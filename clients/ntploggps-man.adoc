@@ -4,7 +4,7 @@ include::../docs/manual.include[]
 
 ntploggps - log gpsd data
 
-include::../docs/includes/ntploggps-body.txt[]
+include::../docs/includes/ntploggps-body.adoc[]
 
 == EXIT STATUS ==
 

@@ -12,7 +12,7 @@ S is for snakeoil.
 
 == Manual Pages ==
 
-include::includes/manual.txt[]
+include::includes/manual.adoc[]
 
 '''''
 == Table of Contents ==
@@ -24,8 +24,8 @@ include::includes/manual.txt[]
 * link:#_exit_status[EXIT STATUS]
 * link:#_authors[AUTHORS]
 
-include::includes/ntploggps-body.txt[]
+include::includes/ntploggps-body.adoc[]
 
 '''''
 
-include::includes/footer.txt[]
+include::includes/footer.adoc[]
