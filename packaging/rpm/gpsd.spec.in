@@ -8,19 +8,18 @@
 %endif
 
 Name: %{srcname}
-Version: 3.19
+Version: @VERSION@
 Release: 4%{?dist}
 Summary: Service daemon for mediating access to a GPS
 
 License: BSD
-URL: http://catb.org/gpsd/
-Source0: https://download-mirror.savannah.gnu.org/releases/gpsd/%{name}-%{version}.tar.gz
+URL: @WEBSITE@
+Source0: @DOWNLOAD@%{name}-%{version}.tar.gz
 Source11: gpsd.sysconfig
 
 BuildRequires: dbus-devel dbus-glib-devel ncurses-devel xmlto python3-devel
-BuildRequires: python3-scons python3-gobject python3-cairo python3-pyserial
-BuildRequires: desktop-file-utils bluez-libs-devel pps-tools-devel /usr/bin/c++
-BuildRequires: systemd
+BuildRequires: python3-scons  desktop-file-utils bluez-libs-devel /usr/bin/c++
+BuildRequires: pps-tools-devel systemd
 %if %{with_qt}
 BuildRequires: qt-devel
 %endif
@@ -37,7 +36,7 @@ gpsd is a service daemon that mediates access to a GPS sensor
 connected to the host computer by serial or USB interface, making its
 data on the location/course/velocity of the sensor available to be
 queried on TCP port 2947 of the host computer.  With gpsd, multiple
-GPS client applications (such as navigational and war-driving software)
+GPS client applications (such as navigational and wardriving software)
 can share access to a GPS without contention or loss of data.  Also,
 gpsd responds to queries with a format that is substantially easier to
 parse than NMEA 0183.
@@ -112,7 +111,7 @@ different gps devices.
 %setup -q
 
 # fix paths in systemd unit files
-sed -i 's|/usr/local/sbin|%{_sbindir}|' systemd/*.service
+sed -i 's|@PREFIX@/sbin|%{_sbindir}|' systemd/*.service
 
 # set gpsd revision string to include package revision
 sed -i 's|^revision=.*REVISION.*$|revision='\'\
@@ -130,6 +129,9 @@ sed -i 's|env.Prepend.*RPATH.*|pass #\0|' SConstruct
 %build
 export CCFLAGS="%{optflags}"
 export LINKFLAGS="%{__global_ldflags}"
+
+# Solidly fix Python interpreter path.
+sed -e "/PYSHEBANG/s|@PYSHEBAG@|/usr/bin/python3|g" -i SConstruct
 
 # breaks with %{_smp_mflags}
 scons \
@@ -155,10 +157,6 @@ scons \
 	target_python=python3 \
 	python_libdir=%{python3_sitearch} \
 	build
-
-# Fix python interpreter path.
-sed -e "s,#!/usr/bin/\(python[23]\?\|env \+python[23]\?\),#!/usr/bin/python3,g" -i \
-	gegps gpscat gpsfake xgps xgpsspeed gpsprof gps/*.py ubxtool zerk
 
 
 %install
@@ -215,7 +213,7 @@ desktop-file-install \
 %endif
 
 %files
-%doc README COPYING
+%doc AUTHORS COPYING INSTALL.adoc README.adoc
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
 %{_sbindir}/gpsd
 %{_sbindir}/gpsdctl
@@ -259,7 +257,7 @@ desktop-file-install \
 
 %if %{with_qt}
 %files qt
-%{_libdir}/libQgpsmm.so.25*
+%{_libdir}/libQgpsmm.so.@LIBGPSVERSION@
 
 %files qt-devel
 %{_libdir}/libQgpsmm.so
@@ -306,6 +304,10 @@ desktop-file-install \
 
 
 %changelog
+* Tue Jan 28 2020 James Browning <jamesb.fe80@gmail.com> - ????
+- Rebuilt for upstream inclusion
+
+
 * Thu Oct 03 2019 Miro Hrončok <mhroncok@redhat.com> - 3.19-4
 - Rebuilt for Python 3.8.0rc1 (#1748018)
 
