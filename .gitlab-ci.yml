@@ -218,4 +218,27 @@ pages:
     - public
   <<: *should_build_pages
 
-
+dist-1f:
+  image: fedora:latest
+  stage: advanced_build
+  script:
+  - dnf install -y gcc-c++ python2 scons xmlto asciidoc bzip2 xz git
+  - scons dist
+  - dnf install -y bluez-libs-devel chrpath dbus-devel desktop-file-utils gcc-c++ ncurses-devel python2-devel python3-devel python3-cairo python3-gobject qt-devel scons xmlto pps-tools-devel fedora-packager rpmdevtools createrepo_c python3-pyserial gtk3-devel cairo
+  - rpmdev-setuptree
+  - cp gpsd-*.tar.gz ~/rpmbuild/SOURCES/
+  - rpmbuild -ba packaging/rpm/gpsd.spec.fed3
+  - mkdir -pv .pages .public/repos/Fedora/31/gpsd/x86_64/RPMS
+  - mv -v /root/rpmbuild/RPMS/x86_64/*.rpm .public/repos/Fedora/31/gpsd/x86_64/RPMS
+  - createrepo_c -v --deltas --retain-old-md 1 .public/repos/Fedora/31/gpsd/x86_64/RPMS
+  - ls -laR gpsd-* .public/repos/Fedora/31/gpsd/x86_64
+  artifacts:
+    paths:
+    - .repos/Fedora/31/py3/x86_64/RPMS
+    - gpsd-*.tar.gz
+    - packaging/rpm/gpsd.spec
+    expire_in: 2 weeks
+  only:
+    - schedules
+    - tags
+    - web
