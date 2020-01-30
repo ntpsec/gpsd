@@ -285,6 +285,8 @@ char *maidenhead(double lat, double lon)
      *    round down from the cast). If I'm reading the spec right it
      *    is not correct to do this.
      */
+    /* FIXME: convert lat/lon to integer seconds, then do all the
+     * math on integers */
     static char buf[9];
 
     int t1;
@@ -311,20 +313,24 @@ char *maidenhead(double lat, double lon)
     buf[2] = (char)t1 + '0';
     lon -= (float)t1 * 2;
 
+    // lon is now degrees
+    lon *= 60.0;
+
     // divide into 24 zones (subsquares) each 5 minute (5/60 deg) lon
-    t1 = (int)((lon * 60) / 5);
+    t1 = (int)(lon / 5);
     buf[4] = (char) ((char)t1 + 'a');
-    lon -= (float)((t1 * 5) / 60.0);
+    lon -= (float)(t1 * 5);
+
+    // lon is now seconds
+    lon *= 60.0;
 
     // divide into 10 zones (extended squares) each 30 seconds (5/600 deg) lon
-    t1 = (int)((lon * 600) / 5);
+    t1 = (int)(lon / 30);
     if (9 < t1) {
         // ugh, floating point gunk.
         t1 = 9;
     }
     buf[6] = (char) ((char)t1 + '0');
-    // no fifth pair, yet.  Just in case
-    lon -= (float)((t1 * 5) / 600.0);
 
     /* latitude */
     if (89.99999 < lat) {
@@ -347,20 +353,24 @@ char *maidenhead(double lat, double lon)
     buf[3] = (char)lat + '0';
     lat -= (int)lat;
 
+    // lat is now degrees
+    lat *= 60.0;
+
     // divide into 24 zones (subsquares) each 2.5 minute (5/120 deg) lat
-    t1 = (int)((lat * 120) / 5);
+    t1 = (int)(lat / 2.5);
     buf[5] = (char)((char)t1 + 'a');
-    lat -= (float)((t1 * 5) / 120.0);
+    lat -= (float)(t1 * 2.5);
+
+    // lat is now seconds
+    lat *= 60.0;
 
     // divide into 10 zones (extended squares) each 15 seconds (5/1200 deg) lat
-    t1 = (int)((lat * 1200) / 5);
+    t1 = (int)(lat / 15);
     if (9 < t1) {
         // ugh, floating point gunk.
         t1 = 9;
     }
     buf[7] = (char) ((char)t1 + '0');
-    // no fifth pair, yet.  Just in case
-    lat -= (float)((t1 * 5) / 1200.0);
 
     buf[8] = '\0';
 
