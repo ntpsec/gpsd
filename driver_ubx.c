@@ -1027,7 +1027,7 @@ ubx_msg_nav_timegps(struct gps_device_t *session, unsigned char *buf,
         timespec_t ts_tow;
 
         week = getles16(buf, 8);
-	MSTOTS(&ts_tow, session->driver.ubx.iTOW);
+        MSTOTS(&ts_tow, session->driver.ubx.iTOW);
         ts_tow.tv_nsec += (long)getles32(buf, 4);
         session->newdata.time = gpsd_gpstime_resolv(session, week, ts_tow);
 
@@ -1671,21 +1671,21 @@ ubx_msg_tim_tp(struct gps_device_t *session, unsigned char *buf,
 
         /* good, save qErr and qErr_time */
         session->gpsdata.qErr = qErr;
-	MSTOTS(&ts_tow, towMS);
-	session->gpsdata.qErr_time = gpsd_gpstime_resolv(session, week, ts_tow);
+        MSTOTS(&ts_tow, towMS);
+        session->gpsdata.qErr_time = gpsd_gpstime_resolv(session, week, ts_tow);
 
         // restore leap
         session->context->leap_seconds = saved_leap;
 
 #ifdef __UNUSED
         {
-	 struct gps_device_t *ppsonly;
+         struct gps_device_t *ppsonly;
          // FIXME!! should be up a layer so other drivers can use it
          // FIXME!! this qErr can only apply to one PPS!
-	 /* propagate this in-band-time to all PPS-only devices */
-	 for (ppsonly = devices; ppsonly < devices + MAX_DEVICES; ppsonly++)
-	     if (ppsonly->sourcetype == source_pps)
-		 pps_thread_qErrin(&ppsonly->pps_thread, qErr,
+         /* propagate this in-band-time to all PPS-only devices */
+         for (ppsonly = devices; ppsonly < devices + MAX_DEVICES; ppsonly++)
+             if (ppsonly->sourcetype == source_pps)
+                 pps_thread_qErrin(&ppsonly->pps_thread, qErr,
                                    session->gpsdata.qErr_time);
         }
 #endif /* __UNUSED */
@@ -2559,7 +2559,7 @@ const struct gps_type_t driver_ubx = {
     .speed_switcher   = ubx_speed,      /* Speed (baudrate) switch */
     .mode_switcher    = ubx_mode,       /* Mode switcher */
     .rate_switcher    = ubx_rate,       /* Message delivery rate switcher */
-    .min_cycle.tv_sec  = 0,		/* not relevant, no rate switch */
+    .min_cycle.tv_sec  = 0,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 250000000,     /* Maximum 4Hz sample rate */
 #endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
