@@ -1768,6 +1768,13 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         ubx_msg_inf(session, buf, data_len);
         break;
 
+    case UBX_LOG_BATCH:
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-LOG-BATCH\n");
+        break;
+
+    case UBX_MON_BATCH:
+        GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-MON-BATCH\n");
+        break;
     case UBX_MON_EXCEPT:
         GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-MON-EXCEPT\n");
         break;
