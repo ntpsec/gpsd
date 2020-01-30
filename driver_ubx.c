@@ -275,7 +275,7 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
 
     if (40 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "Runt MON-VER message, payload len %zd", data_len);
+                 "UBX-MON-VER message, runt payload len %zd", data_len);
         return;
     }
 
@@ -323,7 +323,7 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
  * Used for GPS standalone operation (internal batch retrieval)
  */
 static gps_mask_t
-ubx_msg_log_batch(struct gps_device_t *session, unsigned char *buf,
+ubx_msg_log_batch(struct gps_device_t *session, unsigned char *buf UNUSED,
                   size_t data_len)
 {
     gps_mask_t mask = 0;
@@ -350,7 +350,7 @@ ubx_msg_nav_hpposecef(struct gps_device_t *session, unsigned char *buf,
 
     if (28 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "Runt UBX-NAV-HPPOSECEF message, payload len %zd", data_len);
+                 "UBX-NAV-HPPOSECEF message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -392,7 +392,7 @@ ubx_msg_nav_hpposllh(struct gps_device_t *session, unsigned char *buf,
 
     if (36 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "Runt NAV-HPPOSLLH message, payload len %zd", data_len);
+                 "UBX-NAV-HPPOSLLH message, runt payload len %zd", data_len);
         return mask;
     }
 
@@ -439,7 +439,7 @@ ubx_msg_nav_posecef(struct gps_device_t *session, unsigned char *buf,
 
     if (20 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "Runt UBX-NAV-POSECEF message, payload len %zd", data_len);
+                 "UBX-NAV-POSECEF message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -483,7 +483,7 @@ ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
     /* u-blox 6 and 7 are 84 bytes, u-blox 8 and 9 are 92 bytes  */
     if (84 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "Runt NAV-PVT message, payload len %zd", data_len);
+                 "UBX-NAV-PVT message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -651,7 +651,7 @@ ubx_msg_nav_relposned(struct gps_device_t *session, unsigned char *buf,
 
     if (40 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "Runt NAV-RELPOSNED message, payload len %zd", data_len);
+                 "UBX-NAV-RELPOSNED message, runt payload len %zd", data_len);
         return mask;
     }
 
@@ -709,7 +709,7 @@ ubx_msg_nav_sol(struct gps_device_t *session, unsigned char *buf,
 
     if (52 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "Runt NAV-SOL message, payload len %zd", data_len);
+                 "UBX-NAV-SOL message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -922,7 +922,7 @@ ubx_msg_nav_posllh(struct gps_device_t *session, unsigned char *buf,
 
     if (28 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "Runt NAV-POSLLH message, payload len %zd", data_len);
+                 "UBX-NAV-POSLLH message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -963,7 +963,7 @@ ubx_msg_nav_dop(struct gps_device_t *session, unsigned char *buf,
 {
     if (18 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "Runt RXM-SFRB message, payload len %zd", data_len);
+                 "UBX-RXM-SFRB message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -1000,7 +1000,7 @@ ubx_msg_nav_eoe(struct gps_device_t *session, unsigned char *buf,
 {
     if (4 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "Runt NAV-EOE message, payload len %zd", data_len);
+                 "UBX-NAV-EOE message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -1028,7 +1028,7 @@ ubx_msg_nav_timegps(struct gps_device_t *session, unsigned char *buf,
 
     if (16 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "Runt NAV-TIMEGPS message, payload len %zd", data_len);
+                 "UBX-NAV-TIMEGPS message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -1076,7 +1076,7 @@ ubx_msg_nav_sat(struct gps_device_t *session, unsigned char *buf,
 
     if (8 > data_len) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "Runt NAV-SAT (datalen=%zd)\n", data_len);
+                 "UBX-NAV-SAT runt datalen %zd\n", data_len);
         return 0;
     }
 
@@ -1090,7 +1090,7 @@ ubx_msg_nav_sat(struct gps_device_t *session, unsigned char *buf,
     nchan = (unsigned int)getub(buf, 5);
     if (nchan > MAXCHANNELS) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "Runt NAV-SAT message, >%d reported visible",
+                 "UBX-NAV-SAT message, runt >%d reported visible",
                  MAXCHANNELS);
         return 0;
     }
@@ -1169,7 +1169,7 @@ ubx_msg_nav_svinfo(struct gps_device_t *session, unsigned char *buf,
 
     if (8 > data_len) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "Runt NAV-SVINFO (datalen=%zd)\n", data_len);
+                 "UBX-NAV-SVINFO runt datalen %zd\n", data_len);
         return 0;
     }
 
@@ -1177,7 +1177,7 @@ ubx_msg_nav_svinfo(struct gps_device_t *session, unsigned char *buf,
     nchan = (unsigned int)getub(buf, 4);
     if (nchan > MAXCHANNELS) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "Runt NAV SVINFO message, >%d reported visible",
+                 "UBX-NAV SVINFO message, runt >%d reported visible",
                  MAXCHANNELS);
         return 0;
     }
@@ -1260,7 +1260,7 @@ ubx_msg_nav_velecef(struct gps_device_t *session, unsigned char *buf,
 
     if (20 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "Runt NAV-VELECEF message, payload len %zd", data_len);
+                 "UBX-NAV-VELECEF message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -1291,7 +1291,7 @@ ubx_msg_nav_velned(struct gps_device_t *session, unsigned char *buf,
 
     if (36 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "Runt NAV-VELNED message, payload len %zd", data_len);
+                 "UBX-NAV-VELNED message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -1325,7 +1325,7 @@ static void ubx_msg_sbas(struct gps_device_t *session, unsigned char *buf,
 
     if (12 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "Runt NAV-SBAS message, payload len %zd", data_len);
+                 "UBX-NAV-SBAS message, runt payload len %zd", data_len);
         return;
     }
 
@@ -1376,7 +1376,7 @@ static gps_mask_t ubx_rxm_rawx(struct gps_device_t *session,
 
     if (16 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "Runt RXM-RAWX message, payload len %zd", data_len);
+                 "UBX-RXM-RAWX message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -1593,7 +1593,7 @@ static gps_mask_t ubx_rxm_sfrb(struct gps_device_t *session,
 
     if (42 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "Runt RXM-SFRB message, payload len %zd", data_len);
+                 "UBX-RXM-SFRB message, runt payload len %zd", data_len);
         return 0;
     }
 
@@ -1670,7 +1670,7 @@ ubx_msg_tim_tp(struct gps_device_t *session, unsigned char *buf,
 
     if (16 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "Runt TIM-TP message, payload len %zd", data_len);
+                 "UBX-TIM-TP message, runt payload len %zd", data_len);
         return 0;
     }
 
