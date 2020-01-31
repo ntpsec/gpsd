@@ -23,7 +23,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>      /* for strlcpy(), strsep(), etc. */
+// do not use strsep() it is not POSIX
+#include <string.h>      /* for strlcpy(), strtok(), etc. */
 #include <strings.h>
 #include <sys/select.h>
 #include <sys/socket.h>
@@ -77,11 +78,11 @@ static char* time2string(void)
 
 static int send_udp (char *nmeastring, size_t ind)
 {
-    char message [255];
+    char message[MAX_PACKET_LENGTH];
     char *buffer;
     int  channel;
 
-    /* if string length is unknow make a copy and compute it */
+    /* if string length is unknown make a copy and compute it */
     if (ind == 0) {
 	/* compute message size and add 0x0a 0x0d */
 	for (ind=0; nmeastring [ind] != '\0'; ind ++) {
@@ -138,8 +139,8 @@ static int open_udp(char **hostport)
        struct hostent *hp;
 
        /* parse argument */
-       hostname = strsep(&hostport[channel], ":");
-       portname = strsep(&hostport[channel], ":");
+       hostname = strtok(hostport[channel], ":");
+       portname = strtok(hostport[channel], ":");
        if ((hostname == NULL) || (portname == NULL)) {
 	   (void)fprintf(stderr, "gps2udp: syntax is [-u hostname:port]\n");
 	   return (-1);
@@ -454,7 +455,7 @@ int main(int argc, char **argv)
 		    // strtok break original string
 		    (void)strlcpy((char *)packet, buffer, sizeof(packet));
 		    for (j=0; j<MAX_INFO; j++) {
-			info[j] = (unsigned char *)strsep((char **)&adrpkt, ",");
+			info[j] = (unsigned char *)strtok((char *)adrpkt, ",");
 		    }
 
 		    for(i=0 ; i < (int)strlen((char *)info[5]); i++)  {
