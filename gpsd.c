@@ -2207,10 +2207,11 @@ int main(int argc, char *argv[])
 			    "setuid() failed, errno %s\n",
 			    strerror(errno));
     }
+    // sometimes getegid() and geteuid() are longs
     GPSD_LOG(LOG_INF, &context.errout,
-	     "running with effective group ID %d\n", getegid());
+	     "running with effective group ID %ld\n", (long)getegid());
     GPSD_LOG(LOG_INF, &context.errout,
-	     "running with effective user ID %d\n", geteuid());
+	     "running with effective user ID %ld\n", (long)geteuid());
 
 #ifdef SOCKET_EXPORT_ENABLE
     for (i = 0; i < NITEMS(subscribers); i++) {
