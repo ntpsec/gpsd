@@ -230,7 +230,7 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
     char path[PATH_MAX] = "";
     volatile struct pps_thread_t *pps_thread = inner_context->pps_thread;
 
-    inner_context->kernelpps_handle = -1;
+    inner_context->kernelpps_handle = (pps_handle_t)-1;
     inner_context->pps_canwait = false;
 
     /*
@@ -851,7 +851,7 @@ static void *gpsd_ppsmonitor(void *arg)
         /* ok and log used by KPPS and TIOCMIWAIT */
         log = NULL;
 #if defined(HAVE_SYS_TIMEPPS_H)
-        if ( 0 <= inner_context.kernelpps_handle ) {
+        if ((pps_handle_t)0 <= inner_context.kernelpps_handle) {
             int ret;
             int edge_kpps = 0;       /* 0 = clear edge, 1 = assert edge */
             /* time of the last edge */
@@ -1228,7 +1228,7 @@ static void *gpsd_ppsmonitor(void *arg)
         /* end Stage four, end of the loop, do it again */
     }
 #if defined(HAVE_SYS_TIMEPPS_H)
-    if (inner_context.kernelpps_handle > 0) {
+    if (inner_context.kernelpps_handle > (pps_handle_t)0) {
         thread_context->log_hook(thread_context, THREAD_PROG,
             "KPPS:%s descriptor cleaned up\n",
             thread_context->devicename);
@@ -1264,7 +1264,7 @@ void pps_thread_activate(volatile struct pps_thread_t *pps_thread)
 #if defined(HAVE_SYS_TIMEPPS_H)
     /* some operations in init_kernel_pps() require root privs */
     (void)init_kernel_pps(&inner_context);
-    if ( 0 <= inner_context.kernelpps_handle ) {
+    if ((pps_handle_t)0 <= inner_context.kernelpps_handle) {
         pps_thread->log_hook(pps_thread, THREAD_INF,
                     "KPPS:%s kernel PPS will be used\n",
                     pps_thread->devicename);
