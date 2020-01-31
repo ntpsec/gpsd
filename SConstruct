@@ -1016,7 +1016,7 @@ else:
         confdefs.append("/* #undef HAVE_LIBRT */\n")
 
     # for slowlaris socket(), bind(), etc.
-    if config.CheckLib('lnsl'):
+    if config.CheckLib('libnsl'):
         confdefs.append("#define HAVE_LIBNSL\n")
         # System library - no special flags
         rtlibs += ["-lnsl"]
@@ -1024,7 +1024,7 @@ else:
         confdefs.append("/* #undef HAVE_LIBNSL */\n")
 
     # for slowlaris socket(), bind(), etc.
-    if config.CheckLib('lsocket'):
+    if config.CheckLib('libsocket'):
         confdefs.append("#define HAVE_LIBSOCKET\n")
         # System library - no special flags
         rtlibs += ["-lsocket"]
