@@ -925,9 +925,17 @@ else:
         confdefs.append("#define _NETBSD_SOURCE 1\n")
         confdefs.append('#endif\n')
     elif sys.platform.startswith('sunos5'):
+        # tested with gcc-5.5 on slowlaris 10
         # required to get isascii(), and more, from ctype.h
         confdefs.append('#if !defined(__XPG4_CHAR_CLASS__)')
         confdefs.append("#define __XPG4_CHAR_CLASS__ 1\n")
+        confdefs.append('#endif\n')
+        confdefs.append('#if !defined(__XPG6)')
+        confdefs.append('#define _XPG6\n')
+        confdefs.append('#endif\n')
+        # for things like strlcat(), strlcpy)
+        confdefs.append('#if !defined(__EXTENSIONS__)')
+        confdefs.append('#define __EXTENSIONS__\n')
         confdefs.append('#endif\n')
 
     cxx = config.CheckCXX()
