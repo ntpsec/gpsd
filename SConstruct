@@ -800,6 +800,7 @@ config = Configure(env, custom_tests={
 print("This system is: %s" % sys.platform)
 
 libgps_flags = []
+rtlibs = []
 if cleaning or helping:
     bluezflags = []
     confdefs = []
@@ -807,7 +808,6 @@ if cleaning or helping:
     htmlbuilder = False
     manbuilder = False
     ncurseslibs = []
-    rtlibs = []
     mathlibs = []
     tiocmiwait = True  # For cleaning, which works on any OS
     usbflags = []
@@ -1014,7 +1014,22 @@ else:
         rtlibs = ["-lrt"]
     else:
         confdefs.append("/* #undef HAVE_LIBRT */\n")
-        rtlibs = []
+
+    # for slowlaris socket(), bind(), etc.
+    if config.CheckLib('lnsl'):
+        confdefs.append("#define HAVE_LIBNSL\n")
+        # System library - no special flags
+        rtlibs += ["-lnsl"]
+    else:
+        confdefs.append("/* #undef HAVE_LIBNSL */\n")
+
+    # for slowlaris socket(), bind(), etc.
+    if config.CheckLib('lsocket'):
+        confdefs.append("#define HAVE_LIBSOCKET\n")
+        # System library - no special flags
+        rtlibs += ["-lsocket"]
+    else:
+        confdefs.append("/* #undef HAVE_LIBNSOCKET */\n")
 
     # The main reason we check for libm explicitly is to set up the config
     # environment for CheckFunc for sincos().  But it doesn't hurt to omit
