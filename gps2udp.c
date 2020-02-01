@@ -117,7 +117,8 @@ static int send_udp (char *nmeastring, size_t ind)
 				(const struct sockaddr *)&remote[channel],
 				(int)sizeof(remote));
 	if (status < (ssize_t)ind) {
-	    (void)fprintf(stderr, "gps2udp: failed to send [%s] \n", nmeastring);
+	    (void)fprintf(stderr, "gps2udp: failed to send [%s] \n",
+                          nmeastring);
 	    return -1;
 	}
     }
@@ -140,7 +141,8 @@ static int open_udp(char **hostport)
 
        /* parse argument */
        hostname = strtok(hostport[channel], ":");
-       portname = strtok(hostport[channel], ":");
+       // NULL tells strtok() to resume search from last found token
+       portname = strtok(NULL, ":");
        if ((hostname == NULL) || (portname == NULL)) {
 	   (void)fprintf(stderr, "gps2udp: syntax is [-u hostname:port]\n");
 	   return (-1);
@@ -149,7 +151,8 @@ static int open_udp(char **hostport)
        errno = 0;
        portnum = (int)strtol(portname, &endptr, 10);
        if (1 > portnum || 65535 < portnum || '\0' != *endptr || 0 != errno) {
-	   (void)fprintf(stderr, "gps2udp: syntax is [-u hostname:port] [%s] is not a valid port number\n",portname);
+	   (void)fprintf(stderr, "gps2udp: syntax is [-u hostname:port] "
+                         "[%s] is not a valid port number\n", portname);
 	   return (-1);
        }
 
@@ -180,15 +183,18 @@ static void usage(void)
     (void)fprintf(stderr,
 		  "Usage: gps2udp [OPTIONS] [server[:port[:device]]]\n\n"
 		  "-h Show this help.\n"
-                  "-u Send UDP NMEA/JSON feed to host:port [multiple -u host:port accepted]\n"
+                  "-u Send UDP NMEA/JSON feed to host:port "
+                  "multiple -u host:port accepted]\n"
 		  "-n Feed NMEA.\n"
 		  "-j Feed JSON.\n"
 		  "-a Select AIS message only.\n"
 		  "-c [count] exit after count packets.\n"
 		  "-b Run in background as a daemon.\n"
-		  "-d [0-2] 1 display sent packets, 2 display ignored packets.\n"
+		  "-d [0-2] 1 display sent packets, 2 display ignored "
+                  "packets.\n"
 		  "-v Print version and exit.\n\n"
-                  "example: gps2udp -a -n -c 2 -d 1 -u data.aishub.net:2222 fridu.net\n"
+                  "example: gps2udp -a -n -c 2 -d 1 -u data.aishub.net:2222 "
+                  "fridu.net\n"
 		  );
 }
 
@@ -216,7 +222,8 @@ static void connect2gpsd(bool restart)
         } else {
 	    if (debug > 0)
 		(void)fprintf(stdout, "gps2udp [%s] connect to gpsd %s:%s\n",
-			      time2string(), gpsd_source.server, gpsd_source.port);
+			      time2string(), gpsd_source.server,
+                              gpsd_source.port);
 	    break;
         }
     }
@@ -322,8 +329,9 @@ static unsigned char AISto6bit(unsigned char c)
     return (unsigned char)(cp & (unsigned char)0x3f);
 }
 
-static unsigned int AISGetInt(unsigned char *bitbytes, unsigned int sp, unsigned int len)
 /* get MMSI from AIS bit string */
+static unsigned int AISGetInt(unsigned char *bitbytes, unsigned int sp,
+                              unsigned int len)
 {
     unsigned int acc = 0;
     unsigned int s0p = sp-1;                          // to zero base
@@ -427,38 +435,36 @@ int main(int argc, char **argv)
     }
 
     /* infinite loop to get data from gpsd and push them to aggregators */
-    for (;;)
-    {
-	char buffer[512];
+    for (;;) {
+	char buffer[MAX_PACKET_LENGTH];
 	ssize_t  len;
 
 	len = read_gpsd(buffer, sizeof(buffer));
 
 	/* ignore empty message */
-	if (len > 3)
-	{
-	    if (debug > 0)
-	    {
+	if (len > 3) {
+	    if (debug > 0) {
 		(void)fprintf (stdout,"---> [%s] -- %s",time2string(),buffer);
 
 		// Try to extract MMSI from AIS payload
-		if (str_starts_with(buffer, "!AIVDM"))
-		{
+		if (str_starts_with(buffer, "!AIVDM")) {
 #define MAX_INFO 6
 		    int  i,j;
-		    unsigned char packet[512];
-		    unsigned char *adrpkt = packet;
+		    char packet[MAX_PACKET_LENGTH];
+		    char *adrpkt = packet;
 		    unsigned char *info[MAX_INFO];
 		    unsigned int  mmsi;
 		    unsigned char bitstrings [255];
 
 		    // strtok break original string
-		    (void)strlcpy((char *)packet, buffer, sizeof(packet));
-		    for (j=0; j<MAX_INFO; j++) {
-			info[j] = (unsigned char *)strtok((char *)adrpkt, ",");
+		    (void)strlcpy(packet, buffer, sizeof(packet));
+		    for (j = 0; j < MAX_INFO; j++) {
+			info[j] = (unsigned char *)strtok(adrpkt, ",");
+                        // have strtok() continue from last position
+                        adrpkt = NULL;
 		    }
 
-		    for(i=0 ; i < (int)strlen((char *)info[5]); i++)  {
+		    for(i = 0 ; i < (int)strlen((char *)info[5]); i++)  {
 			if (i >= (int) sizeof (bitstrings)) break;
 			bitstrings[i] = AISto6bit(info[5][i]);
 		    }
@@ -479,7 +485,8 @@ int main(int argc, char **argv)
 		if (count-- == 0) {
 		    /* completed count */
 		    (void)fprintf(stderr,
-				  "gpsd2udp: normal exit after counted packets\n");
+				  "gpsd2udp: normal exit after counted "
+                                  "packets\n");
 		    exit (0);
 		}
 	    }  // end count
