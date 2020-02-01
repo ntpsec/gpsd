@@ -60,7 +60,13 @@ int os_daemon(int nochdir, int noclose);
 
 #ifdef HAVE_SYSLOG_H
 #include <syslog.h>
-#else
+
+  #if !defined(LOG_PERROR)
+    // Slowlaris 10 does not define LOG_PERROR
+    #define	LOG_PERROR	0x20	/* log to stderr as well */
+  #endif // LOG_PERROR
+
+#else // HAVE_SYSLOG_H
 /*
  * Substitutes for syslog functions
  *  (only subset of defines used by gpsd components listed)
