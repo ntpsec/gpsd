@@ -131,8 +131,7 @@ static int open_udp(char **hostport)
 {
    int channel;
 
-   for (channel=0; channel <udpchannel; channel ++)
-   {
+   for (channel=0; channel <udpchannel; channel ++) {
        char *hostname = NULL;
        char *portname = NULL;
        char *endptr = NULL;
@@ -212,7 +211,7 @@ static void connect2gpsd(bool restart)
     }
 
     /* loop until we reach GPSd */
-    for (delay = 10; ; delay = delay*2) {
+    for (delay = 10; ; delay = delay * 2) {
         int status = gps_open(gpsd_source.server, gpsd_source.port, &gpsdata);
         if (status != 0) {
             (void)fprintf(stderr,
@@ -232,8 +231,8 @@ static void connect2gpsd(bool restart)
 
 }
 
-static ssize_t read_gpsd(char *message, size_t len)
 /* get data from gpsd */
+static ssize_t read_gpsd(char *message, size_t len)
 {
     int ind;
     char c;
@@ -257,7 +256,7 @@ static ssize_t read_gpsd(char *message, size_t len)
                 connect2gpsd (true);
             }
 
-            if ((c == '\n') || (c == '\r')){
+            if ((c == '\n') || (c == '\r')) {
                 message[ind]='\0';
 
                 if (ind > 0) {
@@ -289,8 +288,7 @@ static ssize_t read_gpsd(char *message, size_t len)
         case 0: /* no data fail in timeout */
             retry++;
             /* if too many empty packets are received reset gpsd connection */
-            if (retry > MAX_GPSD_RETRY)
-            {
+            if (retry > MAX_GPSD_RETRY) {
                 connect2gpsd(true);
                 retry = 0;
             }
@@ -337,8 +335,7 @@ static unsigned int AISGetInt(unsigned char *bitbytes, unsigned int sp,
     unsigned int s0p = sp-1;                          // to zero base
     unsigned int i;
 
-    for(i=0 ; i<len ; i++)
-    {
+    for(i = 0; i < len; i++) {
         unsigned int cp, cx, c0;
         acc  = acc << 1;
         cp = (s0p + i) / 6;
@@ -358,8 +355,7 @@ int main(int argc, char **argv)
     char *udphostport[MAX_UDP_DEST];
 
     flags = WATCH_ENABLE;
-    while ((option = getopt(argc, argv, "?habnjvc:l:u:d:")) != -1)
-    {
+    while ((option = getopt(argc, argv, "?habnjvc:l:u:d:")) != -1) {
         switch (option) {
         case 'd':
             debug = atoi(optarg);
@@ -422,7 +418,7 @@ int main(int argc, char **argv)
     /* Open UDP port */
     if (udpchannel > 0) {
         int status = open_udp(udphostport);
-        if (status !=0) exit (1);
+        if (status != 0) exit (1);
     }
 
     /* Daemonize if the user requested it. */
