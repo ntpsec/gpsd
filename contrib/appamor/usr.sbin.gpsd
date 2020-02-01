@@ -53,6 +53,9 @@
   # common config path (by default unused)
   /etc/gpsd/* r,
 
+  # control socket e.g. for gpsdctl
+  /{,var/}run/gpsd.sock rw,
+
   # enumerate own FDs
   @{PROC}/@{pid}/fd/ r,
 
