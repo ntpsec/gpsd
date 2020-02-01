@@ -3459,12 +3459,13 @@ Oddly this is polled with UBX-LOG-RETRIEVEBATCH
 
         # u-blox 8, protVer 23+
         # not in u-blox 9
-        u = struct.unpack_from('<BBHLHBBBBBBLlBBBBllllHHlllllLLHHLLLL', buf, 0)
+        u = struct.unpack_from('<BBHLHBBBBBBLlBBBBllllLLlllllLLHHLLLL', buf, 0)
         s = ("  version %u contentValid x%x msgCnt %u iTow %u\n"
              "  year %u month %u day %u hour %u min %u sec %u valid x%x\n"
              "  tAcc %u fracSec %d fixType %u flags x%x flags2 x%x numSV %u\n"
-             "  lon %d lat %d height %d hMSL %d hAcc %u vAcc %u\n"
-             "  vel N %u E %u D %u gSpeed %rdA headMot %d sAxx %u headAcc %u\n"
+             "  lon %d lat %d height %d hMSL %d\n"
+             "  hAcc %u vAcc %u\n"
+             "  vel N %u E %u D %u gSpeed %d headMot %d sAcc %u headAcc %u\n"
              "  pdep %u reserved1 x%x distance %u totalDistance %u\n"
              "  distanceStd %u reserved2 x%x" % u)
         if VERB_DECODE <= opts['verbosity']:
