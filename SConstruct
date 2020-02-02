@@ -105,6 +105,7 @@ generated_sources = [
     'gpsd.rules',
     'gpsfake',
     'gps/gps.py',
+    'gps/packet.py',
     'gps/__init__.py',
     'gps_maskdump.c',
     'gpsprof',
@@ -1590,6 +1591,20 @@ libgpsd_sources = [
     "timebase.c",
 ]
 
+# Build ffi binding
+#
+packet_ffi_extension = [
+    "crc24q.c",
+    "driver_greis_checksum.c",
+    "driver_rtcm2.c",
+    "gpspacket.c",
+    "hex.c",
+    "isgps.c",
+    "os_compat.c",
+    "packet.c",
+    ]
+
+
 if not env["shared"]:
     def Library(env, target, sources, version, parse_flags=None):
         return env.StaticLibrary(target,
@@ -1637,7 +1652,15 @@ static_gpsdlib = env.StaticLibrary(
             for s in libgpsd_sources],
     parse_flags=usbflags + bluezflags)
 
-libraries = [libgps_shared]
+
+packet_ffi_shared = Library(env=env,
+                        target="gpsdpacket",
+                        sources=packet_ffi_extension,
+                        version=gpsd_version,
+                        parse_flags=rtlibs + libgps_flags)
+
+env.Clean(libgps_shared, "gps_maskdump.c")
+libraries = [libgps_shared, packet_ffi_shared]
 
 # Only attempt to create the qt library if we have shared turned on
 # otherwise we have a mismash of objects in library
@@ -1823,14 +1846,13 @@ if env['socket_export']:
 if env["libgpsmm"]:
     testprogs.append(test_gpsmm)
 
+libgpsdpacket_blob = '%sgpsdpacket%s.%s' % (env['LIBPREFIX'], env['SHLIBSUFFIX'], gpsd_version)
+
 # Python programs
 if not env['python'] or cleaning or helping:
-    python_built_extensions = []
     python_misc = []
     python_targets = []
 else:
-    python_deps = {'gpscat': 'packet'}
-
     # python misc helpers and stuff
     python_misc = [
         "gpscap.py",
@@ -1848,7 +1870,8 @@ else:
 
     # Glob() has to be run after all buildable objects defined
     python_modules = Glob('gps/*.py', strings=True) + ['gps/__init__.py',
-                                                       'gps/gps.py']
+                                                       'gps/gps.py',
+                                                       'gps/packet.py']
 
     # Remove the aiogps module if not configured
     # Don't use Glob's exclude option, since it may not be available
@@ -1857,20 +1880,6 @@ else:
             python_modules.remove('gps/aiogps.py')
         except ValueError:
             pass
-
-    # Build Python binding
-    #
-    python_extensions = {
-        "gps" + os.sep + "packet": ["crc24q.c",
-                                    "driver_greis_checksum.c",
-                                    "driver_rtcm2.c",
-                                    "gpspacket.c",
-                                    "hex.c",
-                                    "isgps.c",
-                                    "os_compat.c",
-                                    "packet.c",
-                                    ]
-    }
 
     python_env = env.Clone()
     # FIXME: build of python wrappers doesn't pickup flags set for coveraging,
@@ -1921,30 +1930,9 @@ else:
     for flag in ['CFLAGS', 'LDFLAGS', 'OPT']:
         python_env.MergeFlags(Split(python_config[flag]))
 
-    python_objects = {}
-    python_compiled_libs = {}
-    for ext, sources in python_extensions.items():
-        python_objects[ext] = []
-        for src in sources:
-            python_objects[ext].append(
-                python_env.NoCache(
-                    python_env.SharedObject(
-                        src.split(".")[0] + '-py_' +
-                        '_'.join(['%s' % (x) for x in sys.version_info]) +
-                        python_config['SO'], src
-                    )
-                )
-            )
-        python_compiled_libs[ext] = python_env.SharedLibrary(
-            ext, python_objects[ext])
-
-    # Make sure we know about compiled dependencies
-    for prog, dep in python_deps.items():
-        env.Depends(prog, python_compiled_libs['gps' + os.sep + dep])
-
     # Make PEP 241 Metadata 1.0.
     # Why not PEP 314 (V1.1) or PEP 345 (V1.2)?
-    # V1.2 and V1.2 require a Download-URL to an installable binary
+    # V1.1 and V1.2 require a Download-URL to an installable binary
     python_egg_info_source = """Metadata-Version: 1.0
 Name: gps
 Version: %s
@@ -1962,8 +1950,7 @@ Platform: UNKNOWN
     python_egg_info = python_env.Textfile(target="gps-%s.egg-info"
                                           % (gpsd_version, ),
                                           source=python_egg_info_source)
-    python_built_extensions = list(python_compiled_libs.values())
-    python_targets = (python_built_extensions + [python_egg_info] +
+    python_targets = ([python_egg_info] +
                       python_progs + python_modules)
 
 
@@ -1993,6 +1980,14 @@ if env['systemd']:
 else:
     udevcommand = 'RUN+="%s/gpsd.hotplug"' % (env['udevdir'], )
 
+pythonize_header_match = re.compile(r'\s*#define\s+(\w+)\s+(\w+)\s*.*$[^\\]')
+pythonized_header = ''
+with open('gpsd.h') as sfp:
+    for content in sfp:
+        _match3 = pythonize_header_match.match(content)
+        if _match3:
+            if 'LOG' in content or 'PACKET' in content:
+                pythonized_header +=  '%s = %s\n' % (_match3.group(1), _match3.group(2))
 
 # tuples for Substfile.  To convert .in files to generated files.
 substmap = (
@@ -2008,6 +2003,7 @@ substmap = (
     ('@GITREPO@',    gitrepo),
     ('@GPSAPIVERMAJ@', api_version_major),
     ('@GPSAPIVERMIN@', api_version_minor),
+    ('@GPSPACKET@',  libgpsdpacket_blob),
     ('@ICONPATH@',   installdir('icondir')),
     ('@INCLUDEDIR@', installdir('includedir', add_destdir=False)),
     ('@IRCCHAN@',    ircchan),
@@ -2021,6 +2017,7 @@ substmap = (
     ('@PROJECTPAGE@', projectpage),
     # PEP 394 and 394 python shebang
     ('@PYSHEBANG@', '/usr/bin/env python'),
+    ('@PYPACKETH@', pythonized_header),
     ('@QTVERSIONED@', env['qt_versioned']),
     ('@SCPUPLOAD@',  scpupload),
     ('@SHAREPATH@',  installdir('sharedir')),
@@ -2034,6 +2031,8 @@ substmap = (
     ('@VERSION@',    gpsd_version),
     ('@WEBSITE@',    website),
 )
+
+
 
 
 templated = glob.glob("*.in") + glob.glob("*/*.in") + glob.glob("*/*/*.in")
@@ -2109,6 +2108,8 @@ binaryinstall.append(env.Install(installdir('sbindir'), sbin_binaries))
 binaryinstall.append(env.Install(installdir('bindir'), bin_binaries))
 binaryinstall.append(LibraryInstall(env, installdir('libdir'), libgps_shared,
                                     libgps_version))
+binaryinstall.append(LibraryInstall(env, installdir('libdir'), packet_ffi_shared,
+                                    libgps_version))
 # Work around a minor bug in InstallSharedLib() link handling
 env.AddPreAction(binaryinstall, 'rm -f %s/libgps.*' % (installdir('libdir'), ))
 
@@ -2121,11 +2122,7 @@ if ((not env['debug'] and not env['profiling'] and not env['nostrip'] and
     env.AddPostAction(binaryinstall, '$STRIP $TARGET')
 
 if env['python'] and not cleaning and not helping:
-    python_extensions_install = python_env.Install(DESTDIR + python_module_dir,
-                                                   python_built_extensions)
-    if ((not env['debug'] and not env['profiling'] and
-         not env['nostrip'] and not sys.platform.startswith('darwin'))):
-        python_env.AddPostAction(python_extensions_install, '$STRIP $TARGET')
+    python_module_dir = str(python_libdir) + os.sep + 'gps'
 
     python_modules_install = python_env.Install(DESTDIR + python_module_dir,
                                                 python_modules)
@@ -2135,8 +2132,7 @@ if env['python'] and not cleaning and not helping:
 
     python_egg_info_install = python_env.Install(DESTDIR + str(python_libdir),
                                                  python_egg_info)
-    python_install = [python_extensions_install,
-                      python_modules_install,
+    python_install = [python_modules_install,
                       python_progs_install,
                       python_egg_info_install,
                       # We don't need the directory explicitly for the
@@ -2334,7 +2330,7 @@ else:
     # The ":;" in this production and the later one forestalls an attempt by
     # SCons to install up to date versions of gpsfake and gpsctl if it can
     # find older versions of them in a directory on your $PATH.
-    gps_herald = Utility('gps-herald', [gpsd, gpsctl, python_built_extensions],
+    gps_herald = Utility('gps-herald', [gpsd, gpsctl],
                          ':; $PYTHON $PYTHON_COVERAGE $SRCDIR/gpsfake -T')
     gps_log_pattern = os.path.join('test', 'daemon', '*.log')
     gps_logs = glob.glob(gps_log_pattern)
@@ -2544,7 +2540,7 @@ else:
 
 # Run a valgrind audit on the daemon  - not in normal tests
 valgrind_audit = Utility('valgrind-audit', [
-    '$SRCDIR/valgrind-audit.py', python_built_extensions, gpsd],
+    '$SRCDIR/valgrind-audit.py', gpsd],
     '$PYTHON $SRCDIR/valgrind-audit.py'
 )
 

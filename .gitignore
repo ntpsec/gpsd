@@ -25,6 +25,7 @@ control
 gegps
 gps/__init__.py
 gps/gps.py
+gps/packet.py
 gpscat
 gpsd.php
 gpsfake

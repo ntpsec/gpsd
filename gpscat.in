@@ -164,10 +164,8 @@ if __name__ == '__main__':
                     if length == 0:
                         break
                     if typeflag:
-                        sys.stdout.write(repr(ptype) + " (" + repr(length) +
-                                         "@" + repr(counter - length) + "): " +
-                                         hexdump(packet))
-                        sys.stdout.write("\n")
+                        sys.stdout.write('%d (%d@%d): %s\n' % (ptype, length,
+                                         counter - length, hexdump(packet)))
                     else:
                         sys.stdout.write(hexdump(packet) + "\n")
     except KeyboardInterrupt:
