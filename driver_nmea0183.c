@@ -1865,6 +1865,27 @@ static gps_mask_t processGSV(int count, char *field[],
 #undef GSV_TALKER
 }
 
+/* Android GNSS super message
+ * A stub.
+ */
+static gps_mask_t processPGLOR(int c UNUSED, char *field[],
+                               struct gps_device_t *session)
+{
+    /*
+     * $PGLOR,0,FIX,....
+     * 1    = sequence number
+     * 2    = message subtype
+     * ....
+     */
+    gps_mask_t mask = ONLINE_SET;
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "PGLOR: seq %s type %s\n",
+             field[1],
+             field[2]);
+    return mask;
+}
+
 /* Garmin Estimated Position Error */
 static gps_mask_t processPGRME(int c UNUSED, char *field[],
                                struct gps_device_t *session)
@@ -3194,6 +3215,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         bool cycle_continue;    /* cycle continuer? */
         nmea_decoder decoder;
     } nmea_phrase[] = {
+        {"PGLOR", 2,  false, processPGLOR},  // Android something or other
         {"PGRMB", 0,  false, NULL},     /* ignore Garmin DGPS Beacon Info */
         {"PGRMC", 0,  false, NULL},     /* ignore Garmin Sensor Config */
         {"PGRME", 7,  false, processPGRME},
