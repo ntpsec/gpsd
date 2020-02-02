@@ -2453,7 +2453,8 @@ int main(int argc, char *argv[])
 			 "checking client(%d)\n",
 			 sub_index(sub));
 		if ((buflen =
-		     (int)recv(sub->fd, buf, sizeof(buf) - 1, 0)) <= 0) {
+		     (int)recv(sub->fd, buf, sizeof(buf) - 1, 0)) < 0) {
+                    // recv() error, give up.
 		    detach_client(sub);
 		} else {
 		    if (buf[buflen - 1] != '\n')
