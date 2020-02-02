@@ -1873,9 +1873,40 @@ static gps_mask_t processPGLOR(int c UNUSED, char *field[],
 {
     /*
      * $PGLOR,0,FIX,....
-     * 1    = sequence number
-     * 2    = message subtype
+     * 1    = sentence version (usually)
+     * 2    = message subtype (usually)
      * ....
+     *
+     * subtypes:
+     *  $PGLOR,[],AGC - ??
+     *  $PGLOR,[],CPU - CPU Loading
+     *  $PGLOR,[],FIN - Request completion status
+     *  $PGLOR,[],FIX - Time To Fix
+     *  $PGLOR,[],FTS - Factory Test Status
+     *  $PGLOR,[],GFC - GeoFence Fix
+     *  $PGLOR,[],GLO - ??
+     *  $PGLOR,[],HLA - Value of HULA sensors
+     *  $PGLOR,[],IMS - IMES messages
+     *  $PGLOR,[],LSQ - Least squares GNSS fix
+     *  $PGLOR,NET    - Report network information
+     *  $PGLOR,[],NEW - Indicate new GPS request
+     *  $PGLOR,[],PFM - Platform Status
+     *  $PGLOR,[],PPS - Indicate PPS time corrections
+     *  $PGLOR,[],PWR - Power consumption report
+     *  $PGLOR,[],RID - Version Information
+     *  $PGLOR,[],SAT - GPS Satellite information
+     *  $PGLOR,[],SIO - Serial I/O status report
+     *  $PGLOR,[],SPA - Spectrum analyzer results
+     *  $PGLOR,SPL    - ??
+     *  $PGLOR,[],SPS - ??
+     *  $PGLOR,[],STA - GLL status
+     *  $PGLOR,[],SVC - ??
+     *  $PGLOR,[],SVD - SV Dopplers detected in the false alarm test.
+     *  $PGLOR,[],SMx - Report GPS Summary Information
+     *  $PGLOR,[],UNC - ??
+     *
+     * Are NET and SPL really so different?
+     *
      */
     gps_mask_t mask = ONLINE_SET;
 
