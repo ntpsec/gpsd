@@ -1450,8 +1450,8 @@ env = config.Finish()
 # All configuration should be finished.  env can now be modified.
 # NO CONFIG TESTS AFTER THIS POINT!
 
+qt_env = None
 if not (cleaning or helping):
-
     # Be explicit about what we're doing.
     changelatch = False
     for (name, default, helpd) in boolopts + nonboolopts + pathopts:
@@ -1464,37 +1464,36 @@ if not (cleaning or helping):
     if not changelatch:
         announce("All configuration flags are defaulted.")
 
-# Should we build the Qt binding?
-if env["qt"] and env["shared"]:
-    qt_env = env.Clone()
-    qt_env.MergeFlags('-DUSE_QT')
-    qt_env.Append(OBJPREFIX='qt-')
-    if not (cleaning or helping):
+    # Should we build the Qt binding?
+    if env["qt"] and env["shared"]:
+        qt_env = env.Clone()
+        qt_env.MergeFlags('-DUSE_QT')
+        qt_env.Append(OBJPREFIX='qt-')
         try:
             qt_env.MergeFlags(pkg_config(qt_net_name))
         except OSError:
             announce("pkg_config is confused about the state of %s."
                      % qt_net_name)
             qt_env = None
-else:
-    qt_env = None
 
-# Set up for Python coveraging if needed
-if env['coveraging'] and env['python_coverage'] and not (cleaning or helping):
-    pycov_default = opts.options[opts.keys().index('python_coverage')].default
-    pycov_current = env['python_coverage']
-    pycov_list = pycov_current.split()
-    if env.GetOption('num_jobs') > 1 and pycov_current == pycov_default:
-        pycov_list.append('--parallel-mode')
-    # May need absolute path to coveraging tool if 'PythonXX' is prefixed
-    pycov_path = env.WhereIs(pycov_list[0])
-    if pycov_path:
-        pycov_list[0] = pycov_path
-        env['PYTHON_COVERAGE'] = ' '.join(pycov_list)
-        env['ENV']['PYTHON_COVERAGE'] = ' '.join(pycov_list)
-    else:
-        announce('Python coverage tool not found - disabling Python coverage.')
-        env['python_coverage'] = ''  # So we see it in the options
+    # Set up for Python coveraging if needed
+    if env['coveraging'] and env['python_coverage']:
+        pycov_default = (
+            opts.options[opts.keys().index('python_coverage')].default)
+        pycov_current = env['python_coverage']
+        pycov_list = pycov_current.split()
+        if env.GetOption('num_jobs') > 1 and pycov_current == pycov_default:
+            pycov_list.append('--parallel-mode')
+        # May need absolute path to coveraging tool if 'PythonXX' is prefixed
+        pycov_path = env.WhereIs(pycov_list[0])
+        if pycov_path:
+            pycov_list[0] = pycov_path
+            env['PYTHON_COVERAGE'] = ' '.join(pycov_list)
+            env['ENV']['PYTHON_COVERAGE'] = ' '.join(pycov_list)
+        else:
+            announce('Python coverage tool not found - '
+                     'disabling Python coverage.')
+            env['python_coverage'] = ''  # So we see it in the options
 
 # Two shared libraries provide most of the code for the C programs
 
