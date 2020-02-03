@@ -172,6 +172,8 @@ all_manpages = {
 
 # doc files to install in share/gpsd/doc
 doc_files = {
+    'AUTHORS',
+    'COPYING',
     'NEWS',
     'README.adoc',
     'SUPPORT.adoc',
