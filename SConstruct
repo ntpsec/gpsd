@@ -170,6 +170,13 @@ all_manpages = {
     "man/zerk.1": "man/zerk.xml",
 }
 
+# doc files to install in share/gpsd/doc
+doc_files = {
+    'NEWS',
+    'README.adoc',
+    'SUPPORT.adoc',
+}
+
 # Release identification begins here.
 #
 # Actual releases follow the normal X.Y or X.Y.Z scheme.  The version
@@ -409,12 +416,13 @@ for (name, default, helpd) in nonboolopts:
 
 pathopts = (
     ("bindir",              "bin",           "application binaries directory"),
-    ("docdir",              "share/doc",     "documents directory"),
+    ("docdir",              "share/gpsd/doc",     "documents directory"),
     ("includedir",          "include",       "header file directory"),
     ("libdir",              "lib",           "system libraries"),
     ("mandir",              "share/man",     "manual pages directory"),
     ("pkgconfig",           "$libdir/pkgconfig", "pkgconfig file directory"),
     ("sbindir",             "sbin",          "system binaries directory"),
+    ("sharedir",            "share/gpsd",    "share directory"),
     ("sysconfdir",          "etc",           "system configuration directory"),
     ("udevdir",             "/lib/udev",     "udev rules directory"),
 )
@@ -1997,6 +2005,7 @@ substmap = (
     ('@PYSHEBANG@', '/usr/bin/env python'),
     ('@QTVERSIONED@', env['qt_versioned']),
     ('@SCPUPLOAD@',  scpupload),
+    ('@SHAREPATH@',  installdir('sharedir')),
     ('@SITENAME@',   sitename),
     ('@SITESEARCH@', sitesearch),
     ('@TIPLINK@',    tiplink),
@@ -2192,8 +2201,17 @@ for manpage in all_manpages.keys():
     dest = os.path.join(installdir('mandir'), "man" + section,
                         os.path.basename(manpage))
     maninstall.append(env.InstallAs(source=manpage, target=dest))
+
+# doc to install
+docinstall = []
+for doc in doc_files:
+    dest_doc = os.path.join(installdir('sharedir'), "doc",
+                            os.path.basename(doc))
+    docinstall.append(env.InstallAs(source=doc, target=dest_doc))
+
+# and now we know everything to install
 install = env.Alias('install', binaryinstall + maninstall + python_install +
-                    pc_install + headerinstall)
+                    pc_install + headerinstall + docinstall)
 
 
 def Uninstall(nodes):
