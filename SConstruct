@@ -173,6 +173,7 @@ all_manpages = {
 # doc files to install in share/gpsd/doc
 doc_files = {
     'AUTHORS',
+    'build.adoc',
     'COPYING',
     'NEWS',
     'README.adoc',
@@ -412,7 +413,10 @@ nonboolopts = (
     ("python_coverage",  "coverage run", "coverage command for Python progs"),
     ("python_libdir",    "",            "Python module directory prefix"),
     ("qt_versioned",     "",            "version for versioned Qt"),
-    ("sysroot",          "",            "cross-development system root"),
+    ("sysroot",          "",
+     "Logical root directory for headers and libraries.\n"
+     "Useful for cross-compiling, or building with multiple CC's installed.\n"
+     "See gcc and ld man pages for more details."),
     ("target",           "",            "cross-development target"),
     ("target_python",    "python",      "target Python version as command"),
 )
