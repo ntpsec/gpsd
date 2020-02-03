@@ -582,7 +582,7 @@ def announce(msg, end=False):
     if not env.GetOption("silent"):
         print(msg)
     if end:
-        # duplicate message at eexit
+        # duplicate message at exit
         atexit.register(lambda: print(msg))
 
 
@@ -1416,7 +1416,7 @@ elif config.env['python']:
         if 3 > int(sysver[0]) or 6 > int(sysver[2]):
             config.env['aiogps'] = False
             announce("WARNING: Python%s too old (need 3.6): "
-                     "gps/aiogps.py will not be installed\n" %
+                     "gps/aiogps.py will not be installed" %
                      (sysver), end=True)
         else:
             config.env['aiogps'] = True
