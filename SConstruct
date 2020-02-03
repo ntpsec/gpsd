@@ -177,6 +177,11 @@ doc_files = {
     'SUPPORT.adoc',
 }
 
+# doc files to install in share/gpsd/doc
+icon_files = {
+    'packaging/X11/gpsd-logo.png',
+}
+
 # Release identification begins here.
 #
 # Actual releases follow the normal X.Y or X.Y.Z scheme.  The version
@@ -2210,6 +2215,12 @@ for doc in doc_files:
     dest_doc = os.path.join(installdir('sharedir'), "doc",
                             os.path.basename(doc))
     docinstall.append(env.InstallAs(source=doc, target=dest_doc))
+
+# icons to install
+iconinstall = []
+for icon in icon_files:
+    dest_icon = os.path.join(installdir('icondir'), os.path.basename(icon))
+    docinstall.append(env.InstallAs(source=icon, target=dest_icon))
 
 # and now we know everything to install
 install = env.Alias('install', binaryinstall + maninstall + python_install +

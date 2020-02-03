@@ -62,9 +62,10 @@ except ValueError as err:
     sys.stderr.write("xgps: ERROR %s\n" % err)
     exit(1)
 
-from gi.repository import Gtk  # pylint: disable=wrong-import-position
-from gi.repository import Gdk  # pylint: disable=wrong-import-position
-from gi.repository import GLib  # pylint: disable=wrong-import-position
+from gi.repository import Gtk        # pylint: disable=wrong-import-position
+from gi.repository import Gdk        # pylint: disable=wrong-import-position
+from gi.repository import GdkPixbuf  # pylint: disable=wrong-import-position
+from gi.repository import GLib       # pylint: disable=wrong-import-position
 
 # pylint wants local modules last
 try:
@@ -766,6 +767,10 @@ class Base(object):
         about.set_website("https://www.gpsd.io")
         about.set_website_label("https://www.gpsd.io")
         about.set_license("BSD-2-clause")
+        iconpath = gps.__iconpath__ + '/gpsd-logo.png'
+        if os.access(iconpath, os.R_OK):
+            pixbuf = GdkPixbuf.Pixbuf.new_from_file(iconpath)
+            about.set_logo(pixbuf)
 
         about.run()
         about.destroy()
