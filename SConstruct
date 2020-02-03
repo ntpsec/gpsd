@@ -417,6 +417,7 @@ for (name, default, helpd) in nonboolopts:
 pathopts = (
     ("bindir",              "bin",           "application binaries directory"),
     ("docdir",              "share/gpsd/doc",     "documents directory"),
+    ("icondir",             "share/gpsd/icons",   "icon directory"),
     ("includedir",          "include",       "header file directory"),
     ("libdir",              "lib",           "system libraries"),
     ("mandir",              "share/man",     "manual pages directory"),
@@ -1992,6 +1993,7 @@ substmap = (
     ('@GITREPO@',    gitrepo),
     ('@GPSAPIVERMAJ@', api_version_major),
     ('@GPSAPIVERMIN@', api_version_minor),
+    ('@ICONPATH@',   installdir('icondir')),
     ('@INCLUDEDIR@', installdir('includedir', add_destdir=False)),
     ('@IRCCHAN@',    ircchan),
     ('@LIBDIR@',     installdir('libdir', add_destdir=False)),
