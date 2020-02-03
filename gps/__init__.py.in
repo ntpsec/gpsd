@@ -15,6 +15,9 @@ from .misc import *
 api_version_major = @GPSAPIVERMAJ@   # bumped on incompatible changes
 api_version_minor = @GPSAPIVERMIN@   # bumped on compatible changes
 
+# at some point this will need an override method
+__iconpath__ = '@ICONPATH@'
+
 __version__ = '@VERSION@'
 
 # The 'client' module exposes some C utility functions for Python clients.
