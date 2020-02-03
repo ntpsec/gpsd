@@ -415,9 +415,12 @@ nonboolopts = (
     ("qt_versioned",     "",            "version for versioned Qt"),
     ("sysroot",          "",
      "Logical root directory for headers and libraries.\n"
-     "Useful for cross-compiling, or building with multiple CC's installed.\n"
+     "Useful for cross-compiling, or building with multiple local toolchaons.\n"
      "See gcc and ld man pages for more details."),
-    ("target",           "",            "cross-development target"),
+    ("target",           "",
+     "Directory containing the binary tools to use (gcc, ld, etc.)\n"
+     "Useful for cross-compiling, or building with multiple local toolchains.\n"
+     ),
     ("target_python",    "python",      "target Python version as command"),
 )
 
