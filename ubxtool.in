@@ -3616,7 +3616,7 @@ Oddly this is the poll for UBX-LOG-BATCH
 
         # u-blox 8+, protVer 15+
         u = struct.unpack_from('<LBBHBBBBBBHLLLL', buf, 0)
-        s = ("  version %u reserved1 x%x\n"
+        s = ("  entryIndex %u version %u reserved1 x%x\n"
              "  year %u month %u day %u hour %u minute %u seconds %u\n"
              "  reserved2 x%x %x distance %u reserved3 x%x %x %x" % u)
 
