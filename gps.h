@@ -120,6 +120,11 @@ extern "C" {
  *
  * ref: https://en.wikipedia.org/wiki/Decimal_degrees
  */
+
+/* WARNING: Check all flaots and doubles with isfinite() before using them!
+ * isnan() is not sufficient.
+ */
+
 typedef struct timespec timespec_t;     /* Unix time as sec, nsec */
 
 /* GPS error estimates are all over the map, and often unspecified.
@@ -186,6 +191,46 @@ struct gps_fix_t {
      * RTCM 3, station ID is 0 to 4095.
      * u-blox UBX-NAV-DGPS is 16 bit integer */
     int dgps_station;           /* DGPS station ID, -1 invalid */
+};
+
+/* Some GNSS receivers, like u-blox 8, can log fixes for later use.
+ * That data goes in gps_log_t
+ * Check all doubles with isfinite() before using
+ */
+struct gps_log_t  {
+    double lon;           // degrees
+    double lat;           // degrees
+    double altHAE;        // Height above Ellipsoid, meters
+    double altMSL;        // Mean Sea Level, meters
+    double gSpeed;        // Ground Speed,  meters per second
+    double heading;       // true heading, degrees
+
+    /* The accuracy estimates are near useless as they are not defined
+     * statistically as CEP(50), one sigma, two sigma, etc.
+     */
+    double tAcc;          // Time accuracy estimate, seconds
+    double hAcc;          // Horizontal accuracy estimate, meters
+    double vAcc;          // Vertical accuracy estimate, meters
+    double sAcc;          // Speed accuracy estimate, meters per second
+    double headAcc;       // Heading accuracy estimate, degrees
+
+    double velN;          // NED north velocity, meters per second
+    double velE;          // NED east velocity, meters per second
+    double velD;          // NED down velocity, meters per second
+    double pDOP;          // Position DOP
+
+    // Odometer data
+    double distance;      // Ground distance since last reset, meters
+    double totalDistance; // Total cumulative distance, meters
+    double distanceStd;   // Ground distance accuracy (1-sigma)
+
+    timespec_t then;      // time of log entry, zero if invalid
+    uint32_t index_cnt;   // message counter
+
+    unsigned char fixType;  // 0 = None, 2 == 2D, 3 = 3D
+
+    // Number of satellites used in Nav Solution, zedro if invalid
+    unsigned char numSV;  
 };
 
 /*
@@ -2310,6 +2355,7 @@ struct gps_data_t {
     void* gps_fd;
 #endif
     struct gps_fix_t    fix;    /* accumulated PVT data */
+    struct gps_log_t    log;    // log data
 
     /* GPS status -- always valid */
     int    status;              /* Do we have a fix? */
