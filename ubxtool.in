@@ -6719,7 +6719,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         # UBX-LOG-RETRIEVE
         "LOG-RETRIEVE": {"command": send_poll,
                          "opt": [0x21, 9, 0, 0, 0, 0, 0, 1, 0, 0,
-                                 0, 0, 0, 0, 0],
+                                 0, 0, 0, 0],
                          "help": "send UBX-LOG-RETRIEVE",
                          "minVer": 14},
         # UBX-LOG-RETRIEVEBATCH
