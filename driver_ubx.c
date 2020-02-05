@@ -66,6 +66,11 @@ static gps_mask_t ubx_parse(struct gps_device_t *session, unsigned char *buf,
                             size_t len);
 static gps_mask_t ubx_msg_log_batch(struct gps_device_t *session,
                                     unsigned char *buf, size_t data_len);
+static gps_mask_t ubx_msg_log_retrievepos(struct gps_device_t *session,
+                                          unsigned char *buf, size_t data_len);
+static gps_mask_t ubx_msg_log_retrieveposextra(struct gps_device_t *session,
+                                               unsigned char *buf,
+                                               size_t data_len);
 static gps_mask_t ubx_msg_nav_eoe(struct gps_device_t *session,
                                   unsigned char *buf, size_t data_len);
 static gps_mask_t ubx_msg_nav_dop(struct gps_device_t *session,
@@ -332,6 +337,46 @@ ubx_msg_log_batch(struct gps_device_t *session, unsigned char *buf UNUSED,
     if (100 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "UBX-LOG-BATCH: runt len %zd", data_len);
+        return 0;
+    }
+
+    return mask;
+}
+
+/*
+ * UBX-LOG-RETRIEVEPOS (Indexed PVT entry)
+ * Used for GPS standalone operation and host saved logs
+ */
+static gps_mask_t
+ubx_msg_log_retrievepos(struct gps_device_t *session, unsigned char *buf UNUSED,
+                        size_t data_len)
+{
+    gps_mask_t mask = 0;
+
+    /* u-blox 40 bytes payload */
+    if (40 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-LOG-RETRIEVEPOS: runt len %zd", data_len);
+        return 0;
+    }
+
+    return mask;
+}
+
+/*
+ * UBX-LOG-RETRIEVEPOSEXTRA (Indexed Odometry entry)
+ * Used for GPS standalone operation and host saved logs
+ */
+static gps_mask_t
+ubx_msg_log_retrieveposextra(struct gps_device_t *session,
+                             unsigned char *buf UNUSED, size_t data_len)
+{
+    gps_mask_t mask = 0;
+
+    /* u-blox 32 bytes payload */
+    if (32 > data_len) {
+       GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-LOG-RETRIEVEPOSEXTRA: runt len %zd", data_len);
         return 0;
     }
 
@@ -1793,6 +1838,16 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
     case UBX_LOG_BATCH:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-LOG-BATCH\n");
         mask = ubx_msg_log_batch(session, &buf[UBX_PREFIX_LEN], data_len);
+        break;
+    case UBX_LOG_RETRIEVEPOS:
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-LOG-RETRIEVEPOS\n");
+        mask = ubx_msg_log_retrievepos(session, &buf[UBX_PREFIX_LEN], data_len);
+        break;
+    case UBX_LOG_RETRIEVEPOSEXTRA:
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "UBX-LOG-RETRIEVEPOSEXTRA\n");
+        mask = ubx_msg_log_retrieveposextra(session, &buf[UBX_PREFIX_LEN],
+                                            data_len);
         break;
 
     case UBX_MON_BATCH:
