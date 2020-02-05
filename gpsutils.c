@@ -242,8 +242,8 @@ done:
 
 #define MONTHSPERYEAR	12	/* months per calendar year */
 
-void gps_clear_fix(struct gps_fix_t *fixp)
 /* stuff a fix structure with recognizable out-of-band values */
+void gps_clear_fix(struct gps_fix_t *fixp)
 {
     memset(fixp, 0, sizeof(struct gps_fix_t));
     fixp->altitude = NAN;        // DEPRECATED, undefined
@@ -287,8 +287,8 @@ void gps_clear_fix(struct gps_fix_t *fixp)
     fixp->dgps_station = -1;
 }
 
-void gps_clear_att(struct attitude_t *attp)
 /* stuff an attitude structure with recognizable out-of-band values */
+void gps_clear_att(struct attitude_t *attp)
 {
     memset(attp, 0, sizeof(struct attitude_t));
     attp->pitch = NAN;
@@ -313,6 +313,30 @@ void gps_clear_dop( struct dop_t *dop)
 {
     dop->xdop = dop->ydop = dop->vdop = dop->tdop = dop->hdop = dop->pdop =
         dop->gdop = NAN;
+}
+
+/* stuff a log structure with recognizable out-of-band values */
+void gps_clear_log(struct gps_log_t *logp)
+{
+    memset(logp, 0, sizeof(struct gps_log_t));
+    logp->lon = NAN;
+    logp->lat = NAN;
+    logp->altHAE = NAN;
+    logp->altMSL = NAN;
+    logp->gSpeed = NAN;
+    logp->heading = NAN;
+    logp->tAcc = NAN;
+    logp->hAcc = NAN;
+    logp->vAcc = NAN;
+    logp->sAcc = NAN;
+    logp->headAcc = NAN;
+    logp->velN = NAN;
+    logp->velE = NAN;
+    logp->velD = NAN;
+    logp->pDOP = NAN;
+    logp->distance = NAN;
+    logp->totalDistance = NAN;
+    logp->distanceStd = NAN;
 }
 
 void gps_merge_fix(struct gps_fix_t *to,

@@ -113,6 +113,7 @@ int gps_open(const char *host,
     gps_clear_att(&(gpsdata->attitude));
     gps_clear_dop(&(gpsdata->dop));
     gps_clear_fix(&(gpsdata->fix));
+    gps_clear_log(&(gpsdata->log));
 
     return status;
 }

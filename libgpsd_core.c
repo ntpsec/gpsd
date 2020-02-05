@@ -317,6 +317,7 @@ void gpsd_init(struct gps_device_t *session, struct gps_context_t *context,
     session->gpsdata.set = 0;
     gps_clear_att(&session->gpsdata.attitude);
     gps_clear_dop(&session->gpsdata.dop);
+    gps_clear_log(&session->gpsdata.log);
     session->gpsdata.dev.mincycle.tv_sec = 1;
     session->gpsdata.dev.mincycle.tv_nsec = 0;
     session->gpsdata.dev.cycle.tv_sec = 1;
