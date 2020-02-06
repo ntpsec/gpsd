@@ -467,16 +467,6 @@ stuff is left in place.
 If you interrupted a regression test, 'scons testclean' will remove
 generated test programs.
 
-You can run 'scons sconsclean' to remove most of the configuration
-state that scons keeps.  Be aware, however, that doing this can
-confuse scons; you may need to run 'scons --config=force' afterwards
-to make your build succeed.  At the time of this writing, you can also
-remove all the scons state with "rm -rf .scon*", though that could change
-in a future release of scons.  This method does not "confuse scons".
-If you use any of these actions in combination with "scons -c", do the
-latter first, as removing scons's state may change its notions of what
-needs to be cleaned.
-
 If you're building in a clone of the git repository, you can use
 "git clean -dxf" to remove all untracked files.  Note, however, that
 this will remove any files you have created on your own, in addition
