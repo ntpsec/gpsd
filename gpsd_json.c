@@ -149,6 +149,19 @@ static void json_log_dump(const struct gps_device_t *session,
     if (0 != isfinite(logp->heading)) {
         str_appendf(reply, replylen, ",\"heading\":%.0f", logp->heading);
     }
+    if (0 != isfinite(logp->velN) &&
+        0 != isfinite(logp->velE)) {
+        // 2D fix needs velN and velE
+        str_appendf(reply, replylen,
+                    "\"velN\":%.3f,\"velE\":%.3f,",
+                    logp->velN,
+                    logp->velE);
+        if (0 != isfinite(logp->velD)) {
+            // 3D fix add velD
+            str_appendf(reply, replylen, "\"velD\":%.3f,",
+                        logp->velD);
+        }
+    }
     if (0 != isfinite(logp->distance)) {
         str_appendf(reply, replylen, ",\"distance\":%.0f", logp->distance);
     }
