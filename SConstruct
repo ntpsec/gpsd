@@ -418,7 +418,7 @@ nonboolopts = (
      "Useful for cross-compiling, or building with multiple local toolchains.\n"
      "See gcc and ld man pages for more details."),
     ("target",           "",
-     "Directory containing the binary tools to use (gcc, ld, etc.)\n"
+     "Prefix to the binary tools to use (gcc, ld, etc.)\n"
      "Useful for cross-compiling, or building with multiple local toolchains.\n"
      ),
     ("target_python",    "python",      "target Python version as command"),
