@@ -227,7 +227,7 @@ struct gps_log_t  {
     timespec_t then;      // time of log entry, zero if invalid
     uint32_t index_cnt;   // message counter
 
-    unsigned char fixType;  // 0 = None, 2 == 2D, 3 = 3D
+    char fixType;         // -1 = unset, 0 = None, 2 == 2D, 3 = 3D
 
     // Number of satellites used in Nav Solution, zedro if invalid
     unsigned char numSV;  

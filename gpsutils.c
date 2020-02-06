@@ -337,6 +337,7 @@ void gps_clear_log(struct gps_log_t *logp)
     logp->distance = NAN;
     logp->totalDistance = NAN;
     logp->distanceStd = NAN;
+    logp->fixType = -1;
 }
 
 void gps_merge_fix(struct gps_fix_t *to,

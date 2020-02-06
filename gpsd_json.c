@@ -131,6 +131,15 @@ static void json_log_dump(const struct gps_device_t *session,
                    "{\"class\":\"LOG\",\"time\":\"%s\",\"idx\":%lu",
                    timespec_to_iso8601(logp->then, tbuf, sizeof(tbuf)),
                    (long)logp->index_cnt);
+#ifdef __UNUSED
+    if (STATUS_DGPS_FIX <= gpsdata->status) {
+        /* to save rebuilding all the regressions, skip NO_FIX and FIX */
+	str_appendf(reply, replylen, "\"status\":%d,", gpsdata->status);
+    }
+#endif // __UNUSED
+    if (0 <= logp->fixType) {
+        str_appendf(reply, replylen, "\"mode\":%d,", logp->fixType);
+    }
 
     if (0 != isfinite(logp->lat)  &&
         0 != isfinite(logp->lon)) {
