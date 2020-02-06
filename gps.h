@@ -2338,7 +2338,8 @@ struct gps_data_t {
 #define RAW_SET         (1llu<<39)
 #define NED_SET         (1llu<<40)
 #define VNED_SET        (1llu<<41)
-#define SET_HIGH_BIT    42
+#define LOG_SET         (1llu<<42)
+#define SET_HIGH_BIT    43
     timespec_t online;          /* NZ if GPS is on line, 0 if not.
                                  *
                                  * Note: gpsd clears this time when sentences
