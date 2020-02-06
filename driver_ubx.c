@@ -331,15 +331,111 @@ static gps_mask_t
 ubx_msg_log_batch(struct gps_device_t *session, unsigned char *buf UNUSED,
                   size_t data_len)
 {
+    struct tm unpacked_date;
+    unsigned char contentValid, timeValid, flags, psmState;
+    bool gnssFixOK, diffSoln;
+    char ts_buf[TIMESPEC_LEN];
     gps_mask_t mask = 0;
 
+    gps_clear_log(&session->gpsdata.log);
     /* u-blox 8 100 bytes payload */
     if (100 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "UBX-LOG-BATCH: runt len %zd", data_len);
         return 0;
     }
+    timeValid = getub(buf, 15);
+    if (3 != (timeValid & 3)) {
+        // No time, pointless...
+        return 0;
+    }
 
+    memset(&unpacked_date, 0, sizeof(unpacked_date));
+    unpacked_date.tm_year = getleu16(buf, 8) - 1900;
+    unpacked_date.tm_mon = getub(buf, 10) + 1;
+    unpacked_date.tm_mday = getub(buf, 11);
+    unpacked_date.tm_hour = getub(buf, 12);
+    unpacked_date.tm_min = getub(buf, 13);
+    unpacked_date.tm_sec = getub(buf, 14);
+
+    contentValid = getub(buf, 1);
+    session->gpsdata.log.index_cnt = getleu16(buf, 2);
+
+    session->gpsdata.log.then.tv_sec = mkgmtime(&unpacked_date);
+    session->gpsdata.log.then.tv_nsec = getles32(buf, 20);
+    TS_NORM(&session->gpsdata.log.then);
+
+    session->gpsdata.log.fixType = getub(buf, 24);
+    flags = getub(   buf, 25);
+    gnssFixOK = ((flags >> 0) & 1);
+    diffSoln = ((flags >> 1) & 1);
+    psmState = ((flags >> 2) & 7);
+
+    // flags2 undocumented
+    // flags2 = getub(   buf, 26);
+
+    if (session->gpsdata.log.fixType >= 2) {
+        session->gpsdata.log.lon = 1.0e-7 * getleu32(buf, 28);
+        session->gpsdata.log.lat = 1.0e-7 * getleu32(buf, 32);
+        session->gpsdata.log.gSpeed = 1.0e-3 * getleu32(buf, 64);
+        session->gpsdata.log.heading = 1.0e-5 * getleu32(buf, 68);
+        if (session->gpsdata.log.fixType >= 3) {
+            session->gpsdata.log.altHAE = 1.0e-3 * getleu32(buf, 36);
+        }
+    }
+    GPSD_LOG(LOG_INF, &session->context->errout,
+            "UBX-LOG-BATCH: time=%s index_cnt=%u fixType=%u lon=%.7f lat=%.7f"
+             " gSpeed=%.3f heading=%.5f altHae=%.3f\n",
+             timespec_str(&session->gpsdata.log.then, ts_buf, sizeof(ts_buf)),
+             session->gpsdata.log.index_cnt, session->gpsdata.log.fixType,
+             session->gpsdata.log.lon, session->gpsdata.log.lat,
+             session->gpsdata.log.gSpeed, session->gpsdata.log.heading,
+             session->gpsdata.log.altHAE);
+
+    if (1 == (contentValid & 1)) {
+        //  iTOW = getleu32(buf, 4);
+        session->gpsdata.log.tAcc = 1.0e-2 * getleu32(buf, 16);
+        session->gpsdata.log.numSV = getub(buf, 27);
+        session->gpsdata.log.altMSL = 1.0e-3 * getleu32(buf, 40);
+        session->gpsdata.log.hAcc = 1.0e-2 * getleu32(buf, 44);
+        session->gpsdata.log.vAcc = 1.0e-3 * getleu32(buf, 48);
+        session->gpsdata.log.velN = 1.0e-3 * getleu32(buf, 52);
+        session->gpsdata.log.velE = 1.0e-3 * getleu32(buf, 56);
+        session->gpsdata.log.velD = 1.0e-3 * getleu32(buf, 60);
+        session->gpsdata.log.sAcc = 1.0e-3 * getleu32(buf, 72);
+        session->gpsdata.log.headAcc = 1.0e-5 * getleu32(buf, 76);
+        session->gpsdata.log.pDOP = 1.0e-5 * getleu32(buf, 76);
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                "UBX-LOG-BATCH extraPVT: time=%s index_cnt=%d"
+                 " tAcc=%.2f numSV=%d altMSL=%.3f hAcc=%.2f vAcc=%.3f"
+                 " velN=%.3f velE=%.3f velD=%.3f sAcc=%.3f headAcc=%.5f"
+                 " pDOP=%.5f\n",
+                 timespec_str(&session->gpsdata.log.then, ts_buf,
+                              sizeof(ts_buf)),
+                 session->gpsdata.log.index_cnt,
+                 session->gpsdata.log.tAcc, session->gpsdata.log.numSV,
+                 session->gpsdata.log.altMSL, session->gpsdata.log.hAcc,
+                 session->gpsdata.log.vAcc, session->gpsdata.log.velN,
+                 session->gpsdata.log.velE, session->gpsdata.log.velD,
+                 session->gpsdata.log.sAcc, session->gpsdata.log.headAcc,
+                 session->gpsdata.log.pDOP);
+    }
+
+    if (2 == (contentValid & 2)) {
+        session->gpsdata.log.distance = getleu32(buf, 84);
+        session->gpsdata.log.totalDistance = getleu32(buf, 88);
+        session->gpsdata.log.distanceStd = getleu32(buf, 92);
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "UBX-LOG-BATCH extraOdo: time=%s index_cnt=%d distance=%.0f"
+                 " totalDistance=%.0f distanceStd=%.0f\n",
+                 timespec_str(&session->gpsdata.log.then, ts_buf,
+                              sizeof(ts_buf)),
+                 session->gpsdata.log.index_cnt, session->gpsdata.log.distance,
+                 session->gpsdata.log.totalDistance,
+                 session->gpsdata.log.distanceStd);
+    }
+
+    mask |= LOG_SET;
     return mask;
 }
 
@@ -363,7 +459,7 @@ ubx_msg_log_retrievepos(struct gps_device_t *session, unsigned char *buf UNUSED,
     }
     memset(&unpacked_date, 0, sizeof(unpacked_date));
     unpacked_date.tm_year = getleu16(buf, 30);
-    if (0 == unpacked_date.tm_year) {
+    if (1900 > unpacked_date.tm_year) {
         // useless, no date
         return 0;
     }
@@ -423,7 +519,7 @@ ubx_msg_log_retrieveposextra(struct gps_device_t *session,
 
     memset(&unpacked_date, 0, sizeof(unpacked_date));
     unpacked_date.tm_year = getleu16(buf, 6);
-    if (0 == unpacked_date.tm_year) {
+    if (1900 > unpacked_date.tm_year) {
         // useless, no date
         return 0;
     }
