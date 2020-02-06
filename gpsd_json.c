@@ -272,24 +272,31 @@ void json_tpv_dump(const struct gps_device_t *session,
 		str_appendf(reply, replylen, "\"ecefvAcc\":%.2f,",
 			    gpsdata->fix.ecef.vAcc);
 	    /* NED is in meters, so %.3f is millimeter resolution */
-	    if (0 != isfinite(gpsdata->fix.NED.relPosN))
-		str_appendf(reply, replylen, "\"relN\":%.3f,",
-			    gpsdata->fix.NED.relPosN);
-	    if (0 != isfinite(gpsdata->fix.NED.relPosE))
-		str_appendf(reply, replylen, "\"relE\":%.3f,",
+	    if (0 != isfinite(gpsdata->fix.NED.relPosN) &&
+	        0 != isfinite(gpsdata->fix.NED.relPosE)) {
+                // 2D fix needs relN and relE
+		str_appendf(reply, replylen, "\"relN\":%.3f,\"relE\":%.3f,",
+			    gpsdata->fix.NED.relPosN,
 			    gpsdata->fix.NED.relPosE);
-	    if (0 != isfinite(gpsdata->fix.NED.relPosD))
-		str_appendf(reply, replylen, "\"relD\":%.3f,",
-			    gpsdata->fix.NED.relPosD);
-	    if (0 != isfinite(gpsdata->fix.NED.velN))
-		str_appendf(reply, replylen, "\"velN\":%.3f,",
-			    gpsdata->fix.NED.velN);
-	    if (0 != isfinite(gpsdata->fix.NED.velE))
-		str_appendf(reply, replylen, "\"velE\":%.3f,",
+	        if (0 != isfinite(gpsdata->fix.NED.relPosD)) {
+                    // 3D fix add relD
+                    str_appendf(reply, replylen, "\"relD\":%.3f,",
+                                gpsdata->fix.NED.relPosD);
+                }
+            }
+	    if (0 != isfinite(gpsdata->fix.NED.velN) &&
+	        0 != isfinite(gpsdata->fix.NED.velE)) {
+                // 2D fix needs velN and velE
+		str_appendf(reply, replylen,
+                            "\"velN\":%.3f,\"velE\":%.3f,",
+			    gpsdata->fix.NED.velN,
 			    gpsdata->fix.NED.velE);
-	    if (0 != isfinite(gpsdata->fix.NED.velD))
-		str_appendf(reply, replylen, "\"velD\":%.3f,",
-			    gpsdata->fix.NED.velD);
+	        if (0 != isfinite(gpsdata->fix.NED.velD)) {
+                    // 3D fix add velD
+                    str_appendf(reply, replylen, "\"velD\":%.3f,",
+                                gpsdata->fix.NED.velD);
+                }
+            }
 	    if (0 != isfinite(gpsdata->fix.geoid_sep))
 		str_appendf(reply, replylen, "\"geoidSep\":%.3f,",
 			    gpsdata->fix.geoid_sep);
