@@ -483,7 +483,7 @@ ubx_msg_log_retrievepos(struct gps_device_t *session, unsigned char *buf UNUSED,
 
     // (long long) because of time_t
     GPSD_LOG(LOG_INF, &session->context->errout,
-             "UBX-MON-RETRIEVEPOS: time=%lld entryIndex=%d"
+             "UBX-LOG-RETRIEVEPOS: time=%lld entryIndex=%d"
              " lon=%.7f lat=%.7f altMSL=%.3f hAcc=%.3f"
              " gspeed=%.3f heading=%.5f fixType=%d numSV=%d\n",
              (long long)session->gpsdata.log.then.tv_sec,
@@ -537,7 +537,7 @@ ubx_msg_log_retrieveposextra(struct gps_device_t *session,
 
     // (long long) because of time_t
     GPSD_LOG(LOG_INF, &session->context->errout,
-             "UBX-MON-RETRIEVEPOSEXTRA:"
+             "UBX-LOG-RETRIEVEPOSEXTRA:"
              " time=%lld entryindex=%u distance=%.0f\n",
              (long long)session->gpsdata.log.then.tv_sec,
              session->gpsdata.log.index_cnt, session->gpsdata.log.distance);
