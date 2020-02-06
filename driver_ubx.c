@@ -375,12 +375,12 @@ ubx_msg_log_batch(struct gps_device_t *session, unsigned char *buf UNUSED,
     // flags2 = getub(   buf, 26);
 
     if (session->gpsdata.log.fixType >= 2) {
-        session->gpsdata.log.lon = 1.0e-7 * getleu32(buf, 28);
-        session->gpsdata.log.lat = 1.0e-7 * getleu32(buf, 32);
-        session->gpsdata.log.gSpeed = 1.0e-3 * getleu32(buf, 64);
-        session->gpsdata.log.heading = 1.0e-5 * getleu32(buf, 68);
+        session->gpsdata.log.lon = 1.0e-7 * getles32(buf, 28);
+        session->gpsdata.log.lat = 1.0e-7 * getles32(buf, 32);
+        session->gpsdata.log.gSpeed = 1.0e-3 * getles32(buf, 64);
+        session->gpsdata.log.heading = 1.0e-5 * getles32(buf, 68);
         if (session->gpsdata.log.fixType >= 3) {
-            session->gpsdata.log.altHAE = 1.0e-3 * getleu32(buf, 36);
+            session->gpsdata.log.altHAE = 1.0e-3 * getles32(buf, 36);
         }
     }
     GPSD_LOG(LOG_INF, &session->context->errout,
@@ -396,15 +396,15 @@ ubx_msg_log_batch(struct gps_device_t *session, unsigned char *buf UNUSED,
         //  iTOW = getleu32(buf, 4);
         session->gpsdata.log.tAcc = 1.0e-2 * getleu32(buf, 16);
         session->gpsdata.log.numSV = getub(buf, 27);
-        session->gpsdata.log.altMSL = 1.0e-3 * getleu32(buf, 40);
+        session->gpsdata.log.altMSL = 1.0e-3 * getles32(buf, 40);
         session->gpsdata.log.hAcc = 1.0e-2 * getleu32(buf, 44);
         session->gpsdata.log.vAcc = 1.0e-3 * getleu32(buf, 48);
-        session->gpsdata.log.velN = 1.0e-3 * getleu32(buf, 52);
-        session->gpsdata.log.velE = 1.0e-3 * getleu32(buf, 56);
-        session->gpsdata.log.velD = 1.0e-3 * getleu32(buf, 60);
+        session->gpsdata.log.velN = 1.0e-3 * getles32(buf, 52);
+        session->gpsdata.log.velE = 1.0e-3 * getles32(buf, 56);
+        session->gpsdata.log.velD = 1.0e-3 * getles32(buf, 60);
         session->gpsdata.log.sAcc = 1.0e-3 * getleu32(buf, 72);
         session->gpsdata.log.headAcc = 1.0e-5 * getleu32(buf, 76);
-        session->gpsdata.log.pDOP = 1.0e-5 * getleu32(buf, 76);
+        session->gpsdata.log.pDOP = 1.0e-5 * getleu32(buf, 80);
         GPSD_LOG(LOG_INF, &session->context->errout,
                 "UBX-LOG-BATCH extraPVT: time=%s index_cnt=%d"
                  " tAcc=%.2f numSV=%d altMSL=%.3f hAcc=%.2f vAcc=%.3f"
