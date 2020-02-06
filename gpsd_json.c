@@ -134,11 +134,11 @@ static void json_log_dump(const struct gps_device_t *session,
 #ifdef __UNUSED
     if (STATUS_DGPS_FIX <= gpsdata->status) {
         /* to save rebuilding all the regressions, skip NO_FIX and FIX */
-	str_appendf(reply, replylen, "\"status\":%d,", gpsdata->status);
+	str_appendf(reply, replylen, ",\"status\":%d", gpsdata->status);
     }
 #endif // __UNUSED
     if (0 <= logp->fixType) {
-        str_appendf(reply, replylen, "\"mode\":%d,", logp->fixType);
+        str_appendf(reply, replylen, ",\"mode\":%d", logp->fixType);
     }
 
     if (0 != isfinite(logp->lat)  &&
