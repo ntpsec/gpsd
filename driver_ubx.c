@@ -354,6 +354,7 @@ ubx_msg_log_retrievepos(struct gps_device_t *session, unsigned char *buf UNUSED,
     struct tm unpacked_date;
     gps_mask_t mask = 0;
 
+    gps_clear_log(&session->gpsdata.log);
     /* u-blox 40 bytes payload */
     if (40 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -367,7 +368,7 @@ ubx_msg_log_retrievepos(struct gps_device_t *session, unsigned char *buf UNUSED,
         return 0;
     }
     unpacked_date.tm_year -= 1900;
-    unpacked_date.tm_mon = getub(buf, 32);
+    unpacked_date.tm_mon = getub(buf, 32) + 1;
     unpacked_date.tm_mday = getub(buf, 33);
     unpacked_date.tm_hour = getub(buf, 34);
     unpacked_date.tm_min = getub(buf, 35);
@@ -412,6 +413,7 @@ ubx_msg_log_retrieveposextra(struct gps_device_t *session,
     struct tm unpacked_date;
     gps_mask_t mask = 0;
 
+    gps_clear_log(&session->gpsdata.log);
     /* u-blox 32 bytes payload */
     if (32 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,

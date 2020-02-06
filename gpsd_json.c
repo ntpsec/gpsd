@@ -121,6 +121,7 @@ static void json_log_dump(const struct gps_device_t *session,
 		   char *reply, size_t replylen)
 {
     char tbuf[JSON_DATE_MAX+1];
+    const struct gps_log_t *logp = &session->gpsdata.log;
 
     if (0 >= session->gpsdata.log.then.tv_sec) {
         // no data...
@@ -128,13 +129,28 @@ static void json_log_dump(const struct gps_device_t *session,
     }
     (void)snprintf(reply, replylen,
                    "{\"class\":\"LOG\",\"time\":\"%s\",\"idx\":%lu",
-                   timespec_to_iso8601(session->gpsdata.log.then,
-                                       tbuf, sizeof(tbuf)),
-                   (long)session->gpsdata.log.index_cnt);
+                   timespec_to_iso8601(logp->then, tbuf, sizeof(tbuf)),
+                   (long)logp->index_cnt);
 
-    if (0 != isfinite(session->gpsdata.log.distance)) {
-        str_appendf(reply, replylen,
-                       ",\"distance\":%.0f", session->gpsdata.log.distance);
+    if (0 != isfinite(logp->lat)  &&
+        0 != isfinite(logp->lon)) {
+        str_appendf(reply, replylen, ",\"lat\":%.9f,\"lon\":%.9f",
+                    logp->lat, logp->lon);
+    }
+    if (0 != isfinite(logp->altHAE)) {
+        str_appendf(reply, replylen, ",\"altHAE\":%.3f", logp->altHAE);
+    }
+    if (0 != isfinite(logp->altMSL)) {
+        str_appendf(reply, replylen, ",\"altMSL\":%.3f", logp->altMSL);
+    }
+    if (0 != isfinite(logp->gSpeed)) {
+        str_appendf(reply, replylen, ",\"gSpeed\":%.0f", logp->gSpeed);
+    }
+    if (0 != isfinite(logp->heading)) {
+        str_appendf(reply, replylen, ",\"heading\":%.0f", logp->heading);
+    }
+    if (0 != isfinite(logp->distance)) {
+        str_appendf(reply, replylen, ",\"distance\":%.0f", logp->distance);
     }
 
     (void)strlcat(reply, "}\r\n", replylen);
