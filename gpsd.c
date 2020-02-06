@@ -2452,10 +2452,14 @@ int main(int argc, char *argv[])
 		GPSD_LOG(LOG_PROG, &context.errout,
 			 "checking client(%d)\n",
 			 sub_index(sub));
-		if ((buflen =
-		     (int)recv(sub->fd, buf, sizeof(buf) - 1, 0)) < 0) {
+		buflen = (int)recv(sub->fd, buf, sizeof(buf) - 1, 0);
+		if (0 > buflen) {
                     // recv() error, give up.
 		    detach_client(sub);
+		} else if (0 == buflen) {
+                    // empty read, ignore it.
+		    GPSD_LOG(LOG_CLIENT, &context.errout,
+			     "<= client(%d): emtpy read\n", sub_index(sub));
 		} else {
 		    if (buf[buflen - 1] != '\n')
 			buf[buflen++] = '\n';
