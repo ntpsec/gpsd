@@ -387,6 +387,7 @@ ubx_msg_log_retrieveposextra(struct gps_device_t *session,
         // useless, no date
         return 0;
     }
+    unpacked_date.tm_year -= 1900;
     unpacked_date.tm_mon = getub(buf, 8) + 1;
     unpacked_date.tm_mday = getub(buf, 9);
     unpacked_date.tm_hour = getub(buf, 10);

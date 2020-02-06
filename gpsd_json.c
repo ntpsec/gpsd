@@ -117,6 +117,30 @@ void json_version_dump( char *reply, size_t replylen)
 		   GPSD_PROTO_VERSION_MAJOR, GPSD_PROTO_VERSION_MINOR);
 }
 
+static void json_log_dump(const struct gps_device_t *session,
+		   char *reply, size_t replylen)
+{
+    char tbuf[JSON_DATE_MAX+1];
+
+    if (0 >= session->gpsdata.log.then.tv_sec) {
+        // no data...
+        return;
+    }
+    (void)snprintf(reply, replylen,
+                   "{\"class\":\"LOG\",\"time\":\"%s\",\"idx\":%lu",
+                   timespec_to_iso8601(session->gpsdata.log.then,
+                                       tbuf, sizeof(tbuf)),
+                   (long)session->gpsdata.log.index_cnt);
+
+    if (0 != isfinite(session->gpsdata.log.distance)) {
+        str_appendf(reply, replylen,
+                       ",\"distance\":%.0f", session->gpsdata.log.distance);
+    }
+
+    (void)strlcat(reply, "}\r\n", replylen);
+}
+
+
 void json_tpv_dump(const struct gps_device_t *session,
 		   const struct gps_policy_t *policy,
 		   char *reply, size_t replylen)
@@ -3900,6 +3924,9 @@ void json_data_report(const gps_mask_t changed,
 	json_oscillator_dump(datap, buf+strlen(buf), buflen-strlen(buf));
     }
 #endif /* OSCILLATOR_ENABLE */
+    if ((changed & LOG_SET) != 0) {
+	json_log_dump(session, buf+strlen(buf), buflen-strlen(buf));
+    }
 }
 
 #undef JSON_BOOL
