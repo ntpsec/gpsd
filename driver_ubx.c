@@ -351,6 +351,7 @@ static gps_mask_t
 ubx_msg_log_retrievepos(struct gps_device_t *session, unsigned char *buf UNUSED,
                         size_t data_len)
 {
+    struct tm unpacked_date;
     gps_mask_t mask = 0;
 
     /* u-blox 40 bytes payload */
@@ -359,7 +360,44 @@ ubx_msg_log_retrievepos(struct gps_device_t *session, unsigned char *buf UNUSED,
                  "UBX-LOG-RETRIEVEPOS: runt len %zd", data_len);
         return 0;
     }
+    memset(&unpacked_date, 0, sizeof(unpacked_date));
+    unpacked_date.tm_year = getleu16(buf, 30);
+    if (0 == unpacked_date.tm_year) {
+        // useless, no date
+        return 0;
+    }
+    unpacked_date.tm_year -= 1900;
+    unpacked_date.tm_mon = getub(buf, 32);
+    unpacked_date.tm_mday = getub(buf, 33);
+    unpacked_date.tm_hour = getub(buf, 34);
+    unpacked_date.tm_min = getub(buf, 35);
+    unpacked_date.tm_sec = getub(buf, 36);
+    session->gpsdata.log.then.tv_sec = mkgmtime(&unpacked_date);
 
+    session->gpsdata.log.index_cnt = getleu32(buf, 0);
+    session->gpsdata.log.lon = getleu32(buf, 4) * 1.0e-7;
+    session->gpsdata.log.lat = getleu32(buf, 8) * 1.0e-7;
+    session->gpsdata.log.altMSL = getleu32(buf, 12) * 1.0e-3;
+    session->gpsdata.log.hAcc = getleu32(buf, 16) * 1.0e-3;
+    session->gpsdata.log.gSpeed = getleu32(buf, 20) * 1.0e-3;
+    session->gpsdata.log.heading = getleu32(buf, 24) * 1.0e-5;
+    session->gpsdata.log.fixType = getub(buf, 29);
+    session->gpsdata.log.numSV = getub(buf, 38);
+
+    // (long long) because of time_t
+    GPSD_LOG(LOG_INF, &session->context->errout,
+             "UBX-MON-RETRIEVEPOS: time=%lld entryIndex=%d"
+             " lon=%.7f lat=%.7f altMSL=%.3f hAcc=%.3f"
+             " gspeed=%.3f heading=%.5f fixType=%d numSV=%d\n",
+             (long long)session->gpsdata.log.then.tv_sec,
+             session->gpsdata.log.index_cnt, session->gpsdata.log.lon,
+             session->gpsdata.log.lat, session->gpsdata.log.altMSL,
+             session->gpsdata.log.hAcc, session->gpsdata.log.gSpeed,
+             session->gpsdata.log.heading, session->gpsdata.log.fixType,
+             session->gpsdata.log.numSV);
+
+
+    mask |= LOG_SET;
     return mask;
 }
 
