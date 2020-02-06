@@ -208,7 +208,7 @@ struct gps_log_t  {
     /* The accuracy estimates are near useless as they are not defined
      * statistically as CEP(50), one sigma, two sigma, etc.
      */
-    double tAcc;          // Time accuracy estimate, seconds
+    double tAcc;          // Time accuracy estimate, nano seconds
     double hAcc;          // Horizontal accuracy estimate, meters
     double vAcc;          // Vertical accuracy estimate, meters
     double sAcc;          // Speed accuracy estimate, meters per second
