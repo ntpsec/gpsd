@@ -371,15 +371,41 @@ static gps_mask_t
 ubx_msg_log_retrieveposextra(struct gps_device_t *session,
                              unsigned char *buf UNUSED, size_t data_len)
 {
+    struct tm unpacked_date;
     gps_mask_t mask = 0;
 
     /* u-blox 32 bytes payload */
     if (32 > data_len) {
-       GPSD_LOG(LOG_WARN, &session->context->errout,
+        GPSD_LOG(LOG_WARN, &session->context->errout,
                  "UBX-LOG-RETRIEVEPOSEXTRA: runt len %zd", data_len);
         return 0;
     }
 
+    memset(&unpacked_date, 0, sizeof(unpacked_date));
+    unpacked_date.tm_year = getleu16(buf, 6);
+    if (0 == unpacked_date.tm_year) {
+        // useless, no date
+        return 0;
+    }
+    unpacked_date.tm_mon = getub(buf, 8) + 1;
+    unpacked_date.tm_mday = getub(buf, 9);
+    unpacked_date.tm_hour = getub(buf, 10);
+    unpacked_date.tm_min = getub(buf, 11);
+    unpacked_date.tm_sec = getub(buf, 12);
+
+    session->gpsdata.log.then.tv_sec = mkgmtime(&unpacked_date);
+    session->gpsdata.log.index_cnt = getleu32(buf, 0);
+    // distance units undocumented!  Assume meters.
+    session->gpsdata.log.distance = (double)getleu32(buf, 16);
+
+    // (long long) because of time_t
+    GPSD_LOG(LOG_INF, &session->context->errout,
+             "UBX-MON-RETRIEVEPOSEXTRA:"
+             " time=%lld entryindex=%u distance=%.0f\n",
+             (long long)session->gpsdata.log.then.tv_sec,
+             session->gpsdata.log.index_cnt, session->gpsdata.log.distance);
+
+    mask |= LOG_SET;
     return mask;
 }
 
