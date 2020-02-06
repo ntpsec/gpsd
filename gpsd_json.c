@@ -162,8 +162,19 @@ static void json_log_dump(const struct gps_device_t *session,
                         logp->velD);
         }
     }
+    if (0 != isfinite(logp->pDOP)) {
+        str_appendf(reply, replylen, ",\"pDOP\":%.0f", logp->pDOP);
+    }
     if (0 != isfinite(logp->distance)) {
         str_appendf(reply, replylen, ",\"distance\":%.0f", logp->distance);
+    }
+    if (0 != isfinite(logp->totalDistance)) {
+        str_appendf(reply, replylen, ",\"tDistance\":%.0f",
+                    logp->totalDistance);
+    }
+    if (0 != isfinite(logp->distanceStd)) {
+        str_appendf(reply, replylen, ",\"distStd\":%.1f",
+                    logp->distanceStd);
     }
 
     (void)strlcat(reply, "}\r\n", replylen);
