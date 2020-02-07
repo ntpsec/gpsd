@@ -460,6 +460,7 @@ ubx_msg_log_retrievepos(struct gps_device_t *session, unsigned char *buf UNUSED,
                         size_t data_len)
 {
     struct tm unpacked_date;
+    unsigned char fixType;
     gps_mask_t mask = 0;
 
     gps_clear_log(&session->gpsdata.log);
@@ -487,11 +488,41 @@ ubx_msg_log_retrievepos(struct gps_device_t *session, unsigned char *buf UNUSED,
     session->gpsdata.log.lon = getleu32(buf, 4) * 1.0e-7;
     session->gpsdata.log.lat = getleu32(buf, 8) * 1.0e-7;
     session->gpsdata.log.altMSL = getleu32(buf, 12) * 1.0e-3;
+    // hAcc CEP() unspecified...
     session->gpsdata.log.hAcc = getleu32(buf, 16) * 1.0e-3;
     session->gpsdata.log.gSpeed = getleu32(buf, 20) * 1.0e-3;
     session->gpsdata.log.heading = getleu32(buf, 24) * 1.0e-5;
-    session->gpsdata.log.fixType = getub(buf, 29);
+    fixType = getub(buf, 29);
     session->gpsdata.log.numSV = getub(buf, 38);
+
+    switch (fixType) {
+    case 1:
+        // doc is unclear: 2D or 3D?
+        session->gpsdata.log.fixType = MODE_3D;
+        session->gpsdata.log.status = STATUS_DR;
+        break;
+    case 2:
+        session->gpsdata.log.fixType = MODE_2D;
+        session->gpsdata.log.status = STATUS_FIX;
+        break;
+    case 3:
+        session->gpsdata.log.fixType = MODE_3D;
+        session->gpsdata.log.status = STATUS_FIX;
+        break;
+    case 4:
+        // doc is unclear: 2D or 3D?
+        session->gpsdata.log.fixType = MODE_3D;
+        session->gpsdata.log.status = STATUS_GNSSDR;
+        break;
+
+    case 0:
+        // FALLTHROUGH
+    default:
+        // huh?
+        session->gpsdata.log.fixType = MODE_NO_FIX;
+        session->gpsdata.log.status = STATUS_NO_FIX;
+        break;
+    }
 
     // (long long) because of time_t
     GPSD_LOG(LOG_INF, &session->context->errout,
@@ -544,7 +575,7 @@ ubx_msg_log_retrieveposextra(struct gps_device_t *session,
 
     session->gpsdata.log.then.tv_sec = mkgmtime(&unpacked_date);
     session->gpsdata.log.index_cnt = getleu32(buf, 0);
-    // distance units undocumented!  Assume meters.
+    // distance units undocumented!  Assume meters, as in UBX-LOG-BATCH
     session->gpsdata.log.distance = (double)getleu32(buf, 16);
 
     // (long long) because of time_t
