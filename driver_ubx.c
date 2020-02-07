@@ -71,6 +71,9 @@ static gps_mask_t ubx_msg_log_retrievepos(struct gps_device_t *session,
 static gps_mask_t ubx_msg_log_retrieveposextra(struct gps_device_t *session,
                                                unsigned char *buf,
                                                size_t data_len);
+static gps_mask_t ubx_msg_log_retrievestring(struct gps_device_t *session,
+                                             unsigned char *buf,
+                                             size_t data_len);
 static gps_mask_t ubx_msg_nav_eoe(struct gps_device_t *session,
                                   unsigned char *buf, size_t data_len);
 static gps_mask_t ubx_msg_nav_dop(struct gps_device_t *session,
@@ -584,6 +587,58 @@ ubx_msg_log_retrieveposextra(struct gps_device_t *session,
              " time=%lld entryindex=%u distance=%.0f\n",
              (long long)session->gpsdata.log.then.tv_sec,
              session->gpsdata.log.index_cnt, session->gpsdata.log.distance);
+
+    mask |= LOG_SET;
+    return mask;
+}
+
+/*
+ * UBX-LOG-RETRIEVESTRING
+ * Used for GPS standalone operation and host saved logs
+ */
+static gps_mask_t
+ubx_msg_log_retrievestring(struct gps_device_t *session,
+                             unsigned char *buf UNUSED, size_t data_len)
+{
+    struct tm unpacked_date;
+    unsigned int byteCount;
+    gps_mask_t mask = 0;
+
+    gps_clear_log(&session->gpsdata.log);
+    /* u-blox 16+ bytes payload */
+    if (16 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-LOG-RETRIEVESTRING: runt len %zd", data_len);
+        return 0;
+    }
+
+    memset(&unpacked_date, 0, sizeof(unpacked_date));
+    unpacked_date.tm_year = getleu16(buf, 6);
+    if (1900 > unpacked_date.tm_year) {
+        // useless, no date
+        return 0;
+    }
+    unpacked_date.tm_year -= 1900;
+    unpacked_date.tm_mon = getub(buf, 8) - 1;
+    unpacked_date.tm_mday = getub(buf, 9);
+    unpacked_date.tm_hour = getub(buf, 10);
+    unpacked_date.tm_min = getub(buf, 11);
+    unpacked_date.tm_sec = getub(buf, 12);
+
+    session->gpsdata.log.then.tv_sec = mkgmtime(&unpacked_date);
+    session->gpsdata.log.index_cnt = getleu32(buf, 0);
+    byteCount = getleu16(buf, 14);
+
+    // string could be 0 to 256 bytes, plus NUL
+    (void)strlcpy(session->gpsdata.log.string, (const char*)&buf[16],
+                  sizeof(session->gpsdata.log.string));
+    // (long long) because of time_t
+    GPSD_LOG(LOG_INF, &session->context->errout,
+             "UBX-LOG-RETRIEVESTRING:"
+             " time=%lld entryindex=%u byteCount=%u string=%s\n",
+             (long long)session->gpsdata.log.then.tv_sec,
+             session->gpsdata.log.index_cnt,
+             byteCount, session->gpsdata.log.string);
 
     mask |= LOG_SET;
     return mask;
@@ -2055,6 +2110,13 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         mask = ubx_msg_log_retrieveposextra(session, &buf[UBX_PREFIX_LEN],
                                             data_len);
         break;
+    case UBX_LOG_RETRIEVESTRING:
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "UBX-LOG-RETRIEVESTRING\n");
+        mask = ubx_msg_log_retrievestring(session, &buf[UBX_PREFIX_LEN],
+                                          data_len);
+        break;
+
 
     case UBX_MON_BATCH:
         GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-MON-BATCH\n");

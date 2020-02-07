@@ -131,6 +131,10 @@ static void json_log_dump(const struct gps_device_t *session,
                    "{\"class\":\"LOG\",\"time\":\"%s\",\"idx\":%lu",
                    timespec_to_iso8601(logp->then, tbuf, sizeof(tbuf)),
                    (long)logp->index_cnt);
+    if (0 < logp->string[0]) {
+        str_appendf(reply, replylen, ",\"string\":%s", logp->string);
+    }
+
     if (STATUS_DGPS_FIX <= logp->status) {
         /* to save rebuilding all the regressions, skip NO_FIX and FIX */
 	str_appendf(reply, replylen, ",\"status\":%d", logp->status);

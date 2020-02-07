@@ -232,8 +232,9 @@ struct gps_log_t  {
 
     char fixType;         // -1 = unset, 0 = None, 2 == 2D, 3 = 3D
 
-    // Number of satellites used in Nav Solution, zedro if invalid
+    // Number of satellites used in Nav Solution, zero if invalid
     unsigned char numSV;  
+    char string[257];     // 256 max plus NUL
 };
 
 /*
