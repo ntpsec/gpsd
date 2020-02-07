@@ -352,7 +352,7 @@ ubx_msg_log_batch(struct gps_device_t *session, unsigned char *buf UNUSED,
 
     memset(&unpacked_date, 0, sizeof(unpacked_date));
     unpacked_date.tm_year = getleu16(buf, 8) - 1900;
-    unpacked_date.tm_mon = getub(buf, 10) + 1;
+    unpacked_date.tm_mon = getub(buf, 10) - 1;
     unpacked_date.tm_mday = getub(buf, 11);
     unpacked_date.tm_hour = getub(buf, 12);
     unpacked_date.tm_min = getub(buf, 13);
@@ -367,37 +367,49 @@ ubx_msg_log_batch(struct gps_device_t *session, unsigned char *buf UNUSED,
 
     session->gpsdata.log.fixType = getub(buf, 24);
     flags = getub(   buf, 25);
-    gnssFixOK = ((flags >> 0) & 1);
-    diffSoln = ((flags >> 1) & 1);
+    gnssFixOK = flags & 1;
+    diffSoln = flags & 2;
     psmState = ((flags >> 2) & 7);
 
     // flags2 undocumented
     // flags2 = getub(   buf, 26);
 
-    if (session->gpsdata.log.fixType >= 2) {
+    if ((gnssFixOK &&
+         2 <= session->gpsdata.log.fixType)) {
+        // good 2D fix
         session->gpsdata.log.lon = 1.0e-7 * getles32(buf, 28);
         session->gpsdata.log.lat = 1.0e-7 * getles32(buf, 32);
         session->gpsdata.log.gSpeed = 1.0e-3 * getles32(buf, 64);
         session->gpsdata.log.heading = 1.0e-5 * getles32(buf, 68);
-        if (session->gpsdata.log.fixType >= 3) {
+        if (diffSoln) {
+            session->gpsdata.log.status = STATUS_DGPS_FIX;
+        } else {
+            session->gpsdata.log.status = STATUS_FIX;
+        }
+        if (3 <= session->gpsdata.log.fixType) {
+            // good 3D fix
             session->gpsdata.log.altHAE = 1.0e-3 * getles32(buf, 36);
         }
     }
+    session->gpsdata.log.hAcc = 1.0e-3 * getleu32(buf, 44);
+
     GPSD_LOG(LOG_INF, &session->context->errout,
             "UBX-LOG-BATCH: time=%s index_cnt=%u fixType=%u lon=%.7f lat=%.7f"
-             " gSpeed=%.3f heading=%.5f altHae=%.3f\n",
+             " gSpeed=%.3f heading=%.5f altHae=%.3f psmState=%u hAcc=%.3f\n",
              timespec_str(&session->gpsdata.log.then, ts_buf, sizeof(ts_buf)),
              session->gpsdata.log.index_cnt, session->gpsdata.log.fixType,
              session->gpsdata.log.lon, session->gpsdata.log.lat,
              session->gpsdata.log.gSpeed, session->gpsdata.log.heading,
-             session->gpsdata.log.altHAE);
+             session->gpsdata.log.altHAE, psmState,
+             session->gpsdata.log.hAcc);
+
 
     if (1 == (contentValid & 1)) {
+        // extraPVT valid
         //  iTOW = getleu32(buf, 4);
         session->gpsdata.log.tAcc = (double)getleu32(buf, 16);
         session->gpsdata.log.numSV = getub(buf, 27);
         session->gpsdata.log.altMSL = 1.0e-3 * getles32(buf, 40);
-        session->gpsdata.log.hAcc = 1.0e-3 * getleu32(buf, 44);
         session->gpsdata.log.vAcc = 1.0e-3 * getleu32(buf, 48);
         session->gpsdata.log.velN = 1.0e-3 * getles32(buf, 52);
         session->gpsdata.log.velE = 1.0e-3 * getles32(buf, 56);
@@ -464,7 +476,7 @@ ubx_msg_log_retrievepos(struct gps_device_t *session, unsigned char *buf UNUSED,
         return 0;
     }
     unpacked_date.tm_year -= 1900;
-    unpacked_date.tm_mon = getub(buf, 32) + 1;
+    unpacked_date.tm_mon = getub(buf, 32) - 1;
     unpacked_date.tm_mday = getub(buf, 33);
     unpacked_date.tm_hour = getub(buf, 34);
     unpacked_date.tm_min = getub(buf, 35);
@@ -524,7 +536,7 @@ ubx_msg_log_retrieveposextra(struct gps_device_t *session,
         return 0;
     }
     unpacked_date.tm_year -= 1900;
-    unpacked_date.tm_mon = getub(buf, 8) + 1;
+    unpacked_date.tm_mon = getub(buf, 8) - 1;
     unpacked_date.tm_mday = getub(buf, 9);
     unpacked_date.tm_hour = getub(buf, 10);
     unpacked_date.tm_min = getub(buf, 11);

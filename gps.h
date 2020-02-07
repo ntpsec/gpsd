@@ -225,6 +225,9 @@ struct gps_log_t  {
     double distanceStd;   // Ground distance accuracy (1-sigma)
 
     timespec_t then;      // time of log entry, zero if invalid
+    // GPS status -- always valid, same values as gps_data_t.status
+    int    status;              /* Do we have a fix? */
+
     uint32_t index_cnt;   // message counter
 
     char fixType;         // -1 = unset, 0 = None, 2 == 2D, 3 = 3D
