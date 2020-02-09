@@ -850,5 +850,63 @@ const char *json_error_string(int err)
 
 #endif /* SOCKET_EXPORT_ENABLE */
 
+char *json_clean(const char *in, char *buf, size_t inlen)
+{
+    const char *escape_in = "'\"/\\\b\f\n\r\t\0F";
+    const char *escape_out = "'\"/\\bfnrt0F";
+    size_t ocnt = 0;
+    int cnt;
+    for (cnt = 0; ((in[cnt] != 0) && (ocnt <inlen)); ++cnt) {
+	if (in[cnt] & 0x80) {
+	    /* wrongly drop all bytes with the high bit set
+	     * this is for ASCII not Unicode. A future version
+	     * might support that.
+	     */
+	    continue;
+	}
+	/* step though a array of bytes (escape_in) to escape
+	 * until finding  the target byte or 'F'. not a string
+	 * because \0 is a target desired to match. Then finds
+	 * the corresponding byte in (escape_out) and forms the
+	 * escape sequence. sets a Boolean because a continue
+	 * would probably drop execution in the ext loop up
+	 * which is a level below where we want.
+	 */
+	bool notyet = true;
+	for (int icnt = 0 ; notyet && (escape_in[icnt] != 'F'); icnt++) {
+	    if (in[cnt] == escape_in[icnt]) {
+		if (inlen <= (ocnt + 2)) {
+		    return buf;
+		}
+		buf[ocnt++] = '\\';
+		buf[ocnt++] = escape_out[icnt];
+		buf[ocnt] = 0;
+		notyet = false;
+	    }
+	}
+	if (! notyet) {
+	    continue;
+	}
+	// Escape 0-32 and 127 if not previously handled (x00-x01f,x7f)
+	if (('\x00' <= (int8_t)in[cnt] && (int8_t)in[cnt] <= '\x1f') ||
+	    '\x7f' == (int8_t)in[cnt]
+	) {
+	    if (inlen <= (ocnt + 6)) {
+		return buf;
+	    }
+	    str_appendf(buf, inlen, "\\x%04x", in[cnt]);
+	    ocnt = strlen(buf);
+	    continue;
+	}
+	if (inlen <= (ocnt + 1)) {
+	    return buf;
+	}
+	// pass through everything not escaped.
+	buf[ocnt++] = in[cnt];
+	buf[ocnt] = '\0';
+    }
+    return buf;
+}
+
 /* end */
 
