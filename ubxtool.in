@@ -4307,6 +4307,7 @@ Oddly this is the poll for UBX-LOG-BATCH
     def nav_posecef(self, buf):
         """UBX-NAV-POSECEF decode, Position Solution in ECEF"""
 
+        # protVer 4+
         u = struct.unpack_from('<LlllL', buf, 0)
         return '  iTOW %u ecefX %d Y %d Z %d pAcc %u' % u
 
@@ -4828,6 +4829,7 @@ High Precision GNSS products only."""
     def nav_velecef(self, buf):
         """UBX-NAV-VELECEF decode"""
 
+        # protVer 4+
         u = struct.unpack_from('<LlllL', buf, 0)
         return '  iTOW %d ecef: VX %d VY %d VZ %d vAcc:%u' % u
 
@@ -5953,7 +5955,7 @@ High Precision GNSS products only."""
         gps_model.send_cfg_gnss1(3, able)
 
     def send_able_binary(self, able):
-        """dis/enable basic binary messages"""
+        """dis/enable basic binary messages. -e/-d BINARY"""
 
         # FIXME: does not change UBX-CFG-PRT outProtoMask for current port.
         # Workarouund: gpsctl -b
@@ -5972,6 +5974,14 @@ High Precision GNSS products only."""
             # UBX-NAV-PVT
             m_data = bytearray([0x01, 0x07, rate])
             gps_model.gps_send(6, 1, m_data)
+
+        # UBX-NAV-POSECEF
+        m_data = bytearray([0x01, 0x01, rate])
+        gps_model.gps_send(6, 1, m_data)
+
+        # UBX-NAV-VELECEF
+        m_data = bytearray([0x01, 0x11, rate])
+        gps_model.gps_send(6, 1, m_data)
 
         # UBX-NAV-TIMEGPS
         # Note: UTC may, or may not be UBX-NAV-TIMEGPS.
