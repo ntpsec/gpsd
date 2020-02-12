@@ -780,14 +780,13 @@ void json_subframe_dump(const struct gps_data_t *datap,
 		int i;
 		/* decoding of ERD to SV is non trivial and not done yet */
 		str_appendf(buf, buflen,
-		    ",\"ERD\":{\"ai\":%u,", subframe->sub4_13.ai);
+		    ",\"ERD\":{\"ai\":%u", subframe->sub4_13.ai);
 
 		/* 1-index loop to construct json, rather than giant snprintf */
 		for(i = 1 ; i <= 30; i++){
 		    str_appendf(buf, buflen,
-			"\"ERD%d\":%d,", i, subframe->sub4_13.ERD[i]);
+			",\"ERD%d\":%d", i, subframe->sub4_13.ERD[i]);
 		}
-		str_rstrip_char(buf, ',');
 		str_appendf(buf, buflen, "}");
 		break;
 	}
@@ -858,21 +857,20 @@ void json_subframe_dump(const struct gps_data_t *datap,
 	{
 	    int i;
 	    str_appendf(buf, buflen,
-			   ",\"HEALTH\":{\"data_id\":%d,",
+			   ",\"HEALTH\":{\"data_id\":%d",
 			   (int)subframe->data_id);
 
 		/* 1-index loop to construct json, rather than giant snprintf */
 		for(i = 1 ; i <= 32; i++){
 		    str_appendf(buf, buflen,
-				   "\"SV%d\":%d,",
+				   ",\"SV%d\":%d",
 				   i, (int)subframe->sub4_25.svf[i]);
 		}
 		for(i = 0 ; i < 8; i++){ /* 0-index */
 		    str_appendf(buf, buflen,
-				   "\"SVH%d\":%d,",
+				   ",\"SVH%d\":%d",
 				   i+25, (int)subframe->sub4_25.svhx[i]);
 		}
-		str_rstrip_char(buf, ',');
 		str_appendf(buf, buflen, "}");
 
 	    break;
@@ -886,16 +884,15 @@ void json_subframe_dump(const struct gps_data_t *datap,
 	    int i;
 	    /* subframe5, page 25 */
 	    str_appendf(buf, buflen,
-		",\"HEALTH2\":{\"toa\":%lu,\"WNa\":%u,",
+		",\"HEALTH2\":{\"toa\":%lu,\"WNa\":%u",
 			   (unsigned long)subframe->sub5_25.l_toa,
 			   (unsigned int)subframe->sub5_25.WNa);
 		/* 1-index loop to construct json */
 		for(i = 1 ; i <= 24; i++){
 		    str_appendf(buf, buflen,
-                                "\"SV%d\":%d,",
+                                ",\"SV%d\":%d",
                                 i, (int)subframe->sub5_25.sv[i]);
 		}
-		str_rstrip_char(buf, ',');
 		str_appendf(buf, buflen, "}");
 
 	}
