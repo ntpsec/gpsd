@@ -603,7 +603,7 @@ void json_watch_dump(const struct gps_policy_t *ccp,
     (void)snprintf(reply, replylen,
 		   "{\"class\":\"WATCH\",\"enable\":%s,\"json\":%s,"
                    "\"nmea\":%s,\"raw\":%d,\"scaled\":%s,\"timing\":%s,"
-                   "\"split24\":%s,\"pps\":%s,",
+                   "\"split24\":%s,\"pps\":%s",
 		   ccp->watcher ? "true" : "false",
 		   ccp->json ? "true" : "false",
 		   ccp->nmea ? "true" : "false",
@@ -613,8 +613,7 @@ void json_watch_dump(const struct gps_policy_t *ccp,
 		   ccp->split24 ? "true" : "false",
 		   ccp->pps ? "true" : "false");
     if (ccp->devpath[0] != '\0')
-	str_appendf(reply, replylen, "\"device\":\"%s\",", ccp->devpath);
-    str_rstrip_char(reply, ',');
+	str_appendf(reply, replylen, ",\"device\":\"%s\"", ccp->devpath);
     (void)strlcat(reply, "}\r\n", replylen);
 }
 
