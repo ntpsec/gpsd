@@ -410,19 +410,19 @@ void json_noise_dump(const struct gps_data_t *gpsdata,
 		   char *reply, size_t replylen)
 {
     assert(replylen > sizeof(char *));
-    (void)strlcpy(reply, "{\"class\":\"GST\",", replylen);
+    (void)strlcpy(reply, "{\"class\":\"GST\"", replylen);
     if (gpsdata->dev.path[0] != '\0')
-	str_appendf(reply, replylen, "\"device\":\"%s\",", gpsdata->dev.path);
+	str_appendf(reply, replylen, ",\"device\":\"%s\"", gpsdata->dev.path);
     if (0 < gpsdata->gst.utctime.tv_sec) {
 	char tbuf[JSON_DATE_MAX+1];
 	str_appendf(reply, replylen,
-		   "\"time\":\"%s\",",
+		   ",\"time\":\"%s\"",
 		   timespec_to_iso8601(gpsdata->gst.utctime,
                                        tbuf, sizeof(tbuf)));
     }
 #define ADD_GST_FIELD(tag, field) do {                     \
     if (isfinite(gpsdata->gst.field) != 0)              \
-	str_appendf(reply, replylen, "\"" tag "\":%.3f,", gpsdata->gst.field); \
+	str_appendf(reply, replylen, ",\"" tag "\":%.3f", gpsdata->gst.field); \
     } while(0)
 
     ADD_GST_FIELD("rms",    rms_deviation);
@@ -435,7 +435,6 @@ void json_noise_dump(const struct gps_data_t *gpsdata,
 
 #undef ADD_GST_FIELD
 
-    str_rstrip_char(reply, ',');
     (void)strlcat(reply, "}\r\n", replylen);
 }
 
