@@ -911,16 +911,15 @@ void json_raw_dump(const struct gps_data_t *gpsdata,
         /* no data to dump */
         return;
     }
-    (void)strlcpy(reply, "{\"class\":\"RAW\",", replylen);
+    (void)strlcpy(reply, "{\"class\":\"RAW\"", replylen);
     if (gpsdata->dev.path[0] != '\0')
-	str_appendf(reply, replylen, "\"device\":\"%s\",", gpsdata->dev.path);
+	str_appendf(reply, replylen, ",\"device\":\"%s\"", gpsdata->dev.path);
 
-    str_appendf(reply, replylen, "\"time\":%lld,\"nsec\":%ld,\"rawdata\":[",
+    str_appendf(reply, replylen, ",\"time\":%lld,\"nsec\":%ld,\"rawdata\":[",
                 (long long)gpsdata->raw.mtime.tv_sec,
                 gpsdata->raw.mtime.tv_nsec);
 
     for (i = 0; i < MAXCHANNELS; i++) {
-        bool comma = false;
         if (0 == gpsdata->raw.meas[i].svid ||
             255 == gpsdata->raw.meas[i].svid) {
             /* skip empty and GLONASS 255 */
@@ -941,56 +940,38 @@ void json_raw_dump(const struct gps_data_t *gpsdata,
 	    str_appendf(reply, replylen, ",\"freqid\":%u",
 			gpsdata->raw.meas[i].freqid);
         }
-        comma = true;
 
         if (0 != isfinite(gpsdata->raw.meas[i].pseudorange) &&
             1.0 < gpsdata->raw.meas[i].pseudorange) {
-            if (comma)
-                (void)strlcat(reply, ",", replylen);
-            str_appendf(reply, replylen, "\"pseudorange\":%f",
+            str_appendf(reply, replylen, ",\"pseudorange\":%f",
                         gpsdata->raw.meas[i].pseudorange);
-            comma = true;
 
 	    if (0 != isfinite(gpsdata->raw.meas[i].carrierphase)) {
 		str_appendf(reply, replylen, ",\"carrierphase\":%f",
 			    gpsdata->raw.meas[i].carrierphase);
-		comma = true;
 	    }
         }
         if (0 != isfinite(gpsdata->raw.meas[i].doppler)) {
-            if (comma)
-                (void)strlcat(reply, ",", replylen);
-            str_appendf(reply, replylen, "\"doppler\":%f",
+            str_appendf(reply, replylen, ",\"doppler\":%f",
                         gpsdata->raw.meas[i].doppler);
-            comma = true;
         }
 
         /* L2 C/A pseudo range, RINEX C2C */
         if (0 != isfinite(gpsdata->raw.meas[i].c2c) &&
             1.0 < gpsdata->raw.meas[i].c2c) {
-            if (comma)
-                (void)strlcat(reply, ",", replylen);
-            str_appendf(reply, replylen, "\"c2c\":%f",
+            str_appendf(reply, replylen, ",\"c2c\":%f",
                         gpsdata->raw.meas[i].c2c);
-            comma = true;
 
 	    /* L2 C/A carrier phase, RINEX L2C */
 	    if (0 != isfinite(gpsdata->raw.meas[i].l2c)) {
-		if (comma)
-		    (void)strlcat(reply, ",", replylen);
-		str_appendf(reply, replylen, "\"l2c\":%f",
+		str_appendf(reply, replylen, ",\"l2c\":%f",
 			    gpsdata->raw.meas[i].l2c);
-                // this annoys clang, keep it for future use
-		comma = true;
 	    }
         }
         (void)strlcat(reply, "},", replylen);
     }
     str_rstrip_char(reply, ',');
-    (void)strlcat(reply, "]", replylen);
-
-    str_rstrip_char(reply, ',');
-    (void)strlcat(reply, "}\r\n", replylen);
+    (void)strlcat(reply, "]}\r\n", replylen);
 }
 
 #if defined(RTCM104V2_ENABLE)
