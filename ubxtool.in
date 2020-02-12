@@ -6606,9 +6606,10 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         "CFG-ANT": {"command": send_poll, "opt": [0x06, 0x13],
                     "help": "poll UBX-CFG-ANT antenna config"},
         # UBX-CFG-BATCH
+        # Assume 23 is close enough to the proper 23.01
         "CFG-BATCH": {"command": send_poll, "opt": [0x06, 0x93],
                       "help": "poll UBX-CFG-BATCH data batching config",
-                      "minVer": 23.01},
+                      "minVer": 23},
         # UBX-CFG-DAT
         "CFG-DAT": {"command": send_poll, "opt": [0x06, 0x06],
                     "help": "poll UBX-CFG-DAT Datum Setting"},
@@ -6736,11 +6737,12 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
                          "help": "send UBX-LOG-RETRIEVE",
                          "minVer": 14},
         # UBX-LOG-RETRIEVEBATCH
+        # Assume 23 is close enough to the proper 23.01
         "LOG-RETRIEVEBATCH": {"command": send_poll,
                               "opt": [0x21, 0x10, 0, 1, 0, 0],
                               "help": "send UBX-LOG-RETRIEVEBATCH",
                               "maxVer": 23.99,
-                              "minVer": 23.01},
+                              "minVer": 23},
         # UBX-LOG-STRING
         "LOG-STRING": {"command": send_poll,
                        "opt": [0x21, 4, ord("H"), ord("i")],
@@ -6753,11 +6755,12 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         "MGA-DBD": {"command": send_poll, "opt": [0x13, 0x80],
                     "help": "poll UBX-MGA-DBD Poll the Navigation Database"},
         # UBX-MON-BATCH
+        # Assume 23 is close enough to the proper 23.01
         "MON-BATCH": {"command": send_poll, "opt": [0x0a, 0x32],
                       "help": "poll UBX-MON-BATCH Data batching "
                       "buffer status",
                       "maxVer": 23.99,
-                      "minVer": 23.01},
+                      "minVer": 23},
         # UBX-MON-COMMS
         "MON-COMMS": {"command": send_poll, "opt": [0x0a, 0x36],
                       "help": "poll UBX-MON-COMMS Comm port "
