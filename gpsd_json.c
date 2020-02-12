@@ -2034,11 +2034,11 @@ void json_aivdm_dump(const struct ais_t *ais,
 	"Reserved for future use",
     };
 
-    (void)snprintf(buf, buflen, "{\"class\":\"AIS\",");
+    (void)snprintf(buf, buflen, "{\"class\":\"AIS\"");
     if (device != NULL && device[0] != '\0')
-	str_appendf(buf, buflen, "\"device\":\"%s\",", device);
+	str_appendf(buf, buflen, ",\"device\":\"%s\"", device);
     str_appendf(buf, buflen,
-		   "\"type\":%u,\"repeat\":%u,\"mmsi\":%u,\"scaled\":%s,",
+		   ",\"type\":%u,\"repeat\":%u,\"mmsi\":%u,\"scaled\":%s",
 		   ais->type, ais->repeat, ais->mmsi, JSON_BOOL(scaled));
     switch (ais->type) {
     case 1:			/* Position Report */
@@ -2078,7 +2078,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 			       "%.1f", ais->type1.speed / 10.0);
 
 	    str_appendf(buf, buflen,
-			   "\"status\":%u,\"status_text\":\"%s\","
+			   ",\"status\":%u,\"status_text\":\"%s\","
 			   "\"turn\":%s,\"speed\":%s,"
 			   "\"accuracy\":%s,\"lon\":%.6f,\"lat\":%.6f,"
 			   "\"course\":%.1f,\"heading\":%u,\"second\":%u,"
@@ -2097,7 +2097,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 			   JSON_BOOL(ais->type1.raim), ais->type1.radio);
 	} else {
 	    str_appendf(buf, buflen,
-			   "\"status\":%u,\"status_text\":\"%s\","
+			   ",\"status\":%u,\"status_text\":\"%s\","
 			   "\"turn\":%d,\"speed\":%u,"
 			   "\"accuracy\":%s,\"lon\":%d,\"lat\":%d,"
 			   "\"course\":%u,\"heading\":%u,\"second\":%u,"
@@ -2123,7 +2123,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 	    // The use of %u instead of %04u for the year is to allow
 	    // out-of-band year values.
 	    str_appendf(buf, buflen,
-			   "\"timestamp\":\"%04u-%02u-%02uT%02u:%02u:%02uZ\","
+			   ",\"timestamp\":\"%04u-%02u-%02uT%02u:%02u:%02uZ\","
 			   "\"accuracy\":%s,\"lon\":%.6f,\"lat\":%.6f,"
 			   "\"epfd\":%u,\"epfd_text\":\"%s\","
 			   "\"raim\":%s,\"radio\":%u}\r\n",
@@ -2141,7 +2141,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 			   JSON_BOOL(ais->type4.raim), ais->type4.radio);
 	} else {
 	    str_appendf(buf, buflen,
-			   "\"timestamp\":\"%04u-%02u-%02uT%02u:%02u:%02uZ\","
+			   ",\"timestamp\":\"%04u-%02u-%02uT%02u:%02u:%02uZ\","
 			   "\"accuracy\":%s,\"lon\":%d,\"lat\":%d,"
 			   "\"epfd\":%u,\"epfd_text\":\"%s\","
 			   "\"raim\":%s,\"radio\":%u}\r\n",
@@ -2164,7 +2164,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 	if (scaled) {
             /* *INDENT-OFF* */
 	    str_appendf(buf, buflen,
-			   "\"imo\":%u,\"ais_version\":%u,\"callsign\":\"%s\","
+			   ",\"imo\":%u,\"ais_version\":%u,\"callsign\":\"%s\","
 			   "\"shipname\":\"%s\","
 			   "\"shiptype\":%u,\"shiptype_text\":\"%s\","
 			   "\"to_bow\":%u,\"to_stern\":%u,\"to_port\":%u,"
@@ -2195,7 +2195,7 @@ void json_aivdm_dump(const struct ais_t *ais,
             /* *INDENT-ON* */
 	} else {
 	    str_appendf(buf, buflen,
-			   "\"imo\":%u,\"ais_version\":%u,\"callsign\":\"%s\","
+			   ",\"imo\":%u,\"ais_version\":%u,\"callsign\":\"%s\","
 			   "\"shipname\":\"%s\","
 			   "\"shiptype\":%u,\"shiptype_text\":\"%s\","
 			   "\"to_bow\":%u,\"to_stern\":%u,\"to_port\":%u,"
@@ -2230,8 +2230,8 @@ void json_aivdm_dump(const struct ais_t *ais,
 	break;
     case 6:			/* Binary Message */
 	str_appendf(buf, buflen,
-		       "\"seqno\":%u,\"dest_mmsi\":%u,"
-		       "\"retransmit\":%s,\"dac\":%u,\"fid\":%u,",
+		       ",\"seqno\":%u,\"dest_mmsi\":%u,"
+		       "\"retransmit\":%s,\"dac\":%u,\"fid\":%u",
 		       ais->type6.seqno,
 		       ais->type6.dest_mmsi,
 		       JSON_BOOL(ais->type6.retransmit),
@@ -2239,7 +2239,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 		       ais->type6.fid);
 	if (!ais->type6.structured) {
 	    str_appendf(buf, buflen,
-			   "\"data\":\"%zd:%s\"}\r\n",
+			   ",\"data\":\"%zd:%s\"}\r\n",
 			   ais->type6.bitcount,
 			   json_stringify(buf1, sizeof(buf1),
                               gpsd_hexdump(
@@ -2252,7 +2252,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 	    switch (ais->type6.fid) {
 	    case 21:
 		str_appendf(buf, buflen,
-		    "\"country\":\"%s\",\"locode\":\"%s\","
+		    ",\"country\":\"%s\",\"locode\":\"%s\","
 		    "\"section\":\"%s\",\"terminal\":\"%s\","
 		    "\"hectometre\":\"%s\",\"eta\":\"%u-%uT%u:%u\","
 		    "\"tugs\":%u,\"airdraught\":%u}\r\n",
@@ -2270,7 +2270,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 		break;
 	    case 22:
 		str_appendf(buf, buflen,
-			       "\"country\":\"%s\",\"locode\":\"%s\","
+			       ",\"country\":\"%s\",\"locode\":\"%s\","
 			       "\"section\":\"%s\","
 			       "\"terminal\":\"%s\",\"hectometre\":\"%s\","
 			       "\"eta\":\"%u-%uT%u:%u\","
@@ -2289,7 +2289,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 		break;
 	    case 55:
 		str_appendf(buf, buflen,
-		    "\"crew\":%u,\"passengers\":%u,\"personnel\":%u}\r\n",
+		    ",\"crew\":%u,\"passengers\":%u,\"personnel\":%u}\r\n",
 
 		    ais->type6.dac200fid55.crew,
 		    ais->type6.dac200fid55.passengers,
@@ -2301,37 +2301,37 @@ void json_aivdm_dump(const struct ais_t *ais,
 	    switch (ais->type6.fid) {
 	    case 10:	/* GLA - AtoN monitoring data */
 		str_appendf(buf, buflen,
-			       "\"off_pos\":%s,\"alarm\":%s,"
-			       "\"stat_ext\":%u,",
+			       ",\"off_pos\":%s,\"alarm\":%s,"
+			       "\"stat_ext\":%u",
 			       JSON_BOOL(ais->type6.dac235fid10.off_pos),
 			       JSON_BOOL(ais->type6.dac235fid10.alarm),
 			       ais->type6.dac235fid10.stat_ext);
 		if (scaled && ais->type6.dac235fid10.ana_int != 0)
 		    str_appendf(buf, buflen,
-				   "\"ana_int\":%.2f,",
+				   ",\"ana_int\":%.2f",
 				   ais->type6.dac235fid10.ana_int*0.05);
 		else
 		    str_appendf(buf, buflen,
-				   "\"ana_int\":%u,",
+				   ",\"ana_int\":%u",
 				   ais->type6.dac235fid10.ana_int);
 		if (scaled && ais->type6.dac235fid10.ana_ext1 != 0)
 		    str_appendf(buf, buflen,
-				   "\"ana_ext1\":%.2f,",
+				   ",\"ana_ext1\":%.2f",
 				   ais->type6.dac235fid10.ana_ext1*0.05);
 		else
 		    str_appendf(buf, buflen,
-				   "\"ana_ext1\":%u,",
+				   ",\"ana_ext1\":%u",
 				   ais->type6.dac235fid10.ana_ext1);
 		if (scaled && ais->type6.dac235fid10.ana_ext2 != 0)
 		    str_appendf(buf, buflen,
-				   "\"ana_ext2\":%.2f,",
+				   ",\"ana_ext2\":%.2f",
 				   ais->type6.dac235fid10.ana_ext2*0.05);
 		else
 		    str_appendf(buf, buflen,
-				   "\"ana_ext2\":%u,",
+				   ",\"ana_ext2\":%u",
 				   ais->type6.dac235fid10.ana_ext2);
 		str_appendf(buf, buflen,
-			       "\"racon\":%u,"
+			       ",\"racon\":%u,"
 			       "\"racon_text\":\"%s\","
 			       "\"light\":%u,"
 			       "\"light_text\":\"%s\"",
@@ -2339,7 +2339,6 @@ void json_aivdm_dump(const struct ais_t *ais,
 			       racon_status[ais->type6.dac235fid10.racon],
 			       ais->type6.dac235fid10.light,
 			       light_status[ais->type6.dac235fid10.light]);
-		str_rstrip_char(buf, ',');
 		(void)strlcat(buf, "}\r\n", buflen);
 		break;
 	    }
@@ -2350,7 +2349,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 	    case 12:	/* IMO236 -Dangerous cargo indication */
 		/* some fields have beem merged to an ISO8601 partial date */
 		str_appendf(buf, buflen,
-			       "\"lastport\":\"%s\","
+			       ",\"lastport\":\"%s\","
                                "\"departure\":\"%02u-%02uT%02u:%02uZ\","
 			       "\"nextport\":\"%s\","
                                "\"eta\":\"%02u-%02uT%02u:%02uZ\","
@@ -2378,19 +2377,19 @@ void json_aivdm_dump(const struct ais_t *ais,
 		break;
 	    case 15: /* IMO236 - Extended Ship Static and Voyage Related Data */
 		str_appendf(buf, buflen,
-		    "\"airdraught\":%u}\r\n",
+		    ",\"airdraught\":%u}\r\n",
 		    ais->type6.dac1fid15.airdraught);
 		break;
 	    case 16:	/* IMO236 - Number of persons on board */
 		str_appendf(buf, buflen,
-			   "\"persons\":%u}\r\n",
+			   ",\"persons\":%u}\r\n",
                             ais->type6.dac1fid16.persons);
 		break;
 	    case 18:	/* IMO289 - Clearance time to enter port */
 		str_appendf(buf, buflen,
-			       "\"linkage\":%u,"
+			       ",\"linkage\":%u,"
                                "\"arrival\":\"%02u-%02uT%02u:%02uZ\","
-                               "\"portname\":\"%s\",\"destination\":\"%s\",",
+                               "\"portname\":\"%s\",\"destination\":\"%s\"",
 			       ais->type6.dac1fid18.linkage,
 			       ais->type6.dac1fid18.month,
 			       ais->type6.dac1fid18.day,
@@ -2402,18 +2401,18 @@ void json_aivdm_dump(const struct ais_t *ais,
 					      ais->type6.dac1fid18.destination));
 		if (scaled)
 		    str_appendf(buf, buflen,
-				   "\"lon\":%.4f,\"lat\":%.4f}\r\n",
+				   ",\"lon\":%.4f,\"lat\":%.4f}\r\n",
 				   ais->type6.dac1fid18.lon/AIS_LATLON3_DIV,
 				   ais->type6.dac1fid18.lat/AIS_LATLON3_DIV);
 		else
 		    str_appendf(buf, buflen,
-			       "\"lon\":%d,\"lat\":%d}\r\n",
+			       ",\"lon\":%d,\"lat\":%d}\r\n",
 			       ais->type6.dac1fid18.lon,
 			       ais->type6.dac1fid18.lat);
 		break;
 	    case 20:        /* IMO289 - Berthing Data */
                 str_appendf(buf, buflen,
-			       "\"linkage\":%u,\"berth_length\":%u,"
+			       ",\"linkage\":%u,\"berth_length\":%u,"
 			       "\"position\":%u,\"position_text\":\"%s\","
 			       "\"arrival\":\"%u-%uT%u:%u\","
 			       "\"availability\":%u,"
@@ -2428,7 +2427,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 			       "\"ballast\":%u,\"additional\":%u,"
 			       "\"regional1\":%u,\"regional2\":%u,"
 			       "\"future1\":%u,\"future2\":%u,"
-			       "\"berth_name\":\"%s\",",
+			       "\"berth_name\":\"%s\"",
 			       ais->type6.dac1fid20.linkage,
 			       ais->type6.dac1fid20.berth_length,
 			       ais->type6.dac1fid20.position,
@@ -2468,7 +2467,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 					      ais->type6.dac1fid20.berth_name));
 		if (scaled)
 		    str_appendf(buf, buflen,
-			       "\"berth_lon\":%.4f,"
+			       ",\"berth_lon\":%.4f,"
 			       "\"berth_lat\":%.4f,"
 			       "\"berth_depth\":%.1f}\r\n",
 			       ais->type6.dac1fid20.berth_lon / AIS_LATLON3_DIV,
@@ -2476,7 +2475,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 			       ais->type6.dac1fid20.berth_depth * 0.1);
 		else
 		    str_appendf(buf, buflen,
-			       "\"berth_lon\":%d,"
+			       ",\"berth_lon\":%d,"
 			       "\"berth_lat\":%d,"
 			       "\"berth_depth\":%u}\r\n",
 			       ais->type6.dac1fid20.berth_lon,
@@ -2487,7 +2486,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 		break;
 	    case 25:	/* IMO289 - Dangerous cargo indication */
 		str_appendf(buf, buflen,
-			       "\"unit\":%u,\"amount\":%u,\"cargos\":[",
+			       ",\"unit\":%u,\"amount\":%u,\"cargos\":[",
 			       ais->type6.dac1fid25.unit,
 			       ais->type6.dac1fid25.amount);
 		for (i = 0; i < (int)ais->type6.dac1fid25.ncargos; i++)
@@ -2501,7 +2500,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 		break;
 	    case 28:	/* IMO289 - Route info - addressed */
 		str_appendf(buf, buflen,
-			       "\"linkage\":%u,\"sender\":%u,"
+			       ",\"linkage\":%u,\"sender\":%u,"
 			       "\"rtype\":%u,"
 			       "\"rtype_text\":\"%s\","
 			       "\"start\":\"%02u-%02uT%02u:%02uZ\","
@@ -2532,7 +2531,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 		break;
 	    case 30:	/* IMO289 - Text description - addressed */
 		str_appendf(buf, buflen,
-		       "\"linkage\":%u,\"text\":\"%s\"}\r\n",
+		       ",\"linkage\":%u,\"text\":\"%s\"}\r\n",
 		       ais->type6.dac1fid30.linkage,
 		       json_stringify(buf1, sizeof(buf1),
 				      ais->type6.dac1fid30.text));
@@ -2540,24 +2539,24 @@ void json_aivdm_dump(const struct ais_t *ais,
 	    case 14:	/* IMO236 - Tidal Window */
 	    case 32:	/* IMO289 - Tidal Window */
 	      str_appendf(buf, buflen,
-		  "\"month\":%u,\"day\":%u,\"tidals\":[",
+		  ",\"month\":%u,\"day\":%u,\"tidals\":[",
 		  ais->type6.dac1fid32.month,
 		  ais->type6.dac1fid32.day);
 	      for (i = 0; i < ais->type6.dac1fid32.ntidals; i++) {
 		  const struct tidal_t *tp =  &ais->type6.dac1fid32.tidals[i];
 		  if (scaled)
 		      str_appendf(buf, buflen,
-			  "{\"lon\":%.4f,\"lat\":%.4f,",
+			  "{\"lon\":%.4f,\"lat\":%.4f",
 			  tp->lon / AIS_LATLON3_DIV,
 			  tp->lat / AIS_LATLON3_DIV);
 		  else
 		      str_appendf(buf, buflen,
-			  "{\"lon\":%d,\"lat\":%d,",
+			  "{\"lon\":%d,\"lat\":%d",
 			  tp->lon,
 			  tp->lat);
 		  str_appendf(buf, buflen,
-		      "\"from_hour\":%u,\"from_min\":%u,"
-                      "\"to_hour\":%u,\"to_min\":%u,\"cdir\":%u,",
+		      ",\"from_hour\":%u,\"from_min\":%u,"
+                      "\"to_hour\":%u,\"to_min\":%u,\"cdir\":%u",
 		      tp->from_hour,
 		      tp->from_min,
 		      tp->to_hour,
@@ -2565,11 +2564,11 @@ void json_aivdm_dump(const struct ais_t *ais,
 		      tp->cdir);
 		  if (scaled)
 		      str_appendf(buf, buflen,
-			  "\"cspeed\":%.1f},",
+			  ",\"cspeed\":%.1f},",
 			  tp->cspeed / 10.0);
 		  else
 		      str_appendf(buf, buflen,
-			  "\"cspeed\":%u},",
+			  ",\"cspeed\":%u},",
 			  tp->cspeed);
 	      }
 	      str_rstrip_char(buf, ',');
@@ -2581,17 +2580,18 @@ void json_aivdm_dump(const struct ais_t *ais,
     case 7:			/* Binary Acknowledge */
     case 13:			/* Safety Related Acknowledge */
 	str_appendf(buf, buflen,
-		       "\"mmsi1\":%u,\"mmsi2\":%u,\"mmsi3\":%u,"
+		       ",\"mmsi1\":%u,\"mmsi2\":%u,\"mmsi3\":%u,"
                        "\"mmsi4\":%u}\r\n",
 		       ais->type7.mmsi1,
 		       ais->type7.mmsi2, ais->type7.mmsi3, ais->type7.mmsi4);
 	break;
     case 8:			/* Binary Broadcast Message */
 	str_appendf(buf, buflen,
-		       "\"dac\":%u,\"fid\":%u,",ais->type8.dac, ais->type8.fid);
+		   ",\"dac\":%u,\"fid\":%u",
+                    ais->type8.dac, ais->type8.fid);
 	if (!ais->type8.structured) {
 	    str_appendf(buf, buflen,
-			   "\"data\":\"%zd:%s\"}\r\n",
+			   ",\"data\":\"%zd:%s\"}\r\n",
 			   ais->type8.bitcount,
 			   json_stringify(buf1, sizeof(buf1),
                               gpsd_hexdump(
@@ -2630,18 +2630,18 @@ void json_aivdm_dump(const struct ais_t *ais,
 		/* layout is almost identical to FID=31 from IMO289 */
 		if (scaled)
 		    str_appendf(buf, buflen,
-				   "\"lat\":%.4f,\"lon\":%.4f,",
+				   ",\"lat\":%.4f,\"lon\":%.4f",
 				   ais->type8.dac1fid11.lat / AIS_LATLON3_DIV,
 				   ais->type8.dac1fid11.lon / AIS_LATLON3_DIV);
 		else
 		    str_appendf(buf, buflen,
-				   "\"lat\":%d,\"lon\":%d,",
+				   ",\"lat\":%d,\"lon\":%d",
 				   ais->type8.dac1fid11.lat,
 				   ais->type8.dac1fid11.lon);
 		str_appendf(buf, buflen,
-			       "\"timestamp\":\"%02uT%02u:%02uZ\","
+			       ",\"timestamp\":\"%02uT%02u:%02uZ\","
 			       "\"wspeed\":%u,\"wgust\":%u,\"wdir\":%u,"
-			       "\"wgustdir\":%u,\"humidity\":%u,",
+			       "\"wgustdir\":%u,\"humidity\":%u",
 			       ais->type8.dac1fid11.day,
 			       ais->type8.dac1fid11.hour,
 			       ais->type8.dac1fid11.minute,
@@ -2652,16 +2652,16 @@ void json_aivdm_dump(const struct ais_t *ais,
 			       ais->type8.dac1fid11.humidity);
 		if (scaled)
 		    str_appendf(buf, buflen,
-				   "\"airtemp\":%.1f,\"dewpoint\":%.1f,"
-				   "\"pressure\":%u,\"pressuretend\":\"%s\",",
+				   ",\"airtemp\":%.1f,\"dewpoint\":%.1f,"
+				   "\"pressure\":%u,\"pressuretend\":\"%s\"",
 				   ((signed int)ais->type8.dac1fid11.airtemp - DAC1FID11_AIRTEMP_OFFSET) / DAC1FID11_AIRTEMP_DIV,
 				   ((signed int)ais->type8.dac1fid11.dewpoint - DAC1FID11_DEWPOINT_OFFSET) / DAC1FID11_DEWPOINT_DIV,
 				   ais->type8.dac1fid11.pressure - DAC1FID11_PRESSURE_OFFSET,
 				   trends[ais->type8.dac1fid11.pressuretend]);
 		else
 		    str_appendf(buf, buflen,
-				   "\"airtemp\":%u,\"dewpoint\":%u,"
-				   "\"pressure\":%u,\"pressuretend\":%u,",
+				   ",\"airtemp\":%u,\"dewpoint\":%u,"
+				   "\"pressure\":%u,\"pressuretend\":%u",
 				   ais->type8.dac1fid11.airtemp,
 				   ais->type8.dac1fid11.dewpoint,
 				   ais->type8.dac1fid11.pressure,
@@ -2669,24 +2669,24 @@ void json_aivdm_dump(const struct ais_t *ais,
 
 		if (scaled)
 		    str_appendf(buf, buflen,
-				   "\"visibility\":%.1f,",
+				   ",\"visibility\":%.1f",
 				   ais->type8.dac1fid11.visibility / DAC1FID11_VISIBILITY_DIV);
 		else
 		    str_appendf(buf, buflen,
-				   "\"visibility\":%u,",
+				   ",\"visibility\":%u",
 				   ais->type8.dac1fid11.visibility);
 		if (!scaled)
 		    str_appendf(buf, buflen,
-				   "\"waterlevel\":%d,",
+				   ",\"waterlevel\":%d",
 				   ais->type8.dac1fid11.waterlevel);
 		else
 		    str_appendf(buf, buflen,
-				   "\"waterlevel\":%.1f,",
+				   ",\"waterlevel\":%.1f",
 				   ((signed int)ais->type8.dac1fid11.waterlevel - DAC1FID11_WATERLEVEL_OFFSET) / DAC1FID11_WATERLEVEL_DIV);
 
 		if (scaled) {
 		    str_appendf(buf, buflen,
-				   "\"leveltrend\":\"%s\","
+				   ",\"leveltrend\":\"%s\","
 				   "\"cspeed\":%.1f,\"cdir\":%u,"
 				   "\"cspeed2\":%.1f,\"cdir2\":%u,"
                                    "\"cdepth2\":%u,"
@@ -2725,7 +2725,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 				   ice[ais->type8.dac1fid11.ice]);
 		} else
 		    str_appendf(buf, buflen,
-				   "\"leveltrend\":%u,"
+				   ",\"leveltrend\":%u,"
 				   "\"cspeed\":%u,\"cdir\":%u,"
 				   "\"cspeed2\":%u,\"cdir2\":%u,"
                                    "\"cdepth2\":%u,"
@@ -2766,7 +2766,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 		break;
 	    case 13:        /* IMO236 - Fairway closed */
 		str_appendf(buf, buflen,
-			       "\"reason\":\"%s\",\"closefrom\":\"%s\","
+			       ",\"reason\":\"%s\",\"closefrom\":\"%s\","
 			       "\"closeto\":\"%s\",\"radius\":%u,"
 			       "\"extunit\":%u,"
 			       "\"from\":\"%02u-%02uT%02u:%02u\","
@@ -2790,60 +2790,60 @@ void json_aivdm_dump(const struct ais_t *ais,
 		break;
 	    case 15:        /* IMO236 - Extended ship and voyage */
 		str_appendf(buf, buflen,
-			       "\"airdraught\":%u}\r\n",
+			       ",\"airdraught\":%u}\r\n",
 			       ais->type8.dac1fid15.airdraught);
 		break;
 	    case 16:	/* IMO289 - Number of persons on board */
 		str_appendf(buf, buflen,
-			    "\"persons\":%u}\r\n",
+			    ",\"persons\":%u}\r\n",
                             ais->type6.dac1fid16.persons);
 		break;
 	    case 17:        /* IMO289 - VTS-generated/synthetic targets */
-		(void)strlcat(buf, "\"targets\":[", buflen);
+		(void)strlcat(buf, ",\"targets\":[", buflen);
 		for (i = 0; i < ais->type8.dac1fid17.ntargets; i++) {
 		    str_appendf(buf, buflen,
-				   "{\"idtype\":%u,\"idtype_text\":\"%s\",",
+				   "{\"idtype\":%u,\"idtype_text\":\"%s\"",
 				   ais->type8.dac1fid17.targets[i].idtype,
 				   idtypes[ais->type8.dac1fid17.targets[i].idtype]);
 		    switch (ais->type8.dac1fid17.targets[i].idtype) {
 		    case DAC1FID17_IDTYPE_MMSI:
 			str_appendf(buf, buflen,
-			    "\"%s\":\"%u\",",
+			    ",\"%s\":\"%u\"",
 			    idtypes[ais->type8.dac1fid17.targets[i].idtype],
 			    ais->type8.dac1fid17.targets[i].id.mmsi);
 			break;
 		    case DAC1FID17_IDTYPE_IMO:
 			str_appendf(buf, buflen,
-			    "\"%s\":\"%u\",",
+			    ",\"%s\":\"%u\"",
 			    idtypes[ais->type8.dac1fid17.targets[i].idtype],
 			    ais->type8.dac1fid17.targets[i].id.imo);
 			break;
 		    case DAC1FID17_IDTYPE_CALLSIGN:
 			str_appendf(buf, buflen,
-			    "\"%s\":\"%s\",",
+			    ",\"%s\":\"%s\"",
 			    idtypes[ais->type8.dac1fid17.targets[i].idtype],
 			    json_stringify(buf1, sizeof(buf1),
-					   ais->type8.dac1fid17.targets[i].id.callsign));
+                               ais->type8.dac1fid17.targets[i].id.callsign));
 			break;
 		    default:
 			str_appendf(buf, buflen,
-			    "\"%s\":\"%s\",",
+			    ",\"%s\":\"%s\"",
 			    idtypes[ais->type8.dac1fid17.targets[i].idtype],
 			    json_stringify(buf1, sizeof(buf1),
 					   ais->type8.dac1fid17.targets[i].id.other));
 		    }
 		    if (scaled)
 			str_appendf(buf, buflen,
-			    "\"lat\":%.4f,\"lon\":%.4f,",
+			    ",\"lat\":%.4f,\"lon\":%.4f",
 			    ais->type8.dac1fid17.targets[i].lat / AIS_LATLON3_DIV,
 			    ais->type8.dac1fid17.targets[i].lon / AIS_LATLON3_DIV);
 		    else
 			str_appendf(buf, buflen,
-			    "\"lat\":%d,\"lon\":%d,",
+			    ",\"lat\":%d,\"lon\":%d",
 			    ais->type8.dac1fid17.targets[i].lat,
 			    ais->type8.dac1fid17.targets[i].lon);
 		    str_appendf(buf, buflen,
-			"\"course\":%u,\"second\":%u,\"speed\":%u},",
+			",\"course\":%u,\"second\":%u,\"speed\":%u},",
 			ais->type8.dac1fid17.targets[i].course,
 			ais->type8.dac1fid17.targets[i].second,
 			ais->type8.dac1fid17.targets[i].speed);
@@ -2853,7 +2853,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 		break;
 	    case 19:        /* IMO289 - Marine Traffic Signal */
 		str_appendf(buf, buflen,
-			       "\"linkage\":%u,\"station\":\"%s\","
+			       ",\"linkage\":%u,\"station\":\"%s\","
 			       "\"lon\":%.4f,\"lat\":%.4f,\"status\":%u,"
 			       "\"signal\":%u,\"signal_text\":\"%s\","
 			       "\"hour\":%u,\"minute\":%u,"
@@ -2883,7 +2883,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 		break;
 	    case 27:        /* IMO289 - Route information - broadcast */
 		str_appendf(buf, buflen,
-			       "\"linkage\":%u,\"sender\":%u,"
+			       ",\"linkage\":%u,\"sender\":%u,"
 			       "\"rtype\":%u,"
 			       "\"rtype_text\":\"%s\","
 			       "\"start\":\"%02u-%02uT%02u:%02uZ\","
@@ -2914,7 +2914,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 		break;
 	    case 29:        /* IMO289 - Text Description - broadcast */
 		str_appendf(buf, buflen,
-		       "\"linkage\":%u,\"text\":\"%s\"}\r\n",
+		       ",\"linkage\":%u,\"text\":\"%s\"}\r\n",
 		       ais->type8.dac1fid29.linkage,
 		       json_stringify(buf1, sizeof(buf1),
 				      ais->type8.dac1fid29.text));
@@ -2924,21 +2924,21 @@ void json_aivdm_dump(const struct ais_t *ais,
 		/* layout is almost identical to FID=11 from IMO236 */
 		if (scaled)
 		    str_appendf(buf, buflen,
-				   "\"lat\":%.4f,\"lon\":%.4f,",
+				   ",\"lat\":%.4f,\"lon\":%.4f",
 				   ais->type8.dac1fid31.lat / AIS_LATLON3_DIV,
 				   ais->type8.dac1fid31.lon / AIS_LATLON3_DIV);
 		else
 		    str_appendf(buf, buflen,
-				   "\"lat\":%d,\"lon\":%d,",
+				   ",\"lat\":%d,\"lon\":%d",
 				   ais->type8.dac1fid31.lat,
 				   ais->type8.dac1fid31.lon);
 		str_appendf(buf, buflen,
-			       "\"accuracy\":%s,",
+			       ",\"accuracy\":%s",
 			       JSON_BOOL(ais->type8.dac1fid31.accuracy));
 		str_appendf(buf, buflen,
-			       "\"timestamp\":\"%02uT%02u:%02uZ\","
+			       ",\"timestamp\":\"%02uT%02u:%02uZ\","
 			       "\"wspeed\":%u,\"wgust\":%u,\"wdir\":%u,"
-			       "\"wgustdir\":%u,\"humidity\":%u,",
+			       "\"wgustdir\":%u,\"humidity\":%u",
 			       ais->type8.dac1fid31.day,
 			       ais->type8.dac1fid31.hour,
 			       ais->type8.dac1fid31.minute,
@@ -2949,9 +2949,9 @@ void json_aivdm_dump(const struct ais_t *ais,
 			       ais->type8.dac1fid31.humidity);
 		if (scaled)
 		    str_appendf(buf, buflen,
-				   "\"airtemp\":%.1f,\"dewpoint\":%.1f,"
+				   ",\"airtemp\":%.1f,\"dewpoint\":%.1f,"
 				   "\"pressure\":%u,\"pressuretend\":\"%s\","
-				   "\"visgreater\":%s,",
+				   "\"visgreater\":%s",
 				   ais->type8.dac1fid31.airtemp / DAC1FID31_AIRTEMP_DIV,
 				   ais->type8.dac1fid31.dewpoint / DAC1FID31_DEWPOINT_DIV,
 				   ais->type8.dac1fid31.pressure - DAC1FID31_PRESSURE_OFFSET,
@@ -2959,9 +2959,9 @@ void json_aivdm_dump(const struct ais_t *ais,
 				   JSON_BOOL(ais->type8.dac1fid31.visgreater));
 		else
 		    str_appendf(buf, buflen,
-				   "\"airtemp\":%d,\"dewpoint\":%d,"
+				   ",\"airtemp\":%d,\"dewpoint\":%d,"
 				   "\"pressure\":%u,\"pressuretend\":%u,"
-				   "\"visgreater\":%s,",
+				   "\"visgreater\":%s",
 				   ais->type8.dac1fid31.airtemp,
 				   ais->type8.dac1fid31.dewpoint,
 				   ais->type8.dac1fid31.pressure,
@@ -2970,24 +2970,24 @@ void json_aivdm_dump(const struct ais_t *ais,
 
 		if (scaled)
 		    str_appendf(buf, buflen,
-				   "\"visibility\":%.1f,",
+				   ",\"visibility\":%.1f",
 				   ais->type8.dac1fid31.visibility / DAC1FID31_VISIBILITY_DIV);
 		else
 		    str_appendf(buf, buflen,
-				   "\"visibility\":%u,",
+				   ",\"visibility\":%u",
 				   ais->type8.dac1fid31.visibility);
 		if (!scaled)
 		    str_appendf(buf, buflen,
-				   "\"waterlevel\":%d,",
+				   ",\"waterlevel\":%d",
 				   ais->type8.dac1fid31.waterlevel);
 		else
 		    str_appendf(buf, buflen,
-				   "\"waterlevel\":%.1f,",
+				   ",\"waterlevel\":%.1f",
 				   ((unsigned int)ais->type8.dac1fid31.waterlevel - DAC1FID31_WATERLEVEL_OFFSET) / DAC1FID31_WATERLEVEL_DIV);
 
 		if (scaled) {
 		    str_appendf(buf, buflen,
-				   "\"leveltrend\":\"%s\","
+				   ",\"leveltrend\":\"%s\","
 				   "\"cspeed\":%.1f,\"cdir\":%u,"
 				   "\"cspeed2\":%.1f,\"cdir2\":%u,"
                                    "\"cdepth2\":%u,"
@@ -3022,7 +3022,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 				   ice[ais->type8.dac1fid31.ice]);
 		} else
 		    str_appendf(buf, buflen,
-				   "\"leveltrend\":%u,"
+				   ",\"leveltrend\":%u,"
 				   "\"cspeed\":%u,\"cdir\":%u,"
 				   "\"cspeed2\":%u,\"cdir2\":%u,"
                                    "\"cdepth2\":%u,"
@@ -3194,7 +3194,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 			|| cp->code == 0)
 			break;
 		str_appendf(buf, buflen,
-			       "\"vin\":\"%s\",\"length\":%u,\"beam\":%u,"
+			       ",\"vin\":\"%s\",\"length\":%u,\"beam\":%u,"
 			       "\"shiptype\":%u,\"shiptype_text\":\"%s\","
 			       "\"hazard\":%u,\"hazard_text\":\"%s\","
 			       "\"draught\":%u,"
@@ -3221,8 +3221,8 @@ void json_aivdm_dump(const struct ais_t *ais,
 		if (!ais->type8.structured)
 		    break;
 		str_appendf(buf, buflen,
-			       "\"start\":\"%4u-%02u-%02uT%02u:%02u\","
-			       "\"end\":\"%4u-%02u-%02uT%02u:%02u\",",
+			       ",\"start\":\"%4u-%02u-%02uT%02u:%02u\","
+			       "\"end\":\"%4u-%02u-%02uT%02u:%02u\"",
 			       ais->type8.dac200fid23.start_year + 2000,
 			       ais->type8.dac200fid23.start_month,
 			       ais->type8.dac200fid23.start_hour,
@@ -3235,22 +3235,22 @@ void json_aivdm_dump(const struct ais_t *ais,
 			       ais->type8.dac200fid23.end_minute);
 		if (scaled)
 		    str_appendf(buf, buflen,
-			"\"start_lon\":%.6f,\"start_lat\":%.6f,"
-                        "\"end_lon\":%.6f,\"end_lat\":%.6f,",
+			",\"start_lon\":%.6f,\"start_lat\":%.6f,"
+                        "\"end_lon\":%.6f,\"end_lat\":%.6f",
 			ais->type8.dac200fid23.start_lon / AIS_LATLON_DIV,
 			ais->type8.dac200fid23.start_lat / AIS_LATLON_DIV,
 			ais->type8.dac200fid23.end_lon / AIS_LATLON_DIV,
 			ais->type8.dac200fid23.end_lat / AIS_LATLON_DIV);
 		else
 		    str_appendf(buf, buflen,
-			"\"start_lon\":%d,\"start_lat\":%d,\"end_lon\":%d,"
-                        "\"end_lat\":%d,",
+			",\"start_lon\":%d,\"start_lat\":%d,\"end_lon\":%d,"
+                        "\"end_lat\":%d",
 			ais->type8.dac200fid23.start_lon,
 			ais->type8.dac200fid23.start_lat,
 			ais->type8.dac200fid23.end_lon,
 			ais->type8.dac200fid23.end_lat);
 		str_appendf(buf, buflen,
-		    "\"type\":%u,\"type_text\":\"%s\",\"min\":%d,"
+		    ",\"type\":%u,\"type_text\":\"%s\",\"min\":%d,"
                     "\"max\":%d,\"class\":%u,\"class_text\":\"%s\","
                     "\"wind\":%u,\"wind_text\":\"%s\"}\r\n",
 
@@ -3265,7 +3265,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 		break;
 	    case 24:	/* Inland AIS Water Levels */
 		str_appendf(buf, buflen,
-		    "\"country\":\"%s\",\"gauges\":[",
+		    ",\"country\":\"%s\",\"gauges\":[",
 		    ais->type8.dac200fid24.country);
 		for (i = 0; i < ais->type8.dac200fid24.ngauges; i++) {
 		    str_appendf(buf, buflen,
@@ -3279,16 +3279,16 @@ void json_aivdm_dump(const struct ais_t *ais,
 	    case 40:	/* Inland AIS Signal Strength */
 		if (scaled)
 		    str_appendf(buf, buflen,
-			"\"lon\":%.6f,\"lat\":%.6f,",
+			",\"lon\":%.6f,\"lat\":%.6f",
 			ais->type8.dac200fid40.lon / AIS_LATLON_DIV,
 			ais->type8.dac200fid40.lat / AIS_LATLON_DIV);
 		else
 		    str_appendf(buf, buflen,
-			"\"lon\":%d,\"lat\":%d,",
+			",\"lon\":%d,\"lat\":%d",
 			ais->type8.dac200fid40.lon,
 			ais->type8.dac200fid40.lat);
 		str_appendf(buf, buflen,
-		    "\"form\":%u,\"facing\":%u,\"direction\":%u,"
+		    ",\"form\":%u,\"facing\":%u,\"direction\":%u,"
                     "\"direction_text\":\"%s\",\"status\":%u,"
                     "\"status_text\":\"%s\"}\r\n",
 		    ais->type8.dac200fid40.form,
@@ -3331,7 +3331,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 			       "%u", ais->type9.speed);
 
 	    str_appendf(buf, buflen,
-			   "\"alt\":%s,\"speed\":%s,\"accuracy\":%s,"
+			   ",\"alt\":%s,\"speed\":%s,\"accuracy\":%s,"
 			   "\"lon\":%.6f,\"lat\":%.6f,\"course\":%.1f,"
 			   "\"second\":%u,\"regional\":%u,\"dte\":%u,"
 			   "\"raim\":%s,\"radio\":%u}\r\n",
@@ -3347,7 +3347,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 			   JSON_BOOL(ais->type9.raim), ais->type9.radio);
 	} else {
 	    str_appendf(buf, buflen,
-			   "\"alt\":%u,\"speed\":%u,\"accuracy\":%s,"
+			   ",\"alt\":%u,\"speed\":%u,\"accuracy\":%s,"
 			   "\"lon\":%d,\"lat\":%d,\"course\":%u,"
 			   "\"second\":%u,\"regional\":%u,\"dte\":%u,"
 			   "\"raim\":%s,\"radio\":%u}\r\n",
@@ -3365,11 +3365,11 @@ void json_aivdm_dump(const struct ais_t *ais,
 	break;
     case 10:			/* UTC/Date Inquiry */
 	str_appendf(buf, buflen,
-		       "\"dest_mmsi\":%u}\r\n", ais->type10.dest_mmsi);
+		       ",\"dest_mmsi\":%u}\r\n", ais->type10.dest_mmsi);
 	break;
     case 12:			/* Safety Related Message */
 	str_appendf(buf, buflen,
-		       "\"seqno\":%u,\"dest_mmsi\":%u,\"retransmit\":%s,"
+		       ",\"seqno\":%u,\"dest_mmsi\":%u,\"retransmit\":%s,"
                        "\"text\":\"%s\"}\r\n",
 		       ais->type12.seqno,
 		       ais->type12.dest_mmsi,
@@ -3378,12 +3378,12 @@ void json_aivdm_dump(const struct ais_t *ais,
 	break;
     case 14:			/* Safety Related Broadcast Message */
 	str_appendf(buf, buflen,
-		       "\"text\":\"%s\"}\r\n",
+		       ",\"text\":\"%s\"}\r\n",
 		       json_stringify(buf1, sizeof(buf1), ais->type14.text));
 	break;
     case 15:			/* Interrogation */
 	str_appendf(buf, buflen,
-		       "\"mmsi1\":%u,\"type1_1\":%u,\"offset1_1\":%u,"
+		       ",\"mmsi1\":%u,\"type1_1\":%u,\"offset1_1\":%u,"
 		       "\"type1_2\":%u,\"offset1_2\":%u,\"mmsi2\":%u,"
 		       "\"type2_1\":%u,\"offset2_1\":%u}\r\n",
 		       ais->type15.mmsi1,
@@ -3396,7 +3396,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 	break;
     case 16:
 	str_appendf(buf, buflen,
-		       "\"mmsi1\":%u,\"offset1\":%u,\"increment1\":%u,"
+		       ",\"mmsi1\":%u,\"offset1\":%u,\"increment1\":%u,"
 		       "\"mmsi2\":%u,\"offset2\":%u,\"increment2\":%u}\r\n",
 		       ais->type16.mmsi1,
 		       ais->type16.offset1,
@@ -3407,7 +3407,8 @@ void json_aivdm_dump(const struct ais_t *ais,
     case 17:
 	if (scaled) {
 	    str_appendf(buf, buflen,
-			   "\"lon\":%.1f,\"lat\":%.1f,\"data\":\"%zd:%s\"}\r\n",
+			   ",\"lon\":%.1f,\"lat\":%.1f,\"data\":\"%zd:%s\""
+                           "}\r\n",
 			   ais->type17.lon / AIS_GNSS_LATLON_DIV,
 			   ais->type17.lat / AIS_GNSS_LATLON_DIV,
 			   ais->type17.bitcount,
@@ -3416,7 +3417,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 					BITS_TO_BYTES(ais->type17.bitcount)));
 	} else {
 	    str_appendf(buf, buflen,
-			   "\"lon\":%d,\"lat\":%d,\"data\":\"%zd:%s\"}\r\n",
+			   ",\"lon\":%d,\"lat\":%d,\"data\":\"%zd:%s\"}\r\n",
 			   ais->type17.lon,
 			   ais->type17.lat,
 			   ais->type17.bitcount,
@@ -3428,7 +3429,7 @@ void json_aivdm_dump(const struct ais_t *ais,
     case 18:
 	if (scaled) {
 	    str_appendf(buf, buflen,
-			   "\"reserved\":%u,\"speed\":%.1f,\"accuracy\":%s,"
+			   ",\"reserved\":%u,\"speed\":%.1f,\"accuracy\":%s,"
 			   "\"lon\":%.6f,\"lat\":%.6f,\"course\":%.1f,"
 			   "\"heading\":%u,\"second\":%u,\"regional\":%u,"
 			   "\"cs\":%s,\"display\":%s,\"dsc\":%s,\"band\":%s,"
@@ -3450,7 +3451,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 			   JSON_BOOL(ais->type18.raim), ais->type18.radio);
 	} else {
 	    str_appendf(buf, buflen,
-			   "\"reserved\":%u,\"speed\":%u,\"accuracy\":%s,"
+			   ",\"reserved\":%u,\"speed\":%u,\"accuracy\":%s,"
 			   "\"lon\":%d,\"lat\":%d,\"course\":%u,"
 			   "\"heading\":%u,\"second\":%u,\"regional\":%u,"
 			   "\"cs\":%s,\"display\":%s,\"dsc\":%s,\"band\":%s,"
@@ -3475,7 +3476,7 @@ void json_aivdm_dump(const struct ais_t *ais,
     case 19:
 	if (scaled) {
 	    str_appendf(buf, buflen,
-			   "\"reserved\":%u,\"speed\":%.1f,\"accuracy\":%s,"
+			   ",\"reserved\":%u,\"speed\":%.1f,\"accuracy\":%s,"
 			   "\"lon\":%.6f,\"lat\":%.6f,\"course\":%.1f,"
 			   "\"heading\":%u,\"second\":%u,\"regional\":%u,"
 			   "\"shipname\":\"%s\","
@@ -3508,7 +3509,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 			   JSON_BOOL(ais->type19.assigned));
 	} else {
 	    str_appendf(buf, buflen,
-			   "\"reserved\":%u,\"speed\":%u,\"accuracy\":%s,"
+			   ",\"reserved\":%u,\"speed\":%u,\"accuracy\":%s,"
 			   "\"lon\":%d,\"lat\":%d,\"course\":%u,"
 			   "\"heading\":%u,\"second\":%u,\"regional\":%u,"
 			   "\"shipname\":\"%s\","
@@ -3543,7 +3544,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 	break;
     case 20:			/* Data Link Management Message */
 	str_appendf(buf, buflen,
-		       "\"offset1\":%u,\"number1\":%u,"
+		       ",\"offset1\":%u,\"number1\":%u,"
 		       "\"timeout1\":%u,\"increment1\":%u,"
 		       "\"offset2\":%u,\"number2\":%u,"
 		       "\"timeout2\":%u,\"increment2\":%u,"
@@ -3570,7 +3571,7 @@ void json_aivdm_dump(const struct ais_t *ais,
     case 21:			/* Aid to Navigation */
 	if (scaled) {
 	    str_appendf(buf, buflen,
-			   "\"aid_type\":%u,\"aid_type_text\":\"%s\","
+			   ",\"aid_type\":%u,\"aid_type_text\":\"%s\","
 			   "\"name\":\"%s\",\"lon\":%.6f,"
 			   "\"lat\":%.6f,\"accuracy\":%s,\"to_bow\":%u,"
 			   "\"to_stern\":%u,\"to_port\":%u,\"to_starboard\":%u,"
@@ -3596,7 +3597,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 			   JSON_BOOL(ais->type21.virtual_aid));
 	} else {
 	    str_appendf(buf, buflen,
-			   "\"aid_type\":%u,\"aid_type_text\":\"%s\","
+			   ",\"aid_type\":%u,\"aid_type_text\":\"%s\","
 			   "\"name\":\"%s\",\"accuracy\":%s,"
 			   "\"lon\":%d,\"lat\":%d,\"to_bow\":%u,"
 			   "\"to_stern\":%u,\"to_port\":%u,\"to_starboard\":%u,"
@@ -3626,19 +3627,19 @@ void json_aivdm_dump(const struct ais_t *ais,
 	break;
     case 22:			/* Channel Management */
 	str_appendf(buf, buflen,
-		       "\"channel_a\":%u,\"channel_b\":%u,"
-		       "\"txrx\":%u,\"power\":%s,",
+		       ",\"channel_a\":%u,\"channel_b\":%u,"
+		       "\"txrx\":%u,\"power\":%s",
 		       ais->type22.channel_a,
 		       ais->type22.channel_b,
 		       ais->type22.txrx, JSON_BOOL(ais->type22.power));
 	if (ais->type22.addressed) {
 	    str_appendf(buf, buflen,
-			   "\"dest1\":%u,\"dest2\":%u,",
+			   ",\"dest1\":%u,\"dest2\":%u",
 			   ais->type22.mmsi.dest1, ais->type22.mmsi.dest2);
 	} else if (scaled) {
 	    str_appendf(buf, buflen,
-			   "\"ne_lon\":\"%f\",\"ne_lat\":\"%f\","
-			   "\"sw_lon\":\"%f\",\"sw_lat\":\"%f\",",
+			   ",\"ne_lon\":\"%f\",\"ne_lat\":\"%f\","
+			   "\"sw_lon\":\"%f\",\"sw_lat\":\"%f\"",
 			   ais->type22.area.ne_lon / AIS_CHANNEL_LATLON_DIV,
 			   ais->type22.area.ne_lat / AIS_CHANNEL_LATLON_DIV,
 			   ais->type22.area.sw_lon / AIS_CHANNEL_LATLON_DIV,
@@ -3646,14 +3647,14 @@ void json_aivdm_dump(const struct ais_t *ais,
 			   AIS_CHANNEL_LATLON_DIV);
 	} else {
 	    str_appendf(buf, buflen,
-			   "\"ne_lon\":%d,\"ne_lat\":%d,"
-			   "\"sw_lon\":%d,\"sw_lat\":%d,",
+			   ",\"ne_lon\":%d,\"ne_lat\":%d,"
+			   "\"sw_lon\":%d,\"sw_lat\":%d",
 			   ais->type22.area.ne_lon,
 			   ais->type22.area.ne_lat,
 			   ais->type22.area.sw_lon, ais->type22.area.sw_lat);
 	}
 	str_appendf(buf, buflen,
-		       "\"addressed\":%s,\"band_a\":%s,"
+		       ",\"addressed\":%s,\"band_a\":%s,"
 		       "\"band_b\":%s,\"zonesize\":%u}\r\n",
 		       JSON_BOOL(ais->type22.addressed),
 		       JSON_BOOL(ais->type22.band_a),
@@ -3662,7 +3663,7 @@ void json_aivdm_dump(const struct ais_t *ais,
     case 23:			/* Group Assignment Command */
 	if (scaled) {
 	    str_appendf(buf, buflen,
-			   "\"ne_lon\":\"%f\",\"ne_lat\":\"%f\","
+			   ",\"ne_lon\":\"%f\",\"ne_lat\":\"%f\","
 			   "\"sw_lon\":\"%f\",\"sw_lat\":\"%f\","
 			   "\"stationtype\":%u,\"stationtype_text\":\"%s\","
 			   "\"shiptype\":%u,\"shiptype_text\":\"%s\","
@@ -3678,7 +3679,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 			   ais->type23.interval, ais->type23.quiet);
 	} else {
 	    str_appendf(buf, buflen,
-			   "\"ne_lon\":%d,\"ne_lat\":%d,"
+			   ",\"ne_lon\":%d,\"ne_lat\":%d,"
 			   "\"sw_lon\":%d,\"sw_lat\":%d,"
 			   "\"stationtype\":%u,\"stationtype_text\":\"%s\","
 			   "\"shiptype\":%u,\"shiptype_text\":\"%s\","
@@ -3698,20 +3699,20 @@ void json_aivdm_dump(const struct ais_t *ais,
 	if (ais->type24.part != both) {
 	    static char *partnames[] = {"AB", "A", "B"};
 	    str_appendf(buf, buflen,
-			   "\"part\":\"%s\",",
+			   ",\"part\":\"%s\"",
 			   json_stringify(buf1, sizeof(buf1),
 					  partnames[ais->type24.part]));
 	}
 	if (ais->type24.part != part_b)
 	    str_appendf(buf, buflen,
-			   "\"shipname\":\"%s\",",
+			   ",\"shipname\":\"%s\"",
 			   json_stringify(buf1, sizeof(buf1),
 				      ais->type24.shipname));
 	if (ais->type24.part != part_a) {
 	    str_appendf(buf, buflen,
-			   "\"shiptype\":%u,\"shiptype_text\":\"%s\","
+			   ",\"shiptype\":%u,\"shiptype_text\":\"%s\","
 			   "\"vendorid\":\"%s\",\"model\":%u,\"serial\":%u,"
-			   "\"callsign\":\"%s\",",
+			   "\"callsign\":\"%s\"",
 			   ais->type24.shiptype,
 			   SHIPTYPE_DISPLAY(ais->type24.shiptype),
 			   json_stringify(buf1, sizeof(buf1),
@@ -3722,11 +3723,11 @@ void json_aivdm_dump(const struct ais_t *ais,
 					  ais->type24.callsign));
 	    if (AIS_AUXILIARY_MMSI(ais->mmsi)) {
 		str_appendf(buf, buflen,
-			       "\"mothership_mmsi\":%u",
+			       ",\"mothership_mmsi\":%u",
 			       ais->type24.mothership_mmsi);
 	    } else {
 		str_appendf(buf, buflen,
-			       "\"to_bow\":%u,\"to_stern\":%u,"
+			       ",\"to_bow\":%u,\"to_stern\":%u,"
 			       "\"to_port\":%u,\"to_starboard\":%u",
 			       ais->type24.dim.to_bow,
 			       ais->type24.dim.to_stern,
@@ -3734,12 +3735,11 @@ void json_aivdm_dump(const struct ais_t *ais,
 			       ais->type24.dim.to_starboard);
 	    }
 	}
-	str_rstrip_char(buf, ',');
 	(void)strlcat(buf, "}\r\n", buflen);
 	break;
     case 25:			/* Binary Message, Single Slot */
 	str_appendf(buf, buflen,
-		       "\"addressed\":%s,\"structured\":%s,\"dest_mmsi\":%u,"
+		       ",\"addressed\":%s,\"structured\":%s,\"dest_mmsi\":%u,"
 		       "\"app_id\":%u,\"data\":\"%zd:%s\"}\r\n",
 		       JSON_BOOL(ais->type25.addressed),
 		       JSON_BOOL(ais->type25.structured),
@@ -3752,7 +3752,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 	break;
     case 26:			/* Binary Message, Multiple Slot */
 	str_appendf(buf, buflen,
-		       "\"addressed\":%s,\"structured\":%s,\"dest_mmsi\":%u,"
+		       ",\"addressed\":%s,\"structured\":%s,\"dest_mmsi\":%u,"
 		       "\"app_id\":%u,\"data\":\"%zd:%s\",\"radio\":%u}\r\n",
 		       JSON_BOOL(ais->type26.addressed),
 		       JSON_BOOL(ais->type26.structured),
@@ -3767,7 +3767,7 @@ void json_aivdm_dump(const struct ais_t *ais,
     case 27:			/* Long Range AIS Broadcast message */
 	if (scaled)
 	    str_appendf(buf, buflen,
-			   "\"status\":\"%s\","
+			   ",\"status\":\"%s\","
 			   "\"accuracy\":%s,\"lon\":%.1f,\"lat\":%.1f,"
 			   "\"speed\":%u,\"course\":%u,\"raim\":%s,"
                            "\"gnss\":%s}\r\n",
@@ -3781,7 +3781,7 @@ void json_aivdm_dump(const struct ais_t *ais,
 			   JSON_BOOL(ais->type27.gnss));
 	else
 	    str_appendf(buf, buflen,
-			   "\"status\":%u,"
+			   ",\"status\":%u,"
 			   "\"accuracy\":%s,\"lon\":%d,\"lat\":%d,"
 			   "\"speed\":%u,\"course\":%u,\"raim\":%s,"
                            "\"gnss\":%s}\r\n",
@@ -3795,7 +3795,6 @@ void json_aivdm_dump(const struct ais_t *ais,
 			   JSON_BOOL(ais->type27.gnss));
 	break;
     default:
-	str_rstrip_char(buf, ',');
 	(void)strlcat(buf, "}\r\n", buflen);
 	break;
     }
