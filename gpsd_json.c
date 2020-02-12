@@ -533,25 +533,25 @@ void json_device_dump(const struct gps_device_t *device,
 
     (void)strlcpy(reply, "{\"class\":\"DEVICE\",\"path\":\"", replylen);
     (void)strlcat(reply, device->gpsdata.dev.path, replylen);
-    (void)strlcat(reply, "\",", replylen);
+    (void)strlcat(reply, "\"", replylen);
     if (device->device_type != NULL) {
-	(void)strlcat(reply, "\"driver\":\"", replylen);
+	(void)strlcat(reply, ",\"driver\":\"", replylen);
 	(void)strlcat(reply, device->device_type->type_name, replylen);
-	(void)strlcat(reply, "\",", replylen);
+	(void)strlcat(reply, "\"", replylen);
     }
     if (device->subtype[0] != '\0') {
-	(void)strlcat(reply, "\"subtype\":\"", replylen);
+	(void)strlcat(reply, ",\"subtype\":\"", replylen);
 	(void)strlcat(reply,
 		      json_stringify(buf1, sizeof(buf1), device->subtype),
 		      replylen);
-	(void)strlcat(reply, "\",", replylen);
+	(void)strlcat(reply, "\"", replylen);
     }
     if (device->subtype1[0] != '\0') {
-	(void)strlcat(reply, "\"subtype1\":\"", replylen);
+	(void)strlcat(reply, ",\"subtype1\":\"", replylen);
 	(void)strlcat(reply,
 		      json_stringify(buf1, sizeof(buf1), device->subtype1),
 		      replylen);
-	(void)strlcat(reply, "\",", replylen);
+	(void)strlcat(reply, "\"", replylen);
     }
     /*
      * There's an assumption here: Anything that we type service_sensor is
@@ -559,7 +559,7 @@ void json_device_dump(const struct gps_device_t *device,
      */
     if (0 < device->gpsdata.online.tv_sec) {
         /* odd, using online, not activated, time */
-	str_appendf(reply, replylen, "\"activated\":\"%s\",",
+	str_appendf(reply, replylen, ",\"activated\":\"%s\"",
 		    timespec_to_iso8601(device->gpsdata.online,
                                         buf1, sizeof(buf1)));
 	if (device->observed != 0) {
@@ -568,15 +568,15 @@ void json_device_dump(const struct gps_device_t *device,
 		if ((device->observed & cmp->packetmask) != 0)
 		    mask |= cmp->typemask;
 	    if (mask != 0)
-		str_appendf(reply, replylen, "\"flags\":%d,", mask);
+		str_appendf(reply, replylen, ",\"flags\":%d", mask);
 	}
 	if (device->servicetype == service_sensor) {
 	    /* speed can be 0 if the device is not currently active */
 	    speed_t speed = gpsd_get_speed(device);
 	    if (speed != 0)
 		str_appendf(reply, replylen,
-			    "\"native\":%d,\"bps\":%d,\"parity\":\"%c\","
-                            "\"stopbits\":%u,\"cycle\":%lld.%02ld,",
+			    ",\"native\":%d,\"bps\":%d,\"parity\":\"%c\","
+                            "\"stopbits\":%u,\"cycle\":%lld.%02ld",
 			    device->gpsdata.dev.driver_mode,
 			    (int)speed,
 			    device->gpsdata.dev.parity,
@@ -587,14 +587,13 @@ void json_device_dump(const struct gps_device_t *device,
 	    if (device->device_type != NULL
 		&& device->device_type->rate_switcher != NULL)
 		str_appendf(reply, replylen,
-			       "\"mincycle\":%lld.%02ld,",
+			       ",\"mincycle\":%lld.%02ld",
 			       (long long)device->device_type->min_cycle.tv_sec,
 			       device->device_type->min_cycle.tv_nsec /
                                10000000);
 #endif /* RECONFIGURE_ENABLE */
 	}
     }
-    str_rstrip_char(reply, ',');
     (void)strlcat(reply, "}\r\n", replylen);
 }
 
