@@ -457,6 +457,7 @@ ubx_msg_log_batch(struct gps_device_t *session, unsigned char *buf UNUSED,
 /*
  * UBX-LOG-RETRIEVEPOS (Indexed PVT entry)
  * Used for GPS standalone operation and host saved logs
+ * u-blox 7,8,9.  protVer 14 to 29
  */
 static gps_mask_t
 ubx_msg_log_retrievepos(struct gps_device_t *session, unsigned char *buf UNUSED,
@@ -547,6 +548,7 @@ ubx_msg_log_retrievepos(struct gps_device_t *session, unsigned char *buf UNUSED,
 /*
  * UBX-LOG-RETRIEVEPOSEXTRA (Indexed Odometry entry)
  * Used for GPS standalone operation and host saved logs
+ * u-blox 7,8,9.  protVer 14 to 29
  */
 static gps_mask_t
 ubx_msg_log_retrieveposextra(struct gps_device_t *session,
@@ -595,6 +597,7 @@ ubx_msg_log_retrieveposextra(struct gps_device_t *session,
 /*
  * UBX-LOG-RETRIEVESTRING
  * Used for GPS standalone operation and host saved logs
+ * u-blox 7,8,9.  protVer 14 to 29
  */
 static gps_mask_t
 ubx_msg_log_retrievestring(struct gps_device_t *session,
