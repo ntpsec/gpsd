@@ -5974,6 +5974,9 @@ High Precision GNSS products only."""
             # UBX-NAV-PVT
             m_data = bytearray([0x01, 0x07, rate])
             gps_model.gps_send(6, 1, m_data)
+            # UBX-NAV-SOL is deprecated in protver 14, kill it always
+            m_data = bytearray([0x01, 0x06, 0])
+            gps_model.gps_send(6, 1, m_data)
 
         # UBX-NAV-POSECEF
         m_data = bytearray([0x01, 0x01, rate])
