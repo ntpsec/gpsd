@@ -139,7 +139,9 @@ static void json_log_dump(const struct gps_device_t *session,
         /* to save rebuilding all the regressions, skip NO_FIX and FIX */
 	str_appendf(reply, replylen, ",\"status\":%d", logp->status);
     }
-    if (0 <= logp->fixType) {
+    // Sometimes char is signed, sometimes unsigned, handle both
+    if ((0 <= logp->fixType &&
+         10 >= logp->fixType)) {
         str_appendf(reply, replylen, ",\"mode\":%d", logp->fixType);
     }
 
