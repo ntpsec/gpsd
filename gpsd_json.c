@@ -444,57 +444,57 @@ void json_sky_dump(const struct gps_data_t *datap,
     int i, reported = 0;
 
     assert(replylen > sizeof(char *));
-    (void)strlcpy(reply, "{\"class\":\"SKY\",", replylen);
+    (void)strlcpy(reply, "{\"class\":\"SKY\"", replylen);
     if (datap->dev.path[0] != '\0')
-	str_appendf(reply, replylen, "\"device\":\"%s\",", datap->dev.path);
+	str_appendf(reply, replylen, ",\"device\":\"%s\"", datap->dev.path);
     if (0 < datap->skyview_time.tv_sec) {
 	char tbuf[JSON_DATE_MAX+1];
 	str_appendf(reply, replylen,
-		       "\"time\":\"%s\",",
+		       ",\"time\":\"%s\"",
 		       timespec_to_iso8601(datap->skyview_time,
                                       tbuf, sizeof(tbuf)));
     }
     if (isfinite(datap->dop.xdop) != 0)
-	str_appendf(reply, replylen, "\"xdop\":%.2f,", datap->dop.xdop);
+	str_appendf(reply, replylen, ",\"xdop\":%.2f", datap->dop.xdop);
     if (isfinite(datap->dop.ydop) != 0)
-	str_appendf(reply, replylen, "\"ydop\":%.2f,", datap->dop.ydop);
+	str_appendf(reply, replylen, ",\"ydop\":%.2f", datap->dop.ydop);
     if (isfinite(datap->dop.vdop) != 0)
-	str_appendf(reply, replylen, "\"vdop\":%.2f,", datap->dop.vdop);
+	str_appendf(reply, replylen, ",\"vdop\":%.2f", datap->dop.vdop);
     if (isfinite(datap->dop.tdop) != 0)
-	str_appendf(reply, replylen, "\"tdop\":%.2f,", datap->dop.tdop);
+	str_appendf(reply, replylen, ",\"tdop\":%.2f", datap->dop.tdop);
     if (isfinite(datap->dop.hdop) != 0)
-	str_appendf(reply, replylen, "\"hdop\":%.2f,", datap->dop.hdop);
+	str_appendf(reply, replylen, ",\"hdop\":%.2f", datap->dop.hdop);
     if (isfinite(datap->dop.gdop) != 0)
-	str_appendf(reply, replylen, "\"gdop\":%.2f,", datap->dop.gdop);
+	str_appendf(reply, replylen, ",\"gdop\":%.2f", datap->dop.gdop);
     if (isfinite(datap->dop.pdop) != 0)
-	str_appendf(reply, replylen, "\"pdop\":%.2f,", datap->dop.pdop);
+	str_appendf(reply, replylen, ",\"pdop\":%.2f", datap->dop.pdop);
     /* insurance against flaky drivers */
     for (i = 0; i < datap->satellites_visible; i++)
 	if (datap->skyview[i].PRN)
 	    reported++;
     if (reported) {
-	(void)strlcat(reply, "\"satellites\":[", replylen);
+	(void)strlcat(reply, ",\"satellites\":[", replylen);
 	for (i = 0; i < reported; i++) {
 	    if (datap->skyview[i].PRN) {
-		str_appendf(reply, replylen, "{\"PRN\":%d,",
+		str_appendf(reply, replylen, "{\"PRN\":%d",
                             datap->skyview[i].PRN);
 		if (0 != isfinite(datap->skyview[i].elevation) &&
 		    90 >= fabs(datap->skyview[i].elevation)) {
-		    str_appendf(reply, replylen, "\"el\":%.1f,",
+		    str_appendf(reply, replylen, ",\"el\":%.1f",
 		                datap->skyview[i].elevation);
                 }
 		if (0 != isfinite(datap->skyview[i].azimuth) &&
 		    0 <= fabs(datap->skyview[i].azimuth) &&
 		    359 >= fabs(datap->skyview[i].azimuth)) {
-		    str_appendf(reply, replylen, "\"az\":%.1f,",
+		    str_appendf(reply, replylen, ",\"az\":%.1f",
 		                datap->skyview[i].azimuth);
                 }
 		if (0 != isfinite(datap->skyview[i].ss)) {
-		    str_appendf(reply, replylen, "\"ss\":%.1f,",
+		    str_appendf(reply, replylen, ",\"ss\":%.1f",
 		                datap->skyview[i].ss);
                 }
 		str_appendf(reply, replylen,
-                   "\"used\":%s",
+                   ",\"used\":%s",
                    datap->skyview[i].used ? "true" : "false");
                 if (0 != datap->skyview[i].svid) {
                     str_appendf(reply, replylen,
@@ -519,10 +519,9 @@ void json_sky_dump(const struct gps_data_t *datap,
                 (void)strlcat(reply, "},", replylen);
 	    }
 	}
-	str_rstrip_char(reply, ',');
+        str_rstrip_char(reply, ',');
 	(void)strlcat(reply, "]", replylen);
     }
-    str_rstrip_char(reply, ',');
     (void)strlcat(reply, "}\r\n", replylen);
 }
 
