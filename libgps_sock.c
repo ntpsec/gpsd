@@ -418,49 +418,47 @@ int gps_sock_stream(struct gps_data_t *gpsdata, unsigned int flags, void *d)
 	flags |= WATCH_JSON;
     }
     if ((flags & WATCH_DISABLE) != 0) {
-	(void)strlcpy(buf, "?WATCH={\"enable\":false,", sizeof(buf));
+	(void)strlcpy(buf, "?WATCH={\"enable\":false", sizeof(buf));
 	if (flags & WATCH_JSON)
-	    (void)strlcat(buf, "\"json\":false,", sizeof(buf));
+	    (void)strlcat(buf, ",\"json\":false", sizeof(buf));
 	if (flags & WATCH_NMEA)
-	    (void)strlcat(buf, "\"nmea\":false,", sizeof(buf));
+	    (void)strlcat(buf, ",\"nmea\":false", sizeof(buf));
 	if (flags & WATCH_RAW)
-	    (void)strlcat(buf, "\"raw\":1,", sizeof(buf));
+	    (void)strlcat(buf, ",\"raw\":1", sizeof(buf));
 	if (flags & WATCH_RARE)
-	    (void)strlcat(buf, "\"raw\":0,", sizeof(buf));
+	    (void)strlcat(buf, ",\"raw\":0", sizeof(buf));
 	if (flags & WATCH_SCALED)
-	    (void)strlcat(buf, "\"scaled\":false,", sizeof(buf));
+	    (void)strlcat(buf, ",\"scaled\":false", sizeof(buf));
 	if (flags & WATCH_TIMING)
-	    (void)strlcat(buf, "\"timing\":false,", sizeof(buf));
+	    (void)strlcat(buf, ",\"timing\":false", sizeof(buf));
 	if (flags & WATCH_SPLIT24)
-	    (void)strlcat(buf, "\"split24\":false,", sizeof(buf));
+	    (void)strlcat(buf, ",\"split24\":false", sizeof(buf));
 	if (flags & WATCH_PPS)
-	    (void)strlcat(buf, "\"pps\":false,", sizeof(buf));
-	str_rstrip_char(buf, ',');
+	    (void)strlcat(buf, ",\"pps\":false", sizeof(buf));
 	(void)strlcat(buf, "};", sizeof(buf));
 	libgps_debug_trace((DEBUG_CALLS,
                            "gps_stream() disable command: %s\n", buf));
 	return gps_send(gpsdata, buf);
     } else {			/* if ((flags & WATCH_ENABLE) != 0) */
-	(void)strlcpy(buf, "?WATCH={\"enable\":true,", sizeof(buf));
+	(void)strlcpy(buf, "?WATCH={\"enable\":true", sizeof(buf));
 	if (flags & WATCH_JSON)
-	    (void)strlcat(buf, "\"json\":true,", sizeof(buf));
+	    (void)strlcat(buf, ",\"json\":true", sizeof(buf));
 	if (flags & WATCH_NMEA)
-	    (void)strlcat(buf, "\"nmea\":true,", sizeof(buf));
+	    (void)strlcat(buf, ",\"nmea\":true", sizeof(buf));
 	if (flags & WATCH_RARE)
-	    (void)strlcat(buf, "\"raw\":1,", sizeof(buf));
+	    (void)strlcat(buf, ",\"raw\":1", sizeof(buf));
 	if (flags & WATCH_RAW)
-	    (void)strlcat(buf, "\"raw\":2,", sizeof(buf));
+	    (void)strlcat(buf, ",\"raw\":2", sizeof(buf));
 	if (flags & WATCH_SCALED)
-	    (void)strlcat(buf, "\"scaled\":true,", sizeof(buf));
+	    (void)strlcat(buf, ",\"scaled\":true", sizeof(buf));
 	if (flags & WATCH_TIMING)
-	    (void)strlcat(buf, "\"timing\":true,", sizeof(buf));
+	    (void)strlcat(buf, ",\"timing\":true", sizeof(buf));
 	if (flags & WATCH_SPLIT24)
-	    (void)strlcat(buf, "\"split24\":true,", sizeof(buf));
+	    (void)strlcat(buf, ",\"split24\":true", sizeof(buf));
 	if (flags & WATCH_PPS)
-	    (void)strlcat(buf, "\"pps\":true,", sizeof(buf));
+	    (void)strlcat(buf, ",\"pps\":true", sizeof(buf));
 	if (flags & WATCH_DEVICE)
-	    str_appendf(buf, sizeof(buf), "\"device\":\"%s\",", (char *)d);
-	str_rstrip_char(buf, ',');
+	    str_appendf(buf, sizeof(buf), ",\"device\":\"%s\"", (char *)d);
 	(void)strlcat(buf, "};", sizeof(buf));
 	libgps_debug_trace((DEBUG_CALLS,
                            "gps_stream() enable command: %s\n", buf));
