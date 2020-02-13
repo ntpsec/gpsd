@@ -11,4 +11,4 @@
 {"class":"RTCM2","type":6,"station_id":268,"zcount":255.0,"seqnum":5,"length":0,"station_health":0}
 {"class":"RTCM2","type":7,"station_id":268,"zcount":256.8,"seqnum":6,"length":12,"station_health":0,"satellites":[{"lat":38.8379,"lon":-121.3532,"range":250,"frequency":313.2,"health":0,"station_id":764,"bitrate":200},{"lat":39.4229,"lon":-121.6059,"range":402,"frequency":317.2,"health":0,"station_id":878,"bitrate":100},{"lat":37.1789,"lon":-122.3804,"range":333,"frequency":291.3,"health":0,"station_id":883,"bitrate":100},{"lat":40.4337,"lon":-124.4020,"range":333,"frequency":290.1,"health":0,"station_id":885,"bitrate":100}]}
 {"class":"RTCM2","type":16,"station_id":268,"zcount":258.6,"seqnum":7,"length":9,"station_health":0,"message":"ABRACADABRA SHEMHAMPHORASH"}
-{"class":"RTCM2","type":23,"station_id":268,"zcount":258.6,"seqnum":0,"length":1,"station_health":0,"data":["0xffeeddcc"]}
+{"class":"RTCM2","type":23,"station_id":268,"zcount":258.6,"seqnum":0,"length":1,"station_health":0,"ar":"0","sid":"0"}
