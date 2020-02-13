@@ -40,6 +40,7 @@ import os            # for os.environ
 import re            # for regular expressions
 import socket        # for socket.error
 import stat          # for stat.S_ISBLK()
+import string        # for string.printable
 import struct        # for pack()
 import sys
 import time
@@ -3630,9 +3631,14 @@ Oddly this is the poll for UBX-LOG-BATCH
         s = ("  entryIndex %u version %u reserved2 x%x\n"
              "  year %u month %u day %u hour %u min %u sec %u\n"
              "  reserved2 x%x byteCount %u\n"
-             "\n  bytes " % u)
+             "  bytes \"" % u)
         if 0 < u[10]:
-            s += gps.polystr(binascii.hexlify(buf[16:16 + u[10]]))
+            for c in buf[16:16 + u[10]]:
+                if c < 127 and chr(c) in string.printable:
+                    s += chr(c)
+                else:
+                    s += "\\x%02x" % c
+            s += '"'
 
         return s
 
