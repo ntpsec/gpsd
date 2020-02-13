@@ -6030,6 +6030,11 @@ High Precision GNSS products only."""
             m_data = bytearray([0x01, 0x61, rate])
             gps_model.gps_send(6, 1, m_data)
 
+        if not able and 15 <= opts['protver']:
+            # if disable, turn off UBX-NAV-VELNED too
+            m_data = bytearray([0x01, 0x12, 0])
+            gps_model.gps_send(6, 1, m_data)
+
     def send_able_ecef(self, able):
         """Enable ECEF messages"""
         # set NAV-POSECEF rate
