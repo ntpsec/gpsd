@@ -487,6 +487,10 @@ ubx_msg_log_info(struct gps_device_t *session, unsigned char *buf UNUSED,
     }
     // u-blox 7/8/9 version 1
     version = getub(buf, 0);
+    filestoreCapacity = getleu32(buf, 4);
+    currentMaxLogSize = getleu32(buf, 16);
+    currentLogSize = getleu32(buf, 20);
+    entryCount = getleu32(buf, 24);
     status = getub(buf, 44);
 
     memset(&oldest_date, 0, sizeof(oldest_date));
