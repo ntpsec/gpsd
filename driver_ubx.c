@@ -66,6 +66,8 @@ static gps_mask_t ubx_parse(struct gps_device_t *session, unsigned char *buf,
                             size_t len);
 static gps_mask_t ubx_msg_log_batch(struct gps_device_t *session,
                                     unsigned char *buf, size_t data_len);
+static gps_mask_t ubx_msg_log_info(struct gps_device_t *session,
+                                   unsigned char *buf, size_t data_len);
 static gps_mask_t ubx_msg_log_retrievepos(struct gps_device_t *session,
                                           unsigned char *buf, size_t data_len);
 static gps_mask_t ubx_msg_log_retrieveposextra(struct gps_device_t *session,
@@ -451,6 +453,82 @@ ubx_msg_log_batch(struct gps_device_t *session, unsigned char *buf UNUSED,
     }
 
     mask |= LOG_SET;
+    return mask;
+}
+
+/**
+ * UBX-LOG-INFO info of log status
+ * u-blox 7,8,9.  protVer 14 to 29
+ * WIP: Initial decode, log only.
+ * 
+ */
+static gps_mask_t
+ubx_msg_log_info(struct gps_device_t *session, unsigned char *buf UNUSED,
+                 size_t data_len)
+{
+    struct tm oldest_date, newest_date;
+    timespec_t oldest = {0, 0};
+    timespec_t newest = {0, 0};
+    unsigned char version, status;
+    unsigned long filestoreCapacity;
+    unsigned long currentMaxLogSize;
+    unsigned long currentLogSize;
+    unsigned long entryCount;
+    char ts_buf[TIMESPEC_LEN];
+    char ts_buf1[TIMESPEC_LEN];
+    gps_mask_t mask = 0;
+
+    gps_clear_log(&session->gpsdata.log);
+    // u-blox 7/8/9 48 bytes payload
+    if (48 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-LOG-INFO: runt len %zd", data_len);
+        return 0;
+    }
+    // u-blox 7/8/9 version 1
+    version = getub(buf, 0);
+    status = getub(buf, 44);
+
+    memset(&oldest_date, 0, sizeof(oldest_date));
+    oldest_date.tm_year = getleu16(buf, 28);
+    if (0 != oldest_date.tm_year) {
+        oldest_date.tm_year -= 1900;
+        oldest_date.tm_mon = getub(buf, 30) - 1;
+        oldest_date.tm_mday = getub(buf, 31);
+        oldest_date.tm_hour = getub(buf, 32);
+        oldest_date.tm_min = getub(buf, 33);
+        oldest_date.tm_sec = getub(buf, 34);
+        oldest.tv_sec = mkgmtime(&oldest_date);
+        oldest.tv_nsec = 0;
+        TS_NORM(&oldest);
+    }
+
+    memset(&newest_date, 0, sizeof(newest_date));
+    newest_date.tm_year = getleu16(buf, 36);
+    if (0 != newest_date.tm_year) {
+        newest_date.tm_year -= 1900;
+        newest_date.tm_mon = getub(buf, 38) - 1;
+        newest_date.tm_mday = getub(buf, 39);
+        newest_date.tm_hour = getub(buf, 40);
+        newest_date.tm_min = getub(buf, 41);
+        newest_date.tm_sec = getub(buf, 42);
+        newest.tv_sec = mkgmtime(&newest_date);
+        newest.tv_nsec = 0;
+        TS_NORM(&newest);
+    }
+
+    GPSD_LOG(LOG_INF, &session->context->errout,
+             "UBX-LOG-INFO: version=%u status=x%x Cap=%lu MaxSize=%lu "
+             "Size=%lu cnt=%lu oldest=%s newest=%s\n",
+             version, status,
+             filestoreCapacity,
+             currentMaxLogSize,
+             currentLogSize,
+             entryCount,
+             timespec_str(&oldest, ts_buf, sizeof(ts_buf)),
+             timespec_str(&newest, ts_buf1, sizeof(ts_buf1)));
+
+    // mask |= LOG_SET;
     return mask;
 }
 
@@ -2102,6 +2180,10 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
     case UBX_LOG_BATCH:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-LOG-BATCH\n");
         mask = ubx_msg_log_batch(session, &buf[UBX_PREFIX_LEN], data_len);
+        break;
+    case UBX_LOG_INFO:
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-LOG-INFO\n");
+        mask = ubx_msg_log_info(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_LOG_RETRIEVEPOS:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-LOG-RETRIEVEPOS\n");
