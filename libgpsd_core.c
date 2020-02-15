@@ -1241,7 +1241,7 @@ int gpsd_await_data(fd_set *rfds,
 
     FD_ZERO(efds);
     *rfds = *all_fds;
-    GPSD_LOG(LOG_RAW + 1, errout, "select waits\n");
+    GPSD_LOG(LOG_RAW + 1, errout, "select waits, maxfd %d\n", maxfd);
     /*
      * Poll for user commands or GPS data.  The timeout doesn't
      * actually matter here since select returns whenever one of
@@ -1250,9 +1250,9 @@ int gpsd_await_data(fd_set *rfds,
      * pselect(2) has to poll here as small as possible (for
      * low-clock-rate SBCs and the like).
      *
-     * pselect(2) is preferable to vanilla select, to eliminate
-     * the once-per-second wakeup when no sensors are attached.
-     * This cuts power consumption.
+     * As used here, there is no difference between pselect()
+     * or select().  No timeout is used, this cuts power consumption,
+     * but can lead to infinite hang.
      */
     errno = 0;
 
