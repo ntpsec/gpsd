@@ -133,6 +133,9 @@ export LINKFLAGS="%{__global_ldflags}"
 # Solidly fix Python interpreter path.
 sed -e "/PYSHEBANG/s|@PYSHEBAG@|/usr/bin/python3|g" -i SConstruct
 
+# Solidly fix icon path.
+sed -e "/icon dir/s|share/gpsd/icons|%{_datadir}/gpsd|g" -i SConstruct
+
 # breaks with %{_smp_mflags}
 scons \
 	dbus_export=yes \
@@ -144,7 +147,7 @@ scons \
 	%endif
 	debug=yes \
 	leapfetch=no \
-	prefix="" \
+	prefix=%{_prefix} \
 	sysconfdif=%{_sysconfdir} \
 	bindir=%{_bindir} \
 	includedir=%{_includedir} \
@@ -170,7 +173,7 @@ DESTDIR=%{buildroot} scons install systemd_install udev-install
 mv %{buildroot}%{_udevrulesdir}/{25,99}-gpsd.rules
 
 %{__install} -d -m 0755 %{buildroot}%{_sysconfdir}/sysconfig
-%{__install} -p -m 0644 %{SOURCE11} \
+%{__install} -p -m 0644 packaging/rpm/gpsd.sysconfig \
     %{buildroot}%{_sysconfdir}/sysconfig/gpsd
 
 # Install the .desktop files
@@ -304,9 +307,8 @@ desktop-file-install \
 
 
 %changelog
-* Tue Jan 28 2020 James Browning <jamesb.fe80@gmail.com> - ????
+* Sun Feb 16 2020 James Browning <jamesb.fe80@gmail.com> - ????
 - Rebuilt for upstream inclusion
-
 
 * Thu Oct 03 2019 Miro Hrončok <mhroncok@redhat.com> - 3.19-4
 - Rebuilt for Python 3.8.0rc1 (#1748018)
