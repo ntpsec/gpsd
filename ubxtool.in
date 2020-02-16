@@ -5582,28 +5582,43 @@ High Precision GNSS products only."""
 
     upd_sos_response3 = {
         0: "Unknown",
-        1: "Failed restoring from backup fiil",
+        1: "Failed restoring from backup file",
         2: "Restored from backup file",
         3: "Not restored (no backup)",
         }
 
     def upd_sos(self, buf):
         """UBX-UPD-SOS decode, Backup File stuff"""
+        m_len = len(buf)
+
+        if 0 == m_len:
+            return "  Poll Backup File Restore Status"
+
+        if 4 > m_len:
+            return "  Bad Length %s" % m_len
 
         u = struct.unpack_from('<BBH', buf, 0)
         s = '  command %u reserved1 x%x %x' % u
 
         s1 = ""
-        if 2 == u[0]:
+        if 0 == u[0]:
+            # Create Backup in Flash
+            pass
+        elif 1 == u[0]:
+            # Clear Backup in Flash
+            pass
+        elif 8 > m_len:
+            s += "  Bad Length %s" % m_len
+        elif 2 == u[0]:
             # Backup File Creation Acknowledge
             u1 = struct.unpack_from('<BBH', buf, 4)
             s += '\n  response %u reserved2 x%x %x' % u1
-            s1 = ' response (%s)' % index_s(u[2], self.upd_sos_response2)
+            s1 = ' response (%s)' % index_s(u1[0], self.upd_sos_response2)
         elif 3 == u[0]:
             # System Restored from Backup
             u1 = struct.unpack_from('<BBH', buf, 4)
             s += '\n  response %u reserved2 x%x %x' % u1
-            s1 = ' response (%s)' % index_s(u[2], self.upd_sos_response3)
+            s1 = ' response (%s)' % index_s(u1[0], self.upd_sos_response3)
 
         if VERB_DECODE <= opts['verbosity']:
             s += '\n    cmd (%s)%s' % (index_s(u[0], self.upd_sos_cmd), s1)
@@ -5612,8 +5627,7 @@ High Precision GNSS products only."""
     upd_ids = {
                # undocumented firmware update message
                0x0c: {'str': 'undoc1', 'minlen': 13, 'name': "UBX-UPD-undoc1"},
-               0x14: {'str': 'SOS', 'dec': upd_sos, 'minlen': 4,
-                      'name': "UBX-UPD-SOS"},
+               0x14: {'str': 'SOS', 'dec': upd_sos, 'name': "UBX-UPD-SOS"},
                # undocumented firmware update message
                0x25: {'str': 'undoc2', 'minlen': 20, 'name': "UBX-UPD-undoc2"},
                }
