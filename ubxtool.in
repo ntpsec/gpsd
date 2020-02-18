@@ -4356,7 +4356,7 @@ Oddly this is the poll for UBX-LOG-BATCH
         }
 
     nav_pvt_psm = {
-        0: "n/a",
+        0: "Not Active",
         1: "Enabled",
         2: "Acquisition",
         3: "Tracking",
@@ -4394,7 +4394,8 @@ Oddly this is the poll for UBX-LOG-BATCH
 
         if VERB_DECODE <= opts['verbosity']:
             s += ("\n    valid (%s) fixType (%s)"
-                  "\n    flags (%s) flags2 (%s)"
+                  "\n    flags (%s)"
+                  "\n    flags2 (%s)"
                   "\n    psmState (%s)"
                   "\n    carrSoln (%s)" %
                   (flag_s(u[7], self.nav_pvt_valid),
@@ -4522,7 +4523,7 @@ High Precision GNSS products only."""
         2: "Enabled Testmode",
         }
 
-    # sometimes U1 or I1
+    # sometimes U1 or I1, 255 or -1 == Unknown
     nav_sbas_sys = {
         0: "WAAS",
         1: "EGNOS",
@@ -4542,7 +4543,9 @@ High Precision GNSS products only."""
     def nav_sbas(self, buf):
         """UBX-NAV-SBAS decode, SBAS Status Data"""
 
+        # present in protver 10+ (Antaris4 to ZOE-M8B
         # undocumented, but present in protver 27+
+        # undocumented, but present in protver 32, NEO-M9N
 
         u = struct.unpack_from('<LBBbBBBBB', buf, 0)
         s = (" iTOW %d geo %u mode x%x sys %d service x%x cnt %u "
