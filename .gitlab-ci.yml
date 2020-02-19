@@ -132,6 +132,22 @@ sparc64-linux:
   script:
   - .ci-build/build.sh
 
+# to avoid falied builds on MRs/forks where no builder with the
+# tag `mips64le` is available, run this job only if
+# $HAVE_MIPS64LE_LINUX == "true"
+# set this in your CI environment settings in gitlab.
+mips64le-linux:
+  allow_failure: true
+  only:
+    variables:
+    - $HAVE_MIPS64LE_LINUX == "true"
+  stage: advanced_build
+  tags:
+  - mips64le
+  - linux
+  script:
+  - .ci-build/build.sh
+
 scan-build:
   allow_failure: true
   image: debian:unstable
