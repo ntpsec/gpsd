@@ -137,7 +137,6 @@ sparc64-linux:
 # $HAVE_MIPS64LE_LINUX == "true"
 # set this in your CI environment settings in gitlab.
 mips64le-linux:
-  allow_failure: true
   only:
     variables:
     - $HAVE_MIPS64LE_LINUX == "true"
