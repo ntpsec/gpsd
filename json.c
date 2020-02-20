@@ -850,6 +850,9 @@ const char *json_error_string(int err)
 
 #endif /* SOCKET_EXPORT_ENABLE */
 
+// FIXME: check outlen too.
+// FIXME: do not skip high bit chars, output then as \xXX
+// FIXME: this is JSON so NULL in *in ends the string.
 char *json_clean(const char *in, char *buf, size_t inlen)
 {
     const char *escape_in = "'\"/\\\b\f\n\r\t\0F";
