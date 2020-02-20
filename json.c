@@ -853,32 +853,54 @@ const char *json_error_string(int err)
 // FIXME: check outlen too.
 // FIXME: do not skip high bit chars, output then as \xXX
 // FIXME: this is JSON so NULL in *in ends the string.
-char *json_clean(const char *in, char *buf, size_t inlen)
+char *json_clean(const char *in, char *buf, size_t buflen)
 {
-    const char *escape_in = "'\"/\\\b\f\n\r\t\0F";
-    const char *escape_out = "'\"/\\bfnrt0F";
+    const char *escape_in = "'\"/\\\b\f\n\r\t";
+    const char *escape_out = "'\"/\\bfnrt";
     size_t ocnt = 0;
     int cnt;
-    for (cnt = 0; ((in[cnt] != 0) && (ocnt <inlen)); ++cnt) {
-	if (in[cnt] & 0x80) {
-	    /* wrongly drop all bytes with the high bit set
-	     * this is for ASCII not Unicode. A future version
-	     * might support that.
-	     */
+    for (cnt = 0; in[cnt] != 0; ++cnt) {
+	if (in[cnt] < 0) {
+	    size_t to_copy = 0;
+//	    printf("to print: %zd", to_copy);
+	    if ((((uint8_t)in[cnt] & 0xE0) == 0xC0)&&
+		(((uint8_t)in[cnt+1] & 0xC0) == 0x80)) {
+		// utf-8 ish 16bit rune - deg, plusm, mplus etc.
+		to_copy = 2;
+	    } else if ((((uint8_t)in[cnt]   & 0xF0) == 0xE0)&&
+		       (((uint8_t)in[cnt+1] & 0xC0) == 0x80)&&
+		       (((uint8_t)in[cnt+2] & 0xC0) == 0x80)) {
+		// utf-8 ish 24 bit rune - (double) prime etc. 
+		to_copy = 3;
+	    } else if ((((uint8_t)in[cnt]   & 0xF8) == 0xF0)&&
+		       (((uint8_t)in[cnt+1] & 0xC0) == 0x80)&&
+		       (((uint8_t)in[cnt+2] & 0xC0) == 0x80)&&
+		       (((uint8_t)in[cnt+3] & 0xC0) == 0x80)) {
+		// utf-8 ish 32 bit rune - musical symbol g clef etc. 
+		to_copy = 4;
+	    }
+	    if ((to_copy > 0) && (buflen > (ocnt + to_copy))) {
+		for (;to_copy > 1; to_copy--) {
+		    buf[ocnt++] = in[cnt++];
+		}
+		buf[ocnt++] = in[cnt];
+		buf[ocnt] = 0;
+	    } else {
+		return buf;
+	    }
 	    continue;
 	}
 	/* step though a array of bytes (escape_in) to escape
-	 * until finding  the target byte or 'F'. not a string
-	 * because \0 is a target desired to match. Then finds
+	 * until finding  the target byte or 0. Then finds
 	 * the corresponding byte in (escape_out) and forms the
 	 * escape sequence. sets a Boolean because a continue
 	 * would probably drop execution in the ext loop up
 	 * which is a level below where we want.
 	 */
 	bool notyet = true;
-	for (int icnt = 0 ; notyet && (escape_in[icnt] != 'F'); icnt++) {
+	for (int icnt = 0 ; notyet && (escape_in[icnt] != 0); icnt++) {
 	    if (in[cnt] == escape_in[icnt]) {
-		if (inlen <= (ocnt + 2)) {
+		if (buflen <= (ocnt + 2)) {
 		    return buf;
 		}
 		buf[ocnt++] = '\\';
@@ -894,14 +916,14 @@ char *json_clean(const char *in, char *buf, size_t inlen)
 	if (('\x00' <= (int8_t)in[cnt] && (int8_t)in[cnt] <= '\x1f') ||
 	    '\x7f' == (int8_t)in[cnt]
 	) {
-	    if (inlen <= (ocnt + 6)) {
+	    if (buflen <= (ocnt + 6)) {
 		return buf;
 	    }
-	    str_appendf(buf, inlen, "\\x%04x", in[cnt]);
+	    str_appendf(buf, buflen - ocnt, "\\x%04x", in[cnt]);
 	    ocnt = strlen(buf);
 	    continue;
 	}
-	if (inlen <= (ocnt + 1)) {
+	if (buflen <= (ocnt + 1)) {
 	    return buf;
 	}
 	// pass through everything not escaped.
