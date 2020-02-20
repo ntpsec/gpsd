@@ -341,7 +341,6 @@ static const struct json_attr_t json_attrs_20[] = {
     {NULL},
 };
 
-#ifndef JSON_MINIMAL
 /* Case 21: Read array of integers */
 
 static const char *json_strInt = "[23,-17,5]";
@@ -379,6 +378,19 @@ static const struct json_array_t json_array_Real = {
     .count = &realcount,
     .maxlen = sizeof(realstore)/sizeof(realstore[0]),
 };
+
+// Case 24: ascii, bfnrt, lows unicode string encoding
+char *ee24a = "This, that, the other thing.",
+     *ee24b = "\b\f\n\r\t\'\"\\/",
+     *ee24l = "\x01\x07\x15",
+     *ee24u = "±176°42′13″ 𠜎 𠜱 𠝹 𠱓";
+char *ed24a = "This, that, the other thing.",
+     *ed24b = "\\b\\f\\n\\r\\t\\'\\\"\\\\\\/",
+     *ed24l = "\\x0001\\x0007\\x0015",
+     *ed24u = "±176°42′13″ 𠜎 𠜱 𠝹 𠱓";
+char  md24[500] = "";
+
+#ifndef JSON_MINIMAL
 #endif /* JSON_MINIMAL */
 
 /* *INDENT-ON* */
@@ -618,9 +630,6 @@ static void jsontest(int i)
 	assert_integer("return", status, 0);
 	break;
 
-#ifdef JSON_MINIMAL
-#define MAXTEST 20
-#else
     case 21:
 	status = json_read_array(json_strInt, &json_array_Int, NULL);
 	assert_integer("count", intcount, 3);
@@ -648,7 +657,27 @@ static void jsontest(int i)
 	assert_real("realstore[3]", realstore[3], 0);
 	break;
 
-#define MAXTEST 23
+    case 24:
+	md24[0] = 0;
+	(void)json_clean(ee24a, md24, 490);
+	assert_string("Ascii",   md24, ed24a);
+	md24[0] = 0;
+	(void)json_clean(ee24b, md24, 490);
+	assert_string("bfnrt",   md24, ed24b);
+	md24[0] = 0;
+	(void)json_clean(ee24l, md24, 490);
+	assert_string("low",     md24, ed24l);
+	md24[0] = 0;
+	(void)json_clean(ee24u, md24, 490);
+	assert_string("unicode", md24, ed24u);
+	md24[0] = 0;
+	break;
+
+#ifdef JSON_MINIMAL
+#define MAXTEST 24
+#else
+
+#define MAXTEST 24
 #endif /* JSON_MINIMAL */
 
     default:
