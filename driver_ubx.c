@@ -59,6 +59,7 @@
 #define UBX_PROTOCOL_MASK       0x01
 #define NMEA_PROTOCOL_MASK      0x02
 #define RTCM_PROTOCOL_MASK      0x04
+#define RTCM3_PROTOCOL_MASK     0x20    // protVer 20+
 #define UBX_CFG_LEN             20
 #define outProtoMask            14
 
@@ -2721,8 +2722,8 @@ static void ubx_cfg_prt(struct gps_device_t *session,
     putle32(buf, 4, usart_mode);
 
     /* enable all input protocols by default */
-    /* FIXME!  RTCM3 needs to be set too */
-    buf[12] = NMEA_PROTOCOL_MASK | UBX_PROTOCOL_MASK | RTCM_PROTOCOL_MASK;
+    buf[12] = NMEA_PROTOCOL_MASK | UBX_PROTOCOL_MASK | RTCM_PROTOCOL_MASK |
+              RTCM3_PROTOCOL_MASK;
 
     /* FIXME?  RTCM/RTCM3 needs to be set too? */
     buf[outProtoMask] = (mode == MODE_NMEA
