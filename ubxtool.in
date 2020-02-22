@@ -2202,7 +2202,7 @@ Programming the fixed seed for host interface signature"""
             0x100000: "B2I"},
         4: {0x010000: "L1"},      # IMES
         5: {0x010000: "L1C/A",    # QZSS
-            0x040000: "L2S",
+            0x040000: "L1S",
             0x100000: "L2C"},
         6: {0x010000: "L1",       # GLONASS
             0x100000: "L2"},
@@ -2674,7 +2674,7 @@ Save and Load non-volatile storage data"""
         0x1: 'UBX',
         0x2: 'NMEA',
         0x4: 'RTCM2',    # not in u-blox 5
-        0x20: 'RTCM3',   # not in u-blox 5
+        0x20: 'RTCM3',   # protVer 20+
         }
 
     def cfg_prt(self, buf):
@@ -6355,6 +6355,9 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         m_data[3] = 1       # 1 block follows
         # block 1
         m_data[4] = gnssId  # gnssId
+
+        # m_data[5], resTrkCh, read only protVer 23+
+        # m_data[6], maxTrkCh, read only protVer 23+
         if 0 == gnssId:
             # GPS
             m_data[5] = 8   # resTrkCh
@@ -6385,13 +6388,35 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
             m_data[6] = 14  # maxTrkCh
         m_data[7] = 0       # reserved1
         m_data[8] = enable  # flags
-        m_data[9] = 0       # flagflags, unused
-        if 5 == gnssId:
+        m_data[9] = 0       # flags, unused
+
+        # m_data[10], sigCfgMask, enable all signals
+        if 0 == gnssId:
+            # GPS
+            m_data[10] = 0x11   # flags L1C/A, L2C
+        elif 1 == gnssId:
+            # SBAS
+            m_data[10] = 1      # flags L1C/A
+        elif 2 == gnssId:
+            # Galileo
+            m_data[10] = 0x21   # flags E1, E5b
+        elif 3 == gnssId:
+            # BeiDou
+            m_data[10] = 0x11   # flags B1I,  B2I
+        elif 4 == gnssId:
+            # IMES
+            m_data[10] = 1      # flags L1
+        elif 5 == gnssId:
             # QZSS
-            m_data[10] = 5      # flags E1OS, L1SAIF
+            m_data[10] = 0x15   # flags L1C/A, L1S, L2C
+        elif 6 == gnssId:
+            # GLONASS
+            m_data[10] = 0x11   # flags L1, L2
         else:
-            m_data[10] = 1      # flags E1OS
-        m_data[11] = 1      # flags, unused
+            # what else?
+            m_data[10] = 1      # flags L1
+
+        m_data[11] = 0          # flags, bits 24:31, unused
         gps_model.gps_send(6, 0x3e, m_data)
 
     def poll_cfg_inf(self):
