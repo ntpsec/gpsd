@@ -5050,34 +5050,42 @@ High Precision GNSS products only."""
 
         # common to Short-RLM and Long-RLM report
         u = struct.unpack_from('<BBBBLLB', buf, 0)
-        s = (" version %u type %u svId %u reserved1 %u beacon x%x %x "
+        s = ("  version %u type %u svId %u reserved1 %u beacon x%x %x "
              " message %u" % u)
         if 16 == m_len:
             # Short-RLM report
             u = struct.unpack_from('<BBB', buf, 13)
-            s += "\n params %u %u reserved2 %u" % u
+            s += "\n  params %u %u reserved2 %u" % u
         elif 28 == m_len:
             # Long-RLM report
             u = struct.unpack_from('<BBBBBBBBBBBBBBB', buf, 13)
-            s += ("\n params %u %u %u %u %u %u %u %u %u %u %u %u"
-                  "\n reserved2 %u %u %u" % u)
+            s += ("\n  params %u %u %u %u %u %u %u %u %u %u %u %u"
+                  "\n  reserved2 %u %u %u" % u)
 
         return s
+
+    rxm_rtcm_flags = {
+        1: "crcFailed",
+        }
 
     def rxm_rtcm(self, buf):
         """UBX-RXM-RTCM decode, RTCM Input Status"""
 
+        # present in some u-blox 8 and 9, protVer 20+
+        # undocumented, but in NEO-M9N, protVer 32
         u = struct.unpack_from('<BBHHH', buf, 0)
-        s = " version %u flags x%x subtype %u refstation %u msgtype %u" % u
+        s = "  version %u flags x%x subtype %u refstation %u msgtype %u" % u
+        if VERB_DECODE <= opts['verbosity']:
+            s += ('\n    flags (%s)' % flag_s(u[1], self.rxm_rtcm_flags))
         return s
 
     def rxm_sfrb(self, buf):
         """UBX-RXM-SFRB decode, Subframe Buffer"""
 
         u = struct.unpack_from('<BBLLLLLLLLLL', buf, 0)
-        s = (' chn %d s svid %3d\n'
-             ' dwrd %08x %08x %08x %08x %08x\n'
-             '      %08x %08x %08x %08x %08x' % u)
+        s = ('  chn %d s svid %3d\n'
+             '  dwrd %08x %08x %08x %08x %08x\n'
+             '       %08x %08x %08x %08x %08x' % u)
 
         return s
 
