@@ -100,6 +100,8 @@ opts = {
     'mode': None,
     # the name of an OAF file, extension .jpo
     'oaf_name': None,
+    # optional argument to -d/-e
+    'parm1': None,
     # poll command -p
     'poll': None,
     # port for port-related commands
@@ -112,6 +114,7 @@ opts = {
     # u-blox 8, is protver 15 to 23
     # u-blox 9, firmware 1 is protver 27
     # u-blox F9T, firmware 2 is protver 29
+    # u-blox F9N, firmware 4 is protver 32
     'protver': 10,
     # raw log file name
     'raw_file': None,
@@ -5983,7 +5986,7 @@ High Precision GNSS products only."""
 
     def send_able_beidou(self, able):
         """dis/enable BeiDou"""
-        # Two frequency GPS use BeiDou or GLONASS
+        # Two frequency GNSS receivers use BeiDou or GLONASS
         # disable, then enable
         gps_model.send_cfg_gnss1(3, able)
 
@@ -6355,11 +6358,19 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         gps_model.gps_send(6, 0x9, m_data)
 
     def send_cfg_gnss1(self, gnssId, enable):
-        """UBX-CFG-GNSS, set GNSS config"""
+        """UBX-CFG-GNSS, set GNSS config
+
+WARNING: the receiver will  ACK, then ignore, many seemingly valid settings.
+Always double check with "-p CFG-GNSS".
+"""
+
+        # FIXME!  Add warning if ,2 is requested on single frequency devices
+        # Only u-blox 9 supports L2, except for M9N does not.
+
         m_data = bytearray(12)
         m_data[0] = 0       # version 0, msgVer
-        m_data[1] = 0       # read only, numTrkChHw
-        m_data[2] = 0xFF    # read only, numTrkChUse
+        m_data[1] = 0       # read only protVer 23+, numTrkChHw
+        m_data[2] = 0xFF    # read only protVer 23+, numTrkChUse
         m_data[3] = 1       # 1 block follows
         # block 1
         m_data[4] = gnssId  # gnssId
@@ -6400,26 +6411,46 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
 
         # m_data[10], sigCfgMask, enable all signals
         if 0 == gnssId:
-            # GPS
-            m_data[10] = 0x11   # flags L1C/A, L2C
+            # GPS.  disable does not seem to work on NEO-M9N
+            if '2' == opts['parm1'] and enable:
+                # The NEO-M9N ACKS, then ignores if 0x11 is sent
+                m_data[10] = 0x11   # flags L1C/A, L2C
+            else:
+                m_data[10] = 0x01   # flags L1C/A
         elif 1 == gnssId:
             # SBAS
             m_data[10] = 1      # flags L1C/A
         elif 2 == gnssId:
             # Galileo
-            m_data[10] = 0x21   # flags E1, E5b
+            if '2' == opts['parm1'] and enable:
+                # The NEO-M9N ACKS, then ignores if 0x11 is sent
+                m_data[10] = 0x21   # flags E1, E5b
+            else:
+                m_data[10] = 0x01   # flags E1
         elif 3 == gnssId:
             # BeiDou
-            m_data[10] = 0x11   # flags B1I,  B2I
+            if '2' == opts['parm1'] and enable:
+                # The NEO-M9N ACKS, then ignores if 0x11 is sent
+                m_data[10] = 0x11   # flags B1I,  B2I
+            else:
+                m_data[10] = 0x01   # flags B1I
         elif 4 == gnssId:
             # IMES
             m_data[10] = 1      # flags L1
         elif 5 == gnssId:
             # QZSS
-            m_data[10] = 0x15   # flags L1C/A, L1S, L2C
+            if '2' == opts['parm1'] and enable:
+                # The NEO-M9N ACKS, then ignores if 0x11 is sent
+                m_data[10] = 0x15   # flags L1C/A, L1S, L2C
+            else:
+                m_data[10] = 0x05   # flags L1C/A, L1S
         elif 6 == gnssId:
             # GLONASS
-            m_data[10] = 0x11   # flags L1, L2
+            if '2' == opts['parm1'] and enable:
+                # The NEO-M9N ACKS, then ignores if 0x11 is sent
+                m_data[10] = 0x11   # flags L1, L2
+            else:
+                m_data[10] = 0x01   # flags L1
         else:
             # what else?
             m_data[10] = 1      # flags L1
@@ -6600,7 +6631,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
     able_commands = {
         # en/dis able BeiDou
         "BEIDOU": {"command": send_able_beidou,
-                   "help": "BeiDou"},
+                   "help": "BeiDou B1. BEIDOU,5 for B1 and B2"},
         # en/dis able basic binary messages
         "BINARY": {"command": send_able_binary,
                    "help": "basic binary messages"},
@@ -6609,13 +6640,13 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
                  "help": "ECEF"},
         # en/dis able GPS
         "GPS": {"command": send_able_gps,
-                "help": "GPS and QZSS"},
+                "help": "GPS and QZSS L1C/A. GPS,2 for L1C/A and L2C"},
         # en/dis able GALILEO
         "GALILEO": {"command": send_able_galileo,
-                    "help": "GALILEO"},
+                    "help": "GALILEO E1.  GALILEO,2 for E1 and E5b"},
         # en/dis able GLONASS
         "GLONASS": {"command": send_able_glonass,
-                    "help": "GLONASS"},
+                    "help": "GLONASS L1.  GLONASS,2 for L1 and L2"},
         # en/dis able LOG
         "LOG": {"command": send_able_logfilter,
                 "help": "Data Logger"},
@@ -6633,7 +6664,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
                 "help": "PPS on TIMPULSE"},
         # en/dis able SBAS
         "SBAS": {"command": send_able_sbas,
-                 "help": "SBAS"},
+                 "help": "SBAS L1C"},
         # en/dis able SFRB/SFRBX
         "SFRBX": {"command": send_able_sfrbx,
                   "help": "SFRB/SFRBX subframes"},
@@ -7349,11 +7380,19 @@ for (opt, val) in options:
     if opt == '-c':
         opts['command'] = val
     elif opt == '-d':
+        parts = val.split(',')
         # don't force the user to upper case
-        opts['disable'] = val.upper()
+        opts['disable'] = parts[0].upper()
+        if 1 in parts:
+            # optional parameter
+            opts['parm1'] = parts[1]
     elif opt == '-e':
+        parts = val.split(',')
         # don't force the user to upper case
         opts['enable'] = val.upper()
+        if 1 in parts:
+            # optional parameter
+            opts['parm1'] = parts[1]
     elif opt == '-f':
         opts['input_file_name'] = val
     elif opt == '-g':
