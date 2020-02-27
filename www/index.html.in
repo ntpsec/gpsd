@@ -28,7 +28,7 @@
     <div>
     <a href="#news">News</a><br>
     <a href="#downloads">Downloads</a><br>
-    <a href="#mailing-lists">Mailing lists</a><br>
+    <a href="#support">Mailing lists</a><br>
     <a href="#documentation">Documentation</a><br>
     <a href="faq.html">FAQ</a><br>
     <a href="xgps-sample.html">Screenshots</a><br>
@@ -224,7 +224,14 @@ can probably install <code>gpsd</code> through your regular package
 manager or by typing <code>"sudo apt-get install gpsd"</code> at the command
 line.</p>
 
-<h1 id='mailing-lists'>Mailing Lists</h1>
+<h1 id='support'>Support</h1>
+
+<h2 id='realtime'>Real Time</h2>
+
+<p>Some of the developers hang out regularly on IRC at <a
+href="irc://irc.freenode.net#gpsd">channel #gpsd at irc.freenode.net</a>.</p>
+
+<h2 id='support'>Mailing Lists</h2>
 
 <p>There are four project mailing lists:</p>
 
@@ -246,6 +253,19 @@ Berlios at <a href="https://marc.info">MARC</a>:
 <a href="https://marc.info/?l=gpsd-dev">gpsd-dev</a> and
 <a href="https://marc.info/?l=gpsd-commit-watch">gpsd-commit-watch</a>.</li>
 </ul>
+
+<h2>Issue Tracker</h2>
+
+<p>The gpsd project tracks issues on our <a href='@ISSUE@'>issue tracker</a>.
+Please read the section on <a href='#bug-reporting'>Bug reporting</a> before
+posting on the issue tracker.</p>
+
+<p>More information on <a href='@SUPPORT'>gpsd SUPPORT</a> is available
+on the <a href='@SUPPORT'>gpsd SUPPORT</a> page.</p>
+<h2>SUPPORT information</h2>
+
+<p>More information on <a href='@SUPPORT'>gpsd SUPPORT</a> is available
+on the <a href='@SUPPORT'>gpsd SUPPORT</a> page.</p>
 
 <h1 id='documentation'>Documentation</h1>
 
@@ -337,11 +357,6 @@ want to contribute code.</p>
 
 <p>We maintain a <a href="hall-of-shame.html">GPS Hall of Shame</a>
 that describes particularly egregious vendor blunders.</p>
-
-<h1 id='realtime'>Real Time</h1>
-
-<p>Some of the developers hang out regularly on IRC at <a
-href="irc://irc.freenode.net#gpsd">channel #gpsd at irc.freenode.net</a>.</p>
 
 <h1 id='white_papers'>White Papers</h1>
 
