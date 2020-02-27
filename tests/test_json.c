@@ -41,13 +41,14 @@ static void assert_string(char *attr, char *fld, char *val)
     }
 }
 
-static void assert_string1(char *desc, char *fld, char *val)
+static void assert_string1(char *desc, char *got, char *sb)
 {
-    if (strcmp(fld, val)) {
-	(void)fprintf(stderr, "case %d FAILED\n", current_test);
-	(void)fprintf(stderr,
-		      "'%s' failed, got = %s, s/b %s.\n",
-		      desc, fld, val);
+    if (2 < debug) {
+        (void)fprintf(stderr, "test string: %s.\n", sb);
+    }
+    if (strcmp(got, sb)) {
+	(void)fprintf(stderr, "case %d/%s FAILED\n", current_test, desc);
+	(void)fprintf(stderr, "got = %s, s/b %s.\n", got, sb);
 	exit(EXIT_FAILURE);
     }
 }
@@ -389,10 +390,13 @@ static const struct json_array_t json_array_Real = {
 // Case 24: ascii, bfnrt, lows unicode string encoding
 char *ee24a = "This, that, the other thing.",
      *ee24b = "\b\f\n\r\t\'\"\\/",
+     // test for NUL
+     *ee24c = "This, that, the other thing.\0Not This",
      *ee24l = "\x01\x07\x15",
      *ee24u = "±176°42′13″ 𠜎 𠜱 𠝹 𠱓";
 char *ed24a = "This, that, the other thing.",
      *ed24b = "\\b\\f\\n\\r\\t\\'\\\"\\\\\\/",
+     *ed24c = "This, that, the other thing.",
      *ed24l = "\\x0001\\x0007\\x0015",
      *ed24u = "±176°42′13″ 𠜎 𠜱 𠝹 𠱓";
 
@@ -666,6 +670,8 @@ static void jsontest(int i)
 	assert_string1("Ascii",   buffer, ed24a);
 	(void)json_clean(ee24b, buffer, sizeof(ee24b), sizeof(buffer));
 	assert_string1("bfnrt",   buffer, ed24b);
+	(void)json_clean(ee24c, buffer, sizeof(ee24c), sizeof(buffer));
+	assert_string1("NUL",   buffer, ed24c);
 	// (void)json_clean(ee24l, buffer, sizeof(ee24b), sizeof(buffer));
 	// assert_string1("low",     buffer, ed24l);
 	(void)json_clean(ee24u, buffer, sizeof(ee24b), sizeof(buffer));
