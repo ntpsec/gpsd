@@ -283,7 +283,7 @@ will see correct time reports.</p>
 about this, we shall state the obvious: we welcome security-related
 bug reports and will <em>not</em> sue people who send them to us.  If
 your report includes sensitive information or discloses an exploit,
-please email the maintainer rather than letting it all hang out on
+please email a maintainer rather than letting it all hang out on
 the public bugtracker. We will fix such bugs promptly.</p>
 
 <p>When you have a problem with gpsd, here are some steps you can take to
@@ -303,17 +303,17 @@ bug.  You may find a solution here.</p>
 
 <p>Make sure it is a real gpsd bug and not a problem with
 your client software.  A good way to do this is to run your client and
-the gpsd test client (xgps) side by side.  If xgps seems to report
-good numbers but your client does not, you have a client problem.
-If xgps reports the same sort of bad numbers as your client, you
-have a real <code>gpsd</code> bug.</p>
+a gpsd test client (cgps or xgps) side by side.  If the gpsd test client
+seems to report good numbers but your client does not, you have a client
+problem.  If cgps or xgps reports the same sort of bad numbers as your
+client, you have a real <code>gpsd</code> bug.</p>
 
 <h3>4. Check the latest version of <code>gpsd</code> for the bug.</h3>
 
 <p>If you are using an old version of <code>gpsd</code>, it is
 possible your bug has already been fixed.  Download the latest public
 version from the <a href='@DOWNLOAD@'>download page</a> and test it.
-To be really helpful, check out git head
+To be really helpful, check out <a href='@GITREPO@'>git head</a>
 and test that.  We don't mind getting reports that say "I saw
 version foo had the following bug, but you've fixed it."</p>
 
@@ -324,8 +324,8 @@ rapidly.  If we can't reproduce it, you might get lucky or you might
 not &mdash; and we try hard, but all too often the result is 'not'.</p>
 
 <p>Therefore the most important step you can take is to capture a log
-of some receiver output that reproduces the bug; <code>gpscat</code> will
-help you.</p>
+of some receiver output that reproduces the bug; <code>gpscat</code>
+or <code>gpspipe -R -n 100</code> will help you.</p>
 
 <h3>6. Trim the capture log that reproduces the problem</h3>
 
@@ -356,13 +356,12 @@ all, is the firmware version.  You will want that for your report.</p>
 
 <h3 id="logformat">8. Annotate the capture log and send us a copy</h3>
 
-<p>We'll describe the annotation steps here for completeness, but the
-easiest way to do this is with <a href="@WEBFORM@">our web form</a>.</p>
-
-<p>A logfile should consist of an identifying header followed by a
-straight unencoded dump of receiver data, whether NMEA or binary. The
-header should consist of text lines beginning with # and ending with LF.
-Here is the beginning of one log file I already have:</p>
+<p>Annotating the log you send by adding a header is helpful.  Your
+logfile should consist of an identifying header followed by an
+untouched and unencoded dump of receiver data, whether NMEA, binary or
+a mixture. The header should consist of text lines beginning with # and
+ending with LF.  Here is the beginning of one log file from the gpsd
+regressions:</p>
 
 <pre>
 # Name: Magellan eXplorist 210

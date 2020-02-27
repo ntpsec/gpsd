@@ -2029,7 +2029,6 @@ substmap = (
     ('@UDEVCOMMAND@', udevcommand),
     ('@USERMAIL@',   usermail),
     ('@VERSION@',    gpsd_version),
-    ('@WEBFORM@',    webform),
     ('@WEBSITE@',    website),
 )
 
