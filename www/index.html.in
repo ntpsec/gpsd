@@ -28,7 +28,7 @@
     <div>
     <a href="#news">News</a><br>
     <a href="#downloads">Downloads</a><br>
-    <a href="#support">Mailing lists</a><br>
+    <a href="#support">Support</a><br>
     <a href="#documentation">Documentation</a><br>
     <a href="faq.html">FAQ</a><br>
     <a href="xgps-sample.html">Screenshots</a><br>
@@ -231,7 +231,7 @@ line.</p>
 <p>Some of the developers hang out regularly on IRC at <a
 href="irc://irc.freenode.net#gpsd">channel #gpsd at irc.freenode.net</a>.</p>
 
-<h2 id='support'>Mailing Lists</h2>
+<h2 id='mailing-lists'>Mailing Lists</h2>
 
 <p>There are four project mailing lists:</p>
 
