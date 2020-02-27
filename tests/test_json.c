@@ -631,33 +631,6 @@ static void jsontest(int i)
 	break;
 
     case 21:
-	status = json_read_array(json_strInt, &json_array_Int, NULL);
-	assert_integer("count", intcount, 3);
-	assert_integer("intstore[0]", intstore[0], 23);
-	assert_integer("intstore[1]", intstore[1], -17);
-	assert_integer("intstore[2]", intstore[2], 5);
-	assert_integer("intstore[3]", intstore[3], 0);
-	break;
-
-    case 22:
-	status = json_read_array(json_strBool, &json_array_Bool, NULL);
-	assert_integer("count", boolcount, 3);
-	assert_boolean("boolstore[0]", boolstore[0], true);
-	assert_boolean("boolstore[1]", boolstore[1], false);
-	assert_boolean("boolstore[2]", boolstore[2], true);
-	assert_boolean("boolstore[3]", boolstore[3], false);
-	break;
-
-    case 23:
-	status = json_read_array(json_strReal, &json_array_Real, NULL);
-	assert_integer("count", realcount, 3);
-	assert_real("realstore[0]", realstore[0], 23.1);
-	assert_real("realstore[1]", realstore[1], -17.2);
-	assert_real("realstore[2]", realstore[2], 5.3);
-	assert_real("realstore[3]", realstore[3], 0);
-	break;
-
-    case 24:
 	md24[0] = 0;
 	(void)json_clean(ee24a, md24, 490);
 	assert_string("Ascii",   md24, ed24a);
@@ -674,8 +647,34 @@ static void jsontest(int i)
 	break;
 
 #ifdef JSON_MINIMAL
-#define MAXTEST 24
-#else
+#define MAXTEST 21
+#else // JSON_MINIMAL
+    case 22:
+	status = json_read_array(json_strInt, &json_array_Int, NULL);
+	assert_integer("count", intcount, 3);
+	assert_integer("intstore[0]", intstore[0], 23);
+	assert_integer("intstore[1]", intstore[1], -17);
+	assert_integer("intstore[2]", intstore[2], 5);
+	assert_integer("intstore[3]", intstore[3], 0);
+	break;
+
+    case 23:
+	status = json_read_array(json_strBool, &json_array_Bool, NULL);
+	assert_integer("count", boolcount, 3);
+	assert_boolean("boolstore[0]", boolstore[0], true);
+	assert_boolean("boolstore[1]", boolstore[1], false);
+	assert_boolean("boolstore[2]", boolstore[2], true);
+	assert_boolean("boolstore[3]", boolstore[3], false);
+	break;
+
+    case 24:
+	status = json_read_array(json_strReal, &json_array_Real, NULL);
+	assert_integer("count", realcount, 3);
+	assert_real("realstore[0]", realstore[0], 23.1);
+	assert_real("realstore[1]", realstore[1], -17.2);
+	assert_real("realstore[2]", realstore[2], 5.3);
+	assert_real("realstore[3]", realstore[3], 0);
+	break;
 
 #define MAXTEST 24
 #endif /* JSON_MINIMAL */
