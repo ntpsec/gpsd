@@ -119,6 +119,7 @@ generated_sources = [
     'www/hacking.html',
     'www/hardware-head.html',
     'www/index.html',
+    'www/SUPPORT.html',
     'xgps',
     'xgpsspeed',
     'zerk',
