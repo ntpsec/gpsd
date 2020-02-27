@@ -121,7 +121,7 @@ int json_read_array(const char *, const struct json_array_t *,
 const char *json_error_string(int);
 
 void json_enable_debug(int, FILE *);
-char *json_clean(const char *, char *, size_t);
+char *json_clean(const char *, char *, size_t, size_t);
 #ifdef __cplusplus
 }
 #endif

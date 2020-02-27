@@ -853,7 +853,7 @@ const char *json_error_string(int err)
 // FIXME: check outlen too.
 // FIXME: do not skip high bit chars, output then as \xXX
 // FIXME: this is JSON so NULL in *in ends the string.
-char *json_clean(const char *in, char *buf, size_t buflen)
+char *json_clean(const char *in, char *buf, size_t inlen, size_t bufsiz)
 {
     const char *escape_in = "'\"/\\\b\f\n\r\t";
     const char *escape_out = "'\"/\\bfnrt";
@@ -879,7 +879,7 @@ char *json_clean(const char *in, char *buf, size_t buflen)
 		// utf-8 ish 32 bit rune - musical symbol g clef etc. 
 		to_copy = 4;
 	    }
-	    if ((to_copy > 0) && (buflen > (ocnt + to_copy))) {
+	    if ((to_copy > 0) && (bufsiz > (ocnt + to_copy))) {
 		for (;to_copy > 1; to_copy--) {
 		    buf[ocnt++] = in[cnt++];
 		}
@@ -900,7 +900,7 @@ char *json_clean(const char *in, char *buf, size_t buflen)
 	bool notyet = true;
 	for (int icnt = 0 ; notyet && (escape_in[icnt] != 0); icnt++) {
 	    if (in[cnt] == escape_in[icnt]) {
-		if (buflen <= (ocnt + 2)) {
+		if (bufsiz <= (ocnt + 2)) {
 		    return buf;
 		}
 		buf[ocnt++] = '\\';
@@ -916,14 +916,14 @@ char *json_clean(const char *in, char *buf, size_t buflen)
 	if (('\x00' <= (int8_t)in[cnt] && (int8_t)in[cnt] <= '\x1f') ||
 	    '\x7f' == (int8_t)in[cnt]
 	) {
-	    if (buflen <= (ocnt + 6)) {
+	    if (bufsiz <= (ocnt + 6)) {
 		return buf;
 	    }
-	    str_appendf(buf, buflen - ocnt, "\\x%04x", in[cnt]);
+	    str_appendf(buf, bufsiz - ocnt, "\\x%04x", in[cnt]);
 	    ocnt = strlen(buf);
 	    continue;
 	}
-	if (buflen <= (ocnt + 1)) {
+	if (bufsiz <= (ocnt + 1)) {
 	    return buf;
 	}
 	// pass through everything not escaped.
