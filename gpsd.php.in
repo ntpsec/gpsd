@@ -3,13 +3,16 @@
 # @MASTER@
 # @GENERATED@
 
-# Copyright (c) 2006,2010 Chris Kuethe <chris.kuethe@gmail.com>
+# Copyright 2006 Chris Kuethe <chris.kuethe@gmail.com>
 #
-# This file is Copyright (c) 2009-2020 The GPSD project
+# This file is Copyright 2009 The GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 
 # Changed to Google Maps API v3, requires no API key, and shorter code
 # Sanjeev Gupta <ghane0@gmail.com> 2013-01-05
+
+# This code validates with https://validator.w3.org/
+# Keep it valid.
 
 global $head, $blurb, $title, $showmap, $autorefresh, $footer, $gmap_key;
 global $server, $advertise, $port, $open, $swap_ew, $testmode;
@@ -403,9 +406,8 @@ function write_html($resp){
 </head>
 
 <body {$body} {$map_body}>
-<center>
-<table border="0">
-<tr><td align="justify">
+<table style="text-align:center;border-width:0">
+<tr><td style="text-align:justify">
 {$blurb}
 </td>
 EOF;
@@ -419,10 +421,10 @@ EOF;
                 $part2 = <<<EOF
 <!-- -->
 
-<td rowspan="4" align="center" valign="top">
+<td rowspan="2" style="text-align:center;vertical-align:top">
 <img src="?op=view&amp;imgdata={$imgdata}"
-width="600" height="600"/>
-<br clear="all"/>
+width="600" height="600" alt="Skyview"/>
+<br style="clear:both">
 <p class="caption">A filled circle means the satellite was used in
 the last fix. Green-yellow-red colors indicate signal strength in dB,
 green=most and red=least.  Diamonds indicate Augmentation satellites.</p>
@@ -436,7 +438,7 @@ EOF;
                 $part3 = <<<EOF
 <!-- -->
 
-<tr><td align="justify">To get real-time information, connect to
+<tr><td style="text-align:justify">To get real-time information, connect to
 <span class="fixed">telnet://{$advertise}:{$port}/</span> and type "?POLL;"
 or "?WATCH={"enable":true,"raw":true}".<br/>
 Use a different server:<br/>
@@ -471,9 +473,9 @@ EOF;
                     );
                 $part4 = <<<EOF
 <!-- -->
-<tr><td align=center valign=top>
-    <table border=1>
-        <tr><th colspan=2 align=center>Current Information</th></tr>
+<tr><td style="text-align:center;vertical-align:top">
+    <table style="border-width:1px;border-style:solid">
+        <tr><th colspan=2 style="text-align:center">Current Information</th></tr>
         <tr><td>Time (UTC)</td><td>{$ts}</td></tr>
         <tr><td>Latitude</td><td>{$fix['lat']}</td></tr>
         <tr><td>Longitude</td><td>{$fix['lon']}</td></tr>
@@ -484,8 +486,8 @@ EOF;
         <tr><td>VDOP</td><td>{$sky['vdop']}</td></tr>
     </table>
     <br/>
-    <table border=1>
-        <tr><th colspan=5 align=center>Current Satellites</th></tr>
+    <table style="border-width:1px;border-style:solid">
+        <tr><th colspan=5 style="text-align:center">Current Satellites</th></tr>
         <tr><th>PRN</th><th>Elevation</th><th>Azimuth</th><th>SS</th><th>Used</th></tr>
 $sat    </table>
 </td></tr>
@@ -499,7 +501,6 @@ EOF;
         $part5 = <<<EOF
 
 </table>
-</center>
 {$footer}
 <hr/>
 <p class="administrivia">This script is distributed by the
@@ -592,6 +593,7 @@ return <<<EOT
     google.maps.event.addDomListener(window, 'load', initialize);
 
  -->
+
 </script>
 EOT;
 }
