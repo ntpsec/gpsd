@@ -396,6 +396,8 @@ char ee24a[] = "This, that, the other thing.",
      ee24d[] = "Hello\xc2\xb0",
      // test for bad trailing unicode
      ee24e[] = "Hello\xc2",
+     // test for short output buffer
+     ee24f[] = "Hello\xc2",
      ee24l[] = "\x01\x07\x15",
      /* Note the char after te "13" is a "double prime", U+2033
       * not a double quote! */
@@ -405,6 +407,7 @@ char ed24a[] = "This, that, the other thing.",
      ed24c[] = "This, that, the other thing.",
      ed24d[] = "Hello\xc2\xb0",
      ed24e[] = "Hello\\u00c2",
+     ed24f[] = "Hello",
      ed24l[] = "\\u0001\\u0007\\u0015",
      ed24u[] = "±176°42′13″ 𠜎 𠜱 𠝹 𠱓";
 
@@ -415,6 +418,7 @@ static void jsontest(int i)
     int status = 0;   /* libgps_json_unpack() returned status */
     int n;            /* generic index */
     char buffer[500];
+    char *pbuf;
 
     if (0 < debug) {
 	(void)fprintf(stderr, "Running test #%d.\n", i);
@@ -675,22 +679,30 @@ static void jsontest(int i)
 
     case 24:
         // test w/o the trailing NUL
-	(void)json_clean(ee24a, buffer, sizeof(ee24a) - 1, sizeof(buffer));
-	assert_string1("Ascii", buffer, ed24a);
-	(void)json_clean(ee24b, buffer, sizeof(ee24b), sizeof(buffer));
-	assert_string1("bfnrt", buffer, ed24b);
-	(void)json_clean(ee24c, buffer, sizeof(ee24c), sizeof(buffer));
-	assert_string1("NUL", buffer, ed24c);
-	(void)json_clean(ee24d, buffer, sizeof(ee24d), sizeof(buffer));
-	assert_string1("trailing utf", buffer, ed24d);
-	(void)json_clean(ee24e, buffer, sizeof(ee24e), sizeof(buffer));
-	assert_string1("Bad trailing utf", buffer, ed24e);
+	pbuf = json_clean(ee24a, buffer, sizeof(ee24a) - 1, sizeof(buffer));
+	assert_string1("Ascii", pbuf, ed24a);
 
-	(void)json_clean(ee24l, buffer, sizeof(ee24l), sizeof(buffer));
-	assert_string1("low", buffer, ed24l);
+	pbuf = json_clean(ee24b, buffer, sizeof(ee24b), sizeof(buffer));
+	assert_string1("bfnrt", pbuf, ed24b);
 
-	(void)json_clean(ee24u, buffer, sizeof(ee24u), sizeof(buffer));
-	assert_string1("unicode", buffer, ed24u);
+	pbuf = json_clean(ee24c, buffer, sizeof(ee24c), sizeof(buffer));
+	assert_string1("NUL", pbuf, ed24c);
+
+	pbuf = json_clean(ee24d, buffer, sizeof(ee24d), sizeof(buffer));
+	assert_string1("trailing utf", pbuf, ed24d);
+
+	pbuf = json_clean(ee24e, buffer, sizeof(ee24e), sizeof(buffer));
+	assert_string1("Bad trailing utf", pbuf, ed24e);
+
+        // test for short output buffer
+	pbuf = json_clean(ee24f, buffer, sizeof(ee24f), (size_t)6);
+	assert_string1("Bad trailing utf", pbuf, ed24f);
+
+	pbuf = json_clean(ee24l, buffer, sizeof(ee24l), sizeof(buffer));
+	assert_string1("low", pbuf, ed24l);
+
+	pbuf = json_clean(ee24u, buffer, sizeof(ee24u), sizeof(buffer));
+	assert_string1("unicode", pbuf, ed24u);
 	break;
 
 #define MAXTEST 24
