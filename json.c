@@ -850,12 +850,12 @@ const char *json_error_string(int err)
 
 #endif /* SOCKET_EXPORT_ENABLE */
 
-/* clean a JSON string so it can be quoted.  Used to output the JSON
- * as a literal JSON string
+/* quote a JSON string so it can be used as a simple JSON string.
+ * Used to output the JSON as a literal JSON string
  * escape control chars, escape double quote.
  * stop at NUL, inlen or bad unicode char
  */
-char *json_clean(const char *in, char *buf, size_t inlen, size_t bufsiz)
+char *json_quote(const char *in, char *buf, size_t inlen, size_t bufsiz)
 {
     const char *escape_in = "'\"/\\\b\f\n\r\t";
     const char *escape_out = "'\"/\\bfnrt";

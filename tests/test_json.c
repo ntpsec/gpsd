@@ -679,29 +679,29 @@ static void jsontest(int i)
 
     case 24:
         // test w/o the trailing NUL
-	pbuf = json_clean(ee24a, buffer, sizeof(ee24a) - 1, sizeof(buffer));
+	pbuf = json_quote(ee24a, buffer, sizeof(ee24a) - 1, sizeof(buffer));
 	assert_string1("Ascii", pbuf, ed24a);
 
-	pbuf = json_clean(ee24b, buffer, sizeof(ee24b), sizeof(buffer));
+	pbuf = json_quote(ee24b, buffer, sizeof(ee24b), sizeof(buffer));
 	assert_string1("bfnrt", pbuf, ed24b);
 
-	pbuf = json_clean(ee24c, buffer, sizeof(ee24c), sizeof(buffer));
+	pbuf = json_quote(ee24c, buffer, sizeof(ee24c), sizeof(buffer));
 	assert_string1("NUL", pbuf, ed24c);
 
-	pbuf = json_clean(ee24d, buffer, sizeof(ee24d), sizeof(buffer));
+	pbuf = json_quote(ee24d, buffer, sizeof(ee24d), sizeof(buffer));
 	assert_string1("trailing utf", pbuf, ed24d);
 
-	pbuf = json_clean(ee24e, buffer, sizeof(ee24e), sizeof(buffer));
+	pbuf = json_quote(ee24e, buffer, sizeof(ee24e), sizeof(buffer));
 	assert_string1("Bad trailing utf", pbuf, ed24e);
 
         // test for short output buffer
-	pbuf = json_clean(ee24f, buffer, sizeof(ee24f), (size_t)6);
+	pbuf = json_quote(ee24f, buffer, sizeof(ee24f), (size_t)6);
 	assert_string1("Bad trailing utf", pbuf, ed24f);
 
-	pbuf = json_clean(ee24l, buffer, sizeof(ee24l), sizeof(buffer));
+	pbuf = json_quote(ee24l, buffer, sizeof(ee24l), sizeof(buffer));
 	assert_string1("low", pbuf, ed24l);
 
-	pbuf = json_clean(ee24u, buffer, sizeof(ee24u), sizeof(buffer));
+	pbuf = json_quote(ee24u, buffer, sizeof(ee24u), sizeof(buffer));
 	assert_string1("unicode", pbuf, ed24u);
 	break;
 
