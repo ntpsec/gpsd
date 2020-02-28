@@ -373,15 +373,12 @@ function write_html($resp){
                 $map_code = gen_map_code();
         }
         $part1 = <<<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="https://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html lang="en">
 <head>
 {$head}
 {$map_head}
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-<meta http-equiv="Content-Language" content="en,en-us"/>
 <title>{$title} - GPSD Test Station {$lat}, {$lon}</title>
 {$autorefresh}
 <style>
@@ -420,7 +417,7 @@ EOF;
                 $part2 = "";
         else
                 $part2 = <<<EOF
-<!-- ------------------------------------------------------------ -->
+<!-- -->
 
 <td rowspan="4" align="center" valign="top">
 <img src="?op=view&amp;imgdata={$imgdata}"
@@ -437,7 +434,7 @@ EOF;
                 $part3 = '';
         else
                 $part3 = <<<EOF
-<!-- ------------------------------------------------------------ -->
+<!-- -->
 
 <tr><td align="justify">To get real-time information, connect to
 <span class="fixed">telnet://{$advertise}:{$port}/</span> and type "?POLL;"
@@ -473,7 +470,7 @@ EOF;
                             $s['used'] ? 'Y' : 'N'
                     );
                 $part4 = <<<EOF
-<!-- ------------------------------------------------------------ -->
+<!-- -->
 <tr><td align=center valign=top>
     <table border=1>
         <tr><th colspan=2 align=center>Current Information</th></tr>
@@ -602,7 +599,7 @@ EOT;
 function gen_osm_head() {
 global $GPS;
 return <<<EOT
-<script src="http://openlayers.org/api/OpenLayers.js" />
+<script src="http://openlayers.org/api/OpenLayers.js">
 <script>
     <!--
 function Load() {
