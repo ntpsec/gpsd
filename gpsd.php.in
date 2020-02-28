@@ -74,31 +74,32 @@ if (isset($_GET['imgdata']) && $op == 'view'){
                 exit(0);
         }
 } else {
-        if (isset($_GET['host']))
-                if (!preg_match('/[^a-zA-Z0-9\.-]/', $_GET['host']))
-                        $server = $_GET['host'];
+    if (isset($_GET['host']))
+            if (!preg_match('/[^a-zA-Z0-9\.-]/', $_GET['host']))
+                    $server = $_GET['host'];
 
-        if (isset($_GET['port']))
-                if (!preg_match('/\D/', $_GET['port']) && ($port>0) && ($port<65536))
-                        $port = $_GET['port'];
+    if (isset($_GET['port']))
+            if (!preg_match('/\D/', $_GET['port']) &&
+                ($port > 0) && ($port < 65536))
+                    $port = $_GET['port'];
 
-        if ($testmode){
-                $sock = @fsockopen($server, $port, $errno, $errstr, 2);
-                @fwrite($sock, "?WATCH={\"enable\":true}\n");
-                usleep(1000);
-                @fwrite($sock, "?POLL;\n");
-                usleep(1000);
-                for($tries = 0; $tries < 10; $tries++){
-                        $resp = @fread($sock, 10000); # SKY can be pretty big
-                        if (preg_match('/{"class":"POLL".+}/i', $resp, $m)){
-                                $resp = $m[0];
-                                break;
-                        }
+    if ($testmode){
+        $sock = @fsockopen($server, $port, $errno, $errstr, 2);
+        @fwrite($sock, "?WATCH={\"enable\":true}\n");
+        usleep(1000);
+        @fwrite($sock, "?POLL;\n");
+        usleep(1000);
+        for($tries = 0; $tries < 10; $tries++){
+                $resp = @fread($sock, 10000); # SKY can be pretty big
+                if (preg_match('/{"class":"POLL".+}/i', $resp, $m)){
+                        $resp = $m[0];
+                        break;
                 }
-                @fclose($sock);
-                if (!$resp)
-                        $resp = '{"class":"ERROR","message":"no response from GPS daemon"}';
         }
+        @fclose($sock);
+        if (!$resp)
+            $resp = '{"class":"ERROR","message":"no response from GPS daemon"}';
+    }
 }
 
 if ($op == 'view')
@@ -145,11 +146,16 @@ function legend($im, $sz, $C){
         $x = $sz - (4*$r+7) - 2;
         $y = $sz - $r - 3;
 
-        imageFilledRectangle($im, $x, $y, $x + 4*$r + 7, $y + $r +1, $C['dkgray']);
-        imageRectangle($im, $x+0*$r+1, $y+1, $x + 1*$r + 0, $y + $r, $C['red']);
-        imageRectangle($im, $x+1*$r+2, $y+1, $x + 2*$r + 2, $y + $r, $C['yellow']);
-        imageRectangle($im, $x+2*$r+4, $y+1, $x + 3*$r + 4, $y + $r, $C['darkgreen']);
-        imageRectangle($im, $x+4*$r+6, $y+1, $x + 3*$r + 6, $y + $r, $C['brightgreen']);
+        imageFilledRectangle($im, $x, $y, $x + 4*$r + 7, $y + $r +1,
+                             $C['dkgray']);
+        imageRectangle($im, $x+0*$r+1, $y+1, $x + 1*$r + 0, $y + $r,
+                       $C['red']);
+        imageRectangle($im, $x+1*$r+2, $y+1, $x + 2*$r + 2, $y + $r,
+                       $C['yellow']);
+        imageRectangle($im, $x+2*$r+4, $y+1, $x + 3*$r + 4, $y + $r,
+                       $C['darkgreen']);
+        imageRectangle($im, $x+4*$r+6, $y+1, $x + 3*$r + 6, $y + $r,
+                       $C['brightgreen']);
         imageString($im, $fn, $x+3+0*$r, $y+$r/3, "<30", $C['red']);
         imageString($im, $fn, $x+5+1*$r, $y+$r/3, "30+", $C['yellow']);
         imageString($im, $fn, $x+7+2*$r, $y+$r/3, "35+", $C['darkgreen']);
@@ -352,9 +358,9 @@ function write_html($resp){
         $server = $x; $port = $y;
 
         if ($autorefresh > 0)
-                $autorefresh = "<meta http-equiv='Refresh' content='$autorefresh'/>";
+            $autorefresh = "<meta http-equiv='Refresh' content='$autorefresh'/>";
         else
-                $autorefresh = '';
+            $autorefresh = '';
 
         $map_head = $map_body = $map_code = '';
         if ($showmap == 1) {
@@ -453,17 +459,19 @@ EOF;
                 $sky = $GPS['sky'][0];
                 $sats = $sky['satellites'];
 
-                $fixtype = array('Unknown' => 0, 'No Fix' => 1,'2D Fix' => 2, '3D Fix' => 3);
+                $fixtype = array('Unknown' => 0, 'No Fix' => 1, '2D Fix' => 2,
+                                 '3D Fix' => 3);
                 $type = array_search($fix['mode'],$fixtype);
 
                 $nsv = count($sats);
                 $ts = $fix['time'];
                 $sat = '';
                 foreach($sats as $s)
-                        $sat .= sprintf(
-                                "\t<tr><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%s</td></tr>\n",
-                                $s['PRN'], $s['el'], $s['az'], $s['ss'], $s['used'] ? 'Y' : 'N'
-                        );
+                    $sat .= sprintf(
+                            "\t<tr><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%s</td></tr>\n",
+                            $s['PRN'], $s['el'], $s['az'], $s['ss'],
+                            $s['used'] ? 'Y' : 'N'
+                    );
                 $part4 = <<<EOF
 <!-- ------------------------------------------------------------ -->
 <tr><td align=center valign=top>
@@ -528,7 +536,8 @@ function write_config(){
 #\$advertise = 'localhost';
 \$port = 2947;
 \$autorefresh = 0; # number of seconds after which to refresh
-\$showmap = 0; # set to 1 if you want to have a google map, set it to 2 if you want a map based on openstreetmap
+\$showmap = 0; # set to 1 if you want to have a google map,
+               # set it to 2 if you want a map based on openstreetmap
 \$gmap_key = 'GetYourOwnGoogleKey'; # your google API key goes here
 \$swap_ew = 0; # set to 1 for upward facing view (nonstandard)
 \$open = 0; # set to 1 to show the form to change the GPSd server
@@ -578,8 +587,8 @@ return <<<EOT
       });
 
       var marker = new google.maps.Marker({
-            position: new google.maps.LatLng({$GLOBALS['lat']}, {$GLOBALS['lon']}),
-            map: map
+          position: new google.maps.LatLng({$GLOBALS['lat']}, {$GLOBALS['lon']}),
+          map: map
       });
 
     }
@@ -610,7 +619,8 @@ function Load() {
         map.addLayer(layer);
 
         var center = new OpenLayers.LonLat({$GLOBALS['lon']}, {$GLOBALS['lat']})
-                .transform(new OpenLayers.Projection("EPSG:4326"), map.getProjectionObject());
+                .transform(new OpenLayers.Projection("EPSG:4326"),
+                map.getProjectionObject());
         map.setCenter(center, 12);
 
         var markers = new OpenLayers.Layer.Markers("Markers");
@@ -625,10 +635,12 @@ EOT;
 function gen_map_code() {
 return <<<EOT
 <br/>
-<div id="map" style="width: 550px; height: 400px; border:1px; border-style: solid;">
+<div id="map"
+  style="width: 550px; height: 400px; border:1px; border-style: solid;">
     Loading...
     <noscript>
-        <span class='warning'>Sorry: you must enable javascript to view our maps.</span><br/>
+        <span class='warning'>Sorry: you must enable javascript to view our
+maps.</span><br/>
     </noscript>
 </div>
 
