@@ -89,7 +89,7 @@ if (isset($_GET['imgdata']) && $op == 'view'){
 		@fwrite($sock, "?POLL;\n");
 		usleep(1000);
 		for($tries = 0; $tries < 10; $tries++){
-			$resp = @fread($sock, 2000); # SKY can be pretty big
+			$resp = @fread($sock, 10000); # SKY can be pretty big
 			if (preg_match('/{"class":"POLL".+}/i', $resp, $m)){
 				$resp = $m[0];
 				break;
