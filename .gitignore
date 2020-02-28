@@ -187,3 +187,5 @@ tmp*
 *.tar.?z
 *.tar.?z.sig
 *.zip
+# config file created by gpsd.php
+gpsd_config.inc
