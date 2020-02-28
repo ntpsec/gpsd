@@ -35,7 +35,7 @@ set_time_limit(3);
 ini_set('max_execution_time', 3);
 
 if (!file_exists("gpsd_config.inc"))
-	write_config();
+        write_config();
 
 require_once("gpsd_config.inc");
 
@@ -68,45 +68,45 @@ EOF;
 # if we're passing in a query, let's unpack and use it
 $op = isset($_GET['op']) ? $_GET['op'] : '';
 if (isset($_GET['imgdata']) && $op == 'view'){
-	$resp = base64_decode($_GET['imgdata']);
-	if ($resp){
-		gen_image($resp);
-		exit(0);
-	}
+        $resp = base64_decode($_GET['imgdata']);
+        if ($resp){
+                gen_image($resp);
+                exit(0);
+        }
 } else {
-	if (isset($_GET['host']))
-		if (!preg_match('/[^a-zA-Z0-9\.-]/', $_GET['host']))
-			$server = $_GET['host'];
+        if (isset($_GET['host']))
+                if (!preg_match('/[^a-zA-Z0-9\.-]/', $_GET['host']))
+                        $server = $_GET['host'];
 
-	if (isset($_GET['port']))
-		if (!preg_match('/\D/', $_GET['port']) && ($port>0) && ($port<65536))
-			$port = $_GET['port'];
+        if (isset($_GET['port']))
+                if (!preg_match('/\D/', $_GET['port']) && ($port>0) && ($port<65536))
+                        $port = $_GET['port'];
 
-	if ($testmode){
-		$sock = @fsockopen($server, $port, $errno, $errstr, 2);
-		@fwrite($sock, "?WATCH={\"enable\":true}\n");
-		usleep(1000);
-		@fwrite($sock, "?POLL;\n");
-		usleep(1000);
-		for($tries = 0; $tries < 10; $tries++){
-			$resp = @fread($sock, 10000); # SKY can be pretty big
-			if (preg_match('/{"class":"POLL".+}/i', $resp, $m)){
-				$resp = $m[0];
-				break;
-			}
-		}
-		@fclose($sock);
-		if (!$resp)
-			$resp = '{"class":"ERROR","message":"no response from GPS daemon"}';
-	}
+        if ($testmode){
+                $sock = @fsockopen($server, $port, $errno, $errstr, 2);
+                @fwrite($sock, "?WATCH={\"enable\":true}\n");
+                usleep(1000);
+                @fwrite($sock, "?POLL;\n");
+                usleep(1000);
+                for($tries = 0; $tries < 10; $tries++){
+                        $resp = @fread($sock, 10000); # SKY can be pretty big
+                        if (preg_match('/{"class":"POLL".+}/i', $resp, $m)){
+                                $resp = $m[0];
+                                break;
+                        }
+                }
+                @fclose($sock);
+                if (!$resp)
+                        $resp = '{"class":"ERROR","message":"no response from GPS daemon"}';
+        }
 }
 
 if ($op == 'view')
-	gen_image($resp);
+        gen_image($resp);
 else if ($op == 'json')
-	write_json($resp);
+        write_json($resp);
 else
-	write_html($resp);
+        write_html($resp);
 
 exit(0);
 
@@ -115,258 +115,258 @@ exit(0);
 # Sanjeev Gupta <ghane0@gmail.com> 20150408
 # Please refer to gps.h lines ~~ 95 , for a central definition
 function isGPS($PRN) {
-	if ($PRN <= 32) return TRUE ; 			# Navstar GPS
-	if ($PRN >= 64 && $PRN <= 96) return TRUE ; 	# GLONASS
-	if ($PRN >= 159 ) return TRUE ; 		# BeiDou ?
-	return FALSE ;					# SBAS, GBAS, unknown
-	}
+        if ($PRN <= 32) return TRUE ;                   # Navstar GPS
+        if ($PRN >= 64 && $PRN <= 96) return TRUE ;     # GLONASS
+        if ($PRN >= 159 ) return TRUE ;                 # BeiDou ?
+        return FALSE ;                                  # SBAS, GBAS, unknown
+        }
 
 function colorsetup($im){
-	$C['white']	= imageColorAllocate($im, 255, 255, 255);
-	$C['ltgray']	= imageColorAllocate($im, 191, 191, 191);
-	$C['mdgray']	= imageColorAllocate($im, 127, 127, 127);
-	$C['dkgray']	= imageColorAllocate($im, 63, 63, 63);
-	$C['black']	= imageColorAllocate($im, 0, 0, 0);
-	$C['red']	= imageColorAllocate($im, 255, 0, 0);
-	$C['brightgreen'] = imageColorAllocate($im, 0, 255, 0);
-	$C['darkgreen']	= imageColorAllocate($im, 0, 192, 0);
-	$C['blue']	= imageColorAllocate($im, 0, 0, 255);
-	$C['cyan']	= imageColorAllocate($im, 0, 255, 255);
-	$C['magenta']	= imageColorAllocate($im, 255, 0, 255);
-	$C['yellow']	= imageColorAllocate($im, 255, 255, 0);
-	$C['orange']	= imageColorAllocate($im, 255, 128, 0);
+        $C['white']     = imageColorAllocate($im, 255, 255, 255);
+        $C['ltgray']    = imageColorAllocate($im, 191, 191, 191);
+        $C['mdgray']    = imageColorAllocate($im, 127, 127, 127);
+        $C['dkgray']    = imageColorAllocate($im, 63, 63, 63);
+        $C['black']     = imageColorAllocate($im, 0, 0, 0);
+        $C['red']       = imageColorAllocate($im, 255, 0, 0);
+        $C['brightgreen'] = imageColorAllocate($im, 0, 255, 0);
+        $C['darkgreen'] = imageColorAllocate($im, 0, 192, 0);
+        $C['blue']      = imageColorAllocate($im, 0, 0, 255);
+        $C['cyan']      = imageColorAllocate($im, 0, 255, 255);
+        $C['magenta']   = imageColorAllocate($im, 255, 0, 255);
+        $C['yellow']    = imageColorAllocate($im, 255, 255, 0);
+        $C['orange']    = imageColorAllocate($im, 255, 128, 0);
 
-	return $C;
+        return $C;
 }
 
 function legend($im, $sz, $C){
-	$r = 30;
-	$fn = 5;
-	$x = $sz - (4*$r+7) - 2;
-	$y = $sz - $r - 3;
+        $r = 30;
+        $fn = 5;
+        $x = $sz - (4*$r+7) - 2;
+        $y = $sz - $r - 3;
 
-	imageFilledRectangle($im, $x, $y, $x + 4*$r + 7, $y + $r +1, $C['dkgray']);
-	imageRectangle($im, $x+0*$r+1, $y+1, $x + 1*$r + 0, $y + $r, $C['red']);
-	imageRectangle($im, $x+1*$r+2, $y+1, $x + 2*$r + 2, $y + $r, $C['yellow']);
-	imageRectangle($im, $x+2*$r+4, $y+1, $x + 3*$r + 4, $y + $r, $C['darkgreen']);
-	imageRectangle($im, $x+4*$r+6, $y+1, $x + 3*$r + 6, $y + $r, $C['brightgreen']);
-	imageString($im, $fn, $x+3+0*$r, $y+$r/3, "<30", $C['red']);
-	imageString($im, $fn, $x+5+1*$r, $y+$r/3, "30+", $C['yellow']);
-	imageString($im, $fn, $x+7+2*$r, $y+$r/3, "35+", $C['darkgreen']);
-	imageString($im, $fn, $x+9+3*$r, $y+$r/3, "40+", $C['brightgreen']);
+        imageFilledRectangle($im, $x, $y, $x + 4*$r + 7, $y + $r +1, $C['dkgray']);
+        imageRectangle($im, $x+0*$r+1, $y+1, $x + 1*$r + 0, $y + $r, $C['red']);
+        imageRectangle($im, $x+1*$r+2, $y+1, $x + 2*$r + 2, $y + $r, $C['yellow']);
+        imageRectangle($im, $x+2*$r+4, $y+1, $x + 3*$r + 4, $y + $r, $C['darkgreen']);
+        imageRectangle($im, $x+4*$r+6, $y+1, $x + 3*$r + 6, $y + $r, $C['brightgreen']);
+        imageString($im, $fn, $x+3+0*$r, $y+$r/3, "<30", $C['red']);
+        imageString($im, $fn, $x+5+1*$r, $y+$r/3, "30+", $C['yellow']);
+        imageString($im, $fn, $x+7+2*$r, $y+$r/3, "35+", $C['darkgreen']);
+        imageString($im, $fn, $x+9+3*$r, $y+$r/3, "40+", $C['brightgreen']);
 }
 
 function radial($angle, $sz){
-	#turn into radians
-	$angle = deg2rad($angle);
+        #turn into radians
+        $angle = deg2rad($angle);
 
-	# determine length of radius
-	$r = $sz * 0.5 * 0.95;
+        # determine length of radius
+        $r = $sz * 0.5 * 0.95;
 
-	# and convert length/azimuth to cartesian
-	$x0 = sprintf("%d", (($sz * 0.5) - ($r * cos($angle))));
-	$y0 = sprintf("%d", (($sz * 0.5) - ($r * sin($angle))));
-	$x1 = sprintf("%d", (($sz * 0.5) + ($r * cos($angle))));
-	$y1 = sprintf("%d", (($sz * 0.5) + ($r * sin($angle))));
+        # and convert length/azimuth to cartesian
+        $x0 = sprintf("%d", (($sz * 0.5) - ($r * cos($angle))));
+        $y0 = sprintf("%d", (($sz * 0.5) - ($r * sin($angle))));
+        $x1 = sprintf("%d", (($sz * 0.5) + ($r * cos($angle))));
+        $y1 = sprintf("%d", (($sz * 0.5) + ($r * sin($angle))));
 
-	return array($x0, $y0, $x1, $y1);
+        return array($x0, $y0, $x1, $y1);
 }
 
 function azel2xy($az, $el, $sz){
-	global $swap_ew;
-	#rotate coords... 90deg E = 180deg trig
-	$az += 270;
+        global $swap_ew;
+        #rotate coords... 90deg E = 180deg trig
+        $az += 270;
 
-	#turn into radians
-	$az = deg2rad($az);
+        #turn into radians
+        $az = deg2rad($az);
 
-	# determine length of radius
-	$r = $sz * 0.5 * 0.95;
-	$r -= ($r * ($el/90));
+        # determine length of radius
+        $r = $sz * 0.5 * 0.95;
+        $r -= ($r * ($el/90));
 
-	# and convert length/azimuth to cartesian
-	$x = sprintf("%d", (($sz * 0.5) + ($r * cos($az))));
-	$y = sprintf("%d", (($sz * 0.5) + ($r * sin($az))));
-	if ($swap_ew != 0)
-		$x = $sz - $x;
+        # and convert length/azimuth to cartesian
+        $x = sprintf("%d", (($sz * 0.5) + ($r * cos($az))));
+        $y = sprintf("%d", (($sz * 0.5) + ($r * sin($az))));
+        if ($swap_ew != 0)
+                $x = $sz - $x;
 
-	return array($x, $y);
+        return array($x, $y);
 }
 
 function splot($im, $sz, $C, $e){
-	if ((0 == $e['PRN']) || (0 == $e['az'] + $e['el']) ||
-	    ($e['az'] < 0) || ($e['el'] < 0))
-		return;
+        if ((0 == $e['PRN']) || (0 == $e['az'] + $e['el']) ||
+            ($e['az'] < 0) || ($e['el'] < 0))
+                return;
 
-	$color = $C['brightgreen'];
-	if ($e['ss'] < 40)
-		$color = $C['darkgreen'];
-	if ($e['ss'] < 35)
-		$color = $C['yellow'];
-	if ($e['ss'] < 30)
-		$color = $C['red'];
-	if ($e['el']<10)
-		$color = $C['blue'];
-	if ($e['ss'] < 10)
-		$color = $C['black'];
+        $color = $C['brightgreen'];
+        if ($e['ss'] < 40)
+                $color = $C['darkgreen'];
+        if ($e['ss'] < 35)
+                $color = $C['yellow'];
+        if ($e['ss'] < 30)
+                $color = $C['red'];
+        if ($e['el']<10)
+                $color = $C['blue'];
+        if ($e['ss'] < 10)
+                $color = $C['black'];
 
-	list($x, $y) = azel2xy($e['az'], $e['el'], $sz);
+        list($x, $y) = azel2xy($e['az'], $e['el'], $sz);
 
-	$r = 12;
-	if (isset($_GET['sz']) && ($_GET['sz'] == 'small'))
-		$r = 8;
+        $r = 12;
+        if (isset($_GET['sz']) && ($_GET['sz'] == 'small'))
+                $r = 8;
 
-	imageString($im, 3, $x+4, $y+4, $e['PRN'], $C['black']);
+        imageString($im, 3, $x+4, $y+4, $e['PRN'], $C['black']);
         if ($e['used'] == true)
-		if (isGPS($e['PRN']))
-			imageFilledArc($im, $x, $y, $r, $r, 0, 360, $color, 0);
-		else
-			imageFilledDiamond($im, $x, $y, $r, $color);
-	else
-		if (isGPS($e['PRN']))
-			imageArc($im, $x, $y, $r, $r, 0, 360, $color);
-		else
-			imageDiamond($im, $x, $y, $r, $color);
+                if (isGPS($e['PRN']))
+                        imageFilledArc($im, $x, $y, $r, $r, 0, 360, $color, 0);
+                else
+                        imageFilledDiamond($im, $x, $y, $r, $color);
+        else
+                if (isGPS($e['PRN']))
+                        imageArc($im, $x, $y, $r, $r, 0, 360, $color);
+                else
+                        imageDiamond($im, $x, $y, $r, $color);
 }
 
 
 function imageDiamond($im, $x, $y, $r, $color){
-	$t = $r/2;
-	# this lunacy is because imagesetthickness doesn't seem to work
-	$vx = array ( $x+$t, $y, $x, $y+$t, $x-$t, $y, $x, $y-$t );
-	imagepolygon($im, $vx, 4, $color);
-	$t--;
-	$vx = array ( $x+$t, $y, $x, $y+$t, $x-$t, $y, $x, $y-$t );
-	imagepolygon($im, $vx, 4, $color);
-	$t--;
-	$vx = array ( $x+$t, $y, $x, $y+$t, $x-$t, $y, $x, $y-$t );
-	imagepolygon($im, $vx, 4, $color);
+        $t = $r/2;
+        # this lunacy is because imagesetthickness doesn't seem to work
+        $vx = array ( $x+$t, $y, $x, $y+$t, $x-$t, $y, $x, $y-$t );
+        imagepolygon($im, $vx, 4, $color);
+        $t--;
+        $vx = array ( $x+$t, $y, $x, $y+$t, $x-$t, $y, $x, $y-$t );
+        imagepolygon($im, $vx, 4, $color);
+        $t--;
+        $vx = array ( $x+$t, $y, $x, $y+$t, $x-$t, $y, $x, $y-$t );
+        imagepolygon($im, $vx, 4, $color);
 }
 
 function imageFilledDiamond($im, $x, $y, $r, $color){
-	$t = $r/2;
-	while($t){
-		$vx = array ( $x+$t, $y, $x, $y+$t, $x-$t, $y, $x, $y-$t );
-		imagepolygon($im, $vx, 4, $color);
-		$t -= 0.5;
-	}
+        $t = $r/2;
+        while($t){
+                $vx = array ( $x+$t, $y, $x, $y+$t, $x-$t, $y, $x, $y-$t );
+                imagepolygon($im, $vx, 4, $color);
+                $t -= 0.5;
+        }
 }
 
 function elevation($im, $sz, $C, $a){
-	$b = 90 - $a;
-	$a = $sz * 0.95 * ($a/180);
-	imageArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360, $C['ltgray']);
-	$x = $sz/2 - 16;
-	$y = $sz/2 - $a;
-	imageString($im, 2, $x, $y, $b, $C['ltgray']);
+        $b = 90 - $a;
+        $a = $sz * 0.95 * ($a/180);
+        imageArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360, $C['ltgray']);
+        $x = $sz/2 - 16;
+        $y = $sz/2 - $a;
+        imageString($im, 2, $x, $y, $b, $C['ltgray']);
 }
 
 function skyview($im, $sz, $C){
-	global $swap_ew;
-	$a = 90; $a = $sz * 0.95 * ($a/180);
-	imageFilledArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360, $C['mdgray'], 0);
-	imageArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360, $C['black']);
-	$x = $sz/2 - 16; $y = $sz/2 - $a;
-	imageString($im, 2, $x, $y, "0", $C['ltgray']);
+        global $swap_ew;
+        $a = 90; $a = $sz * 0.95 * ($a/180);
+        imageFilledArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360, $C['mdgray'], 0);
+        imageArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360, $C['black']);
+        $x = $sz/2 - 16; $y = $sz/2 - $a;
+        imageString($im, 2, $x, $y, "0", $C['ltgray']);
 
-	$a = 85; $a = $sz * 0.95 * ($a/180);
-	imageFilledArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360, $C['white'], 0);
-	imageArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360, $C['ltgray']);
-	imageString($im, 1, $sz/2 - 6, $sz+$a, '5', $C['black']);
-	$x = $sz/2 - 16; $y = $sz/2 - $a;
-	imageString($im, 2, $x, $y, "5", $C['ltgray']);
+        $a = 85; $a = $sz * 0.95 * ($a/180);
+        imageFilledArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360, $C['white'], 0);
+        imageArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360, $C['ltgray']);
+        imageString($im, 1, $sz/2 - 6, $sz+$a, '5', $C['black']);
+        $x = $sz/2 - 16; $y = $sz/2 - $a;
+        imageString($im, 2, $x, $y, "5", $C['ltgray']);
 
-	for($i = 0; $i < 180; $i += 15){
-		list($x0, $y0, $x1, $y1) = radial($i, $sz);
-		imageLine($im, $x0, $y0, $x1, $y1, $C['ltgray']);
-	}
+        for($i = 0; $i < 180; $i += 15){
+                list($x0, $y0, $x1, $y1) = radial($i, $sz);
+                imageLine($im, $x0, $y0, $x1, $y1, $C['ltgray']);
+        }
 
-	for($i = 15; $i < 90; $i += 15)
-		elevation($im, $sz, $C, $i);
+        for($i = 15; $i < 90; $i += 15)
+                elevation($im, $sz, $C, $i);
 
-	$x = $sz/2 - 16; $y = $sz/2 - 8;
-	/* imageString($im, 2, $x, $y, "90", $C['ltgray']); */
+        $x = $sz/2 - 16; $y = $sz/2 - 8;
+        /* imageString($im, 2, $x, $y, "90", $C['ltgray']); */
 
-	imageString($im, 4, $sz/2 + 4, 2        , 'N', $C['black']);
-	imageString($im, 4, $sz/2 + 4, $sz - 16 , 'S', $C['black']);
-	if ($swap_ew != 0){
-		imageString($im, 4, 4        , $sz/2 + 4, 'E', $C['black']);
-		imageString($im, 4, $sz - 10 , $sz/2 + 4, 'W', $C['black']);
-	} else {
-		imageString($im, 4, 4        , $sz/2 + 4, 'W', $C['black']);
-		imageString($im, 4, $sz - 10 , $sz/2 + 4, 'E', $C['black']);
-	}
+        imageString($im, 4, $sz/2 + 4, 2        , 'N', $C['black']);
+        imageString($im, 4, $sz/2 + 4, $sz - 16 , 'S', $C['black']);
+        if ($swap_ew != 0){
+                imageString($im, 4, 4        , $sz/2 + 4, 'E', $C['black']);
+                imageString($im, 4, $sz - 10 , $sz/2 + 4, 'W', $C['black']);
+        } else {
+                imageString($im, 4, 4        , $sz/2 + 4, 'W', $C['black']);
+                imageString($im, 4, $sz - 10 , $sz/2 + 4, 'E', $C['black']);
+        }
 }
 
 function gen_image($resp){
-	$sz = 600;
-	if (isset($_GET['sz']) && ($_GET['sz'] == 'small'))
-		$sz = 240;
+        $sz = 600;
+        if (isset($_GET['sz']) && ($_GET['sz'] == 'small'))
+                $sz = 240;
 
-	$GPS = json_decode($resp, true);
-	if ($GPS['class'] != "POLL"){
-		die("json_decode error: $resp");
-	}
+        $GPS = json_decode($resp, true);
+        if ($GPS['class'] != "POLL"){
+                die("json_decode error: $resp");
+        }
 
-	$im = imageCreate($sz, $sz);
-	$C = colorsetup($im);
-	skyview($im, $sz, $C);
-	if ($sz > 240)
-		legend($im, $sz, $C);
+        $im = imageCreate($sz, $sz);
+        $C = colorsetup($im);
+        skyview($im, $sz, $C);
+        if ($sz > 240)
+                legend($im, $sz, $C);
 
-	for($i = 0; $i < count($GPS['sky'][0]['satellites']); $i++){
-		splot($im, $sz, $C, $GPS['sky'][0]['satellites'][$i]);
-	}
+        for($i = 0; $i < count($GPS['sky'][0]['satellites']); $i++){
+                splot($im, $sz, $C, $GPS['sky'][0]['satellites'][$i]);
+        }
 
-	header("Content-type: image/png");
-	imagePNG($im);
-	imageDestroy($im);
+        header("Content-type: image/png");
+        imagePNG($im);
+        imageDestroy($im);
 }
 
 function dfix($x, $y, $z){
-	if ($x < 0){
-		$x = sprintf("%f %s", -1 * $x, $z);
-	} else {
-		$x = sprintf("%f %s", $x, $y);
-	}
-	return $x;
+        if ($x < 0){
+                $x = sprintf("%f %s", -1 * $x, $z);
+        } else {
+                $x = sprintf("%f %s", $x, $y);
+        }
+        return $x;
 }
 
 function write_html($resp){
-	global $sock, $errstr, $errno, $server, $port, $head, $body, $open;
-	global $blurb, $title, $autorefresh, $showmap, $gmap_key, $footer;
-	global $testmode, $advertise;
+        global $sock, $errstr, $errno, $server, $port, $head, $body, $open;
+        global $blurb, $title, $autorefresh, $showmap, $gmap_key, $footer;
+        global $testmode, $advertise;
 
-	$GPS = json_decode($resp, true);
-	if ($GPS['class'] != 'POLL'){
-		die("json_decode error: $resp");
-	}
+        $GPS = json_decode($resp, true);
+        if ($GPS['class'] != 'POLL'){
+                die("json_decode error: $resp");
+        }
 
-	header("Content-type: text/html; charset=UTF-8");
+        header("Content-type: text/html; charset=UTF-8");
 
-	global $lat, $lon;
-	$lat = (float)$GPS['tpv'][0]['lat'];
-	$lon = (float)$GPS['tpv'][0]['lon'];
-	$x = $server; $y = $port;
-	$imgdata = base64_encode($resp);
-	$server = $x; $port = $y;
+        global $lat, $lon;
+        $lat = (float)$GPS['tpv'][0]['lat'];
+        $lon = (float)$GPS['tpv'][0]['lon'];
+        $x = $server; $y = $port;
+        $imgdata = base64_encode($resp);
+        $server = $x; $port = $y;
 
-	if ($autorefresh > 0)
-		$autorefresh = "<meta http-equiv='Refresh' content='$autorefresh'/>";
-	else
-		$autorefresh = '';
+        if ($autorefresh > 0)
+                $autorefresh = "<meta http-equiv='Refresh' content='$autorefresh'/>";
+        else
+                $autorefresh = '';
 
-	$map_head = $map_body = $map_code = '';
-	if ($showmap == 1) {
-		$map_head = gen_gmap_head();
-		$map_body = 'onload="Load()" onunload="GUnload()"';
-		$map_code = gen_map_code();
-	} else if ($showmap == 2) {
-		$map_head = gen_osm_head();
-		$map_body = 'onload="Load()"';
-		$map_code = gen_map_code();
-	}
-	$part1 = <<<EOF
+        $map_head = $map_body = $map_code = '';
+        if ($showmap == 1) {
+                $map_head = gen_gmap_head();
+                $map_body = 'onload="Load()" onunload="GUnload()"';
+                $map_code = gen_map_code();
+        } else if ($showmap == 2) {
+                $map_head = gen_osm_head();
+                $map_body = 'onload="Load()"';
+                $map_code = gen_map_code();
+        }
+        $part1 = <<<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
     "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -407,13 +407,13 @@ function write_html($resp){
 </td>
 EOF;
 
-	if (!strlen($advertise))
-		$advertise = $server;
+        if (!strlen($advertise))
+                $advertise = $server;
 
-	if ($testmode && !$sock)
-		$part2 = "";
-	else
-		$part2 = <<<EOF
+        if ($testmode && !$sock)
+                $part2 = "";
+        else
+                $part2 = <<<EOF
 <!-- ------------------------------------------------------------ -->
 
 <td rowspan="4" align="center" valign="top">
@@ -427,10 +427,10 @@ green=most and red=least.  Diamonds indicate Augmentation satellites.</p>
 </tr>
 EOF;
 
-	if (!$open)
-		$part3 = '';
-	else
-		$part3 = <<<EOF
+        if (!$open)
+                $part3 = '';
+        else
+                $part3 = <<<EOF
 <!-- ------------------------------------------------------------ -->
 
 <tr><td align="justify">To get real-time information, connect to
@@ -446,17 +446,17 @@ Use a different server:<br/>
 </tr>
 EOF;
 
-	if ($testmode && !$sock)
-		$part4 = "<tr><td class='warning'>The gpsd instance that this page monitors is not running.</td></tr>";
-	else {
-		$fix = $GPS['tpv'][0];
-		$sky = $GPS['sky'][0];
-		$sats = $sky['satellites'];
+        if ($testmode && !$sock)
+                $part4 = "<tr><td class='warning'>The gpsd instance that this page monitors is not running.</td></tr>";
+        else {
+                $fix = $GPS['tpv'][0];
+                $sky = $GPS['sky'][0];
+                $sats = $sky['satellites'];
 
-		$fixtype = array('Unknown' => 0, 'No Fix' => 1,'2D Fix' => 2, '3D Fix' => 3);
-		$type = array_search($fix['mode'],$fixtype);
+                $fixtype = array('Unknown' => 0, 'No Fix' => 1,'2D Fix' => 2, '3D Fix' => 3);
+                $type = array_search($fix['mode'],$fixtype);
 
-		$nsv = count($sats);
+                $nsv = count($sats);
                 $ts = $fix['time'];
                 $sat = '';
                 foreach($sats as $s)
@@ -464,7 +464,7 @@ EOF;
                                 "\t<tr><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%s</td></tr>\n",
                                 $s['PRN'], $s['el'], $s['az'], $s['ss'], $s['used'] ? 'Y' : 'N'
                         );
-		$part4 = <<<EOF
+                $part4 = <<<EOF
 <!-- ------------------------------------------------------------ -->
 <tr><td align=center valign=top>
     <table border=1>
@@ -489,9 +489,9 @@ $sat    </table>
 {$resp}
 -->
 EOF;
-	}
+        }
 
-	$part5 = <<<EOF
+        $part5 = <<<EOF
 
 </table>
 </center>
@@ -509,19 +509,19 @@ print $part1 . $part2 . $part3 . $part4 . $part5;
 }
 
 function write_json($resp){
-	header('Content-Type: text/javascript');
-	if (isset($_GET['jsonp']))
-		print "{$_GET['jsonp']}({$resp})";
-	else
-		print $resp;
+        header('Content-Type: text/javascript');
+        if (isset($_GET['jsonp']))
+                print "{$_GET['jsonp']}({$resp})";
+        else
+                print $resp;
 }
 
 function write_config(){
-	$f = fopen("gpsd_config.inc", "a");
-	if (!$f)
-		die("can't generate prototype config file. try running this script as root in DOCUMENT_ROOT");
+        $f = fopen("gpsd_config.inc", "a");
+        if (!$f)
+                die("can't generate prototype config file. try running this script as root in DOCUMENT_ROOT");
 
-	$buf = <<<EOB
+        $buf = <<<EOB
 <?PHP
 \$title = 'My GPS Server';
 \$server = 'localhost';
@@ -558,8 +558,8 @@ EOT;
 ?>
 
 EOB;
-	fwrite($f, $buf);
-	fclose($f);
+        fwrite($f, $buf);
+        fclose($f);
 }
 
 function gen_gmap_head() {
@@ -597,25 +597,25 @@ return <<<EOT
 <script>
     <!--
 function Load() {
-	document.getElementById("map").firstChild.data = "";
-	var map = new OpenLayers.Map("map", {
-		controls: [
-			new OpenLayers.Control.Navigation(),
-			new OpenLayers.Control.PanZoomBar(),
-			new OpenLayers.Control.ScaleLine(),
-			new OpenLayers.Control.LayerSwitcher()
-		]
-	});
-	var layer = new OpenLayers.Layer.OSM("Open Street Map");
-	map.addLayer(layer);
+        document.getElementById("map").firstChild.data = "";
+        var map = new OpenLayers.Map("map", {
+                controls: [
+                        new OpenLayers.Control.Navigation(),
+                        new OpenLayers.Control.PanZoomBar(),
+                        new OpenLayers.Control.ScaleLine(),
+                        new OpenLayers.Control.LayerSwitcher()
+                ]
+        });
+        var layer = new OpenLayers.Layer.OSM("Open Street Map");
+        map.addLayer(layer);
 
-	var center = new OpenLayers.LonLat({$GLOBALS['lon']}, {$GLOBALS['lat']})
-		.transform(new OpenLayers.Projection("EPSG:4326"), map.getProjectionObject());
-	map.setCenter(center, 12);
+        var center = new OpenLayers.LonLat({$GLOBALS['lon']}, {$GLOBALS['lat']})
+                .transform(new OpenLayers.Projection("EPSG:4326"), map.getProjectionObject());
+        map.setCenter(center, 12);
 
-	var markers = new OpenLayers.Layer.Markers("Markers");
-	markers.addMarker(new OpenLayers.Marker(center));
-	map.addLayer(markers);
+        var markers = new OpenLayers.Layer.Markers("Markers");
+        markers.addMarker(new OpenLayers.Marker(center));
+        map.addLayer(markers);
 }
     -->
     </script>
