@@ -850,81 +850,96 @@ const char *json_error_string(int err)
 
 #endif /* SOCKET_EXPORT_ENABLE */
 
-// FIXME: check outlen too.
-// FIXME: do not skip high bit chars, output then as \xXX
-// FIXME: this is JSON so NULL in *in ends the string.
+/* clean a JSON string so it can be quoted.  Used to output the JSON
+ * as a literal JSON string
+ * escape control chars, escape double quote.
+ * stop at NUL, inlen or bad unicode char
+ */
 char *json_clean(const char *in, char *buf, size_t inlen, size_t bufsiz)
 {
     const char *escape_in = "'\"/\\\b\f\n\r\t";
     const char *escape_out = "'\"/\\bfnrt";
-    size_t ocnt = 0;
-    int cnt;
-    for (cnt = 0; in[cnt] != 0; ++cnt) {
-	if (in[cnt] < 0) {
-	    size_t to_copy = 0;
-//	    printf("to print: %zd", to_copy);
-	    if ((((uint8_t)in[cnt] & 0xE0) == 0xC0)&&
-		(((uint8_t)in[cnt+1] & 0xC0) == 0x80)) {
+    unsigned ocnt = 0;
+    unsigned icnt = 0;
+    unsigned cnt = 0;
+    unsigned to_copy = 0;
+    bool notyet = true;
+
+    buf[0] = '\0';
+
+    // check in string, stop at NUL, done inlen, or buf full
+    for (cnt = 0; in[cnt] != '\0'; cnt++) {
+
+        if (cnt >= inlen) {
+            // got all from input buffer
+            break;
+        }
+
+        if (ocnt > (bufsiz - 6) ) {
+            /* output buffer full.  Not enough space for a 4-byte UTF + NUL
+             * safer than a lot of specific size checks later in the loop. */
+            break;
+        }
+
+	if (in[cnt] & 0x80) {
+            // highbit set. assume unicode
+	    to_copy = 0;
+
+            // check inlen so we don't overrun in
+	    if ((inlen > (cnt + 1)) &&
+                (0xC0 == (0xE0 & (uint8_t)in[cnt])) &&
+		(0x80 == (0xC0 & (uint8_t)in[cnt + 1]))) {
 		// utf-8 ish 16bit rune - deg, plusm, mplus etc.
 		to_copy = 2;
-	    } else if ((((uint8_t)in[cnt]   & 0xF0) == 0xE0)&&
-		       (((uint8_t)in[cnt+1] & 0xC0) == 0x80)&&
-		       (((uint8_t)in[cnt+2] & 0xC0) == 0x80)) {
+	    } else if ((inlen > (cnt + 2)) &&
+	               (0xE0 == (0xF0 & (uint8_t)in[cnt])) &&
+		       (0x80 == (0xC0 & (uint8_t)in[cnt + 1])) &&
+		       (0x80 == (0xC0 & (uint8_t)in[cnt + 2]))) {
 		// utf-8 ish 24 bit rune - (double) prime etc. 
 		to_copy = 3;
-	    } else if ((((uint8_t)in[cnt]   & 0xF8) == 0xF0)&&
-		       (((uint8_t)in[cnt+1] & 0xC0) == 0x80)&&
-		       (((uint8_t)in[cnt+2] & 0xC0) == 0x80)&&
-		       (((uint8_t)in[cnt+3] & 0xC0) == 0x80)) {
+	    } else if ((inlen > (cnt + 3)) &&
+	               (0xF0 == (0xF8 & (uint8_t)in[cnt])) &&
+		       (0x80 == (0xC0 & (uint8_t)in[cnt + 1])) &&
+		       (0x80 == (0xC0 & (uint8_t)in[cnt + 2])) &&
+		       (0x80 == (0xC0 & (uint8_t)in[cnt + 3]))) {
 		// utf-8 ish 32 bit rune - musical symbol g clef etc. 
 		to_copy = 4;
-	    }
-	    if ((to_copy > 0) && (bufsiz > (ocnt + to_copy))) {
-		for (;to_copy > 1; to_copy--) {
-		    buf[ocnt++] = in[cnt++];
-		}
-		buf[ocnt++] = in[cnt];
-		buf[ocnt] = 0;
 	    } else {
-		return buf;
-	    }
+                // WTF??  Short UTF?  Bad UTF?
+                return buf;
+            }
+
+            memcpy((void*)&buf[ocnt], (void*)&in[cnt], to_copy);
+            ocnt += to_copy;
+            cnt += to_copy - 1;    // minus one as the for loop does cnt++
+            buf[ocnt] = '\0';
 	    continue;
 	}
 	/* step though a array of bytes (escape_in) to escape
-	 * until finding  the target byte or 0. Then finds
+	 * until finding  the target byte or NUL. Then finds
 	 * the corresponding byte in (escape_out) and forms the
 	 * escape sequence. sets a Boolean because a continue
 	 * would probably drop execution in the ext loop up
 	 * which is a level below where we want.
 	 */
-	bool notyet = true;
-	for (int icnt = 0 ; notyet && (escape_in[icnt] != 0); icnt++) {
+	notyet = true;
+	for (icnt = 0 ; notyet && (escape_in[icnt] != '\0'); icnt++) {
 	    if (in[cnt] == escape_in[icnt]) {
-		if (bufsiz <= (ocnt + 2)) {
-		    return buf;
-		}
 		buf[ocnt++] = '\\';
 		buf[ocnt++] = escape_out[icnt];
-		buf[ocnt] = 0;
+		buf[ocnt] = '\0';
 		notyet = false;
 	    }
 	}
 	if (! notyet) {
 	    continue;
 	}
-	// Escape 0-32 and 127 if not previously handled (x00-x01f,x7f)
-	if (('\x00' <= (int8_t)in[cnt] && (int8_t)in[cnt] <= '\x1f') ||
-	    '\x7f' == (int8_t)in[cnt]
-	) {
-	    if (bufsiz <= (ocnt + 6)) {
-		return buf;
-	    }
-	    str_appendf(buf, bufsiz - ocnt, "\\x%04x", in[cnt]);
-	    ocnt = strlen(buf);
+	// Escape 0-32 and 127 if not previously handled (0-x01f,x7f)
+	if (('\0' <= in[cnt] && '\x1f' >= in[cnt]) ||
+	    '\x7f' == (int8_t)in[cnt]) {
+	    str_appendf(buf, bufsiz - ocnt, "\\x%02x", in[cnt]);
+	    ocnt += 4;
 	    continue;
-	}
-	if (bufsiz <= (ocnt + 1)) {
-	    return buf;
 	}
 	// pass through everything not escaped.
 	buf[ocnt++] = in[cnt];
@@ -935,3 +950,4 @@ char *json_clean(const char *in, char *buf, size_t inlen, size_t bufsiz)
 
 /* end */
 
+// vim: set expandtab shiftwidth=4

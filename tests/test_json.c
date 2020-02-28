@@ -44,11 +44,11 @@ static void assert_string(char *attr, char *fld, char *val)
 static void assert_string1(char *desc, char *got, char *sb)
 {
     if (2 < debug) {
-        (void)fprintf(stderr, "test string: %s.\n", sb);
+        (void)fprintf(stderr, "test string: >%s<\n", sb);
     }
     if (strcmp(got, sb)) {
 	(void)fprintf(stderr, "case %d/%s FAILED\n", current_test, desc);
-	(void)fprintf(stderr, "got = %s, s/b %s.\n", got, sb);
+	(void)fprintf(stderr, "got = >%s<, s/b >%s<\n", got, sb);
 	exit(EXIT_FAILURE);
     }
 }
@@ -388,17 +388,25 @@ static const struct json_array_t json_array_Real = {
 };
 
 // Case 24: ascii, bfnrt, lows unicode string encoding
-char *ee24a = "This, that, the other thing.",
-     *ee24b = "\b\f\n\r\t\'\"\\/",
+char ee24a[] = "This, that, the other thing.",
+     ee24b[] = "\b\f\n\r\t\'\"\\/",
      // test for NUL
-     *ee24c = "This, that, the other thing.\0Not This",
-     *ee24l = "\x01\x07\x15",
-     *ee24u = "±176°42′13″ 𠜎 𠜱 𠝹 𠱓";
-char *ed24a = "This, that, the other thing.",
-     *ed24b = "\\b\\f\\n\\r\\t\\'\\\"\\\\\\/",
-     *ed24c = "This, that, the other thing.",
-     *ed24l = "\\x0001\\x0007\\x0015",
-     *ed24u = "±176°42′13″ 𠜎 𠜱 𠝹 𠱓";
+     ee24c[] = "This, that, the other thing.\0Not This",
+     // test for good trailing unicode
+     ee24d[] = "Hello\xc2\xb0",
+     // test for bad trailing unicode
+     ee24e[] = "Hello\xc2",
+     ee24l[] = "\x01\x07\x15",
+     /* Note the char after te "13" is a "double prime", U+2033
+      * not a double quote! */
+     ee24u[] = "±176°42′13″ 𠜎 𠜱 𠝹 𠱓";
+char ed24a[] = "This, that, the other thing.",
+     ed24b[] = "\\b\\f\\n\\r\\t\\'\\\"\\\\\\/",
+     ed24c[] = "This, that, the other thing.",
+     ed24d[] = "Hello\xc2\xb0",
+     ed24e[] = "Hello",
+     ed24l[] = "\\x01\\x07\\x15",
+     ed24u[] = "±176°42′13″ 𠜎 𠜱 𠝹 𠱓";
 
 /* *INDENT-ON* */
 
@@ -666,15 +674,22 @@ static void jsontest(int i)
 	break;
 
     case 24:
-	(void)json_clean(ee24a, buffer, sizeof(ee24a), sizeof(buffer));
-	assert_string1("Ascii",   buffer, ed24a);
+        // test w/o the trailing NUL
+	(void)json_clean(ee24a, buffer, sizeof(ee24a) - 1, sizeof(buffer));
+	assert_string1("Ascii", buffer, ed24a);
 	(void)json_clean(ee24b, buffer, sizeof(ee24b), sizeof(buffer));
-	assert_string1("bfnrt",   buffer, ed24b);
+	assert_string1("bfnrt", buffer, ed24b);
 	(void)json_clean(ee24c, buffer, sizeof(ee24c), sizeof(buffer));
-	assert_string1("NUL",   buffer, ed24c);
-	// (void)json_clean(ee24l, buffer, sizeof(ee24b), sizeof(buffer));
-	// assert_string1("low",     buffer, ed24l);
-	(void)json_clean(ee24u, buffer, sizeof(ee24b), sizeof(buffer));
+	assert_string1("NUL", buffer, ed24c);
+	(void)json_clean(ee24d, buffer, sizeof(ee24d), sizeof(buffer));
+	assert_string1("trailing utf", buffer, ed24d);
+	(void)json_clean(ee24e, buffer, sizeof(ee24e), sizeof(buffer));
+	assert_string1("Bad trailing utf", buffer, ed24e);
+
+	(void)json_clean(ee24l, buffer, sizeof(ee24l), sizeof(buffer));
+	assert_string1("low", buffer, ed24l);
+
+	(void)json_clean(ee24u, buffer, sizeof(ee24u), sizeof(buffer));
 	assert_string1("unicode", buffer, ed24u);
 	break;
 
@@ -736,3 +751,4 @@ int main(int argc UNUSED, char *argv[]UNUSED)
 }
 
 /* end */
+// vim: set expandtab shiftwidth=4
