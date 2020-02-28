@@ -875,9 +875,10 @@ char *json_clean(const char *in, char *buf, size_t inlen, size_t bufsiz)
             break;
         }
 
-        if (ocnt > (bufsiz - 6) ) {
-            /* output buffer full.  Not enough space for a 4-byte UTF + NUL
-             * safer than a lot of specific size checks later in the loop. */
+        if (ocnt > (bufsiz - 8) ) {
+            /* output buffer full.  Not enough space for a 4-byte UTF + NUL,
+             * or \uxxxx + NUL.  Safer to check once, at the top,
+             * than a lot of specific size checks later in the loop. */
             break;
         }
 
@@ -906,7 +907,9 @@ char *json_clean(const char *in, char *buf, size_t inlen, size_t bufsiz)
 		to_copy = 4;
 	    } else {
                 // WTF??  Short UTF?  Bad UTF?
-                return buf;
+                str_appendf(buf, bufsiz, "\\u%04x", in[cnt] & 0x0ff);
+                ocnt += 6;
+                continue;
             }
 
             memcpy((void*)&buf[ocnt], (void*)&in[cnt], to_copy);
@@ -937,8 +940,8 @@ char *json_clean(const char *in, char *buf, size_t inlen, size_t bufsiz)
 	// Escape 0-32 and 127 if not previously handled (0-x01f,x7f)
 	if (('\0' <= in[cnt] && '\x1f' >= in[cnt]) ||
 	    '\x7f' == (int8_t)in[cnt]) {
-	    str_appendf(buf, bufsiz - ocnt, "\\x%02x", in[cnt]);
-	    ocnt += 4;
+	    str_appendf(buf, bufsiz, "\\u%04x", in[cnt] & 0x0ff);
+	    ocnt += 6;
 	    continue;
 	}
 	// pass through everything not escaped.

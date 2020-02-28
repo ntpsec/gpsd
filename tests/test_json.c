@@ -404,8 +404,8 @@ char ed24a[] = "This, that, the other thing.",
      ed24b[] = "\\b\\f\\n\\r\\t\\'\\\"\\\\\\/",
      ed24c[] = "This, that, the other thing.",
      ed24d[] = "Hello\xc2\xb0",
-     ed24e[] = "Hello",
-     ed24l[] = "\\x01\\x07\\x15",
+     ed24e[] = "Hello\\u00c2",
+     ed24l[] = "\\u0001\\u0007\\u0015",
      ed24u[] = "±176°42′13″ 𠜎 𠜱 𠝹 𠱓";
 
 /* *INDENT-ON* */
