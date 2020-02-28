@@ -432,10 +432,8 @@ green=most and red=least.  Diamonds indicate Augmentation satellites.</p>
 </tr>
 EOF;
 
-        if (!$open)
-                $part3 = '';
-        else
-                $part3 = <<<EOF
+        if ($open)
+            $part3 = <<<EOF
 <!-- -->
 
 <tr><td style="text-align:justify">To get real-time information, connect to
@@ -450,28 +448,64 @@ Use a different server:<br/>
 </td>
 </tr>
 EOF;
+        else
+            $part3 = '';
 
         if ($testmode && !$sock)
-                $part4 = "<tr><td class='warning'>The gpsd instance that this page monitors is not running.</td></tr>";
+            $part4 = <<<EOF
+<tr><td class='warning'>The gpsd instance that this page monitors is not
+running.</td></tr>
+EOF;
         else {
-                $fix = $GPS['tpv'][0];
-                $sky = $GPS['sky'][0];
-                $sats = $sky['satellites'];
+            $fix = $GPS['tpv'][0];
+            $sky = $GPS['sky'][0];
+            $sats = $sky['satellites'];
 
-                $fixtype = array('Unknown' => 0, 'No Fix' => 1, '2D Fix' => 2,
-                                 '3D Fix' => 3);
-                $type = array_search($fix['mode'],$fixtype);
+            $fixtype = array('Unknown' => 0, 'No Fix' => 1, '2D Fix' => 2,
+                             '3D Fix' => 3);
+            $type = array_search($fix['mode'],$fixtype);
 
-                $nsv = count($sats);
-                $ts = $fix['time'];
-                $sat = '';
-                foreach($sats as $s)
-                    $sat .= sprintf(
-                            "\t<tr><td>%d</td><td>%d</td><td>%d</td><td>%d</td><td>%s</td></tr>\n",
-                            $s['PRN'], $s['el'], $s['az'], $s['ss'],
-                            $s['used'] ? 'Y' : 'N'
-                    );
-                $part4 = <<<EOF
+            $nsv = count($sats);
+            $ts = $fix['time'];
+            $sat = '';
+
+            # gnssid to gnss abbreviation
+            $gnss = array(0 => 'GP', 1 => 'SB', 2 => 'GA', 3 => 'BD',
+                          4 => 'IM', 5 => 'QZ', 6 => 'GL');
+
+            $skeys = array('gnssid', 'svid', 'PRN', 'el', 'az',
+                           'ss', 'used');
+            foreach($sats as $s) {
+                # ensure all $s keys exist, for clean logs.
+                foreach($skeys as $key) {
+                    if (!array_key_exists($key, $s)) {
+                        $s[$key] = 'n/a';
+                    }
+                }
+                if (array_key_exists($s['gnssid'], $gnss)) {
+                    $s['gnssid'] = $gnss[$s['gnssid']];
+                } else {
+                    $s['gnssid'] = '  ';
+                }
+                $sat .= sprintf(
+                        "\t<tr style='text-align:right'><td>%s</td>" .
+                        "<td>%d</td><td>%d&nbsp;</td><td>%d&nbsp;</td>" .
+                        "<td>%d</td><td>%s</td></tr>\n",
+                        $s['gnssid'] . $s['svid'],
+                        $s['PRN'], $s['el'], $s['az'], $s['ss'],
+                        $s['used'] ? 'Y&nbsp;' : 'N&nbsp; '
+                );
+            };
+
+
+            # ensure all $fix keys exist, for clean logs.
+            $fixkeys = array('lat', 'lon', 'altHAE', 'altMSL');
+            foreach($fixkeys as $key) {
+                if (!array_key_exists($key, $fix)) {
+                    $fix[$key] = 'n/a';
+                }
+            }
+            $part4 = <<<EOF
 <!-- -->
 <tr><td style="text-align:center;vertical-align:top">
     <table style="border-width:1px;border-style:solid">
@@ -479,16 +513,20 @@ EOF;
         <tr><td>Time (UTC)</td><td>{$ts}</td></tr>
         <tr><td>Latitude</td><td>{$fix['lat']}</td></tr>
         <tr><td>Longitude</td><td>{$fix['lon']}</td></tr>
-        <tr><td>Altitude</td><td>{$fix['alt']}</td></tr>
+        <tr><td>Altitude HAE</td><td>{$fix['altHAE']}</td></tr>
+        <tr><td>Altitude MSL</td><td>{$fix['altMSL']}</td></tr>
         <tr><td>Fix Type</td><td>{$type}</td></tr>
-        <tr><td>Satellites</td><td>{$nsv}</td></tr>
+        <tr><td>Satellites Seen</td><td>{$nsv}</td></tr>
         <tr><td>HDOP</td><td>{$sky['hdop']}</td></tr>
         <tr><td>VDOP</td><td>{$sky['vdop']}</td></tr>
     </table>
     <br/>
     <table style="border-width:1px;border-style:solid">
-        <tr><th colspan=5 style="text-align:center">Current Satellites</th></tr>
-        <tr><th>PRN</th><th>Elevation</th><th>Azimuth</th><th>SS</th><th>Used</th></tr>
+        <tr><th colspan=6 style="text-align:center">Current Satellites</th></tr>
+        <tr><th></th><th>PRN</th>
+            <th>Elevation</th><th>Azimuth</th>
+            <th>SS</th><th>Used</th>
+        </tr>
 $sat    </table>
 </td></tr>
 
