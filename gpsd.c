@@ -2472,8 +2472,12 @@ int main(int argc, char *argv[])
                     detach_client(sub);
                 } else if (0 == buflen) {
                     // empty read, ignore it.
+                    /* FIXME! We want to not detach, but then no client
+                     * ever detachs and the client table fills up.
+                     * How to detect disconnected client?? */
+                    detach_client(sub);
                     GPSD_LOG(LOG_CLIENT, &context.errout,
-                             "<= client(%d): emtpy read\n", sub_index(sub));
+                             "<= client(%d): empty read\n", sub_index(sub));
                 } else {
                     if (buf[buflen - 1] != '\n')
                         buf[buflen++] = '\n';
