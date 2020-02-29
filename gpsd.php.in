@@ -71,11 +71,11 @@ EOF;
 # if we're passing in a query, let's unpack and use it
 $op = isset($_GET['op']) ? $_GET['op'] : '';
 if (isset($_GET['imgdata']) && $op == 'view'){
-        $resp = base64_decode($_GET['imgdata']);
-        if ($resp){
-                gen_image($resp);
-                exit(0);
-        }
+    $resp = base64_decode($_GET['imgdata']);
+    if ($resp){
+        gen_image($resp);
+        exit(0);
+    }
 } else {
     if (isset($_GET['host']))
             if (!preg_match('/[^a-zA-Z0-9\.-]/', $_GET['host']))
@@ -103,6 +103,17 @@ if (isset($_GET['imgdata']) && $op == 'view'){
         if (!$resp)
             $resp = '{"class":"ERROR","message":"no response from GPS daemon"}';
     }
+}
+
+# ensure all satellites keys exist, for clean logs.
+function sat_clean($sat) {
+    $skeys = array('gnssid', 'svid', 'PRN', 'el', 'az', 'ss', 'used');
+    foreach($skeys as $key) {
+        if (!array_key_exists($key, $sat)) {
+            $sat[$key] = 'n/a';
+        }
+    }
+    return $sat;
 }
 
 if ($op == 'view')
@@ -320,11 +331,16 @@ function gen_image($resp){
         $im = imageCreate($sz, $sz);
         $C = colorsetup($im);
         skyview($im, $sz, $C);
-        if ($sz > 240)
-                legend($im, $sz, $C);
+        if (240 < $sz)
+            legend($im, $sz, $C);
 
-        for($i = 0; $i < count($GPS['sky'][0]['satellites']); $i++){
-                splot($im, $sz, $C, $GPS['sky'][0]['satellites'][$i]);
+        if (array_key_exists('sky', $GPS) &&
+            array_key_exists(0, $GPS['sky']) &&
+            array_key_exists('satellites', $GPS['sky'][0])) {
+            for($i = 0; $i < count($GPS['sky'][0]['satellites']); $i++){
+                $sat = sat_clean($GPS['sky'][0]['satellites'][$i]);
+                splot($im, $sz, $C, $sat);
+            }
         }
 
         header("Content-type: image/png");
@@ -341,7 +357,16 @@ function dfix($x, $y, $z){
         return $x;
 }
 
-function write_html($resp){
+# compare sats for sort.  used at top.
+function sat_cmp($a, $b) {
+    if ($b['used'] != $a['used']) {
+        # used Y before used N
+        return $b['used'] - $a['used'];
+    }
+    return $a['PRN'] - $b['PRN'];
+}
+
+function write_html($resp) {
         global $sock, $errstr, $errno, $server, $port, $head, $body, $open;
         global $blurb, $title, $autorefresh, $showmap, $gmap_key, $footer;
         global $testmode, $advertise;
@@ -354,8 +379,28 @@ function write_html($resp){
         header("Content-type: text/html; charset=UTF-8");
 
         global $lat, $lon;
+        # make sure some things exist
+        if (!array_key_exists('sky', $GPS)) {
+            $GPS['sky'] = array();
+        }
+        if (!array_key_exists(0, $GPS['sky'])) {
+            $GPS['sky'][0] = array();
+        }
+        if (!array_key_exists('tpv', $GPS)) {
+            $GPS['tpv'] = array();
+        }
+        if (!array_key_exists(0, $GPS['tpv'])) {
+            $GPS['tpv'][0] = array();
+        }
+        if (!array_key_exists('lat', $GPS['tpv'][0]) ||
+            !array_key_exists('lon', $GPS['tpv'][0])) {
+            $GPS['tpv'][0]['lat'] = 0.0;
+            $GPS['tpv'][0]['lon'] = 0.0;
+        }
+
         $lat = (float)$GPS['tpv'][0]['lat'];
         $lon = (float)$GPS['tpv'][0]['lon'];
+
         $x = $server; $y = $port;
         $imgdata = base64_encode($resp);
         $server = $x; $port = $y;
@@ -463,7 +508,7 @@ EOF;
 
             $fixtype = array('Unknown' => 0, 'No Fix' => 1, '2D Fix' => 2,
                              '3D Fix' => 3);
-            $type = array_search($fix['mode'],$fixtype);
+            $type = array_search($fix['mode'], $fixtype);
 
             $nsv = count($sats);
             $ts = $fix['time'];
@@ -473,15 +518,11 @@ EOF;
             $gnss = array(0 => 'GP', 1 => 'SB', 2 => 'GA', 3 => 'BD',
                           4 => 'IM', 5 => 'QZ', 6 => 'GL');
 
-            $skeys = array('gnssid', 'svid', 'PRN', 'el', 'az',
-                           'ss', 'used');
+            # sort sats
+            usort($sats, "sat_cmp");
+
             foreach($sats as $s) {
-                # ensure all $s keys exist, for clean logs.
-                foreach($skeys as $key) {
-                    if (!array_key_exists($key, $s)) {
-                        $s[$key] = 'n/a';
-                    }
-                }
+                $s = sat_clean($s);
                 if (array_key_exists($s['gnssid'], $gnss)) {
                     $s['gnssid'] = $gnss[$s['gnssid']];
                 } else {
@@ -499,10 +540,19 @@ EOF;
 
 
             # ensure all $fix keys exist, for clean logs.
-            $fixkeys = array('lat', 'lon', 'altHAE', 'altMSL');
+            $fixkeys = array('altHAE', 'altMSL', 'lat', 'leapseconds', 'lon');
             foreach($fixkeys as $key) {
                 if (!array_key_exists($key, $fix)) {
                     $fix[$key] = 'n/a';
+                }
+            }
+
+            # ensure all $sky keys exist, for clean logs.
+            $skykeys = array('gdop', 'hdop', 'pdop','tdop', 'vdop',
+                             'xdop', 'ydop');
+            foreach($skykeys as $key) {
+                if (!array_key_exists($key, $sky)) {
+                    $sky[$key] = 'n/a';
                 }
             }
             $part4 = <<<EOF
@@ -511,13 +561,19 @@ EOF;
     <table style="border-width:1px;border-style:solid">
         <tr><th colspan=2 style="text-align:center">Current Information</th></tr>
         <tr><td>Time (UTC)</td><td>{$ts}</td></tr>
+        <tr><td>Leap Seconds</td><td>{$fix['leapseconds']}</td></tr>
         <tr><td>Latitude</td><td>{$fix['lat']}</td></tr>
         <tr><td>Longitude</td><td>{$fix['lon']}</td></tr>
         <tr><td>Altitude HAE</td><td>{$fix['altHAE']}</td></tr>
         <tr><td>Altitude MSL</td><td>{$fix['altMSL']}</td></tr>
         <tr><td>Fix Type</td><td>{$type}</td></tr>
         <tr><td>Satellites Seen</td><td>{$nsv}</td></tr>
+        <tr><td>GDOP</td><td>{$sky['gdop']}</td></tr>
         <tr><td>HDOP</td><td>{$sky['hdop']}</td></tr>
+        <tr><td>PDOP</td><td>{$sky['pdop']}</td></tr>
+        <tr><td>TDOP</td><td>{$sky['tdop']}</td></tr>
+        <tr><td>XDOP</td><td>{$sky['xdop']}</td></tr>
+        <tr><td>YDOP</td><td>{$sky['ydop']}</td></tr>
         <tr><td>VDOP</td><td>{$sky['vdop']}</td></tr>
     </table>
     <br/>
