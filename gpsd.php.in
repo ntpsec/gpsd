@@ -386,6 +386,9 @@ function write_html($resp) {
         if (!array_key_exists(0, $GPS['sky'])) {
             $GPS['sky'][0] = array();
         }
+        if (!array_key_exists('satellites', $GPS['sky'][0])) {
+            $GPS['sky'][0]['satellites'] = array();
+        }
         if (!array_key_exists('tpv', $GPS)) {
             $GPS['tpv'] = array();
         }
@@ -396,6 +399,12 @@ function write_html($resp) {
             !array_key_exists('lon', $GPS['tpv'][0])) {
             $GPS['tpv'][0]['lat'] = 0.0;
             $GPS['tpv'][0]['lon'] = 0.0;
+        }
+        if (!array_key_exists('mode', $GPS['tpv'][0])) {
+            $GPS['tpv'][0]['mode'] = 0;
+        }
+        if (!array_key_exists('time', $GPS['tpv'][0])) {
+            $GPS['tpv'][0]['time'] = 0;
         }
 
         $lat = (float)$GPS['tpv'][0]['lat'];
