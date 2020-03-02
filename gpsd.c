@@ -2459,25 +2459,29 @@ int main(int argc, char *argv[])
             lock_subscriber(sub);
             if (FD_ISSET(sub->fd, &rfds)) {
                 char buf[BUFSIZ];
-                int buflen;
+                ssize_t buflen;
 
                 unlock_subscriber(sub);
 
                 GPSD_LOG(LOG_PROG, &context.errout,
                          "checking client(%d)\n",
                          sub_index(sub));
-                buflen = (int)recv(sub->fd, buf, sizeof(buf) - 1, 0);
+                buflen = recv(sub->fd, buf, sizeof(buf) - 1, 0);
                 if (0 > buflen) {
                     // recv() error, give up.
                     detach_client(sub);
+                    GPSD_LOG(LOG_CLIENT, &context.errout,
+                             "<= client(%d): error read\n", sub_index(sub));
                 } else if (0 == buflen) {
-                    // empty read, ignore it.
-                    /* FIXME! We want to not detach, but then no client
-                     * ever detachs and the client table fills up.
-                     * How to detect disconnected client?? */
+                    /* Ugh, "man recv" says recv() returns 0 on disconnect!
+                     * So we have to disconnect client.
+                     * But somehow, dormant serial conenctions also
+                     * return 0.  Should FD_ISSET() have prevented getting
+                     * here in that case?
+                     */
                     detach_client(sub);
                     GPSD_LOG(LOG_CLIENT, &context.errout,
-                             "<= client(%d): empty read\n", sub_index(sub));
+                             "<= client(%d): eof read\n", sub_index(sub));
                 } else {
                     if (buf[buflen - 1] != '\n')
                         buf[buflen++] = '\n';
