@@ -429,7 +429,7 @@ function write_html($resp) {
                 $map_body = 'onload="Load()"';
                 $map_code = gen_map_code();
         }
-        $part1 = <<<EOF
+        $part_header = <<<EOF
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -471,12 +471,12 @@ EOF;
                 $advertise = $server;
 
         if ($testmode && !$sock)
-                $part2 = "";
+                $part_sky = "";
         else
-                $part2 = <<<EOF
+                $part_sky = <<<EOF
 <!-- -->
 
-<div style="width:600px;float:right">
+<div style="width:600px;float:right;margin:0 0 0 8px;">
 <img src="?op=view&amp;imgdata={$imgdata}"
 width="600" height="600" alt="Skyview"/>
 <br style="clear:both">
@@ -506,7 +506,7 @@ EOF;
             $part3 = '';
 
         if ($testmode && !$sock)
-            $part4 = <<<EOF
+            $part_tpv_sky = <<<EOF
 <div style="clear:both">The gpsd instance that this page monitors is
 not running.</div>
 EOF;
@@ -564,7 +564,7 @@ EOF;
                     $sky[$key] = 'n/a';
                 }
             }
-            $part4 = <<<EOF
+            $part_tpv_sky = <<<EOF
 <!-- -->
 <div style="float:left">
     <table style="border-width:1px;border-style:solid;text-align:center;">
@@ -602,7 +602,7 @@ $sat    </table>
 EOF;
         }
 
-        $part5 = <<<EOF
+        $part_footer = <<<EOF
 
 </div>  <!-- end div main -->
 <div style="clear:both">
@@ -617,7 +617,7 @@ EOF;
 </html>
 EOF;
 
-print $part1 . $part2 . $part3 . $part4 . $part5;
+print $part_header . $part_sky . $part3 . $part_tpv_sky . $part_footer;
 
 }
 
