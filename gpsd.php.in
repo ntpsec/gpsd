@@ -460,10 +460,11 @@ function write_html($resp) {
 </head>
 
 <body {$body} {$map_body}>
-<table style="text-align:center;border-width:0">
-<tr><td style="text-align:justify">
+<div id="main" style="clear:both">
+<div>
 {$blurb}
-</td>
+<br>
+</div>
 EOF;
 
         if (!strlen($advertise))
@@ -475,22 +476,22 @@ EOF;
                 $part2 = <<<EOF
 <!-- -->
 
-<td rowspan="2" style="text-align:center;vertical-align:top">
+<div style="width:600px;float:right">
 <img src="?op=view&amp;imgdata={$imgdata}"
 width="600" height="600" alt="Skyview"/>
 <br style="clear:both">
 <p class="caption">A filled circle means the satellite was used in
 the last fix. Green-yellow-red colors indicate signal strength in dB,
 green=most and red=least.  Diamonds indicate Augmentation satellites.</p>
-{$map_code}</td>
-</tr>
+{$map_code}
+</div>
 EOF;
 
         if ($open)
             $part3 = <<<EOF
 <!-- -->
 
-<tr><td style="text-align:justify">To get real-time information, connect to
+<div>To get real-time information, connect to
 <span class="fixed">telnet://{$advertise}:{$port}/</span> and type "?POLL;"
 or "?WATCH={"enable":true,"raw":true}".<br/>
 Use a different server:<br/>
@@ -499,16 +500,15 @@ Use a different server:<br/>
 <input name="port" value="{$port}" size="5" maxlength="5">
 <input type=submit value="Get Position"><input type=reset></form>
 <br/>
-</td>
-</tr>
+</div>
 EOF;
         else
             $part3 = '';
 
         if ($testmode && !$sock)
             $part4 = <<<EOF
-<tr><td class='warning'>The gpsd instance that this page monitors is not
-running.</td></tr>
+<div style="clear:both">The gpsd instance that this page monitors is
+not running.</div>
 EOF;
         else {
             $fix = $GPS['tpv'][0];
@@ -566,8 +566,8 @@ EOF;
             }
             $part4 = <<<EOF
 <!-- -->
-<tr><td style="text-align:center;vertical-align:top">
-    <table style="border-width:1px;border-style:solid">
+<div style="float:left">
+    <table style="border-width:1px;border-style:solid;text-align:center;">
         <tr><th colspan=2 style="text-align:center">Current Information</th></tr>
         <tr><td>Time (UTC)</td><td>{$ts}</td></tr>
         <tr><td>Leap Seconds</td><td>{$fix['leapseconds']}</td></tr>
@@ -585,7 +585,8 @@ EOF;
         <tr><td>YDOP</td><td>{$sky['ydop']}</td></tr>
         <tr><td>VDOP</td><td>{$sky['vdop']}</td></tr>
     </table>
-    <br/>
+</div>
+<div style="float:right">
     <table style="border-width:1px;border-style:solid">
         <tr><th colspan=6 style="text-align:center">Current Satellites</th></tr>
         <tr><th></th><th>PRN</th>
@@ -593,7 +594,7 @@ EOF;
             <th>SS</th><th>Used</th>
         </tr>
 $sat    </table>
-</td></tr>
+</div>
 
 <!-- raw response:
 {$resp}
@@ -603,11 +604,14 @@ EOF;
 
         $part5 = <<<EOF
 
-</table>
+</div>  <!-- end div main -->
+<div style="clear:both">
+<br>
+<hr>
 {$footer}
-<hr/>
 <p class="administrivia">This script is distributed by the
 <a href="@WEBSITE@">GPSD project</a>.</p>
+</div>
 
 </body>
 </html>
