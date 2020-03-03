@@ -205,8 +205,13 @@ static bool tsip_detect(struct gps_device_t *session)
     myfd = session->gpsdata.gps_fd;
     if (write(myfd, buf, 4) == 4) {
         unsigned int n;
+        struct timespec to;
+        // FIXME: this holds the main loop from running...
         for (n = 0; n < 3; n++) {
-            if (!nanowait(myfd, NS_IN_SEC))
+            // wait one second
+            to.tv_sec = 1;
+            to.tv_nsec = 0;
+            if (!nanowait(myfd, &to))
                 break;
             if (generic_get(session) >= 0) {
                 if (session->lexer.type == TSIP_PACKET) {

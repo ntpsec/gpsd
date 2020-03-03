@@ -129,18 +129,21 @@ int gps_sock_open(const char *host, const char *port,
     return 0;
 }
 
-bool gps_sock_waiting(const struct gps_data_t *gpsdata, int timeout)
 /* is there input waiting from the GPS? */
-/* timeout is in uSec */
+/* timeout is in milli Seconds */
+bool gps_sock_waiting(const struct gps_data_t *gpsdata, int timeout)
 {
 #ifndef USE_QT
+    struct timespec to;
+
     libgps_debug_trace((DEBUG_CALLS, "gps_waiting(%d): %d\n",
                        timeout, PRIVATE(gpsdata)->waitcount++));
     if (PRIVATE(gpsdata)->waiting > 0)
 	return true;
 
+    MSTOTS(&to, timeout);
     /* all error conditions return "not waiting" -- crude but effective */
-    return nanowait(gpsdata->gps_fd, timeout * 1000);
+    return nanowait(gpsdata->gps_fd, &to);
 #else
     return ((QTcpSocket *) (gpsdata->gps_fd))->waitForReadyRead(timeout / 1000);
 #endif

@@ -151,7 +151,7 @@ static inline void TS_NORM( struct timespec *ts)
 
 extern const char *timespec_str(const struct timespec *, char *, size_t);
 
-bool nanowait(int, int);
+bool nanowait(int, struct timespec *);
 
 #endif /* GPSD_TIMESPEC_H */
 

@@ -237,6 +237,7 @@ static ssize_t read_gpsd(char *message, size_t len)
     int ind;
     char c;
     int retry=0;
+    struct timespec to;
 
     /* allow room for trailing NUL */
     len--;
@@ -244,7 +245,9 @@ static ssize_t read_gpsd(char *message, size_t len)
     /* loop until we get some data or an error */
     for (ind = 0; ind < (int)len;) {
         /* prepare for a blocking read with a 10s timeout */
-        int result = nanowait(gpsdata.gps_fd, 10 * NS_IN_SEC);
+        to.tv_sec = 10;
+        to.tv_nsec = 0;
+        int result = nanowait(gpsdata.gps_fd, &to);
 
         switch (result)
         {
