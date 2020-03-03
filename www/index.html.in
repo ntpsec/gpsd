@@ -256,7 +256,7 @@ Berlios at <a href="https://marc.info">MARC</a>:
 
 <h2>Issue Tracker</h2>
 
-<p>The gpsd project tracks issues on our <a href='@ISSUE@'>issue tracker</a>.
+<p>The gpsd project tracks issues on our <a href='@ISSUES@'>issue tracker</a>.
 Please read the section on <a href='#bug-reporting'>Bug reporting</a> before
 posting on the issue tracker.</p>
 
