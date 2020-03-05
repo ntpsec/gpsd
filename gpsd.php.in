@@ -476,13 +476,14 @@ EOF;
                 $part_sky = <<<EOF
 <!-- -->
 
-<div style="width:600px;float:right;margin:0 0 0 8px;">
+<div style="width:600px;float:right;margin:0 0 0 1em;">
 <img src="?op=view&amp;imgdata={$imgdata}"
 width="600" height="600" alt="Skyview"/>
 <br style="clear:both">
 <p class="caption">A filled circle means the satellite was used in
-the last fix. Green-yellow-red colors indicate signal strength in dB,
-green=most and red=least.  Diamonds indicate Augmentation satellites.</p>
+the last fix. Green-yellow-red colors indicate signal to noise ration in dBHz,
+green=most and red=least.  Diamonds indicate augmentation (SBAS, WAAS, etc.)
+satellites.</p>
 {$map_code}
 </div>
 EOF;
@@ -549,7 +550,9 @@ EOF;
 
 
             # ensure all $fix keys exist, for clean logs.
-            $fixkeys = array('altHAE', 'altMSL', 'ecefx', 'ecefy', 'ecefz',
+            $fixkeys = array('altHAE', 'altMSL',
+                             'ecefvx', 'ecefvy', 'ecefvz',
+                             'ecefx', 'ecefy', 'ecefz',
                              'geoidSep', 'lat', 'leapseconds', 'lon');
             foreach($fixkeys as $key) {
                 if (!array_key_exists($key, $fix)) {
@@ -567,7 +570,7 @@ EOF;
             }
             $part_tpv_sky = <<<EOF
 <!-- -->
-<div style="float:left">
+<div style="float:left;margin:0 0 0 0;">
     <table style="border-width:1px;border-style:solid;text-align:center;">
         <tr><th colspan=2 style="text-align:center">Current Information</th></tr>
         <tr><td>Time (UTC)</td><td>{$ts}</td></tr>
@@ -581,6 +584,9 @@ EOF;
         <tr><td>ECEF X</td><td>{$fix['ecefx']}</td></tr>
         <tr><td>ECEF Y</td><td>{$fix['ecefy']}</td></tr>
         <tr><td>ECEF Z</td><td>{$fix['ecefz']}</td></tr>
+        <tr><td>ECEF vx</td><td>{$fix['ecefvx']}</td></tr>
+        <tr><td>ECEF vy</td><td>{$fix['ecefvy']}</td></tr>
+        <tr><td>ECEF vz</td><td>{$fix['ecefvz']}</td></tr>
         <tr><td>Satellites Seen</td><td>{$nsv}</td></tr>
         <tr><td>GDOP</td><td>{$sky['gdop']}</td></tr>
         <tr><td>HDOP</td><td>{$sky['hdop']}</td></tr>
@@ -591,12 +597,12 @@ EOF;
         <tr><td>VDOP</td><td>{$sky['vdop']}</td></tr>
     </table>
 </div>
-<div style="float:right">
+<div style="float:right;margin:0 0 0 1em;">
     <table style="border-width:1px;border-style:solid">
         <tr><th colspan=6 style="text-align:center">Current Satellites</th></tr>
         <tr><th></th><th>PRN</th>
-            <th>Elevation</th><th>Azimuth</th>
-            <th>SS</th><th>Used</th>
+            <th>Elv</th><th>Azm</th>
+            <th>SNR</th><th>Used</th>
         </tr>
 $sat    </table>
 </div>
