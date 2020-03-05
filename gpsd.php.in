@@ -599,20 +599,36 @@ EOF;
             $ecefvx = field_str($fix, 'ecefvx', 'm');
             $ecefvy = field_str($fix, 'ecefvy', 'm');
             $ecefvz = field_str($fix, 'ecefvz', 'm');
+            $ecefpAcc = field_str($fix, 'ecefpAcc', 'm');
+            $ecefvAcc = field_str($fix, 'ecefvAcc', 'm');
+
+            $epc = field_str($fix, 'epc', 'm');
+            $eph = field_str($fix, 'eph', 'm');
+            $eps = field_str($fix, 'eps', 'm');
+            $epx = field_str($fix, 'epx', 'm');
+            $epy = field_str($fix, 'epy', 'm');
+            $epv = field_str($fix, 'epv', 'm');
+            $sep = field_str($fix, 'sep', 'm');
 
             $part_tpv_sky = <<<EOF
 <!-- -->
 <div style="float:left;margin:0 0 1ex 1em;">
     <table style="border-width:1px;border-style:solid;text-align:center;">
-        <tr><th colspan=2 style="text-align:center">PVT Information</th></tr>
-        <tr><td>Time (UTC)</td><td>{$ts}</td></tr>
-        <tr><td>Leap Seconds</td><td>{$fix['leapseconds']}</td></tr>
+        <tr><th colspan=2 style="text-align:center">Fix Data</th></tr>
         <tr><td>Fix Type</td><td>{$type}</td></tr>
+        <tr><th colspan=2 style="text-align:left">Time</th></tr>
+        <tr><td colspan=2>UTC&nbsp;&nbsp;{$ts}</td></tr>
+        <tr><td>Leap Seconds</td><td>{$fix['leapseconds']}</td></tr>
+        <tr><th colspan=2 style="text-align:left">Position</th></tr>
         <tr><td>Latitude</td><td>{$fix['lat']}</td></tr>
         <tr><td>Longitude</td><td>{$fix['lon']}</td></tr>
         <tr><td>Altitude HAE</td><td>{$altHAE}</td></tr>
         <tr><td>Altitude MSL</td><td>{$altMSL}</td></tr>
         <tr><td>Geoid Separation</td><td>{$geoidSep}</td></tr>
+        <tr><td>ECEF X</td><td>{$ecefx}</td></tr>
+        <tr><td>ECEF Y</td><td>{$ecefy}</td></tr>
+        <tr><td>ECEF Y</td><td>{$ecefz}</td></tr>
+        <tr><th colspan=2 style="text-align:left">Velocity</th></tr>
         <tr><td>Speed</td><td>{$speed}</td></tr>
         <tr><td>Climb</td><td>{$climb}</td></tr>
         <tr><td>velN</td><td>{$velN}</td></tr>
@@ -621,9 +637,6 @@ EOF;
         <tr><td>Track True</td><td>{$track}</td></tr>
         <tr><td>Track Magnetic</td><td>{$magtrack}</td></tr>
         <tr><td>Magnetic Variation</td><td>{$magvar}</td></tr>
-        <tr><td>ECEF X</td><td>{$ecefx}</td></tr>
-        <tr><td>ECEF Y</td><td>{$ecefy}</td></tr>
-        <tr><td>ECEF Y</td><td>{$ecefz}</td></tr>
         <tr><td>ECEF vx</td><td>{$ecefvx}</td></tr>
         <tr><td>ECEF vy</td><td>{$ecefvy}</td></tr>
         <tr><td>ECEF vz</td><td>{$ecefvz}</td></tr>
@@ -639,6 +652,15 @@ EOF;
         <tr><td>XDOP</td><td>{$sky['xdop']}</td></tr>
         <tr><td>YDOP</td><td>{$sky['ydop']}</td></tr>
         <tr><td>VDOP</td><td>{$sky['vdop']}</td></tr>
+        <tr><td>epc</td><td>{$epc}</td></tr>
+        <tr><td>eph</td><td>{$eps}</td></tr>
+        <tr><td>eps</td><td>{$eph}</td></tr>
+        <tr><td>epx</td><td>{$epx}</td></tr>
+        <tr><td>epy</td><td>{$epy}</td></tr>
+        <tr><td>epv</td><td>{$epv}</td></tr>
+        <tr><td>sep</td><td>{$sep}</td></tr>
+        <tr><td>ecef pAcc</td><td>{$ecefpAcc}</td></tr>
+        <tr><td>ecef vAcc</td><td>{$ecefvAcc}</td></tr>
     </table>
 </div>
 <div style="float:right;margin:0 0 0 1em;">
