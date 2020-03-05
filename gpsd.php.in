@@ -583,6 +583,12 @@ EOF;
             $altHAE = field_str($fix, 'altHAE', 'm');
             $altMSL = field_str($fix, 'altMSL', 'm');
             $geoidSep = field_str($fix, 'geoidSep', 'm');
+            $speed = field_str($fix, 'speed', 'm');
+            $climb = field_str($fix, 'climb', 'm');
+
+            $track = field_str($fix, 'track', 'deg');
+            $magtrack = field_str($fix, 'magtrack', 'deg');
+            $magvar = field_str($fix, 'magvar', 'deg');
 
             $ecefx = field_str($fix, 'ecefx', 'm');
             $ecefy = field_str($fix, 'ecefy', 'm');
@@ -604,6 +610,11 @@ EOF;
         <tr><td>Altitude HAE</td><td>{$altHAE}</td></tr>
         <tr><td>Altitude MSL</td><td>{$altMSL}</td></tr>
         <tr><td>Geoid Separation</td><td>{$geoidSep}</td></tr>
+        <tr><td>Speed</td><td>{$speed}</td></tr>
+        <tr><td>Climb</td><td>{$climb}</td></tr>
+        <tr><td>Track True</td><td>{$track}</td></tr>
+        <tr><td>Track Magnetic</td><td>{$magtrack}</td></tr>
+        <tr><td>Magnetic Variation</td><td>{$magvar}</td></tr>
         <tr><td>ECEF X</td><td>{$ecefx}</td></tr>
         <tr><td>ECEF Y</td><td>{$ecefy}</td></tr>
         <tr><td>ECEF Y</td><td>{$ecefz}</td></tr>
