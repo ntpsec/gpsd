@@ -906,8 +906,8 @@ struct rtcm2_msg_t {
                 unsigned int        m:1;
                 unsigned int        pc:1;
                 unsigned int        g:1;
-                unsigned int        dq:3;
                 unsigned int        ident:5;
+                unsigned int        dq:3;
                 unsigned int        clc:5;
                 unsigned int        cp_h:8;
                 unsigned int        parity:6;
