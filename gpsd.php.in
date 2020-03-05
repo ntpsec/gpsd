@@ -549,7 +549,8 @@ EOF;
 
 
             # ensure all $fix keys exist, for clean logs.
-            $fixkeys = array('altHAE', 'altMSL', 'lat', 'leapseconds', 'lon');
+            $fixkeys = array('altHAE', 'altMSL', 'ecefx', 'ecefy', 'ecefz',
+                             'geoidSep', 'lat', 'leapseconds', 'lon');
             foreach($fixkeys as $key) {
                 if (!array_key_exists($key, $fix)) {
                     $fix[$key] = 'n/a';
@@ -571,11 +572,15 @@ EOF;
         <tr><th colspan=2 style="text-align:center">Current Information</th></tr>
         <tr><td>Time (UTC)</td><td>{$ts}</td></tr>
         <tr><td>Leap Seconds</td><td>{$fix['leapseconds']}</td></tr>
+        <tr><td>Fix Type</td><td>{$type}</td></tr>
         <tr><td>Latitude</td><td>{$fix['lat']}</td></tr>
         <tr><td>Longitude</td><td>{$fix['lon']}</td></tr>
         <tr><td>Altitude HAE</td><td>{$fix['altHAE']}</td></tr>
         <tr><td>Altitude MSL</td><td>{$fix['altMSL']}</td></tr>
-        <tr><td>Fix Type</td><td>{$type}</td></tr>
+        <tr><td>Geoid Separation</td><td>{$fix['geoidSep']}</td></tr>
+        <tr><td>ECEF X</td><td>{$fix['ecefx']}</td></tr>
+        <tr><td>ECEF Y</td><td>{$fix['ecefy']}</td></tr>
+        <tr><td>ECEF Z</td><td>{$fix['ecefz']}</td></tr>
         <tr><td>Satellites Seen</td><td>{$nsv}</td></tr>
         <tr><td>GDOP</td><td>{$sky['gdop']}</td></tr>
         <tr><td>HDOP</td><td>{$sky['hdop']}</td></tr>
