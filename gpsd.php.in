@@ -585,6 +585,9 @@ EOF;
             $geoidSep = field_str($fix, 'geoidSep', 'm');
             $speed = field_str($fix, 'speed', 'm');
             $climb = field_str($fix, 'climb', 'm');
+            $velN = field_str($fix, 'velN', 'm');
+            $velE = field_str($fix, 'velE', 'm');
+            $velD = field_str($fix, 'velD', 'm');
 
             $track = field_str($fix, 'track', 'deg');
             $magtrack = field_str($fix, 'magtrack', 'deg');
@@ -612,6 +615,9 @@ EOF;
         <tr><td>Geoid Separation</td><td>{$geoidSep}</td></tr>
         <tr><td>Speed</td><td>{$speed}</td></tr>
         <tr><td>Climb</td><td>{$climb}</td></tr>
+        <tr><td>velN</td><td>{$velN}</td></tr>
+        <tr><td>velE</td><td>{$velE}</td></tr>
+        <tr><td>velD</td><td>{$velD}</td></tr>
         <tr><td>Track True</td><td>{$track}</td></tr>
         <tr><td>Track Magnetic</td><td>{$magtrack}</td></tr>
         <tr><td>Magnetic Variation</td><td>{$magvar}</td></tr>
