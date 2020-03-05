@@ -116,6 +116,20 @@ function sat_clean($sat) {
     return $sat;
 }
 
+# format $arr[$field], adding $unit
+# otherwise return 'n/a'
+function field_str($arr, $key, $unit) {
+    if (!array_key_exists($key, $arr)) {
+        return 'n/a';
+    }
+    $ret = strval($arr[$key]);
+    if ('' != $unit) {
+        $ret .= " " . $unit;
+    }
+    return $ret;
+}
+
+
 if ($op == 'view')
         gen_image($resp);
 else if ($op == 'json')
@@ -550,10 +564,7 @@ EOF;
 
 
             # ensure all $fix keys exist, for clean logs.
-            $fixkeys = array('altHAE', 'altMSL',
-                             'ecefvx', 'ecefvy', 'ecefvz',
-                             'ecefx', 'ecefy', 'ecefz',
-                             'geoidSep', 'lat', 'leapseconds', 'lon');
+            $fixkeys = array('lat', 'leapseconds', 'lon');
             foreach($fixkeys as $key) {
                 if (!array_key_exists($key, $fix)) {
                     $fix[$key] = 'n/a';
@@ -568,6 +579,18 @@ EOF;
                     $sky[$key] = 'n/a';
                 }
             }
+
+            $altHAE = field_str($fix, 'altHAE', 'm');
+            $altMSL = field_str($fix, 'altMSL', 'm');
+            $geoidSep = field_str($fix, 'geoidSep', 'm');
+
+            $ecefx = field_str($fix, 'ecefx', 'm');
+            $ecefy = field_str($fix, 'ecefy', 'm');
+            $ecefz = field_str($fix, 'ecefz', 'm');
+            $ecefvx = field_str($fix, 'ecefvx', 'm');
+            $ecefvy = field_str($fix, 'ecefvy', 'm');
+            $ecefvz = field_str($fix, 'ecefvz', 'm');
+
             $part_tpv_sky = <<<EOF
 <!-- -->
 <div style="float:left;margin:0 0 0 0;">
@@ -578,15 +601,15 @@ EOF;
         <tr><td>Fix Type</td><td>{$type}</td></tr>
         <tr><td>Latitude</td><td>{$fix['lat']}</td></tr>
         <tr><td>Longitude</td><td>{$fix['lon']}</td></tr>
-        <tr><td>Altitude HAE</td><td>{$fix['altHAE']}</td></tr>
-        <tr><td>Altitude MSL</td><td>{$fix['altMSL']}</td></tr>
-        <tr><td>Geoid Separation</td><td>{$fix['geoidSep']}</td></tr>
-        <tr><td>ECEF X</td><td>{$fix['ecefx']}</td></tr>
-        <tr><td>ECEF Y</td><td>{$fix['ecefy']}</td></tr>
-        <tr><td>ECEF Z</td><td>{$fix['ecefz']}</td></tr>
-        <tr><td>ECEF vx</td><td>{$fix['ecefvx']}</td></tr>
-        <tr><td>ECEF vy</td><td>{$fix['ecefvy']}</td></tr>
-        <tr><td>ECEF vz</td><td>{$fix['ecefvz']}</td></tr>
+        <tr><td>Altitude HAE</td><td>{$altHAE}</td></tr>
+        <tr><td>Altitude MSL</td><td>{$altMSL}</td></tr>
+        <tr><td>Geoid Separation</td><td>{$geoidSep}</td></tr>
+        <tr><td>ECEF X</td><td>{$ecefx}</td></tr>
+        <tr><td>ECEF Y</td><td>{$ecefy}</td></tr>
+        <tr><td>ECEF Y</td><td>{$ecefz}</td></tr>
+        <tr><td>ECEF vx</td><td>{$ecefvx}</td></tr>
+        <tr><td>ECEF vy</td><td>{$ecefvy}</td></tr>
+        <tr><td>ECEF vz</td><td>{$ecefvz}</td></tr>
         <tr><td>Satellites Seen</td><td>{$nsv}</td></tr>
         <tr><td>GDOP</td><td>{$sky['gdop']}</td></tr>
         <tr><td>HDOP</td><td>{$sky['hdop']}</td></tr>
