@@ -602,9 +602,9 @@ EOF;
 
             $part_tpv_sky = <<<EOF
 <!-- -->
-<div style="float:left;margin:0 0 0 0;">
+<div style="float:left;margin:0 0 1ex 1em;">
     <table style="border-width:1px;border-style:solid;text-align:center;">
-        <tr><th colspan=2 style="text-align:center">Current Information</th></tr>
+        <tr><th colspan=2 style="text-align:center">PVT Information</th></tr>
         <tr><td>Time (UTC)</td><td>{$ts}</td></tr>
         <tr><td>Leap Seconds</td><td>{$fix['leapseconds']}</td></tr>
         <tr><td>Fix Type</td><td>{$type}</td></tr>
@@ -627,7 +627,11 @@ EOF;
         <tr><td>ECEF vx</td><td>{$ecefvx}</td></tr>
         <tr><td>ECEF vy</td><td>{$ecefvy}</td></tr>
         <tr><td>ECEF vz</td><td>{$ecefvz}</td></tr>
-        <tr><td>Satellites Seen</td><td>{$nsv}</td></tr>
+    </table>
+</div>
+<div style="float:left;margin:0 0 1ex 1em;">
+    <table style="border-width:1px;border-style:solid;text-align:center;">
+        <tr><th colspan=2 style="text-align:center">Error Estimates</th></tr>
         <tr><td>GDOP</td><td>{$sky['gdop']}</td></tr>
         <tr><td>HDOP</td><td>{$sky['hdop']}</td></tr>
         <tr><td>PDOP</td><td>{$sky['pdop']}</td></tr>
@@ -639,7 +643,9 @@ EOF;
 </div>
 <div style="float:right;margin:0 0 0 1em;">
     <table style="border-width:1px;border-style:solid">
-        <tr><th colspan=6 style="text-align:center">Current Satellites</th></tr>
+        <tr><th colspan=6 style="text-align:center">Satellites</th></tr>
+        <tr><td></td><td colspan=3>Satellites Seen</td>
+            <td colspan=2>{$nsv}</td></tr>
         <tr><th></th><th>PRN</th>
             <th>Elv</th><th>Azm</th>
             <th>SNR</th><th>Used</th>
