@@ -545,12 +545,16 @@ EOF;
             # sort sats
             usort($sats, "sat_cmp");
 
+            $sats_used = 0;
             foreach($sats as $s) {
                 $s = sat_clean($s);
                 if (array_key_exists($s['gnssid'], $gnss)) {
                     $s['gnssid'] = $gnss[$s['gnssid']];
                 } else {
                     $s['gnssid'] = '  ';
+                }
+                if ($s['used']) {
+                    $sats_used += 1;
                 }
                 $sat .= sprintf(
                         "\t<tr style='text-align:right'><td>%s</td>" .
@@ -609,6 +613,41 @@ EOF;
             $epy = field_str($fix, 'epy', 'm');
             $epv = field_str($fix, 'epv', 'm');
             $sep = field_str($fix, 'sep', 'm');
+            if (!array_key_exists('status', $fix)) {
+                $fix['status'] = 1;
+            }
+            switch($fix['status']) {
+            case 0:
+                $status = 'No Fix';
+                break;
+            case 1:
+                $status = 'Normal Fix';
+                break;
+            case 2:
+                $status = 'DGPS Fix';
+                break;
+            case 3:
+                $status = 'RTK Fixed Fix';
+                break;
+            case 4:
+                $status = 'RTK Float Fix';
+                break;
+            case 5:
+                $status = 'Dead Reckoning';
+                break;
+            case 6:
+                $status = 'GNSS+DR Fix';
+                break;
+            case 7:
+                $status = 'Surveyed-In Fix';
+                break;
+            case 8:
+                $status = 'Simulated Fix';
+                break;
+            default:
+                $status = 'Unknown Fix Type';
+                break;
+            }
 
             $part_tpv_sky = <<<EOF
 <!-- -->
@@ -616,6 +655,7 @@ EOF;
     <table style="border-width:1px;border-style:solid;text-align:center;">
         <tr><th colspan=2 style="text-align:center">Fix Data</th></tr>
         <tr><td>Fix Type</td><td>{$type}</td></tr>
+        <tr><td>Fix Status</td><td>{$status}</td></tr>
         <tr><th colspan=2 style="text-align:left">Time</th></tr>
         <tr><td colspan=2>UTC&nbsp;&nbsp;{$ts}</td></tr>
         <tr><td>Leap Seconds</td><td>{$fix['leapseconds']}</td></tr>
@@ -666,8 +706,9 @@ EOF;
 <div style="float:right;margin:0 0 0 1em;">
     <table style="border-width:1px;border-style:solid">
         <tr><th colspan=6 style="text-align:center">Satellites</th></tr>
-        <tr><td></td><td colspan=3>Satellites Seen</td>
-            <td colspan=2>{$nsv}</td></tr>
+        <tr><td colspan=6 style="text-align:center"
+            >Seen {$nsv}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Used {$sats_used}
+</td></tr>
         <tr><th></th><th>PRN</th>
             <th>Elv</th><th>Azm</th>
             <th>SNR</th><th>Used</th>
