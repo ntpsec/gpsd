@@ -163,6 +163,7 @@ function colorsetup($im){
         $C['cyan']      = imageColorAllocate($im, 0, 255, 255);
         $C['magenta']   = imageColorAllocate($im, 255, 0, 255);
         $C['yellow']    = imageColorAllocate($im, 255, 255, 0);
+        $C['burntyellow']    = imageColorAllocate($im, 199, 163, 23);
         $C['orange']    = imageColorAllocate($im, 255, 128, 0);
 
         return $C;
@@ -179,13 +180,13 @@ function legend($im, $sz, $C){
         imageRectangle($im, $x+0*$r+1, $y+1, $x + 1*$r + 0, $y + $r,
                        $C['red']);
         imageRectangle($im, $x+1*$r+2, $y+1, $x + 2*$r + 2, $y + $r,
-                       $C['yellow']);
+                       $C['burntyellow']);
         imageRectangle($im, $x+2*$r+4, $y+1, $x + 3*$r + 4, $y + $r,
                        $C['darkgreen']);
         imageRectangle($im, $x+4*$r+6, $y+1, $x + 3*$r + 6, $y + $r,
                        $C['brightgreen']);
         imageString($im, $fn, $x+3+0*$r, $y+$r/3, "<30", $C['red']);
-        imageString($im, $fn, $x+5+1*$r, $y+$r/3, "30+", $C['yellow']);
+        imageString($im, $fn, $x+5+1*$r, $y+$r/3, "30+", $C['burntyellow']);
         imageString($im, $fn, $x+7+2*$r, $y+$r/3, "35+", $C['darkgreen']);
         imageString($im, $fn, $x+9+3*$r, $y+$r/3, "40+", $C['brightgreen']);
 }
@@ -236,7 +237,7 @@ function splot($im, $sz, $C, $e){
         if ($e['ss'] < 40)
                 $color = $C['darkgreen'];
         if ($e['ss'] < 35)
-                $color = $C['yellow'];
+                $color = $C['burntyellow'];
         if ($e['ss'] < 30)
                 $color = $C['red'];
         if ($e['el']<10)
