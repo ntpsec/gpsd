@@ -797,11 +797,14 @@ EOB;
 }
 
 function gen_gmap_head() {
-global $gmap_key;
-return <<<EOT
+    global $gmap_key;
+    return <<<EOT
 <script src="//maps.googleapis.com/maps/api/js?sensor=false"/>
 
 <script>
+ <!-- note that the google map API is commented out, it requires
+an API KEY, and costs money to use!  As of March 2020 more info
+here: https://developers.google.com/maps/gmp-get-started   -->
  <!--
     function Load() {
       var map = new google.maps.Map(
