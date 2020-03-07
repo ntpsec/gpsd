@@ -591,11 +591,11 @@ EOF;
             $altHAE = field_str($fix, 'altHAE', 'm');
             $altMSL = field_str($fix, 'altMSL', 'm');
             $geoidSep = field_str($fix, 'geoidSep', 'm');
-            $speed = field_str($fix, 'speed', 'm');
-            $climb = field_str($fix, 'climb', 'm');
-            $velN = field_str($fix, 'velN', 'm');
-            $velE = field_str($fix, 'velE', 'm');
-            $velD = field_str($fix, 'velD', 'm');
+            $speed = field_str($fix, 'speed', 'm/s');
+            $climb = field_str($fix, 'climb', 'm/s');
+            $velN = field_str($fix, 'velN', 'm/s');
+            $velE = field_str($fix, 'velE', 'm/s');
+            $velD = field_str($fix, 'velD', 'm/s');
 
             $track = field_str($fix, 'track', 'deg');
             $magtrack = field_str($fix, 'magtrack', 'deg');
@@ -604,15 +604,15 @@ EOF;
             $ecefx = field_str($fix, 'ecefx', 'm');
             $ecefy = field_str($fix, 'ecefy', 'm');
             $ecefz = field_str($fix, 'ecefz', 'm');
-            $ecefvx = field_str($fix, 'ecefvx', 'm');
-            $ecefvy = field_str($fix, 'ecefvy', 'm');
-            $ecefvz = field_str($fix, 'ecefvz', 'm');
+            $ecefvx = field_str($fix, 'ecefvx', 'm/s');
+            $ecefvy = field_str($fix, 'ecefvy', 'm/s');
+            $ecefvz = field_str($fix, 'ecefvz', 'm/s');
             $ecefpAcc = field_str($fix, 'ecefpAcc', 'm');
-            $ecefvAcc = field_str($fix, 'ecefvAcc', 'm');
+            $ecefvAcc = field_str($fix, 'ecefvAcc', 'm/s');
 
-            $epc = field_str($fix, 'epc', 'm');
+            $epc = field_str($fix, 'epc', 'm/s');
             $eph = field_str($fix, 'eph', 'm');
-            $eps = field_str($fix, 'eps', 'm');
+            $eps = field_str($fix, 'eps', 'm/s');
             $epx = field_str($fix, 'epx', 'm');
             $epy = field_str($fix, 'epy', 'm');
             $epv = field_str($fix, 'epv', 'm');
@@ -697,8 +697,8 @@ EOF;
         <tr><td>YDOP</td><td>{$sky['ydop']}</td></tr>
         <tr><td>VDOP</td><td>{$sky['vdop']}</td></tr>
         <tr><td>epc</td><td>{$epc}</td></tr>
-        <tr><td>eph</td><td>{$eps}</td></tr>
-        <tr><td>eps</td><td>{$eph}</td></tr>
+        <tr><td>eph</td><td>{$eph}</td></tr>
+        <tr><td>eps</td><td>{$eps}</td></tr>
         <tr><td>epx</td><td>{$epx}</td></tr>
         <tr><td>epy</td><td>{$epy}</td></tr>
         <tr><td>epv</td><td>{$epv}</td></tr>
