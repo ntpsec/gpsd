@@ -497,7 +497,7 @@ width="600" height="600" alt="Skyview"/>
 <br style="clear:both">
 <p class="caption">A filled circle means the satellite was used in
 the last fix.<br>
-Green-yellow-red colors indicate signal to noise ratio in dBHz,
+Green-yellow-red colors indicate signal to noise ratio in dBHz<br>
 <span style="color:green;">green=best</span>,
 <span style="color:#c7a317;">yellow=fair</span>,
 and <span style="color:red;">red=worst</span>.<br>
@@ -859,18 +859,43 @@ maps.</span><br/>
     </noscript>
 
 <script type="text/javascript">
+  var LonLat = ol.proj.fromLonLat([{$GLOBALS['lon']}, {$GLOBALS['lat']}])
+
+  var stroke = new ol.style.Stroke({color: 'red', width: 2});
+
+  var feature = new ol.Feature(new ol.geom.Point(LonLat))
+  var x = new ol.style.Style({
+    image: new ol.style.RegularShape({
+      stroke: stroke,
+      points: 4,
+      radius: 10,
+      radius2: 0,
+      angle: 0.785397   // Pi / 4
+      })
+  })
+  feature.setStyle(x)
+  var source = new ol.source.Vector({
+      features: [feature]
+  });
+
+  var vectorLayer = new ol.layer.Vector({
+    source: source
+  });
+
   var map = new ol.Map({
     target: 'map',
     layers: [
       new ol.layer.Tile({
         source: new ol.source.OSM()
-      })
+      }),
+      vectorLayer
     ],
     view: new ol.View({
-      center: ol.proj.fromLonLat([{$GLOBALS['lon']}, {$GLOBALS['lat']}]),
+      center: LonLat,
       zoom: 6
     })
   });
+
 </script>
 
 EOT;
