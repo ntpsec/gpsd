@@ -522,7 +522,7 @@ You will need to dig deeper to make the PPS work, here is a good reference:
 http://www.satsignal.eu/ntp/Raspberry-Pi-NTP.html
 
 == BSD derivatives ==
-=== Special Notes for FreeBSD Installation ==+
+=== Special Notes for FreeBSD Installation ===
 
 gpsd will build, install and run on FreeBSD.
 Due to the missing CAN bus support (linux/can.h), NMEA2000/CAN
