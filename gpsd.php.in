@@ -156,7 +156,7 @@ function colorsetup($im){
         $C['mdgray']    = imageColorAllocate($im, 127, 127, 127);
         $C['dkgray']    = imageColorAllocate($im, 63, 63, 63);
         $C['black']     = imageColorAllocate($im, 0, 0, 0);
-        $C['red']       = imageColorAllocate($im, 255, 0, 0);
+        $C['red']       = imageColorAllocate($im, 236, 50, 31);
         $C['brightgreen'] = imageColorAllocate($im, 0, 255, 0);
         $C['darkgreen'] = imageColorAllocate($im, 0, 192, 0);
         $C['blue']      = imageColorAllocate($im, 0, 0, 255);
@@ -454,8 +454,9 @@ function write_html($resp) {
 <title>{$title} - GPSD Test Station {$lat}, {$lon}</title>
 {$autorefresh}
 <style>
+blink,
 .warning {
-    color: #FF0000;
+    color: #dc322f;
 }
 
 .fixed {
@@ -470,6 +471,15 @@ function write_html($resp) {
 .administrivia {
     font-size: small;
     font-family: verdana, sans-serif;
+}
+
+body.light {
+    background-color: #fdf6e3;
+    color: #657b83;
+}
+body.dark {
+    background-color: #002b36;
+    color: #839496;
 }
 </style>
 </head>
@@ -500,7 +510,7 @@ the last fix.<br>
 Green-yellow-red colors indicate signal to noise ratio in dBHz<br>
 <span style="color:green;">green=best</span>,
 <span style="color:#c7a317;">yellow=fair</span>,
-and <span style="color:red;">red=worst</span>.<br>
+and <span style="color:#dc322f">red=worst</span>.<br>
 Diamonds indicate augmentation (SBAS, WAAS, etc.) satellites.</p>
 {$map_code}
 </div>
@@ -785,10 +795,10 @@ function write_config(){
 \$blurb = <<<EOT
 This is a
 <a href="@WEBSITE@">gpsd</a>
-server <blink><font color="red">located someplace</font></blink>.
+server <blink>located someplace</blink>.
 
 The hardware is a
-<blink><font color="red">hardware description and link</font></blink>.
+<blink>hardware description and link</blink>.
 
 This machine is maintained by
 <a href="mailto:you@example.com">Your Name Goes Here</a>.<br/>
