@@ -868,7 +868,7 @@ function gen_osmmap_code() {
 maps.</span><br/>
     </noscript>
 
-<script type="text/javascript">
+<script>
   var LonLat = ol.proj.fromLonLat([{$GLOBALS['lon']}, {$GLOBALS['lat']}])
 
   var stroke = new ol.style.Stroke({color: 'red', width: 2});
