@@ -495,6 +495,11 @@ body.dark {
     background-color: #002b36;
     color: #839496;
 }
+
+td:nth-child(1) {
+    text-align: right;
+    font-weight: bold;
+}
 </style>
 </head>
 
@@ -688,16 +693,16 @@ EOF;
         <tr><th colspan=3 style="text-align:center">Fix Data</th></tr>
         <tr><td>Fix Type</td><td>{$type}</td></tr>
         <tr><td>Fix Status</td><td>{$status}</td></tr>
-        <tr><th colspan=2 style="text-align:left">Time</th></tr>
+        <tr><th colspan=3 style="text-align:center">Time</th></tr>
         <tr><td>UTC</td><td colspan=2>{$ts}&nbsp;</td></tr>
         <tr><td>Leap Seconds</td><td>{$fix['leapseconds']}</td></tr>
-        <tr><th colspan=2 style="text-align:left">Position</th></tr>
+        <tr><th colspan=3 style="text-align:center">Position</th></tr>
         <tr><td>Latitude</td><td>{$lat}</td></tr>
         <tr><td>Longitude</td><td>{$lon}</td></tr>
         <tr><td>Altitude HAE</td><td>{$altHAE}</td></tr>
         <tr><td>Altitude MSL</td><td>{$altMSL}</td></tr>
         <tr><td>Geoid Separation</td><td>{$geoidSep}</td></tr>
-        <tr><th colspan=2 style="text-align:left">Velocity</th></tr>
+        <tr><th colspan=3 style="text-align:center">Velocity</th></tr>
         <tr><td>Speed</td><td>{$speed}</td></tr>
         <tr><td>Climb</td><td>{$climb}</td></tr>
         <tr><td>velN</td><td>{$velN}</td></tr>
@@ -749,9 +754,9 @@ $sat    </table>
         <tr><th colspan=5 style="text-align:center"
 >Earth Centered Earth Fixed (ECEF)</th></tr>
         <tr><th></th><th>X</th><th>Y</th><th>Z</th><th>Acc</th></td>
-        <tr><td style="font-weight:bold;">Position</td>
+        <tr><td>Position</td>
             <td>{$ecefx}</td><td>{$ecefy}</td> <td>{$ecefz}</td></tr>
-        <tr><td style="font-weight:bold;">Velocity</td>
+        <tr><td>Velocity</td>
             <td>{$ecefvx}</td><td>{$ecefvy}</td> <td>{$ecefvz}</td></tr>
     </table>
 </div>
