@@ -623,9 +623,9 @@ EOF;
             $velE = field_str($fix, 'velE', 'm/s');
             $velD = field_str($fix, 'velD', 'm/s');
 
-            $track = field_str($fix, 'track', 'deg', 'epd');
-            $magtrack = field_str($fix, 'magtrack', 'deg');
-            $magvar = field_str($fix, 'magvar', 'deg');
+            $track = field_str($fix, 'track', '&deg;', 'epd');
+            $magtrack = field_str($fix, 'magtrack', '&deg;');
+            $magvar = field_str($fix, 'magvar', '&deg;');
 
             $ecefx = field_str($fix, 'ecefx', 'm');
             $ecefy = field_str($fix, 'ecefy', 'm');
@@ -689,7 +689,7 @@ EOF;
         <tr><td>Fix Type</td><td>{$type}</td></tr>
         <tr><td>Fix Status</td><td>{$status}</td></tr>
         <tr><th colspan=2 style="text-align:left">Time</th></tr>
-        <tr><td colspan=2>UTC&nbsp;&nbsp;{$ts}</td></tr>
+        <tr><td>UTC</td><td colspan=2>{$ts}&nbsp;</td></tr>
         <tr><td>Leap Seconds</td><td>{$fix['leapseconds']}</td></tr>
         <tr><th colspan=2 style="text-align:left">Position</th></tr>
         <tr><td>Latitude</td><td>{$lat}</td></tr>
