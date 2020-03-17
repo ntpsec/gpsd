@@ -66,6 +66,21 @@ if gps.__version__ != gps_version:
                      (PROG_NAME, gps_version, gps.__version__))
     sys.exit(1)
 
+# Some old versions of Python fail to accept a bytearray as an input to
+# struct.unpack_from, though it can be worked around by wrapping it with
+# buffer().  Since the fix is only needed in rare cases, this monkey-patches
+# struct.unpack_from() when needed, and otherwise changes nothing.  If
+# struct.unpack() were used, it would need similar treatment, as would
+# methods from struct.Struct if that were used.
+try:
+    struct.unpack_from('B', bytearray(1))
+except TypeError:
+    unpack_from_orig = struct.unpack_from
+
+    def unpack_from_fixed(fmt, buf, offset=0):
+        return unpack_from_orig(fmt, buffer(buf), offset=offset)
+
+    struct.unpack_from = unpack_from_fixed
 
 VERB_QUIET = 0   # quiet
 VERB_NONE = 1    # just output requested data and some info
