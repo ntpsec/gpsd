@@ -938,8 +938,7 @@ char *json_quote(const char *in, char *buf, size_t inlen, size_t bufsiz)
 	    continue;
 	}
 	// Escape 0-32 and 127 if not previously handled (0-x01f,x7f)
-	if (('\0' <= in[cnt] && '\x1f' >= in[cnt]) ||
-	    '\x7f' == (int8_t)in[cnt]) {
+	if ('\x1f' >= (in[cnt] & 0xFF) || '\x7f' == (int8_t)in[cnt]) {
 	    str_appendf(buf, bufsiz, "\\u%04x", in[cnt] & 0x0ff);
 	    ocnt += 6;
 	    continue;
