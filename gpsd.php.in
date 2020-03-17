@@ -515,7 +515,7 @@ EOF;
                 $part_sky = <<<EOF
 <!-- -->
 
-<div style="width:600px;float:right;margin:0 0 0 1em;">
+<div style="width:600px;float:right;margin:0 0 1ex 1em;">
 <img src="?op=view&amp;imgdata={$imgdata}"
 width="600" height="600" alt="Skyview"/>
 <br style="clear:both">
@@ -629,14 +629,21 @@ EOF;
 
             $ecefx = field_str($fix, 'ecefx', 'm');
             $ecefy = field_str($fix, 'ecefy', 'm');
-            $ecefz = field_str($fix, 'ecefz', 'm');
+            $ecefz = field_str($fix, 'ecefz', 'm', 'ecefpAcc');
             $ecefvx = field_str($fix, 'ecefvx', 'm/s');
             $ecefvy = field_str($fix, 'ecefvy', 'm/s');
-            $ecefvz = field_str($fix, 'ecefvz', 'm/s');
-            $ecefpAcc = field_str($fix, 'ecefpAcc', 'm');
-            $ecefvAcc = field_str($fix, 'ecefvAcc', 'm/s');
+            $ecefvz = field_str($fix, 'ecefvz', 'm/s', 'ecefvAcc');
 
+            $epc = field_str($fix, 'epc', 'm');
             $eph = field_str($fix, 'eph', 'm');
+            $eps = field_str($fix, 'eps', 'm');
+            $ept = field_str($fix, 'ept', 's');
+            $epx = field_str($fix, 'epx', 'm');
+            $epy = field_str($fix, 'epy', 'm');
+            $epv = field_str($fix, 'epv', 'm');
+            $sep = field_str($fix, 'sep', 'm');
+            $ecefpAcc = field_str($fix, 'ecefpAcc', 'm');
+            $ecefvAcc = field_str($fix, 'ecefvAcc', 'm');
             $sep = field_str($fix, 'sep', 'm');
             if (!array_key_exists('status', $fix)) {
                 $fix['status'] = 1;
@@ -690,9 +697,6 @@ EOF;
         <tr><td>Altitude HAE</td><td>{$altHAE}</td></tr>
         <tr><td>Altitude MSL</td><td>{$altMSL}</td></tr>
         <tr><td>Geoid Separation</td><td>{$geoidSep}</td></tr>
-        <tr><td>ECEF X</td><td>{$ecefx}</td></tr>
-        <tr><td>ECEF Y</td><td>{$ecefy}</td></tr>
-        <tr><td>ECEF Y</td><td>{$ecefz}</td></tr>
         <tr><th colspan=2 style="text-align:left">Velocity</th></tr>
         <tr><td>Speed</td><td>{$speed}</td></tr>
         <tr><td>Climb</td><td>{$climb}</td></tr>
@@ -702,9 +706,6 @@ EOF;
         <tr><td>Track True</td><td>{$track}</td></tr>
         <tr><td>Track Magnetic</td><td>{$magtrack}</td></tr>
         <tr><td>Magnetic Variation</td><td>{$magvar}</td></tr>
-        <tr><td>ECEF vx</td><td>{$ecefvx}</td></tr>
-        <tr><td>ECEF vy</td><td>{$ecefvy}</td></tr>
-        <tr><td>ECEF vz</td><td>{$ecefvz}</td></tr>
     </table>
 </div>
 <div style="float:left;margin:0 0 1ex 1em;">
@@ -717,13 +718,20 @@ EOF;
         <tr><td>XDOP</td><td>{$sky['xdop']}</td></tr>
         <tr><td>YDOP</td><td>{$sky['ydop']}</td></tr>
         <tr><td>VDOP</td><td>{$sky['vdop']}</td></tr>
+        <tr><td>epc</td><td>{$epc}</td></tr>
         <tr><td>eph</td><td>{$eph}</td></tr>
+        <tr><td>eps</td><td>{$eps}</td></tr>
+        <tr><td>ept</td><td>{$ept}</td></tr>
+        <tr><td>epx</td><td>{$epx}</td></tr>
+        <tr><td>epy</td><td>{$epy}</td></tr>
+        <tr><td>epv</td><td>{$epv}</td></tr>
         <tr><td>sep</td><td>{$sep}</td></tr>
         <tr><td>ecef pAcc</td><td>{$ecefpAcc}</td></tr>
         <tr><td>ecef vAcc</td><td>{$ecefvAcc}</td></tr>
     </table>
 </div>
-<div style="float:right;margin:0 0 0 1em;">
+
+<div style="float:right;margin:0 0 1ex 1em;">
     <table style="border-width:1px;border-style:solid">
         <tr><th colspan=6 style="text-align:center">Satellites</th></tr>
         <tr><td colspan=6 style="text-align:center"
@@ -736,6 +744,17 @@ EOF;
 $sat    </table>
 </div>
 
+<div style="float:left;margin:0 0 1ex 1em;">
+    <table style="border-width:1px;border-style:solid;text-align:center;">
+        <tr><th colspan=5 style="text-align:center"
+>Earth Centered Earth Fixed (ECEF)</th></tr>
+        <tr><th></th><th>X</th><th>Y</th><th>Z</th><th>Acc</th></td>
+        <tr><td style="font-weight:bold;">Position</td>
+            <td>{$ecefx}</td><td>{$ecefy}</td> <td>{$ecefz}</td></tr>
+        <tr><td style="font-weight:bold;">Velocity</td>
+            <td>{$ecefvx}</td><td>{$ecefvy}</td> <td>{$ecefvz}</td></tr>
+    </table>
+</div>
 <!-- raw response:
 {$resp}
 -->
