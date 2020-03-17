@@ -480,9 +480,9 @@ gps_mask_t oncore_dispatch(struct gps_device_t * session, unsigned char *buf,
     case ONCTYPE('B', 'o'):
 	return oncore_msg_utc_offset(session, buf, len);
     case ONCTYPE('A', 's'):
-	return 0;		/* position hold mode */
-    case ONCTYPE('A', 't'):
 	return 0;		/* position hold position */
+    case ONCTYPE('A', 't'):
+	return 0;		/* position hold mode */
     case ONCTYPE('A', 'y'):
 	return oncore_msg_pps_offset(session, buf, len);
 
