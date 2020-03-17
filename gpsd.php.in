@@ -116,15 +116,29 @@ function sat_clean($sat) {
     return $sat;
 }
 
-# format $arr[$field], adding $unit
-# otherwise return 'n/a'
-function field_str($arr, $key, $unit) {
+# format $arr[$field], adding $unit, optionally add $errkey/$errunit
+# otherwise return 'n/a' or 'n/a</td><td>'
+function field_str($arr, $key, $unit, $errkey = '', $errunit = '') {
     if (!array_key_exists($key, $arr)) {
-        return 'n/a';
+        if ($errkey) {
+            return 'n/a</td><td>&nbsp;';
+        } else {
+            return 'n/a';
+        }
+    }
+    if ('' == $errunit) {
+        $errunit = $unit;
     }
     $ret = strval($arr[$key]);
     if ('' != $unit) {
         $ret .= " " . $unit;
+        if ($errkey) {
+            $ret .= "</td><td>&nbsp;" ;
+            if (array_key_exists($errkey, $arr)) {
+                $ret .= "&plusmn;" . strval($arr[$errkey]) .
+                        "&nbsp;" . $errunit;
+            }
+        }
     }
     return $ret;
 }
@@ -598,16 +612,18 @@ EOF;
                 }
             }
 
-            $altHAE = field_str($fix, 'altHAE', 'm');
+            $lat = field_str($fix, 'lat', '&deg;', 'epx', 'm');
+            $lon = field_str($fix, 'lon', '&deg;', 'epy', 'm');
+            $altHAE = field_str($fix, 'altHAE', 'm', 'epv');
             $altMSL = field_str($fix, 'altMSL', 'm');
             $geoidSep = field_str($fix, 'geoidSep', 'm');
-            $speed = field_str($fix, 'speed', 'm/s');
-            $climb = field_str($fix, 'climb', 'm/s');
+            $speed = field_str($fix, 'speed', 'm/s', 'eps');
+            $climb = field_str($fix, 'climb', 'm/s', 'epc');
             $velN = field_str($fix, 'velN', 'm/s');
             $velE = field_str($fix, 'velE', 'm/s');
             $velD = field_str($fix, 'velD', 'm/s');
 
-            $track = field_str($fix, 'track', 'deg');
+            $track = field_str($fix, 'track', 'deg', 'epd');
             $magtrack = field_str($fix, 'magtrack', 'deg');
             $magvar = field_str($fix, 'magvar', 'deg');
 
@@ -620,12 +636,7 @@ EOF;
             $ecefpAcc = field_str($fix, 'ecefpAcc', 'm');
             $ecefvAcc = field_str($fix, 'ecefvAcc', 'm/s');
 
-            $epc = field_str($fix, 'epc', 'm/s');
             $eph = field_str($fix, 'eph', 'm');
-            $eps = field_str($fix, 'eps', 'm/s');
-            $epx = field_str($fix, 'epx', 'm');
-            $epy = field_str($fix, 'epy', 'm');
-            $epv = field_str($fix, 'epv', 'm');
             $sep = field_str($fix, 'sep', 'm');
             if (!array_key_exists('status', $fix)) {
                 $fix['status'] = 1;
@@ -667,15 +678,15 @@ EOF;
 <!-- -->
 <div style="float:left;margin:0 0 1ex 1em;">
     <table style="border-width:1px;border-style:solid;text-align:center;">
-        <tr><th colspan=2 style="text-align:center">Fix Data</th></tr>
+        <tr><th colspan=3 style="text-align:center">Fix Data</th></tr>
         <tr><td>Fix Type</td><td>{$type}</td></tr>
         <tr><td>Fix Status</td><td>{$status}</td></tr>
         <tr><th colspan=2 style="text-align:left">Time</th></tr>
         <tr><td colspan=2>UTC&nbsp;&nbsp;{$ts}</td></tr>
         <tr><td>Leap Seconds</td><td>{$fix['leapseconds']}</td></tr>
         <tr><th colspan=2 style="text-align:left">Position</th></tr>
-        <tr><td>Latitude</td><td>{$fix['lat']}</td></tr>
-        <tr><td>Longitude</td><td>{$fix['lon']}</td></tr>
+        <tr><td>Latitude</td><td>{$lat}</td></tr>
+        <tr><td>Longitude</td><td>{$lon}</td></tr>
         <tr><td>Altitude HAE</td><td>{$altHAE}</td></tr>
         <tr><td>Altitude MSL</td><td>{$altMSL}</td></tr>
         <tr><td>Geoid Separation</td><td>{$geoidSep}</td></tr>
@@ -706,12 +717,7 @@ EOF;
         <tr><td>XDOP</td><td>{$sky['xdop']}</td></tr>
         <tr><td>YDOP</td><td>{$sky['ydop']}</td></tr>
         <tr><td>VDOP</td><td>{$sky['vdop']}</td></tr>
-        <tr><td>epc</td><td>{$epc}</td></tr>
         <tr><td>eph</td><td>{$eph}</td></tr>
-        <tr><td>eps</td><td>{$eps}</td></tr>
-        <tr><td>epx</td><td>{$epx}</td></tr>
-        <tr><td>epy</td><td>{$epy}</td></tr>
-        <tr><td>epv</td><td>{$epv}</td></tr>
         <tr><td>sep</td><td>{$sep}</td></tr>
         <tr><td>ecef pAcc</td><td>{$ecefpAcc}</td></tr>
         <tr><td>ecef vAcc</td><td>{$ecefvAcc}</td></tr>
