@@ -243,6 +243,15 @@ function azel2xy($az, $el, $sz){
 }
 
 function splot($im, $sz, $C, $e){
+        # ensure all $e keys exist, for clean logs.
+        $keys = array('PRN', 'az', 'el','az', 'ss');
+        foreach($keys as $key) {
+            if (!array_key_exists($key, $e)) {
+                return;
+            }
+        }
+
+        # validate ranges
         if ((0 == $e['PRN']) || (0 == $e['az'] + $e['el']) ||
             ($e['az'] < 0) || ($e['el'] < 0))
                 return;
