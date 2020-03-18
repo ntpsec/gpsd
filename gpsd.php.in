@@ -13,6 +13,7 @@
 
 global $head, $blurb, $title, $showmap, $autorefresh, $footer, $gmap_key;
 global $server, $advertise, $port, $open, $swap_ew, $testmode;
+global $colors;
 $testmode = 1; # leave this set to 1
 
 # Public script parameters:
@@ -154,6 +155,8 @@ else
 exit(0);
 
 function colorsetup($im){
+        global $colors;
+
         $C['white']     = imageColorAllocate($im, 255, 255, 255);
         $C['ltgray']    = imageColorAllocate($im, 191, 191, 191);
         $C['mdgray']    = imageColorAllocate($im, 127, 127, 127);
@@ -168,6 +171,7 @@ function colorsetup($im){
         $C['yellow']    = imageColorAllocate($im, 255, 255, 0);
         $C['burntyellow']    = imageColorAllocate($im, 199, 163, 23);
         $C['orange']    = imageColorAllocate($im, 255, 128, 0);
+        $colors = $C;
 
         return $C;
 }
@@ -245,6 +249,8 @@ function imageDiamond($im, $x, $y, $r, $color){
 }
 
 function imageSquare($im, $x, $y, $r, $color, $filled){
+    global $colors;
+
     $t = (int)($r / 2);
     if ($filled) {
         imageFilledRectangle($im, $x + $t, $y + $t, $x - $t, $y - $t,
@@ -255,7 +261,7 @@ function imageSquare($im, $x, $y, $r, $color, $filled){
         $t -= 2;
         # lay a white rectangle in the middle
         imageFilledRectangle($im, $x + $t, $y + $t, $x - $t, $y - $t,
-                             $white);
+                             $colors['white']);
     }
 }
 
@@ -668,9 +674,9 @@ EOF;
             $ecefvy = field_str($fix, 'ecefvy', 'm/s');
             $ecefvz = field_str($fix, 'ecefvz', 'm/s', 'ecefvAcc');
 
-            $epc = field_str($fix, 'epc', 'm');
+            $epc = field_str($fix, 'epc', 'm/s');
             $eph = field_str($fix, 'eph', 'm');
-            $eps = field_str($fix, 'eps', 'm');
+            $eps = field_str($fix, 'eps', 'm/s');
             $ept = field_str($fix, 'ept', 's');
             $epx = field_str($fix, 'epx', 'm');
             $epy = field_str($fix, 'epy', 'm');
