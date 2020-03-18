@@ -16,7 +16,7 @@ Usage:
 
     duration may be
     - a number of seconds
-    - a number followed by a time unit ('s' for secinds, 'm' for minutes,
+    - a number followed by a time unit ('s' for seconds, 'm' for minutes,
       'h' for hours or 'd' for days, e.g. '4h' for a duration of four hours)
     - the letter 'c' for continuous operation
 
@@ -114,38 +114,74 @@ class SatTracks(gps):
     def html(self, fh, jsfile):
         fh.write("""<!DOCTYPE html>
 
-<html>
+<html lang="en">
 <head>
-\t<meta http-equiv=Refresh content=300>
+\t<meta http-equiv="Refresh" content="300">
 \t<meta charset='utf-8'>
 \t<title>GPSD Satellite Positions and Readings</title>
-\t<style type='text/css'>
-\t\t.num td { text-align: right; }
+\t<style>
+\t\t#sky td { text-align: right; }
 \t\tth { text-align: left; }
+\t\ttable { border: none; border-collapse: collapse; }
+\t\tbody { color: #839496; background: #fdf6e3; display: grid; }
+\t\t.dark  { color: #839496; background: #002b36; }
+\t\t@media only screen and (min-width: 900px) {
+\t\t\tbody {
+\t\t\t\tgrid-template-areas:
+\t\t\t\t'tpv satview sky';
+\t\t\t}
+\t\t}
+\t\t@media only screen and (min-width: 680px) and (max-width: 899px) {
+\t\t\tbody {
+\t\t\t\tgrid-template-areas:
+\t\t\t\t'sky satview'
+\t\t\t\t'tpv satview';
+\t\t\t}
+\t\t}
+\t\t@media only screen and (min-width: 460px) and (max-width: 679px) {
+\t\t\tbody {
+\t\t\t\tgrid-template-areas:
+\t\t\t\t'skyview'
+\t\t\t\t'sky'
+\t\t\t\t'tpv';
+\t\t\t}
+\t\t}
+\t\t@media only screen and (max-width: 459px) {
+\t\t\t#satview {
+\t\t\t\tdisplay: none
+\t\t\t}
+\t\t\tbody {
+\t\t\t\tgrid-template-areas:
+\t\t\t\t'sky'
+\t\t\t\t'tpv';
+\t\t\t}
+\t\t}
+\t\ttr:nth-child(6n),
+\t\ttr:nth-child(6n+4),
+\t\ttr:nth-child(6n+5) {
+\t\t\tbackground: rgba(131,148,150,0.25);
+\t\t}
 \t</style>
 \t<script src='%s'></script>
 </head>
 <body>
-\t<table border=1>
-\t\t<tr>
-\t\t\t<td>
-\t\t\t\t<table border=0 class=num>
-\t\t\t\t\t<tr><th>PRN:</th><th>Elev:</th><th>Azim:</th><th>SNR:</th>
+\t<table style="grid-area: sky;">
+\t\t<tr><th>PRN:</th><th>Elev:</th><th>Azim:</th><th>SNR:</th>
 <th>Used:</th></tr>
 """ % jsfile)
 
         sats = self.satellites[:]
         sats.sort(key=lambda x: x.PRN)
         for s in sats:
-            fh.write("\t\t\t\t\t<tr><td>%d</td><td>%d</td><td>%d</td>"
+            fh.write("\t\t<tr><td>%d</td><td>%d</td><td>%d</td>"
                      "<td>%d</td><td>%s</td></tr>\n" %
                      (s.PRN, s.elevation, s.azimuth, s.ss,
                       s.used and 'Y' or 'N'))
 
-        fh.write("\t\t\t\t</table>\n\t\t\t\t<table border=0>\n")
+        fh.write('\t</table>\n\t<table style="grid-area: tpv;">\n')
 
         def row(l, v):
-            fh.write("\t\t\t\t\t<tr><th>%s:</th><td>%s</td></tr>\n" % (l, v))
+            fh.write("\t\t<tr><th>%s:</th><td>%s</td></tr>\n" % (l, v))
 
         def deg_to_str(a, hemi):
             return '%.6f %c' % (abs(a), hemi[a < 0])
@@ -155,8 +191,10 @@ class SatTracks(gps):
         if self.fix.mode >= MODE_2D:
             row('Latitude', deg_to_str(self.fix.latitude, 'SN'))
             row('Longitude', deg_to_str(self.fix.longitude, 'WE'))
-            row('Altitude', self.fix.mode == MODE_3D and "%f m" %
-                self.fix.altitude or 'N/A')
+            row('AltHAE', self.fix.mode == MODE_3D and "%f m" %
+                self.fix.altHAE or 'N/A')
+            row('AltMSL', self.fix.mode == MODE_3D and "%f m" %
+                self.fix.altMSL or 'N/A')
             row('Speed', isfinite(self.fix.speed) and "%f m/s" %
                 self.fix.speed or 'N/A')
             row('Course', isfinite(self.fix.track) and "%f&deg;" %
@@ -191,17 +229,13 @@ class SatTracks(gps):
             self.state = newstate
         row('State', "%s (%d secs)" % (state, time.time() - self.statetimer))
 
-        fh.write("""\t\t\t\t</table>
-\t\t\t</td>
-\t\t\t<td>
-\t\t\t\t<canvas id=satview width=425 height=425>
-\t\t\t\t\t<p>Your browser needs HTML5 &lt;canvas> support to display
+        fh.write("""\t</table>
+\t<canvas id="satview" style="grid-area: satview;" width="425" height="425">
+\t\t<p>Your browser needs HTML5 &lt;canvas&gt; support to display
  the satellite view correctly.</p>
-\t\t\t\t</canvas>
-\t\t\t\t<script>draw_satview();</script>
-\t\t\t</td>
-\t\t</tr>
-\t</table>
+\t</canvas>
+\t<script>draw_satview();</script>
+\t<button onclick="document.body.classList.toggle('dark')">light switch</button>
 </body>
 </html>
 """)
@@ -224,26 +258,27 @@ function draw_satview() {
     ctx.translate(210, 210);
 
     // grid and labels
-    ctx.strokeStyle = 'black';
+    ctx.strokeStyle = '#839496';
     ctx.beginPath();
     ctx.arc(0, 0, 200, 0, circle, 0);
     ctx.stroke();
 
     ctx.beginPath();
+    ctx.strokeStyle = '#839496';
     ctx.strokeText('N', -4, -202);
     ctx.strokeText('W', -210, 4);
     ctx.strokeText('E', 202, 4);
     ctx.strokeText('S', -4, 210);
 
-    ctx.strokeStyle = 'grey';
     ctx.beginPath();
+    ctx.strokeStyle = '#839496';
     ctx.arc(0, 0, 100, 0, circle, 0);
     M(2, 0);
     ctx.arc(0, 0,   2, 0, circle, 0);
     ctx.stroke();
 
-    ctx.strokeStyle = 'lightgrey';
     ctx.save();
+    ctx.strokeStyle = '#839496';
     ctx.beginPath();
     M(0, -200); L(0, 200); ctx.rotate(circle / 8);
     M(0, -200); L(0, 200); ctx.rotate(circle / 8);
@@ -267,7 +302,7 @@ function draw_satview() {
         fh.write("""
     // satellites
     ctx.lineWidth = 1;
-    ctx.strokeStyle = 'black';
+    ctx.strokeStyle = '#839496';
 """)
 
         # Draw the satellites
