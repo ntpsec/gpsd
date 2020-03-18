@@ -274,7 +274,24 @@ function imageSquare($im, $x, $y, $r, $color, $filled){
     }
 }
 
-function imageTriangle($im, $x, $y, $r, $color, $filled){
+# Triangle pointing down
+function imageTriangleD($im, $x, $y, $r, $color, $filled){
+    $t = $r / 2;
+
+    $vx = array($x, $y + $t,
+                $x + $t, $y - $t,
+                $x - $t, $y - $t,
+                $x, $y + $t);
+
+    if ($filled) {
+        imageFilledPolygon($im, $vx, 4, $color);
+    } else {
+        imagepolygon($im, $vx, 4, $color);
+    }
+}
+
+# Triangle pointing up
+function imageTriangleU($im, $x, $y, $r, $color, $filled){
     $t = $r / 2;
 
     $vx = array($x, $y - $t,
@@ -333,16 +350,27 @@ function splot($im, $sz, $C, $e){
         switch ($e['gnssid']) {
         case 0:
             # GPS
+            # FALLTHROUGH
+        case 5:
+            # QZSS
             imageCircle($im, $x, $y, $r, $color, $e['used']);
             break;
         case 1:
             # SBAS
+            # FALLTHROUGH
+        case 4:
+            # IMES
+            # FALLTHROUGH
         default:
             imageDiamond($im, $x, $y, $r, $color, $e['used']);
             break;
         case 2:
             # Galileo
-            imageTriangle($im, $x, $y, $r, $color, $e['used']);
+            imageTriangleU($im, $x, $y, $r, $color, $e['used']);
+            break;
+        case 3:
+            # BeiDou
+            imageTriangleD($im, $x, $y, $r, $color, $e['used']);
             break;
         case 6:
             # GLONASS
@@ -580,9 +608,10 @@ Green-yellow-red colors indicate signal to noise ratio in dBHz<br>
 <span style="color:green;">green=best</span>,
 <span style="color:#c7a317;">yellow=fair</span>,
 and <span style="color:#dc322f">red=worst</span>.<br>
-Circles are GPS satellites.<br>
+Circles are GPS and QZSS satellites.<br>
 Diamonds indicate augmentation (SBAS, WAAS, etc.) satellites.<br>
-Triangles are Galileo satellites.<br>
+Triangles pointing up are Galileo satellites.<br>
+Triangles pointing down are BeiDou satellites.<br>
 Squares are GLONASS satellites.<br>
 </p>
 {$map_code}
