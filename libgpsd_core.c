@@ -878,7 +878,8 @@ static void gpsd_error_model(struct gps_device_t *session)
 {
     struct gps_fix_t *fix;           /* current fix */
     struct gps_fix_t *lastfix;       /* last fix, maybe same time stamp */
-    struct gps_fix_t *oldfix;        /* old fix, previsou time stamp */
+    struct gps_fix_t *oldfix;        /* old fix, previous time stamp */
+    struct gps_fix_t *newfix;        /* new fix (just merged) */
     double deltatime = -1.0;         /* time span to compute rates */
 
     /*
@@ -907,6 +908,7 @@ static void gpsd_error_model(struct gps_device_t *session)
     fix = &session->gpsdata.fix;
     lastfix = &session->lastfix;
     oldfix = &session->oldfix;
+    newfix = &session->newdata;         /* For whether rcvr supplies values */
 
     if (0 < fix->time.tv_sec) {
         /* we have a time for this merge data */
@@ -1129,14 +1131,14 @@ static void gpsd_error_model(struct gps_device_t *session)
 
     /* Other error computations depend on having a valid fix */
     if (MODE_2D <= fix->mode) {
-        if (0 == isfinite(fix->epx) &&
-            0 != isfinite(session->gpsdata.dop.hdop)) {
-            fix->epx = session->gpsdata.dop.xdop * h_uere;
+	if (0 == isfinite(newfix->epx) &&
+            0 != isfinite(session->gpsdata.dop.xdop)) {
+	    fix->epx = session->gpsdata.dop.xdop * h_uere;
         }
 
-        if (0 == isfinite(fix->epy) &&
-            0 != isfinite(session->gpsdata.dop.hdop)) {
-            fix->epy = session->gpsdata.dop.ydop * h_uere;
+	if (0 == isfinite(newfix->epy) &&
+            0 != isfinite(session->gpsdata.dop.ydop)) {
+	    fix->epy = session->gpsdata.dop.ydop * h_uere;
         }
 
         if (MODE_3D <= fix->mode &&
@@ -1168,7 +1170,7 @@ static void gpsd_error_model(struct gps_device_t *session)
         if (0 < deltatime &&
             MODE_2D <= oldfix->mode) {
 
-            if (0 == isfinite(fix->eps) &&
+            if (0 == isfinite(newfix->eps) &&
                 0 != isfinite(oldfix->epx) &&
                 0 != isfinite(oldfix->epy)) {
                     fix->eps = (EMAX(oldfix->epx, oldfix->epy) +
@@ -1201,7 +1203,7 @@ static void gpsd_error_model(struct gps_device_t *session)
                 }
             }
 
-            if (0 == isfinite(fix->epc) &&
+            if (0 == isfinite(newfix->epc) &&
                 0 != isfinite(fix->epv) &&
                 0 != isfinite(oldfix->epv)) {
                     /* Is this really valid? */
