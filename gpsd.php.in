@@ -291,17 +291,24 @@ function imageTriangle($im, $x, $y, $r, $color, $filled){
 
 function splot($im, $sz, $C, $e){
         # ensure all $e keys exist, for clean logs.
-        $keys = array('PRN', 'az', 'el','az', 'ss', 'gnssid');
+        $keys = array('PRN', 'az', 'el', 'gnssid', 'health', 'ss');
         foreach($keys as $key) {
             if (!array_key_exists($key, $e)) {
                 return;
             }
+            if (!is_numeric($e[$key])) {
+                return;
+            }
+        }
+        if (!array_key_exists('used', $e)) {
+            return;
         }
 
         # validate ranges
-        if ((0 == $e['PRN']) || (0 == $e['az'] + $e['el']) ||
-            ($e['az'] < 0) || ($e['el'] < 0))
+        if ((0 >= $e['PRN']) || (0 > $e['az']) || (0 > $e['el']) ||
+            (0 > $e['ss'])) {
                 return;
+        }
 
         $color = $C['brightgreen'];
         if ($e['ss'] < 40)
