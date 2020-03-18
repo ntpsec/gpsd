@@ -244,7 +244,6 @@ function imageDiamond($im, $x, $y, $r, $color, $filled){
     if ($filled) {
         imageFilledPolygon($im, $vx, 5, $color);
     } else {
-        imagesetthickness($im, 2);
         imagepolygon($im, $vx, 5, $color);
     }
 }
@@ -261,8 +260,22 @@ function imageSquare($im, $x, $y, $r, $color, $filled){
     if ($filled) {
         imageFilledPolygon($im, $vx, 5, $color);
     } else {
-        imagesetthickness($im, 2);
         imagepolygon($im, $vx, 5, $color);
+    }
+}
+
+function imageTriangle($im, $x, $y, $r, $color, $filled){
+    $t = $r / 2;
+
+    $vx = array($x, $y - $t,
+                $x - $t, $y + $t,
+                $x + $t, $y + $t,
+                $x, $y - $t);
+
+    if ($filled) {
+        imageFilledPolygon($im, $vx, 4, $color);
+    } else {
+        imagepolygon($im, $vx, 4, $color);
     }
 }
 
@@ -299,6 +312,7 @@ function splot($im, $sz, $C, $e){
                 $r = 8;
 
         imageString($im, 3, $x+4, $y+4, $e['PRN'], $C['black']);
+        imagesetthickness($im, 2);
         if ($e['used'] == true) {
             switch ($e['gnssid']) {
             case 0:
@@ -309,6 +323,10 @@ function splot($im, $sz, $C, $e){
                 # SBAS
             default:
                 imageDiamond($im, $x, $y, $r, $color, 1);
+                break;
+            case 2:
+                # Galileo
+                imageTriangle($im, $x, $y, $r, $color, 1);
                 break;
             case 6:
                 # GLONASS
@@ -325,6 +343,10 @@ function splot($im, $sz, $C, $e){
                 # SBAS
             default:
                 imageDiamond($im, $x, $y, $r, $color, 0);
+                break;
+            case 2:
+                # Galileo
+                imageTriangle($im, $x, $y, $r, $color, 0);
                 break;
             case 6:
                 # GLONASS
@@ -565,6 +587,7 @@ Green-yellow-red colors indicate signal to noise ratio in dBHz<br>
 and <span style="color:#dc322f">red=worst</span>.<br>
 Circles are GPS satellites.<br>
 Diamonds indicate augmentation (SBAS, WAAS, etc.) satellites.<br>
+Triangles are Galileo satellites.<br>
 Squares are GLONASS satellites.<br>
 </p>
 {$map_code}
