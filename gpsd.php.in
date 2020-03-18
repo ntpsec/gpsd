@@ -235,6 +235,16 @@ function azel2xy($az, $el, $sz){
         return array($x, $y);
 }
 
+function imageCircle($im, $x, $y, $r, $color, $filled){
+    $t = $r / 2;
+
+    if ($filled) {
+        imageFilledArc($im, $x, $y, $r, $r, 0, 360, $color, 0);
+    } else {
+        imageArc($im, $x, $y, $r, $r, 0, 360, $color);
+    }
+}
+
 function imageDiamond($im, $x, $y, $r, $color, $filled){
     $t = $r / 2;
 
@@ -313,46 +323,24 @@ function splot($im, $sz, $C, $e){
 
         imageString($im, 3, $x+4, $y+4, $e['PRN'], $C['black']);
         imagesetthickness($im, 2);
-        if ($e['used'] == true) {
-            switch ($e['gnssid']) {
-            case 0:
-                # GPS
-                imageFilledArc($im, $x, $y, $r, $r, 0, 360, $color, 0);
-                break;
-            case 1:
-                # SBAS
-            default:
-                imageDiamond($im, $x, $y, $r, $color, 1);
-                break;
-            case 2:
-                # Galileo
-                imageTriangle($im, $x, $y, $r, $color, 1);
-                break;
-            case 6:
-                # GLONASS
-                imageSquare($im, $x, $y, $r, $color, 1);
-                break;
-            }
-        } else {
-            switch ($e['gnssid']) {
-            case 0:
-                # GPS
-                imageArc($im, $x, $y, $r, $r, 0, 360, $color);
-                break;
-            case 1:
-                # SBAS
-            default:
-                imageDiamond($im, $x, $y, $r, $color, 0);
-                break;
-            case 2:
-                # Galileo
-                imageTriangle($im, $x, $y, $r, $color, 0);
-                break;
-            case 6:
-                # GLONASS
-                imageSquare($im, $x, $y, $r, $color, 0);
-                break;
-            }
+        switch ($e['gnssid']) {
+        case 0:
+            # GPS
+            imageCircle($im, $x, $y, $r, $color, $e['used']);
+            break;
+        case 1:
+            # SBAS
+        default:
+            imageDiamond($im, $x, $y, $r, $color, $e['used']);
+            break;
+        case 2:
+            # Galileo
+            imageTriangle($im, $x, $y, $r, $color, $e['used']);
+            break;
+        case 6:
+            # GLONASS
+            imageSquare($im, $x, $y, $r, $color, $e['used']);
+            break;
         }
 }
 
