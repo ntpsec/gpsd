@@ -108,7 +108,7 @@ if (isset($_GET['imgdata']) && $op == 'view'){
 
 # ensure all satellites keys exist, for clean logs.
 function sat_clean($sat) {
-    $skeys = array('gnssid', 'svid', 'PRN', 'el', 'az', 'ss', 'used');
+    $skeys = array('az', 'el', 'gnssid', 'health', 'PRN', 'ss', 'svid', 'used');
     foreach($skeys as $key) {
         if (!array_key_exists($key, $sat)) {
             $sat[$key] = 'n/a';
@@ -636,13 +636,18 @@ EOF;
                 if ($s['used']) {
                     $sats_used += 1;
                 }
+                if (2 == (int)$s['health']) {
+                    $used = $s['used'] ? 'uY&nbsp;' : 'uN&nbsp; ';
+                } else {
+                    $used = $s['used'] ? '&nbsp;Y&nbsp;' : '&nbsp;N&nbsp; ';
+                }
                 $sat .= sprintf(
                         "\t<tr style='text-align:right'><td>%s</td>" .
                         "<td>%d</td><td>%d&nbsp;</td><td>%d&nbsp;</td>" .
                         "<td>%d</td><td>%s</td></tr>\n",
                         $s['gnssid'] . $s['svid'],
                         $s['PRN'], $s['el'], $s['az'], $s['ss'],
-                        $s['used'] ? 'Y&nbsp;' : 'N&nbsp; '
+                        $used
                 );
             };
 
