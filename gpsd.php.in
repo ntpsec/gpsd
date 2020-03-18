@@ -235,33 +235,34 @@ function azel2xy($az, $el, $sz){
         return array($x, $y);
 }
 
-function imageDiamond($im, $x, $y, $r, $color){
-        $t = $r / 2;
-        # this lunacy is because imagesetthickness doesn't seem to work
-        $vx = array ( $x+$t, $y, $x, $y+$t, $x-$t, $y, $x, $y-$t );
-        imagepolygon($im, $vx, 4, $color);
-        $t--;
-        $vx = array ( $x+$t, $y, $x, $y+$t, $x-$t, $y, $x, $y-$t );
-        imagepolygon($im, $vx, 4, $color);
-        $t--;
-        $vx = array ( $x+$t, $y, $x, $y+$t, $x-$t, $y, $x, $y-$t );
-        imagepolygon($im, $vx, 4, $color);
+function imageDiamond($im, $x, $y, $r, $color, $filled){
+    $t = $r / 2;
+
+    $vx = array($x + $t, $y, $x, $y + $t, $x - $t, $y, $x, $y - $t,
+                $x + $t, $y);
+
+    if ($filled) {
+        imageFilledPolygon($im, $vx, 5, $color);
+    } else {
+        imagesetthickness($im, 2);
+        imagepolygon($im, $vx, 5, $color);
+    }
 }
 
 function imageSquare($im, $x, $y, $r, $color, $filled){
     global $colors;
 
-    $t = (int)($r / 2);
+    $t = $r / 2;
+    $vx = array($x + $t, $y + $t,
+                $x + $t, $y - $t,
+                $x - $t, $y - $t,
+                $x - $t, $y + $t,
+                $x + $t, $y + $t);
     if ($filled) {
-        imageFilledRectangle($im, $x + $t, $y + $t, $x - $t, $y - $t,
-                             $color);
+        imageFilledPolygon($im, $vx, 5, $color);
     } else {
-        imageFilledRectangle($im, $x + $t, $y + $t, $x - $t, $y - $t,
-                             $color);
-        $t -= 2;
-        # lay a white rectangle in the middle
-        imageFilledRectangle($im, $x + $t, $y + $t, $x - $t, $y - $t,
-                             $colors['white']);
+        imagesetthickness($im, 2);
+        imagepolygon($im, $vx, 5, $color);
     }
 }
 
@@ -307,7 +308,7 @@ function splot($im, $sz, $C, $e){
             case 1:
                 # SBAS
             default:
-                imageFilledDiamond($im, $x, $y, $r, $color);
+                imageDiamond($im, $x, $y, $r, $color, 1);
                 break;
             case 6:
                 # GLONASS
@@ -323,7 +324,7 @@ function splot($im, $sz, $C, $e){
             case 1:
                 # SBAS
             default:
-                imageDiamond($im, $x, $y, $r, $color);
+                imageDiamond($im, $x, $y, $r, $color, 0);
                 break;
             case 6:
                 # GLONASS
