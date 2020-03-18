@@ -308,7 +308,7 @@ function imageTriangleU($im, $x, $y, $r, $color, $filled){
 
 function splot($im, $sz, $C, $e){
         # ensure all $e keys exist, for clean logs.
-        $keys = array('PRN', 'az', 'el', 'gnssid', 'health', 'ss');
+        $keys = array('PRN', 'az', 'el', 'gnssid', 'ss');
         foreach($keys as $key) {
             if (!array_key_exists($key, $e)) {
                 return;
@@ -319,6 +319,10 @@ function splot($im, $sz, $C, $e){
         }
         if (!array_key_exists('used', $e)) {
             return;
+        }
+        if (!array_key_exists('health', $e) ||
+            !is_numeric($e['health'])) {
+            $e['health'] = 0;
         }
 
         # validate ranges
