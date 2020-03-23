@@ -196,10 +196,11 @@ class SatTracks(gps):
         sats.sort(key=lambda x: x.PRN)
         for s in sats:
             fh.write("\t\t<tr><td>%d</td><td>%s</td><td>%s</td>"
-                     "<td>%d</td><td>%s</td></tr>\n" % (s.PRN,
-                     (-10 <= s.elevation <= 90) and s.elevation or 'N/A',
-                     (0 <= s.azimuth < 360) and s.azimuth or 'N/A',
-                     s.ss, s.used and 'Y' or 'N'))
+                     "<td>%d</td><td>%s</td></tr>\n" %
+                     (s.PRN,
+                      (-10 <= s.elevation <= 90) and s.elevation or 'N/A',
+                      (0 <= s.azimuth < 360) and s.azimuth or 'N/A',
+                      s.ss, s.used and 'Y' or 'N'))
         fh.write('\t</table></div>\n')
 
         def fgetnans(parent, children):
@@ -207,17 +208,19 @@ class SatTracks(gps):
             for child in children:
                 k = parent.get(child, float('nan'))
                 result.append(isfinite(k) and str(k) or 'N/A')
-            return result;
+            return result
 
         s = dict.get(self.backing, 'SKY', None)
         if s:
             dops = 'x y h v p t g'.split(" ")
-            fh.write('\t<div style="grid-area: dop;"><table class="wide">\n')
-            fh.write('\t\t<tr><th colspan="7">Dilution Of Precision</th></tr>\n')
+            fh.write('\t<div style="grid-area: dop;"><table class="wide">\n'
+                     '\t\t<tr><th colspan="7">Dilution Of Precision</th>'
+                     '</tr>\n')
             fh.write('\t\t<tr><th>' + '</th><th>'.join(dops) + '</th></tr>\n')
 
             result = fgetnans(s, map(lambda e: e+"dop", dops))
-            fh.write('\t\t<tr class="num"><td>%s</td></tr>\n' % '</td><td>'.join(result))
+            fh.write('\t\t<tr class="num"><td>%s</td></tr>\n' %
+                     '</td><td>'.join(result))
             fh.write('\t</table></div>\n')
 
         s = dict.get(self.backing, 'TPV', None)
@@ -227,9 +230,11 @@ class SatTracks(gps):
             fh.write('\t\t<tr><th colspan="7">Estimated Precision</th></tr>\n')
             fh.write('\t\t<tr><th>' + '</th><th>'.join(eps) + '</th></tr>\n')
             result = fgetnans(s, map(lambda e: "ep"+e, eps))
-            fh.write('\t\t<tr class="num"><td>%s m</td><td>%s m</td><td>%s m/s</td><td>%s m/s</td>'
-                     '<td>%s m</td><td>%s deg</td><td>%s !s</td></tr>\n' % (result[0],
-                     result[1], result[2], result[3], result[4], result[5], result[6]))
+            fh.write('\t\t<tr class="num"><td>%s m</td><td>%s m</td>'
+                     '<td>%s m/s</td><td>%s m/s</td>'
+                     '<td>%s m</td><td>%s deg</td><td>%s !s</td></tr>\n' %
+                     (result[0], result[1], result[2], result[3], result[4],
+                      result[5], result[6]))
             fh.write('\t</table></div>\n')
 
         fh.write('\t<div style="grid-area: misc;">\n')
@@ -250,13 +255,15 @@ class SatTracks(gps):
         if 'DEVICES' in self.backing:
             for (index, value) in enumerate(self.backing['DEVICES']['devices']):
                 for key in value:
-                    fh.write('\t\t[%d]%s: %s<br/>\n' % (index, key, value[key]))
+                    fh.write('\t\t[%d]%s: %s<br/>\n' %
+                             (index, key, value[key]))
         if 'OSC' in self.backing:
             s = self.backing['OSC']
             fh.write('\t\tOscillator')
             fh.write(': %s running' % (s['running'] and '' or 'not'))
             fh.write(' with%s GPS PPS' % (s['reference'] and '' or 'out'))
-            fh.write('and is %s disciplined' % (s['disciplined'] and '' or 'not'))
+            fh.write('and is %s disciplined' %
+                     (s['disciplined'] and '' or 'not'))
             fh.write('<br/>\n')
             fh.write('Oscillator delta: %fns<br>\n' % s['delta'])
         fh.write('\t</div>\n')
@@ -309,12 +316,14 @@ class SatTracks(gps):
         row('State', "%s (%d secs)" % (state, time.time() - self.statetimer))
 
         fh.write("""\t</table></div>
-\t<div style="grid-area: satview;"><canvas id="satview" width="425" height="425">
+\t<div style="grid-area: satview;"
+><canvas id="satview" width="425" height="425">
 \t\t<p>Your browser needs HTML5 &lt;canvas&gt; support to display
 \t\tthe satellite view correctly.</p>
 \t</canvas></div>
 \t<div style="grid-area: light">
-\t\t<button onclick="document.body.classList.toggle('dark')">light switch</button>
+\t\t<button onclick="document.body.classList.toggle('dark')"
+ >light switch</button>
 \t</div>
 </body></html>
 """)
@@ -489,10 +498,11 @@ def main():
                 for t in dictionary.values():
                     prn = t['prn']
                     sat.sattrack[prn] = Track(prn)
-                    sat.sattrack[prn].stale=t['stale']
-                    sat.sattrack[prn].posn=t['posn']
+                    sat.sattrack[prn].stale = t['stale']
+                    sat.sattrack[prn].posn = t['posn']
             except ValueError:
-                print("tracker.py WARNING: Ignoring incompatible tracks file.", file=sys.stderr)
+                print("tracker.py WARNING: Ignoring incompatible tracks file.",
+                      file=sys.stderr)
     try:
         sat.run(prefix, period)
     except KeyboardInterrupt:
