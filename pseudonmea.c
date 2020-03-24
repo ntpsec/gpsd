@@ -93,7 +93,8 @@ static void dbl_to_str(const char *fmt, double val, char *bufp, size_t len,
     }
 }
 
-// FIXME!  Use STATUS_ defines from gps.h instead.
+/* GPS Quality Indicator values for xxGGA
+ * Almost, not quite, the same as STATUS_* from gps.h */
 #define FIX_QUALITY_INVALID 0
 #define FIX_QUALITY_GPS 1
 #define FIX_QUALITY_DGPS 2

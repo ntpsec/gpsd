@@ -138,7 +138,8 @@ struct gps_fix_t {
 #define MODE_2D         2       /* good for latitude/longitude */
 #define MODE_3D         3       /* good for altitude/climb too */
 
-    /* GPS status, aka fix type */
+    /* GPS status, aka fix type, almost, but not quite the
+     * same as the NMEA xxGGA GPS Quality Indicator Values */
     int    status;              /* Do we have a fix? */
 #define STATUS_NO_FIX   0       /* no */
 /* yes, plain GPS (SPS Mode), without DGPS, PPS, RTK, DR, etc. */
