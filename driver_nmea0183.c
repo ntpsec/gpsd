@@ -431,13 +431,13 @@ static gps_mask_t processRMC(int count, char *field[],
         /* FALLTHROUGH */
     case 'V':
         /* Invalid */
-        session->newdata.status = STATUS_NO_FIX;
+        newstatus = STATUS_NO_FIX;
         session->newdata.mode = MODE_NO_FIX;
         mask |= STATUS_SET | MODE_SET;
         break;
     case 'D':
         /* Differential Fix */
-        // FIXME: set newdata.status to STATUS_DGPS_FIX
+        // STATUS_DGPS_FIX set below, after lat/lon check
         /* FALLTHROUGH */
     case 'A':
         /* Valid Fix */
@@ -459,7 +459,11 @@ static gps_mask_t processRMC(int count, char *field[],
         /* else, no point to the time only case, no regressions with that */
 
         if (0 == do_lat_lon(&field[3], &session->newdata)) {
-            newstatus = STATUS_FIX;
+            if ('D' == status) {
+                newstatus = STATUS_DGPS_FIX;
+            } else {
+                newstatus = STATUS_FIX;
+            }
             mask |= LATLON_SET;
             if (MODE_2D >= session->lastfix.mode) {
                 /* we have at least a 2D fix */
@@ -514,7 +518,6 @@ static gps_mask_t processRMC(int count, char *field[],
 
         if (count >= 12) {
             newstatus = faa_mode(field[12][0]);
-            // FIXME?  STATUS_SET ??
         }
 
         /*
