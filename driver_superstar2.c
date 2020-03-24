@@ -4,12 +4,12 @@
  */
 #include "gpsd_config.h"  /* must be before all includes */
 
-#include <stdio.h>
-#include <stdbool.h>
-#include <time.h>
-#include <string.h>
 #include <math.h>
+#include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
 #include "gpsd.h"
 
@@ -130,23 +130,23 @@ superstar2_msg_navsol_lla(struct gps_device_t *session,
     switch (flags & 0x1f) {
     case 2:
 	session->newdata.mode = MODE_3D;
-	session->gpsdata.status = STATUS_FIX;
+	session->newdata.status = STATUS_FIX;
 	break;
     case 4:
 	session->newdata.mode = MODE_3D;
-	session->gpsdata.status = STATUS_DGPS_FIX;
+	session->newdata.status = STATUS_DGPS_FIX;
 	break;
     case 5:
 	session->newdata.mode = MODE_2D;
-	session->gpsdata.status = STATUS_DGPS_FIX;
+	session->newdata.status = STATUS_DGPS_FIX;
 	break;
     case 3:
     case 6:
 	session->newdata.mode = MODE_2D;
-	session->gpsdata.status = STATUS_FIX;
+	session->newdata.status = STATUS_FIX;
 	break;
     default:
-	session->gpsdata.status = STATUS_NO_FIX;
+	session->newdata.status = STATUS_NO_FIX;
 	session->newdata.mode = MODE_NO_FIX;
     }
 
@@ -163,7 +163,7 @@ superstar2_msg_navsol_lla(struct gps_device_t *session,
 	     session->newdata.speed,
 	     session->newdata.climb,
 	     session->newdata.mode,
-	     session->gpsdata.status,
+	     session->newdata.status,
 	     session->gpsdata.dop.hdop,
 	     session->gpsdata.dop.vdop,
 	     session->gpsdata.satellites_used);
@@ -585,3 +585,5 @@ const struct gps_type_t driver_superstar2 = {
 };
 /* *INDENT-ON* */
 #endif /* defined(SUPERSTAR2_ENABLE) && defined(BINARY_ENABLE) */
+
+// vim: set expandtab shiftwidth=4

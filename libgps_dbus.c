@@ -1,5 +1,5 @@
 /*
- * This file is Copyright (c)2010-2018 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -66,9 +66,9 @@ static DBusHandlerResult handle_gps_fix(DBusMessage * message)
 			  DBUS_TYPE_STRING, &gpsd_devname, DBUS_TYPE_INVALID);
 
     if (share_gpsdata->fix.mode > MODE_NO_FIX )
-	share_gpsdata->status = STATUS_FIX;
+	share_gpsdata->fix.status = STATUS_FIX;
     else
-	share_gpsdata->status = STATUS_NO_FIX;
+	share_gpsdata->fix.status = STATUS_NO_FIX;
 
     dbus_error_free(&error);
 
@@ -147,3 +147,4 @@ int gps_dbus_mainloop(struct gps_data_t *gpsdata,
 }
 
 #endif /* defined(DBUS_EXPORT_ENABLE) */
+// vim: set expandtab shiftwidth=4

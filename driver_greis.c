@@ -247,9 +247,9 @@ static gps_mask_t greis_msg_PV(struct gps_device_t *session,
     if (solution_type > 0 && solution_type < 5) {
 	session->newdata.mode = MODE_3D;
 	if (solution_type > 1)
-	    session->gpsdata.status = STATUS_DGPS_FIX;
+	    session->newdata.status = STATUS_DGPS_FIX;
 	else
-	    session->gpsdata.status = STATUS_FIX;
+	    session->newdata.status = STATUS_FIX;
     }
 
     GPSD_LOG(LOG_DATA, &session->context->errout,

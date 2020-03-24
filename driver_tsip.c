@@ -398,6 +398,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 /* Hardware component version information (0x1c-83)
                  * polled by 0x1c-03
                  * Not Present in:
+                 *   LassenSQ (2002)
                  *   Copernicus II (2009)
                  */
                 ul1 = getbeu32(buf, 1);  // Serial number
@@ -639,10 +640,10 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          */
         u2 = getub(buf, 1);
         if ((uint8_t)0 != u1) {
-            session->gpsdata.status = STATUS_NO_FIX;
+            session->newdata.status = STATUS_NO_FIX;
             mask |= STATUS_SET;
-        } else if (session->gpsdata.status < STATUS_FIX) {
-            session->gpsdata.status = STATUS_FIX;
+        } else if (session->newdata.status < STATUS_FIX) {
+            session->newdata.status = STATUS_FIX;
             mask |= STATUS_SET;
         }
         GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -698,6 +699,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         break;
     case 0x4a:
         /* Single-Precision Position LLA
+         * Only sent when valid
          * Present in:
          *   pre-2000 models
          *   Copernicus II (2009)
@@ -1228,15 +1230,15 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         case 1:       // clock fix (surveyed in)
             // FALLTHROUGH
         case 5:       // Overdetermined clock fix
-            session->gpsdata.status = STATUS_TIME;
+            session->newdata.status = STATUS_TIME;
             session->newdata.mode = MODE_3D;
             break;
         case 3:
-            session->gpsdata.status = STATUS_FIX;
+            session->newdata.status = STATUS_FIX;
             session->newdata.mode = MODE_2D;
             break;
         case 4:
-            session->gpsdata.status = STATUS_FIX;
+            session->newdata.status = STATUS_FIX;
             session->newdata.mode = MODE_3D;
             break;
         case 2:
@@ -1246,15 +1248,15 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         case 7:
             // FALLTHROUGH
         default:
-            session->gpsdata.status = STATUS_NO_FIX;
+            session->newdata.status = STATUS_NO_FIX;
             session->newdata.mode = MODE_NO_FIX;
             break;
         }
         if (8 == (u1 & 8)) {
             // Surveyed in
-            session->gpsdata.status = STATUS_TIME;
+            session->newdata.status = STATUS_TIME;
         }
-        mask |= MODE_SET;
+        mask |= MODE_SET | STATUS_SET;
 
         session->gpsdata.satellites_used = count;
         session->gpsdata.dop.pdop = getbef32((char *)buf, 1);
@@ -1280,7 +1282,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                  "TSIP: AIVSS (0x6c): mode %d status %d used %d "
                  "pdop %.1f hdop %.1f vdop %.1f tdop %.1f gdop %.1f Used %s\n",
                  session->newdata.mode,
-                 session->gpsdata.status,
+                 session->newdata.status,
                  session->gpsdata.satellites_used,
                  session->gpsdata.dop.pdop,
                  session->gpsdata.dop.hdop,
@@ -1288,10 +1290,11 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                  session->gpsdata.dop.tdop,
                  session->gpsdata.dop.gdop,
                  buf2);
-        mask |= DOP_SET | MODE_SET | STATUS_SET | USED_IS;
+        mask |= DOP_SET | USED_IS;
         break;
     case 0x6d:
         /* All-In-View Satellite Selection (0x6d) polled by 0x24
+         * Sent after every fix
          *
          * Present in:
          *   pre-2000 models
@@ -1327,15 +1330,15 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             case 1:       // clock fix (surveyed in)
                 // FALLTHROUGH
             case 5:       // Overdetermined clock fix
-                session->gpsdata.status = STATUS_TIME;
+                session->newdata.status = STATUS_TIME;
                 session->newdata.mode = MODE_3D;
                 break;
             case 3:
-                session->gpsdata.status = STATUS_FIX;
+                session->newdata.status = STATUS_FIX;
                 session->newdata.mode = MODE_2D;
                 break;
             case 4:
-                session->gpsdata.status = STATUS_FIX;
+                session->newdata.status = STATUS_FIX;
                 session->newdata.mode = MODE_3D;
                 break;
             case 2:
@@ -1345,15 +1348,15 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             case 7:
                 // FALLTHROUGH
             default:
-                session->gpsdata.status = STATUS_NO_FIX;
+                session->newdata.status = STATUS_NO_FIX;
                 session->newdata.mode = MODE_NO_FIX;
                 break;
             }
         } else {
-            session->gpsdata.status = STATUS_NO_FIX;
+            session->newdata.status = STATUS_NO_FIX;
             session->newdata.mode = MODE_NO_FIX;
         }
-        mask |= MODE_SET;
+        mask |= MODE_SET | STATUS_SET;
 
         session->gpsdata.satellites_used = count;
         session->gpsdata.dop.pdop = getbef32((char *)buf, 1);
@@ -1376,16 +1379,18 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             }
         }
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP: AIVSS (0x6d) status=%d used=%d "
+                 "TSIP: AIVSS (0x6d) u1=x%x status=%d mode=%d used=%d "
                  "pdop=%.1f hdop=%.1f vdop=%.1f tdop=%.1f gdop=%.1f used:%s\n",
-                 session->gpsdata.status,
+                 u1,
+                 session->newdata.status,
+                 session->newdata.mode,
                  session->gpsdata.satellites_used,
                  session->gpsdata.dop.pdop,
                  session->gpsdata.dop.hdop,
                  session->gpsdata.dop.vdop,
                  session->gpsdata.dop.tdop,
                  session->gpsdata.dop.gdop, buf2);
-        mask |= DOP_SET | STATUS_SET | USED_IS;
+        mask |= DOP_SET | USED_IS;
         break;
     case 0x82:
         /* Differential Position Fix Mode (0x82) poll with 0x62-ff
@@ -1395,6 +1400,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          * Present in:
          *   pre-2000 models
          *   Copernicus II (2009)
+         *   Lassen SQ
          *   Lassen iQ, deprecated use 0xbb instead
          * Not Present in:
          *   ICM SMT 360 (2018)
@@ -1404,19 +1410,23 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 1;
             break;
         }
-        u1 = getub(buf, 0);     /* fix mode */
-        if (session->gpsdata.status == STATUS_FIX && (u1 & 0x01) != 0) {
-            session->gpsdata.status = STATUS_DGPS_FIX;
+        /* differential position fix mode */
+        u1 = getub(buf, 0);
+        if (3 == (u1 & 3)) {
+            /* currently mode 3 (auto DGPS) and so have DGPS */
+            session->newdata.status = STATUS_DGPS_FIX;
             mask |= STATUS_SET;
         }
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIP: DPFM (0x82) mode %d status=%d\n",
-                 u1, session->gpsdata.status);
+                 u1, session->newdata.status);
         break;
     case 0x83:
         /* Double-Precision XYZ Position Fix and Bias Information
+         * Only sent when valid
          * Present in:
          *   pre-2000 models
+         *   LasenSQ (2002)
          *   Copernicus II (2009)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
@@ -1434,14 +1444,30 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         session->newdata.time = gpsd_gpstime_resolv(session,
                                                     session->context->gps_week,
                                                     ts_tow);
+        /* No fix mode info!! That comes later in 0x6d.
+         * This message only sent when there is 2D or 3D fix.
+         * This is a problem as gpsd will send a report with no mode.
+         * Steal mode from last fix.
+         * The last fix is likely lastfix, not oldfix, as this is likely
+         * a new time and starts a new cycle! */
+	session->newdata.status = session->lastfix.status;
+	if (MODE_2D > session->oldfix.mode) {
+	    session->newdata.mode = MODE_2D;  // At least 2D
+        } else {
+	    session->newdata.mode = session->lastfix.mode;
+        }
+        mask |= STATUS_SET | MODE_SET;
+
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP: DP-XYZ (0x83) %f %f %f %f tow %f\n",
+                 "TSIP: DP-XYZ (0x83) %f %f %f %f tow %f mode %u\n",
                  session->newdata.ecef.x,
                  session->newdata.ecef.y,
                  session->newdata.ecef.z,
-                 d4, ftow);
-        mask = ECEF_SET | TIME_SET | NTPTIME_IS;
+                 d4, ftow,
+		 session->newdata.mode);
+        mask |= ECEF_SET | TIME_SET | NTPTIME_IS;
         if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
+            // New time, so new fix.
             mask |= CLEAR_IS;
             session->driver.tsip.last_tow = ts_tow;
         }
@@ -1451,6 +1477,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          * Present in:
          *   pre-2000 models
          *   Copernicus II (2009)
+         *   LassenSQ  (2002)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
@@ -1471,6 +1498,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         //d1 = getbed64((char *)buf, 24);       clock bias */
         ftow = getbef32((char *)buf, 32);       /* time-of-fix */
         if ((session->context->valid & GPS_TIME_VALID)!=0) {
+            // fingers crossed receiver set to UTC, not GPS.
             DTOTS(&ts_tow, ftow);
             session->newdata.time =
                 gpsd_gpstime_resolv(session, session->context->gps_week,
@@ -1482,6 +1510,15 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             }
         }
         mask |= LATLON_SET;
+        /* No fix mode info!! That comes later in 0x6d.
+         * Message sent when there is 2D or 3D fix.
+         * This is a problem as gpsd will send a report with no mode.
+         * This message only sent on 2D or 3D fix.
+         * Steal mode from last fix. */
+	session->newdata.status = session->oldfix.status;
+	session->newdata.mode = session->oldfix.mode;
+        mask |= STATUS_SET | MODE_SET;
+
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIP: DP-LLA (0x84) time=%s lat=%.2f lon=%.2f alt=%.2f\n",
                  timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
@@ -1585,12 +1622,12 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             session->newdata.altHAE = (double)sl2 * 1e-3;
             mask |= ALTITUDE_SET;
 
-            session->gpsdata.status = STATUS_NO_FIX;
+            session->newdata.status = STATUS_NO_FIX;
             session->newdata.mode = MODE_NO_FIX;
             if ((u2 & 0x01) == (uint8_t) 0) {   /* Fix Available */
-                session->gpsdata.status = STATUS_FIX;
+                session->newdata.status = STATUS_FIX;
                 if ((u2 & 0x02) != (uint8_t) 0) /* DGPS Corrected */
-                    session->gpsdata.status = STATUS_DGPS_FIX;
+                    session->newdata.status = STATUS_DGPS_FIX;
                 if ((u2 & 0x04) != (uint8_t) 0) /* Fix Dimension */
                     session->newdata.mode = MODE_2D;
                 else
@@ -1631,7 +1668,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                                   sizeof(ts_buf)),
                      session->newdata.latitude, session->newdata.longitude,
                      session->newdata.altHAE,
-                     session->newdata.mode, session->gpsdata.status);
+                     session->newdata.mode, session->newdata.status);
             break;
         case 0x23:
             /* Compact Super Packet (0x8f-23)
@@ -1671,12 +1708,12 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             MSTOTS(&ts_tow, tow);
             session->newdata.time =
                 gpsd_gpstime_resolv(session, week, ts_tow);
-            session->gpsdata.status = STATUS_NO_FIX;
+            session->newdata.status = STATUS_NO_FIX;
             session->newdata.mode = MODE_NO_FIX;
             if ((u2 & 0x01) == (uint8_t) 0) {   /* Fix Available */
-                session->gpsdata.status = STATUS_FIX;
+                session->newdata.status = STATUS_FIX;
                 if ((u2 & 0x02) != (uint8_t) 0) /* DGPS Corrected */
-                    session->gpsdata.status = STATUS_DGPS_FIX;
+                    session->newdata.status = STATUS_DGPS_FIX;
                 if ((u2 & 0x04) != (uint8_t) 0) /* Fix Dimension */
                     session->newdata.mode = MODE_2D;
                 else
@@ -1713,7 +1750,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                                   sizeof(ts_buf)),
                      session->newdata.latitude, session->newdata.longitude,
                      session->newdata.altHAE,
-                     session->newdata.mode, session->gpsdata.status);
+                     session->newdata.mode, session->newdata.status);
             break;
 
         case 0xa5:
@@ -1851,11 +1888,11 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
 
             if (u3 != (uint8_t)0) {
                 // not exactly true, could be sort of Dead Reckoning
-                session->gpsdata.status = STATUS_NO_FIX;
+                session->newdata.status = STATUS_NO_FIX;
                 mask |= STATUS_SET;
             } else {
-                if (session->gpsdata.status < STATUS_FIX) {
-                    session->gpsdata.status = STATUS_FIX;
+                if (session->newdata.status < STATUS_FIX) {
+                    session->newdata.status = STATUS_FIX;
                     mask |= STATUS_SET;
                 }
             }
@@ -1897,19 +1934,31 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 }
                 break;
             case 6:             /* Clock Hold 2D */
+                /* Not present:
+                 *   SMT 360
+                 *   Acutime 360
+                 */
                 // FALLTHROUGH
-            case 3:             /* 2D Position Fix */
-                //session->gpsdata.status = STATUS_FIX;
+            case 3:             /* forced 2D Position Fix */
+                //session->newdata.status = STATUS_FIX;
                 session->newdata.mode = MODE_2D;
                 break;
-            case 7:             /* Thunderbolt overdetermined clock */
+                /* Present in:
+                 *   Acutiome 360
+                 */
                 // FALLTHROUGH
-            case 4:             /* 3D position Fix */
-                //session->gpsdata.status = STATUS_FIX;
+            case 1:             /* Single Satellite Time */
+            case 7:             /* overdetermined clock */
+                /* Present in:
+                 *   Acutiome 360
+                 */
+                // FALLTHROUGH
+            case 4:             /* forced 3D position Fix */
+                //session->newdata.status = STATUS_FIX;
                 session->newdata.mode = MODE_3D;
                 break;
             default:
-                //session->gpsdata.status = STATUS_NO_FIX;
+                //session->newdata.status = STATUS_NO_FIX;
                 session->newdata.mode = MODE_NO_FIX;
                 break;
             }
@@ -3382,3 +3431,5 @@ const struct gps_type_t driver_tsip =
 /* *INDENT-ON* */
 
 #endif /* TSIP_ENABLE */
+
+// vim: set expandtab shiftwidth=4

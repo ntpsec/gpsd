@@ -37,10 +37,11 @@
 
 #include "gpsd_config.h"  /* must be before all includes */
 
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
 #include <math.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+
 #include "gpsd.h"
 
 #if defined(NAVCOM_ENABLE)
@@ -413,11 +414,11 @@ static gps_mask_t handle_0xb1(struct gps_device_t *session)
     /* Nav mode */
     nav_mode = (uint8_t) getub(buf, 22);
     if (-nav_mode & 0x80) {
-	session->gpsdata.status = STATUS_NO_FIX;
+	session->newdata.status = STATUS_NO_FIX;
 	session->newdata.mode = MODE_NO_FIX;
     } else {
 	session->newdata.mode = ((nav_mode & 0x40)!=0 ? MODE_3D : MODE_2D);
-	session->gpsdata.status =
+	session->newdata.status =
 	    ((nav_mode & 0x03)!=0 ? STATUS_DGPS_FIX : STATUS_FIX);
     }
 
@@ -497,7 +498,7 @@ static gps_mask_t handle_0xb1(struct gps_device_t *session)
 	     session->newdata.altHAE,
 	     session->newdata.altMSL,
 	     session->newdata.mode,
-	     session->gpsdata.status,
+	     session->newdata.status,
 	     session->gpsdata.dop.gdop,
 	     session->gpsdata.dop.pdop,
 	     session->gpsdata.dop.hdop,
@@ -697,13 +698,13 @@ static gps_mask_t handle_0x86(struct gps_device_t *session)
     /* Fix mode */
     switch (sol_status & 0x05) {
     case 0x05:
-	session->gpsdata.status = STATUS_DGPS_FIX;
+	session->newdata.status = STATUS_DGPS_FIX;
 	break;
     case 0x01:
-	session->gpsdata.status = STATUS_FIX;
+	session->newdata.status = STATUS_FIX;
 	break;
     default:
-	session->gpsdata.status = STATUS_NO_FIX;
+	session->newdata.status = STATUS_NO_FIX;
     }
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
@@ -1272,3 +1273,4 @@ const struct gps_type_t driver_navcom =
 /* *INDENT-ON* */
 
 #endif /* defined(NAVCOM_ENABLE) */
+// vim: set expandtab shiftwidth=4

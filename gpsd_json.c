@@ -219,9 +219,9 @@ void json_tpv_dump(const struct gps_device_t *session,
     if (gpsdata->dev.path[0] != '\0')
 	/* Note: Assumes /dev paths are always plain ASCII */
 	str_appendf(reply, replylen, ",\"device\":\"%s\"", gpsdata->dev.path);
-    if (STATUS_DGPS_FIX <= gpsdata->status) {
+    if (STATUS_DGPS_FIX <= gpsdata->fix.status) {
         /* to save rebuilding all the regressions, skip NO_FIX and FIX */
-	str_appendf(reply, replylen, ",\"status\":%d", gpsdata->status);
+	str_appendf(reply, replylen, ",\"status\":%d", gpsdata->fix.status);
     }
     str_appendf(reply, replylen, ",\"mode\":%d", gpsdata->fix.mode);
     if (0 < gpsdata->fix.time.tv_sec) {
@@ -1386,7 +1386,7 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
 #define R1004 rtcm->rtcmtypes.rtcm3_1004.rtk_data[i]
 	    str_appendf(buf, buflen,
 			   "{\"ident\":%u,"
-			   "\"L1\":{\"ind\":%u,\"prange\":%.2f,"
+			   "\"L1\":{\"ind\":%u,\"prange\":%0.2f,"
 			   "\"delta\":%.4f,\"lockt\":%u,"
 			   "\"amb\":%u,\"CNR\":%.2f},"
 			   "\"L2\":{\"ind\":%u,\"prange\":%.2f,"
@@ -3979,3 +3979,5 @@ void json_data_report(const gps_mask_t changed,
 #endif /* SOCKET_EXPORT_ENABLE */
 
 /* gpsd_json.c ends here */
+
+// vim: set expandtab shiftwidth=4

@@ -197,16 +197,17 @@ static gps_mask_t geostar_analyze(struct gps_device_t *session)
 	ul1 = getleu32(buf, OFFSET(29)); /* status */
 
 	if (ul1 != 0) {
-	    session->gpsdata.status = STATUS_NO_FIX;
+	    session->newdata.status = STATUS_NO_FIX;
 	    mask |= STATUS_SET;
 	} else {
-	    if (session->gpsdata.status < STATUS_FIX) {
-		session->gpsdata.status = STATUS_FIX;
+	    if (session->newdata.status < STATUS_FIX) {
+		session->newdata.status = STATUS_FIX;
 		mask |= STATUS_SET;
 	    }
 	}
 	mask |= TIME_SET | NTPTIME_IS | LATLON_SET | ALTITUDE_SET |
-                SPEED_SET | TRACK_SET | DOP_SET | USED_IS | REPORT_IS;
+                SPEED_SET | STATUS_SET | TRACK_SET | DOP_SET | USED_IS |
+                REPORT_IS;
 
 	GPSD_LOG(LOG_INF, &session->context->errout,
 		 "Geographic coordinates %f %g %g %g %g %g\n",
@@ -239,10 +240,10 @@ static gps_mask_t geostar_analyze(struct gps_device_t *session)
 	    session->newdata.mode = MODE_3D;
 	}
 	if(ul1 & (1<<2)) {
-	    session->gpsdata.status = STATUS_FIX;
+	    session->newdata.status = STATUS_FIX;
 	}
 	else {
-	    session->gpsdata.status = STATUS_NO_FIX;
+	    session->newdata.status = STATUS_NO_FIX;
 	    session->newdata.mode = MODE_NO_FIX;
 	}
 

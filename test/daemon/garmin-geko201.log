@@ -4,9 +4,10 @@
 # Date: 2005-06-14
 # Location: Madrid, Madrid, Spain (ES), 40.39N 03.64E
 # Comments:  This is demo-mode data, with no actual fixes.
+# Note: The FAA status is 8 (Simulated).
 #
-# This file is Copyright (c) 2010 by the GPSD project
-# BSD terms apply: see the file COPYING in the distribution root for details.
+# This file is Copyright 2005 by the GPSD project
+# SPDX-License-Identifier: BSD-2-clause
 #
 $GPRMC,214350,V,4023.8600,N,00339.1630,W,10.8,0.0,140605,2.5,W,S*21
 $GPRMB,V,,,,,,,,,,,,A,S*0E

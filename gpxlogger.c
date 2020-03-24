@@ -5,16 +5,16 @@
 
 #include "gpsd_config.h"  /* must be before all includes */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-#include <math.h>
-#include <time.h>
+#include <assert.h>
 #include <errno.h>
 #include <libgen.h>
+#include <math.h>
 #include <signal.h>
-#include <assert.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "gps.h"
@@ -96,7 +96,7 @@ static void print_fix(struct gps_data_t *gpsdata, timespec_t ts_time)
 	(void)fprintf(logfile,"    <ele>%f</ele>\n", gpsdata->fix.altHAE);
     (void)fprintf(logfile,"    <time>%s</time>\n",
 		 timespec_to_iso8601(ts_time, tbuf, sizeof(tbuf)));
-    if (gpsdata->status == STATUS_DGPS_FIX)
+    if (gpsdata->fix.status == STATUS_DGPS_FIX)
 	(void)fprintf(logfile,"    <fix>dgps</fix>\n");
     else
 	switch (gpsdata->fix.mode) {
@@ -362,3 +362,5 @@ int main(int argc, char **argv)
 
     exit(EXIT_SUCCESS);
 }
+
+// vim: set expandtab shiftwidth=4

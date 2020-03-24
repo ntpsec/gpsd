@@ -78,9 +78,10 @@ extern "C" {
  *       Fix rtcm3_1029_t.text length
  *       Add/change many rtcm2 structs
  *       Add/change many rtcm3 structs
+ * 10    Move gps_data_t->status to gps_fix_t.status for better fix merging
  */
-#define GPSD_API_MAJOR_VERSION  9       /* bump on incompatible changes */
-#define GPSD_API_MINOR_VERSION  1       /* bump on compatible changes */
+#define GPSD_API_MAJOR_VERSION  10      /* bump on incompatible changes */
+#define GPSD_API_MINOR_VERSION  0       /* bump on compatible changes */
 
 #define MAXCHANNELS     140     /* u-blox 9 tracks 140 signals */
 #define MAXUSERDEVS     4       /* max devices per user */
@@ -136,6 +137,25 @@ struct gps_fix_t {
 #define MODE_NO_FIX     1       /* none */
 #define MODE_2D         2       /* good for latitude/longitude */
 #define MODE_3D         3       /* good for altitude/climb too */
+
+    /* GPS status, aka fix type */
+    int    status;              /* Do we have a fix? */
+#define STATUS_NO_FIX   0       /* no */
+/* yes, plain GPS (SPS Mode), without DGPS, PPS, RTK, DR, etc. */
+#define STATUS_FIX      1
+#define STATUS_DGPS_FIX 2       /* yes, with DGPS */
+#define STATUS_RTK_FIX  3       /* yes, with RTK Fixed */
+#define STATUS_RTK_FLT  4       /* yes, with RTK Float */
+#define STATUS_DR       5       /* yes, with dead reckoning */
+#define STATUS_GNSSDR   6       /* yes, with GNSS + dead reckoning */
+#define STATUS_TIME     7       /* yes, time only (surveyed in, manual) */
+// Note that STATUS_SIM and MODE_NO_FIX can go together.
+#define STATUS_SIM      8       /* yes, simulated */
+/* yes, Precise Positioning Service (PPS)
+ * Not to be confused with Pulse per Second (PPS)
+ * PPS is the encrypted military P(Y)-code */
+#define STATUS_PPS_FIX  9
+
     double ept;         /* Expected time uncertainty, seconds */
     double latitude;    /* Latitude in degrees (valid if mode >= 2) */
     double epy;         /* Latitude position uncertainty, meters */
@@ -225,7 +245,7 @@ struct gps_log_t  {
     double distanceStd;   // Ground distance accuracy (1-sigma)
 
     timespec_t then;      // time of log entry, zero if invalid
-    // GPS status -- always valid, same values as gps_data_t.status
+    // GPS status -- always valid, same values as gps_fix_t.status
     int    status;              /* Do we have a fix? */
 
     uint32_t index_cnt;   // message counter
@@ -2361,23 +2381,6 @@ struct gps_data_t {
 #endif
     struct gps_fix_t    fix;    /* accumulated PVT data */
     struct gps_log_t    log;    // log data
-
-    /* GPS status -- always valid */
-    int    status;              /* Do we have a fix? */
-#define STATUS_NO_FIX   0       /* no */
-/* yes, plain GPS (SPS Mode), without DGPS, PPS, RTK, DR, etc. */
-#define STATUS_FIX      1
-#define STATUS_DGPS_FIX 2       /* yes, with DGPS */
-#define STATUS_RTK_FIX  3       /* yes, with RTK Fixed */
-#define STATUS_RTK_FLT  4       /* yes, with RTK Float */
-#define STATUS_DR       5       /* yes, with dead reckoning */
-#define STATUS_GNSSDR   6       /* yes, with GNSS + dead reckoning */
-#define STATUS_TIME     7       /* yes, time only (surveyed in, manual) */
-#define STATUS_SIM      8       /* yes, simulated */
-/* yes, Precise Positioning Service (PPS)
- * Not to be confused with Pulse per Second (PPS)
- * PPS is the encrypted military P(Y)-code */
-#define STATUS_PPS_FIX  9
 
     int leap_seconds;           /* Unix secs to UTC (GPS-UTC offset) */
     /* precision of fix -- valid if satellites_used > 0 */

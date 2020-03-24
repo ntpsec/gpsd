@@ -407,7 +407,6 @@ void gpsd_clear(struct gps_device_t *session)
     gps_clear_att(&session->gpsdata.attitude);
     gps_clear_dop(&session->gpsdata.dop);
     gps_clear_fix(&session->gpsdata.fix);
-    session->gpsdata.status = STATUS_NO_FIX;
     session->releasetime = (time_t)0;
     session->badcount = 0;
 
@@ -926,14 +925,15 @@ static void gpsd_error_model(struct gps_device_t *session)
     }
     /* Sanity check for negative delta? */
 
+    // adjusting UERE for DGPS is dodgy...
     h_uere =
-        (session->gpsdata.status ==
+        (session->gpsdata.fix.status ==
          STATUS_DGPS_FIX ? H_UERE_WITH_DGPS : H_UERE_NO_DGPS);
     v_uere =
-        (session->gpsdata.status ==
+        (session->gpsdata.fix.status ==
          STATUS_DGPS_FIX ? V_UERE_WITH_DGPS : V_UERE_NO_DGPS);
     p_uere =
-        (session->gpsdata.status ==
+        (session->gpsdata.fix.status ==
          STATUS_DGPS_FIX ? P_UERE_WITH_DGPS : P_UERE_NO_DGPS);
 
     if (0 == isfinite(fix->latitude) ||
@@ -1674,7 +1674,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
 
         /*
          * Count good fixes. We used to check
-         *      session->gpsdata.status > STATUS_NO_FIX
+         *      session->gpsdata.fix.status > STATUS_NO_FIX
          * here, but that wasn't quite right.  That tells us whether
          * we think we have a valid fix for the current cycle, but remains
          * true while following non-fix packets are received.  What we
@@ -1685,7 +1685,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
          * to derive a good fix. Such packets should set STATUS_NO_FIX.
          */
         if (0 != (session->gpsdata.set & (LATLON_SET|ECEF_SET))) {
-            if ( session->gpsdata.status > STATUS_NO_FIX) {
+            if ( session->gpsdata.fix.status > STATUS_NO_FIX) {
                 session->context->fixcnt++;
                 session->fixcnt++;
             } else {

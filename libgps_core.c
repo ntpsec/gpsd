@@ -8,14 +8,14 @@
 
 #include "gpsd_config.h"  /* must be before all includes */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <string.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "gpsd.h"
 #include "libgps.h"
@@ -108,7 +108,6 @@ int gps_open(const char *host,
 #undef USES_HOST
 
     gpsdata->set = 0;
-    gpsdata->status = STATUS_NO_FIX;
     gpsdata->satellites_used = 0;
     gps_clear_att(&(gpsdata->attitude));
     gps_clear_dop(&(gpsdata->dop));
@@ -336,9 +335,10 @@ void libgps_dump_state(struct gps_data_t *collect)
     if (collect->set & CLIMB_SET)
 	(void)fprintf(debugfp, "CLIMB: climb: %lf\n", collect->fix.climb);
     if (collect->set & STATUS_SET) {
+        // FIXME! add missing status values.  range check status!
 	const char *status_values[] = { "NO_FIX", "FIX", "DGPS_FIX" };
 	(void)fprintf(debugfp, "STATUS: status: %d (%s)\n",
-		      collect->status, status_values[collect->status]);
+		      collect->fix.status, status_values[collect->fix.status]);
     }
     if (collect->set & MODE_SET) {
 	const char *mode_values[] = { "", "NO_FIX", "MODE_2D", "MODE_3D" };
@@ -402,3 +402,4 @@ void libgps_dump_state(struct gps_data_t *collect)
 #endif /* LIBGPS_DEBUG */
 
 // end
+// vim: set expandtab shiftwidth=4

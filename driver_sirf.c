@@ -1400,7 +1400,7 @@ static gps_mask_t sirf_msg_svinfo(struct gps_device_t *session,
     for (i = 0; i < st; i++) {
         int prn = session->gpsdata.skyview[i].PRN;
         if ((120 <= prn && 158 >= prn) &&
-            session->gpsdata.status == STATUS_DGPS_FIX &&
+            session->lastfix.status == STATUS_DGPS_FIX &&
             session->driver.sirf.dgps_source == SIRF_DGPS_SOURCE_SBAS) {
             /* used does not seem right, DGPS means got the correction
              * data, not that the geometry was improved... */
@@ -1515,15 +1515,15 @@ static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
 
     /* fix status is byte 19 */
     navtype = (unsigned short)getub(buf, 19);
-    session->gpsdata.status = STATUS_NO_FIX;
+    session->newdata.status = STATUS_NO_FIX;
     session->newdata.mode = MODE_NO_FIX;
     if ((navtype & 0x80) != 0)
-        session->gpsdata.status = STATUS_DGPS_FIX;
+        session->newdata.status = STATUS_DGPS_FIX;
     else if ((navtype & 0x07) > 0 && (navtype & 0x07) < 7)
-        session->gpsdata.status = STATUS_FIX;
+        session->newdata.status = STATUS_FIX;
     if ((navtype & 0x07) == 4 || (navtype & 0x07) == 6)
         session->newdata.mode = MODE_3D;
-    else if (session->gpsdata.status != 0)
+    else if (session->newdata.status != 0)
         session->newdata.mode = MODE_2D;
     /* byte 20 is HDOP */
     session->gpsdata.dop.hdop = (double)getub(buf, 20) / 5.0;
@@ -1560,7 +1560,7 @@ static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "SiRF: MND 0x02: Navtype %#0x, Status %d mode %d\n",
-             navtype, session->gpsdata.status, session->newdata.mode);
+             navtype, session->newdata.status, session->newdata.mode);
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "SiRF: MND 0x02: gpsd_week %u iTOW %u\n",
              gps_week, iTOW);
@@ -1570,7 +1570,7 @@ static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
              timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
              session->newdata.ecef.x,
              session->newdata.ecef.y, session->newdata.ecef.z,
-             session->newdata.mode, session->gpsdata.status,
+             session->newdata.mode, session->newdata.status,
              session->gpsdata.dop.hdop, session->gpsdata.satellites_used);
     return mask;
 }
@@ -1614,20 +1614,20 @@ static gps_mask_t sirf_msg_geodetic(struct gps_device_t *session,
     session->gpsdata.sentence_length = 91;
 
     navtype = (unsigned short)getbeu16(buf, 3);
-    session->gpsdata.status = STATUS_NO_FIX;
+    session->newdata.status = STATUS_NO_FIX;
     session->newdata.mode = MODE_NO_FIX;
     if (navtype & 0x80)
-        session->gpsdata.status = STATUS_DGPS_FIX;
+        session->newdata.status = STATUS_DGPS_FIX;
     else if ((navtype & 0x07) > 0 && (navtype & 0x07) < 7)
-        session->gpsdata.status = STATUS_FIX;
+        session->newdata.status = STATUS_FIX;
     session->newdata.mode = MODE_NO_FIX;
     if ((navtype & 0x07) == 4 || (navtype & 0x07) == 6)
         session->newdata.mode = MODE_3D;
-    else if (session->gpsdata.status)
+    else if (session->newdata.status)
         session->newdata.mode = MODE_2D;
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "SiRF: GND 0x29: Navtype = 0x%0x, Status = %d, mode = %d\n",
-             navtype, session->gpsdata.status, session->newdata.mode);
+             navtype, session->newdata.status, session->newdata.mode);
     mask |= STATUS_SET | MODE_SET;
 
     session->newdata.latitude = getbes32(buf, 23) * 1e-7;
@@ -1738,7 +1738,7 @@ static gps_mask_t sirf_msg_geodetic(struct gps_device_t *session,
              session->newdata.track,
              session->newdata.speed,
              session->newdata.mode,
-             session->gpsdata.status);
+             session->newdata.status);
     return mask;
 }
 #endif /* __UNUSED__ */
@@ -1797,19 +1797,19 @@ static gps_mask_t sirf_msg_ublox(struct gps_device_t *session,
     session->newdata.track = (double)getbes32(buf, 21) * RAD_2_DEG * 1e-8;
 
     navtype = (unsigned short)getub(buf, 25);
-    session->gpsdata.status = STATUS_NO_FIX;
+    session->newdata.status = STATUS_NO_FIX;
     session->newdata.mode = MODE_NO_FIX;
     if (navtype & 0x80)
-        session->gpsdata.status = STATUS_DGPS_FIX;
+        session->newdata.status = STATUS_DGPS_FIX;
     else if ((navtype & 0x07) > 0 && (navtype & 0x07) < 7)
-        session->gpsdata.status = STATUS_FIX;
+        session->newdata.status = STATUS_FIX;
     if ((navtype & 0x07) == 4 || (navtype & 0x07) == 6)
         session->newdata.mode = MODE_3D;
-    else if (session->gpsdata.status)
+    else if (session->newdata.status)
         session->newdata.mode = MODE_2D;
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "SiRF: EMND 0x62: Navtype = 0x%0x, Status = %d, mode = %d\n",
-             navtype, session->gpsdata.status, session->newdata.mode);
+             navtype, session->newdata.status, session->newdata.mode);
 
     if (navtype & 0x40) {       /* UTC corrected timestamp? */
         struct tm unpacked_date;
@@ -1859,7 +1859,7 @@ static gps_mask_t sirf_msg_ublox(struct gps_device_t *session,
              session->newdata.longitude, session->newdata.altHAE,
              session->newdata.speed, session->newdata.track,
              session->newdata.climb, session->newdata.mode,
-             session->gpsdata.status, session->gpsdata.dop.gdop,
+             session->newdata.status, session->gpsdata.dop.gdop,
              session->gpsdata.dop.pdop, session->gpsdata.dop.hdop,
              session->gpsdata.dop.vdop, session->gpsdata.dop.tdop);
     return mask;
@@ -2497,3 +2497,5 @@ const struct gps_type_t driver_sirf =
 };
 /* *INDENT-ON* */
 #endif /* defined(SIRF_ENABLE) && defined(BINARY_ENABLE) */
+
+// vim: set expandtab shiftwidth=4

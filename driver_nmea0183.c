@@ -1,5 +1,5 @@
 /*
- * This file is Copyright (c) 2010-2018 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -72,7 +72,7 @@ static int do_lat_lon(char *field[], struct gps_fix_t *out)
 }
 
 /* process an FAA mode character
- * return status as in session->gpsdata.status
+ * return status as in session->newdata.status
  */
 static int faa_mode(char mode)
 {
@@ -431,12 +431,13 @@ static gps_mask_t processRMC(int count, char *field[],
         /* FALLTHROUGH */
     case 'V':
         /* Invalid */
-        session->gpsdata.status = STATUS_NO_FIX;
+        session->newdata.status = STATUS_NO_FIX;
         session->newdata.mode = MODE_NO_FIX;
         mask |= STATUS_SET | MODE_SET;
         break;
     case 'D':
         /* Differential Fix */
+        // FIXME: set newdata.status to STATUS_DGPS_FIX
         /* FALLTHROUGH */
     case 'A':
         /* Valid Fix */
@@ -460,10 +461,15 @@ static gps_mask_t processRMC(int count, char *field[],
         if (0 == do_lat_lon(&field[3], &session->newdata)) {
             newstatus = STATUS_FIX;
             mask |= LATLON_SET;
-            if (MODE_2D >= session->gpsdata.fix.mode) {
+            if (MODE_2D >= session->lastfix.mode) {
                 /* we have at least a 2D fix */
                 /* might cause blinking */
                 session->newdata.mode = MODE_2D;
+                mask |= MODE_SET;
+            } else if (MODE_3D == session->lastfix.mode) {
+                // keep the 3D, this may be cycle starter
+                // might cause blinking
+                session->newdata.mode = MODE_3D;
                 mask |= MODE_SET;
             }
         } else {
@@ -508,6 +514,7 @@ static gps_mask_t processRMC(int count, char *field[],
 
         if (count >= 12) {
             newstatus = faa_mode(field[12][0]);
+            // FIXME?  STATUS_SET ??
         }
 
         /*
@@ -527,7 +534,8 @@ static gps_mask_t processRMC(int count, char *field[],
             session->newdata.mode = MODE_3D;
             mask |= MODE_SET;
         }
-        session->gpsdata.status = newstatus;
+        session->newdata.status = newstatus;
+	mask |= STATUS_SET;
     }
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
@@ -540,7 +548,7 @@ static gps_mask_t processRMC(int count, char *field[],
              session->newdata.track,
              session->newdata.mode,
              session->newdata.magnetic_var,
-             session->gpsdata.status);
+             session->newdata.status);
     return mask;
 }
 
@@ -594,9 +602,8 @@ static gps_mask_t processGLL(int count, char *field[],
     if ('\0' == field[6][0] ||
         'V' == field[6][0]) {
         /* Invalid */
-        session->gpsdata.status = STATUS_NO_FIX;
+        session->newdata.status = STATUS_NO_FIX;
         session->newdata.mode = MODE_NO_FIX;
-        mask |= STATUS_SET | MODE_SET;
     } else if ('A' == field[6][0] &&
         (count < 8 || *status != 'N') &&
         0 == do_lat_lon(&field[1], &session->newdata)) {
@@ -618,23 +625,20 @@ static gps_mask_t processGLL(int count, char *field[],
         if (0 != isfinite(session->gpsdata.fix.altHAE) ||
             0 != isfinite(session->gpsdata.fix.altMSL)) {
             session->newdata.mode = MODE_3D;
-            mask |= MODE_SET;
         } else if (3 < session->gpsdata.satellites_used) {
             /* 4 sats used means 3D */
             session->newdata.mode = MODE_3D;
-            mask |= MODE_SET;
         } else if (MODE_2D > session->gpsdata.fix.mode ||
                    (0 == isfinite(session->oldfix.altHAE) &&
                     0 == isfinite(session->oldfix.altMSL))) {
             session->newdata.mode = MODE_2D;
-            mask |= MODE_SET;
         }
-        session->gpsdata.status = newstatus;
+        session->newdata.status = newstatus;
     } else {
-        session->gpsdata.status = STATUS_NO_FIX;
+        session->newdata.status = STATUS_NO_FIX;
         session->newdata.mode = MODE_NO_FIX;
-        mask |= STATUS_SET | MODE_SET;
     }
+    mask |= STATUS_SET | MODE_SET;
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "GLL: hhmmss=%s lat=%.2f lon=%.2f mode=%d status=%d\n",
@@ -642,7 +646,7 @@ static gps_mask_t processGLL(int count, char *field[],
              session->newdata.latitude,
              session->newdata.longitude,
              session->newdata.mode,
-             session->gpsdata.status);
+             session->newdata.status);
     return mask;
 }
 
@@ -751,8 +755,8 @@ static gps_mask_t processGNS(int count UNUSED, char *field[],
 
     newstatus = faa_mode(field[6][0]);
 
-    session->gpsdata.status = newstatus;
-    mask |= MODE_SET;
+    session->newdata.status = newstatus;
+    mask |= MODE_SET | STATUS_SET;
 
     /* get DGPS stuff */
     if ('\0' != field[11][0] &&
@@ -768,7 +772,7 @@ static gps_mask_t processGNS(int count UNUSED, char *field[],
              session->newdata.latitude,
              session->newdata.longitude,
              session->newdata.mode,
-             session->gpsdata.status);
+             session->newdata.status);
     return mask;
 }
 
@@ -859,7 +863,7 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
         break;
     }
     if (0 <= newstatus) {
-        session->gpsdata.status = newstatus;
+        session->newdata.status = newstatus;
         mask = STATUS_SET;
     }
     /*
@@ -886,8 +890,9 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
     }
 
     if (session->nmea.latch_mode) {
-        session->gpsdata.status = STATUS_NO_FIX;
+        session->newdata.status = STATUS_NO_FIX;
         session->newdata.mode = MODE_NO_FIX;
+        mask |= MODE_SET | STATUS_SET;
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "xxGGA: latch mode\n");
     } else
@@ -982,7 +987,7 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
              session->newdata.longitude,
              session->newdata.altMSL,
              session->newdata.mode,
-             session->gpsdata.status);
+             session->newdata.status);
     return mask;
 }
 
@@ -2842,7 +2847,7 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
         mask |= MODE_SET | STATUS_SET | CLEAR_IS;
         if (0 == strlen(field[2])) {
             /* empty first field means no 3D fix is available */
-            session->gpsdata.status = STATUS_NO_FIX;
+            session->newdata.status = STATUS_NO_FIX;
             session->newdata.mode = MODE_NO_FIX;
         } else {
             int satellites_used;
@@ -2850,9 +2855,9 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
             /* if we make it this far, we at least have a 3D fix */
             session->newdata.mode = MODE_3D;
             if (1 <= atoi(field[2]))
-                session->gpsdata.status = STATUS_DGPS_FIX;
+                session->newdata.status = STATUS_DGPS_FIX;
             else
-                session->gpsdata.status = STATUS_FIX;
+                session->newdata.status = STATUS_FIX;
 
             /* don't use as this breaks the GPGSV counter
              * session->gpsdata.satellites_used = atoi(field[3]);  */
@@ -2886,7 +2891,7 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
                      session->newdata.longitude, session->newdata.altHAE,
                      session->newdata.speed, session->newdata.track,
                      session->newdata.climb, session->newdata.mode,
-                     session->gpsdata.status, session->gpsdata.dop.pdop,
+                     session->newdata.status, session->gpsdata.dop.pdop,
                      session->gpsdata.dop.hdop, session->gpsdata.dop.vdop,
                      session->gpsdata.dop.tdop, satellites_used);
         }
@@ -3070,9 +3075,9 @@ static gps_mask_t processPSTI030(int count, char *field[],
     if ('V' == field[3][0] ||
         'N' == field[13][0]) {
         /* nav warning, or FAA not valid, ignore the rest of the data */
-        session->gpsdata.status = STATUS_NO_FIX;
+        session->newdata.status = STATUS_NO_FIX;
         session->newdata.mode = MODE_NO_FIX;
-        mask |= MODE_SET;
+        mask |= MODE_SET | STATUS_SET;
     } else if ('A' == field[3][0]) {
         double east, north, climb;
 
@@ -3109,10 +3114,10 @@ static gps_mask_t processPSTI030(int count, char *field[],
         session->newdata.NED.velE = east;
         session->newdata.NED.velD = -climb;
 
-        mask |= VNED_SET;
+        mask |= VNED_SET | STATUS_SET;
 
-        session->gpsdata.status = faa_mode(field[13][0]);
-        /* Ignore RTK Age and RTK Ratio, for now */
+        session->newdata.status = faa_mode(field[13][0]);
+        /* FIXME: save RTK Age and RTK Ratio */
     }
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
@@ -3121,7 +3126,7 @@ static gps_mask_t processPSTI030(int count, char *field[],
              field[12], field[2],
              session->newdata.latitude,
              session->newdata.longitude,
-             session->gpsdata.status,
+             session->newdata.status,
              field[14], field[15]);
     return mask;
 }

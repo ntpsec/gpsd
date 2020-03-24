@@ -436,34 +436,34 @@ gps_mask_t PrintSERPacket(struct gps_device_t *session, unsigned char pkt_id,
 	case 1:
 	default:
 	    // no fix
-	    session->gpsdata.status = STATUS_NO_FIX;
+	    session->newdata.status = STATUS_NO_FIX;
 	    session->newdata.mode = MODE_NO_FIX;
 	    break;
 	case 2:
 	    // 2D fix
-	    session->gpsdata.status = STATUS_FIX;
+	    session->newdata.status = STATUS_FIX;
 	    session->newdata.mode = MODE_2D;
 	    break;
 	case 3:
 	    // 3D fix
-	    session->gpsdata.status = STATUS_FIX;
+	    session->newdata.status = STATUS_FIX;
 	    session->newdata.mode = MODE_3D;
 	    break;
 	case 4:
 	    // 2D Differential fix
-	    session->gpsdata.status = STATUS_DGPS_FIX;
+	    session->newdata.status = STATUS_DGPS_FIX;
 	    session->newdata.mode = MODE_2D;
 	    break;
 	case 5:
 	    // 3D differential fix
-	    session->gpsdata.status = STATUS_DGPS_FIX;
+	    session->newdata.status = STATUS_DGPS_FIX;
 	    session->newdata.mode = MODE_3D;
 	    break;
 	}
 
 	GPSD_LOG(LOG_PROG, &session->context->errout,
 		 "Garmin: Appl, mode %d, status %d\n",
-		 session->newdata.mode, session->gpsdata.status);
+		 session->newdata.mode, session->newdata.status);
 
         /* save some expensive calculations if not needed */
         if (session->context->errout.debug >= LOG_INF) {
@@ -522,7 +522,7 @@ gps_mask_t PrintSERPacket(struct gps_device_t *session, unsigned char pkt_id,
 		 session->newdata.sep,
 		 session->newdata.epv,
 		 session->newdata.mode,
-		 session->gpsdata.status);
+		 session->newdata.status);
 	break;
     case GARMIN_PKTID_RMD_DATA:
     case GARMIN_PKTID_RMD41_DATA:

@@ -18,7 +18,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/select.h>	 /* for to have a pselect(2) prototype a la POSIX */
-#include <sys/time.h>
 #include <sys/time.h>	 /* for to have a pselect(2) prototype a la SuS */
 #include <time.h>
 
@@ -340,10 +339,11 @@ void gps_clear_log(struct gps_log_t *logp)
     logp->fixType = -1;
 }
 
+/* merge new data (from) into current fix (to)
+ * Being careful not to lose information */
 void gps_merge_fix(struct gps_fix_t *to,
 		   gps_mask_t transfer,
 		   struct gps_fix_t *from)
-/* merge new data into an old fix */
 {
     if ((NULL == to) || (NULL == from))
 	return;
@@ -353,8 +353,17 @@ void gps_merge_fix(struct gps_fix_t *to,
 	to->latitude = from->latitude;
 	to->longitude = from->longitude;
     }
-    if ((transfer & MODE_SET) != 0)
+    if (0 != (transfer & MODE_SET)) {
+	/* FIXME?  Maybe only upgrade mode, not downgrade it */
 	to->mode = from->mode;
+    }
+    /* Some messages only report mode, some mode and status, some only status.
+     * Only upgrade status, not downgrade it */
+    if (0 != (transfer & STATUS_SET)) {
+	if (to->status < from->status) {
+	    to->status = from->status;
+	}
+    }
     if ((transfer & ALTITUDE_SET) != 0) {
 	if (0 != isfinite(from->altHAE)) {
 	    to->altHAE = from->altHAE;
@@ -790,3 +799,4 @@ void datum_code_string(int code, char *buffer, size_t len)
     }
 }
 /* end */
+// vim: set expandtab shiftwidth=4

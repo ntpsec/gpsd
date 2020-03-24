@@ -1,5 +1,5 @@
 /*
- * UBX driver.  All capabilities are common to Antaris4 and u-blox 6.
+ * UBX driver.  For u-blox binary, also includes Antaris4 binary
  * Reference manuals are at
  * http://www.u-blox.com/en/download/documents-a-resources/u-blox-6-gps-modules-resources.html
  *
@@ -867,7 +867,7 @@ ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
     uint8_t flags;
     uint8_t fixType;
     struct tm unpacked_date;
-    int *status = &session->gpsdata.status;
+    int *status = &session->newdata.status;
     int *mode = &session->newdata.mode;
     gps_mask_t mask = 0;
     char ts_buf[TIMESPEC_LEN];
@@ -1002,7 +1002,7 @@ ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
          session->newdata.speed,
          session->newdata.climb,
          session->newdata.mode,
-         session->gpsdata.status,
+         session->newdata.status,
          session->gpsdata.satellites_used);
     if (92 <= data_len) {
         /* u-blox 8 and 9 extended */
@@ -1143,32 +1143,32 @@ ubx_msg_nav_sol(struct gps_device_t *session, unsigned char *buf,
     case UBX_MODE_TMONLY:
         /* Surveyed-in, better not have moved */
         session->newdata.mode = MODE_3D;
-        session->gpsdata.status = STATUS_TIME;
+        session->newdata.status = STATUS_TIME;
         break;
     case UBX_MODE_3D:
         session->newdata.mode = MODE_3D;
-        session->gpsdata.status = STATUS_FIX;
+        session->newdata.status = STATUS_FIX;
         break;
     case UBX_MODE_2D:
         session->newdata.mode = MODE_2D;
-        session->gpsdata.status = STATUS_FIX;
+        session->newdata.status = STATUS_FIX;
         break;
     case UBX_MODE_DR:           /* consider this too as 2D */
         session->newdata.mode = MODE_2D;
-        session->gpsdata.status = STATUS_DR;
+        session->newdata.status = STATUS_DR;
         break;
     case UBX_MODE_GPSDR:        /* DR-aided GPS is valid 3D */
         session->newdata.mode = MODE_3D;
-        session->gpsdata.status = STATUS_GNSSDR;
+        session->newdata.status = STATUS_GNSSDR;
         break;
     default:
         session->newdata.mode = MODE_NO_FIX;
-        session->gpsdata.status = STATUS_NO_FIX;
+        session->newdata.status = STATUS_NO_FIX;
         break;
     }
 
     if ((flags & UBX_SOL_FLAG_DGPS) != 0)
-        session->gpsdata.status = STATUS_DGPS_FIX;
+        session->newdata.status = STATUS_DGPS_FIX;
 
     mask |= MODE_SET | STATUS_SET;
 
@@ -1183,7 +1183,7 @@ ubx_msg_nav_sol(struct gps_device_t *session, unsigned char *buf,
              session->newdata.speed,
              session->newdata.climb,
              session->newdata.mode,
-             session->gpsdata.status,
+             session->newdata.status,
              session->gpsdata.satellites_used);
     return mask;
 }

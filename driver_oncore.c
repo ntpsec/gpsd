@@ -180,18 +180,18 @@ oncore_msg_navsol(struct gps_device_t *session, unsigned char *buf,
     flags = (unsigned char)getub(buf, 72);
 
     if (flags & 0x20) {
-	session->gpsdata.status = STATUS_FIX;
+	session->newdata.status = STATUS_FIX;
 	session->newdata.mode = MODE_3D;
     } else if (flags & 0x10) {
-	session->gpsdata.status = STATUS_FIX;
+	session->newdata.status = STATUS_FIX;
 	session->newdata.mode = MODE_2D;
     } else {
 	GPSD_LOG(LOG_WARN, &session->context->errout,
 		 "oncore NAVSOL no fix - flags 0x%02x\n", flags);
 	session->newdata.mode = MODE_NO_FIX;
-	session->gpsdata.status = STATUS_NO_FIX;
+	session->newdata.status = STATUS_NO_FIX;
     }
-    mask |= MODE_SET;
+    mask |= MODE_SET | STATUS_SET;
 
     /* Unless we have seen non-zero utc offset data, the time is GPS time
      * and not UTC time.  Do not use it.
@@ -317,7 +317,7 @@ oncore_msg_navsol(struct gps_device_t *session, unsigned char *buf,
              session->newdata.latitude,
 	     session->newdata.longitude, session->newdata.altHAE,
 	     session->newdata.speed, session->newdata.track,
-	     session->newdata.mode, session->gpsdata.status,
+	     session->newdata.mode, session->newdata.status,
 	     session->gpsdata.satellites_used,
 	     session->gpsdata.satellites_visible);
     return mask;
@@ -606,3 +606,5 @@ const struct gps_type_t driver_oncore = {
 };
 /* *INDENT-ON* */
 #endif /* defined(ONCORE_ENABLE) && defined(BINARY_ENABLE) */
+
+// vim: set expandtab shiftwidth=4

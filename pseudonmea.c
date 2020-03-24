@@ -5,10 +5,10 @@
 
 #include "gpsd_config.h"  /* must be before all includes */
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 #include <time.h>
 
 #include "gpsd.h"
@@ -93,6 +93,7 @@ static void dbl_to_str(const char *fmt, double val, char *bufp, size_t len,
     }
 }
 
+// FIXME!  Use STATUS_ defines from gps.h instead.
 #define FIX_QUALITY_INVALID 0
 #define FIX_QUALITY_GPS 1
 #define FIX_QUALITY_DGPS 2
@@ -118,7 +119,7 @@ void gpsd_position_fix_dump(struct gps_device_t *session,
     utc_to_hhmmss(session->gpsdata.fix.time, time_str, sizeof(time_str), &tm);
 
     if (session->gpsdata.fix.mode > MODE_NO_FIX) {
-        switch(session->gpsdata.status) {
+        switch(session->gpsdata.fix.status) {
         case STATUS_NO_FIX:
             fixquality = FIX_QUALITY_INVALID;
             break;
@@ -184,6 +185,7 @@ static void gpsd_transit_fix_dump(struct gps_device_t *session,
     char var_str[BUF_SZ];
     char *var_dir = "";
     struct tm tm;
+    char valid = 'V';
 
     utc_to_hhmmss(session->gpsdata.fix.time, time_str, sizeof(time_str), &tm);
     if ('\0' != time_str[0]) {
@@ -203,10 +205,18 @@ static void gpsd_transit_fix_dump(struct gps_device_t *session,
         var_str[0] = '\0';
         var_dir = "";
     }
+
+    if (MODE_2D > session->gpsdata.fix.mode) {
+	valid = 'V';      // Status: Warning
+    } else {
+	valid = 'A';      // Status: Valid
+    }
+
+    // FIXME! add in "Mode Indicator" after var_dir
     (void)snprintf(bufp, len,
                    "$GPRMC,%s,%c,%s,%c,%s,%c,%s,%s,%s,%s,%s",
                    time_str,
-                   session->gpsdata.status ? 'A' : 'V',
+                   valid,
                    degtodm_str(session->gpsdata.fix.latitude, "%09.4f",
                                lat_str),
                    ((session->gpsdata.fix.latitude > 0) ? 'N' : 'S'),
@@ -309,6 +319,7 @@ static void gpsd_binary_quality_dump(struct gps_device_t *session,
     if (session->device_type != NULL) {
         int i, j;
         int max_channels = session->device_type->channels;
+        int mode = session->gpsdata.fix.mode;
 
         /* GPGSA commonly has exactly 12 channels, enforce that as a MAX */
         if ( 12 < max_channels ) {
@@ -317,8 +328,14 @@ static void gpsd_binary_quality_dump(struct gps_device_t *session,
         }
 
         bufp2 = bufp + strlen(bufp);
-        (void)snprintf(bufp, len,
-                       "$GPGSA,%c,%d,", 'A', session->gpsdata.fix.mode);
+        // fix.mode can be zero, legal values are only 1, 2 or 3
+        if (MODE_NO_FIX > mode) {
+            mode = MODE_NO_FIX;    // 1
+        } else if (MODE_3D < mode) {
+            mode = MODE_3D;        // 3
+        }
+        // We don't know if we are manual (M) or automatic (A), force "A".
+        (void)snprintf(bufp, len, "$GPGSA,%c,%d,", 'A', mode);
         j = 0;
         for (i = 0; i < max_channels; i++) {
             if (session->gpsdata.skyview[i].used == true){
@@ -586,5 +603,6 @@ void nmea_ais_dump(struct gps_device_t *session,
 }
 #endif /* AIVDM_ENABLE */
 
-
 /* pseudonmea.c ends here */
+
+// vim: set expandtab shiftwidth=4

@@ -13,10 +13,10 @@
 
 #include "gpsd_config.h"  /* must be before all includes */
 
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
 #include <math.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "gpsd.h"
@@ -57,7 +57,7 @@ static gps_mask_t decode_itk_navfix(struct gps_device_t *session,
     //cflags = (unsigned short) getleu16(buf, 7 + 6);
     pflags = (unsigned short) getleu16(buf, 7 + 8);
 
-    session->gpsdata.status = STATUS_NO_FIX;
+    session->newdata.status = STATUS_NO_FIX;
     session->newdata.mode = MODE_NO_FIX;
     mask = ONLINE_SET | MODE_SET | STATUS_SET | CLEAR_IS;
 
@@ -109,9 +109,9 @@ static gps_mask_t decode_itk_navfix(struct gps_device_t *session,
             session->newdata.mode = MODE_2D;
 
         if (pflags & FIX_FLAG_DGPS_CORRECTION)
-            session->gpsdata.status = STATUS_DGPS_FIX;
+            session->newdata.status = STATUS_DGPS_FIX;
         else
-            session->gpsdata.status = STATUS_FIX;
+            session->newdata.status = STATUS_FIX;
     }
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
@@ -123,7 +123,7 @@ static gps_mask_t decode_itk_navfix(struct gps_device_t *session,
              session->newdata.ecef.y, session->newdata.ecef.z,
              session->newdata.altHAE, session->newdata.speed,
              session->newdata.track, session->newdata.climb,
-             session->newdata.mode, session->gpsdata.status,
+             session->newdata.mode, session->newdata.status,
              session->gpsdata.dop.gdop, session->gpsdata.dop.pdop,
              session->gpsdata.dop.hdop, session->gpsdata.dop.vdop,
              session->gpsdata.dop.tdop);
@@ -469,3 +469,4 @@ const struct gps_type_t driver_italk =
 };
 /* *INDENT-ON* */
 #endif /* defined(ITRAX_ENABLE) && defined(BINARY_ENABLE) */
+// vim: set expandtab shiftwidth=4

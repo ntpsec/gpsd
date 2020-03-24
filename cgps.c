@@ -796,7 +796,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
         const char *mod = "";
 
         newstate = gpsdata->fix.mode;
-        switch (gpsdata->status) {
+        switch (gpsdata->fix.status) {
         case STATUS_DGPS_FIX:
             mod = "DGPS ";
             break;
@@ -816,7 +816,10 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
             mod = "FIXED ";
             break;
         case STATUS_PPS_FIX:
-            mod = "PPS ";
+            mod = "P(Y) ";
+            break;
+        case STATUS_SIM:
+            mod = "SIM ";
             break;
         default:
             /* ignore: */
@@ -828,7 +831,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
             fmt = "2D %sFIX (%d secs)";
             break;
         case MODE_3D:
-            if (STATUS_TIME == gpsdata->status) {
+            if (STATUS_TIME == gpsdata->fix.status) {
                 fmt = "%sSURVEYED (%d secs)";
             } else {
                 fmt = "3D %sFIX (%d secs)";

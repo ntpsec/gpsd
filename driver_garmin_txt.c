@@ -328,7 +328,7 @@ gps_mask_t garmintxt_parse(struct gps_device_t * session)
     /* assume that position is unknown; if the position is known we
      * will fix status information later */
     session->newdata.mode = MODE_NO_FIX;
-    session->gpsdata.status = STATUS_NO_FIX;
+    session->newdata.status = STATUS_NO_FIX;
     mask |= MODE_SET | STATUS_SET | CLEAR_IS | REPORT_IS;
 
     /* process position */
@@ -378,23 +378,23 @@ gps_mask_t garmintxt_parse(struct gps_device_t * session)
 	case 'G':
 	case 'S':		/* 'S' is DEMO mode, assume 3D position */
 	    session->newdata.mode = MODE_3D;
-	    session->gpsdata.status = STATUS_FIX;
+	    session->newdata.status = STATUS_FIX;
 	    break;
 	case 'D':
 	    session->newdata.mode = MODE_3D;
-	    session->gpsdata.status = STATUS_DGPS_FIX;
+	    session->newdata.status = STATUS_DGPS_FIX;
 	    break;
 	case 'g':
 	    session->newdata.mode = MODE_2D;
-	    session->gpsdata.status = STATUS_FIX;
+	    session->newdata.status = STATUS_FIX;
 	    break;
 	case 'd':
 	    session->newdata.mode = MODE_2D;
-	    session->gpsdata.status = STATUS_DGPS_FIX;
+	    session->newdata.status = STATUS_DGPS_FIX;
 	    break;
 	default:
 	    session->newdata.mode = MODE_NO_FIX;
-	    session->gpsdata.status = STATUS_NO_FIX;
+	    session->newdata.status = STATUS_NO_FIX;
 	}
 	mask |= MODE_SET | STATUS_SET | LATLON_SET;
     } while (0);
@@ -457,7 +457,7 @@ gps_mask_t garmintxt_parse(struct gps_device_t * session)
 	     session->newdata.longitude, session->newdata.altMSL,
 	     session->newdata.climb, session->newdata.eph,
 	     session->newdata.mode,
-	     session->gpsdata.status);
+	     session->newdata.status);
     return mask;
 }
 

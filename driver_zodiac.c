@@ -148,8 +148,8 @@ static gps_mask_t handle1000(struct gps_device_t *session)
     /* ticks                      = getzlong(6); */
     /* sequence                   = getzword(8); */
     /* measurement_sequence       = getzword(9); */
-    session->gpsdata.status = (getzword(10) & 0x1c) ? 0 : 1;
-    if (session->gpsdata.status != 0)
+    session->newdata.status = (getzword(10) & 0x1c) ? 0 : 1;
+    if (session->newdata.status != 0)
 	session->newdata.mode = (getzword(10) & 1) ? MODE_2D : MODE_3D;
     else
 	session->newdata.mode = MODE_NO_FIX;
@@ -210,7 +210,7 @@ static gps_mask_t handle1000(struct gps_device_t *session)
 	     session->newdata.longitude, session->newdata.altHAE,
 	     session->newdata.track, session->newdata.speed,
 	     session->newdata.climb, session->newdata.mode,
-	     session->gpsdata.status);
+	     session->newdata.status);
     return mask;
 }
 
@@ -317,11 +317,11 @@ static void handle1005(struct gps_device_t *session UNUSED)
     int numcorrections = (int)getzword(12);
 
     if (session->newdata.mode == MODE_NO_FIX)
-	session->gpsdata.status = STATUS_NO_FIX;
+	session->newdata.status = STATUS_NO_FIX;
     else if (numcorrections == 0)
-	session->gpsdata.status = STATUS_FIX;
+	session->newdata.status = STATUS_FIX;
     else
-	session->gpsdata.status = STATUS_DGPS_FIX;
+	session->newdata.status = STATUS_DGPS_FIX;
 }
 
 static gps_mask_t handle1011(struct gps_device_t *session)
@@ -496,3 +496,5 @@ const struct gps_type_t driver_zodiac =
 /* *INDENT-ON* */
 
 #endif /* ZODIAC_ENABLE */
+
+// vim: set expandtab shiftwidth=4

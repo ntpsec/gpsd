@@ -468,21 +468,21 @@ static gps_mask_t hnd_129029(unsigned char *bu, int len, PGN *pgn, struct gps_de
 //  printf("mode %x %x\n", (bu[31] >> 4) & 0x0f, bu[31]);
     switch ((bu[31] >> 4) & 0x0f) {
     case 0:
-        session->gpsdata.status      = STATUS_NO_FIX;
+        session->newdata.status      = STATUS_NO_FIX;
 	break;
     case 1:
-        session->gpsdata.status      = STATUS_FIX;
+        session->newdata.status      = STATUS_FIX;
 	break;
     case 2:
-        session->gpsdata.status      = STATUS_DGPS_FIX;
+        session->newdata.status      = STATUS_DGPS_FIX;
 	break;
     case 3:
     case 4:
     case 5:
-        session->gpsdata.status      = STATUS_FIX; /* Is this correct ? */
+        session->newdata.status      = STATUS_FIX; /* Is this correct ? */
 	break;
     default:
-        session->gpsdata.status      = STATUS_NO_FIX;
+        session->newdata.status      = STATUS_NO_FIX;
 	break;
     }
     mask                            |= STATUS_SET;
@@ -1778,3 +1778,5 @@ const struct gps_type_t driver_nmea2000 = {
  * object file */
 int nmea2000_dummy = 1;
 #endif /* of  defined(NMEA2000_ENABLE) */
+
+// vim: set expandtab shiftwidth=4

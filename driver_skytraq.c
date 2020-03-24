@@ -424,22 +424,22 @@ static gps_mask_t sky_msg_DF(struct gps_device_t *session,
 
     /* fix status is byte 2 */
     navstat = (unsigned short)getub(buf, 2);
-    session->gpsdata.status = STATUS_NO_FIX;
+    session->newdata.status = STATUS_NO_FIX;
     session->newdata.mode = MODE_NO_FIX;
     switch ( navstat ) {
     case 1:
 	/* fix prediction, ignore */
 	break;
     case 2:
-	session->gpsdata.status = STATUS_FIX;
+	session->newdata.status = STATUS_FIX;
 	session->newdata.mode = MODE_2D;
 	break;
     case 3:
-	session->gpsdata.status = STATUS_FIX;
+	session->newdata.status = STATUS_FIX;
 	session->newdata.mode = MODE_3D;
 	break;
     case 4:
-	session->gpsdata.status = STATUS_DGPS_FIX;
+	session->newdata.status = STATUS_DGPS_FIX;
 	session->newdata.mode = MODE_3D;
 	break;
     default:
@@ -702,3 +702,4 @@ const struct gps_type_t driver_skytraq =
 /* *INDENT-ON* */
 #endif /* defined( SKYTRAQ_ENABLE) && defined(BINARY_ENABLE) */
 
+// vim: set expandtab shiftwidth=4
