@@ -13,6 +13,7 @@
   Add icondir and sharedir install options
   Install basic doc in sharedir
   Move gps_data_t->status to gps_fix_t.status for better fix merging
+  The gps python module is now pure python. Delete any old packet*so.
 
 3.20: 2019-12-31
   Change README into an asciidoc file and publish HTML from it
