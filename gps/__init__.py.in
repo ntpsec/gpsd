@@ -1,8 +1,8 @@
 # Make core client functions available without prefix.
 # @GENERATED@
 #
-# This file is Copyright (c) 2010-2020 by the GPSD project
-# BSD terms apply: see the file COPYING in the distribution root for details.
+# This file is Copyright 2010 by the GPSD project
+# SPDX-License-Identifier: BSD-2-Clause
 #
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
@@ -22,3 +22,5 @@ __version__ = '@VERSION@'
 
 # The 'client' module exposes some C utility functions for Python clients.
 # The 'packet' module exposes the packet getter via a Python interface.
+
+# vim: set expandtab shiftwidth=4

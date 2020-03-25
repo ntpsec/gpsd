@@ -7,6 +7,7 @@
 #
 # See gpsclient.c for code comments.
 #
+# This file is Copyright 2019 by the GPSD project
 # SPDX-License-Identifier: BSD-2-Clause
 """GPSd client helpers submodule."""
 import math
@@ -915,3 +916,5 @@ def wgs84_separation(lat, lon):
     """Return MSL-WGS84 geodetic separation in meters.
 Given a lat/lon in degrees"""
     return __bilinear(lat, lon, GEOID_DELTA)
+
+# vim: set expandtab shiftwidth=4

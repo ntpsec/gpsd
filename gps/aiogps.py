@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2019 Grand Joldes (grandwork2@yahoo.com).
+# Copyright 2019 Grand Joldes (grandwork2@yahoo.com).
 #
-# This file is Copyright (c) 2019 by the GPSD project
-#
+# This file is Copyright 2019 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 
 # This code run compatibly under Python 3.x for x >= 6.
@@ -306,3 +305,5 @@ class aiogps(gps):  # pylint: disable=R0902
         Returns an awaitable which returns the next message from GPSD.
         """
         return self.read()
+
+# vim: set expandtab shiftwidth=4

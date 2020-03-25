@@ -1,5 +1,8 @@
-# This file is Copyright (c) 2010 by the GPSD project
-# BSD terms apply: see the file COPYING in the distribution root for details.
+# This code run compatibly under Python 2 and 3.x for x >= 2.
+# Preserve this property!
+#
+# This file is Copyright 2010 by the GPSD project
+# SPDX-License-Identifier: BSD-2-Clause
 """
 gpsfake.py -- classes for creating a controlled test environment around gpsd.
 
@@ -835,3 +838,4 @@ class TestSession(object):
         threading.Thread(target=self.run)
 
 # End
+# vim: set expandtab shiftwidth=4

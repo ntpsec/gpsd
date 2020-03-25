@@ -1,6 +1,6 @@
 "gpsd client functions"
-# This file is Copyright (c) 2010 by the GPSD project
-# BSD terms apply: see the file COPYING in the distribution root for details.
+# This file is Copyright 2019 by the GPSD project
+# SPDX-License-Identifier: BSD-2-Clause
 #
 # This code run compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
@@ -338,3 +338,4 @@ class dictwrapper(object):
 #
 
 # End
+# vim: set expandtab shiftwidth=4

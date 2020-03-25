@@ -8,8 +8,11 @@
 #
 # theoretically comprised of reusable bits, in practice probably not so much.
 #
+# This code run compatibly under Python 2 and 3.x for x >= 2.
+# Preserve this property!
+#
+# This file is Copyright 2019 by the GPSD project
 # SPDX-License-Identifier: BSD-2-Clause
-# This file is Copyright (c) 2019- by the GPSD project
 """Python binding of the libgpsd module for recognizing GPS packets.
 
 The new() function returns a new packet-lexer instance.  Lexer instances
@@ -24,13 +27,13 @@ level of the message and the message itself.
 """
 from __future__ import absolute_import, print_function
 import ctypes
+import gps.misc
 import os
 
 
 # Packet types and  Logging levels extracted from gpsd.h
 @PYPACKETH@
 
-import gps.misc
 
 
 class GpsdErrOutT(ctypes.Structure):
@@ -126,3 +129,5 @@ Fetch a single packet from file descriptor
         _packet.ffi_Lexer_init.restype = None
         _packet.ffi_Lexer_init.argtypes = [ctypes.POINTER(lexer_t)]
         _packet.ffi_Lexer_init(self.pointer)
+
+# vim: set expandtab shiftwidth=4
