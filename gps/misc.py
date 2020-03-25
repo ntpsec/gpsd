@@ -13,6 +13,7 @@ import io
 import math
 import time
 
+
 def monotonic():
     """return monotonic seconds, of unknown epoch.
     Python 2 to 3.7 has time.clock(), deprecates in 3.3+, removed in 3.8
