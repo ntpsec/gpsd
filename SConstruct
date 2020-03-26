@@ -1640,6 +1640,16 @@ libgps_shared = Library(env=env,
                         sources=libgps_sources,
                         version=libgps_version,
                         parse_flags=rtlibs + libgps_flags)
+
+if sys.platform.startswith('darwin'):
+    libgpsdpacket_blob = ('%sgpsdpacket.%s%s' %
+                          (env['LIBPREFIX'], libgps_version_current,
+                           env['SHLIBSUFFIX']))
+else:
+    libgpsdpacket_blob = ('%sgpsdpacket%s.%s' %
+                          (env['LIBPREFIX'], env['SHLIBSUFFIX'],
+                           libgps_version_current))
+
 env.Clean(libgps_shared, "gps_maskdump.c")
 
 libgps_static = env.StaticLibrary("gps_static",
@@ -1656,7 +1666,7 @@ static_gpsdlib = env.StaticLibrary(
 packet_ffi_shared = Library(env=env,
                         target="gpsdpacket",
                         sources=packet_ffi_extension,
-                        version=gpsd_version,
+                        version=libgps_version,
                         parse_flags=rtlibs + libgps_flags)
 
 env.Clean(libgps_shared, "gps_maskdump.c")
@@ -1845,8 +1855,6 @@ if env['socket_export']:
     testprogs.append(test_json)
 if env["libgpsmm"]:
     testprogs.append(test_gpsmm)
-
-libgpsdpacket_blob = '%sgpsdpacket%s.%s' % (env['LIBPREFIX'], env['SHLIBSUFFIX'], gpsd_version)
 
 # Python programs
 if not env['python'] or cleaning or helping:
