@@ -581,7 +581,6 @@ static ssize_t throttled_write(struct subscriber_t *sub, char *buf,
             GPSD_LOG(LOG_CLIENT, &context.errout,
                      "=> client(%d): %s\n", sub_index(sub), buf);
         else {
-#ifndef __clang_analyzer__
             char *cp, buf2[MAX_PACKET_LENGTH * 3];
             buf2[0] = '\0';
             for (cp = buf; cp < buf + len; cp++)
@@ -589,7 +588,6 @@ static ssize_t throttled_write(struct subscriber_t *sub, char *buf,
                                "%02x", (unsigned int)(*cp & 0xff));
             GPSD_LOG(LOG_CLIENT, &context.errout,
                      "=> client(%d): =%s\n", sub_index(sub), buf2);
-#endif /* __clang_analyzer__ */
         }
     }
 
@@ -643,8 +641,8 @@ static void notify_watchers(struct gps_device_t *device,
 }
 #endif /* SOCKET_EXPORT_ENABLE */
 
-static void deactivate_device(struct gps_device_t *device)
 /* deactivate device, but leave it in the pool (do not free it) */
+static void deactivate_device(struct gps_device_t *device)
 {
 #ifdef SOCKET_EXPORT_ENABLE
     notify_watchers(device, true, false,
@@ -932,8 +930,8 @@ static void handle_control(int sfd, char *buf)
 #endif /* CONTROL_SOCKET_ENABLE */
 
 #ifdef SOCKET_EXPORT_ENABLE
-static bool awaken(struct gps_device_t *device)
 /* awaken a device and notify all watchers*/
+static bool awaken(struct gps_device_t *device)
 {
     /* open that device */
     if (!initialized_device(device)) {
@@ -976,8 +974,8 @@ static bool awaken(struct gps_device_t *device)
 
 #ifdef RECONFIGURE_ENABLE
 #if __UNUSED_RECONFIGURE__
-static bool privileged_user(struct gps_device_t *device)
 /* is this channel privileged to change a device's behavior? */
+static bool privileged_user(struct gps_device_t *device)
 {
     /* grant user privilege if he's the only one listening to the device */
     struct subscriber_t *sub;
@@ -996,9 +994,9 @@ static bool privileged_user(struct gps_device_t *device)
 }
 #endif /* __UNUSED_RECONFIGURE__ */
 
+/* set serial parameters for a device from a speed and modestring */
 static void set_serial(struct gps_device_t *device,
                        speed_t speed, char *modestring)
-/* set serial parameters for a device from a speed and modestring */
 {
     unsigned int stopbits = device->gpsdata.dev.stopbits;
     char parity = device->gpsdata.dev.parity;
@@ -1476,8 +1474,8 @@ static void pseudonmea_report(struct subscriber_t *sub,
 }
 #endif /* SOCKET_EXPORT_ENABLE */
 
-static void all_reports(struct gps_device_t *device, gps_mask_t changed)
 /* report on the current packet from a specified device */
+static void all_reports(struct gps_device_t *device, gps_mask_t changed)
 {
 #ifdef SOCKET_EXPORT_ENABLE
     struct subscriber_t *sub;
@@ -1726,9 +1724,9 @@ static int handle_gpsd_request(struct subscriber_t *sub, const char *buf)
 #endif /* SOCKET_EXPORT_ENABLE */
 
 #if defined(CONTROL_SOCKET_ENABLE) && defined(SOCKET_EXPORT_ENABLE)
-static void ship_pps_message(struct gps_device_t *session,
-                                   struct timedelta_t *td)
 /* on PPS interrupt, ship a message to all clients */
+static void ship_pps_message(struct gps_device_t *session,
+                             struct timedelta_t *td)
 {
     int precision = -20;
     char buf[GPS_JSON_RESPONSE_MAX];
@@ -1854,8 +1852,8 @@ static void netgnss_autoconnect(struct gps_context_t *context,
 }
 #endif /* __UNUSED_AUTOCONNECT__ */
 
-static void gpsd_terminate(struct gps_context_t *context)
 /* finish cleanly, reverting device configuration */
+static void gpsd_terminate(struct gps_context_t *context)
 {
     int dfd;
 
