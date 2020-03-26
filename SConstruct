@@ -417,11 +417,11 @@ nonboolopts = (
     ("qt_versioned",     "",            "version for versioned Qt"),
     ("sysroot",          "",
      "Logical root directory for headers and libraries.\n"
-     "Useful for cross-compiling, or building with multiple local toolchains.\n"
+     "For cross-compiling, or building with multiple local toolchains.\n"
      "See gcc and ld man pages for more details."),
     ("target",           "",
      "Prefix to the binary tools to use (gcc, ld, etc.)\n"
-     "Useful for cross-compiling, or building with multiple local toolchains.\n"
+     "For cross-compiling, or building with multiple local toolchains.\n"
      ),
     ("target_python",    "python",      "target Python version as command"),
 )
@@ -1664,10 +1664,10 @@ static_gpsdlib = env.StaticLibrary(
 
 
 packet_ffi_shared = Library(env=env,
-                        target="gpsdpacket",
-                        sources=packet_ffi_extension,
-                        version=libgps_version,
-                        parse_flags=rtlibs + libgps_flags)
+                            target="gpsdpacket",
+                            sources=packet_ffi_extension,
+                            version=libgps_version,
+                            parse_flags=rtlibs + libgps_flags)
 
 env.Clean(libgps_shared, "gps_maskdump.c")
 libraries = [libgps_shared, packet_ffi_shared]
@@ -1995,7 +1995,8 @@ with open('gpsd.h') as sfp:
         _match3 = pythonize_header_match.match(content)
         if _match3:
             if 'LOG' in content or 'PACKET' in content:
-                pythonized_header +=  '%s = %s\n' % (_match3.group(1), _match3.group(2))
+                pythonized_header += ('%s = %s\n' %
+                                      (_match3.group(1), _match3.group(2)))
 
 # tuples for Substfile.  To convert .in files to generated files.
 substmap = (
@@ -2039,9 +2040,6 @@ substmap = (
     ('@VERSION@',    gpsd_version),
     ('@WEBSITE@',    website),
 )
-
-
-
 
 templated = glob.glob("*.in") + glob.glob("*/*.in") + glob.glob("*/*/*.in")
 
@@ -2116,7 +2114,8 @@ binaryinstall.append(env.Install(installdir('sbindir'), sbin_binaries))
 binaryinstall.append(env.Install(installdir('bindir'), bin_binaries))
 binaryinstall.append(LibraryInstall(env, installdir('libdir'), libgps_shared,
                                     libgps_version))
-binaryinstall.append(LibraryInstall(env, installdir('libdir'), packet_ffi_shared,
+binaryinstall.append(LibraryInstall(env, installdir('libdir'),
+                                    packet_ffi_shared,
                                     libgps_version))
 # Work around a minor bug in InstallSharedLib() link handling
 env.AddPreAction(binaryinstall, 'rm -f %s/libgps.*' % (installdir('libdir'), ))
