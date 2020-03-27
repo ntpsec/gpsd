@@ -1654,15 +1654,6 @@ libgps_shared = Library(env=env,
                         version=libgps_version,
                         parse_flags=rtlibs + libgps_flags)
 
-if sys.platform.startswith('darwin'):
-    libgpsdpacket_blob = ('%sgpsdpacket.%s%s' %
-                          (env['LIBPREFIX'], libgps_version_current,
-                           env['SHLIBSUFFIX']))
-else:
-    libgpsdpacket_blob = ('%sgpsdpacket%s.%s' %
-                          (env['LIBPREFIX'], env['SHLIBSUFFIX'],
-                           libgps_version_current))
-
 env.Clean(libgps_shared, "gps_maskdump.c")
 
 libgps_static = env.StaticLibrary("gps_static",
@@ -2025,7 +2016,7 @@ substmap = (
     ('@GITREPO@',    gitrepo),
     ('@GPSAPIVERMAJ@', api_version_major),
     ('@GPSAPIVERMIN@', api_version_minor),
-    ('@GPSPACKET@',  libgpsdpacket_blob),
+    ('@GPSPACKET@',  packet_ffi_shared[0].get_path()),
     ('@ICONPATH@',   installdir('icondir')),
     ('@INCLUDEDIR@', installdir('includedir', add_destdir=False)),
     ('@IRCCHAN@',    ircchan),
