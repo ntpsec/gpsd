@@ -284,6 +284,11 @@ void gps_clear_fix(struct gps_fix_t *fixp)
     fixp->geoid_sep = NAN;
     fixp->dgps_age = NAN;
     fixp->dgps_station = -1;
+    fixp->wanglem = NAN;
+    fixp->wangler = NAN;
+    fixp->wanglet = NAN;
+    fixp->wspeedr = NAN;
+    fixp->wspeedt = NAN;
 }
 
 /* stuff an attitude structure with recognizable out-of-band values */

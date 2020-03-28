@@ -1,6 +1,6 @@
 /* gps.h -- interface of the libgps library */
 /*
- * This file is Copyright (c) 2010 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 #ifndef _GPSD_GPS_H_
@@ -79,6 +79,7 @@ extern "C" {
  *       Add/change many rtcm2 structs
  *       Add/change many rtcm3 structs
  * 10    Move gps_data_t->status to gps_fix_t.status for better fix merging
+ *       Add wspeedt, wspeedr, wanglem, wanglet, wangler to  gps_fix_t
  */
 #define GPSD_API_MAJOR_VERSION  10      /* bump on incompatible changes */
 #define GPSD_API_MINOR_VERSION  0       /* bump on compatible changes */
@@ -211,7 +212,12 @@ struct gps_fix_t {
      * NMEA 2 says 0000-1023
      * RTCM 3, station ID is 0 to 4095.
      * u-blox UBX-NAV-DGPS is 16 bit integer */
-    int dgps_station;           /* DGPS station ID, -1 invalid */
+    int dgps_station;           // DGPS station ID, -1 invalid
+    double wanglem;             // Wind angle, magnetic, m/s
+    double wangler;             // Wind angle, relative, m/s
+    double wanglet;             // Wind angle, true, m/s
+    double wspeedr;             // Wind speed, relative, m/s
+    double wspeedt;             // Wind speed, true, m/s
 };
 
 /* Some GNSS receivers, like u-blox 8, can log fixes for later use.
