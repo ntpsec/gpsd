@@ -2957,18 +2957,25 @@ static gps_mask_t processMWD(int c UNUSED, char *field[],
      * Fields in order:
      * 1. wind direction, 0 to 359, True
      * 2. T
-     * 1. wind direction, 0 to 359, Magnetic
-     * 2. M
-     * 1. wind speed, knots
-     * 2. N
-     * 1. wind speed, meters/sec
-     * 2. M
+     * 3. wind direction, 0 to 359, Magnetic
+     * 4. M
+     * 5. wind speed, knots
+     * 6. N
+     * 7. wind speed, meters/sec
+     * 8. M
      * *hh          mandatory nmea_checksum
      */
     gps_mask_t mask = ONLINE_SET;
 
+    session->newdata.wanglet = safe_atof(field[1]);
+    session->newdata.wanglem = safe_atof(field[3]);
+    session->newdata.wspeedt = safe_atof(field[7]);
+
     GPSD_LOG(LOG_DATA, &session->context->errout,
-        "xxMWD\n");
+        "xxMWD wanglet %.2f wanglem %.2f wspeedt %.2f\n",
+        session->newdata.wanglet,
+        session->newdata.wanglem,
+        session->newdata.wspeedt);
     return mask;
 }
 
@@ -2989,8 +2996,18 @@ static gps_mask_t processMWV(int c UNUSED, char *field[],
      */
     gps_mask_t mask = ONLINE_SET;
 
+    if (('R' == field[2][0]) &&
+        ('N' == field[4][0]) &&
+        ('A' == field[5][0])) {
+        // relative, knots, and valid
+        session->newdata.wangler = safe_atof(field[1]);
+        session->newdata.wspeedr = safe_atof(field[3]) * KNOTS_TO_KPH / 1000;
+    }
+
     GPSD_LOG(LOG_DATA, &session->context->errout,
-        "xxMWV\n");
+        "xxMWV wangler %.2f wspeedr %.2f\n",
+        session->newdata.wangler,
+        session->newdata.wspeedr);
     return mask;
 }
 
