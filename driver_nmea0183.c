@@ -2948,6 +2948,52 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
 }
 #endif /* ASHTECH_ENABLE */
 
+static gps_mask_t processMWD(int c UNUSED, char *field[],
+                              struct gps_device_t *session)
+{
+    /*
+     * xxMWD - Wind direction and speed
+     * $xxMWD,x.x,T,x.x,M,x.x,N,x.x,M*hh<cr><lf>
+     * Fields in order:
+     * 1. wind direction, 0 to 359, True
+     * 2. T
+     * 1. wind direction, 0 to 359, Magnetic
+     * 2. M
+     * 1. wind speed, knots
+     * 2. N
+     * 1. wind speed, meters/sec
+     * 2. M
+     * *hh          mandatory nmea_checksum
+     */
+    gps_mask_t mask = ONLINE_SET;
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+        "xxMWD\n");
+    return mask;
+}
+
+static gps_mask_t processMWV(int c UNUSED, char *field[],
+                              struct gps_device_t *session)
+{
+    /*
+     * xxMWV - Wind speed and angle
+     * $xxMWV,x.x,a,x.x,a,A*hh<cr><lf>
+     * Fields in order:
+     * 1. wind angle, 0 to 359, True
+     * 2. R = Relative (apparent), T = Theoretical (calculated)
+     *    Is T magnetic or true??
+     * 3. wind speed
+     * 4. wind speed units K/M/N/S
+     * 6. A = Valid, V = invalid
+     * *hh          mandatory nmea_checksum
+     */
+    gps_mask_t mask = ONLINE_SET;
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+        "xxMWV\n");
+    return mask;
+}
+
 #ifdef MTK3301_ENABLE
 static gps_mask_t processMTK3301(int c UNUSED, char *field[],
                                struct gps_device_t *session)
@@ -3306,8 +3352,8 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"MLA", 0,  false, NULL},       // ignore GLONASS Almana Data
         {"MSS", 0,  false, NULL},       /* ignore beacon receiver status */
         {"MTW", 0,  false, NULL},       /* ignore Water Temperature */
-        {"MWD", 0,  false, NULL},       // ignore Wind Direction and Speed
-        {"MWV", 0,  false, NULL},       // ignore Wind Speed and Angle
+        {"MWD", 0,  false, processMWD},      // Wind Direction and Speed
+        {"MWV", 0,  false, processMWV},      // Wind Speed and Angle
 #ifdef OCEANSERVER_ENABLE
         {"OHPR", 18, false, processOHPR},
 #endif /* OCEANSERVER_ENABLE */
