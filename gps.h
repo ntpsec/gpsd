@@ -80,6 +80,7 @@ extern "C" {
  *       Add/change many rtcm3 structs
  * 10    Move gps_data_t->status to gps_fix_t.status for better fix merging
  *       Add wspeedt, wspeedr, wanglem, wanglet, wangler to  gps_fix_t
+ *       Remove unused gps_data_t.navadata_t.
  */
 #define GPSD_API_MAJOR_VERSION  10      /* bump on incompatible changes */
 #define GPSD_API_MINOR_VERSION  0       /* bump on compatible changes */
@@ -2153,25 +2154,6 @@ struct attitude_t {
     char yaw_st;
 };
 
-struct navdata_t {
-    unsigned int version;
-    double compass_heading;
-    double compass_deviation;
-    double compass_variation;
-    double air_temp;
-    double air_pressure;
-    double water_temp;
-    double depth;
-    double depth_offset;
-    double wind_speed;
-    double wind_dir;
-    double crosstrack_error;
-    unsigned int compass_status;
-    unsigned int log_cumulative;
-    unsigned int log_trip;
-    unsigned int crosstrack_status;
-};
-
 struct dop_t {
     /* Dilution of precision factors */
     double xdop, ydop, pdop, hdop, vdop, tdop, gdop;
@@ -2421,7 +2403,6 @@ struct gps_data_t {
         struct subframe_t subframe;
         struct ais_t ais;
         struct attitude_t attitude;
-        struct navdata_t navdata;
         struct rawdata_t raw;
         struct gst_t gst;
         struct oscillator_t osc;
