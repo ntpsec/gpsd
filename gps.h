@@ -2470,20 +2470,30 @@ extern double mag_var(double, double);
 extern void datum_code_string(int code, char *buffer, size_t len);
 
 /* some multipliers for interpreting GPS output */
-#define METERS_TO_FEET  (1 / 0.3048)    /* Meters to International Foot */
-/* Note: not the same as the USA Survey Foot: (3937 / 1200)
+
+/* International Foot to Meters, exact
+ * Note: not the same as the USA Survey Foot to meters:
+ *   approximately: 0.304800609601.  exactly: (1200 / 3937)
  * Some states use the International Foot, not the USA Survey Foot */
-#define METERS_TO_MILES 0.00062137119   /* Meters to miles */
-#define METERS_TO_FATHOMS       0.54680665      /* Meters to fathoms */
-#define KNOTS_TO_MPH    1.1507794       /* Knots to miles per hour */
-#define KNOTS_TO_KPH    1.852           // Knots to kilometers per hour, exact
+#define FEET_TO_METERS  0.3048                  // intl feet to meters, exact
+#define METERS_TO_FEET  (1 / FEET_TO_METERS)    // meters to intl feet, exact
+
+#define MILES_TO_METERS 1.609344                // Miles to meters, exact
+#define METERS_TO_MILES (1 / MILES_TO_METERS)   // Meters to miles, exact
+#define METERS_TO_FATHOMS (1 / 1.8288)          // Meters to fathoms, exact
+
+// gpsd uses the international nautical mile, same as USA nautical mile
+// different from UK nautical mile
+#define KNOTS_TO_MPH    1.1507794      /* Knots to miles per hour */
+#define KNOTS_TO_KPH    1.852          // Knots to kilometers per hour, exact
 #define KNOTS_TO_MPS (KNOTS_TO_KPH / 3.6)  // Knots to meters per second, exact
-#define MPS_TO_KPH      3.6             /* Meters per second to klicks/hr */
-#define MPS_TO_MPH      2.2369363       /* Meters/second to miles per hour */
-#define MPS_TO_KNOTS    1.9438445       /* Meters per second to knots */
+#define MPS_TO_KPH      3.6            // Meters per second to klicks/hr, exact
+#define MPS_TO_MPH      2.2369363      /* Meters/second to miles per hour */
+#define MPS_TO_KNOTS    1.9438445      /* Meters per second to knots */
 /* miles and knots are both the international standard versions of the units */
 
-/* angle conversion multipliers */
+// angle conversion multipliers
+// IS-GPS-200K uses pi = 3.1415926535898
 #define GPS_PI          3.1415926535897932384626433832795029
 #define RAD_2_DEG       57.2957795130823208767981548141051703
 #define DEG_2_RAD       0.0174532925199432957692369076848861271
