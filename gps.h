@@ -2476,8 +2476,8 @@ extern void datum_code_string(int code, char *buffer, size_t len);
 #define METERS_TO_MILES 0.00062137119   /* Meters to miles */
 #define METERS_TO_FATHOMS       0.54680665      /* Meters to fathoms */
 #define KNOTS_TO_MPH    1.1507794       /* Knots to miles per hour */
-#define KNOTS_TO_KPH    1.852           /* Knots to kilometers per hour */
-#define KNOTS_TO_MPS    0.51444444      /* Knots to meters per second */
+#define KNOTS_TO_KPH    1.852           // Knots to kilometers per hour, exact
+#define KNOTS_TO_MPS (KNOTS_TO_KPH / 3.6)  // Knots to meters per second, exact
 #define MPS_TO_KPH      3.6             /* Meters per second to klicks/hr */
 #define MPS_TO_MPH      2.2369363       /* Meters/second to miles per hour */
 #define MPS_TO_KNOTS    1.9438445       /* Meters per second to knots */
