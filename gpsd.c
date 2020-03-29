@@ -1332,7 +1332,7 @@ static void handle_request(struct subscriber_t *sub,
         for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
             if (allocated_device(devp) && subscribed(sub, devp)) {
                 if ((devp->observed & GPS_TYPEMASK) != 0) {
-                    json_tpv_dump(devp, &sub->policy,
+                    json_tpv_dump(NAVDATA_SET, devp, &sub->policy,
                                   reply + strlen(reply),
                                   replylen - strlen(reply));
                     rstrip(reply);

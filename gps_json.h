@@ -22,7 +22,7 @@ void json_data_report(const gps_mask_t,
 		      const struct gps_policy_t *,
 		      char *, size_t);
 char *json_stringify(char *, size_t, const char *);
-void json_tpv_dump(const struct gps_device_t *,
+void json_tpv_dump(const gps_mask_t, const struct gps_device_t *,
 		   const struct gps_policy_t *, char *, size_t);
 void json_noise_dump(const struct gps_data_t *, char *, size_t);
 void json_raw_dump(const struct gps_data_t *, char *, size_t);

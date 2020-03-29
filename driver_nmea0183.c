@@ -2970,6 +2970,7 @@ static gps_mask_t processMWD(int c UNUSED, char *field[],
     session->newdata.wanglet = safe_atof(field[1]);
     session->newdata.wanglem = safe_atof(field[3]);
     session->newdata.wspeedt = safe_atof(field[7]);
+    mask |= NAVDATA_SET;
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
         "xxMWD wanglet %.2f wanglem %.2f wspeedt %.2f\n",
@@ -3001,7 +3002,8 @@ static gps_mask_t processMWV(int c UNUSED, char *field[],
         ('A' == field[5][0])) {
         // relative, knots, and valid
         session->newdata.wangler = safe_atof(field[1]);
-        session->newdata.wspeedr = safe_atof(field[3]) * KNOTS_TO_KPH / 1000;
+        session->newdata.wspeedr = safe_atof(field[3]) * KNOTS_TO_MPS;
+        mask |= NAVDATA_SET;
     }
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
