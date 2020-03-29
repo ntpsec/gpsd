@@ -1666,12 +1666,12 @@ static_gpsdlib = env.StaticLibrary(
             for s in libgpsd_sources],
     parse_flags=usbflags + bluezflags)
 
-
-packet_ffi_shared = Library(env=env,
-                            target="gpsdpacket",
-                            sources=packet_ffi_extension,
-                            version=libgps_version,
-                            parse_flags=rtlibs + libgps_flags)
+# FFI library must always be shared, even with shared=no.
+packet_ffi_objects = [env.SharedObject(s) for s in packet_ffi_extension]
+packet_ffi_shared = env.SharedLibrary(target="gpsdpacket",
+                                      source=packet_ffi_objects,
+                                      SHLIBVERSION=libgps_version,
+                                      parse_flags=rtlibs + libgps_flags)
 
 env.Clean(libgps_shared, "gps_maskdump.c")
 libraries = [libgps_shared, packet_ffi_shared]
