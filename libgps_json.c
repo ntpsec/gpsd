@@ -126,6 +126,16 @@ static int json_tpv_read(const char *buf, struct gps_data_t *gpsdata,
                                  .dflt.real = NAN},
         {"dgpsSta", t_integer, .addr.integer = &gpsdata->fix.dgps_station,
                                  .dflt.integer = -1},
+        {"wanglem", t_real, .addr.real = &gpsdata->fix.wanglem,
+                                 .dflt.real = NAN},
+        {"wangler", t_real, .addr.real = &gpsdata->fix.wangler,
+                                 .dflt.real = NAN},
+        {"wanglet", t_real, .addr.real = &gpsdata->fix.wanglet,
+                                 .dflt.real = NAN},
+        {"wspeedr", t_real, .addr.real = &gpsdata->fix.wspeedr,
+                                 .dflt.real = NAN},
+        {"wspeedt", t_real, .addr.real = &gpsdata->fix.wspeedt,
+                                 .dflt.real = NAN},
         // ignore unkown keys, for cross-version compatibility
         {"", t_ignore},
 
@@ -629,6 +639,13 @@ int libgps_json_unpack(const char *buf,
             gpsdata->set |= CLIMBERR_SET;
         if (gpsdata->fix.mode != MODE_NOT_SEEN)
             gpsdata->set |= MODE_SET;
+        if (0 != isfinite(gpsdata->fix.wanglem) ||
+            0 != isfinite(gpsdata->fix.wangler) ||
+            0 != isfinite(gpsdata->fix.wanglet) ||
+            0 != isfinite(gpsdata->fix.wspeedr) ||
+            0 != isfinite(gpsdata->fix.wspeedt)) {
+            gpsdata->set |= NAVDATA_SET;
+        }
         return FILTER(status);
     } else if (str_starts_with(classtag, "\"class\":\"GST\"")) {
         status = json_noise_read(buf, gpsdata, end);
