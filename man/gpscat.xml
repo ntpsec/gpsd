@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!--
-This file is Copyright (c) 2010 by the GPSD project
+This file is Copyright 2010 by the GPSD project
 SPDX-License-Identifier: BSD-2-clause
 -->
 <!DOCTYPE refentry PUBLIC
    "-//OASIS//DTD DocBook XML V4.1.2//EN"
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gpscat.1'>
-<refentryinfo><date>16 Nov 2006</date></refentryinfo>
+<refentryinfo><date>30 March 2020</date></refentryinfo>
 <refmeta>
 <refentrytitle>gpscat</refentrytitle>
 <manvolnum>1</manvolnum>
