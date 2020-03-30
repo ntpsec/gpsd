@@ -9,7 +9,7 @@ SPDX-License-Identifier: BSD-2-clause
 <!ENTITY gpsdsock        "/var/run/gpsd.sock">
 ]>
 <refentry id='gpsd_json.5'>
-<refentryinfo><date>23 June 2019</date></refentryinfo>
+<refentryinfo><date>30 March 2020</date></refentryinfo>
 <refmeta>
 <refentrytitle>gpsd_json</refentrytitle>
 <manvolnum>5</manvolnum>
@@ -92,7 +92,7 @@ estimates will be emitted after the fix components they're associated with.
 Others may be reported or not depending on the fix quality.</para>
 
 <para>All error estimates (epc, epd, epe, eph, ept, epv, epx, epy)
-are assumed to be 95% confidence, may also be 50%, one sigma, or two
+are guessed to be 95% confidence, may also be 50%, one sigma, or two
 sigma confidence.  Many GPS do not specify a confidence level.  No
 GPS specifies how the value is calculated.  Use error estimates with
 caution, and only as relative "goodness" indicators.  If the GPS reports
@@ -126,38 +126,40 @@ try to compute the value from the skyview.</para>
         <entry>status</entry>
         <entry>No</entry>
         <entry>numeric</entry>
-        <entry>GPS status: %d, 2=DGPS fix, otherwise not present.</entry>
+        <entry>GPS fix status: %d, 2=DGPS fix, 3=RTK Fixed point,
+4=RTK Floating point, 5=DR fix, 6=GNSSDR fix, 7=Time (surveyed) fix,
+8=Simulated, 9=P(Y) fix, otherwise not present. Similar to FAA Quality
+Indicator in NMEA.</entry>
 </row>
 <row>
         <entry>mode</entry>
         <entry>Yes</entry>
         <entry>numeric</entry>
         <entry>NMEA mode: %d, 0=no mode value yet seen, 1=no fix, 2=2D,
- 3=3D.</entry>
+3=3D.</entry>
 </row>
 <row>
         <entry>time</entry>
         <entry>No</entry>
         <entry>string</entry>
         <entry>Time/date stamp in ISO8601 format, UTC. May have a
-        fractional part of up to .001sec precision. May be absent if the mode
-        is not 2 or 3.</entry>
+fractional part of up to .001sec precision. May be absent if the mode
+is not 2D or 3D.</entry>
 </row>
 <row>
         <entry>altHAE</entry>
         <entry>No</entry>
         <entry>numeric</entry>
         <entry>Altitude, height above allipsoid, in meters.  Probably
-WGS84. Present if the mode is 3.
-</entry>
+WGS84.</entry>
 </row>
 <row>
         <entry>altMSL</entry>
         <entry>No</entry>
         <entry>numeric</entry>
         <entry>MSL Altitude in meters.  The geoid used is rarely specified
-and is often inaccurate.  See the comments below on geoidSep.  Present if
- mode is 3.  altMSL is altHAE - geoidSep.</entry>
+and is often inaccurate.  See the comments below on geoidSep.
+altMSL is altHAE minus geoidSep.</entry>
 </row>
 <row>
         <entry>alt</entry>
@@ -170,13 +172,13 @@ and is often inaccurate.  See the comments below on geoidSep.  Present if
         <entry>No</entry>
         <entry>numeric</entry>
         <entry>Climb (positive) or sink (negative) rate, meters per
-        second.</entry>
+second.</entry>
 </row>
 <row>
         <entry>datum</entry>
         <entry>No</entry>
         <entry>string</entry>
-        <entry>Current datum.</entry>
+        <entry>Current datum. Hopefully WGS84.</entry>
 </row>
 <row>
         <entry>depth</entry>
@@ -200,69 +202,71 @@ and is often inaccurate.  See the comments below on geoidSep.  Present if
         <entry>epc</entry>
         <entry>No</entry>
         <entry>numeric</entry>
-        <entry>Estimated climb error in meters per second. Present
-        if consecutive 3D fixes.</entry>
+        <entry>Estimated climb error in meters per second.
+Certainty unknown.</entry>
 </row>
 <row>
         <entry>epd</entry>
         <entry>No</entry>
         <entry>numeric</entry>
-        <entry>Estimated track (direction) error in degrees. Present if
-        consecutive 2D fixes.</entry>
+        <entry>Estimated track (direction) error in degrees.
+Certainty unknown.</entry>
 </row>
 <row>
         <entry>eph</entry>
         <entry>No</entry>
         <entry>numeric</entry>
         <entry>Estimated horizontal Position (2D) Error in meters.
-        Also known as Estimated Position Error (epe). Present
-        if the mode is 2D or 3D and DOPs can be calculated from the satellite
-        view.</entry>
+Also known as Estimated Position Error (epe).  Certainty unknown.</entry>
 </row>
 <row>
         <entry>eps</entry>
         <entry>No</entry>
         <entry>numeric</entry>
-        <entry>Estimated speed error in meters per second.  Present
-        for consecutive 2D or 3D fixes.</entry>
+        <entry>Estimated speed error in meters per second.
+Certainty unknown.</entry>
 </row>
 <row>
         <entry>ept</entry>
         <entry>No</entry>
         <entry>numeric</entry>
-        <entry>Estimated timestamp error in seconds.
-        Present if time is present.</entry>
+        <entry>Estimated timestamp error in seconds. Certainty unknown.</entry>
 </row>
 <row>
         <entry>epx</entry>
         <entry>No</entry>
         <entry>numeric</entry>
-        <entry>Longitude error estimate in meters. Present
-        if the mode is 2D or 3D and DOPs can be calculated from the satellite
-        view.</entry>
+        <entry>Longitude error estimate in meters. Certainty unknown.</entry>
 </row>
 <row>
         <entry>epy</entry>
         <entry>No</entry>
         <entry>numeric</entry>
-        <entry>Latitude error estimate in meters. Present
-        if the mode is 2 or 3 and DOPs can be calculated from the satellite
-        view.</entry>
+        <entry>Latitude error estimate in meters. Certainty unknown.</entry>
 </row>
 <row>
         <entry>epv</entry>
         <entry>No</entry>
         <entry>numeric</entry>
-        <entry>Estimated vertical error in meters. Present
-        if the mode is 3 and DOPs can be calculated from the satellite
-        view.</entry>
+        <entry>Estimated vertical error in meters. Certainty unknown.</entry>
+</row>
+<row>
+        <entry>geoidSep</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
+        <entry>Geoid separation is the difference between the WGS84
+reference ellipsoid and the geoid (Mean Sea Level) in meters.  Almost no
+GNSS receiver specifies how they compute their geoid. gpsd interpolates the
+geoid from a 5x5 degree table of EGM2008 values when the receiver does
+not supply a geoid separation.  The gpsd computed geoidSep is usually
+within one meter of the "true" value, but can be off as much as 12 meters.
+</entry>
 </row>
 <row>
         <entry>lat</entry>
         <entry>No</entry>
         <entry>numeric</entry>
-        <entry>Latitude in degrees: +/- signifies North/South.  Present
-        when the mode is 2 or 3.</entry>
+        <entry>Latitude in degrees: +/- signifies North/South.</entry>
 </row>
 <row>
         <entry>leapseconds</entry>
@@ -274,8 +278,7 @@ and is often inaccurate.  See the comments below on geoidSep.  Present if
         <entry>lon</entry>
         <entry>No</entry>
         <entry>numeric</entry>
-        <entry>Longitude in degrees: +/- signifies East/West. Present
-        when mode is 2 or 3.</entry>
+        <entry>Longitude in degrees: +/- signifies East/West.</entry>
 </row>
 <row>
         <entry>track</entry>
@@ -326,53 +329,40 @@ Positive is West variation.  Negative is East variation.</entry>
         <entry>ecefpAcc</entry>
         <entry>No</entry>
         <entry>numeric</entry>
-        <entry>ECEF position error in meters.</entry>
+        <entry>ECEF position error in meters. Certainty unknown.</entry>
 </row>
 <row>
         <entry>ecefvx</entry>
         <entry>No</entry>
         <entry>numeric</entry>
-        <entry>ECEF X velocity in meters/second.</entry>
+        <entry>ECEF X velocity in meters per second.</entry>
 </row>
 <row>
         <entry>ecefvy</entry>
         <entry>No</entry>
         <entry>numeric</entry>
-        <entry>ECEF Y velocity in meters/second.</entry>
+        <entry>ECEF Y velocity in meters per second.</entry>
 </row>
 <row>
         <entry>ecefvz</entry>
         <entry>No</entry>
         <entry>numeric</entry>
-        <entry>ECEF Z velocity in meters/second.</entry>
+        <entry>ECEF Z velocity in meters per second.</entry>
 </row>
 <row>
         <entry>ecefvAcc</entry>
         <entry>No</entry>
         <entry>numeric</entry>
-        <entry>ECEF velocity error in meters/second.</entry>
+        <entry>ECEF velocity error in meters per second. Certainty
+unknown.</entry>
 </row>
 <row>
         <entry>sep</entry>
         <entry>No</entry>
         <entry>numeric</entry>
         <entry>Estimated Spherical (3D) Position Error in meters.
-        Present if the mode is 3D and DOPs can be calculated from the
-        satellite view. Assumed to be 95% confidence, but many GPS do not
-        specify.
-        </entry>
-</row>
-<row>
-        <entry>relN</entry>
-        <entry>No</entry>
-        <entry>numeric</entry>
-        <entry>North component of relative position vector in meters.</entry>
-</row>
-<row>
-        <entry>relE</entry>
-        <entry>No</entry>
-        <entry>numeric</entry>
-        <entry>East component of relative position vector in meters.</entry>
+Guessed to be 95% confidence, but many GPS do not specify, so
+certainty unknown.</entry>
 </row>
 <row>
         <entry>relD</entry>
@@ -381,16 +371,16 @@ Positive is West variation.  Negative is East variation.</entry>
         <entry>Down component of relative position vector in meters.</entry>
 </row>
 <row>
-        <entry>velN</entry>
+        <entry>relE</entry>
         <entry>No</entry>
         <entry>numeric</entry>
-        <entry>North velocity component in meters.</entry>
+        <entry>East component of relative position vector in meters.</entry>
 </row>
 <row>
-        <entry>velE</entry>
+        <entry>relN</entry>
         <entry>No</entry>
         <entry>numeric</entry>
-        <entry>wEast velocity component in meters.</entry>
+        <entry>North component of relative position vector in meters.</entry>
 </row>
 <row>
         <entry>velD</entry>
@@ -399,17 +389,46 @@ Positive is West variation.  Negative is East variation.</entry>
         <entry>Down velocity component in meters.</entry>
 </row>
 <row>
-        <entry>geoidSep</entry>
+        <entry>velE</entry>
         <entry>No</entry>
         <entry>numeric</entry>
-        <entry>Geoid separation is the difference between the WGS84
-reference ellipsoid and the geoid (Mean Sea Level) in meters.  Almost no
-GNSS receiver specifies how they compute their geoid. gpsd interpolates the
-geoid from a 5x5 degree table of EGM2008 values when the receiver does
-not supply a geoid separation.  The gpsd computed geoidSep is usually
-within one meter of the "true" value, but can be off as much as 12 meters.
-</entry>
-
+        <entry>wEast velocity component in meters.</entry>
+</row>
+<row>
+        <entry>velN</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
+        <entry>North velocity component in meters.</entry>
+</row>
+<row>
+        <entry>wanglem</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
+        <entry>Wind angle magnetic in degrees.</entry>
+</row>
+<row>
+        <entry>wangler</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
+        <entry>Wind angle relative in degrees.</entry>
+</row>
+<row>
+        <entry>wanglet</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
+        <entry>Wind angle true in degrees.</entry>
+</row>
+<row>
+        <entry>wspeedr</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
+        <entry>Wind speed relative in meters per second.</entry>
+</row>
+<row>
+        <entry>wspeedt</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
+        <entry>Wind speed true in meters per second.</entry>
 </row>
 
 </tbody>
@@ -421,6 +440,7 @@ will assert validity bits in the top-level set member for each
 field received; see gps.h for bitmask names and values.</para>
 
 <para>Invalid or unknown floating point values will be set to NAN.
+Always check floating points with isfinite() before use.
 </para>
 
 <para>Here's an example:</para>
