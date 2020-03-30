@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!--
-This file is Copyright (c) 2010 by the GPSD project
+This file is Copyright 2010 by the GPSD project
 SPDX-License-Identifier: BSD-2-clause
 -->
 <!DOCTYPE refentry PUBLIC
    "-//OASIS//DTD DocBook XML V4.1.2//EN"
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gpsdctl.8'>
-<refentryinfo><date>25 Jun 2011</date></refentryinfo>
+<refentryinfo><date>30 March 2020</date></refentryinfo>
 <refmeta>
 <refentrytitle>gpsdctl</refentrytitle>
 <manvolnum>8</manvolnum>
@@ -22,8 +22,8 @@ SPDX-License-Identifier: BSD-2-clause
 
 <cmdsynopsis>
   <command>gpdsctl</command>
- 	<arg choice='plain'><replaceable>action</replaceable></arg>
- 	<arg choice='plain'><replaceable>device</replaceable></arg>
+        <arg choice='plain'><replaceable>action</replaceable></arg>
+        <arg choice='plain'><replaceable>device</replaceable></arg>
 </cmdsynopsis>
 </refsynopsisdiv>
 
