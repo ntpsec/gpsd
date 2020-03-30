@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!--
-This file is Copyright (c) 2016 by the GPSD project
+This file is Copyright 2016 by the GPSD project
 SPDX-License-Identifier: BSD-2-clause
 -->
 <!DOCTYPE refentry PUBLIC
    "-//OASIS//DTD DocBook XML V4.1.2//EN"
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='ppscheck.8'>
-<refentryinfo><date>28 Jul 2016</date></refentryinfo>
+<refentryinfo><date>30 March 2020</date></refentryinfo>
 <refmeta>
 <refentrytitle>ppscheck</refentrytitle>
 <manvolnum>8</manvolnum>
@@ -22,9 +22,9 @@ SPDX-License-Identifier: BSD-2-clause
 
 <cmdsynopsis>
   <command>ppscheck</command>
-	<arg choice='opt'>-h </arg>
-	<arg choice='opt'>-V </arg>
- 	<arg choice='plain'><replaceable>device</replaceable></arg>
+        <arg choice='opt'>-h </arg>
+        <arg choice='opt'>-V </arg>
+        <arg choice='plain'><replaceable>device</replaceable></arg>
 </cmdsynopsis>
 </refsynopsisdiv>
 
