@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!--
-This file is Copyright (c) 2010-2018 by the GPSD project
+This file is Copyright 2010 by the GPSD project
 SPDX-License-Identifier: BSD-2-clause
 -->
 <!DOCTYPE refentry PUBLIC
    "-//OASIS//DTD DocBook XML V4.1.2//EN"
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
-<!ENTITY gpsdsock	 "/var/run/gpsd.sock">
+<!ENTITY gpsdsock        "/var/run/gpsd.sock">
 ]>
 <refentry id='gpsd_json.5'>
 <refentryinfo><date>23 June 2019</date></refentryinfo>
@@ -103,259 +103,259 @@ try to compute the value from the skyview.</para>
 <tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Always?</entry>
-	<entry>Type</entry>
-	<entry>Description</entry>
+        <entry>Name</entry>
+        <entry>Always?</entry>
+        <entry>Type</entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>class</entry>
-	<entry>Yes</entry>
-	<entry>string</entry>
+        <entry>class</entry>
+        <entry>Yes</entry>
+        <entry>string</entry>
         <entry>Fixed: "TPV"</entry>
 </row>
 <row>
-	<entry>device</entry>
-	<entry>No</entry>
-	<entry>string</entry>
+        <entry>device</entry>
+        <entry>No</entry>
+        <entry>string</entry>
         <entry>Name of the originating device.</entry>
 </row>
 <row>
-	<entry>status</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>status</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>GPS status: %d, 2=DGPS fix, otherwise not present.</entry>
 </row>
 <row>
-	<entry>mode</entry>
-	<entry>Yes</entry>
-	<entry>numeric</entry>
+        <entry>mode</entry>
+        <entry>Yes</entry>
+        <entry>numeric</entry>
         <entry>NMEA mode: %d, 0=no mode value yet seen, 1=no fix, 2=2D,
  3=3D.</entry>
 </row>
 <row>
-	<entry>time</entry>
-	<entry>No</entry>
-	<entry>string</entry>
+        <entry>time</entry>
+        <entry>No</entry>
+        <entry>string</entry>
         <entry>Time/date stamp in ISO8601 format, UTC. May have a
-	fractional part of up to .001sec precision. May be absent if the mode
+        fractional part of up to .001sec precision. May be absent if the mode
         is not 2 or 3.</entry>
 </row>
 <row>
-	<entry>altHAE</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>altHAE</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Altitude, height above allipsoid, in meters.  Probably
 WGS84. Present if the mode is 3.
 </entry>
 </row>
 <row>
-	<entry>altMSL</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>altMSL</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>MSL Altitude in meters.  The geoid used is rarely specified
 and is often inaccurate.  See the comments below on geoidSep.  Present if
  mode is 3.  altMSL is altHAE - geoidSep.</entry>
 </row>
 <row>
-	<entry>alt</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>alt</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Deprecated.  Undefined.  Use altHAE or altMSL.</entry>
 </row>
 <row>
-	<entry>climb</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>climb</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Climb (positive) or sink (negative) rate, meters per
-	second.</entry>
+        second.</entry>
 </row>
 <row>
-	<entry>datum</entry>
-	<entry>No</entry>
-	<entry>string</entry>
+        <entry>datum</entry>
+        <entry>No</entry>
+        <entry>string</entry>
         <entry>Current datum.</entry>
 </row>
 <row>
-	<entry>depth</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>depth</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Depth in meters.  Probably depth below the keel...</entry>
 </row>
 <row>
-	<entry>dgpsAge</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>dgpsAge</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Age of DGPS data. In seconds</entry>
 </row>
 <row>
-	<entry>dgpsSta</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>dgpsSta</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Station of DGPS data.</entry>
 </row>
 <row>
-	<entry>epc</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>epc</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Estimated climb error in meters per second. Present
         if consecutive 3D fixes.</entry>
 </row>
 <row>
-	<entry>epd</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>epd</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Estimated track (direction) error in degrees. Present if
         consecutive 2D fixes.</entry>
 </row>
 <row>
-	<entry>eph</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>eph</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Estimated horizontal Position (2D) Error in meters.
         Also known as Estimated Position Error (epe). Present
         if the mode is 2D or 3D and DOPs can be calculated from the satellite
         view.</entry>
 </row>
 <row>
-	<entry>eps</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>eps</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Estimated speed error in meters per second.  Present
         for consecutive 2D or 3D fixes.</entry>
 </row>
 <row>
-	<entry>ept</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>ept</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Estimated timestamp error in seconds.
         Present if time is present.</entry>
 </row>
 <row>
-	<entry>epx</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>epx</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Longitude error estimate in meters. Present
         if the mode is 2D or 3D and DOPs can be calculated from the satellite
         view.</entry>
 </row>
 <row>
-	<entry>epy</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>epy</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Latitude error estimate in meters. Present
         if the mode is 2 or 3 and DOPs can be calculated from the satellite
         view.</entry>
 </row>
 <row>
-	<entry>epv</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>epv</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Estimated vertical error in meters. Present
         if the mode is 3 and DOPs can be calculated from the satellite
         view.</entry>
 </row>
 <row>
-	<entry>lat</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>lat</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Latitude in degrees: +/- signifies North/South.  Present
         when the mode is 2 or 3.</entry>
 </row>
 <row>
-	<entry>leapseconds</entry>
-	<entry>No</entry>
-	<entry>integer</entry>
+        <entry>leapseconds</entry>
+        <entry>No</entry>
+        <entry>integer</entry>
         <entry><para>Current leap seconds.</para></entry>
 </row>
 <row>
-	<entry>lon</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>lon</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Longitude in degrees: +/- signifies East/West. Present
         when mode is 2 or 3.</entry>
 </row>
 <row>
-	<entry>track</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>track</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Course over ground, degrees from true north.</entry>
 </row>
 <row>
-	<entry>magtrack</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>magtrack</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Course over ground, degrees magnetic.</entry>
 </row>
 <row>
-	<entry>magvar</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>magvar</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Magnetic variation, degrees.  Also known as
 the magnetic declination (the direction of the horizontal component of
 the magnetic field measured clockwise from north) in degrees,
 Positive is West variation.  Negative is East variation.</entry>
 </row>
 <row>
-	<entry>speed</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>speed</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Speed over ground, meters per second.</entry>
 </row>
 <row>
-	<entry>ecefx</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>ecefx</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>ECEF X position in meters.</entry>
 </row>
 <row>
-	<entry>ecefy</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>ecefy</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>ECEF Y position in meters.</entry>
 </row>
 <row>
-	<entry>ecefz</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>ecefz</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>ECEF Z position in meters.</entry>
 </row>
 <row>
-	<entry>ecefpAcc</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>ecefpAcc</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>ECEF position error in meters.</entry>
 </row>
 <row>
-	<entry>ecefvx</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>ecefvx</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>ECEF X velocity in meters/second.</entry>
 </row>
 <row>
-	<entry>ecefvy</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>ecefvy</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>ECEF Y velocity in meters/second.</entry>
 </row>
 <row>
-	<entry>ecefvz</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>ecefvz</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>ECEF Z velocity in meters/second.</entry>
 </row>
 <row>
-	<entry>ecefvAcc</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>ecefvAcc</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>ECEF velocity error in meters/second.</entry>
 </row>
 <row>
-	<entry>sep</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>sep</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Estimated Spherical (3D) Position Error in meters.
         Present if the mode is 3D and DOPs can be calculated from the
         satellite view. Assumed to be 95% confidence, but many GPS do not
@@ -363,45 +363,45 @@ Positive is West variation.  Negative is East variation.</entry>
         </entry>
 </row>
 <row>
-	<entry>relN</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>relN</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>North component of relative position vector in meters.</entry>
 </row>
 <row>
-	<entry>relE</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>relE</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>East component of relative position vector in meters.</entry>
 </row>
 <row>
-	<entry>relD</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>relD</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Down component of relative position vector in meters.</entry>
 </row>
 <row>
-	<entry>velN</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>velN</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>North velocity component in meters.</entry>
 </row>
 <row>
-	<entry>velE</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>velE</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>wEast velocity component in meters.</entry>
 </row>
 <row>
-	<entry>velD</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>velD</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Down velocity component in meters.</entry>
 </row>
 <row>
-	<entry>geoidSep</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>geoidSep</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Geoid separation is the difference between the WGS84
 reference ellipsoid and the geoid (Mean Sea Level) in meters.  Almost no
 GNSS receiver specifies how they compute their geoid. gpsd interpolates the
@@ -446,93 +446,93 @@ yet, only the "class" field will reliably be present.</para>
 <tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Always?</entry>
-	<entry>Type</entry>
-	<entry>Description</entry>
+        <entry>Name</entry>
+        <entry>Always?</entry>
+        <entry>Type</entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>class</entry>
-	<entry>Yes</entry>
-	<entry>string</entry>
+        <entry>class</entry>
+        <entry>Yes</entry>
+        <entry>string</entry>
         <entry>Fixed: "SKY"</entry>
 </row>
 <row>
-	<entry>device</entry>
-	<entry>No</entry>
-	<entry>string</entry>
+        <entry>device</entry>
+        <entry>No</entry>
+        <entry>string</entry>
         <entry>Name of originating device</entry>
 </row>
 <row>
-	<entry>time</entry>
-	<entry>No</entry>
-	<entry>string</entry>
+        <entry>time</entry>
+        <entry>No</entry>
+        <entry>string</entry>
         <entry>Time/date stamp in ISO8601 format, UTC. May have a
-	fractional part of up to .001sec precision.</entry>
+        fractional part of up to .001sec precision.</entry>
 </row>
 <row>
-	<entry>gdop</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>gdop</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Geometric (hyperspherical) dilution of precision, a
         combination of PDOP and TDOP.  A dimensionless factor which
         should be multiplied by a base UERE
         to get an error estimate.</entry>
 </row>
 <row>
-	<entry>hdop</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>hdop</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Horizontal dilution of precision, a dimensionless
-	factor which should be multiplied by a base UERE to get a
-	circular error estimate.</entry>
+        factor which should be multiplied by a base UERE to get a
+        circular error estimate.</entry>
 </row>
 <row>
-	<entry>pdop</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>pdop</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Position (spherical/3D)  dilution of precision, a dimensionless
-	factor which should be multiplied by a base UERE to get an
-	error estimate.</entry>
+        factor which should be multiplied by a base UERE to get an
+        error estimate.</entry>
 </row>
 <row>
-	<entry>tdop</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>tdop</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Time dilution of precision, a dimensionless
-	factor which should be multiplied by a base UERE to get an
-	error estimate.</entry>
+        factor which should be multiplied by a base UERE to get an
+        error estimate.</entry>
 </row>
 <row>
-	<entry>vdop</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>vdop</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Vertical (altitude) dilution of precision, a dimensionless
-	factor which should be multiplied by a base UERE to get an
-	error estimate.</entry>
+        factor which should be multiplied by a base UERE to get an
+        error estimate.</entry>
 </row>
 <row>
-	<entry>xdop</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>xdop</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Longitudinal dilution of precision, a dimensionless
-	factor which should be multiplied by a base UERE to get an
-	error estimate.</entry>
+        factor which should be multiplied by a base UERE to get an
+        error estimate.</entry>
 </row>
 <row>
-	<entry>ydop</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>ydop</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Latitudinal dilution of precision, a dimensionless
-	factor which should be multiplied by a base UERE to get an
-	error estimate.</entry>
+        factor which should be multiplied by a base UERE to get an
+        error estimate.</entry>
 </row>
 <row>
-	<entry>satellites</entry>
-	<entry>Yes</entry>
-	<entry>list</entry>
+        <entry>satellites</entry>
+        <entry>Yes</entry>
+        <entry>list</entry>
         <entry>List of satellite objects in skyview</entry>
 </row>
 
@@ -557,79 +557,79 @@ error modeling than the covariance calculation.</para>
 <tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Always?</entry>
-	<entry>Type</entry>
-	<entry>Description</entry>
+        <entry>Name</entry>
+        <entry>Always?</entry>
+        <entry>Type</entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>PRN</entry>
-	<entry>Yes</entry>
-	<entry>numeric</entry>
+        <entry>PRN</entry>
+        <entry>Yes</entry>
+        <entry>numeric</entry>
         <entry>PRN ID of the satellite. 1-63 are GNSS satellites,
-	64-96 are GLONASS satellites, 100-164 are SBAS satellites</entry>
+        64-96 are GLONASS satellites, 100-164 are SBAS satellites</entry>
 </row>
 <row>
-	<entry>az</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>az</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Azimuth, degrees from true north.</entry>
 </row>
 <row>
-	<entry>el</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>el</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Elevation in degrees.</entry>
 </row>
 <row>
-	<entry>ss</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>ss</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Signal to Noise ratio in dBHz.</entry>
 </row>
 <row>
-	<entry>used</entry>
-	<entry>Yes</entry>
-	<entry>boolean</entry>
+        <entry>used</entry>
+        <entry>Yes</entry>
+        <entry>boolean</entry>
         <entry>Used in current solution? (SBAS/WAAS/EGNOS satellites
-	may be flagged used if the solution has corrections from them,
-	but not all drivers make this information available.)</entry>
+        may be flagged used if the solution has corrections from them,
+        but not all drivers make this information available.)</entry>
 </row>
 <row>
-	<entry>gnssid</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>gnssid</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>The GNSS ID, as defined by u-blox, not NMEA.  0=GPS,
         2=Galileo, 3=Beidou, 5=QZSS, 6-GLONASS.</entry>
 </row>
 <row>
-	<entry>svid</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>svid</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>The satellite ID within its constellation.  As defined
         by u-blox, not NMEA).</entry>
 </row>
 <row>
-	<entry>sigid</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>sigid</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>The signal ID of this signal.  As defined by u-blox, not
         NMEA. See u-blox doc for details.</entry>
 </row>
 <row>
-	<entry>freqid</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>freqid</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>For GLONASS satellites only: the frequency ID of the signal.
 As defined by u-blox, range 0 to 13.  The freqid is the frequency slot
 plus 7.</entry>
 </row>
 <row>
-	<entry>health</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>health</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>The health of this satellite.  0 is unknown, 1 is
 OK, and 2 is unhealthy.</entry>
 </row>
@@ -672,84 +672,84 @@ will assert the SATELLITE_SET bit in the top-level set member.</para>
 <tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Always?</entry>
-	<entry>Type</entry>
-	<entry>Description</entry>
+        <entry>Name</entry>
+        <entry>Always?</entry>
+        <entry>Type</entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>class</entry>
-	<entry>Yes</entry>
-	<entry>string</entry>
+        <entry>class</entry>
+        <entry>Yes</entry>
+        <entry>string</entry>
         <entry>Fixed: "GST"</entry>
 </row>
 <row>
-	<entry>device</entry>
-	<entry>No</entry>
-	<entry>string</entry>
+        <entry>device</entry>
+        <entry>No</entry>
+        <entry>string</entry>
         <entry>Name of originating device</entry>
 </row>
 <row>
-	<entry>time</entry>
-	<entry>No</entry>
-	<entry>string</entry>
+        <entry>time</entry>
+        <entry>No</entry>
+        <entry>string</entry>
         <entry>Time/date stamp in ISO8601 format, UTC. May have a
-	fractional part of up to .001sec precision.</entry>
+        fractional part of up to .001sec precision.</entry>
 </row>
 
 <row>
-	<entry>rms</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>rms</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Value of the standard deviation of the range inputs to the
 navigation process (range inputs include pseudoranges and DGPS
 corrections).</entry>
 </row>
 
 <row>
-	<entry>major</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>major</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Standard deviation of semi-major axis of error ellipse,
         in meters.</entry>
 </row>
 
 <row>
-	<entry>minor</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>minor</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Standard deviation of semi-minor axis of error ellipse,
         in meters.</entry>
 </row>
 
 <row>
-	<entry>orient</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>orient</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Orientation of semi-major axis of error ellipse, in degrees
         from true north.</entry>
 </row>
 
 <row>
-	<entry>lat</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>lat</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Standard deviation of latitude error, in meters.</entry>
 </row>
 
 <row>
-	<entry>lon</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>lon</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Standard deviation of longitude error, in meters.</entry>
 </row>
 
 <row>
-	<entry>alt</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>alt</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Standard deviation of altitude error, in meters.</entry>
 </row>
 
@@ -785,157 +785,157 @@ may be reported or not depending on the specific device type.</para>
 <tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Always?</entry>
-	<entry>Type</entry>
-	<entry>Description</entry>
+        <entry>Name</entry>
+        <entry>Always?</entry>
+        <entry>Type</entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>class</entry>
-	<entry>Yes</entry>
-	<entry>string</entry>
+        <entry>class</entry>
+        <entry>Yes</entry>
+        <entry>string</entry>
         <entry>Fixed: "ATT"</entry>
 </row>
 <row>
-	<entry>device</entry>
-	<entry>Yes</entry>
-	<entry>string</entry>
+        <entry>device</entry>
+        <entry>Yes</entry>
+        <entry>string</entry>
         <entry>Name of originating device</entry>
 </row>
 <row>
-	<entry>time</entry>
-	<entry>No</entry>
-	<entry>string</entry>
+        <entry>time</entry>
+        <entry>No</entry>
+        <entry>string</entry>
         <entry>Time/date stamp in ISO8601 format, UTC. May have a
-	fractional part of up to .001sec precision.</entry>
+        fractional part of up to .001sec precision.</entry>
 </row>
 <row>
-	<entry>heading</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>heading</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Heading, degrees from true north.</entry>
 </row>
 <row>
-	<entry>mag_st</entry>
-	<entry>No</entry>
-	<entry>string</entry>
+        <entry>mag_st</entry>
+        <entry>No</entry>
+        <entry>string</entry>
         <entry>Magnetometer status.</entry>
 </row>
 <row>
-	<entry>pitch</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>pitch</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Pitch in degrees.</entry>
 </row>
 <row>
-	<entry>pitch_st</entry>
-	<entry>No</entry>
-	<entry>string</entry>
+        <entry>pitch_st</entry>
+        <entry>No</entry>
+        <entry>string</entry>
         <entry>Pitch sensor status.</entry>
 </row>
 <row>
-	<entry>yaw</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>yaw</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Yaw in degrees</entry>
 </row>
 <row>
-	<entry>yaw_st</entry>
-	<entry>No</entry>
-	<entry>string</entry>
+        <entry>yaw_st</entry>
+        <entry>No</entry>
+        <entry>string</entry>
         <entry>Yaw sensor status.</entry>
 </row>
 <row>
-	<entry>roll</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>roll</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Roll in degrees.</entry>
 </row>
 <row>
-	<entry>roll_st</entry>
-	<entry>No</entry>
-	<entry>string</entry>
+        <entry>roll_st</entry>
+        <entry>No</entry>
+        <entry>string</entry>
         <entry>Roll sensor status.</entry>
 </row>
 <row>
-	<entry>dip</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>dip</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Local magnetic inclination, degrees, positive when the magnetic
 field points downward (into the Earth).</entry>
 </row>
 <row>
-	<entry>mag_len</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>mag_len</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Scalar magnetic field strength.</entry>
 </row>
 <row>
-	<entry>mag_x</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>mag_x</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>X component of magnetic field strength.</entry>
 </row>
 <row>
-	<entry>mag_y</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>mag_y</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Y component of magnetic field strength.</entry>
 </row>
 <row>
-	<entry>mag_z</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>mag_z</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Z component of magnetic field strength.</entry>
 </row>
 <row>
-	<entry>acc_len</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>acc_len</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Scalar acceleration.</entry>
 </row>
 <row>
-	<entry>acc_x</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>acc_x</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>X component of acceleration.</entry>
 </row>
 <row>
-	<entry>acc_y</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>acc_y</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Y component of acceleration.</entry>
 </row>
 <row>
-	<entry>acc_z</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>acc_z</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Z component of acceleration.</entry>
 </row>
 <row>
-	<entry>gyro_x</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>gyro_x</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>X component of acceleration.</entry>
 </row>
 <row>
-	<entry>gyro_y</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>gyro_y</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Y component of acceleration.</entry>
 </row>
 <row>
-	<entry>depth</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>depth</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Water depth in meters.</entry>
 </row>
 <row>
-	<entry>temp</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>temp</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Temperature at the sensor, degrees centigrade.</entry>
 </row>
 
@@ -951,38 +951,38 @@ For the TNT Revolution digital compasses, they are coded as follows: </para>
 <tgroup cols="2" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Code</entry>
-	<entry>Description</entry>
+        <entry>Code</entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>C</entry>
-	<entry>magnetometer calibration alarm</entry>
+        <entry>C</entry>
+        <entry>magnetometer calibration alarm</entry>
 </row>
 <row>
-	<entry>L</entry>
-	<entry>low alarm</entry>
+        <entry>L</entry>
+        <entry>low alarm</entry>
 </row>
 <row>
-	<entry>M</entry>
-	<entry>low warning</entry>
+        <entry>M</entry>
+        <entry>low warning</entry>
 </row>
 <row>
-	<entry>N</entry>
-	<entry>normal</entry>
+        <entry>N</entry>
+        <entry>normal</entry>
 </row>
 <row>
-	<entry>O</entry>
-	<entry>high warning</entry>
+        <entry>O</entry>
+        <entry>high warning</entry>
 </row>
 <row>
-	<entry>P</entry>
-	<entry>high alarm</entry>
+        <entry>P</entry>
+        <entry>high alarm</entry>
 </row>
 <row>
-	<entry>V</entry>
-	<entry>magnetometer voltage level alarm</entry>
+        <entry>V</entry>
+        <entry>magnetometer voltage level alarm</entry>
 </row>
 </tbody>
 </tgroup>
@@ -1017,47 +1017,47 @@ will assert ATT_IS.</para>
 <tgroup cols="4" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Always?</entry>
-	<entry>Type</entry>
-	<entry>Description</entry>
+        <entry>Name</entry>
+        <entry>Always?</entry>
+        <entry>Type</entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>class</entry>
-	<entry>Yes</entry>
-	<entry>string</entry>
+        <entry>class</entry>
+        <entry>Yes</entry>
+        <entry>string</entry>
         <entry>Fixed: "VERSION"</entry>
 </row>
 <row>
-	<entry>release</entry>
-	<entry>Yes</entry>
-	<entry>string</entry>
+        <entry>release</entry>
+        <entry>Yes</entry>
+        <entry>string</entry>
         <entry>Public release level</entry>
 </row>
 <row>
-	<entry>rev</entry>
-	<entry>Yes</entry>
-	<entry>string</entry>
+        <entry>rev</entry>
+        <entry>Yes</entry>
+        <entry>string</entry>
         <entry>Internal revision-control level.</entry>
 </row>
 <row>
-	<entry>proto_major</entry>
-	<entry>Yes</entry>
-	<entry>numeric</entry>
+        <entry>proto_major</entry>
+        <entry>Yes</entry>
+        <entry>numeric</entry>
         <entry>API major revision level.</entry>
 </row>
 <row>
-	<entry>proto_minor</entry>
-	<entry>Yes</entry>
-	<entry>numeric</entry>
+        <entry>proto_minor</entry>
+        <entry>Yes</entry>
+        <entry>numeric</entry>
         <entry>API minor revision level.</entry>
 </row>
 <row>
-	<entry>remote</entry>
-	<entry>No</entry>
-	<entry>string</entry>
+        <entry>remote</entry>
+        <entry>No</entry>
+        <entry>string</entry>
         <entry>URL of the remote daemon reporting this version. If
         empty, this is the version of the local daemon.</entry>
 </row>
@@ -1093,29 +1093,29 @@ following elements:</para>
 <tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Always?</entry>
-	<entry>Type</entry>
-	<entry>Description</entry>
+        <entry>Name</entry>
+        <entry>Always?</entry>
+        <entry>Type</entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>class</entry>
-	<entry>Yes</entry>
-	<entry>string</entry>
+        <entry>class</entry>
+        <entry>Yes</entry>
+        <entry>string</entry>
         <entry>Fixed: "DEVICES"</entry>
 </row>
 <row>
-	<entry>devices</entry>
-	<entry>Yes</entry>
-	<entry>list</entry>
+        <entry>devices</entry>
+        <entry>Yes</entry>
+        <entry>list</entry>
         <entry>List of device descriptions</entry>
 </row>
 <row>
-	<entry>remote</entry>
-	<entry>No</entry>
-	<entry>string</entry>
+        <entry>remote</entry>
+        <entry>No</entry>
+        <entry>string</entry>
         <entry>URL of the remote daemon reporting the device set. If
         empty, this is a DEVICES response from the local daemon.</entry>
 </row>
@@ -1157,91 +1157,91 @@ object.</para>
 <tgroup cols="4" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Always?</entry>
-	<entry>Type</entry>
-	<entry>Description</entry>
+        <entry>Name</entry>
+        <entry>Always?</entry>
+        <entry>Type</entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>class</entry>
-	<entry>Yes</entry>
-	<entry>string</entry>
+        <entry>class</entry>
+        <entry>Yes</entry>
+        <entry>string</entry>
         <entry>Fixed: "WATCH"</entry>
 </row>
 <row>
-	<entry>enable</entry>
-	<entry>No</entry>
-	<entry>boolean</entry>
+        <entry>enable</entry>
+        <entry>No</entry>
+        <entry>boolean</entry>
         <entry>Enable (true) or disable (false) watcher mode. Default
-	is true.</entry>
+        is true.</entry>
 </row>
 <row>
-	<entry>json</entry>
-	<entry>No</entry>
-	<entry>boolean</entry>
+        <entry>json</entry>
+        <entry>No</entry>
+        <entry>boolean</entry>
         <entry>Enable (true) or disable (false) dumping of JSON reports.
-	Default is false.</entry>
+        Default is false.</entry>
 </row>
 <row>
-	<entry>nmea</entry>
-	<entry>No</entry>
-	<entry>boolean</entry>
+        <entry>nmea</entry>
+        <entry>No</entry>
+        <entry>boolean</entry>
         <entry>Enable (true) or disable (false) dumping of binary
-	packets as pseudo-NMEA. Default
-	is false.</entry>
+        packets as pseudo-NMEA. Default
+        is false.</entry>
 </row>
 <row>
-	<entry>raw</entry>
+        <entry>raw</entry>
         <entry>No</entry>
         <entry>integer</entry>
 
-	<entry>Controls 'raw' mode. When this attribute is set to 1
-	for a channel, <application>gpsd</application> reports the
-	unprocessed NMEA or AIVDM data stream from whatever device is attached.
-	Binary GPS packets are hex-dumped.  RTCM2 and RTCM3
+        <entry>Controls 'raw' mode. When this attribute is set to 1
+        for a channel, <application>gpsd</application> reports the
+        unprocessed NMEA or AIVDM data stream from whatever device is attached.
+        Binary GPS packets are hex-dumped.  RTCM2 and RTCM3
         packets are not dumped in raw mode. When this attribute is set to
-	2 for a channel that processes binary data,
-	<application>gpsd</application> reports the received data verbatim
-	without hex-dumping.</entry>
+        2 for a channel that processes binary data,
+        <application>gpsd</application> reports the received data verbatim
+        without hex-dumping.</entry>
 </row>
 <row>
-	<entry>scaled</entry>
-	<entry>No</entry>
-	<entry>boolean</entry>
+        <entry>scaled</entry>
+        <entry>No</entry>
+        <entry>boolean</entry>
         <entry>If true, apply scaling divisors to output before
-	dumping; default is false.</entry>
+        dumping; default is false.</entry>
 </row>
 <row>
-	<entry>split24</entry>
-	<entry>No</entry>
-	<entry>boolean</entry>
+        <entry>split24</entry>
+        <entry>No</entry>
+        <entry>boolean</entry>
         <entry>If true, aggregate AIS type24 sentence parts.  If false,
         report each part as a separate JSON object, leaving the
         client to match MMSIs and aggregate.  Default is
         false. Applies only to AIS reports.</entry>
 </row>
 <row>
-	<entry>pps</entry>
-	<entry>No</entry>
-	<entry>boolean</entry>
+        <entry>pps</entry>
+        <entry>No</entry>
+        <entry>boolean</entry>
         <entry>If true, emit the TOFF JSON message on each cycle and a
-	PPS JSON message when the device issues 1PPS. Default is false.</entry>
+        PPS JSON message when the device issues 1PPS. Default is false.</entry>
 </row>
 <row>
-	<entry>device</entry>
-	<entry>No</entry>
-	<entry>string</entry>
+        <entry>device</entry>
+        <entry>No</entry>
+        <entry>string</entry>
         <entry>If present, enable watching only of the specified device
-	rather than all devices.  Useful with raw and NMEA modes
-	in which device responses aren't tagged. Has no effect when
-	used with enable:false.</entry>
+        rather than all devices.  Useful with raw and NMEA modes
+        in which device responses aren't tagged. Has no effect when
+        used with enable:false.</entry>
 </row>
 <row>
-	<entry>remote</entry>
-	<entry>No</entry>
-	<entry>string</entry>
+        <entry>remote</entry>
+        <entry>No</entry>
+        <entry>string</entry>
         <entry>URL of the remote daemon reporting the watch set. If
         empty, this is a WATCH response from the local daemon.</entry>
 </row>
@@ -1293,42 +1293,42 @@ will be reported with a mode field of zero.</para>
 <tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Always?</entry>
-	<entry>Type</entry>
-	<entry>Description</entry>
+        <entry>Name</entry>
+        <entry>Always?</entry>
+        <entry>Type</entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>class</entry>
-	<entry>Yes</entry>
-	<entry>string</entry>
+        <entry>class</entry>
+        <entry>Yes</entry>
+        <entry>string</entry>
         <entry>Fixed: "POLL"</entry>
 </row>
 <row>
-	<entry>time</entry>
-	<entry>Yes</entry>
-	<entry>Numeric</entry>
+        <entry>time</entry>
+        <entry>Yes</entry>
+        <entry>Numeric</entry>
         <entry>Timestamp in ISO 8601 format. May have a
-	fractional part of up to .001sec precision.</entry>
+        fractional part of up to .001sec precision.</entry>
 </row>
 <row>
-	<entry>active</entry>
-	<entry>Yes</entry>
-	<entry>Numeric</entry>
+        <entry>active</entry>
+        <entry>Yes</entry>
+        <entry>Numeric</entry>
         <entry>Count of active devices.</entry>
 </row>
 <row>
-	<entry>tpv</entry>
-	<entry>Yes</entry>
-	<entry>JSON array</entry>
+        <entry>tpv</entry>
+        <entry>Yes</entry>
+        <entry>JSON array</entry>
         <entry>Comma-separated list of TPV objects.</entry>
 </row>
 <row>
-	<entry>sky</entry>
-	<entry>Yes</entry>
-	<entry>JSON array</entry>
+        <entry>sky</entry>
+        <entry>Yes</entry>
+        <entry>JSON array</entry>
         <entry>Comma-separated list of SKY objects.</entry>
 </row>
 </tbody>
@@ -1341,7 +1341,7 @@ will be reported with a mode field of zero.</para>
 {"class":"POLL","time":"2010-06-04T10:31:00.289Z","active":1,
     "tpv":[{"class":"TPV","device":"/dev/ttyUSB0",
             "time":"2010-09-08T13:33:06.095Z",
-	    "ept":0.005,"lat":40.035093060,
+            "ept":0.005,"lat":40.035093060,
             "lon":-75.519748733,"track":99.4319,"speed":0.123,"mode":2}],
     "sky":[{"class":"SKY","device":"/dev/ttyUSB0",
             "time":1270517264.240,"hdop":9.20,
@@ -1392,47 +1392,47 @@ from the GPS PPS pulse.</para>
 <tgroup cols="4" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Always?</entry>
-	<entry>Type</entry>
-	<entry>Description</entry>
+        <entry>Name</entry>
+        <entry>Always?</entry>
+        <entry>Type</entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>class</entry>
-	<entry>Yes</entry>
-	<entry>string</entry>
+        <entry>class</entry>
+        <entry>Yes</entry>
+        <entry>string</entry>
         <entry>Fixed: "TOFF"</entry>
 </row>
 <row>
-	<entry>device</entry>
-	<entry>Yes</entry>
-	<entry>string</entry>
+        <entry>device</entry>
+        <entry>Yes</entry>
+        <entry>string</entry>
         <entry>Name of the originating device</entry>
 </row>
 <row>
-	<entry>real_sec</entry>
-	<entry>Yes</entry>
-	<entry>numeric</entry>
+        <entry>real_sec</entry>
+        <entry>Yes</entry>
+        <entry>numeric</entry>
         <entry>seconds from the GPS clock</entry>
 </row>
 <row>
-	<entry>real_nsec</entry>
-	<entry>Yes</entry>
-	<entry>numeric</entry>
+        <entry>real_nsec</entry>
+        <entry>Yes</entry>
+        <entry>numeric</entry>
         <entry>nanoseconds from the GPS clock</entry>
 </row>
 <row>
-	<entry>clock_sec</entry>
-	<entry>Yes</entry>
-	<entry>numeric</entry>
+        <entry>clock_sec</entry>
+        <entry>Yes</entry>
+        <entry>numeric</entry>
         <entry>seconds from the system clock</entry>
 </row>
 <row>
-	<entry>clock_nsec</entry>
-	<entry>Yes</entry>
-	<entry>numeric</entry>
+        <entry>clock_nsec</entry>
+        <entry>Yes</entry>
+        <entry>numeric</entry>
         <entry>nanoseconds from the system clock</entry>
 </row>
 </tbody>
@@ -1495,59 +1495,59 @@ time derived from the start of the GPS cycle can have offsets of
 <tgroup cols="4" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Always?</entry>
-	<entry>Type</entry>
-	<entry>Description</entry>
+        <entry>Name</entry>
+        <entry>Always?</entry>
+        <entry>Type</entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>class</entry>
-	<entry>Yes</entry>
-	<entry>string</entry>
+        <entry>class</entry>
+        <entry>Yes</entry>
+        <entry>string</entry>
         <entry>Fixed: "PPS"</entry>
 </row>
 <row>
-	<entry>device</entry>
-	<entry>Yes</entry>
-	<entry>string</entry>
+        <entry>device</entry>
+        <entry>Yes</entry>
+        <entry>string</entry>
         <entry>Name of the originating device</entry>
 </row>
 <row>
-	<entry>real_sec</entry>
-	<entry>Yes</entry>
-	<entry>numeric</entry>
+        <entry>real_sec</entry>
+        <entry>Yes</entry>
+        <entry>numeric</entry>
         <entry>seconds from the PPS source</entry>
 </row>
 <row>
-	<entry>real_nsec</entry>
-	<entry>Yes</entry>
-	<entry>numeric</entry>
+        <entry>real_nsec</entry>
+        <entry>Yes</entry>
+        <entry>numeric</entry>
         <entry>nanoseconds from the PPS source</entry>
 </row>
 <row>
-	<entry>clock_sec</entry>
-	<entry>Yes</entry>
-	<entry>numeric</entry>
+        <entry>clock_sec</entry>
+        <entry>Yes</entry>
+        <entry>numeric</entry>
         <entry>seconds from the system clock</entry>
 </row>
 <row>
-	<entry>clock_nsec</entry>
-	<entry>Yes</entry>
-	<entry>numeric</entry>
+        <entry>clock_nsec</entry>
+        <entry>Yes</entry>
+        <entry>numeric</entry>
         <entry>nanoseconds from the system clock</entry>
 </row>
 <row>
-	<entry>precision</entry>
-	<entry>Yes</entry>
-	<entry>numeric</entry>
+        <entry>precision</entry>
+        <entry>Yes</entry>
+        <entry>numeric</entry>
         <entry>NTP style estimate of PPS precision</entry>
 </row>
 <row>
-	<entry>qErr</entry>
-	<entry>No</entry>
-	<entry>numeric</entry>
+        <entry>qErr</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
         <entry>Quantization error of the PPS, in picoseconds.  Sometimes
 called the "sawtooth" error.</entry>
 </row>
@@ -1600,49 +1600,49 @@ short-term stability (such as a rubidium atomic clock).</para>
 <tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Always?</entry>
-	<entry>Type</entry>
-	<entry>Description</entry>
+        <entry>Name</entry>
+        <entry>Always?</entry>
+        <entry>Type</entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>class</entry>
-	<entry>Yes</entry>
-	<entry>string</entry>
+        <entry>class</entry>
+        <entry>Yes</entry>
+        <entry>string</entry>
         <entry>Fixed: "OSC"</entry>
 </row>
 <row>
-	<entry>device</entry>
-	<entry>Yes</entry>
-	<entry>string</entry>
+        <entry>device</entry>
+        <entry>Yes</entry>
+        <entry>string</entry>
         <entry>Name of the originating device.</entry>
 </row>
 <row>
-	<entry>running</entry>
-	<entry>Yes</entry>
-	<entry>boolean</entry>
+        <entry>running</entry>
+        <entry>Yes</entry>
+        <entry>boolean</entry>
         <entry>If true, the oscillator is currently running.  Oscillators may
         require warm-up time at the start of the day.</entry>
 </row>
 <row>
-	<entry>reference</entry>
-	<entry>Yes</entry>
-	<entry>boolean</entry>
+        <entry>reference</entry>
+        <entry>Yes</entry>
+        <entry>boolean</entry>
         <entry>If true, the oscillator is receiving a GPS PPS signal.</entry>
 </row>
 <row>
-	<entry>disciplined</entry>
-	<entry>Yes</entry>
-	<entry>boolean</entry>
+        <entry>disciplined</entry>
+        <entry>Yes</entry>
+        <entry>boolean</entry>
         <entry>If true, the GPS PPS signal is sufficiently stable and is being
         used to discipline the local oscillator.</entry>
 </row>
 <row>
-	<entry>delta</entry>
-	<entry>Yes</entry>
-	<entry>numeric</entry>
+        <entry>delta</entry>
+        <entry>Yes</entry>
+        <entry>numeric</entry>
         <entry>The time difference (in nanoseconds) between the GPS-disciplined
         oscillator PPS output pulse and the most recent GPS PPS input
         pulse.</entry>
@@ -1691,106 +1691,106 @@ backup battery.</para>
 <tgroup cols="4" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Always?</entry>
-	<entry>Type</entry>
-	<entry>Description</entry>
+        <entry>Name</entry>
+        <entry>Always?</entry>
+        <entry>Type</entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>class</entry>
-	<entry>Yes</entry>
-	<entry>string</entry>
+        <entry>class</entry>
+        <entry>Yes</entry>
+        <entry>string</entry>
         <entry>Fixed: "DEVICE"</entry>
 </row>
 <row>
-	<entry>path</entry>
-	<entry>No</entry>
-	<entry>string</entry>
+        <entry>path</entry>
+        <entry>No</entry>
+        <entry>string</entry>
         <entry>Name the device for which the control bits are
-	being reported, or for which they are to be applied. This
+        being reported, or for which they are to be applied. This
         attribute may be omitted only when there is exactly one
         subscribed channel.</entry>
 </row>
 <row>
-	<entry>activated</entry>
-	<entry>No</entry>
-	<entry>string</entry>
+        <entry>activated</entry>
+        <entry>No</entry>
+        <entry>string</entry>
         <entry>Time the device was activated as an ISO8601
         timestamp. If the device is inactive this attribute is
         absent.</entry>
 </row>
 <row>
-	<entry>flags</entry>
-	<entry>No</entry>
-	<entry>integer</entry>
+        <entry>flags</entry>
+        <entry>No</entry>
+        <entry>integer</entry>
         <entry>Bit vector of property flags.  Currently defined flags are:
         describe packet types seen so far (GPS, RTCM2, RTCM3,
-	AIS). Won't be reported if empty, e.g. before
-	<application>gpsd</application> has seen identifiable packets
-	from the device.</entry>
+        AIS). Won't be reported if empty, e.g. before
+        <application>gpsd</application> has seen identifiable packets
+        from the device.</entry>
 </row>
 <row>
-	<entry>driver</entry>
-	<entry>No</entry>
-	<entry>string</entry>
+        <entry>driver</entry>
+        <entry>No</entry>
+        <entry>string</entry>
         <entry>GPSD's name for the device driver type. Won't be reported before
-	<application>gpsd</application> has seen identifiable packets
-	from the device.</entry>
+        <application>gpsd</application> has seen identifiable packets
+        from the device.</entry>
 </row>
 <row>
-	<entry>subtype</entry>
-	<entry>No</entry>
-	<entry>string</entry>
-	<entry>Whatever version information the device driver returned.</entry>
+        <entry>subtype</entry>
+        <entry>No</entry>
+        <entry>string</entry>
+        <entry>Whatever version information the device driver returned.</entry>
 </row>
 <row>
-	<entry>subtype1</entry>
-	<entry>No</entry>
-	<entry>string</entry>
-	<entry>More version information the device driver returned.</entry>
+        <entry>subtype1</entry>
+        <entry>No</entry>
+        <entry>string</entry>
+        <entry>More version information the device driver returned.</entry>
 </row>
 <row>
-	<entry>bps</entry>
-	<entry>No</entry>
-	<entry>integer</entry>
+        <entry>bps</entry>
+        <entry>No</entry>
+        <entry>integer</entry>
         <entry>Device speed in bits per second.</entry>
 </row>
 <row>
-	<entry>parity</entry>
+        <entry>parity</entry>
         <entry>No</entry>
         <entry>string</entry>
-	<entry><para>N, O or E for no parity, odd, or even.</para></entry>
+        <entry><para>N, O or E for no parity, odd, or even.</para></entry>
 </row>
 <row>
-	<entry>stopbits</entry>
+        <entry>stopbits</entry>
         <entry>Yes</entry>
         <entry>string</entry>
-	<entry><para>Stop bits (1 or 2).</para></entry>
+        <entry><para>Stop bits (1 or 2).</para></entry>
 </row>
 <row>
-	<entry>native</entry>
-	<entry>No</entry>
-	<entry>integer</entry>
+        <entry>native</entry>
+        <entry>No</entry>
+        <entry>integer</entry>
         <entry>0 means NMEA mode and 1 means
-	alternate mode (binary if it has one, for SiRF and Evermore chipsets
-	in particular). Attempting to set this mode on a non-GPS
-	device will yield an error.</entry>
+        alternate mode (binary if it has one, for SiRF and Evermore chipsets
+        in particular). Attempting to set this mode on a non-GPS
+        device will yield an error.</entry>
 </row>
 <row>
-	<entry>cycle</entry>
-	<entry>No</entry>
-	<entry>real</entry>
+        <entry>cycle</entry>
+        <entry>No</entry>
+        <entry>real</entry>
         <entry>Device cycle time in seconds.</entry>
 </row>
 <row>
-	<entry>mincycle</entry>
-	<entry>No</entry>
-	<entry>real</entry>
+        <entry>mincycle</entry>
+        <entry>No</entry>
+        <entry>real</entry>
         <entry>Device minimum cycle time in seconds. Reported from
-	?DEVICE when (and only when) the rate is switchable. It is
-	read-only and not settable.</entry>
+        ?DEVICE when (and only when) the rate is switchable. It is
+        read-only and not settable.</entry>
 </row>
 </tbody>
 </tgroup>
@@ -1806,31 +1806,31 @@ feed; on a serial device they will always be present.</para>
 <tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>C #define</entry>
-	<entry>Value</entry>
-	<entry>Description</entry>
+        <entry>C #define</entry>
+        <entry>Value</entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>SEEN_GPS</entry>
-	<entry>0x01</entry>
-	<entry>GPS data has been seen on this device</entry>
+        <entry>SEEN_GPS</entry>
+        <entry>0x01</entry>
+        <entry>GPS data has been seen on this device</entry>
 </row>
 <row>
-	<entry>SEEN_RTCM2</entry>
-	<entry>0x02</entry>
-	<entry>RTCM2 data has been seen on this device</entry>
+        <entry>SEEN_RTCM2</entry>
+        <entry>0x02</entry>
+        <entry>RTCM2 data has been seen on this device</entry>
 </row>
 <row>
-	<entry>SEEN_RTCM3</entry>
-	<entry>0x04</entry>
-	<entry>RTCM3 data has been seen on this device</entry>
+        <entry>SEEN_RTCM3</entry>
+        <entry>0x04</entry>
+        <entry>RTCM3 data has been seen on this device</entry>
 </row>
 <row>
-	<entry>SEEN_AIS</entry>
-	<entry>0x08</entry>
-	<entry>AIS data has been seen on this device</entry>
+        <entry>SEEN_AIS</entry>
+        <entry>0x08</entry>
+        <entry>AIS data has been seen on this device</entry>
 </row>
 </tbody>
 </tgroup>
@@ -1899,24 +1899,24 @@ the following elements:</para>
 <tgroup cols="4" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Always?</entry>
-	<entry>Type</entry>
-	<entry>Description</entry>
+        <entry>Name</entry>
+        <entry>Always?</entry>
+        <entry>Type</entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>class</entry>
-	<entry>Yes</entry>
-	<entry>string</entry>
+        <entry>class</entry>
+        <entry>Yes</entry>
+        <entry>string</entry>
         <entry>Fixed: "ERROR"</entry>
 </row>
 <row>
-	<entry>message</entry>
-	<entry>Yes</entry>
-	<entry>string</entry>
-	<entry>Textual error message</entry>
+        <entry>message</entry>
+        <entry>Yes</entry>
+        <entry>string</entry>
+        <entry>Textual error message</entry>
 </row>
 </tbody>
 </tgroup>
@@ -2004,53 +2004,53 @@ attributes are emitted before others.</para>
 <tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Type</entry>
-	<entry><para>Description</para></entry>
+        <entry>Name</entry>
+        <entry>Type</entry>
+        <entry><para>Description</para></entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>class</entry>
-	<entry>string</entry>
+        <entry>class</entry>
+        <entry>string</entry>
         <entry><para>Fixed: "RTCM2".</para></entry>
 </row>
 <row>
-	<entry>type</entry>
-	<entry>integer</entry>
+        <entry>type</entry>
+        <entry>integer</entry>
         <entry><para>Message type (1-9).</para></entry>
 </row>
 <row>
-	<entry>station_id</entry>
-	<entry>integer</entry>
+        <entry>station_id</entry>
+        <entry>integer</entry>
         <entry><para>The id of the GPS reference receiver. The
-	LF transmitters also have (different) id numbers.</para></entry>
+        LF transmitters also have (different) id numbers.</para></entry>
 </row>
 <row>
-	<entry>zcount</entry>
-	<entry>real</entry>
+        <entry>zcount</entry>
+        <entry>real</entry>
         <entry><para>The reference time of the
-	corrections in the message in seconds within the current hour. Note
-	that it is in GPS time, which is some seconds ahead of UTC (see the
-	U.S. Naval Observatory's <ulink
-	url="ftp://maia.usno.navy.mil/ser7/tai-utc.dat">table of leap second
-	corrections</ulink>).</para></entry>
+        corrections in the message in seconds within the current hour. Note
+        that it is in GPS time, which is some seconds ahead of UTC (see the
+        U.S. Naval Observatory's <ulink
+        url="ftp://maia.usno.navy.mil/ser7/tai-utc.dat">table of leap second
+        corrections</ulink>).</para></entry>
 </row>
 <row>
-	<entry>seqnum</entry>
-	<entry>integer</entry>
+        <entry>seqnum</entry>
+        <entry>integer</entry>
         <entry><para>Sequence number. Only 3 bits wide, wraps after 7.</para>
         </entry>
 </row>
 <row>
-	<entry>length</entry>
-	<entry>integer</entry>
+        <entry>length</entry>
+        <entry>integer</entry>
         <entry><para>The number of words after the header that comprise the
         message.</para></entry>
 </row>
 <row>
-	<entry>station_health</entry>
-	<entry>integer</entry>
+        <entry>station_health</entry>
+        <entry>integer</entry>
         <entry><para>Station transmission status. Indicates the health of
         the beacon as a reference source.  Any nonzero value means the
         satellite is probably transmitting bad data and should not be
@@ -2132,27 +2132,27 @@ messages. Here is the format:</para>
 <tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Type</entry>
-	<entry><para>Description</para></entry>
+        <entry>Name</entry>
+        <entry>Type</entry>
+        <entry><para>Description</para></entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>ident</entry>
-	<entry>integer</entry>
+        <entry>ident</entry>
+        <entry>integer</entry>
         <entry><para>The PRN number of the satellite for which this is
-	correction data.</para></entry>
+        correction data.</para></entry>
 </row>
 <row>
-	<entry>udre</entry>
-	<entry>integer</entry>
+        <entry>udre</entry>
+        <entry>integer</entry>
         <entry><para>User Differential Range Error (0-3). See the
         table following for values.</para></entry>
 </row>
 <row>
-	<entry>iod</entry>
-	<entry>integer</entry>
+        <entry>iod</entry>
+        <entry>integer</entry>
         <entry><para>Issue Of Data, matching the IOD for the current
         ephemeris of this satellite, as transmitted by the satellite.
         The IOD is a unique tag that identifies the ephemeris; the GPS
@@ -2161,16 +2161,16 @@ messages. Here is the format:</para>
         satellite.</para></entry>
 </row>
 <row>
-	<entry>prc</entry>
-	<entry>real</entry>
+        <entry>prc</entry>
+        <entry>real</entry>
         <entry><para>The pseudorange error in meters for this
         satellite as measured by the beacon reference receiver at the
         epoch indicated by the z_count in the parent
         record.</para></entry>
 </row>
 <row>
-	<entry>rrc</entry>
-	<entry>real</entry>
+        <entry>rrc</entry>
+        <entry>real</entry>
         <entry><para>The rate of change of pseudorange error in
         meters/sec for this satellite as measured by the beacon
         reference receiver at the epoch indicated by the z_count field
@@ -2187,10 +2187,10 @@ messages. Here is the format:</para>
 <table frame="all" pgwide="0"><title>UDRE values</title>
 <tgroup cols="2" align="left" colsep="1" rowsep="1">
 <tbody>
-<row><entry>0</entry><entry>1-sigma error	&lt;= 1m</entry></row>
-<row><entry>1</entry><entry>1-sigma error	&lt;= 4m</entry></row>
-<row><entry>2</entry><entry>1-sigma error	&lt;= 8m</entry></row>
-<row><entry>3</entry><entry>1-sigma error	&gt;  8m</entry></row>
+<row><entry>0</entry><entry>1-sigma error       &lt;= 1m</entry></row>
+<row><entry>1</entry><entry>1-sigma error       &lt;= 4m</entry></row>
+<row><entry>2</entry><entry>1-sigma error       &lt;= 8m</entry></row>
+<row><entry>3</entry><entry>1-sigma error       &gt;  8m</entry></row>
 </tbody>
 </tgroup>
 </table>
@@ -2201,17 +2201,17 @@ messages. Here is the format:</para>
 {"class":"RTCM2","type":1,
     "station_id":688,"zcount":843.0,"seqnum":5,"length":19,"station_health":6,
     "satellites":[
-	{"ident":10,"udre":0,"iod":46,"prc":-2.400,"rrc":0.000},
-	{"ident":13,"udre":0,"iod":94,"prc":-4.420,"rrc":0.000},
-	{"ident":7,"udre":0,"iod":22,"prc":-5.160,"rrc":0.002},
-	{"ident":2,"udre":0,"iod":34,"prc":-6.480,"rrc":0.000},
-	{"ident":4,"udre":0,"iod":47,"prc":-8.860,"rrc":0.000},
-	{"ident":8,"udre":0,"iod":76,"prc":-7.980,"rrc":0.002},
-	{"ident":5,"udre":0,"iod":99,"prc":-8.260,"rrc":0.002},
-	{"ident":23,"udre":0,"iod":81,"prc":-8.060,"rrc":0.000},
-	{"ident":16,"udre":0,"iod":70,"prc":-11.740,"rrc":0.000},
-	{"ident":30,"udre":0,"iod":4,"prc":-18.960,"rrc":-0.006},
-	{"ident":29,"udre":0,"iod":101,"prc":-24.960,"rrc":-0.002}
+        {"ident":10,"udre":0,"iod":46,"prc":-2.400,"rrc":0.000},
+        {"ident":13,"udre":0,"iod":94,"prc":-4.420,"rrc":0.000},
+        {"ident":7,"udre":0,"iod":22,"prc":-5.160,"rrc":0.002},
+        {"ident":2,"udre":0,"iod":34,"prc":-6.480,"rrc":0.000},
+        {"ident":4,"udre":0,"iod":47,"prc":-8.860,"rrc":0.000},
+        {"ident":8,"udre":0,"iod":76,"prc":-7.980,"rrc":0.002},
+        {"ident":5,"udre":0,"iod":99,"prc":-8.260,"rrc":0.002},
+        {"ident":23,"udre":0,"iod":81,"prc":-8.060,"rrc":0.000},
+        {"ident":16,"udre":0,"iod":70,"prc":-11.740,"rrc":0.000},
+        {"ident":30,"udre":0,"iod":4,"prc":-18.960,"rrc":-0.006},
+        {"ident":29,"udre":0,"iod":101,"prc":-24.960,"rrc":-0.002}
 ]}
 </programlisting>
 
@@ -2225,25 +2225,25 @@ Parameters) message:</para>
 <tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Type</entry>
-	<entry><para>Description</para></entry>
+        <entry>Name</entry>
+        <entry>Type</entry>
+        <entry><para>Description</para></entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>x</entry>
-	<entry>real</entry>
+        <entry>x</entry>
+        <entry>real</entry>
         <entry><para>ECEF X coordinate.</para></entry>
 </row>
 <row>
-	<entry>y</entry>
-	<entry>real</entry>
+        <entry>y</entry>
+        <entry>real</entry>
         <entry><para>ECEF Y coordinate.</para></entry>
 </row>
 <row>
-	<entry>z</entry>
-	<entry>real</entry>
+        <entry>z</entry>
+        <entry>real</entry>
         <entry><para>ECEF Z coordinate.</para></entry>
 </row>
 </tbody>
@@ -2278,21 +2278,21 @@ without payload fields.</para>
 <tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Type</entry>
-	<entry><para>Description</para></entry>
+        <entry>Name</entry>
+        <entry>Type</entry>
+        <entry><para>Description</para></entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>dgnss_type</entry>
-	<entry>string</entry>
+        <entry>dgnss_type</entry>
+        <entry>string</entry>
         <entry><para>Either "GPS", "GLONASS", "GALILEO", or
         "UNKNOWN".</para></entry>
 </row>
 <row>
-	<entry>dat</entry>
-	<entry>integer</entry>
+        <entry>dat</entry>
+        <entry>integer</entry>
         <entry><para>0 or 1 and indicates the sense of the offset
         shift given by dx, dy, dz. dat = 0 means that the station
         coordinates (in the reference message) are referred to a local
@@ -2302,24 +2302,24 @@ without payload fields.</para>
         dz will give it referred to the local datum.</para></entry>
 </row>
 <row>
-	<entry>datum_name</entry>
-	<entry>string</entry>
+        <entry>datum_name</entry>
+        <entry>string</entry>
         <entry><para>A standard name for the datum.</para></entry>
 </row>
 
 <row>
-	<entry>dx</entry>
-	<entry>real</entry>
+        <entry>dx</entry>
+        <entry>real</entry>
         <entry><para>X offset.</para></entry>
 </row>
 <row>
-	<entry>dy</entry>
-	<entry>real</entry>
+        <entry>dy</entry>
+        <entry>real</entry>
         <entry><para>Y offset.</para></entry>
 </row>
 <row>
-	<entry>dz</entry>
-	<entry>real</entry>
+        <entry>dz</entry>
+        <entry>real</entry>
         <entry><para>Z offset.</para></entry>
 </row>
 </tbody>
@@ -2345,58 +2345,58 @@ for each satellite.</para>
 <tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Type</entry>
-	<entry><para>Description</para></entry>
+        <entry>Name</entry>
+        <entry>Type</entry>
+        <entry><para>Description</para></entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>ident</entry>
-	<entry>integer</entry>
+        <entry>ident</entry>
+        <entry>integer</entry>
         <entry><para>The PRN number of the satellite.</para></entry>
 </row>
 <row>
-	<entry>iodl</entry>
-	<entry>bool</entry>
+        <entry>iodl</entry>
+        <entry>bool</entry>
         <entry><para>True indicates that this information relates to
         the satellite information in an accompanying type 1 or type 9
         message.</para></entry>
 </row>
 <row>
-	<entry>health</entry>
-	<entry>integer</entry>
+        <entry>health</entry>
+        <entry>integer</entry>
         <entry>0 indicates that the satellite is healthy. Any other value
-	indicates a problem (coding is not known).<para></para></entry>
+        indicates a problem (coding is not known).<para></para></entry>
 </row>
 <row>
-	<entry>snr</entry>
-	<entry>integer</entry>
+        <entry>snr</entry>
+        <entry>integer</entry>
         <entry><para>The carrier/noise ratio of the received signal in
         the range 25 to 55 dB(Hz).</para></entry>
 </row>
 <row>
-	<entry>health_en</entry>
-	<entry>bool</entry>
+        <entry>health_en</entry>
+        <entry>bool</entry>
         <entry><para>If set to True it indicates that the satellite is
         healthy even if the satellite navigation data says it is
         unhealthy.</para></entry>
 </row>
 <row>
-	<entry>new_data</entry>
-	<entry>bool</entry>
+        <entry>new_data</entry>
+        <entry>bool</entry>
         <entry>True indicates that the IOD for this satellite will
         soon be updated in type 1 or 9 messages.<para></para></entry>
 </row>
 <row>
-	<entry>los_warning</entry>
-	<entry>bool</entry>
+        <entry>los_warning</entry>
+        <entry>bool</entry>
         <entry><para>Line-of-sight warning. True indicates that the
         satellite will shortly go unhealthy.</para></entry>
 </row>
 <row>
-	<entry>tou</entry>
-	<entry>integer</entry>
+        <entry>tou</entry>
+        <entry>integer</entry>
         <entry><para>Healthy time remaining in seconds.</para></entry>
 </row>
 </tbody>
@@ -2420,15 +2420,15 @@ message type field doesn't match any of the known ones.</para>
 <tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Type</entry>
-	<entry><para>Description</para></entry>
+        <entry>Name</entry>
+        <entry>Type</entry>
+        <entry><para>Description</para></entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>data</entry>
-	<entry>list</entry>
+        <entry>data</entry>
+        <entry>list</entry>
         <entry><para>A list of strings.</para></entry>
 </row>
 </tbody>
@@ -2448,39 +2448,39 @@ should be ignored.</para>
 <tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Type</entry>
-	<entry><para>Description</para></entry>
+        <entry>Name</entry>
+        <entry>Type</entry>
+        <entry><para>Description</para></entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>lat</entry>
-	<entry>real</entry>
+        <entry>lat</entry>
+        <entry>real</entry>
         <entry><para>Latitude in degrees, of the LF transmitter
         antenna for the station for which this is an almanac.  North
         is positive.</para></entry>
 </row>
 <row>
-	<entry>lon</entry>
-	<entry>real</entry>
+        <entry>lon</entry>
+        <entry>real</entry>
         <entry><para>Longitude in degrees, of the LF transmitter
         antenna for the station for which this is an almanac.
         East is positive.</para></entry>
 </row>
 <row>
-	<entry>range</entry>
-	<entry>integer</entry>
+        <entry>range</entry>
+        <entry>integer</entry>
         <entry>Published range of the station in km.<para></para></entry>
 </row>
 <row>
-	<entry>frequency</entry>
-	<entry>real</entry>
+        <entry>frequency</entry>
+        <entry>real</entry>
         <entry><para>Station broadcast frequency in kHz.</para></entry>
 </row>
 <row>
-	<entry>health</entry>
-	<entry>integer</entry>
+        <entry>health</entry>
+        <entry>integer</entry>
         <entry><para>&lt;health&gt; is the health of the station for
         which this is an almanac. If it is non-zero, the station is
         issuing suspect data and should not be used for fixes.  The
@@ -2500,19 +2500,19 @@ RTCM104, in the other hand, makes it 3 bits wide.
 The Sager documentation said health has the same meaning as in the header.
 but this cannot be true unless the field is 3 bits wide.
 -->
-	</para></entry>
+        </para></entry>
 </row>
 <row>
-	<entry>station_id</entry>
-	<entry>integer</entry>
+        <entry>station_id</entry>
+        <entry>integer</entry>
         <entry><para>The id of the transmitter. This is not the same
         as the reference id in the header, the latter being the id of
         the reference receiver. <!-- John Sager noted: "However I know
-	of at least one station that gets it wrong." --></para></entry>
+        of at least one station that gets it wrong." --></para></entry>
 </row>
 <row>
-	<entry>bitrate</entry>
-	<entry>integer</entry>
+        <entry>bitrate</entry>
+        <entry>integer</entry>
         <entry><para>The transmitted bitrate.</para></entry>
 </row>
 </tbody>
@@ -2541,43 +2541,43 @@ message:</para>
 <tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Type</entry>
-	<entry><para>Description</para></entry>
+        <entry>Name</entry>
+        <entry>Type</entry>
+        <entry><para>Description</para></entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>status</entry>
-	<entry>bool</entry>
+        <entry>status</entry>
+        <entry>bool</entry>
         <entry><para>If True, signals user to expect a type 16 explanatory
-	message associated with this station. Probably indicates some
-	sort of unusual event.</para></entry>
+        message associated with this station. Probably indicates some
+        sort of unusual event.</para></entry>
 </row>
 <row>
-	<entry>rangeflag</entry>
-	<entry>bool</entry>
+        <entry>rangeflag</entry>
+        <entry>bool</entry>
         <entry><para>If True, indicates that the estimated range is
-	different from that found in the Type 7 message (which contains the
-	beacon's listed range). Generally indicates a range reduction due to
-	causes such as poor ionospheric conditions or reduced transmission
-	power.</para></entry>
+        different from that found in the Type 7 message (which contains the
+        beacon's listed range). Generally indicates a range reduction due to
+        causes such as poor ionospheric conditions or reduced transmission
+        power.</para></entry>
 </row>
 <row>
-	<entry>lat</entry>
-	<entry>real</entry>
+        <entry>lat</entry>
+        <entry>real</entry>
         <entry><para>Degrees latitude, signed.
-	Positive is N, negative is S.</para></entry>
+        Positive is N, negative is S.</para></entry>
 </row>
 <row>
-	<entry>lon</entry>
-	<entry>real</entry>
+        <entry>lon</entry>
+        <entry>real</entry>
         <entry><para>Degrees longitude, signed.
-	Positive is E, negative is W.</para></entry>
+        Positive is E, negative is W.</para></entry>
 </row>
 <row>
-	<entry>range</entry>
-	<entry>integer</entry>
+        <entry>range</entry>
+        <entry>integer</entry>
         <entry><para>Transmission range in km (1-1024).</para></entry>
 </row>
 </tbody>
@@ -2597,25 +2597,25 @@ message:</para>
 <tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Type</entry>
-	<entry><para>Description</para></entry>
+        <entry>Name</entry>
+        <entry>Type</entry>
+        <entry><para>Description</para></entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>week</entry>
-	<entry>integer</entry>
+        <entry>week</entry>
+        <entry>integer</entry>
         <entry><para>GPS week (0-123).</para></entry>
 </row>
 <row>
-	<entry>hour</entry>
-	<entry>integer</entry>
+        <entry>hour</entry>
+        <entry>integer</entry>
         <entry><para>Hour of week (0-167).</para></entry>
 </row>
 <row>
-	<entry>leapsecs</entry>
-	<entry>integer</entry>
+        <entry>leapsecs</entry>
+        <entry>integer</entry>
         <entry><para>Leap Seconds (0-63).</para></entry>
 </row>
 </tbody>
@@ -2637,15 +2637,15 @@ message:</para>
 <tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Type</entry>
-	<entry><para>Description</para></entry>
+        <entry>Name</entry>
+        <entry>Type</entry>
+        <entry><para>Description</para></entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>message</entry>
-	<entry>string</entry>
+        <entry>message</entry>
+        <entry>string</entry>
         <entry><para>A text message sent by the beacon operator.</para></entry>
 </row>
 </tbody>
@@ -2662,46 +2662,46 @@ message:</para>
 <tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Name</entry>
-	<entry>Type</entry>
-	<entry><para>Description</para></entry>
+        <entry>Name</entry>
+        <entry>Type</entry>
+        <entry><para>Description</para></entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>ident</entry>
-	<entry>integer</entry>
+        <entry>ident</entry>
+        <entry>integer</entry>
         <entry><para>The PRN number of the satellite for which this is
-	correction data.</para></entry>
+        correction data.</para></entry>
 </row>
 <row>
-	<entry>udre</entry>
-	<entry>integer</entry>
+        <entry>udre</entry>
+        <entry>integer</entry>
         <entry><para>User Differential Range Error (0-3). See the
         table following for values.</para></entry>
 </row>
 <row>
-	<entry>change</entry>
-	<entry>boolean</entry>
+        <entry>change</entry>
+        <entry>boolean</entry>
         <entry><para>Change-of-ephemeris bit.</para></entry>
 </row>
 <row>
-	<entry>tod</entry>
-	<entry>uinteger</entry>
+        <entry>tod</entry>
+        <entry>uinteger</entry>
         <entry><para>Count of 30-second periods since the top of the
-	hour.</para></entry>
+        hour.</para></entry>
 </row>
 <row>
-	<entry>prc</entry>
-	<entry>real</entry>
+        <entry>prc</entry>
+        <entry>real</entry>
         <entry><para>The pseudorange error in meters for this
         satellite as measured by the beacon reference receiver at the
         epoch indicated by the z_count in the parent
         record.</para></entry>
 </row>
 <row>
-	<entry>rrc</entry>
-	<entry>real</entry>
+        <entry>rrc</entry>
+        <entry>real</entry>
         <entry><para>The rate of change of pseudorange error in
         meters/sec for this satellite as measured by the beacon
         reference receiver at the epoch indicated by the z_count field
