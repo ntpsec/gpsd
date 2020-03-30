@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!--
-This file is Copyright (c) 2010 by the GPSD project
+This file is Copyright 2010 by the GPSD project
 SPDX-License-Identifier: BSD-2-clause
 -->
 <!DOCTYPE refentry PUBLIC
@@ -24,9 +24,9 @@ SPDX-License-Identifier: BSD-2-clause
   <command>gpsctl</command>
       <arg choice='opt'>-h </arg>
       <group>
-	<arg choice='plain'>-b</arg>
-	<arg choice='plain'>-n</arg>
-	<arg choice='plain'>-r</arg>
+        <arg choice='plain'>-b</arg>
+        <arg choice='plain'>-n</arg>
+        <arg choice='plain'>-r</arg>
       </group>
       <arg choice='opt'>-x <replaceable>control</replaceable></arg>
       <arg choice='opt'>-e </arg>
