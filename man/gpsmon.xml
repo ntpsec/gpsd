@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!--
-This file is Copyright (c) 2010-2019 by the GPSD project
+This file is Copyright 2009 by the GPSD project
 SPDX-License-Identifier: BSD-2-clause
 -->
 <!DOCTYPE refentry PUBLIC
    "-//OASIS//DTD DocBook XML V4.1.2//EN"
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gpsmon.1'>
-<refentryinfo><date>17 Feb 2009</date></refentryinfo>
+<refentryinfo><date>30 March 2020</date></refentryinfo>
 <refmeta>
 <refentrytitle>gpsmon</refentrytitle>
 <manvolnum>1</manvolnum>
@@ -30,11 +30,11 @@ SPDX-License-Identifier: BSD-2-clause
       <arg choice='opt'>-l <replaceable>logfile</replaceable></arg>
       <arg choice='opt'>-t <replaceable>driver-prefix</replaceable></arg>
       <arg choice='opt'>
-	<group>
-	  <arg choice='plain'>
+        <group>
+          <arg choice='plain'>
             <replaceable>server</replaceable>
             <group>
-	      <replaceable>:port</replaceable>
+              <replaceable>:port</replaceable>
               <group><replaceable>:device</replaceable></group>
             </group>
           </arg>
