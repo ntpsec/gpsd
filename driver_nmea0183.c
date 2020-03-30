@@ -2114,7 +2114,7 @@ static gps_mask_t processPGRMZ(int c UNUSED, char *field[],
         0 < strlen(field[1])) {
         /* have a GPS altitude, must be 3D */
         /* seems to be altMSL.  regressions show this matches GPGGA MSL */
-        session->newdata.altMSL = atoi(field[1]) / METERS_TO_FEET;
+        session->newdata.altMSL = atoi(field[1]) * FEET_TO_METERS;
         mask |= (ALTITUDE_SET);
     }
     switch (field[3][0]) {
@@ -2574,10 +2574,10 @@ static gps_mask_t processDBT(int c UNUSED, char *field[],
         session->newdata.depth = safe_atof(field[3]);
         mask |= (ALTITUDE_SET);
     } else if (field[1][0] != '\0') {
-        session->newdata.depth = safe_atof(field[1]) / METERS_TO_FEET;
+        session->newdata.depth = safe_atof(field[1]) * FEET_TO_METERS;
         mask |= (ALTITUDE_SET);
     } else if (field[5][0] != '\0') {
-        session->newdata.depth = safe_atof(field[5]) / METERS_TO_FATHOMS;
+        session->newdata.depth = safe_atof(field[5]) * FATHOMS_TO_METERS;
         mask |= (ALTITUDE_SET);
     }
 
@@ -2784,7 +2784,7 @@ static gps_mask_t processOHPR(int c UNUSED, char *field[],
     session->gpsdata.attitude.pitch = safe_atof(field[2]);
     session->gpsdata.attitude.roll = safe_atof(field[3]);
     session->gpsdata.attitude.temp = safe_atof(field[4]);
-    session->gpsdata.attitude.depth = safe_atof(field[5]) / METERS_TO_FEET;
+    session->gpsdata.attitude.depth = safe_atof(field[5]) * FEET_TO_METERS;
     session->gpsdata.attitude.mag_len = safe_atof(field[6]);
     session->gpsdata.attitude.mag_x = safe_atof(field[7]);
     session->gpsdata.attitude.mag_y = safe_atof(field[8]);

@@ -2478,9 +2478,10 @@ extern void datum_code_string(int code, char *buffer, size_t len);
 #define FEET_TO_METERS  0.3048                  // intl feet to meters, exact
 #define METERS_TO_FEET  (1 / FEET_TO_METERS)    // meters to intl feet, exact
 
-#define MILES_TO_METERS 1.609344                // Miles to meters, exact
-#define METERS_TO_MILES (1 / MILES_TO_METERS)   // Meters to miles, exact
-#define METERS_TO_FATHOMS (1 / 1.8288)          // Meters to fathoms, exact
+#define MILES_TO_METERS 1.609344                  // Miles to meters, exact
+#define METERS_TO_MILES (1 / MILES_TO_METERS)     // Meters to miles, exact
+#define FATHOMS_TO_METERS 1.8288                  // Fathoms to meters, exact
+#define METERS_TO_FATHOMS (1 / FATHOMS_TO_METER)  // Meters to fathoms, exact
 
 // gpsd uses the international nautical mile, same as USA nautical mile
 // different from UK nautical mile
