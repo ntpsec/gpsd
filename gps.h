@@ -2475,8 +2475,8 @@ extern void datum_code_string(int code, char *buffer, size_t len);
  * Note: not the same as the USA Survey Foot to meters:
  *   approximately: 0.304800609601.  exactly: (1200 / 3937)
  * Some states use the International Foot, not the USA Survey Foot */
-#define FEET_TO_METERS  0.3048                  // intl feet to meters, exact
-#define METERS_TO_FEET  (1 / FEET_TO_METERS)    // meters to intl feet, exact
+#define FEET_TO_METERS  0.3048                   // intl feet to meters, exact
+#define METERS_TO_FEET  (1 / FEET_TO_METERS)     // meters to intl feet, exact
 
 #define MILES_TO_METERS 1.609344                  // Miles to meters, exact
 #define METERS_TO_MILES (1 / MILES_TO_METERS)     // Meters to miles, exact
@@ -2485,12 +2485,12 @@ extern void datum_code_string(int code, char *buffer, size_t len);
 
 // gpsd uses the international nautical mile, same as USA nautical mile
 // different from UK nautical mile
-#define KNOTS_TO_MPH    1.1507794      /* Knots to miles per hour */
+#define KNOTS_TO_MPH    (1852 / 1609.344)   // Knots to miles per hour, exact
 #define KNOTS_TO_KPH    1.852          // Knots to kilometers per hour, exact
 #define KNOTS_TO_MPS (KNOTS_TO_KPH / 3.6)  // Knots to meters per second, exact
 #define MPS_TO_KPH      3.6            // Meters per second to klicks/hr, exact
-#define MPS_TO_MPH      2.2369363      /* Meters/second to miles per hour */
-#define MPS_TO_KNOTS    1.9438445      /* Meters per second to knots */
+#define MPS_TO_MPH   (1 / 0.44704)    // Meters/second to miles per hour, exact
+#define MPS_TO_KNOTS (3600.0 / 1852.0)     // Meters per second to knots, exact
 /* miles and knots are both the international standard versions of the units */
 
 // angle conversion multipliers

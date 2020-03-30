@@ -101,15 +101,18 @@ else:  # Otherwise we do something real
 # Note: A Texas Foot is ( meters * 3937/1200)
 #       (Texas Natural Resources Code, Subchapter D, Sec 21.071 - 79)
 #       not the same as an international fooot.
-METERS_TO_FEET = 3.28083989501312         # Meters to U.S./British feet
-METERS_TO_MILES = 0.000621371192237334    # Meters to miles
-METERS_TO_FATHOMS = 0.546806649168854     # Meters to fathoms
-KNOTS_TO_MPH = 1.15077944802354           # Knots to miles per hour
-KNOTS_TO_KPH = 1.852                      # Knots to kilometers per hour
-KNOTS_TO_MPS = 0.514444444444445          # Knots to meters per second
-MPS_TO_KPH = 3.6                          # Meters per second to klicks/hr
-MPS_TO_MPH = 2.2369362920544              # Meters/second to miles per hour
-MPS_TO_KNOTS = 1.9438444924406            # Meters per second to knots
+FEET_TO_METERS = 0.3048                   # U.S./British feet to meters, exact
+METERS_TO_FEET = (1 / FEET_TO_METERS)     # Meters to U.S./British feet, exact
+MILES_TO_METERS = 1.609344                # Miles to meters, exact
+METERS_TO_MILES = (1 / MILES_TO_METERS)   # Meters to miles, exact
+FATHOMS_TO_METERS = 1.8288                # Fathoms to meters, exact
+METERS_TO_FATHOMS = (1 / FATHOMS_TO_METERS)  # Meters to fathoms, exact
+KNOTS_TO_MPH = (1852 / 1609.344)          # Knots to miles per hour, exact
+KNOTS_TO_KPH = 1.852                      # Knots to kilometers per hour, exact
+MPS_TO_KPH = 3.6                        # Meters per second to klicks/hr, exact
+KNOTS_TO_MPS = (KNOTS_TO_KPH / MPS_TO_KPH)  # Knots to meters per second, exact
+MPS_TO_MPH = (1 / 0.44704)             # Meters/second to miles per hour, exact
+MPS_TO_KNOTS = (3600.0 / 1852.0)            # Meters per second to knots, exact
 
 
 def Deg2Rad(x):
