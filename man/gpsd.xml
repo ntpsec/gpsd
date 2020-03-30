@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-This file is Copyright (c) 2010 by the GPSD project
+This file is Copyright 2010 by the GPSD project
 SPDX-License-Identifier: BSD-2-clause
 -->
 <!DOCTYPE refentry PUBLIC
    "-//OASIS//DTD DocBook XML V4.1.2//EN"
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
-<!ENTITY gpsdsock	 "/var/run/gpsd.sock">
+<!ENTITY gpsdsock        "/var/run/gpsd.sock">
 ]>
 <refentry id='gpsd.8'>
-<refentryinfo><date>9 Aug 2004</date></refentryinfo>
+<refentryinfo><date>30 March 2020</date></refentryinfo>
 <refmeta>
 <refentrytitle>gpsd</refentrytitle>
 <manvolnum>8</manvolnum>
@@ -40,7 +40,7 @@ SPDX-License-Identifier: BSD-2-clause
       <arg choice='opt'>-s <replaceable>speed</replaceable></arg>
       <arg choice='opt'>-V </arg>
       <arg rep='repeat'>
-	   <group><replaceable>source-name</replaceable></group>
+           <group><replaceable>source-name</replaceable></group>
       </arg>
 </cmdsynopsis>
 </refsynopsisdiv>
@@ -436,71 +436,71 @@ signal name is "fix".  The signal payload layout is as follows:</para>
 <tgroup cols="2" align="left" colsep="1" rowsep="1">
 <thead>
 <row>
-	<entry>Type</entry>
-	<entry><para>Description</para></entry>
+        <entry>Type</entry>
+        <entry><para>Description</para></entry>
 </row>
 </thead>
 <tbody>
 <row>
-	<entry>DBUS_TYPE_DOUBLE</entry>
+        <entry>DBUS_TYPE_DOUBLE</entry>
         <entry><para>Time (seconds since Unix epoch)</para></entry>
 </row>
 <row>
-	<entry>DBUS_TYPE_INT32</entry>
+        <entry>DBUS_TYPE_INT32</entry>
         <entry><para>mode</para></entry>
 </row>
 <row>
-	<entry>DBUS_TYPE_DOUBLE</entry>
+        <entry>DBUS_TYPE_DOUBLE</entry>
         <entry><para>Time uncertainty (seconds).</para></entry>
 </row>
 <row>
-	<entry>DBUS_TYPE_DOUBLE</entry>
+        <entry>DBUS_TYPE_DOUBLE</entry>
         <entry><para>Latitude in degrees.</para></entry>
 </row>
 <row>
-	<entry>DBUS_TYPE_DOUBLE</entry>
+        <entry>DBUS_TYPE_DOUBLE</entry>
         <entry><para>Longitude in degrees.</para></entry>
 </row>
 <row>
-	<entry>DBUS_TYPE_DOUBLE</entry>
+        <entry>DBUS_TYPE_DOUBLE</entry>
         <entry><para>Horizontal uncertainty in meters, 95% confidence.</para></entry>
 </row>
 <row>
-	<entry>DBUS_TYPE_DOUBLE</entry>
+        <entry>DBUS_TYPE_DOUBLE</entry>
         <entry><para>Altitude in meters.</para></entry>
 </row>
 <row>
-	<entry>DBUS_TYPE_DOUBLE</entry>
+        <entry>DBUS_TYPE_DOUBLE</entry>
         <entry><para>Altitude uncertainty in meters, 95% confidence.</para></entry>
 </row>
 <row>
-	<entry>DBUS_TYPE_DOUBLE</entry>
+        <entry>DBUS_TYPE_DOUBLE</entry>
         <entry><para>Course in degrees from true north.</para></entry>
 </row>
 <row>
-	<entry>DBUS_TYPE_DOUBLE</entry>
+        <entry>DBUS_TYPE_DOUBLE</entry>
         <entry><para>Course uncertainty in meters, 95% confidence.</para></entry>
 </row>
 <row>
-	<entry>DBUS_TYPE_DOUBLE</entry>
+        <entry>DBUS_TYPE_DOUBLE</entry>
         <entry><para>Speed, meters per second.</para></entry>
 </row>
 <row>
-	<entry>DBUS_TYPE_DOUBLE</entry>
+        <entry>DBUS_TYPE_DOUBLE</entry>
         <entry><para>Speed uncertainty in meters per second,
-	95% confidence.</para></entry>
+        95% confidence.</para></entry>
 </row>
 <row>
-	<entry>DBUS_TYPE_DOUBLE</entry>
+        <entry>DBUS_TYPE_DOUBLE</entry>
         <entry><para>Climb, meters per second.</para></entry>
 </row>
 <row>
-	<entry>DBUS_TYPE_DOUBLE</entry>
+        <entry>DBUS_TYPE_DOUBLE</entry>
         <entry><para>Climb uncertainty in meters per second,
-	95% confidence.</para></entry>
+        95% confidence.</para></entry>
 </row>
 <row>
-	<entry>DBUS_TYPE_STRING</entry>
+        <entry>DBUS_TYPE_STRING</entry>
         <entry><para>Device name</para></entry>
 </row>
 </tbody>
