@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!--
-This file is Copyright (c) 2013 by the GPSD project
+This file is Copyright 2013 by the GPSD project
 SPDX-License-Identifier: BSD-2-clause
 -->
 <!DOCTYPE refentry PUBLIC
    "-//OASIS//DTD DocBook XML V4.1.2//EN"
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gps2udp.1'>
-<refentryinfo><date>01 Marc 2013</date></refentryinfo>
+<refentryinfo><date>30 March 2020</date></refentryinfo>
 <refmeta>
 <refentrytitle>gps2udp</refentrytitle>
 <manvolnum>1</manvolnum>
@@ -31,10 +31,10 @@ SPDX-License-Identifier: BSD-2-clause
       <arg choice='opt'>-d <replaceable>1|2</replaceable></arg>
       <arg choice='opt'>-v</arg>
       <group>
-	<replaceable>server</replaceable>
-	  <group><replaceable>:port</replaceable>
-	    <group><replaceable>:device</replaceable></group>
-	</group>
+        <replaceable>server</replaceable>
+          <group><replaceable>:port</replaceable>
+            <group><replaceable>:device</replaceable></group>
+        </group>
       </group>
 </cmdsynopsis>
 </refsynopsisdiv>
