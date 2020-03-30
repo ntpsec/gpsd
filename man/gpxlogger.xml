@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!--
-This file is Copyright (c) 2017 by the GPSD project
+This file is Copyright 2017 by the GPSD project
 SPDX-License-Identifier: BSD-2-clause
 -->
 <!DOCTYPE refentry PUBLIC
    "-//OASIS//DTD DocBook XML V4.1.2//EN"
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gpxlogger.1'>
-<refentryinfo><date>05 Mar 2017</date></refentryinfo>
+<refentryinfo><date>30 March 2020</date></refentryinfo>
 <refmeta>
 <refentrytitle>gpxlogger</refentrytitle>
 <manvolnum>1</manvolnum>
@@ -32,11 +32,11 @@ SPDX-License-Identifier: BSD-2-clause
       <arg choice='opt'>-V </arg>
       <arg choice='opt'>-i <replaceable>track timeout</replaceable></arg>
       <group>
-	<replaceable>server</replaceable>
-	  <group>
-	    <replaceable>:port</replaceable>
-	      <group><replaceable>:device</replaceable></group>
-	  </group>
+        <replaceable>server</replaceable>
+          <group>
+            <replaceable>:port</replaceable>
+              <group><replaceable>:device</replaceable></group>
+          </group>
       </group>
 </cmdsynopsis>
 </refsynopsisdiv>
