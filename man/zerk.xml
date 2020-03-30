@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!--
-This file is Copyright (c) 2018 by the GPSD project
+This file is Copyright 2018 by the GPSD project
 BSD terms apply: see the file COPYING in the distribution root for details.
 -->
 <!DOCTYPE refentry PUBLIC
@@ -8,7 +8,7 @@ BSD terms apply: see the file COPYING in the distribution root for details.
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='zerk.1'>
  <refentryinfo>
-  <date>18 Sep 2018</date>
+  <date>30 March 2020</date>
  </refentryinfo>
  <refmeta>
   <refentrytitle>zerk</refentrytitle>
