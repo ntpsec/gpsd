@@ -594,6 +594,9 @@ def announce(msg, end=False):
         # duplicate message at exit
         atexit.register(lambda: print(msg))
 
+announce("scons version: %s" % SCons.__version__)
+announce("scons is running under Python version: %s" %
+         ".".join(map(str, sys.version_info)))
 
 # DESTDIR environment variable means user prefix the installation root.
 DESTDIR = os.environ.get('DESTDIR', '')
@@ -1418,7 +1421,7 @@ elif config.env['python']:
         # announce(python_config)
 
         # aiogps is only available on Python >= 3.6
-        sysver = config.GetPythonValue('version',
+        sysver = config.GetPythonValue('target version',
                                        'import sys',
                                        '"%d.%d" % sys.version_info[0:2]')
 
