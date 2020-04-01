@@ -1037,32 +1037,57 @@ ubx_msg_nav_relposned(struct gps_device_t *session, unsigned char *buf,
                       size_t data_len)
 {
     int version;
-    unsigned refStationId, flags;
+    unsigned flags;
     double accN, accE, accD;
     gps_mask_t mask = 0;
 
     if (40 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-NAV-RELPOSNED message, runt payload len %zd", data_len);
+                 "UBX-NAV-RELPOSNED:0 message, runt payload len %zd",
+                 data_len);
         return mask;
+    }
+    version = getub(buf, 0);
+    /* WTF?  u-blox did not make this sentence upward compatible
+     * 40 bytes in Version 0, protVer 20 to 27
+     * 64 bytes in Version 1, protVer 27.11+ */
+
+    session->newdata.dgps_station = getleu16(buf, 2);          // 0 to 4095
+    session->driver.ubx.iTOW = getles32(buf, 4);
+    if (1 > version) {
+	session->newdata.NED.relPosN = (1e-2 * (getles32(buf, 8) +
+	    (getsb(buf, 20) * 1e-2)));
+	session->newdata.NED.relPosE = (1e-2 * (getles32(buf, 12) +
+	    (getsb(buf, 21) * 1e-2)));
+	session->newdata.NED.relPosD = (1e-2 * (getles32(buf, 16) +
+	    (getsb(buf, 22) * 1e-2)));
+
+	accN = 1e-4 * getles32(buf, 24);
+	accE = 1e-4 * getles32(buf, 28);
+	accD = 1e-4 * getles32(buf, 32);
+	flags = getleu32(buf, 36);
+    } else {
+        // assume version 1
+	if (64 > data_len) {
+	    GPSD_LOG(LOG_WARN, &session->context->errout,
+		     "UBX-NAV-RELPOSNED:1 message, runt payload len %zd",
+                     data_len);
+            return mask;
+        }
+	session->newdata.NED.relPosN = (1e-2 * (getles32(buf, 8) +
+	    (getsb(buf, 32) * 1e-2)));
+	session->newdata.NED.relPosE = (1e-2 * (getles32(buf, 12) +
+	    (getsb(buf, 33) * 1e-2)));
+	session->newdata.NED.relPosD = (1e-2 * (getles32(buf, 16) +
+	    (getsb(buf, 34) * 1e-2)));
+
+	accN = 1e-4 * getles32(buf, 36);
+	accE = 1e-4 * getles32(buf, 40);
+	accD = 1e-4 * getles32(buf, 44);
+	flags = getleu32(buf, 60);
     }
 
     mask = NED_SET;
-
-    version = getub(buf, 0);
-    refStationId = getleu16(buf, 2);
-    session->driver.ubx.iTOW = getles32(buf, 4);
-    session->newdata.NED.relPosN = (1e-2 * (getles32(buf, 8) +
-        (getsb(buf, 20) * 1e-2)));
-    session->newdata.NED.relPosE = (1e-2 * (getles32(buf, 12) +
-        (getsb(buf, 21) * 1e-2)));
-    session->newdata.NED.relPosD = (1e-2 * (getles32(buf, 16) +
-        (getsb(buf, 22) * 1e-2)));
-
-    accN = 1e-4 * getles32(buf, 24);
-    accE = 1e-4 * getles32(buf, 28);
-    accD = 1e-4 * getles32(buf, 32);
-    flags = getleu32(buf, 36);
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
         "UBX-NAV-RELPOSNED: version %d iTOW=%lld refStationId %u flags x%x\n"
@@ -1070,7 +1095,7 @@ ubx_msg_nav_relposned(struct gps_device_t *session, unsigned char *buf,
         "UBX-NAV-RELPOSNED: acc N=%.4f E=%.4f D=%.4f\n",
         version,
         (long long)session->driver.ubx.iTOW,
-        refStationId,
+        session->newdata.dgps_station,
         flags,
         session->newdata.NED.relPosN,
         session->newdata.NED.relPosE,
