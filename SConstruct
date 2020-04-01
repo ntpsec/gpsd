@@ -1676,6 +1676,11 @@ packet_ffi_shared = env.SharedLibrary(target="gpsdpacket",
 env.Clean(libgps_shared, "gps_maskdump.c")
 libraries = [libgps_shared, packet_ffi_shared]
 
+# Make sure the old-style packet.so is gone, since it may be preferred
+old_packet_so = 'packet%s' % python_config['SO']
+del_old_so = Command('del-old-so', '', Delete('gps/%s' % old_packet_so))
+env.Depends(packet_ffi_shared, del_old_so)
+
 # Only attempt to create the qt library if we have shared turned on
 # otherwise we have a mismash of objects in library
 if qt_env:
@@ -2138,12 +2143,18 @@ if env['python'] and not cleaning and not helping:
     python_modules_install = python_env.Install(DESTDIR + python_module_dir,
                                                 python_modules)
 
+    python_oldso_remove = python_env.Command('uninstall-old-so', '',
+                                             Delete(DESTDIR +
+                                             python_module_dir + os.sep +
+                                             old_packet_so))
+
     python_progs_install = python_env.Install(installdir('bindir'),
                                               python_progs)
 
     python_egg_info_install = python_env.Install(DESTDIR + str(python_libdir),
                                                  python_egg_info)
     python_install = [python_modules_install,
+                      python_oldso_remove,
                       python_progs_install,
                       python_egg_info_install,
                       # We don't need the directory explicitly for the
