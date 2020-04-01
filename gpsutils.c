@@ -435,10 +435,15 @@ void gps_merge_fix(struct gps_fix_t *to,
 	to->ecef.vz = from->ecef.vz;
 	to->ecef.vAcc = from->ecef.vAcc;
     }
-    if ((transfer & NED_SET) != 0) {
+    if (0 != (transfer & NED_SET)) {
 	to->NED.relPosN = from->NED.relPosN;
 	to->NED.relPosE = from->NED.relPosE;
 	to->NED.relPosD = from->NED.relPosD;
+	if ((0 != isfinite(from->NED.relPosH)) &&
+	    (0 != isfinite(from->NED.relPosL))) {
+	    to->NED.relPosH = from->NED.relPosH;
+	    to->NED.relPosL = from->NED.relPosL;
+        }
     }
     if ((transfer & VNED_SET) != 0) {
 	to->NED.velN = from->NED.velN;

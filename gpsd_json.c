@@ -334,6 +334,13 @@ void json_tpv_dump(const gps_mask_t changed, const struct gps_device_t *session,
                     str_appendf(reply, replylen, ",\"relD\":%.3f",
                                 gpsdata->fix.NED.relPosD);
                 }
+		if (0 != isfinite(gpsdata->fix.NED.relPosH) &&
+		    0 != isfinite(gpsdata->fix.NED.relPosL)) {
+		    // 2D fix needs relN and relE
+		    str_appendf(reply, replylen, ",\"relH\":%.3f,\"relL\":%.3f",
+				gpsdata->fix.NED.relPosH,
+				gpsdata->fix.NED.relPosL);
+                }
             }
             if (0 != isfinite(gpsdata->fix.NED.velN) &&
                 0 != isfinite(gpsdata->fix.NED.velE)) {

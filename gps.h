@@ -81,6 +81,7 @@ extern "C" {
  * 10    Move gps_data_t->status to gps_fix_t.status for better fix merging
  *       Add wspeedt, wspeedr, wanglem, wanglet, wangler to  gps_fix_t
  *       Remove unused gps_data_t.navadata_t.
+ *       Add relPosL and relPosH to gps_fix_t.NED
  */
 #define GPSD_API_MAJOR_VERSION  10      /* bump on incompatible changes */
 #define GPSD_API_MINOR_VERSION  0       /* bump on compatible changes */
@@ -202,8 +203,9 @@ struct gps_fix_t {
     } ecef;
     /* NED data, all data in meters, and meters/second, or NaN */
     struct {
-        double relPosN, relPosE, relPosD;   /* NED relative positions */
-        double velN, velE, velD;            /* NED velocities */
+        double relPosN, relPosE, relPosD;   // NED relative positions
+        double relPosL, relPosH;            // relative length and heading
+        double velN, velE, velD;            // NED velocities
     } NED;
     char datum[40];             /* map datum */
     /* DGPS stuff, often from xxGGA, or xxGNS */
