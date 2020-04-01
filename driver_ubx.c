@@ -1777,6 +1777,7 @@ static void ubx_msg_sbas(struct gps_device_t *session, unsigned char *buf,
 /*
  * Multi-GNSS Raw measurement Data -- UBX-RXM-RAWX
  * Not in u-blox 5, 6 or 7
+ * u-blox 9, message version 1
  */
 static gps_mask_t ubx_rxm_rawx(struct gps_device_t *session,
                                const unsigned char *buf,
@@ -1787,6 +1788,7 @@ static gps_mask_t ubx_rxm_rawx(struct gps_device_t *session,
     int8_t leapS;
     uint8_t numMeas;
     uint8_t recStat;
+    uint8_t version;
     int i;
     const char * obs_code;
     timespec_t ts_tow;
@@ -1803,10 +1805,12 @@ static gps_mask_t ubx_rxm_rawx(struct gps_device_t *session,
     leapS = getsb(buf, 10);
     numMeas = getub(buf, 11);
     recStat = getub(buf, 12);
+    version = getub(buf, 13);
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX-RXM-RAWX: rcvTow %f week %u leapS %d numMeas %u recStat %d\n",
-             rcvTow, week, leapS, numMeas, recStat);
+             "UBX-RXM-RAWX: rcvTow %f week %u leapS %d numMeas %u recStat %d"
+             " version %u\n",
+             rcvTow, week, leapS, numMeas, recStat, version);
 
     if (recStat & 1) {
         /* Valid leap seconds */
