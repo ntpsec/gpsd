@@ -1777,6 +1777,7 @@ static void ubx_msg_sbas(struct gps_device_t *session, unsigned char *buf,
 /*
  * Multi-GNSS Raw measurement Data -- UBX-RXM-RAWX
  * Not in u-blox 5, 6 or 7
+ * u-blox 9, message version 0 (but no version byte!)
  * u-blox 9, message version 1
  */
 static gps_mask_t ubx_rxm_rawx(struct gps_device_t *session,
@@ -1805,6 +1806,8 @@ static gps_mask_t ubx_rxm_rawx(struct gps_device_t *session,
     leapS = getsb(buf, 10);
     numMeas = getub(buf, 11);
     recStat = getub(buf, 12);
+    /* byte 13 is version on u-blox 9, reserved on u-blox 8
+     * how is that supposed to work?? */
     version = getub(buf, 13);
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -1836,7 +1839,7 @@ static gps_mask_t ubx_rxm_rawx(struct gps_device_t *session,
         double doMes = getlef32((const char *)buf, off + 32);
         uint8_t gnssId = getub(buf, off + 36);
         uint8_t svId = getub(buf, off + 37);
-        /* reserved in u-blox 8, sigId in u-blox 9 */
+        // reserved in u-blox 8, sigId in u-blox 9 (version 1)
         uint8_t sigId = getub(buf, off + 38);
         /* GLONASS frequency slot */
         uint8_t freqId = getub(buf, off + 39);
