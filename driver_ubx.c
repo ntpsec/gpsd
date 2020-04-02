@@ -1038,7 +1038,7 @@ ubx_msg_nav_relposned(struct gps_device_t *session, unsigned char *buf,
 {
     int version;
     unsigned flags;
-    double accN, accE, accD;
+    double accN = NAN, accE = NAN, accD = NAN, accL = NAN, accH = NAN;;
     gps_mask_t mask = 0;
 
     if (40 > data_len) {
@@ -1055,17 +1055,28 @@ ubx_msg_nav_relposned(struct gps_device_t *session, unsigned char *buf,
     session->newdata.dgps_station = getleu16(buf, 2);          // 0 to 4095
     session->driver.ubx.iTOW = getles32(buf, 4);
     if (1 > version) {
-	session->newdata.NED.relPosN = (1e-2 * (getles32(buf, 8) +
-	    (getsb(buf, 20) * 1e-2)));
-	session->newdata.NED.relPosE = (1e-2 * (getles32(buf, 12) +
-	    (getsb(buf, 21) * 1e-2)));
-	session->newdata.NED.relPosD = (1e-2 * (getles32(buf, 16) +
-	    (getsb(buf, 22) * 1e-2)));
-
-	accN = 1e-4 * getles32(buf, 24);
-	accE = 1e-4 * getles32(buf, 28);
-	accD = 1e-4 * getles32(buf, 32);
+        // version 0
 	flags = getleu32(buf, 36);
+        if (1 != (1 & flags)) {
+            // not gnssFixOK
+	    GPSD_LOG(LOG_DATA, &session->context->errout,
+		     "UBX-NAV-RELPOSNED:0 no fix");
+            return mask;
+        }
+        if (4 & flags) {
+            // rePosValid
+	    session->newdata.NED.relPosN = (1e-2 * (getles32(buf, 8) +
+		(getsb(buf, 20) * 1e-2)));
+	    session->newdata.NED.relPosE = (1e-2 * (getles32(buf, 12) +
+		(getsb(buf, 21) * 1e-2)));
+	    session->newdata.NED.relPosD = (1e-2 * (getles32(buf, 16) +
+		(getsb(buf, 22) * 1e-2)));
+
+	    accN = 1e-4 * getles32(buf, 24);
+	    accE = 1e-4 * getles32(buf, 28);
+	    accD = 1e-4 * getles32(buf, 32);
+	    mask |= NED_SET;
+        }
     } else {
         // assume version 1
 	if (64 > data_len) {
@@ -1074,25 +1085,41 @@ ubx_msg_nav_relposned(struct gps_device_t *session, unsigned char *buf,
                      data_len);
             return mask;
         }
-	session->newdata.NED.relPosN = (1e-2 * (getles32(buf, 8) +
-	    (getsb(buf, 32) * 1e-2)));
-	session->newdata.NED.relPosE = (1e-2 * (getles32(buf, 12) +
-	    (getsb(buf, 33) * 1e-2)));
-	session->newdata.NED.relPosD = (1e-2 * (getles32(buf, 16) +
-	    (getsb(buf, 34) * 1e-2)));
-
-	accN = 1e-4 * getles32(buf, 36);
-	accE = 1e-4 * getles32(buf, 40);
-	accD = 1e-4 * getles32(buf, 44);
 	flags = getleu32(buf, 60);
-    }
+        if (1 != (1 & flags)) {
+            // not gnssFixOK
+	    GPSD_LOG(LOG_DATA, &session->context->errout,
+		     "UBX-NAV-RELPOSNED:1 no fix");
+            return mask;
+        }
+        if (4 & flags) {
+            // rePosValid
+	    session->newdata.NED.relPosN = (1e-2 * (getles32(buf, 8) +
+		(getsb(buf, 32) * 1e-2)));
+	    session->newdata.NED.relPosE = (1e-2 * (getles32(buf, 12) +
+		(getsb(buf, 33) * 1e-2)));
+	    session->newdata.NED.relPosD = (1e-2 * (getles32(buf, 16) +
+		(getsb(buf, 34) * 1e-2)));
+	    session->newdata.NED.relPosL = (1e-2 * (getles32(buf, 20) +
+		(getsb(buf, 35) * 1e-2)));
 
-    mask = NED_SET;
+	    accN = 1e-4 * getles32(buf, 36);
+	    accE = 1e-4 * getles32(buf, 40);
+	    accD = 1e-4 * getles32(buf, 44);
+	    accL = 1e-4 * getles32(buf, 48);
+	    accH = 1e-4 * getles32(buf, 52);
+	    if (0x100 & flags) {
+                // relPosHeadingValid
+		session->newdata.NED.relPosH = 1e-5 * getles32(buf, 24);
+            }
+	    mask |= NED_SET;
+        }
+    }
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
         "UBX-NAV-RELPOSNED: version %d iTOW=%lld refStationId %u flags x%x\n"
         "UBX-NAV-RELPOSNED: relPos N=%.4f E=%.4f D=%.4f\n"
-        "UBX-NAV-RELPOSNED: acc N=%.4f E=%.4f D=%.4f\n",
+        "UBX-NAV-RELPOSNED: acc N=%.4f E=%.4f D=%.4f L=%.4f H=%.4f\n",
         version,
         (long long)session->driver.ubx.iTOW,
         session->newdata.dgps_station,
@@ -1100,7 +1127,7 @@ ubx_msg_nav_relposned(struct gps_device_t *session, unsigned char *buf,
         session->newdata.NED.relPosN,
         session->newdata.NED.relPosE,
         session->newdata.NED.relPosD,
-        accN, accE, accD);
+        accN, accE, accD, accL, accH);
 
     if (5 != (flags & 5)) {
         /* gnssFixOK or relPosValid are false, no fix */
