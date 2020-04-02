@@ -4428,30 +4428,51 @@ Oddly this is the poll for UBX-LOG-BATCH
         1: "gnssFixOK",
         2: "diffSoln",
         4: "relPosValid",
-        0x20: "isMoving",
-        0x40: "refPosMiss",
-        0x80: "refObsMiss",
-        0x100: "relPosHeadingValid",
+        0x20: "isMoving",             # protVer 20.3+
+        0x40: "refPosMiss",           # protVer 20.3+
+        0x80: "refObsMiss",           # protVer 20.3+
+        0x100: "relPosHeadingValid",  # protVer 27.11+
+        0x200: "relPosNormalized",    # protVer 27.11+
         }
 
     def nav_relposned(self, buf):
         """UBX-NAV-RELPOSNED decode
 Relative Positioning Information in NED frame.
-protVer 20+
+protVer 20+ is 40 bytes
+protVer 27.11+ is 64 bytes, and things reordered, so not upward compatible
 High Precision GNSS products only."""
 
-        u = struct.unpack_from('<BBHLlllllLbbbbLLLLLLL', buf, 0)
+        m_len = len(buf)
+
+        # common part
+        u = struct.unpack_from('<BBHLlll', buf, 0)
         s = ('  version %u reserved1 %u refStationId %u iTOW %u\n'
-             '  relPosN %d relPosE %d relPosD %d\n'
-             '  relLength %d relHeading %d reserved2 %u\n'
-             '  relPosHPN %d relPosHPE %d relPosHPD %d relPosHPLength %d\n'
-             '  accN %u accE %u accD %u accLength %u accHeading %u\n'
-             '  reserved3 %u flags x%x' % u)
+             '  relPosN %d relPosE %d relPosD %d\n' % u)
+
+        if (1 == u[0] and 64 <= m_len):
+             # valid version 1 packet, newer u-blox 9
+             u1 = struct.unpack_from('<llLbbbbLLLLLLL', buf, 20)
+             s += ('  relLength %d relHeading %d reserved2 %u\n'
+                   '  relPosHPN %d relPosHPE %d relPosHPD %d '
+                   'relPosHPLength %d\n'
+                   '  accN %u accE %u accD %u accLength %u accHeading %u\n'
+                   '  reserved3 %u flags x%x' % u1)
+             flags = u1[13];
+        elif (0 == u[0] and 40 <= m_len):
+             # valid version 0 packet, u-blox 8, and some u-blox 9
+             u1 = struct.unpack_from('<bbbbLLLLLLL', buf, 20)
+             s += ('  relPosHPN %d relPosHPE %d relPosHPD %d reserved2 %u\n'
+                   '  accN %u accE %u accD %u flags x%x' % u1)
+             flags = u1[7];
+        else:
+             # WTF?
+            return "  Bad Length %d version %u combination" % (m_len, u[0])
 
         if VERB_DECODE <= opts['verbosity']:
-            s += ("\n    flags (%s) carrSoln (%s)" %
-                  (flag_s(u[21], self.nav_relposned_flags),
-                   index_s((u[21] >> 3) & 0x03, self.carrSoln)))
+            s += ("\n    flags (%s)\n"
+                  "    carrSoln (%s)" %
+                  (flag_s(flags, self.nav_relposned_flags),
+                   index_s((flags >> 3) & 0x03, self.carrSoln)))
         return s
 
     def nav_resetodo(self, buf):
