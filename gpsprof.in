@@ -796,6 +796,9 @@ class polarplot(plotter):
             for sat in sats:
                 seen += 1
                 # u'ss': 42, u'el': 15, u'PRN': 18, u'az': 80, u'used': True
+                if ((not 'az' in sat) or
+                    (not 'el' in sat)):
+                    continue;
                 if sat['used'] is True:
                     used += 1
                     if 'polarunused' == self.name:
