@@ -64,16 +64,12 @@
  *      pdop
  *      hdop
  *      vdop
- *	magnetic variation
+ *      magnetic variation
  *
  * known bugs:
  *      hangs in the fread loop instead of keeping state and returning.
  *
- * TODO:
- *
- *	?? Add probe function for Serial Binary to start PVT output.
- *
- * This file is Copyright (c) 2010-2019 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -123,7 +119,7 @@
 #define PRIV_PKTID_RESET_REQ    5
 #define PRIV_PKTID_SET_DEF_MODE 6
 
-#define MODE_NATIVE	  0
+#define MODE_NATIVE       0
 #define MODE_GARMIN_SERIAL   1
 
 #define GARMIN_PKTID_TRANSPORT_START_SESSION_REQ 5
@@ -133,28 +129,28 @@
 #define GARMIN_PKTID_PRODUCT_RQST       254
 #define GARMIN_PKTID_PRODUCT_DATA       255
 /* 0x29 ')' */
-#define GARMIN_PKTID_RMD41_DATA	 41
+#define GARMIN_PKTID_RMD41_DATA  41
 /* 0x33 '3' */
-#define GARMIN_PKTID_PVT_DATA	   51
+#define GARMIN_PKTID_PVT_DATA      51
 /* 0x33 '4' */
-#define GARMIN_PKTID_RMD_DATA	   52
+#define GARMIN_PKTID_RMD_DATA      52
 /* 0x72 'r' */
-#define GARMIN_PKTID_SAT_DATA	   114
+#define GARMIN_PKTID_SAT_DATA      114
 
 #define GARMIN_PKTID_L001_XFER_CMPLT     12
 #define GARMIN_PKTID_L001_COMMAND_DATA   10
 #define GARMIN_PKTID_L001_DATE_TIME_DATA 14
-#define GARMIN_PKTID_L001_RECORDS	27
+#define GARMIN_PKTID_L001_RECORDS       27
 #define GARMIN_PKTID_L001_WPT_DATA       35
 
-#define	CMND_ABORT			 0
-#define	CMND_START_PVT_DATA		 49
-#define	CMND_STOP_PVT_DATA		 50
-#define	CMND_START_RM_DATA		 110
+#define CMND_ABORT                       0
+#define CMND_START_PVT_DATA              49
+#define CMND_STOP_PVT_DATA               50
+#define CMND_START_RM_DATA               110
 
 #define MAX_BUFFER_SIZE 4096
 
-#define GARMIN_CHANNELS	12
+#define GARMIN_CHANNELS 12
 
 // something magic about 64, garmin driver will not return more than
 // 64 at a time.  If you read less than 64 bytes the next read will
@@ -167,10 +163,10 @@
 typedef struct __attribute__((__packed__))
 {
     uint8_t svid;
-    uint16_t snr;		// 0 - 0xffff
+    uint16_t snr;               // 0 - 0xffff
     uint8_t elev;
     uint16_t azmth;
-    uint8_t status;		// bit 0, has ephemeris, 1, has diff correction
+    uint8_t status;             // bit 0, has ephemeris, 1, has diff correction
     // bit 2 used in solution
     // bit 3??
 } cpo_sat_data;
@@ -180,29 +176,29 @@ typedef struct __attribute__((__packed__))
 /* This is the data format of the position data from the garmin USB */
 typedef struct __attribute__((__packed__))
 {
-    float alt;			/* altitude above WGS 84 (meters) */
-    float epe;			/* estimated position error, 2 sigma (meters) */
-    float eph;			/* epe, but horizontal only (meters) */
-    float epv;			/* epe but vertical only (meters ) */
-    int16_t fix;		/* 0 - failed integrity check
-				 * 1 - invalid or unavailable fix
-				 * 2 - 2D
-				 * 3 - 3D
-				 * 4 - 2D Diff
-				 * 5 - 3D Diff
-				 */
-    double gps_tow;		/* gps time of week (seconds) */
-    double lat;			/* ->latitude (radians) */
-    double lon;			/* ->longitude (radians) */
-    float lon_vel;		/* velocity east (meters/second) */
-    float lat_vel;		/* velocity north (meters/second) */
-    float alt_vel;		/* velocity up (meters/sec) */
+    float alt;                  /* altitude above WGS 84 (meters) */
+    float epe;                  /* estimated position error, 2 sigma (meters) */
+    float eph;                  /* epe, but horizontal only (meters) */
+    float epv;                  /* epe but vertical only (meters ) */
+    int16_t fix;                /* 0 - failed integrity check
+                                 * 1 - invalid or unavailable fix
+                                 * 2 - 2D
+                                 * 3 - 3D
+                                 * 4 - 2D Diff
+                                 * 5 - 3D Diff
+                                 */
+    double gps_tow;             /* gps time of week (seconds) */
+    double lat;                 /* ->latitude (radians) */
+    double lon;                 /* ->longitude (radians) */
+    float lon_vel;              /* velocity east (meters/second) */
+    float lat_vel;              /* velocity north (meters/second) */
+    float alt_vel;              /* velocity up (meters/sec) */
     // Garmin GPS25 uses pkt_id 0x28 and does not output the
     // next 3 items
-    float msl_hght;		/* height of WGS 84 above MSL (meters) */
-    int16_t leap_sec;		/* diff between GPS and UTC (seconds) */
-    int32_t grmn_days;		/* days from UTC December 31st, 1989 to the
-				 * beginning of the current week */
+    float msl_hght;             /* height of WGS 84 above MSL (meters) */
+    int16_t leap_sec;           /* diff between GPS and UTC (seconds) */
+    int32_t grmn_days;          /* days from UTC December 31st, 1989 to the
+                                 * beginning of the current week */
 } cpo_pvt_data;
 
 typedef struct __attribute__((__packed__))
@@ -236,11 +232,11 @@ typedef struct __attribute__((__packed__))
     uint32_t mDataSize;
     union
     {
-	//int8_t chars[MAX_BUFFER_SIZE];
-	// cppcheck-suppress unusedStructMember
-	uint8_t uchars[MAX_BUFFER_SIZE];
-	cpo_pvt_data pvt;
-	cpo_sat_data sats;
+        //int8_t chars[MAX_BUFFER_SIZE];
+        // cppcheck-suppress unusedStructMember
+        uint8_t uchars[MAX_BUFFER_SIZE];
+        cpo_pvt_data pvt;
+        cpo_sat_data sats;
     } mData;
 } Packet_t;
 
@@ -263,16 +259,16 @@ static inline void set_int32(uint8_t * buf, uint32_t value)
 static inline uint16_t get_uint16(const uint8_t * buf)
 {
     return (uint16_t) (0xFF & buf[0])
-	| ((uint16_t) (0xFF & buf[1]) << 8);
+        | ((uint16_t) (0xFF & buf[1]) << 8);
 }
 
 #if defined(HAVE_LIBUSB) && defined(__linux__)
 static inline uint32_t get_int32(const uint8_t * buf)
 {
     return (uint32_t) (0xFF & buf[0])
-	| ((uint32_t) (0xFF & buf[1]) << 8)
-	| ((uint32_t) (0xFF & buf[2]) << 16)
-	| ((uint32_t) (0xFF & buf[3]) << 24);
+        | ((uint32_t) (0xFF & buf[1]) << 8)
+        | ((uint32_t) (0xFF & buf[2]) << 16)
+        | ((uint32_t) (0xFF & buf[3]) << 24);
 }
 #endif /* HAVE_LIBUSB */
 
@@ -283,15 +279,15 @@ static inline double radtodeg(double rad)
 }
 
 static gps_mask_t PrintSERPacket(struct gps_device_t *session,
-				 unsigned char pkt_id, int pkt_len,
-				 unsigned char *buf);
+                                 unsigned char pkt_id, int pkt_len,
+                                 unsigned char *buf);
 #if defined(HAVE_LIBUSB) && defined(__linux__)
 static gps_mask_t PrintUSBPacket(struct gps_device_t *session,
-				 Packet_t * pkt);
+                                 Packet_t * pkt);
 #endif /* HAVE_LIBUSB */
 
 gps_mask_t PrintSERPacket(struct gps_device_t *session, unsigned char pkt_id,
-			  int pkt_len, unsigned char *buf)
+                          int pkt_len, unsigned char *buf)
 {
 
     gps_mask_t mask = ONLINE_SET;
@@ -309,177 +305,177 @@ gps_mask_t PrintSERPacket(struct gps_device_t *session, unsigned char pkt_id,
     double gps_tow = 0;
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-	     "Garmin: PrintSERPacket(, %#02x, %#02x, )\n", pkt_id, pkt_len);
+             "Garmin: PrintSERPacket(, %#02x, %#02x, )\n", pkt_id, pkt_len);
 
     session->cycle_end_reliable = true;
 
     switch (pkt_id) {
     case ACK:
-	GPSD_LOG(LOG_PROG, &session->context->errout, "Garmin: ACK\n");
-	break;
+        GPSD_LOG(LOG_PROG, &session->context->errout, "Garmin: ACK\n");
+        break;
     case NAK:
-	GPSD_LOG(LOG_PROG, &session->context->errout, "Garmin: NAK\n");
-	break;
+        GPSD_LOG(LOG_PROG, &session->context->errout, "Garmin: NAK\n");
+        break;
     case GARMIN_PKTID_L001_COMMAND_DATA:
-	prod_id = get_uint16((uint8_t *) buf);
-	switch (prod_id) {
-	case CMND_ABORT:
-	    msg = "Abort current xfer";
-	    break;
-	case CMND_START_PVT_DATA:
-	    msg = "Start Xmit PVT data";
-	    break;
-	case CMND_STOP_PVT_DATA:
-	    msg = "Stop Xmit PVT data";
-	    break;
-	case CMND_START_RM_DATA:
-	    msg = "Start RMD data";
-	    break;
-	default:
-	    (void)snprintf(msg_buf, sizeof(msg_buf), "Unknown: %u",
-			   (unsigned int)prod_id);
-	    msg = msg_buf;
-	    break;
-	}
-	GPSD_LOG(LOG_PROG, &session->context->errout,
-		 "Garmin: Appl, Command Data: %s\n", msg);
-	break;
+        prod_id = get_uint16((uint8_t *) buf);
+        switch (prod_id) {
+        case CMND_ABORT:
+            msg = "Abort current xfer";
+            break;
+        case CMND_START_PVT_DATA:
+            msg = "Start Xmit PVT data";
+            break;
+        case CMND_STOP_PVT_DATA:
+            msg = "Stop Xmit PVT data";
+            break;
+        case CMND_START_RM_DATA:
+            msg = "Start RMD data";
+            break;
+        default:
+            (void)snprintf(msg_buf, sizeof(msg_buf), "Unknown: %u",
+                           (unsigned int)prod_id);
+            msg = msg_buf;
+            break;
+        }
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "Garmin: Appl, Command Data: %s\n", msg);
+        break;
     case GARMIN_PKTID_PRODUCT_RQST:
-	GPSD_LOG(LOG_PROG, &session->context->errout,
-		 "Garmin: Appl, Product Data req\n");
-	break;
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "Garmin: Appl, Product Data req\n");
+        break;
     case GARMIN_PKTID_PRODUCT_DATA:
-	prod_id = get_uint16((uint8_t *) buf);
-	ver = get_uint16((uint8_t *) & buf[2]);
-	maj_ver = (int)(ver / 100);
-	min_ver = (int)(ver - (maj_ver * 100));
-	GPSD_LOG(LOG_PROG, &session->context->errout,
-		 "Garmin: Appl, Product Data, sz: %d\n",
-		 pkt_len);
-	(void)snprintf(session->subtype, sizeof(session->subtype),
-		       "%d: %d.%02d", (int)prod_id, maj_ver, min_ver);
-	GPSD_LOG(LOG_INF, &session->context->errout,
-		 "Garmin: Product ID: %d, SoftVer: %d.%02d\n",
-		 prod_id, maj_ver, min_ver);
-	GPSD_LOG(LOG_INF, &session->context->errout,
-		 "Garmin: Product Desc: %s\n", &buf[4]);
-	mask |= DEVICEID_SET;
-	GPSD_LOG(LOG_DATA, &session->context->errout,
-		 "Garmin: PRODUCT_DATA: subtype=%s\n",
-		 session->subtype);
-	break;
+        prod_id = get_uint16((uint8_t *) buf);
+        ver = get_uint16((uint8_t *) & buf[2]);
+        maj_ver = (int)(ver / 100);
+        min_ver = (int)(ver - (maj_ver * 100));
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "Garmin: Appl, Product Data, sz: %d\n",
+                 pkt_len);
+        (void)snprintf(session->subtype, sizeof(session->subtype),
+                       "%d: %d.%02d", (int)prod_id, maj_ver, min_ver);
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "Garmin: Product ID: %d, SoftVer: %d.%02d\n",
+                 prod_id, maj_ver, min_ver);
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "Garmin: Product Desc: %s\n", &buf[4]);
+        mask |= DEVICEID_SET;
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "Garmin: PRODUCT_DATA: subtype=%s\n",
+                 session->subtype);
+        break;
     case GARMIN_PKTID_PVT_DATA:
-	GPSD_LOG(LOG_PROG, &session->context->errout,
-		 "Garmin: PVT Data (51) Sz: %d\n", pkt_len);
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "Garmin: PVT Data (51) Sz: %d\n", pkt_len);
 
-	pvt = (cpo_pvt_data *) buf;
+        pvt = (cpo_pvt_data *) buf;
 
-	session->context->leap_seconds = (int)GPSD_LE16TOH(pvt->leap_sec);
-	session->context->valid = LEAP_SECOND_VALID;
+        session->context->leap_seconds = (int)GPSD_LE16TOH(pvt->leap_sec);
+        session->context->valid = LEAP_SECOND_VALID;
 
-	// 631065600, unix seconds for 31 Dec 1989 Zulu
-	time_l = (time_t) (631065600 + (GPSD_LE32TOH(pvt->grmn_days) * 86400));
-	// TODO, convert grmn_days to context->gps_week
-	time_l -= session->context->leap_seconds;
+        // 631065600, unix seconds for 31 Dec 1989 Zulu
+        time_l = (time_t) (631065600 + (GPSD_LE32TOH(pvt->grmn_days) * 86400));
+        // TODO, convert grmn_days to context->gps_week
+        time_l -= session->context->leap_seconds;
 
-	// gps_tow is always like x.999 or x.998 just round it to nearest sec
+        // gps_tow is always like x.999 or x.998 just round it to nearest sec
         // FIXME! this will break 5Hz garmins...
-	gps_tow = GPSD_LED64(pvt->gps_tow);
-	time_l += (time_t)round(gps_tow);
+        gps_tow = GPSD_LED64(pvt->gps_tow);
+        time_l += (time_t)round(gps_tow);
 
-	/* sanity check unix time against leap second.
-	 * Leap second 18 at 1 Jan 2017: 1483228800 */
-	if (17 < session->context->leap_seconds &&
-	    1483228800L > time_l) {
-	    time_l += 619315200;               // fast forward 1024 weeks
+        /* sanity check unix time against leap second.
+         * Leap second 18 at 1 Jan 2017: 1483228800 */
+        if (17 < session->context->leap_seconds &&
+            1483228800L > time_l) {
+            time_l += 619315200;               // fast forward 1024 weeks
         }
 
-	DTOTS(&session->context->gps_tow, gps_tow);
-	session->newdata.time.tv_sec = time_l;
-	session->newdata.time.tv_nsec = 0;
+        DTOTS(&session->context->gps_tow, gps_tow);
+        session->newdata.time.tv_sec = time_l;
+        session->newdata.time.tv_nsec = 0;
         // (long long) for 32-bit systems
-	GPSD_LOG(LOG_PROG, &session->context->errout,
-		 "Garmin: time_l: %lld\n", (long long)time_l);
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "Garmin: time_l: %lld\n", (long long)time_l);
 
-	session->newdata.latitude = radtodeg(GPSD_LED64(pvt->lat));
-	session->newdata.longitude = radtodeg(GPSD_LED64(pvt->lon));
-	// altitude is WGS84
-	session->newdata.altHAE = GPSD_LEF32(pvt->alt);
+        session->newdata.latitude = radtodeg(GPSD_LED64(pvt->lat));
+        session->newdata.longitude = radtodeg(GPSD_LED64(pvt->lon));
+        // altitude is WGS84
+        session->newdata.altHAE = GPSD_LEF32(pvt->alt);
 
-	// geoid separation from WGS 84
-	// gpsd sign is opposite of garmin sign
-	session->newdata.geoid_sep = -GPSD_LEF32(pvt->msl_hght);
+        // geoid separation from WGS 84
+        // gpsd sign is opposite of garmin sign
+        session->newdata.geoid_sep = -GPSD_LEF32(pvt->msl_hght);
 
-	/* Estimated position error in meters.  Confidence (sigma) not
+        /* Estimated position error in meters.  Confidence (sigma) not
          * specified by Garmin.
-	 * We follow the advice at <http://gpsinformation.net/main/errors.htm>.
+         * We follow the advice at <http://gpsinformation.net/main/errors.htm>.
          * Since GPS data is not gaussian, this is marginal advice...
-	 * If this assumption changes here, it should also change in
-	 * nmea_parse.c where we analyze PGRME.
+         * If this assumption changes here, it should also change in
+         * nmea_parse.c where we analyze PGRME.
          */
-	session->newdata.sep = GPSD_LEF32(pvt->epe) *
+        session->newdata.sep = GPSD_LEF32(pvt->epe) *
                                    (GPSD_CONFIDENCE / CEP50_SIGMA);
         /* eph, horizaontal error, 2 sigma */
-	session->newdata.eph = GPSD_LEF32(pvt->eph) *
+        session->newdata.eph = GPSD_LEF32(pvt->eph) *
                                    (GPSD_CONFIDENCE / CEP50_SIGMA);
         /* eph, horizaontal error, 2 sigma */
-	session->newdata.epv = GPSD_LEF32(pvt->epv) *
+        session->newdata.epv = GPSD_LEF32(pvt->epv) *
                                    (GPSD_CONFIDENCE / CEP50_SIGMA);
 
-	/* meters/sec */
-	session->newdata.NED.velN = GPSD_LEF32(pvt->lat_vel);
-	session->newdata.NED.velE = GPSD_LEF32(pvt->lon_vel);
-	session->newdata.NED.velD = -GPSD_LEF32(pvt->alt_vel);
+        /* meters/sec */
+        session->newdata.NED.velN = GPSD_LEF32(pvt->lat_vel);
+        session->newdata.NED.velE = GPSD_LEF32(pvt->lon_vel);
+        session->newdata.NED.velD = -GPSD_LEF32(pvt->alt_vel);
 
-	switch (GPSD_LE16TOH(pvt->fix)) {
-	case 0:
-	case 1:
-	default:
-	    // no fix
-	    session->newdata.status = STATUS_NO_FIX;
-	    session->newdata.mode = MODE_NO_FIX;
-	    break;
-	case 2:
-	    // 2D fix
-	    session->newdata.status = STATUS_FIX;
-	    session->newdata.mode = MODE_2D;
-	    break;
-	case 3:
-	    // 3D fix
-	    session->newdata.status = STATUS_FIX;
-	    session->newdata.mode = MODE_3D;
-	    break;
-	case 4:
-	    // 2D Differential fix
-	    session->newdata.status = STATUS_DGPS_FIX;
-	    session->newdata.mode = MODE_2D;
-	    break;
-	case 5:
-	    // 3D differential fix
-	    session->newdata.status = STATUS_DGPS_FIX;
-	    session->newdata.mode = MODE_3D;
-	    break;
-	}
+        switch (GPSD_LE16TOH(pvt->fix)) {
+        case 0:
+        case 1:
+        default:
+            // no fix
+            session->newdata.status = STATUS_NO_FIX;
+            session->newdata.mode = MODE_NO_FIX;
+            break;
+        case 2:
+            // 2D fix
+            session->newdata.status = STATUS_FIX;
+            session->newdata.mode = MODE_2D;
+            break;
+        case 3:
+            // 3D fix
+            session->newdata.status = STATUS_FIX;
+            session->newdata.mode = MODE_3D;
+            break;
+        case 4:
+            // 2D Differential fix
+            session->newdata.status = STATUS_DGPS_FIX;
+            session->newdata.mode = MODE_2D;
+            break;
+        case 5:
+            // 3D differential fix
+            session->newdata.status = STATUS_DGPS_FIX;
+            session->newdata.mode = MODE_3D;
+            break;
+        }
 
-	GPSD_LOG(LOG_PROG, &session->context->errout,
-		 "Garmin: Appl, mode %d, status %d\n",
-		 session->newdata.mode, session->newdata.status);
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "Garmin: Appl, mode %d, status %d\n",
+                 session->newdata.mode, session->newdata.status);
 
         /* save some expensive calculations if not needed */
         if (session->context->errout.debug >= LOG_INF) {
 
-	    GPSD_LOG(LOG_INF, &session->context->errout,
-		     "Garmin: UTC Time: %lld\n",
-		     (long long)session->newdata.time.tv_sec);
-	    GPSD_LOG(LOG_INF, &session->context->errout,
-		     "Garmin: Geoid Separation (MSL-WGS84): from garmin %lf, "
+            GPSD_LOG(LOG_INF, &session->context->errout,
+                     "Garmin: UTC Time: %lld\n",
+                     (long long)session->newdata.time.tv_sec);
+            GPSD_LOG(LOG_INF, &session->context->errout,
+                     "Garmin: Geoid Separation (MSL-WGS84): from garmin %lf, "
                      "calculated %lf\n",
                      session->newdata.geoid_sep,
-		     wgs84_separation(session->newdata.latitude,
-					 session->newdata.longitude));
+                     wgs84_separation(session->newdata.latitude,
+                                         session->newdata.longitude));
 
-	    GPSD_LOG(LOG_INF, &session->context->errout,
-		     "Garmin: Alt: %.3f, sep: %.3f, eph: %.3f, Epv: %.3f, "
+            GPSD_LOG(LOG_INF, &session->context->errout,
+                     "Garmin: Alt: %.3f, sep: %.3f, eph: %.3f, Epv: %.3f, "
                      "Fix: %d, Gps_tow: %f, Lat: %.3f, Lon: %.3f, "
                      "velN: %.3f, velE: %.3f, velD: %.3f, geoidsep: %.3f, "
                      "Leap: %d, GarminDays: %d\n",
@@ -488,100 +484,100 @@ gps_mask_t PrintSERPacket(struct gps_device_t *session, unsigned char pkt_id,
                      session->newdata.eph,
                      session->newdata.epv,
                      GPSD_LE16TOH(pvt->fix),
-		     gps_tow,
+                     gps_tow,
                      session->newdata.latitude,
-		     session->newdata.longitude,
+                     session->newdata.longitude,
                      session->newdata.NED.velN,
                      session->newdata.NED.velE,
                      session->newdata.NED.velD,
                      session->newdata.geoid_sep,
                      session->context->leap_seconds,
-		     GPSD_LE32TOH(pvt->grmn_days));
+                     GPSD_LE32TOH(pvt->grmn_days));
         }
 
-	if (session->newdata.mode > MODE_NO_FIX) {
-	    /* data only valid with a fix */
-	    mask |=
-		TIME_SET | LATLON_SET | ALTITUDE_SET | STATUS_SET | MODE_SET |
-		HERR_SET | PERR_IS | CLEAR_IS | REPORT_IS | VNED_SET;
-	    /*
-	     * Garmin documentation says we should wait until four good fixes
-	     * have been seen before trying to use the device for precision
-	     * time service.
-	     */
-	    if (session->fixcnt > 3)
-		mask |= NTPTIME_IS;
-	}
-	GPSD_LOG(LOG_DATA, &session->context->errout,
-		 "Garmin: PVT_DATA: time=%lld, lat=%.2f lon=%.2f "
-		 "eph=%.2f sep=%.2f epv=%.2f  mode=%d status=%d\n",
-		 (long long)session->newdata.time.tv_sec,
-		 session->newdata.latitude,
-		 session->newdata.longitude,
-		 session->newdata.eph,
-		 session->newdata.sep,
-		 session->newdata.epv,
-		 session->newdata.mode,
-		 session->newdata.status);
-	break;
+        if (session->newdata.mode > MODE_NO_FIX) {
+            /* data only valid with a fix */
+            mask |=
+                TIME_SET | LATLON_SET | ALTITUDE_SET | STATUS_SET | MODE_SET |
+                HERR_SET | PERR_IS | CLEAR_IS | REPORT_IS | VNED_SET;
+            /*
+             * Garmin documentation says we should wait until four good fixes
+             * have been seen before trying to use the device for precision
+             * time service.
+             */
+            if (session->fixcnt > 3)
+                mask |= NTPTIME_IS;
+        }
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "Garmin: PVT_DATA: time=%lld, lat=%.2f lon=%.2f "
+                 "eph=%.2f sep=%.2f epv=%.2f  mode=%d status=%d\n",
+                 (long long)session->newdata.time.tv_sec,
+                 session->newdata.latitude,
+                 session->newdata.longitude,
+                 session->newdata.eph,
+                 session->newdata.sep,
+                 session->newdata.epv,
+                 session->newdata.mode,
+                 session->newdata.status);
+        break;
     case GARMIN_PKTID_RMD_DATA:
     case GARMIN_PKTID_RMD41_DATA:
-	rmd = (cpo_rcv_data *) buf;
-	GPSD_LOG(LOG_DATA, &session->context->errout,
-		 "Garmin: PVT RMD Data Sz: %d\n", pkt_len);
-	GPSD_LOG(LOG_PROG, &session->context->errout,
-		 "Garmin: PVT RMD rcvr_tow: %f, rcvr_wn: %d\n",
-		 GPSD_LED64(rmd->rcvr_tow), GPSD_LE16TOH(rmd->rcvr_wn));
-	for (i = 0; i < GARMIN_CHANNELS; i++) {
-	    GPSD_LOG(LOG_INF, &session->context->errout,
-		     "Garmin: PVT RMD Sat: %3u, cycles: %9u, pr: %16.6f, "
-		     "phase: %7.3f, slp_dtct: %3s, snr: %3u, Valid: %3s\n",
-		     (int)rmd->sv[i].svid + 1,
-		     GPSD_LE32TOH(rmd->sv[i].cycles),
-		     GPSD_LED64(rmd->sv[i].pr),
-		     (GPSD_LE16TOH(rmd->sv[i].phase) * 360.0) / 2048.0,
-		     rmd->sv[i].slp_dtct != 0 ? "Yes" : "No",
-		     rmd->sv[i].snr_dbhz,
-		     rmd->sv[i].valid != 0 ? "Yes" : "No");
-	}
-	break;
+        rmd = (cpo_rcv_data *) buf;
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "Garmin: PVT RMD Data Sz: %d\n", pkt_len);
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "Garmin: PVT RMD rcvr_tow: %f, rcvr_wn: %d\n",
+                 GPSD_LED64(rmd->rcvr_tow), GPSD_LE16TOH(rmd->rcvr_wn));
+        for (i = 0; i < GARMIN_CHANNELS; i++) {
+            GPSD_LOG(LOG_INF, &session->context->errout,
+                     "Garmin: PVT RMD Sat: %3u, cycles: %9u, pr: %16.6f, "
+                     "phase: %7.3f, slp_dtct: %3s, snr: %3u, Valid: %3s\n",
+                     (int)rmd->sv[i].svid + 1,
+                     GPSD_LE32TOH(rmd->sv[i].cycles),
+                     GPSD_LED64(rmd->sv[i].pr),
+                     (GPSD_LE16TOH(rmd->sv[i].phase) * 360.0) / 2048.0,
+                     rmd->sv[i].slp_dtct != 0 ? "Yes" : "No",
+                     rmd->sv[i].snr_dbhz,
+                     rmd->sv[i].valid != 0 ? "Yes" : "No");
+        }
+        break;
 
     case GARMIN_PKTID_SAT_DATA:
         // record ID 0x72 (114)
-	GPSD_LOG(LOG_PROG, &session->context->errout,
-		 "Garmin: SAT Data Sz: %d\n", pkt_len);
-	sats = (cpo_sat_data *) buf;
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "Garmin: SAT Data Sz: %d\n", pkt_len);
+        sats = (cpo_sat_data *) buf;
 
-	session->gpsdata.satellites_used = 0;
-	gpsd_zero_satellites(&session->gpsdata);
-	for (i = 0, j = 0; i < GARMIN_CHANNELS; i++, sats++) {
-	    GPSD_LOG(LOG_INF, &session->context->errout,
-		     "Garmin: Sat %2d, snr: %5u, elev: %2d, Azmth: %3d, "
+        session->gpsdata.satellites_used = 0;
+        gpsd_zero_satellites(&session->gpsdata);
+        for (i = 0, j = 0; i < GARMIN_CHANNELS; i++, sats++) {
+            GPSD_LOG(LOG_INF, &session->context->errout,
+                     "Garmin: Sat %2d, snr: %5u, elev: %2d, Azmth: %3d, "
                      "Stat: x%x\n",
-		     sats->svid, GPSD_LE16TOH(sats->snr), sats->elev,
-		     GPSD_LE16TOH(sats->azmth),
-		     sats->status);
+                     sats->svid, GPSD_LE16TOH(sats->snr), sats->elev,
+                     GPSD_LE16TOH(sats->azmth),
+                     sats->status);
 
-	    if (255 == (int)sats->svid) {
-		// Garmin uses 255 for empty
-		// gpsd uses 0 for empty
-		continue;
-	    }
-
-	    if ((int)sats->svid <= 32) {
-                /* GPS 1-32 */
-		session->gpsdata.skyview[j].PRN = (short)sats->svid;
-		session->gpsdata.skyview[j].svid = (short)sats->svid;
-		session->gpsdata.skyview[j].gnssid = GNSSID_GPS;
-	    } else {
-                /* SBAS 33-64 */
-		session->gpsdata.skyview[j].PRN = (short)sats->svid;
-		session->gpsdata.skyview[j].svid = (short)sats->svid + 87;
-		session->gpsdata.skyview[j].gnssid = GNSSID_SBAS;
+            if (255 == (int)sats->svid) {
+                // Garmin uses 255 for empty
+                // gpsd uses 0 for empty
+                continue;
             }
-	    session->gpsdata.skyview[j].azimuth =
+
+            if ((int)sats->svid <= 32) {
+                /* GPS 1-32 */
+                session->gpsdata.skyview[j].PRN = (short)sats->svid;
+                session->gpsdata.skyview[j].svid = (short)sats->svid;
+                session->gpsdata.skyview[j].gnssid = GNSSID_GPS;
+            } else {
+                /* SBAS 33-64 */
+                session->gpsdata.skyview[j].PRN = (short)sats->svid;
+                session->gpsdata.skyview[j].svid = (short)sats->svid + 87;
+                session->gpsdata.skyview[j].gnssid = GNSSID_SBAS;
+            }
+            session->gpsdata.skyview[j].azimuth =
                 (short)GPSD_LE16TOH(sats->azmth);
-	    session->gpsdata.skyview[j].elevation = (short)sats->elev;
+            session->gpsdata.skyview[j].elevation = (short)sats->elev;
             if (0xffff == sats->snr) {
                 session->gpsdata.skyview[j].ss = NAN;
             } else {
@@ -589,49 +585,49 @@ gps_mask_t PrintSERPacket(struct gps_device_t *session, unsigned char pkt_id,
                 // Known, but not seen satellites have a dB value of -1*100
                 session->gpsdata.skyview[j].ss =
                     (float)(GPSD_LE16TOH(sats->snr) / 100.0);
-	    }
-	    // FIX-ME: Garmin documents this, but Daniel Dorau
-	    // <daniel.dorau@gmx.de> says the behavior on his GPSMap60CSX
-	    // doesn't match it.
-	    if ((uint8_t) 0 != (sats->status & 4)) {
-		// used in solution?
-		session->gpsdata.skyview[j].used = true;
-		session->gpsdata.satellites_used++;
-	    }
-	    session->gpsdata.satellites_visible++;
-	    j++;
+            }
+            // FIX-ME: Garmin documents this, but Daniel Dorau
+            // <daniel.dorau@gmx.de> says the behavior on his GPSMap60CSX
+            // doesn't match it.
+            if ((uint8_t) 0 != (sats->status & 4)) {
+                // used in solution?
+                session->gpsdata.skyview[j].used = true;
+                session->gpsdata.satellites_used++;
+            }
+            session->gpsdata.satellites_visible++;
+            j++;
 
-	}
-	session->gpsdata.skyview_time.tv_sec = 0;
-	session->gpsdata.skyview_time.tv_nsec = 0;
+        }
+        session->gpsdata.skyview_time.tv_sec = 0;
+        session->gpsdata.skyview_time.tv_nsec = 0;
         mask |= USED_IS | SATELLITE_SET;
-	GPSD_LOG(LOG_DATA, &session->context->errout,
-		 "Garmin: SAT_DATA: visible=%d used=%d\n",
-		 session->gpsdata.satellites_visible,
-		 session->gpsdata.satellites_used);
-	break;
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "Garmin: SAT_DATA: visible=%d used=%d\n",
+                 session->gpsdata.satellites_visible,
+                 session->gpsdata.satellites_used);
+        break;
     case GARMIN_PKTID_PROTOCOL_ARRAY:
         // Pid_Protocol_Array, ID 253
-	// this packet is never requested, it just comes, in some case
-	// after a GARMIN_PKTID_PRODUCT_RQST
-	GPSD_LOG(LOG_INF, &session->context->errout,
-		 "Garmin: Appl, Product Capability, sz: %d\n",
-		 pkt_len);
-	for (i = 0; i < pkt_len; i += 3) {
-	    GPSD_LOG(LOG_INF, &session->context->errout,
-		     "Garmin:   %c%03d\n",
-		     buf[i],	get_uint16((uint8_t *) & buf[i + 1]));
-	}
-	break;
+        // this packet is never requested, it just comes, in some case
+        // after a GARMIN_PKTID_PRODUCT_RQST
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "Garmin: Appl, Product Capability, sz: %d\n",
+                 pkt_len);
+        for (i = 0; i < pkt_len; i += 3) {
+            GPSD_LOG(LOG_INF, &session->context->errout,
+                     "Garmin:   %c%03d\n",
+                     buf[i],    get_uint16((uint8_t *) & buf[i + 1]));
+        }
+        break;
     default:
-	GPSD_LOG(LOG_WARN, &session->context->errout,
-		 "Garmin: Unknown packet id: %#02x, Sz: %#02x\n",
-		 pkt_id, pkt_len);
-	break;
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "Garmin: Unknown packet id: %#02x, Sz: %#02x\n",
+                 pkt_id, pkt_len);
+        break;
     }
     GPSD_LOG(LOG_DATA, &session->context->errout,
-	     "Garmin: PrintSERPacket(, %#02x, %#02x, ) mask=(%s)\n",
-	     pkt_id, pkt_len, gps_maskdump(mask));
+             "Garmin: PrintSERPacket(, %#02x, %#02x, ) mask=(%s)\n",
+             pkt_id, pkt_len, gps_maskdump(mask));
     return mask;
 }
 
@@ -654,90 +650,90 @@ static gps_mask_t PrintUSBPacket(struct gps_device_t *session, Packet_t * pkt)
 
     GPSD_LOG(LOG_PROG, &session->context->errout, "Garmin: PrintUSBPacket()\n");
     if (DLE == pkt->mPacketType) {
-	GPSD_LOG(LOG_PROG, &session->context->errout,
-		 "Garmin: really a SER packet!\n");
-	return PrintSERPacket(session,
-			      (unsigned char)buffer[1],
-			      (int)buffer[2], (unsigned char *)(buffer + 3));
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "Garmin: really a SER packet!\n");
+        return PrintSERPacket(session,
+                              (unsigned char)buffer[1],
+                              (int)buffer[2], (unsigned char *)(buffer + 3));
     }
 
     if (4096 < mDataSize) {
-	GPSD_LOG(LOG_WARN, &session->context->errout,
-		 "Garmin: bogus packet, size too large=%d\n",
-		 mDataSize);
-	return 0;
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "Garmin: bogus packet, size too large=%d\n",
+                 mDataSize);
+        return 0;
     }
 
     switch (pkt->mPacketType) {
     case GARMIN_LAYERID_TRANSPORT:
-	/* Garmin USB layer specific */
-	switch (pkt->mPacketId) {
-	case GARMIN_PKTID_TRANSPORT_START_SESSION_REQ:
+        /* Garmin USB layer specific */
+        switch (pkt->mPacketId) {
+        case GARMIN_PKTID_TRANSPORT_START_SESSION_REQ:
             // Pid_Start_Session, ID 5
-	    GPSD_LOG(LOG_PROG, &session->context->errout,
-		     "Garmin: Transport, Start Session req\n");
-	    break;
-	case GARMIN_PKTID_TRANSPORT_START_SESSION_RESP:
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "Garmin: Transport, Start Session req\n");
+            break;
+        case GARMIN_PKTID_TRANSPORT_START_SESSION_RESP:
             // Pid_Session_Started, ID 6
-	    mode = get_int32(&pkt->mData.uchars[0]);
-	    GPSD_LOG(LOG_PROG, &session->context->errout,
-		     "Garmin: Transport, Start Session resp, unit: 0x%x\n",
-		     mode);
-	    break;
-	default:
-	    GPSD_LOG(LOG_PROG, &session->context->errout,
-		     "Garmin: Transport, Packet: Type %d %d %d, ID: %d,"
+            mode = get_int32(&pkt->mData.uchars[0]);
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "Garmin: Transport, Start Session resp, unit: 0x%x\n",
+                     mode);
+            break;
+        default:
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "Garmin: Transport, Packet: Type %d %d %d, ID: %d,"
                      "Sz: %d\n",
-		     pkt->mPacketType, pkt->mReserved1, pkt->mReserved2,
-		     pkt->mPacketId, mDataSize);
-	    break;
-	}
-	break;
+                     pkt->mPacketType, pkt->mReserved1, pkt->mReserved2,
+                     pkt->mPacketId, mDataSize);
+            break;
+        }
+        break;
     case GARMIN_LAYERID_APPL:
-	/* raw data transport, shared with Garmin Serial Driver */
+        /* raw data transport, shared with Garmin Serial Driver */
 
-	mask = PrintSERPacket(session,
-			      (unsigned char)pkt->mPacketId,
-			      (int)mDataSize,
-			      (unsigned char *)pkt->mData.uchars);
-	break;
+        mask = PrintSERPacket(session,
+                              (unsigned char)pkt->mPacketId,
+                              (int)mDataSize,
+                              (unsigned char *)pkt->mData.uchars);
+        break;
     case 75:
-	// private, garmin USB kernel driver specific
-	switch (pkt->mPacketId) {
-	case PRIV_PKTID_SET_MODE:
-	    prod_id = get_uint16(&pkt->mData.uchars[0]);
-	    GPSD_LOG(LOG_PROG, &session->context->errout,
-		     "Garmin: Private, Set Mode: %d\n", prod_id);
-	    break;
-	case PRIV_PKTID_INFO_REQ:
-	    GPSD_LOG(LOG_PROG, &session->context->errout,
-		     "Garmin: Private, ID: Info Req\n");
-	    break;
-	case PRIV_PKTID_INFO_RESP:
-	    veri = get_int32(pkt->mData.uchars);
-	    maj_ver = (int)(veri >> 16);
-	    min_ver = (int)(veri & 0xffff);
-	    mode = get_int32(&pkt->mData.uchars[4]);
-	    serial = get_int32(&pkt->mData.uchars[8]);
-	    GPSD_LOG(LOG_PROG, &session->context->errout,
-		     "Garmin: Private, ID: Info Resp\n");
-	    GPSD_LOG(LOG_INF, &session->context->errout,
-		     "Garmin: USB Driver found, Version %d.%d, Mode: %d, GPS Serial# %u\n",
-		     maj_ver, min_ver, mode, serial);
-	    break;
-	default:
-	    GPSD_LOG(LOG_PROG, &session->context->errout,
-		     "Garmin: Private, Packet: ID: %d, Sz: %d\n",
-		     pkt->mPacketId, mDataSize);
-	    break;
-	}
-	break;
+        // private, garmin USB kernel driver specific
+        switch (pkt->mPacketId) {
+        case PRIV_PKTID_SET_MODE:
+            prod_id = get_uint16(&pkt->mData.uchars[0]);
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "Garmin: Private, Set Mode: %d\n", prod_id);
+            break;
+        case PRIV_PKTID_INFO_REQ:
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "Garmin: Private, ID: Info Req\n");
+            break;
+        case PRIV_PKTID_INFO_RESP:
+            veri = get_int32(pkt->mData.uchars);
+            maj_ver = (int)(veri >> 16);
+            min_ver = (int)(veri & 0xffff);
+            mode = get_int32(&pkt->mData.uchars[4]);
+            serial = get_int32(&pkt->mData.uchars[8]);
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "Garmin: Private, ID: Info Resp\n");
+            GPSD_LOG(LOG_INF, &session->context->errout,
+                     "Garmin: USB Driver found, Version %d.%d, Mode: %d, GPS Serial# %u\n",
+                     maj_ver, min_ver, mode, serial);
+            break;
+        default:
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "Garmin: Private, Packet: ID: %d, Sz: %d\n",
+                     pkt->mPacketId, mDataSize);
+            break;
+        }
+        break;
     default:
-	GPSD_LOG(LOG_PROG, &session->context->errout,
-		 "Garmin: Packet: Type %d %d %d, ID: %d, Sz: %d\n",
-		 pkt->mPacketType, pkt->mReserved1, pkt->mReserved2,
-		 pkt->mPacketId, mDataSize);
-	break;
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "Garmin: Packet: Type %d %d %d, ID: %d, Sz: %d\n",
+                 pkt->mPacketType, pkt->mReserved1, pkt->mReserved2,
+                 pkt->mPacketId, mDataSize);
+        break;
     }
 
     return mask;
@@ -749,8 +745,8 @@ static gps_mask_t PrintUSBPacket(struct gps_device_t *session, Packet_t * pkt)
 #if defined(HAVE_LIBUSB) && defined(__linux__)
 /* build and send a packet w/ USB protocol */
 static void Build_Send_USB_Packet(struct gps_device_t *session,
-				  uint32_t layer_id, uint32_t pkt_id,
-				  uint32_t length, uint32_t data)
+                                  uint32_t layer_id, uint32_t pkt_id,
+                                  uint32_t length, uint32_t data)
 {
     uint8_t *buffer = (uint8_t *) session->driver.garmin.Buffer;
     Packet_t *thePacket = (Packet_t *) buffer;
@@ -761,17 +757,17 @@ static void Build_Send_USB_Packet(struct gps_device_t *session,
     set_int32(buffer + 4, pkt_id);
     set_int32(buffer + 8, length);
     if (2 == length) {
-	set_int16(buffer + 12, data);
+        set_int16(buffer + 12, data);
     } else if (4 == length) {
-	set_int32(buffer + 12, data);
+        set_int32(buffer + 12, data);
     }
     (void)PrintUSBPacket(session, thePacket);
 
     theBytesReturned = gpsd_write(session, (const char *)thePacket,
-				  (size_t) theBytesToWrite);
+                                  (size_t) theBytesToWrite);
     GPSD_LOG(LOG_PROG, &session->context->errout,
-	     "Garmin: SendPacket(), wrote %zd bytes\n",
-	     theBytesReturned);
+             "Garmin: SendPacket(), wrote %zd bytes\n",
+             theBytesReturned);
 
     // Garmin says:
     // If the packet size was an exact multiple of the USB packet
@@ -782,8 +778,8 @@ static void Build_Send_USB_Packet(struct gps_device_t *session,
 
     // So here goes just in case
     if (0 == (theBytesToWrite % ASYNC_DATA_SIZE)) {
-	char *n = "";
-	(void)gpsd_write(session, n, 0);
+        char *n = "";
+        (void)gpsd_write(session, n, 0);
     }
 }
 #endif /* HAVE_LIBUSB && __linux__ */
@@ -792,8 +788,8 @@ static void Build_Send_USB_Packet(struct gps_device_t *session,
 /* layer_id unused */
 // FIX-ME: This should go through the common message buffer someday
 static void Build_Send_SER_Packet(struct gps_device_t *session,
-				  uint32_t layer_id UNUSED, uint32_t pkt_id,
-				  uint32_t length, uint32_t data)
+                                  uint32_t layer_id UNUSED, uint32_t pkt_id,
+                                  uint32_t length, uint32_t data)
 {
     uint8_t *buffer = (uint8_t *) session->driver.garmin.Buffer;
     uint8_t *buffer0 = buffer;
@@ -809,17 +805,17 @@ static void Build_Send_SER_Packet(struct gps_device_t *session,
     chksum += length;
     /* ??? What is this doing? */
     if (2 == length) {
-	/* carefull!  no DLE stuffing here! */
-	set_int16(buffer, data);
-	chksum += buffer[0];
-	chksum += buffer[1];
+        /* carefull!  no DLE stuffing here! */
+        set_int16(buffer, data);
+        chksum += buffer[0];
+        chksum += buffer[1];
     } else if (4 == length) {
-	/* carefull!  no DLE stuffing here! */
-	set_int32(buffer, data);
-	chksum += buffer[0];
-	chksum += buffer[1];
-	chksum += buffer[2];
-	chksum += buffer[3];
+        /* carefull!  no DLE stuffing here! */
+        set_int32(buffer, data);
+        chksum += buffer[0];
+        chksum += buffer[1];
+        chksum += buffer[2];
+        chksum += buffer[3];
     }
     /* ??? How is data copied to the buffer? */
     buffer += length;
@@ -827,9 +823,9 @@ static void Build_Send_SER_Packet(struct gps_device_t *session,
     // Add checksum
     *buffer++ = -chksum;
     if (DLE == -chksum) {
-	/* stuff another DLE */
-	*buffer++ = (uint8_t) DLE;
-	theBytesToWrite++;
+        /* stuff another DLE */
+        *buffer++ = (uint8_t) DLE;
+        theBytesToWrite++;
     }
     // Add DLE, ETX
     *buffer++ = (uint8_t) DLE;
@@ -837,14 +833,14 @@ static void Build_Send_SER_Packet(struct gps_device_t *session,
     *buffer = (uint8_t) ETX;
 
     (void)PrintSERPacket(session,
-			 (unsigned char)buffer0[1],
-			 (int)buffer0[2], (unsigned char *)(buffer0 + 3));
+                         (unsigned char)buffer0[1],
+                         (int)buffer0[2], (unsigned char *)(buffer0 + 3));
 
     theBytesReturned = gpsd_write(session, (const char *)thePacket,
-				  (size_t) theBytesToWrite);
+                                  (size_t) theBytesToWrite);
     GPSD_LOG(LOG_PROG, &session->context->errout,
-	     "Garmin: SendPacket(), wrote %zd bytes\n",
-	     theBytesReturned);
+             "Garmin: SendPacket(), wrote %zd bytes\n",
+             theBytesReturned);
 
 }
 
@@ -861,7 +857,7 @@ static void Build_Send_SER_Packet(struct gps_device_t *session,
 // This works around cppcheck not looking into enough config branches
 // cppcheck-suppress unusedFunction
 static bool is_usb_device(const char *path UNUSED, int vendor, int product,
-			  struct gpsd_errout_t *errout)
+                          struct gpsd_errout_t *errout)
 {
     // discover devices
     libusb_device **list;
@@ -873,39 +869,39 @@ static bool is_usb_device(const char *path UNUSED, int vendor, int product,
     (void)libusb_init(NULL);
 
     if ((cnt = libusb_get_device_list(NULL, &list)) < 0) {
-	GPSD_LOG(LOG_ERROR, errout, "USB device list call failed.\n");
-	libusb_exit(NULL);
-	return false;
+        GPSD_LOG(LOG_ERROR, errout, "USB device list call failed.\n");
+        libusb_exit(NULL);
+        return false;
     }
 
     for (i = 0; i < cnt; i++) {
-	struct libusb_device_descriptor desc;
-	libusb_device *dev = list[i];
+        struct libusb_device_descriptor desc;
+        libusb_device *dev = list[i];
 
-	int r = libusb_get_device_descriptor(dev, &desc);
-	if (r < 0) {
-	    GPSD_LOG(LOG_ERROR, errout,
-		     "USB descriptor fetch failed on device %zd.\n", i);
-	    continue;
-	}
+        int r = libusb_get_device_descriptor(dev, &desc);
+        if (r < 0) {
+            GPSD_LOG(LOG_ERROR, errout,
+                     "USB descriptor fetch failed on device %zd.\n", i);
+            continue;
+        }
 
-	/* we can extract device descriptor data */
-	GPSD_LOG(LOG_INF, errout,
-		 "%04x:%04x (bus %d, device %d)\n",
-		 desc.idVendor, desc.idProduct,
-		 libusb_get_bus_number(dev),
-		 libusb_get_device_address(dev));
+        /* we can extract device descriptor data */
+        GPSD_LOG(LOG_INF, errout,
+                 "%04x:%04x (bus %d, device %d)\n",
+                 desc.idVendor, desc.idProduct,
+                 libusb_get_bus_number(dev),
+                 libusb_get_device_address(dev));
 
-	/* we match if vendor and product ID are right */
-	if (desc.idVendor == (uint16_t)vendor && desc.idProduct == (uint16_t)product) {
-	    found = true;
-	    break;
-	}
+        /* we match if vendor and product ID are right */
+        if (desc.idVendor == (uint16_t)vendor && desc.idProduct == (uint16_t)product) {
+            found = true;
+            break;
+        }
     }
 
     GPSD_LOG(LOG_INF, errout,
-	     "vendor/product match with %04x:%04x %sfound\n",
-	     vendor, product, found ? "" : "not ");
+             "vendor/product match with %04x:%04x %sfound\n",
+             vendor, product, found ? "" : "not ");
     libusb_free_device_list(list, 1);
     libusb_exit(NULL);
     return found;
@@ -948,39 +944,39 @@ static bool garmin_usb_detect(struct gps_device_t *session UNUSED)
      * to be trying to coexist with the Garmin.
      */
     if (session->sourcetype != source_usb)
-	return false;
+        return false;
     else {
 #ifdef HAVE_LIBUSB
-	if (!is_usb_device(session->gpsdata.dev.path, 0x091e, 0x0003,
-		&session->context->errout))
-	    return false;
+        if (!is_usb_device(session->gpsdata.dev.path, 0x091e, 0x0003,
+                &session->context->errout))
+            return false;
 
-	if (!gpsd_set_raw(session)) {
-	    GPSD_LOG(LOG_ERROR, &session->context->errout,
-		     "Garmin: garmin_usb_detect: error changing port attributes: %s\n",
-		     strerror(errno));
-	    return false;
-	}
+        if (!gpsd_set_raw(session)) {
+            GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "Garmin: garmin_usb_detect: error changing port attributes: %s\n",
+                     strerror(errno));
+            return false;
+        }
 
-	if (sizeof(session->driver.garmin.Buffer) < sizeof(Packet_t)) {
-	    /* dunno how this happens, but it does on some compilers */
-	    GPSD_LOG(LOG_ERROR, &session->context->errout,
-		     "Garmin: garmin_usb_detect: Compile error, garmin.Buffer too small.\n");
-	    return false;
-	}
+        if (sizeof(session->driver.garmin.Buffer) < sizeof(Packet_t)) {
+            /* dunno how this happens, but it does on some compilers */
+            GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "Garmin: garmin_usb_detect: Compile error, garmin.Buffer too small.\n");
+            return false;
+        }
 
-	// FIXME!!! needs to use libusb totally and move garmin_gps aside */
-	// set Mode 1, mode 0 is broken somewhere past 2.6.14
-	// but how?
-	GPSD_LOG(LOG_PROG, &session->context->errout,
-		 "Garmin: Set garmin_gps driver mode = 0\n");
-	Build_Send_USB_Packet(session, GARMIN_LAYERID_PRIVATE,
-			      PRIV_PKTID_SET_MODE, 4, MODE_GARMIN_SERIAL);
-	// expect no return packet !?
+        // FIXME!!! needs to use libusb totally and move garmin_gps aside */
+        // set Mode 1, mode 0 is broken somewhere past 2.6.14
+        // but how?
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "Garmin: Set garmin_gps driver mode = 0\n");
+        Build_Send_USB_Packet(session, GARMIN_LAYERID_PRIVATE,
+                              PRIV_PKTID_SET_MODE, 4, MODE_GARMIN_SERIAL);
+        // expect no return packet !?
 
-	return true;
+        return true;
 #else
-	return false;
+        return false;
 #endif /* HAVE_LIBUSB */
     }
 #else
@@ -991,39 +987,39 @@ static bool garmin_usb_detect(struct gps_device_t *session UNUSED)
 static void garmin_event_hook(struct gps_device_t *session, event_t event)
 {
     if (session->context->readonly)
-	return;
+        return;
     /*
      * FIX-ME: It might not be necessary to call this on reactivate.
      * Experiment to see if the holds its settings through a close.
      */
     if (event == event_identified || event == event_reactivate) {
-	// Tell the device to send product data
-	GPSD_LOG(LOG_PROG, &session->context->errout,
-		 "Garmin: Get Product Data\n");
-	Build_Send_SER_Packet(session, GARMIN_LAYERID_APPL,
-			      GARMIN_PKTID_PRODUCT_RQST, 0, 0);
+        // Tell the device to send product data
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "Garmin: Get Product Data\n");
+        Build_Send_SER_Packet(session, GARMIN_LAYERID_APPL,
+                              GARMIN_PKTID_PRODUCT_RQST, 0, 0);
 
-	// turn on PVT data 49
-	GPSD_LOG(LOG_PROG, &session->context->errout,
-		 "Garmin: Set to send reports every 1 second\n");
+        // turn on PVT data 49
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "Garmin: Set to send reports every 1 second\n");
 
-	Build_Send_SER_Packet(session, GARMIN_LAYERID_APPL,
-			      GARMIN_PKTID_L001_COMMAND_DATA, 2,
-			      CMND_START_PVT_DATA);
+        Build_Send_SER_Packet(session, GARMIN_LAYERID_APPL,
+                              GARMIN_PKTID_L001_COMMAND_DATA, 2,
+                              CMND_START_PVT_DATA);
 
 #if USE_RMD
-	// turn on RMD data 110
-	GPSD_LOG(LOG_PROG, &session->context->errout,
-		 "Garmin: Set to send Raw sat data\n");
-	Build_Send_SER_Packet(session, GARMIN_LAYERID_APPL,
-			      GARMIN_PKTID_L001_COMMAND_DATA, 2,
-			      CMND_START_RM_DATA);
+        // turn on RMD data 110
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "Garmin: Set to send Raw sat data\n");
+        Build_Send_SER_Packet(session, GARMIN_LAYERID_APPL,
+                              GARMIN_PKTID_L001_COMMAND_DATA, 2,
+                              CMND_START_RM_DATA);
 #endif
     }
     if (event == event_deactivate)
-	/* FIX-ME: is any action needed, or is closing the port sufficient? */
-	GPSD_LOG(LOG_PROG, &session->context->errout,
-		 "Garmin: garmin_close()\n");
+        /* FIX-ME: is any action needed, or is closing the port sufficient? */
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "Garmin: garmin_close()\n");
 }
 
 #define Send_ACK()    Build_Send_SER_Packet(session, 0, ACK, 0, 0)
@@ -1048,130 +1044,130 @@ gps_mask_t garmin_ser_parse(struct gps_device_t *session)
     GPSD_LOG(LOG_RAW, &session->context->errout,
              "Garmin: garmin_ser_parse()\n");
     if (6 > len) {
-	/* WTF? */
-	/* minimum packet; <DLE> [pkt id] [length=0] [chksum] <DLE> <STX> */
-	Send_NAK();
-	GPSD_LOG(LOG_RAW, &session->context->errout,
-		 "Garmin: serial too short: %zd\n", len);
-	return 0;
+        /* WTF? */
+        /* minimum packet; <DLE> [pkt id] [length=0] [chksum] <DLE> <STX> */
+        Send_NAK();
+        GPSD_LOG(LOG_RAW, &session->context->errout,
+                 "Garmin: serial too short: %zd\n", len);
+        return 0;
     }
     /* debug */
     for (i = 0; i < (int)len; i++) {
-	GPSD_LOG(LOG_RAW, &session->context->errout,
-		 "Garmin: Char: %#02x\n", buf[i]);
+        GPSD_LOG(LOG_RAW, &session->context->errout,
+                 "Garmin: Char: %#02x\n", buf[i]);
     }
 
     if ('\x10' != buf[0]) {
-	Send_NAK();
-	GPSD_LOG(LOG_RAW, &session->context->errout,
-		 "Garmin: buf[0] not DLE\n");
-	return 0;
+        Send_NAK();
+        GPSD_LOG(LOG_RAW, &session->context->errout,
+                 "Garmin: buf[0] not DLE\n");
+        return 0;
     }
     n = 1;
     pkt_id = buf[n++];
     chksum = pkt_id;
     if ('\x10' == pkt_id) {
-	if ('\x10' != buf[n++]) {
-	    Send_NAK();
-	    GPSD_LOG(LOG_RAW, &session->context->errout,
-		     "Garmin: Bad pkt_id %#02x\n", pkt_id);
-	    return 0;
-	}
+        if ('\x10' != buf[n++]) {
+            Send_NAK();
+            GPSD_LOG(LOG_RAW, &session->context->errout,
+                     "Garmin: Bad pkt_id %#02x\n", pkt_id);
+            return 0;
+        }
     }
 
     pkt_len = buf[n++];
     chksum += pkt_len;
     if ('\x10' == pkt_len) {
-	if ('\x10' != buf[n++]) {
-	    GPSD_LOG(LOG_RAW, &session->context->errout,
-		     "Garmin: Bad pkt_len %#02x\n", pkt_len);
-	    Send_NAK();
-	    return 0;
-	}
+        if ('\x10' != buf[n++]) {
+            GPSD_LOG(LOG_RAW, &session->context->errout,
+                     "Garmin: Bad pkt_len %#02x\n", pkt_len);
+            Send_NAK();
+            return 0;
+        }
     }
     data_index = 0;
     for (i = 0; i < 256; i++) {
 
-	if ((int)pkt_len == data_index) {
-	    // got it all
-	    break;
-	}
-	if (len < n + i) {
-	    GPSD_LOG(LOG_RAW, &session->context->errout,
-		     "Garmin: Packet too short %zd < %zd\n",
-		     len, n + i);
-	    Send_NAK();
-	    return 0;
-	}
-	c = buf[n + i];
-	if (got_dle) {
-	    got_dle = 0;
-	    if ('\x10' != c) {
-		Send_NAK();
-		GPSD_LOG(LOG_RAW, &session->context->errout,
-			 "Garmin: Bad DLE %#02x\n", c);
-		return 0;
-	    }
-	} else {
-	    chksum += c;
-	    data_buf[data_index++] = c;
-	    if ('\x10' == c) {
-		got_dle = 1;
-	    }
-	}
+        if ((int)pkt_len == data_index) {
+            // got it all
+            break;
+        }
+        if (len < n + i) {
+            GPSD_LOG(LOG_RAW, &session->context->errout,
+                     "Garmin: Packet too short %zd < %zd\n",
+                     len, n + i);
+            Send_NAK();
+            return 0;
+        }
+        c = buf[n + i];
+        if (got_dle) {
+            got_dle = 0;
+            if ('\x10' != c) {
+                Send_NAK();
+                GPSD_LOG(LOG_RAW, &session->context->errout,
+                         "Garmin: Bad DLE %#02x\n", c);
+                return 0;
+            }
+        } else {
+            chksum += c;
+            data_buf[data_index++] = c;
+            if ('\x10' == c) {
+                got_dle = 1;
+            }
+        }
     }
     /* get checksum */
     if (len < n + i) {
-	Send_NAK();
-	GPSD_LOG(LOG_RAW, &session->context->errout,
-		 "Garmin: No checksum, Packet too short %zd < %zd\n", len,
-		 n + i);
-	return 0;
+        Send_NAK();
+        GPSD_LOG(LOG_RAW, &session->context->errout,
+                 "Garmin: No checksum, Packet too short %zd < %zd\n", len,
+                 n + i);
+        return 0;
     }
     c = buf[n + i++];
     chksum += c;
     /* get final DLE */
     if (len < n + i) {
-	Send_NAK();
-	GPSD_LOG(LOG_RAW, &session->context->errout,
-		 "Garmin: No final DLE, Packet too short %zd < %zd\n", len,
-		 n + i);
-	return 0;
+        Send_NAK();
+        GPSD_LOG(LOG_RAW, &session->context->errout,
+                 "Garmin: No final DLE, Packet too short %zd < %zd\n", len,
+                 n + i);
+        return 0;
     }
     c = buf[n + i++];
     if ('\x10' != c) {
-	Send_NAK();
-	GPSD_LOG(LOG_RAW, &session->context->errout,
-		 "Garmin: Final DLE not DLE\n");
-	return 0;
+        Send_NAK();
+        GPSD_LOG(LOG_RAW, &session->context->errout,
+                 "Garmin: Final DLE not DLE\n");
+        return 0;
     }
     /* get final ETX */
     if (len < n + i) {
-	Send_NAK();
-	GPSD_LOG(LOG_RAW, &session->context->errout,
-		 "Garmin: No final ETX, Packet too short %zd < %zd\n", len,
-		 n + i);
-	return 0;
+        Send_NAK();
+        GPSD_LOG(LOG_RAW, &session->context->errout,
+                 "Garmin: No final ETX, Packet too short %zd < %zd\n", len,
+                 n + i);
+        return 0;
     }
     /* we used to say n++ here, but scan-build complains */
     c = buf[n + i];
     if ('\x03' != c) {
-	Send_NAK();
-	GPSD_LOG(LOG_RAW, &session->context->errout,
-		 "Garmin: Final ETX not ETX\n");
-	return 0;
+        Send_NAK();
+        GPSD_LOG(LOG_RAW, &session->context->errout,
+                 "Garmin: Final ETX not ETX\n");
+        return 0;
     }
 
     /* debug */
     for (i = 0; i < data_index; i++) {
-	GPSD_LOG(LOG_RAW, &session->context->errout,
-		 "Garmin: Char: %#02x\n", data_buf[i]);
+        GPSD_LOG(LOG_RAW, &session->context->errout,
+                 "Garmin: Char: %#02x\n", data_buf[i]);
     }
 
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-	     "Garmin: garmin_ser_parse() Type: %#02x, Len: %#02x, chksum: %#02x\n",
-	     pkt_id, pkt_len, chksum);
+             "Garmin: garmin_ser_parse() Type: %#02x, Len: %#02x, chksum: %#02x\n",
+             pkt_id, pkt_len, chksum);
     mask = PrintSERPacket(session, pkt_id, pkt_len, data_buf);
 
     // sending ACK too soon might hang the session
@@ -1183,7 +1179,7 @@ gps_mask_t garmin_ser_parse(struct gps_device_t *session)
 
     Send_ACK();
     GPSD_LOG(LOG_DATA, &session->context->errout,
-	     "Garmin: garmin_ser_parse( )\n");
+             "Garmin: garmin_ser_parse( )\n");
     return mask;
 }
 
@@ -1201,37 +1197,37 @@ static void settle(void)
 static void garmin_switcher(struct gps_device_t *session, int mode)
 {
     if (mode == MODE_NMEA) {
-	const unsigned  char switcher[] =
-	    { 0x10, 0x0A, 0x02, 0x26, 0x00, 0xCE, 0x10, 0x03 };
-	// Note hard-coded string length in the next line...
-	ssize_t status = gpsd_write(session, (char *)switcher,
+        const unsigned  char switcher[] =
+            { 0x10, 0x0A, 0x02, 0x26, 0x00, 0xCE, 0x10, 0x03 };
+        // Note hard-coded string length in the next line...
+        ssize_t status = gpsd_write(session, (char *)switcher,
                                     sizeof(switcher));
-	if (status == (ssize_t)sizeof(switcher)) {
-	    GPSD_LOG(LOG_PROG, &session->context->errout,
-		     "Garmin: => GPS: turn off binary %02x %02x %02x... \n",
-		     switcher[0], switcher[1], switcher[2]);
-	} else {
-	    GPSD_LOG(LOG_ERROR, &session->context->errout,
-		     "Garmin: => GPS: FAILED\n");
-	}
-	settle();		// wait 333mS, essential!
+        if (status == (ssize_t)sizeof(switcher)) {
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "Garmin: => GPS: turn off binary %02x %02x %02x... \n",
+                     switcher[0], switcher[1], switcher[2]);
+        } else {
+            GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "Garmin: => GPS: FAILED\n");
+        }
+        settle();               // wait 333mS, essential!
 
-	/* once a sec, no binary, no averaging, NMEA 2.3, WAAS */
-	(void)nmea_send(session, "$PGRMC1,1,1");
-	//(void)nmea_send(fd, "$PGRMC1,1,1,1,,,,2,W,N");
-	(void)nmea_send(session, "$PGRMI,,,,,,,R");
-	settle();		// wait 333mS, essential!
+        /* once a sec, no binary, no averaging, NMEA 2.3, WAAS */
+        (void)nmea_send(session, "$PGRMC1,1,1");
+        //(void)nmea_send(fd, "$PGRMC1,1,1,1,,,,2,W,N");
+        (void)nmea_send(session, "$PGRMI,,,,,,,R");
+        settle();               // wait 333mS, essential!
     } else {
-	(void)nmea_send(session, "$PGRMC1,1,2,1,,,,2,W,N");
-	(void)nmea_send(session, "$PGRMI,,,,,,,R");
-	settle();		// wait 333mS, essential!
+        (void)nmea_send(session, "$PGRMC1,1,2,1,,,,2,W,N");
+        (void)nmea_send(session, "$PGRMI,,,,,,,R");
+        settle();               // wait 333mS, essential!
     }
 }
 #endif /* RECONFIGURE_ENABLE */
 
 #ifdef CONTROLSEND_ENABLE
 static ssize_t garmin_control_send(struct gps_device_t *session,
-				   char *buf, size_t buflen)
+                                   char *buf, size_t buflen)
 /* not used by the daemon, it's for gpsctl and friends */
 {
     session->msgbuflen = buflen;
@@ -1243,21 +1239,21 @@ static ssize_t garmin_control_send(struct gps_device_t *session,
 static double garmin_time_offset(struct gps_device_t *session)
 {
     if (session->sourcetype == source_usb) {
-	return 0.035;		/* Garmin USB, expect +/- 40mS jitter */
+        return 0.035;           /* Garmin USB, expect +/- 40mS jitter */
     }
     /* only two sentences ships time */
     /* but the PVT data is always first */
     switch (session->gpsdata.dev.baudrate) {
     case 4800:
-	return 0.430;		/* TBD */
+        return 0.430;           /* TBD */
     case 9600:
-	return 0.430;		/* tested 12Arp10 */
+        return 0.430;           /* tested 12Arp10 */
     case 19200:
-	return 0.430;		/* TBD */
+        return 0.430;           /* TBD */
     case 38400:
-	return 0.430;		/* TBD */
+        return 0.430;           /* TBD */
     }
-    return 0.430;		/* WTF?  WAG */
+    return 0.430;               /* WTF?  WAG */
 }
 
 /* this is everything we export */
@@ -1265,26 +1261,26 @@ static double garmin_time_offset(struct gps_device_t *session)
 /* *INDENT-OFF* */
 const struct gps_type_t driver_garmin_usb_binary =
 {
-    .type_name      = "Garmin USB binary",	/* full name of type */
-    .packet_type    = GARMIN_PACKET,	/* associated lexer packet type */
-    .flags	    = DRIVER_STICKY,	/* remember this */
-    .trigger        = NULL,		/* no trigger, it has a probe */
-    .channels       = GARMIN_CHANNELS,	/* consumer-grade GPS */
+    .type_name      = "Garmin USB binary",      /* full name of type */
+    .packet_type    = GARMIN_PACKET,    /* associated lexer packet type */
+    .flags          = DRIVER_STICKY,    /* remember this */
+    .trigger        = NULL,             /* no trigger, it has a probe */
+    .channels       = GARMIN_CHANNELS,  /* consumer-grade GPS */
     .probe_detect   = garmin_usb_detect,/* how to detect at startup time */
     .get_packet     = generic_get,      /* how to grab a packet */
-    .parse_packet   = garmin_ser_parse,	/* parse message packets */
-    .rtcm_writer    = NULL,		/* don't send DGPS corrections */
-    .init_query     = NULL,		/* non-perturbing initial query */
+    .parse_packet   = garmin_ser_parse, /* parse message packets */
+    .rtcm_writer    = NULL,             /* don't send DGPS corrections */
+    .init_query     = NULL,             /* non-perturbing initial query */
     .event_hook     = garmin_event_hook,/* lifetime ebent handler */
 #ifdef RECONFIGURE_ENABLE
-    .speed_switcher = NULL,		/* no speed switcher */
-    .mode_switcher  = NULL,	        /* Garmin USB Binary has no NMEA */
-    .rate_switcher  = NULL,		/* no sample-rate switcher */
+    .speed_switcher = NULL,             /* no speed switcher */
+    .mode_switcher  = NULL,             /* Garmin USB Binary has no NMEA */
+    .rate_switcher  = NULL,             /* no sample-rate switcher */
     .min_cycle.tv_sec  = 0,
-    .min_cycle.tv_nsec = 10000000,	/* 10Hz */
+    .min_cycle.tv_nsec = 10000000,      /* 10Hz */
 #endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
-    .control_send   = garmin_control_send,	/* send raw bytes */
+    .control_send   = garmin_control_send,      /* send raw bytes */
 #endif /* CONTROLSEND_ENABLE */
     .time_offset     = garmin_time_offset,
 };
@@ -1293,28 +1289,28 @@ const struct gps_type_t driver_garmin_usb_binary =
 /* *INDENT-OFF* */
 const struct gps_type_t driver_garmin_ser_binary =
 {
-    .type_name      = "Garmin Serial binary",	/* full name of type */
-    .packet_type    = GARMIN_PACKET,	/* associated lexer packet type */
-    .flags	    = DRIVER_STICKY,	/* remember this */
-    .trigger        = NULL,		/* no trigger, it has a probe */
-    .channels       = GARMIN_CHANNELS,	/* consumer-grade GPS */
-    .probe_detect   = NULL,        	/* how to detect at startup time */
+    .type_name      = "Garmin Serial binary",   /* full name of type */
+    .packet_type    = GARMIN_PACKET,    /* associated lexer packet type */
+    .flags          = DRIVER_STICKY,    /* remember this */
+    .trigger        = NULL,             /* no trigger, it has a probe */
+    .channels       = GARMIN_CHANNELS,  /* consumer-grade GPS */
+    .probe_detect   = NULL,             /* how to detect at startup time */
     .get_packet     = generic_get,       /* how to grab a packet */
-    .parse_packet   = garmin_ser_parse,	/* parse message packets */
-    .rtcm_writer    = NULL,		/* don't send DGPS corrections */
-    .init_query     = NULL,		/* non-perturbing initial query */
+    .parse_packet   = garmin_ser_parse, /* parse message packets */
+    .rtcm_writer    = NULL,             /* don't send DGPS corrections */
+    .init_query     = NULL,             /* non-perturbing initial query */
     /* The Garmin Gek0 301 needs to be kicked to start sending binary.
      * like the Garmin USB. */
     .event_hook     = garmin_event_hook,        /* lifetime event handler */
 #ifdef RECONFIGURE_ENABLE
-    .speed_switcher = NULL,		/* no speed switcher */
-    .mode_switcher  = garmin_switcher,	/* how to change modes */
-    .rate_switcher  = NULL,		/* no sample-rate switcher */
+    .speed_switcher = NULL,             /* no speed switcher */
+    .mode_switcher  = garmin_switcher,  /* how to change modes */
+    .rate_switcher  = NULL,             /* no sample-rate switcher */
     .min_cycle.tv_sec  = 0,
     .min_cycle.tv_nsec = 10000000,      /* 10Hz */
 #endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
-    .control_send   = garmin_control_send,	/* send raw bytes */
+    .control_send   = garmin_control_send,      /* send raw bytes */
 #endif /* CONTROLSEND_ENABLE */
     .time_offset     = garmin_time_offset,
 };
