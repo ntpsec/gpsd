@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2019 Grand Joldes (grandwork2@yahoo.com).
+# Copyright 2019 Grand Joldes (grandwork2@yahoo.com).
 #
-# This file is Copyright (c) 2019 by the GPSD project
+# This file is Copyright 2019 by the GPSD project
 #
 # SPDX-License-Identifier: BSD-2-clause
 
@@ -113,3 +113,5 @@ def run():
             loop.run_until_complete(loop.shutdown_asyncgens())
             asyncio.events.set_event_loop(None)
             loop.close()
+
+# vim: set expandtab shiftwidth=4
