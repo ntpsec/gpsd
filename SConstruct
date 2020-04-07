@@ -1373,13 +1373,14 @@ PYTHON_CONFIG_CALL = ('sysconfig.get_config_vars(%s)'
 # flag that we have xgps* dependencies, so xgps* should run OK
 config.env['xgps_deps'] = False
 
+python_config = {}  # Dummy for all non-Python-build cases
+
 if cleaning or helping:
     # If helping just get usable config info from the local Python
     target_python_path = ''
     py_config_text = str(eval(PYTHON_CONFIG_CALL))
     python_libdir = str(eval(PYTHON_LIBDIR_CALL))
     config.env['xgps_deps'] = False
-    python_config = {}
 
 elif config.env['python']:
     target_python_path = None
