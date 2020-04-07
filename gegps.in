@@ -22,7 +22,7 @@ Modified by Chen Wei <weichen302@aol.com> for use with gpsd
 Cleaned up and adapted for the GPSD project by Eric S. Raymond.
 '''
 
-# This file is Copyright (c) 2010-2020 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
@@ -157,3 +157,4 @@ if __name__ == "__main__":
             print('gegps stopped ')
 
 # end
+# vim: set expandtab shiftwidth=4
