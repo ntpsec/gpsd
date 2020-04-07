@@ -34,8 +34,6 @@ import os
 # Packet types and  Logging levels extracted from gpsd.h
 @PYPACKETH@
 
-
-
 class GpsdErrOutT(ctypes.Structure):
     pass
 
