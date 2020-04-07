@@ -1,7 +1,7 @@
 """
 gpscap - GPS/AIS capability dictionary class.
 
-This file is Copyright (c) 2010 by the GPSD project
+This file is Copyright 2010 by the GPSD project
 SPDX-License-Identifier: BSD-2-clause
 """
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
@@ -47,8 +47,8 @@ class GPSDictionary(configparser.RawConfigParser):
             if not self.has_option(section, "type"):
                 raise configparser.Error("%s has no type" % section)
 
-            if (self.get(section, "type")
-                  not in ("engine", "vendor", "device")):
+            if ((self.get(section, "type")
+                 not in ("engine", "vendor", "device"))):
                 raise configparser.Error("%s has invalid type" % section)
         # Sanity check: All devices must point at a vendor object.
         # Side effect: build the lists of vendors and devices.
@@ -210,3 +210,5 @@ if __name__ == "__main__":
     except configparser.Error as e:
         sys.stderr.write(sys.argv[0] + ":%s\n" % e)
         raise SystemExit(1)
+
+# vim: set expandtab shiftwidth=4
