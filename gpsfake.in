@@ -9,7 +9,7 @@ Most of the logic for this now lives in gps.fake,
 factored out so we can write other test programs with it.
 '''
 #
-# This file is Copyright (c) 2010-2020 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
@@ -243,8 +243,9 @@ if __name__ == '__main__':
         elif switch == '-W':
             try:
                 timeout = int(val)
-            except:
-                sys.stderr.write("gpsfake: bad timeout value.\n")
+            except ValueError:
+                sys.stderr.write("gpsfake: bad timeout value (%s). "
+                                 "Expected a number.\n" % val)
                 raise SystemExit(1)
         elif switch == '-x':
             predump = True
@@ -338,3 +339,4 @@ if __name__ == '__main__':
 # Local Variables:
 # mode:python
 # End:
+# vim: set expandtab shiftwidth=4
