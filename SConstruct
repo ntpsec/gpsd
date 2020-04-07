@@ -23,7 +23,7 @@
 # * Coveraging mode: gcc "-coverage" flag requires a hack
 #   for building the python bindings
 #
-# This file is Copyright (c) 2010-2020 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 #
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
@@ -2148,8 +2148,8 @@ if env['python'] and not cleaning and not helping:
 
     python_oldso_remove = python_env.Command('uninstall-old-so', '',
                                              Delete(DESTDIR +
-                                             python_module_dir + os.sep +
-                                             old_packet_so))
+                                                    python_module_dir +
+                                                    os.sep + old_packet_so))
 
     python_progs_install = python_env.Install(installdir('bindir'),
                                               python_progs)
