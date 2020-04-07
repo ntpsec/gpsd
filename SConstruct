@@ -594,9 +594,11 @@ def announce(msg, end=False):
         # duplicate message at exit
         atexit.register(lambda: print(msg))
 
+
 announce("scons version: %s" % SCons.__version__)
 announce("scons is running under Python version: %s" %
          ".".join(map(str, sys.version_info)))
+announce("gpsd version: %s" % gpsd_revision)
 
 # DESTDIR environment variable means user prefix the installation root.
 DESTDIR = os.environ.get('DESTDIR', '')
