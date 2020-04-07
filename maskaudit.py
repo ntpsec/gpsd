@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# This file is Copyright (c) 2010 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 #
 # With -p, dump a Python status mask list translated from the C one.
@@ -166,3 +166,4 @@ const char *gps_maskdump(gps_mask_t set)
 # Local Variables:
 # mode:python
 # End:
+# vim: set expandtab shiftwidth=4
