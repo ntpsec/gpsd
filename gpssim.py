@@ -1,4 +1,4 @@
-# This file is Copyright (c) 2010 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 """
 A GPS simulator.
@@ -321,3 +321,4 @@ if __name__ == "__main__":
         sys.stderr.write(repr(e) + "\n")
 
 # gpssim.py ends here.
+# vim: set expandtab shiftwidth=4
