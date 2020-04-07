@@ -7,8 +7,8 @@ ubxtool -- u-blox configurator and packet decoder
 usage: ubxtool [OPTIONS] [server[:port[:device]]]
 '''
 
-# This file is Copyright (c) 2018-2020 by the GPSD project
-# BSD terms apply: see the file COPYING in the distribution root for details.
+# This file is Copyright 2018 by the GPSD project
+# SPDX-License-Identifier: BSD-2-clause
 #
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
@@ -4450,22 +4450,22 @@ High Precision GNSS products only."""
              '  relPosN %d relPosE %d relPosD %d\n' % u)
 
         if (1 == u[0] and 64 <= m_len):
-             # valid version 1 packet, newer u-blox 9
-             u1 = struct.unpack_from('<llLbbbbLLLLLLL', buf, 20)
-             s += ('  relLength %d relHeading %d reserved2 %u\n'
-                   '  relPosHPN %d relPosHPE %d relPosHPD %d '
-                   'relPosHPLength %d\n'
-                   '  accN %u accE %u accD %u accLength %u accHeading %u\n'
-                   '  reserved3 %u flags x%x' % u1)
-             flags = u1[13];
+            # valid version 1 packet, newer u-blox 9
+            u1 = struct.unpack_from('<llLbbbbLLLLLLL', buf, 20)
+            s += ('  relLength %d relHeading %d reserved2 %u\n'
+                  '  relPosHPN %d relPosHPE %d relPosHPD %d '
+                  'relPosHPLength %d\n'
+                  '  accN %u accE %u accD %u accLength %u accHeading %u\n'
+                  '  reserved3 %u flags x%x' % u1)
+            flags = u1[13]
         elif (0 == u[0] and 40 <= m_len):
-             # valid version 0 packet, u-blox 8, and some u-blox 9
-             u1 = struct.unpack_from('<bbbbLLLLLLL', buf, 20)
-             s += ('  relPosHPN %d relPosHPE %d relPosHPD %d reserved2 %u\n'
-                   '  accN %u accE %u accD %u flags x%x' % u1)
-             flags = u1[7];
+            # valid version 0 packet, u-blox 8, and some u-blox 9
+            u1 = struct.unpack_from('<bbbbLLLLLLL', buf, 20)
+            s += ('  relPosHPN %d relPosHPE %d relPosHPD %d reserved2 %u\n'
+                  '  accN %u accE %u accD %u flags x%x' % u1)
+            flags = u1[7]
         else:
-             # WTF?
+            # WTF?
             return "  Bad Length %d version %u combination" % (m_len, u[0])
 
         if VERB_DECODE <= opts['verbosity']:
@@ -7680,3 +7680,4 @@ except KeyboardInterrupt:
     exit_code = 1
 
 sys.exit(exit_code)
+# vim: set expandtab shiftwidth=4
