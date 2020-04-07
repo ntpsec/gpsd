@@ -4,7 +4,7 @@
 # It's not really expected to spot anything as long as we aren't using
 # malloc and friends in the daemon.
 #
-# This file is Copyright (c) 2010 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 #
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
@@ -106,3 +106,4 @@ finally:
 # Local Variables:
 # mode:python
 # End:
+# vim: set expandtab shiftwidth=4
