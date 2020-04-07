@@ -748,8 +748,8 @@ def CheckTime_t(context):
         #include <time.h>
 
         int main(int argc, char **argv) {
-	    static int test_array[1 - 2 * ((long int) sizeof(time_t) < 8 )];
-	    test_array[0] = 0;
+            static int test_array[1 - 2 * ((long int) sizeof(time_t) < 8 )];
+            test_array[0] = 0;
             (void) argc; (void) argv;
             return 0;
         }
@@ -1204,10 +1204,10 @@ else:
                             % hdr.replace("/", "_").upper())
 
     if 0 == config.CheckTime_t():
-	announce("WARNING: time_t is too small.  It will fail in 2038")
-	sizeof_time_t = 4
+        announce("WARNING: time_t is too small.  It will fail in 2038")
+        sizeof_time_t = 4
     else:
-	sizeof_time_t = 8
+        sizeof_time_t = 8
 
     confdefs.append("#define SIZEOF_TIME_T %s\n" % sizeof_time_t)
 
