@@ -6,7 +6,7 @@ Collect and plot latency-profiling data from a running gpsd.
 Requires gnuplot, but gnuplot can be on another host.
 '''
 
-# This file is Copyright (c) 2010-2020 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 #
 # Updated to conform with RCC-219-00, RCC/IRIG Standard 261-00
@@ -796,9 +796,9 @@ class polarplot(plotter):
             for sat in sats:
                 seen += 1
                 # u'ss': 42, u'el': 15, u'PRN': 18, u'az': 80, u'used': True
-                if ((not 'az' in sat) or
-                    (not 'el' in sat)):
-                    continue;
+                if ((('az' not in sat) or
+                     ('el' not in sat))):
+                    continue
                 if sat['used'] is True:
                     used += 1
                     if 'polarunused' == self.name:
