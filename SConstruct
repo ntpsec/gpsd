@@ -741,6 +741,23 @@ def CheckXsltproc(context):
     return ret
 
 
+def CheckTime_t(context):
+    context.Message('Checking if sizeof(time_t) is 64 bits... ')
+    old_CFLAGS = context.env['CFLAGS'][:]  # Get a *copy* of the old list
+    ret = context.TryLink("""
+        #include <time.h>
+
+        int main(int argc, char **argv) {
+	    static int test_array[1 - 2 * ((long int) sizeof(time_t) < 8 )];
+	    test_array[0] = 0;
+            (void) argc; (void) argv;
+            return 0;
+        }
+    """, '.c')
+    context.Result(ret)
+    return ret
+
+
 def CheckCompilerOption(context, option):
     context.Message('Checking if compiler accepts %s... ' % (option,))
     old_CFLAGS = context.env['CFLAGS'][:]  # Get a *copy* of the old list
@@ -821,6 +838,7 @@ config = Configure(env, custom_tests={
     'CheckCompilerOption': CheckCompilerOption,
     'CheckPKG': CheckPKG,
     'CheckXsltproc': CheckXsltproc,
+    'CheckTime_t': CheckTime_t,
     'GetPythonValue': GetPythonValue,
     })
 
@@ -1185,19 +1203,11 @@ else:
             confdefs.append("/* #undef HAVE_%s_H */\n"
                             % hdr.replace("/", "_").upper())
 
-    if env['target']:
-        announce("Not checking sizeof(time_t) when cross-compiling")
-        sizeof_time_t = 8
+    if 0 == config.CheckTime_t():
+	announce("WARNING: time_t is too small.  It will fail in 2038")
+	sizeof_time_t = 4
     else:
-        sizeof_time_t = config.CheckTypeSize('time_t',
-                                             includes='#include <time.h>\n')
-        if 0 < sizeof_time_t:
-            announce("sizeof(time_t) is %s" % sizeof_time_t)
-            if 4 >= sizeof_time_t:
-                announce("WARNING: time_t is too small.  It will fail in 2038")
-        else:
-            announce("WARNING: could not get sizeof(time_t)")
-            sizeof_time_t = 8
+	sizeof_time_t = 8
 
     confdefs.append("#define SIZEOF_TIME_T %s\n" % sizeof_time_t)
 
