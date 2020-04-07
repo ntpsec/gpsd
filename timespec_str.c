@@ -44,15 +44,15 @@ const char *timespec_str(const struct timespec *ts, char *buf, size_t buf_size)
     char sign = ' ';
 
     if (!TS_GEZ(ts)) {
-	sign = '-';
+        sign = '-';
     }
 
     /* %lld and (long long) because some time_t is bigger than a long
      * mostly on 32-bit systems. */
     (void)snprintf(buf, buf_size, "%c%lld.%09ld",
-		   sign,
-		   (long long)llabs(ts->tv_sec),
-		   (long)labs(ts->tv_nsec));
+                   sign,
+                   (long long)llabs(ts->tv_sec),
+                   (long)labs(ts->tv_nsec));
     return  buf;
 }
 
