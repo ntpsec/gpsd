@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# This file is Copyright (c) 2010 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 #
 # Never hand-hack what you can generate...
@@ -1062,3 +1062,4 @@ if __name__ == '__main__':
 # Local Variables:
 # mode:python
 # End:
+# vim: set expandtab shiftwidth=4
