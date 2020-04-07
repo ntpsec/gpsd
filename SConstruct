@@ -1379,7 +1379,7 @@ if cleaning or helping:
     py_config_text = str(eval(PYTHON_CONFIG_CALL))
     python_libdir = str(eval(PYTHON_LIBDIR_CALL))
     config.env['xgps_deps'] = False
-    python_config = []
+    python_config = {}
 
 elif config.env['python']:
     target_python_path = None
@@ -1679,7 +1679,7 @@ env.Clean(libgps_shared, "gps_maskdump.c")
 libraries = [libgps_shared, packet_ffi_shared]
 
 # Make sure the old-style packet.so is gone, since it may be preferred
-old_packet_so = 'packet%s' % python_config['SO']
+old_packet_so = 'packet%s' % python_config.get('SO', '.so')
 del_old_so = Command('del-old-so', '', Delete('gps/%s' % old_packet_so))
 env.Depends(packet_ffi_shared, del_old_so)
 
