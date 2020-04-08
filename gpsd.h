@@ -595,8 +595,9 @@ struct gps_device_t {
 	timespec_t this_frac_time, last_frac_time;
 	bool latch_frac_time;
 	int lasttag;              /* index into nmea_phrase[] */
-        // 128 > number of entries in nmea_phrase[]
-	bool cycle_enders[128];    /* bit map into nmea_phrase{} */
+        // 80 > number of used entries in nmea_phrase[]
+#define NMEA_NUM 80
+	bool cycle_enders[NMEA_NUM];    /* bit map into nmea_phrase{} */
 	bool cycle_continue;
     } nmea;
 #endif /* NMEA0183_ENABLE */

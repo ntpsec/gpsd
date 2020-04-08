@@ -3318,7 +3318,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         int nf;                 /* minimum number of fields required to parse */
         bool cycle_continue;    /* cycle continuer? */
         nmea_decoder decoder;
-    } nmea_phrase[] = {
+    } nmea_phrase[NMEA_NUM] = {
         {"PGLOR", 2,  false, processPGLOR},  // Android something or other
         {"PGRMB", 0,  false, NULL},     /* ignore Garmin DGPS Beacon Info */
         {"PGRMC", 0,  false, NULL},     /* ignore Garmin Sensor Config */
@@ -3421,6 +3421,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"XDR", 0,  false, NULL},       /* ignore $HCXDR, IMU? */
         {"XTE", 0,  false, NULL},       /* ignore Cross-Track Error */
         {"ZDA", 4,  false, processZDA},
+        {NULL, 0,  false, NULL},        // no more
     };
 
     int count;
@@ -3500,9 +3501,11 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
 #endif // __UNUSED
 
     /* dispatch on field zero, the sentence tag */
-    for (i = 0;
-         i < (unsigned)(sizeof(nmea_phrase) / sizeof(nmea_phrase[0])); ++i) {
+    for (i = 0; i < NMEA_NUM; ++i) {
         char *s = session->nmea.field[0];
+        if (NULL == nmea_phrase[i].name) {
+            break;
+        }
         if (strlen(nmea_phrase[i].name) == 3
 #ifdef SKYTRAQ_ENABLE
                 /* $STI is special */
