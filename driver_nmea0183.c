@@ -3428,8 +3428,8 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
     unsigned int i, thistag, lasttag;
     char *p, *e;
     volatile char *t;
-    uint64_t lasttag_mask = 0;
-    uint64_t thistag_mask = 0;
+    unsigned lasttag_index = 0;
+    unsigned thistag_index = 0;
     char ts_buf1[TIMESPEC_LEN];
     char ts_buf2[TIMESPEC_LEN];
 #ifdef SKYTRAQ_ENABLE
@@ -3582,23 +3582,21 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
      * occurs just before timestamp increments also occurs in
      * mid-cycle, as in the Garmin eXplorist 210; those might jitter.
      */
-    /* cast for 32/64 bit compat */
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "%s time %s last %s latch %d cont %d enders %#llx\n",
+             "%s time %s last %s latch %d cont %d\n",
              session->nmea.field[0],
              timespec_str(&session->nmea.this_frac_time, ts_buf1,
                           sizeof(ts_buf1)),
              timespec_str(&session->nmea.last_frac_time, ts_buf2,
                           sizeof(ts_buf2)),
              session->nmea.latch_frac_time,
-             session->nmea.cycle_continue,
-             (unsigned long long)session->nmea.cycle_enders);
+             session->nmea.cycle_continue);
     lasttag = session->nmea.lasttag;
     if (0 < session->nmea.lasttag) {
-        lasttag_mask = (uint64_t)1 << lasttag;
+        lasttag_index = (int)lasttag;
     }
     if (0 < thistag) {
-        thistag_mask = (uint64_t)1 << thistag;
+        thistag_index = (int)thistag;
     }
     if (session->nmea.latch_frac_time) {
         timespec_t ts_delta;
@@ -3618,19 +3616,20 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
              *
              */
             if (0 < lasttag &&
-                0 == (session->nmea.cycle_enders & lasttag_mask) &&
+                false == (session->nmea.cycle_enders[lasttag_index]) &&
                 !session->nmea.cycle_continue) {
-                session->nmea.cycle_enders |= lasttag_mask;
-                /* (long long) cast for 32/64 bit compat */
+                session->nmea.cycle_enders[lasttag_index] = true;
+                // we might have a (somewhat) reliable end-of-cycle
+                session->cycle_end_reliable = true;
                 GPSD_LOG(LOG_PROG, &session->context->errout,
-                         "tagged %s as a cycle ender. %#llx\n",
+                         "tagged %s as a cycle ender. %u\n",
                          nmea_phrase[lasttag - 1].name,
-                         (unsigned long long)lasttag_mask);
+                         lasttag_index);
             }
         }
     } else {
         /* extend the cycle to an un-timestamped sentence? */
-        if (0 != (session->nmea.cycle_enders & lasttag_mask)) {
+        if (true == session->nmea.cycle_enders[lasttag_index]) {
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "%s is just after a cycle ender.\n",
                      session->nmea.field[0]);
@@ -3640,14 +3639,16 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
                      "%s extends the reporting cycle.\n",
                      session->nmea.field[0]);
             /* change ender */
-            session->nmea.cycle_enders &= ~lasttag_mask;
-            session->nmea.cycle_enders |= thistag_mask;
+            session->nmea.cycle_enders[lasttag_index] = false;
+            session->nmea.cycle_enders[thistag_index] = true;
+            // have a cycle ender
+            session->cycle_end_reliable = true;
         }
     }
 
     /* here's where we check for end-of-cycle */
     if ((session->nmea.latch_frac_time || session->nmea.cycle_continue)
-        && (session->nmea.cycle_enders & thistag_mask)!=0) {
+        && (true == session->nmea.cycle_enders[thistag_index])) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "%s ends a reporting cycle.\n",
                  session->nmea.field[0]);
@@ -3656,9 +3657,6 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
     if (session->nmea.latch_frac_time)
         session->nmea.lasttag = thistag;
 
-    /* we might have a (somewhat) reliable end-of-cycle */
-    if (session->nmea.cycle_enders != 0)
-        session->cycle_end_reliable = true;
 
     /* don't downgrade mode if holding previous fix */
     /* usually because of xxRMC which does not report 2D/3D */
