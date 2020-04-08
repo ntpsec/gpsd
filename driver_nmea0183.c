@@ -3484,11 +3484,9 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
     }
 
     /* point remaining fields at empty string, just in case */
-    for (i = (unsigned int)count;
-         i <
-         (unsigned)(sizeof(session->nmea.field) /
-                    sizeof(session->nmea.field[0])); i++)
+    for (i = (unsigned int)count; i < NMEA_MAX_FLD; i++) {
         session->nmea.field[i] = e;
+    }
 
     /* sentences handlers will tell us when they have fractional time */
     session->nmea.latch_frac_time = false;

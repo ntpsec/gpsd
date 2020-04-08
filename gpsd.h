@@ -150,6 +150,7 @@ extern "C" {
  * a 100-character PSTI message.
  */
 #define NMEA_MAX	102	/* max length of NMEA sentence */
+#define NMEA_MAX_FLD	100	// max fields in an NMEA sentence
 #define NMEA_BIG_BUF	(2*NMEA_MAX+1)	/* longer than longest NMEA sentence */
 
 /* a few bits of ISGPS magic */
@@ -563,8 +564,9 @@ struct gps_device_t {
 	int part, await;		/* for tracking GSV parts */
 	struct tm date;	                /* date part of last sentence time */
 	timespec_t subseconds;		/* subsec part of last sentence time */
-	char *field[NMEA_MAX];
-	unsigned char fieldcopy[NMEA_MAX+1];
+        // pointers to each field in fieldcopy.  Each is NUL terminated.
+	char *field[NMEA_MAX_FLD];
+	unsigned char fieldcopy[NMEA_MAX+1]; // a copy of the current sentence
 	/* detect receivers that ship GGA with non-advancing timestamp */
 	bool latch_mode;
 	char last_gga_timestamp[16];
