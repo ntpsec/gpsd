@@ -3429,7 +3429,6 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
     unsigned i, thistag = 0, lasttag;
     char *p, *e;
     volatile char *t;
-    unsigned lasttag_index = 0;
     char ts_buf1[TIMESPEC_LEN];
     char ts_buf2[TIMESPEC_LEN];
 #ifdef SKYTRAQ_ENABLE
@@ -3594,9 +3593,6 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
              session->nmea.latch_frac_time,
              session->nmea.cycle_continue);
     lasttag = session->nmea.lasttag;
-    if (0 < session->nmea.lasttag) {
-        lasttag_index = (int)lasttag;
-    }
     if (session->nmea.latch_frac_time) {
         timespec_t ts_delta;
         TS_SUB(&ts_delta, &session->nmea.this_frac_time,
@@ -3615,20 +3611,20 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
              *
              */
             if (0 < lasttag &&
-                false == (session->nmea.cycle_enders[lasttag_index]) &&
+                false == (session->nmea.cycle_enders[lasttag]) &&
                 !session->nmea.cycle_continue) {
-                session->nmea.cycle_enders[lasttag_index] = true;
+                session->nmea.cycle_enders[lasttag] = true;
                 // we might have a (somewhat) reliable end-of-cycle
                 session->cycle_end_reliable = true;
                 GPSD_LOG(LOG_PROG, &session->context->errout,
                          "tagged %s as a cycle ender. %u\n",
                          nmea_phrase[lasttag - 1].name,
-                         lasttag_index);
+                         lasttag);
             }
         }
     } else {
         /* extend the cycle to an un-timestamped sentence? */
-        if (true == session->nmea.cycle_enders[lasttag_index]) {
+        if (true == session->nmea.cycle_enders[lasttag]) {
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "%s is just after a cycle ender.\n",
                      session->nmea.field[0]);
@@ -3638,7 +3634,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
                      "%s extends the reporting cycle.\n",
                      session->nmea.field[0]);
             /* change ender */
-            session->nmea.cycle_enders[lasttag_index] = false;
+            session->nmea.cycle_enders[lasttag] = false;
             session->nmea.cycle_enders[thistag] = true;
             // have a cycle ender
             session->cycle_end_reliable = true;
