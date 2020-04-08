@@ -3425,11 +3425,10 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
 
     int count;
     gps_mask_t mask = 0;
-    unsigned int i, thistag, lasttag;
+    unsigned i, thistag = 0, lasttag;
     char *p, *e;
     volatile char *t;
     unsigned lasttag_index = 0;
-    unsigned thistag_index = 0;
     char ts_buf1[TIMESPEC_LEN];
     char ts_buf2[TIMESPEC_LEN];
 #ifdef SKYTRAQ_ENABLE
@@ -3501,7 +3500,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
 #endif // __UNUSED
 
     /* dispatch on field zero, the sentence tag */
-    for (thistag = i = 0;
+    for (i = 0;
          i < (unsigned)(sizeof(nmea_phrase) / sizeof(nmea_phrase[0])); ++i) {
         char *s = session->nmea.field[0];
         if (strlen(nmea_phrase[i].name) == 3
@@ -3595,9 +3594,6 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
     if (0 < session->nmea.lasttag) {
         lasttag_index = (int)lasttag;
     }
-    if (0 < thistag) {
-        thistag_index = (int)thistag;
-    }
     if (session->nmea.latch_frac_time) {
         timespec_t ts_delta;
         TS_SUB(&ts_delta, &session->nmea.this_frac_time,
@@ -3640,7 +3636,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
                      session->nmea.field[0]);
             /* change ender */
             session->nmea.cycle_enders[lasttag_index] = false;
-            session->nmea.cycle_enders[thistag_index] = true;
+            session->nmea.cycle_enders[thistag] = true;
             // have a cycle ender
             session->cycle_end_reliable = true;
         }
@@ -3648,7 +3644,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
 
     /* here's where we check for end-of-cycle */
     if ((session->nmea.latch_frac_time || session->nmea.cycle_continue)
-        && (true == session->nmea.cycle_enders[thistag_index])) {
+        && (true == session->nmea.cycle_enders[thistag])) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "%s ends a reporting cycle.\n",
                  session->nmea.field[0]);
