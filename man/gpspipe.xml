@@ -100,9 +100,10 @@ specified file.  Use of this option is mandatory
 if <application>gpspipe</application> is run as a daemon.</para>
   <para>-p enables dumping of profiling information in JSON.</para>
   <para>-P enables dumping of PPS drift JSON in NMEA and raw modes.</para>
-  <para>-r causes raw NMEA sentences to be output.</para>
-  <para>-R causes super-raw (gps binary) data to be output.  This overrides
-NMEA and gpsd output modes.</para>
+  <para>-r causes NMEA sentences to be output. This may be NMEA,
+pseudo NMEA built from binary data, or some combination of both.</para>
+  <para>-R causes super-raw (gps binary) data to be output. This will forward
+exactly what the device sent.</para>
   <para>-s option causes the collected data to be written to the
 specified serial device with settings 4800 8N1.  Thus
 <application>gpspipe</application> can be used with -s and -r options
