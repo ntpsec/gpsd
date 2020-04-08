@@ -599,7 +599,8 @@ struct gps_device_t {
 	int lasttag;              /* index into nmea_phrase[] */
         // 80 > number of used entries in nmea_phrase[]
 #define NMEA_NUM 80
-	bool cycle_enders[NMEA_NUM];    /* bit map into nmea_phrase{} */
+        // bit map into nmea_phrase[], +1 to shut up coverity
+	bool cycle_enders[NMEA_NUM + 1];
 	bool cycle_continue;
     } nmea;
 #endif /* NMEA0183_ENABLE */
