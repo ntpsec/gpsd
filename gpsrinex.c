@@ -1031,7 +1031,9 @@ static void usage(void)
  */
 int main(int argc, char **argv)
 {
-    char tmstr[40];            /* time: YYYYDDDMMHH */
+    char tmstr[40];              // time: YYYYDDDMMHH
+    char tmp_fname[32];          // temp file name, for mkstemp
+    int tmp_file_desc;           // temp file descriptor
     struct tm *report_time;
     struct tm tm_buf;            // temp buffer for gmtime_r()
     int ch;
@@ -1121,9 +1123,17 @@ int main(int argc, char **argv)
         flags |= WATCH_DEVICE;
     (void)gps_stream(&gpsdata, flags, source.device);
 
-    tmp_file = tmpfile();
+    // create temp file, coverity does not like tmpfile()
+    strlcpy(tmp_fname, "/tmp/gpsrinexXXXXXX", sizeof(tmp_fname));
+    tmp_file_desc = mkstemp(tmp_fname);
+    if (0 > tmp_file_desc) {
+        (void)fprintf(stderr, "ERROR: mkstemp(%s) failed: %s\n",
+                      tmp_fname, strerror(errno));
+        exit(2);
+    }
+    tmp_file = fdopen(tmp_file_desc, "w+");
     if (NULL == tmp_file) {
-        (void)fprintf(stderr, "ERROR: could not open temp file: %s\n",
+        (void)fprintf(stderr, "ERROR: fdopen() failed: %s\n",
                       strerror(errno));
         exit(2);
     }
@@ -1149,5 +1159,7 @@ int main(int argc, char **argv)
 
     print_rinex_footer();
 
+    // remove the temp file
+    (void)unlink(tmp_fname);
     exit(EXIT_SUCCESS);
 }
