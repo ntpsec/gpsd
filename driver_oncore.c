@@ -335,9 +335,9 @@ oncore_msg_utc_offset(struct gps_device_t *session, unsigned char *buf,
     if (data_len != 8)
 	return 0;
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-	     "oncore UTCTIME - leap seconds\n");
     utc_offset = (int)getub(buf, 4);
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+	     "oncore UTCTIME - leap seconds: %d\n", utc_offset);
     if (utc_offset == 0)
 	return 0;		/* that part of almanac not received yet */
 
@@ -358,8 +358,9 @@ oncore_msg_pps_offset(struct gps_device_t *session, unsigned char *buf,
     if (data_len != 11)
 	return 0;
 
-    GPSD_LOG(LOG_DATA, &session->context->errout, "oncore PPS offset\n");
     pps_offset_ns = (int)getbes32(buf, 4);
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+	     "oncore PPS offset: %d\n", pps_offset_ns);
 
     session->driver.oncore.pps_offset_ns = pps_offset_ns;
     return 0;
