@@ -800,9 +800,9 @@ static gps_mask_t handle_0xb0(struct gps_device_t *session)
     /* L1 wavelength (299792458m/s / 1575420000Hz)
      * from their Technical reference Manual */
 #define LAMBDA_L1 (299792458.0 / 1575420000.0)
-    size_t n;
+    unsigned n;
     unsigned char *buf = session->lexer.outbuffer + 3;
-    size_t msg_len = (size_t) getleu16(buf, 1);
+    unsigned msg_len = getleu16(buf, 1);
     uint16_t week = getleu16(buf, 3);
     uint32_t tow = getleu32(buf, 5);
     uint8_t tm_slew_acc = getub(buf, 9);
@@ -822,8 +822,15 @@ static gps_mask_t handle_0xb0(struct gps_device_t *session)
              tm_slew_acc, status,
              ((status & 0x80) ? "channel time set - " : ""),
              ((status & 0x40) ? "stable" : "not stable"), status & 0x0f);
-    /* coverity_submit[tainted_data] */
-    for (n = 11; n < msg_len - 1; n += 16) {
+
+    if (530 < msg_len) {
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "Navcom: received packet type 0xb0, length %u too long\n",
+                 msg_len);
+        return 0;
+    }
+
+    for (n = 11; n < (msg_len - 1); n += 16) {
         uint8_t sv_status = getub(buf, n);
         uint8_t ch_status = getub(buf, n + 1);
         uint32_t ca_pseudorange = getleu32(buf, n + 2);
