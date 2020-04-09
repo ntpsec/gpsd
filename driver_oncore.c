@@ -43,6 +43,8 @@ static gps_mask_t oncore_msg_navsol(struct gps_device_t *, unsigned char *,
                                     size_t);
 static gps_mask_t oncore_msg_utc_offset(struct gps_device_t *,
                                         unsigned char *, size_t);
+static gps_mask_t oncore_msg_pos_hold_mode(struct gps_device_t *,
+                                           unsigned char *, size_t);
 static gps_mask_t oncore_msg_pps_offset(struct gps_device_t *, unsigned char *,
                                         size_t);
 static gps_mask_t oncore_msg_svinfo(struct gps_device_t *, unsigned char *,
@@ -185,6 +187,17 @@ oncore_msg_navsol(struct gps_device_t *session, unsigned char *buf,
     } else if (flags & 0x10) {
         session->newdata.status = STATUS_FIX;
         session->newdata.mode = MODE_2D;
+    } else if ((flags & 0x08) &&
+               session->driver.oncore.pos_hold_mode ==
+               ONCORE_POS_HOLD_MODE_ON) {
+        /* To be a good time solution for a fixed surveyed position,
+         * the poshold/acquiring flag (0x08) must be accompanied by
+         * the device being in position hold-mode.  The device is
+         * also reporting acquiring (0x08) when it has no fix.
+         * Therefore the pos_hold_mode check above.
+         */
+        session->newdata.status = STATUS_TIME;
+        session->newdata.mode = MODE_3D;
     } else {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "oncore NAVSOL no fix - flags 0x%02x\n", flags);
@@ -347,6 +360,31 @@ oncore_msg_utc_offset(struct gps_device_t *session, unsigned char *buf,
 }
 
 /**
+ * Pos hold mode
+ *
+ * @@AtmC<CR><LF>
+ *
+ *       m         - mode, 0=off, 1=on, 2=surveying
+ */
+static gps_mask_t
+oncore_msg_pos_hold_mode(struct gps_device_t *session, unsigned char *buf,
+                         size_t data_len)
+{
+    int pos_hold_mode;
+
+    if (data_len != 8)
+        return 0;
+
+    pos_hold_mode = (int)getub(buf, 4);
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "oncore pos hold mode: %d\n", pos_hold_mode);
+
+    /* Add 1 to distinguish an unknown (not set) value from mode off. */
+    session->driver.oncore.pos_hold_mode = pos_hold_mode + 1;
+    return 0;
+}
+
+/**
  * PPS offset
  */
 static gps_mask_t
@@ -482,7 +520,7 @@ gps_mask_t oncore_dispatch(struct gps_device_t * session, unsigned char *buf,
     case ONCTYPE('A', 's'):
         return 0;               /* position hold position */
     case ONCTYPE('A', 't'):
-        return 0;               /* position hold mode */
+        return oncore_msg_pos_hold_mode(session, buf, len);
     case ONCTYPE('A', 'y'):
         return oncore_msg_pps_offset(session, buf, len);
 

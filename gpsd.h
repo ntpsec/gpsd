@@ -739,6 +739,11 @@ struct gps_device_t {
 	    int PRN[ONCORE_VISIBLE_CH];		/* PRNs of satellite */
 	    int elevation[ONCORE_VISIBLE_CH];	/* elevation of satellite */
 	    int azimuth[ONCORE_VISIBLE_CH];	/* azimuth */
+#define ONCORE_POS_HOLD_MODE_UNKNOWN    0
+#define ONCORE_POS_HOLD_MODE_OFF        1
+#define ONCORE_POS_HOLD_MODE_ON         2
+#define ONCORE_POS_HOLD_MODE_SURVEYING  3
+            int pos_hold_mode;
 	    int pps_offset_ns;
 	} oncore;
 #endif /* ONCORE_ENABLE */
