@@ -89,27 +89,35 @@ static int gpsd_control(char *action, char *argument)
 
 int main(int argc, char *argv[])
 {
+    char *sockenv = getenv("GPSD_SOCKET");
+    char *optenv = getenv("GPSD_OPTIONS");
+    size_t len;
+
     openlog("gpsdctl", 0, LOG_DAEMON);
-    if (argc != 3) {
+    if (3 != argc) {
         (void)syslog(LOG_ERR, "requires action and argument (%d)", argc);
         exit(EXIT_FAILURE);
-    } else {
-        char *sockenv = getenv("GPSD_SOCKET");
-        char *optenv = getenv("GPSD_OPTIONS");
-
-        if (sockenv != NULL)
-            control_socket = sockenv;
-        else if (geteuid() != 0)
-            control_socket = DEFAULT_GPSD_TEST_SOCKET;
-        if (optenv != NULL)
-            gpsd_options = optenv;
-
-        /* coverity[string_size] */
-        if (gpsd_control(argv[1], argv[2]) < 0)
-            exit(EXIT_FAILURE);
-        else
-            exit(EXIT_SUCCESS);
     }
+    // pacify coverity
+    len = strlen(argv[1]);
+    if (3 > len || 7 < len) {
+        (void)syslog(LOG_ERR, "invalid action '%s'", argv[1]);
+        exit(EXIT_FAILURE);
+    }
+
+    if (NULL != sockenv)
+        control_socket = sockenv;
+    else if (0 != geteuid())
+        control_socket = DEFAULT_GPSD_TEST_SOCKET;
+
+    if (NULL != optenv)
+        gpsd_options = optenv;
+
+    /* coverity[string_size] */
+    if (0 > gpsd_control(argv[1], argv[2]))
+        exit(EXIT_FAILURE);
+
+    exit(EXIT_SUCCESS);
 }
 
 // vim: set expandtab shiftwidth=4
