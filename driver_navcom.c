@@ -791,12 +791,15 @@ static gps_mask_t handle_0x86(struct gps_device_t *session)
     return SATELLITE_SET | STATUS_SET;
 }
 
-/* Raw Meas. Data Block */
+/* Raw Meas. Data Block
+ * Size 4 + 8 + (16 * numSat) = 524
+ */
 static gps_mask_t handle_0xb0(struct gps_device_t *session)
 {
     char ts_buf[TIMESPEC_LEN];
-    /* L1 wavelength (299792458m/s / 1575420000Hz) */
-#define LAMBDA_L1 (.190293672798364880476317426464)
+    /* L1 wavelength (299792458m/s / 1575420000Hz)
+     * from their Technical reference Manual */
+#define LAMBDA_L1 (299792458.0 / 1575420000.0)
     size_t n;
     unsigned char *buf = session->lexer.outbuffer + 3;
     size_t msg_len = (size_t) getleu16(buf, 1);
