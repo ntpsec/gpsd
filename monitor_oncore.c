@@ -150,7 +150,7 @@ static bool oncore_initialize(void)
     (void)wborder(Aywin, 0, 0, 0, 0, 0, 0, 0, 0),
 	(void)wattrset(Aywin, A_BOLD);
     (void)mvwprintw(Aywin, 1, 1, "PPS offset:");
-    (void)mvwaddstr(Aywin, 1, 13, "N/A");
+    (void)mvwaddstr(Aywin, 2, 11, "N/A");
     (void)mvwprintw(Aywin, 3, 4, " @@Ay ");
     (void)wattrset(Aywin, A_NORMAL);
 
