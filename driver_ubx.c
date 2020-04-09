@@ -1779,7 +1779,16 @@ static void ubx_msg_sbas(struct gps_device_t *session, unsigned char *buf,
              (int)getub(buf, 4), (int)getub(buf, 5), (int)getub(buf, 6),
              (int)getub(buf, 7), (int)getub(buf, 8));
 
-    nsv = (int)getub(buf, 8);
+    nsv = getub(buf, 8);
+    if (MAXCHANNELS > nsv) {
+        // too many sats for us, pacify coverity
+        nsv = MAXCHANNELS;
+    }
+    if (data_len < (12 + (12 * nsv))) {
+        // length check, pacify coverity
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-NAV-SBAS message, bad message length %zd", data_len);
+    }
     for (i = 0; i < nsv; i++) {
         int off = 12 + 12 * i;
         GPSD_LOG(LOG_DATA, &session->context->errout,
