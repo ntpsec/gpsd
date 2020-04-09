@@ -1,6 +1,6 @@
 /* gpsdctl.c -- communicate with the control socket of a gpsd instance
  *
- * This file is Copyright (c) 2010-2018 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  *
  */
@@ -20,7 +20,7 @@
 
 #include "gpsd.h"
 
-#define DEFAULT_GPSD_TEST_SOCKET	"/tmp/gpsd.sock"
+#define DEFAULT_GPSD_TEST_SOCKET        "/tmp/gpsd.sock"
 
 static char *control_socket = DEFAULT_GPSD_SOCKET;
 static char *gpsd_options = "";
@@ -34,22 +34,22 @@ static int gpsd_control(char *action, char *argument)
 
     (void)syslog(LOG_ERR, "gpsd_control(action=%s, arg=%s)", action, argument);
     if (access(control_socket, F_OK) == 0 &&
-	    (connect = netlib_localsocket(control_socket, SOCK_STREAM)) >= 0)
-	syslog(LOG_INFO, "reached a running gpsd");
+            (connect = netlib_localsocket(control_socket, SOCK_STREAM)) >= 0)
+        syslog(LOG_INFO, "reached a running gpsd");
     else if (strcmp(action, "add") == 0) {
-	(void)snprintf(buf, sizeof(buf),
-		       "gpsd %s -F %s", gpsd_options, control_socket);
-	(void)syslog(LOG_NOTICE, "launching %s", buf);
-	if (system(buf) != 0) {
-	    (void)syslog(LOG_ERR, "launch of gpsd failed");
-	    return -1;
-	}
-	if (access(control_socket, F_OK) == 0)
-	    connect = netlib_localsocket(control_socket, SOCK_STREAM);
+        (void)snprintf(buf, sizeof(buf),
+                       "gpsd %s -F %s", gpsd_options, control_socket);
+        (void)syslog(LOG_NOTICE, "launching %s", buf);
+        if (system(buf) != 0) {
+            (void)syslog(LOG_ERR, "launch of gpsd failed");
+            return -1;
+        }
+        if (access(control_socket, F_OK) == 0)
+            connect = netlib_localsocket(control_socket, SOCK_STREAM);
     }
     if (connect < 0) {
-	syslog(LOG_ERR, "can't reach gpsd");
-	return -1;
+        syslog(LOG_ERR, "can't reach gpsd");
+        return -1;
     }
     /*
      * We've got a live connection to the gpsd control socket.  No
@@ -62,25 +62,25 @@ static int gpsd_control(char *action, char *argument)
      * will have mysterious failures.
      */
     if (strcmp(action, "add") == 0) {
-	/*
-	 * Force the group-read & group-write bits on, so gpsd will still be
+        /*
+         * Force the group-read & group-write bits on, so gpsd will still be
          * able to use this device after dropping root privileges.
-	 */
-	struct stat sb;
+         */
+        struct stat sb;
 
-	/* coverity[toctou] */
-	if (stat(argument, &sb) != 1)
-	    (void)chmod(argument, sb.st_mode | S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
-	(void)snprintf(buf, sizeof(buf), "+%s\r\n", argument);
-	status = (int)write(connect, buf, strlen(buf));
-	ignore_return(read(connect, buf, 12));
+        /* coverity[toctou] */
+        if (stat(argument, &sb) != 1)
+            (void)chmod(argument, sb.st_mode | S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
+        (void)snprintf(buf, sizeof(buf), "+%s\r\n", argument);
+        status = (int)write(connect, buf, strlen(buf));
+        ignore_return(read(connect, buf, 12));
     } else if (strcmp(action, "remove") == 0) {
-	(void)snprintf(buf, sizeof(buf), "-%s\r\n", argument);
-	status = (int)write(connect, buf, strlen(buf));
-	ignore_return(read(connect, buf, 12));
+        (void)snprintf(buf, sizeof(buf), "-%s\r\n", argument);
+        status = (int)write(connect, buf, strlen(buf));
+        ignore_return(read(connect, buf, 12));
     } else {
-	(void)syslog(LOG_ERR, "unknown action \"%s\"", action);
-	status = -1;
+        (void)syslog(LOG_ERR, "unknown action \"%s\"", action);
+        status = -1;
     }
     (void)close(connect);
     //syslog(LOG_DEBUG, "gpsd_control ends");
@@ -91,23 +91,25 @@ int main(int argc, char *argv[])
 {
     openlog("gpsdctl", 0, LOG_DAEMON);
     if (argc != 3) {
-	(void)syslog(LOG_ERR, "requires action and argument (%d)", argc);
-	exit(EXIT_FAILURE);
+        (void)syslog(LOG_ERR, "requires action and argument (%d)", argc);
+        exit(EXIT_FAILURE);
     } else {
-	char *sockenv = getenv("GPSD_SOCKET");
-	char *optenv = getenv("GPSD_OPTIONS");
+        char *sockenv = getenv("GPSD_SOCKET");
+        char *optenv = getenv("GPSD_OPTIONS");
 
-	if (sockenv != NULL)
-	    control_socket = sockenv;
-	else if (geteuid() != 0)
-	    control_socket = DEFAULT_GPSD_TEST_SOCKET;
-	if (optenv != NULL)
-	    gpsd_options = optenv;
+        if (sockenv != NULL)
+            control_socket = sockenv;
+        else if (geteuid() != 0)
+            control_socket = DEFAULT_GPSD_TEST_SOCKET;
+        if (optenv != NULL)
+            gpsd_options = optenv;
 
-	/* coverity[string_size] */
-	if (gpsd_control(argv[1], argv[2]) < 0)
-	    exit(EXIT_FAILURE);
-	else
-	    exit(EXIT_SUCCESS);
+        /* coverity[string_size] */
+        if (gpsd_control(argv[1], argv[2]) < 0)
+            exit(EXIT_FAILURE);
+        else
+            exit(EXIT_SUCCESS);
     }
 }
+
+// vim: set expandtab shiftwidth=4
