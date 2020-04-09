@@ -56,7 +56,7 @@
  *     [4] RTKLIB: An Open Source Program Package for GNSS Positioning
  *     http://www.rtklib.com/
  *
- * This file is Copyright (c) 2018 by the GPSD project
+ * This file is Copyright 2018 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  *
  */
@@ -235,10 +235,10 @@ static int compare_obs_cnt(const void  *A, const void  *B)
 
     /* 0 = svid means unused, make those last */
     if (0 == a->svid) {
-	a_gnssid = 255;
+        a_gnssid = 255;
     }
     if (0 == b->svid) {
-	b_gnssid = 255;
+        b_gnssid = 255;
     }
     if (a_gnssid != b_gnssid) {
         return a_gnssid - b_gnssid;
@@ -314,12 +314,12 @@ static void print_rinex_header(void)
     (void)fprintf(log_file, "%-20s%-20s%-20s%-20s\n",
                   "0", "UNKNOWN EXT     NONE", "" , "ANT # / TYPE");
     if (isfinite(ecefx) &&
-	isfinite(ecefy) &&
-	isfinite(ecefz)) {
-	(void)fprintf(log_file, "%14.4f%14.4f%14.4f%18s%-20s\n",
-	    ecefx, ecefy, ecefz, "", "APPROX POSITION XYZ");
+        isfinite(ecefy) &&
+        isfinite(ecefz)) {
+        (void)fprintf(log_file, "%14.4f%14.4f%14.4f%18s%-20s\n",
+            ecefx, ecefy, ecefz, "", "APPROX POSITION XYZ");
     } else if (DEBUG_INFO <= debug) {
-	(void)fprintf(stderr, "INFO: missing ECEF\n");
+        (void)fprintf(stderr, "INFO: missing ECEF\n");
     }
 
     (void)fprintf(log_file, "%14.4f%14.4f%14.4f%18s%-20s\n",
@@ -394,84 +394,84 @@ static void print_rinex_header(void)
         switch (obs_cnt[i].gnssid) {
         case GNSSID_GPS:
             /* GPS, code G */
-	    (void)fprintf(log_file,"   %c%02d%6u%6u%6u%6u%6u%6u%18s%-20s\n",
-			  gnssid2rinex(obs_cnt[i].gnssid), obs_cnt[i].svid,
-			  obs_cnt[i].obs_cnts[C1C],
-			  obs_cnt[i].obs_cnts[L1C],
-			  obs_cnt[i].obs_cnts[D1C],
-			  obs_cnt[i].obs_cnts[C2C],
-			  obs_cnt[i].obs_cnts[L2C],
-			  obs_cnt[i].obs_cnts[D2C],
-			  "", "PRN / # OF OBS");
+            (void)fprintf(log_file,"   %c%02d%6u%6u%6u%6u%6u%6u%18s%-20s\n",
+                          gnssid2rinex(obs_cnt[i].gnssid), obs_cnt[i].svid,
+                          obs_cnt[i].obs_cnts[C1C],
+                          obs_cnt[i].obs_cnts[L1C],
+                          obs_cnt[i].obs_cnts[D1C],
+                          obs_cnt[i].obs_cnts[C2C],
+                          obs_cnt[i].obs_cnts[L2C],
+                          obs_cnt[i].obs_cnts[D2C],
+                          "", "PRN / # OF OBS");
             break;
         case GNSSID_SBAS:
             /* SBAS, L1C and L5C, code S */
-	    (void)fprintf(log_file,"   %c%02d%6u%6u%6u%6u%6u%6u%18s%-20s\n",
-			  gnssid2rinex(obs_cnt[i].gnssid), obs_cnt[i].svid,
-			  obs_cnt[i].obs_cnts[C1C],
-			  obs_cnt[i].obs_cnts[L1C],
-			  obs_cnt[i].obs_cnts[D1C],
-			  obs_cnt[i].obs_cnts[C5I],
-			  obs_cnt[i].obs_cnts[L5I],
-			  obs_cnt[i].obs_cnts[D5I],
-			  "", "PRN / # OF OBS");
+            (void)fprintf(log_file,"   %c%02d%6u%6u%6u%6u%6u%6u%18s%-20s\n",
+                          gnssid2rinex(obs_cnt[i].gnssid), obs_cnt[i].svid,
+                          obs_cnt[i].obs_cnts[C1C],
+                          obs_cnt[i].obs_cnts[L1C],
+                          obs_cnt[i].obs_cnts[D1C],
+                          obs_cnt[i].obs_cnts[C5I],
+                          obs_cnt[i].obs_cnts[L5I],
+                          obs_cnt[i].obs_cnts[D5I],
+                          "", "PRN / # OF OBS");
             break;
         case GNSSID_GAL:
             /* Galileo, code E */
-	    (void)fprintf(log_file,"   %c%02d%6u%6u%6u%6u%6u%6u%18s%-20s\n",
-			  gnssid2rinex(obs_cnt[i].gnssid), obs_cnt[i].svid,
-			  obs_cnt[i].obs_cnts[C1C],
-			  obs_cnt[i].obs_cnts[L1C],
-			  obs_cnt[i].obs_cnts[D1C],
-			  obs_cnt[i].obs_cnts[C7Q],
-			  obs_cnt[i].obs_cnts[L7Q],
-			  obs_cnt[i].obs_cnts[D7Q],
-			  "", "PRN / # OF OBS");
+            (void)fprintf(log_file,"   %c%02d%6u%6u%6u%6u%6u%6u%18s%-20s\n",
+                          gnssid2rinex(obs_cnt[i].gnssid), obs_cnt[i].svid,
+                          obs_cnt[i].obs_cnts[C1C],
+                          obs_cnt[i].obs_cnts[L1C],
+                          obs_cnt[i].obs_cnts[D1C],
+                          obs_cnt[i].obs_cnts[C7Q],
+                          obs_cnt[i].obs_cnts[L7Q],
+                          obs_cnt[i].obs_cnts[D7Q],
+                          "", "PRN / # OF OBS");
             break;
         case GNSSID_BD:
             /* BeiDou, code C */
-	    (void)fprintf(log_file,"   %c%02d%6u%6u%6u%6u%6u%6u%18s%-20s\n",
-			  gnssid2rinex(obs_cnt[i].gnssid), obs_cnt[i].svid,
-			  obs_cnt[i].obs_cnts[C1C],
-			  obs_cnt[i].obs_cnts[L1C],
-			  obs_cnt[i].obs_cnts[D1C],
-			  obs_cnt[i].obs_cnts[C7I],
-			  obs_cnt[i].obs_cnts[L7I],
-			  obs_cnt[i].obs_cnts[D7I],
-			  "", "PRN / # OF OBS");
+            (void)fprintf(log_file,"   %c%02d%6u%6u%6u%6u%6u%6u%18s%-20s\n",
+                          gnssid2rinex(obs_cnt[i].gnssid), obs_cnt[i].svid,
+                          obs_cnt[i].obs_cnts[C1C],
+                          obs_cnt[i].obs_cnts[L1C],
+                          obs_cnt[i].obs_cnts[D1C],
+                          obs_cnt[i].obs_cnts[C7I],
+                          obs_cnt[i].obs_cnts[L7I],
+                          obs_cnt[i].obs_cnts[D7I],
+                          "", "PRN / # OF OBS");
             break;
         case GNSSID_QZSS:
             /* QZSS, code J */
-	    (void)fprintf(log_file,"   %c%02d%6u%6u%6u%6u%6u%6u%18s%-20s\n",
-			  gnssid2rinex(obs_cnt[i].gnssid), obs_cnt[i].svid,
-			  obs_cnt[i].obs_cnts[C1C],
-			  obs_cnt[i].obs_cnts[L1C],
-			  obs_cnt[i].obs_cnts[D1C],
-			  obs_cnt[i].obs_cnts[C2L],
-			  obs_cnt[i].obs_cnts[L2L],
-			  obs_cnt[i].obs_cnts[D2L],
-			  "", "PRN / # OF OBS");
+            (void)fprintf(log_file,"   %c%02d%6u%6u%6u%6u%6u%6u%18s%-20s\n",
+                          gnssid2rinex(obs_cnt[i].gnssid), obs_cnt[i].svid,
+                          obs_cnt[i].obs_cnts[C1C],
+                          obs_cnt[i].obs_cnts[L1C],
+                          obs_cnt[i].obs_cnts[D1C],
+                          obs_cnt[i].obs_cnts[C2L],
+                          obs_cnt[i].obs_cnts[L2L],
+                          obs_cnt[i].obs_cnts[D2L],
+                          "", "PRN / # OF OBS");
             break;
         case GNSSID_GLO:
             /* GLONASS, code R */
-	    (void)fprintf(log_file,"   %c%02d%6u%6u%6u%6u%6u%6u%18s%-20s\n",
-			  gnssid2rinex(obs_cnt[i].gnssid), obs_cnt[i].svid,
-			  obs_cnt[i].obs_cnts[C1C],
-			  obs_cnt[i].obs_cnts[L1C],
-			  obs_cnt[i].obs_cnts[D1C],
-			  obs_cnt[i].obs_cnts[C2C],
-			  obs_cnt[i].obs_cnts[L2C],
-			  obs_cnt[i].obs_cnts[D2C],
-			  "", "PRN / # OF OBS");
+            (void)fprintf(log_file,"   %c%02d%6u%6u%6u%6u%6u%6u%18s%-20s\n",
+                          gnssid2rinex(obs_cnt[i].gnssid), obs_cnt[i].svid,
+                          obs_cnt[i].obs_cnts[C1C],
+                          obs_cnt[i].obs_cnts[L1C],
+                          obs_cnt[i].obs_cnts[D1C],
+                          obs_cnt[i].obs_cnts[C2C],
+                          obs_cnt[i].obs_cnts[L2C],
+                          obs_cnt[i].obs_cnts[D2C],
+                          "", "PRN / # OF OBS");
             break;
         default:
-	    (void)fprintf(log_file,"   %c%02d%6u%6u%6u%6s%6s%24s%-20s\n",
-			  gnssid2rinex(obs_cnt[i].gnssid), obs_cnt[i].svid,
-			  obs_cnt[i].obs_cnts[C1C],
-			  obs_cnt[i].obs_cnts[L1C],
-			  obs_cnt[i].obs_cnts[D1C],
-			  "", "",
-			  "", "PRN / # OF OBS");
+            (void)fprintf(log_file,"   %c%02d%6u%6u%6u%6s%6s%24s%-20s\n",
+                          gnssid2rinex(obs_cnt[i].gnssid), obs_cnt[i].svid,
+                          obs_cnt[i].obs_cnts[C1C],
+                          obs_cnt[i].obs_cnts[L1C],
+                          obs_cnt[i].obs_cnts[D1C],
+                          "", "",
+                          "", "PRN / # OF OBS");
         }
     }
 
@@ -668,83 +668,83 @@ static void one_sig(struct meas_t *meas)
         /* FALLTHROUGH */
     case 0:
         /* L1C */
-	cxx = C1C;
-	lxx = L1C;
-	dxx = D1C;
+        cxx = C1C;
+        lxx = L1C;
+        dxx = D1C;
         break;
     case 2:
-	/* GLONASS L2 OF or BeiDou B2I D1 */
+        /* GLONASS L2 OF or BeiDou B2I D1 */
         if (GNSSID_BD == gnssid) {
             /* WAG */
-	    cxx = C7I;
-	    lxx = L7I;
-	    dxx = D7I;
+            cxx = C7I;
+            lxx = L7I;
+            dxx = D7I;
         } else {
-	    cxx = C2C;
-	    lxx = L2C;
-	    dxx = D2C;
+            cxx = C2C;
+            lxx = L2C;
+            dxx = D2C;
         }
         break;
     case 3:
-	/* GPS L2 or BD B2I D2 */
-	cxx = C2C;
-	lxx = L2C;
-	dxx = D2C;
+        /* GPS L2 or BD B2I D2 */
+        cxx = C2C;
+        lxx = L2C;
+        dxx = D2C;
         break;
     case 5:
-	/* QZSS L2C (L) */
-	cxx = C2L;
-	lxx = L2L;
-	dxx = D2L;
+        /* QZSS L2C (L) */
+        cxx = C2L;
+        lxx = L2L;
+        dxx = D2L;
         break;
     case 6:
-	/* Galileo E5 bQ */
-	cxx = C7Q;
-	lxx = L7Q;
-	dxx = D7Q;
+        /* Galileo E5 bQ */
+        cxx = C7Q;
+        lxx = L7Q;
+        dxx = D7Q;
         break;
     }
 
     /* map snr to RINEX snr flag [1-9] */
     if (0 == meas->snr) {
-	snr = 0;
+        snr = 0;
     } else if (12 > meas->snr) {
-	snr = 1;
+        snr = 1;
     } else if (18 >= meas->snr) {
-	snr = 2;
+        snr = 2;
     } else if (23 >= meas->snr) {
-	snr = 3;
+        snr = 3;
     } else if (29 >= meas->snr) {
-	snr = 4;
+        snr = 4;
     } else if (35 >= meas->snr) {
-	snr = 5;
+        snr = 5;
     } else if (41 >= meas->snr) {
-	snr = 6;
+        snr = 6;
     } else if (47 >= meas->snr) {
-	snr = 7;
+        snr = 7;
     } else if (53 >= meas->snr) {
-	snr = 8;
+        snr = 8;
     } else {
-	/* snr >= 54 */
-	snr = 9;
+        /* snr >= 54 */
+        snr = 9;
     }
 
     /* check for slip */
     /* FIXME: use actual interval */
     if (meas->locktime < (sample_interval * 1000)) {
-	meas->lli |= 2;
+        meas->lli |= 2;
     }
 
     if (0 != isfinite(meas->pseudorange)) {
-	obs_cnt_inc(gnssid, svid, cxx);
+        obs_cnt_inc(gnssid, svid, cxx);
     }
 
     if (0 != isfinite(meas->carrierphase)) {
-	obs_cnt_inc(gnssid, svid, lxx);
+        obs_cnt_inc(gnssid, svid, lxx);
     }
 
     if (0 != isfinite(meas->doppler)) {
-	obs_cnt_inc(gnssid, svid, dxx);
+        obs_cnt_inc(gnssid, svid, dxx);
     }
 
     (void)fputs(fmt_obs(meas->pseudorange, 0, 0), tmp_file);
@@ -869,11 +869,11 @@ static void print_raw(struct gps_data_t *gpsdata)
         svid = gpsdata->raw.meas[i].svid;
         sigid = gpsdata->raw.meas[i].sigid;
 
-	if (DEBUG_RAW <= debug) {
-	    (void)fprintf(stderr,"record: %u:%u:%u %s\n",
+        if (DEBUG_RAW <= debug) {
+            (void)fprintf(stderr,"record: %u:%u:%u %s\n",
                           gnssid, svid, sigid,
-			  gpsdata->raw.meas[i].obs_code);
-	}
+                          gpsdata->raw.meas[i].obs_code);
+        }
 
         if (0 == gpsdata->raw.meas[i].svid) {
             /* should not happen... */
@@ -884,12 +884,12 @@ static void print_raw(struct gps_data_t *gpsdata)
         if ((last_gnssid != gpsdata->raw.meas[i].gnssid) ||
             (last_svid != gpsdata->raw.meas[i].svid)) {
 
-	    if (0 != need_nl) {
-		(void)fputs("\n", tmp_file);
-	    }
+            if (0 != need_nl) {
+                (void)fputs("\n", tmp_file);
+            }
             got_l1 = 0;
-	    /* new record line gnssid:svid preamble  */
-	    (void)fprintf(tmp_file,"%c%02d", rinex_gnssid, svid);
+            /* new record line gnssid:svid preamble  */
+            (void)fprintf(tmp_file,"%c%02d", rinex_gnssid, svid);
         }
 
         last_gnssid = gpsdata->raw.meas[i].gnssid;
@@ -904,38 +904,38 @@ static void print_raw(struct gps_data_t *gpsdata)
             break;
         case 2:
             /* GLONASS L2 OF or BD B2I D1 */
-	    if (0 == got_l1) {
-		/* space to start of L2 */
-		(void)fprintf(tmp_file, "%48s", "");
-	    }
+            if (0 == got_l1) {
+                /* space to start of L2 */
+                (void)fprintf(tmp_file, "%48s", "");
+            }
             one_sig(&gpsdata->raw.meas[i]);
             break;
         case 3:
             /* GPS L2 or BD B2I D2 */
-	    if (0 == got_l1) {
-		/* space to start of L2 */
-		(void)fprintf(tmp_file, "%48s", "");
-	    }
+            if (0 == got_l1) {
+                /* space to start of L2 */
+                (void)fprintf(tmp_file, "%48s", "");
+            }
             one_sig(&gpsdata->raw.meas[i]);
             break;
         case 5:
             /* QZSS L2C (L) */
-	    if (0 == got_l1) {
-		/* space to start of L2 */
-		(void)fprintf(tmp_file, "%48s", "");
-	    }
+            if (0 == got_l1) {
+                /* space to start of L2 */
+                (void)fprintf(tmp_file, "%48s", "");
+            }
             one_sig(&gpsdata->raw.meas[i]);
             break;
         case 6:
             /* Galileo E5 bQ */
-	    if (0 == got_l1) {
-		/* space to start of L2 */
-		(void)fprintf(tmp_file, "%48s", "");
-	    }
+            if (0 == got_l1) {
+                /* space to start of L2 */
+                (void)fprintf(tmp_file, "%48s", "");
+            }
             one_sig(&gpsdata->raw.meas[i]);
             break;
         default:
-	    (void)fprintf(stderr,
+            (void)fprintf(stderr,
                           "ERROR: print_raw() gnssid %u unknown sigid %u\n",
                           gnssid, sigid);
             break;
@@ -979,7 +979,7 @@ static void conditionally_log_fix(struct gps_data_t *gpsdata)
 
     if (MODE_2D < gpsdata->fix.mode) {
         /* got a good 3D fix */
-	if (1.0 > ecefx &&
+        if (1.0 > ecefx &&
             isfinite(gpsdata->fix.ecef.x) &&
             isfinite(gpsdata->fix.ecef.y) &&
             isfinite(gpsdata->fix.ecef.z)) {
@@ -988,9 +988,9 @@ static void conditionally_log_fix(struct gps_data_t *gpsdata)
             ecefy = gpsdata->fix.ecef.y;
             ecefz = gpsdata->fix.ecef.z;
 
-	    if (DEBUG_PROG <= debug) {
-		(void)fprintf(stderr,"got ECEF\n");
-	    }
+            if (DEBUG_PROG <= debug) {
+                (void)fprintf(stderr,"got ECEF\n");
+            }
         }
     }
 
@@ -1163,3 +1163,5 @@ int main(int argc, char **argv)
     (void)unlink(tmp_fname);
     exit(EXIT_SUCCESS);
 }
+
+// vim: set expandtab shiftwidth=4
