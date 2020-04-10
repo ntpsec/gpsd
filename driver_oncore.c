@@ -207,9 +207,10 @@ oncore_msg_navsol(struct gps_device_t *session, unsigned char *buf,
     mask |= MODE_SET | STATUS_SET;
 
     /* Unless we have seen non-zero utc offset data, the time is GPS time
-     * and not UTC time.  Do not use it.
+     * and not UTC time.  Even if time mode (Aw) message already says UTC.
+     * Do not use the time.
      */
-    if (session->context->leap_seconds) {
+    if (LEAP_SECOND_VALID == (session->context->valid & LEAP_SECOND_VALID)) {
         unsigned int nsec;
         unpacked_date.tm_mon = (int)getub(buf, 4) - 1;
         unpacked_date.tm_mday = (int)getub(buf, 5);
