@@ -2365,10 +2365,13 @@ struct gps_data_t {
                                  * prone to false zero values.
                                  */
 
-#ifndef USE_QT
-    socket_t gps_fd;            /* socket or file descriptor to GPS */
-#else
+#ifdef USE_QT
     void* gps_fd;
+#else
+    /* socket or file descriptor to GPS
+     * POSIX says this is an int.
+     * use socket_t, which is int, for windows compatibility */
+    socket_t gps_fd;
 #endif
     struct gps_fix_t    fix;    /* accumulated PVT data */
     struct gps_log_t    log;    // log data
