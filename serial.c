@@ -496,10 +496,18 @@ int gpsd_serial_open(struct gps_device_t *session)
         session->gpsdata.gps_fd = socket(AF_BLUETOOTH,
                                          SOCK_STREAM,
                                          BTPROTO_RFCOMM);
+        if (0 > session->gpsdata.gps_fd) {
+            GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "SER: bluetooth socket() failed: %s\n",
+                     strerror(errno));
+            return UNALLOCATED_FD;
+        }
         addr.rc_family = AF_BLUETOOTH;
         addr.rc_channel = (uint8_t) 1;
         (void) str2ba(session->gpsdata.dev.path, &addr.rc_bdaddr);
-        if (connect(session->gpsdata.gps_fd, (struct sockaddr *) &addr, sizeof (addr)) == -1) {
+        if (-1 == connect(session->gpsdata.gps_fd,
+                          (struct sockaddr *) &addr,
+                          sizeof (addr))) {
             if (errno != EINPROGRESS && errno != EAGAIN) {
                 (void)close(session->gpsdata.gps_fd);
                 GPSD_LOG(LOG_ERROR, &session->context->errout,
@@ -508,7 +516,8 @@ int gpsd_serial_open(struct gps_device_t *session)
                 return UNALLOCATED_FD;
             }
             GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "SER: bluetooth socket connect in progress or again : %s\n",
+                     "SER: bluetooth socket connect in progress or "
+                     "EAGAIN: %s\n",
                      strerror(errno));
         }
         (void)fcntl(session->gpsdata.gps_fd, F_SETFL, (int)mode);
