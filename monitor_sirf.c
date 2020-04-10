@@ -264,6 +264,7 @@ static void decode_ecef(double x, double y, double z,
 static void sirf_update(void)
 {
     int i, j, ch, sv;
+    unsigned u, x;
     unsigned char *buf;
     size_t len;
     uint8_t dgps;
@@ -311,13 +312,16 @@ static void sirf_update(void)
         (void)wprintw(mid2win, "%02x", getub(buf, 21));
         /* SVs in fix */
         (void)wmove(mid2win, 4, 6);
-        (void)wprintw(mid2win, "%2d =                                     ",
-                      (int)getub(buf, 28));
+        (void)wprintw(mid2win, "%2u =                                     ",
+                      getub(buf, 28));
         /* SV list */
         (void)wmove(mid2win, 4, 10);
-        /* coverity_submit[tainted_data] */
-        for (i = 0; i < (int)getub(buf, 28); i++)
-           (void)wprintw(mid2win, " %2d", (int)getub(buf, 29 + i));
+        x = getub(buf, 28);
+        if (19 < x) {
+            x = 19;      // SiRF Star V max is 19
+        }
+        for (u = 0; u < x; u++)
+           (void)wprintw(mid2win, " %2u", getub(buf, 29 + u));
         monitor_log("MND 0x02=");
         break;
 
