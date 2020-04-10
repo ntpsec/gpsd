@@ -309,6 +309,9 @@ static void runon_test(struct map *mp)
         st = packet_get(nullfd, &lexer);
         //printf("packet_parse() returned %zd\n", st);
     } while (st > 0);
+
+    // pacify coverity by closing nullfd
+    (void)close(nullfd);
 }
 
 static int property_check(void)
