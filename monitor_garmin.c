@@ -23,6 +23,7 @@ static WINDOW *miscwin, *mid51win, *mid114win;
 
 #define GARMIN_CHANNELS 12
 
+#define GPSD_LEU16TOH(x) getleu16((char *)(&(x)), 0)
 #define GPSD_LE16TOH(x) getles16((char *)(&(x)), 0)
 #define GPSD_LE32TOH(x) getles32((char *)(&(x)), 0)
 
@@ -172,21 +173,23 @@ static void garmin_bin_update(uint16_t pkt_id, uint32_t pkt_size UNUSED, unsigne
         monitor_log("RMD 0x%02x=", pkt_id);
         break;
 
-    case 0x33:  /* Position Record */
-        /* coverity_submit[tainted_data] */
+    case 0x33:
+        /* Position Record, Mid_51 */
         display(miscwin, 0, 6, "%-24s",
-                timespec_to_iso8601(session.gpsdata.fix.time, tbuf, sizeof(tbuf)));
+                timespec_to_iso8601(session.gpsdata.fix.time,
+                                    tbuf, sizeof(tbuf)));
         pvt = (cpo_pvt_data *)pkt_data;
         display(mid51win, 1, 7, "%s",
-                (CHECK_RANGE(fixdesc, (uint8_t)GPSD_LE16TOH(pvt->fix)) ? \
-                        fixdesc[GPSD_LE16TOH(pvt->fix)] : "unknown"));
+                (CHECK_RANGE(fixdesc, GPSD_LEU16TOH(pvt->fix)) ?
+                        fixdesc[GPSD_LEU16TOH(pvt->fix)] : "unknown"));
         display(mid51win, 2, 8, "%3.5f", pvt->lat * RAD_2_DEG);
         display(mid51win, 3, 8, "%3.5f", pvt->lon * RAD_2_DEG);
         display(mid51win, 4, 8, "%8.2f", pvt->alt + pvt->msl_hght);
         display(mid51win, 5, 9, "%5.1f", hypot(pvt->lon_vel, pvt->lat_vel));
         display(mid51win, 6, 9, "%5.1f", pvt->alt_vel);
         display(mid51win, 7, 8, "%d", (int)GPSD_LE16TOH(pvt->leap_sec));
-        if (GPSD_LE16TOH(pvt->fix) < 2) /* error value is very large when status no fix */
+        /* error value is very large when status no fix */
+        if (GPSD_LEU16TOH(pvt->fix) < 2)
            pvt->epe = pvt->eph = pvt->epv = NAN;
         display(mid51win, 8, 7, "%6.2f", pvt->epe);
         display(mid51win, 9, 7, "%6.2f", pvt->eph);
