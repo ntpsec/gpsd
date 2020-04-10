@@ -1865,6 +1865,12 @@ static gps_mask_t ubx_rxm_rawx(struct gps_device_t *session,
     /* so we can tell which meas never got set */
     memset(session->gpsdata.raw.meas, 0, sizeof(session->gpsdata.raw.meas));
 
+    if (numMeas > MAXCHANNELS) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-RXM-RAWX message, too many measurements (%u)",
+                 numMeas);
+        return 0;
+    }
     for (i = 0; i < numMeas; i++) {
         int off = 32 * i;
         /* psuedorange in meters */
