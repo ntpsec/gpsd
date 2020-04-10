@@ -1095,7 +1095,7 @@ static bool do_command(const char *line)
             else if (session.device_type->control_send == NULL)
                 complain("Device type %s has no control-send method.",
                          session.device_type->type_name);
-            else if (!monitor_control_send(buf, (size_t) st))
+            else if (!monitor_control_send(buf, (size_t)st))
                 complain("Control send failed.");
         }
         break;
@@ -1106,8 +1106,8 @@ static bool do_command(const char *line)
         else {
             ssize_t len = (ssize_t) gpsd_hexpack(arg, (char *)buf, strlen(arg));
             if (len < 0)
-                complain("Invalid hex string (error %d)", len);
-            else if (!monitor_raw_send(buf, (size_t) len))
+                complain("Invalid hex string (error %lu)", (unsigned long)len);
+            else if (!monitor_raw_send(buf, (size_t)len))
                 complain("Raw send failed.");
         }
         break;
@@ -1324,12 +1324,11 @@ int main(int argc, char **argv)
             #endif /* MAGIC_HAT_ENABLE */
             pps_thread_activate(&session.pps_thread);
         }
-    }
-    else {
-        if (source.device != NULL)
-            (void)gps_send(&session.gpsdata, nmea ? WATCHNMEADEVICE : WATCHRAWDEVICE, source.device);
-        else
-            (void)gps_send(&session.gpsdata, nmea ? WATCHNMEA : WATCHRAW);
+    } else if (source.device != NULL) {
+        (void)gps_send(&session.gpsdata,
+                       nmea ? WATCHNMEADEVICE : WATCHRAWDEVICE, source.device);
+    } else {
+        (void)gps_send(&session.gpsdata, nmea ? WATCHNMEA : WATCHRAW);
     }
 
     /*
