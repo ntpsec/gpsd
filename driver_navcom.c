@@ -337,7 +337,6 @@ static gps_mask_t handle_0x15(struct gps_device_t *session)
     unsigned char *buf = session->lexer.outbuffer + 3;
     unsigned msg_len = getleu16(buf, 1);
     uint8_t port, cmd_id = getub(buf, 3);
-    unsigned num_ids;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "Navcom: received packet type 0x15 (Negative Acknowledge)\n");
