@@ -1,5 +1,6 @@
 /*
- * Driver for Navcom receivers using proprietary NCT messages, a binary protocol.
+ * Driver for Navcom receivers using proprietary NCT messages,
+ * a binary protocol.
  *
  * Vendor website: http://www.navcomtech.com/
  * Technical references: Technical Reference Manual P/N 96-3120001-3001
@@ -332,13 +333,20 @@ static gps_mask_t handle_0x06(struct gps_device_t *session)
 /* Negative Acknowledge */
 static gps_mask_t handle_0x15(struct gps_device_t *session)
 {
-    size_t n;
+    unsigned n;
     unsigned char *buf = session->lexer.outbuffer + 3;
-    size_t msg_len = (size_t) getleu16(buf, 1);
+    unsigned msg_len = getleu16(buf, 1);
     uint8_t port, cmd_id = getub(buf, 3);
+    unsigned num_ids;
+
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "Navcom: received packet type 0x15 (Negative Acknowledge)\n");
-    /* coverity_submit[tainted_data] */
+
+    if (18 < msg_len) {
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "Navcom: 0x15 too long %u\n", msg_len);
+        return 0;
+    }
     for (n = 4; n < (msg_len - 2); n += 2) {
         uint8_t err_id = getub(buf, n);
         uint8_t err_desc = getub(buf, n + 1);
@@ -348,7 +356,8 @@ static gps_mask_t handle_0x15(struct gps_device_t *session)
     }
     port = getub(buf, n);
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "Navcom: negative acknowledge was for command id 0x%02x on port %c\n",
+             "Navcom: negative acknowledge was for command id 0x%02x "
+             "on port %c\n",
              cmd_id, (port == 0 ? 'A' : (port == 1 ? 'B' : '?')));
     return 0;                   /* Nothing updated */
 }
