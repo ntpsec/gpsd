@@ -1056,63 +1056,63 @@ ubx_msg_nav_relposned(struct gps_device_t *session, unsigned char *buf,
     session->driver.ubx.iTOW = getles32(buf, 4);
     if (1 > version) {
         // version 0
-	flags = getleu32(buf, 36);
+        flags = getleu32(buf, 36);
         if (1 != (1 & flags)) {
             // not gnssFixOK
-	    GPSD_LOG(LOG_DATA, &session->context->errout,
-		     "UBX-NAV-RELPOSNED:0 no fix");
+            GPSD_LOG(LOG_DATA, &session->context->errout,
+                     "UBX-NAV-RELPOSNED:0 no fix");
             return mask;
         }
         if (4 & flags) {
             // rePosValid
-	    session->newdata.NED.relPosN = (1e-2 * (getles32(buf, 8) +
-		(getsb(buf, 20) * 1e-2)));
-	    session->newdata.NED.relPosE = (1e-2 * (getles32(buf, 12) +
-		(getsb(buf, 21) * 1e-2)));
-	    session->newdata.NED.relPosD = (1e-2 * (getles32(buf, 16) +
-		(getsb(buf, 22) * 1e-2)));
+            session->newdata.NED.relPosN = (1e-2 * (getles32(buf, 8) +
+                (getsb(buf, 20) * 1e-2)));
+            session->newdata.NED.relPosE = (1e-2 * (getles32(buf, 12) +
+                (getsb(buf, 21) * 1e-2)));
+            session->newdata.NED.relPosD = (1e-2 * (getles32(buf, 16) +
+                (getsb(buf, 22) * 1e-2)));
 
-	    accN = 1e-4 * getles32(buf, 24);
-	    accE = 1e-4 * getles32(buf, 28);
-	    accD = 1e-4 * getles32(buf, 32);
-	    mask |= NED_SET;
+            accN = 1e-4 * getles32(buf, 24);
+            accE = 1e-4 * getles32(buf, 28);
+            accD = 1e-4 * getles32(buf, 32);
+            mask |= NED_SET;
         }
     } else {
         // assume version 1
-	if (64 > data_len) {
-	    GPSD_LOG(LOG_WARN, &session->context->errout,
-		     "UBX-NAV-RELPOSNED:1 message, runt payload len %zd",
+        if (64 > data_len) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "UBX-NAV-RELPOSNED:1 message, runt payload len %zd",
                      data_len);
             return mask;
         }
-	flags = getleu32(buf, 60);
+        flags = getleu32(buf, 60);
         if (1 != (1 & flags)) {
             // not gnssFixOK
-	    GPSD_LOG(LOG_DATA, &session->context->errout,
-		     "UBX-NAV-RELPOSNED:1 no fix");
+            GPSD_LOG(LOG_DATA, &session->context->errout,
+                     "UBX-NAV-RELPOSNED:1 no fix");
             return mask;
         }
         if (4 & flags) {
             // rePosValid
-	    session->newdata.NED.relPosN = (1e-2 * (getles32(buf, 8) +
-		(getsb(buf, 32) * 1e-2)));
-	    session->newdata.NED.relPosE = (1e-2 * (getles32(buf, 12) +
-		(getsb(buf, 33) * 1e-2)));
-	    session->newdata.NED.relPosD = (1e-2 * (getles32(buf, 16) +
-		(getsb(buf, 34) * 1e-2)));
-	    session->newdata.NED.relPosL = (1e-2 * (getles32(buf, 20) +
-		(getsb(buf, 35) * 1e-2)));
+            session->newdata.NED.relPosN = (1e-2 * (getles32(buf, 8) +
+                (getsb(buf, 32) * 1e-2)));
+            session->newdata.NED.relPosE = (1e-2 * (getles32(buf, 12) +
+                (getsb(buf, 33) * 1e-2)));
+            session->newdata.NED.relPosD = (1e-2 * (getles32(buf, 16) +
+                (getsb(buf, 34) * 1e-2)));
+            session->newdata.NED.relPosL = (1e-2 * (getles32(buf, 20) +
+                (getsb(buf, 35) * 1e-2)));
 
-	    accN = 1e-4 * getles32(buf, 36);
-	    accE = 1e-4 * getles32(buf, 40);
-	    accD = 1e-4 * getles32(buf, 44);
-	    accL = 1e-4 * getles32(buf, 48);
-	    accH = 1e-4 * getles32(buf, 52);
-	    if (0x100 & flags) {
+            accN = 1e-4 * getles32(buf, 36);
+            accE = 1e-4 * getles32(buf, 40);
+            accD = 1e-4 * getles32(buf, 44);
+            accL = 1e-4 * getles32(buf, 48);
+            accH = 1e-4 * getles32(buf, 52);
+            if (0x100 & flags) {
                 // relPosHeadingValid
-		session->newdata.NED.relPosH = 1e-5 * getles32(buf, 24);
+                session->newdata.NED.relPosH = 1e-5 * getles32(buf, 24);
             }
-	    mask |= NED_SET;
+            mask |= NED_SET;
         }
     }
 
