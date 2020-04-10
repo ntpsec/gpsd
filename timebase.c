@@ -69,7 +69,7 @@ day will have 86401 secs.  This is the Leap Second.  Note that this
 often overcorrects, but if we wait a few months, the error will disappear.
 
 An animation of this process is available at:
-http://space-geodesy.nasa.gov/multimedia/EarthOrientationAnimations/UT1.html
+https://space-geodesy.nasa.gov/multimedia/videos/EarthOrientationAnimations/UT1/UT1.html
 
 Clear?
 
