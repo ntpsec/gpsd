@@ -7,7 +7,7 @@
  * Author: Fulup Ar Foll (directly inspired from gpspipe.c)
  * Date:   2013-03-01
  *
- * This file is Copyright (c) 2013-2018 by the GPSD project
+ * This file is Copyright 2013 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  *
  */
@@ -174,7 +174,7 @@ static int open_udp(char **hostport)
        memcpy( &remote[channel].sin_addr, hp->h_addr_list[0], hp->h_length);
        remote[channel].sin_port = htons((in_port_t)portnum);
    }
-return (0);
+    return (0);
 }
 
 static void usage(void)
