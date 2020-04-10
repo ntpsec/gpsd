@@ -36,7 +36,8 @@ static struct map singletests[] = {
     },
     {
         .legend = "NMEA packet with checksum (2)",
-        .test = "$GPGGA,110534.994,4002.1425,N,07531.2585,W,0,00,50.0,172.7,M,-33.8,M,0.0,0000*7A\r\n",
+        .test = "$GPGGA,110534.994,4002.1425,N,07531.2585,W,0,00,50.0,"
+                "172.7,M,-33.8,M,0.0,0000*7A\r\n",
         .testlen = 82,
         .garbage_offset = 0,
         .type = NMEA_PACKET,
@@ -64,14 +65,16 @@ static struct map singletests[] = {
     },
     {
         .legend = "NMEA interspersed packet",
-        .test = "$GPZDA,112533.00,20,01,20$PTNTA,20000102173852,1,T4,,,6,1,0*32\r\n",
+        .test = "$GPZDA,112533.00,20,01,20$PTNTA,20000102173852,1,T4,"
+                ",,6,1,0*32\r\n",
         .testlen = 64,
         .garbage_offset = 25,
         .type = NMEA_PACKET,
     },
     {
         .legend = "NMEA interrupted packet",
-        .test = "$GPZDA,112533.00,20,01,2016,00,00*67\r\n$GPZDA,112533.00,20,01,20$PTNTA,20000102173852,1,T4,,,6,1,0*32\r\n16,00,00*67\r\n",
+        .test = "$GPZDA,112533.00,20,01,2016,00,00*67\r\n$GPZDA,112533.00,20,"
+                "01,20$PTNTA,20000102173852,1,T4,,,6,1,0*32\r\n16,00,00*67\r\n",
         .testlen = 115,
         .garbage_offset = 0,
         .type = NMEA_PACKET,
@@ -167,7 +170,8 @@ static struct map singletests[] = {
         .type = EVERMORE_PACKET,
     },
     {
-        .legend = "EverMore packet 0x04 with 0x10 0x10 sequence, some noise before packet data",
+        .legend = "EverMore packet 0x04 with 0x10 0x10 sequence, "
+                  "some noise before packet data",
          .test = {
             0x10, 0x03, 0xff, 0x10, 0x02, 0x0f, 0x04, 0x00,
             0x00, 0x10, 0x10, 0xa7, 0x13, 0x03, 0x2c, 0x26,
@@ -177,7 +181,8 @@ static struct map singletests[] = {
         .type = EVERMORE_PACKET,
     },
     {
-        .legend = "EverMore packet 0x04, 0x10 and some other data at the beginning",
+        .legend = "EverMore packet 0x04, 0x10 and some other data at "
+                  "the beginning",
         .test = {
             0x10, 0x12, 0x10, 0x03, 0xff, 0x10, 0x02, 0x0f,
             0x04, 0x00, 0x00, 0x10, 0x10, 0xa7, 0x13, 0x03,
@@ -253,7 +258,9 @@ static struct map runontests[] = {
     /* NMEA tests */
     {
         .legend = "Double NMEA packet with checksum",
-        .test = "$GPVTG,308.74,T,,M,0.00,N,0.0,K*68\r\n$GPGGA,110534.994,4002.1425,N,07531.2585,W,0,00,50.0,172.7,M,-33.8,M,0.0,0000*7A\r\n",
+        .test = "$GPVTG,308.74,T,,M,0.00,N,0.0,K*68\r\n$GPGGA,110534.994,"
+                "4002.1425,N,07531.2585,W,0,00,50.0,172.7,M,-33.8,M,0.0,"
+                "0000*7A\r\n",
         .testlen = 118,
         0,
         NMEA_PACKET,
