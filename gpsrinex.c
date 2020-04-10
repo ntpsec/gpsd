@@ -72,6 +72,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>    // for umask()
+#include <sys/stat.h>     // for umask()
 #include <time.h>
 #include <unistd.h>
 
@@ -1124,6 +1126,8 @@ int main(int argc, char **argv)
     (void)gps_stream(&gpsdata, flags, source.device);
 
     // create temp file, coverity does not like tmpfile()
+    // covarfity wants a umask
+    (void)umask(0177);        // force rw-r--r--
     strlcpy(tmp_fname, "/tmp/gpsrinexXXXXXX", sizeof(tmp_fname));
     tmp_file_desc = mkstemp(tmp_fname);
     if (0 > tmp_file_desc) {
