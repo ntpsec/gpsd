@@ -1,7 +1,7 @@
 /*
  * Garmin binary object for the GPS packet monitor.
  *
- * This file is Copyright (c) 2011-2018 by the GPSD project
+ * This file is Copyright 2011 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -19,7 +19,7 @@ extern const struct gps_type_t driver_garmin_ser_binary;
 
 static WINDOW *miscwin, *mid51win, *mid114win;
 
-#define display	(void)mvwprintw
+#define display (void)mvwprintw
 
 #define GARMIN_CHANNELS 12
 
@@ -103,8 +103,8 @@ static bool garmin_bin_initialize(void)
 
 #ifndef CONTROLSEND_ENABLE
     if(serial) {
-	monitor_complain("Direct mode doesn't supported.");
-	return false;
+        monitor_complain("Direct mode doesn't supported.");
+        return false;
     }
 #endif
 
@@ -112,7 +112,7 @@ static bool garmin_bin_initialize(void)
     mid51win = subwin(devicewin, 12, 18, 2, 0);
     mid114win = subwin(devicewin, GARMIN_CHANNELS + 3, 23, 2, 18);
     if (miscwin == NULL || mid51win == NULL || mid114win == NULL)
-	return false;
+        return false;
 
     (void)syncok(miscwin, true);
     (void)syncok(mid51win, true);
@@ -141,10 +141,10 @@ static bool garmin_bin_initialize(void)
     (void)wattrset(mid51win, A_NORMAL);
 
     (void)wborder(mid114win, 0, 0, 0, 0, 0, 0, 0, 0),
-	(void)wattrset(mid114win, A_BOLD);
+        (void)wattrset(mid114win, A_BOLD);
     display(mid114win, 1, 1, "Ch PRN  Az El  SNR ST");
     for (i = 0; i < GARMIN_CHANNELS; i++) {
-	display(mid114win, (int)i + 2, 1, "%2d", i);
+        display(mid114win, (int)i + 2, 1, "%2d", i);
     }
     display(mid114win, 0, 5, " Satellite ");
     display(mid114win, 14, 4, " ID 114 (0x72) ");
@@ -165,55 +165,55 @@ static void garmin_bin_update(uint16_t pkt_id, uint32_t pkt_size UNUSED, unsigne
     char tbuf[JSON_DATE_MAX+1];
 
     switch (pkt_id) {
-    case 0x29:	/* Receiver Measurement Record */
+    case 0x29:  /* Receiver Measurement Record */
     case 0x34:
-	/* for future use */
-	//rmd = (cpo_rcv_data *)pkt_data;
-	monitor_log("RMD 0x%02x=", pkt_id);
-	break;
+        /* for future use */
+        //rmd = (cpo_rcv_data *)pkt_data;
+        monitor_log("RMD 0x%02x=", pkt_id);
+        break;
 
-    case 0x33:	/* Position Record */
-	/* coverity_submit[tainted_data] */
-	display(miscwin, 0, 6, "%-24s",
-		timespec_to_iso8601(session.gpsdata.fix.time, tbuf, sizeof(tbuf)));
-	pvt = (cpo_pvt_data *)pkt_data;
-	display(mid51win, 1, 7, "%s",
-		(CHECK_RANGE(fixdesc, (uint8_t)GPSD_LE16TOH(pvt->fix)) ? \
-			fixdesc[GPSD_LE16TOH(pvt->fix)] : "unknown"));
-	display(mid51win, 2, 8, "%3.5f", pvt->lat * RAD_2_DEG);
-	display(mid51win, 3, 8, "%3.5f", pvt->lon * RAD_2_DEG);
-	display(mid51win, 4, 8, "%8.2f", pvt->alt + pvt->msl_hght);
-	display(mid51win, 5, 9, "%5.1f", hypot(pvt->lon_vel, pvt->lat_vel));
-	display(mid51win, 6, 9, "%5.1f", pvt->alt_vel);
-	display(mid51win, 7, 8, "%d", (int)GPSD_LE16TOH(pvt->leap_sec));
-	if (GPSD_LE16TOH(pvt->fix) < 2) /* error value is very large when status no fix */
-	   pvt->epe = pvt->eph = pvt->epv = NAN;
-	display(mid51win, 8, 7, "%6.2f", pvt->epe);
-	display(mid51win, 9, 7, "%6.2f", pvt->eph);
-	display(mid51win, 10, 7, "%6.2f", pvt->epv);
-	monitor_log("PVT 0x%02x=", pkt_id);
-	break;
+    case 0x33:  /* Position Record */
+        /* coverity_submit[tainted_data] */
+        display(miscwin, 0, 6, "%-24s",
+                timespec_to_iso8601(session.gpsdata.fix.time, tbuf, sizeof(tbuf)));
+        pvt = (cpo_pvt_data *)pkt_data;
+        display(mid51win, 1, 7, "%s",
+                (CHECK_RANGE(fixdesc, (uint8_t)GPSD_LE16TOH(pvt->fix)) ? \
+                        fixdesc[GPSD_LE16TOH(pvt->fix)] : "unknown"));
+        display(mid51win, 2, 8, "%3.5f", pvt->lat * RAD_2_DEG);
+        display(mid51win, 3, 8, "%3.5f", pvt->lon * RAD_2_DEG);
+        display(mid51win, 4, 8, "%8.2f", pvt->alt + pvt->msl_hght);
+        display(mid51win, 5, 9, "%5.1f", hypot(pvt->lon_vel, pvt->lat_vel));
+        display(mid51win, 6, 9, "%5.1f", pvt->alt_vel);
+        display(mid51win, 7, 8, "%d", (int)GPSD_LE16TOH(pvt->leap_sec));
+        if (GPSD_LE16TOH(pvt->fix) < 2) /* error value is very large when status no fix */
+           pvt->epe = pvt->eph = pvt->epv = NAN;
+        display(mid51win, 8, 7, "%6.2f", pvt->epe);
+        display(mid51win, 9, 7, "%6.2f", pvt->eph);
+        display(mid51win, 10, 7, "%6.2f", pvt->epv);
+        monitor_log("PVT 0x%02x=", pkt_id);
+        break;
 
-    case 0x72:	/* Satellite Data Record */
-	sats = (cpo_sat_data *)pkt_data;
-	for (i = 0; i < GARMIN_CHANNELS; i++, sats++) {
-	   display(mid114win, i + 2, 3,  " %3u %3u %2u %4.1f %2x",
-		 sats->svid,
-		 GPSD_LE16TOH(sats->azmth),
-		 sats->elev,
-		 (float)GPSD_LE16TOH(sats->snr) / 100.0,
-		 sats->status);
-	}
-	monitor_log("SAT 0x%02x=", pkt_id);
-	break;
+    case 0x72:  /* Satellite Data Record */
+        sats = (cpo_sat_data *)pkt_data;
+        for (i = 0; i < GARMIN_CHANNELS; i++, sats++) {
+           display(mid114win, i + 2, 3,  " %3u %3u %2u %4.1f %2x",
+                 sats->svid,
+                 GPSD_LE16TOH(sats->azmth),
+                 sats->elev,
+                 (float)GPSD_LE16TOH(sats->snr) / 100.0,
+                 sats->status);
+        }
+        monitor_log("SAT 0x%02x=", pkt_id);
+        break;
 
-    case 0xff:	/* Product Data Record */
-	monitor_log("PDR 0x%02x=", pkt_id);
-	break;
+    case 0xff:  /* Product Data Record */
+        monitor_log("PDR 0x%02x=", pkt_id);
+        break;
 
     default:
-	monitor_log("UNK 0x%02x=", pkt_id);
-	break;
+        monitor_log("UNK 0x%02x=", pkt_id);
+        break;
     }
 }
 
@@ -232,57 +232,57 @@ static void garmin_bin_ser_update(void)
    buf = session.lexer.outbuffer;
    len = session.lexer.outbuflen;
 
-   if (!(buf[0] == (unsigned char)0x10 &&		/* DLE */
-		buf[len-2] == (unsigned char)0x10 &&	/* DLE */
-		buf[len-1] == (unsigned char)0x03))	/* ETX */
-	goto end;	/* bad pkt */
+   if (!(buf[0] == (unsigned char)0x10 &&               /* DLE */
+                buf[len-2] == (unsigned char)0x10 &&    /* DLE */
+                buf[len-1] == (unsigned char)0x03))     /* ETX */
+        goto end;       /* bad pkt */
 
    if (buf[1] == (unsigned char)0x10 && buf[2] != (unsigned char)0x10)
-	goto end;	/* bad pkt */
+        goto end;       /* bad pkt */
    pkt_id = (uint16_t)buf[1];
 
    if (buf[2] == (unsigned char)0x10 && buf[3] != (unsigned char)0x10)
-	goto end;	/* bad pkt */
+        goto end;       /* bad pkt */
    pkt_size = (uint32_t)buf[2];
 
-   chksum = buf[1] + buf[2];	/* pkt_id + pkt_size */
+   chksum = buf[1] + buf[2];    /* pkt_id + pkt_size */
 
    j = 0;
    for (i = 0; i <= 255; i++) {
-	if (pkt_size == (uint32_t)j)
-	   break;
-	c = buf[i+3];
-	if (got_dle) {
-	   got_dle = false;
-	   if (c != (unsigned char)0x10)
-		goto end;	/* bad pkt */
-	} else {
-	   pkt_data[j++] = c;
-	   chksum += c;
-	   if (c == (unsigned char)0x10)
-		got_dle = true;
-	}
+        if (pkt_size == (uint32_t)j)
+           break;
+        c = buf[i+3];
+        if (got_dle) {
+           got_dle = false;
+           if (c != (unsigned char)0x10)
+                goto end;       /* bad pkt */
+        } else {
+           pkt_data[j++] = c;
+           chksum += c;
+           if (c == (unsigned char)0x10)
+                got_dle = true;
+        }
    }
 
    /* check pkt chksum */
    if ((unsigned char)(-chksum) == buf[len-3])
-	pkt_good = true;
+        pkt_good = true;
 
    end:
    if (pkt_good) {
 #ifdef CONTROLSEND_ENABLE
-	if(serial)
-	   /* good packet, send ACK */
-	   (void)monitor_control_send((unsigned char *)"\x10\x06\x00\xfa\x10\x03", 6);
+        if(serial)
+           /* good packet, send ACK */
+           (void)monitor_control_send((unsigned char *)"\x10\x06\x00\xfa\x10\x03", 6);
 #endif
-	garmin_bin_update(pkt_id, pkt_size, pkt_data);
+        garmin_bin_update(pkt_id, pkt_size, pkt_data);
    } else {
 #ifdef CONTROLSEND_ENABLE
-	if(serial)
-	   /* bad packet, send NAK */
-	   (void)monitor_control_send((unsigned char *)"\x10\x15\x00\xeb\x10\x03", 6);
+        if(serial)
+           /* bad packet, send NAK */
+           (void)monitor_control_send((unsigned char *)"\x10\x15\x00\xeb\x10\x03", 6);
 #endif
-	monitor_log("BAD 0x%02x=", buf[1]);
+        monitor_log("BAD 0x%02x=", buf[1]);
    }
 }
 
@@ -304,3 +304,4 @@ const struct monitor_object_t garmin_bin_ser_mmt = {
 
 #endif /* defined(GARMIN_ENABLE) && defined(BINARY_ENABLE) */
 
+// vim: set expandtab shiftwidth=4
