@@ -448,12 +448,16 @@ int main(int argc, char **argv)
                 // Try to extract MMSI from AIS payload
                 if (str_starts_with(buffer, "!AIVDM")) {
 #define MAX_INFO 6
-                    int  i,j;
+                    int  i, j;
                     char packet[MAX_PACKET_LENGTH];
                     char *adrpkt = packet;
                     unsigned char *info[MAX_INFO];
                     unsigned int  mmsi;
-                    unsigned char bitstrings [255];
+                    unsigned char bitstrings[255];
+                    int info_5_len;
+
+                    // pacify coverity.
+                    memset(bitstrings, 0, sizeof(bitstrings));
 
                     // strtok break original string
                     (void)strlcpy(packet, buffer, sizeof(packet));
@@ -463,8 +467,11 @@ int main(int argc, char **argv)
                         adrpkt = NULL;
                     }
 
-                    for(i = 0 ; i < (int)strlen((char *)info[5]); i++)  {
-                        if (i >= (int) sizeof (bitstrings)) break;
+                    info_5_len = (int)strlen((char *)info[5]);
+                    if (info_5_len >= ((int)sizeof(bitstrings) - 1)) {
+                        info_5_len = (int)sizeof(bitstrings) - 1;
+                    }
+                    for(i = 0 ; i < info_5_len; i++)  {
                         bitstrings[i] = AISto6bit(info[5][i]);
                     }
 
