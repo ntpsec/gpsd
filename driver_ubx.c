@@ -1775,12 +1775,12 @@ static void ubx_msg_sbas(struct gps_device_t *session, unsigned char *buf,
 
     session->driver.ubx.iTOW = getles32(buf, 0);
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "SBAS: %d %d %d %d %d\n",
+             "UBX-NAV-SBAS: %d %d %d %d %d\n",
              (int)getub(buf, 4), (int)getub(buf, 5), (int)getub(buf, 6),
              (int)getub(buf, 7), (int)getub(buf, 8));
 
     nsv = getub(buf, 8);
-    if (MAXCHANNELS > nsv) {
+    if (MAXCHANNELS < nsv) {
         // too many sats for us, pacify coverity
         nsv = MAXCHANNELS;
     }
@@ -1792,7 +1792,7 @@ static void ubx_msg_sbas(struct gps_device_t *session, unsigned char *buf,
     for (i = 0; i < nsv; i++) {
         int off = 12 + 12 * i;
         GPSD_LOG(LOG_DATA, &session->context->errout,
-                 "SBAS info on SV: %d\n", (int)getub(buf, off));
+                 "UBX-NAV-SBAS info on SV: %d\n", (int)getub(buf, off));
     }
     /* really 'in_use' depends on the sats info, EGNOS is still
      * in test.  In WAAS areas one might also check for the type of
@@ -1804,7 +1804,7 @@ static void ubx_msg_sbas(struct gps_device_t *session, unsigned char *buf,
 #ifdef __UNUSED
     /* debug */
     GPSD_LOG(LOG_ERROR, &session->context->errout,
-             "NAV-SBAS ubx_prn %d gnssid %d, svid %d nmea_PRN %d\n",
+             "UBX-NAV-SBAS ubx_prn %d gnssid %d, svid %d nmea_PRN %d\n",
              ubx_PRN, gnssid, svid, nmea_PRN);
 #endif /* __UNUSED */
     session->driver.ubx.sbas_in_use = nmea_PRN;
