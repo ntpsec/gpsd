@@ -224,7 +224,7 @@ static gps_mask_t handle1002(struct gps_device_t *session)
     /* measurement_sequence       = getzword(9); */
     unsigned short gps_week = getzword(10);
     time_t gps_seconds = getzlong(11);
-    long gps_nanoseconds = getzlong(13);
+    unsigned long gps_nanoseconds = getzlong(13);
     char ts_buf[TIMESPEC_LEN];
 
     /* Note: this week counter is not limited to 10 bits. */
