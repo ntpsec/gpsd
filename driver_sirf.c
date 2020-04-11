@@ -828,8 +828,19 @@ static gps_mask_t sirf_msg_67_16(struct gps_device_t *session,
     int st;                    /* index into skyview */
     char ts_buf[TIMESPEC_LEN];
 
-    if (198 > len) {
-        /* Doc says payload max of 15 sats */
+    if (18 > len) {
+        /* zero sats is len == 18 */
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "SiRF V: MID 67,16 runt packet. Len %lu\n",
+                 (unsigned long)len);
+        return 0;
+    }
+
+    if (198 < len) {
+        /* max sats per message is 15 */
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "SiRF V: MID 67,16 packet too big. Len %lu\n",
+                 (unsigned long)len);
         return 0;
     }
 
@@ -860,12 +871,6 @@ static gps_mask_t sirf_msg_67_16(struct gps_device_t *session,
     }
     st = ((msg_info & 0x0f) - 1) * 15;
     num_of_sats = getub(buf, 17);
-    if ((18 + (num_of_sats * 12)) > len) {
-        // covarity wants this check
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "SiRF V: MID 67,16 packet too small\n");
-        return 0;
-    }
     /* got time now */
     mask |= TIME_SET;
 
@@ -887,9 +892,14 @@ static gps_mask_t sirf_msg_67_16(struct gps_device_t *session,
     session->gpsdata.satellites_visible = num_of_sats;
     /* used? */
 
+    if (MAXCHANNELS < num_of_sats) {
+        // shut up coverity
+        num_of_sats = MAXCHANNELS;
+    }
+
     /* now decode the individual sat data */
-    /* num_of_sats is total sats tracked, not the number of sats in this
-       message */
+    /* FIXME: num_of_sats is total sats tracked, not the number of sats
+     * in this message, so this looks wrong? */
     for (sat_num = 0; sat_num < num_of_sats; sat_num++) {
         unsigned offset;
         uint16_t sat_info;
