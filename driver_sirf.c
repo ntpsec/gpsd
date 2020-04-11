@@ -31,7 +31,7 @@
  * unfreezes it. We have tries waiting on command acknowledges as
  * the manual advises; this does not fix the problem.
  *
- * This file is Copyright (c) 2010-2018 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -1718,7 +1718,7 @@ static gps_mask_t sirf_msg_geodetic(struct gps_device_t *session,
         /* alititude WGS84 */
         session->newdata.altHAE = getbes32(buf, 31) * 1e-2;
         session->newdata.altMSL = getbes32(buf, 35) * 1e-2;
-	/* Let gpsd_error_model() deal with geoid_sep and altHAE */
+        /* Let gpsd_error_model() deal with geoid_sep and altHAE */
         /* skip 1 byte of map datum */
         session->newdata.speed = getbeu16(buf, 40) * 1e-2;
         session->newdata.track = getbeu16(buf, 42) * 1e-2;
@@ -2487,8 +2487,8 @@ const struct gps_type_t driver_sirf =
     .speed_switcher = sirfbin_speed,    /* we can change baud rate */
     .mode_switcher  = sirfbin_mode,     /* there's a mode switcher */
     .rate_switcher  = NULL,             /* no sample-rate switcher */
-    .min_cycle.tv_sec  = 1,		/* not relevant, no rate switch */
-    .min_cycle.tv_nsec = 0,		/* not relevant, no rate switch */
+    .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
+    .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
 #endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
     .control_send   = sirf_control_send,/* how to send a control string */
