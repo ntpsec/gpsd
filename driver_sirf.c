@@ -829,7 +829,7 @@ static gps_mask_t sirf_msg_67_16(struct gps_device_t *session,
     char ts_buf[TIMESPEC_LEN];
 
     if (198 > len) {
-        /* always payload of 15 sats */
+        /* Doc says payload max of 15 sats */
         return 0;
     }
 
@@ -860,6 +860,12 @@ static gps_mask_t sirf_msg_67_16(struct gps_device_t *session,
     }
     st = ((msg_info & 0x0f) - 1) * 15;
     num_of_sats = getub(buf, 17);
+    if ((18 + (num_of_sats * 12)) > len) {
+        // covarity wants this check
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "SiRF V: MID 67,16 packet too small\n");
+        return 0;
+    }
     /* got time now */
     mask |= TIME_SET;
 
