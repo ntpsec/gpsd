@@ -999,7 +999,8 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             }
         }
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIP: Fix info (0x57): %02x %02x %u %f\n", u1, u2, week, f1);
+                 "TSIP: Fix info (0x57): %02x %02x %u %f\n",
+                 u1, u2, week, ftow);
         break;
     case 0x5a:
         /* Raw Measurement Data
