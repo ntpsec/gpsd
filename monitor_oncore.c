@@ -45,24 +45,28 @@ static const char *pps_ctrl[] = {
     "off",
     "on",
     "on if >= 1 SV",
-    "on if TRAIM ok"
+    "on if TRAIM ok",
+    "Unk",
 };
 
 static const char *pps_sync[] = {
     "UTC",
-    "GPS"
+    "GPS",
+    "Unk",
 };
 
 static const char *traim_sol[] = {
     "OK",
     "ALARM",
     "UNKNOWN"
+    "Unk",
 };
 
 static const char *traim_status[] = {
     "detect & isolate",
     "detect",
-    "insufficient"
+    "insufficient",
+    "Unk",
 };
 
 static const char *pos_hold_mode[] = {
@@ -358,11 +362,22 @@ static void oncore_update(void)
 
         (void)mvwprintw(Enwin, 1, 24, "%3s", traim ? "on" : "off");
         (void)mvwprintw(Enwin, 2, 18, "%6.1f us", alarm);
+        if (3 < ctrl) {
+            ctrl = 4;
+        }
         (void)mvwprintw(Enwin, 3, 13, "%14s", pps_ctrl[ctrl]);
         (void)mvwprintw(Enwin, 4, 24, "%3s", pulse ? "on" : "off");
-        /* coverity_submit[tainted_data] */
+        if (1 < sync) {
+            sync = 2;
+        }
         (void)mvwprintw(Enwin, 5, 24, "%3s", pps_sync[sync]);
+        if (2 < sol_stat) {
+            sol_stat = 3;
+        }
         (void)mvwprintw(Enwin, 6, 20, "%7s", traim_sol[sol_stat]);
+        if (2 < status) {
+            status = 3;
+        }
         (void)mvwprintw(Enwin, 7, 11, "%16s", traim_status[status]);
         (void)mvwprintw(Enwin, 8, 18, "%6.3f us", sigma * 0.001);
     }
