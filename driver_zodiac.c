@@ -23,11 +23,12 @@
 #include "strfuncs.h"
 
 /* Zodiac protocol description uses 1-origin indexing by little-endian word */
-#define get16z(buf, n)  ((buf[2*(n)-2]) | (buf[2*(n)-1] << 8))
-#define get32z(buf, n)  ((buf[2*(n)-2]) | (buf[2*(n)-1] << 8) | \
+#define get16z(buf, n)   ((buf[2*(n)-2]) | (buf[2*(n)-1] << 8))
+#define getu16z(buf, n)  (uint16_t)((buf[2*(n)-2]) | (buf[2*(n)-1] << 8))
+#define get32z(buf, n)   ((buf[2*(n)-2]) | (buf[2*(n)-1] << 8) | \
                           (buf[2*(n)+0] << 16) | (buf[2*(n)+1] << 24))
-#define getu32z(buf, n) (uint32_t)((buf[2*(n)-2]) | (buf[2*(n)-1] << 8) | \
-                                   (buf[2*(n)+0] << 16) | (buf[2*(n)+1] << 24))
+#define getu32z(buf, n)  (uint32_t)((buf[2*(n)-2]) | (buf[2*(n)-1] << 8) | \
+                                    (buf[2*(n)+0] << 16) | (buf[2*(n)+1] << 24))
 #define getstringz(to, from, s, e)                      \
     (void)memcpy(to, from+2*(s)-2, 2*((e)-(s)+1))
 
@@ -134,6 +135,7 @@ static ssize_t zodiac_send_rtcm(struct gps_device_t *session,
 }
 
 #define getzword(n)     get16z(session->lexer.outbuffer, n)
+#define getzu16(n)      getu16z(session->lexer.outbuffer, n)
 #define getzlong(n)     get32z(session->lexer.outbuffer, n)
 #define getzu32(n)      getu32z(session->lexer.outbuffer, n)
 
@@ -223,9 +225,9 @@ static gps_mask_t handle1002(struct gps_device_t *session)
     /* ticks                      = getzlong(6); */
     /* sequence                   = getzword(8); */
     /* measurement_sequence       = getzword(9); */
-    unsigned short gps_week = getzword(10);
+    unsigned short gps_week = getzu16(10);
     time_t gps_seconds = getzlong(11);
-    unsigned long gps_nanoseconds = getzlong(13);
+    unsigned long gps_nanoseconds = getzu32(13);
     char ts_buf[TIMESPEC_LEN];
 
     /* Note: this week counter is not limited to 10 bits. */
