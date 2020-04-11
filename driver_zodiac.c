@@ -23,8 +23,7 @@
 #include "strfuncs.h"
 
 /* Zodiac protocol description uses 1-origin indexing by little-endian word */
-#define get16z(buf, n)  ( (buf[2*(n)-2])        \
-                | (buf[2*(n)-1] << 8))
+#define get16z(buf, n)  ( (buf[2*(n)-2]) | (buf[2*(n)-1] << 8))
 #define get32z(buf, n)  ( (buf[2*(n)-2])        \
                 | (buf[2*(n)-1] << 8) \
                 | (buf[2*(n)+0] << 16) \
@@ -223,13 +222,13 @@ static gps_mask_t handle1002(struct gps_device_t *session)
     /* ticks                      = getzlong(6); */
     /* sequence                   = getzword(8); */
     /* measurement_sequence       = getzword(9); */
-    int gps_week = getzword(10);
+    unsigned short gps_week = getzword(10);
     time_t gps_seconds = getzlong(11);
     long gps_nanoseconds = getzlong(13);
     char ts_buf[TIMESPEC_LEN];
 
     /* Note: this week counter is not limited to 10 bits. */
-    session->context->gps_week = (unsigned short)gps_week;
+    session->context->gps_week = gps_week;
     session->gpsdata.satellites_used = 0;
     for (i = 0; i < ZODIAC_CHANNELS; i++) {
         int status, prn;
@@ -245,9 +244,8 @@ static gps_mask_t handle1002(struct gps_device_t *session)
     }
     ts_tow.tv_sec = gps_seconds;
     ts_tow.tv_nsec = gps_nanoseconds;
-    session->gpsdata.skyview_time = gpsd_gpstime_resolv(session,
-                                                      (unsigned short)gps_week,
-                                                      ts_tow);
+    session->gpsdata.skyview_time = gpsd_gpstime_resolv(session, gps_week,
+                                                        ts_tow);
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "1002: visible=%d used=%d mask={SATELLITE|USED} time %s\n",
              session->gpsdata.satellites_visible,
@@ -332,7 +330,8 @@ static gps_mask_t handle1011(struct gps_device_t *session)
      * client querying of the ID with firmware version in 2006.
      * The Zodiac is supposed to send one of these messages on startup.
      */
-    getstringz(session->subtype, session->lexer.outbuffer, 19, 28);     /* software version field */
+    /* software version field */
+    getstringz(session->subtype, session->lexer.outbuffer, 19, 28);
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "1011: subtype=%s mask={DEVICEID}\n",
              session->subtype);
@@ -447,9 +446,11 @@ static bool zodiac_speed_switch(struct gps_device_t *session,
     data[0] = session->driver.zodiac.sn;        /* sequence number */
     data[1] = 1;                /* port 1 data valid */
     data[2] = (unsigned short)parity;   /* port 1 character width (8 bits) */
-    data[3] = (unsigned short)(stopbits - 1);   /* port 1 stop bits (1 stopbit) */
+    /* port 1 stop bits (1 stopbit) */
+    data[3] = (unsigned short)(stopbits - 1);
     data[4] = 0;                /* port 1 parity (none) */
-    data[5] = (unsigned short)(round(log((double)speed / 300) / GPS_LN2) + 1);  /* port 1 speed */
+    /* port 1 speed */
+    data[5] = (unsigned short)(round(log((double)speed / 300) / GPS_LN2) + 1);
     data[14] = zodiac_checksum(data, 14);
 
     (void)zodiac_spew(session, 1330, data, 15);
