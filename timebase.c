@@ -355,7 +355,7 @@ void gpsd_century_update(struct gps_device_t *session, int century)
 /* gpsd_gpstime_resolv() convert week/tow to UTC as a timespec
  */
 timespec_t gpsd_gpstime_resolv(struct gps_device_t *session,
-                         unsigned short week, timespec_t tow)
+                               unsigned week, timespec_t tow)
 {
     timespec_t t;
 
