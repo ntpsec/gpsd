@@ -186,7 +186,7 @@ NTP clock skew goes over 1 second, but this is unlikely to ever happen
 - and if it does the reasons will have nothing to do with GPS
 idiosyncracies.
 
-This file is Copyright (c) 2010 - 2018 by the GPSD project
+This file is Copyright 2010 by the GPSD project
 SPDX-License-Identifier: BSD-2-clause
 
 *****************************************************************************/
@@ -223,26 +223,26 @@ void gpsd_time_init(struct gps_context_t *context, time_t starttime)
     context->rollovers = (int)((context->start_time-GPS_EPOCH) / GPS_ROLLOVER);
 
     if (GPS_EPOCH > context->start_time) {
-	GPSD_LOG(LOG_ERROR, &context->errout,
-		 "system time looks bogus, dates may not be reliable.\n");
+        GPSD_LOG(LOG_ERROR, &context->errout,
+                 "system time looks bogus, dates may not be reliable.\n");
     } else {
-	/* we've forced the UTC timezone, so this is actually UTC */
-	struct tm *now = localtime(&context->start_time);
-	char scr[128];
+        /* we've forced the UTC timezone, so this is actually UTC */
+        struct tm *now = localtime(&context->start_time);
+        char scr[128];
         timespec_t ts_start_time;
 
         ts_start_time.tv_sec = context->start_time;
         ts_start_time.tv_nsec = 0;
 
-	/*
-	 * This is going to break our regression-test suite once a century.
-	 * I think we can live with that consequence.
-	 */
-	now->tm_year += 1900;
-	context->century = now->tm_year - (now->tm_year % 100);
-	GPSD_LOG(LOG_INF, &context->errout, "startup at %s (%ld)\n",
-	         timespec_to_iso8601(ts_start_time, scr, sizeof(scr)),
-		 (long)context->start_time);
+        /*
+         * This is going to break our regression-test suite once a century.
+         * I think we can live with that consequence.
+         */
+        now->tm_year += 1900;
+        context->century = now->tm_year - (now->tm_year % 100);
+        GPSD_LOG(LOG_INF, &context->errout, "startup at %s (%ld)\n",
+                 timespec_to_iso8601(ts_start_time, scr, sizeof(scr)),
+                 (long)context->start_time);
     }
 }
 
@@ -256,12 +256,12 @@ void gpsd_set_century(struct gps_device_t *session)
 {
     char *end;
     if (strstr((char *)session->lexer.outbuffer, "Date:") != NULL) {
-	int year;
-	unsigned char *cp = session->lexer.outbuffer + 5;
-	while (isspace(*cp))
-	    ++cp;
-	year = (int)strtol((char *)cp, &end, 10);
-	session->context->century = year - (year % 100);
+        int year;
+        unsigned char *cp = session->lexer.outbuffer + 5;
+        while (isspace(*cp))
+            ++cp;
+        year = (int)strtol((char *)cp, &end, 10);
+        session->context->century = year - (year % 100);
     }
 }
 
@@ -287,7 +287,7 @@ timespec_t gpsd_utc_resolve(struct gps_device_t *session)
      * no further sanity-checking is possible.
      */
     if (session->context->start_time < GPS_EPOCH)
-	return t;
+        return t;
 
     /* sanity check unix time against leap second.
      * Does not work well with regressions because the leap_sconds
@@ -299,12 +299,12 @@ timespec_t gpsd_utc_resolve(struct gps_device_t *session)
         long long old_tv_sec = t.tv_sec;
         t.tv_sec += 619315200LL;                    // fast forward 1024 weeks
         (void)gmtime_r(&t.tv_sec, &session->nmea.date);   // fix NMEA date
-	(void)timespec_to_iso8601(t, scr, sizeof(scr));
-	GPSD_LOG(LOG_WARN, &session->context->errout,
-		 "WARNING: WKRO bug: leap second %d inconsistent "
+        (void)timespec_to_iso8601(t, scr, sizeof(scr));
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "WARNING: WKRO bug: leap second %d inconsistent "
                  "with %lld, corrected to %lld (%s)\n",
                  session->context->leap_seconds,
-		 old_tv_sec, (long long)t.tv_sec, scr);
+                 old_tv_sec, (long long)t.tv_sec, scr);
     }
 
     /*
@@ -315,10 +315,10 @@ timespec_t gpsd_utc_resolve(struct gps_device_t *session)
     // 5 Dec 2019
     // This fails ALL regression tests as start time after regression added
     if (t.tv_sec < (time_t)session->context->start_time) {
-	(void)timespec_to_iso8601(t, scr, sizeof(scr));
-	GPSD_LOG(LOG_WARN, &session->context->errout,
-		 "GPS week rollover makes time %s (%lld) invalid\n",
-		 scr, (long long)t.tv_sec);
+        (void)timespec_to_iso8601(t, scr, sizeof(scr));
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "GPS week rollover makes time %s (%lld) invalid\n",
+                 scr, (long long)t.tv_sec);
     }
 #endif  // __UNUSED__
 
@@ -329,24 +329,25 @@ void gpsd_century_update(struct gps_device_t *session, int century)
 {
     session->context->valid |= CENTURY_VALID;
     if (century > session->context->century) {
-	/*
-	 * This mismatch is almost certainly not due to a GPS week
-	 * rollover, because that would throw the ZDA report backward
-	 * into the last rollover period instead of forward.  Almost
-	 * certainly it means that a century mark has passed while
-	 * gpsd was running, and we should trust the new ZDA year.
-	 */
-	GPSD_LOG(LOG_WARN, &session->context->errout,
-		 "century rollover detected.\n");
-	session->context->century = century;
-    } else if (session->context->start_time >= GPS_EPOCH && century < session->context->century) {
-	/*
-	 * This looks like a GPS week-counter rollover.
-	 */
-	GPSD_LOG(LOG_WARN, &session->context->errout,
-		 "ZDA year less than clock year, "
-		 "probable GPS week rollover lossage\n");
-	session->context->valid &=~ CENTURY_VALID;
+        /*
+         * This mismatch is almost certainly not due to a GPS week
+         * rollover, because that would throw the ZDA report backward
+         * into the last rollover period instead of forward.  Almost
+         * certainly it means that a century mark has passed while
+         * gpsd was running, and we should trust the new ZDA year.
+         */
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "century rollover detected.\n");
+        session->context->century = century;
+    } else if (session->context->start_time >=
+               GPS_EPOCH && century < session->context->century) {
+        /*
+         * This looks like a GPS week-counter rollover.
+         */
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "ZDA year less than clock year, "
+                 "probable GPS week rollover lossage\n");
+        session->context->valid &=~ CENTURY_VALID;
     }
 }
 #endif /* NMEA0183_ENABLE */
@@ -354,7 +355,7 @@ void gpsd_century_update(struct gps_device_t *session, int century)
 /* gpsd_gpstime_resolv() convert week/tow to UTC as a timespec
  */
 timespec_t gpsd_gpstime_resolv(struct gps_device_t *session,
-			 unsigned short week, timespec_t tow)
+                         unsigned short week, timespec_t tow)
 {
     timespec_t t;
 
@@ -366,9 +367,9 @@ timespec_t gpsd_gpstime_resolv(struct gps_device_t *session,
      * to 13 bits.
      */
     if ((int)week < (session->context->gps_week & 0x3ff)) {
-	GPSD_LOG(LOG_INF, &session->context->errout,
-		 "GPS week 10-bit rollover detected.\n");
-	++session->context->rollovers;
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "GPS week 10-bit rollover detected.\n");
+        ++session->context->rollovers;
     }
 
     /*
@@ -380,7 +381,7 @@ timespec_t gpsd_gpstime_resolv(struct gps_device_t *session,
      * the protocol reference claims.
      */
     if (week < 1024)
-	week += session->context->rollovers * 1024;
+        week += session->context->rollovers * 1024;
 
     /* sanity check week number, GPS epoch, against leap seconds
      * Does not work well with regressions because the leap_sconds
@@ -391,8 +392,8 @@ timespec_t gpsd_gpstime_resolv(struct gps_device_t *session,
         /* assume leap second = 19 by 31 Dec 2022
          * so week > 2180 is way in the future, do not allow it */
         week -= 1024;
-	GPSD_LOG(LOG_WARN, &session->context->errout,
-		 "GPS week confusion. Adjusted week %u for leap %d\n",
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "GPS week confusion. Adjusted week %u for leap %d\n",
                  week, session->context->leap_seconds);
     }
 
@@ -406,12 +407,12 @@ timespec_t gpsd_gpstime_resolv(struct gps_device_t *session,
     if (0 > t.tv_sec) {
         // recompute for previous EPOCH
         week -= 1024;
-	t.tv_sec = GPS_EPOCH + ((time_t)week * SECS_PER_WEEK) + tow.tv_sec;
-	t.tv_sec -= session->context->leap_seconds;
-	GPSD_LOG(LOG_WARN, &session->context->errout,
-		 "2038 rollover. Adjusting to %lld. week %u leap %d\n",
+        t.tv_sec = GPS_EPOCH + ((time_t)week * SECS_PER_WEEK) + tow.tv_sec;
+        t.tv_sec -= session->context->leap_seconds;
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "2038 rollover. Adjusting to %lld. week %u leap %d\n",
                  (long long)t.tv_sec, week,
-	         session->context->leap_seconds);
+                 session->context->leap_seconds);
     }
 
     session->context->gps_week = week;
@@ -422,3 +423,4 @@ timespec_t gpsd_gpstime_resolv(struct gps_device_t *session,
 }
 
 /* end */
+// vim: set expandtab shiftwidth=4
