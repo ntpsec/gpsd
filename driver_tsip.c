@@ -9,7 +9,7 @@
  * be adding a fixed offset based on a hidden epoch value, in which case
  * unhappy things will occur on the next rollover.
  *
- * This file is Copyright (c) 2010-2019 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -1168,9 +1168,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             session->gpsdata.skyview[i].gnssid = tsip_gnssid(u10, u1,
                 &session->gpsdata.skyview[i].svid);
             if (0 == u7) {
-		session->gpsdata.skyview[i].health = SAT_HEALTH_OK;
+                session->gpsdata.skyview[i].health = SAT_HEALTH_OK;
             } else {
-		session->gpsdata.skyview[i].health = SAT_HEALTH_BAD;
+                session->gpsdata.skyview[i].health = SAT_HEALTH_BAD;
             }
 
             /* when polled by 0x3c, all the skyview times will be the same
@@ -1450,11 +1450,11 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          * Steal mode from last fix.
          * The last fix is likely lastfix, not oldfix, as this is likely
          * a new time and starts a new cycle! */
-	session->newdata.status = session->lastfix.status;
-	if (MODE_2D > session->oldfix.mode) {
-	    session->newdata.mode = MODE_2D;  // At least 2D
+        session->newdata.status = session->lastfix.status;
+        if (MODE_2D > session->oldfix.mode) {
+            session->newdata.mode = MODE_2D;  // At least 2D
         } else {
-	    session->newdata.mode = session->lastfix.mode;
+            session->newdata.mode = session->lastfix.mode;
         }
         mask |= STATUS_SET | MODE_SET;
 
@@ -1464,7 +1464,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                  session->newdata.ecef.y,
                  session->newdata.ecef.z,
                  d4, ftow,
-		 session->newdata.mode);
+                 session->newdata.mode);
         mask |= ECEF_SET | TIME_SET | NTPTIME_IS;
         if (!TS_EQ(&ts_tow, &session->driver.tsip.last_tow)) {
             // New time, so new fix.
@@ -1515,8 +1515,8 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          * This is a problem as gpsd will send a report with no mode.
          * This message only sent on 2D or 3D fix.
          * Steal mode from last fix. */
-	session->newdata.status = session->oldfix.status;
-	session->newdata.mode = session->oldfix.mode;
+        session->newdata.status = session->oldfix.status;
+        session->newdata.mode = session->oldfix.mode;
         mask |= STATUS_SET | MODE_SET;
 
         GPSD_LOG(LOG_PROG, &session->context->errout,
