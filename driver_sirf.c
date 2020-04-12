@@ -266,10 +266,14 @@ static bool sirf_write(struct gps_device_t *session, unsigned char *msg)
     }
 
     len = (size_t) ((msg[2] << 8) | msg[3]);
-
+    /* '(CS-303979-SP-9) SiRFstarV OSP Extensions.pdf'
+     * says max message length is 1032 */
+    if (1032 < len) {
+        // pacify coverity
+        len = 1032;
+    }
     /* calculate CRC */
     crc = 0;
-    /* coverity_submit[tainted_data] */
     for (i = 0; i < len; i++)
         crc += (int)msg[4 + i];
     crc &= 0x7fff;
