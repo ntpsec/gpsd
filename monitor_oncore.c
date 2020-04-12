@@ -27,6 +27,7 @@ static const char *antenna[] = {
     "OC (short)",
     "UC (open)",
     "OU (short)",
+    "Unk",
 };
 
 static const char *sv_mode[] = {
@@ -39,6 +40,7 @@ static const char *sv_mode[] = {
     "satT",
     "epha",
     "avl",
+    "Unk",
 };
 
 static const char *pps_ctrl[] = {
@@ -245,7 +247,12 @@ static void oncore_update(void)
 
         (void)mvwprintw(Ea1win, 3, 24, "%-37s", statusbuf);
 
-        (void)mvwprintw(Ea1win, 2, 10, "%-10s", antenna[dopt >> 6]);
+        dopt >>= 6;
+        if (3 < dopt) {
+            // pacify coverity
+            dopt = 4;
+        }
+        (void)mvwprintw(Ea1win, 2, 10, "%-10s", antenna[dopt]);
 
         (void)mvwprintw(Ea1win, 2, 27, "%s %4.1f",
                         (dopt & 1) ? "hdop" : "pdop", dop);
@@ -264,10 +271,11 @@ static void oncore_update(void)
             (void)wmove(Eawin, (int)(i + 2), 3);
             (void)wprintw(Eawin, " %3d", sv);
             EaSVlines[i] = sv;
-            if (mode <= (unsigned char)8)
-                (void)wprintw(Eawin, " %4s", sv_mode[mode]);
-            else
-                (void)wprintw(Eawin, "    -");
+            if (8 < mode) {
+                // pacify coverity
+                mode = 9;
+            }
+            (void)wprintw(Eawin, " %4s", sv_mode[mode]);
             (void)wprintw(Eawin, " %3d", sn);
             (void)wprintw(Eawin, " %c%c%c%c%c%c%c%c",
                           (status & 0x80) ? 'p' : ' ',  /* used for pos fix  */
