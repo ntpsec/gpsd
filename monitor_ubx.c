@@ -92,27 +92,27 @@ static bool ubx_initialize(void)
 
 static void display_nav_svinfo(unsigned char *buf, size_t data_len)
 {
-    int i, nchan;
+    unsigned i, nchan;
 
     if (data_len < 152)
         return;
 
-    nchan = (int)getub(buf, 4);
+    nchan = getub(buf, 4);
     if (nchan > 16)
         nchan = 16;
 
     for (i = 0; i < nchan; i++) {
-        int off = 8 + 12 * i;
-        unsigned char ss, prn;
-        char el;
-        short az;
-        unsigned short fl;
+        unsigned off = 8 + 12 * i;
+        unsigned ss, prn;
+        int el;
+        int az;
+        unsigned fl;
 
-        prn = (unsigned char)getub(buf, off + 1);
-        fl = (unsigned short)getleu16(buf, off + 2);
-        ss = (unsigned char)getub(buf, off + 4);
-        el = (char)getsb(buf, off + 5);
-        az = (short)getles16(buf, off + 6);
+        prn = getub(buf, off + 1);
+        fl = getleu16(buf, off + 2);
+        ss = getub(buf, off + 4);
+        el = getsb(buf, off + 5);
+        az = getles16(buf, off + 6);
         (void)wmove(satwin, (int)(i + 2), 4);
         (void)wprintw(satwin, "%3d %3d %3d  %2d %04x %c",
                       prn, az, el, ss, fl, (fl & UBX_SAT_USED) ? 'Y' : ' ');
@@ -238,7 +238,6 @@ static void ubx_update(void)
     data_len = (size_t) getles16(buf, 4);
     switch (msgid) {
     case UBX_NAV_SVINFO:
-        /* coverity_submit[tainted_data] */
         display_nav_svinfo(&buf[6], data_len);
         break;
     case UBX_NAV_DOP:
