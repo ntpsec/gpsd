@@ -226,7 +226,7 @@ static gps_mask_t handle1002(struct gps_device_t *session)
     /* sequence                   = getzword(8); */
     /* measurement_sequence       = getzword(9); */
     unsigned short gps_week = getzu16(10);
-    time_t gps_seconds = getzlong(11);
+    time_t gps_seconds = (time_t)getzu32(11);
     unsigned long gps_nanoseconds = getzu32(13);
     char ts_buf[TIMESPEC_LEN];
 
