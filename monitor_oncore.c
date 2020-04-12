@@ -26,7 +26,7 @@ static const char *antenna[] = {
     "OK (conn)",
     "OC (short)",
     "UC (open)",
-    "OU (short)"
+    "OU (short)",
 };
 
 static const char *sv_mode[] = {
@@ -38,7 +38,7 @@ static const char *sv_mode[] = {
     "msgs",
     "satT",
     "epha",
-    "avl"
+    "avl",
 };
 
 static const char *pps_ctrl[] = {
@@ -58,7 +58,7 @@ static const char *pps_sync[] = {
 static const char *traim_sol[] = {
     "OK",
     "ALARM",
-    "UNKNOWN"
+    "UNKNOWN",
     "Unk",
 };
 
@@ -72,7 +72,8 @@ static const char *traim_status[] = {
 static const char *pos_hold_mode[] = {
     "off",
     "on",
-    "survey"
+    "survey",
+    "Unk",
 };
 
 #define ONCTYPE(id2,id3) ((((unsigned int)id2)<<8)|(id3))
@@ -420,6 +421,10 @@ static void oncore_update(void)
 
         mode = (unsigned char)getub(buf, 4);
 
+        if (2 < mode) {
+            // pacify coverity
+            mode = 3;
+        }
         (void)mvwprintw(Atwin, 2, 1, "%6s", pos_hold_mode[mode]);
     }
 
