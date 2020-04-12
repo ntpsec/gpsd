@@ -114,7 +114,7 @@ static int send_udp (char *nmeastring, size_t ind)
                                 buffer,
                                 ind,
                                 0,
-                                (const struct sockaddr *)&remote[channel],
+                                (struct sockaddr *)&remote[channel],
                                 (int)sizeof(remote));
         if (status < (ssize_t)ind) {
             (void)fprintf(stderr, "gps2udp: failed to send [%s] \n",
@@ -126,18 +126,23 @@ static int send_udp (char *nmeastring, size_t ind)
 }
 
 
-static int open_udp(char **hostport)
 /* Open and bind udp socket to host */
+static int open_udp(char **hostport)
 {
    int channel;
 
-   for (channel=0; channel <udpchannel; channel ++) {
+   for (channel = 0; channel < udpchannel; channel++) {
        char *hostname = NULL;
        char *portname = NULL;
        char *endptr = NULL;
        int  portnum;
        struct hostent *hp;
 
+       if (NULL == hostport[channel]) {
+           // pacify coverity
+           (void)fprintf(stderr, "gps2udp: syntax is [-u hostname:port]\n");
+           return (-1);
+       }
        /* parse argument */
        hostname = strtok(hostport[channel], ":");
        // NULL tells strtok() to resume search from last found token
@@ -356,6 +361,9 @@ int main(int argc, char **argv)
     long count = -1;
     int option;
     char *udphostport[MAX_UDP_DEST];
+
+    // pacify covarity
+    memset(udphostport, 0, sizeof(udphostport));
 
     flags = WATCH_ENABLE;
     while ((option = getopt(argc, argv, "?habnjvc:l:u:d:")) != -1) {
