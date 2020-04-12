@@ -88,12 +88,20 @@ int gps_sock_open(const char *host, const char *port,
 
     libgps_debug_trace((DEBUG_CALLS, "gps_sock_open(%s, %s)\n", host, port));
 
-#ifndef USE_QT
+#ifdef USE_QT
+        QTcpSocket *sock = new QTcpSocket();
+        gpsdata->gps_fd = sock;
+        sock->connectToHost(host, QString(port).toInt());
+        if (!sock->waitForConnected())
+            qDebug() << "libgps::connect error: " << sock->errorString();
+        else
+            qDebug() << "libgps::connected!";
+#else  // USE_QT
 #ifdef HAVE_WINSOCK2_H
         if (need_init) {
           need_init != windows_init();
         }
-#endif
+#endif /* HAVE_WINSOCK2_H */
         if ((gpsdata->gps_fd =
             netlib_connectsock(AF_UNSPEC, host, port, "tcp")) < 0) {
             errno = gpsdata->gps_fd;
@@ -105,14 +113,6 @@ int gps_sock_open(const char *host, const char *port,
             libgps_debug_trace((DEBUG_CALLS,
                 "netlib_connectsock() returns socket on fd %d\n",
                 gpsdata->gps_fd));
-#else /* HAVE_WINSOCK2_H */
-        QTcpSocket *sock = new QTcpSocket();
-        gpsdata->gps_fd = sock;
-        sock->connectToHost(host, QString(port).toInt());
-        if (!sock->waitForConnected())
-            qDebug() << "libgps::connect error: " << sock->errorString();
-        else
-            qDebug() << "libgps::connected!";
 #endif /* USE_QT */
 
     /* set up for line-buffered I/O over the daemon socket */
@@ -133,7 +133,9 @@ int gps_sock_open(const char *host, const char *port,
 /* timeout is in milli Seconds */
 bool gps_sock_waiting(const struct gps_data_t *gpsdata, int timeout)
 {
-#ifndef USE_QT
+#ifdef USE_QT
+    return ((QTcpSocket *) (gpsdata->gps_fd))->waitForReadyRead(timeout / 1000);
+#else
     struct timespec to;
 
     libgps_debug_trace((DEBUG_CALLS, "gps_waiting(%d): %d\n",
@@ -144,35 +146,33 @@ bool gps_sock_waiting(const struct gps_data_t *gpsdata, int timeout)
     MSTOTS(&to, timeout);
     /* all error conditions return "not waiting" -- crude but effective */
     return nanowait(gpsdata->gps_fd, &to);
-#else
-    return ((QTcpSocket *) (gpsdata->gps_fd))->waitForReadyRead(timeout / 1000);
-#endif
+#endif // USE_QT
 }
 
-int gps_sock_close(struct gps_data_t *gpsdata)
 /* close a gpsd connection */
+int gps_sock_close(struct gps_data_t *gpsdata)
 {
     free(PRIVATE(gpsdata));
     gpsdata->privdata = NULL;
-#ifndef USE_QT
+#ifdef USE_QT
+    QTcpSocket *sock = (QTcpSocket *) gpsdata->gps_fd;
+    sock->disconnectFromHost();
+    delete sock;
+    gpsdata->gps_fd = NULL;
+    return 0;
+#else   // USE_QT
     int status;
 #ifdef HAVE_WINSOCK2_H
     status = closesocket(gpsdata->gps_fd);
     if (need_finish) {
       need_finish != windows_finish();
     }
-#else
+#else   // HAVE_WINSOCK2_H
     status = close(gpsdata->gps_fd);
-#endif /* HAVE_WINSOCK2_H */
+#endif  // HAVE_WINSOCK2_H
     gpsdata->gps_fd = -1;
     return status;
-#else
-    QTcpSocket *sock = (QTcpSocket *) gpsdata->gps_fd;
-    sock->disconnectFromHost();
-    delete sock;
-    gpsdata->gps_fd = NULL;
-    return 0;
-#endif
+#endif  // USE_QT
 }
 
 int gps_sock_read(struct gps_data_t *gpsdata, char *message, int message_len)
