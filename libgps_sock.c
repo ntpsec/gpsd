@@ -196,17 +196,18 @@ int gps_sock_read(struct gps_data_t *gpsdata, char *message, int message_len)
     if (*eol != '\n') {
         /* no full message found, try to fill buffer */
 
-#ifndef USE_QT
-        /* read data: return -1 if no data waiting or buffered, 0 otherwise */
-        status = (int)recv(gpsdata->gps_fd,
-               PRIVATE(gpsdata)->buffer + PRIVATE(gpsdata)->waiting,
-               sizeof(PRIVATE(gpsdata)->buffer) - PRIVATE(gpsdata)->waiting, 0);
-#else
+#ifdef USE_QT
         status =
             ((QTcpSocket *) (gpsdata->gps_fd))->read(PRIVATE(gpsdata)->buffer +
                  PRIVATE(gpsdata)->waiting,
                  sizeof(PRIVATE(gpsdata)->buffer) - PRIVATE(gpsdata)->waiting);
-#endif
+#else   // USE_QT
+        /* read data: return -1 if no data waiting or buffered, 0 otherwise */
+        status = (int)recv(gpsdata->gps_fd,
+               PRIVATE(gpsdata)->buffer + PRIVATE(gpsdata)->waiting,
+               sizeof(PRIVATE(gpsdata)->buffer) - PRIVATE(gpsdata)->waiting, 0);
+#endif  // USE_QT
+
 #ifdef HAVE_WINSOCK2_H
         int wserr = WSAGetLastError();
 #endif /* HAVE_WINSOCK2_H */
@@ -391,16 +392,7 @@ const char *gps_sock_data(const struct gps_data_t *gpsdata)
 int gps_sock_send(struct gps_data_t *gpsdata, const char *buf)
 /* send a command to the gpsd instance */
 {
-#ifndef USE_QT
-#ifdef HAVE_WINSOCK2_H
-    if (send(gpsdata->gps_fd, buf, strlen(buf), 0) == (ssize_t) strlen(buf))
-#else
-    if (write(gpsdata->gps_fd, buf, strlen(buf)) == (ssize_t) strlen(buf))
-#endif /* HAVE_WINSOCK2_H */
-        return 0;
-    else
-        return -1;
-#else
+#ifdef USE_QT
     QTcpSocket *sock = (QTcpSocket *) gpsdata->gps_fd;
     sock->write(buf, strlen(buf));
     if (sock->waitForBytesWritten())
@@ -409,7 +401,16 @@ int gps_sock_send(struct gps_data_t *gpsdata, const char *buf)
         qDebug() << "libgps::send error: " << sock->errorString();
         return -1;
     }
-#endif
+#else   // USE_QT
+#ifdef HAVE_WINSOCK2_H
+    if (send(gpsdata->gps_fd, buf, strlen(buf), 0) == (ssize_t) strlen(buf))
+#else
+    if (write(gpsdata->gps_fd, buf, strlen(buf)) == (ssize_t) strlen(buf))
+#endif /* HAVE_WINSOCK2_H */
+        return 0;
+    else
+        return -1;
+#endif  // USE_QT
 }
 
 int gps_sock_stream(struct gps_data_t *gpsdata, unsigned int flags, void *d)
@@ -469,9 +470,9 @@ int gps_sock_stream(struct gps_data_t *gpsdata, unsigned int flags, void *d)
     }
 }
 
-int gps_sock_mainloop(struct gps_data_t *gpsdata, int timeout,
-                         void (*hook)(struct gps_data_t *gpsdata))
 /* run a socket main loop with a specified handler */
+int gps_sock_mainloop(struct gps_data_t *gpsdata, int timeout,
+                      void (*hook)(struct gps_data_t *gpsdata))
 {
     for (;;) {
         if (!gps_waiting(gpsdata, timeout)) {
