@@ -3,11 +3,13 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 #include <ctype.h>
+#include <errno.h>          // for errno
 #include <fcntl.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>       // for open()
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -300,6 +302,11 @@ static void runon_test(struct map *mp)
     int nullfd = open("/dev/null", O_RDONLY);
     ssize_t st;
 
+    if (0 > nullfd) {
+        (void)fprintf(stderr, "open('/dev/null') failed! errno %d\n",
+                      errno);
+        exit(EXIT_FAILURE);
+    }
     lexer_init(&lexer);
     lexer.errout.debug = verbose;
     memcpy(lexer.inbufptr = lexer.inbuffer, mp->test, mp->testlen);
