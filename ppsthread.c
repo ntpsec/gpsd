@@ -46,7 +46,7 @@
  *
  * You cannot do PPS math with doubles
  *
- * This file is Copyright (c)2013-2019 by the GPSD project
+ * This file is Copyright 2013 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -217,8 +217,8 @@ char *pps_get_first(void)
 }
 #endif /* __linux__ */
 
-static int init_kernel_pps(struct inner_context_t *inner_context)
 /* return handle for kernel pps, or -1; requires root privileges */
+static int init_kernel_pps(struct inner_context_t *inner_context)
 {
     pps_params_t pp;
     int ret;
@@ -257,8 +257,7 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
                                  " timing will be inaccurate\n",
                                  pps_thread->devicename);
         (void)strncpy(path, pps_thread->devicename, sizeof(path)-1);
-    }
-    else {
+    } else {
         char pps_num = '\0';  /* /dev/pps[pps_num] is our device */
         size_t i;             /* to match type of globbuf.gl_pathc */
         /*
@@ -270,7 +269,7 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
         /* Attach the line PPS discipline, so no need to ldattach */
         /* This activates the magic /dev/pps0 device */
         /* Note: this ioctl() requires root, and device is a tty */
-        if ( 0 > ioctl(pps_thread->devicefd, TIOCSETD, &ldisc)) {
+        if (0 > ioctl(pps_thread->devicefd, TIOCSETD, &ldisc)) {
             char errbuf[BUFSIZ] = "unknown error";
             pps_strerror_r(errno, errbuf, sizeof(errbuf));
             pps_thread->log_hook(pps_thread, THREAD_INF,
@@ -299,7 +298,7 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
                                  "KPPS:%s checking %s, %s\n",
                                  pps_thread->devicename,
                                  globbuf.gl_pathv[i], path);
-            if ( 0 == strncmp( path, pps_thread->devicename, sizeof(path))) {
+            if (0 == strncmp( path, pps_thread->devicename, sizeof(path))) {
                 /* this is the pps we are looking for */
                 /* FIXME, now build the proper pps device path */
                 pps_num = globbuf.gl_pathv[i][28];
@@ -324,7 +323,7 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
      * do not bother to check uid, just go for the open() */
 
     ret = open(path, O_RDWR);
-    if ( 0 > ret ) {
+    if (0 > ret) {
         char errbuf[BUFSIZ] = "unknown error";
         pps_strerror_r(errno, errbuf, sizeof(errbuf));
         // sometimes geteuid)( and geteiud() are long
@@ -354,7 +353,8 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
 
     /* RFC 2783 implies the time_pps_setcap() needs priviledges *
      * keep root a tad longer just in case */
-    if ( 0 > time_pps_create(ret, (pps_handle_t *)&inner_context->kernelpps_handle )) {
+    if (0 > time_pps_create(ret,
+                            (pps_handle_t *)&inner_context->kernelpps_handle)) {
         char errbuf[BUFSIZ] = "unknown error";
         pps_strerror_r(errno, errbuf, sizeof(errbuf));
         pps_thread->log_hook(pps_thread, THREAD_INF,
@@ -403,7 +403,7 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
     }
 
     pp.mode = PPS_TSFMT_TSPEC;
-    switch ( (PPS_CAPTUREASSERT | PPS_CAPTURECLEAR) & inner_context->pps_caps ) {
+    switch ((PPS_CAPTUREASSERT | PPS_CAPTURECLEAR) & inner_context->pps_caps) {
     case PPS_CAPTUREASSERT:
         pps_thread->log_hook(pps_thread, THREAD_WARN,
                     "KPPS:%s missing PPS_CAPTURECLEAR, pulse may be offset\n",
@@ -447,9 +447,9 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
  *         0 for OK
  */
 static int get_edge_tiocmiwait( volatile struct pps_thread_t *thread_context,
-                         struct timespec *clock_ts,
-                         int *state,
-                         volatile struct timedelta_t *last_fixtime)
+                                struct timespec *clock_ts,
+                                int *state,
+                                volatile struct timedelta_t *last_fixtime)
 {
     char ts_str[TIMESPEC_LEN];
 
@@ -550,11 +550,11 @@ static int get_edge_tiocmiwait( volatile struct pps_thread_t *thread_context,
  * of jitter
  */
 static int get_edge_rfc2783(struct inner_context_t *inner_context,
-                         struct timespec *prev_clock_ts,
-                         int *prev_edge,
-                         struct timespec *clock_ts,
-                         int *edge,
-                         volatile struct timedelta_t *last_fixtime)
+                            struct timespec *prev_clock_ts,
+                            int *prev_edge,
+                            struct timespec *clock_ts,
+                            int *edge,
+                            volatile struct timedelta_t *last_fixtime)
 {
     pps_info_t pi;
     char ts_str1[TIMESPEC_LEN], ts_str2[TIMESPEC_LEN];
@@ -587,21 +587,21 @@ static int get_edge_rfc2783(struct inner_context_t *inner_context,
         memset( (void *)&kernelpps_tv, 0, sizeof(kernelpps_tv));
     }
     memset( (void *)&pi, 0, sizeof(pi)); /* paranoia */
-    if ( 0 > time_pps_fetch(inner_context->kernelpps_handle, PPS_TSFMT_TSPEC
-        , &pi, &kernelpps_tv)) {
+    if (0 > time_pps_fetch(inner_context->kernelpps_handle, PPS_TSFMT_TSPEC,
+                            &pi, &kernelpps_tv)) {
 
         char errbuf[BUFSIZ] = "unknown error";
         pps_strerror_r(errno, errbuf, sizeof(errbuf));
-        if ( ETIMEDOUT == errno || EINTR == errno ) {
+        if (ETIMEDOUT == errno || EINTR == errno) {
                 /* just a timeout */
                 thread_context->log_hook(thread_context, THREAD_INF,
-                            "KPPS:%s kernel PPS timeout %s\n",
-                            thread_context->devicename, errbuf);
+                                         "KPPS:%s kernel PPS timeout %s\n",
+                                         thread_context->devicename, errbuf);
                 return 1;
         }
         thread_context->log_hook(thread_context, THREAD_WARN,
-                    "KPPS:%s kernel PPS failed %s\n",
-                    thread_context->devicename, errbuf);
+                                 "KPPS:%s kernel PPS failed %s\n",
+                                 thread_context->devicename, errbuf);
         return 0;
     }
     if ( inner_context->pps_canwait ) {
@@ -615,23 +615,23 @@ static int get_edge_rfc2783(struct inner_context_t *inner_context,
 
 
     // find the last edge
-    if ( pi.assert_timestamp.tv_sec > pi.clear_timestamp.tv_sec ) {
+    if (pi.assert_timestamp.tv_sec > pi.clear_timestamp.tv_sec) {
         /* assert 1 sec or more after than clear */
         *edge = 1;
-    } else if ( pi.assert_timestamp.tv_sec < pi.clear_timestamp.tv_sec ) {
+    } else if (pi.assert_timestamp.tv_sec < pi.clear_timestamp.tv_sec) {
         /* assert 1 sec or more before than clear */
         *edge = 0;
-    } else if ( pi.assert_timestamp.tv_nsec > pi.clear_timestamp.tv_nsec ) {
+    } else if (pi.assert_timestamp.tv_nsec > pi.clear_timestamp.tv_nsec) {
         /* assert less than 1 sec after clear */
         *edge = 1;
     } else {
         /* assert less than 1 sec before clear */
         *edge = 0;
     }
-    if ( 1 == *edge ) {
+    if (1 == *edge) {
         /* assert after clear */
         *prev_edge = 0;
-        if ( 0 == pi.clear_timestamp.tv_sec ) {
+        if (0 == pi.clear_timestamp.tv_sec) {
                 /* brain damaged pps-gpio sometimes never fills in clear
                  * so make it look like an invisible pulse
                  * if clear is the leading edge, then we are off by the
@@ -653,14 +653,16 @@ static int get_edge_rfc2783(struct inner_context_t *inner_context,
      * accomodate Linux's type.
      */
     thread_context->log_hook(thread_context, THREAD_PROG,
-                "KPPS:%s assert %s, sequence: %lu, "
-                "clear  %s, sequence: %lu - using: %.10s\n",
-                thread_context->devicename,
-                timespec_str(&pi.assert_timestamp, ts_str1, sizeof(ts_str1)),
-                (unsigned long) pi.assert_sequence,
-                timespec_str(&pi.clear_timestamp, ts_str2, sizeof(ts_str2)),
-                (unsigned long) pi.clear_sequence,
-                *edge ? "assert" : "clear");
+                             "KPPS:%s assert %s, sequence: %lu, "
+                             "clear  %s, sequence: %lu - using: %.10s\n",
+                             thread_context->devicename,
+                             timespec_str(&pi.assert_timestamp,
+                                          ts_str1, sizeof(ts_str1)),
+                             (unsigned long) pi.assert_sequence,
+                             timespec_str(&pi.clear_timestamp,
+                                          ts_str2, sizeof(ts_str2)),
+                             (unsigned long) pi.clear_sequence,
+                             *edge ? "assert" : "clear");
 
     return 0;
 }
@@ -717,8 +719,8 @@ static void *gpsd_ppsmonitor(void *arg)
      * TIOMCIWAIT, which is linux specifix
      * RFC2783, a.k.a kernel PPS (KPPS)
      * or if KPPS is deficient a combination of the two */
-    if ( 0 > thread_context->devicefd
-      || 0 == isatty(thread_context->devicefd) ) {
+    if (0 > thread_context->devicefd ||
+        0 == isatty(thread_context->devicefd)) {
         thread_context->log_hook(thread_context, THREAD_PROG,
             "KPPS:%s gps_fd:%d not a tty, can not use TIOMCIWAIT\n",
             thread_context->devicename,
@@ -926,7 +928,7 @@ static void *gpsd_ppsmonitor(void *arg)
             break;
         }
         /*
-         * End of Stge One
+         * End of Stage One
          * we now know this about the exact moment of current pulse:
          *      GPS (real) time
          *      system (clock) time
@@ -1011,7 +1013,7 @@ static void *gpsd_ppsmonitor(void *arg)
          */
 
         log = "Unknown error";
-        if ( 0 > cycle ) {
+        if (0 > cycle) {
             log = "Rejecting negative cycle\n";
         } else if (180000 > cycle) {
             /* shorter than 200 milliSec - 10%
@@ -1121,13 +1123,13 @@ static void *gpsd_ppsmonitor(void *arg)
             /* probably should log computed offset just for grins here */
             ok = false;
             log = "missing last_fixtime\n";
-        } else if ( ok && last_second_used >= last_fixtime.real.tv_sec ) {
+        } else if (ok && last_second_used >= last_fixtime.real.tv_sec) {
             /* uh, oh, this second already handled */
             ok = false;
             log = "this second already handled\n";
         }
 
-        if ( !ok ) {
+        if (!ok) {
             /* can not use this pulse, reject and retry */
             thread_context->log_hook(thread_context, THREAD_PROG,
                         "PPS:%s %.10s ignored %.100s",
@@ -1245,8 +1247,8 @@ static void *gpsd_ppsmonitor(void *arg)
  * Entry points begin here.
  */
 
-void pps_thread_activate(volatile struct pps_thread_t *pps_thread)
 /* activate a thread to watch the device's PPS transitions */
+void pps_thread_activate(volatile struct pps_thread_t *pps_thread)
 {
     int retval;
     pthread_t pt;
@@ -1270,7 +1272,8 @@ void pps_thread_activate(volatile struct pps_thread_t *pps_thread)
                     pps_thread->devicename);
     } else {
         pps_thread->log_hook(pps_thread, THREAD_WARN,
-                    "KPPS:%s kernel PPS unavailable, PPS accuracy will suffer\n",
+                    "KPPS:%s kernel PPS unavailable, "
+                    "PPS accuracy will suffer\n",
                     pps_thread->devicename);
     }
 #else
@@ -1317,9 +1320,9 @@ void pps_thread_qErrin(volatile struct pps_thread_t *pps_thread,
     thread_unlock(pps_thread);
 }
 
-int pps_thread_ppsout(volatile struct pps_thread_t *pps_thread,
-                       volatile struct timedelta_t *td)
 /* return the delta at the time of the last PPS - only way we pass data out */
+int pps_thread_ppsout(volatile struct pps_thread_t *pps_thread,
+                      volatile struct timedelta_t *td)
 {
     volatile int ret;
 
