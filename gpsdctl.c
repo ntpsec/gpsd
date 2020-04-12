@@ -105,6 +105,13 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
+    // pacify coverity
+    len = strlen(argv[2]);
+    if (GPS_PATH_MAX <= len) {
+        (void)syslog(LOG_ERR, "invalid path '%s'", argv[2]);
+        exit(EXIT_FAILURE);
+    }
+
     if (NULL != sockenv)
         control_socket = sockenv;
     else if (0 != geteuid())
