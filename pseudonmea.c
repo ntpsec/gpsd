@@ -1,5 +1,5 @@
 /*
- * This file is Copyright (c) 2010-2018 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -84,12 +84,12 @@ static void dbl_to_str(const char *fmt, double val, char *bufp, size_t len,
                        const char *suffix)
 {
     if (0 == isfinite(val)) {
-	(void)strlcat(bufp, ",", len);
+        (void)strlcat(bufp, ",", len);
     } else {
-	str_appendf(bufp, len, fmt, val);
+        str_appendf(bufp, len, fmt, val);
     }
     if (NULL != suffix) {
-	str_appendf(bufp, len, "%s", suffix);
+        str_appendf(bufp, len, "%s", suffix);
     }
 }
 
@@ -168,7 +168,7 @@ void gpsd_position_fix_dump(struct gps_device_t *session,
         dbl_to_str("%.3f,", session->gpsdata.fix.geoid_sep, bufp, len, "M,");
         /* empty place holders for Age of correction data, and
          * Differential base station ID */
-	(void)strlcat(bufp, ",", len);
+        (void)strlcat(bufp, ",", len);
         nmea_add_checksum(bufp);
     }
 }
@@ -200,17 +200,17 @@ static void gpsd_transit_fix_dump(struct gps_device_t *session,
         time2_str[0] = '\0';
     }
     if (0 != isfinite(session->gpsdata.fix.magnetic_var)) {
-	f_str(session->gpsdata.fix.magnetic_var, "%.1f", var_str),
-	var_dir = (session->gpsdata.fix.magnetic_var > 0) ? "E" : "W";
+        f_str(session->gpsdata.fix.magnetic_var, "%.1f", var_str),
+        var_dir = (session->gpsdata.fix.magnetic_var > 0) ? "E" : "W";
     } else {
         var_str[0] = '\0';
         var_dir = "";
     }
 
     if (MODE_2D > session->gpsdata.fix.mode) {
-	valid = 'V';      // Status: Warning
+        valid = 'V';      // Status: Warning
     } else {
-	valid = 'A';      // Status: Valid
+        valid = 'A';      // Status: Valid
     }
 
     // FIXME! add in "Mode Indicator" after var_dir
