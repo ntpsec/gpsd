@@ -276,6 +276,10 @@ static void gpsd_binary_satellite_dump(struct gps_device_t *session,
             /* bad azimuth, ignore */
             continue;
         }
+        if (0 == isfinite(session->gpsdata.skyview[i].ss)) {
+            /* bad snr, ignore */
+            continue;
+        }
         if (j % 4 == 0) {
             bufp2 = bufp + strlen(bufp);
             str_appendf(bufp, len,
