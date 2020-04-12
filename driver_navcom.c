@@ -679,8 +679,8 @@ static gps_mask_t handle_0x86(struct gps_device_t *session)
 {
     size_t n, i, nsu;
     unsigned char *buf = session->lexer.outbuffer + 3;
-    size_t msg_len = (size_t) getleu16(buf, 1);
-    uint16_t week = getleu16(buf, 3);
+    unsigned msg_len = getleu16(buf, 1);
+    unsigned short week = getleu16(buf, 3);
     uint32_t tow = getleu32(buf, 5);
     uint8_t eng_status = getub(buf, 9);
     uint16_t sol_status = getleu16(buf, 10);
@@ -693,9 +693,7 @@ static gps_mask_t handle_0x86(struct gps_device_t *session)
     MSTOTS(&ts_tow, tow);
 
     /* Timestamp */
-    session->gpsdata.skyview_time = gpsd_gpstime_resolv(session,
-                                                      (unsigned short)week,
-                                                      ts_tow);
+    session->gpsdata.skyview_time = gpsd_gpstime_resolv(session, week, ts_tow);
 
     /* Give this driver a single point of truth about DOPs */
     //session->gpsdata.dop.pdop = (int)pdop / 10.0;
@@ -722,7 +720,12 @@ static gps_mask_t handle_0x86(struct gps_device_t *session)
 
     /* Satellite details */
     i = nsu = 0;
-    /* coverity_submit[tainted_data] */
+    if (298 < msg_len) {
+        /* pasify coverity
+         * msg_len = 18 + (14 * nsat)
+         * assume 20 sats max */
+        msg_len = 298;
+    }
     for (n = 17; n < msg_len; n += 14) {
         uint8_t prn, ele, ca_snr, p2_snr, log_channel, hw_channel, s, stat;
         uint16_t azm, dgps_age;
