@@ -376,8 +376,9 @@ int gps_unpack(char *buf, struct gps_data_t *gpsdata)
 
 #ifndef USE_QT
     libgps_debug_trace((DEBUG_CALLS,
-                        "final flags: (0x%04x) %s\n",
-                        gpsdata->set,gps_maskdump(gpsdata->set)));
+                        "final flags: (0x%08lx) %s\n",
+                        (unsigned long)gpsdata->set,
+                        gps_maskdump(gpsdata->set)));
 #endif
     return 0;
 }
