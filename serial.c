@@ -126,12 +126,12 @@ static sourcetype_t gpsd_classify(const char *path)
 
 #ifdef __linux__
 
-static int fusercount(const char *path)
 /* return true if any process has the specified path open */
+static int fusercount(const char *path)
 {
     DIR *procd, *fdd;
     struct dirent *procentry, *fdentry;
-    char procpath[64], fdpath[64], linkpath[64];
+    char procpath[GPS_PATH_MAX], fdpath[GPS_PATH_MAX], linkpath[GPS_PATH_MAX];
     int cnt = 0;
 
     if ((procd = opendir("/proc")) == NULL)
@@ -148,7 +148,9 @@ static int fusercount(const char *path)
             (void)strlcpy(fdpath, procpath, sizeof(fdpath));
             (void)strlcat(fdpath, fdentry->d_name, sizeof(fdpath));
             (void)memset(linkpath, '\0', sizeof(linkpath));
-            if (readlink(fdpath, linkpath, sizeof(linkpath)) == -1)
+            // readlink does not NUL terminate.
+            // pacify coverity by leaving the last NUL
+            if (readlink(fdpath, linkpath, sizeof(linkpath) - 1) == -1)
                 continue;
             if (strcmp(linkpath, path) == 0) {
                 ++cnt;
