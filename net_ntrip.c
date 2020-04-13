@@ -1,6 +1,6 @@
 /* net_ntrip.c -- gather and dispatch DGNSS data from Ntrip broadcasters
  *
- * This file is Copyright (c) 2010-2018 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -79,7 +79,7 @@ static void ntrip_str_parse(char *str, size_t len,
     s = ntrip_field_iterate(NULL, s, eol, errout);
     /* <format> */
     if ((s = ntrip_field_iterate(NULL, s, eol, errout))) {
-	if ((strcasecmp("RTCM 2", s) == 0) ||
+        if ((strcasecmp("RTCM 2", s) == 0) ||
             (strcasecmp("RTCM2", s) == 0))
             hold->format = fmt_rtcm2;
         else if (strcasecmp("RTCM 2.0", s) == 0)
@@ -465,8 +465,8 @@ close:
     return -1;
 }
 
+/* open a connection to a Ntrip broadcaster */
 int ntrip_open(struct gps_device_t *device, char *caster)
-    /* open a connection to a Ntrip broadcaster */
 {
     char *amp, *colon, *slash;
     char *auth = NULL;
@@ -476,131 +476,131 @@ int ntrip_open(struct gps_device_t *device, char *caster)
     int ret = -1;
 
     switch (device->ntrip.conn_state) {
-        case ntrip_conn_init:
-            /* this has to be done here,
-             * because it is needed for multi-stage connection */
-            device->servicetype = service_ntrip;
-            device->ntrip.works = false;
-            device->ntrip.sourcetable_parse = false;
-            device->ntrip.stream.set = false;
+    case ntrip_conn_init:
+        /* this has to be done here,
+         * because it is needed for multi-stage connection */
+        device->servicetype = service_ntrip;
+        device->ntrip.works = false;
+        device->ntrip.sourcetable_parse = false;
+        device->ntrip.stream.set = false;
 
-            if ((amp = strchr(caster, '@')) != NULL) {
-                if (((colon = strchr(caster, ':')) != NULL) && colon < amp) {
-                    auth = caster;
-                    *amp = '\0';
-                    caster = amp + 1;
-                    url = caster;
-                } else {
-                    GPSD_LOG(LOG_ERROR, &device->context->errout,
-                             "can't extract user-ID and password from %s\n",
-                             caster);
-                    device->ntrip.conn_state = ntrip_conn_err;
-                    return -1;
-                }
-            }
-            if ((slash = strchr(caster, '/')) != NULL) {
-                *slash = '\0';
-                stream = slash + 1;
+        if ((amp = strchr(caster, '@')) != NULL) {
+            if (((colon = strchr(caster, ':')) != NULL) && colon < amp) {
+                auth = caster;
+                *amp = '\0';
+                caster = amp + 1;
+                url = caster;
             } else {
-                /* TODO: add autoconnect like in dgpsip.c */
                 GPSD_LOG(LOG_ERROR, &device->context->errout,
-                         "can't extract Ntrip stream from %s\n",
+                         "can't extract user-ID and password from %s\n",
                          caster);
                 device->ntrip.conn_state = ntrip_conn_err;
                 return -1;
             }
-            if ((colon = strchr(caster, ':')) != NULL) {
-                port = colon + 1;
-                *colon = '\0';
-            }
-
-            if (NULL == url) {
-                // there was no @ in caster
-                url = caster;
-            }
-            if (!port) {
-                port = "rtcm-sc104";
-                if (!getservbyname(port, "tcp"))
-                    port = DEFAULT_RTCM_PORT;
-            }
-
-            (void)strlcpy(device->ntrip.stream.mountpoint,
-                    stream,
-                    sizeof(device->ntrip.stream.mountpoint));
-            if (auth != NULL)
-                (void)strlcpy(device->ntrip.stream.credentials,
-                              auth,
-                              sizeof(device->ntrip.stream.credentials));
-            /*
-             * Semantically url and port ought to be non-NULL by now,
-             * but just in case...this code appeases Coverity.
-             */
-            if (url != NULL)
-                (void)strlcpy(device->ntrip.stream.url,
-                              url,
-                              sizeof(device->ntrip.stream.url));
-            if (port != NULL)
-                (void)strlcpy(device->ntrip.stream.port,
-                              port,
-                              sizeof(device->ntrip.stream.port));
-
-            ret = ntrip_stream_req_probe(&device->ntrip.stream,
-                                         &device->context->errout);
-            if (ret == -1) {
-                device->ntrip.conn_state = ntrip_conn_err;
-                return -1;
-            }
-            device->gpsdata.gps_fd = ret;
-            device->ntrip.conn_state = ntrip_conn_sent_probe;
-            return ret;
-        case ntrip_conn_sent_probe:
-            ret = ntrip_sourcetable_parse(device);
-            if (ret == -1) {
-                device->ntrip.conn_state = ntrip_conn_err;
-                return -1;
-            }
-            if (ret == 0 && device->ntrip.stream.set == false) {
-                return ret;
-            }
-            (void)close(device->gpsdata.gps_fd);
-            if (ntrip_auth_encode(&device->ntrip.stream,
-                                  device->ntrip.stream.credentials,
-                                  device->ntrip.stream.authStr,
-                                  sizeof(device->ntrip.stream.authStr)) != 0) {
-                device->ntrip.conn_state = ntrip_conn_err;
-                return -1;
-            }
-            ret = ntrip_stream_get_req(&device->ntrip.stream,
-                                       &device->context->errout);
-            if (ret == -1) {
-                device->ntrip.conn_state = ntrip_conn_err;
-                return -1;
-            }
-            device->gpsdata.gps_fd = ret;
-            device->ntrip.conn_state = ntrip_conn_sent_get;
-            break;
-        case ntrip_conn_sent_get:
-            ret = ntrip_stream_get_parse(&device->ntrip.stream,
-                                         device->gpsdata.gps_fd,
-                                         &device->context->errout);
-            if (ret == -1) {
-                device->ntrip.conn_state = ntrip_conn_err;
-                return -1;
-            }
-            device->ntrip.conn_state = ntrip_conn_established;
-            device->ntrip.works = true; // we know, this worked.
-            break;
-        case ntrip_conn_established:
-        case ntrip_conn_err:
+        }
+        if ((slash = strchr(caster, '/')) != NULL) {
+            *slash = '\0';
+            stream = slash + 1;
+        } else {
+            /* TODO: add autoconnect like in dgpsip.c */
+            GPSD_LOG(LOG_ERROR, &device->context->errout,
+                     "can't extract Ntrip stream from %s\n",
+                     caster);
+            device->ntrip.conn_state = ntrip_conn_err;
             return -1;
+        }
+        if ((colon = strchr(caster, ':')) != NULL) {
+            port = colon + 1;
+            *colon = '\0';
+        }
+
+        if (NULL == url) {
+            // there was no @ in caster
+            url = caster;
+        }
+        if (!port) {
+            port = "rtcm-sc104";
+            if (!getservbyname(port, "tcp"))
+                port = DEFAULT_RTCM_PORT;
+        }
+
+        (void)strlcpy(device->ntrip.stream.mountpoint,
+                stream,
+                sizeof(device->ntrip.stream.mountpoint));
+        if (auth != NULL)
+            (void)strlcpy(device->ntrip.stream.credentials,
+                          auth,
+                          sizeof(device->ntrip.stream.credentials));
+        /*
+         * Semantically url and port ought to be non-NULL by now,
+         * but just in case...this code appeases Coverity.
+         */
+        if (url != NULL)
+            (void)strlcpy(device->ntrip.stream.url,
+                          url,
+                          sizeof(device->ntrip.stream.url));
+        if (port != NULL)
+            (void)strlcpy(device->ntrip.stream.port,
+                          port,
+                          sizeof(device->ntrip.stream.port));
+
+        ret = ntrip_stream_req_probe(&device->ntrip.stream,
+                                     &device->context->errout);
+        if (ret == -1) {
+            device->ntrip.conn_state = ntrip_conn_err;
+            return -1;
+        }
+        device->gpsdata.gps_fd = ret;
+        device->ntrip.conn_state = ntrip_conn_sent_probe;
+        return ret;
+    case ntrip_conn_sent_probe:
+        ret = ntrip_sourcetable_parse(device);
+        if (ret == -1) {
+            device->ntrip.conn_state = ntrip_conn_err;
+            return -1;
+        }
+        if (ret == 0 && device->ntrip.stream.set == false) {
+            return ret;
+        }
+        (void)close(device->gpsdata.gps_fd);
+        if (ntrip_auth_encode(&device->ntrip.stream,
+                              device->ntrip.stream.credentials,
+                              device->ntrip.stream.authStr,
+                              sizeof(device->ntrip.stream.authStr)) != 0) {
+            device->ntrip.conn_state = ntrip_conn_err;
+            return -1;
+        }
+        ret = ntrip_stream_get_req(&device->ntrip.stream,
+                                   &device->context->errout);
+        if (ret == -1) {
+            device->ntrip.conn_state = ntrip_conn_err;
+            return -1;
+        }
+        device->gpsdata.gps_fd = ret;
+        device->ntrip.conn_state = ntrip_conn_sent_get;
+        break;
+    case ntrip_conn_sent_get:
+        ret = ntrip_stream_get_parse(&device->ntrip.stream,
+                                     device->gpsdata.gps_fd,
+                                     &device->context->errout);
+        if (ret == -1) {
+            device->ntrip.conn_state = ntrip_conn_err;
+            return -1;
+        }
+        device->ntrip.conn_state = ntrip_conn_established;
+        device->ntrip.works = true; // we know, this worked.
+        break;
+    case ntrip_conn_established:
+    case ntrip_conn_err:
+        return -1;
     }
     return ret;
 }
 
+/* may be time to ship a usage report to the Ntrip caster */
 void ntrip_report(struct gps_context_t *context,
                   struct gps_device_t *gps,
                   struct gps_device_t *caster)
-    /* may be time to ship a usage report to the Ntrip caster */
 {
     static int count;
     /*
