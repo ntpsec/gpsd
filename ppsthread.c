@@ -184,15 +184,19 @@ static void thread_unlock(volatile struct pps_thread_t *pps_thread)
 
 #if defined(HAVE_SYS_TIMEPPS_H)
 #ifdef __linux__
-/* Obtain contents of specified sysfs variable; null string if failure */
+/* Obtain contents of specified sysfs variable; put in buf
+ * empty (NUL-terminated) string if failure */
 static void get_sysfs_var(const char *path, char *buf, size_t bufsize)
 {
     buf[0] = '\0';
     int fd = open(path, O_RDONLY);
-    if ( 0 <= fd ) {
-        ssize_t r = read( fd, buf, bufsize -1);
-        if ( 0 < r ) {
+    if (0 <= fd ) {
+        ssize_t r = read(fd, buf, bufsize - 1);
+        if (0 < r) {
             buf[r - 1] = '\0'; /* remove trailing \x0a */
+        } else {
+            // pacify coverity
+            buf[0] = '\0';
         }
         (void)close(fd);
     }
@@ -202,6 +206,7 @@ static void get_sysfs_var(const char *path, char *buf, size_t bufsize)
 int pps_check_fake(const char *name) {
     char path[PATH_MAX] = "";
     char buf[32];
+
     memset(buf, 0, sizeof(buf));
     snprintf(path, sizeof(path), "/sys/devices/virtual/pps/%s/name", name);
     get_sysfs_var(path, buf, sizeof(buf));
