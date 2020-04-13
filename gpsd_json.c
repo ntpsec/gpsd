@@ -9,7 +9,7 @@ of various core data structures in JSON.
 
 PERMISSIONS
   Written by Eric S. Raymond, 2009
-  This file is Copyright (c) 2010-2019 by the GPSD project
+  This file is Copyright 2010 by the GPSD project
   SPDX-License-Identifier: BSD-2-clause
 
 ***************************************************************************/
@@ -334,12 +334,12 @@ void json_tpv_dump(const gps_mask_t changed, const struct gps_device_t *session,
                     str_appendf(reply, replylen, ",\"relD\":%.3f",
                                 gpsdata->fix.NED.relPosD);
                 }
-		if (0 != isfinite(gpsdata->fix.NED.relPosH) &&
-		    0 != isfinite(gpsdata->fix.NED.relPosL)) {
-		    // 2D fix needs relN and relE
-		    str_appendf(reply, replylen, ",\"relH\":%.3f,\"relL\":%.3f",
-				gpsdata->fix.NED.relPosH,
-				gpsdata->fix.NED.relPosL);
+                if (0 != isfinite(gpsdata->fix.NED.relPosH) &&
+                    0 != isfinite(gpsdata->fix.NED.relPosL)) {
+                    // 2D fix needs relN and relE
+                    str_appendf(reply, replylen, ",\"relH\":%.3f,\"relL\":%.3f",
+                                gpsdata->fix.NED.relPosH,
+                                gpsdata->fix.NED.relPosL);
                 }
             }
             if (0 != isfinite(gpsdata->fix.NED.velN) &&
@@ -1890,6 +1890,7 @@ void json_aivdm_dump(const struct ais_t *ais,
         "Tanker - Reserved for future use",
         "Tanker - Reserved for future use",
         "Tanker - No additional information",
+        // 90
         "Other Type - all ships of this type",
         "Other Type - Hazardous category A",
         "Other Type - Hazardous category B",
@@ -1902,7 +1903,9 @@ void json_aivdm_dump(const struct ais_t *ais,
         "Other Type - no additional information",
     };
 
-#define SHIPTYPE_DISPLAY(n) (((n) < (unsigned int)NITEMS(ship_type_legends)) ? ship_type_legends[n] : "INVALID SHIP TYPE")
+#define SHIPTYPE_DISPLAY(n) (((n) < \
+                             (unsigned int)NITEMS(ship_type_legends)) ? \
+                             ship_type_legends[n] : "INVALID SHIP TYPE")
 
     static const char *station_type_legends[] = {
         "All types of mobiles",
