@@ -1893,13 +1893,18 @@ void packet_parse(struct gps_lexer_t *lexer)
         else if (lexer->state == SUPERSTAR2_RECOGNIZED) {
             unsigned a = 0, b;
             size_t n;
-            lexer->length = 4 + (size_t) lexer->inbuffer[3] + 2;
+
+            lexer->length = 4 + (size_t)lexer->inbuffer[3] + 2;
+            if (261 < lexer->length) {
+                // can't happen, pacify coverity by checking anyway.
+                lexer->length = 261;
+            }
             for (n = 0; n < lexer->length - 2; n++)
                 a += (unsigned)lexer->inbuffer[n];
             b = (unsigned)getleu16(lexer->inbuffer, lexer->length - 2);
             GPSD_LOG(LOG_IO, &lexer->errout,
                      "SuperStarII pkt dump: type %u len %u\n",
-                     lexer->inbuffer[1], (unsigned int)lexer->length);
+                     lexer->inbuffer[1], (unsigned)lexer->length);
             if (a != b) {
                 GPSD_LOG(LOG_IO, &lexer->errout,
                          "REJECT SuperStarII packet type 0x%02x"
