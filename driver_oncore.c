@@ -24,6 +24,7 @@ static unsigned char pollAs[] =
     0xff, 0xff, 0xff
 };
 static unsigned char pollAt[] = { 'A', 't', 0xff };
+static unsigned char pollAw[] = { 'A', 'w', 0xff };
 static unsigned char pollAy[] = { 'A', 'y', 0xff, 0xff, 0xff, 0xff };
 static unsigned char pollBo[] = { 'B', 'o', 0x01 };
 static unsigned char pollEn[] = {
@@ -49,6 +50,8 @@ static gps_mask_t oncore_msg_pps_offset(struct gps_device_t *, unsigned char *,
                                         size_t);
 static gps_mask_t oncore_msg_svinfo(struct gps_device_t *, unsigned char *,
                                     size_t);
+static gps_mask_t oncore_msg_time_mode(struct gps_device_t *, unsigned char *,
+                                       size_t);
 static gps_mask_t oncore_msg_time_raim(struct gps_device_t *, unsigned char *,
                                        size_t);
 static gps_mask_t oncore_msg_firmware(struct gps_device_t *, unsigned char *,
@@ -324,6 +327,7 @@ oncore_msg_navsol(struct gps_device_t *session, unsigned char *buf,
      */
     (void)oncore_control_send(session, (char *)pollAs, sizeof(pollAs));
     (void)oncore_control_send(session, (char *)pollAt, sizeof(pollAt));
+    (void)oncore_control_send(session, (char *)pollAw, sizeof(pollAw));
     (void)oncore_control_send(session, (char *)pollAy, sizeof(pollAy));
     (void)oncore_control_send(session, (char *)pollBo, sizeof(pollBo));
     (void)oncore_control_send(session, (char *)pollEn, sizeof(pollEn));
@@ -460,6 +464,29 @@ oncore_msg_svinfo(struct gps_device_t *session, unsigned char *buf,
 }
 
 /**
+ * GPS Time Mode
+ *
+ * @@AwmC<CR><LF>
+ *
+ *       m         - mode, 0=GPS, 1=UTC
+ */
+static gps_mask_t
+oncore_msg_time_mode(struct gps_device_t *session UNUSED,
+                     unsigned char *buf UNUSED, size_t data_len UNUSED)
+{
+    int time_mode;
+
+    if (data_len != 8)
+        return 0;
+
+    time_mode = (int)getub(buf, 4);
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "oncore time mode (0=GPS, 1=UTC): %d\n",time_mode);
+
+    return 0;
+}
+
+/**
  * GPS Time RAIM
  */
 static gps_mask_t
@@ -526,6 +553,8 @@ gps_mask_t oncore_dispatch(struct gps_device_t * session, unsigned char *buf,
         return 0;               /* position hold position */
     case ONCTYPE('A', 't'):
         return oncore_msg_pos_hold_mode(session, buf, len);
+    case ONCTYPE('A', 'w'):
+        return oncore_msg_time_mode(session, buf, len);
     case ONCTYPE('A', 'y'):
         return oncore_msg_pps_offset(session, buf, len);
 
