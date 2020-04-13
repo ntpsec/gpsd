@@ -2174,11 +2174,15 @@ int main(int argc, char *argv[])
         struct passwd *pw;
         struct stat stb;
 
-        /* make default devices accessible even after we drop privileges */
+        /* Make default devices accessible even after we drop privileges.
+         * Modifying file system permissions! */
         for (i = optind; i < argc; i++)
             /* coverity[toctou] */
-            if (stat(argv[i], &stb) == 0)
+            if (stat(argv[i], &stb) == 0) {
+                /* This fails if not running as root, or have group
+                 * access to the file. */
                 (void)chmod(argv[i], stb.st_mode | S_IRGRP | S_IWGRP);
+            }
         /*
          * Drop privileges.  Up to now we've been running as root.
          * Instead, set the user ID to 'nobody' (or whatever the gpsd
