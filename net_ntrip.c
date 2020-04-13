@@ -184,7 +184,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
         ssize_t rlen;
 
         memset(&buf[len], 0, (size_t) (blen - len));
-        rlen = read(fd, &buf[len], (size_t) (blen - 1 - len));
+        rlen = read(fd, &buf[len], (size_t)(blen - 1 - len));
         if (rlen == -1) {
             if (errno == EINTR) {
                 continue;
@@ -211,6 +211,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
 
         line = buf;
         rlen = len += rlen;
+        line[rlen] = '\0';      // pacify coverity that this is NUL terminated
 
         GPSD_LOG(LOG_RAW, &device->context->errout,
                  "Ntrip source table buffer %s\n", buf);
@@ -237,9 +238,10 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
             if (str_starts_with(line, NTRIP_ENDSOURCETABLE))
                 goto done;
 
-            /* coverity[string_null] - nul-terminated by previous memset */
-            if (!(eol = strstr(line, NTRIP_BR)))
+            eol = strstr(line, NTRIP_BR);
+            if (NULL == eol){
                 break;
+            }
 
             GPSD_LOG(LOG_DATA, &device->context->errout,
                      "next Ntrip source table line %s\n", line);
