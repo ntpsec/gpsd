@@ -190,18 +190,14 @@ int gps_sock_read(struct gps_data_t *gpsdata, char *message, int message_len)
     eol = PRIVATE(gpsdata)->buffer;
     eptr = eol + PRIVATE(gpsdata)->waiting;
 
-    while( (eol < eptr) && (*eol != '\n') ){
+    while ((eol < eptr) && (*eol != '\n')) {
         eol++;
     }
 
-    if (eol >= eptr){
-        eol = NULL;
-    }
-
-    if (!eol) {
+    if (eol >= eptr) {
         /* no full message found, try to fill buffer */
        if (PRIVATE(gpsdata)->waiting >=
-           (ssize_t)sizeof(PRIVATE(gpsdata)->buffer)){
+           (ssize_t)sizeof(PRIVATE(gpsdata)->buffer)) {
                /* buffer is full but still didn't get a message */
                return -1;
        }
@@ -322,15 +318,11 @@ int gps_sock_read(struct gps_data_t *gpsdata, char *message, int message_len)
         eol = PRIVATE(gpsdata)->buffer;
         eptr = eol + PRIVATE(gpsdata)->waiting;
 
-        while( (eol < eptr) && (*eol != '\n') ){
+        while ((eol < eptr) && (*eol != '\n')) {
                 eol++;
         }
 
-        if (eol >= eptr){
-                eol = NULL;
-
-        }
-        if (!eol) {
+        if (eol >= eptr) {
             /* still no full message, give up for now */
             return 0;
         }
