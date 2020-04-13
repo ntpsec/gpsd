@@ -433,24 +433,24 @@ static int ntrip_stream_get_parse(const struct ntrip_stream_t *stream,
                  dsock);
         goto close;
     }
+    buf[sizeof(buf) - 1] = '\0';   // pacify coverity about NUL-terminated.
 
     /* parse 401 Unauthorized */
-    /* coverity[string_null] - guaranteed terminated by the memset above */
-    if (strstr(buf, NTRIP_UNAUTH)!=NULL) {
+    if (NULL != strstr(buf, NTRIP_UNAUTH)) {
         GPSD_LOG(LOG_ERROR, errout,
                  "not authorized for Ntrip stream %s/%s\n", stream->url,
                  stream->mountpoint);
         goto close;
     }
     /* parse SOURCETABLE */
-    if (strstr(buf, NTRIP_SOURCETABLE)!=NULL) {
+    if (NULL != strstr(buf, NTRIP_SOURCETABLE)) {
         GPSD_LOG(LOG_ERROR, errout,
                  "Broadcaster doesn't recognize Ntrip stream %s:%s/%s\n",
                  stream->url, stream->port, stream->mountpoint);
         goto close;
     }
     /* parse ICY 200 OK */
-    if (strstr(buf, NTRIP_ICY)==NULL) {
+    if (NULL != strstr(buf, NTRIP_ICY)) {
         GPSD_LOG(LOG_ERROR, errout,
                  "Unknown reply %s from Ntrip service %s:%s/%s\n", buf,
                  stream->url, stream->port, stream->mountpoint);
