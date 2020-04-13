@@ -175,26 +175,36 @@ int gps_sock_close(struct gps_data_t *gpsdata)
 #endif  // USE_QT
 }
 
-int gps_sock_read(struct gps_data_t *gpsdata, char *message, int message_len)
 /* wait for and read data being streamed from the daemon */
+int gps_sock_read(struct gps_data_t *gpsdata, char *message, int message_len)
 {
     char *eol;
     ssize_t response_length;
     int status = -1;
+    char *eptr;
 
     errno = 0;
     gpsdata->set &= ~PACKET_SET;
 
     /* scan to find end of message (\n), or end of buffer */
-    for (eol = PRIVATE(gpsdata)->buffer;
-         eol < (PRIVATE(gpsdata)->buffer + PRIVATE(gpsdata)->waiting);
-         eol++) {
-        if ('\n' == *eol)
-            break;
+    eol = PRIVATE(gpsdata)->buffer;
+    eptr = eol + PRIVATE(gpsdata)->waiting;
+
+    while( (eol < eptr) && (*eol != '\n') ){
+        eol++;
     }
 
-    if (*eol != '\n') {
+    if (eol >= eptr){
+        eol = NULL;
+    }
+
+    if (!eol) {
         /* no full message found, try to fill buffer */
+       if (PRIVATE(gpsdata)->waiting >=
+           (ssize_t)sizeof(PRIVATE(gpsdata)->buffer)){
+               /* buffer is full but still didn't get a message */
+               return -1;
+       }
 
 #ifdef USE_QT
         status =
@@ -309,15 +319,21 @@ int gps_sock_read(struct gps_data_t *gpsdata, char *message, int message_len)
         PRIVATE(gpsdata)->waiting += status;
 
         /* there's new buffered data waiting, check for full message */
-        for (eol = PRIVATE(gpsdata)->buffer;
-             eol < (PRIVATE(gpsdata)->buffer + PRIVATE(gpsdata)->waiting);
-             eol++) {
-            if ('\n' == *eol)
-                break;
+        eol = PRIVATE(gpsdata)->buffer;
+        eptr = eol + PRIVATE(gpsdata)->waiting;
+
+        while( (eol < eptr) && (*eol != '\n') ){
+                eol++;
         }
-        if (*eol != '\n')
+
+        if (eol >= eptr){
+                eol = NULL;
+
+        }
+        if (!eol) {
             /* still no full message, give up for now */
             return 0;
+        }
     }
 
     /* eol now points to trailing \n in a full message */
@@ -329,13 +345,28 @@ int gps_sock_read(struct gps_data_t *gpsdata, char *message, int message_len)
     /* unpack the JSON message */
     status = gps_unpack(PRIVATE(gpsdata)->buffer, gpsdata);
 
-    /* why the 1? */
+    /*
+        why the 1?
+
+                |0|1|2|3|4|5| 6|7|
+                |1|2|3|4|5|6|\n|X|
+           buffer^         eol^
+
+        buffer = 0
+        eol = 6
+
+        eol-buffer = 6-0 = 6, size of the line data is 7 bytes with \n
+
+        eol-buffer+1 = 6-0+1 = 7
+
+    */
+
     response_length = eol - PRIVATE(gpsdata)->buffer + 1;
 
     /* calculate length of good data still in buffer */
     PRIVATE(gpsdata)->waiting -= response_length;
 
-    if (1 > PRIVATE(gpsdata)->waiting) {
+    if (0 >= PRIVATE(gpsdata)->waiting) {
         /* no waiting data, or overflow, clear the buffer, just in case */
         *PRIVATE(gpsdata)->buffer = '\0';
         PRIVATE(gpsdata)->waiting = 0;
