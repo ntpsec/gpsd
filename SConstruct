@@ -857,6 +857,7 @@ if cleaning or helping:
     manbuilder = False
     ncurseslibs = []
     mathlibs = []
+    xtlibs = []
     tiocmiwait = True  # For cleaning, which works on any OS
     usbflags = []
 else:
