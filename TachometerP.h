@@ -6,8 +6,8 @@
 #define _GPSD_TACHOMETERP_H_
 
 /* TachometerP.h -- Tachometer widget private data */
-#include <Tachometer.h>
 #include <X11/Xaw/SimpleP.h>
+#include "Tachometer.h"
 
 /* New fields for the Tachometer widget class record */
 typedef struct {int foo;} TachometerClassPart;

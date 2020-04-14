@@ -11,12 +11,14 @@
  */
 #include "gpsd_config.h"  /* must be before all includes */
 
-#include <TachometerP.h>
 #include <X11/IntrinsicP.h>
 #include <X11/StringDefs.h>
+#include <X11/Xlib.h>       // for XDrawLine() and XDrawLines()
 #include <math.h>
 
+#include "compiler.h"       // for UNUSED
 #include "gps.h"
+#include "TachometerP.h"
 
 #define D2R  0.0174532925199432957692369076848861271    /* radians = pi/180 */
 
