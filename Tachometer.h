@@ -1,5 +1,5 @@
 /*
- * This file is Copyright (c) 2010 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 #ifndef _GPSD_TACHOMETER_H_
@@ -50,3 +50,4 @@ typedef struct _TachometerClassRec *TachometerWidgetClass;
 typedef struct _TachometerRec      *TachometerWidget;
 
 #endif /* _GPSD_TACHOMETER_H_ */
+// vim: set expandtab shiftwidth=4

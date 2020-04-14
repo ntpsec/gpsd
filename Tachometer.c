@@ -6,19 +6,19 @@
  * Modifications : ilham@mit.edu   (July 10 '90)
  * Cleaned up and simplified by Eric S. Raymond, December 2004.
  *
- * This file is Copyright (c) 2004-2018 by the GPSD project
+ * This file is Copyright 2004 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 #include "gpsd_config.h"  /* must be before all includes */
 
+#include <TachometerP.h>
 #include <X11/IntrinsicP.h>
 #include <X11/StringDefs.h>
-#include <TachometerP.h>
 #include <math.h>
 
 #include "gps.h"
 
-#define D2R  0.0174532925199432957692369076848861271	/* radians = pi/180 */
+#define D2R  0.0174532925199432957692369076848861271    /* radians = pi/180 */
 
 /****************************************************************
  *
@@ -37,7 +37,7 @@ typedef struct
     XPoint point_list[5];
 } StringRec;
 
-/*	Number character database - like an LED */
+/*      Number character database - like an LED */
 static DigitRec num_segment[] = {
     {{1, 1, 1, 1, 1, 1, 0}},
     {{0, 1, 1, 0, 0, 0, 0}},
@@ -61,18 +61,18 @@ static XSegment offset[] = {
     {-10, 0, 10, 0}
 };
 
-/*	" X 10 %" character database	*/
+/*      " X 10 %" character database    */
 static StringRec char_data[] = {
-    {2,				/* "X" */
+    {2,                         /* "X" */
      {{-17, -5},
       {-7, 5}}},
     {2,
      {{-7, -5},
       {-17, 5}}},
-    {2,				/* "1" */
+    {2,                         /* "1" */
      {{-2, -5},
       {-2, 5}}},
-    {5,				/* "0" */
+    {5,                         /* "0" */
      {{2, -5},
       {12, -5},
       {12, 5},
@@ -120,7 +120,7 @@ static Boolean SetValues(Widget current, Widget request UNUSED, Widget new);
 TachometerClassRec tachometerClassRec = {
     {
 /* core_class fields */
-#define superclass		(&simpleClassRec)
+#define superclass              (&simpleClassRec)
      /* superclass               */ (WidgetClass) superclass,
      /* class_name               */ "Tachometer",
      /* widget_size              */ sizeof(TachometerRec),
@@ -167,57 +167,57 @@ WidgetClass tachometerWidgetClass = (WidgetClass) & tachometerClassRec;
 /* Private procedures */
 
 static void FastFillCircle(Display * d, Drawable w, GC gc,
-			   Cardinal center_x, Cardinal center_y,
-			   Cardinal radius_x, Cardinal radius_y)
+                           Cardinal center_x, Cardinal center_y,
+                           Cardinal radius_x, Cardinal radius_y)
 {
     XPoint points[360];
     Cardinal angle;
 
     for (angle = 0; angle < 360; angle++) {
-	points[angle].x = (short)(sin((double)angle * D2R) *
-				  (double)radius_x + (double)center_x);
-	points[angle].y = (short)(cos((double)angle * D2R) *
-				  (double)radius_y + (double)center_y);
+        points[angle].x = (short)(sin((double)angle * D2R) *
+                                  (double)radius_x + (double)center_x);
+        points[angle].y = (short)(cos((double)angle * D2R) *
+                                  (double)radius_y + (double)center_y);
     }
     (void)XFillPolygon(d, w, gc, points, 360, Complex, CoordModeOrigin);
 }
 
 static void DrawSingleNumber(TachometerWidget w, int which, Cardinal x,
-			     Cardinal y)
+                             Cardinal y)
 {
     XSegment segments[7];
     Cardinal nsegments, width, height, count;
 
     width = (Cardinal) ((w->core.width / 2) - w->tachometer.internal_border);
     height =
-	(Cardinal) ((w->core.height / 2) - w->tachometer.internal_border);
+        (Cardinal) ((w->core.height / 2) - w->tachometer.internal_border);
     if ((width == 0) || (height == 0))
-	return;
+        return;
 
     for (count = 0, nsegments = 0; count < 7; count++)
-	if (num_segment[which].digit[count] == 1) {
-	    segments[nsegments].x1 = (short)
-		(x + ((double)offset[count].x1 * ((double)width / 200.0)));
-	    segments[nsegments].y1 = (short)
-		(y + ((double)offset[count].y1 * ((double)height / 200.0)));
-	    segments[nsegments].x2 = (short)
-		(x + ((double)offset[count].x2 * ((double)width / 200.0)));
-	    segments[nsegments].y2 = (short)
-		(y + ((double)offset[count].y2 * ((double)height / 200.0)));
-	    nsegments++;
-	}
+        if (num_segment[which].digit[count] == 1) {
+            segments[nsegments].x1 = (short)
+                (x + ((double)offset[count].x1 * ((double)width / 200.0)));
+            segments[nsegments].y1 = (short)
+                (y + ((double)offset[count].y1 * ((double)height / 200.0)));
+            segments[nsegments].x2 = (short)
+                (x + ((double)offset[count].x2 * ((double)width / 200.0)));
+            segments[nsegments].y2 = (short)
+                (y + ((double)offset[count].y2 * ((double)height / 200.0)));
+            nsegments++;
+        }
 
     (void)XDrawSegments(XtDisplay(w), XtWindow(w),
-			w->tachometer.scale_GC, segments, (int)nsegments);
+                        w->tachometer.scale_GC, segments, (int)nsegments);
 }
 
 static void DrawNumbers(TachometerWidget w, int which, Cardinal x, Cardinal y)
 {
     if (which == 10) {
-	DrawSingleNumber(w, 1, (Cardinal) ((double)x * 0.9), y);
-	DrawSingleNumber(w, 0, x, y);
+        DrawSingleNumber(w, 1, (Cardinal) ((double)x * 0.9), y);
+        DrawSingleNumber(w, 0, x, y);
     } else
-	DrawSingleNumber(w, which, x, y);
+        DrawSingleNumber(w, which, x, y);
 }
 
 static void DrawLabelString(TachometerWidget w)
@@ -232,22 +232,22 @@ static void DrawLabelString(TachometerWidget w)
     radius_x = center_x - w->tachometer.internal_border;
     radius_y = center_y - w->tachometer.internal_border;
     if (!(center_x != 0 && center_y != 0 && (radius_x > 0) && (radius_y > 0)))
-	return;
+        return;
 
     ry = (Cardinal) (radius_y * 0.35 + center_y);
     gc = w->tachometer.scale_GC;
     for (char_count = 0; char_count < 4; char_count++) {
-	for (data_count = 0; data_count < char_data[char_count].nofline;
-	     data_count++) {
-	    points[data_count].x = (short)
-		((char_data[char_count].point_list[data_count].x) *
-		 (double)radius_x * 0.01 + center_x);
-	    points[data_count].y = (short)
-		((char_data[char_count].point_list[data_count].y) *
-		 (double)radius_y * 0.01 + ry);
-	}
-	(void)XDrawLines(XtDisplay(w), XtWindow(w), gc, points,
-			 char_data[char_count].nofline, CoordModeOrigin);
+        for (data_count = 0; data_count < char_data[char_count].nofline;
+             data_count++) {
+            points[data_count].x = (short)
+                ((char_data[char_count].point_list[data_count].x) *
+                 (double)radius_x * 0.01 + center_x);
+            points[data_count].y = (short)
+                ((char_data[char_count].point_list[data_count].y) *
+                 (double)radius_y * 0.01 + ry);
+        }
+        (void)XDrawLines(XtDisplay(w), XtWindow(w), gc, points,
+                         char_data[char_count].nofline, CoordModeOrigin);
     }
 }
 
@@ -264,45 +264,45 @@ static void DrawGauge(TachometerWidget w)
     radius_x = center_x - w->tachometer.internal_border;
     radius_y = center_y - w->tachometer.internal_border;
     if ((center_x == 0) || (center_y == 0) || (radius_x <= 0)
-	|| (radius_y <= 0))
-	return;			/* Can't draw anything */
+        || (radius_y <= 0))
+        return;                 /* Can't draw anything */
 
     gc = w->tachometer.scale_GC;
     for (step = 330.0; step >= 30.0; step -= jump) {
-	if ((Cardinal) (step) % 30 == 0) {
-	    points[0].x =
-		sin((step + 1.0) * D2R) * radius_x * 0.75 + center_x;
-	    points[0].y =
-		cos((step + 1.0) * D2R) * radius_y * 0.75 + center_y;
-	    points[1].x =
-		sin((step - 1.0) * D2R) * radius_x * 0.75 + center_x;
-	    points[1].y =
-		cos((step - 1.0) * D2R) * radius_y * 0.75 + center_y;
-	    points[2].x =
-		sin((step - 1.0) * D2R) * radius_x * 0.85 + center_x;
-	    points[2].y =
-		cos((step - 1.0) * D2R) * radius_y * 0.85 + center_y;
-	    points[3].x =
-		sin((step + 1.0) * D2R) * radius_x * 0.85 + center_x;
-	    points[3].y =
-		cos((step + 1.0) * D2R) * radius_y * 0.85 + center_y;
-	    (void)XFillPolygon(XtDisplay(w), XtWindow(w), gc, points, 4,
-			       Complex, CoordModeOrigin);
+        if ((Cardinal) (step) % 30 == 0) {
+            points[0].x =
+                sin((step + 1.0) * D2R) * radius_x * 0.75 + center_x;
+            points[0].y =
+                cos((step + 1.0) * D2R) * radius_y * 0.75 + center_y;
+            points[1].x =
+                sin((step - 1.0) * D2R) * radius_x * 0.75 + center_x;
+            points[1].y =
+                cos((step - 1.0) * D2R) * radius_y * 0.75 + center_y;
+            points[2].x =
+                sin((step - 1.0) * D2R) * radius_x * 0.85 + center_x;
+            points[2].y =
+                cos((step - 1.0) * D2R) * radius_y * 0.85 + center_y;
+            points[3].x =
+                sin((step + 1.0) * D2R) * radius_x * 0.85 + center_x;
+            points[3].y =
+                cos((step + 1.0) * D2R) * radius_y * 0.85 + center_y;
+            (void)XFillPolygon(XtDisplay(w), XtWindow(w), gc, points, 4,
+                               Complex, CoordModeOrigin);
 
-	    number_x = sin((step + 1.0) * D2R) * radius_x * 0.65 + center_x;
-	    number_y = cos((step + 1.0) * D2R) * radius_y * 0.65 + center_y;
-	    if ((int)((330.0 - step) / 30.0) == 1)
-		jump = 3.0;
-	    DrawNumbers(w, (unsigned char)((330.0 - step) / 30.0),
-			number_x, number_y);
-	} else {
-	    in_gauge_x = sin(step * D2R) * radius_x * 0.8 + center_x;
-	    in_gauge_y = cos(step * D2R) * radius_y * 0.8 + center_y;
-	    out_gauge_x = sin(step * D2R) * radius_x * 0.85 + center_x;
-	    out_gauge_y = cos(step * D2R) * radius_y * 0.85 + center_y;
-	    (void)XDrawLine(XtDisplay(w), XtWindow(w), gc, in_gauge_x,
-			    in_gauge_y, out_gauge_x, out_gauge_y);
-	}
+            number_x = sin((step + 1.0) * D2R) * radius_x * 0.65 + center_x;
+            number_y = cos((step + 1.0) * D2R) * radius_y * 0.65 + center_y;
+            if ((int)((330.0 - step) / 30.0) == 1)
+                jump = 3.0;
+            DrawNumbers(w, (unsigned char)((330.0 - step) / 30.0),
+                        number_x, number_y);
+        } else {
+            in_gauge_x = sin(step * D2R) * radius_x * 0.8 + center_x;
+            in_gauge_y = cos(step * D2R) * radius_y * 0.8 + center_y;
+            out_gauge_x = sin(step * D2R) * radius_x * 0.85 + center_x;
+            out_gauge_y = cos(step * D2R) * radius_y * 0.85 + center_y;
+            (void)XDrawLine(XtDisplay(w), XtWindow(w), gc, in_gauge_x,
+                            in_gauge_y, out_gauge_x, out_gauge_y);
+        }
     }
 
     DrawLabelString(w);
@@ -319,8 +319,8 @@ static void DrawNeedle(TachometerWidget w, int load)
     radius_x = center_x - w->tachometer.internal_border;
     radius_y = center_y - w->tachometer.internal_border;
     if ((center_x == 0) || (center_y == 0) || (radius_x <= 0)
-	|| (radius_y <= 0))
-	return;			/* can't draw anything */
+        || (radius_y <= 0))
+        return;                 /* can't draw anything */
 
     cur_theta1 = (double)(330 - (load * 3)) * D2R;
     cur_theta2 = (double)(330 - (load * 3) + 1) * D2R;
@@ -342,7 +342,7 @@ static void DrawNeedle(TachometerWidget w, int load)
     points[5].y = points[0].y;
 
     (void)XDrawLines(XtDisplay(w), XtWindow(w),
-		     w->tachometer.needle_GC, points, 6, CoordModeOrigin);
+                     w->tachometer.needle_GC, points, 6, CoordModeOrigin);
 }
 
 static void DrawTachometer(TachometerWidget w)
@@ -354,20 +354,20 @@ static void DrawTachometer(TachometerWidget w)
     radius_x = center_x - w->tachometer.internal_border;
     radius_y = center_y - w->tachometer.internal_border;
     if ((center_x == 0) || (center_y == 0) || (radius_x <= 0)
-	|| (radius_y <= 0))
-	return;			/* Can't draw anything -- no room */
+        || (radius_y <= 0))
+        return;                 /* Can't draw anything -- no room */
 
     /* Big circle */
     FastFillCircle(XtDisplay(w), XtWindow(w), w->tachometer.circle_GC,
-		   center_x, center_y, radius_x, radius_y);
+                   center_x, center_y, radius_x, radius_y);
     /* Inner circle same color as the background */
     FastFillCircle(XtDisplay(w), XtWindow(w), w->tachometer.background_GC,
-		   center_x, center_y, (Cardinal) (radius_x * 0.95),
-		   (Cardinal) (radius_y * 0.95));
+                   center_x, center_y, (Cardinal) (radius_x * 0.95),
+                   (Cardinal) (radius_y * 0.95));
     /* Small circle */
     FastFillCircle(XtDisplay(w), XtWindow(w), w->tachometer.circle_GC,
-		   center_x, center_y, (Cardinal) (radius_x * 0.1),
-		   (Cardinal) (radius_y * 0.1));
+                   center_x, center_y, (Cardinal) (radius_x * 0.1),
+                   (Cardinal) (radius_y * 0.1));
     /* Draw the details */
     DrawGauge(w);
     DrawNeedle(w, w->tachometer.value);
@@ -379,28 +379,28 @@ static void MoveNeedle(TachometerWidget w, int new)
 
     old = w->tachometer.value;
     if (new > 100)
-	new = 100;
+        new = 100;
     if (old == new)
-	return;
+        return;
     else if (old < new)
-	step = (w->tachometer.speed ? w->tachometer.speed : new - old);
+        step = (w->tachometer.speed ? w->tachometer.speed : new - old);
     else
-	step = (w->tachometer.speed ? -w->tachometer.speed : new - old);
+        step = (w->tachometer.speed ? -w->tachometer.speed : new - old);
 
     if (old < new) {
-	for (loop = old; loop < new; loop += step)
-	    DrawNeedle(w, loop);
-	for (loop = old + step; loop <= new; loop += step)
-	    DrawNeedle(w, loop);
+        for (loop = old; loop < new; loop += step)
+            DrawNeedle(w, loop);
+        for (loop = old + step; loop <= new; loop += step)
+            DrawNeedle(w, loop);
     } else {
-	for (loop = old; loop > new; loop += step)
-	    DrawNeedle(w, loop);
-	for (loop = old + step; loop >= new; loop += step)
-	    DrawNeedle(w, loop);
+        for (loop = old; loop > new; loop += step)
+            DrawNeedle(w, loop);
+        for (loop = old + step; loop >= new; loop += step)
+            DrawNeedle(w, loop);
     }
 
-    if (loop != new + step)	/* The final needle wasn't printed */
-	DrawNeedle(w, new);
+    if (loop != new + step)     /* The final needle wasn't printed */
+        DrawNeedle(w, new);
 
     w->tachometer.value = new;
 }
@@ -413,8 +413,8 @@ static void GetneedleGC(TachometerWidget ta)
     values.foreground = ta->tachometer.needle ^ ta->core.background_pixel;
     values.function = GXxor;
     ta->tachometer.needle_GC = XtGetGC((Widget) ta,
-				       (unsigned)GCFunction | GCBackground |
-				       GCForeground, &values);
+                                       (unsigned)GCFunction | GCBackground |
+                                       GCForeground, &values);
 }
 
 static void GetscaleGC(TachometerWidget ta)
@@ -424,8 +424,8 @@ static void GetscaleGC(TachometerWidget ta)
     values.foreground = ta->tachometer.scale;
     values.background = ta->core.background_pixel;
     ta->tachometer.scale_GC = XtGetGC((Widget) ta,
-				      (unsigned)GCForeground | GCBackground,
-				      &values);
+                                      (unsigned)GCForeground | GCBackground,
+                                      &values);
 }
 
 static void GetcircleGC(TachometerWidget ta)
@@ -435,8 +435,8 @@ static void GetcircleGC(TachometerWidget ta)
     values.foreground = ta->tachometer.circle;
     values.background = ta->core.background_pixel;
     ta->tachometer.circle_GC = XtGetGC((Widget) ta,
-				       (unsigned)GCForeground | GCBackground,
-				       &values);
+                                       (unsigned)GCForeground | GCBackground,
+                                       &values);
 }
 
 static void GetbackgroundGC(TachometerWidget ta)
@@ -446,8 +446,8 @@ static void GetbackgroundGC(TachometerWidget ta)
     values.foreground = ta->core.background_pixel;
     values.background = ta->core.background_pixel;
     ta->tachometer.background_GC = XtGetGC((Widget) ta,
-					   (unsigned)GCForeground |
-					   GCBackground, &values);
+                                           (unsigned)GCForeground |
+                                           GCBackground, &values);
 }
 
 static void Initialize(Widget request UNUSED, Widget new)
@@ -459,46 +459,46 @@ static void Initialize(Widget request UNUSED, Widget new)
     GetscaleGC(ta);
     GetbackgroundGC(ta);
     ta->tachometer.width = ta->tachometer.height = 0;
-}				/* Initialize */
+}                               /* Initialize */
 
 static void Realize(Widget w, Mask * valueMask,
-		    XSetWindowAttributes * attributes)
+                    XSetWindowAttributes * attributes)
 {
     *valueMask |= CWBitGravity;
     attributes->bit_gravity = NorthWestGravity;
     (*superclass->core_class.realize) (w, valueMask, attributes);
-}				/* Realize */
+}                               /* Realize */
 
 static void Redisplay(Widget w, XEvent * event, Region region UNUSED)
 {
     if (event->xexpose.count == 0)
-	DrawTachometer((TachometerWidget) w);
-}				/* Redisplay */
+        DrawTachometer((TachometerWidget) w);
+}                               /* Redisplay */
 
 static void Resize(Widget w)
 {
     TachometerWidget ta = (TachometerWidget) w;
 
     if ((ta->core.width == ta->tachometer.width) &&
-	(ta->core.height == ta->tachometer.height))
-	/* What resize?  We don't see a resize! */
-	return;
+        (ta->core.height == ta->tachometer.height))
+        /* What resize?  We don't see a resize! */
+        return;
 
     (void)XClearWindow(XtDisplay(w), XtWindow(w));
 
     if ((ta->core.width <= ta->tachometer.width) &&
-	(ta->core.height <= ta->tachometer.height))
-	/* Only redraw here if no expose events are going to be */
-	/* generated, i.e. if the window has not grown horizontally */
-	/* or vertically. */
-	DrawTachometer(ta);
+        (ta->core.height <= ta->tachometer.height))
+        /* Only redraw here if no expose events are going to be */
+        /* generated, i.e. if the window has not grown horizontally */
+        /* or vertically. */
+        DrawTachometer(ta);
 
     ta->tachometer.width = ta->core.width;
     ta->tachometer.height = ta->core.height;
-}				/* Resize */
+}                               /* Resize */
 
-static Boolean SetValues(Widget current, Widget request UNUSED, Widget new)
 /* Set specified arguments into widget */
+static Boolean SetValues(Widget current, Widget request UNUSED, Widget new)
 {
     Boolean back, changed = (Boolean) False;
 
@@ -507,28 +507,28 @@ static Boolean SetValues(Widget current, Widget request UNUSED, Widget new)
 
     back = (curta->core.background_pixel != newta->core.background_pixel);
     if (back || (curta->tachometer.needle != newta->tachometer.needle)) {
-	(void)XtReleaseGC(new, newta->tachometer.needle_GC);
-	GetneedleGC(newta);
-	changed = True;
+        (void)XtReleaseGC(new, newta->tachometer.needle_GC);
+        GetneedleGC(newta);
+        changed = True;
     }
     if (back || (curta->tachometer.scale != newta->tachometer.scale)) {
-	(void)XtReleaseGC(new, newta->tachometer.scale_GC);
-	GetscaleGC(newta);
-	changed = True;
+        (void)XtReleaseGC(new, newta->tachometer.scale_GC);
+        GetscaleGC(newta);
+        changed = True;
     }
     if (back || (curta->tachometer.circle != newta->tachometer.circle)) {
-	(void)XtReleaseGC(new, newta->tachometer.circle_GC);
-	GetcircleGC(newta);
-	changed = True;
+        (void)XtReleaseGC(new, newta->tachometer.circle_GC);
+        GetcircleGC(newta);
+        changed = True;
     }
     if (back) {
-	(void)XtReleaseGC(new, newta->tachometer.background_GC);
-	GetbackgroundGC(newta);
-	changed = True;
+        (void)XtReleaseGC(new, newta->tachometer.background_GC);
+        GetbackgroundGC(newta);
+        changed = True;
     }
     if (curta->tachometer.value != newta->tachometer.value) {
-	MoveNeedle(newta, newta->tachometer.value);
-	changed = True;
+        MoveNeedle(newta, newta->tachometer.value);
+        changed = True;
     }
 
     return (changed);
@@ -562,3 +562,4 @@ int TachometerSetValue(Widget w, int i)
     MoveNeedle(ta, i);
     return (old);
 }
+// vim: set expandtab shiftwidth=4
