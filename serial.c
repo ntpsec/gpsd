@@ -134,25 +134,28 @@ static int fusercount(const char *path)
     char procpath[GPS_PATH_MAX], fdpath[GPS_PATH_MAX], linkpath[GPS_PATH_MAX];
     int cnt = 0;
 
-    if ((procd = opendir("/proc")) == NULL)
+    if (NULL == (procd = opendir("/proc")))
         return -1;
-    while ((procentry = readdir(procd)) != NULL) {
-        if (isdigit(procentry->d_name[0])==0)
+    while (NULL != (procentry = readdir(procd))) {
+        if (0 == isdigit(procentry->d_name[0]))
             continue;
         /* longest procentry->d_name I could find was 12 */
         (void)snprintf(procpath, sizeof(procpath),
                        "/proc/%.20s/fd/", procentry->d_name);
-        if ((fdd = opendir(procpath)) == NULL)
+        if (NULL == (fdd = opendir(procpath)))
             continue;
-        while ((fdentry = readdir(fdd)) != NULL) {
+        while (NULL != (fdentry = readdir(fdd))) {
+            ssize_t rd;
+
             (void)strlcpy(fdpath, procpath, sizeof(fdpath));
             (void)strlcat(fdpath, fdentry->d_name, sizeof(fdpath));
-            (void)memset(linkpath, '\0', sizeof(linkpath));
             // readlink does not NUL terminate.
-            // pacify coverity by leaving the last NUL
-            if (readlink(fdpath, linkpath, sizeof(linkpath) - 1) == -1)
+            rd = readlink(fdpath, linkpath, sizeof(linkpath) - 1);
+            if (0 > rd)
                 continue;
-            if (strcmp(linkpath, path) == 0) {
+            // pacify coverity by setting NUL
+            linkpath[rd] = '\0';
+            if (0 == strcmp(linkpath, path)) {
                 ++cnt;
             }
         }
