@@ -2177,7 +2177,11 @@ int main(int argc, char *argv[])
         /* Make default devices accessible even after we drop privileges.
          * Modifying file system permissions! */
         for (i = optind; i < argc; i++)
-            /* coverity[toctou] */
+            if (GPS_PATH_MAX < strlen(argv[i])) {
+               // pacify coverity
+               GPSD_LOG(LOG_ERROR, &context.errout,
+                        "Over long device path %s\n", argv[i]);
+            }
             if (stat(argv[i], &stb) == 0) {
                 /* This fails if not running as root, or have group
                  * access to the file. */
