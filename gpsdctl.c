@@ -120,7 +120,6 @@ int main(int argc, char *argv[])
     if (NULL != optenv)
         gpsd_options = optenv;
 
-    /* coverity[string_size] */
     if (0 > gpsd_control(argv[1], argv[2]))
         exit(EXIT_FAILURE);
 
