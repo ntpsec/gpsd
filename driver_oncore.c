@@ -244,13 +244,17 @@ oncore_msg_navsol(struct gps_device_t *session, unsigned char *buf,
              lat, lon, alt, speed, track,
              (float)dop);
 
-    session->newdata.latitude = lat;
-    session->newdata.longitude = lon;
-    session->newdata.altHAE = alt;  /* is WGS84 */
-    session->newdata.speed = speed;
-    session->newdata.track = track;
-
-    mask |= LATLON_SET | ALTITUDE_SET | SPEED_SET | TRACK_SET;
+    if (MODE_2D <= session->newdata.mode) {
+        session->newdata.latitude = lat;
+        session->newdata.longitude = lon;
+        session->newdata.speed = speed;
+        session->newdata.track = track;
+        mask |= LATLON_SET | SPEED_SET | TRACK_SET;
+    }
+    if (MODE_3D <= session->newdata.mode) {
+        session->newdata.altHAE = alt;  /* is WGS84 */
+        mask |= ALTITUDE_SET;
+    }
 
     gpsd_zero_satellites(&session->gpsdata);
     /* Merge the satellite information from the Bb message. */
