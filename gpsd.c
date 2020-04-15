@@ -2176,7 +2176,7 @@ int main(int argc, char *argv[])
 
         /* Make default devices accessible even after we drop privileges.
          * Modifying file system permissions! */
-        for (i = optind; i < argc; i++)
+        for (i = optind; i < argc; i++) {
             if (GPS_PATH_MAX < strlen(argv[i])) {
                // pacify coverity
                GPSD_LOG(LOG_ERROR, &context.errout,
@@ -2187,6 +2187,7 @@ int main(int argc, char *argv[])
                  * access to the file. */
                 (void)chmod(argv[i], stb.st_mode | S_IRGRP | S_IWGRP);
             }
+        }
         /*
          * Drop privileges.  Up to now we've been running as root.
          * Instead, set the user ID to 'nobody' (or whatever the gpsd
