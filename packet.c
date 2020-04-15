@@ -253,6 +253,13 @@ static void character_discard(struct gps_lexer_t *lexer)
     }
 }
 
+/* get 0-origin big-endian words relative to start of packet buffer
+ * used for Zodiac */
+#define getzuword(i) (unsigned)(lexer->inbuffer[2*(i)] | \
+                                (lexer->inbuffer[2*(i)+1] << 8))
+#define getzword(i) (short)(lexer->inbuffer[2*(i)] | \
+                           (lexer->inbuffer[2*(i)+1] << 8))
+
 static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
 {
     static int n = 0;
@@ -1195,22 +1202,19 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         break;
     case ZODIAC_HSUM_1:
     {
-#define getword(i) (short)(lexer->inbuffer[2*(i)] | \
-                           (lexer->inbuffer[2*(i)+1] << 8))
-        short sum = getword(0) + getword(1) + getword(2) + getword(3);
+        short sum = getzword(0) + getzword(1) + getzword(2) + getzword(3);
         sum *= -1;
-        if (sum != getword(4)) {
+        if (sum != getzword(4)) {
             GPSD_LOG(LOG_IO, &lexer->errout,
-                     "Zodiac Header checksum 0x%hx expecting 0x%hx\n",
-                     sum, getword(4));
+                     "Zodiac Header checksum 0x%x expecting 0x%x\n",
+                     sum, getzword(4));
             lexer->state = GROUND_STATE;
             break;
         }
     }
         GPSD_LOG(LOG_RAW + 1, &lexer->errout,
-                 "Zodiac header id=%hd len=%hd flags=%hx\n",
-                 getword(1), getword(2), getword(3));
-#undef getword
+                 "Zodiac header id=%u len=%u flags=%x\n",
+                 getzuword(1), getzuword(2), getzuword(3));
         if (lexer->length == 0) {
             lexer->state = ZODIAC_RECOGNIZED;
             break;
@@ -1728,10 +1732,6 @@ static void packet_unstash(struct gps_lexer_t *lexer)
     }
 }
 #endif /* STASH_ENABLE */
-
-/* get 0-origin big-endian words relative to start of packet buffer */
-#define getword(i) (short)(lexer->inbuffer[2*(i)] | \
-                           (lexer->inbuffer[2*(i)+1] << 8))
 
 /* entry points begin here */
 
@@ -2253,18 +2253,25 @@ void packet_parse(struct gps_lexer_t *lexer)
 #endif /* RTCM104V3_ENABLE */
 #ifdef ZODIAC_ENABLE
         else if (lexer->state == ZODIAC_RECOGNIZED) {
-            short len, n, sum;
-            len = getword(2);
+            unsigned len, n;
+            short sum;
+
+            // be paranoid, look ahead for a good checksum
+            len = getzuword(2);
+            if (253 < len) {
+                // pacify coverity, 253 seems to be max length
+                len = 253;
+            }
             for (n = sum = 0; n < len; n++)
-                sum += getword(5 + n);
+                sum += getzword(5 + n);
             sum *= -1;
-            if (len == 0 || sum == getword(5 + len)) {
+            if (len == 0 || sum == getzword(5 + len)) {
                 packet_accept(lexer, ZODIAC_PACKET);
             } else {
                 GPSD_LOG(LOG_IO, &lexer->errout,
-                         "Zodiac data checksum 0x%hx over length %hd, "
-                         "expecting 0x%hx\n",
-                         sum, len, getword(5 + len));
+                         "Zodiac data checksum 0x%x over length %u, "
+                         "expecting 0x%x\n",
+                         sum, len, getzword(5 + len));
                 packet_accept(lexer, BAD_PACKET);
                 lexer->state = GROUND_STATE;
             }
@@ -2513,8 +2520,6 @@ void packet_parse(struct gps_lexer_t *lexer)
 #endif /* STASH_ENABLE */
     }                           /* while */
 }
-
-#undef getword
 
 ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
 /* grab a packet; return -1=>I/O error, 0=>EOF, or a length */
