@@ -1096,15 +1096,6 @@ else:
     else:
         confdefs.append("/* #undef HAVE_LIBTHR */\n")
 
-    # Tachometer needs -lXt
-    if config.CheckLib('libXt'):
-        confdefs.append("#define HAVE_LIBXT 1\n")
-        # no special flags
-        xtlibs = ["-lXt", "-lX11"]
-    else:
-        confdefs.append("/* #undef HAVE_LIBXT */\n")
-        xtlibs = []
-
     if config.env['dbus_export'] and config.CheckPKG('dbus-1'):
         confdefs.append("#define HAVE_DBUS 1\n")
         dbusflags = pkg_config("dbus-1")
@@ -1793,9 +1784,6 @@ ntpshmmon = env.Program('ntpshmmon', ['ntpshmmon.c'],
 ppscheck = env.Program('ppscheck', ['ppscheck.c'],
                        LIBS=['gps_static'],
                        parse_flags=gpsflags)
-Tachometer = env.Program('Tachometer', ['Tachometer.c'],
-                         # LIBS=['gps_static'],
-                         parse_flags=gpsflags + xtlibs)
 
 bin_binaries = []
 sbin_binaries = []
