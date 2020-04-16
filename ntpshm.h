@@ -1,5 +1,5 @@
 /*
- * This file is Copyright (c) 2015 by the GPSD project
+ * This file is Copyright 2015 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -12,7 +12,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
-#define NTPD_BASE	0x4e545030	/* "NTP0" */
+#define NTPD_BASE       0x4e545030      /* "NTP0" */
 
 /*
  * How to read and write fields in an NTP shared segment.
@@ -22,30 +22,30 @@
  * nsamples is internal to the (obsolete and deprecated) EES M201
  * receiver refclock. The precision field is nominally log(2) of the
  * source's jitter in seconds:
- * 	-1 is about 100mSec jitter
- *	-10 is about 1 mSec jitter (GR-601W or other USB with 1ms poll interval)
- *	-13 is about 100 uSec
- *	-20 is about 1 uSec (typical for serial PPS)
+ *      -1 is about 100mSec jitter
+ *      -10 is about 1 mSec jitter (GR-601W or other USB with 1ms poll interval)
+ *      -13 is about 100 uSec
+ *      -20 is about 1 uSec (typical for serial PPS)
  */
 
 struct shmTime
 {
-    int mode;	/* 0 - if valid set
-		 *       use values,
-		 *       clear valid
-		 * 1 - if valid set
-		 *       if count before and after read of values is equal,
-		 *         use values
-		 *       clear valid
-		 */
+    int mode;   /* 0 - if valid set
+                 *       use values,
+                 *       clear valid
+                 * 1 - if valid set
+                 *       if count before and after read of values is equal,
+                 *         use values
+                 *       clear valid
+                 */
     volatile int count;
     time_t clockTimeStampSec;
     int clockTimeStampUSec;
     time_t receiveTimeStampSec;
     int receiveTimeStampUSec;
-    int leap;			/* not leapsecond offset, a notification code */
-    int precision;		/* log(2) of source jitter */
-    int nsamples;		/* not used */
+    int leap;                   /* not leapsecond offset, a notification code */
+    int precision;              /* log(2) of source jitter */
+    int nsamples;               /* not used */
     volatile int valid;
     unsigned        clockTimeStampNSec;     /* Unsigned ns timestamps */
     unsigned        receiveTimeStampNSec;   /* Unsigned ns timestamps */
@@ -70,8 +70,8 @@ struct shm_stat_t {
 #ifndef TIMEDELTA_DEFINED
 
 struct timedelta_t {
-    struct timespec	real;
-    struct timespec	clock;
+    struct timespec     real;
+    struct timespec     clock;
 };
 
 #define TIMEDELTA_DEFINED
@@ -85,3 +85,4 @@ void ntp_write(volatile struct shmTime *, struct timedelta_t *, int, int);
 #endif /* GPSD_NTPSHM_H */
 
 /* end */
+// vim: set expandtab shiftwidth=4
