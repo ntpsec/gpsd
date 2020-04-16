@@ -127,6 +127,7 @@ class gpscommon(object):
                     sys.stderr.write("poll: partial message: returning 0.\n")
                 # Read succeeded, but only got a fragment
                 self.response = ''  # Don't duplicate last response
+                self.bresponse = ''  # Don't duplicate last response
                 return 0
         else:
             if self.verbose > 1:
