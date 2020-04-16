@@ -1,5 +1,5 @@
 /*
- * This file is Copyright (c) 2011 by Eckhart Wörner
+ * This file is Copyright 2011 by Eckhart Wörner
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -11,3 +11,4 @@
 int sd_get_socket_count(void);
 
 #endif
+// vim: set expandtab shiftwidth=4
