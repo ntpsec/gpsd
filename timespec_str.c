@@ -3,7 +3,7 @@
  * newer features (like clock_gettime).  See the POSIX spec for more info:
  * http://pubs.opengroup.org/onlinepubs/9699919799/functions/V2_chap02.html#tag_15_02_01_02
  *
- * This file is Copyright (c) 2010-2018 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -57,3 +57,4 @@ const char *timespec_str(const struct timespec *ts, char *buf, size_t buf_size)
 }
 
 /* end */
+// vim: set expandtab shiftwidth=4

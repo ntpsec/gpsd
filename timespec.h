@@ -1,5 +1,5 @@
 /*
- * This file is Copyright (c) 2015 by the GPSD project
+ * This file is Copyright 2015 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -21,9 +21,9 @@
  *
  * NOTE: this normalization is not the same as ntpd uses
  */
-#define NS_IN_SEC	1000000000LL     /* nanoseconds in a second */
-#define US_IN_SEC	1000000LL        /* microseconds in a second */
-#define MS_IN_SEC	1000LL           /* milliseconds in a second */
+#define NS_IN_SEC       1000000000LL     /* nanoseconds in a second */
+#define US_IN_SEC       1000000LL        /* microseconds in a second */
+#define MS_IN_SEC       1000LL           /* milliseconds in a second */
 
 /* return the difference between timespecs in nanoseconds
  * int may be too small, 32 bit long is too small, floats are too imprecise,
@@ -37,62 +37,62 @@ static inline void TS_NORM( struct timespec *ts)
     if ( (  1 <= ts->tv_sec ) ||
          ( (0 == ts->tv_sec ) && (0 <= ts->tv_nsec ) ) ) {
         /* result is positive */
-	if ( NS_IN_SEC <= ts->tv_nsec ) {
+        if ( NS_IN_SEC <= ts->tv_nsec ) {
             /* borrow from tv_sec */
-	    ts->tv_nsec -= NS_IN_SEC;
-	    ts->tv_sec++;
-	} else if ( 0 > (ts)->tv_nsec ) {
+            ts->tv_nsec -= NS_IN_SEC;
+            ts->tv_sec++;
+        } else if ( 0 > (ts)->tv_nsec ) {
             /* carry to tv_sec */
-	    ts->tv_nsec += NS_IN_SEC;
-	    ts->tv_sec--;
-	}
+            ts->tv_nsec += NS_IN_SEC;
+            ts->tv_sec--;
+        }
     }  else {
         /* result is negative */
-	if ( -NS_IN_SEC >= ts->tv_nsec ) {
+        if ( -NS_IN_SEC >= ts->tv_nsec ) {
             /* carry to tv_sec */
-	    ts->tv_nsec += NS_IN_SEC;
-	    ts->tv_sec--;
-	} else if ( 0 < ts->tv_nsec ) {
+            ts->tv_nsec += NS_IN_SEC;
+            ts->tv_sec--;
+        } else if ( 0 < ts->tv_nsec ) {
             /* borrow from tv_sec */
-	    ts->tv_nsec -= NS_IN_SEC;
-	    ts->tv_sec++;
-	}
+            ts->tv_nsec -= NS_IN_SEC;
+            ts->tv_sec++;
+        }
     }
 }
 
 /* normalize a timeval */
 #define TV_NORM(tv)  \
     do { \
-	if ( US_IN_SEC <= (tv)->tv_usec ) { \
-	    (tv)->tv_usec -= US_IN_SEC; \
-	    (tv)->tv_sec++; \
-	} else if ( 0 > (tv)->tv_usec ) { \
-	    (tv)->tv_usec += US_IN_SEC; \
-	    (tv)->tv_sec--; \
-	} \
+        if ( US_IN_SEC <= (tv)->tv_usec ) { \
+            (tv)->tv_usec -= US_IN_SEC; \
+            (tv)->tv_sec++; \
+        } else if ( 0 > (tv)->tv_usec ) { \
+            (tv)->tv_usec += US_IN_SEC; \
+            (tv)->tv_sec--; \
+        } \
     } while (0)
 
 /* convert timespec to timeval, with rounding */
 #define TSTOTV(tv, ts) \
     do { \
-	(tv)->tv_sec = (ts)->tv_sec; \
-	(tv)->tv_usec = ((ts)->tv_nsec + 500)/1000; \
+        (tv)->tv_sec = (ts)->tv_sec; \
+        (tv)->tv_usec = ((ts)->tv_nsec + 500)/1000; \
         TV_NORM( tv ); \
     } while (0)
 
 /* convert timeval to timespec */
 #define TVTOTS(ts, tv) \
     do { \
-	(ts)->tv_sec = (tv)->tv_sec; \
-	(ts)->tv_nsec = (tv)->tv_usec*1000; \
+        (ts)->tv_sec = (tv)->tv_sec; \
+        (ts)->tv_nsec = (tv)->tv_usec*1000; \
         TS_NORM( ts ); \
     } while (0)
 
 /* subtract two timespec */
 #define TS_SUB(r, ts1, ts2) \
     do { \
-	(r)->tv_sec = (ts1)->tv_sec - (ts2)->tv_sec; \
-	(r)->tv_nsec = (ts1)->tv_nsec - (ts2)->tv_nsec; \
+        (r)->tv_sec = (ts1)->tv_sec - (ts2)->tv_sec; \
+        (r)->tv_nsec = (ts1)->tv_nsec - (ts2)->tv_nsec; \
         TS_NORM( r ); \
     } while (0)
 
@@ -136,18 +136,18 @@ static inline void TS_NORM( struct timespec *ts)
 #define DTOTS(ts, d) \
     do { \
         double int_part; \
-	(ts)->tv_nsec = (long)(modf(d, &int_part) * 1e9); \
-	(ts)->tv_sec = (time_t)int_part; \
+        (ts)->tv_nsec = (long)(modf(d, &int_part) * 1e9); \
+        (ts)->tv_sec = (time_t)int_part; \
     } while (0)
 
 /* convert integer (64 bit for full range) ms to a timespec_t */
 #define MSTOTS(ts, ms) \
     do { \
-	(ts)->tv_sec = (time_t)(ms / 1000); \
-	(ts)->tv_nsec = (long)((ms % 1000) * 1000000L); \
+        (ts)->tv_sec = (time_t)(ms / 1000); \
+        (ts)->tv_nsec = (long)((ms % 1000) * 1000000L); \
     } while (0)
 
-#define TIMESPEC_LEN	22	/* required length of a timespec buffer */
+#define TIMESPEC_LEN    22      /* required length of a timespec buffer */
 
 extern const char *timespec_str(const struct timespec *, char *, size_t);
 
@@ -156,3 +156,4 @@ bool nanowait(int, struct timespec *);
 #endif /* GPSD_TIMESPEC_H */
 
 /* end */
+// vim: set expandtab shiftwidth=4
