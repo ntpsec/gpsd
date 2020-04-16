@@ -145,12 +145,11 @@ char *json_quote(const char *, char *, size_t, size_t);
 #define JSON_ERR_NOPARSTR       17  // can't support strings in parallel arrays
 #define JSON_ERR_BADENUM        18      /* invalid enumerated value */
 #define JSON_ERR_QNONSTRING     19  // saw quoted value when expecting nonstring
-// duplicate 19??
-#define JSON_ERR_NONQSTRING 19 // didn't see quoted value when expecting string
-#define JSON_ERR_MISC           20      /* other data conversion error */
-#define JSON_ERR_BADNUM         21  // error while parsing a numerical argument
-#define JSON_ERR_NULLPTR      22  // unexpected null value or attribute pointer
-#define JSON_ERR_NOCURLY        23      /* object element specified, but no { */
+#define JSON_ERR_NONQSTRING 20 // didn't see quoted value when expecting string
+#define JSON_ERR_MISC           21      /* other data conversion error */
+#define JSON_ERR_BADNUM         22  // error while parsing a numerical argument
+#define JSON_ERR_NULLPTR      23  // unexpected null value or attribute pointer
+#define JSON_ERR_NOCURLY        24      /* object element specified, but no { */
 
 /*
  * Use the following macros to declare template initializers for structobject
