@@ -1,5 +1,6 @@
 /*
- * This file is Copyright (c) 2011-2018 by Eckhart Wörner
+ * This file is Copyright 2011 by Eckhart Wörner
+ * This file is Copyright 2011 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -33,3 +34,4 @@ int sd_get_socket_count(void) {
 
     return (int)n;
 }
+// vim: set expandtab shiftwidth=4
