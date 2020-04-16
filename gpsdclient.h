@@ -1,7 +1,7 @@
 /*
  * gpsdclient.h -- common functions for GPSD clients
  *
- * This file is Copyright (c) 2010 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  *
  */
@@ -20,7 +20,7 @@ struct exportmethod_t
 struct fixsource_t
 /* describe a data source */
 {
-    char *spec;		/* pointer to actual storage */
+    char *spec;         /* pointer to actual storage */
     char *server;
     char *port;
     char *device;
@@ -40,12 +40,13 @@ extern char *deg_to_str2(enum deg_str_type type, double f,
                          const char *suffix_pos, const char *suffix_neg);
 
 extern void gpsd_source_spec(const char *fromstring,
-			     struct fixsource_t *source);
+                             struct fixsource_t *source);
 
 char *maidenhead(double n,double e);
 
 /* this needs to match JSON_DATE_MAX in gpsd.h */
-#define CLIENT_DATE_MAX	24
+#define CLIENT_DATE_MAX 24
 
 #endif /* _GPSDCLIENT_H_ */
 /* gpsdclient.h ends here */
+// vim: set expandtab shiftwidth=4
