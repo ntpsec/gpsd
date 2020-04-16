@@ -1,5 +1,5 @@
 /*
- * This file is Copyright (c) 2017 by the GPSD project
+ * This file is Copyright 2017 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  *
  * This is the header for os_compat.c, which contains functions dealing with
@@ -63,7 +63,7 @@ int os_daemon(int nochdir, int noclose);
 
   #if !defined(LOG_PERROR)
     // Slowlaris 10 does not define LOG_PERROR
-    #define	LOG_PERROR	0x20	/* log to stderr as well */
+    #define     LOG_PERROR      0x20    /* log to stderr as well */
   #endif // LOG_PERROR
 
 #else // HAVE_SYSLOG_H
@@ -74,20 +74,20 @@ int os_daemon(int nochdir, int noclose);
  */
 /* Copy of syslog.h defines when otherwise not available */
 /* priorities (these are ordered) */
-#define	LOG_EMERG	0	/* system is unusable */
-#define	LOG_ALERT	1	/* action must be taken immediately */
-#define	LOG_CRIT	2	/* critical conditions */
-#define	LOG_ERR		3	/* error conditions */
-#define	LOG_WARNING	4	/* warning conditions */
-#define	LOG_NOTICE	5	/* normal but significant condition */
-#define	LOG_INFO	6	/* informational */
-#define	LOG_DEBUG	7	/* debug-level messages */
+#define LOG_EMERG       0       /* system is unusable */
+#define LOG_ALERT       1       /* action must be taken immediately */
+#define LOG_CRIT        2       /* critical conditions */
+#define LOG_ERR         3       /* error conditions */
+#define LOG_WARNING     4       /* warning conditions */
+#define LOG_NOTICE      5       /* normal but significant condition */
+#define LOG_INFO        6       /* informational */
+#define LOG_DEBUG       7       /* debug-level messages */
 /* Option flags for openlog */
-#define	LOG_PID		0x01	/* log the pid with each message */
-#define	LOG_PERROR	0x20	/* log to stderr as well */
+#define LOG_PID         0x01    /* log the pid with each message */
+#define LOG_PERROR      0x20    /* log to stderr as well */
 /* facility codes */
-#define	LOG_USER	(1<<3)	/* random user-level messages */
-#define	LOG_DAEMON	(3<<3)	/* system daemons */
+#define LOG_USER        (1<<3)  /* random user-level messages */
+#define LOG_DAEMON      (3<<3)  /* system daemons */
 
 void syslog(int priority, const char *format, ...);
 void openlog(const char *__ident, int __option, int __facility);
@@ -137,3 +137,4 @@ void sincos(double x, double *sinp, double *cosp);
 # endif
 
 #endif /* _GPSD_OS_COMPAT_H_ */
+// vim: set expandtab shiftwidth=4
