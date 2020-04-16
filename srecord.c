@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2005 Chris Kuethe <chris.kuethe@gmail.com>
- * This file is Copyright (c)2005-2019 by the GPSD project
+ * Copyright 2005 Chris Kuethe <chris.kuethe@gmail.com>
+ * This file is Copyright 2005 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  *
  */
@@ -15,12 +15,12 @@
 /*
  * See srec(5) for a description of this format.
  * We read and write 4-byte addresses.
- * 	S0: Comments
- * 	S3: Memory Loadable Data, 4byte address
- * 	S5: Count of S1, S2 and S3 Records
- * 	S7: starting execution address interpreted as a 4-byte address
+ *      S0: Comments
+ *      S3: Memory Loadable Data, 4byte address
+ *      S5: Count of S1, S2 and S3 Records
+ *      S7: starting execution address interpreted as a 4-byte address
  */
-#define MAX_BYTES_PER_RECORD	16
+#define MAX_BYTES_PER_RECORD    16
 
 /*
  * bin2srec: turn a chunk of binary into an S-record
@@ -30,21 +30,21 @@
  */
 int
 bin2srec(unsigned int type, unsigned int offset, unsigned int num,
-	 unsigned char *bbuf, unsigned char *sbuf)
+         unsigned char *bbuf, unsigned char *sbuf)
 {
     unsigned char abuf[MAX_BYTES_PER_RECORD * 2 + 2], sum;
     size_t len;
 
     if ((num < 1) || (num > MAX_BYTES_PER_RECORD))
-	return -1;
+        return -1;
 
     len = (size_t) (4 + num + 1);
     memset(abuf, 0, sizeof(abuf));
     hexdump((size_t) num, bbuf, abuf);
     sum = sr_sum((unsigned int)len, offset, bbuf);
     (void)snprintf((char *)sbuf, MAX_BYTES_PER_RECORD * 2 + 17,
-		   "S%u%02X%08X%s%02X\r\n",
-		   type, (unsigned)len, offset, (char *)abuf, (unsigned)sum);
+                   "S%u%02X%08X%s%02X\r\n",
+                   type, (unsigned)len, offset, (char *)abuf, (unsigned)sum);
     return 0;
 }
 
@@ -75,11 +75,11 @@ void hexdump(size_t len, unsigned char *bbuf, unsigned char *abuf)
 
     memset(abuf, 0, MAX_BYTES_PER_RECORD * 2 + 2);
     if (len > MAX_BYTES_PER_RECORD * 2)
-	len = MAX_BYTES_PER_RECORD * 2;
+        len = MAX_BYTES_PER_RECORD * 2;
 
     for (i = 0; i < len; i++) {
-	abuf[i * 2] = hc((bbuf[i] & 0xf0) >> 4);
-	abuf[i * 2 + 1] = hc(bbuf[i] & 0x0f);
+        abuf[i * 2] = hc((bbuf[i] & 0xf0) >> 4);
+        abuf[i * 2 + 1] = hc(bbuf[i] & 0x0f);
     }
 }
 
@@ -92,7 +92,7 @@ unsigned char hc(unsigned char x)
     case 12:
     case 11:
     case 10:
-	return ('A' + x - 10);
+        return ('A' + x - 10);
     case 9:
     case 8:
     case 7:
@@ -103,10 +103,10 @@ unsigned char hc(unsigned char x)
     case 2:
     case 1:
     case 0:
-	return ('0' + x);
+        return ('0' + x);
 
     default:
-	return '0';
+        return '0';
     }
 }
 
@@ -124,8 +124,9 @@ sr_sum(unsigned int count, unsigned int addr, unsigned char *bbuf)
     sum += ((addr & 0xff000000) >> 24);
     j = count - 5;
     for (i = 0; i < j; i++) {
-	unsigned char k = bbuf[i];
-	sum += k;
+        unsigned char k = bbuf[i];
+        sum += k;
     }
     return ~sum;
 }
+// vim: set expandtab shiftwidth=4
