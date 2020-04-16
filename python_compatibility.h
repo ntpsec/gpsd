@@ -1,7 +1,7 @@
 /*
  * python_compatibility.h -- macros for Python 2/3 compatibility
  *
- * This file is Copyright (c) 2016 by the GPSD project
+ * This file is Copyright 2016 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  *
  * Definitions based on examples in "Supporting Python 3 - The Book Site"
@@ -42,3 +42,4 @@
 #endif /* !Python 3 */
 
 #endif /* _PYTHON_COMPATIBILITY_H_ */
+// vim: set expandtab shiftwidth=4
