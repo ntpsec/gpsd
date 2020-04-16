@@ -10,7 +10,7 @@ notifications.  But both client and daemon will avoid all the marshalling and
 unmarshalling overhead.
 
 PERMISSIONS
-   This file is Copyright (c) 2010-2018 by the GPSD project
+   This file is Copyright 2010 by the GPSD project
    SPDX-License-Identifier: BSD-2-clause
 
 ***************************************************************************/
@@ -34,89 +34,92 @@ PERMISSIONS
 bool shm_acquire(struct gps_context_t *context)
 /* initialize the shared-memory segment to be used for export */
 {
-    long shmkey = getenv("GPSD_SHM_KEY") ? strtol(getenv("GPSD_SHM_KEY"), NULL, 0) : GPSD_SHM_KEY;
+    long shmkey = getenv("GPSD_SHM_KEY") ? \
+                      strtol(getenv("GPSD_SHM_KEY"), NULL, 0) : GPSD_SHM_KEY;
 
-    int shmid = shmget((key_t)shmkey, sizeof(struct shmexport_t), (int)(IPC_CREAT|0666));
+    int shmid = shmget((key_t)shmkey, sizeof(struct shmexport_t),
+                       (int)(IPC_CREAT|0666));
     if (shmid == -1) {
-	GPSD_LOG(LOG_ERROR, &context->errout,
-		 "shmget(0x%lx, %zd, 0666) for SHM export failed: %s\n",
-		 shmkey,
-		 sizeof(struct shmexport_t),
-		 strerror(errno));
-	return false;
+        GPSD_LOG(LOG_ERROR, &context->errout,
+                 "shmget(0x%lx, %zd, 0666) for SHM export failed: %s\n",
+                 shmkey,
+                 sizeof(struct shmexport_t),
+                 strerror(errno));
+        return false;
     } else
-	GPSD_LOG(LOG_PROG, &context->errout,
-		 "shmget(0x%lx, %zd, 0666) for SHM export succeeded\n",
-		 shmkey,
-		 sizeof(struct shmexport_t));
+        GPSD_LOG(LOG_PROG, &context->errout,
+                 "shmget(0x%lx, %zd, 0666) for SHM export succeeded\n",
+                 shmkey,
+                 sizeof(struct shmexport_t));
 
     context->shmexport = (void *)shmat(shmid, 0, 0);
     if ((int)(long)context->shmexport == -1) {
-	GPSD_LOG(LOG_ERROR, &context->errout,
-		 "shmat failed: %s\n", strerror(errno));
-	context->shmexport = NULL;
-	return false;
+        GPSD_LOG(LOG_ERROR, &context->errout,
+                 "shmat failed: %s\n", strerror(errno));
+        context->shmexport = NULL;
+        return false;
     }
     context->shmid = shmid;
 
     GPSD_LOG(LOG_PROG, &context->errout,
-	     "shmat() for SHM export succeeded, segment %d\n", shmid);
+             "shmat() for SHM export succeeded, segment %d\n", shmid);
     return true;
 }
 
-void shm_release(struct gps_context_t *context)
 /* release the shared-memory segment used for export */
+void shm_release(struct gps_context_t *context)
 {
     if (context->shmexport == NULL)
-	return;
+        return;
 
     /* Mark shmid to go away when no longer used
      * Having it linger forever is bad, and when the size enlarges
      * it can no longer be opened
      */
     if (shmctl(context->shmid, IPC_RMID, NULL) == -1) {
-	GPSD_LOG(LOG_WARN, &context->errout,
-		 "shmctl for IPC_RMID failed, errno = %d (%s)\n",
-		 errno, strerror(errno));
+        GPSD_LOG(LOG_WARN, &context->errout,
+                 "shmctl for IPC_RMID failed, errno = %d (%s)\n",
+                 errno, strerror(errno));
     }
     (void)shmdt((const void *)context->shmexport);
 }
 
-void shm_update(struct gps_context_t *context, struct gps_data_t *gpsdata)
 /* export an update to all listeners */
+void shm_update(struct gps_context_t *context, struct gps_data_t *gpsdata)
 {
     if (context->shmexport != NULL)
     {
-	static int tick;
-	volatile struct shmexport_t *shared = (struct shmexport_t *)context->shmexport;
+        static int tick;
+        volatile struct shmexport_t *shared = \
+                            (struct shmexport_t *)context->shmexport;
 
-	++tick;
-	/*
-	 * Following block of instructions must not be reordered, otherwise
-	 * havoc will ensue.
-	 *
-	 * This is a simple optimistic-concurrency technique.  We write
-	 * the second bookend first, then the data, then the first bookend.
-	 * Reader copies what it sees in normal order; that way, if we
-	 * start to write the segment during the read, the second bookend will
-	 * get clobbered first and the data can be detected as bad.
-	 *
-	 * Of course many architectures, like Intel, make no guarantees
-	 * about the actual memory read or write order into RAM, so this
+        ++tick;
+        /*
+         * Following block of instructions must not be reordered, otherwise
+         * havoc will ensue.
+         *
+         * This is a simple optimistic-concurrency technique.  We write
+         * the second bookend first, then the data, then the first bookend.
+         * Reader copies what it sees in normal order; that way, if we
+         * start to write the segment during the read, the second bookend will
+         * get clobbered first and the data can be detected as bad.
+         *
+         * Of course many architectures, like Intel, make no guarantees
+         * about the actual memory read or write order into RAM, so this
          * is partly wishful thinking.  Thus the need for the memory_barriers()
          * to enforce the required order.
-	 */
-	shared->bookend2 = tick;
-	memory_barrier();
-	shared->gpsdata = *gpsdata;
-	memory_barrier();
+         */
+        shared->bookend2 = tick;
+        memory_barrier();
+        shared->gpsdata = *gpsdata;
+        memory_barrier();
 #ifndef USE_QT
-	shared->gpsdata.gps_fd = SHM_PSEUDO_FD;
+        shared->gpsdata.gps_fd = SHM_PSEUDO_FD;
 #else
-	shared->gpsdata.gps_fd = (void *)(intptr_t)SHM_PSEUDO_FD;
+        shared->gpsdata.gps_fd = (void *)(intptr_t)SHM_PSEUDO_FD;
 #endif /* USE_QT */
-	memory_barrier();
-	shared->bookend1 = tick;
+        memory_barrier();
+        shared->bookend1 = tick;
     }
 }
 
@@ -124,3 +127,4 @@ void shm_update(struct gps_context_t *context, struct gps_data_t *gpsdata)
 #endif /* SHM_EXPORT_ENABLE */
 
 /* end */
+// vim: set expandtab shiftwidth=4
