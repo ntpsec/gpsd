@@ -1,7 +1,7 @@
 /* gpsmon.h -- what monitor capabuilities look like
  *
  * By Eric S. Raymond, 2009
- * This file is Copyright (c) 2010 by the GPSD project
+ * This file is Copyright 2009 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -40,3 +40,4 @@ void pps_update(WINDOW *, int, int);
 
 #endif /* _GPSD_GPSMON_H_ */
 /* gpsmon.h ends here */
+// vim: set expandtab shiftwidth=4
