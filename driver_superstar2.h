@@ -1,5 +1,5 @@
 /*
- * This file is Copyright (c) 2010 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 #ifndef _GPSD_SUPERSTAR2_H_
@@ -60,3 +60,4 @@
 #define SUPERSTAR2_TIMING 113
 
 #endif /* _GPSD_SUPERSTAR2_H_ */
+// vim: set expandtab shiftwidth=4
