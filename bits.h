@@ -8,7 +8,7 @@
  * We enforce data sizes of integral types in the casts on these.
  * Both 32- and 64-bit systems with gcc are OK with this set.
  *
- * This file is Copyright (c)2010 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 #ifndef _GPSD_BITS_H_
@@ -18,20 +18,20 @@
 #include <limits.h>
 
 /* number of bytes requited to contain a bit array of specified length */
-#define BITS_TO_BYTES(bitlen)	(((bitlen) + CHAR_BIT - 1) / CHAR_BIT)
+#define BITS_TO_BYTES(bitlen)   (((bitlen) + CHAR_BIT - 1) / CHAR_BIT)
 
 /* these are independent of byte order */
-#define getsb(buf, off)	((int8_t)buf[off])
-#define getub(buf, off)	((uint8_t)buf[off])
+#define getsb(buf, off) ((int8_t)buf[off])
+#define getub(buf, off) ((uint8_t)buf[off])
 #define putbyte(buf,off,b) do {buf[off] = (unsigned char)(b);} while (0)
 
 /* little-endian access */
-#define getles16(buf, off)	((int16_t)(((uint16_t)getub((buf),   (off)+1) << 8) | (uint16_t)getub((buf), (off))))
-#define getleu16(buf, off)	((uint16_t)(((uint16_t)getub((buf), (off)+1) << 8) | (uint16_t)getub((buf), (off))))
-#define getles32(buf, off)	((int32_t)(((uint16_t)getleu16((buf),  (off)+2) << 16) | (uint16_t)getleu16((buf), (off))))
-#define getleu32(buf, off)	((uint32_t)(((uint16_t)getleu16((buf),(off)+2) << 16) | (uint16_t)getleu16((buf), (off))))
-#define getles64(buf, off)	((int64_t)(((uint64_t)getleu32(buf, (off)+4) << 32) | getleu32(buf, (off))))
-#define getleu64(buf, off)	((uint64_t)(((uint64_t)getleu32(buf, (off)+4) << 32) | getleu32(buf, (off))))
+#define getles16(buf, off)      ((int16_t)(((uint16_t)getub((buf),   (off)+1) << 8) | (uint16_t)getub((buf), (off))))
+#define getleu16(buf, off)      ((uint16_t)(((uint16_t)getub((buf), (off)+1) << 8) | (uint16_t)getub((buf), (off))))
+#define getles32(buf, off)      ((int32_t)(((uint16_t)getleu16((buf),  (off)+2) << 16) | (uint16_t)getleu16((buf), (off))))
+#define getleu32(buf, off)      ((uint32_t)(((uint16_t)getleu16((buf),(off)+2) << 16) | (uint16_t)getleu16((buf), (off))))
+#define getles64(buf, off)      ((int64_t)(((uint64_t)getleu32(buf, (off)+4) << 32) | getleu32(buf, (off))))
+#define getleu64(buf, off)      ((uint64_t)(((uint64_t)getleu32(buf, (off)+4) << 32) | getleu32(buf, (off))))
 extern float getlef32(const char *, int);
 extern double getled64(const char *, int);
 
@@ -39,13 +39,13 @@ extern double getled64(const char *, int);
 #define putle32(buf, off, l) do {putle16(buf, (off)+2, (unsigned int)(l) >> 16); putle16(buf, (off), (l));} while (0)
 
 /* big-endian access */
-#define getbes16(buf, off)	((int16_t)(((uint16_t)getub(buf, (off)) << 8) | (uint16_t)getub(buf, (off)+1)))
-#define getbeu16(buf, off)	((uint16_t)(((uint16_t)getub(buf, (off)) << 8) | (uint16_t)getub(buf, (off)+1)))
-#define getbeu24(buf, off)	((uint32_t)(((uint16_t)getbeu16(buf, (off)) << 8) | getub(buf, (off)+2)))
-#define getbes32(buf, off)	((int32_t)(((uint16_t)getbeu16(buf, (off)) << 16) | getbeu16(buf, (off)+2)))
-#define getbeu32(buf, off)	((uint32_t)(((uint16_t)getbeu16(buf, (off)) << 16) | getbeu16(buf, (off)+2)))
-#define getbes64(buf, off)	((int64_t)(((uint64_t)getbeu32(buf, (off)) << 32) | getbeu32(buf, (off)+4)))
-#define getbeu64(buf, off)	((uint64_t)(((uint64_t)getbeu32(buf, (off)) << 32) | getbeu32(buf, (off)+4)))
+#define getbes16(buf, off)      ((int16_t)(((uint16_t)getub(buf, (off)) << 8) | (uint16_t)getub(buf, (off)+1)))
+#define getbeu16(buf, off)      ((uint16_t)(((uint16_t)getub(buf, (off)) << 8) | (uint16_t)getub(buf, (off)+1)))
+#define getbeu24(buf, off)      ((uint32_t)(((uint16_t)getbeu16(buf, (off)) << 8) | getub(buf, (off)+2)))
+#define getbes32(buf, off)      ((int32_t)(((uint16_t)getbeu16(buf, (off)) << 16) | getbeu16(buf, (off)+2)))
+#define getbeu32(buf, off)      ((uint32_t)(((uint16_t)getbeu16(buf, (off)) << 16) | getbeu16(buf, (off)+2)))
+#define getbes64(buf, off)      ((int64_t)(((uint64_t)getbeu32(buf, (off)) << 32) | getbeu32(buf, (off)+4)))
+#define getbeu64(buf, off)      ((uint64_t)(((uint64_t)getbeu32(buf, (off)) << 32) | getbeu32(buf, (off)+4)))
 extern float getbef32(const char *, int);
 extern double getbed64(const char *, int);
 
@@ -62,3 +62,4 @@ extern uint64_t ubits(unsigned char buf[], unsigned int, unsigned int, bool);
 extern int64_t sbits(signed char buf[], unsigned int, unsigned int, bool);
 
 #endif /* _GPSD_BITS_H_ */
+// vim: set expandtab shiftwidth=4
