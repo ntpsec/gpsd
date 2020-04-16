@@ -450,17 +450,9 @@ oncore_msg_svinfo(struct gps_device_t *session, unsigned char *buf,
         session->driver.oncore.PRN[i] = sv;
         session->driver.oncore.elevation[i] = (short)el;
         session->driver.oncore.azimuth[i] = (short)az;
-        /* If it has an entry in the satellite list, update it! */
-        for (j = 0; j < session->gpsdata.satellites_visible; j++)
-            if (session->gpsdata.skyview[j].PRN == (short)sv) {
-                session->gpsdata.skyview[j].elevation = (double)el;
-                session->gpsdata.skyview[j].azimuth = (double)az;
-            }
     }
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "SVINFO: mask={SATELLITE}\n");
-    return SATELLITE_SET;
+    return 0;
 }
 
 /**
