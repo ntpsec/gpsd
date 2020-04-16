@@ -3,6 +3,9 @@
 # The regression-test driver script.  This used to be explicit in the
 # makefile before we regrouped the regression tests by stable and unstable
 # drivers.
+#
+# This file is Copyright 2010 by the GPSD project
+# SPDX-License-Identifier: BSD-2-clause
 
 # Without GNU date extensions, %N won't expand and we only get 1sec precision
 starttime=`date +"%s  * 1000000000 + %N" | sed '/+ N/s///' 2>/dev/null`
@@ -53,42 +56,42 @@ quieter=false
 while getopts cl:sStbuvo:qQh opt
 do
     case $opt in
-	c) testing=clientlib ;;	# 'client' rather than the daemon
-	l) logfile=$OPTARG ;;	# Logfile to save diffs to
-	s) mode=regress ;;	# Run regression tests
-	S) mode=slowregress ;;	# Run regression tests with big delays
-	t) baton=true mode=regress ;;	# Run regression tests w/baton
-	b) mode=build ;;	# Rebuild regression check files
-	u) opts="$opts -u" ;;	# Force UDP
-	v) mode=view ;;		# View result of generating a check file
-	o) opts="$opts $OPTARG" ;;	# Pass options to gpsfake
-	q) quiet=true ;;	# Suppress header/trailer messages
-	Q) quiet=true; quieter=true ;;	# Suppress all success chatter
-	h) help="1" ;;
+        c) testing=clientlib ;; # 'client' rather than the daemon
+        l) logfile=$OPTARG ;;   # Logfile to save diffs to
+        s) mode=regress ;;      # Run regression tests
+        S) mode=slowregress ;;  # Run regression tests with big delays
+        t) baton=true mode=regress ;;   # Run regression tests w/baton
+        b) mode=build ;;        # Rebuild regression check files
+        u) opts="$opts -u" ;;   # Force UDP
+        v) mode=view ;;         # View result of generating a check file
+        o) opts="$opts $OPTARG" ;;      # Pass options to gpsfake
+        q) quiet=true ;;        # Suppress header/trailer messages
+        Q) quiet=true; quieter=true ;;  # Suppress all success chatter
+        h) help="1" ;;
     esac
 done
 shift $(($OPTIND - 1))
 
 if [ $help -eq "1" ]
 then
-	echo
-	echo
-	echo "Regression test driver script"
-	echo "-h  - this help"
-	echo "-c  - test with 'client' rather than the daemon"
-	echo "-l <filename>  - where to log diffs to"
-	echo "-s  - run regression tests"
-	echo "-S  - run regression tests with realistic timing delays"
-	echo "-t <ots>  - Run regression tests w/baton"
-	echo "-b  - Rebuild regression check files"
-	echo "-u  - Force UDP"
-	echo "-v  - view result of generating a check file"
-	echo "-o <opt> - Pass options to gpsfake"
-	echo "-q  - Suppress header/trailer messages"
-	echo "-Q  - Suppress all success chatter"
-	echo
+        echo
+        echo
+        echo "Regression test driver script"
+        echo "-h  - this help"
+        echo "-c  - test with 'client' rather than the daemon"
+        echo "-l <filename>  - where to log diffs to"
+        echo "-s  - run regression tests"
+        echo "-S  - run regression tests with realistic timing delays"
+        echo "-t <ots>  - Run regression tests w/baton"
+        echo "-b  - Rebuild regression check files"
+        echo "-u  - Force UDP"
+        echo "-v  - view result of generating a check file"
+        echo "-o <opt> - Pass options to gpsfake"
+        echo "-q  - Suppress header/trailer messages"
+        echo "-Q  - Suppress all success chatter"
+        echo
 
-	exit 0
+        exit 0
 fi
 
 # Enables us to turn debugging up high without screwing up the diff checks
@@ -133,41 +136,41 @@ case $mode in
         [ $quiet = true ] || echo "Testing the $testing..." >&2
         errors=0; total=0; notfound=0;error_list="";
         for f in $*; do
-	    if [ -r $f.chk ]
-	    then
-		trap 'rm -f ${TMP}/test-$$.chk; exit $errors' EXIT HUP INT TERM
-		case $testing in
-		daemon) TMPDIR=${TMP} ${PYTHON} ${PYTHON_COVERAGE} ${GPSD_HOME}/gpsfake -s 38400 -1 -p $opts ${f} | ${GPSFILTER} ${ALTFILTER} >${TMP}/test-$$.chk ;;
-		clientlib) ${GPSD_HOME}/tests/test_libgps -b <${f} >${TMP}/test-$$.chk ;;
-		esac
-		if [ "${ALTFILTER}" ]
-		then
-		    trap 'rm -f ${TMP}/test-$$.chk ${TMP}/testout-$$.chk ${TMP}/testin-$$.chk ${TMP}/diff-$$; exit $errors' EXIT HUP INT TERM
-		    sed -n <${f}.chk >${TMP}/testin-$$.chk ${ALTFILTER} -e 'p';
-		    sed -n <${TMP}/test-$$.chk >${TMP}/testout-$$.chk ${ALTFILTER} -e 'p';
-		    diff -ub ${TMP}/testin-$$.chk ${TMP}/testout-$$.chk >${TMP}/diff-$$;
-		else
-		    diff -ub ${f}.chk ${TMP}/test-$$.chk >${TMP}/diff-$$;
-		fi
-		if test -s ${TMP}/diff-$$ ; then
-		    errors=`expr $errors + 1`;
-		    error_list="$error_list \"${f}\""
-		    if ! test -s ${TMP}/test-$$.chk ; then
-			echo " Output missing for ${f}" >${TMP}/diff-$$
-		    fi
-		    if [ -z "$logfile" ]
-		    then
-			cat ${TMP}/diff-$$
-		    else
-			cat ${TMP}/diff-$$ >>$logfile
-		    fi
-		fi;
-		rm -f ${TMP}/test-$$.chk ${TMP}/testout-$$.chk ${TMP}/testin-$$.chk ${TMP}/diff-$$
-	    else
-		echo "*** No check log $f.chk exists"
-		notfound=`expr $notfound + 1`;
-	    fi
-	    total=`expr $total + 1`;
+            if [ -r $f.chk ]
+            then
+                trap 'rm -f ${TMP}/test-$$.chk; exit $errors' EXIT HUP INT TERM
+                case $testing in
+                daemon) TMPDIR=${TMP} ${PYTHON} ${PYTHON_COVERAGE} ${GPSD_HOME}/gpsfake -s 38400 -1 -p $opts ${f} | ${GPSFILTER} ${ALTFILTER} >${TMP}/test-$$.chk ;;
+                clientlib) ${GPSD_HOME}/tests/test_libgps -b <${f} >${TMP}/test-$$.chk ;;
+                esac
+                if [ "${ALTFILTER}" ]
+                then
+                    trap 'rm -f ${TMP}/test-$$.chk ${TMP}/testout-$$.chk ${TMP}/testin-$$.chk ${TMP}/diff-$$; exit $errors' EXIT HUP INT TERM
+                    sed -n <${f}.chk >${TMP}/testin-$$.chk ${ALTFILTER} -e 'p';
+                    sed -n <${TMP}/test-$$.chk >${TMP}/testout-$$.chk ${ALTFILTER} -e 'p';
+                    diff -ub ${TMP}/testin-$$.chk ${TMP}/testout-$$.chk >${TMP}/diff-$$;
+                else
+                    diff -ub ${f}.chk ${TMP}/test-$$.chk >${TMP}/diff-$$;
+                fi
+                if test -s ${TMP}/diff-$$ ; then
+                    errors=`expr $errors + 1`;
+                    error_list="$error_list \"${f}\""
+                    if ! test -s ${TMP}/test-$$.chk ; then
+                        echo " Output missing for ${f}" >${TMP}/diff-$$
+                    fi
+                    if [ -z "$logfile" ]
+                    then
+                        cat ${TMP}/diff-$$
+                    else
+                        cat ${TMP}/diff-$$ >>$logfile
+                    fi
+                fi;
+                rm -f ${TMP}/test-$$.chk ${TMP}/testout-$$.chk ${TMP}/testin-$$.chk ${TMP}/diff-$$
+            else
+                echo "*** No check log $f.chk exists"
+                notfound=`expr $notfound + 1`;
+            fi
+            total=`expr $total + 1`;
         done;
         if test $errors -gt 0; then
             echo "Regression test FAILED: $errors errors in $total tests total ($notfound not found).";
@@ -175,7 +178,7 @@ case $mode in
             echo "================================================================"
             for err in $error_list
             do
-		echo $err
+                echo $err
             done
             echo "================================================================"
             status=1;
@@ -190,11 +193,11 @@ case $mode in
         fi
         ;;
     build)
-	[ $quiet = true ] || echo "Rebuilding $testing regressions..." >&2
+        [ $quiet = true ] || echo "Rebuilding $testing regressions..." >&2
         for f in $*; do
-	    case $testing in
+            case $testing in
             daemon) ${PYTHON} ${PYTHON_COVERAGE} ${GPSD_HOME}/gpsfake -s 38400 -1 -p $opts ${f} | ${GPSFILTER} >${f}.chk;;
-	    clientlib) ${GPSD_HOME}/test_libgps -b <${f} >${f}.chk ;;
+            clientlib) ${GPSD_HOME}/test_libgps -b <${f} >${f}.chk ;;
             esac
         done
         status=0
@@ -202,7 +205,7 @@ case $mode in
     view)
         [ $quiet = true ] || echo "Viewing..." >&2
         for f in $*; do
-	    case $testing in
+            case $testing in
             daemon) ${PYTHON} ${PYTHON_COVERAGE} ${GPSD_HOME}/gpsfake -s 38400 -1 -p $opts ${f} | ${GPSFILTER} ;;
             clientlib) ${GPSD_HOME}/tests/test_libgps -b <${f} ;;
             esac
@@ -223,3 +226,4 @@ fi
 
 rm -fr ${TMP}
 exit $status
+# vim: set expandtab shiftwidth=4
