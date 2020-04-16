@@ -465,13 +465,12 @@ void gpsd_set_speed(struct gps_device_t *session,
     packet_reset(&session->lexer);
 }
 
-int gpsd_serial_open(struct gps_device_t *session)
 /* open a device for access to its data
  * return: the opened file descriptor
  *         PLACEHOLDING_FD - for /dev/ppsX
  *         UNALLOCATED_FD - for open failure
  */
-
+int gpsd_serial_open(struct gps_device_t *session)
 {
     mode_t mode = (mode_t) O_RDWR;
 
@@ -762,8 +761,8 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
     return true;                /* keep hunting */
 }
 
-void gpsd_assert_sync(struct gps_device_t *session)
 /* to be called when we want to register that we've synced with a device */
+void gpsd_assert_sync(struct gps_device_t *session)
 {
     /*
      * We've achieved first sync with the device. Remember the
