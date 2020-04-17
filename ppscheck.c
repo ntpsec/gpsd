@@ -17,15 +17,15 @@
  * This code requires only ANSI/POSIX. If it doesn't compile and run
  * on your Unix there is something very wrong with your Unix.
  *
- * This code by ESR, Copyright (C) 2013, under BSD terms.
- * This file is Copyright (c)2013-2018 by the GPSD project
+ * This code by ESR, Copyright 2013, under BSD terms.
+ * This file is Copyright 2013 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
 #include "gpsd_config.h"  /* must be before all includes */
 
 #include <errno.h>
-#include <fcntl.h>	/* needed for open() and friends */
+#include <fcntl.h>      /* needed for open() and friends */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -71,10 +71,10 @@ static const struct assoc hlines[] = {
 
 static void usage(void)
 {
-	(void)fprintf(stderr, "usage: ppscheck [-h] [ -V] <device>\n");
-	(void)fprintf(stderr, "                 -h   print usage\n");
-	(void)fprintf(stderr, "                 -V   print cwVersion\n");
-	exit(1);
+        (void)fprintf(stderr, "usage: ppscheck [-h] [ -V] <device>\n");
+        (void)fprintf(stderr, "                 -h   print usage\n");
+        (void)fprintf(stderr, "                 -V   print cwVersion\n");
+        exit(1);
 }
 
 int main(int argc, char *argv[])
@@ -85,58 +85,59 @@ int main(int argc, char *argv[])
     char ts_buf[TIMESPEC_LEN];
 
     while((c = getopt(argc, argv, "hV")) != -1) {
-	    switch(c){
-	    case 'h':
-	    default:
-		usage();
-		exit(0);
-	    case 'V':
-		(void)printf("%s: %s\n", argv[0], REVISION);
-		exit(EXIT_SUCCESS);
-	    }
+            switch(c){
+            case 'h':
+            default:
+                usage();
+                exit(0);
+            case 'V':
+                (void)printf("%s: %s\n", argv[0], REVISION);
+                exit(EXIT_SUCCESS);
+            }
     }
     argc -= optind;
     argv += optind;
 
     if (argc != 1)
-	    usage();
+            usage();
 
     fd = open(argv[0], O_RDONLY);
 
     if (fd == -1) {
-	(void)fprintf(stderr,
-		      "open(%s) failed: %d %.40s\n",
-		      argv[0], errno, strerror(errno));
-	exit(1);
+        (void)fprintf(stderr,
+                      "open(%s) failed: %d %.40s\n",
+                      argv[0], errno, strerror(errno));
+        exit(1);
     }
 
     (void)fprintf(stdout, "# Seconds  nanoSecs   Signals\n");
     for (;;) {
-	if (ioctl(fd, TIOCMIWAIT, TIOCM_CD|TIOCM_DSR|TIOCM_RI|TIOCM_CTS) != 0) {
-	    (void)fprintf(stderr,
-			  "PPS ioctl(TIOCMIWAIT) failed: %d %.40s\n",
-			  errno, strerror(errno));
-	    break;
-	} else {
-	    const struct assoc *sp;
-	    int handshakes;
+        if (ioctl(fd, TIOCMIWAIT, TIOCM_CD|TIOCM_DSR|TIOCM_RI|TIOCM_CTS) != 0) {
+            (void)fprintf(stderr,
+                          "PPS ioctl(TIOCMIWAIT) failed: %d %.40s\n",
+                          errno, strerror(errno));
+            break;
+        } else {
+            const struct assoc *sp;
+            int handshakes;
 
-	    (void)clock_gettime(CLOCK_REALTIME, &ts);
-	    (void)ioctl(fd, TIOCMGET, &handshakes);
-	    (void)fprintf(stdout, "%s",
+            (void)clock_gettime(CLOCK_REALTIME, &ts);
+            (void)ioctl(fd, TIOCMGET, &handshakes);
+            (void)fprintf(stdout, "%s",
                           timespec_str(&ts, ts_buf, sizeof(ts_buf)));
-	    for (sp = hlines;
-		 sp < hlines + sizeof(hlines)/sizeof(hlines[0]);
-		 sp++)
-		if ((handshakes & sp->mask) != 0) {
-		    (void)fputc(' ', stdout);
-		    (void)fputs(sp->string, stdout);
-		}
-	    (void)fputc('\n', stdout);
-	}
+            for (sp = hlines;
+                 sp < hlines + sizeof(hlines)/sizeof(hlines[0]);
+                 sp++)
+                if ((handshakes & sp->mask) != 0) {
+                    (void)fputc(' ', stdout);
+                    (void)fputs(sp->string, stdout);
+                }
+            (void)fputc('\n', stdout);
+        }
     }
 
     exit(EXIT_SUCCESS);
 }
 
 /* end */
+// vim: set expandtab shiftwidth=4
