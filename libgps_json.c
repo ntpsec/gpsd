@@ -9,7 +9,7 @@ representations to libgps structures.
 
 PERMISSIONS
    Written by Eric S. Raymond, 2009
-   This file is Copyright (c) 2009-2018 by the GPSD project
+   This file is Copyright 2009 by the GPSD project
    SPDX-License-Identifier: BSD-2-clause
 
 ***************************************************************************/
@@ -333,7 +333,8 @@ static int json_att_read(const char *buf, struct gps_data_t *gpsdata,
         {"mag_st",   t_character, .addr.character = &gpsdata->attitude.mag_st},
         {"pitch",    t_real,      .addr.real = &gpsdata->attitude.pitch,
                                      .dflt.real = NAN},
-        {"pitch_st", t_character, .addr.character = &gpsdata->attitude.pitch_st},
+        {"pitch_st", t_character,
+         .addr.character = &gpsdata->attitude.pitch_st},
         {"roll",     t_real,      .addr.real = &gpsdata->attitude.roll,
                                      .dflt.real = NAN},
         {"roll_st",  t_character, .addr.character = &gpsdata->attitude.roll_st},
@@ -382,19 +383,21 @@ static int json_devicelist_read(const char *buf, struct gps_data_t *gpsdata,
         /* *INDENT-OFF* */
         {"class",      t_check,      .dflt.check = "DEVICE"},
         {"path",       t_string,     STRUCTOBJECT(struct devconfig_t, path),
-                                        .len = sizeof(gpsdata->devices.list[0].path)},
-        {"activated",  t_time,       STRUCTOBJECT(struct devconfig_t, activated)},
-        {"activated",  t_real,       STRUCTOBJECT(struct devconfig_t, activated)},
+         .len = sizeof(gpsdata->devices.list[0].path)},
+        {"activated",  t_time,
+         STRUCTOBJECT(struct devconfig_t, activated)},
+        {"activated",  t_real,
+         STRUCTOBJECT(struct devconfig_t, activated)},
         {"flags",      t_integer,    STRUCTOBJECT(struct devconfig_t, flags)},
         {"driver",     t_string,     STRUCTOBJECT(struct devconfig_t, driver),
-                                        .len = sizeof(gpsdata->devices.list[0].driver)},
+         .len = sizeof(gpsdata->devices.list[0].driver)},
         {"hexdata",    t_string,     STRUCTOBJECT(struct devconfig_t, hexdata),
-                                        .len = sizeof(gpsdata->devices.list[0].hexdata)},
+         .len = sizeof(gpsdata->devices.list[0].hexdata)},
         {"subtype",    t_string,     STRUCTOBJECT(struct devconfig_t, subtype),
                             .len = sizeof(gpsdata->devices.list[0].subtype)},
         {"subtype1",   t_string,     STRUCTOBJECT(struct devconfig_t, subtype1),
                             .len = sizeof(gpsdata->devices.list[0].subtype1)},
-        {"native",     t_integer,    STRUCTOBJECT(struct devconfig_t, driver_mode),
+        {"native",     t_integer, STRUCTOBJECT(struct devconfig_t, driver_mode),
                                         .dflt.integer = -1},
         {"bps",        t_uinteger,   STRUCTOBJECT(struct devconfig_t, baudrate),
                                         .dflt.uinteger = DEVDEFAULT_BPS},
@@ -440,8 +443,10 @@ static int json_version_read(const char *buf, struct gps_data_t *gpsdata,
                                     .len = sizeof(gpsdata->version.release)},
         {"rev",       t_string,  .addr.string  = gpsdata->version.rev,
                                     .len = sizeof(gpsdata->version.rev)},
-        {"proto_major", t_integer, .addr.integer = &gpsdata->version.proto_major},
-        {"proto_minor", t_integer, .addr.integer = &gpsdata->version.proto_minor},
+        {"proto_major", t_integer,
+         .addr.integer = &gpsdata->version.proto_major},
+        {"proto_minor", t_integer,
+         .addr.integer = &gpsdata->version.proto_minor},
         {"remote",    t_string,  .addr.string  = gpsdata->version.remote,
                                     .len = sizeof(gpsdata->version.remote)},
         {NULL},
@@ -768,3 +773,4 @@ int libgps_json_unpack(const char *buf,
 #endif /* SOCKET_EXPORT_ENABLE */
 
 /* libgps_json.c ends here */
+// vim: set expandtab shiftwidth=4
