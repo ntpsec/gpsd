@@ -2,7 +2,7 @@
  *
  * Core portion of client library.  Cals helpers to handle different eports.
  *
- * This file is Copyright (c) 2010-2018 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -37,8 +37,8 @@ void gps_enable_debug(int level, FILE * fp)
 #endif
 }
 
-void libgps_trace(int errlevel, const char *fmt, ...)
 /* assemble command in printf(3) style */
+void libgps_trace(int errlevel, const char *fmt, ...)
 {
     if (errlevel <= libgps_debuglevel) {
 	char buf[BUFSIZ];
@@ -53,7 +53,8 @@ void libgps_trace(int errlevel, const char *fmt, ...)
     }
 }
 #else
-// Functions defined as so to furfil the API but otherwise do nothing when built with debug capability turned off
+/* Functions defined as so to furfil the API but otherwise do
+ * nothing when built with debug capability turned off */
 void gps_enable_debug(int level UNUSED, FILE * fp UNUSED) {}
 void libgps_trace(int errlevel UNUSED, const char *fmt UNUSED, ...){}
 #endif /* LIBGPS_DEBUG */
@@ -123,8 +124,8 @@ int gps_open(const char *host,
 #define CONDITIONALLY_UNUSED	UNUSED
 #endif
 
-int gps_close(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED)
 /* close a gpsd connection */
+int gps_close(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED)
 {
     int status = -1;
 
@@ -183,8 +184,9 @@ int gps_read(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
     return status;
 }
 
-int gps_send(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED, const char *fmt CONDITIONALLY_UNUSED, ...)
 /* send a command to the gpsd instance */
+int gps_send(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
+             const char *fmt CONDITIONALLY_UNUSED, ...)
 {
     int status = -1;
     char buf[BUFSIZ];
@@ -217,8 +219,8 @@ int gps_stream(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
     return status;
 }
 
-const char *gps_data(const struct gps_data_t *gpsdata CONDITIONALLY_UNUSED)
 /* return the contents of the client data buffer */
+const char *gps_data(const struct gps_data_t *gpsdata CONDITIONALLY_UNUSED)
 {
     const char *bufp = NULL;
 
@@ -229,9 +231,10 @@ const char *gps_data(const struct gps_data_t *gpsdata CONDITIONALLY_UNUSED)
     return bufp;
 }
 
-bool gps_waiting(const struct gps_data_t *gpsdata CONDITIONALLY_UNUSED, int timeout CONDITIONALLY_UNUSED)
 /* is there input waiting from the GPS? */
 /* timeout is in uSec */
+bool gps_waiting(const struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
+                 int timeout CONDITIONALLY_UNUSED)
 {
     /* this is bogus, but I can't think of a better solution yet */
     bool waiting = true;
@@ -358,7 +361,8 @@ void libgps_dump_state(struct gps_data_t *collect)
 		      collect->version.proto_minor);
     if (collect->set & POLICY_SET)
 	(void)fprintf(debugfp,
-		      "POLICY: watcher=%s nmea=%s raw=%d scaled=%s timing=%s, split24=%s pps=%s, devpath=%s\n",
+		      "POLICY: watcher=%s nmea=%s raw=%d scaled=%s timing=%s, "
+                      "split24=%s pps=%s, devpath=%s\n",
 		      collect->policy.watcher ? "true" : "false",
 		      collect->policy.nmea ? "true" : "false",
 		      collect->policy.raw,
