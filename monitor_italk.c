@@ -1,5 +1,5 @@
 /*
- * This file is Copyright (c) 2010 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -18,28 +18,28 @@
 extern const struct gps_type_t driver_italk;
 static WINDOW *satwin, *navfixwin;
 
-#define display	(void)mvwprintw
+#define display (void)mvwprintw
 static bool italk_initialize(void)
 {
     int i;
 
     /* "heavily inspired" by monitor_nmea.c */
     if ((satwin =
-	 derwin(devicewin, MAX_NR_VISIBLE_PRNS + 3, 27, 0, 0)) == NULL)
-	return false;
+         derwin(devicewin, MAX_NR_VISIBLE_PRNS + 3, 27, 0, 0)) == NULL)
+        return false;
     (void)wborder(satwin, 0, 0, 0, 0, 0, 0, 0, 0), (void)syncok(satwin, true);
     (void)wattrset(satwin, A_BOLD);
     display(satwin, 1, 1, "Ch PRN  Az El S/N Flag U");
     for (i = 0; i < MAX_NR_VISIBLE_PRNS; i++)
-	display(satwin, (int)(i + 2), 1, "%2d", i);
+        display(satwin, (int)(i + 2), 1, "%2d", i);
     display(satwin, MAX_NR_VISIBLE_PRNS + 2, 7, " PRN_STATUS ");
     (void)wattrset(satwin, A_NORMAL);
 
     /* "heavily inspired" by monitor_nmea.c */
     if ((navfixwin = derwin(devicewin, 13, 52, 0, 27)) == NULL)
-	return false;
+        return false;
     (void)wborder(navfixwin, 0, 0, 0, 0, 0, 0, 0, 0),
-	(void)wattrset(navfixwin, A_BOLD);
+        (void)wattrset(navfixwin, A_BOLD);
     (void)wmove(navfixwin, 1, 1);
     (void)wprintw(navfixwin, "ECEF Pos:");
     (void)wmove(navfixwin, 2, 1);
@@ -76,7 +76,7 @@ static void display_itk_navfix(unsigned char *buf, size_t len)
     float hdop, gdop, pdop, vdop, tdop;
 
     if (len != 296)
-	return;
+        return;
 
 #ifdef __UNUSED__
     flags = (unsigned short) getleu16(buf, 7 + 4);
@@ -85,8 +85,10 @@ static void display_itk_navfix(unsigned char *buf, size_t len)
 #endif /* __UNUSED__ */
 
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
-    nsv = (unsigned short) MAX(getleu16(buf, 7 + 12), getleu16(buf, 7 + 14));
-    svlist = (unsigned int) ((unsigned short) getleu32(buf, 7 + 16) | getleu32(buf, 7 + 24));
+    nsv = (unsigned short) MAX(getleu16(buf, 7 + 12),
+                               getleu16(buf, 7 + 14));
+    svlist = (unsigned int)((unsigned short)getleu32(buf, 7 + 16) |
+                            getleu32(buf, 7 + 24));
 
     hour = (unsigned short) getleu16(buf, 7 + 66);
     min = (unsigned short) getleu16(buf, 7 + 68);
@@ -125,17 +127,17 @@ static void display_itk_navfix(unsigned char *buf, size_t len)
 
     (void)wmove(navfixwin, 4, 11);
     (void)wprintw(navfixwin, "%11.8lf   %13.8lf %8.1lfm",
-		  latitude, longitude, altitude);
+                  latitude, longitude, altitude);
     (void)mvwaddch(navfixwin, 4, 22, ACS_DEGREE);
     (void)mvwaddch(navfixwin, 4, 38, ACS_DEGREE);
     (void)wmove(navfixwin, 5, 11);
     (void)wprintw(navfixwin, "%6.2lfm/s  %5.1lf  %6.2lfm/s climb",
-		  speed, track, climb);
+                  speed, track, climb);
     (void)mvwaddch(navfixwin, 5, 27, ACS_DEGREE);
 
     (void)wmove(navfixwin, 7, 11);
     (void)wprintw(navfixwin, "%04u-%02u-%02u %02u:%02u:%02u",
-		  year, mon, day, hour, min, sec);
+                  year, mon, day, hour, min, sec);
     (void)wmove(navfixwin, 8, 11);
     (void)wprintw(navfixwin, "%04u+%010.3lf", gps_week, tow / 1000.0);
     (void)wmove(navfixwin, 8, 33);
@@ -159,16 +161,16 @@ static void display_itk_navfix(unsigned char *buf, size_t len)
 
     (void)wmove(navfixwin, 11, 6);
     {
-	char prn[4], satlist[38];
-	uint64_t i;         // uint64_t just in case ints are 32-bit
-	satlist[0] = '\0';
-	for (i = 0; i < 32; i++) {
-	    if (svlist & (1ULL << i)) {
-		(void)snprintf(prn, 4, "%llu ", (unsigned long long)i + 1);
-		(void)strlcat(satlist, prn, sizeof(satlist));
-	    }
-	}
-	(void)wprintw(navfixwin, "%02d = %-38s", nsv, satlist);
+        char prn[4], satlist[38];
+        uint64_t i;         // uint64_t just in case ints are 32-bit
+        satlist[0] = '\0';
+        for (i = 0; i < 32; i++) {
+            if (svlist & (1ULL << i)) {
+                (void)snprintf(prn, 4, "%llu ", (unsigned long long)i + 1);
+                (void)strlcat(satlist, prn, sizeof(satlist));
+            }
+        }
+        (void)wprintw(navfixwin, "%02d = %-38s", nsv, satlist);
     }
     (void)wnoutrefresh(navfixwin);
 
@@ -178,29 +180,29 @@ static void display_itk_prnstatus(unsigned char *buf, size_t len)
 {
     int i, nchan;
     if (len < 62)
-	return;
+        return;
 
     nchan = (int)getleu16(buf, 7 + 50);
     if (nchan > MAX_NR_VISIBLE_PRNS)
-	nchan = MAX_NR_VISIBLE_PRNS;
+        nchan = MAX_NR_VISIBLE_PRNS;
     for (i = 0; i < nchan; i++) {
-	int off = 7 + 52 + 10 * i;
-	unsigned short fl;
-	unsigned char ss, prn, el, az;
+        int off = 7 + 52 + 10 * i;
+        unsigned short fl;
+        unsigned char ss, prn, el, az;
 
-	fl = (unsigned short)getleu16(buf, off);
-	ss = (unsigned char)getleu16(buf, off + 2) & 0xff;
-	prn = (unsigned char)getleu16(buf, off + 4) & 0xff;
-	el = (unsigned char)getles16(buf, off + 6) & 0xff;
-	az = (unsigned char)getles16(buf, off + 8) & 0xff;
-	(void)wmove(satwin, i + 2, 4);
-	(void)wprintw(satwin, "%3d %3d %2d  %02d %04x %c",
-		      prn, az, el, ss, fl,
-		      (fl & PRN_FLAG_USE_IN_NAV) ? 'Y' : ' ');
+        fl = (unsigned short)getleu16(buf, off);
+        ss = (unsigned char)getleu16(buf, off + 2) & 0xff;
+        prn = (unsigned char)getleu16(buf, off + 4) & 0xff;
+        el = (unsigned char)getles16(buf, off + 6) & 0xff;
+        az = (unsigned char)getles16(buf, off + 8) & 0xff;
+        (void)wmove(satwin, i + 2, 4);
+        (void)wprintw(satwin, "%3d %3d %2d  %02d %04x %c",
+                      prn, az, el, ss, fl,
+                      (fl & PRN_FLAG_USE_IN_NAV) ? 'Y' : ' ');
     }
     for (; i < MAX_NR_VISIBLE_PRNS; i++) {
-	(void)wmove(satwin, (int)i + 2, 4);
-	(void)wprintw(satwin, "                      ");
+        (void)wmove(satwin, (int)i + 2, 4);
+        (void)wprintw(satwin, "                      ");
     }
     (void)wnoutrefresh(satwin);
     return;
@@ -217,13 +219,13 @@ static void italk_update(void)
     type = (unsigned char)getub(buf, 4);
     switch (type) {
     case ITALK_NAV_FIX:
-	display_itk_navfix(buf, len);
-	break;
+        display_itk_navfix(buf, len);
+        break;
     case ITALK_PRN_STATUS:
-	display_itk_prnstatus(buf, len);
-	break;
+        display_itk_prnstatus(buf, len);
+        break;
     default:
-	break;
+        break;
     }
 }
 
@@ -243,7 +245,8 @@ const struct monitor_object_t italk_mmt = {
     .update = italk_update,
     .command = italk_command,
     .wrap = italk_wrap,
-    .min_y = 23,.min_x = 80,	/* size of the device window */
+    .min_y = 23,.min_x = 80,    /* size of the device window */
     .driver = &driver_italk,
 };
 #endif
+// vim: set expandtab shiftwidth=4
