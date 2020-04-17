@@ -23,7 +23,7 @@
  * Note that this version has a seed of 0 wired in.  The RTCM104V3 standard
  * requires this.
  *
- * This file is Copyright (c) 2008-2018 by the GPSD project
+ * This file is Copyright 2008 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -42,8 +42,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define CRCSEED	0		/* could be NZ to detect leading zeros */
-#define CRCPOLY	0x1864CFBu	/* encodes all info about the polynomial */
+#define CRCSEED 0               /* could be NZ to detect leading zeros */
+#define CRCPOLY 0x1864CFBu      /* encodes all info about the polynomial */
 
 static void crc_init(unsigned int table[256])
 {
@@ -54,10 +54,10 @@ static void crc_init(unsigned int table[256])
     table[1] = h = CRCPOLY;
 
     for (i = 2; i < 256; i *= 2) {
-	if ((h <<= 1) & 0x1000000)
-	    h ^= CRCPOLY;
-	for (j = 0; j < i; j++)
-	    table[i + j] = table[j] ^ h;
+        if ((h <<= 1) & 0x1000000)
+            h ^= CRCPOLY;
+        for (j = 0; j < i; j++)
+            table[i + j] = table[j] ^ h;
     }
 }
 
@@ -68,9 +68,9 @@ int main(int argc, char *argv[])
     crc_init(table);
 
     for (i = 0; i < 256; i++) {
-	printf("0x%08X, ", table[i]);
-	if ((i % 4) == 3)
-	    putchar('\n');
+        printf("0x%08X, ", table[i]);
+        if ((i % 4) == 3)
+            putchar('\n');
     }
 
     exit(EXIT_SUCCESS);
@@ -150,7 +150,7 @@ unsigned crc24q_hash(unsigned char *data, int len)
     unsigned crc = 0;
 
     for (i = 0; i < len; i++) {
-	crc = (crc << 8) ^ crc24q[data[i] ^ (unsigned char)(crc >> 16)];
+        crc = (crc << 8) ^ crc24q[data[i] ^ (unsigned char)(crc >> 16)];
     }
 
     crc = (crc & 0x00ffffff);
@@ -158,9 +158,9 @@ unsigned crc24q_hash(unsigned char *data, int len)
     return crc;
 }
 
-#define LO(x)	(unsigned char)((x) & 0xff)
-#define MID(x)	(unsigned char)(((x) >> 8) & 0xff)
-#define HI(x)	(unsigned char)(((x) >> 16) & 0xff)
+#define LO(x)   (unsigned char)((x) & 0xff)
+#define MID(x)  (unsigned char)(((x) >> 8) & 0xff)
+#define HI(x)   (unsigned char)(((x) >> 16) & 0xff)
 
 #ifdef __UNUSED__
 void crc24q_sign(unsigned char *data, int len)
@@ -178,5 +178,6 @@ bool crc24q_check(unsigned char *data, int len)
     unsigned crc = crc24q_hash(data, len - 3);
 
     return (((data[len - 3] == HI(crc)) &&
-	     (data[len - 2] == MID(crc)) && (data[len - 1] == LO(crc))));
+             (data[len - 2] == MID(crc)) && (data[len - 1] == LO(crc))));
 }
+// vim: set expandtab shiftwidth=4
