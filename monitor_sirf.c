@@ -8,14 +8,14 @@
 
 #include "gpsd_config.h"  /* must be before all includes */
 
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-#include <math.h>
-#include <stdlib.h> /* for labs() */
 #include <assert.h>
-#include <time.h>
+#include <math.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <stdlib.h> /* for labs() */
+#include <string.h>
 #include <sys/time.h>
+#include <time.h>
 
 #include "gpsd.h"
 #include "bits.h"
@@ -103,13 +103,16 @@ static bool sirf_initialize(void)
                   "Pos:                            m                                    m");
     (void)wmove(mid2win, 2, 1);
     (void)wprintw(mid2win,
-                  "Vel:                            m/s                                  climb m/s");
+                  "Vel:                            m/s"
+                  "                                  climb m/s");
     (void)wmove(mid2win, 3, 1);
     (void)wprintw(mid2win,
-                  "Time:                          Leap:        Heading:                 speed m/s");
+                  "Time:                          Leap:        Heading:"
+                  "                 speed m/s");
     (void)wmove(mid2win, 4, 1);
     (void)wprintw(mid2win,
-                  "Fix:                                                 HDOP:      M1:     M2:   ");
+                  "Fix:                                                 HDOP:"
+                  "      M1:     M2:   ");
     display(mid2win, 5, 24, " Packet type 2 (0x02) ");
     (void)wattrset(mid2win, A_NORMAL);
 
@@ -395,10 +398,14 @@ static void sirf_update(void)
         break;
 
     case 0x09:                  /* Throughput */
-        display(mid9win, 1, 6, "%.3f", (double)getbeu16(buf, 1) / 186); /*SegStatMax */
-        display(mid9win, 1, 18, "%.3f", (double)getbeu16(buf, 3) / 186);        /*SegStatLat */
-        display(mid9win, 1, 31, "%.3f", (double)getbeu16(buf, 5) / 186);        /*SegStatTime */
-        display(mid9win, 1, 42, "%3d", (int)getbeu16(buf, 7));  /* Last Millisecond */
+        /*SegStatMax */
+        display(mid9win, 1, 6, "%.3f", (double)getbeu16(buf, 1) / 186);
+        /*SegStatLat */
+        display(mid9win, 1, 18, "%.3f", (double)getbeu16(buf, 3) / 186);
+        /*SegStatTime */
+        display(mid9win, 1, 31, "%.3f", (double)getbeu16(buf, 5) / 186);
+        /* Last Millisecond */
+        display(mid9win, 1, 42, "%3d", (int)getbeu16(buf, 7));
         monitor_log("THR 0x09=");
         break;
 
@@ -423,35 +430,46 @@ static void sirf_update(void)
 #define YESNO(n)        (((int)getub(buf, n) != 0)?'Y':'N')
         display(mid19win, 1, 20, "%d", getub(buf, 5));  /* Alt. hold mode */
         display(mid19win, 2, 20, "%d", getub(buf, 6));  /* Alt. hold source */
-        display(mid19win, 3, 20, "%dm", (int)getbeu16(buf, 7)); /* Alt. source input */
-        if (getub(buf, 9) != (uint8_t) '\0')
-            display(mid19win, 4, 20, "%dsec", getub(buf, 10));  /* Degraded timeout */
-        else
+        /* Alt. source input */
+        display(mid19win, 3, 20, "%dm", (int)getbeu16(buf, 7));
+        if (getub(buf, 9) != (uint8_t) '\0') {
+            /* Degraded timeout */
+            display(mid19win, 4, 20, "%dsec", getub(buf, 10));
+        } else {
             display(mid19win, 4, 20, "N/A   ");
+        }
         display(mid19win, 5, 20, "%dsec", getub(buf, 11));      /* DR timeout */
         display(mid19win, 6, 20, "%c", YESNO(12));      /* Track smooth mode */
         display(mid19win, 7, 20, "%c", YESNO(13));      /* Static Nav. */
-        display(mid19win, 8, 20, "0x%x", getub(buf, 14));       /* 3SV Least Squares */
-        display(mid19win, 9, 20, "0x%x", getub(buf, 19));       /* DOP Mask mode */
-        display(mid19win, 10, 20, "0x%x", (int)getbeu16(buf, 20));      /* Nav. Elev. mask */
-        display(mid19win, 11, 20, "0x%x", getub(buf, 22));      /* Nav. Power mask */
-        display(mid19win, 12, 20, "0x%x", getub(buf, 27));      /* DGPS Source */
+        display(mid19win, 8, 20, "0x%x", getub(buf, 14)); // 3SV Least Squares
+        display(mid19win, 9, 20, "0x%x", getub(buf, 19)); /* DOP Mask mode */
+        /* Nav. Elev. mask */
+        display(mid19win, 10, 20, "0x%x", (int)getbeu16(buf, 20));
+        /* Nav. Power mask */
+        display(mid19win, 11, 20, "0x%x", getub(buf, 22));
+        display(mid19win, 12, 20, "0x%x", getub(buf, 27));    /* DGPS Source */
         display(mid19win, 13, 20, "0x%x", getub(buf, 28));      /* DGPS Mode */
         display(mid19win, 14, 20, "%dsec", getub(buf, 29));     /* DGPS Timeout */
         display(mid19win, 1, 42, "%c", YESNO(34));      /* LP Push-to-Fix */
-        display(mid19win, 2, 42, "%dms", getbeu32(buf, 35));    /* LP On Time */
-        display(mid19win, 3, 42, "%d", getbeu32(buf, 39));      /* LP Interval */
+        display(mid19win, 2, 42, "%dms", getbeu32(buf, 35));   /* LP On Time */
+        display(mid19win, 3, 42, "%d", getbeu32(buf, 39));     /* LP Interval */
         display(mid19win, 4, 42, "%c", YESNO(43));      /* User Tasks enabled */
-        display(mid19win, 5, 42, "%d", getbeu32(buf, 44));      /* User Task Interval */
-        display(mid19win, 6, 42, "%c", YESNO(48));      /* LP Power Cycling Enabled */
-        display(mid19win, 7, 42, "%d", getbeu32(buf, 49));      /* LP Max Acq Search Time */
-        display(mid19win, 8, 42, "%d", getbeu32(buf, 53));      /* LP Max Off Time */
+        /* User Task Interval */
+        display(mid19win, 5, 42, "%d", getbeu32(buf, 44));
+        display(mid19win, 6, 42, "%c", YESNO(48));  // LP Power Cycling Enabled
+        /* LP Max Acq Search Time */
+        display(mid19win, 7, 42, "%d", getbeu32(buf, 49));
+        /* LP Max Off Time */
+        display(mid19win, 8, 42, "%d", getbeu32(buf, 53));
         display(mid19win, 9, 42, "%c", YESNO(57));      /* APM Enabled */
-        display(mid19win, 10, 42, "%d", (int)getbeu16(buf, 58));        /* # of fixes */
-        display(mid19win, 11, 42, "%d", (int)getbeu16(buf, 60));        /* Time Between fixes */
-        display(mid19win, 12, 42, "%d", getub(buf, 62));        /* H/V Error Max */
-        display(mid19win, 13, 42, "%d", getub(buf, 63));        /* Response Time Max */
-        display(mid19win, 14, 42, "%d", getub(buf, 64));        /* Time/Accu & Duty Cycle Priority */
+        /* # of fixes */
+        display(mid19win, 10, 42, "%d", (int)getbeu16(buf, 58));
+        /* Time Between fixes */
+        display(mid19win, 11, 42, "%d", (int)getbeu16(buf, 60));
+        display(mid19win, 12, 42, "%d", getub(buf, 62));   /* H/V Error Max */
+        display(mid19win, 13, 42, "%d", getub(buf, 63));   // Response Time Max
+        /* Time/Accu & Duty Cycle Priority */
+        display(mid19win, 14, 42, "%d", getub(buf, 64));
 #undef YESNO
         monitor_log("NP  0x13=");
         break;
