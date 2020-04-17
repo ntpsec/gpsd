@@ -33,7 +33,7 @@ to an RTCM3 standard at revision 4 or later, but the guess in the code
 has been observed to correctly analyze a message with a nonempty Receiver
 field.
 
-This file is Copyright (c) 2010-2018 by the GPSD project
+This file is Copyright 2010 by the GPSD project
 SPDX-License-Identifier: BSD-2-clause
 
 *****************************************************************************/
@@ -1403,12 +1403,12 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         memcpy(rtcm->rtcmtypes.data, buf+3, rtcm->length);
         if (NULL == unknown_name) {
-	    GPSD_LOG(LOG_PROG, &context->errout,
-		     "RTCM3: unknown type %d, length %d\n",
-		     rtcm->type, rtcm->length);
+            GPSD_LOG(LOG_PROG, &context->errout,
+                     "RTCM3: unknown type %d, length %d\n",
+                     rtcm->type, rtcm->length);
         } else {
-	    GPSD_LOG(LOG_PROG, &context->errout,
-		     "RTCM3: %s (type %d), length %d\n",
+            GPSD_LOG(LOG_PROG, &context->errout,
+                     "RTCM3: %s (type %d), length %d\n",
                      unknown_name, rtcm->type, rtcm->length);
         }
     }
