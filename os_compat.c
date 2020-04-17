@@ -9,7 +9,7 @@
  * History of this code prior to the creation of this file can be found
  * in the histories of those files.
  *
- * This file is Copyright (c)2017-2019 by the GPSD project
+ * This file is Copyright 2017 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -37,7 +37,7 @@ int clock_gettime(clockid_t clk_id, struct timespec *ts)
     (void) clk_id;
     struct timeval tv;
     if (gettimeofday(&tv, NULL) < 0)
-	return -1;
+        return -1;
     ts->tv_sec = tv.tv_sec;
     ts->tv_nsec = tv.tv_usec * 1000;
     return 0;
@@ -72,23 +72,23 @@ int os_daemon(int nochdir, int noclose)
 
     switch (fork()) {
     case -1:
-	return -1;
-    case 0:			/* child side */
-	break;
-    default:			/* parent side */
-	exit(EXIT_SUCCESS);
+        return -1;
+    case 0:                     /* child side */
+        break;
+    default:                    /* parent side */
+        exit(EXIT_SUCCESS);
     }
 
     if (setsid() == -1)
-	return -1;
+        return -1;
     if ((nochdir==0) && (chdir("/") == -1))
-	return -1;
+        return -1;
     if ((noclose==0) && (fd = open(_PATH_DEVNULL, O_RDWR, 0)) != -1) {
-	(void)dup2(fd, STDIN_FILENO);
-	(void)dup2(fd, STDOUT_FILENO);
-	(void)dup2(fd, STDERR_FILENO);
-	if (fd > 2)
-	    (void)close(fd);
+        (void)dup2(fd, STDIN_FILENO);
+        (void)dup2(fd, STDOUT_FILENO);
+        (void)dup2(fd, STDERR_FILENO);
+        if (fd > 2)
+            (void)close(fd);
     }
     /* coverity[leaked_handle] Intentional handle duplication */
     return 0;
@@ -210,21 +210,21 @@ size_t strlcat(char *dst, const char *src, size_t siz)
     size_t slen = strlen(src);
     size_t dlen = strlen(dst);
     if (siz != 0) {
-	if (dlen + slen < siz)
-	    memcpy(dst + dlen, src, slen + 1);
-	else {
-	    memcpy(dst + dlen, src, siz - dlen - 1);
-	    dst[siz - 1] = '\0';
-	}
+        if (dlen + slen < siz)
+            memcpy(dst + dlen, src, slen + 1);
+        else {
+            memcpy(dst + dlen, src, siz - dlen - 1);
+            dst[siz - 1] = '\0';
+        }
     }
     return dlen + slen;
 }
 
 #ifdef __UNUSED__
-/*	$OpenBSD: strlcat.c,v 1.13 2005/08/08 08:05:37 espie Exp $	*/
+/*      $OpenBSD: strlcat.c,v 1.13 2005/08/08 08:05:37 espie Exp $      */
 
 /*
- * Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
+ * Copyright 1998 Todd C. Miller <Todd.Miller@courtesan.com>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -248,22 +248,22 @@ size_t strlcat(char *dst, const char *src, size_t siz)
 
     /* Find the end of dst and adjust bytes left but don't go past end */
     while (n-- != 0 && *d != '\0')
-	d++;
+        d++;
     dlen = (size_t) (d - dst);
     n = siz - dlen;
 
     if (n == 0)
-	return (dlen + strlen(s));
+        return (dlen + strlen(s));
     while (*s != '\0') {
-	if (n != 1) {
-	    *d++ = *s;
-	    n--;
-	}
-	s++;
+        if (n != 1) {
+            *d++ = *s;
+            n--;
+        }
+        s++;
     }
     *d = '\0';
 
-    return (dlen + (s - src));	/* count does not include NUL */
+    return (dlen + (s - src));  /* count does not include NUL */
 }
 #endif /* __UNUSED__ */
 #endif /* !HAVE_STRLCAT */
@@ -281,11 +281,11 @@ size_t strlcpy(char *dst, const char *src, size_t siz)
 {
     size_t len = strlen(src);
     if (siz != 0) {
-	if (len >= siz) {
-	    memcpy(dst, src, siz - 1);
-	    dst[siz - 1] = '\0';
-	} else
-	    memcpy(dst, src, len + 1);
+        if (len >= siz) {
+            memcpy(dst, src, siz - 1);
+            dst[siz - 1] = '\0';
+        } else
+            memcpy(dst, src, len + 1);
     }
     return len;
 }
@@ -314,3 +314,4 @@ void sincos(double x, double *sinp, double *cosp)
 #endif /* !HAVE_SINCOS */
 
 /* End of sincos() section. */
+// vim: set expandtab shiftwidth=4
