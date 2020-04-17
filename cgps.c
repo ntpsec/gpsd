@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2005 Jeff Francis <jeff@gritch.org>
+ * Copyright 2005 Jeff Francis <jeff@gritch.org>
  *
- * This file is Copyright (c)2010-2018 by the GPSD project
+ * This file is Copyright 2005 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -74,7 +74,8 @@
 #define MIN_GPS_DATAWIN_YSIZE (DATAWIN_GPS_FIELDS + DATAWIN_OVERHEAD)
 
 /* And the maximum ysize we'll try to use */
-#define MAX_GPS_DATAWIN_YSIZE (DATAWIN_GPS_FIELDS + DATAWIN_OPTIONAL_FIELDS + DATAWIN_OVERHEAD)
+#define MAX_GPS_DATAWIN_YSIZE (DATAWIN_GPS_FIELDS + DATAWIN_OPTIONAL_FIELDS + \
+                               DATAWIN_OVERHEAD)
 
 /* This is the minimum ysize we'll accept for the 'datawin' window in
    COMPASS mode. */
@@ -256,8 +257,8 @@ static void die(int sig)
 
 static enum deg_str_type deg_type = deg_dd;
 
-static void windowsetup(void)
 /* initialize curses and set up screen windows */
+static void windowsetup(void)
 {
     /* Set the window sizes per the following criteria:
      *
@@ -548,14 +549,15 @@ static int sat_cmp(const void *p1, const void *p2)
 {
 
    if ( ((struct satellite_t*)p2)->used - ((struct satellite_t*)p1)->used ) {
-        return ((struct satellite_t*)p2)->used - ((struct satellite_t*)p1)->used;
+        return ((struct satellite_t*)p2)->used -
+                ((struct satellite_t*)p1)->used;
    }
    return ((struct satellite_t*)p1)->PRN - ((struct satellite_t*)p2)->PRN;
 }
 
 
-static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
 /* This gets called once for each new GPS sentence. */
+static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
 {
     int newstate;
     char scr[80];
@@ -941,7 +943,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
         /* Fill in the time offset, milliseconds. */
         if (0 < gpsdata->fix.time.tv_sec) {
             timespec_t ts_now, ts_diff;
-	    (void)clock_gettime(CLOCK_REALTIME, &ts_now);
+            (void)clock_gettime(CLOCK_REALTIME, &ts_now);
             TS_SUB(&ts_diff, &ts_now, &gpsdata->fix.time);
 
             (void)snprintf(scr, sizeof(scr), "%lld.%03ld sec",
@@ -1185,3 +1187,4 @@ int main(int argc, char *argv[])
         }
     }
 }
+// vim: set expandtab shiftwidth=4
