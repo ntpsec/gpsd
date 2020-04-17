@@ -18,6 +18,7 @@ stages:
 .debian_build: &debian_build
   script:
   - apt update && apt -y install --no-install-recommends eatmydata
+  - eatmydata -- apt -y dist-upgrade
   - eatmydata -- apt -y install --no-install-recommends ${PACKAGES}
   - eatmydata -- .ci-build/build.sh
 
