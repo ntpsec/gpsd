@@ -3,7 +3,7 @@
  *
  * To do: Support for GPGLL, GPGBS, GPZDA, PASHR NMEA sentences.
  *
- * This file is Copyright (c) 2010-2018 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -297,7 +297,8 @@ static void nmea_update(void)
         if (strcmp(fields[0], "GPGSA") == 0
             || strcmp(fields[0], "GNGSA") == 0
             || strcmp(fields[0], "GLGSA") == 0) {
-            (void)mvwprintw(gpgsawin, MODE_LINE, 7, "%1s%s", fields[1], fields[2]);
+            (void)mvwprintw(gpgsawin, MODE_LINE, 7, "%1s%s", fields[1],
+                            fields[2]);
             monitor_satlist(gpgsawin, SATS_LINE, SATS_COL+6);
             (void)mvwprintw(gpgsawin, DOP_LINE, 8, "%-5s", fields[16]);
             (void)mvwprintw(gpgsawin, DOP_LINE, 16, "%-5s", fields[17]);
@@ -405,7 +406,7 @@ static int ashtech_command(char line[])
 {
     switch (line[0]) {
     case 'N':                   /* normal = 9600, GGA+GSA+GSV+RMC+ZDA */
-        monitor_nmea_send("$PASHS,NME,ALL,A,OFF");      /* silence outbound chatter */
+        monitor_nmea_send("$PASHS,NME,ALL,A,OFF");  // silence outbound chatter
         monitor_nmea_send("$PASHS,NME,ALL,B,OFF");
         monitor_nmea_send("$PASHS,NME,GGA,A,ON");
         monitor_nmea_send("$PASHS,NME,GSA,A,ON");
@@ -415,12 +416,12 @@ static int ashtech_command(char line[])
 
         monitor_nmea_send("$PASHS,INI,%d,%d,,,0,",
                           ASHTECH_SPEED_9600, ASHTECH_SPEED_9600);
-        (void)sleep(6);         /* it takes 4-6 sec for the receiver to reboot */
+        (void)sleep(6);         // it takes 4-6 sec for the receiver to reboot
         monitor_nmea_send("$PASHS,WAS,ON");     /* enable WAAS */
         break;
 
-    case 'R':                   /* raw = 57600, normal+XPG+POS+SAT+MCA+PBN+SNV */
-        monitor_nmea_send("$PASHS,NME,ALL,A,OFF");      /* silence outbound chatter */
+    case 'R':                 /* raw = 57600, normal+XPG+POS+SAT+MCA+PBN+SNV */
+        monitor_nmea_send("$PASHS,NME,ALL,A,OFF");  // silence outbound chatter
         monitor_nmea_send("$PASHS,NME,ALL,B,OFF");
         monitor_nmea_send("$PASHS,NME,GGA,A,ON");
         monitor_nmea_send("$PASHS,NME,GSA,A,ON");
@@ -430,16 +431,16 @@ static int ashtech_command(char line[])
 
         monitor_nmea_send("$PASHS,INI,%d,%d,,,0,",
                           ASHTECH_SPEED_57600, ASHTECH_SPEED_9600);
-        (void)sleep(6);         /* it takes 4-6 sec for the receiver to reboot */
+        (void)sleep(6);         // it takes 4-6 sec for the receiver to reboot
         monitor_nmea_send("$PASHS,WAS,ON");     /* enable WAAS */
 
-        monitor_nmea_send("$PASHS,NME,POS,A,ON");       /* Ashtech TPV solution */
-        monitor_nmea_send("$PASHS,NME,SAT,A,ON");       /* Ashtech Satellite status */
-        monitor_nmea_send("$PASHS,NME,MCA,A,ON");       /* MCA measurements */
-        monitor_nmea_send("$PASHS,NME,PBN,A,ON");       /* ECEF TPV solution */
-        monitor_nmea_send("$PASHS,NME,SNV,A,ON,10");    /* Almanac data */
+        monitor_nmea_send("$PASHS,NME,POS,A,ON");     /* Ashtech TPV solution */
+        monitor_nmea_send("$PASHS,NME,SAT,A,ON");   // Ashtech Satellite status
+        monitor_nmea_send("$PASHS,NME,MCA,A,ON");     /* MCA measurements */
+        monitor_nmea_send("$PASHS,NME,PBN,A,ON");     /* ECEF TPV solution */
+        monitor_nmea_send("$PASHS,NME,SNV,A,ON,10");  /* Almanac data */
 
-        monitor_nmea_send("$PASHS,NME,XMG,A,ON");       /* exception messages */
+        monitor_nmea_send("$PASHS,NME,XMG,A,ON");     /* exception messages */
         break;
 
     default:
