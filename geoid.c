@@ -5,7 +5,7 @@
  * Geoid separation code by Oleg Gusev, from data by Peter Dana.
  * ECEF conversion by Rob Janssen.
  *
- * This file is Copyright (c) 2010-2019 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -1005,3 +1005,4 @@ static double atan2z(double y, double x)
     return atan2(fix_minuz(y), fix_minuz(x));
 }
 #endif /* __UNUSED */
+// vim: set expandtab shiftwidth=4
