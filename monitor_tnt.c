@@ -1,7 +1,7 @@
 /*
  * monitor_tnt.c - gpsmon support for True North Revolution devices.
  *
- * This file is Copyright (c) 2010-2018 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -128,3 +128,4 @@ const struct monitor_object_t tnt_mmt = {
  *
  * The libgpsd session object is accessible as the global variable 'session'.
  */
+// vim: set expandtab shiftwidth=4
