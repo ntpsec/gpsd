@@ -51,7 +51,7 @@ message types 4, 5, 6, 7, and 13 has not been checked. Message types
 8, 10-12, 15-27, 28-30 (undefined), 31-37, 38-58 (undefined), and
 60-63 are not yet supported.
 
-This file is Copyright (c) 2010-2018 by the GPSD project
+This file is Copyright 2010 by the GPSD project
 SPDX-License-Identifier: BSD-2-clause
 
 *****************************************************************************/
@@ -1683,12 +1683,12 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
         memcpy(tp->words, msg->msg_type.rtcm2_msgunk,
                tp->length * sizeof(isgps30bits_t));
         if (NULL == msg_name) {
-	    GPSD_LOG(LOG_PROG, &session->context->errout,
-		     "RTCM2: type %d (unknown), length %d\n",
-		     tp->type, tp->length + 2);
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "RTCM2: type %d (unknown), length %d\n",
+                     tp->type, tp->length + 2);
         } else {
-	    GPSD_LOG(LOG_PROG, &session->context->errout,
-		     "RTCM2: type %d (%s), length %d\n",
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "RTCM2: type %d (%s), length %d\n",
                      tp->type, msg_name,tp->length + 2);
         }
     } else {
