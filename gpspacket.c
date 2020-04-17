@@ -1,7 +1,7 @@
 /*
  * Foreign function interface binding for the packet module.
  *
- * This file is Copyright (c) 2010-2020 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  *
  */
@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 #include "gpsd.h"
 #include "strfuncs.h"
 
@@ -37,9 +38,9 @@ static void visibilize(char *outbuf, size_t outlen, const char *inbuf,
                      0x00ff & (unsigned)*sp);
 }
 
+/* assemble msg in vprintf(3) style, use errout hook or syslog for delivery */
 void gpsd_vlog(const struct gpsd_errout_t *errout, const int errlevel,
                char *outbuf, size_t outlen, const char *fmt, va_list ap)
-/* assemble msg in vprintf(3) style, use errout hook or syslog for delivery */
 {
   if (errout->debug >= errlevel) {
     char buf[BUFSIZ];
@@ -97,9 +98,9 @@ void gpsd_vlog(const struct gpsd_errout_t *errout, const int errlevel,
   }
 }
 
+/* assemble msg in printf(3) style, use errout hook or syslog for delivery */
 void gpsd_log(const int errlevel, const struct gpsd_errout_t *errout,
               const char *fmt, ...)
-/* assemble msg in printf(3) style, use errout hook or syslog for delivery */
 {
   char buf[BUFSIZ];
   va_list ap;
@@ -136,3 +137,4 @@ struct gps_lexer_t *ffi_Lexer_init() {
   packet_reset(result);
   return result;
 }
+// vim: set expandtab shiftwidth=4
