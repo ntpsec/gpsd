@@ -1,6 +1,6 @@
 /* gpsutils.c -- code shared between low-level and high-level interfaces
  *
- * This file is Copyright (c) 2010-2018 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -17,8 +17,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/select.h>	 /* for to have a pselect(2) prototype a la POSIX */
-#include <sys/time.h>	 /* for to have a pselect(2) prototype a la SuS */
+#include <sys/select.h>  /* for to have a pselect(2) prototype a la POSIX */
+#include <sys/time.h>    /* for to have a pselect(2) prototype a la SuS */
 #include <time.h>
 
 #include "gps.h"
@@ -51,41 +51,43 @@
 double safe_atof(const char *string)
 {
     static int maxExponent = 511;   /* Largest possible base 10 exponent.  Any
-				     * exponent larger than this will already
-				     * produce underflow or overflow, so there's
-				     * no need to worry about additional digits.
-				     */
-    static double powersOf10[] = {  /* Table giving binary powers of 10.  Entry */
-	10.,			/* is 10^2^i.  Used to convert decimal */
-	100.,			/* exponents into floating-point numbers. */
-	1.0e4,
-	1.0e8,
-	1.0e16,
-	1.0e32,
-	1.0e64,
-	1.0e128,
-	1.0e256
+                                     * exponent larger than this will already
+                                     * produce underflow or overflow, so there's
+                                     * no need to worry about additional digits.
+                                     */
+    /* Table giving binary powers of 10.  Entry is 10^2^i.
+     * Used to convert decimal exponents into floating-point numbers. */
+    static double powersOf10[] = {
+        10.,
+        100.,
+        1.0e4,
+        1.0e8,
+        1.0e16,
+        1.0e32,
+        1.0e64,
+        1.0e128,
+        1.0e256
     };
 
     bool sign, expSign = false;
     double fraction, dblExp, *d;
     const char *p;
     int c;
-    int exp = 0;		/* Exponent read from "EX" field. */
-    int fracExp = 0;		/* Exponent that derives from the fractional
-				 * part.  Under normal circumstatnces, it is
-				 * the negative of the number of digits in F.
-				 * However, if I is very long, the last digits
-				 * of I get dropped (otherwise a long I with a
-				 * large negative exponent could cause an
-				 * unnecessary overflow on I alone).  In this
-				 * case, fracExp is incremented one for each
-				 * dropped digit. */
-    int mantSize;		/* Number of digits in mantissa. */
-    int decPt;			/* Number of mantissa digits BEFORE decimal
-				 * point. */
-    const char *pExp;		/* Temporarily holds location of exponent
-				 * in string. */
+    int exp = 0;                /* Exponent read from "EX" field. */
+    int fracExp = 0;            /* Exponent that derives from the fractional
+                                 * part.  Under normal circumstatnces, it is
+                                 * the negative of the number of digits in F.
+                                 * However, if I is very long, the last digits
+                                 * of I get dropped (otherwise a long I with a
+                                 * large negative exponent could cause an
+                                 * unnecessary overflow on I alone).  In this
+                                 * case, fracExp is incremented one for each
+                                 * dropped digit. */
+    int mantSize;               /* Number of digits in mantissa. */
+    int decPt;                  /* Number of mantissa digits BEFORE decimal
+                                 * point. */
+    const char *pExp;           /* Temporarily holds location of exponent
+                                 * in string. */
 
     /*
      * Strip off leading blanks and check for a sign.
@@ -93,18 +95,18 @@ double safe_atof(const char *string)
 
     p = string;
     while (isspace((unsigned char) *p)) {
-	p += 1;
+        p += 1;
     }
     if (*p == '\0') {
         return NAN;
     } else if (*p == '-') {
-	sign = true;
-	p += 1;
+        sign = true;
+        p += 1;
     } else {
-	if (*p == '+') {
-	    p += 1;
-	}
-	sign = false;
+        if (*p == '+') {
+            p += 1;
+        }
+        sign = false;
     }
 
     /*
@@ -115,14 +117,14 @@ double safe_atof(const char *string)
     decPt = -1;
     for (mantSize = 0; ; mantSize += 1)
     {
-	c = *p;
-	if (!isdigit(c)) {
-	    if ((c != '.') || (decPt >= 0)) {
-		break;
-	    }
-	    decPt = mantSize;
-	}
-	p += 1;
+        c = *p;
+        if (!isdigit(c)) {
+            if ((c != '.') || (decPt >= 0)) {
+                break;
+            }
+            decPt = mantSize;
+        }
+        p += 1;
     }
 
     /*
@@ -135,45 +137,45 @@ double safe_atof(const char *string)
     pExp  = p;
     p -= mantSize;
     if (decPt < 0) {
-	decPt = mantSize;
+        decPt = mantSize;
     } else {
-	mantSize -= 1;			/* One of the digits was the point. */
+        mantSize -= 1;                  /* One of the digits was the point. */
     }
     if (mantSize > 18) {
-	fracExp = decPt - 18;
-	mantSize = 18;
+        fracExp = decPt - 18;
+        mantSize = 18;
     } else {
-	fracExp = decPt - mantSize;
+        fracExp = decPt - mantSize;
     }
     if (mantSize == 0) {
-	fraction = 0.0;
-	//p = string;
-	goto done;
+        fraction = 0.0;
+        //p = string;
+        goto done;
     } else {
-	int frac1, frac2;
-	frac1 = 0;
-	for ( ; mantSize > 9; mantSize -= 1)
-	{
-	    c = *p;
-	    p += 1;
-	    if (c == '.') {
-		c = *p;
-		p += 1;
-	    }
-	    frac1 = 10*frac1 + (c - '0');
-	}
-	frac2 = 0;
-	for (; mantSize > 0; mantSize -= 1)
-	{
-	    c = *p;
-	    p += 1;
-	    if (c == '.') {
-		c = *p;
-		p += 1;
-	    }
-	    frac2 = 10*frac2 + (c - '0');
-	}
-	fraction = (1.0e9 * frac1) + frac2;
+        int frac1, frac2;
+        frac1 = 0;
+        for ( ; mantSize > 9; mantSize -= 1)
+        {
+            c = *p;
+            p += 1;
+            if (c == '.') {
+                c = *p;
+                p += 1;
+            }
+            frac1 = 10*frac1 + (c - '0');
+        }
+        frac2 = 0;
+        for (; mantSize > 0; mantSize -= 1)
+        {
+            c = *p;
+            p += 1;
+            if (c == '.') {
+                c = *p;
+                p += 1;
+            }
+            frac2 = 10*frac2 + (c - '0');
+        }
+        fraction = (1.0e9 * frac1) + frac2;
     }
 
     /*
@@ -182,25 +184,25 @@ double safe_atof(const char *string)
 
     p = pExp;
     if ((*p == 'E') || (*p == 'e')) {
-	p += 1;
-	if (*p == '-') {
-	    expSign = true;
-	    p += 1;
-	} else {
-	    if (*p == '+') {
-		p += 1;
-	    }
-	    expSign = false;
-	}
-	while (isdigit((unsigned char) *p)) {
-	    exp = exp * 10 + (*p - '0');
-	    p += 1;
-	}
+        p += 1;
+        if (*p == '-') {
+            expSign = true;
+            p += 1;
+        } else {
+            if (*p == '+') {
+                p += 1;
+            }
+            expSign = false;
+        }
+        while (isdigit((unsigned char) *p)) {
+            exp = exp * 10 + (*p - '0');
+            p += 1;
+        }
     }
     if (expSign) {
-	exp = fracExp - exp;
+        exp = fracExp - exp;
     } else {
-	exp = fracExp + exp;
+        exp = fracExp + exp;
     }
 
     /*
@@ -211,35 +213,35 @@ double safe_atof(const char *string)
      */
 
     if (exp < 0) {
-	expSign = true;
-	exp = -exp;
+        expSign = true;
+        exp = -exp;
     } else {
-	expSign = false;
+        expSign = false;
     }
     if (exp > maxExponent) {
-	exp = maxExponent;
-	errno = ERANGE;
+        exp = maxExponent;
+        errno = ERANGE;
     }
     dblExp = 1.0;
     for (d = powersOf10; exp != 0; exp >>= 1, d += 1) {
-	if (exp & 01) {
-	    dblExp *= *d;
-	}
+        if (exp & 01) {
+            dblExp *= *d;
+        }
     }
     if (expSign) {
-	fraction /= dblExp;
+        fraction /= dblExp;
     } else {
-	fraction *= dblExp;
+        fraction *= dblExp;
     }
 
 done:
     if (sign) {
-	return -fraction;
+        return -fraction;
     }
     return fraction;
 }
 
-#define MONTHSPERYEAR	12	/* months per calendar year */
+#define MONTHSPERYEAR   12      /* months per calendar year */
 
 /* stuff a fix structure with recognizable out-of-band values */
 void gps_clear_fix(struct gps_fix_t *fixp)
@@ -347,108 +349,108 @@ void gps_clear_log(struct gps_log_t *logp)
 /* merge new data (from) into current fix (to)
  * Being careful not to lose information */
 void gps_merge_fix(struct gps_fix_t *to,
-		   gps_mask_t transfer,
-		   struct gps_fix_t *from)
+                   gps_mask_t transfer,
+                   struct gps_fix_t *from)
 {
     if ((NULL == to) || (NULL == from))
-	return;
+        return;
     if ((transfer & TIME_SET) != 0)
-	to->time = from->time;
+        to->time = from->time;
     if ((transfer & LATLON_SET) != 0) {
-	to->latitude = from->latitude;
-	to->longitude = from->longitude;
+        to->latitude = from->latitude;
+        to->longitude = from->longitude;
     }
     if (0 != (transfer & MODE_SET)) {
-	/* FIXME?  Maybe only upgrade mode, not downgrade it */
-	to->mode = from->mode;
+        /* FIXME?  Maybe only upgrade mode, not downgrade it */
+        to->mode = from->mode;
     }
     /* Some messages only report mode, some mode and status, some only status.
      * Only upgrade status, not downgrade it */
     if (0 != (transfer & STATUS_SET)) {
-	if (to->status < from->status) {
-	    to->status = from->status;
-	}
+        if (to->status < from->status) {
+            to->status = from->status;
+        }
     }
     if ((transfer & ALTITUDE_SET) != 0) {
-	if (0 != isfinite(from->altHAE)) {
-	    to->altHAE = from->altHAE;
-	}
-	if (0 != isfinite(from->altMSL)) {
-	    to->altMSL = from->altMSL;
-	}
-	if (0 != isfinite(from->depth)) {
-	    to->depth = from->depth;
-	}
+        if (0 != isfinite(from->altHAE)) {
+            to->altHAE = from->altHAE;
+        }
+        if (0 != isfinite(from->altMSL)) {
+            to->altMSL = from->altMSL;
+        }
+        if (0 != isfinite(from->depth)) {
+            to->depth = from->depth;
+        }
     }
     if ((transfer & TRACK_SET) != 0)
         to->track = from->track;
     if ((transfer & MAGNETIC_TRACK_SET) != 0) {
-	if (0 != isfinite(from->magnetic_track)) {
-	    to->magnetic_track = from->magnetic_track;
-	}
-	if (0 != isfinite(from->magnetic_var)) {
-	    to->magnetic_var = from->magnetic_var;
-	}
+        if (0 != isfinite(from->magnetic_track)) {
+            to->magnetic_track = from->magnetic_track;
+        }
+        if (0 != isfinite(from->magnetic_var)) {
+            to->magnetic_var = from->magnetic_var;
+        }
     }
     if ((transfer & SPEED_SET) != 0)
-	to->speed = from->speed;
+        to->speed = from->speed;
     if ((transfer & CLIMB_SET) != 0)
-	to->climb = from->climb;
+        to->climb = from->climb;
     if ((transfer & TIMERR_SET) != 0)
-	to->ept = from->ept;
+        to->ept = from->ept;
     if (0 != isfinite(from->epx) &&
         0 != isfinite(from->epy)) {
-	to->epx = from->epx;
-	to->epy = from->epy;
+        to->epx = from->epx;
+        to->epy = from->epy;
     }
     if (0 != isfinite(from->epd)) {
-	to->epd = from->epd;
+        to->epd = from->epd;
     }
     if (0 != isfinite(from->eph)) {
-	to->eph = from->eph;
+        to->eph = from->eph;
     }
     if (0 != isfinite(from->eps)) {
-	to->eps = from->eps;
+        to->eps = from->eps;
     }
     /* spherical error probability, not geoid separation */
     if (0 != isfinite(from->sep)) {
-	to->sep = from->sep;
+        to->sep = from->sep;
     }
     /* geoid separation, not spherical error probability */
     if (0 != isfinite(from->geoid_sep)) {
-	to->geoid_sep = from->geoid_sep;
+        to->geoid_sep = from->geoid_sep;
     }
     if (0 != isfinite(from->epv)) {
-	to->epv = from->epv;
+        to->epv = from->epv;
     }
     if ((transfer & SPEEDERR_SET) != 0)
-	to->eps = from->eps;
+        to->eps = from->eps;
     if ((transfer & ECEF_SET) != 0) {
-	to->ecef.x = from->ecef.x;
-	to->ecef.y = from->ecef.y;
-	to->ecef.z = from->ecef.z;
-	to->ecef.pAcc = from->ecef.pAcc;
+        to->ecef.x = from->ecef.x;
+        to->ecef.y = from->ecef.y;
+        to->ecef.z = from->ecef.z;
+        to->ecef.pAcc = from->ecef.pAcc;
     }
     if ((transfer & VECEF_SET) != 0) {
-	to->ecef.vx = from->ecef.vx;
-	to->ecef.vy = from->ecef.vy;
-	to->ecef.vz = from->ecef.vz;
-	to->ecef.vAcc = from->ecef.vAcc;
+        to->ecef.vx = from->ecef.vx;
+        to->ecef.vy = from->ecef.vy;
+        to->ecef.vz = from->ecef.vz;
+        to->ecef.vAcc = from->ecef.vAcc;
     }
     if (0 != (transfer & NED_SET)) {
-	to->NED.relPosN = from->NED.relPosN;
-	to->NED.relPosE = from->NED.relPosE;
-	to->NED.relPosD = from->NED.relPosD;
-	if ((0 != isfinite(from->NED.relPosH)) &&
-	    (0 != isfinite(from->NED.relPosL))) {
-	    to->NED.relPosH = from->NED.relPosH;
-	    to->NED.relPosL = from->NED.relPosL;
+        to->NED.relPosN = from->NED.relPosN;
+        to->NED.relPosE = from->NED.relPosE;
+        to->NED.relPosD = from->NED.relPosD;
+        if ((0 != isfinite(from->NED.relPosH)) &&
+            (0 != isfinite(from->NED.relPosL))) {
+            to->NED.relPosH = from->NED.relPosH;
+            to->NED.relPosL = from->NED.relPosL;
         }
     }
     if ((transfer & VNED_SET) != 0) {
-	to->NED.velN = from->NED.velN;
-	to->NED.velE = from->NED.velE;
-	to->NED.velD = from->NED.velD;
+        to->NED.velN = from->NED.velN;
+        to->NED.velE = from->NED.velE;
+        to->NED.velD = from->NED.velD;
     }
     if ('\0' != from->datum[0]) {
         strlcpy(to->datum, from->datum, sizeof(to->datum));
@@ -456,27 +458,27 @@ void gps_merge_fix(struct gps_fix_t *to,
     if (0 != isfinite(from->dgps_age) &&
         0 <= from->dgps_station) {
         /* both, or neither */
-	to->dgps_age = from->dgps_age;
-	to->dgps_station = from->dgps_station;
+        to->dgps_age = from->dgps_age;
+        to->dgps_station = from->dgps_station;
     }
 
     // navdata stuff.  just wind angle and angle for now
     if (0 != (transfer & NAVDATA_SET)) {
-	if (0 != isfinite(from->wanglem)) {
-	    to->wanglem = from->wanglem;
-	}
-	if (0 != isfinite(from->wangler)) {
-	    to->wangler = from->wangler;
-	}
-	if (0 != isfinite(from->wanglet)) {
-	    to->wanglet = from->wanglet;
-	}
-	if (0 != isfinite(from->wspeedr)) {
-	    to->wspeedr = from->wspeedr;
-	}
-	if (0 != isfinite(from->wspeedt)) {
-	    to->wspeedt = from->wspeedt;
-	}
+        if (0 != isfinite(from->wanglem)) {
+            to->wanglem = from->wanglem;
+        }
+        if (0 != isfinite(from->wangler)) {
+            to->wangler = from->wangler;
+        }
+        if (0 != isfinite(from->wanglet)) {
+            to->wanglet = from->wanglet;
+        }
+        if (0 != isfinite(from->wspeedr)) {
+            to->wspeedr = from->wspeedr;
+        }
+        if (0 != isfinite(from->wspeedt)) {
+            to->wspeedt = from->wspeedt;
+        }
     }
 }
 
@@ -492,7 +494,7 @@ time_t mkgmtime(struct tm * t)
     int year;
     time_t result;
     static const int cumdays[MONTHSPERYEAR] =
-	{ 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
+        { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
 
     year = 1900 + t->tm_year + t->tm_mon / MONTHSPERYEAR;
     result = (year - 1970) * 365 + cumdays[t->tm_mon % MONTHSPERYEAR];
@@ -500,8 +502,8 @@ time_t mkgmtime(struct tm * t)
     result -= (year - 1900) / 100;
     result += (year - 1600) / 400;
     if ((year % 4) == 0 && ((year % 100) != 0 || (year % 400) == 0) &&
-	(t->tm_mon % MONTHSPERYEAR) < 2)
-	result--;
+        (t->tm_mon % MONTHSPERYEAR) < 2)
+        result--;
     result += t->tm_mday - 1;
     result *= 24;
     result += t->tm_hour;
@@ -532,10 +534,13 @@ timespec_t iso8601_to_timespec(char *isotime)
     dp = strptime(isotime, "%Y-%m-%dT%H:%M:%S", &tm);
 #else
     /* Fallback for systems without strptime (i.e. Windows)
-       This is a simplistic conversion for iso8601 strings only,
-       rather than embedding a full copy of strptime() that handles all formats */
+     * This is a simplistic conversion for iso8601 strings only,
+     * rather than embedding a full copy of strptime() that handles
+     * all formats */
     double sec;
-    unsigned int tmp; // Thus avoiding needing to test for (broken) negative date/time numbers in token reading - only need to check the upper range
+    /* Thus avoiding needing to test for (broken) negative date/time
+     * numbers in token reading - only need to check the upper range */
+    unsigned int tmp;
     bool failed = false;
     char *isotime_tokenizer = strdup(isotime);
     if (isotime_tokenizer) {
@@ -543,68 +548,68 @@ timespec_t iso8601_to_timespec(char *isotime)
       char *pch = strtok_r(isotime_tokenizer, "-T:", &tmpbuf);
       int token_number = 0;
       while (pch != NULL) {
-	token_number++;
-	// Give up if encountered way too many tokens.
-	if (token_number > 10) {
-	  failed = true;
-	  break;
-	}
-	switch (token_number) {
-	case 1: // Year token
-	  tmp = atoi(pch);
-	  if (tmp < 9999)
-	    tm.tm_year = tmp - 1900; // Adjust to tm year
-	  else
-	    failed = true;
-	  break;
-	case 2: // Month token
-	  tmp = atoi(pch);
-	  if (tmp < 13)
-	    tm.tm_mon = tmp - 1; // Month indexing starts from zero
-	  else
-	    failed = true;
-	  break;
-	case 3: // Day token
-	  tmp = atoi(pch);
-	  if (tmp < 32)
-	    tm.tm_mday = tmp;
-	  else
-	    failed = true;
-	  break;
-	case 4: // Hour token
-	  tmp = atoi(pch);
-	  if (tmp < 24)
-	    tm.tm_hour = tmp;
-	  else
-	    failed = true;
-	  break;
-	case 5: // Minute token
-	  tmp = atoi(pch);
-	  if (tmp < 60)
-	    tm.tm_min = tmp;
-	  else
-	    failed = true;
-	  break;
-	case 6: // Seconds token
-	  sec = safe_atof(pch);
-	  // NB To handle timestamps with leap seconds
-	  if (0 == isfinite(sec) &&
-	      sec >= 0.0 && sec < 61.5 ) {
-	    tm.tm_sec = (unsigned int)sec; // Truncate to get integer value
-	    usec = sec - (unsigned int)sec; // Get the fractional part (if any)
-	  }
-	  else
-	    failed = true;
-	  break;
-	default: break;
-	}
-	pch = strtok_r(NULL, "-T:", &tmpbuf);
+        token_number++;
+        // Give up if encountered way too many tokens.
+        if (token_number > 10) {
+          failed = true;
+          break;
+        }
+        switch (token_number) {
+        case 1: // Year token
+          tmp = atoi(pch);
+          if (tmp < 9999)
+            tm.tm_year = tmp - 1900; // Adjust to tm year
+          else
+            failed = true;
+          break;
+        case 2: // Month token
+          tmp = atoi(pch);
+          if (tmp < 13)
+            tm.tm_mon = tmp - 1; // Month indexing starts from zero
+          else
+            failed = true;
+          break;
+        case 3: // Day token
+          tmp = atoi(pch);
+          if (tmp < 32)
+            tm.tm_mday = tmp;
+          else
+            failed = true;
+          break;
+        case 4: // Hour token
+          tmp = atoi(pch);
+          if (tmp < 24)
+            tm.tm_hour = tmp;
+          else
+            failed = true;
+          break;
+        case 5: // Minute token
+          tmp = atoi(pch);
+          if (tmp < 60)
+            tm.tm_min = tmp;
+          else
+            failed = true;
+          break;
+        case 6: // Seconds token
+          sec = safe_atof(pch);
+          // NB To handle timestamps with leap seconds
+          if (0 == isfinite(sec) &&
+              sec >= 0.0 && sec < 61.5 ) {
+            tm.tm_sec = (unsigned int)sec; // Truncate to get integer value
+            usec = sec - (unsigned int)sec; // Get the fractional part (if any)
+          }
+          else
+            failed = true;
+          break;
+        default: break;
+        }
+        pch = strtok_r(NULL, "-T:", &tmpbuf);
       }
       free(isotime_tokenizer);
       // Split may result in more than 6 tokens if the TZ has any t's in it
       // So check that we've seen enough tokens rather than an exact number
       if (token_number < 6)
-	failed = true;
+        failed = true;
     }
     if (failed)
       memset(&tm,0,sizeof(tm));
@@ -612,12 +617,12 @@ timespec_t iso8601_to_timespec(char *isotime)
       // When successful this normalizes tm so that tm_yday is set
       //  and thus tm is valid for use with other functions
       if (mktime(&tm) == (time_t)-1)
-	// Failed mktime - so reset the timestamp
-	memset(&tm,0,sizeof(tm));
+        // Failed mktime - so reset the timestamp
+        memset(&tm,0,sizeof(tm));
     }
 #endif
     if (dp != NULL && *dp == '.')
-	usec = strtod(dp, NULL);
+        usec = strtod(dp, NULL);
     /*
      * It would be nice if we could say mktime(&tm) - timezone + usec instead,
      * but timezone is not available at all on some BSDs. Besides, when working
@@ -634,7 +639,7 @@ timespec_t iso8601_to_timespec(char *isotime)
     QDateTime d = QDateTime::fromString(isotime, Qt::ISODate);
     QStringList sl = t.split(".");
     if (sl.size() > 1)
-	usec = sl[1].toInt() / pow(10., (double)sl[1].size());
+        usec = sl[1].toInt() / pow(10., (double)sl[1].size());
     ret.tv_sec = d.toTime_t();
     ret.tv_nsec = usec * 1e9;;
 #endif
@@ -689,18 +694,20 @@ char *now_to_iso8601(char *tbuf, size_t tbuf_sz)
     return timespec_to_iso8601(ts_now, tbuf, tbuf_sz);
 }
 
-#define Deg2Rad(n)	((n) * DEG_2_RAD)
+#define Deg2Rad(n)      ((n) * DEG_2_RAD)
 
 /* Distance in meters between two points specified in degrees, optionally
-with initial and final bearings. */
-double earth_distance_and_bearings(double lat1, double lon1, double lat2, double lon2, double *ib, double *fb)
+ * with initial and final bearings. */
+double earth_distance_and_bearings(double lat1, double lon1,
+                                   double lat2, double lon2,
+                                   double *ib, double *fb)
 {
     /*
      * this is a translation of the javascript implementation of the
      * Vincenty distance formula by Chris Veness. See
      * http://www.movable-type.co.uk/scripts/latlong-vincenty.html
      */
-    double a, b, f;		// WGS-84 ellipsoid params
+    double a, b, f;             // WGS-84 ellipsoid params
     double L, L_P, U1, U2, s_U1, c_U1, s_U2, c_U2;
     double uSq, A, B, d_S, lambda;
     // cppcheck-suppress variableScope
@@ -721,44 +728,44 @@ double earth_distance_and_bearings(double lat1, double lon1, double lat2, double
     lambda = L;
 
     do {
-	s_L = sin(lambda);
-	c_L = cos(lambda);
-	s_S = sqrt((c_U2 * s_L) * (c_U2 * s_L) +
-		   (c_U1 * s_U2 - s_U1 * c_U2 * c_L) *
-		   (c_U1 * s_U2 - s_U1 * c_U2 * c_L));
+        s_L = sin(lambda);
+        c_L = cos(lambda);
+        s_S = sqrt((c_U2 * s_L) * (c_U2 * s_L) +
+                   (c_U1 * s_U2 - s_U1 * c_U2 * c_L) *
+                   (c_U1 * s_U2 - s_U1 * c_U2 * c_L));
 
-	if (s_S == 0)
-	    return 0;
+        if (s_S == 0)
+            return 0;
 
-	c_S = s_U1 * s_U2 + c_U1 * c_U2 * c_L;
-	S = atan2(s_S, c_S);
-	s_A = c_U1 * c_U2 * s_L / s_S;
-	c_SqA = 1 - s_A * s_A;
-	c_2SM = c_S - 2 * s_U1 * s_U2 / c_SqA;
+        c_S = s_U1 * s_U2 + c_U1 * c_U2 * c_L;
+        S = atan2(s_S, c_S);
+        s_A = c_U1 * c_U2 * s_L / s_S;
+        c_SqA = 1 - s_A * s_A;
+        c_2SM = c_S - 2 * s_U1 * s_U2 / c_SqA;
 
-	if (0 == isfinite(c_2SM))
-	    c_2SM = 0;
+        if (0 == isfinite(c_2SM))
+            c_2SM = 0;
 
-	C = f / 16 * c_SqA * (4 + f * (4 - 3 * c_SqA));
-	L_P = lambda;
-	lambda = L + (1 - C) * f * s_A *
-	    (S + C * s_S * (c_2SM + C * c_S * (2 * c_2SM * c_2SM - 1)));
+        C = f / 16 * c_SqA * (4 + f * (4 - 3 * c_SqA));
+        L_P = lambda;
+        lambda = L + (1 - C) * f * s_A *
+            (S + C * s_S * (c_2SM + C * c_S * (2 * c_2SM * c_2SM - 1)));
     } while ((fabs(lambda - L_P) > 1.0e-12) && (--i > 0));
 
     if (i == 0)
-	return NAN;		// formula failed to converge
+        return NAN;             // formula failed to converge
 
     uSq = c_SqA * ((a * a) - (b * b)) / (b * b);
     A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)));
     B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)));
     d_S = B * s_S * (c_2SM + B / 4 *
-		     (c_S * (-1 + 2 * c_2SM * c_2SM) - B / 6 * c_2SM *
-		      (-3 + 4 * s_S * s_S) * (-3 + 4 * c_2SM * c_2SM)));
+                     (c_S * (-1 + 2 * c_2SM * c_2SM) - B / 6 * c_2SM *
+                      (-3 + 4 * s_S * s_S) * (-3 + 4 * c_2SM * c_2SM)));
 
     if (ib != NULL)
-	*ib = atan2(c_U2 * sin(lambda), c_U1 * s_U2 - s_U1 * c_U2 * cos(lambda));
+        *ib = atan2(c_U2 * sin(lambda), c_U1 * s_U2 - s_U1 * c_U2 * cos(lambda));
     if (fb != NULL)
-	*fb = atan2(c_U1 * sin(lambda), c_U1 * s_U2 * cos(lambda) - s_U1 * c_U2);
+        *fb = atan2(c_U1 * sin(lambda), c_U1 * s_U2 * cos(lambda) - s_U1 * c_U2);
 
     return (WGS84B * A * (S - d_S));
 }
@@ -766,7 +773,7 @@ double earth_distance_and_bearings(double lat1, double lon1, double lat2, double
 /* Distance in meters between two points specified in degrees. */
 double earth_distance(double lat1, double lon1, double lat2, double lon2)
 {
-	return earth_distance_and_bearings(lat1, lon1, lat2, lon2, NULL, NULL);
+        return earth_distance_and_bearings(lat1, lon1, lat2, lon2, NULL, NULL);
 }
 
 // Wait for data until timeout, ignoring signals.
@@ -824,7 +831,7 @@ void datum_code_string(int code, char *buffer, size_t len)
         /* Fake it */
         snprintf(buffer, len, "%d", code);
     } else {
-	strlcpy(buffer, datum_str, len);
+        strlcpy(buffer, datum_str, len);
     }
 }
 /* end */
