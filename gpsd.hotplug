@@ -16,7 +16,7 @@
 # Do not introduce bashims into this script, as we want it to continue to
 # work under Ubuntu.
 #
-# This file is Copyright (c) 2010 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 
 PATH=/usr/sbin:$PATH
@@ -73,8 +73,9 @@ fi
     #logger -t gpsd.hotplug -p daemon.info "waiting for" $DEVNAME
     while [ -x $DEVNAME ]
     do
-	sleep 1
+        sleep 1
     done
     #logger -t gpsd.hotplug -p daemon.info $DEVNAME "is active"
     gpsdctl $ACTION $DEVNAME
 } &
+# vim: set expandtab shiftwidth=4
