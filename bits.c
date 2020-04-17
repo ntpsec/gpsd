@@ -1,6 +1,6 @@
 /* bits.c - bitfield extraction code
  *
- * This file is Copyright (c)2010-2018 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  *
  * Bitfield extraction functions.  In each, start is a bit index  - not
@@ -13,15 +13,17 @@
 #include "gpsd_config.h"  /* must be before all includes */
 
 #include <assert.h>
-#include <stdint.h>
-#include <stdbool.h>
 #include <limits.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "bits.h"
 
-uint64_t ubits(unsigned char buf[], unsigned int start, unsigned int width, bool le)
-/* extract a (zero-origin) bitfield from the buffer as an unsigned big-endian uint64_t */
+/* extract a (zero-origin) bitfield from the buffer as an
+ * unsigned big-endian uint64_t */
+uint64_t ubits(unsigned char buf[], unsigned int start,
+               unsigned int width, bool le)
 {
     uint64_t fld = 0;
     unsigned int i;
@@ -29,14 +31,14 @@ uint64_t ubits(unsigned char buf[], unsigned int start, unsigned int width, bool
 
     assert(width <= sizeof(uint64_t) * CHAR_BIT);
     for (i = start / CHAR_BIT;
-	 i < (start + width + CHAR_BIT - 1) / CHAR_BIT; i++) {
-	fld <<= CHAR_BIT;
-	fld |= (unsigned char)buf[i];
+         i < (start + width + CHAR_BIT - 1) / CHAR_BIT; i++) {
+        fld <<= CHAR_BIT;
+        fld |= (unsigned char)buf[i];
     }
 
     end = (start + width) % CHAR_BIT;
     if (end != 0) {
-	fld >>= (CHAR_BIT - end);
+        fld >>= (CHAR_BIT - end);
     }
 
     fld &= ~(~0ULL << width);
@@ -44,23 +46,24 @@ uint64_t ubits(unsigned char buf[], unsigned int start, unsigned int width, bool
     /* was extraction as a little-endian requested? */
     if (le)
     {
-	uint64_t reversed = 0;
+        uint64_t reversed = 0;
 
-	for (i = width; i; --i)
-	{
-	    reversed <<= 1;
-	    if (fld & 1)
-		reversed |= 1;
-	    fld >>= 1;
-	}
-	fld = reversed;
+        for (i = width; i; --i)
+        {
+            reversed <<= 1;
+            if (fld & 1)
+                reversed |= 1;
+            fld >>= 1;
+        }
+        fld = reversed;
     }
 
     return fld;
 }
 
-int64_t sbits(signed char buf[], unsigned int start, unsigned int width, bool le)
 /* extract a bitfield from the buffer as a signed big-endian long */
+int64_t sbits(signed char buf[], unsigned int start, unsigned int width,
+              bool le)
 {
     uint64_t fld = ubits((unsigned char *)buf, start, width, le);
 
@@ -70,7 +73,7 @@ int64_t sbits(signed char buf[], unsigned int start, unsigned int width, bool le
     assert(width > 0);
 
     if (fld & (1ULL << (width - 1))) {
-	fld |= (~0ULL << (width - 1));
+        fld |= (~0ULL << (width - 1));
     }
     return (int64_t)fld;
 }
@@ -131,18 +134,18 @@ void shiftleft(unsigned char *data, int size, unsigned short left)
     unsigned char *byte;
 
     if (left >= CHAR_BIT) {
-	size -= left/CHAR_BIT;
-	memmove(data, data + left/CHAR_BIT, (size + CHAR_BIT - 1)/CHAR_BIT);
-	left %= CHAR_BIT;
+        size -= left/CHAR_BIT;
+        memmove(data, data + left/CHAR_BIT, (size + CHAR_BIT - 1)/CHAR_BIT);
+        left %= CHAR_BIT;
     }
 
     for (byte = data; size--; ++byte )
     {
       unsigned char bits;
       if (size)
-	  bits = byte[1] >> (CHAR_BIT - left);
+          bits = byte[1] >> (CHAR_BIT - left);
       else
-	  bits = 0;
+          bits = 0;
       *byte <<= left;
       *byte |= bits;
     }
@@ -169,8 +172,8 @@ u_int16_t swap_u16(u_int16_t i)
     return (c1 << 8) + c2;
 }
 
-u_int32_t swap_u32(u_int32_t i)
 /* byte-swap a 32-bit unsigned int */
+u_int32_t swap_u32(u_int32_t i)
 {
     u_int8_t c1, c2, c3, c4;
 
@@ -179,7 +182,9 @@ u_int32_t swap_u32(u_int32_t i)
     c3 = (i >> 16) & 255;
     c4 = (i >> 24) & 255;
 
-    return ((u_int32_t)c1 << 24) + ((u_int32_t)c2 << 16) + ((u_int32_t)c3 << 8) + c4;
+    return ((u_int32_t)c1 << 24) +
+            ((u_int32_t)c2 << 16) +
+            ((u_int32_t)c3 << 8) + c4;
 }
 
 u_int64_t swap_u64(u_int64_t i)
@@ -206,3 +211,4 @@ u_int64_t swap_u64(u_int64_t i)
             c8;
 }
 #endif /* __UNUSED__ */
+// vim: set expandtab shiftwidth=4
