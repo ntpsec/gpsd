@@ -1,7 +1,7 @@
 /*
  * gpsdclient.c -- support functions for GPSD clients
  *
- * This file is Copyright (c) 2010-2018 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -218,8 +218,8 @@ enum unit gpsd_units(void)
     return unspecified;
 }
 
-void gpsd_source_spec(const char *arg, struct fixsource_t *source)
 /* standard parsing of a GPS data source spec */
+void gpsd_source_spec(const char *arg, struct fixsource_t *source)
 {
     /* the casts attempt to head off a -Wwrite-strings warning */
     source->server = (char *)"localhost";
@@ -379,8 +379,8 @@ char *maidenhead(double lat, double lon)
 
 #define NITEMS(x) (int)(sizeof(x)/sizeof(x[0])) /* from gpsd.h-tail */
 
-struct exportmethod_t *export_lookup(const char *name)
 /* Look up an available export method by name */
+struct exportmethod_t *export_lookup(const char *name)
 {
     struct exportmethod_t *mp, *method = NULL;
 
@@ -392,8 +392,8 @@ struct exportmethod_t *export_lookup(const char *name)
     return method;
 }
 
-void export_list(FILE *fp)
 /* list known export methods */
+void export_list(FILE *fp)
 {
     struct exportmethod_t *method;
 
@@ -409,3 +409,4 @@ struct exportmethod_t *export_default(void)
 }
 
 /* gpsdclient.c ends here */
+// vim: set expandtab shiftwidth=4
