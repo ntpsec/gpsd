@@ -8,7 +8,7 @@ DESCRIPTION
 representations to libgps structures.
 
 PERMISSIONS
-   This file is Copyright (c) 2010-2018 by the GPSD project
+   This file is Copyright 2010 by the GPSD project
    SPDX-License-Identifier: BSD-2-clause
 
 ***************************************************************************/
@@ -270,4 +270,3 @@ int json_rtcm2_read(const char *buf,
 /* rtcm2_json.c ends here */
 
 // vim: set expandtab shiftwidth=4
-
