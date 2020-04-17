@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2005 Jeff Francis <jeff@gritch.org>
+ * Copyright 2005 Jeff Francis <jeff@gritch.org>
  *
- * This file is Copyright (c) 2010-20189 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  *
  */
@@ -260,82 +260,82 @@ int main(int argc, char *argv[])
     switch (gpsd_units())
     {
     case imperial:
-	altfactor = METERS_TO_FEET;
-	altunits = "ft";
-	speedfactor = MPS_TO_MPH;
-	speedunits = "mph";
-	break;
+        altfactor = METERS_TO_FEET;
+        altunits = "ft";
+        speedfactor = MPS_TO_MPH;
+        speedunits = "mph";
+        break;
     case nautical:
-	altfactor = METERS_TO_FEET;
-	altunits = "ft";
-	speedfactor = MPS_TO_KNOTS;
-	speedunits = "knots";
-	break;
+        altfactor = METERS_TO_FEET;
+        altunits = "ft";
+        speedfactor = MPS_TO_KNOTS;
+        speedunits = "knots";
+        break;
     case metric:
-	altfactor = 1;
-	altunits = "m";
-	speedfactor = MPS_TO_KPH;
-	speedunits = "kph";
-	break;
+        altfactor = 1;
+        altunits = "m";
+        speedfactor = MPS_TO_KPH;
+        speedunits = "kph";
+        break;
     default:
-	/* leave the default alone */
-	break;
+        /* leave the default alone */
+        break;
     }
 
     /* Process the options.  Print help if requested. */
     while ((option = getopt(argc, argv, "hl:su:V")) != -1) {
-	switch (option) {
-	case 'h':
-	default:
-	    usage(argv[0]);
-	    break;
-	case 'l':
-	    switch ( optarg[0] ) {
-	    case 'd':
-		deg_type = deg_dd;
-		continue;
-	    case 'm':
-		deg_type = deg_ddmm;
-		continue;
-	    case 's':
-		deg_type = deg_ddmmss;
-		continue;
-	    default:
-		(void)fprintf(stderr, "Unknown -l argument: %s\n", optarg);
-	    }
-	    break;
-	case 's':
-	    sleep(10);
-	    continue;
-	case 'u':
-	    switch ( optarg[0] ) {
-	    case 'i':
-		altfactor = METERS_TO_FEET;
-		altunits = "ft";
-		speedfactor = MPS_TO_MPH;
-		speedunits = "mph";
-		continue;
-	    case 'n':
-		altfactor = METERS_TO_FEET;
-		altunits = "ft";
-		speedfactor = MPS_TO_KNOTS;
-		speedunits = "knots";
-		continue;
-	    case 'm':
-		altfactor = 1;
-		altunits = "m";
-		speedfactor = MPS_TO_KPH;
-		speedunits = "kph";
-		continue;
-	    default:
+        switch (option) {
+        case 'h':
+        default:
+            usage(argv[0]);
+            break;
+        case 'l':
+            switch ( optarg[0] ) {
+            case 'd':
+                deg_type = deg_dd;
+                continue;
+            case 'm':
+                deg_type = deg_ddmm;
+                continue;
+            case 's':
+                deg_type = deg_ddmmss;
+                continue;
+            default:
+                (void)fprintf(stderr, "Unknown -l argument: %s\n", optarg);
+            }
+            break;
+        case 's':
+            sleep(10);
+            continue;
+        case 'u':
+            switch ( optarg[0] ) {
+            case 'i':
+                altfactor = METERS_TO_FEET;
+                altunits = "ft";
+                speedfactor = MPS_TO_MPH;
+                speedunits = "mph";
+                continue;
+            case 'n':
+                altfactor = METERS_TO_FEET;
+                altunits = "ft";
+                speedfactor = MPS_TO_KNOTS;
+                speedunits = "knots";
+                continue;
+            case 'm':
+                altfactor = 1;
+                altunits = "m";
+                speedfactor = MPS_TO_KPH;
+                speedunits = "kph";
+                continue;
+            default:
                 break;
-	    }
+            }
             (void)fprintf(stderr, "Unknown -u argument: %s\n", optarg);
             break;
-	case 'V':
-	    (void)fprintf(stderr, "lcdgps revision " REVISION "\n");
-	    exit(EXIT_SUCCESS);
-	}
+        case 'V':
+            (void)fprintf(stderr, "lcdgps revision " REVISION "\n");
+            exit(EXIT_SUCCESS);
+        }
     }
 
     /* Grok the server, port, and device. */
@@ -347,22 +347,22 @@ int main(int argc, char *argv[])
     /* Daemonize... */
   if (os_daemon(0, 0) != 0)
       (void)fprintf(stderr,
-		    "lcdgps: daemonization failed: %s\n",
-		    strerror(errno));
+                    "lcdgps: daemonization failed: %s\n",
+                    strerror(errno));
 
     /* Open the stream to gpsd. */
     if (gps_open(source.server, source.port, &gpsdata) != 0) {
-	(void)fprintf( stderr,
-		       "lcdgps: no gpsd running or network error: %d, %s\n",
-		       errno, gps_errstr(errno));
-	exit(EXIT_FAILURE);
+        (void)fprintf( stderr,
+                       "lcdgps: no gpsd running or network error: %d, %s\n",
+                       errno, gps_errstr(errno));
+        exit(EXIT_FAILURE);
     }
 
     /* Connect to LCDd */
     h = gethostbyname(LCDDHOST);
     if (h==NULL) {
-	printf("%s: unknown host '%s'\n",argv[0],LCDDHOST);
-	exit(EXIT_FAILURE);
+        printf("%s: unknown host '%s'\n",argv[0],LCDDHOST);
+        exit(EXIT_FAILURE);
     }
 
     servAddr.sin_family = h->h_addrtype;
@@ -372,8 +372,8 @@ int main(int argc, char *argv[])
     /* create socket */
     sd = socket(AF_INET, SOCK_STREAM, 0);
     if (BAD_SOCKET(sd)) {
-	perror("cannot open socket ");
-	exit(EXIT_FAILURE);
+        perror("cannot open socket ");
+        exit(EXIT_FAILURE);
     }
 
     /* bind any port number */
@@ -384,17 +384,17 @@ int main(int argc, char *argv[])
     /* coverity[uninit_use_in_call] */
     rc = bind(sd, (struct sockaddr *) &localAddr, sizeof(localAddr));
     if (rc == -1) {
-	printf("%s: cannot bind port TCP %d\n",argv[0],LCDDPORT);
-	perror("error ");
-	exit(EXIT_FAILURE);
+        printf("%s: cannot bind port TCP %d\n",argv[0],LCDDPORT);
+        perror("error ");
+        exit(EXIT_FAILURE);
     }
 
     /* connect to server */
     /* coverity[uninit_use_in_call] */
     rc = connect(sd, (struct sockaddr *) &servAddr, sizeof(servAddr));
     if (rc == -1) {
-	perror("cannot connect ");
-	exit(EXIT_FAILURE);
+        perror("cannot connect ");
+        exit(EXIT_FAILURE);
     }
 
     /* Do the initial field label setup. */
@@ -403,17 +403,18 @@ int main(int argc, char *argv[])
     /* Here's where updates go. */
     unsigned int flags = WATCH_ENABLE;
     if (source.device != NULL)
-	flags |= WATCH_DEVICE;
+        flags |= WATCH_DEVICE;
     (void)gps_stream(&gpsdata, flags, source.device);
 
     for (;;) { /* heart of the client */
-	if (!gps_waiting(&gpsdata, 50000000)) {
-	    (void)fprintf(stderr, "lcdgps: error while waiting\n");
-	    exit(EXIT_FAILURE);
-	} else {
-	    (void)gps_read(&gpsdata, NULL, 0);
-	    update_lcd(&gpsdata);
-	}
+        if (!gps_waiting(&gpsdata, 50000000)) {
+            (void)fprintf(stderr, "lcdgps: error while waiting\n");
+            exit(EXIT_FAILURE);
+        } else {
+            (void)gps_read(&gpsdata, NULL, 0);
+            update_lcd(&gpsdata);
+        }
 
     }
 }
+// vim: set expandtab shiftwidth=4
