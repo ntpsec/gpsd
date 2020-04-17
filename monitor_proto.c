@@ -1,20 +1,20 @@
 /*
  * Prototype file for a gpsmon monitor object.
  *
- * This file is Copyright (c) 2010-2018 by the GPSD project
+ * This file is Copyright 2010-2018 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
 #include "gpsd_config.h"  /* must be before all includes */
 
+#include <assert.h>
+#include <ctype.h>
+#include <math.h>
+#include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
-#include <ctype.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <assert.h>
 #include <unistd.h>
 
 #include "gpsd.h"
@@ -126,7 +126,7 @@ const struct monitor_object_t PROTO_mmt = {
     .update = PROTO_update,
     .command = PROTO_command,
     .wrap = PROTO_wrap,
-    .min_y = 23, .min_x = 80,	/* size of the device window */
+    .min_y = 23, .min_x = 80,   /* size of the device window */
     /*
      * The gpsd driver type for your device.  gpsmon will use the mode_switcher
      * method for 'n', the speed_switcher for 's', and the control_send method
@@ -160,3 +160,4 @@ const struct monitor_object_t PROTO_mmt = {
  *
  * The libgpsd session object is accessible as the global variable 'session'.
  */
+// vim: set expandtab shiftwidth=4
