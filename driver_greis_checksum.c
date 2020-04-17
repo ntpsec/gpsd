@@ -1,7 +1,8 @@
 /*
  * Checksum for the GNSS Receiver External Interface Specification (GREIS).
  *
- * This file is Copyright (c) 2017-2018 Virgin Orbit
+ * This file is Copyright 2017 Virgin Orbit
+ * This file is Copyright 2017 the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -24,3 +25,4 @@ unsigned char greis_checksum(const unsigned char *src, int count)
 	res = greis_rotate_left(res) ^ *src++;
     return greis_rotate_left(res);
 }
+// vim: set expandtab shiftwidth=4
