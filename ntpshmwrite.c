@@ -1,7 +1,7 @@
 /*
  * ntpshmwrite.c - put time information in SHM segment for ntpd
  *
- * This file is Copyright (c)2010-2018 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -24,9 +24,9 @@
 
 #define LEAP_NOWARNING  0x0     /* normal, no leap second warning */
 
-void ntp_write(volatile struct shmTime *shmseg,
-	       struct timedelta_t *td, int precision, int leap_notify)
 /* put a received fix time into shared memory for NTP */
+void ntp_write(volatile struct shmTime *shmseg,
+               struct timedelta_t *td, int precision, int leap_notify)
 {
     struct tm tm;
 
@@ -83,3 +83,4 @@ void ntp_write(volatile struct shmTime *shmseg,
 }
 
 /* end */
+// vim: set expandtab shiftwidth=4
