@@ -1,6 +1,6 @@
-/*	$OpenBSD: base64.c,v 1.3 1997/11/08 20:46:55 deraadt Exp $	*/
+/*      $OpenBSD: base64.c,v 1.3 1997/11/08 20:46:55 deraadt Exp $      */
 /*
- * Copyright (c) 1996 by Internet Software Consortium.
+ * Copyright 1996 by Internet Software Consortium.
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -17,7 +17,7 @@
  */
 
 /*
- * Portions Copyright (c) 1995 by International Business Machines, Inc.
+ * Portions Copyright 1995 by International Business Machines, Inc.
  *
  * International Business Machines, Inc. (hereinafter called IBM) grants
  * permission under its copyrights to use, copy, modify, and distribute this
@@ -43,15 +43,15 @@
 
 #include "gpsd_config.h"  /* must be before all includes */
 
-#include <stdlib.h>
-#include <sys/types.h>
+#include <assert.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdlib.h>
 #include <string.h>
-#include <assert.h>
+#include <sys/types.h>
 
-#include "gpsd.h"	/* we only need the prototype */
+#include "gpsd.h"       /* we only need the prototype */
 
 static const char Base64[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -110,76 +110,76 @@ static const char Pad64 = '=';
 
        (1) the final quantum of encoding input is an integral
            multiple of 24 bits; here, the final unit of encoded
-	   output will be an integral multiple of 4 characters
-	   with no "=" padding,
+           output will be an integral multiple of 4 characters
+           with no "=" padding,
        (2) the final quantum of encoding input is exactly 8 bits;
            here, the final unit of encoded output will be two
-	   characters followed by two "=" padding characters, or
+           characters followed by two "=" padding characters, or
        (3) the final quantum of encoding input is exactly 16 bits;
            here, the final unit of encoded output will be three
-	   characters followed by one "=" padding character.
+           characters followed by one "=" padding character.
    */
 
-int
-b64_ntop(unsigned char const *src, size_t srclength, char *target,
-	 size_t targsize)
+int b64_ntop(unsigned char const *src, size_t srclength, char *target,
+             size_t targsize)
 {
     size_t datalength = 0;
     unsigned char input[3];
     unsigned char output[4];
 
     while (2 < srclength) {
-	input[0] = *src++;
-	input[1] = *src++;
-	input[2] = *src++;
-	srclength -= 3;
+        input[0] = *src++;
+        input[1] = *src++;
+        input[2] = *src++;
+        srclength -= 3;
 
-	output[0] = input[0] >> 2;
-	output[1] = ((input[0] & 0x03) << 4) + (input[1] >> 4);
-	output[2] = ((input[1] & 0x0f) << 2) + (input[2] >> 6);
-	output[3] = input[2] & 0x3f;
-	assert(output[0] < 64);
-	assert(output[1] < 64);
-	assert(output[2] < 64);
-	assert(output[3] < 64);
+        output[0] = input[0] >> 2;
+        output[1] = ((input[0] & 0x03) << 4) + (input[1] >> 4);
+        output[2] = ((input[1] & 0x0f) << 2) + (input[2] >> 6);
+        output[3] = input[2] & 0x3f;
+        assert(output[0] < 64);
+        assert(output[1] < 64);
+        assert(output[2] < 64);
+        assert(output[3] < 64);
 
-	if (datalength + 4 > targsize)
-	    return (-1);
-	target[datalength++] = Base64[output[0]];
-	target[datalength++] = Base64[output[1]];
-	target[datalength++] = Base64[output[2]];
-	target[datalength++] = Base64[output[3]];
+        if (datalength + 4 > targsize)
+            return (-1);
+        target[datalength++] = Base64[output[0]];
+        target[datalength++] = Base64[output[1]];
+        target[datalength++] = Base64[output[2]];
+        target[datalength++] = Base64[output[3]];
     }
 
     /* Now we worry about padding. */
     if (0 != srclength) {
-	size_t i;
-	/* Get what's left. */
-	input[0] = input[1] = input[2] = '\0';
-	for (i = 0; i < srclength; i++)
-	    input[i] = *src++;
+        size_t i;
+        /* Get what's left. */
+        input[0] = input[1] = input[2] = '\0';
+        for (i = 0; i < srclength; i++)
+            input[i] = *src++;
 
-	output[0] = input[0] >> 2;
-	output[1] = ((input[0] & 0x03) << 4) + (input[1] >> 4);
-	output[2] = ((input[1] & 0x0f) << 2) + (input[2] >> 6);
-	assert(output[0] < 64);
-	assert(output[1] < 64);
-	assert(output[2] < 64);
+        output[0] = input[0] >> 2;
+        output[1] = ((input[0] & 0x03) << 4) + (input[1] >> 4);
+        output[2] = ((input[1] & 0x0f) << 2) + (input[2] >> 6);
+        assert(output[0] < 64);
+        assert(output[1] < 64);
+        assert(output[2] < 64);
 
-	if (datalength + 4 > targsize)
-	    return (-1);
-	target[datalength++] = Base64[output[0]];
-	target[datalength++] = Base64[output[1]];
-	if (srclength == 1)
-	    target[datalength++] = Pad64;
-	else
-	    target[datalength++] = Base64[output[2]];
-	target[datalength++] = Pad64;
+        if (datalength + 4 > targsize)
+            return (-1);
+        target[datalength++] = Base64[output[0]];
+        target[datalength++] = Base64[output[1]];
+        if (srclength == 1)
+            target[datalength++] = Pad64;
+        else
+            target[datalength++] = Base64[output[2]];
+        target[datalength++] = Pad64;
     }
     if (datalength >= targsize)
-	return (-1);
-    target[datalength] = '\0';	/* Returned value doesn't count \0. */
+        return (-1);
+    target[datalength] = '\0';  /* Returned value doesn't count \0. */
     return (datalength);
 }
 
 /* end */
+// vim: set expandtab shiftwidth=4
