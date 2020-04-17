@@ -6,7 +6,7 @@
  * rest is setup and teardown. (For backward compatibility the older gpsd_poll()
  * entry point has been retained.)
  *
- * This file is Copyright (c) 2010-2018 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -1131,14 +1131,14 @@ static void gpsd_error_model(struct gps_device_t *session)
 
     /* Other error computations depend on having a valid fix */
     if (MODE_2D <= fix->mode) {
-	if (0 == isfinite(newfix->epx) &&
+        if (0 == isfinite(newfix->epx) &&
             0 != isfinite(session->gpsdata.dop.xdop)) {
-	    fix->epx = session->gpsdata.dop.xdop * h_uere;
+            fix->epx = session->gpsdata.dop.xdop * h_uere;
         }
 
-	if (0 == isfinite(newfix->epy) &&
+        if (0 == isfinite(newfix->epy) &&
             0 != isfinite(session->gpsdata.dop.ydop)) {
-	    fix->epy = session->gpsdata.dop.ydop * h_uere;
+            fix->epy = session->gpsdata.dop.ydop * h_uere;
         }
 
         if (MODE_3D <= fix->mode &&
