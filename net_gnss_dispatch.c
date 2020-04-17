@@ -1,30 +1,30 @@
 /* net_gnss_dispatch.c -- common interface to a number of Network GNSS services
  *
- * This file is Copyright (c) 2010-2018 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
 #include "gpsd_config.h"  /* must be before all includes */
 
-#include <string.h>
 #include <errno.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <string.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include "gpsd.h"
 #include "strfuncs.h"
 
-#define NETGNSS_DGPSIP	"dgpsip://"
-#define NETGNSS_NTRIP	"ntrip://"
+#define NETGNSS_DGPSIP  "dgpsip://"
+#define NETGNSS_NTRIP   "ntrip://"
 
 bool netgnss_uri_check(char *name)
 /* is given string a valid URI for GNSS/DGPS service? */
 {
     return
-	str_starts_with(name, NETGNSS_NTRIP)
-	|| str_starts_with(name, NETGNSS_DGPSIP);
+        str_starts_with(name, NETGNSS_NTRIP)
+        || str_starts_with(name, NETGNSS_DGPSIP);
 }
 
 
@@ -33,34 +33,35 @@ int netgnss_uri_open(struct gps_device_t *dev, char *netgnss_service)
 {
 #ifdef NTRIP_ENABLE
     if (str_starts_with(netgnss_service, NETGNSS_NTRIP)) {
-	dev->ntrip.conn_state = ntrip_conn_init;
-	return ntrip_open(dev, netgnss_service + strlen(NETGNSS_NTRIP));
+        dev->ntrip.conn_state = ntrip_conn_init;
+        return ntrip_open(dev, netgnss_service + strlen(NETGNSS_NTRIP));
     }
 #endif
 
     if (str_starts_with(netgnss_service, NETGNSS_DGPSIP))
-	return dgpsip_open(dev, netgnss_service + strlen(NETGNSS_DGPSIP));
+        return dgpsip_open(dev, netgnss_service + strlen(NETGNSS_DGPSIP));
 
 #ifndef REQUIRE_DGNSS_PROTO
     return dgpsip_open(dev, netgnss_service);
 #else
     GPSD_LOG(LOG_ERROR, &dev->context.errout,
-	     "Unknown or unspecified DGNSS protocol for service %s\n",
-	     netgnss_service);
+             "Unknown or unspecified DGNSS protocol for service %s\n",
+             netgnss_service);
     return -1;
 #endif
 }
 
-void netgnss_report(struct gps_context_t *context,
-		    struct gps_device_t *gps, struct gps_device_t *dgnss)
 /* may be time to ship a usage report to the DGNSS service */
+void netgnss_report(struct gps_context_t *context,
+                    struct gps_device_t *gps, struct gps_device_t *dgnss)
 {
     if (dgnss->servicetype == service_dgpsip)
-	dgpsip_report(context, gps, dgnss);
+        dgpsip_report(context, gps, dgnss);
 #ifdef NTRIP_ENABLE
     else if (dgnss->servicetype == service_ntrip)
-	ntrip_report(context, gps, dgnss);
+        ntrip_report(context, gps, dgnss);
 #endif
 }
 
 /* end */
+// vim: set expandtab shiftwidth=4
