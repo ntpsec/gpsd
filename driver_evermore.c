@@ -34,8 +34,8 @@
  * an Evermore chipset reveals some messages not described in the vendor
  * documentation (Issue C of Aug 2002):
  *
- * 10 02 06 84 00 00 00 84 10 03	switch to binary mode (84 00 00 00)
- * 10 02 06 84 01 00 00 85 10 03	switch to NMEA mode (84 01 00 00)
+ * 10 02 06 84 00 00 00 84 10 03        switch to binary mode (84 00 00 00)
+ * 10 02 06 84 01 00 00 85 10 03        switch to NMEA mode (84 01 00 00)
  *
  * 10 02 06 89 01 00 00 8a 10 03        set baud rate 4800
  * 10 02 06 89 01 01 00 8b 10 03        set baud rate 9600
@@ -131,26 +131,26 @@
  * 8d indicates that message 0x8d was sent;
  * c5 is EverMore checksum, other bytes are fixed
  *
- * This file is Copyright (c) 2010-2018 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
 #include "gpsd_config.h"  /* must be before all includes */
 
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
 #include <math.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "gpsd.h"
 #if defined(EVERMORE_ENABLE) && defined(BINARY_ENABLE)
 
 #include "bits.h"
 
-#define EVERMORE_CHANNELS	12
+#define EVERMORE_CHANNELS       12
 
 static ssize_t evermore_control_send(struct gps_device_t *session, char *buf,
-				     size_t len)
+                                     size_t len)
 {
     unsigned int crc;
     size_t i;
@@ -158,21 +158,21 @@ static ssize_t evermore_control_send(struct gps_device_t *session, char *buf,
 
     /* prepare a DLE-stuffed copy of the message */
     cp = session->msgbuf;
-    *cp++ = 0x10;		/* message starts with DLE STX */
+    *cp++ = 0x10;               /* message starts with DLE STX */
     *cp++ = 0x02;
 
-    session->msgbuflen = (size_t) (len + 2);	/* len < 254 !! */
-    *cp++ = (char)session->msgbuflen;	/* message length */
+    session->msgbuflen = (size_t) (len + 2);    /* len < 254 !! */
+    *cp++ = (char)session->msgbuflen;   /* message length */
     if (session->msgbuflen == 0x10)
-	*cp++ = 0x10;
+        *cp++ = 0x10;
 
     /* payload */
     crc = 0;
     for (i = 0; i < len; i++) {
-	*cp++ = buf[i];
-	if (buf[i] == 0x10)
-	    *cp++ = 0x10;
-	crc += buf[i];
+        *cp++ = buf[i];
+        if (buf[i] == 0x10)
+            *cp++ = 0x10;
+        crc += buf[i];
     }
 
     crc &= 0xff;
@@ -180,9 +180,9 @@ static ssize_t evermore_control_send(struct gps_device_t *session, char *buf,
     /* enter CRC after payload */
     *cp++ = crc;
     if (crc == 0x10)
-	*cp++ = 0x10;
+        *cp++ = 0x10;
 
-    *cp++ = 0x10;		/* message ends with DLE ETX */
+    *cp++ = 0x10;               /* message ends with DLE ETX */
     *cp++ = 0x03;
 
     session->msgbuflen = (size_t) (cp - session->msgbuf);
@@ -195,128 +195,132 @@ static bool evermore_protocol(struct gps_device_t *session, int protocol)
 {
     char tmp8;
     char evrm_protocol_config[] = {
-	(char)0x84,		/* 0: msg ID, Protocol Configuration */
-	(char)0x00,		/* 1: mode; EverMore binary(0), NMEA(1) */
-	(char)0x00,		/* 2: reserved */
-	(char)0x00,		/* 3: reserved */
+        (char)0x84,             /* 0: msg ID, Protocol Configuration */
+        (char)0x00,             /* 1: mode; EverMore binary(0), NMEA(1) */
+        (char)0x00,             /* 2: reserved */
+        (char)0x00,             /* 3: reserved */
     };
     GPSD_LOG(LOG_PROG, &session->context->errout,
-	     "evermore_protocol(%d)\n", protocol);
+             "evermore_protocol(%d)\n", protocol);
     tmp8 = (protocol != 0) ? 1 : 0;
     /* NMEA : binary */
     evrm_protocol_config[1] = tmp8;
     return (evermore_control_send
-	    (session, evrm_protocol_config,
-	     sizeof(evrm_protocol_config)) != -1);
+            (session, evrm_protocol_config,
+             sizeof(evrm_protocol_config)) != -1);
 }
 
-static bool evermore_nmea_config(struct gps_device_t *session, int mode)
 /* mode = 0 : EverMore default */
 /* mode = 1 : gpsd best */
 /* mode = 2 : EverMore search, activate PEMT101 message */
+static bool evermore_nmea_config(struct gps_device_t *session, int mode)
 {
     unsigned char tmp8;
     unsigned char evrm_nmeaout_config[] = {
-	0x8e,			/*  0: msg ID, NMEA Message Control */
-	0xff,			/*  1: NMEA sentence bitmask, GGA(0), GLL(1), GSA(2), GSV(3), ... */
-	0x01,			/*  2: nmea checksum no(0), yes(1) */
-	1,			/*  3: GPGGA, interval 0-255s */
-	0,			/*  4: GPGLL, interval 0-255s */
-	1,			/*  5: GPGSA, interval 0-255s */
-	1,			/*  6: GPGSV, interval 0-255s */
-	1,			/*  7: GPRMC, interval 0-255s */
-	0,			/*  8: GPVTG, interval 0-255s */
-	0,			/*  9: PEMT,101, interval 0-255s */
-	0, 0, 0, 0, 0, 0,	/* 10-15: reserved */
+        0x8e,  /* 0: msg ID, NMEA Message Control */
+        0xff,  // 1: NMEA sentence bitmask, GGA(0), GLL(1), GSA(2), GSV(3)...
+        0x01,  /* 2: nmea checksum no(0), yes(1) */
+        1,     /* 3: GPGGA, interval 0-255s */
+        0,     /* 4: GPGLL, interval 0-255s */
+        1,     /* 5: GPGSA, interval 0-255s */
+        1,     /* 6: GPGSV, interval 0-255s */
+        1,     /* 7: GPRMC, interval 0-255s */
+        0,     /* 8: GPVTG, interval 0-255s */
+        0,     /* 9: PEMT,101, interval 0-255s */
+        0, 0, 0, 0, 0, 0,       /* 10-15: reserved */
     };
     GPSD_LOG(LOG_PROG, &session->context->errout,
-	     "evermore_nmea_config(%d)\n", mode);
+             "evermore_nmea_config(%d)\n", mode);
     tmp8 = (mode == 1) ? 5 : 1;
     /* NMEA GPGSV, gpsd  */
-    evrm_nmeaout_config[6] = tmp8;	/* GPGSV, 1s or 5s */
+    evrm_nmeaout_config[6] = tmp8;      /* GPGSV, 1s or 5s */
     tmp8 = (mode == 2) ? 1 : 0;
     /* NMEA PEMT101 */
-    evrm_nmeaout_config[9] = tmp8;	/* PEMT101, 1s or 0s */
+    evrm_nmeaout_config[9] = tmp8;      /* PEMT101, 1s or 0s */
     return (evermore_control_send(session, (char *)evrm_nmeaout_config,
-				  sizeof(evrm_nmeaout_config)) != -1);
+                                  sizeof(evrm_nmeaout_config)) != -1);
 }
 
 static void evermore_mode(struct gps_device_t *session, int mode)
 {
     GPSD_LOG(LOG_PROG, &session->context->errout,
-	     "evermore_mode(%d)\n", mode);
+             "evermore_mode(%d)\n", mode);
     if (mode == MODE_NMEA) {
-	/* NMEA */
-	(void)evermore_protocol(session, 1);
-	(void)evermore_nmea_config(session, 1);	/* configure NMEA messages for gpsd */
+        /* NMEA */
+        (void)evermore_protocol(session, 1);
+        /* configure NMEA messages for gpsd */
+        (void)evermore_nmea_config(session, 1);
     } else {
-	/* binary */
-	(void)evermore_protocol(session, 0);
+        /* binary */
+        (void)evermore_protocol(session, 0);
     }
 }
 
 static void evermore_event_hook(struct gps_device_t *session, event_t event)
 {
     if (session->context->readonly)
-	return;
+        return;
     /*
      * FIX-ME: It might not be necessary to call this on reactivate.
      * Experiment to see if the holds its settings through a close.
      */
     if (event == event_identified || event == event_reactivate) {
-	/*
-	 * We used to run this driver in binary mode, but that has the
-	 * problem that Evermore binary mode doesn't report a
-	 * leap-second correction in the Navigation Data Out sentence.
-	 * So, run it in NMEA mode to getbUTC corrected by firmware.
-	 * Fortunately the Evermore firmware interprets binary
-	 * commands in NMEA mode, so nothing else needs to change.
-	 */
-	(void)evermore_mode(session, 0);	/* switch GPS to NMEA mode */
-	(void)evermore_nmea_config(session, 1);	/* configure NMEA messages for gpsd (GPGSV every 5s) */
+        /*
+         * We used to run this driver in binary mode, but that has the
+         * problem that Evermore binary mode doesn't report a
+         * leap-second correction in the Navigation Data Out sentence.
+         * So, run it in NMEA mode to getbUTC corrected by firmware.
+         * Fortunately the Evermore firmware interprets binary
+         * commands in NMEA mode, so nothing else needs to change.
+         */
+        (void)evermore_mode(session, 0);        /* switch GPS to NMEA mode */
+        /* configure NMEA messages for gpsd (GPGSV every 5s) */
+        (void)evermore_nmea_config(session, 1);
     } else if (event == event_deactivate) {
-	(void)evermore_nmea_config(session, 0);	/* configure NMEA messages to default */
+        /* configure NMEA messages to default */
+        (void)evermore_nmea_config(session, 0);
     }
 }
 
 #ifdef RECONFIGURE_ENABLE
 static bool evermore_speed(struct gps_device_t *session,
-			   speed_t speed, char parity, int stopbits)
+                           speed_t speed, char parity, int stopbits)
 {
     GPSD_LOG(LOG_PROG, &session->context->errout,
-	     "evermore_speed(%u%c%d)\n", (unsigned int)speed, parity,
-	     stopbits);
+             "evermore_speed(%u%c%d)\n", (unsigned int)speed, parity,
+             stopbits);
     /* parity and stopbit switching aren't available on this chip */
     if (parity != session->gpsdata.dev.parity
-	|| stopbits != (int)session->gpsdata.dev.stopbits) {
-	return false;
+        || stopbits != (int)session->gpsdata.dev.stopbits) {
+        return false;
     } else {
-	unsigned char tmp8;
-	unsigned char msg[] = {
-	    0x89,		/*  0: msg ID, Serial Port Configuration */
-	    0x01,		/*  1: bit 0 cfg for main serial, bit 1 cfg for DGPS port */
-	    0x00,		/*  2: baud rate for main serial; 4800(0), 9600(1), 19200(2), 38400(3) */
-	    0x00,		/*  3: baud rate for DGPS serial port; 4800(0), 9600(1), etc */
-	};
-	switch (speed) {
-	case 4800:
-	    tmp8 = 0;
-	    break;
-	case 9600:
-	    tmp8 = 1;
-	    break;
-	case 19200:
-	    tmp8 = 2;
-	    break;
-	case 38400:
-	    tmp8 = 3;
-	    break;
-	default:
-	    return false;
-	}
-	msg[2] = tmp8;
-	return (evermore_control_send(session, (char *)msg, sizeof(msg)) !=
-		-1);
+        unsigned char tmp8;
+        unsigned char msg[] = {
+            0x89, /* 0: msg ID, Serial Port Configuration */
+            0x01, /* 1: bit 0 cfg for main serial, bit 1 cfg for DGPS port */
+            0x00, /* 2: main serial baud rate; 4800(0), 9600(1), 19200(2),
+                   *    38400(3) */
+            0x00, /* 3: baud rate for DGPS serial port; 4800(0), 9600(1), etc */
+        };
+        switch (speed) {
+        case 4800:
+            tmp8 = 0;
+            break;
+        case 9600:
+            tmp8 = 1;
+            break;
+        case 19200:
+            tmp8 = 2;
+            break;
+        case 38400:
+            tmp8 = 3;
+            break;
+        default:
+            return false;
+        }
+        msg[2] = tmp8;
+        return (evermore_control_send(session, (char *)msg, sizeof(msg)) !=
+                -1);
     }
 }
 
@@ -324,19 +328,19 @@ static bool evermore_rate_switcher(struct gps_device_t *session, double rate)
 /* change the sample rate of the GPS */
 {
     if (rate < 1 || rate > 10) {
-	GPSD_LOG(LOG_ERROR, &session->context->errout,
-		 "valid rate range is 1-10.\n");
-	return false;
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "valid rate range is 1-10.\n");
+        return false;
     } else {
-	unsigned char evrm_rate_config[] = {
-	    0x84,		/* 1: msg ID, Operating Mode Configuration */
-	    0x02,		/* 2: normal mode with 1PPS */
-	    0x00,		/* 3: navigation update rate */
-	    0x00,		/* 4: RF/GPSBBP On Time */
-	};
-	evrm_rate_config[2] = (unsigned char)trunc(rate);
-	return (evermore_control_send(session, (char *)evrm_rate_config,
-				      sizeof(evrm_rate_config)) != -1);
+        unsigned char evrm_rate_config[] = {
+            0x84,               /* 1: msg ID, Operating Mode Configuration */
+            0x02,               /* 2: normal mode with 1PPS */
+            0x00,               /* 3: navigation update rate */
+            0x00,               /* 4: RF/GPSBBP On Time */
+        };
+        evrm_rate_config[2] = (unsigned char)trunc(rate);
+        return (evermore_control_send(session, (char *)evrm_rate_config,
+                                      sizeof(evrm_rate_config)) != -1);
     }
 }
 #endif /* RECONFIGURE_ENABLE */
@@ -346,28 +350,29 @@ static bool evermore_rate_switcher(struct gps_device_t *session, double rate)
 /* *INDENT-OFF* */
 const struct gps_type_t driver_evermore =
 {
-    .type_name      = "EverMore",		/* full name of type */
-    .packet_type    = EVERMORE_PACKET,		/* lexer packet type */
-    .flags	    = DRIVER_STICKY,		/* remember this */
-    .trigger        = NULL, 			/* recognize the type */
-    .channels       = EVERMORE_CHANNELS,	/* consumer-grade GPS */
-    .probe_detect   = NULL,			/* no probe */
-    .get_packet     = generic_get,		/* use generic one */
-    .parse_packet   = generic_parse_input,	/* parse message packets */
-    .rtcm_writer    = gpsd_write,		/* send RTCM data straight */
-    .init_query     = NULL,			/* non-perturbing query */
-    .event_hook     = evermore_event_hook,	/* lifetime event handler */
+    .type_name      = "EverMore",               /* full name of type */
+    .packet_type    = EVERMORE_PACKET,          /* lexer packet type */
+    .flags          = DRIVER_STICKY,            /* remember this */
+    .trigger        = NULL,                     /* recognize the type */
+    .channels       = EVERMORE_CHANNELS,        /* consumer-grade GPS */
+    .probe_detect   = NULL,                     /* no probe */
+    .get_packet     = generic_get,              /* use generic one */
+    .parse_packet   = generic_parse_input,      /* parse message packets */
+    .rtcm_writer    = gpsd_write,               /* send RTCM data straight */
+    .init_query     = NULL,                     /* non-perturbing query */
+    .event_hook     = evermore_event_hook,      /* lifetime event handler */
 #ifdef RECONFIGURE_ENABLE
-    .speed_switcher = evermore_speed,		/* we can change baud rates */
-    .mode_switcher  = evermore_mode,		/* there is a mode switcher */
-    .rate_switcher  = evermore_rate_switcher,	/* change sample rate */
-    .min_cycle.tv_sec  = 1,		/* not relevant, no rate switch */
-    .min_cycle.tv_nsec = 0,		/* not relevant, no rate switch */
+    .speed_switcher = evermore_speed,           /* we can change baud rates */
+    .mode_switcher  = evermore_mode,            /* there is a mode switcher */
+    .rate_switcher  = evermore_rate_switcher,   /* change sample rate */
+    .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
+    .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
 #endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
-    .control_send   = evermore_control_send,	/* how to send a control string */
+    .control_send   = evermore_control_send,    // how to send a control string
 #endif /* CONTROLSEND_ENABLE */
-    .time_offset     = NULL,		/* no method for NTP fudge factor */
+    .time_offset     = NULL,            /* no method for NTP fudge factor */
 };
 /* *INDENT-ON* */
 #endif /* defined(EVERMORE_ENABLE) && defined(BINARY_ENABLE) */
+// vim: set expandtab shiftwidth=4
