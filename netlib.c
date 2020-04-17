@@ -1,12 +1,12 @@
 /*
- * This file is Copyright (c) 2010-2018 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
 #include "gpsd_config.h"  /* must be before all includes */
 
-#include <string.h>
 #include <fcntl.h>
+#include <string.h>
 #ifdef HAVE_NETDB_H
 #include <netdb.h>
 #endif /* HAVE_NETDB_H */
@@ -178,8 +178,8 @@ const char *netlib_errstr(const int err)
     }
 }
 
-socket_t netlib_localsocket(const char *sockfile, int socktype)
 /* acquire a connection to an existing Unix-domain socket */
+socket_t netlib_localsocket(const char *sockfile, int socktype)
 {
 #ifdef HAVE_SYS_UN_H
     int sock;
@@ -207,8 +207,8 @@ socket_t netlib_localsocket(const char *sockfile, int socktype)
 #endif /* HAVE_SYS_UN_H */
 }
 
-char *netlib_sock2ip(socket_t fd)
 /* retrieve the IP address corresponding to a socket */
+char *netlib_sock2ip(socket_t fd)
 {
     static char ip[INET6_ADDRSTRLEN];
 #ifdef HAVE_INET_NTOP
@@ -237,3 +237,4 @@ char *netlib_sock2ip(socket_t fd)
 	(void)strlcpy(ip, "<unknown>", sizeof(ip));
     return ip;
 }
+// vim: set expandtab shiftwidth=4
