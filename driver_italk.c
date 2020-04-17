@@ -6,7 +6,7 @@
  * be adding a fixed offset based on a hidden epoch value, in which case
  * unhappy things will occur on the next rollover.
  *
- * This file is Copyright (c) 2010-2018 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  *
  */
@@ -42,7 +42,7 @@ static gps_mask_t decode_itk_navfix(struct gps_device_t *session,
 {
     unsigned short flags, pflags;
     timespec_t ts_tow;
-    uint32_t tow;	     /* Time of week [ms] */
+    uint32_t tow;            /* Time of week [ms] */
     char ts_buf[TIMESPEC_LEN];
 
     gps_mask_t mask = 0;
@@ -160,7 +160,8 @@ static gps_mask_t decode_itk_prnstatus(struct gps_device_t *session,
 
             flags = (unsigned short) getleu16(buf, off);
             used = (bool)(flags & PRN_FLAG_USE_IN_NAV);
-            session->gpsdata.skyview[st].PRN = (short)(getleu16(buf, off + 4) & 0xff);
+            session->gpsdata.skyview[st].PRN =
+                (short)(getleu16(buf, off + 4) & 0xff);
             session->gpsdata.skyview[st].elevation =
                 (double)(getles16(buf, off + 6) & 0xff);
             session->gpsdata.skyview[st].azimuth =
@@ -195,7 +196,7 @@ static gps_mask_t decode_itk_utcionomodel(struct gps_device_t *session,
     int leap;
     unsigned short flags;
     timespec_t ts_tow;
-    uint32_t tow;	     /* Time of week [ms] */
+    uint32_t tow;            /* Time of week [ms] */
     char ts_buf[TIMESPEC_LEN];
 
     if (len != 64) {
@@ -459,8 +460,8 @@ const struct gps_type_t driver_italk =
     .speed_switcher = NULL,             /* no speed switcher */
     .mode_switcher  = NULL,             /* no mode switcher */
     .rate_switcher  = NULL,             /* no sample-rate switcher */
-    .min_cycle.tv_sec  = 1,		/* not relevant, no rate switch */
-    .min_cycle.tv_nsec = 0,		/* not relevant, no rate switch */
+    .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
+    .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
 #endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
     .control_send   = NULL,             /* no control string sender */
