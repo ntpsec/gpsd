@@ -32,7 +32,7 @@
  * packet.c
  * packet_states.h
  *
- * This file is Copyright (c) 2010-2018 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -46,41 +46,46 @@
 
 #include "bits.h"
 
-static	gps_mask_t _proto__parse_input(struct gps_device_t *);
-static	gps_mask_t _proto__dispatch(struct gps_device_t *, unsigned char *, size_t );
-static	gps_mask_t _proto__msg_navsol(struct gps_device_t *, unsigned char *, size_t );
-static	gps_mask_t _proto__msg_utctime(struct gps_device_t *, unsigned char *, size_t );
-static	gps_mask_t _proto__msg_svinfo(struct gps_device_t *, unsigned char *, size_t );
-static	gps_mask_t _proto__msg_raw(struct gps_device_t *, unsigned char *, size_t );
+static  gps_mask_t _proto__parse_input(struct gps_device_t *);
+static  gps_mask_t _proto__dispatch(struct gps_device_t *, unsigned char *,
+                                    size_t );
+static  gps_mask_t _proto__msg_navsol(struct gps_device_t *, unsigned char *,
+                                      size_t );
+static  gps_mask_t _proto__msg_utctime(struct gps_device_t *, unsigned char *,
+                                       size_t );
+static  gps_mask_t _proto__msg_svinfo(struct gps_device_t *, unsigned char *,
+                                      size_t );
+static  gps_mask_t _proto__msg_raw(struct gps_device_t *, unsigned char *,
+                                   size_t );
 
 /*
  * These methods may be called elsewhere in gpsd
  */
-static	ssize_t _proto__control_send(struct gps_device_t *, char *, size_t);
-static	bool _proto__probe_detect(struct gps_device_t *);
-static	void _proto__event_hook(struct gps_device_t *, event_t);
-static	bool _proto__set_speed(struct gps_device_t *, speed_t, char, int);
-static	void _proto__set_mode(struct gps_device_t *, int);
+static  ssize_t _proto__control_send(struct gps_device_t *, char *, size_t);
+static  bool _proto__probe_detect(struct gps_device_t *);
+static  void _proto__event_hook(struct gps_device_t *, event_t);
+static  bool _proto__set_speed(struct gps_device_t *, speed_t, char, int);
+static  void _proto__set_mode(struct gps_device_t *, int);
 
 /*
  * Decode the navigation solution message
  */
-static gps_mask_t
-_proto__msg_navsol(struct gps_device_t *session, unsigned char *buf, size_t data_len)
+static gps_mask_t _proto__msg_navsol(struct gps_device_t *session,
+                                     unsigned char *buf, size_t data_len)
 {
     gps_mask_t mask;
     int flags;
     double Px, Py, Pz, Vx, Vy, Vz;
 
     if (data_len != _PROTO__NAVSOL_MSG_LEN)
-	return 0;
+        return 0;
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-	     "_proto_ NAVSOL - navigation data\n");
+             "_proto_ NAVSOL - navigation data\n");
     /* if this protocol has a way to test message validity, use it */
     flags = GET_FLAGS();
     if ((flags & _PROTO__SOLUTION_VALID) == 0)
-	return 0;
+        return 0;
 
     mask = ONLINE_SET;
 
@@ -128,15 +133,15 @@ _proto__msg_navsol(struct gps_device_t *session, unsigned char *buf, size_t data
      * makes it relatively easy to track down data-management problems.
      */
     GPSD_LOG(LOG_DATA, &session->context->errout,
-	     "NAVSOL: time=%.2f, ecef x:%.2f y: %.2f z: %.2f mode=%d "
+             "NAVSOL: time=%.2f, ecef x:%.2f y: %.2f z: %.2f mode=%d "
              "status=%d\n",
-	     session->newdata.time,
-	     session->newdata.ecef.x,
-	     session->newdata.ecef.y,
-	     session->newdata.ecef.z,
-	     session->newdata.longitude,
-	     session->newdata.mode,
-	     session->gpsdata.status);
+             session->newdata.time,
+             session->newdata.ecef.x,
+             session->newdata.ecef.y,
+             session->newdata.ecef.z,
+             session->newdata.longitude,
+             session->newdata.mode,
+             session->gpsdata.status);
 
     return mask;
 }
@@ -144,20 +149,20 @@ _proto__msg_navsol(struct gps_device_t *session, unsigned char *buf, size_t data
 /**
  * GPS Leap Seconds
  */
-static gps_mask_t
-_proto__msg_utctime(struct gps_device_t *session, unsigned char *buf, size_t data_len)
+static gps_mask_t _proto__msg_utctime(struct gps_device_t *session,
+                                      unsigned char *buf, size_t data_len)
 {
     double t;
 
     if (data_len != UTCTIME_MSG_LEN)
-	return 0;
+        return 0;
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-	     "_proto_ UTCTIME - navigation data\n");
+             "_proto_ UTCTIME - navigation data\n");
     /* if this protocol has a way to test message validity, use it */
     flags = GET_FLAGS();
     if ((flags & _PROTO__TIME_VALID) == 0)
-	return 0;
+        return 0;
 
     tow = GET_MS_TIMEOFWEEK();
     gps_week = GET_WEEKNUMBER();
@@ -170,21 +175,21 @@ _proto__msg_utctime(struct gps_device_t *session, unsigned char *buf, size_t dat
 /**
  * GPS Satellite Info
  */
-static gps_mask_t
-_proto__msg_svinfo(struct gps_device_t *session, unsigned char *buf, size_t data_len)
+static gps_mask_t _proto__msg_svinfo(struct gps_device_t *session,
+                                     unsigned char *buf, size_t data_len)
 {
     unsigned char i, st, nchan, nsv;
     unsigned int tow;
 
     if (data_len != SVINFO_MSG_LEN )
-	return 0;
+        return 0;
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-	     "_proto_ SVINFO - navigation data\n");
+             "_proto_ SVINFO - navigation data\n");
     /* if this protocol has a way to test message validity, use it */
     flags = GET_FLAGS();
     if ((flags & _PROTO__SVINFO_VALID) == 0)
-	return 0;
+        return 0;
 
     /*
      * some protocols have a variable length message listing only visible
@@ -195,56 +200,56 @@ _proto__msg_svinfo(struct gps_device_t *session, unsigned char *buf, size_t data
      */
     nchan = GET_NUMBER_OF_CHANNELS();
     if ((nchan < 1) || (nchan > MAXCHANNELS)) {
-	GPSD_LOG(LOG_INF, &session->context->errout,
-		 "too many channels reported\n");
-	return 0;
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "too many channels reported\n");
+        return 0;
     }
     gpsd_zero_satellites(&session->gpsdata);
     nsv = 0; /* number of actually used satellites */
     for (i = st = 0; i < nchan; i++) {
-	/* get info for one channel/satellite */
-	int off = GET_CHANNEL_STATUS(i);
+        /* get info for one channel/satellite */
+        int off = GET_CHANNEL_STATUS(i);
 
-	session->gpsdata.PRN[i]		= PRN_THIS_CHANNEL_IS_TRACKING(i);
-	session->gpsdata.ss[i]		= (float)SIGNAL_STRENGTH_FOR_CHANNEL(i);
-	session->gpsdata.elevation[i]	= SV_ELEVATION_FOR_CHANNEL(i);
-	session->gpsdata.azimuth[i]	= SV_AZIMUTH_FOR_CHANNEL(i);
+        session->gpsdata.PRN[i]         = PRN_THIS_CHANNEL_IS_TRACKING(i);
+        session->gpsdata.ss[i]          = (float)SIGNAL_STRENGTH_FOR_CHANNEL(i);
+        session->gpsdata.elevation[i]   = SV_ELEVATION_FOR_CHANNEL(i);
+        session->gpsdata.azimuth[i]     = SV_AZIMUTH_FOR_CHANNEL(i);
 
-	if (CHANNEL_USED_IN_SOLUTION(i))
-	    session->gpsdata.used[nsv++] = session->gpsdata.PRN[i];
+        if (CHANNEL_USED_IN_SOLUTION(i))
+            session->gpsdata.used[nsv++] = session->gpsdata.PRN[i];
 
-	if(session->gpsdata.PRN[i])
-		st++;
+        if(session->gpsdata.PRN[i])
+                st++;
     }
     /* if the satellite-info setence gives you UTC time, use it */
     session->gpsdata.skyview_time = NaN;
     session->gpsdata.satellites_used = nsv;
     session->gpsdata.satellites_visible = st;
     GPSD_LOG(LOG_DATA, &session->context->errout,
-	     "SVINFO: visible=%d used=%d mask={SATELLITE|USED}\n",
-	     session->gpsdata.satellites_visible,
-	     session->gpsdata.satellites_used);
+             "SVINFO: visible=%d used=%d mask={SATELLITE|USED}\n",
+             session->gpsdata.satellites_visible,
+             session->gpsdata.satellites_used);
     return SATELLITE_SET | USED_IS;
 }
 
 /**
  * Raw measurements
  */
-static gps_mask_t
-_proto__msg_raw(struct gps_device_t *session, unsigned char *buf, size_t data_len)
+static gps_mask_t _proto__msg_raw(struct gps_device_t *session,
+                                  unsigned char *buf, size_t data_len)
 {
     unsigned char i, st, nchan, nsv;
     unsigned int tow;
 
     if (data_len != RAW_MSG_LEN )
-	return 0;
+        return 0;
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-	     "_proto_ RAW - raw measurements\n");
+             "_proto_ RAW - raw measurements\n");
     /* if this protocol has a way to test message validity, use it */
     flags = GET_FLAGS();
     if ((flags & _PROTO__SVINFO_VALID) == 0)
-	return 0;
+        return 0;
 
     /*
      * not all chipsets emit the same information. some of these observables
@@ -255,9 +260,9 @@ _proto__msg_raw(struct gps_device_t *session, unsigned char *buf, size_t data_le
      */
     nchan = GET_NUMBER_OF_CHANNELS();
     if ((nchan < 1) || (nchan > MAXCHANNELS)) {
-	GPSD_LOG(LOG_INF, &session->context->errout,
-		 "too many channels reported\n");
-	return 0;
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "too many channels reported\n");
+        return 0;
     }
 
     DTONS(&session->raw.mtime, GET_TIME());
@@ -266,14 +271,14 @@ _proto__msg_raw(struct gps_device_t *session, unsigned char *buf, size_t data_le
     for (i = 0; i < MAXCHANNELS; i++)
         session->gpsdata.raw.meas[i].svid = 0;
     for (i = 0; i < n; i++){
-	session->gpsdata.PRN[i] = GET_PRN();
-	session->gpsdata.ss[i] = GET_SIGNAL()
-	session->gpsdata.raw.meas[i].satstat = GET_FLAGS();
-	session->gpsdata.raw.meas[i].pseudorange = GET_PSEUDORANGE();
-	session->gpsdata.raw.meas[i].doppler = GET_DOPPLER();
-	session->gpsdata.raw.meas[i].carrierphase = GET_CARRIER_PHASE();
-	session->gpsdata.raw.meas[i].codephase = GET_CODE_PHASE();
-	session->gpsdata.raw.meas[i].deltarange = GET_DELTA_RANGE();
+        session->gpsdata.PRN[i] = GET_PRN();
+        session->gpsdata.ss[i] = GET_SIGNAL()
+        session->gpsdata.raw.meas[i].satstat = GET_FLAGS();
+        session->gpsdata.raw.meas[i].pseudorange = GET_PSEUDORANGE();
+        session->gpsdata.raw.meas[i].doppler = GET_DOPPLER();
+        session->gpsdata.raw.meas[i].carrierphase = GET_CARRIER_PHASE();
+        session->gpsdata.raw.meas[i].codephase = GET_CODE_PHASE();
+        session->gpsdata.raw.meas[i].deltarange = GET_DELTA_RANGE();
     }
     return RAW_IS;
 }
@@ -281,13 +286,14 @@ _proto__msg_raw(struct gps_device_t *session, unsigned char *buf, size_t data_le
 /**
  * Parse the data from the device
  */
-gps_mask_t _proto__dispatch(struct gps_device_t *session, unsigned char *buf, size_t len)
+gps_mask_t _proto__dispatch(struct gps_device_t *session,
+                            unsigned char *buf, size_t len)
 {
     size_t i;
     int type, used, visible, retmask = 0;
 
     if (len == 0)
-	return 0;
+        return 0;
 
     /*
      * Set this if the driver reliably signals end of cycle.
@@ -296,24 +302,24 @@ gps_mask_t _proto__dispatch(struct gps_device_t *session, unsigned char *buf, si
      */
     session->cycle_end_reliable = true;
     if (msgid == MY_START_OF_CYCLE)
-	retmask |= CLEAR_IS;
+        retmask |= CLEAR_IS;
     else if (msgid == MY_END_OF_CYCLE)
-	retmask |= REPORT_IS;
+        retmask |= REPORT_IS;
 
     type = GET_MESSAGE_TYPE();
 
     /* we may need to dump the raw packet */
     GPSD_LOG(LOG_RAW, &session->context->errout,
-	     "raw _proto_ packet type 0x%02x\n", type);
+             "raw _proto_ packet type 0x%02x\n", type);
 
     switch (type)
     {
-	/* Deliver message to specific decoder based on message type */
+        /* Deliver message to specific decoder based on message type */
 
     default:
-	GPSD_LOG(LOG_WARN, &session->context->errout,
-		 "unknown packet id %d length %d\n", type, len);
-	return 0;
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "unknown packet id %d length %d\n", type, len);
+        return 0;
     }
 }
 
@@ -344,7 +350,7 @@ static bool _proto__probe_detect(struct gps_device_t *session)
  * Write data to the device, doing any required padding or checksumming
  */
 static ssize_t _proto__control_send(struct gps_device_t *session,
-			   char *msg, size_t msglen)
+                           char *msg, size_t msglen)
 {
    bool ok;
 
@@ -360,7 +366,7 @@ static ssize_t _proto__control_send(struct gps_device_t *session,
 
    /* we may need to dump the message */
    GPSD_LOG(LOG_PROG, &session->context->errout,
-	       "writing _proto_ control type %02x\n");
+               "writing _proto_ control type %02x\n");
    return gpsd_write(session, session->msgbuf, session->msgbuflen);
 }
 #endif /* CONTROLSEND_ENABLE */
@@ -369,56 +375,56 @@ static ssize_t _proto__control_send(struct gps_device_t *session,
 static void _proto__event_hook(struct gps_device_t *session, event_t event)
 {
     if (session->context->readonly)
-	return;
+        return;
 
     if (event == event_wakeup) {
        /*
-	* Code to make the device ready to communicate.  Only needed if the
-	* device is in some kind of sleeping state, and only shipped to
-	* RS232C, so that gpsd won't send strings to unidentified USB devices
-	* that might not be GPSes at all.
-	*/
+        * Code to make the device ready to communicate.  Only needed if the
+        * device is in some kind of sleeping state, and only shipped to
+        * RS232C, so that gpsd won't send strings to unidentified USB devices
+        * that might not be GPSes at all.
+        */
     }
     if (event == event_identified) {
-	/*
-	 * Fires when the first full packet is recognized from a
-	 * previously unidentified device.  The session.lexer counter
-	 * is zeroed.  If your device has a default cycle time other
-	 * than 1 second, set session->device->gpsdata.cycle here. If
-	 * possible, get the software version and store it in
-	 * session->subtype.
-	 */
+        /*
+         * Fires when the first full packet is recognized from a
+         * previously unidentified device.  The session.lexer counter
+         * is zeroed.  If your device has a default cycle time other
+         * than 1 second, set session->device->gpsdata.cycle here. If
+         * possible, get the software version and store it in
+         * session->subtype.
+         */
     }
     if (event == event_configure) {
-	/*
-	 * Change sentence mix and set reporting modes as needed.
-	 * Called immediately after event_identified fires, then just
-	 * after every packet received thereafter, but you probably
-	 * only want to take actions on the first few packets after
-	 * the session.lexer counter has been zeroed,
-	 *
-	 * Remember that session->lexer.counter is available when you
-	 * write this hook; you can use this fact to interleave configuration
-	 * sends with the first few packet reads, which is useful for
-	 * devices with small receive buffers.
-	 */
+        /*
+         * Change sentence mix and set reporting modes as needed.
+         * Called immediately after event_identified fires, then just
+         * after every packet received thereafter, but you probably
+         * only want to take actions on the first few packets after
+         * the session.lexer counter has been zeroed,
+         *
+         * Remember that session->lexer.counter is available when you
+         * write this hook; you can use this fact to interleave configuration
+         * sends with the first few packet reads, which is useful for
+         * devices with small receive buffers.
+         */
     } else if (event == event_driver_switch) {
-	/*
-	 * Fires when the driver on a device is changed *after* it
-	 * has been identified.
-	 */
+        /*
+         * Fires when the driver on a device is changed *after* it
+         * has been identified.
+         */
     } else if (event == event_deactivate) {
-	/*
-	 * Fires when the device is deactivated.  Usr this to revert
-	 * whatever was done at event_identify and event_configure
-	 * time.
-	 */
+        /*
+         * Fires when the device is deactivated.  Usr this to revert
+         * whatever was done at event_identify and event_configure
+         * time.
+         */
     } else if (event == event_reactivate) {
        /*
-	* Fires when a device is reactivated after having been closed.
-	* Use this hook for re-establishing device settings that
-	* it doesn't hold through closes.
-	*/
+        * Fires when a device is reactivated after having been closed.
+        * Use this hook for re-establishing device settings that
+        * it doesn't hold through closes.
+        */
     }
 }
 
@@ -430,17 +436,18 @@ static void _proto__event_hook(struct gps_device_t *session, event_t event)
 static gps_mask_t _proto__parse_input(struct gps_device_t *session)
 {
     if (session->lexer.type == _PROTO__PACKET) {
-	return _proto__dispatch(session, session->lexer.outbuffer, session->lexer.outbuflen);
+        return _proto__dispatch(session, session->lexer.outbuffer,
+                                session->lexer.outbuflen);
 #ifdef NMEA0183_ENABLE
     } else if (session->lexer.type == NMEA_PACKET) {
-	return nmea_parse((char *)session->lexer.outbuffer, session);
+        return nmea_parse((char *)session->lexer.outbuffer, session);
 #endif /* NMEA0183_ENABLE */
     } else
-	return 0;
+        return 0;
 }
 
 static bool _proto__set_speed(struct gps_device_t *session,
-			      speed_t speed, char parity, int stopbits)
+                              speed_t speed, char parity, int stopbits)
 {
     /*
      * Set port operating mode, speed, parity, stopbits etc. here.
@@ -455,9 +462,9 @@ static bool _proto__set_speed(struct gps_device_t *session,
 static void _proto__set_mode(struct gps_device_t *session, int mode)
 {
     if (mode == MODE_NMEA) {
-	/* send a mode switch control string */
+        /* send a mode switch control string */
     } else {
-	/* send a mode switch control string */
+        /* send a mode switch control string */
     }
 }
 #endif /* RECONFIGURE_ENABLE */
@@ -503,7 +510,7 @@ const struct gps_type_t driver__proto__binary = {
     /* Associated lexer packet type */
     .packet_type      = _PROTO__PACKET,
     /* Driver tyoe flags */
-    .flags	      = DRIVER_NOFLAGS,
+    .flags            = DRIVER_NOFLAGS,
     /* Response string that identifies device (not active) */
     .trigger          = NULL,
     /* Number of satellite channels supported by the device */
@@ -539,3 +546,4 @@ const struct gps_type_t driver__proto__binary = {
 };
 #endif /* defined(_PROTO__ENABLE) && defined(BINARY_ENABLE) */
 
+// vim: set expandtab shiftwidth=4
