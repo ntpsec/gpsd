@@ -2,7 +2,7 @@
 #
 # gpsinit - initialize kernel-CAN interfaces
 #
-# This file is Copyright (c) 2012 by the GPSD project.
+# This file is Copyright 2012 by the GPSD project.
 # SPDX-License-Identifier: BSD-2-clause
 #
 
@@ -88,3 +88,4 @@ beaglebone)
     exit 1
 esac
 
+# vim: set expandtab shiftwidth=4
