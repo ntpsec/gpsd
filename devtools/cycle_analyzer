@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
-# This file is Copyright (c) 2010 by the GPSD project
-# BSD terms apply: see the file COPYING in the distribution root for details.
+# This file is Copyright 2010 by the GPSD project
+# SPDX-License-Identifier: BSD-2-clause
 """
 cycle_analyzer - perform cycle analysis on GPS log files
 
@@ -272,13 +272,13 @@ if __name__ == "__main__":
     try:
         (options, arguments) = getopt.getopt(sys.argv[1:], "d:jsv")
         for (switch, val) in options:
-            if (switch == '-d'):		# Debug
+            if (switch == '-d'):                # Debug
                 stages = val
-            elif (switch == '-j'):		# Interpret JSON, not NMEA
+            elif (switch == '-j'):              # Interpret JSON, not NMEA
                 parse_json = True
-            elif (switch == '-v'):		# Verbose
+            elif (switch == '-v'):              # Verbose
                 verbose += 1
-            elif (switch == '-s'):		# Suppress logs with no problems
+            elif (switch == '-s'):              # Suppress logs with no problems
                 suppress_regular = True
     except getopt.GetoptError as msg:
         print("cycle_analyzer: " + str(msg))
@@ -311,3 +311,4 @@ if __name__ == "__main__":
     except analyze_error as e:
         print(repr(e), file=sys.stderr)
         raise SystemExit(1)
+# vim: set expandtab shiftwidth=4
