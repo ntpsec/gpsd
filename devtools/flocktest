@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
-# This file is Copyright (c) 2010 by the GPSD project
-# BSD terms apply: see the file COPYING in the distribution root for details.
+# This file is Copyright 2010 by the GPSD project
+# SPDX-License-Identifier: BSD-2-clause
 #
 """\
 flocktest - shepherd script for the GPSD test flock
@@ -100,11 +100,11 @@ else
     # Set up or update the repo
     if [ ! -d $subdir ]
     then
-	git clone %(origin)s $subdir
-	cd $subdir
+        git clone %(origin)s $subdir
+        cd $subdir
     else
-	cd $subdir;
-	git pull
+        cd $subdir;
+        git pull
     fi
 
     # Scripts in the test directory need to be able to run binaries in same
@@ -113,11 +113,11 @@ else
     # Perform the test
     if ( %(regression)s )
     then
-	logmessage="Regression test succeeded."
-	status=0
+        logmessage="Regression test succeeded."
+        status=0
     else
-	logmessage="Regression test failed."
-	status=1
+        logmessage="Regression test failed."
+        status=1
     fi
 
     echo "Test ends: "`date`
@@ -299,17 +299,17 @@ if __name__ == '__main__':
     dumpconf = False
     cianotify = True
     for (switch, val) in options:
-        if  switch == '-c':	# Dump flocktest configuration
+        if  switch == '-c':     # Dump flocktest configuration
             dumpconf = True
-        elif switch == '-d':	# Set the test subdirectory name
+        elif switch == '-d':    # Set the test subdirectory name
             subdir = val
-        elif  switch == '-k':	# Install the access keys
+        elif  switch == '-k':   # Install the access keys
             copykeys = True
-        elif switch == '-q':	# Suppress CIA notifications
+        elif switch == '-q':    # Suppress CIA notifications
             cianotify = False
-        elif switch == '-v':	# Display build log even when no error
+        elif switch == '-v':    # Display build log even when no error
             verbose = True
-        elif switch == '-x':	# Exclude specified sites or architectures
+        elif switch == '-x':    # Exclude specified sites or architectures
             exclusions = [x.strip() for x in val.split(",")]
         else: # switch == '-?':
             print(__doc__)
@@ -354,3 +354,4 @@ if __name__ == '__main__':
 # Local Variables:
 # mode:python
 # End:
+# vim: set expandtab shiftwidth=4
