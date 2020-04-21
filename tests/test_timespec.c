@@ -1,7 +1,7 @@
 /*
  * Unit test for timespec's
  *
- * This file is Copyright (c) 2010 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  *
  */
@@ -363,7 +363,7 @@ static int test_gpsd_gpstime_resolv(int verbose)
     }
 
     if ( fail_count ) {
-	printf("test_gpsd_gpstime_resolv test failed %d tests\n", fail_count );
+	printf("test_gpsd_gpstime_resolv test failed %d tests\n", fail_count);
     } else {
 	puts("test_gpsd_gpstime_resolv test succeeded\n");
     }
@@ -629,3 +629,4 @@ int main(int argc, char *argv[])
     }
     exit(0);
 }
+// vim: set expandtab shiftwidth=4
