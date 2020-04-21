@@ -2,9 +2,9 @@
 #
 # A Python AIVDM/AIVDO decoder
 #
-# This file is Copyright (c) 2010 by the GPSD project
-# BSD terms apply: see the file COPYING in the distribution root for details.
-#
+# This file is Copyright 2010 by the GPSD project
+# SPDX-License-Identifier: BSD-2-clause
+e
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
 from __future__ import absolute_import, print_function, division
@@ -1367,3 +1367,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         pass
 # End
+# vim: set expandtab shiftwidth=4
