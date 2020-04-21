@@ -3,7 +3,7 @@
  *
  * Keep in sync with test_clienthelpers.py
  *
- * This file is Copyright (c) 2010-2019 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -11,9 +11,9 @@
 #include "../gpsd_config.h"
 
 #include <math.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <unistd.h>            /* for getopt() */
 
 #include "../gpsd.h"
@@ -202,89 +202,90 @@ int main(int argc, char **argv)
     int option;
 
     while ((option = getopt(argc, argv, "h?vV")) != -1) {
-	switch (option) {
-	default:
-		fail_count = 1;
-		/* FALLTHROUGH */
-	case '?':
-		/* FALLTHROUGH */
-	case 'h':
-	    (void)fputs("usage: test_gpsdclient [-v] [-V]\n", stderr);
-	    exit(fail_count);
-	case 'V':
-	    (void)fprintf( stderr, "test_gpsdclient %s\n",
-		VERSION);
-	    exit(EXIT_SUCCESS);
-	case 'v':
-	    verbose = 1;
-	    break;
-	}
+        switch (option) {
+        default:
+                fail_count = 1;
+                /* FALLTHROUGH */
+        case '?':
+                /* FALLTHROUGH */
+        case 'h':
+            (void)fputs("usage: test_gpsdclient [-v] [-V]\n", stderr);
+            exit(fail_count);
+        case 'V':
+            (void)fprintf( stderr, "test_gpsdclient %s\n",
+                VERSION);
+            exit(EXIT_SUCCESS);
+        case 'v':
+            verbose = 1;
+            break;
+        }
     }
 
     if (0 < verbose)
-	printf("wgs84_separation() tests\n");
+        printf("wgs84_separation() tests\n");
 
     for (i = 0; i < (sizeof(tests3)/sizeof(struct test3)); i++) {
-	double result;
+        double result;
 
-	result = wgs84_separation(tests3[i].lat, tests3[i].lon);
+        result = wgs84_separation(tests3[i].lat, tests3[i].lon);
 
-	if (0 == isfinite(result) ||
-	    0.01 < fabs(tests3[i].separation - result)) {
-	    printf("ERROR: %.2f %.2f separation was %.2f s/b %.2f, %s\n",
-	    tests3[i].lat, tests3[i].lon,
-	    result, tests3[i].separation, tests3[i].desc);
-	    fail_count++;
-	} else if (0 < verbose) {
-	    printf("%.2f %.2f separation was %.2f s/b %.2f, %s\n",
-	    tests3[i].lat, tests3[i].lon,
-	    result, tests3[i].separation, tests3[i].desc);
-	}
+        if (0 == isfinite(result) ||
+            0.01 < fabs(tests3[i].separation - result)) {
+            printf("ERROR: %.2f %.2f separation was %.2f s/b %.2f, %s\n",
+            tests3[i].lat, tests3[i].lon,
+            result, tests3[i].separation, tests3[i].desc);
+            fail_count++;
+        } else if (0 < verbose) {
+            printf("%.2f %.2f separation was %.2f s/b %.2f, %s\n",
+            tests3[i].lat, tests3[i].lon,
+            result, tests3[i].separation, tests3[i].desc);
+        }
     }
 
     if (0 < verbose)
-	printf("mag_var() tests\n");
+        printf("mag_var() tests\n");
 
     for (i = 0; i < (sizeof(tests3)/sizeof(struct test3)); i++) {
-	double result;
+        double result;
 
-	result = mag_var(tests3[i].lat, tests3[i].lon);
+        result = mag_var(tests3[i].lat, tests3[i].lon);
 
-	if (0 == isfinite(result) ||
-	    0.01 < fabs(tests3[i].variation - result)) {
-	    printf("ERROR: %.2f %.2f mag_var was %.2f s/b %.2f, %s\n",
-	    tests3[i].lat, tests3[i].lon,
-	    result, tests3[i].variation, tests3[i].desc);
-	    fail_count++;
-	} else if (0 < verbose) {
-	    printf("%.2f %.2f mag_var was %.2f s/b %.2f, %s\n",
-	           tests3[i].lat, tests3[i].lon,
-	           result, tests3[i].variation, tests3[i].desc);
-	}
+        if (0 == isfinite(result) ||
+            0.01 < fabs(tests3[i].variation - result)) {
+            printf("ERROR: %.2f %.2f mag_var was %.2f s/b %.2f, %s\n",
+            tests3[i].lat, tests3[i].lon,
+            result, tests3[i].variation, tests3[i].desc);
+            fail_count++;
+        } else if (0 < verbose) {
+            printf("%.2f %.2f mag_var was %.2f s/b %.2f, %s\n",
+                   tests3[i].lat, tests3[i].lon,
+                   result, tests3[i].variation, tests3[i].desc);
+        }
     }
 
     for (i = 0; i < (sizeof(tests4)/sizeof(struct test4)); i++) {
-	double result, ib, fb;
+        double result, ib, fb;
 
         result = earth_distance_and_bearings(tests4[i].lat1, tests4[i].lon1,
                                             tests4[i].lat2, tests4[i].lon2,
                                             &ib, &fb);
-	if (0 == isfinite(result) ||
-	    0.001 < fabs(tests4[i].distance - result)) {
-	    printf("ERROR earth_distance_and bearings(%.8f, %.8f, %.8f, "
+        if (0 == isfinite(result) ||
+            0.001 < fabs(tests4[i].distance - result)) {
+            printf("ERROR earth_distance_and bearings(%.8f, %.8f, %.8f, "
                    "%.8f,,) = %.4f, %.2f, %.2f s/b %.4f, %.2f, %.2f\n",
-		   tests4[i].lat1, tests4[i].lon1,
-		   tests4[i].lat2, tests4[i].lon2,
+                   tests4[i].lat1, tests4[i].lon1,
+                   tests4[i].lat2, tests4[i].lon2,
                    result, ib, fb,
-		   tests4[i].distance, tests4[i].ib, tests4[i].fb);
-	} else if (0 < verbose) {
-	    printf("earth_distance_and_bearings(%.8f, %.8f, %.8f, %.8f) = "
+                   tests4[i].distance, tests4[i].ib, tests4[i].fb);
+        } else if (0 < verbose) {
+            printf("earth_distance_and_bearings(%.8f, %.8f, %.8f, %.8f) = "
                    "%.4f, %.2f, %.2f\n",
-		   tests4[i].lat1, tests4[i].lon1,
-		   tests4[i].lat2, tests4[i].lon2,
-		   tests4[i].distance, tests4[i].ib, tests4[i].fb);
+                   tests4[i].lat1, tests4[i].lon1,
+                   tests4[i].lat2, tests4[i].lon2,
+                   tests4[i].distance, tests4[i].ib, tests4[i].fb);
         }
     }
 
     exit(fail_count);
 }
+// vim: set expandtab shiftwidth=4
