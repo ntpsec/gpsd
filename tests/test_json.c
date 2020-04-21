@@ -1,6 +1,6 @@
 /* json.c - unit test for JSON parsing into fixed-extent structures
  *
- * This file is Copyright (c) 2010 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 
@@ -23,21 +23,21 @@ static int current_test = 0;
 static void assert_case(int status)
 {
     if (status != 0) {
-	(void)fprintf(stderr, "case %d FAILED\n", current_test);
-	(void)fprintf(stderr, "status %d (%s).\n",
-		      status, json_error_string(status));
-	exit(EXIT_FAILURE);
+        (void)fprintf(stderr, "case %d FAILED\n", current_test);
+        (void)fprintf(stderr, "status %d (%s).\n",
+                      status, json_error_string(status));
+        exit(EXIT_FAILURE);
     }
 }
 
 static void assert_string(char *attr, char *fld, char *val)
 {
     if (strcmp(fld, val)) {
-	(void)fprintf(stderr, "case %d FAILED\n", current_test);
-	(void)fprintf(stderr,
-		      "'%s' string attribute eval failed, value = %s.\n",
-		      attr, fld);
-	exit(EXIT_FAILURE);
+        (void)fprintf(stderr, "case %d FAILED\n", current_test);
+        (void)fprintf(stderr,
+                      "'%s' string attribute eval failed, value = %s.\n",
+                      attr, fld);
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -47,51 +47,51 @@ static void assert_string1(char *desc, char *got, char *sb)
         (void)fprintf(stderr, "test string: >%s<\n", sb);
     }
     if (strcmp(got, sb)) {
-	(void)fprintf(stderr, "case %d/%s FAILED\n", current_test, desc);
-	(void)fprintf(stderr, "got = >%s<, s/b >%s<\n", got, sb);
-	exit(EXIT_FAILURE);
+        (void)fprintf(stderr, "case %d/%s FAILED\n", current_test, desc);
+        (void)fprintf(stderr, "got = >%s<, s/b >%s<\n", got, sb);
+        exit(EXIT_FAILURE);
     }
 }
 
 static void assert_integer(char *attr, int fld, int val)
 {
     if (fld != val) {
-	(void)fprintf(stderr, "case %d FAILED\n", current_test);
-	(void)fprintf(stderr,
-		      "'%s' integer attribute eval failed, value = %d s/b %d.\n",
-		      attr, fld, val);
-	exit(EXIT_FAILURE);
+        (void)fprintf(stderr, "case %d FAILED\n", current_test);
+        (void)fprintf(stderr,
+                      "'%s' integer attribute eval failed, value = %d s/b %d.\n",
+                      attr, fld, val);
+        exit(EXIT_FAILURE);
     }
 }
 
 static void assert_uinteger(char *attr, unsigned int fld, unsigned int val)
 {
     if (fld != val) {
-	(void)fprintf(stderr, "case %d FAILED\n", current_test);
-	(void)fprintf(stderr,
-		      "'%s' integer attribute eval failed, value = %u.\n",
-		      attr, fld);
-	exit(EXIT_FAILURE);
+        (void)fprintf(stderr, "case %d FAILED\n", current_test);
+        (void)fprintf(stderr,
+                      "'%s' integer attribute eval failed, value = %u.\n",
+                      attr, fld);
+        exit(EXIT_FAILURE);
     }
 }
 
 static void assert_boolean(char *attr, bool fld, bool val)
 {
     if (fld != val) {
-	(void)fprintf(stderr, "case %d FAILED\n", current_test);
-	(void)fprintf(stderr,
-		      "'%s' boolean attribute eval failed, value = %s.\n",
-		      attr, fld ? "true" : "false");
-	exit(EXIT_FAILURE);
+        (void)fprintf(stderr, "case %d FAILED\n", current_test);
+        (void)fprintf(stderr,
+                      "'%s' boolean attribute eval failed, value = %s.\n",
+                      attr, fld ? "true" : "false");
+        exit(EXIT_FAILURE);
     }
 }
 
 static void assert_other(char *desc, int val, int val1)
 {
     if (val != val1) {
-	(void)fprintf(stderr, "case %d FAILED\n", current_test);
-	(void)fprintf(stderr, "'%s' was %d, s/b %d\n", desc, val, val1);
-	exit(EXIT_FAILURE);
+        (void)fprintf(stderr, "case %d FAILED\n", current_test);
+        (void)fprintf(stderr, "'%s' was %d, s/b %d\n", desc, val, val1);
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -102,11 +102,11 @@ static void assert_other(char *desc, int val, int val1)
 static void assert_real(char *attr, double fld, double val)
 {
     if (fld != val) {
-	(void)fprintf(stderr, "case %d FAILED\n", current_test);
-	(void)fprintf(stderr,
-		      "'%s' real attribute eval failed, value = %f.\n", attr,
-		      fld);
-	exit(EXIT_FAILURE);
+        (void)fprintf(stderr, "case %d FAILED\n", current_test);
+        (void)fprintf(stderr,
+                      "'%s' real attribute eval failed, value = %f.\n", attr,
+                      fld);
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -208,12 +208,13 @@ static const struct json_attr_t json_attrs_6_subtype[] = {
 };
 
 static const struct json_attr_t json_attrs_6[] = {
-    {"parts", t_array, .addr.array.element_type = t_structobject,
-                       .addr.array.arr.objects.base = (char*)&dumbstruck,
-                       .addr.array.arr.objects.stride = sizeof(struct dumbstruct_t),
-                       .addr.array.arr.objects.subtype = json_attrs_6_subtype,
-                       .addr.array.count = &dumbcount,
-                       .addr.array.maxlen = sizeof(dumbstruck)/sizeof(dumbstruck[0])},
+    {"parts", t_array,
+     .addr.array.element_type = t_structobject,
+     .addr.array.arr.objects.base = (char*)&dumbstruck,
+     .addr.array.arr.objects.stride = sizeof(struct dumbstruct_t),
+     .addr.array.arr.objects.subtype = json_attrs_6_subtype,
+     .addr.array.count = &dumbcount,
+     .addr.array.maxlen = sizeof(dumbstruck)/sizeof(dumbstruck[0])},
     {NULL},
 };
 
@@ -225,7 +226,8 @@ static const char *json_str7 = "{\"class\":\"VERSION\",\
 
 /* Case 8: test parsing arrays of enumerated types */
 
-static const char *json_str8 = "{\"fee\":\"FOO\",\"fie\":\"BAR\",\"foe\":\"BAZ\"}";
+static const char *json_str8 =
+     "{\"fee\":\"FOO\",\"fie\":\"BAR\",\"foe\":\"BAZ\"}";
 static const struct json_enum_t enum_table[] = {
     {"BAR", 6}, {"FOO", 3}, {"BAZ", 14}, {NULL}
 };
@@ -421,7 +423,7 @@ static void jsontest(int i)
     char *pbuf;
 
     if (0 < debug) {
-	(void)fprintf(stderr, "Running test #%d.\n", i);
+        (void)fprintf(stderr, "Running test #%d.\n", i);
     }
     current_test = i;
 
@@ -431,285 +433,285 @@ static void jsontest(int i)
     switch (i)
     {
     case 1:
-	status = libgps_json_unpack(json_str1, &gpsdata, NULL);
-	assert_case(status);
-	assert_string("device", gpsdata.dev.path, "GPS#1");
-	assert_integer("mode", gpsdata.fix.mode, 3);
-	assert_integer("time.tv_sec", gpsdata.fix.time.tv_sec, 1119168761);
-	assert_integer("time.tv_nsec", gpsdata.fix.time.tv_nsec / 10000000, 89);
-	assert_real("lon", gpsdata.fix.longitude, 46.498203637);
-	assert_real("lat", gpsdata.fix.latitude, 7.568074350);
-	break;
+        status = libgps_json_unpack(json_str1, &gpsdata, NULL);
+        assert_case(status);
+        assert_string("device", gpsdata.dev.path, "GPS#1");
+        assert_integer("mode", gpsdata.fix.mode, 3);
+        assert_integer("time.tv_sec", gpsdata.fix.time.tv_sec, 1119168761);
+        assert_integer("time.tv_nsec", gpsdata.fix.time.tv_nsec / 10000000, 89);
+        assert_real("lon", gpsdata.fix.longitude, 46.498203637);
+        assert_real("lat", gpsdata.fix.latitude, 7.568074350);
+        break;
 
     case 2:
-	status = libgps_json_unpack(json_str2, &gpsdata, NULL);
-	assert_case(status);
-	assert_integer("used", gpsdata.satellites_used, 6);
-	assert_integer("PRN[0]", gpsdata.skyview[0].PRN, 10);
-	assert_integer("el[0]", gpsdata.skyview[0].elevation, 45);
-	assert_integer("az[0]", gpsdata.skyview[0].azimuth, 196);
-	assert_real("ss[0]", gpsdata.skyview[0].ss, 34);
-	assert_boolean("used[0]", gpsdata.skyview[0].used, true);
-	assert_integer("PRN[6]", gpsdata.skyview[6].PRN, 21);
-	assert_integer("el[6]", gpsdata.skyview[6].elevation, 10);
-	assert_integer("az[6]", gpsdata.skyview[6].azimuth, 301);
-	assert_real("ss[6]", gpsdata.skyview[6].ss, 0);
-	assert_boolean("used[6]", gpsdata.skyview[6].used, false);
-	break;
+        status = libgps_json_unpack(json_str2, &gpsdata, NULL);
+        assert_case(status);
+        assert_integer("used", gpsdata.satellites_used, 6);
+        assert_integer("PRN[0]", gpsdata.skyview[0].PRN, 10);
+        assert_integer("el[0]", gpsdata.skyview[0].elevation, 45);
+        assert_integer("az[0]", gpsdata.skyview[0].azimuth, 196);
+        assert_real("ss[0]", gpsdata.skyview[0].ss, 34);
+        assert_boolean("used[0]", gpsdata.skyview[0].used, true);
+        assert_integer("PRN[6]", gpsdata.skyview[6].PRN, 21);
+        assert_integer("el[6]", gpsdata.skyview[6].elevation, 10);
+        assert_integer("az[6]", gpsdata.skyview[6].azimuth, 301);
+        assert_real("ss[6]", gpsdata.skyview[6].ss, 0);
+        assert_boolean("used[6]", gpsdata.skyview[6].used, false);
+        break;
 
     case 3:
-	status = json_read_array(json_str3, &json_array_3, NULL);
-	assert_case(status);
-	assert_other("stringcount", stringcount, 3);
-	assert_other("stringptrs[0] == foo", strcmp(stringptrs[0], "foo"), 0);
-	assert_other("stringptrs[1] == bar", strcmp(stringptrs[1], "bar"), 0);
-	assert_other("stringptrs[2] == baz", strcmp(stringptrs[2], "baz"), 0);
-	break;
+        status = json_read_array(json_str3, &json_array_3, NULL);
+        assert_case(status);
+        assert_other("stringcount", stringcount, 3);
+        assert_other("stringptrs[0] == foo", strcmp(stringptrs[0], "foo"), 0);
+        assert_other("stringptrs[1] == bar", strcmp(stringptrs[1], "bar"), 0);
+        assert_other("stringptrs[2] == baz", strcmp(stringptrs[2], "baz"), 0);
+        break;
 
     case 4:
-	status = json_read_object(json_str4, json_attrs_4, NULL);
-	assert_case(status);
-	assert_integer("dftint", dftinteger, -5);    /* did the default work? */
-	assert_uinteger("dftuint", dftuinteger, 10); /* did the default work? */
-	assert_real("dftreal", dftreal, 23.17);	     /* did the default work? */
-	assert_boolean("flag1", flag1, true);
-	assert_boolean("flag2", flag2, false);
-	break;
+        status = json_read_object(json_str4, json_attrs_4, NULL);
+        assert_case(status);
+        assert_integer("dftint", dftinteger, -5);    /* did the default work? */
+        assert_uinteger("dftuint", dftuinteger, 10); /* did the default work? */
+        assert_real("dftreal", dftreal, 23.17);      /* did the default work? */
+        assert_boolean("flag1", flag1, true);
+        assert_boolean("flag2", flag2, false);
+        break;
 
     case 5:
-	status = libgps_json_unpack(json_str5, &gpsdata, NULL);
-	assert_case(status);
-	assert_string("path", gpsdata.dev.path, "/dev/ttyUSB0");
-	assert_integer("flags", gpsdata.dev.flags, 5);
-	assert_string("driver", gpsdata.dev.driver, "Foonly");
-	break;
+        status = libgps_json_unpack(json_str5, &gpsdata, NULL);
+        assert_case(status);
+        assert_string("path", gpsdata.dev.path, "/dev/ttyUSB0");
+        assert_integer("flags", gpsdata.dev.flags, 5);
+        assert_string("driver", gpsdata.dev.driver, "Foonly");
+        break;
 
     case 6:
-	status = json_read_object(json_str6, json_attrs_6, NULL);
-	assert_case(status);
-	assert_integer("dumbcount", dumbcount, 4);
-	assert_string("dumbstruck[0].name", dumbstruck[0].name, "Urgle");
-	assert_string("dumbstruck[1].name", dumbstruck[1].name, "Burgle");
-	assert_string("dumbstruck[2].name", dumbstruck[2].name, "Witter");
-	assert_string("dumbstruck[3].name", dumbstruck[3].name, "Thud");
-	assert_boolean("dumbstruck[0].flag", dumbstruck[0].flag, true);
-	assert_boolean("dumbstruck[1].flag", dumbstruck[1].flag, false);
-	assert_boolean("dumbstruck[2].flag", dumbstruck[2].flag, true);
-	assert_boolean("dumbstruck[3].flag", dumbstruck[3].flag, false);
-	assert_integer("dumbstruck[0].count", dumbstruck[0].count, 3);
-	assert_integer("dumbstruck[1].count", dumbstruck[1].count, 1);
-	assert_integer("dumbstruck[2].count", dumbstruck[2].count, 4);
-	assert_integer("dumbstruck[3].count", dumbstruck[3].count, 1);
-	break;
+        status = json_read_object(json_str6, json_attrs_6, NULL);
+        assert_case(status);
+        assert_integer("dumbcount", dumbcount, 4);
+        assert_string("dumbstruck[0].name", dumbstruck[0].name, "Urgle");
+        assert_string("dumbstruck[1].name", dumbstruck[1].name, "Burgle");
+        assert_string("dumbstruck[2].name", dumbstruck[2].name, "Witter");
+        assert_string("dumbstruck[3].name", dumbstruck[3].name, "Thud");
+        assert_boolean("dumbstruck[0].flag", dumbstruck[0].flag, true);
+        assert_boolean("dumbstruck[1].flag", dumbstruck[1].flag, false);
+        assert_boolean("dumbstruck[2].flag", dumbstruck[2].flag, true);
+        assert_boolean("dumbstruck[3].flag", dumbstruck[3].flag, false);
+        assert_integer("dumbstruck[0].count", dumbstruck[0].count, 3);
+        assert_integer("dumbstruck[1].count", dumbstruck[1].count, 1);
+        assert_integer("dumbstruck[2].count", dumbstruck[2].count, 4);
+        assert_integer("dumbstruck[3].count", dumbstruck[3].count, 1);
+        break;
 
     case 7:
-	status = libgps_json_unpack(json_str7, &gpsdata, NULL);
-	assert_case(status);
-	assert_string("release", gpsdata.version.release, VERSION);
-	assert_string("rev", gpsdata.version.rev, "dummy-revision");
-	assert_integer("proto_major", gpsdata.version.proto_major, 3);
-	assert_integer("proto_minor", gpsdata.version.proto_minor, 1);
-	break;
+        status = libgps_json_unpack(json_str7, &gpsdata, NULL);
+        assert_case(status);
+        assert_string("release", gpsdata.version.release, VERSION);
+        assert_string("rev", gpsdata.version.rev, "dummy-revision");
+        assert_integer("proto_major", gpsdata.version.proto_major, 3);
+        assert_integer("proto_minor", gpsdata.version.proto_minor, 1);
+        break;
 
     case 8:
-	status = json_read_object(json_str8, json_attrs_8, NULL);
-	assert_case(status);
-	assert_integer("fee", fee, 3);
-	assert_integer("fie", fie, 6);
-	assert_integer("foe", foe, 14);
-	break;
+        status = json_read_object(json_str8, json_attrs_8, NULL);
+        assert_case(status);
+        assert_integer("fee", fee, 3);
+        assert_integer("fie", fie, 6);
+        assert_integer("foe", foe, 14);
+        break;
 
     case 9:
-	/* yes, the '6' in the next line is correct */
-	status = json_read_object(json_str9, json_attrs_6, NULL);
-	assert_case(status);
-	assert_integer("dumbcount", dumbcount, 0);
-	break;
+        /* yes, the '6' in the next line is correct */
+        status = json_read_object(json_str9, json_attrs_6, NULL);
+        assert_case(status);
+        assert_integer("dumbcount", dumbcount, 0);
+        break;
 
     case 10:
-	status = json_pps_read(json_strPPS, &gpsdata, NULL);
-	assert_case(status);
-	assert_string("device", gpsdata.dev.path, "GPS#1");
-	assert_integer("real_sec", gpsdata.pps.real.tv_sec, 1428001514);
-	assert_integer("real_nsec", gpsdata.pps.real.tv_nsec, 1000000);
-	assert_integer("clock_sec", gpsdata.pps.clock.tv_sec, 1428001513);
-	assert_integer("clock_nsec", gpsdata.pps.clock.tv_nsec, 999999999);
-	assert_integer("qErr", gpsdata.qErr, -123456);
-	break;
+        status = json_pps_read(json_strPPS, &gpsdata, NULL);
+        assert_case(status);
+        assert_string("device", gpsdata.dev.path, "GPS#1");
+        assert_integer("real_sec", gpsdata.pps.real.tv_sec, 1428001514);
+        assert_integer("real_nsec", gpsdata.pps.real.tv_nsec, 1000000);
+        assert_integer("clock_sec", gpsdata.pps.clock.tv_sec, 1428001513);
+        assert_integer("clock_nsec", gpsdata.pps.clock.tv_nsec, 999999999);
+        assert_integer("qErr", gpsdata.qErr, -123456);
+        break;
 
     case 11:
-	status = json_toff_read(json_strTOFF, &gpsdata, NULL);
-	assert_case(status);
-	assert_string("device", gpsdata.dev.path, "GPS#1");
-	assert_integer("real_sec", gpsdata.toff.real.tv_sec, 1428001514);
-	assert_integer("real_nsec", gpsdata.toff.real.tv_nsec, 1000000);
-	assert_integer("clock_sec", gpsdata.toff.clock.tv_sec, 1428001513);
-	assert_integer("clock_nsec", gpsdata.toff.clock.tv_nsec, 999999999);
-	break;
+        status = json_toff_read(json_strTOFF, &gpsdata, NULL);
+        assert_case(status);
+        assert_string("device", gpsdata.dev.path, "GPS#1");
+        assert_integer("real_sec", gpsdata.toff.real.tv_sec, 1428001514);
+        assert_integer("real_nsec", gpsdata.toff.real.tv_nsec, 1000000);
+        assert_integer("clock_sec", gpsdata.toff.clock.tv_sec, 1428001513);
+        assert_integer("clock_nsec", gpsdata.toff.clock.tv_nsec, 999999999);
+        break;
 
     case 12:
-	status = json_oscillator_read(json_strOSC, &gpsdata, NULL);
-	assert_case(status);
-	assert_string("device", gpsdata.dev.path, "GPS#1");
-	assert_boolean("running", gpsdata.osc.running, true);
-	assert_boolean("reference", gpsdata.osc.reference, true);
-	assert_boolean("disciplined", gpsdata.osc.disciplined, false);
-	assert_integer("delta", gpsdata.osc.delta, 67);
-	break;
+        status = json_oscillator_read(json_strOSC, &gpsdata, NULL);
+        assert_case(status);
+        assert_string("device", gpsdata.dev.path, "GPS#1");
+        assert_boolean("running", gpsdata.osc.running, true);
+        assert_boolean("reference", gpsdata.osc.reference, true);
+        assert_boolean("disciplined", gpsdata.osc.disciplined, false);
+        assert_integer("delta", gpsdata.osc.delta, 67);
+        break;
 
     case 13:
-	if (2 < debug) {
-	    (void)fprintf(stderr, "test string: %s.\n", json_strErr);
-	}
-	status = libgps_json_unpack(json_strErr, &gpsdata, NULL);
-	assert_case(status);
-	assert_string("message", gpsdata.error, "Hello\b\f\n\r\t");
-	break;
+        if (2 < debug) {
+            (void)fprintf(stderr, "test string: %s.\n", json_strErr);
+        }
+        status = libgps_json_unpack(json_strErr, &gpsdata, NULL);
+        assert_case(status);
+        assert_string("message", gpsdata.error, "Hello\b\f\n\r\t");
+        break;
 
     case 14:
-	if (2 < debug) {
-	    (void)fprintf(stderr, "test string: %s.\n", json_strErr1);
-	}
-	status = libgps_json_unpack(json_strErr1, &gpsdata, NULL);
-	assert_case(status);
-	assert_string("message", gpsdata.error, "034");
-	break;
+        if (2 < debug) {
+            (void)fprintf(stderr, "test string: %s.\n", json_strErr1);
+        }
+        status = libgps_json_unpack(json_strErr1, &gpsdata, NULL);
+        assert_case(status);
+        assert_string("message", gpsdata.error, "034");
+        break;
 
     case 15:
         /* check for string overrun caught */
-	if (2 < debug) {
-	    (void)fprintf(stderr, "test string: %s.\n", json_strOver);
-	}
-	json_short_string_cnt = 7;
-	status = json_read_object(json_strOver, json_short_string, NULL);
-	assert_case(JSON_ERR_STRLONG != status);
-	assert_string("name", json_short_string_dst, "");
-	assert_integer("count", json_short_string_cnt, 0);
-	break;
+        if (2 < debug) {
+            (void)fprintf(stderr, "test string: %s.\n", json_strOver);
+        }
+        json_short_string_cnt = 7;
+        status = json_read_object(json_strOver, json_short_string, NULL);
+        assert_case(JSON_ERR_STRLONG != status);
+        assert_string("name", json_short_string_dst, "");
+        assert_integer("count", json_short_string_cnt, 0);
+        break;
 
     case 16:
         /* check for string overrun caught */
         json_strOver2[0] = '\0';
         /* build a LONG test string */
-	strlcat(json_strOver2, "{\"name\":\"", sizeof(json_strOver2));
+        strlcat(json_strOver2, "{\"name\":\"", sizeof(json_strOver2));
         for (n = 0; n < (2 * JSON_VAL_MAX); n++) {
-	    strlcat(json_strOver2, "\\u0033", sizeof(json_strOver2));
+            strlcat(json_strOver2, "\\u0033", sizeof(json_strOver2));
         }
-	strlcat(json_strOver2, "\"}", sizeof(json_strOver2));
+        strlcat(json_strOver2, "\"}", sizeof(json_strOver2));
 
-	if (2 < debug) {
-	    (void)fprintf(stderr, "test string: %s.\n", json_strOver2);
-	}
-	json_short_string_cnt = 7;
-	status = json_read_object(json_strOver2, json_short_string, NULL);
-	assert_case(JSON_ERR_STRLONG != status);
-	assert_string("name", json_short_string_dst, "");
-	assert_integer("count", json_short_string_cnt, 0);
-	break;
+        if (2 < debug) {
+            (void)fprintf(stderr, "test string: %s.\n", json_strOver2);
+        }
+        json_short_string_cnt = 7;
+        status = json_read_object(json_strOver2, json_short_string, NULL);
+        assert_case(JSON_ERR_STRLONG != status);
+        assert_string("name", json_short_string_dst, "");
+        assert_integer("count", json_short_string_cnt, 0);
+        break;
 
     case 17:
         /* check for a different string overrun caught */
         json_strOver2[0] = '\0';
         /* build a LONG test string */
-	strlcat(json_strOver2, "{\"name\":\"", sizeof(json_strOver2));
+        strlcat(json_strOver2, "{\"name\":\"", sizeof(json_strOver2));
         for (n = 0; n < (2 * JSON_VAL_MAX); n++) {
-	    strlcat(json_strOver2, "\\A", sizeof(json_strOver2));
+            strlcat(json_strOver2, "\\A", sizeof(json_strOver2));
         }
-	strlcat(json_strOver2, "\"}", sizeof(json_strOver2));
+        strlcat(json_strOver2, "\"}", sizeof(json_strOver2));
 
-	if (2 < debug) {
-	    (void)fprintf(stderr, "test string: %s.\n", json_strOver2);
-	}
-	json_short_string_cnt = 7;
-	status = json_read_object(json_strOver2, json_short_string, NULL);
-	assert_case(JSON_ERR_STRLONG != status);
-	assert_string("name", json_short_string_dst, "");
-	assert_integer("count", json_short_string_cnt, 0);
-	break;
+        if (2 < debug) {
+            (void)fprintf(stderr, "test string: %s.\n", json_strOver2);
+        }
+        json_short_string_cnt = 7;
+        status = json_read_object(json_strOver2, json_short_string, NULL);
+        assert_case(JSON_ERR_STRLONG != status);
+        assert_string("name", json_short_string_dst, "");
+        assert_integer("count", json_short_string_cnt, 0);
+        break;
 
     case 18:
-	status = json_read_object(json_str18, json_attrs_18, NULL);
-	assert_integer("proto_major", pvhi, 3);
-	assert_integer("proto_minor", pvlo, 14);
-	assert_string("release", release, VERSION);
-	assert_integer("return", status, 0);
-	break;
+        status = json_read_object(json_str18, json_attrs_18, NULL);
+        assert_integer("proto_major", pvhi, 3);
+        assert_integer("proto_minor", pvlo, 14);
+        assert_string("release", release, VERSION);
+        assert_integer("return", status, 0);
+        break;
 
     case 19:
-	status = json_read_object(json_str19, json_attrs_19, NULL);
-	assert_boolean("enable", enable, true);
-	assert_boolean("json", json, true);
-	assert_integer("return", status, 0);
-	break;
+        status = json_read_object(json_str19, json_attrs_19, NULL);
+        assert_boolean("enable", enable, true);
+        assert_boolean("json", json, true);
+        assert_integer("return", status, 0);
+        break;
 
     case 20:
-	status = json_read_object(json_str20, json_attrs_20, NULL);
-	assert_integer("mode", gps_mode, 3);
-	assert_string("time", gps_time, "2019-10-04T08:51:34.000Z");
-	assert_real("ept", ept, 0.005);
-	assert_integer("return", status, 0);
-	break;
+        status = json_read_object(json_str20, json_attrs_20, NULL);
+        assert_integer("mode", gps_mode, 3);
+        assert_string("time", gps_time, "2019-10-04T08:51:34.000Z");
+        assert_real("ept", ept, 0.005);
+        assert_integer("return", status, 0);
+        break;
 
     case 21:
-	status = json_read_array(json_strInt, &json_array_Int, NULL);
-	assert_integer("count", intcount, 3);
-	assert_integer("intstore[0]", intstore[0], 23);
-	assert_integer("intstore[1]", intstore[1], -17);
-	assert_integer("intstore[2]", intstore[2], 5);
-	assert_integer("intstore[3]", intstore[3], 0);
-	break;
+        status = json_read_array(json_strInt, &json_array_Int, NULL);
+        assert_integer("count", intcount, 3);
+        assert_integer("intstore[0]", intstore[0], 23);
+        assert_integer("intstore[1]", intstore[1], -17);
+        assert_integer("intstore[2]", intstore[2], 5);
+        assert_integer("intstore[3]", intstore[3], 0);
+        break;
 
     case 22:
-	status = json_read_array(json_strBool, &json_array_Bool, NULL);
-	assert_integer("count", boolcount, 3);
-	assert_boolean("boolstore[0]", boolstore[0], true);
-	assert_boolean("boolstore[1]", boolstore[1], false);
-	assert_boolean("boolstore[2]", boolstore[2], true);
-	assert_boolean("boolstore[3]", boolstore[3], false);
-	break;
+        status = json_read_array(json_strBool, &json_array_Bool, NULL);
+        assert_integer("count", boolcount, 3);
+        assert_boolean("boolstore[0]", boolstore[0], true);
+        assert_boolean("boolstore[1]", boolstore[1], false);
+        assert_boolean("boolstore[2]", boolstore[2], true);
+        assert_boolean("boolstore[3]", boolstore[3], false);
+        break;
 
     case 23:
-	status = json_read_array(json_strReal, &json_array_Real, NULL);
-	assert_integer("count", realcount, 3);
-	assert_real("realstore[0]", realstore[0], 23.1);
-	assert_real("realstore[1]", realstore[1], -17.2);
-	assert_real("realstore[2]", realstore[2], 5.3);
-	assert_real("realstore[3]", realstore[3], 0);
-	break;
+        status = json_read_array(json_strReal, &json_array_Real, NULL);
+        assert_integer("count", realcount, 3);
+        assert_real("realstore[0]", realstore[0], 23.1);
+        assert_real("realstore[1]", realstore[1], -17.2);
+        assert_real("realstore[2]", realstore[2], 5.3);
+        assert_real("realstore[3]", realstore[3], 0);
+        break;
 
     case 24:
         // test w/o the trailing NUL
-	pbuf = json_quote(ee24a, buffer, sizeof(ee24a) - 1, sizeof(buffer));
-	assert_string1("Ascii", pbuf, ed24a);
+        pbuf = json_quote(ee24a, buffer, sizeof(ee24a) - 1, sizeof(buffer));
+        assert_string1("Ascii", pbuf, ed24a);
 
-	pbuf = json_quote(ee24b, buffer, sizeof(ee24b), sizeof(buffer));
-	assert_string1("bfnrt", pbuf, ed24b);
+        pbuf = json_quote(ee24b, buffer, sizeof(ee24b), sizeof(buffer));
+        assert_string1("bfnrt", pbuf, ed24b);
 
-	pbuf = json_quote(ee24c, buffer, sizeof(ee24c), sizeof(buffer));
-	assert_string1("NUL", pbuf, ed24c);
+        pbuf = json_quote(ee24c, buffer, sizeof(ee24c), sizeof(buffer));
+        assert_string1("NUL", pbuf, ed24c);
 
-	pbuf = json_quote(ee24d, buffer, sizeof(ee24d), sizeof(buffer));
-	assert_string1("trailing utf", pbuf, ed24d);
+        pbuf = json_quote(ee24d, buffer, sizeof(ee24d), sizeof(buffer));
+        assert_string1("trailing utf", pbuf, ed24d);
 
-	pbuf = json_quote(ee24e, buffer, sizeof(ee24e), sizeof(buffer));
-	assert_string1("Bad trailing utf", pbuf, ed24e);
+        pbuf = json_quote(ee24e, buffer, sizeof(ee24e), sizeof(buffer));
+        assert_string1("Bad trailing utf", pbuf, ed24e);
 
         // test for short output buffer
-	pbuf = json_quote(ee24f, buffer, sizeof(ee24f), (size_t)6);
-	assert_string1("Bad trailing utf", pbuf, ed24f);
+        pbuf = json_quote(ee24f, buffer, sizeof(ee24f), (size_t)6);
+        assert_string1("Bad trailing utf", pbuf, ed24f);
 
-	pbuf = json_quote(ee24l, buffer, sizeof(ee24l), sizeof(buffer));
-	assert_string1("low", pbuf, ed24l);
+        pbuf = json_quote(ee24l, buffer, sizeof(ee24l), sizeof(buffer));
+        assert_string1("low", pbuf, ed24l);
 
-	pbuf = json_quote(ee24u, buffer, sizeof(ee24u), sizeof(buffer));
-	assert_string1("unicode", pbuf, ed24u);
-	break;
+        pbuf = json_quote(ee24u, buffer, sizeof(ee24u), sizeof(buffer));
+        assert_string1("unicode", pbuf, ed24u);
+        break;
 
 #define MAXTEST 24
 
     default:
-	(void)fputs("Unknown test number\n", stderr);
-	exit(EXIT_FAILURE);
+        (void)fputs("Unknown test number\n", stderr);
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -719,41 +721,41 @@ int main(int argc UNUSED, char *argv[]UNUSED)
     int individual = 0;
 
     while ((option = getopt(argc, argv, "D:hn:V?")) != -1) {
-	switch (option) {
+        switch (option) {
 #ifdef CLIENTDEBUG_ENABLE
-	case 'D':
-	    debug = atoi(optarg);
-	    gps_enable_debug(debug, stdout);
-	    break;
+        case 'D':
+            debug = atoi(optarg);
+            gps_enable_debug(debug, stdout);
+            break;
 #endif
-	case 'n':
-	    individual = atoi(optarg);
-	    break;
-	case '?':
-	case 'h':
-	default:
-	    (void)fprintf(stderr,
+        case 'n':
+            individual = atoi(optarg);
+            break;
+        case '?':
+        case 'h':
+        default:
+            (void)fprintf(stderr,
                         "usage: %s [-D lvl] [-n tst] [-V]\n"
                         "       -D lvl      set debug level\n"
                         "       -n tst      run only test tst\n"
                         "       -V          Print version and exit\n",
                         argv[0]);
-	    exit(EXIT_FAILURE);
+            exit(EXIT_FAILURE);
         case 'V':
             (void)fprintf(stderr, "%s: %s (revision %s)\n",
                           argv[0], VERSION, REVISION);
             exit(EXIT_SUCCESS);
-	}
+        }
     }
 
     (void)fprintf(stderr, "JSON unit tests\n");
 
     if (individual)
-	jsontest(individual);
+        jsontest(individual);
     else {
-	int i;
-	for (i = 1; i <= MAXTEST; i++) {
-	    jsontest(i);
+        int i;
+        for (i = 1; i <= MAXTEST; i++) {
+            jsontest(i);
         }
     }
 
