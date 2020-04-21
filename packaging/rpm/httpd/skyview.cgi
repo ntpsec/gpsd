@@ -11,7 +11,9 @@ skyview.cgi - Builds a Skyview PNG image from a POLL request to a GPSD server
 
 =head1 COPYRIGHT
 
-Copyright (c) 2011 - Michael R. Davis
+Copyright 2011 - Michael R. Davis
+This file is Copyright 2011 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause
 
 This program is free software licensed under The BSD License.
 
@@ -50,6 +52,6 @@ if ($error) {
   }
 }
 $gd->color([210,210,210]); #gray
-$gd->addGeoString(122 => 227.0, "Copyright (c) 2011                            Michael R. Davis");
+$gd->addGeoString(122 => 227.0, "Copyright 2011                                Michael R. Davis");
 
 print "Content-type: image/png\n\n", $gd->draw;
