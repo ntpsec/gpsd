@@ -3,9 +3,10 @@
  * iso8601_to_timespec().
  * mktime() is a libc function, why test it?
  *
- * This file is Copyright (c) 2010-2019 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
+
 #include <limits.h>
 #include <math.h>       /* for fabs() */
 #include <stdbool.h>
@@ -259,3 +260,4 @@ int main(int argc UNUSED, char *argv[] UNUSED)
 
 /* end */
 
+// vim: set expandtab shiftwidth=4
