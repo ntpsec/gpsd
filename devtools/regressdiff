@@ -3,8 +3,8 @@
 # Walk through a pair of textfiles looking for where they begin to differ.
 # May be useful for comparing logs when regression tests break.
 #
-# This file is Copyright (c) 2010-2019 by the GPSD project
-# BSD terms apply: see the file COPYING in the distribution root for details.
+# This file is Copyright 2010 by the GPSD project
+# SPDX-License-Identifier: BSD-2-clause
 #
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
@@ -55,3 +55,4 @@ if __name__ == "__main__":
     print("First %d lines match" % eaten)
     print(f1.peek())
     print(f2.peek())
+# vim: set expandtab shiftwidth=4
