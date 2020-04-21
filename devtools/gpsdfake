@@ -1,5 +1,5 @@
-# This file is Copyright (c) 2010 by the GPSD project
-# BSD terms apply: see the file COPYING in the distribution root for details.
+# This file is Copyright 2010 by the GPSD project
+# SPDX-License-Identifier: BSD-2-clause
 """
 gpsdfake - a fake gpsd server that spews specified data at gpsd clients.
 """
@@ -20,9 +20,9 @@ class FakeHandler(SocketServer.BaseRequestHandler):
                           '"version":"gpsdfake","rev":"gpsdfake",'
                           '"proto_major":3,"proto_minor":1}\r\n')
         # Perpetually resend the data we have specified 
-	while True:
-	    for line in lines:
-		self.request.send(line)
+        while True:
+            for line in lines:
+                self.request.send(line)
 
 if __name__ == "__main__":
     (HOST, PORT) = "localhost", 2947
@@ -48,3 +48,4 @@ if __name__ == "__main__":
 # Local Variables:
 # mode:python
 # End:
+# vim: set expandtab shiftwidth=4
