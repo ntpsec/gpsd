@@ -3,17 +3,19 @@
  *  Consider rounding off also:
  *  dsec = (int)(fdsec * 10000.0 + 0.5);
  *
- * This file is Copyright (c) 2010 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
 */
 
 /* first so the #defs work */
 #include "../gpsd_config.h"
+
 #include <math.h>              /* for nan() */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>            /* for getopt() */
+
 #include "../gpsdclient.h"
 
 struct test {
@@ -280,3 +282,4 @@ int main(int argc, char **argv)
     exit(fail_count);
 }
 
+// vim: set expandtab shiftwidth=4
