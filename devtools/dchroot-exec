@@ -5,8 +5,8 @@
 # as argument, nothing else. This wrapper creates a temporary script
 # which will be executed then.
 
-# This file is Copyright (c) 2010 by the GPSD project
-# BSD terms apply: see the file COPYING in the distribution root for details.
+# This file is Copyright 2010 by the GPSD project
+# SPDX-License-Identifier: BSD-2-clause
 
 dchroot="$1"
 shift
