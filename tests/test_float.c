@@ -1,15 +1,10 @@
 /*
- * This file is Copyright (c) 2010 by the GPSD project
+ * Copyright 2006 Chris Kuethe <chris.kuethe@gmail.com>
+ *
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 #include <stdio.h>
-
-/*
- * Copyright (c) 2006 Chris Kuethe <chris.kuethe@gmail.com>
- *
- * This file is Copyright (c)2005-2019 by the GPSD project
- * SPDX-License-Identifier: BSD-2-clause
- */
 
 /*
  * this simple program tests to see whether your system can do proper
@@ -294,3 +289,4 @@ int test_modulo(void) {
     }
     return 0;
 }
+// vim: set expandtab shiftwidth=4
