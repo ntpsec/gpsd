@@ -11,7 +11,9 @@ pgps.cgi - Builds a Satellite List and displays GPS data from a POLL request to 
 
 =head1 COPYRIGHT
 
-Copyright (c) 2011 - Michael R. Davis
+Copyright 2011 - Michael R. Davis
+This file is Copyright 2011 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause
 
 This program is free software licensed under The BSD License.
 
