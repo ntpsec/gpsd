@@ -943,12 +943,13 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
         /* Fill in the time offset, milliseconds. */
         if (0 < gpsdata->fix.time.tv_sec) {
             timespec_t ts_now, ts_diff;
+            char ts_str[TIMESPEC_LEN];
+
             (void)clock_gettime(CLOCK_REALTIME, &ts_now);
             TS_SUB(&ts_diff, &ts_now, &gpsdata->fix.time);
 
-            (void)snprintf(scr, sizeof(scr), "%lld.%03ld sec",
-                           (long long)ts_diff.tv_sec,
-                           ts_diff.tv_nsec / 1000000);
+            (void)snprintf(scr, sizeof(scr), "%s sec",
+                           timespec_str(&ts_diff, ts_str, sizeof(ts_str)));
         } else {
             (void)strlcpy(scr, " n/a", sizeof(scr));
         }
