@@ -6664,6 +6664,43 @@ Always double check with "-p CFG-GNSS".
         """generic send poll request"""
         gps_model.gps_send(m_data[0], m_data[1], m_data[2:])
 
+    CFG_ANT = [0x06, 0x13]
+    CFG_DAT = [0x06, 0x06]
+    CFG_GNSS = [0x06, 0x3e]
+    CFG_PRT = [0x06, 0x00]     # current port only
+    CFG_NAV5 = [0x06, 0x24]
+    CFG_NMEA = [0x06, 0x17]
+    CFG_USB = [0x06, 0x1b]
+    MON_VER = [0x0a, 0x04]
+
+    def get_config(self):
+        """Get a bunch of config messages"""
+
+        # blast them for now, should do one at a time...
+        # MON-VER
+        gps_model.send_poll(ubx.MON_VER)
+
+        # CFG-ANT
+        gps_model.send_poll(ubx.CFG_ANT)
+
+        # CFG-DAT
+        gps_model.send_poll(ubx.CFG_DAT)
+
+        # CFG-GNSS
+        gps_model.send_poll(ubx.CFG_GNSS)
+
+        # CFG-NAV5
+        gps_model.send_poll(ubx.CFG_NAV5)
+
+        # CFG-NMEA
+        gps_model.send_poll(ubx.CFG_NMEA)
+
+        # CFG-PRT
+        gps_model.send_poll(ubx.CFG_PRT)
+
+        # CFG-USB
+        gps_model.send_poll(ubx.CFG_USB)
+
     able_commands = {
         # en/dis able BeiDou
         "BEIDOU": {"command": send_able_beidou,
@@ -6843,6 +6880,9 @@ Always double check with "-p CFG-GNSS".
         "COLDBOOT": {"command": send_cfg_rst,
                      "help": "UBS-CFG-RST coldboot the GPS",
                      "opt": 0xffff},
+        # CONFIG
+        "CONFIG": {"command": get_config,
+                    "help": "Get a lot of receiver config"},
         # UBX-CFG-RST
         "HOTBOOT": {"command": send_cfg_rst,
                     "help": "UBX-CFG-RST hotboot the GPS",
