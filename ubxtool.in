@@ -6665,16 +6665,25 @@ Always double check with "-p CFG-GNSS".
         gps_model.gps_send(m_data[0], m_data[1], m_data[2:])
 
     CFG_ANT = [0x06, 0x13]
+    CFG_BATCH = [0x06, 0x93]
     CFG_DAT = [0x06, 0x06]
     CFG_GNSS = [0x06, 0x3e]
+    CFG_GEOFENCE = [0x06, 0x69]
+    CFG_INF_0 = [0x06, 0x02, 0]
+    CFG_INF_1 = [0x06, 0x02, 1]
+    CFG_LOGFILTER = [0x06, 0x47]
+    CFG_ODO = [0x06, 0x1e]
     CFG_PRT = [0x06, 0x00]     # current port only
     CFG_NAV5 = [0x06, 0x24]
+    CFG_NAVX5 = [0x06, 0x23]
     CFG_NMEA = [0x06, 0x17]
+    CFG_RATE = [0x06, 0x08]
+    CFG_TP5 = [0x06, 0x31]
     CFG_USB = [0x06, 0x1b]
     MON_VER = [0x0a, 0x04]
 
     def get_config(self):
-        """Get a bunch of config messages"""
+        """CONFIG.  Get a bunch of config messages"""
 
         # blast them for now, should do one at a time...
         # MON-VER
@@ -6683,20 +6692,56 @@ Always double check with "-p CFG-GNSS".
         # CFG-ANT
         gps_model.send_poll(ubx.CFG_ANT)
 
+        if 22 < opts['protver']:
+            # CFG-BATCH, protVer 23.01+
+            gps_model.send_poll(ubx.CFG_BATCH)
+
         # CFG-DAT
         gps_model.send_poll(ubx.CFG_DAT)
+
+        # skip CFG-DGNSS, HP only
+        # skip CFG-DOSC, FTS only
+        # skip CFG-ESRC, FTS only
+
+        # CFG-GEOFENCE
+        gps_model.send_poll(ubx.CFG_GEOFENCE)
 
         # CFG-GNSS
         gps_model.send_poll(ubx.CFG_GNSS)
 
+        # skip CFG-HNR, ADR, UDR, only
+
+        # CFG-INF
+        gps_model.send_poll(ubx.CFG_INF_0)
+        gps_model.send_poll(ubx.CFG_INF_1)
+
+        # skip CFG-ITFM
+
+        # CFG-LOGFILTER
+        gps_model.send_poll(ubx.CFG_LOGFILTER)
+
         # CFG-NAV5
         gps_model.send_poll(ubx.CFG_NAV5)
+
+        # CFG-NAVX5
+        gps_model.send_poll(ubx.CFG_NAVX5)
 
         # CFG-NMEA
         gps_model.send_poll(ubx.CFG_NMEA)
 
+        # CFG-ODO
+        gps_model.send_poll(ubx.CFG_ODO)
+
         # CFG-PRT
         gps_model.send_poll(ubx.CFG_PRT)
+
+        # CFG-RATE
+        gps_model.send_poll(ubx.CFG_RATE)
+
+        # skip CFG-TMODE3, HP only
+
+        # CFG-TP5
+        gps_model.send_poll(ubx.CFG_TP5)
 
         # CFG-USB
         gps_model.send_poll(ubx.CFG_USB)
