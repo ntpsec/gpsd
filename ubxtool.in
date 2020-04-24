@@ -6690,77 +6690,40 @@ Always double check with "-p CFG-GNSS".
         """CONFIG.  Get a bunch of config messages"""
 
         # blast them for now, should do one at a time...
-        # MON-VER
-        gps_model.send_poll(ubx.MON_VER)
 
-        # CFG-ANT
-        gps_model.send_poll(ubx.CFG_ANT)
+        cmds = [ubx.MON_VER,          # UBX-MON-VER
+                ubx.CFG_ANT,          # UBX-CFG-ANT
+                ubx.CFG_DAT,          # UBX-CFG-DAT
+                # skip UBX-CFG-DGNSS, HP only
+                # skip UBX-CFG-DOSC, FTS only
+                # skip UBX-CFG-ESRC, FTS only
+                ubx.CFG_GEOFENCE,     # UBX-CFG-GEOFENCE
+                ubx.CFG_GNSS,         # UBX-CFG-GNSS
+                # skip UBX-CFG-HNR, ADR, UDR, only
+                ubx.CFG_INF_0,        # UBX-CFG-INF
+                ubx.CFG_INF_1,
+                # skip UBX-CFG-ITFM
+                ubx.CFG_LOGFILTER,    # UBX-CFG-LOGFILTER
+                ubx.CFG_NAV5,         # UBX-CFG-NAV5
+                ubx.CFG_NAVX5,        # UBX-CFG-NAVX5
+                ubx.CFG_NMEA,         # UBX-CFG-NMEA
+                ubx.CFG_ODO,          # UBX-CFG-ODO
+                ubx.CFG_PRT,          # UBX-CFG-PRT
+                ubx.CFG_PM2,          # UBX-CFG-PM2
+                ubx.CFG_PMS,          # UBX-CFG-PMS
+                ubx.CFG_RATE,         # UBX-CFG-RATE
+                ubx.CFG_RXM,          # UBX-CFG-RXM
+                # skip UBX-CFG-TMODE3, HP only
+                ubx.CFG_TP5,          # UBX-CFG-TP5
+                ubx.CFG_USB,          # UBX-CFG-USB
+                ubx.LOG_INFO,         # UBX-LOG-INFO
+                ]
 
         if 22 < opts['protver']:
-            # CFG-BATCH, protVer 23.01+
-            gps_model.send_poll(ubx.CFG_BATCH)
+            cmds.append(ubx.CFG_BATCH)   # UBX-CFG-BATCH, protVer 23.01+
 
-        # CFG-DAT
-        gps_model.send_poll(ubx.CFG_DAT)
-
-        # skip CFG-DGNSS, HP only
-        # skip CFG-DOSC, FTS only
-        # skip CFG-ESRC, FTS only
-
-        # CFG-GEOFENCE
-        gps_model.send_poll(ubx.CFG_GEOFENCE)
-
-        # CFG-GNSS
-        gps_model.send_poll(ubx.CFG_GNSS)
-
-        # skip CFG-HNR, ADR, UDR, only
-
-        # CFG-INF
-        gps_model.send_poll(ubx.CFG_INF_0)
-        gps_model.send_poll(ubx.CFG_INF_1)
-
-        # skip CFG-ITFM
-
-        # CFG-LOGFILTER
-        gps_model.send_poll(ubx.CFG_LOGFILTER)
-
-        # CFG-NAV5
-        gps_model.send_poll(ubx.CFG_NAV5)
-
-        # CFG-NAVX5
-        gps_model.send_poll(ubx.CFG_NAVX5)
-
-        # CFG-NMEA
-        gps_model.send_poll(ubx.CFG_NMEA)
-
-        # CFG-ODO
-        gps_model.send_poll(ubx.CFG_ODO)
-
-        # CFG-PRT
-        gps_model.send_poll(ubx.CFG_PRT)
-
-        # CFG-PM2
-        gps_model.send_poll(ubx.CFG_PM2)
-
-        # CFG-PMS
-        gps_model.send_poll(ubx.CFG_PMS)
-
-        # CFG-RATE
-        gps_model.send_poll(ubx.CFG_RATE)
-
-        # CFG-RXM
-        gps_model.send_poll(ubx.CFG_RXM)
-
-        # skip CFG-TMODE3, HP only
-
-        # CFG-TP5
-        gps_model.send_poll(ubx.CFG_TP5)
-
-        # CFG-USB
-        gps_model.send_poll(ubx.CFG_USB)
-
-        # LOG-INFO
-        gps_model.send_poll(ubx.LOG_INFO)
+        for cmd in cmds:
+            gps_model.send_poll(cmd)
 
     able_commands = {
         # en/dis able BeiDou
@@ -6943,7 +6906,7 @@ Always double check with "-p CFG-GNSS".
                      "opt": 0xffff},
         # CONFIG
         "CONFIG": {"command": get_config,
-                    "help": "Get a lot of receiver config"},
+                   "help": "Get a lot of receiver config"},
         # UBX-CFG-RST
         "HOTBOOT": {"command": send_cfg_rst,
                     "help": "UBX-CFG-RST hotboot the GPS",
