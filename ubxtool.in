@@ -6716,11 +6716,22 @@ Always double check with "-p CFG-GNSS".
                 # skip UBX-CFG-TMODE3, HP only
                 ubx.CFG_TP5,          # UBX-CFG-TP5
                 ubx.CFG_USB,          # UBX-CFG-USB
-                ubx.LOG_INFO,         # UBX-LOG-INFO
                 ]
 
         if 22 < opts['protver']:
             cmds.append(ubx.CFG_BATCH)   # UBX-CFG-BATCH, protVer 23.01+
+
+        for cmd in cmds:
+            gps_model.send_poll(cmd)
+
+    def get_status(self):
+        """STATUS.  Get a bunch of status messages"""
+
+        # blast them for now, should do one at a time...
+
+        cmds = [ubx.MON_VER,          # UBX-MON-VER
+                ubx.LOG_INFO,         # UBX-LOG-INFO
+                ]
 
         for cmd in cmds:
             gps_model.send_poll(cmd)
@@ -6773,6 +6784,38 @@ Always double check with "-p CFG-GNSS".
                      "help": "Survey-in mode with TMODE2"},
     }
     commands = {
+        # UBX-CFG-RST
+        "COLDBOOT": {"command": send_cfg_rst,
+                     "help": "UBS-CFG-RST coldboot the GPS",
+                     "opt": 0xffff},
+        # CONFIG
+        "CONFIG": {"command": get_config,
+                   "help": "Get a lot of receiver config"},
+        # UBX-CFG-RST
+        "HOTBOOT": {"command": send_cfg_rst,
+                    "help": "UBX-CFG-RST hotboot the GPS",
+                    "opt": 0},
+        # UBX-CFG-NAV5
+        "MODEL": {"command": send_cfg_nav5_model,
+                  "help": "set UBX-CFG-NAV5 Dynamic Platform Model"},
+        # UBX-CFG-PMS
+        "PMS": {"command": send_cfg_pms,
+                "help": "set UBX-CFG-PMS power management settings"},
+        # UBX-CFG-CFG
+        "RESET": {"command": send_cfg_cfg,
+                  "help": "UBX-CFG-CFG reset config to defaults",
+                  "opt": 1},
+        # UBX-CFG-CFG
+        "SAVE": {"command": send_cfg_cfg,
+                 "help": "UBX-CFG-CFG save current config",
+                 "opt": 0},
+        # STATUS
+        "STATUS": {"command": get_status,
+                   "help": "Get a lot of receiver status"},
+        # UBX-CFG-RST
+        "WARMBOOT": {"command": send_cfg_rst,
+                     "help": "UBX-CFG-RST warmboot the GPS",
+                     "opt": 1},
         # UBX-AID-ALM
         "AID-ALM": {"command": send_poll, "opt": [0x0b, 0x30],
                     "help": "poll UBX-AID-ALM Poll GPS Aiding Almanac Data"},
@@ -6900,17 +6943,6 @@ Always double check with "-p CFG-GNSS".
         # UBX-CFG-USB
         "CFG-USB": {"command": send_poll, "opt": [0x06, 0x1b],
                     "help": "poll UBX-CFG-USB USB config"},
-        # UBX-CFG-RST
-        "COLDBOOT": {"command": send_cfg_rst,
-                     "help": "UBS-CFG-RST coldboot the GPS",
-                     "opt": 0xffff},
-        # CONFIG
-        "CONFIG": {"command": get_config,
-                   "help": "Get a lot of receiver config"},
-        # UBX-CFG-RST
-        "HOTBOOT": {"command": send_cfg_rst,
-                    "help": "UBX-CFG-RST hotboot the GPS",
-                    "opt": 0},
         # UBX-LOG-CREATE
         "LOG-CREATE": {"command": send_poll,
                        "opt": [0x21, 0x07, 0, 1, 0, 0, 0, 0, 0, 0],
@@ -6942,9 +6974,6 @@ Always double check with "-p CFG-GNSS".
                        "opt": [0x21, 4, ord("H"), ord("i")],
                        "help": "send UBX-LOG-STRING",
                        "minVer": 14},
-        # UBX-CFG-NAV5
-        "MODEL": {"command": send_cfg_nav5_model,
-                  "help": "set UBX-CFG-NAV5 Dynamic Platform Model"},
         # UBX-MGA-DBD
         "MGA-DBD": {"command": send_poll, "opt": [0x13, 0x80],
                     "help": "poll UBX-MGA-DBD Poll the Navigation Database"},
@@ -7092,9 +7121,6 @@ Always double check with "-p CFG-GNSS".
         # UBX-NAV-VELNED
         "NAV-VELNED": {"command": send_poll, "opt": [0x01, 0x12],
                        "help": "poll UBX-NAV-VELNED NED velocity"},
-        # UBX-CFG-PMS
-        "PMS": {"command": send_cfg_pms,
-                "help": "set UBX-CFG-PMS power management settings"},
         # UBX-RXM-IMES
         "RXM-IMES": {"command": send_poll, "opt": [0x02, 0x61],
                      "help": "poll UBX-RXM-IMES Indoor Messaging System "
@@ -7106,14 +7132,6 @@ Always double check with "-p CFG-GNSS".
         # UBX-RXM-RAWX
         "RXM-RAWX": {"command": send_poll, "opt": [0x02, 0x15],
                      "help": "poll UBX-RXM-RAWX raw measurement data"},
-        # UBX-CFG-CFG
-        "RESET": {"command": send_cfg_cfg,
-                  "help": "UBX-CFG-CFG reset config to defaults",
-                  "opt": 1},
-        # UBX-CFG-CFG
-        "SAVE": {"command": send_cfg_cfg,
-                 "help": "UBX-CFG-CFG save current config",
-                 "opt": 0},
         # UBX-CFG-SBAS
         "SEC-UNIQID": {"command": send_poll, "opt": [0x27, 0x03],
                        "help": "poll UBX-SEC-UNIQID Unique chip ID"},
@@ -7138,10 +7156,6 @@ Always double check with "-p CFG-GNSS".
         # UBX-UPD-SOS
         "UPD-SOS1": {"command": send_poll, "opt": [0x09, 0x14, 1, 0, 0, 0],
                      "help": "UBX-UPD-SOS Create Clear File in Flash"},
-        # UBX-CFG-RST
-        "WARMBOOT": {"command": send_cfg_rst,
-                     "help": "UBX-CFG-RST warmboot the GPS",
-                     "opt": 1},
     }
     # end class ubx
 
