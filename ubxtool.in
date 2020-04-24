@@ -6677,9 +6677,13 @@ Always double check with "-p CFG-GNSS".
     CFG_NAV5 = [0x06, 0x24]
     CFG_NAVX5 = [0x06, 0x23]
     CFG_NMEA = [0x06, 0x17]
+    CFG_PM2 = [0x06, 0x3b]
+    CFG_PMS = [0x06, 0x86]
     CFG_RATE = [0x06, 0x08]
+    CFG_RXM = [0x06, 0x11]
     CFG_TP5 = [0x06, 0x31]
     CFG_USB = [0x06, 0x1b]
+    LOG_INFO = [0x21, 0x08]
     MON_VER = [0x0a, 0x04]
 
     def get_config(self):
@@ -6735,8 +6739,17 @@ Always double check with "-p CFG-GNSS".
         # CFG-PRT
         gps_model.send_poll(ubx.CFG_PRT)
 
+        # CFG-PM2
+        gps_model.send_poll(ubx.CFG_PM2)
+
+        # CFG-PMS
+        gps_model.send_poll(ubx.CFG_PMS)
+
         # CFG-RATE
         gps_model.send_poll(ubx.CFG_RATE)
+
+        # CFG-RXM
+        gps_model.send_poll(ubx.CFG_RXM)
 
         # skip CFG-TMODE3, HP only
 
@@ -6745,6 +6758,9 @@ Always double check with "-p CFG-GNSS".
 
         # CFG-USB
         gps_model.send_poll(ubx.CFG_USB)
+
+        # LOG-INFO
+        gps_model.send_poll(ubx.LOG_INFO)
 
     able_commands = {
         # en/dis able BeiDou
