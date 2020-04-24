@@ -3876,6 +3876,39 @@ Oddly this is the poll for UBX-LOG-BATCH
         4: "xtgalAbsent",
         }
 
+    mon_hw3_pio = {
+        0: "peripheral",
+        1: "PIO",
+        }
+
+    mon_hw3_bank = {
+        0: "A",
+        1: "B",
+        2: "C",
+        3: "D",
+        4: "E",
+        5: "F",
+        6: "G",
+        7: "H",
+        }
+
+    mon_hw3_dir = {
+        0: "In",
+        1: "Out",
+        }
+
+    mon_hw3_value = {
+        0: "Lo",
+        1: "Hi",
+        }
+
+    mon_hw3_mask = {
+        0x20: "VPM",
+        0x40: "IRQ",
+        0x100: "PUp",
+        0x200: "PDn",
+        }
+
     def mon_hw3(self, buf):
         """UBX-MON-HW3 decode, HW I/O pin information"""
 
@@ -3888,7 +3921,9 @@ Oddly this is the poll for UBX-LOG-BATCH
         nPins = u[1]
         substr = buf[3:12]
         substr = substr.split(gps.polybytes('\0'))[0]
-        s += ' hwVersion %s' % gps.polystr(substr)
+        s += ' hwVersion %s\n' % gps.polystr(substr)
+        u1 = struct.unpack_from('<BBBBBBBBB', buf, 13)
+        s += '   reserved1 %02x %02x %02x %02x %02x %02x %02x %02x %02x' % u1
 
         if VERB_DECODE <= opts['verbosity']:
             s += ('\n     flags (%s)' %
@@ -3897,6 +3932,13 @@ Oddly this is the poll for UBX-LOG-BATCH
         for i in range(22, 22 + (nPins * 6), 6):
             u = struct.unpack_from('<HHBB', buf, i)
             s += ('\n   pinId %4u pinMask %#5x VP %3u reserved2 %u' % u)
+            if VERB_DECODE <= opts['verbosity']:
+                s += ('\n     pinMask (%s %s %s %s %s)' %
+                      (index_s(u[1] & 1, self.mon_hw3_pio),
+                       index_s((u[1] >> 1) & 7, self.mon_hw3_bank),
+                       index_s((u[1] >> 4) & 1, self.mon_hw3_dir),
+                       index_s((u[1] >> 5) & 1, self.mon_hw3_value),
+                       flag_s(u[1] & 0xffc0, self.mon_hw3_mask)))
 
         return s
 
