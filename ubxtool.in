@@ -6684,12 +6684,20 @@ Always double check with "-p CFG-GNSS".
     CFG_TP5 = [0x06, 0x31]
     CFG_USB = [0x06, 0x1b]
     LOG_INFO = [0x21, 0x08]
+    MON_COMMS = [0x0a, 0x36]
+    MON_GNSS = [0x0a, 0x28]
+    MON_HW = [0x0a, 0x09]
+    MON_HW2 = [0x0a, 0x0b]
+    MON_HW3 = [0x0a, 0x37]
+    MON_IO = [0x0a, 0x02]
+    MON_MSGPP = [0x0a, 0x06]
+    MON_RF = [0x0a, 0x38]
+    MON_RXBUF = [0x0a, 0x0a]
+    MON_TXBUF = [0x0a, 0x08]
     MON_VER = [0x0a, 0x04]
 
     def get_config(self):
         """CONFIG.  Get a bunch of config messages"""
-
-        # blast them for now, should do one at a time...
 
         cmds = [ubx.MON_VER,          # UBX-MON-VER
                 ubx.CFG_ANT,          # UBX-CFG-ANT
@@ -6721,18 +6729,35 @@ Always double check with "-p CFG-GNSS".
         if 22 < opts['protver']:
             cmds.append(ubx.CFG_BATCH)   # UBX-CFG-BATCH, protVer 23.01+
 
+        # blast them for now, should do one at a time...
         for cmd in cmds:
             gps_model.send_poll(cmd)
 
     def get_status(self):
         """STATUS.  Get a bunch of status messages"""
 
-        # blast them for now, should do one at a time...
-
         cmds = [ubx.MON_VER,          # UBX-MON-VER
                 ubx.LOG_INFO,         # UBX-LOG-INFO
+                ubx.MON_GNSS,         # UBX-MON-GNSS
+                # UBX-MON-PATH, skipping
                 ]
 
+        if 27 <= opts['protver']:
+            cmds.extend([ubx.MON_COMMS,        # UBX-MON-COMMS
+                         ubx.MON_HW3,          # UBX-MON-HW3
+                         ])
+        else:
+            # deprecated in 27+
+            cmds.extend([ubx.MON_HW,           # UBX-MON-HW
+                         ubx.MON_HW2,          # UBX-MON-HW2
+                         ubx.MON_IO,           # UBX-MON-IO
+                         ubx.MON_MSGPP,        # UBX-MON-MSGPP
+                         ubx.MON_RF,           # UBX-MON-RF
+                         ubx.MON_RXBUF,        # UBX-MON-RXBUF
+                         ubx.MON_TXBUF,        # UBX-MON-TXBUF
+                         ])
+
+        # blast them for now, should do one at a time...
         for cmd in cmds:
             gps_model.send_poll(cmd)
 
