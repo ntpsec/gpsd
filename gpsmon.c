@@ -439,7 +439,7 @@ static void refresh_statwin(void)
 {
     if (NULL != session.device_type &&
         NULL != session.device_type->type_name) {
-        type_name = session.device_type->type_name
+        type_name = session.device_type->type_name;
     } else {
         type_name = "Unknown device";
     }
