@@ -60,7 +60,7 @@ static bool curses_active;
 static WINDOW *statwin, *cmdwin;
 static WINDOW *packetwin;
 static FILE *logfile;
-static char *type_name;
+static char *type_name = "Unknown device";
 static size_t promptlen = 0;
 static struct termios cooked, rare;
 static struct fixsource_t source;
@@ -434,11 +434,15 @@ static const char *promptgen(void)
     return buf;
 }
 
-static void refresh_statwin(void)
 /* refresh the device-identification window */
+static void refresh_statwin(void)
 {
-    type_name = session.device_type ? session.device_type->type_name :
-                                      "Unknown device";
+    if (NULL != session.device_type &&
+        NULL != session.device_type->type_name) {
+        type_name = session.device_type->type_name
+    } else {
+        type_name = "Unknown device";
+    }
 
     report_lock();
     (void)wclear(statwin);
