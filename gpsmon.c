@@ -147,11 +147,13 @@ static jmp_buf terminate;
 /* PPS monitoring */
 static inline void report_lock(void)
 {
+    // FIXME: gpsmon, a client, should not link to the gpsd server sources!
     gpsd_acquire_reporting_lock();
 }
 
 static inline void report_unlock(void)
 {
+    // FIXME: gpsmon, a client, should not link to the gpsd server sources!
     gpsd_release_reporting_lock();
 }
 

@@ -1754,6 +1754,7 @@ gpsdecode = env.Program('gpsdecode', ['gpsdecode.c'],
 gpsctl = env.Program('gpsctl', ['gpsctl.c'],
                      LIBS=['gpsd', 'gps_static'],
                      parse_flags=gpsdflags + gpsflags)
+# FIXME: gpsmon should not link to gpsd server sources!
 gpsmon = env.Program('gpsmon', gpsmon_sources,
                      LIBS=['gpsd', 'gps_static'],
                      parse_flags=gpsdflags + gpsflags + ncurseslibs)
