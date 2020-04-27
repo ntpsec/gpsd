@@ -6751,6 +6751,8 @@ Always double check with "-p CFG-GNSS".
     MON_RXBUF = [0x0a, 0x0a]
     MON_TXBUF = [0x0a, 0x08]
     MON_VER = [0x0a, 0x04]
+    NAV_SVIN = [0x01, 0x3b]
+    TIM_SVIN = [0x0d, 0x04]
 
     def get_config(self):
         """CONFIG.  Get a bunch of config messages"""
@@ -6812,6 +6814,11 @@ Always double check with "-p CFG-GNSS".
                          ubx.MON_RXBUF,        # UBX-MON-RXBUF
                          ubx.MON_TXBUF,        # UBX-MON-TXBUF
                          ])
+
+        # should only send these for Time or HP products
+        cmds.extend([ubx.NAV_SVIN,        # UBX-NAV-SVIN
+                     ubx.TIM_SVIN,        # UBX-TIM-SVIN
+                     ])
 
         # blast them for now, should do one at a time...
         for cmd in cmds:
