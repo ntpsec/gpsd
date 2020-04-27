@@ -4146,12 +4146,26 @@ Oddly this is the poll for UBX-LOG-BATCH
              (gps.polystr(substr), gps.polystr(substr1)))
 
         # extensions??
+        protver = None
         num_ext = int((m_len - 40) / 30)
         for i in range(0, num_ext):
             loc = 40 + (i * 30)
             substr = buf[loc:]
             substr = substr.split(gps.polybytes('\0'))[0]
-            s += '\n  extension %s' % gps.polystr(substr)
+            polystr = gps.polystr(substr)
+            s += '\n  extension %s' % polystr
+            # is protver? delimiter may be space or equal
+            if "PROTVER" == polystr[:7]:
+                protver = "%.2f" % float(polystr[8:])
+
+        opts_protver = "%.2f" % opts['protver']
+        if protver and protver != opts_protver:
+            s += ('\nWARNING:  protVer is %s, should be %s.'
+                  '  Hint: use option "-P %s"' %
+                  (opts_protver, protver, protver))
+            # prolly too late to fix, try anyway.
+            opt['protver'] = float(protver)
+
         return s
 
     mon_ids = {0x02: {'str': 'IO', 'dec': mon_io, 'minlen': 20,
@@ -7590,8 +7604,7 @@ for (opt, val) in options:
         opts['protver'] = float(val)
         if 10 > opts['protver']:
             opts['protver'] = 10
-        if 27 < opts['protver']:
-            opts['protver'] = 27
+        # Dunno the max protver, NEO-M9N is 32.00
     elif opt == '-p':
         # don't force the user to upper case
         opts['poll'] = val.upper()
