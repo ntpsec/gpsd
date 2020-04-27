@@ -429,7 +429,7 @@ Preliminary install notes.
 
 --------------------------------------------------------------
 apt install gcc scons python-gi python-gi-cairo g++
-apt install libncurses5-dev pps-tools
+apt install libncurses5-dev libtinfo-dev  pps-tools
 apt install gir1.2-gtk-3.0
 --------------------------------------------------------------
 
