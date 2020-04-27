@@ -421,7 +421,6 @@ oncore_msg_svinfo(struct gps_device_t *session, unsigned char *buf,
                   size_t data_len)
 {
     unsigned int i, nchan;
-    int j;
 
     if (data_len != 92)
         return 0;
