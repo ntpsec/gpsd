@@ -145,6 +145,8 @@ static jmp_buf terminate;
 #define TERM_QUIT               6
 
 /* PPS monitoring */
+
+// FIXME: Lock what?  Why?  Where?
 static inline void report_lock(void)
 {
     // FIXME: gpsmon, a client, should not link to the gpsd server sources!
@@ -1434,12 +1436,14 @@ int main(int argc, char **argv)
                         cmdline = fgets(inbuf+1, sizeof(inbuf)-1, stdin);
                         if (cmdline)
                             cmdline--;
+                        report_unlock();
                     }
                 }
                 if (cmdline != NULL && !do_command(cmdline))
                     longjmp(terminate, TERM_QUIT);
                 if (!curses_active) {
                     (void)sleep(2);
+                    report_lock();
                     (void)tcsetattr(0, TCSANOW, &rare);
                     report_unlock();
                 }
