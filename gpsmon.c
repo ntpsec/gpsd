@@ -324,8 +324,8 @@ static void monitor_dump_send(const char *buf, size_t len)
 }
 #endif /* defined(CONTROLSEND_ENABLE) || defined(RECONFIGURE_ENABLE) */
 
-static void gpsmon_report(const char *buf)
 /* log to the packet window if curses is up, otherwise stdout */
+static void gpsmon_report(const char *buf)
 {
     /* report locking is left to caller */
     if (!curses_active)
@@ -437,20 +437,22 @@ static const char *promptgen(void)
 static void refresh_statwin(void)
 /* refresh the device-identification window */
 {
-    /* *INDENT-OFF* */
-    type_name =
-        session.device_type ? session.device_type->type_name : "Unknown device";
-    /* *INDENT-ON* */
+    type_name = session.device_type ? session.device_type->type_name :
+                                      "Unknown device";
+
+    report_lock();
     (void)wclear(statwin);
     (void)wattrset(statwin, A_BOLD);
     (void)mvwaddstr(statwin, 0, 0, promptgen());
     (void)wattrset(statwin, A_NORMAL);
     (void)wnoutrefresh(statwin);
+    report_unlock();
 }
 
 static void refresh_cmdwin(void)
 /* refresh the command window */
 {
+    report_lock();
     (void)wmove(cmdwin, 0, 0);
     (void)wprintw(cmdwin, type_name);
     promptlen = strlen(type_name);
@@ -465,6 +467,7 @@ static void refresh_cmdwin(void)
     promptlen += 2;
     (void)wclrtoeol(cmdwin);
     (void)wnoutrefresh(cmdwin);
+    report_unlock();
 }
 
 static bool curses_init(void)
@@ -1310,7 +1313,8 @@ int main(int argc, char **argv)
 
     if (serial) {
         /* this guard suppresses a warning on Bluetooth devices */
-        if (session.sourcetype == source_rs232 || session.sourcetype == source_usb) {
+        if (session.sourcetype == source_rs232 ||
+            session.sourcetype == source_usb) {
             session.pps_thread.report_hook = pps_report;
             #ifdef MAGIC_HAT_ENABLE
             /*
