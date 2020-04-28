@@ -57,6 +57,14 @@ must support raw mode.  Currently only the u-blox driver has this support.
 Only a few u-blox 8 GPS implment the required UBX-RXM-RAWX message.  The
 NEO-M8T is known to work, but requires configuration with
 <application>ubxtool</application>.</para>
+<para>Before using <application>ubxtool</application> be sure to
+set the UBXOPTS environment variable with the correct protocol version
+for your u-blox receiver.  If your protocol version is 32.00, you
+would do this:
+<programlisting>
+export UBXOPTS="-P 32.00"
+</programlisting>
+.</para>
     <para>RINEX has its own definitions and abbreviations.  Be
 sure to consult their documentation.  An observation file (.obs)
 contains data sets, called epochs, that contain the pseudorange
