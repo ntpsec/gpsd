@@ -162,9 +162,7 @@ int main(int argc, char **argv)
             break;
         case 'D':
             debug = atoi(optarg);
-#ifdef CLIENTDEBUG_ENABLE
             gps_enable_debug(debug, stderr);
-#endif /* CLIENTDEBUG_ENABLE */
             break;
         case 'd':
             daemonize = true;

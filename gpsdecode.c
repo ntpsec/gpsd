@@ -761,9 +761,7 @@ int main(int argc, char **argv)
 
         case 'D':
             context.errout.debug = verbose = atoi(optarg);
-#if defined(CLIENTDEBUG_ENABLE) && defined(SOCKET_EXPORT_ENABLE)
             json_enable_debug(verbose - 2, stderr);
-#endif
             break;
 
         case 'V':

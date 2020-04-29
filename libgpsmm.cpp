@@ -76,9 +76,7 @@ void gpsmm::clear_fix(void)
 // cppcheck-suppress unusedFunction
 void gpsmm::enable_debug(int level, FILE *fp)
 {
-#ifdef CLIENTDEBUG_ENABLE
     gps_enable_debug(level, fp);
-#endif /* CLIENTDEBUG_ENABLE */
 }
 
 // cppcheck-suppress unusedFunction

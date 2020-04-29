@@ -36,9 +36,7 @@ static FILE *logfile;
 static bool intrack = false;
 static time_t timeout = 5;      /* seconds */
 static double minmove = 0;      /* meters */
-#ifdef CLIENTDEBUG_ENABLE
 static int debug;
-#endif /* CLIENTDEBUG_ENABLE */
 
 static void print_gpx_header(void)
 {
@@ -222,12 +220,10 @@ int main(int argc, char **argv)
             openlog(basename(progname), LOG_PID | LOG_PERROR, LOG_DAEMON);
             daemonize = true;
             break;
-#ifdef CLIENTDEBUG_ENABLE
         case 'D':
             debug = atoi(optarg);
             gps_enable_debug(debug, logfile);
             break;
-#endif /* CLIENTDEBUG_ENABLE */
         case 'e':
             method = export_lookup(optarg);
             if (method == NULL) {

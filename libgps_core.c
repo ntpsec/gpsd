@@ -32,9 +32,7 @@ void gps_enable_debug(int level, FILE * fp)
 {
     libgps_debuglevel = level;
     debugfp = fp;
-#if defined(CLIENTDEBUG_ENABLE) && defined(SOCKET_EXPORT_ENABLE)
     json_enable_debug(level - DEBUG_JSON, fp);
-#endif
 }
 
 /* assemble command in printf(3) style */
@@ -59,8 +57,8 @@ void gps_enable_debug(int level UNUSED, FILE * fp UNUSED) {}
 void libgps_trace(int errlevel UNUSED, const char *fmt UNUSED, ...){}
 #endif /* LIBGPS_DEBUG */
 
-#ifdef SOCKET_EXPORT_ENABLE
-#define CONDITIONALLY_UNUSED
+#if defined(SHM_EXPORT_ENABLE) || defined(SOCKET_EXPORT_ENABLE)
+#define CONDITIONALLY_UNUSED UNUSED
 #else
 #define CONDITIONALLY_UNUSED UNUSED
 #endif /* SOCKET_EXPORT_ENABLE */
@@ -117,12 +115,6 @@ int gps_open(const char *host,
 
     return status;
 }
-
-#if defined(SHM_EXPORT_ENABLE) || defined(SOCKET_EXPORT_ENABLE)
-#define CONDITIONALLY_UNUSED
-#else
-#define CONDITIONALLY_UNUSED	UNUSED
-#endif
 
 /* close a gpsd connection */
 int gps_close(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED)

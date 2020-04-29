@@ -722,12 +722,10 @@ int main(int argc UNUSED, char *argv[]UNUSED)
 
     while ((option = getopt(argc, argv, "D:hn:V?")) != -1) {
         switch (option) {
-#ifdef CLIENTDEBUG_ENABLE
         case 'D':
             debug = atoi(optarg);
             gps_enable_debug(debug, stdout);
             break;
-#endif
         case 'n':
             individual = atoi(optarg);
             break;

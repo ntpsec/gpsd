@@ -1909,9 +1909,7 @@ int main(int argc, char *argv[])
         case 'D':
             // accept decimal, octal and hex
             context.errout.debug = (int)strtol(optarg, 0, 0);
-#ifdef CLIENTDEBUG_ENABLE
             gps_enable_debug(context.errout.debug, stderr);
-#endif /* CLIENTDEBUG_ENABLE */
             break;
 #ifdef CONTROL_SOCKET_ENABLE
         case 'F':

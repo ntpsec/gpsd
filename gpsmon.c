@@ -731,12 +731,14 @@ static void gpsmon_hook(struct gps_device_t *device, gps_mask_t changed UNUSED)
 /* per-packet hook */
 {
     char buf[BUFSIZ];
-    char ts_buf1[TIMESPEC_LEN];
-    char ts_buf2[TIMESPEC_LEN];
 
 /* FIXME:  If the following condition is false, the display is screwed up. */
 #if defined(SOCKET_EXPORT_ENABLE) && defined(PPS_DISPLAY_ENABLE)
-    if (!serial && str_starts_with((char*)device->lexer.outbuffer, "{\"class\":\"TOFF\",")) {
+    char ts_buf1[TIMESPEC_LEN];
+    char ts_buf2[TIMESPEC_LEN];
+
+    if (!serial && str_starts_with((char*)device->lexer.outbuffer,
+                                   "{\"class\":\"TOFF\",")) {
         const char *end = NULL;
         int status = json_toff_read((const char *)device->lexer.outbuffer,
                                    &session.gpsdata,
@@ -1182,14 +1184,13 @@ int main(int argc, char **argv)
             break;
         case 'D':
             context.errout.debug = atoi(optarg);
-#if defined(CLIENTDEBUG_ENABLE) && defined(SOCKET_EXPORT_ENABLE)
             json_enable_debug(context.errout.debug - 2, stderr);
-#endif
             break;
         case 'L':               /* list known device types */
             (void)
                 fputs
-                ("General commands available per type. '+' means there are private commands.\n",
+                ("General commands available per type. '+' "
+                 "means there are private commands.\n",
                  stdout);
             for (active = monitor_objects; *active; active++) {
                 (void)fputs("i l q ^S ^Q", stdout);

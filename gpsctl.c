@@ -321,9 +321,7 @@ int main(int argc, char **argv)
             break;
         case 'D':               /* set debugging level */
             debuglevel = atoi(optarg);
-#ifdef CLIENTDEBUG_ENABLE
             gps_enable_debug(debuglevel, stderr);
-#endif /* CLIENTDEBUG_ENABLE */
             break;
         case 'V':
             (void)fprintf(stderr, "%s: version %s (revision %s)\n",

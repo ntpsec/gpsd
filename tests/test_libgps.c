@@ -39,9 +39,7 @@ int main(int argc, char *argv[])
     bool batchmode = false;
     bool forwardmode = false;
     char *fmsg = NULL;
-#ifdef CLIENTDEBUG_ENABLE
     int debug = 0;
-#endif
 
     (void)signal(SIGSEGV, onsig);
 #ifdef SIGBUS
@@ -69,11 +67,9 @@ int main(int argc, char *argv[])
 		 sizeof(collect.devices), sizeof(struct gps_policy_t),
 		 sizeof(struct version_t), sizeof(struct gst_t));
 	    exit(EXIT_SUCCESS);
-#ifdef CLIENTDEBUG_ENABLE
 	case 'D':
 	    debug = atoi(optarg);
 	    break;
-#endif
 	case '?':
 	case 'h':
 	default:
@@ -88,9 +84,7 @@ int main(int argc, char *argv[])
     } else
 	gpsd_source_spec(NULL, &source);
 
-#ifdef CLIENTDEBUG_ENABLE
     gps_enable_debug(debug, stdout);
-#endif
     if (batchmode) {
 #ifdef SOCKET_EXPORT_ENABLE
 	while (fgets(buf, sizeof(buf), stdin) != NULL) {

@@ -73,14 +73,12 @@ PERMISSIONS
 #include <string.h>
 
 #include "os_compat.h"
-#ifdef SOCKET_EXPORT_ENABLE
 #include "json.h"
 
 #include "gps.h"                /* for safe_atof() prototype */
 #include "strfuncs.h"
 #include "timespec.h"
 
-#ifdef CLIENTDEBUG_ENABLE
 static int debuglevel = 0;
 static FILE *debugfp;
 
@@ -107,10 +105,7 @@ static void json_trace(int errlevel, const char *fmt, ...)
     }
 }
 
-# define json_debug_trace(args) (void) json_trace args
-#else
-# define json_debug_trace(args) do { } while (0)
-#endif /* CLIENTDEBUG_ENABLE */
+#define json_debug_trace(args) (void) json_trace args
 
 static char *json_target_address(const struct json_attr_t *cursor,
                                              const struct json_array_t
@@ -181,12 +176,10 @@ static int json_internal_read_object(const char *cp,
     { init, await_attr, in_attr, await_value, in_val_string,
         in_escape, in_val_token, post_val, post_element
     } state = 0;
-#ifdef CLIENTDEBUG_ENABLE
     char *statenames[] = {
         "init", "await_attr", "in_attr", "await_value", "in_val_string",
         "in_escape", "in_val_token", "post_val", "post_element",
     };
-#endif /* CLIENTDEBUG_ENABLE */
     char attrbuf[JSON_ATTR_MAX + 1], *pattr = NULL;
     char valbuf[JSON_VAL_MAX + 1], *pval = NULL;
     bool value_quoted = false;
@@ -848,8 +841,6 @@ const char *json_error_string(int err)
     else
         return errors[err];
 }
-
-#endif /* SOCKET_EXPORT_ENABLE */
 
 /* quote a JSON string so it can be used as a simple JSON string.
  * Used to output the JSON as a literal JSON string
