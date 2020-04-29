@@ -797,11 +797,7 @@ def GetPythonValue(context, name, imp, expr, brief=False):
     """Get a value from the target python, not the running one."""
     context.Message('Checking Python %s... ' % name)
 
-    if not context.env['target_python']:
-        # FIXME: this ignores imp
-        status = 1
-        value = str(eval(expr))
-    else:
+    if context.env['target_python']:
         command = (context.env['target_python'] + " $SOURCE > $TARGET")
         text = "%s; print(%s)" % (imp, expr)
 
@@ -810,6 +806,10 @@ def GetPythonValue(context, name, imp, expr, brief=False):
 
         # do not disable python because this failed
         # maybe testing for newer python feature
+    else:
+        # FIXME: this ignores imp
+        status = 1
+        value = str(eval(expr))
 
     if 1 == status:
         # we could convert to str(), but caching turns it into bytes anyway
@@ -1843,14 +1843,14 @@ test_libgps = env.Program('tests/test_libgps', ['tests/test_libgps.c'],
                           LIBS=['gps_static'],
                           parse_flags=mathlibs + rtlibs + dbusflags)
 
-if not env['socket_export']:
-    announce("test_json not building because socket_export is disabled")
-    test_json = None
-else:
+if env['socket_export']:
     test_json = env.Program(
         'tests/test_json', ['tests/test_json.c'],
         LIBS=['gps_static'],
         parse_flags=mathlibs + rtlibs + usbflags + dbusflags)
+else:
+    announce("test_json not building because socket_export is disabled")
+    test_json = None
 
 # duplicate below?
 test_gpsmm = env.Program('tests/test_gpsmm', ['tests/test_gpsmm.cpp'],
@@ -2400,10 +2400,7 @@ else:
 #    regress-driver -b test/daemon/foo.log
 
 # Regression-test the RTCM decoder.
-if not env["rtcm104v2"]:
-    announce("RTCM2 regression tests suppressed because rtcm104v2 is off.")
-    rtcm_regress = None
-else:
+if env["rtcm104v2"]:
     rtcm_regress = Utility('rtcm-regress', [gpsdecode], [
         '@echo "Testing RTCM decoding..."',
         '@for f in $SRCDIR/test/*.rtcm2; do '
@@ -2420,6 +2417,9 @@ else:
         '    || echo "Test FAILED!"; '
         '    rm -f $${TMPFILE}; ',
     ])
+else:
+    announce("RTCM2 regression tests suppressed because rtcm104v2 is off.")
+    rtcm_regress = None
 
 # Rebuild the RTCM regression tests.
 Utility('rtcm-makeregress', [gpsdecode], [
@@ -2429,10 +2429,7 @@ Utility('rtcm-makeregress', [gpsdecode], [
 ])
 
 # Regression-test the AIVDM decoder.
-if not env["aivdm"]:
-    announce("AIVDM regression tests suppressed because aivdm is off.")
-    aivdm_regress = None
-else:
+if env["aivdm"]:
     # FIXME! Does not return a proper fail code
     aivdm_regress = Utility('aivdm-regress', [gpsdecode], [
         '@echo "Testing AIVDM decoding w/ CSV format..."',
@@ -2476,6 +2473,9 @@ else:
         '    | diff -ub - $${TMPFILE} || echo "Test FAILED!"; '
         '    rm -f $${TMPFILE}; ',
     ])
+else:
+    announce("AIVDM regression tests suppressed because aivdm is off.")
+    aivdm_regress = None
 
 # Rebuild the AIVDM regression tests.
 Utility('aivdm-makeregress', [gpsdecode], [
@@ -2530,11 +2530,11 @@ Utility('unpack-makeregress', [test_libgps], [
 ])
 
 # Unit-test the JSON parsing
-if not env['socket_export']:
-    json_regress = None
-else:
+if env['socket_export']:
     json_regress = Utility('json-regress', [test_json],
                            ['$SRCDIR/tests/test_json'])
+else:
+    json_regress = None
 
 # Unit-test timespec math
 timespec_regress = Utility('timespec-regress', [test_timespec], [
