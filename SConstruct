@@ -414,6 +414,7 @@ nonboolopts = (
     ("prefix",           "/usr/local",  "installation directory prefix"),
     ("python_coverage",  "coverage run", "coverage command for Python progs"),
     ("python_libdir",    "",            "Python module directory prefix"),
+    ("python_shebang",   "/usr/bin/env python", "Python shebang"),
     ("qt_versioned",     "",            "version for versioned Qt"),
     ("sysroot",          "",
      "Logical root directory for headers and libraries.\n"
@@ -2039,7 +2040,7 @@ substmap = (
     ('@PREFIX@',     env['prefix']),
     ('@PROJECTPAGE@', projectpage),
     # PEP 394 and 394 python shebang
-    ('@PYSHEBANG@', '/usr/bin/env python'),
+    ('@PYSHEBANG@',  env['python_shebang']),
     ('@PYPACKETH@', pythonized_header),
     ('@QTVERSIONED@', env['qt_versioned']),
     ('@SCPUPLOAD@',  scpupload),
