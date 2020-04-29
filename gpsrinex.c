@@ -1086,8 +1086,14 @@ int main(int argc, char **argv)
         gpsd_source_spec(argv[optind], &source);
     }
     if (DEBUG_INFO <= debug) {
+        char *device;
+        if (NULL == source.device) {
+            device = "Default";
+        } else {
+            device = source.device;
+        }
         (void)fprintf(stderr, "INFO: server: %s port: %s  device: %s\n",
-                      source.server, source.port, source.device);
+                      source.server, source.port, device);
     }
 
     /* save start time of report */
