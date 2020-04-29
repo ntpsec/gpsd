@@ -42,7 +42,6 @@ extern int json_ais_read(const char *, char *, size_t, struct ais_t *,
                          const char **);
 
 /* debugging apparatus for the client library */
-#define LIBGPS_DEBUG
 #define DEBUG_CALLS     1       /* shallowest debug level */
 #define DEBUG_JSON      5       /* minimum level for verbose JSON debugging */
 #define libgps_debug_trace(args) (void) libgps_trace args

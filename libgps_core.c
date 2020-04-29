@@ -22,7 +22,6 @@
 #include "gps_json.h"
 #include "strfuncs.h"
 
-#ifdef LIBGPS_DEBUG
 int libgps_debuglevel = 0;
 
 static FILE *debugfp;
@@ -50,12 +49,6 @@ void libgps_trace(int errlevel, const char *fmt, ...)
 	(void)fputs(buf, debugfp);
     }
 }
-#else
-/* Functions defined as so to furfil the API but otherwise do
- * nothing when built with debug capability turned off */
-void gps_enable_debug(int level UNUSED, FILE * fp UNUSED) {}
-void libgps_trace(int errlevel UNUSED, const char *fmt UNUSED, ...){}
-#endif /* LIBGPS_DEBUG */
 
 #if defined(SHM_EXPORT_ENABLE) || defined(SOCKET_EXPORT_ENABLE)
 #define CONDITIONALLY_UNUSED UNUSED
@@ -297,7 +290,6 @@ extern const char *gps_errstr(const int err)
 #endif
 }
 
-#ifdef LIBGPS_DEBUG
 void libgps_dump_state(struct gps_data_t *collect)
 {
     char ts_buf[TIMESPEC_LEN];
@@ -395,7 +387,6 @@ void libgps_dump_state(struct gps_data_t *collect)
     }
 
 }
-#endif /* LIBGPS_DEBUG */
 
 // end
 // vim: set expandtab shiftwidth=4

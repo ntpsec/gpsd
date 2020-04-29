@@ -46,9 +46,7 @@ struct privdata_t
     /* data buffered from the last read */
     ssize_t waiting;
     char buffer[GPS_JSON_RESPONSE_MAX * 2];
-#ifdef LIBGPS_DEBUG
     int waitcount;
-#endif /* LIBGPS_DEBUG */
 };
 
 #ifdef HAVE_WINSOCK2_H
@@ -123,9 +121,7 @@ int gps_sock_open(const char *host, const char *port,
     PRIVATE(gpsdata)->waiting = 0;
     PRIVATE(gpsdata)->buffer[0] = 0;
 
-#ifdef LIBGPS_DEBUG
     PRIVATE(gpsdata)->waitcount = 0;
-#endif /* LIBGPS_DEBUG */
     return 0;
 }
 
@@ -372,11 +368,11 @@ int gps_sock_read(struct gps_data_t *gpsdata, char *message, int message_len)
     return (status == 0) ? (int)response_length : status;
 }
 
-int gps_unpack(char *buf, struct gps_data_t *gpsdata)
 /* unpack a gpsd response into a status structure, buf must be writeable.
  * gps_unpack() currently returns 0 in all cases, but should it ever need to
  * return an error status, it must be < 0.
  */
+int gps_unpack(char *buf, struct gps_data_t *gpsdata)
 {
     libgps_debug_trace((DEBUG_CALLS, "gps_unpack(%s)\n", buf));
 
@@ -389,11 +385,8 @@ int gps_unpack(char *buf, struct gps_data_t *gpsdata)
                                *next));
             if (libgps_json_unpack(*next, gpsdata, next) == -1)
                 break;
-#ifdef LIBGPS_DEBUG
             if (libgps_debuglevel >= 1)
                 libgps_dump_state(gpsdata);
-#endif /* LIBGPS_DEBUG */
-
         }
     }
 

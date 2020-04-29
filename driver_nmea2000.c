@@ -76,7 +76,6 @@ static int scale_int(int32_t var, const int64_t factor)
 static void print_data(struct gps_context_t *context,
                        unsigned char *buffer, int len, PGN *pgn)
 {
-#ifdef LIBGPS_DEBUG
     if ((libgps_debuglevel >= LOG_IO) != 0) {
         int   l1, l2, ptr;
         char  bu[128];
@@ -96,12 +95,6 @@ static void print_data(struct gps_context_t *context,
         }
         GPSD_LOG(LOG_IO, &context->errout, "%s\n", bu);
     }
-#else
-    (void)context;
-    (void)buffer;
-    (void)len;
-    (void)pgn;
-#endif
 }
 
 static gps_mask_t get_mode(struct gps_device_t *session)
