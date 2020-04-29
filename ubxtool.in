@@ -130,7 +130,7 @@ opts = {
     # u-blox 9, firmware 1 is protver 27
     # u-blox F9T, firmware 2 is protver 29
     # u-blox F9N, firmware 4 is protver 32
-    'protver': 10,
+    'protver': 10.0,
     # raw log file name
     'raw_file': None,
     # open port read only -r
@@ -4164,7 +4164,7 @@ Oddly this is the poll for UBX-LOG-BATCH
                   '  Hint: use option "-P %s"' %
                   (opts_protver, protver, protver))
             # prolly too late to fix, try anyway.
-            opt['protver'] = float(protver)
+            opts['protver'] = float(protver)
 
         return s
 
@@ -7610,7 +7610,7 @@ for (opt, val) in options:
         # to handle vesion like 23.01
         opts['protver'] = float(val)
         if 10 > opts['protver']:
-            opts['protver'] = 10
+            opts['protver'] = 10.0
         # Dunno the max protver, NEO-M9N is 32.00
     elif opt == '-p':
         # don't force the user to upper case
