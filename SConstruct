@@ -365,7 +365,6 @@ boolopts = (
     ('usb',           True,  "libusb support for USB devices"),
     # Other daemon options
     ("control_socket", True,  "control socket for hotplug notifications"),
-    ("force_global",  False, "force daemon to listen on all addressses"),
     ("systemd",       systemd, "systemd socket activation"),
     # Client-side options
     ("clientdebug",   True,  "client debugging support"),
