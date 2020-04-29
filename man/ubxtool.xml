@@ -231,8 +231,9 @@ a usage message and exit.</para>
     <term>-P protver</term>
     <listitem>
      <para>Sets the protocol version to use for sending commands.
-Minimum 10 (ublox 5).  Maximum 29 (u-blox 9).  Use "ubxtool -p MON-VER"
- to see the version your GPS supports.
+Minimum 10 (ublox 5).  Use "ubxtool -p MON-VER" to see the version your
+receiver supports.  Many newer u-blox receivers will fail silently or oddly
+if this is not set correctly.
      </para>
     </listitem>
    </varlistentry>
