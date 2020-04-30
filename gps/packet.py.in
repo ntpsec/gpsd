@@ -44,7 +44,7 @@ _cwd = os.getcwd()
 if 'gpsd' in _cwd.split('/'):
     _path = _cwd + '/'
 else:
-    _path = ''
+    _path = './'
 #    _path = ['@libdir@']
 
 try:
