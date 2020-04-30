@@ -44,8 +44,9 @@ _cwd = os.getcwd()
 if 'gpsd' in _cwd.split('/'):
     _path = _cwd + '/'
 else:
-    _path = './'
-#    _path = ['@libdir@']
+    _path = '@LIBDIR@'
+    if _path[-1] is not '/':
+        _path += '/'
 
 try:
     _packet = ctypes.CDLL('%s@GPSPACKET@' % _path)
