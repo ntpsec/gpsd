@@ -176,7 +176,7 @@ gpsfake -1 -P 3000 4h-raw.ubx
 <application>gpsrinex</application>.  Use -n 10000000 so that
 all the data from the raw file is used::
 <programlisting>
-gpsrinex -i 30 -n 1000000
+gpsrinex -i 30 -n 1000000 :3000
 </programlisting></para>
     <para>Repeat the process with 
 <application>gpsfake</application> to send the data to 
