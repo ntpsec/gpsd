@@ -21,7 +21,7 @@ these lines will do, and need to be run as root:
 
    tar -xzf gpsd-X.YY.tar.gz
    cd gpsd-X.YY
-   scons && scons check && sudo scons udev-install
+   scons && scons check && scons udev-install
 
 If you get any errors, you need to read the detailed instructions that follow.
 
