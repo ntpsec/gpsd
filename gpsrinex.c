@@ -89,6 +89,7 @@ static double ecefz = 0.0;
 static timespec_t start_time = {0};      /* report gen time, UTC */
 static timespec_t first_mtime = {0};     /* GPS time, not UTC */
 static timespec_t last_mtime = {0};      /* GPS time, not UTC */
+static int leap_seconds = 0;             // set if non-zero
 
 /* total count of observations by u-blox gnssid [0-6]
  *  0 = GPS       RINEX G
@@ -771,14 +772,22 @@ static void print_raw(struct gps_data_t *gpsdata)
     unsigned char last_svid = 0;
     int need_nl = 0;
     int got_l1 = 0;
+    time_t epoch_sec;
 
     if ((last_mtime.tv_sec + (time_t)sample_interval) >
         gpsdata->raw.mtime.tv_sec) {
         /* not time yet */
         return;
     }
+    epoch_sec = gpsdata->raw.mtime.tv_sec;
+    if (500000000 < gpsdata->raw.mtime.tv_nsec) {
+         // round it up.  To match convbin.
+         // does this break opus?
+         epoch_sec++;
+    }
+
     /* opus insists (time % interval) = 0 */
-    if (0 != (gpsdata->raw.mtime.tv_sec % sample_interval)) {
+    if (0 != (epoch_sec % sample_interval)) {
         return;
     }
 
@@ -970,10 +979,21 @@ static void quit_handler(int signum)
  */
 static void conditionally_log_fix(struct gps_data_t *gpsdata)
 {
+    if (0 == leap_seconds && 0 < gpsdata->leap_seconds) {
+        // grab a static copy of the current leap second.
+        leap_seconds = gpsdata->leap_seconds;
+    }
+
     if (DEBUG_PROG <= debug) {
         /* The (long long unsigned) is for 32/64-bit compatibility */
-        (void)fprintf(stderr, "mode %d set %llx\n", gpsdata->fix.mode,
-                      (long long unsigned)gpsdata->set);
+        (void)fprintf(stderr, "mode %d set %llx leap %d\n",
+                      gpsdata->fix.mode,
+                      (long long unsigned)gpsdata->set,
+                      leap_seconds);
+    }
+    if (0 == leap_seconds) {
+        // Can't do anything until we know the current leap second
+        return;
     }
 
     /* mostly we don't care if 2D or 3D fix, let the post processor
@@ -1000,6 +1020,11 @@ static void conditionally_log_fix(struct gps_data_t *gpsdata)
         if (DEBUG_RAW <= debug) {
             (void)fprintf(stderr,"got RAW\n");
         }
+        /* RINEX 3 prefers GPS time. Accepts GLO (UTC) time.
+         * NRCan does not accept GLO time
+         * Remove the leap second to get GPS from UTC.
+         */
+        gpsdata->raw.mtime.tv_sec += leap_seconds;
         print_raw(gpsdata);
     }
     return;
