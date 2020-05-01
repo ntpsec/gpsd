@@ -708,7 +708,7 @@ int json_read_array(const char *cp, const struct json_array_t *arr,
             break;
         case t_ubyte:
             arr->arr.ubytes.store[offset] = (unsigned char)strtoul(cp,
-                                                                     &ep, 0);
+                                                                   &ep, 0);
             if (ep == cp)
                 return JSON_ERR_BADNUM;
             else
@@ -845,101 +845,100 @@ const char *json_error_string(int err)
 /* quote a JSON string so it can be used as a simple JSON string.
  * Used to output the JSON as a literal JSON string
  * escape control chars, escape double quote.
- * stop at NUL, inlen or bad unicode char
+ * stop at NUL, in_len or bad unicode char
  */
-char *json_quote(const char *in, char *buf, size_t inlen, size_t bufsiz)
+char *json_quote(const char *in_buffer, char *out_buffer, size_t in_len,
+                 size_t out_len)
 {
-    const char *escape_in = "'\"/\\\b\f\n\r\t";
-    const char *escape_out = "'\"/\\bfnrt";
-    unsigned ocnt = 0;
-    unsigned icnt = 0;
-    unsigned cnt = 0;
+    const char *escape_match = "'\"/\\\b\f\n\r\t";
+    const char *escaped_bit = "'\"/\\bfnrt";
+    unsigned out_index = 0;
+    const char *escape_ptr;
+    unsigned in_index = 0;
     unsigned to_copy = 0;
-    bool notyet = true;
 
-    buf[0] = '\0';
+    out_buffer[0] = '\0';
 
-    // check in string, stop at NUL, done inlen, or buf full
-    for (cnt = 0; in[cnt] != '\0'; cnt++) {
+    // check in string, stop at NUL, done in_len, or out_buffer full
+    for (in_index = 0; in_buffer[in_index] != '\0'; in_index++) {
 
-        if (cnt >= inlen) {
+        if (in_index >= in_len) {
             // got all from input buffer
             break;
         }
 
-        if (ocnt > (bufsiz - 8) ) {
-            /* output buffer full.  Not enough space for a 4-byte UTF + NUL,
+        if (out_index > (out_len - 8) ) {
+            /* output out_buffer full.  Not enough space for a 4-byte UTF + NUL,
              * or \uxxxx + NUL.  Safer to check once, at the top,
-             * than a lot of specific size checks later in the loop. */
+             * than a lot of specific size checks later in the loop.
+             */
             break;
         }
 
-        if (in[cnt] & 0x80) {
+        if (in_buffer[in_index] & 0x80) {
             // highbit set. assume unicode
             to_copy = 0;
 
-            // check inlen so we don't overrun in
-            if ((inlen > (cnt + 1)) &&
-                (0xC0 == (0xE0 & (uint8_t)in[cnt])) &&
-                (0x80 == (0xC0 & (uint8_t)in[cnt + 1]))) {
+            // check in_len so we don't overrun in_buffer
+            if ((in_len > (in_index + 1)) &&
+                (0xC0 == (0xE0 & (uint8_t)in_buffer[in_index])) &&
+                (0x80 == (0xC0 & (uint8_t)in_buffer[in_index + 1]))) {
                 // utf-8 ish 16bit rune - deg, plusm, mplus etc.
                 to_copy = 2;
-            } else if ((inlen > (cnt + 2)) &&
-                       (0xE0 == (0xF0 & (uint8_t)in[cnt])) &&
-                       (0x80 == (0xC0 & (uint8_t)in[cnt + 1])) &&
-                       (0x80 == (0xC0 & (uint8_t)in[cnt + 2]))) {
+            } else if ((in_len > (in_index + 2)) &&
+                       (0xE0 == (0xF0 & (uint8_t)in_buffer[in_index])) &&
+                       (0x80 == (0xC0 & (uint8_t)in_buffer[in_index + 1])) &&
+                       (0x80 == (0xC0 & (uint8_t)in_buffer[in_index + 2]))) {
                 // utf-8 ish 24 bit rune - (double) prime etc.
                 to_copy = 3;
-            } else if ((inlen > (cnt + 3)) &&
-                       (0xF0 == (0xF8 & (uint8_t)in[cnt])) &&
-                       (0x80 == (0xC0 & (uint8_t)in[cnt + 1])) &&
-                       (0x80 == (0xC0 & (uint8_t)in[cnt + 2])) &&
-                       (0x80 == (0xC0 & (uint8_t)in[cnt + 3]))) {
+            } else if ((in_len > (in_index + 3)) &&
+                       (0xF0 == (0xF8 & (uint8_t)in_buffer[in_index])) &&
+                       (0x80 == (0xC0 & (uint8_t)in_buffer[in_index + 1])) &&
+                       (0x80 == (0xC0 & (uint8_t)in_buffer[in_index + 2])) &&
+                       (0x80 == (0xC0 & (uint8_t)in_buffer[in_index + 3]))) {
                 // utf-8 ish 32 bit rune - musical symbol g clef etc.
                 to_copy = 4;
             } else {
                 // WTF??  Short UTF?  Bad UTF?
-                str_appendf(buf, bufsiz, "\\u%04x", in[cnt] & 0x0ff);
-                ocnt += 6;
+                str_appendf(out_buffer, out_len,
+                            "\\u%04x", in_buffer[in_index] & 0x0ff);
+                out_index += 6;
                 continue;
             }
 
-            memcpy((void*)&buf[ocnt], (void*)&in[cnt], to_copy);
-            ocnt += to_copy;
-            cnt += to_copy - 1;    // minus one as the for loop does cnt++
-            buf[ocnt] = '\0';
+            memcpy((void*)&out_buffer[out_index],
+                   (void*)&in_buffer[in_index], to_copy);
+            out_index += to_copy;
+            // minus one as the for loop does in_index++
+            in_index += to_copy - 1;
+            out_buffer[out_index] = '\0';
             continue;
         }
-        /* step though a array of bytes (escape_in) to escape
-         * until finding  the target byte or NUL. Then finds
-         * the corresponding byte in (escape_out) and forms the
-         * escape sequence. sets a Boolean because a continue
-         * would probably drop execution in the ext loop up
-         * which is a level below where we want.
+
+        /* Try to find current byte from in buffer in string escape
+         * match if it is there append '\', the corresponding byte
+         * from escaped bit, and a null byte to end of out buffer.
          */
-        notyet = true;
-        for (icnt = 0 ; notyet && (escape_in[icnt] != '\0'); icnt++) {
-            if (in[cnt] == escape_in[icnt]) {
-                buf[ocnt++] = '\\';
-                buf[ocnt++] = escape_out[icnt];
-                buf[ocnt] = '\0';
-                notyet = false;
-            }
-        }
-        if (! notyet) {
+        escape_ptr = strchr(escape_match, in_buffer[in_index]);
+        if (escape_ptr >= escape_match) {
+            out_buffer[out_index++] = '\\';
+            out_buffer[out_index++] = escaped_bit[escape_ptr-escape_match];
+            out_buffer[out_index]   = 0;
             continue;
         }
-        // Escape 0-32 and 127 if not previously handled (0-x01f,x7f)
-        if ('\x1f' >= (in[cnt] & 0xFF) || '\x7f' == (int8_t)in[cnt]) {
-            str_appendf(buf, bufsiz, "\\u%04x", in[cnt] & 0x0ff);
-            ocnt += 6;
+
+        // Escape 0-31 and 127 if not previously handled (0-x01f,x7f)
+        if ('\x1f' >= in_buffer[in_index] || '\x7f' == in_buffer[in_index]) {
+            str_appendf(out_buffer, out_len, "\\u%04x",
+                        in_buffer[in_index] & 0x0ff);
+            out_index += 6;
             continue;
         }
         // pass through everything not escaped.
-        buf[ocnt++] = in[cnt];
-        buf[ocnt] = '\0';
+        out_buffer[out_index++] = in_buffer[in_index];
+        out_buffer[out_index] = '\0';
     }
-    return buf;
+    return out_buffer;
 }
 
 /* end */
