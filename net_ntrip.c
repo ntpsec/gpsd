@@ -450,7 +450,7 @@ static int ntrip_stream_get_parse(const struct ntrip_stream_t *stream,
         goto close;
     }
     /* parse ICY 200 OK */
-    if (NULL != strstr(buf, NTRIP_ICY)) {
+    if (NULL == strstr(buf, NTRIP_ICY)) {
         GPSD_LOG(LOG_ERROR, errout,
                  "Unknown reply %s from Ntrip service %s:%s/%s\n", buf,
                  stream->url, stream->port, stream->mountpoint);
