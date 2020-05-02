@@ -297,5 +297,5 @@ are not $50 USB mice...
 
 Local variables:
 mode: outline
-paragraph-separate: "[ 	]*$"
+paragraph-separate: "[  ]*$"
 end:
