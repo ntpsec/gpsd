@@ -167,7 +167,7 @@ static bool oncore_initialize(void)
     (void)wattrset(Bowin, A_NORMAL);
 
     (void)wborder(Awwin, 0, 0, 0, 0, 0, 0, 0, 0),
-	(void)wattrset(Awwin, A_BOLD);
+        (void)wattrset(Awwin, A_BOLD);
     (void)mvwprintw(Awwin, 1, 1, "Mode");
     (void)mvwprintw(Awwin, 3, 0, " @@Aw ");
     (void)wattrset(Awwin, A_NORMAL);
@@ -435,8 +435,8 @@ static void oncore_update(void)
         (void)mvwprintw(Awwin, 2, 1, "%4s", time_mode[mode]);
     }
 
-	monitor_log("Aw =");
-	break;
+        monitor_log("Aw =");
+        break;
 
     case ONCTYPE('A', 'y'):
     {
