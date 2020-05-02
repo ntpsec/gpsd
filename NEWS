@@ -1,4 +1,4 @@
-			GPSD project news
+                        GPSD project news
 
 3.20.1~dev: In process
   Create python programs from .in files to allow macro substitution.
@@ -125,7 +125,7 @@
   in the Python clients so the graphics don't look like SBAS.
 
 3.14: 2015-03-14 (Eric S. Raymond <esr@snark.thyrsus.com>)
-  The Pi Day release, 3.14 on 3/14 2015 at 9:26. Longer timeouts on test clients.
+  Pi Day release, 3.14 on 3/14 2015 at 9:26. Longer timeouts on test clients.
   Skyview support for the Beidou and QZSS constellations in the NMEA0183 driver.
   ntpmon rename to ntpshmmon - it doesn't actually monitor NTP itself.
   New HOWTO on the website: "Introduction to Time Service".
