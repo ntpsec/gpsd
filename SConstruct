@@ -2866,6 +2866,9 @@ env.Clean(clean_misc, ['.sconf_temp', '.scons-option-cache', 'config.log'])
 # old, and current, versions
 env.Clean(clean_misc, glob.glob('gpsd-*.zip') + glob.glob('gpsd-*tar.?z'))
 
+# qt object files
+env.Clean(clean_misc, glob.glob('qt-*.os'))
+
 # Default targets
 
 if cleaning:
