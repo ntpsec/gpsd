@@ -46,29 +46,29 @@ static DBusHandlerResult handle_gps_fix(DBusMessage * message)
     dbus_error_init(&error);
 
     dbus_message_get_args(message,
-			  &error,
-			  DBUS_TYPE_DOUBLE, &share_gpsdata->fix.time,
-			  DBUS_TYPE_INT32, &share_gpsdata->fix.mode,
-			  DBUS_TYPE_DOUBLE, &share_gpsdata->fix.ept,
-			  DBUS_TYPE_DOUBLE, &share_gpsdata->fix.latitude,
-			  DBUS_TYPE_DOUBLE, &share_gpsdata->fix.longitude,
-			  DBUS_TYPE_DOUBLE, &share_gpsdata->fix.eph,
+                          &error,
+                          DBUS_TYPE_DOUBLE, &share_gpsdata->fix.time,
+                          DBUS_TYPE_INT32, &share_gpsdata->fix.mode,
+                          DBUS_TYPE_DOUBLE, &share_gpsdata->fix.ept,
+                          DBUS_TYPE_DOUBLE, &share_gpsdata->fix.latitude,
+                          DBUS_TYPE_DOUBLE, &share_gpsdata->fix.longitude,
+                          DBUS_TYPE_DOUBLE, &share_gpsdata->fix.eph,
                           /* The dbus doc does not seem to specify
                            * altHAE or altMSL */
-			  DBUS_TYPE_DOUBLE, &share_gpsdata->fix.altHAE,
-			  DBUS_TYPE_DOUBLE, &share_gpsdata->fix.epv,
-			  DBUS_TYPE_DOUBLE, &share_gpsdata->fix.track,
-			  DBUS_TYPE_DOUBLE, &share_gpsdata->fix.epd,
-			  DBUS_TYPE_DOUBLE, &share_gpsdata->fix.speed,
-			  DBUS_TYPE_DOUBLE, &share_gpsdata->fix.eps,
-			  DBUS_TYPE_DOUBLE, &share_gpsdata->fix.climb,
-			  DBUS_TYPE_DOUBLE, &share_gpsdata->fix.epc,
-			  DBUS_TYPE_STRING, &gpsd_devname, DBUS_TYPE_INVALID);
+                          DBUS_TYPE_DOUBLE, &share_gpsdata->fix.altHAE,
+                          DBUS_TYPE_DOUBLE, &share_gpsdata->fix.epv,
+                          DBUS_TYPE_DOUBLE, &share_gpsdata->fix.track,
+                          DBUS_TYPE_DOUBLE, &share_gpsdata->fix.epd,
+                          DBUS_TYPE_DOUBLE, &share_gpsdata->fix.speed,
+                          DBUS_TYPE_DOUBLE, &share_gpsdata->fix.eps,
+                          DBUS_TYPE_DOUBLE, &share_gpsdata->fix.climb,
+                          DBUS_TYPE_DOUBLE, &share_gpsdata->fix.epc,
+                          DBUS_TYPE_STRING, &gpsd_devname, DBUS_TYPE_INVALID);
 
     if (share_gpsdata->fix.mode > MODE_NO_FIX )
-	share_gpsdata->fix.status = STATUS_FIX;
+        share_gpsdata->fix.status = STATUS_FIX;
     else
-	share_gpsdata->fix.status = STATUS_NO_FIX;
+        share_gpsdata->fix.status = STATUS_NO_FIX;
 
     dbus_error_free(&error);
 
@@ -81,11 +81,11 @@ static DBusHandlerResult handle_gps_fix(DBusMessage * message)
  *
  */
 static DBusHandlerResult signal_handler(DBusConnection * connection UNUSED,
-					DBusMessage * message,
+                                        DBusMessage * message,
                                         void *user_data UNUSED)
 {
     if (dbus_message_is_signal(message, "org.gpsd", "fix"))
-	return handle_gps_fix(message);
+        return handle_gps_fix(message);
     /*
      * ignore all other messages
      */
@@ -99,29 +99,29 @@ int gps_dbus_open(struct gps_data_t *gpsdata)
 
     gpsdata->privdata = (void *)malloc(sizeof(struct privdata_t));
     if (gpsdata->privdata == NULL)
-	return -1;
+        return -1;
 
     dbus_error_init(&error);
     connection = dbus_bus_get(DBUS_BUS_SYSTEM, &error);
     if (dbus_error_is_set(&error)) {
-	syslog(LOG_CRIT, "%s: %s", error.name, error.message);
-	dbus_error_free(&error);
-	return 3;
+        syslog(LOG_CRIT, "%s: %s", error.name, error.message);
+        dbus_error_free(&error);
+        return 3;
     }
 
     dbus_bus_add_match(connection, "type='signal'", &error);
     if (dbus_error_is_set(&error)) {
-	syslog(LOG_CRIT, "unable to add match for signals %s: %s", error.name,
-	       error.message);
-	dbus_error_free(&error);
-	return 4;
+        syslog(LOG_CRIT, "unable to add match for signals %s: %s", error.name,
+               error.message);
+        dbus_error_free(&error);
+        return 4;
     }
 
     if (!dbus_connection_add_filter
-	(connection, (DBusHandleMessageFunction) signal_handler, NULL,
-	 NULL)) {
-	syslog(LOG_CRIT, "unable to register filter with the connection");
-	return 5;
+        (connection, (DBusHandleMessageFunction) signal_handler, NULL,
+         NULL)) {
+        syslog(LOG_CRIT, "unable to register filter with the connection");
+        return 5;
     }
 
 #ifndef USE_QT
@@ -134,15 +134,17 @@ int gps_dbus_open(struct gps_data_t *gpsdata)
 }
 
 int gps_dbus_mainloop(struct gps_data_t *gpsdata,
-		       int timeout,
-		       void (*hook)(struct gps_data_t *))
+                       int timeout,
+                       void (*hook)(struct gps_data_t *))
 /* run a DBUS main loop with a specified handler */
 {
     share_gpsdata = gpsdata;
     PRIVATE(share_gpsdata)->handler = (void (*)(struct gps_data_t *))hook;
     for (;;)
-	if (dbus_connection_read_write_dispatch(connection, (int)(timeout/1000)) != TRUE)
-	    return -1;
+        if (TRUE != dbus_connection_read_write_dispatch(connection,
+                                                        (int)(timeout/1000))) {
+            return -1;
+        }
     return 0;
 }
 
