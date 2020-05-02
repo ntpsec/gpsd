@@ -34,6 +34,12 @@
  * input format of lat/lon is NMEA style  DDDMM.mmmmmmm
  * yes, 7 digits of precision past the decimal point from survey grade GPS
  *
+ * Ignoring the complications ellipsoids add:
+ *   1 minute latitude = 1853 m
+ *   0.001 minute latitude = 1.853 m
+ *   0.000001 minute latitude = 0.001853 m = 1.853 mm
+ *   0.0000001 minute latitude = 0.0001853 m = 0.1853 mm
+ *
  * return: 0 == OK, non zero is failure.
  */
 static int do_lat_lon(char *field[], struct gps_fix_t *out)
