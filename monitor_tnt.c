@@ -22,7 +22,7 @@ static bool tnt_initialize(void)
     thtmwin = derwin(devicewin, 6, 80, 0, 0);
     assert(thtmwin != NULL);
     (void)wborder(thtmwin, 0, 0, 0, 0, 0, 0, 0, 0),
-	(void)syncok(thtmwin, true);
+        (void)syncok(thtmwin, true);
     (void)wattrset(thtmwin, A_BOLD);
     (void)mvwaddstr(thtmwin, 0, 35, " PTNTHTM ");
     (void)mvwaddstr(thtmwin, 1, 1, "Heading:          ");
@@ -99,7 +99,7 @@ const struct monitor_object_t tnt_mmt = {
     .update = tnt_update,
     .command = tnt_command,
     .wrap = tnt_wrap,
-    .min_y = 6,.min_x = 80,	/* size of the device window */
+    .min_y = 6,.min_x = 80,     /* size of the device window */
     .driver = &driver_trueNorth,
 };
 #endif /* TNT_ENABLE */
