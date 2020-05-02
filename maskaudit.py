@@ -96,9 +96,9 @@ if __name__ == '__main__':
             sys.exit(1)
 
         if tabulate:
-            print("%-14s	%8s" % (" ", banner))
+            print("%-14s        %8s" % (" ", banner))
             for (flag, value) in source.masks:
-                print("%-14s	%8s" % (flag, source.relevant(flag)))
+                print("%-14s    %8s" % (flag, source.relevant(flag)))
         if pythonize:
             for (d, v) in source.masks:
                 if v[-1] == 'u':
