@@ -538,7 +538,7 @@ static gps_mask_t processRMC(int count, char *field[],
             mask |= MODE_SET;
         }
         session->newdata.status = newstatus;
-	mask |= STATUS_SET;
+        mask |= STATUS_SET;
     }
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
@@ -1026,16 +1026,16 @@ static gps_mask_t processGST(int count, char *field[],
     // compute start of today
     if (0 < session->nmea.date.tm_year) {
         // Do not bother if no current year
-	memset(&date, 0, sizeof(date));
-	date.tm_year = session->nmea.date.tm_year;
-	date.tm_mon = session->nmea.date.tm_mon;
-	date.tm_mday = session->nmea.date.tm_mday;
+        memset(&date, 0, sizeof(date));
+        date.tm_year = session->nmea.date.tm_year;
+        date.tm_mon = session->nmea.date.tm_mon;
+        date.tm_mday = session->nmea.date.tm_mday;
 
-	/* note this is not full UTC, just HHMMSS.ss */
-	/* this is not the current time,
-	 * it references another GPA of the same stamp. So do not set
-	 * any time stamps with it */
-	ret = decode_hhmmss(&date, &ts.tv_nsec, field[1], session);
+        /* note this is not full UTC, just HHMMSS.ss */
+        /* this is not the current time,
+         * it references another GPA of the same stamp. So do not set
+         * any time stamps with it */
+        ret = decode_hhmmss(&date, &ts.tv_nsec, field[1], session);
     } else {
         ret = 1;
     }
@@ -3061,7 +3061,7 @@ static gps_mask_t processMTK3301(int c UNUSED, char *field[],
          *
          * Packet Type: 324 PMTK_API_SET_OUTPUT_CTL
          * Packet meaning
-         * Write the TSIP / antenna / PPS configuration data to the Flash memory.
+         * Write the TSIP/antenna/PPS configuration data to the Flash memory.
          * DataField [Data0]:TSIP Packet[on/off]
          * 0 - Disable TSIP output (Default).
          * 1 - Enable TSIP output.
@@ -3125,7 +3125,8 @@ static gps_mask_t processPSTI030(int count, char *field[],
                                 struct gps_device_t *session)
 {
     /*
-     * $PSTI,030,hhmmss.sss,A,dddmm.mmmmmmm,a,dddmm.mmmmmmm,a,x.x,x.x,x.x,x.x,ddmmyy,a.x.x,x.x*hh<CR><LF>
+     * $PSTI,030,hhmmss.sss,A,dddmm.mmmmmmm,a,dddmm.mmmmmmm,a,x.x,
+            x.x,x.x,x.x,ddmmyy,a.x.x,x.x*hh<CR><LF>
      * 1     030          Sentence ID
      * 2     225446.334   Time of fix 22:54:46 UTC
      * 3     A            Status of Fix: A = Autonomous, valid;
