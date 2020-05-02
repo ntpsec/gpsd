@@ -56,14 +56,14 @@ static int do_lat_lon(char *field[], struct gps_fix_t *out)
     }
 
     lat = safe_atof(field[0]);
-    m = 100.0 * modf(lat / 100.0, &d);
-    lat = d + m / 60.0;
+    m = modf(lat / 100.0, &d);
+    lat = d + m / 0.6;
     if ('S' == field[1][0])
         lat = -lat;
 
     lon = safe_atof(field[2]);
-    m = 100.0 * modf(lon / 100.0, &d);
-    lon = d + m / 60.0;
+    m = modf(lon / 100.0, &d);
+    lon = d + m / 0.6;
     if ('W' == field[3][0])
         lon = -lon;
 
