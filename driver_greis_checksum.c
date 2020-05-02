@@ -22,7 +22,7 @@ unsigned char greis_checksum(const unsigned char *src, int count)
 {
     unsigned char res = 0;
     while (count--)
-	res = greis_rotate_left(res) ^ *src++;
+        res = greis_rotate_left(res) ^ *src++;
     return greis_rotate_left(res);
 }
 // vim: set expandtab shiftwidth=4
