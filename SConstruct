@@ -1217,6 +1217,7 @@ else:
     # check function after libraries, because some function require libraries
     # for example clock_gettime() require librt on Linux glibc < 2.17
     for f in ("cfmakeraw", "clock_gettime", "daemon", "fcntl", "fork",
+              "getopt_long",
               "gmtime_r", "inet_ntop", "strlcat", "strlcpy", "strptime"):
         if config.CheckFunc(f):
             confdefs.append("#define HAVE_%s 1\n" % f.upper())
