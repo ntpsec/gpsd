@@ -1,8 +1,8 @@
 /*
  * compiler.h - compiler specific macros
  *
- * This software is distributed under a BSD-style license. See the
- * file "COPYING" in the toop-level directory of the distribution for details.
+ * This file is Copyright 2010 by the GPSD project
+ * SPDX-License-Identifier: BSD-2-clause
  */
 #ifndef _GPSD_COMPILER_H_
 #define _GPSD_COMPILER_H_
@@ -20,7 +20,7 @@
 #define _POSIX_THREAD_SAFE_FUNCTIONS
 #endif
 
-#include "gpsd_config.h"	/* is HAVE_STDATOMIC defined? */
+#include "gpsd_config.h"        /* is HAVE_STDATOMIC defined? */
 
 /* Macro for declaring function with printf-like arguments. */
 # if __GNUC__ >= 3 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 7)
@@ -105,3 +105,4 @@ static inline void memory_barrier(void)
 }
 
 #endif /* _GPSD_COMPILER_H_ */
+// vim: set expandtab shiftwidth=4
