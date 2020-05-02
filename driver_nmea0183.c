@@ -32,7 +32,7 @@
  *     field[2]: 12118.8472460
  *     field[3]: W
  * input format of lat/lon is NMEA style  DDDMM.mmmmmmm
- * yes, 7 digits of precision from survey grade GPS
+ * yes, 7 digits of precision past the decimal point from survey grade GPS
  *
  * return: 0 == OK, non zero is failure.
  */
