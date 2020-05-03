@@ -77,6 +77,10 @@
 #include <time.h>
 #include <unistd.h>
 
+#ifdef HAVE_GETOPT_LONG
+       #include <getopt.h>
+#endif
+
 #include "gps.h"
 #include "gpsdclient.h"
 #include "os_compat.h"
@@ -1071,13 +1075,31 @@ int main(int argc, char **argv)
     progname = argv[0];
 
     log_file = stdout;
-    while ((ch = getopt(argc, argv, "D:f:hi:n:V")) != -1) {
+    while (1) {
+        const char *optstring = "D:f:hi:n:V";
+
+#ifdef HAVE_GETOPT_LONG
+        int option_index = 0;
+        static struct option long_options[] = {
+            {"help", no_argument, 0,  'h' },
+            {"interval", required_argument, 0,  'i' },
+            {NULL, 0, 0, 0},
+        };
+
+        ch = getopt_long(argc, argv, optstring, long_options, &option_index);
+#else
+        ch = getopt(argc, argv, optstring);
+#endif
+        if (ch == -1) {
+            break;
+        }
+
         switch (ch) {
         case 'D':
             debug = atoi(optarg);
             gps_enable_debug(debug, log_file);
             break;
-       case 'f':       /* Output file name. */
+        case 'f':       /* Output file name. */
             fname = strdup(optarg);
             break;
         case 'i':               /* set sampling interval */
@@ -1095,6 +1117,10 @@ int main(int argc, char **argv)
             (void)fprintf(stderr, "%s: version %s (revision %s)\n",
                           progname, VERSION, REVISION);
             exit(EXIT_SUCCESS);
+        case 'h':
+            // FALLTHROUGH
+        case '?':
+            // FALLTHROUGH
         default:
             usage();
             /* NOTREACHED */
