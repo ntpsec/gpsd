@@ -188,8 +188,8 @@ gpsrinex -i 30 -n 1000000 :3000
 https://webapp.geod.nrcan.gc.ca/geod/tools-outils/ppp.php</para>
     <para>OPUS requires 2 frequency observation files.
 https://www.ngs.noaa.gov/OPUS/</para>
-    <para>The curious can find the RINEX 3.03 format described here:
-ftp://igs.org/pub/data/format/rinex303_update1.pdf</para>
+    <para>The curious can find the RINEX 3.04 format described here:
+ftp://igs.org/pub/data/format/rinex304.pdf </para>
     <para>
       <citerefentry>
         <refentrytitle>gpsd</refentrytitle>

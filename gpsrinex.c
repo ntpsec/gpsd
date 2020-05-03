@@ -44,8 +44,8 @@
  *         # gpsrinex -i 1 -n 1000000
  *
  * See also:
- *     [1] RINEX: The Receiver Independent Exchange Format, Version 3.03
- *     ftp://igs.org/pub/data/format/rinex303.pdf
+ *     [1] RINEX: The Receiver Independent Exchange Format, Version 3.04
+ *     ftp://igs.org/pub/data/format/rinex304.pdf
  *
  *     [2] GPSTk, http://www.gpstk.org/
  *
