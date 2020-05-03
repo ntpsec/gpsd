@@ -45,7 +45,7 @@ if 'gpsd' in _cwd.split('/'):
     _path = _cwd + '/'
 else:
     _path = '@LIBDIR@'
-    if _path[-1] is not '/':
+    if _path[-1] != '/':
         _path += '/'
 
 try:
