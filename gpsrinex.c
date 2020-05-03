@@ -1081,9 +1081,9 @@ int main(int argc, char **argv)
 #ifdef HAVE_GETOPT_LONG
         int option_index = 0;
         static struct option long_options[] = {
-            {"help", no_argument, 0,  'h' },
-            {"interval", required_argument, 0,  'i' },
-            {NULL, 0, 0, 0},
+            {"help", no_argument, NULL,  'h' },
+            {"interval", required_argument, NULL,  'i' },
+            {NULL, 0, NULL, 0},
         };
 
         ch = getopt_long(argc, argv, optstring, long_options, &option_index);
