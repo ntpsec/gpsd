@@ -20,7 +20,7 @@ usage: ubxtool [OPTIONS] [server[:port[:device]]]
 # To see what constellations are enabled:
 #       ubxtool -p CFG-GNSS -f /dev/ttyXX
 #
-# To disable GALILEO and enable GALILEO:
+# To disable GLONASS and enable GALILEO:
 #       ubxtool -d GLONASS -f /dev/ttyXX
 #       ubxtool -e GALILEO -f /dev/ttyXX
 #
