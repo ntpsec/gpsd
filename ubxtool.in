@@ -3207,7 +3207,7 @@ Save and Load non-volatile storage data"""
             # duplicated in cfg_valset()
             m_len -= 4
             i = 4
-            while 0 < m_len:
+            while 4 < m_len:
                 u = struct.unpack_from('<L', buf, i)
                 m_len -= 4
                 i += 4
@@ -3215,12 +3215,16 @@ Save and Load non-volatile storage data"""
                 cfg_type = self.item_to_type(item)
 
                 size = cfg_type[0]
+                # FIXME!  should check for enough bytes to unpack from
                 frmat = cfg_type[1]
                 flavor = cfg_type[2]
                 v = struct.unpack_from(frmat, buf, i)
                 s += ('\n    item %s/%#x val %s' % (item[0], u[0], v[0]))
                 m_len -= size
                 i += size
+
+            if 0 < m_len:
+                s += "\nWARNING: %d extra bytes!" % m_len
 
         return s
 
@@ -3236,10 +3240,10 @@ Save and Load non-volatile storage data"""
               (flag_s(u[1], self.cfg_valdel_layers),
                index_s(u[2], self.cfg_valxxx_trans)))
 
-        # duplicated in cfg_valset()
+        # duplicated in cfg_valget()
         m_len -= 4
         i = 4
-        while 0 < m_len:
+        while 4 < m_len:
             u = struct.unpack_from('<L', buf, i)
             m_len -= 4
             i += 4
@@ -3247,12 +3251,17 @@ Save and Load non-volatile storage data"""
             cfg_type = self.item_to_type(item)
 
             size = cfg_type[0]
+            # FIXME!  should check for enough bytes to unpack from
             frmat = cfg_type[1]
             flavor = cfg_type[2]
             v = struct.unpack_from(frmat, buf, i)
             s += ('\n    item %s/%#x val %s' % (item[0], u[0], v[0]))
             m_len -= size
             i += size
+
+        if 0 < m_len:
+            s += "\nWARNING: %d extra bytes!" % m_len
+
         return s
 
     cfg_ids = {
