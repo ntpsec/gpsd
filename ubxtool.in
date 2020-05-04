@@ -1767,7 +1767,7 @@ class ubx(object):
                 return item
 
         # not found, build a fake item, guess on decode
-        name = "CFG-%u-%u" % ((key >> 16) & 0xff, ket & 0xff)
+        name = "CFG-%u-%u" % ((key >> 16) & 0xff, key & 0xff)
         kmap = {0: "Z0",
                 1: "L",
                 2: "U1",
