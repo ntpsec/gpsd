@@ -98,6 +98,16 @@ reduces the data to 30 second intervals.  Defeault is 30.</para>
 requires a minimum af 15 minutes, and a maximum of 48 hours, of data.</para>
     <para>-V, --version makes <application>gpsrinex</application> print
 its version and exit.</para>
+    <para>The following options set strings that are placed in the generated
+RINEX 3 obs file.</para>
+    <para>--agency [agency]          agency string</para>
+    <para>--marker_name [name]       marker name string</para>
+    <para>--marker_type [type]       marker type string</para>
+    <para>--observer [observer]      observer string</para>
+    <para>--rec_num [num]            receiver number string</para>
+    <para>--rec_type [type]          receiver type string</para>
+    <para>--rec_vers [vers]          receiver vers string</para>
+
   </refsect1>
   <refsect1 id="exampletitle">
     <title>EXAMPLES</title>

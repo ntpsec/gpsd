@@ -94,6 +94,13 @@ static timespec_t start_time = {0};      /* report gen time, UTC */
 static timespec_t first_mtime = {0};     /* GPS time, not UTC */
 static timespec_t last_mtime = {0};      /* GPS time, not UTC */
 static int leap_seconds = 0;             // set if non-zero
+static char marker_name[61] = "XXXX";
+static char marker_type[61] = "NON_PHYSICAL";
+static char observer[21] = "Unknown";
+static char agency[21] = "Unknown";
+static char rec_num[21] = "0";
+static char rec_type[21] = "Unknown";
+static char rec_vers[21] = "0";
 
 /* total count of observations by u-blox gnssid [0-6]
  *  0 = GPS       RINEX G
@@ -312,12 +319,12 @@ static void print_rinex_header(void)
         "PGM / RUN BY / DATE");
     (void)fprintf(log_file, "%-60s%-20s\n",
          "Source: gpsd live data", "COMMENT");
-    (void)fprintf(log_file, "%-60s%-20s\n", "XXXX", "MARKER NAME");
-    (void)fprintf(log_file, "%-60s%-20s\n", "NON_PHYSICAL", "MARKER TYPE");
+    (void)fprintf(log_file, "%-60s%-20s\n", marker_name, "MARKER NAME");
+    (void)fprintf(log_file, "%-60s%-20s\n", marker_type, "MARKER TYPE");
     (void)fprintf(log_file, "%-20s%-20s%-20s%-20s\n",
-                  "Unknown", "Unknown", "", "OBSERVER / AGENCY");
+                  observer, agency, "", "OBSERVER / AGENCY");
     (void)fprintf(log_file, "%-20s%-20s%-20s%-20s\n",
-                  "0", "UNKNOWN", "0", "REC # / TYPE / VERS");
+                  rec_num, rec_type, rec_vers, "REC # / TYPE / VERS");
     (void)fprintf(log_file, "%-20s%-20s%-20s%-20s\n",
                   "0", "UNKNOWN EXT     NONE", "" , "ANT # / TYPE");
     if (isfinite(ecefx) &&
@@ -1052,12 +1059,29 @@ static void usage(void)
           "     -n, --count count          number samples to collect\n"
           "                                default: %d\n"
           "     -V, --version              print version and exit\n"
+          "\nThese strings get placed in the generated RINEX 3 obs file\n"
+          "     --agency [agency]          agency string\n"
+          "     --marker_name [name]       marker name string\n"
+          "     --marker_type [type]       marker type string\n"
+          "     --observer [observer]      observer string\n"
+          "     --rec_num [num]            receiver number string\n"
+          "     --rec_type [type]          receiver type string\n"
+          "     --rec_vers [vers]          receiver vers string\n"
           "\n"
           "defaults to '%s -n %d -i %d localhost:2947'\n",
           progname, sample_interval, sample_count, progname, sample_count,
           sample_interval);
     exit(EXIT_FAILURE);
 }
+
+// defines for getopt_long()
+#define AGENCY 301
+#define MARKER_NAME 302
+#define MARKER_TYPE 303
+#define OBSERVER 304
+#define REC_NUM 305
+#define REC_TYPE 306
+#define REC_VERS 307
 
 /*
  *
@@ -1085,12 +1109,19 @@ int main(int argc, char **argv)
 #ifdef HAVE_GETOPT_LONG
         int option_index = 0;
         static struct option long_options[] = {
-            {"count", required_argument, NULL,  'n' },
-            {"debug", required_argument, NULL,  'D' },
-            {"fileout", required_argument, NULL,  'f' },
-            {"help", no_argument, NULL,  'h' },
-            {"interval", required_argument, NULL,  'i' },
-            {"version", no_argument, NULL,  'V' },
+            {"agency", required_argument, NULL, AGENCY},
+            {"count", required_argument, NULL, 'n' },
+            {"debug", required_argument, NULL, 'D' },
+            {"fileout", required_argument, NULL, 'f' },
+            {"help", no_argument, NULL, 'h' },
+            {"interval", required_argument, NULL, 'i' },
+            {"marker_name", required_argument, NULL, MARKER_NAME},
+            {"marker_type", required_argument, NULL, MARKER_TYPE},
+            {"observer", required_argument, NULL, OBSERVER},
+            {"rec_num", required_argument, NULL, REC_NUM},
+            {"rec_type", required_argument, NULL, REC_TYPE},
+            {"rec_vers", required_argument, NULL, REC_VERS},
+            {"version", no_argument, NULL, 'V' },
             {NULL, 0, NULL, 0},
         };
 
@@ -1125,6 +1156,27 @@ int main(int argc, char **argv)
             (void)fprintf(stderr, "%s: version %s (revision %s)\n",
                           progname, VERSION, REVISION);
             exit(EXIT_SUCCESS);
+        case AGENCY:
+            strlcpy(agency, optarg, sizeof(agency));
+            break;
+        case MARKER_NAME:
+            strlcpy(marker_name, optarg, sizeof(marker_name));
+            break;
+        case MARKER_TYPE:
+            strlcpy(marker_type, optarg, sizeof(marker_type));
+            break;
+        case OBSERVER:
+            strlcpy(observer, optarg, sizeof(observer));
+            break;
+        case REC_NUM:
+            strlcpy(rec_num, optarg, sizeof(rec_num));
+            break;
+        case REC_TYPE:
+            strlcpy(rec_type, optarg, sizeof(rec_type));
+            break;
+        case REC_VERS:
+            strlcpy(rec_vers, optarg, sizeof(rec_vers));
+            break;
         case 'h':
             // FALLTHROUGH
         case '?':
