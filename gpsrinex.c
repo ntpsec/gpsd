@@ -1045,7 +1045,7 @@ static void usage(void)
           "Mandatory arguments to long options are mandatory for "
           "short options too.\n"
           "     -D, --debug debuglevel     Set debug level, default 0\n"
-          "     -f, --outfile  filename    out to filename\n"
+          "     -f, --fileout  filename    out to filename\n"
           "                                default: gpsrinexYYYYDDDDHHMM.obs\n"
           "     -h, --help                 print this usage and exit\n"
           "     -i, --interval interval    time between samples, default: %d\n"
@@ -1087,7 +1087,7 @@ int main(int argc, char **argv)
         static struct option long_options[] = {
             {"count", required_argument, NULL,  'n' },
             {"debug", required_argument, NULL,  'D' },
-            {"outfile", required_argument, NULL,  'f' },
+            {"fileout", required_argument, NULL,  'f' },
             {"help", no_argument, NULL,  'h' },
             {"interval", required_argument, NULL,  'i' },
             {"version", no_argument, NULL,  'V' },
