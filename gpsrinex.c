@@ -94,10 +94,17 @@ static timespec_t start_time = {0};      /* report gen time, UTC */
 static timespec_t first_mtime = {0};     /* GPS time, not UTC */
 static timespec_t last_mtime = {0};      /* GPS time, not UTC */
 static int leap_seconds = 0;             // set if non-zero
+
+// strings for the RINEX file
+static char agency[41] = "Unknown";
+static char ant_num[21] = "0";
+static char ant_type[21] = "UNKNOWN EXT     NONE";
+static double ant_e = 0.0;
+static double ant_h = 0.0;
+static double ant_n = 0.0;
 static char marker_name[61] = "XXXX";
 static char marker_type[61] = "NON_PHYSICAL";
 static char observer[21] = "Unknown";
-static char agency[21] = "Unknown";
 static char rec_num[21] = "0";
 static char rec_type[21] = "Unknown";
 static char rec_vers[21] = "0";
@@ -321,12 +328,12 @@ static void print_rinex_header(void)
          "Source: gpsd live data", "COMMENT");
     (void)fprintf(log_file, "%-60s%-20s\n", marker_name, "MARKER NAME");
     (void)fprintf(log_file, "%-60s%-20s\n", marker_type, "MARKER TYPE");
-    (void)fprintf(log_file, "%-20s%-20s%-20s%-20s\n",
-                  observer, agency, "", "OBSERVER / AGENCY");
+    (void)fprintf(log_file, "%-20s%-40s%-20s\n",
+                  observer, agency, "OBSERVER / AGENCY");
     (void)fprintf(log_file, "%-20s%-20s%-20s%-20s\n",
                   rec_num, rec_type, rec_vers, "REC # / TYPE / VERS");
     (void)fprintf(log_file, "%-20s%-20s%-20s%-20s\n",
-                  "0", "UNKNOWN EXT     NONE", "" , "ANT # / TYPE");
+                  ant_num, ant_type, "" , "ANT # / TYPE");
     if (isfinite(ecefx) &&
         isfinite(ecefy) &&
         isfinite(ecefz)) {
@@ -337,7 +344,7 @@ static void print_rinex_header(void)
     }
 
     (void)fprintf(log_file, "%14.4f%14.4f%14.4f%18s%-20s\n",
-        0.0, 0.0, 0.0, "", "ANTENNA: DELTA H/E/N");
+        ant_h, ant_e, ant_n, "", "ANTENNA: DELTA H/E/N");
     (void)fprintf(log_file, "%6d%6d%48s%-20s\n", 1, 1,
          "", "WAVELENGTH FACT L1/2");
 
@@ -1060,13 +1067,18 @@ static void usage(void)
           "                                default: %d\n"
           "     -V, --version              print version and exit\n"
           "\nThese strings get placed in the generated RINEX 3 obs file\n"
-          "     --agency [agency]          agency string\n"
-          "     --marker_name [name]       marker name string\n"
-          "     --marker_type [type]       marker type string\n"
-          "     --observer [observer]      observer string\n"
-          "     --rec_num [num]            receiver number string\n"
-          "     --rec_type [type]          receiver type string\n"
-          "     --rec_vers [vers]          receiver vers string\n"
+          "     --agency [agency]          agency\n"
+          "     --ant_e [easting]          antenna easting in meters\n"
+          "     --ant_h [height]           antenna height in meters\n"
+          "     --ant_n [northing]         antenna northing in meters\n"
+          "     --ant_num [num]            antenna number\n"
+          "     --ant_type [type]          antenna type\n"
+          "     --marker_name [name]       marker name\n"
+          "     --marker_type [type]       marker type\n"
+          "     --observer [observer]      observer\n"
+          "     --rec_num [num]            receiver number\n"
+          "     --rec_type [type]          receiver type\n"
+          "     --rec_vers [vers]          receiver vers\n"
           "\n"
           "defaults to '%s -n %d -i %d localhost:2947'\n",
           progname, sample_interval, sample_count, progname, sample_count,
@@ -1076,12 +1088,17 @@ static void usage(void)
 
 // defines for getopt_long()
 #define AGENCY 301
-#define MARKER_NAME 302
-#define MARKER_TYPE 303
-#define OBSERVER 304
-#define REC_NUM 305
-#define REC_TYPE 306
-#define REC_VERS 307
+#define ANT_E 302
+#define ANT_H 303
+#define ANT_N 304
+#define ANT_NUM 305
+#define ANT_TYPE 306
+#define MARKER_NAME 307
+#define MARKER_TYPE 308
+#define OBSERVER 309
+#define REC_NUM 310
+#define REC_TYPE 311
+#define REC_VERS 312
 
 /*
  *
@@ -1110,6 +1127,11 @@ int main(int argc, char **argv)
         int option_index = 0;
         static struct option long_options[] = {
             {"agency", required_argument, NULL, AGENCY},
+            {"ant_num", required_argument, NULL, ANT_NUM},
+            {"ant_type", required_argument, NULL, ANT_TYPE},
+            {"ant_e", required_argument, NULL, ANT_E},
+            {"ant_h", required_argument, NULL, ANT_H},
+            {"ant_n", required_argument, NULL, ANT_N},
             {"count", required_argument, NULL, 'n' },
             {"debug", required_argument, NULL, 'D' },
             {"fileout", required_argument, NULL, 'f' },
@@ -1158,6 +1180,21 @@ int main(int argc, char **argv)
             exit(EXIT_SUCCESS);
         case AGENCY:
             strlcpy(agency, optarg, sizeof(agency));
+            break;
+        case ANT_E:
+            ant_e = safe_atof(optarg);
+            break;
+        case ANT_H:
+            ant_h = safe_atof(optarg);
+            break;
+        case ANT_N:
+            ant_n = safe_atof(optarg);
+            break;
+        case ANT_NUM:
+            strlcpy(ant_num, optarg, sizeof(ant_num));
+            break;
+        case ANT_TYPE:
+            strlcpy(ant_type, optarg, sizeof(ant_type));
             break;
         case MARKER_NAME:
             strlcpy(marker_name, optarg, sizeof(marker_name));

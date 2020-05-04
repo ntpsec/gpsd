@@ -100,13 +100,20 @@ requires a minimum af 15 minutes, and a maximum of 48 hours, of data.</para>
 its version and exit.</para>
     <para>The following options set strings that are placed in the generated
 RINEX 3 obs file.</para>
-    <para>--agency [agency]          agency string</para>
-    <para>--marker_name [name]       marker name string</para>
-    <para>--marker_type [type]       marker type string</para>
-    <para>--observer [observer]      observer string</para>
-    <para>--rec_num [num]            receiver number string</para>
-    <para>--rec_type [type]          receiver type string</para>
-    <para>--rec_vers [vers]          receiver vers string</para>
+    <para>--agency [agency]          agency</para>
+    <para>--ant_num [number]         antenna number</para>
+    <para>--ant_type [type]          antenna type</para>
+    <para>--marker_name [name]       marker name</para>
+    <para>--marker_type [type]       marker type</para>
+    <para>--observer [observer]      observer</para>
+    <para>--rec_num [num]            receiver number</para>
+    <para>--rec_type [type]          receiver type</para>
+    <para>--rec_vers [vers]          receiver vers</para>
+    <para>The following options set floating point numbers that are placed
+in the generated RINEX 3 obs file.</para>
+    <para>--ant_e [easting]          antenna easting in meters</para>
+    <para>--ant_h [height]           antenna height in meters</para>
+    <para>--ant_n [northing]         antenna northing in meters</para>
 
   </refsect1>
   <refsect1 id="exampletitle">
