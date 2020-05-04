@@ -3835,7 +3835,7 @@ Oddly this is the poll for UBX-LOG-BATCH
 
         u = struct.unpack_from('<LLLLHHBBBBLBBBBBBBBBBBBBBBBBBBBLLL', buf, 0)
         s = ('  pinSel %#x pinBank %#x pinDir %#x pinVal %#x noisePerRMS %u\n'
-             '  ageCnt %u aStatus %u aPower %u flags %#x reserved1 %u\n'
+             '  agcCnt %u aStatus %u aPower %u flags %#x reserved1 %u\n'
              '  usedMask %#x\n'
              '  VP %u %u %u %u %u %u %u %u %u %u %u %u %u %u %u %u %u\n'
              '  jamInd %u reserved2 %u %u pinIrq %#x pullH %#x pullL %#x' % u)
