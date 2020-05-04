@@ -87,33 +87,111 @@ localhost on the default port (2947) and watches all devices opened by
   </refsect1>
   <refsect1 id="options">
     <title>OPTIONS</title>
-    <para>-D, --debug [debuglevel]  set debug level to [debuglevel].</para>
-    <para>-f, --fileout [filename] save RINEX into [filename].</para>
-    <para>-h, --help makes <application>gpsrinex</application> print
-a usage message and exit.</para>
-    <para>-i, --interval [interval] wait [interval] seconds between epochs.
+      <variablelist remap='TP'>
+        <varlistentry>
+          <term>-D, --debug [debuglevel]</term>
+          <listitem><para>set debug level to [debuglevel].</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>-f, --fileout [filename] </term>
+          <listitem><para>save RINEX into [filename].</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>-h, --help </term>
+          <listitem><para>print a usage message and exit.</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>-i, --interval [interval] </term>
+          <listitem><para>wait [interval] seconds between epochs.
 OPUS accepts intervals of 1, 2, 3, 5, 10, 15 or,30 seconds.  OPUS then
-reduces the data to 30 second intervals.  Defeault is 30.</para>
-    <para>-n, --count [count] causes [count] epochs to be output.  OPUS
+reduces the data to 30 second intervals.  Default is 30.</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>-n, --count [count] </term>
+          <listitem><para>causes [count] epochs to be output.  OPUS
 requires a minimum af 15 minutes, and a maximum of 48 hours, of data.</para>
-    <para>-V, --version makes <application>gpsrinex</application> print
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>-V, --version</term>
+          <listitem><para>makes <application>gpsrinex</application> print
 its version and exit.</para>
-    <para>The following options set strings that are placed in the generated
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <para>The following options set strings that are placed in the generated
 RINEX 3 obs file.</para>
-    <para>--agency [agency]          agency</para>
-    <para>--ant_num [number]         antenna number</para>
-    <para>--ant_type [type]          antenna type</para>
-    <para>--marker_name [name]       marker name</para>
-    <para>--marker_type [type]       marker type</para>
-    <para>--observer [observer]      observer</para>
-    <para>--rec_num [num]            receiver number</para>
-    <para>--rec_type [type]          receiver type</para>
-    <para>--rec_vers [vers]          receiver vers</para>
+      <variablelist remap='TP'>
+        <varlistentry>
+          <term>--agency [agency]</term>
+          <listitem><para>agency</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>--ant_num [number]</term>
+          <listitem><para>antenna number</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>--ant_type [type]</term>
+          <listitem><para>antenna type</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>--marker_name [name]</term>
+          <listitem><para>marker name</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>--marker_type [type]</term>
+          <listitem><para>marker type</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>--observer [observer]</term>
+          <listitem><para>observer</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>--rec_num [num]</term>
+          <listitem><para>receiver number</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>--rec_type [type]</term>
+          <listitem><para>receiver type</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>--rec_vers [vers]</term>
+          <listitem><para>receiver vers</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
     <para>The following options set floating point numbers that are placed
 in the generated RINEX 3 obs file.</para>
-    <para>--ant_e [easting]          antenna easting in meters</para>
-    <para>--ant_h [height]           antenna height in meters</para>
-    <para>--ant_n [northing]         antenna northing in meters</para>
+      <variablelist remap='TP'>
+        <varlistentry>
+          <term>--ant_e [easting]</term>
+          <listitem><para>antenna easting in meters</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>--ant_h [height]</term>
+          <listitem><para>antenna height in meters</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term>--ant_n [northing]</term>
+          <listitem><para>antenna northing in meters</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
 
   </refsect1>
   <refsect1 id="exampletitle">
@@ -174,7 +252,7 @@ gpsrinex -i 30 -n 480 -f today.obs
 <application>gpsrinex</application> finishes, upload the file today.obs
 to your favorite PPP service.</para>
     <para>Example 2:</para>
-    <para>Collect raw masurement data from a remote gpsd.  The
+    <para>Collect raw measurement data from a remote gpsd.  The
 process it later with <application>gpsrinex</application> and
 <application>gpsprof</application>.</para>
     <para>Ensure the GPS is configured properly, as shown in Example 1.</para>
