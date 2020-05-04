@@ -54,9 +54,9 @@ except OSError:
     print('Failed to load the library:\t%s@GPSPACKET@' % _path)
     exit(1)
 
-_lexer_size = ctypes.c_int.in_dll(_packet, "fvi_size_lexer")
+_lexer_size = ctypes.c_size_t.in_dll(_packet, "fvi_size_lexer")
 LEXER_SIZE = _lexer_size.value
-_buffer_size = ctypes.c_int.in_dll(_packet, "fvi_size_buffer").value
+_buffer_size = ctypes.c_size_t.in_dll(_packet, "fvi_size_buffer").value
 
 REPORTER = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_char_p)
 GpsdErrOutT._fields_ = [('debug', ctypes.c_int),
