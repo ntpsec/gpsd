@@ -1041,13 +1041,17 @@ static void usage(void)
 {
     (void)fprintf(stderr,
           "Usage: %s [OPTIONS] [server[:port:[device]]]\n"
-          "     [-D debuglevel]   Set debug level, default 0\n"
-          "     [-f filename]     out to filename\n"
-          "                       gpsrinexYYYYDDDDHHMM.obs\n"
-          "     [-h]              print this usage and exit\n"
-          "     [-i interval]     time between samples, default: %d\n"
-          "     [-n count]        number samples to collect, default: %d\n"
-          "     [-V]              print version and exit\n"
+          "\n"
+          "Mandatory arguments to long options are mandatory for "
+          "short options too.\n"
+          "     -D, --debug debuglevel     Set debug level, default 0\n"
+          "     -f, --outfile  filename    out to filename\n"
+          "                                default: gpsrinexYYYYDDDDHHMM.obs\n"
+          "     -h, --help                 print this usage and exit\n"
+          "     -i, --interval interval    time between samples, default: %d\n"
+          "     -n, --count count          number samples to collect\n"
+          "                                default: %d\n"
+          "     -V, --version              print version and exit\n"
           "\n"
           "defaults to '%s -n %d -i %d localhost:2947'\n",
           progname, sample_interval, sample_count, progname, sample_count,
@@ -1081,8 +1085,12 @@ int main(int argc, char **argv)
 #ifdef HAVE_GETOPT_LONG
         int option_index = 0;
         static struct option long_options[] = {
+            {"count", required_argument, NULL,  'n' },
+            {"debug", required_argument, NULL,  'D' },
+            {"outfile", required_argument, NULL,  'f' },
             {"help", no_argument, NULL,  'h' },
             {"interval", required_argument, NULL,  'i' },
+            {"version", no_argument, NULL,  'V' },
             {NULL, 0, NULL, 0},
         };
 
