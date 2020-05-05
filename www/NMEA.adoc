@@ -296,12 +296,14 @@ the following are well known:
 |GA     | Galileo Positioning System
 |GB     | BeiDou (China)
 |GL     | GLONASS, according to IEIC 61162-1
-|GN     | Mixed GPS and GLONASS data, according to IEIC 61162-1
+|GN     | Combination of multiple satellite systems (NMEA 1083)
 |GP     | Global Positioning System receiver
 |II     | Integrated Instrumentation
 |IN     | Integrated Navigation
 |LC     | Loran-C receiver (obsolete)
 |QZ     | QZSS regional GPS augmentation system (Japan)
+|GI     | NavIC (IRNSS) (India)
+|Pxxx   | Proprietary (Vendor specific)
 |================================================================
 
 EC -- ECDIS is a specialized geographical information system intended
@@ -412,6 +414,8 @@ for them may be present in the GPSD project.
 |ZQ     | Timekeeper - Quartz
 |ZV     | Timekeeper - Radio Update, WWV or WWVH
 |================================================================
+
+The canonical list of Talkers is available at <<TALKERS>> .
 
 == Satellite IDs ==
 
@@ -2729,3 +2733,7 @@ Described in <<MALTESE>>, actually a Maltese government document.
 - [[[NORWAY]]]
   "Etterretninger for sjøfarende" Notoces for Mariners, see p26
   https://kartverket.no/efs-documents/editions/2015/efs01-2015.pdf
+
+- [[[TALKERS]]]
+  "Talker Identifier Mnemonics"
+  https://www.nmea.org/Assets/NMEA%200183%20Talker%20Identifier%20Mnemonics.pdf
