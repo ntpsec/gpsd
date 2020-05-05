@@ -3236,7 +3236,7 @@ Save and Load non-volatile storage data"""
 
         u = struct.unpack_from('<BBBB', buf, 0)
         s = ' version %u layer %#x transaction %#x reserved %u\n' % u
-        s += ('  layers (%s) transacion (%s)' %
+        s += ('  layers (%s) transaction (%s)' %
               (flag_s(u[1], self.cfg_valdel_layers),
                index_s(u[2], self.cfg_valxxx_trans)))
 
