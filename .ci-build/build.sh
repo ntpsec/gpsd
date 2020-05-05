@@ -10,6 +10,10 @@ if uname -a | grep -qi freebsd; then
 fi
 
 if [ "${USE_CCACHE}" = "true" ] && [ -n "${CCACHE_DIR}" ] && command -v ccache >/dev/null; then
+
+        # fix for ccache: error: BASEDIR: not an absolute path
+        export CCACHE_DIR=$(realpath "${CCACHE_DIR}")
+
 	if [ -d "/usr/lib64/ccache" ]; then
 		# fedora
 		export PATH="/usr/lib64/ccache:${PATH}"
