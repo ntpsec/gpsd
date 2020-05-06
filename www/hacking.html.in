@@ -585,7 +585,7 @@ overcomplicate the codebase in advance.</p>
 <p>Do not litter the code with undocumented magic numbers!  This is
 especially important for buffer lengths, because unsynchronized
 changes to buffer lengths and the code that uses them can result in
-overruns and all mamnner of nastiness.  If a magic number occurs once,
+overruns and all manner of nastiness.  If a magic number occurs once,
 a comment near the point of occurrence should explain why it has the
 value it does.  If it occurs multiple times, make it the value of
 a macro that is defined in one place so that all instances can be
@@ -631,7 +631,7 @@ other dynamic errors.</p></li>
 <h2 id="nohash">Avoid git hashes</h2>
 
 <p>Style point: avoid using git hashes in change comments. They'll
-become at best a pain in the ass and at worst meaningless meaningless
+become at best a pain in the ass and at worst meaningless
 if the project ever has to change version control systems again.
 Better to refer by committer and date.</p>
 
@@ -639,7 +639,7 @@ Better to refer by committer and date.</p>
 
 <h2 id="debugging">Debugging</h2>
 
-<p><code>scons debug=yes></code> will build with the right flags to
+<p><code>scons debug=yes</code> will build with the right flags to
 enable symbolic debugging.</p>
 
 <p>There is a script called <code>logextract</code> in the devtools
@@ -654,7 +654,7 @@ Watching such a session with <code>gdb(1)</code> should smoke out any
 repeatable bug pretty quickly.</p>
 
 <p>Almost all the C programs have a -D option that enables logging
-of progress messages to standard error.  In gpsd itself this ups the
+of progress messages to standard error.  In gpsd itself, this ups the
 syslogging level if it is running in background; see the LOG_* defines
 in gpsd.h to get an idea of what the log levels do.  Most of the test
 clients accept this switch to enable progress message from the libgps
@@ -719,7 +719,7 @@ could be earlier if the device emits packets late in the cycle that
 <code>gpsd</code> doesn't use.</p>
 
 <p>Here are the extra timing attributes. They measure components of
-the latency between the GPS's time measurement and when the sentence
+the latency between the GPS' time measurement and when the sentence
 data became available to the client. For these latency timings to be
 meaningful, the GPS has to ship timestamps with sub-second
 precision. SiRF-II and Evermore chipsets ship time with 0.01
@@ -779,14 +779,14 @@ of the normal flow of information through it.</p>
 <h3>The software-layering view</h3>
 
 <p> The <code>gpsd</code> breaks naturally into four pieces: the
-<b>drivers</b>, the <b>packet sniffer</b>, the <b>core library</b> and
+<b>drivers</b>, the <b>packet sniffer</b>, the <b>core library</b>, and
 the <b>multiplexer</b>. We'll describe these from the bottom up.</p>
 
 <p>The <b>drivers</b> are essentially user-space device drivers for
 each kind of chipset we support.  The key entry points are methods to
 parse a data packet into time-position-velocity or status information,
-change its mode or baud rate, probe for device subtype, etc. See <a
-href="#drivers">Driver Architecture</a> for more details about
+change its mode or baud rate, probe for device subtype, etc. See
+<a href="#drivers">Driver Architecture</a> for more details about
 them.</p>
 
 <p>The <b>packet sniffer</b> is responsible for mining data packets

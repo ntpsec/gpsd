@@ -1960,7 +1960,7 @@ class ubx(object):
         """UBX-AID-HUI decode, GPS Heatlh, UTC, Ionosphere"""
 
         u = struct.unpack_from('<LddlhhhhhhffffffffL', buf, 0)
-        s = (' health x%x utcAo %e utcA1 %e utcTOW %d'
+        s = (' health x%x utcA0 %e utcA1 %e utcTOW %d'
              '\n utcWNT %d utcLS %d utcWNF %d utcDN %d utcLSF %d utcSpare %d'
              '\n klobA0 %e klobA1 %e klobA2 %e'
              '\n klobA3 %e klobB0 %e klobB1 %e'
