@@ -11,6 +11,9 @@ fi
 
 if [ "${USE_CCACHE}" = "true" ] && [ -n "${CCACHE_DIR}" ] && command -v ccache >/dev/null; then
 
+        # create dir first, required by realpath
+	mkdir -p "${CCACHE_DIR}"
+
         # fix for ccache: error: BASEDIR: not an absolute path
         export CCACHE_DIR=$(realpath "${CCACHE_DIR}")
 
@@ -24,7 +27,6 @@ if [ "${USE_CCACHE}" = "true" ] && [ -n "${CCACHE_DIR}" ] && command -v ccache >
 		# debian, .....
 		export PATH="/usr/lib/ccache:${PATH}"
 	fi
-	mkdir -p "${CCACHE_DIR}"
 	echo 'max_size = 100M' > "${CCACHE_DIR}/ccache.conf"
 else
 	export USE_CCACHE="false"
