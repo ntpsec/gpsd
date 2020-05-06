@@ -216,7 +216,7 @@ a usage message and exit.</para>
    <varlistentry>
     <term>-i port</term>
     <listitem>
-     <para>Specifies port (interface) for port-related commands.
+     <para>Specifies port ID # (interface) for port-related commands.
 </para>
     </listitem>
    </varlistentry>

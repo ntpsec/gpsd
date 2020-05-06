@@ -119,7 +119,7 @@ opts = {
     'parm1': None,
     # poll command -p
     'poll': None,
-    # port for port-related commands
+    # port ID # for port-related commands
     'port': None,
     # protocol version for sent commands
     # u-blox 5, firmware 4 to 6 is protver 10 to 12
@@ -7535,7 +7535,7 @@ def usage():
           '                     default: %s\n'
           '       -g I          get config item I\n'
           '       -h            print help, increase -v for extra help\n'
-          '       -i P          port (interface ) for UBX-CFG-PRT\n'
+          '       -i P          port ID # (interface) for UBX-CFG-PRT\n'
           '       -m M          optional mode to -p P\n'
           '       -P P          Protocol version for sending commands\n'
           '                     default: %s\n'
