@@ -7613,7 +7613,7 @@ for (opt, val) in options:
     elif opt == '-e':
         parts = val.split(',')
         # don't force the user to upper case
-        opts['enable'] = val.upper()
+        opts['enable'] = parts[0].upper()
         if 1 in parts:
             # optional parameter
             opts['parm1'] = parts[1]
