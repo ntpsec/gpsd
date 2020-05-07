@@ -7607,14 +7607,14 @@ for (opt, val) in options:
         parts = val.split(',')
         # don't force the user to upper case
         opts['disable'] = parts[0].upper()
-        if 1 in parts:
+        if 1 < len(parts):
             # optional parameter
             opts['parm1'] = parts[1]
     elif opt == '-e':
         parts = val.split(',')
         # don't force the user to upper case
         opts['enable'] = parts[0].upper()
-        if 1 in parts:
+        if 1 < len(parts):
             # optional parameter
             opts['parm1'] = parts[1]
     elif opt == '-f':
