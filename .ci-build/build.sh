@@ -16,6 +16,7 @@ if [ "${USE_CCACHE}" = "true" ] && [ -n "${CCACHE_DIR}" ] && command -v ccache >
 
         # fix for ccache: error: BASEDIR: not an absolute path
         export CCACHE_DIR=$(realpath "${CCACHE_DIR}")
+        export CCACHE_BASEDIR=$(realpath "${CCACHE_BASEDIR}")
 
 	if [ -d "/usr/lib64/ccache" ]; then
 		# fedora
