@@ -3551,12 +3551,21 @@ Oddly this is polled with UBX-LOG-RETRIEVEBATCH
         m_len = len(buf)
 
         # length 8 (version 1, type 1) is reponse.
+        # WTF; length 10 (version 0, type 0) is request
         # length 12 (version 0, type 0) is request
         if 8 == m_len:
             # response
             u = struct.unpack_from('<BBHL', buf, 0)
             s = "  version %u type %u reserved1 x%x entryNumber %u" % u
             if 1 != u[0] or 1 != u[1]:
+                s += "\nWARNING: Unknown version, type (%u, %u)" % (u[0], u[1])
+        elif 10 == m_len:
+            # request
+            u = struct.unpack_from('<BBHBBBBBB', buf, 0)
+            s = ("  version %u type %u\n"
+                 "  year %u month %u day %u hour %u min %u sec %u "
+                 "reserved2 x%x" % u)
+            if 0 != u[0] or 0 != u[1]:
                 s += "\nWARNING: Unknown version, type (%u, %u)" % (u[0], u[1])
         elif 12 == m_len:
             # request
