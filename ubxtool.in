@@ -6708,7 +6708,7 @@ Always double check with "-p CFG-GNSS".
             nv_split = nv.split(',')
             name = nv_split[0]
             val = nv_split[1]
-            if 2 <= len(nv_split):
+            if 3 <= len(nv_split):
                 m_data[1] = int(nv_split[2])
                 print("SNARD: layer %u" % m_data[1])
 
