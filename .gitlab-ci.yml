@@ -145,7 +145,6 @@ freebsd:
 # $HAVE_SPARC64_LINUX == "true"
 # set this in your CI environment settings in gitlab.
 sparc64-linux:
-  allow_failure: true
   only:
     variables:
     - $HAVE_SPARC64_LINUX == "true"
