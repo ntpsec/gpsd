@@ -3215,7 +3215,7 @@ Save and Load non-volatile storage data"""
                 size = cfg_type[0]
                 if size > m_len:
                     s += "\nWARNING: not enough bytes!"
-                    break;
+                    break
 
                 frmat = cfg_type[1]
                 flavor = cfg_type[2]
@@ -7560,8 +7560,9 @@ def usage():
           '                     default: %d\n'
           '       -w W          wait time W before exiting\n'
           '                     default: %s seconds\n'
-          '       -x I          delete config item I\n'
-          '       -z I,v,l      set config item I to v, in option layer l\n'
+          '       -x I          delete config item I from BBR and FLASH '
+          'layers\n'
+          '       -z I,v,l      set config item I to v, in optional layer l\n'
           '\n' %
           (PROG_NAME, opts['input_file_name'],
            opts['protver'], opts['raw_file'],

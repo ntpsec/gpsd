@@ -41,8 +41,8 @@ BSD terms apply: see the file COPYING in the distribution root for details.
    <arg choice='opt'>-V </arg>
    <arg choice='opt'>-v <replaceable>verbosity</replaceable></arg>
    <arg choice='opt'>-w <replaceable>wait</replaceable></arg>
-   <arg choice='opt'>-x <replaceable>item</replaceable> </arg>
-   <arg choice='opt'>-z <replaceable>item,val</replaceable> </arg>
+   <arg choice='opt'>-x <replaceable>item</replaceable></arg>
+   <arg choice='opt'>-z <replaceable>item,val,layer</replaceable></arg>
    <arg choice='opt'>[server[:port[:device]]]</arg>
   </cmdsynopsis>
  </refsynopsisdiv>
@@ -356,16 +356,17 @@ options.</para>
    <varlistentry>
     <term>-x ITEM</term>
     <listitem>
-     <para>Delete the value of ITEM name from the GPS (UBX_CFG-VALDEL).
-     Returning to the GPS default for that item.  See the section on
-     CONFIGURATION ITEMS</para>
+     <para>Delete the value of ITEM name from the BBR and FLASH layers in
+the GPS (UBX_CFG-VALDEL).  Returning to the GPS default for that item.
+See the section on CONFIGURATION ITEMS</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-z ITEM,VAL</term>
+    <term>-z ITEM,VAL,LAYER</term>
     <listitem>
-     <para>Set the value of ITEM name to VAL in the GPS (UBX-CFG-VALSET).
-     See the section on CONFIGURATION ITEMS</para>
+     <para>Set the value of ITEM name to VAL in layer LAYER in the GPS
+(UBX-CFG-VALSET).  The ",LAYER" is in decimal notation and is optional.
+ See the section on CONFIGURATION ITEMS</para>
     </listitem>
    </varlistentry>
    <varlistentry>
