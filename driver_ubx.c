@@ -318,7 +318,10 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
             /* no more data */
             break;
         }
-        (void)strlcat(obuf, ",", sizeof(obuf));
+        if (n > 0) {
+            // commas between elements
+            (void)strlcat(obuf, ",", sizeof(obuf));
+        }
         (void)strlcat(obuf, (char *)&buf[start_of_str], sizeof(obuf));
     }
     /* save what we can */
