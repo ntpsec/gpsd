@@ -3858,7 +3858,7 @@ Oddly this is the poll for UBX-LOG-BATCH
         """UBX-MON-HW decode, Hardware Status"""
 
         u = struct.unpack_from('<LLLLHHBBBBLBBBBBBBBBBBBBBBBBBBBLLL', buf, 0)
-        s = ('  pinSel %#x pinBank %#x pinDir %#x pinVal %#x noisePerRMS %u\n'
+        s = ('  pinSel %#x pinBank %#x pinDir %#x pinVal %#x noisePerMS %u\n'
              '  agcCnt %u aStatus %u aPower %u flags %#x reserved1 %u\n'
              '  usedMask %#x\n'
              '  VP %u %u %u %u %u %u %u %u %u %u %u %u %u %u %u %u %u\n'
@@ -6870,10 +6870,10 @@ Always double check with "-p CFG-GNSS".
                 "help": "GPS and QZSS L1C/A. GPS,2 for L1C/A and L2C"},
         # en/dis able GALILEO
         "GALILEO": {"command": send_able_galileo,
-                    "help": "GALILEO E1.  GALILEO,2 for E1 and E5b"},
+                    "help": "GALILEO E1. GALILEO,2 for E1 and E5b"},
         # en/dis able GLONASS
         "GLONASS": {"command": send_able_glonass,
-                    "help": "GLONASS L1.  GLONASS,2 for L1 and L2"},
+                    "help": "GLONASS L1. GLONASS,2 for L1 and L2"},
         # en/dis able LOG
         "LOG": {"command": send_able_logfilter,
                 "help": "Data Logger"},
