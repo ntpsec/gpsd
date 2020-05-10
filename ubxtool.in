@@ -6747,20 +6747,40 @@ Always double check with "-p CFG-GNSS".
             m_data.extend(kv_data)
         gps_model.gps_send(0x06, 0x8a, m_data)
 
-    def send_log_findtime(self):
+    def send_log_findtime(self, args):
         """UBX-LOG-FINDTIME, search log for y,m,d,h,m,s"""
         m_data = bytearray(10)
         m_data[0] = 0      # version, 0 = request
         m_data[1] = 0      # type, 0 = request
         # the doc says two reserved bytes here, the doc is wrong
         # searches for before 1 Jan 2004 always fail
-        m_data[2] = 2004 % 256             # year 1-65635
-        m_data[3] = int(2004 / 256) & 0xff    # year
-        m_data[4] = 1      # month 1-12
-        m_data[5] = 1      # day 1-31
-        m_data[6] = 0      # hour 0-23
-        m_data[7] = 0      # minute 0-59
-        m_data[8] = 0      # second 0-60
+        year = 2004
+        month = 1
+        day = 1
+        hour = 0
+        minute = 0
+        second = 0
+
+        if 0 < len(args):
+            year = int(args[0])
+            if 1 < len(args):
+                month = int(args[1])
+                if 2 < len(args):
+                    day = int(args[2])
+                    if 3 < len(args):
+                        hour = int(args[3])
+                        if 4 < len(args):
+                            minute = int(args[4])
+                            if 5 < len(args):
+                                second = int(args[5])
+
+        m_data[2] = year % 256                # year 1-65635
+        m_data[3] = int(year / 256) & 0xff    # year
+        m_data[4] = month                     # month 1-12
+        m_data[5] = day                       # day 1-31
+        m_data[6] = hour                      # hour 0-23
+        m_data[7] = minute                    # minute 0-59
+        m_data[8] = second                    # second 0-60
         m_data[9] = 0      # reserved
         gps_model.gps_send(0x21, 0x0e, m_data)
 
@@ -7090,7 +7110,8 @@ Always double check with "-p CFG-GNSS".
                       "minVer": 14},
         # UBX-LOG-FINDTIME
         "LOG-FINDTIME": {"command": send_log_findtime,
-                    "help": "search logs by time.  LOG-FINDTIME,y,m,d,h,m,s"},
+                    "help": "search logs by time.  LOG-FINDTIME,y,m,d,h,m,s",
+                    "args": 1},
         # UBX-LOG-INFO
         "LOG-INFO": {"command": send_poll, "opt": [0x21, 0x08],
                      "help": "poll UBX-LOG-INFO",
@@ -7797,13 +7818,14 @@ try:
             if VERB_QUIET < opts['verbosity']:
                 print('%s: poll %s\n' % (PROG_NAME, poll))
 
+            args = poll.split(',')
+            poll = args[0]
+
             if 'MODEL' == poll:
                 if opts["mode"] is None:
                     opts["mode"] = 0   # default to portable model
 
             if poll in gps_model.commands:
-                args = poll.split(',')
-                poll = args[0]
                 command = gps_model.commands[poll]
                 if (('minVer' in command and
                      opts['protver'] < command['minVer'])):
@@ -7821,6 +7843,9 @@ try:
 
                 if 'opt' in command:
                     command["command"](gps, command["opt"])
+                elif 'args' in command:
+                    # pass on  args, except arg[0]
+                    command["command"](gps, args[1:])
                 else:
                     command["command"](gps)
             else:
