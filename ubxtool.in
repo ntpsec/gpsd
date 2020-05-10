@@ -6747,6 +6747,23 @@ Always double check with "-p CFG-GNSS".
             m_data.extend(kv_data)
         gps_model.gps_send(0x06, 0x8a, m_data)
 
+    def send_log_findtime(self):
+        """UBX-LOG-FINDTIME, search log for y,m,d,h,m,s"""
+        m_data = bytearray(10)
+        m_data[0] = 0      # version, 0 = request
+        m_data[1] = 0      # type, 0 = request
+        # the doc says two reserved bytes here, the doc is wrong
+        # searches for before 1 Jan 2004 always fail
+        m_data[2] = 2004 % 256             # year 1-65635
+        m_data[3] = int(2004 / 256) & 0xff    # year
+        m_data[4] = 1      # month 1-12
+        m_data[5] = 1      # day 1-31
+        m_data[6] = 0      # hour 0-23
+        m_data[7] = 0      # minute 0-59
+        m_data[8] = 0      # second 0-60
+        m_data[9] = 0      # reserved
+        gps_model.gps_send(0x21, 0x0e, m_data)
+
     def send_poll(self, m_data):
         """generic send poll request"""
         gps_model.gps_send(m_data[0], m_data[1], m_data[2:])
@@ -7071,6 +7088,9 @@ Always double check with "-p CFG-GNSS".
         "LOG-ERASE": {"command": send_poll, "opt": [0x21, 0x03],
                       "help": "send UBX-LOG-ERASE",
                       "minVer": 14},
+        # UBX-LOG-FINDTIME
+        "LOG-FINDTIME": {"command": send_log_findtime,
+                    "help": "search logs by time.  LOG-FINDTIME,y,m,d,h,m,s"},
         # UBX-LOG-INFO
         "LOG-INFO": {"command": send_poll, "opt": [0x21, 0x08],
                      "help": "poll UBX-LOG-INFO",
