@@ -118,7 +118,7 @@ opts = {
     # optional argument to -d/-e
     'parm1': None,
     # poll command -p
-    'poll': None,
+    'poll': [],
     # port ID # for port-related commands
     'port': None,
     # protocol version for sent commands
@@ -7666,7 +7666,8 @@ for (opt, val) in options:
         # Dunno the max protver, NEO-M9N is 32.00
     elif opt == '-p':
         # don't force the user to upper case
-        opts['poll'] = val.upper()
+        # allow multiple -p
+        opts['poll'].append(val.upper())
     elif opt in '-R':
         # raw log file
         opts['raw_file'] = val
@@ -7791,38 +7792,41 @@ try:
                              (PROG_NAME, opts['enable']))
             sys.exit(1)
 
-    elif opts['poll'] is not None:
-        if VERB_QUIET < opts['verbosity']:
-            print('%s: poll %s\n' % (PROG_NAME, opts['poll']))
+    elif opts['poll']:
+        for poll in opts['poll']:
+            if VERB_QUIET < opts['verbosity']:
+                print('%s: poll %s\n' % (PROG_NAME, poll))
 
-        if 'MODEL' == opts["poll"]:
-            if opts["mode"] is None:
-                opts["mode"] = 0   # default to portable model
+            if 'MODEL' == poll:
+                if opts["mode"] is None:
+                    opts["mode"] = 0   # default to portable model
 
-        if opts['poll'] in gps_model.commands:
-            command = gps_model.commands[opts['poll']]
-            if (('minVer' in command and
-                 opts['protver'] < command['minVer'])):
-                print('%s: WARNING poll %s requires protVer >= %s '
-                      'you have %s\n' %
-                      (PROG_NAME, opts['poll'], command['minVer'],
-                       opts['protver']))
+            if poll in gps_model.commands:
+                args = poll.split(',')
+                poll = args[0]
+                command = gps_model.commands[poll]
+                if (('minVer' in command and
+                     opts['protver'] < command['minVer'])):
+                    print('%s: WARNING poll %s requires protVer >= %s '
+                          'you have %s\n' %
+                          (PROG_NAME, poll, command['minVer'],
+                           opts['protver']))
 
-            if (('maxVer' in command and
-                 opts['protver'] > command['maxVer'])):
-                print('%s: WARNING poll %s requires protVer <= %s '
-                      'you have %s\n' %
-                      (PROG_NAME, opts['poll'], command['maxVer'],
-                       opts['protver']))
+                if (('maxVer' in command and
+                     opts['protver'] > command['maxVer'])):
+                    print('%s: WARNING poll %s requires protVer <= %s '
+                          'you have %s\n' %
+                          (PROG_NAME, poll, command['maxVer'],
+                           opts['protver']))
 
-            if 'opt' in command:
-                command["command"](gps, command["opt"])
+                if 'opt' in command:
+                    command["command"](gps, command["opt"])
+                else:
+                    command["command"](gps)
             else:
-                command["command"](gps)
-        else:
-            sys.stderr.write('%s: poll %s not found\n' %
-                             (PROG_NAME, opts['poll']))
-            sys.exit(1)
+                sys.stderr.write('%s: poll %s not found\n' %
+                                 (PROG_NAME, poll))
+                sys.exit(1)
 
     elif opts['set_speed'] is not None:
         gps_model.send_set_speed(opts['set_speed'])
