@@ -1,9 +1,9 @@
 <?php
 
-# Copyright (c) 2006,2007 Chris Kuethe <chris.kuethe@gmail.com>
+# Copyright 2006,2007 Chris Kuethe <chris.kuethe@gmail.com>
 # Updated 2015 by Sanjeev Gupta <ghane0@gmail.com>
 #
-# This file is Copyright (c) 2010-2019 by the GPSD project
+# This file is Copyright 2010-2019 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 
 // This program originally read a logfile of filtered gpsd messages,

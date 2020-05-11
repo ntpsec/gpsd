@@ -1,5 +1,5 @@
 /*
- * This file is Copyright (c) 2010-2018 by the GPSD project
+ * This file is Copyright 2010-2018 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 #include <assert.h>

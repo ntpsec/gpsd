@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 
-# Copyright (c) 2008 Chris Kuethe <chris.kuethe@gmail.com>
+# Copyright 2008 Chris Kuethe <chris.kuethe@gmail.com>
 #
-# This file is Copyright (c) 2008-2019 by the GPSD project
+# This file is Copyright 2008-2019 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 
 use strict;
