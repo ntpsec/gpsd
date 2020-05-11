@@ -240,9 +240,12 @@ if this is not set correctly.
    <varlistentry>
     <term>-p PRESET</term>
     <listitem>
-     <para>Send a preset command the GPS.  Accepts one parameter, PRESET,
-the name of the command to send.  Only the common PRESETS are shown here.
-To see the full list run "ubxtool -h -v 2".
+     <para>Send a preset command the GPS.  Usually accepts one parameter,
+PRESET, the name of the command to send.  A few PRESETS, like LOG-FINDTIME,
+accept additional comma separated parameters.  More than one -p may be used.
+</para>
+<para> Only the common PRESETS are shown here.  To see the full list,
+including optional parameters, run "ubxtool -h -v 2".
 </para>
      <variablelist>
       <varlistentry>
@@ -301,7 +304,7 @@ To see the full list run "ubxtool -h -v 2".
        </listitem>
       </varlistentry>
      </variablelist>
-     <para>The PRESET parameters not shown above are all simple poll
+     <para>Most PRESET parameters are simple poll
 commands.  They merely poll the GPS to respond with the associated
 message.  For example "ubxtool -p CFG-GNSS" asks the GPS to respond with
 a UBX-CFG-GNSS message describing the current GNSS configuration.
@@ -413,6 +416,21 @@ Over 600 Key Names are supported by ubxtool.  To see them all do:
  </refsect1>
  <refsect1 id='examples'>
   <title>EXAMPLES</title>
+  <para>
+All examples assume that UBXOPTS is set with the protocol version of
+your receiver.  Be sure to replace the "-P 18" with your correct
+prototype version.
+<programlisting>
+export UBXOPTS="-v 18"
+</programlisting>
+  </para>
+  <para>
+Dump configuration and status of the GNSS recceiver.  The "-w 4" is
+to provide extra time for the operations to complete. 
+<programlisting>
+ubxtool -p CONFIG -p STATUS -w 4 -v 2
+</programlisting>
+  </para>
   <para>
 Decode raw log file:
 <programlisting>
