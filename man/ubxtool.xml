@@ -31,7 +31,6 @@ BSD terms apply: see the file COPYING in the distribution root for details.
    <arg choice='opt'>-g <replaceable>item</replaceable> </arg>
    <arg choice='opt'>-h </arg>
    <arg choice='opt'>-i <replaceable>port</replaceable></arg>
-   <arg choice='opt'>-m <replaceable>mode</replaceable></arg>
    <arg choice='opt'>-P <replaceable>protver</replaceable></arg>
    <arg choice='opt'>-p <replaceable>preset</replaceable></arg>
    <arg choice='opt'>-R <replaceable>rawfile</replaceable></arg>
@@ -221,13 +220,6 @@ a usage message and exit.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-m mode</term>
-    <listitem>
-     <para>Sets optional mode parameter to a -p PRESET command.
-</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
     <term>-P protver</term>
     <listitem>
      <para>Sets the protocol version to use for sending commands.
@@ -261,9 +253,10 @@ including optional parameters, run "ubxtool -h -v 2".
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term>MODEL</term>
+       <term>MODEL,model</term>
        <listitem>
-        <para>Configure the Dynamic Platform Model. (UBX-CFG-NAV5).
+        <para>Configure the Dynamic Platform Model to model. (UBX-CFG-NAV5).
+Model is the decimal number of the desired mode.
 </para>
        </listitem>
       </varlistentry>

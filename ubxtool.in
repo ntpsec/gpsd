@@ -111,8 +111,6 @@ opts = {
     'input_speed': 9600,
     # default input wait time -w in seconds
     'input_wait': 2.0,
-    # optional mode to -p P
-    'mode': None,
     # the name of an OAF file, extension .jpo
     'oaf_name': None,
     # optional argument to -d/-e
@@ -6584,13 +6582,16 @@ Always double check with "-p CFG-GNSS".
         m_data[0] = 1        # NMEA
         gps_model.gps_send(6, 0x02, m_data)
 
-    def send_cfg_nav5_model(self):
-        """UBX-CFG-NAV5, set dynamic platform model"""
+    def send_cfg_nav5_model(self, args):
+        """MODEL, UBX-CFG-NAV5, set/poll dynamic platform model"""
 
         m_data = bytearray(36)
-        m_data[0] = 1        # just setting dynamic model
-        m_data[1] = 0        # just setting dynamic model
-        m_data[2] = opts["mode"]
+        if 0 < len(args):
+            m_data[0] = 1        # just setting dynamic model
+            m_data[1] = 0        # just setting dynamic model
+            m_data[2] = int(args[0])
+        # else:
+        # Just polling
 
         gps_model.gps_send(6, 0x24, m_data)
 
@@ -6603,15 +6604,16 @@ Always double check with "-p CFG-GNSS".
             m_data.extend([rate])
         gps_model.gps_send(6, 1, m_data)
 
-    def send_cfg_pms(self):
+    def send_cfg_pms(self, args):
         """UBX-CFG-PMS, poll/set Power Management Settings"""
 
-        if opts["mode"] is not None:
+        if 0 < len(args):
             m_data = bytearray(8)
             # set powerSetupValue to mode
-            m_data[1] = opts["mode"]
+            m_data[1] = int(args[0])
             # leave period and onTime zero, which breaks powerSetupValue = 3
         else:
+            # just poll
             m_data = bytearray(0)
 
         gps_model.gps_send(6, 0x86, m_data)
@@ -6953,10 +6955,14 @@ Always double check with "-p CFG-GNSS".
                     "opt": 0},
         # UBX-CFG-NAV5
         "MODEL": {"command": send_cfg_nav5_model,
-                  "help": "set UBX-CFG-NAV5 Dynamic Platform Model"},
+                  "help": "get/set UBX-CFG-NAV5 Dynamic Platform Model. "
+                          "MODEL,model",
+                  "args": 1},
         # UBX-CFG-PMS
         "PMS": {"command": send_cfg_pms,
-                "help": "set UBX-CFG-PMS power management settings"},
+                "help": "get/set UBX-CFG-PMS power management settings. "
+                        "PMS,power where power is powerSetupValue.",
+                "args": 1},
         # UBX-CFG-CFG
         "RESET": {"command": send_cfg_cfg,
                   "help": "UBX-CFG-CFG reset config to defaults",
@@ -7111,7 +7117,7 @@ Always double check with "-p CFG-GNSS".
         # UBX-LOG-FINDTIME
         "LOG-FINDTIME": {"command": send_log_findtime,
                     "help": "search logs by time.  LOG-FINDTIME,y,m,d,h,m,s",
-                    "args": 1},
+                    "args": 6},
         # UBX-LOG-INFO
         "LOG-INFO": {"command": send_poll, "opt": [0x21, 0x08],
                      "help": "poll UBX-LOG-INFO",
@@ -7586,7 +7592,6 @@ def usage():
           '       -g I          get config item I\n'
           '       -h            print help, increase -v for extra help\n'
           '       -i P          port ID # (interface) for UBX-CFG-PRT\n'
-          '       -m M          optional mode to -p P\n'
           '       -P P          Protocol version for sending commands\n'
           '                     default: %s\n'
           '       -p P          send a preset query P to GPS\n'
@@ -7677,8 +7682,6 @@ for (opt, val) in options:
     elif opt == '-i':
         valnum = gps_model.port_id_map.get(val.upper())
         opts['port'] = valnum if valnum is not None else int(val)
-    elif opt == '-m':
-        opts['mode'] = int(val)
     elif opt == '-P':
         # to handle vesion like 23.01
         opts['protver'] = float(val)
@@ -7820,10 +7823,6 @@ try:
 
             args = poll.split(',')
             poll = args[0]
-
-            if 'MODEL' == poll:
-                if opts["mode"] is None:
-                    opts["mode"] = 0   # default to portable model
 
             if poll in gps_model.commands:
                 command = gps_model.commands[poll]
