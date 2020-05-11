@@ -9,7 +9,7 @@
 # Submitter: Hamish <hamish_nospam@yahoo.com>
 # Date: 2005-03-11
 #
-# This file is Copyright (c) 2010 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.
 #
 $GPRMC,225308,A,4527.458,S,16709.165,E,000.0,094.5,060601,024.1,E*6D

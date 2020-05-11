@@ -6,7 +6,7 @@
 #       running Android 9 (Pie)
 # Note: What is PGLOR??
 #
-# This file is Copyright (c) 2010 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.
 #
 $PGLOR,1,SPS,280930179,0,-1,0,0,12,,*37

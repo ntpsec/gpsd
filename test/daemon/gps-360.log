@@ -4,7 +4,7 @@
 # Date: 2006-07-27
 # Location: Regina, Saskatchewan, Canada, 50N104W
 #
-# This file is Copyright (c) 2010 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.
 #
 $GPGSA,A,3,28,11,26,29,,,,,,,,,12.9,12.5,3.1*39

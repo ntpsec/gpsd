@@ -5,7 +5,7 @@
 # Location: Baned, OR 44.06N 121.31W
 # Note: Unique use of GNGSA
 #
-# This file is Copyright (c) 2010 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.
 #
 $GPGGA,020935.000,4404.1351,N,12118.8556,W,1,08,0.9,1123.9,M,-19.6,M,,0000*5E

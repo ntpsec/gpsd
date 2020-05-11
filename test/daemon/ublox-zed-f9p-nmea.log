@@ -7,7 +7,7 @@
 #
 # Note: NMEA Only
 #
-# This file is Copyright (c) 2010 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.
 #
 $GNRMC,003956.00,A,4552.65403,S,17030.00668,E,0.025,,120419,,,A,V*07

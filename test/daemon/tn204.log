@@ -5,7 +5,7 @@
 #
 # The NMEA looks like Garmin.
 #
-# This file is Copyright (c) 2010 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.
 #
 $GPRMC,230148,A,3348.605,N,11821.126,W,000.0,209.4,261002,013.8,E*6B

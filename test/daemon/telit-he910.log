@@ -5,7 +5,7 @@
 # Location: 50 50.4126,N  004 20.8228,E
 # Notes: quad-band GSM/GPRS/EDGE plus GPS module
 #
-# This file is Copyright (c) 2010 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.
 #
 $GPGGA,,,,,,0,,,,M,,M,,*66

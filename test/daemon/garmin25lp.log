@@ -3,7 +3,7 @@
 # Submitter: Daniele Giangrazi <daniele.giangrazi@elital.net>
 # Date: 2005-03-22
 #
-# This file is Copyright (c) 2010 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.
 #
 $GPRMC,120316,V,4221.4394,N,01321.9948,E,000.0,000.0,150305,001.4,E*63

@@ -5,7 +5,7 @@
 # Submitted by: "David Findlay" <david@davsoft.com.au>
 # Description: Starts stationary, then moving 5m due west, 10m due south, then reversing course
 #
-# This file is Copyright (c) 2010 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.
 #
 $GPGSV,3,3,12,24,58,220,,26,17,053,,29,20,063,,30,60,311,44*7F

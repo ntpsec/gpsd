@@ -7,7 +7,7 @@
 # Notes: Emits GLONASS sentences. Mostly 2D fixes but it loses
 #	satellite lock near the end and the sentence mix changes.
 #
-# This file is Copyright (c) 2010 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.
 #
 $GNGGA,135651.997,5543.0328,N,03724.7198,E,1,06,01.8,165.6,M,14.6,M,,*73

@@ -8,7 +8,7 @@
 #       From the Telit App note:
 # https://rutronik-tec.com/wp-content/uploads/2019/02/Telit_Cellular_WeekRollover_Application_Note_r0.pdf
 #
-# This file is Copyright (c) 2010 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.
 #
 $GPRMC,,V,,,,,,,,,,N*53

@@ -4,7 +4,7 @@
 # Comment: Only emits GPRMC when it has a fix.
 # Date: 2005-03-12
 #
-# This file is Copyright (c) 2010 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.
 #
 $GPRMC,093802,A,5213.1439,N,02100.6511,E,000.0,226.0,160305,004.2,E,D*15

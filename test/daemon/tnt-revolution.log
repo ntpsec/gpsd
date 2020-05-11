@@ -6,7 +6,7 @@
 # Notes: Collected remotely from jon Schleuter's nog.yazug.com
 #        Can't be transmitting angles in degrees, heading figures are too large.
 #
-# This file is Copyright (c) 2010 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.
 #
 $PTNTHTM,14223,N,169,N,-43,N,13641,2454*15

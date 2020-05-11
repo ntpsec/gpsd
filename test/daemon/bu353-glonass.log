@@ -4,7 +4,7 @@
 # Date: 2014-05-23
 # Comment: Contains GLONASS sentences (look for GN talker ID)
 #
-# This file is Copyright (c) 2010 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.
 #
 $GNGSA,A,3,03,19,27,13,,,,,,,,,2.75,2.56,1.00*10

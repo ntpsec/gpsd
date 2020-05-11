@@ -7,7 +7,7 @@
 # Note the crazy times in the RMC, ZDA GGA messages.
 #   Like: 32:25.000, 32:27.000, 32:26.000
 #
-# This file is Copyright (c) 2010 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.
 #
 $GPGGA,193221.00,2037.72792,N,08704.08478,W,1,04,1.7,-30.40,M,-13.9,M,,*7D

@@ -5,7 +5,7 @@
 # Time: 7:53 PST
 # Location: +34? 1' 58.80", -117? 44' 49.56"
 #
-# This file is Copyright (c) 2010 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.
 #
 $GPGGA,145243.000,3401.9764,N,11744.8274,W,2,10,0.87,234.7,M,-33.2,M,0000,0000*5F

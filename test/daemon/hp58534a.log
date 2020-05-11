@@ -3,7 +3,7 @@
 # Date: 2010-10-26
 # Notes: shows GPZDA bug in gpsd 2.95
 #
-# This file is Copyright (c) 2010 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.
 $GPGGA,222449,3349.0337,S,01843.9282,E,1,07,02.31,000115.4,M,0033.3,M,,
 $GPZDA,222449,25,10,2010,+00,00

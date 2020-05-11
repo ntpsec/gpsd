@@ -3,7 +3,7 @@
 # Submitter:  "Kévin REDON" <kevredon@gmail.com>
 # Date: 2006-07-22
 #
-# This file is Copyright (c) 2010 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.
 #
 $GPGGA,185244.000,4854.2575,N,00219.9816,E,1,05,1.7,124.4,M,47.3,M,,0000*56
