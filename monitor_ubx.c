@@ -95,7 +95,7 @@ static void display_nav_svinfo(unsigned char *buf, size_t data_len)
     unsigned i, nchan;
 
     /* very coarse sanity check (minimal length for valid message reached?) */
-    if (data_len < 56)
+    if (data_len < 8)
         return;
 
     nchan = getub(buf, 4);
