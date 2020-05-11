@@ -41,7 +41,7 @@ webgps.py without losing accumulated satellite tracks.
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
 #
-# This file is Copyright 2010-2020 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 
 from __future__ import absolute_import, print_function, division

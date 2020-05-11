@@ -1,7 +1,7 @@
 #!@PYSHEBANG@
 # @GENERATED@
 #
-# This file is Copyright 2010-2020 by the GPSD project
+# This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 #
 # This code runs compatibly under Python 2 and 3.x for x >= 2.

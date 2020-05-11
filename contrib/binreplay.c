@@ -1,7 +1,7 @@
 /*
  * Stuff the contents of a specified file into a specified tty.
  *
- * This file is Copyright 2010-2018 by the GPSD project
+ * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
 #include <err.h>
