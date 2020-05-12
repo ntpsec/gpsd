@@ -6786,8 +6786,24 @@ Always double check with "-p CFG-GNSS".
         m_data[9] = 0      # reserved
         gps_model.gps_send(0x21, 0x0e, m_data)
 
+    def send_log_retrieve(self, args):
+        """UBX-LOG-RETRIEVE, gets logs from start,count"""
+        m_data = bytearray(12)
+
+        # defaults
+        startNumber = 0
+        entryCount = 256      # max 256
+
+        if 0 < len(args):
+            startNumber = int(args[0])
+            if 1 < len(args):
+                entryCount = int(args[1])
+
+        struct.pack_into('<LLB', m_data, 0, startNumber, entryCount, 0)
+        gps_model.gps_send(0x21, 0x09, m_data)
+
     def send_poll(self, m_data):
-        """generic send poll request"""
+        """generic send pomonthll request"""
         gps_model.gps_send(m_data[0], m_data[1], m_data[2:])
 
     CFG_ANT = [0x06, 0x13]
@@ -7116,18 +7132,19 @@ Always double check with "-p CFG-GNSS".
                       "minVer": 14},
         # UBX-LOG-FINDTIME
         "LOG-FINDTIME": {"command": send_log_findtime,
-                    "help": "search logs by time.  LOG-FINDTIME,y,m,d,h,m,s",
-                    "args": 6},
+                         "help": "search logs by time. "
+                                 "LOG-FINDTIME,y,m,d,h,m,s",
+                         "args": 6},
         # UBX-LOG-INFO
         "LOG-INFO": {"command": send_poll, "opt": [0x21, 0x08],
                      "help": "poll UBX-LOG-INFO",
                      "minVer": 14},
         # UBX-LOG-RETRIEVE
-        "LOG-RETRIEVE": {"command": send_poll,
-                         "opt": [0x21, 9, 0, 0, 0, 0, 0, 1, 0, 0,
-                                 0, 0, 0, 0],
-                         "help": "send UBX-LOG-RETRIEVE",
-                         "minVer": 14},
+        "LOG-RETRIEVE": {"command": send_log_retrieve,
+                         "help": "send UBX-LOG-RETRIEVE. "
+                                 "LOG-RETRIEVE,start,count",
+                         "minVer": 14,
+                         "args": 2},
         # UBX-LOG-RETRIEVEBATCH
         # Assume 23 is close enough to the proper 23.01
         "LOG-RETRIEVEBATCH": {"command": send_poll,
