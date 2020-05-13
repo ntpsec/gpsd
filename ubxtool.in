@@ -374,6 +374,8 @@ class ubx(object):
     # 6 - Description
     cfgs = (
         # CFG-GEOFENCE-
+        ("CFG-GEOFENCE", 0x2024FFFF, "", 0, "",
+         "get all CFG-GEOFENCE"),
         ("CFG-GEOFENCE-CONFLVL", 0x20240011, "E1", 1, "",
          "Required confidence level for state evaluation"),
         ("CFG-GEOFENCE-USE_PIO", 0x10240012, "L", 1, "",
@@ -415,6 +417,8 @@ class ubx(object):
         ("CFG-GEOFENCE-FENCE4_RAD", 0x40240053, "U4", 0.01, "m",
          "Radius of the fourth geofence circle"),
         # CFG-HW
+        ("CFG-HW", 0x10a3FFFF, "", 0, "",
+         "get all CFG-HW"),
         ("CFG-HW-ANT_CFG_VOLTCTRL", 0x10a3002e, "L", 1, "",
          "Active antenna voltage control flag"),
         ("CFG-HW-ANT_CFG_SHORTDET", 0x10a3002f, "L", 1, "",
@@ -438,6 +442,8 @@ class ubx(object):
         ("CFG-HW-ANT_SUP_OPEN_PIN", 0x20a30038, "U1", 1, "",
          "ANT2 PIO number"),
         # CFG-I2C
+        ("CFG-I2C", 0x2051ffff, "", 0, "",
+         "get all CFG-I2C"),
         ("CFG-I2C-ADDRESS", 0x20510001, "U1", 1, "",
          "I2C slave address of the receiver"),
         ("CFG-I2C-EXTENDEDTIMEOUT", 0x10510002, "L", 1, "",
@@ -445,6 +451,8 @@ class ubx(object):
         ("CFG-I2C-ENABLED", 0x10510003, "L", 1, "",
          "Flag to indicate if the I2C interface should be enabled"),
         # CFG-I2CINPROT
+        ("CFG-I2CINPROT", 0x1071ffff, "", 0, "",
+         "get all CFG-I2CINPROT"),
         ("CFG-I2CINPROT-UBX", 0x10710001, "L", 1, "",
          "Flag to indicate if UBX should be an input on I2C"),
         ("CFG-I2CINPROT-NMEA", 0x10710002, "L", 1, "",
@@ -454,6 +462,8 @@ class ubx(object):
         ("CFG-I2CINPROT-RTCM3X", 0x10710004, "L", 1, "",
          "Flag to indicate if RTCM3X should be input on I2C"),
         # CFG-I2COUTPROT
+        ("CFG-I2COUTPROT", 0x1072ffff, "", 0, "",
+         "get all CFG-I2COUTPROT"),
         ("CFG-I2COUTPROT-UBX", 0x10720001, "L", 1, "",
          "Flag to indicate if UBX should be an output on I2C"),
         ("CFG-I2COUTPROT-NMEA", 0x10720002, "L", 1, "",
@@ -461,6 +471,8 @@ class ubx(object):
         ("CFG-I2COUTPROT-RTCM3X", 0x10720004, "L", 1, "",
          "Flag to indicate if RTCM3X should be an output on I2C"),
         # CFG-INFMSG-
+        ("CFG-INFMSG", 0x2092ffff, "", 0, "",
+         "get all CFG-INFMSG"),
         ("CFG-INFMSG-UBX_I2C", 0x20920001, "X1", 1, "",
          "Information message enable flags for UBX protocol on I2C"),
         ("CFG-INFMSG-UBX_UART1", 0x20920002, "X1", 1, "",
@@ -482,6 +494,8 @@ class ubx(object):
         ("CFG-INFMSG-NMEA_SPI", 0x2092000a, "X1", 1, "",
          "Information message enable flags for NMEA protocol on SPI"),
         # CFG-ITFM-
+        ("CFG-ITFM", 0x2041ffff, "", 0, "",
+         "get all CFG-ITFM"),
         ("CFG-ITFM-BBTHRESHOLD", 0x20410001, "U1", 1, "",
          "Broadband jamming detection threshold"),
         ("CFG-ITFM-CWTHRESHOLD", 0x20410002, "U1", 1, "",
@@ -493,6 +507,8 @@ class ubx(object):
         ("CFG-ITFM-ENABLE_AUX", 0x10410013, "L", 1, "",
          "Set to true to scan auxiliary bands"),
         # CFG-LOGFILTER-
+        ("CFG-LOGFILTER", 0x10deffff, "", 0, "",
+         "get all CFG-LOGFILTER"),
         ("CFG-LOGFILTER-RECORD_ENA", 0x10de0002, "L", 1, "",
          "Recording enabled"),
         ("CFG-LOGFILTER-ONCE_PER_WAKE_UP_ENA", 0x10de0003, "L", 1, "",
@@ -508,12 +524,16 @@ class ubx(object):
         ("CFG-LOGFILTER-POSITION_THRS", 0x40de0008, "U4", 1, "m",
          "Position threshold"),
         # CFG-MOT-
+        ("CFG-MOT", 0x3025ffff, "", 0, "",
+         "get all CFG-MOT"),
         ("CFG-MOT-GNSSSPEED_THRS", 0x20250038, "U1", 0.01, "m/s",
          "GNSS speed threshold below which platform is considered "
          "as stationary"),
         ("CFG-MOT-GNSSDIST_THRS", 0x3025003b, "U2", 1, "",
          "Distance above which GNSS-based stationary motion is exit"),
         # CFG-MSGOUT-NMEA
+        ("CFG-MSGOUT", 0x2091ffff, "", 0, "",
+         "get all CFG-MSGOUT"),
         ("CFG-MSGOUT-NMEA_ID_DTM_I2C", 0x209100a6, "U1", 1, "",
          "Output rate of the NMEA-GX-DTM message on port I2C"),
         ("CFG-MSGOUT-NMEA_ID_DTM_SPI", 0x209100aa, "U1", 1, "",
@@ -1270,9 +1290,13 @@ class ubx(object):
         ("CFG-MSGOUT-UBX_TIM_VRFY_USB", 0x20910095, "U1", 1, "",
          "Output rate of the UBX-TIM-VRFY message on port USB"),
         # CFG-NAVHPG-
+        ("CFG-NAVHPG", 0x2014ffff, "", 0, "",
+         "get all CFG-NAVHPG"),
         ("CFG-NAVHPG-DGNSSMODE", 0x20140011, "E1", 1, "",
          "Differential corrections mode"),
         # CFG-NAVSPG-
+        ("CFG-NAVSPG", 0x2011ffff, "", 0, "",
+         "get all CFG-NAVSPG"),
         ("CFG-NAVSPG-FIXMODE", 0x20110011, "E1", 1, "",
          "Position fix mode"),
         ("CFG-NAVSPG-INIFIX3D", 0x10110013, "L", 1, "",
@@ -1337,6 +1361,8 @@ class ubx(object):
         ("CFG-NAVSPG-CONSTR_DGNSSTO", 0x201100c4, "U1", 1, "s",
          "DGNSS timeout"),
         # CFG-NMEA-
+        ("CFG-NMEA", 0x2093ffff, "", 0, "",
+         "get all CFG-NMEA"),
         ("CFG-NMEA-PROTVER", 0x20930001, "E1", 1, "",
          "NMEA protocol version"),
         ("CFG-NMEA-MAXSVS", 0x20930002, "E1", 1, "",
@@ -1380,6 +1406,8 @@ class ubx(object):
         ("CFG-NMEA-BDSTALKERID", 0x30930033, "U2", 1, "",
          "BeiDou Talker ID"),
         # CFG-ODO-
+        ("CFG-ODO", 0x1022ffff, "", 0, "",
+         "get all CFG-ODO"),
         ("CFG-ODO-USE_ODO", 0x10220001, "L", 1, "",
          "Use odometer"),
         ("CFG-ODO-USE_COG", 0x10220002, "L", 1, "",
@@ -1400,6 +1428,8 @@ class ubx(object):
         ("CFG-ODO-VELLPGAIN", 0x20220031, "U1", 1, "",
          "Velocity low-pass filter level"),
         # CFG-RATE-
+        ("CFG-RATE", 0x3021ffff, "", 0, "s",
+         "get all CFG-ODO"),
         ("CFG-RATE-MEAS", 0x30210001, "U2", 0.001, "s",
          "Nominal time between GNSS measurements"),
         ("CFG-RATE-NAV", 0x30210002, "U2", 1, "",
@@ -1407,6 +1437,8 @@ class ubx(object):
         ("CFG-RATE-TIMEREF", 0x20210003, "E1", 1, "",
          "Time system to which measurements are aligned"),
         # CFG-RINV-
+        ("CFG-RINV", 0x10c7ffff, "", 0, "",
+         "get all CFG-RINV"),
         ("CFG-RINV-DUMP", 0x10c70001, "L", 1, "",
          "Dump data at startup"),
         ("CFG-RINV-BINARY", 0x10c70002, "L", 1, "",
@@ -1422,6 +1454,8 @@ class ubx(object):
         ("CFG-RINV-CHUNK3", 0x50c70007, "X8", 1, "",
          "Data bytes 25-30 (MSB)"),
         # CFG-SBAS-
+        ("CFG-SBAS", 0x1036ffff, "", 0, "",
+         "get all CFG-SBAS"),
         ("CFG-SBAS-USE_TESTMODE", 0x10360002, "L", 1, "",
          "Use SBAS data when it is in test mode"),
         ("CFG-SBAS-USE_RANGING", 0x10360003, "L", 1, "",
@@ -1433,6 +1467,8 @@ class ubx(object):
         ("CFG-SBAS-PRNSCANMASK", 0x50360006, "X8", 1, "",
          "SBAS PRN search configuration"),
         # CFG-SIGNAL-
+        ("CFG-SIGNAL", 0x1031ffff, "", 0, "",
+         "get all CFG-SIGNAL"),
         ("CFG-SIGNAL-GPS_ENA", 0x1031001f, "L", 1, "",
          "GPS enable"),
         ("CFG-SIGNAL-GPS_L1CA_ENA", 0x10310001, "L", 1, "",
@@ -1470,6 +1506,8 @@ class ubx(object):
         ("CFG-SIGNAL-GLO_L2_ENA", 0x1031001a, "L", 1, "",
          "GLONASS L2"),
         # CFG-SPI-
+        ("CFG-SPI", 0x1064ffff, "", 0, "",
+         "get all CFG-SPI"),
         ("CFG-SPI-MAXFF", 0x20640001, "U1", 1, "",
          "Number of bytes containing 0xFF to receive before "
          "switching off reception."),
@@ -1482,6 +1520,8 @@ class ubx(object):
         ("CFG-SPI-ENABLED", 0x10640006, "L", 1, "",
          "Flag to indicate if the SPI interface should be enabled"),
         # CFG-SPIINPROT-
+        ("CFG-SPIINPROT", 0x1079ffff, "", 0, "",
+         "get all CFG-SPIINPROT"),
         ("CFG-SPIINPROT-UBX", 0x10790001, "L", 1, "",
          "Flag to indicate if UBX should be an input protocol on SPI"),
         ("CFG-SPIINPROT-NMEA", 0x10790002, "L", 1, "",
@@ -1491,6 +1531,8 @@ class ubx(object):
         ("CFG-SPIINPROT-RTCM3X", 0x10790004, "L", 1, "",
          "Flag to indicate if RTCM3X should be an input protocol on SPI"),
         # CFG-SPIOUTPROT-
+        ("CFG-SPIOUTPROT", 0x107affff, "", 0, "",
+         "get all CFG-SPIOUTPROT"),
         ("CFG-SPIOUTPROT-UBX", 0x107a0001, "L", 1, "",
          "Flag to indicate if UBX should be an output protocol on SPI"),
         ("CFG-SPIOUTPROT-NMEA", 0x107a0002, "L", 1, "",
@@ -1498,6 +1540,8 @@ class ubx(object):
         ("CFG-SPIOUTPROT-RTCM3X", 0x107a0004, "L", 1, "",
          "Flag to indicate if RTCM3X should be an output protocol on SPI"),
         # CFG-TMODE-
+        ("CFG-TMODE", 0x2003ffff, "", 0, "",
+         "get all CFG-TMODE"),
         ("CFG-TMODE-MODE", 0x20030001, "E1", 1, "",
          "Receiver mode"),
         ("CFG-TMODE-POS_TYPE", 0x20030002, "E1", 1, "",
@@ -1534,6 +1578,8 @@ class ubx(object):
         ("CFG-TMODE-SVIN_ACC_LIMIT", 0x40030011, "U4", 0.1, "mm",
          "Survey-in position accuracy limit"),
         # CFG-TP-
+        ("CFG-TP", 0x3005ffff, "", 0, "",
+         "get all CFG-TP"),
         ("CFG-TP-PULSE_DEF", 0x20050023, "E1", 1, "",
          "Determines whether the time pulse is interpreted as frequency "
          "or period?"),
@@ -1603,6 +1649,8 @@ class ubx(object):
         ("CFG-TP-TIMEGRID_TP2", 0x20050017, "E1", 1, "",
          "Time grid to use (TP2)"),
         # CFG-UART1-
+        ("CFG-UART1", 0x4052ffff, "", 0, "",
+         "get all CFG-UART1"),
         ("CFG-UART1-BAUDRATE", 0x40520001, "U4", 1, "",
          "The baud rate that should be configured on the UART1"),
         ("CFG-UART1-STOPBITS", 0x20520002, "E1", 1, "",
@@ -1614,6 +1662,8 @@ class ubx(object):
         ("CFG-UART1-ENABLED", 0x10520005, "L", 1, "",
          "Flag to indicate if the UART1 should be enabled"),
         # CFG-UART1INPROT
+        ("CFG-UART1INPROT", 0x1073ffff, "", 0, "",
+         "get all CFG-UART1INPROT"),
         ("CFG-UART1INPROT-UBX", 0x10730001, "L", 1, "",
          "Flag to indicate if UBX should be an input protocol on UART1"),
         ("CFG-UART1INPROT-NMEA", 0x10730002, "L", 1, "",
@@ -1623,6 +1673,8 @@ class ubx(object):
         ("CFG-UART1INPROT-RTCM3X", 0x10730004, "L", 1, "",
          "Flag to indicate if RTCM3X should be an input protocol on UART1"),
         # CFG-UART1OUTPROT
+        ("CFG-UART1OUTPROT", 0x1074ffff, "", 0, "",
+         "get all CFG-UART1OUTPROT"),
         ("CFG-UART1OUTPROT-UBX", 0x10740001, "L", 1, "",
          "Flag to indicate if UBX should be an output protocol on UART1"),
         ("CFG-UART1OUTPROT-NMEA", 0x10740002, "L", 1, "",
@@ -1630,6 +1682,8 @@ class ubx(object):
         ("CFG-UART1OUTPROT-RTCM3X", 0x10740004, "L", 1, "",
          "Flag to indicate if RTCM3X should be an output protocol on UART1"),
         # CFG-UART2-
+        ("CFG-UART2", 0x4053FFFF, "", 0, "",
+         "get all CFG-UART2"),
         ("CFG-UART2-BAUDRATE", 0x40530001, "U4", 1, "",
          "The baud rate that should be configured on the UART2"),
         ("CFG-UART2-STOPBITS", 0x20530002, "E1", 1, "",
@@ -1643,6 +1697,8 @@ class ubx(object):
         ("CFG-UART2-REMAP", 0x10530006, "L", "1", "",
          "UART2 Remapping"),
         # CFG-UART1INPROT
+        ("CFG-UART2INPROT", 0x1075ffff, "", 0, "",
+         "get all CFG-UART2INPROT"),
         ("CFG-UART2INPROT-UBX", 0x10750001, "L", 1, "",
          "Flag to indicate if UBX should be an input protocol on UART2"),
         ("CFG-UART2INPROT-NMEA", 0x10750002, "L", 1, "",
@@ -1651,7 +1707,9 @@ class ubx(object):
          "Flag to indicate if RTCM2X should be an input protocol on UART2"),
         ("CFG-UART2INPROT-RTCM3X", 0x10750004, "L", 1, "",
          "Flag to indicate if RTCM3X should be an input protocol on UART2"),
-        # CFG-UART1OUTPROT
+        # CFG-UART2OUTPROT
+        ("CFG-UART2OUTPROT", 0x1076ffff, "", 0, "",
+         "get all CFG-UART2OUTPROT"),
         ("CFG-UART2OUTPROT-UBX", 0x10760001, "L", 1, "",
          "Flag to indicate if UBX should be an output protocol on UART2"),
         ("CFG-UART2OUTPROT-NMEA", 0x10760002, "L", 1, "",
@@ -1659,6 +1717,8 @@ class ubx(object):
         ("CFG-UART2OUTPROT-RTCM3X", 0x10760004, "L", 1, "",
          "Flag to indicate if RTCM3X should be an output protocol on UART2"),
         # CFG-USB-
+        ("CFG-USB", 0x1065ffff, "", 0, "",
+         "get all CFG-USB"),
         ("CFG-USB-ENABLED", 0x10650001, "L", 1, "",
          "Flag to indicate if the USB interface should be enabled"),
         ("CFG-USB-SELFPOW", 0x10650002, "L", 1, "",
@@ -1694,6 +1754,8 @@ class ubx(object):
         ("CFG-USB-SERIAL_NO_STR3", 0x50650018, "X8", 1, "",
          "Serial number string characters 24-31"),
         # CFG-USB-INPROT
+        ("CFG-USBINPROT", 0x1077ffff, "", 0, "",
+         "get all CFG-USBINPROT"),
         ("CFG-USBINPROT-UBX", 0x10770001, "L", 1, "",
          "Flag to indicate if UBX should be an input protocol on USB"),
         ("CFG-USBINPROT-NMEA", 0x10770002, "L", 1, "",
@@ -1703,6 +1765,8 @@ class ubx(object):
         ("CFG-USBINPROT-RTCM3X", 0x10770004, "L", 1, "",
          "Flag to indicate if RTCM3X should be an input protocol on USB"),
         # CFG-USB-OUTPROT
+        ("CFG-USBOUTPROT", 0x1078ffff, "", 0, "",
+         "get all CFG-USBOUTPROT"),
         ("CFG-USBOUTPROT-UBX", 0x10780001, "L", 1, "",
          "Flag to indicate if UBX should be an output protocol on USB"),
         ("CFG-USBOUTPROT-NMEA", 0x10780002, "L", 1, "",
@@ -1757,6 +1821,50 @@ class ubx(object):
 
         return cfg_type
 
+    cfg_by_key_group = {0x03: "TMODE",
+                        0x05: "TP",
+                        0x11: "NAVSPG",
+                        0x14: "NAVHPG",
+                        0x21: "RATE",
+                        0x22: "ODO",
+                        0x24: "GEOFENCE",
+                        0x25: "MOT",
+                        0x31: "SIGNAL",
+                        0x41: "ITFM",
+                        0x51: "I2C",
+                        0x52: "UART1",
+                        0x53: "UART2",
+                        0x64: "SPI",
+                        0x65: "USB",
+                        0x71: "I2CINPROT",
+                        0x72: "I2COUTPROT",
+                        0x73: "UART1INPROT",
+                        0x74: "UART1OUTPROT",
+                        0x75: "UART2INPROT",
+                        0x76: "UART2OUTPROT",
+                        0x77: "USBOUTPROT",
+                        0x78: "USBOUTPROT",
+                        0x79: "SPIINPROT",
+                        0x7a: "SPIOUTPROT",
+                        0x91: "MSGOUT",
+                        0x92: "INFMSG",
+                        0x93: "NMEA",
+                        0xa2: "TXREADY",
+                        0xa3: "HW",
+                        0xc7: "RINV",
+                        0xde: "LOGFILTER",
+                        }
+
+    cfg_by_key_kmap = {0: "Z0",
+                       1: "L",
+                       2: "U1",
+                       3: "U2",
+                       4: "U4",
+                       5: "U8",
+                       6: "Z6",
+                       7: "Z7",
+                       }
+
     def cfg_by_key(self, key):
         """Find a config item by key"""
 
@@ -1765,18 +1873,14 @@ class ubx(object):
                 return item
 
         # not found, build a fake item, guess on decode
-        name = "CFG-%u-%u" % ((key >> 16) & 0xff, key & 0xff)
-        kmap = {0: "Z0",
-                1: "L",
-                2: "U1",
-                3: "U2",
-                4: "U4",
-                5: "U8",
-                6: "Z6",
-                7: "Z7",
-                }
+        group = (key >> 16) & 0xff
+        group_name = index_s(group, self.cfg_by_key_group)
+        if "Unk" == group_name:
+            group_name = str(group)
+
+        name = "CFG-%s-%u" % (group_name, key & 0xff)
         size = (key >> 28) & 0x07
-        item = (name, key, kmap[size], 1, "Unk", "Unknown")
+        item = (name, key, self.cfg_by_key_kmap[size], 1, "Unk", "Unknown")
 
         return item
 
@@ -7693,7 +7797,7 @@ for (opt, val) in options:
     elif opt == '-f':
         opts['input_file_name'] = val
     elif opt == '-g':
-        opts['get_item'].append(val)
+        opts['get_item'].append(val.upper())
     elif opt in ('-h', '-?'):
         opts['help'] = True
     elif opt == '-i':
