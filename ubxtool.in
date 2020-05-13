@@ -1381,6 +1381,8 @@ class ubx(object):
          "Disable reporting of GPS satellites"),
         ("CFG-NMEA-FILT_SBAS", 0x10930012, "L", 1, "",
          "Disable reporting of SBAS satellites"),
+        ("CFG-NMEA-FILT_GAL", 0x10930013, "L", 1, "",
+         "Disable reporting of GALILEO satellites"),
         ("CFG-NMEA-FILT_QZSS", 0x10930015, "L", 1, "",
          "Disable reporting of QZSS satellites"),
         ("CFG-NMEA-FILT_GLO", 0x10930016, "L", 1, "",
@@ -1648,6 +1650,19 @@ class ubx(object):
          "Set time pulse polarity (TP2)"),
         ("CFG-TP-TIMEGRID_TP2", 0x20050017, "E1", 1, "",
          "Time grid to use (TP2)"),
+        # CFG-TXREADY-
+        ("CFG-TXREADY", 0x10a2ffff, "", 0, "",
+         "get all CFG-TXREADY"),
+        ("CFG-TXREADY-ENABLED", 0x10a20001, "L", 1, "",
+         "Flag to indicate if tx ready pin mechanism should be enabled"),
+        ("CFG-TXREADY-POLARITY", 0x10a20002, "L", 1, "",
+         "The polarity of the tx ready pin:false:high-active, true:low-active"),
+        ("CFG-TXREADY-PIN", 0x20a20003, "U1", 1, "",
+         "Pin number to use for the tx ready functionality"),
+        ("CFG-TXREADY-THRESHOLD", 0x30a20004, "U2", 1, "",
+         "Amount of data ready on interface before triggering tx ready pin"),
+        ("CFG-TXREADY-INTERFACE", 0x20a20005, "E1", 1, "",
+         "Interface where the tx ready feature should be linked to"),
         # CFG-UART1-
         ("CFG-UART1", 0x4052ffff, "", 0, "",
          "get all CFG-UART1"),
@@ -1789,7 +1804,7 @@ class ubx(object):
                      "I8": (8, "<q", "i"),
                      "L": (1, "<B", "u"),
                      "R4": (4, "<f", "f"),
-                     "R8": (2, "<d", "f"),
+                     "R8": (8, "<d", "f"),
                      "U1": (1, "<B", "u"),
                      "U2": (2, "<H", "u"),
                      "U4": (4, "<L", "u"),
@@ -3098,6 +3113,8 @@ Save and Load non-volatile storage data"""
 
     def cfg_tmode2(self, buf):
         """UBX-CFG-TMODE2 decode, Time Mode Settings 2"""
+
+        # u-blox 6, 7, 8 and 0
 
         u = struct.unpack_from('<BBHlllLLL', buf, 0)
         s = ('  timeMode %u reserved1 %u usage %#x\n'
