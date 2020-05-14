@@ -6948,12 +6948,9 @@ Always double check with "-p CFG-GNSS".
         # position
         struct.pack_into('<BBH', m_data, 0, 0, 0, position)
 
+        k_data = bytearray(4)
         for key in keys:
-            k_data = bytearray(4)
-            k_data[0] = (key) & 0xff
-            k_data[1] = (key >> 8) & 0xff
-            k_data[2] = (key >> 16) & 0xff
-            k_data[3] = (key >> 24) & 0xff
+            struct.pack_into('<L', k_data, 0, key)
             m_data.extend(k_data)
 
         if layer is None:
