@@ -8115,6 +8115,10 @@ try:
         nvs = []
         for nv in opts['set_item']:
             parts = nv.split(',')
+            if 1 >= len(parts):
+                sys.stderr.write('%s: ERROR: item %s missing value to set\n' %
+                                 (PROG_NAME, parts[0]))
+                exit(1)
             item = gps_model.cfg_by_name(parts[0])
             if item:
                 nvs.append(nv)
