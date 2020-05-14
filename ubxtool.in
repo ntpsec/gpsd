@@ -8163,6 +8163,7 @@ try:
         keys = []
         layer = None
         position = 0
+        end = None
         for item in opts['get_item']:
             parts = item.split(',')
             item = gps_model.cfg_by_name(parts[0])
@@ -8172,12 +8173,25 @@ try:
                 sys.stderr.write('%s: ERROR: item %s unknown\n' %
                                  (PROG_NAME, name))
                 exit(1)
-            if 1 < len(parts):
-                layer = int(parts[1])
-                if 2 < len(parts):
-                    position = int(parts[2])
+            try:
+                if 1 < len(parts):
+                    layer = int(parts[1])
+                    if 2 < len(parts):
+                        position = int(parts[2])
+                        if 3 < len(parts):
+                            end = int(parts[3])
+            except ValueError:
+                sys.stderr.write('%s: ERROR: -g %s, non numeric parameter\n' %
+                                 (PROG_NAME, parts[0]))
+                exit(1)
 
-        gps_model.send_cfg_valget(keys, layer, position)
+
+        print("layer %s postiion % end %s " % (layer, position, end))
+        if end:
+            for p in range(position, end, 64):
+                gps_model.send_cfg_valget(keys, layer, p)
+        else:
+            gps_model.send_cfg_valget(keys, layer, position)
 
     elif opts['set_item']:
         nvs = []
