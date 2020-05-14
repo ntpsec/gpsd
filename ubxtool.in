@@ -373,6 +373,9 @@ class ubx(object):
     # 5 - Unit
     # 6 - Description
     cfgs = (
+        # CFG--
+        ("CFG", 0x1FFFFFFF, "", 0, "",
+         "get all CFG"),
         # CFG-ANA-
         ("CFG-ANA", 0x1023FFFF, "", 0, "",
          "get all CFG-ANA"),
