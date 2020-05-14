@@ -199,10 +199,12 @@ Requires the pyserial module.
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-g ITEM</term>
+    <term>-g ITEM,LAYER,POSITION</term>
     <listitem>
-     <para>Get the value of ITEM name from the GPS (UBX-CFG-VALGET).
-     See the section on CONFIGURATION ITEMS</para>
+     <para>Get the value of ITEM from LAYER, starting at POSITION, from
+the receiver (UBX-CFG-VALGET).  The ",LAYER" is in decimal notation and
+is optional.  The ",POSITION" is in decimal notation and is optional.
+ See the section on CONFIGURATION ITEMS</para>
     </listitem>
    </varlistentry>
    <varlistentry>
