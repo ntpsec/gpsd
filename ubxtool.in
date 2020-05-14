@@ -1969,7 +1969,7 @@ class ubx(object):
                         0x25: "MOT",
                         0x26: "BATCH",
                         0x31: "SIGNAL",
-                        0x47: "QZSS",
+                        0x37: "QZSS",
                         0x41: "ITFM",
                         0x51: "I2C",
                         0x52: "UART1",
