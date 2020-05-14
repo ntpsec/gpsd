@@ -748,7 +748,7 @@ bool gpsd_add_device(const char *device_name, bool flag_nowait)
 #ifdef SOCKET_EXPORT_ENABLE
             notify_watchers(devp, true, false,
                             "{\"class\":\"DEVICE\",\"path\":\"%s\","
-                            "\"activated\":%s}\r\n",
+                            "\"activated\":\"%s\"}\r\n",
                             devp->gpsdata.dev.path,
                             now_to_iso8601(tbuf, sizeof(tbuf)));
 #endif /* SOCKET_EXPORT_ENABLE */
