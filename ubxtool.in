@@ -6886,11 +6886,12 @@ Always double check with "-p CFG-GNSS".
             m_data.extend(k_data)
         gps_model.gps_send(0x06, 0x8c, m_data)
 
-    def send_cfg_valget(self, keys):
+    def send_cfg_valget(self, keys, layer, position):
         """UBX-CFG-VALGET, get config items by key"""
         m_data = bytearray(4)
         m_data[0] = 0      # version, 0 = request, 1 = answer
         m_data[1] = 0      # RAM layer
+        m_data[2] = position
         for key in keys:
             k_data = bytearray(4)
             k_data[0] = (key) & 0xff
@@ -6898,9 +6899,14 @@ Always double check with "-p CFG-GNSS".
             k_data[2] = (key >> 16) & 0xff
             k_data[3] = (key >> 24) & 0xff
             m_data.extend(k_data)
-        # blast them for now, should do one at a time...
-        layers = {0, 1, 2, 7}
-        for layer in layers:
+
+        if layer is None:
+            # blast them for now, should do one at a time...
+            layers = {0, 1, 2, 7}
+            for layer in layers:
+                m_data[1] = layer
+                gps_model.gps_send(0x06, 0x8b, m_data)
+        else:
             m_data[1] = layer
             gps_model.gps_send(0x06, 0x8b, m_data)
 
@@ -7803,7 +7809,8 @@ def usage():
           '       -e E          enable E\n'
           '       -f F          open F as file/device\n'
           '                     default: %s\n'
-          '       -g I          get config item I\n'
+          '       -g I,l,p      get config item I, optional layer l, '
+          'position p\n'
           '       -h            print help, increase -v for extra help\n'
           '       -i P          port ID # (interface) for UBX-CFG-PRT\n'
           '       -P P          Protocol version for sending commands\n'
@@ -8101,15 +8108,23 @@ try:
 
     elif opts['get_item']:
         keys = []
-        for name in opts['get_item']:
-            item = gps_model.cfg_by_name(name)
+        layer = None
+        position = 0
+        for item in opts['get_item']:
+            parts = item.split(',')
+            item = gps_model.cfg_by_name(parts[0])
             if item:
                 keys.append(item[1])
             else:
                 sys.stderr.write('%s: ERROR: item %s unknown\n' %
                                  (PROG_NAME, name))
                 exit(1)
-        gps_model.send_cfg_valget(keys)
+            if 1 < len(parts):
+                layer = int(parts[1])
+                if 2 < len(parts):
+                    position = int(parts[2])
+
+        gps_model.send_cfg_valget(keys, layer, position)
 
     elif opts['set_item']:
         nvs = []
