@@ -390,9 +390,9 @@ class ubx(object):
         ("CFG-BATCH-MAXENTRIES", 0x30260015, "U2", 1, "",
          "Size of buffer in number of epochs to store."),
         ("CFG-BATCH-WARNTHRS", 0x30260016, "U2", 1, "",
-         "Fill level to trigger PIO notification, in number of epochs stored."),
+         "Fill level to trigger PIO notification, number of epochs stored."),
         ("CFG-BATCH-PIOACTIVELOW", 0x10260018, "L", 1, "",
-         "Drive CFG-BATCH-PIOID low if the buffer fill level reaches WARNTHRS"),
+         "Drive CFG-BATCH-PIOID low when buffer fill level reaches WARNTHRS"),
         ("CFG-BATCH-PIOPID", 0x20260019, "U1", 1, "",
          "PIO that is used for buffer fill level notification"),
         ("CFG-BATCH-EXTRAPVT", 0x1026001a, "L", 1, "",
@@ -650,6 +650,16 @@ class ubx(object):
          "Output rate of the NMEA-GX-GSV message on port UART"),
         ("CFG-MSGOUT-NMEA_ID_GSV_USB", 0x209100c7, "U1", 1, "",
          "Output rate of the NMEA-GX-GSV message on port USB"),
+        ("CFG-MSGOUT-NMEA_ID_RLM_I2C", 0x20910400, "U1", 1, "",
+         "Output rate of the NMEA-GX-RLM message on port I2C"),
+        ("CFG-MSGOUT-NMEA_ID_RLM_SPI", 0x20910404, "U1", 1, "",
+         "Output rate of the NMEA-GX-RLM message on port SPI"),
+        ("CFG-MSGOUT-NMEA_ID_RLM_UART1", 0x20910401, "U1", 1, "",
+         "Output rate of the NMEA-GX-RLM message on port UART1"),
+        ("CFG-MSGOUT-NMEA_ID_RLM_UART2", 0x20910402, "U1", 1, "",
+         "Output rate of the NMEA-GX-RLM message on port UART2"),
+        ("CFG-MSGOUT-NMEA_ID_RLM_USB", 0x20910403, "U1", 1, "",
+         "Output rate of the NMEA-GX-RLM message on port USB"),
         ("CFG-MSGOUT-NMEA_ID_RMC_I2C", 0x209100ab, "U1", 1, "",
          "Output rate of the NMEA-GX-RMC message on port I2C"),
         ("CFG-MSGOUT-NMEA_ID_RMC_SPI", 0x209100af, "U1", 1, "",
@@ -932,6 +942,16 @@ class ubx(object):
          "Output rate of the UBX-MON-RF message on port UART2"),
         ("CFG-MSGOUT-UBX_MON_RF_USB", 0x2091035c, "U1", 1, "",
          "Output rate of the UBX-MON-RF message on port USB"),
+        ("CFG-MSGOUT-UBX_NAV_TIMEQZSS_I2C", 0x20910386, "U1", 1, "",
+         "Output rate of the UBX-NAV-TIMEQZSS message on port I2C"),
+        ("CFG-MSGOUT-UBX_NAV_TIMEQZSS_SPI", 0x2091038a, "U1", 1, "",
+         "Output rate of the UBX-NAV-TIMEQZSS message on port SPI"),
+        ("CFG-MSGOUT-UBX_NAV_TIMEQZSS_USB", 0x20910387, "U1", 1, "",
+         "Output rate of the UBX-NAV-TIMEQZSS message on port USB"),
+        ("CFG-MSGOUT-UBX_NAV_TIMEQZSS_UART1", 0x20910388, "U1", 1, "",
+         "Output rate of the UBX-NAV-TIMEQZSS message on port UART1"),
+        ("CFG-MSGOUT-UBX_NAV_TIMEQZSS_UART2", 0x20910389, "U1", 1, "",
+         "Output rate of the UBX-NAV-TIMEQZSS message on port UART2"),
         ("CFG-MSGOUT-UBX_MON_RXBUF_I2C", 0x209101a0, "U1", 1, "",
          "Output rate of the UBX-MON-RXBUF message on port I2C"),
         ("CFG-MSGOUT-UBX_MON_RXBUF_SPI", 0x209101a4, "U1", 1, "",
@@ -952,6 +972,16 @@ class ubx(object):
          "Output rate of the UBX-MON-RXR message on port UART2"),
         ("CFG-MSGOUT-UBX_MON_RXR_USB", 0x2091018a, "U1", 1, "",
          "Output rate of the UBX-MON-RXR message on port USB"),
+        ("CFG-MSGOUT-UBX_MON_SPAN_I2C", 0x2091038b, "U1", 1, "",
+         "Output rate of the UBX-MON-SPAN message on port I2C"),
+        ("CFG-MSGOUT-UBX_MON_SPAN_SPI", 0x2091038f, "U1", 1, "",
+         "Output rate of the UBX-MON-SPAN message on port SPI"),
+        ("CFG-MSGOUT-UBX_MON_SPAN_UART1", 0x2091038c, "U1", 1, "",
+         "Output rate of the UBX-MON-SPAN message on port UART1"),
+        ("CFG-MSGOUT-UBX_MON_SPAN_UART2", 0x2091038d, "U1", 1, "",
+         "Output rate of the UBX-MON-SPAN message on port UART2"),
+        ("CFG-MSGOUT-UBX_MON_SPAN_USB", 0x2091038e, "U1", 1, "",
+         "Output rate of the UBX-MON-SPAN message on port USB"),
         ("CFG-MSGOUT-UBX_MON_TXBUF_I2C", 0x2091019b, "U1", 1, "",
          "Output rate of the UBX-MON-TXBUF message on port I2C"),
         ("CFG-MSGOUT-UBX_MON_TXBUF_SPI", 0x2091019f, "U1", 1, "",
@@ -962,6 +992,16 @@ class ubx(object):
          "Output rate of the UBX-MON-TXBUF message on port UART2"),
         ("CFG-MSGOUT-UBX_MON_TXBUF_USB", 0x2091019e, "U1", 1, "",
          "Output rate of the UBX-MON-TXBUF message on port USB"),
+        ("CFG-MSGOUT-UBX_NAV_AOPSTATUS_I2C", 0x20910079, "U1", 1, "",
+         "Output rate of the UBX-MON-AOPSTATUS message on port I2C"),
+        ("CFG-MSGOUT-UBX_NAV_AOPSTATUS_SPI", 0x2091007d, "U1", 1, "",
+         "Output rate of the UBX-MON-AOPSTATUS message on port SPI"),
+        ("CFG-MSGOUT-UBX_NAV_AOPSTATUS_UART1", 0x2091007a, "U1", 1, "",
+         "Output rate of the UBX-MON-AOPSTATUS message on port UART1"),
+        ("CFG-MSGOUT-UBX_NAV_AOPSTATUS_UART2", 0x2091007b, "U1", 1, "",
+         "Output rate of the UBX-MON-AOPSTATUS message on port UART2"),
+        ("CFG-MSGOUT-UBX_NAV_AOPSTATUS_USB", 0x2091007c, "U1", 1, "",
+         "Output rate of the UBX-MON-AOPSTATUS message on port USB"),
         ("CFG-MSGOUT-UBX_MON_TXBUF_I2C", 0x2091019b, "U1", 1, "",
          "Output rate of the UBX-MON-TXBUF message on port I2C"),
         ("CFG-MSGOUT-UBX_MON_TXBUF_SPI", 0x2091019f, "U1", 1, "",
@@ -1123,6 +1163,16 @@ class ubx(object):
          "Output rate of the UBX-NAV-SIG message on port UART2"),
         ("CFG-MSGOUT-UBX_NAV_SIG_USB", 0x20910348, "U1", 1, "",
          "Output rate of the UBX-NAV-SIG message on port USB"),
+        ("CFG-MSGOUT-UBX_NAV_SLAS_I2C", 0x20910336, "U1", 1, "",
+         "Output rate of the UBX-NAV-SLAS message on port I2C"),
+        ("CFG-MSGOUT-UBX_NAV_SLAS_SPI", 0x20910337, "U1", 1, "",
+         "Output rate of the UBX-NAV-SLAS message on port SPI"),
+        ("CFG-MSGOUT-UBX_NAV_SLAS_UART1", 0x20910338, "U1", 1, "",
+         "Output rate of the UBX-NAV-SLAS message on port UART1"),
+        ("CFG-MSGOUT-UBX_NAV_SLAS_UART2", 0x20910339, "U1", 1, "",
+         "Output rate of the UBX-NAV-SLAS message on port UART2"),
+        ("CFG-MSGOUT-UBX_NAV_SLAS_USB", 0x20910348, "U1", 1, "",
+         "Output rate of the UBX-NAV-SLAS message on port USB"),
         ("CFG-MSGOUT-UBX_NAV_STATUS_I2C", 0x2091001a, "U1", 1, "",
          "Output rate of the UBX-NAV-STATUS message on port I2C"),
         ("CFG-MSGOUT-UBX_NAV_STATUS_SPI", 0x2091001e, "U1", 1, "",
@@ -1728,7 +1778,7 @@ class ubx(object):
         ("CFG-TXREADY-ENABLED", 0x10a20001, "L", 1, "",
          "Flag to indicate if tx ready pin mechanism should be enabled"),
         ("CFG-TXREADY-POLARITY", 0x10a20002, "L", 1, "",
-         "The polarity of the tx ready pin:false:high-active, true:low-active"),
+         "Polarity of the tx ready pin:false:high-active, true:low-active"),
         ("CFG-TXREADY-PIN", 0x20a20003, "U1", 1, "",
          "Pin number to use for the tx ready functionality"),
         ("CFG-TXREADY-THRESHOLD", 0x30a20004, "U2", 1, "",
@@ -6888,10 +6938,13 @@ Always double check with "-p CFG-GNSS".
 
     def send_cfg_valget(self, keys, layer, position):
         """UBX-CFG-VALGET, get config items by key"""
+
         m_data = bytearray(4)
-        m_data[0] = 0      # version, 0 = request, 1 = answer
-        m_data[1] = 0      # RAM layer
-        m_data[2] = position
+        # version, 0 = request, 1 = answer
+        # RAM layer
+        # position
+        struct.pack_into('<BBH', m_data, 0, 0, 0, position)
+
         for key in keys:
             k_data = bytearray(4)
             k_data[0] = (key) & 0xff
