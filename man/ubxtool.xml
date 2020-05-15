@@ -547,6 +547,9 @@ $ ubxtool -g CFG,0,0,1200 | fgrep "item CFG-"
 [...]
 </programlisting>
    </para>
+   <para>Changing <parameter>CFG,0,0,1200</parameter> to
+   <parameter>CFG,7,0,1200</parameter> would instead dump all the
+configuration defaults, from the Default layer (7).</para>
    </refsect2>
  </refsect1>
  <refsect1 id='environment'>
