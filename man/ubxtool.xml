@@ -28,7 +28,8 @@ BSD terms apply: see the file COPYING in the distribution root for details.
    <arg choice='opt'>-d <replaceable>disable</replaceable> </arg>
    <arg choice='opt'>-e <replaceable>enable</replaceable> </arg>
    <arg choice='opt'>-f <replaceable>file/device</replaceable> </arg>
-   <arg choice='opt'>-g <replaceable>item</replaceable> </arg>
+   <arg choice='opt'>-g <replaceable>item,layer,position,end</replaceable>
+   </arg>
    <arg choice='opt'>-h </arg>
    <arg choice='opt'>-i <replaceable>port</replaceable></arg>
    <arg choice='opt'>-P <replaceable>protver</replaceable></arg>
@@ -40,8 +41,8 @@ BSD terms apply: see the file COPYING in the distribution root for details.
    <arg choice='opt'>-V </arg>
    <arg choice='opt'>-v <replaceable>verbosity</replaceable></arg>
    <arg choice='opt'>-w <replaceable>wait</replaceable></arg>
-   <arg choice='opt'>-x <replaceable>item</replaceable></arg>
-   <arg choice='opt'>-z <replaceable>item,val,layer</replaceable></arg>
+   <arg choice='opt'>-x <replaceable>item,layers</replaceable></arg>
+   <arg choice='opt'>-z <replaceable>item,val,layers</replaceable></arg>
    <arg choice='opt'>[server[:port[:device]]]</arg>
   </cmdsynopsis>
  </refsynopsisdiv>
@@ -199,12 +200,12 @@ Requires the pyserial module.
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-g ITEM,LAYER,POSITION</term>
+    <term>-g ITEM,LAYER,POSITION,END</term>
     <listitem>
-     <para>Get the value of ITEM from LAYER, starting at POSITION, from
-the receiver (UBX-CFG-VALGET).  The ",LAYER" is in decimal notation and
-is optional.  The ",POSITION" is in decimal notation and is optional.
- See the section on CONFIGURATION ITEMS</para>
+     <para>Get the value of ITEM from LAYER, starting at POSITION, up
+to END key/value pairs (UBX-CFG-VALGET).  All parameters past ITEM are
+optional and decimal.  If LAYER is absent, then layers 0, 1, 2
+and 7 are all requested.  See the section on CONFIGURATION ITEMS</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -352,19 +353,21 @@ options.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-x ITEM</term>
+    <term>-x ITEM,LAYERS</term>
     <listitem>
-     <para>Delete the value of ITEM name from the BBR and FLASH layers in
-the GPS (UBX_CFG-VALDEL).  Returning to the GPS default for that item.
-See the section on CONFIGURATION ITEMS</para>
+     <para>Delete the value of ITEM name from LAYERS.  The bit map LAYERS is
+optional.  By default delete in both the BBR and FLASH layers in the
+receiver (UBX_CFG-VALDEL).  Returning to the reciver default for that
+item.  See the section on CONFIGURATION ITEMS</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-z ITEM,VAL,LAYER</term>
+    <term>-z ITEM,VAL,LAYERS</term>
     <listitem>
-     <para>Set the value of ITEM name to VAL in layer LAYER in the GPS
-(UBX-CFG-VALSET).  The ",LAYER" is in decimal notation and is optional.
- See the section on CONFIGURATION ITEMS</para>
+     <para>Set the value of ITEM name to VAL in LAYERS in the GPS
+(UBX-CFG-VALSET).  VAL and the bit mask LAYERS are decimal.  ",LAYERS"
+is optional.  The default LAYERS are RAM and FLASH See the section on
+CONFIGURATION ITEMS</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -400,13 +403,20 @@ not completely succeed, to solve the problem with Configuration
 Items.  If your GPS does not support protocol version 27+, then
 this section does not apply to you.</para>
   <para>Most of the configuration variables in the GPS have been
-assigned a 32-bit Key ID.  Each Key ID has been assigned a Key Name.
-Over 600 Key Names are supported by ubxtool.  To see them all do:
-"ubxtool -h -v 3".  Each Key references one specific value.</para>
+assigned a 32-bit Key ID.
+Each Key references one specific value.
+A typical receiver may have over 1,100 Key IDs.
+Each Key ID has been assigned a Key Name.
+Most of the Key Names are documented by u-blox and supported by ubxtool.
+To see all the Key Name understood by ubxtool do: "ubxtool -h -v 3".
+</para>
+
   <para>To get the value related to an item, use "-g ITEM".</para>
   <para>To reset the value related to an item to it default value, use
 "-x ITEM".</para>
   <para>To set an ITEM name to a value, use "-z ITEM,VAL".</para>
+  <para>If you only want to set an ITEM in one layer, use "-z ITEM,VAL,LAYER".
+  </para>
   <para>See the EXAMPLES section for concrete examples.</para>
  </refsect1>
  <refsect1 id='examples'>
