@@ -426,7 +426,7 @@ All examples assume that UBXOPTS is set with the protocol version of
 your receiver.  Be sure to replace the "-P 18" with your correct
 prototype version.
 <programlisting>
-export UBXOPTS="-v 18"
+export UBXOPTS="-P 18"
 </programlisting>
   </para>
   <para>
@@ -467,10 +467,14 @@ ubxtool -w 5 x.example.com
    <refsect2>
    <title>Version 27+ examples</title>
    <para>The following examples require a GPS supporting protocol 27 or
-   greater.</para>
+   greater.  Be sure to set your protocol version first:
+    <programlisting>
+    export UBXOPTS="-P 32"
+    </programlisting>
+   </para>
    <para>To check the current dynamic model, change it to 6 (AIR1, Airborne
    with &lt;1g acceleration), revert to the default setting, and verify the
-   faults was restored.</para>
+   faults was restored.
 <programlisting>
 $ ubxtool -g CFG-NAVSPG-DYNMODEL
 [...]
@@ -503,9 +507,46 @@ UBX-CFG-VALGET:
   layers (ram)
     item CFG-NAVSPG-DYNMODEL/0x20110021 val 6
 </programlisting>
+   </para>
    <para>Notice that the current DYNMODEL stayed at 6 (AIR1).  The
    "-x" only affects the saved setting, not the current setting.  To
    change the current setting you must set it with "-z".</para>
+   <para>Getting all the Configuration Items in a group one by one
+could be very tedious.  VAL-GET allows you to wild card the item
+number and dump all the items in a group.  To get all the CFG-TP
+items in ram, the currently active ones, you can do this:
+<programlisting>
+$ ubxtool -g CFG-TP,0
+[...]
+UBX-CFG-VALGET:
+ version 1 layer 0 position 0
+  layers (ram)
+    item CFG-TP-TP1_ENA/0x10050007 val 1
+    item CFG-TP-SYNC_GNSS_TP1/0x10050008 val 1
+    item CFG-TP-USE_LOCKED_TP1/0x10050009 val 1
+[...]
+</programlisting>
+   </para>
+   <para>The truly masochistic can dump all the Configuration Items
+by wildcarding the group.  Dumping all 1,000+ of them, 64 at a time, could
+still be tedious.  The -g parameter optionally allows you to specify the
+starting position to get from, as well as the ending position.  To get
+all the known, and unknown, items supported by the receiver that are
+currently in ram:
+<programlisting>
+$ ubxtool -g CFG,0,0,1200 | fgrep "item CFG-"
+    item CFG-1-1/0x10010001 val 0
+    item CFG-1-1/0x10010101 val 0
+    item CFG-4-1/0x10040001 val 1
+    item CFG-4-2/0x10040002 val 0
+    item CFG-4-3/0x10040003 val 0
+    item CFG-4-4/0x10040004 val 0
+    item CFG-4-9/0x10040009 val 0
+    item CFG-TP-TP1_ENA/0x10050007 val 1
+    item CFG-TP-SYNC_GNSS_TP1/0x10050008 val 1
+[...]
+</programlisting>
+   </para>
    </refsect2>
  </refsect1>
  <refsect1 id='environment'>
