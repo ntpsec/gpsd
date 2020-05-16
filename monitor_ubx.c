@@ -92,7 +92,7 @@ static bool ubx_initialize(void)
 
 static void display_nav_svinfo(unsigned char *buf, size_t data_len)
 {
-    unsigned i, nchan;
+    unsigned i, j, nchan;
 
     /* very coarse sanity check (minimal length for valid message reached?) */
     if (data_len < 8)
@@ -117,6 +117,11 @@ static void display_nav_svinfo(unsigned char *buf, size_t data_len)
         (void)wmove(satwin, (int)(i + 2), 4);
         (void)wprintw(satwin, "%3d %3d %3d  %2d %04x %c",
                       prn, az, el, ss, fl, (fl & UBX_SAT_USED) ? 'Y' : ' ');
+    }
+    /* clear potentially stale sat lines unconditionally */
+    for (j = i; j < 16; j++) {
+        (void)wmove(satwin, (int)(j + 2), 4);
+        (void)wprintw(satwin, "%22s", " ");
     }
     (void)wnoutrefresh(satwin);
     return;
