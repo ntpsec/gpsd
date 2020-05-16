@@ -1168,7 +1168,7 @@ class ubx(object):
          "Output rate of the UBX-NAV-SIG message on port USB"),
         ("CFG-MSGOUT-UBX_NAV_SLAS_I2C", 0x20910336, "U1", 1, "",
          "Output rate of the UBX-NAV-SLAS message on port I2C"),
-        ("CFG-MSGOUT-UBX_NAV_SLAS_SPI", 0x20910337, "U1", 1, "",
+        ("CFG-MSGOUT-UBX_NAV_SLAS_SPI", 0x2091033a, "U1", 1, "",
          "Output rate of the UBX-NAV-SLAS message on port SPI"),
         ("CFG-MSGOUT-UBX_NAV_SLAS_UART1", 0x20910338, "U1", 1, "",
          "Output rate of the UBX-NAV-SLAS message on port UART1"),
