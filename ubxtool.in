@@ -6348,6 +6348,14 @@ High Precision GNSS products only."""
                 self.decode_msg(m_all)
                 sys.stdout.flush()
 
+    def send_able_cfg_batch(self, able):
+        """dis/enable batching,  UBX-CFG-BATCH"""
+
+        flags = 0x0d if able else 0x0c
+        m_data = bytearray(8)
+        struct.pack_into('<BBHHBB', m_data, 0, 0, flags, 128, 0, 0, 0)
+        gps_model.gps_send(6, 0x93, m_data)
+
     def send_able_beidou(self, able):
         """dis/enable BeiDou"""
         # Two frequency GNSS receivers use BeiDou or GLONASS
@@ -7173,6 +7181,9 @@ Always double check with "-p CFG-GNSS".
         # en/dis able basic binary messages
         "BINARY": {"command": send_able_binary,
                    "help": "basic binary messages"},
+        # en/dis able BATCH
+        "CFG-BATCH": {"command": send_able_cfg_batch,
+                      "help": "CFG-BATCH"},
         # en/dis able ECEF
         "ECEF": {"command": send_able_ecef,
                  "help": "ECEF"},
