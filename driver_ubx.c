@@ -293,8 +293,8 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
     /* save SW and HW Version as subtype */
     (void)snprintf(obuf, sizeof(obuf),
                    "SW %.30s,HW %.10s",
-                   (char *)&buf[UBX_MESSAGE_DATA_OFFSET + 0],
-                   (char *)&buf[UBX_MESSAGE_DATA_OFFSET + 30]);
+                   (char *)&buf[UBX_PREFIX_LEN + 0],
+                   (char *)&buf[UBX_PREFIX_LEN + 30]);
 
     /* save what we can */
     (void)strlcpy(session->subtype, obuf, sizeof(session->subtype));
@@ -311,7 +311,7 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
     obuf[0] = '\0';
     /* get n number of Extended info strings.  what is max n? */
     for ( n = 0; ; n++ ) {
-        size_t start_of_str = UBX_MESSAGE_DATA_OFFSET + 40 + (30 * n);
+        size_t start_of_str = UBX_PREFIX_LEN + 40 + (30 * n);
 
         if ( (start_of_str + 2 ) > data_len ) {
             /* last one can be shorter than 30 */
@@ -2215,22 +2215,22 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         if (2 <= data_len) {
             GPSD_LOG(LOG_DATA, &session->context->errout,
                      "UBX-ACK-ACK, class: %02x, id: %02x\n",
-                     buf[UBX_MESSAGE_DATA_OFFSET],
-                     buf[UBX_MESSAGE_DATA_OFFSET + 1]);
+                     buf[UBX_PREFIX_LEN],
+                     buf[UBX_PREFIX_LEN + 1]);
         }
         break;
     case UBX_ACK_NAK:
         if (2 <= data_len) {
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "UBX-ACK-NAK, class: %02x, id: %02x\n",
-                     buf[UBX_MESSAGE_DATA_OFFSET],
-                     buf[UBX_MESSAGE_DATA_OFFSET + 1]);
+                     buf[UBX_PREFIX_LEN],
+                     buf[UBX_PREFIX_LEN + 1]);
         }
         break;
 
     case UBX_CFG_PRT:
-        if (session->driver.ubx.port_id != buf[UBX_MESSAGE_DATA_OFFSET + 0] ) {
-            session->driver.ubx.port_id = buf[UBX_MESSAGE_DATA_OFFSET + 0];
+        if (session->driver.ubx.port_id != buf[UBX_PREFIX_LEN + 0] ) {
+            session->driver.ubx.port_id = buf[UBX_PREFIX_LEN + 0];
             GPSD_LOG(LOG_INF, &session->context->errout,
                      "UBX-CFG-PRT: port %d\n", session->driver.ubx.port_id);
 

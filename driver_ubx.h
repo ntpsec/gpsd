@@ -5,9 +5,6 @@
 #ifndef _GPSD_UBX_H_
 #define _GPSD_UBX_H_
 
-#define UBX_MESSAGE_BASE_SIZE 6
-#define UBX_MESSAGE_DATA_OFFSET UBX_MESSAGE_BASE_SIZE
-
 typedef enum {
     UBX_CLASS_NAV = 0x01,     /**< Navigation */
     UBX_CLASS_RXM = 0x02,     /**< Receiver Manager */
