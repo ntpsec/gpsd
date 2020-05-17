@@ -3735,7 +3735,7 @@ Oddly this is polled with UBX-LOG-RETRIEVEBATCH
 """
 
         # u-blox 8, protVer 23+
-        # not in u-blox 9
+        # in NEO-M9N, protVer 32.00
         u = struct.unpack_from('<BBHLHBBBBBBLlBBBBllllLLlllllLLHHLLLL', buf, 0)
         s = ("  version %u contentValid x%x msgCnt %u iTow %u\n"
              "  year %u month %u day %u hour %u min %u sec %u valid x%x\n"
@@ -7406,7 +7406,6 @@ Always double check with "-p CFG-GNSS".
         "LOG-RETRIEVEBATCH": {"command": send_poll,
                               "opt": [0x21, 0x10, 0, 1, 0, 0],
                               "help": "send UBX-LOG-RETRIEVEBATCH",
-                              "maxVer": 23.99,
                               "minVer": 23},
         # UBX-LOG-STRING
         "LOG-STRING": {"command": send_poll,
