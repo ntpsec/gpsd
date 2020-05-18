@@ -1822,9 +1822,9 @@ static void ubx_msg_sbas(struct gps_device_t *session, unsigned char *buf,
  * u-blox 9, message version 0 (but no version byte!)
  * u-blox 9, message version 1
  */
-static gps_mask_t ubx_rxm_rawx(struct gps_device_t *session,
-                               const unsigned char *buf,
-                               size_t data_len)
+static gps_mask_t ubx_msg_rxm_rawx(struct gps_device_t *session,
+                                   const unsigned char *buf,
+                                   size_t data_len)
 {
     double rcvTow;
     uint16_t week;
@@ -2057,8 +2057,8 @@ static gps_mask_t ubx_rxm_rawx(struct gps_device_t *session,
  * Raw Subframes - UBX-RXM-SFRB
  * Not in u-blox 8 or 9
  */
-static gps_mask_t ubx_rxm_sfrb(struct gps_device_t *session,
-                               unsigned char *buf, size_t data_len)
+static gps_mask_t ubx_msg_rxm_sfrb(struct gps_device_t *session,
+                                   unsigned char *buf, size_t data_len)
 {
     unsigned int i, chan, svid;
     uint32_t words[10];
@@ -2491,7 +2491,7 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-RXM-RAW\n");
         break;
     case UBX_RXM_RAWX:
-        mask = ubx_rxm_rawx(session, &buf[UBX_PREFIX_LEN], data_len);
+        mask = ubx_msg_rxm_rawx(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_RXM_RLM:
         GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-RXM-RLM\n");
@@ -2500,7 +2500,7 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-RXM-RTCM\n");
         break;
     case UBX_RXM_SFRB:
-        mask = ubx_rxm_sfrb(session, &buf[UBX_PREFIX_LEN], data_len);
+        mask = ubx_msg_rxm_sfrb(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_RXM_SFRBX:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-RXM-SFRBX\n");
