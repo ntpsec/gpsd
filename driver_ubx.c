@@ -1413,7 +1413,7 @@ ubx_msg_nav_dop(struct gps_device_t *session, unsigned char *buf,
 {
     if (18 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-RXM-SFRB message, runt payload len %zd", data_len);
+                 "UBX-NAV-DOP message, runt payload len %zd", data_len);
         return 0;
     }
 
