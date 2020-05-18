@@ -2892,7 +2892,7 @@ Save and Load non-volatile storage data"""
              " flags x%x updatePeriod %u searchPeriod %u\n"
              " gridOffset %u ontime %u minAcqTime %u\n"
              " reserved3 %u %u %u %u %u" % u)
-        if 48 >= m_len:
+        if 48 <= m_len:
             u1 = struct.unpack_from('<L', buf, 44)
             s += "\n extintInactivityMs %u" % u1
 
