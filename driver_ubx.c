@@ -330,6 +330,9 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
     GPSD_LOG(LOG_INF, &session->context->errout,
              "UBX-MON-VER: %s %s\n",
              session->subtype, session->subtype1);
+    GPSD_LOG(LOG_INF, &session->context->errout,
+             "UBX-MON-VER: PROTVER %d\n",
+             session->driver.ubx.protver);
 }
 
 /**
