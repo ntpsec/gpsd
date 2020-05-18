@@ -100,7 +100,7 @@ static gps_mask_t ubx_msg_nav_timegps(struct gps_device_t *session,
 static gps_mask_t ubx_msg_nav_velecef(struct gps_device_t *session,
                                       unsigned char *buf, size_t data_len);
 static void ubx_msg_nav_sbas(struct gps_device_t *session, unsigned char *buf,
-                         size_t data_len);
+                             size_t data_len);
 static gps_mask_t ubx_msg_tim_tp(struct gps_device_t *session,
                                  unsigned char *buf, size_t data_len);
 #ifdef RECONFIGURE_ENABLE
