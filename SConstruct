@@ -2656,6 +2656,7 @@ if env.WhereIs('asciidoctor'):
                  ('www/protocol-evolution', 'protocol-evolution'),
                  ('www/protocol-transition', 'protocol-transition'),
                  ('www/time-service-intro', 'time-service-intro'),
+                 ('www/ubxtool-examples', 'ubxtool-examples'),
                  )
     for stem, leaf in adocfiles:
         asciidocs.append('www/%s.html' % leaf)
