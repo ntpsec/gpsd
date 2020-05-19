@@ -1,0 +1,552 @@
+:Author: Gary E. Miller
+:Email: <gem@rellim.com>
+:Date: 18 May 2020
+:Description: U-blox GNSS receiver configuration examples
+:keywords: u-blox, examples, configuration
+
+= ubxtool recipes
+
+The u-blox GNSS receivers have a huge number of configuration options.
+Most users will be perfectly happy running their receiver in its default
+configuration, but there are often times when users get the itch to
+change settings to see what happens.  Sometimes even for good reasons.
+
+Feel free to jump around this document to recipes that interest you,
+but be sure to read all of, and comply with, the section on Initial
+Setup.
+
+== Initial Setup
+
+All the examples here assume that gpsd is running on the local host and
+that cgps is showing current and valid data from the receiver.
+
+If cgps is not showing any data, then do not bother to continue reading
+this document.
+
+You also need a copy of the "Interface Desscription" for your exact
+u-blox device.  This document will refer to a lot of messages and
+variables that are defined in that document.  Keep it open while
+reading this document and refer to it often.
+
+=== Protocol Version
+
+All the examples below require that you know the protocol version of
+your u-blox receiver.
+
+----
+$ ubxtool -p MON-VER
+----
+
+Buried in the data will be a data block that looks like one of these
+examples.
+
+A u-blox 6, assume protocol version 12
+
+----
+UBX-MON-VER:
+  swVersion 6.02 (36023)
+  hwVersion 00040007
+----
+
+A u-blox 8, protocol version 15
+
+----
+UBX-MON-VER:
+  swVersion 2.01 (75331)
+  hwVersion 00080000
+  extension PROTVER 15.00
+  extension GPS;SBAS;GLO;BDS;QZSS
+----
+
+The shortcut for u-blox 8 and up:
+
+----
+$ ubxtool -p MON-VER | fgrep PROT
+extension PROTVER=18.00
+----
+
+The above shows the protocol version is 18.00.
+
+The ubxtool program needs to know the protocol version (PROTVER) of
+the connected receiver to send the commands matched to the receiver
+needs.  Use the "-P XX" option for this, where XX is your version.  This
+is easy to forget, and annoying to type repeatedly, so add it to your
+environment and ubxtool will use it.  For example if you have an early
+u-blox 8:
+
+----
+$ export UBXOPTS="-P 15"
+----
+
+You can add "-v 2" for a little more verbosity.
+
+----
+$ export UBXOPTS="-P 18 -v 2"
+----
+
+
+=== Defaut Configuration
+
+A common problem when dealing with a u-blox GNSS receiver is left over
+configuration from earlier experiments.  The u-blox receivers are very
+picky about competing configuration options, and fail to warn the unwary
+of conflicts.  Best to always revert to factory defaults before starting
+a new configuration.
+
+----
+$ ubxtool -p RESET
+----
+
+After a few seconds the receiver will only be sending NMEA, you will
+want to enable the u-blox binary, and disable the NMEA.  Best to do it
+in that order so the receiver does not go totally silent.  This is one
+place where the "-P", set in UBXOPTS, is critically important, to get
+the correct messages for your firmware.
+
+----
+$ ubxtool -e BINARY
+$ ubxtool -d NMEA
+----
+
+== Checking Constellations
+
+For unknown reasons, one of the first things newbies want to play with
+is the constellation settings.  If you are headed to the polar regions,
+into space, or to Asia, then these settings will be of interest to you.
+Otherwise, unless you have a Rubidium atomic clock handy, it will be
+hard for you to improve on the defaults.  If you still must fiddle, then
+read on.
+
+First you must understand what your GNSS receiver is capable of.  Find
+this out with the UBX-MON-GNSS message.
+
+----
+$ ubxtool -p MON-GNSS
+----
+
+If your receiver does not return an ACK-ACK message, then it is
+version 7, or earlier, and only support GPS satellites.  You can
+stop reading this section now.
+
+A u-blox 8 may return something like this:
+
+----
+UBX-MON-GNSS:
+   version 0 supported 0x7 defaultGnss 0x3 enabled 0x3
+   simultaneous 2 reserved1 0 0 0
+     supported (GPS Glonass Beidou)
+     defaultGnss (GPS Glonass)
+     enabled (GPS Glonass)
+----
+
+That 8 can support GPS, GLONASS, and BeiDou, but only two at a time.
+
+A u-blox 9 might return something like this:
+
+----
+UBX-MON-GNSS:
+   version 0 supported 0xf defaultGnss 0xf enabled 0xd
+   simultaneous 4 reserved1 0 0 0
+     supported (GPS Glonass Beidou Galileo)
+     defaultGnss (GPS Glonass Beidou Galileo)
+     enabled (GPS Beidou Galileo)
+----
+
+That 9 can support GPS, GLONASS, BeiDou, and Galileo, and all at the same
+time.  But in that case, GLONASS is turned off.
+
+There are more details to see with UBX-CFG-GNSS.  A u-blox 8 might
+show:
+
+----
+$ ubxtool -p CFG-GNSS -v 2
+[...]
+UBX-CFG-GNSS:
+ msgVer 0  numTrkChHw 32 numTrkChUse 32 numConfigBlocks 5
+  gnssId 0 TrkCh  8 maxTrCh 16 reserved 0 Flags x01010001
+   GPS L1C/A enabled
+  gnssId 1 TrkCh  1 maxTrCh  3 reserved 0 Flags x01010001
+   SBAS L1C/A enabled
+  gnssId 3 TrkCh  8 maxTrCh 16 reserved 0 Flags x01010000
+   BeiDou B1I 
+  gnssId 5 TrkCh  0 maxTrCh  3 reserved 0 Flags x01010001
+   QZSS L1C/A enabled
+  gnssId 6 TrkCh  8 maxTrCh 14 reserved 0 Flags x01010001
+   GLONASS L1 enabled
+----
+
+That shows 5 constellations, not 2.  Since GPS, SBAS and QZSS all use
+the same frequency and modulation, they were lumped together by MON-GNSS
+as simply GPS.
+
+An L2 capable 9-series may look like this:
+
+----
+UBX-CFG-GNSS:
+ msgVer 0  numTrkChHw 60 numTrkChUse 60 numConfigBlocks 5
+  gnssId 0 TrkCh  8 maxTrCh 16 reserved 0 Flags x11110001
+   GPS L1C/A L2C enabled
+  gnssId 2 TrkCh 10 maxTrCh 18 reserved 0 Flags x21210001
+   Galileo E1 E5b enabled
+  gnssId 3 TrkCh  4 maxTrCh  5 reserved 0 Flags x11010001
+   BeiDou B1I enabled
+  gnssId 5 TrkCh  0 maxTrCh  3 reserved 0 Flags x11110001
+   QZSS L1C/A L2C enabled
+  gnssId 6 TrkCh  8 maxTrCh 12 reserved 0 Flags x11110001
+   GLONASS L1 L2 enabled
+----
+
+There are several things to note.  SBAS is not shown.  Outside of FAA
+requirements, SBAS no longer has any value to the user, and is simply
+not supported.  Multiple signals per constellation are shown, and can be
+individually enabled.
+
+== Changing Constellations
+
+The 9-series receives a large number of signals in parallel, so other than
+for testing, there is no need to change the defaults that listen to
+everything.
+
+Stepping back a bit, the 8-series is more problematic.  Many of them
+can only listen to two out of the three possible frequency bands:  GPS,
+GLONASS and BeiDou.  Most default to GPS and GLONASS, but GPS and Beidou
+may work better.  This is partly because most GPS-only antenna can
+receiver BeiDou, but fail to receive GLONASS.
+
+If we first try to enable BeiDou, that will fail, as that would enable
+3 constellations when only 2 are supported.  So disable GLONASS, then
+enable BeiDou, then check.  Always check as u-blox does not reliably report
+errors.
+
+----
+$ ubxtool -d GLONASS
+[...]
+$ ubxtool -e BEIDOU
+[...]
+$ ubxtool -p CFG-GNSS
+[...]
+UBX-CFG-GNSS:
+ msgVer 0  numTrkChHw 32 numTrkChUse 32 numConfigBlocks 5
+  gnssId 0 TrkCh  8 maxTrCh 16 reserved 0 Flags x01010001
+   GPS L1C/A enabled
+  gnssId 1 TrkCh  1 maxTrCh  3 reserved 0 Flags x01010001
+   SBAS L1C/A enabled
+  gnssId 3 TrkCh  2 maxTrCh 16 reserved 0 Flags x01010001
+   BeiDou B1I enabled
+  gnssId 5 TrkCh  0 maxTrCh  3 reserved 0 Flags x01010001
+   QZSS L1C/A enabled
+  gnssId 6 TrkCh  8 maxTrCh 14 reserved 0 Flags x01010000
+   GLONASS L1 
+----
+
+After a few minutes, if you are in a location witch BeiDou covers, then
+you should start to see BeiDou sats in the cgps sat list.  The 8-series
+has many other constraints on setting CFG-GNSS, the masochistic will
+need to spend a lot of quality time with the u-blox documentation to
+lean the many ways to shoot yourself in the foot.
+
+While the need for changing what the 9-series listens for is less, the
+complexity of doing so is increased.  Not only must the constellation
+be selected, but also the signals within the constellation.
+
+Let us disable GLONASS on a ZED-F9P, then enable it, and check the
+results:
+
+----
+$ ubxtool -d GLONASS
+[...]
+$ ubxtool -e GLONASS
+[...]
+$ ubxtool -p CFG-GNSS
+[...]
+UBX-CFG-GNSS:
+ msgVer 0  numTrkChHw 60 numTrkChUse 60 numConfigBlocks 5
+  gnssId 0 TrkCh  8 maxTrCh 16 reserved 0 Flags x11110001
+   GPS L1C/A L2C enabled
+  gnssId 2 TrkCh 10 maxTrCh 18 reserved 0 Flags x21210001
+   Galileo E1 E5b enabled
+  gnssId 3 TrkCh  4 maxTrCh  5 reserved 0 Flags x11010001
+   BeiDou B1I enabled
+  gnssId 5 TrkCh  0 maxTrCh  3 reserved 0 Flags x11110001
+   QZSS L1C/A L2C enabled
+  gnssId 6 TrkCh  8 maxTrCh 12 reserved 0 Flags x11110000
+   GLONASS L1 L2 
+----
+
+Note that GLONASS is still disabled.  Determining why is left as an
+exercise to the reader.  The receiver must be told to enable both
+frequencies before it complies:
+
+----
+$ ubxtool -e GLONASS
+[...]
+$ ubxtool -p CFG-GNSS
+[...]
+UBX-CFG-GNSS:
+ msgVer 0  numTrkChHw 60 numTrkChUse 60 numConfigBlocks 5
+  gnssId 0 TrkCh  8 maxTrCh 16 reserved 0 Flags x11110001
+   GPS L1C/A L2C enabled
+  gnssId 2 TrkCh 10 maxTrCh 18 reserved 0 Flags x21210001
+   Galileo E1 E5b enabled
+  gnssId 3 TrkCh  4 maxTrCh  5 reserved 0 Flags x11010001
+   BeiDou B1I enabled
+  gnssId 5 TrkCh  0 maxTrCh  3 reserved 0 Flags x11110001
+   QZSS L1C/A L2C enabled
+  gnssId 6 TrkCh  8 maxTrCh 12 reserved 0 Flags x11110001
+   GLONASS L1 L2 enabled
+----
+
+Another reason to always check your work when using ubxtool.
+
+== Changing Constellations with Configuration Items
+
+The astute will have noticed that the canned ubxtool commands, like
+"-e GLONASS", send one or binary messages that may change a handful
+or variables at once.  The 9-series avoids this mess with Configuration
+Items.  These allow you to get, set or delete individual settings in
+the receiver.  before continuing this section, read the ubxtool
+man page on Configuration Items.
+
+The CFG-SIGNAL Configuration Item group includes the CFG-GNSS items
+of interest here.  So take a look at them, in the ram layer:
+
+----
+$ ubxtool -g CFG-SIGNAL,0
+[...]
+UBX-CFG-VALGET:
+ version 1 layer 0 position 0
+  layers (ram)
+    item CFG-SIGNAL-GPS_L1CA_ENA/0x10310001 val 1
+    item CFG-SIGNAL-GPS_L2C_ENA/0x10310003 val 1
+    item CFG-SIGNAL-GAL_E1_ENA/0x10310007 val 1
+    item CFG-SIGNAL-GAL_E5B_ENA/0x1031000a val 1
+    item CFG-SIGNAL-BDS_B1_ENA/0x1031000d val 1
+    item CFG-SIGNAL-BDS_B2_ENA/0x1031000e val 0
+    item CFG-SIGNAL-QZSS_L1CA_ENA/0x10310012 val 1
+    item CFG-SIGNAL-QZSS_L2C_ENA/0x10310015 val 1
+    item CFG-SIGNAL-GLO_L1_ENA/0x10310018 val 1
+    item CFG-SIGNAL-GLO_L2_ENA/0x1031001a val 1
+    item CFG-SIGNAL-GPS_ENA/0x1031001f val 1
+    item CFG-SIGNAL-GAL_ENA/0x10310021 val 1
+    item CFG-SIGNAL-BDS_ENA/0x10310022 val 1
+    item CFG-SIGNAL-QZSS_ENA/0x10310024 val 1
+    item CFG-SIGNAL-GLO_ENA/0x10310025 val 1
+    item CFG-SIGNAL-39/0x10310027 val 1
+[...]
+----
+
+Notice that the BeiDou B2 signal is not enabled.  That might be because
+when the firmware was written there were not B2 signals from space to
+test.  Or maybe not, who knows, but we want to enable it to see if
+anything changes.  So we will use the "-z" command to enable it, and
+the "-g" command to check it in layer 0.
+
+----
+$ ubxtool -z CFG-SIGNAL-BDS_B2_ENA,1
+[...]
+$ ubxtool -g CFG-SIGNAL-BDS_B2_ENA,0
+[...]
+UBX-CFG-VALGET:
+ version 1 layer 0 position 0
+  layers (ram)
+    item CFG-SIGNAL-BDS_B2_ENA/0x1031000e val 1
+----
+
+== UBX LOGGING
+
+Sometimes you want your GNSS receiver to be able to log PVT fixes for
+later retrieval.  This allows the host to go into sleep mode to save
+power.  Some GNSS receivers, like the NEO-M8B, allow the receiver to go
+into sleep mode between fixes to save even more power.
+
+Be sure you have performed all the steps in Intitial Setup before
+proceeding to the logging specific steps.
+
+=== Prerequisites
+
+For UBX LOGGING, you need:
+* u-blox 7, 8 or 9 GNSS receiver (protocol version 15+)
+* external flash memory
+
+If you do not meet the above prerequisites, then you can stop reading
+now.
+
+The easy way to see if your firmware supports logging is to ask it:
+
+----
+$ ubxtool -p LOG-INFO
+----
+
+There are three possible results.  One is that the receiver does
+not return ACK-ACK, ACK-NAK, or any UBX-LOG-INFO message.  That means
+your receiver does not support logging.  Game over, your receiver does
+not support logging.
+
+The second is similar to this:
+
+----
+    UBX-LOG-INFO:
+      version 1 reserved1 x0 x0 filestoreCapacity 0 reserved2 x0 x0
+      currentMaxLogSize 0 currentLogSize 0 entryCount 0
+      oldestYear 0 oldestMonth 0 oldestDay 0 
+      oldestHour 0 oldestMin 0 oldestSec 0 reserved3 x0
+      newestYear 0 newestMonth 0 newestDay 0 
+      newestHour 0 newestMin 0 newestSec 0 reserved4 x0
+      status x10 reserved5 x0 x0
+----
+
+The filestoreCapacity of zero means you have no flash for logging to
+use.  Game over, your receiver does not support logging.
+
+The third results is similar to this:
+
+----
+    UBX-LOG-INFO:
+      version 1 reserved1 x0 x0 filestoreCapacity 487680 reserved2 x9600 x24900
+      currentMaxLogSize 134400 currentLogSize 61 entryCount 0
+      oldestYear 0 oldestMonth 0 oldestDay 0 
+      oldestHour 0 oldestMin 0 oldestSec 0 reserved3 x0
+      newestYear 0 newestMonth 0 newestDay 0 
+      newestHour 0 newestMin 0 newestSec 0 reserved4 x0
+      status x20 reserved5 x0 x0
+----
+
+That means your receiver has almost 500 kB of flash, and about 134 kB is
+available for logging.  Congratulations, your receiver supports logging.
+Proceed to the next section on configuration.
+
+=== Configuration
+
+Be sure you have completed the instructions in the section
+Initial Setup before continuing here.
+
+Turn off NMEA
+
+----
+$ ubxtool -d NMEA -P 18
+----
+
+Turn off BINARY
+
+----
+$ ubxtool -d BINARY -P 18
+----
+
+Erase any exiting log:
+
+----
+$ ubxtool -p LOG-ERASE -P 18
+----
+
+Create new log:
+
+----
+$ ubxtool -p LOG-CREATE -P 18
+----
+
+Start logging:
+
+----
+$ ubxtool -e LOG -P 18
+----
+
+Wait, then verify:
+
+----
+$ ubxtool -p LOG-INFO -P 18 -v 2
+----
+
+Add a string:
+
+----
+$ ubxtool -p LOG-STRING -P 18 -v 2
+----
+
+Wait, then turn off logging.
+
+----
+$ ubxtool -d LOG -P 18 -v 2
+----
+
+Verify:
+
+----
+ubxtool -p LOG-INFO -P 18 -v 2
+----
+
+Retrieve log data:
+
+----
+$ ubxtool -p LOG-RETRIEVE -P 18 -v 2
+----
+
+Erase and clear existing log, before you can enable log again.:
+
+----
+$ ubxtool -p LOG-ERASE -P 18
+$ ubxtool -p LOG-CREATE -P 18
+----
+
+== BATCHING
+
+U-blox batching is like logging, but logging is saved in flash memory,
+and batching is saved in RAM memory.  Not all u-blox receivers have RAM
+available for batching.
+
+Be sure you have performed all the steps in Intitial Setup before
+proceeding to the batching specific steps.
+
+=== Prerequisites
+
+For UBX BATCH, you need:
+* u-blox 8 or 9 GNSS receiver (protocol version 23.01+)
+* RAM memory
+
+If you do not meet the above prerequisites, then you can stop reading
+now.
+
+=== Configuration
+
+Be sure you have completed the instructions in the section
+Initial Setup before continuing here.
+
+Enable batching:
+
+----
+$ ubxtool -e CFG-BATCH
+----
+
+Wait, then verify:
+
+----
+$ ubxtool -p CFG-BATCH -p MON-BATCH -v 2
+[...]
+UBX-CFG-BATCH:
+  version 0 flags xd bufsize 128 notifThrs 0
+  pioId 0 reserved1 0
+      flags (enable extraPvt extraOdo)
+
+UBX-ACK-ACK:
+  ACK to Class x06 (CFG) ID x93 (BATCH)
+
+UBX-MON-BATCH:
+   version 0 reserved1 0 0 0 fillLevel 128
+   dropsAll 321 dropsSinceMon 15 nextMsgCnt 38
+[...]
+----
+
+Wait a while, for some fixes to be saved in the BATCH.  Then get all the
+batch entries:
+
+----
+$ ubxtool -p LOG-RETRIEVEBATCH -v 2
+----
+
+End batching:
+
+----
+$ ubxtool -d CFG-BATCH
+----
+
+
+// vim: set syntax=asciidoc:
