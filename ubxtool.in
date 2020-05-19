@@ -4365,7 +4365,7 @@ Oddly this is the poll for UBX-LOG-BATCH
 
         u = struct.unpack_from('<BBBBLHHBBBB', buf, 0)
         s = (" version %u reserved1 %u %u %u iTOW %u intOsc x%x extOsc x%x\n"
-             " discOsc %u gnss x%x extInt0 x%x extInt1 %x%x" % u)
+             " discOsc %u gnss x%x extInt0 x%x extInt1 x%x" % u)
         if VERB_DECODE <= opts['verbosity']:
             s += ("\n  intOsc (%s) intOscState (%s)"
                   "\n  extOsc(%s) extoscState (%s)"
