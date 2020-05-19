@@ -425,15 +425,18 @@ ubiquity and what it's like to be an infrastructure gnome.</dd>
 using GPSD and either ntpd or chrony. Documents the black art of
 tuning offsets for remote time servers.</dd>
 
+<dt><a href="ppp-howto.html">PPP HOWTO</a></dt>
+<dd>A guide to using <code>gpsd</code> and <code>gpsrinex</code> to
+determine your position to the cm level.</dd>
+
 <dt><a href="time-service-intro.html">Introduction to Time Service</a></dt>
 <dd>All about time service, reference clocks, strata, chimers, and
 other mysteries. Written as a companion to <a
 href="gpsd-time-service-howto.html">GPSD Time Service HOWTO</a> for
 time-service novices.</dd>
 
-<dt><a href="ppp-howto.html">PPP HOWTO</a></dt>
-<dd>A guide to using <code>gpsd</code> and <code>gpsrinex</code> to
-determine your position to the cm level.</dd>
+<dt><a href="ubxtool-examples.html">ubxtool examples</a></dt>
+<dd>Examples for performing common <code>ubxtool</code> tasks.</dd>
 
 </dl>
 
