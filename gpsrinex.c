@@ -84,6 +84,7 @@
 #include "gps.h"
 #include "gpsdclient.h"
 #include "os_compat.h"
+#include "timespec.h"
 
 static char *progname;
 static struct fixsource_t source;
@@ -165,8 +166,10 @@ static struct obs_cnt_t {
 
 static FILE * tmp_file;             /* file handle for temp file */
 static int sample_count = 20;       /* number of measurement sets to get */
-/* seconds between measurement sets */
-static unsigned int sample_interval = 30;
+/* timespec_t between measurement sets */
+static timespec_t sample_interval_ts = {30, 0};
+/* milli-seconds between measurement sets */
+static unsigned  sample_interval_ms = 30000;
 
 #define DEBUG_QUIET 0
 #define DEBUG_INFO 1
@@ -499,7 +502,7 @@ static void print_rinex_header(void)
     (void)fprintf(log_file, "%-10s%50s%-20s\n",
                   "DBHZ", "", "SIGNAL STRENGTH UNIT");
     (void)fprintf(log_file, "%10.3f%50s%-20s\n",
-                  (double)sample_interval, "", "INTERVAL");
+                  (double)sample_interval_ms / 1000.0, "", "INTERVAL");
 
     /* GPS time not UTC */
     first_time = gmtime_r(&(first_mtime.tv_sec), &tm_buf);
@@ -750,9 +753,11 @@ static void one_sig(struct meas_t *meas)
         snr = 9;
     }
 
-    /* check for slip */
-    /* FIXME: use actual interval */
-    if (meas->locktime < (sample_interval * 1000)) {
+    /* check for slip
+     * FIXME: use actual interval
+     * locktime is in milliseconds
+     * sample_interval_ms is milli seconds */
+    if (meas->locktime < sample_interval_ms) {
         meas->lli |= 2;
     }
 
@@ -791,22 +796,27 @@ static void print_raw(struct gps_data_t *gpsdata)
     int need_nl = 0;
     int got_l1 = 0;
     time_t epoch_sec;
+    timespec_t interval_ts;
 
-    if ((last_mtime.tv_sec + (time_t)sample_interval) >
-        gpsdata->raw.mtime.tv_sec) {
+    TS_SUB(&interval_ts, &gpsdata->raw.mtime, &last_mtime);
+    if (!TS_GE(&interval_ts, &sample_interval_ts)) {
         /* not time yet */
         return;
     }
-    epoch_sec = gpsdata->raw.mtime.tv_sec;
-    if (500000000 < gpsdata->raw.mtime.tv_nsec) {
-         // round it up.  To match convbin.
-         // does this break opus?
-         epoch_sec++;
-    }
 
-    /* opus insists (time % interval) = 0 */
-    if (0 != (epoch_sec % sample_interval)) {
-        return;
+    // do modulo only for sample_interval of even seconds
+    if (0 == sample_interval_ts.tv_nsec) {
+        epoch_sec = gpsdata->raw.mtime.tv_sec;
+        if (500000000 < gpsdata->raw.mtime.tv_nsec) {
+             // round it up.  To match convbin.
+             // does this break opus?
+             epoch_sec++;
+        }
+
+        /* opus insists (time % interval) = 0 */
+        if (0 != (epoch_sec % sample_interval_ts.tv_sec)) {
+            return;
+        }
     }
 
     /* RINEX 3 wants records in each epoch sorted by gnssid.
@@ -1062,7 +1072,8 @@ static void usage(void)
           "     -f, --fileout  filename    out to filename\n"
           "                                default: gpsrinexYYYYDDDDHHMM.obs\n"
           "     -h, --help                 print this usage and exit\n"
-          "     -i, --interval interval    time between samples, default: %d\n"
+          "     -i, --interval interval    time between samples in seconds\n"
+          "                                default: %0.3f\n"
           "     -n, --count count          number samples to collect\n"
           "                                default: %d\n"
           "     -V, --version              print version and exit\n"
@@ -1080,9 +1091,9 @@ static void usage(void)
           "     --rec_type [type]          receiver type\n"
           "     --rec_vers [vers]          receiver vers\n"
           "\n"
-          "defaults to '%s -n %d -i %d localhost:2947'\n",
-          progname, sample_interval, sample_count, progname, sample_count,
-          sample_interval);
+          "defaults to '%s -n %d -i %0.3f localhost:2947'\n",
+          progname, (double)sample_interval_ms / 1000.0, sample_count, progname,
+          sample_count, (double)sample_interval_ms / 1000.0);
     exit(EXIT_FAILURE);
 }
 
@@ -1164,12 +1175,16 @@ int main(int argc, char **argv)
             fname = strdup(optarg);
             break;
         case 'i':               /* set sampling interval */
-            sample_interval = (time_t) atoi(optarg);
-            if (sample_interval < 1)
-                sample_interval = 1;
-            if (sample_interval >= 3600)
+            sample_interval_ms = safe_atof(optarg); // still in seconds
+            if (0.001 <- sample_interval_ms) {
+                sample_interval_ms = 0.001;
+            }
+            if (3600.0 <= sample_interval_ms) {
                 (void)fprintf(stderr,
-                          "WARNING: saample interval is an hour or more!\n");
+                              "WARNING: sample interval is an hour or more!\n");
+            }
+            DTOTS(&sample_interval_ts, sample_interval_ms);
+            sample_interval_ms /= 1000; // now in ms
             break;
         case 'n':
             sample_count = atoi(optarg);
