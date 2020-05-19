@@ -1,15 +1,15 @@
-= Precise Point Positioning (PPP) HOWTO =
+= Precise Point Positioning (PPP) HOWTO
 :description: This document is a guide getting high accuracy from your GPS using Precise Point Positioning (PPP).
 :keywords: Precise Point Positioning, PPP, GPSD, GPS
 Gary E. Miller <gem@rellim.com>
-V1.01, 31 Dec 2019
+V1.02, 16 May 2020
 
-== WARNING ==
+== WARNING
 
-This document assumes you are using gpsd version 3.19 or 3.20.  Using
-other versions will fail in strange ways.
+This document assumes you are using gpsd versions 3.19, 3.20 or git
+head.  Using older versions will fail in strange ways.
 
-== Introduction ==
+== Introduction
 
 This document is a guide getting high accuracy static positions from
 your GPS using Precise Point Positioning (PPP). The rare few that have a
@@ -29,7 +29,7 @@ will not be discussed here.  RTK users will still want to read this
 document.  The RTK Best practice is to determine the position of the
 base using PPP before sending the RTK data from the base to its rovers.
 
-== Requirements ==
+== Requirements
 
 This document assumes that you have installed gpsd version 3.19 or 3.20, basic
 knowledge of how to use _gpsd_.  Before continuing you should know how
@@ -56,7 +56,7 @@ Javad GPS that support the GREIS language or the u-blox 9 series.
 
 Finally, patience is required.
 
-== Results ==
+== Results
 
 The end goal of this process is to determine the latitude, longitude and
 altitude of your GPS antenna as precisely as possible.  Additionally
@@ -68,7 +68,7 @@ do not want to base any navigation or surveying on a 50% probability.
 
 More interesting is the CEP(95) which includes 95% of the measurements.
 
-== ITRF00, WGS84, NAD83 and Ellipsoids ==
+== ITRF00, WGS84, NAD83 and Ellipsoids
 
 Ever noticed how two "accurate" GPS placed side by side can give wildly
 different latitude, longitude, and especially altitude for the same
@@ -144,7 +144,7 @@ if you are not certain of your datum and vertical datum (ellipsoid),
 with epoch. This will be important later as you are asked to input your
 choice of horizontal and vertical datums to your PPP service.
 
-== Averaging ==
+== Averaging
 
 The first technique covered, Simple Averaging, works with any GPS that
 is supported by _gpsd_.  For best results a minimum of 6 hours, and
@@ -185,7 +185,7 @@ remote host that supports Python this way:
 Depending on your GPS, your GPS antenna, and your sky view, you may get
 a CEP(95) of around 1.5 m.
 
-== Precise Point Positioning (PPP) ==
+== Precise Point Positioning (PPP)
 
 Plain GPS determine their position by measuring the distance to several
 GPS satellites and calculating a position solution. The main limitation
@@ -217,7 +217,7 @@ L1 and L2 observations in RINEX 3.
   Their
 tool is at: https://trimblertx.com/Home.aspx
 
-== PPP Configuration ==
+== PPP Configuration
 
 Before you can collect raw data from you GPS, you must configure it to
 output raw data.  This configuration will not be the default configuration
@@ -230,7 +230,7 @@ Many of the configuration steps are order dependent. If in doubt, start
 over from the beginning. Be sure that _gpsd_ is running and that _cgps_
 shows that you have a stable 3D fix.
 
-=== u-blox configuration ===
+=== u-blox configuration
 
 This section is only for u-blox users.
 
@@ -306,7 +306,7 @@ UBX-RXM-RAWX:
 After you have completed these steps, do not restart _gpsd_.  If you restart
 _gpsd_ then you must restart the configuration from the beginning.
 
-=== Javad (GREIS) configuration ===
+=== Javad (GREIS) configuration
 
 The section is only for users of Javad GPS supporting the GREIS
 language.
@@ -361,7 +361,7 @@ data from the GPS:
 After you have completed these steps, do not retart _gpsd_.  If you restart
 _gpsd_ then you must restart the configuration from the beginning.
 
-== Acquire the Raw Data ==
+== Acquire the Raw Data
 
 Configuration complete. Collect 24 hours of samples at 30 second
 intervals, save the raw data as RINEX 3 format in the file _today.obs_.
@@ -381,7 +381,7 @@ https://webapp.geod.nrcan.gc.ca/geod/tools-outils/ppp.php
 Take a break. You now have 24 hours to contemplate the answer to the
 ultimate question of life, the universe, and everything.
 
-== Post Process the Raw Data ==
+== Post Process the Raw Data
 
 More waiting.  Before you can post process your data, the PPP service
 must be ready for it.  Depending on the service it can take from 10 to
@@ -393,7 +393,7 @@ will accept L1 only data, trimble RTX requires L1 and L2 data.  Try
 both, with the same data set, if you can.  That will show you that their
 sigma's are "optimistic".
 
-=== CSRS-PPP ===
+=== CSRS-PPP
 
 After _gpsrinex_ is complete, you need to login to CSRS-PPP and
 upload the RINEX 3 file.  After login you will be taken to the upload
@@ -408,20 +408,20 @@ maybe within minutes, maybe up to 36 hours later, with a link to a file
 called: full_output.zip.  Unzip, and Voila!  Inside is a PDF file with
 your precise position, and other goodies.
 
-=== Trimble RTX ===
+=== Trimble RTX
 
 Before uploading today.obs to Trimble you will need to change the _.obs_
 extention to _.YYo_, where YY is the 2-digit year.  Then proceed as
 above with CSRS-PPP.
 
-=== GAPS ===
+=== GAPS
 
 The University of New Brunswich has an online PPP sevice.  They call
 it GNSS Analysis and Positioning Software (GAPS).  GAPS requires
 observations from the L2 P signal or L5 signal.  No u-blox chip
 follows the L2 P signal.
 
-== References ==
+== References
 
 Wikipedia has a little information on PPP:
 https://en.wikipedia.org/wiki/Precise_Point_Positioning
