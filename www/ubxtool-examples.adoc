@@ -19,9 +19,9 @@ Most users will be perfectly happy running their receiver in its default
 configuration, but there are often times when users get the itch to
 change settings to see what happens.  Sometimes even for good reasons.
 
-Feel free to jump around this document to recipes that interest you,
-but be sure to read all of, and comply with, the section on Initial
-Setup.
+IMPORTANT: Feel free to jump around this document to recipes that
+interest you, but be sure to first read all of, and comply with, the
+section on Initial Setup.
 
 == Initial Setup
 
@@ -31,7 +31,7 @@ that cgps is showing current and valid data from the receiver.
 If cgps is not showing any data, then do not bother to continue reading
 this document.
 
-You also need a copy of the "Interface Desscription" for your exact
+You also need a copy of the "Interface Description" for your exact
 u-blox device.  The examples here will refer to a lot of messages and
 variables that are defined in that document.  Keep it open while reading
 this document and refer to it often.
@@ -394,11 +394,11 @@ $ ubxtool -p LOG-INFO
 
 There are three possible results.
 
-One,. the receiver does not return ACK-ACK, ACK-NAK, or any UBX-LOG-INFO
+One, the receiver does not return ACK-ACK, ACK-NAK, or any UBX-LOG-INFO
 message.  That means your receiver does not support logging.  Game over,
 your receiver does not support logging.
 
-Two, the receiver returns somthing similar to this:
+Two, the receiver returns something similar to this:
 
 ----
     UBX-LOG-INFO:
@@ -414,7 +414,7 @@ Two, the receiver returns somthing similar to this:
 The filestoreCapacity of zero means you have no flash for logging to
 use.  Game over, your receiver does not support logging.
 
-Three, the receiver returns somthing similar to this:
+Three, the receiver returns something similar to this:
 
 ----
     UBX-LOG-INFO:
@@ -466,7 +466,7 @@ Add a string:
 $ ubxtool -p LOG-STRING -P 18 -v 2
 ----
 
-Wait for a few more fixees to be logged, then turn off logging.
+Wait for a few more fixes to be logged, then turn off logging.
 
 ----
 $ ubxtool -d LOG -P 18 -v 2
@@ -497,7 +497,7 @@ U-blox batching is like logging, but logging is saved in flash memory,
 and batching is saved in RAM memory.  Not all u-blox receivers have RAM
 available for batching.
 
-Be sure you have performed all the steps in Intitial Setup before
+Be sure you have performed all the steps in Initial Setup before
 proceeding to these batching specific steps.
 
 === Batching Prerequisites
