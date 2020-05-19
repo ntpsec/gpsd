@@ -6,6 +6,14 @@
 
 = ubxtool recipes
 
+== WARNING ==
+
+This document assumes you are using gpsd version 3.20 or higher.  Not
+all u-blox 9 examples work in version 3.20.  Using other gpsd versions
+will fail in strange ways.
+
+== Introduction
+
 The u-blox GNSS receivers have a huge number of configuration options.
 Most users will be perfectly happy running their receiver in its default
 configuration, but there are often times when users get the itch to
@@ -108,14 +116,16 @@ $ ubxtool -e BINARY
 $ ubxtool -d NMEA
 ----
 
-== Checking Constellations
+== Constellations
 
 For unknown reasons, one of the first things newbies want to play with
 is the constellation settings.  If you are headed to the polar regions,
 into space, or to Asia, then these settings will be of interest to you.
 Otherwise, unless you have a Rubidium atomic clock handy, it will be
 hard for you to improve on the defaults.  If you still must fiddle, then
-read on.
+read on, after completing the above section on Initial Setup.
+
+=== Changing Constellations
 
 First you must understand what your GNSS receiver is capable of.  Find
 this out with the UBX-MON-GNSS message.
@@ -201,7 +211,7 @@ requirements, SBAS no longer has any value to the user, and is simply
 not supported.  Multiple signals per constellation are shown, and can be
 individually enabled.
 
-== Changing Constellations
+=== Changing Constellations
 
 The 9-series receives a large number of signals in parallel, so other than
 for testing, there is no need to change the defaults that listen to
@@ -352,21 +362,24 @@ UBX-CFG-VALGET:
     item CFG-SIGNAL-BDS_B2_ENA/0x1031000e val 1
 ----
 
-== UBX LOGGING
+== Logging
 
 Sometimes you want your GNSS receiver to be able to log PVT fixes for
 later retrieval.  This allows the host to go into sleep mode to save
-power.  Some GNSS receivers, like the NEO-M8B, allow the receiver to go
-into sleep mode between fixes to save even more power.
+power.  Logs are stored in external flash memory.  Some GNSS receivers,
+like the NEO-M8B, allow the receiver to go into sleep mode between fixes
+to save even more power.
 
 Be sure you have performed all the steps in Intitial Setup before
 proceeding to the logging specific steps.
 
 === Prerequisites
 
-For UBX LOGGING, you need:
-* u-blox 7, 8 or 9 GNSS receiver (protocol version 15+)
-* external flash memory
+For Logging, you need:
+
+1. u-blox 7, 8 or 9 GNSS receiver (protocol version 15+)
+
+2. external flash memory
 
 If you do not meet the above prerequisites, then you can stop reading
 now.
@@ -377,12 +390,13 @@ The easy way to see if your firmware supports logging is to ask it:
 $ ubxtool -p LOG-INFO
 ----
 
-There are three possible results.  One is that the receiver does
-not return ACK-ACK, ACK-NAK, or any UBX-LOG-INFO message.  That means
-your receiver does not support logging.  Game over, your receiver does
-not support logging.
+There are three possible results.
 
-The second is similar to this:
+1. the receiver does not return ACK-ACK, ACK-NAK, or any UBX-LOG-INFO
+message.  That means your receiver does not support logging.  Game over,
+your receiver does not support logging.
+
+2. the receiver returns somthing similar to this:
 
 ----
     UBX-LOG-INFO:
@@ -398,7 +412,7 @@ The second is similar to this:
 The filestoreCapacity of zero means you have no flash for logging to
 use.  Game over, your receiver does not support logging.
 
-The third results is similar to this:
+3. the receiver returns somthing similar to this:
 
 ----
     UBX-LOG-INFO:
@@ -420,18 +434,6 @@ Proceed to the next section on configuration.
 Be sure you have completed the instructions in the section
 Initial Setup before continuing here.
 
-Turn off NMEA
-
-----
-$ ubxtool -d NMEA -P 18
-----
-
-Turn off BINARY
-
-----
-$ ubxtool -d BINARY -P 18
-----
-
 Erase any exiting log:
 
 ----
@@ -450,7 +452,7 @@ Start logging:
 $ ubxtool -e LOG -P 18
 ----
 
-Wait, then verify:
+Wait, then verify that the receiver is logging data:
 
 ----
 $ ubxtool -p LOG-INFO -P 18 -v 2
@@ -462,7 +464,7 @@ Add a string:
 $ ubxtool -p LOG-STRING -P 18 -v 2
 ----
 
-Wait, then turn off logging.
+Wait for a few more fixees to be logged, then turn off logging.
 
 ----
 $ ubxtool -d LOG -P 18 -v 2
@@ -480,27 +482,29 @@ Retrieve log data:
 $ ubxtool -p LOG-RETRIEVE -P 18 -v 2
 ----
 
-Erase and clear existing log, before you can enable log again.:
+Erase and clear existing log, before you can enable log again:
 
 ----
 $ ubxtool -p LOG-ERASE -P 18
 $ ubxtool -p LOG-CREATE -P 18
 ----
 
-== BATCHING
+== Batching
 
 U-blox batching is like logging, but logging is saved in flash memory,
 and batching is saved in RAM memory.  Not all u-blox receivers have RAM
 available for batching.
 
 Be sure you have performed all the steps in Intitial Setup before
-proceeding to the batching specific steps.
+proceeding to these batching specific steps.
 
 === Prerequisites
 
 For UBX BATCH, you need:
-* u-blox 8 or 9 GNSS receiver (protocol version 23.01+)
-* RAM memory
+
+1. u-blox 8 or 9 GNSS receiver (protocol version 23.01+)
+
+2. RAM memory
 
 If you do not meet the above prerequisites, then you can stop reading
 now.
