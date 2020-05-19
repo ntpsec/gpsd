@@ -32,9 +32,9 @@ If cgps is not showing any data, then do not bother to continue reading
 this document.
 
 You also need a copy of the "Interface Desscription" for your exact
-u-blox device.  This document will refer to a lot of messages and
-variables that are defined in that document.  Keep it open while
-reading this document and refer to it often.
+u-blox device.  The examples here will refer to a lot of messages and
+variables that are defined in that document.  Keep it open while reading
+this document and refer to it often.
 
 === Protocol Version
 
@@ -66,7 +66,7 @@ UBX-MON-VER:
   extension GPS;SBAS;GLO;BDS;QZSS
 ----
 
-The shortcut for u-blox 8 and up:
+The shortcut to find the PROTVER for u-blox 8 and up:
 
 ----
 $ ubxtool -p MON-VER | fgrep PROT
@@ -76,7 +76,7 @@ extension PROTVER=18.00
 The above shows the protocol version is 18.00.
 
 The ubxtool program needs to know the protocol version (PROTVER) of
-the connected receiver to send the commands matched to the receiver
+the connected receiver to send commands matched to your exact receiver's
 needs.  Use the "-P XX" option for this, where XX is your version.  This
 is easy to forget, and annoying to type repeatedly, so add it to your
 environment and ubxtool will use it.  For example if you have an early
@@ -97,19 +97,19 @@ $ export UBXOPTS="-P 18 -v 2"
 
 A common problem when dealing with a u-blox GNSS receiver is left over
 configuration from earlier experiments.  The u-blox receivers are very
-picky about competing configuration options, and fail to warn the unwary
-of conflicts.  Best to always revert to factory defaults before starting
-a new configuration.
+picky about competing configuration options, and may fail to warn the
+unwary of conflicts.  Best to always revert to factory defaults before
+starting a new configuration.
 
 ----
 $ ubxtool -p RESET
 ----
 
 After a few seconds the receiver will only be sending NMEA, you will
-want to enable the u-blox binary, and disable the NMEA.  Best to do it
-in that order so the receiver does not go totally silent.  This is one
-place where the "-P", set in UBXOPTS, is critically important, to get
-the correct messages for your firmware.
+want to enable u-blox binary messages, and disable NMEA messages.  Best
+to do it in that order so the receiver does not go totally silent.  This
+is one place where the "-P", set in UBXOPTS, is critically important, to
+get the correct messages for your firmware.
 
 ----
 $ ubxtool -e BINARY
@@ -121,9 +121,10 @@ $ ubxtool -d NMEA
 For unknown reasons, one of the first things newbies want to play with
 is the constellation settings.  If you are headed to the polar regions,
 into space, or to Asia, then these settings will be of interest to you.
-Otherwise, unless you have a Rubidium atomic clock handy, it will be
-hard for you to improve on the defaults.  If you still must fiddle, then
-read on, after completing the above section on Initial Setup.
+Otherwise, unless you have a Rubidium atomic clock handy, or run 12-hour
+experiments with gpsprof, it will be hard for you to improve on the
+defaults.  If you still must fiddle, then read on, after completing the
+above section on Initial Setup.
 
 === Changing Constellations
 
@@ -134,9 +135,9 @@ this out with the UBX-MON-GNSS message.
 $ ubxtool -p MON-GNSS
 ----
 
-If your receiver does not return an ACK-ACK message, then it is
-version 7, or earlier, and only support GPS satellites.  You can
-stop reading this section now.
+If your receiver does not return an ACK-ACK message, then it is 7-series
+or earlier, and only receives from GPS satellites.  Owners of 7-series,
+or older receivers can stop reading this section now.
 
 A u-blox 8 may return something like this:
 
@@ -221,7 +222,8 @@ Stepping back a bit, the 8-series is more problematic.  Many of them
 can only listen to two out of the three possible frequency bands:  GPS,
 GLONASS and BeiDou.  Most default to GPS and GLONASS, but GPS and Beidou
 may work better.  This is partly because most GPS-only antenna can
-receiver BeiDou, but fail to receive GLONASS.
+receiver BeiDou, but fail to receive GLONASS.  Partly because BeiDou and
+GLONASS sats cover different regions of the earth.
 
 If we first try to enable BeiDou, that will fail, as that would enable
 3 constellations when only 2 are supported.  So disable GLONASS, then
@@ -288,7 +290,7 @@ exercise to the reader.  The receiver must be told to enable both
 frequencies before it complies:
 
 ----
-$ ubxtool -e GLONASS
+$ ubxtool -e GLONASS,2
 [...]
 $ ubxtool -p CFG-GNSS
 [...]
@@ -313,7 +315,7 @@ Another reason to always check your work when using ubxtool.
 The astute will have noticed that the canned ubxtool commands, like
 "-e GLONASS", send one or binary messages that may change a handful
 or variables at once.  The 9-series avoids this mess with Configuration
-Items.  These allow you to get, set or delete individual settings in
+Items.  These allow you to get, set and delete individual settings in
 the receiver.  before continuing this section, read the ubxtool
 man page on Configuration Items.
 
@@ -371,9 +373,9 @@ like the NEO-M8B, allow the receiver to go into sleep mode between fixes
 to save even more power.
 
 Be sure you have performed all the steps in Intitial Setup before
-proceeding to the logging specific steps.
+proceeding to the following logging specific steps.
 
-=== Prerequisites
+=== Logging Prerequisites
 
 For Logging, you need:
 
@@ -382,7 +384,7 @@ For Logging, you need:
 2. external flash memory
 
 If you do not meet the above prerequisites, then you can stop reading
-now.
+this section now.
 
 The easy way to see if your firmware supports logging is to ask it:
 
@@ -392,11 +394,11 @@ $ ubxtool -p LOG-INFO
 
 There are three possible results.
 
-1. the receiver does not return ACK-ACK, ACK-NAK, or any UBX-LOG-INFO
+One,. the receiver does not return ACK-ACK, ACK-NAK, or any UBX-LOG-INFO
 message.  That means your receiver does not support logging.  Game over,
 your receiver does not support logging.
 
-2. the receiver returns somthing similar to this:
+Two, the receiver returns somthing similar to this:
 
 ----
     UBX-LOG-INFO:
@@ -412,7 +414,7 @@ your receiver does not support logging.
 The filestoreCapacity of zero means you have no flash for logging to
 use.  Game over, your receiver does not support logging.
 
-3. the receiver returns somthing similar to this:
+Three, the receiver returns somthing similar to this:
 
 ----
     UBX-LOG-INFO:
@@ -429,7 +431,7 @@ That means your receiver has almost 500 kB of flash, and about 134 kB is
 available for logging.  Congratulations, your receiver supports logging.
 Proceed to the next section on configuration.
 
-=== Configuration
+=== Logging Configuration
 
 Be sure you have completed the instructions in the section
 Initial Setup before continuing here.
@@ -498,9 +500,9 @@ available for batching.
 Be sure you have performed all the steps in Intitial Setup before
 proceeding to these batching specific steps.
 
-=== Prerequisites
+=== Batching Prerequisites
 
-For UBX BATCH, you need:
+For batching, you need:
 
 1. u-blox 8 or 9 GNSS receiver (protocol version 23.01+)
 
@@ -509,7 +511,7 @@ For UBX BATCH, you need:
 If you do not meet the above prerequisites, then you can stop reading
 now.
 
-=== Configuration
+=== Batching Configuration
 
 Be sure you have completed the instructions in the section
 Initial Setup before continuing here.
