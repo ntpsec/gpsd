@@ -6,10 +6,8 @@
 
 = ubxtool recipes
 
-== WARNING ==
-
-This document assumes you are using gpsd version 3.20 or higher.  Not
-all u-blox 9 examples work in version 3.20.  Using other gpsd versions
+WARNING: This document assumes you are using gpsd version 3.20 or higher.  Not
+all u-blox 9 examples work in version 3.20.  Using older gpsd versions
 will fail in strange ways.
 
 == Introduction
@@ -45,7 +43,7 @@ your u-blox receiver.
 $ ubxtool -p MON-VER
 ----
 
-Buried in the data will be a data block that looks like one of these
+Buried in the data will be a data block that similar one of these
 examples.
 
 A u-blox 6, assume protocol version 12
@@ -310,7 +308,7 @@ UBX-CFG-GNSS:
 
 Another reason to always check your work when using ubxtool.
 
-== Changing Constellations with Configuration Items
+=== Changing Constellations with Configuration Items
 
 The astute will have noticed that the canned ubxtool commands, like
 "-e GLONASS", send one or binary messages that may change a handful
