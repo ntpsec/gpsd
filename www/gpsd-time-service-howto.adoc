@@ -1,4 +1,4 @@
-= GPSD Time Service HOWTO =
+= GPSD Time Service HOWTO
 :description: How to set up an NTP Stratum 1 server using GPSD.
 :keywords: time, GPSD, NTP, time, precision, 1PPS, PPS, stratum, jitter
 Gary E. Miller <gem@rellim.com>, Eric S. Raymond <esr@thyrsus.com>
@@ -7,7 +7,7 @@ v2.11, June 2018
 This document is mastered in asciidoc format.  If you are reading it in HTML,
 you can find the original at the GPSD project website.
 
-== Introduction ==
+== Introduction
 
 GPSD, NTP and a GPS receiver supplying 1PPS (one pulse-per-second)
 output can be used to set up a high-quality NTP time server. This
@@ -89,7 +89,7 @@ For a time server, the most common causes of wobble are varying GPS
 satellite geometries and the effect of daily temperature variations on
 the oscillators in your equipment.
 
-== NTP with GPSD ==
+== NTP with GPSD
 
 See <<TIME-INTRO>> for a technical description of how NTP corrects
 your computer's clock against wobble. For purposes of this how-to, the
@@ -115,7 +115,7 @@ In fact many public and widely-trusted Stratum 1 servers use GPS
 receivers as their reference clocks, and a significant fraction of
 those use GPSD in the way we will describe here.
 
-== GPS time ==
+== GPS time
 
 The way time is shipped from GPS satellites causes problems to
 beware of in certain edge cases.
@@ -164,7 +164,7 @@ For accurate time service via GPSD, you require three things:
   based on a u-blox from v6 onward should be good; the status of
   SiRFs is unknown and doubtful.
 
-== 1PPS quality issues ==
+== 1PPS quality issues
 
 GPSD is useful for precision time service because it can use the 1PPS
 pulse delivered by some GPS receivers to discipline (correct) a local
@@ -287,7 +287,7 @@ With these factors in play, worst-case error can reach up to
 unusual and should occur only if all your network routes to servers
 have serious problems.
 
-== Software Prerequisites ==
+== Software Prerequisites
 
 If your kernel provides the RFC 2783 KPPS (kernel PPS) API, gpsd will
 use that for extra accuracy. Many Linux distributions have a package
@@ -295,7 +295,7 @@ called "pps-tools" that will install KPPS support and the timepps.h
 header file.  We recommend you do that.  If your kernel is built in
 the normal modular way, this package installation will suffice.
 
-=== Building gpsd ==
+=== Building gpsd
 
 A normal gpsd build includes support for interpreting 1PPS pulses that
 is mostly autoconfiguring and requires no special setup.  If the
@@ -333,7 +333,7 @@ the daemon, this also builds gpsmon and ntpshmmon.
 if you do not use timeservice=yes, then make sure the build is with
 pps=yes and ntpshm=yes (the default).
 
-=== Kernel support ===
+=== Kernel support
 
 If you are scratch-building a Linux kernel, the configuration
 must include either these two lines, or the same with "y" replaced
@@ -371,7 +371,7 @@ Other OSes have different ways to enable KPPS in their kernels.
 When we learn what those are, we'll document them or point
 at references.
 
-=== Time service daemon ===
+=== Time service daemon
 
 You will need to have either ntpd or chrony installed. If you are
 running a Unix variant with a package system, the packages will
@@ -410,7 +410,7 @@ If it is not available as a package, you can build it from source,
 <<GITLAB-SOURCE>>, it is not especially difficult.
 
 
-== Choice of Hardware ==
+== Choice of Hardware
 
 To get 1PPS to your NTP daemon, you first need to get it from a
 PPS-capable GPS receiver. As of early 2015 this means either the
@@ -485,7 +485,7 @@ often surprisingly inexpensive, as in costing less than US$100.  They
 tend to favor the LEA-6H, and many of them use preinstalled GPSD on
 board.
 
-== Enabling PPS ==
+== Enabling PPS
 
 You can determine whether your GPS receiver emits 1PPS, and gpsd is
 detecting it, by running the gpsmon utility (giving it the GPS
@@ -534,7 +534,7 @@ sources to check:
    intimate with datasheets and pinouts, and might need to acquire a
    different GPS receiver.
 
-== Running GPSD ==
+== Running GPSD
 
 If you're going to use gpsd for time service, you must run in -n mode
 so the clock will be updated even when no clients are active.  This option
@@ -590,7 +590,7 @@ socket location.
 You may also find gpsd can't open serial devices at all if your
 OS distribution has done "secure" things with the permissions.
 
-== Feeding NTPD from GPSD ==
+== Feeding NTPD from GPSD
 
 Most Unix systems get their time service through ntpd, a very old and
 stable open-source software suite which is the reference
@@ -886,7 +886,7 @@ recommended fudge, or you see a fudge value very different from what's
 there, send us the output of the "ntpq -p" command and the make and
 type of receiver.
 
-== Feeding chrony from GPSD ==
+== Feeding chrony from GPSD
 
 chrony is an alternative open-source implementation of NTP service,
 originally designed for systems with low-bandwidth or intermittent
@@ -1028,7 +1028,7 @@ To keep chronyd from preferring NMEA time over PPS time, you can add an
 overlarge fudge to the NMEA time.  Or add the suffix 'noselect' so it
 is never used, just monitored.
 
-== Performance Tuning ==
+== Performance Tuning
 
 This section is general and can be used with either ntpd or chronyd.
 We'll have more to say about tuning techniques for the specific
@@ -1105,7 +1105,7 @@ you reboot, expect it to converge to a new/different drift value and
 that may take a while depending on how different the basic calibration
 factors are.
 
-=== ARP is the sound of your server choking ===
+=== ARP is the sound of your server choking
 
 By default ntpd and chronyd poll remote servers every 64 seconds.  This
 is an unfortunate choice.  Linux by default only keeps an ARP table
@@ -1123,7 +1123,7 @@ The solution is the same for both ntpd and chronyd, add the "maxpoll 5"
 command to any 'server" or "peer directive.  This will cause the maximum
 polling period to be 32 seconds, well under the 60 second ARP timeout.
 
-=== Watch your temperatures ===
+=== Watch your temperatures
 
 The stability of the system clock is very temperature dependent.  A one
 degree change in room temperature can create 0.1 ppm of clock frequency
@@ -1134,7 +1134,7 @@ jump.
 If you leave your NTP server in the bubble wrap you will notice some
 improved local and remote offsets.
 
-=== Powersaving is not your friend ===
+=== Powersaving is not your friend
 
 Normally enabling power saving features is a good thing: it saves you power.
 But when your CPU changes power saving modes (cstates for Intel CPUs) the
@@ -1159,7 +1159,7 @@ CPU set to the maximum speed for continuous usage.  How you see and set
 your governor will be distribution specific.  The easiest way it to
 recompile your kernel to only provide the performance governor.
 
-== NTP tuning and performance details ==
+== NTP tuning and performance details
 
 This section deals specifically with ntpd.  It discusses algorithms
 used by the ntpd suite to measure and correct the system time.  It is not
@@ -1171,7 +1171,7 @@ visualize ntpd performance is with ntpviz from <<NTPSEC.ORG>>.  Once you
 are regularly graphing your server performance it is much easier to see
 the results of changes.
 
-=== NTP performance tuning ===
+=== NTP performance tuning
 
 For good time stability, you should always have at least four other
 servers in your ntpd or chrony configuration besides your GPS receiver
@@ -1254,7 +1254,7 @@ A more detailed description of the output is available at
 
 In order to determine the correct GPS offset, do one of the following:
 
-==== Peerstats-based procedure ====
+==== Peerstats-based procedure
 
 [start=1]
 . Add these lines to ntp.conf:
@@ -1295,7 +1295,7 @@ This prints the average offset.
 
 . Restart ntpd.
 
-==== Loopstats-based procedure ====
+==== Loopstats-based procedure
 
 Recall that magic pseudo-IP address 127.127.28.0 identifies unit 0 of
 the ntpd shared-memory driver (NTP0); 127.127.28.1 identifies unit
@@ -1317,14 +1317,14 @@ these scripts for your particular setup.
 These scripts are for the combination of GPSD and ntpd.  If you use
 chronyd, you *will* need to modify these, at the least.
 
-==== ntpviz procedure ====
+==== ntpviz procedure
 
 If all this calculating and graphing looks painful, then grab a copy
 of ntpviz from <<NTPSEC.ORG>>. ntpviz generates lots of pretty graphs
 and html pages.  It even calculates the correct IMT offset, and other
 performance metrics for you.
 
-===== Format of the loopstats and peerstats files =====
+===== Format of the loopstats and peerstats files
 
 The following is incorporated from the ntpd website, see <<NTP-MONOPT>>
 
@@ -1335,7 +1335,7 @@ appends one line to the loopstats file set:
 
 Example:    50935 75440.031 0.000006019 13.778 0.000351733 0.013380 6
 
-|================================
+|===========================================================
 |Item 		|Units 	|Description
 |50935 		|MJD 	|date
 |75440.031 	|s 	|time past midnight (UTC)
@@ -1344,7 +1344,7 @@ Example:    50935 75440.031 0.000006019 13.778 0.000351733 0.013380 6
 |0.000351733 	|s 	|RMS jitter
 |0.013380 	|PPM 	|RMS frequency jitter (aka wander)
 |6 		|log2 s |clock discipline loop time constant
-|=================================
+|===========================================================
 
 
 .peerstats
@@ -1354,7 +1354,7 @@ received appends one line to the peerstats file set:
 
 Example:    48773 10847.650 127.127.4.1 9714 -0.001605376 0.000000000 0.001424877 0.000958674
 
-|================================
+|================================================
 |Item 		|Units 	|Description
 |48773 		|MJD 	|date
 |10847.650 	|s 	|time past midnight (UTC)
@@ -1364,9 +1364,9 @@ Example:    48773 10847.650 127.127.4.1 9714 -0.001605376 0.000000000 0.00142487
 |0.000000000 	|s 	|roundtrip delay
 |0.001424877 	|s 	|dispersion
 |0.000958674 	|s 	|RMS jitter
-|================================
+|================================================
 
-===== Measurement of delay =====
+===== Measurement of delay
 
 There are three parts to measuring and correcting for the delay in
 processing the 1PPS signal.
@@ -1438,7 +1438,7 @@ the offset between the 1PPS time and the GPS time.
 If, for example, your estimate of the offset is -0.32s, your time1 fudge
 value will be '0.32'.  Note the change of sign.
 
-=== Polling Interval ===
+=== Polling Interval
 
 ntpd seems to better use a PPS refclock when the polling interval is
 as small as possible.  The ntpd default minpoll is 6, and can be set to
@@ -1485,7 +1485,7 @@ SHM 0 source should be around 0.495.
 
 //FIXME: What more can we say about chronyd tuning?
 
-== Providing local NTP service using PTP ==
+== Providing local NTP service using PTP
 
 By now if you have a good serial PPS signal your local clock should
 have jitter on the order of 1 uSec.  You do not want the hassle of
@@ -1541,7 +1541,7 @@ EEE Settings for eth1:
 	Link partner advertised EEE link modes:  Not reported
 -----------------------------------------------------------------------------
 
-=== PTP with software timestamping ===
+=== PTP with software timestamping
 
 To start you need to verify that your running Linux kernel configuration
 includes these two lines, or the same with "y" replaced by "m" to enable
@@ -1675,7 +1675,7 @@ Configuration of the slave server is now complete.  Follow the earlier
 procedures for checking the jitter on the SHM on the slaves.  Give it
 a few hours to settle and your hosts will now be synced to around 5 uSec.
 
-=== PTP with hardware timestamping ===
+=== PTP with hardware timestamping
 
 Some NICs requires two additional kernel options.  Just in case, verify
 that your running Linux kernel configuration includes these lines, or
@@ -1748,7 +1748,7 @@ making hardware timestamping work.  I have successfully trashed my
 host system clock.  Tread carefully.  If you make progress please
 pass on some clue.
 
-== Providing public NTP service ==
+== Providing public NTP service
 
 <<NTP-FAQ>> has good advice on things to be sure you have done - and
 are ready to do - before becoming a public server. One detail it
@@ -1757,7 +1757,7 @@ NTP protocol does not use TCP, so no need to unblock TCP port 123.
 
 If and when you are ready to go public, see <<JOIN-POOL>>.
 
-== Acknowledgments ==
+== Acknowledgments
 Beat Bolli <bbolli@ewanet.ch> wrote much of the section on NTP
 performance tuning. Hal Murray <hmurray@megapathdsl.net> wrote
 much of the section on NTP working and performance details.
@@ -1772,7 +1772,7 @@ Andy Walls <andy@silverblocksystems.net>.  A copy of the original
 email can be found at <<ANDY-POST>>. A thorough review was contributed
 by Jaap Winius <jwinius@rjsystems.nl>.
 
-== References ==
+== References
 
 [bibliography]
 
