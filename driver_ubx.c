@@ -321,10 +321,39 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
             (void)strlcat(obuf, ",", sizeof(obuf));
         }
         (void)strlcat(obuf, (char *)&buf[start_of_str], sizeof(obuf));
+
+        /* if we have protocol version already, skip searching further */
+        if (9 < session->driver.ubx.protver) {
+            continue;
+        }
+        /* if gross extension length doesn't look sane, don't proceed here */
+        if ( (40 + (30 * (n + 1))) > data_len ) {
+            continue;
+        }
+        /* string _should_ already be null-terminated, but don't trust */
+        char tbuf[30];
+        (void)memcpy(tbuf, (const char *)&buf[start_of_str], sizeof(tbuf) - 1);
+        tbuf[sizeof(tbuf) - 1] = '\0';    
+        /* find PROTVER literal, followed by single separator character */
+        cptr = strstr(tbuf, "PROTVER=");     // protVer 18 and above
+        if (NULL == cptr) {
+            cptr = strstr(tbuf, "PROTVER "); // protVer 17 and below
+        }
+        if (NULL == cptr) {
+            continue;
+        }
+        /* enough characters after PROTVER and separator to contain digits? */
+        if (strlen(cptr) > 8) {
+            int protver = atoi(cptr + 8);
+            if (9 < protver) {
+                /* protver 10, u-blox 5, is the oldest we know */
+                session->driver.ubx.protver = protver;
+            }
+        }
     }
     /* save what we can */
     (void)strlcpy(session->subtype1, obuf, sizeof(session->subtype1));
-    /* output SW and HW Version at LOG_INFO */
+    /* output SW and HW Version at LOG_INF */
     GPSD_LOG(LOG_INF, &session->context->errout,
              "UBX-MON-VER: %s %s\n",
              session->subtype, session->subtype1);
@@ -2805,6 +2834,10 @@ static void ubx_cfg_prt(struct gps_device_t *session,
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
         "UBX ubx_cfg_prt mode:%d, port:%d\n", mode, buf[0]);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "Configuring device for PROTVER %d\n",
+             session->driver.ubx.protver);
 
     /* selectively enable output protocols */
     if (mode == MODE_NMEA) {
