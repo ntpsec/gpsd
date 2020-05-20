@@ -7005,7 +7005,6 @@ Always double check with "-p CFG-GNSS".
             val = nv_split[1]
             if 3 <= len(nv_split):
                 m_data[1] = int(nv_split[2])
-                print("SNARD: layer %u" % m_data[1])
 
             item = gps_model.cfg_by_name(name)
             key = item[1]

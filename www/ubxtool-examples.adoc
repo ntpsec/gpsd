@@ -21,6 +21,9 @@ IMPORTANT: Feel free to jump around this document to recipes that
 interest you, but be sure to first read all of, and comply with, the
 section on Initial Setup.
 
+Many of the recipes repeat text from other recipes so that recipes can
+stand alone.  Except all recipes require the Initial Setup section.
+
 == Initial Setup
 
 All the examples here assume that gpsd is running on the local host and
@@ -252,6 +255,81 @@ UBX-CFG-VALGET:
   layers (ram)
     item CFG-NAVSPG-DYNMODEL/0x20110021 val 0
 ----
+
+== Rate Settings
+
+There can be a good need to change the rate at which your receiver take
+measurements, or how many measurements it uses to compute its navigation
+solution (fix).  Slow down the measurement rate to save power.  Or speed
+it up in fast moving dynamic environments.  Using several measurements
+sets for each fix computation may remove some noise.  No one size
+fits all.
+
+NOTE: Not all u-blox can take measurements faster than 1 Hz.
+
+The current configuration can be seen this way:
+
+----
+$ ubxtool -p CFG-RATE
+[...]
+UBX-CFG-RATE:
+ measRate 1000 navRate 1 timeRef 1 (GPS)
+----
+
+To change to a 10 Hz measurement and fix rate, then check your work:
+
+----
+$ ubxtool -p RATE,100
+[...]
+$ ubxtool -p CFG-RATE
+[...]
+UBX-CFG-RATE:
+ measRate 000 navRate 1 timeRef 1 (GPS)
+----
+
+=== Rate Settings with Configuration Items
+
+If the receiver is a 9-series one then you can change the rate at which
+the receiver takes measurements and/or computes the navigation solution
+(fix) using Configuration Items.  These allow you to get, set and delete
+individual settings in the receiver. before continuing this section,
+read the ubxtool man page on Configuration Items.
+
+The CFG-NAVSPG Configuration Item group includes the CFG-NAV5 items
+of interest here.  So take a look at them, in the ram layer:
+
+----
+# ubxtool -g CFG-RATE,0
+[...]
+UBX-CFG-VALGET:
+ version 1 layer 0 position 0
+  layers (ram)
+    item CFG-RATE-TIMEREF/0x20210003 val 1
+    item CFG-RATE-MEAS/0x30210001 val 1000
+    item CFG-RATE-NAV/0x30210002 val 1
+----
+
+You can change the measurement rate to 0.1 Hz, and check it, this way:
+
+----
+$ ubxtool -z CFG-RATE-MEAS,10000,1
+sent:
+UBX-CFG-VALSET:
+ version 0 layer 0x1 transaction 0x0 reserved 0
+  layers (ram) transaction (Transactionless)
+    item CFG-RATE-MEAS/0x30210001 val 10000
+
+UBX-ACK-ACK:
+  ACK to Class x06 (CFG) ID x8a (VALSET)
+[...]
+$ ubxtool -g CFG-RATE-MEAS,1
+[...]
+UBX-CFG-VALGET:
+ version 1 layer 0 position 0
+  layers (ram)
+    item CFG-RATE-MEAS/0x30210001 val 10000
+----
+
 
 == Constellations
 
