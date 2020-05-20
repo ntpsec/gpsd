@@ -6841,7 +6841,7 @@ Always double check with "-p CFG-GNSS".
         gps_model.gps_send(6, 0x02, m_data)
 
     def send_cfg_nav5_model(self, args):
-        """MODEL, UBX-CFG-NAV5, set/poll dynamic platform model"""
+        """MODEL, UBX-CFG-NAV5, set dynamic platform model"""
 
         m_data = bytearray(36)
         if 0 < len(args):
@@ -6849,7 +6849,7 @@ Always double check with "-p CFG-GNSS".
             m_data[1] = 0        # just setting dynamic model
             m_data[2] = int(args[0])
         # else:
-        # Just polling
+        # Just polling deprecated
 
         gps_model.gps_send(6, 0x24, m_data)
 
@@ -6863,7 +6863,7 @@ Always double check with "-p CFG-GNSS".
         gps_model.gps_send(6, 1, m_data)
 
     def send_cfg_pms(self, args):
-        """UBX-CFG-PMS, poll/set Power Management Settings"""
+        """UBX-CFG-PMS, set Power Management Settings"""
 
         if 0 < len(args):
             m_data = bytearray(8)
@@ -6871,10 +6871,30 @@ Always double check with "-p CFG-GNSS".
             m_data[1] = int(args[0])
             # leave period and onTime zero, which breaks powerSetupValue = 3
         else:
-            # just poll
+            # just poll, DEPRECATED
             m_data = bytearray(0)
 
         gps_model.gps_send(6, 0x86, m_data)
+
+    def send_cfg_rate(self, args):
+        """ RATE use UBX-CFG-PMS, set rate settings"""
+
+        if 0 == len(args):
+            sys.stderr.write('%s: ERROR: RATE missing argument\n' %
+                             (PROG_NAME))
+            exit(1)
+
+        measRate = int(args[0])
+        navRate = 1
+        timeRef = 1
+        if 1 < len(args):
+            navRate = int(args[1])
+            if 2 < len(args):
+                timeRef = int(args[2])
+
+        m_data = bytearray(6)
+        struct.pack_into('<HHH', m_data, 0, measRate, navRate, timeRef)
+        gps_model.gps_send(6, 0x08, m_data)
 
     def send_cfg_prt(self):
         """UBX-CFG-PRT, get I/O Port settings"""
@@ -7238,14 +7258,19 @@ Always double check with "-p CFG-GNSS".
                     "opt": 0},
         # UBX-CFG-NAV5
         "MODEL": {"command": send_cfg_nav5_model,
-                  "help": "get/set UBX-CFG-NAV5 Dynamic Platform Model. "
+                  "help": "set UBX-CFG-NAV5 Dynamic Platform Model. "
                           "MODEL,model",
                   "args": 1},
         # UBX-CFG-PMS
         "PMS": {"command": send_cfg_pms,
-                "help": "get/set UBX-CFG-PMS power management settings. "
+                "help": "set UBX-CFG-PMS power management settings. "
                         "PMS,power where power is powerSetupValue.",
                 "args": 1},
+        # UBX-CFG-PMS
+        "RATE": {"command": send_cfg_rate,
+                 "help": "set UBX-CFG-RATE measure/nav settings. "
+                         "RATE,meas,nav nav is optional",
+                 "args": 2},
         # UBX-CFG-CFG
         "RESET": {"command": send_cfg_cfg,
                   "help": "UBX-CFG-CFG reset config to defaults",
@@ -8194,7 +8219,6 @@ try:
                 sys.stderr.write('%s: ERROR: -g %s, non numeric parameter\n' %
                                  (PROG_NAME, parts[0]))
                 exit(1)
-
 
         print("layer %s position %d end %s " % (layer, position, end))
         if end:

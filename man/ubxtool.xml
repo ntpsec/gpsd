@@ -266,7 +266,16 @@ Model is the decimal number of the desired mode.
       <varlistentry>
        <term>PMS</term>
        <listitem>
-        <para>Set power management settings (UBX-CFG-PMS).</para>
+        <para>Set power management settings (UBX-CFG-PMS).
+"PMS,pow" where pow is powerSetupValue.</para>
+       </listitem>
+      </varlistentry>
+      <varlistentry>
+       <term>RATE</term>
+       <listitem>
+        <para>Set measurement and nav rate (UBX-CFG-RATE).
+"RATE,meas,nav" meas is the measRate in milli seconds. The
+nav argument is the navRate in cycles and defaults to 1</para>
        </listitem>
       </varlistentry>
       <varlistentry>
