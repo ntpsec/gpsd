@@ -116,15 +116,15 @@ $ ubxtool -d NMEA
 
 == Dynamic Platform Model
 
-The most common variable mis-configured in a u-blox receiver is
-the Dynamic Platform Model.  For good per The receiver uses noisy
-measurements of satellite signals and attempts to interpret those
-as single PVT fix.  By default the receiver assumes the receiver is
-"Portable" and not experiencing large accelerations.  Place that
-receiver in a car or airplane, and the smoothing will act perversely on
-the fix.  Take a moment now to read the section on Platform Settings in
-your u-blox documentation.  Different receivers support different
-models, so no generic recommendations are possible.
+The most common variable mis-configured in a u-blox receiver is the
+Dynamic Platform Model.  The receiver uses noisy measurements of
+satellite signals and attempts to interpret those as single PVT fix.
+By default the receiver assumes the receiver is "Portable" and not
+experiencing large accelerations.  Place that receiver in a car or
+airplane, and the smoothing will act perversely on the fix.  Take a
+moment now to read the section on Platform Settings in your u-blox
+documentation.  Different receivers support different models, so no
+generic recommendations are possible.
 
 Check your current Dynamic Platform Model:
 
