@@ -8196,7 +8196,7 @@ try:
                 exit(1)
 
 
-        print("layer %s postiion % end %s " % (layer, position, end))
+        print("layer %s position %d end %s " % (layer, position, end))
         if end:
             for p in range(position, end, 64):
                 gps_model.send_cfg_valget(keys, layer, p)
