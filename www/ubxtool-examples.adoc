@@ -114,6 +114,145 @@ $ ubxtool -e BINARY
 $ ubxtool -d NMEA
 ----
 
+== Dynamic Platform Model
+
+The most common variable mis-configured in a u-blox receiver is
+the Dynamic Platform Model.  For good per The receiver uses noisy
+measurements of satellite signals and attempts to interpret those
+as single PVT fix.  By default the receiver assumes the receiver is
+"Portable" and not experiencing large accelerations.  Place that
+receiver in a car or airplane, and the smoothing will act perversely on
+the fix.  Take a moment now to read the section on Platform Settings in
+your u-blox documentation.  Different receivers support different
+models, so no generic recommendations are possible.
+
+Check your current Dynamic Platform Model:
+
+----
+$ ubxtool -p CFG-NAV5
+UBX-CFG-NAV5:
+ mask 0xffff dynModel 0 fixmode 3 fixedAlt 0 FixedAltVar 10000
+ minElev 5 drLimit 0 pDop 250 tDop 250 pAcc 100 tAcc 350
+ staticHoldThresh 0 dgpsTimeOut 60 cnoThreshNumSVs 0
+ cnoThresh 0 res 0 staticHoldMaxDist 0 utcStandard 0
+ reserved x0 0
+   dynModel (Portable) fixMode (Auto 2D/3D) utcStandard (Default)
+   mask (dyn minEl posFixMode drLim posMask timeMask staticHoldMask
+         dgpsMask cnoThreshold utc)
+----
+
+That shows the receiver is in the default Portable model.
+
+To change the active model to Automotive (4), and check it again,
+is simply:
+
+----
+$ ubxtool -p MODEL,4
+[...]
+$ ubxtool -p CFG-NAV5
+UBX-CFG-NAV5:
+ mask 0xffff dynModel 4 fixmode 3 fixedAlt 0 FixedAltVar 10000
+ minElev 5 drLimit 0 pDop 250 tDop 250 pAcc 100 tAcc 350
+ staticHoldThresh 0 dgpsTimeOut 60 cnoThreshNumSVs 0
+ cnoThresh 0 res 0 staticHoldMaxDist 0 utcStandard 0
+ reserved x0 0
+   dynModel (Automotive) fixMode (Auto 2D/3D) utcStandard (Default)
+   mask (dyn minEl posFixMode drLim posMask timeMask staticHoldMask
+         dgpsMask cnoThreshold utc)
+----
+
+
+=== Changing Dynamic Platform Model with Configuration Items
+
+If the receiver is a 9-series one then you can change the model using
+Configuration Items.  These allow you to get, set and delete individual
+settings in the receiver. before continuing this section, read the
+ubxtool man page on Configuration Items.
+
+The CFG-NAVSPG Configuration Item group includes the CFG-NAV5 items
+of interest here.  So take a look at them, in the ram layer:
+
+----
+# ubxtool -g CFG-NAVSPG,0
+[...]
+UBX-CFG-VALGET:
+ version 1 layer 0 position 0
+  layers (ram)
+    item CFG-NAVSPG-18/0x10110012 val 0
+    item CFG-NAVSPG-INIFIX3D/0x10110013 val 0
+    item CFG-NAVSPG-20/0x10110014 val 1
+    item CFG-NAVSPG-21/0x10110015 val 1
+    item CFG-NAVSPG-22/0x10110016 val 1
+    item CFG-NAVSPG-24/0x10110018 val 1
+    item CFG-NAVSPG-USE_PPP/0x10110019 val 0
+    item CFG-NAVSPG-27/0x1011001b val 0
+    item CFG-NAVSPG-ACKAIDING/0x10110025 val 0
+    item CFG-NAVSPG-70/0x10110046 val 1
+    item CFG-NAVSPG-82/0x10110052 val 0
+    item CFG-NAVSPG-83/0x10110053 val 0
+    item CFG-NAVSPG-USE_USRDAT/0x10110061 val 0
+    item CFG-NAVSPG-129/0x10110081 val 0
+    item CFG-NAVSPG-130/0x10110082 val 0
+    item CFG-NAVSPG-131/0x10110083 val 0
+    item CFG-NAVSPG-FIXMODE/0x20110011 val 3
+    item CFG-NAVSPG-26/0x2011001a val 18
+    item CFG-NAVSPG-UTCSTANDARD/0x2011001c val 0
+    item CFG-NAVSPG-32/0x20110020 val 100
+    item CFG-NAVSPG-DYNMODEL/0x20110021 val 1
+    item CFG-NAVSPG-34/0x20110022 val 0
+    item CFG-NAVSPG-35/0x20110023 val 0
+    item CFG-NAVSPG-36/0x20110024 val 1
+    item CFG-NAVSPG-38/0x20110026 val 0
+    item CFG-NAVSPG-66/0x20110042 val 2
+    item CFG-NAVSPG-67/0x20110043 val 3
+    item CFG-NAVSPG-68/0x20110044 val 1
+    item CFG-NAVSPG-69/0x20110045 val 1
+    item CFG-NAVSPG-81/0x20110051 val 0
+    item CFG-NAVSPG-INFIL_MINSVS/0x201100a1 val 3
+    item CFG-NAVSPG-INFIL_MAXSVS/0x201100a2 val 32
+    item CFG-NAVSPG-INFIL_MINCNO/0x201100a3 val 6
+    item CFG-NAVSPG-INFIL_MINELEV/0x201100a4 val 5
+    item CFG-NAVSPG-INFIL_NCNOTHRS/0x201100aa val 0
+    item CFG-NAVSPG-INFIL_CNOTHRS/0x201100ab val 0
+    item CFG-NAVSPG-CONSTR_DGNSSTO/0x201100c4 val 60
+    item CFG-NAVSPG-213/0x201100d5 val 0
+    item CFG-NAVSPG-SIGATTCOMP/0x201100d6 val 0
+    item CFG-NAVSPG-WKNROLLOVER/0x30110017 val 2029
+    item CFG-NAVSPG-OUTFIL_PDOP/0x301100b1 val 250
+    item CFG-NAVSPG-OUTFIL_TDOP/0x301100b2 val 250
+    item CFG-NAVSPG-OUTFIL_PACC/0x301100b3 val 100
+    item CFG-NAVSPG-OUTFIL_TACC/0x301100b4 val 350
+    item CFG-NAVSPG-OUTFIL_FACC/0x301100b5 val 150
+    item CFG-NAVSPG-USRDAT_DX/0x40110064 val 0.0
+    item CFG-NAVSPG-USRDAT_DY/0x40110065 val 0.0
+    item CFG-NAVSPG-USRDAT_DZ/0x40110066 val 0.0
+    item CFG-NAVSPG-USRDAT_ROTX/0x40110067 val 0.0
+    item CFG-NAVSPG-USRDAT_ROTY/0x40110068 val 0.0
+    item CFG-NAVSPG-USRDAT_ROTZ/0x40110069 val 0.0
+    item CFG-NAVSPG-USRDAT_SCALE/0x4011006a val 0.0
+    item CFG-NAVSPG-CONSTR_ALT/0x401100c1 val 0
+    item CFG-NAVSPG-CONSTR_ALTVAR/0x401100c2 val 10000
+    item CFG-NAVSPG-209/0x401100d1 val 0
+    item CFG-NAVSPG-210/0x401100d2 val 0
+    item CFG-NAVSPG-211/0x401100d3 val 0
+    item CFG-NAVSPG-USRDAT_MAJA/0x50110062 val 6378137.0
+    item CFG-NAVSPG-USRDAT_FLAT/0x50110063 val 298.257223563
+----
+
+We can now use CFG-NAVSPG-DYNMODEL to change the model back to
+Pedestrian, and then confirm the setting:
+
+----
+$ ubxtool -z CFG-NAVSPG-DYNMODEL,0
+[...]
+$ ubxtool -z CFG-NAVSPG-DYNMODEL,0
+[...]
+UBX-CFG-VALGET:
+ version 1 layer 0 position 0
+  layers (ram)
+    item CFG-NAVSPG-DYNMODEL/0x20110021 val 0
+----
+
 == Constellations
 
 For unknown reasons, one of the first things newbies want to play with
