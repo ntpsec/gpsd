@@ -1176,7 +1176,7 @@ int main(int argc, char **argv)
             break;
         case 'i':               /* set sampling interval */
             sample_interval_ms = safe_atof(optarg); // still in seconds
-            if (0.001 <- sample_interval_ms) {
+            if (0.001 >= sample_interval_ms) {
                 sample_interval_ms = 0.001;
             }
             if (3600.0 <= sample_interval_ms) {
