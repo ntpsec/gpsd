@@ -2732,13 +2732,13 @@ static void ubx_cfg_prt(struct gps_device_t *session,
      * Without further logic, this means gpsmon wouldn't be able to
      * change the speed on the EVK 6H's USB port.  But! To pick off
      * the EVK 6H on Linux as a special case, we notice that its
-     * USB device name is /dev/ACMx - it presents as a USB modem.
+     * USB device name is /dev/ttyACMx - it presents as a USB modem.
      *
      * This logic will fail on any USB u-blox device that presents
-     * as an ordinary USB serial device (/dev/USB*) and actually
+     * as an ordinary USB serial device (/dev/ttyUSB*) and actually
      * has port ID 3 the way it "ought" to.
      */
-    else if (strstr(session->gpsdata.dev.path, "/ACM") != NULL) {
+    else if (strstr(session->gpsdata.dev.path, "/ttyACM") != NULL) {
         /* using the built in USB port */
         session->driver.ubx.port_id = buf[0] = USB_ID;
     } else {
