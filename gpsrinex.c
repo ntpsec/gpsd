@@ -804,8 +804,16 @@ static void print_raw(struct gps_data_t *gpsdata)
         return;
     }
 
+#ifdef __UNUSED
+    fprintf(stderr, "sample: %ld %ld\n", (long)sample_interval_ts.tv_sec,
+            (long)sample_interval_ts.tv_nsec);
+    fprintf(stderr, "epoch: %ld %ld\n", (long)gpsdata->raw.mtime.tv_sec,
+            (long)gpsdata->raw.mtime.tv_nsec);
+#endif // __UNUSED
+
     // do modulo only for sample_interval of even seconds
-    if (0 == sample_interval_ts.tv_nsec) {
+    if (0 == sample_interval_ts.tv_nsec &&
+        0 < sample_interval_ts.tv_sec) {
         epoch_sec = gpsdata->raw.mtime.tv_sec;
         if (500000000 < gpsdata->raw.mtime.tv_nsec) {
              // round it up.  To match convbin.
@@ -1127,6 +1135,7 @@ int main(int argc, char **argv)
     unsigned int flags = WATCH_ENABLE;
     char   *fname = NULL;
     int timeout = 10;
+    double f;
 
     progname = argv[0];
 
@@ -1175,16 +1184,17 @@ int main(int argc, char **argv)
             fname = strdup(optarg);
             break;
         case 'i':               /* set sampling interval */
-            sample_interval_ms = safe_atof(optarg); // still in seconds
-            if (0.001 >= sample_interval_ms) {
-                sample_interval_ms = 0.001;
-            }
-            if (3600.0 <= sample_interval_ms) {
+            f = safe_atof(optarg); // still in seconds
+            if (3600.0 <= f) {
                 (void)fprintf(stderr,
                               "WARNING: sample interval is an hour or more!\n");
             }
-            DTOTS(&sample_interval_ts, sample_interval_ms);
-            sample_interval_ms /= 1000; // now in ms
+            sample_interval_ms = (unsigned)(1000 * f); // now in ms
+            if (0 == sample_interval_ms) {
+                // underflow
+                sample_interval_ms = 1;
+            }
+            MSTOTS(&sample_interval_ts, sample_interval_ms);
             break;
         case 'n':
             sample_count = atoi(optarg);
