@@ -3747,7 +3747,8 @@ Oddly this is polled with UBX-LOG-RETRIEVEBATCH
              "  distanceStd %u reserved2 x%x" % u)
         if VERB_DECODE <= opts['verbosity']:
             # flags2 undocumented
-            s += ("\n      contentValid (%s) valid (%s) fixType (%s) "
+            s += ("\n      contentValid (%s) valid (%s)"
+                  "\n      fixType (%s)"
                   "\n      flags (%s) psmState (%s)" %
                   (flag_s(u[1], self.log_batch_contentValid),
                    flag_s(u[10], self.log_batch_valid),
@@ -7194,15 +7195,15 @@ Always double check with "-p CFG-GNSS".
             gps_model.send_poll(cmd)
 
     able_commands = {
+        # en/dis able BATCH
+        "BATCH": {"command": send_able_cfg_batch,
+                  "help": "batching, using CFG-BATCH"},
         # en/dis able BeiDou
         "BEIDOU": {"command": send_able_beidou,
                    "help": "BeiDou B1. BEIDOU,5 for B1 and B2"},
         # en/dis able basic binary messages
         "BINARY": {"command": send_able_binary,
                    "help": "basic binary messages"},
-        # en/dis able BATCH
-        "CFG-BATCH": {"command": send_able_cfg_batch,
-                      "help": "CFG-BATCH"},
         # en/dis able ECEF
         "ECEF": {"command": send_able_ecef,
                  "help": "ECEF"},
