@@ -587,7 +587,7 @@ power.  Logs are stored in external flash memory.  Some GNSS receivers,
 like the NEO-M8B, allow the receiver to go into sleep mode between fixes
 to save even more power.
 
-Be sure you have performed all the steps in Intitial Setup before
+Be sure you have performed all the steps in Initial Setup before
 proceeding to the following logging specific steps.
 
 === Logging Prerequisites
@@ -654,56 +654,135 @@ Initial Setup before continuing here.
 Erase any exiting log:
 
 ----
-$ ubxtool -p LOG-ERASE -P 18
+$ ubxtool -p LOG-ERASE
+[...]
+sent:
+UBX-LOG-ERASE:
+  Erase Logged Data
+UBX-ACK-ACK:
+  ACK to Class x21 (LOG) ID x03 (ERASE)
 ----
 
 Create new log:
 
 ----
-$ ubxtool -p LOG-CREATE -P 18
+$ ubxtool -p LOG-CREATE
+[...]
+sent:
+UBX-LOG-CREATE:
+  version 0 logCfg x1 reserved1 x0 logSize 0
+  userDefinedSize 0
+
+UBX-ACK-ACK:
+  ACK to Class x21 (LOG) ID x07 (CREATE)
 ----
 
 Start logging:
 
 ----
-$ ubxtool -e LOG -P 18
+$ ubxtool -e LOG
+[...]
+sent:
+UBX-CFG-LOGFILTER:
+ version 1 flags x5 minInterval 0 timeThreshold 0
+ speedThreshold 0 positionThreshold 0
+
+UBX-ACK-ACK:
+  ACK to Class x06 (CFG) ID x47 (LOGFILTER)
 ----
 
 Wait, then verify that the receiver is logging data:
 
 ----
-$ ubxtool -p LOG-INFO -P 18 -v 2
+$ ubxtool -p LOG-INFO -v 2
+UBX-LOG-INFO:
+  version 1 reserved1 x0 x0 filestoreCapacity 487680 reserved2 x9600 x24900
+  currentMaxLogSize 134400 currentLogSize 88 entryCount 8
+  oldestYear 2020 oldestMonth 5 oldestDay 22
+  oldestHour 22 oldestMin 33 oldestSec 56 reserved3 x0
+  newestYear 2020 newestMonth 5 newestDay 22
+  newestHour 22 newestMin 26 newestSec 41 reserved4 x0
+  status x28 reserved5 x0 x0
+      status (recording circular)
 ----
 
 Add a string:
 
 ----
-$ ubxtool -p LOG-STRING -P 18 -v 2
+$ ubxtool -p LOG-STRING -v 2
+[...]
+UBX-ACK-ACK:
+  ACK to Class x21 (LOG) ID x04 (STRING)
 ----
 
 Wait for a few more fixes to be logged, then turn off logging.
 
 ----
-$ ubxtool -d LOG -P 18 -v 2
+$ ubxtool -d LOG -v 2
+[...]
+sent:
+UBX-CFG-LOGFILTER:
+ version 1 flags x0 minInterval 0 timeThreshold 0
+ speedThreshold 0 positionThreshold 0
+   flags ()
+
+UBX-ACK-ACK:
+  ACK to Class x06 (CFG) ID x47 (LOGFILTER)
 ----
 
-Verify:
+Verify that logging is indeed off:
 
 ----
-ubxtool -p LOG-INFO -P 18 -v 2
+$ ubxtool -p LOG-INFO -v 2
+[...]
+UBX-LOG-INFO:
+  version 1 reserved1 x0 x0 filestoreCapacity 487680 reserved2 x9600 x24900
+  currentMaxLogSize 134400 currentLogSize 288 entryCount 33
+  oldestYear 2020 oldestMonth 5 oldestDay 22
+  oldestHour 22 oldestMin 33 oldestSec 56 reserved3 x0
+  newestYear 2020 newestMonth 5 newestDay 22
+  newestHour 22 newestMin 34 newestSec 11 reserved4 x0
+  status x20 reserved5 x0 x0
+      status (circular)
 ----
 
 Retrieve log data:
 
 ----
-$ ubxtool -p LOG-RETRIEVE -P 18 -v 2
+$ ubxtool -p LOG-RETRIEVE -v 2
+[...]
+UBX-LOG-RETRIEVEPOS:
+  entryIndex 12 lon -1213142510 lat 440688770 hMSL 1128900 hAcc 7000
+  gSpeed 90 heading 28500000 version 0 fixType 3
+  year 2020 month 5 day 22 hour 22 min 34 sec 2
+  reserved1 x0 numSV 7 reserved2 x0
+      fixType (3D Fix)
+
+UBX-LOG-RETRIEVEPOSEXTRA:
+  entryIndex 13 version 0 reserved1 x0
+  year 2020 month 5 day 22 hour 22 minute 34 seconds 2
+  reserved2 x0 0 distance 1252489 reserved3 x0 0 0
+
+UBX-LOG-RETRIEVESTRING:
+  entryIndex 14 version 0 reserved2 x0
+  year 2020 month 5 day 22 hour 22 min 34 sec 2
+  reserved2 x0 byteCount 2
+  bytes "Hi"
+
+UBX-LOG-RETRIEVEPOS:
+  entryIndex 15 lon -1213142470 lat 440688690 hMSL 1128600 hAcc 7000
+  gSpeed 240 heading 26300000 version 0 fixType 3
+  year 2020 month 5 day 22 hour 22 min 34 sec 3
+  reserved1 x0 numSV 8 reserved2 x0
+      fixType (3D Fix)
+[...]
 ----
 
 Erase and clear existing log, before you can enable log again:
 
 ----
-$ ubxtool -p LOG-ERASE -P 18
-$ ubxtool -p LOG-CREATE -P 18
+$ ubxtool -p LOG-ERASE
+$ ubxtool -p LOG-CREATE
 ----
 
 == Batching
