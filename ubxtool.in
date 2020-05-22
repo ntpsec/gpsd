@@ -7086,6 +7086,17 @@ Always double check with "-p CFG-GNSS".
         struct.pack_into('<LLB', m_data, 0, startNumber, entryCount, 0)
         gps_model.gps_send(0x21, 0x09, m_data)
 
+    def send_log_string(self, args):
+        """UBX-LOG-STRING, send string to log"""
+
+        if 0 < len(args):
+            string = args[0:256]
+        else:
+            string = "Hi"
+
+        m_data = gps.polybytes(string)
+        gps_model.gps_send(0x21, 0x04, m_data)
+
     def send_poll(self, m_data):
         """generic send pomonthll request"""
         gps_model.gps_send(m_data[0], m_data[1], m_data[2:])
@@ -7444,10 +7455,10 @@ Always double check with "-p CFG-GNSS".
                               "help": "send UBX-LOG-RETRIEVEBATCH",
                               "minVer": 23},
         # UBX-LOG-STRING
-        "LOG-STRING": {"command": send_poll,
-                       "opt": [0x21, 4, ord("H"), ord("i")],
-                       "help": "send UBX-LOG-STRING",
-                       "minVer": 14},
+        "LOG-STRING": {"command": send_log_string,
+                       "help": "send UBX-LOG-STRING. LOG-STRING,string",
+                       "minVer": 14,
+                       "args": 1},
         # UBX-MGA-DBD
         "MGA-DBD": {"command": send_poll, "opt": [0x13, 0x80],
                     "help": "poll UBX-MGA-DBD Poll the Navigation Database"},
