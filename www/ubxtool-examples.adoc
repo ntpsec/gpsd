@@ -466,7 +466,7 @@ UBX-CFG-GNSS:
    GLONASS L1 
 ----
 
-After a few minutes, if you are in a location witch BeiDou covers, then
+After a few minutes, if you are in a location which BeiDou covers, then
 you should start to see BeiDou sats in the cgps sat list.  The 8-series
 has many other constraints on setting CFG-GNSS, the masochistic will
 need to spend a lot of quality time with the u-blox documentation to
