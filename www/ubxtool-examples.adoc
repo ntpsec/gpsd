@@ -1,6 +1,6 @@
 :Author: Gary E. Miller
 :Email: <gem@rellim.com>
-:Date: 18 May 2020
+:Date: 22 May 2020
 :Description: U-blox GNSS receiver configuration examples
 :keywords: u-blox, examples, configuration
 
@@ -394,7 +394,7 @@ UBX-CFG-GNSS:
   gnssId 1 TrkCh  1 maxTrCh  3 reserved 0 Flags x01010001
    SBAS L1C/A enabled
   gnssId 3 TrkCh  8 maxTrCh 16 reserved 0 Flags x01010000
-   BeiDou B1I 
+   BeiDou B1I
   gnssId 5 TrkCh  0 maxTrCh  3 reserved 0 Flags x01010001
    QZSS L1C/A enabled
   gnssId 6 TrkCh  8 maxTrCh 14 reserved 0 Flags x01010001
@@ -463,7 +463,7 @@ UBX-CFG-GNSS:
   gnssId 5 TrkCh  0 maxTrCh  3 reserved 0 Flags x01010001
    QZSS L1C/A enabled
   gnssId 6 TrkCh  8 maxTrCh 14 reserved 0 Flags x01010000
-   GLONASS L1 
+   GLONASS L1
 ----
 
 After a few minutes, if you are in a location which BeiDou covers, then
@@ -497,7 +497,7 @@ UBX-CFG-GNSS:
   gnssId 5 TrkCh  0 maxTrCh  3 reserved 0 Flags x11110001
    QZSS L1C/A L2C enabled
   gnssId 6 TrkCh  8 maxTrCh 12 reserved 0 Flags x11110000
-   GLONASS L1 L2 
+   GLONASS L1 L2
 ----
 
 Note that GLONASS is still disabled.  Determining why is left as an
@@ -619,9 +619,9 @@ Two, the receiver returns something similar to this:
     UBX-LOG-INFO:
       version 1 reserved1 x0 x0 filestoreCapacity 0 reserved2 x0 x0
       currentMaxLogSize 0 currentLogSize 0 entryCount 0
-      oldestYear 0 oldestMonth 0 oldestDay 0 
+      oldestYear 0 oldestMonth 0 oldestDay 0
       oldestHour 0 oldestMin 0 oldestSec 0 reserved3 x0
-      newestYear 0 newestMonth 0 newestDay 0 
+      newestYear 0 newestMonth 0 newestDay 0
       newestHour 0 newestMin 0 newestSec 0 reserved4 x0
       status x10 reserved5 x0 x0
 ----
@@ -635,9 +635,9 @@ Three, the receiver returns something similar to this:
     UBX-LOG-INFO:
       version 1 reserved1 x0 x0 filestoreCapacity 487680 reserved2 x9600 x24900
       currentMaxLogSize 134400 currentLogSize 61 entryCount 0
-      oldestYear 0 oldestMonth 0 oldestDay 0 
+      oldestYear 0 oldestMonth 0 oldestDay 0
       oldestHour 0 oldestMin 0 oldestSec 0 reserved3 x0
-      newestYear 0 newestMonth 0 newestDay 0 
+      newestYear 0 newestMonth 0 newestDay 0
       newestHour 0 newestMin 0 newestSec 0 reserved4 x0
       status x20 reserved5 x0 x0
 ----
@@ -726,6 +726,34 @@ For batching, you need:
 If you do not meet the above prerequisites, then you can stop reading
 now.
 
+The easy way to see if your firmware supports batching is to ask it:
+
+----
+$ ubxtool -p MON-BATCH
+----
+
+If the receiver does not ACK, or NAK, that request, then it does not
+support batching.  Game over, do not bother to continue with this
+example.
+
+If your receiver does support batching, you will see something
+similar to this:
+
+----
+$ ubxtool -p MON-BATCH
+ubxtool: poll MON-BATCH
+
+sent:
+UBX-MON-BATCH:
+  Poll request
+
+UBX-MON-BATCH:
+   version 0 reserved1 0 0 0 fillLevel 128
+   dropsAll 65535 dropsSinceMon 4 nextMsgCnt 166
+----
+
+Check your u-blox documentation for what UBX-MON-BATCH just told you.
+
 === Batching Configuration
 
 Be sure you have completed the instructions in the section
@@ -734,7 +762,7 @@ Initial Setup before continuing here.
 Enable batching:
 
 ----
-$ ubxtool -e CFG-BATCH
+$ ubxtool -e BATCH
 ----
 
 Wait, then verify:
@@ -756,17 +784,37 @@ UBX-MON-BATCH:
 [...]
 ----
 
-Wait a while, for some fixes to be saved in the BATCH.  Then get all the
-batch entries:
+Wait a while, for some fixes to be saved in the BATCH.  Then check
+UBX-MON-BATCH and get all the batch entries:
 
 ----
 $ ubxtool -p LOG-RETRIEVEBATCH -v 2
+[...]
+UBX-MON-BATCH:
+   version 0 reserved1 0 0 0 fillLevel 128
+   dropsAll 65535 dropsSinceMon 1310 nextMsgCnt 166
+
+UBX-LOG-BATCH:
+  version 0 contentValid x3 msgCnt 166 iTow 510334000
+  year 2020 month 5 day 22 hour 21 min 45 sec 16 valid x37
+  tAcc 30 fracSec 104291 fixType 3 flags x11 flags2 xa numSV 5
+  lon -1213142428 lat 440690573 height 1130139 hMSL 1151489
+  hAcc 9541 vAcc 11092
+  vel N 288 E 111 D -29 gSpeed 274 headMot 2104222 sAcc 786 headAcc 4232547
+  pdep 432 reserved1 x0 distance 1249842 totalDistance 1249842
+  distanceStd 4880 reserved2 x0
+      contentValid (extraPvt extraOdo) valid (validDate validTime)
+      fixType (3D Fix)
+      flags (gnssFixOK) psmState (Power Optimized Tracking)
 ----
+
+There will be a number of UBX-LOG-BATCH with each of the individual
+batches fixes.
 
 End batching:
 
 ----
-$ ubxtool -d CFG-BATCH
+$ ubxtool -d BATCH
 ----
 
 
