@@ -2,11 +2,11 @@
 :description: This document is a guide getting high accuracy from your GPS using Precise Point Positioning (PPP).
 :keywords: Precise Point Positioning, PPP, GPSD, GPS
 Gary E. Miller <gem@rellim.com>
-V1.02, 16 May 2020
+24 May 2020
 
 == WARNING
 
-This document assumes you are using gpsd versions 3.19, 3.20 or git
+This document assumes you are using gpsd versions 3.20 or git
 head.  Using older versions will fail in strange ways.
 
 == Introduction
@@ -23,11 +23,43 @@ Patience is required.  For best results 6 to 24 hours of data is
 required.  Post processing time may double that.
 
 This document is not about getting high precision dynamic positions from
-your GPS.  This is about static Post Processed Positions (PPP).  High
-precision dynamic positions requires Real Time Kinematic (RTK) which
-will not be discussed here.  RTK users will still want to read this
-document.  The RTK Best practice is to determine the position of the
-base using PPP before sending the RTK data from the base to its rovers.
+your GPS.  This is about after the fact Post Processed Positions (PPP).
+High precision real time dynamic positions requires Real Time Kinematic
+(RTK) which will not be discussed here.  RTK users may still want to
+read this document.  The RTK Best practice is to determine the position
+of the base using PPP before sending the RTK data from the base to its
+rovers.
+
+== Background
+
+To compute a location fix a GNSS receiver takes measurements (raw data)
+of the relative time of arrival of signals broadcast from the GNSS
+satellites.  The receiver also knows the predicted orbit (ephemeris) of
+each satellite.  The collection of ephemeris from all the satellites is
+known as the ephemerides.  With these two sets of data, the CPU in the
+receiver can compute a fix in position in time and space using iterative
+techniques.
+
+A major problem is that the predicted orbits are often off by one meter
+or more.  Ground stations bounce lasers off the individual satellites as
+they pass overhead and use this new data to compute the actual orbits
+of the satellites.  Using this new ephemeris data, when it becomes
+available, combined with the receiver's raw data, better fixes can be
+computed.  This is the basis of PPP.
+
+There are other smaller problems, like the effects of ocean tides on the
+Earth's crust, that may also be corrected for by your PPP service.
+
+The first take on the actual epherides may take 90 minutes to be published.
+The ephemerides may be further refined for up to three weeks.
+
+There are two flavors of PPP: static, and kinematic.  Kinematic PPP simply
+takes an existing time series of measurements and computes a new time series
+of fixes using the actual orbits, instead of the predicted orbits.  Static
+PPP assumes all the raw measurements were taken at the same location over
+a long duration.  Long is typically 15 minutes to 48 hours.  Preferably
+exactly 12, 24 or 36 hours.  All the computed fixes are then averaged to
+result in one precise location for the receivers antenna.
 
 == Requirements
 
