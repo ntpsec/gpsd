@@ -53,13 +53,23 @@ Earth's crust, that may also be corrected for by your PPP service.
 The first take on the actual epherides may take 90 minutes to be published.
 The ephemerides may be further refined for up to three weeks.
 
-There are two flavors of PPP: static, and kinematic.  Kinematic PPP simply
-takes an existing time series of measurements and computes a new time series
-of fixes using the actual orbits, instead of the predicted orbits.  Static
-PPP assumes all the raw measurements were taken at the same location over
-a long duration.  Long is typically 15 minutes to 48 hours.  Preferably
-exactly 12, 24 or 36 hours.  All the computed fixes are then averaged to
-result in one precise location for the receivers antenna.
+There are two flavors of PPP: static, and kinematic.  Kinematic PPP
+simply takes an existing time series of measurements and computes a new
+time series of fixes using the actual orbits, instead of the predicted
+orbits.  Static PPP assumes all the raw measurements were taken at the
+same location over a long duration.  Long is typically 15 minutes to
+48 hours.  All the computed fixes are then averaged to result in one
+precise location for the receivers antenna.
+
+Now in 2020, most PPP services only use ephermides from GPS satellites,
+with more and more adding GLONASS.  As time passes, more constellations
+will be used, leading to slightly increased accuracy.
+
+The earth revolves around its axis every 24 hours, give or take a few
+milli seconds.  GPS satellites revolve around the Earth's axis about
+every 12 hours, give or take.  PPP will provide best results if your
+data is 12, 24 or 36 hours.  This allows some orbital errors to average
+out.
 
 == Requirements
 
