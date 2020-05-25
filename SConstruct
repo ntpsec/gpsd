@@ -1864,9 +1864,9 @@ testprogs = [test_bits,
              test_packet,
              test_timespec,
              test_trig]
-if env['socket_export']:
+if env['socket_export'] or cleaning:
     testprogs.append(test_json)
-if env["libgpsmm"]:
+if env["libgpsmm"] or cleaning:
     testprogs.append(test_gpsmm)
 
 # Python programs
