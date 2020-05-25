@@ -3069,8 +3069,10 @@ static void tsip_event_hook(struct gps_device_t *session, event_t event)
              "TSIP: event_hook event %d ro %d\n",
              event, session->context->readonly);
 
-    if (session->context->readonly)
+    if (session->context->readonly ||
+        session->context->passive) {
         return;
+    }
     switch (event) {
     case event_identified:
         // FALLTHROUGH

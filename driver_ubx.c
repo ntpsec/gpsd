@@ -2674,9 +2674,11 @@ static void ubx_init_query(struct gps_device_t *session)
 
 static void ubx_event_hook(struct gps_device_t *session, event_t event)
 {
-    if (session->context->readonly)
+    if (session->context->readonly ||
+        session->context->passive) {
         return;
-    else if (event == event_identified) {
+    }
+    if (event == event_identified) {
         GPSD_LOG(LOG_DATA, &session->context->errout, "UBX identified\n");
 
         /* no longer set UBX-CFG-SBAS here, u-blox 9 does not have it */

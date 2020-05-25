@@ -2302,8 +2302,10 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
         0x00, 0x00, 0xb0, 0xb3
     };
 
-    if (session->context->readonly)
+    if (session->context->readonly ||
+        session->context->passive) {
         return;
+    }
 
     switch (event) {
     case event_identified:
@@ -2385,11 +2387,9 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
             break;
 
         case 5:
-            if (!session->context->readonly) {
-                GPSD_LOG(LOG_PROG, &session->context->errout,
-                         "SiRF: Setting Navigation Parameters.\n");
-                (void)sirf_write(session, modecontrol);
-            }
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "SiRF: Setting Navigation Parameters.\n");
+            (void)sirf_write(session, modecontrol);
             break;
 
         case 6:

@@ -1018,8 +1018,10 @@ static ssize_t greis_control_send(struct gps_device_t *session,
 
 static void greis_event_hook(struct gps_device_t *session, event_t event)
 {
-    if (session->context->readonly)
+    if (session->context->readonly ||
+        session->context->passive) {
         return;
+    }
 
     if (event == event_wakeup) {
         /*

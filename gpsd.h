@@ -80,6 +80,7 @@ extern "C" {
  *      Split gps_device_t.subtype into subtype and subtype1
  * 3.20.1
  *      GPSD_PROTO_*_VERSION moved to gpsd_config.h
+ *      Add gps_context_t.passive
  *
  */
 
@@ -305,6 +306,7 @@ struct gps_context_t {
 #define CENTURY_VALID           0x04    /* have received ZDA or 4-digit year */
     struct gpsd_errout_t errout;        /* debug verbosity level and hook */
     bool readonly;                      /* if true, never write to device */
+    bool passive;                       // if true, never autoconfigure device
     speed_t fixed_port_speed;           // Fixed port speed, if non-zero
     char fixed_port_framing[4];         // Fixed port framing, if non-blank
     /* DGPS status */

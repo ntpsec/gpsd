@@ -219,6 +219,13 @@ This switch is mainly useful for debugging.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
+<term>-p, --passive</term>
+<listitem>
+<para>Passive mode.  Do not autoconfigure the receiver, but allow
+manual configuration changes..</para>
+</listitem>
+</varlistentry>
+<varlistentry>
 <term>-P, --pidfile</term>
 <listitem>
 <para>Specify the name and path to record the daemon's process ID.</para>

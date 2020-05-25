@@ -130,18 +130,18 @@ static const int af_allowed = AF_UNSPEC;
 
 #define AFCOUNT 2
 
+static bool batteryRTC = false;
+static struct gps_context_t context;
 static fd_set all_fds;
-static int maxfd;
 static int highwater;
 static bool listen_global = false;
+static int maxfd;
 #ifdef FORCE_NOWAIT
 static bool nowait = true;
 #else /* FORCE_NOWAIT */
 static bool nowait = false;
 #endif /* FORCE_NOWAIT */
-static bool batteryRTC = false;
 static jmp_buf restartbuf;
-static struct gps_context_t context;
 #if defined(SYSTEMD_ENABLE)
 static int sd_socket_count = 0;
 #endif
@@ -210,7 +210,7 @@ static void usage(void)
     (void)printf("usage: gpsd [OPTIONS] device...\n\n\
   Options include: \n\
   -b, --readonly            = bluetooth-safe: open data sources read-only\n\
-  -D, --debug  integer )    = set debug level, default 0 \n\
+  -D, --debug integer       = set debug level, default 0 \n\
   -F, --sockfile sockfile   = specify control socket location, default none\n\
   -f, --framing FRAMING     = fix device framing to FRAMING (8N1, 8O1, etc.)\n\
   -G, --listenany           = make gpsd listen on INADDR_ANY\n\
@@ -222,6 +222,7 @@ static void usage(void)
 #endif /* FORCE_NOWAIT */
 "  -N, --foreground          = don't go into background\n\
   -P, --pidfile pidfile     = set file to record process ID\n\
+  -p, --passive             = do not reconfigure the receiver automatically\n\
   -r, --badtime             = use GPS time even if no fix\n\
   -S, --port PORT           = set port for daemon, default %s\n\
   -s, --speed SPEED         = fix device speed to SPEED, default none\n\
@@ -1912,6 +1913,7 @@ int main(int argc, char *argv[])
             {"listenany", no_argument, NULL, 'G' },
             {"nowait", no_argument, NULL, 'n' },
             {"readonly", no_argument, NULL, 'b'},
+            {"passive", no_argument, NULL, 'p'},
             {"pidfile", no_argument, NULL, 'P'},
             {"port", no_argument, NULL, 'S'},
             {"sockfile", required_argument, NULL, 'F'},
@@ -1970,6 +1972,9 @@ int main(int argc, char *argv[])
             break;
         case 'n':
             nowait = true;
+            break;
+        case 'p':
+            context.passive = true;
             break;
         case 'P':
             pid_file = optarg;

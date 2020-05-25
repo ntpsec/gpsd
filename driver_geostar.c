@@ -518,8 +518,10 @@ static void geostar_event_hook(struct gps_device_t *session, event_t event)
 {
     unsigned char buf[2 * 4];
 
-    if (session->context->readonly)
+    if (session->context->readonly ||
+        session->context->passive) {
         return;
+    }
 
     if (event == event_identified || event == event_reactivate) {
         /* Select binary packets */

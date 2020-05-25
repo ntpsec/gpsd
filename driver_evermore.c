@@ -258,8 +258,11 @@ static void evermore_mode(struct gps_device_t *session, int mode)
 
 static void evermore_event_hook(struct gps_device_t *session, event_t event)
 {
-    if (session->context->readonly)
+    if (session->context->readonly ||
+        session->context->passive) {
         return;
+    }
+
     /*
      * FIX-ME: It might not be necessary to call this on reactivate.
      * Experiment to see if the holds its settings through a close.

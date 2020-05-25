@@ -200,6 +200,7 @@ static void nmea_event_hook(struct gps_device_t *session, event_t event)
         case 4:
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "=> Probing for Evermore\n");
+            // FIXME: not passive compatible
             /* Enable checksum and GGA(1s), GLL(0s), GSA(1s), GSV(1s),
              * RMC(1s), VTG(0s), PEMT101(0s)
              * EverMore will reply with: \x10\x02\x04\x38\x8E\xC6\x10\x03 */
@@ -322,6 +323,9 @@ static void garmin_nmea_event_hook(struct gps_device_t *session,
         /* forces a reconfigure as the following packets come in */
         session->lexer.counter = 0;
     }
+    if (session->context->passive) {
+        return;
+    }
     if (event == event_configure) {
         /*
          * And here's that reconfigure.  It's split up like this because
@@ -409,6 +413,10 @@ static void ashtech_event_hook(struct gps_device_t *session, event_t event)
 
     if (event == event_wakeup)
         (void)nmea_send(session, "$PASHQ,RID");
+
+    if ( session->context->passive) {
+        return;
+    }
     if (event == event_identified) {
         /* turn WAAS on. can't hurt... */
         (void)nmea_send(session, "$PASHS,WAS,ON");

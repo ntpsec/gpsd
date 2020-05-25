@@ -603,6 +603,9 @@ static void oncore_event_hook(struct gps_device_t *session, event_t event)
     if (event == event_wakeup)
         (void)oncore_control_send(session, getfirmware, sizeof(getfirmware));
 
+    if (session->context->passive) {
+        return;
+    }
     /*
      * FIX-ME: It might not be necessary to call this on reactivate.
      * Experiment to see if the holds its settings through a close.
