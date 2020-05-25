@@ -2,7 +2,7 @@
 :description: This document is a guide getting high accuracy from your GPS using Precise Point Positioning (PPP).
 :keywords: Precise Point Positioning, PPP, GPSD, GPS
 Gary E. Miller <gem@rellim.com>
-24 May 2020
+Blursday 86 March 2020
 
 == WARNING
 
@@ -47,8 +47,9 @@ of the satellites.  Using this new ephemeris data, when it becomes
 available, combined with the receiver's raw data, better fixes can be
 computed.  This is the basis of PPP.
 
-There are other smaller problems, like the effects of ocean tides on the
-Earth's crust, that may also be corrected for by your PPP service.
+There are other smaller error sources that PPP can reduce.  The effects of
+ocean tides on the Earth's crust,  Clock drift of the satellite clocks.
+Troposphere effects, and more.
 
 The first take on the actual epherides may take 90 minutes to be published.
 The ephemerides may be further refined for up to three weeks.
