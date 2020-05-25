@@ -423,7 +423,28 @@ PPS timing.
 The rest of the installation is just as for any other source based
 install, as noted in the file *build.adoc* .
 
-==== Ubuntu 18.04 LTS ====
+==== Ubuntu Buster 20
+
+Preliminary install notes.
+
+--------------------------------------------------------------
+apt install gcc scons python-gi python-gi-cairo g++
+apt install python-gobject libgtk-3-dev
+apt install libncurses5-dev libtinfo-dev  pps-tools
+apt install gir1.2-gtk-3.0
+--------------------------------------------------------------
+
+If you wish to build the documentation, be warned it pull in a
+lot of packages.  To build the doc install:
+
+--------------------------------------------------------------
+apt install xsltproc docbook-xsl xmlto asciidoctor
+--------------------------------------------------------------
+
+The rest of the installation is just as for any other source based
+install, as noted in the file *build.adoc* .
+
+==== Ubuntu 18.04 LTS
 
 Preliminary install notes.
 
