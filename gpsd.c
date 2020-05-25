@@ -133,9 +133,7 @@ static const int af_allowed = AF_UNSPEC;
 static fd_set all_fds;
 static int maxfd;
 static int highwater;
-#ifndef FORCE_GLOBAL_ENABLE
 static bool listen_global = false;
-#endif /* FORCE_GLOBAL_ENABLE */
 #ifdef FORCE_NOWAIT
 static bool nowait = true;
 #else /* FORCE_NOWAIT */
@@ -215,11 +213,8 @@ static void usage(void)
   -D, --debug  integer )    = set debug level, default 0 \n\
   -F, --sockfile sockfile   = specify control socket location, default none\n\
   -f, --framing FRAMING     = fix device framing to FRAMING (8N1, 8O1, etc.)\n\
-  -G, --listenany           = make gpsd listen on INADDR_ANY\n"
-#ifndef FORCE_GLOBAL_ENABLE
-"                             forced on in this binary\n"
-#endif /* FORCE_GLOBAL_ENABLE */
-"  -h, --help               = help message \n\
+  -G, --listenany           = make gpsd listen on INADDR_ANY\n\
+  -h, --help               = help message \n\
   -n, --nowait              = don't wait for client connects to poll GPS\n"
 #ifdef FORCE_NOWAIT
 "                             forced on in this binary\n"
@@ -355,11 +350,9 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
 
         memset((char *)&sat.sa_in, 0, sin_len);
         sat.sa_in.sin_family = (sa_family_t) AF_INET;
-#ifndef FORCE_GLOBAL_ENABLE
         if (!listen_global)
             sat.sa_in.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
         else
-#endif /* FORCE_GLOBAL_ENABLE */
             sat.sa_in.sin_addr.s_addr = htonl(INADDR_ANY);
         sat.sa_in.sin_port = htons(port);
 
@@ -380,11 +373,9 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
 
         memset((char *)&sat.sa_in6, 0, sin_len);
         sat.sa_in6.sin6_family = (sa_family_t) AF_INET6;
-#ifndef FORCE_GLOBAL_ENABLE
         if (!listen_global)
             sat.sa_in6.sin6_addr = in6addr_loopback;
         else
-#endif /* FORCE_GLOBAL_ENABLE */
             sat.sa_in6.sin6_addr = in6addr_any;
         sat.sa_in6.sin6_port = htons(port);
 
@@ -1966,11 +1957,9 @@ int main(int argc, char *argv[])
                 exit(1);
             }
             break;
-#ifndef FORCE_GLOBAL_ENABLE
         case 'G':
             listen_global = true;
             break;
-#endif /* FORCE_GLOBAL_ENABLE */
         case 'l':               /* list known device types and exit */
             typelist();
             break;

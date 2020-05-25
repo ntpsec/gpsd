@@ -19,6 +19,7 @@
   Add python_shebang option to scons config.
   gpsrinex has long options and many new options.
   gpsd has long options.
+  Remove unused FORCE_GLOBAL_ENABLE
 
 3.20: 2019-12-31
   Change README into an asciidoc file and publish HTML from it
