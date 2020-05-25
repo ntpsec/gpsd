@@ -298,6 +298,8 @@ install, as noted in the file *build.adoc* .
 
 ==== Buster (10) with python2
 
+These Buster instructions seem to also work for Devuan and Maemo Leste.
+
 Multiple versions of gpsd can not co-exist on the same system.  You need
 to ensure gpsd from a package is not on the system:
 
