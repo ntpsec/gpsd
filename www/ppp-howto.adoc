@@ -49,7 +49,7 @@ computed.  This is the basis of PPP.
 
 There are other smaller error sources that PPP can reduce.  The effects of
 ocean tides on the Earth's crust,  Clock drift of the satellite clocks.
-Troposphere effects, and more.
+Troposphere and Ionosphere effects, and more.
 
 The first take on the actual epherides may take 90 minutes to be published.
 The ephemerides may be further refined for up to three weeks.
