@@ -300,7 +300,6 @@ void monitor_fixframe(WINDOW * win)
     (void)mvwaddch(win, ycur, xmax - 1, ACS_VLINE);
 }
 
-#if defined(CONTROLSEND_ENABLE) || defined(RECONFIGURE_ENABLE)
 static void packet_dump(const char *buf, size_t buflen)
 {
     if (packetwin != NULL) {
@@ -322,7 +321,6 @@ static void monitor_dump_send(const char *buf, size_t len)
         report_unlock();
     }
 }
-#endif /* defined(CONTROLSEND_ENABLE) || defined(RECONFIGURE_ENABLE) */
 
 /* log to the packet window if curses is up, otherwise stdout */
 static void gpsmon_report(const char *buf)
@@ -348,7 +346,6 @@ static void packet_vlog(char *buf, size_t len, const char *fmt, va_list ap)
     report_unlock();
 }
 
-#ifdef RECONFIGURE_ENABLE
 static void announce_log(const char *fmt, ...)
 {
     char buf[BUFSIZ];
@@ -370,7 +367,6 @@ static void announce_log(const char *fmt, ...)
        (void)fprintf(logfile, ">>>%s\n", buf);
    }
 }
-#endif /* RECONFIGURE_ENABLE */
 
 static void monitor_vcomplain(const char *fmt, va_list ap)
 {
@@ -678,9 +674,7 @@ static ssize_t gpsmon_serial_write(struct gps_device_t *session,
                    const size_t len)
 /* pass low-level data to devices, echoing it to the log window */
 {
-#if defined(CONTROLSEND_ENABLE) || defined(RECONFIGURE_ENABLE)
     monitor_dump_send((const char *)buf, len);
-#endif /* defined(CONTROLSEND_ENABLE) || defined(RECONFIGURE_ENABLE) */
     return gpsd_serial_write(session, buf, len);
 }
 
@@ -862,10 +856,8 @@ static void gpsmon_hook(struct gps_device_t *device, gps_mask_t changed UNUSED)
 
 static bool do_command(const char *line)
 {
-#ifdef RECONFIGURE_ENABLE
     unsigned int v;
     struct timespec delay;
-#endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
     unsigned char buf[BUFLEN];
 #endif /* CONTROLSEND_ENABLE */
@@ -879,7 +871,6 @@ static bool do_command(const char *line)
         arg = line + 1;
 
     switch (line[0]) {
-#ifdef RECONFIGURE_ENABLE
     case 'c':   /* change cycle time */
         if (session.device_type == NULL)
             complain("No device defined yet");
@@ -905,7 +896,6 @@ static bool do_command(const char *line)
                     ("Device type %s has no rate switcher",
                      switcher->type_name);
         }
-#endif /* RECONFIGURE_ENABLE */
         break;
     case 'i':   /* start probing for subtype */
         if (session.device_type == NULL)
@@ -917,9 +907,7 @@ static bool do_command(const char *line)
                 context.readonly = !context.readonly;
             else
                 context.readonly = (atoi(line + 1) == 0);
-#ifdef RECONFIGURE_ENABLE
             announce_log("[probing %sabled]", context.readonly ? "dis" : "en");
-#endif /* RECONFIGURE_ENABLE */
             if (!context.readonly)
                 /* magic - forces a reconfigure */
                 session.lexer.counter = 0;
@@ -942,7 +930,6 @@ static bool do_command(const char *line)
         report_unlock();
         break;
 
-#ifdef RECONFIGURE_ENABLE
     case 'n':   /* change mode */
         /* if argument not specified, toggle */
         if (strcspn(line, "01") == strlen(line)) {
@@ -986,12 +973,10 @@ static bool do_command(const char *line)
                      switcher->type_name);
         }
         break;
-#endif /* RECONFIGURE_ENABLE */
 
     case 'q':   /* quit */
         return false;
 
-#ifdef RECONFIGURE_ENABLE
     case 's':   /* change speed */
         if (session.device_type == NULL)
             complain("No device defined yet");
@@ -1064,7 +1049,6 @@ static bool do_command(const char *line)
                 refresh_statwin();
         }
         break;
-#endif /* RECONFIGURE_ENABLE */
 
     case 't':   /* force device type */
         if (!serial)
@@ -1195,7 +1179,6 @@ int main(int argc, char **argv)
             for (active = monitor_objects; *active; active++) {
                 (void)fputs("i l q ^S ^Q", stdout);
                 (void)fputc(' ', stdout);
-#ifdef RECONFIGURE_ENABLE
                 if ((*active)->driver->mode_switcher != NULL)
                     (void)fputc('n', stdout);
                 else
@@ -1211,7 +1194,6 @@ int main(int argc, char **argv)
                 else
                     (void)fputc(' ', stdout);
                 (void)fputc(' ', stdout);
-#endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
                 if ((*active)->driver->control_send != NULL)
                     (void)fputc('x', stdout);

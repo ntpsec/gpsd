@@ -371,7 +371,6 @@ static ssize_t _proto__control_send(struct gps_device_t *session,
 }
 #endif /* CONTROLSEND_ENABLE */
 
-#ifdef RECONFIGURE_ENABLE
 static void _proto__event_hook(struct gps_device_t *session, event_t event)
 {
     if (session->context->readonly)
@@ -467,7 +466,6 @@ static void _proto__set_mode(struct gps_device_t *session, int mode)
         /* send a mode switch control string */
     }
 }
-#endif /* RECONFIGURE_ENABLE */
 
 static double _proto_time_offset(struct gps_device_t *session)
 {
@@ -527,7 +525,6 @@ const struct gps_type_t driver__proto__binary = {
     .init_query        = NULL,
     /* fire on various lifetime events */
     .event_hook       = _proto__event_hook,
-#ifdef RECONFIGURE_ENABLE
     /* Speed (baudrate) switch */
     .speed_switcher   = _proto__set_speed,
     /* Switch to NMEA mode */
@@ -536,7 +533,6 @@ const struct gps_type_t driver__proto__binary = {
     .rate_switcher    = NULL,
     /* Minimum cycle time of the device */
     .min_cycle        = 1,
-#endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
     /* Control string sender - should provide checksum and headers/trailer */
     .control_send   = _proto__control_send,

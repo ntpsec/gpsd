@@ -159,7 +159,6 @@ static void navcom_cmd_0x1c(struct gps_device_t *session, uint8_t mode,
              mode, length);
 }
 
-#ifdef RECONFIGURE_ENABLE
 /* Serial Port Configuration */
 static void navcom_cmd_0x11(struct gps_device_t *session,
                             uint8_t port_selection)
@@ -184,7 +183,6 @@ static void navcom_cmd_0x11(struct gps_device_t *session,
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "Navcom: serial port selection: 0x%02x\n", port_selection);
 }
-#endif /* RECONFIGURE_ENABLE */
 
 static void navcom_event_hook(struct gps_device_t *session, event_t event)
 {
@@ -1196,7 +1194,6 @@ static ssize_t navcom_control_send(struct gps_device_t *session,
 }
 #endif /* CONTROLSEND_ENABLE */
 
-#ifdef RECONFIGURE_ENABLE
 static bool navcom_speed(struct gps_device_t *session,
                          speed_t speed, char parity, int stopbits)
 {
@@ -1262,7 +1259,6 @@ static bool navcom_speed(struct gps_device_t *session,
         return true;
     }
 }
-#endif /* RECONFIGURE_ENABLE */
 
 /* this is everything we export */
 /* *INDENT-OFF* */
@@ -1272,22 +1268,20 @@ const struct gps_type_t driver_navcom =
     .packet_type    = NAVCOM_PACKET,            /* lexer packet type */
     .flags          = DRIVER_STICKY,            /* remember this */
     .trigger        = NULL,                     /* none */
-    .channels       = NAVCOM_CHANNELS,          /* 12 L1 + 12 L2 + 2 Inmarsat L-Band */
+    .channels       = NAVCOM_CHANNELS,     // 12 L1 + 12 L2 + 2 Inmarsat L-Band
     .probe_detect   = NULL,                     /* no probe */
     .get_packet     = generic_get,              /* use generic one */
     .parse_packet   = navcom_parse_input,       /* parse message packets */
     .rtcm_writer    = gpsd_write,               /* send RTCM data straight */
     .init_query     = NULL,                     /* non-perturbing query */
     .event_hook     = navcom_event_hook,        /* lifetime event handler */
-#ifdef RECONFIGURE_ENABLE
     .speed_switcher = navcom_speed,             /* we do change baud rates */
-    .mode_switcher  = NULL,                     /* there is not a mode switcher */
+    .mode_switcher  = NULL,                     // there is not a mode switcher
     .rate_switcher  = NULL,                     /* no sample-rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
-    .control_send   = navcom_control_send,      /* how to send a control string */
+    .control_send   = navcom_control_send,      // how to send a control string
 #endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,            /* no method for NTP fudge factor */
 };

@@ -103,9 +103,7 @@ static void ubx_msg_nav_sbas(struct gps_device_t *session, unsigned char *buf,
                              size_t data_len);
 static gps_mask_t ubx_msg_tim_tp(struct gps_device_t *session,
                                  unsigned char *buf, size_t data_len);
-#ifdef RECONFIGURE_ENABLE
 static void ubx_mode(struct gps_device_t *session, int mode);
-#endif /* RECONFIGURE_ENABLE */
 
 /* make up an NMEA 4.0 (extended) PRN based on gnssId:svId,
  * using Appendix A from * u-blox ZED-F9P Interface Description
@@ -2237,14 +2235,12 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
             GPSD_LOG(LOG_INF, &session->context->errout,
                      "UBX-CFG-PRT: port %d\n", session->driver.ubx.port_id);
 
-#ifdef RECONFIGURE_ENABLE
             /* Need to reinitialize since port changed */
             if (session->mode == O_OPTIMIZE) {
                 ubx_mode(session, MODE_BINARY);
             } else {
                 ubx_mode(session, MODE_NMEA);
             }
-#endif /* RECONFIGURE_ENABLE */
         }
         break;
 
@@ -2683,7 +2679,6 @@ static void ubx_event_hook(struct gps_device_t *session, event_t event)
 
         /* no longer set UBX-CFG-SBAS here, u-blox 9 does not have it */
 
-#ifdef RECONFIGURE_ENABLE
         /*
          * Turn off NMEA output, turn on UBX on this port.
          */
@@ -2692,7 +2687,6 @@ static void ubx_event_hook(struct gps_device_t *session, event_t event)
         } else {
             ubx_mode(session, MODE_NMEA);
         }
-#endif /* RECONFIGURE_ENABLE */
     } else if (event == event_deactivate) {
         /* There used to be a hotstart/reset here.
          * That caused u-blox USB to re-enumerate.
@@ -2702,7 +2696,6 @@ static void ubx_event_hook(struct gps_device_t *session, event_t event)
     }
 }
 
-#ifdef RECONFIGURE_ENABLE
 static void ubx_cfg_prt(struct gps_device_t *session,
                         speed_t speed, const char parity, const int stopbits,
                         const int mode)
@@ -3061,7 +3054,6 @@ static bool ubx_rate(struct gps_device_t *session, double cycletime)
 
     return ubx_write(session, 0x06, 0x08, msg, 6);      /* CFG-RATE */
 }
-#endif /* RECONFIGURE_ENABLE */
 
 /* This is everything we export */
 /* *INDENT-OFF* */
@@ -3080,13 +3072,11 @@ const struct gps_type_t driver_ubx = {
     .rtcm_writer      = gpsd_write,
     .init_query       = ubx_init_query, /* non-perturbing initial query */
     .event_hook       = ubx_event_hook, /* Fire on various lifetime events */
-#ifdef RECONFIGURE_ENABLE
     .speed_switcher   = ubx_speed,      /* Speed (baudrate) switch */
     .mode_switcher    = ubx_mode,       /* Mode switcher */
     .rate_switcher    = ubx_rate,       /* Message delivery rate switcher */
     .min_cycle.tv_sec  = 0,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 250000000,     /* Maximum 4Hz sample rate */
-#endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
     .control_send     = ubx_control_send,/* how to send a control string */
 #endif /* CONTROLSEND_ENABLE */

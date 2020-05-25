@@ -559,7 +559,6 @@ static void geostar_event_hook(struct gps_device_t *session, event_t event)
     }
 }
 
-#ifdef RECONFIGURE_ENABLE
 static bool geostar_speed_switch(struct gps_device_t *session,
                               speed_t speed, char parity, int stopbits)
 {
@@ -607,7 +606,6 @@ static void geostar_mode(struct gps_device_t *session, int mode)
                  "unknown mode %i requested\n", mode);
     }
 }
-#endif /* RECONFIGURE_ENABLE */
 
 static double geostar_time_offset(struct gps_device_t *session UNUSED)
 {
@@ -629,13 +627,11 @@ const struct gps_type_t driver_geostar =
     .rtcm_writer    = NULL,             /* doesn't accept DGPS corrections */
     .init_query     = geostar_init_query,    // non-perturbing initial query
     .event_hook     = geostar_event_hook,    // fire on various lifetime events
-#ifdef RECONFIGURE_ENABLE
     .speed_switcher = geostar_speed_switch,/* change baud rate */
     .mode_switcher  = geostar_mode,     /* there is a mode switcher */
     .rate_switcher  = NULL,             /* no rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
     .control_send   = geostar_control_send,/* how to send commands */
 #endif /* CONTROLSEND_ENABLE */

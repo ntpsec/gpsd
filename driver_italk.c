@@ -456,13 +456,11 @@ const struct gps_type_t driver_italk =
     .rtcm_writer    = gpsd_write,       /* send RTCM data straight */
     .init_query     = NULL,             /* non-perturbing initial query */
     .event_hook     = NULL,             /* lifetime event handler */
-#ifdef RECONFIGURE_ENABLE
     .speed_switcher = NULL,             /* no speed switcher */
     .mode_switcher  = NULL,             /* no mode switcher */
     .rate_switcher  = NULL,             /* no sample-rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
     .control_send   = NULL,             /* no control string sender */
 #endif /* CONTROLSEND_ENABLE */

@@ -1091,7 +1091,6 @@ static gps_mask_t greis_parse_input(struct gps_device_t *session)
         return 0;
 }
 
-#ifdef RECONFIGURE_ENABLE
 /**
  * Set port operating mode, speed, parity, stopbits etc. here.
  * Note: parity is passed as 'N'/'E'/'O', but you should program
@@ -1148,8 +1147,6 @@ static void greis_set_mode(struct gps_device_t *session, int mode)
 }
 #endif
 
-#endif /* RECONFIGURE_ENABLE */
-
 #if 0 /* TODO */
 static double greis_time_offset(struct gps_device_t *session)
 {
@@ -1190,7 +1187,6 @@ const struct gps_type_t driver_greis = {
     .init_query        = NULL,
     /* fire on various lifetime events */
     .event_hook       = greis_event_hook,
-#ifdef RECONFIGURE_ENABLE
     /* Speed (baudrate) switch */
     .speed_switcher   = greis_set_speed,
 #if 0 /* TODO */
@@ -1203,7 +1199,6 @@ const struct gps_type_t driver_greis = {
      * Default is 1/100, but this is tunable using /par/raw/msint . */
     .min_cycle.tv_sec  = 0,
     .min_cycle.tv_nsec = 10000000,
-#endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
     /* Control string sender - should provide checksum and headers/trailer */
     .control_send   = greis_control_send,

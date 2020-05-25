@@ -3110,7 +3110,6 @@ static void tsip_event_hook(struct gps_device_t *session, event_t event)
     }
 }
 
-#ifdef RECONFIGURE_ENABLE
 static bool tsip_speed_switch(struct gps_device_t *session,
                               speed_t speed, char parity, int stopbits)
 {
@@ -3199,7 +3198,6 @@ static void tsip_mode(struct gps_device_t *session, int mode)
                  "TSIP: unknown mode %i requested\n", mode);
     }
 }
-#endif /* RECONFIGURE_ENABLE */
 
 /* configure generic Trimble TSIP device to a known state */
 void configuration_packets_generic(struct gps_device_t *session)
@@ -3419,13 +3417,11 @@ const struct gps_type_t driver_tsip =
     .rtcm_writer    = NULL,             /* doesn't accept DGPS corrections */
     .init_query     = tsip_init_query,  /* non-perturbing initial query */
     .event_hook     = tsip_event_hook,  /* fire on various lifetime events */
-#ifdef RECONFIGURE_ENABLE
     .speed_switcher = tsip_speed_switch,/* change baud rate */
     .mode_switcher  = tsip_mode,        /* there is a mode switcher */
     .rate_switcher  = NULL,             /* no rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
     .control_send   = tsip_control_send,/* how to send commands */
 #endif /* CONTROLSEND_ENABLE */

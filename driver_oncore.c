@@ -658,13 +658,11 @@ const struct gps_type_t driver_oncore = {
     .rtcm_writer      = gpsd_write,             /* device accepts RTCM */
     .init_query       = NULL,                   /* non-perturbing query */
     .event_hook       = oncore_event_hook,      /* lifetime event hook */
-#ifdef RECONFIGURE_ENABLE
     .speed_switcher   = NULL,                   /* no speed setter */
     .mode_switcher    = NULL,                   /* no mode setter */
     .rate_switcher    = NULL,                   /* no speed setter */
     .min_cycle.tv_sec  = 1,                     /* 1Hz */
     .min_cycle.tv_nsec = 0,
-#endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
     /* Control string sender - should provide checksum and headers/trailer */
     .control_send   = oncore_control_send,      /* to send control strings */

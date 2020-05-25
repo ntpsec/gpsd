@@ -41,7 +41,6 @@ static bool hunting = true;
  */
 #define REDIRECT_SNIFF  15
 
-#if defined(RECONFIGURE_ENABLE) || defined(CONTROLSEND_ENABLE)
 /* allow the device to settle after a control operation */
 static void settle(struct gps_device_t *session)
 {
@@ -59,7 +58,6 @@ static void settle(struct gps_device_t *session)
 
     (void)tcdrain(session->gpsdata.gps_fd);
 }
-#endif /* defined(RECONFIGURE_ENABLE) || defined(CONTROLSEND_ENABLE) */
 
 /*
  * Allows any response other than ERROR.  Use it for queries where a
@@ -197,7 +195,7 @@ int main(int argc, char **argv)
 #ifdef CONTROLSEND_ENABLE
     char cooked[BUFSIZ];
     ssize_t cooklen = 0;
-#endif /* RECONFIGURE_ENABLE */
+#endif
 
     context.errout.label = "gpsctl";
 
@@ -210,12 +208,7 @@ int main(int argc, char **argv)
             to_binary = true;
             break;
         case 'c':
-#ifdef RECONFIGURE_ENABLE
             rate = optarg;
-#else
-            GPSD_LOG(LOG_ERROR, &context.errout,
-                     "cycle-change capability has been conditioned out.\n");
-#endif /* RECONFIGURE_ENABLE */
             break;
         case 'x':               /* ship specified control string */
 #ifdef CONTROLSEND_ENABLE
@@ -241,7 +234,6 @@ int main(int argc, char **argv)
             break;
         case 'l':               /* list known device types */
             for (dp = gpsd_drivers; *dp; dp++) {
-#ifdef RECONFIGURE_ENABLE
                 if ((*dp)->mode_switcher != NULL)
                     (void)fputs("-[bn]\t", stdout);
                 else
@@ -254,7 +246,6 @@ int main(int argc, char **argv)
                     (void)fputs("-c\t", stdout);
                 else
                     (void)fputc('\t', stdout);
-#endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
                 if ((*dp)->control_send != NULL)
                     (void)fputs("-x\t", stdout);
@@ -265,29 +256,14 @@ int main(int argc, char **argv)
             }
             exit(EXIT_SUCCESS);
         case 'n':               /* switch to NMEA mode */
-#ifdef RECONFIGURE_ENABLE
             to_nmea = true;
-#else
-            GPSD_LOG(LOG_ERROR, &context.errout,
-                     "speed-change capability has been conditioned out.\n");
-#endif /* RECONFIGURE_ENABLE */
             break;
         case 'r':               /* force-switch to default mode */
-#ifdef RECONFIGURE_ENABLE
             reset = true;
             lowlevel = false;   /* so we'll abort if the daemon is running */
-#else
-            GPSD_LOG(LOG_ERROR, &context.errout,
-                     "reset capability has been conditioned out.\n");
-#endif /* RECONFIGURE_ENABLE */
             break;
         case 's':               /* change output baud rate */
-#ifdef RECONFIGURE_ENABLE
             speed = optarg;
-#else
-            GPSD_LOG(LOG_ERROR, &context.errout,
-                     "speed-change capability has been conditioned out.\n");
-#endif /* RECONFIGURE_ENABLE */
             break;
         case 't':               /* force the device type */
             devtype = optarg;
@@ -487,7 +463,6 @@ int main(int argc, char **argv)
         }
 
         status = 0;
-#ifdef RECONFIGURE_ENABLE
         if (reset)
         {
             GPSD_LOG(LOG_PROG, &context.errout,
@@ -584,10 +559,8 @@ int main(int argc, char **argv)
                             "?DEVICE={\"path\":\"%s\",\"cycle\":%s}\r\n",
                             device, rate);
         }
-#endif /* RECONFIGURE_ENABLE */
         (void)gps_close(&gpsdata);
         exit(status);
-#ifdef RECONFIGURE_ENABLE
     } else if (reset) {
         /* hard reset will go through lower-level operations */
         const int speeds[] = {2400, 4800, 9600, 19200, 38400, 57600, 115200};
@@ -623,7 +596,6 @@ int main(int argc, char **argv)
                 session.device_type->mode_switcher(&session, MODE_NMEA);
         gpsd_wrap(&session);
         exit(EXIT_SUCCESS);
-#endif /* RECONFIGURE_ENABLE */
     } else {
         /* access to the daemon failed, use the low-level facilities */
         static struct gps_device_t      session;        /* zero this too */
@@ -761,7 +733,6 @@ int main(int argc, char **argv)
 
         /* now perform the actual control function */
         status = 0;
-#ifdef RECONFIGURE_ENABLE
         if (to_nmea || to_binary) {
             bool write_enable = context.readonly;
             context.readonly = false;
@@ -854,7 +825,6 @@ int main(int argc, char **argv)
             }
             context.readonly = write_enable;
         }
-#endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
         if (control) {
             bool write_enable = context.readonly;

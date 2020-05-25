@@ -258,17 +258,13 @@ int gpsd_switch_driver(struct gps_device_t *session, char *type_name)
             gpsd_assert_sync(session);
             session->device_type = *dp;
             session->driver_index = i;
-#ifdef RECONFIGURE_ENABLE
             session->gpsdata.dev.mincycle = session->device_type->min_cycle;
-#endif /* RECONFIGURE_ENABLE */
             /* reconfiguration might be required */
             if (first_sync && session->device_type->event_hook != NULL)
                 session->device_type->event_hook(session,
                                                  event_driver_switch);
-#ifdef RECONFIGURE_ENABLE
             if (STICKY(*dp))
                 session->last_controller = *dp;
-#endif /* RECONFIGURE_ENABLE */
             return 1;
         }
     GPSD_LOG(LOG_ERROR, &session->context->errout,
@@ -298,9 +294,7 @@ void gpsd_init(struct gps_device_t *session, struct gps_context_t *context,
         (void)strlcpy(session->gpsdata.dev.path, device,
                       sizeof(session->gpsdata.dev.path));
     session->device_type = NULL;        /* start by hunting packets */
-#ifdef RECONFIGURE_ENABLE
     session->last_controller = NULL;
-#endif /* RECONFIGURE_ENABLE */
     session->observed = 0;
     session->sourcetype = source_unknown;       /* gpsd_open() sets this */
     session->servicetype = service_unknown;     /* gpsd_open() sets this */
@@ -337,13 +331,11 @@ void gpsd_init(struct gps_device_t *session, struct gps_context_t *context,
 /* temporarily release the GPS device */
 void gpsd_deactivate(struct gps_device_t *session)
 {
-#ifdef RECONFIGURE_ENABLE
     if (!session->context->readonly
         && session->device_type != NULL
         && session->device_type->event_hook != NULL) {
         session->device_type->event_hook(session, event_deactivate);
     }
-#endif /* RECONFIGURE_ENABLE */
     GPSD_LOG(LOG_INF, &session->context->errout,
              "closing GPS=%s (%d)\n",
              session->gpsdata.dev.path, session->gpsdata.gps_fd);
@@ -1397,12 +1389,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
         if (NULL != session->device_type &&
             (0 < session->lexer.start_time.tv_sec ||
              0 < session->lexer.start_time.tv_nsec)) {
-#ifdef RECONFIGURE_ENABLE
             const double min_cycle = TSTONS(&session->device_type->min_cycle);
-#else
-            // Assume that all GNSS receivers are 1Hz
-            const double min_cycle = 1;
-#endif /* RECONFIGURE_ENABLE */
             double quiet_time = (MINIMUM_QUIET_TIME * min_cycle);
             double gap;
 
@@ -1500,12 +1487,8 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
                  * previous mode switch to binary succeeded in suppressing
                  * NMEA).
                  */
-#ifdef RECONFIGURE_ENABLE
                 bool dependent_nmea = (newtype == NMEA_PACKET &&
                                    session->device_type->mode_switcher != NULL);
-#else
-                bool dependent_nmea = false;
-#endif /* RECONFIGURE_ENABLE */
 
                 /*
                  * Compute whether to switch drivers.
@@ -1618,7 +1601,6 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
                 && session->device_type->parse_packet != NULL)
                 received |= session->device_type->parse_packet(session);
 
-#ifdef RECONFIGURE_ENABLE
         /*
          * We may want to revert to the last driver that was marked
          * sticky.  What this accomplishes is that if we've just
@@ -1635,7 +1617,6 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
                      "reverted to %s driver...\n",
                      session->device_type->type_name);
         }
-#endif /* RECONFIGURE_ENABLE */
 
         /* are we going to generate a report? if so, count characters */
         if ((received & REPORT_IS) != 0) {

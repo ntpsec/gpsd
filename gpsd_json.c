@@ -611,7 +611,6 @@ void json_device_dump(const struct gps_device_t *device,
                             device->gpsdata.dev.stopbits,
                             (long long)device->gpsdata.dev.cycle.tv_sec,
                             device->gpsdata.dev.cycle.tv_nsec / 10000000);
-#ifdef RECONFIGURE_ENABLE
             if (device->device_type != NULL
                 && device->device_type->rate_switcher != NULL)
                 str_appendf(reply, replylen,
@@ -619,7 +618,6 @@ void json_device_dump(const struct gps_device_t *device,
                                (long long)device->device_type->min_cycle.tv_sec,
                                device->device_type->min_cycle.tv_nsec /
                                10000000);
-#endif /* RECONFIGURE_ENABLE */
         }
     }
     (void)strlcat(reply, "}\r\n", replylen);

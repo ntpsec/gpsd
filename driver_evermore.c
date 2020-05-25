@@ -285,7 +285,6 @@ static void evermore_event_hook(struct gps_device_t *session, event_t event)
     }
 }
 
-#ifdef RECONFIGURE_ENABLE
 static bool evermore_speed(struct gps_device_t *session,
                            speed_t speed, char parity, int stopbits)
 {
@@ -346,7 +345,6 @@ static bool evermore_rate_switcher(struct gps_device_t *session, double rate)
                                       sizeof(evrm_rate_config)) != -1);
     }
 }
-#endif /* RECONFIGURE_ENABLE */
 
 
 /* this is everything we export */
@@ -364,13 +362,11 @@ const struct gps_type_t driver_evermore =
     .rtcm_writer    = gpsd_write,               /* send RTCM data straight */
     .init_query     = NULL,                     /* non-perturbing query */
     .event_hook     = evermore_event_hook,      /* lifetime event handler */
-#ifdef RECONFIGURE_ENABLE
     .speed_switcher = evermore_speed,           /* we can change baud rates */
     .mode_switcher  = evermore_mode,            /* there is a mode switcher */
     .rate_switcher  = evermore_rate_switcher,   /* change sample rate */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
     .control_send   = evermore_control_send,    // how to send a control string
 #endif /* CONTROLSEND_ENABLE */

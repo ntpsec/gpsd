@@ -1186,7 +1186,6 @@ gps_mask_t garmin_ser_parse(struct gps_device_t *session)
 }
 
 
-#ifdef RECONFIGURE_ENABLE
 static void settle(void)
 {
     struct timespec delay, rem;
@@ -1225,7 +1224,6 @@ static void garmin_switcher(struct gps_device_t *session, int mode)
         settle();               // wait 333mS, essential!
     }
 }
-#endif /* RECONFIGURE_ENABLE */
 
 #ifdef CONTROLSEND_ENABLE
 static ssize_t garmin_control_send(struct gps_device_t *session,
@@ -1274,13 +1272,11 @@ const struct gps_type_t driver_garmin_usb_binary =
     .rtcm_writer    = NULL,             /* don't send DGPS corrections */
     .init_query     = NULL,             /* non-perturbing initial query */
     .event_hook     = garmin_event_hook,/* lifetime ebent handler */
-#ifdef RECONFIGURE_ENABLE
     .speed_switcher = NULL,             /* no speed switcher */
     .mode_switcher  = NULL,             /* Garmin USB Binary has no NMEA */
     .rate_switcher  = NULL,             /* no sample-rate switcher */
     .min_cycle.tv_sec  = 0,
     .min_cycle.tv_nsec = 10000000,      /* 10Hz */
-#endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
     .control_send   = garmin_control_send,      /* send raw bytes */
 #endif /* CONTROLSEND_ENABLE */
@@ -1304,13 +1300,11 @@ const struct gps_type_t driver_garmin_ser_binary =
     /* The Garmin Gek0 301 needs to be kicked to start sending binary.
      * like the Garmin USB. */
     .event_hook     = garmin_event_hook,        /* lifetime event handler */
-#ifdef RECONFIGURE_ENABLE
     .speed_switcher = NULL,             /* no speed switcher */
     .mode_switcher  = garmin_switcher,  /* how to change modes */
     .rate_switcher  = NULL,             /* no sample-rate switcher */
     .min_cycle.tv_sec  = 0,
     .min_cycle.tv_nsec = 10000000,      /* 10Hz */
-#endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
     .control_send   = garmin_control_send,      /* send raw bytes */
 #endif /* CONTROLSEND_ENABLE */

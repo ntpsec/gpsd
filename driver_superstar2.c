@@ -46,10 +46,8 @@ static ssize_t superstar2_control_send(struct gps_device_t *, char *, size_t);
 #endif /* CONTROLSEND_ENABLE */
 static void superstar2_event_hook(struct gps_device_t *, event_t);
 static ssize_t superstar2_write(struct gps_device_t *, char *, size_t);
-#ifdef RECONFIGURE_ENABLE
 static bool superstar2_set_speed(struct gps_device_t *, speed_t, char, int);
 static void superstar2_set_mode(struct gps_device_t *, int);
-#endif /* RECONFIGURE_ENABLE */
 
 
 /*
@@ -511,7 +509,6 @@ superstar2_control_send(struct gps_device_t *session, char *msg,
 }
 #endif /* CONTROLSEND_ENABLE */
 
-#ifdef RECONFIGURE_ENABLE
 static bool superstar2_set_speed(struct gps_device_t *session,
                                  speed_t speed, char parity, int stopbits)
 {
@@ -540,7 +537,6 @@ static void superstar2_set_mode(struct gps_device_t *session, int mode)
         (void)superstar2_write(session, (char *)mode_msg, 7);
     }
 }
-#endif /* RECONFIGURE_ENABLE */
 
 /* *INDENT-OFF* */
 const struct gps_type_t driver_superstar2 = {
@@ -566,7 +562,6 @@ const struct gps_type_t driver_superstar2 = {
     .init_query         = NULL,
     /* Fire on various lifetime events */
     .event_hook         = superstar2_event_hook,
-#ifdef RECONFIGURE_ENABLE
     /* Speed (baudrate) switch */
     .speed_switcher     = superstar2_set_speed,
     /* Switch to NMEA mode */
@@ -576,7 +571,6 @@ const struct gps_type_t driver_superstar2 = {
     /* Minimum cycle time (not used) */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
     /* Control string sender - should provide checksum and trailer */
     .control_send       = superstar2_control_send,

@@ -418,13 +418,11 @@ struct gps_type_t {
                            const char *rtcmbuf, size_t rtcmbytes);
     void (*init_query)(struct gps_device_t *session);
     void (*event_hook)(struct gps_device_t *session, event_t event);
-#ifdef RECONFIGURE_ENABLE
     bool (*speed_switcher)(struct gps_device_t *session,
                                      speed_t speed, char parity, int stopbits);
     void (*mode_switcher)(struct gps_device_t *session, int mode);
     bool (*rate_switcher)(struct gps_device_t *session, double rate);
     timespec_t min_cycle;
-#endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
     ssize_t (*control_send)(struct gps_device_t *session,
                             char *buf, size_t buflen);
@@ -521,9 +519,7 @@ struct gps_device_t {
     unsigned int drivers_identified;  /* bitmask; what drivers have we seen? */
     unsigned int cfg_stage;     /* configuration stage counter */
     unsigned int cfg_step;      /* configuration step counter */
-#ifdef RECONFIGURE_ENABLE
     const struct gps_type_t *last_controller;
-#endif /* RECONFIGURE_ENABLE */
     struct gps_context_t        *context;
     sourcetype_t sourcetype;
     servicetype_t servicetype;

@@ -330,7 +330,6 @@ static int property_check(void)
         if (*dp == NULL || (*dp)->packet_type == COMMENT_PACKET)
             continue;
 
-#ifdef RECONFIGURE_ENABLE
         if (CONTROLLABLE(*dp))
             (void)fputs("control\t", stdout);
         else
@@ -339,7 +338,6 @@ static int property_check(void)
             (void)fputs("hook\t", stdout);
         else
             (void)fputs(".\t", stdout);
-#endif /* RECONFIGURE_ENABLE */
         if ((*dp)->trigger != NULL)
             (void)fputs("trigger\t", stdout);
         else if ((*dp)->probe_detect != NULL)
@@ -369,7 +367,7 @@ static int property_check(void)
     for (dp = gpsd_drivers; *dp; dp++) {
         if (*dp == NULL || (*dp)->packet_type == COMMENT_PACKET)
             continue;
-#if defined(CONTROLSEND_ENABLE) && defined(RECONFIGURE_ENABLE)
+#if defined(CONTROLSEND_ENABLE)
         if (CONTROLLABLE(*dp) && (*dp)->control_send == NULL) {
             (void)fprintf(stderr, "%s has control methods but no send\n",
                           (*dp)->type_name);
@@ -380,7 +378,7 @@ static int property_check(void)
                           (*dp)->type_name);
             status = EXIT_FAILURE;
         }
-#endif /* CONTROLSEND_ENABLE && RECONFIGURE_ENABLE*/
+#endif // CONTROLSEND_ENABLE
     }
 
     return status;

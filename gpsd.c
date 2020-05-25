@@ -171,7 +171,6 @@ static void typelist(void)
     for (dp = gpsd_drivers; *dp; dp++) {
         if ((*dp)->packet_type == COMMENT_PACKET)
             continue;
-#ifdef RECONFIGURE_ENABLE
         if ((*dp)->mode_switcher != NULL)
             (void)fputs("n\t", stdout);
         else
@@ -188,7 +187,6 @@ static void typelist(void)
             (void)fputs("*\t", stdout);
         else
             (void)fputc('\t', stdout);
-#endif /* RECONFIGURE_ENABLE */
         (void)puts((*dp)->type_name);
     }
     (void)printf("# n: mode switch, b: speed switch, "
@@ -968,7 +966,6 @@ static bool awaken(struct gps_device_t *device)
     }
 }
 
-#ifdef RECONFIGURE_ENABLE
 #if __UNUSED_RECONFIGURE__
 /* is this channel privileged to change a device's behavior? */
 static bool privileged_user(struct gps_device_t *device)
@@ -1053,7 +1050,6 @@ static void set_serial(struct gps_device_t *device,
     }
     /* *INDENT-ON* */
 }
-#endif /* RECONFIGURE_ENABLE */
 
 #ifdef SOCKET_EXPORT_ENABLE
 static void json_devicelist_dump(char *reply, size_t replylen)
@@ -1171,7 +1167,6 @@ static void handle_request(struct subscriber_t *sub,
         if (*buf == ';') {
             ++buf;
         } else {
-#ifdef RECONFIGURE_ENABLE
             struct gps_device_t *device;
             /* first, select a device to operate on */
             int status = json_device_read(buf + 1, &devconf, &end);
@@ -1290,12 +1285,6 @@ static void handle_request(struct subscriber_t *sub,
                     }
                 }
             }
-#else /* RECONFIGURE_ENABLE */
-            str_appendf(reply, replylen,
-                           "{\"class\":\"ERROR\",\"message\":"
-                           "\"Device configuration support not compiled.\""
-                           "}\r\n");
-#endif /* RECONFIGURE_ENABLE */
         }
         /* dump a response for each selected channel */
         for (devp = devices; devp < devices + MAX_DEVICES; devp++) {

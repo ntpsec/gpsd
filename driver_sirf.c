@@ -69,7 +69,6 @@ static unsigned char versionprobe[] = {
     0x00, 0x00, 0xb0, 0xb3
 };
 
-#ifdef RECONFIGURE_ENABLE
 /* Poll Navigation Parameters MID 152
  * query for MID 19 */
 static unsigned char navparams[] = {
@@ -208,7 +207,6 @@ static unsigned char enablemid52[] = {
     0x00, 0x00, 0x00, 0x00,     /* reserved, set to zero */
     0x00, 0xdb, 0xb0, 0xb3
 };
-#endif /* RECONFIGURE_ENABLE */
 
 
 static gps_mask_t sirf_msg_debug(struct gps_device_t *,
@@ -311,7 +309,6 @@ static ssize_t sirf_control_send(struct gps_device_t *session, char *msg,
 }
 #endif /* CONTROLSEND_ENABLE */
 
-#ifdef RECONFIGURE_ENABLE
 static bool sirfbin_speed(struct gps_device_t *session, speed_t speed, char parity, int stopbits)
 /* change speed in binary mode */
 {
@@ -427,7 +424,6 @@ static void sirfbin_mode(struct gps_device_t *session, int mode)
         session->cfg_step = 0;
     }
 }
-#endif /* RECONFIGURE_ENABLE */
 
 /* Debug messages MID 255 (0xff) */
 static gps_mask_t sirf_msg_debug(struct gps_device_t *device,
@@ -1293,10 +1289,8 @@ static gps_mask_t sirf_msg_swversion(struct gps_device_t *session,
         fv = safe_atof((const char *)cp);
         if (fv < 231) {
             session->driver.sirf.driverstate |= SIRF_LT_231;
-#ifdef RECONFIGURE_ENABLE
             if (fv > 200)
                 sirfbin_mode(session, 0);
-#endif /* RECONFIGURE_ENABLE */
         } else if (fv < 232) {
             session->driver.sirf.driverstate |= SIRF_EQ_231;
         } else {
@@ -1336,15 +1330,19 @@ static gps_mask_t sirf_msg_navdata(struct gps_device_t *session,
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "SiRF: NavData chan %u svid %u\n",chan,svid);
 
-#ifdef RECONFIGURE_ENABLE
     /* SiRF recommends at least 57600 for SiRF IV nav data */
-    if (!session->context->readonly && session->gpsdata.dev.baudrate < 57600) {
+    if (session->gpsdata.dev.baudrate < 57600) {
         /* some USB are also too slow, no way to tell which ones */
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "WARNING: SiRF: link too slow, disabling subframes.\n");
-        (void)sirf_write(session, disablesubframe);
+        if (session->context->readonly ||
+            session->context->passive) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "WARNING: SiRF: link too slow.\n");
+        } else {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "WARNING: SiRF: link too slow, disabling subframes.\n");
+            (void)sirf_write(session, disablesubframe);
+        }
     }
-#endif /* RECONFIGURE_ENABLE */
 
     return gpsd_interpret_subframe_raw(session, svid, words);
 }
@@ -2357,7 +2355,6 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
         case 1:
             (void)sirf_write(session, versionprobe);
             break;
-#ifdef RECONFIGURE_ENABLE
         case 2:
             /* unset MID 0x40 = 64 first since there is a flood of them */
             GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -2451,7 +2448,6 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
             (void)sirf_write(session, unsetmidXX);
             break;
 
-#endif /* RECONFIGURE_ENABLE */
         default:
             /* initialization is done */
             session->cfg_stage = UINT_MAX;
@@ -2503,13 +2499,11 @@ const struct gps_type_t driver_sirf =
     .rtcm_writer    = gpsd_write,       /* send RTCM data straight */
     .init_query     = sirfbin_init_query,/* non-perturbing initial qury */
     .event_hook     = sirfbin_event_hook,/* lifetime event handler */
-#ifdef RECONFIGURE_ENABLE
     .speed_switcher = sirfbin_speed,    /* we can change baud rate */
     .mode_switcher  = sirfbin_mode,     /* there's a mode switcher */
     .rate_switcher  = NULL,             /* no sample-rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
     .control_send   = sirf_control_send,/* how to send a control string */
 #endif /* CONTROLSEND_ENABLE */

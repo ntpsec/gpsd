@@ -419,7 +419,6 @@ static ssize_t zodiac_control_send(struct gps_device_t *session,
 }
 #endif /* CONTROLSEND_ENABLE */
 
-#ifdef RECONFIGURE_ENABLE
 static bool zodiac_speed_switch(struct gps_device_t *session,
                                 speed_t speed, char parity, int stopbits)
 {
@@ -459,7 +458,6 @@ static bool zodiac_speed_switch(struct gps_device_t *session,
     (void)zodiac_spew(session, 1330, data, 15);
     return true;                /* it would be nice to error-check this */
 }
-#endif /* RECONFIGURE_ENABLE */
 
 static double zodiac_time_offset(struct gps_device_t *session UNUSED)
 {
@@ -485,13 +483,11 @@ const struct gps_type_t driver_zodiac =
     .rtcm_writer    = zodiac_send_rtcm, /* send DGPS correction */
     .init_query     = NULL,             /* non-perturbing initial query */
     .event_hook     = NULL,             /* no configuration */
-#ifdef RECONFIGURE_ENABLE
     .speed_switcher = zodiac_speed_switch,/* we can change baud rate */
     .mode_switcher  = NULL,             /* no mode switcher */
     .rate_switcher  = NULL,             /* no sample-rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#endif /* RECONFIGURE_ENABLE */
 #ifdef CONTROLSEND_ENABLE
     .control_send   = zodiac_control_send,      /* for gpsctl and friends */
 #endif /* CONTROLSEND_ENABLE */
