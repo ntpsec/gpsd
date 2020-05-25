@@ -345,7 +345,6 @@ static bool _proto__probe_detect(struct gps_device_t *session)
    return false;
 }
 
-#ifdef CONTROLSEND_ENABLE
 /**
  * Write data to the device, doing any required padding or checksumming
  */
@@ -369,7 +368,6 @@ static ssize_t _proto__control_send(struct gps_device_t *session,
                "writing _proto_ control type %02x\n");
    return gpsd_write(session, session->msgbuf, session->msgbuflen);
 }
-#endif /* CONTROLSEND_ENABLE */
 
 static void _proto__event_hook(struct gps_device_t *session, event_t event)
 {
@@ -533,10 +531,8 @@ const struct gps_type_t driver__proto__binary = {
     .rate_switcher    = NULL,
     /* Minimum cycle time of the device */
     .min_cycle        = 1,
-#ifdef CONTROLSEND_ENABLE
     /* Control string sender - should provide checksum and headers/trailer */
     .control_send   = _proto__control_send,
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = _proto_time_offset,
 /* *INDENT-ON* */
 };

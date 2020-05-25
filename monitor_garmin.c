@@ -102,12 +102,10 @@ static bool garmin_bin_initialize(void)
 {
     unsigned int i;
 
-#ifndef CONTROLSEND_ENABLE
     if(serial) {
         monitor_complain("Direct mode doesn't supported.");
         return false;
     }
-#endif
 
     miscwin = subwin(devicewin, 1, 80, 1, 0);
     mid51win = subwin(devicewin, 12, 18, 2, 0);
@@ -274,20 +272,16 @@ static void garmin_bin_ser_update(void)
 
    end:
    if (pkt_good) {
-#ifdef CONTROLSEND_ENABLE
         if(serial)
            /* good packet, send ACK */
            (void)monitor_control_send(
                    (unsigned char *)"\x10\x06\x00\xfa\x10\x03", 6);
-#endif
         garmin_bin_update(pkt_id, pkt_size, pkt_data);
    } else {
-#ifdef CONTROLSEND_ENABLE
         if(serial)
            /* bad packet, send NAK */
            (void)monitor_control_send(
                    (unsigned char *)"\x10\x15\x00\xeb\x10\x03", 6);
-#endif
         monitor_log("BAD 0x%02x=", buf[1]);
    }
 }

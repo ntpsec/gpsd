@@ -97,9 +97,7 @@ const struct gps_type_t driver_unknown = {
     .rate_switcher  = NULL,             /* no sample-rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = NULL,             /* how to send control strings */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,            /* no method for NTP fudge factor */
 };
 /* *INDENT-ON* */
@@ -278,9 +276,7 @@ const struct gps_type_t driver_nmea0183 = {
     .rate_switcher  = NULL,             /* no sample-rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = nmea_write,       /* how to send control strings */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,            /* no method for NTP fudge factor */
 };
 /* *INDENT-ON* */
@@ -383,9 +379,7 @@ const struct gps_type_t driver_garmin = {
     .rate_switcher  = NULL,             /* no sample-rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = nmea_write,       /* how to send control strings */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,            /* no method for NTP fudge factor */
 };
 /* *INDENT-ON* */
@@ -447,9 +441,7 @@ const struct gps_type_t driver_ashtech = {
     .rate_switcher  = NULL,             /* no sample-rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = nmea_write,       /* how to send control strings */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,            /* no method for NTP fudge factor */
 };
 /* *INDENT-ON* */
@@ -496,9 +488,7 @@ const struct gps_type_t driver_fv18 = {
     .rate_switcher  = NULL,             /* no sample-rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = nmea_write,       /* how to send control strings */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,            /* no method for NTP fudge factor */
 };
 /* *INDENT-ON* */
@@ -533,9 +523,7 @@ const struct gps_type_t driver_gpsclock = {
     .rate_switcher  = NULL,             /* sample rate is fixed */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = nmea_write,       /* how to send control strings */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,            /* no method for NTP fudge factor */
 };
 /* *INDENT-ON* */
@@ -586,9 +574,7 @@ static const struct gps_type_t driver_tripmate = {
     .rate_switcher = NULL,                      /* no sample-rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send  = nmea_write,        /* how to send control strings */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,            /* no method for NTP fudge factor */
 };
 /* *INDENT-ON* */
@@ -640,9 +626,7 @@ static const struct gps_type_t driver_earthmate = {
     .rate_switcher = NULL,                      /* no sample-rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send  = nmea_write,        /* never actually used. */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,            /* no method for NTP fudge factor */
 };
 /* *INDENT-ON* */
@@ -760,9 +744,7 @@ const struct gps_type_t driver_trueNorth = {
     .rate_switcher  = NULL,             /* no wrapup */
     .min_cycle.tv_sec  = 0,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 500000000,     /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = tnt_control_send, /* how to send control strings */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,
 };
 /* *INDENT-ON* */
@@ -837,9 +819,7 @@ static const struct gps_type_t driver_oceanServer = {
     .rate_switcher  = NULL,             /* no wrapup */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = nmea_write,       /* how to send control strings */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,
 };
 /* *INDENT-ON* */
@@ -902,9 +882,7 @@ static const struct gps_type_t driver_fury = {
     .rate_switcher  = fury_rate_switcher,
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = nmea_write,       /* how to send control strings */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,
 };
 /* *INDENT-ON* */
@@ -944,9 +922,7 @@ static const struct gps_type_t driver_rtcm104v2 = {
     .rate_switcher = NULL,              /* no sample-rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = NULL,             /* how to send control strings */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,
 };
 /* *INDENT-ON* */
@@ -988,9 +964,7 @@ static const struct gps_type_t driver_rtcm104v3 = {
     .rate_switcher = NULL,              /* no sample-rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = NULL,             /* how to send control strings */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,
 };
 /* *INDENT-ON* */
@@ -1021,9 +995,7 @@ static const struct gps_type_t driver_garmintxt = {
     .rate_switcher = NULL,              /* no sample-rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = NULL,             /* how to send control strings */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,
 };
 /* *INDENT-ON* */
@@ -1130,9 +1102,7 @@ const struct gps_type_t driver_mtk3301 = {
     .rate_switcher  = mtk3301_rate_switcher,    /* sample rate switcher */
     .min_cycle.tv_sec  = 0,
     .min_cycle.tv_nsec = 100000000,     /* max 10Hz */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = nmea_write,       /* how to send control strings */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,
 };
 /* *INDENT-ON* */
@@ -1294,9 +1264,7 @@ const struct gps_type_t driver_isync = {
     .rate_switcher  = NULL,             /* no sample-rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = nmea_write,       /* how to send control strings */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,            /* no method for NTP fudge factor */
 };
 /* *INDENT-ON* */
@@ -1551,9 +1519,7 @@ const struct gps_type_t driver_aivdm = {
     .rate_switcher    = NULL,           /* no rate switcher */
     .min_cycle.tv_sec  = 1,             /* max 1Hz */
     .min_cycle.tv_nsec = 0,
-#ifdef CONTROLSEND_ENABLE
     .control_send     = NULL,           /* no control sender */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,            /* no NTP communication */
 };
 /* *INDENT-ON* */
@@ -1662,9 +1628,7 @@ const struct gps_type_t driver_json_passthrough = {
     .rate_switcher  = NULL,             /* no sample-rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = NULL,             /* how to send control strings */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,            /* no method for NTP fudge factor */
 };
 /* *INDENT-ON* */
@@ -1689,9 +1653,7 @@ const struct gps_type_t driver_pps = {
     .rate_switcher  = NULL,             /* no sample-rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = NULL,             /* how to send control strings */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,            /* no method for NTP fudge factor */
 };
 /* *INDENT-ON* */

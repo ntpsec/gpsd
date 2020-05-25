@@ -367,9 +367,7 @@ const struct gps_type_t driver_evermore =
     .rate_switcher  = evermore_rate_switcher,   /* change sample rate */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = evermore_control_send,    // how to send a control string
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,            /* no method for NTP fudge factor */
 };
 /* *INDENT-ON* */

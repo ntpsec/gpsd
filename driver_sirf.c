@@ -289,7 +289,6 @@ static bool sirf_write(struct gps_device_t *session, unsigned char *msg)
     return ok;
 }
 
-#ifdef CONTROLSEND_ENABLE
 static ssize_t sirf_control_send(struct gps_device_t *session, char *msg,
                                  size_t len)
 {
@@ -307,7 +306,6 @@ static ssize_t sirf_control_send(struct gps_device_t *session, char *msg,
               (unsigned char *)session->msgbuf) ? (int)session->msgbuflen : -1;
     /* *INDENT-ON* */
 }
-#endif /* CONTROLSEND_ENABLE */
 
 static bool sirfbin_speed(struct gps_device_t *session, speed_t speed, char parity, int stopbits)
 /* change speed in binary mode */
@@ -2504,9 +2502,7 @@ const struct gps_type_t driver_sirf =
     .rate_switcher  = NULL,             /* no sample-rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = sirf_control_send,/* how to send a control string */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = sirf_time_offset,
 };
 /* *INDENT-ON* */

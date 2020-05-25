@@ -400,7 +400,6 @@ static gps_mask_t zodiac_analyze(struct gps_device_t *session)
     }
 }
 
-#ifdef CONTROLSEND_ENABLE
 static ssize_t zodiac_control_send(struct gps_device_t *session,
                                    char *msg, size_t len)
 {
@@ -417,7 +416,6 @@ static ssize_t zodiac_control_send(struct gps_device_t *session,
     return zodiac_spew(session, shortwords[0], shortwords + 1,
                        (int)(len / 2 - 1));
 }
-#endif /* CONTROLSEND_ENABLE */
 
 static bool zodiac_speed_switch(struct gps_device_t *session,
                                 speed_t speed, char parity, int stopbits)
@@ -488,9 +486,7 @@ const struct gps_type_t driver_zodiac =
     .rate_switcher  = NULL,             /* no sample-rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = zodiac_control_send,      /* for gpsctl and friends */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = zodiac_time_offset,      /* compute NTO fudge factor */
 };
 /* *INDENT-ON* */

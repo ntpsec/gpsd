@@ -201,10 +201,8 @@ static bool sirf_initialize(void)
     display(mid27win, 2, 8, " Packet type 27 (0x1B) ");
     (void)wattrset(mid27win, A_NORMAL);
 
-#ifdef CONTROLSEND_ENABLE
     /* probe for version */
     (void)monitor_control_send((unsigned char *)"\x84\x00", 2);
-#endif /* CONTROLSEND_ENABLE */
 
     /* initialize the GPS context's time fields */
     gpsd_time_init(session.context, time(NULL));
@@ -571,12 +569,10 @@ static void sirf_update(void)
         break;
     }
 
-#ifdef CONTROLSEND_ENABLE
     /* elicit navigation parameters */
     if (dispmode && (time(NULL) % 10 == 0)) {
         (void)monitor_control_send((unsigned char *)"\x98\x00", 2);
     }
-#endif /* CONTROLSEND_ENABLE */
 
     /* clear the 50bps data field every 6 seconds */
     if (subframe_enabled && (time(NULL) % 6 == 0)) {
@@ -592,7 +588,6 @@ static void sirf_update(void)
     pps_update(mid7win, 2, 32);
 }
 
-#ifdef CONTROLSEND_ENABLE
 static int sirf_command(char line[])
 {
     unsigned char buf[BUFSIZ];
@@ -658,7 +653,6 @@ static int sirf_command(char line[])
 
     return COMMAND_UNKNOWN;     /* no match */
 }
-#endif /* CONTROLSEND_ENABLE */
 
 static void sirf_wrap(void)
 {
@@ -675,11 +669,7 @@ static void sirf_wrap(void)
 const struct monitor_object_t sirf_mmt = {
     .initialize = sirf_initialize,
     .update = sirf_update,
-#ifdef CONTROLSEND_ENABLE
     .command = sirf_command,
-#else
-    .command = NULL,
-#endif /* CONTROLSEND_ENABLE */
     .wrap = sirf_wrap,
     .min_y = 22,.min_x = 80,
     .driver = &driver_sirf,

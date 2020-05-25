@@ -678,7 +678,6 @@ static ssize_t gpsmon_serial_write(struct gps_device_t *session,
     return gpsd_serial_write(session, buf, len);
 }
 
-#ifdef CONTROLSEND_ENABLE
 bool monitor_control_send( unsigned char *buf, size_t len)
 {
     if (!serial)
@@ -698,7 +697,6 @@ static bool monitor_raw_send( unsigned char *buf, size_t len)
     ssize_t st = gpsd_write(&session, (char *)buf, len);
     return (st > 0 && (size_t) st == len);
 }
-#endif /* CONTROLSEND_ENABLE */
 
 static void complain(const char *fmt, ...)
 {
@@ -858,9 +856,7 @@ static bool do_command(const char *line)
 {
     unsigned int v;
     struct timespec delay;
-#ifdef CONTROLSEND_ENABLE
     unsigned char buf[BUFLEN];
-#endif /* CONTROLSEND_ENABLE */
     const char *arg;
 
     if (isspace((unsigned char) line[1])) {
@@ -1079,7 +1075,6 @@ static bool do_command(const char *line)
             }
         }
         break;
-#ifdef CONTROLSEND_ENABLE
     case 'x':   /* send control packet */
         if (session.device_type == NULL)
             complain("No device defined yet");
@@ -1108,7 +1103,6 @@ static bool do_command(const char *line)
                 complain("Raw send failed.");
         }
         break;
-#endif /* CONTROLSEND_ENABLE */
 
     default:
         complain("Unknown command '%c'", line[0]);
@@ -1194,12 +1188,10 @@ int main(int argc, char **argv)
                 else
                     (void)fputc(' ', stdout);
                 (void)fputc(' ', stdout);
-#ifdef CONTROLSEND_ENABLE
                 if ((*active)->driver->control_send != NULL)
                     (void)fputc('x', stdout);
                 else
                     (void)fputc(' ', stdout);
-#endif /* CONTROLSEND_ENABLE */
                 (void)fputc(' ', stdout);
                 if ((*active)->command != NULL)
                     (void)fputc('+', stdout);

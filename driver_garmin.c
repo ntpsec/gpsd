@@ -1225,7 +1225,6 @@ static void garmin_switcher(struct gps_device_t *session, int mode)
     }
 }
 
-#ifdef CONTROLSEND_ENABLE
 static ssize_t garmin_control_send(struct gps_device_t *session,
                                    char *buf, size_t buflen)
 /* not used by the daemon, it's for gpsctl and friends */
@@ -1234,7 +1233,6 @@ static ssize_t garmin_control_send(struct gps_device_t *session,
     (void)memcpy(session->msgbuf, buf, buflen);
     return gpsd_write(session, session->msgbuf, session->msgbuflen);
 }
-#endif /* CONTROLSEND_ENABLE */
 
 static double garmin_time_offset(struct gps_device_t *session)
 {
@@ -1277,9 +1275,7 @@ const struct gps_type_t driver_garmin_usb_binary =
     .rate_switcher  = NULL,             /* no sample-rate switcher */
     .min_cycle.tv_sec  = 0,
     .min_cycle.tv_nsec = 10000000,      /* 10Hz */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = garmin_control_send,      /* send raw bytes */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = garmin_time_offset,
 };
 /* *INDENT-ON* */
@@ -1305,9 +1301,7 @@ const struct gps_type_t driver_garmin_ser_binary =
     .rate_switcher  = NULL,             /* no sample-rate switcher */
     .min_cycle.tv_sec  = 0,
     .min_cycle.tv_nsec = 10000000,      /* 10Hz */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = garmin_control_send,      /* send raw bytes */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = garmin_time_offset,
 };
 /* *INDENT-ON* */

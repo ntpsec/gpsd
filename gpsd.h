@@ -423,10 +423,8 @@ struct gps_type_t {
     void (*mode_switcher)(struct gps_device_t *session, int mode);
     bool (*rate_switcher)(struct gps_device_t *session, double rate);
     timespec_t min_cycle;
-#ifdef CONTROLSEND_ENABLE
     ssize_t (*control_send)(struct gps_device_t *session,
                             char *buf, size_t buflen);
-#endif /* CONTROLSEND_ENABLE */
     double (*time_offset)(struct gps_device_t *session);
 };
 

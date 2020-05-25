@@ -1005,7 +1005,6 @@ static ssize_t greis_write(struct gps_device_t *session,
         return count;
 }
 
-#ifdef CONTROLSEND_ENABLE
 /**
  * Write data to the device, doing any required padding or checksumming
  */
@@ -1014,7 +1013,6 @@ static ssize_t greis_control_send(struct gps_device_t *session,
 {
     return greis_write(session, msg, msglen);
 }
-#endif /* CONTROLSEND_ENABLE */
 
 static void greis_event_hook(struct gps_device_t *session, event_t event)
 {
@@ -1199,10 +1197,8 @@ const struct gps_type_t driver_greis = {
      * Default is 1/100, but this is tunable using /par/raw/msint . */
     .min_cycle.tv_sec  = 0,
     .min_cycle.tv_nsec = 10000000,
-#ifdef CONTROLSEND_ENABLE
     /* Control string sender - should provide checksum and headers/trailer */
     .control_send   = greis_control_send,
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,
 /* *INDENT-ON* */
 };

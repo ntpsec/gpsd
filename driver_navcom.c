@@ -1176,7 +1176,6 @@ static gps_mask_t navcom_parse_input(struct gps_device_t *session)
         return 0;
 }
 
-#ifdef CONTROLSEND_ENABLE
 static ssize_t navcom_control_send(struct gps_device_t *session,
                                    char *buf, size_t len)
 {
@@ -1192,7 +1191,6 @@ static ssize_t navcom_control_send(struct gps_device_t *session,
     session->msgbuflen = len + 9;
     return gpsd_write(session, session->msgbuf, session->msgbuflen);
 }
-#endif /* CONTROLSEND_ENABLE */
 
 static bool navcom_speed(struct gps_device_t *session,
                          speed_t speed, char parity, int stopbits)
@@ -1280,9 +1278,7 @@ const struct gps_type_t driver_navcom =
     .rate_switcher  = NULL,                     /* no sample-rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = navcom_control_send,      // how to send a control string
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,            /* no method for NTP fudge factor */
 };
 /* *INDENT-ON* */

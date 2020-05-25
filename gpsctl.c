@@ -192,10 +192,8 @@ int main(int argc, char **argv)
     struct gps_data_t gpsdata;
     const struct gps_type_t *forcetype = NULL;
     const struct gps_type_t **dp;
-#ifdef CONTROLSEND_ENABLE
     char cooked[BUFSIZ];
     ssize_t cooklen = 0;
-#endif
 
     context.errout.label = "gpsctl";
 
@@ -211,7 +209,6 @@ int main(int argc, char **argv)
             rate = optarg;
             break;
         case 'x':               /* ship specified control string */
-#ifdef CONTROLSEND_ENABLE
             control = optarg;
             lowlevel = true;
             if ((cooklen = hex_escapes(cooked, control)) <= 0) {
@@ -219,10 +216,6 @@ int main(int argc, char **argv)
                          "invalid escape string (error %d)\n", (int)cooklen);
                 exit(EXIT_FAILURE);
             }
-#else
-            GPSD_LOG(LOG_ERROR, &context.errout,
-                     "control_send capability has been conditioned out.\n");
-#endif /* CONTROLSEND_ENABLE */
             break;
         case 'e':               /* echo specified control string with wrapper */
             lowlevel = true;
@@ -246,12 +239,10 @@ int main(int argc, char **argv)
                     (void)fputs("-c\t", stdout);
                 else
                     (void)fputc('\t', stdout);
-#ifdef CONTROLSEND_ENABLE
                 if ((*dp)->control_send != NULL)
                     (void)fputs("-x\t", stdout);
                 else
                     (void)fputc('\t', stdout);
-#endif /* CONTROLSEND_ENABLE */
                 (void)puts((*dp)->type_name);
             }
             exit(EXIT_SUCCESS);
@@ -825,7 +816,6 @@ int main(int argc, char **argv)
             }
             context.readonly = write_enable;
         }
-#ifdef CONTROLSEND_ENABLE
         if (control) {
             bool write_enable = context.readonly;
             context.readonly = false;
@@ -846,7 +836,6 @@ int main(int argc, char **argv)
             }
             context.readonly = write_enable;
         }
-#endif /* CONTROLSEND_ENABLE */
 
         exit(status);
     }

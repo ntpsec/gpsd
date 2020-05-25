@@ -461,9 +461,7 @@ const struct gps_type_t driver_italk =
     .rate_switcher  = NULL,             /* no sample-rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = NULL,             /* no control string sender */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,            /* no method for NTP fudge factor */
 };
 /* *INDENT-ON* */

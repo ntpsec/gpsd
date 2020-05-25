@@ -663,10 +663,8 @@ const struct gps_type_t driver_oncore = {
     .rate_switcher    = NULL,                   /* no speed setter */
     .min_cycle.tv_sec  = 1,                     /* 1Hz */
     .min_cycle.tv_nsec = 0,
-#ifdef CONTROLSEND_ENABLE
     /* Control string sender - should provide checksum and headers/trailer */
     .control_send   = oncore_control_send,      /* to send control strings */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset = oncore_time_offset,          /* NTP offset array */
 };
 /* *INDENT-ON* */

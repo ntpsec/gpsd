@@ -2651,7 +2651,6 @@ bool ubx_write(struct gps_device_t * session,
     return (ok);
 }
 
-#ifdef CONTROLSEND_ENABLE
 static ssize_t ubx_control_send(struct gps_device_t *session, char *msg,
                                 size_t data_len)
 /* not used by gpsd, it's for gpsctl and friends */
@@ -2660,7 +2659,6 @@ static ssize_t ubx_control_send(struct gps_device_t *session, char *msg,
                      (unsigned char *)msg + 2,
                      (size_t)(data_len - 2)) ? ((ssize_t) (data_len + 7)) : -1;
 }
-#endif /* CONTROLSEND_ENABLE */
 
 static void ubx_init_query(struct gps_device_t *session)
 {
@@ -3077,9 +3075,7 @@ const struct gps_type_t driver_ubx = {
     .rate_switcher    = ubx_rate,       /* Message delivery rate switcher */
     .min_cycle.tv_sec  = 0,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 250000000,     /* Maximum 4Hz sample rate */
-#ifdef CONTROLSEND_ENABLE
     .control_send     = ubx_control_send,/* how to send a control string */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,            /* no method for NTP fudge factor */
 };
 /* *INDENT-ON* */

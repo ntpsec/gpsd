@@ -3037,7 +3037,6 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
     return mask;
 }
 
-#ifdef CONTROLSEND_ENABLE
 static ssize_t tsip_control_send(struct gps_device_t *session,
                                  char *buf, size_t buflen)
 /* not used by the daemon, it's for gpsctl and friends */
@@ -3046,7 +3045,6 @@ static ssize_t tsip_control_send(struct gps_device_t *session,
                                 (unsigned int)buf[0],
                                 (unsigned char *)buf + 1, buflen - 1);
 }
-#endif /* CONTROLSEND_ENABLE */
 
 static void tsip_init_query(struct gps_device_t *session)
 {
@@ -3422,9 +3420,7 @@ const struct gps_type_t driver_tsip =
     .rate_switcher  = NULL,             /* no rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = tsip_control_send,/* how to send commands */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,
 };
 /* *INDENT-ON* */

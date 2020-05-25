@@ -41,9 +41,7 @@ static gps_mask_t superstar2_msg_ephemeris(struct gps_device_t *,
 /*
  * These methods may be called elsewhere in gpsd
  */
-#ifdef CONTROLSEND_ENABLE
 static ssize_t superstar2_control_send(struct gps_device_t *, char *, size_t);
-#endif /* CONTROLSEND_ENABLE */
 static void superstar2_event_hook(struct gps_device_t *, event_t);
 static ssize_t superstar2_write(struct gps_device_t *, char *, size_t);
 static bool superstar2_set_speed(struct gps_device_t *, speed_t, char, int);
@@ -494,7 +492,6 @@ static gps_mask_t superstar2_parse_input(struct gps_device_t *session)
         return 0;
 }
 
-#ifdef CONTROLSEND_ENABLE
 static ssize_t
 superstar2_control_send(struct gps_device_t *session, char *msg,
                         size_t msglen)
@@ -507,7 +504,6 @@ superstar2_control_send(struct gps_device_t *session, char *msg,
     session->msgbuflen = (size_t) (msglen + 5);
     return superstar2_write(session, session->msgbuf, session->msgbuflen);
 }
-#endif /* CONTROLSEND_ENABLE */
 
 static bool superstar2_set_speed(struct gps_device_t *session,
                                  speed_t speed, char parity, int stopbits)
@@ -571,10 +567,8 @@ const struct gps_type_t driver_superstar2 = {
     /* Minimum cycle time (not used) */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     /* Control string sender - should provide checksum and trailer */
     .control_send       = superstar2_control_send,
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,            /* no method for NTP fudge factor */
 };
 /* *INDENT-ON* */

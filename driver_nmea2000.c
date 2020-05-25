@@ -1833,9 +1833,7 @@ const struct gps_type_t driver_nmea2000 = {
     .rate_switcher  = NULL,             /* no rate switcher */
     .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
     .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-#ifdef CONTROLSEND_ENABLE
     .control_send   = NULL,             /* how to send control strings */
-#endif /* CONTROLSEND_ENABLE */
     .time_offset     = NULL,
 };
 /* *INDENT-ON* */
