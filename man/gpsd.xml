@@ -140,7 +140,7 @@ are supported and a client may connect via either.</para>
 <para>The program accepts the following options:</para>
 <variablelist remap='TP'>
 <varlistentry>
-<term>-b</term>
+<term>-b, --readonly</term>
 <listitem><para>Broken-device-safety mode, otherwise known as
 read-only mode. A few bluetooth and USB receivers lock up or become
 totally inaccessible when probed or reconfigured; see the hardware
@@ -154,32 +154,32 @@ independent method to identify serial-over-Bluetooth devices would
 also be nice.</para></listitem>
 </varlistentry>
 <varlistentry>
-<term>-D</term>
+<term>-D, --debug</term>
 <listitem>
-<para>Set debug level. At debug levels 2 and above,
+<para>Set debug level. Default is 0. At debug levels 2 and above,
 <application>gpsd</application> reports incoming sentence and actions
 to standard error if <application>gpsd</application> is in the foreground
 (-N) or to syslog if in the background.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
-<term>-F</term>
+<term>-F, --sockfile</term>
 <listitem>
 <para>Create a control socket for device addition and removal
-commands.  You must specify a valid pathname on your local filesystem;
-this will be created as a Unix-domain socket to which you can write
-commands that edit the daemon's internal device list.</para>
+commands.  Default is None.  You must specify a valid pathname on your
+local filesystem; this will be created as a Unix-domain socket to which
+you can write commands that edit the daemon's internal device list.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
-<term>-f</term>
+<term>-f, --framing</term>
 <listitem><para>Fix the framing to the GNSS device.
 The framing parameter is of the form: [78][ENO][012].
 Most GNSS are 8N1.  Some Trimble default to 8O1.
 The default is to search for the correct framing.</para></listitem>
 </varlistentry>
 <varlistentry>
-<term>-G</term>
+<term>-G, --listenany</term>
 <listitem><para>This flag causes <application>gpsd</application> to
 listen on all addresses (INADDR_ANY) rather than just the loop back
 (INADDR_LOOPBACK) address. For the sake of privacy and security, TPV
@@ -187,11 +187,11 @@ information is now private to the local machine until the user makes
 an effort to expose this to the world.</para></listitem>
 </varlistentry>
 <varlistentry>
-<term>-h</term>
+<term>-h, --help</term>
 <listitem><para>Display help message and terminate.</para></listitem>
 </varlistentry>
 <varlistentry>
-<term>-l</term>
+<term>-l, --drivers</term>
 <listitem><para>List all drivers compiled into this
 <application>gpsd</application> instance. The letters to the left of
 each driver name are the <application>gpsd</application>
@@ -199,7 +199,7 @@ control commands supported by that driver.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
-<term>-n</term>
+<term>-n, --nowait</term>
 <listitem>
 <para>Don't wait for a client to connect before polling whatever GPS
 is associated with it. Some RS232 GPSes wait in a standby mode
@@ -213,13 +213,19 @@ clock information to ntpd through a memory-shared segment.
 </listitem>
 </varlistentry>
 <varlistentry>
-<term>-N</term>
+<term>-N, --foreground</term>
 <listitem><para>Don't daemonize; run in foreground.
 This switch is mainly useful for debugging.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
-<term>-r</term>
+<term>-P, --pidfile</term>
+<listitem>
+<para>Specify the name and path to record the daemon's process ID.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>-r, --badtime</term>
 <listitem><para>Use GPS time even with no current fix.  Some GPS's have
 battery powered Real Time Clocks (RTC's) built in, making them a valid time
 source even before a fix is acquired.  This can be useful on a Raspberry Pi,
@@ -227,23 +233,17 @@ or other device that has no battery powered RTC, and thus has no valid
 time at startup.</para></listitem>
 </varlistentry>
 <varlistentry>
-<term>-P</term>
-<listitem>
-<para>Specify the name and path to record the daemon's process ID.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>-S</term>
+<term>-S, --port</term>
 <listitem><para>Set TCP/IP port on which to listen for GPSD clients
 (default is 2947).</para></listitem>
 </varlistentry>
 <varlistentry>
-<term>-s</term>
+<term>-s, --speed</term>
 <listitem><para>Fix the speed to the GNSS device.
 The default is to autobaud.</para></listitem>
 </varlistentry>
 <varlistentry>
-<term>-V</term>
+<term>-V, --version</term>
 <listitem>
 <para>Dump version and exit.</para>
 </listitem>

@@ -214,12 +214,13 @@ static void usage(void)
   -F, --sockfile sockfile   = specify control socket location, default none\n\
   -f, --framing FRAMING     = fix device framing to FRAMING (8N1, 8O1, etc.)\n\
   -G, --listenany           = make gpsd listen on INADDR_ANY\n\
-  -h, --help               = help message \n\
+  -h, --help                = help message\n\
+  -l, --drivers             = list compiled in drivers, and exit.\n\
   -n, --nowait              = don't wait for client connects to poll GPS\n"
 #ifdef FORCE_NOWAIT
 "                             forced on in this binary\n"
 #endif /* FORCE_NOWAIT */
-"  -N, --foreground         = don't go into background\n\
+"  -N, --foreground          = don't go into background\n\
   -P, --pidfile pidfile     = set file to record process ID\n\
   -r, --badtime             = use GPS time even if no fix\n\
   -S, --port PORT           = set port for daemon, default %s\n\
@@ -1904,6 +1905,7 @@ int main(int argc, char *argv[])
         static struct option long_options[] = {
             {"badtime", no_argument, NULL, 'r'},
             {"debug", required_argument, NULL, 'D'},
+            {"drivers", no_argument, NULL, 'l'},
             {"foreground", no_argument, NULL, 'N'},
             {"framing", required_argument, NULL, 'f'},
             {"help", required_argument, NULL, 'h'},
