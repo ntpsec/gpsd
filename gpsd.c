@@ -13,6 +13,9 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#ifdef HAVE_GETOPT_LONG
+       #include <getopt.h>
+#endif
 #include <grp.h>          /* for setgroups() */
 #include <math.h>
 #include <netdb.h>
@@ -208,25 +211,25 @@ static void usage(void)
 {
     (void)printf("usage: gpsd [OPTIONS] device...\n\n\
   Options include: \n\
-  -b                        = bluetooth-safe: open data sources read-only\n\
-  -D integer (default 0)    = set debug level \n\
-  -F sockfile               = specify control socket location\n\
-  -f FRAMING                = fix device framing to FRAMING (8N1, 8O1, etc.)\n\
-  -G                        = make gpsd listen on INADDR_ANY\n"
+  -b, --readonly            = bluetooth-safe: open data sources read-only\n\
+  -D, --debug  integer )    = set debug level, default 0 \n\
+  -F, --sockfile sockfile   = specify control socket location, default none\n\
+  -f, --framing FRAMING     = fix device framing to FRAMING (8N1, 8O1, etc.)\n\
+  -G, --listenany           = make gpsd listen on INADDR_ANY\n"
 #ifndef FORCE_GLOBAL_ENABLE
 "                             forced on in this binary\n"
 #endif /* FORCE_GLOBAL_ENABLE */
-"  -h                       = help message \n\
-  -n                        = don't wait for client connects to poll GPS\n"
+"  -h, --help               = help message \n\
+  -n, --nowait              = don't wait for client connects to poll GPS\n"
 #ifdef FORCE_NOWAIT
 "                             forced on in this binary\n"
 #endif /* FORCE_NOWAIT */
-"  -N                       = don't go into background\n\
-  -P pidfile                = set file to record process ID\n\
-  -r                        = use GPS time even if no fix\n\
-  -S PORT (default %s) = set port for daemon \n\
-  -s SPEED                  = fix device speed to SPEED\n\
-  -V                        = emit version and exit.\n"
+"  -N, --foreground         = don't go into background\n\
+  -P, --pidfile pidfile     = set file to record process ID\n\
+  -r, --badtime             = use GPS time even if no fix\n\
+  -S, --port PORT           = set port for daemon, default %s\n\
+  -s, --speed SPEED         = fix device speed to SPEED, default none\n\
+  -V, --version             = emit version and exit.\n"
 #ifdef NETFEED_ENABLE
 "\nA device may be a local serial device for GNSS input, plus an optional\n\
 PPS device, or a URL in one of the following forms:\n\
@@ -1886,7 +1889,7 @@ int main(int argc, char *argv[])
 #endif /* defined(SOCKET_EXPORT_ENABLE) || defined(CONTROL_SOCKET_ENABLE) */
     static char *pid_file = NULL;
     struct gps_device_t *device;
-    int i, option;
+    int i;
     int msocks[2] = {-1, -1};
     bool device_opened = false;
     bool go_background = true;
@@ -1901,8 +1904,38 @@ int main(int argc, char *argv[])
 #endif /* SOCKET_EXPORT_ENABLE */
 #endif /* CONTROL_SOCKET_ENABLE */
 
-    while ((option = getopt(argc, argv, "bD:F:f:GhlNnP:rS:s:V")) != -1) {
-        switch (option) {
+    while (1) {
+        const char *optstring = "bD:F:f:GhlNnP:rS:s:V";
+        int ch;
+
+#ifdef HAVE_GETOPT_LONG
+        int option_index = 0;
+        static struct option long_options[] = {
+            {"badtime", no_argument, NULL, 'r'},
+            {"debug", required_argument, NULL, 'D'},
+            {"foreground", no_argument, NULL, 'N'},
+            {"framing", required_argument, NULL, 'f'},
+            {"help", required_argument, NULL, 'h'},
+            {"listenany", no_argument, NULL, 'G' },
+            {"nowait", no_argument, NULL, 'n' },
+            {"readonly", no_argument, NULL, 'b'},
+            {"pidfile", no_argument, NULL, 'P'},
+            {"port", no_argument, NULL, 'S'},
+            {"sockfile", required_argument, NULL, 'F'},
+            {"speed", required_argument, NULL, 's'},
+            {"version", no_argument, NULL, 'V' },
+            {NULL, 0, NULL, 0},
+        };
+
+        ch = getopt_long(argc, argv, optstring, long_options, &option_index);
+#else
+        ch = getopt(argc, argv, optstring);
+#endif
+        if (ch == -1) {
+            break;
+        }
+
+        switch (ch) {
         case 'b':
             context.readonly = true;
             break;
