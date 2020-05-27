@@ -1,18 +1,13 @@
-#!@PYSHEBANG@
-#
+# packet.py - recognize GPS packet types
 # @GENERATED@
-#
-# -*- coding: utf-8 -*-
-#
-# packet.py - helper functions for various bit
-#
-# theoretically comprised of reusable bits, in practice probably not so much.
-#
-# This code run compatibly under Python 2 and 3.x for x >= 2.
-# Preserve this property!
 #
 # This file is Copyright 2019 by the GPSD project
 # SPDX-License-Identifier: BSD-2-Clause
+#
+# This code runs compatibly under Python 2 and 3.x for x >= 2.
+# Preserve this property!
+#
+# -*- coding: utf-8 -*-
 """Python binding of the libgpsd module for recognizing GPS packets.
 
 The new() function returns a new packet-lexer instance.  Lexer instances
@@ -27,44 +22,77 @@ level of the message and the message itself.
 """
 from __future__ import absolute_import, print_function
 import ctypes
-import gps.misc
+import ctypes.util
 import os
+import os.path
+import sysconfig
+import gps.misc
 
 
 # Packet types and  Logging levels extracted from gpsd.h
 @PYPACKETH@
 
-class GpsdErrOutT(ctypes.Structure):
-    pass
+def importado():
+    'Load the packet library or throw an OSError trying.'
+    # Add raw interface to the packet FFI stub.
+    packet_paths = []
+    lib_path = sysconfig.get_config_var('LIBDIR')
+    packet_name = '@GPSPACKET@'
+
+    # Check if GPSD_HOME environment variable
+    if 'GPSD_HOME' in os.environ:
+        packet_paths.append(os.path.abspath(
+            os.environ['GPSD_HOME']) + os.sep + packet_name)
+
+    # Look for library via default scrap
+    packet_path = ctypes.util.find_library(packet_name[3:].split('.')[0])
+    if packet_path:
+        packet_paths.append(packet_path)
+
+    # Look for library in LIBDIR if we are in PREFIX
+    if os.path.abspath(__file__).startswith(os.path.abspath('@PREFIX@')):
+        packet_paths.append(lib_path + os.sep + packet_name)
+
+    # Look for Library in ancestors
+    cwd = os.path.abspath(__file__)
+    cwd_part = cwd.split(os.sep)[:-1]
+    for index in range(len(cwd_part), 0, -1):
+        packet_path = os.sep.join(cwd_part[:index] + ['gps', 'packet.py.in'])
+        if os.path.exists(packet_path) and os.path.isfile(packet_path):
+            packet_paths.append(os.sep.join(
+                cwd_part[:index]) + os.sep + packet_name)
+
+    for packet_path in packet_paths:
+        if os.path.exists(packet_path) and os.path.isfile(packet_path):
+            try:
+                return ctypes.CDLL(packet_path)
+            except OSError:
+                pass
+
+    raise OSError("Can't find packet library")
 
 
-# Add raw interface to the packet FFI stub.
-_packet = None
-_cwd = os.getcwd()
-if 'gpsd' in _cwd.split('/'):
-    _path = _cwd + '/'
-else:
-    _path = '@LIBDIR@'
-    if _path[-1] != '/':
-        _path += '/'
-
-try:
-    _packet = ctypes.CDLL('%s@GPSPACKET@' % _path)
-except OSError:
-    print('Failed to load the library:\t%s@GPSPACKET@' % _path)
-    exit(1)
+_loaded = None
+_packet = importado()
 
 _lexer_size = ctypes.c_size_t.in_dll(_packet, "fvi_size_lexer")
 LEXER_SIZE = _lexer_size.value
 _buffer_size = ctypes.c_size_t.in_dll(_packet, "fvi_size_buffer").value
 
 REPORTER = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_char_p)
-GpsdErrOutT._fields_ = [('debug', ctypes.c_int),
-                        ('report', REPORTER),
-                        ('label', ctypes.c_char_p)]
+
+class GpsdErrOutT(ctypes.Structure):
+    '''Used in gps.packet:register_report() to set logging callback.'''
+    # pylint: disable-msg=R0903
+    _fields_ = [('debug', ctypes.c_int),
+                ('report', REPORTER),
+                ('label', ctypes.c_char_p)]
 
 
 class lexer_t(ctypes.Structure):
+    '''Used in gps.packet:lexer.get() to pass in data and pull
+    out length, packet type, packet, and another datum.'''
+    # pylint: disable-msg=R0903
     _fields_ = [
         ('packet_type', ctypes.c_int),
         ('state', ctypes.c_uint),
@@ -78,7 +106,7 @@ class lexer_t(ctypes.Structure):
         ('retry_counter', ctypes.c_ulong),
         ('counter', ctypes.c_uint),
         ('errout', GpsdErrOutT),
-        ]
+    ]
 
 
 def new():
