@@ -1887,7 +1887,7 @@ int main(int argc, char *argv[])
 #endif /* CONTROL_SOCKET_ENABLE */
 
     while (1) {
-        const char *optstring = "bD:F:f:GhlNnP:rS:s:V";
+        const char *optstring = "bD:F:f:GhlNnpP:rS:s:V";
         int ch;
 
 #ifdef HAVE_GETOPT_LONG
