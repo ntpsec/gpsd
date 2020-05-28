@@ -313,8 +313,9 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
 
         // extensions are exactly 30 bytes long
         /* if gross extension length doesn't look sane, don't proceed here */
+        // FIXME: remove from loop
         if ( (40 + (30 * n)) >= data_len ) {
-            continue;
+            break;
         }
 
         if (n > 0) {
