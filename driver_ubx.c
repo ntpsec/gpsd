@@ -311,54 +311,38 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
     for ( n = 0; ; n++ ) {
         size_t start_of_str = UBX_PREFIX_LEN + 40 + (30 * n);
 
-        if ( (start_of_str + 2 ) > data_len ) {
-            /* last one can be shorter than 30 */
-            /* no more data */
-            break;
+        // extensions are exactly 30 bytes long
+        /* if gross extension length doesn't look sane, don't proceed here */
+        if ( (40 + (30 * n)) >= data_len ) {
+            continue;
         }
+
         if (n > 0) {
             // commas between elements
             (void)strlcat(obuf, ",", sizeof(obuf));
         }
         (void)strlcat(obuf, (char *)&buf[start_of_str], sizeof(obuf));
+    }
 
-        /* if we have protocol version already, skip searching further */
-        if (9 < session->driver.ubx.protver) {
-            continue;
-        }
-        /* if gross extension length doesn't look sane, don't proceed here */
-        if ( (40 + (30 * (n + 1))) > data_len ) {
-            continue;
-        }
-        /* string _should_ already be null-terminated, but don't trust */
-        char tbuf[30];
-        (void)memcpy(tbuf, (const char *)&buf[start_of_str], sizeof(tbuf) - 1);
-        tbuf[sizeof(tbuf) - 1] = '\0';    
-        /* find PROTVER literal, followed by single separator character */
-        cptr = strstr(tbuf, "PROTVER=");     // protVer 18 and above
-        if (NULL == cptr) {
-            cptr = strstr(tbuf, "PROTVER "); // protVer 17 and below
-        }
-        if (NULL == cptr) {
-            continue;
-        }
-        /* enough characters after PROTVER and separator to contain digits? */
-        if (strlen(cptr) > 8) {
-            int protver = atoi(cptr + 8);
-            if (9 < protver) {
-                /* protver 10, u-blox 5, is the oldest we know */
-                session->driver.ubx.protver = protver;
-            }
+    /* find PROTVER literal, followed by single separator character */
+    cptr = strstr(obuf, "PROTVER=");     // protVer 18 and above
+    if (NULL == cptr) {
+        cptr = strstr(obuf, "PROTVER "); // protVer 17 and below
+    }
+    if (NULL != cptr) {
+        int protver = atoi(cptr + 8);
+        if (9 < protver) {
+            /* protver 10, u-blox 5, is the oldest we know */
+            session->driver.ubx.protver = protver;
         }
     }
-    /* save what we can */
+
+    // save what we can in subtype1
     (void)strlcpy(session->subtype1, obuf, sizeof(session->subtype1));
     /* output SW and HW Version at LOG_INF */
     GPSD_LOG(LOG_INF, &session->context->errout,
-             "UBX-MON-VER: %s %s\n",
-             session->subtype, session->subtype1);
-    GPSD_LOG(LOG_INF, &session->context->errout,
-             "UBX-MON-VER: PROTVER %d\n",
+             "UBX-MON-VER: %s %s PROTVER %d\n",
+             session->subtype, session->subtype1,
              session->driver.ubx.protver);
 }
 
@@ -494,7 +478,7 @@ ubx_msg_log_batch(struct gps_device_t *session, unsigned char *buf UNUSED,
  * UBX-LOG-INFO info of log status
  * u-blox 7,8,9.  protVer 14 to 29
  * WIP: Initial decode, log only.
- * 
+ *
  */
 static gps_mask_t
 ubx_msg_log_info(struct gps_device_t *session, unsigned char *buf UNUSED,
@@ -2832,11 +2816,8 @@ static void ubx_cfg_prt(struct gps_device_t *session,
                          ? NMEA_PROTOCOL_MASK : UBX_PROTOCOL_MASK);
     (void)ubx_write(session, 0x06u, 0x00, buf, sizeof(buf));
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-        "UBX ubx_cfg_prt mode:%d, port:%d\n", mode, buf[0]);
-
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "Configuring device for PROTVER %d\n",
+             "UBX ubx_cfg_prt mode %d port %d PROTVER %d\n", mode, buf[0],
              session->driver.ubx.protver);
 
     /* selectively enable output protocols */
