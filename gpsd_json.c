@@ -643,11 +643,10 @@ void json_watch_dump(const struct gps_policy_t *ccp,
     (void)strlcat(reply, "}\r\n", replylen);
 }
 
-void json_subframe_dump(const struct gps_data_t *datap,
+void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                         char buf[], size_t buflen)
 {
     const struct subframe_t *subframe = &datap->subframe;
-    const bool scaled = datap->policy.scaled;
 
     (void)snprintf(buf, buflen, "{\"class\":\"SUBFRAME\",\"device\":\"%s\","
                    "\"tSV\":%u,\"TOW17\":%u,\"frame\":%u,\"scaled\":%s",
@@ -3961,7 +3960,7 @@ void json_data_report(const gps_mask_t changed,
     }
 
     if ((changed & SUBFRAME_SET) != 0) {
-        json_subframe_dump(datap, buf+strlen(buf), buflen-strlen(buf));
+        json_subframe_dump(datap, policy->scaled, buf+strlen(buf), buflen-strlen(buf));
     }
 
     if ((changed & RAW_IS) != 0) {
