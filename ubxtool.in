@@ -6672,24 +6672,12 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
 
         # Survey-in minimum duration seconds
         seconds = 300
-        m_data[20] = seconds & 0x0ff
-        seconds >>= 8
-        m_data[21] = seconds & 0x0ff
-        seconds >>= 8
-        m_data[22] = seconds & 0x0ff
-        seconds >>= 8
-        m_data[23] = seconds & 0x0ff
 
         # Survey-in position accuracy limit in mm
         # make it big, so the duration decides when to end survey
         mmeters = 50000
-        m_data[24] = mmeters & 0x0ff
-        mmeters >>= 8
-        m_data[25] = mmeters & 0x0ff
-        mmeters >>= 8
-        m_data[26] = seconds & 0x0ff
-        seconds >>= 8
-        m_data[27] = mmeters & 0x0ff
+
+        struct.pack_into('<LL', m_data, 20, seconds, mmeters)
         gps_model.gps_send(6, 0x3d, m_data)
 
     def send_able_tmode3(self, able):
@@ -6702,25 +6690,13 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
 
         # Survey-in minimum duration seconds
         seconds = 300
-        m_data[24] = seconds & 0x0ff
-        seconds >>= 8
-        m_data[25] = seconds & 0x0ff
-        seconds >>= 8
-        m_data[26] = seconds & 0x0ff
-        seconds >>= 8
-        m_data[27] = seconds & 0x0ff
 
         # Survey-in position accuracy limit in 0.1mm
         # make it big, so the duration decides when to end survey
         # mmeters is 5m!
         mmeters = 50000
-        m_data[28] = mmeters & 0x0ff
-        mmeters >>= 8
-        m_data[29] = mmeters & 0x0ff
-        mmeters >>= 8
-        m_data[30] = seconds & 0x0ff
-        seconds >>= 8
-        m_data[31] = mmeters & 0x0ff
+
+        struct.pack_into('<LL', m_data, 24, seconds, mmeters)
         gps_model.gps_send(6, 0x71, m_data)
 
     def send_able_tp(self, able):
