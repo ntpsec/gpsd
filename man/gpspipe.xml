@@ -109,7 +109,8 @@ specified serial device with settings 4800 8N1.  Thus
 <application>gpspipe</application> can be used with -s and -r options
 to emulate a serial port hardwired to a GPS that
 <application>gpsd</application> is managing.</para>
-  <para>-S sets the scaled flag.  This is for AIS data only.</para>
+  <para>-S sets the scaled flag.  This is for AIS and SUBFRAME data only.
+</para>
   <para>-t adds a UTC timestamp to each sentence output.</para>
   <para>-T sets the format of the timestamp. See
 <citerefentry>
