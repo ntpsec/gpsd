@@ -2093,6 +2093,60 @@ static gps_mask_t ubx_msg_rxm_sfrb(struct gps_device_t *session,
     return gpsd_interpret_subframe(session, svid, words);
 }
 
+/*
+ * Raw Subframes - UBX-RXM-SFRBX
+ * Note: u-blox F9P abd HPG only
+ * This version, only handles GPS constellation (no Galileo,
+ * BeiDou, Glonass, etc.)
+ */
+static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
+                                    unsigned char *buf, size_t data_len)
+{
+    unsigned i;
+    uint8_t gnssId, svId, freqId, numWords, chn, version;
+    uint32_t words[10];
+
+    if (8 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-RXM-SFRBX message, runt payload len %zd", data_len);
+        return 0;
+    }
+
+    numWords = getub(buf, 4);
+    if (data_len != (size_t)(8 + (4 * numWords))) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-RXM-SFRBX message, wrong payload len %zd s/b %u",
+                 data_len, 8 + (4 * numWords));
+        return 0;
+    }
+
+    gnssId = getub(buf, 0);
+    svId = getub(buf, 1);
+    freqId = getub(buf, 2);
+    chn = getub(buf, 5);
+    version = getub(buf, 6);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "UBX-RXM-SFRBX: version %u gnssId %u chn %u svId %u "
+             "freqId %u words %u\n",
+             version, gnssId, chn, svId, freqId, numWords);
+
+    if (0 != gnssId || 2 != version) {
+        // not a GPS (USA) satellite, no code yet to parse the
+        // subframe words from other constellations.
+        // or wrong version
+        return 0;
+    }
+
+    for (i = 0; i < 10; i++) {
+        words[i] = (uint32_t)getleu32(buf, 4 * i + 8) & 0x3fffffff;
+    }
+
+    // return gpsd_interpret_subframe(session, svId, words);
+    // do not decode yet...
+    return 0;
+}
+
 /* UBX-INF-* */
 static void ubx_msg_inf(struct gps_device_t *session, unsigned char *buf,
                         size_t data_len)
@@ -2512,7 +2566,7 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         mask = ubx_msg_rxm_sfrb(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_RXM_SFRBX:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-RXM-SFRBX\n");
+        mask = ubx_msg_rxm_sfrbx(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_RXM_SVSI:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-RXM-SVSI\n");
