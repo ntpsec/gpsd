@@ -2140,12 +2140,10 @@ static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
     }
 
     for (i = 0; i < 10; i++) {
-        words[i] = (uint32_t)getleu32(buf, 4 * i + 8) & 0x3fffffff;
+        words[i] = (uint32_t)getleu32(buf, 4 * i + 8) >> 6;
     }
 
-    // return gpsd_interpret_subframe(session, svId, words);
-    // do not decode yet...
-    return 0;
+    return gpsd_interpret_subframe(session, svId, words);
 }
 
 /* UBX-INF-* */
