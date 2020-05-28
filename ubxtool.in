@@ -3243,7 +3243,7 @@ Save and Load non-volatile storage data"""
     def cfg_tmode2(self, buf):
         """UBX-CFG-TMODE2 decode, Time Mode Settings 2"""
 
-        # u-blox 6 (timing only), 7 and 8
+        # u-blox 6, 7 and 8 (timing only)
         # not in u-blox 9
         # protver 13+
 
@@ -5055,6 +5055,7 @@ High Precision GNSS products only."""
     def nav_svin(self, buf):
         """UBX-NAV-SVIN decode, Survey-in data"""
 
+        # in M8 HPG only
         u = struct.unpack_from('<BBBBLLlllbbbBLLBB', buf, 0)
         return ('  version %u reserved1[%u %u %u] iTOW %u dur %u\n'
                 '  meanX %d meanY %d meanZ %d\n'
@@ -5063,6 +5064,8 @@ High Precision GNSS products only."""
 
     def nav_svinfo(self, buf):
         """UBX-NAV-SVINFO decode"""
+
+        # in M8 Timing and FTS only
         m_len = len(buf)
 
         u = struct.unpack_from('<Lbb', buf, 0)
@@ -7632,6 +7635,10 @@ Always double check with "-p CFG-GNSS".
         # UBX-NAV-STATUS
         "NAV-STATUS": {"command": send_poll, "opt": [0x01, 0x03],
                        "help": "poll UBX-NAV-STATUS Receiver Nav Status"},
+        # UBX-NAV-SVIN
+        "NAV-SVIN": {"command": send_poll, "opt": [0x01, 0x3b],
+                     "help": "poll UBX-NAV-SVIN Survey-in data",
+                     "minver": 20},
         # UBX-NAV-SVINFO
         "NAV-SVINFO": {"command": send_poll, "opt": [0x01, 0x30],
                        "help": "poll UBX-NAV-SVINFO Satellite Information"},
@@ -8270,7 +8277,7 @@ try:
                 keys.append(item[1])
             else:
                 sys.stderr.write('%s: ERROR: item %s unknown\n' %
-                                 (PROG_NAME, name))
+                                 (PROG_NAME, parts[0]))
                 exit(1)
             try:
                 if 1 < len(parts):
