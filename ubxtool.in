@@ -6556,6 +6556,33 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         # xxZDA
         m_data = bytearray([0xf0, 0x08, rate])
         gps_model.gps_send(6, 1, m_data)
+    
+    def send_able_rtcm3(self, able):
+        """dis/enable RTCM3 1005, 1077, 1087, 1230 messages"""
+        # FIXME: Change outProtoMask correctly
+        if able:
+            rate = 1
+            # Ensures RTCM3 output (all) are set (outProtoMask)
+            m_data = bytearray(20)
+            m_data[0] = 0x03
+            m_data[12] =0x23
+            m_data[14] = 0x23
+            gps_model.gps_send(0x06, 0x00, m_data)
+        else:
+            rate = 0
+
+        # 1005 
+        m_data = bytearray([0xf5, 0x05, rate])
+        gps_model.gps_send(6, 1, m_data)
+        # 1077
+        m_data = bytearray([0xf5, 0x4d, rate])
+        gps_model.gps_send(6, 1, m_data)
+        # 1087
+        m_data = bytearray([0xf5, 0x57, rate])
+        gps_model.gps_send(6, 1, m_data)
+        # 1230
+        m_data = bytearray([0xf5, 0xe6, rate])
+        gps_model.gps_send(6, 1, m_data)
 
     def send_able_rawx(self, able):
         """dis/enable UBX-RXM-RAW/RAWXX"""
@@ -6664,6 +6691,40 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         seconds >>= 8
         m_data[27] = mmeters & 0x0ff
         gps_model.gps_send(6, 0x3d, m_data)
+
+    def send_able_tmode3(self, able):
+        """SURVEYIN, UBX-CFG-TMODE3, set time mode 3 config"""
+
+        m_data = bytearray(40)
+        if able:
+            # enable survey-in
+            m_data[2] = 1
+            rate = 1
+        else:
+            rate = 0
+        
+        # Survey-in minimum duration seconds
+        seconds = 300
+        m_data[24] = seconds & 0x0ff
+        seconds >>= 8
+        m_data[25] = seconds & 0x0ff
+        seconds >>= 8
+        m_data[26] = seconds & 0x0ff
+        seconds >>= 8
+        m_data[27] = seconds & 0x0ff
+
+        # Survey-in position accuracy limit in 0.1mm 
+        # make it big, so the duration decides when to end survey
+        # mmeters is 5m! 
+        mmeters = 50000
+        m_data[28] = mmeters & 0x0ff
+        mmeters >>= 8
+        m_data[29] = mmeters & 0x0ff
+        mmeters >>= 8
+        m_data[30] = seconds & 0x0ff
+        seconds >>= 8
+        m_data[31] = mmeters & 0x0ff
+        gps_model.gps_send(6, 0x71, m_data)
 
     def send_able_tp(self, able):
         """dis/enable UBX-TIM-TP Time Pulse"""
@@ -7254,6 +7315,12 @@ Always double check with "-p CFG-GNSS".
         # en/dis able TMODE2 Survey-in
         "SURVEYIN": {"command": send_able_tmode2,
                      "help": "Survey-in mode with TMODE2"},
+        # en/dis able TMODE3 Survey-in
+        "SURVEYIN3": {"command": send_able_tmode3,
+                      "help": "Survey-in mode with TMODE3"},
+        # en/dis able RTCM3 messages 1005, 1077, 1087, 1230
+        "RTCM3": {"command": send_able_rtcm3,
+                  "help": "basic RTCM messages"},
     }
     commands = {
         # UBX-CFG-RST
