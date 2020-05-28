@@ -6556,7 +6556,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         # xxZDA
         m_data = bytearray([0xf0, 0x08, rate])
         gps_model.gps_send(6, 1, m_data)
-    
+
     def send_able_rtcm3(self, able):
         """dis/enable RTCM3 1005, 1077, 1087, 1230 messages"""
         # FIXME: Change outProtoMask correctly
@@ -6565,13 +6565,13 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
             # Ensures RTCM3 output (all) are set (outProtoMask)
             m_data = bytearray(20)
             m_data[0] = 0x03
-            m_data[12] =0x23
+            m_data[12] = 0x23
             m_data[14] = 0x23
             gps_model.gps_send(0x06, 0x00, m_data)
         else:
             rate = 0
 
-        # 1005 
+        # 1005
         m_data = bytearray([0xf5, 0x05, rate])
         gps_model.gps_send(6, 1, m_data)
         # 1077
@@ -6699,7 +6699,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         if able:
             # enable survey-in
             m_data[2] = 1
-        
+
         # Survey-in minimum duration seconds
         seconds = 300
         m_data[24] = seconds & 0x0ff
@@ -6710,9 +6710,9 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         seconds >>= 8
         m_data[27] = seconds & 0x0ff
 
-        # Survey-in position accuracy limit in 0.1mm 
+        # Survey-in position accuracy limit in 0.1mm
         # make it big, so the duration decides when to end survey
-        # mmeters is 5m! 
+        # mmeters is 5m!
         mmeters = 50000
         m_data[28] = mmeters & 0x0ff
         mmeters >>= 8
