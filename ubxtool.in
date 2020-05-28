@@ -6699,9 +6699,6 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         if able:
             # enable survey-in
             m_data[2] = 1
-            rate = 1
-        else:
-            rate = 0
         
         # Survey-in minimum duration seconds
         seconds = 300
