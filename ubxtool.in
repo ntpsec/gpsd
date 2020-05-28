@@ -3243,7 +3243,9 @@ Save and Load non-volatile storage data"""
     def cfg_tmode2(self, buf):
         """UBX-CFG-TMODE2 decode, Time Mode Settings 2"""
 
-        # u-blox 6, 7, 8 and 0
+        # u-blox 6 (timing only), 7 and 8
+        # not in u-blox 9
+        # protver 13+
 
         u = struct.unpack_from('<BBHlllLLL', buf, 0)
         s = ('  timeMode %u reserved1 %u usage %#x\n'
@@ -3264,8 +3266,11 @@ Save and Load non-volatile storage data"""
     def cfg_tmode3(self, buf):
         """UBX-CFG-TMODE3 decode, Time Mode Settings 3"""
 
+        # in M8 HP only, protver 20 to 23
         # Not in u-blox 7-, HP only
         # undocumented, but present in ZED-F9T
+        # documented in ZED-F9P, protver 27
+        # deprecated in 23.01
         u = struct.unpack_from('<BBHlllbbbBLLLLL', buf, 0)
         s = ('  version %u reserved1 %u flags x%x\n'
              '  ecefXOrLat %d ecefYOrLon %d ecefZOrAlt %d\n'
@@ -7152,6 +7157,7 @@ Always double check with "-p CFG-GNSS".
     CFG_PMS = [0x06, 0x86]
     CFG_RATE = [0x06, 0x08]
     CFG_RXM = [0x06, 0x11]
+    CFG_TMODE3 = [0x06, 0x71]
     CFG_TP5 = [0x06, 0x31]
     CFG_USB = [0x06, 0x1b]
     LOG_INFO = [0x21, 0x08]
@@ -7194,11 +7200,12 @@ Always double check with "-p CFG-GNSS".
                 ubx.CFG_PMS,          # UBX-CFG-PMS
                 ubx.CFG_RATE,         # UBX-CFG-RATE
                 ubx.CFG_RXM,          # UBX-CFG-RXM
-                # skip UBX-CFG-TMODE3, HP only
                 ubx.CFG_TP5,          # UBX-CFG-TP5
                 ubx.CFG_USB,          # UBX-CFG-USB
                 ]
 
+        if 20 < opts['protver']:
+            cmds.append(ubx.CFG_TMODE3)  # UBX-CFG-TMODE3, protVer 20+
         if 22 < opts['protver']:
             cmds.append(ubx.CFG_BATCH)   # UBX-CFG-BATCH, protVer 23.01+
 
@@ -7451,10 +7458,16 @@ Always double check with "-p CFG-GNSS".
                      " configuration"},
         # UBX-CFG-TMODE
         "CFG-TMODE": {"command": send_poll, "opt": [0x06, 0x1d],
-                      "help": "poll UBX-CFG-TMODE time mode settings"},
+                      "help": "poll UBX-CFG-TMODE time mode settings",
+                      "maxVer": 6},
         # UBX-CFG-TMODE2
         "CFG-TMODE2": {"command": send_poll, "opt": [0x06, 0x3d],
-                       "help": "poll UBX-CFG-TMODE2 time mode 2 config"},
+                       "help": "poll UBX-CFG-TMODE2 time mode 2 config",
+                       "minVer": 14},
+        # UBX-CFG-TMODE3
+        "CFG-TMODE3": {"command": send_poll, "opt": [0x06, 0x71],
+                       "help": "poll UBX-CFG-TMODE3 time mode 3 config",
+                       "minVer": 20},
         # UBX-CFG-TP
         "CFG-TP": {"command": send_poll, "opt": [0x06, 0x07],
                    "help": "poll UBX-CFG-TP TimePulse Parameters"},
