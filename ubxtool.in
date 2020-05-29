@@ -6680,11 +6680,15 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         # make it big, so the duration decides when to end survey
         mmeters = 50000
 
+        print(able)
+        print(args)
         if able:
             # enable survey-in
             m_data[0] = 1
-            if args:
+            if args and len(args[0]):
                 seconds = int(args[0])
+            if 1 < len(args) and len(args[1]):
+                mmeters = int(args[1])
 
         struct.pack_into('<LL', m_data, 20, seconds, mmeters)
         gps_model.gps_send(6, 0x3d, m_data)
@@ -6705,8 +6709,10 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         if able:
             # enable survey-in
             m_data[2] = 1
-            if args:
+            if args and len(args[0]):
                 seconds = int(args[0])
+            if 1 < len(args) and len(args[1]):
+                mmeters = int(args[1])
 
         struct.pack_into('<LL', m_data, 24, seconds, mmeters)
         gps_model.gps_send(6, 0x71, m_data)
@@ -7293,12 +7299,16 @@ Always double check with "-p CFG-GNSS".
         # en/dis able TMODE2 Survey-in
         "SURVEYIN": {"command": send_able_tmode2,
                      "help": "Survey-in mode with TMODE2."
-                             " SURVEYIN2,svinMinDur Default svinMinDur 300",
+                             " SURVEYIN2,svinMinDur,svinAccLimit\n   "
+                             "                Default svinMinDur 300 seconds\n"
+                             "                   Default svinAccLimit 50000",
                      "args": 1},
         # en/dis able TMODE3 Survey-in
         "SURVEYIN3": {"command": send_able_tmode3,
                       "help": "Survey-in mode with TMODE3."
-                              " SURVEYIN3,svinMinDur Default svinMinDur 300",
+                              " SURVEYIN3,svinMinDur,svinAccLimit\n    "
+                              "               Default svinMinDur 300 seconds\n"
+                              "                   Default svinAccLimit 50000",
                       "args": 1},
         # en/dis able RTCM3 messages 1005, 1077, 1087, 1230
         "RTCM3": {"command": send_able_rtcm3,
