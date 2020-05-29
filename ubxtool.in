@@ -113,8 +113,8 @@ opts = {
     'input_wait': 2.0,
     # the name of an OAF file, extension .jpo
     'oaf_name': None,
-    # optional argument to -d/-e
-    'parm1': None,
+    # optional arguments to -d/-e
+    'parms': None,
     # poll command -p
     'poll': [],
     # port ID # for port-related commands
@@ -6685,8 +6685,8 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         if able:
             # enable survey-in
             m_data[0] = 1
-            if opts['parm1']:
-                seconds = int(opts['parm1'])
+            if opts['parms']:
+                seconds = int((opts['parms'])[0])
 
         struct.pack_into('<LL', m_data, 20, seconds, mmeters)
         gps_model.gps_send(6, 0x3d, m_data)
@@ -6707,8 +6707,8 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         if able:
             # enable survey-in
             m_data[2] = 1
-            if opts['parm1']:
-                seconds = int(opts['parm1'])
+            if opts['parms']:
+                seconds = int((opts['parms'])[0])
 
         struct.pack_into('<LL', m_data, 24, seconds, mmeters)
         gps_model.gps_send(6, 0x71, m_data)
@@ -6831,9 +6831,13 @@ Always double check with "-p CFG-GNSS".
         m_data[9] = 0       # flags, unused
 
         # m_data[10], sigCfgMask, enable all signals
+        if opts['parms']:
+            parm1 = opts['parms'][0]
+        else:
+            parm1 = '';
         if 0 == gnssId:
             # GPS.  disable does not seem to work on NEO-M9N
-            if '2' == opts['parm1'] and enable:
+            if '2' == parm1 and enable:
                 # The NEO-M9N ACKS, then ignores if 0x11 is sent
                 m_data[10] = 0x11   # flags L1C/A, L2C
             else:
@@ -6843,14 +6847,14 @@ Always double check with "-p CFG-GNSS".
             m_data[10] = 1      # flags L1C/A
         elif 2 == gnssId:
             # Galileo
-            if '2' == opts['parm1'] and enable:
+            if '2' == parm1 and enable:
                 # The NEO-M9N ACKS, then ignores if 0x11 is sent
                 m_data[10] = 0x21   # flags E1, E5b
             else:
                 m_data[10] = 0x01   # flags E1
         elif 3 == gnssId:
             # BeiDou
-            if '2' == opts['parm1'] and enable:
+            if '2' == parm1 and enable:
                 # The NEO-M9N ACKS, then ignores if 0x11 is sent
                 m_data[10] = 0x11   # flags B1I,  B2I
             else:
@@ -6860,14 +6864,14 @@ Always double check with "-p CFG-GNSS".
             m_data[10] = 1      # flags L1
         elif 5 == gnssId:
             # QZSS
-            if '2' == opts['parm1'] and enable:
+            if '2' == parm1 and enable:
                 # The NEO-M9N ACKS, then ignores if 0x11 is sent
                 m_data[10] = 0x15   # flags L1C/A, L1S, L2C
             else:
                 m_data[10] = 0x05   # flags L1C/A, L1S
         elif 6 == gnssId:
             # GLONASS
-            if '2' == opts['parm1'] and enable:
+            if '2' == parm1 and enable:
                 # The NEO-M9N ACKS, then ignores if 0x11 is sent
                 m_data[10] = 0x11   # flags L1, L2
             else:
@@ -8054,15 +8058,15 @@ for (opt, val) in options:
         # don't force the user to upper case
         opts['disable'] = parts[0].upper()
         if 1 < len(parts):
-            # optional parameter
-            opts['parm1'] = parts[1]
+            # optional parameters
+            opts['parms'] = parts[1:]
     elif opt == '-e':
         parts = val.split(',')
         # don't force the user to upper case
         opts['enable'] = parts[0].upper()
         if 1 < len(parts):
-            # optional parameter
-            opts['parm1'] = parts[1]
+            # optional parameters
+            opts['parms'] = parts[1:]
     elif opt == '-f':
         opts['input_file_name'] = val
     elif opt == '-g':
