@@ -6667,9 +6667,6 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         """SURVEYIN, UBX-CFG-TMODE2, set time mode 2 config"""
 
         m_data = bytearray(28)
-        if able:
-            # enable survey-in
-            m_data[0] = 1
 
         # on a NEO-M8T, with good antenna
         # five minutes, gets about 1 m
@@ -6685,6 +6682,12 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         # make it big, so the duration decides when to end survey
         mmeters = 50000
 
+        if able:
+            # enable survey-in
+            m_data[0] = 1
+            if opts['parm1']:
+                seconds = int(opts['parm1'])
+
         struct.pack_into('<LL', m_data, 20, seconds, mmeters)
         gps_model.gps_send(6, 0x3d, m_data)
 
@@ -6692,9 +6695,6 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         """SURVEYIN, UBX-CFG-TMODE3, set time mode 3 config"""
 
         m_data = bytearray(40)
-        if able:
-            # enable survey-in
-            m_data[2] = 1
 
         # Survey-in minimum duration seconds
         seconds = 300
@@ -6703,6 +6703,12 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         # make it big, so the duration decides when to end survey
         # mmeters is 5m!
         mmeters = 50000
+
+        if able:
+            # enable survey-in
+            m_data[2] = 1
+            if opts['parm1']:
+                seconds = int(opts['parm1'])
 
         struct.pack_into('<LL', m_data, 24, seconds, mmeters)
         gps_model.gps_send(6, 0x71, m_data)
@@ -7297,10 +7303,14 @@ Always double check with "-p CFG-GNSS".
                "help": "TP Time Pulse message"},
         # en/dis able TMODE2 Survey-in
         "SURVEYIN": {"command": send_able_tmode2,
-                     "help": "Survey-in mode with TMODE2"},
+                     "help": "Survey-in mode with TMODE2."
+                             " SURVEYIN2,svinMinDur Default svinMinDur 300",
+                     "args": 1},
         # en/dis able TMODE3 Survey-in
         "SURVEYIN3": {"command": send_able_tmode3,
-                      "help": "Survey-in mode with TMODE3"},
+                      "help": "Survey-in mode with TMODE3."
+                              " SURVEYIN3,svinMinDur Default svinMinDur 300",
+                      "args": 1},
         # en/dis able RTCM3 messages 1005, 1077, 1087, 1230
         "RTCM3": {"command": send_able_rtcm3,
                   "help": "basic RTCM messages"},
