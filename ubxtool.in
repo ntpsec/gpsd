@@ -6796,34 +6796,6 @@ Always double check with "-p CFG-GNSS".
 
         # m_data[5], resTrkCh, read only protVer 23+
         # m_data[6], maxTrkCh, read only protVer 23+
-        if 0 == gnssId:
-            # GPS
-            m_data[5] = 8   # resTrkCh
-            m_data[6] = 16  # maxTrkCh
-        if 1 == gnssId:
-            # SBAS
-            m_data[5] = 1   # resTrkCh
-            m_data[6] = 3   # maxTrkCh
-        if 2 == gnssId:
-            # GALILEO
-            m_data[5] = 4   # resTrkCh
-            m_data[6] = 8   # maxTrkCh
-        if 3 == gnssId:
-            # BeiDou
-            m_data[5] = 2   # resTrkCh
-            m_data[6] = 16  # maxTrkCh
-        if 4 == gnssId:
-            # IMES
-            m_data[5] = 0   # resTrkCh
-            m_data[6] = 8   # maxTrkCh
-        if 5 == gnssId:
-            # QZSS
-            m_data[5] = 0   # resTrkCh
-            m_data[6] = 3   # maxTrkCh
-        if 6 == gnssId:
-            # GLONASS
-            m_data[5] = 8   # resTrkCh
-            m_data[6] = 14  # maxTrkCh
         m_data[7] = 0       # reserved1
         m_data[8] = enable  # flags
         m_data[9] = 0       # flags, unused
@@ -6835,7 +6807,9 @@ Always double check with "-p CFG-GNSS".
             parm1 = ''
 
         if 0 == gnssId:
-            # GPS.  disable does not seem to work on NEO-M9N
+            # GPS.  disable does not seem to work on NEO-M9N?
+            m_data[5] = 8   # resTrkCh
+            m_data[6] = 16  # maxTrkCh
             if '2' == parm1 and enable:
                 # The NEO-M9N ACKS, then ignores if 0x11 is sent
                 m_data[10] = 0x11   # flags L1C/A, L2C
@@ -6843,9 +6817,13 @@ Always double check with "-p CFG-GNSS".
                 m_data[10] = 0x01   # flags L1C/A
         elif 1 == gnssId:
             # SBAS
+            m_data[5] = 1   # resTrkCh
+            m_data[6] = 3   # maxTrkCh
             m_data[10] = 1      # flags L1C/A
         elif 2 == gnssId:
             # Galileo
+            m_data[5] = 4   # resTrkCh
+            m_data[6] = 8   # maxTrkCh
             if '2' == parm1 and enable:
                 # The NEO-M9N ACKS, then ignores if 0x11 is sent
                 m_data[10] = 0x21   # flags E1, E5b
@@ -6853,6 +6831,8 @@ Always double check with "-p CFG-GNSS".
                 m_data[10] = 0x01   # flags E1
         elif 3 == gnssId:
             # BeiDou
+            m_data[5] = 2   # resTrkCh
+            m_data[6] = 16  # maxTrkCh
             if '2' == parm1 and enable:
                 # The NEO-M9N ACKS, then ignores if 0x11 is sent
                 m_data[10] = 0x11   # flags B1I,  B2I
@@ -6860,9 +6840,13 @@ Always double check with "-p CFG-GNSS".
                 m_data[10] = 0x01   # flags B1I
         elif 4 == gnssId:
             # IMES
+            m_data[5] = 0   # resTrkCh
+            m_data[6] = 8   # maxTrkCh
             m_data[10] = 1      # flags L1
         elif 5 == gnssId:
             # QZSS
+            m_data[5] = 0   # resTrkCh
+            m_data[6] = 3   # maxTrkCh
             if '2' == parm1 and enable:
                 # The NEO-M9N ACKS, then ignores if 0x11 is sent
                 m_data[10] = 0x15   # flags L1C/A, L1S, L2C
@@ -6870,6 +6854,8 @@ Always double check with "-p CFG-GNSS".
                 m_data[10] = 0x05   # flags L1C/A, L1S
         elif 6 == gnssId:
             # GLONASS
+            m_data[5] = 8   # resTrkCh
+            m_data[6] = 14  # maxTrkCh
             if '2' == parm1 and enable:
                 # The NEO-M9N ACKS, then ignores if 0x11 is sent
                 m_data[10] = 0x11   # flags L1, L2
