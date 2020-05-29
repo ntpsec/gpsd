@@ -6680,8 +6680,6 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         # make it big, so the duration decides when to end survey
         mmeters = 50000
 
-        print(able)
-        print(args)
         if able:
             # enable survey-in
             m_data[0] = 1
