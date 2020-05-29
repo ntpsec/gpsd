@@ -96,9 +96,9 @@ opts = {
     # default -x items, up to 64 per call
     'del_item': [],
     # command for -d disable
-    'disable': None,
+    'disable': [],
     # command for -e enable
-    'enable': None,
+    'enable': [],
     # help requested
     'help': None,
     # default input -f file
@@ -113,8 +113,6 @@ opts = {
     'input_wait': 2.0,
     # the name of an OAF file, extension .jpo
     'oaf_name': None,
-    # optional arguments to -d/-e
-    'parms': None,
     # poll command -p
     'poll': [],
     # port ID # for port-related commands
@@ -6357,7 +6355,7 @@ High Precision GNSS products only."""
                 self.decode_msg(m_all)
                 sys.stdout.flush()
 
-    def send_able_cfg_batch(self, able):
+    def send_able_cfg_batch(self, able, args):
         """dis/enable batching,  UBX-CFG-BATCH"""
 
         flags = 0x0d if able else 0x0c
@@ -6365,13 +6363,13 @@ High Precision GNSS products only."""
         struct.pack_into('<BBHHBB', m_data, 0, 0, flags, 128, 0, 0, 0)
         gps_model.gps_send(6, 0x93, m_data)
 
-    def send_able_beidou(self, able):
+    def send_able_beidou(self, able, args):
         """dis/enable BeiDou"""
         # Two frequency GNSS receivers use BeiDou or GLONASS
         # disable, then enable
-        gps_model.send_cfg_gnss1(3, able)
+        gps_model.send_cfg_gnss1(3, able, args)
 
-    def send_able_binary(self, able):
+    def send_able_binary(self, able, args):
         """dis/enable basic binary messages. -e/-d BINARY"""
 
         # FIXME: does not change UBX-CFG-PRT outProtoMask for current port.
@@ -6452,32 +6450,32 @@ High Precision GNSS products only."""
             m_data = bytearray([0x01, 0x12, 0])
             gps_model.gps_send(6, 1, m_data)
 
-    def send_able_ecef(self, able):
+    def send_able_ecef(self, able, args):
         """Enable ECEF messages"""
         # set NAV-POSECEF rate
         gps_model.send_cfg_msg(1, 1, able)
         # set NAV-VELECEF rate
         gps_model.send_cfg_msg(1, 0x11, able)
 
-    def send_able_gps(self, able):
+    def send_able_gps(self, able, args):
         """dis/enable GPS/QZSS"""
         # GPS and QZSS both on, or both off, together
         # GPS
-        gps_model.send_cfg_gnss1(0, able)
+        gps_model.send_cfg_gnss1(0, able, args)
         # QZSS
-        gps_model.send_cfg_gnss1(5, able)
+        gps_model.send_cfg_gnss1(5, able, args)
 
-    def send_able_galileo(self, able):
+    def send_able_galileo(self, able, args):
         """dis/enable GALILEO"""
-        gps_model.send_cfg_gnss1(2, able)
+        gps_model.send_cfg_gnss1(2, able, args)
 
-    def send_able_glonass(self, able):
+    def send_able_glonass(self, able, args):
         """dis/enable GLONASS"""
         # Two frequency GPS use BeiDou or GLONASS
         # disable, then enable
-        gps_model.send_cfg_gnss1(6, able)
+        gps_model.send_cfg_gnss1(6, able, args)
 
-    def send_able_logfilter(self, able):
+    def send_able_logfilter(self, able, args):
         """Enable logging"""
 
         if able:
@@ -6501,7 +6499,7 @@ High Precision GNSS products only."""
         # set UBX-CFG-LOGFILTER
         gps_model.gps_send(6, 0x47, m_data)
 
-    def send_able_ned(self, able):
+    def send_able_ned(self, able, args):
         """Enable NAV-RELPOSNED and VELNED messages.
 protver 15+ required for VELNED
 protver 20+, and HP GNSS, required for RELPOSNED"""
@@ -6522,7 +6520,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         # set NAV-RELPOSNED rate
         gps_model.send_cfg_msg(1, 0x3C, able)
 
-    def send_able_nmea(self, able):
+    def send_able_nmea(self, able, args):
         """dis/enable basic NMEA messages"""
 
         # FIXME: does not change UBX-CFG-PRT outProtoMask for current port.
@@ -6565,7 +6563,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         m_data = bytearray([0xf0, 0x08, rate])
         gps_model.gps_send(6, 1, m_data)
 
-    def send_able_rtcm3(self, able):
+    def send_able_rtcm3(self, able, args):
         """dis/enable RTCM3 1005, 1077, 1087, 1230 messages"""
         # FIXME: Change outProtoMask correctly
         if able:
@@ -6592,7 +6590,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         m_data = bytearray([0xf5, 0xe6, rate])
         gps_model.gps_send(6, 1, m_data)
 
-    def send_able_rawx(self, able):
+    def send_able_rawx(self, able, args):
         """dis/enable UBX-RXM-RAW/RAWXX"""
 
         rate = 1 if able else 0
@@ -6605,7 +6603,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         m_data = bytearray([0x2, sid, rate])
         gps_model.gps_send(6, 1, m_data)
 
-    def send_able_pps(self, able):
+    def send_able_pps(self, able, args):
         """dis/enable PPS, using UBX-CFG-TP5"""
 
         m_data = bytearray(32)
@@ -6646,11 +6644,11 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
 
         gps_model.gps_send(6, 0x31, m_data)
 
-    def send_able_sbas(self, able):
+    def send_able_sbas(self, able, args):
         """dis/enable SBAS"""
-        gps_model.send_cfg_gnss1(1, able)
+        gps_model.send_cfg_gnss1(1, able, args)
 
-    def send_able_sfrbx(self, able):
+    def send_able_sfrbx(self, able, args):
         """dis/enable UBX-RXM-SFRB/SFRBX"""
 
         rate = 1 if able else 0
@@ -6663,7 +6661,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         m_data = bytearray([0x2, sid, rate])
         gps_model.gps_send(6, 1, m_data)
 
-    def send_able_tmode2(self, able):
+    def send_able_tmode2(self, able, args):
         """SURVEYIN, UBX-CFG-TMODE2, set time mode 2 config"""
 
         m_data = bytearray(28)
@@ -6685,13 +6683,13 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         if able:
             # enable survey-in
             m_data[0] = 1
-            if opts['parms']:
-                seconds = int((opts['parms'])[0])
+            if args:
+                seconds = int(args[0])
 
         struct.pack_into('<LL', m_data, 20, seconds, mmeters)
         gps_model.gps_send(6, 0x3d, m_data)
 
-    def send_able_tmode3(self, able):
+    def send_able_tmode3(self, able, args):
         """SURVEYIN, UBX-CFG-TMODE3, set time mode 3 config"""
 
         m_data = bytearray(40)
@@ -6707,19 +6705,19 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         if able:
             # enable survey-in
             m_data[2] = 1
-            if opts['parms']:
-                seconds = int((opts['parms'])[0])
+            if args:
+                seconds = int(args[0])
 
         struct.pack_into('<LL', m_data, 24, seconds, mmeters)
         gps_model.gps_send(6, 0x71, m_data)
 
-    def send_able_tp(self, able):
+    def send_able_tp(self, able, args):
         """dis/enable UBX-TIM-TP Time Pulse"""
         rate = 1 if able else 0
         m_data = bytearray([0xd, 0x1, rate])
         gps_model.gps_send(6, 1, m_data)
 
-    def send_cfg_cfg(self, save_clear):
+    def send_cfg_cfg(self, save_clear, args):
         """UBX-CFG-CFG, save config"""
 
         # Save: save_clear = 0
@@ -6778,7 +6776,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
 
         gps_model.gps_send(6, 0x9, m_data)
 
-    def send_cfg_gnss1(self, gnssId, enable):
+    def send_cfg_gnss1(self, gnssId, enable, args):
         """UBX-CFG-GNSS, set GNSS config
 
 WARNING: the receiver will  ACK, then ignore, many seemingly valid settings.
@@ -6831,10 +6829,11 @@ Always double check with "-p CFG-GNSS".
         m_data[9] = 0       # flags, unused
 
         # m_data[10], sigCfgMask, enable all signals
-        if opts['parms']:
-            parm1 = opts['parms'][0]
+        if args:
+            parm1 = args[0]
         else:
-            parm1 = '';
+            parm1 = ''
+
         if 0 == gnssId:
             # GPS.  disable does not seem to work on NEO-M9N
             if '2' == parm1 and enable:
@@ -8054,19 +8053,10 @@ for (opt, val) in options:
     if opt == '-c':
         opts['command'] = val
     elif opt == '-d':
-        parts = val.split(',')
         # don't force the user to upper case
-        opts['disable'] = parts[0].upper()
-        if 1 < len(parts):
-            # optional parameters
-            opts['parms'] = parts[1:]
+        opts['disable'].append(val.upper())
     elif opt == '-e':
-        parts = val.split(',')
-        # don't force the user to upper case
-        opts['enable'] = parts[0].upper()
-        if 1 < len(parts):
-            # optional parameters
-            opts['parms'] = parts[1:]
+        opts['enable'].append(val.upper())
     elif opt == '-f':
         opts['input_file_name'] = val
     elif opt == '-g':
@@ -8188,29 +8178,37 @@ try:
 
     sys.stdout.flush()
 
-    if opts['disable'] is not None:
-        if VERB_QUIET < opts['verbosity']:
-            print('%s: disable %s\n' % (PROG_NAME, opts['disable']))
-        if opts['disable'] in gps_model.able_commands:
-            command = gps_model.able_commands[opts['disable']]
-            command["command"](gps, 0)
-        else:
-            sys.stderr.write('%s: disable %s not found\n' %
-                             (PROG_NAME, opts['disable']))
-            sys.exit(1)
+    if opts['disable']:
+        for disable in opts['disable']:
+            if VERB_QUIET < opts['verbosity']:
+                print('%s: disable %s\n' % (PROG_NAME, disable))
+            args = disable.split(',')
+            disable = args[0]
 
-    elif opts['enable'] is not None:
-        if VERB_QUIET < opts['verbosity']:
-            print('%s: enable %s\n' % (PROG_NAME, opts['enable']))
-        if opts['enable'] in gps_model.able_commands:
-            command = gps_model.able_commands[opts['enable']]
-            command["command"](gps, 1)
-        else:
-            sys.stderr.write('%s: enable %s not found\n' %
-                             (PROG_NAME, opts['enable']))
-            sys.exit(1)
+            if disable in gps_model.able_commands:
+                command = gps_model.able_commands[disable]
+                command["command"](gps, 0, disable[1:])
+            else:
+                sys.stderr.write('%s: disable %s not found\n' %
+                                 (PROG_NAME, disable))
+                sys.exit(1)
 
-    elif opts['poll']:
+    if opts['enable']:
+        for enable in opts['enable']:
+            if VERB_QUIET < opts['verbosity']:
+                print('%s: enable %s\n' % (PROG_NAME, enable))
+            args = enable.split(',')
+            enable = args[0]
+
+            if enable in gps_model.able_commands:
+                command = gps_model.able_commands[enable]
+                command["command"](gps, 1, args[1:])
+            else:
+                sys.stderr.write('%s: enable %s not found\n' %
+                                 (PROG_NAME, enable))
+                sys.exit(1)
+
+    if opts['poll']:
         for poll in opts['poll']:
             if VERB_QUIET < opts['verbosity']:
                 print('%s: poll %s\n' % (PROG_NAME, poll))
