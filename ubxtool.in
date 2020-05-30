@@ -6885,9 +6885,8 @@ Always double check with "-p CFG-GNSS".
         gps_model.gps_send(6, 0x02, m_data)
 
     def send_poll_cfg_msg(self, args):
-        """UBX-CFG-MSG, mandatory args: class, ID"""
+        """UBX-CFG-MSG, mandatory args: class, ID, optional rate"""
 
-        m_data = bytearray(2)
         if 0 == len(args):
             sys.stderr.write('%s: ERROR: CFG-MSG missing class\n' %
                              (PROG_NAME))
@@ -6897,6 +6896,12 @@ Always double check with "-p CFG-GNSS".
                              (PROG_NAME, args[0]))
             exit(1)
 
+        if 2 < len(args):
+            # optional set rate
+            m_data = bytearray(3)
+            m_data[2] = int(args[2])
+        else:
+            m_data = bytearray(2)
         m_data[0] = int(args[0])
         m_data[1] = int(args[1])
 
@@ -7438,7 +7443,7 @@ Always double check with "-p CFG-GNSS".
         # UBX-CFG-ESRC
         "CFG-ESRC": {"command": send_poll, "opt": [0x06, 0x60],
                      "help": "poll UBX-CFG-ESRC External synchronization "
-                     "source configuration"},
+                     "source config"},
         # UBX-CFG-FXN
         "CFG-FXN": {"command": send_poll, "opt": [0x06, 0x0e],
                     "help": "poll UBX-CFG-FXN FXN Configuration"},
@@ -7467,7 +7472,10 @@ Always double check with "-p CFG-GNSS".
                           "minVer": 14},
         # UBX-CFG-MSG
         "CFG-MSG": {"command": send_poll_cfg_msg,
-                    "help": "poll UBX-CFG-MSG,class,ID", "args": 2},
+                    "help": "poll/set UBX-CFG-MSG,class,ID[,rate]\n"
+                            "                    "
+                            "rate is optional and sets rate.",
+                    "args": 2},
         # UBX-CFG-NAV5
         "CFG-NAV5": {"command": send_poll, "opt": [0x06, 0x24],
                      "help": "poll UBX-CFG-NAV5 Nav Engines settings"},
@@ -7524,7 +7532,7 @@ Always double check with "-p CFG-GNSS".
         # UBX-CFG-SMGR
         "CFG-SMGR": {"command": send_poll, "opt": [0x06, 0x62],
                      "help": "poll UBX-CFG-SMGR Synchronization manager "
-                     " configuration"},
+                     "configuration"},
         # UBX-CFG-TMODE
         "CFG-TMODE": {"command": send_poll, "opt": [0x06, 0x1d],
                       "help": "poll UBX-CFG-TMODE time mode settings",
@@ -7544,7 +7552,7 @@ Always double check with "-p CFG-GNSS".
         "CFG-TP5": {"command": send_cfg_tp5,
                     "help": "poll UBX-TIM-TP5 time pulse decodes.\n"
                             "                    "
-                            "CFG-TP5,tpIdx  Default tpIdx is 0",
+                            "CFG-TP5[,tpIdx]  Default tpIdx is 0",
                     "args": 1},
         # UBX-CFG-USB
         "CFG-USB": {"command": send_poll, "opt": [0x06, 0x1b],
@@ -7561,7 +7569,9 @@ Always double check with "-p CFG-GNSS".
         # UBX-LOG-FINDTIME
         "LOG-FINDTIME": {"command": send_log_findtime,
                          "help": "search logs by time. "
-                                 "LOG-FINDTIME,y,m,d,h,m,s",
+                                 "LOG-FINDTIME,y,m,d,h,m,s\n",
+                                 "                    "
+                                 "all parameters optional"
                          "args": 6},
         # UBX-LOG-INFO
         "LOG-INFO": {"command": send_poll, "opt": [0x21, 0x08],
@@ -7681,7 +7691,7 @@ Always double check with "-p CFG-GNSS".
         # HP only, 20+, otherwise not ACKed or NACKed
         "NAV-RELPOSNED": {"command": send_poll, "opt": [0x01, 0x3c],
                           "help": "poll UBX-NAV-RELPOSNED Relative "
-                          "Positioning Information in NED frame"},
+                          "Positioning Info in NED frame"},
         # UBX-NAV-RESETODO
         "NAV-RESETODO": {"command": send_poll, "opt": [0x01, 0x10],
                          "help": "UBX-NAV-RESETODO Reset odometer"},
