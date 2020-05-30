@@ -6723,7 +6723,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         m_data = bytearray([0xd, 0x1, rate])
         gps_model.gps_send(6, 1, m_data)
 
-    def send_cfg_cfg(self, save_clear, args):
+    def send_cfg_cfg(self, save_clear, args=[]):
         """UBX-CFG-CFG, save config"""
 
         # Save: save_clear = 0
@@ -7009,7 +7009,7 @@ Always double check with "-p CFG-GNSS".
             # poll default tpIdx 0
             m_data = []
         else:
-            # tpIdx 
+            # tpIdx
             m_data = bytearray([int(args[0])])
 
         gps_model.gps_send(6, 0x31, m_data)
@@ -7039,6 +7039,7 @@ Always double check with "-p CFG-GNSS".
         m_data[12] = 3             # in, ubx and nmea
         m_data[14] = 3             # out, ubx and nmea
         gps_model.gps_send(6, 0, m_data)
+
     def send_cfg_valdel(self, keys):
         """UBX-CFG-VALDEL, delete config items by key"""
         m_data = bytearray(4)
