@@ -2924,7 +2924,7 @@ Save and Load non-volatile storage data"""
              ' period %u onTime %#x reserved1 %u %u' % u)
         if VERB_DECODE <= opts['verbosity']:
             s += ('\n  powerSetupValue (%s)' %
-                  index_s(u[0], self.cfg_pms_values))
+                  index_s(u[1], self.cfg_pms_values))
 
         return s
 
@@ -6930,7 +6930,7 @@ Always double check with "-p CFG-GNSS".
         gps_model.gps_send(6, 1, m_data)
 
     def send_cfg_pms(self, args):
-        """UBX-CFG-PMS, set Power Management Settings"""
+        """UBX-CFG-PMS, poll/set Power Management Settings"""
 
         if 0 < len(args):
             m_data = bytearray(8)
@@ -7382,11 +7382,6 @@ Always double check with "-p CFG-GNSS".
                   "help": "set UBX-CFG-NAV5 Dynamic Platform Model. "
                           "MODEL,model",
                   "args": 1},
-        # UBX-CFG-PMS
-        "PMS": {"command": send_cfg_pms,
-                "help": "set UBX-CFG-PMS power management settings. "
-                        "PMS,power where power is powerSetupValue.",
-                "args": 1},
         # UBX-CFG-CFG
         "RESET": {"command": send_cfg_cfg,
                   "help": "UBX-CFG-CFG reset config to defaults",
@@ -7498,8 +7493,11 @@ Always double check with "-p CFG-GNSS".
                     "help": "poll UBX-CFG-PM2 Extended power management "
                     "settings"},
         # UBX-CFG-PMS
-        "CFG-PMS": {"command": send_poll, "opt": [0x06, 0x86],
-                    "help": "poll UBX-CFG-PMS power management settings"},
+        "CFG-PMS": {"command": send_cfg_pms,
+                    "help": "poll/set UBX-CFG-PMS power management settings\n"
+                            "                    "
+                            "CFG-PMS[,powerSetupValue]",
+                    "args": 1},
         # UBX-CFG-PRT
         "CFG-PRT": {"command": send_cfg_prt,
                     "help": "poll UBX-CFG-PRT I/O port settings"},
