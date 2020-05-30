@@ -1,14 +1,16 @@
-= Building GPSD from source =
+= Building GPSD from source
 
 This is a guide to building GPSD from a bare source tree.  It includes
-guidance on how to cross-build the package.
+guidance on how to cross-build the package.  This document overlaps and
+interweaves with INSTALL.adoc.  INSTALL.adoc contains distribution
+specific advice.
 
 Some hints for people building binary packages are in
 packaging/README.PACKAGERS.
 
 (This file is marked up in asciidoc.)
 
-== Quick start ==
+== Quick start
 
 You can download the most recent development snapshot from:
 https://gitlab.com/gpsd/gpsd/tree/master
@@ -43,7 +45,7 @@ corrupted scons database.  This seems to relate to ^Cing the build at
 an inopportune moment.  If you suspect that, see "Reverting to a clean
 state" below and then try again.
 
-== Supported platforms ==
+== Supported platforms
 
 Native-build success should be expected on the following platforms,
 provided you have the prerequisites listed in the next section
@@ -66,7 +68,7 @@ Cross-compilation to embedded Linuxes (in addition to the OpenWRT family)
 is usually fairly straightforward. An illustrative build transcript
 is included at the end of this file.
 
-== Check your build prerequisites ==
+== Check your build prerequisites
 
 Necessary components for any build:
 
@@ -82,7 +84,7 @@ On Gentoo, a basic build only requires this package:
 |dev-util/scons                | for executing the build recipe
 |============================================================================
 
-=== C compiler ===
+=== C compiler
 
 C99 conformance is required in the compiler. The C code depends on one
 C11 feature (supported by GCC, clang, and pretty much any C compiler
@@ -113,7 +115,7 @@ work", you nay have tripped over stale data in the builder's
 configuration cache.  Clean the directory with "scons -c" then manually
 remove .sconsign.*dblite and retry your build.
 
-=== Python ===
+=== Python
 
 You will need Python 2.x at minor version 6 or later or Python 3 at
 at minor version 3 or later.
@@ -164,11 +166,11 @@ On Gentoo systems that package is named:
 |dev-python/pyserial
 |============================================================================
 
-=== Scons ===
+=== Scons
 
 You will need scons version 2.3.0 (from 2013-03-02) or later to build the code.
 
-=== Optional build components ===
+=== Optional build components
 
 Having the following optional components on your system will enable
 various additional capabilities and extensions:
@@ -184,14 +186,14 @@ various additional capabilities and extensions:
 
 On Gentoo systems those packages are named:
 
-|============================================================================
+|=============================================================================
 |dev-qt/qtcore       | Basic Qt
 |dev-qt/qtnetwork    | Qt network components
 |sys-libs/libcap     | Capabilities library
 |sys-libs/ncurses    | curses screen-painting library, used by cgps and gpsmon
 |net-misc/pps-tools  | adds support for the KPPS API, for improved timing
 |virtual/libusb      | Userspace access to USB devices
-|============================================================================
+|=============================================================================
 
 If you have libusb-1.0.0 or later, the GPSD build will autodetect
 this and use it to discover Garmin USB GPSes, rather than groveling
@@ -243,10 +245,10 @@ process:
 
 On Gentoo systems those packages are named:
 
-|============================================================================
+|================================================================================
 |app-text/xmlto                       | DocBook formatter program
 |app-text/asciidoctor                 | Documentation front end with light markup
-|============================================================================
+|================================================================================
 
 The build degrades gracefully in the absence of any of these. You should
 be able to tell from scons messages which extensions you will get.
@@ -280,7 +282,7 @@ requires legacy PTY support (CONFIG_LEGACY_PTYS) from the Linux
 kernel.  You should make sure you're in the 'dialout' group in order
 to have permission to use these devices.
 
-== How to build the software from source ==
+== How to build the software from source
 
 To build gpsd for your host platform from source, simply call 'scons'
 in a working-directory copy. (Cross-build is described in a later
@@ -340,7 +342,7 @@ generator included with the distribution. To install it, copy the file
 'gpsd.php' to your HTML document directory. Then see the
 post-installation instructions in INSTALL.adoc for how to configure it.
 
-== Leap Seconds ==
+== Leap Seconds
 
 The header gpsd.h contains the value BUILD_LEAPSECONDS.  This is set,
 at release time, to the leap second value current at that time.
@@ -368,7 +370,7 @@ The gpsd daemon may be using the wrong leap second internally if
 the compiled in leap second is no longer valid, and the GNSS receiver
 has not reported the current leap second to gpsd.
 
-== Optional features ==
+== Optional features
 
 By giving command-line options to scons you can configure certain rarely-used
 optional features in, or compile standard features out to reduce gpsd's
@@ -419,7 +421,7 @@ scons minimal=yes shared=True gpsd=False gpsdclients=False
 generates only libgps.so
 
 
-== Port and toolchain testing ==
+== Port and toolchain testing
 
 'scons check' will run a comprehensive regression-test suite.  You
 should do this, at minimum, every time you build from source on a new
@@ -457,7 +459,7 @@ parallelism is the user's responsibility.
 
 For instructions on how to live-test the software, see the file INSTALL.adoc.
 
-== Reverting to a clean state ==
+== Reverting to a clean state
 
 The scons equivalent of 'make clean' is 'scons -c' or 'scons
 --clean'. This will revert your source tree to a clean state nearly as
@@ -512,7 +514,7 @@ export ARM_TARGET_LIB=${TOOL_HOME}/sysroot
 
 scons wordsize=32 snapshot=off arch=arm sample=shell
 
-== Cross-building ==
+== Cross-building
 
 The scons recipe is intended to support cross-building, in particular
 for embedded deployment of the software.  A session transcript
@@ -588,7 +590,7 @@ your cross-compiler is likely to have a different target prefix.
 
 You may also find it useful to set manbuild=no.
 
-== Autostarting the daemon ==
+== Autostarting the daemon
 
 The preferred way to start gpsd is on-demand by a hotplug script
 detecting USB device activations.  Look at the gpsd.rules and
