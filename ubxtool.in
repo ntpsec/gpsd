@@ -7428,6 +7428,9 @@ Always double check with "-p CFG-GNSS".
         # UBX-CFG-DAT
         "CFG-DAT": {"command": send_poll, "opt": [0x06, 0x06],
                     "help": "poll UBX-CFG-DAT Datum Setting"},
+        # UBX-CFG-DGNSS
+        "CFG-DGNSS": {"command": send_poll, "opt": [0x06, 0x70],
+                      "help": "poll UBX-CFG-DGNSS DGNSS configuration"},
         # UBX-CFG-DOSC
         "CFG-DOSC": {"command": send_poll, "opt": [0x06, 0x61],
                      "help": "poll UBX-CFG-DOSC Disciplined oscillator "
