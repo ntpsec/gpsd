@@ -6979,6 +6979,19 @@ Always double check with "-p CFG-GNSS".
 
         gps_model.gps_send(6, 0x11, m_data)
 
+    def send_cfg_slas(self, args):
+        """UBX-CFG-SLAS, poll/set SLAS mode"""
+
+        if 0 == len(args):
+            # poll
+            m_data = []
+        else:
+            # mode
+            m_data = bytearray(4)
+            m_data[0] = int(args[0])
+
+        gps_model.gps_send(6, 0x8d, m_data)
+
     def send_set_speed(self, speed):
         """"UBX-CFG-PRT, set port"""
         port = opts['port']
@@ -7495,8 +7508,10 @@ Always double check with "-p CFG-GNSS".
         "CFG-SBAS": {"command": send_poll, "opt": [0x06, 0x16],
                      "help": "poll UBX-CFG-SBAS SBAS settings"},
         # UBX-CFG-SLAS
-        "CFG-SLAS": {"command": send_poll, "opt": [0x06, 0x8d],
-                     "help": "poll UBX-CFG-SLAS SLAS configuration"},
+        "CFG-SLAS": {"command": send_cfg_slas,
+                     "help": "poll/set UBX-CFG-SLAS SLAS configuration.\n"
+                             "       CFG-SLAS,mode",
+                     "args": 1},
         # UBX-CFG-SMGR
         "CFG-SMGR": {"command": send_poll, "opt": [0x06, 0x62],
                      "help": "poll UBX-CFG-SMGR Synchronization manager "
