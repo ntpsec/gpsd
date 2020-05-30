@@ -6938,6 +6938,15 @@ Always double check with "-p CFG-GNSS".
 
         gps_model.gps_send(6, 0x86, m_data)
 
+    def send_cfg_prt(self):
+        """UBX-CFG-PRT, get I/O Port settings"""
+        port = opts['port']
+        if port is None:
+            m_data = bytearray()
+        else:
+            m_data = bytearray([port])
+        gps_model.gps_send(6, 0x0, m_data)
+
     def send_cfg_rate(self, args):
         """UBX-CFG-RATE, poll/set rate settings"""
 
@@ -6958,14 +6967,17 @@ Always double check with "-p CFG-GNSS".
         struct.pack_into('<HHH', m_data, 0, measRate, navRate, timeRef)
         gps_model.gps_send(6, 0x08, m_data)
 
-    def send_cfg_prt(self):
-        """UBX-CFG-PRT, get I/O Port settings"""
-        port = opts['port']
-        if port is None:
-            m_data = bytearray()
+    def send_cfg_rxm(self, args):
+        """UBX-CFG-RXM, poll/set low power mode"""
+
+        if 0 == len(args):
+            # poll
+            m_data = []
         else:
-            m_data = bytearray([port])
-        gps_model.gps_send(6, 0x0, m_data)
+            # lpMode
+            m_data = bytearray([0, int(args[0])])
+
+        gps_model.gps_send(6, 0x11, m_data)
 
     def send_set_speed(self, speed):
         """"UBX-CFG-PRT, set port"""
@@ -7427,7 +7439,7 @@ Always double check with "-p CFG-GNSS".
                             "Configuration"},
         # UBX-CFG-ITFM
         "CFG-ITFM": {"command": send_poll, "opt": [0x06, 0x39],
-                     "help": "poll UBX-CFG-RXM Jamming/Interference "
+                     "help": "poll UBX-CFG-ITFM Jamming/Interference "
                      "Monitor configuration"},
         # UBX-CFG-LOGFILTER
         "CFG-LOGFILTER": {"command": send_poll, "opt": [0x06, 0x47],
@@ -7464,6 +7476,7 @@ Always double check with "-p CFG-GNSS".
         # UBX-CFG-PRT
         "CFG-PRT": {"command": send_cfg_prt,
                     "help": "poll UBX-CFG-PRT I/O port settings"},
+        # TODO: UBX-CFG-PWR
         # UBX-CFG-RATE
         "CFG-RATE": {"command": send_cfg_rate,
                      "help": "poll/set UBX-CFG-RATE measure/nav settings. "
@@ -7472,9 +7485,12 @@ Always double check with "-p CFG-GNSS".
         # UBX-CFG-RINV
         "CFG-RINV": {"command": send_poll, "opt": [0x06, 0x34],
                      "help": "poll UBX-CFG-RINV Contents of Remote Inventory"},
+        # UBX-CFG-RST, see COLDBOOT, WARMBOOT, HOTBOOT
         # UBX-CFG-RXM
-        "CFG-RXM": {"command": send_poll, "opt": [0x06, 0x11],
-                    "help": "poll UBX-CFG-RXM RXM configuration"},
+        "CFG-RXM": {"command": send_cfg_rxm,
+                    "help": "poll/set UBX-CFG-RXM RXM configuration.\n"
+                            "       CFG-RXM,lpMode",
+                    "args": 1},
         # UBX-CFG-SBAS
         "CFG-SBAS": {"command": send_poll, "opt": [0x06, 0x16],
                      "help": "poll UBX-CFG-SBAS SBAS settings"},
