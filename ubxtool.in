@@ -5841,6 +5841,8 @@ High Precision GNSS products only."""
                       'name': 'UBX-RXM-RLM'},
                0x61: {'str': 'IMES', 'dec': rxm_imes, 'minlen': 4,
                       'name': 'UBX-RXM-IMES'},
+               # NEO-D9S, 24 to 528 bytes
+               0x72: {'str': 'PMP', 'minlen': 24, 'name': 'UBX-RXM-PMP'},
                }
 
     # UBX-SEC-
@@ -6882,6 +6884,24 @@ Always double check with "-p CFG-GNSS".
         m_data[0] = 1        # NMEA
         gps_model.gps_send(6, 0x02, m_data)
 
+    def send_poll_cfg_msg(self, args):
+        """UBX-CFG-MSG, mandatory args: class, ID"""
+
+        m_data = bytearray(2)
+        if 0 == len(args):
+            sys.stderr.write('%s: ERROR: CFG-MSG missing class\n' %
+                             (PROG_NAME))
+            exit(1)
+        if 1 == len(args):
+            sys.stderr.write('%s: ERROR: CFG-MSG,x%x missing ID\n' %
+                             (PROG_NAME, args[0]))
+            exit(1)
+
+        m_data[0] = int(args[0])
+        m_data[1] = int(args[1])
+
+        gps_model.gps_send(6, 1, m_data)
+
     def send_cfg_nav5_model(self, args):
         """MODEL, UBX-CFG-NAV5, set dynamic platform model"""
 
@@ -6919,13 +6939,14 @@ Always double check with "-p CFG-GNSS".
         gps_model.gps_send(6, 0x86, m_data)
 
     def send_cfg_rate(self, args):
-        """ RATE use UBX-CFG-PMS, set rate settings"""
+        """UBX-CFG-RATE, poll/set rate settings"""
 
         if 0 == len(args):
-            sys.stderr.write('%s: ERROR: RATE missing argument\n' %
-                             (PROG_NAME))
-            exit(1)
+            # poll
+            gps_model.gps_send(6, 0x08, [])
+            return
 
+        m_data = bytearray(6)
         measRate = int(args[0])
         navRate = 1
         timeRef = 1
@@ -6934,7 +6955,6 @@ Always double check with "-p CFG-GNSS".
             if 2 < len(args):
                 timeRef = int(args[2])
 
-        m_data = bytearray(6)
         struct.pack_into('<HHH', m_data, 0, measRate, navRate, timeRef)
         gps_model.gps_send(6, 0x08, m_data)
 
@@ -7334,11 +7354,6 @@ Always double check with "-p CFG-GNSS".
                 "help": "set UBX-CFG-PMS power management settings. "
                         "PMS,power where power is powerSetupValue.",
                 "args": 1},
-        # UBX-CFG-PMS
-        "RATE": {"command": send_cfg_rate,
-                 "help": "set UBX-CFG-RATE measure/nav settings. "
-                         "RATE,meas,nav nav is optional",
-                 "args": 2},
         # UBX-CFG-CFG
         "RESET": {"command": send_cfg_cfg,
                   "help": "UBX-CFG-CFG reset config to defaults",
@@ -7419,6 +7434,9 @@ Always double check with "-p CFG-GNSS".
                           "help": "poll UBX-CFG-LOGFILTER "
                           " Data Logger Configuration",
                           "minVer": 14},
+        # UBX-CFG-MSG
+        "CFG-MSG": {"command": send_poll_cfg_msg,
+                    "help": "poll UBX-CFG-MSG,class,ID", "args": 2},
         # UBX-CFG-NAV5
         "CFG-NAV5": {"command": send_poll, "opt": [0x06, 0x24],
                      "help": "poll UBX-CFG-NAV5 Nav Engines settings"},
@@ -7447,9 +7465,10 @@ Always double check with "-p CFG-GNSS".
         "CFG-PRT": {"command": send_cfg_prt,
                     "help": "poll UBX-CFG-PRT I/O port settings"},
         # UBX-CFG-RATE
-        "CFG-RATE": {"command": send_poll, "opt": [0x06, 0x08],
-                     "help": "poll UBX-CFG-RATE Navigation/Measurement "
-                             "Rate Settings"},
+        "CFG-RATE": {"command": send_cfg_rate,
+                     "help": "poll/set UBX-CFG-RATE measure/nav settings. "
+                             "CFG-RATE,measRate,navRate both are optional",
+                     "args": 2},
         # UBX-CFG-RINV
         "CFG-RINV": {"command": send_poll, "opt": [0x06, 0x34],
                      "help": "poll UBX-CFG-RINV Contents of Remote Inventory"},
