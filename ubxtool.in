@@ -115,7 +115,7 @@ opts = {
     'oaf_name': None,
     # poll command -p
     'poll': [],
-    # port ID # for port-related commands
+    # port ID # for -S set speed
     'port': None,
     # protocol version for sent commands
     # u-blox 5, firmware 4 to 6 is protver 10 to 12
@@ -6361,7 +6361,7 @@ High Precision GNSS products only."""
         """dis/enable batching,  UBX-CFG-BATCH"""
 
         flags = 0x0d if able else 0x0c
-        m_data = bytearray(8)
+        m_data = []
         struct.pack_into('<BBHHBB', m_data, 0, 0, flags, 128, 0, 0, 0)
         gps_model.gps_send(6, 0x93, m_data)
 
@@ -6939,17 +6939,20 @@ Always double check with "-p CFG-GNSS".
             # leave period and onTime zero, which breaks powerSetupValue = 3
         else:
             # just poll, DEPRECATED
-            m_data = bytearray(0)
+            m_data = []
 
         gps_model.gps_send(6, 0x86, m_data)
 
-    def send_cfg_prt(self):
+    def send_cfg_prt(self, args=[]):
         """UBX-CFG-PRT, get I/O Port settings"""
-        port = opts['port']
-        if port is None:
-            m_data = bytearray()
+
+        if 0 == len(args):
+            # get current port
+            m_data = []
         else:
-            m_data = bytearray([port])
+            # get specified port
+            # seems broken on ZED-F9P
+            m_data = bytearray([int(args[0])])
         gps_model.gps_send(6, 0x0, m_data)
 
     def send_cfg_rate(self, args):
@@ -7024,7 +7027,8 @@ Always double check with "-p CFG-GNSS".
         port = opts['port']
         # FIXME!  Determine and use current port as default
         if port is None:
-            port = 1  # Default to port 1 (UART/UART_1)
+             port = 1  # Default to port 1 (UART/UART_1)
+
         if port not in set([1, 2]):
             sys.stderr.write('%s: Invalid UART port - %d\n' %
                              (PROG_NAME, port))
@@ -7500,7 +7504,10 @@ Always double check with "-p CFG-GNSS".
                     "args": 1},
         # UBX-CFG-PRT
         "CFG-PRT": {"command": send_cfg_prt,
-                    "help": "poll UBX-CFG-PRT I/O port settings"},
+                    "help": "poll UBX-CFG-PRT I/O port settings"
+                            "                    "
+                            "CFG-PRT[,portID] defaults to current port",
+                    "args": 1},
         # TODO: UBX-CFG-PWR
         # UBX-CFG-RATE
         "CFG-RATE": {"command": send_cfg_rate,
@@ -8048,7 +8055,8 @@ def usage():
           '       -g I,l,p      get config item I, optional layer l, '
           'position p\n'
           '       -h            print help, increase -v for extra help\n'
-          '       -i P          port ID # (interface) for UBX-CFG-PRT\n'
+          '       -i P          port ID # (interface) for -S\n'
+
           '       -P P          Protocol version for sending commands\n'
           '                     default: %s\n'
           '       -p P          send a preset query P to GPS\n'
