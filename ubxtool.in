@@ -7027,7 +7027,7 @@ Always double check with "-p CFG-GNSS".
         port = opts['port']
         # FIXME!  Determine and use current port as default
         if port is None:
-             port = 1  # Default to port 1 (UART/UART_1)
+            port = 1  # Default to port 1 (UART/UART_1)
 
         if port not in set([1, 2]):
             sys.stderr.write('%s: Invalid UART port - %d\n' %
@@ -7696,9 +7696,6 @@ Always double check with "-p CFG-GNSS".
         "NAV-RELPOSNED": {"command": send_poll, "opt": [0x01, 0x3c],
                           "help": "poll UBX-NAV-RELPOSNED Relative "
                           "Positioning Info in NED frame"},
-        # UBX-NAV-RESETODO
-        "NAV-RESETODO": {"command": send_poll, "opt": [0x01, 0x10],
-                         "help": "UBX-NAV-RESETODO Reset odometer"},
         # UBX-NAV-ODO
         "NAV-ODO": {"command": send_poll, "opt": [0x01, 0x09],
                     "help": "poll UBX-NAV-ODO Odometer solution"},
@@ -7717,6 +7714,13 @@ Always double check with "-p CFG-GNSS".
         "NAV-PVT": {"command": send_poll, "opt": [0x01, 0x07],
                     "help": "poll UBX-NAV-PVT Navigation Position Velocity "
                             "Time Solution"},
+        # UBX-NAV-RELPOSNED
+        "NAV-RELPOSNED": {"command": send_poll, "opt": [0x01, 0x3c],
+                          "help": "poll UBX-NAV-RELPOSNED "
+                                  "Relative Positioning Info in NED"},
+        # UBX-NAV-RESETODO
+        "NAV-RESETODO": {"command": send_poll, "opt": [0x01, 0x10],
+                         "help": "UBX-NAV-RESETODO Reset odometer"},
         # UBX-NAV-SAT
         "NAV-SAT": {"command": send_poll, "opt": [0x01, 0x35],
                     "help": "poll UBX-NAV-SAT Satellite Information"},
