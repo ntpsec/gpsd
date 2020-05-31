@@ -2300,13 +2300,6 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
             session->driver.ubx.port_id = buf[UBX_PREFIX_LEN + 0];
             GPSD_LOG(LOG_INF, &session->context->errout,
                      "UBX-CFG-PRT: port %d\n", session->driver.ubx.port_id);
-
-            /* Need to reinitialize since port changed */
-            if (session->mode == O_OPTIMIZE) {
-                ubx_mode(session, MODE_BINARY);
-            } else {
-                ubx_mode(session, MODE_NMEA);
-            }
         }
         break;
 
