@@ -7513,7 +7513,7 @@ Always double check with "-p CFG-GNSS".
         "CFG-RATE": {"command": send_cfg_rate,
                      "help": "poll/set UBX-CFG-RATE measure/nav settings.\n"
                              "                    "
-                             "CFG-RATE,measRate,navRate both are optional",
+                             "CFG-RATE[,measRate,[navRate]]",
                      "args": 2},
         # UBX-CFG-RINV
         "CFG-RINV": {"command": send_poll, "opt": [0x06, 0x34],
@@ -7523,7 +7523,7 @@ Always double check with "-p CFG-GNSS".
         "CFG-RXM": {"command": send_cfg_rxm,
                     "help": "poll/set UBX-CFG-RXM RXM configuration.\n"
                             "                    "
-                            "CFG-RXM,lpMode",
+                            "CFG-RXM[,lpMode]",
                     "args": 1},
         # UBX-CFG-SBAS
         "CFG-SBAS": {"command": send_poll, "opt": [0x06, 0x16],
@@ -7532,7 +7532,7 @@ Always double check with "-p CFG-GNSS".
         "CFG-SLAS": {"command": send_cfg_slas,
                      "help": "poll/set UBX-CFG-SLAS SLAS configuration.\n"
                              "                    "
-                             "CFG-SLAS,mode",
+                             "CFG-SLAS[,mode]",
                      "args": 1},
         # UBX-CFG-SMGR
         "CFG-SMGR": {"command": send_poll, "opt": [0x06, 0x62],
@@ -7585,7 +7585,7 @@ Always double check with "-p CFG-GNSS".
         # UBX-LOG-RETRIEVE
         "LOG-RETRIEVE": {"command": send_log_retrieve,
                          "help": "send UBX-LOG-RETRIEVE. "
-                                 "LOG-RETRIEVE,start,count",
+                                 "LOG-RETRIEVE[,start,[count]]",
                          "minVer": 14,
                          "args": 2},
         # UBX-LOG-RETRIEVEBATCH
@@ -7596,7 +7596,7 @@ Always double check with "-p CFG-GNSS".
                               "minVer": 23},
         # UBX-LOG-STRING
         "LOG-STRING": {"command": send_log_string,
-                       "help": "send UBX-LOG-STRING. LOG-STRING,string",
+                       "help": "send UBX-LOG-STRING. LOG-STRING[,string]",
                        "minVer": 14,
                        "args": 1},
         # UBX-MGA-DBD
@@ -7611,8 +7611,7 @@ Always double check with "-p CFG-GNSS".
                       "minVer": 23},
         # UBX-MON-COMMS
         "MON-COMMS": {"command": send_poll, "opt": [0x0a, 0x36],
-                      "help": "poll UBX-MON-COMMS Comm port "
-                      "information"},
+                      "help": "poll UBX-MON-COMMS Comm port information"},
         # UBX-MON-GNSS
         "MON-GNSS": {"command": send_poll, "opt": [0x0a, 0x28],
                      "help": "poll UBX-MON-GNSS major GNSS selection"},
@@ -7700,6 +7699,9 @@ Always double check with "-p CFG-GNSS".
         # UBX-NAV-RESETODO
         "NAV-RESETODO": {"command": send_poll, "opt": [0x01, 0x10],
                          "help": "UBX-NAV-RESETODO Reset odometer"},
+        # UBX-NAV-ODO
+        "NAV-ODO": {"command": send_poll, "opt": [0x01, 0x09],
+                    "help": "poll UBX-NAV-ODO Odometer solution"},
         # UBX-NAV-SAT
         "NAV-SAT": {"command": send_poll, "opt": [0x01, 0x35],
                     "help": "poll UBX-NAV-SAT Satellite Information"},
