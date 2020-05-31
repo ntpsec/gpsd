@@ -7709,6 +7709,14 @@ Always double check with "-p CFG-GNSS".
         "NAV-POSECEF": {"command": send_poll, "opt": [0x01, 0x01],
                         "help": "poll UBX-NAV-POSECEF Position Solution "
                                 "in ECEF"},
+        # UBX-NAV-POSLLH
+        "NAV-POSLLH": {"command": send_poll, "opt": [0x01, 0x02],
+                       "help": "poll UBX-NAV-POSLLH Geodetic Position "
+                               "Solution"},
+        # UBX-NAV-PVT
+        "NAV-PVT": {"command": send_poll, "opt": [0x01, 0x07],
+                    "help": "poll UBX-NAV-PVT Navigation Position Velocity "
+                            "Time Solution"},
         # UBX-NAV-SAT
         "NAV-SAT": {"command": send_poll, "opt": [0x01, 0x35],
                     "help": "poll UBX-NAV-SAT Satellite Information"},
