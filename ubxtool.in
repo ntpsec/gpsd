@@ -7702,6 +7702,13 @@ Always double check with "-p CFG-GNSS".
         # UBX-NAV-ODO
         "NAV-ODO": {"command": send_poll, "opt": [0x01, 0x09],
                     "help": "poll UBX-NAV-ODO Odometer solution"},
+        # UBX-NAV-ORB
+        "NAV-ORB": {"command": send_poll, "opt": [0x01, 0x34],
+                    "help": "poll UBX-NAV-ORB GNSS Orbit Database Info"},
+        # UBX-NAV-POSECEF
+        "NAV-POSECEF": {"command": send_poll, "opt": [0x01, 0x01],
+                        "help": "poll UBX-NAV-POSECEF Position Solution "
+                                "in ECEF"},
         # UBX-NAV-SAT
         "NAV-SAT": {"command": send_poll, "opt": [0x01, 0x35],
                     "help": "poll UBX-NAV-SAT Satellite Information"},
