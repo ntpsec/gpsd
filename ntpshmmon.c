@@ -109,11 +109,11 @@ int main(int argc, char **argv)
 
     (void)printf("%s: version %s\n", whoami, VERSION);
     if (offset) {
-        (void)printf("#      Name     Offset           Clock"
-                     "                Real                 L Prc\n");
+        (void)printf("#      Name     Offset            Clock"
+                     "                 Real                 L Prc\n");
     } else {
-        (void)printf("#      Name Seen@                Clock"
-                     "                Real                 L Prc\n");
+        (void)printf("#      Name  Seen@                 Clock"
+                     "                 Real                 L Prc\n");
     }
 
     do {
