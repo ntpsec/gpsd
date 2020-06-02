@@ -4743,7 +4743,8 @@ Oddly this is the poll for UBX-LOG-BATCH
             s += ('\n  headVeh %d magDec %d magAcc %u' % u1)
 
         if VERB_DECODE <= opts['verbosity']:
-            s += ("\n    valid (%s) fixType (%s)"
+            s += ("\n    valid (%s)"
+                  "\n    fixType (%s)"
                   "\n    flags (%s)"
                   "\n    flags2 (%s)"
                   "\n    psmState (%s)"
