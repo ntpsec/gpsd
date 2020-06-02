@@ -6680,7 +6680,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
 
         # Survey-in position accuracy limit in mm
         # make it big, so the duration decides when to end survey
-        mmeters = 50000
+        mmeters = 50000          # default 50 meters
 
         if able:
             # enable survey-in
@@ -6704,7 +6704,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         # Survey-in position accuracy limit in 0.1mm
         # make it big, so the duration decides when to end survey
         # mmeters is 5m!
-        mmeters = 50000
+        mmeters = 500000         # default 50 meters
 
         if able:
             # enable survey-in
@@ -7363,7 +7363,7 @@ Always double check with "-p CFG-GNSS".
                       "help": "Survey-in mode with TMODE3."
                               " SURVEYIN3,svinMinDur,svinAccLimit\n    "
                               "               Default svinMinDur 300 seconds\n"
-                              "                   Default svinAccLimit 50000",
+                              "                   Default svinAccLimit 500000",
                       "args": 1},
         # en/dis able RTCM3 messages 1005, 1077, 1087, 1230
         "RTCM3": {"command": send_able_rtcm3,
