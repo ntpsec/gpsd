@@ -2080,7 +2080,7 @@ struct satellite_t {
      *  4 = IMES      1-10
      *  5 = QZSS      1-5       Undocumented u-blox goes to 7
      *  6 = GLONASS   1-32, 255
-     *  x = IRNSS    1-11       Not defined by u-blox:
+     *  7 = IRNSS     1-11       ZED-F9T
      *
      * gnssid:svid:sigid, as defined by NMEA 4.10, NOT USED HERE!
      *  1 = GPS       1-32
@@ -2090,6 +2090,7 @@ struct satellite_t {
      *  3 = Galileo   1-36
      *  4 - BeiDou    1-37
      *  x = IMES                Not defined by NMEA 4.10
+     *  x = IRNSS               Not defined by NMEA 4.10
      *
      * Note: other GNSS receivers use different mappings!
      */
@@ -2102,7 +2103,7 @@ struct satellite_t {
 #define GNSSID_IMES 4
 #define GNSSID_QZSS 5
 #define GNSSID_GLO 6
-#define GNSSID_IRNSS 7            /* Not defined by u-blox */
+#define GNSSID_IRNSS 7            // ZED-F9T
 #define GNSSID_CNT 8              /* count for array size */
 
     /* ignore gnssid and sigid if svid is zero */

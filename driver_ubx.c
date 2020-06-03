@@ -211,6 +211,7 @@ static short ubx_to_prn(int ubx_PRN, unsigned char *gnssId,
     *gnssId = 0;
     *svId = 0;
 
+    // IRNSS??
     if (1 > ubx_PRN) {
         /* skip 0 PRN */
         return 0;

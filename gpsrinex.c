@@ -110,7 +110,7 @@ static char rec_num[21] = "0";
 static char rec_type[21] = "Unknown";
 static char rec_vers[21] = "0";
 
-/* total count of observations by u-blox gnssid [0-6]
+/* total count of observations by u-blox gnssid [0-7]
  *  0 = GPS       RINEX G
  *  1 = SBAS      RINEX S
  *  2 = Galileo   RINEX E
@@ -396,6 +396,7 @@ static void print_rinex_header(void)
              gnssid2rinex(GNSSID_GLO), 6, "C1C", "L1C", "D1C", "C2C", "L2C",
              "D2C", "", "", "", "SYS / # / OBS TYPES");
     }
+    // FIXME: Add IRNSS...
 
     (void)fprintf(log_file, "%6d%54s%-20s\n", obs_cnt_prns(255),
                   "", "# OF SATELLITES");
@@ -488,6 +489,7 @@ static void print_rinex_header(void)
                           obs_cnt[i].obs_cnts[D2C],
                           "", "PRN / # OF OBS");
             break;
+        // FIXME: Add GNSSID_IRNSS, L5A
         default:
             (void)fprintf(log_file,"   %c%02d%6u%6u%6u%6s%6s%24s%-20s\n",
                           gnssid2rinex(obs_cnt[i].gnssid), obs_cnt[i].svid,

@@ -606,26 +606,29 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
                 default:
                     gnssid = "  ";
                     break;
-                case 0:
+                case GNSSID_GPS:
                     gnssid = "GP";  /* GPS */
                     break;
-                case 1:
-                    gnssid = "SB";  /* GPS */
+                case GNSSID_SBAS:
+                    gnssid = "SB";  /* SBAS */
                     break;
-                case 2:
+                case GNSSID_GAL:
                     gnssid = "GA";  /* GALILEO */
                     break;
-                case 3:
+                case GNSSID_BD:
                     gnssid = "BD";  /* BeiDou */
                     break;
-                case 4:
+                case GNSSID_IMES:
                     gnssid = "IM";  /* IMES */
                     break;
-                case 5:
+                case GNSSID_QZSS:
                     gnssid = "QZ";  /* QZSS */
                     break;
-                case 6:
+                case GNSSID_GLO:
                     gnssid = "GL";  /* GLONASS */
+                    break;
+                case GNSSID_IRNSS:
+                    gnssid = "IR";  // IRNSS
                     break;
                 }
                 if (1 < gpsdata->skyview[sat_no].sigid &&

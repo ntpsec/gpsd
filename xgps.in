@@ -126,6 +126,8 @@ def gnssid_str(sat):
         return ['QZ', 'QZSS']
     if 6 == sat.gnssid:
         return ['GL', 'GLONASS']
+    if 7 == sat.gnssid:
+        return ['IR', 'IRNSS']
 
     return '  '
 
@@ -763,7 +765,7 @@ class Base(object):
                           "PyGObject Version %d.%d.%d" %
                           (gps_version,  gi.version_info[0],
                            gi.version_info[1], gi.version_info[2]))
-        about.set_copyright("Copyright 2004-2020 by The GPSD Project")
+        about.set_copyright("Copyright 2004 by The GPSD Project")
         about.set_website("https://www.gpsd.io")
         about.set_website_label("https://www.gpsd.io")
         about.set_license("BSD-2-clause")
