@@ -2792,6 +2792,8 @@ static void ubx_cfg_prt(struct gps_device_t *session,
      */
     else if (strstr(session->gpsdata.dev.path, "/ttyACM") != NULL) {
         /* using the built in USB port */
+        // FIXME!!  USB port has no speed!
+        // FIXME!!  maybe we know the portid already?
         session->driver.ubx.port_id = buf[0] = USB_ID;
     } else {
         /* A guess.  Could be UART2, or SPI, or DDC port */
@@ -2857,9 +2859,10 @@ static void ubx_cfg_prt(struct gps_device_t *session,
     buf[12] = NMEA_PROTOCOL_MASK | UBX_PROTOCOL_MASK | RTCM_PROTOCOL_MASK |
               RTCM3_PROTOCOL_MASK;
 
-    /* FIXME?  RTCM/RTCM3 needs to be set too? */
-    buf[outProtoMask] = (mode == MODE_NMEA
-                         ? NMEA_PROTOCOL_MASK : UBX_PROTOCOL_MASK);
+    /* enable all input protocols by default
+     * no u-blox has RTCM2 out */
+    buf[outProtoMask] = NMEA_PROTOCOL_MASK | UBX_PROTOCOL_MASK |
+                        RTCM3_PROTOCOL_MASK;
     (void)ubx_write(session, 0x06u, 0x00, buf, sizeof(buf));
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -2870,8 +2873,8 @@ static void ubx_cfg_prt(struct gps_device_t *session,
     if (mode == MODE_NMEA) {
         /*
          * We have to club the GR601-W over the head to make it stop emitting
-         * UBX after we've told it to start. Turning off the UBX protocol
-         * mask, by itself, seems to be ineffective.
+         * UBX after we've told it to start.  But do not mung the
+         * protocol out mask, that breaks things.
          */
 
         unsigned char msg[3];
@@ -2974,6 +2977,7 @@ static void ubx_cfg_prt(struct gps_device_t *session,
         msg[2] = 0x01;          /* rate */
         (void)ubx_write(session, 0x06u, 0x01, msg, 3);
 
+        // FIXME: what if we do not know the protver??
         /* UBX-NAV-SOL deprecated in u-blox 6, gone in u-blox 9.
          * Use UBX-NAV-PVT after u-blox 7 */
         if (10 > session->driver.ubx.protver) {
@@ -3007,6 +3011,7 @@ static void ubx_cfg_prt(struct gps_device_t *session,
         msg[2] = 0x01;          /* rate */
         (void)ubx_write(session, 0x06u, 0x01, msg, 3);
 
+        // FIXME: what if we do not know the protver??
         /* UBX-NAV-SVINFO deprecated in u-blox 8, gone in u-blox 9.
          * Use UBX-NAV-SAT after u-blox 7 */
         if (10 > session->driver.ubx.protver) {
