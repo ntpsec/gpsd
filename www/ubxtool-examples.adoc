@@ -330,255 +330,6 @@ UBX-CFG-VALGET:
     item CFG-RATE-MEAS/0x30210001 val 10000
 ----
 
-
-== Constellations
-
-For unknown reasons, one of the first things newbies want to play with
-is the constellation settings.  If you are headed to the polar regions,
-into space, or to Asia, then these settings will be of interest to you.
-Otherwise, unless you have a Rubidium atomic clock handy, or run 12-hour
-experiments with gpsprof, it will be hard for you to improve on the
-defaults.  If you still must fiddle, then read on, after completing the
-above section on Initial Setup.
-
-=== Changing Constellations
-
-First you must understand what your GNSS receiver is capable of.  Find
-this out with the UBX-MON-GNSS message.
-
-----
-$ ubxtool -p MON-GNSS
-----
-
-If your receiver does not return an ACK-ACK message, then it is 7-series
-or earlier, and only receives from GPS satellites.  Owners of 7-series,
-or older receivers can stop reading this section now.
-
-A u-blox 8 may return something like this:
-
-----
-UBX-MON-GNSS:
-   version 0 supported 0x7 defaultGnss 0x3 enabled 0x3
-   simultaneous 2 reserved1 0 0 0
-     supported (GPS Glonass Beidou)
-     defaultGnss (GPS Glonass)
-     enabled (GPS Glonass)
-----
-
-That 8 can support GPS, GLONASS, and BeiDou, but only two at a time.
-
-A u-blox 9 might return something like this:
-
-----
-UBX-MON-GNSS:
-   version 0 supported 0xf defaultGnss 0xf enabled 0xd
-   simultaneous 4 reserved1 0 0 0
-     supported (GPS Glonass Beidou Galileo)
-     defaultGnss (GPS Glonass Beidou Galileo)
-     enabled (GPS Beidou Galileo)
-----
-
-That 9 can support GPS, GLONASS, BeiDou, and Galileo, and all at the same
-time.  But in that case, GLONASS is turned off.
-
-There are more details to see with UBX-CFG-GNSS.  A u-blox 8 might
-show:
-
-----
-$ ubxtool -p CFG-GNSS -v 2
-[...]
-UBX-CFG-GNSS:
- msgVer 0  numTrkChHw 32 numTrkChUse 32 numConfigBlocks 5
-  gnssId 0 TrkCh  8 maxTrCh 16 reserved 0 Flags x01010001
-   GPS L1C/A enabled
-  gnssId 1 TrkCh  1 maxTrCh  3 reserved 0 Flags x01010001
-   SBAS L1C/A enabled
-  gnssId 3 TrkCh  8 maxTrCh 16 reserved 0 Flags x01010000
-   BeiDou B1I
-  gnssId 5 TrkCh  0 maxTrCh  3 reserved 0 Flags x01010001
-   QZSS L1C/A enabled
-  gnssId 6 TrkCh  8 maxTrCh 14 reserved 0 Flags x01010001
-   GLONASS L1 enabled
-----
-
-That shows 5 constellations, not 2.  Since GPS, SBAS and QZSS all use
-the same frequency and modulation, they were lumped together by MON-GNSS
-as simply GPS.
-
-An L2 capable 9-series may look like this:
-
-----
-UBX-CFG-GNSS:
- msgVer 0  numTrkChHw 60 numTrkChUse 60 numConfigBlocks 5
-  gnssId 0 TrkCh  8 maxTrCh 16 reserved 0 Flags x11110001
-   GPS L1C/A L2C enabled
-  gnssId 2 TrkCh 10 maxTrCh 18 reserved 0 Flags x21210001
-   Galileo E1 E5b enabled
-  gnssId 3 TrkCh  4 maxTrCh  5 reserved 0 Flags x11010001
-   BeiDou B1I enabled
-  gnssId 5 TrkCh  0 maxTrCh  3 reserved 0 Flags x11110001
-   QZSS L1C/A L2C enabled
-  gnssId 6 TrkCh  8 maxTrCh 12 reserved 0 Flags x11110001
-   GLONASS L1 L2 enabled
-----
-
-There are several things to note.  SBAS is not shown.  Outside of FAA
-requirements, SBAS no longer has any value to the user, and is simply
-not supported.  Multiple signals per constellation are shown, and can be
-individually enabled.
-
-=== Changing Constellations
-
-The 9-series receives a large number of signals in parallel, so other than
-for testing, there is no need to change the defaults that listen to
-everything.
-
-Stepping back a bit, the 8-series is more problematic.  Many of them
-can only listen to two out of the three possible frequency bands:  GPS,
-GLONASS and BeiDou.  Most default to GPS and GLONASS, but GPS and Beidou
-may work better.  This is partly because most GPS-only antenna can
-receiver BeiDou, but fail to receive GLONASS.  Partly because BeiDou and
-GLONASS sats cover different regions of the earth.
-
-If we first try to enable BeiDou, that will fail, as that would enable
-3 constellations when only 2 are supported.  So disable GLONASS, then
-enable BeiDou, then check.  Always check as u-blox does not reliably report
-errors.
-
-----
-$ ubxtool -d GLONASS
-[...]
-$ ubxtool -e BEIDOU
-[...]
-$ ubxtool -p CFG-GNSS
-[...]
-UBX-CFG-GNSS:
- msgVer 0  numTrkChHw 32 numTrkChUse 32 numConfigBlocks 5
-  gnssId 0 TrkCh  8 maxTrCh 16 reserved 0 Flags x01010001
-   GPS L1C/A enabled
-  gnssId 1 TrkCh  1 maxTrCh  3 reserved 0 Flags x01010001
-   SBAS L1C/A enabled
-  gnssId 3 TrkCh  2 maxTrCh 16 reserved 0 Flags x01010001
-   BeiDou B1I enabled
-  gnssId 5 TrkCh  0 maxTrCh  3 reserved 0 Flags x01010001
-   QZSS L1C/A enabled
-  gnssId 6 TrkCh  8 maxTrCh 14 reserved 0 Flags x01010000
-   GLONASS L1
-----
-
-After a few minutes, if you are in a location which BeiDou covers, then
-you should start to see BeiDou sats in the cgps sat list.  The 8-series
-has many other constraints on setting CFG-GNSS, the masochistic will
-need to spend a lot of quality time with the u-blox documentation to
-lean the many ways to shoot yourself in the foot.
-
-While the need for changing what the 9-series listens for is less, the
-complexity of doing so is increased.  Not only must the constellation
-be selected, but also the signals within the constellation.
-
-Let us disable GLONASS on a ZED-F9P, then enable it, and check the
-results:
-
-----
-$ ubxtool -d GLONASS
-[...]
-$ ubxtool -e GLONASS
-[...]
-$ ubxtool -p CFG-GNSS
-[...]
-UBX-CFG-GNSS:
- msgVer 0  numTrkChHw 60 numTrkChUse 60 numConfigBlocks 5
-  gnssId 0 TrkCh  8 maxTrCh 16 reserved 0 Flags x11110001
-   GPS L1C/A L2C enabled
-  gnssId 2 TrkCh 10 maxTrCh 18 reserved 0 Flags x21210001
-   Galileo E1 E5b enabled
-  gnssId 3 TrkCh  4 maxTrCh  5 reserved 0 Flags x11010001
-   BeiDou B1I enabled
-  gnssId 5 TrkCh  0 maxTrCh  3 reserved 0 Flags x11110001
-   QZSS L1C/A L2C enabled
-  gnssId 6 TrkCh  8 maxTrCh 12 reserved 0 Flags x11110000
-   GLONASS L1 L2
-----
-
-Note that GLONASS is still disabled.  Determining why is left as an
-exercise to the reader.  The receiver must be told to enable both
-frequencies before it complies:
-
-----
-$ ubxtool -e GLONASS,2
-[...]
-$ ubxtool -p CFG-GNSS
-[...]
-UBX-CFG-GNSS:
- msgVer 0  numTrkChHw 60 numTrkChUse 60 numConfigBlocks 5
-  gnssId 0 TrkCh  8 maxTrCh 16 reserved 0 Flags x11110001
-   GPS L1C/A L2C enabled
-  gnssId 2 TrkCh 10 maxTrCh 18 reserved 0 Flags x21210001
-   Galileo E1 E5b enabled
-  gnssId 3 TrkCh  4 maxTrCh  5 reserved 0 Flags x11010001
-   BeiDou B1I enabled
-  gnssId 5 TrkCh  0 maxTrCh  3 reserved 0 Flags x11110001
-   QZSS L1C/A L2C enabled
-  gnssId 6 TrkCh  8 maxTrCh 12 reserved 0 Flags x11110001
-   GLONASS L1 L2 enabled
-----
-
-Another reason to always check your work when using ubxtool.
-
-=== Changing Constellations with Configuration Items
-
-The astute will have noticed that the canned ubxtool commands, like
-"-e GLONASS", send one or binary messages that may change a handful
-or variables at once.  The 9-series avoids this mess with Configuration
-Items.  These allow you to get, set and delete individual settings in
-the receiver.  before continuing this section, read the ubxtool
-man page on Configuration Items.
-
-The CFG-SIGNAL Configuration Item group includes the CFG-GNSS items
-of interest here.  So take a look at them, in the ram layer:
-
-----
-$ ubxtool -g CFG-SIGNAL,0
-[...]
-UBX-CFG-VALGET:
- version 1 layer 0 position 0
-  layers (ram)
-    item CFG-SIGNAL-GPS_L1CA_ENA/0x10310001 val 1
-    item CFG-SIGNAL-GPS_L2C_ENA/0x10310003 val 1
-    item CFG-SIGNAL-GAL_E1_ENA/0x10310007 val 1
-    item CFG-SIGNAL-GAL_E5B_ENA/0x1031000a val 1
-    item CFG-SIGNAL-BDS_B1_ENA/0x1031000d val 1
-    item CFG-SIGNAL-BDS_B2_ENA/0x1031000e val 0
-    item CFG-SIGNAL-QZSS_L1CA_ENA/0x10310012 val 1
-    item CFG-SIGNAL-QZSS_L2C_ENA/0x10310015 val 1
-    item CFG-SIGNAL-GLO_L1_ENA/0x10310018 val 1
-    item CFG-SIGNAL-GLO_L2_ENA/0x1031001a val 1
-    item CFG-SIGNAL-GPS_ENA/0x1031001f val 1
-    item CFG-SIGNAL-GAL_ENA/0x10310021 val 1
-    item CFG-SIGNAL-BDS_ENA/0x10310022 val 1
-    item CFG-SIGNAL-QZSS_ENA/0x10310024 val 1
-    item CFG-SIGNAL-GLO_ENA/0x10310025 val 1
-    item CFG-SIGNAL-39/0x10310027 val 1
-[...]
-----
-
-Notice that the BeiDou B2 signal is not enabled.  That might be because
-when the firmware was written there were not B2 signals from space to
-test.  Or maybe not, who knows, but we want to enable it to see if
-anything changes.  So we will use the "-z" command to enable it, and
-the "-g" command to check it in layer 0.
-
-----
-$ ubxtool -z CFG-SIGNAL-BDS_B2_ENA,1
-[...]
-$ ubxtool -g CFG-SIGNAL-BDS_B2_ENA,0
-[...]
-UBX-CFG-VALGET:
- version 1 layer 0 position 0
-  layers (ram)
-    item CFG-SIGNAL-BDS_B2_ENA/0x1031000e val 1
-----
-
 == Logging
 
 Sometimes you want your GNSS receiver to be able to log PVT fixes for
@@ -894,6 +645,426 @@ End batching:
 
 ----
 $ ubxtool -d BATCH
+----
+
+== Survey-In and RTCM
+
+Sometimes your GNSS antenna is fixed and instead of having your receiver
+compute its position, you want it to use the known position to provide a
+more accurate PPS.  Or to compute the errors it sees in the signals it
+measures.  Then transmit those corrections to a nearby receiver.
+
+The receiver with the fixed antenna is called the base, and the nearby
+receiver is a rover.  The corrections are usually in one of the many
+RTCM2 or RTCM3 variants.
+
+Be sure you have completed the instructions in the section Initial Setup
+before continuing here.  To understand the following example you should
+have read the Survey-in section from the u-blox documentation for your
+receiver.
+
+=== Survey-In and RTCM Prerequisites
+
+For base mode, you need a u-blox receiver that supports UBX-CFG-TMODE2
+or UBX-CFG-TMODE3. This is usually limited to Time & Frequency Sync, Time
+Sync, or High Precision products.
+
+Your receiver supports the High Precision messages if it answers the
+UBX-NAV-SVIN message:
+
+----
+$ ubxtool -p NAV-SVIN -P 27.11
+ubxtool: poll NAV-SVIN
+
+sent:
+UBX-NAV-SVIN:
+  Poll request
+
+[...]
+UBX-NAV-SVIN:
+  version 0 reserved1[0 0 0] iTOW 256297000 dur 100
+  meanX -238605675 meanY -392219737 meanZ 441436428
+  meanXHP -30 meanYHP 9 meanZHP -14 reserved2 0 meanAcc 199922
+  obs 101 valid 1 active 0
+----
+
+Your receiver supports the Timing messages if it answers the
+UBX-TIM-SVIN message:
+
+----
+# ubxtool -p TIM-SVIN -P 22
+ubxtool: poll TIM-SVIN
+
+sent:
+UBX-TIM-SVIN:
+  Poll request
+[...]
+UBX-TIM-SVIN:
+  dur 30 meanX -238607642 meanY -392219170 meanZ 441436506 meanV 163464256
+  obs 31 valid 0 active 0
+----
+
+If your receiver responds to neither request, then you can use Survey-in.
+
+=== Survey-In Configuration
+
+If your receiver responded to UBX-NAV-SVIN, then you start the default
+survey this way:
+
+----
+# ubxtool -e SURVEYIN3 -P 27
+ubxtool: enable SURVEYIN3
+
+sent:
+UBX-CFG-TMODE3:
+  version 0 reserved1 0 flags x1
+  ecefXOrLat 0 ecefYOrLon 0 ecefZOrAlt 0
+  ecefXOrLatHP 0 ecefYOrLonHP 0 ecefZOrAltHP 0
+  reserved2 0 fixedPosAcc 0 svinMinDur 300 svinAccLimit 500000
+  reserved3 0 0
+
+UBX-ACK-ACK:
+  ACK to Class x06 (CFG) ID x71 (TMODE3)
+----
+
+For receivers that responded to UBX-TIM-SVIN, simply change SURVEYIN3 to
+SURVEYIN.  You can optionally provide the svinMinDur and svinAccLimit
+variables on the command line.  For example, to survey-in for 60 seconds
+and 20 meters accuracy:
+
+----
+$ ubxtool -e SURVEYIN3,60,200000  -v 2 -P 27
+ubxtool: enable SURVEYIN3,60,200000
+[...]
+----
+
+To check the progress of your survey:
+
+----
+$ ubxtool -p NAV-SVIN -P 27
+ubxtool: poll NAV-SVIN
+
+sent:
+UBX-NAV-SVIN:
+  Poll request
+[...]
+UBX-NAV-SVIN:
+  version 0 reserved1[0 0 0] iTOW 257578000 dur 23
+  meanX -238605582 meanY -392219750 meanZ 441436474
+  meanXHP -46 meanYHP -48 meanZHP -50 reserved2 0 meanAcc 392629
+  obs 23 valid 0 active 1
+----
+
+Replace NAV-SVIN with TIM-SVIN above for Timing products. "active 1"
+tells you a survey-in is in progress, but "valid 0" tells you it is
+not complete.  It may never complete if it cannot reach the position
+accuracy requested.
+
+Your survey is complete when valid is 1.  At that point NAV-PVT will
+show a fixType of 5 to show you it has entered fixed base mode.
+
+----
+$ ubxtool -p NAV-SVIN -P 27
+[...]
+UBX-NAV-SVIN:
+  version 0 reserved1[0 0 0] iTOW 260515000 dur 300
+  meanX -238605429 meanY -392219715 meanZ 441436264
+  meanXHP -39 meanYHP 17 meanZHP -14 reserved2 0 meanAcc 328065
+  obs 301 valid 1 active 0
+
+UBX-NAV-PVT:
+  iTOW 260516000 time 2020/6/3  0:21:38 valid x37
+  tAcc 26 nano -29221 fixType 5 flags x1 flags2 xea
+  numSV 19 lon -1213140873 lat 440688410 height 1109817
+  hMSL 1131166 hAcc 26786 vAcc 18941
+  velN 0 velE 0 velD 0 gSpeed 0 headMot 33945561
+  sAcc 10 headAcc 16986464 pDOP 9999 reserved1 0 26042 11331
+  headVeh 2900837 magDec 0 magAcc 0
+    valid (validDate ValidTime fullyResolved) fixType (Surveyed)
+    flags (gnssFixOK)
+    flags2 (confirmedAvai confirmedDate confirmedTime)
+    psmState (Not Active)
+    carrSoln (None)
+----
+
+=== RTCM Configuration
+
+TBD.
+
+=== Exiting Survey-in
+
+To restore your receiver to normal mode:
+
+----
+$ ubxtool -d SURVEYIN3
+ubxtool: disable SURVEYIN3
+
+sent:
+UBX-CFG-TMODE3:
+  version 0 reserved1 0 flags x0
+  ecefXOrLat 0 ecefYOrLon 0 ecefZOrAlt 0
+  ecefXOrLatHP 0 ecefYOrLonHP 0 ecefZOrAltHP 0
+  reserved2 0 fixedPosAcc 0 svinMinDur 300 svinAccLimit 50000
+  reserved3 0 0
+
+UBX-ACK-ACK:
+  ACK to Class x06 (CFG) ID x71 (TMODE3)
+----
+
+Or for a Timing product:
+
+----
+$ ubxtool -d SURVEYIN2
+ubxtool: disable SURVEYIN2
+[...]
+----
+
+== Constellations
+
+For unknown reasons, one of the first things newbies want to play with
+is the constellation settings.  If you are headed to the polar regions,
+into space, or to Asia, then these settings will be of interest to you.
+Otherwise, unless you have a Rubidium atomic clock handy, or run 12-hour
+experiments with gpsprof, it will be hard for you to improve on the
+defaults.  If you still must fiddle, then read on, after completing the
+above section on Initial Setup.
+
+=== Changing Constellations
+
+First you must understand what your GNSS receiver is capable of.  Find
+this out with the UBX-MON-GNSS message.
+
+----
+$ ubxtool -p MON-GNSS
+----
+
+If your receiver does not return an ACK-ACK message, then it is 7-series
+or earlier, and only receives from GPS satellites.  Owners of 7-series,
+or older receivers can stop reading this section now.
+
+A u-blox 8 may return something like this:
+
+----
+UBX-MON-GNSS:
+   version 0 supported 0x7 defaultGnss 0x3 enabled 0x3
+   simultaneous 2 reserved1 0 0 0
+     supported (GPS Glonass Beidou)
+     defaultGnss (GPS Glonass)
+     enabled (GPS Glonass)
+----
+
+That 8 can support GPS, GLONASS, and BeiDou, but only two at a time.
+
+A u-blox 9 might return something like this:
+
+----
+UBX-MON-GNSS:
+   version 0 supported 0xf defaultGnss 0xf enabled 0xd
+   simultaneous 4 reserved1 0 0 0
+     supported (GPS Glonass Beidou Galileo)
+     defaultGnss (GPS Glonass Beidou Galileo)
+     enabled (GPS Beidou Galileo)
+----
+
+That 9 can support GPS, GLONASS, BeiDou, and Galileo, and all at the same
+time.  But in that case, GLONASS is turned off.
+
+There are more details to see with UBX-CFG-GNSS.  A u-blox 8 might
+show:
+
+----
+$ ubxtool -p CFG-GNSS -v 2
+[...]
+UBX-CFG-GNSS:
+ msgVer 0  numTrkChHw 32 numTrkChUse 32 numConfigBlocks 5
+  gnssId 0 TrkCh  8 maxTrCh 16 reserved 0 Flags x01010001
+   GPS L1C/A enabled
+  gnssId 1 TrkCh  1 maxTrCh  3 reserved 0 Flags x01010001
+   SBAS L1C/A enabled
+  gnssId 3 TrkCh  8 maxTrCh 16 reserved 0 Flags x01010000
+   BeiDou B1I
+  gnssId 5 TrkCh  0 maxTrCh  3 reserved 0 Flags x01010001
+   QZSS L1C/A enabled
+  gnssId 6 TrkCh  8 maxTrCh 14 reserved 0 Flags x01010001
+   GLONASS L1 enabled
+----
+
+That shows 5 constellations, not 2.  Since GPS, SBAS and QZSS all use
+the same frequency and modulation, they were lumped together by MON-GNSS
+as simply GPS.
+
+An L2 capable 9-series may look like this:
+
+----
+UBX-CFG-GNSS:
+ msgVer 0  numTrkChHw 60 numTrkChUse 60 numConfigBlocks 5
+  gnssId 0 TrkCh  8 maxTrCh 16 reserved 0 Flags x11110001
+   GPS L1C/A L2C enabled
+  gnssId 2 TrkCh 10 maxTrCh 18 reserved 0 Flags x21210001
+   Galileo E1 E5b enabled
+  gnssId 3 TrkCh  4 maxTrCh  5 reserved 0 Flags x11010001
+   BeiDou B1I enabled
+  gnssId 5 TrkCh  0 maxTrCh  3 reserved 0 Flags x11110001
+   QZSS L1C/A L2C enabled
+  gnssId 6 TrkCh  8 maxTrCh 12 reserved 0 Flags x11110001
+   GLONASS L1 L2 enabled
+----
+
+There are several things to note.  SBAS is not shown.  Outside of FAA
+requirements, SBAS no longer has any value to the user, and is simply
+not supported.  Multiple signals per constellation are shown, and can be
+individually enabled.
+
+=== Changing Constellations
+
+The 9-series receives a large number of signals in parallel, so other than
+for testing, there is no need to change the defaults that listen to
+everything.
+
+Stepping back a bit, the 8-series is more problematic.  Many of them
+can only listen to two out of the three possible frequency bands:  GPS,
+GLONASS and BeiDou.  Most default to GPS and GLONASS, but GPS and Beidou
+may work better.  This is partly because most GPS-only antenna can
+receiver BeiDou, but fail to receive GLONASS.  Partly because BeiDou and
+GLONASS sats cover different regions of the earth.
+
+If we first try to enable BeiDou, that will fail, as that would enable
+3 constellations when only 2 are supported.  So disable GLONASS, then
+enable BeiDou, then check.  Always check as u-blox does not reliably report
+errors.
+
+----
+$ ubxtool -d GLONASS
+[...]
+$ ubxtool -e BEIDOU
+[...]
+$ ubxtool -p CFG-GNSS
+[...]
+UBX-CFG-GNSS:
+ msgVer 0  numTrkChHw 32 numTrkChUse 32 numConfigBlocks 5
+  gnssId 0 TrkCh  8 maxTrCh 16 reserved 0 Flags x01010001
+   GPS L1C/A enabled
+  gnssId 1 TrkCh  1 maxTrCh  3 reserved 0 Flags x01010001
+   SBAS L1C/A enabled
+  gnssId 3 TrkCh  2 maxTrCh 16 reserved 0 Flags x01010001
+   BeiDou B1I enabled
+  gnssId 5 TrkCh  0 maxTrCh  3 reserved 0 Flags x01010001
+   QZSS L1C/A enabled
+  gnssId 6 TrkCh  8 maxTrCh 14 reserved 0 Flags x01010000
+   GLONASS L1
+----
+
+After a few minutes, if you are in a location which BeiDou covers, then
+you should start to see BeiDou sats in the cgps sat list.  The 8-series
+has many other constraints on setting CFG-GNSS, the masochistic will
+need to spend a lot of quality time with the u-blox documentation to
+lean the many ways to shoot yourself in the foot.
+
+While the need for changing what the 9-series listens for is less, the
+complexity of doing so is increased.  Not only must the constellation
+be selected, but also the signals within the constellation.
+
+Let us disable GLONASS on a ZED-F9P, then enable it, and check the
+results:
+
+----
+$ ubxtool -d GLONASS
+[...]
+$ ubxtool -e GLONASS
+[...]
+$ ubxtool -p CFG-GNSS
+[...]
+UBX-CFG-GNSS:
+ msgVer 0  numTrkChHw 60 numTrkChUse 60 numConfigBlocks 5
+  gnssId 0 TrkCh  8 maxTrCh 16 reserved 0 Flags x11110001
+   GPS L1C/A L2C enabled
+  gnssId 2 TrkCh 10 maxTrCh 18 reserved 0 Flags x21210001
+   Galileo E1 E5b enabled
+  gnssId 3 TrkCh  4 maxTrCh  5 reserved 0 Flags x11010001
+   BeiDou B1I enabled
+  gnssId 5 TrkCh  0 maxTrCh  3 reserved 0 Flags x11110001
+   QZSS L1C/A L2C enabled
+  gnssId 6 TrkCh  8 maxTrCh 12 reserved 0 Flags x11110000
+   GLONASS L1 L2
+----
+
+Note that GLONASS is still disabled.  Determining why is left as an
+exercise to the reader.  The receiver must be told to enable both
+frequencies before it complies:
+
+----
+$ ubxtool -e GLONASS,2
+[...]
+$ ubxtool -p CFG-GNSS
+[...]
+UBX-CFG-GNSS:
+ msgVer 0  numTrkChHw 60 numTrkChUse 60 numConfigBlocks 5
+  gnssId 0 TrkCh  8 maxTrCh 16 reserved 0 Flags x11110001
+   GPS L1C/A L2C enabled
+  gnssId 2 TrkCh 10 maxTrCh 18 reserved 0 Flags x21210001
+   Galileo E1 E5b enabled
+  gnssId 3 TrkCh  4 maxTrCh  5 reserved 0 Flags x11010001
+   BeiDou B1I enabled
+  gnssId 5 TrkCh  0 maxTrCh  3 reserved 0 Flags x11110001
+   QZSS L1C/A L2C enabled
+  gnssId 6 TrkCh  8 maxTrCh 12 reserved 0 Flags x11110001
+   GLONASS L1 L2 enabled
+----
+
+Another reason to always check your work when using ubxtool.
+
+=== Changing Constellations with Configuration Items
+
+The astute will have noticed that the canned ubxtool commands, like
+"-e GLONASS", send one or binary messages that may change a handful
+or variables at once.  The 9-series avoids this mess with Configuration
+Items.  These allow you to get, set and delete individual settings in
+the receiver.  before continuing this section, read the ubxtool
+man page on Configuration Items.
+
+The CFG-SIGNAL Configuration Item group includes the CFG-GNSS items
+of interest here.  So take a look at them, in the ram layer:
+
+----
+$ ubxtool -g CFG-SIGNAL,0
+[...]
+UBX-CFG-VALGET:
+ version 1 layer 0 position 0
+  layers (ram)
+    item CFG-SIGNAL-GPS_L1CA_ENA/0x10310001 val 1
+    item CFG-SIGNAL-GPS_L2C_ENA/0x10310003 val 1
+    item CFG-SIGNAL-GAL_E1_ENA/0x10310007 val 1
+    item CFG-SIGNAL-GAL_E5B_ENA/0x1031000a val 1
+    item CFG-SIGNAL-BDS_B1_ENA/0x1031000d val 1
+    item CFG-SIGNAL-BDS_B2_ENA/0x1031000e val 0
+    item CFG-SIGNAL-QZSS_L1CA_ENA/0x10310012 val 1
+    item CFG-SIGNAL-QZSS_L2C_ENA/0x10310015 val 1
+    item CFG-SIGNAL-GLO_L1_ENA/0x10310018 val 1
+    item CFG-SIGNAL-GLO_L2_ENA/0x1031001a val 1
+    item CFG-SIGNAL-GPS_ENA/0x1031001f val 1
+    item CFG-SIGNAL-GAL_ENA/0x10310021 val 1
+    item CFG-SIGNAL-BDS_ENA/0x10310022 val 1
+    item CFG-SIGNAL-QZSS_ENA/0x10310024 val 1
+    item CFG-SIGNAL-GLO_ENA/0x10310025 val 1
+    item CFG-SIGNAL-39/0x10310027 val 1
+[...]
+----
+
+Notice that the BeiDou B2 signal is not enabled.  That might be because
+when the firmware was written there were not B2 signals from space to
+test.  Or maybe not, who knows, but we want to enable it to see if
+anything changes.  So we will use the "-z" command to enable it, and
+the "-g" command to check it in layer 0.
+
+----
+$ ubxtool -z CFG-SIGNAL-BDS_B2_ENA,1
+[...]
+$ ubxtool -g CFG-SIGNAL-BDS_B2_ENA,0
+[...]
+UBX-CFG-VALGET:
+ version 1 layer 0 position 0
+  layers (ram)
+    item CFG-SIGNAL-BDS_B2_ENA/0x1031000e val 1
 ----
 
 
