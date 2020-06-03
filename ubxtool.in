@@ -6569,15 +6569,21 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
     def send_able_rtcm3(self, able, args):
         """dis/enable RTCM3 1005, 1077, 1087, 1230 messages"""
 
+        # protVer 20+, High Precision only
+        # No u-blox outputs RTCM2
         # USB ONLY!
 
         if able:
             rate = 1
-            # UBX-CFG-PRT
-            # Ensures RTCM3 output (all) are set (outProtoMask)
+            # UBX-CFG-PRT, USB
+            # can't really do other portIDs as the messages are different
+            # and need data we do not have.
+            # does not seem to hurt to enable all in and out, even unsupported
             m_data = bytearray(20)
             m_data[0] = 0x03         # default to USB port
-            m_data[12] = 0x23        # in: RTCM3, NMEA and UBX
+            m_data[12] = 0x27        # in: RTCM3, RTCM2, NMEA and UBX
+            # Ensures RTCM3 output (all) are set (outProtoMask)
+            # no u-blox has RTCM2 out
             m_data[14] = 0x23        # out:  RTCM3, NMEA and UBX
             gps_model.gps_send(0x06, 0x00, m_data)
         else:
@@ -6596,7 +6602,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         # 1230, GLONASS code-phase biases
         m_data = bytearray([0xf5, 0xe6, rate])
 
-        # we skip Galileo or BeiDou for now
+        # we skip Galileo or BeiDou for now, unsupported by u-blox rover
 
         # ZED-F9P rover requires MSM7 and 4072,0 or 4072,1
         # 4072,0
