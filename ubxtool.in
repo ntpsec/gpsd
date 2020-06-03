@@ -6695,7 +6695,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         gps_model.gps_send(6, 0x3d, m_data)
 
     def send_able_tmode3(self, able, args):
-        """SURVEYIN, UBX-CFG-TMODE3, set time mode 3 config"""
+        """SURVEYIN3, UBX-CFG-TMODE3, set time mode 3 config"""
 
         m_data = bytearray(40)
 
