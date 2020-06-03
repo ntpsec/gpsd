@@ -6569,6 +6569,8 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
     def send_able_rtcm3(self, able, args):
         """dis/enable RTCM3 1005, 1077, 1087, 1230 messages"""
 
+        # USB ONLY!
+
         if able:
             rate = 1
             # UBX-CFG-PRT
@@ -7365,20 +7367,24 @@ Always double check with "-p CFG-GNSS".
         # en/dis able TMODE2 Survey-in
         "SURVEYIN": {"command": send_able_tmode2,
                      "help": "Survey-in mode with TMODE2."
-                             " SURVEYIN2,svinMinDur,svinAccLimit\n   "
-                             "                Default svinMinDur 300 seconds\n"
-                             "                   Default svinAccLimit 50000",
+                             " SURVEYIN2[,svinMinDur[,svinAccLimit]]\n"
+                             "                    "
+                             "Default svinMinDur 300 seconds\n"
+                             "                    "
+                             "Default svinAccLimit 50000",
                      "args": 1},
         # en/dis able TMODE3 Survey-in
         "SURVEYIN3": {"command": send_able_tmode3,
                       "help": "Survey-in mode with TMODE3."
-                              " SURVEYIN3,svinMinDur,svinAccLimit\n    "
-                              "               Default svinMinDur 300 seconds\n"
-                              "                   Default svinAccLimit 500000",
+                              " SURVEYIN3[,svinMinDur[,svinAccLimit]]\n"
+                              "                    "
+                              "Default svinMinDur 300 seconds\n"
+                              "                    "
+                              "Default svinAccLimit 500000",
                       "args": 1},
         # en/dis able RTCM3 messages 1005, 1077, 1087, 1230
         "RTCM3": {"command": send_able_rtcm3,
-                  "help": "basic RTCM messages"},
+                  "help": "required RTCM3 messages. USB port only"},
     }
     commands = {
         # UBX-CFG-RST
