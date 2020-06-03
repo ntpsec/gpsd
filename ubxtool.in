@@ -6568,29 +6568,39 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
 
     def send_able_rtcm3(self, able, args):
         """dis/enable RTCM3 1005, 1077, 1087, 1230 messages"""
-        # FIXME: Change outProtoMask correctly
+
         if able:
             rate = 1
+            # UBX-CFG-PRT
             # Ensures RTCM3 output (all) are set (outProtoMask)
             m_data = bytearray(20)
-            m_data[0] = 0x03
-            m_data[12] = 0x23
-            m_data[14] = 0x23
+            m_data[0] = 0x03         # default to USB port
+            m_data[12] = 0x23        # in: RTCM3, NMEA and UBX
+            m_data[14] = 0x23        # out:  RTCM3, NMEA and UBX
             gps_model.gps_send(0x06, 0x00, m_data)
         else:
+            # leave  UBX-CFG-PRT alone
             rate = 0
 
-        # 1005
+        # 1005, Stationary RTK reference station ARP
         m_data = bytearray([0xf5, 0x05, rate])
         gps_model.gps_send(6, 1, m_data)
-        # 1077
+        # 1077, GPS MSM7
         m_data = bytearray([0xf5, 0x4d, rate])
         gps_model.gps_send(6, 1, m_data)
-        # 1087
+        # 1087, GLONASS MSM7
         m_data = bytearray([0xf5, 0x57, rate])
         gps_model.gps_send(6, 1, m_data)
-        # 1230
+        # 1230, GLONASS code-phase biases
         m_data = bytearray([0xf5, 0xe6, rate])
+
+        # we skip Galileo or BeiDou for now
+
+        # ZED-F9P rover requires MSM7 and 4072,0 or 4072,1
+        # 4072,0
+        m_data = bytearray([0xf5, 0xfe, rate])
+        # 4072,1
+        m_data = bytearray([0xf5, 0xfd, rate])
         gps_model.gps_send(6, 1, m_data)
 
     def send_able_rawx(self, able, args):
