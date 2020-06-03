@@ -787,9 +787,42 @@ UBX-NAV-PVT:
     carrSoln (None)
 ----
 
-=== RTCM Configuration
+=== RTCM3 Configuration
 
-TBD.
+This RTCM3 example currently only works on the USB port of a 9-series
+Time, Frequency and Time, or High Precision device.  It generates a
+LOT of data.
+
+To enable the RTCM 3 output on the USB port:
+
+----
+$ ubxtool -e RTCM3 -P 27 -v 2 
+ubxtool: enable RTCM3
+
+sent:
+UBX-CFG-PRT:
+ PortID 3 (USB) reserved1 0 txReady 0x0
+  reserved2 [0 0]
+  inProtoMask 0x23 outProtoMask 0x23
+  reserved3 0 reserved4 0
+    inProtoMask (UBX NMEA RTCM3)
+    outProtoMask (UBX NMEA RTCM3)
+
+sent:
+UBX-CFG-MSG:
+  Rate set Class xf5 (RTCM) ID x05 (1005) Rate 1
+[A lot of RTCM3 messages are enabled ...]
+RTCM3 packet: type 1077
+[A ton of RTCM3 messages are output ...]
+----
+
+To be able to do anything else, you must disable the RTCM3:
+
+----
+$ ubxtool -d RTCM3 -P 27 -v 2 
+ubxtool: disable RTCM3
+[...]
+----
 
 === Exiting Survey-in
 
