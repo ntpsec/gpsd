@@ -658,6 +658,9 @@ The receiver with the fixed antenna is called the base, and the nearby
 receiver is a rover.  The corrections are usually in one of the many
 RTCM2 or RTCM3 variants.
 
+Some u-blox receivers with protocol versions of 20 or greater output
+RTCM3 corrections.  None output RTCM2 corrections.
+
 Be sure you have completed the instructions in the section Initial Setup
 before continuing here.  To understand the following example you should
 have read the Survey-in section from the u-blox documentation for your
