@@ -2,7 +2,7 @@
 :description: How to set up an NTP Stratum 1 server using GPSD.
 :keywords: time, GPSD, NTP, time, precision, 1PPS, PPS, stratum, jitter
 Gary E. Miller <gem@rellim.com>, Eric S. Raymond <esr@thyrsus.com>
-v2.11, June 2018
+3 June 2020
 
 This document is mastered in asciidoc format.  If you are reading it in HTML,
 you can find the original at the GPSD project website.
@@ -299,7 +299,7 @@ the normal modular way, this package installation will suffice.
 
 A normal gpsd build includes support for interpreting 1PPS pulses that
 is mostly autoconfiguring and requires no special setup.  If the
-current system supports pps.
+current system, and GNSS receiver, supports pps.
 
 You can build a version stripped to the mimimum configuration required
 for time service.  This reduces the size of the binary and may be
@@ -310,28 +310,37 @@ functionality will be lost.
 When gpsd is built with timeservice=yes:
 
 1.  The -n (nowait) option is forced: gpsd opens its command-line devices
-    immediately on startup.
+    immediately on startup.  Assuming you do not start gpsd with systemd.
 
-2.  Forces the building of ntpshmmon, cgps and gpsmon.  Those program would
+2.  Forces the building of ntpshmmon and cgps.  Those programs would
     be built by default anyway, unless gpsdclients=no.
 
 3.  The configure will fail if pps is not available.
 
-4.  Most drivers will not be built.  You must specify them when configuring.
+4.  Most drivers will not be built.  You must specify the ones you need
+    when configuring.
 
 To configure the minimal timeservice build:
 
 -----------------------------------------------------------------------------
-scons timeservice=yes nmea0183=yes fixed_port_speed=9600 fixed_stop_bits=1
+$ scons -c
+$ scons timeservice=yes nmea0183=yes
 -----------------------------------------------------------------------------
 
-You may substitute a different GPS (e.g. "ublox" or "sirf"), You can
-also fix the serial parameters to avoid autobauding lag; the code
-assumes 8 bit bytes, so the above locks the daemon to 9600 8N1. Besides
-the daemon, this also builds gpsmon and ntpshmmon.
+You may substitute a different GNSS reciver protocol (e.g. "ublox" or
+"sirf").  Besides the daemon, this also builds cgps and ntpshmmon.
 
 if you do not use timeservice=yes, then make sure the build is with
-pps=yes and ntpshm=yes (the default).
+pps=yes and ntpshm=yes (the defaults).  Like this:
+
+-----------------------------------------------------------------------------
+$ scons -c
+$ scons pps=yes ntpshm=yes
+-----------------------------------------------------------------------------
+
+More complete, and distro specific, builsinstructions can be found in
+the files INSTALL.adoc and build.adoc in the source distribution.
+
 
 === Kernel support
 
@@ -399,12 +408,13 @@ If you choose the ntpd option, it's best to go with the NTPsec version
 rather than legacy ntpd.  NTPsec shares some maintainers with GPSD,
 and has some significant improvements in security and performance.
 
-As of June 2019, NTPsec is available as a package in:
+As of June 2020 2019, NTPsec is available as a package in:
 
-* OpenSUSE
-* Debian (and variants like Ubuntu and Raspbian)
 * Alpine
 * archlinux
+* Debian (and variants like Ubuntu and Raspbian)
+* Gentoo
+* OpenSUSE
 
 If it is not available as a package, you can build it from source,
 <<GITLAB-SOURCE>>, it is not especially difficult.
@@ -502,7 +512,7 @@ If you don't see evidence of incoming PPS, here are some trouble
 sources to check:
 
 1. The skyview of your GPS receiver may be poor.  Suspect this if,
-   when you watch it with gpsmon, it wanders in and out of having a
+   when you watch it with cgps, it wanders in and out of having a
    good 3D fix. Unfortunately, the only fix for this is to re-site
    your GPS where it can see more sky; fortunately, this is not as
    common a problem as it used to be, because modern receivers are
@@ -807,9 +817,9 @@ hardware.
 There is nothing magic about the refid fields; they are just labels
 used for generating reports.  You can name them anything you like.
 
-When you start gpsd, it will wait for a few good fixes before
-attempting to process PPS.  You should run gpsmon or cgps to verify
-your GPS receiver has a 3D lock before worrying about timekeeping.
+When you start gpsd, it will wait for a few good fixes before attempting
+to process PPS.  You should run cgps to verify your GPS receiver has a
+3D lock before worrying about timekeeping.
 
 After starting (as root) ntpd, then gpsd, a listing similar to the one
 below should appear as the output of the command "ntpq -p" (after
