@@ -225,9 +225,12 @@ static void nmea_event_hook(struct gps_device_t *session, event_t event)
 #endif /* ASHTECH_ENABLE */
 #ifdef UBLOX_ENABLE
         case 7:
-            /* probe for UBX -- query port configuration */
+            // probe for UBX
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "=> Probing for UBX\n");
+            // query port configuration UBX-MON-VER
+            (void)ubx_write(session, 0x0a, 0x04, NULL, 0);
+            // query port configuration UBX-CFG-PRT
             (void)ubx_write(session, 0x06, 0x00, NULL, 0);
             break;
 #endif /* UBLOX_ENABLE */
