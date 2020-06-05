@@ -260,12 +260,10 @@ Berlios at <a href="https://marc.info">MARC</a>:
 Please read the section on <a href='#bug-reporting'>Bug reporting</a> before
 posting on the issue tracker.</p>
 
-<p>More information on <a href='@SUPPORT'>gpsd SUPPORT</a> is available
-on the <a href='@SUPPORT'>gpsd SUPPORT</a> page.</p>
 <h2>SUPPORT information</h2>
 
-<p>More information on <a href='@SUPPORT'>gpsd SUPPORT</a> is available
-on the <a href='@SUPPORT'>gpsd SUPPORT</a> page.</p>
+<p>More information on <a href='@SUPPORT@'>gpsd SUPPORT</a> is available
+on the <a href='@SUPPORT@'>gpsd SUPPORT</a> page.</p>
 
 <h1 id='documentation'>Documentation</h1>
 

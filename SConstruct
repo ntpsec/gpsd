@@ -179,7 +179,7 @@ doc_files = {
     'COPYING',
     'NEWS',
     'README.adoc',
-    'SUPPORT.adoc',
+    'www/SUPPORT.adoc',
 }
 
 # doc files to install in share/gpsd/doc
@@ -2645,7 +2645,6 @@ asciidocs = []
 if env.WhereIs('asciidoctor'):
     adocfiles = (('INSTALL', 'installation'),
                  ('README', 'README'),
-                 ('SUPPORT', 'SUPPORT'),
                  ('www/AIVDM', 'AIVDM'),
                  ('www/client-howto', 'client-howto'),
                  ('www/gpsd-time-service-howto', 'gpsd-time-service-howto'),
@@ -2653,6 +2652,7 @@ if env.WhereIs('asciidoctor'):
                  ('www/ppp-howto', 'ppp-howto'),
                  ('www/protocol-evolution', 'protocol-evolution'),
                  ('www/protocol-transition', 'protocol-transition'),
+                 ('www/SUPPORT', 'SUPPORT'),
                  ('www/time-service-intro', 'time-service-intro'),
                  ('www/ubxtool-examples', 'ubxtool-examples'),
                  )
