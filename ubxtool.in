@@ -6601,7 +6601,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         gps_model.gps_send(6, 1, m_data)
         # 1230, GLONASS code-phase biases
         m_data = bytearray([0xf5, 0xe6, rate])
-
+        gps_model.gps_send(6, 1, m_data)
         # we skip Galileo or BeiDou for now, unsupported by u-blox rover
 
         # ZED-F9P rover requires MSM7 and 4072,0 or 4072,1
