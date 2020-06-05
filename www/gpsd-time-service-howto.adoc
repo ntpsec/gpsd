@@ -2,7 +2,7 @@
 :description: How to set up an NTP Stratum 1 server using GPSD.
 :keywords: time, GPSD, NTP, time, precision, 1PPS, PPS, stratum, jitter
 Gary E. Miller <gem@rellim.com>, Eric S. Raymond <esr@thyrsus.com>
-3 June 2020
+5 June 2020
 
 This document is mastered in asciidoc format.  If you are reading it in HTML,
 you can find the original at the GPSD project website.
@@ -17,47 +17,52 @@ up.
 Here is the quick-start sequence. The rest of this document goes
 into more detail about the steps.
 
-1. Ensure that gpsd and either ntpd or chronyd are installed on your
-   system. (Both gpsd and ntpd are pre-installed in many stock Linux
-   distributions; chronyd is normally not.) You don't have to choose
-   which to use yet if you have easy access to both, but knowing which
-   alternatives are readily available to you is a good place to start.
+. Ensure that gpsd and either ntpd or chronyd are installed on your
+  system. (Both gpsd and ntpd are pre-installed in many stock Linux
+  distributions; chronyd is normally not.) You don't have to choose
+  which to use yet if you have easy access to both, but knowing which
+  alternatives are readily available to you is a good place to start.
 
-2. Verify that your gpsd version is at least 3.17.  Many problems are
-   caused by the use of old versions.  When in doubt, reinstall
-   gpsd from the upstream source.  Many distributions ship old
-   and/or broken versions of gpsd.
+. Verify that your gpsd version is at least 3.20.  Many problems are
+  caused by the use of old versions.  When in doubt, reinstall
+  gpsd from the upstream source.  Many distributions ship old
+  and/or broken versions of gpsd.
 
-3. Connect a PPS-capable GPS receiver to one of your serial or USB
-   ports.  A random cheap consumer-grade GPS receiver won't do; you
-   may have to do some hunting to find a usable one.
+. Connect a PPS-capable GPS receiver to one of your serial or USB
+  ports.  A random cheap consumer-grade GPS receiver won't do; you
+  may have to do some hunting to find a usable one.
 
-4. Check that it actually emits PPS by pointing GPSD's gpsmon utility
-   at the port.  If it has a good (3D-mode) fix, lines marked "PPS"
-   should scroll by in the packet-logging window.  A new device out of
-   the box may take up to 30 minutes for the first 3D fix.  If gpsmon
-   shows a 3D fix, but does not show PPS lines, try running ppscheck.
+. Check that it actually emits PPS by pointing GPSD's gpsmon utility
+  at the port.  If it has a good (3D-mode) fix, lines marked "PPS"
+  should scroll by in the packet-logging window.  A new device out of
+  the box may take up to 30 minutes for the first 3D fix.  If gpsmon
+  shows a 3D fix, but does not show PPS lines, try running ppscheck.
 
-5. If you persistently fail to get live PPS, (a) you may have a
-   skyview problem, (b) you may have a cabling problem, (c) your GPS
-   may not support PPS, (d) you may have a gpsd or kernel configuration
-   problem, (e) you may have a device problem, (e) there may be a bug
-   in the core GPSD code used by gpsmon.  These are listed in roughly
-   decreasing probability.  Troubleshoot appropriately.
+. If you persistently fail to get live PPS, (a) you may have a
+  skyview problem, (b) you may have a cabling problem, (c) your GPS
+  may not support PPS, (d) you may have a gpsd or kernel configuration
+  problem, (e) you may have a device problem, (e) there may be a bug
+  in the core GPSD code used by gpsmon.  These are listed in roughly
+  decreasing probability.  Troubleshoot appropriately.
 
-6. Edit your ntpd or chronyd configuration to tell your NTP daemon to
-   listen for time hints. (This step is somewhat tricky.)
+. Edit your ntpd or chronyd configuration to tell your NTP daemon to
+  listen for time hints. (This step is somewhat tricky.)
 
-7. Start up gpsd.  If you are using ntpd, you can use ipcrm(1) to check that
-   verify that the shared-memory segment that gpsd and ntpd want to
-   use to communicate has been attached; or you can impatiently skip
-   to the next step and look for the segment only if that fails.
+. Start up gpsd.  If you are using ntpd, you can use ipcrm(1) to check that
+  verify that the shared-memory segment that gpsd and ntpd want to
+  use to communicate has been attached; or you can impatiently skip
+  to the next step and look for the segment only if that fails.
 
-8. Use ntpq or the chronyc sources command to verify that your device
-   is feeding time corrections to your NTP daemon.
+. Use cgps or xgps to verify that your GNSS receiver has a good 3D fix.
 
-9. (Optional and challenging.) Hand-tune your installation for the
-   best possible performance.
+. Use ntpshmmon to verify that gpsd is sending time corrections to SHM
+  memory.
+
+. Use ntpq or the chronyc sources command to verify that your device
+  is feeding time corrections to your NTP daemon.
+
+. (Optional and challenging.) Hand-tune your installation for the
+  best possible performance.
 
 This document does not attempt to explain all the intricacies of time
 service; it is focused on practical advice for one specific deployment
@@ -596,6 +601,10 @@ computer that's also handling mail or web service or development.
 from what we show you here; ntpd will need to be told different
 shared-memory segment numbers, and chronyd will need a different
 socket location.
+
+4. gpsd will be unable to change to user nobody.  This means gpsd will
+paradoxically run with higher privileges than if it was started as root.
+This increases the attack surface and decreases your security.
 
 You may also find gpsd can't open serial devices at all if your
 OS distribution has done "secure" things with the permissions.
