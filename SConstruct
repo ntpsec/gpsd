@@ -2130,8 +2130,6 @@ binaryinstall.append(LibraryInstall(env, installdir('libdir'), libgps_shared,
 binaryinstall.append(LibraryInstall(env, installdir('libdir'),
                                     packet_ffi_shared,
                                     libgps_version))
-# Work around a minor bug in InstallSharedLib() link handling
-env.AddPreAction(binaryinstall, 'rm -f %s/libgps.*' % (installdir('libdir'), ))
 
 if qt_env:
     binaryinstall.append(LibraryInstall(qt_env, installdir('libdir'),
