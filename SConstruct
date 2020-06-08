@@ -2342,13 +2342,8 @@ matrix_regress = Utility('matrix-regress', [test_matrix], [
     '$SRCDIR/tests/test_matrix --quiet'
 ])
 
-# using regress-drivers requires socket_export being enabled.
-if not env['socket_export'] or not env['python']:
-    announce("GPS regression tests suppressed because socket_export "
-             "or python is off.")
-    gps_regress = None
-    gpsfake_tests = None
-else:
+# using regress-drivers requires socket_export being enabled and Python
+if env['socket_export'] and env['python']:
     # Regression-test the daemon.
     # But first dump the platform and its delay parameters.
     # The ":;" in this production and the later one forestalls an attempt by
@@ -2390,6 +2385,11 @@ else:
                 '$SRCDIR/regress-driver -b $REGRESSOPTS %s' % gps_log_pattern)
     else:
         env.Alias('gps-makeregress', gps_rebuilds)
+else:
+    announce("GPS regression tests suppressed because socket_export "
+             "or python is off.")
+    gps_regress = None
+    gpsfake_tests = None
 
 # To build an individual test for a load named foo.log, put it in
 # test/daemon and do this:
