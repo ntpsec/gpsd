@@ -1621,15 +1621,7 @@ packet_ffi_extension = [
     ]
 
 
-if not env["shared"]:
-    def Library(env, target, sources, version, parse_flags=None):
-        return env.StaticLibrary(target,
-                                 [env.StaticObject(s) for s in sources],
-                                 parse_flags=parse_flags)
-
-    def LibraryInstall(env, libdir, sources, version):
-        return env.Install(libdir, sources)
-else:
+if env["shared"]:
     def Library(env, target, sources, version, parse_flags=None):
         # Note: We have a possibility of getting either Object or file
         # list for sources, so we run through the sources and try to make
@@ -1650,6 +1642,14 @@ else:
         # where VV is libgps_version_current
         inst = env.InstallVersionedLib(libdir, sources, SHLIBVERSION=version)
         return inst
+else:
+    def Library(env, target, sources, version, parse_flags=None):
+        return env.StaticLibrary(target,
+                                 [env.StaticObject(s) for s in sources],
+                                 parse_flags=parse_flags)
+
+    def LibraryInstall(env, libdir, sources, version):
+        return env.Install(libdir, sources)
 
 libgps_shared = Library(env=env,
                         target="gps",
