@@ -1622,7 +1622,7 @@ packet_ffi_extension = [
 
 
 if env["shared"]:
-    def Library(env, target, sources, version, parse_flags=None):
+    def GPSLibrary(env, target, sources, version, parse_flags=None):
         # Note: We have a possibility of getting either Object or file
         # list for sources, so we run through the sources and try to make
         # them into SharedObject instances.
@@ -1637,25 +1637,25 @@ if env["shared"]:
                                  parse_flags=parse_flags,
                                  SHLIBVERSION=version)
 
-    def LibraryInstall(env, libdir, sources, version):
+    def GPSLibraryInstall(env, libdir, sources, version):
         # note: osX lib name s/b libgps.VV.dylib
         # where VV is libgps_version_current
         inst = env.InstallVersionedLib(libdir, sources, SHLIBVERSION=version)
         return inst
 else:
-    def Library(env, target, sources, version, parse_flags=None):
+    def GPSLibrary(env, target, sources, version, parse_flags=None):
         return env.StaticLibrary(target,
                                  [env.StaticObject(s) for s in sources],
                                  parse_flags=parse_flags)
 
-    def LibraryInstall(env, libdir, sources, version):
+    def GPSLibraryInstall(env, libdir, sources, version):
         return env.Install(libdir, sources)
 
-libgps_shared = Library(env=env,
-                        target="gps",
-                        sources=libgps_sources,
-                        version=libgps_version,
-                        parse_flags=rtlibs + libgps_flags)
+libgps_shared = GPSLibrary(env=env,
+                           target="gps",
+                           sources=libgps_sources,
+                           version=libgps_version,
+                           parse_flags=rtlibs + libgps_flags)
 
 env.Clean(libgps_shared, "gps_maskdump.c")
 
@@ -1709,7 +1709,8 @@ if qt_env:
         qtobjects.append(qt_env.SharedObject(src,
                                              CC=compile_with,
                                              CFLAGS=compile_flags))
-    compiled_qgpsmmlib = Library(qt_env, "Qgpsmm", qtobjects, libgps_version)
+    compiled_qgpsmmlib = GPSLibrary(qt_env, "Qgpsmm", qtobjects,
+                                    libgps_version)
     libraries.append(compiled_qgpsmmlib)
 
 # The libraries have dependencies on system libraries
@@ -2125,15 +2126,16 @@ headerinstall = [env.Install(installdir('includedir'), x)
 binaryinstall = []
 binaryinstall.append(env.Install(installdir('sbindir'), sbin_binaries))
 binaryinstall.append(env.Install(installdir('bindir'), bin_binaries))
-binaryinstall.append(LibraryInstall(env, installdir('libdir'), libgps_shared,
-                                    libgps_version))
-binaryinstall.append(LibraryInstall(env, installdir('libdir'),
-                                    packet_ffi_shared,
-                                    libgps_version))
+binaryinstall.append(GPSLibraryInstall(env, installdir('libdir'),
+                                       libgps_shared,
+                                       libgps_version))
+binaryinstall.append(GPSLibraryInstall(env, installdir('libdir'),
+                                       packet_ffi_shared,
+                                       libgps_version))
 
 if qt_env:
-    binaryinstall.append(LibraryInstall(qt_env, installdir('libdir'),
-                         compiled_qgpsmmlib, libgps_version))
+    binaryinstall.append(GPSLibraryInstall(qt_env, installdir('libdir'),
+                                           compiled_qgpsmmlib, libgps_version))
 
 if ((not env['debug'] and not env['profiling'] and not env['nostrip'] and
      not sys.platform.startswith('darwin'))):
