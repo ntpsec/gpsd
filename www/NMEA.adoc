@@ -2731,7 +2731,7 @@ Described in <<MALTESE>>, actually a Maltese government document.
   about the NMEA standard(s) but do not wish to be identified.
 
 - [[[NORWAY]]]
-  "Etterretninger for sjøfarende" Notoces for Mariners, see p26
+  "Etterretninger for sjøfarende" Notices to Mariners, see p26
   https://kartverket.no/efs-documents/editions/2015/efs01-2015.pdf
 
 - [[[TALKERS]]]
