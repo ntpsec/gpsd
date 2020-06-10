@@ -2633,6 +2633,17 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-TIM-VRFY\n");
         break;
 
+    case UBX_SEC_SIGN:
+        GPSD_LOG(LOG_DATA, &session->context->errout, "UBX_SEC_SIGN\n");
+        break;
+    case UBX_SEC_UNIQID:
+        GPSD_LOG(LOG_DATA, &session->context->errout, "UBX_SEC_UNIQID\n");
+        break;
+
+    case UBX_HNR_PVT:
+        GPSD_LOG(LOG_DATA, &session->context->errout, "UBX_HNR_PVT\n");
+        break;
+
     default:
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "UBX: unknown packet id 0x%04hx (length %zd)\n",
