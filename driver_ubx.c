@@ -917,15 +917,11 @@ ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
             mask |= MODE_SET;
         }
         if ((flags & UBX_NAV_PVT_FLAG_DGPS) == UBX_NAV_PVT_FLAG_DGPS) {
-            if (*status != STATUS_DGPS_FIX) {
-                *status = STATUS_DGPS_FIX;
-                mask |= STATUS_SET;
-            }
+            *status = STATUS_DGPS_FIX;
+            mask |= STATUS_SET;
         } else {
-            if (*status != STATUS_FIX) {
-                *status = STATUS_FIX;
-                mask |= STATUS_SET;
-            }
+            *status = STATUS_FIX;
+            mask |= STATUS_SET;
         }
         mask |=   LATLON_SET;
         break;
