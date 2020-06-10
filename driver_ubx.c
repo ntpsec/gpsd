@@ -2969,10 +2969,9 @@ static void ubx_cfg_prt(struct gps_device_t *session,
         msg[2] = 0x01;          /* rate */
         (void)ubx_write(session, 0x06u, 0x01, msg, 3);
 
-        // FIXME: what if we do not know the protver??
         /* UBX-NAV-SOL deprecated in u-blox 6, gone in u-blox 9.
          * Use UBX-NAV-PVT after u-blox 7 */
-        if (10 > session->driver.ubx.protver) {
+        if (0 == session->driver.ubx.protver) {
             /* unknown version, enable both */
             msg[0] = 0x01;              /* class */
             msg[1] = 0x06;              /* msg id  = NAV-SOL */
@@ -3003,10 +3002,9 @@ static void ubx_cfg_prt(struct gps_device_t *session,
         msg[2] = 0x01;          /* rate */
         (void)ubx_write(session, 0x06u, 0x01, msg, 3);
 
-        // FIXME: what if we do not know the protver??
         /* UBX-NAV-SVINFO deprecated in u-blox 8, gone in u-blox 9.
          * Use UBX-NAV-SAT after u-blox 7 */
-        if (10 > session->driver.ubx.protver) {
+        if (0 == session->driver.ubx.protver) {
             /* unknown version, enable both */
             msg[0] = 0x01;              /* class */
             msg[1] = 0x30;              /* msg id  = NAV-SVINFO */
@@ -3054,7 +3052,8 @@ static void ubx_cfg_prt(struct gps_device_t *session,
         msg[2] = 0xff;          /* about every 4 minutes if nav rate is 1Hz */
         (void)ubx_write(session, 0x06, 0x01, msg, 3);
 
-        if (18 <= session->driver.ubx.protver) {
+        if (0 == session->driver.ubx.protver ||
+            18 <= session->driver.ubx.protver) {
             /* first in u-blox 8 */
             /* UBX-NAV-EOE makes a good cycle ender */
             msg[0] = 0x01;              /* class */
