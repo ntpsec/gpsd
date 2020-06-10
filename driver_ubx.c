@@ -297,15 +297,6 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
 
     /* save what we can */
     (void)strlcpy(session->subtype, obuf, sizeof(session->subtype));
-    /* find PROTVER= */
-    cptr = strstr(session->subtype, "PROTVER=");
-    if (NULL != cptr) {
-        int protver = atoi(cptr + 8);
-        if (9 < protver) {
-            /* protver 10, u-blox 5, is the oldest we know */
-            session->driver.ubx.protver = protver;
-        }
-    }
 
     obuf[0] = '\0';
     /* get n number of Extended info strings.  what is max n? */
