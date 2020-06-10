@@ -280,6 +280,7 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
                 size_t data_len)
 {
     size_t n = 0;       /* extended info counter */
+    size_t num_ext = (data_len - 40) / 30;  /* number of extensions */
     char obuf[128];     /* temp version string buffer */
     char *cptr;
 
@@ -292,23 +293,16 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
     /* save SW and HW Version as subtype */
     (void)snprintf(obuf, sizeof(obuf),
                    "SW %.30s,HW %.10s",
-                   (char *)&buf[UBX_PREFIX_LEN + 0],
-                   (char *)&buf[UBX_PREFIX_LEN + 30]);
+                   (char *)&buf[0],
+                   (char *)&buf[30]);
 
     /* save what we can */
     (void)strlcpy(session->subtype, obuf, sizeof(session->subtype));
 
     obuf[0] = '\0';
-    /* get n number of Extended info strings.  what is max n? */
-    for ( n = 0; ; n++ ) {
-        size_t start_of_str = UBX_PREFIX_LEN + 40 + (30 * n);
-
-        // extensions are exactly 30 bytes long
-        /* if gross extension length doesn't look sane, don't proceed here */
-        // FIXME: remove from loop
-        if ( (40 + (30 * n)) >= data_len ) {
-            break;
-        }
+    /* extract Extended info strings. */
+    for ( n = 0; n < num_ext ; n++ ) {
+        size_t start_of_str = 40 + (30 * n);
 
         if (n > 0) {
             // commas between elements
@@ -2390,7 +2384,7 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         break;
     case UBX_MON_VER:
         GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-MON-VER\n");
-        ubx_msg_mon_ver(session, buf, data_len);
+        ubx_msg_mon_ver(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
 
     case UBX_NAV_AOPSTATUS:
