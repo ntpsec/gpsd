@@ -868,6 +868,7 @@ ubx_msg_nav_posecef(struct gps_device_t *session, unsigned char *buf,
  * UBX-NAV-PVT Class 1, ID 7
  *
  * Not in u-blox 5 or 6, present in u-blox 7
+ * u-blox 6 w/ GLONASS, protver 14 have NAV-PVT
  */
 static gps_mask_t
 ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
@@ -889,6 +890,10 @@ ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
         return 0;
     }
 
+    if (14 > session->driver.ubx.protver) {
+        /* this GPS is at least protver 14 */
+        session->driver.ubx.protver = 14;
+    }
     session->driver.ubx.iTOW = getleu32(buf, 0);
     valid = (unsigned int)getub(buf, 11);
     fixType = (unsigned char)getub(buf, 20);
@@ -1520,7 +1525,8 @@ ubx_msg_nav_timegps(struct gps_device_t *session, unsigned char *buf,
 
 /**
  * GPS Satellite Info -- new style UBX-NAV-SAT
- * Not in u-blox 5, protocol version 15+
+ * Not in u-blox 5
+ * Present in u-blox 8,  protocol version 15+
  */
 static gps_mask_t
 ubx_msg_nav_sat(struct gps_device_t *session, unsigned char *buf,
@@ -1534,6 +1540,10 @@ ubx_msg_nav_sat(struct gps_device_t *session, unsigned char *buf,
         return 0;
     }
 
+    if (15 > session->driver.ubx.protver) {
+        /* this GPS is at least protver 15 */
+        session->driver.ubx.protver = 15;
+    }
     session->driver.ubx.iTOW = getles32(buf, 0);
     ver = (unsigned int)getub(buf, 4);
     if (1 != ver) {
@@ -2847,14 +2857,17 @@ static void ubx_cfg_prt(struct gps_device_t *session,
 
     putle32(buf, 4, usart_mode);
 
-    /* enable all input protocols by default */
+    // enable all input protocols by default
+    // RTCM3 is protver 20+
     buf[12] = NMEA_PROTOCOL_MASK | UBX_PROTOCOL_MASK | RTCM_PROTOCOL_MASK |
               RTCM3_PROTOCOL_MASK;
 
     /* enable all input protocols by default
-     * no u-blox has RTCM2 out */
+     * no u-blox has RTCM2 out
+     * RTCM3 is protver 20+ */
     buf[outProtoMask] = NMEA_PROTOCOL_MASK | UBX_PROTOCOL_MASK |
                         RTCM3_PROTOCOL_MASK;
+    // FIXME: use VALGET if protver  24+
     (void)ubx_write(session, 0x06u, 0x00, buf, sizeof(buf));
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -2982,14 +2995,15 @@ static void ubx_cfg_prt(struct gps_device_t *session,
             msg[2] = 0x01;              /* rate */
             (void)ubx_write(session, 0x06u, 0x01, msg, 3);
         } else if (15 > session->driver.ubx.protver) {
-            /* before u-blox 8, just NAV-SOL */
-            /* do not do both to avoid NACKs */
+            /* before u-blox 8, just NAV-SOL
+             * do not do both to avoid NACKs */
             msg[0] = 0x01;              /* class */
             msg[1] = 0x06;              /* msg id  = NAV-SOL */
             msg[2] = 0x01;              /* rate */
             (void)ubx_write(session, 0x06u, 0x01, msg, 3);
         } else {
-            /* u-blox 8 or later */
+            /* u-blox 8 or later
+             * u-blox 6 w/ GLONASS, protver 14 have NAV-PVT */
             msg[0] = 0x01;              /* class */
             msg[1] = 0x07;              /* msg id  = NAV-PVT */
             msg[2] = 0x01;              /* rate */
@@ -3015,8 +3029,8 @@ static void ubx_cfg_prt(struct gps_device_t *session,
             msg[2] = 0x0a;              /* rate */
             (void)ubx_write(session, 0x06u, 0x01, msg, 3);
         } else if (15 > session->driver.ubx.protver) {
-            /* before u-blox 8, just NAV-SVINFO */
-            /* do not do both to avoid NACKs */
+            /* before u-blox 8, just NAV-SVINFO
+             * do not do both to avoid NACKs */
             msg[0] = 0x01;              /* class */
             msg[1] = 0x30;              /* msg id  = NAV-SVINFO */
             msg[2] = 0x0a;              /* rate */
