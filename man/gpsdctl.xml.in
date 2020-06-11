@@ -7,7 +7,7 @@ SPDX-License-Identifier: BSD-2-clause
    "-//OASIS//DTD DocBook XML V4.1.2//EN"
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gpsdctl.8'>
-<refentryinfo><date>30 March 2020</date></refentryinfo>
+<refentryinfo><date>11 June 2020</date></refentryinfo>
 <refmeta>
 <refentrytitle>gpsdctl</refentrytitle>
 <manvolnum>8</manvolnum>
@@ -46,7 +46,7 @@ client requests a watch.</para>
 <para>Two environment variables are
 interpreted. <envar>GPSD_SOCKET</envar> sets the location of the
 control socket.  It defaults to
-<filename>/var/run/gpsd.sock</filename> if the effective user ID of
+<filename>@RUNDIR@/gpsd.sock</filename> if the effective user ID of
 this program is root, <filename>/tmp/gpsd.sock</filename>
 otherwise.</para>
 

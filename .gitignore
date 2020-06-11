@@ -138,6 +138,7 @@ www/gpsd-time-service-howto.html
 www/gpsfake.html
 www/gps.html
 www/gpsd-time-service-howto.adoc
+man/gpsdctl.xml
 www/gpsinit.html
 www/gpsmon.html
 www/gpspipe.html
