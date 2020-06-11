@@ -105,7 +105,6 @@ static gps_mask_t ubx_msg_tim_tp(struct gps_device_t *session,
                                  unsigned char *buf, size_t data_len);
 static void ubx_mode(struct gps_device_t *session, int mode);
 
-/* FIXME: The following should probably be moved to some header file */
 typedef struct {
     const char *fw_string;
     const float protver;
@@ -113,21 +112,24 @@ typedef struct {
 
 /* based on u-blox document no. GPS.G7-SW-12001-B1 (15 June 2018) */
 /* capture decimal parts of protVer info even when session->protver currently
-   is integer (which _might_ change in the future, so avoid having to revisit
-   the info at that time) */
-const fw_protver_map_entry_t fw_protver_map[] = {
-    {"4.00", 10.00},
-    {"4.01", 10.01},
-    {"5.00", 11.00},
-    {"6.00", 12.00},
-    {"6.02", 12.02},
-    {"7.01", 13.01},
-    {"7.03", 13.03},
+ * is integer (which _might_ change in the future, so avoid having to revisit
+ * the info at that time).
+ * This list is substantially incomplete and over specific. */
+static const fw_protver_map_entry_t fw_protver_map[] = {
+    {"2.10", 8.10},           // antaris 4, version 8 is a guess
+    {"2.11", 8.11},           // antaris 4, version 8 is a guess
+    {"3.04", 9.00},           // antaris 4, version 9 is a guess
+    {"4.00", 10.00},          // antaris 4, and u-blox 5
+    {"4.01", 10.01},          // antaris 4, and u-blox 5
+    {"5.00", 11.00},          // u-blox 5 and antaris 4
+    {"6.00", 12.00},          // u-blox 5 and 6
+    {"6.02", 12.02},          // u-blox 5 and 6
+    {"7.01", 13.01},          // u-blox 7
+    {"7.03", 13.03},          // u-blox 7
+    {"1.00", 14.00},          // u-blox 6 w/ GLONASS, and 7
     // protVer >14 should carry explicit protVer in MON-VER extension
-    {"1.00", 14.00}
+    {NULL, 0.0},
 };
-
-const size_t fw_protver_map_len = sizeof(fw_protver_map) / sizeof(fw_protver_map[0]);
 
 /* make up an NMEA 4.0 (extended) PRN based on gnssId:svId,
  * using Appendix A from * u-blox ZED-F9P Interface Description
@@ -349,15 +351,15 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
     }
 
     /* MON-VER did not contain PROTVER in any extension field (typical for
-       protVer < 14), so use mapping table to try to derive protVer from
-       firmware revision number carried in swVersion field */
+     * protVer < 15), so use mapping table to try to derive protVer from
+     * firmware revision number carried in swVersion field */
     if (0 == session->driver.ubx.protver) {
-        for (n = 0; n < fw_protver_map_len; n++) {
+        for (n = 0; NULL != fw_protver_map[n].fw_string; n++) {
             /* skip "SW " prefix in session->subtype */
             cptr = strstr(session->subtype + 3, fw_protver_map[n].fw_string);
             /* use only when swVersion field starts with fw_string */
             if (cptr == (session->subtype + 3)) {
-                session->driver.ubx.protver = fw_protver_map[n].protver;
+                session->driver.ubx.protver = (int)fw_protver_map[n].protver;
                 break;
             }
         }
