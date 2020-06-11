@@ -274,10 +274,10 @@ static void init_hook(struct gps_device_t *session)
     if ( 0 == getuid() ) {
         /* this case will fire on command-line devices;
          * they're opened before priv-dropping.  Matters because
-         * only root can use /var/run.
+         * usually only root can use /run or /var/run.
          */
         (void)snprintf(chrony_path, sizeof (chrony_path),
-                "/var/run/chrony.%s.sock", basename(session->gpsdata.dev.path));
+                RUNDIR "/chrony.%s.sock", basename(session->gpsdata.dev.path));
     } else {
         (void)snprintf(chrony_path, sizeof (chrony_path),
                 "/tmp/chrony.%s.sock",  basename(session->gpsdata.dev.path));
