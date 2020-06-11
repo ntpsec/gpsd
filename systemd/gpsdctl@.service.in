@@ -6,7 +6,7 @@ After=dev-%i.device
 
 [Service]
 Type=oneshot
-Environment="GPSD_SOCKET=/var/run/gpsd.sock"
+Environment="GPSD_SOCKET=@RUNDIR@/gpsd.sock"
 EnvironmentFile=-/etc/default/gpsd
 EnvironmentFile=-/etc/sysconfig/gpsd
 RemainAfterExit=yes
