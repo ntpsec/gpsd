@@ -65,6 +65,7 @@
 #define QT_ENABLE 1
 #define RTCM104V2_ENABLE 1
 #define RTCM104V3_ENABLE 1
+#define RUNDIR "/run"
 #define SHARED_ENABLE 1
 #define SHM_EXPORT_ENABLE 1
 #define SIRF_ENABLE 1
