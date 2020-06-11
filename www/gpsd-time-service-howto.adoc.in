@@ -2,7 +2,7 @@
 :description: How to set up an NTP Stratum 1 server using GPSD.
 :keywords: time, GPSD, NTP, time, precision, 1PPS, PPS, stratum, jitter
 Gary E. Miller <gem@rellim.com>, Eric S. Raymond <esr@thyrsus.com>
-5 June 2020
+11 June 2020
 
 This document is mastered in asciidoc format.  If you are reading it in HTML,
 you can find the original at the GPSD project website.
@@ -918,7 +918,7 @@ or provide time service. The chrony project has a home page at
 with ntpd at <<CHRONY-COMPARE>>.
 
 gpsd, when run as root, feeds reference clock information to chronyd
-using a socket named /var/run/chrony.ttyXX.sock (where ttyXX is
+using a socket usually named @RUNDIR@/chrony.ttyXX.sock (where ttyXX is
 replaced by the GPS receiver's device name.  This allows multiple GPS
 receivers to feed one chronyd.
 
@@ -977,7 +977,7 @@ allow
 # set larger delay to allow the NMEA source to overlap with
 # the other sources and avoid the falseticker status
 refclock SHM 0 refid GPS precision 1e-1 offset 0.9999 delay 0.2
-refclock SOCK /var/run/chrony.ttyXX.sock refid PPS
+refclock SOCK @RUNDIR@/chrony.ttyXX.sock refid PPS
 -----------------------------------------------------------------------------
 
 If not running as root change the "refclock SOCK" line to:
