@@ -27,7 +27,7 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="GPS (Global Positioning System) daemon"
 NAME=gpsd
 DAEMON=/usr/sbin/$NAME
-PIDFILE=/var/run/$NAME.pid
+PIDFILE=@RUNDIR@/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 
 # Exit if the package is not installed
@@ -37,7 +37,7 @@ SCRIPTNAME=/etc/init.d/$NAME
 [ -r /etc/default/$NAME ] && . /etc/default/$NAME
 
 if [ -z "$GPSD_SOCKET" ] && [ -z "$DEVICES" ]; then
-	GPSD_SOCKET=/var/run/gpsd.sock
+	GPSD_SOCKET=@RUNDIR@/gpsd.sock
 fi
 
 if [ -n "$GPSD_SOCKET" ]; then

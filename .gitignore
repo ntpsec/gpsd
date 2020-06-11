@@ -195,4 +195,6 @@ tmp*
 # config file created by gpsd.php
 gpsd_config.inc
 # for 3rd party packaging
+packaging/deb/etc_default_gpsd
+packaging/deb/etc_init.d_gpsd
 packaging/rpm/gpsd.init
