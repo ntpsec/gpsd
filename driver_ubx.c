@@ -279,9 +279,9 @@ static void
 ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
                 size_t data_len)
 {
-    size_t n = 0;       /* extended info counter */
-    size_t num_ext = (data_len - 40) / 30;  /* number of extensions */
-    char obuf[128];     /* temp version string buffer */
+    int n = 0;                           /* extended info counter */
+    int num_ext = (data_len - 40) / 30;  /* number of extensions */
+    char obuf[128];                      /* temp version string buffer */
     char *cptr;
 
     if (40 > data_len) {
@@ -293,7 +293,7 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
     /* save SW and HW Version as subtype */
     (void)snprintf(obuf, sizeof(obuf),
                    "SW %.30s,HW %.10s",
-                   (char *)&buf[0],
+                   (char *)buf,
                    (char *)&buf[30]);
 
     /* save what we can */
@@ -301,10 +301,10 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
 
     obuf[0] = '\0';
     /* extract Extended info strings. */
-    for ( n = 0; n < num_ext ; n++ ) {
-        size_t start_of_str = 40 + (30 * n);
+    for (n = 0; n < num_ext; n++) {
+        int start_of_str = 40 + (30 * n);
 
-        if (n > 0) {
+        if (0 < n) {
             // commas between elements
             (void)strlcat(obuf, ",", sizeof(obuf));
         }
