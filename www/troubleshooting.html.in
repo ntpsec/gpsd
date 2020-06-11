@@ -123,8 +123,8 @@ load should happen automatically when the device activates, but if you
 don't receive data check for it with <b>lsmod(8)</b>.</p>
 
 <p>On Linux systems with module autoloading disabled or misconfigured,
-it is possible you may need to load the module manually with a command
-such as <code>sudo modprobe usbserial vendor=0x1a86
+it is possible you may need to load the module manually with a command,
+while running as root, such as <code>modprobe usbserial vendor=0x1a86
 product=0x7523</code>.  Do not copy those hex numbers slavishly, they
 are examples.  To get the right numbers, you will need to dig up the
 vendor and product ID of your USB-serial converter device.</p>
@@ -149,13 +149,14 @@ done and can skip the rest of this guide.</p>
 <h2>Make sure gpsd is not running</h2>
 
 <p>Before doing anything else, make sure there is no instance of gpsd
-running:</p>
+running, as root, do:</p>
 
-<pre>sudo killall gpsd</pre>
+<pre># killall gpsd
+# killall -9 gpsd</pre>
 
-<p>Remove any sockets gpsd might have left behind, e.g.:</p>
+<p>Remove any sockets gpsd might have left behind, as root, do:</p>
 
-<pre>sudo rm /var/run/gpsd.sock</pre>
+<pre># rm @RUNDIR@/gpsd.sock</pre>
 
 <h2>Ensure no other programs are using your device</h2>
 <p>Tools like modemmanager might be using your device, probably
@@ -188,7 +189,7 @@ including traffic from the GPS receiver, to the terminal. This is a
 recommended first step because it avoids client issues. For example,
 here we give gpsd a control socket but no device:</p>
 
-<pre># gpsd -N -D3 -F /var/run/gpsd.sock
+<pre># gpsd -N -D3 -F @RUNDIR/gpsd.sock
 gpsd: launching (Version 2.96~dev)
 gpsd: listening on port gpsd
 gpsd: running with effective group ID 0
@@ -204,7 +205,7 @@ file: No such file or directory" then run ldconfig(8) and try again.</p>
 <p>Here we give it a device file. But the device file isn't there, and
 there is no receiver.</p>
 
-<pre># gpsd -N -D3 -F /var/run/gpsd.sock /dev/ttyUSB0
+<pre># gpsd -N -D3 -F @RUNDIR/gpsd.sock /dev/ttyUSB0
 gpsd: launching (Version 2.96~dev)
 gpsd: listening on port gpsd
 gpsd: running with effective group ID 0
@@ -217,7 +218,7 @@ gpsd: exiting.
 <p>This time, gpsd stashes the device file and waits for some outside
 agency, like udev, to create it. Like so:</p>
 
-<pre># gpsd -N -D3 -F /var/run/gpsd.sock /dev/ttyUSB0
+<pre># gpsd -N -D3 -F @RUNDIR/gpsd.sock /dev/ttyUSB0
 gpsd: launching (Version 2.96~dev)
 gpsd: listening on port gpsd
 gpsd: running with effective group ID 0
@@ -427,7 +428,7 @@ text (the USB device may vary):</p>
 
 <pre>
 gpsd.hotplug: gpsd_control(action=add, arg=/dev/ttyUSB0)
-gpsd.hotplug: launching gpsd  -F /var/run/gpsd.sock
+gpsd.hotplug: launching gpsd  -F @RUNDIR/gpsd.sock
 </pre>
 
 <p>These are from the gpsd.hotplug handler called by udev on a hotplug
@@ -452,7 +453,7 @@ this as a bug to the GPSD developers.</p>
 it's doing with the hotplug notifications. Unplug the receiver and
 kill the running gpsd instance, if there is one. Now run <code>make
 udev-test</code> and plug in the receiver. (For those using packages,
-this is the equivalent of &quot;<code>gpsd -N -n -F /var/run/gpsd.sock
+this is the equivalent of &quot;<code>gpsd -N -n -F @RUNDIR/gpsd.sock
 -D 5</code>&quot;.) </p>
 
 <p>You can also launch the hotplug code manually: <code>cd /lib/udev
@@ -563,7 +564,7 @@ root@orca:~#</pre>
 
 <pre>
 [Socket]
-ListenStream=/var/run/gpsd.sock
+ListenStream=@RUNDIR/gpsd.sock
 ListenStream=[::1]:2947
 # ListenStream=127.0.0.1:2947
 ListenStream=0.0.0.0:2947

@@ -91,7 +91,7 @@ extern "C" {
 #define BUILD_LEAPSECONDS 18
 
 #ifndef DEFAULT_GPSD_SOCKET
-#define DEFAULT_GPSD_SOCKET     "/var/run/gpsd.sock"
+#define DEFAULT_GPSD_SOCKET     RUNDIR "/gpsd.sock"
 #endif
 
 /* Some internal capabilities depend on which drivers we're compiling. */
