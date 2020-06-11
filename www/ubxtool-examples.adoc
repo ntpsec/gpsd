@@ -1,6 +1,6 @@
 :Author: Gary E. Miller
 :Email: <gem@rellim.com>
-:Date: 22 May 2020
+:Date: 11 June 2020
 :Description: U-blox GNSS receiver configuration examples
 :keywords: u-blox, examples, configuration
 
@@ -347,7 +347,12 @@ For Logging, you need:
 
 1. u-blox 7, 8 or 9 GNSS receiver (protocol version 15+)
 
-2. external flash memory
+2. External SQI flash memory with a valid Flash Information Structure (FIS).
+
+By default EVK boards and other commercial products with flash will
+already have a valid FIS.  Added or replaced flash will need to have
+an FIS created.  If your receiver has flash, but no valid FIS, you can
+create a new FIS with u-center.
 
 If you do not meet the above prerequisites, then you can stop reading
 this section now.
