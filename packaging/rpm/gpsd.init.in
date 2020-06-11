@@ -8,7 +8,7 @@
 #              making its data on the location/course/velocity of the sensor \
 #              available to be queried on TCP port 2947 of the host computer.
 # processname: gpsd
-# pidfile:     /var/run/gpsd.pid
+# pidfile:     @RUNDIR@/gpsd.pid
 
 # http://fedoraproject.org/wiki/FCNewInit/Initscripts
 ### BEGIN INIT INFO
@@ -31,8 +31,8 @@
 
 exec="/usr/sbin/gpsd"
 prog=$(basename $exec)
-PIDFILE=/var/run/gpsd.pid
-CONTROL_SOCKET=/var/run/gpsd.sock
+PIDFILE=@RUNDIR@/gpsd.pid
+CONTROL_SOCKET=@RUNDIR@/gpsd.sock
 
 [ -e /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
 

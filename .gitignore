@@ -194,3 +194,5 @@ tmp*
 *.zip
 # config file created by gpsd.php
 gpsd_config.inc
+# for 3rd party packaging
+packaging/rpm/gpsd.init
