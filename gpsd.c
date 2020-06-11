@@ -1358,13 +1358,17 @@ static void handle_request(struct subscriber_t *sub,
         json_version_dump(reply, replylen);
     } else {
         const char *errend;
-        errend = buf + strlen(buf) - 1;
+        // a buffer to put the "quoted" bad json into
+        char quoted_error[GPS_JSON_RESPONSE_MAX];
+
+        errend = buf + strlen(buf);
         while (isspace((unsigned char) *errend) && errend > buf)
             --errend;
         (void)snprintf(reply, replylen,
                        "{\"class\":\"ERROR\",\"message\":"
-                       "\"Unrecognized request '%.*s'\"}\r\n",
-                       (int)(errend - buf), buf);
+                       "\"Unrecognized request '%s'\"}\r\n",
+                       json_quote(buf, quoted_error, errend - buf,
+                                  sizeof(quoted_error)));
         GPSD_LOG(LOG_ERROR, &context.errout, "ERROR response: %s\n", reply);
         buf += strlen(buf);
     }
