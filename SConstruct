@@ -403,6 +403,12 @@ if os.path.exists("/etc/gentoo-release"):
 else:
     def_group = "dialout"
 
+# darwin does not have /run, maybe others.
+if os.path.exists("/run"):
+    rundir = "/run"
+else:
+    rundir = "/var/run"
+
 nonboolopts = (
     ("gpsd_group",       def_group,     "privilege revocation group"),
     ("gpsd_user",        "nobody",      "privilege revocation user",),
@@ -413,7 +419,7 @@ nonboolopts = (
     ("python_libdir",    "",            "Python module directory prefix"),
     ("python_shebang",   "/usr/bin/env python", "Python shebang"),
     ("qt_versioned",     "",            "version for versioned Qt"),
-    ("rundir",           "/run",       "Directory for run-time variable data"),
+    ("rundir",           rundir,       "Directory for run-time variable data"),
     ("sysroot",          "",
      "Logical root directory for headers and libraries.\n"
      "For cross-compiling, or building with multiple local toolchains.\n"
