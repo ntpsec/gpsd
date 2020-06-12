@@ -4321,8 +4321,11 @@ Oddly this is the poll for UBX-LOG-BATCH
            }
 
         s = ''
-        for i in range(1, 4):
-            u = struct.unpack_from('<HHHHHH', buf, 0)
+        u = struct.unpack_from('<HHHHHH', buf, 0)
+        s += rxbuf_name[1] + "%u %u %u %u %u %u\n" % u
+
+        for i in range(2, 4):
+            u = struct.unpack_from('<BBBBBB', buf, 6 * i)
             s += rxbuf_name[i] + "%u %u %u %u %u %u\n" % u
         return s
 
@@ -4384,7 +4387,7 @@ Oddly this is the poll for UBX-LOG-BATCH
     def mon_txbuf(self, buf):
         """UBX-MON-TXBUF decode, Transmitter Buffer Status"""
 
-        rxbuf_name = {
+        txbuf_name = {
            1: " pending   ",
            2: " usage     ",
            3: " peakUsage ",
@@ -4396,9 +4399,12 @@ Oddly this is the poll for UBX-LOG-BATCH
            }
 
         s = ''
-        for i in range(1, 4):
-            u = struct.unpack_from('<HHHHHH', buf, 0)
-            s += rxbuf_name[i] + "%u %u %u %u %u %u\n" % u
+        u = struct.unpack_from('<HHHHHH', buf, 0)
+        s += txbuf_name[1] + "%u %u %u %u %u %u\n" % u
+
+        for i in range(2, 4):
+            u = struct.unpack_from('<BBBBBB', buf, 6 * i)
+            s += txbuf_name[i] + "%u %u %u %u %u %u\n" % u
 
         u = struct.unpack_from('<BBBB', buf, 24)
         s += " tUsage %u tPeakUsage %u errors x%x reserved1 %u" % u
