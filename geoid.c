@@ -930,7 +930,7 @@ gps_mask_t ecef_to_wgs84fix(struct gps_fix_t *fix,
                             double x, double y, double z,
                             double vx, double vy, double vz)
 {
-    double lambda, phi, p, theta, n,vnorth, veast, vup;
+    double lambda, phi, p, theta, n, vnorth, veast, vup;
     double cos_lambda, sin_lambda;
     double cos_phi, sin_phi;
     double cos_theta, sin_theta;
