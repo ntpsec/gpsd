@@ -1554,7 +1554,7 @@ class ubx(object):
          "Raim out measurements that are not corrected by QZSS SLAS"),
         # CFG-RATE-
         ("CFG-RATE", 0x3021ffff, "", 0, "s",
-         "get all CFG-ODO"),
+         "get all CFG-RATE"),
         ("CFG-RATE-MEAS", 0x30210001, "U2", 0.001, "s",
          "Nominal time between GNSS measurements"),
         ("CFG-RATE-NAV", 0x30210002, "U2", 1, "",
