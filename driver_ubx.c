@@ -374,6 +374,48 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
              session->driver.ubx.protver);
 }
 
+/* UBX-MON-TXBUF
+ * Present in u-blox 5+ through at least protVer 23.01
+ * Supported but deprecated in M9P protVer 27.11
+ * Supported but deprecated in M9N protVer 32.00 */
+static void
+ubx_msg_mon_txbuf(struct gps_device_t *session, unsigned char *buf,
+                size_t data_len)
+{
+    unsigned int pending, usage, peakUsage;
+    unsigned int tUsage, tPeakusage;
+    unsigned char errors, limit, reserved1;
+    int i;
+
+    if (28 != data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-MON-TXBUF message, runt payload len %zd\n", data_len);
+        return;
+    }
+
+    errors = limit = getub(buf, 26);
+
+    for (i = 0; i < 6; i++) {
+        pending = getleu16(buf, i * 2);
+        usage =  getub(buf, 12 + i);
+        peakUsage = getub(buf, 18 + i);
+
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TXBUF: target %d, limit %u, pending %4u bytes, "
+                 "usage %3u%%, peakUsage %3d%%\n",
+                 i, limit & 1, pending, usage, peakUsage);
+        limit = limit >> 1;
+    }
+    tUsage = getub(buf, 24);
+    tPeakusage = getub(buf, 25);
+    reserved1 = getub(buf, 27);
+
+    GPSD_LOG(LOG_WARN, &session->context->errout,
+             "TXBUF: tUsage %3u%%, tPeakusage %3u%%, errors 0x%02x, "
+             "reserved1 0x%02x\n",
+             tUsage, tPeakusage, errors, reserved1);
+}
+
 /**
  * UBX-LOG-BATCH entry only part of UBX protocol
  * Used for GPS standalone operation (internal batch retrieval)
@@ -2419,6 +2461,7 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         break;
     case UBX_MON_TXBUF:
         GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-MON-TXBUF\n");
+        ubx_msg_mon_txbuf(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_MON_USB:
         GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-MON-USB\n");
