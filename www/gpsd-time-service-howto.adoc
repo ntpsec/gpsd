@@ -918,8 +918,9 @@ or provide time service. The chrony project has a home page at
 with ntpd at <<CHRONY-COMPARE>>.
 
 gpsd, when run as root, feeds reference clock information to chronyd
-using a socket usually named @RUNDIR@/chrony.ttyXX.sock (where ttyXX is
-replaced by the GPS receiver's device name.  This allows multiple GPS
+using a socket usually named /run/chrony.ttyXX.sock (where ttyXX is
+replaced by the GPS receiver's device name.  Older systems may use the
+/var/run directory instead of /run.  This allows multiple GPS
 receivers to feed one chronyd.
 
 No gpsd configuration is required to talk to chronyd. chronyd is
@@ -977,10 +978,11 @@ allow
 # set larger delay to allow the NMEA source to overlap with
 # the other sources and avoid the falseticker status
 refclock SHM 0 refid GPS precision 1e-1 offset 0.9999 delay 0.2
-refclock SOCK @RUNDIR@/chrony.ttyXX.sock refid PPS
+refclock SOCK /run/chrony.ttyXX.sock refid PPS
 -----------------------------------------------------------------------------
 
-If not running as root change the "refclock SOCK" line to:
+Older systems may use the /var/run directory for the scoket file instead
+of /run.  /run is compliant with FHS 3.0.
 
 -----------------------------------------------------------------------------
 refclock SOCK /tmp/chrony.ttyXX.sock refid PPS
