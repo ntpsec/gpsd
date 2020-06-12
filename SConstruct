@@ -403,7 +403,7 @@ if os.path.exists("/etc/gentoo-release"):
 else:
     def_group = "dialout"
 
-# darwin does not have /run, maybe others.
+# darwin and BSDs do not have /run, maybe others.
 if os.path.exists("/run"):
     rundir = "/run"
 else:
