@@ -400,7 +400,7 @@ ubx_msg_mon_txbuf(struct gps_device_t *session, unsigned char *buf,
         usage =  getub(buf, 12 + i);
         peakUsage = getub(buf, 18 + i);
 
-        GPSD_LOG(LOG_WARN, &session->context->errout,
+        GPSD_LOG(LOG_INF, &session->context->errout,
                  "TXBUF: target %d, limit %u, pending %4u bytes, "
                  "usage %3u%%, peakUsage %3d%%\n",
                  i, limit & 1, pending, usage, peakUsage);
@@ -410,10 +410,16 @@ ubx_msg_mon_txbuf(struct gps_device_t *session, unsigned char *buf,
     tPeakusage = getub(buf, 25);
     reserved1 = getub(buf, 27);
 
-    GPSD_LOG(LOG_WARN, &session->context->errout,
+    GPSD_LOG(LOG_INF, &session->context->errout,
              "TXBUF: tUsage %3u%%, tPeakusage %3u%%, errors 0x%02x, "
              "reserved1 0x%02x\n",
              tUsage, tPeakusage, errors, reserved1);
+
+    if ((errors & 0x40) == 0x40 || (errors & 0x80) == 0x80) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+             "TXBUF: alloc %u, mem %u\n",
+             errors >> 7, (errors >> 6) & 1);
+    }
 }
 
 /**
