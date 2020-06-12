@@ -981,7 +981,7 @@ refclock SHM 0 refid GPS precision 1e-1 offset 0.9999 delay 0.2
 refclock SOCK /run/chrony.ttyXX.sock refid PPS
 -----------------------------------------------------------------------------
 
-Older systems may use the /var/run directory for the scoket file instead
+Older systems may use the /var/run directory for the socket file instead
 of /run.  /run is compliant with FHS 3.0.
 
 -----------------------------------------------------------------------------
