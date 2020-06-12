@@ -320,7 +320,7 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
     (void)snprintf(obuf, sizeof(obuf),
                    "SW %.30s,HW %.10s",
                    (char *)buf,
-                   (char *)(buf + 30));
+                   (char *)&buf[30]);
 
     /* save what we can */
     (void)strlcpy(session->subtype, obuf, sizeof(session->subtype));
@@ -729,7 +729,7 @@ ubx_msg_log_retrieveposextra(struct gps_device_t *session,
  */
 static gps_mask_t
 ubx_msg_log_retrievestring(struct gps_device_t *session,
-                             unsigned char *buf UNUSED, size_t data_len)
+                           unsigned char *buf UNUSED, size_t data_len)
 {
     struct tm unpacked_date;
     unsigned int byteCount;
@@ -1812,7 +1812,7 @@ ubx_msg_nav_velned(struct gps_device_t *session, unsigned char *buf,
  * FIXME: not well decoded...
  */
 static void ubx_msg_nav_sbas(struct gps_device_t *session, unsigned char *buf,
-                         size_t data_len)
+                             size_t data_len)
 {
     unsigned int i, nsv;
     short ubx_PRN;
@@ -2931,79 +2931,79 @@ static void ubx_cfg_prt(struct gps_device_t *session,
         msg[0] = 0x01;          /* class */
         msg[1] = 0x04;          /* msg id  = UBX-NAV-DOP */
         msg[2] = 0x00;          /* rate */
-        (void)ubx_write(session, 0x06u, 0x01, msg, 3);
+        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
 
         /* UBX-NAV-SOL deprecated in u-blox 6, gone in u-blox 9.
          * UBX-NAV-PVT for later models.  Turn both off */
         msg[0] = 0x01;          /* class */
         msg[1] = 0x06;          /* msg id  = NAV-SOL */
         msg[2] = 0x00;          /* rate */
-        (void)ubx_write(session, 0x06u, 0x01, msg, 3);
+        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
 
         msg[0] = 0x01;          /* class */
         msg[1] = 0x07;          /* msg id  = NAV-PVT */
         msg[2] = 0x00;          /* rate */
-        (void)ubx_write(session, 0x06u, 0x01, msg, 3);
+        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
 
         msg[0] = 0x01;          /* class */
         msg[1] = 0x20;          /* msg id  = UBX-NAV-TIMEGPS */
         msg[2] = 0x00;          /* rate */
-        (void)ubx_write(session, 0x06u, 0x01, msg, 3);
+        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
 
         /* NAV-SVINFO became NAV-SAT */
         msg[0] = 0x01;          /* class */
         msg[1] = 0x30;          /* msg id  = NAV-SVINFO */
         msg[2] = 0x00;          /* rate */
-        (void)ubx_write(session, 0x06u, 0x01, msg, 3);
+        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
         msg[0] = 0x01;          /* class */
         msg[1] = 0x35;          /* msg id  = NAV-SAT */
         msg[2] = 0x00;          /* rate */
-        (void)ubx_write(session, 0x06u, 0x01, msg, 3);
+        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
 
         msg[0] = 0x01;          /* class */
         msg[1] = 0x32;          /* msg id  = NAV-SBAS */
         msg[2] = 0x00;          /* rate */
-        (void)ubx_write(session, 0x06u, 0x01, msg, 3);
+        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
 
         /* UBX-NAV-EOE */
         msg[0] = 0x01;          /* class */
         msg[1] = 0x61;          /* msg id  = NAV-EOE */
         msg[2] = 0x00;          /* rate */
-        (void)ubx_write(session, 0x06u, 0x01, msg, 3);
+        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
 
         /* try to improve the sentence mix. in particular by enabling ZDA */
         msg[0] = 0xf0;          /* class */
         msg[1] = 0x09;          /* msg id  = GBS */
         msg[2] = 0x01;          /* rate */
-        (void)ubx_write(session, 0x06u, 0x01, msg, 3);
+        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
         msg[0] = 0xf0;          /* class */
         msg[1] = 0x00;          /* msg id  = GGA */
         msg[2] = 0x01;          /* rate */
-        (void)ubx_write(session, 0x06u, 0x01, msg, 3);
+        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
         msg[0] = 0xf0;          /* class */
         msg[1] = 0x02;          /* msg id  = GSA */
         msg[2] = 0x01;          /* rate */
-        (void)ubx_write(session, 0x06u, 0x01, msg, 3);
+        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
         msg[0] = 0xf0;          /* class */
         msg[1] = 0x07;          /* msg id  = GST */
         msg[2] = 0x01;          /* rate */
-        (void)ubx_write(session, 0x06u, 0x01, msg, 3);
+        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
         msg[0] = 0xf0;          /* class */
         msg[1] = 0x03;          /* msg id  = GSV */
         msg[2] = 0x01;          /* rate */
-        (void)ubx_write(session, 0x06u, 0x01, msg, 3);
+        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
         msg[0] = 0xf0;          /* class */
         msg[1] = 0x04;          /* msg id  = RMC */
         msg[2] = 0x01;          /* rate */
-        (void)ubx_write(session, 0x06u, 0x01, msg, 3);
+        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
         msg[0] = 0xf0;          /* class */
         msg[1] = 0x05;          /* msg id  = VTG */
         msg[2] = 0x01;          /* rate */
-        (void)ubx_write(session, 0x06u, 0x01, msg, 3);
+        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
         msg[0] = 0xf0;          /* class */
         msg[1] = 0x08;          /* msg id  = ZDA */
         msg[2] = 0x01;          /* rate */
-        (void)ubx_write(session, 0x06u, 0x01, msg, 3);
+        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
     } else { /* MODE_BINARY */
         /*
          * Just enabling the UBX protocol for output is not enough to
@@ -3170,7 +3170,7 @@ static bool ubx_rate(struct gps_device_t *session, double cycletime)
     msg[0] = (unsigned char)(s >> 8);
     msg[1] = (unsigned char)(s & 0xff);
 
-    return ubx_write(session, 0x06, 0x08, msg, 6);      /* CFG-RATE */
+    return ubx_write(session, UBX_CLASS_CFG, 0x08, msg, 6); /* CFG-RATE */
 }
 
 /* This is everything we export */
