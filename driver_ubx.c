@@ -422,6 +422,35 @@ ubx_msg_mon_txbuf(struct gps_device_t *session, unsigned char *buf,
     }
 }
 
+/* UBX-MON-RXBUF
+ * Present in u-blox 5+ through at least protVer 23.01
+ * Supported but deprecated in M9P protVer 27.11
+ * Supported but deprecated in M9N protVer 32.00 */
+static void
+ubx_msg_mon_rxbuf(struct gps_device_t *session, unsigned char *buf,
+                size_t data_len)
+{
+    unsigned int pending, usage, peakUsage;
+    int i;
+
+    if (24 != data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-MON-RXBUF message, runt payload len %zd\n", data_len);
+        return;
+    }
+
+    for (i = 0; i < 6; i++) {
+        pending = getleu16(buf, i * 2);
+        usage =  getub(buf, 12 + i);
+        peakUsage = getub(buf, 18 + i);
+
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "RXBUF: target %d, pending %4u bytes, "
+                 "usage %3u%%, peakUsage %3d%%\n",
+                 i, pending, usage, peakUsage);
+    }
+}
+
 /**
  * UBX-LOG-BATCH entry only part of UBX protocol
  * Used for GPS standalone operation (internal batch retrieval)
@@ -2455,6 +2484,7 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         break;
     case UBX_MON_RXBUF:
         GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-MON-RXBUF\n");
+        ubx_msg_mon_rxbuf(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_MON_RXR:
         GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-MON-RXR\n");
