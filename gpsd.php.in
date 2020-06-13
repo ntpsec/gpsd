@@ -808,23 +808,39 @@ EOF;
 <div style="float:left;margin:0 0 1ex 1em;">
     <table style="border-width:1px;border-style:solid;text-align:center;">
         <tr><th colspan=2 style="text-align:center">Error Estimates</th></tr>
-        <tr><td>GDOP</td><td>{$sky['gdop']}</td></tr>
-        <tr><td>HDOP</td><td>{$sky['hdop']}</td></tr>
-        <tr><td>PDOP</td><td>{$sky['pdop']}</td></tr>
-        <tr><td>TDOP</td><td>{$sky['tdop']}</td></tr>
-        <tr><td>XDOP</td><td>{$sky['xdop']}</td></tr>
-        <tr><td>YDOP</td><td>{$sky['ydop']}</td></tr>
-        <tr><td>VDOP</td><td>{$sky['vdop']}</td></tr>
-        <tr><td>epc</td><td>{$epc}</td></tr>
-        <tr><td>eph</td><td>{$eph}</td></tr>
-        <tr><td>eps</td><td>{$eps}</td></tr>
-        <tr><td>ept</td><td>{$ept}</td></tr>
-        <tr><td>epx</td><td>{$epx}</td></tr>
-        <tr><td>epy</td><td>{$epy}</td></tr>
-        <tr><td>epv</td><td>{$epv}</td></tr>
-        <tr><td>sep</td><td>{$sep}</td></tr>
-        <tr><td>ecef pAcc</td><td>{$ecefpAcc}</td></tr>
-        <tr><td>ecef vAcc</td><td>{$ecefvAcc}</td></tr>
+        <tr title="Geometric Dilution Of Precision"><td>GDOP
+            </td><td>{$sky['gdop']}</td></tr>
+        <tr title="Horizontal (2D) Dilution Of Precision"><td>HDOP</td>
+            <td>{$sky['hdop']}</td></tr>
+        <tr title="Position (3D) Dilution Of Precision"><td>PDOP
+            </td><td>{$sky['pdop']}</td></tr>
+        <tr title="Time Dilution Of Precision"><td>TDOP</td>
+            <td>{$sky['tdop']}</td></tr>
+        <tr title="X (Longitude) Dilution Of Precision"><td>XDOP
+            </td><td>{$sky['xdop']}</td></tr>
+        <tr title="Y (Latitude) Dilution Of Precision"><td>YDOP
+            </td><td>{$sky['ydop']}</td></tr>
+        <tr title="Velocity Dilution Of Precision"><td>VDOP</td>
+            <td>{$sky['vdop']}</td></tr>
+        <tr title="Estimated Precision of Climb"><td>epc</td>
+            <td>{$epc}</td></tr>
+        <tr title="Estimated Precision 2D"><td>eph</td>
+            <td>{$eph}</td></tr>
+        <tr title="Estimated Precision Speed"><td>eps</td>
+          <td>{$eps}</td></tr>
+        <tr title="Estimated Precision Time"><td>ept</td><td>{$ept}</td></tr>
+        <tr title="Estimated Precision X (Longitude)"><td>epx</td>
+          <td>{$epx}</td></tr>
+        <tr title="Estimated Precision Y (Latitude)"><td>epy</td>
+          <td>{$epy}</td></tr>
+        <tr title="Estimated Precision Vertical"><td>epv</td>
+          <td>{$epv}</td></tr>
+        <tr title="Spherical Error Probability (epe)"><td>sep</td>
+          <td>{$sep}</td></tr>
+        <tr title="Estimated ECEF Position Accuracy"><td>ecef pAcc</td>
+          <td>{$ecefpAcc}</td></tr>
+        <tr title="Estimated ECEF Velocity Accuracy"><td>ecef vAcc</td>
+          <td>{$ecefvAcc}</td></tr>
     </table>
 </div>
 
