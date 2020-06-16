@@ -551,12 +551,15 @@ env['SC_PYTHON'] = sys.executable  # Path to SCons Python
 # So we rely on MergeFlags/ParseFlags to do the right thing for us.
 env['STRIP'] = "strip"
 env['PKG_CONFIG'] = "pkg-config"
-for i in ["AR", "CC", "CXX", "LD",
-          "PKG_CONFIG", "STRIP", "TAR"]:
+for i in ["AR",      # linker for static libs, usually "ar"
+          "CC",
+          "CXX",
+          # "LD",    # scons does not use LD, usually "ld"
+          "PKG_CONFIG",
+          "SHLINK",  # linker for shared libs, usually "gcc" or "g++", NOT "ld"
+          "STRIP",
+          "TAR"]:
     if i in os.environ:
-        j = i
-        if i == "LD":
-            i = "SHLINK"
         env[i] = os.getenv(j)
 for i in ["ARFLAGS",
           "CCFLAGS",
@@ -663,7 +666,7 @@ devenv = (("ADDR2LINE", "addr2line"),
           ("GCOV", "gcov"),
           ("GPROF", "gprof"),
           ("GXX", "g++"),
-          ("LD", "ld"),
+          # ("LD", "ld"),     # scons does not use LD
           ("NM", "nm"),
           ("OBJCOPY", "objcopy"),
           ("OBJDUMP", "objdump"),
