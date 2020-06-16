@@ -560,7 +560,7 @@ for i in ["AR",      # linker for static libs, usually "ar"
           "STRIP",
           "TAR"]:
     if i in os.environ:
-        env[i] = os.getenv(j)
+        env[i] = os.getenv(i)
 for i in ["ARFLAGS",
           "CCFLAGS",
           "CFLAGS",
