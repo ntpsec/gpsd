@@ -939,7 +939,7 @@ static const struct gps_type_t driver_rtcm104v2 = {
 
 static gps_mask_t rtcm104v3_analyze(struct gps_device_t *session)
 {
-    uint16_t type = getbeu16(session->lexer.inbuffer, 3) >> 4;
+    uint16_t type = getbeu16(session->lexer.outbuffer, 3) >> 4;
 
     GPSD_LOG(LOG_RAW, &session->context->errout, "RTCM 3.x packet %d\n", type);
     rtcm3_unpack(session->context,
