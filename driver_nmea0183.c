@@ -2441,10 +2441,18 @@ static gps_mask_t processZDA(int c UNUSED, char *field[],
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NMEA0183: malformed ZDA day: %s\n",  field[2]);
     } else {
+        char ts_buf[TIMESPEC_LEN];
         gpsd_century_update(session, century);
         session->nmea.date.tm_year = year - 1900;
         session->nmea.date.tm_mon = mon - 1;
         session->nmea.date.tm_mday = mday;
+        if (&session->context->batteryRTC) {
+            // user wants to live dangerously
+            session->newdata.time = gpsd_utc_resolve(session);
+            GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "NMEA0183: ZDA badtime %s\n",
+                  timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)));
+        }
         mask = TIME_SET;
     }
     return mask;
@@ -2957,9 +2965,9 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
         session->gpsdata.attitude.pitch = safe_atof(field[5]);
         /* mask |= ATTITUDE_SET;  * confuses cycle order ?? */
         GPSD_LOG(LOG_DATA, &session->context->errout,
-            "NMEA0183: PASHR (OxTS) time %s, heading %lf.\n",
-             timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
-            session->gpsdata.attitude.heading);
+                 "NMEA0183: PASHR (OxTS) time %s, heading %lf.\n",
+                  timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
+                  session->gpsdata.attitude.heading);
     }
     return mask;
 }
