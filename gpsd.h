@@ -81,6 +81,7 @@ extern "C" {
  * 3.20.1
  *      GPSD_PROTO_*_VERSION moved to gpsd_config.h
  *      Add gps_context_t.passive
+ *      Add gps_context_t.batteryRTC
  *
  */
 
@@ -307,6 +308,9 @@ struct gps_context_t {
     struct gpsd_errout_t errout;        /* debug verbosity level and hook */
     bool readonly;                      /* if true, never write to device */
     bool passive;                       // if true, never autoconfigure device
+    // if true, remove fix gate to time, for some RTC backed receivers.
+    // DANGEROUS
+    bool batteryRTC;
     speed_t fixed_port_speed;           // Fixed port speed, if non-zero
     char fixed_port_framing[4];         // Fixed port framing, if non-blank
     /* DGPS status */
