@@ -917,17 +917,56 @@ or provide time service. The chrony project has a home page at
 <<CHRONY>>. Its documentation includes an instructive feature comparison
 with ntpd at <<CHRONY-COMPARE>>.
 
-gpsd, when run as root, feeds reference clock information to chronyd
-using a socket usually named /run/chrony.ttyXX.sock (where ttyXX is
-replaced by the GPS receiver's device name.  Older systems may use the
-/var/run directory instead of /run.  This allows multiple GPS
-receivers to feed one chronyd.
+gpsd, when run as root, may feed time information to chronyd using
+sockets.  The sockets are named /run/chrony.XXXX.sock.  Where XXXX is
+replaced by the basenames of the device names gpsd is using.  If your
+receiver outputs serial data on /dev/ttyS0, then the corresponding
+socket is /run/chrony.ttyS0.sock.  If your PPS is on /dev/pps0, then the
+corresponding socket is /run/chrony.pps0.sock.
+
+Older systems may use the /var/run directory instead of /run.  If gpsd
+can not open the sockets there, it falls back to try /tmp.
 
 No gpsd configuration is required to talk to chronyd. chronyd is
 configured using the file /etc/chrony.conf or /etc/chrony/chrony.conf.
-Check your distributions documentation for the correct location.  To get
-chronyd to connect to gpsd using the basic ntpd compatible SHM method
-add this to use this basic chrony.conf file:
+Check your distributions documentation for the correct location.
+
+To get chronyd to connect to gpsd using the socket method add the
+following lines your chrony.conf file.  Except, replace XXXX with
+the basename of your device's serial port, often ttyS0, ttyACM0, or
+ttyAMA0. Replace YYYY with the basename of your PPS device, usually
+pps0.
+
+When running as root:
+
+-----------------------------------------------------------------------------
+server 0.us.pool.ntp.org
+server 1.us.pool.ntp.org
+server 2.us.pool.ntp.org
+server 3.us.pool.ntp.org
+
+driftfile /var/lib/chrony/drift
+
+allow
+
+# set larger delay to allow the NMEA source to overlap with
+# the other sources and avoid the falseticker status
+refclock SOCK /run/chrony.XXXX.sock refid GPS precision 1e-1 offset 0.9999
+refclock SOCK /run/chrony.YYYY.sock refid PPS precision 1e-7
+-----------------------------------------------------------------------------
+
+Older systems may use the /var/run directory for the socket file instead
+of /run.  /run is compliant with FHS 3.0.  If that file can not be opened
+then gpsd falls back to trying in /tmp:
+
+-----------------------------------------------------------------------------
+refclock SOCK /tmp/chrony.XXXX.sock refid GPS precision 1e-1 offset 0.9999
+refclock SOCK /tmp/chrony.YYYY.sock refid PPS precision 1e-7
+-----------------------------------------------------------------------------
+
+You can also get gpsd to connect to chronyd using the basic ntpd
+compatible SHM method.  To use that instead of sockets, add these lines
+to the basic chrony.conf file:
 
 -----------------------------------------------------------------------------
 server 0.us.pool.ntp.org
@@ -959,40 +998,11 @@ correct known and constant latency.
 The allow option allows anyone on the internet to query your server's
 time.
 
-To get chronyd to connect to gpsd using the more precise socket
-method add this to your chrony.conf file (replacing ttyXX
-with your device name).
-
-If running as root:
-
------------------------------------------------------------------------------
-server 0.us.pool.ntp.org
-server 1.us.pool.ntp.org
-server 2.us.pool.ntp.org
-server 3.us.pool.ntp.org
-
-driftfile /var/lib/chrony/drift
-
-allow
-
-# set larger delay to allow the NMEA source to overlap with
-# the other sources and avoid the falseticker status
-refclock SHM 0 refid GPS precision 1e-1 offset 0.9999 delay 0.2
-refclock SOCK /run/chrony.ttyXX.sock refid PPS
------------------------------------------------------------------------------
-
-Older systems may use the /var/run directory for the socket file instead
-of /run.  /run is compliant with FHS 3.0.
-
------------------------------------------------------------------------------
-refclock SOCK /tmp/chrony.ttyXX.sock refid PPS
------------------------------------------------------------------------------
-
 See the chrony man page for more detail on the configuration options
 <<CHRONY-MAN>>.
 
 Finally note that chronyd needs to be started before gpsd so the
-socket is ready when gpsd starts up.
+sockets are ready before gpsd starts up.
 
 If running as root, the preferred starting procedure is:
 
