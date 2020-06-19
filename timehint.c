@@ -367,12 +367,14 @@ static char *report_hook(volatile struct pps_thread_t *pps_thread,
 
         /*
          * Only listen to PPS after several consecutive fixes,
-         * otherwise time may be inaccurate.  (We know this is
-         * required on all Garmin and u-blox; safest to do it
+         * otherwise time may be inaccurate.  We know this is
+         * required on all Garmin and u-blox.  Safest to do it
          * for all cases as we have no other general way to know
          * if PPS is good.
+         * Allow override with batteryRTC to allow foot shots.
          */
-        if (session->fixcnt <= NTP_MIN_FIXES &&
+        if (!&session->context->batteryRTC &&
+            session->fixcnt <= NTP_MIN_FIXES &&
             (session->gpsdata.set & GOODTIME_IS) == 0)
             return "no fix";
     }
