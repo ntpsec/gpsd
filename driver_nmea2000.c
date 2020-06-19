@@ -1,6 +1,17 @@
 /*
  * NMEA2000 over CAN.
  *
+ * NMEA2000 is proprietary and the doc is not public.
+ * Much of this code is reverse engineered or built from
+ * the sparse doc some vendors provide on their interpretation
+ * of the specification.
+ *
+ * Here is one good source of reverse engineered info:
+ *     https://github.com/canboat/canboat
+ *
+ * Message contents can be had from canboat/analyzer:
+ *     analyzer -explain
+ *
  * This file is Copyright 2012 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
@@ -307,14 +318,45 @@ static gps_mask_t hnd_129026(unsigned char *bu, int len, PGN *pgn,
 
 
 /*
- *   PGN 126992: GNSS System Time
+ * PGN: 126992 / 00370020 / 1F010 - 8 - System Time
+ *
+ *  Field #1: SID
+ *                  Bits: 8
+ *                  Signed: false
+ *  Field #2: Source
+ *                  Bits: 4
+ *                  Type: Lookup table
+ *                  Signed: false
+ *                  Lookup: 0=GPS
+ *                  Lookup: 1=GLONASS
+ *                  Lookup: 2=Radio Station
+ *                  Lookup: 3=Local Cesium clock
+ *                  Lookup: 4=Local Rubidium clock
+ *                  Lookup: 5=Local Crystal clock
+ *  Field #3: Reserved - Reserved
+ *                  Bits: 4
+ *                  Type: Binary data
+ *                  Signed: false
+ *  Field #4: Date - Days since January 1, 1970
+ *                  Bits: 16
+ *                  Units: days
+ *                  Type: Date
+ *                  Resolution: 1
+ *                  Signed: false
+ *  Field #5: Time - Seconds since midnight
+ *                  Bits: 32
+ *                  Units: s
+ *                  Type: Time
+ *                  Resolution: 0.0001
+ *                  Signed: false
+ *
  */
 static gps_mask_t hnd_126992(unsigned char *bu, int len, PGN *pgn,
                              struct gps_device_t *session)
 {
     // uint8_t        sid;
     // uint8_t        source;
-    uint32_t msecs;       /* time in ms */
+    uint64_t usecs;       /* time in us */
 
     print_data(session->context, bu, len, pgn);
     GPSD_LOG(LOG_DATA, &session->context->errout,
@@ -323,8 +365,8 @@ static gps_mask_t hnd_126992(unsigned char *bu, int len, PGN *pgn,
     // sid        = bu[0];
     // source     = bu[1] & 0x0f;
 
-    msecs = getleu32(bu, 4);
-    MSTOTS(&session->newdata.time, msecs);
+    usecs = getleu32(bu, 4) * 100;
+    USTOTS(&session->newdata.time, usecs);
     session->newdata.time.tv_sec += (time_t)(getleu16(bu, 2) * 24 * 60 * 60);
 
     return TIME_SET | get_mode(session);
@@ -424,83 +466,178 @@ static gps_mask_t hnd_129540(unsigned char *bu, int len, PGN *pgn,
 
 
 /*
- *   PGN 129029: GNSS Position Data
+ * PGN: 129029 / 00374005 / 1F805 - 51 - GNSS Position Data
+ *
+ *      The last 3 fields repeat until the data is exhausted.
+ *
+ *   Field #1: SID
+ *                   Bits: 8
+ *                   Signed: false
+ *   Field #2: Date - Days since January 1, 1970
+ *                   Bits: 16
+ *                   Units: days
+ *                   Type: Date
+ *                   Resolution: 1
+ *                   Signed: false
+ *   Field #3: Time - Seconds since midnight
+ *                   Bits: 32
+ *                   Units: s
+ *                   Type: Time
+ *                   Resolution: 0.0001
+ *                   Signed: false
+ *   Field #4: Latitude
+ *                   Bits: 64
+ *                   Units: deg
+ *                   Type: Latitude
+ *                   Resolution: 0.0000000000000001
+ *                   Signed: true
+ *   Field #5: Longitude
+ *                   Bits: 64
+ *                   Units: deg
+ *                   Type: Longitude
+ *                   Resolution: 0.0000000000000001
+ *                   Signed: true
+ *   Field #6: Altitude - Altitude referenced to WGS-84
+ *                   Bits: 64
+ *                   Units: m
+ *                   Resolution: 1e-06
+ *                   Signed: true
+ *   Field #7: GNSS type
+ *                   Bits: 4
+ *                   Type: Lookup table
+ *                   Signed: false
+ *                   Lookup: 0=GPS
+ *                   Lookup: 1=GLONASS
+ *                   Lookup: 2=GPS+GLONASS
+ *                   Lookup: 3=GPS+SBAS/WAAS
+ *                   Lookup: 4=GPS+SBAS/WAAS+GLONASS
+ *                   Lookup: 5=Chayka
+ *                   Lookup: 6=integrated
+ *                   Lookup: 7=surveyed
+ *                   Lookup: 8=Galileo
+ *   Field #8: Method
+ *                   Bits: 4
+ *                   Type: Lookup table
+ *                   Signed: false
+ *                   Lookup: 0=no GNSS
+ *                   Lookup: 1=GNSS fix
+ *                   Lookup: 2=DGNSS fix
+ *                   Lookup: 3=Precise GNSS
+ *                   Lookup: 4=RTK Fixed Integer
+ *                   Lookup: 5=RTK float
+ *                   Lookup: 6=Estimated (DR) mode
+ *                   Lookup: 7=Manual Input
+ *                   Lookup: 8=Simulate mode
+ *   Field #9: Integrity
+ *                   Bits: 2
+ *                   Type: Lookup table
+ *                   Signed: false
+ *                   Lookup: 0=No integrity checking
+ *                   Lookup: 1=Safe
+ *                   Lookup: 2=Caution
+ *   Field #10: Reserved - Reserved
+ *                   Bits: 6
+ *                   Type: Binary data
+ *                   Signed: false
+ *   Field #11: Number of SVs - Number of satellites used in solution
+ *                   Bits: 8
+ *                   Signed: false
+ *   Field #12: HDOP - Horizontal dilution of precision
+ *                   Bits: 16
+ *                   Resolution: 0.01
+ *                   Signed: true
+ *   Field #13: PDOP - Probable dilution of precision
+ *                   Bits: 16
+ *                   Resolution: 0.01
+ *                   Signed: true
+ *   Field #14: Geoidal Separation - Geoidal Separation
+ *                   Bits: 32
+ *                   Units: m
+ *                   Resolution: 0.01
+ *                   Signed: true
+ *   Field #15: Reference Stations - Number of reference stations
+ *                   Bits: 8
+ *                   Signed: false
+ *   Field #16: Reference Station Type
+ *                   Bits: 4
+ *                   Type: Lookup table
+ *                   Signed: false
+ *                   Lookup: 0=GPS
+ *                   Lookup: 1=GLONASS
+ *                   Lookup: 2=GPS+GLONASS
+ *                   Lookup: 3=GPS+SBAS/WAAS
+ *                   Lookup: 4=GPS+SBAS/WAAS+GLONASS
+ *                   Lookup: 5=Chayka
+ *                   Lookup: 6=integrated
+ *                   Lookup: 7=surveyed
+ *                   Lookup: 8=Galileo
+ *   Field #17: Reference Station ID
+ *                   Bits: 12
+ *                   Units:
+ *                   Signed: false
+ *   Field #18: Age of DGNSS Corrections
+ *                   Bits: 16
+ *                   Units: s
+ *                   Resolution: 0.01
+ *                   Signed: false
+ *
  */
 static gps_mask_t hnd_129029(unsigned char *bu, int len, PGN *pgn,
                              struct gps_device_t *session)
 {
-    /* field  description
-     *  1     SID
-     *  2     Position Date
-     *  3     Position time
-     *  4     Latitude
-     *  5     Longitude
-     *  6     Altitude (what kind?  probably WGS84?)
-     *  7     Type of System
-     *  8     Method, GNSS
-     *  9     Integrity
-     * 10     reserved
-     * 11     Number of SVs
-     * 12     HDOP
-     * 13     PDOP
-     * 14     Geoidal Separation
-     * 15     # of reference stations
-     * 16     REf station 1 type
-     * 17     REf station 1 ID
-     * 18     REf station 1 DGNSS correction age
-     * [ last 3 repeated]
-     */
     gps_mask_t mask;
-    uint32_t msecs;    /* time in ms */
+    uint64_t usecs;    /* time in us */
 
     print_data(session->context, bu, len, pgn);
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "pgn %6d(%3d):\n", pgn->pgn, session->driver.nmea2000.unit);
 
-    mask                             = 0;
+    mask = 0;
     session->driver.nmea2000.sid[3]  = bu[0];
 
-    msecs = getleu32(bu, 3);
-    MSTOTS(&session->newdata.time, msecs);
+    // field 3 is time in 0.1 ms
+    usecs = getleu32(bu, 3) * 100;
+    USTOTS(&session->newdata.time, usecs);
+    // add in the date from field 2
     session->newdata.time.tv_sec += (time_t)(getleu16(bu,1) * 24 * 60 * 60);
-    mask                            |= TIME_SET;
+    mask |= TIME_SET;
 
-    session->newdata.latitude        = getles64(bu, 7) * 1e-16;
-    session->newdata.longitude       = getles64(bu, 15) * 1e-16;
-    mask                            |= LATLON_SET;
+    session->newdata.latitude = getles64(bu, 7) * 1e-16;
+    session->newdata.longitude = getles64(bu, 15) * 1e-16;
+    mask |= LATLON_SET;
 
-    session->newdata.altHAE         = getles64(bu, 23) * 1e-6;
-    mask                            |= ALTITUDE_SET;
+    session->newdata.altHAE = getles64(bu, 23) * 1e-6;
+    mask |= ALTITUDE_SET;
 
 //  printf("mode %x %x\n", (bu[31] >> 4) & 0x0f, bu[31]);
     switch ((bu[31] >> 4) & 0x0f) {
     case 0:
-        session->newdata.status      = STATUS_NO_FIX;
+        session->newdata.status = STATUS_NO_FIX;
         break;
     case 1:
-        session->newdata.status      = STATUS_FIX;
+        session->newdata.status = STATUS_FIX;
         break;
     case 2:
-        session->newdata.status      = STATUS_DGPS_FIX;
+        session->newdata.status = STATUS_DGPS_FIX;
         break;
     case 3:
     case 4:
     case 5:
-        session->newdata.status      = STATUS_FIX; /* Is this correct ? */
+        session->newdata.status = STATUS_FIX; /* Is this correct ? */
         break;
     default:
-        session->newdata.status      = STATUS_NO_FIX;
+        session->newdata.status = STATUS_NO_FIX;
         break;
     }
-    mask                            |= STATUS_SET;
+    mask |= STATUS_SET;
 
-    session->newdata.geoid_sep       = getles32(bu, 38) / 100.0;
+    session->newdata.geoid_sep = getles32(bu, 38) / 100.0;
 
     session->gpsdata.satellites_used = (int)bu[33];
 
-    session->gpsdata.dop.hdop        = getleu16(bu, 34) * 0.01;
-    session->gpsdata.dop.pdop        = getleu16(bu, 36) * 0.01;
-    mask                            |= DOP_SET;
+    session->gpsdata.dop.hdop = getleu16(bu, 34) * 0.01;
+    session->gpsdata.dop.pdop = getleu16(bu, 36) * 0.01;
+    mask |= DOP_SET;
 
     return mask | get_mode(session);
 }
