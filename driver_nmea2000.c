@@ -365,7 +365,7 @@ static gps_mask_t hnd_126992(unsigned char *bu, int len, PGN *pgn,
     // sid        = bu[0];
     // source     = bu[1] & 0x0f;
 
-    usecs = getleu32(bu, 4) * 100;
+    usecs = getleu32(bu, 4) * (uint64_t)100;
     USTOTS(&session->newdata.time, usecs);
     session->newdata.time.tv_sec += (time_t)(getleu16(bu, 2) * 24 * 60 * 60);
 
@@ -596,7 +596,7 @@ static gps_mask_t hnd_129029(unsigned char *bu, int len, PGN *pgn,
     session->driver.nmea2000.sid[3]  = bu[0];
 
     // field 3 is time in 0.1 ms
-    usecs = getleu32(bu, 3) * 100;
+    usecs = getleu32(bu, 3) * (uint64_t)100;
     USTOTS(&session->newdata.time, usecs);
     // add in the date from field 2
     session->newdata.time.tv_sec += (time_t)(getleu16(bu,1) * 24 * 60 * 60);
