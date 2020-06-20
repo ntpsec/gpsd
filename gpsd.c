@@ -1559,7 +1559,7 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
      */
     if ((changed & TIME_SET) == 0) {
         //GPSD_LOG(LOG_PROG, &context.errout, "NTP: No time this packet\n");
-    } else if (0 >= device->fixcnt && !context.batteryRTC) {
+    } else if (0 >= device->fixcnt && false == context.batteryRTC) {
         /* many GPS spew random times until a valid GPS fix */
         /* allow override with -r option */
         //GPSD_LOG(LOG_PROG, &context.errout, "NTP: no fix\n");

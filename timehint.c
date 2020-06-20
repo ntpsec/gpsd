@@ -373,7 +373,7 @@ static char *report_hook(volatile struct pps_thread_t *pps_thread,
          * if PPS is good.
          * Allow override with batteryRTC to allow foot shots.
          */
-        if (!&session->context->batteryRTC &&
+        if (false == &session->context->batteryRTC &&
             session->fixcnt <= NTP_MIN_FIXES &&
             (session->gpsdata.set & GOODTIME_IS) == 0)
             return "no fix";

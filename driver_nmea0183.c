@@ -2446,7 +2446,7 @@ static gps_mask_t processZDA(int c UNUSED, char *field[],
         session->nmea.date.tm_year = year - 1900;
         session->nmea.date.tm_mon = mon - 1;
         session->nmea.date.tm_mday = mday;
-        if (&session->context->batteryRTC) {
+        if (true == &session->context->batteryRTC) {
             // user wants to live dangerously
             session->newdata.time = gpsd_utc_resolve(session);
             GPSD_LOG(LOG_DATA, &session->context->errout,
