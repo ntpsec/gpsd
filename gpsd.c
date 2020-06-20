@@ -656,28 +656,31 @@ static struct gps_device_t *find_device(const char *device_name)
 {
     struct gps_device_t *devp;
 
+    if (NULL == device_name) {
+        return NULL;
+    }
     for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
-        if (allocated_device(devp) && NULL != device_name &&
-            strcmp(devp->gpsdata.dev.path, device_name) == 0) {
+        if (allocated_device(devp) &&
+            0 == strcmp(devp->gpsdata.dev.path, device_name)) {
             return devp;
         }
     }
     return NULL;
 }
 
-static bool open_device( struct gps_device_t *device)
 /* open the input device
  * return: false on failure
  *         true on success
  */
+static bool open_device( struct gps_device_t *device)
 {
     int activated = -1;
 
-    if (NULL == device ) {
+    if (NULL == device) {
         return false;
     }
     activated = gpsd_activate(device, O_OPTIMIZE);
-    if ( ( 0 > activated ) && ( PLACEHOLDING_FD != activated ) ) {
+    if ((0 > activated) && (PLACEHOLDING_FD != activated)) {
         /* failed to open device, and it is not a /dev/ppsX */
         return false;
     }
@@ -695,7 +698,7 @@ static bool open_device( struct gps_device_t *device)
 
     GPSD_LOG(LOG_INF, &context.errout,
              "device %s activated\n", device->gpsdata.dev.path);
-    if ( PLACEHOLDING_FD == activated ) {
+    if (PLACEHOLDING_FD == activated) {
         /* it is a /dev/ppsX, no need to wait on it */
         return true;
     }
