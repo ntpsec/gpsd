@@ -49,10 +49,6 @@ def importado():
     if packet_path:
         packet_paths.append(packet_path)
 
-    # Look for library in LIBDIR if we are in PREFIX
-    if os.path.abspath(__file__).startswith(os.path.abspath('@PREFIX@')):
-        packet_paths.append(lib_path + os.sep + packet_name)
-
     # Look for Library in ancestors
     cwd = os.path.abspath(__file__)
     cwd_part = cwd.split(os.sep)[:-1]
