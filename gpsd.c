@@ -199,6 +199,15 @@ static void typelist(void)
 #if defined(DBUS_EXPORT_ENABLE)
     (void)printf("# DBUS export enabled\n");
 #endif
+#if defined(CONTROL_SOCKET_ENABLE)
+    (void)printf("# Control socket for hotplug notifications enabled\n");
+#endif
+#if defined(MAGIC_HAT_ENABLE)
+    (void)printf("# Magic Hat enabled\n");
+#endif
+#if defined(SYSTEMD_ENABLE)
+    (void)printf("# systemd socket activation enabled\n");
+#endif
     exit(EXIT_SUCCESS);
 }
 
