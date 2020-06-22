@@ -807,7 +807,9 @@ EOF;
 </div>
 <div style="float:left;margin:0 0 1ex 1em;">
     <table style="border-width:1px;border-style:solid;text-align:center;">
-        <tr><th colspan=2 style="text-align:center">Error Estimates</th></tr>
+        <tr title="Dimentionless Ratios">
+            <th colspan=2 style="text-align:center">Dilution of Precision
+            </th></tr>
         <tr title="Geometric Dilution Of Precision"><td>GDOP
             </td><td>{$sky['gdop']}</td></tr>
         <tr title="Horizontal (2D) Dilution Of Precision"><td>HDOP</td>
@@ -822,6 +824,12 @@ EOF;
             </td><td>{$sky['ydop']}</td></tr>
         <tr title="Velocity Dilution Of Precision"><td>VDOP</td>
             <td>{$sky['vdop']}</td></tr>
+    </table>
+</div>
+<div style="float:left;margin:0 0 1ex 1em;">
+    <table style="border-width:1px;border-style:solid;text-align:center;">
+        <tr title="Unknown/undefined uncertainty">
+            <th colspan=2 style="text-align:center">Error Estimates</th></tr>
         <tr title="Estimated Precision of Climb"><td>epc</td>
             <td>{$epc}</td></tr>
         <tr title="Estimated Precision 2D"><td>eph</td>
