@@ -791,15 +791,17 @@ EOF;
         <tr><th colspan=3 style="text-align:center">Position</th></tr>
         <tr><td>Latitude</td><td>{$lat}</td></tr>
         <tr><td>Longitude</td><td>{$lon}</td></tr>
-        <tr><td>Altitude HAE</td><td>{$altHAE}</td></tr>
-        <tr><td>Altitude MSL</td><td>{$altMSL}</td></tr>
-        <tr><td>Geoid Separation</td><td>{$geoidSep}</td></tr>
+        <tr title="Height Above Ellipsoid. Typically WGS84">
+          <td>Altitude HAE</td><td>{$altHAE}</td></tr>
+        <tr title="Height Above Mean Sea Level">
+          <td>Altitude MSL</td><td>{$altMSL}</td></tr>
+        <tr title="HAE - MSL"><td>Geoid Separation</td><td>{$geoidSep}</td></tr>
         <tr><th colspan=3 style="text-align:center">Velocity</th></tr>
-        <tr><td>Speed</td><td>{$speed}</td></tr>
-        <tr><td>Climb</td><td>{$climb}</td></tr>
-        <tr><td>velN</td><td>{$velN}</td></tr>
-        <tr><td>velE</td><td>{$velE}</td></tr>
-        <tr><td>velD</td><td>{$velD}</td></tr>
+        <tr title="Horizontal Velocity"><td>Speed</td><td>{$speed}</td></tr>
+        <tr title="Vertical Velocity"><td>Climb</td><td>{$climb}</td></tr>
+        <tr title="Velocity North"><td>velN</td><td>{$velN}</td></tr>
+        <tr title="Velocity East"><td>velE</td><td>{$velE}</td></tr>
+        <tr title="Velocity Down"><td>velD</td><td>{$velD}</td></tr>
         <tr><td>Track True</td><td>{$track}</td></tr>
         <tr><td>Track Magnetic</td><td>{$magtrack}</td></tr>
         <tr><td>Magnetic Variation</td><td>{$magvar}</td></tr>
