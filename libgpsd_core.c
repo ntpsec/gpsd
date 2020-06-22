@@ -421,10 +421,8 @@ void gpsd_clear(struct gps_device_t *session)
 static int parse_uri_dest(struct gps_device_t *session, char *s,
                           char **host, char **service)
 {
-        if (s[0] != '[') {
-                *host = s;
-                s = strchr(s, ':');
-        } else { /* IPv6 literal */
+        if (s[0] == '[') {
+                /* IPv6 literal */
                 char *cb = strchr(s, ']');
                 if (!cb || (cb[1] && cb[1] != ':')) {
                         GPSD_LOG(LOG_ERROR, &session->context->errout,
@@ -434,6 +432,9 @@ static int parse_uri_dest(struct gps_device_t *session, char *s,
                 *cb = '\0';
                 *host = s + 1;
                 s = cb + 1;
+        } else {
+                *host = s;
+                s = strchr(s, ':');
         }
         if (s && s[0] && s[1]) {
                 *s = '\0';
