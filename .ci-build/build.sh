@@ -50,7 +50,10 @@ SCONSOPTS="${SCONSOPTS} docdir=/usr/share/doc/gpsd"
 SCONSOPTS="${SCONSOPTS} gpsd_user=gpsd"
 SCONSOPTS="${SCONSOPTS} gpsd_group=dialout"
 SCONSOPTS="${SCONSOPTS} debug=yes"
-SCONSOPTS="${SCONSOPTS} qt_versioned=5"
+# set qt_versioned here only for non-CentOS systems (CentOS below)
+if [ ! -f "/etc/centos-release" ]; then
+    SCONSOPTS="${SCONSOPTS} qt_versioned=5"
+fi
 
 export SCONS=$(command -v scons)
 
@@ -66,6 +69,23 @@ if command -v nproc >/dev/null; then
 else
     SCONS_PARALLEL=""
     SCONS_CHECK_PARALLEL=""
+fi
+
+if [ -f "/etc/centos-release" ]; then
+    if grep -q "^CentOS Linux release 7" /etc/centos-release ; then
+        export PYTHONS="2"
+        # Qt version 5 currently doesn't compile, so omit versioning
+        # for now
+        #SCONSOPTS="${SCONSOPTS} qt_versioned=5"
+    elif grep -q "^CentOS Linux release 8" /etc/centos-release ; then
+        export SCONS=$(command -v scons-3)
+        export PYTHONS="3"
+        SCONSOPTS="${SCONSOPTS} qt_versioned=5"
+    else
+        # other CentOS versions not explicitly considered here, handle
+        # as per non-CentOS logic
+        SCONSOPTS="${SCONSOPTS} qt_versioned=5"
+    fi
 fi
 
 export SCONSOPTS
