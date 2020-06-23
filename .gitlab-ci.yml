@@ -123,7 +123,34 @@ fedora-latest:
   - dnf install -y ccache diffutils bluez-libs-devel chrpath dbus-devel desktop-file-utils gcc-c++ libXaw-devel ncurses-devel python-devel qt5-qtbase-devel scons xmlto pps-tools-devel
   - .ci-build/build.sh
 
+centos-7-latest:
+  allow_failure: true
+  interruptible: true
+  when: on_success
+  image: centos:centos7
+  stage: advanced_build
+  variables:
+    SCONSOPTS: 'qt=yes xgps=yes'
+  script:
+  - yum -y update
+  - yum -y install epel-release
+  - yum -y install diffutils bluez-libs-devel gcc-c++ dbus-devel ncurses-devel python-devel python2-scons xmlto pps-tools-devel qt5-qtbase-devel gcc libusbx-devel pyserial pycairo ccache qt-devel gtk3-devel bc
+  - .ci-build/build.sh
 
+centos-8-latest:
+  allow_failure: true
+  interruptible: true
+  when: manual
+  image: centos:centos8
+  stage: advanced_build
+  variables:
+    SCONSOPTS: 'qt=yes xgps=yes'
+  script:
+  - dnf -y install dnf-plugins-core epel-release python3
+  - dnf config-manager --set-enabled PowerTools
+  - dnf -y update
+  - dnf -y install diffutils python3-scons ncurses-devel qt5-qtbase-devel python3-pyserial pps-tools-devel libbsd-devel bluez-libs-devel platform-python-devel dbus-devel libusbx-devel python3-cairo gtk3-devel xmlto libxslt asciidoc libnsl2-devel ccache bc
+  - .ci-build/build.sh
 
 # to avoid falied builds on MRs/forks where no builder with the
 # tag `freebsd` is available, run this job only if
