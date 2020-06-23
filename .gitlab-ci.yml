@@ -134,7 +134,7 @@ centos-7-latest:
   script:
   - yum -y update
   - yum -y install epel-release
-  - yum -y install diffutils python2-scons bc gcc gcc-c++ bluez-libs-devel dbus-devel ncurses-devel python-devel pps-tools-devel qt5-qtbase-devel libusbx-devel qt-devel gtk3-devel pyserial pycairo xmlto ccache
+  - yum -y install diffutils python2-scons bc gcc gcc-c++ bluez-libs-devel dbus-devel ncurses-devel python-devel pps-tools-devel qt5-qtbase-devel libusbx-devel qt-devel gtk3-devel pyserial pycairo libxslt docbook-style-xsl rubygem-asciidoctor ccache
   - .ci-build/build.sh
 
 centos-8-latest:
@@ -149,7 +149,7 @@ centos-8-latest:
   - dnf -y install dnf-plugins-core epel-release python3
   - dnf config-manager --set-enabled PowerTools
   - dnf -y update
-  - dnf -y install diffutils python3-scons bc ncurses-devel qt5-qtbase-devel pps-tools-devel libbsd-devel libnsl2-devel bluez-libs-devel platform-python-devel dbus-devel libusbx-devel gtk3-devel python3-pyserial python3-cairo python3-gobject-base xmlto libxslt asciidoc ccache
+  - dnf -y install diffutils python3-scons bc ncurses-devel qt5-qtbase-devel pps-tools-devel libbsd-devel libnsl2-devel bluez-libs-devel platform-python-devel dbus-devel libusbx-devel gtk3-devel python3-pyserial python3-cairo python3-gobject-base libxslt docbook-style-xsl ccache
   - .ci-build/build.sh
 
 # to avoid falied builds on MRs/forks where no builder with the
