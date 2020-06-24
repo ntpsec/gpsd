@@ -5,7 +5,7 @@
    <meta name="Author" content="Eric S. Raymond">
    <meta name="Description" content="Blutooth setup instructions for GPSD">
    <meta name="Keywords" content="GPS, gpsd, bluetooth">
-   <meta name="Revised" content="9 April 2015">
+   <meta name="Revised" content="24 June 2020">
    <meta name="robots" content="index,follow">
    <link rel="stylesheet" href="main.css" type="text/css">
    <title>Bluetooth and GPSD</title>
@@ -70,7 +70,10 @@ probably skip these steps.</p>
 documentation can be found on <a
 href='http://bluez.sourceforge.net/'>http://bluez.sourceforge.net/</a>.</p></li>
 <li><p>Install bluetooth for your device with the "rfcomm" module to
-allow for serial port emulation.</p></li>
+allow for serial port emulation.</p>
+
+<p>This procedure has been verified against Blues version 5.54, but
+should work with any recent version.</p></li>
 
 <li><p>Next, load the following modules:</p>
 <pre>
@@ -82,7 +85,9 @@ allow for serial port emulation.</p></li>
 </li>
 
 <li><p>If the modules have loaded successfully, type "hciconfig" and you
-should see your BT interface listed under the "hci0" name.</p></li>
+should see your BT interface listed under the "hci0" name.  "hciconfig" is
+part of the Bluez stack.  Not all distributions install it by default.
+Gentoo requires USE="deprecated" with bluez to install hciconfig.</p></li>
 </ol>
 
 <h2>Configuration</h2>
@@ -98,16 +103,18 @@ should see your BT interface listed under the "hci0" name.</p></li>
 <li><p>Write down the address of your BT GPS receiver (xx:xx:xx:xx:xx:xx).
 At this point, it is quite likely that passing the address to gpsd will work.</p></li>
 
-<li><p>If you're using a smartphone via Bluetooth, you will probably need to
-specify a channel other than 1.  Start the GPS app on your phone, altering any
-settings needed to make it give NMEA strings over Bluetooth, and then do
-something like:
+<li><p>If you're using a smartphone app to send your GPS data via
+Bluetooth Start the GPS app on your phone, altering any settings needed
+to make it send NMEA strings over Bluetooth.</p></li>
+
+<li><p>Check the protocol and channel that your device supports.</P>
 
 <pre>
   sdptool browse xx:xx:xx:xx:xx:xx
 </pre>
 
-<p>You should see something like this in the output:</p>
+<p>A smartphone app will look something like this in the output.  Note
+the channel number is 2:</p>
 
 <pre>
   Service Name: GPS2BT
@@ -120,57 +127,68 @@ something like:
       Channel: 2
 </pre>
 
-<p>The Service name will vary based on the app.  Write down the
+<p>A standalone Bluetooth GPS may look like this.  Note the channel
+number is 1:</p>
+
+<pre>
+  Service Name: SPP slave
+  Service RecHandle: 0x10000
+  Service Class ID List:
+    "Serial Port" (0x1101)
+  Protocol Descriptor List:
+    "L2CAP" (0x0100)
+    "RFCOMM" (0x0003)
+      Channel: 1
+  Language Base Attr List:
+    code_ISO639: 0x656e
+    encoding:    0x6a
+    base_offset: 0x100
+</pre>
+
+<p>The Service name will vary based on the app or device.  Write down the
 channel number and use it in the next step instead of channel 1. The channel
 number will likely vary each time the app is started, so you will probably
 need some scripting or other additional configuration to fix that. If gpsd or
 gpsctl is reporting "connection refused" it is likely that you have the
 wrong channel number.</p>
+
+<p>If you're using a smartphone app you will probably need to specify a
+channel other than 1.</p>
 </li>
 
-<li><p>Set up rfcomm.  Edit /etc/bluetooth/rfcomm.conf to reflect your BT
-GPS address and to enable binding.</p>
-<pre>
-	#
-	# RFCOMM configuration file.
-	#
-	# $Id: rfcomm.conf,v 1.1 2002/10/07 05:58:18 maxk Exp $
-	#
-
-	rfcomm0 {
-	        # Automatically bind the device at startup
-	        bind yes;
-
-	        # Bluetooth address of the device
-	        device xx:xx:xx:xx:xx:xx;
-
-	        # RFCOMM channel for the connection
-	        channel 1;
-
-	        # Description of the connection
-	        comment "Your GPS Device Here";
-	}
-</pre>
+<li><p>The /etc/bluetooth/rfcomm.conf file is no longer used by rfcomm.
+Previous versions of this procedure used that file.<p>
 </li>
 
-<li><p>Bind rfcomm0 (unless you are planning to reboot, in which case
-it will be automatically bound).</p>
+<li><p>Bind rfcomm0 to the serial data channel, in this case 1, of the BT
+GPS.  Then verify it worked:</p>
 <pre>
-	# rfcomm bind rfcomm0
+	# rfcomm bind rfcomm0 xx:xx:xx:xx:xx:xx 1
+        # rfcomm -a
+        rfcomm0: xx:xx:xx:xx:xx:xx channel 1 clean 
+        # ls /dev/rfcomm0
+        /dev/rfcomm0
 </pre>
+<p>You will now have a new device file, /dev/rfcomm0, that you will
+use for gpsd to connect to theBT GPS.
 </li>
 
 <li>
 <p>Under most Linux distros, GPSD is by default configured to start gpsd on
 a hotplug event announcing a USB GPS. You need to reconfigure the GPSD
 installation so the daemon will be started at boot time listening to
-/dev/rfcomm0 (it will still work with hotplugged USB GPses after you
+/dev/rfcomm0 (it will still work with hotplugged USB GPSes after you
 do this).</p>
 
 <p>Under Debian and Ubuntu Linux, <code>"dpkg-reconfigure gpsd"</code>
 will start a dialog that will reconfigure the device for you. You
 will need to reboot for this change to take effect.</p>
 </li>
+
+<li><p>You may find it easier just to start gpsd manually.</p>
+<pre>
+    # gpsd -n /dev/rfcomm0
+</pre>
 </ol>
 
 <p>At this point, your system should be configured to use gpsd with
@@ -179,14 +197,13 @@ described in the <a href="troubleshooting.html">Troubleshooting Guide</a>.</p>
 
 <h2>Known Issues:</h2>
 <ul>
-<li><p>On system startup, gpsd starts before rfcomm0 is bound by rfcomm
-and fails (at least on some systems) - a workaround for this is to add
-a symlink to the gpsd init.d script to a later runlevel.</p>
-<pre>
-# cd /etc/rcS.d/
-# ln -s ../init.d/gpsd S89gpsd
-</pre>
+<li><p>Apparmor may silently prevent gpsd from using rfcomm.  Check
+your "dmesg" output for signs of Apparmor interference.</p></li>
+
+<li><p>Creating rfcomm to bind on startup, and then starting gpsd, is
+very init system dependant and is not covered here.</p>
 </li>
+
 <li>
 <p>In February 2009 it was reported that there are some issues with
 the Bluetooth stack in Ubuntu Intrepid. <a
