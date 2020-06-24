@@ -77,10 +77,10 @@ should work with any recent version.</p></li>
 
 <li><p>Next, load the following modules:</p>
 <pre>
-	# modprobe hci_xxx (xxx depend on your type of device)
-	# modprobe bluez
-	# modprobe l2cap
-	# modprobe rfcomm
+        # modprobe hci_xxx (xxx depend on your type of device)
+        # modprobe bluez
+        # modprobe l2cap
+        # modprobe rfcomm
 </pre>
 </li>
 
@@ -95,8 +95,8 @@ Gentoo requires USE="deprecated" with bluez to install hciconfig.</p></li>
 <ol>
 <li><p>Turn on your BT GPS device and scan for remote BT devices:</p>
 <pre>
-	# hciconfig hci0 up
-	# hcitool scan
+    # hciconfig hci0 up
+    # hcitool scan
 </pre>
 </li>
 
@@ -110,7 +110,7 @@ to make it send NMEA strings over Bluetooth.</p></li>
 <li><p>Check the protocol and channel that your device supports.</P>
 
 <pre>
-  sdptool browse xx:xx:xx:xx:xx:xx
+    # sdptool browse xx:xx:xx:xx:xx:xx
 </pre>
 
 <p>A smartphone app will look something like this in the output.  Note
@@ -163,14 +163,14 @@ Previous versions of this procedure used that file.<p>
 <li><p>Bind rfcomm0 to the serial data channel, in this case 1, of the BT
 GPS.  Then verify it worked:</p>
 <pre>
-	# rfcomm bind rfcomm0 xx:xx:xx:xx:xx:xx 1
-        # rfcomm -a
-        rfcomm0: xx:xx:xx:xx:xx:xx channel 1 clean 
-        # ls /dev/rfcomm0
-        /dev/rfcomm0
+    # rfcomm bind rfcomm0 xx:xx:xx:xx:xx:xx 1
+    # rfcomm -a
+    rfcomm0: xx:xx:xx:xx:xx:xx channel 1 clean 
+    # ls /dev/rfcomm0
+    /dev/rfcomm0
 </pre>
 <p>You will now have a new device file, /dev/rfcomm0, that you will
-use for gpsd to connect to theBT GPS.
+use for gpsd to connect to the BT GPS.
 </li>
 
 <li>
