@@ -9,6 +9,11 @@
 #include <math.h>          /* for modf() */
 #include <stdbool.h>       /* for bool */
 
+#define NS_IN_SEC       1000000000LL     /* nanoseconds in a second */
+#define MS_IN_NS        1000LL           /* milliseconds in a nano second */
+#define US_IN_SEC       1000000LL        /* microseconds in a second */
+#define MS_IN_SEC       1000LL           /* milliseconds in a second */
+
 /* normalize a timespec
  *
  * three cases to note
@@ -21,9 +26,6 @@
  *
  * NOTE: this normalization is not the same as ntpd uses
  */
-#define NS_IN_SEC       1000000000LL     /* nanoseconds in a second */
-#define US_IN_SEC       1000000LL        /* microseconds in a second */
-#define MS_IN_SEC       1000LL           /* milliseconds in a second */
 
 /* return the difference between timespecs in nanoseconds
  * int may be too small, 32 bit long is too small, floats are too imprecise,
