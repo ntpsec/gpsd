@@ -28,6 +28,7 @@
   network dgram,
   network stream,
   network bluetooth,
+  network can raw,
 
   # own binary
   /usr/sbin/gpsd rmix,
