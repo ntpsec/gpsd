@@ -3230,24 +3230,48 @@ static bool ubx_speed(struct gps_device_t *session,
 static bool ubx_rate(struct gps_device_t *session, double cycletime)
 /* change the sample rate of the GPS */
 {
-    unsigned short s;
+    /* Measurment cycle time to be sent to device, will be in milliseconds. */
+    unsigned s;
+    /* Minimum measurement cycle time currently known from documentation
+     * for fastest devices, here in seconds. Maintained in
+     * struct gps_type_t driver_ubx.
+     */
+    const double min_cycle = TSTONS(&session->device_type->min_cycle);
+    /* Message to be sent to device. */
     unsigned char msg[6] = {
-        0x00, 0x00,     /* U2: Measurement rate (ms) */
-        0x00, 0x01,     /* U2: Navigation rate (cycles) */
-        0x00, 0x00,     /* U2: Alignment to reference time: 0 = UTC, !0 = GPS */
+        0x00, 0x00,     /* U2: Measurement rate (ms), will be set below */
+        0x01, 0x00,     /* U2: Navigation rate (cycles) */
+        0x00, 0x00,     /* U2: Alignment to reference time: 0 = UTC */
     };
 
-    /* clamp to cycle times that i know work on my receiver */
-    if (cycletime > 1000.0)
-        cycletime = 1000.0;
-    if (cycletime < 200.0)
-        cycletime = 200.0;
+    /* cycletime and min_cycle (as returned by TSTONS()) are doubles
+     * representing seconds. Stick to doubles and seconds while working
+     * with min_cycle.
+     */
+
+    /* No functional upper bound for measurement cycle time known,
+     * clamp solely to avoid overflow below.
+     */
+    if (65.5 < cycletime)
+        cycletime = 65.5;   // seconds
+
+    /* Clamp cycle time to lowest bound given in documentation. A particular
+     * device may only accept a device-specific higher minimal value,
+     * e.g. 50ms.
+     */
+    if (min_cycle > cycletime)
+        cycletime = min_cycle;
+
+    /* Receiver expects UBX U2 (unsigned 16 bit integer) representing
+     * milliseconds, so convert cycletime to unsigned representing
+     * milliseconds before talking to the receiver.
+     */
+    s = (unsigned)(cycletime * MS_IN_SEC);
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "UBX rate change, report every %f secs\n", cycletime);
-    s = (unsigned short)cycletime;
-    msg[0] = (unsigned char)(s >> 8);
-    msg[1] = (unsigned char)(s & 0xff);
+             "UBX rate change, report every %u millisecs\n", s);
+    msg[0] = (unsigned char)(s & 0xff);
+    msg[1] = (unsigned char)(s >> 8);
 
     return ubx_write(session, UBX_CLASS_CFG, 0x08, msg, 6); /* CFG-RATE */
 }
@@ -3255,27 +3279,30 @@ static bool ubx_rate(struct gps_device_t *session, double cycletime)
 /* This is everything we export */
 /* *INDENT-OFF* */
 const struct gps_type_t driver_ubx = {
-    .type_name        = "u-blox",    /* Full name of type */
-    .packet_type      = UBX_PACKET,     /* associated lexer packet type */
-    .flags            = DRIVER_STICKY,  /* remember this */
-    .trigger          = NULL,
+    .type_name         = "u-blox",       /* Full name of type */
+    .packet_type       = UBX_PACKET,     /* associated lexer packet type */
+    .flags             = DRIVER_STICKY,  /* remember this */
+    .trigger           = NULL,
     /* Number of satellite channels supported by the device */
-    .channels         = 50,
-    .probe_detect     = NULL,           /* Startup-time device detector */
+    .channels          = 50,
+    .probe_detect      = NULL,           /* Startup-time device detector */
     /* Packet getter (using default routine) */
-    .get_packet       = generic_get,
-    .parse_packet     = parse_input,    /* Parse message packets */
-     /* RTCM handler (using default routine) */
-    .rtcm_writer      = gpsd_write,
-    .init_query       = ubx_init_query, /* non-perturbing initial query */
-    .event_hook       = ubx_event_hook, /* Fire on various lifetime events */
-    .speed_switcher   = ubx_speed,      /* Speed (baudrate) switch */
-    .mode_switcher    = ubx_mode,       /* Mode switcher */
-    .rate_switcher    = ubx_rate,       /* Message delivery rate switcher */
-    .min_cycle.tv_sec  = 0,             /* not relevant, no rate switch */
-    .min_cycle.tv_nsec = 250000000,     /* Maximum 4Hz sample rate */
-    .control_send     = ubx_control_send,/* how to send a control string */
-    .time_offset     = NULL,            /* no method for NTP fudge factor */
+    .get_packet        = generic_get,
+    .parse_packet      = parse_input,    /* Parse message packets */
+    /* RTCM handler (using default routine) */
+    .rtcm_writer       = gpsd_write,
+    .init_query        = ubx_init_query, /* non-perturbing initial query */
+    .event_hook        = ubx_event_hook, /* Fire on various lifetime events */
+    .speed_switcher    = ubx_speed,      /* Speed (baudrate) switch */
+    .mode_switcher     = ubx_mode,       /* Mode switcher */
+    .rate_switcher     = ubx_rate,       /* Message delivery rate switcher */
+    /* Minimum measurement cycle time currently known from documentation
+     * for fastest devices.
+     */
+    .min_cycle.tv_sec  = 0,
+    .min_cycle.tv_nsec = 25000000,       /* Maximum 40Hz sample rate */
+    .control_send      = ubx_control_send,/* how to send a control string */
+    .time_offset       = NULL,           /* no method for NTP fudge factor */
 };
 /* *INDENT-ON* */
 #endif /* defined(UBLOX_ENABLE) && defined(BINARY_ENABLE) */
