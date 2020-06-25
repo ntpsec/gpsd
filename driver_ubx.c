@@ -3227,51 +3227,39 @@ static bool ubx_speed(struct gps_device_t *session,
     return true;
 }
 
-static bool ubx_rate(struct gps_device_t *session, double cycletime)
 /* change the sample rate of the GPS */
+static bool ubx_rate(struct gps_device_t *session, double cycletime)
 {
-    /* Measurment cycle time to be sent to device, will be in milliseconds. */
-    unsigned s;
     /* Minimum measurement cycle time currently known from documentation
-     * for fastest devices, here in seconds. Maintained in
+     * for fastest devices, here in milli seconds. Maintained in
      * struct gps_type_t driver_ubx.
      */
-    const double min_cycle = TSTONS(&session->device_type->min_cycle);
+    const int64_t min_cycle = TSTOMS(&session->device_type->min_cycle);
+    // cycletime in milli seconds
+    int64_t measRate = (int64_t)(cycletime * MS_IN_SEC);
     /* Message to be sent to device. */
     unsigned char msg[6] = {
         0x00, 0x00,     /* U2: Measurement rate (ms), will be set below */
-        0x01, 0x00,     /* U2: Navigation rate (cycles) */
+        0x01, 0x00,     /* U2: Navigation rate (cycles), set to 1 */
         0x00, 0x00,     /* U2: Alignment to reference time: 0 = UTC */
     };
 
-    /* cycletime and min_cycle (as returned by TSTONS()) are doubles
-     * representing seconds. Stick to doubles and seconds while working
-     * with min_cycle.
-     */
-
-    /* No functional upper bound for measurement cycle time known,
-     * clamp solely to avoid overflow below.
-     */
-    if (65.5 < cycletime)
-        cycletime = 65.5;   // seconds
-
-    /* Clamp cycle time to lowest bound given in documentation. A particular
-     * device may only accept a device-specific higher minimal value,
-     * e.g. 50ms.
-     */
-    if (min_cycle > cycletime)
-        cycletime = min_cycle;
-
-    /* Receiver expects UBX U2 (unsigned 16 bit integer) representing
-     * milliseconds, so convert cycletime to unsigned representing
-     * milliseconds before talking to the receiver.
-     */
-    s = (unsigned)(cycletime * MS_IN_SEC);
+    // check max
+    if (65535 < measRate) {
+        measRate = 65535;   // milli seconds
+    } else if (min_cycle > measRate) {
+        /* Clamp cycle time to lowest bound given in documentation.
+         * protVer >= 24 has 25 ms min.
+         * protVer < 24 has min of 50ms or more.
+         */
+        measRate = min_cycle;
+    }
+    // we now know measRate fits in a U2
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "UBX rate change, report every %u millisecs\n", s);
-    msg[0] = (unsigned char)(s & 0xff);
-    msg[1] = (unsigned char)(s >> 8);
+             "UBX rate change, measRate %ld millisecs\n", measRate);
+    msg[0] = (unsigned char)(measRate & 0xff);
+    msg[1] = (unsigned char)(measRate >> 8);
 
     return ubx_write(session, UBX_CLASS_CFG, 0x08, msg, 6); /* CFG-RATE */
 }
