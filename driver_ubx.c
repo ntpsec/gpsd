@@ -2371,6 +2371,34 @@ ubx_msg_tim_tp(struct gps_device_t *session, unsigned char *buf,
     return mask;
 }
 
+/* UBX-CFG-RATE */
+static void ubx_msg_cfg_rate(struct gps_device_t *session, unsigned char *buf,
+                             size_t data_len)
+{
+    uint16_t measRate, navRate, timeRef;
+
+    if (6 != data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-CFG-RATE message, runt payload len %zd", data_len);
+        return;
+    }
+
+    measRate = getleu16(buf, 0);  // Measurement rate (ms)
+    navRate = getleu16(buf, 2);   // Navigation rate (cycles)
+    timeRef = getleu16(buf, 4);   // Time system, e.g. UTC, GPS, ...
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "UBX-CFG-RATE: measRate %ums, navRate %u cycle(s), "
+             "timeRef %u\n",
+             (unsigned)measRate, (unsigned)navRate,
+             (unsigned)timeRef);
+
+    /* Update our notion of what the device's measurement rate is */
+    MSTOTS(&session->gpsdata.dev.cycle, measRate);
+
+    return;
+}
+
 gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
                      size_t len)
 {
@@ -2414,6 +2442,16 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
                      "UBX-CFG-PRT: port %d\n", session->driver.ubx.port_id);
         }
         break;
+    case UBX_CFG_RATE:
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-CFG-RATE\n");
+        ubx_msg_cfg_rate(session, &buf[UBX_PREFIX_LEN], data_len);
+        break;
+    case UBX_CFG_NAV5:
+        GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-CFG-NAV5\n");
+        break;
+    case UBX_CFG_NAVX5:
+        GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-CFG-NAVX5\n");
+        break;
 
     case UBX_INF_DEBUG:
         /* FALLTHROUGH */
@@ -2453,7 +2491,6 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         mask = ubx_msg_log_retrievestring(session, &buf[UBX_PREFIX_LEN],
                                           data_len);
         break;
-
 
     case UBX_MON_BATCH:
         GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-MON-BATCH\n");
@@ -2773,7 +2810,6 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
     }
     return mask | ONLINE_SET;
 }
-
 
 static gps_mask_t parse_input(struct gps_device_t *session)
 {
