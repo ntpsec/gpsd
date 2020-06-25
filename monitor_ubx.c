@@ -184,9 +184,10 @@ static void display_nav_sat(unsigned char *buf, size_t data_len)
         (void)wprintw(satwin, "%22s", " ");
     }
 
+    /* redraw frame to close gap to shorter label */
+    (void)wborder(satwin, 0, 0, 0, 0, 0, 0, 0, 0), (void)syncok(satwin, true);
     /* update pane label */
     (void)wattrset(satwin, A_BOLD);
-    (void)wborder(satwin, 0, 0, 0, 0, 0, 0, 0, 0), (void)syncok(satwin, true);
     display(satwin, 18, 7, " NAV-SAT ");
     (void)wattrset(satwin, A_NORMAL);
     (void)wnoutrefresh(satwin);
