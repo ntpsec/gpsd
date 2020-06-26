@@ -2230,8 +2230,9 @@ if env['python'] and not cleaning and not helping:
             if p in ['xgps', 'xgpsspeed']:
                 # do not have xgps* dependencies, don't test
                 continue
-        pp.append("$PYTHON $SRCDIR/%s -V" % p)
-    python_versions = Utility('python-versions', python_progs, pp, ENV=verenv)
+        pp.append(Utility('version-%s' % p, p,
+                          '$PYTHON $SRCDIR/%s -V' % p, ENV=verenv))
+    python_versions = env.Alias('python-versions', pp)
 
 else:
     python_install = []
