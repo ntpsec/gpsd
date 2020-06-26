@@ -1753,6 +1753,25 @@ gpsmon_sources = [
     'monitor_ubx.c',
 ]
 
+# Python import dependencies
+# Update these whenever the imports change
+# These are technically unnecessary in cases where the dependency isn't
+# a generated file, but this section avoids any knowledge of which files
+# are generated and which aren't.
+
+# Internal imports within 'gps' package
+env.Depends('gps/__init__.py', ['gps/gps.py', 'gps/misc.py'])
+# All Python programs import the 'gps' package
+env.Depends(python_progs, 'gps/__init__.py')
+# Additional specific import cases
+env.Depends('gpscat', ['gps/packet.py', 'gps/misc.py'])
+env.Depends('gpsfake', 'gps/fake.py')
+env.Depends('xgps', 'gps/clienthelpers.py')
+env.Depends('zerk', 'gps/misc.py')
+env.Depends('gps/fake.py', 'gps/packet.py')
+# Dependency on FFI packet library
+env.Depends('gps/packet.py', packet_ffi_shared)
+
 # Production programs
 
 gpsd = env.Program('gpsd', gpsd_sources,
