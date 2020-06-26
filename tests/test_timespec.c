@@ -196,11 +196,11 @@ static int test_ts_to_ms(int verbose)
         result = TSTOMS(&p->input);
         timespec_str(&p->input, buf_i, sizeof(buf_i));
         if (p->expected != result) {
-                printf("%21s = %ld, FAIL s/b %ld\n",
-                       buf_i, result, p->expected);
+                printf("%21s = %lld, FAIL s/b %lld\n",
+                       buf_i, (long long) result, (long long) p->expected);
                 fail_count++;
         } else if ( verbose ) {
-                printf("%21s = %ld\n", buf_i, result);
+                printf("%21s = %lld\n", buf_i, (long long) result);
         }
 
         if (p->last) {

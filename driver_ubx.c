@@ -3257,7 +3257,8 @@ static bool ubx_rate(struct gps_device_t *session, double cycletime)
     // we now know measRate fits in a U2
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "UBX rate change, measRate %ld millisecs\n", measRate);
+             "UBX rate change, measRate %lld millisecs\n",
+             (long long) measRate);
     msg[0] = (unsigned char)(measRate & 0xff);
     msg[1] = (unsigned char)(measRate >> 8);
 
