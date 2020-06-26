@@ -416,10 +416,11 @@ void gpsd_clear(struct gps_device_t *session)
 
 /* split s into host and service parts
  * if service is not specified, *service is assigned to NULL
+ * device is currently always assigned to NULL
  * return: -1 on error, 0 otherwise
  */
 static int parse_uri_dest(struct gps_device_t *session, char *s,
-                          char **host, char **service)
+                          char **host, char **service, char **device)
 {
         if (s[0] == '[') {
                 /* IPv6 literal */
@@ -441,6 +442,7 @@ static int parse_uri_dest(struct gps_device_t *session, char *s,
                 *service = s + 1;
         } else
                 *service = NULL;
+        *device = NULL;
         return 0;
 }
 
@@ -464,11 +466,12 @@ int gpsd_open(struct gps_device_t *session)
         return session->gpsdata.gps_fd;
     /* otherwise, could be an TCP data feed */
     } else if (str_starts_with(session->gpsdata.dev.path, "tcp://")) {
-        char server[GPS_PATH_MAX], *host, *port;
+        char server[GPS_PATH_MAX], *host, *port, *device;
         socket_t dsock;
         (void)strlcpy(server, session->gpsdata.dev.path + 6, sizeof(server));
         INVALIDATE_SOCKET(session->gpsdata.gps_fd);
-        if (parse_uri_dest(session, server, &host, &port) == -1 || !port) {
+        if (-1 == parse_uri_dest(session, server, &host, &port, &device) ||
+            !port) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "Missing service in TCP feed spec.\n");
             return -1;
@@ -489,11 +492,12 @@ int gpsd_open(struct gps_device_t *session)
         return session->gpsdata.gps_fd;
     /* or could be UDP */
     } else if (str_starts_with(session->gpsdata.dev.path, "udp://")) {
-        char server[GPS_PATH_MAX], *host, *port;
+        char server[GPS_PATH_MAX], *host, *port, *device;
         socket_t dsock;
         (void)strlcpy(server, session->gpsdata.dev.path + 6, sizeof(server));
         INVALIDATE_SOCKET(session->gpsdata.gps_fd);
-        if (parse_uri_dest(session, server, &host, &port) == -1 || !port) {
+        if (-1 == parse_uri_dest(session, server, &host, &port, &device) ||
+            !port) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "Missing service in UDP feed spec.\n");
             return -1;
@@ -516,12 +520,30 @@ int gpsd_open(struct gps_device_t *session)
 #endif /* NETFEED_ENABLE */
 #ifdef PASSTHROUGH_ENABLE
     if (str_starts_with(session->gpsdata.dev.path, "gpsd://")) {
-        char server[GPS_PATH_MAX], *host, *port;
+        /* could be, not all implemented:
+         *    gpsd://[ipv6]
+         *    gpsd://ipv4
+         *    gpsd://hostname
+         *    gpsd://[ipv6]:port
+         *    gpsd://ipv4:port
+         *    gpsd://hostname:port
+         *    gpsd://[ipv6]:port/device
+         *    gpsd://ipv4:port/device
+         *    gpsd://hostname:port/device
+         *    gpsd://[ipv6]:/device
+         *    gpsd://ipv4:/device
+         *    gpsd://hostname:/device
+         *    gpsd://[ipv6]/device
+         *    gpsd://ipv4/device
+         *    gpsd://hostname/device
+         */
+        char server[GPS_PATH_MAX], *host, *port, *device;
         socket_t dsock;
         (void)strlcpy(server, session->gpsdata.dev.path + 7, sizeof(server));
         INVALIDATE_SOCKET(session->gpsdata.gps_fd);
-        if (parse_uri_dest(session, server, &host, &port) == -1)
+        if (-1 == parse_uri_dest(session, server, &host, &port, &device)) {
                 return -1;
+        }
         if (!port)
             port = DEFAULT_GPSD_PORT;
         GPSD_LOG(LOG_INF, &session->context->errout,
