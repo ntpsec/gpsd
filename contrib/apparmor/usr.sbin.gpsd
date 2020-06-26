@@ -20,6 +20,7 @@
   #include <abstractions/base>
   #include <abstractions/nameservice>
 
+  # For shmctl()
   capability ipc_lock,
   capability net_bind_service,
   capability sys_nice,
@@ -27,7 +28,6 @@
   capability setgid,
   capability setuid,
   capability sys_resource,
-  # FIXME: how to enable shmctl() use?
 
   # for all the remote connection options
   network dgram,
