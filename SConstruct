@@ -1916,6 +1916,12 @@ else:
         "valgrind-audit.py"
     ]
 
+    # Dependencies for imports in test programs
+    env.Depends('tests/test_clienthelpers.py',
+                ['gps/__init__.py', 'gps/clienthelpers.py', 'gps/misc.py'])
+    env.Depends('tests/test_misc.py', ['gps/__init__.py', 'gps/misc.py'])
+    env.Depends('valgrind-audit.py', ['gps/__init__.py', 'gps/fake.py'])
+
     if not helping and env['aiogps']:
         python_misc.extend(["example_aiogps.py", "example_aiogps_run"])
 
@@ -2546,10 +2552,13 @@ else:
             '$SRCDIR/regress-driver $REGRESSOPTS -c'
             ' $SRCDIR/test/clientlib/*.log', ])
     # Unit-test the bitfield extractor
-    misc_regress = Utility('misc-regress', [], [
+    misc_regress = Utility('misc-regress', [
+        '$SRCDIR/tests/test_clienthelpers.py',
+        '$SRCDIR/tests/test_misc.py',
+        ], [
         '{} $SRCDIR/tests/test_clienthelpers.py'.format(target_python_path),
         '{} $SRCDIR/tests/test_misc.py'.format(target_python_path)
-    ])
+        ])
 
 
 # Build the regression test for the sentence unpacker
@@ -2590,7 +2599,7 @@ method_regress = UtilityWithHerald(
 if env['xgps_deps']:
     test_xgps_deps = UtilityWithHerald(
         'Testing xgps/xgpsspeed dependencies (since xgps=yes)...',
-        'test-xgps-deps', [], [
+        'test-xgps-deps', ['$SRCDIR/tests/test_xgps_deps.py'], [
             '$PYTHON $SRCDIR/tests/test_xgps_deps.py'])
 else:
     test_xgps_deps = None
