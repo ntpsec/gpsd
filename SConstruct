@@ -2388,7 +2388,7 @@ if env['socket_export'] and env['python']:
     # The ":;" in this production and the later one forestalls an attempt by
     # SCons to install up to date versions of gpsfake and gpsctl if it can
     # find older versions of them in a directory on your $PATH.
-    gps_herald = Utility('gps-herald', [gpsd, gpsctl],
+    gps_herald = Utility('gps-herald', [gpsd, gpsctl, '$SRCDIR/gpsfake'],
                          ':; $PYTHON $PYTHON_COVERAGE $SRCDIR/gpsfake -T')
     gps_log_pattern = os.path.join('test', 'daemon', '*.log')
     gps_logs = glob.glob(gps_log_pattern)
