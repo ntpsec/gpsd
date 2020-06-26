@@ -91,6 +91,7 @@ srec.html
 *.swp
 *.egg-info
 *.gcno
+*.dSYM
 # Built sources
 .cproject
 gpsd_config.h
