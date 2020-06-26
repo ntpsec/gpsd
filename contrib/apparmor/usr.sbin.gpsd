@@ -78,6 +78,9 @@
   /{,var/}run/chrony.tty{,S,USB,AMA}[0-9]*.sock rw,
   /tmp/chrony.tty{,S,USB,AMA}[0-9]*.sock rw,
 
+  # for gpsfake:
+  /tmp/gpsfake-*.sock rw,
+
   # logging
   /{,var/}run/systemd/journal/dev-log w,
 
