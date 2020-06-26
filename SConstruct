@@ -2053,7 +2053,6 @@ substmap = (
     ('@BUGTRACKER@', bugtracker),
     ('@CGIUPLOAD@',  cgiupload),
     ('@CLONEREPO@',  clonerepo),
-    ('@DATE@',       time.asctime()),
     ('@DEVMAIL@',    devmail),
     ('@DOWNLOAD@',   download),
     ('@FORMSERVER@', formserver),
@@ -2090,6 +2089,9 @@ substmap = (
     ('@VERSION@',    gpsd_version),
     ('@WEBSITE@',    website),
 )
+# Keep time-dependent version separate
+# FIXME: Come up with a better approach with reproducible builds
+substmap_dated = substmap + (('@DATE@', time.asctime()),)
 
 templated = glob.glob("*.in") + glob.glob("*/*.in") + glob.glob("*/*/*.in")
 
@@ -2103,10 +2105,15 @@ templated = [x for x in templated if (not x.startswith('contrib/gps/') and
                                       not x.startswith('tests/gps/'))]
 
 for fn in templated:
+    iswww = fn.startswith('www/')
+    # Only www pages need @DATE@ expansion, which forces rebuild every time
+    subst = substmap_dated if iswww else substmap
     # use scons built-in Substfile()
-    builder = env.Substfile(fn, SUBST_DICT=substmap)
-    # default to building all built targets
-    env.Default(builder)
+    builder = env.Substfile(fn, SUBST_DICT=subst)
+    # default to building all built targets, except www
+    # FIXME: Render this unnecessary
+    if not iswww:
+        env.Default(builder)
     # set read-only to alert people trying to edit the files.
     env.AddPostAction(builder, 'chmod -w $TARGET')
     if ((fn.endswith(".py.in") or
