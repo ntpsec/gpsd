@@ -2377,7 +2377,7 @@ static void ubx_msg_cfg_rate(struct gps_device_t *session, unsigned char *buf,
 {
     uint16_t measRate, navRate, timeRef;
 
-    if (6 != data_len) {
+    if (6 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "UBX-CFG-RATE message, runt payload len %zd", data_len);
         return;
