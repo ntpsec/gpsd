@@ -1,5 +1,6 @@
 /*
  * Unit test for timespec's
+ * Also for parse_uri_dest()
  *
  * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
@@ -661,6 +662,77 @@ static void ex_precision(void)
         ex_subtract_float();
 }
 
+struct test_parse_uri_dest_t {
+    char *uri;
+    char *host;
+    char *service;
+    char *device;
+} test_parse_uri_dest_t;
+
+struct test_parse_uri_dest_t tests_parse_uri_dest[] = {
+    {"localhost", "localhost", NULL, NULL},
+    // {"localhost:", "localhost", NULL, NULL}, broken!
+    {"localhost:2947", "localhost", "2947", NULL},
+    {"localhost:gpsd", "localhost", "gpsd", NULL},
+    {"127.0.0.1", "127.0.0.1", NULL, NULL},
+    {"127.0.0.1:2947", "127.0.0.1", "2947", NULL},
+    {"127.0.0.1:gpsd", "127.0.0.1", "gpsd", NULL},
+    {"[fe80::1]", "fe80::1", NULL, NULL},
+    {"[fe80::1]:2947", "fe80::1", "2947", NULL},
+    {"[fe80::1]:gpsd", "fe80::1", "gpsd", NULL},
+    {NULL, NULL, NULL, NULL},
+};
+
+static int test_parse_uri_dest(int verbose)
+{
+    int fail_count = 0;
+    int result;
+    char *host, *service, *device;
+    struct test_parse_uri_dest_t *p = tests_parse_uri_dest;
+    char uri[40];
+
+    printf("\n\nTest parse_uri_dest()\n");
+
+    while(NULL != p->uri) {
+        strlcpy(uri, p->uri, sizeof(uri));
+        result = parse_uri_dest(uri, &host, &service, &device);
+        if (0 != strcmp(p->host, host)) {
+            result = 1;
+        } else if (NULL == service || NULL == p->service) {
+            if (service != p->service) {
+                result = 2;
+            }
+        } else if (0 != strcmp(p->service, service)) {
+            result = 3;
+        } else if (NULL == device || NULL == p->device) {
+            if (device != p->device) {
+                result = 4;
+            }
+        } else if (0 != strcmp(p->device, device)) {
+            result = 5;
+        }
+
+        if (0 != result) {
+            printf("parse_uri_dest(%s, %s, %s, %s) failed %d\n", p->uri, host,
+                   service ? service : "NULL",
+                   device ? device : "NULL",
+                   result);
+            fail_count++;
+        } else if (verbose) {
+            printf("parse_uri_dest(%s, %s, %s, %s)\n", p->uri, host,
+                   service ? service : "NULL",
+                   device ? device : "NULL");
+        }
+        p++;
+    }
+    if (fail_count) {
+        printf("parse_uri_dest() test failed %d tests\n", fail_count);
+    } else {
+        puts("parse_uri_dest() test succeeded\n");
+    }
+    return fail_count;
+}
+
 int main(int argc, char *argv[])
 {
     int fail_count = 0;
@@ -673,12 +745,12 @@ int main(int argc, char *argv[])
                 fail_count = 1;
                 /* FALL THROUGH! */
         case '?':
+                /* FALL THROUGH! */
         case 'h':
             (void)fputs("usage: test_timespec [-v] [-V]\n", stderr);
             exit(fail_count);
         case 'V':
-            (void)fprintf( stderr, "test_timespec %s\n",
-                VERSION);
+            (void)fprintf( stderr, "test_timespec %s\n", VERSION);
             exit(EXIT_SUCCESS);
         case 'v':
             verbose = 1;
@@ -687,11 +759,12 @@ int main(int argc, char *argv[])
     }
 
 
-    fail_count = test_format(verbose );
-    fail_count += test_ts_to_ms(verbose );
-    fail_count += test_ts_subtract(verbose );
-    fail_count += test_ns_subtract(verbose );
-    fail_count += test_gpsd_gpstime_resolv(verbose );
+    fail_count = test_format(verbose);
+    fail_count += test_ts_to_ms(verbose);
+    fail_count += test_ts_subtract(verbose);
+    fail_count += test_ns_subtract(verbose);
+    fail_count += test_gpsd_gpstime_resolv(verbose);
+    fail_count += test_parse_uri_dest(verbose);
 
     if ( fail_count ) {
         printf("timespec tests failed %d tests\n", fail_count );
@@ -699,7 +772,7 @@ int main(int argc, char *argv[])
     }
     printf("timespec tests succeeded\n");
 
-    if ( verbose ) {
+    if (verbose) {
         ex_precision();
     }
     exit(0);
