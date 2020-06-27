@@ -1528,10 +1528,10 @@ elif config.env['python']:
             config.env['xgps_deps'] = False
             announce("WARNING: Python module cairo (pycairo) not found.")
 
-        # check for pycairo
+        # check for pygobject
         if not config.GetPythonValue('module gi (pygobject)',
                                      'import gi', '"found"'):
-            # no pycairo, used by xgps, xgpsspeed
+            # no pygobject, used by xgps, xgpsspeed
             config.env['xgps_deps'] = False
             announce("WARNING: Python module gi (pygobject) not found.")
 
