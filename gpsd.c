@@ -239,7 +239,7 @@ PPS device, or a URL in one of the following forms:\n\
      tcp://host[:port]\n\
      udp://host[:port]\n\
      {dgpsip|ntrip}://[user:passwd@]host[:port][/stream]\n\
-     gpsd://host[:port][/device]\n\
+     gpsd://host[:port][:/device]\n\
 in which case it specifies an input source for device, DGPS or ntrip data.\n"
 #endif /* NETFEED_ENABLE */
 "\n\
