@@ -669,17 +669,30 @@ struct test_parse_uri_dest_t {
     char *device;
 } test_parse_uri_dest_t;
 
+// prefixed with gpsd:// in situ
 struct test_parse_uri_dest_t tests_parse_uri_dest[] = {
     {"localhost", "localhost", NULL, NULL},
     {"localhost:", "localhost", NULL, NULL},
-    {"localhost:2947", "localhost", "2947", NULL},
+    {"localhost::", "localhost", NULL, NULL},
+    {"localhost::/dev/ttyAMA0", "localhost", NULL, "/dev/ttyAMA0"},
+    {"localhost:2947:/dev/ttyAMA0", "localhost", "2947", "/dev/ttyAMA0"},
     {"localhost:gpsd", "localhost", "gpsd", NULL},
+    {"gpsd.io", "gpsd.io", NULL, NULL},
+    {"gpsd.io:", "gpsd.io", NULL, NULL},
+    {"gpsd.io::", "gpsd.io", NULL, NULL},
+    {"gpsd.io::/dev/ttyAMA0", "gpsd.io", NULL, "/dev/ttyAMA0"},
+    {"gpsd.io:2947:/dev/ttyAMA0", "gpsd.io", "2947", "/dev/ttyAMA0"},
+    {"gpsd.io:gpsd", "gpsd.io", "gpsd", NULL},
     {"127.0.0.1", "127.0.0.1", NULL, NULL},
     {"127.0.0.1:", "127.0.0.1", NULL, NULL},
+    {"127.0.0.1::", "127.0.0.1", NULL, NULL},
+    {"127.0.0.1::/dev/ttyAMA0", "127.0.0.1", NULL, "/dev/ttyAMA0"},
     {"127.0.0.1:2947", "127.0.0.1", "2947", NULL},
     {"127.0.0.1:gpsd", "127.0.0.1", "gpsd", NULL},
     {"[fe80::1]", "fe80::1", NULL, NULL},
     {"[fe80::1]:", "fe80::1", NULL, NULL},
+    {"[fe80::1]::", "fe80::1", NULL, NULL},
+    {"[fe80::1]::/dev/ttyAMA0", "fe80::1", NULL, "/dev/ttyAMA0"},
     {"[fe80::1]:2947", "fe80::1", "2947", NULL},
     {"[fe80::1]:gpsd", "fe80::1", "gpsd", NULL},
     {NULL, NULL, NULL, NULL},
@@ -696,17 +709,21 @@ static int test_parse_uri_dest(int verbose)
     printf("\n\nTest parse_uri_dest()\n");
 
     while(NULL != p->uri) {
+        // parse_uri_dest() is destructive, so make a copy
         strlcpy(uri, p->uri, sizeof(uri));
+
         result = parse_uri_dest(uri, &host, &service, &device);
         if (0 != strcmp(p->host, host)) {
             result = 1;
-        } else if (NULL == service || NULL == p->service) {
+        }
+        if (NULL == service || NULL == p->service) {
             if (service != p->service) {
                 result = 2;
             }
         } else if (0 != strcmp(p->service, service)) {
             result = 3;
-        } else if (NULL == device || NULL == p->device) {
+        }
+        if (NULL == device || NULL == p->device) {
             if (device != p->device) {
                 result = 4;
             }
@@ -719,6 +736,10 @@ static int test_parse_uri_dest(int verbose)
                    service ? service : "NULL",
                    device ? device : "NULL",
                    result);
+            printf("  s/b parse_uri_dest(%s, %s, %s, %s) = 0\n", p->uri,
+                   p->host,
+                   p->service ? p->service : "NULL",
+                   p->device ? p->device : "NULL");
             fail_count++;
         } else if (verbose) {
             printf("parse_uri_dest(%s, %s, %s, %s)\n", p->uri, host,

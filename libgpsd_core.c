@@ -421,35 +421,49 @@ void gpsd_clear(struct gps_device_t *session)
  */
 int parse_uri_dest(char *s, char **host, char **service, char **device)
 {
-        if (s[0] == '[') {
-            /* IPv6 literal */
-            char *cb = strchr(s, ']');
-            if (!cb) {
-                // missing terminating ]
-                return -1;
-            }
-            *cb = '\0';
-            *host = s + 1;
-            s = cb + 1;
-        } else {
-            // IPv4 literal, or hostname
-            *host = s;
+    char *search = s;
+
+    if (s[0] == '[') {
+        /* IPv6 literal */
+        char *cb = strchr(s, ']');
+        if (!cb) {
+            // missing terminating ]
+            return -1;
         }
-        s = strchr(s, ':');
-        if (s) {
-            // found a colon, remove it from host
-            *s = '\0';
-            if (s[1]) {
-                // s[1] start port/service
-                *service = s + 1;
-            } else {
-                *service = NULL;
-            }
+        *cb = '\0';
+        *host = s + 1;
+        search = cb + 1;
+    } else {
+        // IPv4 literal, or hostname
+        *host = s;
+    }
+    s = strchr(search, ':');
+    if (s) {
+        // found a colon, remove it from host
+        *s = '\0';
+        search = s + 1;
+        if (s[1] && ':' != s[1]) {
+            // s[1] start port/service
+            *service = s + 1;
         } else {
             *service = NULL;
         }
+    } else {
+        *service = NULL;
+    }
+    s = strchr(search, ':');
+    if (s) {
+        // found a colon, remove it
+        *s = '\0';
+        if (s[1]) {
+            *device = s + 1;
+        } else {
+            *device = NULL;
+        }
+    } else {
         *device = NULL;
-        return 0;
+    }
+    return 0;
 }
 
 /* open a device for access to its data *
@@ -526,22 +540,22 @@ int gpsd_open(struct gps_device_t *session)
 #endif /* NETFEED_ENABLE */
 #ifdef PASSTHROUGH_ENABLE
     if (str_starts_with(session->gpsdata.dev.path, "gpsd://")) {
-        /* could be, not all implemented:
+        /* could be:
          *    gpsd://[ipv6]
          *    gpsd://ipv4
          *    gpsd://hostname
          *    gpsd://[ipv6]:port
          *    gpsd://ipv4:port
          *    gpsd://hostname:port
-         *    gpsd://[ipv6]:port/device
-         *    gpsd://ipv4:port/device
-         *    gpsd://hostname:port/device
-         *    gpsd://[ipv6]:/device
-         *    gpsd://ipv4:/device
-         *    gpsd://hostname:/device
-         *    gpsd://[ipv6]/device
-         *    gpsd://ipv4/device
-         *    gpsd://hostname/device
+         *    gpsd://[ipv6]:port:/device
+         *    gpsd://ipv4:port:/device
+         *    gpsd://hostname:port:/device
+         *    gpsd://[ipv6]::/device
+         *    gpsd://ipv4::/device
+         *    gpsd://hostname::/device
+         *    gpsd://[ipv6]::/device
+         *    gpsd://ipv4::/device
+         *    gpsd://hostname::/device
          */
         char server[GPS_PATH_MAX], *host, *port, *device;
         socket_t dsock;
