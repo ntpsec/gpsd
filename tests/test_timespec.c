@@ -671,13 +671,15 @@ struct test_parse_uri_dest_t {
 
 struct test_parse_uri_dest_t tests_parse_uri_dest[] = {
     {"localhost", "localhost", NULL, NULL},
-    // {"localhost:", "localhost", NULL, NULL}, broken!
+    {"localhost:", "localhost", NULL, NULL},
     {"localhost:2947", "localhost", "2947", NULL},
     {"localhost:gpsd", "localhost", "gpsd", NULL},
     {"127.0.0.1", "127.0.0.1", NULL, NULL},
+    {"127.0.0.1:", "127.0.0.1", NULL, NULL},
     {"127.0.0.1:2947", "127.0.0.1", "2947", NULL},
     {"127.0.0.1:gpsd", "127.0.0.1", "gpsd", NULL},
     {"[fe80::1]", "fe80::1", NULL, NULL},
+    {"[fe80::1]:", "fe80::1", NULL, NULL},
     {"[fe80::1]:2947", "fe80::1", "2947", NULL},
     {"[fe80::1]:gpsd", "fe80::1", "gpsd", NULL},
     {NULL, NULL, NULL, NULL},

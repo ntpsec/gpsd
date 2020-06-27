@@ -422,23 +422,32 @@ void gpsd_clear(struct gps_device_t *session)
 int parse_uri_dest(char *s, char **host, char **service, char **device)
 {
         if (s[0] == '[') {
-                /* IPv6 literal */
-                char *cb = strchr(s, ']');
-                if (!cb || (cb[1] && cb[1] != ':')) {
-                        return -1;
-                }
-                *cb = '\0';
-                *host = s + 1;
-                s = cb + 1;
+            /* IPv6 literal */
+            char *cb = strchr(s, ']');
+            if (!cb) {
+                // missing terminating ]
+                return -1;
+            }
+            *cb = '\0';
+            *host = s + 1;
+            s = cb + 1;
         } else {
-                *host = s;
-                s = strchr(s, ':');
+            // IPv4 literal, or hostname
+            *host = s;
         }
-        if (s && s[0] && s[1]) {
-                *s = '\0';
+        s = strchr(s, ':');
+        if (s) {
+            // found a colon, remove it from host
+            *s = '\0';
+            if (s[1]) {
+                // s[1] start port/service
                 *service = s + 1;
-        } else
+            } else {
                 *service = NULL;
+            }
+        } else {
+            *service = NULL;
+        }
         *device = NULL;
         return 0;
 }
