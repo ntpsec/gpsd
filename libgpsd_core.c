@@ -419,15 +419,12 @@ void gpsd_clear(struct gps_device_t *session)
  * device is currently always assigned to NULL
  * return: -1 on error, 0 otherwise
  */
-int parse_uri_dest(struct gps_device_t *session, char *s,
-                   char **host, char **service, char **device)
+int parse_uri_dest(char *s, char **host, char **service, char **device)
 {
         if (s[0] == '[') {
                 /* IPv6 literal */
                 char *cb = strchr(s, ']');
                 if (!cb || (cb[1] && cb[1] != ':')) {
-                        GPSD_LOG(LOG_ERROR, &session->context->errout,
-                                "Malformed URI specified.\n");
                         return -1;
                 }
                 *cb = '\0';
@@ -470,7 +467,7 @@ int gpsd_open(struct gps_device_t *session)
         socket_t dsock;
         (void)strlcpy(server, session->gpsdata.dev.path + 6, sizeof(server));
         INVALIDATE_SOCKET(session->gpsdata.gps_fd);
-        if (-1 == parse_uri_dest(session, server, &host, &port, &device) ||
+        if (-1 == parse_uri_dest(server, &host, &port, &device) ||
             !port) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "Missing service in TCP feed spec.\n");
@@ -496,7 +493,7 @@ int gpsd_open(struct gps_device_t *session)
         socket_t dsock;
         (void)strlcpy(server, session->gpsdata.dev.path + 6, sizeof(server));
         INVALIDATE_SOCKET(session->gpsdata.gps_fd);
-        if (-1 == parse_uri_dest(session, server, &host, &port, &device) ||
+        if (-1 == parse_uri_dest(server, &host, &port, &device) ||
             !port) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "Missing service in UDP feed spec.\n");
@@ -541,7 +538,9 @@ int gpsd_open(struct gps_device_t *session)
         socket_t dsock;
         (void)strlcpy(server, session->gpsdata.dev.path + 7, sizeof(server));
         INVALIDATE_SOCKET(session->gpsdata.gps_fd);
-        if (-1 == parse_uri_dest(session, server, &host, &port, &device)) {
+        if (-1 == parse_uri_dest(server, &host, &port, &device)) {
+                GPSD_LOG(LOG_ERROR, &session->context->errout,
+                        "Malformed URI specified.\n");
                 return -1;
         }
         if (!port)

@@ -1003,8 +1003,7 @@ extern void gpsd_init(struct gps_device_t *,
                       struct gps_context_t *,
                       const char *);
 extern void gpsd_clear(struct gps_device_t *);
-extern int parse_uri_dest(struct gps_device_t *session, char *s,
-                          char **host, char **service, char **device);
+extern int parse_uri_dest(char *s, char **host, char **service, char **device);
 extern int gpsd_open(struct gps_device_t *);
 #define O_CONTINUE      0
 #define O_PROBEONLY     1
