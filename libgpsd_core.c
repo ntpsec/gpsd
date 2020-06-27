@@ -65,13 +65,13 @@ void gpsd_acquire_reporting_lock(void)
 {
     int err;
     err = pthread_mutex_lock(&report_mutex);
-    if ( 0 != err ) {
+    if (0 != err) {
         /* POSIX says pthread_mutex_lock() should only fail if the
-        thread holding the lock has died.  Best for gppsd to just die
+        thread holding the lock has died.  Best for gpsd to just die
         because things are FUBAR. */
 
-        (void) fprintf(stderr,"pthread_mutex_lock() failed: %s\n",
-            strerror(errno));
+        (void)fprintf(stderr,"pthread_mutex_lock() failed: %s\n",
+                      strerror(errno));
         exit(EXIT_FAILURE);
     }
 }
@@ -80,14 +80,14 @@ void gpsd_release_reporting_lock(void)
 {
     int err;
     err = pthread_mutex_unlock(&report_mutex);
-    if ( 0 != err ) {
+    if (0 != err) {
         /* POSIX says pthread_mutex_unlock() should only fail when
         trying to unlock a lock that does not exist, or is not owned by
         this thread.  This should never happen, so best for gpsd to die
         because things are FUBAR. */
 
-        (void) fprintf(stderr,"pthread_mutex_unlock() failed: %s\n",
-            strerror(errno));
+        (void)fprintf(stderr,"pthread_mutex_unlock() failed: %s\n",
+                      strerror(errno));
         exit(EXIT_FAILURE);
     }
 }
@@ -131,7 +131,7 @@ static void gpsd_vlog(const int errlevel,
     }
 
     gpsd_acquire_reporting_lock();
-    switch ( errlevel ) {
+    switch (errlevel) {
     case LOG_ERROR:
             err_str = "ERROR: ";
             break;
@@ -419,8 +419,8 @@ void gpsd_clear(struct gps_device_t *session)
  * device is currently always assigned to NULL
  * return: -1 on error, 0 otherwise
  */
-static int parse_uri_dest(struct gps_device_t *session, char *s,
-                          char **host, char **service, char **device)
+int parse_uri_dest(struct gps_device_t *session, char *s,
+                   char **host, char **service, char **device)
 {
         if (s[0] == '[') {
                 /* IPv6 literal */
@@ -1633,8 +1633,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
          */
         if (!STICKY(session->device_type)
             && session->last_controller != NULL
-            && STICKY(session->last_controller))
-        {
+            && STICKY(session->last_controller)) {
             session->device_type = session->last_controller;
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "reverted to %s driver...\n",
@@ -1879,8 +1878,8 @@ int gpsd_multipoll(const bool data_ready,
     return DEVICE_UNCHANGED;
 }
 
-void gpsd_wrap(struct gps_device_t *session)
 /* end-of-session wrapup */
+void gpsd_wrap(struct gps_device_t *session)
 {
     if (!BAD_SOCKET(session->gpsdata.gps_fd))
         gpsd_deactivate(session);
