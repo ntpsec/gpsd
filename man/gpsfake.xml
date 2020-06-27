@@ -153,7 +153,7 @@ default is 4800.</para>
 <para>The option -S tells gpsfake to insert realistic delays in the
 test input rather than trying to stuff it through the daemon as fast
 as possible.  This will make the test(s) run much slower, but avoids
-flaky failures due to machine lode and possible race conditions in
+flaky failures due to machine load and possible race conditions in
 the pty layer.</para>
 
 <para>The <option>-t</option> forces the test framework to use TCP
@@ -162,7 +162,7 @@ this may be useful for testing from within chroot jails where access
 to pty devices is locked out.</para>
 
 <para>The <option>-T</option> makes <application>gpsfake</application> print
-some system information and then exits.</para>
+some system information and then exit.</para>
 
 <para>The <option>-u</option> forces the test framework to use UDP
 rather than pty devices. Besides being a test of UDP source handling,
