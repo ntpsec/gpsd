@@ -133,7 +133,7 @@ firmware capability to accept RTCM correction packets). See
 <xref linkend='accuracy'/> and <xref linkend='files'/> for discussion.</para>
 
 <para>Client applications will communicate with <application>gpsd</application>
-via a TCP/IP port, 2947 by default).  Both IPv4 and IPv6 connections
+via a TCP/IP port, port 2947 by default.  Both IPv4 and IPv6 connections
 are supported and a client may connect via either.</para>
 
 <para>The program accepts the following options:</para>
@@ -221,7 +221,7 @@ This switch is mainly useful for debugging.</para>
 <term>-p, --passive</term>
 <listitem>
 <para>Passive mode.  Do not autoconfigure the receiver, but allow
-manual configuration changes..</para>
+manual configuration changes.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -232,7 +232,7 @@ manual configuration changes..</para>
 </varlistentry>
 <varlistentry>
 <term>-r, --badtime</term>
-<listitem><para>Use GPS time even with no current fix.  Some GPS's have
+<listitem><para>Use GPS time even with no current fix.  Some GPSs have
 battery powered Real Time Clocks (RTC's) built in, making them a valid time
 source even before a fix is acquired.  This can be useful on a Raspberry Pi,
 or other device that has no battery powered RTC, and thus has no valid
@@ -294,7 +294,7 @@ be interpreted as though they had been issued by a serial device. Example:
 <listitem>
 <para>A URI with the prefix "udp://", followed by a hostname, a
 colon, and a port number. The daemon will open a socket listening for
-UDP datagrams arriving on the indicated address and port, which will
+UDP datagrams arriving in the indicated address and port, which will
 be interpreted as though they had been issued by a serial device. Example:
 <filename>udp://127.0.0.1:5000</filename>.</para>
 </listitem>
@@ -311,7 +311,7 @@ stream to use; the stream is given in the form "/streamname". An
 example DGPSIP URI could be "dgpsip://dgpsip.example.com" and a Ntrip
 URI could be
 "ntrip://foo:bar@ntrip.example.com:80/example-stream". Corrections
-from the caster will be send to each attached GPS with the capability
+from the caster will be sent to each attached GPS with the capability
 to accept them.</para>
 </listitem>
 </varlistentry>
@@ -348,7 +348,7 @@ passed to local clients. Example:
 devicename. Only Linux socket CAN interfaces are supported. The
 interface must be configured to receive CAN messages
 before <application>gpsd</application> can be started. If
-there is more then one unit on the CAN bus that provides GPS data,
+there is more than one unit on the CAN bus that provides GPS data,
 <application>gpsd</application> chooses the unit from which a GPS message
 is first seen. Example: <filename>nmea2000://can0</filename>.
 </para>
@@ -395,7 +395,7 @@ any devices nor a control socket are specified.</para>
 gpsd attempts to execute a hook from
 <filename>/etc/gpsd/device-hook</filename> with first command line argument
 set to the pathname of the device and the second to
-<option>ACTIVATE</option>. On deactivation it does the same passing
+<option>ACTIVATE</option>. On deactivation, it does the same passing
 <option>DEACTIVATE</option> for the second argument.</para>
 
 <para><application>gpsd</application> can export data to client applications
@@ -569,11 +569,11 @@ control socket a '&amp;', followed by the device name, followed by '=',
 followed by the control string in paired hex digits.</para>
 
 <para>Your client may await a response, which will be a line beginning
-with either "OK" or "ERROR".  An ERROR response to an add command means
+with either "OK" or "ERROR".  An ERROR response to an 'add' command means
 the device did not emit data recognizable as GPS packets; an ERROR
 response to a remove command means the specified device was not in
 <application>gpsd</application>'s device pool. An ERROR response to a
-! command means the daemon did not recognize the devicename
+'!' command means the daemon did not recognize the devicename
 specified.</para>
 
 <para>The control socket is intended for use by hotplug scripts and
@@ -603,7 +603,7 @@ computations at sufficient accuracy that it will add no measurable
 position error of its own.</para>
 
 <para>DGPS correction will reduce UERE by a factor of 4, provided you
-are within about 100mi (160km) of a DGPS ground station from which you
+are within about 100 miles (160 km) of a DGPS ground station from which you
 are receiving corrections.</para>
 
 <para>On a 4800bps connection, the time latency of fixes provided by
@@ -613,7 +613,7 @@ fixes once per second, thus expected latency is 0.5sec.  On the
 personal-computer hardware available in 2005 and later, computation
 lag induced by <application>gpsd</application> will be negligible, on
 the order of a millisecond.  Nevertheless, latency can introduce
-significant errors for vehicles in motion; at 50km/h (31mi/h) of speed
+significant errors for vehicles in motion; at 50 km/h (31 mi/h) of speed
 over ground, 1 second of lag corresponds to 13.8 meters change in
 position between updates.</para>
 
@@ -820,20 +820,6 @@ with different assumptions.  See above for further details on the
 device-hook mechanism.</para>
 </listitem>
 </varlistentry>
-<!--
-<varlistentry>
-<term><filename>/usr/share/gpsd/dgpsip-servers</filename></term>
-<listitem>
-<para>A text file listing DGPSIP servers worldwide.  If no DGPSIP
-server is specified at startup (via the -d option)
-<application>gpsd</application> will look here to find the
-nearest one.  Each line has three space-separated fields:
-latitude (decimal degrees), longitude (decimal degrees) and
-a server name (optionally followed by a colon and a port number).
-Text following # on a line is ignored.  Blank lines are ignored.</para>
-</listitem>
-</varlistentry>
--->
 </variablelist>
 
 </refsect1>
