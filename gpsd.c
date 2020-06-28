@@ -939,14 +939,12 @@ static void handle_control(int sfd, char *buf)
 static bool awaken(struct gps_device_t *device)
 {
     /* open that device */
-    if (!initialized_device(device)) {
-        if (!open_device(device)) {
-            GPSD_LOG(LOG_WARN, &context.errout,
-                     "%s: open failed\n",
-                     device->gpsdata.dev.path);
-            free_device(device);
-            return false;
-        }
+    if ((!initialized_device(device) &&
+         !open_device(device))) {
+        GPSD_LOG(LOG_WARN, &context.errout, "%s: open failed\n",
+                 device->gpsdata.dev.path);
+        free_device(device);
+        return false;
     }
 
     if (!BAD_SOCKET(device->gpsdata.gps_fd)) {
@@ -955,26 +953,23 @@ static bool awaken(struct gps_device_t *device)
                  (int)(device - devices),
                  device->gpsdata.gps_fd, device->gpsdata.dev.path);
         return true;
-    } else {
-        if (gpsd_activate(device, O_OPTIMIZE) < 0) {
-            GPSD_LOG(LOG_ERROR, &context.errout,
-                     "%s: device activation failed.\n",
-                     device->gpsdata.dev.path);
-                    GPSD_LOG(LOG_ERROR, &context.errout,
-                                "%s: activation failed, freeing device\n",
-                                device->gpsdata.dev.path);
-                    /* FIXME: works around a crash bug, but prevents retries */
-                    free_device(device);
-            return false;
-        } else {
-            GPSD_LOG(LOG_RAW, &context.errout,
-                     "flagging descriptor %d in assign_channel()\n",
-                     device->gpsdata.gps_fd);
-            FD_SET(device->gpsdata.gps_fd, &all_fds);
-            adjust_max_fd(device->gpsdata.gps_fd, true);
-            return true;
-        }
     }
+
+    if (0 > gpsd_activate(device, O_OPTIMIZE)) {
+        GPSD_LOG(LOG_ERROR, &context.errout,
+                 "%s: device activation failed, freeing device.\n",
+                 device->gpsdata.dev.path);
+        /* FIXME: works around a crash bug, but prevents retries */
+        free_device(device);
+        return false;
+    }
+
+    GPSD_LOG(LOG_RAW, &context.errout,
+             "flagging descriptor %d in assign_channel()\n",
+             device->gpsdata.gps_fd);
+    FD_SET(device->gpsdata.gps_fd, &all_fds);
+    adjust_max_fd(device->gpsdata.gps_fd, true);
+    return true;
 }
 
 #if __UNUSED_RECONFIGURE__
