@@ -11,14 +11,14 @@ They assume you have GPSD available as an installable binary package,
 Instructions for building GPSD from source (including cross-building)
 are in the file "build.adoc" in the source distribution.
 
-Most of these installation instructions are generic to Linux (inc
-There are some special notes on installation for OS X and the Raspberry Pi
-near the end of this file.
+Most of these installation instructions are generic to Linux.  There are
+some special notes on installation on *BSD, WSL, OS X, macOS, and the
+Raspberry Pi near the end of this file.
 
 == Check that your GPS is live and you can get data from it
 
 Start by making sure you can get data from your GPS, otherwise the later
-steps will be very frustrating.  In this command
+steps will be very frustrating.  In this command:
 
       stty -F /dev/ttyXXX ispeed 4800 && cat </dev/ttyXXX
 
@@ -171,9 +171,9 @@ project site.
 
 == Once you have verified correct operation
 
-1. If you installed from a .deb under Debian or a Debian-derived
-system, you may need to `dpkg-reconfigure -plow gpsd' to enable the
-hotplug magic ("Start gpsd automatically").
+1. If you installed from a '.deb' package under Debian or a
+Debian-derived system, you may need to `dpkg-reconfigure -plow gpsd' to
+enable the hotplug magic ("Start gpsd automatically").
 
 2. Check out the list of supported hardware at the Hardware page on
 the GPSD project's website. If your GPS isn't on the list, please send
@@ -292,7 +292,7 @@ Git-core is required to build from a git repository.  pps-tools is for
 PPS timing.
 
 The rest of the installation is just as for any other source based
-install, as noted in the file *build.adoc* .
+install, as noted in the file *build.adoc*.
 
 === Other Debian derivatives (including stock)
 
@@ -353,7 +353,7 @@ Some very old Garmin USB devices need libusb:
 # apt-get install libusb-1.0-0-dev
 --------------------------------------------------------------
 
-If you wish to build the documentation, be warned it pull in a
+If you wish to build the documentation, be warned it pulls in a
 lot of packages.  To build the doc install:
 
 --------------------------------------------------------------
@@ -361,7 +361,7 @@ apt-get install xsltproc docbook-xsl xmlto asciidoctor
 --------------------------------------------------------------
 
 The rest of the installation is just as for any other source based
-install, as noted in the file *build.adoc* .
+install, as noted in the file *build.adoc*.
 
 --------------------------------------------------------------
 # git clone https://gitlab.com/gpsd/gpsd.git
@@ -389,7 +389,7 @@ Git-core is required to build from a git repository.  pps-tools is for
 PPS timing.
 
 The rest of the installation is just as for any other source based
-install, as noted in the file *build.adoc* .
+install, as noted in the file *build.adoc*.
 
 
 ==== Wheezy
@@ -462,7 +462,7 @@ Git-core is required to build from a git repository.  pps-tools is for
 PPS timing.
 
 The rest of the installation is just as for any other source based
-install, as noted in the file *build.adoc* .
+install, as noted in the file *build.adoc*.
 
 ==== Ubuntu Buster 20
 
@@ -517,7 +517,7 @@ apt install libncurses5-dev libtinfo-dev  pps-tools
 apt install gir1.2-gtk-3.0
 --------------------------------------------------------------
 
-If you wish to build the documentation, be warned it pull in a
+If you wish to build the documentation, be warned it pulls in a
 lot of packages.  To build the doc install:
 
 --------------------------------------------------------------
@@ -525,7 +525,7 @@ apt install xsltproc docbook-xsl xmlto asciidoctor
 --------------------------------------------------------------
 
 The rest of the installation is just as for any other source based
-install, as noted in the file *build.adoc* .
+install, as noted in the file *build.adoc*.
 
 === Other Raspberry Pi tips
 
@@ -539,7 +539,7 @@ serial console: /dev/ttyAMA0.  The PPS signal will be on GPIO Pin #4.
 
 Only three specific changes need to be made to make the HAT work.  First
 in the file /boot/cmdline.txt, remove this part "console=ttyAMA0,115200
-kgdboc=ttyAMA0,115200)".  That frees the serial port from console use so
+kgdboc=ttyAMA0,115200".  That frees the serial port from console use so
 the GPS can use it.
 
 Second you need to tell the boot process to load the pps_gpio module
@@ -555,7 +555,7 @@ Run gpsd like this:
 --------------------------------------------------------------
 
 If you are on the RasPi with gpsd version 3.17, or above, /dev/pps0 can
-be autodetected. and used for PPS if available.
+be autodetected, and used for PPS if available.
 
 gpsd 3.17 and up only:
 
@@ -599,7 +599,7 @@ Now proceed as for any other operating system to use gpsd.
 Be sure to validate that your PPS signal is not offset by the pulse
 width.  That would mean gpsd is using the wrong edge.
 
-Detailed instructions are available from their web site:
+Detailed instructions are available from their website:
 https://learn.adafruit.com/adafruit-ultimate-gps-hat-for-raspberry-pi/
 
 You will need to dig deeper to make the PPS work, here is a good reference:
@@ -636,7 +636,7 @@ So you need to add them yourself, as above.
 
 gpsd will build, install and run on NetBSD.
 
-Use their pkg_add command to install pkgin.  Then use pkgin to
+Use their 'pkg_add' command to install pkgin.  Then use pkgin to
 install the required tools.
 
 --------------------------------------------------------------
@@ -716,7 +716,7 @@ support making it unsuitable at this time.
 
 WSL 1 is  a component of Microsoft
 Windows that implements an alternate kernel. Linux
-distributions notably Alpine, Debian, Kali, OpenSUSE, and
+distributions, notably Alpine, Debian, Kali, OpenSUSE, and
 Ubuntu may run on top of it.
 
 There are some issues known which affect gpsd.
