@@ -235,9 +235,9 @@ oncore_msg_navsol(struct gps_device_t *session, unsigned char *buf,
                  unpacked_date.tm_min, unpacked_date.tm_sec, nsec);
     }
 
-    lat = getbes32(buf, 15) / 3600000.0f;
-    lon = getbes32(buf, 19) / 3600000.0f;
-    alt = getbes32(buf, 23) / 100.0f;
+    lat = getbes32(buf, 15) / 3600000.0;
+    lon = getbes32(buf, 19) / 3600000.0;
+    alt = getbes32(buf, 23) / 100.0;
     speed = getbeu16(buf, 31) / 100.0f;
     track = getbeu16(buf, 33) / 10.0f;
     dop = getbeu16(buf, 35) / 10.0f;
