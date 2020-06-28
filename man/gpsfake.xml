@@ -123,12 +123,16 @@ daemon should be run.  This option is intended to be used with
 <citerefentry><refentrytitle>gdb</refentrytitle><manvolnum>1</manvolnum></citerefentry>
 and similar programs.</para>
 
-<para>The <option>-g</option> and <option>-G</option> options use the
-monitor facility to run the <application>gpsd</application> instance
-within gpsfake under control of gdb or lldb, respectively.  They also
-disable the timeout on daemon inactivity, to allow for breakpointing. If
-necessary, the timeout can be reenabled by a subsequent
-<option>-W</option>.</para>
+<para>The <option>-g</option> and <option>-G</option> options use the monitor
+facility to run the <application>gpsd</application> instance within gpsfake
+under control of gdb or lldb, respectively.  They also disable the timeout on
+daemon inactivity, to allow for breakpointing. If necessary, the timeout can be
+reenabled by a subsequent <option>-W</option>.  If xterm and $DISPLAY are
+available, these options launch the debugger in a separate xterm window, to
+separate the debugger dialog from the program output, but otherwise run it
+directly.  In the gdb case, -tui is used with xterm but not otherwise, since
+curses and program output don't play nicely together.  Although lldb lacks an
+equivalent option, some versions have a 'gui' command.</para>
 
 <para>The <option>-o</option> specifies options to pass to the daemon.  The -n
 option passes -n to start the daemon reading the GPS without waiting

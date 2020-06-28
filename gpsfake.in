@@ -16,6 +16,7 @@ factored out so we can write other test programs with it.
 # Preserve this property!
 from __future__ import absolute_import, print_function, division
 
+from distutils import spawn
 import getopt
 import os
 import platform
@@ -96,6 +97,12 @@ def hexdump(s):
     for c in s:
         rep += "%02x" % ord(c)
     return rep
+
+
+def check_xterm():
+    "Check whether xterm and DISPLAY are available."
+    xterm = spawn.find_executable('xterm')
+    return xterm and os.access(xterm, os.X_OK) and os.environ.get('DISPLAY')
 
 
 def fakehook(linenumber, fakegps):
@@ -197,10 +204,16 @@ if __name__ == '__main__':
         elif switch == '-D':
             doptions += " -D " + val
         elif switch == '-g':
-            monitor = "xterm -e gdb -tui --args "
+            if check_xterm():
+                monitor = "xterm -e gdb -tui --args "
+            else:
+                monitor = "gdb --args "
             timeout = 0
         elif switch == '-G':
-            monitor = "xterm -e lldb -- "
+            if check_xterm():
+                monitor = "xterm -e lldb -- "
+            else:
+                monitor = "lldb -- "
             timeout = 0
         elif switch == '-h':
             usage()
