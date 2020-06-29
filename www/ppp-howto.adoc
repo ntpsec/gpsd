@@ -60,7 +60,7 @@ time series of fixes using the actual orbits, instead of the predicted
 orbits.  Static PPP assumes all the raw measurements were taken at the
 same location over a long duration.  Long is typically 15 minutes to
 48 hours.  All the computed fixes are then averaged to result in one
-precise location for the receivers antenna.
+precise location for the receiver's antenna.
 
 Now in 2020, most PPP services only use ephermides from GPS satellites,
 with more and more adding GLONASS.  As time passes, more constellations
@@ -155,7 +155,7 @@ altitude is calculated as height above the ellipsoid (HAE).
 Most people do not consider the altitude as the height above the
 ellipsoid, but as the height above Mean Sea Level.  MSL is the same
 as pressure altitude (when corrected for temperature and barometric
-pressure), but different than HAE.
+pressure), but different from HAE.
 
 Mean Sea Level has had nothing to with the level of the sea, it relates
 to some stakes driven into the ground 100 hundred years ago that seemed
@@ -252,7 +252,7 @@ our purposes.  Some limitations include: open only to paid subscribers,
 require L1 and L2 raw data, and/or use proprietary data formats.
 
 There is one online service that is free to all (requires registration),
-accepts L1 only raw data, and accepts RINEX 3 files: Natural Resoruces
+accepts L1 only raw data, and accepts RINEX 3 files: Natural Resources
 Canada (NRCAN).  Their tool is at https://webapp.geod.nrcan.gc.ca/geod/tools-outils/ppp.php
 
 Trimble has a free to all (requires registration) service that requires
@@ -454,7 +454,7 @@ your precise position, and other goodies.
 === Trimble RTX
 
 Before uploading today.obs to Trimble you will need to change the _.obs_
-extention to _.YYo_, where YY is the 2-digit year.  Then proceed as
+extension to _.YYo_, where YY is the 2-digit year.  Then proceed as
 above with CSRS-PPP.
 
 === GAPS
