@@ -1130,12 +1130,17 @@ static void handle_request(struct subscriber_t *sub,
                         if (allocated_device(devp)) {
                             (void)awaken(devp);
                             if (devp->sourcetype == source_gpsd) {
-                                /* forward to master gpsd */
+                                /* FIXME: the device into this daemon is
+                                 * not the device to pass to the remote daemon..
+                                 * local device = gpsd://host::/device
+                                 * remote device = /device
+                                 */
                                 (void)gpsd_write(devp, start,
                                                  (size_t)(end-start));
                             }
                         }
                 } else {
+                    /* awaken specific device */
                     devp = find_device(sub->policy.devpath);
                     if (devp == NULL) {
                         (void)snprintf(reply, replylen,
@@ -1147,6 +1152,11 @@ static void handle_request(struct subscriber_t *sub,
                         goto bailout;
                     } else if (awaken(devp)) {
                         if (devp->sourcetype == source_gpsd) {
+                            /* FIXME: the device into this daemon is
+                             * not the device to pass to the remote daemon.
+                             * local device = gpsd://host::/device
+                             * remote device = /device
+                             */
                             (void)gpsd_write(devp, start, (size_t)(end-start));
                         }
                     } else {
