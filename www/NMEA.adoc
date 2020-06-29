@@ -248,8 +248,8 @@ in various sentences:
 The "Navigation receiver warning" is 'A' for Active and 'V' for Void.
 (or warning).  You will see it when either there is no satellite lock,
 or to indicate a valid fix that has a DOP too high, or which fails an
-elevation test. In the latter case the visible sats are below some
-fixed elevation of the horizon (usually 15%, but some GPSes make this
+elevation test. In the latter case the visible satellites are below some
+fixed elevation of the horizon (usually 15%, but some GNSS receivers make this
 adjustable) making position unreliable due to poor geometry and more
 variable signal lag induced by lengthened atmosphere transit.
 
@@ -322,10 +322,10 @@ Digital Selective Calling (DSC).  These radios typically take data
 from a local position indicating device.  This data is used in
 conjunction with a unique (FCC assigned) ID to cause your radio to
 broadcast your position data to others.  Conversely, these radios are
-capable of recieving position data of other stations and emitting
+capable of receiving position data of other stations and emitting
 sentences indicating other station positions.  This lets you plot the
 position of other vessels on a chart, for instance.  There has been at
-least one instance of a DSC enabled radio overloading (mis-using) the
+least one instance of a DSC enabled radio overloading (misusing) the
 LC talker prefix for this purpose.  Otherwise they use the CD prefix.
 A vessel's nav system is likely to have both CD and some other
 position indicating talker on its bus(es).
@@ -445,7 +445,7 @@ Here is a table of NMEA-ID allocations above 32 as of March 2010:
 |WAAS       |Anik            |138            |51
 |====================================================
 
-Theoretically, all NMEA-emitting devices should emit NMEA-IDs. In
+Theoretically, all NMEA emitting devices should emit NMEA-IDs. In
 practice, some pass through PRNs.
 
 To avoid possible confusion caused by repetition of satellite ID
@@ -572,9 +572,9 @@ publicly available NMEA document dated 2009.
 |SYS | Hybrid System Configuration
 |================================================================
 
-== NMEA-Standard Sentences ==
+== NMEA Standard Sentences ==
 
-Here are the NMEA-standard sentences we know about:
+Here are the NMEA standard sentences we know about:
 
 === AAM - Waypoint Arrival Alarm ===
 
@@ -663,7 +663,7 @@ Field Number:
      A = OK or not used
 3. Cross Track Error Magnitude
 4. Direction to steer, L or R
-5. Cross Track Units (Nautic miles or kilometers)
+5. Cross Track Units (Nautical miles or kilometers)
 6. Status
      A = Arrival Circle Entered
 7. Status
@@ -698,7 +698,7 @@ bearings are different.
 Field Number:
 
 1. Status
-     A = DAta valid
+     A = Data valid
      V = Loran-C Blink or SNR warning
      V = general warning flag or other navigation systems when a reliable
          fix is not available
@@ -760,7 +760,7 @@ destination waypoint! WARNING Again this information does not change
 until you are on the next leg of the route. (The bearing from POINTA
 to POINTB does not change during the time you are on this leg.)
 
-This sentence has been replaced by BWW in NMEA 4.00 (and posssibly
+This sentence has been replaced by BWW in NMEA 4.00 (and possibly
 earlier versions) <<ANON>>.
 
 === BWC - Bearing & Distance to Waypoint - Great Circle ===
@@ -921,7 +921,7 @@ Field Number:
 11. Red Line Navigation Use
 12. Green Line Navigation Use
 13. Purple Line Navigation Use
-14. Position Uncertainity
+14. Position Uncertainty
 15. N = Nautical Miles
 16. Fix Data Basis
      - 1 = Normal Pattern
@@ -943,7 +943,7 @@ Field Number:
 
 1. Water depth relative to transducer, meters
 2. Offset from transducer, meters
-     positive means distance from tansducer to water line
+     positive means distance from transducer to water line
      negative means distance from transducer to keel
 3. Maximum range scale in use (NMEA 3.0 and above)
 4. Checksum
@@ -1138,7 +1138,7 @@ Field Number:
 4. Longitude
 5. E or W (East or West)
 6. Mode indicator (non-null)
-7. Total number of satelites in use, 00-99
+7. Total number of satellites in use, 00-99
 8. Horizontal Dilution of Precision, HDOP
 9. Antenna altitude, meters, re:mean-sea-level(geoid).
 10. Goeidal separation meters
@@ -1481,7 +1481,7 @@ Field Number:
 13. Time Difference 5 Signal Status
 14. Checksum
 
-=== MDA - Meteorilogical Composite ===
+=== MDA - Meteorological Composite ===
 
 ------------------------------------------------------------------------------
          1   2  3    4  5  6 7 8  9 10 11 12 13 14 15 16 17 18 19 20 21
@@ -1562,7 +1562,7 @@ Example: $GPMSS,0,0,0.000000,200,*5A
 Field Number:
 
 1. Temperature, degrees
-2. Unit of Measurement, Celcius
+2. Unit of Measurement, Celsius
 3. Checksum
 
 <<GLOBALSAT>> lists this as "Meteorological Temperature of Water", which
@@ -1795,7 +1795,7 @@ Field Number:
 Field Number:
 1. Origin 1 range
 2. Origin 1 bearing
-3. Variable Rangs Marker 1
+3. Variable Range Marker 1
 4. Bearing Line 1
 5. Origin 2 range
 6. Origin 2 bearing
@@ -1826,7 +1826,7 @@ Field Number:
      you're heading to, then all the rest
 4. Route ID
 5. Waypoint ID
-6. Additiobal waypint IDs
+6. Additional waypoint IDs
 
 More waypoints follow.  Last field is a checksum as usual.
 
@@ -1844,7 +1844,7 @@ Example: $GPRTE,1,1,c,0*07
 
 Field Number:
 1. Total Number Of sentences
-2. Sentenence Number
+2. Sentence Number
 3. Frequency 1
 4. Mode 1
 5. Additional Frequency, Mode pairs
@@ -1854,7 +1854,7 @@ x. Checksum
 
 This sentence is transmitted before each individual sentence where
 there is a need for the Listener to determine the exact source of data
-in the system. Examples might include dual-frequency depthsounding
+in the system. Examples might include dual-frequency depth sounding
 equipment or equipment that integrates data from a number of sources
 and produces a single output.
 
@@ -1997,7 +1997,7 @@ Field Number:
 
 1. Horizontal range relative to target
 2. Meters (0-4000)
-3. True bearing to taget (ie. relative north).  Resolution is one degree.
+3. True bearing to target (ie. relative north).  Resolution is one degree.
 4. Separator
 5. Depth of trawl below the surface
 6. Meters (0-2000)
@@ -2114,7 +2114,7 @@ Field Number:
 
 Field Number:
 
-1. Heading degress, True
+1. Heading degrees, True
 2. T = True
 3. Heading degrees, Magnetic
 4. M = Magnetic
@@ -2358,7 +2358,7 @@ This is one of the sentences commonly emitted by GPS units.
 
 Field Number:
 
-1. UTC time (hours, minutes, seconds, may have fractional subsecond)
+1. UTC time (hours, minutes, seconds, may have fractional subseconds)
 2. Day, 01 to 31
 3. Month, 01 to 12
 4. Year (4 digits)
@@ -2404,7 +2404,7 @@ There is evidence for the existence of the following NMEA sentences
 on the Web:
 
 |======================================================
-|ACK - Alarm Acknowldgement
+|ACK - Alarm Acknowledgement
 |ADS - Automatic Device Status
 |AKD - Acknowledge Detail Alarm Condition
 |ALA - Set Detail Alarm Condition
@@ -2515,13 +2515,13 @@ Field Number:
 1. Firmware version number?
 2. Mode (1 = no fix, 2 = 2D fix, 3 = 3D fix)
 3. T if we have a fix
-4. numbers change - unknown
-5. time left on the GPS battery in hours
-6. numbers change (freq. compensation?)
+4. Numbers change - unknown
+5. Time left on the GPS battery in hours
+6. Numbers change (freq. compensation?)
 7. PRN number receiving current focus
 8. nmea_checksum
 
-Only supported on Magellan GPSes.
+Only supported on Magellan receivers.
 
 === PRWIZCH - Rockwell Channel Status ===
 
@@ -2599,7 +2599,7 @@ name of the message.
 Field Number:
 
 1. Day/month/year (two-digit year, unknown base century)
-2. Hour/minute/second to 0.1 sec precion, UTC.
+2. Hour/minute/second to 0.1 sec precision, UTC.
 3. ‘R’ indicates that this is an update for a radar track. No other
    values are valid
 4. Internal unique ID number. Can’t be changed even when target is
@@ -2657,7 +2657,7 @@ Described in <<MALTESE>>, actually a Maltese government document.
     Used for GBS, GRS.
 
 - [[[MX535]]]
-    "MX535 UAIS Ship Borne Class A Transponder Unit Techical & Installation Manual"
+    "MX535 UAIS Ship Borne Class A Transponder Unit Technical & Installation Manual"
     http://www.mx-marine.com/downloads/mx535/MX535_Tech_Manual_Rev_E.pdf
     Used for GNS.
 
