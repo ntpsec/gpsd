@@ -8,7 +8,7 @@ SPDX-License-Identifier: BSD-2-clause
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
 ]>
 <refentry id='gpsd_json.5'>
-<refentryinfo><date>11 June 2020</date></refentryinfo>
+<refentryinfo><date>28 June 2020</date></refentryinfo>
 <refmeta>
 <refentrytitle>gpsd_json</refentrytitle>
 <manvolnum>5</manvolnum>
@@ -54,7 +54,7 @@ are reports (including but not limited to as "TPV", "SKY", "DEVICE",
 and "ERROR") which are not direct responses to commands.</para>
 
 <para> The order of JSON attributes within a response object is never
-significant, and you may specify attributes in commands in any
+significant, and you may specify commmand attributes in any
 order. Responses never contain the special JSON value null; instead,
 attributes with empty or undefined values are omitted. The length
 limit for responses and reports is 1536 characters, including a trailing
@@ -92,8 +92,8 @@ Others may be reported or not depending on the fix quality.</para>
 
 <para>All error estimates (epc, epd, epe, eph, ept, epv, epx, epy)
 are guessed to be 95% confidence, may also be 50%, one sigma, or two
-sigma confidence.  Many GPS do not specify a confidence level.  No
-GPS specifies how the value is calculated.  Use error estimates with
+sigma confidence.  Many GNSS receivers do not specify a confidence level.
+None specify how the value is calculated.  Use error estimates with
 caution, and only as relative "goodness" indicators.  If the GPS reports
 a value to gpsd, then gpsd will report that value.  Otherwise gpsd will
 try to compute the value from the skyview.</para>
@@ -360,7 +360,7 @@ unknown.</entry>
         <entry>No</entry>
         <entry>numeric</entry>
         <entry>Estimated Spherical (3D) Position Error in meters.
-Guessed to be 95% confidence, but many GPS do not specify, so
+Guessed to be 95% confidence, but many GNSS receivers do not specify, so
 certainty unknown.</entry>
 </row>
 <row>
@@ -438,7 +438,7 @@ certainty unknown.</entry>
 will assert validity bits in the top-level set member for each
 field received; see gps.h for bitmask names and values.</para>
 
-<para>Invalid or unknown floating point values will be set to NAN.
+<para>Invalid or unknown floating-point values will be set to NAN.
 Always check floating points with isfinite() before use.
 </para>
 
@@ -1477,7 +1477,7 @@ precision on most systems.</para>
 {"class":"TOFF","device":"/dev/ttyUSB0",
      "real_sec":1330212592, "real_nsec":343182,
      "clock_sec":1330212592,"clock_nsec":343184,
-     "precision":-2}}
+     "precision":-2}
 </programlisting>
 
 </listitem>
@@ -2086,13 +2086,13 @@ attributes are emitted before others.</para>
 <variablelist>
 <varlistentry>
 <term>1</term>
-<listitem><para>full corrections - one message containing corrections for
+<listitem><para>full corrections -- one message containing corrections for
 all GPS satellites in view. This is not common.</para></listitem>
 </varlistentry>
 
 <varlistentry>
 <term>3</term>
-<listitem><para>reference station parameters - the position of the
+<listitem><para>reference station parameters -- the position of the
 reference station GPS antenna.</para></listitem>
 </varlistentry>
 
@@ -2206,10 +2206,10 @@ messages. Here is the format:</para>
 <table frame="all" pgwide="0"><title>UDRE values</title>
 <tgroup cols="2" align="left" colsep="1" rowsep="1">
 <tbody>
-<row><entry>0</entry><entry>1-sigma error       &lt;= 1m</entry></row>
-<row><entry>1</entry><entry>1-sigma error       &lt;= 4m</entry></row>
-<row><entry>2</entry><entry>1-sigma error       &lt;= 8m</entry></row>
-<row><entry>3</entry><entry>1-sigma error       &gt;  8m</entry></row>
+<row><entry>0</entry><entry>1-sigma error       &lt;= 1 m</entry></row>
+<row><entry>1</entry><entry>1-sigma error       &lt;= 4 m</entry></row>
+<row><entry>2</entry><entry>1-sigma error       &lt;= 8 m</entry></row>
+<row><entry>3</entry><entry>1-sigma error       &gt;  8 m</entry></row>
 </tbody>
 </tgroup>
 </table>
@@ -2516,7 +2516,7 @@ From itu p.9 just under the type7 msg figure:
                   11     (3) Do not use this radiobeacon
 RTCM104, in the other hand, makes it 3 bits wide.
 
-The Sager documentation said health has the same meaning as in the header.
+The Sager documentation said health has the same meaning as in the header,
 but this cannot be true unless the field is 3 bits wide.
 -->
         </para></entry>
@@ -2577,7 +2577,7 @@ message:</para>
         <entry>rangeflag</entry>
         <entry>bool</entry>
         <entry><para>If True, indicates that the estimated range is
-        different from that found in the Type 7 message (which contains the
+        different from that found in the type 7 message (which contains the
         beacon's listed range). Generally indicates a range reduction due to
         causes such as poor ionospheric conditions or reduced transmission
         power.</para></entry>
