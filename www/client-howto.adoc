@@ -42,7 +42,7 @@ The only way to simulate synchronous querying of such a sensor is to
 have an agent between you and it that caches the data coming out of
 the device; you can then query the agent and expect a reasonably
 synchronous response from the cache (we support this for
-GPSes). However, note that this doesn't work for a freshly opened
+GPSs). However, note that this doesn't work for a freshly opened
 device - there's no cached data.
 
 Consider what this implies for GPses, in particular:
@@ -60,12 +60,12 @@ Consider what this implies for GPses, in particular:
 
 * They may also fail to have lock because they're initially powering
   on (cold start), or waking from a power-conserving sleep mode (warm
-  start).  While most modern GPSes with a good skyview can get
+  start).  While most modern GPSs with a good skyview can get
   satellite lock in 30 seconds from a warm start, a GPS that has
   been off for a while can take 15 minutes or more to acquire lock
 
 Time to fix after a power-on matters because in many use cases for
-GPSes they're running off a battery, and you can't afford to keep them
+GPSs they're running off a battery, and you can't afford to keep them
 powered when you don't actually need location data.  This is why GPS
 sensors are sometimes designed to go to a low-power mode when you close
 the serial port they're attached to.
@@ -189,7 +189,7 @@ sensor in advance - not which of a dozen reporting protocols it uses,
 and not even the baud rate of the serial device.  The reason for this
 agnosticism is so the daemon can adapt properly to anything a hotplug
 event night throw at it.  If you unplug your GPS while your
-application is running, and then plug one one of a different type, the
+application is running, and then plug in one of a different type, the
 daemon will cope.  Your application won't know the difference unless
 you have told it to notice device types.
 
