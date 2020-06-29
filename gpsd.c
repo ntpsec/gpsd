@@ -1109,6 +1109,7 @@ static void handle_request(struct subscriber_t *sub,
             ++buf;
         } else {
             int status = json_watch_read(buf + 1, &sub->policy, &end);
+            // why force policy.timing to false?
             sub->policy.timing = false;
             if (end == NULL)
                 buf += strlen(buf);
@@ -1118,14 +1119,16 @@ static void handle_request(struct subscriber_t *sub,
                 buf = end;
             }
             if (status != 0) {
+                // failed to parse ?WATCH.
                 (void)snprintf(reply, replylen,
                                "{\"class\":\"ERROR\",\"message\":"
                                "\"Invalid WATCH: %s\"}\r\n",
                                json_error_string(status));
                 GPSD_LOG(LOG_ERROR, &context.errout, "response: %s\n", reply);
             } else if (sub->policy.watcher) {
+                // enable:true
                 if (sub->policy.devpath[0] == '\0') {
-                    /* awaken all devices */
+                    // awaken all devices
                     for (devp = devices; devp < devices + MAX_DEVICES; devp++)
                         if (allocated_device(devp)) {
                             (void)awaken(devp);
@@ -1140,7 +1143,7 @@ static void handle_request(struct subscriber_t *sub,
                             }
                         }
                 } else {
-                    /* awaken specific device */
+                    // awaken specific device
                     devp = find_device(sub->policy.devpath);
                     if (devp == NULL) {
                         (void)snprintf(reply, replylen,
@@ -1170,13 +1173,14 @@ static void handle_request(struct subscriber_t *sub,
                     }
                 }
             }
+            // else enable:false ???
         }
-        /* display a device list and the user's policy */
+        // return a device list and the user's policy
         json_devicelist_dump(reply + strlen(reply), replylen - strlen(reply));
         json_watch_dump(&sub->policy,
                         reply + strlen(reply), replylen - strlen(reply));
-    } else if (str_starts_with(buf, "?DEVICE")
-               && (buf[7] == ';' || buf[7] == '=')) {
+    } else if (str_starts_with(buf, "?DEVICE") &&
+               (buf[7] == ';' || buf[7] == '=')) {
         struct devconfig_t devconf;
         buf += 7;
         devconf.path[0] = '\0'; /* initially, no device selection */

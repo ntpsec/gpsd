@@ -638,6 +638,7 @@ void json_watch_dump(const struct gps_policy_t *ccp,
                    ccp->timing ? "true" : "false",
                    ccp->split24 ? "true" : "false",
                    ccp->pps ? "true" : "false");
+    // UNUSED: loglevel, remote
     if (ccp->devpath[0] != '\0')
         str_appendf(reply, replylen, ",\"device\":\"%s\"", ccp->devpath);
     (void)strlcat(reply, "}\r\n", replylen);

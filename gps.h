@@ -2262,8 +2262,10 @@ struct gps_policy_t {
     bool timing;                        /* requesting timing info */
     bool split24;                       /* requesting split AIS Type 24s */
     bool pps;                           /* requesting PPS in NMEA/raw modes */
+    // loglevel presently unused
     int loglevel;                       /* requested log level of messages */
     char devpath[GPS_PATH_MAX];         /* specific device to watch */
+    // remote presently unused
     char remote[GPS_PATH_MAX];          /* ...if this was passthrough */
 };
 
