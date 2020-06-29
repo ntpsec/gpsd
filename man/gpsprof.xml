@@ -103,7 +103,7 @@ rejected.</para>
 <term>polarused</term>
 <listitem>
 <para>Similar to the polar plot, but only satellites used to compute
-fixs are plotted.  Useful for seeing which parts of the antenna
+fixes are plotted.  Useful for seeing which parts of the antenna
 skyview are being used in fixes.</para>
 </listitem>
 </varlistentry>
@@ -185,7 +185,7 @@ discarded.</para>
 <para>Plot total latency without instrumentation.  Useful mainly as a
 check that the instrumentation is not producing significant distortion.
 The X axis is sample time in seconds from the start of the plot.  The Y
-axs is latency in seconds.It only plots times for reports that contain
+axis is latency in seconds.  It only plots times for reports that contain
 fixes; staircase-like artifacts in the plot are created when elapsed
 time from reports without fixes is lumped in.</para>
 </listitem>
