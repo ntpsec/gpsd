@@ -144,7 +144,7 @@ you want to capture the startup message from a device that displays
 firmware version information there.</para>
 
 <para>The -n option forces gpsmon to request NMEA0183 packets instead of the
-raw datastream from gpsd.</para>
+raw data stream from gpsd.</para>
 
 <para>The -t option sets up a fallback type. Give it a string that
 is a distinguishing prefix of exactly one driver type name; this will
@@ -257,7 +257,7 @@ specification in the traditional style, e.g 8N1 (the default), 7E1,
 etc.  Some devices don't support serial modes other than their
 default, so this command may fail with a message.</para>
 
-<para>Use this command with caution.  On USB and Bluetooth GPSes it is
+<para>Use this command with caution.  On USB and Bluetooth GPSs it is
 also possible for serial mode setting to fail either because the
 serial adaptor chip does not support non-8N1 modes or because the
 device firmware does not properly synchronize the serial adaptor chip
