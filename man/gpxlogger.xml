@@ -66,8 +66,8 @@ to emit a summary of its options and then exit.</para>
 <para>The <option>-V</option> option causes <application>gpxlogger</application>
 to dump the package version and exit.</para>
 
-<para> The <option>-D</option> option sets a debug level;
-it is primarily for use by GPSD developers.
+<para> The <option>-D</option> option sets the debug level;
+it is primarily for troubleshooting.
 It enables various progress messages to standard error.</para>
 
 <para>The <option>-d</option> option tells
