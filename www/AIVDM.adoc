@@ -73,7 +73,7 @@ Clarifications on Recommendation ITU-R M.1371-1" <<IALA>>, which
 is freely available.
 
 There have been three minor revisions of ITU-R M.1371 since it was
-originally issued.  These add interpretations to packet bitfields that
+originally issued.  These add interpretations to packet bit fields that
 were previously marked "spare" and "regional reserved". ITU-R M.1371
 revision 4 became available for free download, apparently at some
 point in early 2011, well after most of this document was assembled.
@@ -228,7 +228,7 @@ The \*-separated suffix (\*5C) is the NMEA 0183 data-integrity checksum
 for the sentence, preceded by "*".  It is computed on the entire
 sentence including the AIVDM tag but excluding the leading "!".
 
-For comparison, here is an example of a multifragment sentence with a
+For comparison, here is an example of a multi fragment sentence with a
 nonempty message ID field:
 
 --------------------------------------------------------------------
@@ -350,7 +350,7 @@ This is the binary payload of the sentence.
 == AIS Payload Data Types ==
 
 Data in AIS message payloads (what you get after undoing the AIVDM/AIVDO
-armoring) is encoded as bitfields in the sentence.  Bitfields may be
+armoring) is encoded as bit fields in the sentence.  Bit fields may be
 interpreted in one of the following ways:
 
 - Signed or unsigned integer
@@ -361,7 +361,7 @@ interpreted in one of the following ways:
 - Spare bits
 - Strings
 
-Numeric bitfields are interpreted as big-endian twos-complement
+Numeric bit fields are interpreted as big-endian twos-complement
 integers; when signed, the sign bit is the highest.
 
 Float fields have an associated divisor which should be applied
@@ -370,7 +370,7 @@ types 1-3, the scaling operation involves a more elaborate formula.
 
 Flags are encoded as 1 for true/yes/on, 0 for false/no/off.
 
-Indices into controlled vocabularies are numeric bitfields which
+Indices into controlled vocabularies are numeric bit fields which
 must be interpreted using per-field string lists specified in the
 standards.
 
@@ -382,7 +382,7 @@ Reserved fields should not be ignored, as they may be assigned for
 extension data in minor revisions of the AIS standard; it is noted in
 the message descriptions where this has already occurred.  It is good
 practice for a decoder to make reserved fields available to client
-applications as uninterpreted bitfields.
+applications as uninterpreted bit fields.
 
 Character-string fields within AIS messages are encoded in a special
 way, referred to as "six-bit" in the tables below. First, chop the
@@ -502,7 +502,7 @@ unusual or rare; many AIS transmitters never emit them.
 An MMSI is a Mobile Marine Service Identifier, a unique 9-digit ID for
 the ship's radio(s).  The first three digits convey information about
 the country in which the ID was issued <<ITU-MID>>.  US vessels
-travelling solely in U.S. waters sometimes incorrectly omit the
+traveling solely in U.S. waters sometimes incorrectly omit the
 leading "3", the geography code for North and Central America and
 Caribbean, emitting 8-digit MMSIs beginning with the U.S. country code
 of 669.
@@ -545,7 +545,7 @@ set to use.
 
 The "T" column declares the data type of the field, and may have
 any of the values in the following table.  It is intended to be used
-for generating bitfield-extraction code directly from the message
+for generating bit field-extraction code directly from the message
 type descriptions.
 
 [frame="topbot"]
@@ -1106,7 +1106,7 @@ three points of tidal information.
 ==== IMO236 Number of persons on board ====
 
 This message should be used by a ship to report the number of persons
-on board, e.g. on request by a competent authority.  Acknowledgement
+on board, e.g. on request by a competent authority.  Acknowledgment
 required.
 
 A message 6 subtype. DAC = 001 FID = 16.
@@ -1860,7 +1860,7 @@ Should be used by inland vessels only, to send an ETA report to a
 lock, bridge or terminal in order to apply for a time slot in resource
 planning.
 
-An acknowledgement by Inland AIS message 22 should be received within
+An acknowledgment by Inland AIS message 22 should be received within
 15 minutes. Otherwise, the Inland AIS message 21 should be repeated
 once.
 
@@ -2046,7 +2046,7 @@ process this variant.
 
 === Type 7: Binary Acknowledge ===
 
-Message type 7 is a receipt acknowledgement to the senders of a
+Message type 7 is a receipt acknowledgment to the senders of a
 previous messages of type 6.  Total length varies between 72 and 168
 bits by 32-bit increments, depending on the number of destination
 MMSIs included.
@@ -2185,7 +2185,7 @@ broadcast of this message of 12 minutes.
                                                   127 = N/A (default).
 |135-143 |  9 |Wind Direction     |wdir        |u|0-359, degrees from true north
                                                    511 = N/A (default)
-|144-152 |  9 |Wind Gust Direction|wgustdir    |u|0-359, degrees fom true north
+|144-152 |  9 |Wind Gust Direction|wgustdir    |u|0-359, degrees from true north
                                                    511 = N/A (default)
 |153-163 | 11 |Air Temperature    |temperature |u|Dry bulb temp: 0.1 deg C
                                                   -60.0 to +60.0,
@@ -2227,7 +2227,7 @@ broadcast of this message of 12 minutes.
                                                   255 = N/A (default).
 |280-285 |  6 |Wave period          |waveperiod|u|Seconds 0-60:
                                                   63 = N/A (default).
-|286-294 |  9 |Wave direction       |wavedir   |u|0-359: deg. fom true north,
+|286-294 |  9 |Wave direction       |wavedir   |u|0-359: deg. ffom true north,
                                                   511 = N/A (default).
 |295-302 |  8 |Swell height         |swellheight|U1|0-25m: units of 0.1m
                                                    255 = N/A (default).
@@ -2424,7 +2424,7 @@ field groups) to represent up to 4 targets.
 ==== IMO289 Marine Traffic Signal ====
 
 This message provides information on a signal station and status of
-the control signal at the entrance of a harbour or channel where the
+the control signal at the entrance of a harbor or channel where the
 shipping direction controlled so that the traffic flow be kept in
 order.
 
@@ -2543,7 +2543,7 @@ length: 360 bits.
                                                    63 = N/A (default).
 |317-324 |  8  |Wave height        |waveheight  |U1|0-25m in units of 0.1m,
                                                    255 = N/A (default).
-|325-333 |  9  |Wave direction     |wavedir     |u|0-359: deg. fom true north,
+|325-333 |  9  |Wave direction     |wavedir     |u|0-359: deg. from true north,
                                                    360 = N/A (default).
 |334-341 |  8  |Swell height       |swellheight |U1|0-25m: units 0.1m,
                                                    255 = N/A (default)
@@ -3579,7 +3579,7 @@ decimeters), and (c) end padding changes from 6 to 10 bits.
 |215-222 |  8 |Surface Current Speed  |cspeed  |U1|0.0-25.0: units 0.1 knot,
                                                    251 = speed >= 25.1 knots,
                                                    255 = N/A (default).
-|223-231 |  9 |Surface Current Direction |cdir |u|0-359: deg. fom true north,
+|223-231 |  9 |Surface Current Direction |cdir |u|0-359: deg. from true north,
                                                        360 = N/A (default).
 |232-239 |  8 |Current Speed #2     |cspeed2   |U1|0.0-25.0 knots:
                                                    units 0.1 knot,
@@ -4031,7 +4031,7 @@ Such apparently garbled content does *not* mean there is an error in
 your decoder. It may indicate faulty encoders, operator error, or even
 the use of private encodings for non-ASCII character sets.
 
-=== Type 13: Safety-Related Acknowledgement ===
+=== Type 13: Safety-Related Acknowledgment ===
 
 Message type 13 is a receipt acknowledgement to senders of
 previous messages of type 12.  The message layout is identical to
@@ -4182,7 +4182,7 @@ Navigation Clock.  (Note, however, that the hex representation of
 the out-of-band values differs; it is 181 \* 60 \* 10 = 0x1a838 for
 longitude, 91 \* 60 \* 10 = 0xd548 for latitude.)
 
-The <<IALA>> description of the payload portion subfields has been
+The <<IALA>> description of the payload portion sub-fields has been
 omitted, as it appears to be tied to the now obsolete RTCM2 protocol.
 
 === Type 18: Standard Class B CS Position Report ===
@@ -4511,7 +4511,7 @@ station network.
 |110-113  | 4  |Station Type     |station_type |e|See "Station Types"
 |114-121  | 8  |Ship Type        |ship_type    |e|See "Ship Types"
 |122-143  |22  |Spare            |             |x|Not used
-|144-145  | 2  |Tx/Rx Mode       |txrx         |u|See "Tranmit/Recieve Modes"
+|144-145  | 2  |Tx/Rx Mode       |txrx         |u|See "Transmit/Receive Modes"
 |146-149  | 4  |Report Interval  |interval     |e|See "Station Intervals"
 |150-153  | 4  |Quiet Time       |quiet        |u|0 = none, 1-15 quiet time in minutes
 |154-159  | 6  |Spare            |             |x|Not used
@@ -4773,7 +4773,7 @@ under the description of type 8.
 
 The U.S. Coast Guard has a system called PAWSS (Port and Water Safety
 System) which uses extended AIS binary formats. <<SEAWAY>> says it's
-intercompatible with the St. Lawrence Seaway system and describes three
+compatible with the St. Lawrence Seaway system and describes three
 PAWSS-specific messages in its Appendix A.
 
 Since 2007 the Port Authority of London has operated a Thames AIS
@@ -4983,7 +4983,7 @@ nibble or extra trailing zero data.
 
 === Bit Stuffing ===
 
-The following probably will not affect decoders. Nevertheless we
+The following probably will not affect decoders. Nevertheless, we
 document it here because it is just the sort of thing that is (a)
 likely to confuse implementors reading the public portions of the
 standards, and (b) all too likely to become visible if there are
