@@ -430,16 +430,16 @@ int gps_sock_send(struct gps_data_t *gpsdata, const char *buf)
 #endif  // USE_QT
 }
 
-int gps_sock_stream(struct gps_data_t *gpsdata, unsigned int flags, void *d)
 /* ask gpsd to stream reports at you, hiding the command details */
+int gps_sock_stream(struct gps_data_t *gpsdata, unsigned int flags, void *d)
 {
-    char buf[GPS_JSON_COMMAND_MAX];
+    char buf[GPS_JSON_COMMAND_MAX] = "?WATCH={\"enable\":";
 
     if ((flags & (WATCH_JSON | WATCH_NMEA | WATCH_RAW)) == 0) {
         flags |= WATCH_JSON;
     }
     if ((flags & WATCH_DISABLE) != 0) {
-        (void)strlcpy(buf, "?WATCH={\"enable\":false", sizeof(buf));
+        (void)strlcat(buf, "false", sizeof(buf));
         if (flags & WATCH_JSON)
             (void)strlcat(buf, ",\"json\":false", sizeof(buf));
         if (flags & WATCH_NMEA)
@@ -456,12 +456,9 @@ int gps_sock_stream(struct gps_data_t *gpsdata, unsigned int flags, void *d)
             (void)strlcat(buf, ",\"split24\":false", sizeof(buf));
         if (flags & WATCH_PPS)
             (void)strlcat(buf, ",\"pps\":false", sizeof(buf));
-        (void)strlcat(buf, "};", sizeof(buf));
-        libgps_debug_trace((DEBUG_CALLS,
-                           "gps_stream() disable command: %s\n", buf));
-        return gps_send(gpsdata, buf);
+        // no device here?
     } else {                    /* if ((flags & WATCH_ENABLE) != 0) */
-        (void)strlcpy(buf, "?WATCH={\"enable\":true", sizeof(buf));
+        (void)strlcat(buf, "true", sizeof(buf));
         if (flags & WATCH_JSON)
             (void)strlcat(buf, ",\"json\":true", sizeof(buf));
         if (flags & WATCH_NMEA)
@@ -480,11 +477,10 @@ int gps_sock_stream(struct gps_data_t *gpsdata, unsigned int flags, void *d)
             (void)strlcat(buf, ",\"pps\":true", sizeof(buf));
         if (flags & WATCH_DEVICE)
             str_appendf(buf, sizeof(buf), ",\"device\":\"%s\"", (char *)d);
-        (void)strlcat(buf, "};", sizeof(buf));
-        libgps_debug_trace((DEBUG_CALLS,
-                           "gps_stream() enable command: %s\n", buf));
-        return gps_send(gpsdata, buf);
     }
+    (void)strlcat(buf, "};", sizeof(buf));
+    libgps_debug_trace((DEBUG_CALLS, "gps_sock_stream() command: %s\n", buf));
+    return gps_send(gpsdata, buf);
 }
 
 /* run a socket main loop with a specified handler */
