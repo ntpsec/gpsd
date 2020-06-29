@@ -116,10 +116,10 @@ CAN hardware is connected. The default is /dev/ttyUSB0.
 </refsect1>
 
 <refsect1 id='examples'><title>EXAMPLES</title>
-
+<para>All the following examples probably need to be run as root.</para>
 <variablelist>
 <varlistentry>
-<term><command>sudo gpsinit  plx_pci</command></term>
+<term><command>gpsinit  plx_pci</command></term>
 <listitem>
 <para>Attempt to load the module plx_pci and initialize net 0 for the
 connection to a NMEA2000 network. It will set the baudrate to
@@ -127,13 +127,13 @@ connection to a NMEA2000 network. It will set the baudrate to
 </listitem>
 </varlistentry>
 <varlistentry>
-<term><command>sudo gpsinit  -n 1 plx_pci</command></term>
+<term><command>gpsinit  -n 1 plx_pci</command></term>
 <listitem>
 <para>As above, but use net 1.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
-<term><command>sudo gpsinit  -s 38400 slcan /dev/ttyUSB0</command></term>
+<term><command>gpsinit  -s 38400 slcan /dev/ttyUSB0</command></term>
 <listitem>
 <para>Attempt to load the module slcan and talk to the hardware at
 38400 baud connected to port /dev/ttyUSB0.</para>
