@@ -78,12 +78,12 @@ probably of interest only to GSD developers.</para>
 <para>The <option>-n</option> enables dumping in generated
 pseudo-NME0183.</para>
 
-<para>The <option>-e</option> option option tells the program to
+<para>The <option>-e</option> option tells the program to
 encode JSON on standard input to JSON on standard output. This option
 is only useful for regression-testing of the JSON dumping and parsing
 code.</para>
 
-<para>The <option>-s</option> option option tells the program to report
+<para>The <option>-s</option> option tells the program to report
 AIS Type 24 sentence halves separately rather than attempting to
 aggregate them.</para>
 
@@ -109,8 +109,8 @@ forced). Strings are unpacked from six-bit to full ASCII</para>
 <para>The <option>-V</option> option directs the program to emit its
 version number, then exit.</para>
 
-<para>The <option>-D</option> option sets a debug verbosity level.  It is
-mainly of interest to developers.</para>
+<para>The <option>-D</option> option sets the debug verbosity level.  It is
+mainly of interest to for troubleshooting.</para>
 
 </refsect1>
 <refsect1 id='json_ais'><title>AIS DSV FORMAT</title>
