@@ -279,7 +279,7 @@ gpsrinex -i 30 -n 1000000 :3000
   </refsect1>
   <refsect1 id="see_also">
     <title>SEE ALSO</title>
-    <para>One service known to work with obsrinex output is at:
+    <para>One service known to work with gbsrinex output is at:
 https://webapp.geod.nrcan.gc.ca/geod/tools-outils/ppp.php</para>
     <para>OPUS requires 2 frequency observation files.
 https://www.ngs.noaa.gov/OPUS/</para>
