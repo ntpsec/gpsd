@@ -45,7 +45,7 @@ SPDX-License-Identifier: BSD-2-clause
 
 <para><application>gpsctl</application> can switch a dual-mode GPS
 between NMEA and vendor-binary modes.  It can also be used to set the
-device baudrate.  Note:  Not all devices have these capabilities.</para>
+device baud rate.  Note:  Not all devices have these capabilities.</para>
 
 <para>If you have only one GPS attached to your machine, and gpsd is
 running, it is not necessary to specify the device;
