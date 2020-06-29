@@ -343,7 +343,7 @@ $ scons -c
 $ scons pps=yes ntpshm=yes
 -----------------------------------------------------------------------------
 
-More complete, and distro specific, builsinstructions can be found in
+More complete, and distro specific, build instructions can be found in
 the files INSTALL.adoc and build.adoc in the source distribution.
 
 
@@ -525,7 +525,7 @@ sources to check:
 
 2. If you are using an RS232 cable, examine it suspiciously, ideally
    with an RS232 breakout box. Cheap DB9 to DB9 cables such as those
-   issued with UPSes often carry TXD/RXD/SG only, omitting handshake
+   issued with UPSs often carry TXD/RXD/SG only, omitting handshake
    lines such as DCD, RI, and DSR that are used to carry 1PPS.
    Suspect this especially if the cable jacket looks too skinny to
    hold more than three leads!
@@ -642,12 +642,12 @@ will already have been launched at boot time.
 It's best to have gpsd start first.  That way when ntpd restarts it has
 a good local time handy.  If ntpd starts first, it will set the local
 clock using a remote, probably pool, server.  Then ntpd has to spend a
-whole day slowly resynching the clock.
+whole day slowly resyncing the clock.
 
 If you're using dhcp3-client to configure your system, make sure
 you disable /etc/dhcp3/dhclient-exit-hooks.d/ntp, as dhclient would
 restart ntpd with an automatically created ntp.conf otherwise -- and
-gpsd would not be able to talk with ntpd any more.
+gpsd would not be able to talk with ntpd anymore.
 
 While gpsd may be runnable as non-root, you will get significantly
 better accuracy of time reporting in root mode; the difference, while
@@ -863,7 +863,7 @@ Note the additional ".PPS." line.
 
 If the value under "reach" for the SHM lines remains zero, check that
 gpsd is running; cgps reports a 3D fix; and the '-n' option was used.
-Some GPS recievers specialized for time service can report time with signal
+Some GNSS receivers specialized for time service can report time with signal
 lock on only one satellite, but with most devices a 3D fix is
 required.
 
@@ -1095,7 +1095,7 @@ Measure the time offset every N seconds over a longer window of time
 T, plot the graph, and fit a straight line.  The slope of that line is
 the drift.  The units cancel out.  Parts-per-million is a handy scale.
 
-How do you turn that handwaving description into code?  One easy way
+How do you turn that hand waving description into code?  One easy way
 is to set N=2 and pick the right T, then run the answer through a
 low pass filter.  In that context, there are two competing sources of
 error.  If T is too small, the errors on each individual measurement
@@ -1147,7 +1147,7 @@ when the NTP server sends a request to the remote server an entire ARP
 cycle will be added to the NTP packet round trip time (RTT).  This will
 throw off the time measurements to servers on the local lan.
 
-On a RaspberryPi ARP has been shown to impact the remote offset by up to
+On a Raspberry Pi ARP has been shown to impact the remote offset by up to
 600 uSec in some rare cases.
 
 The solution is the same for both ntpd and chronyd, add the "maxpoll 5"
@@ -1165,7 +1165,7 @@ jump.
 If you leave your NTP server in the bubble wrap you will notice some
 improved local and remote offsets.
 
-=== Powersaving is not your friend
+=== Power saving is not your friend
 
 Normally enabling power saving features is a good thing: it saves you power.
 But when your CPU changes power saving modes (cstates for Intel CPUs) the
