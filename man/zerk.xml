@@ -209,7 +209,7 @@ a usage message and exit.</para>
     <listitem>
      <para>Load an Option Authorization File (OAF) into the GPS.  Accepts
 one parameter, OAF, command file to read.  The OAF is just a special case
-of a .jpo (GREIS command file).  -O will send any valid .jpo file to
+of a '.jpo' (GREIS command file).  -O will send any valid .jpo file to
 the GPS.
 </para>
     </listitem>
@@ -237,7 +237,7 @@ the GPS acknowledges the command, unless the -W is given.
       <varlistentry>
        <term>DM</term>
        <listitem>
-        <para>Disable all periodic GREIS messages..</para>
+        <para>Disable all periodic GREIS messages.</para>
        </listitem>
       </varlistentry>
       <varlistentry>
