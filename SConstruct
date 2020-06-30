@@ -375,7 +375,8 @@ boolopts = (
     ("squelch",       False, "squelch gpsd_log/gpsd_hexdump to save cpu"),
     # Build control
     ("coveraging",    False, "build with code coveraging enabled"),
-    ("debug",         False, "include debug information in build"),
+    ("debug",         False, "include debug information in build, unoptimized"),
+    ("debug_opt",     False, "include debug information in build, optimized"),
     ("gpsdclients",   True,  "gspd client programs"),
     ("gpsd",          True,  "gpsd itself"),
     ("implicit_link", imloads, "implicit linkage is supported in shared libs"),
@@ -645,7 +646,7 @@ else:
         env.Append(LDFLAGS=['-coverage'])
         env.Append(LINKFLAGS=['-coverage'])
     # Should we build with debug symbols?
-    if env['debug']:
+    if env['debug'] or env['debug_opt']:
         env.Append(CCFLAGS=['-g3'])
     # Should we build with optimisation?
     if env['debug'] or env['coveraging']:
@@ -2180,8 +2181,8 @@ if qt_env:
     binaryinstall.append(GPSLibraryInstall(qt_env, installdir('libdir'),
                                            compiled_qgpsmmlib, libgps_version))
 
-if ((not env['debug'] and not env['profiling'] and not env['nostrip'] and
-     not sys.platform.startswith('darwin'))):
+if ((not env['debug'] and not env['debug_opt'] and not env['profiling']
+     and not env['nostrip'] and not sys.platform.startswith('darwin'))):
     env.AddPostAction(binaryinstall, '$STRIP $TARGET')
 
 if env['python'] and not cleaning and not helping:
