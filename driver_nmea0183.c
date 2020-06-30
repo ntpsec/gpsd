@@ -3584,7 +3584,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         session->newdata.time = gpsd_utc_resolve(session);
 
         GPSD_LOG(LOG_DATA, &session->context->errout,
-                 "NMEA1083: %s time is %s = "
+                 "NMEA0183: %s time is %s = "
                  "%d-%02d-%02dT%02d:%02d:%02d.%03ldZ\n",
                  session->nmea.field[0],
                  timespec_str(&session->newdata.time, ts_buf1, sizeof(ts_buf1)),
