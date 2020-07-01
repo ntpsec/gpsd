@@ -25,6 +25,17 @@
  *
  **************************************************************************/
 
+/* Common lat/lon decoding for do_lat_lon */
+static inline double decode_lat_or_lon(const char *field)
+{
+    double d, m;
+    double latlon;
+
+    latlon = safe_atof(field);
+    m = modf(latlon / 100.0, &d);
+    return d + m / 0.6;
+}
+
 /* process a pair of latitude/longitude fields starting at field index BEGIN
  * The input fields look like this:
  *     field[0]: 4404.1237962
@@ -44,7 +55,6 @@
  */
 static int do_lat_lon(char *field[], struct gps_fix_t *out)
 {
-    double d, m;
     double lon;
     double lat;
 
@@ -55,15 +65,11 @@ static int do_lat_lon(char *field[], struct gps_fix_t *out)
         return 1;
     }
 
-    lat = safe_atof(field[0]);
-    m = modf(lat / 100.0, &d);
-    lat = d + m / 0.6;
+    lat = decode_lat_or_lon(field[0]);
     if ('S' == field[1][0])
         lat = -lat;
 
-    lon = safe_atof(field[2]);
-    m = modf(lon / 100.0, &d);
-    lon = d + m / 0.6;
+    lon = decode_lat_or_lon(field[2]);
     if ('W' == field[3][0])
         lon = -lon;
 
