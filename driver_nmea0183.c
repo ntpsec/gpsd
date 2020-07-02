@@ -25,15 +25,32 @@
  *
  **************************************************************************/
 
-/* Common lat/lon decoding for do_lat_lon */
+/* Common lat/lon decoding for do_lat_lon
+ *
+ * This version avoids the use of modf(), which can be slow and also suffers
+ * from exactness problems.  The integer minutes are first extracted and
+ * corrected for the improper degree scaling, using integer arithmetic.
+ * Then the fractional minutes are added as a double, and the result is scaled
+ * to degrees, using multiply which is faster than divide.
+ */
 static inline double decode_lat_or_lon(const char *field)
 {
-    double d, m;
-    double latlon;
+    long degrees, minutes;
+    double full_minutes;
+    char *cp;
 
-    latlon = safe_atof(field);
-    m = modf(latlon / 100.0, &d);
-    return d + m / 0.6;
+    /* Get integer "minutes" */
+    minutes = strtol(field, &cp, 10);
+    /* Must have decimal point */
+    if (*cp != '.') return NAN;
+    /* Extract degrees (scaled by 100) */
+    degrees = minutes / 100;
+    /* Rescale degrees to normal factor of 60 */
+    minutes -= degrees * (100 - 60);
+    /* Add fractional minutes */
+    full_minutes = minutes + safe_atof(cp);
+    /* Scale to degrees & return */
+    return full_minutes * (1.0 / 60.0);
 }
 
 /* process a pair of latitude/longitude fields starting at field index BEGIN
