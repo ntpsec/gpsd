@@ -6,6 +6,7 @@
 #include "gpsd_config.h"  /* must be before all includes */
 
 #include <ctype.h>       /* for isdigit() */
+#include <float.h>       /* for FLT_EVAL_METHOD */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -25,6 +26,21 @@
  *
  **************************************************************************/
 
+/* Allow avoiding long double intermediate values.
+ *
+ * On platforms with FLT_EVAL_METHOD >=2 (currently only 32-bit OpenBSD),
+ * intermediate values may be kept as long doubles.  Although this is in
+ * principle more accurate, it can cause slight differences that lead to
+ * regression failures.  Storing such values in volatile variables avoids
+ * this.  Where the volatile declaration is unnessary (and absent), such
+ * extra variables are normally optimized out.
+ */
+#if FLT_EVAL_METHOD >= 2
+#define FLT_VOLATILE volatile
+#else
+#define FLT_VOLATILE
+#endif  /* FLT_EVAL_METHOD */
+
 /* Common lat/lon decoding for do_lat_lon
  *
  * This version avoids the use of modf(), which can be slow and also suffers
@@ -32,11 +48,14 @@
  * corrected for the improper degree scaling, using integer arithmetic.
  * Then the fractional minutes are added as a double, and the result is scaled
  * to degrees, using multiply which is faster than divide.
+ *
+ * Forcing the intermediate minutes value to a double is sufficient to
+ * avoid regression problems with FLT_EVAL_METHOD>=2.
  */
 static inline double decode_lat_or_lon(const char *field)
 {
     long degrees, minutes;
-    double full_minutes;
+    FLT_VOLATILE double full_minutes;
     char *cp;
 
     /* Get integer "minutes" */
