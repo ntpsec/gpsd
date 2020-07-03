@@ -196,7 +196,9 @@ static void usage(void)
                   "-b Run in background as a daemon.\n"
                   "-d [0-2] 1 display sent packets, 2 display ignored "
                   "packets.\n"
-                  "-v Print version and exit.\n\n"
+                  "-V Print version and exit.\n"
+                  "-v Print version and exit (deprecated).\n"
+                  "\n"
                   "example: gps2udp -a -n -c 2 -d 1 -u data.aishub.net:2222 "
                   "fridu.net\n"
                   );
@@ -366,7 +368,7 @@ int main(int argc, char **argv)
     memset(udphostport, 0, sizeof(udphostport));
 
     flags = WATCH_ENABLE;
-    while ((option = getopt(argc, argv, "?habnjvc:l:u:d:")) != -1) {
+    while ((option = getopt(argc, argv, "?habnjvVc:l:u:d:")) != -1) {
         switch (option) {
         case 'd':
             debug = atoi(optarg);
@@ -404,6 +406,7 @@ int main(int argc, char **argv)
             }
             break;
         case 'v':
+        case 'V':
             (void)fprintf(stderr, "%s: %s (revision %s)\n",
                           argv[0], VERSION, REVISION);
             exit(0);
