@@ -175,10 +175,10 @@ struct ts_to_ms_test ts_to_ms_tests[] = {
         { { -1, MS_IN_NS},  -999, 0},
         { { -1, -MS_IN_NS}, -1001, 0},
         // Note no (extra) loss of precision on the following
-        { TS_2037,          2145916799000, 0},
-        { TS_2037_ONE,      2145916799000, 0},
-        { TS_2037_TREES,    2145916799333, 0},
-        { TS_2037_NINES,    2145916799999, 1},
+        { TS_2037,          2145916799000ULL, 0},
+        { TS_2037_ONE,      2145916799000ULL, 0},
+        { TS_2037_TREES,    2145916799333ULL, 0},
+        { TS_2037_NINES,    2145916799999ULL, 1},
 };
 
 /*
