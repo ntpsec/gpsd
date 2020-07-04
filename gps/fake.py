@@ -103,14 +103,15 @@ from . import packet as sniffer
 if sys.platform.startswith("linux"):
     WRITE_PAD = 0.0
 elif sys.platform.startswith("freebsd"):
-    WRITE_PAD = 0.01
+    WRITE_PAD = 0.001
+elif sys.platform.startswith("openbsd"):
+    WRITE_PAD = 0.001
 elif sys.platform.startswith("netbsd5"):
     WRITE_PAD = 0.200
 elif sys.platform.startswith("netbsd"):
-    WRITE_PAD = 0.01
+    WRITE_PAD = 0.001
 elif sys.platform.startswith("darwin"):
-    # darwin Darwin-13.4.0-x86_64-i386-64bit
-    WRITE_PAD = 0.005
+    WRITE_PAD = 0.001
 else:
     WRITE_PAD = 0.004
 
