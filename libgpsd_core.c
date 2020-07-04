@@ -553,9 +553,6 @@ int gpsd_open(struct gps_device_t *session)
          *    gpsd://[ipv6]::/device
          *    gpsd://ipv4::/device
          *    gpsd://hostname::/device
-         *    gpsd://[ipv6]::/device
-         *    gpsd://ipv4::/device
-         *    gpsd://hostname::/device
          */
         char server[GPS_PATH_MAX], *host, *port, *device;
         socket_t dsock;
