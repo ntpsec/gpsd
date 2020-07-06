@@ -6148,8 +6148,12 @@ High Precision GNSS products only."""
                     # Done, got a full message
                     if gps.polystr('{"class":"ERROR"') in comment:
                         # always print gpsd errors
+                        if 0 <= opts['timestamp']:
+                            print("%.4f" % time.time())
                         print(comment)
                     elif VERB_DECODE <= opts['verbosity']:
+                        if 0 <= opts['timestamp']:
+                            print("%.4f" % time.time())
                         print(comment)
                     return consumed
 
