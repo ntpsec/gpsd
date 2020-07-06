@@ -7621,6 +7621,17 @@ Always double check with "-p CFG-GNSS".
         # UBX-CFG-USB
         "CFG-USB": {"command": send_poll, "opt": [0x06, 0x1b],
                     "help": "poll UBX-CFG-USB USB config"},
+        # UBX-ESF-INS
+        "ESF-INS": {"command": send_poll, "opt": [0x10, 0x15],
+                    "help": "poll UBX-ESF-INS Vehicle dynamics info"},
+        # UBX-ESF-MEAS
+        "ESF-MEAS": {"command": send_poll, "opt": [0x10, 0x02],
+                     "help": "poll UBX-ESF-MEAS External sensor fusion "
+                             "measurements"},
+        # UBX-ESF-STATUS
+        "ESF-STATUS": {"command": send_poll, "opt": [0x10, 0x10],
+                       "help": "poll UBX-ESF-STATUS External sensor fusion "
+                               "status"},
         # UBX-LOG-CREATE
         "LOG-CREATE": {"command": send_poll,
                        "opt": [0x21, 0x07, 0, 1, 0, 0, 0, 0, 0, 0],
