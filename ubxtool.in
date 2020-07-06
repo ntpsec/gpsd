@@ -137,7 +137,7 @@ opts = {
     'set_speed': None,
     # target gpsd (server:port:device) to connect to
     'target': {"server": None, "port": gps.GPSD_PORT, "device": None},
-    # timestamp logs.  0 == None, 1 = unix time in seconds, 2 = 1 + ctime()
+    # timestamp logs.  0 == None, 1 = unix time in seconds, 2 = 1 + gmtime()
     'timestamp': 0,
     # verbosity level, -v
     'verbosity': VERB_NONE,
@@ -323,7 +323,7 @@ def timestamp():
     if 1 == opts['timestamp']:
         print("%.4f" % now)
     elif 2 == opts['timestamp']:
-        print("%.4f %s" % (now, time.ctime(now)))
+        print("%.4f %s" % (now, time.gmtime(now)))
 
 
 class ubx(object):
