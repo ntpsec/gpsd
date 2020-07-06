@@ -137,6 +137,8 @@ opts = {
     'set_speed': None,
     # target gpsd (server:port:device) to connect to
     'target': {"server": None, "port": gps.GPSD_PORT, "device": None},
+    # timestamp logs.  0 == None, 1 = unix time in seconds
+    'timestamp': 0,
     # verbosity level, -v
     'verbosity': VERB_NONE,
     # contents of environment variable UBXOPTS
@@ -6252,16 +6254,19 @@ High Precision GNSS products only."""
                 continue
 
             if 'CSUM2' == state:
+                # got a complete, maybe valid, message
+                if 0 <= opts['timestamp']:
+                    print("%.4f" % time.time())
+
                 # ck_b
                 state = 'BASE'
                 m_ck_b = c
                 # check checksum
                 chk = self.checksum(m_raw, len(m_raw))
                 if (chk[0] != m_ck_a) or (chk[1] != m_ck_b):
-                    sys.stderr.write("%s: ERROR checksum failed,"
-                                     "was (%d,%d) s/b (%d, %d)\n" %
-                                     (PROG_NAME, m_ck_a, m_ck_b,
-                                      chk[0], chk[1]))
+                    print("%s: ERROR checksum failed,"
+                          "was (%d,%d) s/b (%d, %d)\n" %
+                          (PROG_NAME, m_ck_a, m_ck_b, chk[0], chk[1]))
 
                 s_payload = ''.join('{:02x} '.format(x) for x in m_payload)
                 x_payload = ','.join(['%02x' % x for x in m_payload])
@@ -8173,7 +8178,7 @@ else:
 try:
     (options, arguments) = getopt.getopt(options,
                                          "?c:d:e:f:g:hi:m:rP:p:"
-                                         "s:w:v:R:S:Vx:z:")
+                                         "s:w:v:R:S:tVx:z:")
 except getopt.GetoptError as err:
     sys.stderr.write("%s: %s\n"
                      "Try '%s -h' for more information.\n" %
@@ -8231,6 +8236,8 @@ for (opt, val) in options:
                              (PROG_NAME, opts['input_speed']))
             sys.exit(1)
 
+    elif opt == '-t':
+        opts['timestamp'] = 1
     elif opt == '-V':
         # version
         sys.stderr.write('%s: Version %s\n' % (PROG_NAME, gps_version))

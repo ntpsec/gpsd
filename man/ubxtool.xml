@@ -38,6 +38,7 @@ BSD terms apply: see the file COPYING in the distribution root for details.
    <arg choice='opt'>-r </arg>
    <arg choice='opt'>-S <replaceable>setspeed</replaceable></arg>
    <arg choice='opt'>-s <replaceable>speed</replaceable></arg>
+   <arg choice='opt'>-t </arg>
    <arg choice='opt'>-V </arg>
    <arg choice='opt'>-v <replaceable>verbosity</replaceable></arg>
    <arg choice='opt'>-w <replaceable>wait</replaceable></arg>
@@ -340,6 +341,12 @@ options.</para>
     <term>-s SPEED</term>
     <listitem>
      <para>Set local serial port speed to SPEED bps. Default 9,600 bps.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>-t</term>
+    <listitem>
+     <para>Timestamp decoded messages with seconds since the epoch.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
