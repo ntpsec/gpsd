@@ -323,7 +323,7 @@ def timestamp():
     if 1 == opts['timestamp']:
         print("%.4f" % now)
     elif 2 == opts['timestamp']:
-        print("%.4f %s" % (now, time.gmtime(now)))
+        print("%.4f %s" % (now, time.asctime(time.gmtime(now))))
 
 
 class ubx(object):
