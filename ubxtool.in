@@ -137,7 +137,7 @@ opts = {
     'set_speed': None,
     # target gpsd (server:port:device) to connect to
     'target': {"server": None, "port": gps.GPSD_PORT, "device": None},
-    # timestamp logs.  0 == None, 1 = unix time in seconds
+    # timestamp logs.  0 == None, 1 = unix time in seconds, 2 = 1 + ctime()
     'timestamp': 0,
     # verbosity level, -v
     'verbosity': VERB_NONE,
@@ -314,6 +314,16 @@ def index_s(index, descs, nf="Unk"):
         s = nf
 
     return s
+
+
+def timestamp():
+    """ print current time as a timestamp"""
+
+    now = time.time()
+    if 1 == opts['timestamp']:
+        print("%.4f" % now)
+    elif 2 == opts['timestamp']:
+        print("%.4f %s" % (now, time.ctime(now)))
 
 
 class ubx(object):
@@ -4738,7 +4748,7 @@ Oddly this is the poll for UBX-LOG-BATCH
 
         # flags2 is protver 27
         u = struct.unpack_from('<LHBBBBBBLlBBBBllllLLlllllLLHHHH', buf, 0)
-        s = ('  iTOW %u time %u/%u/%u %2u:%2u:%2u valid x%x\n'
+        s = ('  iTOW %u time %u/%u/%u %02u:%02u:%02u valid x%x\n'
              '  tAcc %u nano %d fixType %u flags x%x flags2 x%x\n'
              '  numSV %u lon %d lat %d height %d\n'
              '  hMSL %d hAcc %u vAcc %u\n'
@@ -6149,11 +6159,11 @@ High Precision GNSS products only."""
                     if gps.polystr('{"class":"ERROR"') in comment:
                         # always print gpsd errors
                         if 0 < opts['timestamp']:
-                            print("%.4f" % time.time())
+                            timestamp()
                         print(comment)
                     elif VERB_DECODE <= opts['verbosity']:
                         if 0 < opts['timestamp']:
-                            print("%.4f" % time.time())
+                            timestamp()
                         print(comment)
                     return consumed
 
@@ -6167,7 +6177,9 @@ High Precision GNSS products only."""
                     # CR or LF, done, got a full message
                     # terminates messages on <CR> or <LF>
                     if VERB_DECODE <= opts['verbosity']:
-                        print(comment + '\n')
+                        if 0 < opts['timestamp']:
+                            timestamp()
+                        print(comment)
                     return consumed
 
                 # else:
@@ -6260,7 +6272,7 @@ High Precision GNSS products only."""
             if 'CSUM2' == state:
                 # got a complete, maybe valid, message
                 if 0 < opts['timestamp']:
-                    print("%.4f" % time.time())
+                    timestamp()
 
                 # ck_b
                 state = 'BASE'
@@ -8242,7 +8254,7 @@ for (opt, val) in options:
             sys.exit(1)
 
     elif opt == '-t':
-        opts['timestamp'] = 1
+        opts['timestamp'] += 1
     elif opt == '-V':
         # version
         sys.stderr.write('%s: Version %s\n' % (PROG_NAME, gps_version))

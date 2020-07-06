@@ -346,7 +346,8 @@ options.</para>
    <varlistentry>
     <term>-t</term>
     <listitem>
-     <para>Timestamp decoded messages with seconds since the epoch.</para>
+     <para>Timestamp decoded messages with seconds since the epoch.  Use it
+twice and also get UTC time.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
