@@ -6148,11 +6148,11 @@ High Precision GNSS products only."""
                     # Done, got a full message
                     if gps.polystr('{"class":"ERROR"') in comment:
                         # always print gpsd errors
-                        if 0 <= opts['timestamp']:
+                        if 0 < opts['timestamp']:
                             print("%.4f" % time.time())
                         print(comment)
                     elif VERB_DECODE <= opts['verbosity']:
-                        if 0 <= opts['timestamp']:
+                        if 0 < opts['timestamp']:
                             print("%.4f" % time.time())
                         print(comment)
                     return consumed
@@ -6259,7 +6259,7 @@ High Precision GNSS products only."""
 
             if 'CSUM2' == state:
                 # got a complete, maybe valid, message
-                if 0 <= opts['timestamp']:
+                if 0 < opts['timestamp']:
                     print("%.4f" % time.time())
 
                 # ck_b
@@ -8173,6 +8173,7 @@ def usage():
 
 if 'UBXOPTS' in os.environ:
     # grab the UBXOPTS environment variable for options
+    opts['timestamp'] = 0
     opts['progopts'] = os.environ['UBXOPTS']
     options = opts['progopts'].split(' ') + sys.argv[1:]
 else:
