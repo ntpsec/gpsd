@@ -15,7 +15,7 @@
   Move gps_data_t->status to gps_fix_t.status for better fix merging
   The gps python module is now pure python. Manually delete any old packet*so.
   Add wspeedt, wspeedr, wanglem, wanglet, wangler to  gps_fix_t
-  Add "-p CONFIG" and "-p STATUS" options to ubxtool.
+  Add "-p CONFIG", "-p STATUS", "-t" and "-tt" options to ubxtool.
   Add python_shebang option to scons config.
   gpsrinex has long options and many new options.
   Added long options to gpsd.
