@@ -1720,8 +1720,11 @@ if qt_env:
         qtobjects.append(qt_env.SharedObject(src,
                                              CC=compile_with,
                                              CFLAGS=compile_flags))
-    compiled_qgpsmmlib = GPSLibrary(qt_env, "Qgpsmm", qtobjects,
-                                    libgps_version)
+    compiled_qgpsmmlib = GPSLibrary(env=qt_env,
+                                    target="Qgpsmm",
+                                    sources=qtobjects,
+                                    version=libgps_version,
+                                    parse_flags=libgps_flags)
     libraries.append(compiled_qgpsmmlib)
 
 # The libraries have dependencies on system libraries
