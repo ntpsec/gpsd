@@ -660,6 +660,7 @@ static void deactivate_device(struct gps_device_t *device)
     }
 }
 
+#if defined(SOCKET_EXPORT_ENABLE) || defined(CONTROL_SOCKET_ENABLE)
 /* find the device block for an existing device name */
 static struct gps_device_t *find_device(const char *device_name)
 {
@@ -676,6 +677,7 @@ static struct gps_device_t *find_device(const char *device_name)
     }
     return NULL;
 }
+#endif /* defined(SOCKET_EXPORT_ENABLE) || defined(CONTROL_SOCKET_ENABLE) */
 
 /* open the input device
  * return: false on failure
@@ -762,6 +764,7 @@ bool gpsd_add_device(const char *device_name, bool flag_nowait)
     return ret;
 }
 
+#if defined(SOCKET_EXPORT_ENABLE) || defined(CONTROL_SOCKET_ENABLE)
 /* convert hex to binary, write it, unchanged, to GPS */
 static int write_gps(char *device, char *hex) {
     struct gps_device_t *devp;
@@ -796,6 +799,7 @@ static int write_gps(char *device, char *hex) {
     }
     return 0;
 }
+#endif /* defined(SOCKET_EXPORT_ENABLE) || defined(CONTROL_SOCKET_ENABLE) */
 
 #ifdef CONTROL_SOCKET_ENABLE
 static char *snarfline(char *p, char **out)
