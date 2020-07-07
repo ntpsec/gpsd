@@ -1371,8 +1371,7 @@ else:
 
 PYTHON_LIBDIR_CALL = 'sysconfig.get_python_lib()'
 
-PYTHON_CONFIG_NAMES = ['CC', 'CXX', 'OPT', 'CFLAGS',
-                       'CCSHARED', 'LDSHARED', 'SO', 'INCLUDEPY', 'LDFLAGS']
+PYTHON_CONFIG_NAMES = ['SO']  # Now a fairly degenerate list
 PYTHON_CONFIG_QUOTED = ["'%s'" % s for s in PYTHON_CONFIG_NAMES]
 PYTHON_CONFIG_CALL = ('sysconfig.get_config_vars(%s)'
                       % ', '.join(PYTHON_CONFIG_QUOTED))
@@ -1939,55 +1938,6 @@ else:
         except ValueError:
             pass
 
-    python_env = env.Clone()
-    # FIXME: build of python wrappers doesn't pickup flags set for coveraging,
-    # manually add them here
-    if env['coveraging']:
-        python_config['BASECFLAGS'] += ' -coverage'
-        python_config['LDFLAGS'] += ' -coverage'
-        python_config['LDSHARED'] += ' -coverage'
-    # in case CC/CXX was set to the scan-build wrapper,
-    # ensure that we build the python modules with scan-build, too
-    if env['CC'] is None or env['CC'].find('scan-build') < 0:
-        python_env['CC'] = python_config['CC']
-        # As we seem to be changing compilers we must assume that the
-        # CCFLAGS are incompatible with the new compiler. If we should
-        # use other flags, the variable or the variable for this
-        # should be predefined.
-        if python_config['CC'].split()[0] != env['CC']:
-            python_env['CCFLAGS'] = ''
-    else:
-        python_env['CC'] = (' '.join([env['CC']] +
-                            python_config['CC'].split()[1:]))
-    if env['CXX'] is None or env['CXX'].find('scan-build') < 0:
-        python_env['CXX'] = python_config['CXX']
-        # As we seem to be changing compilers we must assume that the
-        # CCFLAGS or CXXFLAGS are incompatible with the new
-        # compiler. If we should use other flags, the variable or the
-        # variable for this should be predefined.
-        if python_config['CXX'].split()[0] != env['CXX']:
-            python_env['CCFLAGS'] = ''
-            python_env['CXXFLAGS'] = ''
-    else:
-        python_env['CXX'] = (' '.join([env['CXX']] +
-                             python_config['CXX'].split()[1:]))
-
-    ldshared = python_config['LDSHARED']
-    ldshared = ldshared.replace('-fPIE', '')
-    ldshared = ldshared.replace('-pie', '')
-    python_env.Replace(SHLINKFLAGS=[],
-                       LDFLAGS=[],
-                       LINK=ldshared,
-                       SHLIBPREFIX="",
-                       SHLIBSUFFIX=python_config['SO'],
-                       CPPPATH=[python_config['INCLUDEPY']],
-                       CPPFLAGS=[],
-                       CFLAGS=[],
-                       CXXFLAGS=[])
-
-    for flag in ['CFLAGS', 'LDFLAGS', 'OPT']:
-        python_env.MergeFlags(Split(python_config[flag]))
-
     # Make PEP 241 Metadata 1.0.
     # Why not PEP 314 (V1.1) or PEP 345 (V1.2)?
     # V1.1 and V1.2 require a Download-URL to an installable binary
@@ -2005,9 +1955,8 @@ connected to a host computer, making all data on the location and movements \
 of the sensors available to be queried on TCP port 2947.
 Platform: UNKNOWN
 """ % (gpsd_version, website, devmail)
-    python_egg_info = python_env.Textfile(target="gps-%s.egg-info"
-                                          % (gpsd_version, ),
-                                          source=python_egg_info_source)
+    python_egg_info = env.Textfile(target="gps-%s.egg-info" % (gpsd_version, ),
+                                   source=python_egg_info_source)
     python_targets = ([python_egg_info] +
                       python_progs + python_modules)
 
@@ -2154,10 +2103,6 @@ if qt_env:
     qt_env.Default(*build_qt)
     testprogs.append(test_qgpsmm)
 
-if env['python'] and not cleaning and not helping:
-    build_python = python_env.Alias('build', python_targets)
-    python_env.Default(*build_python)
-
 # Installation and deinstallation
 
 # Not here because too distro-specific: udev rules, desktop files, init scripts
@@ -2188,19 +2133,17 @@ if ((not env['debug'] and not env['debug_opt'] and not env['profiling']
 if env['python'] and not cleaning and not helping:
     python_module_dir = str(python_libdir) + os.sep + 'gps'
 
-    python_modules_install = python_env.Install(DESTDIR + python_module_dir,
-                                                python_modules)
+    python_modules_install = env.Install(DESTDIR + python_module_dir,
+                                         python_modules)
 
-    python_oldso_remove = python_env.Command('uninstall-old-so', '',
-                                             Delete(DESTDIR +
-                                                    python_module_dir +
-                                                    os.sep + old_packet_so))
+    python_oldso_remove = env.Command('uninstall-old-so', '',
+                                      Delete(DESTDIR + python_module_dir +
+                                             os.sep + old_packet_so))
 
-    python_progs_install = python_env.Install(installdir('bindir'),
-                                              python_progs)
+    python_progs_install = env.Install(installdir('bindir'), python_progs)
 
-    python_egg_info_install = python_env.Install(DESTDIR + str(python_libdir),
-                                                 python_egg_info)
+    python_egg_info_install = env.Install(DESTDIR + str(python_libdir),
+                                          python_egg_info)
     python_install = [python_modules_install,
                       python_oldso_remove,
                       python_progs_install,
