@@ -1367,9 +1367,6 @@ else:
         if option not in config.env['CFLAGS']:
             config.CheckCompilerOption(option)
 
-# OSX needs to set the ID for installed shared libraries.  See if this is OSX
-# and whether we have the tool.
-
 # Set up configuration for target Python
 
 PYTHON_LIBDIR_CALL = 'sysconfig.get_python_lib()'
