@@ -6322,7 +6322,10 @@ High Precision GNSS products only."""
                 if VERB_INFO <= opts['verbosity']:
                     print("%s, len: %#x" %
                           (self.class_id_s(m_class, m_id), m_len))
+                    x_raw = ','.join(['%02x' % x for x in m_raw[0:4]])
+                    print("header: b5,62,%s" % x_raw)
                     print("payload: %s" % x_payload)
+                    print("chksum: %02x,%02x" % (m_ck_a, m_ck_b))
                 print("%s\n" % s_payload)
                 return consumed
 
