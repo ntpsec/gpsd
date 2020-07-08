@@ -1567,6 +1567,18 @@ libgps_sources = [
     "timespec_str.c",
 ]
 
+# Client sources not to be built as C++ when building the Qt library.
+libgps_c_only = set([
+    "ais_json.c",
+    "json.c",
+    "libgps_json.c",
+    "os_compat.c",
+    "rtcm2_json.c",
+    "rtcm3_json.c",
+    "shared_json.c",
+    "timespec_str.c",
+])
+
 if env['libgpsmm']:
     libgps_sources.append("libgpsmm.cpp")
 
@@ -1705,9 +1717,7 @@ if qt_env:
     # infamous "Two environments with different actions were specified
     # for the same target" error.
     for src in libgps_sources:
-        if src not in ('ais_json.c', 'json.c', 'libgps_json.c',
-                       'rtcm2_json.c', 'rtcm3_json.c', 'shared_json.c',
-                       'timespec_str.c'):
+        if src not in libgps_c_only:
             compile_with = qt_env['CXX']
             compile_flags = qt_flags
         else:
