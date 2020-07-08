@@ -86,7 +86,9 @@ char *deg_to_str2(enum deg_str_type type, double f,
     default:
         /* huh? */
         type = deg_dd;
-        /* FALLTHROUGH */
+        /* It's not worth battling fallthrough warnings just for two lines */
+        f += 0.5 * 1e-8;              /* round up */
+        break;
     case deg_dd:
         /* DD.dddddddd */
         f += 0.5 * 1e-8;              /* round up */
