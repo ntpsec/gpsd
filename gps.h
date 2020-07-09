@@ -15,6 +15,7 @@ extern "C" {
 #include <pthread.h>    /* pacifies OpenBSD's compiler */
 #include <signal.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <sys/time.h>   // for struct timespec
 #include <sys/types.h>
