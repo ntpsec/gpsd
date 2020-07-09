@@ -173,19 +173,19 @@ all_manpages = {
 }
 
 # doc files to install in share/gpsd/doc
-doc_files = {
+doc_files = [
     'AUTHORS',
     'build.adoc',
     'COPYING',
     'NEWS',
     'README.adoc',
     'www/SUPPORT.adoc',
-}
+]
 
 # doc files to install in share/gpsd/doc
-icon_files = {
+icon_files = [
     'packaging/X11/gpsd-logo.png',
-}
+]
 
 # Release identification begins here.
 #

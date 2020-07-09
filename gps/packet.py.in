@@ -25,7 +25,7 @@ import ctypes
 import ctypes.util
 import os
 import os.path
-import sysconfig
+from distutils import sysconfig
 import gps.misc
 
 

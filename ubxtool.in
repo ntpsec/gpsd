@@ -7137,7 +7137,7 @@ Always double check with "-p CFG-GNSS".
 
         if layer is None:
             # blast them for now, should do one at a time...
-            layers = {0, 1, 2, 7}
+            layers = set([0, 1, 2, 7])
             for layer in layers:
                 m_data[1] = layer
                 gps_model.gps_send(0x06, 0x8b, m_data)
