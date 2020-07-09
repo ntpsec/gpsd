@@ -462,6 +462,7 @@ import_env = (
     "DISPLAY",         # Required for dia to run under scons
     "GROUPS",          # Required by gpg
     "HOME",            # Required by gpg
+    "LANG",            # To avoid Gtk warnings with Python >=3.7
     "LOGNAME",         # LOGNAME is required for the flocktest production.
     'PATH',            # Required for ccache and Coverity scan-build
     'CCACHE_DIR',      # Required for ccache
