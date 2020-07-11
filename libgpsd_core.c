@@ -854,11 +854,9 @@ static gps_mask_t fill_dop(const struct gpsd_errout_t *errout,
         }
 #endif /* __UNUSED__ */
     } else {
-#ifndef USE_QT
         GPSD_LOG(LOG_DATA, errout,
                  "LOS matrix is singular, can't calculate DOPs - source '%s'\n",
                  gpsdata->dev.path);
-#endif
         return 0;
     }
 
@@ -870,13 +868,11 @@ static gps_mask_t fill_dop(const struct gpsd_errout_t *errout,
     tdop = sqrt(inv[3][3]);
     gdop = sqrt(inv[0][0] + inv[1][1] + inv[2][2] + inv[3][3]);
 
-#ifndef USE_QT
     GPSD_LOG(LOG_DATA, errout,
              "DOPS computed/reported: X=%f/%f, Y=%f/%f, H=%f/%f, V=%f/%f, "
              "P=%f/%f, T=%f/%f, G=%f/%f\n",
              xdop, dop->xdop, ydop, dop->ydop, hdop, dop->hdop, vdop,
              dop->vdop, pdop, dop->pdop, tdop, dop->tdop, gdop, dop->gdop);
-#endif
 
     /* Check to see which DOPs we already have.  Save values if no value
      * from the GPS.  Do not overwrite values which came from the GPS */
