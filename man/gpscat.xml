@@ -96,7 +96,7 @@ parentheses) reported before a colon and space on each line.</para>
 <listitem>
 <para>In packetizer mode, enable progress messages from the packet
 getter.  Probably only of interest to developers testing packet
-getter changes.  Higher arguements to D produce more output.</para>
+getter changes.  Higher arguments to D produce more output.</para>
 </listitem>
 </varlistentry>
 
