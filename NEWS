@@ -23,6 +23,7 @@
   Remove config option reconfigure, replace with -p, --passive runtime option.
   Remove config option controlsend (RECONFIGURE_ENABLE)
   Add config option rundir=XX.  Default set to /run, or /var/run as required.
+  Fixes for Python 2.6 up to 3.9.
 
 3.20: 2019-12-31
   Change README into an asciidoc file and publish HTML from it
