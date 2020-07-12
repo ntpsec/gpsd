@@ -6939,11 +6939,11 @@ Always double check with "-p CFG-GNSS".
         if 0 == len(args):
             sys.stderr.write('%s: ERROR: CFG-MSG missing class\n' %
                              (PROG_NAME))
-            exit(1)
+            sys.exit(1)
         if 1 == len(args):
             sys.stderr.write('%s: ERROR: CFG-MSG,x%x missing ID\n' %
                              (PROG_NAME, args[0]))
-            exit(1)
+            sys.exit(1)
 
         if 2 < len(args):
             # optional set rate
@@ -8443,7 +8443,7 @@ try:
             else:
                 sys.stderr.write('%s: ERROR: item %s unknown\n' %
                                  (PROG_NAME, opts['del_item']))
-                exit(1)
+                sys.exit(1)
         gps_model.send_cfg_valdel(keys)
 
     elif opts['get_item']:
@@ -8459,7 +8459,7 @@ try:
             else:
                 sys.stderr.write('%s: ERROR: item %s unknown\n' %
                                  (PROG_NAME, parts[0]))
-                exit(1)
+                sys.exit(1)
             try:
                 if 1 < len(parts):
                     layer = int(parts[1])
@@ -8470,7 +8470,7 @@ try:
             except ValueError:
                 sys.stderr.write('%s: ERROR: -g %s, non numeric parameter\n' %
                                  (PROG_NAME, parts[0]))
-                exit(1)
+                sys.exit(1)
 
         print("layer %s position %d end %s " % (layer, position, end))
         if end:
@@ -8486,14 +8486,14 @@ try:
             if 1 >= len(parts):
                 sys.stderr.write('%s: ERROR: item %s missing value to set\n' %
                                  (PROG_NAME, parts[0]))
-                exit(1)
+                sys.exit(1)
             item = gps_model.cfg_by_name(parts[0])
             if item:
                 nvs.append(nv)
             else:
                 sys.stderr.write('%s: ERROR: item %s unknown\n' %
                                  (PROG_NAME, parts[0]))
-                exit(1)
+                sys.exit(1)
         gps_model.send_cfg_valset(nvs)
 
     exit_code = io_handle.read(opts)
