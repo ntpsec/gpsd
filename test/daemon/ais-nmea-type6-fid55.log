@@ -1,3 +1,10 @@
+# Name: AIS NMEA type 6
+# Submitter: Sven Geggus <lists@fuchsschwanzdomain.de>
+# Date: 2018-09-04
+#
+# This file is Copyright (c) 2018 by the GPSD project
+# BSD terms apply: see the file COPYING in the distribution root for details.
+#
 !AIVDM,1,1,,B,13nUgBWP01PkHvDU7<kC4wvJ2>`<,0*27
 !AIVDM,1,1,,B,13aIkChP000FdsjMv=U:;wvL2>`<,0*5B
 !AIVDM,1,1,,A,139qWm0P00PPEm6M3Gj>4?vLR>`<,0*44

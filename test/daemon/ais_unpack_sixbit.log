@@ -1,3 +1,10 @@
+# Name: AIS sixbit
+# Submitter: Stefan Roels <sroels-gpsd-dev@42solutions.nl>
+# Date: 2015-10-02
+#
+# This file is Copyright (c) 2015 by the GPSD project
+# BSD terms apply: see the file COPYING in the distribution root for details.
+#
 !AIVDM,2,1,7,B,53aDpaT000010;CKKB0h4Q8TpLDr222222222216<P:656rd07Tai0CKk5hD,0*74
 !AIVDM,2,2,7,B,Q1C`8888880,2*63
 !AIVDM,2,1,2,B,53a=JT41haoI0GKSG6058=@T>1=Dq8U<F222220V1pR847<:0<hCDm1DQ0CH8888,0*0B
