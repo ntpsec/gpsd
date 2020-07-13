@@ -51,14 +51,16 @@ import SCons
 def polystr(o):
     if bytes is str:  # Python 2
         return str(o)
-    else:             # python 3.
-        if isinstance(o, str):
-            return o
-        if isinstance(o, bytes) or isinstance(o, bytearray):
-            return str(o, encoding='latin1')
-        if isinstance(o, int):
-            return str(o)
-        raise ValueError
+
+    # python 3.
+    if isinstance(o, str):
+        return o
+    if isinstance(o, (bytes, bytearray)):
+        return str(o, encoding='latin1')
+    if isinstance(o, int):
+        return str(o)
+
+    raise ValueError
 
 
 # Helper functions for revision hackery
@@ -755,7 +757,6 @@ def CheckXsltproc(context):
 
 def CheckTime_t(context):
     context.Message('Checking if sizeof(time_t) is 64 bits... ')
-    old_CFLAGS = context.env['CFLAGS'][:]  # Get a *copy* of the old list
     ret = context.TryLink("""
         #include <time.h>
 
@@ -2233,7 +2234,7 @@ if qt_env:
 
 
 maninstall = []
-for manpage in all_manpages.keys():
+for manpage in all_manpages:
     if not manbuilder and not os.path.exists(manpage):
         continue
     section = manpage.split(".")[1]
