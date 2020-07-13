@@ -377,8 +377,8 @@ boolopts = (
     ("squelch",       False, "squelch gpsd_log/gpsd_hexdump to save cpu"),
     # Build control
     ("coveraging",    False, "build with code coveraging enabled"),
-    ("debug",         False, "include debug information in build, unoptimized"),
-    ("debug_opt",     False, "include debug information in build, optimized"),
+    ("debug",         False, "add debug information to build, unoptimized"),
+    ("debug_opt",     False, "add debug information to build, optimized"),
     ("gpsdclients",   True,  "gspd client programs"),
     ("gpsd",          True,  "gpsd itself"),
     ("implicit_link", imloads, "implicit linkage is supported in shared libs"),
