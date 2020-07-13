@@ -13,7 +13,6 @@ import time
 # pylint wants local modules last
 try:
     import gps
-    import gpslib
 except ImportError as e:
     sys.stderr.write(
         "gpssim.py: can't load Python gps libraries -- check PYTHONPATH.\n")
@@ -176,7 +175,7 @@ class gpssim(object):
 
     def filter(self, inp, outp):
         "Make this a filter for file-like objects."
-        self.filename = input.name
+        self.filename = "WTF"
         self.lineno = 1
         self.output = outp
         for line in inp:
@@ -240,7 +239,7 @@ class NMEA(object):
         if sim.mode == gps.MODE_3D:
             gga += "%.1f,M" % self.ksv.lat
         gga += ","
-        gga += "%.3f,M," % gpslib.wg84_separation(sim.ksv.lat, sim.ksv.lon)
+        gga += "%.3f,M," % gps.wg84_separation(sim.ksv.lat, sim.ksv.lon)
         # Magnetic variation goes here
         # gga += "%3.2f,M," % mag_var
         gga += ",,"
