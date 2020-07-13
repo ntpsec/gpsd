@@ -36,7 +36,7 @@ def importado():
     'Load the packet library or throw an OSError trying.'
     # Add raw interface to the packet FFI stub.
     packet_paths = []
-    lib_path = sysconfig.get_config_var('LIBDIR')
+    # lib_path = sysconfig.get_config_var('LIBDIR')  # UNUSED
     packet_name = '@GPSPACKET@'
 
     # Check if GPSD_HOME environment variable
