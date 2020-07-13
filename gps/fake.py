@@ -169,7 +169,8 @@ class TestLoad(object):
             (plen, ptype, packet, _counter) = getter.get(logfp.fileno())
             if plen <= 0:
                 break
-            elif ptype == sniffer.COMMENT_PACKET:
+
+            if ptype == sniffer.COMMENT_PACKET:
                 commentlen += len(packet)
                 # Some comments are magic
                 if b"Serial:" in packet:
