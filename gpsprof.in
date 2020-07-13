@@ -152,14 +152,14 @@ class stats(object):
 
         # might be fast to go through list once?
         if isinstance(fixes[0], tuple):
-            self.mean = (sum([x[index] for x in fixes]) / len(fixes))
+            self.mean = sum([x[index] for x in fixes]) / len(fixes)
             self.min = min([x[index] for x in fixes])
             self.max = max([x[index] for x in fixes])
         else:
             # must be float
-            self.mean = (sum([x for x in fixes]) / len(fixes))
-            self.min = min([x for x in fixes])
-            self.max = max([x for x in fixes])
+            self.mean = sum(fixes) / len(fixes)
+            self.min = min(fixes)
+            self.max = max(fixes)
 
         return
 
@@ -549,7 +549,7 @@ class spaceplot(plotter):
                         dist_3d_max = dist3d
 
             # Sort fixes by distance from average altitude
-            alt_fixes_r.sort(key=lambda a: abs(a))
+            alt_fixes_r.sort(key=abs)
             # so we can rank fixes for EPs
             alt_ep = abs(alt_fixes_r[int(len(alt_fixes_r) * 0.50)])
             alt_ep95 = abs(alt_fixes_r[int(len(alt_fixes_r) * 0.95)])
@@ -885,7 +885,8 @@ set size square
 set key lmargin
 
 # this places a compass label on the outside
-set_label(x, text) = sprintf("set label '%s' at (93*cos(%f)), (93*sin(%f)) center", text, x, x)
+set_label(x, text) = sprintf(
+    "set label '%s' at (93*cos(%f)), (93*sin(%f)) center", text, x, x)
 
 # here all labels are created
 # we compute North (0) at top, East (90) at right
