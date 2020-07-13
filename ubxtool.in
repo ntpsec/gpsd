@@ -357,7 +357,7 @@ class ubx(object):
                 3: 'USB',
                 4: 'SPI',
                 }
-    port_id_map = dict([x[::-1] for x in port_ids.items()])
+    port_id_map = {v:k for (k,v) in port_ids.items()}
     port_id_map['UART'] = port_id_map['UART1']  # Accept synonym
     port_ids[5] = 'Reserved'  # Don't include this in port_id_map
 
@@ -4271,15 +4271,17 @@ Oddly this is the poll for UBX-LOG-BATCH
         """UBX-MON-PATCH decode, Output information about installed patches."""
 
         # first seen in protver 15
+        # len 0 == Poll requestm handeled earlier
+
         u = struct.unpack_from('<HH', buf, 0)
-        s = " version %u nEntries %u" % u
+        s = "  version %u nEntries %u" % u
 
         for i in range(0, u[1]):
-            u = struct.unpack_from('<LLLL', buf, 0)
-            s = (" patchInfo x%x comparatorNumber %u patchAddress %u "
-                 "patchData %u" % u)
+            u = struct.unpack_from('<LLLL', buf, 4 + (i * 16))
+            s += ("\n   patchInfo x%x comparatorNumber %u patchAddress %u "
+                  "patchData %u" % u)
             if VERB_DECODE <= opts['verbosity']:
-                s += ('\n  patchInfo (%s, %s)' %
+                s += ('\n    patchInfo (%s, %s)' %
                       (flag_s(u[0] & 0x01, self.mon_patch_act),
                        index_s(u[0] & 0x06, self.mon_patch_loc)))
 
@@ -6992,7 +6994,7 @@ Always double check with "-p CFG-GNSS".
 
         gps_model.gps_send(6, 0x86, m_data)
 
-    def send_cfg_prt(self, args=[]):
+    def send_cfg_prt(self, args=None):
         """UBX-CFG-PRT, get I/O Port settings"""
 
         if 0 == len(args):
@@ -7763,34 +7765,12 @@ Always double check with "-p CFG-GNSS".
         # UBX-NAV-PVT
         "NAV-PVT": {"command": send_poll, "opt": [0x01, 0x07],
                     "help": "poll UBX-NAV-PVT Navigation Position Velocity "
-                    "Time Solution"},
+                            "Time Solution"},
         # UBX-NAV-RELPOSNED
         # HP only, 20+, otherwise not ACKed or NACKed
         "NAV-RELPOSNED": {"command": send_poll, "opt": [0x01, 0x3c],
                           "help": "poll UBX-NAV-RELPOSNED Relative "
-                          "Positioning Info in NED frame"},
-        # UBX-NAV-ODO
-        "NAV-ODO": {"command": send_poll, "opt": [0x01, 0x09],
-                    "help": "poll UBX-NAV-ODO Odometer solution"},
-        # UBX-NAV-ORB
-        "NAV-ORB": {"command": send_poll, "opt": [0x01, 0x34],
-                    "help": "poll UBX-NAV-ORB GNSS Orbit Database Info"},
-        # UBX-NAV-POSECEF
-        "NAV-POSECEF": {"command": send_poll, "opt": [0x01, 0x01],
-                        "help": "poll UBX-NAV-POSECEF Position Solution "
-                                "in ECEF"},
-        # UBX-NAV-POSLLH
-        "NAV-POSLLH": {"command": send_poll, "opt": [0x01, 0x02],
-                       "help": "poll UBX-NAV-POSLLH Geodetic Position "
-                               "Solution"},
-        # UBX-NAV-PVT
-        "NAV-PVT": {"command": send_poll, "opt": [0x01, 0x07],
-                    "help": "poll UBX-NAV-PVT Navigation Position Velocity "
-                            "Time Solution"},
-        # UBX-NAV-RELPOSNED
-        "NAV-RELPOSNED": {"command": send_poll, "opt": [0x01, 0x3c],
-                          "help": "poll UBX-NAV-RELPOSNED "
-                                  "Relative Positioning Info in NED"},
+                                  "Positioning Info in NED frame"},
         # UBX-NAV-RESETODO
         "NAV-RESETODO": {"command": send_poll, "opt": [0x01, 0x10],
                          "help": "UBX-NAV-RESETODO Reset odometer"},
