@@ -357,7 +357,7 @@ class ubx(object):
                 3: 'USB',
                 4: 'SPI',
                 }
-    port_id_map = {v:k for (k,v) in port_ids.items()}
+    port_id_map = {v: k for (k, v) in port_ids.items()}
     port_id_map['UART'] = port_id_map['UART1']  # Accept synonym
     port_ids[5] = 'Reserved'  # Don't include this in port_id_map
 
@@ -3481,7 +3481,7 @@ Save and Load non-volatile storage data"""
                     break
 
                 frmat = cfg_type[1]
-                flavor = cfg_type[2]
+                # flavor = cfg_type[2]  UNUSED
                 v = struct.unpack_from(frmat, buf, i)
                 s += ('\n    item %s/%#x val %s' % (item[0], u[0], v[0]))
                 m_len -= size
@@ -3517,7 +3517,7 @@ Save and Load non-volatile storage data"""
             size = cfg_type[0]
             # FIXME!  should check for enough bytes to unpack from
             frmat = cfg_type[1]
-            flavor = cfg_type[2]
+            # flavor = cfg_type[2]  UNUSED
             v = struct.unpack_from(frmat, buf, i)
             s += ('\n    item %s/%#x val %s' % (item[0], u[0], v[0]))
             m_len -= size
@@ -5540,31 +5540,31 @@ High Precision GNSS products only."""
     # map subframe 4 SV ID to Page number
     # IS-GPS-200K Table 20-V
     sbfr4_svid_page = {
-        57: 1,
+        57: 1,   # Reserved (Dupe)
         25: 2,
         26: 3,
         27: 4,
         28: 5,
-        57: 6,
+        # 57: 6,   # Reserved (Dupe)
         29: 7,
         30: 8,
         31: 9,
         32: 10,
-        57: 11,
-        62: 12,
-        52: 13,
-        53: 14,
-        54: 15,
-        57: 16,
-        55: 17,
-        56: 18,
-        58: 19,
-        59: 20,
-        57: 21,
-        60: 22,
-        61: 23,
-        62: 24,
-        63: 25,
+        # 57: 11,  # Reserved (Dupe)
+        62: 12,  # reserved
+        52: 13,  # navigation message correction table (NMCT)
+        53: 14,  # reserved
+        54: 15,  # reserved
+        # 57: 16,  # Reserved (Dupe)
+        55: 17,  # Special messages
+        56: 18,  # Ionospheric and UTC data
+        58: 19,  # reserved
+        59: 20,  # reserved
+        # 57: 21,  # Reserved (Dupe)
+        60: 22,  # reserved
+        61: 23,  # reserved
+        # 62: 24,  # Data ID of transmitting SV. (Dupe)
+        63: 25,  # A-S Flags/ SV health
         }
 
     # map subframe 5 SV ID to Page number
@@ -5595,7 +5595,7 @@ High Precision GNSS products only."""
         22: 22,
         23: 23,
         24: 24,
-        51: 25,
+        51: 25,  # SV Health, SC 1 to 24
         }
 
     # URA Index to URA meters
@@ -5637,8 +5637,10 @@ High Precision GNSS products only."""
              '  reserved2 %u version %u reserved3 %u\n' % u)
         s += '    dwrd'
         words = ()
-        for i in range(8, 8 + (u[4] * 4), 4):
-            u1 = struct.unpack_from('<L', buf, i)
+        for i in range(0, u[4]):
+            u1 = struct.unpack_from('<L', buf, 8 + (i * 4))
+            if 6 == (i % 7):
+                s += "\n        "
             s += " %08x" % u1
             words += (u1[0],)
 
@@ -5713,7 +5715,8 @@ High Precision GNSS products only."""
                         # sqrtA = Square Root of the Semi-Major Axis
                         # tOE = Reference Time Ephemeris
                         s += ("\n   IODE %u Crs %e Deltan %e M0 %e"
-                              "\n   Cuc %e e %e Cus %e sqrtA %f tOE %u" %
+                              "\n   Cuc %e e %e Cus %e sqrtA %f"
+                              "\n   tOE %u" %
                               (unpack_u8(words[2], 22),
                                unpack_s16(words[2], 6) * (2 ** -5),
                                unpack_s16(words[3], 14) * (2 ** -43),
@@ -5757,20 +5760,29 @@ High Precision GNSS products only."""
                                unpack_s14(words[9], 8) * (2 ** -43)))
 
                     elif 4 == subframe:
-                        # all data in subframe 4 is "reserved",
-                        # except for pages 13, 18, 15
-                        # as of 2018, dataid is always 1.
+                        # pages:
+                        #  2 to 5, 7 to 10 almanac data for SV 25 through 32
+                        #  13 navigation message correction table (NMCT_
+                        #  17 Special Messages
+                        #  18 Ionospheric and UTC data
+                        #  25 A-S flags/ SV health
+                        #  1, 6, 11, 16 and 21 reserved
+                        #  12, 19, 20, 22, 23 and 24 reserved
+                        #  14 and 15 reserved
+                        # as of 2018, data ID is always 1.
                         svid = (words[2] >> 22) & 0x3f
-                        if 0 < svid:
-                            page = index_s(svid, self.sbfr4_svid_page)
+                        if 0 == svid:
+                            # dummy SV
+                            page = "0/Dummy"
                         else:
-                            # page of zero means the svId that sent it.
-                            page = "%d/Self" % svId
+                            page = index_s(svid, self.sbfr4_svid_page)
 
                         s += ("\n   dataid %u svid %u (page %s)\n" %
                               (words[2] >> 28, svid, page))
 
-                        if 2 <= page <= 10:
+                        if 6 == page:
+                            s += "    reserved"
+                        elif 2 <= page <= 10:
                             s += self.almanac(words)
                         elif 13 == page:
                             s += "    NWCT"
@@ -8258,7 +8270,7 @@ for (opt, val) in options:
     elif opt == '-w':
         try:
             opts['input_wait'] = int(val)
-        except (ValueError):
+        except ValueError:
             sys.stderr.write('%s: -w invalid time %s\n' % (PROG_NAME, val))
             sys.exit(1)
 
