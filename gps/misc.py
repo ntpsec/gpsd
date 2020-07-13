@@ -66,7 +66,7 @@ else:  # Otherwise we do something real
         "Convert bytes or str to str with proper encoding."
         if isinstance(o, str):
             return o
-        if isinstance(o, bytes) or isinstance(o, bytearray):
+        if isinstance(o, (bytes, bytearray)):
             return str(o, encoding=BINARY_ENCODING)
         if isinstance(o, int):
             return str(o)
