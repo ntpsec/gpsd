@@ -209,7 +209,7 @@ masks is allowed.</para>
 <varlistentry>
 <term>WATCH_ENABLE</term>
 <listitem>
-<para>Disable the reporting modes specified by the other WATCH_ flags.
+<para>Enable the reporting modes specified by the other WATCH_ flags.
 This is the default.</para>
 </listitem>
 </varlistentry>
