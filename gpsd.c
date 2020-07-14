@@ -1100,7 +1100,9 @@ static void handle_request(struct subscriber_t *sub,
                            char *reply, size_t replylen)
 {
     struct gps_device_t *devp;
+    struct gps_policy_t policy_copy;
     const char *end = NULL;
+    char watch_buf[GPS_JSON_RESPONSE_MAX];  // buffer for re-written policy
 
     if (str_starts_with(buf, "?DEVICES;")) {
         buf += 9;
@@ -1112,7 +1114,9 @@ static void handle_request(struct subscriber_t *sub,
         if (*buf == ';') {
             ++buf;
         } else {
+            char *host, *port, *device;  // for parse_uri_dest()
             int status = json_watch_read(buf + 1, &sub->policy, &end);
+
             // why force policy.timing to false?
             sub->policy.timing = false;
             if (end == NULL)
@@ -1137,17 +1141,18 @@ static void handle_request(struct subscriber_t *sub,
                         if (allocated_device(devp)) {
                             (void)awaken(devp);
                             if (devp->sourcetype == source_gpsd) {
-                                /* FIXME: the device into this daemon is
-                                 * not the device to pass to the remote daemon..
-                                 * local device = gpsd://host::/device
-                                 * remote device = /device
-                                 */
+                                // wake all, so no devpath/remote issues
                                 (void)gpsd_write(devp, start,
                                                  (size_t)(end-start));
                             }
                         }
                 } else {
                     // awaken specific device
+#if __UNUSED__
+                    char outbuf[GPS_JSON_RESPONSE_MAX];
+                    json_watch_dump(&sub->policy, outbuf, sizeof(outbuf));
+                    GPSD_LOG(0, &context.errout, "policy: %s\n", outbuf);
+#endif
                     devp = find_device(sub->policy.devpath);
                     if (devp == NULL) {
                         (void)snprintf(reply, replylen,
@@ -1164,7 +1169,24 @@ static void handle_request(struct subscriber_t *sub,
                              * local device = gpsd://host::/device
                              * remote device = /device
                              */
-                            (void)gpsd_write(devp, start, (size_t)(end-start));
+                            policy_copy = sub->policy; // struct copy
+                            // parse uri, skip the gpsd://
+                            if (0 == parse_uri_dest(policy_copy.devpath + 7,
+                                                     &host, &port, &device) &&
+                                NULL != device) {
+                                // remove gpsd://host:port part
+                                (void)strlcpy(policy_copy.devpath,
+                                              device,
+                                              sizeof(policy_copy.devpath));
+                            } else {
+                                // no remote device part
+                                policy_copy.devpath[0] = '\0';
+                            }
+                            // SNARD!
+                            (void)json_policy_to_watch(&policy_copy,
+                                                       watch_buf,
+                                                       sizeof(watch_buf));
+                            (void)gpsd_write(devp, watch_buf, strlen(watch_buf));
                         }
                     } else {
                         (void)snprintf(reply, replylen,
