@@ -34,6 +34,8 @@ void json_device_dump(const struct gps_device_t *, char *, size_t);
 void json_watch_dump(const struct gps_policy_t *, char *, size_t);
 int json_watch_read(const char *, struct gps_policy_t *,
                     const char **);
+char *json_policy_to_watch(struct gps_policy_t *ccp,
+                           char *outbuf, size_t outbuf_len);
 int json_device_read(const char *, struct devconfig_t *,
                      const char **);
 void json_version_dump(char *, size_t);
