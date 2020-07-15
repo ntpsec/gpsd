@@ -126,7 +126,7 @@ int gps_sock_open(const char *host, const char *port,
 }
 
 /* is there input waiting from the GPS? */
-/* timeout is in milli Seconds */
+/* timeout is in uSec */
 bool gps_sock_waiting(const struct gps_data_t *gpsdata, int timeout)
 {
 #ifdef USE_QT
@@ -139,7 +139,7 @@ bool gps_sock_waiting(const struct gps_data_t *gpsdata, int timeout)
     if (PRIVATE(gpsdata)->waiting > 0)
         return true;
 
-    MSTOTS(&to, timeout);
+    USTOTS(&to, timeout);
     /* all error conditions return "not waiting" -- crude but effective */
     return nanowait(gpsdata->gps_fd, &to);
 #endif // USE_QT
