@@ -866,8 +866,11 @@ frame * {
                  ["AIS Data", False, "<Control>A", "AIS"],
                  ]
 
+        self.menumap = {}
+
         for name, active, acc, handle in views:
             menui = Gtk.CheckMenuItem(label=name)
+            self.menumap[handle] = menui
             menui.set_active(active)
             menui.connect("activate", self.view_toggle, handle)
             if acc:
@@ -1485,15 +1488,13 @@ frame * {
                 self.noiseview.update(self.daemon.data)
                 if not self.noise_latch:
                     self.noise_latch = True
-                    self.uimanager.get_widget(
-                        '/MenuBar/View/Noise').set_active(True)
+                    self.menumap['Noise'].set_active(True)
                     self.noisebox.show()
             elif self.daemon.data["class"] == "AIS":
                 self.aisview.update(self.daemon.data)
                 if not self.ais_latch:
                     self.ais_latch = True
-                    self.uimanager.get_widget(
-                        '/MenuBar/View/AIS').set_active(True)
+                    self.menumap['AIS'].set_active(True)
                     self.aisbox.show()
 
         return True
