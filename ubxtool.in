@@ -5634,7 +5634,7 @@ High Precision GNSS products only."""
         u = struct.unpack_from('<BBBBBBBB', buf, 0)
         svId = u[1]
         s = (' gnssId %u svId %3u reserved1 %u freqId %u numWords %u\n'
-             '  reserved2 %u version %u reserved3 %u\n' % u)
+             '  chn %u version %u reserved2 %u\n' % u)
         s += '    dwrd'
         words = ()
         for i in range(0, u[4]):
@@ -5644,193 +5644,191 @@ High Precision GNSS products only."""
             s += " %08x" % u1
             words += (u1[0],)
 
-        if VERB_DECODE <= opts['verbosity']:
+        if 0 == u[0]:
+            # GPS
+            preamble = words[0] >> 24
+            if 0x8b == preamble:
+                # CNAV
+                msgid = (words[0] >> 12) & 0x3f
+                s += ("\n  CNAV: preamble %#x PRN %u msgid %d (%s)\n" %
+                      (preamble, (words[0] >> 18) & 0x3f,
+                       msgid, index_s(msgid, self.cnav_msgids)))
 
-            if 0 == u[0]:
-                # GPS
-                preamble = words[0] >> 24
-                if 0x8b == preamble:
-                    # CNAV
-                    msgid = (words[0] >> 12) & 0x3f
-                    s += ("\n  CNAV: preamble %#x PRN %u msgid %d (%s)\n" %
-                          (preamble, (words[0] >> 18) & 0x3f,
-                           msgid, index_s(msgid, self.cnav_msgids)))
+            else:
+                # LNAV-L, 10 words of 30 bits
+                preamble = words[0] >> 22
+                subframe = (words[1] >> 8) & 0x07
+                s += ("\n  LNAV-L: preamble %#x TLM %#x ISF %u" %
+                      (preamble, (words[0] >> 8) & 0xffff,
+                       1 if (words[0] & 0x40) else 0))
 
-                else:
-                    # LNAV-L
-                    preamble = words[0] >> 22
-                    subframe = (words[1] >> 8) & 0x07
-                    s += ("\n  LNAV-L: preamble %#x TLM %#x ISF %u" %
-                          (preamble, (words[0] >> 8) & 0xffff,
-                           1 if (words[0] & 0x40) else 0))
+                s += ("\n  TOW %u AF %u ASF %u Subframe %u" %
+                      (unpack_u8(words[1], 13) * 6,
+                       1 if (words[0] & 0x1000) else 0,
+                       1 if (words[0] & 0x800) else 0,
+                       subframe))
 
-                    s += ("\n  TOW %u AF %u ASF %u Subframe %u" %
-                          (unpack_u8(words[1], 13) * 6,
-                           1 if (words[0] & 0x1000) else 0,
-                           1 if (words[0] & 0x800) else 0,
-                           subframe))
+                if 1 == subframe:
+                    # not well validated decode, possibly wrong...
+                    # [1] Figure 20-1 Sheet 1, Table 20-I
+                    # WN = GPS week number
+                    # TGD = Group Delay Differential
+                    # tOC = Time of Clock
+                    # af0 = SV Clock Bias Correction Coefficient
+                    # af1 = SV Clock Drift Correction Coefficient
+                    # af2 = Drift Rate Correction Coefficient
+                    ura = (words[2] >> 14) & 0x0f
+                    c_on_l2 = (words[2] >> 18) & 0x03
+                    iodc = ((((words[2] >> 6) & 0x03) << 8) |
+                            (words[7] >> 24) & 0xff)
+                    s += ("\n   WN %u Codes on L2 %u (%s) URA %u (%s) "
+                          "SVH %#04x IODC %u" %
+                          (words[2] >> 20,
+                           c_on_l2, index_s(c_on_l2, self.codes_on_l2),
+                           ura, index_s(ura, self.ura_meters),
+                           (words[2] >> 8) & 0x3f, iodc))
+                    # tOC = Clock Data Reference Time of Week
+                    s += ("\n   L2 P DF %u TGD %e tOC %u\n"
+                          "   af2 %e af1 %e af0 %e" %
+                          ((words[2] >> 29) & 0x03,
+                           unpack_s8(words[6], 6) * (2 ** -31),
+                           unpack_u16(words[7], 6) * 16,
+                           unpack_s8(words[8], 22) * (2 ** -55),
+                           unpack_s16(words[8], 6) * (2 ** -43),
+                           unpack_s22(words[9], 8) * (2 ** -31)))
 
-                    if 1 == subframe:
-                        # not well validated decode, possibly wrong...
-                        # [1] Figure 20-1 Sheet 1, Table 20-I
-                        # WN = GPS week number
-                        # TGD = Group Delay Differential
-                        # tOC = Time of Clock
-                        # af0 = SV Clock Bias Correction Coefficient
-                        # af1 = SV Clock Drift Correction Coefficient
-                        # af2 = Drift Rate Correction Coefficient
-                        ura = (words[2] >> 14) & 0x0f
-                        c_on_l2 = (words[2] >> 18) & 0x03
-                        iodc = ((((words[2] >> 6) & 0x03) << 8) |
-                                (words[7] >> 24) & 0xff)
-                        s += ("\n   WN %u Codes on L2 %u (%s) URA %u (%s) "
-                              "SVH %#04x IODC %u" %
-                              (words[2] >> 20,
-                               c_on_l2, index_s(c_on_l2, self.codes_on_l2),
-                               ura, index_s(ura, self.ura_meters),
-                               (words[2] >> 8) & 0x3f, iodc))
-                        # tOC = Clock Data Reference Time of Week
-                        s += ("\n   L2 P DF %u TGD %e tOC %u\n"
-                              "   af2 %e af1 %e af0 %e" %
-                              ((words[2] >> 29) & 0x03,
-                               unpack_s8(words[6], 6) * (2 ** -31),
-                               unpack_u16(words[7], 6) * 16,
-                               unpack_s8(words[8], 22) * (2 ** -55),
-                               unpack_s16(words[8], 6) * (2 ** -43),
-                               unpack_s22(words[9], 8) * (2 ** -31)))
+                elif 2 == subframe:
+                    # not well validated decode, possibly wrong...
+                    # [1] Figure 20-1 Sheet 1, Tables 20-II and 20-III
+                    # IODE = Issue of Data (Ephemeris)
+                    # Crs = Amplitude of the Sine Harmonic Correction
+                    #       Term to the Orbit Radius
+                    # Deltan = Mean Motion Difference From Computed Value
+                    # M0 = Mean Anomaly at Reference Time
+                    # Cuc = Amplitude of the Cosine Harmonic Correction
+                    #       Term to the Argument of Latitude
+                    # e = Eccentricity
+                    # Cus = Amplitude of the Sine Harmonic Correction Term
+                    #       to the Argument of Latitude
+                    # sqrtA = Square Root of the Semi-Major Axis
+                    # tOE = Reference Time Ephemeris
+                    s += ("\n   IODE %u Crs %e Deltan %e M0 %e"
+                          "\n   Cuc %e e %e Cus %e sqrtA %f"
+                          "\n   tOE %u" %
+                          (unpack_u8(words[2], 22),
+                           unpack_s16(words[2], 6) * (2 ** -5),
+                           unpack_s16(words[3], 14) * (2 ** -43),
+                           # M0
+                           unpack_s32s(words[4], words[3]) * (2 ** -31),
+                           unpack_s16(words[5], 14) * (2 ** -29),
+                           unpack_u32s(words[6], words[5]) * (2 ** -33),
+                           unpack_s16(words[7], 14) * (2 ** -29),
+                           unpack_u32s(words[8], words[7]) * (2 ** -19),
+                           unpack_u16(words[9], 14) * 16))
 
-                    elif 2 == subframe:
-                        # not well validated decode, possibly wrong...
-                        # [1] Figure 20-1 Sheet 1, Tables 20-II and 20-III
-                        # IODE = Issue of Data (Ephemeris)
-                        # Crs = Amplitude of the Sine Harmonic Correction
-                        #       Term to the Orbit Radius
-                        # Deltan = Mean Motion Difference From Computed Value
-                        # M0 = Mean Anomaly at Reference Time
-                        # Cuc = Amplitude of the Cosine Harmonic Correction
-                        #       Term to the Argument of Latitude
-                        # e = Eccentricity
-                        # Cus = Amplitude of the Sine Harmonic Correction Term
-                        #       to the Argument of Latitude
-                        # sqrtA = Square Root of the Semi-Major Axis
-                        # tOE = Reference Time Ephemeris
-                        s += ("\n   IODE %u Crs %e Deltan %e M0 %e"
-                              "\n   Cuc %e e %e Cus %e sqrtA %f"
-                              "\n   tOE %u" %
-                              (unpack_u8(words[2], 22),
-                               unpack_s16(words[2], 6) * (2 ** -5),
-                               unpack_s16(words[3], 14) * (2 ** -43),
-                               # M0
-                               unpack_s32s(words[4], words[3]) * (2 ** -31),
-                               unpack_s16(words[5], 14) * (2 ** -29),
-                               unpack_u32s(words[6], words[5]) * (2 ** -33),
-                               unpack_s16(words[7], 14) * (2 ** -29),
-                               unpack_u32s(words[8], words[7]) * (2 ** -19),
-                               unpack_u16(words[9], 14) * 16))
+                elif 3 == subframe:
+                    # not well validated decode, possibly wrong...
+                    # [1] Figure 20-1 Sheet 3, Table 20-II, Table 20-III
+                    # Cic = Amplitude of the Cosine Harmonic Correction
+                    #       Term to the Angle of Inclination
+                    # Omega0 = Longitude of Ascending Node of Orbit
+                    #          Plane at Weekly Epoch
+                    # Cis = Amplitude of the Sine Harmonic Correction
+                    #       Term to the Orbit Radius
+                    # i0 = Inclination Angle at Reference Time
+                    # Crc = Amplitude of the Cosine Harmonic Correction
+                    #       Term to the Orbit Radius
+                    # omega = Argument of Perigee
+                    # Omegadot = Rate of Right Ascension
+                    # IODE = Issue of Data (Ephemeris)
+                    # IODT = Rate of Inclination Angle
+                    s += ("\n   Cic %e Omega0 %e Cis %e i0 %e"
+                          "\n   Crc %e omega %e Omegadot %e"
+                          "\n   IDOE %u IDOT %e" %
+                          (unpack_s16(words[2], 14) * (2 ** -29),
+                           unpack_s32s(words[3], words[2]) * (2 ** -31),
+                           unpack_s16(words[4], 14) * (2 ** -29),
+                           unpack_s32s(words[5], words[4]) * (2 ** -31),
+                           # Crc
+                           unpack_s16(words[6], 14) * (2 ** -5),
+                           unpack_s32s(words[7], words[6]) * (2 ** -31),
+                           # Omegadot
+                           unpack_s24(words[8], 6) * (2 ** -43),
+                           unpack_u8(words[9], 22),
+                           unpack_s14(words[9], 8) * (2 ** -43)))
 
-                    elif 3 == subframe:
-                        # not well validated decode, possibly wrong...
-                        # [1] Figure 20-1 Sheet 3, Table 20-II, Table 20-III
-                        # Cic = Amplitude of the Cosine Harmonic Correction
-                        #       Term to the Angle of Inclination
-                        # Omega0 = Longitude of Ascending Node of Orbit
-                        #          Plane at Weekly Epoch
-                        # Cis = Amplitude of the Sine Harmonic Correction
-                        #       Term to the Orbit Radius
-                        # i0 = Inclination Angle at Reference Time
-                        # Crc = Amplitude of the Cosine Harmonic Correction
-                        #       Term to the Orbit Radius
-                        # omega = Argument of Perigee
-                        # Omegadot = Rate of Right Ascension
-                        # IODE = Issue of Data (Ephemeris)
-                        # IODT = Rate of Inclination Angle
-                        s += ("\n   Cic %e Omega0 %e Cis %e i0 %e"
-                              "\n   Crc %e omega %e Omegadot %e"
-                              "\n   IDOE %u IDOT %e" %
-                              (unpack_s16(words[2], 14) * (2 ** -29),
-                               unpack_s32s(words[3], words[2]) * (2 ** -31),
-                               unpack_s16(words[4], 14) * (2 ** -29),
-                               unpack_s32s(words[5], words[4]) * (2 ** -31),
-                               # Crc
-                               unpack_s16(words[6], 14) * (2 ** -5),
-                               unpack_s32s(words[7], words[6]) * (2 ** -31),
-                               # Omegadot
-                               unpack_s24(words[8], 6) * (2 ** -43),
-                               unpack_u8(words[9], 22),
-                               unpack_s14(words[9], 8) * (2 ** -43)))
+                elif 4 == subframe:
+                    # pages:
+                    #  2 to 5, 7 to 10 almanac data for SV 25 through 32
+                    #  13 navigation message correction table (NMCT_
+                    #  17 Special Messages
+                    #  18 Ionospheric and UTC data
+                    #  25 A-S flags/ SV health
+                    #  1, 6, 11, 16 and 21 reserved
+                    #  12, 19, 20, 22, 23 and 24 reserved
+                    #  14 and 15 reserved
+                    # as of 2018, data ID is always 1.
+                    svid = (words[2] >> 22) & 0x3f
+                    if 0 == svid:
+                        # dummy SV
+                        page = "0/Dummy"
+                    else:
+                        page = index_s(svid, self.sbfr4_svid_page)
 
-                    elif 4 == subframe:
-                        # pages:
-                        #  2 to 5, 7 to 10 almanac data for SV 25 through 32
-                        #  13 navigation message correction table (NMCT_
-                        #  17 Special Messages
-                        #  18 Ionospheric and UTC data
-                        #  25 A-S flags/ SV health
-                        #  1, 6, 11, 16 and 21 reserved
-                        #  12, 19, 20, 22, 23 and 24 reserved
-                        #  14 and 15 reserved
-                        # as of 2018, data ID is always 1.
-                        svid = (words[2] >> 22) & 0x3f
-                        if 0 == svid:
-                            # dummy SV
-                            page = "0/Dummy"
-                        else:
-                            page = index_s(svid, self.sbfr4_svid_page)
+                    s += ("\n   dataid %u svid %u (page %s)\n" %
+                          (words[2] >> 28, svid, page))
 
-                        s += ("\n   dataid %u svid %u (page %s)\n" %
-                              (words[2] >> 28, svid, page))
+                    if 6 == page:
+                        s += "    reserved"
+                    elif 2 <= page <= 10:
+                        s += self.almanac(words)
+                    elif 13 == page:
+                        s += "    NWCT"
+                    elif 17 == page:
+                        s += ("    Special messages: " +
+                              chr((words[2] >> 14) & 0xff) +
+                              chr((words[2] >> 6) & 0xff) +
+                              chr((words[3] >> 22) & 0xff) +
+                              chr((words[3] >> 14) & 0xff) +
+                              chr((words[3] >> 6) & 0xff) +
+                              chr((words[4] >> 22) & 0xff) +
+                              chr((words[4] >> 14) & 0xff) +
+                              chr((words[4] >> 6) & 0xff) +
+                              chr((words[5] >> 22) & 0xff) +
+                              chr((words[5] >> 14) & 0xff) +
+                              chr((words[5] >> 6) & 0xff) +
+                              chr((words[6] >> 22) & 0xff) +
+                              chr((words[6] >> 14) & 0xff) +
+                              chr((words[6] >> 6) & 0xff) +
+                              chr((words[7] >> 22) & 0xff) +
+                              chr((words[7] >> 14) & 0xff) +
+                              chr((words[7] >> 6) & 0xff) +
+                              chr((words[8] >> 22) & 0xff) +
+                              chr((words[8] >> 14) & 0xff) +
+                              chr((words[8] >> 6) & 0xff) +
+                              chr((words[9] >> 22) & 0xff) +
+                              chr((words[9] >> 14) & 0xff))
 
-                        if 6 == page:
-                            s += "    reserved"
-                        elif 2 <= page <= 10:
-                            s += self.almanac(words)
-                        elif 13 == page:
-                            s += "    NWCT"
-                        elif 17 == page:
-                            s += ("    Special messages: " +
-                                  chr((words[2] >> 14) & 0xff) +
-                                  chr((words[2] >> 6) & 0xff) +
-                                  chr((words[3] >> 22) & 0xff) +
-                                  chr((words[3] >> 14) & 0xff) +
-                                  chr((words[3] >> 6) & 0xff) +
-                                  chr((words[4] >> 22) & 0xff) +
-                                  chr((words[4] >> 14) & 0xff) +
-                                  chr((words[4] >> 6) & 0xff) +
-                                  chr((words[5] >> 22) & 0xff) +
-                                  chr((words[5] >> 14) & 0xff) +
-                                  chr((words[5] >> 6) & 0xff) +
-                                  chr((words[6] >> 22) & 0xff) +
-                                  chr((words[6] >> 14) & 0xff) +
-                                  chr((words[6] >> 6) & 0xff) +
-                                  chr((words[7] >> 22) & 0xff) +
-                                  chr((words[7] >> 14) & 0xff) +
-                                  chr((words[7] >> 6) & 0xff) +
-                                  chr((words[8] >> 22) & 0xff) +
-                                  chr((words[8] >> 14) & 0xff) +
-                                  chr((words[8] >> 6) & 0xff) +
-                                  chr((words[9] >> 22) & 0xff) +
-                                  chr((words[9] >> 14) & 0xff))
+                    elif 18 == page:
+                        s += "    Ionospheric and UTC data"
+                    elif 25 == page:
+                        s += "    A/S flags"
+                    else:
+                        s += "    Reserved"
 
-                        elif 18 == page:
-                            s += "    Ionospheric and UTC data"
-                        elif 25 == page:
-                            s += "    A/S flags"
-                        else:
-                            s += "    Reserved"
+                elif 5 == subframe:
+                    svid = (words[2] >> 22) & 0x3f
+                    page = index_s(svid, self.sbfr5_svid_page)
 
-                    elif 5 == subframe:
-                        svid = (words[2] >> 22) & 0x3f
-                        page = index_s(svid, self.sbfr5_svid_page)
+                    s += ("\n   dataid %u svid %u (page %s)\n" %
+                          (words[2] >> 28, svid, page))
 
-                        s += ("\n   dataid %u svid %u (page %s)\n" %
-                              (words[2] >> 28, svid, page))
-
-                        if 1 <= page <= 24:
-                            s += self.almanac(words)
-                        elif 25 == page:
-                            s += "    A/S flags"
-                        else:
-                            s += "    Reserved"
+                    if 1 <= page <= 24:
+                        s += self.almanac(words)
+                    elif 25 == page:
+                        s += "    A/S flags"
+                    else:
+                        s += "    Reserved"
 
         return s
 
