@@ -2,7 +2,7 @@
 #
 # Copyright 2007 Andy Parkins
 #
-# Thi# file is Copyright 2007 by the GPSD project
+# This file is Copyright 2007 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 #
 # An example hook script to mail out commit update information.  This hook
@@ -280,7 +280,7 @@ generate_update_branch_email()
         #
         #  git rev-parse --not --all | grep -v $(git rev-parse $refname)
         #
-        # Get's us to something pretty safe (apart from the small time
+        # Gets us to something pretty safe (apart from the small time
         # between refname being read, and git rev-parse running - for that,
         # I give up)
         #
@@ -366,7 +366,7 @@ generate_update_branch_email()
                         echo "            \\"
                         echo "             O -- O -- O ($oldrev)"
                         echo ""
-                        echo "The removed revisions are not necessarilly gone - if another reference"
+                        echo "The removed revisions are not necessarily gone - if another reference"
                         echo "still refers to them they will stay in the repository."
                         rewind_only=1
                 else

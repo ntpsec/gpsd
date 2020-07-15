@@ -55,7 +55,7 @@ e | Hour                    2       UTC hour, "00".."23"
   | Latitude position       7       WGS84 ddmmmmm, with an implied
   |                                 decimal after the 4th digit
   | ----------------------- ------- ------------------------
-  | Longitude hemishpere    1       'E' or 'W'
+  | Longitude hemisphere    1       'E' or 'W'
   | ----------------------- ------- ------------------------
   | Longitude position      8       WGS84 dddmmmmm with an implied
 P |                                 decimal after the 5th digit

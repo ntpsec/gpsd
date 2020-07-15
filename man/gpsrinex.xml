@@ -54,7 +54,7 @@ problems.</para>
 to <application>gpsd</application>.  Only a few GPS have this capability.
 In addition, the <application>gpsd</application> driver for that GPS
 must support raw mode.  Currently only the u-blox driver has this support.
-Only a few u-blox 8 GPS implment the required UBX-RXM-RAWX message.  The
+Only a few u-blox 8 GPS implement the required UBX-RXM-RAWX message.  The
 NEO-M8T is known to work, but requires configuration with
 <application>ubxtool</application>.</para>
 <para>Before using <application>ubxtool</application> be sure to

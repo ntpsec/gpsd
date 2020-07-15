@@ -63,7 +63,7 @@ int json_device_read(const char *buf,
                                         .dflt.real = NAN},
         {"mincycle",   t_real,       .addr.real = &d_mincycle,
                                         .dflt.real = NAN},
-        // ignore unkown keys, for cross-version compatibility
+        // ignore unknown keys, for cross-version compatibility
         {"", t_ignore},
         {NULL},
     };
@@ -114,7 +114,7 @@ int json_watch_read(const char *buf,
         {"scaled",         t_boolean,  .addr.boolean = &ccp->scaled},
         {"split24",        t_boolean,  .addr.boolean = &ccp->split24},
         {"timing",         t_boolean,  .addr.boolean = &ccp->timing},
-        // ignore unkown keys, for cross-version compatibility
+        // ignore unknown keys, for cross-version compatibility
         {"", t_ignore},
         {NULL},
     };

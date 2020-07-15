@@ -36,13 +36,13 @@ webgps.py draws a sky view of the satellites and their tracks using HTML5. It
 needs to run continuously in order to build a history and generate the
 satellite tracks. Your browser must be able to display the <canvas> element to
 display the satellite view properly. webgps.py can be called with the argument
-"c" to run continously, with an integer duration and a unit suffix to run this
+"c" to run continuously, with an integer duration and a unit suffix to run this
 long (units allowed are "s", "m", "h" and "d", e.g. "4h"), or without argument
 to create a snapshot of the current sat view.
 
 ntpoffset generate an estimate of your GPS's offset from a peerstats
 file.  For instructions on how to use this script, see the GPSD Time
-Service HOWTO in this distrubution, in the www/ subdirectory.
+Service HOWTO in this distribution, in the www/ subdirectory.
 
 skyview.php is used to generate pictures of your skyview, and may be
 used to help determine if a given antenna placement is appropriate for

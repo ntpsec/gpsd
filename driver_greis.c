@@ -455,7 +455,7 @@ static gps_mask_t greis_msg_EL(struct gps_device_t *session,
 
         /* GREIS elevation is -90 to 90 degrees */
         /* GREIS uses 127 for n/a */
-        /* gpsd uses NAN for n/a, so adjust acordingly */
+        /* gpsd uses NAN for n/a, so adjust accordingly */
         elevation = getub(buf, i);
         if (90 < abs(elevation)) {
             session->gpsdata.skyview[i].elevation = (double)elevation;

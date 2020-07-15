@@ -204,7 +204,7 @@ typedef struct __attribute__((__packed__))
 typedef struct __attribute__((__packed__))
 {
     uint32_t cycles;
-    double pr;                  // psuedorange in meters
+    double pr;                  // pseudorange in meters
     uint16_t phase;
     int8_t slp_dtct;
     uint8_t snr_dbhz;
@@ -805,12 +805,12 @@ static void Build_Send_SER_Packet(struct gps_device_t *session,
     chksum += length;
     /* ??? What is this doing? */
     if (2 == length) {
-        /* carefull!  no DLE stuffing here! */
+        /* careful!  no DLE stuffing here! */
         set_int16(buffer, data);
         chksum += buffer[0];
         chksum += buffer[1];
     } else if (4 == length) {
-        /* carefull!  no DLE stuffing here! */
+        /* careful!  no DLE stuffing here! */
         set_int32(buffer, data);
         chksum += buffer[0];
         chksum += buffer[1];

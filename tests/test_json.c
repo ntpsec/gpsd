@@ -401,7 +401,7 @@ char ee24a[] = "This, that, the other thing.",
      // test for short output buffer
      ee24f[] = "Hello\xc2",
      ee24l[] = "\x01\x07\x15",
-     /* Note the char after te "13" is a "double prime", U+2033
+     /* Note the char after the "13" is a "double prime", U+2033
       * not a double quote! */
      ee24u[] = "±176°42′13″ 𠜎 𠜱 𠝹 𠱓";
 char ed24a[] = "This, that, the other thing.",

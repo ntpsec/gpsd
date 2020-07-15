@@ -493,7 +493,7 @@ static int passivesocks(char *service, char *tcp_or_udp,
         if (socks[i] < 0)
             numsocks--;
 
-    /* Return the number of succesfully opened sockets
+    /* Return the number of successfully opened sockets
      * The failed ones are identified by negative values */
     return numsocks;
 }
@@ -2258,7 +2258,7 @@ int main(int argc, char *argv[])
         /*
          * Drop privileges.  Up to now we've been running as root.
          * Instead, set the user ID to 'nobody' (or whatever the gpsd
-         * user set by thre build is) and the group ID to the owning
+         * user set by the build is) and the group ID to the owning
          * group of a prototypical TTY device. This limits the scope
          * of any compromises in the code.  It requires that all GPS
          * devices have their group read/write permissions set.
@@ -2376,7 +2376,7 @@ int main(int argc, char *argv[])
                 /*
                  * The file descriptor validity check is required on some ARM
                  * platforms to prevent a core dump.  This may be due to an
-                 * implimentation error in FD_ISSET().
+                 * implementation error in FD_ISSET().
                  */
                 if (allocated_device(device) &&
                     (0 <= device->gpsdata.gps_fd &&
@@ -2549,7 +2549,7 @@ int main(int argc, char *argv[])
                 } else if (0 == buflen) {
                     /* Ugh, "man recv" says recv() returns 0 on disconnect!
                      * So we have to disconnect client.
-                     * But somehow, dormant serial conenctions also
+                     * But somehow, dormant serial connections also
                      * return 0.  Should FD_ISSET() have prevented getting
                      * here in that case?
                      */

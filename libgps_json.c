@@ -136,7 +136,7 @@ static int json_tpv_read(const char *buf, struct gps_data_t *gpsdata,
                                  .dflt.real = NAN},
         {"wspeedt", t_real, .addr.real = &gpsdata->fix.wspeedt,
                                  .dflt.real = NAN},
-        // ignore unkown keys, for cross-version compatibility
+        // ignore unknown keys, for cross-version compatibility
         {"", t_ignore},
 
         {NULL},
@@ -409,7 +409,7 @@ static int json_devicelist_read(const char *buf, struct gps_data_t *gpsdata,
                                         .dflt.real = NAN},
         {"mincycle",   t_real,       STRUCTOBJECT(struct devconfig_t, mincycle),
                                         .dflt.real = NAN},
-        // ignore unkown keys, for cross-version compatibility
+        // ignore unknown keys, for cross-version compatibility
         {"", t_ignore},
         {NULL},
         /* *INDENT-ON* */
@@ -593,7 +593,7 @@ int json_oscillator_read(const char *buf, struct gps_data_t *gpsdata,
 }
 
 // Test for JSON read status values that should be treated as a go-ahead
-// for further processing.  JSON_BADATTR - to allow JSON attributes uknown
+// for further processing.  JSON_BADATTR - to allow JSON attributes unknown
 // to this version of the library, for forward compatibility, is an obvious
 // thing to go here.
 #define PASS(n) (((n) == 0) || ((n) == JSON_ERR_BADATTR))

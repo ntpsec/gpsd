@@ -739,7 +739,7 @@ click it.
 7. Follow the distribution-specific on-screen instructions to finish \
 installing your Linux distribution.
 
-=== Reccomended packages
+=== Recommended packages
 
 Due to current WSL limitations, it is recommended at this time that you
 only install the equivalent of the following packages on your distribution.

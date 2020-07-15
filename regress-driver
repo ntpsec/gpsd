@@ -96,7 +96,7 @@ fi
 
 # Enables us to turn debugging up high without screwing up the diff checks
 # First and Second filter out gpsd log messages.
-# Third filters out gps.py verbose loggging
+# Third filters out gps.py verbose logging
 # Fourth filters out WATCH responses
 # Fifth filters out DEVICE responses
 # Sixth filters out VERSION responses

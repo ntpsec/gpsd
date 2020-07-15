@@ -969,7 +969,7 @@ static gps_mask_t hnd_129794(unsigned char *bu, int len, PGN *pgn,
                ais->type5.to_port,
                ais->type5.to_starboard,
                ais->type5.draught/10.0);
-        printf("AIS: arival:%-20.20s at %02u-%02u-%04d %02u:%0u\n",
+        printf("AIS: arrival:%-20.20s at %02u-%02u-%04d %02u:%0u\n",
                ais->type5.destination,
                ais->type5.day,
                ais->type5.month,
@@ -1025,7 +1025,7 @@ static gps_mask_t hnd_129798(unsigned char *bu, int len, PGN *pgn,
 
 
 /*
- *   PGN 129802: AIS Safty Related Broadcast Message
+ *   PGN 129802: AIS Safety Related Broadcast Message
  */
 /* No test case for this message at the moment */
 static gps_mask_t hnd_129802(unsigned char *bu, int len, PGN *pgn,
@@ -1428,7 +1428,7 @@ static const char msg_129040[] = {"AIS  Class B Extended Position Report"};
 static const char msg_129793[] = {"AIS  UTC and Date report"};
 static const char msg_129794[] = {"AIS  Class A Static and Voyage Related Data"};
 static const char msg_129798[] = {"AIS  SAR Aircraft Position Report"};
-static const char msg_129802[] = {"AIS  Safty Related Broadcast Message"};
+static const char msg_129802[] = {"AIS  Safety Related Broadcast Message"};
 static const char msg_129809[] = {"AIS  Class B CS Static Data Report, Part A"};
 static const char msg_129810[] = {"AIS  Class B CS Static Data Report, Part B"};
 
@@ -1978,7 +1978,7 @@ const struct gps_type_t driver_nmea2000 = {
 /* end */
 
 #else   /* of  defined(NMEA2000_ENABLE) */
-/* dummy variable to some old linkers do not commplain about empty
+/* dummy variable to some old linkers do not complain about empty
  * object file */
 int nmea2000_dummy = 1;
 #endif /* of  defined(NMEA2000_ENABLE) */

@@ -424,7 +424,7 @@ class spaceplot(plotter):
         self.fixes.sort(key=lambda p: dist_2d(self.centroid, p[:2]))
 
         # compute min/max as meters, ignoring altitude
-        # EarthDistance always returns a positve value
+        # EarthDistance always returns a positive value
         lat_min_o = -gps.EarthDistance((stat_lat.min, self.centroid[1]),
                                        self.centroid[:2])
         lat_max_o = gps.EarthDistance((stat_lat.max, self.centroid[1]),
@@ -502,7 +502,7 @@ class spaceplot(plotter):
         alt_fixes_r = []
         latlon_data = ""
         alt_data = ""
-        # init calcualted hep, sep and mrse
+        # init calculated hep, sep and mrse
         calc_hep = gps.NaN
         calc_sep = gps.NaN
         calc_mrse = gps.NaN
@@ -871,7 +871,7 @@ set xtics scale 0
 # will not be displayed correctly.
 set xtics ("" 90, "" 60, "" 30,)
 
-# make the ytics go from the center (0) to 360 with incrment of 90
+# make the ytics go from the center (0) to 360 with increment of 90
 # set ytics 0, 45, 360
 set ytics scale 0
 

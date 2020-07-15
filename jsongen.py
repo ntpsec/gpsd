@@ -17,7 +17,7 @@ import sys
 
 #
 # Here is the information that makes it all work - attribute, type, and
-# defult information for all fields.  We generate a JSON
+# default information for all fields.  We generate a JSON
 # parser template spec. Doing it this way guarantees consistency.
 #
 # Notes on the fields:

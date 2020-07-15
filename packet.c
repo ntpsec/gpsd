@@ -61,8 +61,8 @@ PERMISSIONS
  *
  * 4) ISGPS packets. The input may be a bitstream containing IS-GPS-200
  *    packets.  Each includes a fixed leader byte, a length, and check bits.
- *    In this case, it is not guaranted that packet starts begin on byte
- *    bounaries; the recognizer has to run a separate state machine against
+ *    In this case, it is not guaranteed that packet starts begin on byte
+ *    boundaries; the recognizer has to run a separate state machine against
  *    each byte just to achieve synchronization lock with the bitstream.
  *
  * 5) Un-checksummed binary packets.  Like case 3, but without
@@ -179,7 +179,7 @@ static size_t oncore_payload_cksum_length(unsigned char id1, unsigned char id2)
     case ONCTYPE('F','a'): l =  9; break; /* self-test */
     case ONCTYPE('C','f'): l =  7; break; /* set-to-defaults */
     case ONCTYPE('E','q'): l = 96; break; /* ASCII position */
-    case ONCTYPE('A','u'): l = 12; break; /* altitide hold height */
+    case ONCTYPE('A','u'): l = 12; break; /* altitude hold height */
     case ONCTYPE('A','v'): l =  8; break; /* altitude hold mode */
     case ONCTYPE('A','N'): l =  8; break; /* velocity filter */
     case ONCTYPE('A','O'): l =  8; break; /* RTCM report mode */
@@ -2066,7 +2066,7 @@ void packet_parse(struct gps_lexer_t *lexer)
                  * 0x8f, Superpackets
                  * 0x8f-01,
                  * 0x8f-02,
-                 * 0x8f-03, port configration
+                 * 0x8f-03, port configuration
                  * 0x8f-14, datum
                  * 0x8f-15, datum
                  * 0x8f-17, Single Precision UTM

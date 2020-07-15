@@ -100,7 +100,7 @@ static int PROTO_command(char line[])
     /*
      * Return COMMAND_UNKNOWN to tell gpsmon you can't interpret the line, and
      * it will be passed to the generic command interpreter to be handled there.
-     * You can alse return COMMAND_MATCH to tell it you handled the command,
+     * You can also return COMMAND_MATCH to tell it you handled the command,
      * or COMMAND_TERMINATE to tell gpsmon you handled it and gpsmon should
      * terminate.
      */

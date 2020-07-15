@@ -14,7 +14,7 @@ self-contained byte-oriented packet protocol.  Packet recognition is
 handled in the GPSD packet-getter state machine; this code is
 concerned with unpacking the packets into well-behaved C structures,
 coping with odd field lengths and fields that may overlap byte
-boudaries.  These report structures live in gps.h.
+boundaries.  These report structures live in gps.h.
 
 Note that the unpacking this module does is probably useful only for
 RTCM reporting and diagnostic tools.  It is not necessary when

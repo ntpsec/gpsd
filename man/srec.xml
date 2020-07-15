@@ -211,7 +211,7 @@ be loaded at a 2-byte address.</para></listitem>
 nineteen character pairs, representing a 2 byte address, 16 bytes of
 binary data, and a 1 byte checksum, follow.  </para></listitem>
 
-<listitem><para>00 00 Four character 2-byte address field; hexidecimal
+<listitem><para>00 00 Four character 2-byte address field; hexadecimal
 address 0x0000, where the data which follows is to be
 loaded.</para></listitem>
 

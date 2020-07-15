@@ -2702,7 +2702,7 @@ static gps_mask_t processTXT(int count, char *field[],
         break;
     }
 
-    /* maximum text lenght unknown, guess 80 */
+    /* maximum text length unknown, guess 80 */
     GPSD_LOG(LOG_WARN, &session->context->errout,
              "NMEA0183: TXT: %.10s: %.80s\n",
              msgType_txt, field[4]);

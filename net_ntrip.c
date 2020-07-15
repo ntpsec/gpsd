@@ -227,7 +227,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                 len -= llen;
             } else {
                 GPSD_LOG(LOG_WARN, &device->context->errout,
-                         "Received unexpexted Ntrip reply %s.\n",
+                         "Received unexpected Ntrip reply %s.\n",
                          buf);
                 return -1;
             }

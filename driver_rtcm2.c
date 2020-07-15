@@ -134,7 +134,7 @@ SPDX-License-Identifier: BSD-2-clause
 /*
  * Structures for interpreting words in an RTCM-104 2.x message (after
  * parity checking and removing inversion).  Note, these structures
- * are overlayed on the raw data in order to decode them into
+ * are overlaid on the raw data in order to decode them into
  * bitfields; this will fail horribly if your C compiler introduces
  * padding between or before bit fields, or between 8-bit-aligned
  * bitfields and character arrays despite #pragma pack(1).  The right
@@ -447,7 +447,7 @@ struct rtcm2_msg_t {
             } sat[15];
         } type18;
 
-        // msg 19 - RTK uncorrected psuedoranges.  RTCM 2.1
+        // msg 19 - RTK uncorrected pseudoranges.  RTCM 2.1
         struct rtcm2_msg19 {
             unsigned int        parity:6;
             unsigned int        tom:20;
@@ -494,7 +494,7 @@ struct rtcm2_msg_t {
             } sat[RTCM2_WORDS_MAX / 2];
         } type20;
 
-        // msg 21 - RTK/high accuracy psuedorange corrections.  RTCM 2.1
+        // msg 21 - RTK/high accuracy pseudorange corrections.  RTCM 2.1
         struct rtcm2_msg21 {
             unsigned int        parity:6;
             unsigned int        tom:20;
@@ -917,7 +917,7 @@ struct rtcm2_msg_t {
             } sat[15];
         } type18;
 
-        // msg 19 - RTK uncorrected psuedoranges.  RTCM 2.1
+        // msg 19 - RTK uncorrected pseudoranges.  RTCM 2.1
         struct rtcm2_msg19 {
             unsigned int        _pad:2;
             unsigned int        f:2;
@@ -964,7 +964,7 @@ struct rtcm2_msg_t {
             } sat[RTCM2_WORDS_MAX / 2];
         } type20;
 
-        // msg 21 - RTK/high accuracy psuedorange corrections.  RTCM 2.1
+        // msg 21 - RTK/high accuracy pseudorange corrections.  RTCM 2.1
         struct rtcm2_msg21 {
             unsigned int        _pad:2;
             unsigned int        f:2;

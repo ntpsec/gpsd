@@ -54,7 +54,7 @@ class Baton(object):
     "Ship progress indications to stderr."
     # By setting this > 1 we reduce the frequency of the twirl
     # and speed up test runs.  Should be relatively prime to the
-    # nunber of baton states, otherwise it will cause beat artifacts
+    # number of baton states, otherwise it will cause beat artifacts
     # in the twirling.
     SPINNER_INTERVAL = 11
 

@@ -2,7 +2,7 @@
 #
 # Generate an estimate of your GPS's offset from a peerstats file
 # For instructions on how to use this script, see the GPSD Time 
-# Service HOWTO in this distrubution. 
+# Service HOWTO in this distribution. 
 #
 # This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause

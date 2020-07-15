@@ -36,7 +36,7 @@ usage()
     echo "  Options include:";
     echo "  -S <portnumber> = Port for gpsd communication. Default is 2948.";
     echo "  -u <can_device> = Used CAN device. Default is \"vcan0\"";
-    echo "  -p <canplayer>  = Programm to replay logfile. Default is \"canplayer\"";
+    echo "  -p <canplayer>  = Program to replay logfile. Default is \"canplayer\"";
     echo "  -b              = Create testfile.chk instead of checking it.";
     echo "  -v              = Print version and exit.";
     echo "  -h              = Print this helptext and exit.";
@@ -57,7 +57,7 @@ can_utils()
     echo
     echo "Command to play CAN logfile \"${CAN_PLAYER}\" do not exist."
     echo "Try to install \"can-utils\" from your distribution."
-    echo "I your distibution do not provide \"can-utils\", then"
+    echo "I your distribution do not provide \"can-utils\", then"
     echo "git clone https://gitorious.org/linux-can/can-utils.git"
     echo "in a directory outside of gpsd, build and install it."
     echo "On most linux systems, \"make\", and then \"sudo make install\" works."

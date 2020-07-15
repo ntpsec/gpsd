@@ -230,7 +230,7 @@ static gps_mask_t sky_msg_DD(struct gps_device_t *session,
         uint8_t PRN = getub(buf, off + 0);
         /* carrier-to-noise density ratio dB-Hz */
         uint8_t cno = getub(buf, off + 1);
-        /* psuedorange in meters */
+        /* pseudorange in meters */
         double prMes = getbed64((const char *)buf, off + 2);
         /* carrier phase in cycles */
         double cpMes = getbed64((const char *)buf, off + 10);

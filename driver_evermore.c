@@ -103,7 +103,7 @@
  * 2 - position status (1,2,3,4,5,6)
  *      (1 invalid, 2 2D fix, 3 3D fix, 4 2D with DIFF, 5 3D with DIFF,
  *       6 2/1 sat degrade mode)
- * 06 - number of used satelites
+ * 06 - number of used satellites
  * 02.1 - DOP (00.0 no fix, HDOP 2D fix, PDOP 3D fix)
  * 300906185730 - date and time, UTC ddmmyyHHMMSS (30/09/2006 18:57:30)
  * 5002.7546,N - Latitude (degree)

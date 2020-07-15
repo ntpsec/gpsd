@@ -249,7 +249,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
     char buf2[BUFSIZ];
     uint32_t tow;             // time of week in milli seconds
     double ftow;              // time of week in seconds
-    double temp;              // tempurature in degrees C
+    double temp;              // temperature in degrees C
     double fqErr;             // PPS Offset. positive is slow.
     timespec_t ts_tow;
     char ts_buf[TIMESPEC_LEN];
@@ -1563,7 +1563,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
 
         case 0x20:
             /* Last Fix with Extra Information (binary fixed point) 0x8f-20
-             * Only ouput when fix is available.
+             * Only output when fix is available.
              * CSK sez "why does my Lassen SQ output oversize packets?"
              * Present in:
              *   pre-2000 models
@@ -1780,7 +1780,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             break;
 
         case 0xa6:
-            /* Self-Survey Comman (0x8f-a6) polled by 0x8e-a6
+            /* Self-Survey Command (0x8f-a6) polled by 0x8e-a6
              *
              * Present in:
              *   ICM SMT 360
@@ -3381,7 +3381,7 @@ void configuration_packets_res360(struct gps_device_t *session)
     putbyte(buf, 1, IO2_VECEF|IO2_ENU);
     // Timing
     putbyte(buf, 2, 0x01);          // Use 0x8e-a2
-    // Auxillary
+    // Auxiliary
     putbyte(buf, 3, 0x08);          // Packet 0x5a off, dBHz
     (void)tsip_write(session, 0x35, buf, 4);
 

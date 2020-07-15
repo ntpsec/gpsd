@@ -3,7 +3,7 @@
 # Upload git configuration from here to the repo
 # Please do not introduce bashisms into this script.
 #
-# Note: This script does not curently work. It used to, on Berlios.
+# Note: This script does not currently work. It used to, on Berlios.
 # We leave it here because light modifications will probably work
 # on may forges.
 

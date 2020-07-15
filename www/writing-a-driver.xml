@@ -727,7 +727,7 @@ by <filename>gpsd</filename>.</para>
 <structfield>.packet.counter</structfield> member of the session
 structure is available; it is often useful to take action only
 when this counter is zero.  It is zeroed when the device is activated
-or someting triggers a device change.</para>
+or something triggers a device change.</para>
 
 <para><structfield>.get_packet</structfield> points to a block of code
 that actually gets the packets from the serial stream. You will
@@ -768,7 +768,7 @@ only by the data throughput of the reporting channel.</para>
 code that can take a buffer full of message payload, wrap iit in
 appropriate headers and trailers and checksumming, and ship it to the
 device.  This entry point is not used by gpsd itself; it's for
-diagnotic tools like gpsctl and gpsmon.  Once you've written it,
+diagnostic tools like gpsctl and gpsmon.  Once you've written it,
 though, you may find it useful for implementing the other switcher
 methods and whatever other probe strings you need to send.  Note: if
 possible, assemble your packet in

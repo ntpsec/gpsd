@@ -383,7 +383,7 @@ void gpsd_set_speed(struct gps_device_t *session,
          *
          * The fundamental problem here is that serial devices take time
          * to settle into a new baud rate after tcsetattr() is issued. Until
-         * they do so, input will be arbitarily garbled.  Normally this
+         * they do so, input will be arbitrarily garbled.  Normally this
          * is not a big problem, but in our hunt loop the garbling can trash
          * a long enough prefix of each sample to prevent detection of a
          * packet header.  We could address the symptom by making the sample

@@ -408,7 +408,7 @@ static ssize_t zodiac_control_send(struct gps_device_t *session,
 #define min(x,y)        ((x) < (y) ? x : y)
     /*
      * We used to just cast msg to an unsigned short pointer.
-     * This can fail on word-oriented achitectures like a SPARC.
+     * This can fail on word-oriented architectures like a SPARC.
      */
     memcpy((char *)shortwords, msg, min(sizeof(shortwords), len));
 

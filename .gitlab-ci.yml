@@ -152,7 +152,7 @@ centos-8-latest:
   - dnf -y install diffutils python3-scons bc ncurses-devel qt5-qtbase-devel pps-tools-devel libbsd-devel libnsl2-devel bluez-libs-devel platform-python-devel dbus-devel libusbx-devel gtk3-devel python3-pyserial python3-cairo python3-gobject-base libxslt docbook-style-xsl ccache
   - .ci-build/build.sh
 
-# to avoid falied builds on MRs/forks where no builder with the
+# to avoid failed builds on MRs/forks where no builder with the
 # tag `freebsd` is available, run this job only if
 # $HAVE_FREEBSD == "true"
 # set this in your CI environment settings in gitlab.
@@ -168,7 +168,7 @@ freebsd:
   script:
   - .ci-build/build.sh
 
-# to avoid falied builds on MRs/forks where no builder with the
+# to avoid failed builds on MRs/forks where no builder with the
 # tag `sparc64` is available, run this job only if
 # $HAVE_SPARC64_LINUX == "true"
 # set this in your CI environment settings in gitlab.
@@ -183,7 +183,7 @@ sparc64-linux:
   script:
   - .ci-build/build.sh
 
-# to avoid falied builds on MRs/forks where no builder with the
+# to avoid failed builds on MRs/forks where no builder with the
 # tag `mips64le` is available, run this job only if
 # $HAVE_MIPS64LE_LINUX == "true"
 # set this in your CI environment settings in gitlab.

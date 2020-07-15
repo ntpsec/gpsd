@@ -2003,7 +2003,7 @@ static gps_mask_t ubx_msg_rxm_rawx(struct gps_device_t *session,
     }
     for (i = 0; i < numMeas; i++) {
         int off = 32 * i;
-        /* psuedorange in meters */
+        /* pseudorange in meters */
         double prMes = getled64((const char *)buf, off + 16);
         /* carrier phase in cycles */
         double cpMes = getled64((const char *)buf, off + 24);

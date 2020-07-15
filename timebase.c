@@ -184,7 +184,7 @@ system clock. The combination of PPS with NTP time should be reliable
 regardless of what the local system clock gets up to. That is, unless
 NTP clock skew goes over 1 second, but this is unlikely to ever happen
 - and if it does the reasons will have nothing to do with GPS
-idiosyncracies.
+idiosyncrasies.
 
 This file is Copyright 2010 by the GPSD project
 SPDX-License-Identifier: BSD-2-clause

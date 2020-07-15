@@ -58,7 +58,7 @@ async def print_gps_info(gpsd: gps.aiogps.aiogps) -> None:
 
 
 async def main():
-    """ Main coroutine - executes 2 asyncio tasks in parralel """
+    """ Main coroutine - executes 2 asyncio tasks in parallel """
     try:
         # Example of using custom connection configuration
         async with gps.aiogps.aiogps(

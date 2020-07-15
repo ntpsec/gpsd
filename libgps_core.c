@@ -94,7 +94,7 @@ int gps_open(const char *host,
 
 #ifndef USES_HOST
     (void)fprintf(stderr,
-                  "No methods available for connnecting to %s!\n",
+                  "No methods available for connecting to %s!\n",
                   host);
 #endif /* USES_HOST */
 #undef USES_HOST

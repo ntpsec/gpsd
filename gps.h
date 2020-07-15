@@ -187,7 +187,7 @@ struct gps_fix_t {
     double sep;
     /* Geoid separation (ellipsoid separation)
      * Height of MSL ellipsoid (geoid) above WGS84 ellipsoid.
-     * Postive is MSL above WGS84. In meters */
+     * Positive is MSL above WGS84. In meters */
     double geoid_sep;
 
     double magnetic_track;  /* Course (relative to Magnetic North) */
@@ -1418,7 +1418,7 @@ struct ais_t
 #define DAC1FID21_MGUSTSPEED_NOT_AVAILABLE      255
                             unsigned int mgustdir;      /* in 5 degree steps */
 #define DAC1FID21_MGUSTDIR_NOT_AVAILABLE        127
-                            unsigned int airtemp;       /* degress K */
+                            unsigned int airtemp;       /* degrees K */
 #define DAC1FID21_AIRTEMP_OFFSET                223
                             unsigned humidity;          /* units of 1% */
 #define DAC1FID21_HUMIDITY_NOT_VAILABLE         127
@@ -2183,7 +2183,7 @@ struct rawdata_t {
                                  * bit 2 - GALILEO BOC-tracking of MBOC signal
                                  */
         char obs_code[4];       /* 3 char RINEX observation code */
-        /* see RINEX documenetation
+        /* see RINEX documentation
          * GPS: L1: L1C, L1S, L1L, L1X, L1P, L1W, L1N
          *      L2: L2C, L2D, L2S, L2L, L2X, L2P, L2W, L2N
          *      L5: L5I, L5Q

@@ -1407,7 +1407,7 @@ class ubx(object):
         ("CFG-NAVSPG-USRDAT_FLAT", 0x50110063, "R8", 1, "",
          "Geodetic datum 1.0 / flattening"),
         ("CFG-NAVSPG-USRDAT_DX", 0x40110064, "R4", 1, "m",
-         "Geodetic datum X axis shift at the orgin"),
+         "Geodetic datum X axis shift at the origin"),
         ("CFG-NAVSPG-USRDAT_DY", 0x40110065, "R4", 1, "m",
          "Geodetic datum Y axis shift at the origin"),
         ("CFG-NAVSPG-USRDAT_DZ", 0x40110066, "R4", 1, "m",
@@ -2922,9 +2922,9 @@ Save and Load non-volatile storage data"""
     cfg_pms_values = {0: "Full power",
                       1: "Balanced",
                       2: "Interval",
-                      3: "Aggresive with 1Hz",
-                      4: "Aggresive with 2Hz",
-                      5: "Aggresive with 4Hz",
+                      3: "Aggressive with 1Hz",
+                      4: "Aggressive with 2Hz",
+                      5: "Aggressive with 4Hz",
                       0xff: "Invalid"
                       }
 
@@ -3073,8 +3073,8 @@ Save and Load non-volatile storage data"""
         1: "Software reset",
         2: "Software reset (GNSS only)",
         4: "Hardware reset, after shutdown",
-        8: "Controled GNSS stop",
-        9: "Controled GNSS start",
+        8: "Controlled GNSS stop",
+        9: "Controlled GNSS start",
         }
 
     def cfg_rst(self, buf):
@@ -3814,7 +3814,7 @@ Oddly this is polled with UBX-LOG-RETRIEVEBATCH
         # u-blox 7+, protVer 14+
         m_len = len(buf)
 
-        # length 8 (version 1, type 1) is reponse.
+        # length 8 (version 1, type 1) is response.
         # WTF; length 10 (version 0, type 0) is request
         # length 12 (version 0, type 0) is request
         if 8 == m_len:
@@ -4271,7 +4271,7 @@ Oddly this is the poll for UBX-LOG-BATCH
         """UBX-MON-PATCH decode, Output information about installed patches."""
 
         # first seen in protver 15
-        # len 0 == Poll requestm handeled earlier
+        # len 0 == Poll requestm handled earlier
 
         u = struct.unpack_from('<HH', buf, 0)
         s = "  version %u nEntries %u" % u
@@ -7707,10 +7707,10 @@ Always double check with "-p CFG-GNSS".
                    "help": "poll UBX-MON-HW Hardware Status"},
         # UBX-MON-HW2
         "MON-HW2": {"command": send_poll, "opt": [0x0a, 0x0b],
-                    "help": "poll UBX-MON-HW2 Exended Hardware Status"},
+                    "help": "poll UBX-MON-HW2 Extended Hardware Status"},
         # UBX-MON-HW3
         "MON-HW3": {"command": send_poll, "opt": [0x0a, 0x37],
-                    "help": "poll UBX-MON-HW3 HW I/O pin infromation"},
+                    "help": "poll UBX-MON-HW3 HW I/O pin information"},
         # UBX-MON-IO
         "MON-IO": {"command": send_poll, "opt": [0x0a, 0x02],
                    "help": "poll UBX-MON-IO I/O Subsystem Status"},
@@ -8129,7 +8129,7 @@ gps_model = ubx()
 
 
 def usage():
-    """Ouput usage information, and exit"""
+    """Output usage information, and exit"""
     print('usage: %s [OPTION] ... [[server[:port[:device]]]]\n\n'
           '   Options:\n'
           '       -?            print help, increase -v for extra help\n'
@@ -8226,7 +8226,7 @@ for (opt, val) in options:
         valnum = gps_model.port_id_map.get(val.upper())
         opts['port'] = valnum if valnum is not None else int(val)
     elif opt == '-P':
-        # to handle vesion like 23.01
+        # to handle version like 23.01
         opts['protver'] = float(val)
         if 10 > opts['protver']:
             opts['protver'] = 10.0

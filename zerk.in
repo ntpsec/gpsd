@@ -519,7 +519,7 @@ class greis(object):
 
         s = " pr"
         for i in range(0, len(payload) - 1, 8):
-            # psuedo in seconds
+            # pseudo in seconds
             u = struct.unpack_from('<d', payload, i)
             s += " %s" % self.f8_s(u[0])
 
@@ -1251,7 +1251,7 @@ class greis(object):
         self.gps_send(b"%cons%set,/par/pos/sys/gps," + en_dis)
 
     def send_able_ipr(self, able):
-        "dis/enable all Integer Psuedo-Range messages"
+        "dis/enable all Integer Pseudo-Range messages"
         self.expect_statement_identifier = 'em'
         if able:
             self.gps_send(b"%em%em,,jps/{rx,rc,r1,r2,r3,r5,rl}:0.25")
@@ -1342,16 +1342,16 @@ class greis(object):
         # en/disable GPS
         "GPS": {"command": send_able_gps,
                 "help": "GPS"},
-        # en/disable Integer Psuedo Range messages
+        # en/disable Integer Pseudo Range messages
         "IPR": {"command": send_able_ipr,
-                "help": "all Integer Psuedo Range messages"},
+                "help": "all Integer Pseudo Range messages"},
         # en/disable IRNSS
         "IRNSS": {"command": send_able_irnss,
                   "help": "IRNSS"},
         # en/disable NMEA 4.1e
         "NMEA": {"command": send_able_nmea41,
                  "help": "basic messages NMEA 4.1 at 4Hz"},
-        # en/disable Psuedo Range, Carrier Phase and Doppler messages
+        # en/disable Pseudo Range, Carrier Phase and Doppler messages
         "RAW": {"command": send_able_raw,
                 "help": "Raw mode messages"},
         # en/disable SBAS
@@ -1408,7 +1408,7 @@ class greis(object):
         self.gps_send(b"%dm%dm")
 
     def send_set_ipr(self):
-        "poll Integer Psuedo-Range messages"
+        "poll Integer Pseudo-Range messages"
         self.expect_statement_identifier = 'out'
         self.gps_send(b"%out%out,,jps/{rx,rc,r1,r2,r3,r5,rl}")
 
@@ -1445,7 +1445,7 @@ class greis(object):
         "ID": {"command": send_get_id,
                "help": "poll receiver ID"},
         "IPR": {"command": send_set_ipr,
-                "help": "poll all Integer Psuedo-range messages"},
+                "help": "poll all Integer Pseudo-range messages"},
         "OAF": {"command": send_get_oaf,
                 "help": "poll all OAF options"},
         "RESET": {"command": send_reset,

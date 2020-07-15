@@ -124,7 +124,7 @@ IMG_WIDTH = 528
 IMG_HEIGHT = 800
 STROKE_WIDTH = int(IMG_WIDTH * 0.007)
 
-# Scale graph bars to accomodate at least MIN_SAT values.
+# Scale graph bars to accommodate at least MIN_SAT values.
 MIN_SAT = 12
 NUM_SAT = MIN_SAT
 

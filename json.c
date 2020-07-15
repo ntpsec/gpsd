@@ -476,7 +476,7 @@ static int json_internal_read_object(const char *cp,
                                      || seeking == t_uinteger))
                         break;
                 }
-                if (cursor[1].attribute==NULL)  /* out of possiblities */
+                if (cursor[1].attribute==NULL)  /* out of possibilities */
                     break;
                 if (strcmp(cursor[1].attribute, attrbuf)!=0)
                     break;

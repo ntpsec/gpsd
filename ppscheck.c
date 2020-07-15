@@ -3,7 +3,7 @@
  *
  * Each output line is the second and nanosecond parts of a timestamp
  * followed by the names of handshake signals then asserted.  Off
- * transitions may generate lines with no signals aserted.
+ * transitions may generate lines with no signals asserted.
  *
  * If you don't see output within a second, use gpsmon or some other
  * equivalent tool to check that your device has satellite lock and is

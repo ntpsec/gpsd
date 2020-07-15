@@ -21,12 +21,12 @@
 /* normalize a timespec
  *
  * three cases to note
- * if tv_sec is positve, then tv_nsec must be positive
+ * if tv_sec is positive, then tv_nsec must be positive
  * if tv_sec is negative, then tv_nsec must be negative
  * if tv_sec is zero, then tv_nsec may be positive or negative.
  *
  * this only handles the case where two normalized timespecs
- * are added or subracted.  (e.g. only a one needs to be borrowed/carried
+ * are added or subtracted.  (e.g. only a one needs to be borrowed/carried
  *
  * NOTE: this normalization is not the same as ntpd uses
  */

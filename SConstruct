@@ -199,7 +199,7 @@ icon_files = [
 # because there is some precedent, ~ is an allowed version number in
 # the Debian version rules, and it does not cause confusion with
 # whether - separates components of the package name, separates the
-# name from the version, or separates version componnents.
+# name from the version, or separates version components.
 #
 # package version
 gpsd_version = "3.20.1~dev"

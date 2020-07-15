@@ -356,7 +356,7 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
                 pps_thread->devicename, path,
                 ret);
 
-    /* RFC 2783 implies the time_pps_setcap() needs priviledges *
+    /* RFC 2783 implies the time_pps_setcap() needs privileges *
      * keep root a tad longer just in case */
     if (0 > time_pps_create(ret,
                             (pps_handle_t *)&inner_context->kernelpps_handle)) {
@@ -655,7 +655,7 @@ static int get_edge_rfc2783(struct inner_context_t *inner_context,
     /*
      * pps_seq_t is uint32_t on NetBSD, so cast to
      * unsigned long as a wider-or-equal type to
-     * accomodate Linux's type.
+     * accommodate Linux's type.
      */
     thread_context->log_hook(thread_context, THREAD_PROG,
                              "KPPS:%s assert %s, sequence: %lu, "
@@ -761,7 +761,7 @@ static void *gpsd_ppsmonitor(void *arg)
      *
      * Success is we have a good edge, otherwise loop some more
      *
-     * On a successul stage one, we know this about the exact moment
+     * On a successful stage one, we know this about the exact moment
      * of current pulse:
      *      GPS (real) time
      *      system (clock) time
@@ -824,7 +824,7 @@ static void *gpsd_ppsmonitor(void *arg)
             /* three things now known about the current edge:
              * clock_ts - time of the edge
              * state - the serial line input states
-             * edge - rising edge (1), falling edge (0) or invisble edge (0)
+             * edge - rising edge (1), falling edge (0) or invisible edge (0)
              */
 
             /* calculate cycle and duration from previous edges */
@@ -951,7 +951,7 @@ static void *gpsd_ppsmonitor(void *arg)
          */
 
         /* FIXME! this block duplicates a lot of the next block
-         * of cycle detetion code */
+         * of cycle detection code */
         if (state != state_last) {
             thread_context->log_hook(thread_context, THREAD_RAW,
                         "PPS:%s %.10s pps-detect changed to %d\n",

@@ -777,7 +777,7 @@ static void one_sig(struct meas_t *meas)
 
     (void)fputs(fmt_obs(meas->pseudorange, 0, 0), tmp_file);
     // putting snr here, with phase, is deprecated.
-    // it shoule be an S observation.
+    // it should be an S observation.
     (void)fputs(fmt_obs(meas->carrierphase, meas->lli, snr), tmp_file);
     (void)fputs(fmt_obs(meas->doppler, 0, 0), tmp_file);
 }

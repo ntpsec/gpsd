@@ -10,7 +10,7 @@
  *
  * "I don't see any indication in any of my material that PDOP, GDOP
  * or VDOP are output. There are quantities called Estimated
- * {Horizontal Position, Vertical Position, Time, Horizonal Velocity}
+ * {Horizontal Position, Vertical Position, Time, Horizontal Velocity}
  * Error, but those are apparently only valid when SiRFDRive is
  * active."
  *
@@ -57,7 +57,7 @@
 
 /*
  * According to the protocol reference, if you don't get ACK/NACK in response
- * to a control send withing 6 seconds, you should just retry.
+ * to a control send within 6 seconds, you should just retry.
  */
 #define SIRF_RETRY_TIME 6
 
@@ -919,7 +919,7 @@ static gps_mask_t sirf_msg_67_16(struct gps_device_t *session,
         }
         sat_info = getbeu16(buf, offset);
         if (0 == sat_info) {
-            /* emtpy slot, ignore */
+            /* empty slot, ignore */
             continue;;
         }
 

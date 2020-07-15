@@ -7,7 +7,7 @@
 # SPDX-License-Identifier: BSD-2-clause
 
 // This program originally read a logfile of filtered gpsd messages,
-// type Y.  The gpsd protocal changed in 2.90, since when this became
+// type Y.  The gpsd protocol changed in 2.90, since when this became
 // non-functional.
 //
 // The program has been updated (the first while loop) to read messages

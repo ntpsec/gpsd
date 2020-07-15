@@ -87,7 +87,7 @@ gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
     return gpsd_interpret_subframe(session, tSVID, words);
 }
 
-/* you can find up to date almanac data for comparision here:
+/* you can find up to date almanac data for comparison here:
  * https://gps.afspc.af.mil/gps/Current/current.alm
  */
 static void subframe_almanac(const struct gpsd_errout_t *errout,
@@ -99,7 +99,7 @@ static void subframe_almanac(const struct gpsd_errout_t *errout,
     almp->sv     = sv; /* ignore the 0 sv problem for now */
     almp->e      = ( words[2] & 0x00FFFF);
     almp->d_eccentricity  = pow(2.0,-21) * almp->e;
-    /* carefull, each SV can have more than 2 toa's active at the same time
+    /* careful, each SV can have more than 2 toa's active at the same time
      * you can not just store one or two almanacs for each sat */
     almp->toa      = ((words[3] >> 16) & 0x0000FF);
     almp->l_toa    = almp->toa << 12;
@@ -846,7 +846,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
         } else {
             /* unknown page */
             GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "50B: SF:5-%d data_id %d uknown page\n",
+                     "50B: SF:5-%d data_id %d unknown page\n",
                      subp->pageid, subp->data_id);
             return 0;
         }
