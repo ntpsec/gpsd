@@ -925,8 +925,8 @@ frame * {
         submenu = Gtk.Menu()
         topmenu.set_submenu(submenu)
 
-        grid = [["30 deg", True, "3", 30],
-                ["45 deg", False, "4", 45],
+        grid = [["30 deg", False, "3", 30],
+                ["45 deg", True, "4", 45],
                 ["Off", False, "5", 0],
                 ]
 
@@ -1430,7 +1430,7 @@ frame * {
     # Preferences
 
     def set_skyview_n(self, system, handle):
-        "Change the step of grid."
+        "Change the grid orientation."
         self.rotate = handle
         if handle is not None:
             self.skyview.rotate = handle
@@ -1439,7 +1439,8 @@ frame * {
         "Change the step of grid."
 
         # print("set_step_of_grid:", system, handle)
-        self.skyview.step_of_grid = handle
+        if hasattr(self, 'skyview') and self.skyview is not None:
+            self.skyview.step_of_grid = handle
 
     def set_deg(self, _unused, handle):
         "Change the degree format."
