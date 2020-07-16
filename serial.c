@@ -311,19 +311,19 @@ void gpsd_set_speed(struct gps_device_t *session,
     /* backward-compatibility hack */
     switch (parity) {
     case 'E':
-        // FALLTHROUGH
+        FALLTHROUGH
     case (char)2:
         parity = 'E';
         break;
     case 'O':
-        // FALLTHROUGH
+        FALLTHROUGH
     case (char)1:
         parity = 'O';
         break;
     case 'N':
-        // FALLTHROUGH
+        FALLTHROUGH
     case (char)0:
-        // FALLTHROUGH
+        FALLTHROUGH
     default:
         parity = 'N';   /* without this we might emit malformed JSON */
         break;
