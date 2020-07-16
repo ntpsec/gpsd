@@ -4,12 +4,11 @@
  *
  * This is the header for os_compat.c, which contains functions dealing with
  * compatibility issues across OSes.
+ *
+ * Calling file needs to have previously included "gpsd_config.h"
  */
 #ifndef _GPSD_OS_COMPAT_H_
 #define _GPSD_OS_COMPAT_H_
-
-/* Determine which of these functions we need */
-#include "gpsd_config.h"
 
 # ifdef __cplusplus
 extern "C" {
