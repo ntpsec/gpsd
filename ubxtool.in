@@ -146,6 +146,16 @@ opts = {
 }
 
 
+def erd_s(erd):
+    """convert 6 bits of subframe 4, page 13 (NMCT) ERD to string"""
+    if erd & 0x20:
+        if erd == 0x20:
+            return "n/a"
+        # else
+        erd = 1 - erd
+    # else
+    return "%3s" % erd
+
 # I'd like to use pypy module bitstring or bitarray, but
 # people complain when non stock python modules are used here.
 def unpack_s11(word, pos):
@@ -5625,6 +5635,14 @@ High Precision GNSS products only."""
         3: "Invalid",
         }
 
+    nmct_ai = {
+        0: "OK",
+        1: "Encrypted",
+        2: "Unavailable",
+        3: "Reserved",
+        }
+
+
     def rxm_sfrbx(self, buf):
         """UBX-RXM-SFRBX decode, Broadcast Navigation Data Subframe"""
 
@@ -5655,7 +5673,9 @@ High Precision GNSS products only."""
                        msgid, index_s(msgid, self.cnav_msgids)))
 
             else:
-                # LNAV-L, 10 words of 30 bits
+                # LNAV-L, from sat is 10 words of 30 bits
+                # from u-blox each of 10 words right aligned into 32 bits
+                #             plus something in top 2 bits?
                 preamble = words[0] >> 22
                 subframe = (words[1] >> 8) & 0x07
                 s += ("\n  LNAV-L: preamble %#x TLM %#x ISF %u" %
@@ -5783,7 +5803,55 @@ High Precision GNSS products only."""
                     elif 2 <= page <= 10:
                         s += self.almanac(words)
                     elif 13 == page:
-                        s += "    NWCT"
+                        # 20.3.3.5.1.9 NMCT.
+                        # 30 ERDs, but more sats. A sat skips own ERD.
+                        # no ERD for sat 32
+                        # erds are signed! 0x20 == NA
+                        s += ("    NMCT AI %u(%s)"
+                              "\n      ERD1:  %s %s %s %s %s %s %s %s"
+                              "\n      ERD9:  %s %s %s %s %s %s %s %s"
+                              "\n      ERD17: %s %s %s %s %s %s %s %s"
+                              "\n      ERD25: %s %s %s %s %s %s" %
+                              ((words[2] >> 22) & 0x3,    # AI
+                               index_s((words[2] >> 22) & 0x3, self.nmct_ai),
+                               erd_s((words[2] >> 16) & 0x3f),   # erd1
+                               erd_s((words[2] >> 8) & 0x3f),
+                               erd_s((((words[2] >> 2) & 0x30) |
+                                (words[3] >> 26) & 0x0f)),
+                               erd_s((words[3] >> 20) & 0x3f),
+                               erd_s((words[3] >> 14) & 0x3f),   # erd5
+                               erd_s((words[3] >> 8) & 0x3f),
+                               erd_s((((words[3] >> 2) & 0x30) |
+                                (words[4] >> 26) & 0x0f)),
+                               erd_s((words[4] >> 20) & 0x3f),
+                               erd_s((words[4] >> 14) & 0x3f),   # erd9
+                               erd_s((words[4] >> 8) & 0x3f),
+                               erd_s((((words[4] >> 2) & 0x30) |
+                                (words[5] >> 26) & 0x0f)),
+                               erd_s((words[5] >> 20) & 0x3f),
+                               erd_s((words[5] >> 14) & 0x3f),   # erd 13
+                               erd_s((words[5] >> 8) & 0x3f),
+                               erd_s((((words[5] >> 2) & 0x30) |
+                                (words[6] >> 26) & 0x0f)),
+                               erd_s((words[6] >> 20) & 0x3f),
+                               erd_s((words[6] >> 14) & 0x3f),   # erd17
+                               erd_s((words[6] >> 8) & 0x3f),
+                               erd_s((((words[6] >> 2) & 0x30) |
+                                (words[7] >> 26) & 0x0f)),
+                               erd_s((words[7] >> 20) & 0x3f),
+                               erd_s((words[7] >> 14) & 0x3f),   # erd21
+                               erd_s((words[7] >> 8) & 0x3f),
+                               erd_s((((words[7] >> 2) & 0x30) |
+                                (words[8] >> 26) & 0x0f)),
+                               erd_s((words[8] >> 20) & 0x3f),
+                               erd_s((words[8] >> 14) & 0x3f),   # erd25
+                               erd_s((words[8] >> 8) & 0x3f),
+                               erd_s((((words[8] >> 2) & 0x30) |
+                                (words[9] >> 26) & 0x0f)),
+                               erd_s((words[9] >> 20) & 0x3f),
+                               erd_s((words[9] >> 14) & 0x3f),   # erd29
+                               erd_s((words[9] >> 8) & 0x3f),    # erd30
+                               ))
                     elif 17 == page:
                         s += ("    Special messages: " +
                               chr((words[2] >> 14) & 0xff) +
