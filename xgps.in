@@ -598,7 +598,7 @@ class AISView(object):
         self.deg_type = deg_type
         self.name_to_mmsi = {}
         self.named = {}
-        self.store = Gtk.ListStore(str, str, str, str, str, str)
+        self.store = Gtk.ListStore(int, str, str, str, str, str)
         self.widget = Gtk.ScrolledWindow()
         self.widget.set_policy(Gtk.PolicyType.AUTOMATIC,
                                Gtk.PolicyType.AUTOMATIC)
@@ -673,13 +673,13 @@ class AISView(object):
             if self.enter(ais, ais.mmsi):
                 where = self.latlon(ais.lat, ais.lon)
                 self.store.prepend(
-                    (ais.type, ais.mmsi, "(shore)", ais.timestamp, where,
+                    (ais.type, str(ais.mmsi), "(shore)", ais.timestamp, where,
                      ais.epfd_text))
         elif ais.type == 5:
             if self.enter(ais, ais.shipname):
                 self.store.prepend(
                     (ais.type, ais.shipname, ais.callsign, ais.destination,
-                     "", ais.shiptype))
+                     "", str(ais.shiptype)))
         elif ais.type == 12:
             sender = ais.mmsi
             if sender in self.named:
