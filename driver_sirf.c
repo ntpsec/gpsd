@@ -2305,7 +2305,7 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
 
     switch (event) {
     case event_identified:
-        /* FALLTHROUGH */
+        FALLTHROUGH
     case event_reactivate:
         if (session->lexer.type == NMEA_PACKET) {
             GPSD_LOG(LOG_PROG, &session->context->errout,

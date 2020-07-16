@@ -1174,7 +1174,7 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
     n = 0;
     switch (tp->type) {
     case 1:
-        // FALLTHROUGH
+        FALLTHROUGH
     case 9:
     {
         struct gps_correction_t *m = &msg->msg_type.type1.corrections[0];
@@ -1580,7 +1580,7 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
         break;
 
     case 25:
-        // FALLTHROUGH
+        FALLTHROUGH
     case 26:
         msg_name = "Undefined";
         break;
@@ -1590,15 +1590,15 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
         break;
 
     case 28:
-        // FALLTHROUGH
+        FALLTHROUGH
     case 29:
-        // FALLTHROUGH
+        FALLTHROUGH
     case 30:
         msg_name = "Undefined";
         break;
 
     case 31:
-        // FALLTHROUGH
+        FALLTHROUGH
     case 34:
     {
         // 32 and 34 are the same, except 31 is all sats, 34 is some sats
