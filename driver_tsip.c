@@ -136,11 +136,11 @@ static unsigned char tsip_gnssid(unsigned svtype, short prn,
         }
         break;
     case 4:
-        // FALLTHROUGH
+        FALLTHROUGH
     case 6:
-        // FALLTHROUGH
+        FALLTHROUGH
     case 7:
-        // FALLTHROUGH
+        FALLTHROUGH
     default:
         svid = 0;
         gnssid = 0;
@@ -451,13 +451,13 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                     configuration_packets_res360(session);
                     break;
                 case 1001:            // Lassen iQ
-                    // FALLTHROUGH
+                    FALLTHROUGH
                 case 1002:            // Copernicus, Copernicus II
-                    // FALLTHROUGH
+                    FALLTHROUGH
                 case 3007:            // Thunderbolt E
-                    // FALLTHROUGH
+                    FALLTHROUGH
                 case 3032:            // Acutime 360
-                    // FALLTHROUGH
+                    FALLTHROUGH
                 default:
                     configuration_packets_generic(session);
                     break;
@@ -817,7 +817,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                      "TSIP: Switching to Super Packet mode %d\n", u3);
             switch (u3){
             default:
-                // FALLTHROUGH
+                FALLTHROUGH
             case 0:
                 // old Trimble, no superpackets
                 break;
@@ -1229,7 +1229,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          */
         switch (u1 & 7) {       /* dimension */
         case 1:       // clock fix (surveyed in)
-            // FALLTHROUGH
+            FALLTHROUGH
         case 5:       // Overdetermined clock fix
             session->newdata.status = STATUS_TIME;
             session->newdata.mode = MODE_3D;
@@ -1243,11 +1243,11 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             session->newdata.mode = MODE_3D;
             break;
         case 2:
-            // FALLTHROUGH
+            FALLTHROUGH
         case 6:
-            // FALLTHROUGH
+            FALLTHROUGH
         case 7:
-            // FALLTHROUGH
+            FALLTHROUGH
         default:
             session->newdata.status = STATUS_NO_FIX;
             session->newdata.mode = MODE_NO_FIX;
@@ -1329,7 +1329,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             // have a fix
             switch (u1 & 7) {   /* dimension */
             case 1:       // clock fix (surveyed in)
-                // FALLTHROUGH
+                FALLTHROUGH
             case 5:       // Overdetermined clock fix
                 session->newdata.status = STATUS_TIME;
                 session->newdata.mode = MODE_3D;
@@ -1343,11 +1343,11 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 session->newdata.mode = MODE_3D;
                 break;
             case 2:
-                // FALLTHROUGH
+                FALLTHROUGH
             case 6:
-                // FALLTHROUGH
+                FALLTHROUGH
             case 7:
-                // FALLTHROUGH
+                FALLTHROUGH
             default:
                 session->newdata.status = STATUS_NO_FIX;
                 session->newdata.mode = MODE_NO_FIX;
@@ -1916,19 +1916,19 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                     session->newdata.mode = MODE_2D;
                     break;
                 case 0x1:   /* "Don't have GPS time" */
-                    // FALLTHROUGH
+                    FALLTHROUGH
                 case 0x3:   /* "PDOP is too high" */
-                    // FALLTHROUGH
+                    FALLTHROUGH
                 case 0x8:   /* "No usable sats" */
-                    // FALLTHROUGH
+                    FALLTHROUGH
                 case 0x9:   /* "Only 1 usable sat" */
-                    // FALLTHROUGH
+                    FALLTHROUGH
                 case 0x0A:  /* "Only 2 usable sats */
-                    // FALLTHROUGH
+                    FALLTHROUGH
                 case 0x0C:  /* "The chosen sat is unusable" */
-                    // FALLTHROUGH
+                    FALLTHROUGH
                 case 0x10:  /* TRAIM rejected the fix */
-                    // FALLTHROUGH
+                    FALLTHROUGH
                 default:
                     session->newdata.mode = MODE_NO_FIX;
                     break;
@@ -1939,7 +1939,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                  *   SMT 360
                  *   Acutime 360
                  */
-                // FALLTHROUGH
+                FALLTHROUGH
             case 3:             /* forced 2D Position Fix */
                 //session->newdata.status = STATUS_FIX;
                 session->newdata.mode = MODE_2D;
@@ -1947,13 +1947,13 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 /* Present in:
                  *   Acutiome 360
                  */
-                // FALLTHROUGH
+                FALLTHROUGH
             case 1:             /* Single Satellite Time */
             case 7:             /* overdetermined clock */
                 /* Present in:
                  *   Acutiome 360
                  */
-                // FALLTHROUGH
+                FALLTHROUGH
             case 4:             /* forced 3D position Fix */
                 //session->newdata.status = STATUS_FIX;
                 session->newdata.mode = MODE_3D;
@@ -1984,7 +1984,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   pre-2000 models
              *   Copernicus II (2009)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x21:
             /* Request accuracy information
              * Present in:
@@ -1992,7 +1992,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              * Not Present in:
              *   pre-2000 models
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x2a:
             /* Request Fix and Channel Tracking info, Type 1
              * Present in:
@@ -2000,7 +2000,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              * Not Present in:
              *   pre-2000 models
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x2b:
             /* Request Fix and Channel Tracking info, Type 2
              * Present in:
@@ -2008,7 +2008,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              * Not Present in:
              *   pre-2000 models
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x41:
             /* Stored manufacturing operating parameters
              * Present in:
@@ -2018,7 +2018,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   pre-2000 models
              *   Copernicus II (2009)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x42:
             /* Stored production parameters
              * Present in:
@@ -2028,7 +2028,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   pre-2000 models
              *   Copernicus II (2009)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x4a:
             /* PPS characteristics
              * Present in:
@@ -2038,7 +2038,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              * Not Present in:
              *   pre-2000 models
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x4e:
             /* PPS Output options
              * Present in:
@@ -2048,7 +2048,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   pre-2000 models
              *   Copernicus II (2009)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x4f:
             /* Set PPS Width
              * Present in:
@@ -2058,7 +2058,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x60:
             /* DR Calibration and Status Report
              * Present in:
@@ -2068,7 +2068,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x62:
             /* GPS/DR Position/Velocity Report
              * Present in:
@@ -2078,7 +2078,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x64:
             /* Firmware Version and Configuration Report
              * Present in:
@@ -2088,7 +2088,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x6b:
             /* Last Gyroscope Readings Report
              * Present in:
@@ -2098,7 +2098,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x6d:
             /* Last Odometer Readings Report
              * Present in:
@@ -2108,7 +2108,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x6f:
             /* Firmware Version Name Report
              * Present in:
@@ -2118,7 +2118,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x70:
             /* Beacon Channel Status Report
              * Present in:
@@ -2128,7 +2128,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x71:
             /* DGPS Station Database Reports
              * Present in:
@@ -2138,7 +2138,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x73:
             /* Beacon Channel Control Acknowledgment
              * Present in:
@@ -2148,7 +2148,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x74:
             /* Clear Beacon Database Acknowledgment
              * Present in:
@@ -2158,7 +2158,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x75:
             /* FFT Start Acknowledgment
              * Present in:
@@ -2168,7 +2168,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x76:
             /* FFT Stop Acknowledgment
              * Present in:
@@ -2178,7 +2178,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x77:
             /* FFT Reports
              * Present in:
@@ -2188,7 +2188,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x78:
             /* RTCM Reports
              * Present in:
@@ -2198,7 +2198,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x79:
             /* Beacon Station Attributes Acknowledgment
              * Present in:
@@ -2208,7 +2208,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x7a:
             /* Beacon Station Attributes Report
              * Present in:
@@ -2218,7 +2218,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x7b:
             /* DGPS Receiver RAM Configuration Block Report
              * Present in:
@@ -2228,7 +2228,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x7c:
             /* DGPS Receiver Configuration Block Acknowledgment
              * Present in:
@@ -2238,7 +2238,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x7e:
             /* Satellite Line-of-Sight (LOS) Message
              * Present in:
@@ -2248,7 +2248,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x7f:
             /* DGPS Receiver ROM Configuration Block Report
              * Present in:
@@ -2258,7 +2258,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x80:
             /* DGPS Service Provider System Information Report
              * Present in:
@@ -2268,7 +2268,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x81:
             /* Decoder Station Information Report and Selection Acknowledgment
              * Present in:
@@ -2278,7 +2278,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x82:
             /* Decoder Diagnostic Information Report
              * Present in:
@@ -2288,7 +2288,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x84:
             /* Satellite FFT Control Acknowledgment
              * Present in:
@@ -2298,7 +2298,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x85:
             /* DGPS Source Tracking Status Report
              * Present in:
@@ -2308,7 +2308,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x86:
             /* Clear Satellite Database Acknowledgment
              * Present in:
@@ -2318,7 +2318,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x87:
             /* Network Statistics Report
              * Present in:
@@ -2328,7 +2328,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x88:
             /* Diagnostic Output Options Report
              * Present in:
@@ -2338,7 +2338,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x89:
             /* DGPS Source Control Report /Acknowledgment
              * Present in:
@@ -2348,7 +2348,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x8a:
             /* Service Provider Information Report and Acknowledgment
              * Present in:
@@ -2358,7 +2358,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x8b:
             /* Service Provider Activation Information Report & Acknowledgment
              * Present in:
@@ -2368,7 +2368,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x8e:
             /* Service Provider Data Load Report
              * Present in:
@@ -2378,7 +2378,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x8f:
             /* Receiver Identity Report
              * Present in:
@@ -2388,7 +2388,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x90:
             /* Guidance Status Report
              * Present in:
@@ -2398,7 +2398,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x91:
             /* Guidance Configuration Report
              * Present in:
@@ -2408,7 +2408,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x92:
             /* Lightbar Configuration Report
              * Present in:
@@ -2418,7 +2418,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x94:
             /* Guidance Operation Acknowledgment
              * Present in:
@@ -2428,7 +2428,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x95:
             /* Button Box Configuration Type Report
              * Present in:
@@ -2438,7 +2438,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x96:
             /* Point Manipulation Report
              * Present in:
@@ -2448,7 +2448,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x97:
             /* Utility Information Report
              * Present in:
@@ -2458,7 +2458,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x98:
             /* Individual Button Configuration Report
              * Present in:
@@ -2468,7 +2468,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0x9a:
             /* Differential Correction Information Report
              * Present in:
@@ -2478,7 +2478,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360 (2018)
              *   RES SMT 360 (2018)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0xa0:
             /* DAC value
              * Present in:
@@ -2488,7 +2488,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   pre-2000 models
              *   Copernicus II (2009)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0xa2:
             /* UTC/GPS timing
              * Present in:
@@ -2498,7 +2498,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   pre-2000 models
              *   Copernicus II (2009)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0xa3:
             /* Oscillator disciplining command
              * Present in:
@@ -2508,7 +2508,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   pre-2000 models
              *   Copernicus II (2009)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0xa8:
             /* Oscillator disciplining parameters
              * Present in:
@@ -2518,7 +2518,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   pre-2000 models
              *   Copernicus II (2009)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         case 0xa9:
             /* self-survey parameters
              * Present in:
@@ -2528,7 +2528,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   pre-2000 models
              *   Copernicus II (2009)
              */
-            // FALLTHROUGH
+            FALLTHROUGH
         default:
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "TSIP: Unhandled TSIP superpacket type 0x8f-%02x\n",
@@ -2584,7 +2584,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360 (2018)
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x2e:
         /* Request GPS Time
          * Present in:
@@ -2594,7 +2594,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   pre-2000 models
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x32:
         /* Request Unit Position
          * Present in:
@@ -2604,7 +2604,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   pre-2000 models
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x38:
         /* Request SV System data
          * Present in:
@@ -2614,7 +2614,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   pre-2000 models
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x40:
         /* Almanac Data for Single Satellite Report
          * Present in:
@@ -2624,7 +2624,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360 (2018)
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x44:
         /* Non-Overdetermined Satellite Selection Report
          * Present in:
@@ -2634,7 +2634,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360 (2018)
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x49:
         /* Almanac Health Page
          * Present in:
@@ -2642,14 +2642,14 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          * Not Present in:
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x4d:
         /* Oscillator Offset
          * Present in:
          *   pre-2000 models
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x4e:
         /* Response to set GPS time
          * Present in:
@@ -2658,7 +2658,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x4f:
         /* UTC Parameters Report
          * Present in:
@@ -2668,7 +2668,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360 (2018)
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x53:
         /* Analog-to-Digital Readings Report
          * Present in:
@@ -2678,7 +2678,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360 (2018)
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x58:
         /* Satellite System Data/Acknowledge from Receiver
          * Present in:
@@ -2687,7 +2687,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x59:
         /* Status of Satellite Disable or Ignore Health
          * aka Satellite Attribute Database Status Report
@@ -2698,7 +2698,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          * Not Present in:
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x5b:
         /* Satellite Ephemeris Status
          * Present in:
@@ -2708,7 +2708,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x5e:
         /* Additional Fix Status Report
          * Present in:
@@ -2718,7 +2718,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x5f:
         /* Severe Failure Notification
          * Present in:
@@ -2728,7 +2728,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360 (2018)
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x60:
         /* Differential GPS Pseudorange Corrections Report
          * Present in:
@@ -2738,7 +2738,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360 (2018)
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x61:
         /* Differential GPS Delta Pseudorange Corrections Report
          * Present in:
@@ -2748,7 +2748,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360 (2018)
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x6a:
         /* Differential Corrections Used in the Fix Repor
          * Present in:
@@ -2758,7 +2758,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360 (2018)
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x6e:
         /* Synchronized Measurements
          * Present in:
@@ -2768,7 +2768,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x6f:
         /* Synchronized Measurements Report
          * Present in:
@@ -2778,7 +2778,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x70:
         /* Filter Report
          * Present in:
@@ -2788,7 +2788,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x76:
         /* Overdetermined Mode Report
          * Present in:
@@ -2798,7 +2798,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360 (2018)
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x78:
         /* Maximum PRC Age Report
          * Present in:
@@ -2808,7 +2808,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360 (2018)
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x7a:
         /* NMEA settings
          * Not Present in:
@@ -2817,7 +2817,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x7b:
         /* NMEA interval and message mask response
          * Present in:
@@ -2827,7 +2827,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          * Not Present in:
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x7d:
         /* Position Fix Rate Configuration Reports
          * Present in:
@@ -2837,7 +2837,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360 (2018)
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x85:
         /* Differential Correction Status Report
          * Present in:
@@ -2847,7 +2847,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360 (2018)
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x87:
         /* Reference Station Parameters Report
          * Present in:
@@ -2857,7 +2857,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360 (2018)
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x89:
         /* Receiver acquisition sensitivity mode
          * Present in:
@@ -2867,7 +2867,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x88:
         /* Mobile Differential Parameters Report
          * Present in:
@@ -2877,7 +2877,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360 (2018)
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x8b:
         /* QA/QC Reports
          * Present in:
@@ -2887,7 +2887,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360 (2018)
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0x8d:
         /* Average Position Reports
          * Present in:
@@ -2897,7 +2897,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360 (2018)
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0xb0:
         /* PPS and Event Report Packets
          * Present in:
@@ -2907,7 +2907,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360 (2018)
          *   Copernicus II (2009)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0xbc:
         /* Receiver port configuration
          * Present in:
@@ -2917,7 +2917,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0xc1:
         /* Bit Mask for GPIOs in Standby Mode
          * Present in:
@@ -2927,7 +2927,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          * Not Present in:
          *   pre-2000 models
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     case 0xc2:
         /* SBAS SV Mask
          * Present in:
@@ -2937,7 +2937,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          * Not Present in:
          *   pre-2000 models
          */
-        // FALLTHROUGH
+        FALLTHROUGH
     default:
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "TSIP: Unhandled packet type x%02x\n", id);
@@ -3073,7 +3073,7 @@ static void tsip_event_hook(struct gps_device_t *session, event_t event)
     }
     switch (event) {
     case event_identified:
-        // FALLTHROUGH
+        FALLTHROUGH
     case event_reactivate:
         // FIXME: reactivate style should depend on model
         /*
@@ -3102,7 +3102,7 @@ static void tsip_event_hook(struct gps_device_t *session, event_t event)
         break;
     case event_deactivate:
         // used to revert serial port parms here.  No need for that.
-        // FALLTHROUGH
+        FALLTHROUGH
     default:
         break;
     }

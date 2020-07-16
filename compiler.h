@@ -38,6 +38,13 @@
 #define UNUSED
 #endif
 
+// Macro to supporess FALLTHROUGH warnings
+#if defined(__GNUC__) && __GNUC__ >= 7
+ #define FALLTHROUGH __attribute__((fallthrough));
+#else
+ #define FALLTHROUGH
+#endif /* __GNUC__ >= 7 */
+
 /*
  * Macro for compile-time checking if argument is an array.
  * It expands to constant expression with int value 0.
