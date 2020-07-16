@@ -397,7 +397,7 @@ static gps_mask_t processVTG(int count,
         switch (field[9][0]) {
         case 'A':
             /* Autonomous, 2D or 3D fix */
-            /* FALL THROUGH */
+            FALLTHROUGH
         case 'D':
             /* Differential, 2D or 3D fix */
             // MODE_SET here causes issues
@@ -405,7 +405,7 @@ static gps_mask_t processVTG(int count,
             break;
         case 'E':
             /* Estimated, DR only */
-            /* FALL THROUGH */
+            FALLTHROUGH
         case 'N':
             /* Not Valid */
             // MODE_SET here causes issues
@@ -476,7 +476,7 @@ static gps_mask_t processRMC(int count, char *field[],
     switch (status) {
     default:
         /* missing */
-        /* FALLTHROUGH */
+        FALLTHROUGH
     case 'V':
         /* Invalid */
         newstatus = STATUS_NO_FIX;
@@ -486,7 +486,7 @@ static gps_mask_t processRMC(int count, char *field[],
     case 'D':
         /* Differential Fix */
         // STATUS_DGPS_FIX set below, after lat/lon check
-        /* FALLTHROUGH */
+        FALLTHROUGH
     case 'A':
         /* Valid Fix */
         /*
@@ -1128,7 +1128,7 @@ static unsigned char nmea_sigid_to_ubx(unsigned char nmea_sigid)
 
     switch (nmea_sigid) {
     default:
-        /* FALLTHROUGH */
+        FALLTHROUGH
     case 0:
         /* missing, assume GPS L1 */
         ubx_sigid = 0;
@@ -1220,7 +1220,7 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
         switch (nmea_gnssid) {
         default:
             /* x = IMES                Not defined by NMEA 4.10 */
-            /* FALLTHROUGH */
+            FALLTHROUGH
         case 0:
             /* none given, ignore */
             nmea2_prn = 0;
@@ -1765,9 +1765,9 @@ static gps_mask_t processGSV(int count, char *field[],
             session->nmea.seen_gagsv = true;
             break;
         case 'B':
-            /* FALLTHROUGH */
+            FALLTHROUGH
         case 'D':
-            /* FALLTHROUGH */
+            FALLTHROUGH
         case 'Q':
             /* Quectel EC25 & EC21 use PQGSA for BeiDou */
             session->nmea.seen_bdgsv = true;

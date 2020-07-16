@@ -2046,9 +2046,9 @@ int main(int argc, char *argv[])
             (void)printf("%s: %s (revision %s)\n", argv[0], VERSION, REVISION);
             exit(EXIT_SUCCESS);
         case 'h':
-            // FALLTHROUGH
+            FALLTHROUGH
         case '?':
-            // FALLTHROUGH
+            FALLTHROUGH
         default:
             usage();
             exit(EXIT_SUCCESS);
