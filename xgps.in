@@ -1572,6 +1572,10 @@ if __name__ == "__main__":
             sys.exit(1)
 
         base = Base(deg_type=degreefmt, rotation=rotate, title=target)
+        # If we're debuuging, stop here so we can set breakpoints
+        pdb_module = sys.modules.get('pdb')
+        if pdb_module:
+            pdb_module.set_trace()
         base.set_units(None, unit_system)
         try:
             sys.stderr.write("xgps: host %s port %s\n" % (host, port))
