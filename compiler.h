@@ -40,10 +40,20 @@
 
 // Macro to supporess FALLTHROUGH warnings
 #if defined(__GNUC__) && __GNUC__ >= 7
- #define FALLTHROUGH __attribute__((fallthrough));
-#else
- #define FALLTHROUGH
-#endif /* __GNUC__ >= 7 */
+    #define FALLTHROUGH __attribute__((fallthrough));
+#elif defined(__clang__)
+    #ifndef __has_attribute         // For backwards compatibility
+        #define __has_attribute(x) 0
+    #endif
+
+    #if __has_attribute(clang::fallthrough)
+        #define FALLTHROUGH [[clang::fallthrough]]
+    #endif
+#endif
+
+#ifndef FALLTHROUGH
+    #define FALLTHROUGH
+#endif
 
 /*
  * Macro for compile-time checking if argument is an array.
