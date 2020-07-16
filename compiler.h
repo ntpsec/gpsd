@@ -46,8 +46,8 @@
         #define __has_attribute(x) 0
     #endif
 
-    #if __has_attribute(clang::fallthrough)
-        #define FALLTHROUGH [[clang::fallthrough]]
+    #if __has_attribute(fallthrough)
+        #define FALLTHROUGH __attribute__((fallthrough))
     #endif
 #endif
 
