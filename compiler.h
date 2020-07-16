@@ -47,7 +47,7 @@
     #endif
 
     #if __has_attribute(fallthrough)
-        #define FALLTHROUGH __attribute__((fallthrough))
+        #define FALLTHROUGH __attribute__((fallthrough));
     #endif
 #endif
 
