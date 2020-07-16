@@ -1944,11 +1944,11 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 //session->newdata.status = STATUS_FIX;
                 session->newdata.mode = MODE_2D;
                 break;
+            case 1:             /* Single Satellite Time */
                 /* Present in:
-                 *   Acutiome 360
+                 *   Acutime 360
                  */
                 FALLTHROUGH
-            case 1:             /* Single Satellite Time */
             case 7:             /* overdetermined clock */
                 /* Present in:
                  *   Acutiome 360
