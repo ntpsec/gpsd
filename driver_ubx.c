@@ -725,7 +725,7 @@ ubx_msg_log_retrievepos(struct gps_device_t *session, unsigned char *buf UNUSED,
         break;
 
     case 0:
-        // FALLTHROUGH
+        FALLTHROUGH
     default:
         // huh?
         session->gpsdata.log.fixType = MODE_NO_FIX;
@@ -1021,7 +1021,7 @@ ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
 
     case UBX_MODE_3D:
         // 3
-        // FALLTHROUGH
+        FALLTHROUGH
     case UBX_MODE_GPSDR:
         // 4
         if (*mode != MODE_3D) {
@@ -1040,7 +1040,7 @@ ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
 
     case UBX_MODE_2D:
         // 2
-        // FALLTHROUGH
+        FALLTHROUGH
     case UBX_MODE_DR:           /* consider this too as 2D */
         // 1
         if (*mode != MODE_2D) {
@@ -1056,7 +1056,7 @@ ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
 
     case UBX_MODE_NOFIX:
         // 0
-        // FALLTHROUGH
+        FALLTHROUGH
     default:
         // huh?
         if (*mode != MODE_NO_FIX) {
@@ -2045,7 +2045,7 @@ static gps_mask_t ubx_msg_rxm_rawx(struct gps_device_t *session,
             switch (sigId) {
             default:
                 /* let PPP figure it out */
-                /* FALLTHROUGH */
+                FALLTHROUGH
             case 0:       /* L1C/A */
                 obs_code = "L1C";
                 break;
@@ -2077,7 +2077,7 @@ static gps_mask_t ubx_msg_rxm_rawx(struct gps_device_t *session,
             switch (sigId) {
             default:
                 /* let PPP figure it out */
-                /* FALLTHROUGH */
+                FALLTHROUGH
             case 0:       /*  */
                 obs_code = "L1C";       /* u-blox calls this E1OS or E1C */
                 break;
@@ -2096,7 +2096,7 @@ static gps_mask_t ubx_msg_rxm_rawx(struct gps_device_t *session,
             switch (sigId) {
             default:
                 /* let PPP figure it out */
-                /* FALLTHROUGH */
+                FALLTHROUGH
             case 0:       /*  */
                 obs_code = "L2Q";       /* u-blox calls this B1I D1 */
                 break;
@@ -2119,7 +2119,7 @@ static gps_mask_t ubx_msg_rxm_rawx(struct gps_device_t *session,
             switch (sigId) {
             default:
                 /* let PPP figure it out */
-                /* FALLTHROUGH */
+                FALLTHROUGH
             case 0:       /*  */
                 obs_code = "L1C";       /* u-blox calls this L1C/A */
                 break;
@@ -2135,7 +2135,7 @@ static gps_mask_t ubx_msg_rxm_rawx(struct gps_device_t *session,
             switch (sigId) {
             default:
                 /* let PPP figure it out */
-                /* FALLTHROUGH */
+                FALLTHROUGH
             case 0:       /*  */
                 obs_code = "L1C";       /* u-blox calls this L1OF */
                 break;
@@ -2454,15 +2454,15 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         break;
 
     case UBX_INF_DEBUG:
-        /* FALLTHROUGH */
+        FALLTHROUGH
     case UBX_INF_ERROR:
-        /* FALLTHROUGH */
+        FALLTHROUGH
     case UBX_INF_NOTICE:
-        /* FALLTHROUGH */
+        FALLTHROUGH
     case UBX_INF_TEST:
-        /* FALLTHROUGH */
+        FALLTHROUGH
     case UBX_INF_USER:
-        /* FALLTHROUGH */
+        FALLTHROUGH
     case UBX_INF_WARNING:
         ubx_msg_inf(session, buf, data_len);
         break;

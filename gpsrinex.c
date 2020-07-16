@@ -81,6 +81,7 @@
        #include <getopt.h>
 #endif
 
+#include "compiler.h"
 #include "gps.h"
 #include "gpsdclient.h"
 #include "os_compat.h"
@@ -691,7 +692,7 @@ static void one_sig(struct meas_t *meas)
     default:
         (void)fprintf(stderr, "ERROR: one_sig() gnmssid %u unknown sigid %u\n",
                       gnssid, sigid);
-        /* FALLTHROUGH */
+        FALLTHROUGH
     case 0:
         /* L1C */
         cxx = C1C;
@@ -1242,9 +1243,9 @@ int main(int argc, char **argv)
             strlcpy(rec_vers, optarg, sizeof(rec_vers));
             break;
         case 'h':
-            // FALLTHROUGH
+            FALLTHROUGH
         case '?':
-            // FALLTHROUGH
+            FALLTHROUGH
         default:
             usage();
             /* NOTREACHED */
