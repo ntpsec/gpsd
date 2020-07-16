@@ -2,6 +2,8 @@
  * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
+#include "../gpsd_config.h"  /* must be before all includes */
+
 #include <ctype.h>
 #include <errno.h>          // for errno
 #include <fcntl.h>
