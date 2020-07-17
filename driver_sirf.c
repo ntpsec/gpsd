@@ -46,6 +46,7 @@
 #include <strings.h>
 #include <unistd.h>
 
+#include "compiler.h"   // for FALLTHROUGH
 #include "gpsd.h"
 #include "bits.h"
 #include "strfuncs.h"

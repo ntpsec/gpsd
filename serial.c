@@ -30,6 +30,7 @@
 #include <bluetooth/rfcomm.h>
 #endif /* ENABLE_BLUEZ */
 
+#include "compiler.h"   // for FALLTHROUGH
 #include "gpsd.h"
 
 /* Workaround for HP-UX 11.23, which is missing CRTSCTS */

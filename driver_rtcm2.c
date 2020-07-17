@@ -61,6 +61,7 @@ SPDX-License-Identifier: BSD-2-clause
 #include <stdio.h>
 #include <string.h>
 
+#include "compiler.h"   // for FALLTHROUGH
 #include "gpsd.h"
 
 /*

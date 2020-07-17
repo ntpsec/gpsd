@@ -30,6 +30,7 @@
 #include <unistd.h>
 
 
+#include "compiler.h"   // for FALLTHROUGH
 #include "gpsd.h"
 #if defined(UBLOX_ENABLE) && defined(BINARY_ENABLE)
 #include "driver_ubx.h"

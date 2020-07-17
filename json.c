@@ -72,6 +72,7 @@ PERMISSIONS
 #include <stdlib.h>
 #include <string.h>
 
+#include "compiler.h"   // for FALLTHROUGH
 #include "os_compat.h"
 #include "json.h"
 

@@ -38,10 +38,11 @@
 #define UNUSED
 #endif
 
-// Macro to supporess FALLTHROUGH warnings
+// Macro to suppress FALLTHROUGH warnings
 #if defined(__GNUC__) && __GNUC__ >= 7
     #define FALLTHROUGH __attribute__((fallthrough));
-#elif defined(__clang__)
+// At least one Clang 6 version advertises fallthrough and then chokes on it
+#elif defined(__clang__) && __clang_major__ > 6
     #ifndef __has_attribute         // For backwards compatibility
         #define __has_attribute(x) 0
     #endif
