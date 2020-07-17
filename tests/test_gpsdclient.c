@@ -16,6 +16,7 @@
 #include <string.h>
 #include <unistd.h>            /* for getopt() */
 
+#include "../compiler.h"       // for FALLTHROUGH
 #include "../gpsdclient.h"
 
 struct test {
@@ -200,9 +201,9 @@ int main(int argc, char **argv)
         switch (option) {
         default:
                 fail_count = 1;
-                /* FALLTHROUGH */
+                FALLTHROUGH
         case '?':
-                /* FALLTHROUGH */
+                FALLTHROUGH
         case 'h':
             (void)fputs("usage: test_gpsdclient [-v] [-V]\n", stderr);
             exit(fail_count);

@@ -18,6 +18,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "../compiler.h"       // for FALLTHROUGH
 #include "../gpsd.h"
 
 #define TS_ZERO         {0,0}
@@ -766,9 +767,9 @@ int main(int argc, char *argv[])
         switch (option) {
         default:
                 fail_count = 1;
-                /* FALL THROUGH! */
+                FALLTHROUGH
         case '?':
-                /* FALL THROUGH! */
+                FALLTHROUGH
         case 'h':
             (void)fputs("usage: test_timespec [-v] [-V]\n", stderr);
             exit(fail_count);
