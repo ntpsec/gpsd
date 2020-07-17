@@ -571,7 +571,7 @@ transmission rate in bits per second.  (Each character costs 8 bits
 plus one parity bit plus one stop bit.)</para>
 
 <para>Knowing this, we can subtract (C * 10) / B from (E-S) to approximate
-the internal proccessing time spent by <application>gpsd</application>.
+the internal processing time spent by <application>gpsd</application>.
 Due to other UART overheads, this formula will slightly underestimate
 transmission time and this overestimate processing time, but even a rough
 comparison of the two is interesting.</para>

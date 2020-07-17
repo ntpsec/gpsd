@@ -489,7 +489,7 @@ too long to fit, let the daemon run for a few minutes and issue an "I"
 command to it. Alternatively, running the daemon at -D 4 may reveal
 the version.</p>
 
-<p>In 3.10 and newer versions, runing gpsctrl with your GPS's device
+<p>In 3.10 and newer versions, running gpsctrl with your GPS's device
 path as an argument will produce a report that includes both the GPS
 type and subtype, if that information is available at all.</p>
 

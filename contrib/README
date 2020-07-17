@@ -7,7 +7,7 @@ of the skyview.
 
 gpssnmp a tool to return some SNMP values from the running local gpsd.
  
-clock_test is used to test the latency of the system call clock_getttime().
+clock_test is used to test the latency of the system call clock_gettime().
 
 binlog and binreplay are probably only useful for people developing
 drivers for new protocols, when gpsfake does not yet know what to do

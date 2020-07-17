@@ -19,7 +19,7 @@ Python versions >= 3.6 and provides the following benefits:
     - support for connection keep-alive (using the TCP keep alive mechanism)
     - support for automatic re-connection;
     - configurable connection parameters;
-    - configurable exeption handling (internally or by application);
+    - configurable exception handling (internally or by application);
     - logging support (logger name: 'gps.aiogps').
 
 The use of timeouts, keepalive and automatic reconnection make possible easy
@@ -110,7 +110,7 @@ class aiogps(gps):  # pylint: disable=R0902
                 error is raised to the user;
                 - number > 0: delay until next reconnection attempt (seconds).
             alive_opts: options related to detection of disconnections.
-                Two mecanisms are supported: TCP keepalive (default, may not be
+                Two mechanisms are supported: TCP keepalive (default, may not be
                 available on all platforms) and Rx timeout, through the
                 following options:
                 - rx_timeout: Rx timeout (seconds). Set to None to disable.

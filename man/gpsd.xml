@@ -760,7 +760,7 @@ if the device speed is not matched to the GPS speed.</para>
 <para>Generation of position error estimates (eph, epv, epd, eps, epc)
 from the incomplete data handed back by GPS reporting protocols
 involves both a lot of mathematical black art and fragile
-device-dependent assumptions.  This code has been bug-prone in tbe
+device-dependent assumptions.  This code has been bug-prone in the
 past and problems may still lurk there.</para>
 
 <para>AIDVM decoding of types 16-17, 22-23, and 25-26 is unverified.</para>

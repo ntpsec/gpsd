@@ -7,7 +7,7 @@
 
 <thead>
 <row>
-  <entry>Functions:-</entry><entry>Provides conversion between the ECEF and WGS84 co-ordinate reference systems.</entry>
+  <entry>Functions:-</entry><entry>Provides conversion between the ECEF and WGS84 coordinate reference systems.</entry>
 </row>
 </thead>
 
@@ -24,13 +24,13 @@
 </row>
 <row>
   <entry><function>double wgs84_separation(double lat, double lon)</function></entry>
-  <entry><para>This is used by drivers to get the separation of MSL from the WGS84 datum at a pair of Latitude/Longitude co-ordinates. The data is in a pre-defined table.</para></entry>
+  <entry><para>This is used by drivers to get the separation of MSL from the WGS84 datum at a pair of Latitude/Longitude coordinates. The data is in a pre-defined table.</para></entry>
 </row>
 <row>
 
   <entry><function>void ecef_to_wgs84fix(struct gps_data_t *gpsdata, double x,
 double y, double z, double vx, double vy, double vz)</function></entry>
-  <entry><para>This does exactly what it says! Co-ordinate system
+  <entry><para>This does exactly what it says! Coordinate system
   conversion from ecef to the wgs84 equivalent.</para></entry>
 </row>
 <row>

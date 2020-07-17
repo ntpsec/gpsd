@@ -76,7 +76,7 @@ class gpscommon(object):
                     msg = str(e) + ' (to {}:{})'.format(host, port)
                     sys.stderr.write("error: {}\n".format(msg.strip()))
                 self.close()
-                raise  # propogate error to caller
+                raise  # propagate error to caller
 
     def close(self):
         "Close the gpsd socket"

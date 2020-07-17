@@ -153,7 +153,7 @@ def make_driver_code(wfp):
 
 
 def make_structure(wfp):
-    # Write a structure definition correponding to the table.
+    # Write a structure definition corresponding to the table.
     global structname
     record = after is None
     baseindent = 8

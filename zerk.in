@@ -664,7 +664,7 @@ class greis(object):
         return s + '\n'
 
     def msg_TC(self, payload):
-        "[TC] decode, CA/L1 Continous Tracking Time"
+        "[TC] decode, CA/L1 Continuous Tracking Time"
 
         s = " tt"
         for i in range(0, len(payload) - 1, 2):

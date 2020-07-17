@@ -357,7 +357,7 @@ GEOID_DELTA = [
 #  This table is wmm2015.  Values obtained from MagneticField, part of
 #  geographiclib., by using devtools/get_mag_var_table.py
 #
-#  magvar[][] has the magnetic variation (declination), in hundreths of
+#  magvar[][] has the magnetic variation (declination), in hundredths of
 #  a degree, on a 5 degree by 5 * degree grid for the entire planet.
 #
 #  This table is duplicated in geoid.c.  Keep them in sync.

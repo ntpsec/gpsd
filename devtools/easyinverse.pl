@@ -3,7 +3,7 @@
 # From: Reuben Settergren <rjs@jhu.edu>
 #
 # I wrote a perl script to randomly generate matrices with smallish integers,
-# and test for a suitable determinant (typically +/-1), and ouput the matrix
+# and test for a suitable determinant (typically +/-1), and output the matrix
 # and its inverse.
 #
 # There are switches to make it -s[ymmetric] and/or -d[iagonally strong],

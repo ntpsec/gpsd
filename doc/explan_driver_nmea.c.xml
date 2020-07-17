@@ -59,7 +59,7 @@
   the sentence time and this fix time are different, we have started a
   new cycle of observation, so update the sentence time and the store
   the CYCLE_START_SET flag.</para><para>Whatever the number of fields,
-  store the fix co-ordinates via <function>do_lat_lon()</function>,
+  store the fix coordinates via <function>do_lat_lon()</function>,
   store the speed and the track and save the corresponding
   flags.</para><para>Return the local aggregated flags to allow the
   main copy in the session data to be updated.</para></entry>
@@ -122,7 +122,7 @@
 <row>
   <entry><function>static gps_mask_t processGPGSV(int count, char *field[], struct gps_device_t *session)</function></entry>
   <entry><para>Check if the sentence has too few fields or the wrong
-  number fo fields. In this case, clear the data for all satellites
+  number of fields. In this case, clear the data for all satellites
   and return with an error indication.</para><para>Start to parse the
   sentence. First, note how many sentences are to be expected to
   complete the data transfer.</para><para>If the sentence number is

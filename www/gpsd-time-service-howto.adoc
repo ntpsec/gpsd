@@ -306,10 +306,10 @@ A normal gpsd build includes support for interpreting 1PPS pulses that
 is mostly autoconfiguring and requires no special setup.  If the
 current system, and GNSS receiver, supports pps.
 
-You can build a version stripped to the mimimum configuration required
+You can build a version stripped to the minimum configuration required
 for time service.  This reduces the size of the binary and may be
 helpful on embedded systems or for SBCs like the Raspberry Pi, Odroid,
-or BeagleBone.  Only do this if you have serious size contraints, much
+or BeagleBone.  Only do this if you have serious size constraints, much
 functionality will be lost.
 
 When gpsd is built with timeservice=yes:
@@ -1776,7 +1776,7 @@ procedures for checking the jitter on the SHM on the slaves.
 
 Sadly, theory and practice diverge here.  I have never succeeded in
 making hardware timestamping work.  I have successfully trashed my
-host system clock.  Tread carefully.  If you make progress please
+host system clock.  Treat carefully.  If you make progress please
 pass on some clue.
 
 == Providing public NTP service

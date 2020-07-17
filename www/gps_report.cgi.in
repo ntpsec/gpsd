@@ -210,7 +210,7 @@ print "</td><td style='text-align:center'>";
 if form.getvalue("rating"):
     print "GPSD compatibility is <code>"+cgi.escape(form.getvalue("rating"))+"</code><br>\n";
 else:
-    print "No GPSD compatiblity specified.<br>\n";
+    print "No GPSD compatibility specified.<br>\n";
 if form.getvalue("noconfigure") == 'yes':
     print "Device can be sent catatonic by baud-rate changes.<br>\n";
 elif form.getvalue("noconfigure") == 'no':

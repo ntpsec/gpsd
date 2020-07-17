@@ -94,7 +94,7 @@ $ export UBXOPTS="-P 18 -v 2"
 ----
 
 
-=== Defaut Configuration
+=== Default Configuration
 
 A common problem when dealing with a u-blox GNSS receiver is left over
 configuration from earlier experiments.  The u-blox receivers are very

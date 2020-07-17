@@ -1134,7 +1134,7 @@ you've done that, writing the dump code is pretty easy.</p>
 
 <p>Be aware that the JSON dialect available for report objects is
 restricted in a couple of ways.  You cannot use the JSON null value,
-and arrays must be homogenous - that is, every element of an array
+and arrays must be homogeneous - that is, every element of an array
 must have the same attribute set. These restrictions enable the
 JSON content to fit in C structures.</p>
 

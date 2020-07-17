@@ -2,7 +2,7 @@
 :description: A Guide for Client Developers moving to GPSD-ND
 :keywords: time, GPSD, gpsd, guide, developers, client
 Eric S. Raymond <esr@thyrsus.com>
-v1.10, Febuary 2011
+v1.10, February 2011
 
 This document is mastered in asciidoc format.  If you are reading it in HTML,
 you can find the original at the GPSD project website.
@@ -365,7 +365,7 @@ old undocumented gps_open_r().
 The gps_query() entry point is gone.  With the new streaming-oriented
 wire protocol, it is extremely unwise to assume that the first
 transmission from the damon after a command is shipped to it will be
-the reponse to command.  If you must send explicit
+the response to command.  If you must send explicit
 commands to the daemon, use gps_send() and handle the response in
 your main event-polling loop -- but beware, as using gps_send()
 ties your code to the GPSD wire protocol and is not recommended.

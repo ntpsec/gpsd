@@ -459,7 +459,7 @@ above with CSRS-PPP.
 
 === GAPS
 
-The University of New Brunswich has an online PPP sevice.  They call
+The University of New Brunswich has an online PPP service.  They call
 it GNSS Analysis and Positioning Software (GAPS).  GAPS requires
 observations from the L2 P signal or L5 signal.  No u-blox chip
 follows the L2 P signal.

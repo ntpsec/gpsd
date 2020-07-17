@@ -54,7 +54,7 @@ are reports (including but not limited to as "TPV", "SKY", "DEVICE",
 and "ERROR") which are not direct responses to commands.</para>
 
 <para> The order of JSON attributes within a response object is never
-significant, and you may specify commmand attributes in any
+significant, and you may specify command attributes in any
 order. Responses never contain the special JSON value null; instead,
 attributes with empty or undefined values are omitted. The length
 limit for responses and reports is 1536 characters, including a trailing

@@ -1342,7 +1342,7 @@ Field Number:
 4. Longitude
 5. North or South
 6. Waypoint ID
-7. Satelite number
+7. Satellite number
 8. Checksum
 
 (The GXA sentence is obsolete as of 3.01.)
@@ -1711,7 +1711,7 @@ This is one of the sentences commonly emitted by GPS units.
 
 Field Number:
 
-1. UTC Time of postion
+1. UTC Time of position
 2. Status, A = Valid, V = Warning
 3. Latitude
 4. N or S
@@ -2096,7 +2096,7 @@ Field Number:
 
 Field Number:
 
-1. Direction degress, True
+1. Direction degrees, True
 2. T = True
 3. Direction degrees Magnetic
 4. M = Magnetic

@@ -37,7 +37,7 @@
   of 0 (on an unsuccessful <function>fork()</function> there is no
   child), so this value is used as the trigger to do the following
   useful stuff.</para><para>First, the child tries to create a new
-  session, returning -1 if unable to do so. If succesful, it will have
+  session, returning -1 if unable to do so. If successful, it will have
   inherited the exiting parent's session.</para><para>Next switch to
   the root directory and try to open <quote>/dev/null</quote>. If that
   succeeds, force stdin, stdout and stderr to duplicate the fd of

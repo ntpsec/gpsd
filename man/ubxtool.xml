@@ -411,7 +411,7 @@ CONFIGURATION ITEMS</para>
   <para>Configuring u-blox GPS with the traditional configuration
 messages is fraught with problems.  Many configuration messages
 interact in odd ways.  Something as simple as changing the serial
-port speed requires you to read the curent configuration using
+port speed requires you to read the current configuration using
 UBX-CFG-PRT for the proper port, merging in the change, the
 writing back the changed UBX-CFG-PRT message.  Or just guessing
 at the current configuration and overwriting it all.</para>

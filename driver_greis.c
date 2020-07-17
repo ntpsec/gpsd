@@ -495,7 +495,7 @@ static gps_mask_t greis_msg_AZ(struct gps_device_t *session,
 
         /* GREIS azimuth is 0 to 180, multiply by 2 for 0 to 360 */
         /* GREIS uses 255 for n/a */
-        /* gpsd azimuth is 0 to 359, so adjust acordingly */
+        /* gpsd azimuth is 0 to 359, so adjust accordingly */
         azimuth = getub(buf, i) * 2;
         if (360 == azimuth) {
             session->gpsdata.skyview[i].azimuth = 0;

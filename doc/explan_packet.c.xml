@@ -24,7 +24,7 @@
   against the definitions of all the packet structures known to
   <application>gpsd</application> and, if possible, sets a new packet
   state.</para><para>If the state is <quote>xxx_RECOGNIZED</quote>,
-  the packet_parse routine will despatch the packet to the appropriate
+  the packet_parse routine will dispatch the packet to the appropriate
   driver.</para></entry>
 </row>
 <row>
