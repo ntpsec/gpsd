@@ -1776,7 +1776,7 @@ procedures for checking the jitter on the SHM on the slaves.
 
 Sadly, theory and practice diverge here.  I have never succeeded in
 making hardware timestamping work.  I have successfully trashed my
-host system clock.  Treat carefully.  If you make progress please
+host system clock.  Tread carefully.  If you make progress please
 pass on some clue.
 
 == Providing public NTP service
