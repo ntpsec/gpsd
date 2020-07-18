@@ -246,7 +246,7 @@
   skyviews.  The -G option now works under IPv6. Cross-build is now
   officially supported and instructions included.  gpsprof works again
   and does whole-cycle profiling. gpsd.php has Open Street Map
-  support.  The pp-on-cts option is replaced by a pps_pin option that
+  support.  The pps-on-cts option is replaced by a pps_pin option that
   lets you specify the pin; the default is still DCD. New supported
   device; the Jackson Labs Fury. The chrpath utility has become a
   build prerequisite.
