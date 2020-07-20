@@ -271,7 +271,7 @@ within one meter of the "true" value, but can be off as much as 12 meters.
         <entry>leapseconds</entry>
         <entry>No</entry>
         <entry>integer</entry>
-        <entry><para>Current leap seconds.</para></entry>
+        <entry>Current leap seconds.</entry>
 </row>
 <row>
         <entry>lon</entry>
@@ -489,64 +489,64 @@ yet, only the "class" field will reliably be present.</para>
         <entry>No</entry>
         <entry>string</entry>
         <entry>Time/date stamp in ISO8601 format, UTC. May have a
-        fractional part of up to .001sec precision.</entry>
+fractional part of up to .001sec precision.</entry>
 </row>
 <row>
         <entry>gdop</entry>
         <entry>No</entry>
         <entry>numeric</entry>
         <entry>Geometric (hyperspherical) dilution of precision, a
-        combination of PDOP and TDOP.  A dimensionless factor which
-        should be multiplied by a base UERE
-        to get an error estimate.</entry>
+combination of PDOP and TDOP.  A dimensionless factor which
+should be multiplied by a base UERE
+to get an error estimate.</entry>
 </row>
 <row>
         <entry>hdop</entry>
         <entry>No</entry>
         <entry>numeric</entry>
         <entry>Horizontal dilution of precision, a dimensionless
-        factor which should be multiplied by a base UERE to get a
-        circular error estimate.</entry>
+factor which should be multiplied by a base UERE to get a
+circular error estimate.</entry>
 </row>
 <row>
         <entry>pdop</entry>
         <entry>No</entry>
         <entry>numeric</entry>
         <entry>Position (spherical/3D)  dilution of precision, a dimensionless
-        factor which should be multiplied by a base UERE to get an
-        error estimate.</entry>
+factor which should be multiplied by a base UERE to get an
+error estimate.</entry>
 </row>
 <row>
         <entry>tdop</entry>
         <entry>No</entry>
         <entry>numeric</entry>
         <entry>Time dilution of precision, a dimensionless
-        factor which should be multiplied by a base UERE to get an
-        error estimate.</entry>
+factor which should be multiplied by a base UERE to get an
+error estimate.</entry>
 </row>
 <row>
         <entry>vdop</entry>
         <entry>No</entry>
         <entry>numeric</entry>
         <entry>Vertical (altitude) dilution of precision, a dimensionless
-        factor which should be multiplied by a base UERE to get an
-        error estimate.</entry>
+factor which should be multiplied by a base UERE to get an
+error estimate.</entry>
 </row>
 <row>
         <entry>xdop</entry>
         <entry>No</entry>
         <entry>numeric</entry>
         <entry>Longitudinal dilution of precision, a dimensionless
-        factor which should be multiplied by a base UERE to get an
-        error estimate.</entry>
+factor which should be multiplied by a base UERE to get an
+error estimate.</entry>
 </row>
 <row>
         <entry>ydop</entry>
         <entry>No</entry>
         <entry>numeric</entry>
         <entry>Latitudinal dilution of precision, a dimensionless
-        factor which should be multiplied by a base UERE to get an
-        error estimate.</entry>
+factor which should be multiplied by a base UERE to get an
+error estimate.</entry>
 </row>
 <row>
         <entry>satellites</entry>
@@ -588,7 +588,7 @@ error modeling than the covariance calculation.</para>
         <entry>Yes</entry>
         <entry>numeric</entry>
         <entry>PRN ID of the satellite. 1-63 are GNSS satellites,
-        64-96 are GLONASS satellites, 100-164 are SBAS satellites</entry>
+64-96 are GLONASS satellites, 100-164 are SBAS satellites</entry>
 </row>
 <row>
         <entry>az</entry>
@@ -613,29 +613,29 @@ error modeling than the covariance calculation.</para>
         <entry>Yes</entry>
         <entry>boolean</entry>
         <entry>Used in current solution? (SBAS/WAAS/EGNOS satellites
-        may be flagged used if the solution has corrections from them,
-        but not all drivers make this information available.)</entry>
+may be flagged used if the solution has corrections from them,
+but not all drivers make this information available.)</entry>
 </row>
 <row>
         <entry>gnssid</entry>
         <entry>No</entry>
         <entry>numeric</entry>
         <entry>The GNSS ID, as defined by u-blox, not NMEA.  0=GPS,
-        2=Galileo, 3=Beidou, 5=QZSS, 6-GLONASS.</entry>
+2=Galileo, 3=Beidou, 5=QZSS, 6-GLONASS.</entry>
 </row>
 <row>
         <entry>svid</entry>
         <entry>No</entry>
         <entry>numeric</entry>
         <entry>The satellite ID within its constellation.  As defined
-        by u-blox, not NMEA).</entry>
+by u-blox, not NMEA).</entry>
 </row>
 <row>
         <entry>sigid</entry>
         <entry>No</entry>
         <entry>numeric</entry>
         <entry>The signal ID of this signal.  As defined by u-blox, not
-        NMEA. See u-blox doc for details.</entry>
+NMEA. See u-blox doc for details.</entry>
 </row>
 <row>
         <entry>freqid</entry>
@@ -715,7 +715,7 @@ will assert the SATELLITE_SET bit in the top-level set member.</para>
         <entry>No</entry>
         <entry>string</entry>
         <entry>Time/date stamp in ISO8601 format, UTC. May have a
-        fractional part of up to .001sec precision.</entry>
+fractional part of up to .001sec precision.</entry>
 </row>
 
 <row>
@@ -732,7 +732,7 @@ corrections).</entry>
         <entry>No</entry>
         <entry>numeric</entry>
         <entry>Standard deviation of semi-major axis of error ellipse,
-        in meters.</entry>
+in meters.</entry>
 </row>
 
 <row>
@@ -740,7 +740,7 @@ corrections).</entry>
         <entry>No</entry>
         <entry>numeric</entry>
         <entry>Standard deviation of semi-minor axis of error ellipse,
-        in meters.</entry>
+in meters.</entry>
 </row>
 
 <row>
@@ -748,7 +748,7 @@ corrections).</entry>
         <entry>No</entry>
         <entry>numeric</entry>
         <entry>Orientation of semi-major axis of error ellipse, in degrees
-        from true north.</entry>
+from true north.</entry>
 </row>
 
 <row>
@@ -828,7 +828,7 @@ may be reported or not depending on the specific device type.</para>
         <entry>No</entry>
         <entry>string</entry>
         <entry>Time/date stamp in ISO8601 format, UTC. May have a
-        fractional part of up to .001sec precision.</entry>
+fractional part of up to .001sec precision.</entry>
 </row>
 <row>
         <entry>heading</entry>
@@ -1078,7 +1078,7 @@ will assert ATT_IS.</para>
         <entry>No</entry>
         <entry>string</entry>
         <entry>URL of the remote daemon reporting this version. If
-        empty, this is the version of the local daemon.</entry>
+empty, this is the version of the local daemon.</entry>
 </row>
 </tbody>
 </tgroup>
@@ -1136,7 +1136,7 @@ following elements:</para>
         <entry>No</entry>
         <entry>string</entry>
         <entry>URL of the remote daemon reporting the device set. If
-        empty, this is a DEVICES response from the local daemon.</entry>
+empty, this is a DEVICES response from the local daemon.</entry>
 </row>
 </tbody>
 </tgroup>
@@ -1194,22 +1194,22 @@ object.</para>
         <entry>No</entry>
         <entry>boolean</entry>
         <entry>Enable (true) or disable (false) watcher mode. Default
-        is true.</entry>
+is true.</entry>
 </row>
 <row>
         <entry>json</entry>
         <entry>No</entry>
         <entry>boolean</entry>
         <entry>Enable (true) or disable (false) dumping of JSON reports.
-        Default is false.</entry>
+Default is false.</entry>
 </row>
 <row>
         <entry>nmea</entry>
         <entry>No</entry>
         <entry>boolean</entry>
         <entry>Enable (true) or disable (false) dumping of binary
-        packets as pseudo-NMEA. Default
-        is false.</entry>
+packets as pseudo-NMEA. Default
+is false.</entry>
 </row>
 <row>
         <entry>raw</entry>
@@ -1217,52 +1217,52 @@ object.</para>
         <entry>integer</entry>
 
         <entry>Controls 'raw' mode. When this attribute is set to 1
-        for a channel, <application>gpsd</application> reports the
-        unprocessed NMEA or AIVDM data stream from whatever device is attached.
-        Binary GPS packets are hex-dumped.  RTCM2 and RTCM3
-        packets are not dumped in raw mode. When this attribute is set to
-        2 for a channel that processes binary data,
-        <application>gpsd</application> reports the received data verbatim
-        without hex-dumping.</entry>
+for a channel, <application>gpsd</application> reports the
+unprocessed NMEA or AIVDM data stream from whatever device is attached.
+Binary GPS packets are hex-dumped.  RTCM2 and RTCM3
+packets are not dumped in raw mode. When this attribute is set to
+2 for a channel that processes binary data,
+<application>gpsd</application> reports the received data verbatim
+without hex-dumping.</entry>
 </row>
 <row>
         <entry>scaled</entry>
         <entry>No</entry>
         <entry>boolean</entry>
         <entry>If true, apply scaling divisors to output before
-        dumping; default is false.</entry>
+dumping; default is false.</entry>
 </row>
 <row>
         <entry>split24</entry>
         <entry>No</entry>
         <entry>boolean</entry>
         <entry>If true, aggregate AIS type24 sentence parts.  If false,
-        report each part as a separate JSON object, leaving the
-        client to match MMSIs and aggregate.  Default is
-        false. Applies only to AIS reports.</entry>
+report each part as a separate JSON object, leaving the
+client to match MMSIs and aggregate.  Default is
+false. Applies only to AIS reports.</entry>
 </row>
 <row>
         <entry>pps</entry>
         <entry>No</entry>
         <entry>boolean</entry>
         <entry>If true, emit the TOFF JSON message on each cycle and a
-        PPS JSON message when the device issues 1PPS. Default is false.</entry>
+PPS JSON message when the device issues 1PPS. Default is false.</entry>
 </row>
 <row>
         <entry>device</entry>
         <entry>No</entry>
         <entry>string</entry>
         <entry>If present, enable watching only of the specified device
-        rather than all devices.  Useful with raw and NMEA modes
-        in which device responses aren't tagged. Has no effect when
-        used with enable:false.</entry>
+rather than all devices.  Useful with raw and NMEA modes
+in which device responses aren't tagged. Has no effect when
+used with enable:false.</entry>
 </row>
 <row>
         <entry>remote</entry>
         <entry>No</entry>
         <entry>string</entry>
         <entry>URL of the remote daemon reporting the watch set. If
-        empty, this is a WATCH response from the local daemon.</entry>
+empty, this is a WATCH response from the local daemon.</entry>
 </row>
 </tbody>
 </tgroup>
@@ -1330,7 +1330,7 @@ will be reported with a mode field of zero.</para>
         <entry>Yes</entry>
         <entry>Numeric</entry>
         <entry>Timestamp in ISO 8601 format. May have a
-        fractional part of up to .001sec precision.</entry>
+fractional part of up to .001sec precision.</entry>
 </row>
 <row>
         <entry>active</entry>
@@ -1643,7 +1643,7 @@ short-term stability (such as a rubidium atomic clock).</para>
         <entry>Yes</entry>
         <entry>boolean</entry>
         <entry>If true, the oscillator is currently running.  Oscillators may
-        require warm-up time at the start of the day.</entry>
+require warm-up time at the start of the day.</entry>
 </row>
 <row>
         <entry>reference</entry>
@@ -1656,15 +1656,15 @@ short-term stability (such as a rubidium atomic clock).</para>
         <entry>Yes</entry>
         <entry>boolean</entry>
         <entry>If true, the GPS PPS signal is sufficiently stable and is being
-        used to discipline the local oscillator.</entry>
+used to discipline the local oscillator.</entry>
 </row>
 <row>
         <entry>delta</entry>
         <entry>Yes</entry>
         <entry>numeric</entry>
         <entry>The time difference (in nanoseconds) between the GPS-disciplined
-        oscillator PPS output pulse and the most recent GPS PPS input
-        pulse.</entry>
+oscillator PPS output pulse and the most recent GPS PPS input
+pulse.</entry>
 </row>
 </tbody>
 </tgroup>
@@ -1728,27 +1728,27 @@ backup battery.</para>
         <entry>No</entry>
         <entry>string</entry>
         <entry>Name the device for which the control bits are
-        being reported, or for which they are to be applied. This
-        attribute may be omitted only when there is exactly one
-        subscribed channel.</entry>
+being reported, or for which they are to be applied. This
+attribute may be omitted only when there is exactly one
+subscribed channel.</entry>
 </row>
 <row>
         <entry>activated</entry>
         <entry>No</entry>
         <entry>string</entry>
         <entry>Time the device was activated as an ISO8601
-        timestamp. If the device is inactive this attribute is
-        absent.</entry>
+timestamp. If the device is inactive this attribute is
+absent.</entry>
 </row>
 <row>
         <entry>flags</entry>
         <entry>No</entry>
         <entry>integer</entry>
         <entry>Bit vector of property flags.  Currently defined flags are:
-        describe packet types seen so far (GPS, RTCM2, RTCM3,
-        AIS). Won't be reported if empty, e.g. before
-        <application>gpsd</application> has seen identifiable packets
-        from the device.</entry>
+describe packet types seen so far (GPS, RTCM2, RTCM3,
+AIS). Won't be reported if empty, e.g. before
+<application>gpsd</application> has seen identifiable packets
+from the device.</entry>
 </row>
 <row>
         <entry>driver</entry>
@@ -1756,7 +1756,7 @@ backup battery.</para>
         <entry>string</entry>
         <entry>GPSD's name for the device driver type. Won't be reported before
         <application>gpsd</application> has seen identifiable packets
-        from the device.</entry>
+from the device.</entry>
 </row>
 <row>
         <entry>subtype</entry>
@@ -1780,22 +1780,22 @@ backup battery.</para>
         <entry>parity</entry>
         <entry>No</entry>
         <entry>string</entry>
-        <entry><para>N, O or E for no parity, odd, or even.</para></entry>
+        <entry>N, O or E for no parity, odd, or even.</entry>
 </row>
 <row>
         <entry>stopbits</entry>
         <entry>Yes</entry>
         <entry>string</entry>
-        <entry><para>Stop bits (1 or 2).</para></entry>
+        <entry>Stop bits (1 or 2).</entry>
 </row>
 <row>
         <entry>native</entry>
         <entry>No</entry>
         <entry>integer</entry>
         <entry>0 means NMEA mode and 1 means
-        alternate mode (binary if it has one, for SiRF and Evermore chipsets
-        in particular). Attempting to set this mode on a non-GPS
-        device will yield an error.</entry>
+alternate mode (binary if it has one, for SiRF and Evermore chipsets
+in particular). Attempting to set this mode on a non-GPS
+device will yield an error.</entry>
 </row>
 <row>
         <entry>cycle</entry>
@@ -1808,8 +1808,8 @@ backup battery.</para>
         <entry>No</entry>
         <entry>real</entry>
         <entry>Device minimum cycle time in seconds. Reported from
-        ?DEVICE when (and only when) the rate is switchable. It is
-        read-only and not settable.</entry>
+?DEVICE when (and only when) the rate is switchable. It is
+read-only and not settable.</entry>
 </row>
 </tbody>
 </tgroup>
@@ -1872,7 +1872,7 @@ through.  Here are the maxima to use for computation:</para>
 <row><entry>RMC       </entry><entry>77</entry></row>
 <row><entry>GSA       </entry><entry>67</entry></row>
 <row><entry>GSV       </entry><entry>60 (per line, thus 180 for a set
-                                     of 3)</entry> </row>
+of 3)</entry> </row>
 </tbody>
 </tgroup>
 </table>
@@ -2025,57 +2025,56 @@ attributes are emitted before others.</para>
 <row>
         <entry>Name</entry>
         <entry>Type</entry>
-        <entry><para>Description</para></entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
         <entry>class</entry>
         <entry>string</entry>
-        <entry><para>Fixed: "RTCM2".</para></entry>
+        <entry>Fixed: "RTCM2".</entry>
 </row>
 <row>
         <entry>type</entry>
         <entry>integer</entry>
-        <entry><para>Message type (1-9).</para></entry>
+        <entry>Message type (1-9).</entry>
 </row>
 <row>
         <entry>station_id</entry>
         <entry>integer</entry>
-        <entry><para>The id of the GPS reference receiver. The
-        LF transmitters also have (different) id numbers.</para></entry>
+        <entry>The id of the GPS reference receiver. The
+LF transmitters also have (different) id numbers.</entry>
 </row>
 <row>
         <entry>zcount</entry>
         <entry>real</entry>
-        <entry><para>The reference time of the
-        corrections in the message in seconds within the current hour. Note
-        that it is in GPS time, which is some seconds ahead of UTC (see the
-        U.S. Naval Observatory's <ulink
-        url="ftp://maia.usno.navy.mil/ser7/tai-utc.dat">table of leap second
-        corrections</ulink>).</para></entry>
+        <entry>The reference time of the
+corrections in the message in seconds within the current hour. Note
+that it is in GPS time, which is some seconds ahead of UTC (see the
+U.S. Naval Observatory's <ulink
+url="ftp://maia.usno.navy.mil/ser7/tai-utc.dat">table of leap second
+corrections</ulink>).</entry>
 </row>
 <row>
         <entry>seqnum</entry>
         <entry>integer</entry>
-        <entry><para>Sequence number. Only 3 bits wide, wraps after 7.</para>
-        </entry>
+        <entry>Sequence number. Only 3 bits wide, wraps after 7.</entry>
 </row>
 <row>
         <entry>length</entry>
         <entry>integer</entry>
-        <entry><para>The number of words after the header that comprise the
-        message.</para></entry>
+        <entry>The number of words after the header that comprise the
+message.</entry>
 </row>
 <row>
         <entry>station_health</entry>
         <entry>integer</entry>
-        <entry><para>Station transmission status. Indicates the health of
-        the beacon as a reference source.  Any nonzero value means the
-        satellite is probably transmitting bad data and should not be
-        used in a fix. 6 means the transmission is unmonitored. 7
-        means the station is not working properly. Other values are
-        defined by the beacon operator.</para></entry>
+        <entry>Station transmission status. Indicates the health of
+the beacon as a reference source.  Any nonzero value means the
+satellite is probably transmitting bad data and should not be
+used in a fix. 6 means the transmission is unmonitored. 7
+means the station is not working properly. Other values are
+defined by the beacon operator.</entry>
 </row>
 </tbody>
 </tgroup>
@@ -2153,49 +2152,49 @@ messages. Here is the format:</para>
 <row>
         <entry>Name</entry>
         <entry>Type</entry>
-        <entry><para>Description</para></entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
         <entry>ident</entry>
         <entry>integer</entry>
-        <entry><para>The PRN number of the satellite for which this is
-        correction data.</para></entry>
+        <entry>The PRN number of the satellite for which this is
+correction data.</entry>
 </row>
 <row>
         <entry>udre</entry>
         <entry>integer</entry>
-        <entry><para>User Differential Range Error (0-3). See the
-        table following for values.</para></entry>
+        <entry>User Differential Range Error (0-3). See the
+table following for values.</entry>
 </row>
 <row>
         <entry>iod</entry>
         <entry>integer</entry>
-        <entry><para>Issue Of Data, matching the IOD for the current
-        ephemeris of this satellite, as transmitted by the satellite.
-        The IOD is a unique tag that identifies the ephemeris; the GPS
-        using the DGPS correction and the DGPS generating the data
-        must use the same orbital positions for the
-        satellite.</para></entry>
+        <entry>Issue Of Data, matching the IOD for the current
+ephemeris of this satellite, as transmitted by the satellite.
+The IOD is a unique tag that identifies the ephemeris; the GPS
+using the DGPS correction and the DGPS generating the data
+must use the same orbital positions for the
+satellite.</entry>
 </row>
 <row>
         <entry>prc</entry>
         <entry>real</entry>
-        <entry><para>The pseudorange error in meters for this
-        satellite as measured by the beacon reference receiver at the
-        epoch indicated by the z_count in the parent
-        record.</para></entry>
+        <entry>The pseudorange error in meters for this
+satellite as measured by the beacon reference receiver at the
+epoch indicated by the z_count in the parent
+record.</entry>
 </row>
 <row>
         <entry>rrc</entry>
         <entry>real</entry>
-        <entry><para>The rate of change of pseudorange error in
-        meters/sec for this satellite as measured by the beacon
-        reference receiver at the epoch indicated by the z_count field
-        in the parent record. This is used to calculate pseudorange
-        errors at other epochs, if required by the GPS
-        receiver.</para></entry>
+        <entry>The rate of change of pseudorange error in
+meters/sec for this satellite as measured by the beacon
+reference receiver at the epoch indicated by the z_count field
+in the parent record. This is used to calculate pseudorange
+errors at other epochs, if required by the GPS
+receiver.</entry>
 </row>
 </tbody>
 </tgroup>
@@ -2246,24 +2245,24 @@ Parameters) message:</para>
 <row>
         <entry>Name</entry>
         <entry>Type</entry>
-        <entry><para>Description</para></entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
         <entry>x</entry>
         <entry>real</entry>
-        <entry><para>ECEF X coordinate.</para></entry>
+        <entry>ECEF X coordinate.</entry>
 </row>
 <row>
         <entry>y</entry>
         <entry>real</entry>
-        <entry><para>ECEF Y coordinate.</para></entry>
+        <entry>ECEF Y coordinate.</entry>
 </row>
 <row>
         <entry>z</entry>
         <entry>real</entry>
-        <entry><para>ECEF Z coordinate.</para></entry>
+        <entry>ECEF Z coordinate.</entry>
 </row>
 </tbody>
 </tgroup>
@@ -2299,47 +2298,47 @@ without payload fields.</para>
 <row>
         <entry>Name</entry>
         <entry>Type</entry>
-        <entry><para>Description</para></entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
         <entry>dgnss_type</entry>
         <entry>string</entry>
-        <entry><para>Either "GPS", "GLONASS", "GALILEO", or
-        "UNKNOWN".</para></entry>
+        <entry>Either "GPS", "GLONASS", "GALILEO", or
+"UNKNOWN".</entry>
 </row>
 <row>
         <entry>dat</entry>
         <entry>integer</entry>
-        <entry><para>0 or 1 and indicates the sense of the offset
-        shift given by dx, dy, dz. dat = 0 means that the station
-        coordinates (in the reference message) are referred to a local
-        datum and that adding dx, dy, dz to that position will render
-        it in GNSS coordinates (WGS84 for GPS). If dat = 1 then the
-        ref station position is in GNSS coordinates and adding dx, dy,
-        dz will give it referred to the local datum.</para></entry>
+        <entry>0 or 1 and indicates the sense of the offset
+shift given by dx, dy, dz. dat = 0 means that the station
+coordinates (in the reference message) are referred to a local
+datum and that adding dx, dy, dz to that position will render
+it in GNSS coordinates (WGS84 for GPS). If dat = 1 then the
+ref station position is in GNSS coordinates and adding dx, dy,
+dz will give it referred to the local datum.</entry>
 </row>
 <row>
         <entry>datum_name</entry>
         <entry>string</entry>
-        <entry><para>A standard name for the datum.</para></entry>
+        <entry>A standard name for the datum.</entry>
 </row>
 
 <row>
         <entry>dx</entry>
         <entry>real</entry>
-        <entry><para>X offset.</para></entry>
+        <entry>X offset.</entry>
 </row>
 <row>
         <entry>dy</entry>
         <entry>real</entry>
-        <entry><para>Y offset.</para></entry>
+        <entry>Y offset.</entry>
 </row>
 <row>
         <entry>dz</entry>
         <entry>real</entry>
-        <entry><para>Z offset.</para></entry>
+        <entry>Z offset.</entry>
 </row>
 </tbody>
 </tgroup>
@@ -2366,57 +2365,57 @@ for each satellite.</para>
 <row>
         <entry>Name</entry>
         <entry>Type</entry>
-        <entry><para>Description</para></entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
         <entry>ident</entry>
         <entry>integer</entry>
-        <entry><para>The PRN number of the satellite.</para></entry>
+        <entry>The PRN number of the satellite.</entry>
 </row>
 <row>
         <entry>iodl</entry>
         <entry>bool</entry>
-        <entry><para>True indicates that this information relates to
-        the satellite information in an accompanying type 1 or type 9
-        message.</para></entry>
+        <entry>True indicates that this information relates to
+the satellite information in an accompanying type 1 or type 9
+message.</entry>
 </row>
 <row>
         <entry>health</entry>
         <entry>integer</entry>
         <entry>0 indicates that the satellite is healthy. Any other value
-        indicates a problem (coding is not known).<para></para></entry>
+indicates a problem (coding is not known).</entry>
 </row>
 <row>
         <entry>snr</entry>
         <entry>integer</entry>
-        <entry><para>The carrier/noise ratio of the received signal in
-        the range 25 to 55 dB(Hz).</para></entry>
+        <entry>The carrier/noise ratio of the received signal in
+the range 25 to 55 dB(Hz).</entry>
 </row>
 <row>
         <entry>health_en</entry>
         <entry>bool</entry>
-        <entry><para>If set to True it indicates that the satellite is
-        healthy even if the satellite navigation data says it is
-        unhealthy.</para></entry>
+        <entry>If set to True it indicates that the satellite is
+healthy even if the satellite navigation data says it is
+unhealthy.</entry>
 </row>
 <row>
         <entry>new_data</entry>
         <entry>bool</entry>
         <entry>True indicates that the IOD for this satellite will
-        soon be updated in type 1 or 9 messages.<para></para></entry>
+soon be updated in type 1 or 9 messages.</entry>
 </row>
 <row>
         <entry>los_warning</entry>
         <entry>bool</entry>
-        <entry><para>Line-of-sight warning. True indicates that the
-        satellite will shortly go unhealthy.</para></entry>
+        <entry>Line-of-sight warning. True indicates that the
+satellite will shortly go unhealthy.</entry>
 </row>
 <row>
         <entry>tou</entry>
         <entry>integer</entry>
-        <entry><para>Healthy time remaining in seconds.</para></entry>
+        <entry>Healthy time remaining in seconds.</entry>
 </row>
 </tbody>
 </tgroup>
@@ -2441,14 +2440,14 @@ message type field doesn't match any of the known ones.</para>
 <row>
         <entry>Name</entry>
         <entry>Type</entry>
-        <entry><para>Description</para></entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
         <entry>data</entry>
         <entry>list</entry>
-        <entry><para>A list of strings.</para></entry>
+        <entry>A list of strings.</entry>
 </row>
 </tbody>
 </tgroup>
@@ -2469,44 +2468,43 @@ should be ignored.</para>
 <row>
         <entry>Name</entry>
         <entry>Type</entry>
-        <entry><para>Description</para></entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
         <entry>lat</entry>
         <entry>real</entry>
-        <entry><para>Latitude in degrees, of the LF transmitter
-        antenna for the station for which this is an almanac.  North
-        is positive.</para></entry>
+        <entry>Latitude in degrees, of the LF transmitter
+antenna for the station for which this is an almanac.  North
+is positive.</entry>
 </row>
 <row>
         <entry>lon</entry>
         <entry>real</entry>
-        <entry><para>Longitude in degrees, of the LF transmitter
-        antenna for the station for which this is an almanac.
-        East is positive.</para></entry>
+        <entry>Longitude in degrees, of the LF transmitter
+antenna for the station for which this is an almanac.
+East is positive.</entry>
 </row>
 <row>
         <entry>range</entry>
         <entry>integer</entry>
-        <entry>Published range of the station in km.<para></para></entry>
+        <entry>Published range of the station in km.</entry>
 </row>
 <row>
         <entry>frequency</entry>
         <entry>real</entry>
-        <entry><para>Station broadcast frequency in kHz.</para></entry>
+        <entry>Station broadcast frequency in kHz.</entry>
 </row>
 <row>
         <entry>health</entry>
         <entry>integer</entry>
-        <entry><para>&lt;health&gt; is the health of the station for
-        which this is an almanac. If it is non-zero, the station is
-        issuing suspect data and should not be used for fixes.  The
-        ITU and RTCM104 standards differ about the mode detailed
-        interpretation of the &lt;health&gt; field and even about its
-        bit width.
-<!--
+        <entry>&lt;health&gt; is the health of the station for
+which this is an almanac. If it is non-zero, the station is
+issuing suspect data and should not be used for fixes.  The
+ITU and RTCM104 standards differ about the mode detailed
+interpretation of the &lt;health&gt; field and even about its
+bit width.<!--
 From itu p.9 just under the type7 msg figure:
 
     *** Radiobeacon health:
@@ -2518,21 +2516,20 @@ RTCM104, in the other hand, makes it 3 bits wide.
 
 The Sager documentation said health has the same meaning as in the header,
 but this cannot be true unless the field is 3 bits wide.
--->
-        </para></entry>
+--></entry>
 </row>
 <row>
         <entry>station_id</entry>
         <entry>integer</entry>
-        <entry><para>The id of the transmitter. This is not the same
-        as the reference id in the header, the latter being the id of
-        the reference receiver. <!-- John Sager noted: "However I know
-        of at least one station that gets it wrong." --></para></entry>
+        <entry>The id of the transmitter. This is not the same
+as the reference id in the header, the latter being the id of
+the reference receiver. <!-- John Sager noted: "However I know
+of at least one station that gets it wrong." --></entry>
 </row>
 <row>
         <entry>bitrate</entry>
         <entry>integer</entry>
-        <entry><para>The transmitted bitrate.</para></entry>
+        <entry>The transmitted bitrate.</entry>
 </row>
 </tbody>
 </tgroup>
@@ -2562,42 +2559,42 @@ message:</para>
 <row>
         <entry>Name</entry>
         <entry>Type</entry>
-        <entry><para>Description</para></entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
         <entry>status</entry>
         <entry>bool</entry>
-        <entry><para>If True, signals user to expect a type 16 explanatory
-        message associated with this station. Probably indicates some
-        sort of unusual event.</para></entry>
+        <entry>If True, signals user to expect a type 16 explanatory
+message associated with this station. Probably indicates some
+sort of unusual event.</entry>
 </row>
 <row>
         <entry>rangeflag</entry>
         <entry>bool</entry>
-        <entry><para>If True, indicates that the estimated range is
-        different from that found in the type 7 message (which contains the
-        beacon's listed range). Generally indicates a range reduction due to
-        causes such as poor ionospheric conditions or reduced transmission
-        power.</para></entry>
+        <entry>If True, indicates that the estimated range is
+different from that found in the type 7 message (which contains the
+beacon's listed range). Generally indicates a range reduction due to
+causes such as poor ionospheric conditions or reduced transmission
+power.</entry>
 </row>
 <row>
         <entry>lat</entry>
         <entry>real</entry>
-        <entry><para>Degrees latitude, signed.
-        Positive is N, negative is S.</para></entry>
+        <entry>Degrees latitude, signed.
+Positive is N, negative is S.</entry>
 </row>
 <row>
         <entry>lon</entry>
         <entry>real</entry>
-        <entry><para>Degrees longitude, signed.
-        Positive is E, negative is W.</para></entry>
+        <entry>Degrees longitude, signed.
+Positive is E, negative is W.</entry>
 </row>
 <row>
         <entry>range</entry>
         <entry>integer</entry>
-        <entry><para>Transmission range in km (1-1024).</para></entry>
+        <entry>Transmission range in km (1-1024).</entry>
 </row>
 </tbody>
 </tgroup>
@@ -2618,24 +2615,24 @@ message:</para>
 <row>
         <entry>Name</entry>
         <entry>Type</entry>
-        <entry><para>Description</para></entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
         <entry>week</entry>
         <entry>integer</entry>
-        <entry><para>GPS week (0-123).</para></entry>
+        <entry>GPS week (0-123).</entry>
 </row>
 <row>
         <entry>hour</entry>
         <entry>integer</entry>
-        <entry><para>Hour of week (0-167).</para></entry>
+        <entry>Hour of week (0-167).</entry>
 </row>
 <row>
         <entry>leapsecs</entry>
         <entry>integer</entry>
-        <entry><para>Leap Seconds (0-63).</para></entry>
+        <entry>Leap Seconds (0-63).</entry>
 </row>
 </tbody>
 </tgroup>
@@ -2658,14 +2655,14 @@ message:</para>
 <row>
         <entry>Name</entry>
         <entry>Type</entry>
-        <entry><para>Description</para></entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
         <entry>message</entry>
         <entry>string</entry>
-        <entry><para>A text message sent by the beacon operator.</para></entry>
+        <entry>A text message sent by the beacon operator.</entry>
 </row>
 </tbody>
 </tgroup>
@@ -2683,50 +2680,50 @@ message:</para>
 <row>
         <entry>Name</entry>
         <entry>Type</entry>
-        <entry><para>Description</para></entry>
+        <entry>Description</entry>
 </row>
 </thead>
 <tbody>
 <row>
         <entry>ident</entry>
         <entry>integer</entry>
-        <entry><para>The PRN number of the satellite for which this is
-        correction data.</para></entry>
+        <entry>The PRN number of the satellite for which this is
+correction data.</entry>
 </row>
 <row>
         <entry>udre</entry>
         <entry>integer</entry>
-        <entry><para>User Differential Range Error (0-3). See the
-        table following for values.</para></entry>
+        <entry>User Differential Range Error (0-3). See the
+table following for values.</entry>
 </row>
 <row>
         <entry>change</entry>
         <entry>boolean</entry>
-        <entry><para>Change-of-ephemeris bit.</para></entry>
+        <entry>Change-of-ephemeris bit.</entry>
 </row>
 <row>
         <entry>tod</entry>
         <entry>uinteger</entry>
-        <entry><para>Count of 30-second periods since the top of the
-        hour.</para></entry>
+        <entry>Count of 30-second periods since the top of the
+hour.</entry>
 </row>
 <row>
         <entry>prc</entry>
         <entry>real</entry>
-        <entry><para>The pseudorange error in meters for this
-        satellite as measured by the beacon reference receiver at the
-        epoch indicated by the z_count in the parent
-        record.</para></entry>
+        <entry>The pseudorange error in meters for this
+satellite as measured by the beacon reference receiver at the
+epoch indicated by the z_count in the parent
+record.</entry>
 </row>
 <row>
         <entry>rrc</entry>
         <entry>real</entry>
-        <entry><para>The rate of change of pseudorange error in
-        meters/sec for this satellite as measured by the beacon
-        reference receiver at the epoch indicated by the z_count field
-        in the parent record. This is used to calculate pseudorange
-        errors at other epochs, if required by the GPS
-        receiver.</para></entry>
+        <entry>The rate of change of pseudorange error in
+meters/sec for this satellite as measured by the beacon
+reference receiver at the epoch indicated by the z_count field
+in the parent record. This is used to calculate pseudorange
+errors at other epochs, if required by the GPS
+receiver.</entry>
 </row>
 </tbody>
 </tgroup>
