@@ -795,7 +795,7 @@ void gpsd_close(struct gps_device_t *session)
          * Don't revert the serial parameters if we didn't have to mess with
          * them the first time.  Economical, and avoids tripping over an
          * obscure Linux 2.6 kernel bug that disables threaded
-         * ioctl(TIOCMWAIT) on a device after tcsetattr() is called.
+         * ioctl(TIOCMIWAIT) on a device after tcsetattr() is called.
          */
         if ((cfgetispeed(&session->ttyset_old) !=
              cfgetispeed(&session->ttyset)) ||
