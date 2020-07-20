@@ -103,7 +103,8 @@ from . import packet as sniffer
 if sys.platform.startswith("linux"):
     WRITE_PAD = 0.0
 elif sys.platform.startswith("freebsd"):
-    WRITE_PAD = 0.001
+    # Hal Murray needs 0..005 for FreeBSD 12.1 on RasPi 3B.
+    WRITE_PAD = 0.005
 elif sys.platform.startswith("openbsd"):
     WRITE_PAD = 0.001
 elif sys.platform.startswith("netbsd5"):
