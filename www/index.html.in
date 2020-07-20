@@ -332,8 +332,8 @@ into a RINEX 3 file.</dd>
 <dt><a href="libQgpsmm.html">libgpsmm.3</a></dt>
 <dd>Qt wrapper for the libgps C binding.</dd>
 
-<dt><a href="gpsd_json.html">gpsd.5</a></dt> <dd>The request/response
-protocol of the <code>gpsd</code> daemon.</dd>
+<dt><a href="gpsd_json.html">gpsd_json.5</a></dt> <dd>The JSON 
+request/response protocol of the <code>gpsd</code> daemon.</dd>
 
 <dt><a href="gpsdctl.html">gpsdctl.8</a></dt>
 <dd>Tool for sending commands to <code>gpsd</code> over its control socket.</dd>
