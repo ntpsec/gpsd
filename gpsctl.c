@@ -195,7 +195,8 @@ int main(int argc, char **argv)
     char cooked[BUFSIZ];
     ssize_t cooklen = 0;
 
-    context.errout.label = "gpsctl";
+    /* We need this before any logging happens (for report_mutex) */
+    gps_context_init(&context, "gpsctl");
 
 #define USAGE   "usage: gpsctl [-l] [-b | -n | -r] [-D n]\n" \
                 "   [-s speed] [-c rate] [-T timeout] [-V]\n" \
@@ -565,7 +566,6 @@ int main(int argc, char **argv)
                 exit(EXIT_FAILURE);
             }
 
-        gps_context_init(&context, "gpsctl");
         context.errout.debug = debuglevel;
         session.context = &context;
         gpsd_tty_init(&session);
