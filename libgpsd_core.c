@@ -71,7 +71,7 @@ void gpsd_acquire_reporting_lock(void)
         because things are FUBAR. */
 
         (void)fprintf(stderr,"pthread_mutex_lock() failed: %s\n",
-                      strerror(errno));
+                      strerror(err));
         exit(EXIT_FAILURE);
     }
 }
@@ -87,7 +87,7 @@ void gpsd_release_reporting_lock(void)
         because things are FUBAR. */
 
         (void)fprintf(stderr,"pthread_mutex_unlock() failed: %s\n",
-                      strerror(errno));
+                      strerror(err));
         exit(EXIT_FAILURE);
     }
 }
