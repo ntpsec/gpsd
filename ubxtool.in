@@ -2520,7 +2520,7 @@ Programming the fixed seed for host interface signature"""
         """UBX-CFG-HNR decode, High Navigation Rate Settings"""
 
         u = struct.unpack_from('<BBBb', buf, 0)
-        s = " highNavRate %u reserved %u %u" % u
+        s = " highNavRate %u reserved %u %u %u" % u
         return s
 
     cfg_inf_protid = {
