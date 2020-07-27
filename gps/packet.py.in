@@ -25,7 +25,6 @@ import ctypes
 import ctypes.util
 import os
 import os.path
-from distutils import sysconfig
 import gps.misc
 
 
@@ -36,7 +35,6 @@ def importado():
     'Load the packet library or throw an OSError trying.'
     # Add raw interface to the packet FFI stub.
     packet_paths = []
-    # lib_path = sysconfig.get_config_var('LIBDIR')  # UNUSED
     packet_name = '@GPSPACKET@'
 
     # Check if GPSD_HOME environment variable
@@ -117,7 +115,6 @@ def register_report(reporter):
     global _loaded
     if callable(reporter):
         _loaded.errout.report = REPORTER(reporter)
-
 
 class Lexer():
     """GPS packet lexer object
