@@ -47,15 +47,6 @@ def importado():
     if packet_path:
         packet_paths.append(packet_path)
 
-    # Look for Library in ancestors
-    cwd = os.path.abspath(__file__)
-    cwd_part = cwd.split(os.sep)[:-1]
-    for index in range(len(cwd_part), 0, -1):
-        packet_path = os.sep.join(cwd_part[:index] + ['gps', 'packet.py.in'])
-        if os.path.exists(packet_path) and os.path.isfile(packet_path):
-            packet_paths.append(os.sep.join(
-                cwd_part[:index]) + os.sep + packet_name)
-
     for packet_path in packet_paths:
         if os.path.exists(packet_path) and os.path.isfile(packet_path):
             try:
