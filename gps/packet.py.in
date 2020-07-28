@@ -32,27 +32,58 @@ import gps.misc
 @PYPACKETH@
 
 def importado():
-    'Load the packet library or throw an OSError trying.'
-    # Add raw interface to the packet FFI stub.
-    packet_paths = []
+    """
+Load the packet library or throw an OSError trying.
+Look in, current directory, GPSD_HOME, then use find_library().
+find_library() looks in: LD_LIBRARY_PATH, DYLD_LIBRARY_PATH,
+$home/lib, /.usr/local/lib, /usr/lib, /lib
+Returns tha library handle."""
+
+    packet_paths = []         # places to look
     packet_name = '@GPSPACKET@'
 
-    # Check if GPSD_HOME environment variable
-    if 'GPSD_HOME' in os.environ:
-        packet_paths.append(os.path.abspath(
-            os.environ['GPSD_HOME']) + os.sep + packet_name)
+    # look in current dir first.  To match what "import" does.
+    # Make sure it is a full path
+    packet_paths.append(os.path.abspath(packet_name))
 
-    # Look for library via default scrap
-    packet_path = ctypes.util.find_library(packet_name[3:].split('.')[0])
+    # Check GPSD_HOME environment variable, look there second
+    if 'GPSD_HOME' in os.environ:
+        # Make sure it is a full path
+        packet_paths.append(os.path.abspath(os.environ['GPSD_HOME'] +
+                                            os.sep + packet_name))
+
+    # find_library() looks for bare library name, using dlopen()
+    # May, or may not, return a full path.  Either way use as is.
+    #
+    # linux dlopen() looks in:
+    #  LD_LIBRARY_PATH,
+    #  paths in /etc/ld.so.cache,
+    #  /lib(64) and /usr/lib(64)
+    #
+    # macOS dlopen() looks in:
+    #  LD_LIBRARY_PATH,
+    #  DYLD_LIBRARY_PATH,
+    #  current working directory,
+    #  DYLD_FALLBACK_LIBRARY_PATH (default: $HOME/lib:/usr/local/lib:/usr/lib)
+    #
+    # Linux:
+    #   find_library() does not usually return a full path.
+    #   LoadLibrary() can use a full path, or whatever find_library() returned.
+    #
+    # macOS:
+    #   find_library() returns a full path unless lib in current directory
+    #   find_library() returns no full path if lib in current directory
+    #   But LoadLibrary() always needs a full path
+    #
+    packet_path = ctypes.util.find_library('gpsdpacket')
     if packet_path:
         packet_paths.append(packet_path)
 
     for packet_path in packet_paths:
-        if os.path.exists(packet_path) and os.path.isfile(packet_path):
-            try:
-                return ctypes.CDLL(packet_path)
-            except OSError:
-                pass
+        try:
+            return ctypes.cdll.LoadLibrary(packet_path)
+        except OSError:
+            pass
 
     raise OSError("Can't find packet library")
 
@@ -65,6 +96,7 @@ LEXER_SIZE = _lexer_size.value
 _buffer_size = ctypes.c_size_t.in_dll(_packet, "fvi_size_buffer").value
 
 REPORTER = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_char_p)
+
 
 class GpsdErrOutT(ctypes.Structure):
     '''Used in gps.packet:register_report() to set logging callback.'''
@@ -106,6 +138,7 @@ def register_report(reporter):
     global _loaded
     if callable(reporter):
         _loaded.errout.report = REPORTER(reporter)
+
 
 class Lexer():
     """GPS packet lexer object
