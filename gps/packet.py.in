@@ -22,70 +22,20 @@ level of the message and the message itself.
 """
 from __future__ import absolute_import, print_function
 import ctypes
-import ctypes.util
 import os
-import os.path
 import gps.misc
 
 
 # Packet types and  Logging levels extracted from gpsd.h
 @PYPACKETH@
 
+
 def importado():
-    """
-Load the packet library or throw an OSError trying.
-Look in, current directory, GPSD_HOME, then use find_library().
-find_library() looks in: LD_LIBRARY_PATH, DYLD_LIBRARY_PATH,
-$home/lib, /.usr/local/lib, /usr/lib, /lib
-Returns tha library handle."""
-
-    packet_paths = []         # places to look
+    """Load the packet library, from the directory where we reside."""
     packet_name = '@GPSPACKET@'
-
-    # look in current dir first.  To match what "import" does.
-    # Make sure it is a full path
-    packet_paths.append(os.path.abspath(packet_name))
-
-    # Check GPSD_HOME environment variable, look there second
-    if 'GPSD_HOME' in os.environ:
-        # Make sure it is a full path
-        packet_paths.append(os.path.abspath(os.environ['GPSD_HOME'] +
-                                            os.sep + packet_name))
-
-    # find_library() looks for bare library name, using dlopen()
-    # May, or may not, return a full path.  Either way use as is.
-    #
-    # linux dlopen() looks in:
-    #  LD_LIBRARY_PATH,
-    #  paths in /etc/ld.so.cache,
-    #  /lib(64) and /usr/lib(64)
-    #
-    # macOS dlopen() looks in:
-    #  LD_LIBRARY_PATH,
-    #  DYLD_LIBRARY_PATH,
-    #  current working directory,
-    #  DYLD_FALLBACK_LIBRARY_PATH (default: $HOME/lib:/usr/local/lib:/usr/lib)
-    #
-    # Linux:
-    #   find_library() does not usually return a full path.
-    #   LoadLibrary() can use a full path, or whatever find_library() returned.
-    #
-    # macOS:
-    #   find_library() returns a full path unless lib in current directory
-    #   find_library() returns no full path if lib in current directory
-    #   But LoadLibrary() always needs a full path
-    #
-    packet_path = ctypes.util.find_library('gpsdpacket')
-    if packet_path:
-        packet_paths.append(packet_path)
-
-    for packet_path in packet_paths:
-        try:
-            return ctypes.cdll.LoadLibrary(packet_path)
-        except OSError:
-            pass
-
-    raise OSError("Can't find packet library")
+    packet_dir = os.path.dirname(__file__)
+    packet_path = os.path.join(packet_dir, packet_name)
+    return ctypes.CDLL(packet_path)
 
 
 _loaded = None

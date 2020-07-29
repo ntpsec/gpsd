@@ -1692,7 +1692,7 @@ static_gpsdlib = env.StaticLibrary(
 
 # FFI library must always be shared, even with shared=no.
 packet_ffi_objects = [env.SharedObject(s) for s in packet_ffi_extension]
-packet_ffi_shared = env.SharedLibrary(target="gpsdpacket",
+packet_ffi_shared = env.SharedLibrary(target="gps/gpsdpacket",
                                       source=packet_ffi_objects,
                                       SHLIBVERSION=libgps_version,
                                       parse_flags=rtlibs + libgps_flags)
@@ -2022,7 +2022,7 @@ substmap = (
     ('@GITREPO@',    gitrepo),
     ('@GPSAPIVERMAJ@', api_version_major),
     ('@GPSAPIVERMIN@', api_version_minor),
-    ('@GPSPACKET@',  packet_ffi_shared[0].get_path()),
+    ('@GPSPACKET@',  os.path.basename(packet_ffi_shared[0].get_path())),
     ('@ICONPATH@',   installdir('icondir')),
     ('@INCLUDEDIR@', installdir('includedir', add_destdir=False)),
     ('@IRCCHAN@',    ircchan),
@@ -2130,9 +2130,6 @@ binaryinstall.append(env.Install(installdir('bindir'), bin_binaries))
 binaryinstall.append(GPSLibraryInstall(env, installdir('libdir'),
                                        libgps_shared,
                                        libgps_version))
-binaryinstall.append(GPSLibraryInstall(env, installdir('libdir'),
-                                       packet_ffi_shared,
-                                       libgps_version))
 
 if qt_env:
     binaryinstall.append(GPSLibraryInstall(qt_env, installdir('libdir'),
@@ -2146,7 +2143,7 @@ if env['python'] and not cleaning and not helping:
     python_module_dir = str(python_libdir) + os.sep + 'gps'
 
     python_modules_install = env.Install(DESTDIR + python_module_dir,
-                                         python_modules)
+                                         python_modules + [packet_ffi_shared])
 
     python_oldso_remove = env.Command('uninstall-old-so', '',
                                       Delete(DESTDIR + python_module_dir +
