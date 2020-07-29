@@ -127,6 +127,7 @@ stamp-python
 doc/explanation.html
 .public
 www/AIVDM.html
+www/building.html
 www/client-howto.html
 www/faq.html
 www/gps2udp.html

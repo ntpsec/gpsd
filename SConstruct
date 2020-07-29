@@ -2646,7 +2646,8 @@ Utility('shmclean', [], ["ipcrm  -M 0x4e545030;"
 # asciidoc documents
 asciidocs = []
 if env.WhereIs('asciidoctor'):
-    adocfiles = (('INSTALL', 'installation'),
+    adocfiles = (('build', 'building'),
+                 ('INSTALL', 'installation'),
                  ('README', 'README'),
                  ('www/AIVDM', 'AIVDM'),
                  ('www/client-howto', 'client-howto'),
