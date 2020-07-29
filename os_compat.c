@@ -17,6 +17,9 @@
 
 #include "os_compat.h"
 
+// export gpsd version so FFI can check it
+const char *gpsd_version = VERSION;
+
 #ifndef HAVE_CLOCK_GETTIME
 
 /* Simulate ANSI/POSIX clock_gettime() on platforms that don't have it */

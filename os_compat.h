@@ -14,6 +14,8 @@
 extern "C" {
 # endif
 
+extern const char *gpsd_version;
+
 #ifndef HAVE_CLOCK_GETTIME
 
 /* Simulate ANSI/POSIX clock_gettime() on platforms that don't have it */
