@@ -255,6 +255,14 @@ set to the path where gpsd can be found. (instead of adding that folder
 to the PATH environment variable</para>
 
 </refsect1>
+<refsect1 id='environment'><title>ENVIRONMENT</title>
+
+<para>For unknown reasons <application>gpsfake</application> may sometimes
+time out and fail.  Set the WRITE_PAD environment value to a larger value
+to avoid this issue.  A starting point might be "WRITE_PAD = 0.005".  Values
+as large os 0.200 may be required.</para>
+
+</refsect1>
 <refsect1 id='see_also'><title>SEE ALSO</title>
 <para>
 <citerefentry><refentrytitle>gpsd</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
