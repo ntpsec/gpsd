@@ -245,10 +245,10 @@ process:
 
 On Gentoo systems those packages are named:
 
-|================================================================================
-|app-text/xmlto                       | DocBook formatter program
-|app-text/asciidoctor                 | Documentation front end with light markup
-|================================================================================
+|==============================================================================
+|app-text/xmlto                   | DocBook formatter program
+|app-text/asciidoctor             | Documentation front end with light markup
+|==============================================================================
 
 The build degrades gracefully in the absence of any of these. You should
 be able to tell from scons messages which extensions you will get.

@@ -354,7 +354,10 @@ Some very old Garmin USB devices need libusb:
 --------------------------------------------------------------
 
 If you wish to build the documentation, be warned it pulls in a
-lot of packages.  To build the doc install:
+lot of packages.  Build the documentation is a prerequisite to
+building the HTML files for the website (www/), and also to make
+a source tarball (scons dist).  To install the tools to build the
+documentation:
 
 --------------------------------------------------------------
 apt-get install xsltproc docbook-xsl xmlto asciidoctor
@@ -486,8 +489,11 @@ apt install libncurses5-dev libtinfo-dev  pps-tools
 apt install gir1.2-gtk-3.0
 --------------------------------------------------------------
 
-If you wish to build the documentation, be warned it pull in a
-lot of packages.  To build the doc install:
+If you wish to build the documentation, be warned it pulls in a
+lot of packages.  Build the documentation is a prerequisite to
+building the HTML files for the website (www/), and also to make
+a source tarball (scons dist).  To install the tools to build the
+documentation:
 
 --------------------------------------------------------------
 apt install xsltproc docbook-xsl xmlto asciidoctor
@@ -518,7 +524,10 @@ apt install gir1.2-gtk-3.0
 --------------------------------------------------------------
 
 If you wish to build the documentation, be warned it pulls in a
-lot of packages.  To build the doc install:
+lot of packages.  Build the documentation is a prerequisite to
+building the HTML files for the website (www/), and also to make
+a source tarball (scons dist).  To install the tools to build the
+documentation:
 
 --------------------------------------------------------------
 apt install xsltproc docbook-xsl xmlto asciidoctor
