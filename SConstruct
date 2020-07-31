@@ -117,15 +117,18 @@ generated_sources = [
     'packet_names.h',
     'Qgpsmm.pc',
     'ubxtool',
+    'xgps',
+    'xgpsspeed',
+    'zerk',
+   ]
+
+generated_www = [
     'www/faq.html',
     'www/gps_report.cgi',
     'www/hacking.html',
     'www/hardware-head.html',
     'www/index.html',
     'www/SUPPORT.html',
-    'xgps',
-    'xgpsspeed',
-    'zerk',
    ]
 
 # All installed python programs
@@ -208,7 +211,7 @@ if 'dev' in gpsd_version:
     if st != 0:
         # Use timestamp from latest relevant file, ignoring generated files
         files = FileList(['*.c', '*.cpp', '*.h', '*.in', 'SConstruct'],
-                         generated_sources)
+                         generated_sources + generated_www)
         timestamps = map(GetMtime, files)
         if timestamps:
             from datetime import datetime
@@ -2841,6 +2844,7 @@ clean_misc = env.Alias('clean-misc')
 #  Qt stuff libQgpsmm.prl, Qgpsmm.pc
 #  packaging/rpm/gpsd.spec
 env.Clean(clean_misc, generated_sources)
+env.Clean(clean_misc, generated_www)
 
 # Since manpage targets are disabled in clean mode, we cover them here
 env.Clean(clean_misc, all_manpages.keys())
