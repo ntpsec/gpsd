@@ -183,8 +183,7 @@ doc_files = [
     'build.adoc',
     'COPYING',
     'NEWS',
-    'README.adoc',
-    'www/SUPPORT.adoc',
+    'README.adoc'
 ]
 
 # doc files to install in share/gpsd/doc
