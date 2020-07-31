@@ -2658,7 +2658,7 @@ if env.WhereIs('asciidoctor'):
                  ('www/ppp-howto', 'ppp-howto'),
                  ('www/protocol-evolution', 'protocol-evolution'),
                  ('www/protocol-transition', 'protocol-transition'),
-                 ('www/SUPPORT', 'SUPPORT'),
+                 ('SUPPORT', 'SUPPORT'),
                  ('www/time-service-intro', 'time-service-intro'),
                  ('www/ubxtool-examples', 'ubxtool-examples'),
                  )
