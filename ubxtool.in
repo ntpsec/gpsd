@@ -367,7 +367,7 @@ class ubx(object):
                 3: 'USB',
                 4: 'SPI',
                 }
-    port_id_map = {v: k for (k, v) in port_ids.items()}
+    port_id_map = dict([(v, k) for (k, v) in port_ids.items()])
     port_id_map['UART'] = port_id_map['UART1']  # Accept synonym
     port_ids[5] = 'Reserved'  # Don't include this in port_id_map
 
