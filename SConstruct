@@ -434,7 +434,7 @@ nonboolopts = (
     ("prefix",           "/usr/local",  "installation directory prefix"),
     ("python_coverage",  "coverage run", "coverage command for Python progs"),
     ("python_libdir",    "",            "Python module directory prefix"),
-    ("python_shebang",   "/usr/bin/env python", "Python shebang"),
+    ("python_shebang",   "python",      "Python shebang (path or program)"),
     ("qt_versioned",     "",            "version for versioned Qt"),
     ("rundir",           rundir,       "Directory for run-time variable data"),
     ("sysroot",          "",
@@ -2022,6 +2022,9 @@ with open('gpsd.h') as sfp:
             if 'LOG' in content or 'PACKET' in content:
                 pythonized_header += ('%s = %s\n' %
                                       (_match3.group(1), _match3.group(2)))
+
+if not env['python_shebang'].startswith(os.path.sep):
+    env['python_shebang'] = '/usr/bin/env ' + env['python_shebang']
 
 # tuples for Substfile.  To convert .in files to generated files.
 substmap = (
