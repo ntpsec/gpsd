@@ -46,6 +46,18 @@ from distutils import sysconfig
 import SCons
 
 
+# Facilitate debugging with pdb.
+# At pdb startup, the environment is such that setting breakpoints in
+# SConstruct requires specifying its full absolute path, which is incovenient.
+# Stopping here at an automatic breakpoint makes this easier.  Note that this
+# code has no effect unless pdb is loaded.
+# To use this, run with pdb and continue from the initial pdb prompt.
+pdb_module = sys.modules.get('pdb')
+if pdb_module:
+    pdb_module.set_trace()
+    pass  # Breakpoint default file is now SConstruct
+
+
 # ugly hack from http://www.catb.org/esr/faqs/practical-python-porting/
 # handle python2/3 strings
 def polystr(o):
