@@ -103,6 +103,28 @@ def _getstatusoutput(cmd, nput=None, shell=True, cwd=None, env=None):
     return (status, output)
 
 
+# Workaround for old SCons bug that couldn't overwrite existing symlinks
+# This was fixed in 2.3.2, but we allow 2.3.0 (e.g., on Ubuntu 14)
+#
+# In the troublesome versions, we monkey-patch os.symlink to bully it through
+
+standard_os_symlink = os.symlink
+
+def _forced_symlink(source, link_name):
+    try:
+        standard_os_symlink(source, link_name)
+    except OSError:
+        # Out of paranoia, only do this when the target is a symlink
+        if os.path.islink(link_name):
+            os.remove(link_name)
+            standard_os_symlink(source, link_name)
+        else:
+            raise
+
+if SCons.__version__ in ['2.3.0', '2.3.1']:
+    os.symlink = _forced_symlink
+
+
 # TODO: this list is missing stuff.
 # built man pages found in all_manpages
 generated_sources = [
