@@ -829,7 +829,8 @@ Bearing calculated at the FROM waypoint.
  $--BWW,x.x,T,x.x,M,c--c,c--c*hh<CR><LF>
 ------------------------------------------------------------------------------
 
- Field Number:
+Field Number:
+
 1. Bearing, degrees True
 2. T = True
 3. Bearing Degrees, Magnetic
@@ -988,7 +989,8 @@ radiotelephone.
  $--FSI,xxxxxx,xxxxxx,c,x*hh<CR><LF>
 ------------------------------------------------------------------------------
 
- Field Number:
+Field Number:
+
 1. Transmitting Frequency
 2. Receiving Frequency
 3. Communications Mode (NMEA Syntax 2)
@@ -1446,7 +1448,7 @@ unclear which is correct.
  $--ITS,x.x,M*hh<CR><LF>
 ------------------------------------------------------------------------------
 
-Field Number)
+Field Number:
 
 1. Second spread distance
 2. Meters
@@ -1793,6 +1795,7 @@ Field Number:
 (Some fields are missing from this description.)
 
 Field Number:
+
 1. Origin 1 range
 2. Origin 1 bearing
 3. Variable Range Marker 1
@@ -1843,6 +1846,7 @@ Example: $GPRTE,1,1,c,0*07
 ------------------------------------------------------------------------------
 
 Field Number:
+
 1. Total Number Of sentences
 2. Sentence Number
 3. Frequency 1
@@ -1877,7 +1881,7 @@ Field Number:
  $--TDS,x.x,M*hh<CR><LF>
 ------------------------------------------------------------------------------
 
-Field Number)
+Field Number:
 
 1. Distance between trawl doors
 2. Meters (0-300)
@@ -1893,7 +1897,7 @@ From <<GLOBALSAT>>.  Shown with a "@II" leader rather than "$GP".
  $--TFI,x,y,z*hh<CR><LF>
 ------------------------------------------------------------------------------
 
-Field number:
+Field Number:
 
 1. Catch sensor #1 (0 = off, 1 = on, 2 = no answer)
 2. Catch sensor #2 (0 = off, 1 = on, 2 = no answer)
@@ -2443,7 +2447,7 @@ This list is very incomplete.
 $PASHR,hhmmss.sss,hhh.hh,T,rrr.rr,ppp.pp,xxx.xx,a.aaa,b.bbb,c.ccc,d,e*hh<CR><LF>
 ------------------------------------------------------------------------------
 
-Field number:
+Field Number:
 
 1.  hhmmss.sss - UTC time
 2.  hhh.hh - Heading in degrees
