@@ -2062,7 +2062,7 @@ substmap = (
     ('@GPSAPIVERMAJ@', api_version_major),
     ('@GPSAPIVERMIN@', api_version_minor),
     ('@GPSPACKET@',  packet_ffi_shared[0].get_path()),
-    ('@ICONPATH@',   installdir('icondir')),
+    ('@ICONPATH@',   installdir('icondir', add_destdir=False)),
     ('@INCLUDEDIR@', installdir('includedir', add_destdir=False)),
     ('@IRCCHAN@',    ircchan),
     ('@ISSUES@',     'https://gitlab.com/gpsd/gpsd/issues'),
