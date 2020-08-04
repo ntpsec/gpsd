@@ -78,7 +78,7 @@ extern "C" {
  *      change tsip.superpkt from bool to int.
  *      Add tsip  .machine_id, .hardware_code, .last_tow, last_chan_seen
  *      Split gps_device_t.subtype into subtype and subtype1
- * 3.20.1
+ * 3.21
  *      GPSD_PROTO_*_VERSION moved to gpsd_config.h
  *      Add gps_context_t.passive
  *      Add gps_context_t.batteryRTC

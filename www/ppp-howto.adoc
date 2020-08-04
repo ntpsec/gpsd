@@ -6,7 +6,7 @@ Blursday 86 March 2020
 
 == WARNING
 
-This document assumes you are using gpsd versions 3.20 or git
+This document assumes you are using gpsd versions 3.21 or git
 head.  Using older versions will fail in strange ways.
 
 == Introduction
@@ -74,8 +74,8 @@ out.
 
 == Requirements
 
-This document assumes that you have installed gpsd version 3.19 or 3.20, basic
-knowledge of how to use _gpsd_.  Before continuing you should know how
+This document assumes that you have installed gpsd version 3.21 or later,
+basic knowledge of how to use _gpsd_.  Before continuing you should know how
 to start and stop _gpsd_, and how to use _cgps_ to see you current
 position and fix status.
 

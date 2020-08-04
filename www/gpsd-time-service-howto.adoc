@@ -23,7 +23,7 @@ into more detail about the steps.
   which to use yet if you have easy access to both, but knowing which
   alternatives are readily available to you is a good place to start.
 
-. Verify that your gpsd version is at least 3.20.  Many problems are
+. Verify that your gpsd version is at least 3.21.  Many problems are
   caused by the use of old versions.  When in doubt, reinstall
   gpsd from the upstream source.  Many distributions ship old
   and/or broken versions of gpsd.

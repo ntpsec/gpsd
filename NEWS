@@ -1,6 +1,6 @@
                         GPSD project news
 
-3.20.1~dev: In process
+3.21: 2020-08-04
   Create python programs from .in files to allow macro substitution.
   Finally clean .sconsign*.dblite with "scons -c"
   Remove revision.h.  Move REVISION into gpsd_config.h
@@ -13,7 +13,8 @@
   Add icondir and sharedir install options
   Install basic doc in sharedir
   Move gps_data_t->status to gps_fix_t.status for better fix merging
-  The gps python module is now pure python. Manually delete any old packet*so.
+  The gps python module is now Pure Python + FFI.  FFI only for packet.py
+  User should manually delete any old packet*so.
   Add wspeedt, wspeedr, wanglem, wanglet, wangler to  gps_fix_t
   Add "-p CONFIG", "-p STATUS", "-t" and "-tt" options to ubxtool.
   Add python_shebang option to scons config.
