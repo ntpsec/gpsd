@@ -1,5 +1,8 @@
                         GPSD project news
 
+3.21.1~dev: in progress
+  Nothing yet.
+
 3.21: 2020-08-04
   Create python programs from .in files to allow macro substitution.
   Finally clean .sconsign*.dblite with "scons -c"

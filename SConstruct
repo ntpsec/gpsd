@@ -238,7 +238,7 @@ icon_files = [
 # name from the version, or separates version components.
 #
 # package version
-gpsd_version = "3.21"
+gpsd_version = "3.21.1~dev"
 if 'dev' in gpsd_version:
     (st, gpsd_revision) = _getstatusoutput('git describe --tags')
     if st != 0:

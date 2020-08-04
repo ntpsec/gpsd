@@ -82,6 +82,8 @@ extern "C" {
  *      GPSD_PROTO_*_VERSION moved to gpsd_config.h
  *      Add gps_context_t.passive
  *      Add gps_context_t.batteryRTC
+ * 3.21.1~dev
+ *      Nothing yet.
  *
  */
 

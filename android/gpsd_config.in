@@ -7,7 +7,7 @@
  */
 
 // Keep next 4 in sync with SConstruct
-#define VERSION "3.21"
+#define VERSION "3.21.1~dev"
 #define REVISION VERSION
 #define GPSD_PROTO_VERSION_MAJOR 3
 #define GPSD_PROTO_VERSION_MINOR 15
