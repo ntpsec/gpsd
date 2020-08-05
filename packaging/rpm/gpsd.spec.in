@@ -155,6 +155,7 @@ scons \
 	sbindir=%{_sbindir} \
 	mandir=%{_mandir} \
 	docdir=%{_docdir} \
+	python_shebang="/usr/bin/env python3" \
 	pkgconfigdir=%{_libdir}/pkgconfig \
 	udevdir=$(dirname %{_udevrulesdir}) \
 	target_python=python3 \
