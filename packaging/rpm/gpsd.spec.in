@@ -15,7 +15,6 @@ Summary: Service daemon for mediating access to a GPS
 License: BSD
 URL: @WEBSITE@
 Source0: @DOWNLOAD@%{name}-%{version}.tar.gz
-Source11: gpsd.sysconfig
 
 BuildRequires: dbus-devel dbus-glib-devel ncurses-devel xmlto python3-devel
 BuildRequires: python3-scons  desktop-file-utils bluez-libs-devel /usr/bin/c++
