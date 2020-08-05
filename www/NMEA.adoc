@@ -1852,7 +1852,7 @@ Field Number:
 3. Frequency 1
 4. Mode 1
 5. Additional Frequency, Mode pairs
-x. Checksum
+6. Checksum
 
 === STN - Multiple Data ID ===
 
