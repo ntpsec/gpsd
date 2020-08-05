@@ -241,7 +241,7 @@ desktop-file-install \
 
 %files libs
 %{_libdir}/libgps.so.27*
-%{_libdir}/libgpspacket.so.27*
+%{_libdir}/libgpsdpacket.so.27*
 
 %files -n python3-%{srcname}
 %{_bindir}/gpsprof
