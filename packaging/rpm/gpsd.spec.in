@@ -129,9 +129,6 @@ sed -i 's|env.Prepend.*RPATH.*|pass #\0|' SConstruct
 export CCFLAGS="%{optflags}"
 export LINKFLAGS="%{__global_ldflags}"
 
-# Solidly fix Python interpreter path.
-sed -e "/PYSHEBANG/s|@PYSHEBAG@|/usr/bin/python3|g" -i SConstruct
-
 # Solidly fix icon path.
 sed -e "/icon dir/s|share/gpsd/icons|%{_datadir}/gpsd|g" -i SConstruct
 
