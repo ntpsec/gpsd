@@ -213,7 +213,12 @@ desktop-file-install \
 %endif
 
 %files
-%doc AUTHORS COPYING INSTALL.adoc README.adoc
+%doc INSTALL.adoc
+%doc /usr/share/gpsd/doc/AUTHORS
+%doc /usr/share/gpsd/doc/COPYING
+%doc /usr/share/gpsd/doc/NEWS
+%doc /usr/share/gpsd/doc/README.adoc
+%doc /usr/share/gpsd/doc/build.adoc
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
 %{_sbindir}/gpsd
 %{_sbindir}/gpsdctl
@@ -236,6 +241,7 @@ desktop-file-install \
 
 %files libs
 %{_libdir}/libgps.so.27*
+%{_libdir}/libgpspacket.so.27*
 
 %files -n python3-%{srcname}
 %{_bindir}/gpsprof
