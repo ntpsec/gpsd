@@ -238,7 +238,7 @@ desktop-file-install \
 %{_mandir}/man1/ntpshmmon.1*
 
 %files libs
-%{_libdir}/libgps.so.25*
+%{_libdir}/libgps.so.27*
 
 %files -n python3-%{srcname}
 %{_bindir}/gpsprof
@@ -307,7 +307,7 @@ desktop-file-install \
 
 
 %changelog
-* Sun Feb 16 2020 James Browning <jamesb.fe80@gmail.com> - ????
+* Sun Feb 16 2020 James Browning <jamesb.fe80@gmail.com> - 3.20.1
 - Rebuilt for upstream inclusion
 
 * Thu Oct 03 2019 Miro Hrončok <mhroncok@redhat.com> - 3.19-4
