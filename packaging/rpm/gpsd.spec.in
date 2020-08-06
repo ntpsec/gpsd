@@ -241,7 +241,7 @@ desktop-file-install \
 
 %files libs
 %{_libdir}/libgps.so.27*
-%{_libdir}/libgpsdpacket.so.27*
+%{_libdir}/libgpsdpacket.so*
 
 %files -n python3-%{srcname}
 %{_bindir}/gpsprof
@@ -263,10 +263,9 @@ desktop-file-install \
 
 %if %{with_qt}
 %files qt
-%{_libdir}/libQgpsmm.so.@LIBGPSVERSION@
 
 %files qt-devel
-%{_libdir}/libQgpsmm.so
+%{_libdir}/libQgpsmm.so*
 %{_libdir}/libQgpsmm.prl
 %{_libdir}/pkgconfig/Qgpsmm.pc
 %{_mandir}/man3/libQgpsmm.3*
