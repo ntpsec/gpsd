@@ -160,7 +160,7 @@ static inline void TS_NORM( struct timespec *ts)
         (ts)->tv_nsec = (long)((ms % 1000000) * 1000L); \
     } while (0)
 
-#define TIMESPEC_LEN    22      /* required length of a timespec buffer */
+#define TIMESPEC_LEN    42      /* required length of a timespec buffer */
 
 extern const char *timespec_str(const struct timespec *, char *, size_t);
 
