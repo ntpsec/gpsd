@@ -5880,6 +5880,23 @@ High Precision GNSS products only."""
                     elif 18 == page:
                         s += "    Ionospheric and UTC data"
                     elif 25 == page:
+                        aspoof = []
+                        aspoof.append((words[2] >> 18) & 0x0f)
+                        aspoof.append((words[2] >> 14) & 0x0f)
+                        aspoof.append((words[2] >> 10) & 0x0f)
+                        aspoof.append((words[2] >> 6) & 0x0f)
+                        for i in range(3, 7):
+                            aspoof.append((words[i] >> 26) & 0x0f)
+                            aspoof.append((words[i] >> 22) & 0x0f)
+                            aspoof.append((words[i] >> 18) & 0x0f)
+                            aspoof.append((words[i] >> 14) & 0x0f)
+                            aspoof.append((words[i] >> 10) & 0x0f)
+                            aspoof.append((words[i] >> 6) & 0x0f)
+                        aspoof.append((words[7] >> 26) & 0x0f)
+                        aspoof.append((words[7] >> 22) & 0x0f)
+                        aspoof.append((words[7] >> 18) & 0x0f)
+                        aspoof.append((words[7] >> 14) & 0x0f)
+
                         sv = []
                         sv.append((words[7] >> 6) & 0x3f)
                         sv.append((words[8] >> 24) & 0x3f)
@@ -5889,8 +5906,17 @@ High Precision GNSS products only."""
                         sv.append((words[9] >> 24) & 0x3f)
                         sv.append((words[9] >> 18) & 0x3f)
                         sv.append((words[9] >> 12) & 0x3f)
-                        s += ("    A/S flags\n"
-                              "     SV HEALTH:\n"
+                        s += ("    A/S flags:\n"
+                              "     as01 %x as02 %x as03 %x as04 %x "
+                              "as05 %x as06 %x as07 %x as08 %x\n"
+                              "     as09 %x as10 %x as11 %x as12 %x "
+                              "as13 %x as14 %x as15 %x as16 %x\n"
+                              "     as17 %x as18 %x as19 %x as20 %x "
+                              "as21 %x as22 %x as23 %x as24 %x\n"
+                              "     as25 %x as26 %x as27 %x as28 %x "
+                              "as29 %x as30 %x as31 %x as32 %x\n" %
+                              tuple(aspoof))
+                        s += ("    SV HEALTH:\n"
                               "      sv25 %2x sv26 %2x sv27 %2x sv28 %2x "
                               "sv29 %2x sv30 %2x sv31 %2x sv32 %2x" %
                               tuple(sv))
@@ -5910,30 +5936,11 @@ High Precision GNSS products only."""
                         toa = (words[2] >> 14) & 0xff
                         WNa = (words[2] >> 6) & 0xff
                         sv = []
-                        sv.append((words[3] >> 24) & 0x3f)
-                        sv.append((words[3] >> 18) & 0x3f)
-                        sv.append((words[3] >> 12) & 0x3f)
-                        sv.append((words[3] >> 6) & 0x3f)
-                        sv.append((words[4] >> 24) & 0x3f)
-                        sv.append((words[4] >> 18) & 0x3f)
-                        sv.append((words[4] >> 12) & 0x3f)
-                        sv.append((words[4] >> 6) & 0x3f)
-                        sv.append((words[5] >> 24) & 0x3f)
-                        sv.append((words[5] >> 18) & 0x3f)
-                        sv.append((words[5] >> 12) & 0x3f)
-                        sv.append((words[5] >> 6) & 0x3f)
-                        sv.append((words[6] >> 24) & 0x3f)
-                        sv.append((words[6] >> 18) & 0x3f)
-                        sv.append((words[6] >> 12) & 0x3f)
-                        sv.append((words[6] >> 6) & 0x3f)
-                        sv.append((words[7] >> 24) & 0x3f)
-                        sv.append((words[7] >> 18) & 0x3f)
-                        sv.append((words[7] >> 12) & 0x3f)
-                        sv.append((words[7] >> 6) & 0x3f)
-                        sv.append((words[8] >> 24) & 0x3f)
-                        sv.append((words[8] >> 18) & 0x3f)
-                        sv.append((words[8] >> 12) & 0x3f)
-                        sv.append((words[8] >> 6) & 0x3f)
+                        for i in range(3, 9):
+                            sv.append((words[i] >> 24) & 0x3f)
+                            sv.append((words[i] >> 18) & 0x3f)
+                            sv.append((words[i] >> 12) & 0x3f)
+                            sv.append((words[i] >> 6) & 0x3f)
                         s += "    SV HEALTH toa %u WNa %u\n" % (toa, WNa)
                         s += ("     sv01 %2x sv02 %2x sv03 %2x sv04 %2x "
                               "sv05 %2x sv06 %2x sv07 %2x sv08 %2x\n"
