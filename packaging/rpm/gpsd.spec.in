@@ -129,9 +129,6 @@ sed -i 's|env.Prepend.*RPATH.*|pass #\0|' SConstruct
 export CCFLAGS="%{optflags}"
 export LINKFLAGS="%{__global_ldflags}"
 
-# Solidly fix icon path.
-sed -e "/icon dir/s|share/gpsd/icons|%{_datadir}/gpsd|g" -i SConstruct
-
 # breaks with %{_smp_mflags}
 scons \
 	dbus_export=yes \
@@ -151,6 +148,7 @@ scons \
 	sbindir=%{_sbindir} \
 	mandir=%{_mandir} \
 	docdir=%{_docdir} \
+	icondir=%{_datadir}/gpsd \
 	python_shebang="/usr/bin/python3" \
 	pkgconfigdir=%{_libdir}/pkgconfig \
 	udevdir=$(dirname %{_udevrulesdir}) \
