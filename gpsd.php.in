@@ -25,6 +25,8 @@ $testmode = 1; # leave this set to 1
 #     jsonp=prefix: used with op=json, wrap the POLL JSON in parentheses
 #                   and prepend prefix
 
+# To draw the skyview, make sure that GD is installed and configured with PHP
+
 # If you're running PHP with the Suhosin patch (like the Debian PHP5 package),
 # it may be necessary to increase the value of the
 # suhosin.get.max_value_length parameter to 2048. The imgdata parameter used
