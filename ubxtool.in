@@ -156,6 +156,7 @@ def erd_s(erd):
     # else
     return "%3s" % erd
 
+
 # I'd like to use pypy module bitstring or bitarray, but
 # people complain when non stock python modules are used here.
 def unpack_s11(word, pos):
@@ -5642,7 +5643,6 @@ High Precision GNSS products only."""
         3: "Reserved",
         }
 
-
     def rxm_sfrbx(self, buf):
         """UBX-RXM-SFRBX decode, Broadcast Navigation Data Subframe"""
 
@@ -5817,37 +5817,37 @@ High Precision GNSS products only."""
                                erd_s((words[2] >> 16) & 0x3f),   # erd1
                                erd_s((words[2] >> 8) & 0x3f),
                                erd_s((((words[2] >> 2) & 0x30) |
-                                (words[3] >> 26) & 0x0f)),
+                                      (words[3] >> 26) & 0x0f)),
                                erd_s((words[3] >> 20) & 0x3f),
                                erd_s((words[3] >> 14) & 0x3f),   # erd5
                                erd_s((words[3] >> 8) & 0x3f),
                                erd_s((((words[3] >> 2) & 0x30) |
-                                (words[4] >> 26) & 0x0f)),
+                                      (words[4] >> 26) & 0x0f)),
                                erd_s((words[4] >> 20) & 0x3f),
                                erd_s((words[4] >> 14) & 0x3f),   # erd9
                                erd_s((words[4] >> 8) & 0x3f),
                                erd_s((((words[4] >> 2) & 0x30) |
-                                (words[5] >> 26) & 0x0f)),
+                                      (words[5] >> 26) & 0x0f)),
                                erd_s((words[5] >> 20) & 0x3f),
                                erd_s((words[5] >> 14) & 0x3f),   # erd 13
                                erd_s((words[5] >> 8) & 0x3f),
                                erd_s((((words[5] >> 2) & 0x30) |
-                                (words[6] >> 26) & 0x0f)),
+                                      (words[6] >> 26) & 0x0f)),
                                erd_s((words[6] >> 20) & 0x3f),
                                erd_s((words[6] >> 14) & 0x3f),   # erd17
                                erd_s((words[6] >> 8) & 0x3f),
                                erd_s((((words[6] >> 2) & 0x30) |
-                                (words[7] >> 26) & 0x0f)),
+                                      (words[7] >> 26) & 0x0f)),
                                erd_s((words[7] >> 20) & 0x3f),
                                erd_s((words[7] >> 14) & 0x3f),   # erd21
                                erd_s((words[7] >> 8) & 0x3f),
                                erd_s((((words[7] >> 2) & 0x30) |
-                                (words[8] >> 26) & 0x0f)),
+                                      (words[8] >> 26) & 0x0f)),
                                erd_s((words[8] >> 20) & 0x3f),
                                erd_s((words[8] >> 14) & 0x3f),   # erd25
                                erd_s((words[8] >> 8) & 0x3f),
                                erd_s((((words[8] >> 2) & 0x30) |
-                                (words[9] >> 26) & 0x0f)),
+                                      (words[9] >> 26) & 0x0f)),
                                erd_s((words[9] >> 20) & 0x3f),
                                erd_s((words[9] >> 14) & 0x3f),   # erd29
                                erd_s((words[9] >> 8) & 0x3f),    # erd30
@@ -5880,7 +5880,20 @@ High Precision GNSS products only."""
                     elif 18 == page:
                         s += "    Ionospheric and UTC data"
                     elif 25 == page:
-                        s += "    A/S flags"
+                        sv = []
+                        sv.append((words[7] >> 6) & 0x3f)
+                        sv.append((words[8] >> 24) & 0x3f)
+                        sv.append((words[8] >> 18) & 0x3f)
+                        sv.append((words[8] >> 12) & 0x3f)
+                        sv.append((words[8] >> 6) & 0x3f)
+                        sv.append((words[9] >> 24) & 0x3f)
+                        sv.append((words[9] >> 18) & 0x3f)
+                        sv.append((words[9] >> 12) & 0x3f)
+                        s += ("    A/S flags\n"
+                              "     SV HEALTH:\n"
+                              "      sv25 %2x sv26 %2x sv27 %2x sv28 %2x "
+                              "sv29 %2x sv30 %2x sv31 %2x sv32 %2x" %
+                              tuple(sv))
                     else:
                         s += "    Reserved"
 
@@ -5894,7 +5907,41 @@ High Precision GNSS products only."""
                     if 1 <= page <= 24:
                         s += self.almanac(words)
                     elif 25 == page:
-                        s += "    A/S flags"
+                        toa = (words[2] >> 14) & 0xff
+                        WNa = (words[2] >> 6) & 0xff
+                        sv = []
+                        sv.append((words[3] >> 24) & 0x3f)
+                        sv.append((words[3] >> 18) & 0x3f)
+                        sv.append((words[3] >> 12) & 0x3f)
+                        sv.append((words[3] >> 6) & 0x3f)
+                        sv.append((words[4] >> 24) & 0x3f)
+                        sv.append((words[4] >> 18) & 0x3f)
+                        sv.append((words[4] >> 12) & 0x3f)
+                        sv.append((words[4] >> 6) & 0x3f)
+                        sv.append((words[5] >> 24) & 0x3f)
+                        sv.append((words[5] >> 18) & 0x3f)
+                        sv.append((words[5] >> 12) & 0x3f)
+                        sv.append((words[5] >> 6) & 0x3f)
+                        sv.append((words[6] >> 24) & 0x3f)
+                        sv.append((words[6] >> 18) & 0x3f)
+                        sv.append((words[6] >> 12) & 0x3f)
+                        sv.append((words[6] >> 6) & 0x3f)
+                        sv.append((words[7] >> 24) & 0x3f)
+                        sv.append((words[7] >> 18) & 0x3f)
+                        sv.append((words[7] >> 12) & 0x3f)
+                        sv.append((words[7] >> 6) & 0x3f)
+                        sv.append((words[8] >> 24) & 0x3f)
+                        sv.append((words[8] >> 18) & 0x3f)
+                        sv.append((words[8] >> 12) & 0x3f)
+                        sv.append((words[8] >> 6) & 0x3f)
+                        s += "    SV HEALTH toa %u WNa %u\n" % (toa, WNa)
+                        s += ("     sv01 %2x sv02 %2x sv03 %2x sv04 %2x "
+                              "sv05 %2x sv06 %2x sv07 %2x sv08 %2x\n"
+                              "     sv09 %2x sv10 %2x sv11 %2x sv12 %2x "
+                              "sv13 %2x sv14 %2x sv15 %2x sv16 %2x\n"
+                              "     sv17 %2x sv18 %2x sv19 %2x sv20 %2x "
+                              "sv21 %2x sv22 %2x sv23 %2x sv24 %2x" %
+                              tuple(sv))
                     else:
                         s += "    Reserved"
 
