@@ -5889,7 +5889,35 @@ High Precision GNSS products only."""
                               chr((words[9] >> 14) & 0xff))
 
                     elif 18 == page:
-                        s += "    Ionospheric and UTC data"
+                        alpha1 = (words[2] >> 14) & 0xff
+                        alpha0 = (words[2] >> 6) & 0xff
+                        alpha2 = (words[3] >> 22) & 0xff
+                        alpha3 = (words[3] >> 14) & 0xff
+                        beta0 = (words[3] >> 6) & 0xff
+                        beta1 = (words[4] >> 6) & 0xff
+                        beta2 = (words[4] >> 22) & 0xff
+                        beta3 = (words[4] >> 14) & 0xff
+                        A1 = (words[5] >> 6) & 0xffffff
+                        A0 = (((words[6] << 2) & 0xffffff00) |
+                              ((words[7] >> 22) & 0xff))
+                        tot = (words[7] >> 14) & 0xff
+                        WNt = (words[7] >> 6) & 0xff
+                        deltatls = (words[8] >> 22) & 0xff
+                        WNlsf = (words[8] >> 14) & 0xff
+                        DN = (words[8] >> 6) & 0xff
+                        deltatlsf = (words[9] >> 22) & 0xff
+                        s += ("    Ionospheric and UTC data\n"
+                              "     alpah0 x%02x alpah1 x%02x "
+                              "alpah2 x%02x alpah3 x%02x\n"
+                              "     beta0  x%02x beta1  x%02x "
+                              "beta2  x%02x beta3  x%02x\n"
+                              "     A0  x%08x A1  x%06x tot x%02x WNt x%02x\n"
+                              "     deltatls x%02x WNlsf x%02x DN x%02x "
+                              "deltatlsf x%02x" %
+                              (alpha0, alpha1, alpha2, alpha3,
+                               beta0, beta1, beta2, beta3,
+                               A0, A1, tot, WNt,
+                               deltatls, WNlsf, DN, deltatlsf))
                     elif 25 == page:
                         aspoof = []
                         aspoof.append((words[2] >> 18) & 0x0f)
@@ -5918,26 +5946,26 @@ High Precision GNSS products only."""
                         sv.append((words[9] >> 18) & 0x3f)
                         sv.append((words[9] >> 12) & 0x3f)
                         s += ("    A/S flags:\n"
-                              "     as01 %x as02 %x as03 %x as04 %x "
-                              "as05 %x as06 %x as07 %x as08 %x\n"
-                              "     as09 %x as10 %x as11 %x as12 %x "
-                              "as13 %x as14 %x as15 %x as16 %x\n"
-                              "     as17 %x as18 %x as19 %x as20 %x "
-                              "as21 %x as22 %x as23 %x as24 %x\n"
-                              "     as25 %x as26 %x as27 %x as28 %x "
-                              "as29 %x as30 %x as31 %x as32 %x\n" %
+                              "     as01 x%x as02 x%x as03 x%x as04 x%x "
+                              "as05 x%x as06 x%x as07 x%x as08 x%x\n"
+                              "     as09 x%x as10 x%x as11 x%x as12 x%x "
+                              "as13 x%x as14 x%x as15 x%x as16 x%x\n"
+                              "     as17 x%x as18 x%x as19 x%x as20 x%x "
+                              "as21 x%x as22 x%x as23 x%x as24 x%x\n"
+                              "     as25 x%x as26 x%x as27 x%x as28 x%x "
+                              "as29 x%x as30 x%x as31 x%x as32 x%x\n" %
                               tuple(aspoof))
                         if VERB_DECODE <= opts['verbosity']:
                             for i in range(1, 33):
                                 f = aspoof[i - 1]
-                                s += ("      as%02d %x (A-S %s, Conf %s)\n" %
+                                s += ("      as%02d x%x (A-S %s, Conf %s)\n" %
                                       (i, f,
                                        'On' if (f & 8) else 'Off',
                                        index_s(f & 7, self.sv_conf)))
 
                         s += ("    SV HEALTH:\n"
-                              "      sv25 %2x sv26 %2x sv27 %2x sv28 %2x "
-                              "sv29 %2x sv30 %2x sv31 %2x sv32 %2x" %
+                              "      sv25 x%2x sv26 x%2x sv27 x%2x sv28 x%2x "
+                              "sv29 x%2x sv30 x%2x sv31 x%2x sv32 x%2x" %
                               tuple(sv))
                     else:
                         s += "    Reserved"
@@ -5961,12 +5989,12 @@ High Precision GNSS products only."""
                             sv.append((words[i] >> 12) & 0x3f)
                             sv.append((words[i] >> 6) & 0x3f)
                         s += "    SV HEALTH toa %u WNa %u\n" % (toa, WNa)
-                        s += ("     sv01 %2x sv02 %2x sv03 %2x sv04 %2x "
-                              "sv05 %2x sv06 %2x sv07 %2x sv08 %2x\n"
-                              "     sv09 %2x sv10 %2x sv11 %2x sv12 %2x "
-                              "sv13 %2x sv14 %2x sv15 %2x sv16 %2x\n"
-                              "     sv17 %2x sv18 %2x sv19 %2x sv20 %2x "
-                              "sv21 %2x sv22 %2x sv23 %2x sv24 %2x" %
+                        s += ("     sv01 x%2x sv02 x%2x sv03 x%2x sv04 x%2x "
+                              "sv05 x%2x sv06 x%2x sv07 x%2x sv08 x%2x\n"
+                              "     sv09 x%2x sv10 x%2x sv11 x%2x sv12 x%2x "
+                              "sv13 x%2x sv14 x%2x sv15 x%2x sv16 x%2x\n"
+                              "     sv17 x%2x sv18 x%2x sv19 x%2x sv20 x%2x "
+                              "sv21 x%2x sv22 x%2x sv23 x%2x sv24 x%2x" %
                               tuple(sv))
                     else:
                         s += "    Reserved"
