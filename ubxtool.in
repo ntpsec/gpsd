@@ -5500,8 +5500,8 @@ High Precision GNSS products only."""
     def almanac(self, words):
         """Decode GPS Almanac"""
 
-        # Note: not really tested!  What to test against?
         # [1] Section 20.3.3.5, Figure 20-1 Sheet 4, and Table 20-VI.
+        # Current almanac: https://www.navcen.uscg.gov/?pageName=gpsAlmanacs
 
         # e = Eccentricity
         # toa = Almanac reference time
@@ -5512,12 +5512,12 @@ High Precision GNSS products only."""
         # Omega0 = Longitude of Ascending Node of Orbit Plane at Weekly Epoch
         # omega = Argument of Perigee
         # M0 = Mean Anomaly at Reference Time
-        # af0 = SV Clock Bias Correction Coefficient
-        # af1 = SV Clock Drift Correction Coefficient
+        # Af0 = SV Clock Bias Correction Coefficient
+        # Af1 = SV Clock Drift Correction Coefficient
         s = "    Almanac"
         s += ("\n    e %e toa %u deltai %e Omegadot %e"
               "\n    SVH x%x sqrtA %.6f Omega0 %e omega %e"
-              "\n    M0 %e af0 %e af1 %e" %
+              "\n    M0 %e Af0 %e Af1 %e" %
               (unpack_u16(words[2], 6) * (2 ** -21),
                unpack_u8(words[3], 22) * (2 ** 12),
                unpack_s16(words[3], 6) * (2 ** -19),
@@ -5643,6 +5643,17 @@ High Precision GNSS products only."""
         3: "Reserved",
         }
 
+    sv_conf = {
+        0: "Reserved",
+        1: "Block II/Block IIA/IIR SV",
+        2: "M-code, L2C, Block IIR-M SV",
+        3: "M-code, L2C, L5, Block IIF SV",
+        4: "M-code, L2C, L5, No SA,  Block III SV",
+        5: "Reserved",
+        6: "Reserved",
+        7: "Reserved",
+        }
+
     def rxm_sfrbx(self, buf):
         """UBX-RXM-SFRBX decode, Broadcast Navigation Data Subframe"""
 
@@ -5682,7 +5693,7 @@ High Precision GNSS products only."""
                       (preamble, (words[0] >> 8) & 0xffff,
                        1 if (words[0] & 0x40) else 0))
 
-                s += ("\n  TOW %u AF %u ASF %u Subframe %u" %
+                s += ("\n  TOW %u Alert %u A-S %u Subframe %u" %
                       (unpack_u8(words[1], 13) * 6,
                        1 if (words[0] & 0x1000) else 0,
                        1 if (words[0] & 0x800) else 0,
@@ -5916,6 +5927,14 @@ High Precision GNSS products only."""
                               "     as25 %x as26 %x as27 %x as28 %x "
                               "as29 %x as30 %x as31 %x as32 %x\n" %
                               tuple(aspoof))
+                        if VERB_DECODE <= opts['verbosity']:
+                            for i in range(1, 33):
+                                f = aspoof[i - 1]
+                                s += ("      as%02d %x (A-S %s, Conf %s)\n" %
+                                      (i, f,
+                                       'On' if (f & 8) else 'Off',
+                                       index_s(f & 7, self.sv_conf)))
+
                         s += ("    SV HEALTH:\n"
                               "      sv25 %2x sv26 %2x sv27 %2x sv28 %2x "
                               "sv29 %2x sv30 %2x sv31 %2x sv32 %2x" %
