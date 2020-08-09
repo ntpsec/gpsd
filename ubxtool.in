@@ -5312,7 +5312,8 @@ High Precision GNSS products only."""
                       'name': 'UBX-NAV-GEOFENCE'},
                0x3B: {'str': 'SVIN', 'dec': nav_svin, 'minlen': 40,
                       'name': 'UBX-NAV-SVIN'},
-               0x3C: {'str': 'RELPOSNED', 'dec': nav_relposned, 'minlen': 64,
+               # M8P length = 40, M9P length = 64
+               0x3C: {'str': 'RELPOSNED', 'dec': nav_relposned, 'minlen': 40,
                       'name': 'UBX-NAV-RELPOSNED'},
                # deprecated in u-blox 6, SFDR only
                0x40: {'str': 'EKFSTATUS', 'minlen': 36,
