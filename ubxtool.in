@@ -5803,6 +5803,7 @@ High Precision GNSS products only."""
                     svid = (words[2] >> 22) & 0x3f
                     if 0 == svid:
                         # dummy SV
+                        # almanac for dummy sat 0, same as transmitting sat
                         page = "0/Dummy"
                     else:
                         page = index_s(svid, self.sbfr4_svid_page)

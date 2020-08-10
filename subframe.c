@@ -11,7 +11,7 @@
 #include "gpsd.h"
 
 /* convert unsigned to signed */
-#define uint2int( u, bit) ( (u & (1<<(bit-1))) ? u - (1<<bit) : u)
+#define uint2int(u, bit) ((u & (1<<(bit-1))) ? u - (1<<bit) : u)
 
 gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
                                        unsigned int tSVID, uint32_t words[])
@@ -119,7 +119,7 @@ static void subframe_almanac(const struct gpsd_errout_t *errout,
     almp->M0       = ( words[8] & 0x00FFFFFF);
     almp->M0       = uint2int(almp->M0, 24);
     /* if you want radians, multiply by GPS_PI, but we do semi-circles
-     * to match IS-GPS-200E */
+     * to match IS-GPS-200K */
     almp->d_M0     = pow(2.0,-23) * almp->M0;
     almp->af1      = ((words[9] >>  5) & 0x0007FF);
     almp->af1      = (short)uint2int(almp->af1, 11);
@@ -200,7 +200,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
              (unsigned)subp->alert, (unsigned)subp->antispoof,
              (unsigned)subp->integrity);
     /*
-     * Consult the latest revision of IS-GPS-200 for the mapping
+     * Consult the latest revision of IS-GPS-200K for the mapping
      * between magic SVIDs and pages.
      */
     subp->pageid  = (words[2] >> 16) & 0x00003F; /* only in frames 4 & 5 */
@@ -346,82 +346,34 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                 /* almanac for dummy sat 0, which is same as transmitting sat */
                 sv = 0;
                 break;
-            case 1:
-            case 6:
-            case 11:
-            case 16:
-            case 21:
-            case 57:
-                /* for some inscutable reason these pages are all sent
-                 * as page 57, IS-GPS-200E Table 20-V */
-                break;
-            case 12:
-            case 24:
-            case 62:
-                /* for some inscrutable reason these pages are all sent
-                 * as page 62, IS-GPS-200E Table 20-V */
-                break;
-            case 14:
-            case 53:
-                /* for some inscrutable reason page 14 is sent
-                 * as page 53, IS-GPS-200E Table 20-V */
-                break;
-            case 15:
-            case 54:
-                /* for some inscrutable reason page 15 is sent
-                 * as page 54, IS-GPS-200E Table 20-V */
-                break;
-            case 19:
-                /* for some inscrutable reason page 20 is sent
-                 * as page 58, IS-GPS-200E Table 20-V */
-                /* reserved page */
-                break;
-            case 20:
-                /* for some inscrutable reason page 20 is sent
-                 * as page 59, IS-GPS-200E Table 20-V */
-                /* reserved page */
-                break;
-            case 22:
-            case 60:
-                /* for some inscrutable reason page 22 is sent
-                 * as page 60, IS-GPS-200E Table 20-V */
-                /* reserved page */
-                break;
-            case 23:
-            case 61:
-                /* for some inscrutable reason page 23 is sent
-                 * as page 61, IS-GPS-200E Table 20-V */
-                /* reserved page */
-                break;
 
             /* almanac data for SV 25 through 32 respectively; */
-            case 2:
+            case 25:         // aka page 2:
                 sv = 25;
                 break;
-            case 3:
+            case 26:         // aka page 3:
                 sv = 26;
                 break;
-            case 4:
+            case 27:         // aka page 4:
                 sv = 27;
                 break;
-            case 5:
+            case 28:         // aka page 5:
                 sv = 28;
                 break;
-            case 7:
+            case 29:         // aka page 7
                 sv = 29;
                 break;
-            case 8:
+            case 30:         // aka page 8
                 sv = 30;
                 break;
-            case 9:
+            case 31:         // aka page 9
                 sv = 31;
                 break;
-            case 10:
+            case 32:         // aka page 10
                 sv = 32;
                 break;
 
-            case 13:
-            case 52:
+            case 52:                  // aka page 13
                 /* NMCT */
                 sv = -1;
                 subp->sub4_13.ai = (unsigned char)((words[2] >> 22) & 0x000003);
@@ -509,10 +461,191 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                          subp->sub4_13.ERD[29], subp->sub4_13.ERD[30]);
                 break;
 
-            case 25:
-            case 63:
+            case 53:     // aka page 14
+                /* for some inscrutable reason page 14 is sent
+                 * as page 53, IS-GPS-200K Table 20-
+                 * reserved */
+                break;
+
+            case 54:      // aka page 15
+                /* for some inscrutable reason page 15 is sent
+                 * as page 54, IS-GPS-200K Table 20-V
+                 * reserved */
+                break;
+
+            case 55:  // aka page 17
+                /* for some inscrutable reason page 17 is sent
+                 * as page 55, IS-GPS-200K Table 20-V */
+                sv = -1;
+                /*
+                 * "The requisite 176 bits shall occupy bits 9 through 24
+                 * of word TWO, the 24 MSBs of words THREE through EIGHT,
+                 * plus the 16 MSBs of word NINE." (word numbers changed
+                 * to account for zero-indexing)
+                 * Since we've already stripped the low six parity bits,
+                 * and shifted the data to a byte boundary, we can just
+                 * copy it out. */
+
+                i = 0;
+                subp->sub4_17.str[i++] = (words[2] >> 8) & 0xff;
+                subp->sub4_17.str[i++] = (words[2]) & 0xff;
+
+                subp->sub4_17.str[i++] = (words[3] >> 16) & 0xff;
+                subp->sub4_17.str[i++] = (words[3] >> 8) & 0xff;
+                subp->sub4_17.str[i++] = (words[3]) & 0xff;
+
+                subp->sub4_17.str[i++] = (words[4] >> 16) & 0xff;
+                subp->sub4_17.str[i++] = (words[4] >> 8) & 0xff;
+                subp->sub4_17.str[i++] = (words[4]) & 0xff;
+
+                subp->sub4_17.str[i++] = (words[5] >> 16) & 0xff;
+                subp->sub4_17.str[i++] = (words[5] >> 8) & 0xff;
+                subp->sub4_17.str[i++] = (words[5]) & 0xff;
+
+                subp->sub4_17.str[i++] = (words[6] >> 16) & 0xff;
+                subp->sub4_17.str[i++] = (words[6] >> 8) & 0xff;
+                subp->sub4_17.str[i++] = (words[6]) & 0xff;
+
+                subp->sub4_17.str[i++] = (words[7] >> 16) & 0xff;
+                subp->sub4_17.str[i++] = (words[7] >> 8) & 0xff;
+                subp->sub4_17.str[i++] = (words[7]) & 0xff;
+
+                subp->sub4_17.str[i++] = (words[8] >> 16) & 0xff;
+                subp->sub4_17.str[i++] = (words[8] >> 8) & 0xff;
+                subp->sub4_17.str[i++] = (words[8]) & 0xff;
+
+                subp->sub4_17.str[i++] = (words[9] >> 16) & 0xff;
+                subp->sub4_17.str[i++] = (words[9] >> 8) & 0xff;
+                subp->sub4_17.str[i] = '\0';
+                GPSD_LOG(LOG_PROG, &session->context->errout,
+                         "50B: SF:4-17 system message: %.24s\n",
+                         subp->sub4_17.str);
+                break;
+
+            case 56:         // aka page 18
+                /* for some inscrutable reason page 18 is sent
+                 * as page 56, IS-GPS-200K Table 20-V */
+                /* ionospheric and UTC data */
+
+                sv = -1;
+                /* current leap seconds */
+                subp->sub4_18.alpha0 = (int8_t)((words[2] >> 8) & 0x0000FF);
+                subp->sub4_18.d_alpha0 = pow(2.0, -30) *
+                                             (int)subp->sub4_18.alpha0;
+                subp->sub4_18.alpha1 = (int8_t)((words[2] >> 0) & 0x0000FF);
+                subp->sub4_18.d_alpha1 = pow(2.0, -27) * 
+                                            (int)subp->sub4_18.alpha1;
+                subp->sub4_18.alpha2 = (int8_t)((words[3] >> 16) & 0x0000FF);
+                subp->sub4_18.d_alpha2 = pow(2.0, -24) * 
+                                            (int)subp->sub4_18.alpha2;
+                subp->sub4_18.alpha3 = (int8_t)((words[3] >>  8) & 0x0000FF);
+                subp->sub4_18.d_alpha3 = pow(2.0, -24) * 
+                                            (int)subp->sub4_18.alpha3;
+
+                subp->sub4_18.beta0  = (int8_t)((words[3] >>  0) & 0x0000FF);
+                subp->sub4_18.d_beta0 = pow(2.0, 11) * (int)subp->sub4_18.beta0;
+                subp->sub4_18.beta1  = (int8_t)((words[4] >> 16) & 0x0000FF);
+                subp->sub4_18.d_beta1 = pow(2.0, 14) * (int)subp->sub4_18.beta1;
+                subp->sub4_18.beta2  = (int8_t)((words[4] >>  8) & 0x0000FF);
+                subp->sub4_18.d_beta2 = pow(2.0, 16) * (int)subp->sub4_18.beta2;
+                subp->sub4_18.beta3  = (int8_t)((words[4] >>  0) & 0x0000FF);
+                subp->sub4_18.d_beta3 = pow(2.0, 16) * (int)subp->sub4_18.beta3;
+
+                subp->sub4_18.A1     = (int32_t)((words[5] >>  0) & 0xFFFFFF);
+                subp->sub4_18.A1     = uint2int(subp->sub4_18.A1, 24);
+                subp->sub4_18.d_A1   = pow(2.0,-50) * subp->sub4_18.A1;
+                subp->sub4_18.A0     = (int32_t)((words[6] >>  0) & 0xFFFFFF);
+                subp->sub4_18.A0   <<= 8;
+                subp->sub4_18.A0    |= ((words[7] >> 16) & 0x0000FF);
+                subp->sub4_18.d_A0   = pow(2.0,-30) * subp->sub4_18.A0;
+
+                /* careful WN is 10 bits, but WNt is 8 bits! */
+                /* WNt (Week Number of LSF) */
+                subp->sub4_18.tot    = ((words[7] >> 8) & 0x0000FF);
+                subp->sub4_18.t_tot  = 2e12 * subp->sub4_18.tot;
+                subp->sub4_18.WNt    = ((words[7] >> 0) & 0x0000FF);
+                subp->sub4_18.leap  = (int8_t)((words[8] >> 16) & 0x0000FF);
+                subp->sub4_18.WNlsf  = ((words[8] >>  8) & 0x0000FF);
+
+                /* DN (Day Number of LSF) */
+                subp->sub4_18.DN = (words[8] & 0x0000FF);
+                /* leap second future */
+                subp->sub4_18.lsf = (int8_t)((words[9] >> 16) & 0x0000FF);
+
+                GPSD_LOG(LOG_PROG, &session->context->errout,
+                         "50B: SF:4-18 a0:%.5g a1:%.5g a2:%.5g a3:%.5g "
+                         "b0:%.5g b1:%.5g b2:%.5g b3:%.5g "
+                         "A1:%.11e A0:%.11e tot:%lld WNt:%u "
+                         "ls: %d WNlsf:%u DN:%u, lsf:%d\n",
+                         subp->sub4_18.d_alpha0, subp->sub4_18.d_alpha1,
+                         subp->sub4_18.d_alpha2, subp->sub4_18.d_alpha3,
+                         subp->sub4_18.d_beta0, subp->sub4_18.d_beta1,
+                         subp->sub4_18.d_beta2, subp->sub4_18.d_beta3,
+                         subp->sub4_18.d_A1, subp->sub4_18.d_A0,
+                         (long long)subp->sub4_18.t_tot, subp->sub4_18.WNt,
+                         subp->sub4_18.leap, subp->sub4_18.WNlsf,
+                         subp->sub4_18.DN, subp->sub4_18.lsf);
+
+                /* notify the leap seconds correction in the end
+                 * of current day */
+                /* IS-GPS-200 Revision K, paragraph 20.3.3.5.2.4 */
+                /* FIXME: only allow LEAPs in June and December */
+                // only need to check whole seconds
+                if (((session->context->gps_week % 256) ==
+                     (unsigned short)subp->sub4_18.WNlsf) &&
+                    (((subp->sub4_18.DN - 1) * SECS_PER_DAY) <
+                     session->context->gps_tow.tv_sec) &&
+                    ((subp->sub4_18.DN * SECS_PER_DAY) >
+                     session->context->gps_tow.tv_sec)) {
+
+                   if (subp->sub4_18.leap < subp->sub4_18.lsf) {
+                        session->context->leap_notify = LEAP_ADDSECOND;
+                   } else if (subp->sub4_18.leap > subp->sub4_18.lsf) {
+                        session->context->leap_notify = LEAP_DELSECOND;
+                   } else {
+                        session->context->leap_notify = LEAP_NOWARNING;
+                   }
+                } else {
+                   session->context->leap_notify = LEAP_NOWARNING;
+                }
+
+                session->context->leap_seconds = (int)subp->sub4_18.leap;
+                session->context->valid |= LEAP_SECOND_VALID;
+                break;
+
+            case 57:    // aka pages 1, 6, 11, 16, 21
+                /* for some inscutable reason these pages are all sent
+                 * as page 57, IS-GPS-200K Table 20-V
+                 * reserved */
+                break;
+
+            case 59:         // aka page 20
+                /* for some inscrutable reason page 20 is sent
+                 * as page 59, IS-GPS-200K Table 20-V
+                 * reserved page */
+                break;
+
+            case 60:         // aka page 22
+                /* for some inscrutable reason page 22 is sent
+                 * as page 60, IS-GPS-200K Table 20-V */
+                /* reserved page */
+                break;
+
+            case 61:         // aka page 23
+                /* for some inscrutable reason page 23 is sent
+                 * as page 61, IS-GPS-200K Table 20-V */
+                /* reserved page */
+                break;
+
+            case 62:     // aka pages 12 and 24
+                /* for some inscrutable reason these pages are all sent
+                 * as page 62, IS-GPS-200K Table 20-V
+                 * reserved */
+                break;
+
+            case 63:          // aka page 25
                 /* for some inscrutable reason page 25 is sent
-                 * as page 63, IS-GPS-200E Table 20-V */
+                 * as page 63, IS-GPS-200K Table 20-V */
                 /* A-S flags/SV configurations for 32 SVs,
                  * plus SV health for SV 25 through 32
                  */
@@ -595,172 +728,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                          subp->sub4_25.svhx[6], subp->sub4_25.svhx[7]);
                 break;
 
-            case 33:
-            case 34:
-            case 35:
-            case 36:
-            case 37:
-            case 38:
-            case 39:
-            case 40:
-            case 41:
-            case 42:
-            case 43:
-            case 44:
-            case 45:
-            case 46:
-            case 47:
-            case 48:
-            case 49:
-            case 50:
-                /* unassigned */
-                break;
-
-            case 51:
-                /* unknown */
-                break;
-
-            case 17:
-            case 55:
-                /* for some inscrutable reason page 17 is sent
-                 * as page 55, IS-GPS-200E Table 20-V */
-                sv = -1;
-                /*
-                 * "The requisite 176 bits shall occupy bits 9 through 24
-                 * of word TWO, the 24 MSBs of words THREE through EIGHT,
-                 * plus the 16 MSBs of word NINE." (word numbers changed
-                 * to account for zero-indexing)
-                 * Since we've already stripped the low six parity bits,
-                 * and shifted the data to a byte boundary, we can just
-                 * copy it out. */
-
-                i = 0;
-                subp->sub4_17.str[i++] = (words[2] >> 8) & 0xff;
-                subp->sub4_17.str[i++] = (words[2]) & 0xff;
-
-                subp->sub4_17.str[i++] = (words[3] >> 16) & 0xff;
-                subp->sub4_17.str[i++] = (words[3] >> 8) & 0xff;
-                subp->sub4_17.str[i++] = (words[3]) & 0xff;
-
-                subp->sub4_17.str[i++] = (words[4] >> 16) & 0xff;
-                subp->sub4_17.str[i++] = (words[4] >> 8) & 0xff;
-                subp->sub4_17.str[i++] = (words[4]) & 0xff;
-
-                subp->sub4_17.str[i++] = (words[5] >> 16) & 0xff;
-                subp->sub4_17.str[i++] = (words[5] >> 8) & 0xff;
-                subp->sub4_17.str[i++] = (words[5]) & 0xff;
-
-                subp->sub4_17.str[i++] = (words[6] >> 16) & 0xff;
-                subp->sub4_17.str[i++] = (words[6] >> 8) & 0xff;
-                subp->sub4_17.str[i++] = (words[6]) & 0xff;
-
-                subp->sub4_17.str[i++] = (words[7] >> 16) & 0xff;
-                subp->sub4_17.str[i++] = (words[7] >> 8) & 0xff;
-                subp->sub4_17.str[i++] = (words[7]) & 0xff;
-
-                subp->sub4_17.str[i++] = (words[8] >> 16) & 0xff;
-                subp->sub4_17.str[i++] = (words[8] >> 8) & 0xff;
-                subp->sub4_17.str[i++] = (words[8]) & 0xff;
-
-                subp->sub4_17.str[i++] = (words[9] >> 16) & 0xff;
-                subp->sub4_17.str[i++] = (words[9] >> 8) & 0xff;
-                subp->sub4_17.str[i] = '\0';
-                GPSD_LOG(LOG_PROG, &session->context->errout,
-                         "50B: SF:4-17 system message: %.24s\n",
-                         subp->sub4_17.str);
-                break;
-            case 18:
-            case 56:
-                /* for some inscrutable reason page 18 is sent
-                 * as page 56, IS-GPS-200E Table 20-V */
-                /* ionospheric and UTC data */
-
-                sv = -1;
-                /* current leap seconds */
-                subp->sub4_18.alpha0 = (int8_t)((words[2] >> 8) & 0x0000FF);
-                subp->sub4_18.d_alpha0 = pow(2.0, -30) *
-                                             (int)subp->sub4_18.alpha0;
-                subp->sub4_18.alpha1 = (int8_t)((words[2] >> 0) & 0x0000FF);
-                subp->sub4_18.d_alpha1 = pow(2.0, -27) * 
-                                            (int)subp->sub4_18.alpha1;
-                subp->sub4_18.alpha2 = (int8_t)((words[3] >> 16) & 0x0000FF);
-                subp->sub4_18.d_alpha2 = pow(2.0, -24) * 
-                                            (int)subp->sub4_18.alpha2;
-                subp->sub4_18.alpha3 = (int8_t)((words[3] >>  8) & 0x0000FF);
-                subp->sub4_18.d_alpha3 = pow(2.0, -24) * 
-                                            (int)subp->sub4_18.alpha3;
-
-                subp->sub4_18.beta0  = (int8_t)((words[3] >>  0) & 0x0000FF);
-                subp->sub4_18.d_beta0 = pow(2.0, 11) * (int)subp->sub4_18.beta0;
-                subp->sub4_18.beta1  = (int8_t)((words[4] >> 16) & 0x0000FF);
-                subp->sub4_18.d_beta1 = pow(2.0, 14) * (int)subp->sub4_18.beta1;
-                subp->sub4_18.beta2  = (int8_t)((words[4] >>  8) & 0x0000FF);
-                subp->sub4_18.d_beta2 = pow(2.0, 16) * (int)subp->sub4_18.beta2;
-                subp->sub4_18.beta3  = (int8_t)((words[4] >>  0) & 0x0000FF);
-                subp->sub4_18.d_beta3 = pow(2.0, 16) * (int)subp->sub4_18.beta3;
-
-                subp->sub4_18.A1     = (int32_t)((words[5] >>  0) & 0xFFFFFF);
-                subp->sub4_18.A1     = uint2int(subp->sub4_18.A1, 24);
-                subp->sub4_18.d_A1   = pow(2.0,-50) * subp->sub4_18.A1;
-                subp->sub4_18.A0     = (int32_t)((words[6] >>  0) & 0xFFFFFF);
-                subp->sub4_18.A0   <<= 8;
-                subp->sub4_18.A0    |= ((words[7] >> 16) & 0x0000FF);
-                subp->sub4_18.d_A0   = pow(2.0,-30) * subp->sub4_18.A0;
-
-                /* careful WN is 10 bits, but WNt is 8 bits! */
-                /* WNt (Week Number of LSF) */
-                subp->sub4_18.tot    = ((words[7] >> 8) & 0x0000FF);
-                subp->sub4_18.t_tot  = 2e12 * subp->sub4_18.tot;
-                subp->sub4_18.WNt    = ((words[7] >> 0) & 0x0000FF);
-                subp->sub4_18.leap  = (int8_t)((words[8] >> 16) & 0x0000FF);
-                subp->sub4_18.WNlsf  = ((words[8] >>  8) & 0x0000FF);
-
-                /* DN (Day Number of LSF) */
-                subp->sub4_18.DN = (words[8] & 0x0000FF);
-                /* leap second future */
-                subp->sub4_18.lsf = (int8_t)((words[9] >> 16) & 0x0000FF);
-
-                GPSD_LOG(LOG_PROG, &session->context->errout,
-                         "50B: SF:4-18 a0:%.5g a1:%.5g a2:%.5g a3:%.5g "
-                         "b0:%.5g b1:%.5g b2:%.5g b3:%.5g "
-                         "A1:%.11e A0:%.11e tot:%lld WNt:%u "
-                         "ls: %d WNlsf:%u DN:%u, lsf:%d\n",
-                         subp->sub4_18.d_alpha0, subp->sub4_18.d_alpha1,
-                         subp->sub4_18.d_alpha2, subp->sub4_18.d_alpha3,
-                         subp->sub4_18.d_beta0, subp->sub4_18.d_beta1,
-                         subp->sub4_18.d_beta2, subp->sub4_18.d_beta3,
-                         subp->sub4_18.d_A1, subp->sub4_18.d_A0,
-                         (long long)subp->sub4_18.t_tot, subp->sub4_18.WNt,
-                         subp->sub4_18.leap, subp->sub4_18.WNlsf,
-                         subp->sub4_18.DN, subp->sub4_18.lsf);
-
-                /* notify the leap seconds correction in the end
-                 * of current day */
-                /* IS-GPS-200 Revision E, paragraph 20.3.3.5.2.4 */
-                /* FIXME: only allow LEAPs in June and December */
-                // only need to check whole seconds
-                if (((session->context->gps_week % 256) ==
-                     (unsigned short)subp->sub4_18.WNlsf) &&
-                    (((subp->sub4_18.DN - 1) * SECS_PER_DAY) <
-                     session->context->gps_tow.tv_sec) &&
-                    ((subp->sub4_18.DN * SECS_PER_DAY) >
-                     session->context->gps_tow.tv_sec)) {
-
-                   if (subp->sub4_18.leap < subp->sub4_18.lsf) {
-                        session->context->leap_notify = LEAP_ADDSECOND;
-                   } else if (subp->sub4_18.leap > subp->sub4_18.lsf) {
-                        session->context->leap_notify = LEAP_DELSECOND;
-                   } else {
-                        session->context->leap_notify = LEAP_NOWARNING;
-                   }
-                } else {
-                   session->context->leap_notify = LEAP_NOWARNING;
-                }
-
-                session->context->leap_seconds = (int)subp->sub4_18.leap;
-                session->context->valid |= LEAP_SECOND_VALID;
-                break;
-            default:
+            default:                    // unkown page...
                 ;                       /* no op */
             }
             if ( -1 < sv ) {
@@ -785,14 +753,14 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
          * Page 25: SV health data for SV 1 through 24, the almanac
          * reference time, the almanac reference week number.
          */
-        if ( 25 > subp->pageid ) {
+        if (25 > subp->pageid) {
             subp->is_almanac = 1;
             subframe_almanac(&session->context->errout,
                              subp->tSVID, words, subp->subframe_num,
                              subp->pageid, subp->data_id, &subp->sub5.almanac);
-        } else if ( 51 == subp->pageid ) {
+        } else if (51 == subp->pageid) {
             /* for some inscrutable reason page 25 is sent as page 51
-             * IS-GPS-200E Table 20-V */
+             * IS-GPS-200K Table 20-V */
 
             subp->sub5_25.toa   = ((words[2] >> 8) & 0x0000FF);
             subp->sub5_25.l_toa <<= 12;
