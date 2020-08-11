@@ -2823,7 +2823,7 @@ static gps_mask_t parse_input(struct gps_device_t *session)
 
 bool ubx_write(struct gps_device_t * session,
                unsigned int msg_class, unsigned int msg_id,
-               unsigned char *msg, size_t data_len)
+               const unsigned char *msg, size_t data_len)
 {
     unsigned char CK_A, CK_B;
     ssize_t count;
@@ -3047,7 +3047,7 @@ static void ubx_cfg_prt(struct gps_device_t *session,
         /* nmea to turn on at rate one (multiplier on measurement rate)
          * u-blox 8 default: RMC, VTG, GGA, GSA GSV, GLL
          * who wanted GST? */
-        unsigned char nmea_on[] = {
+        const unsigned char nmea_on[] = {
             0x00,          // msg id  = GGA
             // 0x01,          /* msg id  = GLL, only need RMC */
             0x02,          // msg id  = GSA
@@ -3059,7 +3059,7 @@ static void ubx_cfg_prt(struct gps_device_t *session,
             0x09,          // msg id  = GBS, for RAIM errors
         };
 
-        unsigned char ubx_nav_off[] = {
+        const unsigned char ubx_nav_off[] = {
             0x01,          // msg id = NAV-POSECEF
             0x04,          // msg id = UBX-NAV-DOP
             0x06,          // msg id = NAV-SOL, deprecated in 6, gone in 9
@@ -3093,7 +3093,7 @@ static void ubx_cfg_prt(struct gps_device_t *session,
 
     } else { /* MODE_BINARY */
         // nmea to turn off
-        unsigned char nmea_off[] = {
+        const unsigned char nmea_off[] = {
             0x00,          /* msg id  = GGA */
             0x01,          /* msg id  = GLL */
             0x02,          /* msg id  = GSA */
@@ -3105,7 +3105,7 @@ static void ubx_cfg_prt(struct gps_device_t *session,
             0x09,          /* msg id  = GBS */
         };
 
-        unsigned char ubx_nav_on[] = {
+        const unsigned char ubx_nav_on[] = {
             0x01,          // msg id = NAV-POSECEF
             0x04,          // msg id = UBX-NAV-DOP
             0x11,          // msg id = NAV-VELECEF
@@ -3116,6 +3116,29 @@ static void ubx_cfg_prt(struct gps_device_t *session,
              * in NEO-M8N, but not most other 9-series */
             0x32,          // msg id = NAV-SBAS, in u-blox 4 to 8, not all 9
         };
+
+        /* UBX-NAV-SOL deprecated in u-blox 6, gone in u-blox 9.
+         * Use UBX-NAV-PVT after u-blox 7
+         * u-blox 6 w/ GLONASS, protver 14 have NAV-PVT
+         *
+         * UBX-NAV-SVINFO deprecated in u-blox 8, gone in u-blox 9.
+         * Use UBX-NAV-SAT after u-blox 7
+         *
+         * UBX-NAV-EOE makes a good cycle ender */
+
+        // UBX for protver < 15
+        const unsigned char ubx_14_nav_on[] = {
+            0x06,              // msg id = NAV-SOL
+            0x30,              // msg id = NAV-SVINFO
+        };
+
+        // UBX for protver >= 15
+        const unsigned char ubx_15_nav_on[] = {
+            0x07,              // msg id = NAV-PVT
+            0x35,              // msg id = NAV-SAT
+            0x61,              // msg id = NAV-EOE, first in protver 18
+        };
+
         /*
          * Just enabling the UBX protocol for output is not enough to
          * actually get UBX output; the sentence mix is initially empty.
@@ -3140,82 +3163,34 @@ static void ubx_cfg_prt(struct gps_device_t *session,
             msg[1] = ubx_nav_on[i];          // msg id to turn on
             (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
         }
+
+        if (15 > session->driver.ubx.protver ||
+            0 == session->driver.ubx.protver) {
+            // protver 14 or less, or unknown version, turn on pre-15 UBX-NAV
+            msg[0] = 0x01;          // class, UBX-NAV
+            msg[2] = 0x01;          // rate, one
+            for (i = 0; i < sizeof(ubx_14_nav_on); i++) {
+                msg[1] = ubx_14_nav_on[i];          // msg id to turn on
+                (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
+            }
+        }
+
+        if (15 <= session->driver.ubx.protver ||
+            0 == session->driver.ubx.protver) {
+            // protver 15 or more, or unknown version, turn on 15+ UBX-NAV
+            msg[0] = 0x01;          // class, UBX-NAV
+            msg[2] = 0x01;          // rate, one
+            for (i = 0; i < sizeof(ubx_15_nav_on); i++) {
+                msg[1] = ubx_15_nav_on[i];          // msg id to turn on
+                (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
+            }
+        }
+
         msg[0] = 0x01;          /* class */
         msg[1] = 0x26;          /* msg id  = UBX-NAV-TIMELS */
         msg[2] = 0xff;          /* about every 4 minutes if nav rate is 1Hz */
         (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
 
-        /* UBX-NAV-SOL deprecated in u-blox 6, gone in u-blox 9.
-         * Use UBX-NAV-PVT after u-blox 7 */
-        /* UBX-NAV-SVINFO deprecated in u-blox 8, gone in u-blox 9.
-         * Use UBX-NAV-SAT after u-blox 7 */
-        if (0 == session->driver.ubx.protver) {
-            // unknown version, enable both
-            msg[0] = 0x01;              /* class */
-            msg[1] = 0x06;              /* msg id  = NAV-SOL */
-            msg[2] = 0x01;              /* rate */
-            (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-            msg[0] = 0x01;              /* class */
-            msg[1] = 0x07;              /* msg id  = NAV-PVT */
-            msg[2] = 0x01;              /* rate */
-            (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-
-            /* unknown version, enable both */
-            msg[0] = 0x01;              /* class */
-            msg[1] = 0x30;              /* msg id  = NAV-SVINFO */
-            msg[2] = 0x0a;              /* rate */
-            (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-            msg[0] = 0x01;              /* class */
-            msg[1] = 0x35;              /* msg id  = NAV-SAT */
-            msg[2] = 0x0a;              /* rate */
-            (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-
-            /* first in u-blox 8 */
-            /* UBX-NAV-EOE makes a good cycle ender */
-            msg[0] = 0x01;              /* class */
-            msg[1] = 0x61;              /* msg id  = NAV-EOE */
-            msg[2] = 0x01;              /* rate */
-            (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-        } else if (15 > session->driver.ubx.protver) {
-            /* protver 14 or less
-             * before u-blox 8, just NAV-SOL
-             * do not do both to avoid NACKs */
-            msg[0] = 0x01;              /* class */
-            msg[1] = 0x06;              /* msg id  = NAV-SOL */
-            msg[2] = 0x01;              /* rate */
-            (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-
-            /* before u-blox 8, just NAV-SVINFO
-             * do not do both to avoid NACKs */
-            msg[0] = 0x01;              /* class */
-            msg[1] = 0x30;              /* msg id  = NAV-SVINFO */
-            msg[2] = 0x0a;              /* rate */
-            (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-        } else {
-
-            /* protver 15+
-             * u-blox 8 or later
-             * u-blox 6 w/ GLONASS, protver 14 have NAV-PVT */
-            msg[0] = 0x01;              /* class */
-            msg[1] = 0x07;              /* msg id  = NAV-PVT */
-            msg[2] = 0x01;              /* rate */
-            (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-
-            /* u-blox 8 or later */
-            msg[0] = 0x01;              /* class */
-            msg[1] = 0x35;              /* msg id  = NAV-SAT */
-            msg[2] = 0x0a;              /* rate */
-            (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-
-            if (18 <= session->driver.ubx.protver) {
-                /* first in u-blox 8, protver 18 */
-                /* UBX-NAV-EOE makes a good cycle ender */
-                msg[0] = 0x01;              /* class */
-                msg[1] = 0x61;              /* msg id  = NAV-EOE */
-                msg[2] = 0x01;              /* rate */
-                (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-            }
-        }
         // turn off common NMEA
         msg[0] = 0xf0;          /* class, NMEA */
         msg[2] = 0x00;          /* rate, off */

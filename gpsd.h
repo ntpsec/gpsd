@@ -1037,7 +1037,7 @@ extern const char *gpsd_maskdump(gps_mask_t);
 
 /* exceptional driver methods */
 extern bool ubx_write(struct gps_device_t *, unsigned int, unsigned int,
-                      unsigned char *, size_t);
+                      const unsigned char *, size_t);
 extern bool ais_binary_decode(const struct gpsd_errout_t *errout,
                               struct ais_t *ais,
                               const unsigned char *, size_t,
