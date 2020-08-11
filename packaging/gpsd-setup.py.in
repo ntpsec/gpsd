@@ -1,0 +1,20 @@
+"""
+gpsd-setup.py - Build gpsd Python modules for additional Pythons.
+
+This file is Copyright 2020 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause
+"""
+# This code runs compatibly under Python 2 and 3.x for x >= 2.
+# Preserve this property!
+from distutils.core import setup, Extension
+
+setup(
+    name = 'gps',
+    version = '@VERSION@',
+    description = 'gpsd Python modules for additional Pythons',
+    url = '@WEBSITE@',
+    author = 'the GPSD project',
+    author_email = '@DEVMAIL@',
+    license = 'BSD',
+    packages = ['gps'],
+)

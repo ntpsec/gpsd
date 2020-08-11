@@ -96,6 +96,7 @@ srec.html
 .cproject
 gpsd_config.h
 gpsd_maskdump.c
+gpsd-setup.py
 gpsd.spec
 gps_maskdump.c
 .kdbgrc.*
