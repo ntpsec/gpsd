@@ -3062,14 +3062,13 @@ static void ubx_cfg_prt(struct gps_device_t *session,
         unsigned char ubx_nav_off[] = {
             0x01,          // msg id = NAV-POSECEF
             0x04,          // msg id = UBX-NAV-DOP
-            // UBX-NAV-SOL deprecated in u-blox 6, gone in u-blox 9.
-            0x06,          // msg id = NAV-SOL
+            0x06,          // msg id = NAV-SOL, deprecated in 6, gone in 9
             0x07,          // msg id = NAV-PVT, in u-blox 6 and on
             0x11,          // msg id = NAV-VELECEF
             0x20,          // msg id = UBX-NAV-TIMEGPS
-            // NAV-SVINFO in u-blox 4 to 8, in 9 became NAV-SAT
-            0x30,          // msg id = NAV-SVINFO
-            0x32,          // msg id = NAV-SBAS
+            // 0x26;       // msg id  = UBX-NAV-TIMELS, allow as low rate
+            0x30,          // msg id = NAV-SVINFO, in 4 to 8, not 9
+            0x32,          // msg id = NAV-SBAS, in u-blox 4 to 8, not all 9
             0x35,          // msg id = NAV-SAT, in u-blox 8 and 9
             0x61,          // msg id = NAV-EOE
         };
@@ -3106,6 +3105,17 @@ static void ubx_cfg_prt(struct gps_device_t *session,
             0x09,          /* msg id  = GBS */
         };
 
+        unsigned char ubx_nav_on[] = {
+            0x01,          // msg id = NAV-POSECEF
+            0x04,          // msg id = UBX-NAV-DOP
+            0x11,          // msg id = NAV-VELECEF
+            // UBX-NAV-TIMEGPS is a great cycle ender, NAV-EOE better
+            0x20,          // msg id = UBX-NAV-TIMEGPS
+            // 0x26,           // msg id  = UBX-NAV-TIMELS, low rate, skip here
+            /* NAV-SBAS errors guranteed by FAA within 6 seconds!
+             * in NEO-M8N, but not most other 9-series */
+            0x32,          // msg id = NAV-SBAS, in u-blox 4 to 8, not all 9
+        };
         /*
          * Just enabling the UBX protocol for output is not enough to
          * actually get UBX output; the sentence mix is initially empty.
@@ -3120,39 +3130,19 @@ static void ubx_cfg_prt(struct gps_device_t *session,
          */
         unsigned char msg[3] = {0, 0, 0};
         // request SW and HW Versions, prolly already requested at detection
+        // ask again
         (void)ubx_write(session, UBX_CLASS_MON, 0x04, msg, 0);
 
-        msg[0] = 0x01;          /* class */
-        msg[1] = 0x04;          /* msg id  = UBX-NAV-DOP */
-        msg[2] = 0x01;          /* rate */
-        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-
-        msg[0] = 0x01;          /* class */
-        msg[1] = 0x01;          /* msg id  = UBX-NAV-POSECEF */
-        msg[2] = 0x01;          /* rate */
-        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-
-        msg[0] = 0x01;          /* class */
-        msg[1] = 0x11;          /* msg id  = UBX-NAV-VELECEF */
-        msg[2] = 0x01;          /* rate */
-        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-
+        // turn on common UBX-NAV
+        msg[0] = 0x01;          // class, UBX-NAV
+        msg[2] = 0x01;          // rate, one
+        for (i = 0; i < sizeof(ubx_nav_on); i++) {
+            msg[1] = ubx_nav_on[i];          // msg id to turn on
+            (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
+        }
         msg[0] = 0x01;          /* class */
         msg[1] = 0x26;          /* msg id  = UBX-NAV-TIMELS */
         msg[2] = 0xff;          /* about every 4 minutes if nav rate is 1Hz */
-        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-
-        /* UBX-NAV-TIMEGPS is a great cycle ender */
-        msg[0] = 0x01;          /* class */
-        msg[1] = 0x20;          /* msg id  = UBX-NAV-TIMEGPS */
-        msg[2] = 0x01;          /* rate */
-        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-
-        /* UBX-NAV-SBAS, in u-blox 4+
-         * in NEO-M8N, but not most other 9-series */
-        msg[0] = 0x01;              /* class */
-        msg[1] = 0x32;              /* msg id  = NAV-SBAS */
-        msg[2] = 0x0a;              /* rate */
         (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
 
         /* UBX-NAV-SOL deprecated in u-blox 6, gone in u-blox 9.
