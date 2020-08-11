@@ -2922,6 +2922,7 @@ static void ubx_cfg_prt(struct gps_device_t *session,
 {
     unsigned long usart_mode = 0;
     unsigned char buf[UBX_CFG_LEN];
+    int i;
 
     memset(buf, '\0', UBX_CFG_LEN);
 
@@ -3043,7 +3044,32 @@ static void ubx_cfg_prt(struct gps_device_t *session,
          */
 
         unsigned char msg[3];
+        /* nmea to turn on at rate one (multiplier on measurement rate)
+         * u-blox 8 default: RMC, VTG, GGA, GSA GSV, GLL
+         * who wanted GST? */
+        unsigned char nmea_on[] = {
+            0x00,          // msg id  = GGA
+            // 0x01,          /* msg id  = GLL, only need RMC */
+            0x02,          // msg id  = GSA
+            0x03,          // msg id  = GSV
+            0x04,          // msg id  = RMC
+            0x05,          // msg id  = VTG
+            0x07,          // msg id  = GST, GNSS pseudorange error statistics
+            0x08,          // msg id  = ZDA, for UTC year
+            0x09,          // msg id  = GBS, for RAIM errors
+        };
 
+        // enable NMEA first, in case we over-run receiver input buffer.
+
+        // turn on rate one NMEA
+        msg[0] = 0xf0;          /* class, NMEA */
+        msg[2] = 0x01;          /* rate, one */
+        for (i = 0; i < sizeof(nmea_on); i++) {
+            msg[1] = nmea_on[i];          // msg id to turn on
+            (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
+        }
+
+        // Now turn off UBX, one at a time.
         msg[0] = 0x01;          /* class */
         msg[1] = 0x04;          /* msg id  = UBX-NAV-DOP */
         msg[2] = 0x00;          /* rate */
@@ -3087,41 +3113,7 @@ static void ubx_cfg_prt(struct gps_device_t *session,
         msg[2] = 0x00;          /* rate */
         (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
 
-        /* try to improve the sentence mix. in particular by enabling ZDA */
-        msg[0] = 0xf0;          /* class */
-        msg[1] = 0x09;          /* msg id  = GBS */
-        msg[2] = 0x01;          /* rate */
-        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-        msg[0] = 0xf0;          /* class */
-        msg[1] = 0x00;          /* msg id  = GGA */
-        msg[2] = 0x01;          /* rate */
-        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-        msg[0] = 0xf0;          /* class */
-        msg[1] = 0x02;          /* msg id  = GSA */
-        msg[2] = 0x01;          /* rate */
-        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-        msg[0] = 0xf0;          /* class */
-        msg[1] = 0x07;          /* msg id  = GST */
-        msg[2] = 0x01;          /* rate */
-        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-        msg[0] = 0xf0;          /* class */
-        msg[1] = 0x03;          /* msg id  = GSV */
-        msg[2] = 0x01;          /* rate */
-        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-        msg[0] = 0xf0;          /* class */
-        msg[1] = 0x04;          /* msg id  = RMC */
-        msg[2] = 0x01;          /* rate */
-        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-        msg[0] = 0xf0;          /* class */
-        msg[1] = 0x05;          /* msg id  = VTG */
-        msg[2] = 0x01;          /* rate */
-        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-        msg[0] = 0xf0;          /* class */
-        msg[1] = 0x08;          /* msg id  = ZDA */
-        msg[2] = 0x01;          /* rate */
-        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
     } else { /* MODE_BINARY */
-        int i;
         // nmea to turn off
         unsigned char nmea_off[] = {
             0x00,          /* msg id  = GGA */
