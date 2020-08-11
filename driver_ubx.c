@@ -2922,7 +2922,7 @@ static void ubx_cfg_prt(struct gps_device_t *session,
 {
     unsigned long usart_mode = 0;
     unsigned char buf[UBX_CFG_LEN];
-    int i;
+    unsigned long i;
 
     memset(buf, '\0', UBX_CFG_LEN);
 
@@ -3059,6 +3059,21 @@ static void ubx_cfg_prt(struct gps_device_t *session,
             0x09,          // msg id  = GBS, for RAIM errors
         };
 
+        unsigned char ubx_nav_off[] = {
+            0x01,          // msg id = NAV-POSECEF
+            0x04,          // msg id = UBX-NAV-DOP
+            // UBX-NAV-SOL deprecated in u-blox 6, gone in u-blox 9.
+            0x06,          // msg id = NAV-SOL
+            0x07,          // msg id = NAV-PVT, in u-blox 6 and on
+            0x11,          // msg id = NAV-VELECEF
+            0x20,          // msg id = UBX-NAV-TIMEGPS
+            // NAV-SVINFO in u-blox 4 to 8, in 9 became NAV-SAT
+            0x30,          // msg id = NAV-SVINFO
+            0x32,          // msg id = NAV-SBAS
+            0x35,          // msg id = NAV-SAT, in u-blox 8 and 9
+            0x61,          // msg id = NAV-EOE
+        };
+
         // enable NMEA first, in case we over-run receiver input buffer.
 
         // turn on rate one NMEA
@@ -3069,49 +3084,13 @@ static void ubx_cfg_prt(struct gps_device_t *session,
             (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
         }
 
-        // Now turn off UBX, one at a time.
-        msg[0] = 0x01;          /* class */
-        msg[1] = 0x04;          /* msg id  = UBX-NAV-DOP */
-        msg[2] = 0x00;          /* rate */
-        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-
-        /* UBX-NAV-SOL deprecated in u-blox 6, gone in u-blox 9.
-         * UBX-NAV-PVT for later models.  Turn both off */
-        msg[0] = 0x01;          /* class */
-        msg[1] = 0x06;          /* msg id  = NAV-SOL */
-        msg[2] = 0x00;          /* rate */
-        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-
-        msg[0] = 0x01;          /* class */
-        msg[1] = 0x07;          /* msg id  = NAV-PVT */
-        msg[2] = 0x00;          /* rate */
-        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-
-        msg[0] = 0x01;          /* class */
-        msg[1] = 0x20;          /* msg id  = UBX-NAV-TIMEGPS */
-        msg[2] = 0x00;          /* rate */
-        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-
-        /* NAV-SVINFO became NAV-SAT */
-        msg[0] = 0x01;          /* class */
-        msg[1] = 0x30;          /* msg id  = NAV-SVINFO */
-        msg[2] = 0x00;          /* rate */
-        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-        msg[0] = 0x01;          /* class */
-        msg[1] = 0x35;          /* msg id  = NAV-SAT */
-        msg[2] = 0x00;          /* rate */
-        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-
-        msg[0] = 0x01;          /* class */
-        msg[1] = 0x32;          /* msg id  = NAV-SBAS */
-        msg[2] = 0x00;          /* rate */
-        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
-
-        /* UBX-NAV-EOE */
-        msg[0] = 0x01;          /* class */
-        msg[1] = 0x61;          /* msg id  = NAV-EOE */
-        msg[2] = 0x00;          /* rate */
-        (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
+        // Now turn off UBX-NAV, one at a time.
+        msg[0] = 0x01;          // class, UBX-NAV
+        msg[2] = 0x00;          // rate off
+        for (i = 0; i < sizeof(ubx_nav_off); i++) {
+            msg[1] = ubx_nav_off[i];          // msg id to turn on
+            (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
+        }
 
     } else { /* MODE_BINARY */
         // nmea to turn off
