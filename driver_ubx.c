@@ -3121,6 +3121,20 @@ static void ubx_cfg_prt(struct gps_device_t *session,
         msg[2] = 0x01;          /* rate */
         (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
     } else { /* MODE_BINARY */
+        int i;
+        // nmea to turn off
+        unsigned char nmea_off[] = {
+            0x00,          /* msg id  = GGA */
+            0x01,          /* msg id  = GLL */
+            0x02,          /* msg id  = GSA */
+            0x03,          /* msg id  = GSV */
+            0x04,          /* msg id  = RMC */
+            0x05,          /* msg id  = VTG */
+            0x07,          /* msg id  = GST */
+            0x08,          /* msg id  = ZDA */
+            0x09,          /* msg id  = GBS */
+        };
+
         /*
          * Just enabling the UBX protocol for output is not enough to
          * actually get UBX output; the sentence mix is initially empty.
@@ -3217,6 +3231,7 @@ static void ubx_cfg_prt(struct gps_device_t *session,
             msg[2] = 0x0a;              /* rate */
             (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
         } else {
+
             /* protver 15+
              * u-blox 8 or later
              * u-blox 6 w/ GLONASS, protver 14 have NAV-PVT */
@@ -3240,7 +3255,13 @@ static void ubx_cfg_prt(struct gps_device_t *session,
                 (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
             }
         }
-
+        // turn off common NMEA
+        msg[0] = 0xf0;          /* class, NMEA */
+        msg[2] = 0x00;          /* rate, off */
+        for (i = 0; i < sizeof(nmea_off); i++) {
+            msg[1] = nmea_off[i];          // msg id to turn off
+            (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
+        }
     }
 }
 
