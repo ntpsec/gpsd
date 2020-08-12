@@ -338,6 +338,9 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
         (void)strlcat(obuf, (char *)&buf[start_of_str], sizeof(obuf));
     }
 
+    // save what we can in subtype1
+    (void)strlcpy(session->subtype1, obuf, sizeof(session->subtype1));
+
     /* find PROTVER literal, followed by single separator character */
     cptr = strstr(obuf, "PROTVER=");     // protVer 18 and above
     if (NULL == cptr) {
@@ -345,8 +348,9 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
     }
     if (NULL != cptr) {
         int protver = atoi(cptr + 8);
-        if (9 < protver) {
-            /* protver 10, u-blox 5, is the oldest we know */
+        if (7 < protver) {
+            /* protver 8, u-blox Antaris, is the oldest we know, but never
+             * used explicitly.  protver 15, u-blox 8, is oldest seen. */
             session->driver.ubx.protver = protver;
         }
     }
@@ -360,17 +364,20 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
             cptr = strstr(session->subtype + 3, fw_protver_map[n].fw_string);
             /* use only when swVersion field starts with fw_string */
             if (cptr == (session->subtype + 3)) {
-                session->driver.ubx.protver = (int)fw_protver_map[n].protver;
+                session->driver.ubx.protver =
+                    (unsigned char)fw_protver_map[n].protver;
                 break;
             }
         }
+        if (0 == session->driver.ubx.protver) {
+            // Still not found, old chip.  Set to one so we know we tried.
+            session->driver.ubx.protver = 1;
+        }
     }
 
-    // save what we can in subtype1
-    (void)strlcpy(session->subtype1, obuf, sizeof(session->subtype1));
     /* output SW and HW Version at LOG_INF */
     GPSD_LOG(LOG_INF, &session->context->errout,
-             "UBX-MON-VER: %s %s PROTVER %d\n",
+             "UBX-MON-VER: %s %s PROTVER %u\n",
              session->subtype, session->subtype1,
              session->driver.ubx.protver);
 }
@@ -2571,7 +2578,7 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-NAV-DGPS\n");
         break;
     case UBX_NAV_DOP:
-        /* DOP seems to be the last NAV sent in a cycle */
+        // DOP seems to be the last NAV sent in a cycle, unless NAV-EOE
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-DOP\n");
         mask = ubx_msg_nav_dop(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
@@ -2808,10 +2815,24 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
             session->driver.ubx.last_iTOW = session->driver.ubx.iTOW;
             /* debug
             GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "UBX: new ender %x, iTOW %.2f\n",
-                     session->driver.ubx.end_msgid, iTOW);
+                     "UBX: new ender %x, iTOW %.2f last %u PROTVER %u\n",
+                     session->driver.ubx.end_msgid, iTOW,
+                     session->driver.ubx.last_protver,
+                     session->driver.ubx.protver);
              */
+
+            // Did protver change?
+            if (session->driver.ubx.last_protver !=
+                session->driver.ubx.protver) {
+                /* Assumption: we just did init, but did not have
+                 * protver then, so init is not complete.  Finish now. */
+                if (session->mode == O_OPTIMIZE) {
+                    ubx_mode(session, MODE_BINARY);
+                }
+                session->driver.ubx.last_protver = session->driver.ubx.protver;
+            }
         }
+
         session->driver.ubx.last_msgid = msgid;
         /* FIXME: last_time never used... */
         session->driver.ubx.last_time = session->newdata.time;
@@ -2928,10 +2949,10 @@ static void ubx_event_hook(struct gps_device_t *session, event_t event)
     }
 }
 
+/* generate and send a configuration block */
 static void ubx_cfg_prt(struct gps_device_t *session,
                         speed_t speed, const char parity, const int stopbits,
                         const int mode)
-/* generate and send a configuration block */
 {
     unsigned long usart_mode = 0;
     unsigned char buf[UBX_CFG_LEN];
@@ -3163,8 +3184,11 @@ static void ubx_cfg_prt(struct gps_device_t *session,
         /* FIXME: possibly sending too many messages without waiting
          * for u-blox ACK, over running its input buffer.
          *
-         * for example, the UBX-MON-VER fails here, but works in other
-         * contexts
+         * For example, the UBX-MON-VER may fail here, but works in other
+         * contexts.
+         *
+         * Need UBX-MON-VER for protver.  Need protver to properly configure
+         * the message set.
          */
         unsigned char msg[3] = {0, 0, 0};
         // request SW and HW Versions, prolly already requested at detection
@@ -3179,9 +3203,12 @@ static void ubx_cfg_prt(struct gps_device_t *session,
             (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
         }
 
-        if (15 > session->driver.ubx.protver ||
-            0 == session->driver.ubx.protver) {
-            // protver 14 or less, or unknown version, turn on pre-15 UBX-NAV
+        /* if protver unknown, turn on everything.  Which may be too
+         * much for slower serial port speeds.  Hope that we know protver
+         * later and can fix things then. */
+        if (15 > session->driver.ubx.protver) {
+            /* protver 14 or less, or unknown version,
+             * turn on pre-15 UBX-NAV */
             msg[0] = 0x01;          // class, UBX-NAV
             msg[2] = 0x01;          // rate, one
             for (i = 0; i < sizeof(ubx_14_nav_on); i++) {
@@ -3198,6 +3225,15 @@ static void ubx_cfg_prt(struct gps_device_t *session,
             for (i = 0; i < sizeof(ubx_15_nav_on); i++) {
                 msg[1] = ubx_15_nav_on[i];          // msg id to turn on
                 (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
+            }
+            if (15 <= session->driver.ubx.protver) {
+                // protver 15 or more, turn off 14 and below UBX-NAV
+                msg[0] = 0x01;          // class, UBX-NAV
+                msg[2] = 0x00;          // rate, off
+                for (i = 0; i < sizeof(ubx_14_nav_on); i++) {
+                    msg[1] = ubx_14_nav_on[i];          // msg id to turn off
+                    (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
+                }
             }
         }
 
