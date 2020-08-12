@@ -1887,13 +1887,13 @@ ubx_msg_nav_velned(struct gps_device_t *session, unsigned char *buf,
  * in u-blox 4_
  * in NEO-M9N
  * Not in some u-blox 9
- * FIXME: not well decoded...
+ * Decode looks good, but data only goes to log.
  */
 static void ubx_msg_nav_sbas(struct gps_device_t *session, unsigned char *buf,
                              size_t data_len)
 {
-    unsigned int i, nsv;
-    short ubx_PRN;
+    unsigned i, cnt;
+    unsigned ubx_PRN;
     short nmea_PRN;
     unsigned char gnssid = 0;
     unsigned char svid = 0;
@@ -1905,32 +1905,45 @@ static void ubx_msg_nav_sbas(struct gps_device_t *session, unsigned char *buf,
     }
 
     session->driver.ubx.iTOW = getles32(buf, 0);
+    ubx_PRN = getub(buf, 4);
+    cnt = getub(buf, 8);
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "UBX-NAV-SBAS: %d %d %d %d %d\n",
-             (int)getub(buf, 4), (int)getub(buf, 5), (int)getub(buf, 6),
-             (int)getub(buf, 7), (int)getub(buf, 8));
+             "UBX-NAV-SBAS iTOW %lu geo %u mode %u sys %u service x%x "
+             "cnt %u\n",
+             (unsigned long)session->driver.ubx.iTOW,
+             ubx_PRN, (unsigned)getub(buf, 5),
+             (unsigned)getub(buf, 6), (unsigned)getub(buf, 7),
+             cnt);
 
-    nsv = getub(buf, 8);
-    if (MAXCHANNELS < nsv) {
+    if (MAXCHANNELS < cnt) {
         // too many sats for us, pacify coverity
-        nsv = MAXCHANNELS;
+        cnt = MAXCHANNELS;
     }
-    if (data_len < (12 + (12 * nsv))) {
+    if (data_len < (12 + (12 * cnt))) {
         // length check, pacify coverity
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "UBX-NAV-SBAS message, bad message length %zd", data_len);
     }
-    for (i = 0; i < nsv; i++) {
-        int off = 12 + 12 * i;
+    for (i = 0; i < cnt; i++) {
+        int off = 12 + (12 * i);
+        unsigned svid = getub(buf, off);
+        unsigned flags = getub(buf, off + 1);
+        // User Differential Range Error (udre)
+        unsigned udre = getub(buf, off + 2);
+        int svSys = getsb(buf, off + 3);
+        unsigned svService = getub(buf, off + 4);
+        int prc = getles16(buf, off + 6);
+        int ic = getles16(buf, off + 10);
         GPSD_LOG(LOG_DATA, &session->context->errout,
-                 "UBX-NAV-SBAS info on SV: %d\n", (int)getub(buf, off));
+                 "UBX-NAV-SBAS SV%3u flags x%02x udre %u svSys %2d "
+                 "svService x%x prc %d ic %d\n",
+                 svid, flags, udre, svSys, svService, prc, ic);
     }
     /* really 'in_use' depends on the sats info, EGNOS is still
      * in test.  In WAAS areas one might also check for the type of
      * corrections indicated
      */
 
-    ubx_PRN = getub(buf, 4);
     nmea_PRN = ubx_to_prn(ubx_PRN, &gnssid, &svid);
 #ifdef __UNUSED
     /* debug */
