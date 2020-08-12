@@ -83,7 +83,7 @@ extern "C" {
  *      Add gps_context_t.passive
  *      Add gps_context_t.batteryRTC
  * 3.21.1~dev
- *      Nothing yet.
+ *      Add gps_device_t.ubx.last_protver
  *
  */
 
@@ -716,16 +716,17 @@ struct gps_device_t {
 #endif /* ZODIAC_ENABLE */
 #ifdef UBLOX_ENABLE
         struct {
-            unsigned char port_id;
-            unsigned char sbas_in_use;
-            unsigned char protver;              /* u-blox protocol version */
-            unsigned int last_msgid;            /* last class/ID */
             /* FIXME: last_time set but never used? */
             timespec_t last_time;               /* time of last_msgid */
-            unsigned int end_msgid;             /* cycle ender class/ID */
             /* iTOW, and last_iTOW, in ms, used for cycle end detect. */
             int64_t iTOW;
             int64_t last_iTOW;
+            unsigned int end_msgid;             /* cycle ender class/ID */
+            unsigned int last_msgid;            /* last class/ID */
+            unsigned char port_id;
+            unsigned char sbas_in_use;
+            unsigned char protver;              // u-blox protocol version
+            unsigned char last_protver;         // last protocol version
         } ubx;
 #endif /* UBLOX_ENABLE */
 #ifdef NAVCOM_ENABLE
