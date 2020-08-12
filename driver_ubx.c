@@ -3126,8 +3126,10 @@ static void ubx_cfg_prt(struct gps_device_t *session,
             0x20,          // msg id = UBX-NAV-TIMEGPS
             // 0x26,           // msg id  = UBX-NAV-TIMELS, low rate, skip here
             /* NAV-SBAS errors guranteed by FAA within 6 seconds!
-             * in NEO-M8N, but not most other 9-series */
-            0x32,          // msg id = NAV-SBAS, in u-blox 4 to 8, not all 9
+             * in NEO-M8N, but not most other 9-series.
+             * Do not set NAV-SBAS as the gpsd decode does not go to JSON,
+             * so the data is wasted. */
+            // 0x32,          // msg id = NAV-SBAS, in u-blox 4 to 8, not 9
         };
 
         /* UBX-NAV-SOL deprecated in u-blox 6, gone in u-blox 9.
