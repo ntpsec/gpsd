@@ -789,7 +789,8 @@ static gps_mask_t fill_dop(const struct gpsd_errout_t *errout,
             * cos(sp->elevation * DEG_2_RAD);
         satpos[n][2] = sin(sp->elevation * DEG_2_RAD);
         satpos[n][3] = 1;
-        GPSD_LOG(LOG_INF, errout, "PRN=%3d az=%.1f ael%.1f (%f, %f, %f)\n",
+        GPSD_LOG(LOG_INF, errout,
+                 "PRN%3d az %5.1f el %4.1f (%9.6f, %9.6f, %9.6f)\n",
                  gpsdata->skyview[k].PRN,
                  gpsdata->skyview[k].azimuth,
                  gpsdata->skyview[k].elevation,
