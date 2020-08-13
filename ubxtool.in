@@ -5092,39 +5092,58 @@ High Precision GNSS products only."""
                 '  meanXHP %d meanYHP %d meanZHP %d reserved2 %u meanAcc %u\n'
                 '  obs %u valid %u active %u' % u)
 
+    nav_svinfo_gflags = {
+        0: 'Antaris, Antaris 4',
+        1: 'u-blox 5',
+        2: 'u-blox 6',
+        3: 'u-blox 7',
+        4: 'u-blox 8/M8',
+        }
+
+    nav_svinfo_flags = {
+        1: 'svUsed',
+        2: 'diffCorr',
+        4: 'orbitAvail',
+        8: 'orbitEph',
+        0x10: 'unhealthy',
+        0x20: 'orbitAlm',
+        0x40: 'orbitAop',
+        0x80: 'smoothed',
+        }
+
+    nav_svinfo_quality = {
+        0: 'no signal',
+        1: 'searching signal',
+        2: 'signal acquired',
+        3: 'signal detected but unusable',
+        4: 'code locked, time synced',
+        5: 'code and carrier locked, time synced',
+        6: 'code and carrier locked, time synced',
+        7: 'code and carrier locked, time synced',
+        }
+
     def nav_svinfo(self, buf):
         """UBX-NAV-SVINFO decode"""
 
         # in M8 Timing and FTS only
         m_len = len(buf)
 
-        u = struct.unpack_from('<Lbb', buf, 0)
-        s = ' iTOW:%d ms, numCh:%d globalFlags:%d' % u
+        u = struct.unpack_from('<LbbH', buf, 0)
+        s = ' iTOW:%d numCh %d globalFlags %d reserved1 x%x' % u
+        if VERB_DECODE <= opts['verbosity']:
+            s += '\n  globalFlags (%s)' % index_s(u[2], self.nav_svinfo_gflags)
 
         m_len -= 8
         i = 0
         while 0 < m_len:
             u = struct.unpack_from('<BBBBBbhl', buf, 8 + i * 12)
-            s += ('\n  chn %3d svid %3d flags %#0.2x quality %#x cno %2d'
+            s += ('\n  chn %3d svid %3d flags %#0.2x quality %u cno %2d'
                   ' elev %3d azim %3d prRes %6d' % u)
-            if 0 < u[2]:
-                s += '\n   '
-                if 1 & u[2]:
-                    s += 'svUsed '
-                if 2 & u[2]:
-                    s += 'diffCorr '
-                if 4 & u[2]:
-                    s += 'orbitAvail '
-                if 8 & u[2]:
-                    s += 'orbitEph '
-                if 0x10 & u[2]:
-                    s += 'unhealthy '
-                if 0x20 & u[2]:
-                    s += 'orbitAlm '
-                if 0x40 & u[2]:
-                    s += 'orbitAop '
-                if 0x80 & u[2]:
-                    s += 'smoothed '
+            if VERB_DECODE <= opts['verbosity']:
+                s += ('\n   flags (%s)'
+                      '\n   quality (%s)' %
+                      (flag_s(u[2], self.nav_svinfo_flags),
+                       index_s(u[3], self.nav_svinfo_quality)))
             m_len -= 12
             i += 1
 
