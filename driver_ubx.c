@@ -3156,9 +3156,11 @@ static void ubx_cfg_prt(struct gps_device_t *session,
         };
 
         /* UBX-NAV-SOL deprecated in u-blox 6, gone in u-blox 9.
-         * Use UBX-NAV-PVT after u-blox 7
+         * Use UBX-NAV-PVT after u-blox 7 (protver 15+)
          * u-blox 6 w/ GLONASS, protver 14 have NAV-PVT
          * UBX-NAV-SOL has same data from NAV-POSECEF and NAV-VELECEF.
+         * Need NAV-SOL for fix type and fix flags.
+         * skip NAV-POSLLH as we compute lat/lon/alt/geoid from ECEF.
          *
          * UBX-NAV-SVINFO deprecated in u-blox 8, gone in u-blox 9.
          * Use UBX-NAV-SAT after u-blox 7
