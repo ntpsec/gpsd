@@ -3221,6 +3221,16 @@ static void ubx_cfg_prt(struct gps_device_t *session,
                 msg[1] = ubx_14_nav_on[i];          // msg id to turn on
                 (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
             }
+            if (0 != session->driver.ubx.protver) {
+                // protver 14 or less, known version only.
+                // turn off 15 and above UBX-NAV
+                msg[0] = 0x01;          // class, UBX-NAV
+                msg[2] = 0x00;          // rate, off
+                for (i = 0; i < sizeof(ubx_15_nav_on); i++) {
+                    msg[1] = ubx_15_nav_on[i];          // msg id to turn off
+                    (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
+                }
+            }
         }
 
         if (15 <= session->driver.ubx.protver ||
