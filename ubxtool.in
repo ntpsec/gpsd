@@ -6608,7 +6608,9 @@ High Precision GNSS products only."""
         """dis/enable basic binary messages. -e/-d BINARY"""
 
         # FIXME: does not change UBX-CFG-PRT outProtoMask for current port.
+        # FIXME: in u-blox 9, use VAL-SET to ensure NMEA mask on.
         # Workarouund: gpsctl -b
+        # try to keep in sync with driver_ubx.c, ubx_cfg_prt()
 
         rate = 1 if able else 0
 
@@ -6758,44 +6760,35 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
     def send_able_nmea(self, able, args):
         """dis/enable basic NMEA messages"""
 
+        # try to keep in sync with driver_ubx.c, ubx_cfg_prt()
         # FIXME: does not change UBX-CFG-PRT outProtoMask for current port.
+        # FIXME: in u-blox 9, use VAL-SET to ensure NMEA mask on.
         # Workarouund: gpsctl -n
+
+        # we assume no oddball NMEA to toggle
+        nmea_toggle = (
+            0x00,          # msg id  = GGA
+            # 0x01,        # msg id  = GLL, only need RMC */
+            0x02,          # msg id  = GSA
+            0x03,          # msg id  = GSV
+            0x04,          # msg id  = RMC
+            0x05,          # msg id  = VTG
+            0x07,          # msg id  = GST, GNSS pseudorange error statistics
+            0x08,          # msg id  = ZDA, for UTC year
+            0x09,          # msg id  = GBS, for RAIM errors
+            )
+
         rate = 1 if able else 0
 
-        # xxGBS
+        # msgClass (UBX-NMEA), msgID, rate
         m_data = bytearray([0xf0, 0x09, rate])
-        gps_model.gps_send(6, 1, m_data)
+        for id in nmea_id_toggle:
+            m_data[1] = id
+            # UBX-CFG-MSG
+            gps_model.gps_send(6, 1, m_data)
 
-        # xxGGA
-        m_data = bytearray([0xf0, 0x00, rate])
-        gps_model.gps_send(6, 1, m_data)
-
-        # xxGGL
-        m_data = bytearray([0xf0, 0x01, rate])
-        gps_model.gps_send(6, 1, m_data)
-
-        # xxGSA
-        m_data = bytearray([0xf0, 0x02, rate])
-        gps_model.gps_send(6, 1, m_data)
-
-        # xxGST
-        m_data = bytearray([0xf0, 0x07, rate])
-        gps_model.gps_send(6, 1, m_data)
-
-        # xxGSV
-        m_data = bytearray([0xf0, 0x03, rate])
-        gps_model.gps_send(6, 1, m_data)
-
-        # xxRMC
-        m_data = bytearray([0xf0, 0x04, rate])
-        gps_model.gps_send(6, 1, m_data)
-
-        # xxVTG
-        m_data = bytearray([0xf0, 0x05, rate])
-        gps_model.gps_send(6, 1, m_data)
-
-        # xxZDA
-        m_data = bytearray([0xf0, 0x08, rate])
+        # xxGLL, never need it
+        m_data = bytearray([0xf0, 0x01, 0])
         gps_model.gps_send(6, 1, m_data)
 
     def send_able_rtcm3(self, able, args):
