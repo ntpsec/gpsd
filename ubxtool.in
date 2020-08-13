@@ -6612,79 +6612,90 @@ High Precision GNSS products only."""
         # Workarouund: gpsctl -b
         # try to keep in sync with driver_ubx.c, ubx_cfg_prt()
 
+        # UBX-NAV we always toggle
+        # we assume no oddball UBX to toggle
+        ubx_nav_toggle = (
+            0x04,          # msg id = UBX-NAV-DOP
+
+            # UBX-NAV-TIMEGPS
+            # Note: UTC may, or may not be UBX-NAV-TIMEGPS.
+            #       depending on UBX-CFG-NAV5 utcStandard
+            # Note: We use TIMEGPS to get the leapS
+            # UBX-NAV-TIMEGPS is a great cycle ender, NAV-EOE better
+            0x20,          # msg id = UBX-NAV-TIMEGPS
+            )
+
+        # UBX for protver < 15
+        ubx_14_nav_on = (
+            # UBX-NAV-SOL is ECEF. deprecated in protver 14, gone in protver 27
+            0x06,              # msg id = NAV-SOL
+            0x30,              # msg id = NAV-SVINFO
+        )
+
+        # UBX for protver >= 15
+        ubx_15_nav_on = (
+            # Need NAV-POSECEF, NAV-VELECEF and NAV-PVT to replace NAV-SOL
+            0x01,              # msg id = NAV-POSECEF
+            0x07,              # msg id = NAV-PVT
+            0x11,              # msg id = NAV-VELECEF
+            0x35,              # msg id = NAV-SAT
+            0x61,              # msg id = NAV-EOE, first in protver 18
+        )
+
+        # some we always turn off, user can enable later
+        ubx_nav_off = (
+            0x12,              # msg id = NAV-VELNED
+            # turn off NAV-SBAS as the gpsd decode does not go to JSON,
+            # so the data is wasted. */
+            0x32,              # msg id = NAV-SBAS, in u-blox 4 to 8, not 9
+            )
+
         rate = 1 if able else 0
 
-        # UBX-NAV-DOP
-        m_data = bytearray([0x01, 0x04, rate])
-        gps_model.gps_send(6, 1, m_data)
+        # msgClass (UBX-NAV), msgID, rate
+        m_data = bytearray([0x01, 0x09, rate])
+        for id in ubx_nav_toggle:
+            m_data[1] = id
+            # UBX-CFG-MSG
+            gps_model.gps_send(6, 1, m_data)
 
         if 15 > opts['protver']:
-            # UBX-NAV-SOL is ECEF. deprecated in protver 14, gone in protver 27
-            m_data = bytearray([0x01, 0x06, rate])
-            gps_model.gps_send(6, 1, m_data)
-        else:
-            # UBX-NAV-PVT
-            m_data = bytearray([0x01, 0x07, rate])
-            gps_model.gps_send(6, 1, m_data)
-            # UBX-NAV-SOL is deprecated in protver 14, kill it always
-            m_data = bytearray([0x01, 0x06, 0])
-            gps_model.gps_send(6, 1, m_data)
-
-        # UBX-NAV-POSECEF
-        m_data = bytearray([0x01, 0x01, rate])
-        gps_model.gps_send(6, 1, m_data)
-
-        # UBX-NAV-VELECEF
-        m_data = bytearray([0x01, 0x11, rate])
-        gps_model.gps_send(6, 1, m_data)
-
-        # UBX-NAV-TIMEGPS
-        # Note: UTC may, or may not be UBX-NAV-TIMEGPS.
-        #       depending on UBX-CFG-NAV5 utcStandard
-        # Note: We use TIMEGPS to get the leapS
-        m_data = bytearray([0x01, 0x20, rate])
-        gps_model.gps_send(6, 1, m_data)
-
-        # no point doing UBX-NAV-SBAS and UBX-NAV-SVINFO
-        # faster than every 10 seconds
-        if rate:
-            rate_s = 10
-        else:
-            rate_s = 0
-
-        if 27 > opts['protver']:
-            # UBX-NAV-SBAS, gone in protver 27
-            m_data = bytearray([0x01, 0x32, rate_s])
-            gps_model.gps_send(6, 1, m_data)
-
-        # get Satellite Information
-        if 15 > opts['protver']:
-            # UBX-NAV-SVINFO - deprecated in protver 15, gone in 27
-            m_data = bytearray([0x01, 0x30, rate_s])
-            gps_model.gps_send(6, 1, m_data)
-
-            # UBX-NAV-SAT turn it off, if we can
-            m_data = bytearray([0x01, 0x35, 0])
-            gps_model.gps_send(6, 1, m_data)
-        else:
-            # use UBX-NAV-SAT for protver 15 and up
-            m_data = bytearray([0x01, 0x35, rate_s])
-            gps_model.gps_send(6, 1, m_data)
-
-            if 27 > opts['protver']:
-                # UBX-NAV-SVINFO turn it off, if we can
-                m_data = bytearray([0x01, 0x30, 0])
+            for id in ubx_14_nav_on:
+                m_data[1] = id
+                # UBX-CFG-MSG
                 gps_model.gps_send(6, 1, m_data)
 
-        if 18 <= opts['protver']:
-            # first in u-blox 8
-            # UBX-NAV-EOE, end of epoch. Good cycle ender
-            m_data = bytearray([0x01, 0x61, rate])
-            gps_model.gps_send(6, 1, m_data)
+            # turn off >= 15 messages.  Yes this makes NAKs.
+            m_data[2] = 0       # rate off
+            for id in ubx_15_nav_on:
+                m_data[1] = id
+                # UBX-CFG-MSG
+                gps_model.gps_send(6, 1, m_data)
 
-        if not able and 15 <= opts['protver']:
-            # if disable, turn off UBX-NAV-VELNED too
-            m_data = bytearray([0x01, 0x12, 0])
+        else:
+            for id in ubx_15_nav_on:
+                m_data[1] = id
+                # UBX-CFG-MSG
+                gps_model.gps_send(6, 1, m_data)
+
+            # turn off < 15 messages.  Yes this may make NAKs.
+            m_data[2] = 0       # rate off
+            for id in ubx_14_nav_on:
+                m_data[1] = id
+                # UBX-CFG-MSG
+                gps_model.gps_send(6, 1, m_data)
+
+        # msgClass (UBX-NAV), msgID (TIMELS), rate (0xff)
+        # 0xff is about every 4 minutes if nav rate is 1Hz
+        m_data = bytearray([0x01, 0x26, 0xff])
+        # UBX-CFG-MSG
+        gps_model.gps_send(6, 1, m_data)
+
+        # always off NAV messages
+        m_data[2] = 0       # rate off
+        for id in ubx_nav_off:
+            m_data[1] = id
+            # UBX-CFG-MSG
             gps_model.gps_send(6, 1, m_data)
 
     def send_able_ecef(self, able, args):
