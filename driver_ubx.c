@@ -1270,8 +1270,12 @@ ubx_msg_nav_relposned(struct gps_device_t *session, unsigned char *buf,
 /**
  * Navigation solution message: UBX-NAV-SOL
  *
- * UBX-NAV-SOL deprecated in u-blox 6, gone in u-blox 9.
+ * UBX-NAV-SOL, present in Antaris, up to 23,01
+ * deprecated in u-blox 6, gone in u-blox 9.
  * Use UBX-NAV-PVT instead
+ *
+ * UBX-NAV-SOL has ECEF and VECEF, so no need for UBX-NAV-POSECEF and
+ * UBX-NAV-VELECEF
  */
 static gps_mask_t
 ubx_msg_nav_sol(struct gps_device_t *session, unsigned char *buf,
@@ -3140,9 +3144,7 @@ static void ubx_cfg_prt(struct gps_device_t *session,
         };
 
         const unsigned char ubx_nav_on[] = {
-            0x01,          // msg id = NAV-POSECEF
             0x04,          // msg id = UBX-NAV-DOP
-            0x11,          // msg id = NAV-VELECEF
             // UBX-NAV-TIMEGPS is a great cycle ender, NAV-EOE better
             0x20,          // msg id = UBX-NAV-TIMEGPS
             // 0x26,           // msg id  = UBX-NAV-TIMELS, low rate, skip here
@@ -3156,6 +3158,7 @@ static void ubx_cfg_prt(struct gps_device_t *session,
         /* UBX-NAV-SOL deprecated in u-blox 6, gone in u-blox 9.
          * Use UBX-NAV-PVT after u-blox 7
          * u-blox 6 w/ GLONASS, protver 14 have NAV-PVT
+         * UBX-NAV-SOL has same data from NAV-POSECEF and NAV-VELECEF.
          *
          * UBX-NAV-SVINFO deprecated in u-blox 8, gone in u-blox 9.
          * Use UBX-NAV-SAT after u-blox 7
@@ -3170,7 +3173,10 @@ static void ubx_cfg_prt(struct gps_device_t *session,
 
         // UBX for protver >= 15
         const unsigned char ubx_15_nav_on[] = {
+            // Need NAV-POSECEF, NAV-VELECEF and NAV-PVT to replace NAV-SOL
+            0x01,              // msg id = NAV-POSECEF
             0x07,              // msg id = NAV-PVT
+            0x11,              // msg id = NAV-VELECEF
             0x35,              // msg id = NAV-SAT
             0x61,              // msg id = NAV-EOE, first in protver 18
         };
