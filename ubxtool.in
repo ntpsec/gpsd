@@ -5571,7 +5571,8 @@ High Precision GNSS products only."""
     # map subframe 4 SV ID to Page number
     # IS-GPS-200K Table 20-V
     sbfr4_svid_page = {
-        57: 1,   # Reserved (Dupe)
+        0: 0,   # dummy/self
+        57: 1,   # Reserved (Dupe, also 6, 11, 16 21)
         25: 2,
         26: 3,
         27: 4,
@@ -5582,7 +5583,7 @@ High Precision GNSS products only."""
         31: 9,
         32: 10,
         # 57: 11,  # Reserved (Dupe)
-        62: 12,  # reserved
+        62: 12,  # reserved (Dupe 12 and 24)
         52: 13,  # navigation message correction table (NMCT)
         53: 14,  # reserved
         54: 15,  # reserved
@@ -5594,14 +5595,14 @@ High Precision GNSS products only."""
         # 57: 21,  # Reserved (Dupe)
         60: 22,  # reserved
         61: 23,  # reserved
-        # 62: 24,  # Data ID of transmitting SV. (Dupe)
+        # 62: 24,  # reserved (Dupe 12 and 24)
         63: 25,  # A-S Flags/ SV health
         }
 
     # map subframe 5 SV ID to Page number
-    # FIXME: duplicate keys!
     # IS-GPS-200K Table 20-V
     sbfr5_svid_page = {
+        0: 0,   # dummy/self
         1: 1,
         2: 2,
         3: 3,
@@ -5820,12 +5821,10 @@ High Precision GNSS products only."""
                     #  14 and 15 reserved
                     # as of 2018, data ID is always 1.
                     svid = (words[2] >> 22) & 0x3f
-                    if 0 == svid:
-                        # dummy SV
-                        # almanac for dummy sat 0, same as transmitting sat
-                        page = "0/Dummy"
-                    else:
-                        page = index_s(svid, self.sbfr4_svid_page)
+                    # 0 === svid is dummy SV
+                    # almanac for dummy sat 0, same as transmitting sat
+                    # Sec 3.2.1: "Users shall only use non-dummy satellites"
+                    page = index_s(svid, self.sbfr4_svid_page)
 
                     s += ("\n   dataid %u svid %u (page %s)\n" %
                           (words[2] >> 28, svid, page))
@@ -5993,6 +5992,9 @@ High Precision GNSS products only."""
 
                 elif 5 == subframe:
                     svid = (words[2] >> 22) & 0x3f
+                    # 0 === svid is dummy SV
+                    # almanac for dummy sat 0, same as transmitting sat
+                    # Sec 3.2.1: "Users shall only use non-dummy satellites"
                     page = index_s(svid, self.sbfr5_svid_page)
 
                     s += ("\n   dataid %u svid %u (page %s)\n" %
