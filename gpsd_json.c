@@ -766,7 +766,7 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                         (int)subframe->sub5.almanac.sv,
                         (unsigned int)subframe->sub5.almanac.svh,
                         subframe->sub5.almanac.d_eccentricity,
-                        (unsigned long)subframe->sub5.almanac.l_toa,
+                        subframe->sub5.almanac.l_toa,
                         subframe->sub5.almanac.d_deltai,
                         subframe->sub5.almanac.d_Omegad,
                         subframe->sub5.almanac.d_sqrtA,
@@ -911,7 +911,7 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
             /* subframe5, page 25 */
             str_appendf(buf, buflen,
                 ",\"HEALTH2\":{\"toa\":%lu,\"WNa\":%u",
-                           (unsigned long)subframe->sub5_25.l_toa,
+                           subframe->sub5_25.l_toa,
                            (unsigned int)subframe->sub5_25.WNa);
                 /* 1-index loop to construct json */
                 for(i = 1 ; i <= 24; i++){

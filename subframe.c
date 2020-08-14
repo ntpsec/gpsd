@@ -763,7 +763,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
              * IS-GPS-200K Table 20-V */
 
             subp->sub5_25.toa   = ((words[2] >> 8) & 0x0000FF);
-            subp->sub5_25.l_toa <<= 12;
+            subp->sub5_25.l_toa = subp->sub5_25.toa << 12;
             subp->sub5_25.WNa   = ( words[2] & 0x0000FF);
             subp->sub5_25.sv[1] = ((words[2] >> 18) & 0x00003F);
             subp->sub5_25.sv[2] = ((words[2] >> 12) & 0x00003F);

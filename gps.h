@@ -83,9 +83,11 @@ extern "C" {
  *       Add wspeedt, wspeedr, wanglem, wanglet, wangler to  gps_fix_t
  *       Remove unused gps_data_t.navadata_t.
  *       Add relPosL and relPosH to gps_fix_t.NED
+ * 10.1  long l_toa becomes unsigned long l_toa
+ *
  */
 #define GPSD_API_MAJOR_VERSION  10      /* bump on incompatible changes */
-#define GPSD_API_MINOR_VERSION  0       /* bump on compatible changes */
+#define GPSD_API_MINOR_VERSION  1       /* bump on compatible changes */
 
 #define MAXCHANNELS     140     /* u-blox 9 tracks 140 signals */
 #define MAXUSERDEVS     4       /* max devices per user */
@@ -788,7 +790,7 @@ struct almanac_t
     uint8_t sv;  /* The satellite this refers to */
     /* toa, almanac reference time, 8 bits unsigned, seconds */
     uint8_t toa;
-    long l_toa;
+    unsigned long l_toa;
     /* SV health data, 8 bit unsigned bit map */
     uint8_t svh;
     /* deltai, correction to inclination, 16 bits signed, semi-circles */
@@ -1066,7 +1068,7 @@ struct subframe_t {
             /* toa, Almanac reference Time, 8 bits unsigned, scale 2**12,
              * seconds */
             uint8_t toa;
-            long l_toa;
+            unsigned long l_toa;
             /* WNa, Week Number almanac, 8 bits, scale 2, GPS Week
              * Number % 256 */
             uint8_t WNa;
