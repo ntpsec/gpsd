@@ -76,6 +76,13 @@ parser.add_argument(
     help='Count of messages to parse. 0 to disable. [Default %(default)s)]'
 )
 parser.add_argument(
+    '--no-header',
+    dest='header',
+    default=True,
+    action="store_false",
+    help='Do not output header on first line'
+)
+parser.add_argument(
     '--port',
     dest='port',
     default=gps.GPSD_PORT,
@@ -130,8 +137,8 @@ except socket.error:
 session.stream(gps.WATCH_ENABLE | gps.WATCH_SCALED, devpath=options.device)
 
 # top line is headings
-if json_fields is not None:
-    print(','.join(json_fields))
+if json_fields is not None and options.header:
+    print('# %s' % ','.join(json_fields))
 try:
     count = 0
     while True:
@@ -148,8 +155,9 @@ try:
                     # skip dictionay fields
                     continue;
 
+            if options.header:
                 json_fields.append(f)
-            print(','.join(json_fields))
+            print('# %s' % ','.join(json_fields))
 
         for fld in json_fields:
             s += '%s,' % ('' if fld not in report else str(report[fld]))
