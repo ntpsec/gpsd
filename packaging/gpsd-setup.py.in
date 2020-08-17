@@ -6,15 +6,43 @@ SPDX-License-Identifier: BSD-2-clause
 """
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
-from distutils.core import setup, Extension
+try:
+    from setuptools import setup
+except ImportError:  # No setuptools in Python 2
+    from distutils.core import setup
 
 setup(
-    name = 'gps',
-    version = '@VERSION@',
-    description = 'gpsd Python modules for additional Pythons',
-    url = '@WEBSITE@',
-    author = 'the GPSD project',
-    author_email = '@DEVMAIL@',
-    license = 'BSD',
-    packages = ['gps'],
+    name='gps',
+    version='@VERSION@',
+    description='gpsd Python modules for additional Pythons',
+    long_description='''# README
+
+the gps module is a translator between gpsd and its' clients.
+gps communicates on a port (2947) requesting information.  The
+communication is JSON formatted. gps takes this information
+from gpsd and translates it a pythonic interface easier to
+understand for clients.
+
+This module is for additional Pythons.''',
+    long_description_content_type='text/markdown',
+    url='@WEBSITE@',
+    author='the GPSD project',
+    author_email='@DEVMAIL@',
+    license='BSD',
+    packages=['gps'],
+    project_urls={
+        'download': '@DOWNLOAD@',
+        'irc':      '@IRCCHAN@',
+        'issues':   '@ISSUES@',
+        'lists':    '@MAILMAN@',
+        'project':  '@PROJECTPAGE@',
+        'support':  '@SUPPORT@',
+        'tiplink':  'https://www.patreon.com/esr',
+    },
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'License :: OSI Approved :: BSD License',
+        'Operating System :: POSIX',
+        'Programming Language :: Python',
+    ],
 )
