@@ -140,8 +140,17 @@ try:
             continue
         s = ''
         if json_fields is None:
-            json_fields = report.keys()
+            # no fields specified, use the 1st ones found
+            fields = report.keys()
+            json_fields = []
+            for f in fields:
+                if isinstance(report[f], (dict, list)):
+                    # skip dictionay fields
+                    continue;
+
+                json_fields.append(f)
             print(','.join(json_fields))
+
         for fld in json_fields:
             s += '%s,' % ('' if fld not in report else str(report[fld]))
         print(s)
