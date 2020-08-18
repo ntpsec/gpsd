@@ -11,6 +11,8 @@
 #
 #   Grab 100 samples of time,lat,lon,altHAE:
 #       $ gpscsv -n 100 --cvt-isotime  > tpv.dat
+#   Grab 100 samples of time,epx,epy,epv,eph
+#       $ gpscsv -n 100 --cvt-isotime -f time,epx,epy,epv,eph > ep.dat
 #   And grab 100 samples of time,xdop,ydop,vdop,tdop,hdop,gdop,pdop
 #       $ gpscsv -n 100 --cvt-isotime -c SKY  > sky.dat
 #
@@ -36,6 +38,12 @@
 #   Put both latitude and longitude on one plot:
 #       gnuplot> set y2tics
 #       gnuplot> plot 'tpv.dat' using 1:2, '' using 1:3 axes x1y2
+#
+#   Plot epx, epy, epv and eph in one plot:
+#       gnuplot> plot 'ep.dat' using 1:2, \
+#                '' using 1:3, \
+#                '' using 1:4, \
+#                '' using 1:5
 #
 #   Plot all the DOPs on one plot:
 #       gnuplot> plot 'sky.dat' using 1:2, \
