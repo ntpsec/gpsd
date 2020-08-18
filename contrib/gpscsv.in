@@ -17,7 +17,11 @@
 #       $ gnuplot
 #
 #   Some gnuplot housekeeping:
+#       # this are csv files
 #       gnuplot> set datafile separator ','
+#       # use the first line as title
+#       gnuplot> set key autotitle columnhead
+#       # X axis is UNIT time in seconds.
 #       gnuplot> set xdata time
 #       gnuplot> set timefmt "%s"
 
@@ -30,17 +34,16 @@
 #
 #   Put both latitude and longitude on one plot:
 #       gnuplot> set y2tics
-#       gnuplot> plot 'tpv.dat' using 1:2 title 'lat', \
-#                '' using 1:3 axes x1y2 title 'lon'
+#       gnuplot> plot 'tpv.dat' using 1:2, '' using 1:3 axes x1y2
 #
 #   Plot all the DOPs on one plot:
-#       gnuplot> plot 'sky.dat' using 1:2 title 'xdop', \
-#                '' using 1:3 title 'ydop', \
-#                '' using 1:4 title 'vdop', \
-#                '' using 1:5 title 'tdop', \
-#                '' using 1:6 title 'hdop', \
-#                '' using 1:7 title 'gdop', \
-#                '' using 1:8 title 'pdop'
+#       gnuplot> plot 'sky.dat' using 1:2, \
+#                '' using 1:3, \
+#                '' using 1:4, \
+#                '' using 1:5, \
+#                '' using 1:6, \
+#                '' using 1:7, \
+#                '' using 1:8
 
 
 from __future__ import print_function
@@ -120,11 +123,11 @@ parser.add_argument(
     help='Count of messages to parse. 0 to disable. [Default %(default)s)]'
 )
 parser.add_argument(
-    '--no-header',
+    '--header',
     dest='header',
-    default=True,
-    action="store_false",
-    help='Do not output header on first line'
+    default=1,
+    type=int,
+    help='0: No header, 1: fields, 2: comment. [Default %(default)s)]'
 )
 parser.add_argument(
     '--port',
@@ -185,8 +188,11 @@ except socket.error:
 session.stream(gps.WATCH_ENABLE | gps.WATCH_SCALED, devpath=options.device)
 
 # top line is headings
-if json_fields is not None and options.header:
-    print('# %s' % ','.join(json_fields))
+if json_fields is not None and 0 < options.header:
+    f = ','.join(json_fields)
+    if 2 == options.header:
+        f = '# ' + f
+    print(f)
 try:
     count = 0
     while True:
@@ -205,8 +211,11 @@ try:
 
                 json_fields.append(f)
 
-            if options.header:
-                print('# %s' % ','.join(json_fields))
+            if 0 < options.header:
+                f = ','.join(json_fields)
+                if 2 == options.header:
+                    f = '# ' + f
+                print(f)
 
         for fld in json_fields:
             if options.cvtisotime and 'time' == fld:
