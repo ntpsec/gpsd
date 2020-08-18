@@ -28,6 +28,11 @@
 #       gnuplot> plot 'tpv.dat' using 1:3
 #       gnuplot> plot 'tpv.dat' using 1:4
 #
+#   Put both latitude and longitude on one plot:
+#       gnuplot> set y2tics
+#       gnuplot> plot 'tpv.dat' using 1:2 title 'lat', \
+#                '' using 1:3 axes x1y2 title 'lon'
+#
 #   Plot all the DOPs on one plot:
 #       gnuplot> plot 'sky.dat' using 1:2 title 'xdop', \
 #                '' using 1:3 title 'ydop', \
