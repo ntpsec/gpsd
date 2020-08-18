@@ -1653,6 +1653,7 @@ ubx_msg_nav_sat(struct gps_device_t *session, unsigned char *buf,
                 size_t data_len)
 {
     unsigned int i, nchan, nsv, st, ver;
+    timespec_t ts_tow;
 
     if (8 > data_len) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -1665,6 +1666,10 @@ ubx_msg_nav_sat(struct gps_device_t *session, unsigned char *buf,
         session->driver.ubx.protver = 15;
     }
     session->driver.ubx.iTOW = getles32(buf, 0);
+    MSTOTS(&ts_tow, session->driver.ubx.iTOW);
+    session->gpsdata.skyview_time =
+        gpsd_gpstime_resolv(session, session->context->gps_week, ts_tow);
+
     ver = (unsigned int)getub(buf, 4);
     if (1 != ver) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -1730,8 +1735,6 @@ ubx_msg_nav_sat(struct gps_device_t *session, unsigned char *buf,
     /* UBX does not give us these, so recompute */
     session->gpsdata.dop.xdop = NAN;
     session->gpsdata.dop.ydop = NAN;
-    session->gpsdata.skyview_time.tv_sec = 0;
-    session->gpsdata.skyview_time.tv_nsec = 0;
     session->gpsdata.satellites_visible = (int)st;
     session->gpsdata.satellites_used = (int)nsv;
     GPSD_LOG(LOG_DATA, &session->context->errout,
