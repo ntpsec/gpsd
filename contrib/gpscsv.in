@@ -10,6 +10,8 @@
 # Examples:
 #   Grab 100 samples of time,lat,lon,altHAE:
 #       $ gpscsv -n 100 --cvt-isotime  > tpv.dat
+#   And grab 100 samples of time,xdop,ydop,vdop,tdop,hdop,gdop,pdop
+#       $ gpscsv -n 100 --cvt-isotime -c SKY  > sky.dat
 #
 #   start gnuplot in interactive mode:
 #       $ gnuplot
@@ -25,6 +27,16 @@
 #   Then to plot longitude and altHAE:
 #       gnuplot> plot 'tpv.dat' using 1:3
 #       gnuplot> plot 'tpv.dat' using 1:4
+#
+#   Plot all the DOPs on one plot:
+#       gnuplot> plot 'sky.dat' using 1:2 title 'xdop', \
+#                '' using 1:3 title 'ydop', \
+#                '' using 1:4 title 'vdop', \
+#                '' using 1:5 title 'tdop', \
+#                '' using 1:6 title 'hdop', \
+#                '' using 1:7 title 'gdop', \
+#                '' using 1:8 title 'pdop'
+
 
 from __future__ import print_function
 
@@ -145,9 +157,13 @@ if options.target:
 
 # Fields to parse
 if options.fields is None:
+    default_fields = {'TPV': ('time', 'lat', 'lon', 'altHAE'),
+                      'SKY': ('time', 'xdop', 'ydop', 'vdop', 'tdop',
+                              'hdop', 'gdop', 'pdop'),
+                      }
     # None specified, use defaults, if they exist
-    if 'TPV' == options.mclass:
-        json_fields = ('time','lat','lon','altHAE')
+    if options.mclass in default_fields:
+        json_fields = default_fields[options.mclass]
     else:
         # read one message, use those fields
         json_fields = None
@@ -180,7 +196,7 @@ try:
             for f in fields:
                 if isinstance(report[f], (dict, list)):
                     # skip dictionay fields
-                    continue;
+                    continue
 
                 json_fields.append(f)
 
@@ -193,12 +209,12 @@ try:
                 report[fld] = gps.isotime(report[fld])
             s += '%s,' % ('' if fld not in report else str(report[fld]))
         print(s)
-        
+
         if 0 != options.count:
             count += 1
             if count >= options.count:
-                break;
-          
+                break
+
 except KeyboardInterrupt:
     # caught control-C
     print()
