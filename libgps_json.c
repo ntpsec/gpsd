@@ -296,6 +296,8 @@ static int json_sky_read(const char *buf, struct gps_data_t *gpsdata,
                                    STRUCTARRAY(gpsdata->skyview,
                                          json_attrs_satellites,
                                          &gpsdata->satellites_visible)},
+        // ignore unknown keys, for cross-version compatibility
+        {"", t_ignore},
         {NULL},
         /* *INDENT-ON* */
     };
