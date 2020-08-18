@@ -178,9 +178,10 @@ try:
                     # skip dictionay fields
                     continue;
 
-            if options.header:
                 json_fields.append(f)
-            print('# %s' % ','.join(json_fields))
+
+            if options.header:
+                print('# %s' % ','.join(json_fields))
 
         for fld in json_fields:
             if options.cvtisotime and 'time' == fld:
