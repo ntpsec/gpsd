@@ -11,8 +11,13 @@
 #
 #   Grab 100 samples of time,lat,lon,altHAE:
 #       $ gpscsv -n 100 --cvt-isotime  > tpv.dat
+<<<<<<< HEAD
 #   Grab 100 samples of time,epx,epy,epv,eph
 #       $ gpscsv -n 100 --cvt-isotime -f time,epx,epy,epv,eph > ep.dat
+=======
+#   Grab 100 samples of time,epx,epy,epv,eph,sep
+#       $ gpscsv -n 100 --cvt-isotime -f time,epx,epy,epv,eph,sep > ep.dat
+>>>>>>> 4e4be8215... contrib/gpscsv.in: Add ep[xyvh] example.
 #   And grab 100 samples of time,xdop,ydop,vdop,tdop,hdop,gdop,pdop
 #       $ gpscsv -n 100 --cvt-isotime -c SKY  > sky.dat
 #
@@ -39,20 +44,21 @@
 #       gnuplot> set y2tics
 #       gnuplot> plot 'tpv.dat' using 1:2, '' using 1:3 axes x1y2
 #
+<<<<<<< HEAD
 #   Plot epx, epy, epv and eph in one plot:
 #       gnuplot> plot 'ep.dat' using 1:2, \
 #                '' using 1:3, \
 #                '' using 1:4, \
 #                '' using 1:5
+=======
+#   Plot epx, epy, epv, eph, and sep in one plot:
+#       gnuplot> plot 'ep.dat' using 1:2, '' using 1:3, \
+#                '' using 1:4, '' using 1:5, '' using 1:6
+>>>>>>> 4e4be8215... contrib/gpscsv.in: Add ep[xyvh] example.
 #
 #   Plot all the DOPs on one plot:
-#       gnuplot> plot 'sky.dat' using 1:2, \
-#                '' using 1:3, \
-#                '' using 1:4, \
-#                '' using 1:5, \
-#                '' using 1:6, \
-#                '' using 1:7, \
-#                '' using 1:8
+#       gnuplot> plot 'sky.dat' using 1:2, '' using 1:3, '' using 1:4, \
+#                '' using 1:5, '' using 1:6, '' using 1:7, '' using 1:8
 #
 #   Lat/lon scatter plot:
 #       # x is no longer time
@@ -120,7 +126,7 @@ parser.add_argument(
     '--fields',
     dest='fields',
     default=None,
-    help='Fields to process. Default varies by class.'
+    help='Fields to process. '' for all.  Default varies by class.'
 )
 parser.add_argument(
     '--host',
@@ -187,8 +193,11 @@ if options.fields is None:
     if options.mclass in default_fields:
         json_fields = default_fields[options.mclass]
     else:
-        # read one message, use those fields
+        # autodetect, read one message, use those fields
         json_fields = None
+elif '' == options.fields:
+    # autodetect, read one message, use those fields
+    json_fields = None
 else:
     json_fields = options.fields.split(',')
 
