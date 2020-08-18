@@ -6,6 +6,22 @@
 
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
+#
+# Examples:
+#   Grab 100 samples of time,lat,lon,altHAE:
+#       $ gpscsv -n 100 --cvt-isotime  > tpv.dat
+#
+#   start gnuplot in interactive mode:
+#       $ gnuplot
+#
+#   To plot time vs latitude:
+#       gnuplot> set datafile separator ','
+#       gnuplot> plot 'tpv.dat' using 1:2
+#
+#   Then to plot longitude and altHAE:
+#       gnuplot> plot 'tpv.dat' using 1:3
+#       gnuplot> plot 'tpv.dat' using 1:4
+
 from __future__ import print_function
 
 import argparse
@@ -39,6 +55,13 @@ parser.add_argument(
     dest='mclass',         # class is a reserved word
     default='TPV',
     help='Message class to process. [Default %(default)s)]'
+)
+parser.add_argument(
+    '--cvt-isotime',
+    dest='cvtisotime',
+    default=False,
+    action="store_true",
+    help='Convert ISO time to UNIX time'
 )
 parser.add_argument(
     '-D',
@@ -160,6 +183,9 @@ try:
             print('# %s' % ','.join(json_fields))
 
         for fld in json_fields:
+            if options.cvtisotime and 'time' == fld:
+                # convert 2020-08-17T23:58:01.000Z to 1597708682.0
+                report[fld] = gps.isotime(report[fld])
             s += '%s,' % ('' if fld not in report else str(report[fld]))
         print(s)
         
