@@ -13,8 +13,10 @@
 #       $ gpscsv -n 100 --cvt-isotime  > tpv.dat
 #   Grab 100 samples of time,epx,epy,epv,eph,sep
 #       $ gpscsv -n 100 --cvt-isotime -f time,epx,epy,epv,eph,sep > ep.dat
-#   And grab 100 samples of time,xdop,ydop,vdop,tdop,hdop,gdop,pdop
+#   Grab 100 samples of time,xdop,ydop,vdop,tdop,hdop,gdop,pdop
 #       $ gpscsv -n 100 --cvt-isotime -c SKY  > sky.dat
+#   Grab 100 samples of time,nSat,uSat
+#       $ gpscsv -n 100 --cvt-isotime -c SKY -f time,nSat,uSat  > sat.dat
 #
 #   start gnuplot in interactive mode:
 #       $ gnuplot
@@ -46,6 +48,9 @@
 #   Plot all the DOPs on one plot:
 #       gnuplot> plot 'sky.dat' using 1:2, '' using 1:3, '' using 1:4, \
 #                '' using 1:5, '' using 1:6, '' using 1:7, '' using 1:8
+#
+#   Plot nSat and uSat together:
+#       gnuplot> plot 'sat.dat' using 1:2, '' using 1:3
 #
 #   Lat/lon scatter plot:
 #       # x is no longer time
