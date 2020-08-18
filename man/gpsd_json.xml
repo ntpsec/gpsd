@@ -549,6 +549,18 @@ factor which should be multiplied by a base UERE to get an
 error estimate.</entry>
 </row>
 <row>
+        <entry>nSat</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
+        <entry>Number of satellite objects in "satellites" array.</entry>
+</row>
+<row>
+        <entry>uSat</entry>
+        <entry>No</entry>
+        <entry>numeric</entry>
+        <entry>Number of satellites used in navigation solution.</entry>
+</row>
+<row>
         <entry>satellites</entry>
         <entry>Yes</entry>
         <entry>list</entry>

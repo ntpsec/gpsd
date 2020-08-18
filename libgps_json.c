@@ -311,6 +311,7 @@ static int json_sky_read(const char *buf, struct gps_data_t *gpsdata,
 
     gpsdata->satellites_used = 0;
     gpsdata->satellites_visible = 0;
+    // recalculate used and visible, do not use nSat, uSat
     for (i = 0; i < MAXCHANNELS; i++) {
         if(gpsdata->skyview[i].PRN > 0)
             gpsdata->satellites_visible++;

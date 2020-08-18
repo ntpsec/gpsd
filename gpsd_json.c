@@ -469,7 +469,7 @@ void json_noise_dump(const struct gps_data_t *gpsdata,
 void json_sky_dump(const struct gps_data_t *datap,
                    char *reply, size_t replylen)
 {
-    int i, reported = 0;
+    int i, reported = 0, used = 0;
 
     assert(replylen > sizeof(char *));
     (void)strlcpy(reply, "{\"class\":\"SKY\"", replylen);
@@ -498,8 +498,13 @@ void json_sky_dump(const struct gps_data_t *datap,
         str_appendf(reply, replylen, ",\"pdop\":%.2f", datap->dop.pdop);
     /* insurance against flaky drivers */
     for (i = 0; i < datap->satellites_visible; i++)
-        if (datap->skyview[i].PRN)
+        if (datap->skyview[i].PRN) {
             reported++;
+            if (datap->skyview[i].used) {
+                used++;
+            }
+        }
+    str_appendf(reply, replylen, ",\"nSat\":%d,\"uSat\":%d", reported, used);
     if (reported) {
         (void)strlcat(reply, ",\"satellites\":[", replylen);
         for (i = 0; i < reported; i++) {
