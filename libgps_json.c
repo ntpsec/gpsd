@@ -173,6 +173,8 @@ static int json_noise_read(const char *buf, struct gps_data_t *gpsdata,
                                  .dflt.real = NAN},
         {"alt",    t_real,    .addr.real = &gpsdata->gst.alt_err_deviation,
                                  .dflt.real = NAN},
+        // ignore unknown keys, for cross-version compatibility
+        {"", t_ignore},
         {NULL},
         /* *INDENT-ON* */
     };
@@ -215,6 +217,8 @@ static int json_raw_read(const char *buf, struct gps_data_t *gpsdata,
                                     .dflt.real = NAN},
         {"l2c",          t_real,     STRUCTOBJECT(struct meas_t, l2c),
                                     .dflt.real = NAN},
+        // ignore unknown keys, for cross-version compatibility
+        {"", t_ignore},
         /* *INDENT-ON* */
         {NULL},
     };
@@ -229,6 +233,8 @@ static int json_raw_read(const char *buf, struct gps_data_t *gpsdata,
                                  .dflt.real = NAN},
         {"rawdata",    t_array,   STRUCTARRAY(gpsdata->raw.meas,
                                      json_attrs_meas, &measurements)},
+        // ignore unknown keys, for cross-version compatibility
+        {"", t_ignore},
         {NULL},
         /* *INDENT-ON* */
     };
@@ -268,6 +274,8 @@ static int json_sky_read(const char *buf, struct gps_data_t *gpsdata,
                               .dflt.byte = -1},
         {"health", t_ubyte,   STRUCTOBJECT(struct satellite_t, health),
                               .dflt.ubyte = SAT_HEALTH_UNK},
+        // ignore unknown keys, for cross-version compatibility
+        {"", t_ignore},
         /* *INDENT-ON* */
         {NULL},
     };
@@ -372,6 +380,8 @@ static int json_att_read(const char *buf, struct gps_data_t *gpsdata,
                                  .dflt.real = NAN},
         {"depth",    t_real,    .addr.real = &gpsdata->attitude.depth,
                                  .dflt.real = NAN},
+        // ignore unknown keys, for cross-version compatibility
+        {"", t_ignore},
         {NULL},
         /* *INDENT-ON* */
     };
@@ -422,6 +432,8 @@ static int json_devicelist_read(const char *buf, struct gps_data_t *gpsdata,
         {"devices", t_array, STRUCTARRAY(gpsdata->devices.list,
                                          json_attrs_subdevices,
                                          &gpsdata->devices.ndevices)},
+        // ignore unknown keys, for cross-version compatibility
+        {"", t_ignore},
         {NULL},
     };
     int status;
@@ -452,6 +464,8 @@ static int json_version_read(const char *buf, struct gps_data_t *gpsdata,
          .addr.integer = &gpsdata->version.proto_minor},
         {"remote",    t_string,  .addr.string  = gpsdata->version.remote,
                                     .len = sizeof(gpsdata->version.remote)},
+        // ignore unknown keys, for cross-version compatibility
+        {"", t_ignore},
         {NULL},
         /* *INDENT-ON* */
     };
@@ -471,6 +485,8 @@ static int json_error_read(const char *buf, struct gps_data_t *gpsdata,
         {"class",     t_check,   .dflt.check = "ERROR"},
         {"message",   t_string,  .addr.string  = gpsdata->error,
                                     .len = sizeof(gpsdata->error)},
+        // ignore unknown keys, for cross-version compatibility
+        {"", t_ignore},
         {NULL},
         /* *INDENT-ON* */
     };
@@ -501,6 +517,8 @@ int json_toff_read(const char *buf, struct gps_data_t *gpsdata,
                                  .dflt.integer = 0},
         {"clock_nsec",t_integer, .addr.integer = &clock_nsec,
                                  .dflt.integer = 0},
+        // ignore unknown keys, for cross-version compatibility
+        {"", t_ignore},
         {NULL},
         /* *INDENT-ON* */
     };
@@ -541,6 +559,8 @@ int json_pps_read(const char *buf, struct gps_data_t *gpsdata,
                                  .dflt.integer = 0},
         {"qErr", t_integer, .addr.integer = &qErr,
                                  .dflt.integer = 0},
+        // ignore unknown keys, for cross-version compatibility
+        {"", t_ignore},
         {NULL},
         /* *INDENT-ON* */
     };
@@ -579,6 +599,8 @@ int json_oscillator_read(const char *buf, struct gps_data_t *gpsdata,
                                    .dflt.boolean = false},
         {"delta",       t_integer, .addr.integer = &delta,
                                    .dflt.integer = 0},
+        // ignore unknown keys, for cross-version compatibility
+        {"", t_ignore},
         {NULL},
         /* *INDENT-ON* */
     };
