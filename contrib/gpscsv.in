@@ -14,8 +14,12 @@
 #   start gnuplot in interactive mode:
 #       $ gnuplot
 #
-#   To plot time vs latitude:
+#   Some gnuplot housekeeping:
 #       gnuplot> set datafile separator ','
+#       gnuplot> set xdata time
+#       gnuplot> set timefmt "%s"
+
+#   Now to plot time vs latitude:
 #       gnuplot> plot 'tpv.dat' using 1:2
 #
 #   Then to plot longitude and altHAE:
