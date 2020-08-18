@@ -7,7 +7,8 @@
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
 #
-# Examples:
+# Examples, do them in exact order:
+#
 #   Grab 100 samples of time,lat,lon,altHAE:
 #       $ gpscsv -n 100 --cvt-isotime  > tpv.dat
 #   And grab 100 samples of time,xdop,ydop,vdop,tdop,hdop,gdop,pdop
@@ -44,7 +45,12 @@
 #                '' using 1:6, \
 #                '' using 1:7, \
 #                '' using 1:8
-
+#
+#   Lat/lon scatter plot:
+#       # x is no longer time
+#       gnuplot> set xdata
+#       gnuplot> plot 'tpv.dat' using 3:2 title 'fix'
+#
 
 from __future__ import print_function
 
