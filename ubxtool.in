@@ -7614,9 +7614,12 @@ Always double check with "-p CFG-GNSS".
         # en/dis able SFRB/SFRBX
         "SFRBX": {"command": send_able_sfrbx,
                   "help": "SFRB/SFRBX subframes"},
-        # en/dis able TP time pulse message
+        # en/dis able TP time pulse message (deprecated)
+        "TIM-TP": {"command": send_able_tp,
+                   "help": "TIM-TP Time Pulse message"},
+        # en/dis able TP time pulse message (deprecated)
         "TP": {"command": send_able_tp,
-               "help": "TP Time Pulse message"},
+               "help": "TP Time Pulse message (Deprecated, use TIM-TP)"},
         # en/dis able TMODE2 Survey-in
         "SURVEYIN": {"command": send_able_tmode2,
                      "help": "Survey-in mode with TMODE2."
