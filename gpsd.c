@@ -2029,8 +2029,16 @@ int main(int argc, char *argv[])
             break;
         case 's':
             {
+                char *endptr;
+
                 // accept decimal, octal and hex
-                long speed = strtol(optarg, 0, 0);
+                long speed = strtol(optarg, &endptr, 0);
+                if (*endptr != '\0') {
+                    // check only numeric, some try to suffix with junk (N1).
+                    GPSD_LOG(LOG_ERROR, &context.errout,
+                             "-s has invalid speed %s\n", optarg);
+                    exit(1);
+                }
                 if (0 < speed) {
                     // allow weird speeds
                     context.fixed_port_speed = (speed_t)speed;
