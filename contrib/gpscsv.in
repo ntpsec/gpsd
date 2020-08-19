@@ -142,6 +142,13 @@ parser.add_argument(
     help='0: No header, 1: fields, 2: comment. [Default %(default)s)]'
 )
 parser.add_argument(
+    '--separator',
+    dest='separator',
+    default=',',
+    type=str,
+    help='CSV field separator character. [Default %(default)s)]'
+)
+parser.add_argument(
     '--port',
     dest='port',
     default=gps.GPSD_PORT,
@@ -202,9 +209,10 @@ except socket.error:
 
 session.stream(gps.WATCH_ENABLE | gps.WATCH_SCALED, devpath=options.device)
 
+
 # top line is headings
 if json_fields is not None and 0 < options.header:
-    f = ','.join(json_fields)
+    f = options.separator.join(json_fields)
     if 2 == options.header:
         f = '# ' + f
     print(f)
@@ -214,7 +222,6 @@ try:
         report = session.next()
         if report['class'] != options.mclass:
             continue
-        s = ''
         if json_fields is None:
             # no fields specified, use the 1st ones found
             fields = report.keys()
@@ -227,17 +234,18 @@ try:
                 json_fields.append(f)
 
             if 0 < options.header:
-                f = ','.join(json_fields)
+                f = options.separator.join(json_fields)
                 if 2 == options.header:
                     f = '# ' + f
                 print(f)
 
+        out = []
         for fld in json_fields:
-            if options.cvtisotime and 'time' == fld:
+            if 'time' == fld and options.cvtisotime:
                 # convert 2020-08-17T23:58:01.000Z to 1597708682.0
                 report[fld] = gps.isotime(report[fld])
-            s += '%s,' % ('' if fld not in report else str(report[fld]))
-        print(s)
+            out.append('' if fld not in report else str(report[fld]))
+        print(options.separator.join(out))
 
         if 0 != options.count:
             count += 1
