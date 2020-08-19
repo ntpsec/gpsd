@@ -6795,7 +6795,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
 
         # msgClass (UBX-NMEA), msgID, rate
         m_data = bytearray([0xf0, 0x09, rate])
-        for id in nmea_id_toggle:
+        for id in nmea_toggle:
             m_data[1] = id
             # UBX-CFG-MSG
             gps_model.gps_send(6, 1, m_data)
