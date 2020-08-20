@@ -119,6 +119,8 @@ epilog = ('Use the psuedo class SAT to dump the individual satellite '
           'records\nfrom the SKY messages.\n\n'
           'Use the psuedo class SUBFRAME1 to dump Subframe 1 from the '
           'the SUBFRAME messages.\n\n'
+          'Use the psuedo class SUBFRAME2 to dump Subframe 2 from the '
+          'the SUBFRAME messages.\n\n'
           'BSD terms apply: see the file COPYING in the distribution root'
           ' for details.')
 
@@ -239,9 +241,12 @@ if options.fields is None:
                               'ss', 'used', 'health'),
                       'SKY': ('time', 'xdop', 'ydop', 'vdop', 'tdop',
                               'hdop', 'gdop', 'pdop'),
-                      'SUBFRAME1': ('TOW17', 'WN', 'tSV', 'IODC', 'ura',
+                      'SUBFRAME1': ('TOW17', 'tSV', 'IODC', 'WN', 'ura',
                                     'hlth', 'L2', 'L2P', 'Tgd',
                                     'toc', 'af0', 'af1', 'af2'),
+                      'SUBFRAME2': ('TOW17', 'tSV', 'IODE', 'M0',
+                                    'deltan', 'e', 'sqrtA', 'FIT', 'AODO',
+                                    'Crs', 'Cuc', 'Cus', 'toe'),
                       'TPV': ('time', 'lat', 'lon', 'altHAE'),
                       }
     # None specified, use defaults, if they exist
@@ -264,6 +269,10 @@ elif 'SUBFRAME1' == options.mclass:
     options.mclass = 'SUBFRAME'
     options.subclass = 'EPHEM1'
     options.frame = 1
+elif 'SUBFRAME2' == options.mclass:
+    options.mclass = 'SUBFRAME'
+    options.subclass = 'EPHEM2'
+    options.frame = 2
 else:
     options.subclass = None
 
@@ -306,7 +315,7 @@ try:
                 continue
 
             subreport = {'TOW17': report['TOW17'], 'tSV': report['tSV']}
-            subreport.update(report['EPHEM1'])
+            subreport.update(report[options.subclass])
             _do_one_line(subreport)
 
         else:
