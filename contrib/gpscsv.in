@@ -121,6 +121,8 @@ epilog = ('Use the psuedo class SAT to dump the individual satellite '
           'the SUBFRAME messages.\n\n'
           'Use the psuedo class SUBFRAME2 to dump Subframe 2 from the '
           'the SUBFRAME messages.\n\n'
+          'Use the psuedo class SUBFRAME3 to dump Subframe 3 from the '
+          'the SUBFRAME messages.\n\n'
           'BSD terms apply: see the file COPYING in the distribution root'
           ' for details.')
 
@@ -247,6 +249,9 @@ if options.fields is None:
                       'SUBFRAME2': ('TOW17', 'tSV', 'IODE', 'M0',
                                     'deltan', 'e', 'sqrtA', 'FIT', 'AODO',
                                     'Crs', 'Cuc', 'Cus', 'toe'),
+                      'SUBFRAME3': ('TOW17', 'tSV', 'IODE',
+                                    'Crc', 'Cic', 'Cis', 'Omega0', 'i0',
+                                    'omega', 'Omegad', 'IDOT'),
                       'TPV': ('time', 'lat', 'lon', 'altHAE'),
                       }
     # None specified, use defaults, if they exist
@@ -273,6 +278,10 @@ elif 'SUBFRAME2' == options.mclass:
     options.mclass = 'SUBFRAME'
     options.subclass = 'EPHEM2'
     options.frame = 2
+elif 'SUBFRAME3' == options.mclass:
+    options.mclass = 'SUBFRAME'
+    options.subclass = 'EPHEM3'
+    options.frame = 3
 else:
     options.subclass = None
 
