@@ -470,7 +470,7 @@ close:
 /* open a connection to a Ntrip broadcaster */
 int ntrip_open(struct gps_device_t *device, char *caster)
 {
-    char *amp, *colon, *slash;
+    char *amp, *amp_url, *colon, *slash;
     char *auth = NULL;
     char *port = NULL;
     char *stream = NULL;
@@ -486,18 +486,18 @@ int ntrip_open(struct gps_device_t *device, char *caster)
         device->ntrip.sourcetable_parse = false;
         device->ntrip.stream.set = false;
 
-        if ((amp = strchr(caster, '@')) != NULL) {
+        amp_url=caster;
+        while((amp_url = strchr(amp_url, '@')) != NULL) {
+            amp = amp_url;
+            amp_url++;
+        }
+
+        if (amp) {
             if (((colon = strchr(caster, ':')) != NULL) && colon < amp) {
                 auth = caster;
                 *amp = '\0';
                 caster = amp + 1;
                 url = caster;
-            } else {
-                GPSD_LOG(LOG_ERROR, &device->context->errout,
-                         "can't extract user-ID and password from %s\n",
-                         caster);
-                device->ntrip.conn_state = ntrip_conn_err;
-                return -1;
             }
         }
         if ((slash = strchr(caster, '/')) != NULL) {
