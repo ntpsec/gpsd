@@ -331,6 +331,9 @@ try:
         elif 'SUBFRAME' == options.mclass:
             if report['frame'] not in options.frames:
                 continue
+            if options.subclass ot in report:
+                # Not all subframe 4/5 have ALMANAC
+                continue
 
             subreport = {'TOW17': report['TOW17'], 'tSV': report['tSV']}
             subreport.update(report[options.subclass])
