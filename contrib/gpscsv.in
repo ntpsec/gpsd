@@ -66,28 +66,30 @@ import sys
 import time            # for time.time()
 
 
-def _do_one_line(json_fields, data):
+def _do_one_line(data):
     '''dump one report line'''
 
-    if json_fields is None:
+    global options
+
+    if options.json_fields is None:
         # no fields specified, use the 1st ones found
         fields = data.keys()
-        json_fields = []
+        options.json_fields = []
         for f in fields:
             if isinstance(data[f], (dict, list)):
                 # skip dictionay fields
                 continue
 
-            json_fields.append(f)
+            options.json_fields.append(f)
 
         if 0 < options.header:
-            f = options.separator.join(json_fields)
+            f = options.separator.join(options.json_fields)
             if 2 == options.header:
                 f = '# ' + f
             print(f)
 
     out = []
-    for fld in json_fields:
+    for fld in options.json_fields:
         if 'time' == fld and options.cvtisotime:
             # convert 2020-08-17T23:58:01.000Z to 1597708682.0
             data[fld] = gps.isotime(data[fld])
@@ -114,7 +116,9 @@ if gps.__version__ != gps_version:
 description = 'Convert one gpsd JSON message class to csv format.'
 usage = '%(prog)s [OPTIONS] [host[:port[:device]]]'
 epilog = ('Use the psuedo class SAT to dump the individual satellite '
-          'records\nfrom the SKY records.\n\n'
+          'records\nfrom the SKY messages.\n\n'
+          'Use the psuedo class SUBFRAME1 to dump Subframe 1 from the '
+          'the SUBFRAME messages.\n\n'
           'BSD terms apply: see the file COPYING in the distribution root'
           ' for details.')
 
@@ -229,28 +233,37 @@ if options.target:
         sys.exit(0)
 
 # Fields to parse
+options.json_fields = None
 if options.fields is None:
     default_fields = {'SAT': ('time', 'gnssid', 'svid', 'PRN', 'az', 'el',
                               'ss', 'used', 'health'),
                       'SKY': ('time', 'xdop', 'ydop', 'vdop', 'tdop',
                               'hdop', 'gdop', 'pdop'),
+                      'SUBFRAME1': ('TOW17', 'WN', 'tSV', 'IODC', 'ura',
+                                    'hlth', 'L2', 'L2P', 'Tgd',
+                                    'toc', 'af0', 'af1', 'af2'),
                       'TPV': ('time', 'lat', 'lon', 'altHAE'),
                       }
     # None specified, use defaults, if they exist
     if options.mclass in default_fields:
-        json_fields = default_fields[options.mclass]
+        options.json_fields = default_fields[options.mclass]
     else:
         # autodetect, read one message, use those fields
-        json_fields = None
+        options.json_fields = None
 elif '' == options.fields:
     # autodetect, read one message, use those fields
-    json_fields = None
+    options.json_fields = None
 else:
-    json_fields = options.fields.split(',')
+    options.json_fields = options.fields.split(',')
 
+options.frame = None
 if 'SAT' == options.mclass:
     options.mclass = 'SKY'
     options.subclass = 'SAT'
+elif 'SUBFRAME1' == options.mclass:
+    options.mclass = 'SUBFRAME'
+    options.subclass = 'EPHEM1'
+    options.frame = 1
 else:
     options.subclass = None
 
@@ -265,8 +278,8 @@ session.stream(gps.WATCH_ENABLE | gps.WATCH_SCALED, devpath=options.device)
 
 
 # top line is headings
-if json_fields is not None and 0 < options.header:
-    f = options.separator.join(json_fields)
+if options.json_fields is not None and 0 < options.header:
+    f = options.separator.join(options.json_fields)
     if 2 == options.header:
         f = '# ' + f
     print(f)
@@ -287,9 +300,17 @@ try:
             for sat in report['satellites']:
                 subreport = {'time': report['time']}
                 subreport.update(sat)
-                _do_one_line(json_fields, subreport)
+                _do_one_line(subreport)
+        elif 'SUBFRAME' == options.mclass:
+            if report['frame'] != options.frame:
+                continue
+
+            subreport = {'TOW17': report['TOW17'], 'tSV': report['tSV']}
+            subreport.update(report['EPHEM1'])
+            _do_one_line(subreport)
+
         else:
-            _do_one_line(json_fields, report)
+            _do_one_line(report)
 
         if 0 < options.count:
             count += 1
