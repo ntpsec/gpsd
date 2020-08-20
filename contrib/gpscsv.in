@@ -63,6 +63,7 @@ from __future__ import print_function
 import argparse
 import socket
 import sys
+import time            # for time.time()
 
 # pylint wants local modules last
 try:
@@ -161,6 +162,14 @@ parser.add_argument(
     help='Output version to stderr, then exit'
 )
 parser.add_argument(
+    '-x',
+    '--seconds',
+    dest='seconds',
+    default=0,
+    type=int,
+    help='Seconds of messages to parse. 0 to disable. [Default %(default)s)]'
+)
+parser.add_argument(
     'target',
     nargs='?',
     help='[host[:port[:device]]]'
@@ -216,8 +225,14 @@ if json_fields is not None and 0 < options.header:
     if 2 == options.header:
         f = '# ' + f
     print(f)
+
+count = 0
+if 0 < options.seconds:
+    end_seconds = time.time() + options.seconds
+else:
+    end_seconds = 0
+
 try:
-    count = 0
     while True:
         report = session.next()
         if report['class'] != options.mclass:
@@ -247,9 +262,13 @@ try:
             out.append('' if fld not in report else str(report[fld]))
         print(options.separator.join(out))
 
-        if 0 != options.count:
+        if 0 < options.count:
             count += 1
             if count >= options.count:
+                break
+
+        if 0 < options.seconds:
+            if time.time() > end_seconds:
                 break
 
 except KeyboardInterrupt:
