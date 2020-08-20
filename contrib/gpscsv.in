@@ -65,6 +65,36 @@ import socket
 import sys
 import time            # for time.time()
 
+
+def _do_one_line(json_fields, data):
+    '''dump one report line'''
+
+    if json_fields is None:
+        # no fields specified, use the 1st ones found
+        fields = data.keys()
+        json_fields = []
+        for f in fields:
+            if isinstance(data[f], (dict, list)):
+                # skip dictionay fields
+                continue
+
+            json_fields.append(f)
+
+        if 0 < options.header:
+            f = options.separator.join(json_fields)
+            if 2 == options.header:
+                f = '# ' + f
+            print(f)
+
+    out = []
+    for fld in json_fields:
+        if 'time' == fld and options.cvtisotime:
+            # convert 2020-08-17T23:58:01.000Z to 1597708682.0
+            data[fld] = gps.isotime(data[fld])
+        out.append('' if fld not in data else str(data[fld]))
+    print(options.separator.join(out))
+
+
 # pylint wants local modules last
 try:
     import gps
@@ -81,11 +111,18 @@ if gps.__version__ != gps_version:
                      (sys.argv[0], gps_version, gps.__version__))
     sys.exit(1)
 
+description = 'Convert one gpsd JSON message class to csv format.'
 usage = '%(prog)s [OPTIONS] [host[:port[:device]]]'
-epilog = ('BSD terms apply: see the file COPYING in the distribution root'
+epilog = ('Use the psuedo class SAT to dump the individual satellite '
+          'records\nfrom the SKY records.\n\n'
+          'BSD terms apply: see the file COPYING in the distribution root'
           ' for details.')
 
-parser = argparse.ArgumentParser(usage=usage, epilog=epilog)
+parser = argparse.ArgumentParser(
+             description=description,
+             epilog=epilog,
+             formatter_class=argparse.RawDescriptionHelpFormatter,
+             usage=usage)
 parser.add_argument(
     '-c',
     '--class',
@@ -193,9 +230,11 @@ if options.target:
 
 # Fields to parse
 if options.fields is None:
-    default_fields = {'TPV': ('time', 'lat', 'lon', 'altHAE'),
+    default_fields = {'SAT': ('time', 'gnssid', 'svid', 'PRN', 'az', 'el',
+                              'ss', 'used', 'health'),
                       'SKY': ('time', 'xdop', 'ydop', 'vdop', 'tdop',
                               'hdop', 'gdop', 'pdop'),
+                      'TPV': ('time', 'lat', 'lon', 'altHAE'),
                       }
     # None specified, use defaults, if they exist
     if options.mclass in default_fields:
@@ -208,6 +247,12 @@ elif '' == options.fields:
     json_fields = None
 else:
     json_fields = options.fields.split(',')
+
+if 'SAT' == options.mclass:
+    options.mclass = 'SKY'
+    options.subclass = 'SAT'
+else:
+    options.subclass = None
 
 try:
     session = gps.gps(host=options.host, port=options.port,
@@ -237,30 +282,14 @@ try:
         report = session.next()
         if report['class'] != options.mclass:
             continue
-        if json_fields is None:
-            # no fields specified, use the 1st ones found
-            fields = report.keys()
-            json_fields = []
-            for f in fields:
-                if isinstance(report[f], (dict, list)):
-                    # skip dictionay fields
-                    continue
-
-                json_fields.append(f)
-
-            if 0 < options.header:
-                f = options.separator.join(json_fields)
-                if 2 == options.header:
-                    f = '# ' + f
-                print(f)
-
-        out = []
-        for fld in json_fields:
-            if 'time' == fld and options.cvtisotime:
-                # convert 2020-08-17T23:58:01.000Z to 1597708682.0
-                report[fld] = gps.isotime(report[fld])
-            out.append('' if fld not in report else str(report[fld]))
-        print(options.separator.join(out))
+        if 'SAT' == options.subclass:
+            # grab the sats, one at a time
+            for sat in report['satellites']:
+                subreport = {'time': report['time']}
+                subreport.update(sat)
+                _do_one_line(json_fields, subreport)
+        else:
+            _do_one_line(json_fields, report)
 
         if 0 < options.count:
             count += 1
