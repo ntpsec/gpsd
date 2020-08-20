@@ -2076,6 +2076,10 @@ int main(int argc, char *argv[])
                  "This gpsd will fail at 2038-01-19T03:14:07Z.\n");
     }
 
+    if (0 != getuid()) {
+       GPSD_LOG(LOG_WARN, &context.errout,
+                "gpsd not started as root, can not drop priviledges.\n");
+    }
 #if defined(SYSTEMD_ENABLE) && defined(CONTROL_SOCKET_ENABLE)
     sd_socket_count = sd_get_socket_count();
     if (sd_socket_count > 0 && control_socket != NULL) {
