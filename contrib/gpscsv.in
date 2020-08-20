@@ -123,6 +123,8 @@ epilog = ('Use the psuedo class SAT to dump the individual satellite '
           'the SUBFRAME messages.\n\n'
           'Use the psuedo class SUBFRAME3 to dump Subframe 3 from the '
           'the SUBFRAME messages.\n\n'
+          'Use the psuedo class ALMANAC to dump the Alamanacs from '
+          'Subframes 4/5.\n\n'
           'BSD terms apply: see the file COPYING in the distribution root'
           ' for details.')
 
@@ -188,17 +190,17 @@ parser.add_argument(
     help='0: No header, 1: fields, 2: comment. [Default %(default)s)]'
 )
 parser.add_argument(
+    '--port',
+    dest='port',
+    default=gps.GPSD_PORT,
+    help='The port to connect. [Default %(default)s)]'
+)
+parser.add_argument(
     '--separator',
     dest='separator',
     default=',',
     type=str,
     help='CSV field separator character. [Default %(default)s)]'
-)
-parser.add_argument(
-    '--port',
-    dest='port',
-    default=gps.GPSD_PORT,
-    help='The port to connect. [Default %(default)s)]'
 )
 parser.add_argument(
     '-V', '--version',
@@ -239,7 +241,10 @@ if options.target:
 # Fields to parse
 options.json_fields = None
 if options.fields is None:
-    default_fields = {'SAT': ('time', 'gnssid', 'svid', 'PRN', 'az', 'el',
+    default_fields = {'ALMANAC': ('TOW17', 'tSV', 'ID', 'Health', 'e',
+                                  'toa', 'deltai', 'Omegad', 'sqrtA',
+                                  'Omega0', 'omega', 'M0', 'af0', 'af1'),
+                      'SAT': ('time', 'gnssid', 'svid', 'PRN', 'az', 'el',
                               'ss', 'used', 'health'),
                       'SKY': ('time', 'xdop', 'ydop', 'vdop', 'tdop',
                               'hdop', 'gdop', 'pdop'),
@@ -266,22 +271,26 @@ elif '' == options.fields:
 else:
     options.json_fields = options.fields.split(',')
 
-options.frame = None
+options.frames = None
 if 'SAT' == options.mclass:
     options.mclass = 'SKY'
     options.subclass = 'SAT'
 elif 'SUBFRAME1' == options.mclass:
     options.mclass = 'SUBFRAME'
     options.subclass = 'EPHEM1'
-    options.frame = 1
+    options.frames = (1)
 elif 'SUBFRAME2' == options.mclass:
     options.mclass = 'SUBFRAME'
     options.subclass = 'EPHEM2'
-    options.frame = 2
+    options.frames = (2)
 elif 'SUBFRAME3' == options.mclass:
     options.mclass = 'SUBFRAME'
     options.subclass = 'EPHEM3'
-    options.frame = 3
+    options.frames = (3)
+elif 'ALMANAC' == options.mclass:
+    options.mclass = 'SUBFRAME'
+    options.subclass = 'ALMANAC'
+    options.frames = (4, 5)
 else:
     options.subclass = None
 
@@ -289,7 +298,7 @@ try:
     session = gps.gps(host=options.host, port=options.port,
                       verbose=options.debug)
 except socket.error:
-    sys.stderr.write("gegps: Could not connect to gpsd daemon\n")
+    sys.stderr.write("gpscsv: Could not connect to gpsd daemon\n")
     sys.exit(1)
 
 session.stream(gps.WATCH_ENABLE | gps.WATCH_SCALED, devpath=options.device)
@@ -320,7 +329,7 @@ try:
                 subreport.update(sat)
                 _do_one_line(subreport)
         elif 'SUBFRAME' == options.mclass:
-            if report['frame'] != options.frame:
+            if report['frame'] not in options.frames:
                 continue
 
             subreport = {'TOW17': report['TOW17'], 'tSV': report['tSV']}
