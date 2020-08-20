@@ -331,7 +331,7 @@ try:
         elif 'SUBFRAME' == options.mclass:
             if report['frame'] not in options.frames:
                 continue
-            if options.subclass ot in report:
+            if options.subclass not in report:
                 # Not all subframe 4/5 have ALMANAC
                 continue
 
