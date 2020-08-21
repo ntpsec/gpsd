@@ -287,8 +287,8 @@ to support an RTCM104 encoder.</p>
 <p>The project implementation languages are C and Python.  The core
 libgpsd libraries (and the daemon, which is a thin wrapper around
 them) are written in C; the test and profiling tools are written in
-Python, with a limited amount of glue in POSIX-conformant sh and some
-bash.</p>
+Python, with a limited amount of glue in POSIX-conformant sh.  The
+project avoids bash-isms.</p>
 
 <p>Code in other languages will, in general, be accepted only if
 it supplies a language binding for the libgps or libgpsd libraries

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause

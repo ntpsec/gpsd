@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Very simple wrapper around the DSA version of dchroot
 # on the Debian porter boxes. dchroot only accepts one command
@@ -16,7 +16,7 @@ arguments="$@"
 
 tmpfile=`mktemp $HOME/XXXXXXXXX.tmp`
 cat > $tmpfile << _EOF_
-#!/bin/bash
+#!/bin/sh
 
 exec $command $arguments
 _EOF_
