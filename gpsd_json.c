@@ -653,6 +653,7 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                         char buf[], size_t buflen)
 {
     const struct subframe_t *subframe = &datap->subframe;
+    int i;
 
     (void)snprintf(buf, buflen, "{\"class\":\"SUBFRAME\",\"device\":\"%s\","
                    "\"tSV\":%u,\"TOW17\":%u,\"frame\":%u,\"scaled\":%s",
@@ -662,7 +663,8 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                    (unsigned int)subframe->subframe_num,
                    JSON_BOOL(scaled));
 
-    if ( 1 == subframe->subframe_num ) {
+    switch (subframe->subframe_num) {
+    case 1:
         if (scaled) {
             str_appendf(buf, buflen,
                         ",\"EPHEM1\":{\"WN\":%u,\"IODC\":%u,\"L2\":%u,"
@@ -696,7 +698,8 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                         (int)subframe->sub1.af1,
                         (int)subframe->sub1.af0);
         }
-    } else if ( 2 == subframe->subframe_num ) {
+        break;
+    case 2:
         if (scaled) {
             str_appendf(buf, buflen,
                         ",\"EPHEM2\":{\"IODE\":%u,\"Crs\":%.6e,\"deltan\":%.6e,"
@@ -730,12 +733,13 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                         (unsigned int)subframe->sub2.fit,
                         (unsigned int)subframe->sub2.AODO);
         }
-    } else if ( 3 == subframe->subframe_num ) {
+        break;
+    case 3:
         if (scaled) {
             str_appendf(buf, buflen,
-                ",\"EPHEM3\":{\"IODE\":%3u,\"IDOT\":%.6g,\"Cic\":%.6e,"
-                "\"Omega0\":%.11e,\"Cis\":%.7g,\"i0\":%.11e,\"Crc\":%.7g,"
-                "\"omega\":%.11e,\"Omegad\":%.6e}",
+                        ",\"EPHEM3\":{\"IODE\":%3u,\"IDOT\":%.6g,\"Cic\":%.6e,"
+                        "\"Omega0\":%.11e,\"Cis\":%.7g,\"i0\":%.11e,"
+                        "\"Crc\":%.7g,\"omega\":%.11e,\"Omegad\":%.6e}",
                         (unsigned int)subframe->sub3.IODE,
                         subframe->sub3.d_IDOT,
                         subframe->sub3.d_Cic,
@@ -747,9 +751,9 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                         subframe->sub3.d_Omegad );
         } else {
             str_appendf(buf, buflen,
-                ",\"EPHEM3\":{\"IODE\":%u,\"IDOT\":%u,\"Cic\":%u,"
-                "\"Omega0\":%ld,\"Cis\":%d,\"i0\":%ld,\"Crc\":%d,"
-                "\"omega\":%ld,\"Omegad\":%ld}",
+                        ",\"EPHEM3\":{\"IODE\":%u,\"IDOT\":%u,\"Cic\":%u,"
+                        "\"Omega0\":%ld,\"Cis\":%d,\"i0\":%ld,\"Crc\":%d,"
+                        "\"omega\":%ld,\"Omegad\":%ld}",
                         (unsigned int)subframe->sub3.IODE,
                         (unsigned int)subframe->sub3.IDOT,
                         (unsigned int)subframe->sub3.Cic,
@@ -758,166 +762,63 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                         (long int)subframe->sub3.i0,
                         (int)subframe->sub3.Crc,
                         (long int)subframe->sub3.omega,
-                        (long int)subframe->sub3.Omegad );
+                        (long int)subframe->sub3.Omegad);
         }
-    } else if ( subframe->is_almanac ) {
-        if (scaled) {
-            str_appendf(buf, buflen,
-                        ",\"ALMANAC\":{\"ID\":%d,\"Health\":%u,"
-                        "\"e\":%g,\"toa\":%lu,"
-                        "\"deltai\":%.10e,\"Omegad\":%.5e,\"sqrtA\":%.10g,"
-                        "\"Omega0\":%.10e,\"omega\":%.10e,\"M0\":%.11e,"
-                        "\"af0\":%.5e,\"af1\":%.5e}",
-                        (int)subframe->sub5.almanac.sv,
-                        (unsigned int)subframe->sub5.almanac.svh,
-                        subframe->sub5.almanac.d_eccentricity,
-                        subframe->sub5.almanac.l_toa,
-                        subframe->sub5.almanac.d_deltai,
-                        subframe->sub5.almanac.d_Omegad,
-                        subframe->sub5.almanac.d_sqrtA,
-                        subframe->sub5.almanac.d_Omega0,
-                        subframe->sub5.almanac.d_omega,
-                        subframe->sub5.almanac.d_M0,
-                        subframe->sub5.almanac.d_af0,
-                        subframe->sub5.almanac.d_af1);
-        } else {
-            str_appendf(buf, buflen,
-                        ",\"ALMANAC\":{\"ID\":%d,\"Health\":%u,"
-                        "\"e\":%u,\"toa\":%u,"
-                        "\"deltai\":%d,\"Omegad\":%d,\"sqrtA\":%lu,"
-                        "\"Omega0\":%ld,\"omega\":%ld,\"M0\":%ld,"
-                        "\"af0\":%d,\"af1\":%d}",
-                        (int)subframe->sub5.almanac.sv,
-                        (unsigned int)subframe->sub5.almanac.svh,
-                        (unsigned int)subframe->sub5.almanac.e,
-                        (unsigned int)subframe->sub5.almanac.toa,
-                        (int)subframe->sub5.almanac.deltai,
-                        (int)subframe->sub5.almanac.Omegad,
-                        (unsigned long)subframe->sub5.almanac.sqrtA,
-                        (long)subframe->sub5.almanac.Omega0,
-                        (long)subframe->sub5.almanac.omega,
-                        (long)subframe->sub5.almanac.M0,
-                        (int)subframe->sub5.almanac.af0,
-                        (int)subframe->sub5.almanac.af1);
-        }
-    } else if ( 4 == subframe->subframe_num ) {
-        str_appendf(buf, buflen,
-            ",\"pageid\":%u",
-                       (unsigned int)subframe->pageid);
-        switch (subframe->pageid ) {
-        case 13:
-        case 52:
-        {
-                int i;
-                /* decoding of ERD to SV is non trivial and not done yet */
-                str_appendf(buf, buflen,
-                    ",\"ERD\":{\"ai\":%u", subframe->sub4_13.ai);
+        break;
+    case 4:
+        FALLTHROUGH
+    case 5:
+        // pageid is unique to all of subframes 4 and 5, handle as one
 
-                /* 1-index loop to construct json, rather than giant snprintf */
-                for(i = 1 ; i <= 30; i++){
-                    str_appendf(buf, buflen,
-                        ",\"ERD%d\":%d", i, subframe->sub4_13.ERD[i]);
-                }
-                str_appendf(buf, buflen, "}");
-                break;
-        }
-        case 55:
-            /* JSON is UTF-8. double quote, backslash and
-             * control charactores (U+0000 through U+001F).must be
-             * escaped. */
-            /* system message can be 24 bytes, JSON can escape all
-             * chars so up to 24*6 long. */
-
-            {
-                char buf1[25 * 6];
-                (void)json_stringify(buf1, sizeof(buf1), subframe->sub4_17.str);
-                str_appendf(buf, buflen,
-                               ",\"system_message\":\"%.144s\"", buf1);
-            }
-            break;
-        case 56:
+        if (subframe->is_almanac) {
             if (scaled) {
                 str_appendf(buf, buflen,
-                        ",\"IONO\":{\"a0\":%.5g,\"a1\":%.5g,\"a2\":%.5g,"
-                        "\"a3\":%.5g,\"b0\":%.5g,\"b1\":%.5g,\"b2\":%.5g,"
-                        "\"b3\":%.5g,\"A1\":%.11e,\"A0\":%.11e,\"tot\":%lld,"
-                        "\"WNt\":%u,\"ls\":%d,\"WNlsf\":%u,\"DN\":%u,"
-                        "\"lsf\":%d}",
-                            subframe->sub4_18.d_alpha0,
-                            subframe->sub4_18.d_alpha1,
-                            subframe->sub4_18.d_alpha2,
-                            subframe->sub4_18.d_alpha3,
-                            subframe->sub4_18.d_beta0,
-                            subframe->sub4_18.d_beta1,
-                            subframe->sub4_18.d_beta2,
-                            subframe->sub4_18.d_beta3,
-                            subframe->sub4_18.d_A1,
-                            subframe->sub4_18.d_A0,
-                            (long long)subframe->sub4_18.t_tot,
-                            (unsigned int)subframe->sub4_18.WNt,
-                            (int)subframe->sub4_18.leap,
-                            (unsigned int)subframe->sub4_18.WNlsf,
-                            (unsigned int)subframe->sub4_18.DN,
-                            (int)subframe->sub4_18.lsf);
+                            ",\"ALMANAC\":{\"ID\":%d,\"Health\":%u,"
+                            "\"e\":%g,\"toa\":%lu,"
+                            "\"deltai\":%.10e,\"Omegad\":%.5e,\"sqrtA\":%.10g,"
+                            "\"Omega0\":%.10e,\"omega\":%.10e,\"M0\":%.11e,"
+                            "\"af0\":%.5e,\"af1\":%.5e}",
+                            (int)subframe->sub5.almanac.sv,
+                            (unsigned int)subframe->sub5.almanac.svh,
+                            subframe->sub5.almanac.d_eccentricity,
+                            subframe->sub5.almanac.l_toa,
+                            subframe->sub5.almanac.d_deltai,
+                            subframe->sub5.almanac.d_Omegad,
+                            subframe->sub5.almanac.d_sqrtA,
+                            subframe->sub5.almanac.d_Omega0,
+                            subframe->sub5.almanac.d_omega,
+                            subframe->sub5.almanac.d_M0,
+                            subframe->sub5.almanac.d_af0,
+                            subframe->sub5.almanac.d_af1);
             } else {
                 str_appendf(buf, buflen,
-                        ",\"IONO\":{\"a0\":%d,\"a1\":%d,\"a2\":%d,\"a3\":%d,"
-                        "\"b0\":%d,\"b1\":%d,\"b2\":%d,\"b3\":%d,"
-                        "\"A1\":%ld,\"A0\":%ld,\"tot\":%u,\"WNt\":%u,"
-                        "\"ls\":%d,\"WNlsf\":%u,\"DN\":%u,\"lsf\":%d}",
-                            (int)subframe->sub4_18.alpha0,
-                            (int)subframe->sub4_18.alpha1,
-                            (int)subframe->sub4_18.alpha2,
-                            (int)subframe->sub4_18.alpha3,
-                            (int)subframe->sub4_18.beta0,
-                            (int)subframe->sub4_18.beta1,
-                            (int)subframe->sub4_18.beta2,
-                            (int)subframe->sub4_18.beta3,
-                            (long)subframe->sub4_18.A1,
-                            (long)subframe->sub4_18.A0,
-                            (unsigned int)subframe->sub4_18.tot,
-                            (unsigned int)subframe->sub4_18.WNt,
-                            (int)subframe->sub4_18.leap,
-                            (unsigned int)subframe->sub4_18.WNlsf,
-                            (unsigned int)subframe->sub4_18.DN,
-                            (int)subframe->sub4_18.lsf);
+                            ",\"ALMANAC\":{\"ID\":%d,\"Health\":%u,"
+                            "\"e\":%u,\"toa\":%u,"
+                            "\"deltai\":%d,\"Omegad\":%d,\"sqrtA\":%lu,"
+                            "\"Omega0\":%ld,\"omega\":%ld,\"M0\":%ld,"
+                            "\"af0\":%d,\"af1\":%d}",
+                            (int)subframe->sub5.almanac.sv,
+                            (unsigned int)subframe->sub5.almanac.svh,
+                            (unsigned int)subframe->sub5.almanac.e,
+                            (unsigned int)subframe->sub5.almanac.toa,
+                            (int)subframe->sub5.almanac.deltai,
+                            (int)subframe->sub5.almanac.Omegad,
+                            (unsigned long)subframe->sub5.almanac.sqrtA,
+                            (long)subframe->sub5.almanac.Omega0,
+                            (long)subframe->sub5.almanac.omega,
+                            (long)subframe->sub5.almanac.M0,
+                            (int)subframe->sub5.almanac.af0,
+                            (int)subframe->sub5.almanac.af1);
             }
-            break;
-        case 25:
-        case 63:
-        {
-            int i;
-            str_appendf(buf, buflen,
-                           ",\"HEALTH\":{\"data_id\":%d",
-                           (int)subframe->data_id);
-
-                /* 1-index loop to construct json, rather than giant snprintf */
-                for(i = 1 ; i <= 32; i++){
-                    str_appendf(buf, buflen,
-                                   ",\"SV%d\":%d",
-                                   i, (int)subframe->sub4_25.svf[i]);
-                }
-                for(i = 0 ; i < 8; i++){ /* 0-index */
-                    str_appendf(buf, buflen,
-                                   ",\"SVH%d\":%d",
-                                   i+25, (int)subframe->sub4_25.svhx[i]);
-                }
-                str_appendf(buf, buflen, "}");
-
-            break;
-            }
-        }
-    } else if ( 5 == subframe->subframe_num ) {
-        str_appendf(buf, buflen,
-            ",\"pageid\":%u",
-                       (unsigned int)subframe->pageid);
-        if ( 51 == subframe->pageid ) {
-            int i;
-            /* subframe5, page 25 */
-            str_appendf(buf, buflen,
-                ",\"HEALTH2\":{\"toa\":%lu,\"WNa\":%u",
-                           subframe->sub5_25.l_toa,
-                           (unsigned int)subframe->sub5_25.WNa);
+        } else {
+            str_appendf(buf, buflen, ",\"pageid\":%u",
+                        (unsigned int)subframe->pageid);
+            switch (subframe->pageid ) {
+            case 51:    // subframe5, page 25
+                str_appendf(buf, buflen,
+                    ",\"HEALTH2\":{\"toa\":%lu,\"WNa\":%u",
+                               subframe->sub5_25.l_toa,
+                               (unsigned int)subframe->sub5_25.WNa);
                 /* 1-index loop to construct json */
                 for(i = 1 ; i <= 24; i++){
                     str_appendf(buf, buflen,
@@ -925,7 +826,105 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                                 i, (int)subframe->sub5_25.sv[i]);
                 }
                 str_appendf(buf, buflen, "}");
+                break;
 
+            case 52:    // data ID 52, subframe 4, page 13
+                /* decoding of ERD to SV is non trivial and not done yet */
+                str_appendf(buf, buflen,
+                    ",\"ERD\":{\"ai\":%u", subframe->sub4_13.ai);
+
+                // 1-index loop to construct json, rather than giant snprintf
+                for(i = 1 ; i <= 30; i++){
+                    str_appendf(buf, buflen,
+                        ",\"ERD%d\":%d", i, subframe->sub4_13.ERD[i]);
+                }
+                str_appendf(buf, buflen, "}");
+                break;
+
+            case 55:   // subframe 4, page 17, System Message
+                /* JSON is UTF-8. double quote, backslash and
+                 * control charactores (U+0000 through U+001F).must be
+                 * escaped. */
+                /* system message can be 24 bytes, JSON can escape all
+                 * chars so up to 24*6 long. */
+
+                {
+                    char buf1[25 * 6];
+                    (void)json_stringify(buf1, sizeof(buf1),
+                                         subframe->sub4_17.str);
+                    str_appendf(buf, buflen, ",\"system_message\":\"%.144s\"",
+                                buf1);
+                }
+                break;
+
+            case 56:   // subframe 4, page 18
+                if (scaled) {
+                    str_appendf(buf, buflen,
+                        ",\"IONO\":{\"a0\":%.5g,\"a1\":%.5g,\"a2\":%.5g,"
+                        "\"a3\":%.5g,\"b0\":%.5g,\"b1\":%.5g,\"b2\":%.5g,"
+                        "\"b3\":%.5g,\"A1\":%.11e,\"A0\":%.11e,"
+                        "\"tot\":%lld,\"WNt\":%u,\"ls\":%d,\"WNlsf\":%u,"
+                        "\"DN\":%u,\"lsf\":%d}",
+                        subframe->sub4_18.d_alpha0,
+                        subframe->sub4_18.d_alpha1,
+                        subframe->sub4_18.d_alpha2,
+                        subframe->sub4_18.d_alpha3,
+                        subframe->sub4_18.d_beta0,
+                        subframe->sub4_18.d_beta1,
+                        subframe->sub4_18.d_beta2,
+                        subframe->sub4_18.d_beta3,
+                        subframe->sub4_18.d_A1,
+                        subframe->sub4_18.d_A0,
+                        (long long)subframe->sub4_18.t_tot,
+                        (unsigned int)subframe->sub4_18.WNt,
+                        (int)subframe->sub4_18.leap,
+                        (unsigned int)subframe->sub4_18.WNlsf,
+                        (unsigned int)subframe->sub4_18.DN,
+                        (int)subframe->sub4_18.lsf);
+                } else {
+                    str_appendf(buf, buflen,
+                        ",\"IONO\":{\"a0\":%d,\"a1\":%d,\"a2\":%d,"
+                        "\"a3\":%d,\"b0\":%d,\"b1\":%d,\"b2\":%d,"
+                        "\"b3\":%d,\"A1\":%ld,\"A0\":%ld,\"tot\":%u,"
+                        "\"WNt\":%u,\"ls\":%d,\"WNlsf\":%u,\"DN\":%u,"
+                        "\"lsf\":%d}",
+                        (int)subframe->sub4_18.alpha0,
+                        (int)subframe->sub4_18.alpha1,
+                        (int)subframe->sub4_18.alpha2,
+                        (int)subframe->sub4_18.alpha3,
+                        (int)subframe->sub4_18.beta0,
+                        (int)subframe->sub4_18.beta1,
+                        (int)subframe->sub4_18.beta2,
+                        (int)subframe->sub4_18.beta3,
+                        (long)subframe->sub4_18.A1,
+                        (long)subframe->sub4_18.A0,
+                        (unsigned int)subframe->sub4_18.tot,
+                        (unsigned int)subframe->sub4_18.WNt,
+                        (int)subframe->sub4_18.leap,
+                        (unsigned int)subframe->sub4_18.WNlsf,
+                        (unsigned int)subframe->sub4_18.DN,
+                        (int)subframe->sub4_18.lsf);
+                }
+                break;
+            case 63:      // subframe 4, page 25
+                str_appendf(buf, buflen,
+                               ",\"HEALTH\":{\"data_id\":%d",
+                               (int)subframe->data_id);
+
+                // 1-index loop to construct json, rather than giant snprintf
+                for(i = 1 ; i <= 32; i++){
+                    str_appendf(buf, buflen, ",\"SV%d\":%d",
+                                i, (int)subframe->sub4_25.svf[i]);
+                }
+                for(i = 0 ; i < 8; i++){ /* 0-index */
+                    str_appendf(buf, buflen, ",\"SVH%d\":%d",
+                                i+25, (int)subframe->sub4_25.svhx[i]);
+                }
+                str_appendf(buf, buflen, "}");
+                break;
+            default:
+                break;
+            }
         }
     }
     (void)strlcat(buf, "}\r\n", buflen);
