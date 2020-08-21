@@ -84,10 +84,11 @@ extern "C" {
  *       Remove unused gps_data_t.navadata_t.
  *       Add relPosL and relPosH to gps_fix_t.NED
  * 10.1  long l_toa becomes unsigned long l_toa
+ *       fix sub4_18 types.
  *
  */
-#define GPSD_API_MAJOR_VERSION  10      /* bump on incompatible changes */
-#define GPSD_API_MINOR_VERSION  1       /* bump on compatible changes */
+#define GPSD_API_MAJOR_VERSION  11      /* bump on incompatible changes */
+#define GPSD_API_MINOR_VERSION  0       /* bump on compatible changes */
 
 #define MAXCHANNELS     140     /* u-blox 9 tracks 140 signals */
 #define MAXUSERDEVS     4       /* max devices per user */
@@ -1038,9 +1039,9 @@ struct subframe_t {
             int8_t lsf;
 
             /* tot, reference time for UTC data,
-             * 8 bits unsigned, scale 2**12, seconds */
-            uint8_t tot;
-            time_t t_tot;
+             * 16 bits unsigned, scale 2**12, 0 to 604,784 seconds */
+            uint16_t tot;
+            unsigned long t_tot;
 
             /* WNt, UTC reference week number, 8 bits unsigned, scale 1,
              * weeks */

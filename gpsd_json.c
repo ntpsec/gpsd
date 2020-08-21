@@ -863,7 +863,7 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                         ",\"IONO\":{\"a0\":%.5g,\"a1\":%.5g,\"a2\":%.5g,"
                         "\"a3\":%.5g,\"b0\":%.5g,\"b1\":%.5g,\"b2\":%.5g,"
                         "\"b3\":%.5g,\"A1\":%.11e,\"A0\":%.11e,"
-                        "\"tot\":%lld,\"WNt\":%u,\"ls\":%d,\"WNlsf\":%u,"
+                        "\"tot\":%lu,\"WNt\":%u,\"ls\":%d,\"WNlsf\":%u,"
                         "\"DN\":%u,\"lsf\":%d}",
                         subframe->sub4_18.d_alpha0,
                         subframe->sub4_18.d_alpha1,
@@ -875,12 +875,12 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                         subframe->sub4_18.d_beta3,
                         subframe->sub4_18.d_A1,
                         subframe->sub4_18.d_A0,
-                        (long long)subframe->sub4_18.t_tot,
-                        (unsigned int)subframe->sub4_18.WNt,
-                        (int)subframe->sub4_18.leap,
-                        (unsigned int)subframe->sub4_18.WNlsf,
-                        (unsigned int)subframe->sub4_18.DN,
-                        (int)subframe->sub4_18.lsf);
+                        subframe->sub4_18.t_tot,
+                        subframe->sub4_18.WNt,
+                        subframe->sub4_18.leap,
+                        subframe->sub4_18.WNlsf,
+                        subframe->sub4_18.DN,
+                        subframe->sub4_18.lsf);
                 } else {
                     str_appendf(buf, buflen,
                         ",\"IONO\":{\"a0\":%d,\"a1\":%d,\"a2\":%d,"
@@ -898,12 +898,12 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                         (int)subframe->sub4_18.beta3,
                         (long)subframe->sub4_18.A1,
                         (long)subframe->sub4_18.A0,
-                        (unsigned int)subframe->sub4_18.tot,
-                        (unsigned int)subframe->sub4_18.WNt,
-                        (int)subframe->sub4_18.leap,
-                        (unsigned int)subframe->sub4_18.WNlsf,
-                        (unsigned int)subframe->sub4_18.DN,
-                        (int)subframe->sub4_18.lsf);
+                        subframe->sub4_18.tot,
+                        subframe->sub4_18.WNt,
+                        subframe->sub4_18.leap,
+                        subframe->sub4_18.WNlsf,
+                        subframe->sub4_18.DN,
+                        subframe->sub4_18.lsf);
                 }
                 break;
             case 63:      // subframe 4, page 25

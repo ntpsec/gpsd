@@ -562,7 +562,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                 /* careful WN is 10 bits, but WNt is 8 bits! */
                 /* WNt (Week Number of LSF) */
                 subp->sub4_18.tot    = ((words[7] >> 8) & 0x0000FF);
-                subp->sub4_18.t_tot  = 2e12 * subp->sub4_18.tot;
+                subp->sub4_18.t_tot  = (unsigned long)subp->sub4_18.tot << 12;
                 subp->sub4_18.WNt    = ((words[7] >> 0) & 0x0000FF);
                 subp->sub4_18.leap  = (int8_t)((words[8] >> 16) & 0x0000FF);
                 subp->sub4_18.WNlsf  = ((words[8] >>  8) & 0x0000FF);
