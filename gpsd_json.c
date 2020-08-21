@@ -770,6 +770,8 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
     case 5:
         // pageid is unique to all of subframes 4 and 5, handle as one
 
+        str_appendf(buf, buflen, ",\"dataid\":%u",
+                    (unsigned int)subframe->pageid);
         if (subframe->is_almanac) {
             if (scaled) {
                 str_appendf(buf, buflen,
@@ -811,8 +813,6 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                             (int)subframe->sub5.almanac.af1);
             }
         } else {
-            str_appendf(buf, buflen, ",\"pageid\":%u",
-                        (unsigned int)subframe->pageid);
             switch (subframe->pageid ) {
             case 51:    // subframe5, page 25
                 str_appendf(buf, buflen,
@@ -828,10 +828,10 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                 str_appendf(buf, buflen, "}");
                 break;
 
-            case 52:    // data ID 52, subframe 4, page 13
+            case 52:    // data ID 52, subframe 4, page 13, aka NMCT
                 /* decoding of ERD to SV is non trivial and not done yet */
                 str_appendf(buf, buflen,
-                    ",\"ERD\":{\"ai\":%u", subframe->sub4_13.ai);
+                    ",\"NMCT\":{\"ai\":%u", subframe->sub4_13.ai);
 
                 // 1-index loop to construct json, rather than giant snprintf
                 for(i = 1 ; i <= 30; i++){
