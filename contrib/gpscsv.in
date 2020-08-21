@@ -123,8 +123,10 @@ epilog = ('Use the psuedo class SAT to dump the individual satellite '
           'the SUBFRAME messages.\n\n'
           'Use the psuedo class SUBFRAME3 to dump Subframe 3 from the '
           'the SUBFRAME messages.\n\n'
-          'Use the psuedo class ALMANAC to dump the Alamanacs from '
+          'Use the psuedo class ALMANAC to dump the Almanacs from '
           'Subframes 4/5.\n\n'
+          'Use the psuedo class IONO to dump the Ionosphere and UTC data'
+          'from Subframe 4, page 18\n\n'
           'BSD terms apply: see the file COPYING in the distribution root'
           ' for details.')
 
@@ -244,6 +246,10 @@ if options.fields is None:
     default_fields = {'ALMANAC': ('TOW17', 'tSV', 'ID', 'Health', 'e',
                                   'toa', 'deltai', 'Omegad', 'sqrtA',
                                   'Omega0', 'omega', 'M0', 'af0', 'af1'),
+                      'IONO': ('TOW17', 'tSV', 'WNt', 'tot',
+                               'lsf', 'ls', 'WNlsf', 'DN',
+                               'A0', 'A1', 'a0', 'a1', 'a2', 'a3',
+                               'b0', 'b1', 'b2', 'b3'),
                       'SAT': ('time', 'gnssid', 'svid', 'PRN', 'az', 'el',
                               'ss', 'used', 'health'),
                       'SKY': ('time', 'xdop', 'ydop', 'vdop', 'tdop',
@@ -272,25 +278,29 @@ else:
     options.json_fields = options.fields.split(',')
 
 options.frames = None
-if 'SAT' == options.mclass:
+if 'ALMANAC' == options.mclass:
+    options.mclass = 'SUBFRAME'
+    options.subclass = 'ALMANAC'
+    options.frames = [4, 5]
+elif 'IONO' == options.mclass:
+    options.mclass = 'SUBFRAME'
+    options.subclass = 'IONO'
+    options.frames = [4]
+elif 'SAT' == options.mclass:
     options.mclass = 'SKY'
     options.subclass = 'SAT'
 elif 'SUBFRAME1' == options.mclass:
     options.mclass = 'SUBFRAME'
     options.subclass = 'EPHEM1'
-    options.frames = (1)
+    options.frames = [1]
 elif 'SUBFRAME2' == options.mclass:
     options.mclass = 'SUBFRAME'
     options.subclass = 'EPHEM2'
-    options.frames = (2)
+    options.frames = [2]
 elif 'SUBFRAME3' == options.mclass:
     options.mclass = 'SUBFRAME'
     options.subclass = 'EPHEM3'
-    options.frames = (3)
-elif 'ALMANAC' == options.mclass:
-    options.mclass = 'SUBFRAME'
-    options.subclass = 'ALMANAC'
-    options.frames = (4, 5)
+    options.frames = [3]
 else:
     options.subclass = None
 
