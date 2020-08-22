@@ -470,7 +470,7 @@ close:
 /* open a connection to a Ntrip broadcaster */
 int ntrip_open(struct gps_device_t *device, char *caster)
 {
-    char *amp, *amp_url, *colon, *slash;
+    char *amp, *colon, *slash;
     char *auth = NULL;
     char *port = NULL;
     char *stream = NULL;
@@ -486,13 +486,7 @@ int ntrip_open(struct gps_device_t *device, char *caster)
         device->ntrip.sourcetable_parse = false;
         device->ntrip.stream.set = false;
 
-        amp_url=caster;
-        while((amp_url = strchr(amp_url, '@')) != NULL) {
-            amp = amp_url;
-            amp_url++;
-        }
-
-        if (amp) {
+        if ((amp = strrchr(caster, '@')) != NULL) {
             if (((colon = strchr(caster, ':')) != NULL) && colon < amp) {
                 auth = caster;
                 *amp = '\0';
