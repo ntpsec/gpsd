@@ -375,61 +375,64 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
 
             case 52:                  // aka page 13
                 /* NMCT */
+                // ERD can not be char as char may be signed or unsigned.
+                // FIXME: shuffle SV into correct slot.
                 sv = -1;
                 subp->sub4_13.ai = (unsigned char)((words[2] >> 22) & 0x000003);
-                subp->sub4_13.ERD[1]  = (char)((words[2] >>  8) & 0x00003F);
-                subp->sub4_13.ERD[2]  = (char)((words[2] >>  2) & 0x00003F);
-                subp->sub4_13.ERD[3]  = (char)((words[2] >>  0) & 0x000003);
+                subp->sub4_13.ERD[1]  = (int8_t)((words[2] >>  8) & 0x00003F);
+                subp->sub4_13.ERD[2]  = (int8_t)((words[2] >>  2) & 0x00003F);
+                subp->sub4_13.ERD[3]  = (int8_t)((words[2] >>  0) & 0x000003);
                 subp->sub4_13.ERD[3] <<= 2;
-                subp->sub4_13.ERD[3] |= (char)((words[3] >> 20) & 0x00000F);
+                subp->sub4_13.ERD[3] |= (int8_t)((words[3] >> 20) & 0x00000F);
 
-                subp->sub4_13.ERD[4]  = (char)((words[3] >> 14) & 0x00003F);
-                subp->sub4_13.ERD[5]  = (char)((words[3] >>  8) & 0x00003F);
-                subp->sub4_13.ERD[6]  = (char)((words[3] >>  2) & 0x00003F);
-                subp->sub4_13.ERD[7]  = (char)((words[3] >>  0) & 0x000003);
+                subp->sub4_13.ERD[4]  = (int8_t)((words[3] >> 14) & 0x00003F);
+                subp->sub4_13.ERD[5]  = (int8_t)((words[3] >>  8) & 0x00003F);
+                subp->sub4_13.ERD[6]  = (int8_t)((words[3] >>  2) & 0x00003F);
+                subp->sub4_13.ERD[7]  = (int8_t)((words[3] >>  0) & 0x000003);
 
                 subp->sub4_13.ERD[7] <<= 2;
-                subp->sub4_13.ERD[7] |= (char)((words[4] >> 20) & 0x00000F);
-                subp->sub4_13.ERD[8]  = (char)((words[4] >> 14) & 0x00003F);
-                subp->sub4_13.ERD[9]  = (char)((words[4] >>  8) & 0x00003F);
-                subp->sub4_13.ERD[10] = (char)((words[4] >>  2) & 0x00003F);
-                subp->sub4_13.ERD[11] = (char)((words[4] >>  0) & 0x00000F);
+                subp->sub4_13.ERD[7] |= (int8_t)((words[4] >> 20) & 0x00000F);
+                subp->sub4_13.ERD[8]  = (int8_t)((words[4] >> 14) & 0x00003F);
+                subp->sub4_13.ERD[9]  = (int8_t)((words[4] >>  8) & 0x00003F);
+                subp->sub4_13.ERD[10] = (int8_t)((words[4] >>  2) & 0x00003F);
+                subp->sub4_13.ERD[11] = (int8_t)((words[4] >>  0) & 0x00000F);
 
                 subp->sub4_13.ERD[11] <<= 2;
-                subp->sub4_13.ERD[11] |= (char)((words[5] >> 20) & 0x00000F);
-                subp->sub4_13.ERD[12]  = (char)((words[5] >> 14) & 0x00003F);
-                subp->sub4_13.ERD[13]  = (char)((words[5] >>  8) & 0x00003F);
-                subp->sub4_13.ERD[14]  = (char)((words[5] >>  2) & 0x00003F);
-                subp->sub4_13.ERD[15]  = (char)((words[5] >>  0) & 0x000003);
+                subp->sub4_13.ERD[11] |= (int8_t)((words[5] >> 20) & 0x00000F);
+                subp->sub4_13.ERD[12]  = (int8_t)((words[5] >> 14) & 0x00003F);
+                subp->sub4_13.ERD[13]  = (int8_t)((words[5] >>  8) & 0x00003F);
+                subp->sub4_13.ERD[14]  = (int8_t)((words[5] >>  2) & 0x00003F);
+                subp->sub4_13.ERD[15]  = (int8_t)((words[5] >>  0) & 0x000003);
 
                 subp->sub4_13.ERD[15] <<= 2;
-                subp->sub4_13.ERD[15] |= (char)((words[6] >> 20) & 0x00000F);
-                subp->sub4_13.ERD[16]  = (char)((words[6] >> 14) & 0x00003F);
-                subp->sub4_13.ERD[17]  = (char)((words[6] >>  8) & 0x00003F);
-                subp->sub4_13.ERD[18]  = (char)((words[6] >>  2) & 0x00003F);
-                subp->sub4_13.ERD[19]  = (char)((words[6] >>  0) & 0x000003);
+                subp->sub4_13.ERD[15] |= (int8_t)((words[6] >> 20) & 0x00000F);
+                subp->sub4_13.ERD[16]  = (int8_t)((words[6] >> 14) & 0x00003F);
+                subp->sub4_13.ERD[17]  = (int8_t)((words[6] >>  8) & 0x00003F);
+                subp->sub4_13.ERD[18]  = (int8_t)((words[6] >>  2) & 0x00003F);
+                subp->sub4_13.ERD[19]  = (int8_t)((words[6] >>  0) & 0x000003);
 
                 subp->sub4_13.ERD[19] <<= 2;
-                subp->sub4_13.ERD[19] |= (char)((words[7] >> 20) & 0x00000F);
-                subp->sub4_13.ERD[20]  = (char)((words[7] >> 14) & 0x00003F);
-                subp->sub4_13.ERD[21]  = (char)((words[7] >>  8) & 0x00003F);
-                subp->sub4_13.ERD[22]  = (char)((words[7] >>  2) & 0x00003F);
-                subp->sub4_13.ERD[23]  = (char)((words[7] >>  0) & 0x000003);
+                subp->sub4_13.ERD[19] |= (int8_t)((words[7] >> 20) & 0x00000F);
+                subp->sub4_13.ERD[20]  = (int8_t)((words[7] >> 14) & 0x00003F);
+                subp->sub4_13.ERD[21]  = (int8_t)((words[7] >>  8) & 0x00003F);
+                subp->sub4_13.ERD[22]  = (int8_t)((words[7] >>  2) & 0x00003F);
+                subp->sub4_13.ERD[23]  = (int8_t)((words[7] >>  0) & 0x000003);
 
                 subp->sub4_13.ERD[23] <<= 2;
-                subp->sub4_13.ERD[23] |= (char)((words[8] >> 20) & 0x00000F);
-                subp->sub4_13.ERD[24]  = (char)((words[8] >> 14) & 0x00003F);
-                subp->sub4_13.ERD[25]  = (char)((words[8] >>  8) & 0x00003F);
-                subp->sub4_13.ERD[26]  = (char)((words[8] >>  2) & 0x00003F);
-                subp->sub4_13.ERD[27]  = (char)((words[8] >>  0) & 0x000003);
+                subp->sub4_13.ERD[23] |= (int8_t)((words[8] >> 20) & 0x00000F);
+                subp->sub4_13.ERD[24]  = (int8_t)((words[8] >> 14) & 0x00003F);
+                subp->sub4_13.ERD[25]  = (int8_t)((words[8] >>  8) & 0x00003F);
+                subp->sub4_13.ERD[26]  = (int8_t)((words[8] >>  2) & 0x00003F);
+                subp->sub4_13.ERD[27]  = (int8_t)((words[8] >>  0) & 0x000003);
 
                 subp->sub4_13.ERD[27] <<= 2;
-                subp->sub4_13.ERD[27] |= (char)((words[9] >> 20) & 0x00000F);
-                subp->sub4_13.ERD[28]  = (char)((words[9] >> 14) & 0x00003F);
-                subp->sub4_13.ERD[29]  = (char)((words[9] >>  8) & 0x00003F);
-                subp->sub4_13.ERD[30]  = (char)((words[9] >>  2) & 0x00003F);
+                subp->sub4_13.ERD[27] |= (int8_t)((words[9] >> 20) & 0x00000F);
+                subp->sub4_13.ERD[28]  = (int8_t)((words[9] >> 14) & 0x00003F);
+                subp->sub4_13.ERD[29]  = (int8_t)((words[9] >>  8) & 0x00003F);
+                subp->sub4_13.ERD[30]  = (int8_t)((words[9] >>  2) & 0x00003F);
 
                 for ( i = 1; i < 31; i++ ) {
+                    // sign extend 6 bit to 8 bit
                     subp->sub4_13.ERD[i]  = uint2int(subp->sub4_13.ERD[i], 6);
                 }
 

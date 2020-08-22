@@ -979,9 +979,9 @@ struct subframe_t {
             /* mapping ord ERD# to SV # is non trivial
              * leave it alone.  See IS-GPS-200E Section 20.3.3.5.1.9 */
             /* Estimated Range Deviation, 6 bits signed, meters */
-            char ERD[33];
+            int8_t ERD[33];
             /* ai, Availability Indicator, 2bits, bit map */
-            unsigned char ai;
+            uint8_t ai;
         } sub4_13;
         /* subframe 4, page 17, system message, 23 chars, plus nul */
         struct {
