@@ -38,16 +38,20 @@
  */
 
 /* Takes a decimal ASCII floating-point number, optionally
- * preceded by white space.  Must have form "-I.FE-X",
- * where I is the integer part of the mantissa, F is
- * the fractional part of the mantissa, and X is the
- * exponent.  Either of the signs may be "+", "-", or
- * omitted.  Either I or F may be omitted, or both.
+ * preceded by white space.  Must have form "SI.FE-X",
+ * S may be ither of the signs may be "+", "-", or omitted.
+ * I is the integer part of the mantissa,
+ * F is the fractional part of the mantissa,
+ * X is the exponent.
+ * Either I or F may be omitted, or both.
  * The decimal point isn't necessary unless F is
  * present.  The "E" may actually be an "e".  E and X
  * may both be omitted (but not just one).
  *
- * returns NaN if *string is zero length
+ * returns NaN if:
+ *    *string is zero length,
+ *    the first non-white space is not negative sign ('-'), positive sign ('_')
+ *    or a digit
  */
 double safe_atof(const char *string)
 {
@@ -70,7 +74,7 @@ double safe_atof(const char *string)
         1.0e256
     };
 
-    bool sign, expSign = false;
+    bool sign = false, expSign = false;
     double fraction, dblExp, *d;
     const char *p;
     int c;
@@ -95,19 +99,20 @@ double safe_atof(const char *string)
      */
 
     p = string;
-    while (isspace((unsigned char) *p)) {
+    while (isspace((int)*p)) {
         p += 1;
     }
-    if (*p == '\0') {
-        return NAN;
-    } else if (*p == '-') {
+    if (isdigit((int)*p)) {
+        // ignore
+    } else if ('-' == *p) {
         sign = true;
         p += 1;
+    } else if ('+' == *p) {
+        p += 1;
+    } else if ('.' == *p) {
+        // ignore
     } else {
-        if (*p == '+') {
-            p += 1;
-        }
-        sign = false;
+        return NAN;
     }
 
     /*
@@ -116,10 +121,9 @@ double safe_atof(const char *string)
      */
 
     decPt = -1;
-    for (mantSize = 0; ; mantSize += 1)
-    {
+    for (mantSize = 0; ; mantSize += 1) {
         c = *p;
-        if (!isdigit(c)) {
+        if (!isdigit((int)c)) {
             if ((c != '.') || (decPt >= 0)) {
                 break;
             }
@@ -195,7 +199,7 @@ double safe_atof(const char *string)
             }
             expSign = false;
         }
-        while (isdigit((unsigned char) *p)) {
+        while (isdigit((int) *p)) {
             exp = exp * 10 + (*p - '0');
             p += 1;
         }
