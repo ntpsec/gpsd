@@ -156,10 +156,9 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
      * A description of how to decode these bits is at
      * <http://home-2.worldonline.nl/~samsvl/nav2eu.htm>
      *
-     * We're mostly looking for subframe 4 page 18 word 9, the leap second
-     * correction. This functions assumes an array of words without parity
-     * or inversion (inverted word 0 is OK). It may be called directly by a
-     * driver if the chipset emits acceptable data.
+     * This functions assumes an array of words without parity or inversion.
+     * Inverted word 0 is OK.
+     * May be called directly by a driver if the chipset emits acceptable data.
      *
      * To date this code has been tested on iTrax, SiRF and ublox.
      */
@@ -188,12 +187,13 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
     }
     subp->integrity = (bool)((words[0] >> 1) & 0x01);
     /* The subframe ID is in the Hand Over Word (page 80) */
-    subp->TOW17 = ((words[1] >> 7) & 0x01FFFF);
-    subp->l_TOW17 = (long)(subp->TOW17 * 6);
     subp->tSVID = (uint8_t)tSVID;
+    // subframe_num is 1 to 5
     subp->subframe_num = ((words[1] >> 2) & 0x07);
+    subp->antispoof = (bool)((words[1] >> 5) & 0x01);
     subp->alert = (bool)((words[1] >> 6) & 0x01);
-    subp->antispoof = (bool)((words[1] >> 6) & 0x01);
+    subp->TOW17 = ((words[1] >> 7) & 0x01FFFF);
+    subp->l_TOW17 = (unsigned long)subp->TOW17 * 6;
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "50B: SF:%d SV:%2u TOW17:%7lu Alert:%u AS:%u IF:%d\n",
              subp->subframe_num, subp->tSVID, subp->l_TOW17,
@@ -431,10 +431,18 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                 subp->sub4_13.ERD[29]  = (int8_t)((words[9] >>  8) & 0x00003F);
                 subp->sub4_13.ERD[30]  = (int8_t)((words[9] >>  2) & 0x00003F);
 
-                for ( i = 1; i < 31; i++ ) {
+                for (i = 1; i < 31; i++) {
                     // sign extend 6 bit to 8 bit
                     subp->sub4_13.ERD[i]  = uint2int(subp->sub4_13.ERD[i], 6);
                 }
+                // ERD for SV 32 never sent.
+                // own ERD never transmitted
+                for (i = 30; i >= subp->tSVID; i--) {
+                    // do the shuffle up thing
+                    subp->sub4_13.ERD[i + 1]  = subp->sub4_13.ERD[i];
+                }
+                // 0x20 sign extends to 0xe0, 0xe0 is -32
+                subp->sub4_13.ERD[subp->tSVID] = -32;
 
                 GPSD_LOG(LOG_PROG, &session->context->errout,
                          "50B: SF:4-13 data_id %d ai:%u "
@@ -445,7 +453,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                          "ERD17:%d ERD18:%d ERD19:%d ERD20:%d "
                          "ERD21:%d ERD22:%d ERD23:%d ERD24:%d "
                          "ERD25:%d ERD26:%d ERD27:%d ERD28:%d "
-                         "ERD29:%d ERD30:%d\n",
+                         "ERD29:%d ERD30:%d ERD31:%d\n",
                          subp->data_id, subp->sub4_13.ai,
                          subp->sub4_13.ERD[1], subp->sub4_13.ERD[2],
                          subp->sub4_13.ERD[3], subp->sub4_13.ERD[4],
@@ -461,7 +469,8 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                          subp->sub4_13.ERD[23], subp->sub4_13.ERD[24],
                          subp->sub4_13.ERD[25], subp->sub4_13.ERD[26],
                          subp->sub4_13.ERD[27], subp->sub4_13.ERD[28],
-                         subp->sub4_13.ERD[29], subp->sub4_13.ERD[30]);
+                         subp->sub4_13.ERD[29], subp->sub4_13.ERD[30],
+                         subp->sub4_13.ERD[31]);
                 break;
 
             case 53:     // aka page 14
@@ -536,13 +545,13 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                 subp->sub4_18.d_alpha0 = pow(2.0, -30) *
                                              (int)subp->sub4_18.alpha0;
                 subp->sub4_18.alpha1 = (int8_t)((words[2] >> 0) & 0x0000FF);
-                subp->sub4_18.d_alpha1 = pow(2.0, -27) * 
+                subp->sub4_18.d_alpha1 = pow(2.0, -27) *
                                             (int)subp->sub4_18.alpha1;
                 subp->sub4_18.alpha2 = (int8_t)((words[3] >> 16) & 0x0000FF);
-                subp->sub4_18.d_alpha2 = pow(2.0, -24) * 
+                subp->sub4_18.d_alpha2 = pow(2.0, -24) *
                                             (int)subp->sub4_18.alpha2;
                 subp->sub4_18.alpha3 = (int8_t)((words[3] >>  8) & 0x0000FF);
-                subp->sub4_18.d_alpha3 = pow(2.0, -24) * 
+                subp->sub4_18.d_alpha3 = pow(2.0, -24) *
                                             (int)subp->sub4_18.alpha3;
 
                 subp->sub4_18.beta0  = (int8_t)((words[3] >>  0) & 0x0000FF);

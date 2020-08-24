@@ -655,11 +655,12 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
     const struct subframe_t *subframe = &datap->subframe;
     int i;
 
+    // TOW17 is always scaled
     (void)snprintf(buf, buflen, "{\"class\":\"SUBFRAME\",\"device\":\"%s\","
-                   "\"tSV\":%u,\"TOW17\":%u,\"frame\":%u,\"scaled\":%s",
+                   "\"tSV\":%u,\"TOW17\":%lu,\"frame\":%u,\"scaled\":%s",
                    datap->dev.path,
                    (unsigned int)subframe->tSVID,
-                   (unsigned int)subframe->TOW17,
+                   subframe->l_TOW17,
                    (unsigned int)subframe->subframe_num,
                    JSON_BOOL(scaled));
 
@@ -834,9 +835,21 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                     ",\"NMCT\":{\"ai\":%u", subframe->sub4_13.ai);
 
                 // 1-index loop to construct json, rather than giant snprintf
-                for(i = 1 ; i <= 30; i++){
-                    str_appendf(buf, buflen,
-                        ",\"ERD%d\":%d", i, subframe->sub4_13.ERD[i]);
+                // ERD for SV 32, and for transmitting SV, are never sent.
+                for(i = 1 ; i < 32; i++){
+                    // 0xe0 is sign extended 0x20, is -32, marked invalid
+                    if (scaled) {
+                        // JSON has no nan, use "null" instead
+                        if (-32 >= subframe->sub4_13.ERD[i]) {
+                            str_appendf(buf, buflen, ",\"ERD%d\":\"null\"", i);
+                        } else {
+                            str_appendf(buf, buflen, ",\"ERD%d\":%.3f", i,
+                                        subframe->sub4_13.ERD[i] * 0.3);
+                        }
+                    } else {
+                        str_appendf(buf, buflen, ",\"ERD%d\":%d", i,
+                                    subframe->sub4_13.ERD[i]);
+                    }
                 }
                 str_appendf(buf, buflen, "}");
                 break;
