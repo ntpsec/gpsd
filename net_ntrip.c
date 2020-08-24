@@ -486,6 +486,11 @@ int ntrip_open(struct gps_device_t *device, char *caster)
         device->ntrip.sourcetable_parse = false;
         device->ntrip.stream.set = false;
 
+        /* Test cases
+         * ntrip://userid:passwd@ntrip.com:2101/MOUNT-POINT
+         * ntrip://a@b.com:passwd@ntrip.com:2101/MOUNT-POINT
+         * ntrip://userid:passwd@@@ntrip.com:2101/MOUNT-POINT
+         * ntrip://a@b.com:passwd@@@ntrip.com:2101/MOUNT-POINT */
         if ((amp = strrchr(caster, '@')) != NULL) {
             if (((colon = strchr(caster, ':')) != NULL) && colon < amp) {
                 auth = caster;
