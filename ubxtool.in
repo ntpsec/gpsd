@@ -214,6 +214,12 @@ def unpack_u16(word, pos):
     return u[0]
 
 
+def unpack_u17(word, pos):
+    """Grab an unsigned 17 bits from offset pos of word"""
+
+    return unpack_u24(word, pos) & 0x01ffff
+
+
 def unpack_s22(word, pos):
     """Grab a signed 22 bits from offset pos of word"""
 
@@ -5705,6 +5711,7 @@ High Precision GNSS products only."""
                        msgid, index_s(msgid, self.cnav_msgids)))
 
             else:
+                # IS-GPS-200, Figure 20-2
                 # LNAV-L, from sat is 10 words of 30 bits
                 # from u-blox each of 10 words right aligned into 32 bits
                 #             plus something in top 2 bits?
@@ -5714,8 +5721,8 @@ High Precision GNSS products only."""
                       (preamble, (words[0] >> 8) & 0xffff,
                        1 if (words[0] & 0x40) else 0))
 
-                s += ("\n  TOW %u Alert %u A-S %u Subframe %u" %
-                      (unpack_u8(words[1], 13) * 6,
+                s += ("\n  TOW17 %u Alert %u A-S %u Subframe %u" %
+                      (unpack_u17(words[1], 13) * 6,
                        1 if (words[0] & 0x1000) else 0,
                        1 if (words[0] & 0x800) else 0,
                        subframe))
