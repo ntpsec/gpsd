@@ -93,7 +93,10 @@ def _do_one_line(data):
         if 'time' == fld and options.cvtisotime:
             # convert 2020-08-17T23:58:01.000Z to 1597708682.0
             data[fld] = gps.isotime(data[fld])
-        out.append('' if fld not in data else str(data[fld]))
+        if fld not in data or 'null' == data[fld]:
+            out.append('')
+        else:
+            out.append(str(data[fld]))
     print(options.separator.join(out))
 
 
@@ -127,6 +130,8 @@ epilog = ('Use the psuedo class SAT to dump the individual satellite '
           'Subframes 4/5.\n\n'
           'Use the psuedo class IONO to dump the Ionosphere and UTC data'
           'from Subframe 4, page 18\n\n'
+          'Use the psuedo class NMCT to dump the ERD data'
+          'from Subframe 4, page 13\n\n'
           'BSD terms apply: see the file COPYING in the distribution root'
           ' for details.')
 
@@ -241,6 +246,7 @@ if options.target:
         sys.exit(0)
 
 # Fields to parse
+# Python dicts are unorderd, so try to clean things up a little
 options.json_fields = None
 if options.fields is None:
     default_fields = {'ALMANAC': ('TOW17', 'tSV', 'ID', 'Health', 'e',
@@ -250,6 +256,14 @@ if options.fields is None:
                                'lsf', 'ls', 'WNlsf', 'DN',
                                'A0', 'A1', 'a0', 'a1', 'a2', 'a3',
                                'b0', 'b1', 'b2', 'b3'),
+                      'NMCT': ('TOW17', 'tSV', 'ai',
+                               'ERD1', 'ERD2', 'ERD3', 'ERD4', 'ERD5',
+                               'ERD6', 'ERD7', 'ERD8', 'ERD9', 'ERD10',
+                               'ERD11', 'ERD12', 'ERD13', 'ERD14', 'ERD15',
+                               'ERD16', 'ERD17', 'ERD18', 'ERD19', 'ERD20',
+                               'ERD21', 'ERD22', 'ERD23', 'ERD24', 'ERD25',
+                               'ERD26', 'ERD27', 'ERD28', 'ERD29', 'ERD30',
+                               'ERD31'),
                       'SAT': ('time', 'gnssid', 'svid', 'PRN', 'az', 'el',
                               'ss', 'used', 'health'),
                       'SKY': ('time', 'xdop', 'ydop', 'vdop', 'tdop',
@@ -282,6 +296,10 @@ if 'ALMANAC' == options.mclass:
     options.mclass = 'SUBFRAME'
     options.subclass = 'ALMANAC'
     options.frames = [4, 5]
+elif 'NMCT' == options.mclass:
+    options.mclass = 'SUBFRAME'
+    options.subclass = 'NMCT'
+    options.frames = [4]
 elif 'IONO' == options.mclass:
     options.mclass = 'SUBFRAME'
     options.subclass = 'IONO'
