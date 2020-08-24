@@ -267,7 +267,7 @@ struct gps_log_t  {
     char fixType;         // -1 = unset, 0 = None, 2 == 2D, 3 = 3D
 
     // Number of satellites used in Nav Solution, zero if invalid
-    unsigned char numSV;  
+    unsigned char numSV;
     char string[257];     // 256 max plus NUL
 };
 
@@ -837,9 +837,10 @@ struct subframe_t {
     uint8_t pageid;
     /* tSVID, SV ID of the sat that transmitted this frame, 6 bits unsigned */
     uint8_t tSVID;
-    /* TOW, Time of Week of NEXT message, 17 bits unsigned, scale 6, seconds */
-    uint32_t TOW17;
-    long l_TOW17;
+    /* TOW17, Time of Week of next Subframe.
+     * 17 bits unsigned, 0 to 100,799, scale 6, seconds */
+    uint32_t TOW17;            // 0 to 100,799
+    unsigned long l_TOW17;     // 0 to 604,794
     /* integrity, URA bounds flag, 1 bit */
     bool integrity;
     /* alert, alert flag, SV URA and/or the SV User Differential Range
