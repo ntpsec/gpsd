@@ -236,7 +236,7 @@ void toff_update(WINDOW *win, int y, int x)
          * we know we'll never see more than 5 digits of seconds
          * rather than 10.
          */
-        for (i = 0; i < TIMESPEC_LEN-4 && x + i < xmax - 1; i++)
+        for (i = 0; i < TIMESPEC_LEN-24 && x + i < xmax - 1; i++)
             (void)waddch(win, ' ');
         TS_SUB(&timedelta, &time_offset.clock, &time_offset.real);
         // (long long) for 32-bit CPU with 64-bit time_t
@@ -266,7 +266,7 @@ void pps_update(WINDOW *win, int y, int x)
         assert(ymax > 0);  /* squash a compiler warning */
         (void)wmove(win, y, x);
         /* see toff_update() for explanation of the magic number */
-        for (i = 0; i < TIMESPEC_LEN-4 && x + i < xmax - 1; i++)
+        for (i = 0; i < TIMESPEC_LEN-24 && x + i < xmax - 1; i++)
             (void)waddch(win, ' ');
         TS_SUB( &timedelta, &ppstimes.clock, &ppstimes.real);
         // (long long) for 32-bit CPU with 64-bit time_t
