@@ -140,10 +140,11 @@ static void ntrip_str_parse(char *str, size_t len,
     s = ntrip_field_iterate(NULL, s, eol, errout);
     /* <compr-encryp> */
     if ((s = ntrip_field_iterate(NULL, s, eol, errout))) {
-        if (strcasecmp("none", s) == 0)
+        if (('\0' == s[0]) || (0 == strcasecmp("none", s))) {
             hold->compr_encryp = cmp_enc_none;
-        else
+        } else {
             hold->compr_encryp = cmp_enc_unknown;
+        }
     }
     /* <authentication> */
     if ((s = ntrip_field_iterate(NULL, s, eol, errout))) {
