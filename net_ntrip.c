@@ -469,10 +469,10 @@ close:
 }
 
 /* open a connection to a Ntrip broadcaster */
-int ntrip_open(struct gps_device_t *device, char *caster)
+int ntrip_open(struct gps_device_t *device, char *orig)
 {
     char *amp, *colon, *slash;
-    char *auth = NULL;
+    char *auth = NULL, dup[256], *caster = dup;
     char *port = NULL;
     char *stream = NULL;
     char *url = NULL;
@@ -482,6 +482,8 @@ int ntrip_open(struct gps_device_t *device, char *caster)
     case ntrip_conn_init:
         /* this has to be done here,
          * because it is needed for multi-stage connection */
+        strncpy(dup, orig, 255);
+        dup[255] = '\0';
         device->servicetype = service_ntrip;
         device->ntrip.works = false;
         device->ntrip.sourcetable_parse = false;
