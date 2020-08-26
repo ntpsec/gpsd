@@ -118,7 +118,17 @@ if gps.__version__ != gps_version:
 
 description = 'Convert one gpsd JSON message class to csv format.'
 usage = '%(prog)s [OPTIONS] [host[:port[:device]]]'
-epilog = ('Use the psuedo class SAT to dump the individual satellite '
+epilog = ('Use the psuedo class ALMANAC to dump the Almanacs from '
+          'Subframes 4/5.\n\n'
+          'Use the psuedo class HEALTH to dump health data'
+          'from Subframe 4, page 25\n\n'
+          'Use the psuedo class HEALTH2 to dump health data'
+          'from Subframe 5, page 25\n\n'
+          'Use the psuedo class IONO to dump the Ionosphere and UTC data'
+          'from Subframe 4, page 18\n\n'
+          'Use the psuedo class NMCT to dump the ERD data'
+          'from Subframe 4, page 13. encrypted\n\n'
+          'Use the psuedo class SAT to dump the individual satellite '
           'records\nfrom the SKY messages.\n\n'
           'Use the psuedo class SUBFRAME1 to dump Subframe 1 from the '
           'the SUBFRAME messages.\n\n'
@@ -126,12 +136,6 @@ epilog = ('Use the psuedo class SAT to dump the individual satellite '
           'the SUBFRAME messages.\n\n'
           'Use the psuedo class SUBFRAME3 to dump Subframe 3 from the '
           'the SUBFRAME messages.\n\n'
-          'Use the psuedo class ALMANAC to dump the Almanacs from '
-          'Subframes 4/5.\n\n'
-          'Use the psuedo class IONO to dump the Ionosphere and UTC data'
-          'from Subframe 4, page 18\n\n'
-          'Use the psuedo class NMCT to dump the ERD data'
-          'from Subframe 4, page 13\n\n'
           'BSD terms apply: see the file COPYING in the distribution root'
           ' for details.')
 
@@ -252,6 +256,22 @@ if options.fields is None:
     default_fields = {'ALMANAC': ('TOW17', 'tSV', 'ID', 'Health', 'e',
                                   'toa', 'deltai', 'Omegad', 'sqrtA',
                                   'Omega0', 'omega', 'M0', 'af0', 'af1'),
+                      'HEALTH': ('TOW17', 'tSV',
+                                 'SV1', 'SV2', 'SV3', 'SV4', 'SV5',
+                                 'SV6', 'SV7', 'SV8', 'SV9', 'SV10',
+                                 'SV11', 'SV12', 'SV13', 'SV14', 'SV15',
+                                 'SV16', 'SV17', 'SV18', 'SV19', 'SV20',
+                                 'SV21', 'SV22', 'SV23', 'SV24', 'SV25',
+                                 'SV26', 'SV27', 'SV28', 'SV29', 'SV30',
+                                 'SV31', 'SV32',
+                                 'SVH25', 'SVH26', 'SVH27', 'SVH28', 'SVH29',
+                                 'SVH30', 'SVH31', 'SVH32'),
+                      'HEALTH2': ('TOW17', 'tSV', 'toa', 'WNa',
+                                  'SVH1', 'SVH2', 'SVH3', 'SVH4', 'SVH5',
+                                  'SVH6', 'SVH7', 'SVH8', 'SVH9', 'SVH10',
+                                  'SVH11', 'SVH12', 'SVH13', 'SVH14', 'SVH15',
+                                  'SVH16', 'SVH17', 'SVH18', 'SVH19', 'SVH20',
+                                  'SVH21', 'SVH22', 'SVH23', 'SVH24'),
                       'IONO': ('TOW17', 'tSV', 'WNt', 'tot',
                                'lsf', 'ls', 'WNlsf', 'DN',
                                'A0', 'A1', 'a0', 'a1', 'a2', 'a3',
@@ -296,13 +316,22 @@ if 'ALMANAC' == options.mclass:
     options.mclass = 'SUBFRAME'
     options.subclass = 'ALMANAC'
     options.frames = [4, 5]
-elif 'NMCT' == options.mclass:
+elif 'HEALTH' == options.mclass:
     options.mclass = 'SUBFRAME'
-    options.subclass = 'NMCT'
+    options.subclass = 'HEALTH'
     options.frames = [4]
+elif 'HEALTH2' == options.mclass:
+    options.mclass = 'SUBFRAME'
+    options.subclass = 'HEALTH2'
+    options.frames = [5]
 elif 'IONO' == options.mclass:
     options.mclass = 'SUBFRAME'
     options.subclass = 'IONO'
+    options.frames = [4]
+elif 'NMCT' == options.mclass:
+    # Note: ai is probably 01, which means the NMCT data is encypted.
+    options.mclass = 'SUBFRAME'
+    options.subclass = 'NMCT'
     options.frames = [4]
 elif 'SAT' == options.mclass:
     options.mclass = 'SKY'
