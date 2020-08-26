@@ -2080,7 +2080,7 @@ substmap = (
     ('@RUNDIR@',     env['rundir']),
     ('@SBINDIR@',    installdir('sbindir', add_destdir=False)),
     ('@SCPUPLOAD@',  scpupload),
-    ('@SHAREPATH@',  installdir('sharedir')),
+    ('@SHAREPATH@',  installdir('sharedir', add_destdir=False)),
     ('@SITENAME@',   sitename),
     ('@SITESEARCH@', sitesearch),
     ('@SUPPORT@',    'https://gpsd.io/SUPPORT.html'),

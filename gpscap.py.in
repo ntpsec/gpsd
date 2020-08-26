@@ -19,7 +19,7 @@ class GPSDictionary(configparser.RawConfigParser):
         "Initialize the capability dictionary"
         configparser.RawConfigParser.__init__(self)
         if not files:
-            files = ["gpscap.ini", "/usr/share/gpsd/gpscap.ini"]
+            files = ["gpscap.ini", "@SHAREPATH@/gpscap.ini"]
         try:
             self.read(files, encoding='utf-8')
         except TypeError:

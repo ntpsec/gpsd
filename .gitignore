@@ -2,6 +2,7 @@
 cgps
 cgpxlogger
 gps2udp
+gpscap.py
 gpsctl
 gpsd
 gpsdctl
