@@ -785,7 +785,7 @@ struct rtcm3_t {
  */
 
 /* The almanac is a subset of the clock and ephemeris data, with reduced
- * precision. See IS-GPS-200E, Table 20-VI  */
+ * precision. See IS-GPS-200, Table 20-VI  */
 struct almanac_t
 {
     uint8_t sv;  /* The satellite this refers to */
@@ -831,7 +831,7 @@ struct subframe_t {
     /* subframe number, 3 bits, unsigned, 1 to 5 */
     uint8_t subframe_num;
     /* data_id, denotes the NAV data structure of D(t), 2 bits, in
-     * IS-GPS-200E always == 0x1 */
+     * IS-GPS-200 always == 0x1 */
     uint8_t data_id;
     /* SV/page id used for subframes 4 & 5, 6 bits */
     uint8_t pageid;
@@ -850,7 +850,7 @@ struct subframe_t {
     bool antispoof;
     int is_almanac;
     union {
-        /* subframe 1, part of ephemeris, see IS-GPS-200E, Table 20-II
+        /* subframe 1, part of ephemeris, see IS-GPS-200, Table 20-II
          * and Table 20-I */
         struct {
             /* WN, Week Number, 10 bits unsigned, scale 1, weeks */
@@ -887,7 +887,7 @@ struct subframe_t {
             int8_t Tgd;
             double d_Tgd;
         } sub1;
-        /* subframe 2, part of ephemeris, see IS-GPS-200E, Table 20-II
+        /* subframe 2, part of ephemeris, see IS-GPS-200, Table 20-II
          * and Table 20-III */
         struct {
             /* Issue of Data (Ephemeris),
@@ -933,7 +933,7 @@ struct subframe_t {
             uint32_t sqrtA;
             double d_sqrtA;
         } sub2;
-        /* subframe 3, part of ephemeris, see IS-GPS-200E, Table 20-II,
+        /* subframe 3, part of ephemeris, see IS-GPS-200, Table 20-II,
          * Table 20-III */
         struct {
             /* Issue of Data (Ephemeris), 8 bits, unsigned
@@ -978,7 +978,7 @@ struct subframe_t {
         /* subframe 4, page 13 */
         struct {
             /* mapping ord ERD# to SV # is non trivial
-             * leave it alone.  See IS-GPS-200E Section 20.3.3.5.1.9 */
+             * leave it alone.  See IS-GPS-200 Section 20.3.3.5.1.9 */
             /* Estimated Range Deviation, 6 bits signed, meters */
             int8_t ERD[33];
             /* ai, Availability Indicator, 2bits, bit map */
@@ -2507,7 +2507,7 @@ extern void datum_code_string(int code, char *buffer, size_t len);
 /* miles and knots are both the international standard versions of the units */
 
 // angle conversion multipliers
-// IS-GPS-200K uses pi = 3.1415926535898
+// IS-GPS-200 uses pi = 3.1415926535898
 #define GPS_PI          3.1415926535897932384626433832795029
 #define RAD_2_DEG       57.2957795130823208767981548141051703
 #define DEG_2_RAD       0.0174532925199432957692369076848861271

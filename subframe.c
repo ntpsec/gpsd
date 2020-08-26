@@ -119,7 +119,7 @@ static void subframe_almanac(const struct gpsd_errout_t *errout,
     almp->M0       = ( words[8] & 0x00FFFFFF);
     almp->M0       = uint2int(almp->M0, 24);
     /* if you want radians, multiply by GPS_PI, but we do semi-circles
-     * to match IS-GPS-200K */
+     * to match IS-GPS-200 */
     almp->d_M0     = pow(2.0,-23) * almp->M0;
     almp->af1      = ((words[9] >>  5) & 0x0007FF);
     almp->af1      = (short)uint2int(almp->af1, 11);
@@ -200,7 +200,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
              (unsigned)subp->alert, (unsigned)subp->antispoof,
              (unsigned)subp->integrity);
     /*
-     * Consult the latest revision of IS-GPS-200K for the mapping
+     * Consult the latest revision of IS-GPS-200 for the mapping
      * between magic SVIDs and pages.
      */
     subp->pageid  = (words[2] >> 16) & 0x00003F; /* only in frames 4 & 5 */
@@ -475,19 +475,19 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
 
             case 53:     // aka page 14
                 /* for some inscrutable reason page 14 is sent
-                 * as page 53, IS-GPS-200K Table 20-
+                 * as page 53, IS-GPS-200 Table 20-
                  * reserved */
                 break;
 
             case 54:      // aka page 15
                 /* for some inscrutable reason page 15 is sent
-                 * as page 54, IS-GPS-200K Table 20-V
+                 * as page 54, IS-GPS-200 Table 20-V
                  * reserved */
                 break;
 
             case 55:  // aka page 17
                 /* for some inscrutable reason page 17 is sent
-                 * as page 55, IS-GPS-200K Table 20-V */
+                 * as page 55, IS-GPS-200 Table 20-V */
                 sv = -1;
                 /*
                  * "The requisite 176 bits shall occupy bits 9 through 24
@@ -536,7 +536,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
 
             case 56:         // aka page 18
                 /* for some inscrutable reason page 18 is sent
-                 * as page 56, IS-GPS-200K Table 20-V */
+                 * as page 56, IS-GPS-200 Table 20-V */
                 /* ionospheric and UTC data */
 
                 sv = -1;
@@ -600,7 +600,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
 
                 /* notify the leap seconds correction in the end
                  * of current day */
-                /* IS-GPS-200 Revision K, paragraph 20.3.3.5.2.4 */
+                /* IS-GPS-200, paragraph 20.3.3.5.2.4 */
                 /* FIXME: only allow LEAPs in June and December */
                 // only need to check whole seconds
                 if (((session->context->gps_week % 256) ==
@@ -627,37 +627,37 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
 
             case 57:    // aka pages 1, 6, 11, 16, 21
                 /* for some inscutable reason these pages are all sent
-                 * as page 57, IS-GPS-200K Table 20-V
+                 * as page 57, IS-GPS-200 Table 20-V
                  * reserved */
                 break;
 
             case 59:         // aka page 20
                 /* for some inscrutable reason page 20 is sent
-                 * as page 59, IS-GPS-200K Table 20-V
+                 * as page 59, IS-GPS-200 Table 20-V
                  * reserved page */
                 break;
 
             case 60:         // aka page 22
                 /* for some inscrutable reason page 22 is sent
-                 * as page 60, IS-GPS-200K Table 20-V */
+                 * as page 60, IS-GPS-200 Table 20-V */
                 /* reserved page */
                 break;
 
             case 61:         // aka page 23
                 /* for some inscrutable reason page 23 is sent
-                 * as page 61, IS-GPS-200K Table 20-V */
+                 * as page 61, IS-GPS-200 Table 20-V */
                 /* reserved page */
                 break;
 
             case 62:     // aka pages 12 and 24
                 /* for some inscrutable reason these pages are all sent
-                 * as page 62, IS-GPS-200K Table 20-V
+                 * as page 62, IS-GPS-200 Table 20-V
                  * reserved */
                 break;
 
             case 63:          // aka page 25
                 /* for some inscrutable reason page 25 is sent
-                 * as page 63, IS-GPS-200K Table 20-V */
+                 * as page 63, IS-GPS-200 Table 20-V */
                 /* A-S flags/SV configurations for 32 SVs,
                  * plus SV health for SV 25 through 32
                  */
@@ -772,11 +772,11 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                              subp->pageid, subp->data_id, &subp->sub5.almanac);
         } else if (51 == subp->pageid) {
             /* for some inscrutable reason page 25 is sent as page 51
-             * IS-GPS-200K Table 20-V */
+             * IS-GPS-200 Table 20-V */
 
             subp->sub5_25.toa   = ((words[2] >> 8) & 0x0000FF);
             subp->sub5_25.l_toa = subp->sub5_25.toa << 12;
-            subp->sub5_25.WNa   = ( words[2] & 0x0000FF);
+            subp->sub5_25.WNa   = (words[2] & 0x0000FF);
             subp->sub5_25.sv[1] = ((words[2] >> 18) & 0x00003F);
             subp->sub5_25.sv[2] = ((words[2] >> 12) & 0x00003F);
             subp->sub5_25.sv[3] = ((words[2] >>  6) & 0x00003F);
