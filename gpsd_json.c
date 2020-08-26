@@ -921,7 +921,7 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                 break;
             case 63:      // subframe 4, page 25
                 str_appendf(buf, buflen, ",\"HEALTH\":{\"SV1\":%d",
-                                (int)subframe->sub4_25.svf[i]);
+                                (int)subframe->sub4_25.svf[1]);
 
                 // 1-index loop to construct json, rather than giant snprintf
                 for(i = 2 ; i <= 32; i++){
@@ -930,7 +930,7 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                 }
                 for(i = 0 ; i < 8; i++){ /* 0-index */
                     str_appendf(buf, buflen, ",\"SVH%d\":%u",
-                                i+25, subframe->sub4_25.svhx[i]);
+                                i + 25, subframe->sub4_25.svhx[i]);
                 }
                 str_appendf(buf, buflen, "}");
                 break;
