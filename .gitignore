@@ -199,6 +199,7 @@ tmp*
 # config file created by gpsd.php
 gpsd_config.inc
 # for systemd(umb)
+systemd/gpsd.service
 systemd/gpsdctl@.service
 systemd/gpsd.socket
 # for 3rd party packaging

@@ -2076,6 +2076,7 @@ substmap = (
     ('@PYPACKETH@',  pythonized_header),
     ('@QTVERSIONED@', env['qt_versioned']),
     ('@RUNDIR@',     env['rundir']),
+    ('@SBINDIR@',    installdir('sbindir', add_destdir=False)),
     ('@SCPUPLOAD@',  scpupload),
     ('@SHAREPATH@',  installdir('sharedir')),
     ('@SITENAME@',   sitename),
