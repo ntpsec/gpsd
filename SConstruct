@@ -2916,6 +2916,9 @@ env.Clean(clean_misc, glob.glob('gpsd-*.zip') + glob.glob('gpsd-*tar.?z'))
 # qt object files
 env.Clean(clean_misc, glob.glob('qt-*.os'))
 
+# Clean obsolete files
+env.Clean(clean_misc, 'contrib/gpscsv')
+
 # Default targets
 
 if cleaning:
