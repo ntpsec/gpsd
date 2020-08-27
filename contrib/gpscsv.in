@@ -7,56 +7,6 @@
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
 #
-# Examples, do them in exact order:
-#
-#   Grab 100 samples of time,lat,lon,altHAE:
-#       $ gpscsv -n 100 --cvt-isotime  > tpv.dat
-#   Grab 100 samples of time,epx,epy,epv,eph,sep
-#       $ gpscsv -n 100 --cvt-isotime -f time,epx,epy,epv,eph,sep > ep.dat
-#   Grab 100 samples of time,xdop,ydop,vdop,tdop,hdop,gdop,pdop
-#       $ gpscsv -n 100 --cvt-isotime -c SKY  > sky.dat
-#   Grab 100 samples of time,nSat,uSat
-#       $ gpscsv -n 100 --cvt-isotime -c SKY -f time,nSat,uSat  > sat.dat
-#
-#   start gnuplot in interactive mode:
-#       $ gnuplot
-#
-#   Some gnuplot housekeeping:
-#       # this are csv files
-#       gnuplot> set datafile separator ','
-#       # use the first line as title
-#       gnuplot> set key autotitle columnhead
-#       # X axis is UNIT time in seconds.
-#       gnuplot> set xdata time
-#       gnuplot> set timefmt "%s"
-
-#   Now to plot time vs latitude:
-#       gnuplot> plot 'tpv.dat' using 1:2
-#
-#   Then to plot longitude and altHAE:
-#       gnuplot> plot 'tpv.dat' using 1:3
-#       gnuplot> plot 'tpv.dat' using 1:4
-#
-#   Put both latitude and longitude on one plot:
-#       gnuplot> set y2tics
-#       gnuplot> plot 'tpv.dat' using 1:2, '' using 1:3 axes x1y2
-#
-#   Plot epx, epy, epv, eph, and sep in one plot:
-#       gnuplot> plot 'ep.dat' using 1:2, '' using 1:3, \
-#                '' using 1:4, '' using 1:5, '' using 1:6
-#
-#   Plot all the DOPs on one plot:
-#       gnuplot> plot 'sky.dat' using 1:2, '' using 1:3, '' using 1:4, \
-#                '' using 1:5, '' using 1:6, '' using 1:7, '' using 1:8
-#
-#   Plot nSat and uSat together:
-#       gnuplot> plot 'sat.dat' using 1:2, '' using 1:3
-#
-#   Lat/lon scatter plot:
-#       # x is no longer time
-#       gnuplot> set xdata
-#       gnuplot> plot 'tpv.dat' using 3:2 title 'fix'
-#
 
 from __future__ import print_function
 
@@ -118,24 +68,15 @@ if gps.__version__ != gps_version:
 
 description = 'Convert one gpsd JSON message class to csv format.'
 usage = '%(prog)s [OPTIONS] [host[:port[:device]]]'
-epilog = ('Use the psuedo class ALMANAC to dump the Almanacs from '
-          'Subframes 4/5.\n\n'
-          'Use the psuedo class HEALTH to dump health data'
-          'from Subframe 4, page 25\n\n'
-          'Use the psuedo class HEALTH2 to dump health data'
-          'from Subframe 5, page 25\n\n'
-          'Use the psuedo class IONO to dump the Ionosphere and UTC data'
-          'from Subframe 4, page 18\n\n'
-          'Use the psuedo class NMCT to dump the ERD data'
-          'from Subframe 4, page 13. encrypted\n\n'
-          'Use the psuedo class SAT to dump the individual satellite '
-          'records\nfrom the SKY messages.\n\n'
-          'Use the psuedo class SUBFRAME1 to dump Subframe 1 from the '
-          'the SUBFRAME messages.\n\n'
-          'Use the psuedo class SUBFRAME2 to dump Subframe 2 from the '
-          'the SUBFRAME messages.\n\n'
-          'Use the psuedo class SUBFRAME3 to dump Subframe 3 from the '
-          'the SUBFRAME messages.\n\n'
+epilog = ('  -c ALMANAC to dump the Almanacs from Subframes 4/5.\n'
+          '  -c HEALTH to dump health data from Subframe 4, page 25\n'
+          '  -c HEALTH2 to dump health data from Subframe 5, page 25\n'
+          '  -c IONO to dump the Iono/UTC data from Subframe 4, page 18\n'
+          '  -c NMCT to dump the ERD data from Subframe 4, page 13\n'
+          '  -c SAT to dump the satellite records from the SKY messages.\n'
+          '  -c SUBFRAME1 to dump Ephemeris1 from Subframe 1\n'
+          '  -c SUBFRAME2 to dump Ephemeris2 from Subframe 2\n'
+          '  -c SUBFRAME3 to dump Ephermeris3 from Subframe 3\n\n'
           'BSD terms apply: see the file COPYING in the distribution root'
           ' for details.')
 
@@ -180,6 +121,13 @@ parser.add_argument(
     help='Fields to process. '' for all.  Default varies by class.'
 )
 parser.add_argument(
+    '--header',
+    dest='header',
+    default=1,
+    type=int,
+    help='0: No header, 1: fields, 2: comment. [Default %(default)s)]'
+)
+parser.add_argument(
     '--host',
     dest='host',
     default='localhost',
@@ -192,13 +140,6 @@ parser.add_argument(
     default=0,
     type=int,
     help='Count of messages to parse. 0 to disable. [Default %(default)s)]'
-)
-parser.add_argument(
-    '--header',
-    dest='header',
-    default=1,
-    type=int,
-    help='0: No header, 1: fields, 2: comment. [Default %(default)s)]'
 )
 parser.add_argument(
     '--port',
