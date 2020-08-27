@@ -18,7 +18,7 @@ contrib/clock_test
 *.exe
 # These are built from .in files
 android/gpsd_config
-contrib/gpscsv
+clients/gpscsv
 contrib/ntpshmviz
 contrib/skyview2svg.py
 contrib/webgps

@@ -130,7 +130,7 @@ if SCons.__version__ in ['2.3.0', '2.3.1']:
 generated_sources = [
     'ais_json.i',
     'android/gpsd_config',
-    'contrib/gpscsv',
+    'clients/gpscsv',
     'contrib/ntpshmviz',
     'contrib/skyview2svg.py',
     'contrib/webgps',
@@ -169,6 +169,7 @@ generated_www = [
 # All installed python programs
 # All are templated
 python_progs = [
+    "clients/gpscsv",
     "gegps",
     "gpscat",
     "gpsfake",
@@ -2119,7 +2120,7 @@ for fn in templated:
     env.AddPostAction(builder, 'chmod -w $TARGET')
     if ((fn.endswith(".py.in") or
          fn[:-3] in python_progs or
-         fn[:-3] in ['contrib/gpscsv', 'contrib/gpscsv'] or
+         fn[:-3] in ['clients/gpscsv', 'clients/gpscsv'] or
          fn[:-3] in ['contrib/ntpshmviz', 'contrib/webgps'])):
         # set python files to executable
         env.AddPostAction(builder, 'chmod +x $TARGET')
