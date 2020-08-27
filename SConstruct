@@ -186,6 +186,7 @@ all_manpages = {
     "man/gegps.1": "man/gps.xml",
     "man/gps.1": "man/gps.xml",
     "man/gps2udp.1": "man/gps2udp.xml",
+    "man/gpscsv.1": "man/gpscsv.xml",
     "man/gpscat.1": "man/gpscat.xml",
     "man/gpsctl.1": "man/gpsctl.xml",
     "man/gpsd.8": "man/gpsd.xml",
@@ -2713,6 +2714,7 @@ else:
 htmlpages = Split('''
     www/gps2udp.html
     www/gpscat.html
+    www/gpscsv.html
     www/gpsctl.html
     www/gpsdctl.html
     www/gpsdecode.html
