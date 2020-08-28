@@ -207,3 +207,5 @@ systemd/gpsd.socket
 packaging/deb/etc_default_gpsd
 packaging/deb/etc_init.d_gpsd
 packaging/rpm/gpsd.init
+packaging/X11/xgps.desktop
+packaging/X11/xgpsspeed.desktop
