@@ -5538,12 +5538,12 @@ High Precision GNSS products only."""
         # Omega0 = Longitude of Ascending Node of Orbit Plane at Weekly Epoch
         # omega = Argument of Perigee
         # M0 = Mean Anomaly at Reference Time
-        # Af0 = SV Clock Bias Correction Coefficient
-        # Af1 = SV Clock Drift Correction Coefficient
+        # af0 = SV Clock Bias Correction Coefficient
+        # af1 = SV Clock Drift Correction Coefficient
         s = "    Almanac"
         s += ("\n    e %e toa %u deltai %e Omegadot %e"
               "\n    SVH x%x sqrtA %.6f Omega0 %e omega %e"
-              "\n    M0 %e Af0 %e Af1 %e" %
+              "\n    M0 %e af0 %e af1 %e" %
               (unpack_u16(words[2], 6) * (2 ** -21),
                unpack_u8(words[3], 22) * (2 ** 12),
                unpack_s16(words[3], 6) * (2 ** -19),
