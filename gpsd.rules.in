@@ -48,6 +48,8 @@ ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a6", SYMLINK+="gps%n", @UDEVCOMMAN
 ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a7", SYMLINK+="gps%n", @UDEVCOMMAND@
 # u-blox AG, u-blox 8 (tested with GNSS Evaluation Kit EKV-M8N) [linux module: cdc_acm]
 ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a8", SYMLINK+="gps%n", @UDEVCOMMAND@
+# u-blox AG, u-blox 9 (tested with GNSS Evaluation Kit C099-F9P) [linux module: cdc_acm]
+ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a9", SYMLINK+="gps%n", @UDEVCOMMAND@
 # MediaTek (tested with HOLUX M-1200E) [linux module: cdc_acm]
 ATTRS{idVendor}=="0e8d", ATTRS{idProduct}=="3329", SYMLINK+="gps%n", @UDEVCOMMAND@
 # Telit wireless solutions (tested with HE910G) [linux module: cdc_acm]
