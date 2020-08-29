@@ -20,6 +20,7 @@ contrib/clock_test
 # These are built from .in files
 android/gpsd_config
 clients/gpscsv
+contrib/gpssubframe
 contrib/ntpshmviz
 contrib/skyview2svg.py
 contrib/webgps

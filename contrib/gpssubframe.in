@@ -1,0 +1,256 @@
+#!@PYSHEBANG@
+# @GENERATED@
+# -*- coding: utf-8 -*-
+# This file is Copyright 2010 by the GPSD project
+# SPDX-License-Identifier: BSD-2-clause
+
+# This code runs compatibly under Python 2 and 3.x for x >= 2.
+# Preserve this property!
+#
+
+from __future__ import print_function
+
+import argparse
+import socket
+import sys
+import time            # for time.time()
+
+ephemeris1 = {}
+ephemeris2 = {}
+ephemeris3 = {}
+
+
+ephem1_fields = {
+    1: ('ura', 'URA Index'),
+    2: ('WN', 'Data Sequence Propagation Week Number'),
+    3: ('L2P', 'L2 P data flag'),
+    4: ('hlth', 'SV health'),
+    5: ('Tgd', 'Group Delay Differential'),
+    6: ('IODC', 'Issue of Data, Clock'),
+    7: ('toc', 'Time of Clock'),
+    8: ('L2', 'Code on L2'),
+    9: ('af0', 'SV Clock Bias Correction Coefficient'),
+    10: ('af1', 'SV Clock Drift Correction Coefficient'),
+    11: ('af2', 'Drift Rate Correction Coefficient'),
+    }
+
+ephem2_fields = {
+    1: ('IODE', 'Issue of Data, Ephemeris'),
+    2: ('M0', 'Mean Anomaly at Reference Time'),
+    3: ('deltan', 'Mean Motion Difference from Computed Value'),
+    4: ('e', 'Eccentricity '),
+    5: ('sqrtA', 'Square Root of the Semi-Major Axis'),
+    6: ('FIT', 'Fit Interval Flag'),
+    7: ('AODO', 'Age of Data Offset '),
+    8: ('Crs', 'Sine Correction Amplitude Term to Orbit Radius'),
+    9: ('Cus', 'Cosine Correction Amplitude Term to Orbit Radius'),
+    10: ('Cuc', 'Sine Harmonic Correction Term to Arg of Lat'),
+    11: ('toe', 'Reference Time Ephemeris')
+    }
+
+ephem3_fields = {
+    1: ('IODE', 'Issue of Data, Ephemeris'),
+    2: ('Crc', 'Cosine Harmonic Correction Amplitude Orbit Radius'),
+    3: ('Cic', 'Cosine Harmonic Correction Amplitude Angle of Inclination'),
+    4: ('Cis', 'Sine Harmonic Correction Amplitude Angle of Inclination'),
+    5: ('Omega0',
+        'Longitude of Ascending Node of Orbit Plane at Weekly Epoch '),
+    6: ('i0', 'Inclination Angle at Reference Time'),
+    7: ('omega', 'Argument of Perigee'),
+    8: ('Omegad', 'Rate of Right Ascension'),
+    9: ('IDOT', 'Rate of Inclination Angle'),
+    }
+
+
+def _print_ephem(sv, ephem, fields):
+    """Print Subframe, Ephemeris Data"""
+
+    for index in sorted(fields.keys()):
+        fld = fields[index]
+        print("%10s %s" % (fld[0], ephem[fld[0]]))
+        if options.desc:
+            print("           %-48s " % (fld[1]))
+
+
+def _do_one_line(data):
+    """do one frame"""
+
+    global options
+    global ephemeris
+
+    if 1 != data['frame']:
+        return
+
+
+# pylint wants local modules last
+try:
+    import gps
+except ImportError as e:
+    sys.stderr.write(
+        "%s: can't load Python gps libraries -- check PYTHONPATH.\n" %
+        (sys.argv[0]))
+    sys.stderr.write("%s\n" % e)
+    sys.exit(1)
+
+gps_version = '@VERSION@'
+if gps.__version__ != gps_version:
+    sys.stderr.write("%s: ERROR: need gps module version %s, got %s\n" %
+                     (sys.argv[0], gps_version, gps.__version__))
+    sys.exit(1)
+
+description = 'Convert one gpsd JSON message class to csv format.'
+usage = '%(prog)s [OPTIONS] [host[:port[:device]]]'
+epilog = ('BSD terms apply: see the file COPYING in the distribution root'
+          ' for details.')
+
+parser = argparse.ArgumentParser(
+             description=description,
+             epilog=epilog,
+             formatter_class=argparse.RawDescriptionHelpFormatter,
+             usage=usage)
+parser.add_argument(
+    '--cvt-isotime',
+    dest='cvtisotime',
+    default=False,
+    action="store_true",
+    help='Convert ISO time to UNIX time [Default %(default)s)]'
+)
+parser.add_argument(
+    '--desc',
+    dest='desc',
+    default=False,
+    action="store_true",
+    help='Print long descriptions [Default %(default)s)]'
+)
+parser.add_argument(
+    '-D',
+    '--debug',
+    dest='debug',
+    default=0,
+    type=int,
+    help='Set level of debug. Must be integer. [Default %(default)s)]'
+)
+parser.add_argument(
+    '--device',
+    dest='device',
+    default='',
+    help='The device to connect. [Default %(default)s)]'
+)
+parser.add_argument(
+    '--host',
+    dest='host',
+    default='localhost',
+    help='The host to connect. [Default %(default)s)]'
+)
+parser.add_argument(
+    '-n',
+    '--count',
+    dest='count',
+    default=0,
+    type=int,
+    help='Count of messages to parse. 0 to disable. [Default %(default)s)]'
+)
+parser.add_argument(
+    '--port',
+    dest='port',
+    default=gps.GPSD_PORT,
+    help='The port to connect. [Default %(default)s)]'
+)
+parser.add_argument(
+    '-V', '--version',
+    action='version',
+    version="%(prog)s: Version " + gps_version + "\n",
+    help='Output version to stderr, then exit'
+)
+parser.add_argument(
+    '-x',
+    '--seconds',
+    dest='seconds',
+    default=16,
+    type=int,
+    help='Seconds of messages to parse. 0 to disable. [Default %(default)s)]'
+)
+parser.add_argument(
+    'target',
+    nargs='?',
+    help='[host[:port[:device]]]'
+)
+options = parser.parse_args()
+
+# the options host, port, device are set by the defaults
+if options.target:
+    # override host, port and device with target
+    arg = options.target.split(':')
+    len_arg = len(arg)
+    if len_arg == 1:
+        (options.host,) = arg
+    elif len_arg == 2:
+        (options.host, options.port) = arg
+    elif len_arg == 3:
+        (options.host, options.port, options.device) = arg
+    else:
+        parser.print_help()
+        sys.exit(0)
+
+options.frames = (1, 2, 3)
+options.mclass = 'SUBFRAME'
+
+try:
+    session = gps.gps(host=options.host, port=options.port,
+                      verbose=options.debug)
+except socket.error:
+    sys.stderr.write("gpscsv: Could not connect to gpsd daemon\n")
+    sys.exit(1)
+
+session.stream(gps.WATCH_ENABLE | gps.WATCH_SCALED, devpath=options.device)
+
+
+count = 0
+if 0 < options.seconds:
+    end_seconds = time.time() + options.seconds
+else:
+    end_seconds = 0
+
+try:
+    while True:
+        msg = session.next()
+        if msg['class'] != options.mclass:
+            continue
+        if 'SUBFRAME' == options.mclass:
+            if msg['frame'] not in options.frames:
+                continue
+
+            if 1 == msg['frame']:
+                ephemeris1[msg['tSV']] = msg['EPHEM1']
+            elif 2 == msg['frame']:
+                ephemeris2[msg['tSV']] = msg['EPHEM2']
+            elif 3 == msg['frame']:
+                ephemeris3[msg['tSV']] = msg['EPHEM3']
+
+        if 0 < options.count:
+            count += 1
+            if count >= options.count:
+                break
+
+        if 0 < options.seconds:
+            if time.time() > end_seconds:
+                break
+
+except KeyboardInterrupt:
+    # caught control-C
+    print()
+    sys.exit(1)
+
+for sv in sorted(ephemeris1.keys()):
+    print("SV %u\n  Subframe 1, Clock Data" % sv)
+    _print_ephem(sv, ephemeris1[sv], ephem1_fields)
+    print("  Subframe 2, Orbit Data")
+    if sv in ephemeris2:
+        _print_ephem(sv, ephemeris2[sv], ephem2_fields)
+    else:
+        print("    Missing")
+    print("  Subframe 3, Orbit Data")
+    if sv in ephemeris3:
+        _print_ephem(sv, ephemeris3[sv], ephem3_fields)
+    else:
+        print("    Missing")

@@ -131,6 +131,7 @@ generated_sources = [
     'ais_json.i',
     'android/gpsd_config',
     'clients/gpscsv',
+    'contrib/gpssubframe',
     'contrib/ntpshmviz',
     'contrib/skyview2svg.py',
     'contrib/webgps',
@@ -2120,7 +2121,7 @@ for fn in templated:
     env.AddPostAction(builder, 'chmod -w $TARGET')
     if ((fn.endswith(".py.in") or
          fn[:-3] in python_progs or
-         fn[:-3] in ['clients/gpscsv', 'clients/gpscsv'] or
+         fn[:-3] in ['clients/gpscsv', 'contrib/gpssubframe'] or
          fn[:-3] in ['contrib/ntpshmviz', 'contrib/webgps'])):
         # set python files to executable
         env.AddPostAction(builder, 'chmod +x $TARGET')
