@@ -15,9 +15,26 @@ import socket
 import sys
 import time            # for time.time()
 
+# pylint wants local modules last
+try:
+    import gps
+except ImportError as e:
+    sys.stderr.write(
+        "%s: can't load Python gps libraries -- check PYTHONPATH.\n" %
+        (sys.argv[0]))
+    sys.stderr.write("%s\n" % e)
+    sys.exit(1)
+
+gps_version = '@VERSION@'
+if gps.__version__ != gps_version:
+    sys.stderr.write("%s: ERROR: need gps module version %s, got %s\n" %
+                     (sys.argv[0], gps_version, gps.__version__))
+    sys.exit(1)
+
 ephemeris1 = {}
 ephemeris2 = {}
 ephemeris3 = {}
+almanac = {}
 
 
 ephem1_fields = {
@@ -54,16 +71,32 @@ ephem3_fields = {
     3: ('Cic', 'Cosine Harmonic Correction Amplitude Angle of Inclination'),
     4: ('Cis', 'Sine Harmonic Correction Amplitude Angle of Inclination'),
     5: ('Omega0',
-        'Longitude of Ascending Node of Orbit Plane at Weekly Epoch '),
+        'Longitude of Ascending Node of Orbit Plane Week beginning'),
     6: ('i0', 'Inclination Angle at Reference Time'),
     7: ('omega', 'Argument of Perigee'),
     8: ('Omegad', 'Rate of Right Ascension'),
     9: ('IDOT', 'Rate of Inclination Angle'),
     }
 
+almanac_fields = {
+    # 1: ('ID' same as SV
+    1: ('Health', 'SV health'),
+    2: ('e', 'Eccentricity '),
+    3: ('toa', 'Almanac Rference Time'),
+    4: ('deltai', 'Inclination offset from 0.3 semicircles (= 54 deg)'),
+    5: ('Omegad', 'Rate of Right Ascension'),
+    6: ('sqrtA', 'Square Root of the Semi-Major Axis'),
+    7: ('Omega0',
+        'Longitude of Ascending Node of Orbit Plane Week beginning'),
+    8: ('omega', 'Argument of Perigee'),
+    9: ('M0', 'Mean Anomaly at Reference Time'),
+    10: ('af0', 'SV Clock Bias Correction Coefficient'),
+    11: ('af1', 'SV Clock Drift Correction Coefficient'),
+    }
 
-def _print_ephem(sv, ephem, fields):
-    """Print Subframe, Ephemeris Data"""
+
+def _print_msg(sv, ephem, fields):
+    """Print Subframe Data"""
 
     for index in sorted(fields.keys()):
         fld = fields[index]
@@ -71,32 +104,6 @@ def _print_ephem(sv, ephem, fields):
         if options.desc:
             print("           %-48s " % (fld[1]))
 
-
-def _do_one_line(data):
-    """do one frame"""
-
-    global options
-    global ephemeris
-
-    if 1 != data['frame']:
-        return
-
-
-# pylint wants local modules last
-try:
-    import gps
-except ImportError as e:
-    sys.stderr.write(
-        "%s: can't load Python gps libraries -- check PYTHONPATH.\n" %
-        (sys.argv[0]))
-    sys.stderr.write("%s\n" % e)
-    sys.exit(1)
-
-gps_version = '@VERSION@'
-if gps.__version__ != gps_version:
-    sys.stderr.write("%s: ERROR: need gps module version %s, got %s\n" %
-                     (sys.argv[0], gps_version, gps.__version__))
-    sys.exit(1)
 
 description = 'Convert one gpsd JSON message class to csv format.'
 usage = '%(prog)s [OPTIONS] [host[:port[:device]]]'
@@ -192,7 +199,6 @@ if options.target:
         parser.print_help()
         sys.exit(0)
 
-options.frames = (1, 2, 3)
 options.mclass = 'SUBFRAME'
 
 try:
@@ -217,15 +223,17 @@ try:
         if msg['class'] != options.mclass:
             continue
         if 'SUBFRAME' == options.mclass:
-            if msg['frame'] not in options.frames:
-                continue
-
             if 1 == msg['frame']:
                 ephemeris1[msg['tSV']] = msg['EPHEM1']
             elif 2 == msg['frame']:
                 ephemeris2[msg['tSV']] = msg['EPHEM2']
             elif 3 == msg['frame']:
                 ephemeris3[msg['tSV']] = msg['EPHEM3']
+            elif 4 <= msg['frame'] <= 5:
+                if 'ALMANAC' in msg:
+                    almanac[msg['dataid']] = msg['ALMANAC']
+                # else not Almanac page
+            # else, bad packet...
 
         if 0 < options.count:
             count += 1
@@ -241,16 +249,26 @@ except KeyboardInterrupt:
     print()
     sys.exit(1)
 
-for sv in sorted(ephemeris1.keys()):
+all_sv = (ephemeris1.keys() + ephemeris1.keys() + ephemeris1.keys() +
+          almanac.keys())
+for sv in sorted(set(all_sv)):
     print("SV %u\n  Subframe 1, Clock Data" % sv)
-    _print_ephem(sv, ephemeris1[sv], ephem1_fields)
+    if sv in ephemeris2:
+        _print_msg(sv, ephemeris1[sv], ephem1_fields)
+    else:
+        print("    Missing")
     print("  Subframe 2, Orbit Data")
     if sv in ephemeris2:
-        _print_ephem(sv, ephemeris2[sv], ephem2_fields)
+        _print_msg(sv, ephemeris2[sv], ephem2_fields)
     else:
         print("    Missing")
     print("  Subframe 3, Orbit Data")
     if sv in ephemeris3:
-        _print_ephem(sv, ephemeris3[sv], ephem3_fields)
+        _print_msg(sv, ephemeris3[sv], ephem3_fields)
+    else:
+        print("    Missing")
+    print("  Almanac")
+    if sv in almanac:
+        _print_msg(sv, almanac[sv], almanac_fields)
     else:
         print("    Missing")
