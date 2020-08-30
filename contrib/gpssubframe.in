@@ -35,6 +35,7 @@ ephemeris1 = {}
 ephemeris2 = {}
 ephemeris3 = {}
 almanac = {}
+tpv = None               # for current time and position
 
 
 ephem1_fields = {
@@ -200,8 +201,6 @@ if options.target:
         parser.print_help()
         sys.exit(0)
 
-options.mclass = 'SUBFRAME'
-
 try:
     session = gps.gps(host=options.host, port=options.port,
                       verbose=options.debug)
@@ -221,9 +220,7 @@ else:
 try:
     while True:
         msg = session.next()
-        if msg['class'] != options.mclass:
-            continue
-        if 'SUBFRAME' == options.mclass:
+        if 'SUBFRAME' == msg['class']:
             if 1 == msg['frame']:
                 ephemeris1[msg['tSV']] = msg['EPHEM1']
             elif 2 == msg['frame']:
@@ -235,6 +232,8 @@ try:
                     almanac[msg['dataid']] = msg['ALMANAC']
                 # else not Almanac page
             # else, bad packet...
+        elif 'TPV' == msg['class']:
+            tpv = msg
 
         if 0 < options.count:
             count += 1
@@ -273,3 +272,16 @@ for sv in sorted(set(all_sv)):
         _print_msg(sv, almanac[sv], almanac_fields)
     else:
         print("    Missing")
+
+if 'time' in tpv:
+    # convert to UNIX time
+    unix_time = gps.isotime(tpv['time'])
+    # GPS Epoch starts: Jan 1980 00:00:00 UTC, Unix time: 315964800
+    gps_time = unix_time - 315964800
+    if 'leapseconds' in tpv:
+        gps_time += tpv['leapseconds']
+    # 604,800 in a GPS week
+    (gps_week, gps_tow) = divmod(gps_time, 604800)
+
+    print("Unix time: %s, gps time: %s, week: %s tow: %s" %
+          (unix_time, gps_time, int(gps_week), gps_tow))
