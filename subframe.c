@@ -103,9 +103,9 @@ static void subframe_almanac(const struct gpsd_errout_t *errout,
      * you can not just store one or two almanacs for each sat */
     almp->toa      = ((words[3] >> 16) & 0x0000FF);
     almp->l_toa    = almp->toa << 12;
-    almp->deltai   = ( words[3] & 0x00FFFF);
+    almp->deltai   = (int16_t)( words[3] & 0x00FFFF);
     almp->d_deltai = pow(2.0, -19) * almp->deltai;
-    almp->Omegad   = ((words[4] >>  8) & 0x00FFFF);
+    almp->Omegad   = (int16_t)((words[4] >>  8) & 0x00FFFF);
     almp->d_Omegad = pow(2.0, -38) * almp->Omegad;
     almp->svh      = ( words[4] & 0x0000FF);
     almp->sqrtA    = ( words[5] & 0xFFFFFF);
@@ -267,7 +267,9 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
         subp->sub2.M0     = (int32_t)( words[3] & 0x0000FF);
         subp->sub2.M0   <<= 24;
         subp->sub2.M0    |= ( words[4] & 0x00FFFFFF);
-        subp->sub2.d_M0   = pow(2.0,-31) * subp->sub2.M0 * GPS_PI;
+        /* if you want radians, multiply by GPS_PI, but we do semi-circles
+         * to match IS-GPS-200 */
+        subp->sub2.d_M0   = pow(2.0,-31) * subp->sub2.M0;
         subp->sub2.Cuc    = (int16_t)((words[5] >>  8) & 0x00FFFF);
         subp->sub2.d_Cuc  = pow(2.0,-29) * subp->sub2.Cuc;
         subp->sub2.e      = ( words[5] & 0x0000FF);
@@ -281,7 +283,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
         subp->sub2.sqrtA |= ( words[8] & 0x00FFFFFF);
         subp->sub2.d_sqrtA = pow(2.0, -19) * subp->sub2.sqrtA;
         subp->sub2.toe    = ((words[9] >>  8) & 0x00FFFF);
-        subp->sub2.l_toe  = (long)(subp->sub2.toe << 4);
+        subp->sub2.l_toe  = ((unsigned long)subp->sub2.toe << 4);
         subp->sub2.fit    = ((words[9] >>  7) & 0x000001);
         subp->sub2.AODO   = ((words[9] >>  2) & 0x00001F);
         subp->sub2.u_AODO   = subp->sub2.AODO * 900;

@@ -903,7 +903,7 @@ struct subframe_t {
             /* toe, Reference Time Ephemeris, 16 bits unsigned, scale 2**4,
              * seconds */
             uint16_t toe;
-            long l_toe;
+            unsigned long l_toe;
             /* Crs, Amplitude of the Sine Harmonic Correction Term to the
              * Orbit Radius, 16 bits, scale 2**-5, signed, meters */
             int16_t Crs;
