@@ -11,6 +11,7 @@
 from __future__ import print_function
 
 import argparse
+import math
 import socket
 import sys
 import time            # for time.time()
@@ -253,7 +254,7 @@ all_sv = (ephemeris1.keys() + ephemeris1.keys() + ephemeris1.keys() +
           almanac.keys())
 for sv in sorted(set(all_sv)):
     print("SV %u\n  Subframe 1, Clock Data" % sv)
-    if sv in ephemeris2:
+    if sv in ephemeris1:
         _print_msg(sv, ephemeris1[sv], ephem1_fields)
     else:
         print("    Missing")
@@ -285,3 +286,46 @@ if 'time' in tpv:
 
     print("Unix time: %s, gps time: %s, week: %s tow: %s" %
           (unix_time, gps_time, int(gps_week), gps_tow))
+
+    sys.exit(0)
+    # below is WIP
+
+    # find one SV with all 3 ephemeris
+    for sv in ephemeris1.keys():
+        if ((sv not in ephemeris2 or
+             sv not in ephemeris3)):
+            continue;
+        # got one
+
+        # compute Sat position from IS-GPS-200 table 20-IV
+
+        # WGS 84 value of the earth's gravitational constant for GPS user
+        mu = 3.986005e14             # m/s
+        # WGS 84 value of the earth's rotation rate
+        omegade = 7.2921151467e-5    # rad/sec
+        # Semi-major axis
+        A = pow(ephemeris2[sv]['sqrtA'], 2)      # m
+
+        # Computed mean motion
+        comp_mm = math.sqrt(mu / pow(A, 3))           # rad/sec
+
+        # Time from ephemeris reference epoch
+        # FIXME: assume gps_tow is close enough to
+        # t: GPS system time at time of transmission
+        tk = gps_tow - ephemeris2[sv]['toe']
+        if 302400 > tk:
+            tk -= 604800;
+        elif -302400 > tk:
+            tk += 604800;
+
+        # corrrrected mean motion
+        # FIXME: semi-circles -> rads
+        corr_mm = comp_mm + (ephemeris2[sv]['deltan'] + math.pi)   # rad/sec
+
+        # mean anomaly, rads
+        Mk = (ephemeris2[sv]['M0'] * math.pi) + (corr_mm * tk)
+
+        # solve for eccentric anomaly ??
+
+        print("A %s comp_mm %s tk %s Mk %s" & (A, comp_mm, tk, Mk))
+        break;
