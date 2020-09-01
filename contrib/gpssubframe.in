@@ -32,6 +32,21 @@ if gps.__version__ != gps_version:
                      (sys.argv[0], gps_version, gps.__version__))
     sys.exit(1)
 
+
+def keppler(e, M0, n):
+    '''Kepplers iteration to solve his equation'''
+
+    # FIXME: iterate to a desired error, instead of fixed rounds?
+    # https://en.wikipedia.org/wiki/Kepler%27s_equation
+    Ek = M0             # initial guess
+    for i in range(1, n):
+        Ek = M0 + e * math.sin(Ek)
+    return Ek
+
+# another algorithm here:
+# http://www.alpheratz.net/dynamics/twobody/KeplerIterations_summary.pdf
+
+
 ephemeris1 = {}
 ephemeris2 = {}
 ephemeris3 = {}
@@ -72,7 +87,8 @@ ephem3_fields = {
     2: ('Crc', '(m) Cosine Harmonic Correction Amplitude Orbit Radius'),
     3: ('Cic',
         '(rad) Cosine Harmonic Correction Amplitude Angle of Inclination'),
-    4: ('Cis', '(rad) Sine Harmonic Correction Amplitude Angle of Inclination'),
+    4: ('Cis',
+        '(rad) Sine Harmonic Correction Amplitude Angle of Inclination'),
     5: ('Omega0',
         '(sc) Longitude of Ascending Node of Orbit Plane Week beginning'),
     6: ('i0', '(sc) Inclination Angle at Reference Time'),
@@ -165,6 +181,13 @@ parser.add_argument(
     dest='port',
     default=gps.GPSD_PORT,
     help='The port to connect. [Default %(default)s)]'
+)
+parser.add_argument(
+    '--satpos',
+    dest='satpos',
+    default=False,
+    action="store_true",
+    help='Compute Satellite Positions [Default %(default)s)]'
 )
 parser.add_argument(
     '-V', '--version',
@@ -287,14 +310,17 @@ if 'time' in tpv:
     print("Unix time: %s, gps time: %s, week: %s tow: %s" %
           (unix_time, gps_time, int(gps_week), gps_tow))
 
-    sys.exit(0)
+    if not options.satpos:
+        # done, do not continue to calc sat positions
+        sys.exit(0)
+
     # below is WIP
 
     # find one SV with all 3 ephemeris
     for sv in ephemeris1.keys():
         if ((sv not in ephemeris2 or
              sv not in ephemeris3)):
-            continue;
+            continue
         # got one
 
         # compute Sat position from IS-GPS-200 table 20-IV
@@ -310,22 +336,61 @@ if 'time' in tpv:
         comp_mm = math.sqrt(mu / pow(A, 3))           # rad/sec
 
         # Time from ephemeris reference epoch
-        # FIXME: assume gps_tow is close enough to
         # t: GPS system time at time of transmission
+        # FIXME: assume gps_tow is close enough to t
         tk = gps_tow - ephemeris2[sv]['toe']
         if 302400 > tk:
-            tk -= 604800;
+            tk -= 604800
         elif -302400 > tk:
-            tk += 604800;
+            tk += 604800
 
-        # corrrrected mean motion
+        # corrected mean motion
         # FIXME: semi-circles -> rads
         corr_mm = comp_mm + (ephemeris2[sv]['deltan'] + math.pi)   # rad/sec
 
         # mean anomaly, rads
         Mk = (ephemeris2[sv]['M0'] * math.pi) + (corr_mm * tk)
 
-        # solve for eccentric anomaly ??
+        print("A %s comp_mm %s tk %s Mk %s" % (A, comp_mm, tk, Mk))
 
-        print("A %s comp_mm %s tk %s Mk %s" & (A, comp_mm, tk, Mk))
-        break;
+        # solve for eccentric anomaly
+        # 5 seems enough
+        Ek = keppler(ephemeris2[sv]['e'], ephemeris2[sv]['M0'], 5)
+        print("Ek %s" % (Ek))
+
+        # True anomaly:
+        nuk = math.atan2(
+           math.sqrt(1 - math.pow(ephemeris2[sv]['e'], 2) * math.sin(Ek)) /
+           (1 - ephemeris2[sv]['e'] * math.cos(Ek)),
+           (math.cos(Ek) - ephemeris2[sv]['e']) /
+           (1 - ephemeris2[sv]['e'] * math.cos(Ek)))
+
+        Ek = math.acos((ephemeris2[sv]['e'] + math.cos(nuk)) /
+                       (1 + ephemeris2[sv]['e'] * math.cos(nuk)))
+
+        # Argument of Latitude
+        Phik = nuk + ephemeris2[sv]['e']
+        print("nuk %.10g Ek %.10g Phik %.10g" % (nuk, Ek, Phik))
+
+        # 2nd harmonic corrections
+        # Argument of Latitude Correction
+        deltauk = (ephemeris2[sv]['Cus'] * math.sin(2 * Phik) +
+                   ephemeris2[sv]['Cuc'] * math.cos(2 * Phik))
+        # Radius Correction
+        deltark = (ephemeris2[sv]['Crs'] * math.sin(2 * Phik) +
+                   ephemeris3[sv]['Crc'] * math.cos(2 * Phik))
+        # Inclination Correction
+        deltaik = (ephemeris3[sv]['Cis'] * math.sin(2 * Phik) +
+                   ephemeris3[sv]['Cic'] * math.cos(2 * Phik))
+        print("deltauk %.10g deltark %.10g deltaik %.10g" %
+              (deltauk, deltark, deltaik))
+
+        # Corrected Argument of Latitude
+        uk = Phik + deltauk
+
+        # Corrected Radius
+        rk = A * (1 - ephemeris2[sv]['e'] * math.cos(Ek)) + deltark
+
+        # Corrected Inclination Angle
+        ik = ephemeris3[sv]['i0'] + ephemeris3[sv]['IDOT'] * tk + deltaik
+        print("uk %.10g rk %.10g ik %.10g" % (uk, rk, ik))
