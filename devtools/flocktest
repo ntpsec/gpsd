@@ -36,7 +36,7 @@ flocktest instances concurrently could result in a scrambled keyfile.
 # Preserve this property!
 from __future__ import absolute_import, print_function, division
 
-import os, sys, getopt, socket, threading, time
+import os, sys, getopt, threading, time
 
 try:
     import configparser                  # Python 2
