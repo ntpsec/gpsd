@@ -353,7 +353,7 @@ if 'time' in tpv:
         # mean anomaly, rads
         # M0:  semi-circles -> rads
         M0 = ephemeris2[sv]['M0'] * math.pi
-        Mk = (M0 * math.pi) + (corr_mm * tk)
+        Mk = M0 + (corr_mm * tk)
 
         print("A %s comp_mm %s tk %s Mk %s" % (A, comp_mm, tk, Mk))
 
@@ -397,7 +397,8 @@ if 'time' in tpv:
 
         # Corrected Inclination Angle
         IDOT = ephemeris3[sv]['IDOT'] * math.pi
-        ik = ephemeris3[sv]['i0'] + IDOT * tk + deltaik
+        i0 = ephemeris3[sv]['i0'] * math.pi
+        ik = i0 + IDOT * tk + deltaik
         print("uk %.10g rk %.10g ik %.10g" % (uk, rk, ik))
 
         # Positions in orbital plane.
