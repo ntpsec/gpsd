@@ -201,7 +201,6 @@ test4 = [('GPSD_UNITS', 'imperial', gps.clienthelpers.imperial),
 
 # ecef2lla() tests
 # lat, lon, altHAE, x, y z
-# integer meters for now.
 # FIXME: not well validated yet
 test5 = [(0, 0, 0, 6378137, 0, 0),
          # (90, 0, 0, 0, 0, 6356752),  # broken!
@@ -211,6 +210,19 @@ test5 = [(0, 0, 0, 6378137, 0, 0),
          (29.999996, 29.999998, 29.356862, 4787633, 2764141, 3170388),
          (60, 60, -0.000068,
           1598552.29346197, 2768773.79083189, 5500477.13386045),
+         ]
+
+# lla2ecef() tests
+# lat, lon, altHAE, x, y z
+# FIXME: not well validated yet
+# idealy would be the same as test 5, but life not that simple
+test6 = [(0, 0, 0, 6378137, 0, 0),
+         # (90, 0, 0, 0, 0, 6356752),  # broken!
+         (0, 90, 0, 0, 6378137, 0),
+         (0, 90, 90, 0, 6378227, 0),
+         (30, 30, 0, 4787610.688268, 2764128.319646, 3170373.735383),
+         (30, 30, 30, 4787633.188268, 2764141.310027, 3170388.735383),
+         (60, 60, 0, 1598552.29346197, 2768773.79083189, 5500477.13386045),
          ]
 
 errors = 0
@@ -286,6 +298,17 @@ for (elat, elon, ealtHAE, x, y, z) in test5:
         print("fail: ecef2lla(%f, %f, %f)=(%.6f, %.6f, %.6f) "
               "expected (%.6f, %.6f, %.6f)" %
               (x, y, z, lat, lon, altHAE, elat, elon, ealtHAE))
+        errors += 1
+
+for (lat, lon, altHAE, ex, ey, ez) in test6:
+    (x, y, z) = gps.lla2ecef(lat, lon, altHAE)
+
+    if ((0.001 < abs(ex - x) or
+         0.001 < abs(ey - y) or
+         0.001 < abs(ez - z))):
+        print("fail: lla2ecef(%f, %f, %f)=(%.6f, %.6f, %.6f) "
+              "expected (%.6f, %.6f, %.6f)" %
+              (lat, lon, altHAE, x, y, z, ex, ey, ez))
         errors += 1
 
 # restore environment

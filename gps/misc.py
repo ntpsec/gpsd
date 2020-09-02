@@ -142,10 +142,28 @@ def Rad2Deg(x):
     return x * (180 / math.pi)
 
 
-def ecef2lla(x, y, z):
-    """Convert ECEF x, y and z to Lat, lon and altHAE"""
+def lla2ecef(lat, lon, altHAE):
+    """Convert Lat, lon (in degrees) and altHAE in meters
+to ECEF x, y and z in meters."""
 
-    longitude  = math.atan2(y, x) * RAD_2_DEG
+    # convert degrees to radians
+    lat *= DEG_2_RAD
+    lon *= DEG_2_RAD
+
+    sin_lat = math.sin(lat)
+    cos_lat = math.cos(lat)
+    n = WGS84A / math.sqrt(1 - WGS84E * (sin_lat ** 2))
+    x = (n + altHAE) * cos_lat * math.cos(lon)
+    y = (n + altHAE) * cos_lat * math.sin(lon)
+    z = (n * (1 - WGS84E) + altHAE) * sin_lat
+    return (x, y, z)
+
+
+def ecef2lla(x, y, z):
+    """Convert ECEF x, y and z in meters to
+Lat, lon in degrees and altHAE in meters"""
+
+    longitude = math.atan2(y, x) * RAD_2_DEG
 
     p = math.sqrt((x ** 2) + (y ** 2))
     theta = math.atan2(z * WGS84A, p * WGS84B)
@@ -155,6 +173,7 @@ def ecef2lla(x, y, z):
 
     phi = math.atan2(z + WGS84E2 * WGS84B * (sin_theta ** 3),
                      p - WGS84E * WGS84A * (cos_theta ** 3))
+    latitude = phi * RAD_2_DEG
     sin_phi = math.sin(phi)
     cos_phi = math.cos(phi)
 
@@ -163,7 +182,6 @@ def ecef2lla(x, y, z):
     # altitude is WGS84
     altHAE = (p / cos_phi) - n
 
-    latitude = phi * RAD_2_DEG
     return (latitude, longitude, altHAE)
 
 
