@@ -255,7 +255,6 @@ class TestFlock(object):
             site.update_remote(filename)
     def do_remotes(self, agent, invocation):
         "Execute a command on all machines in the flock."
-        slaves = []
         print("== testing at: %s ==" % flock.listdump())
         starttime = time.time()
         for site in self.sitelist:
