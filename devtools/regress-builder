@@ -27,7 +27,6 @@ since the former fixes would otherwise be untestable.
 """
 import getopt
 import os
-import random
 import sys
 import time
 
