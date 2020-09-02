@@ -58,7 +58,6 @@ class gpscommon(object):
                 raise socket.error("nonnumeric port")
         # if self.verbose > 0:
         #    print 'connect:', (host, port)
-        msg = "getaddrinfo returns an empty list"
         self.sock = None
         for res in socket.getaddrinfo(host, port, 0, socket.SOCK_STREAM):
             af, socktype, proto, _canonname, sa = res
