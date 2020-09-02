@@ -96,6 +96,23 @@ else:  # Otherwise we do something real
         "Standard input/output bytes buffer function"
         return stream.buffer
 
+# WGS84(G1674) defining parameters
+# https://en.wikipedia.org/wiki/Geodetic_datum
+# Section #World_Geodetic_System_1984_(WGS_84)
+#
+# http://www.unoosa.org/pdf/icg/2012/template/WGS_84.pdf
+WGS84A = 6378137.0                # equatorial radius (semi-major axis), meters
+WGS84F = 298.257223563            # flattening
+WGS84B = 6356752.314245           # polar radius (semi-minor axis)
+# 1st eccentricity squared = (WGS84A ** 2 + WGS84B **^ 2) / (WGS84A **^ 2)
+WGS84E = 0.006694379990197585     # 1st eccentricity squared
+# 2nd  eccentricity squared = ((WGS84A **^ 2 - WGS84B **^ 2) / (WGS84B **^ 2)
+WGS84E2 = 0.006739496742333464    # 2nd eccentricy squared
+
+
+RAD_2_DEG = 57.2957795130823208767981548141051703
+DEG_2_RAD = 0.0174532925199432957692369076848861271
+
 
 # some multipliers for interpreting GPS output
 # Note: A Texas Foot is ( meters * 3937/1200)
@@ -125,6 +142,36 @@ def Rad2Deg(x):
     return x * (180 / math.pi)
 
 
+def ecef2lla(x, y, z):
+    """Convert ECEF x, y and z to Lat, lon and altHAE"""
+
+    # lambda is a reserved word, so use lmbda
+    # geodetic location
+    lmbda = math.atan2(y, x)
+    # sadly Python has no sincos()
+    sin_lmbda = math.sin(lmbda)
+    cos_lmbda = math.cos(lmbda)
+
+    p = math.sqrt((x ** 2) + (y ** 2))
+    theta = math.atan2(z * WGS84A, p * WGS84B)
+    sin_theta = math.sin(theta)
+    cos_theta = math.cos(theta)
+
+    phi = math.atan2(z + WGS84E2 * WGS84B * (sin_theta ** 3),
+                     p - WGS84E * WGS84A * (cos_theta ** 3))
+    sin_phi = math.sin(phi)
+    cos_phi = math.cos(phi)
+
+    n = WGS84A / math.sqrt(1.0 - WGS84E * (sin_phi ** 2))
+
+    # altitude is WGS84
+    altHAE = (p / cos_phi) - n
+
+    latitude = phi * RAD_2_DEG
+    longitude = lmbda * RAD_2_DEG
+    return (latitude, longitude, altHAE)
+
+
 def CalcRad(lat):
     "Radius of curvature in meters at specified latitude WGS-84."
     # the radius of curvature of an ellipsoidal Earth in the plane of a
@@ -141,15 +188,13 @@ def CalcRad(lat):
     #   es2 is es^2 = (a^2 - b^2) / b^2
     #
     # for WGS-84:
-    # a   = 6378.137 km (3963 mi)
+    # a   = WGS84A/1000 = 6378.137 km (3963 mi)
     # b   = 6356.752314245 km (3950 mi)
-    # e2  = 0.00669437999014132
+    # e2  = WGS84E =  0.00669437999014132
     # es2 = 0.00673949674227643
-    a = 6378.137
-    e2 = 0.00669437999014132
     sc = math.sin(math.radians(lat))
-    x = a * (1.0 - e2)
-    z = 1.0 - e2 * pow(sc, 2)
+    x = (WGS84A / 1000) * (1.0 - WGS84E)
+    z = 1.0 - WGS84E * (sc ** 2)
     y = pow(z, 1.5)
     r = x / y
 

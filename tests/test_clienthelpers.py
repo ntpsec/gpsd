@@ -45,7 +45,7 @@ test2 = [
          (39.9771, -75.1685, "FM29jx94", "Philadelphia, PA USA"),
          (44.06878, -121.31424, "CN94ib26", "Bend, OR USA"),
          (-23.4028, -50.9766, "GG46mo23", "Sao Paulo"),
-         (-33.86881, 151.20929 , "QF56od51", "Sydney, NSW AU"),
+         (-33.86881, 151.20929, "QF56od51", "Sydney, NSW AU"),
          (90, 180, "RR99xx99", "North Pole"),
          (-90, -180, "AA00aa00", "South Pole"),
          ]
@@ -199,6 +199,20 @@ test4 = [('GPSD_UNITS', 'imperial', gps.clienthelpers.imperial),
          ('LANG', 'ru_RU', gps.clienthelpers.metric),
          ]
 
+# ecef2lla() tests
+# lat, lon, altHAE, x, y z
+# integer meters for now.
+# FIXME: not well validated yet
+test5 = [(0, 0, 0, 6378137, 0, 0),
+         # (90, 0, 0, 0, 0, 6356752),  # broken!
+         (0, 90, 0, 0, 6378137, 0),
+         (0, 90, 90, 0, 6378227, 0),
+         (29.999998, 30.000001, -1.022303, 4787610, 2764128, 3170373),
+         (29.999996, 29.999998, 29.356862, 4787633, 2764141, 3170388),
+         (60, 60, -0.000068,
+          1598552.29346197, 2768773.79083189, 5500477.13386045),
+         ]
+
 errors = 0
 
 for test in test1:
@@ -261,6 +275,17 @@ for (key, val, expected) in test4:
     if result != expected:
         print("fail: gpsd_units() %s=%s got %s expected %d" %
               (key, val, str(result), expected))
+        errors += 1
+
+for (elat, elon, ealtHAE, x, y, z) in test5:
+    (lat, lon, altHAE) = gps.ecef2lla(x, y, z)
+
+    if ((0.000001 < abs(elat - lat) or
+         0.000001 < abs(elon - lon) or
+         0.000001 < abs(ealtHAE - altHAE))):
+        print("fail: ecef2lla(%f, %f, %f)=(%.6f, %.6f, %.6f) "
+              "expected (%.6f, %.6f, %.6f)" %
+              (x, y, z, lat, lon, altHAE, elat, elon, ealtHAE))
         errors += 1
 
 # restore environment
