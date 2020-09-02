@@ -145,15 +145,11 @@ def Rad2Deg(x):
 def ecef2lla(x, y, z):
     """Convert ECEF x, y and z to Lat, lon and altHAE"""
 
-    # lambda is a reserved word, so use lmbda
-    # geodetic location
-    lmbda = math.atan2(y, x)
-    # sadly Python has no sincos()
-    sin_lmbda = math.sin(lmbda)
-    cos_lmbda = math.cos(lmbda)
+    longitude  = math.atan2(y, x) * RAD_2_DEG
 
     p = math.sqrt((x ** 2) + (y ** 2))
     theta = math.atan2(z * WGS84A, p * WGS84B)
+    # sadly Python has no sincos()
     sin_theta = math.sin(theta)
     cos_theta = math.cos(theta)
 
@@ -168,7 +164,6 @@ def ecef2lla(x, y, z):
     altHAE = (p / cos_phi) - n
 
     latitude = phi * RAD_2_DEG
-    longitude = lmbda * RAD_2_DEG
     return (latitude, longitude, altHAE)
 
 
