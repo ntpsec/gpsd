@@ -88,10 +88,10 @@ static void print_fix(struct gps_data_t *gpsdata, timespec_t ts_time)
     char tbuf[CLIENT_DATE_MAX+1];
 
     /* lat/lon/ele are all WGS84, no altMSL */
-    (void)fprintf(logfile,"   <trkpt lat=\"%f\" lon=\"%f\">\n",
+    (void)fprintf(logfile,"   <trkpt lat=\"%.9f\" lon=\"%.9f\">\n",
                  gpsdata->fix.latitude, gpsdata->fix.longitude);
     if ((isfinite(gpsdata->fix.altHAE) != 0))
-        (void)fprintf(logfile,"    <ele>%f</ele>\n", gpsdata->fix.altHAE);
+        (void)fprintf(logfile,"    <ele>%.4f</ele>\n", gpsdata->fix.altHAE);
     (void)fprintf(logfile,"    <time>%s</time>\n",
                  timespec_to_iso8601(ts_time, tbuf, sizeof(tbuf)));
     if (gpsdata->fix.status == STATUS_DGPS_FIX)
