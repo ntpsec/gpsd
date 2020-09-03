@@ -101,13 +101,23 @@ else:  # Otherwise we do something real
 # Section #World_Geodetic_System_1984_(WGS_84)
 #
 # http://www.unoosa.org/pdf/icg/2012/template/WGS_84.pdf
+# 8-Jul-2014:
+# ftp://ftp.nga.mil/pub2/gandg/website/wgs84/NGA.STND.0036_1.0.0_WGS84.pdf
 WGS84A = 6378137.0                # equatorial radius (semi-major axis), meters
 WGS84F = 298.257223563            # flattening
 WGS84B = 6356752.314245           # polar radius (semi-minor axis)
 # 1st eccentricity squared = (WGS84A ** 2 + WGS84B **^ 2) / (WGS84A **^ 2)
-WGS84E = 0.006694379990197585     # 1st eccentricity squared
+# valid 8-Jul-2014:
+WGS84E = 6.694379990141e-3        # 1st eccentricity squared
 # 2nd  eccentricity squared = ((WGS84A **^ 2 - WGS84B **^ 2) / (WGS84B **^ 2)
-WGS84E2 = 0.006739496742333464    # 2nd eccentricy squared
+# valid 8-Jul-2014:
+WGS84E2 = 6739496742276e-3        # 2nd eccentricy squared
+# WGS 84 value of the earth's gravitational constant for GPS user, mu
+# GMgpsnav, valid 8-JUl-2014
+WGS84GM = 3.9860050e14            # m^3/second^2
+# Earth's Angular Velocity, Omega dot e
+# valid 8-Jul-2014:
+WGS84AV = 7.2921151467e-5         # rad/sec
 
 
 RAD_2_DEG = 57.2957795130823208767981548141051703
