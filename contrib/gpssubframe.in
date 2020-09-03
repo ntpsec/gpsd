@@ -1,6 +1,6 @@
 #!@PYSHEBANG@
-# @GENERATED@
 # -*- coding: utf-8 -*-
+# @GENERATED@
 # This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 
@@ -39,7 +39,7 @@ def keppler(e, M0, n):
     # FIXME: iterate to a desired error, instead of fixed rounds?
     # https://en.wikipedia.org/wiki/Kepler%27s_equation
     Ek = M0             # initial guess
-    for i in range(1, n):
+    for i in range(1, n + 1):
         Ek = M0 + e * math.sin(Ek)
     return Ek
 
@@ -324,24 +324,21 @@ if 'time' in tpv:
         # got one
         print("\nComputing SV %u position:" % sv)
 
+        #real time sat positions: https://in-the-sky.org/satmap_worldmap.php
         # compute Sat position from IS-GPS-200 table 20-IV
         # https://www.telesens.co/2017/07/17/calculating-position-from-raw-gps-data/#1b_Code_for_Calculating_Satellite_Position
 
-        # WGS 84 value of the earth's gravitational constant for GPS user
-        mu = 3.986005e14             # m/s
-        # WGS 84 value of the earth's rotation rate
-        omegade = 7.2921151467e-5    # rad/sec
         # Semi-major axis
-        A = pow(ephemeris2[sv]['sqrtA'], 2)      # m
+        A = ephemeris2[sv]['sqrtA'] ** 2      # meters
 
         # Computed mean motion
-        comp_mm = math.sqrt(mu / pow(A, 3))           # rad/sec
+        comp_mm = math.sqrt(gps.WGS84GM / (A ** 3))           # rad/sec
 
         # Time from ephemeris reference epoch
         # t: GPS system time at time of transmission
         # FIXME: assume gps_tow is close enough to t
         tk = gps_tow - ephemeris2[sv]['toe']
-        if 302400 > tk:
+        if 302400 < tk:
             tk -= 604800
         elif -302400 > tk:
             tk += 604800
@@ -364,7 +361,7 @@ if 'time' in tpv:
 
         # True anomaly:
         nuk = math.atan2(
-           math.sqrt(1 - math.pow(ephemeris2[sv]['e'], 2) * math.sin(Ek)) /
+           math.sqrt(1 - (ephemeris2[sv]['e'] ** 2)) * math.sin(Ek) /
            (1 - ephemeris2[sv]['e'] * math.cos(Ek)),
            (math.cos(Ek) - ephemeris2[sv]['e']) /
            (1 - ephemeris2[sv]['e'] * math.cos(Ek)))
@@ -373,21 +370,27 @@ if 'time' in tpv:
                        (1 + ephemeris2[sv]['e'] * math.cos(nuk)))
 
         # Argument of Latitude
-        Phik = nuk + ephemeris2[sv]['e']
+        Phik = nuk + (ephemeris3[sv]['omega'] * math.pi)
         print("nuk %.10g Ek %.10g Phik %.10g" % (nuk, Ek, Phik))
 
-        # 2nd harmonic corrections
-        # Argument of Latitude Correction
-        deltauk = (ephemeris2[sv]['Cus'] * math.sin(2 * Phik) +
-                   ephemeris2[sv]['Cuc'] * math.cos(2 * Phik))
-        # Radius Correction
-        deltark = (ephemeris2[sv]['Crs'] * math.sin(2 * Phik) +
-                   ephemeris3[sv]['Crc'] * math.cos(2 * Phik))
-        # Inclination Correction
-        deltaik = (ephemeris3[sv]['Cis'] * math.sin(2 * Phik) +
-                   ephemeris3[sv]['Cic'] * math.cos(2 * Phik))
-        print("deltauk %.10g deltark %.10g deltaik %.10g" %
-              (deltauk, deltark, deltaik))
+        # debug, skip corrections for now.
+        if False:
+            # 2nd harmonic corrections
+            # Argument of Latitude Correction
+            deltauk = (ephemeris2[sv]['Cus'] * math.sin(2 * Phik) +
+                       ephemeris2[sv]['Cuc'] * math.cos(2 * Phik))
+            # Radius Correction
+            deltark = (ephemeris2[sv]['Crs'] * math.sin(2 * Phik) +
+                       ephemeris3[sv]['Crc'] * math.cos(2 * Phik))
+            # Inclination Correction
+            deltaik = (ephemeris3[sv]['Cis'] * math.sin(2 * Phik) +
+                       ephemeris3[sv]['Cic'] * math.cos(2 * Phik))
+            print("deltauk %.10g deltark %.10g deltaik %.10g" %
+                  (deltauk, deltark, deltaik))
+        else:
+            deltauk = 0
+            deltark = 0
+            deltaik = 0
 
         # Corrected Argument of Latitude
         uk = Phik + deltauk
@@ -408,17 +411,17 @@ if 'time' in tpv:
         # Corrected longitude of ascending node.
         Omega0 = ephemeris3[sv]['Omega0'] * math.pi
         Omegad = ephemeris3[sv]['Omegad'] * math.pi
-        omega = (Omega0 + ((Omegad - omegade) * tk) -
-                 omegade * ephemeris2[sv]['toe']
+        Omegak = (Omega0 + ((Omegad - gps.WGS84AV) * tk) -
+                 gps.WGS84AV * ephemeris2[sv]['toe']
                  )
-        print("xkprime %.10g ykprime %.10g omega %.10g" %
-              (xkprime, ykprime, omega))
+        print("xkprime %.10g ykprime %.10g Omegak %.10g" %
+              (xkprime, ykprime, Omegak))
 
         # Finally! Earth-fixed coordinates.
-        x = (xkprime * math.cos(omega) - ykprime * math.cos(ik) *
-             math.sin(omega))
-        y = (xkprime * math.sin(omega) + ykprime * math.cos(ik) *
-             math.cos(omega))
+        x = (xkprime * math.cos(Omegak) - ykprime * math.cos(ik) *
+             math.sin(Omegak))
+        y = (xkprime * math.sin(Omegak) + ykprime * math.cos(ik) *
+             math.cos(Omegak))
         z = ykprime * math.sin(ik)
         print("x %.10g y %.10g z %.10g" % (x, y, z))
 
