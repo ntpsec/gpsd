@@ -129,7 +129,7 @@ extern "C" {
  * ref: https://en.wikipedia.org/wiki/Decimal_degrees
  */
 
-/* WARNING: Check all flaots and doubles with isfinite() before using them!
+/* WARNING: Check all floats and doubles with isfinite() before using them!
  * isnan() is not sufficient.
  */
 
