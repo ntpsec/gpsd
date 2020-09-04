@@ -57,12 +57,6 @@ Compare the results from running gpsfake on a logfile between this
 machine and a remote one.  Especially useful when remote and local
 have different word lengths.
 
-== flock* ==
-
-The files prefixed with flock are the scripts, data files, and 
-documentation for the flock-test suite. Read flock-instructions for 
-explanation.
-
 == gpsd-debian-regressions.sh ==
 
 Retrieves the latest build logs from Debian's buildds and extracts a
