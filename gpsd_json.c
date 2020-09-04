@@ -150,10 +150,10 @@ static void json_log_dump(const struct gps_device_t *session,
                     logp->lat, logp->lon);
     }
     if (0 != isfinite(logp->altHAE)) {
-        str_appendf(reply, replylen, ",\"altHAE\":%.3f", logp->altHAE);
+        str_appendf(reply, replylen, ",\"altHAE\":%.4f", logp->altHAE);
     }
     if (0 != isfinite(logp->altMSL)) {
-        str_appendf(reply, replylen, ",\"altMSL\":%.3f", logp->altMSL);
+        str_appendf(reply, replylen, ",\"altMSL\":%.4f", logp->altMSL);
     }
     if (0 != isfinite(logp->gSpeed)) {
         str_appendf(reply, replylen, ",\"gSpeed\":%.0f", logp->gSpeed);
@@ -259,17 +259,17 @@ void json_tpv_dump(const gps_mask_t changed, const struct gps_device_t *session,
         if (0 != isfinite(gpsdata->fix.altHAE)) {
             altitude = gpsdata->fix.altHAE;
             str_appendf(reply, replylen,
-                           ",\"altHAE\":%.3f", gpsdata->fix.altHAE);
+                           ",\"altHAE\":%.4f", gpsdata->fix.altHAE);
         }
         if (0 != isfinite(gpsdata->fix.altMSL)) {
             altitude = gpsdata->fix.altMSL;
             str_appendf(reply, replylen,
-                           ",\"altMSL\":%.3f", gpsdata->fix.altMSL);
+                           ",\"altMSL\":%.4f", gpsdata->fix.altMSL);
         }
         if (0 != isfinite(altitude)) {
             // DEPRECATED, undefined
             str_appendf(reply, replylen,
-                           ",\"alt\":%.3f", altitude);
+                           ",\"alt\":%.4f", altitude);
         }
 
         if (isfinite(gpsdata->fix.epx) != 0)
