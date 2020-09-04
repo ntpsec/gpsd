@@ -1,4 +1,5 @@
 # misc.py - miscellaneous geodesy and time functions
+# -*- coding: utf-8 -*-
 "miscellaneous geodesy and time functions"
 #
 # This file is Copyright 2010 by the GPSD project
@@ -111,8 +112,8 @@ WGS84B = 6356752.314245           # polar radius (semi-minor axis)
 WGS84E = 6.694379990141e-3        # 1st eccentricity squared
 # 2nd  eccentricity squared = ((WGS84A **^ 2 - WGS84B **^ 2) / (WGS84B **^ 2)
 # valid 8-Jul-2014:
-WGS84E2 = 6739496742276e-3        # 2nd eccentricy squared
-# WGS 84 value of the earth's gravitational constant for GPS user, mu
+WGS84E2 = 6.739496742276e-3       # 2nd eccentricy squared
+# WGS 84 value of the earth's gravitational constant for GPS user
 # GMgpsnav, valid 8-JUl-2014
 WGS84GM = 3.9860050e14            # m^3/second^2
 # Earth's Angular Velocity, Omega dot e
