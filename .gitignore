@@ -180,8 +180,6 @@ www/ubxtool.html
 www/.upload-stamp
 www/writing-a-driver.html
 www/zerk.html
-# Controls for the flock tester
-devtools/.flocktest.ini
 # QT stuff
 libQgpsmm.prl
 libQgpsmm/binaries/*

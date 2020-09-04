@@ -211,11 +211,6 @@ for possibilities.
 Jon Schlueter has one of these on a flock machine, so testing
 shouldn't be difficult.
 
-*** Enable flocktest on the Debian server farm
-
-Debian server farm boxes have a screwy chrooted environment setup.
-flocktest needs to be modified to deal with it.
-
 *** Finish gpssim
 
 It's blocked on skyview computation.
