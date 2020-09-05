@@ -87,11 +87,18 @@ static void print_fix(struct gps_data_t *gpsdata, timespec_t ts_time)
 {
     char tbuf[CLIENT_DATE_MAX+1];
 
-    /* lat/lon/ele are all WGS84, no altMSL */
     (void)fprintf(logfile,"   <trkpt lat=\"%.9f\" lon=\"%.9f\">\n",
                  gpsdata->fix.latitude, gpsdata->fix.longitude);
+
+    /*
+     * From the specification at https://www.topografix.com/GPX/1/1/gpx.xsd
+     * the <ele> tag is defined as "Elevation (in meters) of the point."
+     * This is ambiguous between HAE and orthometric height (above geoid).
+     * gpsd has historically interpeted this as HAE.
+     */
     if ((isfinite(gpsdata->fix.altHAE) != 0))
         (void)fprintf(logfile,"    <ele>%.4f</ele>\n", gpsdata->fix.altHAE);
+
     (void)fprintf(logfile,"    <time>%s</time>\n",
                  timespec_to_iso8601(ts_time, tbuf, sizeof(tbuf)));
     if (gpsdata->fix.status == STATUS_DGPS_FIX)
