@@ -459,6 +459,32 @@ parallelism is the user's responsibility.
 
 For instructions on how to live-test the software, see the file INSTALL.adoc.
 
+=== Regenerating regression tests
+
+Sometimes, changes are made to code that cause the output to be
+different.  Examples are bug fixes and changes to precision.  In these
+cases, the regression tests must be updated.  This is dangerous, and
+one must guard against the possibility of introducing a bug and
+recording that bug's output as the desired state.
+
+A suggested procedure is
+
+  * Create a minimal commit with the breaking change.  Do not include
+    any other changes.
+
+  * On master, without the new commit, run the regression tests and
+    verify that they pass.  Do this on a machine with a history of
+    zero flaky behavior with the regression tests.
+
+  * Apply the minimal commit.
+
+  * Run "scons make-regresss".
+
+  * Merge the regression changes into the commit.  Mentiion in the
+    commit message that regression tests were regenerated.
+  
+  * Review the diff for sanity, and if ok, push it. 
+
 == Reverting to a clean state
 
 The scons equivalent of 'make clean' is 'scons -c' or 'scons
