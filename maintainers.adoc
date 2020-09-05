@@ -22,12 +22,15 @@ Miroslav Lichvar <mlichvar@redhat.com>::
 Mike Frysinger <vapier@gentoo.org>::
      Gentoo
 
+Greg Troxel <gdt@NetBSD.org>::
+     pkgsrc
+
 == Ports ==
 
 Samuel CUELLA <samuel.cuella@supinfo.com>::
      Android
 
-Greg Troxel <gdt@ir.bbn.com>::
+Greg Troxel <gdt@NetBSD.org>::
      NetBSD, Mac OS X
 
 Chris Kuethe <ckuethe@lapdance.mainframe.cx>::
