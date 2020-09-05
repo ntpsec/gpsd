@@ -478,7 +478,7 @@ A suggested procedure is
 
   * Apply the minimal commit.
 
-  * Run "scons make-regresss".
+  * Run "scons gps-makeregress".
 
   * Merge the regression changes into the commit.  Mentiion in the
     commit message that regression tests were regenerated.

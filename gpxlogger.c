@@ -93,8 +93,10 @@ static void print_fix(struct gps_data_t *gpsdata, timespec_t ts_time)
     /*
      * From the specification at https://www.topografix.com/GPX/1/1/gpx.xsd
      * the <ele> tag is defined as "Elevation (in meters) of the point."
-     * This is ambiguous between HAE and orthometric height (above geoid).
-     * gpsd has historically interpeted this as HAE.
+     * This is ambiguous between HAE and orthometric height (above geoid,
+     * aka MSL).
+     * gpsd has historically used HAE and MSL randomly for altitude.
+     * gpsd now explicitly supports distinct HAE and MSL.
      */
     if ((isfinite(gpsdata->fix.altHAE) != 0))
         (void)fprintf(logfile,"    <ele>%.4f</ele>\n", gpsdata->fix.altHAE);
