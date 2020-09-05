@@ -482,8 +482,8 @@ A suggested procedure is
 
   * Merge the regression changes into the commit.  Mentiion in the
     commit message that regression tests were regenerated.
-  
-  * Review the diff for sanity, and if ok, push it. 
+
+  * Review the diff for sanity, and if ok, push it.
 
 == Reverting to a clean state
 
