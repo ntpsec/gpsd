@@ -951,7 +951,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
             (void)clock_gettime(CLOCK_REALTIME, &ts_now);
             TS_SUB(&ts_diff, &ts_now, &gpsdata->fix.time);
 
-            (void)snprintf(scr, sizeof(scr), "%s sec",
+            (void)snprintf(scr, sizeof(scr), "%s s",
                            timespec_str(&ts_diff, ts_str, sizeof(ts_str)));
         } else {
             (void)strlcpy(scr, " n/a", sizeof(scr));
