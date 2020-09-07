@@ -1043,7 +1043,7 @@ int main(int argc, char *argv[])
         altfactor = 1;
         altunits = "m";
         speedfactor = MPS_TO_KPH;
-        speedunits = "kph";
+        speedunits = "km/h";
         break;
     default:
         /* leave the default alone */
@@ -1081,7 +1081,7 @@ int main(int argc, char *argv[])
                 altfactor = 1;
                 altunits = "m";
                 speedfactor = MPS_TO_KPH;
-                speedunits = "kph";
+                speedunits = "km/h";
                 continue;
             default:
                 (void)fprintf(stderr, "Unknown -u argument: %s\n", optarg);
