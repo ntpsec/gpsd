@@ -103,27 +103,37 @@ static void subframe_almanac(const struct gpsd_errout_t *errout,
      * you can not just store one or two almanacs for each sat */
     almp->toa      = ((words[3] >> 16) & 0x0000FF);
     almp->l_toa    = almp->toa << 12;
+    // Inclination Angle at Reference Time
+    // Relative to i0 = 0.30 semi-circles
     almp->deltai   = (int16_t)( words[3] & 0x00FFFF);
     almp->d_deltai = pow(2.0, -19) * almp->deltai;
+    // Rate of Right Ascension, semi-circles/sec
     almp->Omegad   = (int16_t)((words[4] >>  8) & 0x00FFFF);
+    // -1.19E-07 to 0, semi-circles/sec
     almp->d_Omegad = pow(2.0, -38) * almp->Omegad;
     almp->svh      = ( words[4] & 0x0000FF);
     almp->sqrtA    = ( words[5] & 0xFFFFFF);
     almp->d_sqrtA  = pow(2.0,-11) * almp->sqrtA;
+    // Longitude of Ascending Node of Orbit Plane at Weekly Epoch, semi-circles
+    // aka Tight Ascen at Week
     almp->Omega0   = ( words[6] & 0xFFFFFF);
     almp->Omega0   = uint2int(almp->Omega0, 24);
     almp->d_Omega0 = pow(2.0, -23) * almp->Omega0;
+    // Argument of Perigee, semi-circles
     almp->omega    = ( words[7] & 0xFFFFFF);
     almp->omega    = uint2int(almp->omega, 24);
     almp->d_omega  = pow(2.0, -23) * almp->omega;
+    // Mean Anomaly at Reference Time, semi-circles
     almp->M0       = ( words[8] & 0x00FFFFFF);
     almp->M0       = uint2int(almp->M0, 24);
     /* if you want radians, multiply by GPS_PI, but we do semi-circles
      * to match IS-GPS-200 */
     almp->d_M0     = pow(2.0,-23) * almp->M0;
+    // SV Clock Drift Correction Coefficient, seconds/second
     almp->af1      = ((words[9] >>  5) & 0x0007FF);
     almp->af1      = (short)uint2int(almp->af1, 11);
     almp->d_af1    = pow(2.0,-38) * almp->af1;
+    // SV Clock Bias Correction Coefficient, seconds
     almp->af0      = ((words[9] >> 16) & 0x0000FF);
     almp->af0    <<= 3;
     almp->af0     |= ((words[9] >>  2) & 0x000007);
@@ -324,8 +334,10 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
         subp->sub3.omega  <<= 24;
         subp->sub3.omega   |= ( words[7] & 0x00FFFFFF);
         subp->sub3.d_omega  = pow(2.0, -31) * subp->sub3.omega;
+        // Rate of Right Ascension
         subp->sub3.Omegad   = (int32_t)(words[8] & 0x00FFFFFF);
         subp->sub3.Omegad   = uint2int(subp->sub3.Omegad, 24);
+        // -6.33E-07 to 0, semi-circles/sec
         subp->sub3.d_Omegad = pow(2.0, -43) * subp->sub3.Omegad;
         subp->sub3.IODE     = ((words[9] >> 16) & 0x0000FF);
         subp->sub3.IDOT     = (int16_t)((words[9] >>  2) & 0x003FFF);
