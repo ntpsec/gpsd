@@ -3,14 +3,17 @@
 # This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 #
-# With -p, dump a Python status mask list translated from the C one.
-#
-# With -c, generate C code to dump masks for debugging purposes.
-#
-# With -t, tabulate usage of defines to find unused ones.  Requires -c or -d.
-
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
+
+"""
+With -p, dump a Python status mask list translated from the C one.
+
+With -c, generate C code to dump masks for debugging purposes.
+
+With -t, tabulate usage of defines to find unused ones.  Requires -c or -d.
+"""
+
 from __future__ import absolute_import, print_function, division
 
 import getopt
