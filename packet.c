@@ -428,6 +428,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         else if (c == 'A')      /* SiRF Ack */
             lexer->state = SIRF_ACK_LEAD_1;
         else if (c == 'E')      /* ECDIS */
+            // codacy thinks this is impossible
             lexer->state = ECDIS_LEAD_1;
         else if (c == 'S')
             lexer->state = SOUNDER_LEAD_1;
@@ -627,6 +628,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         if (c == '#')
             lexer->state = COMMENT_BODY;
         else if (c == '$')
+            // codacy thinks this state is impossible
             lexer->state = NMEA_DOLLAR;
         else if (c == '!')
             lexer->state = NMEA_BANG;
