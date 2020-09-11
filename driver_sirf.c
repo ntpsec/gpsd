@@ -1231,7 +1231,7 @@ static gps_mask_t sirf_msg_tcxo(struct gps_device_t *session,
             /* coerce time_t to long to placate older OS, like 32-bit FreeBSD,
              * where time_t is int */
             (void)snprintf(output, sizeof(output),
-                           ", GPS Week %d, tow %d, time %lld, time_status %d "
+                           ", GPS Week %d, tow %u, time %lld, time_status %d "
                            "ClockOffset %d, Temp %.1f",
                            gps_week, gps_tow, (long long)now.tv_sec,
                            time_status,
@@ -1648,7 +1648,7 @@ static gps_mask_t sirf_msg_geodetic(struct gps_device_t *session,
 
     session->newdata.latitude = getbes32(buf, 23) * 1e-7;
     session->newdata.longitude = getbes32(buf, 27) * 1e-7;
-    if (session->newdata.latitude != 0 && session->newdata.latitude != 0)
+    if (session->newdata.latitude != 0 && session->newdata.longitude != 0)
         mask |= LATLON_SET;
 
     if ((eph = getbes32(buf, 50)) > 0) {
