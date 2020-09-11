@@ -846,7 +846,7 @@ static void print_raw(struct gps_data_t *gpsdata)
         nrec++;
     }
 
-    if (0 >= nrec) {
+    if (0 == nrec) {
         /* nothing to do */
         return;
     }
