@@ -688,7 +688,7 @@ int json_read_array(const char *cp, const struct json_array_t *arr,
                                           offset, &cp);
             if (substatus != 0) {
                 if (end != NULL)
-                    end = &cp;
+                    *end = cp;
                 return substatus;
             }
             break;
