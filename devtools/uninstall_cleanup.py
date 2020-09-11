@@ -72,8 +72,8 @@ class PythonCommand(object):
     def FindAllPythons(cls):
         """Create PythonCommand objects by scanning command PATH."""
         paths = os.getenv(cls.PATH_ENV)
-        for dir in paths.split(cls.PATH_ENV_SEP):
-            cls.FindPythons(dir)
+        for pdir in paths.split(cls.PATH_ENV_SEP):
+            cls.FindPythons(pdir)
         return cls.instances
 
     def GetExecutable(self):
