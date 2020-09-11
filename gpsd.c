@@ -2391,7 +2391,7 @@ int main(int argc, char *argv[])
                  * implementation error in FD_ISSET().
                  */
                 if (allocated_device(device) &&
-                    (NULL != device->gpsdata.gps_fd &&
+                    (0 <= device->gpsdata.gps_fd &&
                      device->gpsdata.gps_fd < (socket_t)FD_SETSIZE) &&
                      FD_ISSET(device->gpsdata.gps_fd, &efds)) {
                     deactivate_device(device);
