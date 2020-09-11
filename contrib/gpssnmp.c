@@ -51,8 +51,16 @@ int main (int argc, char **argv) {
     double snr_avg = 0.0;
     int status, used, visible;
 
-    status = gps_open (GPSD_SHARED_MEMORY, DEFAULT_GPSD_PORT, &gpsdata);
-    status = gps_read (&gpsdata, NULL, 0);
+    status = gps_open(GPSD_SHARED_MEMORY, DEFAULT_GPSD_PORT, &gpsdata);
+    if (0 != status) {
+        (void)fprintf(stderr, "gpssnmp: Error: connection failed\n");
+        exit(1);
+    }
+    status = gps_read(&gpsdata, NULL, 0);
+    if (0 != status) {
+        (void)fprintf(stderr, "gpssnmp: Error: read failed\n");
+        exit(1);
+    }
     used  = gpsdata.satellites_used;
     visible = gpsdata.satellites_visible;
     for(i=0; i<=used; i++) {
