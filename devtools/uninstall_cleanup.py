@@ -148,8 +148,9 @@ class PythonExecutable(object):
             exe.CleanLib(name)
 
 
-def main(argv):
+def main():
     """Main function."""
+
     commands = PythonCommand.FindAllPythons()
     PythonExecutable.GetAllExecutables(commands)
     PythonExecutable.CleanAllLibs(GPS_LIB_NAME)
