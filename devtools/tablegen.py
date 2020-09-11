@@ -1,66 +1,68 @@
 #!/usr/bin/env python
-#
-# This tool is intended to automate away the drudgery in bring up support
-# for a new AIS message type.  It parses the tabular description of a message
-# and generates various useful code snippets from that.  It can also be used to
-# correct offsets in the tables themselves.
-#
-# Requires the AIVDM.txt file on standard input. Takes a single argument,
-# which must match a string in a //: Type comment.  Things you can generate:
-#
-# * -t: A corrected version of the table.  It will redo all the offsets to be
-#   in conformance with the bit widths. (The other options rely only on the
-#   bit widths). If the old and new tables are different, an error message
-#   describing the corrections will be emitted to standard error.
-#
-# * -s: A structure definition capturing the message info, with member
-#   names extracted from the table and types computed from it.
-#
-# * -c: Bit-extraction code for the AIVDM driver.  Grind out the right sequence
-#   of UBITS, SBITS, and UCHARS macros, and assignments to structure members,
-#   guaranteed correct if the table offsets and widths are.
-#
-# * -d: Code to dump the contents of the unpacked message structure as JSON. If
-#   the structure has float members, you'll get an if/then/else  guarded by
-#   the scaled flag.
-#
-# * -r: A Python initializer stanza for jsongen.py, which is in turn used to
-#   generate the specification structure for a JSON parse that reads JSON
-#   into an instance of the message structure.
-#
-# * -a: Generate all of -s, -d, -c, and -r, and -t, not to stdout but to
-#   files named with 'tablegen' as a distinguishing part of the stem.
-#   The stem name can be overridden with the -o option.
-#
-# This generates almost all the code required to support a new message type.
-# It's not quite "Look, ma, no handhacking!" You'll need to add default
-# values to the Python stanza. If the structure definition contains character
-# arrays, you'll have to fill in the dimensions by hand.  You'll need to add
-# a bit of glue to ais_json.c so that json_ais_read() actually calls the parser
-# handing it the specification structure as a control argument.
-#
-# The -a, -c, -s, -d, and -r modes all take an argument, which should be a
-# structure reference prefix to be prepended (before a dot) to each fieldname.
-# Usually you'll need this to look something like "ais->typeN", but it could be
-# "ais->typeN.FOO" if the generated code has to operate on a union member
-# inside a type 6 or 8, or something similar.
-#
-# The -S and -E options allow you to generate code only for a specified span
-# of fields in the table.  This may be useful for dealing with groups of
-# messages that have a common head section.
-#
-# This code interprets magic comments in the input
-#
-# //: Type
-#    The token following "Type" is the name of the table
-# //: xxxx vocabulary
-#    A subtable describing a controlled vocabulary for field xxxx in the
-#    preceding table.
-#
-# TO-DO: generate code for ais.py.
-#
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
+
+"""
+This tool is intended to automate away the drudgery in bring up support
+for a new AIS message type.  It parses the tabular description of a message
+and generates various useful code snippets from that.  It can also be used to
+correct offsets in the tables themselves.
+
+Requires the AIVDM.txt file on standard input. Takes a single argument,
+which must match a string in a //: Type comment.  Things you can generate:
+
+* -t: A corrected version of the table.  It will redo all the offsets to be
+  in conformance with the bit widths. (The other options rely only on the
+  bit widths). If the old and new tables are different, an error message
+  describing the corrections will be emitted to standard error.
+
+* -s: A structure definition capturing the message info, with member
+  names extracted from the table and types computed from it.
+
+* -c: Bit-extraction code for the AIVDM driver.  Grind out the right sequence
+  of UBITS, SBITS, and UCHARS macros, and assignments to structure members,
+  guaranteed correct if the table offsets and widths are.
+
+* -d: Code to dump the contents of the unpacked message structure as JSON. If
+  the structure has float members, you'll get an if/then/else  guarded by
+  the scaled flag.
+
+* -r: A Python initializer stanza for jsongen.py, which is in turn used to
+  generate the specification structure for a JSON parse that reads JSON
+  into an instance of the message structure.
+
+* -a: Generate all of -s, -d, -c, and -r, and -t, not to stdout but to
+  files named with 'tablegen' as a distinguishing part of the stem.
+  The stem name can be overridden with the -o option.
+
+This generates almost all the code required to support a new message type.
+It's not quite "Look, ma, no handhacking!" You'll need to add default
+values to the Python stanza. If the structure definition contains character
+arrays, you'll have to fill in the dimensions by hand.  You'll need to add
+a bit of glue to ais_json.c so that json_ais_read() actually calls the parser
+handing it the specification structure as a control argument.
+
+The -a, -c, -s, -d, and -r modes all take an argument, which should be a
+structure reference prefix to be prepended (before a dot) to each fieldname.
+Usually you'll need this to look something like "ais->typeN", but it could be
+"ais->typeN.FOO" if the generated code has to operate on a union member
+inside a type 6 or 8, or something similar.
+
+The -S and -E options allow you to generate code only for a specified span
+of fields in the table.  This may be useful for dealing with groups of
+messages that have a common head section.
+
+This code interprets magic comments in the input
+
+//: Type
+   The token following "Type" is the name of the table
+//: xxxx vocabulary
+   A subtable describing a controlled vocabulary for field xxxx in the
+   preceding table.
+
+TO-DO: generate code for ais.py.
+"""
+
 from __future__ import absolute_import, print_function, division
 
 import getopt
