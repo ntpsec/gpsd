@@ -21,13 +21,13 @@ import gps.aiogps
 
 
 async def get_gps_updates(gpsd: gps.aiogps.aiogps) -> None:
-    """ Receives and prints messages from GPSD.
+    """Receives and prints messages from GPSD.
 
     The GPS status information is updated within aiogps every time a new
     message is received.
     This function also demonstrates what error messages can be expected when
     auto reconnection is not used in aiogps (reconnect = 0).
-    """
+"""
     while True:
         try:
             async for msg in gpsd:
