@@ -87,6 +87,8 @@ def make_driver_code(wfp):
     base = '\t'
     step = " " * 4
     indent = base
+    last = 0
+
     for (i, t) in enumerate(table):
         if '|' in t:
             fields = [s.strip() for s in t.split('|')]
@@ -156,6 +158,7 @@ def make_structure(wfp):
     # Write a structure definition corresponding to the table.
     global structname
     record = after is None
+    last = 0
     baseindent = 8
     step = 4
     inwards = step
@@ -225,6 +228,7 @@ def make_structure(wfp):
 def make_json_dumper(wfp):
     # Write the skeleton of a JSON dump corresponding to the table.
     # Also, if there are subtables, some initializers
+    last = 0
     if subtables:
         for (name, lines) in subtables:
             wfp.write("    const char *%s_vocabulary[] = {\n" % name)
@@ -413,6 +417,7 @@ def make_json_generator(wfp):
     # JSON parser initializer from this table. You need to fill in
     # __INITIALIZER__ and default values after this is generated.
     extra = ""
+    last = 0
     arrayname = None
     record = after is None
     print('''\
