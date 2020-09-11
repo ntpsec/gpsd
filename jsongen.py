@@ -3,13 +3,16 @@
 # This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 #
-# Never hand-hack what you can generate...
-#
-# This code generates template declarations for AIS-JSON parsing from a
-# declarative specification of a JSON structure.
-#
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
+
+"""
+Never hand-hack what you can generate...
+
+This code generates template declarations for AIS-JSON parsing from a
+declarative specification of a JSON structure.
+"""
+
 from __future__ import absolute_import, print_function, division
 
 import getopt
@@ -937,6 +940,8 @@ ais_specs = (
 
 
 def generate(spec):
+    """Generate it"""
+
     report = ""
     leader = " " * 39
     initname = spec["initname"]
