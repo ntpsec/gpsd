@@ -482,7 +482,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
     case ntrip_conn_init:
         /* this has to be done here,
          * because it is needed for multi-stage connection */
-        strncpy(dup, orig, 255);
+        strlcpy(dup, orig, 255);
         dup[255] = '\0';
         device->servicetype = service_ntrip;
         device->ntrip.works = false;
