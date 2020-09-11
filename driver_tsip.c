@@ -603,7 +603,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          * RES SMT 360 calls these "application" and "GPS core".
          */
         (void)snprintf(session->subtype, sizeof(session->subtype),
-                       "sw %d.%d %02d/%02d/%04d hw %d.%d %02d/%02d/%04d",
+                       "sw %u.%u %02u/%02u/%04u hw %u.%u %02u/%02u/%04u",
                        getub(buf, 0),
                        getub(buf, 1),
                        getub(buf, 4),
