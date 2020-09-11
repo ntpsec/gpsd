@@ -366,7 +366,7 @@ static gps_mask_t handle_0xb1(struct gps_device_t *session)
     unsigned char *buf = session->lexer.outbuffer + 3;
     uint16_t week;
     uint32_t tow;
-    timespec_t ts_tow;
+    timespec_t ts_tow = {0, 0};      // pacify codacy
     int32_t lat, lon;
     char ts_buf[TIMESPEC_LEN];
     /* Resolution of lat/lon values (2^-11) */
