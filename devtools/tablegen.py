@@ -170,6 +170,7 @@ def make_structure(wfp):
     arrayname = None
 
     def tabify(n):
+        """convert to tabs"""
         return ('\t' * (n // 8)) + (" " * (n % 8))
 
     print(tabify(baseindent) + "struct {", file=wfp)
@@ -231,8 +232,9 @@ def make_structure(wfp):
 
 
 def make_json_dumper(wfp):
-    # Write the skeleton of a JSON dump corresponding to the table.
-    # Also, if there are subtables, some initializers
+    """Write the skeleton of a JSON dump corresponding to the table.
+    Also, if there are subtables, some initializers"""
+
     last = 0
     if subtables:
         for (name, lines) in subtables:
