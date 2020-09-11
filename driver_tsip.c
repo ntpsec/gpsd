@@ -91,7 +91,7 @@ static unsigned char tsip_gnssid(unsigned svtype, short prn,
         } else if (183 == prn) {
             gnssid = GNSSID_QZSS;
             *svid = 1;
-        } else if (192 >= prn && 193 >= prn) {
+        } else if (192 <= prn && 193 >= prn) {
             gnssid = GNSSID_QZSS;
             *svid = prn - 190;
         } else if (200 == prn) {
