@@ -106,7 +106,8 @@ static bool gps_query(struct gps_data_t *gpsdata,
 
         tv.tv_sec = 2;
         tv.tv_nsec = 0;
-        if (pselect(gpsdata->gps_fd + 1, &rfds, NULL, NULL,
+        // (socket_t) to pacify codacy.
+        if (pselect((socket_t)gpsdata->gps_fd + 1, &rfds, NULL, NULL,
                     &tv, &oldset) == -1) {
             if (errno == EINTR || !FD_ISSET(gpsdata->gps_fd, &rfds))
                 continue;
