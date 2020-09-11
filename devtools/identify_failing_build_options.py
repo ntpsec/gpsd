@@ -87,6 +87,8 @@ knobs = [
 
 
 def main(starting_number_of_options=0):
+    """Main program"""
+
     import itertools
     import multiprocessing
     import shutil
@@ -99,6 +101,7 @@ def main(starting_number_of_options=0):
     dev_null = open('/dev/null', 'w')
 
     def _run(command, phase):
+        """Rub subproceses"""
         if subprocess.call(command, stdout=dev_null) == 0:
             return True
         failed_configurations.append(command)
