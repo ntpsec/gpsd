@@ -1632,7 +1632,6 @@ static gps_mask_t sirf_msg_geodetic(struct gps_device_t *session,
 
     navtype = (unsigned short)getbeu16(buf, 3);
     session->newdata.status = STATUS_NO_FIX;
-    session->newdata.mode = MODE_NO_FIX;
     if (navtype & 0x80)
         session->newdata.status = STATUS_DGPS_FIX;
     else if ((navtype & 0x07) > 0 && (navtype & 0x07) < 7)
