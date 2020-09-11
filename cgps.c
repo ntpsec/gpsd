@@ -702,7 +702,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
         (void)timespec_to_iso8601(gpsdata->fix.time, scr, sizeof(scr));
     } else
         (void)strlcpy(scr, "  n/a", sizeof(scr));
-    (void)snprintf(buf1, sizeof(buf1), " (%u)", gpsdata->leap_seconds);
+    (void)snprintf(buf1, sizeof(buf1), " (%d)", gpsdata->leap_seconds);
     (void)strlcat(scr, buf1, sizeof(scr));
     (void)mvwprintw(datawin, 1, DATAWIN_VALUE_OFFSET - 2, "%-*s", 26, scr);
 
