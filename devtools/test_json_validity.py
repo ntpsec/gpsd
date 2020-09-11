@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 #
 # Christian Gagneraud - 2012
-# Simple python script that will parse json dictionaries on its input,
-# If it fails, it will print the offending line and an error message.
-# The goal is to check that GPSD outputs valid JSON.
-#
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
+
+"""
+Simple python script that will parse json dictionaries on its input,
+If it fails, it will print the offending line and an error message.
+The goal is to check that GPSD outputs valid JSON.
+"""
+
 from __future__ import absolute_import, print_function, division
 
 import json
