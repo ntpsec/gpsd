@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 #
-# This is a valgrind torture test for the gpsd daemon.
-# It's not really expected to spot anything as long as we aren't using
-# malloc and friends in the daemon.
-#
 # This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 #
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
+
+"""
+This is a valgrind torture test for the gpsd daemon.
+It's not really expected to spot anything as long as we aren't using
+malloc and friends in the daemon.
+"""
+
 from __future__ import absolute_import, print_function, division
 
 import sys
