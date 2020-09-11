@@ -70,7 +70,8 @@ import sys
 
 
 def correct_table(wfp):
-    # Writes the corrected table.
+    """Writes the corrected table."""
+
     print("Total bits:", base, file=sys.stderr)
     for (i, t) in enumerate(table):
         if offsets[i].strip():
@@ -80,10 +81,11 @@ def correct_table(wfp):
 
 
 def make_driver_code(wfp):
-    # Writes calls to bit-extraction macros.
-    # Requires UBITS, SBITS, UCHARS to act as they do in the AIVDM driver.
-    # Also relies on bitlen to be the message bit length, and i to be
-    # available as abn index variable.
+    """Writes calls to bit-extraction macros.
+    Requires UBITS, SBITS, UCHARS to act as they do in the AIVDM driver.
+    Also relies on bitlen to be the message bit length, and i to be
+    available as abn index variable."""
+
     record = after is None
     arrayname = None
     base = '\t'
@@ -157,7 +159,8 @@ def make_driver_code(wfp):
 
 
 def make_structure(wfp):
-    # Write a structure definition corresponding to the table.
+    """Write a structure definition corresponding to the table."""
+
     global structname
     record = after is None
     last = 0
