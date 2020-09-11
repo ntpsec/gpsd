@@ -27,6 +27,8 @@ except ImportError:
 
 
 class SourceExtractor(object):
+    """SourceExtractor Class"""
+
     def __init__(self, sourcefile, clientside):
         """Init for SourceExtractor"""
 
@@ -52,16 +54,19 @@ class SourceExtractor(object):
                     self.primitive_masks.append((fields[1], fields[2]))
 
     def in_library(self, flag):
+        """grep in library"""
         (status, _output) = getstatusoutput(
             "grep '%s' libgps_core.c libgps_json.c gpsctl.c" % flag)
         return status == 0
 
     def in_daemon(self, flag):
+        """grep in daemon"""
         (status, _output) = getstatusoutput(
             "grep '%s' %s" % (flag, " ".join(self.daemonfiles)))
         return status == 0
 
     def relevant(self, flag):
+        """Relevant??"""
         if self.clientside:
             return self.in_library(flag)
 
