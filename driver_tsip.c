@@ -143,7 +143,7 @@ static unsigned char tsip_gnssid(unsigned svtype, short prn,
     case 7:
         FALLTHROUGH
     default:
-        svid = 0;
+        *svid = 0;
         gnssid = 0;
         break;
     }
