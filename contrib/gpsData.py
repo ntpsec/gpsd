@@ -5,6 +5,9 @@
 
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
+
+"""gpsd data dump example"""
+
 from __future__ import absolute_import, print_function, division
 
 import gps
@@ -18,6 +21,8 @@ os.system('clear')   # clear the terminal (optional)
 
 
 class GpsPoller(threading.Thread):
+    """Class to poll gpsd"""
+
     def __init__(self):
         """Initializer for GpsPoller"""
 
