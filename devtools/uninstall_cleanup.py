@@ -54,9 +54,9 @@ class PythonCommand(object):
         self.command = command
 
     @classmethod
-    def FindPythons(cls, dir):
+    def FindPythons(cls, pdir):
         "Create PythonCommand objects by scanning directory."
-        pattern = dir + os.path.sep + cls.PYTHON_GLOB
+        pattern = pdir + os.path.sep + cls.PYTHON_GLOB
         pythons = glob.glob(pattern)
         for python in pythons:
             with open(python, 'rb') as f:
