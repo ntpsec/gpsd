@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 """Simple program to exact 5x5 geoid separations in EGM2008
 from GeoidEval for use in geoidc"""
 
