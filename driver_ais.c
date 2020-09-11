@@ -461,9 +461,9 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         ais->type7.mmsi2 = mmsi[1];
         ais->type7.seqno2 = seqno[1];
         ais->type7.mmsi3 = mmsi[2];
-        ais->type7.seqno2 = seqno[2];
+        ais->type7.seqno3 = seqno[2];
         ais->type7.mmsi4 = mmsi[3];
-        ais->type7.seqno3 = seqno[3];
+        ais->type7.seqno4 = seqno[3];
         break;
     }
     case 8: /* Binary Broadcast Message */
