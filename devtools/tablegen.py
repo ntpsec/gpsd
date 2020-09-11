@@ -326,9 +326,11 @@ def make_json_dumper(wfp):
     startspan = 0
 
     def scaled(i):
+        """Check if scaled"""
         return tuples[i][3] is not None
 
     def tslice(e, i):
+        """Missing docstring"""
         return [x[i] for x in tuples[startspan:e+1]]
 
     base = " " * 8
@@ -508,12 +510,12 @@ if __name__ == '__main__':
     except getopt.GetoptError as msg:
         print("tablecheck.py: " + str(msg))
         raise SystemExit(1)
-    generate = maketable = makestruct = makedump = readgen = all = False
+    generate = maketable = makestruct = makedump = readgen = doall = False
     after = before = None
     filestem = "tablegen"
     for (switch, val) in options:
         if switch == '-a':
-            all = True
+            doall = True
             structname = val
         elif switch == '-c':
             generate = True
@@ -537,7 +539,7 @@ if __name__ == '__main__':
             filestem = val
 
     if ((not generate and not maketable and not makestruct and
-         not makedump and not readgen and not all)):
+         not makedump and not readgen and not doall)):
         print("tablecheck.py: no mode selected", file=sys.stderr)
         sys.exit(1)
 
@@ -642,7 +644,7 @@ if __name__ == '__main__':
         offsets[i] += " " * (owidth - len(offsets[i]))
 
     # Here's where we generate useful output.
-    if all:
+    if doall:
         if corrections:
             correct_table(open(filestem + ".txt", "w"))
         make_driver_code(open(filestem + ".c", "w"))
