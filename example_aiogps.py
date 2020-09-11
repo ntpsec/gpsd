@@ -9,8 +9,7 @@
 
 # This code run compatibly under Python 3.x for x >= 6.
 
-"""
-Example of using the asyncio Python interface to GPSD. This example
+"""Example of using the asyncio Python interface to GPSD. This example
 demonstrates error handling by the application code when aiogps is not
 configured to handle automatic re-connection.
 """
@@ -46,7 +45,7 @@ async def get_gps_updates(gpsd: gps.aiogps.aiogps) -> None:
 
 
 async def print_gps_info(gpsd: gps.aiogps.aiogps) -> None:
-    """ Prints GPS status every 5s """
+    """Prints GPS status every 5s"""
     while True:
         try:
             await asyncio.sleep(5)
@@ -58,7 +57,8 @@ async def print_gps_info(gpsd: gps.aiogps.aiogps) -> None:
 
 
 async def main():
-    """ Main coroutine - executes 2 asyncio tasks in parallel """
+    """Main coroutine - executes 2 asyncio tasks in parallel"""
+
     try:
         # Example of using custom connection configuration
         async with gps.aiogps.aiogps(
