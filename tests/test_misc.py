@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 #
-# Test gps/misc.py
-#
-
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
+
+"""Test gps/misc.py"""
+
 from __future__ import absolute_import, print_function, division
 
 import sys
