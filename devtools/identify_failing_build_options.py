@@ -2,6 +2,9 @@
 
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
+
+"""Build option tester"""
+
 from __future__ import absolute_import, print_function, division
 
 import os
