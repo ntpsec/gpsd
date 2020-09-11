@@ -968,8 +968,7 @@ static ssize_t greis_write(struct gps_device_t *session,
         return -1;
     }
 
-    if (msg != NULL)
-        memcpy(&session->msgbuf[0], msg, msglen);
+    memcpy(&session->msgbuf[0], msg, msglen);
 
     if (msglen == 0) {
         /* This is a dummy write, don't give a checksum. */
