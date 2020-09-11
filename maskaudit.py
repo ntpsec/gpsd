@@ -25,6 +25,8 @@ except ImportError:
 
 class SourceExtractor(object):
     def __init__(self, sourcefile, clientside):
+        """Init for SourceExtractor"""
+
         self.sourcefile = sourcefile
         self.clientside = clientside
         self.daemonfiles = [
