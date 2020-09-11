@@ -95,15 +95,20 @@ def SatPos(ephm, t):
     # Argument of Latitude
     Phik = nuk + ephm['omega']
 
-    # 2nd harmonic corrections
-    # Argument of Latitude Correction
-    sin2Phik = math.sin(2 * Phik)
-    cos2Phik = math.cos(2 * Phik)
-    deltauk = (ephm['Cus'] * sin2Phik + ephm['Cuc'] * cos2Phik)
-    # Radius Correction
-    deltark = (ephm['Crs'] * sin2Phik + ephm['Crc'] * cos2Phik)
-    # Inclination Correction
-    deltaik = (ephm['Cis'] * sin2Phik + ephm['Cic'] * cos2Phik)
+    if 'Cus' in ephm:
+        # 2nd harmonic corrections
+        # Argument of Latitude Correction
+        sin2Phik = math.sin(2 * Phik)
+        cos2Phik = math.cos(2 * Phik)
+        deltauk = (ephm['Cus'] * sin2Phik + ephm['Cuc'] * cos2Phik)
+        # Radius Correction
+        deltark = (ephm['Crs'] * sin2Phik + ephm['Crc'] * cos2Phik)
+        # Inclination Correction
+        deltaik = (ephm['Cis'] * sin2Phik + ephm['Cic'] * cos2Phik)
+    else:
+        deltauk = 0
+        deltark = 0
+        deltaik = 0
 
     # Corrected Argument of Latitude
     uk = Phik + deltauk
@@ -419,23 +424,39 @@ if 'time' in tpv:
 
     # below is WIP
 
-    # find one SV with all 3 ephemeris
-    for sv in ephemeris1.keys():
-        if ((sv not in ephemeris2 or
-             sv not in ephemeris3)):
-            continue
-        # got one
-        print("\nSV %u position:" % sv)
+    for sv in range(1, 33):
+        if ((sv in ephemeris1 and
+             sv in ephemeris2 and
+             sv in ephemeris3)):
 
-        # mash into one dict
-        # FIXME, check validity first
-        ephm = ephemeris1[sv]
-        ephm.update(ephemeris2[sv])
-        ephm.update(ephemeris3[sv])
+            print("\nSV %u EPhemeris position:" % sv)
 
-        # convert semi-circles to radians
-        cvt = ('deltan', 'i0', 'IDOT', 'M0', 'omega', 'Omega0', 'Omegad')
-        for i in cvt:
-            ephm[i] *= math.pi
+            # mash into one dict
+            # FIXME, check validity first
+            ephm = ephemeris1[sv]
+            ephm.update(ephemeris2[sv])
+            ephm.update(ephemeris3[sv])
 
-        SatPos(ephm, gps_tow)
+            # convert semi-circles to radians
+            cvt = ('deltan', 'i0', 'IDOT', 'M0', 'omega', 'Omega0', 'Omegad')
+            for i in cvt:
+                ephm[i] *= math.pi
+
+            SatPos(ephm, gps_tow)
+
+        # FIXME: broken...
+        if False and sv in almanac:
+            print("\nSV %u Almanac position:" % sv)
+
+            ephm = almanac[sv]
+            ephm.update({'i0': ephm['deltai'] + 0.30,
+                         'deltan': 0,
+                         'IDOT': 0,
+                         'toe': ephm['toa']})
+
+            # convert semi-circles to radians
+            cvt = ('deltan', 'i0', 'IDOT', 'M0', 'omega', 'Omega0', 'Omegad')
+            for i in cvt:
+                ephm[i] *= math.pi
+
+            SatPos(ephm, gps_tow)
