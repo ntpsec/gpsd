@@ -8,7 +8,8 @@
 
 # This code run compatibly under Python 3.x for x >= 6.
 
-"""aiogps.py -- Asyncio Python interface to GPSD.
+"""
+aiogps.py -- Asyncio Python interface to GPSD.
 
 This module adds asyncio support to the Python gps interface. It runs on
 Python versions >= 3.6 and provides the following benefits:
