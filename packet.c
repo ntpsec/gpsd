@@ -632,10 +632,12 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             lexer->state = NMEA_BANG;
 #ifdef UBLOX_ENABLE
         else if (c == 0xb5)  // LEA-5H can/ will output NMEA/UBX back to back
+            // codacy says this state impossible?
             lexer->state = UBX_LEADER_1;
 #endif
 #ifdef PASSTHROUGH_ENABLE
         else if (c == '{')
+            // codacy says this state impossible?
             return character_pushback(lexer, JSON_LEADER);
 #endif /* PASSTHROUGH_ENABLE */
         else
