@@ -33,23 +33,126 @@ if gps.__version__ != gps_version:
     sys.exit(1)
 
 
-def keppler(e, M0, n):
-    '''Kepplers iteration to solve his equation'''
+def kepler(e, M0):
+    '''Keplers iteration to solve his equation'''
 
-    # FIXME: iterate to a desired error, instead of fixed rounds?
     # https://en.wikipedia.org/wiki/Kepler%27s_equation
     Ek = M0             # initial guess
-    for i in range(1, n + 1):
+    for i in range(1, 20):
+        temp = Ek
         Ek = M0 + e * math.sin(Ek)
+        if 1e-10 > math.fabs(Ek - temp):
+            break
     return Ek
 
-# another algorithm here:
+# another kepler algorithm here:
 # http://www.alpheratz.net/dynamics/twobody/KeplerIterations_summary.pdf
+
+
+# FIXME!  Does not agree with satmap:
+# real time sat positions: https://in-the-sky.org/satmap_worldmap.php
+def SatPos(ephm, t):
+    """Calculate GPS Satellite Position from Ephemeris/Almanac and t"""
+
+    # compute Sat position from IS-GPS-200 table 20-IV
+    # https://www.telesens.co/2017/07/17/calculating-position-from-raw-gps-data/#1b_Code_for_Calculating_Satellite_Position
+
+    # Semi-major axis
+    A = ephm['sqrtA'] ** 2      # meters
+
+    # Computed mean motion
+    n0 = math.sqrt(gps.WGS84GM / (A ** 3))           # rad/sec
+
+    # Time from ephemeris reference epoch
+    # t: GPS system time at time of transmission
+    # FIXME: assume gps_tow is close enough to t
+    tk = t - ephm['toe']
+    if 302400 < tk:
+        tk -= 604800
+    elif -302400 > tk:
+        tk += 604800
+
+    # corrected mean motion
+    n = n0 + ephm['deltan']   # rad/sec
+
+    # mean anomaly, rads
+    Mk = ephm['M0'] + (n * tk)
+
+    # solve for eccentric anomaly
+    Ek = kepler(ephm['e'], ephm['M0'])
+
+    # true anomaly
+    nuk = math.atan2(
+       math.sqrt(1 - (ephm['e'] ** 2)) * math.sin(Ek) /
+       (1 - ephm['e'] * math.cos(Ek)),
+       (math.cos(Ek) - ephm['e']) / (1 - ephm['e'] * math.cos(Ek)))
+
+    # alternate true anomaly
+    # close enough?
+    # nuk = math.atan2(math.sqrt(1 - (ephm['e'] ** 2)) * math.sin(Ek),
+    #                  (math.cos(Ek) - ephm['e']))
+
+    # Argument of Latitude
+    Phik = nuk + ephm['omega']
+
+    # 2nd harmonic corrections
+    # Argument of Latitude Correction
+    sin2Phik = math.sin(2 * Phik)
+    cos2Phik = math.cos(2 * Phik)
+    deltauk = (ephm['Cus'] * sin2Phik + ephm['Cuc'] * cos2Phik)
+    # Radius Correction
+    deltark = (ephm['Crs'] * sin2Phik + ephm['Crc'] * cos2Phik)
+    # Inclination Correction
+    deltaik = (ephm['Cis'] * sin2Phik + ephm['Cic'] * cos2Phik)
+
+    # Corrected Argument of Latitude
+    uk = Phik + deltauk
+
+    # Corrected Radius
+    rk = A * (1 - ephm['e'] * math.cos(Ek)) + deltark
+
+    # Corrected Inclination Angle
+    ik = ephm['i0'] + ephm['IDOT'] * tk + deltaik
+
+    # Positions in orbital plane.
+    xkprime = rk * math.cos(uk)
+    ykprime = rk * math.sin(uk)
+
+    # Corrected longitude of ascending node.
+    Omegak = (ephm['Omega0'] + ((ephm['Omegad'] - gps.WGS84AV) * tk) -
+              gps.WGS84AV * ephm['toe'])
+
+    # Earth-fixed coordinates.
+    ykprimecosik = ykprime * math.cos(ik)
+    sinOmegak = math.sin(Omegak)
+    cosOmegak = math.cos(Omegak)
+    x = xkprime * cosOmegak - ykprimecosik * sinOmegak
+    y = xkprime * sinOmegak + ykprimecosik * cosOmegak
+    z = ykprime * math.sin(ik)
+
+    if 1 < options.debug:
+        print(ephm)
+        print("gps_tow %d tk %s" % (gps_tow, tk))
+        print("A %s n0 %s Mk %s" % (A, n0, Mk))
+        print("Ek %s" % (Ek))
+        print("nuk %.10g Ek %.10g Phik %.10g" % (nuk, Ek, Phik))
+        print("deltauk %.10g deltark %.10g deltaik %.10g" %
+              (deltauk, deltark, deltaik))
+        print("uk %.10g rk %.10g ik %.10g" % (uk, rk, ik))
+        print("xkprime %.10g ykprime %.10g Omegak %.10g" %
+              (xkprime, ykprime, Omegak))
+
+    # Finally, lat/lon/alt
+    (lat, lon, altHAE) = gps.ecef2lla(x, y, z)
+    print("x %.10g y %.10g z %.10g\n"
+          "lat %.6f lon %.6f altHAE %.3f" %
+          (x, y, z, lat, lon, altHAE))
 
 
 ephemeris1 = {}
 ephemeris2 = {}
 ephemeris3 = {}
+# current almanac here: https://www.navcen.uscg.gov/?pageName=gpsAlmanacs
 almanac = {}
 tpv = None               # for current time and position
 
@@ -273,7 +376,7 @@ except KeyboardInterrupt:
     print()
     sys.exit(1)
 
-all_sv = (ephemeris1.keys() + ephemeris1.keys() + ephemeris1.keys() +
+all_sv = (ephemeris1.keys() + ephemeris2.keys() + ephemeris3.keys() +
           almanac.keys())
 for sv in sorted(set(all_sv)):
     print("SV %u\n  Subframe 1, Clock Data" % sv)
@@ -322,108 +425,17 @@ if 'time' in tpv:
              sv not in ephemeris3)):
             continue
         # got one
-        print("\nComputing SV %u position:" % sv)
+        print("\nSV %u position:" % sv)
 
-        #real time sat positions: https://in-the-sky.org/satmap_worldmap.php
-        # compute Sat position from IS-GPS-200 table 20-IV
-        # https://www.telesens.co/2017/07/17/calculating-position-from-raw-gps-data/#1b_Code_for_Calculating_Satellite_Position
+        # mash into one dict
+        # FIXME, check validity first
+        ephm = ephemeris1[sv]
+        ephm.update(ephemeris2[sv])
+        ephm.update(ephemeris3[sv])
 
-        # Semi-major axis
-        A = ephemeris2[sv]['sqrtA'] ** 2      # meters
+        # convert semi-circles to radians
+        cvt = ('deltan', 'i0', 'IDOT', 'M0', 'omega', 'Omega0', 'Omegad')
+        for i in cvt:
+            ephm[i] *= math.pi
 
-        # Computed mean motion
-        comp_mm = math.sqrt(gps.WGS84GM / (A ** 3))           # rad/sec
-
-        # Time from ephemeris reference epoch
-        # t: GPS system time at time of transmission
-        # FIXME: assume gps_tow is close enough to t
-        tk = gps_tow - ephemeris2[sv]['toe']
-        if 302400 < tk:
-            tk -= 604800
-        elif -302400 > tk:
-            tk += 604800
-
-        # corrected mean motion
-        # deltan:  semi-circles -> rads
-        corr_mm = comp_mm + (ephemeris2[sv]['deltan'] * math.pi)   # rad/sec
-
-        # mean anomaly, rads
-        # M0:  semi-circles -> rads
-        M0 = ephemeris2[sv]['M0'] * math.pi
-        Mk = M0 + (corr_mm * tk)
-
-        print("A %s comp_mm %s tk %s Mk %s" % (A, comp_mm, tk, Mk))
-
-        # solve for eccentric anomaly
-        # 5 seems enough
-        Ek = keppler(ephemeris2[sv]['e'], M0, 5)
-        print("Ek %s" % (Ek))
-
-        # True anomaly:
-        nuk = math.atan2(
-           math.sqrt(1 - (ephemeris2[sv]['e'] ** 2)) * math.sin(Ek) /
-           (1 - ephemeris2[sv]['e'] * math.cos(Ek)),
-           (math.cos(Ek) - ephemeris2[sv]['e']) /
-           (1 - ephemeris2[sv]['e'] * math.cos(Ek)))
-
-        Ek = math.acos((ephemeris2[sv]['e'] + math.cos(nuk)) /
-                       (1 + ephemeris2[sv]['e'] * math.cos(nuk)))
-
-        # Argument of Latitude
-        Phik = nuk + (ephemeris3[sv]['omega'] * math.pi)
-        print("nuk %.10g Ek %.10g Phik %.10g" % (nuk, Ek, Phik))
-
-        # debug, skip corrections for now.
-        if False:
-            # 2nd harmonic corrections
-            # Argument of Latitude Correction
-            deltauk = (ephemeris2[sv]['Cus'] * math.sin(2 * Phik) +
-                       ephemeris2[sv]['Cuc'] * math.cos(2 * Phik))
-            # Radius Correction
-            deltark = (ephemeris2[sv]['Crs'] * math.sin(2 * Phik) +
-                       ephemeris3[sv]['Crc'] * math.cos(2 * Phik))
-            # Inclination Correction
-            deltaik = (ephemeris3[sv]['Cis'] * math.sin(2 * Phik) +
-                       ephemeris3[sv]['Cic'] * math.cos(2 * Phik))
-            print("deltauk %.10g deltark %.10g deltaik %.10g" %
-                  (deltauk, deltark, deltaik))
-        else:
-            deltauk = 0
-            deltark = 0
-            deltaik = 0
-
-        # Corrected Argument of Latitude
-        uk = Phik + deltauk
-
-        # Corrected Radius
-        rk = A * (1 - ephemeris2[sv]['e'] * math.cos(Ek)) + deltark
-
-        # Corrected Inclination Angle
-        IDOT = ephemeris3[sv]['IDOT'] * math.pi
-        i0 = ephemeris3[sv]['i0'] * math.pi
-        ik = i0 + IDOT * tk + deltaik
-        print("uk %.10g rk %.10g ik %.10g" % (uk, rk, ik))
-
-        # Positions in orbital plane.
-        xkprime = rk * math.cos(uk)
-        ykprime = rk * math.sin(uk)
-
-        # Corrected longitude of ascending node.
-        Omega0 = ephemeris3[sv]['Omega0'] * math.pi
-        Omegad = ephemeris3[sv]['Omegad'] * math.pi
-        Omegak = (Omega0 + ((Omegad - gps.WGS84AV) * tk) -
-                 gps.WGS84AV * ephemeris2[sv]['toe']
-                 )
-        print("xkprime %.10g ykprime %.10g Omegak %.10g" %
-              (xkprime, ykprime, Omegak))
-
-        # Finally! Earth-fixed coordinates.
-        x = (xkprime * math.cos(Omegak) - ykprime * math.cos(ik) *
-             math.sin(Omegak))
-        y = (xkprime * math.sin(Omegak) + ykprime * math.cos(ik) *
-             math.cos(Omegak))
-        z = ykprime * math.sin(ik)
-        print("x %.10g y %.10g z %.10g" % (x, y, z))
-
-        (lat, lon, altHAE) = gps.ecef2lla(x, y, z)
-        print("lat %.6f lon %.6f altHAE %.3f" % (lat, lon, altHAE))
+        SatPos(ephm, gps_tow)
