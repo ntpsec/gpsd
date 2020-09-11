@@ -19,6 +19,8 @@ os.system('clear')   # clear the terminal (optional)
 
 class GpsPoller(threading.Thread):
     def __init__(self):
+        """Initializer for GpsPoller"""
+
         threading.Thread.__init__(self)
         global gpsd                    # bring it in scope
         gpsd = gps.gps(mode=gps.WATCH_ENABLE)  # starting the stream of info
