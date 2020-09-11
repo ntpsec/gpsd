@@ -479,7 +479,6 @@ static gps_mask_t processRMC(int count, char *field[],
         FALLTHROUGH
     case 'V':
         /* Invalid */
-        newstatus = STATUS_NO_FIX;
         session->newdata.mode = MODE_NO_FIX;
         mask |= STATUS_SET | MODE_SET;
         break;
@@ -2052,7 +2051,6 @@ static gps_mask_t processPGRMF(int c UNUSED, char *field[],
   */
     gps_mask_t mask = ONLINE_SET;
     unsigned short week = 0;
-    time_t tow = 0;
     timespec_t ts_tow = {0, 0};
 
     /* Some garmin fail due to GPS Week Roll Over
@@ -2067,7 +2065,7 @@ static gps_mask_t processPGRMF(int c UNUSED, char *field[],
         0 < session->context->leap_seconds) {
         // have GPS week, tow and leap second
         week = atol(field[1]);
-        ts_tow.tv_sec = tow = atol(field[2]);
+        ts_tow.tv_sec = atol(field[2]);
         ts_tow.tv_nsec = 0;
         session->newdata.time = gpsd_gpstime_resolv(session, week, ts_tow);
         mask |= TIME_SET;
