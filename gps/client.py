@@ -28,6 +28,7 @@ class gpscommon(object):
 
     def __init__(self, host="127.0.0.1", port=GPSD_PORT, verbose=0,
                  should_reconnect=False):
+        """Init gpscommon"""
         self.stream_command = b''
         self.linebuffer = b''
         self.received = time.time()
@@ -177,6 +178,7 @@ class json_error(BaseException):
     """Class for JSON errors"""
 
     def __init__(self, data, explanation):
+        """Init json_error"""
         BaseException.__init__(self)
         self.data = data
         self.explanation = explanation
@@ -186,6 +188,7 @@ class gpsjson(object):
     """Basic JSON decoding."""
 
     def __init__(self):
+        """Init gpsjson"""
         self.data = None
         self.stream_command = None
         self.enqueued = None
@@ -226,7 +229,7 @@ class gpsjson(object):
             raise TypeError("Invalid streaming command!! : " + str(flags))
 
     def generate_stream_command(self, flags=0, devpath=None):
-        "Generate stream command"
+        """Generate stream command"""
         if flags & WATCH_OLDSTYLE:
             return self.generate_stream_command_old_style(flags)
 
@@ -234,7 +237,7 @@ class gpsjson(object):
 
     @staticmethod
     def generate_stream_command_old_style(flags=0):
-        "Generate stream command, old style"
+        """Generate stream command, old style"""
         if flags & WATCH_DISABLE:
             arg = "w-"
             if flags & WATCH_NMEA:
@@ -249,7 +252,7 @@ class gpsjson(object):
 
     @staticmethod
     def generate_stream_command_new_style(flags=0, devpath=None):
-        "Generate stream command, new style"
+        """Generate stream command, new style"""
 
         if (flags & (WATCH_JSON | WATCH_OLDSTYLE | WATCH_NMEA |
                      WATCH_RAW)) == 0:
@@ -298,43 +301,43 @@ class gpsjson(object):
 
 
 class dictwrapper(object):
-    "Wrapper that yields both class and dictionary behavior,"
+    """Wrapper that yields both class and dictionary behavior,"""
 
     def __init__(self, ddict):
-        "Init class dictwrapper"
+        """Init class dictwrapper"""
         self.__dict__ = ddict
 
     def get(self, k, d=None):
-        "Get dictwrapper"
+        """Get dictwrapper"""
         return self.__dict__.get(k, d)
 
     def keys(self):
-        "Keys dictwrapper"
+        """Keys dictwrapper"""
         return self.__dict__.keys()
 
     def __getitem__(self, key):
-        "Emulate dictionary, for new-style interface."
+        """Emulate dictionary, for new-style interface."""
         return self.__dict__[key]
 
     def __iter__(self):
-        "Iterate dictwrapper"
+        """Iterate dictwrapper"""
         return self.__dict__.__iter__()
 
     def __setitem__(self, key, val):
-        "Emulate dictionary, for new-style interface."
+        """Emulate dictionary, for new-style interface."""
         self.__dict__[key] = val
 
     def __contains__(self, key):
-        "Find key in dictwrapper"
+        """Find key in dictwrapper"""
         return key in self.__dict__
 
     def __str__(self):
-        "dictwrapper to string"
+        """dictwrapper to string"""
         return "<dictwrapper: " + str(self.__dict__) + ">"
     __repr__ = __str__
 
     def __len__(self):
-        "length of dictwrapper"
+        """length of dictwrapper"""
         return len(self.__dict__)
 
 #
