@@ -1,9 +1,11 @@
-"gpsd client functions"
 # This file is Copyright 2019 by the GPSD project
 # SPDX-License-Identifier: BSD-2-Clause
 #
 # This code run compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
+
+"""gpsd client functions"""
+
 from __future__ import absolute_import, print_function, division
 
 import json
@@ -19,7 +21,7 @@ GPSD_PORT = "2947"
 
 
 class gpscommon(object):
-    "Isolate socket handling and buffering from the protocol interpretation."
+    """Isolate socket handling and buffering from protocol interpretation."""
 
     host = "127.0.0.1"
     port = GPSD_PORT
@@ -78,17 +80,17 @@ class gpscommon(object):
                 raise  # propagate error to caller
 
     def close(self):
-        "Close the gpsd socket"
+        """Close the gpsd socket"""
         if self.sock:
             self.sock.close()
         self.sock = None
 
     def __del__(self):
-        "Close the gpsd socket"
+        """Close the gpsd socket"""
         self.close()
 
     def waiting(self, timeout=0):
-        "Return True if data is ready for the client."
+        """Return True if data is ready for the client."""
         if self.linebuffer:
             return True
         if self.sock is None:
@@ -99,7 +101,7 @@ class gpscommon(object):
         return winput != []
 
     def read(self):
-        "Wait for and read data being streamed from the daemon."
+        """Wait for and read data being streamed from the daemon."""
 
         if None is self.sock:
             self.connect(self.host, self.port)
@@ -154,11 +156,11 @@ class gpscommon(object):
     # for 'bresponse' is currently provided.
 
     def data(self):
-        "Return the client data buffer."
+        """Return the client data buffer."""
         return self.response
 
     def send(self, commands):
-        "Ship commands to the daemon."
+        """Ship commands to the daemon."""
         lineend = "\n"
         if isinstance(commands, bytes):
             lineend = polybytes("\n")
@@ -172,7 +174,7 @@ class gpscommon(object):
 
 
 class json_error(BaseException):
-    "Class for JSON errors"
+    """Class for JSON errors"""
 
     def __init__(self, data, explanation):
         BaseException.__init__(self)
@@ -181,7 +183,7 @@ class json_error(BaseException):
 
 
 class gpsjson(object):
-    "Basic JSON decoding."
+    """Basic JSON decoding."""
 
     def __init__(self):
         self.data = None
@@ -190,11 +192,11 @@ class gpsjson(object):
         self.verbose = -1
 
     def __iter__(self):
-        "Broken __iter__"
+        """Broken __iter__"""
         return self
 
     def unpack(self, buf):
-        "Unpack a JSON string"
+        """Unpack a JSON string"""
         try:
             # json.loads(,encoding=) deprecated Python 3.1.  Gone in 3.9
             # like it or not, data is now UTF-8
@@ -208,7 +210,7 @@ class gpsjson(object):
                                     for x in self.data.satellites]
 
     def stream(self, flags=0, devpath=None):
-        "Control streaming reports from the daemon,"
+        """Control streaming reports from the daemon,"""
 
         if 0 < flags:
             self.stream_command = self.generate_stream_command(flags, devpath)
