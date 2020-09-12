@@ -1,6 +1,6 @@
 # misc.py - miscellaneous geodesy and time functions
 # -*- coding: utf-8 -*-
-"miscellaneous geodesy and time functions"
+"""miscellaneous geodesy and time functions"""
 #
 # This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-Clause
@@ -54,17 +54,18 @@ if bytes is str:  # In Python 2 these functions can be null transformations
     polybytes = bytes
 
     def make_std_wrapper(stream):
-        "Dummy stdio wrapper function."
+        """Dummy stdio wrapper function."""
         return stream
 
     def get_bytes_stream(stream):
-        "Dummy stdio bytes buffer function."
+        """Dummy stdio bytes buffer function."""
         return stream
 
 else:  # Otherwise we do something real
 
     def polystr(o):
-        "Convert bytes or str to str with proper encoding."
+        """Convert bytes or str to str with proper encoding."""
+
         if isinstance(o, str):
             return o
         if isinstance(o, (bytes, bytearray)):
@@ -74,7 +75,7 @@ else:  # Otherwise we do something real
         raise ValueError
 
     def polybytes(o):
-        "Convert bytes or str to bytes with proper encoding."
+        """Convert bytes or str to bytes with proper encoding."""
         if isinstance(o, bytes):
             return o
         if isinstance(o, str):
@@ -82,7 +83,7 @@ else:  # Otherwise we do something real
         raise ValueError
 
     def make_std_wrapper(stream):
-        "Standard input/output wrapper factory function"
+        """Standard input/output wrapper factory function"""
         # This ensures that the encoding of standard output and standard
         # error on Python 3 matches the binary encoding we use to turn
         # bytes to Unicode in polystr above.
@@ -94,7 +95,7 @@ else:  # Otherwise we do something real
                                 newline="\n", line_buffering=True)
 
     def get_bytes_stream(stream):
-        "Standard input/output bytes buffer function"
+        """Standard input/output bytes buffer function"""
         return stream.buffer
 
 # WGS84(G1674) defining parameters
@@ -144,12 +145,12 @@ MPS_TO_KNOTS = (3600.0 / 1852.0)            # Meters per second to knots, exact
 
 
 def Deg2Rad(x):
-    "Degrees to radians."
+    """Degrees to radians."""
     return x * (math.pi / 180)
 
 
 def Rad2Deg(x):
-    "Radians to degrees."
+    """Radians to degrees."""
     return x * (180 / math.pi)
 
 
@@ -197,7 +198,7 @@ Lat, lon in degrees and altHAE in meters"""
 
 
 def CalcRad(lat):
-    "Radius of curvature in meters at specified latitude WGS-84."
+    """Radius of curvature in meters at specified latitude WGS-84."""
     # the radius of curvature of an ellipsoidal Earth in the plane of a
     # meridian of latitude is given by
     #
@@ -300,7 +301,7 @@ def EarthDistance(c1, c2):
 
 
 def EarthDistanceSmall(c1, c2):
-    "Distance in meters between two close points specified in degrees."
+    """Distance in meters between two close points specified in degrees."""
     # This calculation is known as an Equirectangular Projection
     # fewer numeric issues for small angles that other methods
     # the main use here is for when Vincenty's fails to converge.
@@ -321,7 +322,7 @@ def EarthDistanceSmall(c1, c2):
 
 
 def MeterOffset(c1, c2):
-    "Return offset in meters of second arg from first."
+    """Return offset in meters of second arg from first."""
     (lat1, lon1) = c1
     (lat2, lon2) = c2
     dx = EarthDistance((lat1, lon1), (lat1, lon2))
@@ -334,7 +335,7 @@ def MeterOffset(c1, c2):
 
 
 def isotime(s):
-    "Convert timestamps in ISO8661 format to and from Unix time."
+    """Convert timestamps in ISO8661 format to and from Unix time."""
     if isinstance(s, int):
         return time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime(s))
 
