@@ -153,6 +153,14 @@ def SatPos(ephm, t):
           "lat %.6f lon %.6f altHAE %.3f" %
           (x, y, z, lat, lon, altHAE))
 
+    # ax and el to sat
+    if 'lat' in tpv and 'lon' in tpv and 'altHAE' in tpv:
+        (E, N, U) = gps.ecef2enu(x, y, z,
+                                 tpv['lat'], tpv['lon'], tpv['altHAE'])
+        print("E %.3f N %.3f U %.3f" % (E, N, U))
+        (az, el, rng) = gps.enu2aer(E, N, U)
+        print("az %.3f el %.3f rng %.3f" % (az, el, rng))
+
 
 ephemeris1 = {}
 ephemeris2 = {}
