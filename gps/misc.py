@@ -197,6 +197,38 @@ Lat, lon in degrees and altHAE in meters"""
     return (latitude, longitude, altHAE)
 
 
+# FIXME: needs tests
+def ecef2enu(x, y, z, lat, lon, altHAE):
+    """Calculate ENU from lat/lon/altHAE to ECEF
+ECEF in meters, lat/lon in degrees, altHAE in meters.
+Returns ENU in meters"""
+
+    #  Grr, lambda is a reserved name in Python...
+    lambd = lat * RAD_2_DEG
+    phi = lon * RAD_2_DEG
+    sin_lambd = math.sin(lambd)
+    cos_lambd = math.cos(lambd)
+    n = WGS84A / math.sqrt(1 - WGS84E * sin_lambd ** 2)
+
+    sin_phi = math.sin(phi)
+    cos_phi = math.cos(phi)
+
+    # ECEF of observer
+    x0 = (altHAE + n) * cos_lambd * cos_phi
+    y0 = (altHAE + n) * cos_lambd * sin_phi
+    z0 = (altHAE + (1 - WGS84E) * n) * sin_lambd
+
+    xd = x - x0
+    yd = y - y0
+    zd = z - z0
+
+    E = -sin_phi * xd + cos_phi * yd
+    N = -cos_phi * sin_lambd * xd - sin_lambd * sin_phi * yd + cos_lambd * zd
+    U = cos_phi * cos_lambd * xd + cos_lambd * sin_phi * yd + sin_lambd * zd
+
+    return E, N, U
+
+
 def CalcRad(lat):
     """Radius of curvature in meters at specified latitude WGS-84."""
     # the radius of curvature of an ellipsoidal Earth in the plane of a
