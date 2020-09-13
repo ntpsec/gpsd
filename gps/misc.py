@@ -7,6 +7,10 @@
 
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
+
+# A good more complete 3d math implementation:
+# https://github.com/geospace-code/pymap3d/
+#
 from __future__ import absolute_import, print_function, division
 
 import calendar
@@ -227,6 +231,19 @@ Returns ENU in meters"""
     U = cos_phi * cos_lambd * xd + cos_lambd * sin_phi * yd + sin_lambd * zd
 
     return E, N, U
+
+
+# FIXME:  needs tests.
+def enu2aer(E, N, U):
+    """Convert ENU to Azimuth, Elevation and Range.
+ENU is in meters.  Azimuth and Elevation in degrees.  Range in meters"""
+
+    enr = math.hypot(E, N)
+    rng = math.hypot(enr, U)
+    az = math.atan2(E, N) % (math.pi * 2) * RAD_2_DEG
+    el = math.atan2(U, enr) * RAD_2_DEG
+
+    return az, el, rng
 
 
 def CalcRad(lat):
