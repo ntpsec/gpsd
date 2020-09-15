@@ -1293,8 +1293,9 @@ static void handle_request(struct subscriber_t *sub,
                         devconf.parity = device->gpsdata.dev.parity;
                     if (devconf.stopbits == DEVDEFAULT_STOPBITS)
                         devconf.stopbits = device->gpsdata.dev.stopbits;
-                    if (0 < devconf.cycle.tv_sec ||
-                        0 < devconf.cycle.tv_nsec) {
+                    /* make sure that the cycle is positive, if not, use
+                     * current value as to not change cycle later */
+                    if (!TS_GZ(&devconf.cycle)) {
                         devconf.cycle = device->gpsdata.dev.cycle;
                     }
 
