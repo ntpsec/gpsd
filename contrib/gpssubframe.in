@@ -86,15 +86,16 @@ def SatPos(ephm, t):
     Ek = (Ek + 2 * math.pi) % (2 * math.pi)
 
     # true anomaly
-    nuk = math.atan2(
-       math.sqrt(1 - (ephm['e'] ** 2)) * math.sin(Ek) /
-       (1 - ephm['e'] * math.cos(Ek)),
-       (math.cos(Ek) - ephm['e']) / (1 - ephm['e'] * math.cos(Ek)))
-
-    # alternate true anomaly
-    # close enough?
-    # nuk = math.atan2(math.sqrt(1 - (ephm['e'] ** 2)) * math.sin(Ek),
-    #                  (math.cos(Ek) - ephm['e']))
+    if False:
+        nuk = math.atan2(
+           math.sqrt(1 - (ephm['e'] ** 2)) * math.sin(Ek) /
+           (1 - ephm['e'] * math.cos(Ek)),
+           (math.cos(Ek) - ephm['e']) / (1 - ephm['e'] * math.cos(Ek)))
+    else:
+        # alternate true anomaly
+        # close enough?
+        nuk = math.atan2(math.sqrt(1 - (ephm['e'] ** 2)) * math.sin(Ek),
+                         (math.cos(Ek) - ephm['e']))
 
     # Argument of Latitude
     Phik = nuk + ephm['omega']
