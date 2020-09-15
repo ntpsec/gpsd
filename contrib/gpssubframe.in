@@ -41,7 +41,7 @@ def kepler(e, M0):
     for i in range(1, 20):
         temp = Ek
         Ek = M0 + e * math.sin(Ek)
-        if 1e-10 > math.fabs(Ek - temp):
+        if 1e-12 > math.fabs(Ek - temp):
             break
     return Ek
 
@@ -63,10 +63,10 @@ def SatPos(ephm, t):
     # Computed mean motion
     n0 = math.sqrt(gps.WGS84GM / (A ** 3))           # rad/sec
 
-    # Time from ephemeris reference epoch
-    # t: GPS system time at time of transmission
-    # FIXME: assume gps_tow is close enough to t
-    tk = t - ephm['toe']
+    # t: GPS system time of week at time of transmission
+    # tk: time from ephemeris reference epoch
+    tk = t - ephm['toe']                 # seconds
+    # handle week rollover
     if 302400 < tk:
         tk -= 604800
     elif -302400 > tk:
@@ -77,9 +77,13 @@ def SatPos(ephm, t):
 
     # mean anomaly, rads
     Mk = ephm['M0'] + (n * tk)
+    # reduce to two pi.  needed?
+    Mk = (Mk + 2 * math.pi) % (2 * math.pi)
 
     # solve for eccentric anomaly
-    Ek = kepler(ephm['e'], ephm['M0'])
+    Ek = kepler(ephm['e'], ephm['M0'])   # radians
+    # reduce to two pi.  needed?
+    Ek = (Ek + 2 * math.pi) % (2 * math.pi)
 
     # true anomaly
     nuk = math.atan2(
@@ -94,8 +98,11 @@ def SatPos(ephm, t):
 
     # Argument of Latitude
     Phik = nuk + ephm['omega']
+    # reduce to two pi.  needed?
+    Phik = (Phik + 2 * math.pi) % (2 * math.pi)
 
-    if 'Cus' in ephm:
+    # FIXME: when the rest works, add in these corrections.
+    if False and 'Cus' in ephm:
         # 2nd harmonic corrections
         # Argument of Latitude Correction
         sin2Phik = math.sin(2 * Phik)
@@ -112,12 +119,16 @@ def SatPos(ephm, t):
 
     # Corrected Argument of Latitude
     uk = Phik + deltauk
+    # reduce to two pi.  needed?
+    uk = (uk + 2 * math.pi) % (2 * math.pi)
 
     # Corrected Radius
     rk = A * (1 - ephm['e'] * math.cos(Ek)) + deltark
 
     # Corrected Inclination Angle
     ik = ephm['i0'] + ephm['IDOT'] * tk + deltaik
+    # reduce to two pi.  needed?
+    ik = (ik + 2 * math.pi) % (2 * math.pi)
 
     # Positions in orbital plane.
     xkprime = rk * math.cos(uk)
@@ -126,6 +137,8 @@ def SatPos(ephm, t):
     # Corrected longitude of ascending node.
     Omegak = (ephm['Omega0'] + ((ephm['Omegad'] - gps.WGS84AV) * tk) -
               gps.WGS84AV * ephm['toe'])
+    # reduce to two pi.  needed?
+    Omegak = (Omegak + 2 * math.pi) % (2 * math.pi)
 
     # Earth-fixed coordinates.
     ykprimecosik = ykprime * math.cos(ik)
@@ -137,10 +150,9 @@ def SatPos(ephm, t):
 
     if 1 < options.debug:
         print(ephm)
-        print("gps_tow %d tk %s" % (gps_tow, tk))
-        print("A %s n0 %s Mk %s" % (A, n0, Mk))
-        print("Ek %s" % (Ek))
-        print("nuk %.10g Ek %.10g Phik %.10g" % (nuk, Ek, Phik))
+        print("t %.3f tk %.3f" % (t, tk))
+        print("A %s n0 %s n %s Mk %s Ek %s" % (A, n0, n, Mk, Ek))
+        print("nuk %.10g Phik %.10g" % (nuk, Phik))
         print("deltauk %.10g deltark %.10g deltaik %.10g" %
               (deltauk, deltark, deltaik))
         print("uk %.10g rk %.10g ik %.10g" % (uk, rk, ik))
@@ -306,6 +318,13 @@ parser.add_argument(
     help='Compute Satellite Positions [Default %(default)s)]'
 )
 parser.add_argument(
+    '--test',
+    dest='test',
+    default=False,
+    action="store_true",
+    help='Run tests of the algorithms [Default %(default)s)]'
+)
+parser.add_argument(
     '-V', '--version',
     action='version',
     version="%(prog)s: Version " + gps_version + "\n",
@@ -426,45 +445,185 @@ if 'time' in tpv:
     print("Unix time: %s, gps time: %s, week: %s tow: %s" %
           (unix_time, gps_time, int(gps_week), gps_tow))
 
-    if not options.satpos:
-        # done, do not continue to calc sat positions
-        sys.exit(0)
+    if options.satpos:
+        # below is WIP
 
-    # below is WIP
+        for sv in range(1, 33):
+            if ((sv in ephemeris1 and
+                 sv in ephemeris2 and
+                 sv in ephemeris3)):
 
-    for sv in range(1, 33):
-        if ((sv in ephemeris1 and
-             sv in ephemeris2 and
-             sv in ephemeris3)):
+                print("\nSV %u Ephemeris position:" % sv)
 
-            print("\nSV %u EPhemeris position:" % sv)
+                # mash into one dict
+                # FIXME, check validity first
+                ephm = ephemeris1[sv]
+                ephm.update(ephemeris2[sv])
+                ephm.update(ephemeris3[sv])
 
-            # mash into one dict
-            # FIXME, check validity first
-            ephm = ephemeris1[sv]
-            ephm.update(ephemeris2[sv])
-            ephm.update(ephemeris3[sv])
+                # convert semi-circles to radians
+                cvt = ('deltan', 'i0', 'IDOT', 'M0', 'omega', 'Omega0',
+                       'Omegad')
+                for i in cvt:
+                    ephm[i] *= math.pi
 
-            # convert semi-circles to radians
-            cvt = ('deltan', 'i0', 'IDOT', 'M0', 'omega', 'Omega0', 'Omegad')
-            for i in cvt:
-                ephm[i] *= math.pi
+                SatPos(ephm, gps_tow)
 
-            SatPos(ephm, gps_tow)
+            # FIXME: broken...
+            if False and sv in almanac:
+                print("\nSV %u Almanac position:" % sv)
 
-        # FIXME: broken...
-        if False and sv in almanac:
-            print("\nSV %u Almanac position:" % sv)
+                ephm = almanac[sv]
+                ephm.update({'i0': ephm['deltai'] + 0.30,
+                             'deltan': 0,
+                             'IDOT': 0,
+                             'toe': ephm['toa']})
 
-            ephm = almanac[sv]
-            ephm.update({'i0': ephm['deltai'] + 0.30,
-                         'deltan': 0,
-                         'IDOT': 0,
-                         'toe': ephm['toa']})
+                # convert semi-circles to radians
+                cvt = ('deltan', 'i0', 'IDOT', 'M0', 'omega', 'Omega0',
+                       'Omegad')
+                for i in cvt:
+                    ephm[i] *= math.pi
 
-            # convert semi-circles to radians
-            cvt = ('deltan', 'i0', 'IDOT', 'M0', 'omega', 'Omega0', 'Omegad')
-            for i in cvt:
-                ephm[i] *= math.pi
+                SatPos(ephm, gps_tow)
 
-            SatPos(ephm, gps_tow)
+if options.test:
+    # SatPos() tests
+    # lat 0.000000 lon 0.000000 altHAE 20175272.000
+    ephm = {
+        'af0': 0,
+        'af1': 0,
+        'af2': 0,
+        'AODO': 0,
+        'Cic': 0,
+        'Cis': 0,
+        'Crc': 0,
+        'Crs': 0,
+        'Cuc': 0,
+        'Cus': 0,
+        'deltan': 0,
+        'e': 0,         # nominal 0
+        'FIT': 0,
+        'hlth': 0,
+        'i0': 0,        # nominal 55.0 degrees +/- 3
+        'IDOT': 0,
+        'IODC': 53,
+        'IODE': 53,
+        'L2': 1,
+        'L2P': 0,
+        'M0': 0,
+        'omega': 0,     # nominal 0, +/1 180 degrees
+        'Omega0': 0,
+        'Omegad': 0,
+        'sqrtA': 5153,  # nominal 5153.542538875565
+        'Tgd': 0,
+        'toc': 0,
+        'toe': 0,
+        'ura': 0,
+        'WN': 75}
+
+    options.debug = 2
+    print("\nTest Ephemeris:")
+    SatPos(ephm, 0)
+
+    # move 90 degrees
+    print("\nTest omega 90:")
+    ephm['omega'] = math.pi / 2
+
+    SatPos(ephm, 0)
+
+    # move 180 degrees
+    print("\nTest omega 180:")
+    ephm['omega'] = math.pi
+
+    SatPos(ephm, 0)
+
+    # move 270 degrees
+    print("\nTest omega 270:")
+    ephm['omega'] = math.pi * 1.5
+
+    SatPos(ephm, 0)
+
+    # move omega 0, Omega0 90
+    print("\nTest Omega 90:")
+    ephm['omega'] = 0
+    ephm['Omega0'] = math.pi / 2
+
+    SatPos(ephm, 0)
+
+    # move omega 0, Omega0 180
+    print("\nTest Omega 180:")
+    ephm['omega'] = 0
+    ephm['Omega0'] = math.pi
+
+    SatPos(ephm, 0)
+
+    # move omega 90, Omega0 90
+    print("\nTest omega 90 Omega0 90:")
+    ephm['omega'] = math.pi / 2
+    ephm['Omega0'] = math.pi / 2
+
+    SatPos(ephm, 0)
+
+    # move omega 0, Omega0 0, i0 90
+    print("\nTest omega 0 Omega0 0 i0 90:")
+    ephm['omega'] = 0
+    ephm['Omega0'] = 0
+    ephm['i0'] = math.pi / 2
+
+    SatPos(ephm, 0)
+
+    # move omega 45, Omega0 0, i0 90
+    print("\nTest omega 45 Omega0 0 i0 90:")
+    ephm['omega'] = math.pi / 4
+    ephm['Omega0'] = 0
+    ephm['i0'] = math.pi / 2
+
+    SatPos(ephm, 0)
+
+    # move omega 45, Omega0 45, i0 90
+    print("\nTest omega 45 Omega0 45 i0 90:")
+    ephm['omega'] = math.pi / 4
+    ephm['Omega0'] = math.pi / 4
+    ephm['i0'] = math.pi / 2
+
+    SatPos(ephm, 0)
+
+    # move omega 45, Omega0 0, i0 45
+    print("\nTest omega 45 Omega0 0 i0 45:")
+    ephm['omega'] = math.pi / 4
+    ephm['Omega0'] = 0
+    ephm['i0'] = math.pi / 4
+
+    SatPos(ephm, 0)
+
+    # move omega 90, Omega0 0, i0 90
+    # altitude blows up.
+    print("\nTest omega 0 Omega0 0 i0 0:")
+    ephm['omega'] = math.pi / 2
+    ephm['Omega0'] = 0
+    ephm['i0'] = math.pi / 2
+
+    SatPos(ephm, 0)
+
+    # omega Omega0, i0 seem OK.
+
+    # move omega 0, Omega0 0, i0 0
+    # t = one quarter sideral day
+    siderial_day = 86164.0905
+    print("\nTest omega 0 Omega0 0 i0 0:")
+    ephm['omega'] = 0
+    ephm['Omega0'] = 0
+    ephm['i0'] = 0
+
+    SatPos(ephm, siderial_day / 4)
+
+    # move omega 0, Omega0 0, i0 0
+    # t = one half sideral day
+    # sat has done one orbit, earth 1/2 orbit
+    print("\nTest omega 0 Omega0 0 i0 0:")
+    ephm['omega'] = 0
+    ephm['Omega0'] = 0
+    ephm['i0'] = 0
+
+    SatPos(ephm, siderial_day / 2)
