@@ -33,17 +33,17 @@ if gps.__version__ != gps_version:
     sys.exit(1)
 
 
-def kepler(e, M0):
+def kepler(e, M):
     '''Keplers iteration to solve his equation'''
 
     # https://en.wikipedia.org/wiki/Kepler%27s_equation
-    Ek = M0             # initial guess
+    E = M             # initial guess
     for i in range(1, 20):
-        temp = Ek
-        Ek = M0 + e * math.sin(Ek)
-        if 1e-12 > math.fabs(Ek - temp):
+        temp = E
+        E = M + e * math.sin(E)
+        if 1e-12 > math.fabs(E - temp):
             break
-    return Ek
+    return E
 
 # another kepler algorithm here:
 # http://www.alpheratz.net/dynamics/twobody/KeplerIterations_summary.pdf
@@ -77,13 +77,9 @@ def SatPos(ephm, t):
 
     # mean anomaly, rads
     Mk = ephm['M0'] + (n * tk)
-    # reduce to two pi.  needed?
-    Mk = (Mk + 2 * math.pi) % (2 * math.pi)
 
     # solve for eccentric anomaly
     Ek = kepler(ephm['e'], ephm['M0'])   # radians
-    # reduce to two pi.  needed?
-    Ek = (Ek + 2 * math.pi) % (2 * math.pi)
 
     # true anomaly
     if False:
@@ -99,8 +95,6 @@ def SatPos(ephm, t):
 
     # Argument of Latitude
     Phik = nuk + ephm['omega']
-    # reduce to two pi.  needed?
-    Phik = (Phik + 2 * math.pi) % (2 * math.pi)
 
     # FIXME: when the rest works, add in these corrections.
     if False and 'Cus' in ephm:
@@ -120,16 +114,12 @@ def SatPos(ephm, t):
 
     # Corrected Argument of Latitude
     uk = Phik + deltauk
-    # reduce to two pi.  needed?
-    uk = (uk + 2 * math.pi) % (2 * math.pi)
 
     # Corrected Radius
     rk = A * (1 - ephm['e'] * math.cos(Ek)) + deltark
 
     # Corrected Inclination Angle
     ik = ephm['i0'] + ephm['IDOT'] * tk + deltaik
-    # reduce to two pi.  needed?
-    ik = (ik + 2 * math.pi) % (2 * math.pi)
 
     # Positions in orbital plane.
     xkprime = rk * math.cos(uk)
@@ -138,8 +128,6 @@ def SatPos(ephm, t):
     # Corrected longitude of ascending node.
     Omegak = (ephm['Omega0'] + ((ephm['Omegad'] - gps.WGS84AV) * tk) -
               gps.WGS84AV * ephm['toe'])
-    # reduce to two pi.  needed?
-    Omegak = (Omegak + 2 * math.pi) % (2 * math.pi)
 
     # Earth-fixed coordinates.
     ykprimecosik = ykprime * math.cos(ik)
@@ -457,7 +445,7 @@ if 'time' in tpv:
                 print("\nSV %u Ephemeris position:" % sv)
 
                 # mash into one dict
-                # FIXME, check validity first
+                # FIXME: check iodc, iode and iode consistency
                 ephm = ephemeris1[sv]
                 ephm.update(ephemeris2[sv])
                 ephm.update(ephemeris3[sv])
