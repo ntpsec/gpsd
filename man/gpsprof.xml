@@ -114,9 +114,7 @@ skyview are being used in fixes.</para>
 <para>Plot delta of system clock (NTP corrected time) against GPS time
 as reported in PPS messages.  The X axis is sample time in seconds
 from the start of the plot.  The Y axis is the system clock delta from
-GPS time.  This plot only works if <application>gpsd</application> was
-built with the timing (latency timing support) configure option
-enabled.</para>
+GPS time.</para>
 </listitem>
 </varlistentry>
 
@@ -125,9 +123,7 @@ enabled.</para>
 <listitem>
 <para>Plot instrumented profile.  Plots various components of the total
 latency between the GPS's fix time and when the client receives the
-fix.  This plot only works if <application>gpsd</application> was built
-with the timing (latency timing support) configuration option enabled.
-</para>
+fix.</para>
 <para>For purposes of the description, below, start-of-reporting-cycle
 (SORC) is when a device's reporting cycle begins. This time is
 detected by watching to see when data availability follows a long

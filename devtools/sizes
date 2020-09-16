@@ -48,7 +48,6 @@ time_service = ["ntpshm=no", "pps=no"]
 
 # Debugging and profiling
 debugging = [
-  "timing=no",
   "clientdebug=no",
   "oldstyle=no",
   ]
