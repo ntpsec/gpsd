@@ -1117,8 +1117,6 @@ static void handle_request(struct subscriber_t *sub,
             char *host, *port, *device;  // for parse_uri_dest()
             int status = json_watch_read(buf + 1, &sub->policy, &end);
 
-            // why force policy.timing to false?
-            sub->policy.timing = false;
             if (end == NULL)
                 buf += strlen(buf);
             else {
