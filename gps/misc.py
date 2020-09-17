@@ -208,8 +208,8 @@ ECEF in meters, lat/lon in degrees, altHAE in meters.
 Returns ENU in meters"""
 
     #  Grr, lambda is a reserved name in Python...
-    lambd = lat * RAD_2_DEG
-    phi = lon * RAD_2_DEG
+    lambd = lat * DEG_2_RAD
+    phi = lon * DEG_2_RAD
     sin_lambd = math.sin(lambd)
     cos_lambd = math.cos(lambd)
     n = WGS84A / math.sqrt(1 - WGS84E * sin_lambd ** 2)
@@ -236,7 +236,7 @@ Returns ENU in meters"""
 # FIXME:  needs tests.
 def enu2aer(E, N, U):
     """Convert ENU to Azimuth, Elevation and Range.
-ENU is in meters.  Azimuth and Elevation in degrees.  Range in meters"""
+ENU is in meters. Returns Azimuth and Elevation in degrees, range in meters"""
 
     enr = math.hypot(E, N)
     rng = math.hypot(enr, U)
@@ -244,6 +244,16 @@ ENU is in meters.  Azimuth and Elevation in degrees.  Range in meters"""
     el = math.atan2(U, enr) * RAD_2_DEG
 
     return az, el, rng
+
+
+# FIXME: needs tests
+def ecef2aer(x, y, z, lat, lon, altHAE):
+    """Calculate az, el and range to ECEF from lat/lon/altHAE.
+ECEF in meters, lat/lon in degrees, altHAE in meters.
+Returns Azimuth and Elevation in degrees, range in meters"""
+
+    (E, N, U) = ecef2enu(x, y, z, lat, lon, altHAE)
+    return enu2aer(E, N, U)
 
 
 def CalcRad(lat):
