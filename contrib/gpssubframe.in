@@ -303,6 +303,13 @@ parser.add_argument(
     help='The port to connect. [Default %(default)s)]'
 )
 parser.add_argument(
+    '--progress',
+    dest='progress',
+    default=False,
+    action="store_true",
+    help='Print progress reports [Default %(default)s)]'
+)
+parser.add_argument(
     '--satpos',
     dest='satpos',
     default=False,
@@ -373,14 +380,33 @@ try:
         msg = session.next()
         if 'SUBFRAME' == msg['class']:
             if 1 == msg['frame']:
-                ephemeris1[msg['tSV']] = msg['EPHEM1']
+                if ((msg['tSV'] not in ephemeris1 or
+                     msg['EPHEM1']['IODC'] != ephemeris1[msg['tSV']]['IODC'])):
+                    if options.progress:
+                        print("Received %d Ephemeris1, IODC %d" %
+                              (msg['tSV'], msg['EPHEM1']['IODC']))
+                    ephemeris1[msg['tSV']] = msg['EPHEM1']
             elif 2 == msg['frame']:
-                ephemeris2[msg['tSV']] = msg['EPHEM2']
+                if ((msg['tSV'] not in ephemeris2 or
+                     msg['EPHEM2']['IODE'] != ephemeris2[msg['tSV']]['IODE'])):
+                    if options.progress:
+                        print("Received %d Ephemeris2, IODE %d" %
+                              (msg['tSV'], msg['EPHEM2']['IODE']))
+                    ephemeris2[msg['tSV']] = msg['EPHEM2']
             elif 3 == msg['frame']:
-                ephemeris3[msg['tSV']] = msg['EPHEM3']
+                if ((msg['tSV'] not in ephemeris3 or
+                     msg['EPHEM3']['IODE'] != ephemeris3[msg['tSV']]['IODE'])):
+                    if options.progress:
+                        print("Received %d Ephemeris3, IODE %d" %
+                              (msg['tSV'], msg['EPHEM3']['IODE']))
+                    ephemeris3[msg['tSV']] = msg['EPHEM3']
             elif 4 <= msg['frame'] <= 5:
                 if 'ALMANAC' in msg:
-                    almanac[msg['dataid']] = msg['ALMANAC']
+                    if 0 != msg['dataid']:
+                        if options.progress:
+                            print("Received Almanac dataid %d  toa %d" %
+                                  (msg['dataid'], msg['ALMANAC']['toa']))
+                        almanac[msg['dataid']] = msg['ALMANAC']
                 # else not Almanac page
             # else, bad packet...
         elif 'TPV' == msg['class']:
@@ -441,14 +467,16 @@ if 'time' in tpv:
         # below is WIP
 
         for sv in range(1, 33):
+            # Ensure we have all 3 parts, and their IODx matches.
             if ((sv in ephemeris1 and
                  sv in ephemeris2 and
-                 sv in ephemeris3)):
+                 sv in ephemeris3 and
+                 ephemeris1[sv]['IODC'] == ephemeris2[sv]['IODE'] and
+                 ephemeris2[sv]['IODE'] == ephemeris3[sv]['IODE'])):
 
                 print("\nSV %u Ephemeris position:" % sv)
 
                 # mash into one dict
-                # FIXME: check iodc, iode and iode consistency
                 ephm = ephemeris1[sv]
                 ephm.update(ephemeris2[sv])
                 ephm.update(ephemeris3[sv])
