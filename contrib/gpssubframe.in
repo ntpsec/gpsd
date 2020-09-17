@@ -49,12 +49,14 @@ def kepler(e, M):
 # http://www.alpheratz.net/dynamics/twobody/KeplerIterations_summary.pdf
 
 
-# FIXME!  Does not agree with satmap:
+# Online data check:
 # real time sat positions: https://in-the-sky.org/satmap_worldmap.php
 def SatPos(ephm, t):
     """Calculate GPS Satellite Position from Ephemeris/Almanac and t"""
 
     # compute Sat position from IS-GPS-200 table 20-IV
+    # See also:
+    # RTKLIB src/ephemeris.c
     # https://www.telesens.co/2017/07/17/calculating-position-from-raw-gps-data/#1b_Code_for_Calculating_Satellite_Position
 
     # Semi-major axis
@@ -79,25 +81,25 @@ def SatPos(ephm, t):
     Mk = ephm['M0'] + (n * tk)
 
     # solve for eccentric anomaly
-    Ek = kepler(ephm['e'], ephm['M0'])   # radians
+    Ek = kepler(ephm['e'], Mk)   # radians
+    cosEk = math.cos(Ek)
 
     # true anomaly
     if False:
         nuk = math.atan2(
            math.sqrt(1 - (ephm['e'] ** 2)) * math.sin(Ek) /
            (1 - ephm['e'] * math.cos(Ek)),
-           (math.cos(Ek) - ephm['e']) / (1 - ephm['e'] * math.cos(Ek)))
+           (cosEk - ephm['e']) / (1 - ephm['e'] * math.cos(Ek)))
     else:
         # alternate true anomaly
         # close enough?
         nuk = math.atan2(math.sqrt(1 - (ephm['e'] ** 2)) * math.sin(Ek),
-                         (math.cos(Ek) - ephm['e']))
+                         (cosEk - ephm['e']))
 
     # Argument of Latitude
     Phik = nuk + ephm['omega']
 
-    # FIXME: when the rest works, add in these corrections.
-    if False and 'Cus' in ephm:
+    if 'Cus' in ephm:
         # 2nd harmonic corrections
         # Argument of Latitude Correction
         sin2Phik = math.sin(2 * Phik)
@@ -108,6 +110,7 @@ def SatPos(ephm, t):
         # Inclination Correction
         deltaik = (ephm['Cis'] * sin2Phik + ephm['Cic'] * cos2Phik)
     else:
+        # almanac does not have these corrections
         deltauk = 0
         deltark = 0
         deltaik = 0
@@ -116,7 +119,7 @@ def SatPos(ephm, t):
     uk = Phik + deltauk
 
     # Corrected Radius
-    rk = A * (1 - ephm['e'] * math.cos(Ek)) + deltark
+    rk = A * (1 - ephm['e'] * cosEk) + deltark
 
     # Corrected Inclination Angle
     ik = ephm['i0'] + ephm['IDOT'] * tk + deltaik
@@ -458,8 +461,7 @@ if 'time' in tpv:
 
                 SatPos(ephm, gps_tow)
 
-            # FIXME: broken...
-            if False and sv in almanac:
+            if sv in almanac:
                 print("\nSV %u Almanac position:" % sv)
 
                 ephm = almanac[sv]
