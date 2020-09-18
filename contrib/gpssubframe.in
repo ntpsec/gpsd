@@ -460,8 +460,10 @@ if 'time' in tpv:
     # 604,800 in a GPS week
     (gps_week, gps_tow) = divmod(gps_time, 604800)
 
-    print("Unix time: %s, gps time: %s, week: %s tow: %s" %
-          (unix_time, gps_time, int(gps_week), gps_tow))
+    print("Unix time: %s, gps time: %s, week: %s tow: %s\n"
+          "Current position: lat %.8f lon %.8f altHAE %.3f" %
+          (unix_time, gps_time, int(gps_week), gps_tow,
+           tpv['lat'], tpv['lon'], tpv['altHAE']))
 
     if options.satpos:
         # below is WIP
