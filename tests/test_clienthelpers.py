@@ -201,7 +201,6 @@ test4 = [('GPSD_UNITS', 'imperial', gps.clienthelpers.imperial),
 
 # ecef2lla() tests
 # lat, lon, altHAE, x, y z
-# FIXME: not well validated yet
 test5 = [(0, 0, 0, 6378137, 0, 0),
          # (90, 0, 0, 0, 0, 6356752),  # broken!
          (0, 90, 0, 0, 6378137, 0),
@@ -220,8 +219,7 @@ test5 = [(0, 0, 0, 6378137, 0, 0),
 
 # lla2ecef() tests
 # lat, lon, altHAE, x, y z
-# FIXME: not well validated yet
-# idealy would be the same as test 5, but life not that simple
+# ideally would be the same as test 5, but life not that simple
 test6 = [(0, 0, 0, 6378137, 0, 0),
          # (90, 0, 0, 0, 0, 6356752),  # broken!
          (0, 90, 0, 0, 6378137, 0),
@@ -234,6 +232,18 @@ test6 = [(0, 0, 0, 6378137, 0, 0),
          (-34.2, -172.3, 20240000, -21822373.137, -2950500.608, -14941384.507),
          (44.0, -155.5, 20240000, -17430229.809, -7943413.363, 18467977.030),
          ]
+
+# ecef2aer().  Which sorta tests ecef2enu() and enu2aer()
+# x, y, z, lat, lon, altHAE, e, n, u
+test7 = [
+         (1, 0, 0, 0, 0, 0, 0, -90.000, 6378136.000),
+         (0, 1, 0, 0, 0, 0, 90.000, -90.000, 6378137.000),
+         (0, 0, 1, 0, 0, 0, 0.000, -90.000, 6378137.000),
+         (1, 1, 1, 0, 0, 0, 45.000, -90.000, 6378136.000),
+         (15363696.95, -9349336.027, 19639882.76,
+          44.06876100, -121.31437000, 1115.922,
+          51.842, 17.685, 24006768.741),
+        ]
 
 errors = 0
 
@@ -320,6 +330,18 @@ for (lat, lon, altHAE, ex, ey, ez) in test6:
               "expected (%.6f, %.6f, %.6f)" %
               (lat, lon, altHAE, x, y, z, ex, ey, ez))
         errors += 1
+
+for (x, y, z, lat, lon, altHAE, eaz, eel, ernge) in test7:
+    (az, el, rnge) = gps.ecef2aer(x, y, z, lat, lon, altHAE)
+
+    if ((0.001 < abs(eaz - az) or
+         0.001 < abs(eel - el) or
+         0.001 < abs(ernge - rnge))):
+        print("fail: ecef2aer(%f, %f, %f, %f, %f, %f)=(%.3f, %.3f, %.3f) "
+              "expected (%.3f, %.3f, %.3f)" %
+              (x, y, z, lat, lon, altHAE, eaz, eel, ernge, az, el, rnge))
+        errors += 1
+
 
 # restore environment
 os.environ = savedenv
