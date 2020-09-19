@@ -208,9 +208,9 @@ def SatPos(ephm, t):
         # SV Clock Correction
         deltatsv = (ephm['af0'] + ephm['af1'] * toff +
                     ephm['af2'] * toff ** 2 + deltatr)
-        print("deltatr %e deltatsv %e\n"
+        print("deltatr %e deltatsv %e Tgd %.e\n"
               "URE %s Health %s" %
-              (deltatr, deltatsv, ura2ure[ephm['ura']],
+              (deltatr, deltatsv, ephm['Tgd'],  ura2ure[ephm['ura']],
                health[ephm['hlth'] & 0x1f]))
 
     if 1 < options.debug:
