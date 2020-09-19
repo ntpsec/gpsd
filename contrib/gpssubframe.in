@@ -33,6 +33,25 @@ if gps.__version__ != gps_version:
     sys.exit(1)
 
 
+ura2ure = {0: "0.00 to 2.40",
+           1: "2.40 to 3.40",
+           2: "3.40 to 4.85",
+           3: "4.85 to 6.85",
+           4: "6.85 to 9.65",
+           5: "9.65 to 13.65",
+           6: "13.65 to 24.00",
+           7: "24.00 to 48.00",
+           8: "48.00 to 96.00",
+           9: "96.00 to 192.00",
+           10: "192.00 to 384.00",
+           11: "384.00 to 768.00",
+           12: "768.00 to 1536.00",
+           13: "1536.00 to 3072.00",
+           14: "3072.00 to 6144.00",
+           15: "6144.00 or worse",
+           }
+
+
 def kepler(e, M):
     '''Keplers iteration to solve his equation'''
 
@@ -141,7 +160,7 @@ def SatPos(ephm, t):
     y = xkprime * sinOmegak + ykprimecosik * cosOmegak
     z = ykprime * math.sin(ik)
 
-    # Almanac does not have toc
+    # Almanac does not have toc, or ure
     if 'toc' in ephm:
         # relativistic correction term, seconds
         deltatr = gps.GPS_F * ephm['e'] * ephm['sqrtA'] * sinEk
@@ -156,7 +175,8 @@ def SatPos(ephm, t):
         # SV Clock Correction
         deltatsv = (ephm['af0'] + ephm['af1'] * toff +
                     ephm['af2'] * toff ** 2 + deltatr)
-        print("deltatr %e deltatsv %e" % (deltatr, deltatsv))
+        print("deltatr %e deltatsv %e\n"
+              "URE %s" % (deltatr, deltatsv, ura2ure[ephm['ura']]))
 
     if 1 < options.debug:
         print(ephm)
