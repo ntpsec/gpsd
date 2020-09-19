@@ -141,8 +141,22 @@ def SatPos(ephm, t):
     y = xkprime * sinOmegak + ykprimecosik * cosOmegak
     z = ykprime * math.sin(ik)
 
-    # relativistic correction term, seconds
-    deltatr = gps.GPS_F * ephm['e'] * ephm['sqrtA'] * sinEk
+    # Almanac does not have toc
+    if 'toc' in ephm:
+        # relativistic correction term, seconds
+        deltatr = gps.GPS_F * ephm['e'] * ephm['sqrtA'] * sinEk
+        # toff == SV PRN code phase offset, seconds
+        # we want tgps, but our t (tsv) is close enough.
+        toff = t - ephm['toc']
+        # handle week rollover
+        if 302400 < toff:
+            toff -= 604800
+        elif -302400 > toff:
+            toff += 604800
+        # SV Clock Correction
+        deltatsv = (ephm['af0'] + ephm['af1'] * toff +
+                    ephm['af2'] * toff ** 2 + deltatr)
+        print("deltatr %e deltatsv %e" % (deltatr, deltatsv))
 
     if 1 < options.debug:
         print(ephm)
@@ -157,10 +171,9 @@ def SatPos(ephm, t):
 
     # Finally, lat/lon/alt
     (lat, lon, altHAE) = gps.ecef2lla(x, y, z)
-    print("deltatr %e\n"
-          "x %.10g y %.10g z %.10g\n"
+    print("x %.10g y %.10g z %.10g\n"
           "lat %.6f lon %.6f altHAE %.3f" %
-          (deltatr, x, y, z, lat, lon, altHAE))
+          (x, y, z, lat, lon, altHAE))
 
     # ax and el to sat
     if 'lat' in tpv and 'lon' in tpv and 'altHAE' in tpv:
