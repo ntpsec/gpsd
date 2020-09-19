@@ -83,17 +83,18 @@ def SatPos(ephm, t):
     # solve for eccentric anomaly
     Ek = kepler(ephm['e'], Mk)   # radians
     cosEk = math.cos(Ek)
+    sinEk = math.sin(Ek)
 
     # true anomaly
     if False:
         nuk = math.atan2(
-           math.sqrt(1 - (ephm['e'] ** 2)) * math.sin(Ek) /
+           math.sqrt(1 - (ephm['e'] ** 2)) * sinEk /
            (1 - ephm['e'] * math.cos(Ek)),
-           (cosEk - ephm['e']) / (1 - ephm['e'] * math.cos(Ek)))
+           (cosEk - ephm['e']) / (1 - ephm['e'] * cosEk))
     else:
         # alternate true anomaly
         # close enough?
-        nuk = math.atan2(math.sqrt(1 - (ephm['e'] ** 2)) * math.sin(Ek),
+        nuk = math.atan2(math.sqrt(1 - (ephm['e'] ** 2)) * sinEk,
                          (cosEk - ephm['e']))
 
     # Argument of Latitude
@@ -140,6 +141,9 @@ def SatPos(ephm, t):
     y = xkprime * sinOmegak + ykprimecosik * cosOmegak
     z = ykprime * math.sin(ik)
 
+    # relativistic correction term, seconds
+    deltatr = gps.GPS_F * ephm['e'] * ephm['sqrtA'] * sinEk
+
     if 1 < options.debug:
         print(ephm)
         print("t %.3f tk %.3f" % (t, tk))
@@ -153,9 +157,10 @@ def SatPos(ephm, t):
 
     # Finally, lat/lon/alt
     (lat, lon, altHAE) = gps.ecef2lla(x, y, z)
-    print("x %.10g y %.10g z %.10g\n"
+    print("deltatr %e\n"
+          "x %.10g y %.10g z %.10g\n"
           "lat %.6f lon %.6f altHAE %.3f" %
-          (x, y, z, lat, lon, altHAE))
+          (deltatr, x, y, z, lat, lon, altHAE))
 
     # ax and el to sat
     if 'lat' in tpv and 'lon' in tpv and 'altHAE' in tpv:
