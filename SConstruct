@@ -110,6 +110,7 @@ def _getstatusoutput(cmd, nput=None, shell=True, cwd=None, env=None):
 
 standard_os_symlink = os.symlink
 
+
 def _forced_symlink(source, link_name):
     try:
         standard_os_symlink(source, link_name)
@@ -121,6 +122,7 @@ def _forced_symlink(source, link_name):
         else:
             raise
 
+
 if SCons.__version__ in ['2.3.0', '2.3.1']:
     os.symlink = _forced_symlink
 
@@ -131,6 +133,7 @@ generated_sources = [
     'ais_json.i',
     'android/gpsd_config',
     'clients/gpscsv',
+    'contrib/gpsplot',
     'contrib/gpssubframe',
     'contrib/ntpshmviz',
     'contrib/skyview2svg.py',
@@ -2120,9 +2123,9 @@ for fn in templated:
     # set read-only to alert people trying to edit the files.
     env.AddPostAction(builder, 'chmod -w $TARGET')
     if ((fn.endswith(".py.in") or
-         fn[:-3] in python_progs or
-         fn[:-3] in ['clients/gpscsv', 'contrib/gpssubframe'] or
-         fn[:-3] in ['contrib/ntpshmviz', 'contrib/webgps'])):
+         fn[:-3] in ['clients/gpscsv', 'contrib/gpssubframe',
+                     'contrib/gpsplot', 'contrib/ntpshmviz',
+                     'contrib/webgps'])):
         # set python files to executable
         env.AddPostAction(builder, 'chmod +x $TARGET')
 

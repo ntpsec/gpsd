@@ -1,0 +1,190 @@
+#!@PYSHEBANG@
+# -*- coding: utf-8 -*-
+# @GENERATED@
+# This file is Copyright 2020 by the GPSD project
+# SPDX-License-Identifier: BSD-2-clause
+
+# This code runs compatibly under Python 2 and 3.x for x >= 2.
+# Preserve this property!
+#
+
+from __future__ import print_function
+
+import argparse
+try:
+    # optional
+    from matplotlib import pyplot as plt
+    have_matplotlib = True
+except ImportError:
+    have_matplotlib = False
+import socket
+import sys
+import time            # for time.time()
+
+if not have_matplotlib:
+    sys.stderr.write("Error: required python module matplotlib not found\n")
+    sys.exit(1)
+# pylint wants local modules last
+try:
+    import gps
+except ImportError as e:
+    sys.stderr.write(
+        "%s: can't load Python gps libraries -- check PYTHONPATH.\n" %
+        (sys.argv[0]))
+    sys.stderr.write("%s\n" % e)
+    sys.exit(1)
+
+gps_version = '3.21.1~dev'
+if gps.__version__ != gps_version:
+    sys.stderr.write("%s: ERROR: need gps module version %s, got %s\n" %
+                     (sys.argv[0], gps_version, gps.__version__))
+    sys.exit(1)
+
+
+def _do_one_line(data):
+    '''dump one report line'''
+
+    ax.scatter(data['lon'], data['lat'])
+    plt.pause(0.05)
+
+
+description = 'Create dynamic plots from gpsd with matplotlib.'
+usage = '%(prog)s [OPTIONS] [host[:port[:device]]]'
+epilog = ('BSD terms apply: see the file COPYING in the distribution root'
+          ' for details.')
+
+parser = argparse.ArgumentParser(
+             description=description,
+             epilog=epilog,
+             formatter_class=argparse.RawDescriptionHelpFormatter,
+             usage=usage)
+parser.add_argument(
+    '-D',
+    '--debug',
+    dest='debug',
+    default=0,
+    type=int,
+    help='Set level of debug. Must be integer. [Default %(default)s)]'
+)
+parser.add_argument(
+    '--device',
+    dest='device',
+    default='',
+    help='The device to connect. [Default %(default)s)]'
+)
+parser.add_argument(
+    '--host',
+    dest='host',
+    default='localhost',
+    help='The host to connect. [Default %(default)s)]'
+)
+parser.add_argument(
+    '-n',
+    '--count',
+    dest='count',
+    default=0,
+    type=int,
+    help='Count of messages to parse. 0 to disable. [Default %(default)s)]'
+)
+parser.add_argument(
+    '--port',
+    dest='port',
+    default=gps.GPSD_PORT,
+    help='The port to connect. [Default %(default)s)]'
+)
+parser.add_argument(
+    '-V', '--version',
+    action='version',
+    version="%(prog)s: Version " + gps_version + "\n",
+    help='Output version to stderr, then exit'
+)
+parser.add_argument(
+    '-x',
+    '--seconds',
+    dest='seconds',
+    default=0,
+    type=int,
+    help='Seconds of messages to parse. 0 to disable. [Default %(default)s)]'
+)
+parser.add_argument(
+    'target',
+    nargs='?',
+    help='[host[:port[:device]]]'
+)
+options = parser.parse_args()
+
+# the options host, port, device are set by the defaults
+if options.target:
+    # override host, port and device with target
+    arg = options.target.split(':')
+    len_arg = len(arg)
+    if len_arg == 1:
+        (options.host,) = arg
+    elif len_arg == 2:
+        (options.host, options.port) = arg
+    elif len_arg == 3:
+        (options.host, options.port, options.device) = arg
+    else:
+        parser.print_help()
+        sys.exit(0)
+
+options.mclass = 'TPV'
+# Fields to parse
+# autodetect, read one message, use those fields
+options.json_fields = None
+
+options.frames = None
+options.subclass = None
+
+try:
+    session = gps.gps(host=options.host, port=options.port,
+                      verbose=options.debug)
+except socket.error:
+    sys.stderr.write("gpsplot: Could not connect to gpsd daemon\n")
+    sys.exit(1)
+
+session.stream(gps.WATCH_ENABLE | gps.WATCH_SCALED, devpath=options.device)
+
+
+plt.ion()
+
+x = []
+y = []
+
+fig = plt.figure()
+ax = fig.add_axes([0.2, 0.2, 0.70, 0.70])
+ax.set_title("Scatterplot", fontsize=25)
+
+ax.ticklabel_format(useOffset=False)
+ax.set_xlabel("Longitude", fontsize=18)
+ax.set_ylabel("Latitude", fontsize=18)
+plt.xticks(rotation=30, ha='right')
+
+
+count = 0
+if 0 < options.seconds:
+    end_seconds = time.time() + options.seconds
+else:
+    end_seconds = 0
+
+try:
+    while True:
+        report = session.next()
+        if report['class'] != options.mclass:
+            continue
+
+        _do_one_line(report)
+
+        if 0 < options.count:
+            count += 1
+            if count >= options.count:
+                break
+
+        if 0 < options.seconds:
+            if time.time() > end_seconds:
+                break
+
+except KeyboardInterrupt:
+    # caught control-C
+    print()
+    sys.exit(1)
