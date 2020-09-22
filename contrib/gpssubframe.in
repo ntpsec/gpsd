@@ -499,8 +499,8 @@ except KeyboardInterrupt:
     print()
     sys.exit(1)
 
-all_sv = (ephemeris1.keys() + ephemeris2.keys() + ephemeris3.keys() +
-          almanac.keys())
+all_sv = (list(ephemeris1.keys()) + list(ephemeris2.keys()) +
+          list(ephemeris3.keys()) + list(almanac.keys()))
 for sv in sorted(set(all_sv)):
     print("SV %u\n  Subframe 1, Clock Data" % sv)
     if sv in ephemeris1:
