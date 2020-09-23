@@ -11,6 +11,7 @@
 from __future__ import print_function
 
 import argparse
+import datetime
 try:
     # optional
     from matplotlib import pyplot as plt
@@ -45,11 +46,18 @@ def _do_one_line(data):
     '''dump one report line'''
 
     if options.stripchart:
+        if 'time' not in data:
+            plt.pause(0.05)
+            return
+
+        time = datetime.datetime.strptime(data['time'],
+                                          '%Y-%m-%dT%H:%M:%S.%fZ')
+
         if 'lon' in data and 'lat' in data:
-            axs[0].scatter(data['time'], data['lat'])
-            axs[1].scatter(data['time'], data['lon'])
+            axs[0].scatter(time, data['lat'])
+            axs[1].scatter(time, data['lon'])
         if 'altHAE' in data:
-            axs[2].scatter(data['time'], data['altHAE'])
+            axs[2].scatter(time, data['altHAE'])
     else:
         # must be scatterplot
         if 'lon' in data and 'lat' in data:
@@ -176,26 +184,27 @@ plt.ion()
 x = []
 y = []
 
-# plt.xticks(rotation=30, ha='right')
 if options.scatterplot:
-    fig = plt.figure()
-    ax = fig.add_axes([0.2, 0.2, 0.70, 0.70])
+    fig = plt.figure(figsize=(7, 7))
+    ax = fig.add_axes([0.2, 0.17, 0.70, 0.70])
 
     ax.ticklabel_format(useOffset=False)
+    ax.tick_params(direction='in', top=True, right=True)
     ax.set_xlabel("Longitude", fontsize=18)
     ax.set_ylabel("Latitude", fontsize=18)
     plt.xticks(rotation=30, ha='right')
 
 elif options.stripchart:
-    fig, axs = plt.subplots(3, sharex=True)
-    axs[0].ticklabel_format(useOffset=False)
+    fig, axs = plt.subplots(3, sharex=True, figsize=(7, 7))
+    for ax in axs:
+        ax.ticklabel_format(useOffset=False)
+        ax.tick_params(direction='in', top=True, right=True)
     axs[0].set_title('Latitude')
-    axs[1].ticklabel_format(useOffset=False)
     axs[1].set_title('Longitude')
-    axs[2].ticklabel_format(useOffset=False)
     axs[2].set_title('altHAE')
-    plt.xticks(rotation=30, ha='right')
-    plt.subplots_adjust(left=0.18, bottom=0.25)
+    # plt.xticks(rotation=30, ha='right')
+    fig.autofmt_xdate(rotation=30, ha='right')
+    plt.subplots_adjust(left=0.16, bottom=0.10)
 else:
     sys.stderr.write("Error: Unknown plot type\n")
     sys.exit(1)
@@ -223,6 +232,7 @@ try:
         if 0 < options.seconds:
             if time.time() > end_seconds:
                 break
+
 
 except KeyboardInterrupt:
     # caught control-C
