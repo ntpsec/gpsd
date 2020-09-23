@@ -1471,7 +1471,12 @@ elif config.env['python']:
                                                   "/usr/local/lib")
         python_module_dir = str(python_libdir) + os.sep
         # Many systems can have a problem with the Python path
-        announce("Ensure your PYTHONPATH includes %s" % python_module_dir)
+        if 'PYTHONPATH' in os.environ:
+            announce("System PYTHONPATH='%s'" % os.environ['PYTHONPATH'])
+        else:
+            announce("System PYTHONPATH is empty")
+        announce("Ensure your PYTHONPATH includes %s" % python_module_dir,
+                 end=True)
         python_module_dir += 'gps'
 
         py_config_text = config.GetPythonValue('config vars',
