@@ -46,10 +46,10 @@ def _do_one_line(data):
 
     if options.stripchart:
         if 'lon' in data and 'lat' in data:
-            ax.scatter(data['time'], data['lat'])
-            ax1.scatter(data['time'], data['lon'])
+            axs[0].scatter(data['time'], data['lat'])
+            axs[1].scatter(data['time'], data['lon'])
         if 'altHAE' in data:
-            ax2.scatter(data['time'], data['altHAE'])
+            axs[2].scatter(data['time'], data['altHAE'])
     else:
         # must be scatterplot
         if 'lon' in data and 'lat' in data:
@@ -187,14 +187,15 @@ if options.scatterplot:
     plt.xticks(rotation=30, ha='right')
 
 elif options.stripchart:
-    fig, (ax, ax1, ax2) = plt.subplots(3, 1, sharex=True)
-    ax.ticklabel_format(useOffset=False)
-    ax.set_title('Latitude')
-    ax1.ticklabel_format(useOffset=False)
-    ax1.set_title('Longitude')
-    ax2.ticklabel_format(useOffset=False)
-    ax2.set_title('altHAE')
+    fig, axs = plt.subplots(3, sharex=True)
+    axs[0].ticklabel_format(useOffset=False)
+    axs[0].set_title('Latitude')
+    axs[1].ticklabel_format(useOffset=False)
+    axs[1].set_title('Longitude')
+    axs[2].ticklabel_format(useOffset=False)
+    axs[2].set_title('altHAE')
     plt.xticks(rotation=30, ha='right')
+    plt.subplots_adjust(left=0.18, bottom=0.25)
 else:
     sys.stderr.write("Error: Unknown plot type\n")
     sys.exit(1)
