@@ -2082,7 +2082,7 @@ substmap = (
     ('@MASTER@',     'DO NOT HAND_HACK! THIS FILE IS GENERATED'),
     ('@PREFIX@',     env['prefix']),
     ('@PROJECTPAGE@', projectpage),
-    # PEP 394 and 394 python shebang
+    # PEP 394 and 397 python shebang
     ('@PYSHEBANG@',  env['python_shebang']),
     ('@PYPACKETH@',  pythonized_header),
     ('@QTVERSIONED@', env['qt_versioned']),
