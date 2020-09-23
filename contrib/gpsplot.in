@@ -22,7 +22,7 @@ import sys
 import time            # for time.time()
 
 if not have_matplotlib:
-    sys.stderr.write("Error: required python module matplotlib not found\n")
+    sys.stderr.write("Error: required Python module matplotlib not found\n")
     sys.exit(1)
 # pylint wants local modules last
 try:
@@ -34,7 +34,7 @@ except ImportError as e:
     sys.stderr.write("%s\n" % e)
     sys.exit(1)
 
-gps_version = '3.21.1~dev'
+gps_version = '@VERSION@'
 if gps.__version__ != gps_version:
     sys.stderr.write("%s: ERROR: need gps module version %s, got %s\n" %
                      (sys.argv[0], gps_version, gps.__version__))
@@ -44,7 +44,17 @@ if gps.__version__ != gps_version:
 def _do_one_line(data):
     '''dump one report line'''
 
-    ax.scatter(data['lon'], data['lat'])
+    if options.stripchart:
+        if 'lon' in data and 'lat' in data:
+            ax.scatter(data['time'], data['lat'])
+            ax1.scatter(data['time'], data['lon'])
+        if 'altHAE' in data:
+            ax2.scatter(data['time'], data['altHAE'])
+    else:
+        # must be scatterplot
+        if 'lon' in data and 'lat' in data:
+            ax.scatter(data['lon'], data['lat'])
+
     plt.pause(0.05)
 
 
@@ -93,6 +103,12 @@ parser.add_argument(
     help='The port to connect. [Default %(default)s)]'
 )
 parser.add_argument(
+    '--plottype',
+    dest='plottype',
+    default='scatterplot',
+    help='Plot type (scatterplot, stripchart) [Default %(default)s)]'
+)
+parser.add_argument(
     '-V', '--version',
     action='version',
     version="%(prog)s: Version " + gps_version + "\n",
@@ -128,6 +144,15 @@ if options.target:
         parser.print_help()
         sys.exit(0)
 
+options.scatterplot = False
+options.stripchart = False
+if 'scatterplot' == options.plottype.lower():
+    # scatterplot
+    options.scatterplot = True
+else:
+    # stripchart
+    options.stripchart = True
+
 options.mclass = 'TPV'
 # Fields to parse
 # autodetect, read one message, use those fields
@@ -151,14 +176,28 @@ plt.ion()
 x = []
 y = []
 
-fig = plt.figure()
-ax = fig.add_axes([0.2, 0.2, 0.70, 0.70])
-ax.set_title("Scatterplot", fontsize=25)
+# plt.xticks(rotation=30, ha='right')
+if options.scatterplot:
+    fig = plt.figure()
+    ax = fig.add_axes([0.2, 0.2, 0.70, 0.70])
 
-ax.ticklabel_format(useOffset=False)
-ax.set_xlabel("Longitude", fontsize=18)
-ax.set_ylabel("Latitude", fontsize=18)
-plt.xticks(rotation=30, ha='right')
+    ax.ticklabel_format(useOffset=False)
+    ax.set_xlabel("Longitude", fontsize=18)
+    ax.set_ylabel("Latitude", fontsize=18)
+    plt.xticks(rotation=30, ha='right')
+
+elif options.stripchart:
+    fig, (ax, ax1, ax2) = plt.subplots(3, 1, sharex=True)
+    ax.ticklabel_format(useOffset=False)
+    ax.set_title('Latitude')
+    ax1.ticklabel_format(useOffset=False)
+    ax1.set_title('Longitude')
+    ax2.ticklabel_format(useOffset=False)
+    ax2.set_title('altHAE')
+    plt.xticks(rotation=30, ha='right')
+else:
+    sys.stderr.write("Error: Unknown plot type\n")
+    sys.exit(1)
 
 
 count = 0
