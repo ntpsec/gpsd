@@ -2123,6 +2123,7 @@ for fn in templated:
     # set read-only to alert people trying to edit the files.
     env.AddPostAction(builder, 'chmod -w $TARGET')
     if ((fn.endswith(".py.in") or
+         fn[:-3] in python_progs or
          fn[:-3] in ['clients/gpscsv', 'contrib/gpssubframe',
                      'contrib/gpsplot', 'contrib/ntpshmviz',
                      'contrib/webgps'])):
