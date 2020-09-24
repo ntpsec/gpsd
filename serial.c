@@ -287,6 +287,7 @@ void gpsd_set_speed(struct gps_device_t *session,
      * across port closings, you've screwed yourself. Don't do that!
      */
     if (speed < 300)
+        // in POSIX B0 means do not touch the speed
         rate = B0;
     else if (speed < 1200)
         rate = B300;
@@ -306,8 +307,17 @@ void gpsd_set_speed(struct gps_device_t *session,
         rate = B57600;
     else if (speed < 230400)
         rate = B115200;
+    else if (speed < 460800)
+        rate = B230400;
+#ifdef B460800
+    // not a valid POSIX speed
+    else if (speed < 460800)
+        rate = B460800;
+#else
     else
         rate = B230400;
+#endif
+
 
     /* backward-compatibility hack */
     switch (parity) {
