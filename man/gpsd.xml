@@ -244,10 +244,13 @@ time at startup.</para></listitem>
 (default is 2947).</para></listitem>
 </varlistentry>
 <varlistentry>
-<term>-s, --speed</term>
-<listitem><para>Fix the speed to the GNSS device.
-The default is to autobaud.</para></listitem>
+ <term>-s, --speed</term>
+ <listitem><para>Fix the serial port speed to the GNSS device. Allowed
+ speeds are: 4800, 9600, 19200, 38400, 57600, 115200, 230400, and 460800.
+ The default is to autobaud. Note that some devices with integrated USB
+ ignore port speed.</para></listitem>
 </varlistentry>
+
 <varlistentry>
 <term>-V, --version</term>
 <listitem>
