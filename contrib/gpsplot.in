@@ -61,7 +61,9 @@ def _do_one_line(data):
     else:
         # must be scatterplot
         if 'lon' in data and 'lat' in data:
-            ax.scatter(data['lon'], data['lat'])
+            axs[0].scatter(data['lon'], data['lat'])
+        if 'altHAE' in data:
+            axs[1].scatter(0.5, data['altHAE'])
 
     plt.pause(0.05)
 
@@ -187,12 +189,18 @@ y = []
 if options.scatterplot:
     fig = plt.figure(figsize=(7, 7))
     ax = fig.add_axes([0.2, 0.17, 0.70, 0.70])
-
-    ax.ticklabel_format(useOffset=False)
-    ax.tick_params(direction='in', top=True, right=True)
-    ax.set_xlabel("Longitude", fontsize=18)
-    ax.set_ylabel("Latitude", fontsize=18)
     plt.xticks(rotation=30, ha='right')
+    ax1 = fig.add_axes([0.92, 0.17, 0.02, 0.70])
+    axs = [ax, ax1]
+
+    for ax in axs:
+        ax.ticklabel_format(useOffset=False)
+    axs[0].tick_params(direction='in', top=True, right=True)
+    axs[0].set_xlabel("Longitude", fontsize=18)
+    axs[0].set_ylabel("Latitude", fontsize=18)
+    axs[1].set_title("altHAE", fontsize=18)
+    axs[1].tick_params(bottom=False, left=False, right=True,
+                       labeltop=True, labelbottom=False)
 
 elif options.stripchart:
     fig, axs = plt.subplots(3, sharex=True, figsize=(7, 7))
