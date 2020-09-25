@@ -443,6 +443,9 @@ boolopts = (
 for (name, default, helpd) in boolopts:
     opts.Add(BoolVariable(name, helpd, default))
 
+def_target_python = "python"
+def_python_shebang = "/usr/bin/env %s" % def_target_python
+
 # Gentoo, Fedora, openSUSE systems use uucp for ttyS* and ttyUSB*
 if os.path.exists("/etc/gentoo-release"):
     def_group = "uucp"
@@ -463,7 +466,7 @@ nonboolopts = (
     ("prefix",           "/usr/local",  "installation directory prefix"),
     ("python_coverage",  "coverage run", "coverage command for Python progs"),
     ("python_libdir",    "",            "Python module directory prefix"),
-    ("python_shebang",   "/usr/bin/env python", "Python shebang"),
+    ("python_shebang",   def_python_shebang, "Python shebang"),
     ("qt_versioned",     "",            "version for versioned Qt"),
     ("rundir",           rundir,       "Directory for run-time variable data"),
     ("sysroot",          "",
@@ -474,10 +477,11 @@ nonboolopts = (
      "Prefix to the binary tools to use (gcc, ld, etc.)\n"
      "For cross-compiling, or building with multiple local toolchains.\n"
      ),
-    ("target_python",    "python",      "target Python version as command"),
+    ("target_python",  def_target_python,  "target Python version as command"),
 )
 
 # now step on the non boolopts just read from '.scons-option-cache'
+# why?
 for (name, default, helpd) in nonboolopts:
     opts.Add(name, helpd, default)
 
