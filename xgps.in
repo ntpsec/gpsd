@@ -54,7 +54,8 @@ try:
 
 except ImportError as err:
     # ModuleNotFoundError needs Python 3.6
-    sys.stderr.write("xgps: ERROR %s.  Probably missing package pygobject.\n" % err)
+    sys.stderr.write("xgps: ERROR %s.  "
+                     "Probably missing package pygobject.\n" % err)
     sys.exit(1)
 
 except ValueError as err:
@@ -130,34 +131,6 @@ def gnssid_str(sat):
         return ['IR', 'IRNSS']
 
     return '  '
-
-
-class unit_adjustments(object):
-    "Encapsulate adjustments for unit systems."
-
-    def __init__(self, units=None):
-        "Initialize class unit_adjustments"
-        self.altfactor = gps.METERS_TO_FEET
-        self.altunits = "ft"
-        self.speedfactor = gps.MPS_TO_MPH
-        self.speedunits = "mph"
-        if units is None:
-            units = gps.clienthelpers.gpsd_units()
-        if units in (gps.clienthelpers.unspecified, gps.clienthelpers.imperial,
-                     "imperial", "i"):
-            pass
-        elif units in (gps.clienthelpers.nautical, "nautical", "n"):
-            self.altfactor = gps.METERS_TO_FEET
-            self.altunits = "ft"
-            self.speedfactor = gps.MPS_TO_KNOTS
-            self.speedunits = "knots"
-        elif units in (gps.clienthelpers.metric, "metric", "m"):
-            self.altfactor = 1.0
-            self.altunits = "m"
-            self.speedfactor = gps.MPS_TO_KPH
-            self.speedunits = "kph"
-        else:
-            raise ValueError  # Should never happen
 
 
 def fit_to_grid(x, y, line_width):
@@ -781,7 +754,7 @@ class Base(object):
         "Initialize class Base"
         self.deg_type = deg_type
         self.rotate = rotation
-        self.conversions = unit_adjustments()
+        self.conversions = gps.clienthelpers.unit_adjustments()
         self.saved_mode = -1
         self.ais_latch = False
         self.noise_latch = False
@@ -1454,7 +1427,7 @@ frame * {
         "Change the display units."
 
         # print("set_units:", handle)
-        self.conversions = unit_adjustments(handle)
+        self.conversions = gps.clienthelpers.unit_adjustments(handle)
 
     # I/O monitoring and gtk housekeeping
 
