@@ -54,17 +54,17 @@ def _do_one_line(data):
         time = datetime.datetime.strptime(data['time'],
                                           '%Y-%m-%dT%H:%M:%S.%fZ')
 
-        if 'lon' in data and 'lat' in data:
-            axs[0].scatter(time, data['lat'])
-            axs[1].scatter(time, data['lon'])
-        if 'altHAE' in data:
-            axs[2].scatter(time, data['altHAE'] * conversion.altfactor)
+        if fields[0] in data and fields[2] in data:
+            axs[0].scatter(time, data[fields[0]])
+            axs[1].scatter(time, data[fields[2]])
+        if fields[4] in data:
+            axs[2].scatter(time, data[fields[4]] * conversion.altfactor)
     else:
         # must be scatterplot
-        if 'lon' in data and 'lat' in data:
-            axs[0].scatter(data['lon'], data['lat'])
-        if 'altHAE' in data:
-            axs[1].scatter(0.5, data['altHAE'] * conversion.altfactor)
+        if fields[0] in data and fields[2] in data:
+            axs[0].scatter(data[fields[2]], data[fields[0]])
+        if fields[4] in data:
+            axs[1].scatter(0.5, data[fields[4]] * conversion.altfactor)
 
     plt.pause(0.05)
 
@@ -95,6 +95,12 @@ parser.add_argument(
     dest='device',
     default='',
     help='The device to connect. [Default %(default)s)]'
+)
+parser.add_argument(
+    '--fields',
+    dest='fields',
+    default='llh',
+    help='Fields to plot (llh, llm). [Default %(default)s)]'
 )
 parser.add_argument(
     '--host',
@@ -151,6 +157,16 @@ options = parser.parse_args()
 
 # get conversion factors
 conversion = gps.clienthelpers.unit_adjustments(units=options.units)
+flds = {'llh': ('lat', 'Latitude', 'lon', 'Longitude', 'altHAE', 'altHAE'),
+        'llm': ('lat', 'Latitude', 'lon', 'Longitude', 'altMSL', 'altMSL'),
+        }
+
+if options.fields not in flds:
+    sys.stderr.write("gpsplot: Invalid --fields argument %s\n" %
+                     options.fields)
+    sys.exit(1)
+
+fields = flds[options.fields]
 
 # the options host, port, device are set by the defaults
 if options.target:
@@ -201,19 +217,19 @@ y = []
 
 if options.scatterplot:
     fig = plt.figure(figsize=(7, 7))
-    # lat/lon
+    # x/y
     ax = fig.add_axes([0.18, 0.17, 0.65, 0.65])
     plt.xticks(rotation=30, ha='right')
-    # altHAE
+    # z
     ax1 = fig.add_axes([0.85, 0.17, 0.02, 0.65])
     axs = [ax, ax1]
 
     for ax in axs:
         ax.ticklabel_format(useOffset=False)
     axs[0].tick_params(direction='in', top=True, right=True)
-    axs[0].set_xlabel("Longitude")
-    axs[0].set_ylabel("Latitude")
-    axs[1].set_title("altHAE (%s)" % conversion.altunits)
+    axs[0].set_xlabel(fields[3])
+    axs[0].set_ylabel(fields[1])
+    axs[1].set_title("%s (%s)" % (fields[5], conversion.altunits))
     axs[1].tick_params(bottom=False, left=False, right=True,
                        labeltop=True, labelbottom=False)
     axs[1].xaxis.set_visible(False)
@@ -224,9 +240,9 @@ elif options.stripchart:
     for ax in axs:
         ax.ticklabel_format(useOffset=False)
         ax.tick_params(direction='in', top=True, right=True)
-    axs[0].set_title('Latitude')
-    axs[1].set_title('Longitude')
-    axs[2].set_title('altHAE (%s)' % conversion.altunits)
+    axs[0].set_title(fields[1])
+    axs[1].set_title(fields[3])
+    axs[2].set_title("%s (%s)" % (fields[5], conversion.altunits))
     # plt.xticks(rotation=30, ha='right')
     fig.autofmt_xdate(rotation=30, ha='right')
     plt.subplots_adjust(left=0.16, bottom=0.10)
