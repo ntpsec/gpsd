@@ -28,6 +28,7 @@ if not have_matplotlib:
 # pylint wants local modules last
 try:
     import gps
+    import gps.clienthelpers
 except ImportError as e:
     sys.stderr.write(
         "%s: can't load Python gps libraries -- check PYTHONPATH.\n" %
@@ -57,16 +58,19 @@ def _do_one_line(data):
             axs[0].scatter(time, data['lat'])
             axs[1].scatter(time, data['lon'])
         if 'altHAE' in data:
-            axs[2].scatter(time, data['altHAE'])
+            axs[2].scatter(time, data['altHAE'] * conversion.altfactor)
     else:
         # must be scatterplot
         if 'lon' in data and 'lat' in data:
             axs[0].scatter(data['lon'], data['lat'])
         if 'altHAE' in data:
-            axs[1].scatter(0.5, data['altHAE'])
+            axs[1].scatter(0.5, data['altHAE'] * conversion.altfactor)
 
     plt.pause(0.05)
 
+
+# get default units from the environment
+default_units = gps.clienthelpers.unit_adjustments()
 
 description = 'Create dynamic plots from gpsd with matplotlib.'
 usage = '%(prog)s [OPTIONS] [host[:port[:device]]]'
@@ -119,6 +123,12 @@ parser.add_argument(
     help='Plot type (scatterplot, stripchart) [Default %(default)s)]'
 )
 parser.add_argument(
+    '-u', '--units',
+    dest='units',
+    default=default_units.name,
+    help='Units (i, imperial, n, nautical, m, metric) [Default %(default)s)]'
+)
+parser.add_argument(
     '-V', '--version',
     action='version',
     version="%(prog)s: Version " + gps_version + "\n",
@@ -138,6 +148,9 @@ parser.add_argument(
     help='[host[:port[:device]]]'
 )
 options = parser.parse_args()
+
+# get conversion factors
+conversion = gps.clienthelpers.unit_adjustments(units=options.units)
 
 # the options host, port, device are set by the defaults
 if options.target:
@@ -200,7 +213,7 @@ if options.scatterplot:
     axs[0].tick_params(direction='in', top=True, right=True)
     axs[0].set_xlabel("Longitude")
     axs[0].set_ylabel("Latitude")
-    axs[1].set_title("altHAE")
+    axs[1].set_title("altHAE (%s)" % conversion.altunits)
     axs[1].tick_params(bottom=False, left=False, right=True,
                        labeltop=True, labelbottom=False)
     axs[1].xaxis.set_visible(False)
@@ -213,7 +226,7 @@ elif options.stripchart:
         ax.tick_params(direction='in', top=True, right=True)
     axs[0].set_title('Latitude')
     axs[1].set_title('Longitude')
-    axs[2].set_title('altHAE')
+    axs[2].set_title('altHAE (%s)' % conversion.altunits)
     # plt.xticks(rotation=30, ha='right')
     fig.autofmt_xdate(rotation=30, ha='right')
     plt.subplots_adjust(left=0.16, bottom=0.10)
