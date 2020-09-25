@@ -440,6 +440,7 @@ boolopts = (
 )
 
 # now step on the boolopts just read from '.scons-option-cache'
+# Otherwise if no cache, then no boolopts.
 for (name, default, helpd) in boolopts:
     opts.Add(BoolVariable(name, helpd, default))
 
@@ -2061,6 +2062,21 @@ with open('gpsd.h') as sfp:
                 pythonized_header += ('%s = %s\n' %
                                       (_match3.group(1), _match3.group(2)))
 
+if ((env['python'] and
+     not cleaning and
+     not helping and
+     def_target_python != env['target_python'])):
+    # non-default target python.
+    if def_python_shebang == env['python_shebang']:
+        # default python shebang, update to match target python
+        if os.sep == env['target_python'][0]:
+            # full path, no need for env
+            env['python_shebang'] = env['target_python']
+        else:
+            # partial path, need env
+            env['python_shebang'] = "/usr/bin/env %s" % env['target_python']
+        announce("Setting python_shebang to %s" % env['python_shebang'])
+
 # tuples for Substfile.  To convert .in files to generated files.
 substmap = (
     ('@ANNOUNCE@',   annmail),
@@ -2104,6 +2120,8 @@ substmap = (
     ('@VERSION@',    gpsd_version),
     ('@WEBSITE@',    website),
 )
+
+
 # Keep time-dependent version separate
 # FIXME: Come up with a better approach with reproducible builds
 substmap_dated = substmap + (('@DATE@', time.asctime()),)
