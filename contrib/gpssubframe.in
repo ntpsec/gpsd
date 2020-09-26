@@ -246,6 +246,9 @@ ephemeris3 = {}
 almanac = {}
 # ionosphere, subframe 4, page 18, data id 56
 ionosphere = None
+# subframe 4/5 page 25
+health = None
+health2 = None
 tpv = None               # for current time and position
 
 
@@ -503,7 +506,15 @@ try:
                     ephemeris3[msg['tSV']] = msg['EPHEM3']
             elif 4 <= msg['frame'] <= 5:
                 if 'ALMANAC' in msg:
-                    if 0 != msg['dataid']:
+                    # save it if:
+                    #  not dummy
+                    #  don't already have it
+                    #  newer than what we have
+                    if ((0 != msg['dataid'] and
+                         (msg['dataid'] not in almanac or
+                          almanac[msg['dataid']]['toa'] <
+                          msg['ALMANAC']['toa']))):
+                        # FIXME: handle week rollover
                         if options.progress:
                             print("Received Almanac dataid %2d  toa %d" %
                                   (msg['dataid'], msg['ALMANAC']['toa']))
@@ -512,6 +523,14 @@ try:
                     if options.progress:
                         print("Received Ionosphere")
                     ionosphere = msg['IONO']
+                elif 'HEALTH' in msg:
+                    if options.progress:
+                        print("Received Health")
+                    health = msg
+                elif 'HEALTH2' in msg:
+                    if options.progress:
+                        print("Received Health2")
+                    health2 = msg
                 # else not Almanac page
             # else, bad packet...
         elif 'TPV' == msg['class']:
@@ -586,6 +605,14 @@ if ionosphere:
                       604800 * (gps_week - ionosphere['WNt']))
                      )
         print("  deltatutc %.9f" % deltatutc)
+
+if health:
+    print("\nSubframe 4, page 25")
+    print(health)
+
+if health2:
+    print("\nSubframe 5, page 25")
+    print(health2)
 
 if 'time' in tpv and options.satpos:
     for sv in range(1, 33):
