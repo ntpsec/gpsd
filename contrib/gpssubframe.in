@@ -244,6 +244,8 @@ ephemeris2 = {}
 ephemeris3 = {}
 # current almanac here: https://www.navcen.uscg.gov/?pageName=gpsAlmanacs
 almanac = {}
+# ionosphere, subframe 4, page 18, data id 56
+ionosphere = None
 tpv = None               # for current time and position
 
 
@@ -304,6 +306,26 @@ almanac_fields = {
     9: ('M0', '(sc) Mean Anomaly at Reference Time'),
     10: ('af0', '(s) SV Clock Bias Correction Coefficient'),
     11: ('af1', '(s/s) SV Clock Drift Correction Coefficient'),
+    }
+
+# see IS-GPS-200 Section 20.3.3.5.2.4 Coordinated Universal Time (UTC).
+ionosphere_fields = {
+    1: ('A0', '(s) constant term of polynomial'),
+    2: ('A1', '(s) first order term of polynomial'),
+    3: ('ls', '(s) delta time due to leap seconds'),
+    4: ('tot', '(s) reference time for UTC data'),
+    5: ('WNt', '(wk) UTC reference week number'),
+    6: ('WNlsf', '(wk) Week Number of future Leap Second'),
+    7: ('DN', '(dy) Day Number of future Leap Second'),
+    8: ('lsf', '(s) future Leap Second'),
+    9: ('a0', '(s) constant term amplitude of vertical delay'),
+    10: ('a1', '(s/sc) first order term amplitude of vertical delay'),
+    11: ('a2', '(s/sc^2) second order term amplitude of vertical delay'),
+    12: ('a3', '(s/sc^3) third order term amplitude of vertical delay'),
+    13: ('b0', '(s) constant term period of the model'),
+    14: ('b1', '(s/sc) first order term period of the model'),
+    15: ('b2', '(s/sc^2) second order term period of the model'),
+    16: ('b3', '(s/sc^3) third order term period of the model'),
     }
 
 
@@ -441,6 +463,8 @@ except socket.error:
 
 session.stream(gps.WATCH_ENABLE | gps.WATCH_SCALED, devpath=options.device)
 
+# save subframe 1 WN
+subframe1_WN = None
 
 count = 0
 if 0 < options.seconds:
@@ -453,33 +477,41 @@ try:
         msg = session.next()
         if 'SUBFRAME' == msg['class']:
             if 1 == msg['frame']:
+                if 'WN' in msg:
+                    # save WN for later use
+                    subframe1_WN = msg['WN']
+
                 if ((msg['tSV'] not in ephemeris1 or
                      msg['EPHEM1']['IODC'] != ephemeris1[msg['tSV']]['IODC'])):
                     if options.progress:
-                        print("Received %d Ephemeris1, IODC %d" %
+                        print("Received Ephemeris1 GPS %2d, IODC %3d" %
                               (msg['tSV'], msg['EPHEM1']['IODC']))
                     ephemeris1[msg['tSV']] = msg['EPHEM1']
             elif 2 == msg['frame']:
                 if ((msg['tSV'] not in ephemeris2 or
                      msg['EPHEM2']['IODE'] != ephemeris2[msg['tSV']]['IODE'])):
                     if options.progress:
-                        print("Received %d Ephemeris2, IODE %d" %
+                        print("Received Ephemeris2 GPS %2d, IODE %3d" %
                               (msg['tSV'], msg['EPHEM2']['IODE']))
                     ephemeris2[msg['tSV']] = msg['EPHEM2']
             elif 3 == msg['frame']:
                 if ((msg['tSV'] not in ephemeris3 or
                      msg['EPHEM3']['IODE'] != ephemeris3[msg['tSV']]['IODE'])):
                     if options.progress:
-                        print("Received %d Ephemeris3, IODE %d" %
+                        print("Received Ephemeris3 GPS %2d, IODE %3d" %
                               (msg['tSV'], msg['EPHEM3']['IODE']))
                     ephemeris3[msg['tSV']] = msg['EPHEM3']
             elif 4 <= msg['frame'] <= 5:
                 if 'ALMANAC' in msg:
                     if 0 != msg['dataid']:
                         if options.progress:
-                            print("Received Almanac dataid %d  toa %d" %
+                            print("Received Almanac dataid %2d  toa %d" %
                                   (msg['dataid'], msg['ALMANAC']['toa']))
                         almanac[msg['dataid']] = msg['ALMANAC']
+                elif 'IONO' in msg:
+                    if options.progress:
+                        print("Received Ionosphere")
+                    ionosphere = msg['IONO']
                 # else not Almanac page
             # else, bad packet...
         elif 'TPV' == msg['class']:
@@ -502,7 +534,7 @@ except KeyboardInterrupt:
 all_sv = (list(ephemeris1.keys()) + list(ephemeris2.keys()) +
           list(ephemeris3.keys()) + list(almanac.keys()))
 for sv in sorted(set(all_sv)):
-    print("SV %u\n  Subframe 1, Clock Data" % sv)
+    print("\nSV %u\n  Subframe 1, Clock Data" % sv)
     if sv in ephemeris1:
         _print_msg(sv, ephemeris1[sv], ephem1_fields)
     else:
@@ -523,6 +555,10 @@ for sv in sorted(set(all_sv)):
     else:
         print("    Missing")
 
+gps_time = None
+gps_week = None
+gps_tow = None
+
 if 'time' in tpv:
     # convert to UNIX time
     unix_time = gps.isotime(tpv['time'])
@@ -533,53 +569,64 @@ if 'time' in tpv:
     # 604,800 in a GPS week
     (gps_week, gps_tow) = divmod(gps_time, 604800)
 
-    print("Unix time: %s, gps time: %s, week: %s tow: %s\n"
+    print("\nUnix time: %s, gps time: %s, week: %s tow: %s\n"
           "Current position: lat %.8f lon %.8f altHAE %.3f" %
           (unix_time, gps_time, int(gps_week), gps_tow,
            tpv['lat'], tpv['lon'], tpv['altHAE']))
 
-    if options.satpos:
-        # below is WIP
+if ionosphere:
+    print("\nSubframe 4, page 18")
+    _print_msg(None, ionosphere, ionosphere_fields)
+    if gps_tow:
+        # tUTC = tLS + A0 + A1 (tE - tot + 604800 (WN - WNt))
+        deltatutc = (ionosphere['ls'] +
+                     ionosphere['A0'] +
+                     ionosphere['A1'] *
+                     (gps_tow - ionosphere['tot'] +
+                      604800 * (gps_week - ionosphere['WNt']))
+                     )
+        print("  deltatutc %.9f" % deltatutc)
 
-        for sv in range(1, 33):
-            # Ensure we have all 3 parts, and their IODx matches.
-            if ((sv in ephemeris1 and
-                 sv in ephemeris2 and
-                 sv in ephemeris3 and
-                 ephemeris1[sv]['IODC'] == ephemeris2[sv]['IODE'] and
-                 ephemeris2[sv]['IODE'] == ephemeris3[sv]['IODE'])):
+if 'time' in tpv and options.satpos:
+    for sv in range(1, 33):
+        # Ensure we have all 3 parts, and their IODx matches.
+        if ((sv in ephemeris1 and
+             sv in ephemeris2 and
+             sv in ephemeris3 and
+             ephemeris1[sv]['IODC'] == ephemeris2[sv]['IODE'] and
+             ephemeris2[sv]['IODE'] == ephemeris3[sv]['IODE'])):
 
-                print("\nSV %u Ephemeris position:" % sv)
+            print("\nSV %u Ephemeris position:" % sv)
 
-                # mash into one dict
-                ephm = ephemeris1[sv]
-                ephm.update(ephemeris2[sv])
-                ephm.update(ephemeris3[sv])
+            # mash into one dict
+            ephm = ephemeris1[sv]
+            ephm.update(ephemeris2[sv])
+            ephm.update(ephemeris3[sv])
 
-                # convert semi-circles to radians
-                cvt = ('deltan', 'i0', 'IDOT', 'M0', 'omega', 'Omega0',
-                       'Omegad')
-                for i in cvt:
-                    ephm[i] *= math.pi
+            # convert semi-circles to radians
+            cvt = ('deltan', 'i0', 'IDOT', 'M0', 'omega', 'Omega0',
+                   'Omegad')
+            for i in cvt:
+                ephm[i] *= math.pi
 
-                SatPos(ephm, gps_tow)
+            SatPos(ephm, gps_tow)
 
-            if sv in almanac:
-                print("\nSV %u Almanac position:" % sv)
+        if sv in almanac:
+            print("\nSV %u Almanac position:" % sv)
 
-                ephm = almanac[sv]
-                ephm.update({'i0': ephm['deltai'] + 0.30,
-                             'deltan': 0,
-                             'IDOT': 0,
-                             'toe': ephm['toa']})
+            ephm = almanac[sv]
+            ephm.update({'i0': ephm['deltai'] + 0.30,
+                         'deltan': 0,
+                         'IDOT': 0,
+                         'toe': ephm['toa']})
 
-                # convert semi-circles to radians
-                cvt = ('deltan', 'i0', 'IDOT', 'M0', 'omega', 'Omega0',
-                       'Omegad')
-                for i in cvt:
-                    ephm[i] *= math.pi
+            # convert semi-circles to radians
+            cvt = ('deltan', 'i0', 'IDOT', 'M0', 'omega', 'Omega0',
+                   'Omegad')
+            for i in cvt:
+                ephm[i] *= math.pi
 
-                SatPos(ephm, gps_tow)
+            SatPos(ephm, gps_tow)
 
 if options.test:
     # SatPos() tests
