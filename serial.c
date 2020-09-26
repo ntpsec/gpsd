@@ -722,7 +722,7 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
     /* every rate we're likely to see on an old GPS */
     // FIXME add new rates
     static unsigned int rates[] =
-        {0, 4800, 9600, 19200, 38400, 57600, 115200, 230400};
+        {0, 4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800};
 
     char new_parity;   // E, N, O
     unsigned int new_stop;
