@@ -229,7 +229,7 @@ def SatPos(ephm, t):
         if 2 < options.debug:
             print(ephm)
         print("t %.3f tk %.3f" % (t, tk))
-        print("A %s n0 %s n %s Mk %s Ek %s" % (A, n0, n, Mk, Ek))
+        print("A %s n0 %s n %s\nMk %s Ek %s" % (A, n0, n, Mk, Ek))
         print("nuk %.10g Phik %.10g" % (nuk, Phik))
         print("deltauk %.10g deltark %.10g deltaik %.10g" %
               (deltauk, deltark, deltaik))
@@ -571,11 +571,11 @@ all_sv = (list(ephemeris1.keys()) + list(ephemeris2.keys()) +
           list(ephemeris3.keys()) + list(almanac.keys()))
 for sv in sorted(set(all_sv)):
     print("\nSV %u" % sv)
-    print("    Subframe 4 page 25, Health")
+    print("    Subframe 4 page 25")
     id = "SV%d" % sv
     if health and id in health:
-        print("  %s %2d (A/S %3s Config %s)" %
-              (id, health[id], 'Yes' if (health[id] & 8) else 'No',
+        print("       Health %2d (A/S %3s Config %s)" %
+              (health[id], 'Yes' if (health[id] & 8) else 'No',
                sv_conf[health[id] & 0x7]))
     else:
         print("    Missing")
