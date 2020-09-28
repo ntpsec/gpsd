@@ -217,9 +217,10 @@ support the feature) the locations of accessible satellites.</para>
 
 <para>In the sky view, satellites are color-coded to indicate quality
 of signal; consult the data display to the left for exact figures in
-dB. Square icons indicate SBAS/WAAS/EGNOS satellites, circles indicate
-ordinary GPS satellites.  Filled icons were used in the current fix,
-outline icons were not.</para>
+dB.  Square icons indicate GLONASS or SBAS (e.g. WAAS, EGNOS) satellites,
+circles indicate GPS satellites, and triangles indicate Galileo,
+BeiDou, QZSS, IMES, IRNSS, or other systems' satellites.  Filled icons
+were used in the current fix, outline icons were not.</para>
 
 <para>The -r option accepts an argument in degrees, to rotate the
 skyview counterclockwise.</para>
@@ -237,10 +238,10 @@ modeled after a marine navigation display; for backward compatibility
 the --nautical option forces this mode. The --landspeed option produces
 a simple speedometer.</para>
 
-<para>The -speedunits option can be used to set the speed units for
+<para>The --speedunits option can be used to set the speed units for
 display; follow the keyword with knots for nautical miles per hour,
 kph for kilometres per hour, or mph for miles per hour.  The default
-is miles per hour. </para>
+is miles per hour.</para>
 
 <para>In the nautical mode only, --maxspeed sets the maximum on the
 speedometer.</para>
