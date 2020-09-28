@@ -190,9 +190,9 @@ static char *ep_to_str(double ep, double factor, char *units)
     /* somehow these go negative now and then... */
     val = fabs(ep * factor);
     if ( 100 <= val ) {
-        (void)snprintf(buf, sizeof(buf), "+/-%5d %.3s", (int)val, units);
+        (void)snprintf(buf, sizeof(buf), "+/-%5d %.5s", (int)val, units);
     } else {
-        (void)snprintf(buf, sizeof(buf), "+/-%5.1f %.3s", val, units);
+        (void)snprintf(buf, sizeof(buf), "+/-%5.1f %.5s", val, units);
     }
     return buf;
 }
@@ -204,7 +204,7 @@ static char *ecef_to_str(double pos, double vel, double factor, char *units)
 
     if (isfinite(pos) == 0) {
         if (isfinite(vel) == 0) {
-            return "             n/a    n/a    ";
+            return "             n/a    n/a      ";
         } else {
             (void)snprintf(buf, sizeof(buf), "  n/a %8.3f%.4s/s",
                            vel * factor, units);
@@ -1005,8 +1005,11 @@ static void usage(char *prog)
         "                      d = DD.ddddddd\n"
         "                      m = DD MM.mmmmmm'\n"
         "                      s = DD MM' SS.sssss\"\n"
+        "  -u {i|m|k}      Select distance and speed units\n"
+        "                      i = imperial\n"
+        "                      m = metric\n"
+        "                      n = nautical\n"
         "  -m              Display track as the estimated magnetic track\n"
-        "                  Valid or USA (Lower 48 + AK) and Western Europe.\n"
         "  -s              Be silent (don't print raw gpsd data)\n"
         "  -V              Show version, then exit\n",
         prog);
@@ -1037,7 +1040,7 @@ int main(int argc, char *argv[])
         altfactor = METERS_TO_FEET;
         altunits = "ft";
         speedfactor = MPS_TO_KNOTS;
-        speedunits = "kts";
+        speedunits = "knots";
         break;
     case metric:
         altfactor = 1;
