@@ -536,18 +536,31 @@ try:
                                   (msg['dataid'], msg['ALMANAC']['toa']))
                         almanac[msg['dataid']] = msg['ALMANAC']
                 elif 'IONO' in msg:
-                    if options.progress:
-                        print("Received Ionosphere")
-                    ionosphere = msg['IONO']
+                    if ((not ionosphere or
+                         msg['IONO']['tot'] < ionosphere['tot'])):
+                        # FIXME handle WNt rollover
+                        # new data set
+                        if options.progress:
+                            print("Received Subframe 4 dataid 56 "
+                                  "(Ionosphere and UTC) tot %d WNt %d" %
+                                  (msg['IONO']['tot'], msg['IONO']['WNt']))
+                        ionosphere = msg['IONO']
                 elif 'HEALTH' in msg:
                     if options.progress:
-                        print("Received Health")
+                        print("Received Subframe 4 dataid 63 "
+                              "(A-S, Configurations)")
                     health = msg['HEALTH']
                 elif 'HEALTH2' in msg:
-                    if options.progress:
-                        print("Received Health2 toa %s WNa %s" %
-                              (msg['HEALTH2']['toa'], msg['HEALTH2']['WNa']))
-                    health2 = msg['HEALTH2']
+                    if ((not health2 or
+                         msg['HEALTH2']['toa'] < health2['toa'])):
+                        # FIXME handle WNa rollover
+                        # new data set
+                        if options.progress:
+                            print("Received Subframe 5 dataid 51 "
+                                  "(SV Health) toa %s WNa %s" %
+                                  (msg['HEALTH2']['toa'],
+                                   msg['HEALTH2']['WNa']))
+                        health2 = msg['HEALTH2']
                 # else not Almanac page
             # else, bad packet...
         elif 'TPV' == msg['class']:
@@ -574,7 +587,7 @@ for sv in sorted(set(all_sv)):
     print("    Subframe 4 page 25")
     id = "SV%d" % sv
     if health and id in health:
-        print("       Health %2d (A/S %3s Config %s)" %
+        print("       Flags  %2d (A/S %3s Config %s)" %
               (health[id], 'Yes' if (health[id] & 8) else 'No',
                sv_conf[health[id] & 0x7]))
     else:
