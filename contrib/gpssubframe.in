@@ -584,15 +584,7 @@ all_sv = (list(ephemeris1.keys()) + list(ephemeris2.keys()) +
           list(ephemeris3.keys()) + list(almanac.keys()))
 for sv in sorted(set(all_sv)):
     print("\nSV %u" % sv)
-    print("    Subframe 4 page 25")
-    id = "SV%d" % sv
-    if health and id in health:
-        print("       Flags  %2d (A/S %3s Config %s)" %
-              (health[id], 'Yes' if (health[id] & 8) else 'No',
-               sv_conf[health[id] & 0x7]))
-    else:
-        print("    Missing")
-    print("    Subframe 1, Clock Data")
+    print("  Subframe 1, Clock Data")
     if sv in ephemeris1:
         _print_msg(sv, ephemeris1[sv], ephem1_fields)
     else:
@@ -605,6 +597,17 @@ for sv in sorted(set(all_sv)):
     print("  Subframe 3, Orbit Data")
     if sv in ephemeris3:
         _print_msg(sv, ephemeris3[sv], ephem3_fields)
+    else:
+        print("    Missing")
+    print("  Subframe 4 page 25")
+    id = "SV%d" % sv
+    if health and id in health:
+        if 0x3f == health[id]:
+            print("       Flags  %2d (n/a)" % health[id])
+        else:
+            print("       Flags  %2d (A/S %3s Config %s)" %
+                  (health[id], 'Yes' if (health[id] & 8) else 'No',
+                   sv_conf[health[id] & 0x7]))
     else:
         print("    Missing")
     print("  Almanac")
@@ -656,9 +659,12 @@ if health:
     for sv in range(25, 33):
         id = "SVH%d" % sv
         if id in health:
-            print("  %s %2d (Data %s, %s)" %
-                  (id, health[id], 'Bad' if (health[id] & 0x20) else 'OK',
-                   health_str[health[id] & 0x1f]))
+            if 0x3f == health[id]:
+                print("  %s %2d (n/a)" % (id, health[id]))
+            else:
+                print("  %s %2d (Data %s, %s)" %
+                      (id, health[id], 'Bad' if (health[id] & 0x20) else 'OK',
+                       health_str[health[id] & 0x1f]))
 
 if health2:
     print("\nSubframe 5, page 25\n  WNa %d toa %d" %
@@ -666,9 +672,13 @@ if health2:
     for sv in range(1, 25):
         id = "SVH%d" % sv
         if id in health2:
-            print("  %s %2d (Data %s, %s)" %
-                  (id, health2[id], 'Bad' if (health2[id] & 0x20) else 'OK',
-                   health_str[health2[id] & 0x1f]))
+            if 0x3f == health2[id]:
+                print("  %s %2d (n/a)" % (id, health2[id]))
+            else:
+                print("  %s %2d (Data %s, %s)" %
+                      (id, health2[id],
+                       'Bad' if (health2[id] & 0x20) else 'OK',
+                       health_str[health2[id] & 0x1f]))
 
 if 'time' in tpv and options.satpos:
     for sv in range(1, 33):
