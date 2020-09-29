@@ -166,6 +166,13 @@ enum isgpsstat_t {
 /*
  * RTCM3 is more variable length than RTCM 2.  In the absence of
  * reading a specification, follow BKG's lead in assuming 2048.
+ *
+ * In theory, the limit is
+ *   1 octet preamble
+ *   2 octets payload length (first 6 bits reserved) --> max payload length 1023 octets
+ *   0-1023 octects payload
+ *   3 octets CRC
+ *   1029 octets maximum
  */
 #define RTCM3_MAX       2048
 
