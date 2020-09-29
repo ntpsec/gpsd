@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+This file is Copyright 2020 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause
+-->
+<!DOCTYPE refentry PUBLIC
+   "-//OASIS//DTD DocBook XML V4.1.2//EN"
+   "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id='gpsplot.1'>
+ <refentryinfo>
+  <date>28 September 2020</date>
+ </refentryinfo>
+ <refmeta>
+  <refentrytitle>gpsplot</refentrytitle>
+  <manvolnum>1</manvolnum>
+  <refmiscinfo class="source">The GPSD Project</refmiscinfo>
+  <refmiscinfo class="manual">GPSD Documentation</refmiscinfo>
+ </refmeta>
+ <refnamediv id='name'>
+  <refname>gpsplot</refname>
+  <refpurpose>tool to dynamically dump plot data from gpsd</refpurpose>
+ </refnamediv>
+ <refsynopsisdiv id='synopsis'>
+  <cmdsynopsis>
+   <command>gpsplot</command>
+   <arg choice='opt'>-?</arg>
+   <arg choice='opt'>--count <replaceable>COUNT</replaceable></arg>
+   <arg choice='opt'>-D <replaceable>DEBUG-LEVEL</replaceable></arg>
+   <arg choice='opt'>--device <replaceable>DEVICE</replaceable></arg>
+   <arg choice='opt'>--fields <replaceable>FIELDS</replaceable></arg>
+   <arg choice='opt'>-h</arg>
+   <arg choice='opt'>--help</arg>
+   <arg choice='opt'>--host <replaceable>HOST</replaceable></arg>
+   <arg choice='opt'>-n <replaceable>COUNT</replaceable></arg>
+   <arg choice='opt'>--plottype <replaceable>PLOTTYPE</replaceable></arg>
+   <arg choice='opt'>--port <replaceable>PORT</replaceable></arg>
+   <arg choice='opt'>--seconds <replaceable>SECONDS</replaceable></arg>
+   <arg choice='opt'>-u <replaceable>UNITS</replaceable></arg>
+   <arg choice='opt'>--units <replaceable>UNITS</replaceable></arg>
+   <arg choice='opt'>-V</arg>
+   <arg choice='opt'>-x <replaceable>SECONDS</replaceable></arg>
+   <group>
+    <replaceable>server</replaceable>
+    <group>
+     <replaceable>:port</replaceable>
+     <group>
+      <replaceable>:device</replaceable>
+     </group>
+    </group>
+   </group>
+  </cmdsynopsis>
+ </refsynopsisdiv>
+ <refsect1 id='description'>
+  <title>DESCRIPTION</title>
+  <para>
+   <application>gpsplot</application> is a tool to connect
+to <application>gpsd</application> and dynamically plot data
+to the users screen.  Plot types include scatterplots and stripcharts.
+</para>
+   <para>Plotting requires the Python Matplot lib module, and its many
+dependencies be installed on the display host, but not on the host
+that is running the <application>gpsd</application> instance.</para>
+ </refsect1>
+ <refsect1 id='options'>
+  <title>OPTIONS</title>
+  <para>--count [COUNT] Exit after [COUNT] plot messages.</para>
+  <para>--device [DEVICE] Connect to device [DEVICE].</para>
+  <para>--fields [FIELDS] The code for the fields to plot.
+FIELDS is one of: llh (lat/lon/altHAE) or llm (lat/lon/altMSL).</para>
+  <para>--help Print a usage message and exit.</para>
+  <para>--plottype [PLOTTYPE] The type of plot to make.  PLOTTYPE is
+one of 'scatterplot' or'stripchart'.</para>
+  <para>--port [PORT] Connect on port [PORT].</para>
+  <para>--seconds [seconds] Exit after delay of [seconds].</para>
+  <para>-? Print a usage message and exit.</para>
+  <para>-D [debug-level] Set debug level..</para>
+  <para>-h print a usage message and exit.</para>
+  <para>-n [COUNT] Exit after [COUNT] plot messages.</para>
+  <para>-p [PORT] Connect on port [PORT].</para>
+  <para>-V prints the program version, then exits.</para>
+  <para>-x [seconds] Exit after delay of [seconds].</para>
+ </refsect1>
+ <refsect1 id='examples'>
+  <title>EXAMPLES</title>
+  <para>Generate a scatterplot of Latitude, Longitude and the Altitude
+above Mean Sea Level (altMSL).  Stop after 60 seconds:
+   <programlisting>
+gpsplot --seconds 60 --fields llm
+   </programlisting>
+  </para>
+  <para>Generate a scatterplot of Latitude, Longitude and the Height
+Above Ellipsoid (altHAE).  Stop after 60 fixes:
+   <programlisting>
+gpsplot --count 60 --plottype stripchart
+   </programlisting>
+  </para>
+  <para>Generate a scatterplot locally of Latitude, Longitude and altMSL
+from a remote <application>gpsd</application> instannce at host "example.com"
+and the remote device "/dev/ttyS0".  Stop after 60 fixes:
+   <programlisting>
+gpsplot --count 60 --fields llm example.com::/dev/ttyS0
+   </programlisting>
+  </para>
+ </refsect1>
+ <refsect1 id='see_also'>
+  <title>SEE ALSO</title>
+  <para>
+   <citerefentry>
+    <refentrytitle>gpsd</refentrytitle>
+    <manvolnum>8</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gps</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gpscat</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>.
+<citerefentry>
+    <refentrytitle>gpsfake</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gpsprof</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>,
+  </para>
+ </refsect1>
+ <refsect1 id='maintainer'>
+  <title>AUTHOR</title>
+  <para>Gary E. Miller <email>gem@rellim.com</email>.</para>
+ </refsect1>
+</refentry>

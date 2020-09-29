@@ -203,6 +203,7 @@ all_manpages = {
     "man/gpsinit.8": "man/gpsinit.xml",
     "man/gpsmon.1": "man/gpsmon.xml",
     "man/gpspipe.1": "man/gpspipe.xml",
+    "man/gpsplot.1": "man/gpsplot.xml",
     "man/gpsprof.1": "man/gpsprof.xml",
     "man/gpsrinex.1": "man/gpsrinex.xml",
     "man/gpssubframe.1": "man/gpssubframe.xml",
@@ -2760,6 +2761,7 @@ htmlpages = Split('''
     www/gpsinit.html
     www/gpsmon.html
     www/gpspipe.html
+    www/gpsplot.html
     www/gpsprof.html
     www/gpsrinex.html
     www/gpssubframe.html
