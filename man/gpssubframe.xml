@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+This file is Copyright 2020 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause
+-->
+<!DOCTYPE refentry PUBLIC
+   "-//OASIS//DTD DocBook XML V4.1.2//EN"
+   "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<refentry id='gpssubframe.1'>
+ <refentryinfo>
+  <date>28 September 2020</date>
+ </refentryinfo>
+ <refmeta>
+  <refentrytitle>gpssubframe</refentrytitle>
+  <manvolnum>1</manvolnum>
+  <refmiscinfo class="source">The GPSD Project</refmiscinfo>
+  <refmiscinfo class="manual">GPSD Documentation</refmiscinfo>
+ </refmeta>
+ <refnamediv id='name'>
+  <refname>gpssubframe</refname>
+  <refpurpose>tool to dump subframe sentences from gpsd</refpurpose>
+ </refnamediv>
+ <refsynopsisdiv id='synopsis'>
+  <cmdsynopsis>
+   <command>gpssubframe</command>
+   <arg choice='opt'>-?</arg>
+   <arg choice='opt'>--count <replaceable>count</replaceable></arg>
+   <arg choice='opt'>-D <replaceable>debug-level</replaceable></arg>
+   <arg choice='opt'>--desc</arg>
+   <arg choice='opt'>--device <replaceable>device</replaceable></arg>
+   <arg choice='opt'>-h</arg>
+   <arg choice='opt'>--help</arg>
+   <arg choice='opt'>--host <replaceable>host</replaceable></arg>
+   <arg choice='opt'>-n <replaceable>count</replaceable></arg>
+   <arg choice='opt'>--port <replaceable>port</replaceable></arg>
+   <arg choice='opt'>--progress</arg>
+   <arg choice='opt'>--satpos</arg>
+   <arg choice='opt'>--seconds <replaceable>seconds</replaceable></arg>
+   <arg choice='opt'>--test</arg>
+   <arg choice='opt'>-V</arg>
+   <arg choice='opt'>-x <replaceable>seconds</replaceable></arg>
+   <group>
+    <replaceable>server</replaceable>
+    <group>
+     <replaceable>:port</replaceable>
+     <group>
+      <replaceable>:device</replaceable>
+     </group>
+    </group>
+   </group>
+  </cmdsynopsis>
+ </refsynopsisdiv>
+ <refsect1 id='description'>
+  <title>DESCRIPTION</title>
+  <para>
+   <application>gpssubframe</application> is a tool to connect
+to <application>gpsd</application> and dump decoded subframe data
+to stdout.  This is only useful if your GNSS receiver can output
+GPS subframe messages, and is configured to do so.</para>
+  <para>
+   <application>gpssubframe</application> does not require root
+privileges, and can be run concurrently with other tools connecting
+to the local <application>gpsd</application> without causing problems.</para>
+  <para>The program will accumulate subframe message and output them
+by GPS satellite number on exit.  By default the program never exits
+unless the user selects the number of seconds to run.  </para>
+  <para>By default <application>gpssubframe</application> connects to
+a <application>gpsd</application> running on the local host.  Optionally
+a host, TCP/IP port number and remote device can be given.  </para>
+ </refsect1>
+ <refsect1 id='options'>
+  <title>OPTIONS</title>
+  <para>-? print a usage message and exit.</para>
+  <para>--count [COUNT] Exit after [COUNT] subframe messages.</para>
+  <para>--device [DEVICE] connect to device [DEVICE].</para>
+  <para>-D [debug-level] set debug level..</para>
+  <para>-h print a usage message and exit.</para>
+  <para>--help print a usage message and exit.</para>
+  <para>-n [COUNT] Exit after [COUNT] subframe messages.</para>
+  <para>-p [PORT] connect on port [PORT].</para>
+  <para>--progress print progress reports as messages are received.</para>
+  <para>--satpos Compute GPS satellite positions before exit.</para>
+  <para>--seconds [seconds] Exit after delay of [seconds].</para>
+  <para>--test Run selftest code.</para>
+  <para>-V prints the program version, then exits.</para>
+  <para>-x [seconds] Exit after delay of [seconds].</para>
+ </refsect1>
+ <refsect1 id='examples'>
+  <title>EXAMPLES</title>
+  <para>
+   <command>gpssubfraame -x 750 --satpos</command> will gather one complete
+set of subframes, then print the data organized by GPS satellite number.
+Then calculate and print the known satellite positions as well as the
+azimuth, elevation, and range from the current position.  </para>
+ </refsect1>
+ <refsect1 id='see_also'>
+  <title>SEE ALSO</title>
+  <para>
+   <citerefentry>
+    <refentrytitle>gpsd</refentrytitle>
+    <manvolnum>8</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gps</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gpsprof</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gpsfake</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gpsctl</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gpscat</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>.
+</para>
+ </refsect1>
+ <refsect1 id='maintainer'>
+  <title>AUTHOR</title>
+  <para>Gary E. Miller <email>gem@rellim.com</email>.</para>
+ </refsect1>
+</refentry>
