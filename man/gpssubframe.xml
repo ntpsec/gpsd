@@ -56,14 +56,17 @@ SPDX-License-Identifier: BSD-2-clause
    <application>gpssubframe</application> is a tool to connect
 to <application>gpsd</application> and dump decoded subframe data
 to stdout.  This is only useful if your GNSS receiver can output
-GPS subframe messages, and is configured to do so.</para>
+GPS subframe messages, and is configured to do so.  A working
+knowledge of IS-GPS-200 is also required.  Keep your copy close at
+hand.</para>
   <para>
    <application>gpssubframe</application> does not require root
 privileges, and can be run concurrently with other tools connecting
 to the local <application>gpsd</application> without causing problems.</para>
   <para>The program will accumulate subframe message and output them
 by GPS satellite number on exit.  By default the program never exits
-unless the user selects the number of seconds to run.  </para>
+unless the user selects the number of seconds to run or number of
+messages to capture.  </para>
   <para>By default <application>gpssubframe</application> connects to
 a <application>gpsd</application> running on the local host.  Optionally
 a host, TCP/IP port number and remote device can be given.  </para>
@@ -88,10 +91,22 @@ a host, TCP/IP port number and remote device can be given.  </para>
  <refsect1 id='examples'>
   <title>EXAMPLES</title>
   <para>
-   <command>gpssubfraame -x 750 --satpos</command> will gather one complete
+   First connfigure a u-blox 9-series to output subframe messages.
+Then have <application>gpssubframe</application> gather one complete
 set of subframes, then print the data organized by GPS satellite number.
 Then calculate and print the known satellite positions as well as the
-azimuth, elevation, and range from the current position.  </para>
+azimuth, elevation, and range from the current position:
+   <programlisting>
+ubxtool -P 22 -e SFRBX
+gpssubframe -x 750 --satpos
+   </programlisting>
+  </para>
+  <para>If staring at a blank screen for 12.5 minutes is too stressful,
+then enable progress messages:
+   <programlisting>
+gpssubframe -x 750 --satpos --progress
+   </programlisting>
+  </para>
  </refsect1>
  <refsect1 id='see_also'>
   <title>SEE ALSO</title>
@@ -120,7 +135,10 @@ azimuth, elevation, and range from the current position.  </para>
     <refentrytitle>gpscat</refentrytitle>
     <manvolnum>1</manvolnum>
    </citerefentry>.
-</para>
+  </para>
+  <para>
+IS-GPS-200 "NAVSTAR GPS Space Segment/Navigation User Segment Interfaces"
+  </para>
  </refsect1>
  <refsect1 id='maintainer'>
   <title>AUTHOR</title>
