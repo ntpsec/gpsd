@@ -163,8 +163,11 @@ enum isgpsstat_t {
 };
 
 #define RTCM_MAX        (RTCM2_WORDS_MAX * sizeof(isgps30bits_t))
-/* RTCM is more variable length than RTCM 2 */
-#define RTCM3_MAX       512
+/*
+ * RTCM3 is more variable length than RTCM 2.  In the absence of
+ * reading a specification, follow BKG's lead in assuming 2048.
+ */
+#define RTCM3_MAX       2048
 
 /*
  * The packet buffers need to be as long than the longest packet we
