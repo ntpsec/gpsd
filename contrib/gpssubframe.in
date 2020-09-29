@@ -366,11 +366,9 @@ parser = argparse.ArgumentParser(
              formatter_class=argparse.RawDescriptionHelpFormatter,
              usage=usage)
 parser.add_argument(
-    '--cvt-isotime',
-    dest='cvtisotime',
-    default=False,
-    action="store_true",
-    help='Convert ISO time to UNIX time [Default %(default)s)]'
+    '-?',
+    action="help",
+    help='shot this help message and exit'
 )
 parser.add_argument(
     '--desc',
