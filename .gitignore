@@ -20,6 +20,7 @@ contrib/clock_test
 # These are built from .in files
 android/gpsd_config
 clients/gpscsv
+clients/gpssubframe
 contrib/gpsplot
 contrib/gpssubframe
 contrib/ntpshmviz
@@ -137,21 +138,23 @@ www/client-howto.html
 www/faq.html
 www/gps2udp.html
 www/gpscat.html
+www/gpscsv.html
 www/gpsctl.html
 www/gpsdctl.html
 www/gpsdecode.html
 www/gpsd.html
+www/gpsd-time-service-howto.adoc
 www/gpsd-time-service-howto.html
 www/gpsfake.html
 www/gps.html
-www/gpsd-time-service-howto.adoc
-man/gpsdctl.xml
+www/gpsdctl.xml
 www/gpsinit.html
 www/gpsmon.html
 www/gpspipe.html
 www/gpsprof.html
 www/gps_report.cgi
 www/gpsrinex.html
+www/gpssubframe.html
 www/gpxlogger.html
 www/hacking.html
 www/hardware-head.html
