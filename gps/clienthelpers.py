@@ -10,8 +10,8 @@
 # SPDX-License-Identifier: BSD-2-Clause
 """GPSd client helpers submodule."""
 
+from __future__ import absolute_import  # Ensure Python2 behaves like Python 3
 import gps
-import gps.misc        # For METERS_TO_FEET, etc.
 import math
 import os
 
