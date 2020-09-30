@@ -368,7 +368,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     '-?',
     action="help",
-    help='shot this help message and exit'
+    help='show this help message and exit'
 )
 parser.add_argument(
     '--desc',
@@ -467,6 +467,9 @@ if options.target:
     else:
         parser.print_help()
         sys.exit(0)
+
+if not options.port:
+    options.port = 2947
 
 try:
     session = gps.gps(host=options.host, port=options.port,
