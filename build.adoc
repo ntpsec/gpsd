@@ -166,6 +166,14 @@ On Gentoo systems that package is named:
 |dev-python/pyserial
 |============================================================================
 
+The gpsplot client requires Matplotlib to do its job of creating dynamic
+plots.
+
+On Gentoo systems that package is named:
+|============================================================================
+|dev-python/matplotlib
+|============================================================================
+
 === Scons
 
 You will need scons version 2.3.0 (from 2013-03-02) or later to build the code.
