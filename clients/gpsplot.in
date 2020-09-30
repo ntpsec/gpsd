@@ -22,9 +22,6 @@ import socket
 import sys
 import time            # for time.time()
 
-if not have_matplotlib:
-    sys.stderr.write("Error: required Python module matplotlib not found\n")
-    sys.exit(1)
 # pylint wants local modules last
 try:
     import gps
@@ -67,6 +64,7 @@ def _do_one_line(data):
             axs[1].scatter(0.5, data[fields[4]] * conversion.altfactor)
 
     plt.pause(0.05)
+    plt.tight_layout(h_pad=.2)
 
 
 # get default units from the environment
@@ -162,6 +160,11 @@ parser.add_argument(
     nargs='?',
 )
 options = parser.parse_args()
+
+# allow -V and -h, above, before exiting on matplotlib not found
+if not have_matplotlib:
+    sys.stderr.write("Error: required Python module matplotlib not found\n")
+    sys.exit(1)
 
 # get conversion factors
 conversion = gps.clienthelpers.unit_adjustments(units=options.units)

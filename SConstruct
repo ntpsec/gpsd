@@ -1548,6 +1548,13 @@ elif config.env['python']:
             # xgps* turned off by option
             config.env['xgps_deps'] = False
 
+        # check for matplotlib
+        if not config.GetPythonValue('module matplotlib',
+                                     'import matplotlib', '"found"'):
+            # no matplotlib, used by gpsplot
+            announce("WARNING: gpsplot is missing required "
+                     "runtime module matplotlib", end=True)
+
         config.env['PYTHON'] = target_python_path
         # For regress-driver
         config.env['ENV']['PYTHON'] = target_python_path
