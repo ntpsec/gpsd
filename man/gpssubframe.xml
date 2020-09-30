@@ -24,21 +24,21 @@ SPDX-License-Identifier: BSD-2-clause
   <cmdsynopsis>
    <command>gpssubframe</command>
    <arg choice='opt'>-?</arg>
-   <arg choice='opt'>--count <replaceable>count</replaceable></arg>
-   <arg choice='opt'>-D <replaceable>debug-level</replaceable></arg>
+   <arg choice='opt'>--count <replaceable>COUNT</replaceable></arg>
+   <arg choice='opt'>-D <replaceable>DEBUG-LEVEL</replaceable></arg>
    <arg choice='opt'>--desc</arg>
-   <arg choice='opt'>--device <replaceable>device</replaceable></arg>
+   <arg choice='opt'>--device <replaceable>DEVICE</replaceable></arg>
    <arg choice='opt'>-h</arg>
    <arg choice='opt'>--help</arg>
-   <arg choice='opt'>--host <replaceable>host</replaceable></arg>
-   <arg choice='opt'>-n <replaceable>count</replaceable></arg>
-   <arg choice='opt'>--port <replaceable>port</replaceable></arg>
+   <arg choice='opt'>--host <replaceable>HOST</replaceable></arg>
+   <arg choice='opt'>-n <replaceable>COUNT</replaceable></arg>
+   <arg choice='opt'>--port <replaceable>PORT</replaceable></arg>
    <arg choice='opt'>--progress</arg>
    <arg choice='opt'>--satpos</arg>
-   <arg choice='opt'>--seconds <replaceable>seconds</replaceable></arg>
+   <arg choice='opt'>--seconds <replaceable>SECONDS</replaceable></arg>
    <arg choice='opt'>--test</arg>
    <arg choice='opt'>-V</arg>
-   <arg choice='opt'>-x <replaceable>seconds</replaceable></arg>
+   <arg choice='opt'>-x <replaceable>SECONDS</replaceable></arg>
    <group>
     <replaceable>server</replaceable>
     <group>
