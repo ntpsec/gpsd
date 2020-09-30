@@ -6,7 +6,7 @@
 # and
 # Chen Wei <weichen302@gmx.com> (nautical mode)
 #
-# This file is Copyright 2010 by the GPSD project
+# This file is Copyright 2004 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
@@ -33,12 +33,12 @@ try:
 
 except ImportError as err:
     # ModuleNotFoundError needs Python 3.6
-    sys.stderr.write("xgps: ERROR %s\n" % err)
+    sys.stderr.write("xgpsspeed: ERROR %s\n" % err)
     sys.exit(1)
 
 except ValueError as err:
     # Gtk2 may be installed, has no require_version()
-    sys.stderr.write("xgps: ERROR %s\n" % err)
+    sys.stderr.write("xgpsspeed: ERROR %s\n" % err)
     sys.exit(1)
 
 
@@ -726,9 +726,9 @@ class Main(object):
                           "PyGObject Version %d.%d.%d" %
                           (gps_version,  gi.version_info[0],
                            gi.version_info[1], gi.version_info[2]))
-        about.set_copyright("Copyright 2004-2019 by The GPSD Project")
-        about.set_website("https://www.gpsd.io")
-        about.set_website_label("https://www.gpsd.io")
+        about.set_copyright("Copyright 2004 by The GPSD Project")
+        about.set_website("@WEBSITE")
+        about.set_website_label("@WEBSITE")
         about.set_license("BSD-2-clause")
         iconpath = gps.__iconpath__ + '/gpsd-logo.png'
         if os.access(iconpath, os.R_OK):
@@ -973,7 +973,7 @@ if __name__ == '__main__':
     target = ':'.join([options.host, options.port, options.device])
 
     if 'DISPLAY' not in os.environ:
-        sys.stderr.write("xgps: ERROR: DISPLAY not set\n")
+        sys.stderr.write("xgpsspeed: ERROR: DISPLAY not set\n")
         sys.exit(1)
 
     Main(
