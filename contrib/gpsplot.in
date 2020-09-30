@@ -83,75 +83,83 @@ parser = argparse.ArgumentParser(
              formatter_class=argparse.RawDescriptionHelpFormatter,
              usage=usage)
 parser.add_argument(
+    '-?',
+    action="help",
+    help='show this help message and exit'
+)
+parser.add_argument(
     '-D',
     '--debug',
-    dest='debug',
     default=0,
+    dest='debug',
+    help='Set level of debug. Must be integer. [Default %(default)s)]',
     type=int,
-    help='Set level of debug. Must be integer. [Default %(default)s)]'
 )
 parser.add_argument(
     '--device',
-    dest='device',
     default='',
-    help='The device to connect. [Default %(default)s)]'
+    dest='device',
+    help='The device to connect. [Default %(default)s)]',
 )
 parser.add_argument(
     '--fields',
-    dest='fields',
+    choices=['llh', 'llm'],
     default='llh',
-    help='Fields to plot (llh, llm). [Default %(default)s)]'
+    dest='fields',
+    help='Fields to plot. [Default %(default)s)]',
 )
 parser.add_argument(
     '--host',
-    dest='host',
     default='localhost',
-    help='The host to connect. [Default %(default)s)]'
+    dest='host',
+    help='The host to connect. [Default %(default)s)]',
 )
 parser.add_argument(
     '-n',
     '--count',
-    dest='count',
     default=0,
+    dest='count',
+    help='Count of messages to parse. 0 to disable. [Default %(default)s)]',
     type=int,
-    help='Count of messages to parse. 0 to disable. [Default %(default)s)]'
 )
 parser.add_argument(
     '--port',
-    dest='port',
     default=gps.GPSD_PORT,
-    help='The port to connect. [Default %(default)s)]'
+    dest='port',
+    help='The port to connect. [Default %(default)s)]',
 )
 parser.add_argument(
     '--plottype',
-    dest='plottype',
+    choices=['scatterplot', 'stripchart'],
     default='scatterplot',
-    help='Plot type (scatterplot, stripchart) [Default %(default)s)]'
+    dest='plottype',
+    help='Plot type. [Default %(default)s)]',
 )
 parser.add_argument(
     '-u', '--units',
-    dest='units',
+    choices=['i', 'imperial', 'n', 'nautical', 'm', 'metric'],
     default=default_units.name,
-    help='Units (i, imperial, n, nautical, m, metric) [Default %(default)s)]'
+    dest='units',
+    help='Units [Default %(default)s)]',
 )
 parser.add_argument(
     '-V', '--version',
     action='version',
+    help='Output version to stderr, then exit',
     version="%(prog)s: Version " + gps_version + "\n",
-    help='Output version to stderr, then exit'
 )
 parser.add_argument(
     '-x',
     '--seconds',
-    dest='seconds',
     default=0,
+    dest='seconds',
+    help='Seconds of messages to parse. 0 to disable. [Default %(default)s)]',
     type=int,
-    help='Seconds of messages to parse. 0 to disable. [Default %(default)s)]'
 )
 parser.add_argument(
     'target',
+    help='[host[:port[:device]]]',
     nargs='?',
-    help='[host[:port[:device]]]'
 )
 options = parser.parse_args()
 
@@ -182,6 +190,9 @@ if options.target:
     else:
         parser.print_help()
         sys.exit(0)
+
+if not options.port:
+    options.port = 2947
 
 options.scatterplot = False
 options.stripchart = False
@@ -274,8 +285,11 @@ try:
             if time.time() > end_seconds:
                 break
 
-
 except KeyboardInterrupt:
     # caught control-C
+    # FIXME: plot is in different process, does not come here...
     print()
     sys.exit(1)
+
+# make the plot persist until window closed.
+plt.show(block=True)
