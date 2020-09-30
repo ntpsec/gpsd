@@ -133,8 +133,8 @@ generated_sources = [
     'ais_json.i',
     'android/gpsd_config',
     'clients/gpscsv',
+    'clients/gpsplot',
     'clients/gpssubframe',
-    'contrib/gpsplot',
     'contrib/ntpshmviz',
     'contrib/skyview2svg.py',
     'contrib/webgps',
@@ -174,6 +174,7 @@ generated_www = [
 # All are templated
 python_progs = [
     "clients/gpscsv",
+    "clients/gpsplot",
     "clients/gpssubframe",
     "gegps",
     "gpscat",
@@ -2155,7 +2156,7 @@ for fn in templated:
     if ((fn.endswith(".py.in") or
          fn[:-3] in python_progs or
          fn[:-3] in ['clients/gpscsv', 'clients/gpssubframe',
-                     'contrib/gpsplot', 'contrib/ntpshmviz',
+                     'clients/gpsplot', 'contrib/ntpshmviz',
                      'contrib/webgps'])):
         # set python files to executable
         env.AddPostAction(builder, 'chmod +x $TARGET')
@@ -2954,7 +2955,8 @@ env.Clean(clean_misc, glob.glob('gpsd-*.zip') + glob.glob('gpsd-*tar.?z'))
 env.Clean(clean_misc, glob.glob('qt-*.os'))
 
 # Clean obsolete files
-env.Clean(clean_misc, ['contrib/gpscsv', 'contrib/gpssubframe'])
+env.Clean(clean_misc, ['contrib/gpscsv', 'contrib/gpsplot',
+                       'contrib/gpssubframe'])
 
 # Default targets
 

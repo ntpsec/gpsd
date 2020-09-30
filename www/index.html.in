@@ -311,9 +311,13 @@ tool. (This replaces the <code>sirfmon</code> tool in older versions.)</dd>
 captures GPS output and/or <code>gpsd</code> reports and sends it to
 standard output.</dd>
 
+<dt><a href="gpsplot.html">gpsprof.1</a></dt>
+<dd>The <code>gpsplot</code> program for dynamically plotting scatterplots
+and stripcharts of <code>gpsd</code> data.</dd>
+
 <dt><a href="gpsprof.html">gpsprof.1</a></dt>
-<dd>The <code>gpsprof</code> program for plotting spatial scatter of fixes
-and fix latency.</dd>
+<dd>The <code>gpsprof</code> program for statically plotting spatial scatter
+of fixes, satellite skyview, fix latency, and other plots.</dd>
 
 <dt><a href="gpsrinex.html">gpsrinex.1</a></dt>
 <dd>The <code>gpsrinex</code> program for outputting raw measurements

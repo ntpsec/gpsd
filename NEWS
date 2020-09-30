@@ -1,7 +1,9 @@
                         GPSD project news
 
 3.21.1~dev: in progress
-  Added contrib/gpscsv to convert gpsd JSON to csv.
+  Added client/gpscsv to convert gpsd JSON to csv.
+  Added client/gpsplot to dynamically plot gpsd JSON.
+  Added client/gpssubframe to decode gpsd SUBFRAME JSON.
   Added nSat and uSat to SKY JSON.  Old clients can not read new SKY.
 
 3.21: 2020-08-04
