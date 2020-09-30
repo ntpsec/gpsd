@@ -135,6 +135,7 @@ generated_sources = [
     'clients/gpscsv',
     'clients/gpsplot',
     'clients/gpssubframe',
+    'clients/xgps',
     'clients/xgpsspeed',
     'contrib/ntpshmviz',
     'contrib/skyview2svg.py',
@@ -157,7 +158,6 @@ generated_sources = [
     'packet_names.h',
     'Qgpsmm.pc',
     'ubxtool',
-    'xgps',
     'zerk',
    ]
 
@@ -176,13 +176,13 @@ python_progs = [
     "clients/gpscsv",
     "clients/gpsplot",
     "clients/gpssubframe",
+    "clients/xgps",
     "clients/xgpsspeed",
     "gegps",
     "gpscat",
     "gpsfake",
     "gpsprof",
     "ubxtool",
-    "xgps",
     "zerk",
 ]
 
@@ -1842,7 +1842,7 @@ env.Depends(python_progs, 'gps/__init__.py')
 # Additional specific import cases
 env.Depends('gpscat', ['gps/packet.py', 'gps/misc.py'])
 env.Depends('gpsfake', 'gps/fake.py')
-env.Depends('xgps', 'gps/clienthelpers.py')
+env.Depends('clients/xgps', 'gps/clienthelpers.py')
 env.Depends('zerk', 'gps/misc.py')
 env.Depends('gps/fake.py', 'gps/packet.py')
 # Dependency on FFI packet library
@@ -2299,7 +2299,7 @@ if env['python'] and not cleaning and not helping:
     pp = []
     for p in python_progs:
         if not env['xgps_deps']:
-            if p in ['xgps', 'clients/xgpsspeed']:
+            if p in ['clients/xgps', 'clients/xgpsspeed']:
                 # do not have xgps* dependencies, don't test
                 continue
         pp.append(Utility('version-%s' % p, p,
@@ -2963,7 +2963,7 @@ env.Clean(clean_misc, glob.glob('qt-*.os'))
 
 # Clean obsolete files
 env.Clean(clean_misc, ['contrib/gpscsv', 'contrib/gpsplot',
-                       'contrib/gpssubframe', 'xgpsspeed'])
+                       'contrib/gpssubframe', 'xgps', 'xgpsspeed'])
 
 # Default targets
 

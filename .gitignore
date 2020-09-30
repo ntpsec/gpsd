@@ -22,8 +22,8 @@ android/gpsd_config
 clients/gpscsv
 clients/gpssubframe
 clients/gpsplot
+clients/xgps
 clients/xgpsspeed
-contrib/gpssubframe
 contrib/ntpshmviz
 contrib/skyview2svg.py
 contrib/webgps
@@ -40,7 +40,6 @@ jsongen
 maskaudit.py
 ubxtool
 valgrind-audit.py
-xgps
 zerk
 # Unit tests
 test_bits
