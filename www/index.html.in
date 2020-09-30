@@ -311,7 +311,7 @@ tool. (This replaces the <code>sirfmon</code> tool in older versions.)</dd>
 captures GPS output and/or <code>gpsd</code> reports and sends it to
 standard output.</dd>
 
-<dt><a href="gpsplot.html">gpsprof.1</a></dt>
+<dt><a href="gpsplot.html">gpsplot.1</a></dt>
 <dd>The <code>gpsplot</code> program for dynamically plotting scatterplots
 and stripcharts of <code>gpsd</code> data.</dd>
 
@@ -323,7 +323,7 @@ of fixes, satellite skyview, fix latency, and other plots.</dd>
 <dd>The <code>gpsrinex</code> program for outputting raw measurements
 into a RINEX 3 file.</dd>
 
-<dt><a href="gpssubframe.html">gpscsv.1</a></dt>
+<dt><a href="gpssubframe.html">gpssubframe.1</a></dt>
 <dd>The <code>gpssubframe</code> tool for reading gpsd JSON subframe
 sentences and decoding them.</dd>
 
