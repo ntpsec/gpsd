@@ -966,10 +966,11 @@ if __name__ == '__main__':
         else:
             parser.print_help()
             sys.exit(0)
-        target = ':'.join(options.target[0:])
 
-    ltarget = [options.host, options.port, options.device]
-    target = ':'.join(ltarget)
+    if not options.port:
+        options.port = gps.GPSD_PORT
+
+    target = ':'.join([options.host, options.port, options.device])
 
     if 'DISPLAY' not in os.environ:
         sys.stderr.write("xgps: ERROR: DISPLAY not set\n")
