@@ -21,7 +21,7 @@ contrib/clock_test
 android/gpsd_config
 clients/gpscsv
 clients/gpssubframe
-contrib/gpsplot
+clients/gpsplot
 contrib/gpssubframe
 contrib/ntpshmviz
 contrib/skyview2svg.py
