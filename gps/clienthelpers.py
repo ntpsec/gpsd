@@ -831,7 +831,7 @@ class unit_adjustments(object):
             self.altunits = "m"
             self.name = "metric"
             self.speedfactor = gps.MPS_TO_KPH
-            self.speedunits = "kph"
+            self.speedunits = "kmh"
         else:
             raise ValueError  # Should never happen
 
