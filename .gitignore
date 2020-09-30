@@ -22,6 +22,7 @@ android/gpsd_config
 clients/gpscsv
 clients/gpssubframe
 clients/gpsplot
+clients/xgpsspeed
 contrib/gpssubframe
 contrib/ntpshmviz
 contrib/skyview2svg.py
@@ -40,7 +41,6 @@ maskaudit.py
 ubxtool
 valgrind-audit.py
 xgps
-xgpsspeed
 zerk
 # Unit tests
 test_bits
@@ -112,11 +112,6 @@ tags
 # Python files
 build
 devtools/ppstest
-gpscatc
-gpsfakec
-gpsprofc
-xgpsc
-xgpsspeedc
 # Developer sandbox directory for patches that haven't been applied yet
 patches
 # build/test logs from devtools/do-build

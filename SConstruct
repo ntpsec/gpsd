@@ -135,6 +135,7 @@ generated_sources = [
     'clients/gpscsv',
     'clients/gpsplot',
     'clients/gpssubframe',
+    'clients/xgpsspeed',
     'contrib/ntpshmviz',
     'contrib/skyview2svg.py',
     'contrib/webgps',
@@ -157,7 +158,6 @@ generated_sources = [
     'Qgpsmm.pc',
     'ubxtool',
     'xgps',
-    'xgpsspeed',
     'zerk',
    ]
 
@@ -176,13 +176,13 @@ python_progs = [
     "clients/gpscsv",
     "clients/gpsplot",
     "clients/gpssubframe",
+    "clients/xgpsspeed",
     "gegps",
     "gpscat",
     "gpsfake",
     "gpsprof",
     "ubxtool",
     "xgps",
-    "xgpsspeed",
     "zerk",
 ]
 
@@ -2299,7 +2299,7 @@ if env['python'] and not cleaning and not helping:
     pp = []
     for p in python_progs:
         if not env['xgps_deps']:
-            if p in ['xgps', 'xgpsspeed']:
+            if p in ['xgps', 'clients/xgpsspeed']:
                 # do not have xgps* dependencies, don't test
                 continue
         pp.append(Utility('version-%s' % p, p,
@@ -2963,7 +2963,7 @@ env.Clean(clean_misc, glob.glob('qt-*.os'))
 
 # Clean obsolete files
 env.Clean(clean_misc, ['contrib/gpscsv', 'contrib/gpsplot',
-                       'contrib/gpssubframe'])
+                       'contrib/gpssubframe', 'xgpsspeed'])
 
 # Default targets
 
