@@ -11,6 +11,7 @@
 """GPSd client helpers submodule."""
 
 import gps
+import gps.misc        # For METERS_TO_FEET, etc.
 import math
 import os
 
