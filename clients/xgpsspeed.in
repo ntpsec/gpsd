@@ -727,8 +727,8 @@ class Main(object):
                           (gps_version,  gi.version_info[0],
                            gi.version_info[1], gi.version_info[2]))
         about.set_copyright("Copyright 2004 by The GPSD Project")
-        about.set_website("@WEBSITE")
-        about.set_website_label("@WEBSITE")
+        about.set_website("@WEBSITE@")
+        about.set_website_label("@WEBSITE@")
         about.set_license("BSD-2-clause")
         iconpath = gps.__iconpath__ + '/gpsd-logo.png'
         if os.access(iconpath, os.R_OK):
