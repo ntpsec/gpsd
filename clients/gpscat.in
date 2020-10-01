@@ -10,7 +10,7 @@
 # Preserve this property!
 from __future__ import absolute_import, print_function, division
 
-import getopt
+import argparse
 import os
 import select
 import socket
@@ -59,101 +59,126 @@ def hexdump(st):
     return dmp
 
 
-debuglevel = 0
-
-
 def reporter(errlevel, mesg):
     "Report errors, depending on log level"
-    if errlevel <= debuglevel:
+    if errlevel <= options.debug:
         sys.stdout.write(mesg)
 
 
-def printusage():
-    "Print usage"
-    sys.stderr.write("usage: gpscat [-D debuglevel] [-h] [-p] [-s speed] [-t] "
-                     "[-V] serial-port\n")
-
-
 if __name__ == '__main__':
+    usage = '%(prog)s [OPTIONS]'
+    epilog = ('BSD terms apply: see the file COPYING in the distribution root'
+              ' for details.')
+
+    parser = argparse.ArgumentParser(usage=usage, epilog=epilog)
+    parser.add_argument(
+        '-?',
+        action="help",
+        help='show this help message and exit'
+    )
+    parser.add_argument(
+        '-D',
+        '--debug',
+        dest='debug',
+        default=0,
+        type=int,
+        help='Set level of debug. Must be integer. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '-p', '--packetizer',
+        action='store_true',
+        dest='packetizer',
+        default=False,
+        help="Set packetizer mode",
+    )
+    parser.add_argument(
+        '-s', '--speed',
+        dest='speed_str',
+        default=None,
+        help=('Set port speed. '
+              ' Optionally parity (N, O, E) and stop bits (1, 2)'),
+    )
+    parser.add_argument(
+        '-t', '--typeflag',
+        action='store_true',
+        dest='typeflag',
+        default=False,
+        help="Select packetizer mode with type and length",
+    )
+    parser.add_argument(
+        '-V', '--version',
+        action='version',
+        version="%(prog)s: Version " + gps_version + "\n",
+        help='Output version to stderr, then exit',
+    )
+    parser.add_argument(
+        'target',
+        help='File or Serial port to read from',
+    )
+
+    options = parser.parse_args()
+
+    options.speed = None
+    options.parity = None
+    options.stopbits = None
+    if options.speed_str:
+        if options.speed_str[-2] in ('N', 'E', 'O'):
+            options.parity = options.speed_str[-2]
+            options.stopbits = int(options.speed_str[-1])
+            options.speed_str = options.speed_str[:-2]
+        options.speed = int(options.speed_str)
+
+    # adjust debug level
+    options.debug += BASELEVEL
+    if options.packetizer or options.typeflag:
+        options.rawmode = False
+    else:
+        options.rawmode = True
+
     try:
-        try:
-            (options, arguments) = getopt.getopt(sys.argv[1:], "hps:tD:V")
-        except getopt.GetoptError as msg:
-            print("gpscat: " + str(msg))
-            raise SystemExit(1)
-
-        speed = None
-        parity = None
-        stopbits = None
-        rawmode = True
-        typeflag = False
-        for (switch, val) in options:
-            if switch == '-D':
-                debuglevel = BASELEVEL + int(val)
-            elif switch == '-h':
-                printusage()
-                raise SystemExit(0)
-            elif switch == '-p':
-                rawmode = False
-            elif switch == '-s':
-                if val[-2] in ('N', 'E', 'O'):
-                    parity = val[-2]
-                    stopbits = int(val[-1])
-                    val = val[:-2]
-                speed = int(val)
-            elif switch == '-t':
-                typeflag = True
-                rawmode = False
-            elif switch == '-V':
-                sys.stderr.write("gpscat: Version %s\n" % gps_version)
-                sys.exit(0)
-
-        if len(arguments) != 1:
-            printusage()
-            raise SystemExit(1)
-
-        if "rfcomm" in arguments[0]:     # Bluetooth special case
+        if "rfcomm" in options.target:     # Bluetooth special case
             s = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM,
                               socket.BTPROTO_RFCOMM)
-            s.connect((arguments[0], 1))
+            s.connect((options.target, 1))
             tty = s.fileno()
         else:                            # Ordinary device
-            tty = os.open(arguments[0], os.O_RDWR)
+            tty = os.open(options.target, os.O_RDWR)
 
-        if speed is not None:
+        if options.speed is not None:
             (iflag, oflag, cflag, lflag, ispeed, ospeed, cc) = \
                 termios.tcgetattr(tty)
             try:
-                ispeed = ospeed = eval("termios.B%d" % speed)
+                ispeed = ospeed = eval("termios.B%d" % options.speed)
             except AttributeError:
-                sys.stderr.write("gpscat: unknown baud rate %d\n" % speed)
+                sys.stderr.write("gpscat: unknown baud rate %d\n" %
+                                 options.speed)
                 raise SystemExit(1)
-            if stopbits:
+            if options.stopbits:
                 cflag &= ~termios.CSIZE
-                cflag |= (termios.CS8, termios.CS7)[stopbits - 1]
-            if parity:
-                if parity == 'N':
+                cflag |= (termios.CS8, termios.CS7)[options.stopbits - 1]
+            if options.parity:
+                if options.parity == 'N':
                     iflag &= ~termios.PARENB
                     iflag &= ~termios.INPCK
-                elif parity == 'O':
+                elif options.parity == 'O':
                     iflag |= termios.INPCK
                     cflag |= termios.PARENB
                     cflag |= termios.PARODD
-                elif parity == 'E':
+                elif options.parity == 'E':
                     iflag |= termios.INPCK
                     cflag |= termios.PARENB
                     cflag &= ~termios.PARODD
             termios.tcsetattr(tty, termios.TCSANOW,
                               [iflag, oflag, cflag, lflag, ispeed, ospeed, cc])
 
-        if not rawmode:
+        if not options.rawmode:
             getter = sniffer.new()
             sniffer.register_report(reporter)
         seqno = 0
         while True:
             rlist, wlist, xlist = select.select([tty], [], [])
             if rlist == [tty]:
-                if rawmode:
+                if options.rawmode:
                     buf = os.read(tty, NMEA_MAX)
                     if not buf:
                         break
@@ -163,13 +188,13 @@ if __name__ == '__main__':
                     seqno += 1
                     if length == 0:
                         break
-                    if typeflag:
+                    if options.typeflag:
                         sys.stdout.write('%d (%d@%d): %s\n' % (ptype, length,
                                          counter - length, hexdump(packet)))
                     else:
                         sys.stdout.write(hexdump(packet) + "\n")
     except KeyboardInterrupt:
-        if rawmode:
+        if options.rawmode:
             sys.stdout.write("\n")
         raise SystemExit(0)
 
