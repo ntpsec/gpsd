@@ -297,14 +297,16 @@ class SkyView(Gtk.DrawingArea):
         "Draw a square centered on the specified midpoint."
         lw = self.cr.get_line_width()
         if 0 == flip:
+            # square
             x1, y1 = fit_to_grid(x - radius, y - radius, lw)
             x2, y2 = fit_to_grid(x + radius, y + radius, lw)
             self.cr.rectangle(x1, y1, x2 - x1, y2 - y1)
         else:
-            self.cr.move_to(x, y + radius)
-            self.cr.line_to(x + radius, y)
-            self.cr.line_to(x, y - radius)
-            self.cr.line_to(x - radius, y)
+            # diamond
+            self.cr.move_to(x, y + radius + 1)   # top
+            self.cr.line_to(x + radius - 1 , y)  # right
+            self.cr.line_to(x, y - radius - 1)   # bottom
+            self.cr.line_to(x - radius + 1, y)   # left
             self.cr.close_path()
 
         if filled:
