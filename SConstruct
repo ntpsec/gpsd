@@ -217,8 +217,8 @@ all_manpages = {
     "man/ppscheck.8": "man/ppscheck.xml",
     "man/srec.5": "man/srec.xml",
     "man/ubxtool.1": "man/ubxtool.xml",
-    "man/xgps.1": "man/gps.xml",
-    "man/xgpsspeed.1": "man/gps.xml",
+    "man/xgps.1": "man/xgps.xml",
+    "man/xgpsspeed.1": "man/xgps.xml",
     "man/zerk.1": "man/zerk.xml",
 }
 
