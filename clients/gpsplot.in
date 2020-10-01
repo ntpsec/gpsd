@@ -68,6 +68,7 @@ def _do_one_line(data):
 
 
 # get default units from the environment
+# GPSD_UNITS, LC_MEASUREMENT and LANG
 default_units = gps.clienthelpers.unit_adjustments()
 
 description = 'Create dynamic plots from gpsd with matplotlib.'

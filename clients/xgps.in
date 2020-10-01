@@ -1479,8 +1479,15 @@ frame * {
 if __name__ == "__main__":
 
     usage = '%(prog)s [OPTIONS] [host[:port[:device]]]'
-    epilog = ('BSD terms apply: see the file COPYING in the distribution root'
+    epilog = ('Options can be placed in the XGPSOPTS environment variable.\n'
+              'Default units can be placed in the GPSD_UNITS environment'
+              ' variabla.\n\ne'
+              'BSD terms apply: see the file COPYING in the distribution root'
               ' for details.')
+
+    # get default units from the environment
+    # GPSD_UNITS, LC_MEASUREMENT and LANG
+    default_units = gps.clienthelpers.unit_adjustments()
 
     parser = argparse.ArgumentParser(usage=usage, epilog=epilog)
     parser.add_argument(
@@ -1530,8 +1537,7 @@ if __name__ == "__main__":
         '-u, --units',
         choices=['i', 'imperial', 'm', 'metric', 'n', 'nautical'],
         dest='units',
-        # FIXME! use environment
-        default='i',
+        default=default_units.name,
         help='The unit of speed. [Default %(default)s)]',
     )
     parser.add_argument(

@@ -50,6 +50,7 @@ from gi.repository import GLib       # pylint: disable=wrong-import-position
 # pylint wants local modules last
 try:
     import gps
+    import gps.clienthelpers
 except ImportError as e:
     sys.stderr.write(
         "xgpsspeed: can't load Python gps libraries -- check PYTHONPATH.\n")
@@ -873,8 +874,14 @@ class Main(object):
 if __name__ == '__main__':
 
     usage = '%(prog)s [OPTIONS] [host[:port[:device]]]'
-    epilog = ('BSD terms apply: see the file COPYING in the distribution root'
+    epilog = ('Default units can be placed in the GPSD_UNITS environment'
+              ' variabla.\n\ne'
+              'BSD terms apply: see the file COPYING in the distribution root'
               ' for details.')
+
+    # get default units from the environment
+    # GPSD_UNITS, LC_MEASUREMENT and LANG
+    default_units = gps.clienthelpers.unit_adjustments()
 
     parser = argparse.ArgumentParser(usage=usage, epilog=epilog)
     parser.add_argument(
@@ -935,7 +942,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--speedunits',
         dest='speedunits',
-        default='mph',
+        default=default_units.speedunits,
         choices=['mph', 'kmh', 'knots'],
         help='The unit of speed. [Default %(default)s)]'
     )
