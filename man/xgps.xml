@@ -178,10 +178,14 @@ support the feature) the locations of accessible satellites.</para>
 
 <para>In the sky view, satellites are color-coded to indicate quality
 of signal; consult the data display to the left for exact figures in
-dB.  Square icons indicate GLONASS or SBAS (e.g. WAAS, EGNOS) satellites,
-circles indicate GPS satellites, and triangles indicate Galileo,
-BeiDou, QZSS, IMES, IRNSS, or other systems' satellites.  Filled icons
-were used in the current fix, outline icons were not.</para>
+dB.  Diamond-shaped icons indicate GLONASS satellites, squares are used
+for SBAS (e.g. WAAS, EGNOS), circles indicate GPS, and down-, up-,
+right-, and left-pointing triangles, respectively, indicate Galileo,
+BeiDou, QZSS, and other systems' satellites (e.g. IMES, IRNSS, as well
+as unknown systems).  Filled icons were used in the current fix,
+outline icons were not.  Hovering over a symbol with the mouse pointer
+will temporarily display a small popup window with the satellite
+details from the Satellite List pane.</para>
 
 <para>The -r option accepts an argument in degrees, to rotate the
 skyview counterclockwise.</para>
@@ -201,7 +205,7 @@ a simple speedometer.</para>
 
 <para>The --speedunits option can be used to set the speed units for
 display; follow the keyword with knots for nautical miles per hour,
-kmh for kilometres per hour, or mph for miles per hour.  The default
+kmh for kilometers per hour, or mph for miles per hour.  The default
 is miles per hour.</para>
 
 <para>In the nautical mode only, --maxspeed sets the maximum on the
