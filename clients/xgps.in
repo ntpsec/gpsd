@@ -346,12 +346,19 @@ class SkyView(Gtk.DrawingArea):
             x2, y2 = fit_to_grid(x + radius, ybot, lw)
             x3, y3 = fit_to_grid(x - radius, ybot, lw)
         else:
-            # right
             ytop = y + radius
             ybot = y - radius
-            x1, y1 = fit_to_grid(x - radius, ytop, lw)
-            x2, y2 = fit_to_grid(x - radius, ybot, lw)
-            x3, y3 = fit_to_grid(x + radius, y, lw)
+
+            if 2 == flip:
+                # right
+                x1, y1 = fit_to_grid(x - radius, ytop, lw)
+                x2, y2 = fit_to_grid(x - radius, ybot, lw)
+                x3, y3 = fit_to_grid(x + radius, y, lw)
+            else:
+                # left
+                x1, y1 = fit_to_grid(x + radius, ytop, lw)
+                x2, y2 = fit_to_grid(x + radius, ybot, lw)
+                x3, y3 = fit_to_grid(x - radius, y, lw)
 
         self.cr.move_to(x1, y1)
         self.cr.line_to(x2, y2)
@@ -480,9 +487,11 @@ class SkyView(Gtk.DrawingArea):
                 self.draw_triangle(x, y, SkyView.SAT_RADIUS, sat.used, 1)
             elif constellation == 'GL':
                 self.draw_square(x, y, SkyView.SAT_RADIUS, sat.used, 1)
-            else:
-                # QZSS, IMES, unknown or other
+            elif constellation == 'QZ':
                 self.draw_triangle(x, y, SkyView.SAT_RADIUS, sat.used, 2)
+            else:
+                # IRNSS, IMES, unknown or other
+                self.draw_triangle(x, y, SkyView.SAT_RADIUS, sat.used, 3)
 
             self.sat_xy.append((x, y, sat))
             self.cr.set_source_rgb(1, 1, 1)
