@@ -1491,6 +1491,11 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(usage=usage, epilog=epilog)
     parser.add_argument(
+        '-?',
+        action="help",
+        help='show this help message and exit'
+    )
+    parser.add_argument(
         '-D',
         '--debug',
         dest='debug',
