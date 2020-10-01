@@ -162,8 +162,8 @@ freebsd:
     - $HAVE_FREEBSD == "true"
   stage: advanced_build
   variables:
-    # 1 Oct 20, 0.01250 is too short
-    WRITE_PAD: '0.02'
+    # 1 Oct 20, 0.01250, 0.02, are too short
+    WRITE_PAD: '0.05'
   tags:
   - freebsd
   script:
