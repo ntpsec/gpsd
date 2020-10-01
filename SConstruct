@@ -132,6 +132,7 @@ if SCons.__version__ in ['2.3.0', '2.3.1']:
 generated_sources = [
     'ais_json.i',
     'android/gpsd_config',
+    'clients/gpscat',
     'clients/gpscsv',
     'clients/gpsplot',
     'clients/gpssubframe',
@@ -142,7 +143,6 @@ generated_sources = [
     'contrib/webgps',
     'control',
     'gegps',
-    'gpscat',
     'gpsd_config.h',
     'gpsd.php',
     'gpsd.rules',
@@ -173,13 +173,13 @@ generated_www = [
 # All installed python programs
 # All are templated
 python_progs = [
+    "clients/gpscat",
     "clients/gpscsv",
     "clients/gpsplot",
     "clients/gpssubframe",
     "clients/xgps",
     "clients/xgpsspeed",
     "gegps",
-    "gpscat",
     "gpsfake",
     "gpsprof",
     "ubxtool",
@@ -1840,7 +1840,7 @@ env.Depends('gps/__init__.py', ['gps/gps.py', 'gps/misc.py'])
 # All Python programs import the 'gps' package
 env.Depends(python_progs, 'gps/__init__.py')
 # Additional specific import cases
-env.Depends('gpscat', ['gps/packet.py', 'gps/misc.py'])
+env.Depends('clients/gpscat', ['gps/packet.py', 'gps/misc.py'])
 env.Depends('gpsfake', 'gps/fake.py')
 env.Depends('clients/xgps', 'gps/clienthelpers.py')
 env.Depends('zerk', 'gps/misc.py')
@@ -2963,7 +2963,7 @@ env.Clean(clean_misc, glob.glob('qt-*.os'))
 
 # Clean obsolete files
 env.Clean(clean_misc, ['contrib/gpscsv', 'contrib/gpsplot',
-                       'contrib/gpssubframe', 'xgps', 'xgpsspeed'])
+                       'contrib/gpssubframe', 'gpscat', 'xgps', 'xgpsspeed'])
 
 # Default targets
 
