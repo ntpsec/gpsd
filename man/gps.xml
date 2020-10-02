@@ -19,7 +19,7 @@ SPDX-License-Identifier: BSD-2-clause
 <refname>gegps</refname>
 <refname>gps</refname>
 <refname>lcdgps</refname>
-<refpurpose>sample clients for gpsd</refpurpose>
+<refpurpose>simple clients for gpsd</refpurpose>
 </refnamediv>
 <refsynopsisdiv id='synopsis'>
 
@@ -42,10 +42,26 @@ SPDX-License-Identifier: BSD-2-clause
 </cmdsynopsis>
 <cmdsynopsis>
   <command>gegps</command>
-      <arg choice='opt'>-d <replaceable>directory</replaceable></arg>
+      <arg choice='opt'>--debug <replaceable>DEBUG</replaceable></arg>
+      <arg choice='opt'>--device <replaceable>DEVICE</replaceable></arg>
+      <arg choice='opt'>--help </arg>
+      <arg choice='opt'>--host <replaceable>HOST</replaceable></arg>
+      <arg choice='opt'>--initialize </arg>
+      <arg choice='opt'>--kmldir <replaceable>DIRECTORY</replaceable></arg>
+      <arg choice='opt'>--port <replaceable>PORT</replaceable></arg>
+      <arg choice='opt'>--version</arg>
+      <arg choice='opt'>-D <replaceable>DEBUG</replaceable></arg>
+      <arg choice='opt'>-d <replaceable>DIRECTORY</replaceable></arg>
       <arg choice='opt'>-h </arg>
       <arg choice='opt'>-i </arg>
       <arg choice='opt'>-V </arg>
+      <group>
+        <replaceable>server</replaceable>
+          <group>
+            <replaceable>:port</replaceable>
+              <group><replaceable>:device</replaceable></group>
+          </group>
+      </group>
 </cmdsynopsis>
 <cmdsynopsis>
   <command>lcdgps</command>
@@ -67,7 +83,7 @@ SPDX-License-Identifier: BSD-2-clause
 
 <refsect1 id='description'><title>DESCRIPTION</title>
 
-<para>These are some sample clients shipped with
+<para>These are some simple clients shipped with
 <application>gpsd</application>. They have some common options:</para>
 
 <para>The <option>-h</option> option causes each client to emit a summary of its
@@ -182,18 +198,15 @@ after that.</para>
 
 <refsect1 id='environment'><title>ENVIRONMENT</title>
 
-<para>The environment variable <envar>GPSD_UNITS</envar> is checked
-if no unit system is specified on the command line or in
-<envar>XPGSOPTS</envar> it may be set to 'i'. 'imperial', 'm', 'metric', or
-'n', 'nautical'.</para>
+<para>The environment variable <envar>GPSD_UNITS</envar> is checked if
+no unit system is specified on the command line. It may be set to 'i'.
+'imperial', 'm', 'metric', or 'n', 'nautical'.</para>
 
 <para><envar>LC_MEASUREMENT</envar> and then <envar>LANG</envar> are
-checked if no unit system has been specified on the command line, in
-<envar>XPGSOPTS</envar> or in <envar>GPSD_UNITS</envar>. If the value
-is 'C', 'POSIX', or begins with
-'en_US' the unit system is set to imperial. The default
-if no system has been selected defaults to metric.</para>
-</refsect1>
+checked if no unit system has been specified on the command line, or in
+<envar>GPSD_UNITS</envar>. If the value is 'C', 'POSIX', or begins with
+'en_US' the unit system is set to imperial. The default if no system has
+been selected defaults to metric.</para> </refsect1>
 
 <refsect1 id='see_also'><title>SEE ALSO</title>
 <para>

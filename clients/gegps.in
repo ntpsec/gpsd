@@ -3,16 +3,6 @@
 # @GENERATED@
 '''
 Feed location data from a running GPSD to a Google Earth instance.
-The -d argument is the location of the Google Earth installation
-directory.  If not specified, it defaults to the current directory.
-
-If you have the free (non-subscription) version, start by running with
-the -i option to drop a clue in the Google Earth installation directory,
-as 'Open_in_Google_Earth_RT_GPS.kml', then open that file in Places
-(File > Open...),
-
-The basic recipe is here:
-http://tjworld.net/wiki/Linux/Ubuntu/GoogleEarthPlusRealTimeGPS
 
 This code originally by Jaroslaw Zachwieja and a guy referring
 to himself/herself as TJ(http://tjworld.net)
