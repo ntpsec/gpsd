@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 # @GENERATED@
 '''
-usage: gegps [-i] [-d kmldir]
-
 Feed location data from a running GPSD to a Google Earth instance.
 The -d argument is the location of the Google Earth installation
 directory.  If not specified, it defaults to the current directory.
@@ -29,7 +27,7 @@ Cleaned up and adapted for the GPSD project by Eric S. Raymond.
 # Preserve this property!
 from __future__ import absolute_import, print_function, division
 
-import getopt
+import argparse
 import os
 import socket     # for socket.error
 import sys
@@ -108,39 +106,100 @@ def kmlize(tpv):
 
 
 if __name__ == "__main__":
-    def usage():
-        "Print usage and exit"
-        sys.stderr.write("usage: gegps: [-d] [-h] [-i] [-V]\n\n"
-                         "    -d directory  Location of Google Earth\n"
-                         "    -h            Print this help and exit\n"
-                         "    -i\n"
-                         "    -V            Print version and exit\n")
-        sys.exit(0)
+    description = 'Feed location data from GPSD to Google Earth.'
+    usage = '%(prog)s [OPTIONS] [host[:port[:device]]]'
+    epilog = ('BSD terms apply: see the file COPYING in the distribution root'
+              ' for details.')
 
-    kmldir = "."
-    initialize = False
-    (options, arguments) = getopt.getopt(sys.argv[1:], "d:hiV")
-    for (opt, arg) in options:
-        if opt == '-d':
-            kmldir = arg
-        elif opt == '-h':
-            usage()
-        elif opt == '-i':
-            initialize = True
-        elif opt == '-V':
-            sys.stderr.write("gegps: Version %s\n" % gps_version)
+    parser = argparse.ArgumentParser(
+                 description=description,
+                 epilog=epilog,
+                 formatter_class=argparse.RawDescriptionHelpFormatter,
+                 usage=usage)
+    parser.add_argument(
+        '-?',
+        action="help",
+        help='show this help message and exit'
+    )
+    parser.add_argument(
+        '-d', '--kmldir',
+        default='.',
+        dest='kmldir',
+        help='Google Earth kml directory. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '-D',
+        '--debug',
+        default=0,
+        dest='debug',
+        help='Set level of debug. Must be integer. [Default %(default)s)]',
+        type=int,
+    )
+    parser.add_argument(
+        '--device',
+        default='',
+        dest='device',
+        help='The device to connect. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '--host',
+        default='localhost',
+        dest='host',
+        help='The host to connect. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '-i', '--initialize',
+        action='store_true',
+        default=False,
+        dest='initialize',
+        help='Google Earth kml directory. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '--port',
+        default=gps.GPSD_PORT,
+        dest='port',
+        help='The port to connect. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '-V', '--version',
+        action='version',
+        help='Output version to stderr, then exit',
+        version="%(prog)s: Version " + gps_version + "\n",
+    )
+    parser.add_argument(
+        'target',
+        help='[host[:port[:device]]]',
+        nargs='?',
+    )
+    options = parser.parse_args()
+
+    # the options host, port, device are set by the defaults
+    if options.target:
+        # override host, port and device with target
+        arg = options.target.split(':')
+        len_arg = len(arg)
+        if len_arg == 1:
+            (options.host,) = arg
+        elif len_arg == 2:
+            (options.host, options.port) = arg
+        elif len_arg == 3:
+            (options.host, options.port, options.device) = arg
+        else:
+            parser.print_help()
             sys.exit(0)
 
     try:
-        session = gps.gps()
+        session = gps.gps(host=options.host, port=options.port,
+                          verbose=options.debug)
     except socket.error:
         sys.stderr.write("gegps: Could not connect to gpsd daemon\n")
         sys.exit(1)
 
     session.stream(gps.WATCH_ENABLE)
 
-    if initialize:
-        f = open(os.path.join(kmldir, 'Open_in_Google_Earth_RT_GPS.kml'), 'w')
+    if options.initialize:
+        f = open(os.path.join(options.kmldir,
+                 'Open_in_Google_Earth_RT_GPS.kml'), 'w')
         f.write(KML_OPEN_IN_GE)
         f.close()
     else:
@@ -148,7 +207,8 @@ if __name__ == "__main__":
             while True:
                 report = session.next()
                 if report['class'] == 'TPV':
-                    f = open(os.path.join(kmldir, 'Realtime_GPS.kml'), 'w')
+                    f = open(os.path.join(options.kmldir,
+                             'Realtime_GPS.kml'), 'w')
                     f.write(kmlize(report))
                     f.close()
         except StopIteration:
