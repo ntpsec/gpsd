@@ -132,6 +132,7 @@ if SCons.__version__ in ['2.3.0', '2.3.1']:
 generated_sources = [
     'ais_json.i',
     'android/gpsd_config',
+    'clients/gegps',
     'clients/gpscat',
     'clients/gpscsv',
     'clients/gpsplot',
@@ -142,7 +143,6 @@ generated_sources = [
     'contrib/skyview2svg.py',
     'contrib/webgps',
     'control',
-    'gegps',
     'gpsd_config.h',
     'gpsd.php',
     'gpsd.rules',
@@ -173,13 +173,13 @@ generated_www = [
 # All installed python programs
 # All are templated
 python_progs = [
+    "clients/gegps",
     "clients/gpscat",
     "clients/gpscsv",
     "clients/gpsplot",
     "clients/gpssubframe",
     "clients/xgps",
     "clients/xgpsspeed",
-    "gegps",
     "gpsfake",
     "gpsprof",
     "ubxtool",
@@ -2963,7 +2963,8 @@ env.Clean(clean_misc, glob.glob('qt-*.os'))
 
 # Clean obsolete files
 env.Clean(clean_misc, ['contrib/gpscsv', 'contrib/gpsplot',
-                       'contrib/gpssubframe', 'gpscat', 'xgps', 'xgpsspeed'])
+                       'contrib/gpssubframe', 'gegps', 'gpscat', 'xgps',
+                       'xgpsspeed'])
 
 # Default targets
 
