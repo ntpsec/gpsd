@@ -140,6 +140,7 @@ generated_sources = [
     'clients/ubxtool',
     'clients/xgps',
     'clients/xgpsspeed',
+    'clients/zerk',
     'contrib/ntpshmviz',
     'contrib/skyview2svg.py',
     'contrib/webgps',
@@ -158,7 +159,6 @@ generated_sources = [
     'packaging/rpm/gpsd.spec',
     'packet_names.h',
     'Qgpsmm.pc',
-    'zerk',
    ]
 
 generated_www = [
@@ -181,9 +181,9 @@ python_progs = [
     "clients/ubxtool",
     "clients/xgps",
     "clients/xgpsspeed",
+    "clients/zerk",
     "gpsfake",
     "gpsprof",
-    "zerk",
 ]
 
 # All man pages.  Always build them all.
@@ -2964,7 +2964,7 @@ env.Clean(clean_misc, glob.glob('qt-*.os'))
 # Clean obsolete files
 env.Clean(clean_misc, ['contrib/gpscsv', 'contrib/gpsplot',
                        'contrib/gpssubframe', 'gegps', 'gpscat', 'ubxtool',
-                       'xgps', 'xgpsspeed'])
+                       'xgps', 'xgpsspeed', 'zerk'])
 
 # Default targets
 

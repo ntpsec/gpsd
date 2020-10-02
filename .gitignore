@@ -26,6 +26,7 @@ clients/gpsplot
 clients/ubxtool
 clients/xgps
 clients/xgpsspeed
+clients/zerk
 contrib/ntpshmviz
 contrib/skyview2svg.py
 contrib/webgps
@@ -40,7 +41,6 @@ gpsprof
 jsongen
 maskaudit.py
 valgrind-audit.py
-zerk
 # Unit tests
 test_bits
 test_float
