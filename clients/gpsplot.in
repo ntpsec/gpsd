@@ -196,7 +196,7 @@ if options.target:
         sys.exit(0)
 
 if not options.port:
-    options.port = 2947
+    options.port = gps.GPSD_PORT
 
 options.scatterplot = False
 options.stripchart = False
