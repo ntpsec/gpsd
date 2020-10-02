@@ -29,6 +29,9 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
+#ifdef HAVE_GETOPT_LONG
+       #include <getopt.h>   // for getopt_long()
+#endif
 #include <math.h>
 #include <netdb.h>        /* for gethostbyname() */
 #include <stdio.h>
@@ -231,6 +234,12 @@ static void usage( char *prog)
 {
   (void)fprintf(stderr,
         "Usage: %s [OPTIONS] [server[:port:[device]]]\n\n"
+#ifdef HAVE_GETOPT_LONG
+        "  --sleep     Sleep for 10 seconds before starting\n"
+        "  --help      Show this help, then exit\n"
+        "  --version   Show version, then exit\n"
+#endif
+        "  -?          Show this help, then exit\n"
         "  -h          Show this help, then exit\n"
         "  -j          Turn on anti-jitter buffering\n"
         "  -l {d|m|s}  Select lat/lon format\n"
@@ -250,15 +259,25 @@ static void usage( char *prog)
 
 int main(int argc, char *argv[])
 {
-    int option, rc;
+    int rc;
     struct sockaddr_in localAddr, servAddr;
     struct hostent *h;
-
+    const char *optstring = "hl:su:V";
+    int ch;
     int n;
+#ifdef HAVE_GETOPT_LONG
+    int option_index = 0;
+    static struct option long_options[] = {
+        {"sleep", no_argument, NULL, 's'},
+        {"help", required_argument, NULL, 'h'},
+        {"version", no_argument, NULL, 'V' },
+        {NULL, 0, NULL, 0},
+    };
+#endif
+
     for(n=0;n<CLIMB;n++) climb[n]=0.0;
 
-    switch (gpsd_units())
-    {
+    switch (gpsd_units()) {
     case imperial:
         altfactor = METERS_TO_FEET;
         altunits = "ft";
@@ -283,14 +302,26 @@ int main(int argc, char *argv[])
     }
 
     /* Process the options.  Print help if requested. */
-    while ((option = getopt(argc, argv, "hl:su:V")) != -1) {
-        switch (option) {
+
+    while (1) {
+#ifdef HAVE_GETOPT_LONG
+        ch = getopt_long(argc, argv, optstring, long_options, &option_index);
+#else
+        ch = getopt(argc, argv, optstring);
+#endif
+
+        if (ch == -1) {
+            break;
+        }
+
+        switch (ch) {
+        case '?':
         case 'h':
         default:
             usage(argv[0]);
             break;
         case 'l':
-            switch ( optarg[0] ) {
+            switch (optarg[0]) {
             case 'd':
                 deg_type = deg_dd;
                 continue;
