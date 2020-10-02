@@ -1878,7 +1878,7 @@ gps2udp = env.Program('gps2udp', ['gps2udp.c'],
 gpxlogger = env.Program('gpxlogger', ['gpxlogger.c'],
                         LIBS=['gps_static'],
                         parse_flags=gpsflags)
-lcdgps = env.Program('lcdgps', ['lcdgps.c'],
+lcdgps = env.Program('clients/lcdgps', ['clients/lcdgps.c'],
                      LIBS=['gps_static'],
                      parse_flags=gpsflags)
 cgps = env.Program('cgps', ['cgps.c'],
@@ -2963,7 +2963,8 @@ env.Clean(clean_misc, glob.glob('qt-*.os'))
 
 # Clean obsolete files
 env.Clean(clean_misc, ['contrib/gpscsv', 'contrib/gpsplot',
-                       'contrib/gpssubframe', 'gegps', 'gpscat', 'ubxtool',
+                       'contrib/gpssubframe', 'gegps', 'gpscat', 'lcdgps',
+                       'ubxtool',
                        'xgps', 'xgpsspeed', 'zerk'])
 
 # Default targets
