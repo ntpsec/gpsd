@@ -137,6 +137,7 @@ generated_sources = [
     'clients/gpscsv',
     'clients/gpsplot',
     'clients/gpssubframe',
+    'clients/ubxtool',
     'clients/xgps',
     'clients/xgpsspeed',
     'contrib/ntpshmviz',
@@ -157,7 +158,6 @@ generated_sources = [
     'packaging/rpm/gpsd.spec',
     'packet_names.h',
     'Qgpsmm.pc',
-    'ubxtool',
     'zerk',
    ]
 
@@ -178,11 +178,11 @@ python_progs = [
     "clients/gpscsv",
     "clients/gpsplot",
     "clients/gpssubframe",
+    "clients/ubxtool",
     "clients/xgps",
     "clients/xgpsspeed",
     "gpsfake",
     "gpsprof",
-    "ubxtool",
     "zerk",
 ]
 
@@ -2963,8 +2963,8 @@ env.Clean(clean_misc, glob.glob('qt-*.os'))
 
 # Clean obsolete files
 env.Clean(clean_misc, ['contrib/gpscsv', 'contrib/gpsplot',
-                       'contrib/gpssubframe', 'gegps', 'gpscat', 'xgps',
-                       'xgpsspeed'])
+                       'contrib/gpssubframe', 'gegps', 'gpscat', 'ubxtool',
+                       'xgps', 'xgpsspeed'])
 
 # Default targets
 

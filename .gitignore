@@ -23,6 +23,7 @@ clients/gegps
 clients/gpscsv
 clients/gpssubframe
 clients/gpsplot
+clients/ubxtool
 clients/xgps
 clients/xgpsspeed
 contrib/ntpshmviz
@@ -38,7 +39,6 @@ gpsfake
 gpsprof
 jsongen
 maskaudit.py
-ubxtool
 valgrind-audit.py
 zerk
 # Unit tests
