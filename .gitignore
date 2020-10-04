@@ -1,7 +1,7 @@
 # Binaries
 cgps
-cgpxlogger
 clients/lcdgps
+clients/gpxlogger
 gps2udp
 gpscap.py
 gpsctl
@@ -11,7 +11,6 @@ gpsdecode
 gpsmon
 gpspipe
 gpsrinex
-gpxlogger
 ntpshmmon
 ppscheck
 rtcmdecode

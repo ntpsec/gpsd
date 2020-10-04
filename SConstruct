@@ -1875,7 +1875,7 @@ gpsrinex = env.Program('gpsrinex', ['gpsrinex.c'],
 gps2udp = env.Program('gps2udp', ['gps2udp.c'],
                       LIBS=['gps_static'],
                       parse_flags=gpsflags)
-gpxlogger = env.Program('gpxlogger', ['gpxlogger.c'],
+gpxlogger = env.Program('clients/gpxlogger', ['clients/gpxlogger.c'],
                         LIBS=['gps_static'],
                         parse_flags=gpsflags)
 lcdgps = env.Program('clients/lcdgps', ['clients/lcdgps.c'],
@@ -2964,7 +2964,7 @@ env.Clean(clean_misc, glob.glob('qt-*.os'))
 # Clean obsolete files
 env.Clean(clean_misc, ['contrib/gpscsv', 'contrib/gpsplot',
                        'contrib/gpssubframe', 'gegps', 'gpscat', 'gpsprof',
-                       'lcdgps', 'ubxtool',
+                       'gpxlogger', 'lcdgps', 'ubxtool',
                        'xgps', 'xgpsspeed', 'zerk'])
 
 # Default targets
@@ -2982,7 +2982,7 @@ misc_sources = ['cgps.c',
                 'gpsdctl.c',
                 'gpsdecode.c',
                 'gpspipe.c',
-                'gpxlogger.c',
+                'clients/gpxlogger.c',
                 'ntpshmmon.c',
                 'ppscheck.c',
                 ]
