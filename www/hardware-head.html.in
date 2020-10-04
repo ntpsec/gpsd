@@ -189,7 +189,7 @@ is given it is a measured NTP offset.</p>
 
 <p>This table is generated from a capability database in the
 <code>gpsd</code> source tree. Please help us enrich the database with
-new devices by filling out <a href="@WEBFORM@">this form</a>.</p>
+new devices by emailing a new device report to @DEVMAIL@.</p>
 
 <div>&nbsp;</div>
 
