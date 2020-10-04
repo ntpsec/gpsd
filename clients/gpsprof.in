@@ -20,8 +20,8 @@ Requires gnuplot, but gnuplot can be on another host.
 # Preserve this property!
 from __future__ import absolute_import, print_function, division
 
+import argparse
 import copy
-import getopt
 import math
 import os
 import signal
@@ -32,6 +32,7 @@ import time
 # pylint wants local modules last
 try:
     import gps
+    import gps.clienthelpers
 except ImportError as e:
     sys.stderr.write(
         "gpsprof: can't load Python gps libraries -- check PYTHONPATH.\n")
@@ -43,8 +44,6 @@ if gps.__version__ != gps_version:
     sys.stderr.write("gpsprof: ERROR: need gps module version %s, got %s\n" %
                      (gps_version, gps.__version__))
     sys.exit(1)
-
-debug = False
 
 
 def dist_2d(a, b):
@@ -238,7 +237,8 @@ class plotter(object):
         "Collect data from the GPS."
 
         try:
-            self.session = gps.gps(host=host, port=port, verbose=verb)
+            self.session = gps.gps(host=options.host, port=options.port,
+                                   verbose=verb)
         except socket.error:
             sys.stderr.write("gpsprof: gpsd unreachable.\n")
             sys.exit(1)
@@ -251,18 +251,19 @@ class plotter(object):
         flags = gps.WATCH_ENABLE | gps.WATCH_JSON
         if self.requires_time:
             flags |= gps.WATCH_TIMING
-        if device:
+        if options.device:
             flags |= gps.WATCH_DEVICE
         try:
             signal.signal(signal.SIGUSR1,
                           lambda empty, unused: sys.stderr.write(
                               "%d of %d (%d%%)..."
-                              % (wait - countdown, wait,
-                                 ((wait - countdown) * 100.0 / wait))))
+                              % (options.wait - countdown, options.wait,
+                                 ((options.wait - countdown) * 100.0 /
+                                  options.wait))))
             signal.siginterrupt(signal.SIGUSR1, False)
-            self.session.stream(flags, device)
+            self.session.stream(flags, options.device)
             baton = Baton("gpsprof: %d looking for fix" % os.getpid(), "done")
-            countdown = wait
+            countdown = options.wait
             basetime = time.time()
             while countdown > 0:
                 if self.session.read() == -1:
@@ -274,7 +275,8 @@ class plotter(object):
                                      % self.session.data["message"])
                     sys.exit(1)
                 if self.session.data["class"] == "DEVICES":
-                    if len(self.session.data["devices"]) != 1 and not device:
+                    if ((len(self.session.data["devices"]) != 1 and
+                         not options.device)):
                         sys.stderr.write("ERROR: multiple devices connected, "
                                          "you must explicitly specify the "
                                          "device.\n")
@@ -282,7 +284,7 @@ class plotter(object):
                     for i in range(len(self.session.data["devices"])):
                         self.device = copy.copy(
                             self.session.data["devices"][i])
-                        if self.device['path'] == device:
+                        if self.device['path'] == options.device:
                             break
                 if self.session.data["class"] == "WATCH":
                     if ((self.requires_time and
@@ -298,16 +300,18 @@ class plotter(object):
                 # We can get some funky artifacts at start of self.session
                 # apparently due to RS232 buffering effects. Ignore
                 # them.
-                if ((threshold and
-                     time.time() - basetime < self.session.cycle * threshold)):
+                if ((options.threshold and
+                     (time.time() - basetime <
+                      self.session.cycle * options.threshold))):
                     continue
                 if self.session.fix.mode <= gps.MODE_NO_FIX:
                     continue
                 if self.sample():
-                    if countdown == wait:
+                    if countdown == options.wait:
                         sys.stderr.write("first fix in %.2fsec, gathering %d "
                                          "samples..."
-                                         % (time.time() - basetime, wait))
+                                         % (time.time() - basetime,
+                                            options.wait))
                     countdown -= 1
             baton.end()
         finally:
@@ -681,7 +685,7 @@ class spaceplot(plotter):
                      stat_used.max,
                      '{:>10.1f}'.format(stat_used.sigma))
 
-        if debug:
+        if 1 < options.debug:
             fmt += ('set label 15 at screen 0.6, screen 0.12 '
                     '"\\n'
                     '      min\\n'
@@ -1108,133 +1112,195 @@ plot \\\n'''
         return fmt + self.header() + (self.data() + "e\n") * len(legends)
 
 
-formatters = (polarplot, polarplotunused, polarplotused, spaceplot, timeplot,
-              uninstrumented, instrumented)
-
-
-def usage():
-    "Print help, then exit"
-    sys.stderr.write('''\
-usage: gpsprof [OPTION]... [server[:port[:device]]]
-    [-D debuglevel]
-    [-d dumpfile]
-    [-f {%s}]
-    [-h]
-    [-l logfile]
-    [-m threshold]
-    [-n samplecount]
-    [-r]
-    [-s speed]
-    [-S subtitle]
-    [-T terminal]
-    [-t title]
-    [-V]
-
-''' % ("|".join([x.name for x in formatters])))
-    sys.exit(0)
-
-
 if __name__ == '__main__':
+    usage = '%(prog)s [OPTIONS] [host[:port[:device]]]'
+    epilog = ('BSD terms apply: see the file COPYING in the distribution '
+              'root for details.')
+
+    # get default units from the environment
+    # GPSD_UNITS, LC_MEASUREMENT and LANG
+    # FIXME: use default_units
+    default_units = gps.clienthelpers.unit_adjustments()
+
+    parser = argparse.ArgumentParser(usage=usage, epilog=epilog)
+    parser.add_argument(
+        '-?',
+        action="help",
+        help='show this help message and exit'
+    )
+    parser.add_argument(
+        '-D',
+        '--debug',
+        dest='debug',
+        default=0,
+        type=int,
+        help='Set level of debug. Must be integer. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '-d', '--dumpfile',
+        dest='dumpfile',
+        default=None,
+        help='Set dumpfile. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '--device',
+        dest='device',
+        default='',
+        help='The device to connect. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '-f', '--formatter',
+        choices=('instrumented',
+                 'polar',
+                 'polarunused',
+                 'polarused',
+                 'space',
+                 'time',
+                 'uninstrumented',
+                 ),
+        dest='plotmode',
+        default='space',
+        help='Formatter to use. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '--host',
+        dest='host',
+        default='localhost',
+        help='The host to connect. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '-l',
+        dest='logfile',
+        default=None,
+        help='Select logfile for JSON. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '-m', '--threshold',
+        dest='threshold',
+        default=None,
+        help='Select logfile. [Default %(default)s)]',
+        type=int,
+    )
+    parser.add_argument(
+        '-n', '--wait',
+        dest='wait',
+        default='100',
+        help=('Select wait time in seconds before plotting.\n'
+              '[Default %(default)s)]'),
+        type=str,
+    )
+    parser.add_argument(
+        '--port',
+        dest='port',
+        default=gps.GPSD_PORT,
+        help='The port to connect. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '-r', '--redo',
+        action='store_true',
+        dest='redo',
+        default=False,
+        help=('Redo from a previous JSON logfile on stdin.\n'
+              '[Default %(default)s)]'),
+    )
+    parser.add_argument(
+        '-S', '--subtitle',
+        dest='subtitle',
+        default=None,
+        help='Plot subtitle. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '-t', '--title',
+        dest='title',
+        default=None,
+        help='Plot title. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '-T', '--terminal',
+        dest='terminal',
+        default=None,
+        help='gnuplot terminal type. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '-V', '--version',
+        action='version',
+        version="%(prog)s: Version " + gps_version + "\n",
+        help='Output version to stderr, then exit',
+    )
+    parser.add_argument(
+        'target',
+        nargs='?',
+        help='[host[:port[:device]]]',
+    )
+
+    options = parser.parse_args()
+
+    if options.logfile:
+        options.logfp = open(options.logfile, "w")
+    else:
+        options.logfp = None
+
+    # the options host, port, device are set by the defaults
+    if options.target:
+        # override with target
+        arg = options.target.split(':')
+        len_arg = len(arg)
+        if len_arg == 1:
+            (options.host,) = arg
+        elif len_arg == 2:
+            (options.host, options.port) = arg
+        elif len_arg == 3:
+            (options.host, options.port, options.device) = arg
+        else:
+            parser.print_help()
+            sys.exit(0)
+
+    if not options.port:
+        options.port = gps.GPSD_PORT
+
+    formatters = (polarplot, polarplotunused, polarplotused,
+                  spaceplot, timeplot, uninstrumented, instrumented)
+    if options.plotmode:
+        for formatter in formatters:
+            if formatter.name == options.plotmode:
+                plot = formatter()
+                break
+        else:
+            sys.stderr.write("gpsprof: no such formatter.\n")
+            sys.exit(1)
+
+    if options.wait[-1] == 'h':
+        options.wait = int(options.wait[:-1]) * 360
+    else:
+        options.wait = int(options.wait)
+
     try:
-        (options, arguments) = getopt.getopt(sys.argv[1:],
-                                             "d:f:hl:m:n:rs:t:D:S:T:V")
-
-        plotmode = "space"
-        raw = False
-        title = None
-        subtitle = None
-        threshold = 0
-        wait = 100
-        verbose = 0
-        terminal = None
-        dumpfile = None
-        logfp = None
-        redo = False
-        for (switch, val) in options:
-            if switch == '-d':
-                dumpfile = val
-            elif switch == '-D':
-                # set debug level, 0 off, 1 medium, 2 high
-                verbose = int(val)
-            elif switch == '-f':
-                plotmode = val
-            elif switch == '-h':
-                # print help, then exit
-                usage()
-
-            elif switch == '-l':
-                logfp = open(val, "w")
-            elif switch == '-m':
-                threshold = int(val)
-            elif switch == '-n':
-                if val[-1] == 'h':
-                    wait = int(val[:-1]) * 360
-                else:
-                    wait = int(val)
-            elif switch == '-r':
-                redo = True
-            elif switch == '-t':
-                # replace title
-                title = val
-            elif switch == '-S':
-                # add sub title
-                subtitle = val
-            elif switch == '-T':
-                terminal = val
-            elif switch == '-V':
-                sys.stderr.write("gpsprof: Version %s\n" % gps_version)
-                sys.exit(0)
-
-        (host, port, device) = ("localhost", "2947", None)
-        if arguments:
-            args = arguments[0].split(":")
-            if len(args) >= 1:
-                host = args[0]
-            if len(args) >= 2:
-                port = args[1]
-            if len(args) >= 3:
-                device = args[2]
-
-        # Select the plotting mode
-        if plotmode:
-            for formatter in formatters:
-                if formatter.name == plotmode:
-                    plot = formatter()
-                    break
-            else:
-                sys.stderr.write("gpsprof: no such formatter.\n")
-                sys.exit(1)
         # Get fix data from the GPS
-        if redo:
+        if options.redo:
             plot.replot(sys.stdin)
         else:
-            plot.collect(verbose, logfp)
+            plot.collect(options.debug, options.logfp)
         plot.postprocess()
         # Save the timing data (only) for post-analysis if required.
-        if dumpfile:
-            with open(dumpfile, "w") as fp:
+        if options.dumpfile:
+            with open(options.dumpfile, "w") as fp:
                 fp.write(plot.dump())
-        if logfp:
-            logfp.close()
+        if options.logfp:
+            options.logfp.close()
         # Ship the plot to standard output
-        if not title:
-            title = plot.whatami()
+        if not options.title:
+            options.title = plot.whatami()
             # escape " for gnuplot
-            title = title.replace('"', '\\"')
-        if subtitle:
-            title += '\\n' + subtitle
-        if terminal:
+            options.title = options.title.replace('"', '\\"')
+        if options.subtitle:
+            options.title += '\\n' + options.subtitle
+        if options.terminal:
             sys.stdout.write("set terminal %s truecolor enhanced size"
                              " 800,950\n"
-                             % terminal)
+                             % options.terminal)
         # double quotes on title so \n is parsed by gnuplot
-        sys.stdout.write('set title noenhanced "%s\\n\\n"\n' % title)
+        sys.stdout.write('set title noenhanced "%s\\n\\n"\n' % options.title)
         sys.stdout.write(plot.plot())
-    except getopt.GetoptError as error:
-        print(error)
-        print("")
-        usage()
-        sys.exit(1)
     except KeyboardInterrupt:
         pass
 

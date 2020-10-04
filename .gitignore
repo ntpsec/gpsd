@@ -22,6 +22,7 @@ android/gpsd_config
 clients/gegps
 clients/gpscsv
 clients/gpssubframe
+clients/gpsprof
 clients/gpsplot
 clients/ubxtool
 clients/xgps
@@ -37,7 +38,6 @@ gps/packet.py
 gpscat
 gpsd.php
 gpsfake
-gpsprof
 jsongen
 maskaudit.py
 valgrind-audit.py

@@ -135,6 +135,7 @@ generated_sources = [
     'clients/gegps',
     'clients/gpscat',
     'clients/gpscsv',
+    'clients/gpsprof',
     'clients/gpsplot',
     'clients/gpssubframe',
     'clients/ubxtool',
@@ -153,7 +154,6 @@ generated_sources = [
     'gps/packet.py',
     'gps/__init__.py',
     'gps_maskdump.c',
-    'gpsprof',
     'libgps.pc',
     'libQgpsmm.prl',
     'packaging/rpm/gpsd.spec',
@@ -176,6 +176,7 @@ python_progs = [
     "clients/gegps",
     "clients/gpscat",
     "clients/gpscsv",
+    "clients/gpsprof",
     "clients/gpsplot",
     "clients/gpssubframe",
     "clients/ubxtool",
@@ -183,7 +184,6 @@ python_progs = [
     "clients/xgpsspeed",
     "clients/zerk",
     "gpsfake",
-    "gpsprof",
 ]
 
 # All man pages.  Always build them all.
@@ -2963,8 +2963,8 @@ env.Clean(clean_misc, glob.glob('qt-*.os'))
 
 # Clean obsolete files
 env.Clean(clean_misc, ['contrib/gpscsv', 'contrib/gpsplot',
-                       'contrib/gpssubframe', 'gegps', 'gpscat', 'lcdgps',
-                       'ubxtool',
+                       'contrib/gpssubframe', 'gegps', 'gpscat', 'gpsprof',
+                       'lcdgps', 'ubxtool',
                        'xgps', 'xgpsspeed', 'zerk'])
 
 # Default targets
