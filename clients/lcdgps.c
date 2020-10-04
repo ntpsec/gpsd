@@ -269,7 +269,7 @@ int main(int argc, char *argv[])
     int option_index = 0;
     static struct option long_options[] = {
         {"sleep", no_argument, NULL, 's'},
-        {"help", required_argument, NULL, 'h'},
+        {"help", no_argument, NULL, 'h'},
         {"version", no_argument, NULL, 'V' },
         {NULL, 0, NULL, 0},
     };
