@@ -3,12 +3,15 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "../gpsd_config.h"  /* must be before all includes */
 
 #include <assert.h>
 #include <errno.h>
 #include <libgen.h>
 #include <math.h>
+#ifdef HAVE_GETOPT_LONG
+       #include <getopt.h>   // for getopt_long()
+#endif
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -17,10 +20,10 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "gps.h"
-#include "gpsdclient.h"
-#include "os_compat.h"
-#include "timespec.h"
+#include "../gps.h"
+#include "../gpsdclient.h"
+#include "../os_compat.h"
+#include "../timespec.h"
 
 static char *progname;
 static struct fixsource_t source;
@@ -198,11 +201,31 @@ static void quit_handler(int signum)
 static void usage(void)
 {
     (void)fprintf(stderr,
-                  "Usage: %s [-V] [-h] [-l] [-d] [-D debuglevel]"
-                  " [-i timeout] [-f filename] [-m minmove]\n"
-                  "\t[-r] [-e exportmethod] [server[:port:[device]]]\n\n"
-                  "defaults to '%s -i 5 -e %s localhost:2947'\n",
-                  progname, progname, export_default()->name);
+         "Usage: %s [OPTIONS] [server[:port:[device]]]\n\n"
+#ifdef HAVE_GETOPT_LONG
+         "  --daemonize         Daemonize\n"
+         "  --debug DEBUGLEVEL\n"
+         "  --export EXPORTMETHOD  Default %s\n"
+         "  --exports           List available exports, then exit\n"
+         "  --help              Show this help, then exit\n"
+         "  --interval TIMEOUT\n"
+         "  --minmove MINMOVE\n"
+         "  --output FILNAME\n"
+         "  --reconnect\n"
+         "  --version           Show version, then exit\n"
+#endif
+         "  -D DEBUGLEVEL\n"
+         "  -d                  Daemonize\n"
+         "  -e EXPORTMETHOD     Default %s \n"
+         "  -f FILENAME\n"
+         "  -h\n"
+         "  -i TIMEOUT          Default 5\n"
+         "  -l \n"
+         "  -m MINMOVE\n"
+         "  -r\n"
+         "  -V                  Show version and exit\n",
+         progname, export_default()->name,
+         export_default()->name);
     exit(EXIT_FAILURE);
 }
 
@@ -213,6 +236,23 @@ int main(int argc, char **argv)
     bool reconnect = false;
     unsigned int flags = WATCH_ENABLE;
     struct exportmethod_t *method = NULL;
+    const char *optstring = "dD:e:f:hi:lm:rV";
+#ifdef HAVE_GETOPT_LONG
+    int option_index = 0;
+    static struct option long_options[] = {
+        {"daemonize", no_argument, NULL, 'd'},
+        {"debug", required_argument, NULL, 'D'},
+        {"export", required_argument, NULL, 'e'},
+        {"exports", required_argument, NULL, 'l'},
+        {"help", no_argument, NULL, 'h'},
+        {"interval", required_argument, NULL, 'i'},
+        {"minmove", required_argument, NULL, 'm'},
+        {"output", required_argument, NULL, 'f'},
+        {"reconnect", no_argument, NULL, 'r' },
+        {"version", no_argument, NULL, 'V' },
+        {NULL, 0, NULL, 0},
+    };
+#endif
 
     progname = argv[0];
 
@@ -223,7 +263,17 @@ int main(int argc, char **argv)
     }
 
     logfile = stdout;
-    while ((ch = getopt(argc, argv, "dD:e:f:hi:lm:rV")) != -1) {
+    while (1) {
+#ifdef HAVE_GETOPT_LONG
+        ch = getopt_long(argc, argv, optstring, long_options, &option_index);
+#else
+        ch = getopt(argc, argv, optstring);
+#endif
+
+        if (ch == -1) {
+            break;
+        }
+
         switch (ch) {
         case 'd':
             openlog(basename(progname), LOG_PID | LOG_PERROR, LOG_DAEMON);
