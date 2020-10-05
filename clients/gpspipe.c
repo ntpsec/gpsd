@@ -27,6 +27,9 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#ifdef HAVE_GETOPT_LONG
+       #include <getopt.h>   // for getopt_long()
+#endif
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -102,27 +105,64 @@ static void usage(void)
 {
     (void)fprintf(stderr,
                   "Usage: gpspipe [OPTIONS] [server[:port[:device]]]\n\n"
-                  "-2 Set the split24 flag.\n"
-                  "-d Run as a daemon.\n"
-                  "-h Show this help.\n"
-                  "-l Sleep for ten seconds before connecting to gpsd.\n"
-                  "-n [count] exit after count packets.\n"
-                  "-o [file] Write output to file.\n"
-                  "-P Include PPS JSON in NMEA or raw mode.\n"
-                  "-p Include profiling info in the JSON.\n"
-                  "-r Dump raw NMEA.\n"
-                  "-R Dump super-raw mode (GPS binary).\n"
-                  "-s [serial dev] emulate a 4800bps NMEA GPS on serial port (use with '-r').\n"
-                  "-S Set scaled flag. For AIS and subframe data.\n"
-                  "-T [format] set the timestamp format (strftime(3)-like; implies '-t')\n"
-                  "-t Time stamp the data.\n"
-                  "-u usec time stamp, implies -t. Use -uu to output sec.usec\n"
-                  "-v Print a little spinner.\n"
-                  "-V Print version and exit.\n"
-                  "-w Dump gpsd native data.\n"
-                  "-x [seconds] Exit after given delay.\n"
-                  "-Z sets the timestamp format iso8601: implies '-t'\n"
-                  "You must specify one, or more, of -r, -R, or -w\n"
+#ifdef HAVE_GETOPT_LONG
+                  "  --count COUNT    Exit after COUNT packets.\n"
+                  "  --daemonize      Run as daemon.\n"
+                  "  --help           Show this help and exit.\n"
+                  "  --json           Dump gpsd native JSON data.\n"
+                  "  --nmea           Dump (psuedo) NMEA.\n"
+                  "  --output FILE    Write output to FILE.\n"
+                  "  --pps            Include PPS JSON in NMEA or raw mode.\n"
+                  "  --profile        Include profiling info in the JSON.\n"
+                  "  --raw            Dump super-raw mode, GPS binary and "
+                  "NMEA.\n"
+                  "  --scaled         Set scaled flag. For AIS and subframe "
+                  "data.\n"
+                  "  --seconds        Exit after SECONDS delay.\n"
+                  "  --serial DEV     Emulate a 4800bps NMEA GPS on "
+                  "DEV (use with '-r').\n"
+                  "  --sleep          Sleep for ten seconds before "
+                  "connecting to gpsd.\n"
+                  "  --spinner        Print a little spinner.\n"
+                  "  --split24        Set the split24 flag.\n"
+                  "  --timefmt        Set the timestamp format "
+                  "(strftime(3)-like; implies '-t').\n"
+                  "  --timestamp      Time stamp the data.\n"
+                  "  --usec           Time stamp in usec, implies -t. "
+                  "Use twice for sec.usec\n"
+                  "  --version        Print version and exit.\n"
+                  "  --zulu           Set the timestamp format to iso8601, "
+                  "implies '-t'\n"
+#endif
+                  "  -2               Set the split24 flag.\n"
+                  "  -d               Run as a daemon.\n"
+                  "  -h               Show this help and exit.\n"
+                  "  -l               Sleep for ten seconds before "
+                  "connecting to gpsd.\n"
+                  "  -n COUNT         Exit after count packets.\n"
+                  "  -o FILE          Write output to FILE.\n"
+                  "  -P               Include PPS JSON in NMEA or raw mode.\n"
+                  "  -p               Include profiling info in the JSON.\n"
+                  "  -r               Dump (pseudo) NMEA.\n"
+                  "  -R               Dump super-raw mode, GPS binary and "
+                  "NMEA.\n"
+                  "  -s DEV           Emulate a 4800bps NMEA GPS on "
+                  "DEV (use with '-r').\n"
+                  "  -S               Set scaled flag. For AIS and subframe "
+                  "data.\n"
+                  "  -T FORMAT        Set the timestamp format "
+                  "(strftime(3)-like; implies '-t')\n"
+                  "  -t               Time stamp the data.\n"
+                  "  -u               Time stamp in usec, implies -t. "
+                  "Use -uu to output sec.usec\n"
+                  "  -v               Print a little spinner.\n"
+                  "  -V               Print version and exit.\n"
+                  "  -w               Dump gpsd native JSON data.\n"
+                  "  -x SECONDS       Exit after SECONDS delay.\n"
+                  "  -Z               Set the timestamp format to iso8601, "
+                  "implies '-t'\n\n"
+                  "You must specify one, or more, of: "
+                  "--json, --nmea, --raw, -r, -R, or -w\n"
                   "You must use -o if you use -d.\n");
 }
 
@@ -144,7 +184,7 @@ int main(int argc, char **argv)
     int option_u = 0;                   // option to show uSeconds
     long count = -1;
     time_t exit_timer = 0;
-    int option;
+    int ch;
     unsigned int vflag = 0, l = 0;
     FILE *fp;
     unsigned int flags;
@@ -153,11 +193,47 @@ int main(int argc, char **argv)
     struct fixsource_t source;
     char *serialport = NULL;
     char *outfile = NULL;
+    const char *optstring = "2?dD:hln:o:pPrRwSs:tT:uvVx:Z";
+#ifdef HAVE_GETOPT_LONG
+    int option_index = 0;
+    static struct option long_options[] = {
+        {"count", required_argument, NULL, 'n'},
+        {"daemonize", no_argument, NULL, 'd'},
+        {"help", no_argument, NULL, 'h'},
+        {"json", no_argument, NULL, 'w'},
+        {"nmea", no_argument, NULL, 'r' },
+        {"output", required_argument, NULL, 'o'},
+        {"pps", no_argument, NULL, 'P' },
+        {"profile", no_argument, NULL, 'P' },
+        {"scaled", no_argument, NULL, 'S' },
+        {"seconds", required_argument, NULL, 'x'},
+        {"serial", no_argument, NULL, 'r' },
+        {"sleep", required_argument, NULL, 'i'},
+        {"spinner", no_argument, NULL, 'v' },
+        {"split24", no_argument, NULL, '2'},
+        {"raw", no_argument, NULL, 'R' },
+        {"timefmt", required_argument, NULL, 'T'},
+        {"timestamp", required_argument, NULL, 't'},
+        {"usec", no_argument, NULL, 'u'},
+        {"version", no_argument, NULL, 'V' },
+        {"zulu", no_argument, NULL, 'Z'},
+        {NULL, 0, NULL, 0},
+    };
+#endif
 
     flags = WATCH_ENABLE;
-    while ((option = getopt(argc, argv,
-                            "2?dD:hln:o:pPrRwSs:tT:uvVx:Z")) != -1) {
-        switch (option) {
+    while (1) {
+#ifdef HAVE_GETOPT_LONG
+        ch = getopt_long(argc, argv, optstring, long_options, &option_index);
+#else
+        ch = getopt(argc, argv, optstring);
+#endif
+
+        if (ch == -1) {
+            break;
+        }
+
+        switch (ch) {
         case '2':
             flags |= WATCH_SPLIT24;
             break;
@@ -233,6 +309,8 @@ int main(int argc, char **argv)
             break;
         case '?':
         case 'h':
+            usage();
+            exit(0);
         default:
             usage();
             exit(EXIT_FAILURE);
