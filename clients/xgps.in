@@ -733,9 +733,9 @@ class Base(object):
         about.set_version("Versions:\n"
                           "xgps %s\n"
                           "PyGObject Version %d.%d.%d" %
-                          (gps_version,  gi.version_info[0],
+                          (gps_version, gi.version_info[0],
                            gi.version_info[1], gi.version_info[2]))
-        about.set_copyright("Copyright 2004 by The GPSD Project")
+        about.set_copyright("Copyright 2010 by The GPSD Project")
         about.set_website("@WEBSITE@")
         about.set_website_label("@WEBSITE@")
         about.set_license("BSD-2-clause")
