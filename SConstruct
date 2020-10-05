@@ -1869,7 +1869,7 @@ gpsdctl = env.Program('gpsdctl', ['gpsdctl.c'],
 gpspipe = env.Program('gpspipe', ['gpspipe.c'],
                       LIBS=['gps_static'],
                       parse_flags=gpsflags)
-gpsrinex = env.Program('gpsrinex', ['gpsrinex.c'],
+gpsrinex = env.Program('clients/gpsrinex', ['clients/gpsrinex.c'],
                        LIBS=['gps_static'],
                        parse_flags=gpsflags)
 gps2udp = env.Program('clients/gps2udp', ['clients/gps2udp.c'],
@@ -2964,7 +2964,7 @@ env.Clean(clean_misc, glob.glob('qt-*.os'))
 # Clean obsolete files
 env.Clean(clean_misc, ['contrib/gpscsv', 'contrib/gpsplot',
                        'contrib/gpssubframe', 'gegps', 'gps2udp',
-                       'gpscat', 'gpsprof',
+                       'gpscat', 'gpsprof', 'gpsrinex',
                        'gpxlogger', 'lcdgps', 'ubxtool',
                        'xgps', 'xgpsspeed', 'zerk'])
 

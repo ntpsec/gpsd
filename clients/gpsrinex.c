@@ -61,7 +61,7 @@
  *
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "../gpsd_config.h"  /* must be before all includes */
 
 #include <assert.h>
 #include <errno.h>
@@ -81,11 +81,11 @@
        #include <getopt.h>
 #endif
 
-#include "compiler.h"
-#include "gps.h"
-#include "gpsdclient.h"
-#include "os_compat.h"
-#include "timespec.h"
+#include "../compiler.h"
+#include "../gps.h"
+#include "../gpsdclient.h"
+#include "../os_compat.h"
+#include "../timespec.h"
 
 static char *progname;
 static struct fixsource_t source;
