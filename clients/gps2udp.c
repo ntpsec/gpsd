@@ -18,6 +18,9 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#ifdef HAVE_GETOPT_LONG
+       #include <getopt.h>   // for getopt_long()
+#endif
 #include <netdb.h>        /* for gethostbyname() */
 #include <netinet/in.h>
 #include <stdbool.h>
@@ -186,18 +189,27 @@ static void usage(void)
 {
     (void)fprintf(stderr,
                   "Usage: gps2udp [OPTIONS] [server[:port[:device]]]\n\n"
-                  "-h Show this help.\n"
-                  "-u Send UDP NMEA/JSON feed to host:port "
-                  "multiple -u host:port accepted]\n"
-                  "-n Feed NMEA.\n"
-                  "-j Feed JSON.\n"
-                  "-a Select AIS message only.\n"
-                  "-c [count] exit after count packets.\n"
-                  "-b Run in background as a daemon.\n"
-                  "-d [0-2] 1 display sent packets, 2 display ignored "
-                  "packets.\n"
-                  "-V Print version and exit.\n"
-                  "-v Print version and exit (deprecated).\n"
+#ifdef HAVE_GETOPT_LONG
+                  "  --ais               Select AIS messages only.\n"
+                  "  --count COUNT       exit after count packets.\n"
+                  "  --daemonize         Daemonize\n"
+                  "  --debug DEBUGLEVEL\n"
+                  "  --help              Show this help, then exit\n"
+                  "  --json              Feed JSON messages only.\n"
+                  "  --nmea              Feed NMEA messages only.\n"
+                  "  --version           Show version, then exit\n"
+#endif
+                  "  -a                  Select AIS messages only.\n"
+                  "  -b                  Run in background as a daemon.\n"
+                  "  -c COUNT            Exit after count packets.\n"
+                  "  -d [0-2]            1 display sent packets, "
+                  "2 display ignored packets.\n"
+                  "  -h Show this help.\n"
+                  "  -j Feed JSON.\n"
+                  "  -n Feed NMEA.\n"
+                  "  -u HOST:PORT        Send UDP NMEA/JSON feed to host:port "
+                  "multiple -u accepted]\n"
+                  "  -V                  Print version and exit.\n"
                   "\n"
                   "example: gps2udp -a -n -c 2 -d 1 -u data.aishub.net:2222 "
                   "fridu.net\n"
@@ -361,15 +373,48 @@ int main(int argc, char **argv)
 {
     bool daemonize = false;
     long count = -1;
-    int option;
+    int ch;
     char *udphostport[MAX_UDP_DEST];
+    const char *optstring = "?habnjVc:l:u:d:";
+#ifdef HAVE_GETOPT_LONG
+    int option_index = 0;
+    static struct option long_options[] = {
+        {"ais", no_argument, NULL, 'h'},
+        {"count", required_argument, NULL, 'c'},
+        {"daemonize", no_argument, NULL, 'b'},
+        {"debug", required_argument, NULL, 'd'},
+        {"help", no_argument, NULL, 'h'},
+        {"json", no_argument, NULL, 'j'},
+        {"nmea", no_argument, NULL, 'n'},
+        {"version", no_argument, NULL, 'V' },
+        {NULL, 0, NULL, 0},
+    };
+#endif
 
     // pacify covarity
     memset(udphostport, 0, sizeof(udphostport));
 
     flags = WATCH_ENABLE;
-    while ((option = getopt(argc, argv, "?habnjvVc:l:u:d:")) != -1) {
-        switch (option) {
+    while (1) {
+#ifdef HAVE_GETOPT_LONG
+        ch = getopt_long(argc, argv, optstring, long_options, &option_index);
+#else
+        ch = getopt(argc, argv, optstring);
+#endif
+        if (ch == -1) {
+            break;
+        }
+
+        switch (ch) {
+        case 'a':
+            aisonly = true;
+            break;
+        case 'b':
+            daemonize = true;
+            break;
+        case 'c':
+            count = atol(optarg);
+            break;
         case 'd':
             debug = atoi(optarg);
             if ((debug <1) || (debug > 2)) {
@@ -377,24 +422,15 @@ int main(int argc, char **argv)
                 exit(1);
             }
             break;
-        case 'n':
-            if (debug >0)
-                (void)fprintf(stdout, "NMEA selected\n");
-            flags |= WATCH_NMEA;
-            break;
         case 'j':
             if (debug >0)
                 (void)fprintf(stdout, "JSON selected\n");
             flags |= WATCH_JSON;
             break;
-        case 'a':
-            aisonly = true;
-            break;
-        case 'c':
-            count = atol(optarg);
-            break;
-        case 'b':
-            daemonize = true;
+        case 'n':
+            if (debug >0)
+                (void)fprintf(stdout, "NMEA selected\n");
+            flags |= WATCH_NMEA;
             break;
         case 'u':
             if (udpchannel >= MAX_UDP_DEST) {
@@ -405,16 +441,15 @@ int main(int argc, char **argv)
                 udphostport[udpchannel++] = optarg;
             }
             break;
-        case 'v':
-        case 'V':
-            (void)fprintf(stderr, "%s: %s (revision %s)\n",
-                          argv[0], VERSION, REVISION);
-            exit(0);
         case '?':
         case 'h':
         default:
             usage();
             exit(1);
+        case 'V':
+            (void)fprintf(stderr, "%s: %s (revision %s)\n",
+                          argv[0], VERSION, REVISION);
+            exit(0);
         }
     }
 
