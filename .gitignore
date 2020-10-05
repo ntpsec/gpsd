@@ -2,6 +2,7 @@
 cgps
 clients/lcdgps
 clients/gps2udp
+clients/gpspipe
 clients/gpsrinex
 clients/gpxlogger
 gpscap.py
@@ -10,7 +11,6 @@ gpsd
 gpsdctl
 gpsdecode
 gpsmon
-gpspipe
 ntpshmmon
 ppscheck
 rtcmdecode

@@ -1866,7 +1866,7 @@ gpsmon = env.Program('gpsmon', gpsmon_sources,
 gpsdctl = env.Program('gpsdctl', ['gpsdctl.c'],
                       LIBS=['gps_static'],
                       parse_flags=gpsflags)
-gpspipe = env.Program('gpspipe', ['gpspipe.c'],
+gpspipe = env.Program('clients/gpspipe', ['clients/gpspipe.c'],
                       LIBS=['gps_static'],
                       parse_flags=gpsflags)
 gpsrinex = env.Program('clients/gpsrinex', ['clients/gpsrinex.c'],
@@ -2964,7 +2964,7 @@ env.Clean(clean_misc, glob.glob('qt-*.os'))
 # Clean obsolete files
 env.Clean(clean_misc, ['contrib/gpscsv', 'contrib/gpsplot',
                        'contrib/gpssubframe', 'gegps', 'gps2udp',
-                       'gpscat', 'gpsprof', 'gpsrinex',
+                       'gpscat', 'gpspipe', 'gpsprof', 'gpsrinex',
                        'gpxlogger', 'lcdgps', 'ubxtool',
                        'xgps', 'xgpsspeed', 'zerk'])
 
@@ -2979,11 +2979,11 @@ else:
 # Tags for Emacs and vi
 misc_sources = ['cgps.c',
                 'clients/gps2udp.c',
+                'clients/gpspipe.c',
                 'clients/gpxlogger.c',
                 'gpsctl.c',
                 'gpsdctl.c',
                 'gpsdecode.c',
-                'gpspipe.c',
                 'ntpshmmon.c',
                 'ppscheck.c',
                 ]
