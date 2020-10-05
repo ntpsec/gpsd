@@ -1,8 +1,8 @@
 # Binaries
 cgps
 clients/lcdgps
+clients/gps2udp
 clients/gpxlogger
-gps2udp
 gpscap.py
 gpsctl
 gpsd

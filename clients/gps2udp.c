@@ -12,7 +12,7 @@
  *
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "../gpsd_config.h"  /* must be before all includes */
 
 #include <arpa/inet.h>
 #include <assert.h>
@@ -35,10 +35,10 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "gpsd.h"
-#include "gpsdclient.h"
-#include "strfuncs.h"
-#include "timespec.h"
+#include "../gpsd.h"
+#include "../gpsdclient.h"
+#include "../strfuncs.h"
+#include "../timespec.h"
 
 #define MAX_TIME_LEN 80
 #define MAX_GPSD_RETRY 10
