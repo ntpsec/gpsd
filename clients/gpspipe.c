@@ -50,8 +50,7 @@
 #include <winsock2.h>
 #endif /* HAVE_WINSOCK2_H */
 
-// why gpsd.h and not gps.h?
-#include "../gpsd.h"
+#include "../gpsd.h"            // for os_daemon()
 
 #include "../gpsdclient.h"
 
