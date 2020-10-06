@@ -1887,7 +1887,7 @@ cgps = env.Program('clients/cgps', ['clients/cgps.c'],
 ntpshmmon = env.Program('ntpshmmon', ['ntpshmmon.c'],
                         LIBS=['gpsd', 'gps_static'],
                         parse_flags=gpsflags)
-ppscheck = env.Program('ppscheck', ['ppscheck.c'],
+ppscheck = env.Program('clients/ppscheck', ['clients/ppscheck.c'],
                        LIBS=['gps_static'],
                        parse_flags=gpsflags)
 
@@ -2965,7 +2965,7 @@ env.Clean(clean_misc, ['contrib/gpscsv', 'contrib/gpsplot',
                        'contrib/gpssubframe', 'cgps', 'gegps', 'gps2udp',
                        'gpscat', 'gpsdctl', 'gpsdecode', 'gpspipe',
                        'gpsprof', 'gpsrinex',
-                       'gpxlogger', 'lcdgps', 'ubxtool',
+                       'gpxlogger', 'lcdgps', 'ppscheck', 'ubxtool',
                        'xgps', 'xgpsspeed', 'zerk'])
 
 # Default targets
@@ -2983,9 +2983,9 @@ misc_sources = ['clients/cgps.c',
                 'clients/gpsdecode.c',
                 'clients/gpspipe.c',
                 'clients/gpxlogger.c',
+                'clients/ppscheck.c',
                 'gpsctl.c',
                 'ntpshmmon.c',
-                'ppscheck.c',
                 ]
 sources = libgpsd_sources + libgps_sources + gpsd_sources + gpsmon_sources + \
     misc_sources
