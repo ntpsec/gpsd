@@ -7,12 +7,12 @@ clients/gpsdecode
 clients/gpspipe
 clients/gpsrinex
 clients/gpxlogger
+clients/ntpshmmon
 clients/ppscheck
 gpscap.py
 gpsctl
 gpsd
 gpsmon
-ntpshmmon
 rtcmdecode
 contrib/clock_test
 *.exe

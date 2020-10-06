@@ -1884,7 +1884,7 @@ lcdgps = env.Program('clients/lcdgps', ['clients/lcdgps.c'],
 cgps = env.Program('clients/cgps', ['clients/cgps.c'],
                    LIBS=['gps_static'],
                    parse_flags=gpsflags + ncurseslibs)
-ntpshmmon = env.Program('ntpshmmon', ['ntpshmmon.c'],
+ntpshmmon = env.Program('clients/ntpshmmon', ['clients/ntpshmmon.c'],
                         LIBS=['gpsd', 'gps_static'],
                         parse_flags=gpsflags)
 ppscheck = env.Program('clients/ppscheck', ['clients/ppscheck.c'],
@@ -2965,8 +2965,8 @@ env.Clean(clean_misc, ['contrib/gpscsv', 'contrib/gpsplot',
                        'contrib/gpssubframe', 'cgps', 'gegps', 'gps2udp',
                        'gpscat', 'gpsdctl', 'gpsdecode', 'gpspipe',
                        'gpsprof', 'gpsrinex',
-                       'gpxlogger', 'lcdgps', 'ppscheck', 'ubxtool',
-                       'xgps', 'xgpsspeed', 'zerk'])
+                       'gpxlogger', 'lcdgps', 'ntpshmmon', 'ppscheck',
+                       'ubxtool', 'xgps', 'xgpsspeed', 'zerk'])
 
 # Default targets
 
@@ -2983,9 +2983,9 @@ misc_sources = ['clients/cgps.c',
                 'clients/gpsdecode.c',
                 'clients/gpspipe.c',
                 'clients/gpxlogger.c',
+                'cliens/ntpshmmon.c',
                 'clients/ppscheck.c',
                 'gpsctl.c',
-                'ntpshmmon.c',
                 ]
 sources = libgpsd_sources + libgps_sources + gpsd_sources + gpsmon_sources + \
     misc_sources
