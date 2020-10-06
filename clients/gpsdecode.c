@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "../gpsd_config.h"  /* must be before all includes */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,10 +12,10 @@
 #include <stdarg.h>
 #include <unistd.h>
 
-#include "gpsd.h"
-#include "bits.h"
-#include "gps_json.h"
-#include "strfuncs.h"
+#include "../gpsd.h"         // for gpsd_hexdump()
+#include "../bits.h"
+#include "../gps_json.h"
+#include "../strfuncs.h"
 
 static int verbose = 0;
 static bool scaled = true;

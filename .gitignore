@@ -3,13 +3,13 @@ cgps
 clients/lcdgps
 clients/gps2udp
 clients/gpsdctl
+clients/gpsdecode
 clients/gpspipe
 clients/gpsrinex
 clients/gpxlogger
 gpscap.py
 gpsctl
 gpsd
-gpsdecode
 gpsmon
 ntpshmmon
 ppscheck

@@ -1853,7 +1853,7 @@ env.Depends('gps/packet.py', packet_ffi_shared)
 gpsd = env.Program('gpsd', gpsd_sources,
                    LIBS=['gpsd', 'gps_static'],
                    parse_flags=gpsdflags + gpsflags)
-gpsdecode = env.Program('gpsdecode', ['gpsdecode.c'],
+gpsdecode = env.Program('clients/gpsdecode', ['clients/gpsdecode.c'],
                         LIBS=['gpsd', 'gps_static'],
                         parse_flags=gpsdflags + gpsflags)
 gpsctl = env.Program('gpsctl', ['gpsctl.c'],
@@ -2486,13 +2486,14 @@ if env["rtcm104v2"]:
         '@for f in $SRCDIR/test/*.rtcm2; do '
         '    echo "\tTesting $${f}..."; '
         '    TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
-        '    $SRCDIR/gpsdecode -u -j <$${f} >$${TMPFILE}; '
+        '    $SRCDIR/clients/gpsdecode -u -j <$${f} >$${TMPFILE}; '
         '    diff -ub $${f}.chk $${TMPFILE} || echo "Test FAILED!"; '
         '    rm -f $${TMPFILE}; '
         'done;',
         '@echo "Testing idempotency of JSON dump/decode for RTCM2"',
         '@TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
-        '$SRCDIR/gpsdecode -u -e -j <test/synthetic-rtcm2.json >$${TMPFILE}; '
+        '$SRCDIR/clients/gpsdecode -u -e -j <test/synthetic-rtcm2.json '
+        ' >$${TMPFILE}; '
         '    grep -v "^#" test/synthetic-rtcm2.json | diff -ub - $${TMPFILE} '
         '    || echo "Test FAILED!"; '
         '    rm -f $${TMPFILE}; ',
@@ -2504,7 +2505,7 @@ else:
 # Rebuild the RTCM regression tests.
 Utility('rtcm-makeregress', [gpsdecode], [
     'for f in $SRCDIR/test/*.rtcm2; do '
-    '    $SRCDIR/gpsdecode -j <$${f} >$${f}.chk; '
+    '    $SRCDIR/clients/gpsdecode -j <$${f} >$${f}.chk; '
     'done'
 ])
 
@@ -2516,7 +2517,7 @@ if env["aivdm"]:
         '@for f in $SRCDIR/test/*.aivdm; do '
         '    echo "\tTesting $${f}..."; '
         '    TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
-        '    $SRCDIR/gpsdecode -u -c <$${f} >$${TMPFILE}; '
+        '    $SRCDIR/clients/gpsdecode -u -c <$${f} >$${TMPFILE}; '
         '    diff -ub $${f}.chk $${TMPFILE} || echo "Test FAILED!"; '
         '    rm -f $${TMPFILE}; '
         'done;',
@@ -2524,7 +2525,7 @@ if env["aivdm"]:
         '@for f in $SRCDIR/test/*.aivdm; do '
         '    echo "\tTesting $${f}..."; '
         '    TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
-        '    $SRCDIR/gpsdecode -u -j <$${f} >$${TMPFILE}; '
+        '    $SRCDIR/clients/gpsdecode -u -j <$${f} >$${TMPFILE}; '
         '    diff -ub $${f}.ju.chk $${TMPFILE} || echo "Test FAILED!"; '
         '    rm -f $${TMPFILE}; '
         'done;',
@@ -2532,13 +2533,13 @@ if env["aivdm"]:
         '@for f in $SRCDIR/test/*.aivdm; do '
         '    echo "\tTesting $${f}..."; '
         '    TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
-        '    $SRCDIR/gpsdecode -j <$${f} >$${TMPFILE}; '
+        '    $SRCDIR/clients/gpsdecode -j <$${f} >$${TMPFILE}; '
         '    diff -ub $${f}.js.chk $${TMPFILE} || echo "Test FAILED!"; '
         '    rm -f $${TMPFILE}; '
         'done;',
         '@echo "Testing idempotency of unscaled JSON dump/decode for AIS"',
         '@TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
-        '$SRCDIR/gpsdecode -u -e -j <$SRCDIR/test/sample.aivdm.ju.chk '
+        '$SRCDIR/clients/gpsdecode -u -e -j <$SRCDIR/test/sample.aivdm.ju.chk '
         ' >$${TMPFILE}; '
         '    grep -v "^#" $SRCDIR/test/sample.aivdm.ju.chk '
         '    | diff -ub - $${TMPFILE} || echo "Test FAILED!"; '
@@ -2547,7 +2548,7 @@ if env["aivdm"]:
         # and finally compare it with the scaled json reference
         '@echo "Testing idempotency of scaled JSON dump/decode for AIS"',
         '@TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
-        '$SRCDIR/gpsdecode -e -j <$SRCDIR/test/sample.aivdm.ju.chk '
+        '$SRCDIR/clients/gpsdecode -e -j <$SRCDIR/test/sample.aivdm.ju.chk '
         ' >$${TMPFILE};'
         '    grep -v "^#" $SRCDIR/test/sample.aivdm.js.chk '
         '    | diff -ub - $${TMPFILE} || echo "Test FAILED!"; '
@@ -2560,9 +2561,9 @@ else:
 # Rebuild the AIVDM regression tests.
 Utility('aivdm-makeregress', [gpsdecode], [
     'for f in $SRCDIR/test/*.aivdm; do '
-    '    $SRCDIR/gpsdecode -u -c <$${f} > $${f}.chk; '
-    '    $SRCDIR/gpsdecode -u -j <$${f} > $${f}.ju.chk; '
-    '    $SRCDIR/gpsdecode -j  <$${f} > $${f}.js.chk; '
+    '    $SRCDIR/clients/gpsdecode -u -c <$${f} > $${f}.chk; '
+    '    $SRCDIR/clients/gpsdecode -u -j <$${f} > $${f}.ju.chk; '
+    '    $SRCDIR/clients/gpsdecode -j  <$${f} > $${f}.js.chk; '
     'done', ])
 
 # Regression-test the packet getter.
@@ -2962,7 +2963,8 @@ env.Clean(clean_misc, glob.glob('qt-*.os'))
 # Clean obsolete files
 env.Clean(clean_misc, ['contrib/gpscsv', 'contrib/gpsplot',
                        'contrib/gpssubframe', 'gegps', 'gps2udp',
-                       'gpscat', 'gpsdctl', 'gpspipe', 'gpsprof', 'gpsrinex',
+                       'gpscat', 'gpsdctl', 'gpsdecode', 'gpspipe',
+                       'gpsprof', 'gpsrinex',
                        'gpxlogger', 'lcdgps', 'ubxtool',
                        'xgps', 'xgpsspeed', 'zerk'])
 
@@ -2977,11 +2979,11 @@ else:
 # Tags for Emacs and vi
 misc_sources = ['cgps.c',
                 'clients/gps2udp.c',
+                'clients/gpsdecode.c',
                 'clients/gpspipe.c',
                 'clients/gpxlogger.c',
                 'gpsctl.c',
                 'gpsdctl.c',
-                'gpsdecode.c',
                 'ntpshmmon.c',
                 'ppscheck.c',
                 ]
