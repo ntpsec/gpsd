@@ -26,6 +26,9 @@
 
 #include <errno.h>
 #include <fcntl.h>      /* needed for open() and friends */
+#ifdef HAVE_GETOPT_LONG
+       #include <getopt.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -71,9 +74,15 @@ static const struct assoc hlines[] = {
 
 static void usage(void)
 {
-        (void)fprintf(stderr, "usage: ppscheck [-h] [ -V] <device>\n");
-        (void)fprintf(stderr, "                 -h   print usage\n");
-        (void)fprintf(stderr, "                 -V   print cwVersion\n");
+        (void)fprintf(stderr, 
+        "usage: ppscheck [OPTIONS] <device>\n\n"
+#ifdef HAVE_GETOPT_LONG
+        "  --help              Show this help, then exit.\n"
+        "  --version           Show version, then exit.\n"
+#endif
+        "   -?                 Show this help, then exit.\n"
+        "   -h                 Show this help, then exit.\n"
+        "   -V                 Show version, then exit.\n");
         exit(1);
 }
 
@@ -81,19 +90,39 @@ int main(int argc, char *argv[])
 {
     struct timespec ts;
     int fd;
-    int c;
+    int ch;
     char ts_buf[TIMESPEC_LEN];
+    const char *optstring = "?hV";
+#ifdef HAVE_GETOPT_LONG
+    int option_index = 0;
+    static struct option long_options[] = {
+        {"help", no_argument, NULL, 'h'},
+        {"version", no_argument, NULL, 'V' },
+        {NULL, 0, NULL, 0},
+    };
+#endif
 
-    while((c = getopt(argc, argv, "hV")) != -1) {
-            switch(c){
-            case 'h':
-            default:
-                usage();
-                exit(0);
-            case 'V':
-                (void)printf("%s: %s\n", argv[0], REVISION);
-                exit(EXIT_SUCCESS);
-            }
+    while (1) {
+#ifdef HAVE_GETOPT_LONG
+        ch = getopt_long(argc, argv, optstring, long_options, &option_index);
+#else
+        ch = getopt(argc, argv, optstring);
+#endif
+
+        if (ch == -1) {
+            break;
+        }
+
+        switch(ch){
+        case '?':
+        case 'h':
+        default:
+            usage();
+            exit(0);
+        case 'V':
+            (void)printf("%s: %s\n", argv[0], REVISION);
+            exit(EXIT_SUCCESS);
+        }
     }
     argc -= optind;
     argv += optind;
