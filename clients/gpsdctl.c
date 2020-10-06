@@ -5,7 +5,7 @@
  *
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "../gpsd_config.h"  /* must be before all includes */
 
 #include <assert.h>
 #include <fcntl.h>
@@ -18,7 +18,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "gpsd.h"
+#include "../gpss.h"          // for netlib_localsocket()
 
 #define DEFAULT_GPSD_TEST_SOCKET        "/tmp/gpsd.sock"
 

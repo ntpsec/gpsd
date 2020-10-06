@@ -2,13 +2,13 @@
 cgps
 clients/lcdgps
 clients/gps2udp
+clients/gpsdctl
 clients/gpspipe
 clients/gpsrinex
 clients/gpxlogger
 gpscap.py
 gpsctl
 gpsd
-gpsdctl
 gpsdecode
 gpsmon
 ntpshmmon

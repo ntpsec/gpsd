@@ -1863,7 +1863,7 @@ gpsctl = env.Program('gpsctl', ['gpsctl.c'],
 gpsmon = env.Program('gpsmon', gpsmon_sources,
                      LIBS=['gpsd', 'gps_static'],
                      parse_flags=gpsdflags + gpsflags + ncurseslibs)
-gpsdctl = env.Program('gpsdctl', ['gpsdctl.c'],
+gpsdctl = env.Program('clients/gpsdctl', ['clients/gpsdctl.c'],
                       LIBS=['gps_static'],
                       parse_flags=gpsflags)
 gpspipe = env.Program('clients/gpspipe', ['clients/gpspipe.c'],
@@ -2162,9 +2162,7 @@ for fn in templated:
     env.AddPostAction(builder, 'chmod -w $TARGET')
     if ((fn.endswith(".py.in") or
          fn[:-3] in python_progs or
-         fn[:-3] in ['clients/gpscsv', 'clients/gpssubframe',
-                     'clients/gpsplot', 'contrib/ntpshmviz',
-                     'contrib/webgps'])):
+         fn[:-3] in ['contrib/ntpshmviz', 'contrib/webgps'])):
         # set python files to executable
         env.AddPostAction(builder, 'chmod +x $TARGET')
 
@@ -2964,7 +2962,7 @@ env.Clean(clean_misc, glob.glob('qt-*.os'))
 # Clean obsolete files
 env.Clean(clean_misc, ['contrib/gpscsv', 'contrib/gpsplot',
                        'contrib/gpssubframe', 'gegps', 'gps2udp',
-                       'gpscat', 'gpspipe', 'gpsprof', 'gpsrinex',
+                       'gpscat', 'gpsdctl', 'gpspipe', 'gpsprof', 'gpsrinex',
                        'gpxlogger', 'lcdgps', 'ubxtool',
                        'xgps', 'xgpsspeed', 'zerk'])
 
