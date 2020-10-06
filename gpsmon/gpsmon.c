@@ -11,6 +11,9 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#ifdef HAVE_GETOPT_LONG
+       #include <getopt.h>
+#endif
 #include <math.h>
 #include <setjmp.h>
 #include <signal.h>
@@ -25,10 +28,11 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "../compiler.h"         // for FALLTHROUGH
+#include "../gpsdclient.h"
 #include "../gpsd.h"
 #include "../gps_json.h"
 #include "../gpsmon.h"
-#include "../gpsdclient.h"
 #include "../strfuncs.h"
 #include "../timespec.h"
 
@@ -1138,9 +1142,35 @@ static void onsig(int sig UNUSED)
 /* this placement avoids a compiler warning */
 static const char *cmdline;
 
+static void usage(void)
+{
+    (void)fputs(
+         "usage: gpsmon [OPTIONS] [server[:port:[device]]]\n\n"
+#ifdef HAVE_GETOPT_LONG
+         "  --debug DEBUGLEVEL  Set DEBUGLEVEL\n"
+         "  --help              Show this help, then exit\n"
+         "  --list              List known device types, then exit.\n"
+         "  --logfile FILE      Log to LOGFILE\n"
+         "  --nocurses          No curses. Data only.\n"
+         "  --nmea              Force NMEA mode.\n"
+         "  --type TYPE         Set receiver TYPE\n"
+         "  --version           Show version, then exit\n"
+#endif
+         "  -a                  No curses. Data only.\n"
+         "  -?                  Show this help, then exit\n"
+         "  -D DEBUGLEVEL       Set DEBUGLEVEL\n"
+         "  -h                  Show this help, then exit\n"
+         "  -L                  List known device types, then exit.\n"
+         "  -l FILE             Log to LOGFILE\n"
+         "  -n                  Force NMEA mode.\n"
+         "  -t TYPE             Set receiver TYPE\n"
+         "  -V                  Show version, then exit\n",
+         stderr);
+}
+
 int main(int argc, char **argv)
 {
-    int option;
+    int ch;
     char *explanation;
     int bailout = 0, matches = 0;
     bool nmea = false;
@@ -1150,14 +1180,39 @@ int main(int argc, char **argv)
     char inbuf[80];
     volatile bool nocurses = false;
     int activated = -1;
+    const char *optstring = "?aD:hLl:nt:V";
+#ifdef HAVE_GETOPT_LONG
+    int option_index = 0;
+    static struct option long_options[] = {
+        {"debug", required_argument, NULL, 'D'},
+        {"help", no_argument, NULL, 'h'},
+        {"list", no_argument, NULL, 'L' },
+        {"logfile", required_argument, NULL, 'l'},
+        {"nmea", no_argument, NULL, 'n' },
+        {"nocurses", no_argument, NULL, 'a' },
+        {"type", required_argument, NULL, 't'},
+        {"version", no_argument, NULL, 'V' },
+        {NULL, 0, NULL, 0},
+    };
+#endif
 
     gethostname(hostname, sizeof(hostname)-1);
     (void)putenv("TZ=UTC");     // for ctime()
     gps_context_init(&context, "gpsmon");       // initialize the report mutex
     context.serial_write = gpsmon_serial_write;
     context.errout.report = gpsmon_report;
-    while ((option = getopt(argc, argv, "aD:LVhl:nt:?")) != -1) {
-        switch (option) {
+    while (1) {
+#ifdef HAVE_GETOPT_LONG
+        ch = getopt_long(argc, argv, optstring, long_options, &option_index);
+#else
+        ch = getopt(argc, argv, optstring);
+#endif
+
+        if (ch == -1) {
+            break;
+        }
+
+        switch (ch) {
         case 'a':
             nocurses = true;
             break;
@@ -1203,9 +1258,6 @@ int main(int argc, char **argv)
                 (void)fputc('\n', stdout);
             }
             exit(EXIT_SUCCESS);
-        case 'V':
-            (void)printf("%s: %s (revision %s)\n", argv[0], VERSION, REVISION);
-            exit(EXIT_SUCCESS);
         case 'l':               /* enable logging at startup */
             logfile = fopen(optarg, "w");
             if (logfile == NULL) {
@@ -1213,7 +1265,9 @@ int main(int argc, char **argv)
                 exit(EXIT_FAILURE);
             }
             break;
-        case 'T':
+        case 'n':
+            nmea = true;
+            break;
         case 't':
             fallback = NULL;
             for (active = monitor_objects; *active; active++) {
@@ -1233,17 +1287,16 @@ int main(int argc, char **argv)
             }
             active = NULL;
             break;
-        case 'n':
-            nmea = true;
-            break;
+        case 'V':
+            (void)printf("%s: %s (revision %s)\n", argv[0], VERSION, REVISION);
+            exit(EXIT_SUCCESS);
         case 'h':
+            FALLTHROUGH
         case '?':
+            usage();
+            exit(EXIT_SUCCESS);
         default:
-            (void)
-                fputs
-                ("usage: gpsmon [-?hVn] [-l logfile] [-D debuglevel] "
-                 "[-t type] [server[:port:[device]]]\n",
-                 stderr);
+            usage();
             exit(EXIT_FAILURE);
         }
     }
