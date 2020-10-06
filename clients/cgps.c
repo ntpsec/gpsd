@@ -95,6 +95,9 @@
 #include <ctype.h>
 #include <curses.h>
 #include <errno.h>
+#ifdef HAVE_GETOPT_LONG
+       #include <getopt.h>
+#endif
 #include <math.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -994,27 +997,37 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
     (void)wrefresh(satellites);
 }
 
-static void usage(char *prog)
+static void usage(char *prog,  int exit_code)
 {
     (void)fprintf(stderr,
         "Usage: %s [-h] [-l {d|m|s}] [-m] [-s] [-V] "
         "[server[:port:[device]]]\n\n"
-        "  -D debug-level  Set debug level\n"
-        "  -h              Show this help, then exit\n"
-        "  -l {d|m|s}      Select lat/lon format\n"
-        "                      d = DD.ddddddd\n"
-        "                      m = DD MM.mmmmmm'\n"
-        "                      s = DD MM' SS.sssss\"\n"
-        "  -u {i|m|k}      Select distance and speed units\n"
-        "                      i = imperial\n"
-        "                      m = metric\n"
-        "                      n = nautical\n"
-        "  -m              Display track as the estimated magnetic track\n"
-        "  -s              Be silent (don't print raw gpsd data)\n"
-        "  -V              Show version, then exit\n",
+#ifdef HAVE_GETOPT_LONG
+        "  --debug DEBUG       Set debug level\n"
+        "  --help              Show this help, then exit\n"
+        "  --llfmt FMT         Select lat/lon format, same as -l\n"
+        "  --magtrack          Display track as estimated magnetic track.\n"
+        "  --silent            Be silent, don't print raw gpsd JSON.\n"
+        "  --units U           Select distance and speed units, same as -u.\n"
+        "  --version           Show version, then exit\n"
+#endif
+        "  -?                  Show this help, then exit\n"
+        "  -D DEBUG            Set debug level\n"
+        "  -h                  Show this help, then exit\n"
+        "  -l {d|m|s}          Select lat/lon format\n"
+        "                          d = DD.ddddddd\n"
+        "                          m = DD MM.mmmmmm'\n"
+        "                          s = DD MM' SS.sssss\"\n"
+        "  -m                  Display track as the estimated magnetic track\n"
+        "  -s                  Be silent, don't print raw gpsd JSON.\n"
+        "  -u {i|m|k}          Select distance and speed units\n"
+        "                          i = imperial\n"
+        "                          m = metric\n"
+        "                          n = nautical\n"
+        "  -V                  Show version, then exit\n",
         prog);
 
-    exit(EXIT_FAILURE);
+    exit(exit_code);
 }
 
 /*
@@ -1023,11 +1036,25 @@ static void usage(char *prog)
 
 int main(int argc, char *argv[])
 {
-    int option;
+    int ch;
     unsigned int flags = WATCH_ENABLE;
     int wait_clicks = 0;  /* cycles to wait before gpsd timeout */
     /* buffer to hold one JSON message */
     char message[GPS_JSON_RESPONSE_MAX];
+    const char *optstring = "D:hl:msu:V";
+#ifdef HAVE_GETOPT_LONG
+    int option_index = 0;
+    static struct option long_options[] = {
+        {"debug", required_argument, NULL, 'D'},
+        {"help", no_argument, NULL, 'h'},
+        {"llfmt", required_argument, NULL, 'l'},
+        {"magtrack", no_argument, NULL, 'm' },
+        {"silent", no_argument, NULL, 's' },
+        {"units", required_argument, NULL, 'u'},
+        {"version", no_argument, NULL, 'V' },
+        {NULL, 0, NULL, 0},
+    };
+#endif
 
     switch (gpsd_units()) {
     case imperial:
@@ -1054,11 +1081,36 @@ int main(int argc, char *argv[])
     }
 
     /* Process the options.  Print help if requested. */
-    while ((option = getopt(argc, argv, "D:hl:msu:V")) != -1) {
-        switch (option) {
+    while (1) {
+#ifdef HAVE_GETOPT_LONG
+        ch = getopt_long(argc, argv, optstring, long_options, &option_index);
+#else
+        ch = getopt(argc, argv, optstring);
+#endif
+
+        if (ch == -1) {
+            break;
+        }
+
+        switch (ch) {
         case 'D':
             debug = atoi(optarg);
             gps_enable_debug(debug, stderr);
+            break;
+        case 'l':
+            switch (optarg[0]) {
+            case 'd':
+                deg_type = deg_dd;
+                continue;
+            case 'm':
+                deg_type = deg_ddmm;
+                continue;
+            case 's':
+                deg_type = deg_ddmmss;
+                continue;
+            default:
+                (void)fprintf(stderr, "Unknown -l argument: %s\n", optarg);
+            }
             break;
         case 'm':
             magnetic_flag = true;
@@ -1094,24 +1146,14 @@ int main(int argc, char *argv[])
             (void)fprintf(stderr, "%s: %s (revision %s)\n",
                           argv[0], VERSION, REVISION);
             exit(EXIT_SUCCESS);
-        case 'l':
-            switch (optarg[0]) {
-            case 'd':
-                deg_type = deg_dd;
-                continue;
-            case 'm':
-                deg_type = deg_ddmm;
-                continue;
-            case 's':
-                deg_type = deg_ddmmss;
-                continue;
-            default:
-                (void)fprintf(stderr, "Unknown -l argument: %s\n", optarg);
-            }
-            break;
+        case '?':
         case 'h':
+            usage(argv[0], EXIT_SUCCESS);
+            // never returns
+            break;
         default:
-            usage(argv[0]);
+            usage(argv[0], EXIT_FAILURE);
+            // never returns
             break;
         }
     }
