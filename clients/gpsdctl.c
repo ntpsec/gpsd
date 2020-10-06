@@ -18,7 +18,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "../gpss.h"          // for netlib_localsocket()
+#include "../gpsd.h"          // for netlib_localsocket()
 
 #define DEFAULT_GPSD_TEST_SOCKET        "/tmp/gpsd.sock"
 
