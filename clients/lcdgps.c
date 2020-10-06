@@ -25,7 +25,7 @@
 
 #define CLIMB 3
 
-#include "../gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <arpa/inet.h>
 #include <errno.h>
@@ -48,9 +48,9 @@
 #include <netinet/in.h>
 #endif /* INADDR_ANY */
 
-#include "../gps.h"
-#include "../gpsdclient.h"
-#include "../os_compat.h"
+#include "../include/gps.h"
+#include "../include/gpsdclient.h"
+#include "../include/os_compat.h"
 
 /* Prototypes. */
 ssize_t sockreadline(int sockd,void *vptr,size_t maxlen);

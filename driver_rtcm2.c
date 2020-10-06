@@ -56,13 +56,13 @@ SPDX-License-Identifier: BSD-2-clause
 
 *****************************************************************************/
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <stdio.h>
 #include <string.h>
 
-#include "compiler.h"   // for FALLTHROUGH
-#include "gpsd.h"
+#include "include/compiler.h"   // for FALLTHROUGH
+#include "include/gpsd.h"
 
 /*
   __BYTE_ORDER__, __ORDER_BIG_ENDIAN__ and __ORDER_LITTLE_ENDIAN__ are

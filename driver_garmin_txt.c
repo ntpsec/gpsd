@@ -107,7 +107,7 @@ invalid data.
 ***************************************************/
 
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <math.h>
 #include <stdbool.h>
@@ -115,7 +115,7 @@ invalid data.
 #include <string.h>
 #include <strings.h>
 
-#include "gpsd.h"
+#include "include/gpsd.h"
 
 #ifdef GARMINTXT_ENABLE
 

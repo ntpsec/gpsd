@@ -7,14 +7,15 @@
  * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
+#include "../include/gpsd_config.h"  /* must be before all includes */
+
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdlib.h>
 
-#include "../compiler.h"
-#include "../matrix.h"
+#include "../include/compiler.h"
+#include "../include/matrix.h"
 
 static struct {
     double mat[4][4];

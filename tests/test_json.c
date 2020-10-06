@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../gpsd_config.h"
+#include "../include/gpsd_config.h"
 
 #include <getopt.h>
 #include <stddef.h>
@@ -12,8 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../gpsd.h"
-#include "../gps_json.h"
+#include "../include/gpsd.h"
+#include "../include/gps_json.h"
 
 // Note: JSON_MINIMAL no longer exists
 

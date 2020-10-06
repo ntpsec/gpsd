@@ -146,7 +146,6 @@ generated_sources = [
     'contrib/skyview2svg.py',
     'contrib/webgps',
     'control',
-    'gpsd_config.h',
     'gpsd.php',
     'gpsd.rules',
     'gpsfake',
@@ -154,10 +153,11 @@ generated_sources = [
     'gps/packet.py',
     'gps/__init__.py',
     'gps_maskdump.c',
+    'include/gpsd_config.h',
+    'include/packet_names.h',
     'libgps.pc',
     'libQgpsmm.prl',
     'packaging/rpm/gpsd.spec',
-    'packet_names.h',
     'Qgpsmm.pc',
    ]
 
@@ -254,7 +254,9 @@ if 'dev' in gpsd_version:
     (st, gpsd_revision) = _getstatusoutput('git describe --tags')
     if st != 0:
         # Use timestamp from latest relevant file, ignoring generated files
-        files = FileList(['*.c', '*.cpp', '*.h', '*.in', 'SConstruct'],
+        files = FileList(['*.c', '*/*.c', '*.cpp', '*/*.cpp',  'include/*.h',
+                          '*.in', '*/*.in',
+                          'SConstruct'],
                          generated_sources + generated_www)
         timestamps = map(GetMtime, files)
         if timestamps:
@@ -2037,16 +2039,16 @@ Platform: UNKNOWN
                       python_progs + python_modules)
 
 
-env.Command(target="packet_names.h", source="packet_states.h",
+env.Command(target="include/packet_names.h", source="include/packet_states.h",
             action="""
     rm -f $TARGET &&\
     sed -e '/^ *\\([A-Z][A-Z0-9_]*\\),/s//   \"\\1\",/' <$SOURCE >$TARGET &&\
     chmod a-w $TARGET""")
 
-env.Textfile(target="gpsd_config.h", source=confdefs)
+env.Textfile(target="include/gpsd_config.h", source=confdefs)
 
 env.Command(target="gps_maskdump.c",
-            source=["maskaudit.py", "gps.h", "gpsd.h"],
+            source=["maskaudit.py", "include/gps.h", "include/gpsd.h"],
             action='''
     rm -f $TARGET &&\
         $SC_PYTHON $SOURCE -c $SRCDIR >$TARGET &&\
@@ -2065,7 +2067,7 @@ else:
 
 pythonize_header_match = re.compile(r'\s*#define\s+(\w+)\s+(\w+)\s*.*$[^\\]')
 pythonized_header = ''
-with open('gpsd.h') as sfp:
+with open('include/gpsd.h') as sfp:
     for content in sfp:
         _match3 = pythonize_header_match.match(content)
         if _match3:
@@ -2204,7 +2206,7 @@ if qt_env:
 # It's deliberate that we don't install gpsd.h. It's full of internals that
 # third-party client programs should not see.
 headerinstall = [env.Install(installdir('includedir'), x)
-                 for x in ("libgpsmm.h", "gps.h")]
+                 for x in ("include/libgpsmm.h", "include/gps.h")]
 
 binaryinstall = []
 binaryinstall.append(env.Install(installdir('sbindir'), sbin_binaries))
@@ -2370,7 +2372,7 @@ AlwaysBuild(Alias(".", [], error_action))
 
 # Putting in all these -U flags speeds up cppcheck and allows it to look
 # at configurations we actually care about.
-Utility("cppcheck", ["gpsd.h", "packet_names.h"],
+Utility("cppcheck", ["include/gpsd.h", "include/packet_names.h"],
         "cppcheck -U__UNUSED__ -UUSE_QT -U__COVERITY__ -U__future__ "
         "-ULIMITED_MAX_CLIENTS -ULIMITED_MAX_DEVICES -UAF_UNSPEC -UINADDR_ANY "
         "-U_WIN32 -U__CYGWIN__ "
@@ -2380,7 +2382,7 @@ Utility("cppcheck", ["gpsd.h", "packet_names.h"],
         "--force $SRCDIR")
 
 # Check with clang analyzer
-Utility("scan-build", ["gpsd.h", "packet_names.h"],
+Utility("scan-build", ["include/gpsd.h", "include/packet_names.h"],
         "scan-build scons")
 
 
@@ -2392,7 +2394,7 @@ Utility("xmllint", glob.glob("man/*.xml"),
 # ends with other than '0 removed' there's work to be done.
 Utility("deheader", generated_sources, [
     'deheader -x cpp -x contrib -x gpspacket.c '
-    '-x monitor_proto.c -i gpsd_config.h -i gpsd.h '
+    '-x monitor_proto.c -i include/gpsd_config.h -i include/gpsd.h '
     '-m "MORECFLAGS=\'-Werror -Wfatal-errors -DDEBUG \' scons -Q"',
 ])
 
@@ -3071,7 +3073,8 @@ if os.path.exists("gpsd.c") and os.path.exists(".gitignore"):
     # Note that tag_release has to fire early, otherwise the value of REVISION
     # won't be right when gpsd_config.h is generated for the tarball.
     releaseprep = env.Alias("releaseprep",
-                            [Utility("distclean", [], ["rm -f gpsd_config.h"]),
+                            [Utility("distclean", [],
+                             ["rm -f include/gpsd_config.h"]),
                              tag_release,
                              dist])
     # Undo local release preparation

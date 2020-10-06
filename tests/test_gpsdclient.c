@@ -8,7 +8,7 @@
 */
 
 /* first so the #defs work */
-#include "../gpsd_config.h"
+#include "../include/gpsd_config.h"
 
 #include <math.h>              /* for nan() */
 #include <stdio.h>
@@ -16,8 +16,8 @@
 #include <string.h>
 #include <unistd.h>            /* for getopt() */
 
-#include "../compiler.h"       // for FALLTHROUGH
-#include "../gpsdclient.h"
+#include "../include/compiler.h"       // for FALLTHROUGH
+#include "../include/gpsdclient.h"
 
 struct test {
     double deg;

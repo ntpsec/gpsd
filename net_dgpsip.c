@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <fcntl.h>
 #include <netdb.h>
@@ -16,7 +16,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "gpsd.h"
+#include "include/gpsd.h"
 
 int dgpsip_open(struct gps_device_t *device, const char *dgpsserver)
 /* open a connection to a DGPSIP server */

@@ -9,14 +9,14 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
-#include "gpsd.h"
-#include "bits.h"
+#include "include/gpsd.h"
+#include "include/bits.h"
 #include <stdint.h>
 
 #ifdef AIVDM_ENABLE

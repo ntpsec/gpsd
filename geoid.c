@@ -9,11 +9,11 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <math.h>
-#include "gpsd.h"
-#include "os_compat.h"
+#include "include/gpsd.h"
+#include "include/os_compat.h"
 
 #ifdef __UNUSED
 static double fix_minuz(double d);

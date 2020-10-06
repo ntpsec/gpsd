@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <math.h>
 
-#include "gpsd.h"
+#include "include/gpsd.h"
 
 /* convert unsigned to signed */
 #define uint2int(u, bit) ((u & (1<<(bit-1))) ? u - (1<<bit) : u)

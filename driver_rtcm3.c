@@ -38,12 +38,12 @@ SPDX-License-Identifier: BSD-2-clause
 
 *****************************************************************************/
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <string.h>
 
-#include "gpsd.h"
-#include "bits.h"
+#include "include/gpsd.h"
+#include "include/bits.h"
 
 #ifdef RTCM104V3_ENABLE
 

@@ -7,6 +7,8 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
+#include "../include/gpsd_config.h"  /* must be before all includes */
+
 #include <limits.h>
 #include <math.h>       /* for fabs() */
 #include <stdbool.h>
@@ -15,9 +17,9 @@
 #include <string.h>
 #include <time.h>
 
-#include "../gps.h"
-#include "../compiler.h"
-#include "../timespec.h"
+#include "../include/gps.h"
+#include "../include/compiler.h"
+#include "../include/timespec.h"
 
 static struct
 {

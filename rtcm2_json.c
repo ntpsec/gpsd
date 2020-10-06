@@ -13,17 +13,17 @@ PERMISSIONS
 
 ***************************************************************************/
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <math.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "gpsd.h"
+#include "include/gpsd.h"
 
 #ifdef SOCKET_EXPORT_ENABLE
-#include "gps_json.h"
+#include "include/gps_json.h"
 
 /* common fields in every RTCM2 message */
 

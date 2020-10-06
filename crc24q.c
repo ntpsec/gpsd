@@ -27,13 +27,13 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "crc24q.h"
+#include "include/crc24q.h"
 
 #ifdef REBUILD_CRC_TABLE
 /*

@@ -5,7 +5,7 @@
  *
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <assert.h>
 #include <errno.h>
@@ -20,7 +20,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "gpsd.h"
+#include "include/gpsd.h"
 
 #ifdef SHM_EXPORT_ENABLE
 #include <sys/ipc.h>

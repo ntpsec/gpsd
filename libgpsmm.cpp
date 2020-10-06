@@ -5,10 +5,10 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <cstdlib>
-#include "libgpsmm.h"
+#include "include/libgpsmm.h"
 
 struct gps_data_t* gpsmm::gps_inner_open(const char *host, const char *port)
 {

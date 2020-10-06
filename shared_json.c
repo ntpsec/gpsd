@@ -15,16 +15,16 @@ PERMISSIONS
 
 ***************************************************************************/
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <math.h>
 #include <stdbool.h>
 
-#include "gpsd.h"
+#include "include/gpsd.h"
 #ifdef SOCKET_EXPORT_ENABLE
-#include "gps_json.h"
-#include "strfuncs.h"
-#include "timespec.h"
+#include "include/gps_json.h"
+#include "include/strfuncs.h"
+#include "include/timespec.h"
 
 int json_device_read(const char *buf,
                      struct devconfig_t *dev,

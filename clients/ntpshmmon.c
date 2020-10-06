@@ -5,7 +5,7 @@
  *
  */
 
-#include "../gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #ifdef HAVE_GETOPT_LONG
        #include <getopt.h>
@@ -16,11 +16,11 @@
 #include <string.h>           // for memset()
 #include <unistd.h>
 
-#include "../compiler.h"      // for FALLTHROUGH
-#include "../gps.h"           // for safe_atof()
-#include "../ntpshm.h"
-#include "../timespec.h"
-#include "../os_compat.h"
+#include "../include/compiler.h"      // for FALLTHROUGH
+#include "../include/gps.h"           // for safe_atof()
+#include "../include/ntpshm.h"
+#include "../include/timespec.h"
+#include "../include/os_compat.h"
 
 #define NTPSEGMENTS     256     /* NTPx for x any byte */
 

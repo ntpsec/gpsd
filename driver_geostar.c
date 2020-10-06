@@ -10,17 +10,17 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "bits.h"
-#include "gpsd.h"
-#include "strfuncs.h"
-#include "timespec.h"
+#include "include/bits.h"
+#include "include/gpsd.h"
+#include "include/strfuncs.h"
+#include "include/timespec.h"
 
 #ifdef GEOSTAR_ENABLE
 #define GEOSTAR_CHANNELS   24

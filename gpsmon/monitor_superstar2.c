@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
-#include "../gpsd.h"
-#include "../bits.h"
-#include "../gpsmon.h"
+#include "../include/gpsd.h"
+#include "../include/bits.h"
+#include "../include/gpsmon.h"
 
 #ifdef SUPERSTAR2_ENABLE
-#include "../driver_superstar2.h"
+#include "../include/driver_superstar2.h"
 extern const struct gps_type_t driver_superstar2;
 static WINDOW *satwin;
 

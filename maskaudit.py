@@ -93,8 +93,10 @@ if __name__ == '__main__':
         else:
             srcdir = arguments[0]
 
-        clientside = SourceExtractor(srcdir + "/gps.h", clientside=True)
-        daemonside = SourceExtractor(srcdir + "/gpsd.h", clientside=False)
+        clientside = SourceExtractor(srcdir + "/include/gps.h",
+                                     clientside=True)
+        daemonside = SourceExtractor(srcdir + "/include/gpsd.h",
+                                     clientside=False)
         if clientgen:
             source = clientside
             banner = "Library"
@@ -131,12 +133,12 @@ if __name__ == '__main__':
  * Try to write guards so it is only called at higher log levels.
  */
 
-#include \"gpsd_config.h\"  /* must be before all includes */
+#include \"include/gpsd_config.h\"  /* must be before all includes */
 
 #include <stdio.h>
 #include <string.h>
 
-#include \"gpsd.h\"
+#include \"include/gpsd.h\"
 
 const char *gps_maskdump(gps_mask_t set)
 {

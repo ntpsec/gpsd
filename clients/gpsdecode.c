@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #ifdef HAVE_GETOPT_LONG
        #include <getopt.h>   // for getopt_long()
@@ -15,10 +15,10 @@
 #include <stdarg.h>
 #include <unistd.h>
 
-#include "../gpsd.h"         // for gpsd_hexdump()
-#include "../bits.h"
-#include "../gps_json.h"
-#include "../strfuncs.h"
+#include "../include/gpsd.h"         // for gpsd_hexdump()
+#include "../include/bits.h"
+#include "../include/gps_json.h"
+#include "../include/strfuncs.h"
 
 static int verbose = 0;
 static bool scaled = true;

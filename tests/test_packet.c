@@ -2,7 +2,7 @@
  * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
-#include "../gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <ctype.h>
 #include <errno.h>          // for errno
@@ -15,7 +15,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "../gpsd.h"
+#include "../include/gpsd.h"
 
 static int verbose = 0;
 

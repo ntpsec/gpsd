@@ -10,7 +10,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <math.h>
 #include <stdbool.h>
@@ -18,9 +18,9 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "gpsd.h"
-#include "bits.h"
-#include "strfuncs.h"
+#include "include/gpsd.h"
+#include "include/bits.h"
+#include "include/strfuncs.h"
 
 /* Zodiac protocol description uses 1-origin indexing by little-endian word */
 #define get16z(buf, n)   ((buf[2*(n)-2]) | (buf[2*(n)-1] << 8))

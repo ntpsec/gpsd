@@ -50,7 +50,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <errno.h>
 #include <inttypes.h>
@@ -85,9 +85,9 @@
 #include <sys/timepps.h>
 #endif
 
-#include "timespec.h"
-#include "ppsthread.h"
-#include "os_compat.h"
+#include "include/timespec.h"
+#include "include/ppsthread.h"
+#include "include/os_compat.h"
 
 /*
  * Tell GCC that we want thread-safe behavior with _REENTRANT;

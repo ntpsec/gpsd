@@ -3,18 +3,18 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <math.h>
 #include <stdlib.h> /* for labs() */
 #include <time.h>
 
-#include "../gpsd.h"
-#include "../bits.h"
-#include "../gpsmon.h"
+#include "../include/gpsd.h"
+#include "../include/bits.h"
+#include "../include/gpsmon.h"
 
 #ifdef UBLOX_ENABLE
-#include "../driver_ubx.h"
+#include "../include/driver_ubx.h"
 extern const struct gps_type_t driver_ubx;
 static WINDOW *satwin, *navsolwin, *dopwin, *ppswin;
 

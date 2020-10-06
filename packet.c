@@ -28,7 +28,7 @@ PERMISSIONS
 
 ***************************************************************************/
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <arpa/inet.h>          /* for htons() */
 #include <ctype.h>
@@ -41,11 +41,11 @@ PERMISSIONS
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "bits.h"
-#include "driver_greis.h"
-#include "gpsd.h"
-#include "crc24q.h"
-#include "strfuncs.h"
+#include "include/bits.h"
+#include "include/driver_greis.h"
+#include "include/gpsd.h"
+#include "include/crc24q.h"
+#include "include/strfuncs.h"
 
 /*
  * The packet-recognition state machine.  This takes an incoming byte stream
@@ -127,11 +127,11 @@ PERMISSIONS
 
 enum
 {
-#include "packet_states.h"
+#include "include/packet_states.h"
 };
 
 static char *state_table[] = {
-#include "packet_names.h"
+#include "include/packet_names.h"
 };
 
 #define SOH     (unsigned char)0x01

@@ -23,7 +23,7 @@
  *
  */
 
-#include "../gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <errno.h>
 #include <fcntl.h>
@@ -50,9 +50,9 @@
 #include <winsock2.h>
 #endif /* HAVE_WINSOCK2_H */
 
-#include "../gpsd.h"            // for os_daemon()
+#include "../include/gpsd.h"            // for os_daemon()
 
-#include "../gpsdclient.h"
+#include "../include/gpsdclient.h"
 
 static struct gps_data_t gpsdata;
 static void spinner(unsigned int, unsigned int);

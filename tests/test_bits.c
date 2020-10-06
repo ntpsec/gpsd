@@ -4,13 +4,14 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
+#include "../include/gpsd_config.h"  /* must be before all includes */
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../bits.h"
+#include "../include/bits.h"
 
 static unsigned char buf[80];
 static signed char sb1, sb2;

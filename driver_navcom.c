@@ -36,18 +36,18 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "gpsd.h"
+#include "include/gpsd.h"
 
 #if defined(NAVCOM_ENABLE)
-#include "bits.h"
-#include "timespec.h"
+#include "include/bits.h"
+#include "include/timespec.h"
 
 /* Have data which is 24 bits long */
 #define getles3224(buf,off)  (int32_t)(((uint32_t)getub((buf), (off)+2)<<24 | (uint32_t)getub((buf), (off)+1)<<16 | (uint32_t)getub((buf), (off))<<8)>>8)

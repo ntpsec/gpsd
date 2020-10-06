@@ -9,7 +9,7 @@
  * newer features (like clock_gettime).  See the POSIX spec for more info:
  * http://pubs.opengroup.org/onlinepubs/9699919799/functions/V2_chap02.html#tag_15_02_01_02 */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <ctype.h>
 #include <errno.h>
@@ -22,10 +22,10 @@
 #include <sys/time.h>    /* for to have a pselect(2) prototype a la SuS */
 #include <time.h>
 
-#include "gps.h"
-#include "libgps.h"
-#include "os_compat.h"
-#include "timespec.h"
+#include "include/gps.h"
+#include "include/libgps.h"
+#include "include/os_compat.h"
+#include "include/timespec.h"
 
 #ifdef USE_QT
 #include <QDateTime>

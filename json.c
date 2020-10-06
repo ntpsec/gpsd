@@ -62,7 +62,7 @@ PERMISSIONS
    SPDX-License-Identifier: BSD-2-clause
 
 ***************************************************************************/
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <ctype.h>
 #include <math.h>       /* for HUGE_VAL */
@@ -72,13 +72,13 @@ PERMISSIONS
 #include <stdlib.h>
 #include <string.h>
 
-#include "compiler.h"   // for FALLTHROUGH
-#include "os_compat.h"
-#include "json.h"
+#include "include/compiler.h"   // for FALLTHROUGH
+#include "include/os_compat.h"
+#include "include/json.h"
 
-#include "gps.h"                /* for safe_atof() prototype */
-#include "strfuncs.h"
-#include "timespec.h"
+#include "include/gps.h"                /* for safe_atof() prototype */
+#include "include/strfuncs.h"
+#include "include/timespec.h"
 
 static int debuglevel = 0;
 static FILE *debugfp;

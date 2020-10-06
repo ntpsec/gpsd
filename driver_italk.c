@@ -11,7 +11,7 @@
  *
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <math.h>
 #include <stdbool.h>
@@ -19,12 +19,12 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "gpsd.h"
+#include "include/gpsd.h"
 #if defined(ITRAX_ENABLE) && defined(BINARY_ENABLE)
 
-#include "bits.h"
-#include "driver_italk.h"
-#include "timespec.h"
+#include "include/bits.h"
+#include "include/driver_italk.h"
+#include "include/timespec.h"
 
 static gps_mask_t italk_parse(struct gps_device_t *, unsigned char *, size_t);
 static gps_mask_t decode_itk_navfix(struct gps_device_t *, unsigned char *,

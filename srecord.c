@@ -5,12 +5,12 @@
  *
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <stdio.h>
 #include <string.h>
 
-#include "gpsd.h"
+#include "include/gpsd.h"
 
 /*
  * See srec(5) for a description of this format.

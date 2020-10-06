@@ -7,7 +7,7 @@
  *
  */
 /* first so the #defs work */
-#include "../gpsd_config.h"
+#include "../include/gpsd_config.h"
 
 #include <math.h>
 #include <stdbool.h>
@@ -18,8 +18,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "../compiler.h"       // for FALLTHROUGH
-#include "../gpsd.h"
+#include "../include/compiler.h"       // for FALLTHROUGH
+#include "../include/gpsd.h"
 
 #define TS_ZERO         {0,0}
 #define TS_ZERO_ONE     {0,1}

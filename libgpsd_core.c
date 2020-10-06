@@ -10,7 +10,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <assert.h>
 #include <ctype.h>
@@ -32,12 +32,12 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "gpsd.h"
-#include "matrix.h"
-#include "strfuncs.h"
-#include "timespec.h"
+#include "include/gpsd.h"
+#include "include/matrix.h"
+#include "include/strfuncs.h"
+#include "include/timespec.h"
 #if defined(NMEA2000_ENABLE)
-#include "driver_nmea2000.h"
+#include "include/driver_nmea2000.h"
 #endif /* defined(NMEA2000_ENABLE) */
 
 /* pass low-level data to devices straight through */

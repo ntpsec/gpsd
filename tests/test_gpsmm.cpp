@@ -5,14 +5,15 @@
  * file "COPYING" in the top-level directory of the distribution for details.
  *
  */
-
 /* This simple program shows the basic functionality of the C++ wrapper class */
-#include <iostream>
+
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <getopt.h>
+#include <iostream>
 
-#include "../libgpsmm.h"
-#include "../timespec.h"
+#include "../include/libgpsmm.h"
+#include "../include/timespec.h"
 #include "../timespec_str.c"
 #include "../gpsdclient.c"
 /*     YES   --->  ^^^^

@@ -61,10 +61,10 @@ SPDX-License-Identifier: BSD-2-clause
 
 *****************************************************************************/
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <stdbool.h>
-#include "gpsd.h"
+#include "include/gpsd.h"
 
 #define MAG_SHIFT 6u
 #define MAG_TAG_DATA (1 << MAG_SHIFT)

@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <math.h>
 #include <stdbool.h>
 
-#include "matrix.h"
+#include "include/matrix.h"
 
 /* selected elements from 4x4 matrox inversion */
 bool matrix_invert(double mat[4][4], double inverse[4][4])

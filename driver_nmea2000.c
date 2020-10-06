@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #if defined(NMEA2000_ENABLE)
 
@@ -36,11 +36,11 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "gpsd.h"
-#include "libgps.h"
-#include "driver_nmea2000.h"
-#include "bits.h"
-#include "timespec.h"
+#include "include/gpsd.h"
+#include "include/libgps.h"
+#include "include/driver_nmea2000.h"
+#include "include/bits.h"
+#include "include/timespec.h"
 
 
 #define LOG_FILE 1

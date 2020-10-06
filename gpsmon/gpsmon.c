@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <assert.h>
 #include <ctype.h>
@@ -28,13 +28,13 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "../compiler.h"         // for FALLTHROUGH
-#include "../gpsdclient.h"
-#include "../gpsd.h"
-#include "../gps_json.h"
-#include "../gpsmon.h"
-#include "../strfuncs.h"
-#include "../timespec.h"
+#include "../include/compiler.h"         // for FALLTHROUGH
+#include "../include/gpsdclient.h"
+#include "../include/gpsd.h"
+#include "../include/gps_json.h"
+#include "../include/gpsmon.h"
+#include "../include/strfuncs.h"
+#include "../include/timespec.h"
 
 #define BUFLEN          2048
 

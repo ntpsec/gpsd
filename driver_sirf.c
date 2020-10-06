@@ -35,7 +35,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <ctype.h>
 #include <math.h>
@@ -46,11 +46,11 @@
 #include <strings.h>
 #include <unistd.h>
 
-#include "compiler.h"   // for FALLTHROUGH
-#include "gpsd.h"
-#include "bits.h"
-#include "strfuncs.h"
-#include "timespec.h"
+#include "include/compiler.h"   // for FALLTHROUGH
+#include "include/gpsd.h"
+#include "include/bits.h"
+#include "include/strfuncs.h"
+#include "include/timespec.h"
 #if defined(SIRF_ENABLE) && defined(BINARY_ENABLE)
 
 #define HI(n)           ((n) >> 8)

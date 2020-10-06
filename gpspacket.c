@@ -6,7 +6,7 @@
  *
  */
 
-#include "gpsd_config.h" /* must be before all includes */
+#include "include/gpsd_config.h" /* must be before all includes */
 
 #include <assert.h>
 #include <ctype.h>
@@ -15,8 +15,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "gpsd.h"
-#include "strfuncs.h"
+#include "include/gpsd.h"
+#include "include/strfuncs.h"
 
 #define LOG_SHOUT 0
 

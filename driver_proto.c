@@ -36,7 +36,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -44,7 +44,7 @@
 
 #if defined(_PROTO__ENABLE) && defined(BINARY_ENABLE)
 
-#include "bits.h"
+#include "include/bits.h"
 
 static  gps_mask_t _proto__parse_input(struct gps_device_t *);
 static  gps_mask_t _proto__dispatch(struct gps_device_t *, unsigned char *,

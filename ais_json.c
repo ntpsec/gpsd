@@ -11,7 +11,7 @@ This file is Copyright 2010 by the GPSD project
 SPDX-License-Identifier: BSD-2-clause
 ***************************************************************************/
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  /* must be before all includes */
 
 #include <stdio.h>
 #include <string.h>
@@ -20,10 +20,10 @@ SPDX-License-Identifier: BSD-2-clause
 #include <stddef.h>
 #include <time.h>
 
-#include "gps.h"
-#include "json.h"
+#include "include/gps.h"
+#include "include/json.h"
 #ifdef SOCKET_EXPORT_ENABLE
-#include "libgps.h"
+#include "include/libgps.h"
 
 /* kluge because we don't want to include gpsd.h here */
 extern int gpsd_hexpack(const char *, char *, size_t);
