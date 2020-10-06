@@ -1818,15 +1818,15 @@ if env['systemd']:
     gpsd_sources.append("sd_socket.c")
 
 gpsmon_sources = [
-    'gpsmon.c',
-    'monitor_garmin.c',
-    'monitor_italk.c',
-    'monitor_nmea0183.c',
-    'monitor_oncore.c',
-    'monitor_sirf.c',
-    'monitor_superstar2.c',
-    'monitor_tnt.c',
-    'monitor_ubx.c',
+    'gpsmon/gpsmon.c',
+    'gpsmon/monitor_garmin.c',
+    'gpsmon/monitor_italk.c',
+    'gpsmon/monitor_nmea0183.c',
+    'gpsmon/monitor_oncore.c',
+    'gpsmon/monitor_sirf.c',
+    'gpsmon/monitor_superstar2.c',
+    'gpsmon/monitor_tnt.c',
+    'gpsmon/monitor_ubx.c',
 ]
 
 # Python import dependencies
@@ -1860,7 +1860,7 @@ gpsctl = env.Program('gpsctl', ['gpsctl.c'],
                      LIBS=['gpsd', 'gps_static'],
                      parse_flags=gpsdflags + gpsflags)
 # FIXME: gpsmon should not link to gpsd server sources!
-gpsmon = env.Program('gpsmon', gpsmon_sources,
+gpsmon = env.Program('gpsmon/gpsmon', gpsmon_sources,
                      LIBS=['gpsd', 'gps_static'],
                      parse_flags=gpsdflags + gpsflags + ncurseslibs)
 gpsdctl = env.Program('clients/gpsdctl', ['clients/gpsdctl.c'],

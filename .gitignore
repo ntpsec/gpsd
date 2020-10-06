@@ -11,8 +11,8 @@ clients/ntpshmmon
 clients/ppscheck
 gpscap.py
 gpsctl
+gpsmon/gpsmon
 gpsd
-gpsmon
 rtcmdecode
 contrib/clock_test
 *.exe

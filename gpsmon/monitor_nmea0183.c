@@ -7,7 +7,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "../gpsd_config.h"  /* must be before all includes */
 
 #include <assert.h>
 #include <math.h>
@@ -17,10 +17,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "gpsd.h"
-#include "gpsmon.h"
-#include "gpsdclient.h"
-#include "strfuncs.h"
+#include "../gpsd.h"
+#include "../gpsmon.h"
+#include "../gpsdclient.h"
+#include "../strfuncs.h"
 
 #ifdef NMEA0183_ENABLE
 extern const struct gps_type_t driver_nmea0183;

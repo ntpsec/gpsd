@@ -5,14 +5,14 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "../gpsd_config.h"  /* must be before all includes */
 
 #include <assert.h>
 #include <math.h>
 
-#include "gpsd.h"
-#include "bits.h"
-#include "gpsmon.h"
+#include "../gpsd.h"
+#include "../bits.h"
+#include "../gpsmon.h"
 
 #if defined(GARMIN_ENABLE) && defined(BINARY_ENABLE)
 extern const struct gps_type_t driver_garmin_ser_binary;

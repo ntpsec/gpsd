@@ -5,12 +5,12 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "../gpsd_config.h"  /* must be before all includes */
 
 #include <assert.h>
 
-#include "gpsd.h"
-#include "gpsmon.h"
+#include "../gpsd.h"
+#include "../gpsmon.h"
 
 #ifdef TNT_ENABLE
 extern const struct gps_type_t driver_trueNorth;

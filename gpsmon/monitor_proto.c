@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "../gpsd_config.h"  /* must be before all includes */
 
 #include <assert.h>
 #include <ctype.h>
@@ -17,9 +17,9 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "gpsd.h"
-#include "bits.h"
-#include "gpsmon.h"
+#include "../gpsd.h"
+#include "../bits.h"
+#include "../gpsmon.h"
 
 /*
  * Replace PROTO everywhere with the name of the GPSD driver describing
