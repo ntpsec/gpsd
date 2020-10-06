@@ -5,6 +5,9 @@
 
 #include "../gpsd_config.h"  /* must be before all includes */
 
+#ifdef HAVE_GETOPT_LONG
+       #include <getopt.h>   // for getopt_long()
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -703,21 +706,97 @@ static void encode(FILE *fpin, FILE *fpout)
 }
 #endif /* SOCKET_EXPORT_ENABLE */
 
+/* usage()
+ * print usages, and exit
+ */
+static void usage(void)
+{
+    (void)fprintf(stderr,
+          "Usage: gpsdecode [OPTIONS]\n"
+          "\n"
+#ifdef HAVE_GETOPT_LONG
+          "  --ais              AIS dump format with an ASCII pipe separator.\n"
+          "  --debug DEBUG      Set debug level.\n"
+          "  --decode           Decode\n"
+          "  --encode           Encode\n"
+          "  --help             Show this help, then exit\n"
+          "  --json             JSON.\n"
+          "  --minlength        Minimum length, no JSON.\n"
+          "  --nmea             psuedo NMEA\n"
+          "  --split24          split24\n"
+          "  --types TYPES      Types\n"
+          "  --unscaled         Unscaled\n"
+          "  --verbose          Verbose.\n"
+          "  --version          Print version, then exit\n"
+#endif
+          "  -?                 Show this help, then exit\n"
+          "  -c                 AIS dump format with an ASCII pipe separator.\n"
+          "  -D DEBUG           Set debug level.\n"
+          "  -d                 Decode \n"
+          "  -e                 Encode\n"
+          "  -h                 Show this help, then exit\n"
+          "  -j                 JSON.\n"
+          "  -m                 Minimum length, no JSON\n"
+          "  -n                 psuedo NMEA\n"
+          "  -s                 split24 \n"
+          "  -t TYPES           Types, comma separated.\n"
+          "  -u                 Unscaled\n"
+          "  -V                 Print version and exit.\n"
+          "  -v                 Verbose.\n"
+          "\n");
+    exit(EXIT_FAILURE);
+}
+
 int main(int argc, char **argv)
 {
-    int c;
+    int ch;
+    const char *optstring = "cdehjmnst:uvVD:";
     enum { doencode, dodecode } mode = dodecode;
+#ifdef HAVE_GETOPT_LONG
+    int option_index = 0;
+    static struct option long_options[] = {
+        {"debug", required_argument, NULL, 'D'},
+        {"decode", no_argument, NULL, 'd'},
+        {"encode", no_argument, NULL, 'e'},
+        {"help", no_argument, NULL, 'h'},
+        {"json", no_argument, NULL, 'j'},
+        {"minlength", no_argument, NULL, 'm'},
+        {"nmea", no_argument, NULL, 'n'},
+        {"nojson", no_argument, NULL, 'c'},
+        {"split24", no_argument, NULL, 's'},
+        {"types", required_argument, NULL, 't'},
+        {"unscaled", no_argument, NULL, 'u' },
+        {"verbose", no_argument, NULL, 'v' },
+        {"version", no_argument, NULL, 'V' },
+        {NULL, 0, NULL, 0},
+    };
+#endif
 
     gps_context_init(&context, "gpsdecode");
 
-    while ((c = getopt(argc, argv, "cdejmnpst:uvVD:")) != EOF) {
-        switch (c) {
+    while (1) {
+#ifdef HAVE_GETOPT_LONG
+        ch = getopt_long(argc, argv, optstring, long_options, &option_index);
+#else
+        ch = getopt(argc, argv, optstring);
+#endif
+
+        if (ch == -1) {
+            break;
+        }
+
+        switch (ch) {
         case 'c':
             json = false;
             break;
 
         case 'd':
             mode = dodecode;
+            break;
+
+        case 'D':
+            context.errout.debug = verbose = atoi(optarg);
+            json_enable_debug(verbose - 2, stderr);
             break;
 
         case 'e':
@@ -759,19 +838,14 @@ int main(int argc, char **argv)
             verbose = 1;
             break;
 
-        case 'D':
-            context.errout.debug = verbose = atoi(optarg);
-            json_enable_debug(verbose - 2, stderr);
-            break;
-
         case 'V':
             (void)fprintf(stderr, "gpsdecode revision " VERSION "\n");
             exit(EXIT_SUCCESS);
 
         case '?':
+        case 'h':
         default:
-            (void)fputs("gpsdecode [-v]\n", stderr);
-            exit(EXIT_FAILURE);
+            usage();
         }
     }
     //argc -= optind;
