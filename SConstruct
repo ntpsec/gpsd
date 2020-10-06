@@ -1881,7 +1881,7 @@ gpxlogger = env.Program('clients/gpxlogger', ['clients/gpxlogger.c'],
 lcdgps = env.Program('clients/lcdgps', ['clients/lcdgps.c'],
                      LIBS=['gps_static'],
                      parse_flags=gpsflags)
-cgps = env.Program('cgps', ['cgps.c'],
+cgps = env.Program('clients/cgps', ['clients/cgps.c'],
                    LIBS=['gps_static'],
                    parse_flags=gpsflags + ncurseslibs)
 ntpshmmon = env.Program('ntpshmmon', ['ntpshmmon.c'],
@@ -2962,7 +2962,7 @@ env.Clean(clean_misc, glob.glob('qt-*.os'))
 
 # Clean obsolete files
 env.Clean(clean_misc, ['contrib/gpscsv', 'contrib/gpsplot',
-                       'contrib/gpssubframe', 'gegps', 'gps2udp',
+                       'contrib/gpssubframe', 'cgps', 'gegps', 'gps2udp',
                        'gpscat', 'gpsdctl', 'gpsdecode', 'gpspipe',
                        'gpsprof', 'gpsrinex',
                        'gpxlogger', 'lcdgps', 'ubxtool',
@@ -2977,13 +2977,13 @@ else:
     env.Default(build)
 
 # Tags for Emacs and vi
-misc_sources = ['cgps.c',
+misc_sources = ['clients/cgps.c',
                 'clients/gps2udp.c',
+                'clients/gpsdctl.c',
                 'clients/gpsdecode.c',
                 'clients/gpspipe.c',
                 'clients/gpxlogger.c',
                 'gpsctl.c',
-                'gpsdctl.c',
                 'ntpshmmon.c',
                 'ppscheck.c',
                 ]

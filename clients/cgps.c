@@ -90,7 +90,7 @@
 /* Minimum xsize to display 3rd window with DOPs, etc. */
 #define MIN_ERRWIN_SIZE 100
 
-#include "gpsd_config.h"  /* must be before all includes */
+#include "../gpsd_config.h"  /* must be before all includes */
 
 #include <ctype.h>
 #include <curses.h>
@@ -104,12 +104,12 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "gps.h"
-#include "gps_json.h"   /* for GPS_JSON_RESPONSE_MAX */
-#include "compiler.h"   /* for UNUSED */
-#include "gpsdclient.h"
-#include "os_compat.h"
-#include "timespec.h"
+#include "../gps.h"
+#include "../gps_json.h"   /* for GPS_JSON_RESPONSE_MAX */
+#include "../compiler.h"   /* for UNUSED */
+#include "../gpsdclient.h"
+#include "../os_compat.h"
+#include "../timespec.h"
 
 static struct gps_data_t gpsdata;
 static time_t status_timer;     /* Time of last state change. */
