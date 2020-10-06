@@ -7,14 +7,17 @@
 
 #include "../gpsd_config.h"  /* must be before all includes */
 
-#include <getopt.h>
+#ifdef HAVE_GETOPT_LONG
+       #include <getopt.h>
+#endif
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>     /* for memset() */
+#include <string.h>           // for memset()
 #include <unistd.h>
 
-#include "../gps.h"        /* for safe_atof() */
+#include "../compiler.h"      // for FALLTHROUGH
+#include "../gps.h"           // for safe_atof()
 #include "../ntpshm.h"
 #include "../timespec.h"
 #include "../os_compat.h"
@@ -23,9 +26,34 @@
 
 static struct shmTime *segments[NTPSEGMENTS + 1];
 
+static void usage(void)
+{
+    (void)fprintf(stderr,
+        "usage: ntpshmmon [OPTIONS]\n\n"
+#ifdef HAVE_GETOPT_LONG
+        "  --count COUNT       Exit after COUNT samples\n"
+        "  --help              Print this help, then exit\n"
+        "  --offset            Replace Seen@ with Offset\n"
+        "  --rmshm             Remove SHMs and exit\n"
+        "  --seconds SECONDS   Exit after SECONDS seconds\n"
+        "  --verbose           Be verbose\n"
+        "  --version           Show version, then exit\n"
+#endif
+        "  -?                  Print this help and exit.\n"
+        "  -h                  Print this help and exit.\n"
+        "  -n COUNT            Exit after COUNT samples\n"
+        "  -o                  Replace Seen@ with Offset\n"
+        "  -s                  Remove SHMs and exit\n"
+        "  -t SECONDS          Exit after SECONDS seconds\n"
+        "  -v                  Be verbose\n"
+        "  -V                  Print version and exit.\n"
+        );
+    exit(EXIT_SUCCESS);
+}
+
 int main(int argc, char **argv)
 {
-    int option;
+    int ch;
     int i;
     bool killall = false;
     bool offset = false;            /* show offset, not seen */
@@ -35,30 +63,47 @@ int main(int argc, char **argv)
     /* a copy of all old segments */
     struct shm_stat_t   shm_stat_old[NTPSEGMENTS + 1];
     char *whoami;
+    const char *optstring = "?hn:ost:vV";
+#ifdef HAVE_GETOPT_LONG
+    int option_index = 0;
+    static struct option long_options[] = {
+        {"count", required_argument, NULL, 'n'},
+        {"help", no_argument, NULL, 'h'},
+        {"offset", no_argument, NULL, 'o'},
+        {"rmshm", no_argument, NULL, 's'},
+        {"seconds", required_argument, NULL, 't'},
+        {"verbose", no_argument, NULL, 'v' },
+        {"version", no_argument, NULL, 'V' },
+        {NULL, 0, NULL, 0},
+    };
+#endif
 
     /* strip path from program name */
     (whoami = strrchr(argv[0], '/')) ? ++whoami : (whoami = argv[0]);
 
     memset( shm_stat_old, 0 ,sizeof( shm_stat_old));
 
-    while ((option = getopt(argc, argv, "?hn:ost:vV")) != -1) {
-        switch (option) {
+    while (1) {
+#ifdef HAVE_GETOPT_LONG
+        ch = getopt_long(argc, argv, optstring, long_options, &option_index);
+#else
+        ch = getopt(argc, argv, optstring);
+#endif
+
+        if (ch == -1) {
+            break;
+        }
+
+        switch (ch) {
+        default:
+            // unknown option
+            FALLTHROUGH
         case '?':
+            FALLTHROUGH
         case 'h':
-            (void)fprintf(
-                stderr,
-                "usage: ntpshmmon [-?] [-h] [-n nsamples] [-o] [-s] "
-                "[-t nseconds] [-v] [-V]\n"
-                "  -?           print this help\n"
-                "  -h           print this help\n"
-                "  -n nsamples  exit after nsamples\n"
-                "  -o           replace Seen@ with Offset\n"
-                "  -s           remove SHMs and exit\n"
-                "  -t nseconds  exit after nseconds\n"
-                "  -v           be verbose\n"
-                "  -V           print version and exit\n"
-                );
-            exit(EXIT_SUCCESS);
+            usage();
+            // never returns but shut up compiler warnings
+            break;
         case 'n':
             nsamples = atoi(optarg);
             break;
@@ -78,10 +123,16 @@ int main(int argc, char **argv)
             (void)fprintf(stderr, "%s: version %s (revision %s)\n",
                           whoami, VERSION, REVISION);
             exit(EXIT_SUCCESS);
-        default:
-            /* no option, just go and do it */
-            break;
         }
+    }
+
+    if (optind < argc) {
+        (void)fprintf(stderr, "%s: Extra positional arguments: ", whoami);
+        while (optind < argc) {
+            (void)fprintf(stderr, "  %s", argv[optind++]);
+        }
+        (void)fprintf(stderr, "\n");
+        exit(EXIT_FAILURE);
     }
 
     /* grab all segments, keep the non-null ones */
