@@ -20,6 +20,7 @@ contrib/clock_test
 android/gpsd_config
 clients/gegps
 clients/gpscsv
+clients/gpsd.php
 clients/gpssubframe
 clients/gpsprof
 clients/gpsplot
@@ -35,7 +36,6 @@ gps/__init__.py
 gps/gps.py
 gps/packet.py
 gpscat
-gpsd.php
 gpsfake
 jsongen
 maskaudit.py
@@ -195,7 +195,7 @@ tmp*
 *.tar.?z.sig
 *.zip
 # config file created by gpsd.php
-gpsd_config.inc
+clients/gpsd_config.inc
 # for systemd(umb)
 systemd/gpsd.service
 systemd/gpsdctl@.service

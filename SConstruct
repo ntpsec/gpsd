@@ -135,6 +135,7 @@ generated_sources = [
     'clients/gegps',
     'clients/gpscat',
     'clients/gpscsv',
+    'clients/gpsd.php',
     'clients/gpsprof',
     'clients/gpsplot',
     'clients/gpssubframe',
@@ -146,7 +147,6 @@ generated_sources = [
     'contrib/skyview2svg.py',
     'contrib/webgps',
     'control',
-    'gpsd.php',
     'gpsd.rules',
     'gpsfake',
     'gps/gps.py',
@@ -2182,7 +2182,7 @@ if manbuilder:
 
 build = env.Alias('build',
                   [libraries, sbin_binaries, bin_binaries, python_targets,
-                   "gpsd.php", manpage_targets,
+                   "clients/gpsd.php", manpage_targets,
                    "libgps.pc", "gpsd.rules"])
 
 if [] == COMMAND_LINE_TARGETS:
@@ -2965,7 +2965,7 @@ env.Clean(clean_misc, glob.glob('qt-*.os'))
 # Clean obsolete files
 env.Clean(clean_misc, ['contrib/gpscsv', 'contrib/gpsplot',
                        'contrib/gpssubframe', 'cgps', 'gegps', 'gps2udp',
-                       'gpscat', 'gpsdctl', 'gpsdecode', 'gpspipe',
+                       'gpscat', 'gpsd.php', 'gpsdctl', 'gpsdecode', 'gpspipe',
                        'gpsprof', 'gpsrinex',
                        'gpxlogger', 'lcdgps', 'ntpshmmon', 'ppscheck',
                        'ubxtool', 'xgps', 'xgpsspeed', 'zerk'])
