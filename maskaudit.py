@@ -39,9 +39,9 @@ class SourceExtractor(object):
             "libgpsd_core.c",
             "pseudonmea.c",
             "drivers.c",
-            "gpsmon.c",
+            "gpsmon/gpsmon.c",
             "subframe.c"
-        ] + glob.glob("driver_*.c") + glob.glob("monitor_*.c")
+        ] + glob.glob("driver_*.c") + glob.glob("gpsmon/monitor_*.c")
         self.masks = []
         self.primitive_masks = []
         for line in open(self.sourcefile):
@@ -56,7 +56,8 @@ class SourceExtractor(object):
     def in_library(self, flag):
         """grep in library"""
         (status, _output) = getstatusoutput(
-            "grep '%s' libgps_core.c libgps_json.c gpsctl.c" % flag)
+            "grep '%s' libgps/libgps_core.c libgps/libgps_json.c gpsctl.c" %
+            flag)
         return status == 0
 
     def in_daemon(self, flag):
