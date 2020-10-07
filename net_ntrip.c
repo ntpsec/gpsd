@@ -140,10 +140,12 @@ static void ntrip_str_parse(char *str, size_t len,
     s = ntrip_field_iterate(NULL, s, eol, errout);
     /* <compr-encryp> */
     if ((s = ntrip_field_iterate(NULL, s, eol, errout))) {
-        if (('\0' == s[0]) || (0 == strcasecmp("none", s))) {
+        if ((0 == strcmp(" ", s)) || (0 == strlen(s)) || (0 == strcasecmp("none", s))) {
             hold->compr_encryp = cmp_enc_none;
         } else {
             hold->compr_encryp = cmp_enc_unknown;
+            GPSD_LOG(LOG_WARN, errout,
+                     "NTRIP: Got unknown {compress,encrypt}ion '%s'\n", s);
         }
     }
     /* <authentication> */
