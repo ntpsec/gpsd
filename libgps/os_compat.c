@@ -13,9 +13,9 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
-#include "include/os_compat.h"
+#include "../include/os_compat.h"
 
 // export gpsd version so FFI can check it
 const char *gpsd_version = VERSION;
@@ -158,7 +158,7 @@ int os_daemon(int nochdir, int noclose)
 /* Provide syslog() on platforms that don't have it */
 
 #ifndef HAVE_SYSLOG_H
-#include "include/compiler.h"
+#include "../include/compiler.h"
 #include <stdarg.h>
 #include <stdio.h>
 /*

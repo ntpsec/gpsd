@@ -19,18 +19,18 @@ PERMISSIONS
  * use isfinite() to make sure a float is valid
  */
 
-#include "include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <math.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
 
-#include "include/gpsd.h"
-#include "include/strfuncs.h"
+#include "../include/gpsd.h"
+#include "../include/strfuncs.h"
 #ifdef SOCKET_EXPORT_ENABLE
-#include "include/gps_json.h"
-#include "include/timespec.h"
+#include "../include/gps_json.h"
+#include "../include/timespec.h"
 
 static int json_tpv_read(const char *buf, struct gps_data_t *gpsdata,
                          const char **endptr)

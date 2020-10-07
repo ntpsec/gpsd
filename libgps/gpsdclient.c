@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <assert.h>
 #include <math.h>
@@ -14,9 +14,9 @@
 #include <string.h>
 #include <strings.h>   /* for strcasecmp() */
 
-#include "include/gps.h"
-#include "include/gpsdclient.h"
-#include "include/os_compat.h"
+#include "../include/gps.h"
+#include "../include/gpsdclient.h"
+#include "../include/os_compat.h"
 
 static struct exportmethod_t exportmethods[] = {
 #if defined(DBUS_EXPORT_ENABLE)

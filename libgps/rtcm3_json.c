@@ -13,17 +13,17 @@ PERMISSIONS
 
 ***************************************************************************/
 
-#include "include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <math.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "include/gpsd.h"
+#include "../include/gpsd.h"
 
 #ifdef SOCKET_EXPORT_ENABLE
-#include "include/gps_json.h"
+#include "../include/gps_json.h"
 
 int json_rtcm3_read(const char *buf,
                     char *path, size_t pathlen, struct rtcm3_t *rtcm3,

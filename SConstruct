@@ -152,10 +152,10 @@ generated_sources = [
     'gps/gps.py',
     'gps/packet.py',
     'gps/__init__.py',
-    'gps_maskdump.c',
     'include/gpsd_config.h',
     'include/packet_names.h',
     'libgps.pc',
+    'libgps/gps_maskdump.c',
     'libQgpsmm.prl',
     'packaging/rpm/gpsd.spec',
     'Qgpsmm.pc',
@@ -1615,40 +1615,40 @@ if not (cleaning or helping):
 
 # gpsd client library
 libgps_sources = [
-    "ais_json.c",
-    "bits.c",
-    "gpsdclient.c",
-    "gps_maskdump.c",
-    "gpsutils.c",
-    "hex.c",
-    "json.c",
-    "libgps_core.c",
-    "libgps_dbus.c",
-    "libgps_json.c",
-    "libgps_shm.c",
-    "libgps_sock.c",
-    "netlib.c",
-    "os_compat.c",
-    "rtcm2_json.c",
-    "rtcm3_json.c",
-    "shared_json.c",
-    "timespec_str.c",
+    "libgps/ais_json.c",
+    "libgps/bits.c",
+    "libgps/gpsdclient.c",
+    "libgps/gps_maskdump.c",      # generated
+    "libgps/gpsutils.c",
+    "libgps/hex.c",
+    "libgps/json.c",
+    "libgps/libgps_core.c",
+    "libgps/libgps_dbus.c",
+    "libgps/libgps_json.c",
+    "libgps/libgps_shm.c",
+    "libgps/libgps_sock.c",
+    "libgps/netlib.c",
+    "libgps/os_compat.c",
+    "libgps/rtcm2_json.c",
+    "libgps/rtcm3_json.c",
+    "libgps/shared_json.c",
+    "libgps/timespec_str.c",
 ]
 
 # Client sources not to be built as C++ when building the Qt library.
 libgps_c_only = set([
-    "ais_json.c",
-    "json.c",
-    "libgps_json.c",
-    "os_compat.c",
-    "rtcm2_json.c",
-    "rtcm3_json.c",
-    "shared_json.c",
-    "timespec_str.c",
+    "libgps/ais_json.c",
+    "libgps/json.c",
+    "libgps/libgps_json.c",
+    "libgps/os_compat.c",
+    "libgps/rtcm2_json.c",
+    "libgps/rtcm3_json.c",
+    "libgps/shared_json.c",
+    "libgps/timespec_str.c",
 ])
 
 if env['libgpsmm']:
-    libgps_sources.append("libgpsmm.cpp")
+    libgps_sources.append("libgps/libgpsmm.cpp")
 
 # gpsd server library
 libgpsd_sources = [
@@ -1701,9 +1701,9 @@ packet_ffi_extension = [
     "driver_greis_checksum.c",
     "driver_rtcm2.c",
     "gpspacket.c",
-    "hex.c",
     "isgps.c",
-    "os_compat.c",
+    "libgps/hex.c",
+    "libgps/os_compat.c",
     "packet.c",
     ]
 
@@ -1744,9 +1744,7 @@ libgps_shared = GPSLibrary(env=env,
                            version=libgps_version,
                            parse_flags=rtlibs + libgps_flags)
 
-env.Clean(libgps_shared, "gps_maskdump.c")
-
-libgps_static = env.StaticLibrary("gps_static",
+libgps_static = env.StaticLibrary("libgps/gps_static",
                                   [env.StaticObject(s)
                                    for s in libgps_sources], rtlibs)
 
@@ -1763,7 +1761,6 @@ packet_ffi_shared = env.SharedLibrary(target="gpsdpacket",
                                       SHLIBVERSION=libgps_version,
                                       parse_flags=rtlibs + libgps_flags)
 
-env.Clean(libgps_shared, "gps_maskdump.c")
 libraries = [libgps_shared, packet_ffi_shared]
 
 # Make sure the old-style packet.so is gone, since it may be preferred
@@ -2047,7 +2044,7 @@ env.Command(target="include/packet_names.h", source="include/packet_states.h",
 
 env.Textfile(target="include/gpsd_config.h", source=confdefs)
 
-env.Command(target="gps_maskdump.c",
+env.Command(target="libgps/gps_maskdump.c",
             source=["maskaudit.py", "include/gps.h", "include/gpsd.h"],
             action='''
     rm -f $TARGET &&\
@@ -2929,6 +2926,7 @@ clean_misc = env.Alias('clean-misc')
 #  Qt stuff libQgpsmm.prl, Qgpsmm.pc
 #  packaging/rpm/gpsd.spec
 env.Clean(clean_misc, generated_sources)
+
 env.Clean(clean_misc, generated_www)
 
 # Since manpage targets are disabled in clean mode, we cover them here
@@ -2963,12 +2961,28 @@ env.Clean(clean_misc, glob.glob('gpsd-*.zip') + glob.glob('gpsd-*tar.?z'))
 env.Clean(clean_misc, glob.glob('qt-*.os'))
 
 # Clean obsolete files
-env.Clean(clean_misc, ['contrib/gpscsv', 'contrib/gpsplot',
-                       'contrib/gpssubframe', 'cgps', 'gegps', 'gps2udp',
-                       'gpscat', 'gpsd.php', 'gpsdctl', 'gpsdecode', 'gpspipe',
-                       'gpsprof', 'gpsrinex',
-                       'gpxlogger', 'lcdgps', 'ntpshmmon', 'ppscheck',
-                       'ubxtool', 'xgps', 'xgpsspeed', 'zerk'])
+env.Clean(clean_misc, ['cgps',
+                       'contrib/gpscsv',
+                       'contrib/gpsplot',
+                       'contrib/gpssubframe',
+                       'gegps',
+                       'gps2udp',
+                       'gpscat',
+                       'gpsdctl',
+                       'gpsdecode',
+                       'gpsd.php',
+                       'gps_maskdump.c',
+                       'gpspipe',
+                       'gpsprof',
+                       'gpsrinex',
+                       'gpxlogger',
+                       'lcdgps',
+                       'ntpshmmon',
+                       'ppscheck',
+                       'ubxtool',
+                       'xgps',
+                       'xgpsspeed',
+                       'zerk'])
 
 # Default targets
 

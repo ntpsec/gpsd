@@ -10,7 +10,7 @@
  * The sbits() function assumes twos-complement arithmetic. ubits()
  * and sbits() assume no padding in integers.
  */
-#include "include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <assert.h>
 #include <limits.h>
@@ -18,7 +18,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "include/bits.h"
+#include "../include/bits.h"
 
 /* extract a (zero-origin) bitfield from the buffer as an
  * unsigned big-endian uint64_t */
