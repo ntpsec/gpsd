@@ -5,6 +5,7 @@
   Added client/gpsplot to dynamically plot gpsd JSON.
   Added client/gpssubframe to decode gpsd SUBFRAME JSON.
   Added nSat and uSat to SKY JSON.  Old clients can not read new SKY.
+  Move stuff from source root into clients/, include/, gpsmon/ and libgps/.
 
 3.21: 2020-08-04
   Create python programs from .in files to allow macro substitution.
