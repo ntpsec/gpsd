@@ -9,6 +9,9 @@
 
 #include <assert.h>
 #include <errno.h>
+#ifdef HAVE_GETOPT_LONG
+       #include <getopt.h>
+#endif
 #include <signal.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -182,9 +185,51 @@ static void ctlhook(struct gps_device_t *device UNUSED,
     }
 }
 
+static void usage(void)
+{
+    (void)printf("usage: gpsctl [OPTIONS] [device]\n\n"
+#ifdef HAVE_GETOPT_LONG
+         "  --binary            Switch device to native binary mode.\n"
+         "  --debug DEBUGLEVEL  Set debug level to DEBUGLEVEL.\n"
+         "  --direct            Force direct access to the device.\n"
+         "  --echo              Echo specified control string with wrapper.\n"
+         "  --help              Show this help, then exit\n"
+         "  --list              List known device types and exit.\n"
+         "  --nmea              Switch device to NMEA mode.\n"
+         "  --rate RATE         Change receiver cyclte time to RATE.\n"
+         "  --reset             Force reset to default mode.\n"
+#ifdef SHM_EXPORT_ENABLE
+         "  --rmshm             Remove the SHM export segment and exit.\n"
+#endif   // SHM_EXPORT_ENABLE
+         "  --ship CONTROL      Ship specified control string.\n"
+         "  --speed SPEED       Set device speed to SPEED.\n"
+         "  --timeout TIMEOUT   Set the timeout on packet recognition.\n"
+         "  --type DEVTYPE      Force the device type.\n"
+         "  --version           Show version, then exit\n"
+#endif   // HAVE_GETOPT_LONG
+         "  -?                  Show this help, then exit\n"
+         "  -b                  Switch device to native binary mode.\n"
+         "  -c RATE             Change receiver cyclte time to RATE.\n"
+         "  -D DEBUGLEVEL       Set debug level to DEBUGLEVEL.\n"
+         "  -e                  Echo specified control string with wrapper.\n"
+         "  -f                  Force direct access to the device.\n"
+         "  -h                  Show this help, then exit\n"
+         "  -l                  List known device types and exit.\n"
+         "  -n                  Switch device to NMEA mode.\n"
+#ifdef SHM_EXPORT_ENABLE
+         "  -R                  Remove the SHM export segment and exit.\n"
+#endif   // SHM_EXPORT_ENABLE
+         "  -r                  Force reset to default mode.\n"
+         "  -s SPEED            Set device speed to SPEED.\n"
+         "  -t DEVTYPE          Force the device type.\n"
+         "  -T TIMEOUT          Set the timeout on packet recognition.\n"
+         "  -V                  Show version, then exit\n"
+         "  -x CONTROL          Ship specified control string.\n");
+}
+
 int main(int argc, char **argv)
 {
-    int option, status;
+    int ch, status;
     char *device = NULL, *devtype = NULL;
     char *speed = NULL, *control = NULL, *rate = NULL;
     bool to_binary = false, to_nmea = false, reset = false;
@@ -195,29 +240,54 @@ int main(int argc, char **argv)
     const struct gps_type_t **dp;
     char cooked[BUFSIZ];
     ssize_t cooklen = 0;
+    const char *optstring = "bec:fhlnrs:t:x:D:RT:V";
+#ifdef HAVE_GETOPT_LONG
+    int option_index = 0;
+    static struct option long_options[] = {
+        {"binary", no_argument, NULL, 'b'},
+        {"debug", required_argument, NULL, 'D'},
+        {"direct", no_argument, NULL, 'f'},
+        {"echo", no_argument, NULL, 'e'},
+        {"help", no_argument, NULL, 'h'},
+        {"list", no_argument, NULL, 'l'},
+        {"nmea", no_argument, NULL, 'n'},
+        {"rate", required_argument, NULL, 'c'},
+#ifdef SHM_EXPORT_ENABLE
+        {"rmshm", required_argument, NULL, 'R'},
+#endif
+        {"ship", required_argument, NULL, 'x'},
+        {"speed", required_argument, NULL, 's'},
+        {"timeout", required_argument, NULL, 'T'},
+        {"type", required_argument, NULL, 't'},
+        {"version", no_argument, NULL, 'V' },
+        {NULL, 0, NULL, 0},
+    };
+#endif
 
     /* We need this before any logging happens (for report_mutex) */
     gps_context_init(&context, "gpsctl");
 
-#define USAGE   "usage: gpsctl [-l] [-b | -n | -r] [-D n]\n" \
-                "   [-s speed] [-c rate] [-T timeout] [-V]\n" \
-                "   [-t devtype] [-x control] [-R] [-e] [device]\n"
-    while ((option = getopt(argc, argv, "bec:fhlnrs:t:x:D:RT:V")) != -1) {
-        switch (option) {
+    while (1) {
+#ifdef HAVE_GETOPT_LONG
+        ch = getopt_long(argc, argv, optstring, long_options, &option_index);
+#else
+        ch = getopt(argc, argv, optstring);
+#endif
+
+        if (ch == -1) {
+            break;
+        }
+
+        switch (ch) {
         case 'b':               /* switch to vendor binary mode */
             to_binary = true;
             break;
         case 'c':
             rate = optarg;
             break;
-        case 'x':               /* ship specified control string */
-            control = optarg;
-            lowlevel = true;
-            if ((cooklen = hex_escapes(cooked, control)) <= 0) {
-                GPSD_LOG(LOG_ERROR, &context.errout,
-                         "invalid escape string (error %d)\n", (int)cooklen);
-                exit(EXIT_FAILURE);
-            }
+        case 'D':               /* set debugging level */
+            debuglevel = atoi(optarg);
+            gps_enable_debug(debuglevel, stderr);
             break;
         case 'e':               /* echo specified control string with wrapper */
             lowlevel = true;
@@ -251,21 +321,8 @@ int main(int argc, char **argv)
         case 'n':               /* switch to NMEA mode */
             to_nmea = true;
             break;
-        case 'r':               /* force-switch to default mode */
-            reset = true;
-            lowlevel = false;   /* so we'll abort if the daemon is running */
-            break;
-        case 's':               /* change output baud rate */
-            speed = optarg;
-            break;
-        case 't':               /* force the device type */
-            devtype = optarg;
-            /* experimental kluge */
-            if (strcmp(devtype, "u-blox") == 0)
-                timeout = 2;
-            break;
-        case 'R':               /* remove the SHM export segment */
 #ifdef SHM_EXPORT_ENABLE
+        case 'R':               /* remove the SHM export segment */
             status = shmget(getenv("GPSD_SHM_KEY") ?
                             (key_t)strtol(getenv("GPSD_SHM_KEY"), NULL, 0) :
                             (key_t)GPSD_SHM_KEY, 0, 0);
@@ -284,22 +341,44 @@ int main(int argc, char **argv)
             }
             exit(0);
 #endif /* SHM_EXPORT_ENABLE */
+        case 'r':               /* force-switch to default mode */
+            reset = true;
+            lowlevel = false;   /* so we'll abort if the daemon is running */
+            break;
+        case 's':               /* change output baud rate */
+            speed = optarg;
+            break;
         case 'T':               /* set the timeout on packet recognition */
             timeout = (unsigned)atoi(optarg);
             explicit_timeout = true;
             break;
-        case 'D':               /* set debugging level */
-            debuglevel = atoi(optarg);
-            gps_enable_debug(debuglevel, stderr);
+        case 't':               /* force the device type */
+            devtype = optarg;
+            /* experimental kluge */
+            if (strcmp(devtype, "u-blox") == 0)
+                timeout = 2;
+            break;
+        case 'x':               /* ship specified control string */
+            control = optarg;
+            lowlevel = true;
+            if ((cooklen = hex_escapes(cooked, control)) <= 0) {
+                GPSD_LOG(LOG_ERROR, &context.errout,
+                         "invalid escape string (error %d)\n", (int)cooklen);
+                exit(EXIT_FAILURE);
+            }
             break;
         case 'V':
             (void)fprintf(stderr, "%s: version %s (revision %s)\n",
                           argv[0], VERSION, REVISION);
             exit(EXIT_SUCCESS);
+        case '?':
+            FALLTHROUGH
         case 'h':
+            usage();
+            exit(EXIT_SUCCESS);
         default:
-            (void)fprintf(stderr, USAGE);
-            break;
+            usage();
+            exit(EXIT_FAILURE);
         }
     }
 
