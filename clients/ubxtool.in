@@ -2547,7 +2547,7 @@ Programming the fixed seed for host interface signature"""
             return ("  Poll request: %s" %
                     index_s(buf[0], self.cfg_inf_protid))
 
-        if 10 < m_len:
+        if 10 > m_len:
             return "  Bad Length %d" % m_len
 
         u = struct.unpack_from('<BBBBBBBBBB', buf, 0)
