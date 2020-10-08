@@ -16,7 +16,7 @@ With -t, tabulate usage of defines to find unused ones.  Requires -c or -d.
 
 from __future__ import absolute_import, print_function, division
 
-import getopt
+import argparse
 import glob
 import sys
 
@@ -75,49 +75,99 @@ class SourceExtractor(object):
 
 
 if __name__ == '__main__':
+    description = 'Create dynamic plots from gpsd with matplotlib.'
+    usage = '%(prog)s [OPTIONS] [host[:port[:device]]]'
+    epilog = ('BSD terms apply: see the file COPYING in the distribution root'
+              ' for details.')
+
+    parser = argparse.ArgumentParser(
+                 description=description,
+                 epilog=epilog,
+                 formatter_class=argparse.RawDescriptionHelpFormatter,
+                 usage=usage)
+    parser.add_argument(
+        '-?',
+        action="help",
+        help='show this help message and exit'
+    )
+    parser.add_argument(
+        '-d',
+        '--daemongen',
+        action="store_true",
+        default=False,
+        dest='daemongen',
+        help=('Generate C code to dump masks for debugging'
+              ' [Default %(default)s)]'),
+    )
+    parser.add_argument(
+        '-c',
+        '--clientgen',
+        action="store_true",
+        default=False,
+        dest='clientgen',
+        help=('Generate C code to dump masks for debugging'
+              ' [Default %(default)s)]'),
+    )
+    parser.add_argument(
+        '-p',
+        '--pythonize',
+        action="store_true",
+        default=False,
+        dest='pythonize',
+        help=('Dump a Python status mask list. [Default %(default)s)]'),
+    )
+    parser.add_argument(
+        '-t',
+        '--tabulate',
+        action="store_true",
+        default=False,
+        dest='tabulate',
+        help=('Tabulate usage of defines to find unused ones. '
+              ' Requires -c or -d. [Default %(default)s)]'),
+    )
+    # parser.add_argument(
+    #     '-V', '--version',
+    #     action='version',
+    #     help='Output version to stderr, then exit',
+    #     version="%(prog)s: Version " + gps_version + "\n",
+    # )
+    parser.add_argument(
+        'arguments',
+        help='Source Directory',
+        nargs='?',
+    )
+    options = parser.parse_args()
+
+    if not options.arguments:
+        srcdir = '.'
+    else:
+        srcdir = options.arguments
+
+    clientside = SourceExtractor(srcdir + "/include/gps.h",
+                                 clientside=True)
+    daemonside = SourceExtractor(srcdir + "/include/gpsd.h",
+                                 clientside=False)
+    if options.clientgen:
+        source = clientside
+        banner = "Library"
+    elif options.daemongen:
+        source = daemonside
+        banner = "Daemon"
+    else:
+        sys.stderr.write("maskaudit: need -c or -d option\n")
+        sys.exit(1)
+
     try:
-        (options, arguments) = getopt.getopt(sys.argv[1:], "cdpt")
-        pythonize = tabulate = False
-        clientgen = daemongen = False
-        for (switch, val) in options:
-            if switch == '-p':
-                pythonize = True
-            if switch == '-c':
-                clientgen = True
-            if switch == '-d':
-                daemongen = True
-            if switch == '-t':
-                tabulate = True
-
-        if not arguments:
-            srcdir = '.'
-        else:
-            srcdir = arguments[0]
-
-        clientside = SourceExtractor(srcdir + "/include/gps.h",
-                                     clientside=True)
-        daemonside = SourceExtractor(srcdir + "/include/gpsd.h",
-                                     clientside=False)
-        if clientgen:
-            source = clientside
-            banner = "Library"
-        elif daemongen:
-            source = daemonside
-            banner = "Daemon"
-        else:
-            sys.stderr.write("maskaudit: need -c or -d option\n")
-            sys.exit(1)
-
-        if tabulate:
+        if options.tabulate:
             print("%-14s        %8s" % (" ", banner))
             for (flag, value) in source.masks:
                 print("%-14s    %8s" % (flag, source.relevant(flag)))
-        if pythonize:
+        if options.pythonize:
             for (d, v) in source.masks:
                 if v[-1] == 'u':
                     v = v[:-1]
                 print("%-15s\t= %s" % (d, v))
-        if not pythonize and not tabulate:
+        if not options.pythonize and not options.tabulate:
             maxout = 0
             for (d, v) in source.primitive_masks:
                 if source.relevant(d):
