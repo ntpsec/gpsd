@@ -130,7 +130,6 @@ if SCons.__version__ in ['2.3.0', '2.3.1']:
 # TODO: this list is missing stuff.
 # built man pages found in all_manpages
 generated_sources = [
-    'ais_json.i',
     'android/gpsd_config',
     'clients/gegps',
     'clients/gpscat',
@@ -155,6 +154,7 @@ generated_sources = [
     'include/gpsd_config.h',
     'include/packet_names.h',
     'libgps.pc',
+    'libgps/ais_json.i',
     'libgps/gps_maskdump.c',
     'libQgpsmm.prl',
     'packaging/rpm/gpsd.spec',
@@ -1983,7 +1983,7 @@ else:
     python_misc = [
         "gpscap.py",
         "gpssim.py",
-        "jsongen.py",
+        "libgps/jsongen.py",
         "maskaudit.py",
         "tests/test_clienthelpers.py",
         "tests/test_misc.py",
@@ -2051,7 +2051,8 @@ env.Command(target="libgps/gps_maskdump.c",
         $SC_PYTHON $SOURCE -c $SRCDIR >$TARGET &&\
         chmod a-w $TARGET''')
 
-env.Command(target="ais_json.i", source="jsongen.py", action='''\
+env.Command(target="libgps/ais_json.i", source="libgps/jsongen.py",
+            action='''\
     rm -f $TARGET &&\
     $SC_PYTHON $SOURCE --ais --target=parser >$TARGET &&\
     chmod a-w $TARGET''')
@@ -2961,7 +2962,8 @@ env.Clean(clean_misc, glob.glob('gpsd-*.zip') + glob.glob('gpsd-*tar.?z'))
 env.Clean(clean_misc, glob.glob('qt-*.os'))
 
 # Clean obsolete files
-env.Clean(clean_misc, ['cgps',
+env.Clean(clean_misc, ['ais_json.i',
+                       'cgps',
                        'contrib/gpscsv',
                        'contrib/gpsplot',
                        'contrib/gpssubframe',

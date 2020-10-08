@@ -75,7 +75,7 @@ int json_ais_read(const char *buf,
 
     int status;
 
-#include "../ais_json.i"           /* JSON parser template structures */
+#include "ais_json.i"           // JSON parser template structures
 
 #undef AIS_HEADER
 
