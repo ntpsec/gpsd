@@ -134,7 +134,7 @@ centos-7-latest:
   script:
   - yum -y update
   - yum -y install epel-release
-  - yum -y install diffutils python2-scons bc gcc gcc-c++ bluez-libs-devel dbus-devel ncurses-devel python-devel pps-tools-devel qt5-qtbase-devel libusbx-devel qt-devel gtk3-devel pyserial pycairo libxslt docbook-style-xsl rubygem-asciidoctor ccache
+  - yum -y install diffutils python2-scons bc gcc gcc-c++ bluez-libs-devel dbus-devel ncurses-devel python-devel pps-tools-devel libusbx-devel qt-devel gtk3-devel pyserial pycairo libxslt docbook-style-xsl rubygem-asciidoctor ccache
   - .ci-build/build.sh
 
 centos-8-latest:
