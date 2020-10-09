@@ -1602,7 +1602,7 @@ if __name__ == "__main__":
     ltarget = [options.host, options.port, options.device]
     target = ':'.join(ltarget)
 
-    if 'DISPLAY' not in os.environ:
+    if 'DISPLAY' not in os.environ or not os.environ['DISPLAY']:
         sys.stderr.write("xgps: ERROR: DISPLAY not set\n")
         sys.exit(1)
 

@@ -984,7 +984,7 @@ if __name__ == '__main__':
 
     target = ':'.join([options.host, options.port, options.device])
 
-    if 'DISPLAY' not in os.environ:
+    if 'DISPLAY' not in os.environ or not os.environ['DISPLAY']:
         sys.stderr.write("xgpsspeed: ERROR: DISPLAY not set\n")
         sys.exit(1)
 
