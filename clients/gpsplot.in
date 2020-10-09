@@ -12,15 +12,21 @@ from __future__ import print_function
 
 import argparse
 import datetime
-try:
-    # optional
-    from matplotlib import pyplot as plt
-    have_matplotlib = True
-except ImportError:
-    have_matplotlib = False
+import os
 import socket
 import sys
 import time            # for time.time()
+
+if 'DISPLAY' not in os.environ:
+    have_display = False
+else:
+    have_display = True
+    try:
+        # Don't fail until after check for -h or -V.
+        from matplotlib import pyplot as plt
+        have_matplotlib = True
+    except ImportError:
+        have_matplotlib = False
 
 # pylint wants local modules last
 try:
@@ -162,9 +168,14 @@ parser.add_argument(
 )
 options = parser.parse_args()
 
-# allow -V and -h, above, before exiting on matplotlib not found
+# allow -V and -h, above, before exiting on matplotlib, or DISPLAY, not found
+if not have_display:
+    # matplotlib will not import w/o DISPLAY
+    sys.stderr.write("gpsplot: ERROR: $DISPLAY not set\n")
+    sys.exit(1)
 if not have_matplotlib:
-    sys.stderr.write("Error: required Python module matplotlib not found\n")
+    sys.stderr.write("gpsplot: ERROR: required Python module "
+                     "matplotlib not found\n")
     sys.exit(1)
 
 # get conversion factors
