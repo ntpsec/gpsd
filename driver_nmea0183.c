@@ -480,6 +480,17 @@ static gps_mask_t processRMC(int count, char *field[],
     case 'V':
         /* Invalid */
         session->newdata.mode = MODE_NO_FIX;
+        if ('\0' == field[1][0] ||
+            '\0' ==  field[9][0]) {
+            /* No time available. That breaks cycle end detector
+             * Force report to bypass cycle detector and get report out.
+             * To handle Querks (Quectel) like this:
+             *  $GPRMC,,V,,,,,,,,,,N*53
+             */
+            memset(&session->nmea.date, 0, sizeof(session->nmea.date));
+            session->cycle_end_reliable = false;
+            mask |= REPORT_IS | TIME_SET;
+        }
         mask |= STATUS_SET | MODE_SET;
         break;
     case 'D':
@@ -877,6 +888,16 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
     switch (fix) {
     case 0:     /* no fix */
         newstatus = STATUS_NO_FIX;
+        if ('\0' == field[1][0]) {
+            /* No time available. That breaks cycle end detector
+             * Force report to bypass cycle detector and get report out.
+             * To handle Querks (Quectel) like this:
+             *  $GPGGA,,,,,,0,,,,,,,,*66
+             */
+            memset(&session->nmea.date, 0, sizeof(session->nmea.date));
+            session->cycle_end_reliable = false;
+            mask |= REPORT_IS | TIME_SET;
+        }
         break;
     case 1:
         /* could be 2D, 3D, GNSSDR */
@@ -908,6 +929,8 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
         /* Garmin GPSMAP and Gecko sends an 8, but undocumented why */
         newstatus = STATUS_SIM;
         break;
+    case -1:
+        FALLTHROUGH
     default:
         newstatus = -1;
         break;
@@ -957,7 +980,10 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
      */
     satellites_visible = atoi(field[7]);
 
-    if (0 == merge_hhmmss(field[1], session)) {
+    if ('\0' == field[1][0]) {
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "NMEA0183: GGA time missing.\n");
+    } else if (0 == merge_hhmmss(field[1], session)) {
         register_fractional_time(field[0], field[1], session);
         if (session->nmea.date.tm_year == 0)
             GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -3621,10 +3647,16 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
 
     /* timestamp recording for fixes happens here */
     if ((mask & TIME_SET) != 0) {
-        session->newdata.time = gpsd_utc_resolve(session);
+        if (0 == session->nmea.date.tm_year &&
+            0 == session->nmea.date.tm_mday) {
+            // special case to time zero
+            session->newdata.time = (timespec_t){0, 0};
+        } else {
+            session->newdata.time = gpsd_utc_resolve(session);
+        }
 
         GPSD_LOG(LOG_DATA, &session->context->errout,
-                 "NMEA0183: %s time is %s = "
+                 "NMEA0183: %s newtime is %s = "
                  "%d-%02d-%02dT%02d:%02d:%02d.%03ldZ\n",
                  session->nmea.field[0],
                  timespec_str(&session->newdata.time, ts_buf1, sizeof(ts_buf1)),

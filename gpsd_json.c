@@ -235,6 +235,7 @@ void json_tpv_dump(const gps_mask_t changed, const struct gps_device_t *session,
         str_appendf(reply, replylen, ",\"leapseconds\":%d",
                     session->context->leap_seconds);
     }
+    // FIXME: do not output ept is no time.
     if (isfinite(gpsdata->fix.ept) != 0)
         str_appendf(reply, replylen, ",\"ept\":%.3f", gpsdata->fix.ept);
     /*
