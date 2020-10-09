@@ -772,7 +772,7 @@ class TestSession(object):
                         had_output = True
                         if not chosen.valid & gps.PACKET_SET:
                             continue
-                        self.reporter(chosen.bresponse)
+                        self.reporter(gps.polybytes(chosen.bresponse))
                         if ((chosen.data["class"] == "DEVICE" and
                              chosen.data["activated"] == 0 and
                              chosen.data["path"] in self.fakegpslist)):
