@@ -70,7 +70,11 @@ def _do_one_line(data):
             axs[1].scatter(0.5, data[fields[4]] * conversion.altfactor)
 
     plt.pause(0.05)
-    plt.tight_layout(h_pad=.2)
+    try:
+        # try to tighten up the plot.  let it fail silently
+        plt.tight_layout(h_pad=.2)
+    except ValueError:
+        pass
 
 
 # get default units from the environment
