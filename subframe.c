@@ -89,6 +89,10 @@ gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
 
 /* you can find up to date almanac data for comparison here:
  * https://gps.afspc.af.mil/gps/Current/current.alm
+ *
+ * Current ephermeis here, note URL split:
+ *  https://cddis.nasa.gov/Data_and_Derived_Products/GNSS/
+ *        broadcast_ephemeris_data.html#GPShourly
  */
 static void subframe_almanac(const struct gpsd_errout_t *errout,
                              uint8_t tSVID, uint32_t words[],

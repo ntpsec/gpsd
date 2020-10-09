@@ -251,7 +251,8 @@ def SatPos(ephm, t):
         (az, el, rng) = gps.enu2aer(E, N, U)
         print("az %.3f el %.3f rng %.3f" % (az, el, rng))
 
-
+# current GPS Ephemeris here, url split: https://cddis.nasa.gov/
+#   Data_and_Derived_Products/GNSS/broadcast_ephemeris_data.html
 ephemeris1 = {}
 ephemeris2 = {}
 ephemeris3 = {}
