@@ -2547,12 +2547,19 @@ Programming the fixed seed for host interface signature"""
             return ("  Poll request: %s" %
                     index_s(buf[0], self.cfg_inf_protid))
 
-        if 10 > m_len:
+        if 8 > m_len:
             return "  Bad Length %d" % m_len
 
-        u = struct.unpack_from('<BBBBBBBBBB', buf, 0)
+        # very old u-blox have 8 octets, e.g. Antaris 4 w/ protVer 11
+        u = struct.unpack_from('<BBBBBBBB', buf, 0)
         s = (" protocolId %u reserved1 %u %u %u\n"
-             " infMsgMask %u %u %u %u %u %u" % u)
+             " infMsgMask %u %u %u %u" % u)
+
+        # newer u-blox have 10 octets, e.g. u-blox 6 w/ protVer 13
+        if 9 < m_len:
+            u = struct.unpack_from('<BB', buf[8:], 0)
+            s += (" %u %u" % u)
+
         if VERB_DECODE <= opts['verbosity']:
             s += ('\n   protocolId (%s)' %
                   index_s(buf[0], self.cfg_inf_protid))
