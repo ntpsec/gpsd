@@ -336,7 +336,8 @@ PYTHON_SYSCONFIG_IMPORT = 'from distutils import sysconfig'
 def Utility(target, source, action, **kwargs):
     target = env.Command(target=target, source=source, action=action, **kwargs)
     # why always build?  wasteful?
-    env.AlwaysBuild(target)
+    # when gpsdecode is the course this rebuilds the entire daemon!
+    # env.AlwaysBuild(target)
     env.Precious(target)
     return target
 
