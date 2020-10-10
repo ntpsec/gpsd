@@ -632,7 +632,7 @@ if 'time' in tpv:
     # 604,800 in a GPS week
     (gps_week, gps_tow) = divmod(gps_time, 604800)
 
-    print("\nUnix time: %s, gps time: %s, week: %s tow: %s\n" %
+    print("\nUnix time: %s, gps time: %s, week: %s tow: %s" %
           (unix_time, gps_time, int(gps_week), gps_tow))
     if 'lat' in tpv and 'lon' in tpv and 'altHAE' in tpv:
         print("Current position: lat %.8f lon %.8f altHAE %.3f" %
