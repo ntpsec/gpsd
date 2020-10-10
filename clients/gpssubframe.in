@@ -222,7 +222,7 @@ def SatPos(ephm, t):
                     ephm['af2'] * toff ** 2 + deltatr)
         print("deltatr %e deltatsv %e Tgd %.e\n"
               "URE %s Health %s" %
-              (deltatr, deltatsv, ephm['Tgd'],  ura2ure[ephm['ura']],
+              (deltatr, deltatsv, ephm['Tgd'], ura2ure[ephm['ura']],
                health_str[ephm['hlth'] & 0x1f]))
 
     if 1 < options.debug:
@@ -632,10 +632,11 @@ if 'time' in tpv:
     # 604,800 in a GPS week
     (gps_week, gps_tow) = divmod(gps_time, 604800)
 
-    print("\nUnix time: %s, gps time: %s, week: %s tow: %s\n"
-          "Current position: lat %.8f lon %.8f altHAE %.3f" %
-          (unix_time, gps_time, int(gps_week), gps_tow,
-           tpv['lat'], tpv['lon'], tpv['altHAE']))
+    print("\nUnix time: %s, gps time: %s, week: %s tow: %s\n" %
+          (unix_time, gps_time, int(gps_week), gps_tow))
+    if 'lat' in tpv and 'lon' in tpv and 'altHAE' in tpv:
+        print("Current position: lat %.8f lon %.8f altHAE %.3f" %
+            (tpv['lat'], tpv['lon'], tpv['altHAE']))
 
 if ionosphere:
     print("\nSubframe 4, page 18")
