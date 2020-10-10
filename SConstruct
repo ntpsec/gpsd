@@ -58,6 +58,23 @@ if pdb_module:
     pass  # Breakpoint default file is now SConstruct
 
 
+# gpsd needs Scons version at least 2.3
+EnsureSConsVersion(2, 3, 0)
+# gpsd needs Python version at least 2.6
+EnsurePythonVersion(2, 6)
+
+# Have scons rebuild an existing target when the source timestamp changes
+# and the MD5 changes.  To prevent rebuidling when gpsd_config.h rebuilt,
+# with no  changes.
+Decider('MD5-timestamp')
+
+# support building with various Python versions.
+sconsign_file = '.sconsign.{}.dblite'.format(pickle.HIGHEST_PROTOCOL)
+SConsignFile(os.getcwd() + os.path.sep + sconsign_file)
+
+# Start by reading configuration variables from the cache
+opts = Variables('.scons-option-cache')
+
 # ugly hack from http://www.catb.org/esr/faqs/practical-python-porting/
 # handle python2/3 strings
 def polystr(o):
@@ -310,11 +327,6 @@ webform = "http://www.thyrsus.com/cgi-bin/gps_report.cgi"
 website = "https://gpsd.io/"
 # Hosting information ends here
 
-# gpsd needs Scons version at least 2.3
-EnsureSConsVersion(2, 3, 0)
-# gpsd needs Python version at least 2.6
-EnsurePythonVersion(2, 6)
-
 
 PYTHON_SYSCONFIG_IMPORT = 'from distutils import sysconfig'
 
@@ -352,18 +364,6 @@ def filtered_spawn(sh, escape, cmd, args, env):
 # Build-control options
 #
 
-
-# Have scons rebuild an existing target when the source timestamp changes
-# and the MD5 changes.  To prevent rebuidling when gpsd_config.h rebuilt,
-# with no  changes.
-Decider('MD5-timestamp')
-
-# support building with various Python versions.
-sconsign_file = '.sconsign.{}.dblite'.format(pickle.HIGHEST_PROTOCOL)
-SConsignFile(sconsign_file)
-
-# Start by reading configuration variables from the cache
-opts = Variables('.scons-option-cache')
 
 systemd_dir = '/lib/systemd/system'
 systemd = os.path.exists(systemd_dir)
