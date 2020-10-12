@@ -148,7 +148,7 @@ struct gps_fix_t {
     /* GPS status, aka fix type, almost, but not quite the
      * same as the NMEA xxGGA GPS Quality Indicator Values */
     int    status;              /* Do we have a fix? */
-#define STATUS_NO_FIX   0       /* no */
+#define STATUS_NO_FIX   0       // no, or unknown
 /* yes, plain GPS (SPS Mode), without DGPS, PPS, RTK, DR, etc. */
 #define STATUS_FIX      1
 #define STATUS_DGPS_FIX 2       /* yes, with DGPS */
