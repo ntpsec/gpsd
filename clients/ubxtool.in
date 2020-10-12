@@ -4,7 +4,7 @@
 '''
 ubxtool -- u-blox configurator and packet decoder
 
-usage: ubxtool [OPTIONS] [server[:port[:device]]]
+usage: ubxtool [OPTIONS] [host[:port[:device]]]
 '''
 
 # This file is Copyright 2018 by the GPSD project
@@ -32,9 +32,9 @@ usage: ubxtool [OPTIONS] [server[:port[:device]]]
 
 from __future__ import absolute_import, print_function, division
 
+import argparse      # to parse CLI options
 import binascii      # for binascii.hexlify()
 from functools import reduce  # pylint: disable=redefined-builtin
-import getopt        # for getopt.getopt(), to parse CLI options
 import operator      # for or_
 import os            # for os.environ
 import re            # for regular expressions
@@ -89,61 +89,15 @@ VERB_INFO = 3    # more info
 VERB_RAW = 4     # raw info
 VERB_PROG = 5    # program trace
 
-# dictionary to hold all user options
-opts = {
-    # command to send to GPS, -c
-    'command': None,
-    # default -x items, up to 64 per call
-    'del_item': [],
-    # command for -d disable
-    'disable': [],
-    # command for -e enable
-    'enable': [],
-    # help requested
-    'help': None,
-    # default input -f file
-    'input_file_name': None,
-    # default -g items, up to 64 per call
-    'get_item': [],
-    # default forced wait? -W
-    'input_forced_wait': False,
-    # default port speed -s
-    'input_speed': 9600,
-    # default input wait time -w in seconds
-    'input_wait': 2.0,
-    # the name of an OAF file, extension .jpo
-    'oaf_name': None,
-    # poll command -p
-    'poll': [],
-    # port ID # for -S set speed
-    'port': None,
-    # protocol version for sent commands
-    # u-blox 5, firmware 4 to 6 is protver 10 to 12
-    # u-blox 6, firmware 6 to 7 is protver 12 to 13
-    # u-blox 6, firmware 1 is protver 14
-    # u-blox 7, firmware 1 is protver 14
-    # u-blox 8, is protver 15 to 23
-    # u-blox 9, firmware 1 is protver 27
-    # u-blox F9T, firmware 2 is protver 29
-    # u-blox F9N, firmware 4 is protver 32
-    'protver': 10.0,
-    # raw log file name
-    'raw_file': None,
-    # open port read only -r
-    'read_only': False,
-    # default -z item
-    'set_item': [],
-    # speed to set GPS -S
-    'set_speed': None,
-    # target gpsd (server:port:device) to connect to
-    'target': {"server": None, "port": gps.GPSD_PORT, "device": None},
-    # timestamp logs.  0 == None, 1 = unix time in seconds, 2 = 1 + gmtime()
-    'timestamp': 0,
-    # verbosity level, -v
-    'verbosity': VERB_NONE,
-    # contents of environment variable UBXOPTS
-    'progopts': '',
-}
+# opts['protver'],  protocol version for sent commands
+# u-blox 5, firmware 4 to 6 is protver 10 to 12
+# u-blox 6, firmware 6 to 7 is protver 12 to 13
+# u-blox 6, firmware 1 is protver 14
+# u-blox 7, firmware 1 is protver 14
+# u-blox 8, is protver 15 to 23
+# u-blox 9, firmware 1 is protver 27
+# u-blox F9T, firmware 2 is protver 29
+# u-blox F9N, firmware 4 is protver 32
 
 
 def erd_s(erd):
@@ -355,8 +309,7 @@ class ubx(object):
         pass
 
     # allowable speeds
-    speeds = (460800, 230400, 153600, 115200, 57600, 38400, 19200, 9600,
-              4800, 2400, 1200, 600, 300)
+    speeds = (460800, 230400, 153600, 115200, 57600, 38400, 19200, 9600, 4800)
 
     # UBX Satellite Numbering
     gnss_id = {0: 'GPS',
@@ -7640,7 +7593,8 @@ Always double check with "-p CFG-GNSS".
                "help": "TP Time Pulse message (Deprecated, use TIM-TP)"},
         # en/dis able TMODE2 Survey-in
         "SURVEYIN": {"command": send_able_tmode2,
-                     "help": "Survey-in mode with TMODE2."
+                     "help": "Survey-in mode with TMODE2.\n"
+                             "                    "
                              " SURVEYIN2[,svinMinDur[,svinAccLimit]]\n"
                              "                    "
                              "Default svinMinDur 300 seconds\n"
@@ -7649,7 +7603,8 @@ Always double check with "-p CFG-GNSS".
                      "args": 1},
         # en/dis able TMODE3 Survey-in
         "SURVEYIN3": {"command": send_able_tmode3,
-                      "help": "Survey-in mode with TMODE3."
+                      "help": "Survey-in mode with TMODE3.\n"
+                              "                    "
                               " SURVEYIN3[,svinMinDur[,svinAccLimit]]\n"
                               "                    "
                               "Default svinMinDur 300 seconds\n"
@@ -7710,7 +7665,8 @@ Always double check with "-p CFG-GNSS".
                     "help": "poll UBX-AID-HUI Poll GPS Health, UTC, Iono"},
         # UBX-AID-INI
         "AID-INI": {"command": send_poll, "opt": [0x0b, 0x01],
-                    "help": "poll UBX-AID-INI Poll Aiding position, time, "
+                    "help": "poll UBX-AID-INI Poll Aiding position, time,\n"
+                    "                    "
                     "frequency, clock drift"},
         # UBX-CFG-ANT
         "CFG-ANT": {"command": send_poll, "opt": [0x06, 0x13],
@@ -7795,7 +7751,7 @@ Always double check with "-p CFG-GNSS".
                     "args": 1},
         # UBX-CFG-PRT
         "CFG-PRT": {"command": send_cfg_prt,
-                    "help": "poll UBX-CFG-PRT I/O port settings"
+                    "help": "poll UBX-CFG-PRT I/O port settings.\n"
                             "                    "
                             "CFG-PRT[,portID] defaults to current port",
                     "args": 1},
@@ -7876,9 +7832,9 @@ Always double check with "-p CFG-GNSS".
         # UBX-LOG-FINDTIME
         "LOG-FINDTIME": {"command": send_log_findtime,
                          "help": "search logs by time. "
-                                 "LOG-FINDTIME,y,m,d,h,m,s\n",
+                                 "LOG-FINDTIME,y,m,d,h,m,s\n"
                                  "                    "
-                                 "all parameters optional"
+                                 "all parameters optional",
                          "args": 6},
         # UBX-LOG-INFO
         "LOG-INFO": {"command": send_poll, "opt": [0x21, 0x08],
@@ -8112,7 +8068,7 @@ class gps_io(object):
         self.out = b''
 
         # open the input: device, file, or gpsd
-        if opts['input_file_name'] is not None:
+        if opts['input_file_name']:
             # check if input file is a file or device
             try:
                 mode = os.stat(opts['input_file_name']).st_mode
@@ -8125,9 +8081,8 @@ class gps_io(object):
                 # character device, need not be read only
                 self.input_is_device = True
 
-            if ((opts['disable'] or opts['enable'] or opts['poll'] or
-                 opts['oaf_name'])):
-
+            # FIXME: test broken
+            if opts['disable'] or opts['enable'] or opts['poll']:
                 # check that we can write
                 if opts['read_only']:
                     sys.stderr.write('%s: read-only mode, '
@@ -8138,11 +8093,11 @@ class gps_io(object):
                                      'can not send commands\n' % PROG_NAME)
                     sys.exit(1)
 
-        if opts['target']['server'] is not None:
+        elif opts['gpsd_host']:
             # try to open local/remote gpsd daemon
             try:
-                self.ser = gps.gpscommon(host=opts['target']['server'],
-                                         port=opts['target']['port'],
+                self.ser = gps.gpscommon(host=opts['gpsd_host'],
+                                         port=opts['gpsd_port'],
                                          verbose=0)
 
                 # alias self.ser.write() to self.write_gpsd()
@@ -8150,10 +8105,10 @@ class gps_io(object):
 
                 # ask for raw, not rare, data
                 data_out = b'?WATCH={'
-                if opts['target']['device'] is not None:
+                if opts['gpsd_device'] is not None:
                     # add in the requested device
                     data_out += (b'"device":"' +
-                                 gps.polybytes(opts['target']['device']) +
+                                 gps.polybytes(opts['gpsd_device']) +
                                  b'",')
                 data_out += b'"enable":true,"raw":2}\r\n'
                 if VERB_RAW <= opts['verbosity']:
@@ -8163,8 +8118,9 @@ class gps_io(object):
                 sys.stderr.write('%s: failed to connect to gpsd %s\n' %
                                  (PROG_NAME, err))
                 sys.exit(1)
+            return
 
-        elif self.input_is_device:
+        if self.input_is_device:
             # configure the serial connections (the parameters refer to
             # the device you are connecting to)
 
@@ -8228,7 +8184,7 @@ class gps_io(object):
             ret_code = 0
 
         try:
-            if read_opts['target']['server'] is not None:
+            if read_opts['gpsd_host']:
                 # gpsd input
                 start = gps.monotonic()
                 while read_opts['input_wait'] > (gps.monotonic() - start):
@@ -8241,7 +8197,7 @@ class gps_io(object):
                         new_out = self.ser.sock.recv(8192)
                         if raw is not None:
                             # save to raw file
-                            raw.write(new_out)
+                            raw.write(gps.polybytes(new_out))
                         self.out += new_out
 
                     consumed = gps_model.decode_msg(self.out)
@@ -8270,7 +8226,7 @@ class gps_io(object):
                         new_out = self.ser.read(1024)
                         if raw is not None:
                             # save to raw file
-                            raw.write(new_out)
+                            raw.write(gps.polybytes(new_out))
                         self.out += new_out
 
                     consumed = gps_model.decode_msg(self.out)
@@ -8288,7 +8244,7 @@ class gps_io(object):
                 self.out += self.ser.read()
                 if raw is not None:
                     # save to raw file
-                    raw.write(self.out)
+                    raw.write(gps.polybytes(self.out))
 
                 while True:
                     consumed = gps_model.decode_msg(self.out)
@@ -8324,10 +8280,10 @@ class gps_io(object):
                              % (PROG_NAME, len(data)))
             return 1
 
-        if opts['target']['device'] is not None:
+        if opts['gpsd_device'] is not None:
             # add in the requested device
             data_out = (b'?DEVICE={"path":"' +
-                        gps.polybytes(opts['target']['device']) + b'",')
+                        gps.polybytes(opts['gpsd_device']) + b'",')
         else:
             data_out = b'?DEVICE={'
 
@@ -8343,67 +8299,6 @@ class gps_io(object):
 gps_model = ubx()
 
 
-def usage():
-    """Output usage information, and exit"""
-    print('usage: %s [OPTION] ... [[server[:port[:device]]]]\n\n'
-          '   Options:\n'
-          '       -?            print help, increase -v for extra help\n'
-          '       -c C          send raw command C (cls,id...) to GPS\n'
-          '       -d D          disable D\n'
-          '       -e E          enable E\n'
-          '       -f F          open F as file/device\n'
-          '                     default: %s\n'
-          '       -g I,l,p      get config item I, optional layer l, '
-          'position p\n'
-          '       -h            print help, increase -v for extra help\n'
-          '       -i P          port ID # (interface) for -S\n'
-
-          '       -P P          Protocol version for sending commands\n'
-          '                     default: %s\n'
-          '       -p P          send a preset query P to GPS\n'
-          '       -R R          save raw data from GPS in file R\n'
-          '                     default: %s\n'
-          '       -r            open file/device read only\n'
-          '       -S S          set GPS speed to S\n'
-          '       -s S          set port speed to S\n'
-          '                     default: %s bps\n'
-          '       -V            print version\n'
-          '       -v V          Set verbosity level to V, 0 to 4\n'
-          '                     default: %d\n'
-          '       -w W          wait time W before exiting\n'
-          '                     default: %s seconds\n'
-          '       -x I          delete config item I from BBR and FLASH '
-          'layers\n'
-          '       -z I,v,l      set config item I to v, in optional layer l\n'
-          '\n' %
-          (PROG_NAME, opts['input_file_name'],
-           opts['protver'], opts['raw_file'],
-           opts['input_speed'], opts['input_wait'],
-           opts['verbosity'])
-          )
-
-    if VERB_DECODE <= opts['verbosity']:
-        print('D and E can be one of:')
-        for item in sorted(gps_model.able_commands.keys()):
-            print("    %-13s %s" %
-                  (item, gps_model.able_commands[item]["help"]))
-
-        print('\nP can be one of:')
-        for item in sorted(gps_model.commands.keys()):
-            print("    %-13s %s" % (item, gps_model.commands[item]["help"]))
-        print('\n')
-        if VERB_DECODE < opts['verbosity']:
-            print('\nConfiguration items for -g, -x and -z can be one of:')
-            for item in sorted(gps_model.cfgs):
-                print("    %s\n"
-                      "        %s" % (item[0], item[5]))
-            print('\n')
-
-    print('Options can be placed in the UBXOPTS environment variable.\n'
-          'UBXOPTS is processed before the CLI options.')
-    sys.exit(0)
-
-
 if 'UBXOPTS' in os.environ:
     # grab the UBXOPTS environment variable for options
     opts['timestamp'] = 0
@@ -8413,121 +8308,249 @@ else:
     options = sys.argv[1:]
 
 
-try:
-    (options, arguments) = getopt.getopt(options,
-                                         "?c:d:e:f:g:hi:m:rP:p:"
-                                         "s:w:v:R:S:tVx:z:")
-except getopt.GetoptError as err:
-    sys.stderr.write("%s: %s\n"
-                     "Try '%s -h' for more information.\n" %
-                     (PROG_NAME, str(err), PROG_NAME))
-    sys.exit(2)
+#  "m:")
 
-for (opt, val) in options:
-    if opt == '-c':
-        opts['command'] = val
-    elif opt == '-d':
-        # don't force the user to upper case
-        opts['disable'].append(val.upper())
-    elif opt == '-e':
-        opts['enable'].append(val.upper())
-    elif opt == '-f':
-        opts['input_file_name'] = val
-    elif opt == '-g':
-        opts['get_item'].append(val.upper())
-    elif opt in ('-h', '-?'):
-        opts['help'] = True
-    elif opt == '-i':
-        valnum = gps_model.port_id_map.get(val.upper())
-        opts['port'] = valnum if valnum is not None else int(val)
-    elif opt == '-P':
-        # to handle version like 23.01
-        opts['protver'] = float(val)
-        if 10 > opts['protver']:
-            opts['protver'] = 10.0
-        # Dunno the max protver, NEO-M9N is 32.00
-    elif opt == '-p':
-        # don't force the user to upper case
-        # allow multiple -p
-        opts['poll'].append(val.upper())
-    elif opt in '-R':
-        # raw log file
-        opts['raw_file'] = val
-    elif opt == '-r':
-        opts['read_only'] = True
-    elif opt in '-S':
-        opts['set_speed'] = int(val)
-        if opts['set_speed'] not in gps_model.speeds:
-            sys.stderr.write('%s: -S invalid speed %s\n' %
-                             (PROG_NAME, opts['set_speed']))
-            sys.exit(1)
-    elif opt == '-s':
-        try:
-            opts['input_speed'] = int(val)
-        except ValueError:
-            sys.stderr.write('%s: -s invalid speed %s\n' %
-                             (PROG_NAME, val))
-            sys.exit(1)
+usage = '%(prog)s [OPTIONS] [host[:port[:device]]]'
+epilog = ('BSD terms apply: see the file COPYING in the distribution '
+          'root for details.')
 
-        if opts['input_speed'] not in gps_model.speeds:
-            sys.stderr.write('%s: -s invalid speed %s\n' %
-                             (PROG_NAME, opts['input_speed']))
-            sys.exit(1)
+parser = argparse.ArgumentParser(add_help=False, epilog=epilog, usage=usage)
+parser.add_argument(
+    '-?', '-h', '--help',
+    action="store_true",
+    dest='help',
+    default=False,
+    help='Show this help message and exit. Use -v 2, or -v 3, for extra help'
+)
+parser.add_argument(
+    '-c', '--command',
+    dest='command',
+    default=None,
+    metavar='CMD',
+    help='Send raw command CMD (cls,id...) to receiver'
+)
+parser.add_argument(
+    '-d', '--disable',
+    action='append',
+    dest='disable',
+    default=None,
+    metavar='ABLE',
+    help='Disable ABLE in the receiver.  May be used multiple times. ',
+)
+parser.add_argument(
+    '-e', '--enable',
+    action='append',
+    dest='enable',
+    default=None,
+    metavar='ABLE',
+    help='Enable ABLE in the receiver.  May be used multiple times. ',
+)
+parser.add_argument(
+    '--device',
+    dest='gpsd_device',
+    default=None,
+    metavar='DEVICE',
+    help='The gpsd device to connect to. [Default %(default)s)]',
+)
+parser.add_argument(
+    '-f', '--file',
+    dest='input_file_name',
+    default=None,
+    metavar='FILE',
+    help='Read from FILE instead of a gpsd instance.',
+)
+parser.add_argument(
+    '-g', '--getitem',
+    action='append',
+    dest='get_item',
+    default=None,
+    metavar='ITEM,LAYER,POSITION',
+    help=('Get ITEM from LAYER and POSITION. LAYER and POSITION are '
+          'optional.  May be used multiple times.'),
+)
+parser.add_argument(
+    '--host',
+    dest='gpsd_host',
+    default=None,
+    metavar='HOST',
+    help='The gpsd host to connect to.',
+)
+parser.add_argument(
+    '-i', '-portid',
+    dest='port',
+    default=None,
+    metavar='PORTID',
+    help=('Specifies receiver PORTID (interface) for port-related commands. '
+          '[Default %(default)s)]'),
+)
+parser.add_argument(
+    '--port',
+    dest='gpsd_port',
+    default=gps.GPSD_PORT,
+    metavar='PORT',
+    type=int,
+    help='The gpsd port to connect to. [Default %(default)s)]',
+)
+parser.add_argument(
+    '-p', '--preset',
+    action='append',
+    dest='poll',
+    metavar='PRESET',
+    help='Poll the receiver for PRESET.  May be used multiple times.',
+)
+parser.add_argument(
+    '-P', '--protver',
+    dest='protver',
+    default=10.0,
+    type=float,
+    help='Protocol version for sending commands. [Default %(default)s)]',
+)
+parser.add_argument(
+    '-r', '--readonly',
+    action='store_true',
+    dest='read_only',
+    default=False,
+    help='Read only. Do not send anything to the GPS.',
+)
+parser.add_argument(
+    '-R', '--rawfile',
+    dest='raw_file',
+    default=None,
+    metavar='FILE',
+    help='Save raw data from receiver in FILE\n',
+)
+parser.add_argument(
+    '-s', '--inspeed',
+    choices=gps_model.speeds,
+    dest='input_speed',
+    default=None,
+    metavar='SPEED',
+    type=int,
+    help='Set local serial port speed to SPEED bps.',
+)
+parser.add_argument(
+    '-S', '--setspeed',
+    choices=gps_model.speeds,
+    dest='set_speed',
+    metavar='SPEED',
+    type=int,
+    help='Configure receiver speed to SETSPEED.',
+)
+parser.add_argument(
+    '-t', '--timestamp',
+    action='count',
+    dest='timestamp',
+    default=0,
+    help='Timestamp messages with seconds since UNIX epoch.  Use -tt for UTC',
+)
+parser.add_argument(
+    '-v', '--verbosity',
+    dest='verbosity',
+    default=0,
+    metavar='VERB',
+    type=int,
+    help='Set verbosity level to V, 0 to 5. [Default %(default)s)]',
+)
+parser.add_argument(
+    '-V', '--version',
+    action='version',
+    version="%(prog)s: Version " + gps_version + "\n",
+    help='Output version to stderr, then exit',
+)
+parser.add_argument(
+    '-w', '--wait',
+    dest='input_wait',
+    default=2.0,
+    metavar='WAIT',
+    type=float,
+    help='Wait for WAIT seconds before exiting.. [Default %(default)s)]',
+)
+parser.add_argument(
+    '-x', '--delitem',
+    action='append',
+    dest='del_item',
+    default=None,
+    metavar='ITEM',
+    help=('Delete ITEM from receiver BBR and FLASH layers.  '
+          'May be used multiple times. '),
+)
+parser.add_argument(
+    '-z', '--setitem',
+    action='append',
+    dest='set_item',
+    default=None,
+    metavar='ITEM,VAL[,LAYER]',
+    help=('Set ITEM in receiver to VAL in LAYER.  LAYER is optional. '
+          'May be used multiple times. '),
+)
+parser.add_argument(
+    'target',
+    nargs='?',
+    help='[host[:port[:device]]]',
+)
 
-    elif opt == '-t':
-        opts['timestamp'] += 1
-    elif opt == '-V':
-        # version
-        sys.stderr.write('%s: Version %s\n' % (PROG_NAME, gps_version))
-        sys.exit(0)
-    elif opt in '-v':
-        opts['verbosity'] = int(val)
-    elif opt == '-w':
-        try:
-            opts['input_wait'] = int(val)
-        except ValueError:
-            sys.stderr.write('%s: -w invalid time %s\n' % (PROG_NAME, val))
-            sys.exit(1)
+# turn the stupid Namespace into a nice dictionary
+opts = vars(parser.parse_args(options))
 
-    elif opt == '-x':
-        opts['del_item'].append(val)
-    elif opt == '-z':
-        opts['set_item'].append(val)
+if opts['port']:
+    # FIXME: better error message
+    valnum = gps_model.port_id_map.get(val.upper())
+    opts['port'] = valnum if valnum is not None else int(val)
 
 if opts['help']:
-    usage()
+    parser.print_help()
+    if VERB_DECODE <= opts['verbosity']:
+        print('\nABLE for -d/--disable and -e/--enable can be one of:')
+        for item in sorted(gps_model.able_commands.keys()):
+            print("    %-13s %s" %
+                  (item, gps_model.able_commands[item]["help"]))
 
-if opts['input_file_name'] is None:
-    # no input file given
-    # default to local gpsd
-    opts['target']['server'] = "localhost"
-    opts['target']['port'] = gps.GPSD_PORT
-    opts['target']['device'] = None
-    if arguments:
-        # TODO: move to module gps as a function
-        # server[:port[:device]]
-        # or maybe ::device
-        # or maybe \[ipv6\][:port[:device]]
-        if '[' == arguments[0][0]:
-            # hex IPv6 address
-            match = re.match(r'''\[([:a-fA-F0-9]+)\](.*)''', arguments[0])
-            opts['target']['server'] = match.group(1)
-            parts = match.group(2).split(':')
-        else:
-            # maybe IPv4 address, maybe hostname
-            parts = arguments[0].split(':')
-            if parts[0]:
-                opts['target']['server'] = parts[0]
+        print('\nPRESET for -p can be one of:')
+        for item in sorted(gps_model.commands.keys()):
+            print("    %-13s %s" % (item, gps_model.commands[item]["help"]))
+        print('\n')
+        if VERB_DECODE < opts['verbosity']:
+            print('\nITEM for -g/--getitem, -x/--delitem and -z/--setitem '
+                  'can be one of:')
+            for item in sorted(gps_model.cfgs):
+                print("    %s\n"
+                      "        %s" % (item[0], item[5]))
+            print('\n')
 
-        if 1 < len(parts):
-            if parts[1]:
-                opts['target']['port'] = parts[1]
-            if 2 < len(parts) and parts[2]:
-                opts['target']['device'] = parts[2]
+    print('Options can be placed in the UBXOPTS environment variable.\n'
+          'UBXOPTS is processed before the CLI options.')
+    sys.exit(0)
 
-elif arguments:
-    sys.stderr.write('%s: Both input file and server specified\n' % PROG_NAME)
-    sys.exit(1)
+if opts['input_file_name']:
+    # input file given
+    if opts['target']:
+        sys.stderr.write('%s: ERROR: both input file and target given.\n' %
+                         (PROG_NAME,))
+        sys.exit(0)
+
+elif opts['target']:
+    # TODO: move to module gps as a function
+    # host[:port[:device]]
+    # or maybe ::device
+    # or maybe \[ipv6\][:port[:device]]
+    if '[' == opts['target'][0]:
+        # hex IPv6 address
+        # FIXME: make site local IPv6 work too
+        match = re.match(r'''\[([:a-fA-F0-9]+)\](.*)''', opts['target'])
+        opts['gpsd_host'] = match.group(1)
+        parts = match.group(2).split(':')
+    else:
+        # maybe IPv4 address, maybe hostname
+        parts = opts['target'].split(':')
+        if parts[0]:
+            opts['gpsd_host'] = parts[0]
+
+    if 1 < len(parts):
+        if parts[1]:
+            opts['gpsd_port'] = parts[1]
+        if 2 < len(parts) and parts[2]:
+            opts['gpsd_device'] = parts[2]
+# else, use defaults: localhost:2947:
 
 if VERB_PROG <= opts['verbosity']:
     # dump versions and all options
@@ -8543,7 +8566,7 @@ try:
     raw = None
     if opts['raw_file']:
         try:
-            raw = open(opts['raw_file'], 'w')
+            raw = open(opts['raw_file'], 'wb')
         except IOError:
             sys.stderr.write('%s: failed to open raw file %s\n' %
                              (PROG_NAME, opts['raw_file']))
@@ -8559,7 +8582,7 @@ try:
             if VERB_QUIET < opts['verbosity']:
                 print('%s: disable %s\n' % (PROG_NAME, disable))
             args = disable.split(',')
-            disable = args[0]
+            disable = args[0].upper()
 
             if disable in gps_model.able_commands:
                 command = gps_model.able_commands[disable]
@@ -8574,7 +8597,7 @@ try:
             if VERB_QUIET < opts['verbosity']:
                 print('%s: enable %s\n' % (PROG_NAME, enable))
             args = enable.split(',')
-            enable = args[0]
+            enable = args[0].upper()
 
             if enable in gps_model.able_commands:
                 command = gps_model.able_commands[enable]
@@ -8590,7 +8613,7 @@ try:
                 print('%s: poll %s\n' % (PROG_NAME, poll))
 
             args = poll.split(',')
-            poll = args[0]
+            poll = args[0].upper()
 
             if poll in gps_model.commands:
                 command = gps_model.commands[poll]
@@ -8660,7 +8683,7 @@ try:
         end = None
         for item in opts['get_item']:
             parts = item.split(',')
-            item = gps_model.cfg_by_name(parts[0])
+            item = gps_model.cfg_by_name(parts[0].upper())
             if item:
                 keys.append(item[1])
             else:
