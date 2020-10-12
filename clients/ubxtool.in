@@ -8553,9 +8553,9 @@ elif opts['target']:
     # or maybe ::device
     # or maybe \[ipv6\][:port[:device]]
     if '[' == opts['target'][0]:
-        # hex IPv6 address
-        # FIXME: make site local IPv6 work too
-        match = re.match(r'''\[([:a-fA-F0-9]+)\](.*)''', opts['target'])
+        # hex, or hex+zoneindex IPv6 address
+        # could be like [fe80::1ff:fe23:4567:890a%eth2]
+        match = re.match(r'''\[([^]]+)\](.*)''', opts['target'])
         opts['gpsd_host'] = match.group(1)
         parts = match.group(2).split(':')
     else:
