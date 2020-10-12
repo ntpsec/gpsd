@@ -2533,15 +2533,19 @@ Programming the fixed seed for host interface signature"""
     cfg_inf_protid = {
         0: "UBX",
         1: "NMEA",
-        3: "Unk3",      # undocumented, used by u-center
-        12: "Unk12",    # undocumented, used by u-center
-        13: "Unk13",    # undocumented, used by u-center
-        14: "Unk14",    # undocumented, used by u-center
-        15: "Unk15",    # undocumented, used by u-center
+        # labels of following values based on u-blox document
+        # no. GPS.G3-X-03002-D (Antaris protocol specification)
+        2: "RTCM",      # cannot be used to output INF messages
+        3: "RAW",       # used by u-center
+        12: "User 0",   # used by u-center
+        13: "User 1",   # used by u-center
+        14: "User 2",   # used by u-center
+        15: "User 3",   # used by u-center
         }
 
     def cfg_inf(self, buf):
         """UBX-CFG-INF decode, Poll configuration for one protocol"""
+
         m_len = len(buf)
         if 1 == m_len:
             return ("  Poll request: %s" %
@@ -3694,7 +3698,7 @@ Save and Load non-volatile storage data"""
     # UBX-ESF-
     # only with ADR or UDR products
     esf_ids = {0x02: {'str': 'MEAS', 'minlen': 8, 'name': "UBX-ESF-MEAS"},
-               0x03: {'str': 'RAW',  'minlen': 4, 'name': "UBX-ESF-RAW"},
+               0x03: {'str': 'RAW', 'minlen': 4, 'name': "UBX-ESF-RAW"},
                0x10: {'str': 'STATUS', 'minlen': 16, 'name': "UBX-ESF-STATUS"},
                0x15: {'str': 'INS', 'minlen': 16, 'name': "UBX-ESF-INS"},
                }
@@ -5682,7 +5686,7 @@ High Precision GNSS products only."""
         1: "Block II/Block IIA/IIR SV",
         2: "M-code, L2C, Block IIR-M SV",
         3: "M-code, L2C, L5, Block IIF SV",
-        4: "M-code, L2C, L5, No SA,  Block III SV",
+        4: "M-code, L2C, L5, No SA, Block III SV",
         5: "Reserved",
         6: "Reserved",
         7: "Reserved",
@@ -6102,7 +6106,7 @@ High Precision GNSS products only."""
         s += gps.polystr(binascii.hexlify(buf[8:39]))
         return s
 
-    sec_ids = {0x01: {'str': 'SIGN', 'minlen': 40,  'dec': sec_sign,
+    sec_ids = {0x01: {'str': 'SIGN', 'minlen': 40, 'dec': sec_sign,
                       'name': 'UBX-SEC-SIGN'},
                0x03: {'str': 'UNIQID', 'minlen': 9, 'dec': sec_uniqid,
                       'name': 'UBX-SEC-UNIQID'},
@@ -6607,7 +6611,7 @@ High Precision GNSS products only."""
                 sys.stdout.flush()
 
     def send_able_cfg_batch(self, able, args):
-        """dis/enable batching,  UBX-CFG-BATCH"""
+        """dis/enable batching, UBX-CFG-BATCH"""
 
         flags = 0x0d if able else 0x0c
         m_data = []
@@ -7112,7 +7116,7 @@ Always double check with "-p CFG-GNSS".
             m_data[6] = 16  # maxTrkCh
             if '2' == parm1 and enable:
                 # The NEO-M9N ACKS, then ignores if 0x11 is sent
-                m_data[10] = 0x11   # flags B1I,  B2I
+                m_data[10] = 0x11   # flags B1I, B2I
             else:
                 m_data[10] = 0x01   # flags B1I
         elif 4 == gnssId:
