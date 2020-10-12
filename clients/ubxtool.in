@@ -2708,10 +2708,11 @@ Programming the fixed seed for host interface signature"""
         }
 
     cfg_nmea_ver = {
-        0x11: "2.1",
-        0x23: "2,3",
+        0x21: "2.1",
+        0x23: "2.3",
         0x40: "4.0",
         0x41: "4.10",
+        0x4b: "4.11",
         }
 
     cfg_nmea_flags = {
@@ -2733,6 +2734,7 @@ Programming the fixed seed for host interface signature"""
         3: "GN",
         4: "GA",
         5: "GB",
+        6: "GQ",
         }
 
     cfg_nmea_gtid = {
@@ -2743,31 +2745,48 @@ Programming the fixed seed for host interface signature"""
     cfg_nmea_gnssfilt = {
         1: "gps",
         2: "sbas",
+        4: "galileo",
         0x10: "qzss",
         0x20: "glonass",
         0x40: "beidou",
         }
 
     def cfg_nmea(self, buf):
-        """UBX-CFG-NMEA decode, Extended NMEA protocol configuration V1"""
+        """UBX-CFG-NMEA decode, NMEA protocol configuration"""
 
-        u = struct.unpack_from('<BBBBLBBBBBBBBBBBB', buf, 0)
-        s = (" filter x%x nmeaVersion x%x numSv %u flags x%x "
-             "gnssToFilter x%x\n"
-             " svNumbering %u mainTalkerId %u gsvTalkerId %u version %u\n"
-             " bdsTalkerId %u %u reserved1 %u %u %u %u %u %u" % u)
+        # old u-blox have 4 octets, e.g. u-blox 6 w/ protVer < 14
+        # less old u-blox have 12 octets, e.g. u-blox 7 w/ protVer == 14
+        # more recent u-blox have 20 octets, e.g. u-blox 8 w/ protVer > 14
+        # deprecated in most recent u-blox, e.g. u-blox 9 w/ protVer > 23.01
+
+        u = struct.unpack_from('<BBBB', buf, 0)
+        s = (" filter x%x nmeaVersion x%x numSv %u flags x%x " % u)
+
+        if 11 < len(buf):
+            u1 = struct.unpack_from('<LBBBB', buf[4:], 0)
+            s += ("gnssToFilter x%x\n svNumbering %u"
+                  " mainTalkerId %u gsvTalkerId %u version %u" % u1)
+            u += u1
+
+        if 19 < len(buf):
+            u2 = struct.unpack_from('<BBBBBBBB', buf[12:], 0)
+            s += ("\n bdsTalkerId %u %u reserved1 %u %u %u %u %u %u" % u2)
+            u += u2
+
         if VERB_DECODE <= opts['verbosity']:
-            s += ("\n  filter (%s) NMEA Version (%s) numSv (%s) flags (%s)"
-                  "\n  gnssToFilter (%s) svNumbering (%s) mainTalkerId (%s)"
-                  "\n  gsvTalkerId (%s)" %
+            s += ("\n  filter (%s) NMEA Version (%s) numSV (%s) flags (%s)" %
                   (flag_s(u[0], self.cfg_nmea_filter),
                    index_s(u[1], self.cfg_nmea_ver),
                    u[2] if 0 != u[2] else "Unlimited",
-                   flag_s(u[3], self.cfg_nmea_flags),
-                   flag_s(u[4], self.cfg_nmea_gnssfilt),
-                   index_s(u[5], self.cfg_nmea_svn),
-                   index_s(u[6], self.cfg_nmea_mtid),
-                   index_s(u[7], self.cfg_nmea_gtid)))
+                   flag_s(u[3], self.cfg_nmea_flags)))
+
+            if 11 < len(buf):
+                s += ("\n  gnssToFilter (%s) svNumbering (%s) mainTalkerId (%s)"
+                      "\n  gsvTalkerId (%s)" %
+                      (flag_s(u[4], self.cfg_nmea_gnssfilt),
+                       index_s(u[5], self.cfg_nmea_svn),
+                       index_s(u[6], self.cfg_nmea_mtid),
+                       index_s(u[7], self.cfg_nmea_gtid)))
         return s
 
     cfg_nvs_mask = {
@@ -3549,7 +3568,7 @@ Save and Load non-volatile storage data"""
                0x16: {'str': 'SBAS', 'dec': cfg_sbas, 'minlen': 8,
                       'name': 'UBX-CFG-SBAS'},
                # in u-blox 5+
-               0x17: {'str': 'NMEA', 'dec': cfg_nmea, 'minlen': 20,
+               0x17: {'str': 'NMEA', 'dec': cfg_nmea, 'minlen': 4,
                       'name': 'UBX-CFG-NMEA'},
                # in u-blox 6+, Not in u-blox 5-
                0x1b: {'str': 'USB', 'dec': cfg_usb, 'minlen': 108,
