@@ -271,7 +271,7 @@ if 'dev' in gpsd_version:
     (st, gpsd_revision) = _getstatusoutput('git describe --tags')
     if st != 0:
         # Use timestamp from latest relevant file, ignoring generated files
-        files = FileList(['*.c', '*/*.c', '*.cpp', '*/*.cpp',  'include/*.h',
+        files = FileList(['*.c', '*/*.c', '*.cpp', '*/*.cpp', 'include/*.h',
                           '*.in', '*/*.in',
                           'SConstruct'],
                          generated_sources + generated_www)
@@ -2380,10 +2380,18 @@ Utility("cppcheck", ["include/gpsd.h", "include/packet_names.h"],
         "--enable=all --inline-suppr --suppress='*:driver_proto.c' "
         "--force $SRCDIR")
 
+# By user choice, or due to system-dependent availability, the scons
+# executable may be called using names other than plain "scons",
+# e.g. "scons-3" on CentOS 8.
+# Try to make "scan-build" and "deheader" targets call the same scons
+# executable that is currently executing this SConstruct.
+scons_executable_name = os.path.basename(sys.argv[0])
+if not scons_executable_name:
+    scons_executable_name = "scons"
+
 # Check with clang analyzer
 Utility("scan-build", ["include/gpsd.h", "include/packet_names.h"],
-        "scan-build scons")
-
+        "scan-build " + scons_executable_name)
 
 # Check the documentation for bogons, too
 Utility("xmllint", glob.glob("man/*.xml"),
@@ -2394,7 +2402,8 @@ Utility("xmllint", glob.glob("man/*.xml"),
 Utility("deheader", generated_sources, [
     'deheader -x cpp -x contrib -x gpspacket.c '
     '-x monitor_proto.c -i include/gpsd_config.h -i include/gpsd.h '
-    '-m "MORECFLAGS=\'-Werror -Wfatal-errors -DDEBUG \' scons -Q"',
+    '-m "MORECFLAGS=\'-Werror -Wfatal-errors -DDEBUG \' '
+    + scons_executable_name + ' -Q"',
 ])
 
 # Perform all local code-sanity checks (but not the Coverity scan).
