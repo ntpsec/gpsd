@@ -122,6 +122,7 @@ def SatPos(ephm, t):
     # See also:
     # RTKLIB src/ephemeris.c
     # https://www.telesens.co/2017/07/17/calculating-position-from-raw-gps-data/#1b_Code_for_Calculating_Satellite_Position
+    # gnss-sdr: src/core/system_parameters/gps_ephemeris.cc
 
     # Semi-major axis
     A = ephm['sqrtA'] ** 2      # meters
@@ -193,17 +194,29 @@ def SatPos(ephm, t):
     xkprime = rk * math.cos(uk)
     ykprime = rk * math.sin(uk)
 
+    # diff of sat and earth Omega dot
+    delta_Omegad = ephm['Omegad'] - gps.WGS84AV
     # Corrected longitude of ascending node.
-    Omegak = (ephm['Omega0'] + ((ephm['Omegad'] - gps.WGS84AV) * tk) -
-              gps.WGS84AV * ephm['toe'])
+    Omegak = (ephm['Omega0'] + delta_Omegad * tk - gps.WGS84AV * ephm['toe'])
 
     # Earth-fixed coordinates.
-    ykprimecosik = ykprime * math.cos(ik)
+    cosik = math.cos(ik)
+    sinik = math.sin(ik)
+    ykprimecosik = ykprime * cosik
     sinOmegak = math.sin(Omegak)
     cosOmegak = math.cos(Omegak)
     x = xkprime * cosOmegak - ykprimecosik * sinOmegak
     y = xkprime * sinOmegak + ykprimecosik * cosOmegak
-    z = ykprime * math.sin(ik)
+    z = ykprime * sinik
+
+    # sat velocity in ECEF coordinates
+    # not validated yet.
+    vx = (-delta_Omegad * (xkprime + ykprime * cosik) +
+          x * cosOmegak - y * cosik * sinOmegak)
+    vy = (delta_Omegad * (xkprime * cosOmegak -
+          ykprime * cosik * sinOmegak) + x * sinOmegak +
+          y * cosik * cosOmegak)
+    vz = y * sinik
 
     # Almanac does not have toc, or ure
     if 'toc' in ephm:
@@ -239,9 +252,10 @@ def SatPos(ephm, t):
 
     # Finally, lat/lon/alt
     (lat, lon, altHAE) = gps.ecef2lla(x, y, z)
-    print("x %.10g y %.10g z %.10g\n"
+    print(" x %13.3f  y %13.3f  z %13.3f\n"
+          "vx %13.3f yv %13.3f zv %13.3f\n"
           "lat %.6f lon %.6f altHAE %.3f" %
-          (x, y, z, lat, lon, altHAE))
+          (x, y, z, vx, vy, vz, lat, lon, altHAE))
 
     # ax and el to sat
     if 'lat' in tpv and 'lon' in tpv and 'altHAE' in tpv:
@@ -250,6 +264,7 @@ def SatPos(ephm, t):
         print("E %.3f N %.3f U %.3f" % (E, N, U))
         (az, el, rng) = gps.enu2aer(E, N, U)
         print("az %.3f el %.3f rng %.3f" % (az, el, rng))
+
 
 # current GPS Ephemeris here, url split: https://cddis.nasa.gov/
 #   Data_and_Derived_Products/GNSS/broadcast_ephemeris_data.html
@@ -636,7 +651,7 @@ if 'time' in tpv:
           (unix_time, gps_time, int(gps_week), gps_tow))
     if 'lat' in tpv and 'lon' in tpv and 'altHAE' in tpv:
         print("Current position: lat %.8f lon %.8f altHAE %.3f" %
-            (tpv['lat'], tpv['lon'], tpv['altHAE']))
+              (tpv['lat'], tpv['lon'], tpv['altHAE']))
 
 if ionosphere:
     print("\nSubframe 4, page 18")
@@ -700,10 +715,11 @@ if 'time' in tpv and options.satpos:
             ephm.update(ephemeris3[sv])
 
             # convert semi-circles to radians
+            # use military PI, not real pi.
             cvt = ('deltan', 'i0', 'IDOT', 'M0', 'omega', 'Omega0',
                    'Omegad')
             for i in cvt:
-                ephm[i] *= math.pi
+                ephm[i] *= gps.GPS_PI
 
             SatPos(ephm, gps_tow)
 
@@ -717,10 +733,11 @@ if 'time' in tpv and options.satpos:
                          'toe': ephm['toa']})
 
             # convert semi-circles to radians
+            # use military PI, not real pi.
             cvt = ('deltan', 'i0', 'IDOT', 'M0', 'omega', 'Omega0',
                    'Omegad')
             for i in cvt:
-                ephm[i] *= math.pi
+                ephm[i] *= gps.GPS_PI
 
             SatPos(ephm, gps_tow)
 
@@ -765,40 +782,40 @@ if options.test:
 
     # move 90 degrees
     print("\nTest omega 90:")
-    ephm['omega'] = math.pi / 2
+    ephm['omega'] = gps.GPS_PI / 2
 
     SatPos(ephm, 0)
 
     # move 180 degrees
     print("\nTest omega 180:")
-    ephm['omega'] = math.pi
+    ephm['omega'] = gps.GPS_PI
 
     SatPos(ephm, 0)
 
     # move 270 degrees
     print("\nTest omega 270:")
-    ephm['omega'] = math.pi * 1.5
+    ephm['omega'] = gps.GPS_PI * 1.5
 
     SatPos(ephm, 0)
 
     # move omega 0, Omega0 90
     print("\nTest Omega 90:")
     ephm['omega'] = 0
-    ephm['Omega0'] = math.pi / 2
+    ephm['Omega0'] = gps.GPS_PI / 2
 
     SatPos(ephm, 0)
 
     # move omega 0, Omega0 180
     print("\nTest Omega 180:")
     ephm['omega'] = 0
-    ephm['Omega0'] = math.pi
+    ephm['Omega0'] = gps.GPS_PI
 
     SatPos(ephm, 0)
 
     # move omega 90, Omega0 90
     print("\nTest omega 90 Omega0 90:")
-    ephm['omega'] = math.pi / 2
-    ephm['Omega0'] = math.pi / 2
+    ephm['omega'] = gps.GPS_PI / 2
+    ephm['Omega0'] = gps.GPS_PI / 2
 
     SatPos(ephm, 0)
 
@@ -806,40 +823,40 @@ if options.test:
     print("\nTest omega 0 Omega0 0 i0 90:")
     ephm['omega'] = 0
     ephm['Omega0'] = 0
-    ephm['i0'] = math.pi / 2
+    ephm['i0'] = gps.GPS_PI / 2
 
     SatPos(ephm, 0)
 
     # move omega 45, Omega0 0, i0 90
     print("\nTest omega 45 Omega0 0 i0 90:")
-    ephm['omega'] = math.pi / 4
+    ephm['omega'] = gps.GPS_PI / 4
     ephm['Omega0'] = 0
-    ephm['i0'] = math.pi / 2
+    ephm['i0'] = gps.GPS_PI / 2
 
     SatPos(ephm, 0)
 
     # move omega 45, Omega0 45, i0 90
     print("\nTest omega 45 Omega0 45 i0 90:")
-    ephm['omega'] = math.pi / 4
-    ephm['Omega0'] = math.pi / 4
-    ephm['i0'] = math.pi / 2
+    ephm['omega'] = gps.GPS_PI / 4
+    ephm['Omega0'] = gps.GPS_PI / 4
+    ephm['i0'] = gps.GPS_PI / 2
 
     SatPos(ephm, 0)
 
     # move omega 45, Omega0 0, i0 45
     print("\nTest omega 45 Omega0 0 i0 45:")
-    ephm['omega'] = math.pi / 4
+    ephm['omega'] = gps.GPS_PI / 4
     ephm['Omega0'] = 0
-    ephm['i0'] = math.pi / 4
+    ephm['i0'] = gps.GPS_PI / 4
 
     SatPos(ephm, 0)
 
     # move omega 90, Omega0 0, i0 90
     # altitude blows up.
     print("\nTest omega 0 Omega0 0 i0 0:")
-    ephm['omega'] = math.pi / 2
+    ephm['omega'] = gps.GPS_PI / 2
     ephm['Omega0'] = 0
-    ephm['i0'] = math.pi / 2
+    ephm['i0'] = gps.GPS_PI / 2
 
     SatPos(ephm, 0)
 
