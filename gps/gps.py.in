@@ -27,6 +27,13 @@ from .watch_options import *
 
 NaN = float('nan')
 
+VERB_QUIET = 0   # quiet
+VERB_NONE = 1    # just output requested data and some info
+VERB_DECODE = 2  # decode all messages
+VERB_INFO = 3    # more info
+VERB_RAW = 4     # raw info
+VERB_PROG = 5    # program trace
+
 
 def isfinite(f):
     "Check if f is finite"
