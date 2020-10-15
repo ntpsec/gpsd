@@ -8112,7 +8112,7 @@ class gps_io(object):
                                      'can not send commands\n' % PROG_NAME)
                     sys.exit(1)
 
-        elif opts['gpsd_host']:
+        else:
             # try to open local/remote gpsd daemon
             try:
                 self.ser = gps.gpscommon(host=opts['gpsd_host'],
@@ -8569,7 +8569,10 @@ elif opts['target']:
             opts['gpsd_port'] = parts[1]
         if 2 < len(parts) and parts[2]:
             opts['gpsd_device'] = parts[2]
-# else, use defaults: localhost:2947:
+else:
+    # else, use defaults: localhost:2947:
+    if not opts['gpsd_host']:
+        opts['gpsd_host'] = 'localhost'
 
 if VERB_PROG <= opts['verbosity']:
     # dump versions and all options
