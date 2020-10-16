@@ -79,6 +79,9 @@ socket_t netlib_connectsock(int af, const char *host, const char *service,
     if (bind_me)
         hints.ai_flags = AI_PASSIVE;
     if ((ret = getaddrinfo(host, service, &hints, &result))) {
+        if ((ret = getaddrinfo(NULL, service, &hints, &result))) {
+            return NL_NOSERVICE;
+        }
         return NL_NOHOST;
     }
 
