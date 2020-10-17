@@ -219,9 +219,9 @@ scan-build:
 # https://www.synopsys.com/blogs/software-security/integrating-coverity-scan-with-gitlab-ci/
 coverity:
   allow_failure: true
-  image: debian:unstable
+  image: debian:latext
   stage: test
-  needs: ["debian-unstable:gcc"]
+  needs: ["debian-stable"]
   only:
     refs:
       - master
