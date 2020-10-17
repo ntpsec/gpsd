@@ -472,7 +472,7 @@ parser.add_argument(
     # FIXME: speeds s/b in io class
     choices=gps_model.speeds,
     dest='input_speed',
-    default=None,
+    default=9600,
     metavar='SPEED',
     type=int,
     help='Set local serial port speed to SPEED bps.',
