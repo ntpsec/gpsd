@@ -175,26 +175,33 @@ static void monitor_satlist(WINDOW *win, int y, int x)
 /* display as much as we can of a satlist in a specified window */
 {
     int ymax, xmax;
-    char scr[128];
+    char scr[128], tmp[128];
     int i;
 
     assert(win != NULL);
     (void)wmove(win, y, x);
     (void)wclrtoeol(win);
     scr[0] = '\0';
-    for (i = 0; i < MAXCHANNELS; i++) {
-        if (session.gpsdata.skyview[i].used)
-            str_appendf(scr, sizeof(scr),
-                        "%d ", session.gpsdata.skyview[i].PRN);
-    }
+    tmp[0] = '\0';
     getmaxyx(win, ymax, xmax);
     assert(ymax != 0);  /* suppress compiler warning */
-    (void)mvwaddnstr(win, y, x, scr, xmax - 2 - x);
-    if (strlen(scr) >= (size_t) (xmax - 2)) {
-        (void)mvwaddch(win, y, xmax - 2 - x, (chtype) '.');
-        (void)mvwaddch(win, y, xmax - 3 - x, (chtype) '.');
-        (void)mvwaddch(win, y, xmax - 4 - x, (chtype) '.');
+
+    for (i = 0; i < MAXCHANNELS; i++) {
+        if (session.gpsdata.skyview[i].used) {
+            str_appendf(tmp, sizeof(tmp),
+                        "%d ", session.gpsdata.skyview[i].PRN);
+            if ((int)strlen(tmp) < xmax - 1 - x) {
+                str_appendf(scr, sizeof(scr),
+                            "%d ", session.gpsdata.skyview[i].PRN);
+            } else {
+                str_appendf(scr, sizeof(scr),
+                            "%s", "+");
+                break;
+            }
+        }
     }
+
+    (void)mvwaddnstr(win, y, x, scr, xmax - 1 - x);
     monitor_fixframe(win);
 }
 
