@@ -453,14 +453,16 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                     // sign extend 6 bit to 8 bit
                     subp->sub4_13.ERD[i]  = uint2int(subp->sub4_13.ERD[i], 6);
                 }
-                // ERD for SV 32 never sent.
-                // own ERD never transmitted
-                for (i = 30; i >= subp->tSVID; i--) {
-                    // do the shuffle up thing
-                    subp->sub4_13.ERD[i + 1]  = subp->sub4_13.ERD[i];
+                // ERD for SV 32 never sent, test for it to shut up coverity.
+                if (32 > subp->tSVID) {
+                    // own ERD never transmitted
+                    for (i = 30; i >= subp->tSVID; i--) {
+                        // do the shuffle up thing
+                        subp->sub4_13.ERD[i + 1]  = subp->sub4_13.ERD[i];
+                    }
+                    // 0x20 sign extends to 0xe0, 0xe0 is -32
+                    subp->sub4_13.ERD[subp->tSVID] = -32;
                 }
-                // 0x20 sign extends to 0xe0, 0xe0 is -32
-                subp->sub4_13.ERD[subp->tSVID] = -32;
 
                 GPSD_LOG(LOG_PROG, &session->context->errout,
                          "50B: SF:4-13 data_id %d ai:%u "
