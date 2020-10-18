@@ -423,10 +423,10 @@ int parse_uri_dest(char *s, char **host, char **service, char **device)
 {
     char *search = s;
 
-    if (s[0] == '[') {
+    if ('[' == s[0]) {
         /* IPv6 literal */
         char *cb = strchr(s, ']');
-        if (!cb) {
+        if (NULL == cb) {
             // missing terminating ]
             return -1;
         }
@@ -438,11 +438,11 @@ int parse_uri_dest(char *s, char **host, char **service, char **device)
         *host = s;
     }
     s = strchr(search, ':');
-    if (s) {
+    if (NULL != s) {
         // found a colon, remove it from host
         *s = '\0';
         search = s + 1;
-        if (s[1] && ':' != s[1]) {
+        if ('\0' != s[1] && ':' != s[1]) {
             // s[1] start port/service
             *service = s + 1;
         } else {
@@ -452,16 +452,37 @@ int parse_uri_dest(char *s, char **host, char **service, char **device)
         *service = NULL;
     }
     s = strchr(search, ':');
-    if (s) {
+    if (NULL != s) {
         // found a colon, remove it
         *s = '\0';
-        if (s[1]) {
+        if ('\0' != s[1]) {
             *device = s + 1;
         } else {
             *device = NULL;
         }
     } else {
         *device = NULL;
+    }
+    // Support trailing / in URIs, e.g. tcp://192.168.100.90:1234/
+    // Assumes / is not valid _inside_ host or service parts of URI
+    // Accepts strange input, e.g. service part with / but no digits
+    s = strchr(*host, '/');
+    if (NULL != s) {
+        // found a backslash, remove it
+        *s = '\0';
+    }
+    // Don't enforce that / should not be in both host and service
+    // Or that if host has /, there shouldn't be any service at all
+    if (NULL != *service) {
+        s = strchr(*service, '/');
+        if (NULL != s) {
+            // found a backslash, remove it
+            *s = '\0';
+        }
+        // nothing in service besides / --> trigger use of default port
+        if (0 == strlen(*service)) {
+            *service = NULL;
+        }
     }
     return 0;
 }
