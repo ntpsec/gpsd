@@ -320,7 +320,9 @@ static void nmea_update(void)
             (void)mvwprintw(gpggawin, 6, 12, "%-5.5s", fields[8]);
             (void)mvwprintw(gpggawin, 7, 12, "%-5.5s", fields[11]);
         }
-        if (strcmp(fields[0], "GPGST") == 0) {
+        if (strcmp(fields[0], "GPGST") == 0
+            || strcmp(fields[0], "GNGST") == 0
+            || strcmp(fields[0], "GLGST") == 0) {
             (void)mvwprintw(gpgstwin, 1,  6, "%-10s", fields[1]);
             (void)mvwprintw(gpgstwin, 1, 21,  "%-8s", fields[2]);
             (void)mvwprintw(gpgstwin, 2,  6, "%-10s", fields[3]);
