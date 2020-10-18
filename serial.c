@@ -219,6 +219,11 @@ static speed_t gpsd_get_speed_termios(const struct termios *ttyctl)
         return (115200);
     case B230400:
         return (230400);
+#ifdef B460800
+    case B460800:
+        // not a valid POSIX speed
+        return (460800);
+#endif
     default: /* B0 */
         return 0;
     }
@@ -313,10 +318,9 @@ void gpsd_set_speed(struct gps_device_t *session,
     // not a valid POSIX speed
     else if (speed < 460800)
         rate = B460800;
-#else
+#endif
     else
         rate = B230400;
-#endif
 
 
     /* backward-compatibility hack */
