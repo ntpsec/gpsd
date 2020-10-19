@@ -1,5 +1,5 @@
 '''
-class usb
+class ubx
 '''
 
 # This file is Copyright 2020 by the GPSD project
@@ -230,10 +230,11 @@ def timestamp():
 class ubx(object):
     """class to hold u-blox stuff"""
 
-    # when a statement identifier is received, it is stored here
-    last_statement_identifier = None
     # expected statement identifier.
     expect_statement_identifier = False
+    io_handle = None
+    # when a statement identifier is received, it is stored here
+    last_statement_identifier = None
     read_only = False
     protver = 10.0
     timestamp = None
@@ -6507,7 +6508,7 @@ High Precision GNSS products only."""
     def gps_send_raw(self, m_all):
         """Send a raw message to GPS"""
         if not self.read_only:
-            io_handle.ser.write(m_all)
+            self.io_handle.ser.write(m_all)
             if gps.VERB_QUIET < self.verbosity:
                 sys.stdout.write("sent:\n")
                 if gps.VERB_INFO < self.verbosity:
@@ -6522,13 +6523,13 @@ High Precision GNSS products only."""
         flags = 0x0d if able else 0x0c
         m_data = []
         struct.pack_into('<BBHHBB', m_data, 0, 0, flags, 128, 0, 0, 0)
-        gps_model.gps_send(6, 0x93, m_data)
+        self.gps_send(6, 0x93, m_data)
 
     def send_able_beidou(self, able, args):
         """dis/enable BeiDou"""
         # Two frequency GNSS receivers use BeiDou or GLONASS
         # disable, then enable
-        gps_model.send_cfg_gnss1(3, able, args)
+        self.send_cfg_gnss1(3, able, args)
 
     def send_able_binary(self, able, args):
         """dis/enable basic binary messages. -e/-d BINARY"""
@@ -6583,71 +6584,71 @@ High Precision GNSS products only."""
         for id in ubx_nav_toggle:
             m_data[1] = id
             # UBX-CFG-MSG
-            gps_model.gps_send(6, 1, m_data)
+            self.gps_send(6, 1, m_data)
 
         if 15 > self.protver:
             for id in ubx_14_nav_on:
                 m_data[1] = id
                 # UBX-CFG-MSG
-                gps_model.gps_send(6, 1, m_data)
+                self.gps_send(6, 1, m_data)
 
             # turn off >= 15 messages.  Yes this makes NAKs.
             m_data[2] = 0       # rate off
             for id in ubx_15_nav_on:
                 m_data[1] = id
                 # UBX-CFG-MSG
-                gps_model.gps_send(6, 1, m_data)
+                self.gps_send(6, 1, m_data)
 
         else:
             for id in ubx_15_nav_on:
                 m_data[1] = id
                 # UBX-CFG-MSG
-                gps_model.gps_send(6, 1, m_data)
+                self.gps_send(6, 1, m_data)
 
             # turn off < 15 messages.  Yes this may make NAKs.
             m_data[2] = 0       # rate off
             for id in ubx_14_nav_on:
                 m_data[1] = id
                 # UBX-CFG-MSG
-                gps_model.gps_send(6, 1, m_data)
+                self.gps_send(6, 1, m_data)
 
         # msgClass (UBX-NAV), msgID (TIMELS), rate (0xff)
         # 0xff is about every 4 minutes if nav rate is 1Hz
         m_data = bytearray([0x01, 0x26, 0xff])
         # UBX-CFG-MSG
-        gps_model.gps_send(6, 1, m_data)
+        self.gps_send(6, 1, m_data)
 
         # always off NAV messages
         m_data[2] = 0       # rate off
         for id in ubx_nav_off:
             m_data[1] = id
             # UBX-CFG-MSG
-            gps_model.gps_send(6, 1, m_data)
+            self.gps_send(6, 1, m_data)
 
     def send_able_ecef(self, able, args):
         """Enable ECEF messages"""
         # set NAV-POSECEF rate
-        gps_model.send_cfg_msg(1, 1, able)
+        self.send_cfg_msg(1, 1, able)
         # set NAV-VELECEF rate
-        gps_model.send_cfg_msg(1, 0x11, able)
+        self.send_cfg_msg(1, 0x11, able)
 
     def send_able_gps(self, able, args):
         """dis/enable GPS/QZSS"""
         # GPS and QZSS both on, or both off, together
         # GPS
-        gps_model.send_cfg_gnss1(0, able, args)
+        self.send_cfg_gnss1(0, able, args)
         # QZSS
-        gps_model.send_cfg_gnss1(5, able, args)
+        self.send_cfg_gnss1(5, able, args)
 
     def send_able_galileo(self, able, args):
         """dis/enable GALILEO"""
-        gps_model.send_cfg_gnss1(2, able, args)
+        self.send_cfg_gnss1(2, able, args)
 
     def send_able_glonass(self, able, args):
         """dis/enable GLONASS"""
         # Two frequency GPS use BeiDou or GLONASS
         # disable, then enable
-        gps_model.send_cfg_gnss1(6, able, args)
+        self.send_cfg_gnss1(6, able, args)
 
     def send_able_logfilter(self, able, args):
         """Enable logging"""
@@ -6671,7 +6672,7 @@ High Precision GNSS products only."""
                                 ])
 
         # set UBX-CFG-LOGFILTER
-        gps_model.gps_send(6, 0x47, m_data)
+        self.gps_send(6, 0x47, m_data)
 
     def send_able_ned(self, able, args):
         """Enable NAV-RELPOSNED and VELNED messages.
@@ -6683,7 +6684,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
             return
 
         # set NAV-VELNED rate
-        gps_model.send_cfg_msg(1, 0x12, able)
+        self.send_cfg_msg(1, 0x12, able)
 
         if 20 > self.protver:
             sys.stderr.write('%s: WARNING: protver %d too low for '
@@ -6692,7 +6693,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
             return
 
         # set NAV-RELPOSNED rate
-        gps_model.send_cfg_msg(1, 0x3C, able)
+        self.send_cfg_msg(1, 0x3C, able)
 
     def send_able_nmea(self, able, args):
         """dis/enable basic NMEA messages"""
@@ -6722,11 +6723,11 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         for id in nmea_toggle:
             m_data[1] = id
             # UBX-CFG-MSG
-            gps_model.gps_send(6, 1, m_data)
+            self.gps_send(6, 1, m_data)
 
         # xxGLL, never need it
         m_data = bytearray([0xf0, 0x01, 0])
-        gps_model.gps_send(6, 1, m_data)
+        self.gps_send(6, 1, m_data)
 
     def send_able_rtcm3(self, able, args):
         """dis/enable RTCM3 1005, 1077, 1087, 1230 messages"""
@@ -6747,23 +6748,23 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
             # Ensures RTCM3 output (all) are set (outProtoMask)
             # no u-blox has RTCM2 out
             m_data[14] = 0x23        # out:  RTCM3, NMEA and UBX
-            gps_model.gps_send(0x06, 0x00, m_data)
+            self.gps_send(0x06, 0x00, m_data)
         else:
             # leave  UBX-CFG-PRT alone
             rate = 0
 
         # 1005, Stationary RTK reference station ARP
         m_data = bytearray([0xf5, 0x05, rate])
-        gps_model.gps_send(6, 1, m_data)
+        self.gps_send(6, 1, m_data)
         # 1077, GPS MSM7
         m_data = bytearray([0xf5, 0x4d, rate])
-        gps_model.gps_send(6, 1, m_data)
+        self.gps_send(6, 1, m_data)
         # 1087, GLONASS MSM7
         m_data = bytearray([0xf5, 0x57, rate])
-        gps_model.gps_send(6, 1, m_data)
+        self.gps_send(6, 1, m_data)
         # 1230, GLONASS code-phase biases
         m_data = bytearray([0xf5, 0xe6, rate])
-        gps_model.gps_send(6, 1, m_data)
+        self.gps_send(6, 1, m_data)
         # we skip Galileo or BeiDou for now, unsupported by u-blox rover
 
         # ZED-F9P rover requires MSM7 and 4072,0 or 4072,1
@@ -6771,7 +6772,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         m_data = bytearray([0xf5, 0xfe, rate])
         # 4072,1
         m_data = bytearray([0xf5, 0xfd, rate])
-        gps_model.gps_send(6, 1, m_data)
+        self.gps_send(6, 1, m_data)
 
     def send_able_rawx(self, able, args):
         """dis/enable UBX-RXM-RAW/RAWXX"""
@@ -6784,7 +6785,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
             # u-blox 8 or later, use RAWX
             sid = 0x15
         m_data = bytearray([0x2, sid, rate])
-        gps_model.gps_send(6, 1, m_data)
+        self.gps_send(6, 1, m_data)
 
     def send_able_pps(self, able, args):
         """dis/enable PPS, using UBX-CFG-TP5"""
@@ -6825,11 +6826,11 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         if not able:
             m_data[28] &= ~1  # bit 0 is active
 
-        gps_model.gps_send(6, 0x31, m_data)
+        self.gps_send(6, 0x31, m_data)
 
     def send_able_sbas(self, able, args):
         """dis/enable SBAS"""
-        gps_model.send_cfg_gnss1(1, able, args)
+        self.send_cfg_gnss1(1, able, args)
 
     def send_able_sfrbx(self, able, args):
         """dis/enable UBX-RXM-SFRB/SFRBX"""
@@ -6842,7 +6843,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
             # u-blox 8 or later, use SFRBX
             sid = 0x13
         m_data = bytearray([0x2, sid, rate])
-        gps_model.gps_send(6, 1, m_data)
+        self.gps_send(6, 1, m_data)
 
     def send_able_tmode2(self, able, args):
         """SURVEYIN, UBX-CFG-TMODE2, set time mode 2 config"""
@@ -6872,7 +6873,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
                 mmeters = int(args[1])
 
         struct.pack_into('<LL', m_data, 20, seconds, mmeters)
-        gps_model.gps_send(6, 0x3d, m_data)
+        self.gps_send(6, 0x3d, m_data)
 
     def send_able_tmode3(self, able, args):
         """SURVEYIN3, UBX-CFG-TMODE3, set time mode 3 config"""
@@ -6896,13 +6897,13 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
                 mmeters = int(args[1])
 
         struct.pack_into('<LL', m_data, 24, seconds, mmeters)
-        gps_model.gps_send(6, 0x71, m_data)
+        self.gps_send(6, 0x71, m_data)
 
     def send_able_tp(self, able, args):
         """dis/enable UBX-TIM-TP Time Pulse"""
         rate = 1 if able else 0
         m_data = bytearray([0xd, 0x1, rate])
-        gps_model.gps_send(6, 1, m_data)
+        self.gps_send(6, 1, m_data)
 
     def send_cfg_cfg(self, save_clear, args=[]):
         """UBX-CFG-CFG, save config"""
@@ -6961,7 +6962,7 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         # devBBR = 1, devFLASH = 2, devEEPROM = 4, devSpiFlash = 0x10
         m_data[12] = 0x17
 
-        gps_model.gps_send(6, 0x9, m_data)
+        self.gps_send(6, 0x9, m_data)
 
     def send_cfg_gnss1(self, gnssId, enable, args):
         """UBX-CFG-GNSS, set GNSS config
@@ -7053,17 +7054,17 @@ Always double check with "-p CFG-GNSS".
             m_data[10] = 1      # flags L1
 
         m_data[11] = 0          # flags, bits 24:31, unused
-        gps_model.gps_send(6, 0x3e, m_data)
+        self.gps_send(6, 0x3e, m_data)
 
     def poll_cfg_inf(self):
         """UBX-CFG-INF, poll"""
 
         m_data = bytearray(1)
         m_data[0] = 0        # UBX
-        gps_model.gps_send(6, 0x02, m_data)
+        self.gps_send(6, 0x02, m_data)
 
         m_data[0] = 1        # NMEA
-        gps_model.gps_send(6, 0x02, m_data)
+        self.gps_send(6, 0x02, m_data)
 
     def send_poll_cfg_msg(self, args):
         """UBX-CFG-MSG, mandatory args: class, ID, optional rate"""
@@ -7086,7 +7087,7 @@ Always double check with "-p CFG-GNSS".
         m_data[0] = int(args[0])
         m_data[1] = int(args[1])
 
-        gps_model.gps_send(6, 1, m_data)
+        self.gps_send(6, 1, m_data)
 
     def send_cfg_nav5_model(self, args):
         """MODEL, UBX-CFG-NAV5, set dynamic platform model"""
@@ -7099,7 +7100,7 @@ Always double check with "-p CFG-GNSS".
         # else:
         # Just polling deprecated
 
-        gps_model.gps_send(6, 0x24, m_data)
+        self.gps_send(6, 0x24, m_data)
 
     def send_cfg_msg(self, m_class, m_id, rate=None):
         """UBX-CFG-MSG, poll, or set, message rates decode"""
@@ -7108,7 +7109,7 @@ Always double check with "-p CFG-GNSS".
         m_data[1] = m_id
         if rate is not None:
             m_data.extend([rate])
-        gps_model.gps_send(6, 1, m_data)
+        self.gps_send(6, 1, m_data)
 
     def send_cfg_pms(self, args):
         """UBX-CFG-PMS, poll/set Power Management Settings"""
@@ -7122,7 +7123,7 @@ Always double check with "-p CFG-GNSS".
             # just poll, DEPRECATED
             m_data = []
 
-        gps_model.gps_send(6, 0x86, m_data)
+        self.gps_send(6, 0x86, m_data)
 
     def send_cfg_prt(self, args=None):
         """UBX-CFG-PRT, get I/O Port settings"""
@@ -7134,14 +7135,14 @@ Always double check with "-p CFG-GNSS".
             # get specified port
             # seems broken on ZED-F9P
             m_data = bytearray([int(args[0])])
-        gps_model.gps_send(6, 0x0, m_data)
+        self.gps_send(6, 0x0, m_data)
 
     def send_cfg_rate(self, args):
         """UBX-CFG-RATE, poll/set rate settings"""
 
         if 0 == len(args):
             # poll
-            gps_model.gps_send(6, 0x08, [])
+            self.gps_send(6, 0x08, [])
             return
 
         m_data = bytearray(6)
@@ -7154,7 +7155,7 @@ Always double check with "-p CFG-GNSS".
                 timeRef = int(args[2])
 
         struct.pack_into('<HHH', m_data, 0, measRate, navRate, timeRef)
-        gps_model.gps_send(6, 0x08, m_data)
+        self.gps_send(6, 0x08, m_data)
 
     def send_cfg_rst(self, reset_type):
         """UBX-CFG-RST, reset"""
@@ -7164,7 +7165,7 @@ Always double check with "-p CFG-GNSS".
         m_data = bytearray(4)
         m_data[0] = reset_type & 0xff
         m_data[1] = (reset_type >> 8) & 0xff
-        gps_model.gps_send(6, 0x4, m_data)
+        self.gps_send(6, 0x4, m_data)
 
     def send_cfg_rxm(self, args):
         """UBX-CFG-RXM, poll/set low power mode"""
@@ -7176,7 +7177,7 @@ Always double check with "-p CFG-GNSS".
             # lpMode
             m_data = bytearray([0, int(args[0])])
 
-        gps_model.gps_send(6, 0x11, m_data)
+        self.gps_send(6, 0x11, m_data)
 
     def send_cfg_slas(self, args):
         """UBX-CFG-SLAS, poll/set SLAS mode"""
@@ -7189,7 +7190,7 @@ Always double check with "-p CFG-GNSS".
             m_data = bytearray(4)
             m_data[0] = int(args[0])
 
-        gps_model.gps_send(6, 0x8d, m_data)
+        self.gps_send(6, 0x8d, m_data)
 
     def send_cfg_tp5(self, args):
         """UBX-CFG-TP5, get time0 decodes"""
@@ -7201,7 +7202,7 @@ Always double check with "-p CFG-GNSS".
             # tpIdx
             m_data = bytearray([int(args[0])])
 
-        gps_model.gps_send(6, 0x31, m_data)
+        self.gps_send(6, 0x31, m_data)
 
     def send_set_speed(self, speed):
         """"UBX-CFG-PRT, set port"""
@@ -7228,7 +7229,7 @@ Always double check with "-p CFG-GNSS".
 
         m_data[12] = 3             # in, ubx and nmea
         m_data[14] = 3             # out, ubx and nmea
-        gps_model.gps_send(6, 0, m_data)
+        self.gps_send(6, 0, m_data)
 
     def send_cfg_valdel(self, keys):
         """UBX-CFG-VALDEL, delete config items by key"""
@@ -7248,7 +7249,7 @@ Always double check with "-p CFG-GNSS".
             k_data[2] = (key >> 16) & 0xff
             k_data[3] = (key >> 24) & 0xff
             m_data.extend(k_data)
-        gps_model.gps_send(0x06, 0x8c, m_data)
+        self.gps_send(0x06, 0x8c, m_data)
 
     def send_cfg_valget(self, keys, layer, position):
         """UBX-CFG-VALGET, get config items by key"""
@@ -7272,10 +7273,10 @@ Always double check with "-p CFG-GNSS".
             layers = set([0, 1, 2, 7])
             for layer in layers:
                 m_data[1] = layer
-                gps_model.gps_send(0x06, 0x8b, m_data)
+                self.gps_send(0x06, 0x8b, m_data)
         else:
             m_data[1] = layer
-            gps_model.gps_send(0x06, 0x8b, m_data)
+            self.gps_send(0x06, 0x8b, m_data)
 
     def send_cfg_valset(self, nvs):
         """UBX-CFG-VALSET, set config items by key/val pairs"""
@@ -7295,7 +7296,7 @@ Always double check with "-p CFG-GNSS".
             if 3 <= len(nv_split):
                 m_data[1] = int(nv_split[2])
 
-            item = gps_model.cfg_by_name(name)
+            item = self.cfg_by_name(name)
             key = item[1]
             val_type = item[2]
 
@@ -7319,7 +7320,7 @@ Always double check with "-p CFG-GNSS".
 
             struct.pack_into(frmat, kv_data, 4, val1)
             m_data.extend(kv_data)
-        gps_model.gps_send(0x06, 0x8a, m_data)
+        self.gps_send(0x06, 0x8a, m_data)
 
     def send_log_findtime(self, args):
         """UBX-LOG-FINDTIME, search log for y,m,d,h,m,s"""
@@ -7356,7 +7357,7 @@ Always double check with "-p CFG-GNSS".
         m_data[7] = minute                    # minute 0-59
         m_data[8] = second                    # second 0-60
         m_data[9] = 0      # reserved
-        gps_model.gps_send(0x21, 0x0e, m_data)
+        self.gps_send(0x21, 0x0e, m_data)
 
     def send_log_retrieve(self, args):
         """UBX-LOG-RETRIEVE, gets logs from start,count"""
@@ -7372,7 +7373,7 @@ Always double check with "-p CFG-GNSS".
                 entryCount = int(args[1])
 
         struct.pack_into('<LLB', m_data, 0, startNumber, entryCount, 0)
-        gps_model.gps_send(0x21, 0x09, m_data)
+        self.gps_send(0x21, 0x09, m_data)
 
     def send_log_string(self, args):
         """UBX-LOG-STRING, send string to log"""
@@ -7383,11 +7384,11 @@ Always double check with "-p CFG-GNSS".
             string = "Hi"
 
         m_data = gps.polybytes(string)
-        gps_model.gps_send(0x21, 0x04, m_data)
+        self.gps_send(0x21, 0x04, m_data)
 
     def send_poll(self, m_data):
-        """generic send pomonthll request"""
-        gps_model.gps_send(m_data[0], m_data[1], m_data[2:])
+        """generic send poll request"""
+        self.gps_send(m_data[0], m_data[1], m_data[2:])
 
     CFG_ANT = [0x06, 0x13]
     CFG_BATCH = [0x06, 0x93]
@@ -7460,7 +7461,7 @@ Always double check with "-p CFG-GNSS".
 
         # blast them for now, should do one at a time...
         for cmd in cmds:
-            gps_model.send_poll(cmd)
+            self.send_poll(cmd)
 
     def get_status(self):
         """STATUS.  Get a bunch of status messages"""
@@ -7493,7 +7494,7 @@ Always double check with "-p CFG-GNSS".
 
         # blast them for now, should do one at a time...
         for cmd in cmds:
-            gps_model.send_poll(cmd)
+            self.send_poll(cmd)
 
     able_commands = {
         # en/dis able BATCH

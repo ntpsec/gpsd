@@ -94,7 +94,6 @@ except TypeError:
 # u-blox F9N, firmware 4 is protver 32
 
 
-
 class gps_io(object):
     """All the GPS I/O in one place"
 
@@ -338,7 +337,7 @@ class gps_io(object):
 
         # Convert binary data to hex and build the message.
         data_out += b'"hexdata":"' + binascii.hexlify(data) + b'"}\r\n'
-        if gps.gps.VERB_RAW <= opts['verbosity']:
+        if gps.VERB_RAW <= opts['verbosity']:
             print("sent: ", data_out)
         self.ser.send(data_out)
         return 0
@@ -634,6 +633,7 @@ try:
 
     # create the I/O instance
     io_handle = gps_io()
+    gps_model.io_handle = io_handle
 
     sys.stdout.flush()
 
@@ -646,7 +646,7 @@ try:
 
             if disable in gps_model.able_commands:
                 command = gps_model.able_commands[disable]
-                command["command"](gps, 0, disable[1:])
+                command["command"](gps_model, 0, disable[1:])
             else:
                 sys.stderr.write('%s: disable %s not found\n' %
                                  (PROG_NAME, disable))
@@ -661,7 +661,7 @@ try:
 
             if enable in gps_model.able_commands:
                 command = gps_model.able_commands[enable]
-                command["command"](gps, 1, args[1:])
+                command["command"](gps_model, 1, args[1:])
             else:
                 sys.stderr.write('%s: enable %s not found\n' %
                                  (PROG_NAME, enable))
@@ -692,12 +692,12 @@ try:
                            opts['protver']))
 
                 if 'opt' in command:
-                    command["command"](gps, command["opt"])
+                    command["command"](gps_model, command["opt"])
                 elif 'args' in command:
                     # pass on  args, except arg[0]
-                    command["command"](gps, args[1:])
+                    command["command"](gps_model, args[1:])
                 else:
-                    command["command"](gps)
+                    command["command"](gps_model)
             else:
                 sys.stderr.write('%s: poll %s not found\n' %
                                  (PROG_NAME, poll))
