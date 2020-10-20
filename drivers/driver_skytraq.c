@@ -7,7 +7,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <ctype.h>
 #include <math.h>
@@ -18,11 +18,11 @@
 #include <strings.h>
 #include <unistd.h>
 
-#include "include/gpsd.h"
-#include "include/bits.h"
-#include "include/strfuncs.h"
+#include "../include/gpsd.h"
+#include "../include/bits.h"
+#include "../include/strfuncs.h"
 #if defined(SKYTRAQ_ENABLE)
-#include "include/timespec.h"
+#include "../include/timespec.h"
 
 #define HI(n)           ((n) >> 8)
 #define LO(n)           ((n) & 0xff)

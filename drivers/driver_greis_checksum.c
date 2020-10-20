@@ -6,11 +6,11 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <limits.h>
 
-#include "include/driver_greis.h"
+#include "../include/driver_greis.h"
 
 static inline unsigned char greis_rotate_left(unsigned char val)
 {

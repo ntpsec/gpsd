@@ -16,14 +16,14 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "include/gpsd.h"
-#include "include/bits.h"
+#include "../include/gpsd.h"
+#include "../include/bits.h"
 
 /*
  * Parse the data from the device

@@ -19,7 +19,7 @@
  *
  */
 
-#include "include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <assert.h>
 #include <math.h>
@@ -30,13 +30,13 @@
 #include <unistd.h>
 
 
-#include "include/compiler.h"   // for FALLTHROUGH
-#include "include/gpsd.h"
+#include "../include/compiler.h"   // for FALLTHROUGH
+#include "../include/gpsd.h"
 #if defined(UBLOX_ENABLE) && defined(BINARY_ENABLE)
-#include "include/driver_ubx.h"
+#include "../include/driver_ubx.h"
 
-#include "include/bits.h"
-#include "include/timespec.h"
+#include "../include/bits.h"
+#include "../include/timespec.h"
 
 /*
  * A ubx packet looks like this:

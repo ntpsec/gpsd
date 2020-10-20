@@ -19,7 +19,7 @@ http://www.javad.com/downloads/javadgnss/manuals/GREIS/GREIS_Reference_Guide.pdf
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <assert.h>
 #include <math.h>
@@ -29,10 +29,10 @@ http://www.javad.com/downloads/javadgnss/manuals/GREIS/GREIS_Reference_Guide.pdf
 #include <string.h>
 #include <sys/select.h>
 
-#include "include/bits.h"
-#include "include/driver_greis.h"
-#include "include/gpsd.h"
-#include "include/timespec.h"
+#include "../include/bits.h"
+#include "../include/driver_greis.h"
+#include "../include/gpsd.h"
+#include "../include/timespec.h"
 
 #if defined(GREIS_ENABLE) && defined(BINARY_ENABLE)
 

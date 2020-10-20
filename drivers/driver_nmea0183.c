@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <ctype.h>       /* for isdigit() */
 #include <float.h>       /* for FLT_EVAL_METHOD */
@@ -15,11 +15,11 @@
 #include <stdarg.h>
 #include <time.h>
 
-#include "include/gpsd.h"
-#include "include/strfuncs.h"
+#include "../include/gpsd.h"
+#include "../include/strfuncs.h"
 
 #ifdef NMEA0183_ENABLE
-#include "include/timespec.h"
+#include "../include/timespec.h"
 /**************************************************************************
  *
  * Parser helpers begin here

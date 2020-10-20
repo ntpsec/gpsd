@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <stdbool.h>
 #include <stdio.h>
-#include "include/gpsd.h"
+#include "../include/gpsd.h"
 
 #if defined(ONCORE_ENABLE) && defined(BINARY_ENABLE)
-#include "include/bits.h"
-#include "include/timespec.h"
+#include "../include/bits.h"
+#include "../include/timespec.h"
 
 static char enableEa[] = { 'E', 'a', 1 };
 static char enableBb[] = { 'B', 'b', 1 };

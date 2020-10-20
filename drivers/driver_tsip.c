@@ -13,7 +13,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <math.h>
 #include <stdbool.h>
@@ -23,11 +23,11 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "include/compiler.h"   // for FALLTHROUGH
-#include "include/gpsd.h"
-#include "include/bits.h"
-#include "include/strfuncs.h"
-#include "include/timespec.h"
+#include "../include/compiler.h"   // for FALLTHROUGH
+#include "../include/gpsd.h"
+#include "../include/bits.h"
+#include "../include/strfuncs.h"
+#include "../include/timespec.h"
 
 #ifdef TSIP_ENABLE
 // RES SMT 360 has 32 max channels, use 64 for next gen

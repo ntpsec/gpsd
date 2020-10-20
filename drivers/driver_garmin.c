@@ -73,7 +73,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #ifdef GARMIN_ENABLE
 
@@ -89,9 +89,9 @@
 #include <libusb.h>
 #endif
 
-#include "include/gpsd.h"
-#include "include/bits.h"
-#include "include/timespec.h"
+#include "../include/gpsd.h"
+#include "../include/bits.h"
+#include "../include/timespec.h"
 
 #define GPSD_LE16TOH(x) getles16((char *)(&(x)), 0)
 #define GPSD_LE32TOH(x) getles32((char *)(&(x)), 0)
