@@ -312,15 +312,16 @@ void gpsd_set_speed(struct gps_device_t *session,
         rate = B57600;
     else if (speed < 230400)
         rate = B115200;
+#ifdef B460800
     else if (speed < 460800)
         rate = B230400;
-#ifdef B460800
     // not a valid POSIX speed
-    else if (speed == 460800)
+    else
         rate = B460800;
-#endif
+#else
     else
         rate = B230400;
+#endif
 
 
     /* backward-compatibility hack */
