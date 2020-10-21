@@ -1,29 +1,20 @@
 %global _hardened_build 1
-%global srcname gpsd
 
-%if 0%{?fedora} || 0%{?rhel} <= 7
-%global with_qt 1
-%else
-%global with_qt 0
-%endif
-
-Name: %{srcname}
+Name: gpsd
 Version: @VERSION@
-Release: 4%{?dist}
+Release: 0%{?dist}
 Summary: Service daemon for mediating access to a GPS
 
 License: BSD
 URL: @WEBSITE@
-Source0: @DOWNLOAD@%{name}-%{version}.tar.gz
+Source0: @DOWNLOAD@%{name}-%{version}.tar.xz
 
-BuildRequires: dbus-devel dbus-glib-devel ncurses-devel xmlto python3-devel
-BuildRequires: python3-scons  desktop-file-utils bluez-libs-devel /usr/bin/c++
-BuildRequires: pps-tools-devel systemd
-%if %{with_qt}
-BuildRequires: qt-devel
-%endif
+BuildRequires:  dbus-devel dbus-glib-devel ncurses-devel xmlto python3-devel
+BuildRequires:  python3-scons  desktop-file-utils bluez-libs-devel /usr/bin/c++
+BuildRequires:  pps-tools-devel systemd
+BuildRequires:  qt-devel
 %ifnarch s390 s390x
-BuildRequires: libusb1-devel
+BuildRequires:  libusb1-devel
 %endif
 
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
@@ -47,12 +38,12 @@ Summary: Client libraries in C for talking to a running gpsd or GPS
 This package contains the gpsd libraries that manage access
 to a GPS for applications.
 
-%package -n python3-%{srcname}
+%package -n python3-%{name}
 Summary: Python libraries and modules for use with gpsd
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
-%{?python_provide:%python_provide python3-%{srcname}}
+%{?python_provide:%python_provide python3-%{name}}
 
-%description -n python3-%{srcname}
+%description -n python3-%{name}
 This package contains the python3 modules that manage access to a GPS for
 applications, and commonly useful python applications for use with gpsd.
 
@@ -64,7 +55,6 @@ Requires: %{name}-libs%{?_isa} = %{version}-%{release}
 This package provides C header files for the gpsd shared libraries that
 manage access to a GPS for applications
 
-%if %{with_qt}
 %package qt
 Summary: C++/Qt5 bindings for the gpsd library
 Requires: %{name}-libs%{?_isa} = %{version}-%{release}
@@ -81,13 +71,12 @@ Requires: %{name}-qt%{?_isa} = %{version}-%{release}
 %description qt-devel
 This package provides the development files for the C++ and Qt bindings for use
 with the libgps library from gpsd.
-%endif
 
 %package clients
 Summary: Clients for gpsd
-Requires: python3-%{srcname} = %{version}-%{release}
+Requires: python3-%{name} = %{version}-%{release}
 Requires: python3-pyserial
-Requires: %{srcname}-libs%{?_isa} = %{version}-%{release}
+Requires: %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description clients
 xgps is a simple test client for gpsd with an X interface. It displays
@@ -108,9 +97,6 @@ different gps devices.
 
 %prep
 %setup -q
-
-# fix paths in systemd unit files
-sed -i 's|@PREFIX@/sbin|%{_sbindir}|' systemd/*.service
 
 # set gpsd revision string to include package revision
 sed -i 's|^revision=.*REVISION.*$|revision='\'\
@@ -133,11 +119,7 @@ export LINKFLAGS="%{__global_ldflags}"
 scons \
 	dbus_export=yes \
 	systemd=yes \
-	%if %{with_qt}
 	libQgpsmm=yes \
-	%else
-	libQgpsmm=no \
-	%endif
 	debug=yes \
 	leapfetch=no \
 	prefix=%{_prefix} \
@@ -154,7 +136,7 @@ scons \
 	udevdir=$(dirname %{_udevrulesdir}) \
 	target_python=python3 \
 	python_libdir=%{python3_sitearch} \
-	build
+	build packaging
 
 
 %install
@@ -179,20 +161,8 @@ desktop-file-install \
     --dir %{buildroot}%{_datadir}/applications \
     packaging/X11/xgpsspeed.desktop
 
-# Install logo icon for .desktop files
-%{__install} -d -m 0755 %{buildroot}%{_datadir}/gpsd
-%{__install} -p -m 0644 packaging/X11/gpsd-logo.png %{buildroot}%{_datadir}/gpsd/gpsd-logo.png
-
 # Missed in scons install
 %{__install} -p -m 0755 gpsinit %{buildroot}%{_sbindir}
-
-# If qt build was disabled, clean up the files that may have been installed
-# anyway
-%if !%{with_qt}
-%{__rm} -f %{buildroot}%{_libdir}/libQgpsmm* \
-    %{buildroot}%{_libdir}/pkgconfig/Qgpsmm* \
-    %{buildroot}%{_mandir}/man3/libQgpsmm.3*
-%endif
 
 %post
 %systemd_post gpsd.service gpsd.socket
@@ -206,17 +176,15 @@ desktop-file-install \
 
 %ldconfig_scriptlets libs
 
-%if %{with_qt}
 %ldconfig_scriptlets qt
-%endif
 
 %files
 %doc INSTALL.adoc
-%doc @SHAREPATH@/doc/AUTHORS
-%doc @SHAREPATH@/doc/COPYING
-%doc @SHAREPATH@/doc/NEWS
-%doc @SHAREPATH@/doc/README.adoc
-%doc @SHAREPATH@/doc/build.adoc
+%doc /usr/share/gpsd/doc/AUTHORS
+%doc /usr/share/gpsd/doc/COPYING
+%doc /usr/share/gpsd/doc/NEWS
+%doc /usr/share/gpsd/doc/README.adoc
+%doc /usr/share/gpsd/doc/build.adoc
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
 %{_sbindir}/gpsd
 %{_sbindir}/gpsdctl
@@ -241,7 +209,7 @@ desktop-file-install \
 %{_libdir}/libgps.so.27*
 %{_libdir}/libgpsdpacket.so*
 
-%files -n python3-%{srcname}
+%files -n python3-%{name}
 %{_bindir}/gpsprof
 %{_mandir}/man1/gpsprof.1*
 %{python3_sitearch}/gps*
@@ -259,21 +227,20 @@ desktop-file-install \
 %{_mandir}/man5/gpsd_json.5*
 %{_mandir}/man5/srec.5*
 
-%if %{with_qt}
 %files qt
+%{_libdir}/libQgpsmm.so*
 
 %files qt-devel
-%{_libdir}/libQgpsmm.so*
 %{_libdir}/libQgpsmm.prl
 %{_libdir}/pkgconfig/Qgpsmm.pc
 %{_mandir}/man3/libQgpsmm.3*
-%endif
 
 %files clients
 %{_bindir}/cgps
 %{_bindir}/gegps
 %{_bindir}/gps2udp
 %{_bindir}/gpscat
+%{_bindir}/gpscsv
 %{_bindir}/gpsdecode
 %{_bindir}/gpspipe
 %{_bindir}/gpsrinex
@@ -296,6 +263,7 @@ desktop-file-install \
 %{_mandir}/man1/xgpsspeed.1*
 %{_mandir}/man1/cgps.1*
 %{_mandir}/man1/gpscat.1*
+%{_mandir}/man1/gpscsv.1*
 %{_mandir}/man1/gpsfake.1*
 %{_mandir}/man1/ubxtool.1*
 %{_mandir}/man1/zerk.1*
@@ -307,7 +275,7 @@ desktop-file-install \
 
 
 %changelog
-* Sun Feb 16 2020 James Browning <jamesb.fe80@gmail.com> - 3.20.1
+* Thu Aug 06 2020 James Browning <jamesb.fe80@gmail.com> - 3.21-0
 - Rebuilt for upstream inclusion
 
 * Thu Oct 03 2019 Miro Hrončok <mhroncok@redhat.com> - 3.19-4

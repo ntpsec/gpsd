@@ -289,45 +289,28 @@ pages:
     - public
   <<: *should_build_pages
 
-dist-1:
-  image: alpine
-  stage: build
-  script:
-  - apk update && apk add python3-dev scons xmlto asciidoctor bzip2 xz git linux-headers build-base tar
-  - scons dist
-  artifacts:
-    paths:
-    - gpsd-*.tar.gz
-    - packaging/rpm/gpsd.spec
-    expire_in: 2 weeks
-  only:
-    - schedules
-    - tags
-    - web
-
-dist-1f:
-  image: fedora:latest
+dist-1f33:
+  image: fedora:33
   stage: advanced_build
   script:
   - dnf install -y gcc-c++ python3-devel scons xmlto asciidoctor bzip2 xz git dnf-plugins-core
   - scons dist
   - dnf builddep -y packaging/rpm/gpsd.spec
-  - dnf install -y chrpath fedora-packager rpmdevtools createrepo_c
-  - echo dnf install -y bluez-libs-devel dbus-devel desktop-file-utils gcc-c++ ncurses-devel python2-devel python3-devel python3-cairo python3-gobject qt-devel scons xmlto pps-tools-devel python3-pyserial gtk3-devel cairo
+  - dnf install -y chrpath fedora-packager rpmdevtools
   - rpmdev-setuptree
-  - cp gpsd-*.tar.gz ~/rpmbuild/SOURCES/
+  - cp gpsd-*.tar.* ~/rpmbuild/SOURCES/
   - rpmbuild -ba packaging/rpm/gpsd.spec
-  - mkdir -pv .pages .public/repos/Fedora/`lsb_release -sr`/gpsd/x86_64/RPMS
-  - mv -v /root/rpmbuild/RPMS/x86_64/*.rpm .public/repos/Fedora/`lsb_release -sr`/gpsd/x86_64/RPMS
-  - createrepo_c -v --deltas --retain-old-md 1 .public/repos/Fedora/`lsb_release -sr`/gpsd/x86_64/RPMS
-  - ls -laR gpsd-* .public/repos/Fedora/`lsb_release -sr`/gpsd/x86_64
+  - dnf install -y createrepo_c
+  - mkdir -pv .pages .public/repos/Fedora/33/gpsd/x86_64/RPMS
+  - mv -v /root/rpmbuild/RPMS/x86_64/*.rpm .public/repos/Fedora/33/gpsd/x86_64/RPMS
+  - createrepo_c -v --deltas --retain-old-md 1 .public/repos/Fedora/33/gpsd/x86_64/RPMS
   artifacts:
     paths:
-    - .repos/Fedora/`lsb_release -sr`/py3/x86_64/RPMS
-    - gpsd-*.tar.gz
+    - .public/repos/Fedora/33/gpsd/x86_64/RPMS/
+    - gpsd-*.tar.*
     - packaging/rpm/gpsd.spec
     expire_in: 2 weeks
   only:
-    - schedules
-    - tags
-    - web
+  - schedules
+  - tags
+  - web
