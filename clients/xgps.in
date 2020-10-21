@@ -74,9 +74,7 @@ if gps.__version__ != gps_version:
 
 # MAXCHANNELS, from gps.h, currently 120
 MAXCHANNELS = 120
-# MAXCHANDISP, max channels to display
-# Use our own MAXCHANDISP value, due to the tradeoff between max sats and
-# the window size.  Ideally, this should be dynamic.
+# MAXCHANDISP, default max channels to display
 MAXCHANDISP = 28
 
 # how to sort the Satellite List
@@ -304,7 +302,7 @@ class SkyView(Gtk.DrawingArea):
         else:
             # diamond
             self.cr.move_to(x, y + radius + 1)   # top
-            self.cr.line_to(x + radius - 1 , y)  # right
+            self.cr.line_to(x + radius - 1, y)  # right
             self.cr.line_to(x, y - radius - 1)   # bottom
             self.cr.line_to(x - radius + 1, y)   # left
             self.cr.close_path()
@@ -964,7 +962,7 @@ frame * {
             view.append_column(column)
 
         self.row_iters = []
-        for i in range(MAXCHANDISP):
+        for i in range(options.maxchandisp):
             self.satlist.append(["", "", "", "", "", "", ""])
             self.row_iters.append(self.satlist.get_iter(i))
 
@@ -1070,8 +1068,8 @@ frame * {
         try:
             self.satlist.set_value(self.row_iters[row], column, str(value))
         except IndexError:
-            sys.stderr.write("xgps: channel = %d, MAXCHANDISP = %d\n"
-                             % (row, MAXCHANDISP))
+            sys.stderr.write("xgps: channel = %d, maxchandisp = %d\n"
+                             % (row, options.maxchandisp))
 
     def delete_event(self, _widget, _event, _data=None):
         "Say goodbye nicely"
@@ -1351,7 +1349,7 @@ frame * {
                 else:
                     yesno = '   ' + yesno
 
-                if i >= MAXCHANDISP:
+                if i >= options.maxchandisp:
                     # more than can be displaced
                     continue
 
@@ -1377,12 +1375,12 @@ frame * {
                 self.set_satlist_field(i, 6, yesno)
 
             # clear rest of the list
-            for i in range(data.satellites_seen, MAXCHANDISP):
+            for i in range(data.satellites_seen, options.maxchandisp):
                 for j in range(0, 7):
                     self.set_satlist_field(i, j, "")
         else:
             # clear all of the list
-            for i in range(0, MAXCHANDISP):
+            for i in range(0, options.maxchandisp):
                 for j in range(0, 7):
                     self.set_satlist_field(i, j, "")
             satellites = ()
@@ -1548,6 +1546,15 @@ if __name__ == "__main__":
         type=float,
         help='Rotation of skyview ("up" direction) in degrees. '
              ' [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '-s',
+        '--sats',
+        dest='maxchandisp',
+        default=MAXCHANDISP,
+        type=int,
+        help=('Set number of sats to display in sat window. '
+              '[Default %(default)s)]'),
     )
     parser.add_argument(
         '-u, --units',
