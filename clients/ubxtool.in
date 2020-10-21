@@ -350,8 +350,8 @@ gps_model = gps.ubx.ubx()
 if 'UBXOPTS' in os.environ:
     # grab the UBXOPTS environment variable for options
     opts['timestamp'] = 0
-    opts['progopts'] = os.environ['UBXOPTS']
-    options = opts['progopts'].split(' ') + sys.argv[1:]
+    # grab the UBXOPTS environment variable to be handled as prepended options
+    options = os.environ['UBXOPTS'].split(' ') + sys.argv[1:]
 else:
     options = sys.argv[1:]
 
