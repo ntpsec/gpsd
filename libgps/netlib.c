@@ -54,7 +54,8 @@ socket_t netlib_connectsock(int af, const char *host, const char *service,
 {
     struct protoent *ppe;
     struct addrinfo hints;
-    struct addrinfo *result, *rp;
+    struct addrinfo *result = NULL;
+    struct addrinfo *rp;
     int ret, type, proto, one = 1;
     socket_t s;
     bool bind_me;
@@ -79,6 +80,8 @@ socket_t netlib_connectsock(int af, const char *host, const char *service,
     if (bind_me)
         hints.ai_flags = AI_PASSIVE;
     if ((ret = getaddrinfo(host, service, &hints, &result))) {
+        // result is unchanged on error, so we need to have set it to NULL
+        // freeaddrinfo() checks for NULL, the NULL we provided.
         freeaddrinfo(result);
         // quick check to see if the problem was host or service
         if ((ret = getaddrinfo(NULL, service, &hints, &result))) {
