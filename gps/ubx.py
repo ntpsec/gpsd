@@ -218,13 +218,13 @@ def index_s(index, descs, nf="Unk"):
     return s
 
 
-def timestamp():
-    """ print current time as a timestamp"""
+def timestamp(timestamp_opts):
+    """ print current time as a timestamp - UNIX epoch for timestamp_opts==1, UTC when timestamp_opts==2"""
 
     now = time.time()
-    if 1 == opts['timestamp']:
+    if 1 == timestamp_opts:
         print("%.4f" % now)
-    elif 2 == opts['timestamp']:
+    elif 2 == timestamp_opts:
         print("%.4f %s" % (now, time.asctime(time.gmtime(now))))
 
 class ubx(object):
@@ -6288,11 +6288,11 @@ High Precision GNSS products only."""
                     if gps.polystr('{"class":"ERROR"') in comment:
                         # always print gpsd errors
                         if 0 < self.timestamp:
-                            timestamp()
+                            timestamp(self.timestamp)
                         print(comment)
                     elif gps.VERB_DECODE <= self.verbosity:
                         if 0 < self.timestamp:
-                            timestamp()
+                            timestamp(self.timestamp)
                         print(comment)
                     return consumed
 
@@ -6307,7 +6307,7 @@ High Precision GNSS products only."""
                     # terminates messages on <CR> or <LF>
                     if gps.VERB_DECODE <= self.verbosity:
                         if 0 < self.timestamp:
-                            timestamp()
+                            timestamp(self.timestamp)
                         print(comment)
                     return consumed
 
@@ -6401,7 +6401,7 @@ High Precision GNSS products only."""
             if 'CSUM2' == state:
                 # got a complete, maybe valid, message
                 if 0 < self.timestamp:
-                    timestamp()
+                    timestamp(self.timestamp)
 
                 # ck_b
                 state = 'BASE'
