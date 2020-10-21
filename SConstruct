@@ -176,6 +176,9 @@ generated_sources = [
     'libQgpsmm.prl',
     'packaging/rpm/gpsd.spec',
     'Qgpsmm.pc',
+    'systemd/gpsd.service',
+    'systemd/gpsd.socket',
+    'systemd/gpsdctl@.service',
    ]
 
 generated_www = [
@@ -2329,7 +2332,7 @@ for manpage in all_manpages:
 # doc to install
 docinstall = []
 for doc in doc_files:
-    dest_doc = os.path.join(installdir('sharedir'), "doc",
+    dest_doc = os.path.join(installdir('docdir'),
                             os.path.basename(doc))
     docinstall.append(env.InstallAs(source=doc, target=dest_doc))
 
