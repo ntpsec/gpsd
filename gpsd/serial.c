@@ -729,8 +729,6 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
     static unsigned int rates[] =
         {0, 4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800};
 
-    char new_parity;   // E, N, O
-    unsigned int new_stop;
 
     /* don't waste time in the hunt loop if this is not actually a tty */
     if (0 == isatty(session->gpsdata.gps_fd))
@@ -741,6 +739,9 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
         return false;
 
     if (session->lexer.retry_counter++ >= SNIFF_RETRIES) {
+        char new_parity;   // E, N, O
+        unsigned int new_stop;
+
         if (0 < session->context->fixed_port_speed) {
             //  fixed speed, don't hunt
             //  this prevents framing hunt?
