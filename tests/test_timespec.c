@@ -716,7 +716,6 @@ struct test_parse_uri_dest_t tests_parse_uri_dest[] = {
 static int test_parse_uri_dest(int verbose)
 {
     int fail_count = 0;
-    int result;
     char *host, *service, *device;
     struct test_parse_uri_dest_t *p = tests_parse_uri_dest;
     char uri[40];
@@ -724,6 +723,8 @@ static int test_parse_uri_dest(int verbose)
     printf("\n\nTest parse_uri_dest()\n");
 
     while(NULL != p->uri) {
+        int result;
+
         // parse_uri_dest() is destructive, so make a copy
         strlcpy(uri, p->uri, sizeof(uri));
 
