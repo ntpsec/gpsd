@@ -196,7 +196,36 @@ in the packages available from distributions.
 For special instructions related to using GPSD for time service, see the
 GPSD Time Service HOWTO in the distribution or on the web.
 
-== Special Notes for OS X Installation
+== Apple Desktop
+
+=== Special Notes for macOS X Installation
+
+gpsd will build, install and run on macOs. Install the Xcode application
+from the Apple store. Then install Homebrew (https://brew.sh/) to get
+all the stuff you need, like git, scons, python, etc.
+
+As a normal user, install homebrew, then install scons and asciidoctor.
+Installing scons pulls in python3. Brew will become root as needed, so
+starting asd a normal user is just security theater.
+
+--------------------------------------------------------------
+$ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+$ brew install scons asciidoctor
+--------------------------------------------------------------
+
+Now you need to become root. Make a place for the gpsd source to live,
+use git to install it there, then go there.  Build gpsd with "scons",
+then install it with "scons install"
+
+--------------------------------------------------------------
+# mkdir -p /usr/local/src/GPS
+# cd /usr/local/src/GPS
+# git clone https://gitlab.com/gpsd/gpsd.git
+# cd gpsd
+# scons && scons install
+--------------------------------------------------------------
+
+=== Special Notes for OS X Installation
 
 gpsd will build, install and run on OS X (osX).  The easiest way to
 do so is to first install the MacPorts package.  Follow their install
@@ -703,7 +732,7 @@ Use the yum command to install git if you
 want to access the development source.
 
 --------------------------------------------------------------
-# yum group install "Development Tools" 
+# yum group install "Development Tools"
 # yum install git
 # yum install \
    https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
