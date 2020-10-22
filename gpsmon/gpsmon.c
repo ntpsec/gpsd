@@ -1176,7 +1176,7 @@ int main(int argc, char **argv)
     bool nmea = false;
     fd_set all_fds;
     fd_set rfds;
-    volatile int maxfd = 0;
+    volatile socket_t maxfd = 0;
     char inbuf[80];
     volatile bool nocurses = false;
     int activated = -1;
