@@ -190,9 +190,8 @@ class gpsjson(object):
     def __init__(self):
         """Init gpsjson"""
         self.data = None
-        self.data.satellites = None
-        self.enqueued = None
         self.stream_command = None
+        self.enqueued = None
         self.verbose = -1
 
     def __iter__(self):
