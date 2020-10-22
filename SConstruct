@@ -1987,7 +1987,6 @@ else:
     # python misc helpers and stuff
     python_misc = [
         "gpscap.py",
-        "gpssim.py",
         "libgps/jsongen.py",
         "maskaudit.py",
         "tests/test_clienthelpers.py",
