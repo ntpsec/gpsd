@@ -1704,7 +1704,7 @@ packet_ffi_extension = [
     "gpsd/crc24q.c",
     "drivers/driver_greis_checksum.c",
     "drivers/driver_rtcm2.c",
-    "gpspacket.c",
+    "libgps/gpspacket.c",
     "gpsd/isgps.c",
     "libgps/hex.c",
     "libgps/os_compat.c",
@@ -2404,7 +2404,7 @@ Utility("xmllint", glob.glob("man/*.xml"),
 # Use deheader to remove headers not required.  If the statistics line
 # ends with other than '0 removed' there's work to be done.
 Utility("deheader", generated_sources, [
-    'deheader -x cpp -x contrib -x gpspacket.c '
+    'deheader -x cpp -x contrib -x libgps/gpspacket.c '
     '-x monitor_proto.c -i include/gpsd_config.h -i include/gpsd.h '
     '-m "MORECFLAGS=\'-Werror -Wfatal-errors -DDEBUG \' '
     + scons_executable_name + ' -Q"',
