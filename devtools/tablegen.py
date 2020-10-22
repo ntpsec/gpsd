@@ -340,16 +340,16 @@ def make_json_dumper(wfp):
         """Missing docstring"""
         return [x[i] for x in tuples[startspan:e+1]]
 
-    base = " " * 8
+    lbase = " " * 8
     step = " " * 4
     inarray = None
     header = "(void)snprintf(buf + strlen(buf), buflen - strlen(buf),"
     for (i, (var, uf, uv, sf, sv)) in enumerate(tuples):
         if uf is not None:
-            print(base + "for (i = 0; i < %s.%s; i++) {" % (structname, sv),
+            print(lbase + "for (i = 0; i < %s.%s; i++) {" % (structname, sv),
                   file=wfp)
             inarray = var
-            base = " " * 12
+            lbase = " " * 12
             startspan = i+1
             continue
         # At end of tuples, or if scaled flag changes, or if next op is array,
@@ -364,48 +364,48 @@ def make_json_dumper(wfp):
             endit = None
         if endit:
             if not scaled(i):
-                print(base + header, file=wfp)
+                print(lbase + header, file=wfp)
                 if inarray:
                     prefix = '{"'
                 else:
                     prefix = '"'
-                print(base + step + prefix + ','.join(tslice(i, 1)) + endit,
+                print(lbase + step + prefix + ','.join(tslice(i, 1)) + endit,
                       file=wfp)
                 for (j, t) in enumerate(tuples[startspan:i+1]):
                     if inarray:
                         ref = structname + "." + inarray + "[i]." + t[0]
                     else:
                         ref = structname + "." + t[0]
-                    wfp.write(base + step + t[2] % ref)
+                    wfp.write(lbase + step + t[2] % ref)
                     if j == i - startspan:
                         wfp.write(");\n")
                     else:
                         wfp.write(",\n")
             else:
-                print(base + "if (scaled)", file=wfp)
-                print(base + step + header, file=wfp)
-                print(base + step * 2 + '"' + ','.join(tslice(i, 3)) + endit,
+                print(lbase + "if (scaled)", file=wfp)
+                print(lbase + step + header, file=wfp)
+                print(lbase + step * 2 + '"' + ','.join(tslice(i, 3)) + endit,
                       file=wfp)
                 for (j, t) in enumerate(tuples[startspan:i+1]):
                     if inarray:
                         ref = structname + "." + inarray + "[i]." + t[0]
                     else:
                         ref = structname + "." + t[0]
-                    wfp.write(base + step*2 + t[4] % ref)
+                    wfp.write(lbase + step*2 + t[4] % ref)
                     if j == i - startspan:
                         wfp.write(");\n")
                     else:
                         wfp.write(",\n")
-                print(base + "else", file=wfp)
-                print(base + step + header, file=wfp)
-                print(base + step * 2 + '"' + ','.join(tslice(i, 1)) + endit,
+                print(lbase + "else", file=wfp)
+                print(lbase + step + header, file=wfp)
+                print(lbase + step * 2 + '"' + ','.join(tslice(i, 1)) + endit,
                       file=wfp)
                 for (j, t) in enumerate(tuples[startspan:i+1]):
                     if inarray:
                         ref = structname + "." + inarray + "[i]." + t[0]
                     else:
                         ref = structname + "." + t[0]
-                    wfp.write(base + step*2 + t[2] % ref)
+                    wfp.write(lbase + step*2 + t[2] % ref)
                     if j == i - startspan:
                         wfp.write(");\n")
                     else:
@@ -413,11 +413,11 @@ def make_json_dumper(wfp):
             startspan = i+1
     # If we were looking at a trailing array, close scope
     if inarray:
-        base = " " * 8
-        print(base + "}", file=wfp)
-        print(base + "if (buf[strlen(buf)-1] == ',')", file=wfp)
-        print(base + step + r"buf[strlen(buf)-1] = '\0';", file=wfp)
-        print(base + "(void)strlcat(buf, \"]}\", buflen - strlen(buf));",
+        lbase = " " * 8
+        print(lbase + "}", file=wfp)
+        print(lbase + "if (buf[strlen(buf)-1] == ',')", file=wfp)
+        print(lbase + step + r"buf[strlen(buf)-1] = '\0';", file=wfp)
+        print(lbase + "(void)strlcat(buf, \"]}\", buflen - strlen(buf));",
               file=wfp)
 
 
@@ -513,6 +513,7 @@ def make_json_generator(wfp):
 
 if __name__ == '__main__':
     try:
+        # FIXME: Convert to argparse
         (options, arguments) = getopt.getopt(sys.argv[1:], "a:tc:s:d:S:E:r:o:")
     except getopt.GetoptError as msg:
         print("tablecheck.py: " + str(msg))
