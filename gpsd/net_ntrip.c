@@ -479,7 +479,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
     char *port = NULL;
     char *stream = NULL;
     char *url = NULL;
-    int ret = -1;
+    socket_t ret = -1;
 
     switch (device->ntrip.conn_state) {
     case ntrip_conn_init:
