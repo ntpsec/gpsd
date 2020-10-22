@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <errno.h>
 #include <libgen.h>
@@ -18,9 +18,9 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "include/ntpshm.h"
-#include "include/compiler.h"
-#include "include/timespec.h"
+#include "../include/ntpshm.h"
+#include "../include/compiler.h"
+#include "../include/timespec.h"
 
 #define LEAP_NOWARNING  0x0     /* normal, no leap second warning */
 

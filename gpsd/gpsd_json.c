@@ -14,7 +14,7 @@ PERMISSIONS
 
 ***************************************************************************/
 
-#include "include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <assert.h>
 #include <ctype.h>
@@ -23,13 +23,13 @@ PERMISSIONS
 #include <stdlib.h>       // for qsort()
 #include <string.h>       /* for strcat(), strlcpy() */
 
-#include "include/gpsd.h"
-#include "include/bits.h"
-#include "include/strfuncs.h"
+#include "../include/gpsd.h"
+#include "../include/bits.h"
+#include "../include/strfuncs.h"
 
 #ifdef SOCKET_EXPORT_ENABLE
-#include "include/gps_json.h"
-#include "include/timespec.h"
+#include "../include/gps_json.h"
+#include "../include/timespec.h"
 
 /* *INDENT-OFF* */
 #define JSON_BOOL(x)    ((x)?"true":"false")

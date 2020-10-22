@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <math.h>
 #include <stdio.h>
@@ -11,8 +11,8 @@
 #include <string.h>
 #include <time.h>
 
-#include "include/gpsd.h"
-#include "include/strfuncs.h"
+#include "../include/gpsd.h"
+#include "../include/strfuncs.h"
 
 /*
  * Support for generic binary drivers.  These functions dump NMEA for passing

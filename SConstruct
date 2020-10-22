@@ -1657,8 +1657,8 @@ if env['libgpsmm']:
 
 # gpsd server library
 libgpsd_sources = [
-    "bsd_base64.c",
-    "crc24q.c",
+    "gpsd/bsd_base64.c",
+    "gpsd/crc24q.c",
     "drivers/driver_ais.c",
     "drivers/driver_evermore.c",
     "drivers/driver_garmin.c",
@@ -1680,36 +1680,36 @@ libgpsd_sources = [
     "drivers/driver_tsip.c",
     "drivers/driver_ubx.c",
     "drivers/driver_zodiac.c",
-    "geoid.c",
-    "gpsd_json.c",
-    "isgps.c",
-    "libgpsd_core.c",
-    "matrix.c",
-    "net_dgpsip.c",
-    "net_gnss_dispatch.c",
-    "net_ntrip.c",
-    "ntpshmread.c",
-    "ntpshmwrite.c",
-    "packet.c",
-    "ppsthread.c",
-    "pseudoais.c",
-    "pseudonmea.c",
-    "serial.c",
-    "subframe.c",
-    "timebase.c",
+    "gpsd/geoid.c",
+    "gpsd/gpsd_json.c",
+    "gpsd/isgps.c",
+    "gpsd/libgpsd_core.c",
+    "gpsd/matrix.c",
+    "gpsd/net_dgpsip.c",
+    "gpsd/net_gnss_dispatch.c",
+    "gpsd/net_ntrip.c",
+    "gpsd/ntpshmread.c",
+    "gpsd/ntpshmwrite.c",
+    "gpsd/packet.c",
+    "gpsd/ppsthread.c",
+    "gpsd/pseudoais.c",
+    "gpsd/pseudonmea.c",
+    "gpsd/serial.c",
+    "gpsd/subframe.c",
+    "gpsd/timebase.c",
 ]
 
 # Build ffi binding
 #
 packet_ffi_extension = [
-    "crc24q.c",
+    "gpsd/crc24q.c",
     "drivers/driver_greis_checksum.c",
     "drivers/driver_rtcm2.c",
     "gpspacket.c",
-    "isgps.c",
+    "gpsd/isgps.c",
     "libgps/hex.c",
     "libgps/os_compat.c",
-    "packet.c",
+    "gpsd/packet.c",
     ]
 
 
@@ -1819,7 +1819,7 @@ gpsd_sources = [
 ]
 
 if env['systemd']:
-    gpsd_sources.append("sd_socket.c")
+    gpsd_sources.append("gpsd/sd_socket.c")
 
 gpsmon_sources = [
     'gpsmon/gpsmon.c',
@@ -3017,7 +3017,7 @@ misc_sources = ['clients/cgps.c',
                 'clients/gpsdecode.c',
                 'clients/gpspipe.c',
                 'clients/gpxlogger.c',
-                'cliens/ntpshmmon.c',
+                'clients/ntpshmmon.c',
                 'clients/ppscheck.c',
                 'gpsctl.c',
                 ]

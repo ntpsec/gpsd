@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <ctype.h>              /* for isdigit() */
 #include <dirent.h>             /* for DIR */
@@ -30,8 +30,8 @@
 #include <bluetooth/rfcomm.h>
 #endif /* ENABLE_BLUEZ */
 
-#include "include/compiler.h"   // for FALLTHROUGH
-#include "include/gpsd.h"
+#include "../include/compiler.h"   // for FALLTHROUGH
+#include "../include/gpsd.h"
 
 /* Workaround for HP-UX 11.23, which is missing CRTSCTS */
 #ifndef CRTSCTS

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <errno.h>
 #include <string.h>
@@ -13,8 +13,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "include/gpsd.h"
-#include "include/strfuncs.h"
+#include "../include/gpsd.h"
+#include "../include/strfuncs.h"
 
 #define NETGNSS_DGPSIP  "dgpsip://"
 #define NETGNSS_NTRIP   "ntrip://"

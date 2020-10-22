@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <limits.h>
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "include/sd_socket.h"
+#include "../include/sd_socket.h"
 
 int sd_get_socket_count(void) {
     unsigned long n;
