@@ -53,25 +53,25 @@ class SourceExtractor(object):
                      fields[2].startswith("INTERNAL_SET"))):
                     self.primitive_masks.append((fields[1], fields[2]))
 
-    def in_library(self, flag):
+    def in_library(self, flg):
         """grep in library"""
         (status, _output) = getstatusoutput(
             "grep '%s' libgps/libgps_core.c libgps/libgps_json.c gpsctl.c" %
-            flag)
+            flg)
         return status == 0
 
-    def in_daemon(self, flag):
+    def in_daemon(self, flg):
         """grep in daemon"""
         (status, _output) = getstatusoutput(
-            "grep '%s' %s" % (flag, " ".join(self.daemonfiles)))
+            "grep '%s' %s" % (flg, " ".join(self.daemonfiles)))
         return status == 0
 
-    def relevant(self, flag):
+    def relevant(self, flg):
         """Relevant??"""
         if self.clientside:
-            return self.in_library(flag)
+            return self.in_library(flg)
 
-        return self.in_daemon(flag)
+        return self.in_daemon(flg)
 
 
 if __name__ == '__main__':
