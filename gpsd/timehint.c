@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <errno.h>
 #include <libgen.h>
@@ -22,10 +22,10 @@
 #include <time.h>        /* for timespec */
 #include <unistd.h>
 
-#include "include/timespec.h"
-#include "include/gpsd.h"
+#include "../include/timespec.h"
+#include "../include/gpsd.h"
 
-#include "include/ntpshm.h"
+#include "../include/ntpshm.h"
 
 /* Note: you can start gpsd as non-root, and have it work with ntpd.
  * However, it will then only use the ntpshm segments 2 3, and higher.

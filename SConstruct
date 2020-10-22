@@ -75,6 +75,7 @@ SConsignFile(os.getcwd() + os.path.sep + sconsign_file)
 # Start by reading configuration variables from the cache
 opts = Variables('.scons-option-cache')
 
+
 # ugly hack from http://www.catb.org/esr/faqs/practical-python-porting/
 # handle python2/3 strings
 def polystr(o):
@@ -1811,10 +1812,10 @@ gpsdflags = usbflags + bluezflags + gpsflags
 # Source groups
 
 gpsd_sources = [
-    'dbusexport.c',
-    'gpsd.c',
-    'shmexport.c',
-    'timehint.c'
+    'gpsd/dbusexport.c',
+    'gpsd/gpsd.c',
+    'gpsd/shmexport.c',
+    'gpsd/timehint.c'
 ]
 
 if env['systemd']:
@@ -1854,7 +1855,7 @@ env.Depends('gps/packet.py', packet_ffi_shared)
 
 # Production programs
 
-gpsd = env.Program('gpsd', gpsd_sources,
+gpsd = env.Program('gpsd/gpsd', gpsd_sources,
                    LIBS=['gpsd', 'gps_static'],
                    parse_flags=gpsdflags + gpsflags)
 gpsdecode = env.Program('clients/gpsdecode', ['clients/gpsdecode.c'],
@@ -2929,7 +2930,8 @@ Utility('udev-uninstall', '', [
     'rm -f %s/rules.d/25-gpsd.rules' % env['udevdir'],
 ])
 
-Utility('udev-test', '', ['$SRCDIR/gpsd -N -n -F /var/run/gpsd.sock -D 5', ])
+Utility('udev-test', '',
+        ['$SRCDIR/gpsd/gpsd -N -n -F /var/run/gpsd.sock -D 5', ])
 
 # Cleanup
 
@@ -3028,7 +3030,7 @@ env.Command('TAGS', sources, ['etags ' + " ".join(sources)])
 # We need to be in the actual project repo (i.e. not doing a -Y build)
 # for these productions to work.
 
-if os.path.exists("gpsd.c") and os.path.exists(".gitignore"):
+if os.path.exists("gpsd/gpsd.c") and os.path.exists(".gitignore"):
     distfiles = _getoutput(r"git ls-files | grep -v '^www/'").split()
     # for some reason distfiles is now a mix of byte strings and char strings
     distfiles = [polystr(d) for d in distfiles]

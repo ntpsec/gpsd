@@ -6,6 +6,8 @@
   Added client/gpssubframe to decode gpsd SUBFRAME JSON.
   Added nSat and uSat to SKY JSON.  Old clients can not read new SKY.
   Move stuff from source root into clients/, include/, gpsmon/ and libgps/.
+  Move stuff from source root into gpsd/.
+  Move class ubx out of ubxtool and into gps/ubx.py.
 
 3.21: 2020-08-04
   Create python programs from .in files to allow macro substitution.

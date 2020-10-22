@@ -6,7 +6,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <arpa/inet.h>    /* for htons() and friends */
 #include <assert.h>
@@ -44,13 +44,13 @@
 #include <netinet/in.h>
 #endif /* INADDR_ANY */
 
-#include "include/gpsd.h"
-#include "include/gps_json.h"         /* needs gpsd.h */
-#include "include/sockaddr.h"
-#include "include/strfuncs.h"
+#include "../include/gpsd.h"
+#include "../include/gps_json.h"         /* needs gpsd.h */
+#include "../include/sockaddr.h"
+#include "../include/strfuncs.h"
 
 #if defined(SYSTEMD_ENABLE)
-#include "include/sd_socket.h"
+#include "../include/sd_socket.h"
 #endif
 
 /*

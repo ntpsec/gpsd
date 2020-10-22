@@ -15,7 +15,7 @@ PERMISSIONS
 
 ***************************************************************************/
 
-#include "include/gpsd_config.h"
+#include "../include/gpsd_config.h"
 
 #ifdef SHM_EXPORT_ENABLE
 
@@ -27,8 +27,8 @@ PERMISSIONS
 #include <sys/shm.h>
 #include <sys/time.h>
 
-#include "include/gpsd.h"
-#include "include/libgps.h" /* for SHM_PSEUDO_FD */
+#include "../include/gpsd.h"
+#include "../include/libgps.h" /* for SHM_PSEUDO_FD */
 
 
 bool shm_acquire(struct gps_context_t *context)
