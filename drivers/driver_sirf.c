@@ -610,7 +610,6 @@ static gps_mask_t sirf_msg_67_1(struct gps_device_t *session,
     uint32_t sv_list_5;
     uint32_t additional_info;
     int debug_base = LOG_PROG;
-    char ts_buf[TIMESPEC_LEN];
 
     if (len < 126)
         return 0;
@@ -753,6 +752,8 @@ static gps_mask_t sirf_msg_67_1(struct gps_device_t *session,
 
     /* skip all the debug pushing and popping, unless needed */
     if (session->context->errout.debug >= debug_base) {
+        char ts_buf[TIMESPEC_LEN];
+
         /* coerce time_t to long to placate older OS, like 32-bit FreeBSD,
          * where time_t is int */
         GPSD_LOG(debug_base, &session->context->errout,
@@ -1231,7 +1232,7 @@ static gps_mask_t sirf_msg_tcxo(struct gps_device_t *session,
             /* coerce time_t to long to placate older OS, like 32-bit FreeBSD,
              * where time_t is int */
             (void)snprintf(output, sizeof(output),
-                           ", GPS Week %d, tow %u, time %lld, time_status %d "
+                           ", GPS Week %u, tow %u, time %lld, time_status %d "
                            "ClockOffset %d, Temp %.1f",
                            gps_week, gps_tow, (long long)now.tv_sec,
                            time_status,
