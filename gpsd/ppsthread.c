@@ -85,9 +85,10 @@
 #include <sys/timepps.h>
 #endif
 
+#include "../include/gpsd.h"    // for socket_t
 #include "../include/timespec.h"
-#include "../include/ppsthread.h"
 #include "../include/os_compat.h"
+#include "../include/ppsthread.h"
 
 /*
  * Tell GCC that we want thread-safe behavior with _REENTRANT;
