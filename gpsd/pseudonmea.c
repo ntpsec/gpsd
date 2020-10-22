@@ -115,11 +115,12 @@ void gpsd_position_fix_dump(struct gps_device_t *session,
     char time_str[TIMESTR_SZ];
     char lat_str[BUF_SZ];
     char lon_str[BUF_SZ];
-    unsigned char fixquality;
 
     utc_to_hhmmss(session->gpsdata.fix.time, time_str, sizeof(time_str), &tm);
 
     if (session->gpsdata.fix.mode > MODE_NO_FIX) {
+        unsigned char fixquality;
+
         switch(session->gpsdata.fix.status) {
         case STATUS_NO_FIX:
             fixquality = FIX_QUALITY_INVALID;
