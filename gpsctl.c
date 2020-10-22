@@ -697,7 +697,7 @@ int main(int argc, char **argv)
          * and find out what is actually there.
          */
         if (!(forcetype != NULL && echo)) {
-            int maxfd = 0;
+            socket_t maxfd = 0;
             int activated = -1;
 
             if (device == NULL) {
