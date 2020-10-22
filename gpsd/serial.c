@@ -724,10 +724,10 @@ ssize_t gpsd_serial_write(struct gps_device_t * session,
 /* advance to the next hunt setting  */
 bool gpsd_next_hunt_setting(struct gps_device_t * session)
 {
-    /* every rate we're likely to see on an old GPS */
-    // FIXME add new rates
+    // every rate we're likely to see on an GNSS receiver
+    // u-blox 9 can do 921600
     static unsigned int rates[] =
-        {0, 4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800};
+        {0, 4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600};
 
 
     /* don't waste time in the hunt loop if this is not actually a tty */
