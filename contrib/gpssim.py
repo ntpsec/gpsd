@@ -113,15 +113,20 @@ class gpssim(object):
             for (prn, _satellite) in list(self.ephemeris.items()):
                 self.skyview[prn] = (random.randint(-60, +61),
                                      random.randint(0, 359))
-        self.have_ephemeris = False
+        self.alt = gps.NaN
         self.channels = {}
-        self.outfmt = outfmt
-        self.status = gps.STATUS_NO_FIX
-        self.mode = gps.MODE_NO_FIX
-        self.validity = "V"
-        self.satellites_used = 0
         self.filename = None
+        self.have_ephemeris = False
+        self.lat = gps.NaN
         self.lineno = 0
+        self.lon = gps.NaN
+        self.mode = gps.MODE_NO_FIX
+        self.outfmt = outfmt
+        self.output = None
+        self.satellites_used = 0
+        self.skyview = None
+        self.status = gps.STATUS_NO_FIX
+        self.validity = "V"
 
     def parse_tdl(self, line):
         "Interpret one TDL directive."
