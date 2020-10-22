@@ -763,8 +763,6 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
         (void)strlcpy(scr, " (mag, var):    ", sizeof(scr));
     }
     if (gpsdata->fix.mode >= MODE_2D && isfinite(gpsdata->fix.track) != 0) {
-        char buf1[20], buf2[20];
-
         if (!magnetic_flag || isfinite(gpsdata->fix.magnetic_track) == 0) {
             (void)snprintf(buf1, sizeof(buf1), "%5.1f,",
                            gpsdata->fix.track);
