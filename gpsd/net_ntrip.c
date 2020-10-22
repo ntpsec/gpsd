@@ -181,7 +181,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
     bool match = false;
     char buf[BUFSIZ];
     size_t blen = sizeof(buf);
-    int fd = device->gpsdata.gps_fd;
+    socket_t fd = device->gpsdata.gps_fd;
 
     for (;;) {
         char *eol;
@@ -387,8 +387,8 @@ static int ntrip_auth_encode(const struct ntrip_stream_t *stream,
 
 /* *INDENT-ON* */
 
-static int ntrip_stream_get_req(const struct ntrip_stream_t *stream,
-                                const struct gpsd_errout_t *errout)
+static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
+                                     const struct gpsd_errout_t *errout)
 {
     int dsock;
     char buf[BUFSIZ];
