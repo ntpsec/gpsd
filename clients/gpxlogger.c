@@ -224,7 +224,10 @@ static void usage(void)
          "  -m MINMOVE\n"
          "  -r\n"
          "  -V                  Show version and exit\n",
-         progname, export_default()->name,
+         progname,
+#ifdef HAVE_GETOPT_LONG
+         export_default()->name,
+#endif
          export_default()->name);
     exit(EXIT_FAILURE);
 }
