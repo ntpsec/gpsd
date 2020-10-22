@@ -996,15 +996,6 @@ int initialize_dbus_connection (void);
 void send_dbus_fix (struct gps_device_t* channel);
 #endif /* defined(DBUS_EXPORT_ENABLE) */
 
-/* srecord.c */
-extern void hexdump(size_t, unsigned char *, unsigned char *);
-extern unsigned char sr_sum(unsigned int, unsigned int, unsigned char *);
-extern int bin2srec(unsigned int, unsigned int, unsigned int,
-                    unsigned char *, unsigned char *);
-extern int srec_hdr(unsigned int, unsigned char *, unsigned char *);
-extern int srec_fin(unsigned int, unsigned char *);
-extern unsigned char hc(unsigned char);
-
 /* a BSD transplant */
 int b64_ntop(unsigned char const *src, size_t srclength, char *target,
     size_t targsize);

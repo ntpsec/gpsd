@@ -236,7 +236,6 @@ all_manpages = {
     "man/libQgpsmm.3": "man/libgpsmm.xml",
     "man/ntpshmmon.1": "man/ntpshmmon.xml",
     "man/ppscheck.8": "man/ppscheck.xml",
-    "man/srec.5": "man/srec.xml",
     "man/ubxtool.1": "man/ubxtool.xml",
     "man/xgps.1": "man/xgps.xml",
     "man/xgpsspeed.1": "man/xgps.xml",
@@ -2796,7 +2795,6 @@ htmlpages = Split('''
     www/performance/performance.html
     www/ppscheck.html
     www/replacing-nmea.html
-    www/srec.html
     www/ubxtool.html
     www/writing-a-driver.html
     www/zerk.html

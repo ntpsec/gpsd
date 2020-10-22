@@ -225,7 +225,6 @@ desktop-file-install \
 %{_mandir}/man3/libgps.3*
 %{_mandir}/man3/libgpsmm.3*
 %{_mandir}/man5/gpsd_json.5*
-%{_mandir}/man5/srec.5*
 
 %files qt
 %{_libdir}/libQgpsmm.so*
