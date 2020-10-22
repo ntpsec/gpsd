@@ -1,7 +1,13 @@
 #!/usr/bin/env python
+# This code run compatibly under Python 2 and 3.x for x >= 2.
+# Preserve this property!
+#
+# This file is Copyright 2019 by the GPSD project
+# SPDX-License-Identifier: BSD-2-Clause
 
-"""Simple program to exact 5x5 magnetic variations in WMM2015
-from MagneticField for use in geoid.c"""
+"""Simple program to extract WMM2015 data for use in geoid.c
+
+Extract 5x5 magnetic variations in WMM2015 from MagneticField."""
 
 import sys
 import subprocess
