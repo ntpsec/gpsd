@@ -131,15 +131,15 @@ class PythonExecutable(object):
 
     def CleanLib(self, name):
         """Clean up given package from this Python."""
-        dir = os.path.join(self.GetLibdir(), name)
-        if not name or not os.path.exists(dir):
+        libdir = os.path.join(self.GetLibdir(), name)
+        if not name or not os.path.exists(libdir):
             return
         try:
-            os.rmdir(dir)
+            os.rmdir(libdir)
         except OSError:
-            print('Unable to remove %s' % dir)
+            print('Unable to remove %s' % libdir)
         else:
-            print('Removed empty %s' % dir)
+            print('Removed empty %s' % libdir)
 
     @classmethod
     def CleanAllLibs(cls, name):
