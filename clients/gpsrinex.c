@@ -311,7 +311,6 @@ static void print_rinex_header(void)
     struct tm *first_time;
     struct tm *last_time;
     struct tm tm_buf;            // temp buffer for gmtime_r()
-    int cnt;                     /* number of obs for one sat */
     int prn_count[GNSSID_CNT] = {0};   /* count of PRN per gnssid */
 
     if (DEBUG_PROG <= debug) {
@@ -404,7 +403,7 @@ static void print_rinex_header(void)
 
     /* get all the PRN / # OF OBS */
     for (i = 0; i < MAXCNT; i++) {
-        cnt = 0;
+        int cnt = 0;                     /* number of obs for one sat */
 
         if (0 == obs_cnt[i].svid) {
             /* done */
@@ -602,7 +601,8 @@ static void print_rinex_footer(void)
         size_t count;
 
         count = fread(buffer, 1, sizeof(buffer), tmp_file);
-        if (0 >= count ) {
+        if (0 == count ) {
+            // nothing read, or read error
             break;
         }
         (void)fwrite(buffer, 1, count, log_file);
