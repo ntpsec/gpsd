@@ -18,7 +18,7 @@
 
 #include "../include/gpsd.h"
 
-int dgpsip_open(struct gps_device_t *device, const char *dgpsserver)
+socket_t dgpsip_open(struct gps_device_t *device, const char *dgpsserver)
 /* open a connection to a DGPSIP server */
 {
     char *colon, *dgpsport = "rtcm-sc104";

@@ -19,7 +19,7 @@
 
 <tbody>
 <row>
-  <entry><function>int dgpsip_open(struct gps_context_t *context, const char *dgpsserver)</function></entry>
+  <entry><function>socket_t dgpsip_open(struct gps_context_t *context, const char *dgpsserver)</function></entry>
   <entry><para>Tries to open a connection to a dgpsip server. Returns
   either -1 on failure or the socket number on success. On success, it
   initializes the connection, sends a <quote>HELO</quote> to the

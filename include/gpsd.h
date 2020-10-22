@@ -893,7 +893,7 @@ extern void netgnss_report(struct gps_context_t *,
                          struct gps_device_t *);
 extern void netgnss_autoconnect(struct gps_context_t *, double, double);
 
-extern int dgpsip_open(struct gps_device_t *, const char *);
+extern socket_t dgpsip_open(struct gps_device_t *, const char *);
 extern void dgpsip_report(struct gps_context_t *,
                          struct gps_device_t *,
                          struct gps_device_t *);
