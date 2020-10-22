@@ -116,11 +116,11 @@ def main(starting_number_of_options=0):
     for i in range(starting_number_of_options, len(knobs)):
         print('Testing at length {}'.format(i))
 
-        for row in itertools.combinations(knobs, i):
-            print(row)
-            params = static_params + [key + '=on' for key in row]
+        for thisrow in itertools.combinations(knobs, i):
+            print(thisrow)
+            params = static_params + [key + '=on' for key in thisrow]
 
-            # print {'on_params': row, 'scons_params': params}
+            # print {'on_params': thisrow, 'scons_params': params}
 
             # Clean before clearing cached options, in case options
             # affect what's cleaned.
