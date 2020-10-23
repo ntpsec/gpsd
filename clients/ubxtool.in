@@ -33,13 +33,10 @@ usage: ubxtool [OPTIONS] [host[:port[:device]]]
 from __future__ import absolute_import, print_function, division
 
 import argparse      # to parse CLI options
-import binascii      # for binascii.hexlify()
 from functools import reduce  # pylint: disable=redefined-builtin
 import operator      # for or_
 import os            # for os.environ
 import re            # for regular expressions
-import socket        # for socket.error
-import stat          # for stat.S_ISBLK()
 import string        # for string.printable
 import struct        # for pack()
 import sys
@@ -47,10 +44,6 @@ import time
 
 PROG_NAME = 'ubxtool'
 
-try:
-    import serial
-except ImportError:
-    serial = None  # Defer complaining until we know we need it.
 
 try:
     import gps
@@ -93,265 +86,15 @@ except TypeError:
 # u-blox F9T, firmware 2 is protver 29
 # u-blox F9N, firmware 4 is protver 32
 
-
-class gps_io(object):
-    """All the GPS I/O in one place"
-
-    Three types of GPS I/O
-    1. read only from a file
-    2. read/write through a device
-    3. read only from a gpsd instance
-    """
-
-    out = b''
-    ser = None
-    input_is_device = False
-
-    def __init__(self):
-        """Initialize class"""
-
-        Serial = serial
-        Serial_v3 = Serial and Serial.VERSION.split('.')[0] >= '3'
-        # buffer to hold read data
-        self.out = b''
-
-        # open the input: device, file, or gpsd
-        if opts['input_file_name']:
-            # check if input file is a file or device
-            try:
-                mode = os.stat(opts['input_file_name']).st_mode
-            except OSError:
-                sys.stderr.write('%s: failed to open input file %s\n' %
-                                 (PROG_NAME, opts['input_file_name']))
-                sys.exit(1)
-
-            if stat.S_ISCHR(mode):
-                # character device, need not be read only
-                self.input_is_device = True
-
-            # FIXME: test broken
-            if opts['disable'] or opts['enable'] or opts['poll']:
-                # check that we can write
-                if opts['read_only']:
-                    sys.stderr.write('%s: read-only mode, '
-                                     'can not send commands\n' % PROG_NAME)
-                    sys.exit(1)
-                if self.input_is_device is False:
-                    sys.stderr.write('%s: input is plain file, '
-                                     'can not send commands\n' % PROG_NAME)
-                    sys.exit(1)
-
-        else:
-            # try to open local/remote gpsd daemon
-            try:
-                self.ser = gps.gpscommon(host=opts['gpsd_host'],
-                                         port=opts['gpsd_port'],
-                                         verbose=0)
-
-                # alias self.ser.write() to self.write_gpsd()
-                self.ser.write = self.write_gpsd
-
-                # ask for raw, not rare, data
-                data_out = b'?WATCH={'
-                if opts['gpsd_device'] is not None:
-                    # add in the requested device
-                    data_out += (b'"device":"' +
-                                 gps.polybytes(opts['gpsd_device']) +
-                                 b'",')
-                data_out += b'"enable":true,"raw":2}\r\n'
-                if gps.VERB_RAW <= opts['verbosity']:
-                    print("sent: ", data_out)
-                self.ser.send(data_out)
-            except socket.error as err:
-                sys.stderr.write('%s: failed to connect to gpsd %s\n' %
-                                 (PROG_NAME, err))
-                sys.exit(1)
-            return
-
-        if self.input_is_device:
-            # configure the serial connections (the parameters refer to
-            # the device you are connecting to)
-
-            # pyserial Ver 3.0+ changes writeTimeout to write_timeout
-            # Using the wrong one causes an error
-            write_timeout_arg = ('write_timeout'
-                                 if Serial_v3 else 'writeTimeout')
-            try:
-                self.ser = Serial.Serial(
-                    baudrate=opts['input_speed'],
-                    # 8N1 is UBX default
-                    bytesize=Serial.EIGHTBITS,
-                    parity=Serial.PARITY_NONE,
-                    port=opts['input_file_name'],
-                    stopbits=Serial.STOPBITS_ONE,
-                    # read timeout
-                    timeout=0.05,
-                    **{write_timeout_arg: 0.5}
-                )
-            except AttributeError:
-                sys.stderr.write('%s: failed to import pyserial\n' % PROG_NAME)
-                sys.exit(2)
-            except Serial.serialutil.SerialException:
-                # this exception happens on bad serial port device name
-                sys.stderr.write('%s: failed to open serial port "%s"\n'
-                                 '%s: Your computer has the serial ports:\n' %
-                                 (PROG_NAME, opts['input_file_name'],
-                                  PROG_NAME))
-
-                # print out list of supported ports
-                import serial.tools.list_ports as List_Ports
-                ports = List_Ports.comports()
-                for port in ports:
-                    sys.stderr.write("    %s: %s\n" %
-                                     (port.device, port.description))
-                sys.exit(1)
-
-            # flush input buffer, discarding all its contents
-            # pyserial 3.0+ deprecates flushInput() in favor of
-            # reset_input_buffer(), but flushInput() is still present.
-            self.ser.flushInput()
-
-        elif opts['input_file_name']:
-            # Read from a plain file of UBX messages
-            try:
-                self.ser = open(opts['input_file_name'], 'rb')
-            except IOError:
-                sys.stderr.write('%s: failed to open input %s\n' %
-                                 (PROG_NAME, opts['input_file_name']))
-                sys.exit(1)
-
-    def read(self, read_opts):
-        """Read from device, until timeout or expected message"""
-
-        # are we expecting a certain message?
-        if gps_model.expect_statement_identifier:
-            # assume failure, until we see expected message
-            ret_code = 1
-        else:
-            # not expecting anything, so OK if we did not see it.
-            ret_code = 0
-
-        try:
-            if read_opts['gpsd_host']:
-                # gpsd input
-                start = gps.monotonic()
-                while read_opts['input_wait'] > (gps.monotonic() - start):
-                    # First priority is to be sure the input buffer is read.
-                    # This is to prevent input buffer overuns
-                    if 0 < self.ser.waiting():
-                        # We have serial input waiting, get it
-                        # No timeout possible
-                        # RTCM3 JSON can be over 4.4k long, so go big
-                        new_out = self.ser.sock.recv(8192)
-                        if raw is not None:
-                            # save to raw file
-                            raw.write(gps.polybytes(new_out))
-                        self.out += new_out
-
-                    consumed = gps_model.decode_msg(self.out)
-                    self.out = self.out[consumed:]
-                    if ((gps_model.expect_statement_identifier and
-                         (gps_model.expect_statement_identifier ==
-                          gps_model.last_statement_identifier))):
-                        # Got what we were waiting for.  Done?
-                        ret_code = 0
-                        if not read_opts['input_forced_wait']:
-                            # Done
-                            break
-
-            elif self.input_is_device:
-                # input is a serial device
-                start = gps.monotonic()
-                while read_opts['input_wait'] > (gps.monotonic() - start):
-                    # First priority is to be sure the input buffer is read.
-                    # This is to prevent input buffer overuns
-                    # pyserial 3.0+ deprecates inWaiting() in favor of
-                    # in_waiting, but inWaiting() is still present.
-                    if 0 < self.ser.inWaiting():
-                        # We have serial input waiting, get it
-                        # 1024 is comfortably large, almost always the
-                        # Read timeout is what causes ser.read() to return
-                        new_out = self.ser.read(1024)
-                        if raw is not None:
-                            # save to raw file
-                            raw.write(gps.polybytes(new_out))
-                        self.out += new_out
-
-                    consumed = gps_model.decode_msg(self.out)
-                    self.out = self.out[consumed:]
-                    if ((gps_model.expect_statement_identifier and
-                         (gps_model.expect_statement_identifier ==
-                          gps_model.last_statement_identifier))):
-                        # Got what we were waiting for.  Done?
-                        ret_code = 0
-                        if not read_opts['input_forced_wait']:
-                            # Done
-                            break
-            else:
-                # ordinary file, so all read at once
-                self.out += self.ser.read()
-                if raw is not None:
-                    # save to raw file
-                    raw.write(gps.polybytes(self.out))
-
-                while True:
-                    consumed = gps_model.decode_msg(self.out)
-                    self.out = self.out[consumed:]
-                    if 0 >= consumed:
-                        break
-
-        except IOError:
-            # This happens on a good device name, but gpsd already running.
-            # or if USB device unplugged
-            sys.stderr.write('%s: failed to read %s\n'
-                             '%s: Is gpsd already holding the port?\n'
-                             % (PROG_NAME, read_opts['input_file_name'],
-                                PROG_NAME))
-            return 1
-
-        if 0 < ret_code:
-            # did not see the message we were expecting to see
-            sys.stderr.write('%s: waited %0.2f seconds for, '
-                             'but did not get: %%%s%%\n'
-                             % (PROG_NAME, read_opts['input_wait'],
-                                gps_model.expect_statement_identifier))
-        return ret_code
-
-    def write_gpsd(self, data):
-        """write data to gpsd daemon"""
-
-        # HEXDATA_MAX = 512, from gps.h, The max hex digits can write.
-        # Input data is binary, converting to hex doubles its size.
-        # Limit binary data to length 255, so hex data length less than 510.
-        if 255 < len(data):
-            sys.stderr.write('%s: trying to send %d bytes, max is 255\n'
-                             % (PROG_NAME, len(data)))
-            return 1
-
-        if opts['gpsd_device'] is not None:
-            # add in the requested device
-            data_out = (b'?DEVICE={"path":"' +
-                        gps.polybytes(opts['gpsd_device']) + b'",')
-        else:
-            data_out = b'?DEVICE={'
-
-        # Convert binary data to hex and build the message.
-        data_out += b'"hexdata":"' + binascii.hexlify(data) + b'"}\r\n'
-        if gps.VERB_RAW <= opts['verbosity']:
-            print("sent: ", data_out)
-        self.ser.send(data_out)
-        return 0
-
-
 # instantiate the GPS class
 gps_model = gps.ubx.ubx()
-
 
 if 'UBXOPTS' in os.environ:
     # grab the UBXOPTS environment variable for options
     opts['timestamp'] = 0
     # grab the UBXOPTS environment variable to be handled as prepended options
     options = os.environ['UBXOPTS'].split(' ') + sys.argv[1:]
+
 else:
     options = sys.argv[1:]
 
@@ -631,8 +374,17 @@ try:
                              (PROG_NAME, opts['raw_file']))
             sys.exit(1)
 
+    # Check if there is a conflict
+
     # create the I/O instance
-    io_handle = gps_io()
+    io_handle = gps.gps_io(
+        opts['input_file_name'],
+        opts['read_only'],
+        opts['gpsd_host'],
+        opts['gpsd_port'],
+        opts['gpsd_device'],
+        write_requested=(opts['disable'] or opts['enable'] or opts['poll'])
+        )
     gps_model.io_handle = io_handle
 
     sys.stdout.flush()
@@ -786,7 +538,8 @@ try:
                 sys.exit(1)
         gps_model.send_cfg_valset(nvs)
 
-    exit_code = io_handle.read(opts)
+    exit_code = io_handle.read(gps_model.decode_msg,  # decode function
+                               opts['input_wait'])    # raw input
 
     if ((gps.VERB_RAW <= opts['verbosity']) and io_handle.out):
         # dump raw left overs

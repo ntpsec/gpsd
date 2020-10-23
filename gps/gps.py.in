@@ -20,10 +20,22 @@ now live in a different module.
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
 from __future__ import absolute_import, print_function, division
+import os            # for file handling in gps_io
+import sys           # to get script name for nice error/warning messages
+import stat          # for stat.S_ISBLK()
+import socket        # for socket.error
+import binascii      # for binascii.hexlify()
 
+from .misc import monotonic, polybytes
 from .client import *
 from .watch_options import *
 
+
+# Sometimes used in gps_io if a serial device is specified
+try:
+    import serial
+except ImportError:
+    serial = None  # Defer complaining until we know we need it.
 
 NaN = float('nan')
 
@@ -143,6 +155,303 @@ class gpsfix(object):
         self.velN = NaN
         self.velE = NaN
         self.velD = NaN
+
+
+class gps_io(object):
+    """All the GPS I/O in one place"
+
+    Three types of GPS I/O
+    1. read only from a file
+    2. read/write through a device
+    3. read only from a gpsd instance
+    """
+
+    out = b''
+    ser = None
+    input_is_device = False
+
+    def __init__(self, input_file_name=None, read_only=False,
+                 gpsd_host='localhost', gpsd_port=2947,
+                 gpsd_device=None,
+                 input_speed=9600,
+                 verbosity_level=0,
+                 write_requested=True):
+        """Initialize class
+
+    Arguments:
+      input_file_name: Name of a device/file to open - None if connection to
+                       gpsd via network
+      read_only: request a read only access (will be set automagically when
+                 a file is used for input)
+      gpsd_host: hostname of host running the gpsd
+      gpsd_port: port of [hostname] running the gpsd
+      gpsd_device: Specify a dedicated device for the gpsd - None for auto
+      input_speed: If input_file_name is a (serial) device this specifies
+                   the speed in baud
+      verbosity_level: Specify the verbosity level (0..5)
+      write_requested: Set to true if a write operation shall be executed
+                       (used for internal sanity checking)
+"""
+
+        # Used as an indicator in read if a device, file or network connection
+        # is used
+        self.gpsd_host = gpsd_host
+        # required by write for packet construction
+        self.gpsd_device = gpsd_device
+        # used in read to print meaningfull error
+        self.input_file_name = input_file_name
+        self.verbosity_level = verbosity_level
+        self.prog_name = os.path.basename(sys.argv[0])
+        Serial = serial
+        Serial_v3 = Serial and Serial.VERSION.split('.')[0] >= '3'
+        # buffer to hold read data
+        self.out = b''
+
+        # open the input: device, file, or gpsd
+        if input_file_name is not None:
+            # check if input file is a file or device
+            try:
+                mode = os.stat(input_file_name).st_mode
+            except OSError:
+                sys.stderr.write('%s: failed to open input file %s\n' %
+                                 (self.prog_name, input_file_name))
+                sys.exit(1)
+
+            if stat.S_ISCHR(mode):
+                # character device, need not be read only
+                self.input_is_device = True
+
+            # FIXME: test broken
+            if write_requested:
+                # check for inconsistend arguments
+                if read_only:
+                    sys.stderr.write('%s: read-only mode, '
+                                     'can not send commands\n' %
+                                     self.prog_name)
+                    sys.exit(1)
+                # check if a file instead of device was specified
+                if self.input_is_device is False:
+                    sys.stderr.write('%s: input is plain file, '
+                                     'can not send commands\n' %
+                                     self.prog_name)
+                    sys.exit(1)
+
+        else:
+            # try to open local/remote gpsd daemon
+            try:
+                self.ser = gpscommon(host=gpsd_host,
+                                     port=gpsd_port,
+                                     verbose=0)
+
+                # alias self.ser.write() to self.write_gpsd()
+                self.ser.write = self.write_gpsd
+
+                # ask for raw, not rare, data
+                data_out = b'?WATCH={'
+                if gpsd_device is not None:
+                    # add in the requested device
+                    data_out += (b'"device":"' +
+                                 polybytes(gpsd_device) +
+                                 b'",')
+                data_out += b'"enable":true,"raw":2}\r\n'
+                if VERB_RAW <= verbosity_level:
+                    print("sent: ", data_out)
+                self.ser.send(data_out)
+            except socket.error as err:
+                sys.stderr.write('%s: failed to connect to gpsd %s\n' %
+                                 (self.prog_name, err))
+                sys.exit(1)
+            return
+
+        if self.input_is_device:
+            # configure the serial connections (the parameters refer to
+            # the device you are connecting to)
+
+            # pyserial Ver 3.0+ changes writeTimeout to write_timeout
+            # Using the wrong one causes an error
+            write_timeout_arg = ('write_timeout'
+                                 if Serial_v3 else 'writeTimeout')
+            try:
+                self.ser = Serial.Serial(
+                    baudrate=input_speed,
+                    # 8N1 is UBX default
+                    bytesize=Serial.EIGHTBITS,
+                    parity=Serial.PARITY_NONE,
+                    port=input_file_name,
+                    stopbits=Serial.STOPBITS_ONE,
+                    # read timeout
+                    timeout=0.05,
+                    **{write_timeout_arg: 0.5}
+                )
+            except AttributeError:
+                sys.stderr.write('%s: failed to import pyserial\n' %
+                                 self.prog_name)
+                sys.exit(2)
+            except Serial.serialutil.SerialException:
+                # this exception happens on bad serial port device name
+                sys.stderr.write('%s: failed to open serial port "%s"\n'
+                                 '%s: Your computer has the serial ports:\n' %
+                                 (self.prog_name, input_file_name,
+                                  self.prog_name))
+
+                # print out list of supported ports
+                import serial.tools.list_ports as List_Ports
+                ports = List_Ports.comports()
+                for port in ports:
+                    sys.stderr.write("    %s: %s\n" %
+                                     (port.device, port.description))
+                sys.exit(1)
+
+            # flush input buffer, discarding all its contents
+            # pyserial 3.0+ deprecates flushInput() in favor of
+            # reset_input_buffer(), but flushInput() is still present.
+            self.ser.flushInput()
+
+        elif input_file_name is not None:
+            # Read from a plain file of UBX messages
+            try:
+                self.ser = open(input_file_name, 'rb')
+            except IOError:
+                sys.stderr.write('%s: failed to open input %s\n' %
+                                 (self.prog_name, input_file_name))
+                sys.exit(1)
+
+    def read(self, decode_func,
+             input_wait=2.0, expect_statement_identifier=None,
+             raw_fd=None):
+        """Read from device, until timeout or expected message
+
+        Arguments:
+           decode_func: callable function that accepts the raw data which
+                        converts it to a human readable format
+           expect_statement_identifier: return only the specified package or
+                                        1 if timeout. None (default) if no
+                                        filtering is requested
+           input_wait: read timeout in seconds. Default: 2 seconds
+           raw: file descriptor like object (has to support the .write method)
+                to dump raw data. None if not used
+"""
+
+        # are we expecting a certain message?
+        if expect_statement_identifier:
+            # assume failure, until we see expected message
+            ret_code = 1
+        else:
+            # not expecting anything, so OK if we did not see it.
+            ret_code = 0
+
+        try:
+            if self.gpsd_host is not None:
+                # gpsd input
+                start = monotonic()
+                while input_wait > (monotonic() - start):
+                    # First priority is to be sure the input buffer is read.
+                    # This is to prevent input buffer overuns
+                    if 0 < self.ser.waiting():
+                        # We have serial input waiting, get it
+                        # No timeout possible
+                        # RTCM3 JSON can be over 4.4k long, so go big
+                        new_out = self.ser.sock.recv(8192)
+                        if raw_fd is not None:
+                            # save to raw file
+                            raw_fd.write(polybytes(new_out))
+                        self.out += new_out
+
+                    consumed = decode_func(self.out)
+                    # TODO: the decoder shall return a some current
+                    # statement_identifier # to fill last_statement_identifier
+                    last_statement_identifier = None
+                    #
+                    self.out = self.out[consumed:]
+                    if ((expect_statement_identifier and
+                         (expect_statement_identifier ==
+                          last_statement_identifier))):
+                        # Got what we were waiting for.  Done?
+                        ret_code = 0
+
+            elif self.input_is_device:
+                # input is a serial device
+                start = monotonic()
+                while input_wait > (monotonic() - start):
+                    # First priority is to be sure the input buffer is read.
+                    # This is to prevent input buffer overuns
+                    # pyserial 3.0+ deprecates inWaiting() in favor of
+                    # in_waiting, but inWaiting() is still present.
+                    if 0 < self.ser.inWaiting():
+                        # We have serial input waiting, get it
+                        # 1024 is comfortably large, almost always the
+                        # Read timeout is what causes ser.read() to return
+                        new_out = self.ser.read(1024)
+                        if raw_fd is not None:
+                            # save to raw file
+                            raw_fd.write(polybytes(new_out))
+                        self.out += new_out
+
+                    # TODO: Code duplicated from above - make it better
+                    consumed = decode_func(self.out)
+                    # TODO: the decoder shall return a some current
+                    # statement_identifier to fill last_statement_identifier
+                    last_statement_identifier = None
+                    #
+                    self.out = self.out[consumed:]
+                    if ((expect_statement_identifier and
+                         (expect_statement_identifier ==
+                          last_statement_identifier))):
+                        # Got what we were waiting for.  Done?
+                        ret_code = 0
+            else:
+                # ordinary file, so all read at once
+                self.out += self.ser.read()
+                if raw_fd is not None:
+                    # save to raw file
+                    raw_fd.write(polybytes(self.out))
+                while True:
+                    consumed = decode_func(self.out)
+                    self.out = self.out[consumed:]
+                    if 0 >= consumed:
+                        break
+
+        except IOError:
+            # This happens on a good device name, but gpsd already running.
+            # or if USB device unplugged
+            sys.stderr.write('%s: failed to read %s\n'
+                             '%s: Is gpsd already holding the port?\n'
+                             % (self.prog_name, self.input_file_name,
+                                self.prog_name))
+            return 1
+
+        if 0 < ret_code:
+            # did not see the message we were expecting to see
+            sys.stderr.write('%s: waited %0.2f seconds for, '
+                             'but did not get: %%%s%%\n'
+                             % (self.prog_name, input_wait,
+                                gps_model.expect_statement_identifier))
+        return ret_code
+
+    def write_gpsd(self, data):
+        """write data to gpsd daemon"""
+
+        # HEXDATA_MAX = 512, from gps.h, The max hex digits can write.
+        # Input data is binary, converting to hex doubles its size.
+        # Limit binary data to length 255, so hex data length less than 510.
+        if 255 < len(data):
+            sys.stderr.write('%s: trying to send %d bytes, max is 255\n'
+                             % (self.prog_name, len(data)))
+            return 1
+
+        if self.gpsd_device is not None:
+            # add in the requested device
+            data_out = (b'?DEVICE={"path":"' +
+                        polybytes(self.gpsd_device) + b'",')
+        else:
+            data_out = b'?DEVICE={'
+
+        # Convert binary data to hex and build the message.
+        data_out += b'"hexdata":"' + binascii.hexlify(data) + b'"}\r\n'
+        if VERB_RAW <= self.verbosity_level:
+            print("sent: ", data_out)
+        self.ser.send(data_out)
+        return 0
 
 
 class gpsdata(object):
