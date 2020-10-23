@@ -4,8 +4,8 @@
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
 
-"""
-Simple python script that will parse json dictionaries on its input,
+"""Simple python script that will parse json dictionaries on its input.
+
 If it fails, it will print the offending line and an error message.
 The goal is to check that GPSD outputs valid JSON.
 """
