@@ -1232,7 +1232,7 @@ static gps_mask_t sirf_msg_tcxo(struct gps_device_t *session,
             /* coerce time_t to long to placate older OS, like 32-bit FreeBSD,
              * where time_t is int */
             (void)snprintf(output, sizeof(output),
-                           ", GPS Week %u, tow %u, time %lld, time_status %d "
+                           ", GPS Week %u, tow %u, time %lld, time_status %u "
                            "ClockOffset %d, Temp %.1f",
                            gps_week, gps_tow, (long long)now.tv_sec,
                            time_status,
