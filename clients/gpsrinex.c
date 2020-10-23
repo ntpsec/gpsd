@@ -877,7 +877,7 @@ static void print_raw(struct gps_data_t *gpsdata)
         last_svid = gpsdata->raw.meas[i].svid;
         nsat++;
     }
-    if (0 >= nsat) {
+    if (0 == nsat) {
         /* nothing to do */
         return;
     }
