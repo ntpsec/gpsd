@@ -7,7 +7,8 @@
 
 """Simple program to extract WMM2015 data for use in geoid.c
 
-Extract 5x5 magnetic variations in WMM2015 from MagneticField."""
+Extract 5x5 magnetic variations in WMM2015 from MagneticField.
+"""
 
 import sys
 import subprocess
