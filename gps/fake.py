@@ -73,6 +73,9 @@ the run method in a subthread, with locking of critical regions.
 """
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
+
+# Codacy D203 and D211 conflict, I choose D203
+# Codacy D212 and D213 conflict, I choose D212
 from __future__ import absolute_import, print_function, division
 
 import os
@@ -131,25 +134,22 @@ def GetDelay(slow=False):
 
 
 class TestError(BaseException):
-
-    """Class TestError"""
+    """Class TestError."""
     def __init__(self, msg):
-        """Initialize Class TestError"""
+        """Initialize Class TestError."""
         super(TestError, self).__init__()
         self.msg = msg
 
 
 class TestLoadError(TestError):
-
-    """Class TestLoadError, empty"""
+    """Class TestLoadError, empty."""
 
 
 class TestLoad(object):
-
     """Digest a logfile into a list of sentences we can cycle through."""
 
     def __init__(self, logfp, predump=False, slow=False, oneshot=False):
-        """Initialize Class TestLoad"""
+        """Initialize Class TestLoad."""
         self.sentences = []  # This is the interesting part
         if isinstance(logfp, str):
             logfp = open(logfp, "rb")
@@ -239,15 +239,13 @@ class TestLoad(object):
 
 
 class PacketError(TestError):
-
-    """Class PacketError, empty"""
+    """Class PacketError, empty."""
 
 
 class FakeGPS(object):
-
-    """Class FakeGPS"""
+    """Class FakeGPS."""
     def __init__(self, testload, progress=lambda x: None):
-        """Initialize Class FakeGPS"""
+        """Initialize Class FakeGPS."""
         self.exhausted = 0
         self.go_predicate = lambda: True
         self.index = 0
@@ -276,13 +274,12 @@ class FakeGPS(object):
 
 
 class FakePTY(FakeGPS):
-
     """A FakePTY is a pty with a test log ready to be cycled to it."""
 
     def __init__(self, testload,
                  speed=4800, databits=8, parity='N', stopbits=1,
                  progress=lambda x: None):
-        """Initialize Class FakePTY"""
+        """Initialize Class FakePTY."""
         super(FakePTY, self).__init__(testload, progress)
         # Allow Serial: header to be overridden by explicit speed.
         if self.testload.serial:
@@ -391,12 +388,12 @@ def freeport(socktype=socket.SOCK_STREAM):
 
 
 class FakeTCP(FakeGPS):
-
     """A TCP serverlet with a test log ready to be cycled to it."""
 
     def __init__(self, testload,
                  host, port,
                  progress=lambda x: None):
+        """Init class FakeTCP."""
         super(FakeTCP, self).__init__(testload, progress)
         self.host = host
         self.dispatcher = cleansocket(self.host, int(port))
@@ -441,12 +438,12 @@ class FakeTCP(FakeGPS):
 
 
 class FakeUDP(FakeGPS):
-
     """A UDP broadcaster with a test log ready to be cycled to it."""
 
     def __init__(self, testload,
                  ipaddr, port,
                  progress=lambda x: None):
+        """Init FakeUDP."""
         super(FakeUDP, self).__init__(testload, progress)
         self.byname = "udp://" + ipaddr + ":" + str(port)
         self.ipaddr = ipaddr
@@ -469,16 +466,15 @@ class FakeUDP(FakeGPS):
 
 
 class SubprogramError(TestError):
-
-    """Class SubprogramError"""
+    """Class SubprogramError."""
     def __str__(self):
         """Return class SubprogramError msg."""
         return repr(self.msg)
 
 
 class SubprogramInstance(object):
-
     """Class for generic subprogram."""
+
     ERROR = SubprogramError
 
     def __init__(self):
@@ -548,13 +544,12 @@ class SubprogramInstance(object):
 
 
 class DaemonError(SubprogramError):
-
-    """Class DaemonError"""
+    """Class DaemonError."""
 
 
 class DaemonInstance(SubprogramInstance):
-
     """Control a gpsd instance."""
+
     ERROR = DaemonError
 
     def __init__(self, control_socket=None):
@@ -616,19 +611,18 @@ class DaemonInstance(SubprogramInstance):
 
 
 class TestSessionError(TestError):
+    """class TestSessionError."""
 
-    """class TestSessionError"""
     # why does testSessionError() do nothing? "
 
 
 class TestSession(object):
-
     """Manage a session including a daemon with fake GPSes and clients."""
 
     def __init__(self, prefix=None, port=None, options=None, verbose=0,
                  predump=False, udp=False, tcp=False, slow=False,
                  timeout=None):
-        "Initialize the test session by launching the daemon."
+        """Initialize the test session by launching the daemon."""
         self.prefix = prefix
         self.options = options
         self.verbose = verbose
@@ -657,7 +651,7 @@ class TestSession(object):
         self.timeout = TEST_TIMEOUT if timeout is None else timeout
 
     def spawn(self):
-        """Spawn daemon"""
+        """Spawn daemon."""
         for sig in (signal.SIGQUIT, signal.SIGINT, signal.SIGTERM):
             signal.signal(sig, lambda unused, dummy: self.cleanup())
         self.daemon.spawn(background=True, prefix=self.prefix, port=self.port,
@@ -858,7 +852,7 @@ class TestSession(object):
             client.enqueued = commands
 
     def start(self):
-        """Start thread"""
+        """Start thread."""
         self.threadlock = threading.Lock()
         threading.Thread(target=self.run)
 
