@@ -542,17 +542,19 @@ timespec_t iso8601_to_timespec(char *isotime)
      * This is a simplistic conversion for iso8601 strings only,
      * rather than embedding a full copy of strptime() that handles
      * all formats */
-    double sec;
     /* Thus avoiding needing to test for (broken) negative date/time
      * numbers in token reading - only need to check the upper range */
-    unsigned int tmp;
     bool failed = false;
     char *isotime_tokenizer = strdup(isotime);
     if (isotime_tokenizer) {
       char *tmpbuf;
       char *pch = strtok_r(isotime_tokenizer, "-T:", &tmpbuf);
       int token_number = 0;
+
       while (pch != NULL) {
+        double sec;
+        unsigned int tmp;
+
         token_number++;
         // Give up if encountered way too many tokens.
         if (token_number > 10) {
