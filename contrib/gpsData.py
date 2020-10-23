@@ -5,8 +5,10 @@
 
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
+# Codacy D203 and D211 conflict, I choose D203
+# Codacy D212 and D213 conflict, I choose D212
 
-"""gpsd data dump example"""
+"""gpsd data dump example."""
 
 from __future__ import absolute_import, print_function, division
 
@@ -24,8 +26,7 @@ class GpsPoller(threading.Thread):
     """Class to poll gpsd"""
 
     def __init__(self):
-        """Initializer for GpsPoller"""
-
+        """Initializer for GpsPoller."""
         threading.Thread.__init__(self)
         global gpsd                    # bring it in scope
         gpsd = gps.gps(mode=gps.WATCH_ENABLE)  # starting the stream of info
@@ -33,6 +34,7 @@ class GpsPoller(threading.Thread):
         self.running = True            # setting the thread running to true
 
     def run(self):
+        """Run."""
         global gpsd
         while gpsp.running:
             # this will continue to loop and grab EACH set of
