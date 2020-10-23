@@ -3,6 +3,9 @@
 #
 # This code run compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
+# Codacy D203 and D211 conflict, I choose D203
+# Codacy D212 and D213 conflict, I choose D212
+
 
 """gpsd client functions."""
 
@@ -45,8 +48,7 @@ class gpscommon(object):
             self.connect(self.host, self.port)
 
     def connect(self, host, port):
-        """
-        Connect to a host on a given port.
+        """Connect to a host on a given port.
 
         If the hostname ends with a colon (`:') followed by a number, and
         there is no port specified, that suffix will be stripped off and the
@@ -186,6 +188,7 @@ class json_error(BaseException):
 
 
 class gpsjson(object):
+
     """Basic JSON decoding."""
 
     def __init__(self):
@@ -253,7 +256,6 @@ class gpsjson(object):
     @staticmethod
     def generate_stream_command_new_style(flags=0, devpath=None):
         """Generate stream command, new style."""
-
         if (flags & (WATCH_JSON | WATCH_OLDSTYLE | WATCH_NMEA |
                      WATCH_RAW)) == 0:
             flags |= WATCH_JSON
