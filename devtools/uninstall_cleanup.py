@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 
+# Codacy D203 and D211 conflict, I choose D203
+# Codacy D212 and D213 conflict, I choose D212
+
+# This file is Copyright 2010 by the GPSD project
+# SPDX-License-Identifier: BSD-2-Clause
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
 
-"""Uninstall cleanup"""
+"""Uninstall cleanup."""
 
 from __future__ import absolute_import, print_function, division
 
@@ -41,6 +46,7 @@ def DoCommand(cmd_list):
 
 class PythonCommand(object):
     """Object for one system Python command."""
+
     PYTHON_GLOB = 'python*'
     TEXT_PREFIX = b'#!'
     PATH_ENV = 'PATH'
@@ -87,6 +93,7 @@ class PythonCommand(object):
 
 class PythonExecutable(object):
     """Object for one Python executable, deduped."""
+
     PYTHON_LIBDIR_COMMANDS = [
         'from distutils import sysconfig',
         'print(sysconfig.get_python_lib())',
@@ -150,7 +157,6 @@ class PythonExecutable(object):
 
 def main():
     """Main function."""
-
     commands = PythonCommand.FindAllPythons()
     PythonExecutable.GetAllExecutables(commands)
     PythonExecutable.CleanAllLibs(GPS_LIB_NAME)
@@ -158,4 +164,4 @@ def main():
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv))
+    sys.exit(main())
