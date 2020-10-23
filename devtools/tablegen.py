@@ -2,7 +2,8 @@
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
 
-"""
+"""Generate AIS code from text file.
+
 This tool is intended to automate away the drudgery in bring up support
 for a new AIS message type.  It parses the tabular description of a message
 and generates various useful code snippets from that.  It can also be used to
@@ -71,11 +72,10 @@ import sys
 
 def correct_table(wfp):
     """Writes the corrected table."""
-
     print("Total bits:", base, file=sys.stderr)
-    for (i, t) in enumerate(table):
-        if offsets[i].strip():
-            print("|" + offsets[i] + t[owidth+1:].rstrip(), file=wfp)
+    for (idx, t) in enumerate(table):
+        if offsets[idx].strip():
+            print("|" + offsets[idx] + t[owidth+1:].rstrip(), file=wfp)
         else:
             print(t.rstrip(), file=wfp)
 
@@ -85,20 +85,19 @@ def make_driver_code(wfp):
     Requires UBITS, SBITS, UCHARS to act as they do in the AIVDM driver.
     Also relies on bitlen to be the message bit length, and i to be
     available as abn index variable."""
-
     record = after is None
     arrayname = None
-    base = '\t'
+    lbase = '\t'
     step = " " * 4
-    indent = base
+    indent = lbase
     last = 0
 
     for (i, t) in enumerate(table):
         if '|' in t:
-            fields = [s.strip() for s in t.split('|')]
-            width = fields[2]
-            name = fields[4]
-            ftype = fields[5]
+            filds = [s.strip() for s in t.split('|')]
+            width = filds[2]
+            name = filds[4]
+            ftype = filds[5]
             if after == name:
                 record = True
                 continue
@@ -149,7 +148,7 @@ def make_driver_code(wfp):
                       (width, ftype), file=wfp)
             last = name
     if arrayname:
-        indent = base
+        indent = lbase
         print(indent + "}", file=wfp)
         if not explicit:
             print(indent + "%s.%s = ind;" %
@@ -160,7 +159,6 @@ def make_driver_code(wfp):
 
 def make_structure(wfp):
     """Write a structure definition corresponding to the table."""
-
     global structname
     record = after is None
     last = 0
@@ -170,7 +168,7 @@ def make_structure(wfp):
     arrayname = None
 
     def tabify(n):
-        """convert to tabs"""
+        """convert to tabs."""
         return ('\t' * (n // 8)) + (" " * (n % 8))
 
     print(tabify(baseindent) + "struct {", file=wfp)
@@ -233,14 +231,13 @@ def make_structure(wfp):
 
 def make_json_dumper(wfp):
     """Write the skeleton of a JSON dump corresponding to the table.
-    Also, if there are subtables, some initializers"""
-
+    Also, if there are subtables, some initializers."""
     last = 0
     if subtables:
         for (name, lines) in subtables:
             wfp.write("    const char *%s_vocabulary[] = {\n" % name)
-            for line in lines:
-                value = line[1]
+            for ln in lines:
+                value = ln[1]
                 if value.endswith(" (default)"):
                     value = value[:-10]
                 wfp.write('        "%s",\n' % value)
@@ -332,13 +329,13 @@ def make_json_dumper(wfp):
         last = name
     startspan = 0
 
-    def scaled(i):
-        """Check if scaled"""
-        return tuples[i][3] is not None
+    def scaled(idx):
+        """Check if scaled."""
+        return tuples[idx][3] is not None
 
-    def tslice(e, i):
-        """Missing docstring"""
-        return [x[i] for x in tuples[startspan:e+1]]
+    def tslice(e, idx):
+        """Missing docstring."""
+        return [x[idx] for x in tuples[startspan:e+1]]
 
     lbase = " " * 8
     step = " " * 4
@@ -422,9 +419,9 @@ def make_json_dumper(wfp):
 
 
 def make_json_generator(wfp):
-    # Write a stanza for jsongen.py.in describing how to generate a
-    # JSON parser initializer from this table. You need to fill in
-    # __INITIALIZER__ and default values after this is generated.
+    """Write a stanza for jsongen.py.in describing how to generate a
+    JSON parser initializer from this table. You need to fill in
+    __INITIALIZER__ and default values after this is generated."""
     extra = ""
     last = 0
     arrayname = None
