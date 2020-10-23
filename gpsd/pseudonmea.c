@@ -25,13 +25,13 @@
  */
 
 #define BUF_SZ 20
-static char *degtodm_str(double angle, const char *fmt, char *buf)
 /* decimal degrees to GPS-style, degrees first followed by minutes */
+static char *degtodm_str(double angle, const char *fmt, char *buf)
 {
-    double fraction, integer;
     if (0 == isfinite(angle)) {
         buf[0] = '\0';
     } else {
+        double fraction, integer;
         angle = fabs(angle);
         fraction = modf(angle, &integer);
         (void)snprintf(buf, BUF_SZ, fmt, floor(angle) * 100 + fraction * 60);
@@ -113,13 +113,13 @@ void gpsd_position_fix_dump(struct gps_device_t *session,
 {
     struct tm tm;
     char time_str[TIMESTR_SZ];
-    char lat_str[BUF_SZ];
-    char lon_str[BUF_SZ];
 
     utc_to_hhmmss(session->gpsdata.fix.time, time_str, sizeof(time_str), &tm);
 
     if (session->gpsdata.fix.mode > MODE_NO_FIX) {
         unsigned char fixquality;
+        char lat_str[BUF_SZ];
+        char lon_str[BUF_SZ];
 
         switch(session->gpsdata.fix.status) {
         case STATUS_NO_FIX:
@@ -134,24 +134,24 @@ void gpsd_position_fix_dump(struct gps_device_t *session,
         case STATUS_RTK_FIX:
             fixquality = FIX_QUALITY_RTK;
             break;
-       case STATUS_RTK_FLT:
+        case STATUS_RTK_FLT:
             fixquality = FIX_QUALITY_RTK_FLT;
             break;
-       case STATUS_DR:
+        case STATUS_DR:
             FALLTHROUGH
-       case STATUS_GNSSDR:
+        case STATUS_GNSSDR:
             fixquality = FIX_QUALITY_DR;
             break;
-       case STATUS_TIME:
+        case STATUS_TIME:
             fixquality = FIX_QUALITY_MANUAL;
             break;
-       case STATUS_SIM:
+        case STATUS_SIM:
             fixquality = FIX_QUALITY_SIMULATED;
             break;
-       default:
+        default:
             fixquality = FIX_QUALITY_INVALID;
             break;
-       }
+        }
 
         (void)snprintf(bufp, len,
                        "$GPGGA,%s,%s,%c,%s,%c,%d,%02d,",
