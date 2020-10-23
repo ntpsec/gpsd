@@ -7,9 +7,10 @@
 # SPDX-License-Identifier: BSD-2-clause
 
 # This code run compatibly under Python 3.x for x >= 6.
+# Codacy D203 and D211 conflict, I choose D203
+# Codacy D212 and D213 conflict, I choose D212
 
-"""
-aiogps.py -- Asyncio Python interface to GPSD.
+"""aiogps.py -- Asyncio Python interface to GPSD.
 
 This module adds asyncio support to the Python gps interface. It runs on
 Python versions >= 3.6 and provides the following benefits:
@@ -119,7 +120,6 @@ class aiogps(gps):  # pylint: disable=R0902
                 - TCP_KEEPINTVL
                 - TCP_KEEPCNT
 """
-
         # If connection_args are not specified use defaults
         self.connection_args = connection_args or {
             'host': self.host,
@@ -153,14 +153,14 @@ class aiogps(gps):  # pylint: disable=R0902
         # Default stream command
         self.stream_command = self.generate_stream_command(WATCH_ENABLE)
         self.loop = self.connection_args.get('loop', asyncio.get_event_loop())
+        self.valid = 0
 
     def __del__(self) -> None:
-        """Destructor"""
+        """Destructor."""
         self.close()
 
     async def _open_connection(self) -> None:
         """Opens connection to GPSD server and configure the TCP socket."""
-
         self.logger.info(
             f"Connecting to gpsd at {self.connection_args['host']}" +
             (f":{self.connection_args['port']}"
@@ -196,7 +196,7 @@ class aiogps(gps):  # pylint: disable=R0902
                                 self.alive_opts['TCP_KEEPCNT'])
 
     def close(self) -> None:
-        """Closes connection to GPSD server"""
+        """Closes connection to GPSD server."""
         if self.writer:
             try:
                 self.writer.close()
@@ -205,11 +205,11 @@ class aiogps(gps):  # pylint: disable=R0902
             self.writer = None
 
     def waiting(self) -> bool:   # pylint: disable=W0221
-        """Mask the blocking waiting method from gpscommon"""
+        """Mask the blocking waiting method from gpscommon."""
         return True
 
     async def read(self) -> Union[dictwrapper, str]:
-        """Reads data from GPSD server"""
+        """Reads data from GPSD server."""
         while True:
             await self.connect()
             try:
@@ -242,7 +242,7 @@ class aiogps(gps):  # pylint: disable=R0902
                     raise
 
     async def connect(self) -> None:    # pylint: disable=W0221
-        """Connects to GPSD server and starts streaming data"""
+        """Connects to GPSD server and starts streaming data."""
         while not self.writer:
             try:
                 await self._open_connection()
@@ -263,7 +263,7 @@ class aiogps(gps):  # pylint: disable=R0902
                     raise
 
     async def send(self, commands) -> None:
-        """Sends commands"""
+        """Sends commands."""
         bcommands = polybytes(commands + "\n")
         if self.writer:
             self.writer.write(bcommands)
@@ -271,7 +271,7 @@ class aiogps(gps):  # pylint: disable=R0902
 
     async def stream(self, flags: Optional[int] = 0,
                      devpath: Optional[str] = None) -> None:
-        """Creates and sends the stream command"""
+        """Creates and sends the stream command."""
         if flags > 0:
             # Update the stream command
             self.stream_command = self.generate_stream_command(flags, devpath)
@@ -283,19 +283,19 @@ class aiogps(gps):  # pylint: disable=R0902
             raise TypeError(f'Invalid streaming command: {flags}')
 
     async def __aenter__(self) -> 'aiogps':
-        """Context manager entry"""
+        """Context manager entry."""
         return self
 
     async def __aexit__(self, exc_type, exc, traceback) -> None:
-        """Context manager exit: close connection"""
+        """Context manager exit: close connection."""
         self.close()
 
     def __aiter__(self) -> 'aiogps':
-        """Async iterator interface"""
+        """Async iterator interface."""
         return self
 
     async def __anext__(self) -> Union[dictwrapper, str]:
-        """Returns next message from GPSD"""
+        """Returns next message from GPSD."""
         data = await self.read()
         return data
 
@@ -303,7 +303,6 @@ class aiogps(gps):  # pylint: disable=R0902
         """Reimplementation of the blocking iterator from gps.
         Returns an awaitable which returns the next message from GPSD.
 """
-
         return self.read()
 
 # vim: set expandtab shiftwidth=4
