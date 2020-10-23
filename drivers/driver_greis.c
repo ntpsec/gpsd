@@ -518,7 +518,6 @@ static gps_mask_t greis_msg_DC(struct gps_device_t *session,
                                unsigned char *buf, size_t len)
 {
     int i;
-    long int_doppler;
     size_t len_needed = (session->gpsdata.satellites_visible * 4) + 1;
 
     if (!session->driver.greis.seen_si) {
@@ -536,7 +535,7 @@ static gps_mask_t greis_msg_DC(struct gps_device_t *session,
     }
 
     for (i = 0; i < session->gpsdata.satellites_visible; i++) {
-        int_doppler = getles32((char *)buf, i * 4);
+        long int_doppler = getles32((char *)buf, i * 4);
         if (0x7fffffff == int_doppler) {
             /* out of range */
             session->gpsdata.raw.meas[i].doppler = NAN;
