@@ -15,13 +15,13 @@ if [ ! -x /usr/bin/getbuildlog ]; then
 	exit 1
 fi
 
-TMPDIR=`mktemp -d`
-OLDPWD=`pwd`
+TMPDIR=$(mktemp -d)
+OLDPWD=$(pwd)
 
-cd ${TMPDIR}
-getbuildlog gpsd $logs || true
+cd "${TMPDIR}"
+getbuildlog gpsd "$logs" || true
 grep -c -E -- '--- (./)?test' * | grep -E ':0$' | sed 's,^gpsd_[^_]*_\([^.]*\)\.log:0,\1: no regressions,'
 grep -E -- '--- (./)?test' * | sed 's,\s2013.*,,;s,^gpsd_[^_]*_\([^.]*\)\.log:--- ,\1 ,' | sort -u
-cd ${OLDPWD}
-rm -rf ${TMPDIR}
+cd "${OLDPWD}"
+rm -rf "${TMPDIR}"
 
