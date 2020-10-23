@@ -17,18 +17,28 @@ body {
   color: #333;
   background-image: url(/paper.gif);
 }
+
 p {
   font-family: helvetica, sans-serif;
   margin: 0 0 1em 0;
   padding: 0;
 }
-#Content>p {text-indent: 2em; margin: 0;}
-#Content>p+p {text-indent: 2em; margin-top: 1ex;}
+
+#Content > p {
+  text-indent: 2em;
+  margin: 0;
+}
+
+#Content > p+p {
+  text-indent: 2em;
+  margin-top: 1ex;
+}
 
 h1 {
   font-size: x-large;
   margin-bottom: 0.25ex;
 }
+
 h2 {
   font-size: large;
   margin-bottom: 0.25ex;
@@ -38,13 +48,16 @@ a {
   text-decoration: none;
   font-family: verdana, arial, helvetica, sans-serif;
 }
-a: hover {background-color: #ccc;}
+
+a: hover {
+  background-color: #ccc;
+}
 
 #Header {
   font-weight: 600;
   font-size: x-large;	/* should be same as an h1 header */
   margin: 20px 0 10px 0;
-  padding: 0 0 2.0ex 20px;
+  padding: 0 0 2ex 20px;
   border-style: solid;
   border-color: black;
   border-width: 1px 0;
@@ -98,8 +111,8 @@ div.strike {
 
 .right {
   float: right;
-  margin: 0px;
-  }
+  margin: 0;
+}
 
 .notebox {
   background-color: #eee;
