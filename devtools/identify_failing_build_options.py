@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
+# This file is Copyright 2010 by the GPSD project
+# SPDX-License-Identifier: BSD-2-Clause
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
 
-"""Build option tester"""
+"""Build option tester."""
 
 from __future__ import absolute_import, print_function, division
 
@@ -87,7 +89,7 @@ knobs = [
 
 
 def main(starting_number_of_options=0):
-    """Main program"""
+    """Main program."""
 
     import itertools
     import multiprocessing
@@ -101,7 +103,7 @@ def main(starting_number_of_options=0):
     dev_null = open('/dev/null', 'w')
 
     def _run(command, phase):
-        """Rub subproceses"""
+        """Run subproceses."""
         if subprocess.call(command, stdout=dev_null) == 0:
             return True
         failed_configurations.append(command)
