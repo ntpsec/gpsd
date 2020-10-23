@@ -3,6 +3,9 @@
 #
 # This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-Clause
+# Codacy D203 and D211 conflict, I choose D203
+# Codacy D212 and D213 conflict, I choose D212
+
 """gpsfake.py -- classes for creating controlled test environment around gpsd.
 
 The gpsfake(1) regression tester shipped with GPSD is a trivial wrapper
@@ -134,6 +137,7 @@ def GetDelay(slow=False):
 
 
 class TestError(BaseException):
+
     """Class TestError."""
     def __init__(self, msg):
         """Initialize Class TestError."""
@@ -142,10 +146,12 @@ class TestError(BaseException):
 
 
 class TestLoadError(TestError):
+
     """Class TestLoadError, empty."""
 
 
 class TestLoad(object):
+
     """Digest a logfile into a list of sentences we can cycle through."""
 
     def __init__(self, logfp, predump=False, slow=False, oneshot=False):
@@ -239,10 +245,12 @@ class TestLoad(object):
 
 
 class PacketError(TestError):
+
     """Class PacketError, empty."""
 
 
 class FakeGPS(object):
+
     """Class FakeGPS."""
     def __init__(self, testload, progress=lambda x: None):
         """Initialize Class FakeGPS."""
@@ -274,6 +282,7 @@ class FakeGPS(object):
 
 
 class FakePTY(FakeGPS):
+
     """A FakePTY is a pty with a test log ready to be cycled to it."""
 
     def __init__(self, testload,
@@ -466,6 +475,7 @@ class FakeUDP(FakeGPS):
 
 
 class SubprogramError(TestError):
+
     """Class SubprogramError."""
     def __str__(self):
         """Return class SubprogramError msg."""
@@ -473,6 +483,7 @@ class SubprogramError(TestError):
 
 
 class SubprogramInstance(object):
+
     """Class for generic subprogram."""
 
     ERROR = SubprogramError
@@ -544,6 +555,7 @@ class SubprogramInstance(object):
 
 
 class DaemonError(SubprogramError):
+
     """Class DaemonError."""
 
 
