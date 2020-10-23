@@ -24,7 +24,7 @@ except ImportError as e:
 
 
 class ksv(object):
-    "Kinematic state vector."
+    """Kinematic state vector."""
 
     def __init__(self, time=0, lat=0, lon=0, alt=0, course=0,
                  speed=0, climb=0, h_acc=0, v_acc=0):
@@ -39,7 +39,7 @@ class ksv(object):
         self.v_acc = v_acc      # Meters per second per second
 
     def next(self, quantum=1):
-        "State after quantum."
+        """State after quantum."""
         self.time += quantum
         avspeed = (2 * self.speed + self.h_acc * quantum) / 2
         avclimb = (2 * self.climb + self.v_acc * quantum) / 2
@@ -75,13 +75,14 @@ class ksv(object):
 
 
 class satellite(object):
-    "Orbital elements of one satellite. PRESENTLY A STUB"
+    """Orbital elements of one satellite. PRESENTLY A STUB."""
 
     def __init__(self, prn):
+        """Class satellite init."""
         self.prn = prn
 
     def position(self, time):
-        "Return right ascension and declination of satellite,"
+        """Return right ascension and declination of satellite,"""
         return
 
 # Next, the command interpreter.  This is an object that takes an
@@ -91,6 +92,7 @@ class satellite(object):
 
 
 class gpssimException(BaseException):
+    """Class gpssimException."""
     def __init__(self, message, filename, lineno):
         BaseException.__init__(self)
         self.message = message
@@ -102,10 +104,11 @@ class gpssimException(BaseException):
 
 
 class gpssim(object):
-    "Simulate a moving sensor, with skyview."
+    """Simulate a moving sensor, with skyview."""
     active_PRNs = list(range(1, 24 + 1)) + [134, ]
 
     def __init__(self, outfmt):
+        """Class gpssim init."""
         self.ksv = ksv()
         self.ephemeris = {}
         # This sets up satellites at random.  Not really what we want.
@@ -129,7 +132,7 @@ class gpssim(object):
         self.validity = "V"
 
     def parse_tdl(self, line):
-        "Interpret one TDL directive."
+        """Interpret one TDL directive."""
         line = line.strip()
         if "#" in line:
             line = line[:line.find("#")]
@@ -179,7 +182,7 @@ class gpssim(object):
         self.lineno += 1
 
     def filter(self, inp, outp):
-        "Make this a filter for file-like objects."
+        """Make this a filter for file-like objects."""
         self.filename = "WTF"
         self.lineno = 1
         self.output = outp
@@ -187,7 +190,7 @@ class gpssim(object):
             self.execute(line)
 
     def go(self, seconds):
-        "Run the simulation for a specified number of seconds."
+        """Run the simulation for a specified number of seconds."""
         for i in range(seconds):
             next(self.ksv)
             if self.have_ephemeris:
@@ -207,14 +210,15 @@ MPS_TO_KNOTS = 1.9438445      # Meters per second to knots
 
 
 class NMEA(object):
-    "NMEA output generator."
+    """NMEA output generator."""
 
     def __init__(self):
+        """Class NMEA init."""
         self.sentences = ("RMC", "GGA",)
         self.counter = 0
 
     def add_checksum(self, mstr):
-        "Concatenate NMEA checksum and trailer to a string"
+        """Concatenate NMEA checksum and trailer to a string."""
         csum = 0
         for (i, c) in enumerate(mstr):
             if i == 0 and c == "$":
@@ -224,12 +228,12 @@ class NMEA(object):
         return mstr
 
     def degtodm(self, angle):
-        "Decimal degrees to GPS-style, degrees first followed by minutes."
+        """Decimal degrees to GPS-style, degrees first followed by minutes."""
         (fraction, _integer) = math.modf(angle)
         return math.floor(angle) * 100 + fraction * 60
 
     def GGA(self, sim):
-        "Emit GGA sentence describing the simulation state."
+        """Emit GGA sentence describing the simulation state."""
         tm = time.gmtime(sim.ksv.time)
         gga = "$GPGGA,%02d%02d%02d,%09.4f,%c,%010.4f,%c,%d,%02d," % (
             tm.tm_hour,
@@ -254,7 +258,7 @@ class NMEA(object):
         return self.add_checksum(gga)
 
     def GLL(self, sim):
-        "Emit GLL sentence describing the simulation state."
+        """Emit GLL sentence describing the simulation state."""
         tm = time.gmtime(sim.ksv.time)
         gll = "$GPLL,%09.4f,%c,%010.4f,%c,%02d%02d%02d,%s," % (
             self.degtodm(abs(sim.ksv.lat)), "SN"[sim.ksv.lat > 0],
@@ -267,7 +271,7 @@ class NMEA(object):
         return self.add_checksum(gll)
 
     def RMC(self, sim):
-        "Emit RMC sentence describing the simulation state."
+        """Emit RMC sentence describing the simulation state."""
         tm = time.gmtime(sim.ksv.time)
         rmc = \
             "GPRMC,%02d%02d%02d,%s,%09.4f,%c,%010.4f,%c,%.1f,%02d%02d%02d," % (
@@ -288,7 +292,7 @@ class NMEA(object):
         return self.add_checksum(rmc)
 
     def ZDA(self, sim):
-        "Emit ZDA sentence describing the simulation state."
+        """Emit ZDA sentence describing the simulation state."""
         tm = time.gmtime(sim.ksv.time)
         zda = "$GPZDA,%02d%2d%02d,%02d,%02d,%04d" % (
             tm.tm_hour,
@@ -304,7 +308,7 @@ class NMEA(object):
         return self.add_checksum(zda)
 
     def report(self, sim):
-        "Report the simulation state."
+        """Report the simulation state."""
         out = ""
         for sentence in self.sentences:
             if isinstance(sentence, tuple):
