@@ -5,8 +5,11 @@
 #
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
+# Codacy D203 and D211 conflict, I choose D203
+# Codacy D212 and D213 conflict, I choose D212
 
-"""
+"""Program to generate code for gpsd masks.
+
 With -p, dump a Python status mask list translated from the C one.
 
 With -c, generate C code to dump masks for debugging purposes.
@@ -27,11 +30,11 @@ except ImportError:
 
 
 class SourceExtractor(object):
-    """SourceExtractor Class"""
+
+    """SourceExtractor Class."""
 
     def __init__(self, sourcefile, clientside):
-        """Init for SourceExtractor"""
-
+        """Init for SourceExtractor."""
         self.sourcefile = sourcefile
         self.clientside = clientside
         self.daemonfiles = [
@@ -54,14 +57,14 @@ class SourceExtractor(object):
                     self.primitive_masks.append((fields[1], fields[2]))
 
     def in_library(self, flg):
-        """grep in library"""
+        """grep in library."""
         (status, _output) = getstatusoutput(
             "grep '%s' libgps/libgps_core.c libgps/libgps_json.c gpsctl.c" %
             flg)
         return status == 0
 
     def in_daemon(self, flg):
-        """grep in daemon"""
+        """grep in daemon."""
         (status, _output) = getstatusoutput(
             "grep '%s' %s" % (flg, " ".join(self.daemonfiles)))
         return status == 0
