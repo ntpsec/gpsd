@@ -60,7 +60,8 @@ typedef struct PGN
     unsigned int  pgn;
     unsigned int  fast;
     unsigned int  type;
-    gps_mask_t    (* func)(unsigned char *bu, int len, struct PGN *pgn, struct gps_device_t *session);
+    gps_mask_t    (* func)(unsigned char *bu, int len, struct PGN *pgn,
+                           struct gps_device_t *session);
     const char    *name;
     } PGN;
 
@@ -69,7 +70,8 @@ typedef struct PGN
 FILE *logFile = NULL;
 #endif /* of if LOG_FILE */
 
-extern bool __attribute__ ((weak)) gpsd_add_device(const char *device_name, bool flag_nowait);
+extern bool __attribute__ ((weak)) gpsd_add_device(const char *device_name,
+                                                   bool flag_nowait);
 
 #define SHIFT32 0x100000000l
 
@@ -1547,12 +1549,8 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
     }
 
     if (frame->can_id & 0x80000000) {
-        // cppcheck-suppress unreadVariable
-#ifdef __UNUSED__
         unsigned int source_prio;
         unsigned int daddr;
-#endif
-        // cppcheck-suppress unreadVariable
         unsigned int source_pgn;
         unsigned int source_unit;
 
@@ -1577,21 +1575,18 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
 #endif /* of if LOG_FILE */
         session->driver.nmea2000.can_msgcnt += 1;
         source_pgn = (frame->can_id >> 8) & 0x1ffff;
-#ifdef __UNUSED__
         source_prio = (frame->can_id >> 26) & 0x7;
-#endif
         source_unit = frame->can_id & 0x0ff;
 
         if (((source_pgn & 0x0ff00) >> 8) < 240) {
-#ifdef __UNUSED__
             daddr  = source_pgn & 0x000ff;
-#endif
             source_pgn  = source_pgn & 0x1ff00;
         } else {
-#ifdef __UNUSED__
             daddr = 0xff;
-#endif
         }
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "nmea2000: source_prio %u daddr %u",
+                 source_prio, daddr);
 
         if (!session->driver.nmea2000.unit_valid) {
             unsigned int l1, l2;
@@ -1688,10 +1683,10 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
                         GPSD_LOG(LOG_ERROR, &session->context->errout,
                                  "Fast done  %2x %2x %2x %2x %6d\n",
                                  session->driver.nmea2000.idx,
-                                                                                   frame->data[0],
-                                                                                   session->driver.nmea2000.unit,
-                                                                                   (unsigned int) session->driver.nmea2000.fast_packet_len,
-                                                                                   source_pgn);
+                                 frame->data[0],
+                                 session->driver.nmea2000.unit,
+                                 (unsigned int)session->driver.nmea2000.fast_packet_len,
+                                 source_pgn);
 #endif /* of #if  NMEA2000_FAST_DEBUG */
                         session->driver.nmea2000.workpgn = (void *) work;
                         session->lexer.outbuflen =
