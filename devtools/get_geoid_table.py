@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 
-"""Simple program to exact 5x5 geoid separations in EGM2008
-from GeoidEval for use in geoidc"""
+"""Simple program to exact 5x5 geoid separations in EGM2008.
+
+Use the GeoidEval program from:
+    https://geographiclib.sourceforge.io
+
+Maybe someday use their python?
+from GeoidEval for use in geoidc
+"""
 
 import sys
 import subprocess
