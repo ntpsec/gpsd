@@ -11,103 +11,100 @@
  */
 
 body {
-	margin:0;
-	padding:0;
-	font-family: helvetica, sans-serif;
-	color:#333;
-	background-image: url(/paper.gif);
-	}
+  margin: 0;
+  padding: 0;
+  font-family: helvetica, sans-serif;
+  color: #333;
+  background-image: url(/paper.gif);
+}
 p {
-	font-family: helvetica, sans-serif;
-	margin:0 0 1em 0;
-	padding:0;
-	}
-#Content>p {text-indent:2em; margin:0;}
-#Content>p+p {text-indent:2em; margin-top: 1ex;}
+  font-family: helvetica, sans-serif;
+  margin: 0 0 1em 0;
+  padding: 0;
+}
+#Content>p {text-indent: 2em; margin: 0;}
+#Content>p+p {text-indent: 2em; margin-top: 1ex;}
 
 h1 {
-	font-size: x-large;
-	margin-bottom: 0.25ex;
-	}
+  font-size: x-large;
+  margin-bottom: 0.25ex;
+}
 h2 {
-	font-size: large;
-	margin-bottom: 0.25ex;
-	}
+  font-size: large;
+  margin-bottom: 0.25ex;
+}
 
 a {
-	text-decoration:none;
-	font-family:verdana, arial, helvetica, sans-serif;
-	}
-a:hover {background-color:#ccc;}
+  text-decoration: none;
+  font-family: verdana, arial, helvetica, sans-serif;
+}
+a: hover {background-color: #ccc;}
 
 #Header {
-	font-weight:600;
-	font-size: x-large;	/* should be same as an h1 header */
-	margin:20px 0 10px 0;
-	padding:0 0 2.0ex 20px;
-	border-style:solid;
-	border-color:black;
-	border-width:1px 0;
-	background-color:#eee;
-	height:1ex;
-	}
+  font-weight: 600;
+  font-size: x-large;	/* should be same as an h1 header */
+  margin: 20px 0 10px 0;
+  padding: 0 0 2.0ex 20px;
+  border-style: solid;
+  border-color: black;
+  border-width: 1px 0;
+  background-color: #eee;
+  height: 1ex;
+}
 
 #Content {
-	/* Left margin is menu width + 40 pixels
-	 */
-	margin:0 50px 50px 200px;
-	padding:10px;
-	}
+  /* Left margin is menu width + 40 pixels */
+  margin: 0 50px 50px 200px;
+  padding: 10px;
+}
 
 #Menu {
-	position:absolute;
-	top:80px;
-	left:20px;
-	width:160px;
-	padding:0.5em;
-	background-color:#eee;
-	border:1px dashed #999;
-	}
+  position: absolute;
+  top: 80px;
+  left: 20px;
+  width: 160px;
+  padding: 0.5em;
+  background-color: #eee;
+  border: 1px dashed #999;
+}
 
 /* For internal tables of contents on a page. E.g. hacking.html. */
 ol.ToC {
-    list-style: upper-roman;
+  list-style: upper-roman;
 }
 
 div.strike {
-    text-decoration: line-through;
+  text-decoration: line-through;
 }
 
 @media print {
-	#Content {
-		/* Left margin is menu width + 3em
-		 */
-		margin:0 50px 50px 0;
-		padding:10px;
-		}
+  #Content {
+    /* Left margin is menu width + 3em */
+    margin: 0 50px 50px 0;
+    padding: 10px;
+  }
 
-	#Menu {
-		  display: none;
-		}
-
+  #Menu {
+    display: none;
+  }
 }
 
 /* For convenience */
 .centered {
-	text-align: center;
-	margin-left: auto;
-	margin-right: auto;
-	}
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
 
 .right {
-	float:right;
-	margin:0px;
-	}
+  float: right;
+  margin: 0px;
+  }
 
 .notebox {
-	background-color:#eee;
-	border:1px dashed #999;
-	margin: 15px;
-	font-size:small;
-	text-indent: 0;
+  background-color: #eee;
+  border: 1px dashed #999;
+  margin: 15px;
+  font-size: small;
+  text-indent: 0;
 }
