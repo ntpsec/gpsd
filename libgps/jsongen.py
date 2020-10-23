@@ -6,8 +6,7 @@
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
 
-"""
-Never hand-hack what you can generate...
+"""Never hand-hack what you can generate...
 
 This code generates template declarations for AIS-JSON parsing from a
 declarative specification of a JSON structure.
@@ -940,8 +939,7 @@ ais_specs = (
 
 
 def generate(spec):
-    """Generate it"""
-
+    """Generate it."""
     report = ""
     leader = " " * 39
     initname = spec["initname"]
