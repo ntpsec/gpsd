@@ -13,17 +13,17 @@ The file *usr.sbin.gpsd* is the apparmor profile created by the
 Ubuntu/Cacnonical developers for the usage in Debian and Ubuntu. If you
 want to use it, you need
 
- - an apparmor installation. Please consult the documentation of your
+-  an apparmor installation. Please consult the documentation of your
 distribution, some useful documentation can be found in
 [Debian Wiki](https://wiki.debian.org/AppArmor/HowToUse) and
 [Arch Wiki](https://wiki.archlinux.org/index.php/AppArmor). Make sure
 apparmor in general is working as expected before adding new profiles.
 
- - to copy the file to */etc/apparmor.d* and name it according to the
+-  to copy the file to */etc/apparmor.d* and name it according to the
 location of your gpsd binary. The proper name should be the output of
 `command -v gpsd | sed 's,^/,,;s,/,.,g'`
 
- - to edit your copied file, at least you need to fix the location of
+-  to edit your copied file, at least you need to fix the location of
 gpsd if necessary, also check if the rules apply to your installation or
 if you want to limit them (for example: if you have one fixed serial device
 you might now want to allow gpsd to talk to all tty devices).
