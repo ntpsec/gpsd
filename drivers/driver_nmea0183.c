@@ -264,7 +264,7 @@ static int decode_hhmmss(struct tm *date, long *nsec, char *hhmmss,
                          struct gps_device_t *session)
 {
     int old_hour = date->tm_hour;
-    int i, sublen;
+    int i;
 
     if (NULL == hhmmss) {
         return 1;
@@ -289,8 +289,8 @@ static int decode_hhmmss(struct tm *date, long *nsec, char *hhmmss,
     if ('.' == hhmmss[6] &&
         /* NetBSD 6 wants the cast */
         0 != isdigit((int)hhmmss[7])) {
+        int sublen = strlen(hhmmss + 7);
         i = atoi(hhmmss + 7);
-        sublen = strlen(hhmmss + 7);
         *nsec = (long)i * (long)pow(10.0, 9 - sublen);
     } else {
         *nsec = 0;
@@ -346,9 +346,10 @@ static int merge_hhmmss(char *hhmmss, struct gps_device_t *session)
 static void register_fractional_time(const char *tag, const char *fld,
                                      struct gps_device_t *session)
 {
-    char ts_buf[TIMESPEC_LEN];
 
     if (fld[0] != '\0') {
+        char ts_buf[TIMESPEC_LEN];
+
         session->nmea.last_frac_time = session->nmea.this_frac_time;
         DTOTS(&session->nmea.this_frac_time, safe_atof(fld));
         session->nmea.latch_frac_time = true;
@@ -2076,7 +2077,6 @@ static gps_mask_t processPGRMF(int c UNUSED, char *field[],
   * 15 = dop, 0 to 9
   */
     gps_mask_t mask = ONLINE_SET;
-    unsigned short week = 0;
     timespec_t ts_tow = {0, 0};
 
     /* Some garmin fail due to GPS Week Roll Over
@@ -2090,7 +2090,7 @@ static gps_mask_t processPGRMF(int c UNUSED, char *field[],
         isdigit((int)field[2][0]) &&
         0 < session->context->leap_seconds) {
         // have GPS week, tow and leap second
-        week = atol(field[1]);
+        unsigned short week = atol(field[1]);
         ts_tow.tv_sec = atol(field[2]);
         ts_tow.tv_nsec = 0;
         session->newdata.time = gpsd_gpstime_resolv(session, week, ts_tow);
