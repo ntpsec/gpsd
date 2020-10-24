@@ -1,7 +1,7 @@
 #!@PYSHEBANG@
 # -*- coding: utf-8 -*-
 # @GENERATED@
-'''gps.py -- Python interface to GPSD.
+"""gps.py -- Python interface to GPSD.
 
 This interface has a lot of historical cruft in it related to old
 protocol, and was modeled on the C interface. It won't be thrown
@@ -10,7 +10,7 @@ Pythonic.
 
 The JSON parts of this (which will be reused by any new interface)
 now live in a different module.
-'''
+"""
 
 #
 # This file is Copyright 2010 by the GPSD project
@@ -48,7 +48,7 @@ VERB_PROG = 5    # program trace
 
 
 def isfinite(f):
-    "Check if f is finite"
+    """Check if f is finite."""
     # Python 2 does not think +Inf or -Inf are NaN
     # Python 2 has no easier way to test for Inf
     return float('-inf') < float(f) < float('inf')
@@ -109,10 +109,10 @@ SIGNAL_STRENGTH_UNKNOWN = NaN
 
 
 class gpsfix(object):
-    "Class to hold one GPS fix"
+    """Class to hold one GPS fix."""
 
     def __init__(self):
-        "Init class gpsfix"
+        """Init class gpsfix."""
 
         self.altitude = NaN         # Meters DEPRECATED
         self.altHAE = NaN           # Meters
@@ -158,13 +158,13 @@ class gpsfix(object):
 
 
 class gps_io(object):
-    """All the GPS I/O in one place"
+    """All the GPS I/O in one place.
 
     Three types of GPS I/O
     1. read only from a file
     2. read/write through a device
     3. read only from a gpsd instance
-    """
+"""
 
     out = b''
     ser = None
@@ -176,7 +176,7 @@ class gps_io(object):
                  input_speed=9600,
                  verbosity_level=0,
                  write_requested=True):
-        """Initialize class
+        """Initialize class.
 
     Arguments:
       input_file_name: Name of a device/file to open - None if connection to
@@ -319,17 +319,17 @@ class gps_io(object):
     def read(self, decode_func,
              input_wait=2.0, expect_statement_identifier=None,
              raw_fd=None):
-        """Read from device, until timeout or expected message
+        """Read from device, until timeout or expected message.
 
-        Arguments:
-           decode_func: callable function that accepts the raw data which
-                        converts it to a human readable format
-           expect_statement_identifier: return only the specified package or
-                                        1 if timeout. None (default) if no
-                                        filtering is requested
-           input_wait: read timeout in seconds. Default: 2 seconds
-           raw: file descriptor like object (has to support the .write method)
-                to dump raw data. None if not used
+    Arguments:
+       decode_func: callable function that accepts the raw data which
+                    converts it to a human readable format
+       expect_statement_identifier: return only the specified package or
+                                    1 if timeout. None (default) if no
+                                    filtering is requested
+       input_wait: read timeout in seconds. Default: 2 seconds
+       raw: file descriptor like object (has to support the .write method)
+            to dump raw data. None if not used
 """
 
         # are we expecting a certain message?
@@ -429,7 +429,7 @@ class gps_io(object):
         return ret_code
 
     def write_gpsd(self, data):
-        """write data to gpsd daemon"""
+        """write data to gpsd daemon."""
 
         # HEXDATA_MAX = 512, from gps.h, The max hex digits can write.
         # Input data is binary, converting to hex doubles its size.
@@ -455,10 +455,10 @@ class gps_io(object):
 
 
 class gpsdata(object):
-    "Position, track, velocity and status information returned by a GPS."
+    """Position, track, velocity and status information returned by a GPS."""
 
     class satellite(object):
-        "Class to hold satellite data"
+        """Class to hold satellite data."""
         def __init__(self, PRN, elevation, azimuth, ss, used=None):
             self.PRN = PRN
             self.elevation = elevation
@@ -529,7 +529,7 @@ class gpsdata(object):
 
 
 class gps(gpscommon, gpsdata, gpsjson):
-    "Client interface to a running gpsd instance."
+    """Client interface to a running gpsd instance."""
 
     # module version, would be nice to automate the version
     __version__ = "@VERSION@"
@@ -553,7 +553,7 @@ class gps(gpscommon, gpsdata, gpsjson):
     def _oldstyle_shim(self):
         # The rest is backwards compatibility for the old interface
         def default(k, dflt, vbit=0):
-            "Return default for key"
+            """Return default for key."""
             if k not in self.data.keys():
                 return dflt
 
@@ -635,7 +635,7 @@ class gps(gpscommon, gpsdata, gpsjson):
         # TODO: handle class DEVICES    # pylint: disable=fixme
 
     def read(self):
-        "Read and interpret data from the daemon."
+        """Read and interpret data from the daemon."""
         status = gpscommon.read(self)
         if status <= 0:
             return status
@@ -646,7 +646,7 @@ class gps(gpscommon, gpsdata, gpsjson):
         return 0
 
     def __next__(self):
-        "Python 3 version of next()."
+        """Python 3 version of next()."""
         if self.read() == -1:
             raise StopIteration
         if hasattr(self, "data"):
@@ -655,17 +655,17 @@ class gps(gpscommon, gpsdata, gpsjson):
         return self.response
 
     def next(self):
-        "Python 2 backward compatibility."
+        """Python 2 backward compatibility."""
         return self.__next__()
 
     def stream(self, flags=0, devpath=None):
-        "Ask gpsd to stream reports at your client."
+        """Ask gpsd to stream reports at your client."""
 
         gpsjson.stream(self, flags, devpath)
 
 
 def is_sbas(prn):
-    "Is this the NMEA ID of an SBAS satellite?"
+    """Is this the NMEA ID of an SBAS satellite?."""
     return 120 <= prn <= 158
 
 
