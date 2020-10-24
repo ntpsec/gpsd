@@ -15,8 +15,10 @@ except ImportError:
 
 
 class GPSDictionary(configparser.RawConfigParser):
+    """Class GPSDictionary."""
+
     def __init__(self, *files):
-        "Initialize the capability dictionary"
+        """Initialize the capability dictionary."""
         configparser.RawConfigParser.__init__(self)
         if not files:
             files = ["gpscap.ini", "@SHAREPATH@/gpscap.ini"]
@@ -68,6 +70,7 @@ class GPSDictionary(configparser.RawConfigParser):
                     raise configparser.Error("%s has invalid vendor" % section)
 
     def HTMLDump(self, ofp):
+        """HTMLDUmper."""
         thead = """
 <table style='border:1px solid gray;font-size:small;background-color:#CCCCCC'>
 <caption>Listing %s devices from %s vendors</caption>
