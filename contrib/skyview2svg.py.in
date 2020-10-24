@@ -50,8 +50,7 @@ def cutoff_err(err, err_min, err_max):
         return err_max, '&gt;'
     if err <= err_min:
         return err_min, '&lt;'
-    else:
-        return err, ''
+    return err, ''
 
 
 # ------------------------------------------------------------------------
