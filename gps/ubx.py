@@ -31,6 +31,7 @@ except ImportError:
                      PROG_NAME)
     sys.exit(2)
 
+
 def erd_s(erd):
     """convert 6 bits of subframe 4, page 13 (NMCT) ERD to string"""
     if erd & 0x20:
@@ -219,7 +220,10 @@ def index_s(index, descs, nf="Unk"):
 
 
 def timestamp(timestamp_opts):
-    """ print current time as a timestamp - UNIX epoch for timestamp_opts==1, UTC when timestamp_opts==2"""
+    """Print current time as a timestamp.
+
+UNIX epoch for timestamp_opts == 1, UTC when timestamp_opts == 2
+"""
 
     now = time.time()
     if 1 == timestamp_opts:
@@ -227,8 +231,9 @@ def timestamp(timestamp_opts):
     elif 2 == timestamp_opts:
         print("%.4f %s" % (now, time.asctime(time.gmtime(now))))
 
+
 class ubx(object):
-    """class to hold u-blox stuff"""
+    """Class to hold u-blox stuff."""
 
     # expected statement identifier.
     expect_statement_identifier = False
@@ -2716,7 +2721,8 @@ Programming the fixed seed for host interface signature"""
                    flag_s(u[3], self.cfg_nmea_flags)))
 
             if 11 < len(buf):
-                s += ("\n  gnssToFilter (%s) svNumbering (%s) mainTalkerId (%s)"
+                s += ("\n  gnssToFilter (%s) svNumbering (%s)"
+                      "mainTalkerId (%s)"
                       "\n  gsvTalkerId (%s)" %
                       (flag_s(u[4], self.cfg_nmea_gnssfilt),
                        index_s(u[5], self.cfg_nmea_svn),
