@@ -20,11 +20,12 @@ now live in a different module.
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
 from __future__ import absolute_import, print_function, division
-import os            # for file handling in gps_io
-import sys           # to get script name for nice error/warning messages
-import stat          # for stat.S_ISBLK()
-import socket        # for socket.error
 import binascii      # for binascii.hexlify()
+import getopt
+import os            # for file handling in gps_io
+import socket        # for socket.error
+import stat          # for stat.S_ISBLK()
+import sys           # to get script name for nice error/warning messages
 
 from .misc import monotonic, polybytes
 from .client import *
@@ -425,7 +426,7 @@ class gps_io(object):
             sys.stderr.write('%s: waited %0.2f seconds for, '
                              'but did not get: %%%s%%\n'
                              % (self.prog_name, input_wait,
-                                gps_model.expect_statement_identifier))
+                                expect_statement_identifier))
         return ret_code
 
     def write_gpsd(self, data):
@@ -670,19 +671,18 @@ def is_sbas(prn):
 
 
 if __name__ == '__main__':
-    import getopt
-    import sys
+    # FIXME: convert to argparse
     (options, arguments) = getopt.getopt(sys.argv[1:], "v")
     streaming = False
-    verbose = False
+    verb = False
     for (switch, val) in options:
         if switch == '-v':
-            verbose = True
+            verb = True
     if len(arguments) > 2:
         print('Usage: gps.py [-v] [host [port]]')
         sys.exit(1)
 
-    opts = {"verbose": verbose}
+    opts = {"verbose": verb}
     if arguments:
         opts["host"] = arguments[0]
     if arguments:
