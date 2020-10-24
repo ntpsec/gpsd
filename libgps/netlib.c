@@ -83,9 +83,11 @@ socket_t netlib_connectsock(int af, const char *host, const char *service,
         // result is unchanged on error, so we need to have set it to NULL
         // freeaddrinfo() checks for NULL, the NULL we provided.
         freeaddrinfo(result);
+        result = NULL;
         // quick check to see if the problem was host or service
-        if ((ret = getaddrinfo(NULL, service, &hints, &result))) {
-            freeaddrinfo(result);
+        ret = getaddrinfo(NULL, service, &hints, &result);
+        freeaddrinfo(result);
+        if (ret) {
             return NL_NOSERVICE;
         }
         return NL_NOHOST;
