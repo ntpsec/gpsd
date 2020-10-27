@@ -11,6 +11,8 @@
 
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
+# Codacy D203 and D211 conflict, I choose D203
+# Codacy D212 and D213 conflict, I choose D212
 """xgpsspeed -- test client for gpsd."""
 
 from __future__ import absolute_import, print_function, division
@@ -67,7 +69,6 @@ if gps.__version__ != gps_version:
 
 
 class Speedometer(Gtk.DrawingArea):
-
     """Speedometer class."""
 
     def __init__(self, speed_unit=None):
@@ -90,23 +91,18 @@ class Speedometer(Gtk.DrawingArea):
 
 
 class LandSpeedometer(Speedometer):
-
     """LandSpeedometer class."""
 
     def __init__(self, speed_unit=None):
         """Init LandSpeedometer class."""
         Speedometer.__init__(self, speed_unit)
-        self.connect('size-allocate', self.on_size_allocate)
-        self.width = self.height = 0
         self.connect('draw', self.draw_s)
-        self.long_ticks = (2, 1, 0, -1, -2, -3, -4, -5, -6, -7, -8)
-        self.short_ticks = (0.1, 0.2, 0.3, 0.4, 0.6, 0.7, 0.8, 0.9)
-        self.long_inset = lambda x: 0.1 * x
-        self.middle_inset = lambda x: self.long_inset(x) / 1.5
-        self.short_inset = lambda x: self.long_inset(x) / 3
-        self.res_div = 10.0
-        self.res_div_mul = 1
+        self.connect('size-allocate', self.on_size_allocate)
+        self.cr = None
         self.last_speed = 0
+        self.long_inset = lambda x: 0.1 * x
+        self.long_ticks = (2, 1, 0, -1, -2, -3, -4, -5, -6, -7, -8)
+        self.middle_inset = lambda x: self.long_inset(x) / 1.5
         self.nums = {
             -8: 0,
             -7: 10,
@@ -120,15 +116,19 @@ class LandSpeedometer(Speedometer):
             1: 90,
             2: 100
         }
+        self.res_div = 10.0
+        self.res_div_mul = 1
+        self.short_inset = lambda x: self.long_inset(x) / 3
+        self.short_ticks = (0.1, 0.2, 0.3, 0.4, 0.6, 0.7, 0.8, 0.9)
+        self.width = self.height = 0
 
     def on_size_allocate(self, _unused, allocation):
-        """on_size_allocatio."""
+        """On_size_allocatio."""
         self.width = allocation.width
         self.height = allocation.height
 
     def draw_s(self, widget, _event, _empty=None):
         """Top level draw."""
-
         window = widget.get_window()
         region = window.get_clip_region()
         context = window.begin_draw_frame(region)
@@ -284,19 +284,18 @@ class LandSpeedometer(Speedometer):
         self.cr.restore()
 
     def get_x_y(self):
-        """get_x_y."""
+        """Get_x_y."""
         rect = self.get_allocation()
         x = (rect.x + rect.width / 2.0)
         y = (rect.y + rect.height / 2.0) - 20
         return x, y
 
     def get_radius(self, width, height):
-        """"get_radius."""
+        """Get_radius."""
         return min(width / 2.0, height / 2.0) - 20
 
 
 class NauticalSpeedometer(Speedometer):
-
     """NauticalSpeedometer class."""
     HEADING_SAT_GAP = 0.8
     SAT_SIZE = 10  # radius of the satellite circle in skyview
@@ -538,7 +537,6 @@ Args:
 
     def set_color(self, spec):
         """Set foreground color for drawing."""
-
         color = Gdk.RGBA()
         color.parse(spec)
         Gdk.cairo_set_source_rgba(self.cr, color)
@@ -615,20 +613,21 @@ satsoup: a dictionary {'el': xx, 'az': xx, 'ss': xx}
 
 
 class Main(object):
-
     """Main."""
 
     def __init__(self, host='localhost', port=gps.GPSD_PORT, device=None,
                  debug=0, speed_unit=None, maxspeed=0, nautical=False,
                  rotate=0.0, target=""):
-        self.host = host
-        self.port = port
-        self.device = device
+        """Init class main."""
+        self.daemon = None
         self.debug = debug
-        self.speed_unit = speed_unit
+        self.device = device
+        self.host = host
         self.maxspeed = maxspeed
         self.nautical = nautical
+        self.port = port
         self.rotate = rotate
+        self.speed_unit = speed_unit
         self.window = Gtk.Window(type=Gtk.WindowType.TOPLEVEL)
         if not self.window.get_display():
             raise Exception("Can't open display")
@@ -741,7 +740,6 @@ class Main(object):
 
     def about(self, _unused):
         """Show about dialog."""
-
         about = Gtk.AboutDialog()
         about.set_program_name("xgpsspeed")
         about.set_version("Versions:\n"
@@ -768,12 +766,11 @@ class Main(object):
 
     def set_units(self, _unused, handle):
         """Change the display units."""
-
         # print("set_units:", handle, self)
         self.widget.speed_unit = handle
 
     def watch(self, daemon, device):
-        """watch."""
+        """Watch."""
         self.daemon = daemon
         self.device = device
         GLib.io_add_watch(daemon.sock, GLib.PRIORITY_DEFAULT,
@@ -809,7 +806,7 @@ class Main(object):
         self.widget.show()
 
     def handle_response(self, source, condition):
-        """"handle_response."""
+        """Handle_response."""
         if self.daemon.read() == -1:
             self.handle_hangup(source, condition)
         if self.daemon.data['class'] == 'VERSION':
@@ -822,7 +819,7 @@ class Main(object):
         return True
 
     def handle_hangup(self, _dummy, _unused):
-        """handle_hangup."""
+        """Handle_hangup."""
         w = Gtk.MessageDialog(
             parent=self.window,
             message_type=Gtk.MessageType.ERROR,
