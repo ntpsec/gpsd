@@ -1,12 +1,11 @@
 #!@PYSHEBANG@
 # -*- coding: UTF-8
 # @GENERATED@
-'''
-xgps -- test client for gpsd
+""" xgps -- test client for gpsd.
 
-    Options can be placed in the XGPSOPTS environment variable.
-    XGPSOPTS is processed before the CLI options.
-'''
+Options can be placed in the XGPSOPTS environment variable.
+XGPSOPTS is processed before the CLI options.
+"""
 
 # ENVIRONMENT:
 #    Options in the XGPSOPTS environment variable will be parsed before
@@ -17,6 +16,8 @@ xgps -- test client for gpsd
 #
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
+# Codacy D203 and D211 conflict, I choose D203
+# Codacy D203 and D211 conflict, I choose D203
 from __future__ import absolute_import, print_function, division
 
 import argparse
@@ -88,8 +89,7 @@ SKY_VIEW_SORT_FIELDS = ('-used', 'PRN')
 
 
 def gnssid_str(sat):
-    "convert gnssid:svid to short and long strings"
-
+    """convert gnssid:svid to short and long strings"""
     # gnssid:svid appeared in gpsd 3.18
     # allow for old servers
     if 'gnssid' not in sat or 'svid' not in sat:
@@ -118,7 +118,7 @@ def gnssid_str(sat):
 
 
 def fit_to_grid(x, y, line_width):
-    "Adjust coordinates to produce sharp lines."
+    """Adjust coordinates to produce sharp lines."""
     if line_width % 1.0 != 0:
         # Can't have sharp lines for non-integral line widths.
         return float(x), float(y)  # Be consistent about returning floats
@@ -131,8 +131,10 @@ def fit_to_grid(x, y, line_width):
 
 
 def fit_circle_to_grid(x, y, radius, line_width):
-    """Adjust circle coordinates and radius to produce sharp horizontal
-    and vertical tangents."""
+    """Fit cicrle to grid.
+
+Adjust circle coordinates and radius to produce sharp horizontal
+and vertical tangents."""
     r = radius
     x1, y1 = fit_to_grid(x - r, y - r, line_width)
     x2, y2 = fit_to_grid(x + r, y + r, line_width)
@@ -142,13 +144,14 @@ def fit_circle_to_grid(x, y, radius, line_width):
 
 
 class SkyView(Gtk.DrawingArea):
-    "Satellite skyview, encapsulates pygtk's draw-on-expose behavior."
+
+    """Satellite skyview, encapsulates pygtk's draw-on-expose behavior."""
     # See <http://faq.pygtk.org/index.py?req=show&file=faq18.008.htp>
     HORIZON_PAD = 50    # How much whitespace to leave around horizon
     SAT_RADIUS = 5      # Diameter of satellite circle
 
     def __init__(self, rotation=None):
-        "Initialize class SkyView"
+        """Initialize class SkyView"""
         Gtk.DrawingArea.__init__(self)
         # GObject.GObject.__init__(self)
         self.set_size_request(400, 400)
@@ -167,14 +170,14 @@ class SkyView(Gtk.DrawingArea):
         self.pop_xy = (None, None)
 
     def popdown(self):
-        "See if need to popdown the sat details"
+        """See if need to popdown the sat details"""
         if self.popover:
             self.popover.popdown()
             self.popover = None
             self.pop_xy = (None, None)
 
     def popup(self, skyview, event):
-        "See if need to popup the sat details"
+        """See if need to popup the sat details"""
         for (x, y, sat) in self.sat_xy:
             if ((SkyView.SAT_RADIUS >= abs(x - event.x) and
                  SkyView.SAT_RADIUS >= abs(y - event.y))):
@@ -244,7 +247,7 @@ class SkyView(Gtk.DrawingArea):
             self.popdown()
 
     def on_size_allocate(self, _unused, allocation):
-        "Adjust SkyView on size change"
+        """Adjust SkyView on size change"""
         width = allocation.width
         height = allocation.height
         x = width // 2
@@ -266,7 +269,7 @@ class SkyView(Gtk.DrawingArea):
         self.cr.set_source_rgb(r, g, b)
 
     def draw_circle(self, x, y, radius, filled=False):
-        "Draw a circle centered on the specified midpoint."
+        """Draw a circle centered on the specified midpoint."""
         lw = self.cr.get_line_width()
         r = int(2 * radius + 0.5) // 2
 
@@ -281,7 +284,7 @@ class SkyView(Gtk.DrawingArea):
             self.cr.stroke()
 
     def draw_line(self, x1, y1, x2, y2):
-        "Draw a line between specified points."
+        """Draw a line between specified points."""
         lw = self.cr.get_line_width()
         x1, y1 = fit_to_grid(x1, y1, lw)
         x2, y2 = fit_to_grid(x2, y2, lw)
@@ -292,7 +295,7 @@ class SkyView(Gtk.DrawingArea):
         self.cr.stroke()
 
     def draw_square(self, x, y, radius, filled, flip):
-        "Draw a square centered on the specified midpoint."
+        """Draw a square centered on the specified midpoint."""
         lw = self.cr.get_line_width()
         if 0 == flip:
             # square
@@ -313,7 +316,7 @@ class SkyView(Gtk.DrawingArea):
             self.cr.stroke()
 
     def draw_string(self, x, y, text, centered=True):
-        "Draw a text on the skyview."
+        """Draw a text on the skyview."""
         self.cr.select_font_face("Sans", cairo.FONT_SLANT_NORMAL,
                                  cairo.FONT_WEIGHT_BOLD)
         self.cr.set_font_size(10)
@@ -330,7 +333,7 @@ class SkyView(Gtk.DrawingArea):
         self.cr.new_path()
 
     def draw_triangle(self, x, y, radius, filled, flip):
-        "Draw a triangle centered on the specified midpoint."
+        """Draw a triangle centered on the specified midpoint."""
         lw = self.cr.get_line_width()
         if flip in (0, 1):
             if 0 == flip:
@@ -371,7 +374,7 @@ class SkyView(Gtk.DrawingArea):
             self.cr.stroke()
 
     def pol2cart(self, az, el):
-        "Polar to Cartesian coordinates within the horizon circle."
+        """Polar to Cartesian coordinates within the horizon circle."""
         az = (az - self.rotate) % 360.0
         az *= (math.pi / 180)  # Degrees to radians
         # Exact spherical projection would be like this:
@@ -382,7 +385,7 @@ class SkyView(Gtk.DrawingArea):
         return (xout, yout)
 
     def on_draw(self, widget, _unused):
-        "Draw the skyview"
+        """Draw the skyview"""
         window = widget.get_window()
         region = window.get_clip_region()
         context = window.begin_draw_frame(region)
@@ -503,13 +506,14 @@ class SkyView(Gtk.DrawingArea):
         window.end_draw_frame(context)
 
     def redraw(self, satellites):
-        "Redraw the skyview."
+        """Redraw the skyview."""
         self.satellites = satellites
         self.queue_draw()
 
 
 class NoiseView(object):
-    "Encapsulate view object for watching noise statistics."
+
+    """Encapsulate view object for watching noise statistics."""
     COLUMNS = 2
     ROWS = 4
     noisefields = (
@@ -526,7 +530,7 @@ class NoiseView(object):
     )
 
     def __init__(self):
-        "Initialize class NoiseView"
+        """Initialize class NoiseView"""
         self.widget = Gtk.Grid()
         self.noisewidgets = []
         for i in range(len(NoiseView.noisefields)):
@@ -545,8 +549,7 @@ class NoiseView(object):
             self.noisewidgets.append((NoiseView.noisefields[i][1], entry))
 
     def update(self, noise):
-        "Update the GPGST data fields."
-
+        """Update the GPGST data fields."""
         markup = "<span font_desc='monospace 10'>%s </span>"
         for (attrname, widget) in self.noisewidgets:
             if hasattr(noise, attrname):
@@ -557,12 +560,12 @@ class NoiseView(object):
 
 
 class AISView(object):
-    "Encapsulate store and view objects for watching AIS data."
+    """Encapsulate store and view objects for watching AIS data."""
     AIS_ENTRIES = 10
     DWELLTIME = 360
 
     def __init__(self, deg_type):
-        "Initialize the store and view."
+        """Initialize the store and view."""
         self.deg_type = deg_type
         self.name_to_mmsi = {}
         self.named = {}
@@ -584,7 +587,7 @@ class AISView(object):
             self.view.append_column(column)
 
     def enter(self, ais, name):
-        "Add a named object (ship or station) to the store."
+        """Add a named object (ship or station) to the store."""
         if ais.mmsi in self.named:
             return False
 
@@ -608,7 +611,7 @@ class AISView(object):
         return True
 
     def latlon(self, lat, lon):
-        "Latitude/longitude display in nice format."
+        """Latitude/longitude display in nice format."""
         if lat < 0:
             latsuff = "S"
         elif lat > 0:
@@ -626,7 +629,7 @@ class AISView(object):
         return lat + latsuff + "/" + lon + lonsuff
 
     def update(self, ais):
-        "Update the AIS data fields."
+        """Update the AIS data fields."""
         if ais.type in (1, 2, 3, 18):
             if ais.mmsi in self.named:
                 for i in range(len(self.store)):
@@ -678,7 +681,8 @@ class AISView(object):
 
 
 class Base(object):
-    "Base class for all the output"
+
+    """Base class for all the output"""
     ROWS = 9
     gpsfields = (
         # First column
@@ -724,8 +728,7 @@ class Base(object):
     )
 
     def about(self, _unused):
-        "Show about dialog"
-
+        """Show about dialog"""
         about = Gtk.AboutDialog()
         about.set_program_name("xgps")
         about.set_version("Versions:\n"
@@ -746,7 +749,7 @@ class Base(object):
         about.destroy()
 
     def __init__(self, deg_type, rotation=None, title=""):
-        "Initialize class Base"
+        """Initialize class Base"""
         self.deg_type = deg_type
         self.rotate = rotation
         self.conversions = gps.clienthelpers.unit_adjustments()
@@ -1050,7 +1053,7 @@ frame * {
                           in zip(Base.gpsfields, gpswidgets)]
 
     def view_toggle(self, action, name):
-        "Toggle widget view"
+        """Toggle widget view"""
 
         # print("View toggle:", action.get_active(), name)
         if hasattr(self, 'view_name_to_widget'):
@@ -1064,7 +1067,7 @@ frame * {
         self.window.resize(1, 1)
 
     def set_satlist_field(self, row, column, value):
-        "Set a specified field in the satellite list."
+        """Set a specified field in the satellite list."""
         try:
             self.satlist.set_value(self.row_iters[row], column, str(value))
         except IndexError:
@@ -1072,14 +1075,14 @@ frame * {
                              % (row, options.maxchandisp))
 
     def delete_event(self, _widget, _event, _data=None):
-        "Say goodbye nicely"
+        """Say goodbye nicely."""
         Gtk.main_quit()
         return False
 
     # State updates
 
     def update_time(self, data):
-        "Update time"
+        """Update time."""
         if hasattr(data, "time"):
             # str() just in case we get an old-style float.
             ret = str(data.time)
@@ -1092,7 +1095,7 @@ frame * {
         return ret
 
     def update_latitude(self, data):
-        "Update latitude"
+        """Update latitude."""
         if data.mode >= gps.MODE_2D and hasattr(data, "lat"):
             lat = gps.clienthelpers.deg_to_str(self.deg_type, data.lat)
             if data.lat < 0:
@@ -1104,7 +1107,7 @@ frame * {
         return "n/a"
 
     def update_longitude(self, data):
-        "Update longitude"
+        """Update longitude."""
         if data.mode >= gps.MODE_2D and hasattr(data, "lon"):
             lon = gps.clienthelpers.deg_to_str(self.deg_type, data.lon)
             if data.lon < 0:
@@ -1116,8 +1119,7 @@ frame * {
         return "n/a"
 
     def update_altitude(self, data, item):
-        "Update altitude"
-
+        """Update altitude."""
         ret = "n/a"
         if data.mode >= gps.MODE_3D:
             if 0 == item and hasattr(data, "altHAE"):
@@ -1133,7 +1135,7 @@ frame * {
         return ret
 
     def update_speed(self, data):
-        "Update speed"
+        """Update speed."""
         if hasattr(data, "speed"):
             return "%9.3f %s" % (
                 data.speed * self.conversions.speedfactor,
@@ -1142,7 +1144,7 @@ frame * {
         return "n/a"
 
     def update_climb(self, data):
-        "Update climb"
+        """Update climb."""
         if hasattr(data, "climb"):
             return "%9.3f %s" % (
                 data.climb * self.conversions.speedfactor,
@@ -1151,8 +1153,7 @@ frame * {
         return "n/a"
 
     def update_track(self, data, item):
-        "Update track"
-
+        """Update track."""
         if 0 == item and hasattr(data, "track"):
             return "%14s " % (
                 gps.clienthelpers.deg_to_str(self.deg_type, data.track))
@@ -1164,8 +1165,7 @@ frame * {
         return "n/a"
 
     def update_seen(self, data, item):
-        "Update sats seen"
-
+        """Update sats seen."""
         # update sats seen/used in the GPS Data window
         if 0 == item and hasattr(data, 'satellites_seen'):
             return getattr(data, 'satellites_seen')
@@ -1176,14 +1176,14 @@ frame * {
         return "n/a"
 
     def update_dop(self, data, doptype):
-        "update a DOP in the GPS Data window"
+        """update a DOP in the GPS Data window."""
         if hasattr(data, doptype):
             return "%5.2f" % getattr(data, doptype)
 
         return "n/a"
 
     def update_ecef(self, data, eceftype, speedunit=''):
-        "update a ECEF in the GPS Data window"
+        """update a ECEF in the GPS Data window."""
         if hasattr(data, eceftype):
             value = getattr(data, eceftype)
             return ("% 14.3f %s%s" %
@@ -1193,7 +1193,7 @@ frame * {
         return "n/a"
 
     def update_err(self, data, errtype):
-        "update a error estimate in the GPS Data window"
+        """update a error estimate in the GPS Data window."""
         if hasattr(data, errtype):
             return "%8.3f %s" % (
                 getattr(data, errtype) * self.conversions.altfactor,
@@ -1202,7 +1202,7 @@ frame * {
         return "n/a"
 
     def update_err_speed(self, data, errtype):
-        "update speed error estimate in the GPS Data window"
+        """update speed error estimate in the GPS Data window."""
         if hasattr(data, errtype):
             return "%8.3f %s" % (
                 getattr(data, errtype) * self.conversions.speedfactor,
@@ -1211,7 +1211,7 @@ frame * {
         return "n/a"
 
     def update_err_degrees(self, data, errtype):
-        "update heading error estimate in the GPS Data window"
+        """update heading error estimate in the GPS Data window."""
         if hasattr(data, errtype):
             return ("%s " %
                     (gps.clienthelpers.deg_to_str(self.deg_type,
@@ -1220,7 +1220,7 @@ frame * {
         return "n/a"
 
     def update_mag_dec(self, data):
-        "update magnetic declination in the GPS Data window"
+        """update magnetic declination in the GPS Data window."""
         if ((data.mode >= gps.MODE_2D and
              hasattr(data, "lat") and
              hasattr(data, "lon"))):
@@ -1230,7 +1230,7 @@ frame * {
         return "n/a"
 
     def update_maidenhead(self, data):
-        "update maidenhead grid square in the GPS Data window"
+        """update maidenhead grid square in the GPS Data window."""
         if ((data.mode >= gps.MODE_2D and
              hasattr(data, "lat") and
              hasattr(data, "lon"))):
@@ -1238,7 +1238,7 @@ frame * {
         return "n/a"
 
     def update_status(self, data, item):
-        "Update the status window"
+        """Update the status window."""
 
         if 1 == item:
             return "%d secs" % (time.time() - self.last_transition)
@@ -1278,7 +1278,7 @@ frame * {
         return status
 
     def update_gpsdata(self, tpv):
-        "Update the GPS data fields."
+        """Update the GPS data fields."""
         # the first 28 fields are updated using TPV data
         # the next 9 fields are updated using SKY data
 
@@ -1295,7 +1295,7 @@ frame * {
                 self.skyview.rotate = tpv.track
 
     def update_version(self, ver):
-        "Update the Version"
+        """Update the Version."""
 
         if ver.release != gps_version:
             sys.stderr.write("%s: WARNING gpsd version %s different than "
@@ -1310,19 +1310,19 @@ frame * {
                               gps.api_version_major, gps.api_version_minor))
 
     def _int_to_str(self, value, min_val, max_val):
-        "test val in range min to max, or return"
+        """test val in range min to max, or return."""
         if min_val <= value <= max_val:
             return '%3d' % value
         return 'n/a'
 
     def _tenth_to_str(self, value, min_val, max_val):
-        "test val in range min to max, or return"
+        """test val in range min to max, or return."""
         if min_val <= value <= max_val:
             return '%5.1f' % value
         return 'n/a'
 
     def update_skyview(self, data):
-        "Update the satellite list and skyview."
+        """Update the satellite list and skyview."""
         data.satellites_seen = 0
         data.satellites_used = 0
         if hasattr(data, 'satellites'):
@@ -1398,20 +1398,20 @@ frame * {
     # Preferences
 
     def set_skyview_n(self, system, handle):
-        "Change the grid orientation."
+        """Change the grid orientation."""
         self.rotate = handle
         if handle is not None:
             self.skyview.rotate = handle
 
     def set_step_of_grid(self, system, handle):
-        "Change the step of grid."
+        """Change the step of grid."""
 
         # print("set_step_of_grid:", system, handle)
         if hasattr(self, 'skyview') and self.skyview is not None:
             self.skyview.step_of_grid = handle
 
     def set_deg(self, _unused, handle):
-        "Change the degree format."
+        """Change the degree format."""
 
         # print("set_deg:", _unused, handle)
         self.deg_type = handle
@@ -1419,7 +1419,7 @@ frame * {
             self.mvview.deg_type = handle
 
     def set_units(self, _unused, handle):
-        "Change the display units."
+        """Change the display units."""
 
         # print("set_units:", handle)
         self.conversions = gps.clienthelpers.unit_adjustments(handle)
@@ -1427,7 +1427,7 @@ frame * {
     # I/O monitoring and gtk housekeeping
 
     def watch(self, daem, dev):
-        "Set up monitoring of a daemon instance."
+        """Set up monitoring of a daemon instance."""
         self.daemon = daem
         self.device = dev
         GLib.io_add_watch(daemon.sock, GLib.PRIORITY_DEFAULT,
@@ -1438,7 +1438,7 @@ frame * {
                           GLib.IO_HUP, self.handle_hangup)
 
     def handle_response(self, source, condition):
-        "Handle ordinary I/O ready condition from the daemon."
+        """Handle ordinary I/O ready condition from the daemon."""
         if self.daemon.read() == -1:
             self.handle_hangup(source, condition)
         if self.daemon.valid & gps.PACKET_SET:
@@ -1469,7 +1469,7 @@ frame * {
         return True
 
     def handle_hangup(self, _source, _condition):
-        "Handle hangup condition from the daemon."
+        """Handle hangup condition from the daemon."""
         win = Gtk.MessageDialog(parent=self.window,
                                 message_type=Gtk.MessageType.ERROR,
                                 destroy_with_parent=True,
@@ -1481,7 +1481,7 @@ frame * {
         return True
 
     def main(self):
-        "The main routine"
+        """The main routine."""
         Gtk.main()
 
 
