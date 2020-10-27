@@ -1,11 +1,6 @@
 #!@PYSHEBANG@
 # -*- coding: UTF-8
 # @GENERATED@
-"""zerk -- GREIS configurator and packet decoder.
-
-usage: zerk [OPTIONS] [server[:port[:device]]]
-"""
-
 # This program conforms to the JAVAD document:
 #    GNSS Receiver External Interface Specification
 #    Revised: October 11, 2017
@@ -33,6 +28,13 @@ usage: zerk [OPTIONS] [server[:port[:device]]]
 #
 # TODO: no CRC16 packets handled yet
 # TODO: more packet decodes
+# Codacy D203 and D211 conflict, I choose D203
+# Codacy D212 and D213 conflict, I choose D212
+"""zerk -- GREIS configurator and packet decoder.
+
+usage: zerk [OPTIONS] [server[:port[:device]]]
+"""
+
 
 from __future__ import absolute_import, print_function, division
 
@@ -81,7 +83,7 @@ except TypeError:
     unpack_from_orig = struct.unpack_from
 
     def unpack_from_fixed(fmt, buf, offset=0):
-        """unpack_from_fixed."""
+        """Unpack_from_fixed."""
         return unpack_from_orig(fmt, buffer(buf), offset=offset)
 
     struct.unpack_from = unpack_from_fixed
@@ -152,41 +154,41 @@ This class contains functions to decode messages in the Javad GREIS
         self.epoch = None
 
     def f4_s(self, f):
-        """convert an '! f4' to a string."""
+        """Convert an '! f4' to a string."""
         if gps.isfinite(f):
             # yeah, the precision is a guess
             return "%.6f" % f
         return 'X'
 
     def f8_s(self, f):
-        """convert an '! f8' to a string."""
+        """Convert an '! f8' to a string."""
         if gps.isfinite(f):
             # yeah, the precision is a guess
             return "%.4f" % f
         return 'X'
 
     def i1_s(self, i):
-        """convert an '! i1' to a string."""
+        """Convert an '! i1' to a string."""
         return 'X' if i == 127 else str(i)
 
     def i2_s(self, i):
-        """convert an '! i2' to a string."""
+        """Convert an '! i2' to a string."""
         return 'X' if i == 32767 else str(i)
 
     def i4_s(self, i):
-        """convert an '! i4' to a string."""
+        """Convert an '! i4' to a string."""
         return 'X' if i == 2147483647 else str(i)
 
     def u1_s(self, u):
-        """convert an '! u1' to a string."""
+        """Convert an '! u1' to a string."""
         return 'X' if u == 255 else str(u)
 
     def u2_s(self, u):
-        """convert an '! u2' to a string."""
+        """Convert an '! u2' to a string."""
         return 'X' if u == 65535 else str(u)
 
     def u4_s(self, u):
-        """convert an '! u4' to a string."""
+        """Convert an '! u4' to a string."""
         return 'X' if u == 4294967295 else str(u)
 
     def isuchex(self, c):
@@ -1002,7 +1004,7 @@ This class contains functions to decode messages in the Javad GREIS
         return rcode
 
     def _rol(self, value):
-        """rotate a byte left 2 bits."""
+        """Rotate a byte left 2 bits."""
         return ((value << 2) | (value >> 6)) & 0x0ff
 
     def checksum(self, msg, m_len):
@@ -1137,7 +1139,7 @@ This class contains functions to decode messages in the Javad GREIS
     )
 
     def send_able_4hz(self, able):
-        """enable basic GREIS messages at 4Hz."""
+        """Enable basic GREIS messages at 4Hz."""
         self.expect_statement_identifier = 'greis'
 
         # the messages we want
@@ -1154,13 +1156,13 @@ This class contains functions to decode messages in the Javad GREIS
             self.gps_send(b"%greis%dm,," + messages)
 
     def send_able_comp(self, able):
-        """dis/enable COMPASS, aka BeiDou."""
+        """Dis/enable COMPASS, aka BeiDou."""
         self.expect_statement_identifier = 'cons'
         en_dis = b'y' if 1 == able else b'n'
         self.gps_send(b"%cons%set,/par/pos/sys/comp," + en_dis)
 
     def send_able_constellations(self, able):
-        """dis/enable all constellations."""
+        """Dis/enable all constellations."""
         self.expect_statement_identifier = 'cons7'
         en_dis = b'y' if 1 == able else b'n'
         self.gps_send(b"%cons1%set,/par/pos/sys/comp," + en_dis)
@@ -1173,7 +1175,7 @@ This class contains functions to decode messages in the Javad GREIS
         self.gps_send(b"%cons7%set,/par/pos/sys/qzss," + en_dis)
 
     def send_able_defmsg(self, able):
-        """dis/enable default messages at 1Hz."""
+        """Dis/enable default messages at 1Hz."""
         self.expect_statement_identifier = 'defmsg'
         if able:
             self.gps_send(b"%defmsg%em,,jps/RT,/msg/def:1,jps/ET")
@@ -1182,25 +1184,25 @@ This class contains functions to decode messages in the Javad GREIS
             self.gps_send(b"%defmsg%dm,,/msg/def:1")
 
     def send_able_gal(self, able):
-        """dis/enable GALILEO."""
+        """Dis/enable GALILEO."""
         self.expect_statement_identifier = 'cons'
         en_dis = b'y' if 1 == able else b'n'
         self.gps_send(b"%cons%set,/par/pos/sys/gal," + en_dis)
 
     def send_able_glo(self, able):
-        """dis/enable GLONASS."""
+        """Dis/enable GLONASS."""
         self.expect_statement_identifier = 'cons'
         en_dis = b'y' if 1 == able else b'n'
         self.gps_send(b"%cons%set,/par/pos/sys/glo," + en_dis)
 
     def send_able_gps(self, able):
-        """dis/enable GPS."""
+        """Dis/enable GPS."""
         self.expect_statement_identifier = 'cons'
         en_dis = b'y' if 1 == able else b'n'
         self.gps_send(b"%cons%set,/par/pos/sys/gps," + en_dis)
 
     def send_able_ipr(self, able):
-        """dis/enable all Integer Pseudo-Range messages."""
+        """Dis/enable all Integer Pseudo-Range messages."""
         self.expect_statement_identifier = 'em'
         if able:
             self.gps_send(b"%em%em,,jps/{rx,rc,r1,r2,r3,r5,rl}:0.25")
@@ -1208,13 +1210,13 @@ This class contains functions to decode messages in the Javad GREIS
             self.gps_send(b"%em%dm,,jps/{rx,rc,r1,r2,r3,r5,rl}")
 
     def send_able_irnss(self, able):
-        """dis/enable IRNSS."""
+        """Dis/enable IRNSS."""
         self.expect_statement_identifier = 'cons'
         en_dis = b'y' if 1 == able else b'n'
         self.gps_send(b"%cons%set,/par/pos/sys/irnss," + en_dis)
 
     def send_able_nmea41(self, able):
-        """dis/enable basic NMEA 4.1e messages at 4Hz."""
+        """Dis/enable basic NMEA 4.1e messages at 4Hz."""
         self.expect_statement_identifier = 'nmea'
 
         messages = b"nmea/{GBS,GGA,GSA,GST,GSV,RMC,VTG,ZDA}"
@@ -1234,7 +1236,7 @@ This class contains functions to decode messages in the Javad GREIS
             self.gps_send(b"%nmea%dm,," + messages)
 
     def send_able_raw(self, able):
-        """dis/enable Raw mode messages."""
+        """Dis/enable Raw mode messages."""
         self.expect_statement_identifier = 'raw'
 
         messages = (b"jps/{RT,UO,GT,PV,SG,DP,SI,EL,AZ,EC,SS,"
@@ -1249,19 +1251,19 @@ This class contains functions to decode messages in the Javad GREIS
             self.gps_send(b"%raw%dm,," + messages)
 
     def send_able_sbas(self, able):
-        """dis/enable SBAS."""
+        """Dis/enable SBAS."""
         self.expect_statement_identifier = 'cons'
         en_dis = b'y' if 1 == able else b'n'
         self.gps_send(b"%cons%set,/par/pos/sys/sbas," + en_dis)
 
     def send_able_qzss(self, able):
-        """dis/enable QZSS."""
+        """Dis/enable QZSS."""
         self.expect_statement_identifier = 'cons'
         en_dis = b'y' if 1 == able else b'n'
         self.gps_send(b"%cons%set,/par/pos/sys/qzss," + en_dis)
 
     def send_able_snr(self, able):
-        """dis/enable all SNR messages, except [EC]."""
+        """Dis/enable all SNR messages, except [EC]."""
         self.expect_statement_identifier = 'em'
         if able:
             self.gps_send(b"%em%em,,jps/{E1,E2,E3,E5,El}:0.25")
@@ -1319,17 +1321,17 @@ This class contains functions to decode messages in the Javad GREIS
         self.gps_send(b"%coldboot%init,/dev/nvm/a")
 
     def send_constellations(self):
-        """poll all constellations."""
+        """Poll all constellations."""
         self.expect_statement_identifier = 'cons'
         self.gps_send(b"%cons%print,/par/pos/sys:on")
 
     def send_get_id(self):
-        """get receiver id."""
+        """Get receiver id."""
         self.expect_statement_identifier = 'id'
         self.gps_send(b"%id%print,/par/rcv/id")
 
     def send_get_oaf(self):
-        """poll OAF (GPS opts)."""
+        """Poll OAF (GPS opts)."""
         self.expect_statement_identifier = 'opts,_WPT'
         if VERB_RAW <= opts['verbosity']:
             # get list of all opts
@@ -1340,44 +1342,44 @@ This class contains functions to decode messages in the Javad GREIS
             self.gps_send(b"%%opts,%s%%print,/par/opts/%s" % (s, s))
 
     def send_get_serial(self):
-        """get receiver serial number."""
+        """Get receiver serial number."""
         self.expect_statement_identifier = 'serial'
         self.gps_send(b"%serial%print,/par/rcv/sn")
 
     def send_reset(self):
-        """reset (reboot) the GPS."""
+        """Reset (reboot) the GPS."""
         self.expect_statement_identifier = 'reset'
         self.gps_send(b"%reset%set,/par/reset,y")
 
     def send_set_dm(self):
-        """disable all messages."""
+        """Disable all messages."""
         self.expect_statement_identifier = 'dm'
         self.gps_send(b"%dm%dm")
 
     def send_set_ipr(self):
-        """poll Integer Pseudo-Range messages."""
+        """Poll Integer Pseudo-Range messages."""
         self.expect_statement_identifier = 'out'
         self.gps_send(b"%out%out,,jps/{rx,rc,r1,r2,r3,r5,rl}")
 
     def send_get_snr(self):
-        """poll all SNR messages."""
+        """Poll all SNR messages."""
         # nothing we can wait on, depending on GPS model/configuration
         # we may never see some of E2, E3, E5 or El
         self.gps_send(b"%out%out,,jps/{EC,E1,E2,E3,E5,El}")
 
     def send_set_speed(self, set_speed):
-        """change GPS speed."""
+        """Change GPS speed."""
         self.expect_statement_identifier = 'setspeed'
         self.gps_send(b"%%setspeed%%set,/par/cur/term/rate,%d" %
                       set_speed)
 
     def send_get_vendor(self):
-        """get receiver vendor."""
+        """Get receiver vendor."""
         self.expect_statement_identifier = 'vendor'
         self.gps_send(b"%vendor%print,/par/rcv/vendor")
 
     def send_get_ver(self):
-        """get receiver version, per section 4.4.3 of the specification."""
+        """Get receiver version, per section 4.4.3 of the specification."""
         self.expect_statement_identifier = 'ver'
         self.gps_send(b"%ver%print,/par/rcv/ver")
 
@@ -1628,7 +1630,7 @@ Three types of GPS I/O
         return ret_code
 
     def write_gpsd(self, data):
-        """write data to gpsd daemon."""
+        """Write data to gpsd daemon."""
         # HEXDATA_MAX = 512, from gps.h, The max hex digits can write.
         # Input data is binary, converting to hex doubles its size.
         # Limit binary data to length 255, so hex data length less than 510.
