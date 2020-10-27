@@ -7,6 +7,7 @@
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
 #
+"""gpssubframe -- read JSON subframe messages from gpsd and decode them."""
 
 from __future__ import print_function
 
@@ -98,11 +99,11 @@ sv_conf = {
 
 
 def kepler(e, M):
-    '''Keplers iteration to solve his equation'''
+    """Keplers iteration to solve his equation."""
 
     # https://en.wikipedia.org/wiki/Kepler%27s_equation
     E = M             # initial guess
-    for i in range(1, 20):
+    for iter in range(1, 20):
         temp = E
         E = M + e * math.sin(E)
         if 1e-12 > math.fabs(E - temp):
@@ -116,8 +117,7 @@ def kepler(e, M):
 # Online data check:
 # real time sat positions: https://in-the-sky.org/satmap_worldmap.php
 def SatPos(ephm, t):
-    """Calculate GPS Satellite Position from Ephemeris/Almanac and t"""
-
+    """Calculate GPS Satellite Position from Ephemeris/Almanac."""
     # compute Sat position from IS-GPS-200 table 20-IV
     # See also:
     # RTKLIB src/ephemeris.c
@@ -369,9 +369,8 @@ ionosphere_fields = {
     }
 
 
-def _print_msg(sv, ephem, fields):
-    """Print Subframe Data"""
-
+def _print_msg(svid, ephem, fields):
+    """Print Subframe Data."""
     for index in sorted(fields.keys()):
         fld = fields[index]
         print("%10s %s" % (fld[0], ephem[fld[0]]))
@@ -625,14 +624,14 @@ for sv in sorted(set(all_sv)):
     else:
         print("    Missing")
     print("  Subframe 4 page 25")
-    id = "SV%d" % sv
-    if health and id in health:
-        if 0x3f == health[id]:
-            print("       Flags  %2d (n/a)" % health[id])
+    svid = "SV%d" % sv
+    if health and svid in health:
+        if 0x3f == health[svid]:
+            print("       Flags  %2d (n/a)" % health[svid])
         else:
             print("       Flags  %2d (A/S %3s Config %s)" %
-                  (health[id], 'Yes' if (health[id] & 8) else 'No',
-                   sv_conf[health[id] & 0x7]))
+                  (health[svid], 'Yes' if (health[svid] & 8) else 'No',
+                   sv_conf[health[svid] & 0x7]))
     else:
         print("    Missing")
     print("  Almanac")
@@ -718,18 +717,18 @@ if 'time' in tpv and options.satpos:
             print("\nSV %u Ephemeris position:" % sv)
 
             # mash into one dict
-            ephm = ephemeris1[sv]
-            ephm.update(ephemeris2[sv])
-            ephm.update(ephemeris3[sv])
+            eph = ephemeris1[sv]
+            eph.update(ephemeris2[sv])
+            eph.update(ephemeris3[sv])
 
             # convert semi-circles to radians
             # use military PI, not real pi.
             cvt = ('deltan', 'i0', 'IDOT', 'M0', 'omega', 'Omega0',
                    'Omegad')
             for i in cvt:
-                ephm[i] *= gps.GPS_PI
+                eph[i] *= gps.GPS_PI
 
-            SatPos(ephm, gps_tow)
+            SatPos(eph, gps_tow)
 
         if sv in almanac:
             print("\nSV %u Almanac position:" % sv)
