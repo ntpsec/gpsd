@@ -8,7 +8,7 @@
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
 # Codacy D203 and D211 conflict, I choose D203
-# Codacy D203 and D211 conflict, I choose D203
+# Codacy D212 and D213 conflict, I choose D212
 
 """gpsfake -- test harness for gpsd.
 
