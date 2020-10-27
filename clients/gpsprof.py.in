@@ -1,11 +1,6 @@
 #!@PYSHEBANG@
 #
 # @GENERATED@
-"""Collect and plot latency-profiling data from a running gpsd.
-
-Requires gnuplot, but gnuplot can be on another host.
-"""
-
 # This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 #
@@ -18,6 +13,13 @@ Requires gnuplot, but gnuplot can be on another host.
 #
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
+# Codacy D203 and D211 conflict, I choose D203
+# Codacy D212 and D213 conflict, I choose D212
+"""Collect and plot latency-profiling data from a running gpsd.
+
+Requires gnuplot, but gnuplot can be on another host.
+"""
+
 from __future__ import absolute_import, print_function, division
 
 import argparse
@@ -47,14 +49,14 @@ if gps.__version__ != gps_version:
 
 
 def dist_2d(a, b):
-    """calculate distance between a[x,y] and b[x,y]."""
+    """Calculate distance between a[x,y] and b[x,y]."""
     # x and y are orthogonal, probably lat/lon in meters
     # ignore altitude change.
     return math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
 
 
 def dist_3d(a, b):
-    """calculate distance between a[x,y,z] and b[x,y,z]."""
+    """Calculate distance between a[x,y,z] and b[x,y,z]."""
     # x, y, and z are othogonal, probably ECEF, probably in meters
     return math.sqrt((a[0] - b[0]) ** 2 +
                      (a[1] - b[1]) ** 2 +
@@ -88,7 +90,6 @@ def wgs84_to_ecef(wgs84):
 
 
 class Baton(object):
-
     """Ship progress indication to stderr."""
 
     def __init__(self, prompt, endmsg=None):
@@ -125,8 +126,7 @@ class Baton(object):
 
 
 class stats(object):
-
-    "Class for 1D stats: min, max, mean, sigma, skewness, kurtosis"
+    """Class for 1D stats: min, max, mean, sigma, skewness, kurtosis."""
 
     def __init__(self):
         """Init class stats."""
@@ -139,7 +139,7 @@ class stats(object):
         self.kurtosis = 0.0
 
     def __str__(self):
-        """return a nice string, for debug."""
+        """Return a nice string, for debug."""
         return ("min %f, max %f, mean %f, median %f, sigma %f, skewedness %f, "
                 "kurtosis %f" %
                 (self.min, self.max, self.mean, self.median,
@@ -207,16 +207,16 @@ class stats(object):
 
 
 class plotter(object):
-
-    "Generic class for gathering and plotting sensor statistics."
+    """Generic class for gathering and plotting sensor statistics."""
 
     def __init__(self):
-        """Init class prlotter."""
+        """Init class plotter."""
         self.device = None
         self.fixes = []
         self.in_replot = False
         self.session = None
         self.start_time = int(time.time())
+        self.requires_time = False
         self.watch = set(['TPV'])
 
     def whatami(self):
@@ -340,8 +340,7 @@ class plotter(object):
 
 
 class spaceplot(plotter):
-
-    "Spatial scattergram of fixes."
+    """Spatial scattergram of fixes."""
     name = "space"
     requires_time = False
 
@@ -402,7 +401,7 @@ class spaceplot(plotter):
         stat_lon_r = stats()
         stat_alt_r = stats()
 
-        if len(self.fixes) == 0:
+        if self.fixes:
             print("plot(): fixes array is empty\n")
             raise Exception('When plotting, there are no fixes.')
 
@@ -782,8 +781,7 @@ class spaceplot(plotter):
 
 
 class polarplot(plotter):
-
-    "Polar plot of signal strength"
+    """Polar plot of signal strength."""
     name = "polar"
     requires_time = False
     seen_used = []          # count of seen and used in each SKY
@@ -947,20 +945,17 @@ plot "-" u (90 - $3):4:(1):($2) t "Sat" w circles lc palette
 
 
 class polarplotunused(polarplot):
-
-    "Polar plot of unused sats signal strength"
+    """Polar plot of unused sats signal strength."""
     name = "polarunused"
 
 
 class polarplotused(polarplot):
-
-    "Polar plot of used sats signal strength"
+    """Polar plot of used sats signal strength."""
     name = "polarused"
 
 
 class timeplot(plotter):
-
-    "Time drift against PPS."
+    """Time drift against PPS."""
     name = "time"
     requires_time = True
 
@@ -1007,8 +1002,7 @@ plot "-" using 0:((column(1)-column(3))*1e9 + (column(2)-column(4))) \
 
 
 class uninstrumented(plotter):
-
-    "Total times without instrumentation."
+    """Total times without instrumentation."""
     name = "uninstrumented"
     requires_time = False
 
@@ -1052,8 +1046,7 @@ plot "-" using 0:1 title "Total time" with impulses
 
 
 class instrumented(plotter):
-
-    "Latency as analyzed by instrumentation."
+    """Latency as analyzed by instrumentation."""
     name = "instrumented"
     requires_time = True
 
