@@ -1,12 +1,6 @@
 #!@PYSHEBANG@
 # -*- coding: UTF-8
 # @GENERATED@
-'''
-ubxtool -- u-blox configurator and packet decoder
-
-usage: ubxtool [OPTIONS] [host[:port[:device]]]
-'''
-
 # This file is Copyright 2018 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 #
@@ -29,6 +23,12 @@ usage: ubxtool [OPTIONS] [host[:port[:device]]]
 #
 # References:
 #   [1] IS-GPS-200K
+# Codacy D203 and D211 conflict, I choose D203
+# Codacy D212 and D213 conflict, I choose D212
+"""ubxtool -- u-blox configurator and packet decoder.
+
+usage: ubxtool [OPTIONS] [host[:port[:device]]]
+"""
 
 from __future__ import absolute_import, print_function, division
 
@@ -37,10 +37,8 @@ from functools import reduce  # pylint: disable=redefined-builtin
 import operator      # for or_
 import os            # for os.environ
 import re            # for regular expressions
-import string        # for string.printable
 import struct        # for pack()
 import sys
-import time
 
 PROG_NAME = 'ubxtool'
 
@@ -72,6 +70,7 @@ except TypeError:
     unpack_from_orig = struct.unpack_from
 
     def unpack_from_fixed(fmt, buf, offset=0):
+        """Unpack_from_fixed."""
         return unpack_from_orig(fmt, buffer(buf), offset=offset)
 
     struct.unpack_from = unpack_from_fixed
@@ -90,8 +89,6 @@ except TypeError:
 gps_model = gps.ubx.ubx()
 
 if 'UBXOPTS' in os.environ:
-    # grab the UBXOPTS environment variable for options
-    opts['timestamp'] = 0
     # grab the UBXOPTS environment variable to be handled as prepended options
     options = os.environ['UBXOPTS'].split(' ') + sys.argv[1:]
 
@@ -294,7 +291,7 @@ gps_model.verbosity = opts['verbosity']
 if opts['port']:
     # FIXME: better error message
     valnum = gps_model.port_id_map.get(val.upper())
-    opts['port'] = valnum if valnum is not None else int(val)
+    opts['port'] = valnum if valnum is not None else int(opt['port'])
 
 if opts['help']:
     parser.print_help()
