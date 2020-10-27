@@ -507,6 +507,10 @@ class SubprogramInstance(object):
                 if os.path.isfile(_spawncmd) and os.access(_spawncmd, os.X_OK):
                     spawncmd = _spawncmd
                     break
+                _spawncmd = "%s/gpsd/%s" % (path, program)
+                if os.path.isfile(_spawncmd) and os.access(_spawncmd, os.X_OK):
+                    spawncmd = _spawncmd
+                    break
 
         # if we could not find it yet try PATH env variable for it
         if not spawncmd:
