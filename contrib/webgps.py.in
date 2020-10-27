@@ -1,6 +1,14 @@
 #!@PYSHEBANG@
 # encoding: utf-8
 # @GENERATED@
+# This code runs compatibly under Python 2 and 3.x for x >= 2.
+# Preserve this property!
+#
+# This file is Copyright 2010 by the GPSD project
+# SPDX-License-Identifier: BSD-2-clause
+
+# Codacy D203 and D211 conflict, I choose D203
+# Codacy D212 and D213 conflict, I choose D212
 
 """webgps.py
 
@@ -38,17 +46,10 @@ is present on start of webgps.py, it is loaded. This allows to restart
 webgps.py without losing accumulated satellite tracks.
 """
 
-# This code runs compatibly under Python 2 and 3.x for x >= 2.
-# Preserve this property!
-#
-# This file is Copyright 2010 by the GPSD project
-# SPDX-License-Identifier: BSD-2-clause
-
 from __future__ import absolute_import, print_function, division
 
 import math
 import os
-import pickle
 import sys
 import time
 
@@ -68,6 +69,7 @@ DIAMETER = 200
 
 
 def polartocart(el, az):
+    """Polartocart."""
     radius = DIAMETER * (1 - el / 90.0)   # * math.cos(Deg2Rad(float(el)))
     theta = Deg2Rad(float(az - 90))
     return (
@@ -78,14 +80,15 @@ def polartocart(el, az):
 
 
 class Track:
-    '''Store the track of one satellite.'''
-
+    """Store the track of one satellite."""
     def __init__(self, prn):
+        """Init class track."""
         self.prn = prn
         self.stale = 0
         self.posn = []          # list of (x, y) tuples
 
     def add(self, x, y):
+        """Add track."""
         pos = (x, y)
         self.stale = STALECOUNT
         if not self.posn or self.posn[-1] != pos:
@@ -96,16 +99,18 @@ class Track:
         return 0
 
     def track(self):
-        '''Return the track as canvas drawing operations.'''
+        """Return the track as canvas drawing operations."""
         mid_thing = ');L('
         return('M(%s);' % mid_thing.join(
                         map(lambda x: '%d,%d' % (x[0], x[1]), self.posn)))
 
 
 class SatTracks(gps):
-    '''gpsd client writing HTML5 and <canvas> output.'''
+
+    """gpsd client writing HTML5 and <canvas> output."""
 
     def __init__(self):
+        """Init class SatTracks."""
         super(SatTracks, self).__init__()
         self.backing = {}
         self.sattrack = {}      # maps PRNs to Tracks
@@ -114,6 +119,7 @@ class SatTracks(gps):
         self.needsupdate = 0
 
     def html(self, fh, jsfile):
+        """Writh HTML."""
         fh.write("""<!DOCTYPE html>
 <html lang="en"><head>
 \t<meta http-equiv="Refresh" content="300">
@@ -204,6 +210,7 @@ class SatTracks(gps):
         fh.write('\t</table></div>\n')
 
         def fgetnans(parent, children):
+            """Fgetnans."""
             result = []
             for child in children:
                 k = parent.get(child, float('nan'))
@@ -253,7 +260,8 @@ class SatTracks(gps):
             fh.write(isfinite(qerr) and ("\t\tPPS sawtooth %fps<br/>\n"
                      % qerr) or "")
         if 'DEVICES' in self.backing:
-            for (index, value) in enumerate(self.backing['DEVICES']['devices']):
+            for (index, value) in enumerate(
+                    self.backing['DEVICES']['devices']):
                 for key in value:
                     fh.write('\t\t[%d]%s: %s<br/>\n' %
                              (index, key, value[key]))
@@ -268,13 +276,16 @@ class SatTracks(gps):
             fh.write('Oscillator delta: %fns<br>\n' % s['delta'])
         fh.write('\t</div>\n')
 
-        def row(l, v):
-            fh.write("\t\t<tr><th>%s:</th><td>%s</td></tr>\n" % (l, v))
+        def row(ln, v):
+            """Write raw."""
+            fh.write("\t\t<tr><th>%s:</th><td>%s</td></tr>\n" % (ln, v))
 
         def deg_to_str(a, hemi):
+            """deg_to_str."""
             return '%.6f %c' % (abs(a), hemi[a < 0])
 
         def moderows(mode, table):
+            """Moderows."""
             for line in table:
                 if line[0] > mode or not isfinite(line[3]):
                     row(line[1], 'N/A')
@@ -329,6 +340,7 @@ class SatTracks(gps):
 """)
 
     def js(self, fh):
+        """Write the js."""
         fh.write("""// draw the satellite view
 
 function draw_satview() {
@@ -419,11 +431,13 @@ function draw_satview() {
 """)
 
     def make_stale(self):
+        """Nake_stale."""
         for t in self.sattrack.values():
             if t.stale:
                 t.stale -= 1
 
     def delete_stale(self):
+        """"Delete_stale."""
         stales = []
         for prn in self.sattrack.keys():
             if self.sattrack[prn].stale == 0:
@@ -433,6 +447,7 @@ function draw_satview() {
             del self.sattrack[prn]
 
     def insert_sat(self, prn, x, y):
+        """Insert_sat."""
         try:
             t = self.sattrack[prn]
         except KeyError:
@@ -441,6 +456,7 @@ function draw_satview() {
             self.needsupdate = 1
 
     def update_tracks(self):
+        """update_tracks."""
         self.make_stale()
         for s in self.satellites:
             x, y = polartocart(s.elevation, s.azimuth)
@@ -448,6 +464,7 @@ function draw_satview() {
         self.delete_stale()
 
     def run(self, suffix, period):
+        """Run."""
         jsfile = 'gpsd' + suffix + '.js'
         htmlfile = 'gpsd' + suffix + '.html'
         if period is not None:
@@ -473,6 +490,7 @@ function draw_satview() {
 
 
 def main():
+    """Main."""
     argv = sys.argv[1:]
 
     factors = {
