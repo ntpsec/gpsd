@@ -649,7 +649,7 @@ http://www.satsignal.eu/ntp/Raspberry-Pi-NTP.html
 
 gpsd will build, install and run on FreeBSD.
 Due to the missing CAN bus support (linux/can.h), NMEA2000/CAN
-is not supporten on FreeBSD.
+is not supported on FreeBSD.
 
 Use their pkg command to install scons, and optionally git if you
 want to access the development source.
