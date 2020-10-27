@@ -11,6 +11,8 @@
 
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
+"""xgpsspeed -- test client for gpsd."""
+
 from __future__ import absolute_import, print_function, division
 
 import argparse
@@ -65,10 +67,11 @@ if gps.__version__ != gps_version:
 
 
 class Speedometer(Gtk.DrawingArea):
-    "Speedometer class"
+
+    """Speedometer class."""
 
     def __init__(self, speed_unit=None):
-        "Init Speedometer class"
+        """Init Speedometer class."""
         Gtk.DrawingArea.__init__(self)
         self.MPH_UNIT_LABEL = 'mph'
         self.KPH_UNIT_LABEL = 'kmh'
@@ -87,10 +90,11 @@ class Speedometer(Gtk.DrawingArea):
 
 
 class LandSpeedometer(Speedometer):
-    "LandSpeedometer class"
+
+    """LandSpeedometer class."""
 
     def __init__(self, speed_unit=None):
-        "Init LandSpeedometer class"
+        """Init LandSpeedometer class."""
         Speedometer.__init__(self, speed_unit)
         self.connect('size-allocate', self.on_size_allocate)
         self.width = self.height = 0
@@ -118,11 +122,12 @@ class LandSpeedometer(Speedometer):
         }
 
     def on_size_allocate(self, _unused, allocation):
+        """on_size_allocatio."""
         self.width = allocation.width
         self.height = allocation.height
 
     def draw_s(self, widget, _event, _empty=None):
-        "Top level draw"
+        """Top level draw."""
 
         window = widget.get_window()
         region = window.get_clip_region()
@@ -142,6 +147,7 @@ class LandSpeedometer(Speedometer):
         window.end_draw_frame(context)
 
     def draw_arc_and_ticks(self, width, height, radius, x, y):
+        """draw_arc_and_ticks."""
         self.cr.set_source_rgb(1.0, 1.0, 1.0)
         self.cr.rectangle(0, 0, width, height)
         self.cr.fill()
@@ -239,6 +245,7 @@ class LandSpeedometer(Speedometer):
             self.cr.stroke()
 
     def draw_needle(self, speed, radius, x, y):
+        """draw_needle."""
         self.cr.save()
         inset = self.long_inset(radius)
         speed = speed * self.conversions.get(self.speed_unit)
@@ -257,6 +264,7 @@ class LandSpeedometer(Speedometer):
         self.cr.restore()
 
     def draw_speed_text(self, speed, radius, x, y):
+        """draw_speed_text."""
         self.cr.save()
         speed = '%.2f %s' % (
                 speed * self.conversions.get(self.speed_unit),
@@ -276,21 +284,25 @@ class LandSpeedometer(Speedometer):
         self.cr.restore()
 
     def get_x_y(self):
+        """get_x_y."""
         rect = self.get_allocation()
         x = (rect.x + rect.width / 2.0)
         y = (rect.y + rect.height / 2.0) - 20
         return x, y
 
     def get_radius(self, width, height):
+        """"get_radius."""
         return min(width / 2.0, height / 2.0) - 20
 
 
 class NauticalSpeedometer(Speedometer):
-    "NauticalSpeedometer class"
+
+    """NauticalSpeedometer class."""
     HEADING_SAT_GAP = 0.8
     SAT_SIZE = 10  # radius of the satellite circle in skyview
 
     def __init__(self, speed_unit=None, maxspeed=100, rotate=0.0):
+        """Init class NauticalSpeedometer."""
         Speedometer.__init__(self, speed_unit)
         self.connect('size-allocate', self.on_size_allocate)
         self.width = self.height = 0
@@ -306,27 +318,29 @@ class NauticalSpeedometer(Speedometer):
         self.cr = None
 
     def polar2xy(self, radius, angle, polex, poley):
-        '''convert Polar coordinate to Cartesian coordinate system
-        the y axis in pygtk points downward
-        Args:
-           radius:
-           angle: azimuth from from Polar coordinate system, in radian
-           polex and poley are the Cartesian coordinate of the pole
-        return a tuple contains (x, y)'''
+        """convert Polar coordinate to Cartesian coordinate system.
+
+The y axis in pygtk points downward
+Args:
+   radius:
+   angle: azimuth from from Polar coordinate system, in radian
+   polex and poley are the Cartesian coordinate of the pole
+return a tuple contains (x, y)
+"""
         return (polex + cos(angle) * radius, poley - sin(angle) * radius)
 
     def polar2xyr(self, radius, angle, polex, poley):
-        '''Version of polar2xy that includes rotation'''
+        """Version of polar2xy that includes rotation."""
         angle = (angle + self.rotate) % (pi * 2)  # Note reversed sense
         return self.polar2xy(radius, angle, polex, poley)
 
     def on_size_allocate(self, _unused, allocation):
+        """on_size_allocate."""
         self.width = allocation.width
         self.height = allocation.height
 
     def draw_s(self, widget, _event, _empty=None):
-        "Top level draw"
-
+        """Top level draw."""
         window = widget.get_window()
         region = window.get_clip_region()
         context = window.begin_draw_frame(region)
@@ -348,9 +362,11 @@ class NauticalSpeedometer(Speedometer):
         window.end_draw_frame(context)
 
     def draw_text(self, x, y, text, fontsize=10):
-        '''draw text at given location
-        Args:
-            x, y is the center of textbox'''
+        """draw text at given location.
+
+Args:
+    x, y is the center of textbox
+"""
         txt = str(text)
         self.cr.new_sub_path()
         self.cr.set_source_rgba(0, 0, 0)
@@ -365,7 +381,7 @@ class NauticalSpeedometer(Speedometer):
         self.cr.show_text(txt)
 
     def draw_arc_and_ticks(self, width, height, radius, x, y):
-        '''Draw a serial of circle, with ticks in outmost circle'''
+        """Draw a serial of circle, with ticks in outmost circle."""
 
         self.cr.set_source_rgb(1.0, 1.0, 1.0)
         self.cr.rectangle(0, 0, width, height)
@@ -474,6 +490,7 @@ class NauticalSpeedometer(Speedometer):
             self.cr.stroke()
 
     def draw_heading(self, trig_height, heading, radius, x, y):
+        """draw_heading."""
         hypo = trig_height * 2 / sqrt(3)
         h = (pi / 2 - radians(heading) + self.rotate) % (pi * 2)  # to xyz
         self.cr.set_line_width(2)
@@ -520,17 +537,18 @@ class NauticalSpeedometer(Speedometer):
         # self.cr.stroke()
 
     def set_color(self, spec):
-        '''Set foreground color for drawing.'''
+        """Set foreground color for drawing."""
 
         color = Gdk.RGBA()
         color.parse(spec)
         Gdk.cairo_set_source_rgba(self.cr, color)
 
     def draw_sat(self, satsoup, radius, x, y):
-        """Given a sat's elevation, azimuth, SNR, draw it on the skyview
-        Arg:
-        satsoup: a dictionary {'el': xx, 'az': xx, 'ss': xx}
-        """
+        """Given a sat's elevation, azimuth, SNR, draw it on the skyview.
+
+Arg:
+satsoup: a dictionary {'el': xx, 'az': xx, 'ss': xx}
+"""
         el, az = satsoup['el'], satsoup['az']
         if el == 0 and az == 0:
             return  # Skip satellites with unknown position
@@ -567,6 +585,7 @@ class NauticalSpeedometer(Speedometer):
         self.draw_text(x0, y0, satsoup['PRN'], fontsize=15)
 
     def draw_speed(self, radius, x, y):
+        """draw_speed."""
         self.cr.new_sub_path()
         self.cr.set_line_width(20)
         self.cr.set_source_rgba(0, 0, 0, 0.5)
@@ -584,17 +603,20 @@ class NauticalSpeedometer(Speedometer):
         self.draw_text(x, y + radius + 40, label, fontsize=20)
 
     def get_x_y(self):
+        """get_x_y."""
         rect = self.get_allocation()
         x = (rect.x + rect.width / 2.0)
         y = (rect.y + rect.height / 2.0) - 20
         return x, y
 
     def get_radius(self, width, height):
+        """ get_radius."""
         return min(width / 2.0, height / 2.0) - 70
 
 
 class Main(object):
-    "Main"
+
+    """Main."""
 
     def __init__(self, host='localhost', port=gps.GPSD_PORT, device=None,
                  debug=0, speed_unit=None, maxspeed=0, nautical=False,
@@ -718,7 +740,7 @@ class Main(object):
         self.window.show_all()
 
     def about(self, _unused):
-        "Show about dialog"
+        """Show about dialog."""
 
         about = Gtk.AboutDialog()
         about.set_program_name("xgpsspeed")
@@ -740,17 +762,18 @@ class Main(object):
         about.destroy()
 
     def delete_event(self, _widget, _event, _data=None):
-        "Say goodbye nicely"
+        """Say goodbye nicely."""
         Gtk.main_quit()
         return False
 
     def set_units(self, _unused, handle):
-        "Change the display units."
+        """Change the display units."""
 
         # print("set_units:", handle, self)
         self.widget.speed_unit = handle
 
     def watch(self, daemon, device):
+        """watch."""
         self.daemon = daemon
         self.device = device
         GLib.io_add_watch(daemon.sock, GLib.PRIORITY_DEFAULT,
@@ -762,7 +785,7 @@ class Main(object):
         return True
 
     def view_toggle(self, action, name):
-        "Toggle widget view"
+        """Toggle widget view."""
 
         if not action.get_active() or not name:
             # nothing to do
@@ -786,6 +809,7 @@ class Main(object):
         self.widget.show()
 
     def handle_response(self, source, condition):
+        """"handle_response."""
         if self.daemon.read() == -1:
             self.handle_hangup(source, condition)
         if self.daemon.data['class'] == 'VERSION':
@@ -798,6 +822,7 @@ class Main(object):
         return True
 
     def handle_hangup(self, _dummy, _unused):
+        """handle_hangup."""
         w = Gtk.MessageDialog(
             parent=self.window,
             message_type=Gtk.MessageType.ERROR,
@@ -812,6 +837,7 @@ class Main(object):
         return True
 
     def update_speed(self, data):
+        """update_speed."""
         if hasattr(data, 'speed'):
             self.widget.last_speed = data.speed
             self.widget.queue_draw()
@@ -821,14 +847,13 @@ class Main(object):
 
     # Used for NauticalSpeedometer only
     def update_skyview(self, data):
-        "Update the satellite list and skyview."
+        """Update the satellite list and skyview."""
         if hasattr(data, 'satellites'):
             self.widget.satellites = data.satellites
             self.widget.queue_draw()
 
     def update_version(self, ver):
-        "Update the Version"
-
+        """Update the Version."""
         if ver.release != gps_version:
             sys.stderr.write("%s: WARNING gpsd version %s different than "
                              "expected %s\n" %
@@ -842,9 +867,11 @@ class Main(object):
                               gps.api_version_major, gps.api_version_minor))
 
     def destroy(self, _unused, _empty=None):
+        """destroy."""
         Gtk.main_quit()
 
     def run(self):
+        """run."""
         try:
             daemon = gps.gps(
                 host=self.host,
