@@ -544,7 +544,7 @@ envs = {}
 for var in import_env:
     if var in os.environ:
         envs[var] = os.environ[var]
-envs["GPSD_HOME"] = os.getcwd()
+envs["GPSD_HOME"] = os.getcwd() + os.sep + 'gpsd'
 
 env = Environment(tools=["default", "tar", "textfile"], options=opts, ENV=envs)
 
@@ -2157,7 +2157,10 @@ for fn in templated:
     # Only www pages need @DATE@ expansion, which forces rebuild every time
     subst = substmap_dated if iswww else substmap
     # use scons built-in Substfile()
-    builder = env.Substfile(fn, SUBST_DICT=subst)
+    if 'gpsfake.py.in' == fn:
+        builder = env.Substfile(target='gpsfake', source=fn, SUBST_DICT=subst)
+    else:
+        builder = env.Substfile(fn, SUBST_DICT=subst)
     # default to building all built targets, except www
     # FIXME: Render this unnecessary
     if not iswww:
