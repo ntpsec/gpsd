@@ -2141,35 +2141,71 @@ substmap = (
 # FIXME: Come up with a better approach with reproducible builds
 substmap_dated = substmap + (('@DATE@', time.asctime()),)
 
-templated = glob.glob("*.in") + glob.glob("*/*.in") + glob.glob("*/*/*.in")
-
+# explicit templated files
+# ignore files in subfolder called './contrib/gps' - just links
 # ignore files in subfolder called 'debian' - the Debian packaging
 # tools will handle them.
-# ignore files in subfolder called './contrib/gps' - just links
 # ignore files in subfolder called './devtools/gps' - just links
-templated = [x for x in templated if (not x.startswith('contrib/gps/') and
-                                      not x.startswith('debian/') and
-                                      not x.startswith('devtools/gps/') and
-                                      not x.startswith('tests/gps/'))]
+# ignore files in subfolder called './tests/gps' - just links
+templated = {
+    "android/gpsd_config": "android/gpsd_config.in",
+    "clients/gegps": "clients/gegps.in",
+    "clients/gpscat": "clients/gpscat.in",
+    "clients/gpscsv": "clients/gpscsv.in",
+    "clients/gpsd.php": "clients/gpsd.php.in",
+    "clients/gpsplot": "clients/gpsplot.in",
+    "clients/gpsprof": "clients/gpsprof.in",
+    "clients/gpssubframe": "clients/gpssubframe.in",
+    "clients/ubxtool": "clients/ubxtool.in",
+    "clients/xgps": "clients/xgps.in",
+    "clients/xgpsspeed": "clients/xgpsspeed.in",
+    "clients/zerk": "clients/zerk.in",
+    "contrib/ntpshmviz": "contrib/ntpshmviz.in",
+    "contrib/skyview2svg.py": "contrib/skyview2svg.py.in",
+    "contrib/webgps": "contrib/webgps.in",
+    "control": "control.in",
+    "gpscap.py": "gpscap.py.in",
+    "gpsd.rules": "gpsd.rules.in",
+    "gpsfake": "gpsfake.py.in",
+    "gps/gps.py": "gps/gps.py.in",
+    "gps/__init__.py": "gps/__init__.py.in",
+    "gps/packet.py": "gps/packet.py.in",
+    "libgps.pc": "libgps.pc.in",
+    "libQgpsmm.prl": "libQgpsmm.prl.in",
+    "packaging/deb/etc_default_gpsd": "packaging/deb/etc_default_gpsd.in",
+    "packaging/deb/etc_init.d_gpsd": "packaging/deb/etc_init.d_gpsd.in",
+    "packaging/gpsd-setup.py": "packaging/gpsd-setup.py.in",
+    "packaging/rpm/gpsd.init": "packaging/rpm/gpsd.init.in",
+    "packaging/rpm/gpsd.spec": "packaging/rpm/gpsd.spec.in",
+    "packaging/X11/xgps.desktop": "packaging/X11/xgps.desktop.in",
+    "packaging/X11/xgpsspeed.desktop": "packaging/X11/xgpsspeed.desktop.in",
+    "Qgpsmm.pc": "Qgpsmm.pc.in",
+    "systemd/gpsdctl@.service": "systemd/gpsdctl@.service.in",
+    "systemd/gpsd.service": "systemd/gpsd.service.in",
+    "systemd/gpsd.socket": "systemd/gpsd.socket.in",
+    "www/faq.html": "www/faq.html.in",
+    "www/gps_report.cgi": "www/gps_report.cgi.in",
+    "www/hacking.html": "www/hacking.html.in",
+    "www/hardware-head.html": "www/hardware-head.html.in",
+    "www/index.html": "www/index.html.in",
+    "www/troubleshooting.html": "www/troubleshooting.html.in",
+    }
 
-for fn in templated:
-    iswww = fn.startswith('www/')
+for (tgt, src) in templated.items():
+    iswww = tgt.startswith('www/')
     # Only www pages need @DATE@ expansion, which forces rebuild every time
     subst = substmap_dated if iswww else substmap
     # use scons built-in Substfile()
-    if 'gpsfake.py.in' == fn:
-        builder = env.Substfile(target='gpsfake', source=fn, SUBST_DICT=subst)
-    else:
-        builder = env.Substfile(fn, SUBST_DICT=subst)
+    builder = env.Substfile(target=tgt, source=src, SUBST_DICT=subst)
     # default to building all built targets, except www
     # FIXME: Render this unnecessary
     if not iswww:
         env.Default(builder)
     # set read-only to alert people trying to edit the files.
     env.AddPostAction(builder, 'chmod -w $TARGET')
-    if ((fn.endswith(".py.in") or
-         fn[:-3] in python_progs or
-         fn[:-3] in ['contrib/ntpshmviz', 'contrib/webgps'])):
+    if ((src.endswith(".py.in") or
+         tgt in python_progs or
+         tgt in ['contrib/ntpshmviz', 'contrib/webgps'])):
         # set python files to executable
         env.AddPostAction(builder, 'chmod +x $TARGET')
 
