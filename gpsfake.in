@@ -17,7 +17,7 @@ factored out so we can write other test programs with it.
 from __future__ import absolute_import, print_function, division
 
 from distutils import spawn
-import getopt
+import argparse
 import os
 import platform
 import pty
@@ -112,16 +112,16 @@ def fakehook(linenumber, fakegps):
         sys.stderr.write("fakegps: no sentences in test load.\n")
         raise SystemExit(1)
     if linenumber % len(fakegps.testload.sentences) == 0:
-        if singleshot and linenumber > 0:
+        if options.singleshot and linenumber > 0:
             return False
-        if progress:
+        if options.progress:
             baton.twirl('*\b')
-        elif not singleshot:
-            if not quiet:
+        elif not options.singleshot:
+            if not options.quiet:
                 sys.stderr.write("gpsfake: log cycle of %s begins.\n"
                                  % fakegps.testload.name)
-    time.sleep(cycle)
-    if linedump and fakegps.testload.legend:
+    time.sleep(options.cycle)
+    if options.linedump and fakegps.testload.legend:
         ml = fakegps.testload.sentences[
             linenumber % len(fakegps.testload.sentences)].strip()
         if not fakegps.testload.textual:
@@ -129,176 +129,323 @@ def fakehook(linenumber, fakegps):
         announce = ((fakegps.testload.legend %
                     (linenumber % len(fakegps.testload.sentences) + 1)) +
                     gps.polystr(ml))
-        if promptme:
+        if options.promptme:
             my_input(announce + "? ")
         else:
             print(announce)
-    if progress:
+    if options.progress:
         baton.twirl()
     return True
 
 
 if __name__ == '__main__':
-    def usage():
-        "Print usage and exit"
-        sys.stderr.write("""usage: gpsfake [OPTIONS] logfile...
-    [-1]         logfile is interpreted once only rather than repeatedly
-    [-b]         enable a twirling-baton progress indicator
-    [-c cycle]   sets the delay between sentences in seconds
-    [-D debug]   passes a -D option to the daemon
-    [-g]         run the gpsd instance within gpsfake under control of gdb
-    [-G]         run the gpsd instance within gpsfake under control of lldb
-    [-h]         print a usage message and exit
-    [-i]         single-stepping through logfile
-    [-l]         dump a line or packet number just before each sentence
-    [-m monitor] specifies a monitor program under which the daemon is run
-    [-n]         start the daemon reading the GPS without waiting for a client
-    [-o options] specifies options to pass to the daemon
-    [-p]         sets watcher mode and dump to stdout
-    [-P port]    sets the daemon's listening port
-    [-q]         act in a quiet manner
-    [-r initcmd] specifies an initialization command to use in pipe mode
-    [-S]         insert realistic delays in the test input
-    [-s speed]   sets the baud rate for the slave tty
-    [-t]         force TCP
-    [-T]         print some system information and exit
-    [-v]         verbose
-    [-V]         Version
-    [-W]         specify timeout (default 60s), 0 means none
-    [-x]         dump packets as gpsfake gathers them
-""")
+    description = 'Fake gpsd from a log file.'
+    usage = '%(prog)s [OPTIONS] logfile...'
+    epilog = ('BSD terms apply: see the file COPYING in the distribution root'
+              ' for details.')
+
+    parser = argparse.ArgumentParser(
+                 description=description,
+                 epilog=epilog,
+                 formatter_class=argparse.RawDescriptionHelpFormatter,
+                 usage=usage)
+    parser.add_argument(
+        '-?',
+        action="help",
+        help='show this help message and exit'
+    )
+    parser.add_argument(
+        '-1',
+        '--singleshot',
+        dest='singleshot',
+        default=False,
+        action="store_true",
+        help=('Logfile is interpreted once only rather than repeatedly. '
+              '[Default %(default)s)]')
+    )
+    parser.add_argument(
+        '-b',
+        '--baton',
+        dest='progress',
+        default=False,
+        action="store_true",
+        help=('Enable a twirling-baton progress indicator. '
+              '[Default %(default)s)]')
+    )
+    parser.add_argument(
+        '-c',
+        '--cycle',
+        default=0.0,
+        dest='cycle',
+        metavar='CYCLE',
+        type=float,
+        help=('Sets the delay between sentences in seconds. '
+              '[Default %(default)s)]'),
+    )
+    parser.add_argument(
+        '-D',
+        '--debug',
+        action='append',
+        dest='debug',
+        metavar='OPT',
+        help='Pass a -D option OPT to the daemon.',
+    )
+    parser.add_argument(
+        '-g',
+        '--gdb',
+        dest='gdb',
+        default=False,
+        action="store_true",
+        help='Run the gpsd instance within gpsfake under control of gdb.',
+    )
+    parser.add_argument(
+        '-G',
+        '--lldb',
+        dest='lldb',
+        default=False,
+        action="store_true",
+        help='Run the gpsd instance within gpsfake under control of lldb.',
+    )
+    parser.add_argument(
+        '-i',
+        '--promptme',
+        dest='promptme',
+        default=False,
+        action="store_true",
+        help=('Single-stepping through logfile. [Default %(default)s)]'),
+    )
+    parser.add_argument(
+        '-l',
+        '--linedump',
+        dest='linedump',
+        default=False,
+        action="store_true",
+        help=('Dump a line or packet number just before each sentence. '
+              '[Default %(default)s)]'),
+    )
+    parser.add_argument(
+        '-m',
+        '--monitor',
+        default=None,
+        dest='mon',
+        metavar='PROG',
+        help='Specifies a monitor program under which the daemon is run.',
+    )
+    parser.add_argument(
+        '-n',
+        '--nowait',
+        dest='nowait',
+        default=False,
+        action="store_true",
+        help=('Start the daemon reading from gpsfake without '
+              'waiting for a client.'),
+    )
+    parser.add_argument(
+        '-o',
+        '--options',
+        dest='options',
+        metavar='OPT',
+        help='Pass options OPT to the daemon.',
+    )
+    parser.add_argument(
+        '-p',
+        '--pipe',
+        dest='pipe',
+        default=False,
+        action="store_true",
+        help='Sets watcher mode and dump to stdout. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '-P',
+        '--port',
+        default=None,
+        dest='port',
+        metavar='PORT',
+        type=int,
+        help="Sets the daemon's listening port to PORT [Default %(default)s)]",
+    )
+    parser.add_argument(
+        '-q',
+        '--quiet',
+        dest='quiet',
+        default=False,
+        action="store_true",
+        help='Act in a quiet manner. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '-r',
+        '--clientinit',
+        default='?WATCH={"json":true,"nmea":true}',
+        dest='client_init',
+        metavar='STR',
+        help=('Specifies an initialization command to use in pipe mode. '
+              '[Default %(default)s)]'),
+    )
+    parser.add_argument(
+        '-s',
+        '--speed',
+        default=4800,
+        dest='speed',
+        metavar='SPEED',
+        type=int,
+        help='Sets the baud rate for the slave tty. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '-S',
+        '--slow',
+        dest='slow',
+        default=False,
+        action="store_true",
+        help=('Insert realistic delays in the test input.  '
+              '[Default %(default)s)]'),
+    )
+    parser.add_argument(
+        '-t',
+        '--tcp',
+        dest='tcp',
+        default=False,
+        action="store_true",
+        help='Force TCP. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '-T',
+        '--sysinfo',
+        dest='sysinfo',
+        default=False,
+        action="store_true",
+        help='Print some system information and exit.',
+    )
+    parser.add_argument(
+        '-u',
+        '--udp',
+        dest='udp',
+        default=False,
+        action="store_true",
+        help='Force UDP. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '-v',
+        '--verbose',
+        dest='verbose',
+        default=0,
+        action='count',
+        help='Verbose. Repeat for more verbosity. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '-W',
+        '--timeout',
+        default=60,
+        dest='timeout',
+        metavar='SEC',
+        type=int,
+        help='Specify timeout. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '-V', '--version',
+        action='version',
+        version="%(prog)s: Version " + gps_version + "\n",
+        help='Output version to stderr, then exit'
+    )
+    parser.add_argument(
+        '-x',
+        '--predump',
+        dest='predump',
+        default=False,
+        action="store_true",
+        help='Dump packets as gpsfake gathers them. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        'arguments',
+        metavar='logfile',
+        nargs='*',
+        help='Logfile(s) to read and feed to gpsd.  At least one required.'
+    )
+    options = parser.parse_args()
+
+    if options.sysinfo:
+        sys.stdout.write("sys %s platform %s\nWRITE_PAD = %.5f\n"
+                         % (sys.platform, platform.platform(),
+                            gpsfake.GetDelay(options.slow)))
+
         raise SystemExit(0)
 
-    try:
-        (options, arguments) = getopt.getopt(
-            sys.argv[1:],
-            "1bc:D:gGhilm:no:pP:qr:s:StTuvxVW:"
-            )
-    except getopt.GetoptError as msg:
-        print("gpsfake: " + str(msg))
-        raise SystemExit(1)
-
-    port = None
-    progress = False
-    cycle = 0.0
-    monitor = ""
-    speed = 4800
-    linedump = False
-    predump = False
-    pipe = False
-    singleshot = False
-    promptme = False
-    client_init = '?WATCH={"json":true,"nmea":true}'
-    doptions = ""
-    tcp = False
-    udp = False
-    verbose = 0
-    slow = False
-    quiet = False
-    timeout = None  # Really means default
-    for (switch, val) in options:
-        if switch == '-1':
-            singleshot = True
-        elif switch == '-b':
-            progress = True
-        elif switch == '-c':
-            cycle = float(val)
-        elif switch == '-D':
-            doptions += " -D " + val
-        elif switch == '-g':
-            if check_xterm():
-                monitor = "xterm -e gdb -tui --args "
-            else:
-                monitor = "gdb --args "
-            timeout = 0
-        elif switch == '-G':
-            if check_xterm():
-                monitor = "xterm -e lldb -- "
-            else:
-                monitor = "lldb -- "
-            timeout = 0
-        elif switch == '-h':
-            usage()
-        elif switch == '-i':
-            linedump = promptme = True
-        elif switch == '-l':
-            linedump = True
-        elif switch == '-m':
-            monitor = val + " "
-        elif switch == '-n':
-            doptions += " -n"
-        elif switch == '-o':
-            doptions = val
-        elif switch == '-p':
-            pipe = True
-        elif switch == '-P':
-            port = int(val)
-        elif switch == '-q':
-            quiet = True
-        elif switch == '-r':
-            client_init = val
-        elif switch == '-s':
-            speed = int(val)
-        elif switch == '-S':
-            slow = True
-        elif switch == '-t':
-            tcp = True
-        elif switch == '-T':
-            sys.stdout.write("sys %s platform %s: WRITE_PAD = %.5f\n"
-                             % (sys.platform, platform.platform(),
-                                gpsfake.GetDelay(slow)))
-            raise SystemExit(0)
-        elif switch == '-u':
-            udp = True
-        elif switch == '-v':
-            verbose += 1
-        elif switch == '-V':
-            sys.stderr.write("gpsfake: Version %s\n" % gps_version)
-            sys.exit(0)
-        elif switch == '-W':
-            try:
-                timeout = int(val)
-            except ValueError:
-                sys.stderr.write("gpsfake: bad timeout value (%s). "
-                                 "Expected a number.\n" % val)
-                raise SystemExit(1)
-        elif switch == '-x':
-            predump = True
-
-    try:
-        pty.openpty()
-    except (AttributeError, OSError):
-        sys.stderr.write("gpsfake: ptys not available, falling back to UDP.\n")
-        udp = True
-
-    if not arguments:
+    if not options.arguments:
         sys.stderr.write("gpsfake: requires at least one logfile argument.\n")
-        raise SystemExit(1)
+        raise SystemExit(0)
 
-    if progress:
-        baton = Baton("Processing %s" % ",".join(arguments), "done")
-    elif not quiet:
-        sys.stderr.write("Processing %s\n" % ",".join(arguments))
+    if options.promptme:
+        options.linedump = True
+
+    # debug options to pass to gpsd
+    doptions = []
+    if options.debug:
+        for dopt in options.debug:
+            doptions.append("-D " + dopt)
+    if options.options:
+        for opt in options.options:
+            doptions.append(opt)
+    if options.nowait:
+        doptions.append("-n")
+    doptions = ' '.join(doptions)
+
+    monitor = ()
+    timeout = 0
+    if options.gdb:
+        if check_xterm():
+            monitor = "xterm -e gdb -tui --args "
+        else:
+            monitor = "gdb --args "
+        timeout = 0
+    elif options.lldb:
+        if check_xterm():
+            monitor = "xterm -e lldb -- "
+        else:
+            monitor = "lldb -- "
+        timeout = 0
+    elif options.mon:
+        monitor = options.mon + " "
+
+    if options.timeout:
+        timeout = options.timeout
+
+    if not options.tcp and not options.udp:
+        try:
+            pty.openpty()
+        except (AttributeError, OSError):
+            sys.stderr.write('gpsfake: ptys not available, falling back'
+                             ' to UDP.\n')
+            options.udp = True
+
+    if options.progress:
+        baton = Baton("Processing %s" % ",".join(options.arguments), "done")
+    elif not options.quiet:
+        sys.stderr.write("Processing %s\n" % ",".join(options.arguments))
 
     # Don't allocate a private port when cycling logs for client testing.
-    if port is None and not pipe:
-        port = int(gps.GPSD_PORT)
+    if options.port is None and not options.pipe:
+        options.port = int(gps.GPSD_PORT)
 
-    test = gpsfake.TestSession(prefix=monitor, port=port, options=doptions,
-                               tcp=tcp, udp=udp, verbose=verbose,
-                               predump=predump, slow=slow, timeout=timeout)
+    test = gpsfake.TestSession(options=doptions,
+                               prefix=monitor,
+                               predump=options.predump,
+                               port=options.port,
+                               slow=options.slow,
+                               tcp=options.tcp,
+                               timeout=timeout,
+                               udp=options.udp,
+                               verbose=options.verbose)
 
-    if pipe:
+    if options.pipe:
         test.reporter = bytesout.write
-        if verbose:
-            progress = False
+        if options.verbose:
+            options.progress = False
             test.progress = sys.stderr.write
     test.spawn()
     try:
-        for logfile in arguments:
+        for logfile in options.arguments:
             try:
-                test.gps_add(logfile, speed=speed, pred=fakehook,
-                             oneshot=singleshot)
+                test.gps_add(logfile, speed=options.speed, pred=fakehook,
+                             oneshot=options.singleshot)
             except gpsfake.TestLoadError as e:
                 sys.stderr.write("gpsfake: " + e.msg + "\n")
                 raise SystemExit(1)
@@ -321,8 +468,8 @@ if __name__ == '__main__':
                 raise SystemExit(1)
 
         try:
-            if pipe:
-                test.client_add(client_init + "\n")
+            if options.pipe:
+                test.client_add(options.client_init + "\n")
                 # Give daemon time to get ready for the feeds.
                 # Without a delay here there's a window for test
                 # sentences to arrive before the watch takes effect.
@@ -347,7 +494,7 @@ if __name__ == '__main__':
     finally:
         test.cleanup()
 
-    if progress:
+    if options.progress:
         baton.end()
 
 # The following sets edit modes for GNU EMACS

@@ -23,27 +23,51 @@ SPDX-License-Identifier: BSD-2-clause
 <cmdsynopsis>
   <command>gpsfake</command>
       <arg choice='opt'>-1</arg>
-      <arg choice='opt'>-h</arg>
       <arg choice='opt'>-b</arg>
+      <arg choice='opt'>--baton</arg>
       <arg choice='opt'>-c <replaceable>interval</replaceable></arg>
-      <arg choice='opt'>-i</arg>
+      <arg choice='opt'>--cycle <replaceable>interval</replaceable></arg>
       <arg choice='opt'>-D <replaceable>debuglevel</replaceable></arg>
-      <arg choice='opt'>-l</arg>
-      <arg choice='opt'>-m <replaceable>monitor</replaceable></arg>
       <arg choice='opt'>-g</arg>
       <arg choice='opt'>-G</arg>
+      <arg choice='opt'>--gdb</arg>
+      <arg choice='opt'>-h</arg>
+      <arg choice='opt'>--help</arg>
+      <arg choice='opt'>-i</arg>
+      <arg choice='opt'>--initcmd <replaceable>initcmd</replaceable></arg>
+      <arg choice='opt'>-l</arg>
+      <arg choice='opt'>--linedump</arg>
+      <arg choice='opt'>--lldb</arg>
+      <arg choice='opt'>--monitor <replaceable>monitor</replaceable></arg>
+      <arg choice='opt'>-m <replaceable>monitor</replaceable></arg>
       <arg choice='opt'>-n</arg>
+      <arg choice='opt'>--nowait</arg>
+      <arg choice='opt'>--options <replaceable>options</replaceable></arg>
       <arg choice='opt'>-o <replaceable>options</replaceable></arg>
       <arg choice='opt'>-p</arg>
+      <arg choice='opt'>--pipe</arg>
+      <arg choice='opt'>--port <replaceable>port</replaceable></arg>
+      <arg choice='opt'>--predump</arg>
       <arg choice='opt'>-P <replaceable>port</replaceable></arg>
+      <arg choice='opt'>--promptme</arg>
       <arg choice='opt'>-q</arg>
+      <arg choice='opt'>--quiet</arg>
       <arg choice='opt'>-r <replaceable>initcmd</replaceable></arg>
-      <arg choice='opt'>-s <replaceable>speed</replaceable></arg>
       <arg choice='opt'>-S</arg>
-      <arg choice='opt'>-u</arg>
+      <arg choice='opt'>--singleshot</arg>
+      <arg choice='opt'>--slow</arg>
+      <arg choice='opt'>--speed <replaceable>speed</replaceable></arg>
+      <arg choice='opt'>-s <replaceable>speed</replaceable></arg>
       <arg choice='opt'>-t</arg>
       <arg choice='opt'>-T</arg>
+      <arg choice='opt'>--tcp</arg>
+      <arg choice='opt'>--timeout <replaceable>timeout</replaceable></arg>
+      <arg choice='opt'>-u</arg>
+      <arg choice='opt'>--udp</arg>
       <arg choice='opt'>-v</arg>
+      <arg choice='opt'>-V</arg>
+      <arg choice='opt'>--verbose</arg>
+      <arg choice='opt'>--version</arg>
       <arg choice='opt'>-W <replaceable>timeout</replaceable></arg>
       <arg rep='repeat'>
             <arg choice='plain'><replaceable>logfile</replaceable></arg>
@@ -94,104 +118,126 @@ is run in background.</para>
 </refsect1>
 <refsect1 id='options'><title>OPTIONS</title>
 
-<para>With the -1 option, the logfile is interpreted once only rather
+<para><option>-?</option>,<option>-h</option>, <option>--help</option>
+makes <application>gpsfake</application> print a usage message and
+exit.</para>
+
+<para><option>-1</option> means the logfile is interpreted once only rather
 than repeatedly.  This option is intended to facilitate regression
 testing.</para>
 
-<para>The <option>-b</option> enables a twirling-baton progress indicator
-on standard error.  At termination, it reports elapsed time.</para>
+<para><option>-b</option>, <option>--baton</option> enables a twirling-baton
+progress indicator on standard error.  At termination, it reports elapsed
+time.</para>
 
-<para>The <option>-c</option> sets the delay between sentences in
-seconds. Fractional values of seconds are legal.  The default is zero
-(no delay).</para>
+<para><option>-c</option>, <option>-cycle</option>  sets the delay between
+sentences in seconds. Fractional values of seconds are legal.  The default
+is zero (no delay).</para>
 
-<para>The <option>-l</option> makes the program dump a line or packet number
-just before each sentence is fed to the daemon. If the sentence is
-textual (e.g. NMEA), the text is dumped as well.  If not, the packet
-will be dumped in hexadecimal (except for RTCM packets, which aren't
-dumped at all).  This option is useful for checking that gpsfake is
-getting packet boundaries right.</para>
+<para><option>-D</option>, <option>--debug</option> passes a -D option
+to the daemon: thus -D 4 is shorthand for -o="-D 4".</para>
 
-<para>The <option>-i</option> is for single-stepping through logfiles.  It dumps
-the line or packet number (and the sentence if the protocol is
-textual) followed by "? ".  Only when the user keys Enter is the line
-actually fed to <application>gpsd</application>.</para>
+<para><option>-g</option>, <option>--gdb</option> or
+<option>-G</option>, <option>--lldb</option> options use the monitor
+facility to run the <application>gpsd</application> instance within
+gpsfake under control of gdb or lldb, respectively. They also disable
+the timeout on daemon inactivity, to allow for breakpointing.
+If necessary, the timeout can be reenabled by a subsequent
+<option>-W</option> or <option>--wait</option> . If xterm and $DISPLAY
+are available, these options launch the debugger in a separate xterm
+window, to separate the debugger dialog from the program output, but
+otherwise run it directly. In the gdb case, -tui is used with xterm
+but not otherwise, since curses and program output don't play nicely
+together. Although lldb lacks an equivalent option, some versions have a
+'gui' command.</para>
 
-<para>The <option>-m</option> specifies a monitor program inside which the
-daemon should be run.  This option is intended to be used with
-<citerefentry><refentrytitle>valgrind</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>gdb</refentrytitle><manvolnum>1</manvolnum></citerefentry>
-and similar programs.</para>
+<para><option>-i</option>, <option>--promptme</option> is for
+single-stepping through logfiles. It dumps the line or packet
+number (and the sentence if the protocol is textual) followed by
+"? ". Only when the user keys Enter is the line actually fed to
+<application>gpsd</application>.</para>
 
-<para>The <option>-g</option> and <option>-G</option> options use the monitor
-facility to run the <application>gpsd</application> instance within gpsfake
-under control of gdb or lldb, respectively.  They also disable the timeout on
-daemon inactivity, to allow for breakpointing. If necessary, the timeout can be
-reenabled by a subsequent <option>-W</option>.  If xterm and $DISPLAY are
-available, these options launch the debugger in a separate xterm window, to
-separate the debugger dialog from the program output, but otherwise run it
-directly.  In the gdb case, -tui is used with xterm but not otherwise, since
-curses and program output don't play nicely together.  Although lldb lacks an
-equivalent option, some versions have a 'gui' command.</para>
+<para><option>-l</option>, <option>--singleshot</option> makes the
+program dump a line or packet number just before each sentence is fed to
+the daemon. If the sentence is textual (e.g. NMEA), the text is dumped
+as well. If not, the packet will be dumped in hexadecimal (except for
+RTCM packets, which aren't dumped at all). This option is useful for
+checking that gpsfake is getting packet boundaries right.</para>
 
-<para>The <option>-o</option> specifies options to pass to the daemon.  The -n
-option passes -n to start the daemon reading the GPS without waiting
-for a client (equivalent to -o "-n").  The <option>-D</option> passes a -D
-option to the daemon: thus -D 4 is shorthand for -o "-D 4".</para>
+<para><option>-m</option>, <option>--monitor</option>
+specifies a monitor program inside which the daemon
+should be run. This option is intended to be used with
+<citerefentry><refentrytitle>valgrind</refentrytitle>
+<manvolnum>1</manvolnum></citerefentry>,
+<citerefentry><refentrytitle>gdb</refentrytitle><manvolnum>1</manvolnum>
+</citerefentry> and similar programs.</para>
 
-<para>The -p ("pipe") option sets watcher mode and dumps the NMEA and GPSD
-notifications generated by the log to standard output. This is useful
-for regression-testing.</para>
+<para><option>-n</option>, <option>--nowait</option> passes "-n" to the
+daemon to start the daemon reading the GPS without waiting for a client
+(equivalent to -o="-n"). </para>
 
-<para>The -P ("port") option sets the daemon's listening port.</para>
+<para><option>-o</option>, <option>--option</option> specifies options
+to pass to the daemon. The -n option passes -n to start the daemon
+reading the GPS without waiting for a client (equivalent to -o="-n").
+The <option>-D</option> passes a -D option to the daemon: thus -D 4 is
+shorthand for -o="-D 4".</para>
 
-<para>The <option>-q</option> tells gpsfake to suppress normal progress
-output and thus act in a quiet manner.</para>
+<para><option>-p</option>, <option>--pipe</option> sets watcher mode and
+dumps the NMEA and GPSD notifications generated by the log to standard
+output. This is useful for regression-testing.</para>
 
-<para>The <option>-r</option> specifies an initialization command to use in pipe mode.
-The default is <command>?WATCH={"enable":true,"json":true}</command>.</para>
+<para><option>-P</option>, <option>--port</option> sets the daemon's
+listening port.</para>
 
-<para>The <option>-s</option> sets the baud rate for the slave tty.  The
-default is 4800.</para>
+<para><option>-q</option>,<option>-quiet</option> tells gpsfake to
+suppress normal progress output and thus act in a quiet manner.</para>
 
-<para>The option -S tells gpsfake to insert realistic delays in the
-test input rather than trying to stuff it through the daemon as fast
-as possible.  This will make the test(s) run much slower, but avoids
-flaky failures due to machine load and possible race conditions in
-the pty layer.</para>
+<para><option>-r</option>, <option>--clientinit</option> specifies
+an initialization command to use in pipe mode. The default is
+<command>?WATCH={"enable":true,"json":true}</command>.</para>
 
-<para>The <option>-t</option> forces the test framework to use TCP
-rather than pty devices. Besides being a test of TCP source handling,
-this may be useful for testing from within chroot jails where access
-to pty devices is locked out.</para>
+<para><option>-s</option>, <option>--speed</option> sets the baud rate
+for the slave tty. The default is 4800.</para>
 
-<para>The <option>-T</option> makes <application>gpsfake</application> print
-some system information and then exit.</para>
+<para><option>-S</option>, <option>--slow</option> tells gpsfake to
+insert realistic delays in the test input rather than trying to stuff it
+through the daemon as fast as possible. This will make the test(s) run
+much slower, but avoids flaky failures due to machine load and possible
+race conditions in the pty layer.</para>
 
-<para>The <option>-u</option> forces the test framework to use UDP
-rather than pty devices. Besides being a test of UDP source handling,
-this may be useful for testing from within chroot jails where access
-to pty devices is locked out.</para>
+<para><option>-t</option>, <option>--tcp</option> forces the test
+framework to use TCP rather than pty devices. Besides being a test of
+TCP source handling, this may be useful for testing from within chroot
+jails where access to pty devices is locked out.</para>
 
-<para>The <option>-v</option> enables verbose progress reports to stderr.  It is
-mainly useful for debugging <application>gpsfake</application>
+<para><option>-T</option>, <option>--sysinfo</option> makes
+<application>gpsfake</application> print some system information and
+then exit.</para>
+
+<para><option>-u</option>, <option>--udp</option> forces the test
+framework to use UDP rather than pty devices. Besides being a test of
+UDP source handling, this may be useful for testing from within chroot
+jails where access to pty devices is locked out.</para>
+
+<para><option>-v</option>, <option>--verbose</option> enables verbose
+progress reports to stderr. Use multiple times to increase verbosity.
+It is mainly useful for debugging <application>gpsfake</application>
 itself.</para>
 
-<para>The <option>-W</option> ("wait") option sets the timeout on daemon
-inactivity, in seconds.  The default timeout is 60 seconds, and a value
-of 0 suppresses the timeout altogether.  Note that the actual timeout is
-longer due to internal delays, typically by about 20 seconds.</para>
+<para><option>-W</option>, <option>--wait</option> option sets the
+timeout on daemon inactivity, in seconds. The default timeout is 60
+seconds, and a value of 0 suppresses the timeout altogether. Note that
+the actual timeout is longer due to internal delays, typically by about
+20 seconds.</para>
 
-<para>The <option>-x</option> dumps packets as
+<para><option>-x</option>,<option>--predump</option>   dumps packets as
 <application>gpsfake</application> gathers them.  It is mainly useful
 for debugging <application>gpsfake</application> itself.</para>
 
-<para>The <option>-h</option> makes <application>gpsfake</application> print
-a usage message and exit.</para>
-
-<para>The argument must be the name of a file containing the
-data to be cycled at the device. <application>gpsfake</application>
-will print a notification each time it cycles.</para>
+<para>The last argument(s) must be the name of a file or
+files containing the data to be cycled at the device.
+<application>gpsfake</application> will print a notification each time
+it cycles.</para>
 
 <para>Normally, gpsfake creates a pty for each logfile and passes the
 slave side of the device to the daemon.  If the header comment in the
