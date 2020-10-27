@@ -1,10 +1,10 @@
 #!@PYSHEBANG@
 #
 # @GENERATED@
-'''
-Collect and plot latency-profiling data from a running gpsd.
+"""Collect and plot latency-profiling data from a running gpsd.
+
 Requires gnuplot, but gnuplot can be on another host.
-'''
+"""
 
 # This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
@@ -47,15 +47,14 @@ if gps.__version__ != gps_version:
 
 
 def dist_2d(a, b):
-    "calculate distance between a[x,y] and b[x,y]"
-
+    """calculate distance between a[x,y] and b[x,y]."""
     # x and y are orthogonal, probably lat/lon in meters
     # ignore altitude change.
     return math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
 
 
 def dist_3d(a, b):
-    "calculate distance between a[x,y,z] and b[x,y,z]"
+    """calculate distance between a[x,y,z] and b[x,y,z]."""
     # x, y, and z are othogonal, probably ECEF, probably in meters
     return math.sqrt((a[0] - b[0]) ** 2 +
                      (a[1] - b[1]) ** 2 +
@@ -63,8 +62,7 @@ def dist_3d(a, b):
 
 
 def wgs84_to_ecef(wgs84):
-    "Convert wgs84 coordinates to ECEF ones"
-
+    """Convert wgs84 coordinates to ECEF ones."""
     # unpack args
     (lat, lon, alt) = wgs84
     # convert lat/lon/altitude in degrees and altitude in meters
@@ -90,9 +88,11 @@ def wgs84_to_ecef(wgs84):
 
 
 class Baton(object):
-    "Ship progress indication to stderr."
+
+    """Ship progress indication to stderr."""
 
     def __init__(self, prompt, endmsg=None):
+        """Init class baton."""
         self.stream = sys.stderr
         self.stream.write(prompt + "...")
         if os.isatty(self.stream.fileno()):
@@ -103,7 +103,7 @@ class Baton(object):
         self.time = time.time()
 
     def twirl(self, ch=None):
-        "Twirl the baton"
+        """Twirl the baton."""
         if self.stream is None:
             return
         if ch:
@@ -116,7 +116,7 @@ class Baton(object):
         return
 
     def end(self, msg=None):
-        "Write the end message"
+        """Write the end message."""
         if msg is None:
             msg = self.endmsg
         if self.stream:
@@ -125,9 +125,11 @@ class Baton(object):
 
 
 class stats(object):
+
     "Class for 1D stats: min, max, mean, sigma, skewness, kurtosis"
 
     def __init__(self):
+        """Init class stats."""
         self.min = 0.0
         self.max = 0.0
         self.mean = 0.0
@@ -137,15 +139,14 @@ class stats(object):
         self.kurtosis = 0.0
 
     def __str__(self):
-        "return a nice string, for debug"
+        """return a nice string, for debug."""
         return ("min %f, max %f, mean %f, median %f, sigma %f, skewedness %f, "
                 "kurtosis %f" %
                 (self.min, self.max, self.mean, self.median,
                  self.sigma, self.skewness, self.kurtosis))
 
     def min_max_mean(self, fixes, index):
-        "Find min, max, and mean of fixes[index]"
-
+        """Find min, max, and mean of fixes[index]."""
         if not fixes:
             return
 
@@ -163,8 +164,7 @@ class stats(object):
         return
 
     def moments(self, fixes, index):
-        "Find and set the (sigma, skewness, kurtosis) of fixes[index]"
-
+        """Find and set the (sigma, skewness, kurtosis) of fixes[index]."""
         # The skewness of a random variable X is the third standardized
         # moment and is a dimension-less ratio. ntpviz uses the Pearson's
         # moment coefficient of skewness.  Wikipedia describes it
@@ -207,9 +207,11 @@ class stats(object):
 
 
 class plotter(object):
+
     "Generic class for gathering and plotting sensor statistics."
 
     def __init__(self):
+        """Init class prlotter."""
         self.device = None
         self.fixes = []
         self.in_replot = False
@@ -218,7 +220,7 @@ class plotter(object):
         self.watch = set(['TPV'])
 
     def whatami(self):
-        "How do we identify this plotting run?"
+        """How do we identify this plotting run?"""
         desc = "%s, %s, " % \
                (gps.misc.isotime(self.start_time),
                 self.device.get('driver', "unknown"))
@@ -234,8 +236,7 @@ class plotter(object):
         return desc
 
     def collect(self, verb, log_fp=None):
-        "Collect data from the GPS."
-
+        """Collect data from the GPS."""
         try:
             self.session = gps.gps(host=options.host, port=options.port,
                                    verbose=verb)
@@ -319,7 +320,7 @@ class plotter(object):
             signal.signal(signal.SIGUSR1, signal.SIG_DFL)
 
     def replot(self, infp):
-        "Replot from a JSON log file."
+        """Replot from a JSON log file."""
         self.in_replot = True
         baton = Baton("gpsprof: replotting", "done")
         self.session = gps.gps(host=None)
@@ -334,26 +335,25 @@ class plotter(object):
         baton.end()
 
     def dump(self):
-        "Dump the raw data for post-analysis."
+        """Dump the raw data for post-analysis."""
         return self.header() + self.data()
 
 
 class spaceplot(plotter):
+
     "Spatial scattergram of fixes."
     name = "space"
     requires_time = False
 
     def __init__(self):
-        "Initialize class spaceplot"
-
+        """Initialize class spaceplot."""
         plotter.__init__(self)
         self.centroid = None
         self.centroid_ecef = None
         self.recentered = []
 
     def sample(self):
-        "Grab samples"
-
+        """Grab samples."""
         # Watch out for the NaN value from gps.py.
         if (((self.in_replot or self.session.valid) and
              self.session.data["class"] == "TPV" and
@@ -374,15 +374,15 @@ class spaceplot(plotter):
         return True
 
     def header(self):
-        "Return header"
+        """Return header."""
         return "\n# Position uncertainty, %s\n" % self.whatami()
 
     def postprocess(self):
-        "Postprocess the sample data"
+        """Postprocess the sample data."""
         return
 
     def data(self):
-        "Format data for dump"
+        """Format data for dump."""
         res = ""
         for i in range(len(self.recentered)):
             (lat, lon) = self.recentered[i][:2]
@@ -392,7 +392,7 @@ class spaceplot(plotter):
         return res
 
     def plot(self):
-        "Plot the data"
+        """Plot the data."""
         stat_lat = stats()
         stat_lon = stats()
         stat_alt = stats()
@@ -782,17 +782,19 @@ class spaceplot(plotter):
 
 
 class polarplot(plotter):
+
     "Polar plot of signal strength"
     name = "polar"
     requires_time = False
     seen_used = []          # count of seen and used in each SKY
 
     def __init__(self):
+        """Init class polarplot."""
         plotter.__init__(self)
         self.watch = set(['SKY'])
 
     def sample(self):
-        "Grab samples"
+        """Grab samples."""
         if self.session.data["class"] == "SKY":
             sats = self.session.data['satellites']
             seen = 0
@@ -816,23 +818,22 @@ class polarplot(plotter):
         return True
 
     def header(self):
-        "Return header"
+        """Return header."""
         return "# Polar plot of signal strengths, %s\n" % self.whatami()
 
     def postprocess(self):
-        "Postprocess the sample data"
+        """Postprocess the sample data."""
         return
 
     def data(self):
-        "Format data for dump"
+        """Format data for dump."""
         res = ""
         for (prn, ss, az, el, used) in self.fixes:
             res += "%d\t%d\t%d\t%d\t%s\n" % (prn, ss, az, el, used)
         return res
 
     def plot(self):
-        "Format data for dump"
-
+        """Format data for dump."""
         # calc SNR: mean, min, max, sigma
         stat_ss = stats()
         stat_ss.min_max_mean(self.fixes, 1)
@@ -946,26 +947,30 @@ plot "-" u (90 - $3):4:(1):($2) t "Sat" w circles lc palette
 
 
 class polarplotunused(polarplot):
+
     "Polar plot of unused sats signal strength"
     name = "polarunused"
 
 
 class polarplotused(polarplot):
+
     "Polar plot of used sats signal strength"
     name = "polarused"
 
 
 class timeplot(plotter):
+
     "Time drift against PPS."
     name = "time"
     requires_time = True
 
     def __init__(self):
+        """Init class timeplot."""
         plotter.__init__(self)
         self.watch = set(['PPS'])
 
     def sample(self):
-        "Grab samples"
+        """Grab samples."""
         if self.session.data["class"] == "PPS":
             self.fixes.append((self.session.data['real_sec'],
                                self.session.data['real_nsec'],
@@ -974,15 +979,15 @@ class timeplot(plotter):
         return True
 
     def header(self):
-        "Return header"
+        """Return header."""
         return "# Time drift against PPS, %s\n" % self.whatami()
 
     def postprocess(self):
-        "Postprocess the sample data"
+        """Postprocess the sample data."""
         return
 
     def data(self):
-        "Format data for dump"
+        """Format data for dump."""
         res = ""
         for (real_sec, real_nsec, clock_sec, clock_nsec) in self.fixes:
             res += "%d\t%d\t%d\t%d\n" % (real_sec, real_nsec, clock_sec,
@@ -990,7 +995,7 @@ class timeplot(plotter):
         return res
 
     def plot(self):
-        "Format data for dump"
+        """Format data for dump."""
         fmt = '''\
 set autoscale
 set key below
@@ -1002,15 +1007,17 @@ plot "-" using 0:((column(1)-column(3))*1e9 + (column(2)-column(4))) \
 
 
 class uninstrumented(plotter):
+
     "Total times without instrumentation."
     name = "uninstrumented"
     requires_time = False
 
     def __init__(self):
+        """Init class uninstrumentd."""
         plotter.__init__(self)
 
     def sample(self):
-        "Grab samples"
+        """Grab samples."""
         if self.session.fix.time:
             seconds = time.time() - gps.misc.isotime(self.session.data.time)
             self.fixes.append(seconds)
@@ -1019,23 +1026,22 @@ class uninstrumented(plotter):
         return False
 
     def header(self):
-        "Return header"
+        """Return header."""
         return "# Uninstrumented total latency, " + self.whatami() + "\n"
 
     def postprocess(self):
-        "Postprocess the sample data"
+        """Postprocess the sample data."""
         return
 
     def data(self):
-        "Format data for dump"
+        """Format data for dump."""
         res = ""
         for seconds in self.fixes:
             res += "%2.6lf\n" % seconds
         return res
 
     def plot(self):
-        "Plot the data"
-
+        """Plot the data."""
         fmt = '''\
 set autoscale
 set key below
@@ -1046,18 +1052,17 @@ plot "-" using 0:1 title "Total time" with impulses
 
 
 class instrumented(plotter):
+
     "Latency as analyzed by instrumentation."
     name = "instrumented"
     requires_time = True
 
     def __init__(self):
-        "Initialize class instrumented()"
-
+        """Initialize class instrumented()."""
         plotter.__init__(self)
 
     def sample(self):
-        "Grab the samples"
-
+        """Grab the samples."""
         if 'rtime' in self.session.data:
             self.fixes.append((gps.misc.isotime(self.session.data['time']),
                                self.session.data["chars"],
@@ -1070,18 +1075,18 @@ class instrumented(plotter):
         return False
 
     def header(self):
-        "Return the header"
+        """Return the header."""
         res = "# Analyzed latency, " + self.whatami() + "\n"
         res += "#-- Fix time --  - Chars -  --   Latency  - RS232-  " \
                "Analysis  - Recv -\n"
         return res
 
     def postprocess(self):
-        "Postprocess the sample data"
+        """Postprocess the sample data."""
         return
 
     def data(self):
-        "Format data for dump"
+        """Format data for dump."""
         res = ""
         for (fix_time, chars, sats, start, xmit, recv) in self.fixes:
             rs232_time = (chars * 10.0) / self.device['bps']
@@ -1092,7 +1097,7 @@ class instrumented(plotter):
         return res
 
     def plot(self):
-        "Do the plot"
+        """Do the plot."""
         legends = (
             "Reception delta",
             "Analysis time",
