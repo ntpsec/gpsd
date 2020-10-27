@@ -74,7 +74,7 @@ class Baton(object):
         self.time = time.time()
 
     def twirl(self, ch=None):
-        """Twirl the baton"""
+        """Twirl the baton."""
         if self.stream is None:
             return
         if os.isatty(self.stream.fileno()):
@@ -88,7 +88,7 @@ class Baton(object):
         self.count = self.count + 1
 
     def end(self, mesg=None):
-        """Write end message"""
+        """Write end message."""
         if mesg is None:
             mesg = self.endmsg
         if self.stream:
