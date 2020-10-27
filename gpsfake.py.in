@@ -1,19 +1,21 @@
 #!@PYSHEBANG@
 # @GENERATED@
 #
-'''
-gpsfake -- test harness for gpsd
-
-Simulates one or more GPSes, playing back logfiles.
-Most of the logic for this now lives in gps.fake,
-factored out so we can write other test programs with it.
-'''
 #
 # This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
+# Codacy D203 and D211 conflict, I choose D203
+# Codacy D203 and D211 conflict, I choose D203
+
+"""gpsfake -- test harness for gpsd.
+
+Simulates one or more GPSes, playing back logfiles.
+Most of the logic for this now lives in gps.fake,
+factored out so we can write other test programs with it.
+"""
 from __future__ import absolute_import, print_function, division
 
 from distutils import spawn
@@ -52,7 +54,8 @@ bytesout = gps.get_bytes_stream(sys.stdout)
 
 
 class Baton(object):
-    "Ship progress indications to stderr."
+
+    """Ship progress indications to stderr."""
     # By setting this > 1 we reduce the frequency of the twirl
     # and speed up test runs.  Should be relatively prime to the
     # number of baton states, otherwise it will cause beat artifacts
@@ -60,6 +63,7 @@ class Baton(object):
     SPINNER_INTERVAL = 11
 
     def __init__(self, prompt, endmsg=None):
+        """Init class Baton."""
         self.stream = sys.stderr
         self.stream.write(prompt + "...")
         if os.isatty(self.stream.fileno()):
@@ -70,7 +74,7 @@ class Baton(object):
         self.time = time.time()
 
     def twirl(self, ch=None):
-        "Twirl the baton"
+        """Twirl the baton"""
         if self.stream is None:
             return
         if os.isatty(self.stream.fileno()):
@@ -84,7 +88,7 @@ class Baton(object):
         self.count = self.count + 1
 
     def end(self, mesg=None):
-        "Write end message"
+        """Write end message"""
         if mesg is None:
             mesg = self.endmsg
         if self.stream:
@@ -93,7 +97,7 @@ class Baton(object):
 
 
 def hexdump(s):
-    "Convert string to hex"
+    """Convert string to hex"""
     rep = ""
     for c in s:
         rep += "%02x" % ord(c)
@@ -101,13 +105,13 @@ def hexdump(s):
 
 
 def check_xterm():
-    "Check whether xterm and DISPLAY are available."
+    """Check whether xterm and DISPLAY are available."""
     xterm = spawn.find_executable('xterm')
     return xterm and os.access(xterm, os.X_OK) and os.environ.get('DISPLAY')
 
 
 def fakehook(linenumber, fakegps):
-    "Do the real work"
+    """Do the real work."""
     if not fakegps.testload.sentences:
         sys.stderr.write("fakegps: no sentences in test load.\n")
         raise SystemExit(1)
