@@ -1,7 +1,7 @@
 #!@PYSHEBANG@
 # -*- coding: UTF-8
 # @GENERATED@
-""" xgps -- test client for gpsd.
+"""xgps -- test client for gpsd.
 
 Options can be placed in the XGPSOPTS environment variable.
 XGPSOPTS is processed before the CLI options.
@@ -89,7 +89,7 @@ SKY_VIEW_SORT_FIELDS = ('-used', 'PRN')
 
 
 def gnssid_str(sat):
-    """convert gnssid:svid to short and long strings"""
+    """Convert gnssid:svid to short and long strings."""
     # gnssid:svid appeared in gpsd 3.18
     # allow for old servers
     if 'gnssid' not in sat or 'svid' not in sat:
@@ -134,7 +134,8 @@ def fit_circle_to_grid(x, y, radius, line_width):
     """Fit cicrle to grid.
 
 Adjust circle coordinates and radius to produce sharp horizontal
-and vertical tangents."""
+and vertical tangents.
+"""
     r = radius
     x1, y1 = fit_to_grid(x - r, y - r, line_width)
     x2, y2 = fit_to_grid(x + r, y + r, line_width)
@@ -151,7 +152,7 @@ class SkyView(Gtk.DrawingArea):
     SAT_RADIUS = 5      # Diameter of satellite circle
 
     def __init__(self, rotation=None):
-        """Initialize class SkyView"""
+        """Initialize class SkyView."""
         Gtk.DrawingArea.__init__(self)
         # GObject.GObject.__init__(self)
         self.set_size_request(400, 400)
@@ -170,14 +171,14 @@ class SkyView(Gtk.DrawingArea):
         self.pop_xy = (None, None)
 
     def popdown(self):
-        """See if need to popdown the sat details"""
+        """See if need to popdown the sat details."""
         if self.popover:
             self.popover.popdown()
             self.popover = None
             self.pop_xy = (None, None)
 
     def popup(self, skyview, event):
-        """See if need to popup the sat details"""
+        """See if need to popup the sat details."""
         for (x, y, sat) in self.sat_xy:
             if ((SkyView.SAT_RADIUS >= abs(x - event.x) and
                  SkyView.SAT_RADIUS >= abs(y - event.y))):
@@ -247,7 +248,7 @@ class SkyView(Gtk.DrawingArea):
             self.popdown()
 
     def on_size_allocate(self, _unused, allocation):
-        """Adjust SkyView on size change"""
+        """Adjust SkyView on size change."""
         width = allocation.width
         height = allocation.height
         x = width // 2
@@ -259,8 +260,7 @@ class SkyView(Gtk.DrawingArea):
         self.radius = r
 
     def set_color(self, r, g, b):
-        """Set foreground color for drawing. rgb: 0 to 255"""
-
+        """Set foreground color for drawing. rgb: 0 to 255."""
         # Gdk.color_parse() deprecated in GDK 3.14
         # gdkcolor = Gdk.color_parse(spec)
         r = r / 255.0
@@ -385,7 +385,7 @@ class SkyView(Gtk.DrawingArea):
         return (xout, yout)
 
     def on_draw(self, widget, _unused):
-        """Draw the skyview"""
+        """Draw the skyview."""
         window = widget.get_window()
         region = window.get_clip_region()
         context = window.begin_draw_frame(region)
@@ -530,7 +530,7 @@ class NoiseView(object):
     )
 
     def __init__(self):
-        """Initialize class NoiseView"""
+        """Initialize class NoiseView."""
         self.widget = Gtk.Grid()
         self.noisewidgets = []
         for i in range(len(NoiseView.noisefields)):
@@ -728,7 +728,7 @@ class Base(object):
     )
 
     def about(self, _unused):
-        """Show about dialog"""
+        """Show about dialog."""
         about = Gtk.AboutDialog()
         about.set_program_name("xgps")
         about.set_version("Versions:\n"
@@ -749,7 +749,7 @@ class Base(object):
         about.destroy()
 
     def __init__(self, deg_type, rotation=None, title=""):
-        """Initialize class Base"""
+        """Initialize class Base."""
         self.deg_type = deg_type
         self.rotate = rotation
         self.conversions = gps.clienthelpers.unit_adjustments()
@@ -1176,14 +1176,14 @@ frame * {
         return "n/a"
 
     def update_dop(self, data, doptype):
-        """update a DOP in the GPS Data window."""
+        """Update a DOP in the GPS Data window."""
         if hasattr(data, doptype):
             return "%5.2f" % getattr(data, doptype)
 
         return "n/a"
 
     def update_ecef(self, data, eceftype, speedunit=''):
-        """update a ECEF in the GPS Data window."""
+        """Update a ECEF in the GPS Data window."""
         if hasattr(data, eceftype):
             value = getattr(data, eceftype)
             return ("% 14.3f %s%s" %
@@ -1193,7 +1193,7 @@ frame * {
         return "n/a"
 
     def update_err(self, data, errtype):
-        """update a error estimate in the GPS Data window."""
+        """Update a error estimate in the GPS Data window."""
         if hasattr(data, errtype):
             return "%8.3f %s" % (
                 getattr(data, errtype) * self.conversions.altfactor,
@@ -1220,7 +1220,7 @@ frame * {
         return "n/a"
 
     def update_mag_dec(self, data):
-        """update magnetic declination in the GPS Data window."""
+        """Update magnetic declination in the GPS Data window."""
         if ((data.mode >= gps.MODE_2D and
              hasattr(data, "lat") and
              hasattr(data, "lon"))):
@@ -1230,7 +1230,7 @@ frame * {
         return "n/a"
 
     def update_maidenhead(self, data):
-        """update maidenhead grid square in the GPS Data window."""
+        """Update maidenhead grid square in the GPS Data window."""
         if ((data.mode >= gps.MODE_2D and
              hasattr(data, "lat") and
              hasattr(data, "lon"))):
@@ -1239,7 +1239,6 @@ frame * {
 
     def update_status(self, data, item):
         """Update the status window."""
-
         if 1 == item:
             return "%d secs" % (time.time() - self.last_transition)
 
@@ -1310,13 +1309,13 @@ frame * {
                               gps.api_version_major, gps.api_version_minor))
 
     def _int_to_str(self, value, min_val, max_val):
-        """test val in range min to max, or return."""
+        """Rest val in range min to max, or return."""
         if min_val <= value <= max_val:
             return '%3d' % value
         return 'n/a'
 
     def _tenth_to_str(self, value, min_val, max_val):
-        """test val in range min to max, or return."""
+        """Test val in range min to max, or return."""
         if min_val <= value <= max_val:
             return '%5.1f' % value
         return 'n/a'
@@ -1405,14 +1404,12 @@ frame * {
 
     def set_step_of_grid(self, system, handle):
         """Change the step of grid."""
-
         # print("set_step_of_grid:", system, handle)
         if hasattr(self, 'skyview') and self.skyview is not None:
             self.skyview.step_of_grid = handle
 
     def set_deg(self, _unused, handle):
         """Change the degree format."""
-
         # print("set_deg:", _unused, handle)
         self.deg_type = handle
         if hasattr(self, 'mvview') and self.mvview is not None:
@@ -1420,7 +1417,6 @@ frame * {
 
     def set_units(self, _unused, handle):
         """Change the display units."""
-
         # print("set_units:", handle)
         self.conversions = gps.clienthelpers.unit_adjustments(handle)
 
