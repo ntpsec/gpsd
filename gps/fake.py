@@ -585,7 +585,7 @@ class DaemonInstance(SubprogramInstance):
         # Use 'Gp' as the prefix to avoid colliding with 'GPSD'.
         shmkey = '0x4770%.04X' % int(port)
         env = {'GPSD_SHM_KEY': shmkey}
-        self.spawn_sub('gpsd/gpsd', opts, background, prefix, env)
+        self.spawn_sub('gpsd', opts, background, prefix, env)
 
     def wait_ready(self):
         """Wait for the daemon to create the control socket."""
