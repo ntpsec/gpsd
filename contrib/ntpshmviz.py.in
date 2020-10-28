@@ -6,6 +6,8 @@
 #
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
+# Codacy D203 and D211 conflict, I choose D203
+# Codacy D212 and D213 conflict, I choose D212
 
 """ntpshmviz - graph the drift of NTP servers
 Written by Keane Wolter <daemoneye2@gmail.com>
@@ -43,7 +45,7 @@ class ntpOffset(object):
         self.display()
 
     def display(self):
-        """display the graphs."""
+        """Display the graphs."""
         # Alert the user that closing the graphs can be done with "Ctrl-w"
         print("Please note that the graph can be closed with the "
               "key combination of <Ctrl-w>")
