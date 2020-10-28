@@ -20,8 +20,8 @@ now live in a different module.
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
 from __future__ import absolute_import, print_function, division
+import argparse
 import binascii      # for binascii.hexlify()
-import getopt
 import os            # for file handling in gps_io
 import socket        # for socket.error
 import stat          # for stat.S_ISBLK()
@@ -671,22 +671,54 @@ def is_sbas(prn):
 
 
 if __name__ == '__main__':
-    # FIXME: convert to argparse
-    (options, arguments) = getopt.getopt(sys.argv[1:], "v")
+    # FIXME:  relative imports break this __main__
+    description = 'gps/gps.py module.'
+    usage = '%(prog)s [OPTIONS] [host [port]]'
+    epilog = ('BSD terms apply: see the file COPYING in the distribution root'
+              ' for details.')
+
+    parser = argparse.ArgumentParser(
+                 description=description,
+                 epilog=epilog,
+                 formatter_class=argparse.RawDescriptionHelpFormatter,
+                 usage=usage)
+    parser.add_argument(
+        '-?',
+        action="help",
+        help='show this help message and exit'
+    )
+    parser.add_argument(
+        '-v',
+        '--verbose',
+        dest='verbose',
+        default=0,
+        action='count',
+        help='Verbose. Repeat for more verbosity. [Default %(default)s)]',
+    )
+    parser.add_argument(
+        '-V', '--version',
+        action='version',
+        version="%(prog)s: Version " + gps_version + "\n",
+        help='Output version to stderr, then exit'
+    )
+    parser.add_argument(
+        'arguments',
+        metavar='[host [port]]',
+        nargs='*',
+        help='[host [port]] Host and port to connec to gpsd on.'
+    )
+    options = parser.parse_args()
+
     streaming = False
-    verb = False
-    for (switch, val) in options:
-        if switch == '-v':
-            verb = True
     if len(arguments) > 2:
-        print('Usage: gps.py [-v] [host [port]]')
+        sys.stderr.write("gps.py: too many positional arguments.")
         sys.exit(1)
 
-    opts = {"verbose": verb}
-    if arguments:
-        opts["host"] = arguments[0]
-    if arguments:
-        opts["port"] = arguments[1]
+    opts = {"verbose": options.verb}
+    if options.arguments:
+        opts["host"] = options.arguments[0]
+        if 2 == len(options.arguments):
+            opts["port"] = options.arguments[1]
 
     session = gps(**opts)
     session.stream(WATCH_ENABLE)
