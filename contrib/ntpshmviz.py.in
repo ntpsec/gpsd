@@ -7,10 +7,9 @@
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
 
-'''
-ntpshmviz - graph the drift of NTP servers
+"""ntpshmviz - graph the drift of NTP servers
 Written by Keane Wolter <daemoneye2@gmail.com>
-'''
+"""
 #
 # To do:
 #
@@ -33,11 +32,10 @@ ns_per_s = 1e9
 
 
 class ntpOffset(object):
-    "The master Class"
+    """The master Class."""
 
     def __init__(self, stream):
-        "Initialize class ntpOffset"
-
+        """Initialize class ntpOffset."""
         # get the data
         self.read_data(stream)
 
@@ -45,8 +43,7 @@ class ntpOffset(object):
         self.display()
 
     def display(self):
-        "display the graphs"
-
+        """display the graphs."""
         # Alert the user that closing the graphs can be done with "Ctrl-w"
         print("Please note that the graph can be closed with the "
               "key combination of <Ctrl-w>")
@@ -73,8 +70,7 @@ class ntpOffset(object):
         PLT.show()
 
     def read_data(self, stream):
-        "Read data from a ntp log file."
-
+        """Read data from a ntp log file."""
         # Layout is:
         #
         #   - The keyword "sample"
@@ -120,6 +116,7 @@ class ntpOffset(object):
 
 
 def args():
+    """Handle command line args."""
     parser = argparse.ArgumentParser(description='NTP drift visualizer')
     parser.add_argument('-V', '--version',
                         action='version',
