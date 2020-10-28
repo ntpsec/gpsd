@@ -1,20 +1,19 @@
 #!@PYSHEBANG@
 # -*- coding: utf-8 -*-
 # @GENERATED@
-'''
-Feed location data from a running GPSD to a Google Earth instance.
-
-This code originally by Jaroslaw Zachwieja and a guy referring
-to himself/herself as TJ(http://tjworld.net)
-Modified by Chen Wei <weichen302@aol.com> for use with gpsd
-Cleaned up and adapted for the GPSD project by Eric S. Raymond.
-'''
-
 # This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
+"""Feed location data from a running GPSD to a Google Earth instance.
+
+This code originally by Jaroslaw Zachwieja and a guy referring
+to himself/herself as TJ(http://tjworld.net)
+Modified by Chen Wei <weichen302@aol.com> for use with gpsd
+Cleaned up and adapted for the GPSD project by Eric S. Raymond.
+"""
+
 from __future__ import absolute_import, print_function, division
 
 import argparse
@@ -53,8 +52,11 @@ KML_OPEN_IN_GE = '''\
 
 
 def kmlize(tpv):
-    '''http://code.google.com/apis/kml/documentation/kmlreference.html
-       for official kml document'''
+    """Kmlize.
+
+http://code.google.com/apis/kml/documentation/kmlreference.html
+for official kml document.
+"""
     latitude = tpv['lat']
     longitude = tpv['lon']
 
