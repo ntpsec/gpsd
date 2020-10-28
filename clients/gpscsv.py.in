@@ -7,6 +7,7 @@
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
 #
+"""gpscsv -- convert gpsd JSON strams into csv files."""
 
 from __future__ import print_function
 
@@ -17,8 +18,7 @@ import time            # for time.time()
 
 
 def _do_one_line(data):
-    '''dump one report line'''
-
+    """dump one report line."""
     global options
 
     if options.json_fields is None:
