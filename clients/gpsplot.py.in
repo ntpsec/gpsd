@@ -7,6 +7,9 @@
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
 #
+# Codacy D203 and D211 conflict, I choose D203
+# Codacy D212 and D213 conflict, I choose D212
+"""gpsplot -- plot gpsd data in real time with matplotlib."""
 
 from __future__ import print_function
 
@@ -47,21 +50,20 @@ if gps.__version__ != gps_version:
 
 
 def _do_one_line(data):
-    '''dump one report line'''
-
+    """Dump one report line."""
     if options.stripchart:
         if 'time' not in data:
             plt.pause(0.05)
             return
 
-        time = datetime.datetime.strptime(data['time'],
+        timestr = datetime.datetime.strptime(data['time'],
                                           '%Y-%m-%dT%H:%M:%S.%fZ')
 
         if fields[0] in data and fields[2] in data:
-            axs[0].scatter(time, data[fields[0]])
-            axs[1].scatter(time, data[fields[2]])
+            axs[0].scatter(timestr, data[fields[0]])
+            axs[1].scatter(timestr, data[fields[2]])
         if fields[4] in data:
-            axs[2].scatter(time, data[fields[4]] * conversion.altfactor)
+            axs[2].scatter(timestr, data[fields[4]] * conversion.altfactor)
     else:
         # must be scatterplot
         if fields[0] in data and fields[2] in data:
