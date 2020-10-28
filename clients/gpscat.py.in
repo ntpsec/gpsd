@@ -1,13 +1,15 @@
 #!@PYSHEBANG@
 #
 # @GENERATED@
-"Display GPS output.  Hexify it if necessary."
-
 # This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
+# Codacy D203 and D211 conflict, I choose D203
+# Codacy D212 and D213 conflict, I choose D212
+"""Display GPS output.  Hexify it if necessary."""
+
 from __future__ import absolute_import, print_function, division
 
 import argparse
@@ -49,7 +51,7 @@ PRINTABLE = set(bytearray(string.printable, encoding=BINARY_ENCODING))
 
 
 def hexdump(st):
-    "Convert string to hex string"
+    """Convert string to hex string."""
     dmp = ""
     for ch in bytearray(st):  # bytearray gets array of ints in Python 2 and 3
         if ch in PRINTABLE:
@@ -60,7 +62,7 @@ def hexdump(st):
 
 
 def reporter(errlevel, mesg):
-    "Report errors, depending on log level"
+    """Report errors, depending on log level."""
     if errlevel <= options.debug:
         sys.stdout.write(mesg)
 
