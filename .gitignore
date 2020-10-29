@@ -1,3 +1,5 @@
+# temp dir for building
+buildtmp
 # Binaries
 clients/cgps
 clients/lcdgps
