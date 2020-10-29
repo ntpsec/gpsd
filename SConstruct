@@ -1855,44 +1855,44 @@ env.Depends('gps/packet.py', packet_ffi_shared)
 # Production programs
 
 gpsd = env.Program('gpsd/gpsd', gpsd_sources,
-                   LIBS=['gpsd', 'gps_static'],
+                   LIBS=['gpsd', libgps_static],
                    parse_flags=gpsdflags + gpsflags)
 gpsdecode = env.Program('clients/gpsdecode', ['clients/gpsdecode.c'],
-                        LIBS=['gpsd', 'gps_static'],
+                        LIBS=['gpsd', libgps_static],
                         parse_flags=gpsdflags + gpsflags)
 gpsctl = env.Program('gpsctl', ['gpsctl.c'],
-                     LIBS=['gpsd', 'gps_static'],
+                     LIBS=['gpsd', libgps_static],
                      parse_flags=gpsdflags + gpsflags)
 # FIXME: gpsmon should not link to gpsd server sources!
 gpsmon = env.Program('gpsmon/gpsmon', gpsmon_sources,
-                     LIBS=['gpsd', 'gps_static'],
+                     LIBS=['gpsd', libgps_static],
                      parse_flags=gpsdflags + gpsflags + ncurseslibs)
 gpsdctl = env.Program('clients/gpsdctl', ['clients/gpsdctl.c'],
-                      LIBS=['gps_static'],
+                      LIBS=[libgps_static],
                       parse_flags=gpsflags)
 gpspipe = env.Program('clients/gpspipe', ['clients/gpspipe.c'],
-                      LIBS=['gps_static'],
+                      LIBS=[libgps_static],
                       parse_flags=gpsflags)
 gpsrinex = env.Program('clients/gpsrinex', ['clients/gpsrinex.c'],
-                       LIBS=['gps_static'],
+                       LIBS=[libgps_static],
                        parse_flags=gpsflags)
 gps2udp = env.Program('clients/gps2udp', ['clients/gps2udp.c'],
-                      LIBS=['gps_static'],
+                      LIBS=[libgps_static],
                       parse_flags=gpsflags)
 gpxlogger = env.Program('clients/gpxlogger', ['clients/gpxlogger.c'],
-                        LIBS=['gps_static'],
+                        LIBS=[libgps_static],
                         parse_flags=gpsflags)
 lcdgps = env.Program('clients/lcdgps', ['clients/lcdgps.c'],
-                     LIBS=['gps_static'],
+                     LIBS=[libgps_static],
                      parse_flags=gpsflags)
 cgps = env.Program('clients/cgps', ['clients/cgps.c'],
-                   LIBS=['gps_static'],
+                   LIBS=[libgps_static],
                    parse_flags=gpsflags + ncurseslibs)
 ntpshmmon = env.Program('clients/ntpshmmon', ['clients/ntpshmmon.c'],
-                        LIBS=['gpsd', 'gps_static'],
+                        LIBS=['gpsd', libgps_static],
                         parse_flags=gpsflags)
 ppscheck = env.Program('clients/ppscheck', ['clients/ppscheck.c'],
-                       LIBS=['gps_static'],
+                       LIBS=[libgps_static],
                        parse_flags=gpsflags)
 
 bin_binaries = []
@@ -1925,36 +1925,36 @@ if env["timeservice"] or env["gpsdclients"]:
 
 # Test programs - always link locally and statically
 test_bits = env.Program('tests/test_bits', ['tests/test_bits.c'],
-                        LIBS=['gps_static'])
+                        LIBS=[libgps_static])
 test_float = env.Program('tests/test_float', ['tests/test_float.c'])
 test_geoid = env.Program('tests/test_geoid', ['tests/test_geoid.c'],
-                         LIBS=['gpsd', 'gps_static'],
+                         LIBS=['gpsd', libgps_static],
                          parse_flags=gpsdflags)
 test_gpsdclient = env.Program('tests/test_gpsdclient',
                               ['tests/test_gpsdclient.c'],
-                              LIBS=['gps_static', 'm'])
+                              LIBS=[libgps_static, 'm'])
 test_matrix = env.Program('tests/test_matrix', ['tests/test_matrix.c'],
-                          LIBS=['gpsd', 'gps_static'],
+                          LIBS=['gpsd', libgps_static],
                           parse_flags=gpsdflags)
 test_mktime = env.Program('tests/test_mktime', ['tests/test_mktime.c'],
-                          LIBS=['gps_static'], parse_flags=mathlibs + rtlibs)
+                          LIBS=[libgps_static], parse_flags=mathlibs + rtlibs)
 test_packet = env.Program('tests/test_packet', ['tests/test_packet.c'],
-                          LIBS=['gpsd', 'gps_static'],
+                          LIBS=['gpsd', libgps_static],
                           parse_flags=gpsdflags)
 test_timespec = env.Program('tests/test_timespec', ['tests/test_timespec.c'],
-                            LIBS=['gpsd', 'gps_static'],
+                            LIBS=['gpsd', libgps_static],
                             parse_flags=gpsdflags)
 test_trig = env.Program('tests/test_trig', ['tests/test_trig.c'],
                         parse_flags=mathlibs)
 # test_libgps for glibc older than 2.17
 test_libgps = env.Program('tests/test_libgps', ['tests/test_libgps.c'],
-                          LIBS=['gps_static'],
+                          LIBS=[libgps_static],
                           parse_flags=mathlibs + rtlibs + dbusflags)
 
 if env['socket_export']:
     test_json = env.Program(
         'tests/test_json', ['tests/test_json.c'],
-        LIBS=['gps_static'],
+        LIBS=[libgps_static],
         parse_flags=mathlibs + rtlibs + usbflags + dbusflags)
 else:
     announce("test_json not building because socket_export is disabled")
@@ -1962,7 +1962,7 @@ else:
 
 # duplicate below?
 test_gpsmm = env.Program('tests/test_gpsmm', ['tests/test_gpsmm.cpp'],
-                         LIBS=['gps_static'],
+                         LIBS=[libgps_static],
                          parse_flags=mathlibs + rtlibs + dbusflags)
 testprogs = [test_bits,
              test_float,
