@@ -1736,7 +1736,7 @@ if env["shared"]:
 else:
     def GPSLibrary(env, target, source, version, parse_flags=None):
         return env.StaticLibrary(target=target,
-                                 source=[env.StaticObject(s) for s in sources],
+                                 source=[env.StaticObject(s) for s in source],
                                  parse_flags=parse_flags)
 
     def GPSLibraryInstall(env, libdir, source, version):
