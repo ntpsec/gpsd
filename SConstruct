@@ -1713,12 +1713,12 @@ packet_ffi_extension = [
 
 
 if env["shared"]:
-    def GPSLibrary(env, target, sources, version, parse_flags=None):
+    def GPSLibrary(env, target, source, version, parse_flags=None):
         # Note: We have a possibility of getting either Object or file
         # list for sources, so we run through the sources and try to make
         # them into SharedObject instances.
         obj_list = []
-        for s in Flatten(sources):
+        for s in Flatten(source):
             if isinstance(s, str):
                 obj_list.append(env.SharedObject(s))
             else:
@@ -1728,23 +1728,23 @@ if env["shared"]:
                                  parse_flags=parse_flags,
                                  SHLIBVERSION=version)
 
-    def GPSLibraryInstall(env, libdir, sources, version):
+    def GPSLibraryInstall(env, libdir, source, version):
         # note: osX lib name s/b libgps.VV.dylib
         # where VV is libgps_version_current
-        inst = env.InstallVersionedLib(libdir, sources, SHLIBVERSION=version)
+        inst = env.InstallVersionedLib(libdir, source, SHLIBVERSION=version)
         return inst
 else:
-    def GPSLibrary(env, target, sources, version, parse_flags=None):
-        return env.StaticLibrary(target,
-                                 [env.StaticObject(s) for s in sources],
+    def GPSLibrary(env, target, source, version, parse_flags=None):
+        return env.StaticLibrary(target=target,
+                                 source=[env.StaticObject(s) for s in sources],
                                  parse_flags=parse_flags)
 
-    def GPSLibraryInstall(env, libdir, sources, version):
-        return env.Install(libdir, sources)
+    def GPSLibraryInstall(env, libdir, source, version):
+        return env.Install(libdir, source)
 
 libgps_shared = GPSLibrary(env=env,
                            target="gps",
-                           sources=libgps_sources,
+                           source=libgps_sources,
                            version=libgps_version,
                            parse_flags=rtlibs + libgps_flags)
 
@@ -1798,7 +1798,7 @@ if qt_env:
                                              CFLAGS=compile_flags))
     compiled_qgpsmmlib = GPSLibrary(env=qt_env,
                                     target="Qgpsmm",
-                                    sources=qtobjects,
+                                    source=qtobjects,
                                     version=libgps_version,
                                     parse_flags=libgps_flags)
     libraries.append(compiled_qgpsmmlib)
