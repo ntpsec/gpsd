@@ -1180,7 +1180,6 @@ static void handle_request(struct subscriber_t *sub,
                                 // no remote device part
                                 policy_copy.devpath[0] = '\0';
                             }
-                            // SNARD!
                             (void)json_policy_to_watch(&policy_copy,
                                                        watch_buf,
                                                        sizeof(watch_buf));
