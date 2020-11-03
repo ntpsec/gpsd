@@ -10,4 +10,6 @@ nohup.out
 # contrib fluff
 contrib/clock_test
 contrib/gpsd-dbus
+# common log file
+nohup.out
 
