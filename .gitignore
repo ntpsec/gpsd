@@ -6,4 +6,6 @@ __pycache__
 config.log
 # common log file
 nohup.out
+# vi swap files
+*.swp
 
