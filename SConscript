@@ -273,14 +273,14 @@ gpsd_version = "3.21.1~dev"
 if 'dev' in gpsd_version:
     (st, gpsd_revision) = _getstatusoutput('git describe --tags')
     if st != 0:
+        # Only if git describe failed
         # Use timestamp from latest relevant file, ignoring generated files
         # from root, not from buildtmp
-        files = FileList(['#*.c', '#*/*.c', '#*.cpp', '#*/*.cpp',
-                          '#include/*.h', '#*.in', '#*/*.in',
-                          '@SConstruct', '@SConscript'],
+        files = FileList(['../*.c', '../*/*.c', '../*.cpp', '../*/*.cpp',
+                          '../include/*.h', '../*.in', '../*/*.in',
+                          '../SConstruct', '../SConscript'],
                          generated_sources + generated_www)
         timestamps = map(GetMtime, files)
-        # FIXME: stop using timestamps, it break reproduceable biulds.
         if timestamps:
             from datetime import datetime
             latest = datetime.fromtimestamp(sorted(timestamps)[-1])
