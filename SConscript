@@ -2573,9 +2573,12 @@ Utility('rtcm-makeregress', [gpsdecode], [
 ])
 
 # Regression-test the AIVDM decoder.
+aivdm_logs = ['test/sample.aivdm', 'test/sample.aivdm.chk',
+              'test/sample.aivdm.js.chk', 'test/sample.aivdm.ju.chk']
 if env["aivdm"]:
+    # the log files must be dependencies so they get copied into variant_dir
     # FIXME! Does not return a proper fail code
-    aivdm_regress = Utility('aivdm-regress', [gpsdecode], [
+    aivdm_regress = Utility('aivdm-regress', [gpsdecode, aivdm_logs], [
         '@echo "Testing AIVDM decoding w/ CSV format..."',
         '@for f in $SRCDIR1/test/*.aivdm; do '
         '    echo "\tTesting $${f}..."; '
@@ -2622,8 +2625,9 @@ else:
     aivdm_regress = None
 
 # Rebuild the AIVDM regression tests.
+# The new .chk back into root.
 Utility('aivdm-makeregress', [gpsdecode], [
-    'for f in $SRCDIR/test/*.aivdm; do '
+    'for f in $SRCDIR/../test/*.aivdm; do '
     '    $SRCDIR/clients/gpsdecode -u -c <$${f} > $${f}.chk; '
     '    $SRCDIR/clients/gpsdecode -u -j <$${f} > $${f}.ju.chk; '
     '    $SRCDIR/clients/gpsdecode -j  <$${f} > $${f}.js.chk; '
