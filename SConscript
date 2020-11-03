@@ -1,27 +1,4 @@
-# see library directories " SCons build recipe for the GPSD project
-
-# Important targets:
-#
-# build      - build the software (default)
-# dist       - make distribution tarball (requires GNU tar)
-# install    - install programs, libraries, and manual pages
-# uninstall  - undo an install
-#
-# check      - run regression and unit tests.
-# audit      - run code-auditing tools
-# testbuild  - test-build the code from a tarball
-# website    - refresh the website
-# release    - ship a release
-#
-# --clean    - clean all normal build targets
-#
-# Setting the DESTDIR environment variable will prefix the install destinations
-# without changing the --prefix prefix.
-
-# Unfinished items:
-# * Out-of-directory builds: see http://www.scons.org/wiki/UsingBuildDir
-# * Coveraging mode: gcc "-coverage" flag requires a hack
-#   for building the python bindings
+# scons file.  Only meant to be run from SContruct.
 #
 # This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
@@ -646,7 +623,6 @@ for key, value in os.environ.items():
 # scons can get confused if this is not a full path
 # env['SRCDIR'] = os.getcwd() + os.sep + 'buildtmp'
 env['SRCDIR'] = os.getcwd()
-env['SRCDIR1'] = os.getcwd()
 
 # We may need to force slow regression tests to get around race
 # conditions in the pty layer, especially on a loaded machine.
@@ -785,7 +761,7 @@ docbook_html_uri = docbook_url_stem + 'html/docbook.xsl'
 
 def CheckXsltproc(context):
     context.Message('Checking that xsltproc can make man pages... ')
-    # ofp = open(env['SRCDIR1'] + "/man/xmltest.xml", "w")
+    # ofp = open(env['SRCDIR'] + "/man/xmltest.xml", "w")
     ofp = open("xmltest.xml", "w")
     ofp.write('''
        <refentry id="foo.1">
@@ -1752,10 +1728,10 @@ libgps_shared = GPSLibrary(env=env,
                            version=libgps_version,
                            parse_flags=rtlibs + libgps_flags)
 
-libgps_static = env.StaticLibrary(terget="gps_static",
-                                  source=[env.StaticObject(s)
-                                           for s in libgps_sources],
-                                  parse_flags=rtlibs)
+libgps_static = env.StaticLibrary(
+    terget="gps_static",
+    source=[env.StaticObject(s) for s in libgps_sources],
+    parse_flags=rtlibs)
 
 libgpsd_static = env.StaticLibrary(
     target="gpsd",
@@ -2059,7 +2035,7 @@ env.Command(target="libgps/gps_maskdump.c",
             source=["maskaudit.py", "include/gps.h", "include/gpsd.h"],
             action='''
     rm -f $TARGET &&\
-        $SC_PYTHON $SOURCE -c $SRCDIR1 > $TARGET &&\
+        $SC_PYTHON $SOURCE -c $SRCDIR > $TARGET &&\
         chmod a-w $TARGET''')
 
 env.Command(target="libgps/ais_json.i", source="libgps/jsongen.py",
@@ -2078,8 +2054,7 @@ else:
 # buildtmp may not exist when this is run.
 pythonize_header_match = re.compile(r'\s*#define\s+(\w+)\s+(\w+)\s*.*$[^\\]')
 pythonized_header = ''
-with open(env['SRCDIR1'] + '/../include/gpsd.h') as sfp:
-# with open('../include/gpsd.h') as sfp:
+with open(env['SRCDIR'] + '/../include/gpsd.h') as sfp:
     for content in sfp:
         _match3 = pythonize_header_match.match(content)
         if _match3:
@@ -2300,12 +2275,14 @@ if env['python'] and not cleaning and not helping:
                       Dir(DESTDIR + python_module_dir)]
 
     # Check that Python modules compile properly
+    # FIXME: why not install some of the .pyc?
     python_all = python_misc + python_modules + python_progs + ['SConstruct']
     check_compile = []
     for p in python_all:
         # split in two lines for readability
-        check_compile.append('cp buildtmp/%s tmp.py; %s -tt -m py_compile tmp.py;' %
-                             (p, target_python_path))
+        check_compile.append(
+            'cp buildtmp/%s tmp.py; %s -tt -m py_compile tmp.py;' %
+            (p, target_python_path))
         # tmp.py may have inherited non-writable permissions
         check_compile.append('rm -f tmp.py*')
 
@@ -2356,7 +2333,8 @@ if env['python'] and not cleaning and not helping:
                 # FIXME: make these do -V w/o dependencies.
                 continue
         # need to run in buildtmp to find libgpsdpacket
-        pp.append(Utility('version-%s' % p, p,
+        pp.append(Utility(
+            'version-%s' % p, p,
             'cd buildtmp; $PYTHON $SRCDIR/%s -V' % p,
             ENV=verenv))
     python_versions = env.Alias('python-versions', pp)
@@ -2496,7 +2474,8 @@ matrix_regress = Utility('matrix-regress', [test_matrix], [
 if env['socket_export'] and env['python']:
     # Regression-test the daemon.
     # But first dump the platform and its delay parameters.
-    gps_herald = Utility('gps-herald', [gpsd, gpsctl, '$SRCDIR/gpsfake'],
+    gps_herald = Utility(
+        'gps-herald', [gpsd, gpsctl, '$SRCDIR/gpsfake'],
         'cd buildtmp; $PYTHON $PYTHON_COVERAGE $SRCDIR/gpsfake -T')
     # get from root, do not bother to move to variant_dir
     gps_log_pattern = os.path.join('..', 'test', 'daemon', '*.log')
@@ -2518,10 +2497,11 @@ if env['socket_export'] and env['python']:
     gpsfake_tests = []
     for name, opts in [['pty', ''], ['udp', '-u'], ['tcp', '-o -t']]:
         # oddly this runs in build root, but needs to run in variant_dir
-        gpsfake_tests.append(Utility('gpsfake-' + name,
+        gpsfake_tests.append(Utility(
+            'gpsfake-' + name,
             [gps_herald, gpsfake_logs],
-            'cd buildtmp; $SRCDIR/regress-driver $REGRESSOPTS -q %s %s'
-            % (opts, 'test/daemon/passthrough.log')))
+            'cd buildtmp; $SRCDIR/regress-driver $REGRESSOPTS -q %s %s' %
+            (opts, 'test/daemon/passthrough.log')))
     env.Alias('gpsfake-tests', gpsfake_tests)
 
     # Build the regression tests for the daemon.
@@ -2531,7 +2511,8 @@ if env['socket_export'] and env['python']:
     gps_rebuilds = []
     for gps_name, gps_log in zip(gps_names, gps_logs):
         # oddly this runs in build root, but needs to run in variant_dir
-        gps_rebuilds.append(Utility('gps-makeregress-' + gps_name, gps_herald,
+        gps_rebuilds.append(Utility(
+            'gps-makeregress-' + gps_name, gps_herald,
             'cd buildtmp; $SRCDIR/regress-driver -bq -o -t '
             '$REGRESSOPTS ' + gps_log))
     if GetOption('num_jobs') <= 1:
@@ -2589,7 +2570,7 @@ if env["aivdm"]:
     # FIXME! Does not return a proper fail code
     aivdm_regress = Utility('aivdm-regress', [gpsdecode, aivdm_logs], [
         '@echo "Testing AIVDM decoding w/ CSV format..."',
-        '@for f in $SRCDIR1/test/*.aivdm; do '
+        '@for f in $SRCDIR/test/*.aivdm; do '
         '    echo "\tTesting $${f}..."; '
         '    TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
         '    $SRCDIR/clients/gpsdecode -u -c <$${f} >$${TMPFILE}; '
@@ -2597,7 +2578,7 @@ if env["aivdm"]:
         '    rm -f $${TMPFILE}; '
         'done;',
         '@echo "Testing AIVDM decoding w/ JSON unscaled format..."',
-        '@for f in $SRCDIR1/test/*.aivdm; do '
+        '@for f in $SRCDIR/test/*.aivdm; do '
         '    echo "\tTesting $${f}..."; '
         '    TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
         '    $SRCDIR/clients/gpsdecode -u -j <$${f} >$${TMPFILE}; '
@@ -2605,7 +2586,7 @@ if env["aivdm"]:
         '    rm -f $${TMPFILE}; '
         'done;',
         '@echo "Testing AIVDM decoding w/ JSON scaled format..."',
-        '@for f in $SRCDIR1/test/*.aivdm; do '
+        '@for f in $SRCDIR/test/*.aivdm; do '
         '    echo "\tTesting $${f}..."; '
         '    TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
         '    $SRCDIR/clients/gpsdecode -j <$${f} >$${TMPFILE}; '
@@ -2616,7 +2597,7 @@ if env["aivdm"]:
         '@TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
         '$SRCDIR/clients/gpsdecode -u -e -j <$SRCDIR/test/sample.aivdm.ju.chk '
         ' >$${TMPFILE}; '
-        '    grep -v "^#" $SRCDIR1/test/sample.aivdm.ju.chk '
+        '    grep -v "^#" $SRCDIR/test/sample.aivdm.ju.chk '
         '    | diff -ub - $${TMPFILE} || echo "Test FAILED!"; '
         '    rm -f $${TMPFILE}; ',
         # Parse the unscaled json reference, dump it as scaled json,
@@ -2625,7 +2606,7 @@ if env["aivdm"]:
         '@TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
         '$SRCDIR/clients/gpsdecode -e -j <$SRCDIR/test/sample.aivdm.ju.chk '
         ' >$${TMPFILE};'
-        '    grep -v "^#" $SRCDIR1/test/sample.aivdm.js.chk '
+        '    grep -v "^#" $SRCDIR/test/sample.aivdm.js.chk '
         '    | diff -ub - $${TMPFILE} || echo "Test FAILED!"; '
         '    rm -f $${TMPFILE}; ',
     ])
@@ -2646,7 +2627,7 @@ Utility('aivdm-makeregress', [gpsdecode], [
 packet_regress = UtilityWithHerald(
     'Testing detection of invalid packets...',
     'packet-regress', [test_packet],
-    ['$SRCDIR/tests/test_packet | diff -u test/packet.test.chk -',])
+    ['$SRCDIR/tests/test_packet | diff -u test/packet.test.chk -', ])
 
 # Rebuild the packet-getter regression test
 Utility('packet-makeregress', [test_packet], [
@@ -2677,13 +2658,16 @@ else:
             ' $SRCDIR/test/clientlib/*.log', ])
     # Unit-test the bitfield extractor
     # PYTHONPATH to help find the new copy of gps module
+    verenv = env['ENV'].copy()
+    verenv['PYTHONPATH'] = env['SRCDIR']  # Use new gps module, not system's
     misc_regress = Utility('misc-regress', [
         'tests/test_clienthelpers.py',
         'tests/test_misc.py',
         ], [
-        'PYTHONPATH=$SRCDIR {} buildtmp/tests/test_clienthelpers.py'.format(target_python_path),
-        'PYTHONPATH=$SRCDIR {} buildtmp/tests/test_misc.py'.format(target_python_path)
-        ])
+        '{} buildtmp/tests/test_clienthelpers.py'.format(target_python_path),
+        '{} buildtmp/tests/test_misc.py'.format(target_python_path)
+        ],
+        ENV=verenv)
 
 
 # Build the regression test for the sentence unpacker
@@ -2914,11 +2898,12 @@ if htmlbuilder:
 www_xml_files = []
 for file in glob.iglob('../doc/*xml'):
     www_xml_files.append(file[3:])
-env.Command('www/hardware.html', ['gpscap.py',
-                                  'www/hardware-head.html',
-                                  'gpscap.ini',
-                                  'www/hardware-tail.html'] +
-                                  www_xml_files,
+env.Command('www/hardware.html',
+            ['gpscap.py',
+             'www/hardware-head.html',
+             'gpscap.ini',
+             'www/hardware-tail.html',
+             www_xml_files],
             ['cd buildtmp;'
              '(cat www/hardware-head.html && PYTHONIOENCODING=utf-8 '
              '$SC_PYTHON gpscap.py && cat www/hardware-tail.html) '
