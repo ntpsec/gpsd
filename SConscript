@@ -2823,7 +2823,8 @@ if env.WhereIs('asciidoctor'):
     for stem, leaf in adocfiles:
         asciidocs.append('www/%s.html' % leaf)
         env.Command('www/%s.html' % leaf, '%s.adoc' % stem,
-                    ['asciidoctor -a compat -b html5 -a toc -o www/%s.html '
+                    ['cd buildtmp;'
+                     'asciidoctor -a compat -b html5 -a toc -o www/%s.html '
                      '%s.adoc' % (leaf, stem)])
 else:
     announce("WARNING: asciidoctor not found.\n"
@@ -2910,11 +2911,16 @@ if htmlbuilder:
     env.HTML('www/internals.html', '$SRCDIR/doc/internals.xml')
 
 # The hardware page
+www_xml_files = []
+for file in glob.iglob('../doc/*xml'):
+    www_xml_files.append(file[3:])
 env.Command('www/hardware.html', ['gpscap.py',
                                   'www/hardware-head.html',
                                   'gpscap.ini',
-                                  'www/hardware-tail.html'],
-            ['(cat www/hardware-head.html && PYTHONIOENCODING=utf-8 '
+                                  'www/hardware-tail.html'] +
+                                  www_xml_files,
+            ['cd buildtmp;'
+             '(cat www/hardware-head.html && PYTHONIOENCODING=utf-8 '
              '$SC_PYTHON gpscap.py && cat www/hardware-tail.html) '
              '>www/hardware.html'])
 
