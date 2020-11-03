@@ -2498,24 +2498,27 @@ if env['socket_export'] and env['python']:
     # find older versions of them in a directory on your $PATH.
     gps_herald = Utility('gps-herald', [gpsd, gpsctl, '$SRCDIR/gpsfake'],
                          ':; $PYTHON $PYTHON_COVERAGE $SRCDIR/gpsfake -T')
-    gps_log_pattern = os.path.join('test', 'daemon', '*.log')
+    # get from root, do not bother to move to variant_dir
+    gps_log_pattern = os.path.join('..', 'test', 'daemon', '*.log')
     gps_logs = glob.glob(gps_log_pattern)
     gps_names = [os.path.split(x)[-1][:-4] for x in gps_logs]
     gps_tests = []
     for gps_name, gps_log in zip(gps_names, gps_logs):
+        # oddly this runs in build root, but needs to run in variant_dir
         gps_tests.append(Utility(
             'gps-regress-' + gps_name, gps_herald,
-            '$SRCDIR/regress-driver -q -o -t $REGRESSOPTS ' + gps_log))
+            'cd buildtmp; $SRCDIR/regress-driver -q -o -t $REGRESSOPTS ' +
+            gps_log))
     gps_regress = env.Alias('gps-regress', gps_tests)
 
     # Run the passthrough log in all transport modes for better coverage
     gpsfake_log = os.path.join('test', 'daemon', 'passthrough.log')
     gpsfake_tests = []
     for name, opts in [['pty', ''], ['udp', '-u'], ['tcp', '-o -t']]:
+        # oddly this runs in build root, but needs to run in variant_dir
         gpsfake_tests.append(Utility('gpsfake-' + name, gps_herald,
-                                     '$SRCDIR/regress-driver'
-                                     ' $REGRESSOPTS -q %s %s'
-                                     % (opts, gpsfake_log)))
+            'cd buildtmp; $SRCDIR/regress-driver $REGRESSOPTS -q %s %s'
+            % (opts, gpsfake_log)))
     env.Alias('gpsfake-tests', gpsfake_tests)
 
     # Build the regression tests for the daemon.
@@ -2524,9 +2527,10 @@ if env['socket_export'] and env['python']:
     # get the current leap second.
     gps_rebuilds = []
     for gps_name, gps_log in zip(gps_names, gps_logs):
+        # oddly this runs in build root, but needs to run in variant_dir
         gps_rebuilds.append(Utility('gps-makeregress-' + gps_name, gps_herald,
-                                    '$SRCDIR/regress-driver -bq -o -t '
-                                    '$REGRESSOPTS ' + gps_log))
+            'cd buildtmp; $SRCDIR/regress-driver -bq -o -t '
+            '$REGRESSOPTS ' + gps_log))
     if GetOption('num_jobs') <= 1:
         Utility('gps-makeregress', gps_herald,
                 '$SRCDIR/regress-driver -b $REGRESSOPTS %s' % gps_log_pattern)
