@@ -274,11 +274,13 @@ if 'dev' in gpsd_version:
     (st, gpsd_revision) = _getstatusoutput('git describe --tags')
     if st != 0:
         # Use timestamp from latest relevant file, ignoring generated files
-        files = FileList(['*.c', '*/*.c', '*.cpp', '*/*.cpp', 'include/*.h',
-                          '*.in', '*/*.in',
-                          'SConstruct'],
+        # from root, not from buildtmp
+        files = FileList(['#*.c', '#*/*.c', '#*.cpp', '#*/*.cpp',
+                          '#include/*.h', '#*.in', '#*/*.in',
+                          '@SConstruct', '@SConscript'],
                          generated_sources + generated_www)
         timestamps = map(GetMtime, files)
+        # FIXME: stop using timestamps, it break reproduceable biulds.
         if timestamps:
             from datetime import datetime
             latest = datetime.fromtimestamp(sorted(timestamps)[-1])
@@ -2511,13 +2513,16 @@ if env['socket_export'] and env['python']:
     gps_regress = env.Alias('gps-regress', gps_tests)
 
     # Run the passthrough log in all transport modes for better coverage
-    gpsfake_log = os.path.join('test', 'daemon', 'passthrough.log')
+    gpsfake_logs = ['test/daemon/passthrough.log',
+                    'test/daemon/passthrough.log.chk']
+    # the log files must be dependencies so they get copied into variant_dir
     gpsfake_tests = []
     for name, opts in [['pty', ''], ['udp', '-u'], ['tcp', '-o -t']]:
         # oddly this runs in build root, but needs to run in variant_dir
-        gpsfake_tests.append(Utility('gpsfake-' + name, gps_herald,
+        gpsfake_tests.append(Utility('gpsfake-' + name,
+            [gps_herald, gpsfake_logs],
             'cd buildtmp; $SRCDIR/regress-driver $REGRESSOPTS -q %s %s'
-            % (opts, gpsfake_log)))
+            % (opts, 'test/daemon/passthrough.log')))
     env.Alias('gpsfake-tests', gpsfake_tests)
 
     # Build the regression tests for the daemon.
@@ -2547,7 +2552,9 @@ else:
 
 # Regression-test the RTCM decoder.
 if env["rtcm104v2"]:
-    rtcm_regress = Utility('rtcm-regress', [gpsdecode], [
+    rtcm2_logs = ['test/sample.rtcm2', 'test/sample.rtcm2.chk']
+    # the log files must be dependencies so they get copied into variant_dir
+    rtcm_regress = Utility('rtcm-regress', [gpsdecode, rtcm2_logs], [
         '@echo "Testing RTCM decoding..."',
         '@for f in $SRCDIR/test/*.rtcm2; do '
         '    echo "\tTesting $${f}..."; '
@@ -2628,7 +2635,7 @@ else:
     aivdm_regress = None
 
 # Rebuild the AIVDM regression tests.
-# The new .chk back into root.
+# Use root dir copies so the new .chk is back into root.
 Utility('aivdm-makeregress', [gpsdecode], [
     'for f in $SRCDIR/../test/*.aivdm; do '
     '    $SRCDIR/clients/gpsdecode -u -c <$${f} > $${f}.chk; '
@@ -2661,9 +2668,12 @@ if not env['python'] or cleaning or helping:
     misc_regress = None
 else:
     # Regression test the unpacking code in libgps
+    # the log files must be dependencies so they get copied into variant_dir
+    clientlib_logs = ['test/clientlib/multipacket.log',
+                      'test/clientlib/multipacket.log.chk']
     unpack_regress = UtilityWithHerald(
         'Testing the client-library sentence decoder...',
-        'unpack-regress', [test_libgps, 'regress-driver'], [
+        'unpack-regress', [test_libgps, 'regress-driver', clientlib_logs], [
             '$SRCDIR/regress-driver $REGRESSOPTS -c'
             ' $SRCDIR/test/clientlib/*.log', ])
     # Unit-test the bitfield extractor

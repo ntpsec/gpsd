@@ -75,7 +75,12 @@ SConsignFile(os.getcwd() + os.path.sep + sconsign_file)
 # Start by reading configuration variables from the cache
 opts = Variables('.scons-option-cache')
 
+# one touch clean!
+if GetOption('clean'):
+    atexit.register(lambda: os.system("rm -rf buildtmp"))
+
 # name 'build' is already taken
+# Not everything respects this  chdir()
 SConscriptChdir(1)
 # SConscript('SConscript', variant_dir='buildtmp', must_exit=True, duplicate=1)
 VariantDir('buildtmp', '.')
