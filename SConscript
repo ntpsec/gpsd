@@ -102,14 +102,12 @@ def GetMtime(file):
         return 0
 
 
-def FileList(patterns, exclusions=None):
-    """Get list of files based on patterns, minus excluded files."""
+def FileList(patterns, exclusion=None):
+    """Get list of files based on patterns, minus excluded path."""
     files = functools.reduce(operator.add, map(glob.glob, patterns), [])
-    for file in exclusions:
-        try:
+    for file in files:
+        if file.find(exclusion):
             files.remove(file)
-        except ValueError:
-            pass
     return files
 
 
@@ -273,13 +271,13 @@ if 'dev' in gpsd_version:
     (st, gpsd_revision) = _getstatusoutput('git describe --tags')
     if st != 0:
         # Only if git describe failed
-        # Use timestamp from latest relevant file, ignoring generated files
+        # Use timestamp from latest relevant file,
+        # ignoring generated files (../buildtmp)
         # from root, not from buildtmp
         files = FileList(['../*.c', '../*/*.c', '../*.cpp', '../*/*.cpp',
                           '../include/*.h', '../*.in', '../*/*.in',
                           '../SConstruct', '../SConscript'],
-                         generated_sources + generated_www)
-        # FIXME: ignore buildtmp/
+                         '../buildtmp')
         timestamps = map(GetMtime, files)
         if timestamps:
             from datetime import datetime
