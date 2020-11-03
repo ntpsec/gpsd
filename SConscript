@@ -2346,6 +2346,7 @@ if env['python'] and not cleaning and not helping:
     vchk = ''
     verenv = env['ENV'].copy()
     verenv['DISPLAY'] = ''  # Avoid launching X11 in X11 progs
+    verenv['PYTHONPATH'] = env['SRCDIR']  # Use new gps module, not system's
     pp = []
     for p in python_progs:
         if not env['xgps_deps']:
@@ -2353,9 +2354,10 @@ if env['python'] and not cleaning and not helping:
                 # do not have xgps* dependencies, don't test
                 # FIXME: make these do -V w/o dependencies.
                 continue
+        # need to run in buildtmp to find libgpsdpacket
         pp.append(Utility('version-%s' % p, p,
-                          'PYTHONPATH=buildtmp/ $PYTHON $SRCDIR/%s -V' %
-                          p, ENV=verenv))
+            'cd buildtmp; $PYTHON $SRCDIR/%s -V' % p,
+            ENV=verenv))
     python_versions = env.Alias('python-versions', pp)
 
 else:
@@ -2493,11 +2495,8 @@ matrix_regress = Utility('matrix-regress', [test_matrix], [
 if env['socket_export'] and env['python']:
     # Regression-test the daemon.
     # But first dump the platform and its delay parameters.
-    # The ":;" in this production and the later one forestalls an attempt by
-    # SCons to install up to date versions of gpsfake and gpsctl if it can
-    # find older versions of them in a directory on your $PATH.
     gps_herald = Utility('gps-herald', [gpsd, gpsctl, '$SRCDIR/gpsfake'],
-                         ':; $PYTHON $PYTHON_COVERAGE $SRCDIR/gpsfake -T')
+        'cd buildtmp; $PYTHON $PYTHON_COVERAGE $SRCDIR/gpsfake -T')
     # get from root, do not bother to move to variant_dir
     gps_log_pattern = os.path.join('..', 'test', 'daemon', '*.log')
     gps_logs = glob.glob(gps_log_pattern)
