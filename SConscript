@@ -34,16 +34,15 @@ if pdb_module:
     pdb_module.set_trace()
     pass  # Breakpoint default file is now SConstruct
 
-
 # gpsd needs Scons version at least 2.3
 EnsureSConsVersion(2, 3, 0)
 # gpsd needs Python version at least 2.6
 EnsurePythonVersion(2, 6)
 
-# Have scons rebuild an existing target when the source timestamp changes
-# and the MD5 changes.  To prevent rebuidling when gpsd_config.h rebuilt,
-# with no  changes.
-Decider('MD5-timestamp')
+# Have scons rebuild an existing target when the source(s) MD5 changes
+# Do not use time to prevent rebuilding when sources, like gpsd_config.h,
+# are rebuilt, but with no changes.
+Decider('MD5')
 
 # support building with various Python versions.
 sconsign_file = '.sconsign.{}.dblite'.format(pickle.HIGHEST_PROTOCOL)
