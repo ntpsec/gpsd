@@ -2706,6 +2706,13 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         mask = ubx_msg_nav_velned(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
 
+    case UBX_MGA_ACK:
+        GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-MGA-ACK\n");
+        break;
+    case UBX_MGA_DBD:
+        gpsd_log(LOG_DATA, &session->context->errout, "UBX-MGA-DBD\n");
+        break;
+
     case UBX_RXM_ALM:
         GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-RXM-ALM\n");
         break;
