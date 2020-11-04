@@ -38,6 +38,7 @@ void send_dbus_fix(struct gps_device_t *channel)
     /*DBusMessageIter   iter; */
     dbus_uint32_t serial;       /* collected, but not used */
     char *gpsd_devname;
+    double dtime;               // time as a double, loss of precision!
 
     /* if the connection is non existent, return without doing anything */
     if (connection == NULL)
@@ -51,8 +52,9 @@ void send_dbus_fix(struct gps_device_t *channel)
     /* the dbus/locationd doc fails to specify altitude as WGS84 or MSL.
      * assume altMSL */
     message = dbus_message_new_signal("/org/gpsd", "org.gpsd", "fix");
+    dtime = TSTONS(&gpsfix->time);
     dbus_message_append_args(message,
-                             DBUS_TYPE_DOUBLE, &(gpsfix->time),
+                             DBUS_TYPE_DOUBLE, &dtime,
                              DBUS_TYPE_INT32, &(gpsfix->mode),
                              DBUS_TYPE_DOUBLE, &(gpsfix->ept),
                              DBUS_TYPE_DOUBLE, &(gpsfix->latitude),
