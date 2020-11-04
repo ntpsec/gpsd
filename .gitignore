@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 # temp dir for building, no files outside of gpsd-3.21~dev should change.
 gpsd-3.21.1~dev
-=======
-# temp dir for building, no files outside of buildtmp should change.
-3.21.1~dev
->>>>>>> a4a0fb018 (SCons*:  Change buildtmp/ to gpsd-VERSION.  Makes tar easy.)
 buildtmp
 .sconf_temp
 __pycache__
