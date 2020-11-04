@@ -1,5 +1,5 @@
-# temp dir for building, no files outside of buildtmp should change.
-3.21.1~dev
+# temp dir for building, no files outside of gpsd-3.21~dev should change.
+gpsd-3.21.1~dev
 buildtmp
 .sconf_temp
 __pycache__
@@ -15,4 +15,9 @@ contrib/gpsd-dbus
 nohup.out
 # vi swap files
 *.swp
-
+# distfiles
+gpsd-3.*zip
+gpsd-3.*.tar.gz
+gpsd-3.*.tar.xz
+# testbuild directory
+testbuild
