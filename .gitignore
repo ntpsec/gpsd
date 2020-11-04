@@ -1,17 +1,10 @@
-<<<<<<< HEAD
 # temp dir for building, no files outside of gpsd-3.21~dev should change.
 gpsd-3.21.1~dev
 buildtmp
-=======
-# temp dir for building, no files outside of buildtmp should change.
-buildtmp
-# misc scons temp files
->>>>>>> a7cda3dd0 (.gitignore: So much simpler with buildtmp.)
 .sconf_temp
 __pycache__
 config.log
 # common log file
-<<<<<<< HEAD
 nohup.out
 # vi swap files
 *.swp
@@ -28,7 +21,3 @@ gpsd-3.*.tar.gz
 gpsd-3.*.tar.xz
 # testbuild directory
 testbuild
-=======
-nohup.out
-
->>>>>>> a7cda3dd0 (.gitignore: So much simpler with buildtmp.)
