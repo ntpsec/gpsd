@@ -1,6 +1,5 @@
 # temp dir for building, no files outside of buildtmp should change.
 buildtmp
-# misc scons temp files
 .sconf_temp
 __pycache__
 config.log
@@ -8,4 +7,7 @@ config.log
 nohup.out
 # vi swap files
 *.swp
+# contrib fluff
+contrib/clock_test
+contrib/gpsd-dbus
 
