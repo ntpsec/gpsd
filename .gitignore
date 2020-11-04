@@ -17,6 +17,7 @@ gpsmon/gpsmon
 gpsd/gpsd
 rtcmdecode
 contrib/clock_test
+contrib/gpsd-dbus
 *.exe
 # These are built from .in files
 android/gpsd_config
