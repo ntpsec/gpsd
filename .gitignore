@@ -11,6 +11,7 @@ nohup.out
 # contrib fluff
 contrib/clock_test
 contrib/gpsd-dbus
+<<<<<<< HEAD
 # common log file
 nohup.out
 # vi swap files
@@ -21,3 +22,6 @@ gpsd-3.*.tar.gz
 gpsd-3.*.tar.xz
 # testbuild directory
 testbuild
+=======
+
+>>>>>>> 593f6d0cc (contrib/gpsd-dbus.c: New program to read gpsd d-bus.)
