@@ -1,6 +1,11 @@
 /*
  * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
+ *
+ * D-Bus API is here:
+ *  https://dbus.freedesktop.org/doc/api/html/group__DBusMessage.html
+ *
+ * See "man 8 gpsd" for description of the gpsd D-Bus message.
  */
 #include "../include/gpsd_config.h"  /* must be before all includes */
 
