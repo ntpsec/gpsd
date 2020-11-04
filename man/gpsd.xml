@@ -478,7 +478,7 @@ signal name is "fix".  The signal payload layout is as follows:</para>
 </row>
 <row>
         <entry>DBUS_TYPE_DOUBLE</entry>
-        <entry><para>Altitude in meters.</para></entry>
+        <entry><para>Altitude MSL in meters.</para></entry>
 </row>
 <row>
         <entry>DBUS_TYPE_DOUBLE</entry>
