@@ -39,10 +39,17 @@ static char sentences[NMEA_MAX * 2];
 #define SENTENCELINE    1       /* index of sentences line in the NMEA window */
 #define MAXSATS         12      /* max satellites we can display */
 
+/* define all window width constants at one location */
+/* WIDTH shall be >= 80 */
+#define WIDTH_L 20
+#define WIDTH_M 30
+#define WIDTH_R 30
+#define WIDTH (WIDTH_L + WIDTH_M + WIDTH_R)
+
 static bool nmea_initialize(void)
 {
 
-    cookedwin = derwin(devicewin, 3, 80, 0, 0);
+    cookedwin = derwin(devicewin, 3, WIDTH, 0, 0);
     assert(cookedwin !=NULL);
     (void)wborder(cookedwin, 0, 0, 0, 0, 0, 0, 0, 0);
     (void)syncok(cookedwin, true);
@@ -50,26 +57,26 @@ static bool nmea_initialize(void)
     (void)mvwaddstr(cookedwin, 1, 1, "Time: ");
     (void)mvwaddstr(cookedwin, 1, 32, "Lat: ");
     (void)mvwaddstr(cookedwin, 1, 55, "Lon: ");
-    (void)mvwaddstr(cookedwin, 2, 34, " Cooked TPV ");
+    (void)mvwaddstr(cookedwin, 2, WIDTH/2 - 6, " Cooked TPV ");
     (void)wattrset(cookedwin, A_NORMAL);
 
-    nmeawin = derwin(devicewin, 3, 80, 3, 0);
+    nmeawin = derwin(devicewin, 3, WIDTH, 3, 0);
     assert(nmeawin !=NULL);
     (void)wborder(nmeawin, 0, 0, 0, 0, 0, 0, 0, 0);
     (void)syncok(nmeawin, true);
     (void)wattrset(nmeawin, A_BOLD);
-    (void)mvwaddstr(nmeawin, 2, 34, " Sentences ");
+    (void)mvwaddstr(nmeawin, 2, WIDTH/2 - 6, " Sentences ");
     (void)wattrset(nmeawin, A_NORMAL);
 
-    satwin = derwin(devicewin, MAXSATS + 3, 20, 6, 0);
+    satwin = derwin(devicewin, MAXSATS + 3, WIDTH_L, 6, 0);
     assert(satwin !=NULL);
     (void)wborder(satwin, 0, 0, 0, 0, 0, 0, 0, 0), (void)syncok(satwin, true);
     (void)wattrset(satwin, A_BOLD);
     (void)mvwprintw(satwin, 1, 1, "PRN  Az El S/N");
-    (void)mvwprintw(satwin, 14, 7, " GSV ");
+    (void)mvwprintw(satwin, 14, WIDTH_L/2 - 3, " GSV ");
     (void)wattrset(satwin, A_NORMAL);
 
-    gprmcwin = derwin(devicewin, 9, 30, 6, 20);
+    gprmcwin = derwin(devicewin, 9, WIDTH_M, 6, WIDTH_L);
     assert(gprmcwin !=NULL);
     (void)wborder(gprmcwin, 0, 0, 0, 0, 0, 0, 0, 0),
         (void)syncok(gprmcwin, true);
@@ -81,10 +88,10 @@ static bool nmea_initialize(void)
     (void)mvwprintw(gprmcwin, 5, 1, "Course: ");
     (void)mvwprintw(gprmcwin, 6, 1, "Status:            FAA: ");
     (void)mvwprintw(gprmcwin, 7, 1, "MagVar: ");
-    (void)mvwprintw(gprmcwin, 8, 12, " RMC ");
+    (void)mvwprintw(gprmcwin, 8, WIDTH_M/2 - 3, " RMC ");
     (void)wattrset(gprmcwin, A_NORMAL);
 
-    gpgsawin = derwin(devicewin, 6, 30, 15, 20);
+    gpgsawin = derwin(devicewin, 6, WIDTH_M, 15, WIDTH_L);
     assert(gpgsawin !=NULL);
     (void)wborder(gpgsawin, 0, 0, 0, 0, 0, 0, 0, 0);
     (void)syncok(gpgsawin, true);
@@ -102,11 +109,11 @@ static bool nmea_initialize(void)
 #define PPS_LINE        4
     (void)mvwprintw(gpgsawin, PPS_LINE, 1, "PPS: ");
     (void)mvwaddstr(gpgsawin, PPS_LINE, 6, "N/A");
-    (void)mvwprintw(gpgsawin, 5, 9, " GSA + PPS ");
+    (void)mvwprintw(gpgsawin, 5, WIDTH_M/2 - 6, " GSA + PPS ");
     (void)wattrset(gpgsawin, A_NORMAL);
     (void)syncok(gpgsawin, true);
 
-    gpggawin = derwin(devicewin, 9, 30, 6, 50);
+    gpggawin = derwin(devicewin, 9, WIDTH_R, 6, WIDTH_L + WIDTH_M);
     assert(gpggawin !=NULL);
     (void)wborder(gpggawin, 0, 0, 0, 0, 0, 0, 0, 0);
     (void)syncok(gpggawin, true);
@@ -118,10 +125,10 @@ static bool nmea_initialize(void)
     (void)mvwprintw(gpggawin, 5, 1, "Quality:       Sats: ");
     (void)mvwprintw(gpggawin, 6, 1, "HDOP: ");
     (void)mvwprintw(gpggawin, 7, 1, "Geoid: ");
-    (void)mvwprintw(gpggawin, 8, 12, " GGA ");
+    (void)mvwprintw(gpggawin, 8, WIDTH_R/2 - 3, " GGA ");
     (void)wattrset(gpggawin, A_NORMAL);
 
-    gpgstwin = derwin(devicewin, 6, 30, 15, 50);
+    gpgstwin = derwin(devicewin, 6, WIDTH_R, 15, WIDTH_L + WIDTH_M);
     assert(gpgstwin !=NULL);
     (void)wborder(gpgstwin, 0, 0, 0, 0, 0, 0, 0, 0);
     (void)syncok(gpgstwin, true);
@@ -134,7 +141,7 @@ static bool nmea_initialize(void)
     (void)mvwprintw(gpgstwin, 3, 16, "LAT: ");
     (void)mvwprintw(gpgstwin, 4,  1, "LON: ");
     (void)mvwprintw(gpgstwin, 4, 16, "ALT: ");
-    (void)mvwprintw(gpgstwin, 5, 12, " GST ");
+    (void)mvwprintw(gpgstwin, 5, WIDTH_R/2 - 3, " GST ");
     (void)wattrset(gpgstwin, A_NORMAL);
 
 
@@ -359,7 +366,7 @@ const struct monitor_object_t nmea_mmt = {
     .update = nmea_update,
     .command = NULL,
     .wrap = nmea_wrap,
-    .min_y = 21,.min_x = 80,
+    .min_y = 21,.min_x = WIDTH,
     .driver = &driver_nmea0183,
 };
 
@@ -399,7 +406,7 @@ const struct monitor_object_t garmin_mmt = {
     .update = nmea_update,
     .command = NULL,
     .wrap = nmea_wrap,
-    .min_y = 21,.min_x = 80,
+    .min_y = 21,.min_x = WIDTH,
     .driver = &driver_garmin,
 };
 #endif /* GARMIN_ENABLE && NMEA0183_ENABLE */
@@ -463,7 +470,7 @@ const struct monitor_object_t ashtech_mmt = {
     .update = nmea_update,
     .command = ashtech_command,
     .wrap = nmea_wrap,
-    .min_y = 21,.min_x = 80,
+    .min_y = 21,.min_x = WIDTH,
     .driver = &driver_ashtech,
 };
 #endif /* ASHTECH_ENABLE */
@@ -476,7 +483,7 @@ const struct monitor_object_t fv18_mmt = {
     .update = nmea_update,
     .command = NULL,
     .wrap = nmea_wrap,
-    .min_y = 21,.min_x = 80,
+    .min_y = 21,.min_x = WIDTH,
     .driver = &driver_fv18,
 };
 #endif /* FV18_ENABLE */
@@ -489,7 +496,7 @@ const struct monitor_object_t gpsclock_mmt = {
     .update = nmea_update,
     .command = NULL,
     .wrap = nmea_wrap,
-    .min_y = 21,.min_x = 80,
+    .min_y = 21,.min_x = WIDTH,
     .driver = &driver_gpsclock,
 };
 #endif /* GPSCLOCK_ENABLE */
@@ -502,7 +509,7 @@ const struct monitor_object_t mtk3301_mmt = {
     .update = nmea_update,
     .command = NULL,
     .wrap = nmea_wrap,
-    .min_y = 21,.min_x = 80,
+    .min_y = 21,.min_x = WIDTH,
     .driver = &driver_mtk3301,
 };
 #endif /* MTK3301_ENABLE */
@@ -515,7 +522,7 @@ const struct monitor_object_t aivdm_mmt = {
     .update = nmea_update,
     .command = NULL,
     .wrap = nmea_wrap,
-    .min_y = 21,.min_x = 80,
+    .min_y = 21,.min_x = WIDTH,
     .driver = &driver_aivdm,
 };
 #endif /* AIVDM_ENABLE */
