@@ -242,7 +242,7 @@ icon_files = [
 # whether - separates components of the package name, separates the
 # name from the version, or separates version components.
 #
-# package version
+# package version, FIXME, duplicate from SConstruct
 gpsd_version = "3.21.1~dev"
 if 'dev' in gpsd_version:
     (st, gpsd_revision) = _getstatusoutput('git describe --tags')
@@ -2196,24 +2196,120 @@ for (tgt, src) in templated.items():
         # set python files to executable
         env.AddPostAction(builder, 'chmod +x $TARGET')
 
-# Documentation
+# When the URL declarations change, so must the generated web pages
+for fn in glob.glob("www/*.in"):
+    env.Depends(fn[:-3], "SConstruct")
 
 man_env = env.Clone()
 if man_env.GetOption('silent'):
     man_env['SPAWN'] = filtered_spawn  # Suppress stderr chatter
 manpage_targets = []
-wwwpage_targets = []
 if manbuilder:
     for (man, xml) in all_manpages.items():
         manpage_targets.append(man_env.Man(source=xml, target=man))
-        html = 'www/' + xml[4:-4] + '.html'
-        wwwpage_targets.append(man_env.Man(source=xml, target=html))
+
+# The hardware page
+www_xml_files = []
+for file in glob.iglob('../doc/*xml'):
+    www_xml_files.append(file[3:])
+env.Command('www/hardware.html',
+            ['gpscap.py',
+             'www/hardware-head.html',
+             'gpscap.ini',
+             'www/hardware-tail.html',
+             www_xml_files],
+            ['cd buildtmp;'
+             '(cat www/hardware-head.html && PYTHONIOENCODING=utf-8 '
+             '$SC_PYTHON gpscap.py && cat www/hardware-tail.html) '
+             '>www/hardware.html'])
+
+maninstall = []
+for manpage in all_manpages:
+    if not manbuilder and not os.path.exists(manpage):
+        continue
+    section = manpage.split(".")[1]
+    dest = os.path.join(installdir('mandir'), "man" + section,
+                        os.path.basename(manpage))
+    maninstall.append(env.InstallAs(source=manpage, target=dest))
+
+# doc to install
+docinstall = []
+for doc in doc_files:
+    dest_doc = os.path.join(installdir('docdir'),
+                            os.path.basename(doc))
+    docinstall.append(env.InstallAs(source=doc, target=dest_doc))
+
+# asciidoc documents
+asciidocs = []
+if env.WhereIs('asciidoctor'):
+    adocfiles = (('build', 'building'),
+                 ('INSTALL', 'installation'),
+                 ('README', 'README'),
+                 ('www/AIVDM', 'AIVDM'),
+                 ('www/client-howto', 'client-howto'),
+                 ('www/gpsd-time-service-howto', 'gpsd-time-service-howto'),
+                 ('www/NMEA', 'NMEA'),
+                 ('www/ppp-howto', 'ppp-howto'),
+                 ('www/protocol-evolution', 'protocol-evolution'),
+                 ('www/protocol-transition', 'protocol-transition'),
+                 ('SUPPORT', 'SUPPORT'),
+                 ('www/time-service-intro', 'time-service-intro'),
+                 ('www/ubxtool-examples', 'ubxtool-examples'),
+                 )
+    for stem, leaf in adocfiles:
+        asciidocs.append('www/%s.html' % leaf)
+        env.Command('www/%s.html' % leaf, '%s.adoc' % stem,
+                    ['cd buildtmp;'
+                     'asciidoctor -a compat -b html5 -a toc -o www/%s.html '
+                     '%s.adoc' % (leaf, stem)])
+else:
+    announce("WARNING: asciidoctor not found.\n"
+             "WARNING: Some documentation and html will not be built.",
+             end=True)
+
+# Non-asciidoc, non xml, webpages only
+htmlpages = [
+    'www/hardware.html',
+    'www/internals.html',
+    'www/performance/performance.html',
+    'www/replacing-nmea.html',
+    'www/writing-a-driver.html',
+    ]
+
+wwwpage_targets = []
+if htmlbuilder:
+    # xml manual pages
+    for xml in glob.glob("../man/*.xml"):
+        wwwpage_targets.append(env.HTML(
+            'www/%s.html' % os.path.basename(xml[:-4]), xml))
+
+    # DocBook documents
+    for stem in ['writing-a-driver', 'performance/performance',
+                 'replacing-nmea']:
+        wwwpage_targets.append(env.HTML(
+            'www/%s.html' % stem, 'www/%s.xml' % stem))
+
+    # The internals manual.
+    internals = env.HTML('www/internals.html', '$SRCDIR/doc/internals.xml')
+    # Depends on the subpages
+    env.Depends(internals, glob.glob('../doc/*xml'))
+    wwwpage_targets.append(internals)
+
+webpages = (htmlpages + asciidocs + wwwpage_targets +
+            list(map(lambda f: f[:-3], glob.glob("www/*.in"))))
+
+www = env.Alias('www', webpages)
+
+# The diagram editor dia is required in order to edit the diagram masters
+# FIXME, test for dia available
+Utility("www/cycle.svg", ["www/cycle.dia"],
+        ["dia -e www/cycle.svg www/cycle.dia"])
 
 # Where it all comes together
 
 build = env.Alias('build',
                   [libraries, sbin_binaries, bin_binaries, python_targets,
-                   "clients/gpsd.php", manpage_targets,
+                   "clients/gpsd.php", manpage_targets, webpages,
                    "libgps.pc", "gpsd.rules"])
 
 if [] == COMMAND_LINE_TARGETS:
@@ -2354,22 +2450,6 @@ if qt_env:
     pc_install.append(qt_env.Install(installdir('pkgconfig'), 'Qgpsmm.pc'))
     pc_install.append(qt_env.Install(installdir('libdir'), 'libQgpsmm.prl'))
 
-
-maninstall = []
-for manpage in all_manpages:
-    if not manbuilder and not os.path.exists(manpage):
-        continue
-    section = manpage.split(".")[1]
-    dest = os.path.join(installdir('mandir'), "man" + section,
-                        os.path.basename(manpage))
-    maninstall.append(env.InstallAs(source=manpage, target=dest))
-
-# doc to install
-docinstall = []
-for doc in doc_files:
-    dest_doc = os.path.join(installdir('docdir'),
-                            os.path.basename(doc))
-    docinstall.append(env.InstallAs(source=doc, target=dest_doc))
 
 # icons to install
 iconinstall = []
@@ -2792,47 +2872,7 @@ Utility('shmclean', [], ["ipcrm  -M 0x4e545030;"
 # The content they handle is the GPSD website, not included in
 # release tarballs.
 
-# asciidoc documents
-asciidocs = []
-if env.WhereIs('asciidoctor'):
-    adocfiles = (('build', 'building'),
-                 ('INSTALL', 'installation'),
-                 ('README', 'README'),
-                 ('www/AIVDM', 'AIVDM'),
-                 ('www/client-howto', 'client-howto'),
-                 ('www/gpsd-time-service-howto', 'gpsd-time-service-howto'),
-                 ('www/NMEA', 'NMEA'),
-                 ('www/ppp-howto', 'ppp-howto'),
-                 ('www/protocol-evolution', 'protocol-evolution'),
-                 ('www/protocol-transition', 'protocol-transition'),
-                 ('SUPPORT', 'SUPPORT'),
-                 ('www/time-service-intro', 'time-service-intro'),
-                 ('www/ubxtool-examples', 'ubxtool-examples'),
-                 )
-    for stem, leaf in adocfiles:
-        asciidocs.append('www/%s.html' % leaf)
-        env.Command('www/%s.html' % leaf, '%s.adoc' % stem,
-                    ['cd buildtmp;'
-                     'asciidoctor -a compat -b html5 -a toc -o www/%s.html '
-                     '%s.adoc' % (leaf, stem)])
-else:
-    announce("WARNING: asciidoctor not found.\n"
-             "WARNING: Some documentation and html will not be built.",
-             end=True)
-
-# Non-asciidoc, non xml, webpages only
-htmlpages = [
-    'www/hardware.html',
-    'www/internals.html',
-    'www/performance/performance.html',
-    'www/replacing-nmea.html',
-    'www/writing-a-driver.html',
-    ]
-
-webpages = (htmlpages + asciidocs + wwwpage_targets +
-            list(map(lambda f: f[:-3], glob.glob("www/*.in"))))
-
-www = env.Alias('www', webpages)
+# Documentation
 
 # Paste 'scons --quiet validation-list' to a batch validator such as
 # http://htmlhelp.com/tools/validator/batch.html.en
@@ -2856,43 +2896,6 @@ upload_web = Utility("website", [www],
                       os.environ.get('WEBSITE', '.public'),
                       'cp TODO NEWS ' +
                       os.environ.get('WEBSITE', '.public')])
-
-# When the URL declarations change, so must the generated web pages
-for fn in glob.glob("www/*.in"):
-    env.Depends(fn[:-3], "SConstruct")
-
-if htmlbuilder:
-    # Manual pages
-    for xml in glob.glob("man/*.xml"):
-        env.HTML('www/%s.html' % os.path.basename(xml[:-4]), xml)
-
-    # DocBook documents
-    for stem in ['writing-a-driver', 'performance/performance',
-                 'replacing-nmea']:
-        env.HTML('www/%s.html' % stem, 'www/%s.xml' % stem)
-
-    # The internals manual.
-    # Doesn't capture dependencies on the subpages
-    env.HTML('www/internals.html', '$SRCDIR/doc/internals.xml')
-
-# The hardware page
-www_xml_files = []
-for file in glob.iglob('../doc/*xml'):
-    www_xml_files.append(file[3:])
-env.Command('www/hardware.html',
-            ['gpscap.py',
-             'www/hardware-head.html',
-             'gpscap.ini',
-             'www/hardware-tail.html',
-             www_xml_files],
-            ['cd buildtmp;'
-             '(cat www/hardware-head.html && PYTHONIOENCODING=utf-8 '
-             '$SC_PYTHON gpscap.py && cat www/hardware-tail.html) '
-             '>www/hardware.html'])
-
-# The diagram editor dia is required in order to edit the diagram masters
-Utility("www/cycle.svg", ["www/cycle.dia"],
-        ["dia -e www/cycle.svg www/cycle.dia"])
 
 # Experimenting with pydoc.  Not yet fired by any other productions.
 # scons www/ dies with this

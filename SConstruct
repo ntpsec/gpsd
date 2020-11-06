@@ -46,9 +46,13 @@ EnsurePythonVersion(2, 6)
 if GetOption('clean'):
     atexit.register(lambda: os.system("rm -rf buildtmp"))
 
-# name 'build' is already taken
+# package version
+gpsd_version = "3.21.1~dev"
+gpsd_version = "buildtmp"
+# name 'build' is already taken, put stuff in gpsd-$VERSION
+
 # Not everything respects this  chdir()
 SConscriptChdir(1)
-# SConscript('SConscript', variant_dir='buildtmp', must_exit=True, duplicate=1)
-VariantDir('buildtmp', '.')
-SConscript('buildtmp/SConscript', must_exit=True, duplicate=1)
+SConscript('SConscript', variant_dir=gpsd_version, must_exit=True, duplicate=1)
+# VariantDir('buildtmp', '.')
+# SConscript('buildtmp/SConscript', must_exit=True, duplicate=1)
