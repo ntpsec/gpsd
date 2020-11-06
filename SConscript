@@ -87,6 +87,7 @@ def FileList(patterns, exclusion=None):
     return files
 
 
+# FIXME: replace with TryAction()
 def _getstatusoutput(cmd, nput=None, shell=True, cwd=None, env=None):
     pipe = subprocess.Popen(cmd, shell=shell, cwd=cwd, env=env,
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -325,10 +326,6 @@ def UtilityWithHerald(herald, target, source, action, **kwargs):
     if not env.GetOption('silent'):
         action = ['@echo "%s"' % herald] + action
     return Utility(target=target, source=source, action=action, **kwargs)
-
-
-def _getoutput(cmd, nput=None, shell=True, cwd=None, env=None):
-    return _getstatusoutput(cmd, nput, shell, cwd, env)[1]
 
 
 # Spawn replacement that suppresses non-error stderr
@@ -730,6 +727,7 @@ def cmp(a, b):
     return (a > b) - (a < b)
 
 
+# FIXME: include __doc__ in help
 Help("""Arguments may be a mixture of switches and targets in any order.
 Switches apply to the entire build regardless of where they are in the order.
 Important switches include:
@@ -1545,6 +1543,10 @@ elif config.env['python']:
         config.env['ENV']['PYTHON'] = target_python_path
 
 
+# get a list of the files from git, so they can go in distribution zip/tar
+distfiles = config.TryAction("git ls-files > $TARGET")[1]
+distfiles = polystr(distfiles).split()
+
 env = config.Finish()
 # All configuration should be finished.  env can now be modified.
 # NO CONFIG TESTS AFTER THIS POINT!
@@ -1987,6 +1989,7 @@ else:
         python_misc.extend(["example_aiogps.py", "example_aiogps_run"])
 
     # Glob() has to be run after all buildable objects defined
+    # FIXME: confirm this is true here.
     python_modules = Glob('gps/*.py', strings=True) + ['gps/__init__.py',
                                                        'gps/gps.py',
                                                        'gps/packet.py']
@@ -3004,106 +3007,131 @@ misc_sources = ['clients/cgps.c',
                 ]
 sources = libgpsd_sources + libgps_sources + gpsd_sources + gpsmon_sources + \
     misc_sources
-env.Command('TAGS', sources, ['etags ' + " ".join(sources)])
+env.Command('#TAGS', sources, ['etags ' + " ".join(sources)])
 
 # Release machinery begins here
 #
 # We need to be in the actual project repo (i.e. not doing a -Y build)
 # for these productions to work.
 
-if os.path.exists("gpsd/gpsd.c") and os.path.exists(".gitignore"):
-    distfiles = _getoutput(r"git ls-files | grep -v '^www/'").split()
-    # for some reason distfiles is now a mix of byte strings and char strings
-    distfiles = [polystr(d) for d in distfiles]
+# add in the built man pages
+distfiles += all_manpages.keys()
+distfiles.sort()
 
-    if ".gitignore" in distfiles:
-        distfiles.remove(".gitignore")
-    distfiles += generated_sources
-    distfiles += all_manpages.keys()
-    if "packaging/rpm/gpsd.spec" not in distfiles:
-        distfiles.append("packaging/rpm/gpsd.spec")
+# remove git and CI stuff from files to tar/zip
+distfiles_ignore = [
+    ".ci-build/build.sh",
+    ".ci-build/test_options.sh",
+    ".gitignore",
+    ".gitlab-ci.yml",
+    ".travis.yml",
+    ]
+for fn in distfiles_ignore:
+    if fn in distfiles:
+        distfiles.remove(fn)
 
-    # How to build a zip file.
-    # Perversely, if the zip exists, it is modified, not replaced.
-    # So delete it first.
-    dozip = env.Command('zip', distfiles, [
-        'rm -f gpsd-${VERSION}.zip',
-        '@zip -ry gpsd-${VERSION}.zip $SOURCES -x contrib/ais-samples/\\*',
-        '@ls -l gpsd-${VERSION}.zip',
-    ])
+# remove www/ files, and contrib/ais-samples
+distfiles_new = []
+for fn in distfiles:
+    if ((fn.startswith('www') or
+         fn.startswith('contrib/ais-samples/'))):
+        continue
+    else:
+        distfiles_new.append(fn)
 
-    # How to build a tarball.
-    # The command assume the non-portable GNU tar extension
-    # "--transform", and will thus fail if ${TAR} is not GNU tar.
-    # scons in theory has code to cope with this, but in practice this
-    # is not working.  On BSD-derived systems, install GNU tar and
-    # pass TAR=gtar in the environment.
-    # make a .tar.gz and a .tar.xz
-    dist = env.Command('dist', distfiles, [
-        '@${TAR} --transform "s:^:gpsd-${VERSION}/:S" '
-        ' -czf gpsd-${VERSION}.tar.gz --exclude contrib/ais-samples $SOURCES',
-        '@${TAR} --transform "s:^:gpsd-${VERSION}/:S" '
-        ' -cJf gpsd-${VERSION}.tar.xz --exclude contrib/ais-samples $SOURCES',
-        '@ls -l gpsd-${VERSION}.tar.gz',
-    ])
+# yes, this is odd, but I could not get distfiles.remove() to work...
+distfiles = distfiles_new
 
-    # Make RPM from the specfile in packaging
-    Utility('dist-rpm', dist, 'rpmbuild -ta gpsd-${VERSION}.tar.gz')
+# We do not need generated files
+# distfiles += generated_sources
 
-    # Make sure build-from-tarball works.
-    testbuild = Utility('testbuild', [dist], [
-        '${TAR} -xzvf gpsd-${VERSION}.tar.gz',
-        'cd gpsd-${VERSION}; scons',
-        'rm -fr gpsd-${VERSION}',
-    ])
+if "packaging/rpm/gpsd.spec" not in distfiles:
+    # should not be in git, but we need it
+    distfiles.append("packaging/rpm/gpsd.spec")
 
-    releasecheck = env.Alias('releasecheck', [
-        testbuild,
-        check,
-        audit,
-        flocktest,
-    ])
+# How to build a zip file.
+# Perversely, if the zip exists, it is modified, not replaced.
+# So delete it first.
+dozip = env.Command('#zip', distfiles, [
+    'rm -f gpsd-${VERSION}.zip',
+    '@zip -ry gpsd-${VERSION}.zip $SOURCES',
+    '@ls -l gpsd-${VERSION}.zip',
+])
 
-    # The chmod copes with the fact that scp will give a
-    # replacement the permissions of the *original*...
-    upload_release = Utility('upload-release', [dist], [
-        'rm -f gpsd-*tar*sig',
-        'gpg -b gpsd-${VERSION}.tar.gz',
-        'gpg -b gpsd-${VERSION}.tar.xz',
-        'chmod ug=rw,o=r gpsd-${VERSION}.tar.*',
-        'scp gpsd-${VERSION}.tar.* ' + scpupload,
-    ])
-
-    # How to tag a release
-    tag_release = Utility('tag-release', [], [
-        'git tag -s -m "Tagged for external release ${VERSION}" \
-         release-${VERSION}'])
-    upload_tags = Utility('upload-tags', [], ['git push --tags'])
-
-    # Local release preparation. This production will require Internet access,
-    # but it doesn't do any uploads or public repo mods.
-    #
-    # Note that tag_release has to fire early, otherwise the value of REVISION
-    # won't be right when gpsd_config.h is generated for the tarball.
-    releaseprep = env.Alias("releaseprep",
-                            [Utility("distclean", [],
-                             ["rm -f include/gpsd_config.h"]),
-                             tag_release,
-                             dist])
-    # Undo local release preparation
-    Utility("undoprep", [], ['rm -f gpsd-${VERSION}.tar.gz;',
-                             'git tag -d release-${VERSION};'])
-
-    # All a buildup to this.
-    env.Alias("release", [releaseprep,
-                          upload_release,
-                          upload_tags,
-                          upload_web])
-
-    # Experimental release mechanics using shipper
-    # This will ship a freecode metadata update
-    Utility("ship", [dist, "control"],
-            ['shipper version=%s | sh -e -x' % gpsd_version])
+# # How to build a tarball.
+# # The command assume the non-portable GNU tar extension
+# # "--transform", and will thus fail if ${TAR} is not GNU tar.
+# # scons in theory has code to cope with this, but in practice this
+# # is not working.  On BSD-derived systems, install GNU tar and
+# # pass TAR=gtar in the environment.
+# # make a .tar.gz and a .tar.xz
+dist = env.Command('#dist', distfiles, [
+    '@${TAR} --transform "s:^:gpsd-${VERSION}/:S" '
+    ' -czf gpsd-${VERSION}.tar.gz $SOURCES',
+    '@${TAR} --transform "s:^:gpsd-${VERSION}/:S" '
+    ' -cJf gpsd-${VERSION}.tar.xz $SOURCES',
+    '@ls -l gpsd-${VERSION}.tar.?z',
+])
+#
+# # Make RPM from the specfile in packaging
+# Utility('dist-rpm', dist, 'rpmbuild -ta gpsd-${VERSION}.tar.gz')
+#
+# # Make sure build-from-tarball works.
+# testbuild = Utility('testbuild', [dist], [
+#     '${TAR} -xzvf gpsd-${VERSION}.tar.gz',
+#     'cd gpsd-${VERSION}; scons',
+#     'rm -fr gpsd-${VERSION}',
+# ])
+#
+# releasecheck = env.Alias('releasecheck', [
+#     testbuild,
+#     check,
+#     audit,
+#     flocktest,
+# ])
+#
+# # The chmod copes with the fact that scp will give a
+# # replacement the permissions of the *original*...
+# upload_release = Utility('upload-release', [dist], [
+#     'rm -f gpsd-*tar*sig',
+#     'gpg -b gpsd-${VERSION}.tar.gz',
+#     'gpg -b gpsd-${VERSION}.tar.xz',
+#     'chmod ug=rw,o=r gpsd-${VERSION}.tar.*',
+#     'scp gpsd-${VERSION}.tar.* ' + scpupload,
+# ])
+#
+# # How to tag a release
+# tag_release = Utility('tag-release', [], [
+#     'git tag -s -m "Tagged for external release ${VERSION}" \
+#      release-${VERSION}'])
+# upload_tags = Utility('upload-tags', [], ['git push --tags'])
+#
+# # Local release preparation. This production will require Internet access,
+# # but it doesn't do any uploads or public repo mods.
+# #
+# # Note that tag_release has to fire early, otherwise the value of REVISION
+# # won't be right when gpsd_config.h is generated for the tarball.
+# releaseprep = env.Alias("releaseprep",
+#                         [Utility("distclean", [],
+#                          ["rm -f include/gpsd_config.h"]),
+#                          tag_release,
+#                          dist])
+# # Undo local release preparation
+# Utility("undoprep", [], ['rm -f gpsd-${VERSION}.tar.gz;',
+#                          'git tag -d release-${VERSION};'])
+#
+# # All a buildup to this.
+# env.Alias("release", [releaseprep,
+#                       upload_release,
+#                       upload_tags,
+#                       upload_web])
+#
+# # Experimental release mechanics using shipper
+# # This will ship a freecode metadata update
+# Utility("ship", [dist, "control"],
+#         ['shipper version=%s | sh -e -x' % gpsd_version])
+#
+# Release machinery ends here
 
 # The following sets edit modes for GNU EMACS
 # Local Variables:

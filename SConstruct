@@ -4,6 +4,7 @@ Important targets:
 
 build      - build the software (default)
 dist       - make distribution tarball (requires GNU tar)
+zip        - make distribution zip
 install    - install programs, libraries, and manual pages
 uninstall  - undo an install
 
