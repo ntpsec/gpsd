@@ -2202,9 +2202,12 @@ man_env = env.Clone()
 if man_env.GetOption('silent'):
     man_env['SPAWN'] = filtered_spawn  # Suppress stderr chatter
 manpage_targets = []
+wwwpage_targets = []
 if manbuilder:
     for (man, xml) in all_manpages.items():
         manpage_targets.append(man_env.Man(source=xml, target=man))
+        html = 'www/' + xml[4:-4] + '.html'
+        wwwpage_targets.append(man_env.Man(source=xml, target=html))
 
 # Where it all comes together
 
@@ -2818,16 +2821,16 @@ else:
              end=True)
 
 # Non-asciidoc, non xml, webpages only
-htmlpages = Split('''
-    www/hardware.html
-    www/internals.html
-    www/performance/performance.html
-    www/replacing-nmea.html
-    www/writing-a-driver.html
-    ''')
+htmlpages = [
+    'www/hardware.html',
+    'www/internals.html',
+    'www/performance/performance.html',
+    'www/replacing-nmea.html',
+    'www/writing-a-driver.html',
+    ]
 
-webpages = htmlpages + asciidocs + list(map(lambda f: f[:-3],
-                                            glob.glob("www/*.in")))
+webpages = (htmlpages + asciidocs + wwwpage_targets +
+            list(map(lambda f: f[:-3], glob.glob("www/*.in"))))
 
 www = env.Alias('www', webpages)
 
