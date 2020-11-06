@@ -41,8 +41,8 @@ static char sentences[NMEA_MAX * 2];
 
 /* define all window width constants at one location */
 /* WIDTH shall be >= 80 */
-#define WIDTH_L 20
-#define WIDTH_M 30
+#define WIDTH_L 16
+#define WIDTH_M 34
 #define WIDTH_R 30
 #define WIDTH (WIDTH_L + WIDTH_M + WIDTH_R)
 
@@ -277,11 +277,12 @@ static void nmea_update(void)
 
             for (i = 0; i < nsats; i++) {
                 (void)wmove(satwin, i + 2, 1);
-                (void)wprintw(satwin, "%3d %3d%3d %3.0f",
+                (void)wprintw(satwin, "%3d %3d %2d %2.0f",
                               session.gpsdata.skyview[i].PRN,
-                              (int)session.gpsdata.skyview[i].azimuth,
-                              (int)session.gpsdata.skyview[i].elevation,
-                              session.gpsdata.skyview[i].ss);
+                              (int)session.gpsdata.skyview[i].azimuth, // degrees, 000..359
+                              (int)session.gpsdata.skyview[i].elevation, // degrees, 00..90
+                              session.gpsdata.skyview[i].ss); // 00-99 dB-Hz, null when not tracking
+
             }
             /* add overflow mark to the display */
             if (nsats <= MAXSATS)
