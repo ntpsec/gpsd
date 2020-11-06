@@ -2817,37 +2817,13 @@ else:
              "WARNING: Some documentation and html will not be built.",
              end=True)
 
-# Non-asciidoc webpages only
+# Non-asciidoc, non xml, webpages only
 htmlpages = Split('''
-    www/gps2udp.html
-    www/gpscat.html
-    www/gpscsv.html
-    www/gpsctl.html
-    www/gpsdctl.html
-    www/gpsdecode.html
-    www/gpsd.html
-    www/gpsd_json.html
-    www/gpsfake.html
-    www/gps.html
-    www/gpsinit.html
-    www/gpsmon.html
-    www/gpspipe.html
-    www/gpsplot.html
-    www/gpsprof.html
-    www/gpsrinex.html
-    www/gpssubframe.html
-    www/gpxlogger.html
     www/hardware.html
     www/internals.html
-    www/libgps.html
-    www/libgpsmm.html
-    www/ntpshmmon.html
     www/performance/performance.html
-    www/ppscheck.html
     www/replacing-nmea.html
-    www/ubxtool.html
     www/writing-a-driver.html
-    www/zerk.html
     ''')
 
 webpages = htmlpages + asciidocs + list(map(lambda f: f[:-3],
@@ -3072,6 +3048,10 @@ dist = env.Command('#dist', distfiles, [
     ' -cJf gpsd-${VERSION}.tar.xz $SOURCES',
     '@ls -l gpsd-${VERSION}.tar.?z',
 ])
+
+# tar = env.Tar('tar', distfiles)
+# env.Alias('TAR', tar)
+
 #
 # # Make RPM from the specfile in packaging
 # Utility('dist-rpm', dist, 'rpmbuild -ta gpsd-${VERSION}.tar.gz')
