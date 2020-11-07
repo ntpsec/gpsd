@@ -41,42 +41,46 @@ static char sentences[NMEA_MAX * 2];
 
 /* define all window width constants at one location */
 /* WIDTH shall be >= 80 */
-#define WIDTH_L 16
-#define WIDTH_M 34
+#define WIDTH_L 22
+#define WIDTH_M 28
 #define WIDTH_R 30
 #define WIDTH (WIDTH_L + WIDTH_M + WIDTH_R)
 
+#define HEIGHT_1 3
+#define HEIGHT_2 3
+#define HEIGHT_3 9
+#define HEIGHT_4 6
+#define HEIGHT (HEIGHT_1 + HEIGHT_2 + HEIGHT_3 + HEIGHT_4)
 static bool nmea_initialize(void)
 {
-
-    cookedwin = derwin(devicewin, 3, WIDTH, 0, 0);
+    cookedwin = derwin(devicewin, HEIGHT_1, WIDTH, 0, 0);
     assert(cookedwin !=NULL);
     (void)wborder(cookedwin, 0, 0, 0, 0, 0, 0, 0, 0);
     (void)syncok(cookedwin, true);
     (void)wattrset(cookedwin, A_BOLD);
     (void)mvwaddstr(cookedwin, 1, 1, "Time: ");
-    (void)mvwaddstr(cookedwin, 1, 32, "Lat: ");
-    (void)mvwaddstr(cookedwin, 1, 55, "Lon: ");
-    (void)mvwaddstr(cookedwin, 2, WIDTH/2 - 6, " Cooked TPV ");
+    (void)mvwaddstr(cookedwin, 1, 34, "Lat:");
+    (void)mvwaddstr(cookedwin, 1, 57, "Lon: ");
+    (void)mvwaddstr(cookedwin, HEIGHT_1-1, WIDTH/2 - 6, " Cooked TPV ");
     (void)wattrset(cookedwin, A_NORMAL);
 
-    nmeawin = derwin(devicewin, 3, WIDTH, 3, 0);
+    nmeawin = derwin(devicewin, HEIGHT_2, WIDTH, HEIGHT_1, 0);
     assert(nmeawin !=NULL);
     (void)wborder(nmeawin, 0, 0, 0, 0, 0, 0, 0, 0);
     (void)syncok(nmeawin, true);
     (void)wattrset(nmeawin, A_BOLD);
-    (void)mvwaddstr(nmeawin, 2, WIDTH/2 - 6, " Sentences ");
+    (void)mvwaddstr(nmeawin, HEIGHT_2-1, WIDTH/2 - 6, " Sentences ");
     (void)wattrset(nmeawin, A_NORMAL);
 
-    satwin = derwin(devicewin, MAXSATS + 3, WIDTH_L, 6, 0);
+    satwin = derwin(devicewin, MAXSATS + 3, WIDTH_L, HEIGHT_1 + HEIGHT_2, 0);
     assert(satwin !=NULL);
     (void)wborder(satwin, 0, 0, 0, 0, 0, 0, 0, 0), (void)syncok(satwin, true);
     (void)wattrset(satwin, A_BOLD);
-    (void)mvwprintw(satwin, 1, 1, "PRN  Az El S/N");
-    (void)mvwprintw(satwin, 14, WIDTH_L/2 - 3, " GSV ");
+    (void)mvwprintw(satwin, 1, 1, "SVID PRN Az El SN HU");
+    (void)mvwprintw(satwin, MAXSATS+2, WIDTH_L/2 - 3, " GSV ");
     (void)wattrset(satwin, A_NORMAL);
 
-    gprmcwin = derwin(devicewin, 9, WIDTH_M, 6, WIDTH_L);
+    gprmcwin = derwin(devicewin, HEIGHT_3, WIDTH_M, HEIGHT_1 + HEIGHT_2, WIDTH_L);
     assert(gprmcwin !=NULL);
     (void)wborder(gprmcwin, 0, 0, 0, 0, 0, 0, 0, 0),
         (void)syncok(gprmcwin, true);
@@ -88,10 +92,10 @@ static bool nmea_initialize(void)
     (void)mvwprintw(gprmcwin, 5, 1, "Course: ");
     (void)mvwprintw(gprmcwin, 6, 1, "Status:            FAA: ");
     (void)mvwprintw(gprmcwin, 7, 1, "MagVar: ");
-    (void)mvwprintw(gprmcwin, 8, WIDTH_M/2 - 3, " RMC ");
+    (void)mvwprintw(gprmcwin, HEIGHT_3-1, WIDTH_M/2 - 3, " RMC ");
     (void)wattrset(gprmcwin, A_NORMAL);
 
-    gpgsawin = derwin(devicewin, 6, WIDTH_M, 15, WIDTH_L);
+    gpgsawin = derwin(devicewin, HEIGHT_4, WIDTH_M, HEIGHT_1 + HEIGHT_2 + HEIGHT_3, WIDTH_L);
     assert(gpgsawin !=NULL);
     (void)wborder(gpgsawin, 0, 0, 0, 0, 0, 0, 0, 0);
     (void)syncok(gpgsawin, true);
@@ -102,18 +106,18 @@ static bool nmea_initialize(void)
 #define SATS_COL        10
     (void)mvwprintw(gpgsawin, SATS_LINE, SATS_COL, "Sats: ");
 #define DOP_LINE        2
-    (void)mvwprintw(gpgsawin, DOP_LINE, 1, "DOP: H=      V=      P=");
+    (void)mvwprintw(gpgsawin, DOP_LINE, 1, "DOP: H=     V=     P=");
 #define TOFF_LINE       3
     (void)mvwprintw(gpgsawin, TOFF_LINE, 1, "TOFF: ");
     (void)mvwaddstr(gpgsawin, TOFF_LINE, 7, "N/A");
 #define PPS_LINE        4
     (void)mvwprintw(gpgsawin, PPS_LINE, 1, "PPS: ");
     (void)mvwaddstr(gpgsawin, PPS_LINE, 6, "N/A");
-    (void)mvwprintw(gpgsawin, 5, WIDTH_M/2 - 6, " GSA + PPS ");
+    (void)mvwprintw(gpgsawin, HEIGHT_4-1, WIDTH_M/2 - 6, " GSA + PPS ");
     (void)wattrset(gpgsawin, A_NORMAL);
     (void)syncok(gpgsawin, true);
 
-    gpggawin = derwin(devicewin, 9, WIDTH_R, 6, WIDTH_L + WIDTH_M);
+    gpggawin = derwin(devicewin, HEIGHT_3, WIDTH_R, HEIGHT_1 + HEIGHT_2, WIDTH_L + WIDTH_M);
     assert(gpggawin !=NULL);
     (void)wborder(gpggawin, 0, 0, 0, 0, 0, 0, 0, 0);
     (void)syncok(gpggawin, true);
@@ -125,10 +129,10 @@ static bool nmea_initialize(void)
     (void)mvwprintw(gpggawin, 5, 1, "Quality:       Sats: ");
     (void)mvwprintw(gpggawin, 6, 1, "HDOP: ");
     (void)mvwprintw(gpggawin, 7, 1, "Geoid: ");
-    (void)mvwprintw(gpggawin, 8, WIDTH_R/2 - 3, " GGA ");
+    (void)mvwprintw(gpggawin, HEIGHT_3-1, WIDTH_R/2 - 3, " GGA ");
     (void)wattrset(gpggawin, A_NORMAL);
 
-    gpgstwin = derwin(devicewin, 6, WIDTH_R, 15, WIDTH_L + WIDTH_M);
+    gpgstwin = derwin(devicewin, HEIGHT_4, WIDTH_R, HEIGHT_1 + HEIGHT_2 + HEIGHT_3, WIDTH_L + WIDTH_M);
     assert(gpgstwin !=NULL);
     (void)wborder(gpgstwin, 0, 0, 0, 0, 0, 0, 0, 0);
     (void)syncok(gpgstwin, true);
@@ -141,7 +145,7 @@ static bool nmea_initialize(void)
     (void)mvwprintw(gpgstwin, 3, 16, "LAT: ");
     (void)mvwprintw(gpgstwin, 4,  1, "LON: ");
     (void)mvwprintw(gpgstwin, 4, 16, "ALT: ");
-    (void)mvwprintw(gpgstwin, 5, WIDTH_R/2 - 3, " GST ");
+    (void)mvwprintw(gpgstwin, HEIGHT_4-1, WIDTH_R/2 - 3, " GST ");
     (void)wattrset(gpgstwin, A_NORMAL);
 
 
@@ -168,14 +172,14 @@ static void cooked_pvt(void)
                     scr, sizeof(scr), " N", " S");
     } else
         (void)strlcpy(scr, "n/a", sizeof(scr));
-    (void)mvwprintw(cookedwin, 1, 37, "%-17s", scr);
+    (void)mvwprintw(cookedwin, 1, 38, "%-17s", scr);
 
     if (session.gpsdata.fix.mode >= MODE_2D) {
         deg_to_str2(deg_ddmm, session.gpsdata.fix.longitude,
                     scr, sizeof(scr), " E", " W");
     } else
         (void)strlcpy(scr, "n/a", sizeof(scr));
-    (void)mvwprintw(cookedwin, 1, 60, "%-17s", scr);
+    (void)mvwprintw(cookedwin, 1, 62, "%-17s", scr);
 }
 
 static void monitor_satlist(WINDOW *win, int y, int x)
@@ -274,15 +278,24 @@ static void nmea_update(void)
             int nsats =
                 (session.gpsdata.satellites_visible <
                  MAXSATS) ? session.gpsdata.satellites_visible : MAXSATS;
-
             for (i = 0; i < nsats; i++) {
+                char sigid = ' ';
+                if (1 < session.gpsdata.skyview[i].sigid &&
+                    8 > session.gpsdata.skyview[i].sigid) {
+                    /* Do not display L1, or missing */
+                    /* max is 8 */
+                    sigid = '0' + session.gpsdata.skyview[i].sigid;
+                }
                 (void)wmove(satwin, i + 2, 1);
-                (void)wprintw(satwin, "%3d %3d %2d %2.0f",
+                (void)wprintw(satwin, "%c%c%c %3d %3d %2d %2.0f %c%c",
+                              fields[0][0], fields[0][1], sigid,
                               session.gpsdata.skyview[i].PRN,
                               (int)session.gpsdata.skyview[i].azimuth, // degrees, 000..359
                               (int)session.gpsdata.skyview[i].elevation, // degrees, 00..90
-                              session.gpsdata.skyview[i].ss); // 00-99 dB-Hz, null when not tracking
-
+                              session.gpsdata.skyview[i].ss, // 00-99 dB-Hz, null when not tracking
+                              SAT_HEALTH_BAD == session.gpsdata.skyview[i].health ? 'u' : ' ',
+                              session.gpsdata.skyview[i].used ? 'Y' : 'N'
+                             );
             }
             /* add overflow mark to the display */
             if (nsats <= MAXSATS)
@@ -290,7 +303,6 @@ static void nmea_update(void)
             else
                 (void)mvwaddch(satwin, MAXSATS + 2, 18, ACS_DARROW);
         }
-
         if (strcmp(fields[0], "GPRMC") == 0
             || strcmp(fields[0], "GNRMC") == 0
             || strcmp(fields[0], "GLRMC") == 0) {
@@ -316,8 +328,8 @@ static void nmea_update(void)
                             fields[2]);
             monitor_satlist(gpgsawin, SATS_LINE, SATS_COL+6);
             (void)mvwprintw(gpgsawin, DOP_LINE, 8, "%-5s", fields[16]);
-            (void)mvwprintw(gpgsawin, DOP_LINE, 16, "%-5s", fields[17]);
-            (void)mvwprintw(gpgsawin, DOP_LINE, 24, "%-5s", fields[15]);
+            (void)mvwprintw(gpgsawin, DOP_LINE, 15, "%-5s", fields[17]);
+            (void)mvwprintw(gpgsawin, DOP_LINE, 22, "%-5s", fields[15]);
             monitor_fixframe(gpgsawin);
         }
 
@@ -367,7 +379,7 @@ const struct monitor_object_t nmea_mmt = {
     .update = nmea_update,
     .command = NULL,
     .wrap = nmea_wrap,
-    .min_y = 21,.min_x = WIDTH,
+    .min_y = HEIGHT,.min_x = WIDTH,
     .driver = &driver_nmea0183,
 };
 
@@ -407,7 +419,7 @@ const struct monitor_object_t garmin_mmt = {
     .update = nmea_update,
     .command = NULL,
     .wrap = nmea_wrap,
-    .min_y = 21,.min_x = WIDTH,
+    .min_y = HEIGHT, .min_x = WIDTH,
     .driver = &driver_garmin,
 };
 #endif /* GARMIN_ENABLE && NMEA0183_ENABLE */
@@ -471,7 +483,7 @@ const struct monitor_object_t ashtech_mmt = {
     .update = nmea_update,
     .command = ashtech_command,
     .wrap = nmea_wrap,
-    .min_y = 21,.min_x = WIDTH,
+    .min_y = HEIGHT, .min_x = WIDTH,
     .driver = &driver_ashtech,
 };
 #endif /* ASHTECH_ENABLE */
@@ -484,7 +496,7 @@ const struct monitor_object_t fv18_mmt = {
     .update = nmea_update,
     .command = NULL,
     .wrap = nmea_wrap,
-    .min_y = 21,.min_x = WIDTH,
+    .min_y = HEIGHT, .min_x = WIDTH,
     .driver = &driver_fv18,
 };
 #endif /* FV18_ENABLE */
@@ -497,7 +509,7 @@ const struct monitor_object_t gpsclock_mmt = {
     .update = nmea_update,
     .command = NULL,
     .wrap = nmea_wrap,
-    .min_y = 21,.min_x = WIDTH,
+    .min_y = HEIGHT, .min_x = WIDTH,
     .driver = &driver_gpsclock,
 };
 #endif /* GPSCLOCK_ENABLE */
@@ -510,7 +522,7 @@ const struct monitor_object_t mtk3301_mmt = {
     .update = nmea_update,
     .command = NULL,
     .wrap = nmea_wrap,
-    .min_y = 21,.min_x = WIDTH,
+    .min_y = HEIGHT, .min_x = WIDTH,
     .driver = &driver_mtk3301,
 };
 #endif /* MTK3301_ENABLE */
@@ -523,7 +535,7 @@ const struct monitor_object_t aivdm_mmt = {
     .update = nmea_update,
     .command = NULL,
     .wrap = nmea_wrap,
-    .min_y = 21,.min_x = WIDTH,
+    .min_y = HEIGHT, .min_x = WIDTH,
     .driver = &driver_aivdm,
 };
 #endif /* AIVDM_ENABLE */
