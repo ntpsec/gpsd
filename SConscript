@@ -3047,12 +3047,16 @@ env.Alias('dist', [zip, targz, tarxz])
 # # Make RPM from the specfile in packaging
 # Utility('dist-rpm', dist, 'rpmbuild -ta gpsd-${VERSION}.tar.gz')
 #
-# # Make sure build-from-tarball works.
-# testbuild = Utility('testbuild', [dist], [
-#     '${TAR} -xzvf gpsd-${VERSION}.tar.gz',
-#     'cd gpsd-${VERSION}; scons',
-#     'rm -fr gpsd-${VERSION}',
-# ])
+# Make sure build-from-tarball works.
+testbuild = Utility('#testbuild', [targz], [
+    'rm -Rf testbuild',
+    'mkdir testbuild',
+    'cd testbuild;'
+    'pwd;'
+    '${TAR} -xzvf ../gpsd-${VERSION}.tar.gz;'
+    'cd gpsd-${VERSION}; scons;',
+])
+env.Alias('testbuild', [testbuild])
 #
 # releasecheck = env.Alias('releasecheck', [
 #     testbuild,
