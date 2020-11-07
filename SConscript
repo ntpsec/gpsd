@@ -2271,10 +2271,6 @@ else:
 # Non-asciidoc, non xml, webpages only
 htmlpages = [
     'www/hardware.html',
-    'www/internals.html',
-    'www/performance/performance.html',
-    'www/replacing-nmea.html',
-    'www/writing-a-driver.html',
     ]
 
 wwwpage_targets = []
@@ -3048,7 +3044,6 @@ tarxz = xzenv.Tar(target + '.xz', distfiles)
 env.Alias('tar', [targz, tarxz])
 env.Alias('dist', [zip, targz, tarxz])
 
-#
 # # Make RPM from the specfile in packaging
 # Utility('dist-rpm', dist, 'rpmbuild -ta gpsd-${VERSION}.tar.gz')
 #

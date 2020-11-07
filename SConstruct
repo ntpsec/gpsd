@@ -3,7 +3,7 @@
 Important targets:
 
 build      - build the software (default)
-dist       - make distribution tarball (requires GNU tar)
+dist       - make distribution tarballs .gz and .xz, plus .zip
 zip        - make distribution zip
 install    - install programs, libraries, and manual pages
 uninstall  - undo an install
@@ -50,6 +50,7 @@ variantdir = 'gpsd-' + gpsd_version
 
 # one touch clean!
 if GetOption('clean'):
+    # FIXME: remove .tar.gz, .tar.xz and .zip
     atexit.register(lambda: os.system("rm -rf %s" % variantdir))
 
 # Not everything respects this  chdir()
