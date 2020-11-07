@@ -320,8 +320,9 @@ static void nmea_update(void)
                     sigid = '0' + session.gpsdata.skyview[i].sigid;
                 }
                 (void)wmove(satwin, i + 2, 1);
-                (void)wprintw(satwin, "%.2s%2d%c %3d %3d %2d %2.0f %c%c",
+                (void)wprintw(satwin, "%.2s%3d%c %3d %3d %2d %2.0f %c%c",
                               gnssid,
+                              // svid can be 3 digits
                               session.gpsdata.skyview[i].svid, sigid,
                               session.gpsdata.skyview[i].PRN,
                               (int)session.gpsdata.skyview[i].azimuth, // degrees, 000..359
