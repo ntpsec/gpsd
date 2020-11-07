@@ -3033,32 +3033,20 @@ if "packaging/rpm/gpsd.spec" not in distfiles:
     # should not be in git, but we need it
     distfiles.append("packaging/rpm/gpsd.spec")
 
-# How to build a zip file.
-# Perversely, if the zip exists, it is modified, not replaced.
-# So delete it first.
-dozip = env.Command('#zip', distfiles, [
-    'rm -f gpsd-${VERSION}.zip',
-    '@zip -ry gpsd-${VERSION}.zip $SOURCES',
-    '@ls -l gpsd-${VERSION}.zip',
-])
+# zip archive
+target = '#gpsd-${VERSION}.zip'
+dozip = env.Zip(target, distfiles)
+www = env.Alias('zip', dozip)
 
-# # How to build a tarball.
-# # The command assume the non-portable GNU tar extension
-# # "--transform", and will thus fail if ${TAR} is not GNU tar.
-# # scons in theory has code to cope with this, but in practice this
-# # is not working.  On BSD-derived systems, install GNU tar and
-# # pass TAR=gtar in the environment.
-# # make a .tar.gz and a .tar.xz
-dist = env.Command('#dist', distfiles, [
-    '@${TAR} --transform "s:^:gpsd-${VERSION}/:S" '
-    ' -czf gpsd-${VERSION}.tar.gz $SOURCES',
-    '@${TAR} --transform "s:^:gpsd-${VERSION}/:S" '
-    ' -cJf gpsd-${VERSION}.tar.xz $SOURCES',
-    '@ls -l gpsd-${VERSION}.tar.?z',
-])
-
-# tar = env.Tar('tar', distfiles)
-# env.Alias('TAR', tar)
+target = '#gpsd-%s.tar' % gpsd_version
+# .tar.gz archive
+gzenv = Environment(TARFLAGS = '-c -z')
+targz = gzenv.Tar(target + '.gz', distfiles)
+# .tar.xz archive
+xzenv = Environment(TARFLAGS = '-c -J')
+tarxz = xzenv.Tar(target + '.xz', distfiles)
+env.Alias('tar', [targz, tarxz])
+env.Alias('dist', [zip, targz, tarxz])
 
 #
 # # Make RPM from the specfile in packaging
