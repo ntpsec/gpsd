@@ -271,6 +271,8 @@ static void nmea_update(void)
         }
         last_tick = now;
 
+        // FIXME: why not always display sat data if we have it??
+        // FIXME: why not all xxGSV??
         if (strcmp(fields[0], "GPGSV") == 0
             || strcmp(fields[0], "GNGSV") == 0
             || strcmp(fields[0], "GLGSV") == 0) {
@@ -279,7 +281,38 @@ static void nmea_update(void)
                 (session.gpsdata.satellites_visible <
                  MAXSATS) ? session.gpsdata.satellites_visible : MAXSATS;
             for (i = 0; i < nsats; i++) {
+                // FIXME: gnssid and svid to string s/b common to all monitors.
+                char *gnssid = "  ";
                 char sigid = ' ';
+                switch (session.gpsdata.skyview[i].gnssid) {
+                default:
+                    gnssid = "  ";
+                    break;
+                case GNSSID_GPS:
+                    gnssid = "GP";  /* GPS */
+                    break;
+                case GNSSID_SBAS:
+                    gnssid = "SB";  /* SBAS */
+                    break;
+                case GNSSID_GAL:
+                    gnssid = "GA";  /* GALILEO */
+                    break;
+                case GNSSID_BD:
+                    gnssid = "BD";  /* BeiDou */
+                    break;
+                case GNSSID_IMES:
+                    gnssid = "IM";  /* IMES */
+                    break;
+                case GNSSID_QZSS:
+                    gnssid = "QZ";  /* QZSS */
+                    break;
+                case GNSSID_GLO:
+                    gnssid = "GL";  /* GLONASS */
+                    break;
+                case GNSSID_IRNSS:
+                    gnssid = "IR";  // IRNSS
+                    break;
+                }
                 if (1 < session.gpsdata.skyview[i].sigid &&
                     8 > session.gpsdata.skyview[i].sigid) {
                     /* Do not display L1, or missing */
@@ -287,8 +320,9 @@ static void nmea_update(void)
                     sigid = '0' + session.gpsdata.skyview[i].sigid;
                 }
                 (void)wmove(satwin, i + 2, 1);
-                (void)wprintw(satwin, "%c%c%c %3d %3d %2d %2.0f %c%c",
-                              fields[0][0], fields[0][1], sigid,
+                (void)wprintw(satwin, "%.2s%2d%c %3d %3d %2d %2.0f %c%c",
+                              gnssid,
+                              session.gpsdata.skyview[i].svid, sigid,
                               session.gpsdata.skyview[i].PRN,
                               (int)session.gpsdata.skyview[i].azimuth, // degrees, 000..359
                               (int)session.gpsdata.skyview[i].elevation, // degrees, 00..90
