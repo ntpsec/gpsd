@@ -42,17 +42,23 @@ EnsureSConsVersion(2, 3, 0)
 # gpsd needs Python version at least 2.6
 EnsurePythonVersion(2, 6)
 
-# one touch clean!
-if GetOption('clean'):
-    atexit.register(lambda: os.system("rm -rf buildtmp"))
-
 # package version
 gpsd_version = "3.21.1~dev"
-gpsd_version = "buildtmp"
 # name 'build' is already taken, put stuff in gpsd-$VERSION
+# it makes tar simple
+variantdir = 'gpsd-' + gpsd_version
+
+# one touch clean!
+if GetOption('clean'):
+    atexit.register(lambda: os.system("rm -rf %s" % variantdir))
 
 # Not everything respects this  chdir()
 SConscriptChdir(1)
-SConscript('SConscript', variant_dir=gpsd_version, must_exit=True, duplicate=1)
+SConscript('SConscript',
+           duplicate=1,
+           exports=['gpsd_version', 'variantdir'],
+           must_exit=True,
+           variant_dir=variantdir,
+           )
 # VariantDir('buildtmp', '.')
 # SConscript('buildtmp/SConscript', must_exit=True, duplicate=1)

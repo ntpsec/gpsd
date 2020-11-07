@@ -1,4 +1,5 @@
 # temp dir for building, no files outside of buildtmp should change.
+3.21.1~dev
 buildtmp
 .sconf_temp
 __pycache__

@@ -242,19 +242,20 @@ icon_files = [
 # whether - separates components of the package name, separates the
 # name from the version, or separates version components.
 #
-# package version, FIXME, duplicate from SConstruct
-gpsd_version = "3.21.1~dev"
+# gpsd_version, and variantdir, from SConstruct
+Import('*')
+
 if 'dev' in gpsd_version:
     (st, gpsd_revision) = _getstatusoutput('git describe --tags')
     if st != 0:
         # Only if git describe failed
         # Use timestamp from latest relevant file,
-        # ignoring generated files (../buildtmp)
-        # from root, not from buildtmp
+        # ignoring generated files (../$variantdir)
+        # from root, not from $variantdir
         files = FileList(['../*.c', '../*/*.c', '../*.cpp', '../*/*.cpp',
                           '../include/*.h', '../*.in', '../*/*.in',
                           '../SConstruct', '../SConscript'],
-                         '../buildtmp')
+                         '../%s' % variantdir)
         timestamps = map(GetMtime, files)
         if timestamps:
             from datetime import datetime
@@ -318,6 +319,7 @@ def Utility(target, source, action, **kwargs):
     # why always build?  wasteful?
     # when gpsdecode is the source this rebuilds the entire daemon!
     # env.AlwaysBuild(target)
+    # Why precious?
     env.Precious(target)
     return target
 
@@ -617,7 +619,7 @@ for key, value in os.environ.items():
 # Placeholder so we can kluge together something like VPATH builds.
 # $SRCDIR replaces occurrences for $(srcdir) in the autotools build.
 # scons can get confused if this is not a full path
-# env['SRCDIR'] = os.getcwd() + os.sep + 'buildtmp'
+# FIXME: could get variantdir from SRCDIR
 env['SRCDIR'] = os.getcwd()
 
 # We may need to force slow regression tests to get around race
@@ -875,7 +877,7 @@ cleaning = env.GetOption('clean')
 helping = env.GetOption('help')
 
 # Always set up LIBPATH so that cleaning works properly.
-# FIXME: Change to buildtmp?
+# FIXME: use $SRCDIR?
 env.Prepend(LIBPATH=[os.path.realpath(os.curdir)])
 
 # from scons 3.0.5, any changes to env after this, until after
@@ -2053,7 +2055,7 @@ else:
     udevcommand = 'RUN+="%s/gpsd.hotplug"' % (env['udevdir'], )
 
 # FIXME: why do this every time scons is called?
-# buildtmp may not exist when this is run.
+# $variantdir may not exist when this is run.
 pythonize_header_match = re.compile(r'\s*#define\s+(\w+)\s+(\w+)\s*.*$[^\\]')
 pythonized_header = ''
 with open(env['SRCDIR'] + '/../include/gpsd.h') as sfp:
@@ -2218,10 +2220,9 @@ env.Command('www/hardware.html',
              'gpscap.ini',
              'www/hardware-tail.html',
              www_xml_files],
-            ['cd buildtmp;'
-             '(cat www/hardware-head.html && PYTHONIOENCODING=utf-8 '
+            ['cd %s; (cat www/hardware-head.html && PYTHONIOENCODING=utf-8 '
              '$SC_PYTHON gpscap.py && cat www/hardware-tail.html) '
-             '>www/hardware.html'])
+             '> www/hardware.html' % variantdir])
 
 maninstall = []
 for manpage in all_manpages:
@@ -2259,9 +2260,9 @@ if env.WhereIs('asciidoctor'):
     for stem, leaf in adocfiles:
         asciidocs.append('www/%s.html' % leaf)
         env.Command('www/%s.html' % leaf, '%s.adoc' % stem,
-                    ['cd buildtmp;'
+                    ['cd %s;'
                      'asciidoctor -a compat -b html5 -a toc -o www/%s.html '
-                     '%s.adoc' % (leaf, stem)])
+                     '%s.adoc' % (variantdir, leaf, stem)])
 else:
     announce("WARNING: asciidoctor not found.\n"
              "WARNING: Some documentation and html will not be built.",
@@ -2382,8 +2383,8 @@ if env['python'] and not cleaning and not helping:
     for p in python_all:
         # split in two lines for readability
         check_compile.append(
-            'cp buildtmp/%s tmp.py; %s -tt -m py_compile tmp.py;' %
-            (p, target_python_path))
+            'cp %s/%s tmp.py; %s -tt -m py_compile tmp.py;' %
+            (variantdir, p, target_python_path))
         # tmp.py may have inherited non-writable permissions
         check_compile.append('rm -f tmp.py*')
 
@@ -2433,10 +2434,10 @@ if env['python'] and not cleaning and not helping:
                 # do not have xgps* dependencies, don't test
                 # FIXME: make these do -V w/o dependencies.
                 continue
-        # need to run in buildtmp to find libgpsdpacket
+        # need to run in variantdir to find libgpsdpacket
         pp.append(Utility(
             'version-%s' % p, p,
-            'cd buildtmp; $PYTHON $SRCDIR/%s -V' % p,
+            'cd %s; $PYTHON $SRCDIR/%s -V' % (variantdir, p),
             ENV=verenv))
     python_versions = env.Alias('python-versions', pp)
 
@@ -2561,7 +2562,7 @@ if env['socket_export'] and env['python']:
     # But first dump the platform and its delay parameters.
     gps_herald = Utility(
         'gps-herald', [gpsd, gpsctl, '$SRCDIR/gpsfake'],
-        'cd buildtmp; $PYTHON $PYTHON_COVERAGE $SRCDIR/gpsfake -T')
+        'cd %s; $PYTHON $PYTHON_COVERAGE $SRCDIR/gpsfake -T' % variantdir)
     # get from root, do not bother to move to variant_dir
     gps_log_pattern = os.path.join('..', 'test', 'daemon', '*.log')
     gps_logs = glob.glob(gps_log_pattern)
@@ -2571,8 +2572,8 @@ if env['socket_export'] and env['python']:
         # oddly this runs in build root, but needs to run in variant_dir
         gps_tests.append(Utility(
             'gps-regress-' + gps_name, gps_herald,
-            'cd buildtmp; $SRCDIR/regress-driver -q -o -t $REGRESSOPTS ' +
-            gps_log))
+            'cd %s; ./regress-driver -q -o -t $REGRESSOPTS %s' %
+            (variantdir, gps_log)))
     gps_regress = env.Alias('gps-regress', gps_tests)
 
     # Run the passthrough log in all transport modes for better coverage
@@ -2585,8 +2586,8 @@ if env['socket_export'] and env['python']:
         gpsfake_tests.append(Utility(
             'gpsfake-' + name,
             [gps_herald, gpsfake_logs],
-            'cd buildtmp; $SRCDIR/regress-driver $REGRESSOPTS -q %s %s' %
-            (opts, 'test/daemon/passthrough.log')))
+            'cd %s; ./regress-driver $REGRESSOPTS -q %s %s' %
+            (variantdir, opts, 'test/daemon/passthrough.log')))
     env.Alias('gpsfake-tests', gpsfake_tests)
 
     # Build the regression tests for the daemon.
@@ -2598,8 +2599,8 @@ if env['socket_export'] and env['python']:
         # oddly this runs in build root, but needs to run in variant_dir
         gps_rebuilds.append(Utility(
             'gps-makeregress-' + gps_name, gps_herald,
-            'cd buildtmp; $SRCDIR/regress-driver -bq -o -t '
-            '$REGRESSOPTS ' + gps_log))
+            'cd %s; ./regress-driver -bq -o -t '
+            '$REGRESSOPTS %s ' % (variantdir, gps_log)))
     if GetOption('num_jobs') <= 1:
         Utility('gps-makeregress', gps_herald,
                 '$SRCDIR/regress-driver -b $REGRESSOPTS %s' % gps_log_pattern)
@@ -2749,8 +2750,9 @@ else:
         'tests/test_clienthelpers.py',
         'tests/test_misc.py',
         ], [
-        '{} buildtmp/tests/test_clienthelpers.py'.format(target_python_path),
-        '{} buildtmp/tests/test_misc.py'.format(target_python_path)
+        'cd %s' % variantdir,
+        '%s tests/test_clienthelpers.py' % target_python_path,
+        '%s tests/test_misc.py' % target_python_path
         ],
         ENV=verenv)
 
