@@ -44,6 +44,8 @@ EnsurePythonVersion(2, 6)
 # are rebuilt, but with no changes.
 Decider('MD5')
 
+# Put .sconsign*dblite and .scons-options-cache in variantdir for
+# one-touch cleaning
 # support building with various Python versions.
 sconsign_file = '.sconsign.{}.dblite'.format(pickle.HIGHEST_PROTOCOL)
 SConsignFile(os.getcwd() + os.path.sep + sconsign_file)
@@ -2988,9 +2990,8 @@ Utility('udev-test', '',
 
 # Default targets
 
-if cleaning:
-    atexit.register(lambda: os.system("rm -rf .sconsign*.dblite"))
-else:
+if not cleaning:
+    # FIXME: redundant?
     env.Default(build)
 
 # Tags for Emacs and vi
@@ -3055,6 +3056,8 @@ xzenv = Environment(TARFLAGS = '-c -J')
 tarxz = xzenv.Tar(target + '.xz', distfiles)
 env.Alias('tar', [targz, tarxz])
 env.Alias('dist', [zip, targz, tarxz])
+
+Clean('build', [targz, tarxz, dozip])
 
 # # Make RPM from the specfile in packaging
 # Utility('dist-rpm', dist, 'rpmbuild -ta gpsd-${VERSION}.tar.gz')
