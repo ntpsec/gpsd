@@ -1422,15 +1422,19 @@ config.env['xgps_deps'] = False
 python_config = {}  # Dummy for all non-Python-build cases
 
 have_dia = False
+have_scan_build = False
 try:
-    config.CheckProg
+    have_dia = config.CheckProg('dia')
+    have_scan_build = config.CheckProg('scan_build')
 except AttributeError:
     # scons versions before Sep 2015 (2.4.0) don't have CheckProg
     # gpsd only asks for 2.3.0 or higher
+    announce("scons CheckProg() failed..")
+
+if not have_dia:
     announce("Program dia not found -- not rebuiding cycle.svg.")
-    have_dia = False
-else:
-    have_dia = config.CheckProg('dia')
+if not have_scan_build:
+    announce("Program scan-build not found -- skipping scan-build checks")
 
 if cleaning or helping:
     # If helping just get usable config info from the local Python
@@ -2534,15 +2538,16 @@ Utility("deheader", generated_sources, [
 ])
 
 # Perform all local code-sanity checks (but not the Coverity scan).
-audit = env.Alias('audit',
-                  ['cppcheck',
-                   'pylint',
-                   'scan-build',
-                   'valgrind-audit',
-                   'xmllint',
-                   ])
+audits = ['cppcheck',
+          'pylint',
+          'valgrind-audit',
+          'xmllint',
+          ]
+if have_scan_build:
+    audits.append('scan-build')
 
-#
+audit = env.Alias('audit', audits)
+
 # Regression tests begin here
 #
 # Note that the *-makeregress targets re-create the *.log.chk source
@@ -3060,14 +3065,14 @@ testbuild = Utility('#testbuild', [targz], [
     'cd gpsd-${VERSION}; scons;',
 ])
 env.Alias('testbuild', [testbuild])
-#
-# releasecheck = env.Alias('releasecheck', [
-#     testbuild,
-#     check,
-#     audit,
-#     flocktest,
-# ])
-#
+
+releasecheck = env.Alias('releasecheck', [
+    testbuild,
+    check,
+    audit,
+    flocktest,
+])
+
 # # The chmod copes with the fact that scp will give a
 # # replacement the permissions of the *original*...
 # upload_release = Utility('upload-release', [dist], [
