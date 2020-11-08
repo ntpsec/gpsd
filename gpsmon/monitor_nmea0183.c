@@ -325,10 +325,15 @@ static void nmea_update(void)
                               // svid can be 3 digits
                               session.gpsdata.skyview[i].svid, sigid,
                               session.gpsdata.skyview[i].PRN,
-                              (int)session.gpsdata.skyview[i].azimuth, // degrees, 000..359
-                              (int)session.gpsdata.skyview[i].elevation, // degrees, 00..90
-                              session.gpsdata.skyview[i].ss, // 00-99 dB-Hz, null when not tracking
-                              SAT_HEALTH_BAD == session.gpsdata.skyview[i].health ? 'u' : ' ',
+                              // degrees, 000..359
+                              (int)session.gpsdata.skyview[i].azimuth,
+                              // degrees, 00..90
+                              (int)session.gpsdata.skyview[i].elevation,
+                              // 00-99 dB-Hz, NAN when not tracking
+                              // FIXME: check isfinite()
+                              session.gpsdata.skyview[i].ss,
+                              SAT_HEALTH_BAD ==
+                                  session.gpsdata.skyview[i].health ? 'u' : ' ',
                               session.gpsdata.skyview[i].used ? 'Y' : 'N'
                              );
             }
