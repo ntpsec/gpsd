@@ -116,6 +116,7 @@ export CCFLAGS="%{optflags}"
 export LINKFLAGS="%{__global_ldflags}"
 
 # breaks with %{_smp_mflags}
+echo %{_docdir}
 scons \
 	dbus_export=yes \
 	systemd=yes \
@@ -180,11 +181,11 @@ desktop-file-install \
 
 %files
 %doc INSTALL.adoc
-%doc /usr/share/gpsd/doc/AUTHORS
-%doc /usr/share/gpsd/doc/COPYING
-%doc /usr/share/gpsd/doc/NEWS
-%doc /usr/share/gpsd/doc/README.adoc
-%doc /usr/share/gpsd/doc/build.adoc
+%doc /usr/share/doc/AUTHORS
+%doc /usr/share/doc/COPYING
+%doc /usr/share/doc/NEWS
+%doc /usr/share/doc/README.adoc
+%doc /usr/share/doc/build.adoc
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
 %{_sbindir}/gpsd
 %{_sbindir}/gpsdctl
@@ -206,7 +207,7 @@ desktop-file-install \
 %{_mandir}/man1/ntpshmmon.1*
 
 %files libs
-%{_libdir}/libgps.so.27*
+%{_libdir}/libgps.so*
 %{_libdir}/libgpsdpacket.so*
 
 %files -n python3-%{name}
@@ -242,7 +243,9 @@ desktop-file-install \
 %{_bindir}/gpscsv
 %{_bindir}/gpsdecode
 %{_bindir}/gpspipe
+%{_bindir}/gpsplot
 %{_bindir}/gpsrinex
+%{_bindir}/gpssubframe
 %{_bindir}/gpxlogger
 %{_bindir}/lcdgps
 %{_bindir}/xgps
@@ -255,7 +258,9 @@ desktop-file-install \
 %{_mandir}/man1/gps2udp.1*
 %{_mandir}/man1/gpsdecode.1*
 %{_mandir}/man1/gpspipe.1*
+%{_mandir}/man1/gpsplot.1*
 %{_mandir}/man1/gpsrinex.1*
+%{_mandir}/man1/gpssubframe.1*
 %{_mandir}/man1/gpxlogger.1*
 %{_mandir}/man1/lcdgps.1*
 %{_mandir}/man1/xgps.1*
