@@ -908,6 +908,8 @@ if cleaning or helping:
     xtlibs = []
     tiocmiwait = True  # For cleaning, which works on any OS
     usbflags = []
+    have_dia = False
+    have_scan_build = False
 else:
 
     # OS X aliases gcc to clang
@@ -1406,6 +1408,21 @@ else:
         if option not in config.env['CFLAGS']:
             config.CheckCompilerOption(option)
 
+    # check for misc audit programs
+    try:
+        have_dia = config.CheckProg('dia')
+        have_scan_build = config.CheckProg('scan_build')
+    except AttributeError:
+        # scons versions before Sep 2015 (2.4.0) don't have CheckProg
+        # gpsd only asks for 2.3.0 or higher
+        announce("scons CheckProg() failed..")
+
+    if not have_dia:
+        announce("Program dia not found -- not rebuiding cycle.svg.")
+    if not have_scan_build:
+        announce("Program scan-build not found -- skipping scan-build checks")
+
+
 # Set up configuration for target Python
 
 PYTHON_LIBDIR_CALL = 'sysconfig.get_python_lib()'
@@ -1420,21 +1437,6 @@ PYTHON_CONFIG_CALL = ('sysconfig.get_config_vars(%s)'
 config.env['xgps_deps'] = False
 
 python_config = {}  # Dummy for all non-Python-build cases
-
-have_dia = False
-have_scan_build = False
-try:
-    have_dia = config.CheckProg('dia')
-    have_scan_build = config.CheckProg('scan_build')
-except AttributeError:
-    # scons versions before Sep 2015 (2.4.0) don't have CheckProg
-    # gpsd only asks for 2.3.0 or higher
-    announce("scons CheckProg() failed..")
-
-if not have_dia:
-    announce("Program dia not found -- not rebuiding cycle.svg.")
-if not have_scan_build:
-    announce("Program scan-build not found -- skipping scan-build checks")
 
 if cleaning or helping:
     # If helping just get usable config info from the local Python
