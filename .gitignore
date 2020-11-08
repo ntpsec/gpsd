@@ -1,211 +1,23 @@
-# temp dir for building
+# temp dir for building, no files outside of gpsd-3.21~dev should change.
+gpsd-3.21.1~dev
 buildtmp
-# Binaries
-clients/cgps
-clients/lcdgps
-clients/gps2udp
-clients/gpsdctl
-clients/gpsdecode
-clients/gpspipe
-clients/gpsrinex
-clients/gpxlogger
-clients/ntpshmmon
-clients/ppscheck
-gpscap.py
-gpsctl
-gpsmon/gpsmon
-gpsd/gpsd
-rtcmdecode
+.sconf_temp
+__pycache__
+config.log
+# common log file
+nohup.out
+# vi swap files
+*.swp
+# contrib fluff
 contrib/clock_test
 contrib/gpsd-dbus
-*.exe
-# These are built from .in files
-android/gpsd_config
-clients/gegps
-clients/gpscsv
-clients/gpsd.php
-clients/gpssubframe
-clients/gpsprof
-clients/gpsplot
-clients/ubxtool
-clients/xgps
-clients/xgpsspeed
-clients/zerk
-contrib/ntpshmviz
-contrib/skyview2svg.py
-contrib/webgps
-control
-gps/__init__.py
-gps/gps.py
-gps/packet.py
-gpscat
-gpsfake
-jsongen
-maskaudit.py
-valgrind-audit.py
-# Unit tests
-test_bits
-test_float
-test_geoid
-test_gpsdclient
-test_gpsmm
-test_json
-test_json_wignore
-test_libgps
-test_matrix
-test_mkgmtime
-test_mktime
-test_packet
-test_qgpsmm
-test_timespec
-test_trig
-# Other generated files
-gpsd.rules
-gps.html
-gpscat.html
-gpsctl.html
-gpsd.html
-gpsd_json.html
-gpsdecode.html
-gpsfake.html
-gpsmon.html
-gpspipe.html
-gpsprof.html
-gps2udp.html
-gpxlogger.html
-ntpmon.html
-libgps.html
-libgpsd.html
-libgpsmm.html
-srec.html
-*.[1358]
-*.pyc
-*.pc
-*.sum
-*.i
-*.o
-*.obj
-*.os
-*.a
-*.lo
-*.la
-*.so
-*.so.[0-9.]*
-*.dylib
-*.dll
-*~
-*.swp
-*.egg-info
-*.gcno
-*.dSYM
-# Built sources
-.cproject
-gpsd_config.h
-gpsd_maskdump.c
-gpsd-setup.py
-gpsd.spec
-gps_maskdump.c
-.kdbgrc.*
-MANIFEST
-packet_names.h
-.project
-tags
-# Python files
-build
-devtools/ppstest
-# Developer sandbox directory for patches that haven't been applied yet
-patches
-# build/test logs from devtools/do-build
-BUILD.*
-CHECK.*
-# SCons cruft
-config.log
-.sconsign.dblite
-.sconsign.*.dblite
-.sconf_temp
-.scons-option-cache
-stamp-python
-# Documentation/Web
-doc/explanation.html
-.public
-www/AIVDM.html
-www/building.html
-www/client-howto.html
-www/faq.html
-www/gps2udp.html
-www/gpscat.html
-www/gpscsv.html
-www/gpsctl.html
-www/gpsdctl.html
-www/gpsdecode.html
-www/gpsd.html
-www/gpsd-time-service-howto.adoc
-www/gpsd-time-service-howto.html
-www/gpsfake.html
-www/gps.html
-www/gpsdctl.xml
-www/gpsinit.html
-www/gpsmon.html
-www/gpspipe.html
-www/gpsplot.html
-www/gpsprof.html
-www/gps_report.cgi
-www/gpsrinex.html
-www/gpssubframe.html
-www/gpxlogger.html
-www/hacking.html
-www/hardware-head.html
-www/hardware.html
-www/index.html
-www/installation.html
-www/internals.html
-www/libgpsd.html
-www/libgps.html
-www/libgpsmm.html
-www/NMEA.html
-www/ntpshmmon.html
-www/performance/performance.html
-www/ppp-howto.html
-www/ppscheck.html
-www/protocol-evolution.html
-www/protocol-transition.html
-www/pydoc
-www/README.html
-www/replacing-nmea.html
-www/srec.html
-www/SUPPORT.html
-www/time-service-intro.html
-www/troubleshooting.html
-www/ubxtool-examples.html
-www/ubxtool.html
-www/.upload-stamp
-www/writing-a-driver.html
-www/zerk.html
-# QT stuff
-libQgpsmm.prl
-libQgpsmm/binaries/*
-# C coverage-related files
-*.gcda
-# Python coverage-related files/directories
-.coverage*
-htmlcov/
-# misc files
+# common log file
 nohup.out
-*.bak
-tmp*
-# release files
-*.tar.?z
-*.tar.?z.sig
-*.zip
-# config file created by gpsd.php
-clients/gpsd_config.inc
-# for systemd(umb)
-systemd/gpsd.service
-systemd/gpsdctl@.service
-systemd/gpsd.socket
-# for 3rd party packaging
-packaging/deb/etc_default_gpsd
-packaging/deb/etc_init.d_gpsd
-packaging/rpm/gpsd.init
-packaging/X11/xgps.desktop
-packaging/X11/xgpsspeed.desktop
+# vi swap files
+*.swp
+# distfiles
+gpsd-3.*zip
+gpsd-3.*.tar.gz
+gpsd-3.*.tar.xz
+# testbuild directory
+testbuild
