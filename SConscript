@@ -2240,13 +2240,14 @@ env.Command('www/hardware.html',
              '> www/hardware.html' % variantdir])
 
 maninstall = []
-for manpage in all_manpages:
-    if not manbuilder and not os.path.exists(manpage):
-        continue
-    section = manpage.split(".")[1]
-    dest = os.path.join(installdir('mandir'), "man" + section,
-                        os.path.basename(manpage))
-    maninstall.append(env.InstallAs(source=manpage, target=dest))
+if manbuilder:
+    for manpage in all_manpages:
+        if not manbuilder and not os.path.exists(manpage):
+            continue
+        section = manpage.split(".")[1]
+        dest = os.path.join(installdir('mandir'), "man" + section,
+                            os.path.basename(manpage))
+        maninstall.append(env.InstallAs(source=manpage, target=dest))
 
 # doc to install
 docinstall = []
@@ -3010,8 +3011,9 @@ env.Command('#TAGS', sources, ['etags ' + " ".join(sources)])
 # We need to be in the actual project repo (i.e. not doing a -Y build)
 # for these productions to work.
 
-# add in the built man pages
-distfiles += all_manpages.keys()
+if manbuilder:
+	# add in the built man pages
+	distfiles += all_manpages.keys()
 distfiles.sort()
 
 # remove git and CI stuff from files to tar/zip
