@@ -2299,8 +2299,9 @@ www = env.Alias('www', webpages)
 
 # The diagram editor dia is required in order to edit the diagram masters
 # FIXME, test for dia available
+# FIXME, make a proper dependency
 Utility("www/cycle.svg", ["www/cycle.dia"],
-        ["dia -e www/cycle.svg www/cycle.dia"])
+        ["cd %s; dia -e www/cycle.svg www/cycle.dia" % variantdir])
 
 # Where it all comes together
 
@@ -3005,34 +3006,31 @@ distfiles_ignore = [
     ".gitignore",
     ".gitlab-ci.yml",
     ".travis.yml",
+    # remove contrib/ais-samples
+    "contrib/ais-samples/ais-nmea-sample.log",
+    "contrib/ais-samples/ais-nmea-sample.log.chk",
+
     ]
 for fn in distfiles_ignore:
     if fn in distfiles:
         distfiles.remove(fn)
 
-# remove www/ files, and contrib/ais-samples
-distfiles_new = []
-for fn in distfiles:
-    if ((fn.startswith('www') or
-         fn.startswith('contrib/ais-samples/'))):
-        continue
-    else:
-        distfiles_new.append(fn)
-
-# yes, this is odd, but I could not get distfiles.remove() to work...
-distfiles = distfiles_new
-
 # We do not need generated files
 # distfiles += generated_sources
 
 if "packaging/rpm/gpsd.spec" not in distfiles:
-    # should not be in git, but we need it
+    # should not be in git, gnerated file, we need it
     distfiles.append("packaging/rpm/gpsd.spec")
+
+if 'www/cycle.svg' in distfiles:
+    print("SNARD!")
+else:
+    print("snard")
 
 # zip archive
 target = '#gpsd-${VERSION}.zip'
 dozip = env.Zip(target, distfiles)
-www = env.Alias('zip', dozip)
+zip = env.Alias('zip', dozip)
 
 target = '#gpsd-%s.tar' % gpsd_version
 # .tar.gz archive
