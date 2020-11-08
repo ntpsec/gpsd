@@ -1421,6 +1421,17 @@ config.env['xgps_deps'] = False
 
 python_config = {}  # Dummy for all non-Python-build cases
 
+have_dia = False
+try:
+    config.CheckProg
+except AttributeError:
+    # scons versions before Sep 2015 (2.4.0) don't have CheckProg
+    # gpsd only asks for 2.3.0 or higher
+    announce("Program dia not found -- not rebuiding cycle.svg.")
+    have_dia = False
+else:
+    have_dia = config.CheckProg('dia')
+
 if cleaning or helping:
     # If helping just get usable config info from the local Python
     target_python_path = ''
@@ -2298,10 +2309,9 @@ webpages = (htmlpages + asciidocs + wwwpage_targets +
 www = env.Alias('www', webpages)
 
 # The diagram editor dia is required in order to edit the diagram masters
-# FIXME, test for dia available
-# FIXME, make a proper dependency
-Utility("www/cycle.svg", ["www/cycle.dia"],
-        ["cd %s; dia -e www/cycle.svg www/cycle.dia" % variantdir])
+if have_dia:
+    Utility("www/cycle.svg", ["www/cycle.dia"],
+            ["cd %s; dia -e www/cycle.svg www/cycle.dia" % variantdir])
 
 # Where it all comes together
 
@@ -3021,11 +3031,6 @@ for fn in distfiles_ignore:
 if "packaging/rpm/gpsd.spec" not in distfiles:
     # should not be in git, gnerated file, we need it
     distfiles.append("packaging/rpm/gpsd.spec")
-
-if 'www/cycle.svg' in distfiles:
-    print("SNARD!")
-else:
-    print("snard")
 
 # zip archive
 target = '#gpsd-${VERSION}.zip'
