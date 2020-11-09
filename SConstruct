@@ -17,10 +17,13 @@ release    - ship a release
 --clean    - clean all normal build targets
 -c         - clean all normal build targets
 
+Usefuk options:
+--warn=all - to see scons warnings
+
 Setting the DESTDIR environment variable will prefix the install destinations
 without changing the --prefix prefix.
 
-Pretty much all this file does is create buildtmp, and call SConscript.
+Pretty much all this file does is create the variant_dir, and call SConscript.
 """
 
 # Unfinished items:

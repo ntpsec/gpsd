@@ -2396,6 +2396,7 @@ if env['python'] and not cleaning and not helping:
 
     python_compilation_regress = Utility('python-compilation-regress',
                                          python_all, check_compile)
+    env.Pseudo(python_compilation_regress)
 
     # Sanity-check Python code.
     # Bletch.  We don't really want to suppress W0231 E0602 E0611 E1123,
@@ -2440,11 +2441,15 @@ if env['python'] and not cleaning and not helping:
                 # do not have xgps* dependencies, don't test
                 # FIXME: make these do -V w/o dependencies.
                 continue
-        # need to run in variantdir to find libgpsdpacket
-        pp.append(Utility(
+        # need to run in variantdir to:
+        #     find libgpsdpacket
+        #     gps module in pwd trumps the one in PYTHONPATH
+        tgt = Utility(
             'version-%s' % p, p,
-            'cd %s; $PYTHON $SRCDIR/%s -V' % (variantdir, p),
-            ENV=verenv))
+            'cd %s; $PYTHON %s -V' % (variantdir, p),
+            ENV=verenv)
+        env.Pseudo(tgt)
+        pp.append(tgt)
     python_versions = env.Alias('python-versions', pp)
 
 else:
@@ -2552,16 +2557,19 @@ audit = env.Alias('audit', audits)
 bits_regress = Utility('bits-regress', [test_bits], [
     '$SRCDIR/tests/test_bits --quiet'
 ])
+env.Pseudo(bits_regress)
 
 # Unit-test the deg_to_str() converter
-bits_regress = Utility('deg-regress', [test_gpsdclient], [
+deg_regress = Utility('deg-regress', [test_gpsdclient], [
     '$SRCDIR/tests/test_gpsdclient'
 ])
+env.Pseudo(deg_regress)
 
 # Unit-test the bitfield extractor
 matrix_regress = Utility('matrix-regress', [test_matrix], [
     '$SRCDIR/tests/test_matrix --quiet'
 ])
+env.Pseudo(matrix_regress)
 
 # using regress-drivers requires socket_export being enabled and Python
 if env['socket_export'] and env['python']:
@@ -2570,6 +2578,7 @@ if env['socket_export'] and env['python']:
     gps_herald = Utility(
         'gps-herald', [gpsd, gpsctl, '$SRCDIR/gpsfake'],
         'cd %s; $PYTHON $PYTHON_COVERAGE $SRCDIR/gpsfake -T' % variantdir)
+    env.Pseudo(gps_herald)
     # get from root, do not bother to move to variant_dir
     gps_log_pattern = os.path.join('..', 'test', 'daemon', '*.log')
     gps_logs = glob.glob(gps_log_pattern)
@@ -2577,10 +2586,12 @@ if env['socket_export'] and env['python']:
     gps_tests = []
     for gps_name, gps_log in zip(gps_names, gps_logs):
         # oddly this runs in build root, but needs to run in variant_dir
-        gps_tests.append(Utility(
+        tgt = Utility(
             'gps-regress-' + gps_name, gps_herald,
             'cd %s; ./regress-driver -q -o -t $REGRESSOPTS %s' %
-            (variantdir, gps_log)))
+            (variantdir, gps_log))
+        env.Pseudo(tgt)
+        gps_tests.append(tgt)
     gps_regress = env.Alias('gps-regress', gps_tests)
 
     # Run the passthrough log in all transport modes for better coverage
@@ -2590,11 +2601,13 @@ if env['socket_export'] and env['python']:
     gpsfake_tests = []
     for name, opts in [['pty', ''], ['udp', '-u'], ['tcp', '-o -t']]:
         # oddly this runs in build root, but needs to run in variant_dir
-        gpsfake_tests.append(Utility(
+        tgt = Utility(
             'gpsfake-' + name,
             [gps_herald, gpsfake_logs],
             'cd %s; ./regress-driver $REGRESSOPTS -q %s %s' %
-            (variantdir, opts, 'test/daemon/passthrough.log')))
+            (variantdir, opts, 'test/daemon/passthrough.log'))
+        env.Pseudo(tgt)
+        gpsfake_tests.append(tgt)
     env.Alias('gpsfake-tests', gpsfake_tests)
 
     # Build the regression tests for the daemon.
@@ -2644,6 +2657,7 @@ if env["rtcm104v2"]:
         '    || echo "Test FAILED!"; '
         '    rm -f $${TMPFILE}; ',
     ])
+    env.Pseudo(rtcm_regress)
 else:
     announce("RTCM2 regression tests suppressed because rtcm104v2 is off.")
     rtcm_regress = None
@@ -2703,6 +2717,7 @@ if env["aivdm"]:
         '    | diff -ub - $${TMPFILE} || echo "Test FAILED!"; '
         '    rm -f $${TMPFILE}; ',
     ])
+    env.Pseudo(aivdm_regress)
 else:
     announce("AIVDM regression tests suppressed because aivdm is off.")
     aivdm_regress = None
@@ -2721,6 +2736,7 @@ packet_regress = UtilityWithHerald(
     'Testing detection of invalid packets...',
     'packet-regress', [test_packet],
     ['$SRCDIR/tests/test_packet | diff -u test/packet.test.chk -', ])
+env.Pseudo(packet_regress)
 
 # Rebuild the packet-getter regression test
 Utility('packet-makeregress', [test_packet], [
@@ -2730,11 +2746,13 @@ Utility('packet-makeregress', [test_packet], [
 geoid_regress = UtilityWithHerald(
     'Testing the geoid and variation models...',
     'geoid-regress', [test_geoid], ['$SRCDIR/tests/test_geoid'])
+env.Pseudo(geoid_regress)
 
 # Regression-test the calendar functions
 time_regress = Utility('time-regress', [test_mktime], [
     '$SRCDIR/tests/test_mktime'
 ])
+env.Pseudo(time_regress)
 
 if not env['python'] or cleaning or helping:
     unpack_regress = None
@@ -2749,6 +2767,7 @@ else:
         'unpack-regress', [test_libgps, 'regress-driver', clientlib_logs], [
             '$SRCDIR/regress-driver $REGRESSOPTS -c'
             ' $SRCDIR/test/clientlib/*.log', ])
+    env.Pseudo(unpack_regress)
     # Unit-test the bitfield extractor
     # PYTHONPATH to help find the new copy of gps module
     verenv = env['ENV'].copy()
@@ -2757,11 +2776,12 @@ else:
         'tests/test_clienthelpers.py',
         'tests/test_misc.py',
         ], [
-        'cd %s' % variantdir,
-        '%s tests/test_clienthelpers.py' % target_python_path,
-        '%s tests/test_misc.py' % target_python_path
+        'cd %s; %s tests/test_clienthelpers.py' %
+        (variantdir, target_python_path),
+        'cd %s; %s tests/test_misc.py' % (variantdir, target_python_path),
         ],
         ENV=verenv)
+    env.Pseudo(misc_regress)
 
 
 # Build the regression test for the sentence unpacker
@@ -2774,6 +2794,7 @@ Utility('unpack-makeregress', [test_libgps], [
 if env['socket_export']:
     json_regress = Utility('json-regress', [test_json],
                            ['$SRCDIR/tests/test_json'])
+    env.Pseudo(json_regress)
 else:
     json_regress = None
 
@@ -2781,22 +2802,26 @@ else:
 timespec_regress = Utility('timespec-regress', [test_timespec], [
     '$SRCDIR/tests/test_timespec'
 ])
+env.Pseudo(timespec_regress)
 
 # Unit-test float math
 float_regress = Utility('float-regress', [test_float], [
     '$SRCDIR/tests/test_float'
 ])
+env.Pseudo(float_regress)
 
 # Unit-test trig math
 trig_regress = Utility('trig-regress', [test_trig], [
     '$SRCDIR/tests/test_trig'
 ])
+env.Pseudo(trig_regress)
 
 # consistency-check the driver methods
 method_regress = UtilityWithHerald(
     'Consistency-checking driver methods...',
     'method-regress', [test_packet], [
         '$SRCDIR/tests/test_packet -c >/dev/null', ])
+env.Pseudo(method_regress)
 
 # Test the xgps/xgpsspeed dependencies
 if env['xgps_deps']:
@@ -2804,6 +2829,7 @@ if env['xgps_deps']:
         'Testing xgps/xgpsspeed dependencies (since xgps=yes)...',
         'test-xgps-deps', ['$SRCDIR/tests/test_xgps_deps.py'], [
             '$PYTHON $SRCDIR/tests/test_xgps_deps.py'])
+    env.Pseudo(test_xgps_deps)
 else:
     test_xgps_deps = None
 
@@ -2812,6 +2838,7 @@ valgrind_audit = Utility('valgrind-audit', [
     '$SRCDIR/valgrind-audit.py', gpsd],
     '$PYTHON $SRCDIR/valgrind-audit.py'
 )
+env.Pseudo(valgrind_audit)
 
 # Run test builds on remote machines
 flocktest = Utility("flocktest", [], "cd devtools; ./flocktest " + gitrepo)
@@ -2821,6 +2848,7 @@ flocktest = Utility("flocktest", [], "cd devtools; ./flocktest " + gitrepo)
 describe = UtilityWithHerald(
     'Run normal regression tests for %s...' % gpsd_revision.strip(),
     'describe', [], [])
+env.Pseudo(describe)
 
 # Delete all test programs
 test_exes = [str(p) for p in Flatten(testprogs)]
