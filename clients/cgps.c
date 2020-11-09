@@ -143,15 +143,15 @@ static bool compass_flag = false;
 #define GPS_ERROR       -2      /* low-level failure in GPS read */
 #define GPS_TIMEOUT     -3      /* low-level failure in GPS waiting */
 
-/* range test an int, return 4 chars + NUL */
+/* range test an int, return 3 chars + NUL */
 static const char *int_to_str(int val, int min, int max)
 {
     static char buf[20];
 
     if (val < min || val > max) {
-        return " n/a";
+        return "n/a";
     }
-    (void)snprintf(buf, sizeof(buf), "%4d", val);
+    (void)snprintf(buf, sizeof(buf), "%3d", val);
     return buf;
 }
 
@@ -473,7 +473,7 @@ static void windowsetup(void)
          * Geostar GPS receivers compute USI this way:
          * GPS is USI 1 to 32, SBAS is 33 to 64, GLONASS is 65 to 96 */
         (void)mvwaddstr(satellites, 1, 1,
-                        "     PRN  Elev   Azim   SNR  Use  ");
+                        "GNSS   PRN  Elev   Azim   SNR Use");
         (void)wborder(satellites, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 }
@@ -644,15 +644,18 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
             }
             (void)mvwaddstr(satellites, sat_no + 2, column, gnssid);
             column += 2;
+            (void)mvwaddstr(satellites, sat_no + 2, column,
+                    int_to_str(gpsdata->skyview[sat_no].svid, 0, 500));
+            column += 3;
             (void)mvwaddstr(satellites, sat_no + 2, column, sigid);
+            column += 2;
 
             /* no GPS uses PRN 0, NMEA 4.0 here
              * NMEA 4.0 uses 1-437 */
-            column += 2;
             (void)mvwaddstr(satellites, sat_no + 2, column,
                             int_to_str(gpsdata->skyview[sat_no].PRN,
                                        1, 438));
-            column += 5;
+            column += 4;
             (void)mvwaddstr(satellites, sat_no + 2, column,
                             tenth_to_str(gpsdata->skyview[sat_no].elevation,
                                        -90.0, 90.0));
@@ -664,7 +667,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
             (void)mvwaddstr(satellites, sat_no + 2, column,
                             tenth_to_str(gpsdata->skyview[sat_no].ss,
                                        0.0, 254.0));
-            column += 6;
+            column += 5;
             if (SAT_HEALTH_BAD == gpsdata->skyview[sat_no].health) {
                 /* only mark known unhealthy */
                 health = 'u';
