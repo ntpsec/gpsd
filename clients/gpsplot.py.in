@@ -57,7 +57,7 @@ def _do_one_line(data):
             return
 
         timestr = datetime.datetime.strptime(data['time'],
-                                          '%Y-%m-%dT%H:%M:%S.%fZ')
+                                             '%Y-%m-%dT%H:%M:%S.%fZ')
 
         if fields[0] in data and fields[2] in data:
             axs[0].scatter(timestr, data[fields[0]])
