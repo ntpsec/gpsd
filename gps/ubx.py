@@ -20,8 +20,7 @@ try:
     import gps
 except ImportError:
     # PEP8 says local imports last
-    sys.stderr.write("%s: failed to import gps, check PYTHONPATH\n" %
-                     PROG_NAME)
+    sys.stderr.write("gps/ubx: failed to import gps, check PYTHONPATH\n")
     sys.exit(2)
 
 
@@ -6407,9 +6406,9 @@ High Precision GNSS products only."""
                 # check checksum
                 chk = self.checksum(m_raw, len(m_raw))
                 if (chk[0] != m_ck_a) or (chk[1] != m_ck_b):
-                    print("%s: ERROR checksum failed,"
+                    print("gps/ubx: ERROR checksum failed,"
                           "was (%d,%d) s/b (%d, %d)\n" %
-                          (PROG_NAME, m_ck_a, m_ck_b, chk[0], chk[1]))
+                          (m_ck_a, m_ck_b, chk[0], chk[1]))
 
                 s_payload = ''.join('{:02x} '.format(x) for x in m_payload)
                 x_payload = ','.join(['%02x' % x for x in m_payload])
@@ -6592,8 +6591,8 @@ High Precision GNSS products only."""
 
             # turn off >= 15 messages.  Yes this makes NAKs.
             m_data[2] = 0       # rate off
-            for id in ubx_15_nav_on:
-                m_data[1] = id
+            for idx in ubx_15_nav_on:
+                m_data[1] = idx
                 # UBX-CFG-MSG
                 self.gps_send(6, 1, m_data)
 
@@ -6677,17 +6676,17 @@ High Precision GNSS products only."""
 protver 15+ required for VELNED
 protver 20+, and HP GNSS, required for RELPOSNED"""
         if 15 > self.protver:
-            sys.stderr.write('%s: WARNING: protver %d too low for NED\n' %
-                             (PROG_NAME, self.protver))
+            sys.stderr.write('gps/ubx: WARNING: protver %d too low for NED\n' %
+                             (self.protver))
             return
 
         # set NAV-VELNED rate
         self.send_cfg_msg(1, 0x12, able)
 
         if 20 > self.protver:
-            sys.stderr.write('%s: WARNING: protver %d too low for '
+            sys.stderr.write('gps/ubx: WARNING: protver %d too low for '
                              'RELPOSNED\n' %
-                             (PROG_NAME, self.protver))
+                             (self.protver))
             return
 
         # set NAV-RELPOSNED rate
@@ -7068,12 +7067,11 @@ Always double check with "-p CFG-GNSS".
         """UBX-CFG-MSG, mandatory args: class, ID, optional rate"""
 
         if 0 == len(args):
-            sys.stderr.write('%s: ERROR: CFG-MSG missing class\n' %
-                             (PROG_NAME))
+            sys.stderr.write('gps/ubx: ERROR: CFG-MSG missing class\n')
             sys.exit(1)
         if 1 == len(args):
-            sys.stderr.write('%s: ERROR: CFG-MSG,x%x missing ID\n' %
-                             (PROG_NAME, args[0]))
+            sys.stderr.write('gps/ubx: ERROR: CFG-MSG,x%x missing ID\n' %
+                             (args[0]))
             sys.exit(1)
 
         if 2 < len(args):
@@ -7210,8 +7208,8 @@ Always double check with "-p CFG-GNSS".
             port = 1  # Default to port 1 (UART/UART_1)
 
         if port not in set([1, 2]):
-            sys.stderr.write('%s: Invalid UART port - %d\n' %
-                             (PROG_NAME, port))
+            sys.stderr.write('gps/ubx: Invalid UART port - %d\n' %
+                             (port))
             sys.exit(2)
 
         # FIXME!  Poll current masks, then adjust speed
@@ -7268,8 +7266,8 @@ Always double check with "-p CFG-GNSS".
 
         if layer is None:
             # blast them for now, should do one at a time...
-            for l in set([0, 1, 2, 7]):
-                m_data[1] = l
+            for lyr in set([0, 1, 2, 7]):
+                m_data[1] = lyr
                 self.gps_send(0x06, 0x8b, m_data)
         else:
             m_data[1] = layer
