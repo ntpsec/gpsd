@@ -10,14 +10,7 @@ class ubx
 
 from __future__ import absolute_import, print_function, division
 
-import argparse      # to parse CLI options
 import binascii      # for binascii.hexlify()
-from functools import reduce  # pylint: disable=redefined-builtin
-import operator      # for or_
-import os            # for os.environ
-import re            # for regular expressions
-import socket        # for socket.error
-import stat          # for stat.S_ISBLK()
 import string        # for string.printable
 import struct        # for pack()
 import sys
@@ -5612,7 +5605,6 @@ High Precision GNSS products only."""
         # undocuemnted.  Even more perverse than native subframes.
 
         u = struct.unpack_from('<BBBBBBBB', buf, 0)
-        svId = u[1]
         s = (' gnssId %u svId %3u reserved1 %u freqId %u numWords %u\n'
              '  chn %u version %u reserved2 %u\n' % u)
         s += '    dwrd'
@@ -6587,14 +6579,14 @@ High Precision GNSS products only."""
 
         # msgClass (UBX-NAV), msgID, rate
         m_data = bytearray([0x01, 0x09, rate])
-        for id in ubx_nav_toggle:
-            m_data[1] = id
+        for mid in ubx_nav_toggle:
+            m_data[1] = mid
             # UBX-CFG-MSG
             self.gps_send(6, 1, m_data)
 
         if 15 > self.protver:
-            for id in ubx_14_nav_on:
-                m_data[1] = id
+            for mid in ubx_14_nav_on:
+                m_data[1] = mid
                 # UBX-CFG-MSG
                 self.gps_send(6, 1, m_data)
 
@@ -6726,8 +6718,8 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
 
         # msgClass (UBX-NMEA), msgID, rate
         m_data = bytearray([0xf0, 0x09, rate])
-        for id in nmea_toggle:
-            m_data[1] = id
+        for mid in nmea_toggle:
+            m_data[1] = mid
             # UBX-CFG-MSG
             self.gps_send(6, 1, m_data)
 
@@ -6873,9 +6865,9 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         if able:
             # enable survey-in
             m_data[0] = 1
-            if args and len(args[0]):
+            if args and args[0]:
                 seconds = int(args[0])
-            if 1 < len(args) and len(args[1]):
+            if 1 < len(args) and args[1]:
                 mmeters = int(args[1])
 
         struct.pack_into('<LL', m_data, 20, seconds, mmeters)
@@ -6897,9 +6889,9 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         if able:
             # enable survey-in
             m_data[2] = 1
-            if args and len(args[0]):
+            if args and args[0]:
                 seconds = int(args[0])
-            if 1 < len(args) and len(args[1]):
+            if 1 < len(args) and args[1]:
                 mmeters = int(args[1])
 
         struct.pack_into('<LL', m_data, 24, seconds, mmeters)
@@ -7276,9 +7268,8 @@ Always double check with "-p CFG-GNSS".
 
         if layer is None:
             # blast them for now, should do one at a time...
-            layers = set([0, 1, 2, 7])
-            for layer in layers:
-                m_data[1] = layer
+            for l in set([0, 1, 2, 7]):
+                m_data[1] = l
                 self.gps_send(0x06, 0x8b, m_data)
         else:
             m_data[1] = layer
@@ -7304,7 +7295,7 @@ Always double check with "-p CFG-GNSS".
 
             item = self.cfg_by_name(name)
             key = item[1]
-            val_type = item[2]
+            # val_type = item[2]  # unused
 
             cfg_type = self.item_to_type(item)
 
@@ -7385,11 +7376,11 @@ Always double check with "-p CFG-GNSS".
         """UBX-LOG-STRING, send string to log"""
 
         if 0 < len(args):
-            string = args[0:256]
+            s = args[0:256]
         else:
-            string = "Hi"
+            s = "Hi"
 
-        m_data = gps.polybytes(string)
+        m_data = gps.polybytes(s)
         self.gps_send(0x21, 0x04, m_data)
 
     def send_poll(self, m_data):
