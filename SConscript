@@ -2530,12 +2530,17 @@ Utility("xmllint", glob.glob("man/*.xml"),
 
 # Use deheader to remove headers not required.  If the statistics line
 # ends with other than '0 removed' there's work to be done.
-Utility("deheader", generated_sources, [
+# https://gitlab.com/esr/deheader
+# deheader gets slightly confused, but is helpful.
+deheader = Utility("deheader", generated_sources, [
     'deheader -x cpp -x contrib -x libgps/gpspacket.c '
     '-x monitor_proto.c -i include/gpsd_config.h -i include/gpsd.h '
-    '-m "MORECFLAGS=\'-Werror -Wfatal-errors -DDEBUG \' '
-    + scons_executable_name + ' -Q"',
+    '-x %s -x .sconf_temp '
+    '-m "MORECFLAGS=\'-Werror -Wfatal-errors -DDEBUG \' %s +Q"' %
+    (variantdir, scons_executable_name,),
 ])
+env.Pseudo(deheader)
+env.Alias('deheader', deheader)
 
 # Perform all local code-sanity checks (but not the Coverity scan).
 audits = ['cppcheck',
