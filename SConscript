@@ -2525,8 +2525,12 @@ Utility("scan-build", ["include/gpsd.h", "include/packet_names.h"],
         "scan-build " + scons_executable_name)
 
 # Check the documentation for bogons, too
-Utility("xmllint", glob.glob("man/*.xml"),
-        "for xml in $SOURCES; do xmllint --nonet --noout --valid $$xml; done")
+# xmllint is part of the libxml2 package
+# do not test xml in doc/*xml as those are fragments, not complete xml
+xmllint = Utility("xmllint", [glob.glob("man/*xml"), glob.glob("www/*.xml")],
+    "for xml in $SOURCES; do xmllint --nonet --noout --valid $$xml; done")
+env.Pseudo(xmllint)
+env.Alias('xmllint', xmllint)
 
 # Use deheader to remove headers not required.  If the statistics line
 # ends with other than '0 removed' there's work to be done.
