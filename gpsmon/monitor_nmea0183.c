@@ -28,7 +28,9 @@ extern const struct gps_type_t driver_nmea0183;
 static WINDOW *cookedwin, *nmeawin, *satwin, *gprmcwin;
 static WINDOW *gpggawin, *gpgsawin, *gpgstwin;
 static timespec_t last_tick, tick_interval;
-static char sentences[NMEA_MAX * 2];
+// string to store the message types seen
+// 132 for no good reason, longer than the field it goes into
+static char sentences[132];
 
 /*****************************************************************************
  *
@@ -271,7 +273,7 @@ static void nmea_update(void)
             char *s_end = sentences + strlen(sentences);
             if ((int)(strlen(sentences) + strlen(fields[0])) < xmax - 2) {
                 *s_end++ = ' ';
-                (void)strlcpy(s_end, fields[0], NMEA_MAX);
+                (void)strlcpy(s_end, fields[0], sizeof(sentences));
             } else {
                 *--s_end = '.';
                 *--s_end = '.';
