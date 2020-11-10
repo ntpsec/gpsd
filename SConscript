@@ -2535,9 +2535,9 @@ Utility("xmllint", glob.glob("man/*.xml"),
 deheader = Utility("deheader", generated_sources, [
     'deheader -x cpp -x contrib -x libgps/gpspacket.c '
     '-x monitor_proto.c -i include/gpsd_config.h -i include/gpsd.h '
-    '-x %s -x .sconf_temp '
+    '-x %s/ -x %s/.sconf_temp '
     '-m "MORECFLAGS=\'-Werror -Wfatal-errors -DDEBUG \' %s +Q"' %
-    (variantdir, scons_executable_name,),
+    (variantdir, variantdir, scons_executable_name,),
 ])
 env.Pseudo(deheader)
 env.Alias('deheader', deheader)

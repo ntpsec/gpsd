@@ -11,7 +11,6 @@
 #include <assert.h>
 #include <math.h>
 #include <stdbool.h>
-#include <stdlib.h>
 #include <stdlib.h> /* for labs() */
 #include <string.h>
 #include <sys/time.h>

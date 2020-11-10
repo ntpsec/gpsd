@@ -14,7 +14,6 @@
 #include <stdint.h>   /* required by C99, for int32_t */
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
