@@ -885,7 +885,7 @@ char *json_quote(const char *in_buffer, char *out_buffer, size_t in_len,
 
         if (in_buffer[in_index] & 0x80) {
             // highbit set. assume unicode
-            to_copy = 0;
+            to_copy = 0;    // always reset before use, to shut up coverity
 
             // check in_len so we don't overrun in_buffer
             if ((in_len > (in_index + 1)) &&
