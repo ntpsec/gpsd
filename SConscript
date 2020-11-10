@@ -22,6 +22,13 @@ import time
 from distutils import sysconfig
 import SCons
 
+# scons does not like targets that come and go (if cleaning, if python,
+# etc). All targets are needed for proper cleaning. If a target should
+# not be built (if not python), then do not include the target in the
+# next layer sources.
+
+# scons gets confused by targets that are not a real file (shmclean, etc.).
+# Set them Pseudo (like in a Makefile) and use an Alias() for them.
 
 # Facilitate debugging with pdb.
 # At pdb startup, the environment is such that setting breakpoints in
@@ -1980,48 +1987,43 @@ if env["libgpsmm"] or cleaning:
     testprogs.append(test_gpsmm)
 
 # Python programs
-if not env['python'] or cleaning or helping:
-    python_misc = []
-    python_targets = []
+# python misc helpers and stuff
+python_misc = [
+    "gpscap.py",
+    "libgps/jsongen.py",
+    "maskaudit.py",
+    "tests/test_clienthelpers.py",
+    "tests/test_misc.py",
+    "tests/test_xgps_deps.py",
+    "valgrind-audit.py"
+]
+
+# Dependencies for imports in test programs
+env.Depends('tests/test_clienthelpers.py',
+            ['gps/__init__.py', 'gps/clienthelpers.py', 'gps/misc.py'])
+env.Depends('tests/test_misc.py', ['gps/__init__.py', 'gps/misc.py'])
+env.Depends('valgrind-audit.py', ['gps/__init__.py', 'gps/fake.py'])
+
+# Glob() has to be run after all buildable objects defined
+# FIXME: confirm this is true here.
+python_modules = Glob('gps/*.py', strings=True) + ['gps/__init__.py',
+                                                   'gps/gps.py',
+                                                   'gps/packet.py']
+
+# Remove the aiogps module if not configured
+# Don't use Glob's exclude option, since it may not be available
+if 'aiogps' in env and env['aiogps']:
+    python_misc.extend(["example_aiogps.py", "example_aiogps_run"])
 else:
-    # python misc helpers and stuff
-    python_misc = [
-        "gpscap.py",
-        "libgps/jsongen.py",
-        "maskaudit.py",
-        "tests/test_clienthelpers.py",
-        "tests/test_misc.py",
-        "tests/test_xgps_deps.py",
-        "valgrind-audit.py"
-    ]
+    try:
+        python_modules.remove('gps/aiogps.py')
+    except ValueError:
+        pass
 
-    # Dependencies for imports in test programs
-    env.Depends('tests/test_clienthelpers.py',
-                ['gps/__init__.py', 'gps/clienthelpers.py', 'gps/misc.py'])
-    env.Depends('tests/test_misc.py', ['gps/__init__.py', 'gps/misc.py'])
-    env.Depends('valgrind-audit.py', ['gps/__init__.py', 'gps/fake.py'])
-
-    if not helping and env['aiogps']:
-        python_misc.extend(["example_aiogps.py", "example_aiogps_run"])
-
-    # Glob() has to be run after all buildable objects defined
-    # FIXME: confirm this is true here.
-    python_modules = Glob('gps/*.py', strings=True) + ['gps/__init__.py',
-                                                       'gps/gps.py',
-                                                       'gps/packet.py']
-
-    # Remove the aiogps module if not configured
-    # Don't use Glob's exclude option, since it may not be available
-    if helping or not env['aiogps']:
-        try:
-            python_modules.remove('gps/aiogps.py')
-        except ValueError:
-            pass
-
-    # Make PEP 241 Metadata 1.0.
-    # Why not PEP 314 (V1.1) or PEP 345 (V1.2)?
-    # V1.1 and V1.2 require a Download-URL to an installable binary
-    python_egg_info_source = """Metadata-Version: 1.0
+# Make PEP 241 Metadata 1.0.
+# Why not PEP 314 (V1.1) or PEP 345 (V1.2)?
+# V1.1 and V1.2 require a Download-URL to an installable binary
+python_egg_info_source = """Metadata-Version: 1.0
 Name: gps
 Version: %s
 Summary: Python libraries for the gpsd service daemon
@@ -2035,10 +2037,9 @@ connected to a host computer, making all data on the location and movements \
 of the sensors available to be queried on TCP port 2947.
 Platform: UNKNOWN
 """ % (gpsd_version, website, devmail)
-    python_egg_info = env.Textfile(target="gps-%s.egg-info" % (gpsd_version, ),
-                                   source=python_egg_info_source)
-    python_targets = ([python_egg_info] +
-                      python_progs + python_modules)
+python_egg_info = env.Textfile(target="gps-%s.egg-info" % (gpsd_version, ),
+                               source=python_egg_info_source)
+python_targets = ([python_egg_info] + python_progs + python_modules)
 
 
 env.Command(target="include/packet_names.h", source="include/packet_states.h",
@@ -2319,10 +2320,11 @@ if have_dia:
 
 # Where it all comes together
 
-build = env.Alias('build',
-                  [libraries, sbin_binaries, bin_binaries, python_targets,
-                   "clients/gpsd.php", manpage_targets, webpages,
-                   "libgps.pc", "gpsd.rules"])
+build_src = [libraries, sbin_binaries, bin_binaries, "clients/gpsd.php",
+             manpage_targets, webpages, "libgps.pc", "gpsd.rules" ]
+if env['python']:
+    build_src.append(python_targets)
+build = env.Alias('build', build_src)
 
 if [] == COMMAND_LINE_TARGETS:
     # 'build' is default target
@@ -2365,97 +2367,95 @@ if ((not env['debug'] and not env['debug_opt'] and not env['profiling']
      and not env['nostrip'] and not sys.platform.startswith('darwin'))):
     env.AddPostAction(binaryinstall, '$STRIP $TARGET')
 
-if env['python'] and not cleaning and not helping:
-    python_module_dir = str(python_libdir) + os.sep + 'gps'
+python_module_dir = str(python_libdir) + os.sep + 'gps'
 
-    python_modules_install = env.Install(DESTDIR + python_module_dir,
-                                         python_modules)
+python_modules_install = env.Install(DESTDIR + python_module_dir,
+                                     python_modules)
 
-    python_progs_install = env.Install(installdir('bindir'), python_progs)
+python_progs_install = env.Install(installdir('bindir'), python_progs)
 
-    python_egg_info_install = env.Install(DESTDIR + str(python_libdir),
-                                          python_egg_info)
-    python_install = [python_modules_install,
-                      python_progs_install,
-                      python_egg_info_install,
-                      # We don't need the directory explicitly for the
-                      # install, but we do need it for the uninstall
-                      Dir(DESTDIR + python_module_dir)]
+python_egg_info_install = env.Install(DESTDIR + str(python_libdir),
+                                      python_egg_info)
+python_install = [python_modules_install,
+                  python_progs_install,
+                  python_egg_info_install,
+                  # We don't need the directory explicitly for the
+                  # install, but we do need it for the uninstall
+                  Dir(DESTDIR + python_module_dir)]
 
-    # Check that Python modules compile properly
-    # FIXME: why not install some of the .pyc?
+# Check that Python modules compile properly
+# FIXME: why not install some of the .pyc?
+if env['python']:
     python_all = python_misc + python_modules + python_progs + ['SConstruct']
-    check_compile = []
-    for p in python_all:
-        # split in two lines for readability
-        check_compile.append(
-            'cp %s/%s tmp.py; %s -tt -m py_compile tmp.py;' %
-            (variantdir, p, target_python_path))
-        # tmp.py may have inherited non-writable permissions
-        check_compile.append('rm -f tmp.py*')
-
-    python_compilation_regress = Utility('python-compilation-regress',
-                                         python_all, check_compile)
-    env.Pseudo(python_compilation_regress)
-
-    # Sanity-check Python code.
-    # Bletch.  We don't really want to suppress W0231 E0602 E0611 E1123,
-    # but Python 3 syntax confuses a pylint running under Python 2.
-    # There's an internal error in astroid that requires we disable some
-    # auditing. This is irritating as hell but there's no help for it short
-    # of an upstream fix.
-    python_lint = python_misc + python_modules + python_progs + ['SConstruct']
-
-    pylint = Utility(
-        "pylint", python_lint,
-        ['''pylint --rcfile=/dev/null --dummy-variables-rgx='^_' '''
-         '''--msg-template='''
-         '''"{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" '''
-         '''--reports=n --disable=F0001,C0103,C0111,C1001,C0301,C0122,C0302,'''
-         '''C0322,C0324,C0323,C0321,C0330,C0411,C0413,E1136,R0201,R0204,'''
-         '''R0801,'''
-         '''R0902,R0903,R0904,R0911,R0912,R0913,R0914,R0915,W0110,W0201,'''
-         '''W0121,W0123,W0231,W0232,W0234,W0401,W0403,W0141,W0142,W0603,'''
-         '''W0614,W0640,W0621,W1504,E0602,E0611,E1101,E1102,E1103,E1123,'''
-         '''F0401,I0011 ''' + " ".join(python_lint)])
-
-    # Additional Python readability style checks
-    pep8 = Utility("pep8", python_lint,
-                   ['pycodestyle --ignore=W602,E122,E241 ' +
-                    " ".join(python_lint)])
-
-    flake8 = Utility("flake8", python_lint,
-                     ['flake8 --ignore=E501,W602,E122,E241,E401 ' +
-                      " ".join(python_lint)])
-
-    # get version from each python prog
-    # this ensures they can run and gps_versions match
-    vchk = ''
-    verenv = env['ENV'].copy()
-    verenv['DISPLAY'] = ''  # Avoid launching X11 in X11 progs
-    verenv['PYTHONPATH'] = env['SRCDIR']  # Use new gps module, not system's
-    pp = []
-    for p in python_progs:
-        if not env['xgps_deps']:
-            if p in ['clients/xgps', 'clients/xgpsspeed']:
-                # do not have xgps* dependencies, don't test
-                # FIXME: make these do -V w/o dependencies.
-                continue
-        # need to run in variantdir to:
-        #     find libgpsdpacket
-        #     gps module in pwd trumps the one in PYTHONPATH
-        tgt = Utility(
-            'version-%s' % p, p,
-            'cd %s; $PYTHON %s -V' % (variantdir, p),
-            ENV=verenv)
-        env.Pseudo(tgt)
-        pp.append(tgt)
-    python_versions = env.Alias('python-versions', pp)
-
 else:
-    python_install = []
-    python_compilation_regress = None
-    python_versions = None
+    python_all = None
+python_lint = python_all
+
+check_compile = []
+for p in python_all:
+    # split in two lines for readability
+    check_compile.append(
+        'cp %s/%s tmp.py; %s -tt -m py_compile tmp.py;' %
+        (variantdir, p, target_python_path))
+    # tmp.py may have inherited non-writable permissions
+    check_compile.append('rm -f tmp.py*')
+
+python_compilation_regress = Utility('python-compilation-regress',
+                                     python_all, check_compile)
+env.Pseudo(python_compilation_regress)
+
+# Sanity-check Python code.
+# Bletch.  We don't really want to suppress W0231 E0602 E0611 E1123,
+# but Python 3 syntax confuses a pylint running under Python 2.
+# There's an internal error in astroid that requires we disable some
+# auditing. This is irritating as hell but there's no help for it short
+# of an upstream fix.
+
+pylint = Utility(
+    "pylint", python_lint,
+    ['''pylint --rcfile=/dev/null --dummy-variables-rgx='^_' '''
+     '''--msg-template='''
+     '''"{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" '''
+     '''--reports=n --disable=F0001,C0103,C0111,C1001,C0301,C0122,C0302,'''
+     '''C0322,C0324,C0323,C0321,C0330,C0411,C0413,E1136,R0201,R0204,'''
+     '''R0801,'''
+     '''R0902,R0903,R0904,R0911,R0912,R0913,R0914,R0915,W0110,W0201,'''
+     '''W0121,W0123,W0231,W0232,W0234,W0401,W0403,W0141,W0142,W0603,'''
+     '''W0614,W0640,W0621,W1504,E0602,E0611,E1101,E1102,E1103,E1123,'''
+     '''F0401,I0011 ''' + " ".join(python_lint)])
+
+# Additional Python readability style checks
+pep8 = Utility("pep8", python_lint,
+               ['pycodestyle --ignore=W602,E122,E241 ' +
+                " ".join(python_lint)])
+
+flake8 = Utility("flake8", python_lint,
+                 ['flake8 --ignore=E501,W602,E122,E241,E401 ' +
+                  " ".join(python_lint)])
+
+# get version from each python prog
+# this ensures they can run and gps_versions match
+vchk = ''
+verenv = env['ENV'].copy()
+verenv['DISPLAY'] = ''  # Avoid launching X11 in X11 progs
+verenv['PYTHONPATH'] = env['SRCDIR']  # Use new gps module, not system's
+pp = []
+for p in python_progs:
+    if not env['xgps_deps']:
+        if p in ['clients/xgps', 'clients/xgpsspeed']:
+            # do not have xgps* dependencies, don't test
+            # FIXME: make these do -V w/o dependencies.
+            continue
+    # need to run in variantdir to:
+    #     find libgpsdpacket
+    #     gps module in pwd trumps the one in PYTHONPATH
+    tgt = Utility(
+        'version-%s' % p, p,
+        'cd %s; $PYTHON %s -V' % (variantdir, p),
+        ENV=verenv)
+    env.Pseudo(tgt)
+    pp.append(tgt)
+python_versions = env.Alias('python-versions', pp)
 
 pc_install = [env.Install(installdir('pkgconfig'), 'libgps.pc')]
 if qt_env:
@@ -2470,8 +2470,11 @@ for icon in icon_files:
     docinstall.append(env.InstallAs(source=icon, target=dest_icon))
 
 # and now we know everything to install
-install = env.Alias('install', binaryinstall + maninstall + python_install +
-                    pc_install + headerinstall + docinstall)
+install_src = (binaryinstall + maninstall + pc_install + headerinstall + docinstall)
+if env['python']:
+    install_src.append(python_install)
+
+install = env.Alias('install', install_src)
 
 
 def Uninstall(nodes):
@@ -2766,34 +2769,30 @@ time_regress = Utility('time-regress', [test_mktime], [
 ])
 env.Pseudo(time_regress)
 
-if not env['python'] or cleaning or helping:
-    unpack_regress = None
-    misc_regress = None
-else:
-    # Regression test the unpacking code in libgps
-    # the log files must be dependencies so they get copied into variant_dir
-    clientlib_logs = ['test/clientlib/multipacket.log',
-                      'test/clientlib/multipacket.log.chk']
-    unpack_regress = UtilityWithHerald(
-        'Testing the client-library sentence decoder...',
-        'unpack-regress', [test_libgps, 'regress-driver', clientlib_logs], [
-            '$SRCDIR/regress-driver $REGRESSOPTS -c'
-            ' $SRCDIR/test/clientlib/*.log', ])
-    env.Pseudo(unpack_regress)
-    # Unit-test the bitfield extractor
-    # PYTHONPATH to help find the new copy of gps module
-    verenv = env['ENV'].copy()
-    verenv['PYTHONPATH'] = env['SRCDIR']  # Use new gps module, not system's
-    misc_regress = Utility('misc-regress', [
-        'tests/test_clienthelpers.py',
-        'tests/test_misc.py',
-        ], [
-        'cd %s; %s tests/test_clienthelpers.py' %
-        (variantdir, target_python_path),
-        'cd %s; %s tests/test_misc.py' % (variantdir, target_python_path),
-        ],
-        ENV=verenv)
-    env.Pseudo(misc_regress)
+# Regression test the unpacking code in libgps
+# the log files must be dependencies so they get copied into variant_dir
+clientlib_logs = ['test/clientlib/multipacket.log',
+                  'test/clientlib/multipacket.log.chk']
+unpack_regress = UtilityWithHerald(
+    'Testing the client-library sentence decoder...',
+    'unpack-regress', [test_libgps, 'regress-driver', clientlib_logs], [
+        '$SRCDIR/regress-driver $REGRESSOPTS -c'
+        ' $SRCDIR/test/clientlib/*.log', ])
+env.Pseudo(unpack_regress)
+# Unit-test the bitfield extractor
+# PYTHONPATH to help find the new copy of gps module
+verenv = env['ENV'].copy()
+verenv['PYTHONPATH'] = env['SRCDIR']  # Use new gps module, not system's
+misc_regress = Utility('misc-regress', [
+    'tests/test_clienthelpers.py',
+    'tests/test_misc.py',
+    ], [
+    'cd %s; %s tests/test_clienthelpers.py' %
+    (variantdir, target_python_path),
+    'cd %s; %s tests/test_misc.py' % (variantdir, target_python_path),
+    ],
+    ENV=verenv)
+env.Pseudo(misc_regress)
 
 
 # Build the regression test for the sentence unpacker
@@ -2875,17 +2874,19 @@ test_nondaemon = [
     json_regress,
     matrix_regress,
     method_regress,
-    misc_regress,
     packet_regress,
-    python_compilation_regress,
-    python_versions,
     rtcm_regress,
     test_xgps_deps,
     time_regress,
     timespec_regress,
     # trig_regress,  # not ready
-    unpack_regress,
 ]
+if env['python']:
+    test_nondaemon.append(misc_regress)
+    test_nondaemon.append(python_compilation_regress)
+    test_nondaemon.append(python_versions)
+    test_nondaemon.append(unpack_regress)
+
 if env['socket_export']:
     test_nondaemon.append(test_json)
 if env['libgpsmm']:
@@ -2905,15 +2906,17 @@ build_all = env.Alias('build-all', build + testprogs)
 
 # Remove all shared-memory segments.  Normally only needs to be run
 # when a segment size changes.
-Utility('shmclean', [], ["ipcrm  -M 0x4e545030;"
-                         "ipcrm  -M 0x4e545031;"
-                         "ipcrm  -M 0x4e545032;"
-                         "ipcrm  -M 0x4e545033;"
-                         "ipcrm  -M 0x4e545034;"
-                         "ipcrm  -M 0x4e545035;"
-                         "ipcrm  -M 0x4e545036;"
-                         "ipcrm  -M 0x47505345;"
-                         ])
+shmclean = Utility('shmclean', [], ["ipcrm  -M 0x4e545030;"
+                                    "ipcrm  -M 0x4e545031;"
+                                    "ipcrm  -M 0x4e545032;"
+                                    "ipcrm  -M 0x4e545033;"
+                                    "ipcrm  -M 0x4e545034;"
+                                    "ipcrm  -M 0x4e545035;"
+                                    "ipcrm  -M 0x4e545036;"
+                                    "ipcrm  -M 0x47505345;"
+                                    ])
+env.Pseudo(shmclean)
+env.Alias('shmclean', shmclean)
 
 # The website directory
 #
