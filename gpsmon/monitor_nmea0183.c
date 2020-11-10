@@ -231,6 +231,20 @@ static void monitor_satlist(WINDOW *win, int y, int x)
     monitor_fixframe(win);
 }
 
+/* sort the skyviews
+ * Used = Y first, then used = N
+ * then sort by PRN
+ */
+static int sat_cmp(const void *p1, const void *p2)
+{
+
+   if ( ((struct satellite_t*)p2)->used - ((struct satellite_t*)p1)->used ) {
+        return ((struct satellite_t*)p2)->used -
+                ((struct satellite_t*)p1)->used;
+   }
+   return ((struct satellite_t*)p1)->PRN - ((struct satellite_t*)p2)->PRN;
+}
+
 static void nmea_update(void)
 {
     char **fields;
@@ -286,11 +300,15 @@ static void nmea_update(void)
         }
         last_tick = now;
 
+        // this is a fake, GSV not decoded here, using sats from JSON
         if (4 < strlen(fields[0]) && 0 == strcmp(fields[0] + 2, "GSV")) {
             int i;
             int nsats =
                 (session.gpsdata.satellites_visible <
                  MAXSATS) ? session.gpsdata.satellites_visible : MAXSATS;
+            // sort, so at least we see used.
+            qsort(session.gpsdata.skyview, session.gpsdata.satellites_visible,
+                  sizeof( struct satellite_t), sat_cmp);
             for (i = 0; i < nsats; i++) {
                 // FIXME: gnssid and svid to string s/b common to all monitors.
                 char *gnssid = "  ";
@@ -349,6 +367,7 @@ static void nmea_update(void)
                               session.gpsdata.skyview[i].used ? 'Y' : 'N'
                              );
             }
+            // clear the rest of the sat lines
             // use i from above loop
             for (; i < MAXSATS; i++)
                 (void)mvwprintw(satwin, i+2, 1, "                       ");
