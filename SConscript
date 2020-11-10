@@ -2520,9 +2520,12 @@ scons_executable_name = os.path.basename(sys.argv[0])
 if not scons_executable_name:
     scons_executable_name = "scons"
 
-# Check with clang analyzer
-Utility("scan-build", ["include/gpsd.h", "include/packet_names.h"],
-        "scan-build " + scons_executable_name)
+# Check with scan-build, an analyzer, part of clang
+scan_build = Utility("scan-build",
+                     ["include/gpsd.h", "include/packet_names.h"],
+                     "scan-build " + scons_executable_name)
+env.Pseudo(scan_build)
+env.Alias('scan_build', scan_build)
 
 # Check the documentation for bogons, too
 # xmllint is part of the libxml2 package
