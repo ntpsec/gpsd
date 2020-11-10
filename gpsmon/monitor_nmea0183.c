@@ -349,9 +349,9 @@ static void nmea_update(void)
                               session.gpsdata.skyview[i].used ? 'Y' : 'N'
                              );
             }
-            if (atoi(fields[3]) < MAXSATS) /* clear no more valid sats */
-                for (i = atoi(fields[3]); i < MAXSATS; i++)
-                    (void)mvwprintw(satwin, i+2, 1, "                       ");
+            // use i from above loop
+            for (; i < MAXSATS; i++)
+                (void)mvwprintw(satwin, i+2, 1, "                       ");
             /* add overflow mark to the display */
             if (session.gpsdata.satellites_visible <= MAXSATS)
                 (void)mvwaddch(satwin, MAXSATS + 2, 4, ACS_HLINE);
