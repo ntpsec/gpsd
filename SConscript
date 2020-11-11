@@ -2412,7 +2412,7 @@ env.Pseudo(python_compilation_regress)
 # of an upstream fix.
 
 pylint = Utility("pylint", python_lint,
-    ['pylint --rcfile=/dev/null --dummy-variables-rgx='^_' '
+    ['pylint --rcfile=/dev/null --dummy-variables-rgx=\'^_\' '
      '--msg-template='
      '"{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" '
      '--reports=n --disable=F0001,C0103,C0111,C1001,C0301,C0122,C0302,'
