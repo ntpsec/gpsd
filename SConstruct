@@ -54,7 +54,6 @@ variantdir = 'gpsd-' + gpsd_version
 # one touch clean!
 # also, for brutal effect, you can do: git clean -dfx
 if GetOption('clean'):
-    # FIXME: remove .tar.gz, .tar.xz and .zip
     atexit.register(lambda: os.system("rm -rf %s" % variantdir))
 
 # Not everything respects this  chdir()

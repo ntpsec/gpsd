@@ -2383,14 +2383,14 @@ python_install = [python_modules_install,
                   # install, but we do need it for the uninstall
                   Dir(DESTDIR + python_module_dir)]
 
+python_lint = python_misc + python_modules + python_progs + ['SConstruct']
+if env['python']:
+    python_all = python_lint
+else:
+    python_all = []
+
 # Check that Python modules compile properly
 # FIXME: why not install some of the .pyc?
-if env['python']:
-    python_all = python_misc + python_modules + python_progs + ['SConstruct']
-else:
-    python_all = None
-python_lint = python_all
-
 check_compile = []
 for p in python_all:
     # split in two lines for readability
@@ -2411,27 +2411,32 @@ env.Pseudo(python_compilation_regress)
 # auditing. This is irritating as hell but there's no help for it short
 # of an upstream fix.
 
-pylint = Utility(
-    "pylint", python_lint,
-    ['''pylint --rcfile=/dev/null --dummy-variables-rgx='^_' '''
-     '''--msg-template='''
-     '''"{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" '''
-     '''--reports=n --disable=F0001,C0103,C0111,C1001,C0301,C0122,C0302,'''
-     '''C0322,C0324,C0323,C0321,C0330,C0411,C0413,E1136,R0201,R0204,'''
-     '''R0801,'''
-     '''R0902,R0903,R0904,R0911,R0912,R0913,R0914,R0915,W0110,W0201,'''
-     '''W0121,W0123,W0231,W0232,W0234,W0401,W0403,W0141,W0142,W0603,'''
-     '''W0614,W0640,W0621,W1504,E0602,E0611,E1101,E1102,E1103,E1123,'''
-     '''F0401,I0011 ''' + " ".join(python_lint)])
+pylint = Utility("pylint", python_lint,
+    ['pylint --rcfile=/dev/null --dummy-variables-rgx='^_' '
+     '--msg-template='
+     '"{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" '
+     '--reports=n --disable=F0001,C0103,C0111,C1001,C0301,C0122,C0302,'
+     'C0322,C0324,C0323,C0321,C0330,C0411,C0413,E1136,R0201,R0204,'
+     'R0801,'
+     'R0902,R0903,R0904,R0911,R0912,R0913,R0914,R0915,W0110,W0201,'
+     'W0121,W0123,W0231,W0232,W0234,W0401,W0403,W0141,W0142,W0603,'
+     'W0614,W0640,W0621,W1504,E0602,E0611,E1101,E1102,E1103,E1123,'
+     'F0401,I0011 $SOURCES'])
+env.Pseudo(pylint)
+env.Alias('pylint', pylint)
 
 # Additional Python readability style checks
 pep8 = Utility("pep8", python_lint,
-               ['pycodestyle --ignore=W602,E122,E241 ' +
-                " ".join(python_lint)])
+               ['pycodestyle --ignore=W602,E122,E241 $SOURCES'])
+env.Pseudo(pep8)
+env.Alias('pep8', pep8)
+# pep8 was renamed to pycodestyle, same thing
+env.Alias('pycodestyle', pep8)
 
 flake8 = Utility("flake8", python_lint,
-                 ['flake8 --ignore=E501,W602,E122,E241,E401 ' +
-                  " ".join(python_lint)])
+                 ['flake8 --ignore=E501,W602,E122,E241,E401 $SOURCES'])
+env.Pseudo(flake8)
+env.Alias('flake8', flake8)
 
 # get version from each python prog
 # this ensures they can run and gps_versions match
@@ -2470,9 +2475,8 @@ for icon in icon_files:
     docinstall.append(env.InstallAs(source=icon, target=dest_icon))
 
 # and now we know everything to install
-install_src = (binaryinstall + maninstall + pc_install + headerinstall + docinstall)
-if env['python']:
-    install_src.append(python_install)
+install_src = (binaryinstall + maninstall + pc_install + headerinstall +
+               docinstall +python_install)
 
 install = env.Alias('install', install_src)
 
@@ -2499,20 +2503,20 @@ env.Precious(uninstall)
 def error_action(target, source, env):
     raise SCons.Error.UserError("Target selection for '.' is broken.")
 
-
 AlwaysBuild(Alias(".", [], error_action))
-
 
 # Putting in all these -U flags speeds up cppcheck and allows it to look
 # at configurations we actually care about.
-Utility("cppcheck", ["include/gpsd.h", "include/packet_names.h"],
-        "cppcheck -U__UNUSED__ -UUSE_QT -U__COVERITY__ -U__future__ "
-        "-ULIMITED_MAX_CLIENTS -ULIMITED_MAX_DEVICES -UAF_UNSPEC -UINADDR_ANY "
-        "-U_WIN32 -U__CYGWIN__ "
-        "-UPATH_MAX -UHAVE_STRLCAT -UHAVE_STRLCPY -UIPTOS_LOWDELAY "
-        "-UIPV6_TCLASS -UTCP_NODELAY -UTIOCMIWAIT --template gcc "
-        "--enable=all --inline-suppr --suppress='*:driver_proto.c' "
-        "--force $SRCDIR")
+cppcheck = Utility("cppcheck", ["include/gpsd.h", "include/packet_names.h"],
+                   "cppcheck -U__UNUSED__ -UUSE_QT -U__COVERITY__ -U__future__ "
+                   "-ULIMITED_MAX_CLIENTS -ULIMITED_MAX_DEVICES -UAF_UNSPEC "
+                   "-UINADDR_ANY -U_WIN32 -U__CYGWIN__ "
+                   "-UPATH_MAX -UHAVE_STRLCAT -UHAVE_STRLCPY -UIPTOS_LOWDELAY "
+                   "-UIPV6_TCLASS -UTCP_NODELAY -UTIOCMIWAIT --template gcc "
+                   "--enable=all --inline-suppr --suppress='*:driver_proto.c' "
+                   "--force $SRCDIR")
+env.Pseudo(cppcheck)
+env.Alias('cppcheck', cppcheck)
 
 # By user choice, or due to system-dependent availability, the scons
 # executable may be called using names other than plain "scons",
@@ -2553,15 +2557,14 @@ env.Pseudo(deheader)
 env.Alias('deheader', deheader)
 
 # Perform all local code-sanity checks (but not the Coverity scan).
-audits = ['cppcheck',
-          'pylint',
+audits = [cppcheck,
+          pylint,
           'valgrind-audit',
           'xmllint',
           ]
 if have_scan_build:
     audits.append('scan-build')
-
-audit = env.Alias('audit', audits)
+env.Alias('audit', audits)
 
 # Regression tests begin here
 #
@@ -3109,7 +3112,7 @@ env.Alias('testbuild', [testbuild])
 releasecheck = env.Alias('releasecheck', [
     testbuild,
     check,
-    audit,
+    audits,
     flocktest,
 ])
 
