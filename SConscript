@@ -918,7 +918,13 @@ if cleaning or helping:
     tiocmiwait = True  # For cleaning, which works on any OS
     usbflags = []
     have_dia = False
+    have_cppcheck = False
+    have_flake8 = False
+    have_pycodestyle = False
+    have_pylint = False
     have_scan_build = False
+    have_valgrind = False
+    have_xmllint = False
 else:
 
     # OS X aliases gcc to clang
@@ -1419,17 +1425,35 @@ else:
 
     # check for misc audit programs
     try:
+        have_cppcheck = config.CheckProg('cppcheck')
         have_dia = config.CheckProg('dia')
+        have_flake8 = config.CheckProg('flake8')
+        have_pycodestyle = config.CheckProg('pycodestyle')
+        have_pylint = config.CheckProg('pylint')
         have_scan_build = config.CheckProg('scan_build')
+        have_valgrind = config.CheckProg('valgrind')
+        have_xmllint = config.CheckProg('xmllint')
     except AttributeError:
         # scons versions before Sep 2015 (2.4.0) don't have CheckProg
         # gpsd only asks for 2.3.0 or higher
         announce("scons CheckProg() failed..")
 
+    if not have_cppcheck:
+        announce("Program cppcheck not found -- skipping cppcheck checks")
     if not have_dia:
         announce("Program dia not found -- not rebuiding cycle.svg.")
+    if not have_flake8:
+        announce("Program flake8 not found -- skipping flake8 checks")
+    if not have_pycodestyle:
+        announce("Program pycodestyle not found -- skipping pycodestyle checks")
+    if not have_pylint:
+        announce("Program pylint not found -- skipping pylint checks")
     if not have_scan_build:
         announce("Program scan-build not found -- skipping scan-build checks")
+    if not have_valgrind:
+        announce("Program valgrind not found -- skipping valgrind checks")
+    if not have_xmllint:
+        announce("Program xmllint not found -- skipping xmllint checks")
 
 
 # Set up configuration for target Python
@@ -1447,20 +1471,18 @@ config.env['xgps_deps'] = False
 
 python_config = {}  # Dummy for all non-Python-build cases
 
-if cleaning or helping:
-    # If helping just get usable config info from the local Python
-    target_python_path = ''
-    py_config_text = str(eval(PYTHON_CONFIG_CALL))
-    python_libdir = str(eval(PYTHON_LIBDIR_CALL))
-    config.env['xgps_deps'] = False
+target_python_path = ''
+py_config_text = str(eval(PYTHON_CONFIG_CALL))
+python_libdir = str(eval(PYTHON_LIBDIR_CALL))
+config.env['xgps_deps'] = False
 
-elif config.env['python']:
+if config.env['python']:
     target_python_path = None
     if config.env['target_python']:
         try:
             config.CheckProg
         except AttributeError:
-            # scons versions before Sep 2015 (2.4.0) don't have CheckProg
+            # scons versions before Nov 2015 (2.4.1) don't have CheckProg
             # gpsd only asks for 2.3.0 or higher
             target_python_path = config.env['target_python']
         else:
@@ -1987,7 +2009,7 @@ if env["libgpsmm"] or cleaning:
     testprogs.append(test_gpsmm)
 
 # Python programs
-# python misc helpers and stuff
+# python misc helpers and stuff, not to be installed
 python_misc = [
     "gpscap.py",
     "libgps/jsongen.py",
@@ -2404,40 +2426,6 @@ python_compilation_regress = Utility('python-compilation-regress',
                                      python_all, check_compile)
 env.Pseudo(python_compilation_regress)
 
-# Sanity-check Python code.
-# Bletch.  We don't really want to suppress W0231 E0602 E0611 E1123,
-# but Python 3 syntax confuses a pylint running under Python 2.
-# There's an internal error in astroid that requires we disable some
-# auditing. This is irritating as hell but there's no help for it short
-# of an upstream fix.
-
-pylint = Utility("pylint", python_lint,
-    ['pylint --rcfile=/dev/null --dummy-variables-rgx=\'^_\' '
-     '--msg-template='
-     '"{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" '
-     '--reports=n --disable=F0001,C0103,C0111,C1001,C0301,C0122,C0302,'
-     'C0322,C0324,C0323,C0321,C0330,C0411,C0413,E1136,R0201,R0204,'
-     'R0801,'
-     'R0902,R0903,R0904,R0911,R0912,R0913,R0914,R0915,W0110,W0201,'
-     'W0121,W0123,W0231,W0232,W0234,W0401,W0403,W0141,W0142,W0603,'
-     'W0614,W0640,W0621,W1504,E0602,E0611,E1101,E1102,E1103,E1123,'
-     'F0401,I0011 $SOURCES'])
-env.Pseudo(pylint)
-env.Alias('pylint', pylint)
-
-# Additional Python readability style checks
-pep8 = Utility("pep8", python_lint,
-               ['pycodestyle --ignore=W602,E122,E241 $SOURCES'])
-env.Pseudo(pep8)
-env.Alias('pep8', pep8)
-# pep8 was renamed to pycodestyle, same thing
-env.Alias('pycodestyle', pep8)
-
-flake8 = Utility("flake8", python_lint,
-                 ['flake8 --ignore=E501,W602,E122,E241,E401 $SOURCES'])
-env.Pseudo(flake8)
-env.Alias('flake8', flake8)
-
 # get version from each python prog
 # this ensures they can run and gps_versions match
 vchk = ''
@@ -2505,8 +2493,22 @@ def error_action(target, source, env):
 
 AlwaysBuild(Alias(".", [], error_action))
 
+#
+# start audit checks section
+#
+
+# By user choice, or due to system-dependent availability, the scons
+# executable may be called using names other than plain "scons",
+# e.g. "scons-3" on CentOS 8.
+# Try to make "scan-build" and "deheader" targets call the same scons
+# executable that is currently executing this SConstruct.
+scons_executable_name = os.path.basename(sys.argv[0])
+if not scons_executable_name:
+    scons_executable_name = "scons"
+
 # Putting in all these -U flags speeds up cppcheck and allows it to look
 # at configurations we actually care about.
+# https://github.com/danmar/cppcheck
 cppcheck = Utility("cppcheck", ["include/gpsd.h", "include/packet_names.h"],
                    "cppcheck -U__UNUSED__ -UUSE_QT -U__COVERITY__ -U__future__ "
                    "-ULIMITED_MAX_CLIENTS -ULIMITED_MAX_DEVICES -UAF_UNSPEC "
@@ -2518,34 +2520,10 @@ cppcheck = Utility("cppcheck", ["include/gpsd.h", "include/packet_names.h"],
 env.Pseudo(cppcheck)
 env.Alias('cppcheck', cppcheck)
 
-# By user choice, or due to system-dependent availability, the scons
-# executable may be called using names other than plain "scons",
-# e.g. "scons-3" on CentOS 8.
-# Try to make "scan-build" and "deheader" targets call the same scons
-# executable that is currently executing this SConstruct.
-scons_executable_name = os.path.basename(sys.argv[0])
-if not scons_executable_name:
-    scons_executable_name = "scons"
-
-# Check with scan-build, an analyzer, part of clang
-scan_build = Utility("scan-build",
-                     ["include/gpsd.h", "include/packet_names.h"],
-                     "scan-build " + scons_executable_name)
-env.Pseudo(scan_build)
-env.Alias('scan_build', scan_build)
-
-# Check the documentation for bogons, too
-# xmllint is part of the libxml2 package
-# do not test xml in doc/*xml as those are fragments, not complete xml
-xmllint = Utility("xmllint", [glob.glob("man/*xml"), glob.glob("www/*.xml")],
-    "for xml in $SOURCES; do xmllint --nonet --noout --valid $$xml; done")
-env.Pseudo(xmllint)
-env.Alias('xmllint', xmllint)
-
 # Use deheader to remove headers not required.  If the statistics line
 # ends with other than '0 removed' there's work to be done.
 # https://gitlab.com/esr/deheader
-# deheader gets slightly confused, but is helpful.
+# deheader gets slightly confused, so is not part of audits, but is helpful.
 deheader = Utility("deheader", generated_sources, [
     'deheader -x cpp -x contrib -x libgps/gpspacket.c '
     '-x monitor_proto.c -i include/gpsd_config.h -i include/gpsd.h '
@@ -2556,15 +2534,84 @@ deheader = Utility("deheader", generated_sources, [
 env.Pseudo(deheader)
 env.Alias('deheader', deheader)
 
-# Perform all local code-sanity checks (but not the Coverity scan).
-audits = [cppcheck,
-          pylint,
-          'valgrind-audit',
-          'xmllint',
-          ]
+flake8 = Utility("flake8", python_lint,
+                 ['flake8 --ignore=E501,W602,E122,E241,E401 $SOURCES'])
+env.Pseudo(flake8)
+env.Alias('flake8', flake8)
+
+# Additional Python readability style checks
+pycodestyle = Utility("pep8", python_lint,
+                      ['pycodestyle --ignore=W602,E122,E241 $SOURCES'])
+env.Pseudo(pycodestyle)
+env.Alias('pycodestyle', pycodestyle)
+# pep8 was renamed to pycodestyle, same thing
+env.Alias('pep8', pycodestyle)
+
+# Sanity-check Python code.
+# Bletch.  We don't really want to suppress W0231 E0602 E0611 E1123,
+# but Python 3 syntax confuses a pylint running under Python 2.
+# There's an internal error in astroid that requires we disable some
+# auditing. This is irritating as hell but there's no help for it short
+# of an upstream fix.
+
+pylint = Utility("pylint", python_lint,
+    ['pylint --rcfile=/dev/null --dummy-variables-rgx=\'^_\' '
+     '--msg-template='
+     '"{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" '
+     '--reports=n --disable=F0001,C0103,C0111,C1001,C0301,C0122,C0302,'
+     'C0322,C0324,C0323,C0321,C0330,C0411,C0413,E1136,R0201,R0204,'
+     'R0801,'
+     'R0902,R0903,R0904,R0911,R0912,R0913,R0914,R0915,W0110,W0201,'
+     'W0121,W0123,W0231,W0232,W0234,W0401,W0403,W0141,W0142,W0603,'
+     'W0614,W0640,W0621,W1504,E0602,E0611,E1101,E1102,E1103,E1123,'
+     'F0401,I0011 $SOURCES'])
+env.Pseudo(pylint)
+env.Alias('pylint', pylint)
+
+# Check with scan-build, an analyzer, part of clang
+scan_build = Utility("scan-build",
+                     ["include/gpsd.h", "include/packet_names.h"],
+                     "scan-build " + scons_executable_name)
+env.Pseudo(scan_build)
+env.Alias('scan_build', scan_build)
+
+# Run a valgrind audit on the daemon  - not in normal tests
+valgrind = Utility('valgrind',
+    ['valgrind-audit.py', gpsd],
+    '$PYTHON $SRCDIR/valgrind-audit.py'
+)
+env.Pseudo(valgrind)
+env.Alias('valgrind', valgrind)
+
+# Check the documentation for bogons, too
+# xmllint is part of the libxml2 package
+# do not test xml in doc/*xml as those are fragments, not complete xml
+xmllint = Utility("xmllint", [glob.glob("man/*xml"), glob.glob("www/*.xml")],
+    "for xml in $SOURCES; do xmllint --nonet --noout --valid $$xml; done")
+env.Pseudo(xmllint)
+env.Alias('xmllint', xmllint)
+
+# Perform all (possible) local code-sanity checks (but not the Coverity scan).
+audits = []
+if have_cppcheck:
+    audits.append(cppcheck)
+if have_flake8:
+    audits.append(flake8)
+if have_pycodestyle:
+    audits.append(pycodestyle)
+if have_pylint:
+    audits.append(pylint)
 if have_scan_build:
-    audits.append('scan-build')
+    audits.append(scan-build)
+if have_valgrind:
+    audits.append(valgrind)
+if have_xmllint:
+    audits.append(xmllint)
 env.Alias('audit', audits)
+
+#
+# end audit checks section
+#
 
 # Regression tests begin here
 #
@@ -2846,13 +2893,6 @@ if env['xgps_deps']:
     env.Pseudo(test_xgps_deps)
 else:
     test_xgps_deps = None
-
-# Run a valgrind audit on the daemon  - not in normal tests
-valgrind_audit = Utility('valgrind-audit', [
-    '$SRCDIR/valgrind-audit.py', gpsd],
-    '$PYTHON $SRCDIR/valgrind-audit.py'
-)
-env.Pseudo(valgrind_audit)
 
 # Run test builds on remote machines
 flocktest = Utility("flocktest", [], "cd devtools; ./flocktest " + gitrepo)
