@@ -1481,8 +1481,7 @@ py_config_text = str(eval(PYTHON_CONFIG_CALL))
 python_libdir = str(eval(PYTHON_LIBDIR_CALL))
 config.env['xgps_deps'] = False
 
-if config.env['python']:
-    target_python_path = None
+if not cleaning and not helping and config.env['python']:
     if config.env['target_python']:
         try:
             config.CheckProg
