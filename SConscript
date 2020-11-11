@@ -906,6 +906,7 @@ print("This system is: %s" % sys.platform)
 
 libgps_flags = []
 rtlibs = []
+# skip config part if cleaning or helping.
 if cleaning or helping:
     bluezflags = []
     confdefs = []
@@ -918,6 +919,7 @@ if cleaning or helping:
     tiocmiwait = True  # For cleaning, which works on any OS
     usbflags = []
     have_dia = False
+    have_coverage = False
     have_cppcheck = False
     have_flake8 = False
     have_pycodestyle = False
@@ -1425,6 +1427,7 @@ else:
 
     # check for misc audit programs
     try:
+        have_coverage = config.CheckProg('coverage')
         have_cppcheck = config.CheckProg('cppcheck')
         have_dia = config.CheckProg('dia')
         have_flake8 = config.CheckProg('flake8')
@@ -1438,6 +1441,8 @@ else:
         # gpsd only asks for 2.3.0 or higher
         announce("scons CheckProg() failed..")
 
+    if not have_coverage:
+        announce("Program coverage not found -- skipping Python coverage")
     if not have_cppcheck:
         announce("Program cppcheck not found -- skipping cppcheck checks")
     if not have_dia:
@@ -1627,24 +1632,22 @@ if not (cleaning or helping):
                      % qt_net_name)
             qt_env = None
 
-    # Set up for Python coveraging if needed
-    if env['coveraging'] and env['python_coverage']:
-        pycov_default = (
-            opts.options[opts.keys().index('python_coverage')].default)
-        pycov_current = env['python_coverage']
-        pycov_list = pycov_current.split()
-        if env.GetOption('num_jobs') > 1 and pycov_current == pycov_default:
-            pycov_list.append('--parallel-mode')
-        # May need absolute path to coveraging tool if 'PythonXX' is prefixed
-        pycov_path = env.WhereIs(pycov_list[0])
-        if pycov_path:
-            pycov_list[0] = pycov_path
-            env['PYTHON_COVERAGE'] = ' '.join(pycov_list)
-            env['ENV']['PYTHON_COVERAGE'] = ' '.join(pycov_list)
-        else:
-            announce('Python coverage tool not found - '
-                     'disabling Python coverage.')
-            env['python_coverage'] = ''  # So we see it in the options
+# Set up for Python coveraging if needed
+pycov_path = None
+if have_coverage and env['coveraging'] and env['python_coverage']:
+    pycov_default = ( opts.options[opts.keys().index('python_coverage')].default)
+    pycov_current = env['python_coverage']
+    pycov_list = pycov_current.split()
+    if env.GetOption('num_jobs') > 1 and pycov_current == pycov_default:
+        pycov_list.append('--parallel-mode')
+    # May need absolute path to coveraging tool if 'PythonXX' is prefixed
+    pycov_path = env.WhereIs(pycov_list[0])
+if pycov_path:
+    pycov_list[0] = pycov_path
+    env['PYTHON_COVERAGE'] = ' '.join(pycov_list)
+    env['ENV']['PYTHON_COVERAGE'] = ' '.join(pycov_list)
+else:
+    env['python_coverage'] = ''  # So we see it in the options
 
 # Two shared libraries provide most of the code for the C programs
 
