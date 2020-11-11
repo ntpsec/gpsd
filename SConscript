@@ -906,29 +906,29 @@ print("This system is: %s" % sys.platform)
 
 libgps_flags = []
 rtlibs = []
-# skip config part if cleaning or helping.
-if cleaning or helping:
-    bluezflags = []
-    confdefs = []
-    dbusflags = []
-    htmlbuilder = False
-    manbuilder = False
-    ncurseslibs = []
-    mathlibs = []
-    xtlibs = []
-    tiocmiwait = True  # For cleaning, which works on any OS
-    usbflags = []
-    have_dia = False
-    have_coverage = False
-    have_cppcheck = False
-    have_flake8 = False
-    have_pycodestyle = False
-    have_pylint = False
-    have_scan_build = False
-    have_valgrind = False
-    have_xmllint = False
-else:
+bluezflags = []
+confdefs = []
+dbusflags = []
+htmlbuilder = False
+manbuilder = False
+ncurseslibs = []
+mathlibs = []
+xtlibs = []
+tiocmiwait = True  # For cleaning, which works on any OS
+usbflags = []
+have_dia = False
+have_coverage = False
+have_cppcheck = False
+have_flake8 = False
+have_pycodestyle = False
+have_pylint = False
+have_scan_build = False
+have_valgrind = False
+have_xmllint = False
 
+# skip config part if cleaning or helping.
+# per SCons 4.0.1 doc: Section 23.9. Not Configuring When Cleaning Targets
+if not cleaning and not helping:
     # OS X aliases gcc to clang
     # clang accepts -pthread, then warns it is unused.
     if not config.CheckCC():
