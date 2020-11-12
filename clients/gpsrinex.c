@@ -798,7 +798,6 @@ static void print_raw(struct gps_data_t *gpsdata)
     unsigned char last_svid = 0;
     int need_nl = 0;
     int got_l1 = 0;
-    time_t epoch_sec;
     timespec_t interval_ts;
 
     TS_SUB(&interval_ts, &gpsdata->raw.mtime, &last_mtime);
@@ -817,7 +816,7 @@ static void print_raw(struct gps_data_t *gpsdata)
     // do modulo only for sample_interval of even seconds
     if (0 == sample_interval_ts.tv_nsec &&
         0 < sample_interval_ts.tv_sec) {
-        epoch_sec = gpsdata->raw.mtime.tv_sec;
+        time_t epoch_sec = gpsdata->raw.mtime.tv_sec;
         if (500000000 < gpsdata->raw.mtime.tv_nsec) {
              // round it up.  To match convbin.
              // does this break opus?
@@ -1134,7 +1133,6 @@ int main(int argc, char **argv)
     int tmp_file_desc;           // temp file descriptor
     struct tm *report_time;
     struct tm tm_buf;            // temp buffer for gmtime_r()
-    int ch;
     unsigned int flags = WATCH_ENABLE;
     char   *fname = NULL;
     int timeout = 10;
@@ -1144,6 +1142,7 @@ int main(int argc, char **argv)
 
     log_file = stdout;
     while (1) {
+        int ch;
         const char *optstring = "D:f:hi:n:V";
 
 #ifdef HAVE_GETOPT_LONG
