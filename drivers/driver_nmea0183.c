@@ -306,7 +306,7 @@ static int decode_hhmmss(struct tm *date, long *nsec, char *hhmmss,
 static int merge_hhmmss(char *hhmmss, struct gps_device_t *session)
 {
     int old_hour = session->nmea.date.tm_hour;
-    int i, sublen;
+    int i;
 
     if (NULL == hhmmss) {
         return 1;
@@ -332,8 +332,8 @@ static int merge_hhmmss(char *hhmmss, struct gps_device_t *session)
     if ('.' == hhmmss[6] &&
         /* NetBSD 6 wants the cast */
         0 != isdigit((int)hhmmss[7])) {
+        int sublen = strlen(hhmmss + 7);
         i = atoi(hhmmss + 7);
-        sublen = strlen(hhmmss + 7);
         session->nmea.subseconds.tv_nsec = (long)i *
                                            (long)pow(10.0, 9 - sublen);
     } else {
@@ -1505,10 +1505,8 @@ static gps_mask_t processGSA(int count, char *field[],
     if (18 > count) {
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "NMEA0183: xxGSA: malformed, setting ONLINE_SET only.\n");
-        mask = ONLINE_SET;
     } else if (session->nmea.latch_mode) {
         /* last GGA had a non-advancing timestamp; don't trust this GSA */
-        mask = ONLINE_SET;
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "NMEA0183: xxGSA: non-advancing timestamp\n");
     } else {
@@ -1519,9 +1517,7 @@ static gps_mask_t processGSA(int count, char *field[],
          * fixes from an Antaris chipset. which returns E in field 2
          * for a dead-reckoning estimate.  Fix by Andreas Stricker.
          */
-        if ('E' == field[2][0])
-            mask = ONLINE_SET;
-        else
+        if ('E' != field[2][0])
             mask = MODE_SET;
 
         GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -2027,11 +2023,9 @@ static gps_mask_t processPGRME(int c UNUSED, char *field[],
      */
     gps_mask_t mask = ONLINE_SET;
 
-    if ('M' != field[2][0] ||
-        'M' != field[4][0] ||
-        'M' != field[6][0]) {
-        mask = ONLINE_SET;
-    } else {
+    if ('M' == field[2][0] &&
+        'M' == field[4][0] &&
+        'M' == field[6][0]) {
         session->newdata.epx = session->newdata.epy =
             safe_atof(field[1]) * (1 / sqrt(2))
                       * (GPSD_CONFIDENCE / CEP50_SIGMA);
