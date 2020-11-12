@@ -183,7 +183,6 @@ int main(int argc, char **argv)
     int option_u = 0;                   // option to show uSeconds
     long count = -1;
     time_t exit_timer = 0;
-    int ch;
     unsigned int vflag = 0, l = 0;
     FILE *fp;
     unsigned int flags;
@@ -222,6 +221,7 @@ int main(int argc, char **argv)
 
     flags = WATCH_ENABLE;
     while (1) {
+        int ch;
 #ifdef HAVE_GETOPT_LONG
         ch = getopt_long(argc, argv, optstring, long_options, &option_index);
 #else
