@@ -53,7 +53,6 @@ static void usage(void)
 
 int main(int argc, char **argv)
 {
-    int ch;
     int i;
     bool killall = false;
     bool offset = false;            /* show offset, not seen */
@@ -84,6 +83,7 @@ int main(int argc, char **argv)
     memset( shm_stat_old, 0 ,sizeof( shm_stat_old));
 
     while (1) {
+        int ch;
 #ifdef HAVE_GETOPT_LONG
         ch = getopt_long(argc, argv, optstring, long_options, &option_index);
 #else
