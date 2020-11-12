@@ -21,3 +21,5 @@ gpsd-3.*.tar.gz
 gpsd-3.*.tar.xz
 # testbuild directory
 testbuild
+# website staging
+.public

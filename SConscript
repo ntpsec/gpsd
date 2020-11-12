@@ -2986,14 +2986,6 @@ def validation_list(target, source, env):
 
 Utility("validation-list", [www], validation_list)
 
-# How to update the website.  Assumes a logal GitLab pages setup.
-# See .gitlab-ci.yml
-upload_web = Utility("website", [www],
-                     ['rsync --exclude="*.in" -avz www/ ' +
-                      os.environ.get('WEBSITE', '.public'),
-                      'cp TODO NEWS ' +
-                      os.environ.get('WEBSITE', '.public')])
-
 # Experimenting with pydoc.  Not yet fired by any other productions.
 # scons www/ dies with this
 
@@ -3137,9 +3129,6 @@ env.Alias('dist', [zip, targz, tarxz])
 
 Clean('build', [targz, tarxz, dozip])
 
-# # Make RPM from the specfile in packaging
-# Utility('dist-rpm', dist, 'rpmbuild -ta gpsd-${VERSION}.tar.gz')
-#
 # Make sure build-from-tarball works.
 testbuild = Utility('#testbuild', [targz], [
     'rm -Rf testbuild',
@@ -3171,22 +3160,47 @@ upload_release = Utility('upload-release', ['dist'], [
 env.Pseudo(upload_release)
 env.Alias('upload_release', upload_release)
 
-# # How to tag a release
-# tag_release = Utility('tag-release', [], [
-#     'git tag -s -m "Tagged for external release ${VERSION}" \
-#      release-${VERSION}'])
-# upload_tags = Utility('upload-tags', [], ['git push --tags'])
+# How to tag a release
+tag_release = Utility('tag-release', [], [
+    'git tag -s -m "Tagged for external release ${VERSION}" \
+     release-${VERSION}'])
+env.Pseudo(tag_release)
+env.Alias('tag_release', tag_release)
+
+upload_tags = Utility('upload-tags', [], ['git push --tags'])
+env.Pseudo(upload_tags)
+env.Alias('upload_tags', upload_tags)
+
+
+# Local release preparation. This production will require Internet access,
+# but it doesn't do any uploads or public repo mods.
 #
-# # Local release preparation. This production will require Internet access,
-# # but it doesn't do any uploads or public repo mods.
-# #
-# # Note that tag_release has to fire early, otherwise the value of REVISION
-# # won't be right when gpsd_config.h is generated for the tarball.
-# releaseprep = env.Alias("releaseprep",
-#                         [Utility("distclean", [],
-#                          ["rm -f include/gpsd_config.h"]),
-#                          tag_release,
-#                          'dist'])
+# Note that tag_release has to fire early, otherwise the value of REVISION
+# won't be right when gpsd_config.h is generated for the tarball.
+# FIXME: this is confused
+releaseprep = env.Alias("releaseprep",
+                        [Utility("distclean", [],
+                         ["rm -f include/gpsd_config.h"]),
+                         tag_release,
+                         'dist'])
+env.Pseudo(releaseprep)
+env.Alias('releaseprep', releaseprep)
+
+# How to update the website.  Assumes a local GitLab pages setup.
+# See "pages:" in .gitlab-ci.yml
+www_dest = os.environ.get('WEBSITE', '.public')
+website = Utility("website", [www],
+                  ['rsync --exclude="*.in" -avz %s/www/ %s ' %
+                   (variantdir, www_dest),
+                   'cp TODO NEWS %s ' % (www_dest)])
+env.Pseudo(website)
+env.Alias('website', website)
+
+# All a buildup to this.
+env.Alias("release", [releaseprep,
+                      upload_release,
+                      upload_tags,
+                      website])
 
 # Undo local release preparation
 undoprep = Utility("undoprep", [],
@@ -3196,17 +3210,29 @@ undoprep = Utility("undoprep", [],
 env.Pseudo(undoprep)
 env.Alias('undoprep', undoprep)
 
-# # All a buildup to this.
-# env.Alias("release", [releaseprep,
-#                       upload_release,
-#                       upload_tags,
-#                       upload_web])
-#
-# # Experimental release mechanics using shipper
-# # This will ship a freecode metadata update
-# Utility("ship", ['dist', "control"],
-#         ['shipper version=%s | sh -e -x' % gpsd_version])
-#
+#######
+# start Debian stuff
+#######
+
+# Make RPM from the specfile in packaging
+# untested
+dist_rpm = Utility('dist-rpm', 'dist', 'rpmbuild -ta gpsd-${VERSION}.tar.gz')
+env.Pseudo(dist_rpm)
+env.Alias('dist_rpm', dist_rpm)
+
+# Experimental release mechanics using shipper
+# This will ship a freecode metadata update
+# untested
+ship = Utility("ship", ['dist', "control"],
+               ['cd %s; shipper version=%s | sh -e -x' %
+                (variantdir, gpsd_version)])
+env.Pseudo(ship)
+env.Alias('ship', ship)
+#######
+# end Debian stuff
+#######
+
+
 # Release machinery ends here
 
 # The following sets edit modes for GNU EMACS
