@@ -263,7 +263,6 @@ int main(int argc, char *argv[])
     struct sockaddr_in localAddr, servAddr;
     struct hostent *h;
     const char *optstring = "hl:su:V";
-    int ch;
     int n;
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
@@ -304,6 +303,7 @@ int main(int argc, char *argv[])
     /* Process the options.  Print help if requested. */
 
     while (1) {
+        int ch;
 #ifdef HAVE_GETOPT_LONG
         ch = getopt_long(argc, argv, optstring, long_options, &option_index);
 #else
