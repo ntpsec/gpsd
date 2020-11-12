@@ -1601,9 +1601,7 @@ static void find_pgn(struct can_frame *frame, struct gps_device_t *session)
                     }
                 }
             }
-        }
 
-        if (!session->driver.nmea2000.unit_valid) {
             session->driver.nmea2000.unit = source_unit;
             session->driver.nmea2000.unit_valid = true;
             nmea2000_units[can_net][source_unit] = session;
