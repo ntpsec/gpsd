@@ -3581,7 +3581,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
 
 #ifdef __UNUSED
     // debug
-    GPSD_LOG(&session->context->errout, 0,
+    GPSD_LOG(0, &session->context->errout,
              "NMEA0183: got %s\n", session->nmea.field[0]);
 #endif // __UNUSED
 

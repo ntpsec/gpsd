@@ -105,7 +105,8 @@ void gpsd_log(const int errlevel, const struct gpsd_errout_t *errout,
   char buf[BUFSIZ];
   va_list ap;
 
-  if (errout->debug < errlevel) {
+  // cppcheck wants is to check for NULL == errout.  Should never happen?
+  if (NULL == errout || errout->debug < errlevel) {
     /* nothing to do, get out */
     return;
   }
