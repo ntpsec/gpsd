@@ -373,7 +373,6 @@ int main(int argc, char **argv)
 {
     bool daemonize = false;
     long count = -1;
-    int ch;
     char *udphostport[MAX_UDP_DEST];
     const char *optstring = "?habnjVc:l:u:d:";
 #ifdef HAVE_GETOPT_LONG
@@ -396,6 +395,7 @@ int main(int argc, char **argv)
 
     flags = WATCH_ENABLE;
     while (1) {
+        int ch;
 #ifdef HAVE_GETOPT_LONG
         ch = getopt_long(argc, argv, optstring, long_options, &option_index);
 #else
