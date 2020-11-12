@@ -130,7 +130,7 @@ static void json_log_dump(const struct gps_device_t *session,
     (void)snprintf(reply, replylen,
                    "{\"class\":\"LOG\",\"time\":\"%s\",\"idx\":%lu",
                    timespec_to_iso8601(logp->then, tbuf, sizeof(tbuf)),
-                   (long)logp->index_cnt);
+                   (unsigned long)logp->index_cnt);
     if (0 < logp->string[0]) {
         str_appendf(reply, replylen, ",\"string\":%s", logp->string);
     }
@@ -656,7 +656,6 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                         char buf[], size_t buflen)
 {
     const struct subframe_t *subframe = &datap->subframe;
-    int i;
 
     // TOW17 is always scaled
     (void)snprintf(buf, buflen, "{\"class\":\"SUBFRAME\",\"device\":\"%s\","
@@ -817,6 +816,8 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                             (int)subframe->sub5.almanac.af1);
             }
         } else {
+            int i;
+
             switch (subframe->pageid ) {
             case 51:    // subframe5, page 25
                 str_appendf(buf, buflen,
