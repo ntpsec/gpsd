@@ -243,10 +243,6 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
      * This next code block abuses "ret" by storing the filedescriptor
      * to use for RFC2783 calls.
      */
-#ifndef __clang_analyzer__
-    ret = -1;  /* this ret will not be unneeded when the 'else' part
-                * of the followinng ifdef becomes an #elif */
-#endif /* __clang_analyzer__ */
 #ifdef __linux__
     /*
      * Some Linuxes, like the RasPi's, have PPS devices preexisting.
