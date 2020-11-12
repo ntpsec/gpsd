@@ -1353,9 +1353,9 @@ static bool aivdm_decode(const char *buf, size_t buflen,
         }
     }
 #ifdef __UNDEF_DEBUG_
-    for(int i=0;i<nfields;i++)
+    for(int nf = 0; nf < nfields; nf++)
         GPSD_LOG(LOG_DATA, &session->context->errout,
-                 "field [%d] [%s]\n", i, field[i]);
+                 "field [%d] [%s]\n", nf, field[nf]);
 #endif
 
     /* discard sentences with exiguous commas; catches run-ons */
