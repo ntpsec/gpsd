@@ -390,7 +390,7 @@ static void
 ubx_msg_mon_txbuf(struct gps_device_t *session, unsigned char *buf,
                 size_t data_len)
 {
-    unsigned int usage, peakUsage;
+    unsigned int peakUsage;
     unsigned int tUsage, tPeakusage;
     unsigned char errors, limit, reserved1;
     int i;
@@ -405,7 +405,7 @@ ubx_msg_mon_txbuf(struct gps_device_t *session, unsigned char *buf,
 
     for (i = 0; i < 6; i++) {
         unsigned int pending = getleu16(buf, i * 2);
-        usage =  getub(buf, 12 + i);
+        unsigned int usage =  getub(buf, 12 + i);
         peakUsage = getub(buf, 18 + i);
 
         GPSD_LOG(LOG_INF, &session->context->errout,
@@ -438,7 +438,6 @@ static void
 ubx_msg_mon_rxbuf(struct gps_device_t *session, unsigned char *buf,
                 size_t data_len)
 {
-    unsigned int pending, usage, peakUsage;
     int i;
 
     if (24 != data_len) {
@@ -448,9 +447,9 @@ ubx_msg_mon_rxbuf(struct gps_device_t *session, unsigned char *buf,
     }
 
     for (i = 0; i < 6; i++) {
-        pending = getleu16(buf, i * 2);
-        usage =  getub(buf, 12 + i);
-        peakUsage = getub(buf, 18 + i);
+        unsigned int pending = getleu16(buf, i * 2);
+        unsigned int usage =  getub(buf, 12 + i);
+        unsigned int peakUsage = getub(buf, 18 + i);
 
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "RXBUF: target %d, pending %4u bytes, "
@@ -1943,7 +1942,7 @@ static void ubx_msg_nav_sbas(struct gps_device_t *session, unsigned char *buf,
     }
     for (i = 0; i < cnt; i++) {
         int off = 12 + (12 * i);
-        unsigned svid = getub(buf, off);
+        unsigned svID = getub(buf, off);
         unsigned flags = getub(buf, off + 1);
         // User Differential Range Error (udre)
         unsigned udre = getub(buf, off + 2);
@@ -1954,7 +1953,7 @@ static void ubx_msg_nav_sbas(struct gps_device_t *session, unsigned char *buf,
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "UBX-NAV-SBAS SV%3u flags x%02x udre %u svSys %2d "
                  "svService x%x prc %d ic %d\n",
-                 svid, flags, udre, svSys, svService, prc, ic);
+                 svID, flags, udre, svSys, svService, prc, ic);
     }
     /* really 'in_use' depends on the sats info, EGNOS is still
      * in test.  In WAAS areas one might also check for the type of
