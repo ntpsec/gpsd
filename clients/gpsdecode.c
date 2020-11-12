@@ -749,7 +749,6 @@ static void usage(void)
 
 int main(int argc, char **argv)
 {
-    int ch;
     const char *optstring = "cdehjmnst:uvVD:";
     enum { doencode, dodecode } mode = dodecode;
 #ifdef HAVE_GETOPT_LONG
@@ -775,6 +774,7 @@ int main(int argc, char **argv)
     gps_context_init(&context, "gpsdecode");
 
     while (1) {
+        int ch;
 #ifdef HAVE_GETOPT_LONG
         ch = getopt_long(argc, argv, optstring, long_options, &option_index);
 #else
