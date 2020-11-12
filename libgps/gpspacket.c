@@ -20,7 +20,7 @@
 
 #define LOG_SHOUT 0
 
-struct gps_lexer_t *ffi_Lexer_init(void);
+struct gps_lexer_t *ffi_Lexer_init(void);   // For FFI Python interface.
 void gpsd_vlog(const struct gpsd_errout_t*, const int, char*,
                size_t, const char*, va_list);
 
