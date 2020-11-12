@@ -90,7 +90,6 @@ int main(int argc, char *argv[])
 {
     struct timespec ts;
     int fd;
-    int ch;
     char ts_buf[TIMESPEC_LEN];
     const char *optstring = "?hV";
 #ifdef HAVE_GETOPT_LONG
@@ -103,6 +102,7 @@ int main(int argc, char *argv[])
 #endif
 
     while (1) {
+        int ch;
 #ifdef HAVE_GETOPT_LONG
         ch = getopt_long(argc, argv, optstring, long_options, &option_index);
 #else

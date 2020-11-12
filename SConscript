@@ -1433,7 +1433,7 @@ if not cleaning and not helping:
         have_flake8 = config.CheckProg('flake8')
         have_pycodestyle = config.CheckProg('pycodestyle')
         have_pylint = config.CheckProg('pylint')
-        have_scan_build = config.CheckProg('scan_build')
+        have_scan_build = config.CheckProg('scan-build')
         have_valgrind = config.CheckProg('valgrind')
         have_xmllint = config.CheckProg('xmllint')
     except AttributeError:
@@ -2511,7 +2511,8 @@ if not scons_executable_name:
 # Putting in all these -U flags speeds up cppcheck and allows it to look
 # at configurations we actually care about.
 # https://github.com/danmar/cppcheck
-cppcheck = Utility("cppcheck", ["include/gpsd.h", "include/packet_names.h"],
+cppcheck = Utility("cppcheck",
+                   ['build', "include/gpsd.h", "include/packet_names.h"],
                    "cppcheck -U__UNUSED__ -UUSE_QT -U__COVERITY__ -U__future__ "
                    "-ULIMITED_MAX_CLIENTS -ULIMITED_MAX_DEVICES -UAF_UNSPEC "
                    "-UINADDR_ANY -U_WIN32 -U__CYGWIN__ "
@@ -2604,7 +2605,7 @@ if have_pycodestyle:
 if have_pylint:
     audits.append(pylint)
 if have_scan_build:
-    audits.append(scan-build)
+    audits.append(scan_build)
 if have_valgrind:
     audits.append(valgrind)
 if have_xmllint:
