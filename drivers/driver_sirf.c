@@ -587,7 +587,7 @@ static gps_mask_t sirf_msg_67_1(struct gps_device_t *session,
     uint32_t gps_tow_sub_ms = 0;
     uint16_t gps_week = 0;
     timespec_t gps_tow_ns = {0};
-    timespec_t now = {0};
+    timespec_t now;
     int16_t time_bias = 0;
     uint8_t time_accuracy = 0;
     uint8_t time_source = 0;
