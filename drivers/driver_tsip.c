@@ -255,7 +255,6 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
     timespec_t ts_tow;
     char ts_buf[TIMESPEC_LEN];
     int bad_len = 0;
-    const char *name;
 
     if (session->lexer.type != TSIP_PACKET) {
         // this should not happen
@@ -770,6 +769,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                  u2, u3);
 
         if ('\0' == session->subtype[0]) {
+            const char *name;
             // better than nothing
             switch (session->driver.tsip.machine_id) {
             case 1:
