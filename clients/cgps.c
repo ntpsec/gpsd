@@ -550,10 +550,9 @@ static void update_compass_panel(struct gps_data_t *gpsdata)
  */
 static int sat_cmp(const void *p1, const void *p2)
 {
-
-   if ( ((struct satellite_t*)p2)->used - ((struct satellite_t*)p1)->used ) {
-        return ((struct satellite_t*)p2)->used -
-                ((struct satellite_t*)p1)->used;
+   int diff = ((struct satellite_t*)p2)->used - ((struct satellite_t*)p1)->used;
+   if (0 != diff) {
+        return (diff);
    }
    return ((struct satellite_t*)p1)->PRN - ((struct satellite_t*)p2)->PRN;
 }
@@ -1037,7 +1036,6 @@ static void usage(char *prog,  int exit_code)
 
 int main(int argc, char *argv[])
 {
-    int ch;
     unsigned int flags = WATCH_ENABLE;
     int wait_clicks = 0;  /* cycles to wait before gpsd timeout */
     /* buffer to hold one JSON message */
@@ -1083,6 +1081,7 @@ int main(int argc, char *argv[])
 
     /* Process the options.  Print help if requested. */
     while (1) {
+        int ch;
 #ifdef HAVE_GETOPT_LONG
         ch = getopt_long(argc, argv, optstring, long_options, &option_index);
 #else
