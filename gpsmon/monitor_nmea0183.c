@@ -239,10 +239,9 @@ static void monitor_satlist(WINDOW *win, int y, int x)
  */
 static int sat_cmp(const void *p1, const void *p2)
 {
-
-   if ( ((struct satellite_t*)p2)->used - ((struct satellite_t*)p1)->used ) {
-        return ((struct satellite_t*)p2)->used -
-                ((struct satellite_t*)p1)->used;
+   int ret = ((struct satellite_t*)p2)->used - ((struct satellite_t*)p1)->used;
+   if (ret) {
+        return ret;
    }
    return ((struct satellite_t*)p1)->PRN - ((struct satellite_t*)p2)->PRN;
 }
