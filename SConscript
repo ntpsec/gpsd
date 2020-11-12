@@ -3158,16 +3158,19 @@ releasecheck = env.Alias('releasecheck', [
     flocktest,
 ])
 
-# # The chmod copes with the fact that scp will give a
-# # replacement the permissions of the *original*...
-# upload_release = Utility('upload-release', [dist], [
-#     'rm -f gpsd-*tar*sig',
-#     'gpg -b gpsd-${VERSION}.tar.gz',
-#     'gpg -b gpsd-${VERSION}.tar.xz',
-#     'chmod ug=rw,o=r gpsd-${VERSION}.tar.*',
-#     'scp gpsd-${VERSION}.tar.* ' + scpupload,
-# ])
-#
+# The chmod copes with the fact that scp will give a
+# replacement the permissions of the *original*...
+upload_release = Utility('upload-release', ['dist'], [
+    'rm -f gpsd-*.sig',
+    'gpg -b gpsd-${VERSION}.tar.gz',
+    'gpg -b gpsd-${VERSION}.tar.xz',
+    'gpg -b gpsd-${VERSION}.zip',
+    'chmod ug=rw,o=r gpsd-${VERSION}.tar.* gpsd-${VERSION}.zip',
+    'scp gpsd-${VERSION}.tar.* gpsd-${VERSION}.zip ' + scpupload,
+])
+env.Pseudo(upload_release)
+env.Alias('upload_release', upload_release)
+
 # # How to tag a release
 # tag_release = Utility('tag-release', [], [
 #     'git tag -s -m "Tagged for external release ${VERSION}" \
@@ -3183,11 +3186,16 @@ releasecheck = env.Alias('releasecheck', [
 #                         [Utility("distclean", [],
 #                          ["rm -f include/gpsd_config.h"]),
 #                          tag_release,
-#                          dist])
-# # Undo local release preparation
-# Utility("undoprep", [], ['rm -f gpsd-${VERSION}.tar.gz;',
-#                          'git tag -d release-${VERSION};'])
-#
+#                          'dist'])
+
+# Undo local release preparation
+undoprep = Utility("undoprep", [],
+                   ['rm -f gpsd-${VERSION}.tar.?z',
+                    'rm -f gpsd-$VERSION}.zip',
+                    'git tag -d release-${VERSION};'])
+env.Pseudo(undoprep)
+env.Alias('undoprep', undoprep)
+
 # # All a buildup to this.
 # env.Alias("release", [releaseprep,
 #                       upload_release,
@@ -3196,7 +3204,7 @@ releasecheck = env.Alias('releasecheck', [
 #
 # # Experimental release mechanics using shipper
 # # This will ship a freecode metadata update
-# Utility("ship", [dist, "control"],
+# Utility("ship", ['dist', "control"],
 #         ['shipper version=%s | sh -e -x' % gpsd_version])
 #
 # Release machinery ends here
