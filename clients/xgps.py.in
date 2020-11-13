@@ -1286,8 +1286,8 @@ frame * {
             if hook:  # Remove this guard when we have all hooks
                 widget.set_markup(markup % hook(self, tpv))
         if self.skyview:
-            if ((self.rotate is None
-                 and hasattr(tpv, 'lat') and hasattr(tpv, 'lon'))):
+            if ((self.rotate is None and
+                 hasattr(tpv, 'lat') and hasattr(tpv, 'lon'))):
                 self.skyview.rotate = gps.clienthelpers.mag_var(tpv.lat,
                                                                 tpv.lon)
             elif self.rotate is True and 'track' in tpv:

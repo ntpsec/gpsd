@@ -381,8 +381,7 @@ try:
         opts['gpsd_host'],
         opts['gpsd_port'],
         opts['gpsd_device'],
-        write_requested=(opts['disable'] or opts['enable'] or opts['poll'])
-        )
+        write_requested=(opts['disable'] or opts['enable'] or opts['poll']))
     gps_model.io_handle = io_handle
 
     sys.stdout.flush()
