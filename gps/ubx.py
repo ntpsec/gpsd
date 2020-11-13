@@ -1831,8 +1831,7 @@ class ubx(object):
         """Return (size, pack format, i/i/f) for item"""
 
         # conversion of known types from known key
-        cfg_types = {
-                     "E1": (1, "<B", "u"),
+        cfg_types = {"E1": (1, "<B", "u"),
                      "E2": (2, "<H", "u"),
                      "E4": (4, "<L", "u"),
                      "I1": (1, "<b", "i"),
@@ -2504,14 +2503,14 @@ Programming the fixed seed for host interface signature"""
         return s
 
     utc_std = {
-            0: "Default",
-            1: "CRL",
-            2: "NIST",
-            3: "USNO",
-            4: "BIPM",
-            5: "tbd",
-            6: "SU",
-            7: "NTSC",
+        0: "Default",
+        1: "CRL",
+        2: "NIST",
+        3: "USNO",
+        4: "BIPM",
+        5: "tbd",
+        6: "SU",
+        7: "NTSC",
         }
 
     cfg_nav5_dyn = {
@@ -3462,143 +3461,143 @@ Save and Load non-volatile storage data"""
         return s
 
     cfg_ids = {
-               # in u-blox 5+
-               0x00: {'str': 'PRT', 'dec': cfg_prt, 'minlen': 1,
-                      'name': 'UBX-CFG-PRT'},
-               # in u-blox 5+
-               0x01: {'str': 'MSG', 'dec': cfg_msg, 'minlen': 2,
-                      'name': 'UBX-CFG-MSG'},
-               # in u-blox 5+
-               0x02: {'str': 'INF', 'dec': cfg_inf, 'minlen': 1,
-                      'name': 'UBX-CFG-INF'},
-               # in u-blox 5+
-               0x04: {'str': 'RST', 'dec': cfg_rst, 'minlen': 4,
-                      'name': 'UBX-CFG-RST'},
-               # in u-blox 5 to 9
-               0x06: {'str': 'DAT', 'dec': cfg_dat, 'minlen': 2,
-                      'name': 'UBX-CFG-DAT'},
-               # u-blox 5, 6.  Not in u-blox 7+
-               0x07: {'str': 'TP', 'dec': cfg_tp, 'minlen': 28,
-                      'name': 'UBX-CFG-TP'},
-               # in u-blox 5+
-               0x08: {'str': 'RATE', 'dec': cfg_rate, 'minlen': 6,
-                      'name': 'UBX-CFG-RATE'},
-               # in u-blox 5+
-               0x09: {'str': 'CFG', 'dec': cfg_cfg, 'minlen': 12,
-                      'name': 'UBX-CFG-CFG'},
-               # Antaris 4, deprecated in u-blox 5/6, gone in 7
-               0x0e: {'str': 'FXM', 'dec': cfg_fxn, 'minlen': 36,
-                      'name': 'UBX-CFG-FXM'},
-               # u-blox 5, 6, 7, 8
-               0x11: {'str': 'RXM', 'dec': cfg_rxm, 'minlen': 2,
-                      'name': 'UBX-CFG-RXM'},
-               # in u-blox 6, SFDR only.  Not in 5- or 7+
-               0x12: {'str': 'EKF', 'minlen': 16, 'name': 'UBX-CFG-EKF'},
-               # in u-blox 5+
-               0x13: {'str': 'ANT', 'dec': cfg_ant, 'minlen': 4,
-                      'name': 'UBX-CFG-ANT'},
-               # in u-blox 5+
-               0x16: {'str': 'SBAS', 'dec': cfg_sbas, 'minlen': 8,
-                      'name': 'UBX-CFG-SBAS'},
-               # in u-blox 5+
-               0x17: {'str': 'NMEA', 'dec': cfg_nmea, 'minlen': 4,
-                      'name': 'UBX-CFG-NMEA'},
-               # in u-blox 6+, Not in u-blox 5-
-               0x1b: {'str': 'USB', 'dec': cfg_usb, 'minlen': 108,
-                      'name': 'UBX-CFG-USB'},
-               # u-blox 5 and 6.  Not in u-blox 7+
-               0x1d: {'str': 'TMODE', 'dec': cfg_tmode, 'minlen': 28,
-                      'name': 'UBX-CFG-TMODE'},
-               # in u-blox 8+. Not in u-blox 7-
-               0x1e: {'str': 'ODO', 'dec': cfg_odo, 'minlen': 20,
-                      'name': 'UBX-CFG-ODO'},
-               # in u-blox 6, not in u-blox 7+
-               0x22: {'str': 'NVS', 'dec': cfg_nvs, 'minlen': 13,
-                      'name': 'UBX-CFG-NVS'},
-               # in u-blox 5+
-               0x23: {'str': 'NAVX5', 'dec': cfg_navx5, 'minlen': 20,
-                      'name': 'UBX-CFG-NAVX5'},
-               # in u-blox 6+.  Not in 5-
-               0x24: {'str': 'NAV5', 'dec': cfg_nav5, 'minlen': 36,
-                      'name': 'UBX-CFG-NAV5'},
-               # in u-blox 6. SFDR only. Not in u-blox 5- or 7+
-               0x29: {'str': 'ESFGWT', 'minlen': 44, 'name': 'UBX-CFG-ESFGWT'},
-               # in u-blox 6+, Not u-blox 5-
-               0x31: {'str': 'TP5', 'dec': cfg_tp5, 'minlen': 1,
-                      'name': 'UBX-CFG-TP5'},
-               # In u-blox 5, 6. Not in u-blox 7+
-               0x32: {'str': 'PM', 'dec': cfg_pm, 'minlen': 24,
-                      'name': 'UBX-CFG-PM'},
-               # in u-blox 5+
-               0x34: {'str': 'RINV', 'dec': cfg_rinv, 'minlen': 1,
-                      'name': 'UBX-CFG-RINV'},
-               # in u-blox 6+.  Not in u-blox 5-
-               0x39: {'str': 'ITFM', 'dec': cfg_itfm, 'minlen': 8,
-                      'name': 'UBX-CFG-ITFM'},
-               # in u-blox 6+.  Not in u-blox 5-
-               0x3b: {'str': 'PM2', 'dec': cfg_pm2, 'minlen': 44,
-                      'name': 'UBX-CFG-PM2'},
-               # in u-blox 6 and 7.  Not in u-blox 5- or 8+
-               0x3d: {'str': 'TMODE2', 'dec': cfg_tmode2, 'minlen': 28,
-                      'name': 'UBX-CFG-TMODE2'},
-               # in u-blox 7+  Not in u-blox 6-
-               0x3e: {'str': 'GNSS', 'dec': cfg_gnss, 'minlen': 4,
-                      'name': 'UBX-CFG-GNSS'},
-               # in u-blox 7+  Not in u-blox 6-
-               0x47: {'str': 'LOGFILTER', 'dec': cfg_logfilter, 'minlen': 12,
-                      'name': 'UBX-CFG-LOGFILTER'},
-               # Not in u-blox 7-, FTS only
-               0x53: {'str': 'TXSLOT', 'minlen': 2, 'name': 'UBX-CFG-TXSLOT'},
-               # Not in u-blox 7-
-               0x57: {'str': 'PWR', 'dec': cfg_pwr, 'minlen': 8,
-                      'name': 'UBX-CFG-PWR'},
-               # Not in u-blox 8-
-               0x5c: {'str': 'HNR', 'dec': cfg_hnr, 'minlen': 4,
-                      'name': 'UBX-CFG-HNR'},
-               # Not in u-blox 7-
-               0x60: {'str': 'ESRC', 'dec': cfg_esrc, 'minlen': 4,
-                      'name': 'UBX-CFG-ESRC'},
-               # Not in u-blox 8-
-               0x61: {'str': 'DOSC', 'dec': cfg_dosc, 'minlen': 4,
-                      'name': 'UBX-CFG-DOSC'},
-               # Not in u-blox 8-
-               0x62: {'str': 'SMGR', 'dec': cfg_smgr, 'minlen': 20,
-                      'name': 'UBX-CFG-SMGR'},
-               # Not in u-blox 8-
-               0x69: {'str': 'GEOFENCE', 'dec': cfg_geofence, 'minlen': 8,
-                      'name': 'UBX-CFG-GEOFENCE'},
-               # Not in u-blox 8-
-               0x70: {'str': 'DGNSS', 'dec': cfg_dgnss, 'minlen': 4,
-                      'name': 'UBX-CFG-DGNSS'},
-               # Not in u-blox 7-, HP only
-               # undocumented, but present in ZED-F9T
-               0x71: {'str': 'TMODE3', 'dec': cfg_tmode3, 'minlen': 40,
-                      'name': 'UBX-CFG-TMODE3'},
-               # Not in u-blox 7-
-               0x84: {'str': 'FIXSEED', 'dec': cfg_fixseed, 'minlen': 12,
-                      'name': 'UBX-CFG-FIXSEED'},
-               # Not in u-blox 7-
-               0x85: {'str': 'DYNSEED', 'dec': cfg_dynseed, 'minlen': 12,
-                      'name': 'UBX-CFG-DYNSEED'},
-               # Not in u-blox 8-
-               0x86: {'str': 'PMS', 'dec': cfg_pms, 'minlen': 8,
-                      'name': 'UBX-CFG-PMS'},
-               # in u-blox 9
-               0x8a: {'str': 'VALSET', 'dec': cfg_valset, 'minlen': 4,
-                      'name': 'UBX-CFG-VALSET'},
-               # in u-blox 9
-               0x8b: {'str': 'VALGET', 'dec': cfg_valget, 'minlen': 4,
-                      'name': 'UBX-CFG-VALGET'},
-               # in u-blox 9
-               0x8c: {'str': 'VALDEL', 'dec': cfg_valdel, 'minlen': 4,
-                      'name': 'UBX-CFG-VALDEL'},
-               # u-blox 8
-               0x8d: {'str': 'SLAS', 'dec': cfg_slas, 'minlen': 4,
-                      'name': 'UBX-CFG-SLAS'},
-               # only in u-blox 8
-               0x93: {'str': 'BATCH', 'dec': cfg_batch, 'minlen': 8,
-                      'name': 'UBX-CFG-BATCH'},
-               }
+        # in u-blox 5+
+        0x00: {'str': 'PRT', 'dec': cfg_prt, 'minlen': 1,
+               'name': 'UBX-CFG-PRT'},
+        # in u-blox 5+
+        0x01: {'str': 'MSG', 'dec': cfg_msg, 'minlen': 2,
+               'name': 'UBX-CFG-MSG'},
+        # in u-blox 5+
+        0x02: {'str': 'INF', 'dec': cfg_inf, 'minlen': 1,
+               'name': 'UBX-CFG-INF'},
+        # in u-blox 5+
+        0x04: {'str': 'RST', 'dec': cfg_rst, 'minlen': 4,
+               'name': 'UBX-CFG-RST'},
+        # in u-blox 5 to 9
+        0x06: {'str': 'DAT', 'dec': cfg_dat, 'minlen': 2,
+               'name': 'UBX-CFG-DAT'},
+        # u-blox 5, 6.  Not in u-blox 7+
+        0x07: {'str': 'TP', 'dec': cfg_tp, 'minlen': 28,
+               'name': 'UBX-CFG-TP'},
+        # in u-blox 5+
+        0x08: {'str': 'RATE', 'dec': cfg_rate, 'minlen': 6,
+               'name': 'UBX-CFG-RATE'},
+        # in u-blox 5+
+        0x09: {'str': 'CFG', 'dec': cfg_cfg, 'minlen': 12,
+               'name': 'UBX-CFG-CFG'},
+        # Antaris 4, deprecated in u-blox 5/6, gone in 7
+        0x0e: {'str': 'FXM', 'dec': cfg_fxn, 'minlen': 36,
+               'name': 'UBX-CFG-FXM'},
+        # u-blox 5, 6, 7, 8
+        0x11: {'str': 'RXM', 'dec': cfg_rxm, 'minlen': 2,
+               'name': 'UBX-CFG-RXM'},
+        # in u-blox 6, SFDR only.  Not in 5- or 7+
+        0x12: {'str': 'EKF', 'minlen': 16, 'name': 'UBX-CFG-EKF'},
+        # in u-blox 5+
+        0x13: {'str': 'ANT', 'dec': cfg_ant, 'minlen': 4,
+               'name': 'UBX-CFG-ANT'},
+        # in u-blox 5+
+        0x16: {'str': 'SBAS', 'dec': cfg_sbas, 'minlen': 8,
+               'name': 'UBX-CFG-SBAS'},
+        # in u-blox 5+
+        0x17: {'str': 'NMEA', 'dec': cfg_nmea, 'minlen': 4,
+               'name': 'UBX-CFG-NMEA'},
+        # in u-blox 6+, Not in u-blox 5-
+        0x1b: {'str': 'USB', 'dec': cfg_usb, 'minlen': 108,
+               'name': 'UBX-CFG-USB'},
+        # u-blox 5 and 6.  Not in u-blox 7+
+        0x1d: {'str': 'TMODE', 'dec': cfg_tmode, 'minlen': 28,
+               'name': 'UBX-CFG-TMODE'},
+        # in u-blox 8+. Not in u-blox 7-
+        0x1e: {'str': 'ODO', 'dec': cfg_odo, 'minlen': 20,
+               'name': 'UBX-CFG-ODO'},
+        # in u-blox 6, not in u-blox 7+
+        0x22: {'str': 'NVS', 'dec': cfg_nvs, 'minlen': 13,
+               'name': 'UBX-CFG-NVS'},
+        # in u-blox 5+
+        0x23: {'str': 'NAVX5', 'dec': cfg_navx5, 'minlen': 20,
+               'name': 'UBX-CFG-NAVX5'},
+        # in u-blox 6+.  Not in 5-
+        0x24: {'str': 'NAV5', 'dec': cfg_nav5, 'minlen': 36,
+               'name': 'UBX-CFG-NAV5'},
+        # in u-blox 6. SFDR only. Not in u-blox 5- or 7+
+        0x29: {'str': 'ESFGWT', 'minlen': 44, 'name': 'UBX-CFG-ESFGWT'},
+        # in u-blox 6+, Not u-blox 5-
+        0x31: {'str': 'TP5', 'dec': cfg_tp5, 'minlen': 1,
+               'name': 'UBX-CFG-TP5'},
+        # In u-blox 5, 6. Not in u-blox 7+
+        0x32: {'str': 'PM', 'dec': cfg_pm, 'minlen': 24,
+               'name': 'UBX-CFG-PM'},
+        # in u-blox 5+
+        0x34: {'str': 'RINV', 'dec': cfg_rinv, 'minlen': 1,
+               'name': 'UBX-CFG-RINV'},
+        # in u-blox 6+.  Not in u-blox 5-
+        0x39: {'str': 'ITFM', 'dec': cfg_itfm, 'minlen': 8,
+               'name': 'UBX-CFG-ITFM'},
+        # in u-blox 6+.  Not in u-blox 5-
+        0x3b: {'str': 'PM2', 'dec': cfg_pm2, 'minlen': 44,
+               'name': 'UBX-CFG-PM2'},
+        # in u-blox 6 and 7.  Not in u-blox 5- or 8+
+        0x3d: {'str': 'TMODE2', 'dec': cfg_tmode2, 'minlen': 28,
+               'name': 'UBX-CFG-TMODE2'},
+        # in u-blox 7+  Not in u-blox 6-
+        0x3e: {'str': 'GNSS', 'dec': cfg_gnss, 'minlen': 4,
+               'name': 'UBX-CFG-GNSS'},
+        # in u-blox 7+  Not in u-blox 6-
+        0x47: {'str': 'LOGFILTER', 'dec': cfg_logfilter, 'minlen': 12,
+               'name': 'UBX-CFG-LOGFILTER'},
+        # Not in u-blox 7-, FTS only
+        0x53: {'str': 'TXSLOT', 'minlen': 2, 'name': 'UBX-CFG-TXSLOT'},
+        # Not in u-blox 7-
+        0x57: {'str': 'PWR', 'dec': cfg_pwr, 'minlen': 8,
+               'name': 'UBX-CFG-PWR'},
+        # Not in u-blox 8-
+        0x5c: {'str': 'HNR', 'dec': cfg_hnr, 'minlen': 4,
+               'name': 'UBX-CFG-HNR'},
+        # Not in u-blox 7-
+        0x60: {'str': 'ESRC', 'dec': cfg_esrc, 'minlen': 4,
+               'name': 'UBX-CFG-ESRC'},
+        # Not in u-blox 8-
+        0x61: {'str': 'DOSC', 'dec': cfg_dosc, 'minlen': 4,
+               'name': 'UBX-CFG-DOSC'},
+        # Not in u-blox 8-
+        0x62: {'str': 'SMGR', 'dec': cfg_smgr, 'minlen': 20,
+               'name': 'UBX-CFG-SMGR'},
+        # Not in u-blox 8-
+        0x69: {'str': 'GEOFENCE', 'dec': cfg_geofence, 'minlen': 8,
+               'name': 'UBX-CFG-GEOFENCE'},
+        # Not in u-blox 8-
+        0x70: {'str': 'DGNSS', 'dec': cfg_dgnss, 'minlen': 4,
+               'name': 'UBX-CFG-DGNSS'},
+        # Not in u-blox 7-, HP only
+        # undocumented, but present in ZED-F9T
+        0x71: {'str': 'TMODE3', 'dec': cfg_tmode3, 'minlen': 40,
+               'name': 'UBX-CFG-TMODE3'},
+        # Not in u-blox 7-
+        0x84: {'str': 'FIXSEED', 'dec': cfg_fixseed, 'minlen': 12,
+               'name': 'UBX-CFG-FIXSEED'},
+        # Not in u-blox 7-
+        0x85: {'str': 'DYNSEED', 'dec': cfg_dynseed, 'minlen': 12,
+               'name': 'UBX-CFG-DYNSEED'},
+        # Not in u-blox 8-
+        0x86: {'str': 'PMS', 'dec': cfg_pms, 'minlen': 8,
+               'name': 'UBX-CFG-PMS'},
+        # in u-blox 9
+        0x8a: {'str': 'VALSET', 'dec': cfg_valset, 'minlen': 4,
+               'name': 'UBX-CFG-VALSET'},
+        # in u-blox 9
+        0x8b: {'str': 'VALGET', 'dec': cfg_valget, 'minlen': 4,
+               'name': 'UBX-CFG-VALGET'},
+        # in u-blox 9
+        0x8c: {'str': 'VALDEL', 'dec': cfg_valdel, 'minlen': 4,
+               'name': 'UBX-CFG-VALDEL'},
+        # u-blox 8
+        0x8d: {'str': 'SLAS', 'dec': cfg_slas, 'minlen': 4,
+               'name': 'UBX-CFG-SLAS'},
+        # only in u-blox 8
+        0x93: {'str': 'BATCH', 'dec': cfg_batch, 'minlen': 8,
+               'name': 'UBX-CFG-BATCH'},
+        }
 
     # UBX-ESF-
     # only with ADR or UDR products
