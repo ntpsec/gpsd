@@ -1450,7 +1450,8 @@ if not cleaning and not helping:
     if not have_flake8:
         announce("Program flake8 not found -- skipping flake8 checks")
     if not have_pycodestyle:
-        announce("Program pycodestyle not found -- skipping pycodestyle checks")
+        announce("Program pycodestyle not found -- "
+                 "skipping pycodestyle checks")
     if not have_pylint:
         announce("Program pylint not found -- skipping pylint checks")
     if not have_scan_build:
@@ -1634,7 +1635,7 @@ if not (cleaning or helping):
 # Set up for Python coveraging if needed
 pycov_path = None
 if have_coverage and env['coveraging'] and env['python_coverage']:
-    pycov_default = ( opts.options[opts.keys().index('python_coverage')].default)
+    pycov_default = opts.options[opts.keys().index('python_coverage')].default
     pycov_current = env['python_coverage']
     pycov_list = pycov_current.split()
     if env.GetOption('num_jobs') > 1 and pycov_current == pycov_default:
@@ -2239,7 +2240,7 @@ for (tgt, src) in templated.items():
 
 # When the URL declarations change, so must the generated web pages
 for fn in glob.glob("www/*.in"):
-    env.Depends(fn[:-3], "SConstruct")
+    env.Depends(fn[:-3], ["SConstruct", "SConscript"])
 
 man_env = env.Clone()
 if man_env.GetOption('silent'):
@@ -2345,7 +2346,7 @@ if have_dia:
 # Where it all comes together
 
 build_src = [libraries, sbin_binaries, bin_binaries, "clients/gpsd.php",
-             manpage_targets, webpages, "libgps.pc", "gpsd.rules" ]
+             manpage_targets, webpages, "libgps.pc", "gpsd.rules"]
 if env['python']:
     build_src.append(python_targets)
 build = env.Alias('build', build_src)
@@ -2387,8 +2388,8 @@ if qt_env:
     binaryinstall.append(GPSLibraryInstall(qt_env, installdir('libdir'),
                                            compiled_qgpsmmlib, libgps_version))
 
-if ((not env['debug'] and not env['debug_opt'] and not env['profiling']
-     and not env['nostrip'] and not sys.platform.startswith('darwin'))):
+if ((not env['debug'] and not env['debug_opt'] and not env['profiling'] and
+     not env['nostrip'] and not sys.platform.startswith('darwin'))):
     env.AddPostAction(binaryinstall, '$STRIP $TARGET')
 
 python_module_dir = str(python_libdir) + os.sep + 'gps'
@@ -2407,7 +2408,8 @@ python_install = [python_modules_install,
                   # install, but we do need it for the uninstall
                   Dir(DESTDIR + python_module_dir)]
 
-python_lint = python_misc + python_modules + python_progs + ['SConstruct']
+python_lint = (python_misc + python_modules + python_progs +
+               ['SConstruct', 'SConscript'])
 if env['python']:
     python_all = python_lint
 else:
@@ -2466,7 +2468,7 @@ for icon in icon_files:
 
 # and now we know everything to install
 install_src = (binaryinstall + maninstall + pc_install + headerinstall +
-               docinstall +python_install)
+               docinstall + python_install)
 
 install = env.Alias('install', install_src)
 
@@ -2493,7 +2495,9 @@ env.Precious(uninstall)
 def error_action(target, source, env):
     raise SCons.Error.UserError("Target selection for '.' is broken.")
 
+
 AlwaysBuild(Alias(".", [], error_action))
+
 
 #
 # start audit checks section
@@ -2513,7 +2517,8 @@ if not scons_executable_name:
 # https://github.com/danmar/cppcheck
 cppcheck = Utility("cppcheck",
                    ['build', "include/gpsd.h", "include/packet_names.h"],
-                   "cppcheck -U__UNUSED__ -UUSE_QT -U__COVERITY__ -U__future__ "
+                   "cppcheck -U__UNUSED__ -UUSE_QT -U__COVERITY__ "
+                   "-U__future__ "
                    "-ULIMITED_MAX_CLIENTS -ULIMITED_MAX_DEVICES -UAF_UNSPEC "
                    "-UINADDR_ANY -U_WIN32 -U__CYGWIN__ "
                    "-UPATH_MAX -UHAVE_STRLCAT -UHAVE_STRLCPY -UIPTOS_LOWDELAY "
@@ -2538,15 +2543,28 @@ deheader = Utility("deheader", generated_sources, [
 env.Pseudo(deheader)
 env.Alias('deheader', deheader)
 
-# W504 line break after binary operator
+# Conflicts with pycodestyle:
+#   E121 continuation line under-indented for hanging indent
+#   E123 closing bracket does not match indentation of opening bracket's line
+# Conflist with gpsd style
+#   W504 line break after binary operator
+# --exit-zero always return success, so later audits will run
 flake8 = Utility("flake8", python_lint,
-                 ['flake8 --ignore=E122,E241,E401,E501,W504,W602 $SOURCES'])
+                 ['flake8 --ignore=E121,E122,E123,E241,E401,E501,W504,W602 '
+                  '--exit-zero $SOURCES'])
 env.Pseudo(flake8)
 env.Alias('flake8', flake8)
 
 # Additional Python readability style checks
+# Oddly these only happen when called this way?
+#   E121 continuation line under-indented for hanging indent
+#   E123 closing bracket does not match indentation of opening bracket's line
+# Conflicts with gpsd style
+#   W504 line break after binary operator
+# exit 0 so the rest of the audit runs
 pycodestyle = Utility("pep8", python_lint,
-                      ['pycodestyle --ignore=W602,E122,E241 $SOURCES'])
+                      ['pycodestyle --ignore=E121,E122,E123,E241,W504,W602 '
+                       '$SOURCES; exit 0'])
 env.Pseudo(pycodestyle)
 env.Alias('pycodestyle', pycodestyle)
 # pep8 was renamed to pycodestyle, same thing
@@ -2559,17 +2577,18 @@ env.Alias('pep8', pycodestyle)
 # auditing. This is irritating as hell but there's no help for it short
 # of an upstream fix.
 
-pylint = Utility("pylint", python_lint,
-    ['pylint --rcfile=/dev/null --dummy-variables-rgx=\'^_\' '
-     '--msg-template='
-     '"{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" '
-     '--reports=n --disable=F0001,C0103,C0111,C1001,C0301,C0122,C0302,'
-     'C0322,C0324,C0323,C0321,C0330,C0411,C0413,E1136,R0201,R0204,'
-     'R0801,'
-     'R0902,R0903,R0904,R0911,R0912,R0913,R0914,R0915,W0110,W0201,'
-     'W0121,W0123,W0231,W0232,W0234,W0401,W0403,W0141,W0142,W0603,'
-     'W0614,W0640,W0621,W1504,E0602,E0611,E1101,E1102,E1103,E1123,'
-     'F0401,I0011 $SOURCES'])
+# --exit-zero always return success, so later audits will run
+pylint = Utility("pylint", python_lint, [
+    'pylint --rcfile=/dev/null --dummy-variables-rgx=\'^_\' '
+    '--exit-zero --msg-template='
+    '"{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" '
+    '--reports=n --disable=F0001,C0103,C0111,C1001,C0301,C0122,C0302,'
+    'C0322,C0324,C0323,C0321,C0330,C0411,C0413,E1136,R0201,R0204,'
+    'R0801,'
+    'R0902,R0903,R0904,R0911,R0912,R0913,R0914,R0915,W0110,W0201,'
+    'W0121,W0123,W0231,W0232,W0234,W0401,W0403,W0141,W0142,W0603,'
+    'W0614,W0640,W0621,W1504,E0602,E0611,E1101,E1102,E1103,E1123,'
+    'F0401,I0011 $SOURCES'])
 env.Pseudo(pylint)
 env.Alias('pylint', pylint)
 
@@ -2581,8 +2600,8 @@ env.Pseudo(scan_build)
 env.Alias('scan_build', scan_build)
 
 # Run a valgrind audit on the daemon  - not in normal tests
-valgrind = Utility('valgrind',
-    ['valgrind-audit.py', gpsd],
+valgrind = Utility('valgrind', [
+    'valgrind-audit.py', gpsd],
     '$PYTHON $SRCDIR/valgrind-audit.py'
 )
 env.Pseudo(valgrind)
@@ -2591,7 +2610,8 @@ env.Alias('valgrind', valgrind)
 # Check the documentation for bogons, too
 # xmllint is part of the libxml2 package
 # do not test xml in doc/*xml as those are fragments, not complete xml
-xmllint = Utility("xmllint", [glob.glob("man/*xml"), glob.glob("www/*.xml")],
+xmllint = Utility("xmllint", [
+    glob.glob("man/*xml"), glob.glob("www/*.xml")],
     "for xml in $SOURCES; do xmllint --nonet --noout --valid $$xml; done")
 env.Pseudo(xmllint)
 env.Alias('xmllint', xmllint)
@@ -2840,12 +2860,11 @@ verenv = env['ENV'].copy()
 verenv['PYTHONPATH'] = env['SRCDIR']  # Use new gps module, not system's
 misc_regress = Utility('misc-regress', [
     'tests/test_clienthelpers.py',
-    'tests/test_misc.py',
-    ], [
+    'tests/test_misc.py', ],
+    [
     'cd %s; %s tests/test_clienthelpers.py' %
     (variantdir, target_python_path),
-    'cd %s; %s tests/test_misc.py' % (variantdir, target_python_path),
-    ],
+    'cd %s; %s tests/test_misc.py' % (variantdir, target_python_path), ],
     ENV=verenv)
 env.Pseudo(misc_regress)
 
@@ -3088,8 +3107,8 @@ env.Command('#TAGS', sources, ['etags ' + " ".join(sources)])
 # for these productions to work.
 
 if manbuilder:
-	# add in the built man pages
-	distfiles += all_manpages.keys()
+    # add in the built man pages
+    distfiles += all_manpages.keys()
 distfiles.sort()
 
 # remove git and CI stuff from files to tar/zip
@@ -3101,9 +3120,7 @@ distfiles_ignore = [
     ".travis.yml",
     # remove contrib/ais-samples
     "contrib/ais-samples/ais-nmea-sample.log",
-    "contrib/ais-samples/ais-nmea-sample.log.chk",
-
-    ]
+    "contrib/ais-samples/ais-nmea-sample.log.chk", ]
 for fn in distfiles_ignore:
     if fn in distfiles:
         distfiles.remove(fn)
@@ -3118,17 +3135,17 @@ if "packaging/rpm/gpsd.spec" not in distfiles:
 # zip archive
 target = '#gpsd-${VERSION}.zip'
 dozip = env.Zip(target, distfiles)
-zip = env.Alias('zip', dozip)
+ziptgt = env.Alias('zip', dozip)
 
 target = '#gpsd-%s.tar' % gpsd_version
 # .tar.gz archive
-gzenv = Environment(TARFLAGS = '-c -z')
+gzenv = Environment(TARFLAGS='-c -z')
 targz = gzenv.Tar(target + '.gz', distfiles)
 # .tar.xz archive
-xzenv = Environment(TARFLAGS = '-c -J')
+xzenv = Environment(TARFLAGS='-c -J')
 tarxz = xzenv.Tar(target + '.xz', distfiles)
 env.Alias('tar', [targz, tarxz])
-env.Alias('dist', [zip, targz, tarxz])
+env.Alias('dist', [ziptgt, targz, tarxz])
 
 Clean('build', [targz, tarxz, dozip])
 
