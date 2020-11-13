@@ -2518,7 +2518,8 @@ cppcheck = Utility("cppcheck",
                    "-UINADDR_ANY -U_WIN32 -U__CYGWIN__ "
                    "-UPATH_MAX -UHAVE_STRLCAT -UHAVE_STRLCPY -UIPTOS_LOWDELAY "
                    "-UIPV6_TCLASS -UTCP_NODELAY -UTIOCMIWAIT --template gcc "
-                   "--enable=all --inline-suppr --suppress='*:driver_proto.c' "
+                   "--enable=all --inline-suppr "
+                   "--suppress='*:drivers/driver_proto.c' "
                    "--force $SRCDIR")
 env.Pseudo(cppcheck)
 env.Alias('cppcheck', cppcheck)
@@ -2537,8 +2538,9 @@ deheader = Utility("deheader", generated_sources, [
 env.Pseudo(deheader)
 env.Alias('deheader', deheader)
 
+# W504 line break after binary operator
 flake8 = Utility("flake8", python_lint,
-                 ['flake8 --ignore=E501,W602,E122,E241,E401 $SOURCES'])
+                 ['flake8 --ignore=E122,E241,E401,E501,W504,W602 $SOURCES'])
 env.Pseudo(flake8)
 env.Alias('flake8', flake8)
 
