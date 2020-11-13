@@ -274,6 +274,7 @@ coverity:
     - 'www/*/*'
     - '*.adoc'
     - 'man/*.xml'
+    - 'NEWS'
 
 .should_build_pages: &should_build_pages
   only:
