@@ -103,7 +103,7 @@ def kepler(e, M):
 
     # https://en.wikipedia.org/wiki/Kepler%27s_equation
     E = M             # initial guess
-    for iter in range(1, 20):
+    for i in range(1, 20):
         temp = E
         E = M + e * math.sin(E)
         if 1e-12 > math.fabs(E - temp):
@@ -151,16 +151,15 @@ def SatPos(ephm, t):
     sinEk = math.sin(Ek)
 
     # true anomaly
-    if False:
-        nuk = math.atan2(
-           math.sqrt(1 - (ephm['e'] ** 2)) * sinEk /
-           (1 - ephm['e'] * math.cos(Ek)),
-           (cosEk - ephm['e']) / (1 - ephm['e'] * cosEk))
-    else:
-        # alternate true anomaly
-        # close enough?
-        nuk = math.atan2(math.sqrt(1 - (ephm['e'] ** 2)) * sinEk,
-                         (cosEk - ephm['e']))
+    nuk = math.atan2(
+       math.sqrt(1 - (ephm['e'] ** 2)) * sinEk /
+       (1 - ephm['e'] * math.cos(Ek)),
+       (cosEk - ephm['e']) / (1 - ephm['e'] * cosEk))
+
+    # alternate true anomaly
+    # close enough?
+    # nuk = math.atan2(math.sqrt(1 - (ephm['e'] ** 2)) * sinEk,
+    #                  (cosEk - ephm['e']))
 
     # Argument of Latitude
     Phik = nuk + ephm['omega']
@@ -369,7 +368,7 @@ ionosphere_fields = {
     }
 
 
-def _print_msg(svid, ephem, fields):
+def _print_msg(ephem, fields):
     """Print Subframe Data."""
     for index in sorted(fields.keys()):
         fld = fields[index]
@@ -610,17 +609,17 @@ for sv in sorted(set(all_sv)):
     print("\nSV %u" % sv)
     print("  Subframe 1, Clock Data")
     if sv in ephemeris1:
-        _print_msg(sv, ephemeris1[sv], ephem1_fields)
+        _print_msg(ephemeris1[sv], ephem1_fields)
     else:
         print("    Missing")
     print("  Subframe 2, Orbit Data")
     if sv in ephemeris2:
-        _print_msg(sv, ephemeris2[sv], ephem2_fields)
+        _print_msg(ephemeris2[sv], ephem2_fields)
     else:
         print("    Missing")
     print("  Subframe 3, Orbit Data")
     if sv in ephemeris3:
-        _print_msg(sv, ephemeris3[sv], ephem3_fields)
+        _print_msg(ephemeris3[sv], ephem3_fields)
     else:
         print("    Missing")
     print("  Subframe 4 page 25")
@@ -636,7 +635,7 @@ for sv in sorted(set(all_sv)):
         print("    Missing")
     print("  Almanac")
     if sv in almanac:
-        _print_msg(sv, almanac[sv], almanac_fields)
+        _print_msg(almanac[sv], almanac_fields)
     else:
         print("    Missing")
 
@@ -662,7 +661,7 @@ if 'time' in tpv:
 
 if ionosphere:
     print("\nSubframe 4, page 18")
-    _print_msg(None, ionosphere, ionosphere_fields)
+    _print_msg(ionosphere, ionosphere_fields)
     if gps_tow:
         # tUTC = tLS + A0 + A1 (tE - tot + 604800 (WN - WNt))
         deltatutc = (ionosphere['ls'] +
@@ -676,20 +675,21 @@ if ionosphere:
 if health:
     print("\nSubframe 4, page 25")
     for sv in range(1, 33):
-        id = "SV%d" % sv
-        if id in health:
+        svid = "SV%d" % sv
+        if svid in health:
             print("  %s %2d (A/S %3s Config %s)" %
-                  (id, health[id], 'Yes' if (health[id] & 8) else 'No',
-                   sv_conf[health[id] & 0x7]))
+                  (id, health[svid], 'Yes' if (health[svid] & 8) else 'No',
+                   sv_conf[health[svid] & 0x7]))
     for sv in range(25, 33):
-        id = "SVH%d" % sv
-        if id in health:
-            if 0x3f == health[id]:
-                print("  %s %2d (n/a)" % (id, health[id]))
+        svid = "SVH%d" % sv
+        if isvd in health:
+            if 0x3f == health[svid]:
+                print("  %s %2d (n/a)" % (svid, health[svid]))
             else:
                 print("  %s %2d (Data %s, %s)" %
-                      (id, health[id], 'Bad' if (health[id] & 0x20) else 'OK',
-                       health_str[health[id] & 0x1f]))
+                      (svid, health[svid],
+                      'Bad' if (health[svid] & 0x20) else 'OK',
+                       health_str[health[svid] & 0x1f]))
 
 if health2:
     print("\nSubframe 5, page 25\n  WNa %d toa %d" %
