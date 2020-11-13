@@ -34,7 +34,6 @@ socket_t dgpsip_open(struct gps_device_t *device, const char *dgpsserver)
 
     device->gpsdata.gps_fd =
         netlib_connectsock(AF_UNSPEC, dgpsserver, dgpsport, "tcp");
-    // cppcheck-suppress pointerPositive
     if (device->gpsdata.gps_fd >= 0) {
         char hn[256], buf[BUFSIZ];
         GPSD_LOG(LOG_PROG, &device->context->errout,

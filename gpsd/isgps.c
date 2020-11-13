@@ -177,8 +177,6 @@ void isgps_init(struct gps_lexer_t *lexer)
     lexer->isgps.buflen = 0;
 }
 
-// This works around cppcheck not looking into enough config branches
-// cppcheck-suppress unusedFunction
 enum isgpsstat_t isgps_decode(struct gps_lexer_t *lexer,
                               bool(*preamble_match) (isgps30bits_t *),
                               bool(*length_check) (struct gps_lexer_t *),

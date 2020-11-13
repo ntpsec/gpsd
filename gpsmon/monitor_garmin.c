@@ -81,7 +81,6 @@ typedef struct __attribute__((__packed__))
     double rcvr_tow;
     // cppcheck-suppress unusedStructMember
     int16_t rcvr_wn;
-    // cppcheck-suppress unusedStructMember
     cpo_rcv_sv_data sv[GARMIN_CHANNELS];
 } cpo_rcv_data;
 

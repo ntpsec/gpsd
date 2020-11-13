@@ -633,8 +633,6 @@ gps_mask_t PrintSERPacket(struct gps_device_t *session, unsigned char pkt_id,
 
 
 #if defined(HAVE_LIBUSB) && defined(__linux__)
-// This works around cppcheck not looking into enough config branches
-// cppcheck-suppress unusedFunction
 static gps_mask_t PrintUSBPacket(struct gps_device_t *session, Packet_t * pkt)
 /* For debugging, decodes and prints some known packets */
 {
@@ -854,8 +852,6 @@ static void Build_Send_SER_Packet(struct gps_device_t *session,
  *
  * libudev: http://www.kernel.org/pub/linux/utils/kernel/hotplug/libudev/
  */
-// This works around cppcheck not looking into enough config branches
-// cppcheck-suppress unusedFunction
 static bool is_usb_device(const char *path UNUSED, int vendor, int product,
                           struct gpsd_errout_t *errout)
 {

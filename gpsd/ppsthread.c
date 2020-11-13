@@ -344,7 +344,6 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
      * FIXME! need more specific than 'not linux'
      */
     (void)strlcpy(path, pps_thread->devicename, sizeof(path));
-    // cppcheck-suppress redundantAssignment
     ret  = pps_thread->devicefd;
 #endif
     /* assert(ret >= 0); */
@@ -1058,7 +1057,6 @@ static void *gpsd_ppsmonitor(void *arg)
                  * pulse shorter than 500 milliSec + 10%
                  * looks like 1.0 Hz square wave, ignore trailing edge
                  * except we can't tell which is which, so we guess */
-                // cppcheck-suppress knownConditionTrueFalse
                 if (edge == 1) {
                     ok = true;
                     log = "square\n";

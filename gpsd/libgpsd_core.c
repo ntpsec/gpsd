@@ -623,7 +623,6 @@ int gpsd_activate(struct gps_device_t *session, const int mode)
     if (mode != O_CONTINUE)
         session->mode = mode;
 
-    // cppcheck-suppress pointerLessThanZero
     if (session->gpsdata.gps_fd < 0) {
         /* return could be -1, PLACEHOLDING_FD, of UNALLOCATED_FD */
         if ( PLACEHOLDING_FD == session->gpsdata.gps_fd ) {

@@ -196,7 +196,6 @@ int gps_stream(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
     int status = -1;
 
 #ifdef SOCKET_EXPORT_ENABLE
-    /* cppcheck-suppress redundantAssignment */
     status = gps_sock_stream(gpsdata, flags, d);
 #endif /* SOCKET_EXPORT_ENABLE */
 
@@ -229,7 +228,6 @@ bool gps_waiting(const struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
 #endif /* SHM_EXPORT_ENABLE */
 
 #ifdef SOCKET_EXPORT_ENABLE
-    // cppcheck-suppress pointerPositive
     if ((intptr_t)(gpsdata->gps_fd) >= 0)
         waiting = gps_sock_waiting(gpsdata, timeout);
 #endif /* SOCKET_EXPORT_ENABLE */

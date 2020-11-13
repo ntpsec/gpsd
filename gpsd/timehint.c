@@ -259,7 +259,6 @@ struct sock_sample {
     double offset;
     int pulse;
     int leap;    /* notify that a leap second is upcoming */
-    // cppcheck-suppress unusedStructMember
     int _pad;
     int magic;      /* must be SOCK_MAGIC */
 };
