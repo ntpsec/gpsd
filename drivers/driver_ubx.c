@@ -390,7 +390,6 @@ static void
 ubx_msg_mon_txbuf(struct gps_device_t *session, unsigned char *buf,
                 size_t data_len)
 {
-    unsigned int peakUsage;
     unsigned int tUsage, tPeakusage;
     unsigned char errors, limit, reserved1;
     int i;
@@ -406,7 +405,7 @@ ubx_msg_mon_txbuf(struct gps_device_t *session, unsigned char *buf,
     for (i = 0; i < 6; i++) {
         unsigned int pending = getleu16(buf, i * 2);
         unsigned int usage =  getub(buf, 12 + i);
-        peakUsage = getub(buf, 18 + i);
+        unsigned int peakUsage = getub(buf, 18 + i);
 
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "TXBUF: target %d, limit %u, pending %4u bytes, "
