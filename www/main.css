@@ -29,7 +29,7 @@ p {
   margin: 0;
 }
 
-#Content > p+p {
+#Content > p + p {
   text-indent: 2em;
   margin-top: 1ex;
 }
@@ -49,7 +49,7 @@ a {
   font-family: verdana, arial, helvetica, sans-serif;
 }
 
-a: hover {
+a:hover {
   background-color: #ccc;
 }
 

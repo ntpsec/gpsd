@@ -206,7 +206,7 @@ function azel2xy($az, $el, $sz){
 }
 
 function cellplot($im, $sz, $C, $cellsize, $e){
-	list($sv, $el, $az, $snr, $u) = $e;
+	list($sv, $el, $az, $snr, $_) = $e;
 
 	if ((0 == $sv) || (0 == $az + $el + $snr) ||
 	    ($az < 0) || ($el < 0))
@@ -251,7 +251,7 @@ function cellplot($im, $sz, $C, $cellsize, $e){
 }
 
 function splot($im, $sz, $C, $r, $filled, $e){
-	list($sv, $az, $el, $snr, $u) = $e;
+	list($sv, $az, $el, $snr, $_) = $e;
 
 	if ((0 == $sv) || (0 == $az + $el + $snr))
 		return;
