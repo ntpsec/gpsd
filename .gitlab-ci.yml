@@ -270,6 +270,9 @@ coverity:
 
 .changes_pages: &changes_pages
   changes:
+    - '.gitlab-ci.yml'
+    - 'Scons*'
+    - 'gpsd-3.21.1~dev/SCons*'
     - 'www/*'
     - 'www/*/*'
     - '*.adoc'
