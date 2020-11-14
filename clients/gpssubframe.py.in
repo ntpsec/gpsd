@@ -383,10 +383,10 @@ epilog = ('BSD terms apply: see the file COPYING in the distribution root'
           ' for details.')
 
 parser = argparse.ArgumentParser(
-             description=description,
-             epilog=epilog,
-             formatter_class=argparse.RawDescriptionHelpFormatter,
-             usage=usage)
+    description=description,
+    epilog=epilog,
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+    usage=usage)
 parser.add_argument(
     '-?',
     action="help",
@@ -449,10 +449,18 @@ parser.add_argument(
 )
 parser.add_argument(
     '--test',
+    action="store_true",
     dest='test',
     default=False,
-    action="store_true",
     help='Run tests of the algorithms [Default %(default)s)]'
+)
+parser.add_argument(
+    '--time',
+    dest='timeat',
+    default=False,
+    metavar='TIME',
+    type=float,
+    help='Compute sat positions at TIME seconds,  [Default: current time ]'
 )
 parser.add_argument(
     '-V', '--version',
@@ -644,22 +652,35 @@ gps_week = None
 gps_tow = None
 
 if 'time' in tpv:
+    if 'leapseconds' in tpv:
+        leapseconds = tpv['leapseconds']
+        print("\nCurrent leapseconds: %s" % tpv['leapseconds'])
+    else:
+        leapseconds = 18
+        print("\nCurrent leapseconds: Unknown, assuming 18")
     # convert to UNIX time
     unix_time = gps.isotime(tpv['time'])
     # GPS Epoch starts: Jan 1980 00:00:00 UTC, Unix time: 315964800
     gps_time = unix_time - 315964800
-    if 'leapseconds' in tpv:
-        gps_time += tpv['leapseconds']
+    gps_time += leapseconds
     # 604,800 in a GPS week
     (gps_week, gps_tow) = divmod(gps_time, 604800)
 
-    print("\nUnix time: %s, gps time: %s, week: %s tow: %s" %
+    print("Current time: %s, gps time: %s, week: %s tow: %s" %
           (unix_time, gps_time, int(gps_week), gps_tow))
+    if options.timeat:
+        gps_time = options.timeat - 315964800
+        gps_time += leapseconds
+        # 604,800 in a GPS week
+        (gps_week, gps_tow) = divmod(gps_time, 604800)
+        print("Use time: %s, gps time: %s, week: %s tow: %s" %
+              (options.timeat, gps_time, int(gps_week), gps_tow))
+
     if 'lat' in tpv and 'lon' in tpv and 'altHAE' in tpv:
         print("Current position: lat %.8f lon %.8f altHAE %.3f" %
               (tpv['lat'], tpv['lon'], tpv['altHAE']))
 
-if ionosphere:
+if gps_week and ionosphere:
     print("\nSubframe 4, page 18")
     _print_msg(ionosphere, ionosphere_fields)
     if gps_tow:
@@ -678,17 +699,17 @@ if health:
         svid = "SV%d" % sv
         if svid in health:
             print("  %s %2d (A/S %3s Config %s)" %
-                  (id, health[svid], 'Yes' if (health[svid] & 8) else 'No',
+                  (svid, health[svid], 'Yes' if (health[svid] & 8) else 'No',
                    sv_conf[health[svid] & 0x7]))
     for sv in range(25, 33):
         svid = "SVH%d" % sv
-        if isvd in health:
+        if svid in health:
             if 0x3f == health[svid]:
                 print("  %s %2d (n/a)" % (svid, health[svid]))
             else:
                 print("  %s %2d (Data %s, %s)" %
                       (svid, health[svid],
-                      'Bad' if (health[svid] & 0x20) else 'OK',
+                       'Bad' if (health[svid] & 0x20) else 'OK',
                        health_str[health[svid] & 0x1f]))
 
 if health2:
@@ -705,7 +726,7 @@ if health2:
                        'Bad' if (health2[id] & 0x20) else 'OK',
                        health_str[health2[id] & 0x1f]))
 
-if 'time' in tpv and options.satpos:
+if gps_week and options.satpos:
     for sv in range(1, 33):
         # Ensure we have all 3 parts, and their IODx matches.
         if ((sv in ephemeris1 and

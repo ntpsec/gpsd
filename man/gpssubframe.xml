@@ -36,6 +36,7 @@ SPDX-License-Identifier: BSD-2-clause
    <arg choice='opt'>--progress</arg>
    <arg choice='opt'>--satpos</arg>
    <arg choice='opt'>--seconds <replaceable>SECONDS</replaceable></arg>
+   <arg choice='opt'>--time <replaceable>SECONDS</replaceable></arg>
    <arg choice='opt'>--test</arg>
    <arg choice='opt'>-V</arg>
    <arg choice='opt'>-x <replaceable>SECONDS</replaceable></arg>
@@ -84,6 +85,7 @@ a host, TCP/IP port number and remote device can be given.  </para>
   <para>--progress print progress reports as messages are received.</para>
   <para>--satpos Compute GPS satellite positions before exit.</para>
   <para>--seconds [seconds] Exit after delay of [seconds].</para>
+  <para>--time [seconds] Compute satpos at time [seconds].</para>
   <para>--test Run selftest code.</para>
   <para>-V prints the program version, then exits.</para>
   <para>-x [seconds] Exit after delay of [seconds].</para>
