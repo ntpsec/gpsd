@@ -81,10 +81,10 @@ epilog = ('  -c ALMANAC to dump the Almanacs from Subframes 4/5.\n'
           ' for details.')
 
 parser = argparse.ArgumentParser(
-             description=description,
-             epilog=epilog,
-             formatter_class=argparse.RawDescriptionHelpFormatter,
-             usage=usage)
+    description=description,
+    epilog=epilog,
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+    usage=usage)
 parser.add_argument(
     '-c',
     '--class',

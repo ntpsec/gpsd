@@ -678,10 +678,10 @@ if __name__ == '__main__':
               ' for details.')
 
     parser = argparse.ArgumentParser(
-                 description=description,
-                 epilog=epilog,
-                 formatter_class=argparse.RawDescriptionHelpFormatter,
-                 usage=usage)
+        description=description,
+        epilog=epilog,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        usage=usage)
     parser.add_argument(
         '-?',
         action="help",
