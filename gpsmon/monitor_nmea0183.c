@@ -302,7 +302,10 @@ static void nmea_update(void)
         last_tick = now;
 
         // this is a fake, GSV not decoded here, using sats from JSON
-        if (4 < strlen(fields[0]) && 0 == strcmp(fields[0] + 2, "GSV")) {
+        // fields[1] is current GSV sentence, fields[2] is total sentences
+        if (4 < strlen(fields[0]) &&
+            0 == strcmp(fields[0] + 2, "GSV") &&
+            0 == strcmp(fields[1], fields[2])) {
             int i;
             int nsats =
                 (session.gpsdata.satellites_visible <
