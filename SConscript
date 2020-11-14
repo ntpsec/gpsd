@@ -2309,9 +2309,22 @@ else:
              "WARNING: Some documentation and html will not be built.",
              end=True)
 
-# Non-asciidoc, non xml, webpages only
+# Non-asciidoc, non xml, plain html webpages only
 htmlpages = [
-    'www/hardware.html',
+    'www/bt.html',
+    'www/bu_303b.html',
+    'www/excellence.html',
+    'www/for-vendors.html',
+    'www/future.html',
+    'www/gps-hacking.html',
+    'www/gypsy.html',
+    'www/hall-of-shame.html',
+    'www/history.html',
+    'www/references.html',
+    'www/reliability.html',
+    'www/upstream-bugs.html',
+    'www/wishlist.html',
+    'www/xgps-sample.html',
     ]
 
 wwwpage_targets = []
@@ -2327,15 +2340,21 @@ if htmlbuilder:
         wwwpage_targets.append(env.HTML(
             'www/%s.html' % stem, 'www/%s.xml' % stem))
 
-    # The internals manual.
-    internals = env.HTML('www/internals.html', '$SRCDIR/doc/internals.xml')
-    # Depends on the subpages
-    env.Depends(internals, glob.glob('../doc/*xml'))
-    wwwpage_targets.append(internals)
+    if False:
+        # The internals manual.  BROKEN
+        internals = env.HTML('www/internals.html', '$SRCDIR/doc/internals.xml')
+        # Depends on the subpages
+        env.Depends(internals, glob.glob('../doc/*xml'))
+        wwwpage_targets.append(internals)
 
-webpages = (htmlpages + asciidocs + wwwpage_targets +
-            list(map(lambda f: f[:-3], glob.glob("www/*.in"))))
+# webapges from .in files
+webpages_in = list(map(lambda f: f[3:-3], glob.glob("../www/*.in")))
+webpages_in_not = ('www/hardware-tail.html')
+for fn in webpages_in_not:
+    if fn in webpages_in:
+        webpages_in.remove(fn)
 
+webpages = htmlpages + asciidocs + wwwpage_targets + webpages_in
 www = env.Alias('www', webpages)
 
 # The diagram editor dia is required in order to edit the diagram masters
