@@ -2354,7 +2354,18 @@ for fn in webpages_in_not:
     if fn in webpages_in:
         webpages_in.remove(fn)
 
-webpages = htmlpages + asciidocs + wwwpage_targets + webpages_in
+# webapges extras: images, css, js
+webpages_x_list = ('../www/*.css',
+                   '../www/*.gif',
+                   '../www/*.js',
+                   '../www/*.png',
+                   '../www/*.svg',
+                   )
+webpages_x = []
+for glb in webpages_x_list:
+    webpages_x += list(map(lambda f: f[3:], glob.glob(glb)))
+
+webpages = htmlpages + asciidocs + wwwpage_targets + webpages_in + webpages_x
 www = env.Alias('www', webpages)
 
 # The diagram editor dia is required in order to edit the diagram masters
