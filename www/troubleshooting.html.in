@@ -501,7 +501,7 @@ root@orca:~#</pre>
 
 <pre>
 root@orca:~# <a href="https://www.freedesktop.org/software/systemd/man/systemctl.html#status%20PATTERN%E2%80%A6%7CPID%E2%80%A6%5D" >systemctl status</a> gpsd
-● gpsd.service - GPS (Global Positioning System) Daemon
+ gpsd.service - GPS (Global Positioning System) Daemon
    Loaded: loaded (/lib/systemd/system/gpsd.service; enabled; vendor preset: enabled)
    Active: active (running) since Thu 2019-10-03 15:07:01 MDT; 1 weeks 2 days ago
  Main PID: 32454 (gpsd)
