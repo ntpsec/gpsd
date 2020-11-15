@@ -170,7 +170,7 @@ generated_www = [
     'www/faq.html',
     'www/gps_report.cgi',
     'www/hacking.html',
-    'www/hardware-head.html',
+    'www/hardware.html',
     'www/index.html',
     'www/SUPPORT.html',
    ]
@@ -2319,6 +2319,7 @@ htmlpages = [
     'www/gps-hacking.html',
     'www/gypsy.html',
     'www/hall-of-shame.html',
+    'www/hardware.html',       # built above
     'www/history.html',
     'www/references.html',
     'www/reliability.html',
@@ -2340,12 +2341,11 @@ if htmlbuilder:
         wwwpage_targets.append(env.HTML(
             'www/%s.html' % stem, 'www/%s.xml' % stem))
 
-    if False:
-        # The internals manual.  BROKEN
-        internals = env.HTML('www/internals.html', '$SRCDIR/doc/internals.xml')
-        # Depends on the subpages
-        env.Depends(internals, glob.glob('../doc/*xml'))
-        wwwpage_targets.append(internals)
+    # The internals manual.
+    internals = env.HTML('www/internals.html', '#doc/internals.xml')
+    # Depends on the subpages
+    env.Depends(internals, glob.glob('../doc/*xml'))
+    wwwpage_targets.append(internals)
 
 # webapges from .in files
 webpages_in = list(map(lambda f: f[3:-3], glob.glob("../www/*.in")))
