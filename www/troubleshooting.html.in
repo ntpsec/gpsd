@@ -508,7 +508,7 @@ root@orca:~# <a href="https://www.freedesktop.org/software/systemd/man/systemctl
     Tasks: 1 (limit: 4915)
    Memory: 924.0K
    CGroup: /system.slice/gpsd.service
-           └─32454 /usr/sbin/gpsd
+            32454 /usr/sbin/gpsd
 
 Oct 03 15:07:01 orca systemd[1]: Starting GPS (Global Positioning System) Daemon...
 Oct 03 15:07:01 orca systemd[1]: Started GPS (Global Positioning System) Daemon.
