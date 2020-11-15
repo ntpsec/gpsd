@@ -342,7 +342,7 @@ sentences and decoding them.</dd>
 <dt><a href="libgpsmm.html">libgpsmm.3</a></dt>
 <dd>C++ class wrapper for the libgps C binding.</dd>
 
-<dt><a href="libQgpsmm.html">libgpsmm.3</a></dt>
+<dt><a href="libgpsmm.html">libQgpsmm.3</a></dt>
 <dd>Qt wrapper for the libgps C binding.</dd>
 
 <dt><a href="gpsd_json.html">gpsd_json.5</a></dt> <dd>The JSON 
