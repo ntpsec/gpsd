@@ -2699,25 +2699,24 @@ if env['socket_export'] and env['python']:
         'gps-herald', [gpsd, gpsctl, '$SRCDIR/gpsfake'],
         'cd %s; $PYTHON $PYTHON_COVERAGE $SRCDIR/gpsfake -T' % variantdir)
     env.Pseudo(gps_herald)
-    # get from root, do not bother to move to variant_dir
-    gps_log_pattern = os.path.join('..', 'test', 'daemon', '*.log')
-    gps_logs = glob.glob(gps_log_pattern)
-    gps_names = [os.path.split(x)[-1][:-4] for x in gps_logs]
+
+    gps_log_pattern = "test/daemon/*.log"
+    gps_logs = Glob(gps_log_pattern, strings=True)
     gps_tests = []
-    for gps_name, gps_log in zip(gps_names, gps_logs):
+    for gps_log in gps_logs:
         # oddly this runs in build root, but needs to run in variant_dir
         tgt = Utility(
-            'gps-regress-' + gps_name, gps_herald,
+            'gps-regress-' + gps_log[:-4],
+            [gps_herald, gps_log],
             'cd %s; ./regress-driver -q -o -t $REGRESSOPTS %s' %
             (variantdir, gps_log))
         env.Pseudo(tgt)
         gps_tests.append(tgt)
     gps_regress = env.Alias('gps-regress', gps_tests)
 
-    # Run the passthrough log in all transport modes for better coverage
-    gpsfake_logs = ['test/daemon/passthrough.log',
-                    'test/daemon/passthrough.log.chk']
     # the log files must be dependencies so they get copied into variant_dir
+    gpsfake_logs = Glob('test/daemon/*')
+    # Run the passthrough log in all transport modes for better coverage
     gpsfake_tests = []
     for name, opts in [['pty', ''], ['udp', '-u'], ['tcp', '-o -t']]:
         # oddly this runs in build root, but needs to run in variant_dir
@@ -2735,15 +2734,17 @@ if env['socket_export'] and env['python']:
     # changes in gpsd.h.  Many drivers rely on the default until they
     # get the current leap second.
     gps_rebuilds = []
-    for gps_name, gps_log in zip(gps_names, gps_logs):
+    for gps_log in gps_logs:
         # oddly this runs in build root, but needs to run in variant_dir
         gps_rebuilds.append(Utility(
-            'gps-makeregress-' + gps_name, gps_herald,
+            'gps-makeregress-' + gps_log[:-4],
+             [gps_herald, gps_log],
             'cd %s; ./regress-driver -bq -o -t '
             '$REGRESSOPTS %s ' % (variantdir, gps_log)))
     if GetOption('num_jobs') <= 1:
         Utility('gps-makeregress', gps_herald,
-                '$SRCDIR/regress-driver -b $REGRESSOPTS %s' % gps_log_pattern)
+                'cd %s; ./regress-driver -b $REGRESSOPTS %s' %
+                (variantdir, gps_log_pattern))
     else:
         env.Alias('gps-makeregress', gps_rebuilds)
 else:
