@@ -116,13 +116,18 @@ def kepler(e, M):
 
 # Online data check:
 # real time sat positions: https://in-the-sky.org/satmap_worldmap.php
+#
+# See also:
+# RTKLIB src/ephemeris.c
+# https://www.telesens.co/2017/07/17/calculating-position-from-raw-gps-data/#1b_Code_for_Calculating_Satellite_Position
+# gnss-sdr: src/core/system_parameters/gps_ephemeris.cc
 def SatPos(ephm, t):
-    """Calculate GPS Satellite Position from Ephemeris/Almanac."""
-    # compute Sat position from IS-GPS-200 table 20-IV
-    # See also:
-    # RTKLIB src/ephemeris.c
-    # https://www.telesens.co/2017/07/17/calculating-position-from-raw-gps-data/#1b_Code_for_Calculating_Satellite_Position
-    # gnss-sdr: src/core/system_parameters/gps_ephemeris.cc
+    """Calculate GPS Satellite Position from Ephemeris/Almanac.
+
+Calculations from IS-GPS-200 table 20-IV
+
+return (x, y, z) of satellite at gps_tow t
+"""
 
     # Semi-major axis
     A = ephm['sqrtA'] ** 2      # meters
@@ -209,14 +214,14 @@ def SatPos(ephm, t):
     z = ykprime * sinik
 
     # sat velocity in ECEF coordinates, meters per second
-    # not validated yet.
-    vx = (-delta_Omegad * (xkprime + ykprime * cosik) +
-          x * cosOmegak -
-          y * cosik * sinOmegak)
-    vy = (delta_Omegad * (xkprime * cosOmegak - ykprime * cosik * sinOmegak) +
-          x * sinOmegak +
-          y * cosik * cosOmegak)
-    vz = y * sinik
+    # FIXME: broken calculation
+    # vx = (-delta_Omegad * (xkprime + ykprime * cosik) +
+    #       x * cosOmegak -
+    #       y * cosik * sinOmegak)
+    # vy = (delta_Omegad * (xkprime * cosOmegak - ykprime * cosik * sinOmegak) +
+    #       x * sinOmegak +
+    #       y * cosik * cosOmegak)
+    # vz = y * sinik
 
     # Almanac does not have toc, or ure
     if 'toc' in ephm:
@@ -251,26 +256,18 @@ def SatPos(ephm, t):
               (xkprime, ykprime, Omegak))
         # compute distance from earth's center, and orbital speed, as
         # simple cross-check
-        # GPS orbit: speed about 3.9 km/sec, radius about 26,600 km
+        # GPS orbit radius about 26,600 km
         dist = math.sqrt((x * x) + (y * y) + (z * z))
-        speed = math.sqrt((vx * vx) + (vy * vy) + (vz * vz))
-        print("dist %13.3f speed %13.3f" %
-              (dist, speed))
+        print("dist %13.3f" % dist)
 
-    # Finally, lat/lon/alt
-    (lat, lon, altHAE) = gps.ecef2lla(x, y, z)
-    print(" x %13.3f  y %13.3f  z %13.3f\n"
-          "vx %13.3f yv %13.3f zv %13.3f\n"
-          "lat %.6f lon %.6f altHAE %.3f" %
-          (x, y, z, vx, vy, vz, lat, lon, altHAE))
+    # FIXME: broken
+    # if 1 < options.debug:
+        # GPS orbit speed about 3.9 km/sec
+        # speed = math.sqrt((vx * vx) + (vy * vy) + (vz * vz))
+        # print("speed %13.3f" % speed)
+    # print("vx %13.3f yv %13.3f zv %13.3f" % (vx, vy, vz))
 
-    # ax and el to sat
-    if 'lat' in tpv and 'lon' in tpv and 'altHAE' in tpv:
-        (E, N, U) = gps.ecef2enu(x, y, z,
-                                 tpv['lat'], tpv['lon'], tpv['altHAE'])
-        print("E %.3f N %.3f U %.3f" % (E, N, U))
-        (az, el, rng) = gps.enu2aer(E, N, U)
-        print("az %.3f el %.3f rng %.3f" % (az, el, rng))
+    return (x, y, z)
 
 
 # current GPS Ephemeris here, url split: https://cddis.nasa.gov/
@@ -749,7 +746,33 @@ if gps_week and options.satpos:
             for i in cvt:
                 eph[i] *= gps.GPS_PI
 
-            SatPos(eph, gps_tow)
+            (x, y, z) = SatPos(eph, gps_tow)
+
+            # lat/lon/alt
+            (lat, lon, altHAE) = gps.ecef2lla(x, y, z)
+            print(" x %13.3f  y %13.3f  z %13.3f\n"
+                  "lat %.6f lon %.6f altHAE %.3f" %
+                  (x, y, z, lat, lon, altHAE))
+
+            # compute sat velocity by subtracting two postions.
+            # because I can't get the direct method to work...
+            delta_t = 0.1
+            (x2, y2, z2) = SatPos(eph, gps_tow + delta_t)
+            vx = (x2 - x) / delta_t
+            vy = (y2 - y) / delta_t
+            vz = (z2 - z) / delta_t
+            # GPS orbit speed about 3.9 km/sec
+            speed = math.sqrt((vx * vx) + (vy * vy) + (vz * vz))
+            print("vx %13.3f  yv %13.3f  zv %13.3f speed %13.3f" %
+                  (vx, vy, vz, speed))
+
+            # ax and el to sat
+            if 'lat' in tpv and 'lon' in tpv and 'altHAE' in tpv:
+                (E, N, U) = gps.ecef2enu(x, y, z,
+                                         tpv['lat'], tpv['lon'], tpv['altHAE'])
+                print("E %.3f N %.3f U %.3f" % (E, N, U))
+                (az, el, rng) = gps.enu2aer(E, N, U)
+                print("az %.3f el %.3f rng %.3f" % (az, el, rng))
 
         if sv in almanac:
             print("\nSV %u Almanac position:" % sv)
@@ -767,7 +790,33 @@ if gps_week and options.satpos:
             for i in cvt:
                 ephm[i] *= gps.GPS_PI
 
-            SatPos(ephm, gps_tow)
+            (x, y, z) = SatPos(ephm, gps_tow)
+
+            # lat/lon/alt
+            (lat, lon, altHAE) = gps.ecef2lla(x, y, z)
+            print("x %13.3f  y %13.3f  z %13.3f\n"
+                  "lat %.6f lon %.6f altHAE %.3f" %
+                  (x, y, z, lat, lon, altHAE))
+
+            # compute sat velocity by subtracting two postions.
+            # because I can't get the direct method to work...
+            delta_t = 0.1
+            (x2, y2, z2) = SatPos(ephm, gps_tow + delta_t)
+            vx = (x2 - x) / delta_t
+            vy = (y2 - y) / delta_t
+            vz = (z2 - z) / delta_t
+            # GPS orbit speed about 3.9 km/sec
+            speed = math.sqrt((vx * vx) + (vy * vy) + (vz * vz))
+            print("vx %13.3f  yv %13.3f  zv %13.3f speed %13.3f" %
+                  (vx, vy, vz, speed))
+
+            # ax and el to sat
+            if 'lat' in tpv and 'lon' in tpv and 'altHAE' in tpv:
+                (E, N, U) = gps.ecef2enu(x, y, z,
+                                         tpv['lat'], tpv['lon'], tpv['altHAE'])
+                print("E %.3f N %.3f U %.3f" % (E, N, U))
+                (az, el, rng) = gps.enu2aer(E, N, U)
+                print("az %.3f el %.3f rng %.3f" % (az, el, rng))
 
 if options.test:
     # SatPos() tests
