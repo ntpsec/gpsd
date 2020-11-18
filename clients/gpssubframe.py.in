@@ -126,7 +126,7 @@ def SatPos(ephm, t):
 
 Calculations from IS-GPS-200 table 20-IV
 
-return (x, y, z) of satellite at gps_tow t
+return (x, y, z, deltatsv) of satellite at gps_tow t
 """
 
     # Semi-major axis
@@ -241,6 +241,8 @@ return (x, y, z) of satellite at gps_tow t
               "URE %s Health %s" %
               (deltatr, deltatsv, ephm['Tgd'], ura2ure[ephm['ura']],
                health_str[ephm['hlth'] & 0x1f]))
+    else:
+        deltatsv = 0.0
 
     if 1 < options.debug:
         if 2 < options.debug:
@@ -266,7 +268,7 @@ return (x, y, z) of satellite at gps_tow t
         # print("speed %13.3f" % speed)
     # print("vx %13.3f yv %13.3f zv %13.3f" % (vx, vy, vz))
 
-    return (x, y, z)
+    return (x, y, z, deltatsv)
 
 
 # current GPS Ephemeris here, url split: https://cddis.nasa.gov/
@@ -745,18 +747,18 @@ if gps_week and options.satpos:
             for i in cvt:
                 eph[i] *= gps.GPS_PI
 
-            (x, y, z) = SatPos(eph, gps_tow)
+            (x, y, z, deltatsv) = SatPos(eph, gps_tow)
 
             # lat/lon/alt
             (lat, lon, altHAE) = gps.ecef2lla(x, y, z)
-            print(" x %13.3f  y %13.3f  z %13.3f\n"
+            print(" x %13.3f  y %13.3f  z %13.3f deltatsv %g\n"
                   "lat %.6f lon %.6f altHAE %.3f" %
-                  (x, y, z, lat, lon, altHAE))
+                  (x, y, z, deltatsv, lat, lon, altHAE))
 
             # compute sat velocity by subtracting two postions.
             # because I can't get the direct method to work...
             delta_t = 0.1
-            (x2, y2, z2) = SatPos(eph, gps_tow + delta_t)
+            (x2, y2, z2, deltatsv2) = SatPos(eph, gps_tow + delta_t)
             vx = (x2 - x) / delta_t
             vy = (y2 - y) / delta_t
             vz = (z2 - z) / delta_t
@@ -799,18 +801,18 @@ if gps_week and options.satpos:
             for i in cvt:
                 ephm[i] *= gps.GPS_PI
 
-            (x, y, z) = SatPos(ephm, gps_tow)
+            (x, y, z, deltatsv) = SatPos(ephm, gps_tow)
 
             # lat/lon/alt
             (lat, lon, altHAE) = gps.ecef2lla(x, y, z)
-            print("x %13.3f  y %13.3f  z %13.3f\n"
+            print("x %13.3f  y %13.3f  z %13.3f deltatsv %g\n"
                   "lat %.6f lon %.6f altHAE %.3f" %
-                  (x, y, z, lat, lon, altHAE))
+                  (x, y, z, deltatsv, lat, lon, altHAE))
 
             # compute sat velocity by subtracting two postions.
             # because I can't get the direct method to work...
             delta_t = 0.1
-            (x2, y2, z2) = SatPos(ephm, gps_tow + delta_t)
+            (x2, y2, z2, deltatsv) = SatPos(ephm, gps_tow + delta_t)
             vx = (x2 - x) / delta_t
             vy = (y2 - y) / delta_t
             vz = (z2 - z) / delta_t
@@ -828,6 +830,7 @@ if gps_week and options.satpos:
                 print("az %.3f el %.3f rng %.3f" % (az, el, rng))
 
 if options.test:
+    # FIXME: Broken
     # SatPos() tests
     # lat 0.000000 lon 0.000000 altHAE 20175272.000
     ephm = {
