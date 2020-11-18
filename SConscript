@@ -1871,15 +1871,17 @@ gpsmon_sources = [
 # Internal imports within 'gps' package
 env.Depends('gps/__init__.py', ['gps/gps.py', 'gps/misc.py'])
 # All Python programs import the 'gps' package
-env.Depends(python_progs, 'gps/__init__.py')
+# FIXME: should be python targets, no sources
+env.Depends(python_progs, ['gps/__init__.py', 'gps/misc.py'])
 # Additional specific import cases
 env.Depends('clients/gpscat', ['gps/packet.py', 'gps/misc.py'])
-env.Depends('gpsfake', 'gps/fake.py')
-env.Depends('regress-driver', 'gpsfake')
-env.Depends('clients/xgps', 'gps/clienthelpers.py')
+env.Depends('clients/gpssubframe', ['gps/packet.py', 'gps/misc.py'])
 env.Depends('clients/ubxtool', 'gps/misc.py')
+env.Depends('clients/xgps', 'gps/clienthelpers.py')
 env.Depends('clients/zerk', 'gps/misc.py')
+env.Depends('gpsfake', 'gps/fake.py')
 env.Depends('gps/fake.py', 'gps/packet.py')
+env.Depends('regress-driver', 'gpsfake')
 # Dependency on FFI packet library
 env.Depends('gps/packet.py', packet_ffi_shared)
 
