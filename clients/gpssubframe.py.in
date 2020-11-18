@@ -218,9 +218,8 @@ return (x, y, z) of satellite at gps_tow t
     # vx = (-delta_Omegad * (xkprime + ykprime * cosik) +
     #       x * cosOmegak -
     #       y * cosik * sinOmegak)
-    # vy = (delta_Omegad * (xkprime * cosOmegak - ykprime * cosik * sinOmegak) +
-    #       x * sinOmegak +
-    #       y * cosik * cosOmegak)
+    # vy = (delta_Omegad * (xkprime * cosOmegak - ykprime * cosik * sinOmegak)
+    #       + x * sinOmegak + y * cosik * cosOmegak)
     # vz = y * sinik
 
     # Almanac does not have toc, or ure
@@ -768,11 +767,21 @@ if gps_week and options.satpos:
 
             # ax and el to sat
             if 'lat' in tpv and 'lon' in tpv and 'altHAE' in tpv:
-                (E, N, U) = gps.ecef2enu(x, y, z,
-                                         tpv['lat'], tpv['lon'], tpv['altHAE'])
-                print("E %.3f N %.3f U %.3f" % (E, N, U))
+                (E, N, U) = gps.ecef2enu(
+                    x, y, z, tpv['lat'], tpv['lon'], tpv['altHAE'])
                 (az, el, rng) = gps.enu2aer(E, N, U)
-                print("az %.3f el %.3f rng %.3f" % (az, el, rng))
+                print("E %.3f N %.3f U %.3f\n"
+                      "az %.3f el %.3f rng %.3f" %
+                      (E, N, U, az, el, rng))
+
+                (E2, N2, U2) = gps.ecef2enu(
+                    x2, y2, z2, tpv['lat'], tpv['lon'], tpv['altHAE'])
+                (az2, el2, rng2) = gps.enu2aer(E2, N2, U2)
+                range_speed = (rng2 - rng) / delta_t
+                # doppler is postive when sat egetting nearer
+                dopplerl1 = -2 * range_speed / gps.GPS_L1_WL
+                print("range speed %.3f L1 doppler %.3f" %
+                      (range_speed, dopplerl1))
 
         if sv in almanac:
             print("\nSV %u Almanac position:" % sv)
