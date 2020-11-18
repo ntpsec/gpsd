@@ -270,6 +270,50 @@ return (x, y, z, deltatsv) of satellite at gps_tow t
 
     return (x, y, z, deltatsv)
 
+def SatPosSum(eph, gps_tow):
+    """Call SatPos() many times to compute and display more data.
+
+Compute Velocities.  Use deltatsv to correct pseudorange.
+"""
+
+    (x, y, z, deltatsv) = SatPos(eph, gps_tow)
+
+    # lat/lon/alt
+    (lat, lon, altHAE) = gps.ecef2lla(x, y, z)
+    print(" x %13.3f  y %13.3f  z %13.3f deltatsv %g\n"
+          "lat %.6f lon %.6f altHAE %.3f" %
+          (x, y, z, deltatsv, lat, lon, altHAE))
+
+    # compute sat velocity by subtracting two postions.
+    # because I can't get the direct method to work...
+    delta_t = 0.1
+    (x2, y2, z2, deltatsv2) = SatPos(eph, gps_tow + delta_t)
+    vx = (x2 - x) / delta_t
+    vy = (y2 - y) / delta_t
+    vz = (z2 - z) / delta_t
+    # GPS orbit speed about 3.9 km/sec
+    speed = math.sqrt((vx * vx) + (vy * vy) + (vz * vz))
+    print("vx %13.3f  yv %13.3f  zv %13.3f speed %13.3f" %
+          (vx, vy, vz, speed))
+
+    # ax and el to sat
+    if 'lat' in tpv and 'lon' in tpv and 'altHAE' in tpv:
+        (E, N, U) = gps.ecef2enu(
+            x, y, z, tpv['lat'], tpv['lon'], tpv['altHAE'])
+        (az, el, rng) = gps.enu2aer(E, N, U)
+        print("E %.3f N %.3f U %.3f\n"
+              "az %.3f el %.3f rng %.3f" %
+              (E, N, U, az, el, rng))
+
+        (E2, N2, U2) = gps.ecef2enu(
+            x2, y2, z2, tpv['lat'], tpv['lon'], tpv['altHAE'])
+        (az2, el2, rng2) = gps.enu2aer(E2, N2, U2)
+        range_speed = (rng2 - rng) / delta_t
+        # doppler is postive when sat egetting nearer
+        dopplerl1 = -2 * range_speed / gps.GPS_L1_WL
+        print("range speed %.3f L1 doppler %.3f" %
+              (range_speed, dopplerl1))
+
 
 # current GPS Ephemeris here, url split: https://cddis.nasa.gov/
 #   Data_and_Derived_Products/GNSS/broadcast_ephemeris_data.html
@@ -680,6 +724,8 @@ if 'time' in tpv:
 
 if gps_week and ionosphere:
     print("\nSubframe 4, page 18")
+    # IS-GPS-200, Section 20.3.3.5.2.5, says if we use
+    # this data correctly L1 single frequency error gets cut in half.
     _print_msg(ionosphere, ionosphere_fields)
     if gps_tow:
         # tUTC = tLS + A0 + A1 (tE - tot + 604800 (WN - WNt))
@@ -747,43 +793,7 @@ if gps_week and options.satpos:
             for i in cvt:
                 eph[i] *= gps.GPS_PI
 
-            (x, y, z, deltatsv) = SatPos(eph, gps_tow)
-
-            # lat/lon/alt
-            (lat, lon, altHAE) = gps.ecef2lla(x, y, z)
-            print(" x %13.3f  y %13.3f  z %13.3f deltatsv %g\n"
-                  "lat %.6f lon %.6f altHAE %.3f" %
-                  (x, y, z, deltatsv, lat, lon, altHAE))
-
-            # compute sat velocity by subtracting two postions.
-            # because I can't get the direct method to work...
-            delta_t = 0.1
-            (x2, y2, z2, deltatsv2) = SatPos(eph, gps_tow + delta_t)
-            vx = (x2 - x) / delta_t
-            vy = (y2 - y) / delta_t
-            vz = (z2 - z) / delta_t
-            # GPS orbit speed about 3.9 km/sec
-            speed = math.sqrt((vx * vx) + (vy * vy) + (vz * vz))
-            print("vx %13.3f  yv %13.3f  zv %13.3f speed %13.3f" %
-                  (vx, vy, vz, speed))
-
-            # ax and el to sat
-            if 'lat' in tpv and 'lon' in tpv and 'altHAE' in tpv:
-                (E, N, U) = gps.ecef2enu(
-                    x, y, z, tpv['lat'], tpv['lon'], tpv['altHAE'])
-                (az, el, rng) = gps.enu2aer(E, N, U)
-                print("E %.3f N %.3f U %.3f\n"
-                      "az %.3f el %.3f rng %.3f" %
-                      (E, N, U, az, el, rng))
-
-                (E2, N2, U2) = gps.ecef2enu(
-                    x2, y2, z2, tpv['lat'], tpv['lon'], tpv['altHAE'])
-                (az2, el2, rng2) = gps.enu2aer(E2, N2, U2)
-                range_speed = (rng2 - rng) / delta_t
-                # doppler is postive when sat egetting nearer
-                dopplerl1 = -2 * range_speed / gps.GPS_L1_WL
-                print("range speed %.3f L1 doppler %.3f" %
-                      (range_speed, dopplerl1))
+            SatPosSum(eph, gps_tow)
 
         if sv in almanac:
             print("\nSV %u Almanac position:" % sv)
@@ -801,33 +811,8 @@ if gps_week and options.satpos:
             for i in cvt:
                 ephm[i] *= gps.GPS_PI
 
-            (x, y, z, deltatsv) = SatPos(ephm, gps_tow)
+            SatPosSum(ephm, gps_tow)
 
-            # lat/lon/alt
-            (lat, lon, altHAE) = gps.ecef2lla(x, y, z)
-            print("x %13.3f  y %13.3f  z %13.3f deltatsv %g\n"
-                  "lat %.6f lon %.6f altHAE %.3f" %
-                  (x, y, z, deltatsv, lat, lon, altHAE))
-
-            # compute sat velocity by subtracting two postions.
-            # because I can't get the direct method to work...
-            delta_t = 0.1
-            (x2, y2, z2, deltatsv) = SatPos(ephm, gps_tow + delta_t)
-            vx = (x2 - x) / delta_t
-            vy = (y2 - y) / delta_t
-            vz = (z2 - z) / delta_t
-            # GPS orbit speed about 3.9 km/sec
-            speed = math.sqrt((vx * vx) + (vy * vy) + (vz * vz))
-            print("vx %13.3f  yv %13.3f  zv %13.3f speed %13.3f" %
-                  (vx, vy, vz, speed))
-
-            # ax and el to sat
-            if 'lat' in tpv and 'lon' in tpv and 'altHAE' in tpv:
-                (E, N, U) = gps.ecef2enu(x, y, z,
-                                         tpv['lat'], tpv['lon'], tpv['altHAE'])
-                print("E %.3f N %.3f U %.3f" % (E, N, U))
-                (az, el, rng) = gps.enu2aer(E, N, U)
-                print("az %.3f el %.3f rng %.3f" % (az, el, rng))
 
 if options.test:
     # FIXME: Broken
