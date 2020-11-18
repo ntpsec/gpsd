@@ -125,10 +125,29 @@ WGS84GM = 3.9860050e14            # m^3/second^2
 # valid 8-Jul-2014:
 WGS84AV = 7.2921151467e-5         # rad/sec
 
+# speed of light (m/s), exact
+CLIGHT = 299792458.0
 # GPS_PI.  Exact!  The military says so.
 GPS_PI = 3.1415926535898
 # GPS F, sec/sqrt(m), == -2*sqrt(WGS*$M)/c^2
-GPS_F = - 4.442807633e-10
+GPS_F = -4.442807633e-10
+
+# GPS L1 Frequency Hz (1575.42 MHz)
+GPS_L1_FR = 1575420000
+# GPS L1 Wavelength == C / GPS_L1_FR meters
+GPS_L1_WL = CLIGHT / GPS_L1_FR
+
+# GPS L2 Frequency Hz (1227.60 MHz)
+GPS_L2_FR = 1227600000
+# GPS L2 Wavelength == C / GPS_L2_FR meters
+GPS_L2_WL = CLIGHT / GPS_L2_FR
+
+# GPS L3 (1381.05 MHz) and L4 (1379.9133)  unused as of 2020
+
+# GPS L5 Frequency Hz (1176.45 MHz)
+GPS_L5_FR = 1176450000
+# GPS L5 Wavelength == C / GPS_L2_FR meters
+GPS_L5_WL = CLIGHT / GPS_L5_FR
 
 RAD_2_DEG = 57.2957795130823208767981548141051703
 DEG_2_RAD = 0.0174532925199432957692369076848861271
