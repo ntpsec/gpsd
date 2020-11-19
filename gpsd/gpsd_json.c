@@ -672,7 +672,7 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
             str_appendf(buf, buflen,
                         ",\"EPHEM1\":{\"WN\":%u,\"IODC\":%u,\"L2\":%u,"
                         "\"ura\":%u,\"hlth\":%u,\"L2P\":%u,\"Tgd\":%g,"
-                        "\"toc\":%lu,\"af2\":%.4g,\"af1\":%.6e,\"af0\":%.7e}",
+                        "\"toc\":%lu,\"af2\":%.4g,\"af1\":%.7g,\"af0\":%.8e}",
                         (unsigned int)subframe->sub1.WN,
                         (unsigned int)subframe->sub1.IODC,
                         (unsigned int)subframe->sub1.l2,
@@ -705,8 +705,8 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
     case 2:
         if (scaled) {
             str_appendf(buf, buflen,
-                        ",\"EPHEM2\":{\"IODE\":%u,\"Crs\":%.6e,\"deltan\":%.6e,"
-                        "\"M0\":%.11e,\"Cuc\":%.6e,\"e\":%e,\"Cus\":%.6e,"
+                        ",\"EPHEM2\":{\"IODE\":%u,\"Crs\":%.6g,\"deltan\":%.6g,"
+                        "\"M0\":%.11g,\"Cuc\":%.6g,\"e\":%.11g,\"Cus\":%.6g,"
                         "\"sqrtA\":%.11g,\"toe\":%lu,\"FIT\":%u,\"AODO\":%u}",
                         (unsigned int)subframe->sub2.IODE,
                         subframe->sub2.d_Crs,
@@ -740,9 +740,9 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
     case 3:
         if (scaled) {
             str_appendf(buf, buflen,
-                        ",\"EPHEM3\":{\"IODE\":%3u,\"IDOT\":%.6g,\"Cic\":%.6e,"
-                        "\"Omega0\":%.11e,\"Cis\":%.7g,\"i0\":%.11e,"
-                        "\"Crc\":%.7g,\"omega\":%.11e,\"Omegad\":%.6e}",
+                        ",\"EPHEM3\":{\"IODE\":%3u,\"IDOT\":%.6g,\"Cic\":%.6g,"
+                        "\"Omega0\":%.11g,\"Cis\":%.7g,\"i0\":%.11g,"
+                        "\"Crc\":%.7g,\"omega\":%.11g,\"Omegad\":%.9g}",
                         (unsigned int)subframe->sub3.IODE,
                         subframe->sub3.d_IDOT,
                         subframe->sub3.d_Cic,
