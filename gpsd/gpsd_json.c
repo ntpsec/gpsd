@@ -671,8 +671,8 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
         if (scaled) {
             str_appendf(buf, buflen,
                         ",\"EPHEM1\":{\"WN\":%u,\"IODC\":%u,\"L2\":%u,"
-                        "\"ura\":%u,\"hlth\":%u,\"L2P\":%u,\"Tgd\":%g,"
-                        "\"toc\":%lu,\"af2\":%.4g,\"af1\":%.7g,\"af0\":%.8e}",
+                        "\"ura\":%u,\"hlth\":%u,\"L2P\":%u,\"Tgd\":%e,"
+                        "\"toc\":%lu,\"af2\":%.4e,\"af1\":%.7e,\"af0\":%.8e}",
                         (unsigned int)subframe->sub1.WN,
                         (unsigned int)subframe->sub1.IODC,
                         (unsigned int)subframe->sub1.l2,
@@ -705,9 +705,9 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
     case 2:
         if (scaled) {
             str_appendf(buf, buflen,
-                        ",\"EPHEM2\":{\"IODE\":%u,\"Crs\":%.6g,\"deltan\":%.6g,"
-                        "\"M0\":%.11g,\"Cuc\":%.6g,\"e\":%.11g,\"Cus\":%.6g,"
-                        "\"sqrtA\":%.11g,\"toe\":%lu,\"FIT\":%u,\"AODO\":%u}",
+                        ",\"EPHEM2\":{\"IODE\":%u,\"Crs\":%.6e,\"deltan\":%.6e,"
+                        "\"M0\":%.11e,\"Cuc\":%.6e,\"e\":%.11e,\"Cus\":%.6e,"
+                        "\"sqrtA\":%.11e,\"toe\":%lu,\"FIT\":%u,\"AODO\":%u}",
                         (unsigned int)subframe->sub2.IODE,
                         subframe->sub2.d_Crs,
                         subframe->sub2.d_deltan,
@@ -740,9 +740,9 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
     case 3:
         if (scaled) {
             str_appendf(buf, buflen,
-                        ",\"EPHEM3\":{\"IODE\":%3u,\"IDOT\":%.6g,\"Cic\":%.6g,"
-                        "\"Omega0\":%.11g,\"Cis\":%.7g,\"i0\":%.11g,"
-                        "\"Crc\":%.7g,\"omega\":%.11g,\"Omegad\":%.9g}",
+                        ",\"EPHEM3\":{\"IODE\":%3u,\"IDOT\":%.6e,\"Cic\":%.6e,"
+                        "\"Omega0\":%.11e,\"Cis\":%.7e,\"i0\":%.11e,"
+                        "\"Crc\":%.7e,\"omega\":%.11e,\"Omegad\":%.9e}",
                         (unsigned int)subframe->sub3.IODE,
                         subframe->sub3.d_IDOT,
                         subframe->sub3.d_Cic,
@@ -780,7 +780,7 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                 str_appendf(buf, buflen,
                             ",\"ALMANAC\":{\"ID\":%d,\"Health\":%u,"
                             "\"e\":%.10e,\"toa\":%lu,"
-                            "\"deltai\":%.10e,\"Omegad\":%.10e,\"sqrtA\":%.10g,"
+                            "\"deltai\":%.10e,\"Omegad\":%.10e,\"sqrtA\":%.10e,"
                             "\"Omega0\":%.10e,\"omega\":%.10e,\"M0\":%.11e,"
                             "\"af0\":%.10e,\"af1\":%.10e}",
                             (int)subframe->sub5.almanac.sv,
