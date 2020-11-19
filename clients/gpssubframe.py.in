@@ -437,15 +437,15 @@ parser.add_argument(
     help='show this help message and exit'
 )
 # WIP
-# parser.add_argument(
-#     '-c',
-#     '--continuous',
-#     dest='continuous',
-#     default=False,
-#     action="store_true",
-#     help=('Continuously calculate a SatPos() after -x SECONDS '
-#            '[Default %(default)s)]')
-# )
+parser.add_argument(
+    '-c',
+    '--continuous',
+    dest='continuous',
+    default=False,
+    action="store_true",
+    help=('Continuously calculate a SatPos() after -x SECONDS '
+           '[Default %(default)s)]')
+)
 parser.add_argument(
     '--desc',
     dest='desc',
