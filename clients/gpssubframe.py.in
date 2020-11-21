@@ -12,6 +12,7 @@
 from __future__ import print_function
 
 import argparse
+import json           # for json.dumps()
 import math
 import socket
 import sys
@@ -328,6 +329,8 @@ Compute Velocities.  Use deltatsv to correct pseudorange.
         print("range speed %.3f L1 doppler %.3f" %
               (range_speed, dopplerl1))
 
+    # pseudorange is range + C * clock_errors + C * path_delays
+
 
 # current GPS Ephemeris here, url split: https://cddis.nasa.gov/
 #   Data_and_Derived_Products/GNSS/broadcast_ephemeris_data.html
@@ -455,7 +458,7 @@ parser.add_argument(
     dest='continuous',
     default=False,
     action="store_true",
-    help=('Continuously calculate a SatPos() after -x SECONDS '
+    help=('INOP: Continuously calculate a SatPos() after -x SECONDS '
            '[Default %(default)s)]')
 )
 parser.add_argument(
@@ -512,6 +515,14 @@ parser.add_argument(
     default=False,
     action="store_true",
     help='Compute Satellite Positions [Default %(default)s)]'
+)
+parser.add_argument(
+    '--save',
+    dest='savefile',
+    default=None,
+    type=str,
+    help=('Save decoded Subframe data in savefile as JSON. '
+          ' [Default %(default)s)]')
 )
 parser.add_argument(
     '--test',
@@ -840,6 +851,17 @@ if gps_week and options.satpos:
                 ephm[i] *= gps.GPS_PI
 
             SatPosSum(ephm, gps_tow)
+
+if options.savefile:
+    with open(options.savefile, 'w') as save_file:
+        # the JSON format will change, do not depend on it.
+        json.dump(almanac, save_file, indent=4, sort_keys=True)
+        json.dump(ephemeris1, save_file, indent=4, sort_keys=True)
+        json.dump(ephemeris2, save_file, indent=4, sort_keys=True)
+        json.dump(ephemeris3, save_file, indent=4, sort_keys=True)
+        json.dump(ionosphere, save_file, indent=4, sort_keys=True)
+        json.dump(health, save_file, indent=4, sort_keys=True)
+        json.dump(health2, save_file, indent=4, sort_keys=True)
 
 
 if options.test:
