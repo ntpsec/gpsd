@@ -298,6 +298,18 @@ Compute Velocities.  Use deltatsv to correct pseudorange.
     print("vx %13.3f  yv %13.3f  zv %13.3f speed %13.3f" %
           (vx, vy, vz, speed))
 
+    # Try ecef first, no trig.  This agrees to the meter level
+    # with the next range calculation that uses lat/Log/AltHAE.
+    # This one likely better.
+    if 'ecefx' in tpv and 'ecefy' in tpv and 'ecefz' in tpv:
+        dx = x - tpv['ecefx']
+        dy = y - tpv['ecefy']
+        dz = z - tpv['ecefz']
+        rng = math.sqrt(dx ** 2 + dy ** 2 + dz **2)
+        print("sta x %.3f y %.3f z %.3f\n"
+              "rng %.3f" %
+              (tpv['ecefx'], tpv['ecefy'], tpv['ecefz'], rng))
+
     # ax and el to sat
     if 'lat' in tpv and 'lon' in tpv and 'altHAE' in tpv:
         (E, N, U) = gps.ecef2enu(
