@@ -335,7 +335,7 @@ Compute Velocities.  Use deltatsv to correct pseudorange.
 
 # current GPS Ephemeris here, url split: https://cddis.nasa.gov/
 #   Data_and_Derived_Products/GNSS/broadcast_ephemeris_data.html
-# all the data is one big JSON for easy save/restore
+# all the data is one big JSON for easy save/load
 all_data = {
     # current almanac here: https://www.navcen.uscg.gov/?pageName=gpsAlmanacs
     'almanac': {},
@@ -502,6 +502,14 @@ parser.add_argument(
     help='Count of messages to parse. 0 to disable. [Default %(default)s)]'
 )
 parser.add_argument(
+    '--load',
+    dest='loadfile',
+    default=None,
+    type=str,
+    help=('Load saved JSON Subframe data trom loadfile. '
+          ' [Default %(default)s)]')
+)
+parser.add_argument(
     '--port',
     dest='port',
     default=gps.GPSD_PORT,
@@ -565,6 +573,11 @@ parser.add_argument(
 )
 options = parser.parse_args()
 
+if options.loadfile:
+    with open(options.loadfile, 'r') as load_file:
+        # the JSON format will change, do not depend on it.
+        all_data = json.load(load_file)
+
 # the options host, port, device are set by the defaults
 if options.target:
     # override host, port and device with target
@@ -612,49 +625,55 @@ try:
             if 1 < options.debug:
                 print("Subframe %d TOW17 %s WN %d" %
                       (msg["frame"], msg['TOW17'], subframe1_WN))
+            if 'tSV' in msg:
+                idx = "GP%d" % msg['tSV']
+            elif 'dataid' in msg:
+                idx = "GP%d" % msg['dataid']
+            else:
+                idx = 0
+
             if 1 == msg['frame']:
                 if 'WN' in msg['EPHEM1']:
                     # save WN for later use
                     subframe1_WN = msg['EPHEM1']['WN']
 
-                if ((msg['tSV'] not in all_data['ephemeris1'] or
+                if ((idx not in all_data['ephemeris1'] or
                      msg['EPHEM1']['IODC'] !=
-                     all_data['ephemeris1'][msg['tSV']]['IODC'])):
+                     all_data['ephemeris1'][idx]['IODC'])):
                     if options.progress:
-                        print("Received Ephemeris1 GPS %2d, IODC %3d" %
-                              (msg['tSV'], msg['EPHEM1']['IODC']))
-                    all_data['ephemeris1'][msg['tSV']] = msg['EPHEM1']
+                        print("Received Ephemeris1 %5s, IODC %3d" %
+                              (idx, msg['EPHEM1']['IODC']))
+                    all_data['ephemeris1'][idx] = msg['EPHEM1']
             elif 2 == msg['frame']:
-                if ((msg['tSV'] not in all_data['ephemeris2'] or
+                if ((idx not in all_data['ephemeris2'] or
                      msg['EPHEM2']['IODE'] !=
-                     all_data['ephemeris2'][msg['tSV']]['IODE'])):
+                     all_data['ephemeris2'][idx]['IODE'])):
                     if options.progress:
-                        print("Received Ephemeris2 GPS %2d, IODE %3d" %
-                              (msg['tSV'], msg['EPHEM2']['IODE']))
-                    all_data['ephemeris2'][msg['tSV']] = msg['EPHEM2']
+                        print("Received Ephemeris2 %5s, IODE %3d" %
+                              (idx, msg['EPHEM2']['IODE']))
+                    all_data['ephemeris2'][idx] = msg['EPHEM2']
             elif 3 == msg['frame']:
-                if ((msg['tSV'] not in all_data['ephemeris3'] or
+                if ((idx not in all_data['ephemeris3'] or
                      msg['EPHEM3']['IODE'] !=
-                     all_data['ephemeris3'][msg['tSV']]['IODE'])):
+                     all_data['ephemeris3'][idx]['IODE'])):
                     if options.progress:
-                        print("Received Ephemeris3 GPS %2d, IODE %3d" %
-                              (msg['tSV'], msg['EPHEM3']['IODE']))
-                    all_data['ephemeris3'][msg['tSV']] = msg['EPHEM3']
+                        print("Received Ephemeris3 %5s, IODE %3d" %
+                              (idx, msg['EPHEM3']['IODE']))
+                    all_data['ephemeris3'][idx] = msg['EPHEM3']
             elif 4 <= msg['frame'] <= 5:
-                if 'ALMANAC' in msg:
+                if 'ALMANAC' in msg and 0 != idx:
                     # save it if:
                     #  not dummy
                     #  don't already have it
                     #  newer than what we have
-                    if ((0 != msg['dataid'] and
-                         (msg['dataid'] not in all_data['almanac'] or
-                          all_data['almanac'][msg['dataid']]['toa'] <
-                          msg['ALMANAC']['toa']))):
+                    if ((idx not in all_data['almanac'] or
+                         all_data['almanac'][idx]['toa'] <
+                         msg['ALMANAC']['toa'])):
                         # FIXME: handle week rollover
                         if options.progress:
                             print("Received Almanac dataid %2d  toa %d" %
                                   (msg['dataid'], msg['ALMANAC']['toa']))
-                        all_data['almanac'][msg['dataid']] = msg['ALMANAC']
+                        all_data['almanac'][idx] = msg['ALMANAC']
                 elif 'IONO' in msg:
                     if ((not all_data['ionosphere'] or
                          msg['IONO']['tot'] < all_data['ionosphere']['tot'])):
@@ -681,7 +700,7 @@ try:
                                   (msg['HEALTH2']['toa'],
                                    msg['HEALTH2']['WNa']))
                         all_data['health2'] = msg['HEALTH2']
-                # else not Almanac page
+                # else nothing to do
             # else, bad packet...
         elif 'TPV' == msg['class']:
             tpv = msg
@@ -704,8 +723,9 @@ all_sv = (list(all_data['ephemeris1'].keys()) +
           list(all_data['ephemeris2'].keys()) +
           list(all_data['ephemeris3'].keys()) +
           list(all_data['almanac'].keys()))
+print(all_sv)
 for sv in sorted(set(all_sv)):
-    print("\nSV %u" % sv)
+    print("\n%s" % sv)
     print("  Subframe 1, Clock Data")
     if sv in all_data['ephemeris1']:
         _print_msg(all_data['ephemeris1'][sv], ephem1_fields)
@@ -721,8 +741,8 @@ for sv in sorted(set(all_sv)):
         _print_msg(all_data['ephemeris3'][sv], ephem3_fields)
     else:
         print("    Missing")
-    print("  Subframe 4 page 25")
-    svid = "SV%d" % sv
+    print("  Subframe 4 page 25 %s" % sv)
+    svid = "SV%d" % int(sv[2:])
     if all_data['health'] and svid in all_data['health']:
         if 0x3f == all_data['health'][svid]:
             print("       Flags  %2d (n/a)" % all_data['health'][svid])
@@ -822,7 +842,7 @@ if all_data['health2']:
                        health_str[all_data['health2'][id] & 0x1f]))
 
 if gps_week and options.satpos:
-    for sv in range(1, 33):
+    for sv in all_sv:
         # Ensure we have all 3 parts, and their IODx matches.
         if ((sv in all_data['ephemeris1'] and
              sv in all_data['ephemeris2'] and
@@ -832,7 +852,7 @@ if gps_week and options.satpos:
              all_data['ephemeris2'][sv]['IODE'] ==
              all_data['ephemeris3'][sv]['IODE'])):
 
-            print("\nSV %u Ephemeris position:" % sv)
+            print("\n%5s Ephemeris position:" % sv)
 
             # mash into one dict
             eph = all_data['ephemeris1'][sv]
@@ -849,7 +869,7 @@ if gps_week and options.satpos:
             SatPosSum(eph, gps_tow)
 
         if sv in all_data['almanac']:
-            print("\nSV %u Almanac position:" % sv)
+            print("\n%s Almanac position:" % sv)
 
             ephm = all_data['almanac'][sv]
             ephm.update({'i0': ephm['deltai'] + 0.30,
@@ -869,6 +889,7 @@ if gps_week and options.satpos:
 if options.savefile:
     with open(options.savefile, 'w') as save_file:
         # the JSON format will change, do not depend on it.
+        # JSON turns all the int keys into strings!
         json.dump(all_data, save_file, indent=4, sort_keys=True)
 
 
