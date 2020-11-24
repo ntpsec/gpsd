@@ -110,7 +110,7 @@ def kepler(e, M):
         # not sure how accurate we need to be
         # but we want 18 digits of lat/lon
         if 1e-18 > math.fabs(E - temp):
-            break;
+            break
     return E
 
 # another kepler algorithm here:
@@ -273,6 +273,7 @@ return (x, y, z, deltatsv) of satellite at gps_tow t
 
     return (x, y, z, deltatsv)
 
+
 def SatPosSum(eph, gps_tow):
     """Call SatPos() many times to compute and display more data.
 
@@ -306,7 +307,7 @@ Compute Velocities.  Use deltatsv to correct pseudorange.
         dx = x - tpv['ecefx']
         dy = y - tpv['ecefy']
         dz = z - tpv['ecefz']
-        rng = math.sqrt(dx ** 2 + dy ** 2 + dz **2)
+        rng = math.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
         print("sta x %.3f y %.3f z %.3f\n"
               "rng %.3f" %
               (tpv['ecefx'], tpv['ecefy'], tpv['ecefz'], rng))
@@ -334,16 +335,20 @@ Compute Velocities.  Use deltatsv to correct pseudorange.
 
 # current GPS Ephemeris here, url split: https://cddis.nasa.gov/
 #   Data_and_Derived_Products/GNSS/broadcast_ephemeris_data.html
-ephemeris1 = {}
-ephemeris2 = {}
-ephemeris3 = {}
-# current almanac here: https://www.navcen.uscg.gov/?pageName=gpsAlmanacs
-almanac = {}
-# ionosphere, subframe 4, page 18, data id 56
-ionosphere = None
-# subframe 4/5 page 25
-health = None
-health2 = None
+# all the data is one big JSON for easy save/restore
+all_data = {
+    # current almanac here: https://www.navcen.uscg.gov/?pageName=gpsAlmanacs
+    'almanac': {},
+    'ephemeris1': {},
+    'ephemeris2': {},
+    'ephemeris3': {},
+    # subframe 4 page 25
+    'health': {},
+    # subframe 5 page 25
+    'health2': {},
+    # ionosphere, subframe 4, page 18, data id 56
+    'ionosphere': {},
+    }
 tpv = None               # for current time and position
 
 
@@ -612,26 +617,29 @@ try:
                     # save WN for later use
                     subframe1_WN = msg['EPHEM1']['WN']
 
-                if ((msg['tSV'] not in ephemeris1 or
-                     msg['EPHEM1']['IODC'] != ephemeris1[msg['tSV']]['IODC'])):
+                if ((msg['tSV'] not in all_data['ephemeris1'] or
+                     msg['EPHEM1']['IODC'] !=
+                     all_data['ephemeris1'][msg['tSV']]['IODC'])):
                     if options.progress:
                         print("Received Ephemeris1 GPS %2d, IODC %3d" %
                               (msg['tSV'], msg['EPHEM1']['IODC']))
-                    ephemeris1[msg['tSV']] = msg['EPHEM1']
+                    all_data['ephemeris1'][msg['tSV']] = msg['EPHEM1']
             elif 2 == msg['frame']:
-                if ((msg['tSV'] not in ephemeris2 or
-                     msg['EPHEM2']['IODE'] != ephemeris2[msg['tSV']]['IODE'])):
+                if ((msg['tSV'] not in all_data['ephemeris2'] or
+                     msg['EPHEM2']['IODE'] !=
+                     all_data['ephemeris2'][msg['tSV']]['IODE'])):
                     if options.progress:
                         print("Received Ephemeris2 GPS %2d, IODE %3d" %
                               (msg['tSV'], msg['EPHEM2']['IODE']))
-                    ephemeris2[msg['tSV']] = msg['EPHEM2']
+                    all_data['ephemeris2'][msg['tSV']] = msg['EPHEM2']
             elif 3 == msg['frame']:
-                if ((msg['tSV'] not in ephemeris3 or
-                     msg['EPHEM3']['IODE'] != ephemeris3[msg['tSV']]['IODE'])):
+                if ((msg['tSV'] not in all_data['ephemeris3'] or
+                     msg['EPHEM3']['IODE'] !=
+                     all_data['ephemeris3'][msg['tSV']]['IODE'])):
                     if options.progress:
                         print("Received Ephemeris3 GPS %2d, IODE %3d" %
                               (msg['tSV'], msg['EPHEM3']['IODE']))
-                    ephemeris3[msg['tSV']] = msg['EPHEM3']
+                    all_data['ephemeris3'][msg['tSV']] = msg['EPHEM3']
             elif 4 <= msg['frame'] <= 5:
                 if 'ALMANAC' in msg:
                     # save it if:
@@ -639,32 +647,32 @@ try:
                     #  don't already have it
                     #  newer than what we have
                     if ((0 != msg['dataid'] and
-                         (msg['dataid'] not in almanac or
-                          almanac[msg['dataid']]['toa'] <
+                         (msg['dataid'] not in all_data['almanac'] or
+                          all_data['almanac'][msg['dataid']]['toa'] <
                           msg['ALMANAC']['toa']))):
                         # FIXME: handle week rollover
                         if options.progress:
                             print("Received Almanac dataid %2d  toa %d" %
                                   (msg['dataid'], msg['ALMANAC']['toa']))
-                        almanac[msg['dataid']] = msg['ALMANAC']
+                        all_data['almanac'][msg['dataid']] = msg['ALMANAC']
                 elif 'IONO' in msg:
-                    if ((not ionosphere or
-                         msg['IONO']['tot'] < ionosphere['tot'])):
+                    if ((not all_data['ionosphere'] or
+                         msg['IONO']['tot'] < all_data['ionosphere']['tot'])):
                         # FIXME handle WNt rollover
                         # new data set
                         if options.progress:
                             print("Received Subframe 4 dataid 56 "
                                   "(Ionosphere and UTC) tot %d WNt %d" %
                                   (msg['IONO']['tot'], msg['IONO']['WNt']))
-                        ionosphere = msg['IONO']
+                        all_data['ionosphere'] = msg['IONO']
                 elif 'HEALTH' in msg:
                     if options.progress:
                         print("Received Subframe 4 dataid 63 "
                               "(A-S, Configurations)")
-                    health = msg['HEALTH']
+                    all_data['health'] = msg['HEALTH']
                 elif 'HEALTH2' in msg:
-                    if ((not health2 or
-                         msg['HEALTH2']['toa'] < health2['toa'])):
+                    if ((not all_data['health2'] or
+                         msg['HEALTH2']['toa'] < all_data['health2']['toa'])):
                         # FIXME handle WNa rollover
                         # new data set
                         if options.progress:
@@ -672,7 +680,7 @@ try:
                                   "(SV Health) toa %s WNa %s" %
                                   (msg['HEALTH2']['toa'],
                                    msg['HEALTH2']['WNa']))
-                        health2 = msg['HEALTH2']
+                        all_data['health2'] = msg['HEALTH2']
                 # else not Almanac page
             # else, bad packet...
         elif 'TPV' == msg['class']:
@@ -692,39 +700,42 @@ except KeyboardInterrupt:
     print()
     sys.exit(1)
 
-all_sv = (list(ephemeris1.keys()) + list(ephemeris2.keys()) +
-          list(ephemeris3.keys()) + list(almanac.keys()))
+all_sv = (list(all_data['ephemeris1'].keys()) +
+          list(all_data['ephemeris2'].keys()) +
+          list(all_data['ephemeris3'].keys()) +
+          list(all_data['almanac'].keys()))
 for sv in sorted(set(all_sv)):
     print("\nSV %u" % sv)
     print("  Subframe 1, Clock Data")
-    if sv in ephemeris1:
-        _print_msg(ephemeris1[sv], ephem1_fields)
+    if sv in all_data['ephemeris1']:
+        _print_msg(all_data['ephemeris1'][sv], ephem1_fields)
     else:
         print("    Missing")
     print("  Subframe 2, Orbit Data")
-    if sv in ephemeris2:
-        _print_msg(ephemeris2[sv], ephem2_fields)
+    if sv in all_data['ephemeris2']:
+        _print_msg(all_data['ephemeris2'][sv], ephem2_fields)
     else:
         print("    Missing")
     print("  Subframe 3, Orbit Data")
-    if sv in ephemeris3:
-        _print_msg(ephemeris3[sv], ephem3_fields)
+    if sv in all_data['ephemeris3']:
+        _print_msg(all_data['ephemeris3'][sv], ephem3_fields)
     else:
         print("    Missing")
     print("  Subframe 4 page 25")
     svid = "SV%d" % sv
-    if health and svid in health:
-        if 0x3f == health[svid]:
-            print("       Flags  %2d (n/a)" % health[svid])
+    if all_data['health'] and svid in all_data['health']:
+        if 0x3f == all_data['health'][svid]:
+            print("       Flags  %2d (n/a)" % all_data['health'][svid])
         else:
             print("       Flags  %2d (A/S %3s Config %s)" %
-                  (health[svid], 'Yes' if (health[svid] & 8) else 'No',
-                   sv_conf[health[svid] & 0x7]))
+                  (all_data['health'][svid],
+                   'Yes' if (all_data['health'][svid] & 8) else 'No',
+                   sv_conf[all_data['health'][svid] & 0x7]))
     else:
         print("    Missing")
     print("  Almanac")
-    if sv in almanac:
-        _print_msg(almanac[sv], almanac_fields)
+    if sv in all_data['almanac']:
+        _print_msg(all_data['almanac'][sv], almanac_fields)
     else:
         print("    Missing")
 
@@ -761,69 +772,72 @@ if 'time' in tpv:
         print("Current position: lat %.8f lon %.8f altHAE %.3f" %
               (tpv['lat'], tpv['lon'], tpv['altHAE']))
 
-if gps_week and ionosphere:
+if gps_week and all_data['ionosphere']:
     print("\nSubframe 4, page 18")
     # IS-GPS-200, Section 20.3.3.5.2.5, says if we use
     # this data correctly L1 single frequency error gets cut in half.
-    _print_msg(ionosphere, ionosphere_fields)
+    _print_msg(all_data['ionosphere'], ionosphere_fields)
     if gps_tow:
         # tUTC = tLS + A0 + A1 (tE - tot + 604800 (WN - WNt))
-        deltatutc = (ionosphere['ls'] +
-                     ionosphere['A0'] +
-                     ionosphere['A1'] *
-                     (gps_tow - ionosphere['tot'] +
-                      604800 * (gps_week - ionosphere['WNt']))
+        deltatutc = (all_data['ionosphere']['ls'] +
+                     all_data['ionosphere']['A0'] +
+                     all_data['ionosphere']['A1'] *
+                     (gps_tow - all_data['ionosphere']['tot'] +
+                      604800 * (gps_week - all_data['ionosphere']['WNt']))
                      )
         print("  deltatutc %.9f" % deltatutc)
 
-if health:
+if all_data['health']:
     print("\nSubframe 4, page 25")
     for sv in range(1, 33):
         svid = "SV%d" % sv
-        if svid in health:
+        if svid in all_data['health']:
             print("  %s %2d (A/S %3s Config %s)" %
-                  (svid, health[svid], 'Yes' if (health[svid] & 8) else 'No',
-                   sv_conf[health[svid] & 0x7]))
+                  (svid, all_data['health'][svid],
+                   'Yes' if (all_data['health'][svid] & 8) else 'No',
+                   sv_conf[all_data['health'][svid] & 0x7]))
     for sv in range(25, 33):
         svid = "SVH%d" % sv
-        if svid in health:
-            if 0x3f == health[svid]:
-                print("  %s %2d (n/a)" % (svid, health[svid]))
+        if svid in all_data['health']:
+            if 0x3f == all_data['health'][svid]:
+                print("  %s %2d (n/a)" % (svid, all_data['health'][svid]))
             else:
                 print("  %s %2d (Data %s, %s)" %
-                      (svid, health[svid],
-                       'Bad' if (health[svid] & 0x20) else 'OK',
-                       health_str[health[svid] & 0x1f]))
+                      (svid, all_data['health'][svid],
+                       'Bad' if (all_data['health'][svid] & 0x20) else 'OK',
+                       health_str[all_data['health'][svid] & 0x1f]))
 
-if health2:
+if all_data['health2']:
     print("\nSubframe 5, page 25\n  WNa %d toa %d" %
-          (health2['WNa'], health2['toa']))
+          (all_data['health2']['WNa'], all_data['health2']['toa']))
     for sv in range(1, 25):
         id = "SVH%d" % sv
-        if id in health2:
-            if 0x3f == health2[id]:
-                print("  %s %2d (n/a)" % (id, health2[id]))
+        if id in all_data['health2']:
+            if 0x3f == all_data['health2'][id]:
+                print("  %s %2d (n/a)" % (id, all_data['health2'][id]))
             else:
                 print("  %s %2d (Data %s, %s)" %
-                      (id, health2[id],
-                       'Bad' if (health2[id] & 0x20) else 'OK',
-                       health_str[health2[id] & 0x1f]))
+                      (id, all_data['health2'][id],
+                       'Bad' if (all_data['health2'][id] & 0x20) else 'OK',
+                       health_str[all_data['health2'][id] & 0x1f]))
 
 if gps_week and options.satpos:
     for sv in range(1, 33):
         # Ensure we have all 3 parts, and their IODx matches.
-        if ((sv in ephemeris1 and
-             sv in ephemeris2 and
-             sv in ephemeris3 and
-             ephemeris1[sv]['IODC'] == ephemeris2[sv]['IODE'] and
-             ephemeris2[sv]['IODE'] == ephemeris3[sv]['IODE'])):
+        if ((sv in all_data['ephemeris1'] and
+             sv in all_data['ephemeris2'] and
+             sv in all_data['ephemeris3'] and
+             all_data['ephemeris1'][sv]['IODC'] ==
+             all_data['ephemeris2'][sv]['IODE'] and
+             all_data['ephemeris2'][sv]['IODE'] ==
+             all_data['ephemeris3'][sv]['IODE'])):
 
             print("\nSV %u Ephemeris position:" % sv)
 
             # mash into one dict
-            eph = ephemeris1[sv]
-            eph.update(ephemeris2[sv])
-            eph.update(ephemeris3[sv])
+            eph = all_data['ephemeris1'][sv]
+            eph.update(all_data['ephemeris2'][sv])
+            eph.update(all_data['ephemeris3'][sv])
 
             # convert semi-circles to radians
             # use military PI, not real pi.
@@ -834,10 +848,10 @@ if gps_week and options.satpos:
 
             SatPosSum(eph, gps_tow)
 
-        if sv in almanac:
+        if sv in all_data['almanac']:
             print("\nSV %u Almanac position:" % sv)
 
-            ephm = almanac[sv]
+            ephm = all_data['almanac'][sv]
             ephm.update({'i0': ephm['deltai'] + 0.30,
                          'deltan': 0,
                          'IDOT': 0,
@@ -855,13 +869,7 @@ if gps_week and options.satpos:
 if options.savefile:
     with open(options.savefile, 'w') as save_file:
         # the JSON format will change, do not depend on it.
-        json.dump(almanac, save_file, indent=4, sort_keys=True)
-        json.dump(ephemeris1, save_file, indent=4, sort_keys=True)
-        json.dump(ephemeris2, save_file, indent=4, sort_keys=True)
-        json.dump(ephemeris3, save_file, indent=4, sort_keys=True)
-        json.dump(ionosphere, save_file, indent=4, sort_keys=True)
-        json.dump(health, save_file, indent=4, sort_keys=True)
-        json.dump(health2, save_file, indent=4, sort_keys=True)
+        json.dump(all_data, save_file, indent=4, sort_keys=True)
 
 
 if options.test:
