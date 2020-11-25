@@ -210,7 +210,6 @@ parser.add_argument(
 )
 parser.add_argument(
     '-s', '--inspeed',
-    # FIXME: speeds s/b in io class
     choices=gps_model.speeds,
     dest='input_speed',
     default=9600,
@@ -376,11 +375,13 @@ try:
 
     # create the I/O instance
     io_handle = gps.gps_io(
-        opts['input_file_name'],
-        opts['read_only'],
-        opts['gpsd_host'],
-        opts['gpsd_port'],
-        opts['gpsd_device'],
+        input_file_name=opts['input_file_name'],
+        read_only=opts['read_only'],
+        gpsd_host=opts['gpsd_host'],
+        gpsd_port=opts['gpsd_port'],
+        gpsd_device=opts['gpsd_device'],
+        input_speed=opts['input_speed'],
+        verbosity_level=opts['verbosity'],
         write_requested=(opts['disable'] or opts['enable'] or opts['poll']))
     gps_model.io_handle = io_handle
 
