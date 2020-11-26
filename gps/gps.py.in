@@ -194,9 +194,11 @@ class gps_io(object):
                        (used for internal sanity checking)
 """
 
+        self.gpsd_device = gpsd_device
         # Used as an indicator in read if a device, file or network connection
         # is used
         self.gpsd_host = gpsd_host
+        self.gpsd_port = gpsd_port
         # required by write for packet construction
         self.gpsd_device = gpsd_device
         # used in read to print meaningfull error
@@ -207,6 +209,14 @@ class gps_io(object):
         Serial_v3 = Serial and Serial.VERSION.split('.')[0] >= '3'
         # buffer to hold read data
         self.out = b''
+
+        if VERB_PROG <= verbosity_level:
+            print('gps_io(gpsd_device=%s gpsd_host=%s gpsd_port=%s\n'
+                  '       input_file_name=%s input_speed=%s read_only=%s\n'
+                  '       verbosity_level=%s write_requested=%s)' %
+                  (gpsd_device, gpsd_host, gpsd_port,
+                   input_file_name, input_speed, read_only,
+                   verbosity_level, write_requested))
 
         # open the input: device, file, or gpsd
         if input_file_name is not None:
@@ -238,11 +248,13 @@ class gps_io(object):
                     sys.exit(1)
 
         else:
-            # try to open local/remote gpsd daemon
+            # try to open local/remote gpsd daemon over tcp
+            if not self.gpsd_host:
+                self.gpsd_host = 'localhost'
             try:
-                self.ser = gpscommon(host=gpsd_host,
-                                     port=gpsd_port,
-                                     verbose=0)
+                self.ser = gpscommon(host=self.gpsd_host,
+                                     port=self.gpsd_port,
+                                     verbose=self.verbosity_level)
 
                 # alias self.ser.write() to self.write_gpsd()
                 self.ser.write = self.write_gpsd
@@ -296,6 +308,7 @@ class gps_io(object):
                                   self.prog_name))
 
                 # print out list of supported ports
+                # FIXME: bad location for an import
                 import serial.tools.list_ports as List_Ports
                 ports = List_Ports.comports()
                 for port in ports:
