@@ -79,6 +79,7 @@ GPSes have not adopted it.  Thus we do not attempt to document NMEA
 |NMEA 3.01 | January 2002
 |NMEA 4.00 | November 2008
 |NMEA 4.10 | July 2012
+|NMEA 4.11 | November 2018
 |========================================================================
 
 No version earlier than 2.00 is listed or archived on the NMEA website.
@@ -295,15 +296,16 @@ the following are well known:
 |EC     | Electronic Chart Display & Information System (ECDIS)
 |GA     | Galileo Positioning System
 |GB     | BeiDou (China)
+|GI     | NavIC, IRNSS (India)
 |GL     | GLONASS, according to IEIC 61162-1
 |GN     | Combination of multiple satellite systems (NMEA 1083)
 |GP     | Global Positioning System receiver
+|GQ     | QZSS regional GPS augmentation system (Japan)
 |II     | Integrated Instrumentation
 |IN     | Integrated Navigation
 |LC     | Loran-C receiver (obsolete)
-|QZ     | QZSS regional GPS augmentation system (Japan)
-|GI     | NavIC (IRNSS) (India)
 |Pxxx   | Proprietary (Vendor specific)
+|QZ     | QZSS regional GPS augmentation system (Japan)
 |================================================================
 
 EC -- ECDIS is a specialized geographical information system intended
@@ -353,12 +355,20 @@ for them may be present in the GPSD project.
 |AB     | Independent AIS Base Station
 |AD     | Dependent AIS Base Station
 |AG     | Autopilot - General
+|AI     | Mobile AIS Station
+|AN     | AIS Aid to Navigation
 |AP     | Autopilot - Magnetic
+|AR     | AIS Receiving Station
+|AT     | AIS Transmitting Station
+|AX     | AIS Simplex Repeater
 |BD     | BeiDou (China)
+|BI     | Bilge System
 |BN     | Bridge navigational watch alarm system
+|CA     | Central Alarm
 |CC     | Computer - Programmed Calculator (obsolete)
 |CD     | Communications - Digital Selective Calling (DSC)
 |CM     | Computer - Memory Data (obsolete)
+|CR     | Data Receiver
 |CS     | Communications - Satellite
 |CT     | Communications - Radio-Telephone (MF/HF)
 |CV     | Communications - Radio-Telephone (VHF)
@@ -366,40 +376,70 @@ for them may be present in the GPSD project.
 |DE     | DECCA Navigation (obsolete)
 |DF     | Direction Finder
 |DM     | Velocity Sensor, Speed Log, Water, Magnetic
+|DP     | Dynamiv Position
 |DU     | Duplex repeater station
 |EC     | Electronic Chart Display & Information System (ECDIS)
 |EP     | Emergency Position Indicating Beacon (EPIRB)
 |ER     | Engine Room Monitoring Systems
+|FD     | Fire Door
+|FS     | Fire Sprinkler
 |GA     | Galileo Positioning System
 |GB     | BeiDou (China)
+|GI     | NavIC, IRNSS (India)
 |GL     | GLONASS, according to IEIC 61162-1
-|GN     | Mixed GPS and GLONASS data, according to IEIC 61162-1
-|GP     | Global Positioning System (GPS)
+|GN     | Combination of multiple satellite systems (NMEA 1083)
+|GP     | Global Positioning System receiver
+|GQ     | QZSS regional GPS augmentation system (Japan)
 |HC     | Heading - Magnetic Compass
+|HD     | Hull Door
 |HE     | Heading - North Seeking Gyro
+|HF     | Heading - Fluxgate
 |HN     | Heading - Non North Seeking Gyro
+|HS     | Hull Stress
 |II     | Integrated Instrumentation
 |IN     | Integrated Navigation
+|JA     | Alarm and Monitoring
+|JB     | Water Monitoring
+|JC     | Power Management
+|JD     | Propulsion Control
+|JE     | Engine Control
+|JF     | Propulsion Boiler
+|JG     | Aux Boiler
+|JH     | Engine Governor
 |LA     | Loran A (obsolete)
 |LC     | Loran C (obsolete)
 |MP     | Microwave Positioning System (obsolete)
+|MX     | Multiplexer
 |NL     | Navigation light controller
 |OM     | OMEGA Navigation System (obsolete)
 |OS     | Distress Alarm System (obsolete)
 |P      | Vendor specific
 |QZ     | QZSS regional GPS augmentation system (Japan)
 |RA     | RADAR and/or ARPA
+|RB     | Record Book
+|RC     | Propulsion Machinery
+|RI     | Rudder Angle Indicator
+|SA     | Physical Shore AUS Station
 |SD     | Depth Sounder
+|SG     | Steering Gear
 |SN     | Electronic Positioning System, other/general
 |SS     | Scanning Sounder
 |ST     | Skytraq debug output
+|TC     | Track Control
 |TI     | Turn Rate Indicator
 |TR     | TRANSIT Navigation System
 |U#     | '#' is a digit 0 ... 9; User Configured
 |UP     | Microprocessor controller
+|VA     | VHF Data Exchange System (VDES), ASM
 |VD     | Velocity Sensor, Doppler, other/general
+|VM     | Velocity Sensor, Speed Log, Water, Magnetic
+|VR     | Voyage Data recorder
+|VS     | VHF Data Exchange System (VDES), Satellite
+|VT     | VHF Data Exchange System (VDES), Terrestrial
 |VW     | Velocity Sensor, Speed Log, Water, Mechanical
+|WD     | Watertight Door
 |WI     | Weather Instruments
+|WL     | Water Level
 |YC     | Transducer - Temperature (obsolete)
 |YD     | Transducer - Displacement, Angular or Linear (obsolete)
 |YF     | Transducer - Frequency (obsolete)
@@ -517,6 +557,71 @@ unworkable.  New GPS denote each satellite, and their signals, by their
 constellation (gnssID), satellite id in that constellation (svId), and
 signal type (sigId).  NMEA, as of version 4, has not adapted.
 
+== NMEA 4.11 System ID and Signal ID
+
+|========================================================================
+|GNSS System| System ID| Satellite ID| Signal ID| Signal Channel
+|GPS| 1 (GP)|1 - 99| 0| All signals
+|||1 - 32 GPS|1| L1 C/A
+|||33 - 64 GPS SBAS|2| L1 P(Y)
+||||3| L1 M
+||||4| L2 P(Y)
+||||5| L2C-M
+||||6| L2C-L
+||||7| L5-I
+||||8| L5-Q
+||||9 - F| Reserved
+|GLONASS| 2 (GL)|1 - 99| 0| All signals
+|||33 - 64 SBAS|1| L1 C/A
+|||65 - 99 GL|2| L1 P
+||||3| L2 C/A
+||||4| L2 P
+||||5 -F| Reserved
+|Galileo| 3 (GA)|1 - 99| 0| All signals
+|||1 - 36 GA|1| E5a
+|||37 - 64 GA SBAS|2| E5b
+||||3| E5a+b
+||||4| E6-A
+||||5| E6-BC
+||||6| L1-A
+||||7| L1-BC
+||||8 - F| Reserved
+|BDS (BeiDou System)| 4 (GB/BD)|1 - 99| 0| All signals
+|||1 - 64 BD|1| B1I
+||||2| B1Q
+||||3| B1C
+||||4| B1A
+||||5| B2-a
+||||6| B2-b
+||||7| B2 a+b
+||||8| B3I
+||||9| B3Q
+||||A| B3A
+||||B| B2I
+||||C| B2Q
+||||D - F| Reserved
+|QZSS| 5 (GQ)|1 - 99| 0| All signals
+|||1 - 10 QZ|1| L1 C/A
+|||55 - 63 QZ SBAS|2| L1C (D)
+||||3| L1C (P)
+||||4| LIS
+||||5| L2C-M
+||||6| L2C-L
+||||7| L5-I
+||||8| L5-Q
+||||9| L6D
+||||A| L6E
+||||B - F| Reserved
+|NavIC| 6 (GI)| 0|1 - 99| All signals
+|||1 - 15 GI|1| L5-SPS
+|||33 - 64 SBAS|2| S-SPS
+||||3| L5-RS
+||||4| S-RS
+||||5| L1-SPS
+||||6 - F| Reserved
+||||Reserved| 7 - F
+|========================================================================
+
 == Obsolete sentences
 
 Note that sentences made obsolete by newer revisions of the
@@ -532,14 +637,14 @@ publicly available NMEA document dated 2009.
 |BPI | Bearing & Distance to Point of Interest
 |DBK | Depth Below Keel
 |DBS | Depth Below Surface
-
+|DCN | DECCA Position
 |DRU | Dual Doppler Auxiliary Data
-|GDA | Dead Reckoning Positions
-|GLA | Loran-C Positions
-|GOA | OMEGA Positions
-|GXA | TRANSIT Positions
+|GDa | Dead Reckoning Positions
+|GLa | Loran-C Positions
+|GOa | OMEGA Positions
 |GTD | Geographical Position, Loran-C TDs
 |GXA | TRANSIT Position
+|GXa | TRANSIT Positions
 |HCC | Compass Heading
 |HCD | Heading and Deviation
 |HDM | Heading, Magnetic
@@ -553,11 +658,14 @@ publicly available NMEA document dated 2009.
 |MTA | Air Temperature
 |MWH | Wave Height
 |MWS | Wind & Sea State
-
+|OLN | Omega Lane Numbers
+|OLW | Omega Lane Width
+|OMP | Omega Position
+|OZN | Omega Zone Number
 |Rnn | Routes
 |SBK | Loran-C Blink Status
-|SCY | Loran-C Cycle Lock Status
 |SCD | Loran-C ECDs
+|SCY | Loran-C Cycle Lock Status
 |SDB | Loran-C Signal Strength
 |SGD | Position Accuracy Estimate
 |SGR | Loran-C Chain Identifier
@@ -570,6 +678,31 @@ publicly available NMEA document dated 2009.
 |STC | Time Constant
 |STR | Tracking Reference
 |SYS | Hybrid System Configuration
+|TEC | TRANSIT Satellite Error Code & Doppler Count
+|TEP | TRANSIT Satellite Predicted Elevation
+|TGA | TRANSIT Satellite Antenna & Geoidal Heights
+|TIF | TRANSIT Satellite Initial Flag
+|TRF | TRANSIT Fix Data
+|TRP | TRANSIT Satellite Predicted Direction of Rise
+|TRS | TRANSIT Satellite Operating Statu
+|VCD | Current at Selected Depth
+|VPE | Speed, Dead Reckoned Parallel to True Wind
+|VTA | Actual Track
+|VTI | Intended Track
+|VWE | Wind Track Efficiency
+|VWR | Relative (Apparent) Wind Speed and Angle
+|VWT | True Wind Speed and Angle
+|WDC | Distance to Waypoint
+|WDR | Waypoint Distance, Rhumb Line
+|WFM | Route Following Mode
+|WNR | Waypoint-to-Waypoint Distance, Rhumb Line
+|YWP | Water Propagation Speed
+|YWS | Water Profile
+|ZAA | Time, Elapsed/Estimated
+|ZCD | Timer
+|ZEV | Event Timer
+|ZLZ | Time of Day
+|ZZU | Time, UTC
 |================================================================
 
 == NMEA Standard Sentences
@@ -1106,8 +1239,8 @@ Field Number:
 This is one of the sentences commonly emitted by GPS units.
 
 ------------------------------------------------------------------------------
-	1       2 3        4 5         6 7   8
-	|       | |        | |         | |   |
+        1       2 3        4 5         6 7   8
+        |       | |        | |         | |   |
  $--GLL,llll.ll,a,yyyyy.yy,a,hhmmss.ss,a,m,*hh<CR><LF>
 ------------------------------------------------------------------------------
 
@@ -1193,7 +1326,9 @@ Field Number:
 12. Satellite 10 residual in meters (blank if unused)
 13. Satellite 11 residual in meters (blank if unused)
 14. Satellite 12 residual in meters (blank if unused)
-15. Checksum
+15. System ID (NMEA 4.11), see below
+16. Signal ID (NMEA 4.11), see below
+xx. Checksum
 
 The order of satellites MUST match those in the last GSA.
 
@@ -1230,8 +1365,8 @@ Example: $GPGST,182141.000,15.5,15.3,7.2,21.8,0.9,0.5,0.8*54
 This is one of the sentences commonly emitted by GPS units.
 
 ------------------------------------------------------------------------------
-	1 2 3                        14 15  16  17  18
-	| | |                         |  |   |   |   |
+        1 2 3                        14 15  16  17  18
+        | | |                         |  |   |   |   |
  $--GSA,a,a,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x.x,x.x,x.x*hh<CR><LF>
 ------------------------------------------------------------------------------
 
@@ -1254,7 +1389,8 @@ Field Number:
 15. PDOP
 16. HDOP
 17. VDOP
-18. Checksum
+18. System ID (NMEA 4.11), see below
+xx. Checksum
 
 Example: $GNGSA,A,3,80,71,73,79,69,,,,,,,,1.83,1.09,1.47*17
 
@@ -1277,8 +1413,8 @@ These sentences describe the sky position of a UPS satellite in view.
 Typically they're shipped in a group of 2 or 3.
 
 ------------------------------------------------------------------------------
-	1 2 3 4 5 6 7     n
-	| | | | | | |     |
+        1 2 3 4 5 6 7     n
+        | | | | | | |     |
  $--GSV,x,x,x,x,x,x,x,...*hh<CR><LF>
 ------------------------------------------------------------------------------
 
@@ -1311,8 +1447,8 @@ Example: $GLGSV,3,3,09,88,07,028,*51
 === GTD - Geographic Location in Time Differences
 
 ------------------------------------------------------------------------------
- 	 1   2   3   4   5  6
-	 |   |   |   |   |  |
+         1   2   3   4   5  6
+         |   |   |   |   |  |
  $--GTD,x.x,x.x,x.x,x.x,x.x*hh<CR><LF>
 ------------------------------------------------------------------------------
 
@@ -2173,8 +2309,8 @@ Field Number:
 This is one of the sentences commonly emitted by GPS units.
 
 ------------------------------------------------------------------------------
-         1  2  3  4  5	6  7  8 9   10
-         |  |  |  |  |	|  |  | |   |
+         1  2  3  4  5  6  7  8 9   10
+         |  |  |  |  |  |  |  | |   |
  $--VTG,x.x,T,x.x,M,x.x,N,x.x,K,m,*hh<CR><LF>
 ------------------------------------------------------------------------------
 
@@ -2273,7 +2409,7 @@ Field Number:
 === WPL - Waypoint Location
 
 ------------------------------------------------------------------------------
-	1       2 3        4 5    6
+        1       2 3        4 5    6
         |       | |        | |    |
  $--WPL,llll.ll,a,yyyyy.yy,a,c--c*hh<CR><LF>
 ------------------------------------------------------------------------------
@@ -2300,6 +2436,23 @@ Field Number:
 1. Transducer Type
 2. Measurement Data
 3. Units of measurement
+     A = Amperes
+     B = Bars
+     B = Binary
+     C = Celsius
+     D = Degrees
+     H = Hertz
+     I = liters/second
+     K = Kelvin
+     K = kg/m3
+     M = Meters
+     M = cubic Meters
+     N = Newton
+     P = % of full range
+     P = Pascal
+     R = RPM
+     S = Parts per thousand
+     V = Volts
 4. Name of transducer
 
 There may be any number of quadruplets like this, each describing a
@@ -2661,6 +2814,7 @@ Field Number:
 Transas is a mnanufacturer of proprietary ECDIS systems.
 
 Described in <<MALTESE>>, actually a Maltese government document.
+
 
 == References
 
