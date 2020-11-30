@@ -8,9 +8,6 @@
 # This file is Copyright (c) 2020 by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.
 #
-{"class":"VERSION","release":"3.19","rev":"3.19","proto_major":3,"proto_minor":14}
-{"class":"DEVICES","devices":[{"class":"DEVICE","path":"/dev/ttyUSB1","driver":"NMEA0183","activated":"2020-10-07T02:20:20.034Z","flags":1,"native":0,"bps":9600,"parity":"N","stopbits":1,"cycle":1.00}]}
-{"class":"WATCH","enable":true,"json":false,"nmea":false,"raw":2,"scaled":false,"timing":false,"split24":false,"pps":false}
 $GPGSV,4,1,13,03,03,074,37,06,15,348,38,07,18,022,52,11,13,133,35,1*6E
 $GPGSV,4,2,13,19,43,291,35,22,07,094,42,28,66,165,29,30,47,008,54,1*65
 $GPGSV,4,3,13,13,21,278,,15,06,246,,24,,,,39,,,34,1*64
