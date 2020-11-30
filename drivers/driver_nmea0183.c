@@ -1982,6 +1982,7 @@ static gps_mask_t processPGLOR(int c UNUSED, char *field[],
      *  $PGLOR,[],SAT - GPS Satellite information
      *  $PGLOR,[],SIO - Serial I/O status report
      *  $PGLOR,[],SPA - Spectrum analyzer results
+     *  $PGLOR,[],SPD - ??
      *  $PGLOR,SPL    - ??
      *  $PGLOR,[],SPS - ??
      *  $PGLOR,[],STA - GLL status
