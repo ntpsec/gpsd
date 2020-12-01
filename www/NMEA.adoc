@@ -1327,8 +1327,9 @@ Field Number:
 12. Satellite 10 residual in meters (blank if unused)
 13. Satellite 11 residual in meters (blank if unused)
 14. Satellite 12 residual in meters (blank if unused)
-15. System ID (NMEA 4.11), see below
-16. Signal ID (NMEA 4.11), see below
+15. System ID (NMEA 4.11), see above
+16. Signal ID (NMEA 4.11), see above
+
 xx. Checksum
 
 The order of satellites MUST match those in the last GSA.
@@ -1391,6 +1392,7 @@ Field Number:
 16. HDOP
 17. VDOP
 18. System ID (NMEA 4.11), see above
+
 xx. Checksum
 
 Example: $GNGSA,A,3,80,71,73,79,69,,,,,,,,1.83,1.09,1.47*17
