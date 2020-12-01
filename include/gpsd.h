@@ -584,18 +584,23 @@ struct gps_device_t {
         char last_gga_timestamp[16];
         char last_gga_talker;
         /* GSV stuff */
-        bool seen_bdgsv;
-        bool seen_gagsv;
-        bool seen_glgsv;
-        bool seen_gpgsv;
-        bool seen_qzss;
+        bool seen_bdgsv;                        // BeiDou GSV
+        bool seen_gagsv;                        // Galileo GSV
+        bool seen_gigsv;                        // IRNSS GSV
+        bool seen_glgsv;                        // GLONASS GSV
+        bool seen_gngsv;                        // GNSS GSV
+        bool seen_gpgsv;                        // GPS GSV
+        bool seen_qzgsv;                        // QZSS GSV
         char last_gsv_talker;
         unsigned char last_gsv_sigid;           /* NMEA 4.1 */
         /* GSA stuff */
-        bool seen_glgsa;
-        bool seen_gngsa;
-        bool seen_bdgsa;
-        bool seen_gagsa;
+        bool seen_bdgsa;                        // BeiDou GSA
+        bool seen_gagsa;                        // Galileo GSA
+        bool seen_gigsa;                        // IRNSS GSA
+        bool seen_glgsa;                        // GLONASS GSA
+        bool seen_gpgsa;                        // GPS GSA
+        bool seen_gngsa;                        // GNSS GSA
+        bool seen_qzgsa;                        // QZSS GSA
         char last_gsa_talker;
         /*
          * State for the cycle-tracking machinery.

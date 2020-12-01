@@ -1555,17 +1555,40 @@ static gps_mask_t processGSA(int count, char *field[],
                      "NMEA0183: xxGSA: clear sats_used\n");
         }
         session->nmea.last_gsa_talker = GSA_TALKER;
-        if ((session->nmea.last_gsa_talker == 'B') ||
-            (session->nmea.last_gsa_talker == 'D') ||
-            (session->nmea.last_gsa_talker == 'Q'))
-            /* Quectel EC25 & EC21 use PQGSA for BeiDou */
-            session->nmea.seen_bdgsa = true;
-        else if (session->nmea.last_gsa_talker == 'L')
-            session->nmea.seen_glgsa = true;
-        else if (session->nmea.last_gsa_talker == 'N')
-            session->nmea.seen_gngsa = true;
-        else if (session->nmea.last_gsa_talker == 'A')
+        switch (session->nmea.last_gsa_talker) {
+        case 'A':
+            // GA Galileo
             session->nmea.seen_gagsa = true;
+            break;
+        case 'B':
+            // GB BeiDou
+            FALLTHROUGH
+        case 'D':
+            // BD BeiDou
+            session->nmea.seen_bdgsa = true;
+            break;
+        case 'I':
+            // GI IRNSS
+            session->nmea.seen_gigsa = true;
+            break;
+        case 'L':
+            // GL GLONASS
+            session->nmea.seen_glgsa = true;
+            break;
+        case 'N':
+            // GN GNSS
+            session->nmea.seen_gngsa = true;
+            break;
+        case 'P':
+            // GP GPS
+            session->nmea.seen_gpgsa = true;
+            break;
+        case 'Q':
+            // Quectel EC25 & EC21 use PQGSA for QZSS
+            // NMEA 4.11 GQGSA for QZSS
+            session->nmea.seen_qzgsa = true;
+            break;
+        }
 
         /* the magic 6 here counts the tag, two mode fields, and DOP fields */
         for (i = 0; i < count - 6; i++) {
@@ -1619,13 +1642,17 @@ static gps_mask_t processGSA(int count, char *field[],
     }
     /* assumes GLGSA or BDGSA, if present, is emitted  directly
      * after the GPGSA*/
-    if ((session->nmea.seen_glgsa || session->nmea.seen_bdgsa ||
-         session->nmea.seen_gagsa) && GSA_TALKER == 'P') {
+    if ((session->nmea.seen_bdgsa ||
+         session->nmea.seen_gagsa ||
+         session->nmea.seen_gigsa ||
+         session->nmea.seen_glgsa ||
+         session->nmea.seen_gngsa ||
+         session->nmea.seen_qzgsa) &&
+         GSA_TALKER == 'P') {
         mask = ONLINE_SET;
-
-    /* first of two GNGSA */
-    /* if mode == 1 some GPS only output 1 GNGSA, so ship mode always */
     } else if ( 'N' != last_last_gsa_talker && 'N' == GSA_TALKER) {
+        /* first of two GNGSA */
+        /* if mode == 1 some GPS only output 1 GNGSA, so ship mode always */
         mask =  ONLINE_SET | MODE_SET;
     }
 
@@ -1669,9 +1696,12 @@ static gps_mask_t processGSV(int count, char *field[],
      *   BD (Beidou),
      *   GA (Galileo),
      *   GB (Beidou),
+     *   GI (IRNSS
      *   GL (GLONASS),
      *   GN (GLONASS, any combination GNSS),
      *   GP (GPS, SBAS, QZSS),
+     *   GQ (QZSS).
+     *   PQ (QZSS). Quectel Quirk
      *   QZ (QZSS).
      *
      * As of April 2019:
@@ -1783,25 +1813,31 @@ static gps_mask_t processGSV(int count, char *field[],
         session->nmea.last_gsv_talker = GSV_TALKER;
         session->nmea.last_gsv_sigid = ubx_sigid; /* UNUSED */
         switch (GSV_TALKER) {
-        case 'A':
+        case 'A':        // GA Galileo
             session->nmea.seen_gagsv = true;
             break;
-        case 'B':
+        case 'B':        // GB BeiDou
             FALLTHROUGH
-        case 'D':
+        case 'D':        // BD BeiDou
             FALLTHROUGH
-        case 'Q':
+        case 'L':        // GL GLONASS
+            session->nmea.seen_glgsv = true;
+            break;
+        case 'I':        // GI IRNSS
+            session->nmea.seen_gigsv = true;
+            break;
+        case 'N':        // GN GNSS
+            session->nmea.seen_gngsv = true;
+            break;
+        case 'P':        // GP GPS
+            session->nmea.seen_gpgsv = true;
+            break;
+        case 'Q':        // GQ, and PQ (Quectel) QZAA
             /* Quectel EC25 & EC21 use PQGSA for BeiDou */
             session->nmea.seen_bdgsv = true;
             break;
-        case 'L':
-            session->nmea.seen_glgsv = true;
-            break;
-        case 'P':
-            session->nmea.seen_gpgsv = true;
-            break;
-        case 'Z':
-            session->nmea.seen_qzss = true;
+        case 'Z':        // QZ QZSS
+            session->nmea.seen_qzgsv = true;
             break;
         default:
             /* uh, what? */
@@ -1870,13 +1906,17 @@ static gps_mask_t processGSV(int count, char *field[],
 #if __UNUSED
     /* debug code */
     GPSD_LOG(LOG_ERROR, &session->context->errout,
-        "NMEA0183: x%cGSV: vis %d gagsv %d bdgsv %d glgsv %d qzss %d\n",
+        "NMEA0183: x%cGSV: vis %d bdgsv %d gagsv %d gigsv %d glgsv %d "
+        "gngsv %d qpgsv %dqzgsv %d\n",
         GSV_TALKER,
         session->gpsdata.satellites_visible,
-        session->nmea.seen_gagsv,
         session->nmea.seen_bdgsv,
+        session->nmea.seen_gagsv,
+        session->nmea.seen_gigsv,
         session->nmea.seen_glgsv,
-        session->nmea.seen_qzss);
+        session->nmea.seen_gngsv,
+        session->nmea.seen_gpgsv,
+        session->nmea.seen_qzgsv);
 #endif
 
     /*
@@ -1888,13 +1928,19 @@ static gps_mask_t processGSV(int count, char *field[],
      *
      * FIXME: Add per-talker totals so we can do this check properly.
      */
-    if (!(session->nmea.seen_glgsv || session->nmea.seen_bdgsv
-        || session->nmea.seen_qzss || session->nmea.seen_gagsv))
+    if (!(session->nmea.seen_bdgsv ||
+          session->nmea.seen_gagsv ||
+          session->nmea.seen_gigsv ||
+          session->nmea.seen_glgsv ||
+          session->nmea.seen_gngsv ||
+          session->nmea.seen_qzgsv)) {
         if (session->nmea.part == session->nmea.await
-                && atoi(field[3]) != session->gpsdata.satellites_visible)
+                && atoi(field[3]) != session->gpsdata.satellites_visible) {
             GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "NMEA0183: GPGSV field 3 value of %d != actual count %d\n",
+                     "NMEA0183: xxGSV field 3 value of %d != actual count %d\n",
                      atoi(field[3]), session->gpsdata.satellites_visible);
+        }
+    }
 
     /* not valid data until we've seen a complete set of parts */
     if (session->nmea.part < session->nmea.await) {
@@ -1927,8 +1973,12 @@ static gps_mask_t processGSV(int count, char *field[],
              session->nmea.part, session->nmea.await);
 
     /* assumes GLGSV or BDGSV group, if present, is emitted after the GPGSV */
-    if ((session->nmea.seen_glgsv || session->nmea.seen_bdgsv
-         || session->nmea.seen_qzss  || session->nmea.seen_gagsv)
+    if ((session->nmea.seen_bdgsv ||
+         session->nmea.seen_gagsv ||
+         session->nmea.seen_gigsv ||
+         session->nmea.seen_glgsv ||
+         session->nmea.seen_gngsv ||
+         session->nmea.seen_qzgsv)
         && GSV_TALKER == 'P')
         return ONLINE_SET;
 
@@ -2691,9 +2741,12 @@ static gps_mask_t processTXT(int count, char *field[],
      *   BD (Beidou),
      *   GA (Galileo),
      *   GB (Beidou),
+     *   GI (IRNSS
      *   GL (GLONASS),
      *   GN (GLONASS, any combination GNSS),
      *   GP (GPS, SBAS, QZSS),
+     *   GQ (QZSS).
+     *   PQ (QZSS). Quectel Quirk
      *   QZ (QZSS).
      */
     gps_mask_t mask = ONLINE_SET;
