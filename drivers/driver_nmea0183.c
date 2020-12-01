@@ -2088,6 +2088,36 @@ static gps_mask_t processPGLOR(int c UNUSED, char *field[],
     return mask;
 }
 
+/* smart watch sensors
+ * A stub.
+ */
+static gps_mask_t processPRHS(int c UNUSED, char *field[],
+                               struct gps_device_t *session)
+{
+    /*
+     * $PRHS ,type,....
+     *   type = message type
+     *
+     * Yes: $PRHS[space],
+     *
+     * types:
+     * $PRHS ,ACC,9.952756,0.37819514,1.3165021,20150305072428436*44
+     * $PRHS ,COM,238.09642,16.275442,82.198425,20150305072428824*43
+     * $PRHS ,GYR,0.0,0.0,0.0,20150305072428247*4D
+     * $PRHS ,LAC,0.23899937,0.009213656,0.02143073,20150305072428437*46
+     * $PRHS ,MAG,47.183502,-51.789,-2.7145,20150305072428614*41
+     * $PRHS ,ORI,187.86511,-2.1546898,-82.405205,20150305072428614*53
+     * $PRHS ,RMC,20150305072427985*55
+     *
+     */
+    gps_mask_t mask = ONLINE_SET;
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: PRHS: type %s\n",
+             field[1]);
+    return mask;
+}
+
 /* Garmin Estimated Position Error */
 static gps_mask_t processPGRME(int c UNUSED, char *field[],
                                struct gps_device_t *session)
@@ -3567,6 +3597,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PMTK705", 3,  false, processMTK3301},
         {"PMTKCHN", 0, false, NULL},    /* ignore MediaTek Channel Status */
 #endif /* MTK3301_ENABLE */
+        {"PRHS ", 2,  false, processPRHS},  // smart watch sensors, Yes: space!
         {"PRWIZCH", 0, false, NULL},    /* ignore Rockwell Channel Status */
         {"PSRFEPE", 7, false, processPSRFEPE},  /* SiRF Estimated Errors */
         {"PTFTTXT", 0, false, NULL},    /* ignore unknown uptime */
