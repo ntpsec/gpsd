@@ -17,6 +17,7 @@ import socket
 import sys
 import time
 
+import gps          # for VERB_*
 from .misc import polystr, polybytes
 from .watch_options import *
 
@@ -30,14 +31,20 @@ class gpscommon(object):
     port = GPSD_PORT
 
     def __init__(self,
+                 device=None,
                  host="127.0.0.1",
                  input_file_name=None,
+                 input_speed=None,
                  port=GPSD_PORT,
+                 read_only=False,
                  should_reconnect=False,
                  verbose=0):
         """Init gpscommon."""
+        self.device = device
+        self.input_file_name = input_file_name
+        self.input_speed = input_speed
         self.linebuffer = b''
-        self.input_file_name = None
+        self.read_only = read_only
         self.received = time.time()
         self.reconnect = should_reconnect
         self.sock = None        # in case we blow up in connect
@@ -46,6 +53,13 @@ class gpscommon(object):
         # Provide the response in both 'str' and 'bytes' form
         self.bresponse = b''
         self.response = polystr(self.bresponse)
+
+        if gps.VERB_PROG <= verbose:
+            print('gpscommon(device=%s host=%s port=%s\n'
+                  '          input_file_name=%s input_speed=%s read_only=%s\n'
+                  '          verbose=%s)' %
+                  (device, host, port, input_file_name, input_speed,
+                   read_only, verbose))
 
         if host is not None and port is not None:
             self.host = host

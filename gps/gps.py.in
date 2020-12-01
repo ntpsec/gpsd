@@ -550,25 +550,38 @@ class gps(gpscommon, gpsdata, gpsjson):
     __version__ = "@VERSION@"
 
     def __init__(self,
+                 device=None,
                  host="127.0.0.1",
                  input_file_name=None,
+                 input_speed=None,
                  mode=0,
                  port=GPSD_PORT,
+                 read_only=False,
                  reconnect=False,
                  verbose=0):
         self.activated = None
         self.clock_sec = NaN
         self.clock_nsec = NaN
+        self.device = device
         self.input_file_name = input_file_name
         self.path = ''
         self.precision = 0
         self.real_sec = NaN
         self.real_nsec = NaN
         self.serialmode = "8N1"
+        self.verbose = verbose
+        if VERB_PROG <= verbose:
+            print('gps(device=%s host=%s port=%s\n'
+                  '       input_file_name=%s input_speed=%s read_only=%s\n'
+                  '       verbose=%s)' %
+                  (device, host, port, input_file_name, input_speed,
+                   read_only, verbose))
+
         gpscommon.__init__(self, host=host, port=port,
                            input_file_name=input_file_name,
                            should_reconnect=reconnect,
                            verbose=verbose)
+
         gpsdata.__init__(self)
         gpsjson.__init__(self)
         if mode:
