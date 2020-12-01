@@ -1220,6 +1220,7 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
      *   301..336: Galileo
      *   401..437: Beidou
      *   null: GLONASS unused
+     *   500-509: NavIC (IRNSS)  NOT STANDARD!
      *
      * The issue is what to do when GPSes from these different systems
      * fight for IDs in the  1-32 range, as in this pair of Beidou sentences
@@ -1303,6 +1304,19 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
             *ubx_svid = nmea_satnum;
             nmea2_prn = 300 + nmea_satnum;
             break;
+        case 5:
+            //  5 - QZSS, 1 - 10, NMEA 4.11
+            *ubx_gnssid = 5;
+            *ubx_svid = nmea_satnum;
+            // huh?  space for only 7?
+            nmea2_prn = 192 + nmea_satnum;
+            break;
+        case 6:
+            /*  6 - NavIC (IRNSS)    1-15 */
+            *ubx_gnssid = 7;
+            *ubx_svid = nmea_satnum;
+            nmea2_prn = 500 + nmea_satnum;  // This is wrong...
+            break;
         }
 
     /* left with NMEA 2.x to NMEA 4.0 satnums
@@ -1311,22 +1325,41 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
         *ubx_svid = nmea_satnum;
         switch (talker[0]) {
         case 'G':
-            if (talker[1] == 'A') {
+            switch (talker[1]) {
+            case 'A':
                 /* Galileo */
                 nmea2_prn = 300 + nmea_satnum;
                 *ubx_gnssid = 2;
-            } else if (talker[1] == 'B') {
+                break;
+            case 'B':
                 /* map Beidou IDs 1..37 to 401..437 */
                 *ubx_gnssid = 3;
                 nmea2_prn = 400 + nmea_satnum;
-            } else if (talker[1] == 'L') {
+                break;
+            case 'I':
+                // map NavIC (IRNSS) IDs 1..10 to 500 - 509, not NMEA
+                *ubx_gnssid = 7;
+                nmea2_prn = 500 + nmea_satnum;
+                break;
+            case 'L':
                 /* GLONASS GL doesn't seem to do this, better safe than sorry */
                 nmea2_prn = 64 + nmea_satnum;
                 *ubx_gnssid = 6;
-            } else if (talker[1] == 'N') {
+                break;
+            case 'Q':
+                // GQ, QZSS, 1 - 10
+                nmea2_prn = 192 + nmea_satnum;
+                *ubx_gnssid = 5;
+                break;
+            case 'N':
                 /* all of them, but only GPS is 0 < PRN < 33 */
-            } else if (talker[1] == 'P') {
+                FALLTHROUGH
+            case 'P':
                 /* GPS,SBAS,QZSS, but only GPS is 0 < PRN < 33 */
+                FALLTHROUGH
+            default:
+                // WTF?
+                break;
             } /* else ?? */
             break;
         case 'B':
