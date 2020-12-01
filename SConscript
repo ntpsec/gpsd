@@ -2016,12 +2016,12 @@ if env["libgpsmm"] or cleaning:
 # Python programs
 # python misc helpers and stuff, not to be installed
 python_misc = [
-    "gpscap.py",
     "libgps/jsongen.py",
     "maskaudit.py",
     "tests/test_clienthelpers.py",
     "tests/test_misc.py",
     "tests/test_xgps_deps.py",
+    "www/gpscap.py",
     "valgrind-audit.py"
 ]
 
@@ -2195,7 +2195,6 @@ templated = {
     "contrib/skyview2svg.py": "contrib/skyview2svg.py.in",
     "contrib/webgps": "contrib/webgps.py.in",
     "control": "control.in",
-    "gpscap.py": "gpscap.py.in",
     "gpsd.rules": "gpsd.rules.in",
     "gpsfake": "gpsfake.py.in",
     "gps/gps.py": "gps/gps.py.in",
@@ -2216,6 +2215,7 @@ templated = {
     "systemd/gpsd.socket": "systemd/gpsd.socket.in",
     "www/faq.html": "www/faq.html.in",
     "www/gps_report.cgi": "www/gps_report.cgi.in",
+    "www/gpscap.py": "www/gpscap.py.in",
     "www/hacking.html": "www/hacking.html.in",
     "www/hardware-head.html": "www/hardware-head.html.in",
     "www/index.html": "www/index.html.in",
@@ -2257,14 +2257,14 @@ www_xml_files = []
 for file in glob.iglob('../doc/*xml'):
     www_xml_files.append(file[3:])
 env.Command('www/hardware.html',
-            ['gpscap.py',
+            ['www/gpscap.py',
              'www/hardware-head.html',
-             'gpscap.ini',
+             'www/gpscap.ini',
              'www/hardware-tail.html',
              www_xml_files],
-            ['cd %s; (cat www/hardware-head.html && PYTHONIOENCODING=utf-8 '
-             '$SC_PYTHON gpscap.py && cat www/hardware-tail.html) '
-             '> www/hardware.html' % variantdir])
+            ['cd %s/www; (cat hardware-head.html && PYTHONIOENCODING=utf-8 '
+             '$SC_PYTHON gpscap.py && cat hardware-tail.html) '
+             '> hardware.html' % variantdir])
 
 maninstall = []
 if manbuilder:
