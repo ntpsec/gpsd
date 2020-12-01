@@ -107,6 +107,8 @@ ubuntu-rolling:gcc:
 
 # the devel tag should point to the docker image of the next, upcoming Ubuntu release
 ubuntu-devel:gcc:
+  # Broken 20 Nov 2020
+  allow_failure: true
   image: ubuntu:devel
   stage: advanced_build
   variables:
