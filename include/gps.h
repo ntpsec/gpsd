@@ -2078,24 +2078,24 @@ struct satellite_t {
     double azimuth;     /* azimuth, 0 to 359 deg, NAN1 for n/a */
     /* gnssid:svid:sigid, as defined by u-blox 8/9:
      *  gnssid        svid (native PRN)
-     *  0 = GPS       1-32
-     *  1 = SBAS      120-158
-     *  2 = Galileo   1-36
-     *  3 - BeiDou    1-37
-     *  4 = IMES      1-10
-     *  5 = QZSS      1-5       Undocumented u-blox goes to 7
-     *  6 = GLONASS   1-32, 255
-     *  7 = IRNSS     1-11       ZED-F9T
+     *  0 = GPS           1-32
+     *  1 = SBAS          120-158
+     *  2 = Galileo       1-36
+     *  3 - BeiDou        1-37
+     *  4 = IMES          1-10
+     *  5 = QZSS          1-5       Undocumented u-blox goes to 7
+     *  6 = GLONASS       1-32, 255
+     *  7 = NavIC (IRNSS) 1-11       ZED-F9T
      *
-     * gnssid:svid:sigid, as defined by NMEA 4.10, NOT USED HERE!
+     * gnssid:svid:sigid, as defined by NMEA 4.11, NOT USED HERE!
      *  1 = GPS       1-32
      *  1 = SBAS      33-64, 152-158
-     *  1 = QZSS      193-197  Undocuemtned u-blox goes to 199
+     *  1 = QZSS      193-197  Undocumetned u-blox goes to 199
      *  2 = GLONASS   1-32, nul
      *  3 = Galileo   1-36
      *  4 - BeiDou    1-37
-     *  x = IMES                Not defined by NMEA 4.10
-     *  x = IRNSS               Not defined by NMEA 4.10
+     *  x = IMES                Not defined by NMEA
+     *  6 = NavIC (IRNSS)               NMEA 4.11+
      *
      * Note: other GNSS receivers use different mappings!
      */
