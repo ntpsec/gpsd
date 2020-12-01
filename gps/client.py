@@ -29,15 +29,20 @@ class gpscommon(object):
     host = "127.0.0.1"
     port = GPSD_PORT
 
-    def __init__(self, host="127.0.0.1", port=GPSD_PORT, verbose=0,
-                 should_reconnect=False):
+    def __init__(self,
+                 host="127.0.0.1",
+                 input_file_name=None,
+                 port=GPSD_PORT,
+                 should_reconnect=False,
+                 verbose=0):
         """Init gpscommon."""
-        self.stream_command = b''
         self.linebuffer = b''
+        self.input_file_name = None
         self.received = time.time()
         self.reconnect = should_reconnect
-        self.verbose = verbose
         self.sock = None        # in case we blow up in connect
+        self.stream_command = b''
+        self.verbose = verbose
         # Provide the response in both 'str' and 'bytes' form
         self.bresponse = b''
         self.response = polystr(self.bresponse)

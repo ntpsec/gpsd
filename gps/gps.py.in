@@ -253,6 +253,7 @@ class gps_io(object):
                 self.gpsd_host = 'localhost'
             try:
                 self.ser = gpscommon(host=self.gpsd_host,
+                                     input_file_name=input_file_name,
                                      port=self.gpsd_port,
                                      verbose=self.verbosity_level)
 
@@ -564,7 +565,10 @@ class gps(gpscommon, gpsdata, gpsjson):
         self.real_sec = NaN
         self.real_nsec = NaN
         self.serialmode = "8N1"
-        gpscommon.__init__(self, host, port, verbose, reconnect)
+        gpscommon.__init__(self, host=host, port=port,
+                           input_file_name=input_file_name,
+                           should_reconnect=reconnect,
+                           verbose=verbose)
         gpsdata.__init__(self)
         gpsjson.__init__(self)
         if mode:
