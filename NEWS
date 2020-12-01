@@ -9,6 +9,7 @@
   Move stuff from source root into gpsd/.
   Move class ubx out of ubxtool and into gps/ubx.py.
   Build all targets in gpsd-$VERSION/, not in tree.
+  NMEA 4.11 support for $GI (IRNSS) and $GZ (QZSS).
 
 3.21: 2020-08-04
   Create python programs from .in files to allow macro substitution.
