@@ -1435,7 +1435,7 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
         /* $GBGSV,2,2,05,209,07,033,*62 */
         *ubx_gnssid = 3;
         *ubx_svid = nmea_satnum - 200;
-        nmea2_prn += 200;           /* move up to 400 where NMEA 2.x wants it. */
+        nmea2_prn += 200;           // move up to 400 where NMEA 2.x wants it.
     } else if (301 > nmea_satnum) {
         /* Huh? */
         *ubx_gnssid = 0;
@@ -1489,6 +1489,8 @@ static gps_mask_t processGSA(int count, char *field[],
      *             2 = GLONASS L1 OF, L2 OF
      *             3 = Galileo E1C, E1B, E5 bl, E5 bQ
      *             4 = BeiDou B1I D1, B1I D2, B2I D1, B2I D12
+     *             5 = QZSS
+     *             6 - NavID (IRNSS)
      *
      * Not all documentation specifies the number of PRN fields, it
      * may be variable.  Most doc that specifies says 12 PRNs.
