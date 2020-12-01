@@ -548,11 +548,17 @@ class gps(gpscommon, gpsdata, gpsjson):
     # module version, would be nice to automate the version
     __version__ = "@VERSION@"
 
-    def __init__(self, host="127.0.0.1", port=GPSD_PORT, verbose=0, mode=0,
-                 reconnect=False):
+    def __init__(self,
+                 host="127.0.0.1",
+                 input_file_name=None,
+                 mode=0,
+                 port=GPSD_PORT,
+                 reconnect=False,
+                 verbose=0):
         self.activated = None
         self.clock_sec = NaN
         self.clock_nsec = NaN
+        self.input_file_name = input_file_name
         self.path = ''
         self.precision = 0
         self.real_sec = NaN
