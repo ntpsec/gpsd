@@ -305,6 +305,7 @@ the following are well known:
 |IN     | Integrated Navigation
 |LC     | Loran-C receiver (obsolete)
 |Pxxx   | Proprietary (Vendor specific)
+|PQ     | QZSS (Quectel Quirk)
 |QZ     | QZSS regional GPS augmentation system (Japan)
 |================================================================
 
@@ -1389,13 +1390,13 @@ Field Number:
 15. PDOP
 16. HDOP
 17. VDOP
-18. System ID (NMEA 4.11), see below
+18. System ID (NMEA 4.11), see above
 xx. Checksum
 
 Example: $GNGSA,A,3,80,71,73,79,69,,,,,,,,1.83,1.09,1.47*17
 
-Note: NMEA 4.1+ systems (in particular u-blox 9) emit an extra field
-just before the checksum.
+Note: NMEA 4.1+ systems (u-blox 9, Quectel LCD79) may emit an extra field,
+System ID, just before the checksum.
 
 -----------------------------------------------
 1 = GPS L1C/A, L2CL, L2CM
@@ -1428,7 +1429,8 @@ Field Number:
 6. azimuth in degrees to true north (000 to 359) (leading zeros sent)
 7. SNR in dB (00-99) (leading zeros sent)
    more satellite info quadruples like 4-7
-   n) checksum
+n-1) Signal ID (NMEA 4.11)
+n) checksum
 
 Example:
     $GPGSV,3,1,11,03,03,111,00,04,15,270,00,06,01,010,00,13,06,292,00*74
@@ -1443,6 +1445,9 @@ SNR field will be null; we don't know whether this is formally allowed
 or not.
 
 Example: $GLGSV,3,3,09,88,07,028,*51
+
+Note: NMEA 4.1+ systems (u-blox 9, Quectel LCD79) may emit an extra field,
+Signal ID, just before the checksum.
 
 === GTD - Geographic Location in Time Differences
 
@@ -1780,6 +1785,22 @@ Field Number:
 ...
 
 n) checksum
+
+=== RLM – Return Link Message
+
+------------------------------------------------------------------------------
+            1             2       3  4   5
+            |             |       |  |   |
+ $--RLM,hhhhhhhhhhhhhhh,hhmmss.ss,h,h--h*hh<CR><LF>
+------------------------------------------------------------------------------
+
+Field Number:
+
+1. Beacon ID
+2. Time of Reception
+3. Message Code
+4. Message Body
+5. Checksum
 
 === RMA - Recommended Minimum Navigation Information
 
