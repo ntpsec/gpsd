@@ -192,11 +192,13 @@ static void usage(void)
 #ifdef HAVE_GETOPT_LONG
                   "  --ais               Select AIS messages only.\n"
                   "  --count COUNT       exit after count packets.\n"
-                  "  --daemonize         Daemonize\n"
-                  "  --debug DEBUGLEVEL\n"
+                  "  --daemon            Daemonize\n"
+                  "  --debug DEBUGLEVEL  See -d for DEBUGLEVEL\n"
                   "  --help              Show this help, then exit\n"
                   "  --json              Feed JSON messages only.\n"
                   "  --nmea              Feed NMEA messages only.\n"
+                  "  --udp HOST:PORT     Send UDP feed to host:port.\n"
+                  "                      Up to five --udp accepted.\n"
                   "  --version           Show version, then exit\n"
 #endif
                   "  -a                  Select AIS messages only.\n"
@@ -204,11 +206,12 @@ static void usage(void)
                   "  -c COUNT            Exit after count packets.\n"
                   "  -d [0-2]            1 display sent packets, "
                   "2 display ignored packets.\n"
-                  "  -h Show this help.\n"
-                  "  -j Feed JSON.\n"
-                  "  -n Feed NMEA.\n"
-                  "  -u HOST:PORT        Send UDP NMEA/JSON feed to host:port "
-                  "multiple -u accepted]\n"
+                  "  -h                  Show this help.\n"
+                  "  -j                  Feed JSON.\n"
+                  "  -n                  Feed NMEA.\n"
+                  "  -u HOST:PORT        Send UDP NMEA/JSON feed to "
+                  "host:port.\n"
+                  "                      Up to five -u accepted.\n"
                   "  -V                  Print version and exit.\n"
                   "\n"
                   "example: gps2udp -a -n -c 2 -d 1 -u data.aishub.net:2222 "
@@ -378,13 +381,14 @@ int main(int argc, char **argv)
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
     static struct option long_options[] = {
-        {"ais", no_argument, NULL, 'h'},
+        {"ais", no_argument, NULL, 'a'},
         {"count", required_argument, NULL, 'c'},
-        {"daemonize", no_argument, NULL, 'b'},
+        {"daemon", no_argument, NULL, 'b'},
         {"debug", required_argument, NULL, 'd'},
         {"help", no_argument, NULL, 'h'},
         {"json", no_argument, NULL, 'j'},
         {"nmea", no_argument, NULL, 'n'},
+        {"udp", required_argument, NULL, 'u'},
         {"version", no_argument, NULL, 'V' },
         {NULL, 0, NULL, 0},
     };

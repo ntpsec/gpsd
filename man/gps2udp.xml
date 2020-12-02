@@ -22,13 +22,22 @@ SPDX-License-Identifier: BSD-2-clause
 
 <cmdsynopsis>
   <command>gps2udp</command>
-      <arg choice='opt'>-h</arg>
-      <arg choice='opt'>-n</arg>
-      <arg choice='opt'>-j</arg>
+      <arg choice='opt'>--ais</arg>
+      <arg choice='opt'>--count <replaceable>count</replaceable></arg>
+      <arg choice='opt'>--daemonize</arg>
+      <arg choice='opt'>--debug <replaceable>1|2</replaceable></arg>
+      <arg choice='opt'>--help</arg>
+      <arg choice='opt'>--json</arg>
+      <arg choice='opt'>--nmea</arg>
+      <arg choice='opt'>--udp <replaceable>hostname:udpport</replaceable></arg>
       <arg choice='opt'>-a</arg>
-      <arg choice='opt'>-u <replaceable>hostname:udpport</replaceable></arg>
       <arg choice='opt'>-c <replaceable>count</replaceable></arg>
       <arg choice='opt'>-d <replaceable>1|2</replaceable></arg>
+      <arg choice='opt'>-h</arg>
+      <arg choice='opt'>-j</arg>
+      <arg choice='opt'>-n</arg>
+      <arg choice='opt'>-u <replaceable>hostname:udpport</replaceable></arg>
+      <arg choice='opt'>-V</arg>
       <arg choice='opt'>-V</arg>
       <group>
         <replaceable>server</replaceable>
@@ -73,23 +82,23 @@ count of packets (-c option).</para>
 </refsect1>
 <refsect1 id='options'><title>OPTIONS</title>
 
-<para>-h makes <application>gps2udp</application> print
+<para>-a, --ais, output only AIS messages.</para>
+<para>-b, --daemon, causes <application>gps2udp</application> to run as a
+daemon.</para>
+<para>-c count, --count count, causes [count] sentences to be output.
+<application>gps2udp</application> will then exit gracefully.</para>
+<para>-d lvl, --debug lvl. [lvl] 0 prints nothing.
+[lvl] 1 prints sent packet on stdout. [lvl] 2 print ignored packets.</para>
+<para>-h, --help, makes <application>gps2udp</application> print
 a usage message and exit.</para>
 
-<para>-n causes NMEA sentences to be output.</para>
-<para>-j causes JSON sentences to be output.</para>
-<para>-u host:port UDP destination for output sentenses (up to five
-destinations).</para>
+<para>-j, --json, causes JSON sentences to be output.</para>
+<para>-n, --nmea, causes NMEA sentences to be output.</para>
+<para>-u host:port, --udp host:port, UDP destination for output sentenses
+(up to five destinations).</para>
 
-<para>-a output only AIS messages.</para>
-<para>-b causes <application>gps2udp</application> to run as a daemon.</para>
-<para>-c [count] causes [count] sentences to be output.
-<application>gps2udp</application> will then exit gracefully.</para>
-
-<para>-d 1 prints sent packet on stdout.</para>
-<para>-d 2 prints unsent packet on stdout.</para>
-<para>-V prints the version, then exits.</para>
 <para>-v prints the version, then exits (deprecated).</para>
+<para>-V, --version, prints the version, then exits.</para>
 </refsect1>
 
 <refsect1 id='exampletitle'><title>EXAMPLE</title>
