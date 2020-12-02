@@ -29,6 +29,7 @@ SPDX-License-Identifier: BSD-2-clause
       <arg choice='opt'>--help</arg>
       <arg choice='opt'>--json</arg>
       <arg choice='opt'>--nmea</arg>
+      <arg choice='opt'>--tpv</arg>
       <arg choice='opt'>--udp <replaceable>hostname:udpport</replaceable></arg>
       <arg choice='opt'>-a</arg>
       <arg choice='opt'>-c <replaceable>count</replaceable></arg>
@@ -36,6 +37,7 @@ SPDX-License-Identifier: BSD-2-clause
       <arg choice='opt'>-h</arg>
       <arg choice='opt'>-j</arg>
       <arg choice='opt'>-n</arg>
+      <arg choice='opt'>-t</arg>
       <arg choice='opt'>-u <replaceable>hostname:udpport</replaceable></arg>
       <arg choice='opt'>-V</arg>
       <arg choice='opt'>-V</arg>
@@ -94,6 +96,7 @@ a usage message and exit.</para>
 
 <para>-j, --json, causes JSON sentences to be output.</para>
 <para>-n, --nmea, causes NMEA sentences to be output.</para>
+<para>-t, --tpv, Only output TPV sentences.  Implies --json.</para>
 <para>-u host:port, --udp host:port, UDP destination for output sentenses
 (up to five destinations).</para>
 

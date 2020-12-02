@@ -57,11 +57,12 @@ static int udpchannel;
 /* gpsclient source */
 static struct fixsource_t gpsd_source;
 static unsigned int flags;
-static int debug = 0;
+static unsigned int debug = 0;
 static bool aisonly = false;
+static bool tpvonly = false;
 
-static char* time2string(void)
 /* return local time hh:mm:ss */
+static char* time2string(void)
 {
    static char buffer[MAX_TIME_LEN];
    time_t curtime;
@@ -79,11 +80,12 @@ static char* time2string(void)
    return (buffer);
 }
 
-static int send_udp (char *nmeastring, size_t ind)
+static int send_udp(char *nmeastring, size_t ind)
 {
     char message[MAX_PACKET_LENGTH];
     char *buffer;
     int  channel;
+    static char mstr[] = "{\"class\":\"TPV\",";
 
     /* if string length is unknown make a copy and compute it */
     if (ind == 0) {
@@ -106,8 +108,19 @@ static int send_udp (char *nmeastring, size_t ind)
     buffer[ind] = '\n'; ind++;
     buffer[ind] = '\0';
 
-    if ((flags & WATCH_JSON)==0 && buffer[0] == '{') {
+    if (0 == (flags & WATCH_JSON) && '{' == buffer[0]) {
         /* do not send JSON when not configured to do so */
+        // JSON, skip it
+        if (1 < debug) {
+            (void)fprintf(stdout, "...j [%s] '%s'\n", time2string(), buffer);
+        }
+        return 0;
+    }
+    if (tpvonly && (0 != strncmp(mstr, buffer, sizeof(mstr) - 1))) {
+        // only TPV requests, but not TPV, skip it
+        if (1 < debug) {
+            (void)fprintf(stdout, "...t [%s] '%s'\n", time2string(), buffer);
+        }
         return 0;
     }
 
@@ -121,7 +134,7 @@ static int send_udp (char *nmeastring, size_t ind)
                                 (int)sizeof(remote));
         if (status < (ssize_t)ind) {
             (void)fprintf(stderr, "gps2udp: failed to send [%s] \n",
-                          nmeastring);
+                          buffer);
             return -1;
         }
     }
@@ -144,7 +157,7 @@ static int open_udp(char **hostport)
        if (NULL == hostport[channel]) {
            // pacify coverity
            (void)fprintf(stderr, "gps2udp: syntax is [-u hostname:port]\n");
-           return (-1);
+           return -1;
        }
        /* parse argument */
        hostname = strtok(hostport[channel], ":");
@@ -152,7 +165,7 @@ static int open_udp(char **hostport)
        portname = strtok(NULL, ":");
        if ((hostname == NULL) || (portname == NULL)) {
            (void)fprintf(stderr, "gps2udp: syntax is [-u hostname:port]\n");
-           return (-1);
+           return -1;
        }
 
        errno = 0;
@@ -160,13 +173,13 @@ static int open_udp(char **hostport)
        if (1 > portnum || 65535 < portnum || '\0' != *endptr || 0 != errno) {
            (void)fprintf(stderr, "gps2udp: syntax is [-u hostname:port] "
                          "[%s] is not a valid port number\n", portname);
-           return (-1);
+           return -1;
        }
 
        sock[channel]= socket(AF_INET, SOCK_DGRAM, 0);
        if (sock[channel] < 0) {
            (void)fprintf(stderr, "gps2udp: error creating UDP socket\n");
-           return (-1);
+           return -1;
        }
 
        remote[channel].sin_family = (sa_family_t)AF_INET;
@@ -176,13 +189,13 @@ static int open_udp(char **hostport)
                          "gps2udp: syntax is [-u hostname:port] [%s]"
                          " is not a valid hostname\n",
                          hostname);
-           return (-1);
+           return -1;
        }
 
        memcpy( &remote[channel].sin_addr, hp->h_addr_list[0], hp->h_length);
        remote[channel].sin_port = htons((in_port_t)portnum);
    }
-    return (0);
+    return 0;
 }
 
 static void usage(void)
@@ -197,6 +210,8 @@ static void usage(void)
                   "  --help              Show this help, then exit\n"
                   "  --json              Feed JSON messages only.\n"
                   "  --nmea              Feed NMEA messages only.\n"
+                  "  --tpv               Feed TPV JSON messages only.\n"
+                  "                      Implies --json.\n"
                   "  --udp HOST:PORT     Send UDP feed to host:port.\n"
                   "                      Up to five --udp accepted.\n"
                   "  --version           Show version, then exit\n"
@@ -209,6 +224,8 @@ static void usage(void)
                   "  -h                  Show this help.\n"
                   "  -j                  Feed JSON.\n"
                   "  -n                  Feed NMEA.\n"
+                  "  -t                  Feed TPV JSON messages only.\n"
+                  "                      Implies --json.\n"
                   "  -u HOST:PORT        Send UDP NMEA/JSON feed to "
                   "host:port.\n"
                   "                      Up to five -u accepted.\n"
@@ -226,7 +243,7 @@ static void connect2gpsd(bool restart)
 
     if (restart) {
         (void)gps_close(&gpsdata);
-        if (debug > 0)
+        if (0 < debug)
             (void)fprintf(stdout,
                           "gps2udp [%s] reset gpsd connection\n",
                           time2string());
@@ -241,7 +258,7 @@ static void connect2gpsd(bool restart)
                           time2string(), gpsd_source.server, gpsd_source.port);
            (void)sleep(delay);
         } else {
-            if (debug > 0)
+            if (0 < debug)
                 (void)fprintf(stdout, "gps2udp [%s] connect to gpsd %s:%s\n",
                               time2string(), gpsd_source.server,
                               gpsd_source.port);
@@ -271,9 +288,10 @@ static ssize_t read_gpsd(char *message, size_t len)
         to.tv_nsec = 0;
         int result = nanowait(gpsdata.gps_fd, &to);
 
-        switch (result)
-        {
-        case 1: /* we have data waiting, let's process them */
+        switch (result) {
+        case 1:
+            /* we have data waiting, let's process them */
+            // FIXME!  Do not do one at a time!
             result = (int)read(gpsdata.gps_fd, &c, 1);
 
             /* If we lost gpsd connection reset it */
@@ -286,18 +304,25 @@ static ssize_t read_gpsd(char *message, size_t len)
 
                 if (ind > 0) {
                     if (retry > 0) {
-                        if (debug ==1)
+                        if (1 == debug)
                             (void)fprintf (stdout,"\r");
-                        if (debug > 1)
+                        if (1 < debug)
                             (void)fprintf(stdout,
                                           " [%s] No Data for: %ds\n",
                                           time2string(), retry*10);
                     }
 
-                    if (aisonly && message[0] != '!') {
-                        if (debug >1)
+                    if (tpvonly && message[0] != '{') {
+                        if (1 < debug)
                             (void)fprintf(stdout,
-                                          ".... [%s %d] %s\n", time2string(),
+                                          "...{ [%s %d] '%s'\n", time2string(),
+                                          ind, message);
+                        return(0);
+                    }
+                    if (aisonly && message[0] != '!') {
+                        if (1 < debug)
+                            (void)fprintf(stdout,
+                                          "...! [%s %d] '%s'\n", time2string(),
                                           ind, message);
                         return(0);
                     }
@@ -317,7 +342,7 @@ static ssize_t read_gpsd(char *message, size_t len)
                 connect2gpsd(true);
                 retry = 0;
             }
-            if (debug > 0)
+            if (0 < debug)
                 ignore_return(write (1, ".", 1));
             break;
 
@@ -377,7 +402,7 @@ int main(int argc, char **argv)
     bool daemonize = false;
     long count = -1;
     char *udphostport[MAX_UDP_DEST];
-    const char *optstring = "?habnjVc:l:u:d:";
+    const char *optstring = "?abc:d:hjntu:V";
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
     static struct option long_options[] = {
@@ -412,37 +437,56 @@ int main(int argc, char **argv)
         switch (ch) {
         case 'a':
             aisonly = true;
+            if (0 < debug)
+                (void)fprintf(stdout, "AIS only selected\n");
             break;
         case 'b':
             daemonize = true;
+            if (0 < debug)
+                (void)fprintf(stdout, "Daemonize selected\n");
             break;
         case 'c':
             count = atol(optarg);
+            if (0 < debug)
+                (void)fprintf(stdout, "Count %ld selected\n", count);
             break;
         case 'd':
             debug = atoi(optarg);
-            if ((debug <1) || (debug > 2)) {
+            if (2 < debug) {
                 usage();
                 exit(1);
             }
+            if (0 < debug)
+                (void)fprintf(stdout, "Debug %u selected\n", debug);
             break;
         case 'j':
-            if (debug >0)
+            if (0 < debug)
                 (void)fprintf(stdout, "JSON selected\n");
             flags |= WATCH_JSON;
             break;
         case 'n':
-            if (debug >0)
+            if (0 < debug) {
                 (void)fprintf(stdout, "NMEA selected\n");
+            }
             flags |= WATCH_NMEA;
+            break;
+        case 't':
+            if (0 < debug) {
+                (void)fprintf(stdout, "TPV and JSON selected\n");
+            }
+            flags |= WATCH_JSON;
+            tpvonly = true;
             break;
         case 'u':
             if (udpchannel >= MAX_UDP_DEST) {
                 (void)fprintf(stderr,
-                              "gps2udp: too many UDP destinations (max=%d)\n",
+                              "gps2udp: too many UDP destinations (max=%d).\n",
                               MAX_UDP_DEST);
             } else {
                 udphostport[udpchannel++] = optarg;
+                if (0 < debug) {
+                    (void)fprintf(stdout, "UDP %s added.\n", optarg);
+                }
             }
             break;
         case '?':
@@ -458,12 +502,23 @@ int main(int argc, char **argv)
     }
 
     /* Grok the server, port, and device. */
-    if (optind < argc)
+    if (optind < argc) {
         gpsd_source_spec(argv[optind], &gpsd_source);
-    else
+    } else {
         gpsd_source_spec(NULL, &gpsd_source);
-    if (gpsd_source.device != NULL)
+    }
+    if (NULL == gpsd_source.device) {
+        if (0 < debug) {
+            (void)fprintf(stdout, "gpsd source %s:%s\n",
+            gpsd_source.server, gpsd_source.port);
+        }
+    } else {
         flags |= WATCH_DEVICE;
+        if (0 < debug) {
+            (void)fprintf(stdout, "gpsd source %s:%s:%s\n",
+            gpsd_source.server, gpsd_source.port, gpsd_source.device);
+        }
+    }
 
     /* check before going background if we can connect to gpsd */
     connect2gpsd(false);
@@ -492,7 +547,7 @@ int main(int argc, char **argv)
 
         /* ignore empty message */
         if (len > 3) {
-            if (debug > 0) {
+            if (0 < debug) {
                 (void)fprintf (stdout,"---> [%s] -- %s",time2string(),buffer);
 
                 // Try to extract MMSI from AIS payload
