@@ -34,17 +34,14 @@ class gpscommon(object):
                  device=None,
                  host="127.0.0.1",
                  input_file_name=None,
-                 input_speed=None,
                  port=GPSD_PORT,
-                 read_only=False,
                  should_reconnect=False,
                  verbose=0):
         """Init gpscommon."""
         self.device = device
         self.input_file_name = input_file_name
-        self.input_speed = input_speed
+        self.input_fd = None
         self.linebuffer = b''
-        self.read_only = read_only
         self.received = time.time()
         self.reconnect = should_reconnect
         self.sock = None        # in case we blow up in connect
@@ -56,15 +53,18 @@ class gpscommon(object):
 
         if gps.VERB_PROG <= verbose:
             print('gpscommon(device=%s host=%s port=%s\n'
-                  '          input_file_name=%s input_speed=%s read_only=%s\n'
-                  '          verbose=%s)' %
-                  (device, host, port, input_file_name, input_speed,
-                   read_only, verbose))
+                  '          input_file_name=%s verbose=%s)' %
+                  (device, host, port, input_file_name, verbose))
 
-        if host is not None and port is not None:
+        if input_file_name:
+            # file input, binary mode, for binary data.
+            self.input_fd = open(input_file_name, "rb")
+
+        elif host is not None and port is not None:
             self.host = host
             self.port = port
             self.connect(self.host, self.port)
+        # else?
 
     def connect(self, host, port):
         """Connect to a host on a given port.
@@ -103,7 +103,10 @@ class gpscommon(object):
                 raise  # propagate error to caller
 
     def close(self):
-        """Close the gpsd socket."""
+        """Close the gpsd socket or file."""
+        if self.input_fd:
+            self.input_fd.close()
+        self.input_fd = None
         if self.sock:
             self.sock.close()
         self.sock = None
@@ -114,7 +117,8 @@ class gpscommon(object):
 
     def waiting(self, timeout=0):
         """Return True if data is ready for the client."""
-        if self.linebuffer:
+        if self.linebuffer or self.input_fd:
+            # check for input_fd EOF?
             return True
         if self.sock is None:
             return False
@@ -125,7 +129,8 @@ class gpscommon(object):
 
     def read(self):
         """Wait for and read data being streamed from the daemon."""
-        if None is self.sock:
+        if not self.input_fd and None is self.sock:
+            # input_fd.open() was earlier, and read_only, so no stream()
             self.connect(self.host, self.port)
             if None is self.sock:
                 return -1
@@ -134,7 +139,10 @@ class gpscommon(object):
         eol = self.linebuffer.find(b'\n')
         if eol == -1:
             # RTCM3 JSON can be over 4.4k long, so go big
-            frag = self.sock.recv(8192)
+            if self.input_fd:
+                frag = self.input_fd.read(8192)
+            else:
+                frag = self.sock.recv(8192)
 
             self.linebuffer += frag
             if not self.linebuffer:

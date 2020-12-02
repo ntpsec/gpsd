@@ -544,7 +544,10 @@ class gpsdata(object):
 
 
 class gps(gpscommon, gpsdata, gpsjson):
-    """Client interface to a running gpsd instance."""
+    """Client interface to a running gpsd instance.
+
+Or maybe a gpsd JSON file.
+"""
 
     # module version, would be nice to automate the version
     __version__ = "@VERSION@"
@@ -553,10 +556,8 @@ class gps(gpscommon, gpsdata, gpsjson):
                  device=None,
                  host="127.0.0.1",
                  input_file_name=None,
-                 input_speed=None,
                  mode=0,
                  port=GPSD_PORT,
-                 read_only=False,
                  reconnect=False,
                  verbose=0):
         self.activated = None
@@ -572,10 +573,9 @@ class gps(gpscommon, gpsdata, gpsjson):
         self.verbose = verbose
         if VERB_PROG <= verbose:
             print('gps(device=%s host=%s port=%s\n'
-                  '       input_file_name=%s input_speed=%s read_only=%s\n'
-                  '       verbose=%s)' %
-                  (device, host, port, input_file_name, input_speed,
-                   read_only, verbose))
+                  '    input_file_name=%s verbose=%s)' %
+                  (device, host, port, input_file_name,
+                   verbose))
 
         gpscommon.__init__(self, host=host, port=port,
                            input_file_name=input_file_name,

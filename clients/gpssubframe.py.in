@@ -492,7 +492,7 @@ parser.add_argument(
     dest='input_file_name',
     default=None,
     metavar='FILE',
-    help='Read from FILE instead of a gpsd instance.',
+    help='Read gpsd JSON from FILE instead of a gpsd instance.',
 )
 parser.add_argument(
     '--host',
@@ -604,7 +604,10 @@ if not options.port:
     options.port = 2947
 
 try:
-    session = gps.gps(host=options.host, port=options.port,
+    session = gps.gps(device=options.device,
+                      input_file_name=options.input_file_name,
+                      host=options.host,
+                      port=options.port,
                       verbose=options.debug)
 except socket.error:
     sys.stderr.write("gpscsv: Could not connect to gpsd daemon\n")
@@ -627,7 +630,12 @@ if options.continuous:
 
 try:
     while True:
-        msg = session.next()
+        try:
+            msg = session.next()
+        except StopIteration:
+            # most likely end of file, maybe lost connection to gpsd
+            break;
+
         if 'SUBFRAME' == msg['class']:
             if 1 < options.debug:
                 print("Subframe %d TOW17 %s WN %d" %
