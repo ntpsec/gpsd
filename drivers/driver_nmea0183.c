@@ -134,6 +134,9 @@ static int faa_mode(char mode)
     default:
         newstatus = STATUS_FIX;
         break;
+    case 'C':   // Quectel unique: Caution
+        newstatus = STATUS_NO_FIX;
+        break;
     case 'D':   /* Differential */
         newstatus = STATUS_DGPS_FIX;
         break;
@@ -155,6 +158,9 @@ static int faa_mode(char mode)
         break;
     case 'S':   /* simulator */
         newstatus = STATUS_NO_FIX;      /* or maybe MODE_FIX? */
+        break;
+    case 'U':   // Quectel unique: Unsafe
+        newstatus = STATUS_NO_FIX;
         break;
     }
     return newstatus;
@@ -577,6 +583,12 @@ static gps_mask_t processRMC(int count, char *field[],
 
         if (count >= 12) {
             newstatus = faa_mode(field[12][0]);
+            /* QUectel uses
+             * S = Safe  (s/b Simulated)
+             * C = Caution (not NMEA)
+             * U = Unsafe (not NMEA)
+             * V = Invalid
+             */
         }
 
         /*
@@ -732,11 +744,13 @@ static gps_mask_t processGNS(int count UNUSED, char *field[],
      * 5:  W             Longitude West
      * 6:  D             FAA mode indicator
      *                     see faa_mode() for possible mode values
-     *                     May be one to four characters.
+     *                     May be one to six characters.
      *                       Char 1 = GPS
      *                       Char 2 = GLONASS
-     *                       Char 3 = ?
-     *                       Char 4 = ?
+     *                       Char 3 = Galileo
+     *                       Char 4 = BDS
+     *                       Char 5 = QZSS
+     *                       Char 6 = NavIC (IRNSS)
      * 7:  19           Number of Satellites used in solution
      * 8:  0.6          HDOP
      * 9:  406110       MSL Altitude in meters
@@ -815,6 +829,7 @@ static gps_mask_t processGNS(int count UNUSED, char *field[],
         session->gpsdata.dop.hdop = safe_atof(field[8]);
     }
 
+    // we ignore all but the leading mode indicator.
     newstatus = faa_mode(field[6][0]);
 
     session->newdata.status = newstatus;
@@ -2043,34 +2058,35 @@ static gps_mask_t processPGLOR(int c UNUSED, char *field[],
 {
     /*
      * $PGLOR,0,FIX,....
-     * 1    = sentence version (usually)
-     * 2    = message subtype (usually)
+     * 1    = sentence version (may not be present)
+     * 2    = message subtype
      * ....
      *
      * subtypes:
      *  $PGLOR,[],AGC - ??
      *  $PGLOR,[],CPU - CPU Loading
      *  $PGLOR,[],FIN - Request completion status
-     *  $PGLOR,[],FIX - Time To Fix
+     *  $PGLOR,0,FIX,seconds - Time To Fix
      *  $PGLOR,[],FTS - Factory Test Status
      *  $PGLOR,[],GFC - GeoFence Fix
      *  $PGLOR,[],GLO - ??
      *  $PGLOR,[],HLA - Value of HULA sensors
      *  $PGLOR,[],IMS - IMES messages
-     *  $PGLOR,[],LSQ - Least squares GNSS fix
+     *  $PGLOR,1,LSQ,hhmmss.ss  - Least squares GNSS fix
      *  $PGLOR,NET    - Report network information
      *  $PGLOR,[],NEW - Indicate new GPS request
      *  $PGLOR,[],PFM - Platform Status
      *  $PGLOR,[],PPS - Indicate PPS time corrections
-     *  $PGLOR,[],PWR - Power consumption report
+     *  $PGLOR,5,PWR i - Power consumption report
+     *                  Only have doc for 5, Quectel uses 4
      *  $PGLOR,[],RID - Version Information
-     *  $PGLOR,[],SAT - GPS Satellite information
+     *  $PGLOR,2,SAT - GPS Satellite information
      *  $PGLOR,[],SIO - Serial I/O status report
      *  $PGLOR,[],SPA - Spectrum analyzer results
-     *  $PGLOR,[],SPD - ??
+     *  $PGLOR,0,SPD  - Speed, Steps, etc.
      *  $PGLOR,SPL    - ??
      *  $PGLOR,[],SPS - ??
-     *  $PGLOR,[],STA - GLL status
+     *  $PGLOR,10,STA - GLL status
      *  $PGLOR,[],SVC - ??
      *  $PGLOR,[],SVD - SV Dopplers detected in the false alarm test.
      *  $PGLOR,[],SMx - Report GPS Summary Information
@@ -2080,11 +2096,48 @@ static gps_mask_t processPGLOR(int c UNUSED, char *field[],
      *
      */
     gps_mask_t mask = ONLINE_SET;
+    int got_one = 0;
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "NMEA0183: PGLOR: seq %s type %s\n",
-             field[1],
-             field[2]);
+    switch (field[1][0]) {
+    case '0':
+        if (0 == strncmp("FIX", field[2], 3)) {
+            got_one = 1;
+            // field 3, time to first fix in seconds
+            GPSD_LOG(LOG_DATA, &session->context->errout,
+                     "NMEA0183: PGLOR: FIX, TTFF %s\n",
+                     field[3]);
+        } else if (0 == strncmp("SPD", field[2], 3)) {
+            got_one = 1;
+            // field 4, ddmmy.ss UTC
+            // field 5, hhmmss.ss UTC
+            GPSD_LOG(LOG_DATA, &session->context->errout,
+                     "NMEA0183: PGLOR: SPD, %s %s UTC\n",
+                     field[4], field[5]);
+        }
+        break;
+    case '1':
+        if (0 == strncmp("LSQ", field[2], 3)) {
+            got_one = 1;
+            // field 3, hhmmss.ss UTC, only field Quectel supplies
+            GPSD_LOG(LOG_DATA, &session->context->errout,
+                     "NMEA0183: PGLOR: LSQ %s UTC\n",
+                     field[3]);
+        } else if ('0' == field[1][1] && 0 == strncmp("STA", field[2], 3)) {
+            // version 10
+            got_one = 1;
+            // field 3, hhmmss.ss UTC
+            // field 7, Position uncertainty meters
+            GPSD_LOG(LOG_DATA, &session->context->errout,
+                     "NMEA0183: PGLOR: STA, UTC %s PosUncer  %s\n",
+                     field[3], field[7]);
+        }
+        break;
+    }
+    if (0 != got_one) {
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "NMEA0183: PGLOR: seq %s type %s\n",
+                 field[1], field[2]);
+    }
     return mask;
 }
 
