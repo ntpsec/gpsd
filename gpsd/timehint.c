@@ -163,12 +163,12 @@ void ntpshm_context_init(struct gps_context_t *context)
     memset(context->shmTimeInuse, 0, sizeof(context->shmTimeInuse));
 }
 
-static volatile struct shmTime *ntpshm_alloc(struct gps_context_t *context)
 /* allocate NTP SHM segment.  return its segment number, or -1 */
+static volatile struct shmTime *ntpshm_alloc(struct gps_context_t *context)
 {
     int i;
 
-    for (i = 0; i < NTPSHMSEGS; i++)
+    for (i = 0; i < NTPSHMSEGS; i++) {
         if (context->shmTime[i] != NULL && !context->shmTimeInuse[i]) {
             context->shmTimeInuse[i] = true;
 
@@ -185,9 +185,12 @@ static volatile struct shmTime *ntpshm_alloc(struct gps_context_t *context)
             context->shmTime[i]->leap = LEAP_NOTINSYNC;
             context->shmTime[i]->precision = -20;/* initially 1 micro sec */
             context->shmTime[i]->nsamples = 3;  /* stages of median filter */
+            GPSD_LOG(LOG_PROG, &context->errout,
+                     "NTP:PPS: using SHM(%d)\n", i);
 
             return context->shmTime[i];
         }
+    }
 
     return NULL;
 }
@@ -410,8 +413,8 @@ void ntpshm_link_deactivate(struct gps_device_t *session)
     }
 }
 
-void ntpshm_link_activate(struct gps_device_t *session)
 /* set up ntpshm storage for a session */
+void ntpshm_link_activate(struct gps_device_t *session)
 {
     /* don't talk to NTP when we're running inside the test harness */
     if (session->sourcetype == source_pty)
@@ -428,34 +431,34 @@ void ntpshm_link_activate(struct gps_device_t *session)
         }
     }
 
-    if (session->sourcetype == source_usb
-            || session->sourcetype == source_rs232
-            || session->sourcetype == source_pps) {
+    if (session->sourcetype == source_usb ||
+        session->sourcetype == source_rs232 ||
+        session->sourcetype == source_pps) {
         /* We also have the 1pps capability, allocate a shared-memory segment
          * for the 1pps time data and launch a thread to capture the 1pps
          * transitions
          */
-        if ((session->shm_pps = ntpshm_alloc(session->context)) == NULL) {
+        session->shm_pps = ntpshm_alloc(session->context);
+        if (NULL == session->shm_pps) {
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "PPS: ntpshm_alloc(1) failed\n");
         } else {
             init_hook(session);
             session->pps_thread.report_hook = report_hook;
-            #ifdef MAGIC_HAT_ENABLE
+#ifdef MAGIC_HAT_ENABLE
             /*
              * The HAT kludge. If we're using the HAT GPS on a
              * Raspberry Pi or a workalike like the ODROIDC2, and
              * there is a static "first PPS", and we have access because
              * we're root, assume we want to use KPPS.
              */
-            if (strcmp(session->pps_thread.devicename, MAGIC_HAT_GPS) == 0
-                || strcmp(session->pps_thread.devicename,
-                          MAGIC_LINK_GPS) == 0) {
+            if (0 == strcmp(session->pps_thread.devicename, MAGIC_HAT_GPS) ||
+                0 == strcmp(session->pps_thread.devicename, MAGIC_LINK_GPS)) {
                 char *first_pps = pps_get_first();
                 if (access(first_pps, R_OK | W_OK) == 0)
                         session->pps_thread.devicename = first_pps;
                 }
-            #endif /* MAGIC_HAT_ENABLE */
+#endif /* MAGIC_HAT_ENABLE */
             pps_thread_activate(&session->pps_thread);
         }
     }

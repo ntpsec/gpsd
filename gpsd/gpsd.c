@@ -702,12 +702,10 @@ static bool open_device( struct gps_device_t *device)
      */
     ntpshm_link_activate(device);
     GPSD_LOG(LOG_INF, &context.errout,
-             "PPS:%s ntpshm_link_activate: %d\n",
+             "PPS: activated %s ntpshm_link_activate(): %s\n",
              device->gpsdata.dev.path,
-             device->shm_clock != NULL);
+             device->shm_clock == NULL ? "PPS" : "Clock");
 
-    GPSD_LOG(LOG_INF, &context.errout,
-             "device %s activated\n", device->gpsdata.dev.path);
     if (PLACEHOLDING_FD == activated) {
         /* it is a /dev/ppsX, no need to wait on it */
         return true;
