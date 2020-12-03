@@ -3460,17 +3460,21 @@ Save and Load non-volatile storage data"""
 
         return s
 
+    # Broadcom calls this BRM-STP-
     cfg_ids = {
         # in u-blox 5+
+        # Broadcom calls this BRM-STP-PORT
         0x00: {'str': 'PRT', 'dec': cfg_prt, 'minlen': 1,
                'name': 'UBX-CFG-PRT'},
         # in u-blox 5+
+        # Broadcom calls this BRM-STP-MESSAGE
         0x01: {'str': 'MSG', 'dec': cfg_msg, 'minlen': 2,
                'name': 'UBX-CFG-MSG'},
         # in u-blox 5+
         0x02: {'str': 'INF', 'dec': cfg_inf, 'minlen': 1,
                'name': 'UBX-CFG-INF'},
         # in u-blox 5+
+        # Broadcom calls this BRM-STP-RESET
         0x04: {'str': 'RST', 'dec': cfg_rst, 'minlen': 4,
                'name': 'UBX-CFG-RST'},
         # in u-blox 5 to 9
@@ -3483,6 +3487,7 @@ Save and Load non-volatile storage data"""
         0x08: {'str': 'RATE', 'dec': cfg_rate, 'minlen': 6,
                'name': 'UBX-CFG-RATE'},
         # in u-blox 5+
+        # Broadcom calls this BRM-STP-CONFIG
         0x09: {'str': 'CFG', 'dec': cfg_cfg, 'minlen': 12,
                'name': 'UBX-CFG-CFG'},
         # Antaris 4, deprecated in u-blox 5/6, gone in 7
@@ -3500,6 +3505,7 @@ Save and Load non-volatile storage data"""
         0x16: {'str': 'SBAS', 'dec': cfg_sbas, 'minlen': 8,
                'name': 'UBX-CFG-SBAS'},
         # in u-blox 5+
+        # Broadcom calls this BRM-STP-NMEA
         0x17: {'str': 'NMEA', 'dec': cfg_nmea, 'minlen': 4,
                'name': 'UBX-CFG-NMEA'},
         # in u-blox 6+, Not in u-blox 5-
@@ -3518,6 +3524,7 @@ Save and Load non-volatile storage data"""
         0x23: {'str': 'NAVX5', 'dec': cfg_navx5, 'minlen': 20,
                'name': 'UBX-CFG-NAVX5'},
         # in u-blox 6+.  Not in 5-
+        # Broadcom calls this BRM-STP-CONFIG2
         0x24: {'str': 'NAV5', 'dec': cfg_nav5, 'minlen': 36,
                'name': 'UBX-CFG-NAV5'},
         # in u-blox 6. SFDR only. Not in u-blox 5- or 7+
@@ -3541,6 +3548,7 @@ Save and Load non-volatile storage data"""
         0x3d: {'str': 'TMODE2', 'dec': cfg_tmode2, 'minlen': 28,
                'name': 'UBX-CFG-TMODE2'},
         # in u-blox 7+  Not in u-blox 6-
+        # Broadcom calls this BRM-STP-ME_SETTINGS
         0x3e: {'str': 'GNSS', 'dec': cfg_gnss, 'minlen': 4,
                'name': 'UBX-CFG-GNSS'},
         # in u-blox 7+  Not in u-blox 6-
@@ -3580,6 +3588,7 @@ Save and Load non-volatile storage data"""
         0x85: {'str': 'DYNSEED', 'dec': cfg_dynseed, 'minlen': 12,
                'name': 'UBX-CFG-DYNSEED'},
         # Not in u-blox 8-
+        # Broadcom calls this BRM-STP-PWR_MODE
         0x86: {'str': 'PMS', 'dec': cfg_pms, 'minlen': 8,
                'name': 'UBX-CFG-PMS'},
         # in u-blox 9
@@ -3597,6 +3606,8 @@ Save and Load non-volatile storage data"""
         # only in u-blox 8
         0x93: {'str': 'BATCH', 'dec': cfg_batch, 'minlen': 8,
                'name': 'UBX-CFG-BATCH'},
+        # Broadcom calls this BRM-STP-L1L5bias
+        # 0xb0:
         }
 
     # UBX-ESF-
@@ -3936,15 +3947,21 @@ Oddly this is the poll for UBX-LOG-BATCH
 
         return s
 
+    # Braodcam calls this BRM-AST-
     mga_ids = {0x00: {'str': 'GPS', 'minlen': 16, 'name': "UBX-MGA-GPS"},
                0x02: {'str': 'GAL', 'minlen': 12, 'name': "UBX-MGA-GAL"},
                0x03: {'str': 'BDS', 'minlen': 16, 'name': "UBX-MGA-BDS"},
                0x05: {'str': 'QZSS', 'minlen': 12, 'name': "UBX-MGA-QZSS"},
                0x06: {'str': 'GLO', 'minlen': 20, 'name': "UBX-MGA-GLO"},
+               # Braodcam calls this BRM-AST-LTO
                0x20: {'str': 'ANO', 'minlen': 76, 'name': "UBX-MGA-ANO"},
                0x21: {'str': 'FLASH', 'minlen': 2, 'name': "UBX-MGA-FLASH"},
+               # Braodcam calls this BRM-AST-REF_LOCATION
+               # Braodcam calls this BRM-AST-REF_TIME_UTC
                0x40: {'str': 'INI', 'minlen': 12, 'name': "UBX-MGA-INI"},
+               # Braodcam calls this BRM-AST-ACK
                0x60: {'str': 'ACK', 'minlen': 8, 'name': "UBX-MGA-ACK"},
+               # Braodcam calls this BRM-AST-NVMEM
                0x80: {'str': 'DBD', 'dec': mga_dbd, 'minlen': 12,
                       'name': "UBX-MGA-DBD"},
                }
@@ -5198,22 +5215,27 @@ High Precision GNSS products only."""
         return ('  iTOW %u vel: N %d E %d D %d speed %u\n'
                 '  gspeed %u heading %d sAcc %u cAcc %u' % u)
 
+    # Broadcom calls this BRM-PVT-
     nav_ids = {0x01: {'str': 'POSECEF', 'dec': nav_posecef, 'minlen': 20,
                       'name': 'UBX-NAV-POSECEF'},
                0x02: {'str': 'POSLLH', 'dec': nav_posllh, 'minlen': 20,
                       'name': 'UBX-NAV-POSLLH'},
                0x03: {'str': 'STATUS', 'dec': nav_status, 'minlen': 16,
                       'name': 'UBX-NAV-STATUS'},
+               # Broadcom calls this BRM-PVT-DOP
                0x04: {'str': 'DOP', 'dec': nav_dop, 'minlen': 18,
                       'name': 'UBX-NAV-DOP'},
                0x05: {'str': 'ATT', 'dec': nav_att, 'minlen': 32,
                       'name': 'UBX-NAV-ATT'},
                0x06: {'str': 'SOL', 'dec': nav_sol, 'minlen': 52,
                       'name': 'UBX-NAV-SOL'},
+               # Broadcom calls this BRM-PVT-PVT
                0x07: {'str': 'PVT', 'dec': nav_pvt, 'minlen': 84,
                       'name': 'UBX-NAV-PVT'},
+               # Broadcom calls this BRM-PVT-ACC_DIST
                0x09: {'str': 'ODO', 'dec': nav_odo, 'minlen': 20,
                       'name': 'UBX-NAV-ODO'},
+               # Broadcom calls this BRM-PVT-RESET_ACC_DIST
                0x10: {'str': 'RESETODO', 'dec': nav_resetodo, 'minlen': 0,
                       'name': 'UBX-NAV-RESETODO'},
                0x11: {'str': 'VELECEF', 'dec': nav_velecef, 'minlen': 20,
@@ -5246,6 +5268,7 @@ High Precision GNSS products only."""
                       'name': 'UBX-NAV-SBAS'},
                0x34: {'str': 'ORB', 'dec': nav_orb, 'minlen': 8,
                       'name': 'UBX-NAV-ORB'},
+               # Broadcom calls this BRM-PVT-SAT
                0x35: {'str': 'SAT', 'dec': nav_sat, 'minlen': 8,
                       'name': 'UBX-NAV-SAT'},
                0x39: {'str': 'GEOFENCE', 'dec': nav_geofence, 'minlen': 8,
@@ -5264,6 +5287,7 @@ High Precision GNSS products only."""
                       'name': 'UBX-NAV-SIG'},
                0x60: {'str': 'AOPSTATUS', 'dec': nav_aopstatus, 'minlen': 16,
                       'name': 'UBX-NAV-AOPSTATUS'},
+               # Broadcom calls this BRM-PVT-EOE
                0x61: {'str': 'EOE', 'dec': nav_eoe, 'minlen': 4,
                       'name': 'UBX-NAV-EOE'},
                }
@@ -5962,6 +5986,7 @@ High Precision GNSS products only."""
 
         return s
 
+    # Broadcom calls this BRM-ASC-
     rxm_ids = {0x10: {'str': 'RAW', 'dec': rxm_raw, 'minlen': 8,
                       'name': 'UBX-RXM-RAW'},      # obsolete
                0x11: {'str': 'SFRB', 'dec': rxm_sfrb, 'minlen': 42,
@@ -5980,6 +6005,7 @@ High Precision GNSS products only."""
                0x31: {'str': 'EPH', 'minlen': 1, 'name': 'UBX-RXM-EPH'},
                0x32: {'str': 'RTCM', 'dec': rxm_rtcm, 'minlen': 8,
                       'name': 'UBX-RXM-RTCM'},
+               # Broadcom calls this BRM-ASC-SCLEEP
                0x41: {'str': 'PMREQ', 'minlen': 8, 'name': 'UBX-RXM-PMREQ'},
                0x59: {'str': 'RLM', 'dec': rxm_rlm, 'minlen': 16,
                       'name': 'UBX-RXM-RLM'},
