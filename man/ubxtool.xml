@@ -8,7 +8,7 @@ BSD terms apply: see the file COPYING in the distribution root for details.
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='ubxtool.1'>
  <refentryinfo>
-  <date>30 March 2020</date>
+  <date>5 December 2020</date>
  </refentryinfo>
  <refmeta>
   <refentrytitle>ubxtool</refentrytitle>
@@ -24,18 +24,39 @@ BSD terms apply: see the file COPYING in the distribution root for details.
   <cmdsynopsis>
    <command>ubxtool</command>
    <arg choice='opt'>-? </arg>
+   <arg choice='opt'>--command <replaceable>command</replaceable> </arg>
+   <arg choice='opt'>--delitem <replaceable>item,layers</replaceable></arg>
+   <arg choice='opt'>--device <replaceable>device</replaceable></arg>
+   <arg choice='opt'>--disable <replaceable>disable</replaceable> </arg>
+   <arg choice='opt'>--enable <replaceable>enable</replaceable> </arg>
+   <arg choice='opt'>--file <replaceable>file/device</replaceable> </arg>
+   <arg choice='opt'>--getitem <replaceable>item,layer,position,end</replaceable></arg>
+   <arg choice='opt'>--help </arg>
+   <arg choice='opt'>--host <replaceable>host</replaceable></arg>
+   <arg choice='opt'>--inspeed <replaceable>speed</replaceable></arg>
+   <arg choice='opt'>--port <replaceable>port</replaceable></arg>
+   <arg choice='opt'>--portid <replaceable>port</replaceable></arg>
+   <arg choice='opt'>--preset <replaceable>preset</replaceable></arg>
+   <arg choice='opt'>--protver <replaceable>protver</replaceable></arg>
+   <arg choice='opt'>--rawfile <replaceable>rawfile</replaceable></arg>
+   <arg choice='opt'>--readonly </arg>
+   <arg choice='opt'>--setitem <replaceable>item,val,layers</replaceable></arg>
+   <arg choice='opt'>--setspeed <replaceable>setspeed</replaceable></arg>
+   <arg choice='opt'>--timestamp </arg>
+   <arg choice='opt'>--verbosity <replaceable>verbosity</replaceable></arg>
+   <arg choice='opt'>--version </arg>
+   <arg choice='opt'>--wait <replaceable>wait</replaceable></arg>
    <arg choice='opt'>-c <replaceable>command</replaceable> </arg>
    <arg choice='opt'>-d <replaceable>disable</replaceable> </arg>
    <arg choice='opt'>-e <replaceable>enable</replaceable> </arg>
    <arg choice='opt'>-f <replaceable>file/device</replaceable> </arg>
-   <arg choice='opt'>-g <replaceable>item,layer,position,end</replaceable>
-   </arg>
+   <arg choice='opt'>-g <replaceable>item,layer,position,end</replaceable></arg>
    <arg choice='opt'>-h </arg>
    <arg choice='opt'>-i <replaceable>port</replaceable></arg>
-   <arg choice='opt'>-P <replaceable>protver</replaceable></arg>
    <arg choice='opt'>-p <replaceable>preset</replaceable></arg>
-   <arg choice='opt'>-R <replaceable>rawfile</replaceable></arg>
+   <arg choice='opt'>-P <replaceable>protver</replaceable></arg>
    <arg choice='opt'>-r </arg>
+   <arg choice='opt'>-R <replaceable>rawfile</replaceable></arg>
    <arg choice='opt'>-S <replaceable>setspeed</replaceable></arg>
    <arg choice='opt'>-s <replaceable>speed</replaceable></arg>
    <arg choice='opt'>-t </arg>
@@ -70,14 +91,18 @@ running gpsd instance.</para>
   <para>The program accepts the following options:</para>
   <variablelist remap='TP'>
    <varlistentry>
-    <term>-?</term>
+    <term>-?, -h, --help</term>
     <listitem>
-     <para>Makes <application>ubxtool</application> print
-a usage message and exit.</para>
+     <para>Makes <application>ubxtool</application> print a usage
+message and exit. Use with <option>-v 2</option> to see all
+enable/disable and preset values. Use with <option>-v 3</option> to
+additionally see all configuration items (long).</para>
+
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>-c COMMAND</term>
+    <term>--command COMMAND</term>
     <listitem>
      <para>Send a command to the GPS.  Accepts one parameter, COMMAND,
 a comma-separated list of hexadecimal bytes specifying the class, the ID,
@@ -85,11 +110,21 @@ and any needed payload.  The header, length, and checksum are added automaticall
 </para>
     </listitem>
    </varlistentry>
+    <varlistentry>
+    <term>--device DEVICE</term>
+    <listitem>
+    <para>The DEVICE on the <application>gpsd</application> to connect to.
+    Defaults to all.</para>
+    </listitem>
+    </varlistentry>
+
    <varlistentry>
     <term>-d OPTION</term>
+    <term>--disable OPTION</term>
     <listitem>
      <para>Disable an option in the GPS.  Accepts one parameter, OPTION,
-the option to disable.
+the option to disable.  Use <option>-h -v 2</option> to see all possible
+OPTIONs.  A few possible OPTIONs are:
 </para>
      <variablelist>
       <varlistentry>
@@ -183,25 +218,28 @@ GBS, GGA, GSA, GGL, GST, GSV, RMC, VTG, and ZDA.</para>
    </varlistentry>
    <varlistentry>
     <term>-e OPTION</term>
+    <term>--enable OPTION</term>
     <listitem>
      <para>Enable an option in the GPS.  Accepts one parameter, OPTION,
-the option to enable.  -e accepts the same OPTIONs as -d, except the action
-is to enable the option.
+the option to enable.  <option>-e</option> accepts the same OPTIONs as
+<option>-d</option>, except the action is to enable the option.
 </para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>-f FILE</term>
+    <term>--file FILE</term>
     <listitem>
-     <para>Connect to a file or device.  Accepts one parameter, FILE,
-the file or device to open.   Files are opened read-only.  Character
-devices are opened read/write, unless the -r parameter is given.
-Requires the pyserial module.
+     <para>Connect to a file or device. Accepts one parameter, FILE, the
+file or device to open. Files are opened read-only. Character devices
+are opened read/write, unless the <option>-r</option> parameter is
+given. Requires the pyserial module.
 </para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>-g ITEM,LAYER,POSITION,END</term>
+    <term>--getitem ITEM,LAYER,POSITION,END</term>
     <listitem>
      <para>Get the value of ITEM from LAYER, starting at POSITION, up
 to END key/value pairs (UBX-CFG-VALGET).  All parameters past ITEM are
@@ -210,31 +248,25 @@ and 7 are all requested.  See the section on CONFIGURATION ITEMS</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-h</term>
+    <term>--host HOST</term>
     <listitem>
-     <para>Makes <application>ubxtool</application> print
-a usage message and exit.</para>
+    <para>Connect to the <application>gpsd</application> on HOST (server).
+    Defaults to localhost.</para>
     </listitem>
-   </varlistentry>
+    </varlistentry>
+
    <varlistentry>
     <term>-i port</term>
+    <term>--portid port</term>
     <listitem>
-     <para>Specifies port ID # (interface) for port-related commands.
+     <para>Specifies port ID # (interface) for port-related commands
+such as UBX_CFG-PRT.
 </para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-P protver</term>
-    <listitem>
-     <para>Sets the protocol version to use for sending commands.
-Minimum 10 (ublox 5).  Use "ubxtool -p MON-VER" to see the version your
-receiver supports.  Many newer u-blox receivers will fail silently or oddly
-if this is not set correctly.
-     </para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
     <term>-p PRESET</term>
+    <term>--preset PRESET</term>
     <listitem>
      <para>Send a preset command the GPS.  Usually accepts one parameter,
 PRESET, the name of the command to send.  A few PRESETS, like LOG-FINDTIME,
@@ -318,59 +350,87 @@ Increase the verbosity of the output by adding the "-v 2" or "-v 3"
 options.</para>
     </listitem>
    </varlistentry>
+    <varlistentry>
+    <term>--port PORT</term>
+    <listitem>
+    <para>Use PORT to connect to <application>gpsd</application>.
+    Defaults to 2947.</para>
+    </listitem>
+    </varlistentry>
+
+   <varlistentry>
+    <term>-P protver</term>
+    <term>--protver protver</term>
+    <listitem>
+     <para>Sets the protocol version to use for sending commands.
+Minimum 6 (Antaris 4).  Use "ubxtool -p MON-VER" to see the version your
+receiver supports.  Many newer u-blox receivers will fail silently or oddly
+if this is not set correctly.  Default 10 (u-blox 5).
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>-r</term>
+    <term>-readonly</term>
+    <listitem>
+     <para>Read only.  Do not send anything to the GPS.</para>
+    </listitem>
+   </varlistentry>
    <varlistentry>
     <term>-R RAW</term>
+    <term>--rawfile RAW</term>
     <listitem>
      <para>Save all raw serial data received from the GPS into the
      file RAW.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-r</term>
-    <listitem>
-     <para>Read only.  Do not send anything to the GPS.</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>-S SPEED</term>
-    <listitem>
-     <para>Set the GPS serial port speed to SPEED bps.</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
     <term>-s SPEED</term>
+    <term>--inspeed SPEED</term>
     <listitem>
      <para>Set local serial port speed to SPEED bps. Default 9,600 bps.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
+    <term>-S SPEED</term>
+    <term>--setspeed SPEED</term>
+    <listitem>
+     <para>Set the GPS serial port speed to SPEED bps.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
     <term>-t</term>
+    <term>--timestamp</term>
     <listitem>
      <para>Timestamp decoded messages with seconds since the epoch.  Use it
 twice and also get UTC time.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-V</term>
-    <listitem>
-     <para>Print <application>ubxtool</application> version and exit.</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
     <term>-v VERBOSITY</term>
+    <term>--verbosity VERBOSITY</term>
     <listitem>
      <para>Set verbosity level to VERBOSITY.  Verbosity can be from 0
      (very quiet), 2 (decode messages), to 4 (very noisy).  Default 1.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
+    <term>-V</term>
+    <term>--version</term>
+    <listitem>
+     <para>Print <application>ubxtool</application> version and exit.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
     <term>-w WAIT</term>
+    <term>--wait WAIT</term>
     <listitem>
      <para>Wait for WAIT seconds before exiting.  Default 2 seconds.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
     <term>-x ITEM,LAYERS</term>
+    <term>--delitem ITEM,LAYERS</term>
     <listitem>
      <para>Delete the value of ITEM name from LAYERS.  The bit map LAYERS is
 optional.  By default, delete in both the BBR and FLASH layers in the
@@ -380,6 +440,7 @@ item.  See the section on CONFIGURATION ITEMS</para>
    </varlistentry>
    <varlistentry>
     <term>-z ITEM,VAL,LAYERS</term>
+    <term>--setitem ITEM,VAL,LAYERS</term>
     <listitem>
      <para>Set the value of ITEM name to VAL in LAYERS in the GPS
 (UBX-CFG-VALSET).  VAL and the bit mask LAYERS are decimal.  ",LAYERS"
