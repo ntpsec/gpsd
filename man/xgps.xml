@@ -7,7 +7,7 @@ SPDX-License-Identifier: BSD-2-clause
    "-//OASIS//DTD DocBook XML V4.1.2//EN"
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='xgps.1'>
-<refentryinfo><date>30 Sep 2020</date></refentryinfo>
+<refentryinfo><date>5 December 2020</date></refentryinfo>
 <refmeta>
 <refentrytitle>xgps</refentrytitle>
 <manvolnum>1</manvolnum>
@@ -27,13 +27,18 @@ SPDX-License-Identifier: BSD-2-clause
       <arg choice='opt'>--debug <replaceable>DEBUG-LEVEL</replaceable></arg>
       <arg choice='opt'>--device <replaceable>DEVICE</replaceable></arg>
       <arg choice='opt'>--host <replaceable>HOST</replaceable></arg>
+      <arg choice='opt'>--llfmt <group><arg>d</arg><arg>m</arg><arg>s</arg></group></arg>
       <arg choice='opt'>--port <replaceable>PORT</replaceable></arg>
       <arg choice='opt'>--rotate <replaceable>DEGREES</replaceable></arg>
+      <arg choice='opt'>--sats <replaceable>NSATS</replaceable></arg>
+      <arg choice='opt'>--units <group><arg>i</arg><arg>n</arg><arg>m</arg></group></arg>
+      <arg choice='opt'>--version </arg>
       <arg choice='opt'>-? </arg>
       <arg choice='opt'>-D <replaceable>DEBUG-LEVEL</replaceable></arg>
       <arg choice='opt'>-h </arg>
       <arg choice='opt'>-l <group><arg>d</arg><arg>m</arg><arg>s</arg></group></arg>
       <arg choice='opt'>-r <replaceable>DEGREES</replaceable></arg>
+      <arg choice='opt'>-s <replaceable>NSATS</replaceable></arg>
       <arg choice='opt'>-u <group><arg>i</arg><arg>n</arg><arg>m</arg></group></arg>
       <arg choice='opt'>-V </arg>
       <group>
@@ -60,6 +65,7 @@ SPDX-License-Identifier: BSD-2-clause
                       <arg>mph</arg><arg>kmh</arg><arg>knots</arg>
               </group>
       </arg>
+      <arg choice='opt'>--version </arg>
       <arg choice='opt'>-D <replaceable>DEBUG-LEVEL</replaceable></arg>
       <arg choice='opt'>-? </arg>
       <arg choice='opt'>-h </arg>
@@ -80,58 +86,24 @@ SPDX-License-Identifier: BSD-2-clause
 <para>These are two sample clients shipped with
 <application>gpsd</application>. They have some common options:</para>
 
-<para>The <option>-h</option> option causes each client to emit a summary of its
-options and then exit.</para>
-
-<para>The <option>-V</option> option causes each client to dump the package
-version and exit.</para>
-
-<para> The <option>-l</option> option, when present, sets the format
-of latitude and longitude reports.  The value 'd' produces decimal
-degrees and is the default.  The value 'm' produces degrees and
-decimal minutes.  The value 's' produces degrees, minutes, and decimal
-seconds.</para>
-
-<para><application>xgps</application>,
-<application>cgps</application>, and <application>lcdgps</application>
-look at variables in the environment to figure out what units they
-should default to using for display &mdash; imperial, nautical, or
-metric.  Here are the variables and values they check:</para>
-
-<screen>
-    GPSD_UNITS one of:
-              i          = miles/feet
-              imperial   = miles/feet
-              n          = knots/feet
-              nautical   = knots/feet
-              m          = km/meters
-              metric     = km/meters
-    LC_MEASUREMENT
-              en_US      = miles/feet
-              C          = miles/feet
-              POSIX      = miles/feet
-              [other]    = km/meters
-    LANG
-              en_US      = miles/feet
-              C          = miles/feet
-              POSIX      = miles/feet
-              [other]    = km/meters
-</screen>
-<para>These preferences may be overridden by the <option>-u</option>
-option.</para>
-
-<para>The <option>-u</option> option can be used to set
-the system units for display; follow the keyword with 'i' for
-'imperial' for American units (International Feet in altitude and error
-estimates, miles per hour in speeds), 'n' for 'nautical' (feet in altitude
-and error estimates, knots in speed) or 'm' for 'metric' (meters in
-altitude and error estimates, kilometers per hour in speeds).</para>
-
-<para>Note: The USA Survey Foot is not supported.</para>
+<para>The <option>--device</option> The device on the host to connect
+to. The default is empty (any).</para>
 
 <para> The <option>-D</option> option, when present, sets a debug
 level; it is primarily for use by GPSD developers.  It enables
 various progress messages to standard error.</para>
+
+<para>The <option>-h, --help</option> option causes each client to emit a
+summary of its options and then exit.</para>
+
+<para>The <option>--host</option> The host (server) to connect to. The
+default is localhost.</para>
+
+<para>The <option>--port</option> The port to connect to. The default is
+2947.</para>
+
+<para>The <option>-V, --version</option> option causes each client to dump
+the package version and exit.</para>
 
 <para>By default, clients collect data from all compatible devices on
 localhost, using the default GPSD port 2947. An optional argument to any
@@ -187,29 +159,73 @@ outline icons were not.  Hovering over a symbol with the mouse pointer
 will temporarily display a small popup window with the satellite
 details from the Satellite List pane.</para>
 
-<para>The -r option accepts an argument in degrees, to rotate the
-skyview counterclockwise.</para>
+<para> The <option>-l, --llfmt</option> option, when present, sets
+the format of latitude and longitude reports. The value 'd' produces
+decimal degrees and is the default. The value 'm' produces degrees and
+decimal minutes. The value 's' produces degrees, minutes, and decimal
+seconds.</para>
+
+<para>The <option>-r, --rotate</option> option accepts an argument in
+degrees, to rotate the skyview counterclockwise.</para>
+
+<para><application>xgps</application> looks at variables in the
+environment to figure out the units for display &mdash; imperial,
+nautical, or metric. Here are the variables and values
+checked:</para>
+
+<screen>
+    GPSD_UNITS one of:
+              i          = miles/feet
+              imperial   = miles/feet
+              n          = knots/feet
+              nautical   = knots/feet
+              m          = km/meters
+              metric     = km/meters
+    LC_MEASUREMENT
+              en_US      = miles/feet
+              C          = miles/feet
+              POSIX      = miles/feet
+              [other]    = km/meters
+    LANG
+              en_US      = miles/feet
+              C          = miles/feet
+              POSIX      = miles/feet
+              [other]    = km/meters
+</screen>
+<para>These preferences may be overridden by the <option>-u, --units</option>
+option.</para>
+
+<para>The <option>-u</option> option can be used to set
+the system units for display; follow the keyword with 'i' for
+'imperial' for American units (International Feet in altitude and error
+estimates, miles per hour in speeds), 'n' for 'nautical' (feet in altitude
+and error estimates, knots in speed) or 'm' for 'metric' (meters in
+altitude and error estimates, kilometers per hour in speeds).</para>
+
+<para>Note: The USA Survey Foot is not supported.</para>
 
 </refsect2>
 <refsect2><title>xgpsspeed</title>
 
-<para><application>xgpsspeed</application> is a speedometer that uses
-position information from the GPS. It accepts an -h option and
-optional argument as for <application>gps</application>, or a -V
-option to dump the package version and exit.</para>
+<para><application>xgpsspeed</application> is a speedometer
+that uses position information from the GPS. It accepts an
+<option>-h, --help</option> option and optional argument as for
+<application>xgps</application>, or a <option>-V, --version</option>
+option to dump the program version and exit.</para>
 
 <para>The default display mode is a speed and track presentation
 modeled after a marine navigation display; for backward compatibility
-the --nautical option forces this mode. The --landspeed option produces
-a simple speedometer.</para>
-
-<para>The --speedunits option can be used to set the speed units for
-display; follow the keyword with knots for nautical miles per hour,
-kmh for kilometers per hour, or mph for miles per hour.  The default
-is miles per hour.</para>
-
-<para>In the nautical mode only, --maxspeed sets the maximum on the
+the <option>--nautical</option> option forces this mode.
+The <option>--landspeed</option> option produces a simple
 speedometer.</para>
+
+<para>The <option>--speedunits</option> option can be used to set the
+speed units for display; follow the keyword with "knots" for nautical
+miles per hour, "kmh" for kilometers per hour, or "mph" for miles per
+hour. The default is miles per hour.</para>
+
+<para>In the nautical mode only, <option>--maxspeed</option> sets the
+maximum on the speedometer.</para>
 
 </refsect2>
 </refsect1>
