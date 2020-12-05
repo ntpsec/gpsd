@@ -7,7 +7,7 @@ SPDX-License-Identifier: BSD-2-clause
    "-//OASIS//DTD DocBook XML V4.1.2//EN"
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='ntpshmmon.1'>
-<refentryinfo><date>30 March 2020</date></refentryinfo>
+<refentryinfo><date>5 December 2020</date></refentryinfo>
 <refmeta>
 <refentrytitle>ntpshmmon</refentrytitle>
 <manvolnum>1</manvolnum>
@@ -22,6 +22,13 @@ SPDX-License-Identifier: BSD-2-clause
 
 <cmdsynopsis>
   <command>ntpshmmon</command>
+      <arg choice='opt'>--count <replaceable>nsamples</replaceable></arg>
+      <arg choice='opt'>--help </arg>
+      <arg choice='opt'>--offset </arg>
+      <arg choice='opt'>--rmshm </arg>
+      <arg choice='opt'>--seconds <replaceable>nseconds</replaceable></arg>
+      <arg choice='opt'>--verbose </arg>
+      <arg choice='opt'>--version </arg>
       <arg choice='opt'>-? </arg>
       <arg choice='opt'>-h </arg>
       <arg choice='opt'>-n <replaceable>nsamples</replaceable></arg>
@@ -104,27 +111,24 @@ nanoseconds part of receiver time to be zero.</para>
 <variablelist>
 <varlistentry>
 <term>-?</term>
-<listitem>
-<para>Display program usage and exit.</para>
-</listitem>
-</varlistentry>
-
-<varlistentry>
 <term>-h</term>
+<term>--help</term>
 <listitem>
 <para>Display program usage and exit.</para>
 </listitem>
 </varlistentry>
 
 <varlistentry>
-<term>-n</term>
+<term>-n COUNT</term>
+<term>--count COUNT</term>
 <listitem>
-<para>Set maximum number of samples to collect.</para>
+<para>Set maximum number of samples to collect to COUNT.</para>
 </listitem>
 </varlistentry>
 
 <varlistentry>
 <term>-o</term>
+<term>--offset</term>
 <listitem>
 <para>Replace the "Seen@" column with the "Offset" column.  The "Offset" is
 the difference between "Clock" and "Real" times.
@@ -134,6 +138,7 @@ the difference between "Clock" and "Real" times.
 
 <varlistentry>
 <term>-s</term>
+<term>--rmshm</term>
 <listitem>
 <para>Remove all SHM segments used by GPSD. This
 option will normally only be of interest to GPSD developers.</para>
@@ -141,14 +146,16 @@ option will normally only be of interest to GPSD developers.</para>
 </varlistentry>
 
 <varlistentry>
-<term>-t</term>
+<term>-t SECONDS</term>
+<term>--seconds SECONDS</term>
 <listitem>
-<para>Set maximum time to collect samples in seconds.</para>
+<para>Set maximum time to collect samples in seconds to SECONDS.</para>
 </listitem>
 </varlistentry>
 
 <varlistentry>
 <term>-v</term>
+<term>--verbose</term>
 <listitem>
 <para>Enable verbose status messages.</para>
 </listitem>
@@ -156,6 +163,7 @@ option will normally only be of interest to GPSD developers.</para>
 
 <varlistentry>
 <term>-V</term>
+<term>--version</term>
 <listitem>
 <para>Display program version and exit.</para>
 </listitem>
