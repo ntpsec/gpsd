@@ -7,7 +7,7 @@ SPDX-License-Identifier: BSD-2-clause
    "-//OASIS//DTD DocBook XML V4.1.2//EN"
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gpxlogger.1'>
-<refentryinfo><date>30 March 2020</date></refentryinfo>
+<refentryinfo><date>5 December 2020</date></refentryinfo>
 <refmeta>
 <refentrytitle>gpxlogger</refentrytitle>
 <manvolnum>1</manvolnum>
@@ -22,15 +22,24 @@ SPDX-License-Identifier: BSD-2-clause
 
 <cmdsynopsis>
   <command>gpxlogger</command>
-      <arg choice='opt'>-D <replaceable>debug-level</replaceable></arg>
+      <arg choice='opt'>--daemonize </arg>
+      <arg choice='opt'>--debug <replaceable>debug-level</replaceable></arg>
+      <arg choice='opt'>--export <replaceable>export-method</replaceable></arg>
+      <arg choice='opt'>--exports</arg>
+      <arg choice='opt'>--help </arg>
+      <arg choice='opt'>--interval<replaceable>track timeout</replaceable></arg>
+      <arg choice='opt'>--minmove <replaceable>minmove</replaceable></arg>
+      <arg choice='opt'>--output <replaceable>filename</replaceable></arg>
+      <arg choice='opt'>--version </arg>
       <arg choice='opt'>-d </arg>
+      <arg choice='opt'>-D <replaceable>debug-level</replaceable></arg>
       <arg choice='opt'>-e <replaceable>export-method</replaceable></arg>
       <arg choice='opt'>-f <replaceable>filename</replaceable></arg>
+      <arg choice='opt'>-h </arg>
+      <arg choice='opt'>-i <replaceable>track timeout</replaceable></arg>
       <arg choice='opt'>-l </arg>
       <arg choice='opt'>-m <replaceable>minmove</replaceable></arg>
-      <arg choice='opt'>-h </arg>
       <arg choice='opt'>-V </arg>
-      <arg choice='opt'>-i <replaceable>track timeout</replaceable></arg>
       <group>
         <replaceable>server</replaceable>
           <group>
@@ -48,46 +57,31 @@ logging.</para>
 
 <para>The output may be composed of multiple tracks. A new track is
 created if there's no fix written for an interval specified by the
-<option>-i</option> and defaulting to 5 seconds.</para>
+<option>-i, --interval</option> and defaulting to 5 seconds.</para>
 
 <para><application>gpxlogger</application> can use any of the
 export methods that <application>gpsd</application> supports.
-For a list of these methods, use the <option>-l</option>.
-To force the method, give the <option>-e</option> one of
-the colon-terminated method names from the <option>-l</option>
+For a list of these methods, use the <option>-l, --exports</option>.
+To force the method, give the <option>-e, --export</option> one of
+the colon-terminated method names from the <option>-l, --exports</option>
 table.</para>
 </refsect1>
 
 <refsect1 id='options'><title>OPTIONS</title>
 
-<para>The <option>-h</option> option causes <application>gpxlogger</application>
-to emit a summary of its options and then exit.</para>
+<para>The <option>-d, --daemonize</option> option tells
+<application>gpxlogger</application> to run as a daemon in background.
+It requires the <option>-f, --ouput</option> option, which directs output to a
+specified logfile.</para>
 
-<para>The <option>-V</option> option causes <application>gpxlogger</application>
-to dump the package version and exit.</para>
-
-<para> The <option>-D</option> option sets the debug level;
+<para>The <option>-D, --debug</option> option sets the debug level;
 it is primarily for troubleshooting.
 It enables various progress messages to standard error.</para>
 
-<para>The <option>-d</option> option tells
-<application>gpxlogger</application> to run as a daemon in background.
-It requires the <option>-f</option> option, which directs output to a
-specified logfile.</para>
-
-<para>The <option>-m</option> option sets a minimum move distance in
-meters (it may include a fractional decimal part).  Motions shorter
-than this will not be logged.</para>
-
-<para>The <option>-r</option> option tells
-<application>gpxlogger</application> to retry when GPSd loses the fix.
-Without <option>-r</option>, <application>gpxlogger</application>
-would quit in this case.</para>
-
-<para>If D-Bus support is available on the host, GPSD is configured to
-use it, and <command>-e dbus</command> is specified, this program
-listens to DBUS broadcasts from
-<application>gpsd</application> via org.gpsd.fix.</para>
+<para><option>-e, --export</option> If D-Bus support is available on
+the host, GPSD is configured to use it, and <command>-e dbus, --export
+dbus</command> is specified, this program listens to DBUS broadcasts
+from <application>gpsd</application> via org.gpsd.fix.</para>
 
 <para>With <command>-e sockets</command>, or if sockets is the method
 defaulted to, you may give a server-port-device specification as
@@ -125,6 +119,34 @@ address, collecting data from attached serial device 3.</para></listitem>
 address, collecting data from attached serial device 5.</para></listitem>
 </varlistentry>
 </variablelist>
+
+<para>With <command>-e shm, --export shm</command> this program will listen to
+the local <application>gpsd</application> using shared memory.  </para>
+
+<para>The <option>-h, --help</option> option causes                    >
+<application>gpxlogger</application> to emit a summary of its options
+and then exit.</para>
+
+<para>With <option>-i SECONDS, --interval SECONDS</option> a new track
+is created if there's no fix written for an interval of SECONDS.
+Defaulting to 5 seconds.</para>
+
+<para>The <option>-l, --exports</option> option lists all possible
+options for <application>-e, --export</application>.
+</para>
+
+<para>The <option>-m MINMOVE, --minmove MINMOVE</option> option sets a
+minimum move distance in meters (it may include a fractional decimal
+part). Motions shorter than this will not be logged.</para>
+
+<para>The <option>-r, --reconnect</option> option tells
+<application>gpxlogger</application> to retry when GPSd loses the fix.
+Without <option>-r</option>, <application>gpxlogger</application>
+would quit in this case.</para>
+
+<para>The <option>-V, --version</option> option causes
+<application>gpxlogger</application> to dump the package version and
+exit.</para>
 
 </refsect1>
 
