@@ -77,12 +77,14 @@ static void usage(void)
         (void)fprintf(stderr, 
         "usage: ppscheck [OPTIONS] <device>\n\n"
 #ifdef HAVE_GETOPT_LONG
-        "  --help              Show this help, then exit.\n"
-        "  --version           Show version, then exit.\n"
+        "  --help            Show this help, then exit.\n"
+        "  --version         Show version, then exit.\n"
 #endif
-        "   -?                 Show this help, then exit.\n"
-        "   -h                 Show this help, then exit.\n"
-        "   -V                 Show version, then exit.\n");
+        "   -?               Show this help, then exit.\n"
+        "   -h               Show this help, then exit.\n"
+        "   -V               Show version, then exit.\n"
+        "\n"
+           "<device>         Device to check (/dev/ttyS0, /dev/pps0, etc.).\n");
         exit(1);
 }
 
