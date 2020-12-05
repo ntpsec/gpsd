@@ -7,137 +7,165 @@ SPDX-License-Identifier: BSD-2-clause
    "-//OASIS//DTD DocBook XML V4.1.2//EN"
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gps2udp.1'>
-<refentryinfo><date>30 March 2020</date></refentryinfo>
-<refmeta>
-<refentrytitle>gps2udp</refentrytitle>
-<manvolnum>1</manvolnum>
-<refmiscinfo class="source">The GPSD Project</refmiscinfo>
-<refmiscinfo class="manual">GPSD Documentation</refmiscinfo>
-</refmeta>
-<refnamediv id='name'>
-<refname>gps2udp</refname>
-<refpurpose>feed the take from gpsd to one or more aggregation sites</refpurpose>
-</refnamediv>
-<refsynopsisdiv id='synopsis'>
-
-<cmdsynopsis>
-  <command>gps2udp</command>
-      <arg choice='opt'>--ais</arg>
-      <arg choice='opt'>--count <replaceable>count</replaceable></arg>
-      <arg choice='opt'>--daemonize</arg>
-      <arg choice='opt'>--debug <replaceable>1|2</replaceable></arg>
-      <arg choice='opt'>--help</arg>
-      <arg choice='opt'>--json</arg>
-      <arg choice='opt'>--nmea</arg>
-      <arg choice='opt'>--tpv</arg>
-      <arg choice='opt'>--udp <replaceable>hostname:udpport</replaceable></arg>
-      <arg choice='opt'>-a</arg>
-      <arg choice='opt'>-c <replaceable>count</replaceable></arg>
-      <arg choice='opt'>-d <replaceable>1|2</replaceable></arg>
-      <arg choice='opt'>-h</arg>
-      <arg choice='opt'>-j</arg>
-      <arg choice='opt'>-n</arg>
-      <arg choice='opt'>-t</arg>
-      <arg choice='opt'>-u <replaceable>hostname:udpport</replaceable></arg>
-      <arg choice='opt'>-V</arg>
-      <arg choice='opt'>-V</arg>
-      <group>
-        <replaceable>server</replaceable>
-          <group><replaceable>:port</replaceable>
-            <group><replaceable>:device</replaceable></group>
-        </group>
-      </group>
-</cmdsynopsis>
-</refsynopsisdiv>
-
-<refsect1 id='description'><title>DESCRIPTION</title>
-
-<para><application>gps2udp</application> is a tool to connect to
+ <refentryinfo>
+  <date>30 March 2020</date>
+ </refentryinfo>
+ <refmeta>
+  <refentrytitle>gps2udp</refentrytitle>
+  <manvolnum>1</manvolnum>
+  <refmiscinfo class="source">The GPSD Project</refmiscinfo>
+  <refmiscinfo class="manual">GPSD Documentation</refmiscinfo>
+ </refmeta>
+ <refnamediv id='name'>
+  <refname>gps2udp</refname>
+  <refpurpose>feed the take from gpsd to one or more aggregation sites</refpurpose>
+ </refnamediv>
+ <refsynopsisdiv id='synopsis'>
+  <cmdsynopsis>
+   <command>gps2udp</command>
+   <arg choice='opt'>--ais</arg>
+   <arg choice='opt'>--count <replaceable>count</replaceable>
+   </arg>
+   <arg choice='opt'>--daemonize</arg>
+   <arg choice='opt'>--debug <replaceable>1|2</replaceable>
+   </arg>
+   <arg choice='opt'>--help</arg>
+   <arg choice='opt'>--json</arg>
+   <arg choice='opt'>--nmea</arg>
+   <arg choice='opt'>--tpv</arg>
+   <arg choice='opt'>--udp <replaceable>hostname:udpport</replaceable>
+   </arg>
+   <arg choice='opt'>-a</arg>
+   <arg choice='opt'>-c <replaceable>count</replaceable>
+   </arg>
+   <arg choice='opt'>-d <replaceable>1|2</replaceable>
+   </arg>
+   <arg choice='opt'>-h</arg>
+   <arg choice='opt'>-j</arg>
+   <arg choice='opt'>-n</arg>
+   <arg choice='opt'>-t</arg>
+   <arg choice='opt'>-u <replaceable>hostname:udpport</replaceable>
+   </arg>
+   <arg choice='opt'>-V</arg>
+   <arg choice='opt'>-V</arg>
+   <group>
+    <replaceable>server</replaceable>
+    <group>
+     <replaceable>:port</replaceable>
+     <group>
+      <replaceable>:device</replaceable>
+     </group>
+    </group>
+   </group>
+  </cmdsynopsis>
+ </refsynopsisdiv>
+ <refsect1 id='description'>
+  <title>DESCRIPTION</title>
+  <para>
+   <application>gps2udp</application> is a tool to connect to
 <application>gpsd</application> and output the received sentences to
 one or many UDP host:port destinations.  This makes the program useful
 for feeding AIS information from <application>gpsd</application> to
 aishub, marinetraffic, shipfinder,... </para>
-
-<para><application>gps2udp</application> does not require root
+  <para>
+   <application>gps2udp</application> does not require root
 privileges, and can be run concurrently with other tools connecting
 to the local <application>gpsd</application> without causing problems.</para>
-
-<para>The output will consist of one or both of NMEA (-n option) or
+  <para>The output will consist of one or both of NMEA (-n option) or
 JSON (-j option) <application>gpsd</application> sentences. The
 output is sent to one or many destinations host through a UDP network
 socket (-u host:port options) .</para>
-
-<para>Optionally a server, TCP/IP port number and remote device can be given.
+  <para>Optionally a server, TCP/IP port number and remote device can be given.
 If omitted, <application>gps2udp</application> connects to localhost on
 the default port (2947) and watches all devices opened by
 <application>gpsd</application>.</para>
-
-<para><application>gps2udp</application> may be run as a daemon (-b
+  <para>
+   <application>gps2udp</application> may be run as a daemon (-b
 option).</para>
-
-<para><application>gps2udp</application> is designed to run smoothly in
+  <para>
+   <application>gps2udp</application> is designed to run smoothly in
 background; it reconnects automatically to
 <application>gpsd</application> whenever it is restarted. For
 debugging purporses, there is an option to exit gracefully after a given
 count of packets (-c option).</para>
-
-</refsect1>
-<refsect1 id='options'><title>OPTIONS</title>
-
-<para>-a, --ais, output only AIS messages.</para>
-<para>-b, --daemon, causes <application>gps2udp</application> to run as a
+ </refsect1>
+ <refsect1 id='options'>
+  <title>OPTIONS</title>
+  <para>-a, --ais, output only AIS messages.</para>
+  <para>-b, --daemon, causes <application>gps2udp</application> to run as a
 daemon.</para>
-<para>-c count, --count count, causes [count] sentences to be output.
+  <para>-c count, --count count, causes [count] sentences to be output.
 <application>gps2udp</application> will then exit gracefully.</para>
-<para>-d lvl, --debug lvl. [lvl] 0 prints nothing.
+  <para>-d lvl, --debug lvl. [lvl] 0 prints nothing.
 [lvl] 1 prints sent packet on stdout. [lvl] 2 print ignored packets.</para>
-<para>-h, --help, makes <application>gps2udp</application> print
+  <para>-h, --help, makes <application>gps2udp</application> print
 a usage message and exit.</para>
-
-<para>-j, --json, causes JSON sentences to be output.</para>
-<para>-n, --nmea, causes NMEA sentences to be output.</para>
-<para>-t, --tpv, Only output TPV sentences.  Implies --json.</para>
-<para>-u host:port, --udp host:port, UDP destination for output sentenses
+  <para>-j, --json, causes JSON sentences to be output.</para>
+  <para>-n, --nmea, causes NMEA sentences to be output.</para>
+  <para>-t, --tpv, Only output TPV sentences.  Implies --json.</para>
+  <para>-u host:port, --udp host:port, UDP destination for output sentenses
 (up to five destinations).</para>
-
-<para>-v prints the version, then exits (deprecated).</para>
-<para>-V, --version, prints the version, then exits.</para>
-</refsect1>
-
-<refsect1 id='exampletitle'><title>EXAMPLE</title>
-<para>With a running <application>gpsd</application> accessible on the
+  <para>-v prints the version, then exits (deprecated).</para>
+  <para>-V, --version, prints the version, then exits.</para>
+ </refsect1>
+ <refsect1 id='exampletitle'>
+  <title>EXAMPLE</title>
+  <para>With a running <application>gpsd</application> accessible on the
 network </para>
-
-<para><command>gps2udp -d 1 -n -u data.aishub.net:2222 </command> will
+  <para>
+   <command>gps2udp -d 1 -n -u data.aishub.net:2222 </command> will
 collect data from localhost:gpsd display them on stdout and send a
 copy to test aishub in NMEA format.</para>
-
-<para><command>gps2udp -a -n -b -u data.aishub.net:2222 -u 5.9.207.224:5321 -u 109.200.19.151:4001 fridu.net:2947</command> will collect
+  <para>
+   <command>gps2udp -a -n -b -u data.aishub.net:2222 -u 5.9.207.224:5321 -u 109.200.19.151:4001 fridu.net:2947</command> will collect
 data from a remote gpsd located on fridu.net host, will filter AIS
 messages and send them to 3 destination (aishub, marinetraffic,
 shipfinder) in NMEA format, command is running in background
 mode</para>
-</refsect1>
-
-<refsect1 id='see_also'><title>SEE ALSO</title>
-<para>
-<citerefentry><refentrytitle>gpsd</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>gps</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>libgps</refentrytitle><manvolnum>3</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>libgpsmm</refentrytitle><manvolnum>3</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>gpsprof</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>gpsfake</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>gpsctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>gpscat</refentrytitle><manvolnum>1</manvolnum></citerefentry>.
-<citerefentry><refentrytitle>gpsmon</refentrytitle><manvolnum>1</manvolnum></citerefentry>.
+ </refsect1>
+ <refsect1 id='see_also'>
+  <title>SEE ALSO</title>
+  <para>
+   <citerefentry>
+    <refentrytitle>gpsd</refentrytitle>
+    <manvolnum>8</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gps</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>libgps</refentrytitle>
+    <manvolnum>3</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>libgpsmm</refentrytitle>
+    <manvolnum>3</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gpsprof</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gpsfake</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gpsctl</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gpscat</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>.
+<citerefentry>
+    <refentrytitle>gpsmon</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>.
 </para>
-</refsect1>
-
-<refsect1 id='maintainer'><title>AUTHOR</title>
-
-<para>Fulup Ar Foll <email>fulup@sinagot.net</email>.</para>
-
-</refsect1>
-
+ </refsect1>
+ <refsect1 id='maintainer'>
+  <title>AUTHOR</title>
+  <para>Fulup Ar Foll <email>fulup@sinagot.net</email>.</para>
+ </refsect1>
 </refentry>
-
