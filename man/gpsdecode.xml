@@ -7,7 +7,7 @@ SPDX-License-Identifier: BSD-2-clause
    "-//OASIS//DTD DocBook XML V4.1.2//EN"
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gpsdecode.1'>
-<refentryinfo><date>30 March 2020</date></refentryinfo>
+<refentryinfo><date>5 December 2020</date></refentryinfo>
 <refmeta>
 <refentrytitle>gpsdecode</refentrytitle>
 <manvolnum>1</manvolnum>
@@ -22,9 +22,24 @@ SPDX-License-Identifier: BSD-2-clause
 
 <cmdsynopsis>
   <command>gpsdecode</command>
+      <arg choice='opt'>--ais</arg>
+      <arg choice='opt'>--decode</arg>
+      <arg choice='opt'>--debug <replaceable>debuglevel</replaceable></arg>
+      <arg choice='opt'>--encode</arg>
+      <arg choice='opt'>--help</arg>
+      <arg choice='opt'>--json</arg>
+      <arg choice='opt'>--minlength</arg>
+      <arg choice='opt'>--nmea</arg>
+      <arg choice='opt'>--split24</arg>
+      <arg choice='opt'>--types <replaceable>typelist</replaceable></arg>
+      <arg choice='opt'>--unscaled</arg>
+      <arg choice='opt'>--verbose</arg>
+      <arg choice='opt'>--version</arg>
       <arg choice='opt'>-c</arg>
       <arg choice='opt'>-d</arg>
+      <arg choice='opt'>-D <replaceable>debuglevel</replaceable></arg>
       <arg choice='opt'>-e</arg>
+      <arg choice='opt'>-h</arg>
       <arg choice='opt'>-j</arg>
       <arg choice='opt'>-m</arg>
       <arg choice='opt'>-n</arg>
@@ -32,7 +47,6 @@ SPDX-License-Identifier: BSD-2-clause
       <arg choice='opt'>-t <replaceable>typelist</replaceable></arg>
       <arg choice='opt'>-u</arg>
       <arg choice='opt'>-v</arg>
-      <arg choice='opt'>-D <replaceable>debuglevel</replaceable></arg>
       <arg choice='opt'>-V</arg>
 </cmdsynopsis>
 </refsynopsisdiv>
@@ -64,58 +78,61 @@ receivers or NTRIP broadcasters.</para>
 </refsect1>
 <refsect1 id='options'><title>OPTIONS</title>
 
-<para>The <option>-d</option> option tells the program to decode
+<para>The <option>-c, --json</option> sets the AIS dump format to separate
+fields with an ASCII pipe symbol.  Fields are dumped in the order they
+occur in the AIS packet. Numerics are not scaled (-u is
+forced). Strings are unpacked from six-bit to full ASCII</para>
+
+<para>The <option>-d, --decode</option> option tells the program to decode
 packets presented on standard input to standard output. This is the
 default behavior.</para>
 
-<para>The <option>-j</option> explicitly sets the output dump format
-to JSON (the default behavior).</para>
+<para>The <option>-D, --debug</option> option sets the debug verbosity
+level. It is mainly of interest to for troubleshooting.</para>
 
-<para>With the <option>-m</option> option, dump minimum lengths for
-each packet type in the input (ignoring comment packets).  This is
-probably of interest only to GSD developers.</para>
-
-<para>The <option>-n</option> enables dumping in generated
-pseudo-NME0183.</para>
-
-<para>The <option>-e</option> option tells the program to
+<para>The <option>-e, --encode</option> option tells the program to
 encode JSON on standard input to JSON on standard output. This option
 is only useful for regression-testing of the JSON dumping and parsing
 code.</para>
 
-<para>The <option>-s</option> option tells the program to report
+<para>The <option>-h, --help</option> option directs the program to output
+a usage mssage, then exit.</para>
+
+<para>The <option>-j, --json</option> explicitly sets the output dump format
+to JSON (the default behavior).</para>
+
+<para>With the <option>-m, --minlength</option> option, dump minimum lengths for
+each packet type in the input (ignoring comment packets).  This is
+probably of interest only to GSD developers.</para>
+
+<para>The <option>-n, --nmea</option> enables dumping in generated
+pseudo-NME0183.</para>
+
+<para>The <option>-s, --split24</option> option tells the program to report
 AIS Type 24 sentence halves separately rather than attempting to
 aggregate them.</para>
 
-<para>The <option>-t</option> accepts a comma-separated list of
+<para>The <option>-t, --types</option> accepts a comma-separated list of
 numeric types.  Packets with a numeric AIS, RTCM2, or RTCM3 type are
 passed through and output only if they match a type in the
 list. Packets of other kinds (in particular GPS packets) are
 passed through unconditionally.</para>
 
-<para>The <option>-u</option> suppresses scaling of AIS data to float
-quantities and text expansion of numeric codes.  A dump with this
-option is lossless.</para>
+<para>The <option>-u, --unscaled</option> suppresses scaling of AIS data
+to float quantities and text expansion of numeric codes. A dump with
+this option is lossless.</para>
 
-<para>The <option>-v</option> enables dumping of textual packets
+<para>The <option>-v, --verbose</option> enables dumping of textual packets
 to output as they are received on input, immediately preceding
 corresponding output.</para>
 
-<para>The <option>-c</option> sets the AIS dump format to separate
-fields with an ASCII pipe symbol.  Fields are dumped in the order they
-occur in the AIS packet. Numerics are not scaled (-u is
-forced). Strings are unpacked from six-bit to full ASCII</para>
-
-<para>The <option>-V</option> option directs the program to emit its
+<para>The <option>-V, --version</option> option directs the program to emit its
 version number, then exit.</para>
-
-<para>The <option>-D</option> option sets the debug verbosity level.  It is
-mainly of interest to for troubleshooting.</para>
 
 </refsect1>
 <refsect1 id='json_ais'><title>AIS DSV FORMAT</title>
 
-<para>With the <option>-c</option> option, dump lines are values of AIS
+<para>With the <option>-c, --ais</option> option, dump lines are values of AIS
 payload fields, pipe-separated, in the order that they occur in the
 payload. Spans of fields expressing a date are emitted as an ISO8601
 timestamp (look for colons and the trailing Z indicating Zulu/UTC
