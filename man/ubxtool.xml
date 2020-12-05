@@ -24,47 +24,80 @@ BSD terms apply: see the file COPYING in the distribution root for details.
   <cmdsynopsis>
    <command>ubxtool</command>
    <arg choice='opt'>-? </arg>
-   <arg choice='opt'>--command <replaceable>command</replaceable> </arg>
-   <arg choice='opt'>--delitem <replaceable>item,layers</replaceable></arg>
-   <arg choice='opt'>--device <replaceable>device</replaceable></arg>
-   <arg choice='opt'>--disable <replaceable>disable</replaceable> </arg>
-   <arg choice='opt'>--enable <replaceable>enable</replaceable> </arg>
-   <arg choice='opt'>--file <replaceable>file/device</replaceable> </arg>
-   <arg choice='opt'>--getitem <replaceable>item,layer,position,end</replaceable></arg>
+   <arg choice='opt'>--command <replaceable>command</replaceable>
+   </arg>
+   <arg choice='opt'>--delitem <replaceable>item,layers</replaceable>
+   </arg>
+   <arg choice='opt'>--device <replaceable>device</replaceable>
+   </arg>
+   <arg choice='opt'>--disable <replaceable>disable</replaceable>
+   </arg>
+   <arg choice='opt'>--enable <replaceable>enable</replaceable>
+   </arg>
+   <arg choice='opt'>--file <replaceable>file/device</replaceable>
+   </arg>
+   <arg choice='opt'>--getitem <replaceable>item,layer,position,end</replaceable>
+   </arg>
    <arg choice='opt'>--help </arg>
-   <arg choice='opt'>--host <replaceable>host</replaceable></arg>
-   <arg choice='opt'>--inspeed <replaceable>speed</replaceable></arg>
-   <arg choice='opt'>--port <replaceable>port</replaceable></arg>
-   <arg choice='opt'>--portid <replaceable>port</replaceable></arg>
-   <arg choice='opt'>--preset <replaceable>preset</replaceable></arg>
-   <arg choice='opt'>--protver <replaceable>protver</replaceable></arg>
-   <arg choice='opt'>--rawfile <replaceable>rawfile</replaceable></arg>
+   <arg choice='opt'>--host <replaceable>host</replaceable>
+   </arg>
+   <arg choice='opt'>--inspeed <replaceable>speed</replaceable>
+   </arg>
+   <arg choice='opt'>--port <replaceable>port</replaceable>
+   </arg>
+   <arg choice='opt'>--portid <replaceable>port</replaceable>
+   </arg>
+   <arg choice='opt'>--preset <replaceable>preset</replaceable>
+   </arg>
+   <arg choice='opt'>--protver <replaceable>protver</replaceable>
+   </arg>
+   <arg choice='opt'>--rawfile <replaceable>rawfile</replaceable>
+   </arg>
    <arg choice='opt'>--readonly </arg>
-   <arg choice='opt'>--setitem <replaceable>item,val,layers</replaceable></arg>
-   <arg choice='opt'>--setspeed <replaceable>setspeed</replaceable></arg>
+   <arg choice='opt'>--setitem <replaceable>item,val,layers</replaceable>
+   </arg>
+   <arg choice='opt'>--setspeed <replaceable>setspeed</replaceable>
+   </arg>
    <arg choice='opt'>--timestamp </arg>
-   <arg choice='opt'>--verbosity <replaceable>verbosity</replaceable></arg>
+   <arg choice='opt'>--verbosity <replaceable>verbosity</replaceable>
+   </arg>
    <arg choice='opt'>--version </arg>
-   <arg choice='opt'>--wait <replaceable>wait</replaceable></arg>
-   <arg choice='opt'>-c <replaceable>command</replaceable> </arg>
-   <arg choice='opt'>-d <replaceable>disable</replaceable> </arg>
-   <arg choice='opt'>-e <replaceable>enable</replaceable> </arg>
-   <arg choice='opt'>-f <replaceable>file/device</replaceable> </arg>
-   <arg choice='opt'>-g <replaceable>item,layer,position,end</replaceable></arg>
+   <arg choice='opt'>--wait <replaceable>wait</replaceable>
+   </arg>
+   <arg choice='opt'>-c <replaceable>command</replaceable>
+   </arg>
+   <arg choice='opt'>-d <replaceable>disable</replaceable>
+   </arg>
+   <arg choice='opt'>-e <replaceable>enable</replaceable>
+   </arg>
+   <arg choice='opt'>-f <replaceable>file/device</replaceable>
+   </arg>
+   <arg choice='opt'>-g <replaceable>item,layer,position,end</replaceable>
+   </arg>
    <arg choice='opt'>-h </arg>
-   <arg choice='opt'>-i <replaceable>port</replaceable></arg>
-   <arg choice='opt'>-p <replaceable>preset</replaceable></arg>
-   <arg choice='opt'>-P <replaceable>protver</replaceable></arg>
+   <arg choice='opt'>-i <replaceable>port</replaceable>
+   </arg>
+   <arg choice='opt'>-p <replaceable>preset</replaceable>
+   </arg>
+   <arg choice='opt'>-P <replaceable>protver</replaceable>
+   </arg>
    <arg choice='opt'>-r </arg>
-   <arg choice='opt'>-R <replaceable>rawfile</replaceable></arg>
-   <arg choice='opt'>-S <replaceable>setspeed</replaceable></arg>
-   <arg choice='opt'>-s <replaceable>speed</replaceable></arg>
+   <arg choice='opt'>-R <replaceable>rawfile</replaceable>
+   </arg>
+   <arg choice='opt'>-S <replaceable>setspeed</replaceable>
+   </arg>
+   <arg choice='opt'>-s <replaceable>speed</replaceable>
+   </arg>
    <arg choice='opt'>-t </arg>
    <arg choice='opt'>-V </arg>
-   <arg choice='opt'>-v <replaceable>verbosity</replaceable></arg>
-   <arg choice='opt'>-w <replaceable>wait</replaceable></arg>
-   <arg choice='opt'>-x <replaceable>item,layers</replaceable></arg>
-   <arg choice='opt'>-z <replaceable>item,val,layers</replaceable></arg>
+   <arg choice='opt'>-v <replaceable>verbosity</replaceable>
+   </arg>
+   <arg choice='opt'>-w <replaceable>wait</replaceable>
+   </arg>
+   <arg choice='opt'>-x <replaceable>item,layers</replaceable>
+   </arg>
+   <arg choice='opt'>-z <replaceable>item,val,layers</replaceable>
+   </arg>
    <arg choice='opt'>[server[:port[:device]]]</arg>
   </cmdsynopsis>
  </refsynopsisdiv>
@@ -97,7 +130,6 @@ running gpsd instance.</para>
 message and exit. Use with <option>-v 2</option> to see all
 enable/disable and preset values. Use with <option>-v 3</option> to
 additionally see all configuration items (long).</para>
-
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -110,14 +142,13 @@ and any needed payload.  The header, length, and checksum are added automaticall
 </para>
     </listitem>
    </varlistentry>
-    <varlistentry>
+   <varlistentry>
     <term>--device DEVICE</term>
     <listitem>
-    <para>The DEVICE on the <application>gpsd</application> to connect to.
+     <para>The DEVICE on the <application>gpsd</application> to connect to.
     Defaults to all.</para>
     </listitem>
-    </varlistentry>
-
+   </varlistentry>
    <varlistentry>
     <term>-d OPTION</term>
     <term>--disable OPTION</term>
@@ -250,11 +281,10 @@ and 7 are all requested.  See the section on CONFIGURATION ITEMS</para>
    <varlistentry>
     <term>--host HOST</term>
     <listitem>
-    <para>Connect to the <application>gpsd</application> on HOST (server).
+     <para>Connect to the <application>gpsd</application> on HOST (server).
     Defaults to localhost.</para>
     </listitem>
-    </varlistentry>
-
+   </varlistentry>
    <varlistentry>
     <term>-i port</term>
     <term>--portid port</term>
@@ -272,7 +302,7 @@ such as UBX_CFG-PRT.
 PRESET, the name of the command to send.  A few PRESETS, like LOG-FINDTIME,
 accept additional comma separated parameters.  More than one -p may be used.
 </para>
-<para> Only the common PRESETS are shown here.  To see the full list,
+     <para> Only the common PRESETS are shown here.  To see the full list,
 including optional parameters, run "ubxtool -h -v 2".
 </para>
      <variablelist>
@@ -350,14 +380,13 @@ Increase the verbosity of the output by adding the "-v 2" or "-v 3"
 options.</para>
     </listitem>
    </varlistentry>
-    <varlistentry>
+   <varlistentry>
     <term>--port PORT</term>
     <listitem>
-    <para>Use PORT to connect to <application>gpsd</application>.
+     <para>Use PORT to connect to <application>gpsd</application>.
     Defaults to 2947.</para>
     </listitem>
-    </varlistentry>
-
+   </varlistentry>
    <varlistentry>
     <term>-P protver</term>
     <term>--protver protver</term>
@@ -488,7 +517,6 @@ Each Key ID has been assigned a Key Name.
 Most of the Key Names are documented by u-blox and supported by ubxtool.
 To see all the Key Name understood by ubxtool do: "ubxtool -h -v 3".
 </para>
-
   <para>To get the value related to an item, use "-g ITEM".</para>
   <para>To reset the value related to an item to it default value, use
 "-x ITEM".</para>
@@ -542,7 +570,7 @@ Dump gpsd data from a remote server named x.example.com:
 ubxtool -w 5 x.example.com
 </programlisting>
   </para>
-   <refsect2>
+  <refsect2>
    <title>Version 27+ examples</title>
    <para>The following examples require a GPS supporting protocol 27 or
    greater.  Be sure to set your protocol version first:
@@ -628,7 +656,7 @@ $ ubxtool -g CFG,0,0,1200 | fgrep "item CFG-"
    <para>Changing <parameter>CFG,0,0,1200</parameter> to
    <parameter>CFG,7,0,1200</parameter> would instead dump all the
 configuration defaults, from the Default layer (7).</para>
-   </refsect2>
+  </refsect2>
  </refsect1>
  <refsect1 id='environment'>
   <title>ENVIRONMENT</title>
@@ -640,7 +668,8 @@ UBXOPTS is processed before the CLI options.</para>
   <para>
    <application>ubxtool</application> is written to conform to the official
 u-blox documentation for the u-blox binary protocol.
-<ulink url="https://www.u-blox.com/en/product-resources"></ulink></para>
+<ulink url="https://www.u-blox.com/en/product-resources"></ulink>
+  </para>
   <para>
    <citerefentry>
     <refentrytitle>cgps</refentrytitle>
