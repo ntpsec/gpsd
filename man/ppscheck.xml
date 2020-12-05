@@ -7,7 +7,7 @@ SPDX-License-Identifier: BSD-2-clause
    "-//OASIS//DTD DocBook XML V4.1.2//EN"
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='ppscheck.8'>
-<refentryinfo><date>30 March 2020</date></refentryinfo>
+<refentryinfo><date>5 December 2020</date></refentryinfo>
 <refmeta>
 <refentrytitle>ppscheck</refentrytitle>
 <manvolnum>8</manvolnum>
@@ -22,6 +22,9 @@ SPDX-License-Identifier: BSD-2-clause
 
 <cmdsynopsis>
   <command>ppscheck</command>
+        <arg choice='opt'>--help </arg>
+        <arg choice='opt'>--version </arg>
+        <arg choice='opt'>-? </arg>
         <arg choice='opt'>-h </arg>
         <arg choice='opt'>-V </arg>
         <arg choice='plain'><replaceable>device</replaceable></arg>
@@ -52,18 +55,20 @@ output PPS signals you will never need to use it again on that device.
 <variablelist remap='TP'>
 <varlistentry>
 <term>-h</term>
+<term>--help</term>
 <listitem><para>Display help message and terminate.</para></listitem>
 </varlistentry>
 <varlistentry>
 <term>-V</term>
+<term>--version</term>
 <listitem>
 <para>Dump version and exit.</para>
 </listitem>
 </varlistentry>
 </variablelist>
 
-<para>The "device" argument should be the pathname of a device. It will
-be the device monitored. </para>
+<para>The "device" argument should be the pathname of a device.
+Such as /dev/ttyS0 or /dev/pps0. It will be the device monitored. </para>
 
 <para>Each output line is the second and nanosecond parts of a timestamp
 followed by the names of the handshake signals then asserted.  Off
