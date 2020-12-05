@@ -7,7 +7,7 @@ SPDX-License-Identifier: BSD-2-clause
    "-//OASIS//DTD DocBook XML V4.1.2//EN"
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gpsctl.1'>
-<refentryinfo><date>29 Oct 2006</date></refentryinfo>
+<refentryinfo><date>4 November 2020</date></refentryinfo>
 <refmeta>
 <refentrytitle>gpsctl</refentrytitle>
 <manvolnum>1</manvolnum>
@@ -22,21 +22,39 @@ SPDX-License-Identifier: BSD-2-clause
 
 <cmdsynopsis>
   <command>gpsctl</command>
-      <arg choice='opt'>-h </arg>
+      <group>
+        <arg choice='plain'>--binary</arg>
+        <arg choice='plain'>--nmea</arg>
+        <arg choice='plain'>--reset</arg>
+      </group>
+      <arg choice='opt'>--debug <replaceable>debuglevel</replaceable></arg>
+      <arg choice='opt'>--direct </arg>
+      <arg choice='opt'>--echo </arg>
+      <arg choice='opt'>--help </arg>
+      <arg choice='opt'>--list </arg>
+      <arg choice='opt'>--rate </arg>
+      <arg choice='opt'>--rmshm </arg>
+      <arg choice='opt'>--rate <replaceable>rate</replaceable></arg>
+      <arg choice='opt'>--ship <replaceable>control</replaceable></arg>
+      <arg choice='opt'>--speed <replaceable>speed</replaceable></arg>
+      <arg choice='opt'>--timeout <replaceable>devicetype</replaceable></arg>
+      <arg choice='opt'>--version </arg>
       <group>
         <arg choice='plain'>-b</arg>
         <arg choice='plain'>-n</arg>
         <arg choice='plain'>-r</arg>
       </group>
-      <arg choice='opt'>-x <replaceable>control</replaceable></arg>
+      <arg choice='opt'>-D <replaceable>debuglevel</replaceable></arg>
+      <arg choice='opt'>-c <replaceable>rate</replaceable></arg>
       <arg choice='opt'>-e </arg>
       <arg choice='opt'>-f </arg>
+      <arg choice='opt'>-h </arg>
       <arg choice='opt'>-l </arg>
+      <arg choice='opt'>-R </arg>
       <arg choice='opt'>-s <replaceable>speed</replaceable></arg>
       <arg choice='opt'>-t <replaceable>devicetype</replaceable></arg>
-      <arg choice='opt'>-R </arg>
-      <arg choice='opt'>-D <replaceable>debuglevel</replaceable></arg>
       <arg choice='opt'>-V </arg>
+      <arg choice='opt'>-x <replaceable>control</replaceable></arg>
       <arg choice='opt'><replaceable>serial-port</replaceable></arg>
 </cmdsynopsis>
 </refsynopsisdiv>
@@ -62,14 +80,14 @@ to the device. On many Unix variants the owning group will be named
 <variablelist remap='TP'>
 
 <varlistentry>
-<term>-b</term>
+<term>-b, --binary</term>
 <listitem>
 <para>Put the GPS into native (binary) mode.</para>
 </listitem>
 </varlistentry>
 
 <varlistentry>
-<term>-c</term>
+<term>-c, --rate</term>
 <listitem>
 <para>Change the GPS's cycle time.  Units are seconds.  Note, most
 GPSes have a fixed cycle time of 1 second.</para>
@@ -77,7 +95,14 @@ GPSes have a fixed cycle time of 1 second.</para>
 </varlistentry>
 
 <varlistentry>
-<term>-e</term>
+<term>-D, --debug</term>
+<listitem>
+<para>Set level of debug messages.</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-e, --echo</term>
 <listitem>
 <para>Generate the packet from any other arguments specified and ship
 it to standard output instead of the device. This switch can be used
@@ -88,14 +113,21 @@ any way.</para>
 </varlistentry>
 
 <varlistentry>
-<term>-f</term>
+<term>-f, --force</term>
 <listitem>
 <para>Force low-level access (not through the daemon).</para>
 </listitem>
 </varlistentry>
 
 <varlistentry>
-<term>-l</term>
+<term>-h, --help</term>
+<listitem>
+<para>Display program usage and exit.</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-l, --list</term>
 <listitem>
 <para>List a table showing which option switches can be applied
 to which device types, and exit.</para>
@@ -103,21 +135,29 @@ to which device types, and exit.</para>
 </varlistentry>
 
 <varlistentry>
-<term>-n</term>
+<term>-n, --nmea</term>
 <listitem>
 <para>Put GPS into NMEA mode.</para>
 </listitem>
 </varlistentry>
 
 <varlistentry>
-<term>-r</term>
+<term>-r, --reset</term>
 <listitem>
 <para>Reset the GPS. Device port and type must be specified.</para>
 </listitem>
 </varlistentry>
 
 <varlistentry>
-<term>-s</term>
+<term>-R, --rmshm</term>
+<listitem>
+<para>Remove the GPSD shared-memory segment used for SHM export. This
+option will normally only be of interest to GPSD developers.</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-s, --speed</term>
 <listitem>
 <para>Set the baud rate at which the GPS emits packets.</para>
 
@@ -132,14 +172,30 @@ extreme cases) physically disconnecting the NVRAM backup battery.</para>
 </varlistentry>
 
 <varlistentry>
-<term>-t</term>
+<term>-t, --type</term>
 <listitem>
 <para>Force the device type.</para>
 </listitem>
 </varlistentry>
 
 <varlistentry>
-<term>-x</term>
+<term>-T, --timeout</term>
+<listitem>
+<para>Change the sampling timeout. Defaults to 8 seconds, which should
+always be sufficient to get an identifying packet from a device
+emitting at the normal rate of 1 per second.</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-V, --version</term>
+<listitem>
+<para>Display program version and exit.</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term>-x, --ship</term>
 <listitem>
 <para>Send a specified control string to the GPS;
 <application>gpsctl</application> will provide packet headers and
@@ -158,44 +214,6 @@ message payload and wrapped with appropriate header, trailer and
 checksum bytes. C-style backslash escapes in the string, notably \xNN
 for hex, will be interpreted; additionally, \e will be replaced with
 ESC. This switch implies <option>-f</option>.</para>
-</listitem>
-</varlistentry>
-
-<varlistentry>
-<term>-T</term>
-<listitem>
-<para>Change the sampling timeout. Defaults to 8 seconds, which should
-always be sufficient to get an identifying packet from a device
-emitting at the normal rate of 1 per second.</para>
-</listitem>
-</varlistentry>
-
-<varlistentry>
-<term>-R</term>
-<listitem>
-<para>Remove the GPSD shared-memory segment used for SHM export. This
-option will normally only be of interest to GPSD developers.</para>
-</listitem>
-</varlistentry>
-
-<varlistentry>
-<term>-h</term>
-<listitem>
-<para>Display program usage and exit.</para>
-</listitem>
-</varlistentry>
-
-<varlistentry>
-<term>-D</term>
-<listitem>
-<para>Set level of debug messages.</para>
-</listitem>
-</varlistentry>
-
-<varlistentry>
-<term>-V</term>
-<listitem>
-<para>Display program version and exit.</para>
 </listitem>
 </varlistentry>
 </variablelist>
