@@ -1506,33 +1506,34 @@ if __name__ == "__main__":
         dest='debug',
         default=0,
         type=int,
-        help='Set level of debug. Must be integer. [Default %(default)s)]',
+        help='Set level of debug. Must be integer. [Default %(default)s]',
     )
     parser.add_argument(
         '--device',
         dest='device',
         default='',
-        help='The device to connect. [Default %(default)s)]',
+        help='The device to connect. [Default %(default)s]',
     )
     parser.add_argument(
         '--host',
         dest='host',
         default='localhost',
-        help='The host to connect. [Default %(default)s)]',
+        help='The host to connect. [Default %(default)s]',
     )
     parser.add_argument(
         '-l',
+        '--llfmt',
         choices=['d', 'm', 's'],
         dest='degreefmt',
         default='d',
         help=("Select lat/lon format. d = DD.dddddd, m = DD MM.mmmm'"
-              "s = DD MM' SS.sss\" [Default %(default)s)]"),
+              "s = DD MM' SS.sss\" [Default %(default)s]"),
     )
     parser.add_argument(
         '--port',
         dest='port',
         default=gps.GPSD_PORT,
-        help='The port to connect. [Default %(default)s)]',
+        help='The port to connect. [Default %(default)s]',
     )
     parser.add_argument(
         '-r',
@@ -1541,7 +1542,7 @@ if __name__ == "__main__":
         default=0,
         type=float,
         help='Rotation of skyview ("up" direction) in degrees. '
-             ' [Default %(default)s)]',
+             ' [Default %(default)s]',
     )
     parser.add_argument(
         '-s',
@@ -1550,14 +1551,14 @@ if __name__ == "__main__":
         default=MAXCHANDISP,
         type=int,
         help=('Set number of sats to display in sat window. '
-              '[Default %(default)s)]'),
+              '[Default %(default)s]'),
     )
     parser.add_argument(
         '-u, --units',
         choices=['i', 'imperial', 'm', 'metric', 'n', 'nautical'],
         dest='units',
         default=default_units.name,
-        help='The unit of speed. [Default %(default)s)]',
+        help='The unit of speed. [Default %(default)s]',
     )
     parser.add_argument(
         '-V', '--version',
