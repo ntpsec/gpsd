@@ -7,7 +7,7 @@ SPDX-License-Identifier: BSD-2-clause
    "-//OASIS//DTD DocBook XML V4.1.2//EN"
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gps.1'>
-<refentryinfo><date>30 Sep 2020</date></refentryinfo>
+<refentryinfo><date>4 December 2020</date></refentryinfo>
 <refmeta>
 <refentrytitle>gps</refentrytitle>
 <manvolnum>1</manvolnum>
