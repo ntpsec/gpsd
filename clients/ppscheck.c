@@ -84,7 +84,7 @@ static void usage(void)
         "   -h               Show this help, then exit.\n"
         "   -V               Show version, then exit.\n"
         "\n"
-           "<device>         Device to check (/dev/ttyS0, /dev/pps0, etc.).\n");
+        "   <device>         Device to check (/dev/ttyS0, /dev/pps0, etc.).\n");
         exit(1);
 }
 
