@@ -7,54 +7,59 @@ SPDX-License-Identifier: BSD-2-clause
    "-//OASIS//DTD DocBook XML V4.1.2//EN"
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='ntpshmmon.1'>
-<refentryinfo><date>5 December 2020</date></refentryinfo>
-<refmeta>
-<refentrytitle>ntpshmmon</refentrytitle>
-<manvolnum>1</manvolnum>
-<refmiscinfo class="source">The GPSD Project</refmiscinfo>
-<refmiscinfo class="manual">GPSD Documentation</refmiscinfo>
-</refmeta>
-<refnamediv id='name'>
-<refname>ntpshmmon</refname>
-<refpurpose>capture samples from gpsd or other ntpd refclock sources</refpurpose>
-</refnamediv>
-<refsynopsisdiv id='synopsis'>
-
-<cmdsynopsis>
-  <command>ntpshmmon</command>
-      <arg choice='opt'>--count <replaceable>nsamples</replaceable></arg>
-      <arg choice='opt'>--help </arg>
-      <arg choice='opt'>--offset </arg>
-      <arg choice='opt'>--rmshm </arg>
-      <arg choice='opt'>--seconds <replaceable>nseconds</replaceable></arg>
-      <arg choice='opt'>--verbose </arg>
-      <arg choice='opt'>--version </arg>
-      <arg choice='opt'>-? </arg>
-      <arg choice='opt'>-h </arg>
-      <arg choice='opt'>-n <replaceable>nsamples</replaceable></arg>
-      <arg choice='opt'>-o </arg>
-      <arg choice='opt'>-s </arg>
-      <arg choice='opt'>-t <replaceable>nseconds</replaceable></arg>
-      <arg choice='opt'>-v </arg>
-      <arg choice='opt'>-V </arg>
-</cmdsynopsis>
-</refsynopsisdiv>
-
-<refsect1 id='description'><title>DESCRIPTION</title>
-
-<para>This program monitors the shared-memory segments updated by
-<citerefentry><refentrytitle>gpsd</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+ <refentryinfo>
+  <date>5 December 2020</date>
+ </refentryinfo>
+ <refmeta>
+  <refentrytitle>ntpshmmon</refentrytitle>
+  <manvolnum>1</manvolnum>
+  <refmiscinfo class="source">The GPSD Project</refmiscinfo>
+  <refmiscinfo class="manual">GPSD Documentation</refmiscinfo>
+ </refmeta>
+ <refnamediv id='name'>
+  <refname>ntpshmmon</refname>
+  <refpurpose>capture samples from gpsd or other ntpd refclock sources</refpurpose>
+ </refnamediv>
+ <refsynopsisdiv id='synopsis'>
+  <cmdsynopsis>
+   <command>ntpshmmon</command>
+   <arg choice='opt'>--count <replaceable>nsamples</replaceable>
+   </arg>
+   <arg choice='opt'>--help </arg>
+   <arg choice='opt'>--offset </arg>
+   <arg choice='opt'>--rmshm </arg>
+   <arg choice='opt'>--seconds <replaceable>nseconds</replaceable>
+   </arg>
+   <arg choice='opt'>--verbose </arg>
+   <arg choice='opt'>--version </arg>
+   <arg choice='opt'>-? </arg>
+   <arg choice='opt'>-h </arg>
+   <arg choice='opt'>-n <replaceable>nsamples</replaceable>
+   </arg>
+   <arg choice='opt'>-o </arg>
+   <arg choice='opt'>-s </arg>
+   <arg choice='opt'>-t <replaceable>nseconds</replaceable>
+   </arg>
+   <arg choice='opt'>-v </arg>
+   <arg choice='opt'>-V </arg>
+  </cmdsynopsis>
+ </refsynopsisdiv>
+ <refsect1 id='description'>
+  <title>DESCRIPTION</title>
+  <para>This program monitors the shared-memory segments updated by
+<citerefentry>
+    <refentrytitle>gpsd</refentrytitle>
+    <manvolnum>8</manvolnum>
+   </citerefentry>
 , and possibly other refclock sources, as a way of communicating with
 ntpd, the Network Time Protocol daemon. It reads these in exactly the way an
 ntpd instance does. It can be run concurrently with ntpd without
 interfering with ntpd's normal operation.</para>
-
-<para>This program runs forever, or until a termination option is
+  <para>This program runs forever, or until a termination option is
 matched, or until interrupted, generating sample reports to standard
 output.  Each line consists of whitespace-separated textual
 fields.</para>
-
-<para>Here is an example of the beginning of a report file:
+  <para>Here is an example of the beginning of a report file:
 
 <screen>
 ntpshmmon version 3.18
@@ -66,126 +71,142 @@ sample NTP2 1424926257.112433572 1424926257.111936726 1424926257.000000000 0  -1
 sample NTP3 1424926257.996221153 1424926257.995410232 1424926258.000000000 0 -20
 sample NTP2 1424926258.107769409 1424926258.107451006 1424926258.000000000 0  -1
 sample NTP3 1424926258.995647636 1424926258.995406476 1424926259.000000000 0 -20
-</screen></para>
-
-<para>The output always begins with a header line expressing the
+</screen>
+  </para>
+  <para>The output always begins with a header line expressing the
 version of the output format; the version line begins with "ntpshmmon
 version" and is followed by a numeric version field.</para>
-
-<para>The remainder of the file is either comments or sample lines. A
+  <para>The remainder of the file is either comments or sample lines. A
 comment line begins with a # and should be ignored by programs that
 interpret this format.</para>
-
-<para>The fields of a sample line are as follows:
+  <para>The fields of a sample line are as follows:
 
 <orderedlist>
-<listitem><para>The keyword "sample"</para></listitem>
-
-<listitem><para>The NTP unit from which it was collected.</para></listitem>
-
-<listitem><para>Collection time of day, seconds.</para></listitem>
-
-<listitem><para>Receiver time of day, seconds.</para></listitem>
-
-<listitem><para>Clock time of day, seconds.</para></listitem>
-
-<listitem><para>Leap-second notification status.</para></listitem>
-
-<listitem><para>Source precision (log(2) of source jitter).</para></listitem>
-</orderedlist>
-</para>
-
-<para>In these fields, "clock time" is the high-precision system clock
+    <listitem>
+     <para>The keyword "sample"</para>
+    </listitem>
+    <listitem>
+     <para>The NTP unit from which it was collected.</para>
+    </listitem>
+    <listitem>
+     <para>Collection time of day, seconds.</para>
+    </listitem>
+    <listitem>
+     <para>Receiver time of day, seconds.</para>
+    </listitem>
+    <listitem>
+     <para>Clock time of day, seconds.</para>
+    </listitem>
+    <listitem>
+     <para>Leap-second notification status.</para>
+    </listitem>
+    <listitem>
+     <para>Source precision (log(2) of source jitter).</para>
+    </listitem>
+   </orderedlist>
+  </para>
+  <para>In these fields, "clock time" is the high-precision system clock
 time measured by the source and "receiver time" is from the receiver.
 Both times are in UTC. It is normal for the seconds part of receiver
 time to coincide with the seconds part of collection time and for the
 nanoseconds part of receiver time to be zero.</para>
-
-<para>If the -o option is used, the "Seen@" column is replaced with the
+  <para>If the -o option is used, the "Seen@" column is replaced with the
 "Offset" column.  The "Offset" is the difference between "Clock" and
 "Real" times.</para>
-
-</refsect1>
-<refsect1 id='options'><title>OPTIONS</title>
-
-<variablelist>
-<varlistentry>
-<term>-?</term>
-<term>-h</term>
-<term>--help</term>
-<listitem>
-<para>Display program usage and exit.</para>
-</listitem>
-</varlistentry>
-
-<varlistentry>
-<term>-n COUNT</term>
-<term>--count COUNT</term>
-<listitem>
-<para>Set maximum number of samples to collect to COUNT.</para>
-</listitem>
-</varlistentry>
-
-<varlistentry>
-<term>-o</term>
-<term>--offset</term>
-<listitem>
-<para>Replace the "Seen@" column with the "Offset" column.  The "Offset" is
+ </refsect1>
+ <refsect1 id='options'>
+  <title>OPTIONS</title>
+  <variablelist>
+   <varlistentry>
+    <term>-?</term>
+    <term>-h</term>
+    <term>--help</term>
+    <listitem>
+     <para>Display program usage and exit.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>-n COUNT</term>
+    <term>--count COUNT</term>
+    <listitem>
+     <para>Set maximum number of samples to collect to COUNT.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>-o</term>
+    <term>--offset</term>
+    <listitem>
+     <para>Replace the "Seen@" column with the "Offset" column.  The "Offset" is
 the difference between "Clock" and "Real" times.
 </para>
-</listitem>
-</varlistentry>
-
-<varlistentry>
-<term>-s</term>
-<term>--rmshm</term>
-<listitem>
-<para>Remove all SHM segments used by GPSD. This
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>-s</term>
+    <term>--rmshm</term>
+    <listitem>
+     <para>Remove all SHM segments used by GPSD. This
 option will normally only be of interest to GPSD developers.</para>
-</listitem>
-</varlistentry>
-
-<varlistentry>
-<term>-t SECONDS</term>
-<term>--seconds SECONDS</term>
-<listitem>
-<para>Set maximum time to collect samples in seconds to SECONDS.</para>
-</listitem>
-</varlistentry>
-
-<varlistentry>
-<term>-v</term>
-<term>--verbose</term>
-<listitem>
-<para>Enable verbose status messages.</para>
-</listitem>
-</varlistentry>
-
-<varlistentry>
-<term>-V</term>
-<term>--version</term>
-<listitem>
-<para>Display program version and exit.</para>
-</listitem>
-</varlistentry>
-</variablelist>
-
-</refsect1>
-
-<refsect1 id='see_also'><title>SEE ALSO</title>
-<para>
-<citerefentry><refentrytitle>gpsd</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>gpsdctl</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>gps</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>libgps</refentrytitle><manvolnum>3</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>libgpsmm</refentrytitle><manvolnum>3</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>gpsprof</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>gpsfake</refentrytitle><manvolnum>1</manvolnum></citerefentry>.
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>-t SECONDS</term>
+    <term>--seconds SECONDS</term>
+    <listitem>
+     <para>Set maximum time to collect samples in seconds to SECONDS.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>-v</term>
+    <term>--verbose</term>
+    <listitem>
+     <para>Enable verbose status messages.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>-V</term>
+    <term>--version</term>
+    <listitem>
+     <para>Display program version and exit.</para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </refsect1>
+ <refsect1 id='see_also'>
+  <title>SEE ALSO</title>
+  <para>
+   <citerefentry>
+    <refentrytitle>gpsd</refentrytitle>
+    <manvolnum>8</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gpsdctl</refentrytitle>
+    <manvolnum>8</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gps</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>libgps</refentrytitle>
+    <manvolnum>3</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>libgpsmm</refentrytitle>
+    <manvolnum>3</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gpsprof</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gpsfake</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>.
 </para>
-</refsect1>
-
-<refsect1 id='maintainer'><title>AUTHOR</title>
-
-<para>Eric S. Raymond <email>esr@thyrsus.com</email>.</para>
-</refsect1>
+ </refsect1>
+ <refsect1 id='maintainer'>
+  <title>AUTHOR</title>
+  <para>Eric S. Raymond <email>esr@thyrsus.com</email>.</para>
+ </refsect1>
 </refentry>
