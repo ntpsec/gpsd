@@ -7,7 +7,7 @@ SPDX-License-Identifier: BSD-2-clause
    "-//OASIS//DTD DocBook XML V4.1.2//EN"
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gpsprof.1'>
-<refentryinfo><date>30 March 2020</date></refentryinfo>
+<refentryinfo><date>5 December 2020</date></refentryinfo>
 <refmeta>
 <refentrytitle>gpsprof</refentrytitle>
 <manvolnum>1</manvolnum>
@@ -22,17 +22,34 @@ SPDX-License-Identifier: BSD-2-clause
 
 <cmdsynopsis>
   <command>gpsprof</command>
+      <arg choice='opt'>-? </arg>
+      <arg choice='opt'>--debug <replaceable>debuglevel</replaceable></arg>
+      <arg choice='opt'>--device <replaceable>device</replaceable></arg>
+      <arg choice='opt'>--dumpfile <replaceable>dumpfile</replaceable></arg>
+      <arg choice='opt'>--formatter <replaceable>plot_type</replaceable></arg>
+      <arg choice='opt'>--help </arg>
+      <arg choice='opt'>--host <replaceable>host</replaceable></arg>
+      <arg choice='opt'>--logfile <replaceable>logfile</replaceable></arg>
+      <arg choice='opt'>--port <replaceable>port</replaceable></arg>
+      <arg choice='opt'>--redo </arg>
+      <arg choice='opt'>--subtitle <replaceable>subtitle</replaceable></arg>
+      <arg choice='opt'>--terminal <replaceable>terminal</replaceable></arg>
+      <arg choice='opt'>--threshold <replaceable>threshold</replaceable></arg>
+      <arg choice='opt'>--title <replaceable>title</replaceable></arg>
+      <arg choice='opt'>--wait <replaceable>seconds</replaceable></arg>
+      <arg choice='opt'>--version</arg>
       <arg choice='opt'>-D <replaceable>debuglevel</replaceable></arg>
       <arg choice='opt'>-d <replaceable>dumpfile</replaceable></arg>
       <arg choice='opt'>-f <replaceable>plot_type</replaceable></arg>
       <arg choice='opt'>-h </arg>
       <arg choice='opt'>-l <replaceable>logfile</replaceable></arg>
       <arg choice='opt'>-m <replaceable>threshold</replaceable></arg>
-      <arg choice='opt'>-n <replaceable>samplecount</replaceable></arg>
+      <arg choice='opt'>-n <replaceable>seconds</replaceable></arg>
       <arg choice='opt'>-r </arg>
       <arg choice='opt'>-S <replaceable>subtitle</replaceable></arg>
       <arg choice='opt'>-T <replaceable>terminal</replaceable></arg>
       <arg choice='opt'>-t <replaceable>title</replaceable></arg>
+      <arg choice='opt'>-V</arg>
       <arg choice='opt'>[server[:port[:device]]]</arg>
 </cmdsynopsis>
 </refsynopsisdiv>
@@ -62,8 +79,8 @@ with <application>gnuplot</application>.
 </refsect1>
 <refsect1 id='options'><title>OPTIONS</title>
 
-<para>The -f option sets the plot type.  Currently the following plot
-types are defined:</para>
+<para>The <option>-f, --formatter</option> option sets the plot type.
+Currently the following plot types are defined:</para>
 
 <variablelist>
 <varlistentry>
@@ -189,40 +206,53 @@ time from reports without fixes is lumped in.</para>
 </variablelist>
 
 
-<para>The -d option dumps the plot data, without attached gnuplot
+<para>The <option>-?, -h, --help</option> option makes
+<application>gpsprof</application> print a usage message and exit.</para>
+
+<para>The <option>-d, --dumpfile</option> option dumps the plot data,
+without attached gnuplot
 code, to a specified file for post-analysis.</para>
 
-<para>The -D sets debug level.</para>
+<para>The <option>-D, --debug</option> sets debug level.</para>
 
-<para>The -h option makes <application>gpsprof</application> print
-a usage message and exit.</para>
+<para>The <option>-l, --logfile</option> option dumps the raw JSON
+reports collected from the device to a specified file.</para>
 
-<para>The -l option dumps the raw JSON reports collected from the device
-to a specified file.</para>
-
-<para>The -n option sets the number of packets to sample.  The default
+<para>The <option>-n, --wait</option> option sets the number of seconds to
+sample.  The default
 is 100.  Most GPS are configured to emit one fix per second, so 100
 samples would then span 100 seconds.</para>
 
-<para>The -r option replots from a JSON logfile (such as -l produces)
-on standard input. Both -n and -l options are ignored when this
-one is selected.</para>
+<para>The <option>-r, --redo</option> option replots from a JSON logfile
+(such as <option>-l, logfile</option> produces) on standard input. Both
+<option>-n, --wait</option> and <option>-l, --logfile</option> options are
+ignored when this one is selected.</para>
 
-<para>The -S option sets a text string to be included in the plot
-as a subtitle.  This will be below the title.</para>
+<para>The <option>-S, --subtitle</option> option sets a text string
+to be included in the plot as a subtitle. This will be below the
+title.</para>
 
-<para>The -t option sets a text string to be the plot title.  This
-will replace the default title.</para>
+<para>The <option>-t, --title</option> option sets a text string to be
+the plot title. This will replace the default title.</para>
 
-<para>The -T option generates a terminal type setting into the gnuplot
-code.  Typical usage is "-T png", or "-T pngcairo" telling gnuplot to
-write a PNG file.  Without this option gnuplot will call its X11 display
-code.</para>
-<para> Different installations of <application>gnuplot</application> will
+<para>The <option>-T, --terminal</option> option generates a terminal
+type setting into the gnuplot code. Typical usage is "-T png", or "-T
+pngcairo" telling gnuplot to write a PNG file. Without this option
+gnuplot will call its X11 display code.</para>
+
+<para>Different installations of <application>gnuplot</application> will
 support different terminal types.  Different terminal types may work better
 for you than other ones.  "-T png" will generate PNG images.  Use "-T jpeg"
 to generate JPEG images.  "-T pngcairo" often works best, but is not
-supported by some distributions.</para>
+supported by some distributions.  The same terminal type may work
+very differently on different distributions.</para>
+
+<para>To see which terminal types your copy of
+<application>gnuplot</application> supports:
+<programlisting>
+gnuplot -e "set terminal"
+</programlisting>
+</para>
 
 </refsect1>
 <refsect1 id='signals'><title>SIGNALS</title>
