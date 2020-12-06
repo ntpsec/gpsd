@@ -8,7 +8,7 @@ SPDX-License-Identifier: BSD-2-clause
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gpssubframe.1'>
  <refentryinfo>
-  <date>28 September 2020</date>
+  <date>6 December 2020</date>
  </refentryinfo>
  <refmeta>
   <refentrytitle>gpssubframe</refentrytitle>
@@ -25,19 +25,25 @@ SPDX-License-Identifier: BSD-2-clause
    <command>gpssubframe</command>
    <arg choice='opt'>-?</arg>
    <arg choice='opt'>--count <replaceable>COUNT</replaceable></arg>
-   <arg choice='opt'>-D <replaceable>DEBUG-LEVEL</replaceable></arg>
+   <arg choice='opt'>--debug <replaceable>LVL</replaceable></arg>
    <arg choice='opt'>--desc</arg>
    <arg choice='opt'>--device <replaceable>DEVICE</replaceable></arg>
-   <arg choice='opt'>-h</arg>
+   <arg choice='opt'>--file <replaceable>FILE</replaceable></arg>
    <arg choice='opt'>--help</arg>
    <arg choice='opt'>--host <replaceable>HOST</replaceable></arg>
-   <arg choice='opt'>-n <replaceable>COUNT</replaceable></arg>
+   <arg choice='opt'>--load <replaceable>FILE</replaceable></arg>
    <arg choice='opt'>--port <replaceable>PORT</replaceable></arg>
    <arg choice='opt'>--progress</arg>
    <arg choice='opt'>--satpos</arg>
+   <arg choice='opt'>--save <replaceable>FILE</replaceable></arg>
    <arg choice='opt'>--seconds <replaceable>SECONDS</replaceable></arg>
-   <arg choice='opt'>--time <replaceable>SECONDS</replaceable></arg>
    <arg choice='opt'>--test</arg>
+   <arg choice='opt'>--time <replaceable>SECONDS</replaceable></arg>
+   <arg choice='opt'>--version</arg>
+   <arg choice='opt'>-D <replaceable>LVL</replaceable></arg>
+   <arg choice='opt'>-f <replaceable>FILE</replaceable></arg>
+   <arg choice='opt'>-h</arg>
+   <arg choice='opt'>-n <replaceable>COUNT</replaceable></arg>
    <arg choice='opt'>-V</arg>
    <arg choice='opt'>-x <replaceable>SECONDS</replaceable></arg>
    <group>
@@ -74,21 +80,125 @@ a host, TCP/IP port number and remote device can be given.  </para>
  </refsect1>
  <refsect1 id='options'>
   <title>OPTIONS</title>
-  <para>-? print a usage message and exit.</para>
-  <para>--count [COUNT] Exit after [COUNT] subframe messages.</para>
-  <para>--device [DEVICE] connect to device [DEVICE].</para>
-  <para>-D [debug-level] set debug level..</para>
-  <para>-h print a usage message and exit.</para>
-  <para>--help print a usage message and exit.</para>
-  <para>-n [COUNT] Exit after [COUNT] subframe messages.</para>
-  <para>-p [PORT] connect on port [PORT].</para>
-  <para>--progress print progress reports as messages are received.</para>
-  <para>--satpos Compute GPS satellite positions before exit.</para>
-  <para>--seconds [seconds] Exit after delay of [seconds].</para>
-  <para>--time [seconds] Compute satpos at time [seconds].</para>
-  <para>--test Run selftest code.</para>
-  <para>-V prints the program version, then exits.</para>
-  <para>-x [seconds] Exit after delay of [seconds].</para>
+  <variablelist remap='TP'>
+   <varlistentry>
+    <term>
+     <option>-?</option>
+    </term>
+    <term>
+     <option>-h</option>
+    </term>
+    <term>
+     <option>--help</option>
+    </term>
+    <listitem>
+  <para>-Print a usage message and exit.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-c COUNT</option>
+    </term>
+    <term>
+     <option>--count COUNT</option>
+    </term>
+    <listitem>
+     <para>Exit after COUNT subframe messages.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>--device DEVICE</option>
+    </term>
+    <listitem>
+  <para>Connect to device DEVICE on gpsd host.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-D LVL</option>
+    </term>
+    <term>
+     <option>--debug LVL</option>
+    </term>
+    <listitem>
+  <para>Set debug level to LVL.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>--port PORT</option>
+    </term>
+    <listitem>
+  <para>Connect to gpsd on port PORT.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>--progress</option>
+    </term>
+    <listitem>
+  <para>Print progress reports as messages are received.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>--satpos</option>
+    </term>
+    <listitem>
+  <para>Compute GPS satellite positions before exit.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>--time SEC</option>
+    </term>
+    <listitem>
+  <para>Compute satellite position at time SEC in POSIX seconds.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>--test</option>
+    </term>
+    <listitem>
+  <para>Run <option>--satpos</option> selftest code.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-V</option>
+    </term>
+    <term>
+     <option>--version</option>
+    </term>
+    <listitem>
+  <para>Print the program version, then exit.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-c COUNT</option>
+    </term>
+    <term>
+     <option>--count COUNT</option>
+    </term>
+    <listitem>
+     <para>Exit after COUNT subframe messages.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-x SEC</option>
+    </term>
+    <term>
+     <option>--seconds SEC</option>
+    </term>
+    <listitem>
+    <para>Seconds of messages to parse. 0 to disable.</para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
  </refsect1>
  <refsect1 id='examples'>
   <title>EXAMPLES</title>
