@@ -8,7 +8,7 @@ SPDX-License-Identifier: BSD-2-clause
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
 ]>
 <refentry id='gpsd.8'>
-<refentryinfo><date>30 March 2020</date></refentryinfo>
+<refentryinfo><date>6 December 2020</date></refentryinfo>
 <refmeta>
 <refentrytitle>gpsd</refentrytitle>
 <manvolnum>8</manvolnum>
@@ -24,6 +24,20 @@ SPDX-License-Identifier: BSD-2-clause
 
 <cmdsynopsis>
   <command>gpsd</command>
+      <arg choice='opt'>-? </arg>
+      <arg choice='opt'>--badtime </arg>
+      <arg choice='opt'>--debug <replaceable>LVL</replaceable></arg>
+      <arg choice='opt'>--drivers </arg>
+      <arg choice='opt'>--foreground </arg>
+      <arg choice='opt'>--framing <replaceable>FRAMING</replaceable></arg>
+      <arg choice='opt'>--help </arg>
+      <arg choice='opt'>--listenany </arg>
+      <arg choice='opt'>--nowait </arg>
+      <arg choice='opt'>--pidfile <replaceable>FILE</replaceable></arg>
+      <arg choice='opt'>--port <replaceable>PORT</replaceable></arg>
+      <arg choice='opt'>--sockfile <replaceable>SOCK</replaceable></arg>
+      <arg choice='opt'>--speed <replaceable>SPEED</replaceable></arg>
+      <arg choice='opt'>--verbose </arg>
       <arg choice='opt'>-b </arg>
       <arg choice='opt'>-D <replaceable>debuglevel</replaceable></arg>
       <arg choice='opt'>-F <replaceable>control-socket</replaceable></arg>
@@ -139,7 +153,14 @@ are supported and a client may connect via either.</para>
 <para>The program accepts the following options:</para>
 <variablelist remap='TP'>
 <varlistentry>
-<term>-b, --readonly</term>
+<term><option>-?</option></term>
+<term><option>-h</option></term>
+<term><option>---help</option></term>
+<listitem><para>Display help message and terminate.</para></listitem>
+</varlistentry>
+<varlistentry>
+<term><option>-b</option></term>
+<term><option>--readonly</option></term>
 <listitem><para>Broken-device-safety mode, otherwise known as
 read-only mode. A few bluetooth and USB receivers lock up or become
 totally inaccessible when probed or reconfigured; see the hardware
@@ -153,7 +174,8 @@ independent method to identify serial-over-Bluetooth devices would
 also be nice.</para></listitem>
 </varlistentry>
 <varlistentry>
-<term>-D, --debug</term>
+<term><option>-D LVL</option></term>
+<term><option>--debug LVL</option></term>
 <listitem>
 <para>Set debug level. Default is 0. At debug levels 2 and above,
 <application>gpsd</application> reports incoming sentence and actions
@@ -162,7 +184,8 @@ to standard error if <application>gpsd</application> is in the foreground
 </listitem>
 </varlistentry>
 <varlistentry>
-<term>-F, --sockfile</term>
+<term><option>-F FILE</option></term>
+<term><option>--sockfile FILE</option></term>
 <listitem>
 <para>Create a control socket for device addition and removal
 commands.  Default is None.  You must specify a valid pathname on your
@@ -171,14 +194,16 @@ you can write commands that edit the daemon's internal device list.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
-<term>-f, --framing</term>
+<term><option>-f FRAME</option></term>
+<term><option>--framing FRAME</option></term>
 <listitem><para>Fix the framing to the GNSS device.
 The framing parameter is of the form: [78][ENO][012].
 Most GNSS are 8N1.  Some Trimble default to 8O1.
 The default is to search for the correct framing.</para></listitem>
 </varlistentry>
 <varlistentry>
-<term>-G, --listenany</term>
+<term><option>-G</option></term>
+<term><option>--listenany</option></term>
 <listitem><para>This flag causes <application>gpsd</application> to
 listen on all addresses (INADDR_ANY) rather than just the loop back
 (INADDR_LOOPBACK) address. For the sake of privacy and security, TPV
@@ -186,19 +211,17 @@ information is now private to the local machine until the user makes
 an effort to expose this to the world.</para></listitem>
 </varlistentry>
 <varlistentry>
-<term>-h, --help</term>
-<listitem><para>Display help message and terminate.</para></listitem>
-</varlistentry>
-<varlistentry>
-<term>-l, --drivers</term>
+<term><option>-l</option></term>
+<term><option>--drivers</option></term>
 <listitem><para>List all drivers compiled into this
 <application>gpsd</application> instance. The letters to the left of
 each driver name are the <application>gpsd</application>
-control commands supported by that driver.</para>
+control commands supported by that driver. Then exit</para>
 </listitem>
 </varlistentry>
 <varlistentry>
-<term>-n, --nowait</term>
+<term><option>n</option></term>
+<term><option>--nowait</option></term>
 <listitem>
 <para>Don't wait for a client to connect before polling whatever GPS
 is associated with it. Some RS232 GPSes wait in a standby mode
@@ -212,26 +235,30 @@ clock information to ntpd through a memory-shared segment.
 </listitem>
 </varlistentry>
 <varlistentry>
-<term>-N, --foreground</term>
+<term><option>-N</option></term>
+<term><option>--foreground</option></term>
 <listitem><para>Don't daemonize; run in foreground.
 This switch is mainly useful for debugging.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
-<term>-p, --passive</term>
+<term><option>-p</option></term>
+<term><option>--passive</option></term>
 <listitem>
 <para>Passive mode.  Do not autoconfigure the receiver, but allow
 manual configuration changes.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
-<term>-P, --pidfile</term>
+<term><option>-P FILE</option></term>
+<term><option>--pidfile FILE</option></term>
 <listitem>
 <para>Specify the name and path to record the daemon's process ID.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
-<term>-r, --badtime</term>
+<term><option>-r</option></term>
+<term><option>--badtime</option></term>
 <listitem><para>Use GPS time even with no current fix.  Some GPSs have
 battery powered Real Time Clocks (RTC's) built in, making them a valid time
 source even before a fix is acquired.  This can be useful on a Raspberry Pi,
@@ -239,12 +266,14 @@ or other device that has no battery powered RTC, and thus has no valid
 time at startup.</para></listitem>
 </varlistentry>
 <varlistentry>
-<term>-S, --port</term>
+<term><option>--port PORT</option></term>
+<term><option>-S PORT</option></term>
 <listitem><para>Set TCP/IP port on which to listen for GPSD clients
 (default is 2947).</para></listitem>
 </varlistentry>
 <varlistentry>
- <term>-s, --speed</term>
+ <term><option>-s SPEED</option></term>
+ <term><option>--speed SPEED</option></term>
  <listitem><para>Fix the serial port speed to the GNSS device. Allowed
  speeds are: 4800, 9600, 19200, 38400, 57600, 115200, 230400, and 460800.
  The default is to autobaud. Note that some devices with integrated USB
@@ -252,7 +281,8 @@ time at startup.</para></listitem>
 </varlistentry>
 
 <varlistentry>
-<term>-V, --version</term>
+<term><option>-V</option></term>
+<term><option>--version</option></term>
 <listitem>
 <para>Dump version and exit.</para>
 </listitem>
