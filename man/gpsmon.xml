@@ -7,7 +7,7 @@ SPDX-License-Identifier: BSD-2-clause
    "-//OASIS//DTD DocBook XML V4.1.2//EN"
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gpsmon.1'>
-<refentryinfo><date>30 March 2020</date></refentryinfo>
+<refentryinfo><date>6 December 2020</date></refentryinfo>
 <refmeta>
 <refentrytitle>gpsmon</refentrytitle>
 <manvolnum>1</manvolnum>
@@ -22,13 +22,23 @@ SPDX-License-Identifier: BSD-2-clause
 
 <cmdsynopsis>
   <command>gpsmon</command>
-      <arg choice='opt'>-L </arg>
-      <arg choice='opt'>-V </arg>
-      <arg choice='opt'>-h </arg>
-      <arg choice='opt'>-n </arg>
+      <arg choice='opt'>-? </arg>
+      <arg choice='opt'>--debug <replaceable>LVL</replaceable></arg>
+      <arg choice='opt'>--help </arg>
+      <arg choice='opt'>--list </arg>
+      <arg choice='opt'>--logfile <replaceable>FILE</replaceable></arg>
+      <arg choice='opt'>--nmea </arg>
+      <arg choice='opt'>--nocurses </arg>
+      <arg choice='opt'>--type <replaceable>TYPE</replaceable></arg>
+      <arg choice='opt'>--version </arg>
       <arg choice='opt'>-a </arg>
-      <arg choice='opt'>-l <replaceable>logfile</replaceable></arg>
-      <arg choice='opt'>-t <replaceable>driver-prefix</replaceable></arg>
+      <arg choice='opt'>-D <replaceable>LVL</replaceable></arg>
+      <arg choice='opt'>-h </arg>
+      <arg choice='opt'>-L </arg>
+      <arg choice='opt'>-l <replaceable>FILE</replaceable></arg>
+      <arg choice='opt'>-n </arg>
+      <arg choice='opt'>-t <replaceable>TYPE</replaceable></arg>
+      <arg choice='opt'>-V </arg>
       <arg choice='opt'>
         <group>
           <arg choice='plain'>
@@ -41,7 +51,6 @@ SPDX-License-Identifier: BSD-2-clause
           <arg choice='plain'><replaceable>device</replaceable></arg>
         </group>
       </arg>
-      <arg choice='opt'>-D <replaceable>debuglevel</replaceable></arg>
 </cmdsynopsis>
 </refsynopsisdiv>
 
@@ -75,10 +84,6 @@ a design choice made to accommodate users operating in constrained
 environments and over telnet or ssh connections.  If run in a larger
 window, the size of the packet-log window will be increased to
 fit.</para>
-
-<para><application>gpsmon</application> accepts an -h option that
-displays a usage message, or a -V option to dump the package
-version and exit.</para>
 
 <para>This program may be run in either of two modes, as a client for
 the <application>gpsd</application> daemon (and its associated control
@@ -116,52 +121,11 @@ address, collecting data from attached serial device 5.</para></listitem>
 </varlistentry>
 </variablelist>
 
-<para>Unlike <application>gpsd</application>,
-<application>gpsmon</application> run in direct mode does not do its
-own device probing.  Thus, in particular, if you point it at a
-GPS with a native binary mode that happens to be emitting NMEA, it
-won't identify the actual type unless the device emits a recognizable
-NMEA trigger sentence.  The -t and -i options may help you.</para>
-
-<para>The -F option is only valid in client mode; it specifies a
-control socket to which the program should send device control
-strings.  You must specify a valid pathname of a Unix-domain socket on
-your local filesystem.</para>
-
-<para>The -D option enables packet-getter debugging output and is
-probably only useful to developers of the GPSD code.  Consult the
-packet-getter source code for relevant values.</para>
-
-<para>The -L option lists a table showing which GPS device types
-<application>gpsmon</application> has built-in support for, and which
-generic commands can be applied to which GPS types, and then
-exits. Note that this does not list type-specific commands associated
-with individual GPS types.</para>
-
-<para>The -l option sets up logging to a specified file to start
-immediately on device open.  This may be useful is, for example,
-you want to capture the startup message from a device that displays
-firmware version information there.</para>
-
-<para>The -n option forces gpsmon to request NMEA0183 packets instead of the
-raw data stream from gpsd.</para>
-
-<para>The -t option sets up a fallback type. Give it a string that
-is a distinguishing prefix of exactly one driver type name; this will
-be used for mode, speed, and rate switching if the driver selected
-by the packet type lacks those capabilities.  Most useful when the
-packet type is NMEA but the device is known to have a binary mode,
-such as SiRF binary.</para>
-
-<para>The -a option enables a special debugging mode that does not
-use screen painting.  Packets are dumped normally; any character
-typed suspends packet dumping and brings up a command prompt. This
-feature will mainly be of interest to GPSD developers.</para>
-
-<para>After startup (without -a), the top part of the screen reports
-the contents of several especially interesting packet types.  The
-"PPS" field, if nonempty, is the delta between the last 1PPS top of
-second and the system clock at that time.</para>
+<para>After startup (without <option>-a, --nocurses</option>), the
+top part of the screen reports the contents of several especially
+interesting packet types. The "PPS" field, if nonempty, is the delta
+between the last 1PPS top of second and the system clock at that
+time.</para>
 
 <para>The bottom half of the screen is a scrolling hex dump of all
 packets the GPS is issuing.  If the packet type is textual, any
@@ -169,6 +133,121 @@ trailing CR/LF is omitted. Dump lines beginning &gt;&gt;&gt; represent
 control packets sent to the GPS. Lines consisting of "PPS" surrounded
 by dashes, if present, indicate 1PPS and the start of the reporting
 cycle.</para>
+
+<para>Unlike <application>gpsd</application>,
+<application>gpsmon</application> run in direct mode does not do its own
+device probing. Thus, in particular, if you point it at a GPS with a
+native binary mode that happens to be emitting NMEA, it won't identify
+the actual type unless the device emits a recognizable NMEA trigger
+sentence. The <option>-t, --type</option> option may help you.</para>
+
+ </refsect1>
+ <refsect1 id='options'>
+  <title>OPTIONS</title>
+  <variablelist remap='TP'>
+   <varlistentry>
+    <term>
+     <option>-?</option>
+    </term>
+    <term>
+     <option>-h</option>
+    </term>
+    <term>
+     <option>--help</option>
+    </term>
+    <listitem>
+     <para>Print a usage message and exit.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-a</option>
+    </term>
+    <term>
+     <option>--nocurses</option>
+    </term>
+    <listitem>
+<para>Enables a special debugging mode that does not
+use screen painting.  Packets are dumped normally; any character
+typed suspends packet dumping and brings up a command prompt. This
+feature will mainly be of interest to GPSD developers.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-d LVL</option>
+    </term>
+    <term>
+     <option>--debug LVL</option>
+    </term>
+    <listitem>
+<para>Enable packet-getter debugging output and is
+probably only useful to developers of the GPSD code.  Consult the
+packet-getter source code for relevant values.</para>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry>
+    <term>
+     <option>-l FILE</option>
+    </term>
+    <term>
+     <option>--logfile FILE</option>
+    </term>
+    <listitem>
+<para>Set up logging to a specified file (FILE) to start
+immediately on device open.  This may be useful is, for example,
+you want to capture the startup message from a device that displays
+firmware version information there.</para>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry>
+    <term>
+     <option>-L</option>
+    </term>
+    <term>
+     <option>--list</option>
+    </term>
+    <listitem>
+<para>Lists a table showing which GPS device types this
+<application>gpsmon</application> has built-in support for, and which
+generic commands can be applied to which GPS types, and then
+exits. Note that this does not list type-specific commands associated
+with individual GPS types.</para>
+    </listitem>
+   </varlistentry>
+
+   <varlistentry>
+    <term>
+     <option>-n</option>
+    </term>
+    <term>
+     <option>--nmea</option>
+    </term>
+    <listitem>
+<para>Force gpsmon to request NMEA0183 packets instead of the
+raw data stream from gpsd.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-t TYPE</option>
+    </term>
+    <term>
+     <option>--type TYPE</option>
+    </term>
+    <listitem>
+<para>Set a fallback type (TYPE). Give it a string that
+is a distinguishing prefix of exactly one driver type name; this will
+be used for mode, speed, and rate switching if the driver selected
+by the packet type lacks those capabilities.  Most useful when the
+packet type is NMEA but the device is known to have a binary mode,
+such as SiRF binary.</para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+
 
 </refsect1>
 <refsect1 id='commands'><title>COMMANDS</title>
