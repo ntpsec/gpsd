@@ -7,164 +7,186 @@ SPDX-License-Identifier: BSD-2-clause
    "-//OASIS//DTD DocBook XML V4.1.2//EN"
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gpsinit.8'>
-<refentryinfo><date>30 March 2020</date></refentryinfo>
-<refmeta>
-<refentrytitle>gpsinit</refentrytitle>
-<manvolnum>8</manvolnum>
-<refmiscinfo class="source">The GPSD Project</refmiscinfo>
-<refmiscinfo class="manual">GPSD Documentation</refmiscinfo>
-</refmeta>
-<refnamediv id='name'>
-<refname>gpsinit</refname>
-<refpurpose>initialize CAN kernel modules for GPSD</refpurpose>
-</refnamediv>
-<refsynopsisdiv id='synopsis'>
-
-<cmdsynopsis>
-  <command>gpsinit</command>
-      <arg choice='opt'>-n <replaceable>control</replaceable></arg>
-      <arg choice='opt'>-s <replaceable>speed</replaceable></arg>
-      <arg choice='plain'><replaceable>module_name</replaceable></arg>
-      <arg choice='opt'><replaceable>interface_name</replaceable></arg>
-</cmdsynopsis>
-<cmdsynopsis>
-  <command>gpsinit</command>
-      <arg choice='plain'>-h </arg>
-</cmdsynopsis>
-<cmdsynopsis>
-  <command>gpsinit</command>
-      <arg choice='plain'>-v </arg>
-</cmdsynopsis>
-</refsynopsisdiv>
-
-<refsect1 id='description'><title>DESCRIPTION</title>
-
-<para><application>gpsinit</application> initializes whatever
+ <refentryinfo>
+  <date>6 December 2020</date>
+ </refentryinfo>
+ <refmeta>
+  <refentrytitle>gpsinit</refentrytitle>
+  <manvolnum>8</manvolnum>
+  <refmiscinfo class="source">The GPSD Project</refmiscinfo>
+  <refmiscinfo class="manual">GPSD Documentation</refmiscinfo>
+ </refmeta>
+ <refnamediv id='name'>
+  <refname>gpsinit</refname>
+  <refpurpose>initialize CAN kernel modules for GPSD</refpurpose>
+ </refnamediv>
+ <refsynopsisdiv id='synopsis'>
+  <cmdsynopsis>
+   <command>gpsinit</command>
+   <arg choice='opt'>-n <replaceable>control</replaceable>
+   </arg>
+   <arg choice='opt'>-s <replaceable>speed</replaceable>
+   </arg>
+   <arg choice='plain'>
+    <replaceable>module_name</replaceable>
+   </arg>
+   <arg choice='opt'>
+    <replaceable>interface_name</replaceable>
+   </arg>
+  </cmdsynopsis>
+  <cmdsynopsis>
+   <command>gpsinit</command>
+   <arg choice='plain'>-h </arg>
+  </cmdsynopsis>
+  <cmdsynopsis>
+   <command>gpsinit</command>
+   <arg choice='plain'>-V </arg>
+  </cmdsynopsis>
+ </refsynopsisdiv>
+ <refsect1 id='description'>
+  <title>DESCRIPTION</title>
+  <para>
+   <application>gpsinit</application> initializes whatever
 kernel-level modules are needed to enable special non-serial hardware
 to communicate with a gpsd instance.  Note: it will need root permissions
 to load modules and perform other special operations, such as changing
 kernel-interface baudrates.</para>
-
-<para>At present, all modes of this tool are concerned with setting up
+  <para>At present, all modes of this tool are concerned with setting up
 kernel-level interfaces to hardware on a CAN (Control Area Network) speaking
 NMEA2000.</para>
-
-<para>The program accepts the following options:</para>
-<variablelist remap='TP'>
-
-<varlistentry>
-<term>-h</term>
-<listitem>
-<para>Display a brief help text.</para>
-</listitem>
-</varlistentry>
-
-<varlistentry>
-<term>-v</term>
-<listitem>
-<para>Display the version of <application>gpsinit</application>.</para>
-</listitem>
-</varlistentry>
-
-<varlistentry>
-<term>-n</term>
-<listitem>
-<para>Set the CAN network number. The default is 0.</para>
-</listitem>
-</varlistentry>
-
-<varlistentry>
-<term>-s</term>
-<listitem>
-<para>Set the baudrate to be used to communicate over the serial line
+  <para>The program accepts the following options:</para>
+  <variablelist remap='TP'>
+   <varlistentry>
+    <term>-h</term>
+    <listitem>
+     <para>Display a brief help text.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>-n</term>
+    <listitem>
+     <para>Set the CAN network number. The default is 0.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>-s</term>
+    <listitem>
+     <para>Set the baudrate to be used to communicate over the serial line
 to the CAN hardware. The default is 38400 baud.</para>
-</listitem>
-</varlistentry>
-</variablelist>
-
-<para>The parameter <parameter>module_name</parameter> is mandatory.  The
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>-V</term>
+    <listitem>
+     <para>Display the version of <application>gpsinit</application>.</para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+  <para>The parameter <parameter>module_name</parameter> is mandatory.  The
 socket CAN driver module <parameter>module_name</parameter>.ko will be
 loaded.  <command>gpsinit</command> recognize the following module
 names:
 
 <variablelist>
-<varlistentry>
-<term>plx_pci</term>
-<term>esd_usb2</term>
-<term>vcan</term>
-<term>slcan</term>
-<listitem>
-<para>
+    <varlistentry>
+     <term>plx_pci</term>
+     <term>esd_usb2</term>
+     <term>vcan</term>
+     <term>slcan</term>
+     <listitem>
+      <para>
 The parameter <parameter>interface_name</parameter> and <parameter>-s
-<replaceable>speed</replaceable></parameter> can used here.
+<replaceable>speed</replaceable>
+       </parameter> can used here.
 </para>
-</listitem>
-</varlistentry>
-<varlistentry><term>beaglebone</term>
-<listitem>
-<para> The dcan module needed for the beaglebone is part of the Linux kernel,
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>beaglebone</term>
+     <listitem>
+      <para> The dcan module needed for the beaglebone is part of the Linux kernel,
 so no module is loaded in this case.</para>
-</listitem>
-</varlistentry>
-</variablelist>
-</para>
-
-<para>The parameter <parameter>interface_name</parameter> is needed for
+     </listitem>
+    </varlistentry>
+   </variablelist>
+  </para>
+  <para>The parameter <parameter>interface_name</parameter> is needed for
 slcan hardware only.  It gives the name of the serial device to which the SL
 CAN hardware is connected. The default is /dev/ttyUSB0.
 </para>
-</refsect1>
-
-<refsect1 id='examples'><title>EXAMPLES</title>
-<para>All the following examples probably need to be run as root.</para>
-<variablelist>
-<varlistentry>
-<term><command>gpsinit  plx_pci</command></term>
-<listitem>
-<para>Attempt to load the module plx_pci and initialize net 0 for the
+ </refsect1>
+ <refsect1 id='examples'>
+  <title>EXAMPLES</title>
+  <para>All the following examples probably need to be run as root.</para>
+  <variablelist>
+   <varlistentry>
+    <term>
+     <command>gpsinit  plx_pci</command>
+    </term>
+    <listitem>
+     <para>Attempt to load the module plx_pci and initialize net 0 for the
 connection to a NMEA2000 network. It will set the baudrate to
 250kBits.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term><command>gpsinit  -n 1 plx_pci</command></term>
-<listitem>
-<para>As above, but use net 1.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term><command>gpsinit  -s 38400 slcan /dev/ttyUSB0</command></term>
-<listitem>
-<para>Attempt to load the module slcan and talk to the hardware at
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <command>gpsinit  -n 1 plx_pci</command>
+    </term>
+    <listitem>
+     <para>As above, but use net 1.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <command>gpsinit  -s 38400 slcan /dev/ttyUSB0</command>
+    </term>
+    <listitem>
+     <para>Attempt to load the module slcan and talk to the hardware at
 38400 baud connected to port /dev/ttyUSB0.</para>
-</listitem>
-</varlistentry>
-
-<varlistentry>
-<term><command>gpsinit -h </command></term>
-<listitem>
-<para>Display a brief help message.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term><command>gpsinit -v </command></term>
-<listitem>
-<para>Display the version of gpsinit.</para>
-</listitem>
-</varlistentry>
-</variablelist>
-</refsect1>
-
-<refsect1 id='see_also'><title>SEE ALSO</title>
-<para>
-<citerefentry><refentrytitle>gpsd</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>gps</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>libgps</refentrytitle><manvolnum>3</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>libgpsmm</refentrytitle><manvolnum>3</manvolnum></citerefentry>.
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <command>gpsinit -h </command>
+    </term>
+    <listitem>
+     <para>Display a brief help message.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <command>gpsinit -v </command>
+    </term>
+    <listitem>
+     <para>Display the version of gpsinit.</para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </refsect1>
+ <refsect1 id='see_also'>
+  <title>SEE ALSO</title>
+  <para>
+   <citerefentry>
+    <refentrytitle>gpsd</refentrytitle>
+    <manvolnum>8</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gps</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>libgps</refentrytitle>
+    <manvolnum>3</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>libgpsmm</refentrytitle>
+    <manvolnum>3</manvolnum>
+   </citerefentry>.
 </para>
-</refsect1>
-
-<refsect1 id='maintainer'><title>AUTHOR</title>
-<para>Reinhard Arlt <email>reinhard.arlt@t-online.de</email>.</para>
-</refsect1>
+ </refsect1>
+ <refsect1 id='maintainer'>
+  <title>AUTHOR</title>
+  <para>Reinhard Arlt <email>reinhard.arlt@t-online.de</email>.</para>
+ </refsect1>
 </refentry>
