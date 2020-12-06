@@ -467,19 +467,19 @@ parser.add_argument(
            '[Default %(default)s)]')
 )
 parser.add_argument(
-    '--desc',
-    dest='desc',
-    default=False,
-    action="store_true",
-    help='Print long descriptions [Default %(default)s)]'
-)
-parser.add_argument(
     '-D',
     '--debug',
     dest='debug',
     default=0,
     type=int,
     help='Set level of debug. Must be integer. [Default %(default)s)]'
+)
+parser.add_argument(
+    '--desc',
+    dest='desc',
+    default=False,
+    action="store_true",
+    help='Print long descriptions [Default %(default)s)]'
 )
 parser.add_argument(
     '--device',
