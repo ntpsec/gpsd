@@ -24,23 +24,29 @@ SPDX-License-Identifier: BSD-2-clause
   <cmdsynopsis>
    <command>gpspipe</command>
    <arg choice='opt'>-?</arg>
-   <arg choice='opt'>--count <replaceable>COUNT</replaceable></arg>
+   <arg choice='opt'>--count <replaceable>COUNT</replaceable>
+   </arg>
    <arg choice='opt'>--daemonize</arg>
-   <arg choice='opt'>--debug <replaceable>LVL</replaceable></arg>
+   <arg choice='opt'>--debug <replaceable>LVL</replaceable>
+   </arg>
    <arg choice='opt'>--help</arg>
    <arg choice='opt'>--json</arg>
    <arg choice='opt'>--nmae</arg>
-   <arg choice='opt'>--output <replaceable>FILE</replaceable></arg>
+   <arg choice='opt'>--output <replaceable>FILE</replaceable>
+   </arg>
    <arg choice='opt'>--pps</arg>
    <arg choice='opt'>--profile</arg>
    <arg choice='opt'>--raw</arg>
    <arg choice='opt'>--scaled</arg>
-   <arg choice='opt'>--seconds <replaceable>SEC</replaceable></arg>
-   <arg choice='opt'>--serial <replaceable>DEV</replaceable></arg>
+   <arg choice='opt'>--seconds <replaceable>SEC</replaceable>
+   </arg>
+   <arg choice='opt'>--serial <replaceable>DEV</replaceable>
+   </arg>
    <arg choice='opt'>--sleep</arg>
    <arg choice='opt'>--spinner</arg>
    <arg choice='opt'>--split24</arg>
-   <arg choice='opt'>--timefmt <replaceable>FMT</replaceable></arg>
+   <arg choice='opt'>--timefmt <replaceable>FMT</replaceable>
+   </arg>
    <arg choice='opt'>--timestamp</arg>
    <arg choice='opt'>--usec</arg>
    <arg choice='opt'>--version</arg>
@@ -48,24 +54,30 @@ SPDX-License-Identifier: BSD-2-clause
    <arg choice='opt'>-2</arg>
    <arg choice='opt'>-?</arg>
    <arg choice='opt'>-d</arg>
-   <arg choice='opt'>-D <replaceable>LVL</replaceable></arg>
+   <arg choice='opt'>-D <replaceable>LVL</replaceable>
+   </arg>
    <arg choice='opt'>-h</arg>
    <arg choice='opt'>-l</arg>
-   <arg choice='opt'>-n <replaceable>COUNT</replaceable></arg>
-   <arg choice='opt'>-o <replaceable>FILE</replaceable></arg>
+   <arg choice='opt'>-n <replaceable>COUNT</replaceable>
+   </arg>
+   <arg choice='opt'>-o <replaceable>FILE</replaceable>
+   </arg>
    <arg choice='opt'>-p</arg>
    <arg choice='opt'>-P</arg>
    <arg choice='opt'>-r</arg>
    <arg choice='opt'>-R</arg>
    <arg choice='opt'>-S</arg>
-   <arg choice='opt'>-s <replaceable>serial-device</replaceable></arg>
+   <arg choice='opt'>-s <replaceable>serial-device</replaceable>
+   </arg>
    <arg choice='opt'>-t</arg>
-   <arg choice='opt'>-T <replaceable>timestamp-format</replaceable></arg>
+   <arg choice='opt'>-T <replaceable>timestamp-format</replaceable>
+   </arg>
    <arg choice='opt'>-u</arg>
    <arg choice='opt'>-v</arg>
    <arg choice='opt'>-V</arg>
    <arg choice='opt'>-w</arg>
-   <arg choice='opt'>-x <replaceable>seconds</replaceable></arg>
+   <arg choice='opt'>-x <replaceable>seconds</replaceable>
+   </arg>
    <arg choice='opt'>-Z</arg>
    <group>
     <replaceable>server</replaceable>
@@ -103,7 +115,6 @@ requires the <option>-o, --output</option> flag for writing the output to
 a file.</para>
  </refsect1>
  <refsect1 id='options'>
-
   <title>OPTIONS</title>
   <variablelist remap='TP'>
    <varlistentry>
@@ -139,7 +150,7 @@ a file.</para>
      <option>--daemonize</option>
     </term>
     <listitem>
-      <para>Run as a daemon.</para>
+     <para>Run as a daemon.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -161,7 +172,7 @@ a file.</para>
      <option>--sleep</option>
     </term>
     <listitem>
-  <para>Sleep for ten seconds before attempting to connect to gpsd.
+     <para>Sleep for ten seconds before attempting to connect to gpsd.
 This is very useful when running as a daemon, giving gpsd time to start
 before attempting a connection.</para>
     </listitem>
@@ -185,7 +196,7 @@ before attempting a connection.</para>
      <option>--output FILE</option>
     </term>
     <listitem>
-  <para>Cause the collected data to be written to the
+     <para>Cause the collected data to be written to the
 specified file.  Use of this option is mandatory
 if <application>gpspipe</application> is run as a daemon.</para>
     </listitem>
@@ -220,7 +231,7 @@ if <application>gpspipe</application> is run as a daemon.</para>
      <option>--nmea</option>
     </term>
     <listitem>
-  <para>Cause NMEA sentences to be output. This may be NMEA,
+     <para>Cause NMEA sentences to be output. This may be NMEA,
 pseudo NMEA built from binary data, or some combination of both.</para>
     </listitem>
    </varlistentry>
@@ -232,7 +243,7 @@ pseudo NMEA built from binary data, or some combination of both.</para>
      <option>--raw</option>
     </term>
     <listitem>
-  <para>Causes super-raw (gps binary) data to be output. This will forward
+     <para>Causes super-raw (gps binary) data to be output. This will forward
 exactly what the device sent.</para>
     </listitem>
    </varlistentry>
@@ -244,7 +255,7 @@ exactly what the device sent.</para>
      <option>--serial DEV</option>
     </term>
     <listitem>
-  <para>Cause the collected data to be written to the
+     <para>Cause the collected data to be written to the
 specified serial device (DEV) with settings 4800 8N1. Thus
 <application>gpspipe</application> can be used with <option>-s, --serial</option>
 and <option>-r, --nmea</option> options to emulate a serial port hardwired to a
@@ -259,7 +270,7 @@ GPS that <application>gpsd</application> is managing.</para>
      <option>--scaled</option>
     </term>
     <listitem>
-  <para>Set the scaled flag.  This is for AIS and SUBFRAME data only.
+     <para>Set the scaled flag.  This is for AIS and SUBFRAME data only.
 Scaled data will be output in the JSON, instead of raw data in the JSON.
 </para>
     </listitem>
@@ -283,9 +294,10 @@ Scaled data will be output in the JSON, instead of raw data in the JSON.
      <option>--timefmt FMT</option>
     </term>
     <listitem>
-  <para>Set the format of the timestamp. See <citerefentry>
-<refentrytitle>strftime</refentrytitle> <manvolnum>3</manvolnum>
-</citerefentry> for the available placeholders. Setting this option
+     <para>Set the format of the timestamp. See <citerefentry>
+       <refentrytitle>strftime</refentrytitle>
+       <manvolnum>3</manvolnum>
+      </citerefentry> for the available placeholders. Setting this option
 implies <option>-t, --timestamp</option>. Default setting is "%F
 %T"</para>
     </listitem>
@@ -298,7 +310,7 @@ implies <option>-t, --timestamp</option>. Default setting is "%F
      <option>--usec</option>
     </term>
     <listitem>
- <para>Use usec resolution time stamp, implies <option>-t,
+     <para>Use usec resolution time stamp, implies <option>-t,
 --timestamp</option>. Use twice (<option>-uu</option>) to output sec.usec.</para>
     </listitem>
    </varlistentry>
@@ -310,7 +322,7 @@ implies <option>-t, --timestamp</option>. Default setting is "%F
      <option>--spinner</option>
     </term>
     <listitem>
-  <para>Show a spinning activity indicator on stderr. This is useful
+     <para>Show a spinning activity indicator on stderr. This is useful
 if stdout is redirected into a file or a pipe. By default the spinner
 is advanced with every messages written; specifying <option>-v,
 --spinner</option> more than once will double the number of messages
@@ -336,7 +348,7 @@ required to rotate the spinner.</para>
      <option>--json</option>
     </term>
     <listitem>
-  <para>Cause native <application>gpsd</application> JSON sentences to be
+     <para>Cause native <application>gpsd</application> JSON sentences to be
 output.</para>
     </listitem>
    </varlistentry>
@@ -348,7 +360,7 @@ output.</para>
      <option>--seconds SEC</option>
     </term>
     <listitem>
-      <para>Exit after delay of SEC seconds.</para>
+     <para>Exit after delay of SEC seconds.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -359,7 +371,8 @@ output.</para>
      <option>--zulu</option>
     </term>
     <listitem>
-     <para>Set the timestamp format iso8601: implies <option>-t</option></para>
+     <para>Set the timestamp format iso8601: implies <option>-t</option>
+     </para>
     </listitem>
    </varlistentry>
   </variablelist>
