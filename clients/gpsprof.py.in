@@ -1168,6 +1168,7 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '-l',
+        '--logfile',
         dest='logfile',
         default=None,
         help='Select logfile for JSON. [Default %(default)s)]',
