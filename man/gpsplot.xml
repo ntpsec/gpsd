@@ -8,7 +8,7 @@ SPDX-License-Identifier: BSD-2-clause
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gpsplot.1'>
  <refentryinfo>
-  <date>28 September 2020</date>
+  <date>5 December 2020</date>
  </refentryinfo>
  <refmeta>
   <refentrytitle>gpsplot</refentrytitle>
@@ -25,18 +25,20 @@ SPDX-License-Identifier: BSD-2-clause
    <command>gpsplot</command>
    <arg choice='opt'>-?</arg>
    <arg choice='opt'>--count <replaceable>COUNT</replaceable></arg>
-   <arg choice='opt'>-D <replaceable>DEBUG-LEVEL</replaceable></arg>
+   <arg choice='opt'>--debug <replaceable>LVL</replaceable></arg>
    <arg choice='opt'>--device <replaceable>DEVICE</replaceable></arg>
    <arg choice='opt'>--fields <replaceable>FIELDS</replaceable></arg>
-   <arg choice='opt'>-h</arg>
    <arg choice='opt'>--help</arg>
    <arg choice='opt'>--host <replaceable>HOST</replaceable></arg>
-   <arg choice='opt'>-n <replaceable>COUNT</replaceable></arg>
    <arg choice='opt'>--plottype <replaceable>PLOTTYPE</replaceable></arg>
    <arg choice='opt'>--port <replaceable>PORT</replaceable></arg>
    <arg choice='opt'>--seconds <replaceable>SECONDS</replaceable></arg>
-   <arg choice='opt'>-u <replaceable>UNITS</replaceable></arg>
    <arg choice='opt'>--units <replaceable>UNITS</replaceable></arg>
+   <arg choice='opt'>--version</arg>
+   <arg choice='opt'>-D <replaceable>LVL</replaceable></arg>
+   <arg choice='opt'>-h</arg>
+   <arg choice='opt'>-n <replaceable>COUNT</replaceable></arg>
+   <arg choice='opt'>-u <replaceable>UNITS</replaceable></arg>
    <arg choice='opt'>-V</arg>
    <arg choice='opt'>-x <replaceable>SECONDS</replaceable></arg>
    <group>
@@ -63,22 +65,81 @@ that is running the <application>gpsd</application> instance.</para>
  </refsect1>
  <refsect1 id='options'>
   <title>OPTIONS</title>
-  <para>--count [COUNT] Exit after [COUNT] plot messages.</para>
-  <para>--device [DEVICE] Connect to device [DEVICE].</para>
-  <para>--fields [FIELDS] The code for the fields to plot.
+  <variablelist remap='TP'>
+   <varlistentry>
+    <term><option>-?</option></term>
+    <term><option>-h</option></term>
+    <term><option>--help</option></term>
+    <listitem>
+     <para>Print a usage message and exit.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><option>-d LVL</option></term>
+    <term><option>--debug LVL</option></term>
+    <listitem>
+     <para>Set debug level to LVL.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><option>--device DEVICE</option></term>
+    <listitem>
+     <para>The DEVICE on the <application>gpsd</application> to connect to.
+    Defaults to all.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><option>--fields FIELDS</option></term>
+    <listitem>
+      <para>The code for the fields to plot.
 FIELDS is one of: llh (lat/lon/altHAE) or llm (lat/lon/altMSL).</para>
-  <para>--help Print a usage message and exit.</para>
-  <para>--plottype [PLOTTYPE] The type of plot to make.  PLOTTYPE is
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><option>--host HOST</option></term>
+    <listitem>
+     <para>Connect to the <application>gpsd</application> on HOST (server).
+    Defaults to localhost.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><option>--plottype PLOTTYPE</option></term>
+    <listitem>
+     <para> The type of plot to make.  PLOTTYPE is
 one of 'scatterplot' or'stripchart'.</para>
-  <para>--port [PORT] Connect on port [PORT].</para>
-  <para>--seconds [seconds] Exit after delay of [seconds].</para>
-  <para>-? Print a usage message and exit.</para>
-  <para>-D [debug-level] Set debug level..</para>
-  <para>-h print a usage message and exit.</para>
-  <para>-n [COUNT] Exit after [COUNT] plot messages.</para>
-  <para>-p [PORT] Connect on port [PORT].</para>
-  <para>-V prints the program version, then exits.</para>
-  <para>-x [seconds] Exit after delay of [seconds].</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><option>-n COUNT</option></term>
+    <term><option>--count COUNT</option></term>
+    <listitem>
+     <para>Exit after COUNT plot messages.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><option>-p PORT</option></term>
+    <term><option>--port PORT</option></term>
+    <listitem>
+     <para>Use PORT to connect to <application>gpsd</application>.
+    Defaults to 2947.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><option>-V</option></term>
+    <term><option>--version</option></term>
+    <listitem>
+     <para>Print the program version and exit.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><option>-x SECONDS</option></term>
+    <term><option>--seconds SECONDS</option></term>
+    <listitem>
+     <para>Wait for SECONDS seconds before exiting.  Set to zero to
+diable.  Default 0.</para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
  </refsect1>
  <refsect1 id='examples'>
   <title>EXAMPLES</title>
