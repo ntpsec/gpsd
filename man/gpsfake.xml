@@ -7,7 +7,7 @@ SPDX-License-Identifier: BSD-2-clause
    "-//OASIS//DTD DocBook XML V4.1.2//EN"
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gpsfake.1'>
-<refentryinfo><date>30 March 2020</date></refentryinfo>
+<refentryinfo><date>6 December 2020</date></refentryinfo>
 <refmeta>
 <refentrytitle>gpsfake</refentrytitle>
 <manvolnum>1</manvolnum>
@@ -22,52 +22,53 @@ SPDX-License-Identifier: BSD-2-clause
 
 <cmdsynopsis>
   <command>gpsfake</command>
-      <arg choice='opt'>-1</arg>
-      <arg choice='opt'>-b</arg>
+      <arg choice='opt'>-?</arg>
       <arg choice='opt'>--baton</arg>
-      <arg choice='opt'>-c <replaceable>interval</replaceable></arg>
       <arg choice='opt'>--cycle <replaceable>interval</replaceable></arg>
-      <arg choice='opt'>-D <replaceable>debuglevel</replaceable></arg>
-      <arg choice='opt'>-g</arg>
-      <arg choice='opt'>-G</arg>
       <arg choice='opt'>--gdb</arg>
-      <arg choice='opt'>-h</arg>
       <arg choice='opt'>--help</arg>
-      <arg choice='opt'>-i</arg>
       <arg choice='opt'>--initcmd <replaceable>initcmd</replaceable></arg>
-      <arg choice='opt'>-l</arg>
       <arg choice='opt'>--linedump</arg>
       <arg choice='opt'>--lldb</arg>
       <arg choice='opt'>--monitor <replaceable>monitor</replaceable></arg>
-      <arg choice='opt'>-m <replaceable>monitor</replaceable></arg>
-      <arg choice='opt'>-n</arg>
       <arg choice='opt'>--nowait</arg>
       <arg choice='opt'>--options <replaceable>options</replaceable></arg>
-      <arg choice='opt'>-o <replaceable>options</replaceable></arg>
-      <arg choice='opt'>-p</arg>
       <arg choice='opt'>--pipe</arg>
       <arg choice='opt'>--port <replaceable>port</replaceable></arg>
       <arg choice='opt'>--predump</arg>
-      <arg choice='opt'>-P <replaceable>port</replaceable></arg>
       <arg choice='opt'>--promptme</arg>
-      <arg choice='opt'>-q</arg>
       <arg choice='opt'>--quiet</arg>
-      <arg choice='opt'>-r <replaceable>initcmd</replaceable></arg>
-      <arg choice='opt'>-S</arg>
       <arg choice='opt'>--singleshot</arg>
       <arg choice='opt'>--slow</arg>
       <arg choice='opt'>--speed <replaceable>speed</replaceable></arg>
+      <arg choice='opt'>--tcp</arg>
+      <arg choice='opt'>--timeout <replaceable>timeout</replaceable></arg>
+      <arg choice='opt'>--udp</arg>
+      <arg choice='opt'>--verbose</arg>
+      <arg choice='opt'>--version</arg>
+      <arg choice='opt'>-1</arg>
+      <arg choice='opt'>-b</arg>
+      <arg choice='opt'>-c <replaceable>interval</replaceable></arg>
+      <arg choice='opt'>-D <replaceable>debuglevel</replaceable></arg>
+      <arg choice='opt'>-g</arg>
+      <arg choice='opt'>-G</arg>
+      <arg choice='opt'>-h</arg>
+      <arg choice='opt'>-i</arg>
+      <arg choice='opt'>-l</arg>
+      <arg choice='opt'>-m <replaceable>monitor</replaceable></arg>
+      <arg choice='opt'>-n</arg>
+      <arg choice='opt'>-o <replaceable>options</replaceable></arg>
+      <arg choice='opt'>-p</arg>
+      <arg choice='opt'>-P <replaceable>port</replaceable></arg>
+      <arg choice='opt'>-q</arg>
+      <arg choice='opt'>-r <replaceable>initcmd</replaceable></arg>
+      <arg choice='opt'>-S</arg>
       <arg choice='opt'>-s <replaceable>speed</replaceable></arg>
       <arg choice='opt'>-t</arg>
       <arg choice='opt'>-T</arg>
-      <arg choice='opt'>--tcp</arg>
-      <arg choice='opt'>--timeout <replaceable>timeout</replaceable></arg>
       <arg choice='opt'>-u</arg>
-      <arg choice='opt'>--udp</arg>
       <arg choice='opt'>-v</arg>
       <arg choice='opt'>-V</arg>
-      <arg choice='opt'>--verbose</arg>
-      <arg choice='opt'>--version</arg>
       <arg choice='opt'>-W <replaceable>timeout</replaceable></arg>
       <arg rep='repeat'>
             <arg choice='plain'><replaceable>logfile</replaceable></arg>
@@ -116,123 +117,355 @@ foreground.  The thread sending fake GPS data to the daemon
 is run in background.</para>
 
 </refsect1>
-<refsect1 id='options'><title>OPTIONS</title>
+<refsect1 id='options'>
+  <title>OPTIONS</title>
+  <variablelist remap='TP'>
+   <varlistentry>
+    <term>
+     <option>-?</option>
+    </term>
+    <term>
+     <option>-h</option>
+    </term>
+    <term>
+     <option>--help</option>
+    </term>
+    <listitem>
+     <para>Print a usage message and exit.</para>
+    </listitem>
+   </varlistentry>
 
-<para><option>-?</option>,<option>-h</option>, <option>--help</option>
-makes <application>gpsfake</application> print a usage message and
-exit.</para>
-
-<para><option>-1</option> means the logfile is interpreted once only rather
+   <varlistentry>
+    <term>
+     <option>-1</option>
+    </term>
+    <term>
+     <option>--singleshot</option>
+    </term>
+    <listitem>
+<para>The logfile is interpreted once only rather
 than repeatedly.  This option is intended to facilitate regression
 testing.</para>
+    </listitem>
+   </varlistentry>
 
-<para><option>-b</option>, <option>--baton</option> enables a twirling-baton
+   <varlistentry>
+    <term>
+     <option>-b</option>
+    </term>
+    <term>
+     <option>--baton</option>
+    </term>
+    <listitem>
+<para>Enable a twirling-baton
 progress indicator on standard error.  At termination, it reports elapsed
 time.</para>
+    </listitem>
+   </varlistentry>
 
-<para><option>-c</option>, <option>-cycle</option>  sets the delay between
+   <varlistentry>
+    <term>
+     <option>-c COUNT</option>
+    </term>
+    <term>
+     <option>--cycle COUNT</option>
+    </term>
+    <listitem>
+<para>Sets the delay between
 sentences in seconds. Fractional values of seconds are legal.  The default
 is zero (no delay).</para>
+    </listitem>
+   </varlistentry>
 
-<para><option>-D</option>, <option>--debug</option> passes a -D option
-to the daemon: thus -D 4 is shorthand for -o="-D 4".</para>
+   <varlistentry>
+    <term>
+     <option>-d LVL</option>
+    </term>
+    <term>
+     <option>--debug LVL</option>
+    </term>
+    <listitem>
+<para>Pass a <option>-D</option> option to the daemon: thus <option>-D
+4</option> is shorthand for <option>-o="-D 4"</option>.</para>
+    </listitem>
+   </varlistentry>
 
-<para><option>-g</option>, <option>--gdb</option> or
-<option>-G</option>, <option>--lldb</option> options use the monitor
-facility to run the <application>gpsd</application> instance within
-gpsfake under control of gdb or lldb, respectively. They also disable
-the timeout on daemon inactivity, to allow for breakpointing.
-If necessary, the timeout can be reenabled by a subsequent
-<option>-W</option> or <option>--wait</option> . If xterm and $DISPLAY
-are available, these options launch the debugger in a separate xterm
-window, to separate the debugger dialog from the program output, but
-otherwise run it directly. In the gdb case, -tui is used with xterm
-but not otherwise, since curses and program output don't play nicely
-together. Although lldb lacks an equivalent option, some versions have a
-'gui' command.</para>
+   <varlistentry>
+    <term>
+     <option>-g</option>
+    </term>
+    <term>
+     <option>-G</option>
+    </term>
+    <term>
+     <option>--gdb</option>
+    </term>
+    <term>
+     <option>--lldb</option>
+    </term>
+    <listitem>
+<para> Use the monitor facility to run the
+<application>gpsd</application> instance within gpsfake under control
+of gdb or lldb, respectively. They also disable the timeout on daemon
+inactivity, to allow for breakpointing. If necessary, the timeout can be
+reenabled by a subsequent <option>-W</option> or <option>--wait</option>
+. If xterm and $DISPLAY are available, these options launch the debugger
+in a separate xterm window, to separate the debugger dialog from
+the program output, but otherwise run it directly. In the gdb case,
+<option>-tui</option> is used with xterm but not otherwise, since curses
+and program output don't play nicely together. Although lldb lacks an
+equivalent option, some versions have a 'gui' command.</para>
+    </listitem>
+   </varlistentry>
 
-<para><option>-i</option>, <option>--promptme</option> is for
-single-stepping through logfiles. It dumps the line or packet
+   <varlistentry>
+    <term>
+     <option>-i</option>
+    </term>
+    <term>
+     <option>--promptme</option>
+    </term>
+    <listitem>
+<para>Single-step through logfiles. It dumps the line or packet
 number (and the sentence if the protocol is textual) followed by
 "? ". Only when the user keys Enter is the line actually fed to
 <application>gpsd</application>.</para>
+    </listitem>
+   </varlistentry>
 
-<para><option>-l</option>, <option>--singleshot</option> makes the
-program dump a line or packet number just before each sentence is fed to
-the daemon. If the sentence is textual (e.g. NMEA), the text is dumped
-as well. If not, the packet will be dumped in hexadecimal (except for
+   <varlistentry>
+    <term>
+     <option>-l</option>
+    </term>
+    <term>
+     <option>--linedump</option>
+    </term>
+    <listitem>
+<para>Print a line or packet number just before each sentence is fed to
+the daemon. If the sentence is textual (e.g. NMEA), the text is printed
+as well. If not, the packet will be printed in hexadecimal (except for
 RTCM packets, which aren't dumped at all). This option is useful for
 checking that gpsfake is getting packet boundaries right.</para>
+    </listitem>
+   </varlistentry>
 
-<para><option>-m</option>, <option>--monitor</option>
-specifies a monitor program inside which the daemon
+   <varlistentry>
+    <term>
+     <option>-m PROG</option>
+    </term>
+    <term>
+     <option>--monitor PROG</option>
+    </term>
+    <listitem>
+<para>Specify a monitor program (PROG) inside which the daemon
 should be run. This option is intended to be used with
 <citerefentry><refentrytitle>valgrind</refentrytitle>
 <manvolnum>1</manvolnum></citerefentry>,
 <citerefentry><refentrytitle>gdb</refentrytitle><manvolnum>1</manvolnum>
 </citerefentry> and similar programs.</para>
+    </listitem>
+   </varlistentry>
 
-<para><option>-n</option>, <option>--nowait</option> passes "-n" to the
+   <varlistentry>
+    <term>
+     <option>-n</option>
+    </term>
+    <term>
+     <option>--nowait</option>
+    </term>
+    <listitem>
+<para>Pass <option>-n</option> to the
 daemon to start the daemon reading the GPS without waiting for a client
-(equivalent to -o="-n"). </para>
+(equivalent to <option>-o="-n"</option>). </para>
+    </listitem>
+   </varlistentry>
 
-<para><option>-o</option>, <option>--option</option> specifies options
-to pass to the daemon. The -n option passes -n to start the daemon
-reading the GPS without waiting for a client (equivalent to -o="-n").
-The <option>-D</option> passes a -D option to the daemon: thus -D 4 is
-shorthand for -o="-D 4".</para>
+   <varlistentry>
+    <term>
+     <option>-o OPTS</option>
+    </term>
+    <term>
+     <option>--option OPTS</option>
+    </term>
+    <listitem>
+<para>Specify options to pass to the daemon. The <option>-n</option>
+option passes <option>-n</option> to start the daemon reading the GPS
+without waiting for a client (equivalent to <option>-o="-n"</option>).
+The <option>-D</option> passes a <option>-D</option> option to the
+daemon: thus <option>-D 4</option> is shorthand for <option>-o="-D
+4"</option>.</para>
+    </listitem>
+   </varlistentry>
 
-<para><option>-p</option>, <option>--pipe</option> sets watcher mode and
-dumps the NMEA and GPSD notifications generated by the log to standard
+   <varlistentry>
+    <term>
+     <option>-p</option>
+    </term>
+    <term>
+     <option>--pipe</option>
+    </term>
+    <listitem>
+<para>Sets watcher mode and
+dump the NMEA and GPSD notifications generated by the log to standard
 output. This is useful for regression-testing.</para>
+    </listitem>
+   </varlistentry>
 
-<para><option>-P</option>, <option>--port</option> sets the daemon's
-listening port.</para>
+   <varlistentry>
+    <term>
+     <option>-p PORT</option>
+    </term>
+    <term>
+     <option>--port PORT</option>
+    </term>
+    <listitem>
+<para>Sets the daemon's listening port to PORT.</para>
+    </listitem>
+   </varlistentry>
 
-<para><option>-q</option>,<option>-quiet</option> tells gpsfake to
+   <varlistentry>
+    <term>
+     <option>-q</option>
+    </term>
+    <term>
+     <option>--quiet</option>
+    </term>
+    <listitem>
+<para>Tell gpsfake to
 suppress normal progress output and thus act in a quiet manner.</para>
+    </listitem>
+   </varlistentry>
 
-<para><option>-r</option>, <option>--clientinit</option> specifies
-an initialization command to use in pipe mode. The default is
+   <varlistentry>
+    <term>
+     <option>-r STR</option>
+    </term>
+    <term>
+     <option>--clientinit STR</option>
+    </term>
+    <listitem>
+<para>Specify an initialization command to use in pipe mode. The default is
 <command>?WATCH={"enable":true,"json":true}</command>.</para>
+    </listitem>
+   </varlistentry>
 
-<para><option>-s</option>, <option>--speed</option> sets the baud rate
-for the slave tty. The default is 4800.</para>
+   <varlistentry>
+    <term>
+     <option>-s SPEED</option>
+    </term>
+    <term>
+     <option>--speed SPEED</option>
+    </term>
+    <listitem>
+<para>Sets the baud rate for the slave tty. The default is 4800.</para>
+    </listitem>
+   </varlistentry>
 
-<para><option>-S</option>, <option>--slow</option> tells gpsfake to
+   <varlistentry>
+    <term>
+     <option>-S</option>
+    </term>
+    <term>
+     <option>--slow</option>
+    </term>
+    <listitem>
+<para>Tells gpsfake to
 insert realistic delays in the test input rather than trying to stuff it
 through the daemon as fast as possible. This will make the test(s) run
 much slower, but avoids flaky failures due to machine load and possible
 race conditions in the pty layer.</para>
+    </listitem>
+   </varlistentry>
 
-<para><option>-t</option>, <option>--tcp</option> forces the test
+   <varlistentry>
+    <term>
+     <option>-t</option>
+    </term>
+    <term>
+     <option>--tcp</option>
+    </term>
+    <listitem>
+<para>Forces the test
 framework to use TCP rather than pty devices. Besides being a test of
 TCP source handling, this may be useful for testing from within chroot
 jails where access to pty devices is locked out.</para>
+    </listitem>
+   </varlistentry>
 
-<para><option>-T</option>, <option>--sysinfo</option> makes
-<application>gpsfake</application> print some system information and
-then exit.</para>
+   <varlistentry>
+    <term>
+     <option>-T</option>
+    </term>
+    <term>
+     <option>--sysinfo</option>
+    </term>
+    <listitem>
+<para>Makes <application>gpsfake</application> print some system information
+and then exit.</para>
+    </listitem>
+   </varlistentry>
 
-<para><option>-u</option>, <option>--udp</option> forces the test
+   <varlistentry>
+    <term>
+     <option>-u</option>
+    </term>
+    <term>
+     <option>--udp</option>
+    </term>
+    <listitem>
+<para>Forces the test
 framework to use UDP rather than pty devices. Besides being a test of
 UDP source handling, this may be useful for testing from within chroot
 jails where access to pty devices is locked out.</para>
+    </listitem>
+   </varlistentry>
 
-<para><option>-v</option>, <option>--verbose</option> enables verbose
+   <varlistentry>
+    <term>
+     <option>-v</option>
+    </term>
+    <term>
+     <option>--verbose</option>
+    </term>
+    <listitem>
+<para>Enable verbose
 progress reports to stderr. Use multiple times to increase verbosity.
 It is mainly useful for debugging <application>gpsfake</application>
 itself.</para>
+    </listitem>
+   </varlistentry>
 
-<para><option>-W</option>, <option>--wait</option> option sets the
+   <varlistentry>
+    <term>
+     <option>-w SEC</option>
+    </term>
+    <term>
+     <option>--wait SEC</option>
+    </term>
+    <listitem>
+<para>Set the
 timeout on daemon inactivity, in seconds. The default timeout is 60
 seconds, and a value of 0 suppresses the timeout altogether. Note that
 the actual timeout is longer due to internal delays, typically by about
 20 seconds.</para>
+    </listitem>
+   </varlistentry>
 
-<para><option>-x</option>,<option>--predump</option>   dumps packets as
+   <varlistentry>
+    <term>
+     <option>-x</option>
+    </term>
+    <term>
+     <option>--predump</option>
+    </term>
+    <listitem>
+<para>Dump packets as
 <application>gpsfake</application> gathers them.  It is mainly useful
 for debugging <application>gpsfake</application> itself.</para>
+    </listitem>
+   </varlistentry>
+
+  </variablelist>
 
 <para>The last argument(s) must be the name of a file or
 files containing the data to be cycled at the device.
