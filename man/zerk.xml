@@ -8,7 +8,7 @@ BSD terms apply: see the file COPYING in the distribution root for details.
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='zerk.1'>
  <refentryinfo>
-  <date>30 March 2020</date>
+  <date>6 December 2020</date>
  </refentryinfo>
  <refmeta>
   <refentrytitle>zerk</refentrytitle>
@@ -35,7 +35,8 @@ BSD terms apply: see the file COPYING in the distribution root for details.
    <arg choice='opt'>-h </arg>
    <arg choice='opt'>-O <replaceable>oaf</replaceable>
    </arg>
-   <arg choice='opt'>-p <replaceable>preset</replaceable></arg>
+   <arg choice='opt'>-p <replaceable>preset</replaceable>
+   </arg>
    <arg choice='opt'>-R <replaceable>rawfile</replaceable>
    </arg>
    <arg choice='opt'>-r </arg>
