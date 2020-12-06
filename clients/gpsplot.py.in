@@ -134,17 +134,17 @@ parser.add_argument(
     type=int,
 )
 parser.add_argument(
-    '--port',
-    default=gps.GPSD_PORT,
-    dest='port',
-    help='The port to connect. [Default %(default)s)]',
-)
-parser.add_argument(
     '--plottype',
     choices=['scatterplot', 'stripchart'],
     default='scatterplot',
     dest='plottype',
     help='Plot type. [Default %(default)s)]',
+)
+parser.add_argument(
+    '--port',
+    default=gps.GPSD_PORT,
+    dest='port',
+    help='The port to connect. [Default %(default)s)]',
 )
 parser.add_argument(
     '-u', '--units',
