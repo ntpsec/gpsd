@@ -24,23 +24,36 @@ SPDX-License-Identifier: BSD-2-clause
   <cmdsynopsis>
    <command>gpsplot</command>
    <arg choice='opt'>-?</arg>
-   <arg choice='opt'>--count <replaceable>COUNT</replaceable></arg>
-   <arg choice='opt'>--debug <replaceable>LVL</replaceable></arg>
-   <arg choice='opt'>--device <replaceable>DEVICE</replaceable></arg>
-   <arg choice='opt'>--fields <replaceable>FIELDS</replaceable></arg>
+   <arg choice='opt'>--count <replaceable>COUNT</replaceable>
+   </arg>
+   <arg choice='opt'>--debug <replaceable>LVL</replaceable>
+   </arg>
+   <arg choice='opt'>--device <replaceable>DEVICE</replaceable>
+   </arg>
+   <arg choice='opt'>--fields <replaceable>FIELDS</replaceable>
+   </arg>
    <arg choice='opt'>--help</arg>
-   <arg choice='opt'>--host <replaceable>HOST</replaceable></arg>
-   <arg choice='opt'>--plottype <replaceable>PLOTTYPE</replaceable></arg>
-   <arg choice='opt'>--port <replaceable>PORT</replaceable></arg>
-   <arg choice='opt'>--seconds <replaceable>SECONDS</replaceable></arg>
-   <arg choice='opt'>--units <replaceable>UNITS</replaceable></arg>
+   <arg choice='opt'>--host <replaceable>HOST</replaceable>
+   </arg>
+   <arg choice='opt'>--plottype <replaceable>PLOTTYPE</replaceable>
+   </arg>
+   <arg choice='opt'>--port <replaceable>PORT</replaceable>
+   </arg>
+   <arg choice='opt'>--seconds <replaceable>SECONDS</replaceable>
+   </arg>
+   <arg choice='opt'>--units <replaceable>UNITS</replaceable>
+   </arg>
    <arg choice='opt'>--version</arg>
-   <arg choice='opt'>-D <replaceable>LVL</replaceable></arg>
+   <arg choice='opt'>-D <replaceable>LVL</replaceable>
+   </arg>
    <arg choice='opt'>-h</arg>
-   <arg choice='opt'>-n <replaceable>COUNT</replaceable></arg>
-   <arg choice='opt'>-u <replaceable>UNITS</replaceable></arg>
+   <arg choice='opt'>-n <replaceable>COUNT</replaceable>
+   </arg>
+   <arg choice='opt'>-u <replaceable>UNITS</replaceable>
+   </arg>
    <arg choice='opt'>-V</arg>
-   <arg choice='opt'>-x <replaceable>SECONDS</replaceable></arg>
+   <arg choice='opt'>-x <replaceable>SECONDS</replaceable>
+   </arg>
    <group>
     <replaceable>server</replaceable>
     <group>
@@ -59,7 +72,7 @@ SPDX-License-Identifier: BSD-2-clause
 to <application>gpsd</application> and dynamically plot data
 to the users screen.  Plot types include scatterplots and stripcharts.
 </para>
-   <para>Plotting requires the Python Matplot lib module, and its many
+  <para>Plotting requires the Python Matplot lib module, and its many
 dependencies be installed on the display host, but not on the host
 that is running the <application>gpsd</application> instance.</para>
  </refsect1>
@@ -67,73 +80,107 @@ that is running the <application>gpsd</application> instance.</para>
   <title>OPTIONS</title>
   <variablelist remap='TP'>
    <varlistentry>
-    <term><option>-?</option></term>
-    <term><option>-h</option></term>
-    <term><option>--help</option></term>
+    <term>
+     <option>-?</option>
+    </term>
+    <term>
+     <option>-h</option>
+    </term>
+    <term>
+     <option>--help</option>
+    </term>
     <listitem>
      <para>Print a usage message and exit.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><option>-d LVL</option></term>
-    <term><option>--debug LVL</option></term>
+    <term>
+     <option>-d LVL</option>
+    </term>
+    <term>
+     <option>--debug LVL</option>
+    </term>
     <listitem>
      <para>Set debug level to LVL.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><option>--device DEVICE</option></term>
+    <term>
+     <option>--device DEVICE</option>
+    </term>
     <listitem>
      <para>The DEVICE on the <application>gpsd</application> to connect to.
     Defaults to all.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><option>--fields FIELDS</option></term>
+    <term>
+     <option>--fields FIELDS</option>
+    </term>
     <listitem>
-      <para>The code for the fields to plot.
+     <para>The code for the fields to plot.
 FIELDS is one of: llh (lat/lon/altHAE) or llm (lat/lon/altMSL).</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><option>--host HOST</option></term>
+    <term>
+     <option>--host HOST</option>
+    </term>
     <listitem>
      <para>Connect to the <application>gpsd</application> on HOST (server).
     Defaults to localhost.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><option>--plottype PLOTTYPE</option></term>
+    <term>
+     <option>--plottype PLOTTYPE</option>
+    </term>
     <listitem>
      <para> The type of plot to make.  PLOTTYPE is
 one of 'scatterplot' or'stripchart'.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><option>-n COUNT</option></term>
-    <term><option>--count COUNT</option></term>
+    <term>
+     <option>-n COUNT</option>
+    </term>
+    <term>
+     <option>--count COUNT</option>
+    </term>
     <listitem>
      <para>Exit after COUNT plot messages.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><option>-p PORT</option></term>
-    <term><option>--port PORT</option></term>
+    <term>
+     <option>-p PORT</option>
+    </term>
+    <term>
+     <option>--port PORT</option>
+    </term>
     <listitem>
      <para>Use PORT to connect to <application>gpsd</application>.
     Defaults to 2947.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><option>-V</option></term>
-    <term><option>--version</option></term>
+    <term>
+     <option>-V</option>
+    </term>
+    <term>
+     <option>--version</option>
+    </term>
     <listitem>
      <para>Print the program version and exit.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><option>-x SECONDS</option></term>
-    <term><option>--seconds SECONDS</option></term>
+    <term>
+     <option>-x SECONDS</option>
+    </term>
+    <term>
+     <option>--seconds SECONDS</option>
+    </term>
     <listitem>
      <para>Wait for SECONDS seconds before exiting.  Set to zero to
 diable.  Default 0.</para>
