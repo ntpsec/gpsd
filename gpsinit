@@ -11,35 +11,38 @@ net=0
 
 version()
 {
-    echo `basename $0`" : Version v0.20";
+    echo `basename $0`" : Version v0.21";
 }
 
 usage()
 {
     version; echo;
     echo "usage :" `basename $0` "[-n <netnumber>] [-s <serial speed>] <can_module_name> [<interface_name>]";
-    echo "      :" `basename $0` "-v";
+    echo "      :" `basename $0` "-V";
     echo "      :" `basename $0` "-h";
     echo "  Options include:";
+    echo "  -?              = Print this help message and exit.";
+    echo "  -h              = Print this help message and exit.";
     echo "  -n              = CAN network number, 0 if not given.";
     echo "  -s              = Speed of the slcan hardware port, 38400 if not given.";
     echo "                  = Needed for some slcan modules only.";
-    echo "  -v              = Print version of this script and exit.";
-    echo "  -h              = Print this help message and exit.";
+    echo "  -V              = Print version of this script and exit.";
     echo "  can_module_name = One out of plx_pci, esd_usb2, usb_8dev, vcan, slcan, beaglebone.";
     echo "  interface_name  = The interface, the SLCAN module is connected to, i.e. /dev/ttyS0 or /dev/ttyUSB0.";
     echo "                  = Needed for the slcan module only. The default is /dev/ttyUSB0.";
     echo "Root permissions are needed for the first calling option (Enforced by socketCAN subsystem).";
 }
 
+# -v for version is deprecated 2020
 while getopts :n:s:vh opt
 do
     case ${opt} in
+        h)  usage; exit 0;;
         n)  net=${OPTARG};;
         s)  speed=${OPTARG};;
-        v)  version; exit 0;;
-        h)  usage; exit 0;;
         \?) usage; exit 1;;
+        v)  version; exit 0;;
+        V)  version; exit 0;;
     esac
 done
 
