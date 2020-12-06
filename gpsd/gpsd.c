@@ -215,12 +215,12 @@ static void usage(void)
 {
     (void)printf("usage: gpsd [OPTIONS] device...\n\n\
   Options include: \n\
+  -?, -h, --help            = help message\n\
   -b, --readonly            = bluetooth-safe: open data sources read-only\n\
   -D, --debug integer       = set debug level, default 0 \n\
   -F, --sockfile sockfile   = specify control socket location, default none\n\
   -f, --framing FRAMING     = fix device framing to FRAMING (8N1, 8O1, etc.)\n\
   -G, --listenany           = make gpsd listen on INADDR_ANY\n\
-  -h, --help                = help message\n\
   -l, --drivers             = list compiled in drivers, and exit.\n\
   -n, --nowait              = don't wait for client connects to poll GPS\n"
 #ifdef FORCE_NOWAIT
@@ -1932,7 +1932,7 @@ int main(int argc, char *argv[])
 #endif /* CONTROL_SOCKET_ENABLE */
 
     while (1) {
-        const char *optstring = "bD:F:f:GhlNnpP:rS:s:V";
+        const char *optstring = "?bD:F:f:GhlNnpP:rS:s:V";
         int ch;
 
 #ifdef HAVE_GETOPT_LONG
