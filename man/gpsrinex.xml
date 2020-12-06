@@ -5,7 +5,7 @@ This file is Copyright 2018 by the GPSD project
 SPDX-License-Identifier: BSD-2-clause
 --><refentry id="gpsrinex.1">
   <refentryinfo>
-    <date>30 March 2020</date>
+    <date>5 December 2020</date>
   </refentryinfo>
   <refmeta>
     <refentrytitle>gpsrinex</refentrytitle>
@@ -20,6 +20,24 @@ SPDX-License-Identifier: BSD-2-clause
   <refsynopsisdiv id="synopsis">
     <cmdsynopsis>
       <command>gpsrinex</command>
+      <arg choice="opt">--agency <replaceable>agency</replaceable></arg>
+      <arg choice="opt">--ant_e <replaceable>easting</replaceable></arg>
+      <arg choice="opt">--ant_h <replaceable>height</replaceable></arg>
+      <arg choice="opt">--ant_n <replaceable>northing</replaceable></arg>
+      <arg choice="opt">--ant_num <replaceable>num</replaceable></arg>
+      <arg choice="opt">--ant_type <replaceable>type</replaceable></arg>
+      <arg choice="opt">--count <replaceable>count</replaceable></arg>
+      <arg choice="opt">--debug <replaceable>debuglevel</replaceable></arg>
+      <arg choice="opt">--fileout <replaceable>filename</replaceable></arg>
+      <arg choice="opt">--help</arg>
+      <arg choice="opt">--interval <replaceable>interval</replaceable></arg>
+      <arg choice="opt">--marker_name <replaceable>name</replaceable></arg>
+      <arg choice="opt">--marker_type <replaceable>type</replaceable></arg>
+      <arg choice="opt">--observer <replaceable>observer</replaceable></arg>
+      <arg choice="opt">--rec_num <replaceable>num</replaceable></arg>
+      <arg choice="opt">--rec_type <replaceable>type</replaceable></arg>
+      <arg choice="opt">--rec_vers <replaceable>vers</replaceable></arg>
+      <arg choice="opt">--version</arg>
       <arg choice="opt">-D <replaceable>debuglevel</replaceable></arg>
       <arg choice="opt">-f <replaceable>filename</replaceable></arg>
       <arg choice="opt">-h</arg>
@@ -126,70 +144,72 @@ its version and exit.</para>
       </variablelist>
 
       <para>The following options set strings that are placed in the generated
-RINEX 3 obs file.</para>
+RINEX 3 obs file.  They do not change how gpsrinex computes anything.</para>
       <variablelist remap='TP'>
         <varlistentry>
           <term>--agency [agency]</term>
-          <listitem><para>agency</para>
+          <listitem><para>Thename of the agency creating the current
+file.</para>
           </listitem>
         </varlistentry>
         <varlistentry>
           <term>--ant_num [number]</term>
-          <listitem><para>antenna number</para>
+          <listitem><para>The antenna serial number.</para>
           </listitem>
         </varlistentry>
         <varlistentry>
           <term>--ant_type [type]</term>
-          <listitem><para>antenna type</para>
+          <listitem><para>The antenna type.</para>
           </listitem>
         </varlistentry>
         <varlistentry>
           <term>--marker_name [name]</term>
-          <listitem><para>marker name</para>
+          <listitem><para>The marker name.</para>
           </listitem>
         </varlistentry>
         <varlistentry>
           <term>--marker_type [type]</term>
-          <listitem><para>marker type</para>
+          <listitem><para>The marker type</para>
           </listitem>
         </varlistentry>
         <varlistentry>
           <term>--observer [observer]</term>
-          <listitem><para>observer</para>
+          <listitem><para>The name of the observer (you).</para>
           </listitem>
         </varlistentry>
         <varlistentry>
           <term>--rec_num [num]</term>
-          <listitem><para>receiver number</para>
+          <listitem><para>The receiver serial number.</para>
           </listitem>
         </varlistentry>
         <varlistentry>
           <term>--rec_type [type]</term>
-          <listitem><para>receiver type</para>
+          <listitem><para>The receiver type.</para>
           </listitem>
         </varlistentry>
         <varlistentry>
           <term>--rec_vers [vers]</term>
-          <listitem><para>receiver vers</para>
+          <listitem><para>The receiver version.</para>
           </listitem>
         </varlistentry>
       </variablelist>
     <para>The following options set floating point numbers that are placed
-in the generated RINEX 3 obs file.</para>
+in the generated RINEX 3 obs file.  They do not change how gpsrinex computes
+anything.</para>
       <variablelist remap='TP'>
         <varlistentry>
           <term>--ant_e [easting]</term>
-          <listitem><para>antenna easting in meters</para>
+          <listitem><para>The antenna easting from marker in meters.</para>
           </listitem>
         </varlistentry>
         <varlistentry>
           <term>--ant_h [height]</term>
-          <listitem><para>antenna height in meters</para>
+          <listitem><para>The antenna height from marker in meters.</para>
           </listitem>
         </varlistentry>
         <varlistentry>
           <term>--ant_n [northing]</term>
-          <listitem><para>antenna northing in meters</para>
+          <listitem><para>The antenna northing from marker in meters.</para>
           </listitem>
         </varlistentry>
       </variablelist>
