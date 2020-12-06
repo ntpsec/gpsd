@@ -8,100 +8,105 @@ SPDX-License-Identifier: BSD-2-clause
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
 ]>
 <refentry id='gpsd.8'>
-<refentryinfo><date>6 December 2020</date></refentryinfo>
-<refmeta>
-<refentrytitle>gpsd</refentrytitle>
-<manvolnum>8</manvolnum>
-<refmiscinfo class="source">The GPSD Project</refmiscinfo>
-<refmiscinfo class="manual">GPSD Documentation</refmiscinfo>
-</refmeta>
-<refnamediv id='name'>
-<refname>gpsd</refname>
-<refpurpose>interface daemon for GPS receivers</refpurpose>
-</refnamediv>
-
-<refsynopsisdiv id='synopsis'>
-
-<cmdsynopsis>
-  <command>gpsd</command>
-      <arg choice='opt'>-? </arg>
-      <arg choice='opt'>--badtime </arg>
-      <arg choice='opt'>--debug <replaceable>LVL</replaceable></arg>
-      <arg choice='opt'>--drivers </arg>
-      <arg choice='opt'>--foreground </arg>
-      <arg choice='opt'>--framing <replaceable>FRAMING</replaceable></arg>
-      <arg choice='opt'>--help </arg>
-      <arg choice='opt'>--listenany </arg>
-      <arg choice='opt'>--nowait </arg>
-      <arg choice='opt'>--pidfile <replaceable>FILE</replaceable></arg>
-      <arg choice='opt'>--port <replaceable>PORT</replaceable></arg>
-      <arg choice='opt'>--sockfile <replaceable>SOCK</replaceable></arg>
-      <arg choice='opt'>--speed <replaceable>SPEED</replaceable></arg>
-      <arg choice='opt'>--verbose </arg>
-      <arg choice='opt'>-b </arg>
-      <arg choice='opt'>-D <replaceable>debuglevel</replaceable></arg>
-      <arg choice='opt'>-F <replaceable>control-socket</replaceable></arg>
-      <arg choice='opt'>-f <replaceable>framing</replaceable></arg>
-      <arg choice='opt'>-G </arg>
-      <arg choice='opt'>-h </arg>
-      <arg choice='opt'>-l </arg>
-      <arg choice='opt'>-n </arg>
-      <arg choice='opt'>-N </arg>
-      <arg choice='opt'>-P <replaceable>pidfile</replaceable></arg>
-      <arg choice='opt'>-r </arg>
-      <arg choice='opt'>-S <replaceable>listener-port</replaceable></arg>
-      <arg choice='opt'>-s <replaceable>speed</replaceable></arg>
-      <arg choice='opt'>-V </arg>
-      <arg rep='repeat'>
-           <group><replaceable>source-name</replaceable></group>
-      </arg>
-</cmdsynopsis>
-</refsynopsisdiv>
-
-<refsect1 id='quickstart'><title>QUICK START</title>
-
-<para>If you have a GPS attached on the lowest-numbered USB port of a
+ <refentryinfo>
+  <date>6 December 2020</date>
+ </refentryinfo>
+ <refmeta>
+  <refentrytitle>gpsd</refentrytitle>
+  <manvolnum>8</manvolnum>
+  <refmiscinfo class="source">The GPSD Project</refmiscinfo>
+  <refmiscinfo class="manual">GPSD Documentation</refmiscinfo>
+ </refmeta>
+ <refnamediv id='name'>
+  <refname>gpsd</refname>
+  <refpurpose>interface daemon for GPS receivers</refpurpose>
+ </refnamediv>
+ <refsynopsisdiv id='synopsis'>
+  <cmdsynopsis>
+   <command>gpsd</command>
+   <arg choice='opt'>-? </arg>
+   <arg choice='opt'>--badtime </arg>
+   <arg choice='opt'>--debug <replaceable>LVL</replaceable>
+   </arg>
+   <arg choice='opt'>--drivers </arg>
+   <arg choice='opt'>--foreground </arg>
+   <arg choice='opt'>--framing <replaceable>FRAMING</replaceable>
+   </arg>
+   <arg choice='opt'>--help </arg>
+   <arg choice='opt'>--listenany </arg>
+   <arg choice='opt'>--nowait </arg>
+   <arg choice='opt'>--pidfile <replaceable>FILE</replaceable>
+   </arg>
+   <arg choice='opt'>--port <replaceable>PORT</replaceable>
+   </arg>
+   <arg choice='opt'>--sockfile <replaceable>SOCK</replaceable>
+   </arg>
+   <arg choice='opt'>--speed <replaceable>SPEED</replaceable>
+   </arg>
+   <arg choice='opt'>--verbose </arg>
+   <arg choice='opt'>-b </arg>
+   <arg choice='opt'>-D <replaceable>debuglevel</replaceable>
+   </arg>
+   <arg choice='opt'>-F <replaceable>control-socket</replaceable>
+   </arg>
+   <arg choice='opt'>-f <replaceable>framing</replaceable>
+   </arg>
+   <arg choice='opt'>-G </arg>
+   <arg choice='opt'>-h </arg>
+   <arg choice='opt'>-l </arg>
+   <arg choice='opt'>-n </arg>
+   <arg choice='opt'>-N </arg>
+   <arg choice='opt'>-P <replaceable>pidfile</replaceable>
+   </arg>
+   <arg choice='opt'>-r </arg>
+   <arg choice='opt'>-S <replaceable>listener-port</replaceable>
+   </arg>
+   <arg choice='opt'>-s <replaceable>speed</replaceable>
+   </arg>
+   <arg choice='opt'>-V </arg>
+   <arg rep='repeat'>
+    <group>
+     <replaceable>source-name</replaceable>
+    </group>
+   </arg>
+  </cmdsynopsis>
+ </refsynopsisdiv>
+ <refsect1 id='quickstart'>
+  <title>QUICK START</title>
+  <para>If you have a GPS attached on the lowest-numbered USB port of a
 Linux system, and want to read reports from it on TCP/IP port 2947, it
 will normally suffice to do this:</para>
-
-<programlisting>
+  <programlisting>
 gpsd /dev/ttyUSB0
 </programlisting>
-
-<para>For the lowest-numbered serial port:</para>
-
-<programlisting>
+  <para>For the lowest-numbered serial port:</para>
+  <programlisting>
 gpsd /dev/ttyS0
 </programlisting>
-
-<para>Change the device number as appropriate if you need to use a
+  <para>Change the device number as appropriate if you need to use a
 different port. Command-line flags enable verbose logging, a control
 port, and other optional extras but should not be needed for basic
 operation; the one exception, on very badly designed hardware, might
 be <option>-b</option> (which see).</para>
-
-<para>On Linux systems supporting udev, <application>gpsd</application>
+  <para>On Linux systems supporting udev, <application>gpsd</application>
 is normally started automatically when a USB plugin event fires (if it
 is not already running) and is handed the name of the newly active
 device. In that case no invocation is required at all.</para>
-
-<para>For your initial tests set your GPS hardware to speak NMEA, as
+  <para>For your initial tests set your GPS hardware to speak NMEA, as
 <application>gpsd</application> is guaranteed to be able to process
 that. If your GPS has a native or binary mode with better performance
 that <application>gpsd</application> knows how to speak,
 <application>gpsd</application> will autoconfigure that mode.</para>
-
-<para>You can verify correct operation by first starting
+  <para>You can verify correct operation by first starting
 <application>gpsd</application> and then
 <application>xgps</application>, the X windows test client.</para>
-
-<para>If you have problems, the GPSD project maintains a FAQ to
+  <para>If you have problems, the GPSD project maintains a FAQ to
 assist troubleshooting.</para>
-
-</refsect1>
-<refsect1 id='description'><title>DESCRIPTION</title>
-
-<para><application>gpsd</application> is a monitor daemon that collects
+ </refsect1>
+ <refsect1 id='description'>
+  <title>DESCRIPTION</title>
+  <para>
+   <application>gpsd</application> is a monitor daemon that collects
 information from GPSes, differential-GPS radios, or AIS receivers
 attached to the host machine.  Each GPS, DGPS radio, or AIS receiver
 is expected to be direct-connected to the host via a USB or RS232C
@@ -111,8 +116,8 @@ command shipped down a local control socket (e.g. by a USB hotplug
 script). Given a GPS device by either means,
 <application>gpsd</application> discovers the correct port speed and
 protocol for it.</para>
-
-<para><application>gpsd</application> should be able to query any GPS
+  <para>
+   <application>gpsd</application> should be able to query any GPS
 that speaks either the standard textual NMEA 0183 protocol, or the
 (differing) extended NMEA dialects used by MKT-3301, iTrax, Motorola
 OnCore, Sony CXD2951, and Ashtech/Thales devices.  It can also
@@ -121,21 +126,21 @@ Rockwell/Zodiac, SiRF, Trimble, and u-blox ANTARIS devices. Under Linux
 it can read NMEA2000 packets through the kernel CAN socket. It can read
 heading and attitude information from the Oceanserver 5000 or TNT
 Revolution digital compasses.</para>
-
-<para>The GPS reporting formats supported by your instance of
+  <para>The GPS reporting formats supported by your instance of
 <application>gpsd</application> may differ depending on how it was
 compiled; general-purpose versions support many, but it can be built
 with protocol subsets down to a singleton for use in constrained
 environments. For a list of the GPS protocols supported by your
-instance, see the output of <command>gpsd -l</command></para>
-
-<para><application>gpsd</application> effectively hides the
+instance, see the output of <command>gpsd -l</command>
+  </para>
+  <para>
+   <application>gpsd</application> effectively hides the
 differences among the GPS types it supports. It also knows about and
 uses commands that tune these GPSes for lower latency. By using
 <application>gpsd</application> as an intermediary, applications
 avoid contention for serial devices.</para>
-
-<para><application>gpsd</application> can use differential-GPS
+  <para>
+   <application>gpsd</application> can use differential-GPS
 corrections from a DGPS radio or over the net, from a ground station
 running a DGPSIP server or a Ntrip broadcaster that reports RTCM-104
 data; this will shrink position errors by roughly a factor of four.
@@ -145,23 +150,34 @@ correction source for all connected GPSes that accept RTCM corrections
 (this is dependent on the type of the GPS; not all GPSes have the
 firmware capability to accept RTCM correction packets). See
 <xref linkend='accuracy'/> and <xref linkend='files'/> for discussion.</para>
-
-<para>Client applications will communicate with <application>gpsd</application>
+  <para>Client applications will communicate with <application>gpsd</application>
 via a TCP/IP port, port 2947 by default.  Both IPv4 and IPv6 connections
 are supported and a client may connect via either.</para>
-
-<para>The program accepts the following options:</para>
-<variablelist remap='TP'>
-<varlistentry>
-<term><option>-?</option></term>
-<term><option>-h</option></term>
-<term><option>---help</option></term>
-<listitem><para>Display help message and terminate.</para></listitem>
-</varlistentry>
-<varlistentry>
-<term><option>-b</option></term>
-<term><option>--readonly</option></term>
-<listitem><para>Broken-device-safety mode, otherwise known as
+  <para>The program accepts the following options:</para>
+  <variablelist remap='TP'>
+   <varlistentry>
+    <term>
+     <option>-?</option>
+    </term>
+    <term>
+     <option>-h</option>
+    </term>
+    <term>
+     <option>---help</option>
+    </term>
+    <listitem>
+     <para>Display help message and terminate.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-b</option>
+    </term>
+    <term>
+     <option>--readonly</option>
+    </term>
+    <listitem>
+     <para>Broken-device-safety mode, otherwise known as
 read-only mode. A few bluetooth and USB receivers lock up or become
 totally inaccessible when probed or reconfigured; see the hardware
 compatibility list on the GPSD project website for details. This
@@ -171,59 +187,89 @@ optimal performance, but it also means that
 <application>gpsd</application> cannot break the receiver. A better
 solution would be for Bluetooth to not be so fragile. A platform
 independent method to identify serial-over-Bluetooth devices would
-also be nice.</para></listitem>
-</varlistentry>
-<varlistentry>
-<term><option>-D LVL</option></term>
-<term><option>--debug LVL</option></term>
-<listitem>
-<para>Set debug level. Default is 0. At debug levels 2 and above,
+also be nice.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-D LVL</option>
+    </term>
+    <term>
+     <option>--debug LVL</option>
+    </term>
+    <listitem>
+     <para>Set debug level. Default is 0. At debug levels 2 and above,
 <application>gpsd</application> reports incoming sentence and actions
 to standard error if <application>gpsd</application> is in the foreground
 (-N) or to syslog if in the background.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term><option>-F FILE</option></term>
-<term><option>--sockfile FILE</option></term>
-<listitem>
-<para>Create a control socket for device addition and removal
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-F FILE</option>
+    </term>
+    <term>
+     <option>--sockfile FILE</option>
+    </term>
+    <listitem>
+     <para>Create a control socket for device addition and removal
 commands.  Default is None.  You must specify a valid pathname on your
 local filesystem; this will be created as a Unix-domain socket to which
 you can write commands that edit the daemon's internal device list.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term><option>-f FRAME</option></term>
-<term><option>--framing FRAME</option></term>
-<listitem><para>Fix the framing to the GNSS device.
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-f FRAME</option>
+    </term>
+    <term>
+     <option>--framing FRAME</option>
+    </term>
+    <listitem>
+     <para>Fix the framing to the GNSS device.
 The framing parameter is of the form: [78][ENO][012].
 Most GNSS are 8N1.  Some Trimble default to 8O1.
-The default is to search for the correct framing.</para></listitem>
-</varlistentry>
-<varlistentry>
-<term><option>-G</option></term>
-<term><option>--listenany</option></term>
-<listitem><para>This flag causes <application>gpsd</application> to
+The default is to search for the correct framing.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-G</option>
+    </term>
+    <term>
+     <option>--listenany</option>
+    </term>
+    <listitem>
+     <para>This flag causes <application>gpsd</application> to
 listen on all addresses (INADDR_ANY) rather than just the loop back
 (INADDR_LOOPBACK) address. For the sake of privacy and security, TPV
 information is now private to the local machine until the user makes
-an effort to expose this to the world.</para></listitem>
-</varlistentry>
-<varlistentry>
-<term><option>-l</option></term>
-<term><option>--drivers</option></term>
-<listitem><para>List all drivers compiled into this
+an effort to expose this to the world.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-l</option>
+    </term>
+    <term>
+     <option>--drivers</option>
+    </term>
+    <listitem>
+     <para>List all drivers compiled into this
 <application>gpsd</application> instance. The letters to the left of
 each driver name are the <application>gpsd</application>
 control commands supported by that driver. Then exit</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term><option>n</option></term>
-<term><option>--nowait</option></term>
-<listitem>
-<para>Don't wait for a client to connect before polling whatever GPS
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>n</option>
+    </term>
+    <term>
+     <option>--nowait</option>
+    </term>
+    <listitem>
+     <para>Don't wait for a client to connect before polling whatever GPS
 is associated with it. Some RS232 GPSes wait in a standby mode
 (drawing less power) when the host machine is not asserting DTR, and
 some cellphone and handheld embedded GPSes have similar behaviors.
@@ -232,110 +278,142 @@ battery power. (This capability is rare in consumer-grade devices).
 You should use this option if you plan to use gpsd to provide reference
 clock information to ntpd through a memory-shared segment.
 </para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term><option>-N</option></term>
-<term><option>--foreground</option></term>
-<listitem><para>Don't daemonize; run in foreground.
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-N</option>
+    </term>
+    <term>
+     <option>--foreground</option>
+    </term>
+    <listitem>
+     <para>Don't daemonize; run in foreground.
 This switch is mainly useful for debugging.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term><option>-p</option></term>
-<term><option>--passive</option></term>
-<listitem>
-<para>Passive mode.  Do not autoconfigure the receiver, but allow
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-p</option>
+    </term>
+    <term>
+     <option>--passive</option>
+    </term>
+    <listitem>
+     <para>Passive mode.  Do not autoconfigure the receiver, but allow
 manual configuration changes.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term><option>-P FILE</option></term>
-<term><option>--pidfile FILE</option></term>
-<listitem>
-<para>Specify the name and path to record the daemon's process ID.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term><option>-r</option></term>
-<term><option>--badtime</option></term>
-<listitem><para>Use GPS time even with no current fix.  Some GPSs have
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-P FILE</option>
+    </term>
+    <term>
+     <option>--pidfile FILE</option>
+    </term>
+    <listitem>
+     <para>Specify the name and path to record the daemon's process ID.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-r</option>
+    </term>
+    <term>
+     <option>--badtime</option>
+    </term>
+    <listitem>
+     <para>Use GPS time even with no current fix.  Some GPSs have
 battery powered Real Time Clocks (RTC's) built in, making them a valid time
 source even before a fix is acquired.  This can be useful on a Raspberry Pi,
 or other device that has no battery powered RTC, and thus has no valid
-time at startup.</para></listitem>
-</varlistentry>
-<varlistentry>
-<term><option>--port PORT</option></term>
-<term><option>-S PORT</option></term>
-<listitem><para>Set TCP/IP port on which to listen for GPSD clients
-(default is 2947).</para></listitem>
-</varlistentry>
-<varlistentry>
- <term><option>-s SPEED</option></term>
- <term><option>--speed SPEED</option></term>
- <listitem><para>Fix the serial port speed to the GNSS device. Allowed
+time at startup.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>--port PORT</option>
+    </term>
+    <term>
+     <option>-S PORT</option>
+    </term>
+    <listitem>
+     <para>Set TCP/IP port on which to listen for GPSD clients
+(default is 2947).</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-s SPEED</option>
+    </term>
+    <term>
+     <option>--speed SPEED</option>
+    </term>
+    <listitem>
+     <para>Fix the serial port speed to the GNSS device. Allowed
  speeds are: 4800, 9600, 19200, 38400, 57600, 115200, 230400, and 460800.
  The default is to autobaud. Note that some devices with integrated USB
- ignore port speed.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><option>-V</option></term>
-<term><option>--version</option></term>
-<listitem>
-<para>Dump version and exit.</para>
-</listitem>
-</varlistentry>
-</variablelist>
-
-<para>Arguments are interpreted as the names of data sources.
+ ignore port speed.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-V</option>
+    </term>
+    <term>
+     <option>--version</option>
+    </term>
+    <listitem>
+     <para>Dump version and exit.</para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+  <para>Arguments are interpreted as the names of data sources.
 Normally, a data source is the device pathname of a local device from
 which the daemon may expect GPS data. But there are three other
 special source types recognized, for a total of four:</para>
-
-<variablelist>
-<varlistentry>
-<term>Local serial or USB device</term>
-<listitem>
-<para>A normal Unix device name of a serial or USB device to which a
+  <variablelist>
+   <varlistentry>
+    <term>Local serial or USB device</term>
+    <listitem>
+     <para>A normal Unix device name of a serial or USB device to which a
 sensor is attached. Example:
 <filename>/dev/ttyUSB0</filename>.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>Local PPS device</term>
-<listitem>
-<para>A normal Unix device name of a PPS device to which a PPS source
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>Local PPS device</term>
+    <listitem>
+     <para>A normal Unix device name of a PPS device to which a PPS source
 is attached.  The device name must start with "/dev/pps" and a local
 serial or USB GPS device must also be available. Example:
 <filename>/dev/pps0</filename>.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>TCP feed</term>
-<listitem>
-<para>A URI with the prefix "tcp://", followed by a hostname, a
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>TCP feed</term>
+    <listitem>
+     <para>A URI with the prefix "tcp://", followed by a hostname, a
 colon, and a port number. The daemon will open a socket to the
 indicated address and port and read data packets from it, which will
 be interpreted as though they had been issued by a serial device. Example:
 <filename>tcp://data.aishub.net:4006</filename>.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>UDP feed</term>
-<listitem>
-<para>A URI with the prefix "udp://", followed by a hostname, a
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>UDP feed</term>
+    <listitem>
+     <para>A URI with the prefix "udp://", followed by a hostname, a
 colon, and a port number. The daemon will open a socket listening for
 UDP datagrams arriving in the indicated address and port, which will
 be interpreted as though they had been issued by a serial device. Example:
 <filename>udp://127.0.0.1:5000</filename>.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>Ntrip caster</term>
-<listitem>
-<para>A URI with the prefix "ntrip://" followed by the name of an
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>Ntrip caster</term>
+    <listitem>
+     <para>A URI with the prefix "ntrip://" followed by the name of an
 Ntrip caster (Ntrip is a protocol for broadcasting differential-GPS
 fixes over the net). For Ntrip services that require authentication, a
 prefix of the form "username:password@" can be added before the name
@@ -346,24 +424,24 @@ URI could be
 "ntrip://foo:bar@ntrip.example.com:80/example-stream". Corrections
 from the caster will be sent to each attached GPS with the capability
 to accept them.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>DGPSIP server</term>
-<listitem>
-<para>A URI with the prefix "dgpsip://" followed by a hostname, a
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>DGPSIP server</term>
+    <listitem>
+     <para>A URI with the prefix "dgpsip://" followed by a hostname, a
 colon, and an optional colon-separated port number (defaulting to
 2101). The daemon will handshake with the DGPSIP server and
 read RTCM2 correction data from it. Corrections
 from the server will be set to each attached GPS with the capability
 to accept them. Example:
 <filename>dgpsip://dgps.wsrcc.com:2101</filename>.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>Remote gpsd feed</term>
-<listitem>
-<para>A URI with the prefix "gpsd://", followed by a hostname and
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>Remote gpsd feed</term>
+    <listitem>
+     <para>A URI with the prefix "gpsd://", followed by a hostname and
 optionally a colon and a port number (if the port is absent the
 default <application>gpsd</application> port will be used). Then
 followed optionally by a second colon and the remote device name The
@@ -372,12 +450,12 @@ daemon will open a socket to the indicated address and port and emulate a
 the remote <application>gpsd</application> instance that will be
 passed to local clients. Example:
 <filename>gpsd://gpsd.io:2947:/dev/ttyAMA0</filename>.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>NMEA2000 CAN data</term>
-<listitem>
-<para>A URI with the prefix "nmea2000://", followed by a CAN
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>NMEA2000 CAN data</term>
+    <listitem>
+     <para>A URI with the prefix "nmea2000://", followed by a CAN
 devicename. Only Linux socket CAN interfaces are supported. The
 interface must be configured to receive CAN messages
 before <application>gpsd</application> can be started. If
@@ -385,37 +463,34 @@ there is more than one unit on the CAN bus that provides GPS data,
 <application>gpsd</application> chooses the unit from which a GPS message
 is first seen. Example: <filename>nmea2000://can0</filename>.
 </para>
-</listitem>
-</varlistentry>
-</variablelist>
-
-<para>(The "ais:://" source type supported in some older versions of
+    </listitem>
+   </varlistentry>
+  </variablelist>
+  <para>(The "ais:://" source type supported in some older versions of
 the daemon has been retired in favor of the more general
 "tcp://".)</para>
-
-<para>Additionally, two serial device names have a side effect:</para>
-<variablelist>
-<varlistentry>
-<term>/dev/ttyAMA0</term>
-<listitem>
-<para>The UART device on a Raspberry Pi. Has the side effect of
+  <para>Additionally, two serial device names have a side effect:</para>
+  <variablelist>
+   <varlistentry>
+    <term>/dev/ttyAMA0</term>
+    <listitem>
+     <para>The UART device on a Raspberry Pi. Has the side effect of
 opening /dev/pps0 for RFC2783 1PPS data.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>/dev/gpsd0</term>
-<listitem>
-<para>Generic GPS device 0. Has the side effect of
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>/dev/gpsd0</term>
+    <listitem>
+     <para>Generic GPS device 0. Has the side effect of
 opening /dev/pps0 for RFC2783 1PPS data.</para>
-</listitem>
-</varlistentry>
-</variablelist>
-<para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
+  <para>
 Note, however, that if /dev/pps0 is the fake "ktimer" PPS, then /dev/pps1
 will be used instead.
 </para>
-
-<para>Internally, the daemon maintains a device pool holding the
+  <para>Internally, the daemon maintains a device pool holding the
 pathnames of devices and remote servers known to the
 daemon. Initially, this list is the list of device-name arguments
 specified on the command line.  That list may be empty, in which case
@@ -423,136 +498,167 @@ the daemon will have no devices on its search list until they are
 added by a control-socket command (see <xref linkend='devices'/> for
 details on this).  Daemon startup will abort with an error if neither
 any devices nor a control socket are specified.</para>
-
-<para>When a device is activated (i.e. a client requests data from it),
+  <para>When a device is activated (i.e. a client requests data from it),
 gpsd attempts to execute a hook from
 <filename>/etc/gpsd/device-hook</filename> with first command line argument
 set to the pathname of the device and the second to
 <option>ACTIVATE</option>. On deactivation, it does the same passing
 <option>DEACTIVATE</option> for the second argument.</para>
-
-<para><application>gpsd</application> can export data to client applications
+  <para>
+   <application>gpsd</application> can export data to client applications
 in three ways: via a sockets interface, via a shared-memory segment, and
 via D-Bus. The next three major sections describe these interfaces.</para>
-
-</refsect1>
-<refsect1 id='sockets'><title>THE SOCKET INTERFACE</title>
-
-<para>Clients may communicate with the daemon via textual request and
+ </refsect1>
+ <refsect1 id='sockets'>
+  <title>THE SOCKET INTERFACE</title>
+  <para>Clients may communicate with the daemon via textual request and
 responses over a socket. It is a bad idea for applications to speak the protocol
 directly: rather, they should use the
 <application>libgps</application> client library and take appropriate
 care to conditionalize their code on the major and minor protocol
 version symbols.</para>
-
-<para>The request-response protocol for the socket interface is fully
+  <para>The request-response protocol for the socket interface is fully
 documented in
-<citerefentry><refentrytitle>gpsd_json</refentrytitle><manvolnum>5</manvolnum></citerefentry>.</para>
-
-</refsect1>
-
-<refsect1 id='shm'><title>SHARED-MEMORY AND DBUS INTERFACES</title>
-
-<para><application>gpsd</application> has two other (read-only)
+<citerefentry>
+    <refentrytitle>gpsd_json</refentrytitle>
+    <manvolnum>5</manvolnum>
+   </citerefentry>.</para>
+ </refsect1>
+ <refsect1 id='shm'>
+  <title>SHARED-MEMORY AND DBUS INTERFACES</title>
+  <para>
+   <application>gpsd</application> has two other (read-only)
 interfaces.</para>
-
-<para>Whenever the daemon recognizes a packet from any attached
+  <para>Whenever the daemon recognizes a packet from any attached
 device, it writes the accumulated state from that device to a shared
 memory segment.  The C and C++ client libraries shipped with GPSD can
 read this segment. Client methods, and various restrictions associated
 with the read-only nature of this interface, are documented at
-<citerefentry><refentrytitle>libgps</refentrytitle><manvolnum>3</manvolnum></citerefentry>. The
+<citerefentry>
+    <refentrytitle>libgps</refentrytitle>
+    <manvolnum>3</manvolnum>
+   </citerefentry>. The
 shared-memory interface is intended primarily for embedded deployments
 in which <application>gpsd</application> monitors a single device, and
 its principal advantage is that a daemon instance configured with
 shared memory but without the sockets interface loses a significant
 amount of runtime weight.</para>
-
-<para>The daemon may be configured to emit a D-Bus signal each time an
+  <para>The daemon may be configured to emit a D-Bus signal each time an
 attached device delivers a fix.  The signal path is <filename>path
 /org/gpsd</filename>, the signal interface is "org.gpsd", and the
 signal name is "fix".  The signal payload layout is as follows:</para>
-
-<table frame="all" pgwide="0"><title>Satellite object</title>
-<tgroup cols="2" align="left" colsep="1" rowsep="1">
-<thead>
-<row>
-        <entry>Type</entry>
-        <entry><para>Description</para></entry>
-</row>
-</thead>
-<tbody>
-<row>
-        <entry>DBUS_TYPE_DOUBLE</entry>
-        <entry><para>Time (seconds since Unix epoch)</para></entry>
-</row>
-<row>
-        <entry>DBUS_TYPE_INT32</entry>
-        <entry><para>mode</para></entry>
-</row>
-<row>
-        <entry>DBUS_TYPE_DOUBLE</entry>
-        <entry><para>Time uncertainty (seconds).</para></entry>
-</row>
-<row>
-        <entry>DBUS_TYPE_DOUBLE</entry>
-        <entry><para>Latitude in degrees.</para></entry>
-</row>
-<row>
-        <entry>DBUS_TYPE_DOUBLE</entry>
-        <entry><para>Longitude in degrees.</para></entry>
-</row>
-<row>
-        <entry>DBUS_TYPE_DOUBLE</entry>
-        <entry><para>Horizontal uncertainty in meters, 95% confidence.</para></entry>
-</row>
-<row>
-        <entry>DBUS_TYPE_DOUBLE</entry>
-        <entry><para>Altitude MSL in meters.</para></entry>
-</row>
-<row>
-        <entry>DBUS_TYPE_DOUBLE</entry>
-        <entry><para>Altitude uncertainty in meters, 95% confidence.</para></entry>
-</row>
-<row>
-        <entry>DBUS_TYPE_DOUBLE</entry>
-        <entry><para>Course in degrees from true north.</para></entry>
-</row>
-<row>
-        <entry>DBUS_TYPE_DOUBLE</entry>
-        <entry><para>Course uncertainty in meters, 95% confidence.</para></entry>
-</row>
-<row>
-        <entry>DBUS_TYPE_DOUBLE</entry>
-        <entry><para>Speed, meters per second.</para></entry>
-</row>
-<row>
-        <entry>DBUS_TYPE_DOUBLE</entry>
-        <entry><para>Speed uncertainty in meters per second,
-        95% confidence.</para></entry>
-</row>
-<row>
-        <entry>DBUS_TYPE_DOUBLE</entry>
-        <entry><para>Climb, meters per second.</para></entry>
-</row>
-<row>
-        <entry>DBUS_TYPE_DOUBLE</entry>
-        <entry><para>Climb uncertainty in meters per second,
-        95% confidence.</para></entry>
-</row>
-<row>
-        <entry>DBUS_TYPE_STRING</entry>
-        <entry><para>Device name</para></entry>
-</row>
-</tbody>
-</tgroup>
-</table>
-
-</refsect1>
-
-<refsect1 id='devices'><title>GPS DEVICE MANAGEMENT</title>
-
-<para><application>gpsd</application> maintains an internal list of
+  <table frame="all" pgwide="0">
+   <title>Satellite object</title>
+   <tgroup cols="2" align="left" colsep="1" rowsep="1">
+    <thead>
+     <row>
+      <entry>Type</entry>
+      <entry>
+       <para>Description</para>
+      </entry>
+     </row>
+    </thead>
+    <tbody>
+     <row>
+      <entry>DBUS_TYPE_DOUBLE</entry>
+      <entry>
+       <para>Time (seconds since Unix epoch)</para>
+      </entry>
+     </row>
+     <row>
+      <entry>DBUS_TYPE_INT32</entry>
+      <entry>
+       <para>mode</para>
+      </entry>
+     </row>
+     <row>
+      <entry>DBUS_TYPE_DOUBLE</entry>
+      <entry>
+       <para>Time uncertainty (seconds).</para>
+      </entry>
+     </row>
+     <row>
+      <entry>DBUS_TYPE_DOUBLE</entry>
+      <entry>
+       <para>Latitude in degrees.</para>
+      </entry>
+     </row>
+     <row>
+      <entry>DBUS_TYPE_DOUBLE</entry>
+      <entry>
+       <para>Longitude in degrees.</para>
+      </entry>
+     </row>
+     <row>
+      <entry>DBUS_TYPE_DOUBLE</entry>
+      <entry>
+       <para>Horizontal uncertainty in meters, 95% confidence.</para>
+      </entry>
+     </row>
+     <row>
+      <entry>DBUS_TYPE_DOUBLE</entry>
+      <entry>
+       <para>Altitude MSL in meters.</para>
+      </entry>
+     </row>
+     <row>
+      <entry>DBUS_TYPE_DOUBLE</entry>
+      <entry>
+       <para>Altitude uncertainty in meters, 95% confidence.</para>
+      </entry>
+     </row>
+     <row>
+      <entry>DBUS_TYPE_DOUBLE</entry>
+      <entry>
+       <para>Course in degrees from true north.</para>
+      </entry>
+     </row>
+     <row>
+      <entry>DBUS_TYPE_DOUBLE</entry>
+      <entry>
+       <para>Course uncertainty in meters, 95% confidence.</para>
+      </entry>
+     </row>
+     <row>
+      <entry>DBUS_TYPE_DOUBLE</entry>
+      <entry>
+       <para>Speed, meters per second.</para>
+      </entry>
+     </row>
+     <row>
+      <entry>DBUS_TYPE_DOUBLE</entry>
+      <entry>
+       <para>Speed uncertainty in meters per second,
+        95% confidence.</para>
+      </entry>
+     </row>
+     <row>
+      <entry>DBUS_TYPE_DOUBLE</entry>
+      <entry>
+       <para>Climb, meters per second.</para>
+      </entry>
+     </row>
+     <row>
+      <entry>DBUS_TYPE_DOUBLE</entry>
+      <entry>
+       <para>Climb uncertainty in meters per second,
+        95% confidence.</para>
+      </entry>
+     </row>
+     <row>
+      <entry>DBUS_TYPE_STRING</entry>
+      <entry>
+       <para>Device name</para>
+      </entry>
+     </row>
+    </tbody>
+   </tgroup>
+  </table>
+ </refsect1>
+ <refsect1 id='devices'>
+  <title>GPS DEVICE MANAGEMENT</title>
+  <para>
+   <application>gpsd</application> maintains an internal list of
 GPS devices (the "device pool").  If you specify devices on the
 command line, the list is initialized with those pathnames; otherwise
 the list starts empty.  Commands to add and remove GPS device paths
@@ -560,31 +666,26 @@ from the daemon's device list must be written to a local Unix-domain
 socket which will be accessible only to programs running as root.
 This control socket will be located wherever the -F option specifies
 it.</para>
-
-<para>A device may will also be dropped from the pool if GPSD gets a zero
+  <para>A device may will also be dropped from the pool if GPSD gets a zero
 length read from it. This  end-of-file condition indicates that the
 device has been disconnected.</para>
-
-<para>When <application>gpsd</application> is properly installed along
+  <para>When <application>gpsd</application> is properly installed along
 with hotplug notifier scripts feeding it device-add commands over the
 control socket, <application>gpsd</application> should require no
 configuration or user action to find devices.</para>
-
-<para>Sending SIGHUP to a running <application>gpsd</application>
+  <para>Sending SIGHUP to a running <application>gpsd</application>
 forces it to close all GPSes and all client connections.  It will then
 attempt to reconnect to any GPSes on its device list and resume
 listening for client connections.  This may be useful if your GPS
 enters a wedged or confused state but can be soft-reset by pulling
 down DTR.</para>
-
-<para>When <application>gpsd</application> is called with no initial
+  <para>When <application>gpsd</application> is called with no initial
 devices (thus, expecting devices to be passed to it by notifications to
 the control socket), and reaches a state where there are no devices
 connected and no subscribers <emphasis>after</emphasis> after some
 devices have been seen, it shuts down gracefully. It is expected that
 future device hotplug events will reactivate it.</para>
-
-<para>To point <application>gpsd</application> at a device that may be
+  <para>To point <application>gpsd</application> at a device that may be
 a GPS, write to the control socket a plus sign ('+') followed by the
 device name followed by LF or CR-LF.  Thus, to point the daemon at
 <filename>/dev/foo</filename>. send "+/dev/foo\n".  To tell the daemon
@@ -592,33 +693,28 @@ that a device has been disconnected and is no longer available, send a
 minus sign ('-') followed by the device name followed by LF or
 CR-LF. Thus, to remove <filename>/dev/foo</filename> from the search
 list, send "-/dev/foo\n".</para>
-
-<para>To send a control string to a specified device, write to the
+  <para>To send a control string to a specified device, write to the
 control socket a '!', followed by the device name, followed by '=',
 followed by the control string.</para>
-
-<para>To send a binary control string to a specified device, write to the
+  <para>To send a binary control string to a specified device, write to the
 control socket a '&amp;', followed by the device name, followed by '=',
 followed by the control string in paired hex digits.</para>
-
-<para>Your client may await a response, which will be a line beginning
+  <para>Your client may await a response, which will be a line beginning
 with either "OK" or "ERROR".  An ERROR response to an 'add' command means
 the device did not emit data recognizable as GPS packets; an ERROR
 response to a remove command means the specified device was not in
 <application>gpsd</application>'s device pool. An ERROR response to a
 '!' command means the daemon did not recognize the devicename
 specified.</para>
-
-<para>The control socket is intended for use by hotplug scripts and
+  <para>The control socket is intended for use by hotplug scripts and
 other device-discovery services.  This control channel is separate
 from the public <application>gpsd</application> service port, and only
 locally accessible, in order to prevent remote denial-of-service and
 spoofing attacks.</para>
-
-</refsect1>
-<refsect1 id='accuracy'><title>ACCURACY</title>
-
-<para>The base User Estimated Range Error (UERE) of GPSes is 8 meters
+ </refsect1>
+ <refsect1 id='accuracy'>
+  <title>ACCURACY</title>
+  <para>The base User Estimated Range Error (UERE) of GPSes is 8 meters
 or less at 66% confidence, 15 meters or less at 95% confidence. Actual
 horizontal error will be UERE times a dilution factor dependent on current
 satellite position.  Altitude determination is more sensitive to
@@ -629,17 +725,14 @@ Again, this will be multiplied by a vertical dilution of precision
 (VDOP) dependent on satellite geometry, and VDOP is typically larger
 than HDOP.  Users should <emphasis>not</emphasis> rely on GPS altitude for
 life-critical tasks such as landing an airplane.</para>
-
-<para>These errors are intrinsic to the design and physics of the GPS
+  <para>These errors are intrinsic to the design and physics of the GPS
 system.  <application>gpsd</application> does its internal
 computations at sufficient accuracy that it will add no measurable
 position error of its own.</para>
-
-<para>DGPS correction will reduce UERE by a factor of 4, provided you
+  <para>DGPS correction will reduce UERE by a factor of 4, provided you
 are within about 100 miles (160 km) of a DGPS ground station from which you
 are receiving corrections.</para>
-
-<para>On a 4800bps connection, the time latency of fixes provided by
+  <para>On a 4800bps connection, the time latency of fixes provided by
 <application>gpsd</application> will be one second or less 95% of the
 time.  Most of this lag is due to the fact that GPSes normally emit
 fixes once per second, thus expected latency is 0.5sec.  On the
@@ -649,15 +742,13 @@ the order of a millisecond.  Nevertheless, latency can introduce
 significant errors for vehicles in motion; at 50 km/h (31 mi/h) of speed
 over ground, 1 second of lag corresponds to 13.8 meters change in
 position between updates.</para>
-
-<para>The time reporting of the GPS system itself has an intrinsic
+  <para>The time reporting of the GPS system itself has an intrinsic
 accuracy limit of 14 nanoseconds, but this can only be approximated by
 specialized receivers using that send the high-accuracy PPS
 (Pulse-Per-Second) over RS232 to cue a clock crystal.  Most GPS
 receivers only report time to a precision of 0.01s or 0.001s,
 and with no accuracy guarantees below 1sec.</para>
-
-<para>If your GPS uses a SiRF chipset at firmware level 231, reported
+  <para>If your GPS uses a SiRF chipset at firmware level 231, reported
 UTC time may be off by the difference between whatever default
 leap-second offset has been compiled in and whatever leap-second
 correction is currently applicable, from startup until complete
@@ -665,12 +756,10 @@ subframe information is received.  Firmware levels 232 and up don't
 have this problem.  You may run <application>gpsd</application> at
 debug level 4 to see the chipset type and firmware revision
 level.</para>
-
-<para>There are exactly two circumstances under which
+  <para>There are exactly two circumstances under which
 <application>gpsd</application> relies on the host-system
 clock:</para>
-
-<para>In the GPS broadcast signal, GPS time is represented using a
+  <para>In the GPS broadcast signal, GPS time is represented using a
 week number that rolls over after 2^10 or 2^13 weeks (about 19.6
 years, or 157 years), depending on the spacecraft.  Receivers are
 required to disambiguate this to the correct date, but may have
@@ -680,8 +769,7 @@ due to this issue.  <application>gpsd</application> uses the startup
 time of the daemon detect and compensate for rollovers while it is
 running, but otherwise reports the date as it is reported by the
 receiver without attempting to correct it.</para>
-
-<para>If you are using an NMEA-only GPS (that is, not using SiRF or
+  <para>If you are using an NMEA-only GPS (that is, not using SiRF or
 Garmin or Zodiac binary mode), <application>gpsd</application> relies
 on the system clock to tell it the current century. If the system clock
 returns an invalid value near zero, and the GPS does not emit GPZDA at
@@ -691,15 +779,13 @@ not) then the century part of the dates
 near the century turnover, a range of dates as wide in seconds as the
 accuracy of your system clock may be referred to the wrong
 century.</para>
-</refsect1>
-
-<refsect1 id='ntp'><title>USE WITH NTP</title>
-
-<para>gpsd can provide reference clock information to
+ </refsect1>
+ <refsect1 id='ntp'>
+  <title>USE WITH NTP</title>
+  <para>gpsd can provide reference clock information to
 <application>ntpd</application>, to keep the system clock synchronized
 to the time provided by the GPS receiver.</para>
-
-<para>On Linux, <application>gpsd</application> includes support for
+  <para>On Linux, <application>gpsd</application> includes support for
 interpreting the PPS pulses emitted at the start of every clock second
 on the carrier-detect lines of some serial GPSes; this pulse can be
 used to update NTP at much higher accuracy than message time provides.
@@ -708,53 +794,48 @@ and watching for carrier-detect state change messages in the logfile.
 In addition, if your kernel provides the RFC 2783 kernel PPS API then
 <application>gpsd</application> will use that for extra
 accuracy.</para>
-
-<para>Detailed instructions for using GPSD to set up a high-quality
+  <para>Detailed instructions for using GPSD to set up a high-quality
 time service can be found among the documentation on the GPSD
 website.</para>
-</refsect1>
-
-<refsect1 id='dbus'><title>USE WITH D-BUS</title>
-
-<para>On operating systems that support D-BUS,
+ </refsect1>
+ <refsect1 id='dbus'>
+  <title>USE WITH D-BUS</title>
+  <para>On operating systems that support D-BUS,
 <application>gpsd</application> can be built to broadcast GPS fixes to
 D-BUS-aware applications.  As D-BUS is still at a pre-1.0 stage, we
 will not attempt to document this interface here.  Read the
 <application>gpsd</application> source code to learn more.</para>
-
-</refsect1>
-<refsect1 id='security'><title>SECURITY AND PERMISSIONS ISSUES</title>
-
-<para><application>gpsd</application>, if given the -G flag, will
+ </refsect1>
+ <refsect1 id='security'>
+  <title>SECURITY AND PERMISSIONS ISSUES</title>
+  <para>
+   <application>gpsd</application>, if given the -G flag, will
 listen for connections from any reachable host, and then disclose the
 current position.  Before using the -G flag, consider whether you
 consider your computer's location to be sensitive data to be kept
 private or something that you wish to publish.</para>
-
-<para><application>gpsd</application> must start up as root in order
+  <para>
+   <application>gpsd</application> must start up as root in order
 to open the NTPD shared-memory segment, open its logfile, and create
 its local control socket.  Before doing any processing of GPS data, it
 tries to drop root privileges by setting its UID to "nobody" (or another
 configured userid) and its group ID to the group of the initial
 GPS passed on the command line &mdash; or, if that device doesn't exist,
 to the group of <filename>/dev/ttyS0</filename>.</para>
-
-<para>Privilege-dropping is a hedge against the possibility that
+  <para>Privilege-dropping is a hedge against the possibility that
 carefully crafted data, either presented from a client socket or from
 a subverted serial device posing as a GPS, could be used to induce
 misbehavior in the internals of <application>gpsd</application>.
 It ensures that any such compromises cannot be used for privilege
 elevation to root.</para>
-
-<para>The assumption behind <application>gpsd</application>'s
+  <para>The assumption behind <application>gpsd</application>'s
 particular behavior is that all the tty devices to which a GPS might
 be connected are owned by the same non-root group and allow group
 read/write, though the group may vary because of distribution-specific
 or local administrative practice.  If this assumption is false,
 <application>gpsd</application> may not be able to open GPS devices in
 order to read them (such failures will be logged).</para>
-
-<para>In order to fend off inadvertent denial-of-service attacks by
+  <para>In order to fend off inadvertent denial-of-service attacks by
 port scanners (not to mention deliberate ones),
 <application>gpsd</application> will time out inactive client
 connections.  Before the client has issued a command that requests a
@@ -764,59 +845,50 @@ timeout for clients in watcher or raw modes; rather,
 read data long enough for the outbound socket write buffer to fill.
 Clients with an assigned device in polling mode are subject to a
 longer timeout (15 minutes).</para>
-
-</refsect1>
-<refsect1 id='limitations'><title>LIMITATIONS</title>
-
-<para>If multiple NMEA talkers are feeding RMC, GLL, and GGA sentences
+ </refsect1>
+ <refsect1 id='limitations'>
+  <title>LIMITATIONS</title>
+  <para>If multiple NMEA talkers are feeding RMC, GLL, and GGA sentences
 to the same serial device (possible with an RS422 adapter hooked up to
 some marine-navigation systems), a 'TPV' response may mix an altitude
 from one device's GGA with latitude/longitude from another's RMC/GLL
 after the second sentence has arrived.</para>
-
-<para><application>gpsd</application> may change control settings on
+  <para>
+   <application>gpsd</application> may change control settings on
 your GPS (such as the emission frequency of various sentences or
 packets) and not restore the original settings on exit.  This is a
 result of inadequacies in NMEA and the vendor binary GPS protocols,
 which often do not give clients any way to query the values of control
 settings in order to be able to restore them later.</para>
-
-<para>When using SiRF chips, the VDOP/TDOP/GDOP figures and associated
+  <para>When using SiRF chips, the VDOP/TDOP/GDOP figures and associated
 error estimates are computed by <application>gpsd</application> rather
 than reported by the chip.  The computation does not exactly match
 what SiRF chips do internally, which includes some satellite weighting
 using parameters <application>gpsd</application> cannot see.</para>
-
-<para>Autobauding on the Trimble GPSes can take as long as 5 seconds
+  <para>Autobauding on the Trimble GPSes can take as long as 5 seconds
 if the device speed is not matched to the GPS speed.</para>
-
-<para>Generation of position error estimates (eph, epv, epd, eps, epc)
+  <para>Generation of position error estimates (eph, epv, epd, eps, epc)
 from the incomplete data handed back by GPS reporting protocols
 involves both a lot of mathematical black art and fragile
 device-dependent assumptions.  This code has been bug-prone in the
 past and problems may still lurk there.</para>
-
-<para>AIDVM decoding of types 16-17, 22-23, and 25-26 is unverified.</para>
-
-<para>GPSD presently fully recognizes only the 2.1 level of RTCM2
+  <para>AIDVM decoding of types 16-17, 22-23, and 25-26 is unverified.</para>
+  <para>GPSD presently fully recognizes only the 2.1 level of RTCM2
 (message types 1, 3, 4, 5, 6, 7, 9, 16). The 2.3 message types 13, 14,
 and 31 are recognized and reported. Message types 8, 10-12, 15-27,
 28-30 (undefined), 31-37, 38-58 (undefined), and 60-63 are not yet
 supported.</para>
-
-<para>The ISGPS used for RTCM2 and subframes decoder logic is
+  <para>The ISGPS used for RTCM2 and subframes decoder logic is
 sufficiently convoluted to confuse some compiler optimizers, notably
 in GCC 3.x at -O2, into generating bad code.</para>
-
-<para>Devices meant to use PPS for high-precision timekeeping may
+  <para>Devices meant to use PPS for high-precision timekeeping may
 fail if they are specified after startup by a control-socket command,
 as opposed to on the daemon's original command line. Root privileges
 are dropped early, and some Unix variants require them in order to set
 the PPS line discipline. Under Linux the POSIX capability to set the
 line discipline is retained, but other platforms cannot use this
 code.</para>
-
-<para>USB GPS devices often do not identify themselves through the USB
+  <para>USB GPS devices often do not identify themselves through the USB
 subsystem; they typically present as the class 00h (undefined) or
 class FFh (vendor-specific) of USB-to-serial adapters. Because of
 this, the Linux hotplug scripts must tell
@@ -829,52 +901,53 @@ window for non-GPS devices not opened; if the application that wants
 them loses a race with GPSD its device open will fail and have to be
 retried after GPSD sniffs the device (normally less than a second
 later).</para>
-
-</refsect1>
-<refsect1 id='files'><title>FILES</title>
-
-<variablelist>
-<varlistentry>
-<term><filename>/dev/ttyS0</filename></term>
-<listitem>
-<para>Prototype TTY device. After startup,
+ </refsect1>
+ <refsect1 id='files'>
+  <title>FILES</title>
+  <variablelist>
+   <varlistentry>
+    <term>
+     <filename>/dev/ttyS0</filename>
+    </term>
+    <listitem>
+     <para>Prototype TTY device. After startup,
 <application>gpsd</application> sets its group ID to the owning group of this
 device if no GPS device was specified on the command line does not
 exist.</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term><filename>/etc/gpsd/device-hook</filename></term>
-<listitem>
-<para>Optional file containing the device activation/deactivation script.
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <filename>/etc/gpsd/device-hook</filename>
+    </term>
+    <listitem>
+     <para>Optional file containing the device activation/deactivation script.
 Note that while <filename>/etc/gpsd</filename> is the default system
 configuration directory, it is possible to build the GPSD source code
 with different assumptions.  See above for further details on the
 device-hook mechanism.</para>
-</listitem>
-</varlistentry>
-</variablelist>
-
-</refsect1>
-<refsect1 id='environment'><title>ENVIRONMENT VARIABLES</title>
-
-<para>By setting the environment variable <envar>GPSD_SHM_KEY</envar>,
+    </listitem>
+   </varlistentry>
+  </variablelist>
+ </refsect1>
+ <refsect1 id='environment'>
+  <title>ENVIRONMENT VARIABLES</title>
+  <para>By setting the environment variable <envar>GPSD_SHM_KEY</envar>,
 you can control the key value used to create the shared-memory segment
 used for communication with the client library.  This will be useful
 mainly when isolating test instances of
 <application>gpsd</application> from production ones.</para>
-
-</refsect1>
-<refsect1 id='standards'><title>APPLICABLE STANDARDS</title>
-
-<para>The official NMEA protocol standards for NMEA0183 and NMEA2000
+ </refsect1>
+ <refsect1 id='standards'>
+  <title>APPLICABLE STANDARDS</title>
+  <para>The official NMEA protocol standards for NMEA0183 and NMEA2000
 are available from the National Marine Electronics Association, but are
 proprietary and expensive; the maintainers of
 <application>gpsd</application> have made a point of not looking at
 them.  The GPSD project website links to several documents that collect
 publicly disclosed information about the protocol.</para>
-
-<para><application>gpsd</application> parses the following NMEA
+  <para>
+   <application>gpsd</application> parses the following NMEA
 sentences: RMC, GGA, GLL, GSA, GSV, VTG, ZDA, GBS, HDT, DBT, GST.  It
 recognizes these with either the normal GP talker-ID prefix, or with
 the GN prefix used by GLONASS, or with the II prefix emitted by
@@ -887,12 +960,10 @@ OHPR emitted by Oceanserver digital compasses, the PTNTHTM emitted by
 True North digital compasses, the PMTK omitted by some San Jose
 Navigation GPSes, and the PASHR sentences emitted by some Ashtech
 GPSes.</para>
-
-<para>Note that <application>gpsd</application> JSON returns pure decimal
+  <para>Note that <application>gpsd</application> JSON returns pure decimal
 degrees, not the hybrid degree/minute format described in the NMEA
 standard.</para>
-
-<para>Differential-GPS corrections are conveyed by the RTCM
+  <para>Differential-GPS corrections are conveyed by the RTCM
 protocols. The applicable standard for RTCM-104 V2 is <citetitle>RTCM
 Recommended Standards for Differential GNSS (Global Navigation
 Satellite) Service</citetitle> RTCM Paper 136-2001/SC 104-STD.  The
@@ -901,8 +972,7 @@ applicable standard for RTCM-104 V3 is <citetitle>RTCM Standard
 Paper 177-2006-SC104-STD. Ordering instructions for the RTCM standards
 are accessible from the website of the Radio Technical Commission for Maritime
 Services under "Publications".</para>
-
-<para>AIS is defined by ITU Recommendation M.1371,
+  <para>AIS is defined by ITU Recommendation M.1371,
 <citetitle>Technical Characteristics for a Universal Shipborne
 Automatic Identification System Using Time Division Multiple
 Access</citetitle>. The AIVDM/AIVDO format understood by this program
@@ -911,42 +981,66 @@ radiocommunication equipment and systems</citetitle>. A more accessible
 description of both can be found at <citetitle>AIVDM/AIVDO Protocol
 Decoding</citetitle>, on the references page of the GPSD project
 website.</para>
-
-<para>Subframe data is defined by IS-GPS-200E, <citetitle>GLOBAL
+  <para>Subframe data is defined by IS-GPS-200E, <citetitle>GLOBAL
 POSITIONING SYSTEM WING (GPSW) SYSTEMS ENGINEERING &amp; INTEGRATION,
 INTERFACE SPECIFICATION IS-GPS-200 Revision E</citetitle>. The format
 understood by this program is defined in Section 20 (Appendix II) of
 the IS-GPS-200E, <citetitle>GPS NAVIGATION DATA STRUCTURE FOR DATA,
-D(t)</citetitle></para>
-
-<para>JSON is specified by RFC 7159, <citetitle>The JavaScript Object
+D(t)</citetitle>
+  </para>
+  <para>JSON is specified by RFC 7159, <citetitle>The JavaScript Object
 Notation (JSON) Data Interchange Format</citetitle>.</para>
-
-<para>The API for PPS time service is specified by RFC 2783,
+  <para>The API for PPS time service is specified by RFC 2783,
 <citetitle>Pulse-Per-Second API for UNIX-like Operating Systems,
-Version 1.0</citetitle></para>
-
-</refsect1>
-<refsect1 id='see_also'><title>SEE ALSO</title>
-<para>
-<citerefentry><refentrytitle>gpsdctl</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>gps</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>libgps</refentrytitle><manvolnum>3</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>gpsd_json</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>libgpsmm</refentrytitle><manvolnum>3</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>gpsprof</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>gpsfake</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>gpsctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
-<citerefentry><refentrytitle>gpscat</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+Version 1.0</citetitle>
+  </para>
+ </refsect1>
+ <refsect1 id='see_also'>
+  <title>SEE ALSO</title>
+  <para>
+   <citerefentry>
+    <refentrytitle>gpsdctl</refentrytitle>
+    <manvolnum>8</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gps</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>libgps</refentrytitle>
+    <manvolnum>3</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gpsd_json</refentrytitle>
+    <manvolnum>5</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>libgpsmm</refentrytitle>
+    <manvolnum>3</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gpsprof</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gpsfake</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gpsctl</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>,
+<citerefentry>
+    <refentrytitle>gpscat</refentrytitle>
+    <manvolnum>1</manvolnum>
+   </citerefentry>,
 </para>
-</refsect1>
-
-<refsect1 id='maintainer'><title>AUTHORS</title>
-
-<para>Authors: Eric S. Raymond, Chris Kuethe, Gary Miller.  Former
+ </refsect1>
+ <refsect1 id='maintainer'>
+  <title>AUTHORS</title>
+  <para>Authors: Eric S. Raymond, Chris Kuethe, Gary Miller.  Former
 authors whose bits have been plowed under by code turnover: Remco
 Treffcorn, Derrick Brashear, Russ Nelson. This manual page by Eric S. Raymond
 <email>esr@thyrsus.com</email>.</para>
-</refsect1>
-
+ </refsect1>
 </refentry>
