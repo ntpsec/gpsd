@@ -141,6 +141,14 @@ a host, TCP/IP port number and remote device can be given.  </para>
    </varlistentry>
    <varlistentry>
     <term>
+     <option>--file FILE</option>
+    </term>
+    <listitem>
+     <para>Read JSON from FILE instead of from gpsd..</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
      <option>--host HOST</option>
     </term>
     <listitem>

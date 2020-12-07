@@ -32,6 +32,8 @@ SPDX-License-Identifier: BSD-2-clause
    </arg>
    <arg choice='opt'>--fields <replaceable>FIELDS</replaceable>
    </arg>
+   <arg choice='opt'>--file <replaceable>FILE</replaceable>
+   </arg>
    <arg choice='opt'>--help</arg>
    <arg choice='opt'>--host <replaceable>HOST</replaceable>
    </arg>
@@ -120,6 +122,14 @@ that is running the <application>gpsd</application> instance.</para>
     <listitem>
      <para>The code for the fields to plot.
 FIELDS is one of: llh (lat/lon/altHAE) or llm (lat/lon/altMSL).</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>--file FILE</option>
+    </term>
+    <listitem>
+     <para>Read JSON from FILE instead of from gpsd..</para>
     </listitem>
    </varlistentry>
    <varlistentry>
