@@ -8,7 +8,7 @@ SPDX-License-Identifier: BSD-2-clause
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gpscat.1'>
  <refentryinfo>
-  <date>4 December 2020</date>
+  <date>6 December 2020</date>
  </refentryinfo>
  <refmeta>
   <refentrytitle>gpscat</refentrytitle>
@@ -23,21 +23,23 @@ SPDX-License-Identifier: BSD-2-clause
  <refsynopsisdiv id='synopsis'>
   <cmdsynopsis>
    <command>gpscat</command>
-   <arg choice='opt'>--debug <replaceable>debuglevel</replaceable>
+   <arg choice='opt'>-? </arg>
+   <arg choice='opt'>--debug <replaceable>LVL</replaceable>
    </arg>
    <arg choice='opt'>--help </arg>
    <arg choice='opt'>--packetizer </arg>
-   <arg choice='opt'>--speed <replaceable>speed</replaceable>
+   <arg choice='opt'>--speed <replaceable>SPEED</replaceable>
    </arg>
    <arg choice='opt'>--typeflag </arg>
    <arg choice='opt'>--version </arg>
-   <arg choice='opt'>-D <replaceable>debuglevel</replaceable>
+   <arg choice='opt'>-D <replaceable>LVL</replaceable>
    </arg>
+   <arg choice='opt'>-h </arg>
    <arg choice='opt'>-p </arg>
-   <arg choice='opt'>-s <replaceable>speed</replaceable>
+   <arg choice='opt'>-s <replaceable>SPEED</replaceable>
    </arg>
    <arg choice='opt'>-t </arg>
-   <arg choice='opt'>-v </arg>
+   <arg choice='opt'>-V </arg>
    <arg choice='plain'>
     <replaceable>file-or-serial-port</replaceable>
    </arg>
@@ -77,46 +79,79 @@ of one of the known types.</para>
   <para>The program accepts the following options:</para>
   <variablelist remap='TP'>
    <varlistentry>
-    <term>-D, --debug</term>
-    <listitem>
-     <para>In packetizer mode, enable progress messages from the packet
-getter.  Probably only of interest to developers testing packet
-getter changes.  Higher arguments to D produce more output.</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>-h, --help</term>
+    <term>
+     <option>-?</option>
+    </term>
+    <term>
+     <option>-h</option>
+    </term>
+    <term>
+     <option>--help</option>
+    </term>
     <listitem>
      <para>Display program usage and exit.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-p, --packetizer</term>
+    <term>
+     <option>-D LVL</option>
+    </term>
+    <term>
+     <option>--debug LVL</option>
+    </term>
+    <listitem>
+     <para>In packetizer mode, enable progress messages from the packet
+getter.  Probably only of interest to developers testing packet
+getter changes.  Higher arguments to <option>-D</option> produce more output.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-p</option>
+    </term>
+    <term>
+     <option>--packetizer</option>
+    </term>
     <listitem>
      <para>Invoke packetizer mode.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-s, --speed</term>
+    <term>
+     <option>-s SPEED</option>
+    </term>
+    <term>
+     <option>--speed SPEED</option>
+    </term>
     <listitem>
      <para>Set the port's baud rate (and optionally its parity and stop
-bits) before reading.  Argument should begin with one of the normal integer
+bits) to SPEED before reading.  Argument should begin with one of the normal integer
 baud rates (300, 1200, 4800, 9600, 19200, 38400, etc.).  It may be
 followed by an optional suffix [NOE][12] to set parity (None, Odd,
 Even) and stop bits (1 or 2).</para>
-     <para>Specifying -s 4800N1 is frequently helpful with unknown
+     <para>Specifying <option>-s 4800N1</option> is frequently helpful with unknown
 devices.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-t, --typeflag</term>
+    <term>
+     <option>-t</option>
+    </term>
+    <term>
+     <option>--typeflag</option>
+    </term>
     <listitem>
      <para>Invoke packetizer mode, with the packet type and length (in
 parentheses) reported before a colon and space on each line.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-V, --version</term>
+    <term>
+     <option>-V</option>
+    </term>
+    <term>
+     <option>--version</option>
+    </term>
     <listitem>
      <para>Display program version and exit.</para>
     </listitem>
