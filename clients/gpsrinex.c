@@ -1078,28 +1078,28 @@ static void usage(void)
           "\n"
           "Mandatory arguments to long options are mandatory for "
           "short options too.\n"
-          "     -D, --debug debuglevel     Set debug level, default 0\n"
-          "     -f, --fileout  filename    out to filename\n"
+          "     -D, --debug LVL            Set debug level, default 0\n"
+          "     -f FILE, --fileout FILE    Output to filename\n"
           "                                default: gpsrinexYYYYDDDDHHMM.obs\n"
           "     -h, --help                 print this usage and exit\n"
-          "     -i, --interval interval    time between samples in seconds\n"
+          "     -i SEC, --interval SEC     Time between samples in seconds\n"
           "                                default: %0.3f\n"
-          "     -n, --count count          number samples to collect\n"
+          "     -n COUNT, --count COUNT    Number samples to collect\n"
           "                                default: %d\n"
           "     -V, --version              print version and exit\n"
           "\nThese strings get placed in the generated RINEX 3 obs file\n"
-          "     --agency [agency]          agency\n"
-          "     --ant_e [easting]          antenna easting in meters\n"
-          "     --ant_h [height]           antenna height in meters\n"
-          "     --ant_n [northing]         antenna northing in meters\n"
-          "     --ant_num [num]            antenna number\n"
-          "     --ant_type [type]          antenna type\n"
-          "     --marker_name [name]       marker name\n"
-          "     --marker_type [type]       marker type\n"
-          "     --observer [observer]      observer\n"
-          "     --rec_num [num]            receiver number\n"
-          "     --rec_type [type]          receiver type\n"
-          "     --rec_vers [vers]          receiver vers\n"
+          "     --agency AGENCY           agency\n"
+          "     --ant_e EASTING           antenna easting in meters\n"
+          "     --ant_h HEIGHT            antenna height in meters\n"
+          "     --ant_n NORTHING          antenna northing in meters\n"
+          "     --ant_num NUM             antenna number\n"
+          "     --ant_type TYPE           antenna type\n"
+          "     --marker_name NAME        marker name\n"
+          "     --marker_type TYPE        marker type\n"
+          "     --observer OBSERVER       observer\n"
+          "     --rec_num NUM             receiver number\n"
+          "     --rec_type TYPE           receiver type\n"
+          "     --rec_vers VERS           receiver vers\n"
           "\n"
           "defaults to '%s -n %d -i %0.3f localhost:2947'\n",
           progname, (double)sample_interval_ms / 1000.0, sample_count, progname,
@@ -1143,7 +1143,7 @@ int main(int argc, char **argv)
     log_file = stdout;
     while (1) {
         int ch;
-        const char *optstring = "D:f:hi:n:V";
+        const char *optstring = "?D:f:hi:n:V";
 
 #ifdef HAVE_GETOPT_LONG
         int option_index = 0;
@@ -1241,9 +1241,9 @@ int main(int argc, char **argv)
         case REC_VERS:
             strlcpy(rec_vers, optarg, sizeof(rec_vers));
             break;
-        case 'h':
-            FALLTHROUGH
         case '?':
+            FALLTHROUGH
+        case 'h':
             FALLTHROUGH
         default:
             usage();
