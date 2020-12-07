@@ -234,12 +234,12 @@ static void usage( char *prog)
 {
   (void)fprintf(stderr,
         "Usage: %s [OPTIONS] [server[:port:[device]]]\n\n"
+        "  -?          Show this help, then exit\n"
 #ifdef HAVE_GETOPT_LONG
         "  --sleep     Sleep for 10 seconds before starting\n"
         "  --help      Show this help, then exit\n"
         "  --version   Show version, then exit\n"
 #endif
-        "  -?          Show this help, then exit\n"
         "  -h          Show this help, then exit\n"
         "  -j          Turn on anti-jitter buffering\n"
         "  -l {d|m|s}  Select lat/lon format\n"
@@ -262,7 +262,7 @@ int main(int argc, char *argv[])
     int rc;
     struct sockaddr_in localAddr, servAddr;
     struct hostent *h;
-    const char *optstring = "hl:su:V";
+    const char *optstring = "?hl:su:V";
     int n;
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
