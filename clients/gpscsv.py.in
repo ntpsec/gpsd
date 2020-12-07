@@ -86,6 +86,11 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawDescriptionHelpFormatter,
     usage=usage)
 parser.add_argument(
+    '-?',
+    action="help",
+    help='show this help message and exit'
+)
+parser.add_argument(
     '-c',
     '--class',
     dest='mclass',         # class is a reserved word
