@@ -1002,6 +1002,7 @@ static void usage(char *prog,  int exit_code)
     (void)fprintf(stderr,
         "Usage: %s [-h] [-l {d|m|s}] [-m] [-s] [-V] "
         "[server[:port:[device]]]\n\n"
+        "  -?                  Show this help, then exit\n"
 #ifdef HAVE_GETOPT_LONG
         "  --debug DEBUG       Set debug level\n"
         "  --help              Show this help, then exit\n"
@@ -1011,7 +1012,6 @@ static void usage(char *prog,  int exit_code)
         "  --units U           Select distance and speed units, same as -u.\n"
         "  --version           Show version, then exit\n"
 #endif
-        "  -?                  Show this help, then exit\n"
         "  -D DEBUG            Set debug level\n"
         "  -h                  Show this help, then exit\n"
         "  -l {d|m|s}          Select lat/lon format\n"
@@ -1040,7 +1040,7 @@ int main(int argc, char *argv[])
     int wait_clicks = 0;  /* cycles to wait before gpsd timeout */
     /* buffer to hold one JSON message */
     char message[GPS_JSON_RESPONSE_MAX];
-    const char *optstring = "D:hl:msu:V";
+    const char *optstring = "?D:hl:msu:V";
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
     static struct option long_options[] = {
@@ -1147,6 +1147,7 @@ int main(int argc, char *argv[])
                           argv[0], VERSION, REVISION);
             exit(EXIT_SUCCESS);
         case '?':
+            FALLTHROUGH
         case 'h':
             usage(argv[0], EXIT_SUCCESS);
             // never returns
