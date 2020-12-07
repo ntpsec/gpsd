@@ -655,9 +655,14 @@ try:
                 if ((idx not in all_data['ephemeris1'] or
                      msg['EPHEM1']['IODC'] !=
                      all_data['ephemeris1'][idx]['IODC'])):
+
                     if options.progress:
                         print("Received Ephemeris1 %5s, IODC %3d" %
                               (idx, msg['EPHEM1']['IODC']))
+                    if 1 < math.fabs(msg['EPHEM1']['af0']):
+                        print("ERROR: af0 %s out of range.  Unscaled data?" %
+                              msg['EPHEM1']['af0'])
+                        sys.exit(1)
                     all_data['ephemeris1'][idx] = msg['EPHEM1']
             elif 2 == msg['frame']:
                 if ((idx not in all_data['ephemeris2'] or
