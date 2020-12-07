@@ -749,7 +749,7 @@ static void usage(void)
 
 int main(int argc, char **argv)
 {
-    const char *optstring = "cdehjmnst:uvVD:";
+    const char *optstring = "?cdehjmnst:uvVD:";
     enum { doencode, dodecode } mode = dodecode;
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
@@ -843,7 +843,9 @@ int main(int argc, char **argv)
             exit(EXIT_SUCCESS);
 
         case '?':
+            FALLTHROUGH
         case 'h':
+            FALLTHROUGH
         default:
             usage();
         }
