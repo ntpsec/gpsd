@@ -141,6 +141,14 @@ a host, TCP/IP port number and remote device can be given.  </para>
    </varlistentry>
    <varlistentry>
     <term>
+     <option>--host HOST</option>
+    </term>
+    <listitem>
+     <para>Connect to gpsd on host HOST.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
      <option>--port PORT</option>
     </term>
     <listitem>
