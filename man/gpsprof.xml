@@ -103,7 +103,9 @@ with <application>gnuplot</application>.
 Currently the following plot types are defined:</para>
   <variablelist>
    <varlistentry>
-    <term><option>space</option></term>
+    <term>
+     <option>space</option>
+    </term>
     <listitem>
      <para>Generate a scatterplot of fixes and plot probable error circles.
 This data is only meaningful if the GPS is held stationary while
@@ -112,7 +114,9 @@ the fixes are listed at the bottom.  This is the default plot type.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><option>polar</option></term>
+    <term>
+     <option>polar</option>
+    </term>
     <listitem>
      <para>Generate a heat map of reported satellite Signal to Noise Ratio
 (SNR) using polar coordinates.  A colored dot is plotted for
@@ -125,7 +129,9 @@ Useful for analyzing the quality of the skyview as seen by the GPS.
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><option>polarunused</option></term>
+    <term>
+     <option>polarunused</option>
+    </term>
     <listitem>
      <para>Similar to the polar plot, but only unused satellites
 are plotted.  Useful for seeing which parts of the antenna skyview
@@ -134,7 +140,9 @@ rejected.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><option>polarused</option></term>
+    <term>
+     <option>polarused</option>
+    </term>
     <listitem>
      <para>Similar to the polar plot, but only satellites used to compute
 fixes are plotted.  Useful for seeing which parts of the antenna
@@ -142,7 +150,9 @@ skyview are being used in fixes.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><option>time</option></term>
+    <term>
+     <option>time</option>
+    </term>
     <listitem>
      <para>Plot delta of system clock (NTP corrected time) against GPS time
 as reported in PPS messages.  The X axis is sample time in seconds
@@ -151,7 +161,9 @@ GPS time.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><option>instrumented</option></term>
+    <term>
+     <option>instrumented</option>
+    </term>
     <listitem>
      <para>Plot instrumented profile.  Plots various components of the total
 latency between the GPS's fix time and when the client receives the
@@ -168,27 +180,35 @@ a fix to the client.</para>
      <para>The components of the instrumented plot are as follows:</para>
      <variablelist>
       <varlistentry>
-       <term><option>Fix latency</option></term>
+       <term>
+        <option>Fix latency</option>
+       </term>
        <listitem>
         <para>Delta between GPS time and SORC.</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><option>RS232 time</option></term>
+       <term>
+        <option>RS232 time</option>
+       </term>
        <listitem>
         <para>RS232 transmission time for data shipped during the cycle
 (computed from character volume and baud rate).</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><option>Analysis time</option></term>
+       <term>
+        <option>Analysis time</option>
+       </term>
        <listitem>
         <para>EORC, minus SORC, minus RS232 time.  The amount of real time the daemon
 spent on computation rather than I/O.</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term><option>Reception time</option></term>
+       <term>
+        <option>Reception time</option>
+       </term>
        <listitem>
         <para>Shipping time from
 the daemon to when it was received by <application>gpsprof</application>.</para>
@@ -203,7 +223,9 @@ discarded.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term><option>uninstrumented</option></term>
+    <term>
+     <option>uninstrumented</option>
+    </term>
     <listitem>
      <para>Plot total latency without instrumentation.  Useful mainly as a
 check that the instrumentation is not producing significant distortion.
@@ -226,7 +248,7 @@ time from reports without fixes is lumped in.</para>
      <option>--help</option>
     </term>
     <listitem>
-  <para>Print a usage message and exit.</para>
+     <para>Print a usage message and exit.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -237,7 +259,7 @@ time from reports without fixes is lumped in.</para>
      <option>--dumpfile FILE</option>
     </term>
     <listitem>
-  <para>Dump the plot data, without attached gnuplot
+     <para>Dump the plot data, without attached gnuplot
 code, to a specified file for post-analysis.</para>
     </listitem>
    </varlistentry>
@@ -249,7 +271,7 @@ code, to a specified file for post-analysis.</para>
      <option>--debug LVL</option>
     </term>
     <listitem>
-  <para>Sets debug level.</para>
+     <para>Sets debug level.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -260,7 +282,7 @@ code, to a specified file for post-analysis.</para>
      <option>--logfile FILE</option>
     </term>
     <listitem>
-  <para>Dump the raw JSON
+     <para>Dump the raw JSON
 reports collected from the device to the specified FILE.</para>
     </listitem>
    </varlistentry>
@@ -272,7 +294,7 @@ reports collected from the device to the specified FILE.</para>
      <option>--wait SEC</option>
     </term>
     <listitem>
-  <para>Sets the number of seconds to
+     <para>Sets the number of seconds to
 sample.  The default
 is 100.  Most GPS are configured to emit one fix per second, so 100
 samples would then span 100 seconds.</para>
@@ -286,7 +308,7 @@ samples would then span 100 seconds.</para>
      <option>--redo</option>
     </term>
     <listitem>
-  <para>Replot from a JSON logfile
+     <para>Replot from a JSON logfile
 (such as <option>-l, logfile</option> produces) on standard input. Both
 <option>-n, --wait</option> and <option>-l, --logfile</option> options are
 ignored when this one is selected.</para>
@@ -300,7 +322,7 @@ ignored when this one is selected.</para>
      <option>--subtitle STR</option>
     </term>
     <listitem>
-  <para>Sets a text string
+     <para>Sets a text string
 to be included in the plot as a subtitle. This will be below the
 title.</para>
     </listitem>
@@ -313,7 +335,7 @@ title.</para>
      <option>--title STR</option>
     </term>
     <listitem>
-  <para>Sets a text string to be
+     <para>Sets a text string to be
 the plot title. This will replace the default title.</para>
     </listitem>
    </varlistentry>
@@ -325,25 +347,25 @@ the plot title. This will replace the default title.</para>
      <option>--terminal TERM</option>
     </term>
     <listitem>
-  <para>Add a terminal
+     <para>Add a terminal
 type setting into the gnuplot code. Typical usage is "<option>-T png</option>", or "<option>-T
 pngcairo</option>" telling gnuplot to write a PNG file. Without this option
 gnuplot will call its X11 display code.</para>
-  <para>Different installations of <application>gnuplot</application> will
+     <para>Different installations of <application>gnuplot</application> will
 support different terminal types.  Different terminal types may work better
 for you than other ones.  "<option>-T png</option>" will generate PNG images.  Use "<option>-T jpeg</option>"
 to generate JPEG images.  "<option>-T pngcairo</option>" often works best, but is not
 supported by some distributions.  The same terminal type may work
 very differently on different distributions.</para>
-  <para>To see which terminal types your copy of
+     <para>To see which terminal types your copy of
 <application>gnuplot</application> supports:
 <programlisting>
 gnuplot -e "set terminal"
 </programlisting>
-  </para>
+     </para>
     </listitem>
    </varlistentry>
-   </variablelist>
+  </variablelist>
  </refsect1>
  <refsect1 id='signals'>
   <title>SIGNALS</title>
