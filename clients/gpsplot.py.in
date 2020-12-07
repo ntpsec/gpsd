@@ -120,6 +120,13 @@ parser.add_argument(
     help='Fields to plot. [Default %(default)s)]',
 )
 parser.add_argument(
+    '-f', '--file',
+    dest='input_file_name',
+    default=None,
+    metavar='FILE',
+    help='Read gpsd JSON from FILE instead of a gpsd instance.',
+)
+parser.add_argument(
     '--host',
     default='localhost',
     dest='host',
@@ -234,6 +241,7 @@ options.subclass = None
 
 try:
     session = gps.gps(host=options.host, port=options.port,
+                      input_file_name=options.input_file_name,
                       verbose=options.debug)
 except socket.error:
     sys.stderr.write("gpsplot: Could not connect to gpsd daemon\n")
