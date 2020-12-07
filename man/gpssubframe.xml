@@ -192,17 +192,6 @@ a host, TCP/IP port number and remote device can be given.  </para>
    </varlistentry>
    <varlistentry>
     <term>
-     <option>-c COUNT</option>
-    </term>
-    <term>
-     <option>--count COUNT</option>
-    </term>
-    <listitem>
-     <para>Exit after COUNT subframe messages.</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>
      <option>-x SEC</option>
     </term>
     <term>
