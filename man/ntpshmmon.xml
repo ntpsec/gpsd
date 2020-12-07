@@ -23,22 +23,22 @@ SPDX-License-Identifier: BSD-2-clause
  <refsynopsisdiv id='synopsis'>
   <cmdsynopsis>
    <command>ntpshmmon</command>
-   <arg choice='opt'>--count <replaceable>nsamples</replaceable>
+   <arg choice='opt'>-? </arg>
+   <arg choice='opt'>--count <replaceable>COUNT</replaceable>
    </arg>
    <arg choice='opt'>--help </arg>
    <arg choice='opt'>--offset </arg>
    <arg choice='opt'>--rmshm </arg>
-   <arg choice='opt'>--seconds <replaceable>nseconds</replaceable>
+   <arg choice='opt'>--seconds <replaceable>SEC</replaceable>
    </arg>
    <arg choice='opt'>--verbose </arg>
    <arg choice='opt'>--version </arg>
-   <arg choice='opt'>-? </arg>
    <arg choice='opt'>-h </arg>
-   <arg choice='opt'>-n <replaceable>nsamples</replaceable>
+   <arg choice='opt'>-n <replaceable>COUNT</replaceable>
    </arg>
    <arg choice='opt'>-o </arg>
    <arg choice='opt'>-s </arg>
-   <arg choice='opt'>-t <replaceable>nseconds</replaceable>
+   <arg choice='opt'>-t <replaceable>SEC</replaceable>
    </arg>
    <arg choice='opt'>-v </arg>
    <arg choice='opt'>-V </arg>
@@ -118,23 +118,37 @@ nanoseconds part of receiver time to be zero.</para>
   <title>OPTIONS</title>
   <variablelist>
    <varlistentry>
-    <term>-?</term>
-    <term>-h</term>
-    <term>--help</term>
+    <term>
+     <option>-?</option>
+    </term>
+    <term>
+     <option>-h</option>
+    </term>
+    <term>
+     <option>--help</option>
+    </term>
     <listitem>
      <para>Display program usage and exit.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-n COUNT</term>
-    <term>--count COUNT</term>
+    <term>
+     <option>-n COUNT</option>
+    </term>
+    <term>
+     <option>--count COUNT</option>
+    </term>
     <listitem>
      <para>Set maximum number of samples to collect to COUNT.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-o</term>
-    <term>--offset</term>
+    <term>
+     <option>-o</option>
+    </term>
+    <term>
+     <option>--offset</option>
+    </term>
     <listitem>
      <para>Replace the "Seen@" column with the "Offset" column.  The "Offset" is
 the difference between "Clock" and "Real" times.
@@ -142,30 +156,46 @@ the difference between "Clock" and "Real" times.
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-s</term>
-    <term>--rmshm</term>
+    <term>
+     <option>-s</option>
+    </term>
+    <term>
+     <option>--rmshm</option>
+    </term>
     <listitem>
      <para>Remove all SHM segments used by GPSD. This
 option will normally only be of interest to GPSD developers.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-t SECONDS</term>
-    <term>--seconds SECONDS</term>
+    <term>
+     <option>-t SECONDS</option>
+    </term>
+    <term>
+     <option>--seconds SECONDS</option>
+    </term>
     <listitem>
      <para>Set maximum time to collect samples in seconds to SECONDS.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-v</term>
-    <term>--verbose</term>
+    <term>
+     <option>-v</option>
+    </term>
+    <term>
+     <option>--verbose</option>
+    </term>
     <listitem>
      <para>Enable verbose status messages.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-V</term>
-    <term>--version</term>
+    <term>
+     <option>-V</option>
+    </term>
+    <term>
+     <option>--version</option>
+    </term>
     <listitem>
      <para>Display program version and exit.</para>
     </listitem>
