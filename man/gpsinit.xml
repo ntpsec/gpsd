@@ -57,26 +57,34 @@ NMEA2000.</para>
   <para>The program accepts the following options:</para>
   <variablelist remap='TP'>
    <varlistentry>
-    <term>-h</term>
+    <term>
+     <option>-h</option>
+    </term>
     <listitem>
      <para>Display a brief help text.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-n</term>
+    <term>
+     <option>-n</option>
+    </term>
     <listitem>
      <para>Set the CAN network number. The default is 0.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-s</term>
+    <term>
+     <option>-s</option>
+    </term>
     <listitem>
      <para>Set the baudrate to be used to communicate over the serial line
 to the CAN hardware. The default is 38400 baud.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-V</term>
+    <term>
+     <option>-V</option>
+    </term>
     <listitem>
      <para>Display the version of <application>gpsinit</application>.</para>
     </listitem>
