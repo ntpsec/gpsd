@@ -38,7 +38,7 @@ SPDX-License-Identifier: BSD-2-clause
 add or remove devices from the daemon's device list. It is not
 intended to be called by users, but rather by the Linux hotplug
 system and similar facilities.</para>
-  <para>The action argument may be "add" or "remove". If no daemon
+  <para>The action argument may be "<option>add</option>" or "<option>remove</option>". If no daemon
 instance is running when an add is requested, this program will launch
 one.</para>
   <para>The "device" argument should be the pathname of a device. A
