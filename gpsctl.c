@@ -240,7 +240,7 @@ int main(int argc, char **argv)
     const struct gps_type_t **dp;
     char cooked[BUFSIZ];
     ssize_t cooklen = 0;
-    const char *optstring = "bec:fhlnrs:t:x:D:RT:V";
+    const char *optstring = "?bec:fhlnrs:t:x:D:RT:V";
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
     static struct option long_options[] = {
