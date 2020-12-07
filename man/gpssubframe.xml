@@ -24,28 +24,42 @@ SPDX-License-Identifier: BSD-2-clause
   <cmdsynopsis>
    <command>gpssubframe</command>
    <arg choice='opt'>-?</arg>
-   <arg choice='opt'>--count <replaceable>COUNT</replaceable></arg>
-   <arg choice='opt'>--debug <replaceable>LVL</replaceable></arg>
+   <arg choice='opt'>--count <replaceable>COUNT</replaceable>
+   </arg>
+   <arg choice='opt'>--debug <replaceable>LVL</replaceable>
+   </arg>
    <arg choice='opt'>--desc</arg>
-   <arg choice='opt'>--device <replaceable>DEVICE</replaceable></arg>
-   <arg choice='opt'>--file <replaceable>FILE</replaceable></arg>
+   <arg choice='opt'>--device <replaceable>DEVICE</replaceable>
+   </arg>
+   <arg choice='opt'>--file <replaceable>FILE</replaceable>
+   </arg>
    <arg choice='opt'>--help</arg>
-   <arg choice='opt'>--host <replaceable>HOST</replaceable></arg>
-   <arg choice='opt'>--load <replaceable>FILE</replaceable></arg>
-   <arg choice='opt'>--port <replaceable>PORT</replaceable></arg>
+   <arg choice='opt'>--host <replaceable>HOST</replaceable>
+   </arg>
+   <arg choice='opt'>--load <replaceable>FILE</replaceable>
+   </arg>
+   <arg choice='opt'>--port <replaceable>PORT</replaceable>
+   </arg>
    <arg choice='opt'>--progress</arg>
    <arg choice='opt'>--satpos</arg>
-   <arg choice='opt'>--save <replaceable>FILE</replaceable></arg>
-   <arg choice='opt'>--seconds <replaceable>SECONDS</replaceable></arg>
+   <arg choice='opt'>--save <replaceable>FILE</replaceable>
+   </arg>
+   <arg choice='opt'>--seconds <replaceable>SECONDS</replaceable>
+   </arg>
    <arg choice='opt'>--test</arg>
-   <arg choice='opt'>--time <replaceable>SECONDS</replaceable></arg>
+   <arg choice='opt'>--time <replaceable>SECONDS</replaceable>
+   </arg>
    <arg choice='opt'>--version</arg>
-   <arg choice='opt'>-D <replaceable>LVL</replaceable></arg>
-   <arg choice='opt'>-f <replaceable>FILE</replaceable></arg>
+   <arg choice='opt'>-D <replaceable>LVL</replaceable>
+   </arg>
+   <arg choice='opt'>-f <replaceable>FILE</replaceable>
+   </arg>
    <arg choice='opt'>-h</arg>
-   <arg choice='opt'>-n <replaceable>COUNT</replaceable></arg>
+   <arg choice='opt'>-n <replaceable>COUNT</replaceable>
+   </arg>
    <arg choice='opt'>-V</arg>
-   <arg choice='opt'>-x <replaceable>SECONDS</replaceable></arg>
+   <arg choice='opt'>-x <replaceable>SECONDS</replaceable>
+   </arg>
    <group>
     <replaceable>server</replaceable>
     <group>
@@ -92,7 +106,7 @@ a host, TCP/IP port number and remote device can be given.  </para>
      <option>--help</option>
     </term>
     <listitem>
-  <para>-Print a usage message and exit.</para>
+     <para>-Print a usage message and exit.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -111,7 +125,7 @@ a host, TCP/IP port number and remote device can be given.  </para>
      <option>--device DEVICE</option>
     </term>
     <listitem>
-  <para>Connect to device DEVICE on gpsd host.</para>
+     <para>Connect to device DEVICE on gpsd host.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -122,7 +136,7 @@ a host, TCP/IP port number and remote device can be given.  </para>
      <option>--debug LVL</option>
     </term>
     <listitem>
-  <para>Set debug level to LVL.</para>
+     <para>Set debug level to LVL.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -130,7 +144,7 @@ a host, TCP/IP port number and remote device can be given.  </para>
      <option>--port PORT</option>
     </term>
     <listitem>
-  <para>Connect to gpsd on port PORT.</para>
+     <para>Connect to gpsd on port PORT.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -138,7 +152,7 @@ a host, TCP/IP port number and remote device can be given.  </para>
      <option>--progress</option>
     </term>
     <listitem>
-  <para>Print progress reports as messages are received.</para>
+     <para>Print progress reports as messages are received.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -146,7 +160,7 @@ a host, TCP/IP port number and remote device can be given.  </para>
      <option>--satpos</option>
     </term>
     <listitem>
-  <para>Compute GPS satellite positions before exit.</para>
+     <para>Compute GPS satellite positions before exit.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -154,7 +168,7 @@ a host, TCP/IP port number and remote device can be given.  </para>
      <option>--time SEC</option>
     </term>
     <listitem>
-  <para>Compute satellite position at time SEC in POSIX seconds.</para>
+     <para>Compute satellite position at time SEC in POSIX seconds.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -162,7 +176,7 @@ a host, TCP/IP port number and remote device can be given.  </para>
      <option>--test</option>
     </term>
     <listitem>
-  <para>Run <option>--satpos</option> selftest code.</para>
+     <para>Run <option>--satpos</option> selftest code.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -173,7 +187,7 @@ a host, TCP/IP port number and remote device can be given.  </para>
      <option>--version</option>
     </term>
     <listitem>
-  <para>Print the program version, then exit.</para>
+     <para>Print the program version, then exit.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
@@ -195,7 +209,7 @@ a host, TCP/IP port number and remote device can be given.  </para>
      <option>--seconds SEC</option>
     </term>
     <listitem>
-    <para>Seconds of messages to parse. 0 to disable.</para>
+     <para>Seconds of messages to parse. 0 to disable.</para>
     </listitem>
    </varlistentry>
   </variablelist>
