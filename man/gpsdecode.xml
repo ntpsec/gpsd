@@ -8,7 +8,7 @@ SPDX-License-Identifier: BSD-2-clause
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gpsdecode.1'>
  <refentryinfo>
-  <date>5 December 2020</date>
+  <date>6 December 2020</date>
  </refentryinfo>
  <refmeta>
   <refentrytitle>gpsdecode</refentrytitle>
@@ -23,9 +23,10 @@ SPDX-License-Identifier: BSD-2-clause
  <refsynopsisdiv id='synopsis'>
   <cmdsynopsis>
    <command>gpsdecode</command>
+   <arg choice='opt'>-?</arg>
    <arg choice='opt'>--ais</arg>
    <arg choice='opt'>--decode</arg>
-   <arg choice='opt'>--debug <replaceable>debuglevel</replaceable>
+   <arg choice='opt'>--debug <replaceable>LVL</replaceable>
    </arg>
    <arg choice='opt'>--encode</arg>
    <arg choice='opt'>--help</arg>
@@ -40,7 +41,7 @@ SPDX-License-Identifier: BSD-2-clause
    <arg choice='opt'>--version</arg>
    <arg choice='opt'>-c</arg>
    <arg choice='opt'>-d</arg>
-   <arg choice='opt'>-D <replaceable>debuglevel</replaceable>
+   <arg choice='opt'>-D <replaceable>LVL</replaceable>
    </arg>
    <arg choice='opt'>-e</arg>
    <arg choice='opt'>-h</arg>
@@ -88,44 +89,173 @@ receivers or NTRIP broadcasters.</para>
  </refsect1>
  <refsect1 id='options'>
   <title>OPTIONS</title>
-  <para>The <option>-c, --json</option> sets the AIS dump format to separate
+  <variablelist>
+   <varlistentry>
+    <term>
+     <option>-?</option>
+    </term>
+    <term>
+     <option>-h</option>
+    </term>
+    <term>
+     <option>--help</option>
+    </term>
+    <listitem>
+     <para>Output a usage mssage, then exit.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-c</option>
+    </term>
+    <term>
+     <option>--json</option>
+    </term>
+    <listitem>
+     <para>Sets the AIS dump format to separate
 fields with an ASCII pipe symbol.  Fields are dumped in the order they
-occur in the AIS packet. Numerics are not scaled (-u is
+occur in the AIS packet. Numerics are not scaled (<option>-u</option> is
 forced). Strings are unpacked from six-bit to full ASCII</para>
-  <para>The <option>-d, --decode</option> option tells the program to decode
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-d</option>
+    </term>
+    <term>
+     <option>--decode</option>
+    </term>
+    <listitem>
+     <para>Decode
 packets presented on standard input to standard output. This is the
 default behavior.</para>
-  <para>The <option>-D, --debug</option> option sets the debug verbosity
-level. It is mainly of interest to for troubleshooting.</para>
-  <para>The <option>-e, --encode</option> option tells the program to
-encode JSON on standard input to JSON on standard output. This option
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-D LVL</option>
+    </term>
+    <term>
+     <option>--debug LVL</option>
+    </term>
+    <listitem>
+     <para>Set the debug verbosity
+level to LVL. It is mainly of interest to for troubleshooting.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-e</option>
+    </term>
+    <term>
+     <option>--encode</option>
+    </term>
+    <listitem>
+     <para>Encode JSON on standard input to JSON on standard output. This option
 is only useful for regression-testing of the JSON dumping and parsing
 code.</para>
-  <para>The <option>-h, --help</option> option directs the program to output
-a usage mssage, then exit.</para>
-  <para>The <option>-j, --json</option> explicitly sets the output dump format
-to JSON (the default behavior).</para>
-  <para>With the <option>-m, --minlength</option> option, dump minimum lengths for
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-j</option>
+    </term>
+    <term>
+     <option>--json</option>
+    </term>
+    <listitem>
+     <para>Sets the output dump format to JSON (the default behavior).</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-m</option>
+    </term>
+    <term>
+     <option>--minlength</option>
+    </term>
+    <listitem>
+     <para>Dump minimum lengths for
 each packet type in the input (ignoring comment packets).  This is
 probably of interest only to GSD developers.</para>
-  <para>The <option>-n, --nmea</option> enables dumping in generated
-pseudo-NME0183.</para>
-  <para>The <option>-s, --split24</option> option tells the program to report
-AIS Type 24 sentence halves separately rather than attempting to
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-n</option>
+    </term>
+    <term>
+     <option>--nmea</option>
+    </term>
+    <listitem>
+     <para>Dump the generated pseudo-NME0183.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-s</option>
+    </term>
+    <term>
+     <option>--split24</option>
+    </term>
+    <listitem>
+     <para>Report AIS Type 24 sentence halves separately rather than attempting to
 aggregate them.</para>
-  <para>The <option>-t, --types</option> accepts a comma-separated list of
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-t TYPES</option>
+    </term>
+    <term>
+     <option>--types TYPES</option>
+    </term>
+    <listitem>
+     <para>A comma-separated list of
 numeric types.  Packets with a numeric AIS, RTCM2, or RTCM3 type are
 passed through and output only if they match a type in the
 list. Packets of other kinds (in particular GPS packets) are
 passed through unconditionally.</para>
-  <para>The <option>-u, --unscaled</option> suppresses scaling of AIS data
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-u</option>
+    </term>
+    <term>
+     <option>--unsscaled</option>
+    </term>
+    <listitem>
+     <para>Suppress scaling of AIS data
 to float quantities and text expansion of numeric codes. A dump with
 this option is lossless.</para>
-  <para>The <option>-v, --verbose</option> enables dumping of textual packets
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-v</option>
+    </term>
+    <term>
+     <option>--verbose</option>
+    </term>
+    <listitem>
+     <para>Dump textual packets
 to output as they are received on input, immediately preceding
 corresponding output.</para>
-  <para>The <option>-V, --version</option> option directs the program to emit its
-version number, then exit.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-V</option>
+    </term>
+    <term>
+     <option>--version</option>
+    </term>
+    <listitem>
+     <para>Print version number, then exit.</para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
  </refsect1>
  <refsect1 id='json_ais'>
   <title>AIS DSV FORMAT</title>
