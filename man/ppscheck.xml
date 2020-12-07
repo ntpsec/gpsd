@@ -23,9 +23,9 @@ SPDX-License-Identifier: BSD-2-clause
  <refsynopsisdiv id='synopsis'>
   <cmdsynopsis>
    <command>ppscheck</command>
+   <arg choice='opt'>-? </arg>
    <arg choice='opt'>--help </arg>
    <arg choice='opt'>--version </arg>
-   <arg choice='opt'>-? </arg>
    <arg choice='opt'>-h </arg>
    <arg choice='opt'>-V </arg>
    <arg choice='plain'>
@@ -52,15 +52,16 @@ output PPS signals you will never need to use it again on that device.
   <para>The program accepts the following options:</para>
   <variablelist remap='TP'>
    <varlistentry>
-    <term>-h</term>
-    <term>--help</term>
+    <term><option>-?</option></term>
+    <term><option>-h</option></term>
+    <term><option>--help</option></term>
     <listitem>
      <para>Display help message and terminate.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-V</term>
-    <term>--version</term>
+    <term><option>-V</option></term>
+    <term><option>--version</option></term>
     <listitem>
      <para>Dump version and exit.</para>
     </listitem>
