@@ -441,6 +441,150 @@ def _print_msg(ephem, fields):
             print("           %-48s " % (fld[1]))
 
 
+def test():
+    # FIXME: Broken
+    # SatPos() tests
+    # lat 0.000000 lon 0.000000 altHAE 20175272.000
+    ephm = {
+        'af0': 0,
+        'af1': 0,
+        'af2': 0,
+        'AODO': 0,
+        'Cic': 0,
+        'Cis': 0,
+        'Crc': 0,
+        'Crs': 0,
+        'Cuc': 0,
+        'Cus': 0,
+        'deltan': 0,
+        'e': 0,         # nominal 0
+        'FIT': 0,
+        'hlth': 0,
+        'i0': 0,        # nominal 55.0 degrees +/- 3
+        'IDOT': 0,
+        'IODC': 53,
+        'IODE': 53,
+        'L2': 1,
+        'L2P': 0,
+        'M0': 0,
+        'omega': 0,     # nominal 0, +/1 180 degrees
+        'Omega0': 0,
+        'Omegad': 0,
+        'sqrtA': 5153,  # nominal 5153.542538875565
+        'Tgd': 0,
+        'toc': 0,
+        'toe': 0,
+        'ura': 0,
+        'WN': 75}
+
+    options.debug = 2
+    print("\nTest Ephemeris:")
+    SatPos(ephm, 0)
+
+    # move 90 degrees
+    print("\nTest omega 90:")
+    ephm['omega'] = gps.GPS_PI / 2
+
+    SatPos(ephm, 0)
+
+    # move 180 degrees
+    print("\nTest omega 180:")
+    ephm['omega'] = gps.GPS_PI
+
+    SatPos(ephm, 0)
+
+    # move 270 degrees
+    print("\nTest omega 270:")
+    ephm['omega'] = gps.GPS_PI * 1.5
+
+    SatPos(ephm, 0)
+
+    # move omega 0, Omega0 90
+    print("\nTest Omega 90:")
+    ephm['omega'] = 0
+    ephm['Omega0'] = gps.GPS_PI / 2
+
+    SatPos(ephm, 0)
+
+    # move omega 0, Omega0 180
+    print("\nTest Omega 180:")
+    ephm['omega'] = 0
+    ephm['Omega0'] = gps.GPS_PI
+
+    SatPos(ephm, 0)
+
+    # move omega 90, Omega0 90
+    print("\nTest omega 90 Omega0 90:")
+    ephm['omega'] = gps.GPS_PI / 2
+    ephm['Omega0'] = gps.GPS_PI / 2
+
+    SatPos(ephm, 0)
+
+    # move omega 0, Omega0 0, i0 90
+    print("\nTest omega 0 Omega0 0 i0 90:")
+    ephm['omega'] = 0
+    ephm['Omega0'] = 0
+    ephm['i0'] = gps.GPS_PI / 2
+
+    SatPos(ephm, 0)
+
+    # move omega 45, Omega0 0, i0 90
+    print("\nTest omega 45 Omega0 0 i0 90:")
+    ephm['omega'] = gps.GPS_PI / 4
+    ephm['Omega0'] = 0
+    ephm['i0'] = gps.GPS_PI / 2
+
+    SatPos(ephm, 0)
+
+    # move omega 45, Omega0 45, i0 90
+    print("\nTest omega 45 Omega0 45 i0 90:")
+    ephm['omega'] = gps.GPS_PI / 4
+    ephm['Omega0'] = gps.GPS_PI / 4
+    ephm['i0'] = gps.GPS_PI / 2
+
+    SatPos(ephm, 0)
+
+    # move omega 45, Omega0 0, i0 45
+    print("\nTest omega 45 Omega0 0 i0 45:")
+    ephm['omega'] = gps.GPS_PI / 4
+    ephm['Omega0'] = 0
+    ephm['i0'] = gps.GPS_PI / 4
+
+    SatPos(ephm, 0)
+
+    # move omega 90, Omega0 0, i0 90
+    # altitude blows up.
+    print("\nTest omega 0 Omega0 0 i0 0:")
+    ephm['omega'] = gps.GPS_PI / 2
+    ephm['Omega0'] = 0
+    ephm['i0'] = gps.GPS_PI / 2
+
+    SatPos(ephm, 0)
+
+    # omega Omega0, i0 seem OK.
+
+    # move omega 0, Omega0 0, i0 0
+    # t = one quarter sideral day
+    siderial_day = 86164.0905
+    print("\nTest omega 0 Omega0 0 i0 0:")
+    ephm['omega'] = 0
+    ephm['Omega0'] = 0
+    ephm['i0'] = 0
+
+    SatPos(ephm, siderial_day / 4)
+
+    # move omega 0, Omega0 0, i0 0
+    # t = one half sideral day
+    # sat has done one orbit, earth 1/2 orbit
+    print("\nTest omega 0 Omega0 0 i0 0:")
+    ephm['omega'] = 0
+    ephm['Omega0'] = 0
+    ephm['i0'] = 0
+
+    SatPos(ephm, siderial_day / 2)
+    return 0
+
+
 description = 'Convert one gpsd JSON message class to csv format.'
 usage = '%(prog)s [OPTIONS] [host[:port[:device]]]'
 epilog = ('BSD terms apply: see the file COPYING in the distribution root'
@@ -600,6 +744,10 @@ if options.target:
         parser.print_help()
         sys.exit(0)
 
+if options.test:
+    ret = test()
+    sys.exit(ret)
+
 if not options.port:
     options.port = 2947
 
@@ -634,7 +782,7 @@ try:
             msg = session.next()
         except StopIteration:
             # most likely end of file, maybe lost connection to gpsd
-            break;
+            break
 
         if 'SUBFRAME' == msg['class']:
             if 1 < options.debug:
@@ -911,146 +1059,3 @@ if options.savefile:
         # the JSON format will change, do not depend on it.
         # JSON turns all the int keys into strings!
         json.dump(all_data, save_file, indent=4, sort_keys=True)
-
-
-if options.test:
-    # FIXME: Broken
-    # SatPos() tests
-    # lat 0.000000 lon 0.000000 altHAE 20175272.000
-    ephm = {
-        'af0': 0,
-        'af1': 0,
-        'af2': 0,
-        'AODO': 0,
-        'Cic': 0,
-        'Cis': 0,
-        'Crc': 0,
-        'Crs': 0,
-        'Cuc': 0,
-        'Cus': 0,
-        'deltan': 0,
-        'e': 0,         # nominal 0
-        'FIT': 0,
-        'hlth': 0,
-        'i0': 0,        # nominal 55.0 degrees +/- 3
-        'IDOT': 0,
-        'IODC': 53,
-        'IODE': 53,
-        'L2': 1,
-        'L2P': 0,
-        'M0': 0,
-        'omega': 0,     # nominal 0, +/1 180 degrees
-        'Omega0': 0,
-        'Omegad': 0,
-        'sqrtA': 5153,  # nominal 5153.542538875565
-        'Tgd': 0,
-        'toc': 0,
-        'toe': 0,
-        'ura': 0,
-        'WN': 75}
-
-    options.debug = 2
-    print("\nTest Ephemeris:")
-    SatPos(ephm, 0)
-
-    # move 90 degrees
-    print("\nTest omega 90:")
-    ephm['omega'] = gps.GPS_PI / 2
-
-    SatPos(ephm, 0)
-
-    # move 180 degrees
-    print("\nTest omega 180:")
-    ephm['omega'] = gps.GPS_PI
-
-    SatPos(ephm, 0)
-
-    # move 270 degrees
-    print("\nTest omega 270:")
-    ephm['omega'] = gps.GPS_PI * 1.5
-
-    SatPos(ephm, 0)
-
-    # move omega 0, Omega0 90
-    print("\nTest Omega 90:")
-    ephm['omega'] = 0
-    ephm['Omega0'] = gps.GPS_PI / 2
-
-    SatPos(ephm, 0)
-
-    # move omega 0, Omega0 180
-    print("\nTest Omega 180:")
-    ephm['omega'] = 0
-    ephm['Omega0'] = gps.GPS_PI
-
-    SatPos(ephm, 0)
-
-    # move omega 90, Omega0 90
-    print("\nTest omega 90 Omega0 90:")
-    ephm['omega'] = gps.GPS_PI / 2
-    ephm['Omega0'] = gps.GPS_PI / 2
-
-    SatPos(ephm, 0)
-
-    # move omega 0, Omega0 0, i0 90
-    print("\nTest omega 0 Omega0 0 i0 90:")
-    ephm['omega'] = 0
-    ephm['Omega0'] = 0
-    ephm['i0'] = gps.GPS_PI / 2
-
-    SatPos(ephm, 0)
-
-    # move omega 45, Omega0 0, i0 90
-    print("\nTest omega 45 Omega0 0 i0 90:")
-    ephm['omega'] = gps.GPS_PI / 4
-    ephm['Omega0'] = 0
-    ephm['i0'] = gps.GPS_PI / 2
-
-    SatPos(ephm, 0)
-
-    # move omega 45, Omega0 45, i0 90
-    print("\nTest omega 45 Omega0 45 i0 90:")
-    ephm['omega'] = gps.GPS_PI / 4
-    ephm['Omega0'] = gps.GPS_PI / 4
-    ephm['i0'] = gps.GPS_PI / 2
-
-    SatPos(ephm, 0)
-
-    # move omega 45, Omega0 0, i0 45
-    print("\nTest omega 45 Omega0 0 i0 45:")
-    ephm['omega'] = gps.GPS_PI / 4
-    ephm['Omega0'] = 0
-    ephm['i0'] = gps.GPS_PI / 4
-
-    SatPos(ephm, 0)
-
-    # move omega 90, Omega0 0, i0 90
-    # altitude blows up.
-    print("\nTest omega 0 Omega0 0 i0 0:")
-    ephm['omega'] = gps.GPS_PI / 2
-    ephm['Omega0'] = 0
-    ephm['i0'] = gps.GPS_PI / 2
-
-    SatPos(ephm, 0)
-
-    # omega Omega0, i0 seem OK.
-
-    # move omega 0, Omega0 0, i0 0
-    # t = one quarter sideral day
-    siderial_day = 86164.0905
-    print("\nTest omega 0 Omega0 0 i0 0:")
-    ephm['omega'] = 0
-    ephm['Omega0'] = 0
-    ephm['i0'] = 0
-
-    SatPos(ephm, siderial_day / 4)
-
-    # move omega 0, Omega0 0, i0 0
-    # t = one half sideral day
-    # sat has done one orbit, earth 1/2 orbit
-    print("\nTest omega 0 Omega0 0 i0 0:")
-    ephm['omega'] = 0
-    ephm['Omega0'] = 0
-    ephm['i0'] = 0
-
-    SatPos(ephm, siderial_day / 2)
