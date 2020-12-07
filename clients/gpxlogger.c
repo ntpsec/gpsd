@@ -202,9 +202,10 @@ static void usage(void)
 {
     (void)fprintf(stderr,
          "Usage: %s [OPTIONS] [server[:port:[device]]]\n\n"
+         "  -?                  Show this help, then exit\n"
 #ifdef HAVE_GETOPT_LONG
          "  --daemonize         Daemonize\n"
-         "  --debug DEBUGLEVEL  Set debug level.\n"
+         "  --debug LVL         Set debug level.\n"
          "  --export EXPORTMETHOD  Default %s\n"
          "  --exports           List available exports, then exit\n"
          "  --help              Show this help, then exit\n"
@@ -215,7 +216,7 @@ static void usage(void)
          "  --reconnect         Retry when gpsd loses the fix.\n"
          "  --version           Show version, then exit\n"
 #endif
-         "  -D DEBUGLEVEL       Set debug level.\n"
+         "  -D LVL              Set debug level.\n"
          "  -d                  Daemonize\n"
          "  -e EXPORTMETHOD     Default %s \n"
          "  -f FILENAME         Send output to file FILENAME\n"
@@ -241,7 +242,7 @@ int main(int argc, char **argv)
     bool reconnect = false;
     unsigned int flags = WATCH_ENABLE;
     struct exportmethod_t *method = NULL;
-    const char *optstring = "dD:e:f:hi:lm:rV";
+    const char *optstring = "?dD:e:f:hi:lm:rV";
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
     static struct option long_options[] = {
@@ -353,6 +354,8 @@ int main(int argc, char **argv)
             (void)fprintf(stderr, "%s: version %s (revision %s)\n",
                           progname, VERSION, REVISION);
             exit(EXIT_SUCCESS);
+        case '?':
+        case 'h':
         default:
             usage();
             /* NOTREACHED */
