@@ -8,7 +8,7 @@ SPDX-License-Identifier: BSD-2-clause
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='xgps.1'>
  <refentryinfo>
-  <date>5 December 2020</date>
+  <date>6 December 2020</date>
  </refentryinfo>
  <refmeta>
   <refentrytitle>xgps</refentrytitle>
@@ -24,6 +24,7 @@ SPDX-License-Identifier: BSD-2-clause
  <refsynopsisdiv id='synopsis'>
   <cmdsynopsis>
    <command>xgps</command>
+   <arg choice='opt'>-? </arg>
    <arg choice='opt'>--help </arg>
    <arg choice='opt'>--debug <replaceable>DEBUG-LEVEL</replaceable>
    </arg>
@@ -50,8 +51,7 @@ SPDX-License-Identifier: BSD-2-clause
     </group>
    </arg>
    <arg choice='opt'>--version </arg>
-   <arg choice='opt'>-? </arg>
-   <arg choice='opt'>-D <replaceable>DEBUG-LEVEL</replaceable>
+   <arg choice='opt'>-D <replaceable>LVL</replaceable>
    </arg>
    <arg choice='opt'>-h </arg>
    <arg choice='opt'>-l <group>
@@ -83,6 +83,7 @@ SPDX-License-Identifier: BSD-2-clause
   </cmdsynopsis>
   <cmdsynopsis>
    <command>xgpsspeed</command>
+   <arg choice='opt'>-? </arg>
    <arg choice='opt'>--debug <replaceable>DEBUG-LEVEL</replaceable>
    </arg>
    <arg choice='opt'>--device <replaceable>DEVICE</replaceable>
@@ -106,9 +107,8 @@ SPDX-License-Identifier: BSD-2-clause
     </group>
    </arg>
    <arg choice='opt'>--version </arg>
-   <arg choice='opt'>-D <replaceable>DEBUG-LEVEL</replaceable>
+   <arg choice='opt'>-D <replaceable>LVL</replaceable>
    </arg>
-   <arg choice='opt'>-? </arg>
    <arg choice='opt'>-h </arg>
    <arg choice='opt'>-r <replaceable>DEGREES</replaceable>
    </arg>
@@ -128,19 +128,75 @@ SPDX-License-Identifier: BSD-2-clause
   <title>DESCRIPTION</title>
   <para>These are two sample clients shipped with
 <application>gpsd</application>. They have some common options:</para>
-  <para>The <option>--device</option> The device on the host to connect
+  <variablelist>
+   <varlistentry>
+    <term>
+     <option>-?</option>
+    </term>
+    <term>
+     <option>-h</option>
+    </term>
+    <term>
+     <option>--help</option>
+    </term>
+    <listitem>
+     <para>Causes the client to emit a summary of its options and then exit.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-device DEVICE</option>
+    </term>
+    <listitem>
+     <para>The device on the host to connect
 to. The default is empty (any).</para>
-  <para> The <option>-D</option> option, when present, sets a debug
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-D LVL</option>
+    </term>
+    <term>
+     <option>--debug LVL</option>
+    </term>
+    <listitem>
+     <para>Sets the debug
 level; it is primarily for use by GPSD developers.  It enables
 various progress messages to standard error.</para>
-  <para>The <option>-h, --help</option> option causes each client to emit a
-summary of its options and then exit.</para>
-  <para>The <option>--host</option> The host (server) to connect to. The
-default is localhost.</para>
-  <para>The <option>--port</option> The port to connect to. The default is
-2947.</para>
-  <para>The <option>-V, --version</option> option causes each client to dump
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>--host HOST</option>
+    </term>
+    <listitem>
+     <para>The host (server) to connect to. The default is localhost.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-p PORT</option>
+    </term>
+    <term>
+     <option>--port PORT</option>
+    </term>
+    <listitem>
+     <para>The port to connect to. The default is 2947.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-V</option>
+    </term>
+    <term>
+     <option>--version</option>
+    </term>
+    <listitem>
+     <para>The <option>-V, --version</option> option causes each client to dump
 the package version and exit.</para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
   <para>By default, clients collect data from all compatible devices on
 localhost, using the default GPSD port 2947. An optional argument to any
 client may specify a server to get data from. A colon-separated suffix
@@ -199,13 +255,35 @@ as unknown systems).  Filled icons were used in the current fix,
 outline icons were not.  Hovering over a symbol with the mouse pointer
 will temporarily display a small popup window with the satellite
 details from the Satellite List pane.</para>
-   <para> The <option>-l, --llfmt</option> option, when present, sets
+   <variablelist>
+    <varlistentry>
+     <term>
+      <option>-l FMT</option>
+     </term>
+     <term>
+      <option>--llfmt FMT</option>
+     </term>
+     <listitem>
+      <para>Set
 the format of latitude and longitude reports. The value 'd' produces
 decimal degrees and is the default. The value 'm' produces degrees and
 decimal minutes. The value 's' produces degrees, minutes, and decimal
 seconds.</para>
-   <para>The <option>-r, --rotate</option> option accepts an argument in
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>
+      <option>-r DEG</option>
+     </term>
+     <term>
+      <option>--rotate DEG</option>
+     </term>
+     <listitem>
+      <para>Accepts an argument in
 degrees, to rotate the skyview counterclockwise.</para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
    <para>
     <application>xgps</application> looks at variables in the
 environment to figure out the units for display &mdash; imperial,
@@ -244,10 +322,7 @@ altitude and error estimates, kilometers per hour in speeds).</para>
    <title>xgpsspeed</title>
    <para>
     <application>xgpsspeed</application> is a speedometer
-that uses position information from the GPS. It accepts an
-<option>-h, --help</option> option and optional argument as for
-<application>xgps</application>, or a <option>-V, --version</option>
-option to dump the program version and exit.</para>
+that uses position information from the GPS.  </para>
    <para>The default display mode is a speed and track presentation
 modeled after a marine navigation display; for backward compatibility
 the <option>--nautical</option> option forces this mode.
