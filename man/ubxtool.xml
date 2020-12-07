@@ -124,7 +124,9 @@ running gpsd instance.</para>
   <para>The program accepts the following options:</para>
   <variablelist remap='TP'>
    <varlistentry>
-    <term>-?, -h, --help</term>
+    <term><option>-?</option></term>
+    <term><option>-h</option></term>
+    <term><option>--help</option></term>
     <listitem>
      <para>Makes <application>ubxtool</application> print a usage
 message and exit. Use with <option>-v 2</option> to see all
@@ -133,8 +135,8 @@ additionally see all configuration items (long).</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-c COMMAND</term>
-    <term>--command COMMAND</term>
+    <term><option>-c COMMAND</option></term>
+    <term><option>--command COMMAND</option></term>
     <listitem>
      <para>Send a command to the GPS.  Accepts one parameter, COMMAND,
 a comma-separated list of hexadecimal bytes specifying the class, the ID,
@@ -143,15 +145,15 @@ and any needed payload.  The header, length, and checksum are added automaticall
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>--device DEVICE</term>
+    <term><option>--device DEVICE</option></term>
     <listitem>
      <para>The DEVICE on the <application>gpsd</application> to connect to.
     Defaults to all.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-d OPTION</term>
-    <term>--disable OPTION</term>
+    <term><option>-d OPTION</option></term>
+    <term><option>--disable OPTION</option></term>
     <listitem>
      <para>Disable an option in the GPS.  Accepts one parameter, OPTION,
 the option to disable.  Use <option>-h -v 2</option> to see all possible
@@ -248,8 +250,8 @@ GBS, GGA, GSA, GGL, GST, GSV, RMC, VTG, and ZDA.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-e OPTION</term>
-    <term>--enable OPTION</term>
+    <term><option>-e OPTION</option></term>
+    <term><option>--enable OPTION</option></term>
     <listitem>
      <para>Enable an option in the GPS.  Accepts one parameter, OPTION,
 the option to enable.  <option>-e</option> accepts the same OPTIONs as
@@ -258,8 +260,8 @@ the option to enable.  <option>-e</option> accepts the same OPTIONs as
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-f FILE</term>
-    <term>--file FILE</term>
+    <term><option>-f FILE</option></term>
+    <term><option>--file FILE</option></term>
     <listitem>
      <para>Connect to a file or device. Accepts one parameter, FILE, the
 file or device to open. Files are opened read-only. Character devices
@@ -269,8 +271,8 @@ given. Requires the pyserial module.
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-g ITEM,LAYER,POSITION,END</term>
-    <term>--getitem ITEM,LAYER,POSITION,END</term>
+    <term><option>-g ITEM,LAYER,POSITION,END</option></term>
+    <term><option>--getitem ITEM,LAYER,POSITION,END</option></term>
     <listitem>
      <para>Get the value of ITEM from LAYER, starting at POSITION, up
 to END key/value pairs (UBX-CFG-VALGET).  All parameters past ITEM are
@@ -279,15 +281,15 @@ and 7 are all requested.  See the section on CONFIGURATION ITEMS</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>--host HOST</term>
+    <term><option>--host HOST</option></term>
     <listitem>
      <para>Connect to the <application>gpsd</application> on HOST (server).
     Defaults to localhost.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-i port</term>
-    <term>--portid port</term>
+    <term><option>-i port</option></term>
+    <term><option>--portid port</option></term>
     <listitem>
      <para>Specifies port ID # (interface) for port-related commands
 such as UBX_CFG-PRT.
@@ -295,8 +297,8 @@ such as UBX_CFG-PRT.
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-p PRESET</term>
-    <term>--preset PRESET</term>
+    <term><option>-p PRESET</option></term>
+    <term><option>--preset PRESET</option></term>
     <listitem>
      <para>Send a preset command the GPS.  Usually accepts one parameter,
 PRESET, the name of the command to send.  A few PRESETS, like LOG-FINDTIME,
@@ -381,15 +383,15 @@ options.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>--port PORT</term>
+    <term><option>--port PORT</option></term>
     <listitem>
      <para>Use PORT to connect to <application>gpsd</application>.
     Defaults to 2947.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-P protver</term>
-    <term>--protver protver</term>
+    <term><option>-P protver</option></term>
+    <term><option>--protver protver</option></term>
     <listitem>
      <para>Sets the protocol version to use for sending commands.
 Minimum 6 (Antaris 4).  Use "ubxtool -p MON-VER" to see the version your
@@ -399,67 +401,67 @@ if this is not set correctly.  Default 10 (u-blox 5).
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-r</term>
-    <term>-readonly</term>
+    <term><option>-r</option></term>
+    <term><option>-readonly</option></term>
     <listitem>
      <para>Read only.  Do not send anything to the GPS.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-R RAW</term>
-    <term>--rawfile RAW</term>
+    <term><option>-R RAW</option></term>
+    <term><option>--rawfile RAW</option></term>
     <listitem>
      <para>Save all raw serial data received from the GPS into the
      file RAW.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-s SPEED</term>
-    <term>--inspeed SPEED</term>
+    <term><option>-s SPEED</option></term>
+    <term><option>--inspeed SPEED</option></term>
     <listitem>
      <para>Set local serial port speed to SPEED bps. Default 9,600 bps.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-S SPEED</term>
-    <term>--setspeed SPEED</term>
+    <term><option>-S SPEED</option></term>
+    <term><option>--setspeed SPEED</option></term>
     <listitem>
      <para>Set the GPS serial port speed to SPEED bps.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-t</term>
-    <term>--timestamp</term>
+    <term><option>-t</option></term>
+    <term><option>--timestamp</option></term>
     <listitem>
      <para>Timestamp decoded messages with seconds since the epoch.  Use it
 twice and also get UTC time.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-v VERBOSITY</term>
-    <term>--verbosity VERBOSITY</term>
+    <term><option>-v VERBOSITY</option></term>
+    <term><option>--verbosity VERBOSITY</option></term>
     <listitem>
      <para>Set verbosity level to VERBOSITY.  Verbosity can be from 0
      (very quiet), 2 (decode messages), to 4 (very noisy).  Default 1.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-V</term>
-    <term>--version</term>
+    <term><option>-V</option></term>
+    <term><option>--version</option></term>
     <listitem>
      <para>Print <application>ubxtool</application> version and exit.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-w WAIT</term>
-    <term>--wait WAIT</term>
+    <term><option>-w WAIT</option></term>
+    <term><option>--wait WAIT</option></term>
     <listitem>
      <para>Wait for WAIT seconds before exiting.  Default 2 seconds.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-x ITEM,LAYERS</term>
-    <term>--delitem ITEM,LAYERS</term>
+    <term><option>-x ITEM,LAYERS</option></term>
+    <term><option>--delitem ITEM,LAYERS</option></term>
     <listitem>
      <para>Delete the value of ITEM name from LAYERS.  The bit map LAYERS is
 optional.  By default, delete in both the BBR and FLASH layers in the
@@ -468,8 +470,8 @@ item.  See the section on CONFIGURATION ITEMS</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-z ITEM,VAL,LAYERS</term>
-    <term>--setitem ITEM,VAL,LAYERS</term>
+    <term><option>-z ITEM,VAL,LAYERS</option></term>
+    <term><option>--setitem ITEM,VAL,LAYERS</option></term>
     <listitem>
      <para>Set the value of ITEM name to VAL in LAYERS in the GPS
 (UBX-CFG-VALSET).  VAL and the bit mask LAYERS are decimal.  ",LAYERS"
@@ -478,7 +480,7 @@ CONFIGURATION ITEMS</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>[server[:port[:device]]]</term>
+    <term><option>[server[:port[:device]]]</option></term>
     <listitem>
      <para>
        By default, <application>ubxtool</application> collects data
