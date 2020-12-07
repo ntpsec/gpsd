@@ -76,7 +76,15 @@ running gpsd instance.</para>
   <para>The program accepts the following options:</para>
   <variablelist remap='TP'>
    <varlistentry>
-    <term>-c COMMAND</term>
+    <term><option>-?</option></term>
+    <term><option>-h</option></term>
+    <listitem>
+     <para>Makes <application>zerk</application> print
+a usage message and exit.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term><option>-c COMMAND</option></term>
     <listitem>
      <para>Send a text string to the GPS.  Accepts one parameter, COMMAND,
 the command string to send to the GPS.  The string is sent verbatim, except
@@ -85,7 +93,7 @@ a newline is appended.
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-d OPTION</term>
+    <term><option>-d OPTION</option></term>
     <listitem>
      <para>Disable an option in the GPS.  Accepts one parameter, OPTION,
 the option to disable.  <application>zerk</application> will exit after
@@ -179,7 +187,7 @@ disabled are: [E1], [E2], [E3], [E5], [El].</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-e OPTION</term>
+    <term><option>-e OPTION</option></term>
     <listitem>
      <para>Enable an option in the GPS.  Accepts one parameter, OPTION,
 the option to enable.  <application>zerk</application> will exit after
@@ -189,7 +197,7 @@ same OPTIONs as -d, except the action is to enable the option.
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-f FILE</term>
+    <term><option>-f FILE</option></term>
     <listitem>
      <para>Connect to a file or device.  Accepts one parameter, FILE,
 the file or device to open.   Files are opened read-only.  Character
@@ -199,14 +207,7 @@ Requires the pyserial module.
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-h</term>
-    <listitem>
-     <para>Makes <application>zerk</application> print
-a usage message and exit.</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>-O OAF</term>
+    <term><option>-O OAF</option></term>
     <listitem>
      <para>Load an Option Authorization File (OAF) into the GPS.  Accepts
 one parameter, OAF, command file to read.  The OAF is just a special case
@@ -216,7 +217,7 @@ the GPS.
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-p PRESET</term>
+    <term><option>-p PRESET</option></term>
     <listitem>
      <para>Send a preset command the GPS.  Accepts one parameter, PRESET,
 the name of the command to send.  <application>zerk</application> will exit after
@@ -295,65 +296,58 @@ the GPS acknowledges the command, unless the -W is given.
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-r</term>
+    <term><option>-r</option></term>
     <listitem>
      <para>Read only.  Do not send anything to the GPS.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-R RAW</term>
+    <term><option>-R RAW</option></term>
     <listitem>
      <para>Save all raw data from the GPS into the file RAW.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-S SPEED</term>
+    <term><option>-S SPEED</option></term>
     <listitem>
      <para>Configure the GPS serial speed to SPEED bps.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-s SPEED</term>
+    <term><option>-s SPEED</option></term>
     <listitem>
      <para>Set local serial port speed to SPEED bps. Default 115,200 bps.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-V</term>
+    <term><option>-V</option></term>
     <listitem>
      <para>Print <application>zerk</application> version and exit.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-v VERBOSITY</term>
+    <term><option>-v VERBOSITY</option></term>
     <listitem>
      <para>Set verbosity level to VERBOSITY.  Verbosity can be from 0
      (very quiet), to 4 (very noisy).  Default 2.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-v VERBOSITY</term>
-    <listitem>
-     <para>Set verbosity level to VERBOSITY.  Verbosity can be from 0
-     (very quiet), 2 (decode messages), to 4 (very noisy).  Default 1.</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>-W</term>
+    <term><option>-W</option></term>
     <listitem>
      <para>Force waiting the entire wait time.  No early exit for completion
 of -d, -e or -p command.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-w WAIT</term>
+    <term><option>-w WAIT</option></term>
     <listitem>
      <para>Wait for WAIT seconds before exiting.  Will exit early on command
 completion of -d, -e or -p command, unless -W is given.  Default 2.0 second.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>[server[:port[:device]]]</term>
+    <term><option>[server[:port[:device]]]</option></term>
     <listitem>
      <para>
        By default, <application>zerk</application> collects data from all compatible devices on
@@ -367,13 +361,6 @@ completion of -d, -e or -p command, unless -W is given.  Default 2.0 second.</pa
        <manvolnum>1</manvolnum>
       </citerefentry> man page.
      </para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>-?</term>
-    <listitem>
-     <para>Makes <application>zerk</application> print
-a usage message and exit.</para>
     </listitem>
    </varlistentry>
   </variablelist>
