@@ -6,7 +6,7 @@ SPDX-License-Identifier: BSD-2-clause
 -->
 <refentry id="gpsrinex.1">
  <refentryinfo>
-  <date>5 December 2020</date>
+  <date>6 December 2020</date>
  </refentryinfo>
  <refmeta>
   <refentrytitle>gpsrinex</refentrytitle>
@@ -21,48 +21,48 @@ SPDX-License-Identifier: BSD-2-clause
  <refsynopsisdiv id="synopsis">
   <cmdsynopsis>
    <command>gpsrinex</command>
-   <arg choice="opt">--agency <replaceable>agency</replaceable>
+   <arg choice="opt">--agency <replaceable>AGENCY</replaceable>
    </arg>
-   <arg choice="opt">--ant_e <replaceable>easting</replaceable>
+   <arg choice="opt">--ant_e <replaceable>EASTING</replaceable>
    </arg>
-   <arg choice="opt">--ant_h <replaceable>height</replaceable>
+   <arg choice="opt">--ant_h <replaceable>HEIGHT</replaceable>
    </arg>
-   <arg choice="opt">--ant_n <replaceable>northing</replaceable>
+   <arg choice="opt">--ant_n <replaceable>NORTHING</replaceable>
    </arg>
-   <arg choice="opt">--ant_num <replaceable>num</replaceable>
+   <arg choice="opt">--ant_num <replaceable>NUM</replaceable>
    </arg>
-   <arg choice="opt">--ant_type <replaceable>type</replaceable>
+   <arg choice="opt">--ant_type <replaceable>TYPE</replaceable>
    </arg>
-   <arg choice="opt">--count <replaceable>count</replaceable>
+   <arg choice="opt">--count <replaceable>COUNT</replaceable>
    </arg>
-   <arg choice="opt">--debug <replaceable>debuglevel</replaceable>
+   <arg choice="opt">--debug <replaceable>LVL</replaceable>
    </arg>
-   <arg choice="opt">--fileout <replaceable>filename</replaceable>
+   <arg choice="opt">--fileout <replaceable>FILE</replaceable>
    </arg>
    <arg choice="opt">--help</arg>
-   <arg choice="opt">--interval <replaceable>interval</replaceable>
+   <arg choice="opt">--interval <replaceable>INTERVAL</replaceable>
    </arg>
-   <arg choice="opt">--marker_name <replaceable>name</replaceable>
+   <arg choice="opt">--marker_name <replaceable>NAME</replaceable>
    </arg>
-   <arg choice="opt">--marker_type <replaceable>type</replaceable>
+   <arg choice="opt">--marker_type <replaceable>TYPE</replaceable>
    </arg>
-   <arg choice="opt">--observer <replaceable>observer</replaceable>
+   <arg choice="opt">--observer <replaceable>OBSERVER</replaceable>
    </arg>
-   <arg choice="opt">--rec_num <replaceable>num</replaceable>
+   <arg choice="opt">--rec_num <replaceable>NUM</replaceable>
    </arg>
-   <arg choice="opt">--rec_type <replaceable>type</replaceable>
+   <arg choice="opt">--rec_type <replaceable>TYPE</replaceable>
    </arg>
-   <arg choice="opt">--rec_vers <replaceable>vers</replaceable>
+   <arg choice="opt">--rec_vers <replaceable>VERS</replaceable>
    </arg>
    <arg choice="opt">--version</arg>
-   <arg choice="opt">-D <replaceable>debuglevel</replaceable>
+   <arg choice="opt">-D <replaceable>LVL</replaceable>
    </arg>
-   <arg choice="opt">-f <replaceable>filename</replaceable>
+   <arg choice="opt">-f <replaceable>FILE</replaceable>
    </arg>
    <arg choice="opt">-h</arg>
-   <arg choice="opt">-i <replaceable>interval</replaceable>
+   <arg choice="opt">-i <replaceable>INTERVAL</replaceable>
    </arg>
-   <arg choice="opt">-n <replaceable>count</replaceable>
+   <arg choice="opt">-n <replaceable>COUNT</replaceable>
    </arg>
    <arg choice="opt">-V</arg>
    <group>
@@ -119,7 +119,7 @@ improvement. </para>
   <para>The output will consist of one RINEX 3 observation file that
 is ready to be read by your PPP program.  The default filename will be
 in the form: gpsrinexYYYYJJJHHMMSS.obs.  You can override this filename
-with the -f option.</para>
+with the <option>-f</option> option.</para>
   <para>Optionally a server, TCP/IP port number and remote device can
 be given.  If omitted, <application>gpsrinex</application> connects to
 localhost on the default port (2947) and watches all devices opened by
@@ -129,25 +129,48 @@ localhost on the default port (2947) and watches all devices opened by
   <title>OPTIONS</title>
   <variablelist remap='TP'>
    <varlistentry>
-    <term>-D, --debug [debuglevel]</term>
+    <term>
+     <option>-?</option>
+    </term>
+    <term>
+     <option>-h</option>
+    </term>
+    <term>
+     <option>--help</option>
+    </term>
     <listitem>
-     <para>set debug level to [debuglevel].</para>
+     <para>Print a usage message and exit.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-f, --fileout [filename] </term>
+    <term>
+     <option>-D LVL</option>
+    </term>
+    <term>
+     <option>-debug LVL</option>
+    </term>
     <listitem>
-     <para>save RINEX into [filename].</para>
+     <para>Set debug level to LVL.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-h, --help </term>
+    <term>
+     <option>-f FILE</option>
+    </term>
+    <term>
+     <option>--fileout FILE</option>
+    </term>
     <listitem>
-     <para>print a usage message and exit.</para>
+     <para>save RINEX into FILE.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-i, --interval [interval] </term>
+    <term>
+     <option>-i SECS</option>
+    </term>
+    <term>
+     <option>--interval SECS</option>
+    </term>
     <listitem>
      <para>wait [interval] seconds between epochs.
 The interval can be specified to the millisecond.
@@ -156,14 +179,24 @@ reduces the data to 30 second intervals.  Default is 30.000.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-n, --count [count] </term>
+    <term>
+     <option>-n COUNT</option>
+    </term>
+    <term>
+     <option>--count COUNT</option>
+    </term>
     <listitem>
-     <para>causes [count] epochs to be output.  OPUS
+     <para>Causes COUNT epochs to be output.  OPUS
 requires a minimum af 15 minutes, and a maximum of 48 hours, of data.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-V, --version</term>
+    <term>
+     <option>-V</option>
+    </term>
+    <term>
+     <option>--version</option>
+    </term>
     <listitem>
      <para>makes <application>gpsrinex</application> print
 its version and exit.</para>
@@ -174,56 +207,73 @@ its version and exit.</para>
 RINEX 3 obs file.  They do not change how gpsrinex computes anything.</para>
   <variablelist remap='TP'>
    <varlistentry>
-    <term>--agency [agency]</term>
+    <term>
+     <option>--agency AGENCY</option>
+    </term>
     <listitem>
-     <para>Thename of the agency creating the current
-file.</para>
+     <para>The name of the agency creating the current file.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>--ant_num [number]</term>
+    <term>
+     <option>--ant_num NUMBER</option>
+    </term>
     <listitem>
      <para>The antenna serial number.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>--ant_type [type]</term>
+    <term>
+     <option>--ant_type TYPE</option>
+    </term>
     <listitem>
      <para>The antenna type.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>--marker_name [name]</term>
+    <term>
+     <option>--marker_name NAME</option>
+    </term>
     <listitem>
      <para>The marker name.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>--marker_type [type]</term>
+    <term>
+     <option>--marker_type TYPE</option>
+    </term>
     <listitem>
      <para>The marker type</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>--observer [observer]</term>
+    <term>
+     <option>--observer OBSERVER</option>
+    </term>
     <listitem>
      <para>The name of the observer (you).</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>--rec_num [num]</term>
+    <term>
+     <option>--rec_num NUM</option>
+    </term>
     <listitem>
      <para>The receiver serial number.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>--rec_type [type]</term>
+    <term>
+     <option>--rec_type TYPE</option>
+    </term>
     <listitem>
      <para>The receiver type.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>--rec_vers [vers]</term>
+    <term>
+     <option>--rec_vers VERS</option>
+    </term>
     <listitem>
      <para>The receiver version.</para>
     </listitem>
@@ -234,19 +284,25 @@ in the generated RINEX 3 obs file.  They do not change how gpsrinex computes
 anything.</para>
   <variablelist remap='TP'>
    <varlistentry>
-    <term>--ant_e [easting]</term>
+    <term>
+     <option>--ant_e EASTING</option>
+    </term>
     <listitem>
      <para>The antenna easting from marker in meters.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>--ant_h [height]</term>
+    <term>
+     <option>--ant_h HEIGHT</option>
+    </term>
     <listitem>
      <para>The antenna height from marker in meters.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>--ant_n [northing]</term>
+    <term>
+     <option>--ant_n NORTHING</option>
+    </term>
     <listitem>
      <para>The antenna northing from marker in meters.</para>
     </listitem>
