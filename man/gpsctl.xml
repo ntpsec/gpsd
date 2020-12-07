@@ -8,7 +8,7 @@ SPDX-License-Identifier: BSD-2-clause
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gpsctl.1'>
  <refentryinfo>
-  <date>4 November 2020</date>
+  <date>6 December 2020</date>
  </refentryinfo>
  <refmeta>
   <refentrytitle>gpsctl</refentrytitle>
@@ -24,11 +24,12 @@ SPDX-License-Identifier: BSD-2-clause
   <cmdsynopsis>
    <command>gpsctl</command>
    <group>
+    <arg choice='plain'>-?</arg>
     <arg choice='plain'>--binary</arg>
     <arg choice='plain'>--nmea</arg>
     <arg choice='plain'>--reset</arg>
    </group>
-   <arg choice='opt'>--debug <replaceable>debuglevel</replaceable>
+   <arg choice='opt'>--debug <replaceable>LVL</replaceable>
    </arg>
    <arg choice='opt'>--direct </arg>
    <arg choice='opt'>--echo </arg>
@@ -50,7 +51,7 @@ SPDX-License-Identifier: BSD-2-clause
     <arg choice='plain'>-n</arg>
     <arg choice='plain'>-r</arg>
    </group>
-   <arg choice='opt'>-D <replaceable>debuglevel</replaceable>
+   <arg choice='opt'>-D <replaceable>LVL</replaceable>
    </arg>
    <arg choice='opt'>-c <replaceable>rate</replaceable>
    </arg>
@@ -89,26 +90,60 @@ to the device. On many Unix variants the owning group will be named
   <para>The program accepts the following options:</para>
   <variablelist remap='TP'>
    <varlistentry>
-    <term>-b, --binary</term>
+    <term>
+     <option>-?</option>
+    </term>
+    <term>
+     <option>-h</option>
+    </term>
+    <term>
+     <option>--help</option>
+    </term>
+    <listitem>
+     <para>Display program usage and exit.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-b</option>
+    </term>
+    <term>
+     <option>--binary</option>
+    </term>
     <listitem>
      <para>Put the GPS into native (binary) mode.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-c, --rate</term>
+    <term>
+     <option>-c RATE</option>
+    </term>
+    <term>
+     <option>--rate RATE</option>
+    </term>
     <listitem>
      <para>Change the GPS's cycle time.  Units are seconds.  Note, most
 GPSes have a fixed cycle time of 1 second.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-D, --debug</term>
+    <term>
+     <option>-D LVL</option>
+    </term>
+    <term>
+     <option>--debug LVL</option>
+    </term>
     <listitem>
      <para>Set level of debug messages.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-e, --echo</term>
+    <term>
+     <option>-e</option>
+    </term>
+    <term>
+     <option>--echo</option>
+    </term>
     <listitem>
      <para>Generate the packet from any other arguments specified and ship
 it to standard output instead of the device. This switch can be used
@@ -118,45 +153,69 @@ any way.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-f, --force</term>
+    <term>
+     <option>-f</option>
+    </term>
+    <term>
+     <option>--force</option>
+    </term>
     <listitem>
      <para>Force low-level access (not through the daemon).</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-h, --help</term>
-    <listitem>
-     <para>Display program usage and exit.</para>
-    </listitem>
-   </varlistentry>
-   <varlistentry>
-    <term>-l, --list</term>
+    <term>
+     <option>-l</option>
+    </term>
+    <term>
+     <option>--list</option>
+    </term>
     <listitem>
      <para>List a table showing which option switches can be applied
 to which device types, and exit.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-n, --nmea</term>
+    <term>
+     <option>-n</option>
+    </term>
+    <term>
+     <option>--nmea</option>
+    </term>
     <listitem>
      <para>Put GPS into NMEA mode.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-r, --reset</term>
+    <term>
+     <option>-r</option>
+    </term>
+    <term>
+     <option>--reset</option>
+    </term>
     <listitem>
      <para>Reset the GPS. Device port and type must be specified.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-R, --rmshm</term>
+    <term>
+     <option>-R</option>
+    </term>
+    <term>
+     <option>--rmshm</option>
+    </term>
     <listitem>
      <para>Remove the GPSD shared-memory segment used for SHM export. This
 option will normally only be of interest to GPSD developers.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-s, --speed</term>
+    <term>
+     <option>-s SPEED</option>
+    </term>
+    <term>
+     <option>--speed SPEED</option>
+    </term>
     <listitem>
      <para>Set the baud rate at which the GPS emits packets.</para>
      <para>Use this option with caution.  On USB and Bluetooth GPSes it is
@@ -169,13 +228,23 @@ extreme cases) physically disconnecting the NVRAM backup battery.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-t, --type</term>
+    <term>
+     <option>-t TYPE</option>
+    </term>
+    <term>
+     <option>--type TYPE</option>
+    </term>
     <listitem>
      <para>Force the device type.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-T, --timeout</term>
+    <term>
+     <option>-T TIMEOUT</option>
+    </term>
+    <term>
+     <option>--timeout TIMEOUT</option>
+    </term>
     <listitem>
      <para>Change the sampling timeout. Defaults to 8 seconds, which should
 always be sufficient to get an identifying packet from a device
@@ -183,13 +252,23 @@ emitting at the normal rate of 1 per second.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-V, --version</term>
+    <term>
+     <option>-V</option>
+    </term>
+    <term>
+     <option>--version</option>
+    </term>
     <listitem>
      <para>Display program version and exit.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>-x, --ship</term>
+    <term>
+     <option>-x STR</option>
+    </term>
+    <term>
+     <option>--ship STR</option>
+    </term>
     <listitem>
      <para>Send a specified control string to the GPS;
 <application>gpsctl</application> will provide packet headers and
@@ -227,9 +306,9 @@ SiRFStar I chips, which don't respond to the normal SiRF ID
 probe.)</para>
   <para>If no options are given, the program will display a message
 identifying the GPS type of the selected device and exit.</para>
-  <para>Reset (-r) operations must stand alone; others can be combined.
-Multiple options will be executed in this order: mode changes (-b and
--n) first, speed changes (-s) second, and control-string sends (-c)
+  <para>Reset (<option>-r</option>) operations must stand alone; others can be combined.
+Multiple options will be executed in this order: mode changes (<option>-b</option> and
+-<option>n</option>) first, speed changes (<option>-s</option>) second, and control-string sends (<option>-c</option>)
 last.</para>
  </refsect1>
  <refsect1 id='environment'>
