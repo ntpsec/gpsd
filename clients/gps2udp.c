@@ -203,6 +203,7 @@ static void usage(void)
     (void)fprintf(stderr,
                   "Usage: gps2udp [OPTIONS] [server[:port[:device]]]\n\n"
 #ifdef HAVE_GETOPT_LONG
+                  "  -?                  Show this help, then exit\n"
                   "  --ais               Select AIS messages only.\n"
                   "  --count COUNT       exit after count packets.\n"
                   "  --daemon            Daemonize\n"
