@@ -303,26 +303,33 @@ Compute Velocities.  Use deltatsv to correct pseudorange.
     # Try ecef first, no trig.  This agrees to the meter level
     # with the next range calculation that uses lat/Log/AltHAE.
     # This one likely better.
-    if 'ecefx' in tpv and 'ecefy' in tpv and 'ecefz' in tpv:
-        dx = x - tpv['ecefx']
-        dy = y - tpv['ecefy']
-        dz = z - tpv['ecefz']
+    if (('ecefx' in all_data['tpv'] and
+         'ecefy' in all_data['tpv'] and
+         'ecefz' in all_data['tpv'])):
+        dx = x - all_data['tpv']['ecefx']
+        dy = y - all_data['tpv']['ecefy']
+        dz = z - all_data['tpv']['ecefz']
         rng = math.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
         print("sta x %.3f y %.3f z %.3f\n"
               "rng %.3f" %
-              (tpv['ecefx'], tpv['ecefy'], tpv['ecefz'], rng))
+              (all_data['tpv']['ecefx'], all_data['tpv']['ecefy'],
+               all_data['tpv']['ecefz'], rng))
 
     # ax and el to sat
-    if 'lat' in tpv and 'lon' in tpv and 'altHAE' in tpv:
+    if (('lat' in all_data['tpv'] and
+         'lon' in all_data['tpv'] and
+         'altHAE' in all_data['tpv'])):
         (E, N, U) = gps.ecef2enu(
-            x, y, z, tpv['lat'], tpv['lon'], tpv['altHAE'])
+            x, y, z, all_data['tpv']['lat'], all_data['tpv']['lon'],
+            all_data['tpv']['altHAE'])
         (az, el, rng) = gps.enu2aer(E, N, U)
         print("E %.3f N %.3f U %.3f\n"
               "az %.3f el %.3f rng %.3f" %
               (E, N, U, az, el, rng))
 
         (E2, N2, U2) = gps.ecef2enu(
-            x2, y2, z2, tpv['lat'], tpv['lon'], tpv['altHAE'])
+            x2, y2, z2, all_data['tpv']['lat'], all_data['tpv']['lon'],
+            all_data['tpv']['altHAE'])
         (az2, el2, rng2) = gps.enu2aer(E2, N2, U2)
         range_speed = (rng2 - rng) / delta_t
         # doppler is postive when sat egetting nearer
@@ -348,8 +355,9 @@ all_data = {
     'health2': {},
     # ionosphere, subframe 4, page 18, data id 56
     'ionosphere': {},
+    # for current time and position
+    'tpv': None
     }
-tpv = None               # for current time and position
 
 
 ephem1_fields = {
@@ -788,10 +796,11 @@ try:
             if 1 < options.debug:
                 print("Subframe %d TOW17 %s WN %d" %
                       (msg["frame"], msg['TOW17'], subframe1_WN))
+            # use %02d so it sorts nicely.
             if 'tSV' in msg:
-                idx = "GP%d" % msg['tSV']
+                idx = "GP%02d" % msg['tSV']
             elif 'dataid' in msg:
-                idx = "GP%d" % msg['dataid']
+                idx = "GP%02d" % msg['dataid']
             else:
                 idx = 0
 
@@ -871,7 +880,9 @@ try:
                 # else nothing to do
             # else, bad packet...
         elif 'TPV' == msg['class']:
-            tpv = msg
+            # message is a "dictwrapper" not a dictionary
+            # Python does not document what a "dictwarapper" is.
+            all_data['tpv'] = dict(msg)
 
         if 0 < options.count:
             count += 1
@@ -891,7 +902,7 @@ all_sv = (list(all_data['ephemeris1'].keys()) +
           list(all_data['ephemeris2'].keys()) +
           list(all_data['ephemeris3'].keys()) +
           list(all_data['almanac'].keys()))
-print(all_sv)
+
 for sv in sorted(set(all_sv)):
     print("\n%s" % sv)
     print("  Subframe 1, Clock Data")
@@ -931,15 +942,15 @@ gps_time = None
 gps_week = None
 gps_tow = None
 
-if 'time' in tpv:
-    if 'leapseconds' in tpv:
-        leapseconds = tpv['leapseconds']
-        print("\nCurrent leapseconds: %s" % tpv['leapseconds'])
+if 'time' in all_data['tpv']:
+    if 'leapseconds' in all_data['tpv']:
+        leapseconds = all_data['tpv']['leapseconds']
+        print("\nCurrent leapseconds: %s" % all_data['tpv']['leapseconds'])
     else:
         leapseconds = 18
         print("\nCurrent leapseconds: Unknown, assuming 18")
     # convert to UNIX time
-    unix_time = gps.isotime(tpv['time'])
+    unix_time = gps.isotime(all_data['tpv']['time'])
     # GPS Epoch starts: Jan 1980 00:00:00 UTC, Unix time: 315964800
     gps_time = unix_time - 315964800
     gps_time += leapseconds
@@ -956,9 +967,12 @@ if 'time' in tpv:
         print("Use time: %s, gps time: %s, week: %s tow: %s" %
               (options.timeat, gps_time, int(gps_week), gps_tow))
 
-    if 'lat' in tpv and 'lon' in tpv and 'altHAE' in tpv:
+    if (('lat' in all_data['tpv'] and
+         'lon' in all_data['tpv'] and
+         'altHAE' in all_data['tpv'])):
         print("Current position: lat %.8f lon %.8f altHAE %.3f" %
-              (tpv['lat'], tpv['lon'], tpv['altHAE']))
+              (all_data['tpv']['lat'], all_data['tpv']['lon'],
+               all_data['tpv']['altHAE']))
 
 if gps_week and all_data['ionosphere']:
     print("\nSubframe 4, page 18")
