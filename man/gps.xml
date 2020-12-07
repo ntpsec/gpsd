@@ -8,7 +8,7 @@ SPDX-License-Identifier: BSD-2-clause
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gps.1'>
  <refentryinfo>
-  <date>4 December 2020</date>
+  <date>6 December 2020</date>
  </refentryinfo>
  <refmeta>
   <refentrytitle>gps</refentrytitle>
@@ -26,7 +26,8 @@ SPDX-License-Identifier: BSD-2-clause
  <refsynopsisdiv id='synopsis'>
   <cmdsynopsis>
    <command>cgps</command>
-   <arg choice='opt'>--debug <replaceable>debug-level</replaceable>
+   <arg choice='opt'>-?</arg>
+   <arg choice='opt'>--debug <replaceable>LVL</replaceable>
    </arg>
    <arg choice='opt'>--help </arg>
    <arg choice='opt'>--llfmt <group>
@@ -44,7 +45,7 @@ SPDX-License-Identifier: BSD-2-clause
     </group>
    </arg>
    <arg choice='opt'>--version </arg>
-   <arg choice='opt'>-D <replaceable>debug-level</replaceable>
+   <arg choice='opt'>-D <replaceable>LVL</replaceable>
    </arg>
    <arg choice='opt'>-h </arg>
    <arg choice='opt'>-l <group>
@@ -74,7 +75,8 @@ SPDX-License-Identifier: BSD-2-clause
   </cmdsynopsis>
   <cmdsynopsis>
    <command>gegps</command>
-   <arg choice='opt'>--debug <replaceable>DEBUG</replaceable>
+   <arg choice='opt'>-?</arg>
+   <arg choice='opt'>--debug <replaceable>LVL</replaceable>
    </arg>
    <arg choice='opt'>--device <replaceable>DEVICE</replaceable>
    </arg>
@@ -106,6 +108,7 @@ SPDX-License-Identifier: BSD-2-clause
   </cmdsynopsis>
   <cmdsynopsis>
    <command>lcdgps</command>
+   <arg choice='opt'>-?</arg>
    <arg choice='opt'>--help </arg>
    <arg choice='opt'>--sleep </arg>
    <arg choice='opt'>--version </arg>
@@ -140,11 +143,33 @@ SPDX-License-Identifier: BSD-2-clause
   <title>DESCRIPTION</title>
   <para>These are some simple clients shipped with
 <application>gpsd</application>. They have some common options:</para>
-  <para>The <option>-h, --help</option> option causes each client to emit
-a summary of its options and then exit.</para>
-  <para>Note: The USA Survey Foot is not supported.</para>
-  <para>The <option>-V, --version</option> option causes each client to dump
-the package version and exit.</para>
+  <variablelist>
+   <varlistentry>
+    <term>
+     <option>-?</option>
+    </term>
+    <term>
+     <option>-h</option>
+    </term>
+    <term>
+     <option>--help</option>
+    </term>
+    <listitem>
+     <para>Print a summary of options and then exit.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-V</option>
+    </term>
+    <term>
+     <option>--version</option>
+    </term>
+    <listitem>
+     <para>Print the package version and exit.</para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
   <para>By default, clients collect data from all compatible devices on
 localhost, using the default GPSD port 2947. An optional argument to any
 client may specify a server to get data from. A colon-separated suffix
@@ -191,32 +216,159 @@ address, collecting data from attached serial device 5.</para>
 <application>xgps</application>, but without the pictorial
 satellite display and able to run on a serial terminal or
 terminal emulator.</para>
-   <para> The <option>-D, --debug</option> option, sets a debug
+   <variablelist>
+    <varlistentry>
+     <term>
+      <option>-D LVL</option>
+     </term>
+     <term>
+      <option>--debug LVL</option>
+     </term>
+     <listitem>
+      <para>Sets the debug
 level; it is primarily for use by GPSD developers.  It enables
 various progress messages to standard error.</para>
-   <para> The <option>-l, --llfmt</option> option, sets the format
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>
+      <option>-l FMT</option>
+     </term>
+     <term>
+      <option>--llfmt FMT</option>
+     </term>
+     <listitem>
+      <para>Sets the format
 of latitude and longitude reports.  The value 'd' produces decimal
 degrees and is the default.  The value 'm' produces degrees and
 decimal minutes.  The value 's' produces degrees, minutes, and decimal
 seconds.</para>
-   <para> The <option>-s, --silent</option> option prevents
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>
+      <option>-s</option>
+     </term>
+     <term>
+      <option>--silent</option>
+     </term>
+     <listitem>
+      <para>Prevents
 <application>cgps</application> from displaying the data coming from
 the daemon. This display can also be toggled with the s
 command.</para>
-   <para>The <option>-m, --magtrack</option> option will display your magnetic
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>
+      <option>-m</option>
+     </term>
+     <term>
+      <option>--magtrack</option>
+     </term>
+     <listitem>
+      <para>Display your magnetic
 track (as opposed to your true track).  This is a calculated
 value, not a measured value.  Magnetic variation is always potentially
 subject to large errors, but is usually better than two degrees.</para>
-   <para>The <option>-u, --units</option> option can be used to set
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>
+      <option>-u UNITS</option>
+     </term>
+     <term>
+      <option>--units UNITS</option>
+     </term>
+     <listitem>
+      <para>Set
 the system units for display; follow the keyword with 'i' for
 'imperial' for American units (International Feet in altitude and error
 estimates, miles per hour in speeds), 'n' for 'nautical' (feet in altitude
 and error estimates, knots in speed) or 'm' for 'metric' (meters in
 altitude and error estimates, kilometers per hour in speeds).</para>
+      <para>Note: The USA Survey Foot is not supported.</para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
    <para>
     <application>cgps</application> terminates when you send it a
 SIGHUP or SIGINT; given default terminal settings this will happen
 when you type Ctrl-C at it.  It will also terminate on 'q'</para>
+  </refsect2>
+  <refsect2>
+   <title>gegps</title>
+   <para>This program collects fixes from <application>gpsd</application>
+and feeds them to a running instance of Google Earth for live location
+tracking.</para>
+   <variablelist>
+    <varlistentry>
+     <term>
+      <option>-d DIR</option>
+     </term>
+     <term>
+      <option>--kmldir DIR</option>
+     </term>
+     <listitem>
+      <para>Specify the location of the Google
+Earth installation directory.  If not specified, it defaults to the
+current directory.</para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>
+      <option>-D LVL</option>
+     </term>
+     <term>
+      <option>--debug LVL</option>
+     </term>
+     <listitem>
+      <para>Sets the debug
+level; it is primarily for use by GPSD developers.  It enables
+various progress messages to standard error.</para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>
+      <option>--device DEVICE</option>
+     </term>
+     <listitem>
+      <para>Connect to device DEVICE on gpsd host.</para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>
+      <option>--host HOST</option>
+     </term>
+     <listitem>
+      <para>Connect to gpsd on host HOST.</para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>
+      <option>-i</option>
+     </term>
+     <term>
+      <option>--initialize</option>
+     </term>
+     <listitem>
+      <para>If you have the free (non-subscription) version, start by
+running with the <option>-i</option> option to drop a clue in the
+Google Earth installation directory, as
+'Open_in_Google_Earth_RT_GPS.kml', then open that file in Places (File
+> Open...). Run <application>gegps</application> in the normal way
+after that.</para>
+     </listitem>
+    </varlistentry>
+    <varlistentry>
+     <term>
+      <option>--port PORT</option>
+     </term>
+     <listitem>
+      <para>Connect to gpsd on port PORT.</para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
   </refsect2>
   <refsect2>
    <title>lcdgps</title>
@@ -225,33 +377,19 @@ when you type Ctrl-C at it.  It will also terminate on 'q'</para>
 very expensive and nearly feature-free GPS receiver.  Currently
 assumes a 4x40 LCD and writes data formatted to fit that size screen.
 Also displays 4- or 6-character Maidenhead grid square output.</para>
-   <para> The <option>-s, --sleep</option> option make
-<application>lcdgps</application> sleep for 10 seconds before
-starting.</para>
-  </refsect2>
-  <refsect2>
-   <title>gegps</title>
-   <para>This program collects fixes from <application>gpsd</application>
-and feeds them to a running instance of Google Earth for live location
-tracking.</para>
-   <para>The <option>-d</option> argument is the location of the Google
-Earth installation directory.  If not specified, it defaults to the
-current directory.</para>
-   <para> The <option>-D, --debug</option> option, sets a debug
-level; it is primarily for use by GPSD developers.  It enables
-various progress messages to standard error.</para>
-   <para>If you have the free (non-subscription) version, start by
-running with the <option>-i</option> option to drop a clue in the
-Google Earth installation directory, as
-'Open_in_Google_Earth_RT_GPS.kml', then open that file in Places (File
-> Open...). Run <application>gegps</application> in the normal way
-after that.</para>
-   <para>The <option>-u, --units</option> option can be used to set
-the system units for display; follow the keyword with 'i' for
-'imperial' for American units (International Feet in altitude and error
-estimates, miles per hour in speeds), 'n' for 'nautical' (feet in altitude
-and error estimates, knots in speed) or 'm' for 'metric' (meters in
-altitude and error estimates, kilometers per hour in speeds).</para>
+   <variablelist>
+    <varlistentry>
+     <term>
+      <option>-s</option>
+     </term>
+     <term>
+      <option>--sleep</option>
+     </term>
+     <listitem>
+      <para>Sleep for 10 seconds before starting.</para>
+     </listitem>
+    </varlistentry>
+   </variablelist>
   </refsect2>
  </refsect1>
  <refsect1 id='environment'>
