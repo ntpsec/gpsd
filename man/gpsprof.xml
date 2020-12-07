@@ -8,7 +8,7 @@ SPDX-License-Identifier: BSD-2-clause
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gpsprof.1'>
  <refentryinfo>
-  <date>5 December 2020</date>
+  <date>6 December 2020</date>
  </refentryinfo>
  <refmeta>
   <refentrytitle>gpsprof</refentrytitle>
@@ -24,52 +24,52 @@ SPDX-License-Identifier: BSD-2-clause
   <cmdsynopsis>
    <command>gpsprof</command>
    <arg choice='opt'>-? </arg>
-   <arg choice='opt'>--debug <replaceable>debuglevel</replaceable>
+   <arg choice='opt'>--debug <replaceable>LVL</replaceable>
    </arg>
-   <arg choice='opt'>--device <replaceable>device</replaceable>
+   <arg choice='opt'>--device <replaceable>DEV</replaceable>
    </arg>
-   <arg choice='opt'>--dumpfile <replaceable>dumpfile</replaceable>
+   <arg choice='opt'>--dumpfile <replaceable>FILE</replaceable>
    </arg>
-   <arg choice='opt'>--formatter <replaceable>plot_type</replaceable>
+   <arg choice='opt'>--formatter <replaceable>TYPE</replaceable>
    </arg>
    <arg choice='opt'>--help </arg>
-   <arg choice='opt'>--host <replaceable>host</replaceable>
+   <arg choice='opt'>--host <replaceable>HOST</replaceable>
    </arg>
-   <arg choice='opt'>--logfile <replaceable>logfile</replaceable>
+   <arg choice='opt'>--logfile <replaceable>FILE</replaceable>
    </arg>
-   <arg choice='opt'>--port <replaceable>port</replaceable>
+   <arg choice='opt'>--port <replaceable>PORT</replaceable>
    </arg>
    <arg choice='opt'>--redo </arg>
-   <arg choice='opt'>--subtitle <replaceable>subtitle</replaceable>
+   <arg choice='opt'>--subtitle <replaceable>SUBTITLE</replaceable>
    </arg>
-   <arg choice='opt'>--terminal <replaceable>terminal</replaceable>
+   <arg choice='opt'>--terminal <replaceable>TERMINAL</replaceable>
    </arg>
-   <arg choice='opt'>--threshold <replaceable>threshold</replaceable>
+   <arg choice='opt'>--threshold <replaceable>THRESHOLD</replaceable>
    </arg>
-   <arg choice='opt'>--title <replaceable>title</replaceable>
+   <arg choice='opt'>--title <replaceable>TITLE</replaceable>
    </arg>
-   <arg choice='opt'>--wait <replaceable>seconds</replaceable>
+   <arg choice='opt'>--wait <replaceable>SECONDS</replaceable>
    </arg>
    <arg choice='opt'>--version</arg>
-   <arg choice='opt'>-D <replaceable>debuglevel</replaceable>
+   <arg choice='opt'>-D <replaceable>LVL</replaceable>
    </arg>
-   <arg choice='opt'>-d <replaceable>dumpfile</replaceable>
+   <arg choice='opt'>-d <replaceable>FILE</replaceable>
    </arg>
-   <arg choice='opt'>-f <replaceable>plot_type</replaceable>
+   <arg choice='opt'>-f <replaceable>TYPE</replaceable>
    </arg>
    <arg choice='opt'>-h </arg>
-   <arg choice='opt'>-l <replaceable>logfile</replaceable>
+   <arg choice='opt'>-l <replaceable>FILE</replaceable>
    </arg>
-   <arg choice='opt'>-m <replaceable>threshold</replaceable>
+   <arg choice='opt'>-m <replaceable>THRESHOLD</replaceable>
    </arg>
-   <arg choice='opt'>-n <replaceable>seconds</replaceable>
+   <arg choice='opt'>-n <replaceable>SECONDS</replaceable>
    </arg>
    <arg choice='opt'>-r </arg>
-   <arg choice='opt'>-S <replaceable>subtitle</replaceable>
+   <arg choice='opt'>-S <replaceable>SUBTITLE</replaceable>
    </arg>
-   <arg choice='opt'>-T <replaceable>terminal</replaceable>
+   <arg choice='opt'>-T <replaceable>TERMINAL</replaceable>
    </arg>
-   <arg choice='opt'>-t <replaceable>title</replaceable>
+   <arg choice='opt'>-t <replaceable>TITLE</replaceable>
    </arg>
    <arg choice='opt'>-V</arg>
    <arg choice='opt'>[server[:port[:device]]]</arg>
@@ -103,7 +103,7 @@ with <application>gnuplot</application>.
 Currently the following plot types are defined:</para>
   <variablelist>
    <varlistentry>
-    <term>space</term>
+    <term><option>space</option></term>
     <listitem>
      <para>Generate a scatterplot of fixes and plot probable error circles.
 This data is only meaningful if the GPS is held stationary while
@@ -112,7 +112,7 @@ the fixes are listed at the bottom.  This is the default plot type.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>polar</term>
+    <term><option>polar</option></term>
     <listitem>
      <para>Generate a heat map of reported satellite Signal to Noise Ratio
 (SNR) using polar coordinates.  A colored dot is plotted for
@@ -125,7 +125,7 @@ Useful for analyzing the quality of the skyview as seen by the GPS.
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>polarunused</term>
+    <term><option>polarunused</option></term>
     <listitem>
      <para>Similar to the polar plot, but only unused satellites
 are plotted.  Useful for seeing which parts of the antenna skyview
@@ -134,7 +134,7 @@ rejected.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>polarused</term>
+    <term><option>polarused</option></term>
     <listitem>
      <para>Similar to the polar plot, but only satellites used to compute
 fixes are plotted.  Useful for seeing which parts of the antenna
@@ -142,7 +142,7 @@ skyview are being used in fixes.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>time</term>
+    <term><option>time</option></term>
     <listitem>
      <para>Plot delta of system clock (NTP corrected time) against GPS time
 as reported in PPS messages.  The X axis is sample time in seconds
@@ -151,7 +151,7 @@ GPS time.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>instrumented</term>
+    <term><option>instrumented</option></term>
     <listitem>
      <para>Plot instrumented profile.  Plots various components of the total
 latency between the GPS's fix time and when the client receives the
@@ -168,27 +168,27 @@ a fix to the client.</para>
      <para>The components of the instrumented plot are as follows:</para>
      <variablelist>
       <varlistentry>
-       <term>Fix latency</term>
+       <term><option>Fix latency</option></term>
        <listitem>
         <para>Delta between GPS time and SORC.</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term>RS232 time</term>
+       <term><option>RS232 time</option></term>
        <listitem>
         <para>RS232 transmission time for data shipped during the cycle
 (computed from character volume and baud rate).</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term>Analysis time</term>
+       <term><option>Analysis time</option></term>
        <listitem>
         <para>EORC, minus SORC, minus RS232 time.  The amount of real time the daemon
 spent on computation rather than I/O.</para>
        </listitem>
       </varlistentry>
       <varlistentry>
-       <term>Reception time</term>
+       <term><option>Reception time</option></term>
        <listitem>
         <para>Shipping time from
 the daemon to when it was received by <application>gpsprof</application>.</para>
@@ -203,7 +203,7 @@ discarded.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
-    <term>uninstrumented</term>
+    <term><option>uninstrumented</option></term>
     <listitem>
      <para>Plot total latency without instrumentation.  Useful mainly as a
 check that the instrumentation is not producing significant distortion.
@@ -214,35 +214,125 @@ time from reports without fixes is lumped in.</para>
     </listitem>
    </varlistentry>
   </variablelist>
-  <para>The <option>-?, -h, --help</option> option makes
-<application>gpsprof</application> print a usage message and exit.</para>
-  <para>The <option>-d, --dumpfile</option> option dumps the plot data,
-without attached gnuplot
+  <variablelist>
+   <varlistentry>
+    <term>
+     <option>-?</option>
+    </term>
+    <term>
+     <option>-h</option>
+    </term>
+    <term>
+     <option>--help</option>
+    </term>
+    <listitem>
+  <para>Print a usage message and exit.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-d FILE</option>
+    </term>
+    <term>
+     <option>--dumpfile FILE</option>
+    </term>
+    <listitem>
+  <para>Dump the plot data, without attached gnuplot
 code, to a specified file for post-analysis.</para>
-  <para>The <option>-D, --debug</option> sets debug level.</para>
-  <para>The <option>-l, --logfile</option> option dumps the raw JSON
-reports collected from the device to a specified file.</para>
-  <para>The <option>-n, --wait</option> option sets the number of seconds to
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-d LVL</option>
+    </term>
+    <term>
+     <option>--debug LVL</option>
+    </term>
+    <listitem>
+  <para>Sets debug level.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-l FILE</option>
+    </term>
+    <term>
+     <option>--logfile FILE</option>
+    </term>
+    <listitem>
+  <para>Dump the raw JSON
+reports collected from the device to the specified FILE.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-n SEC</option>
+    </term>
+    <term>
+     <option>--wait SEC</option>
+    </term>
+    <listitem>
+  <para>Sets the number of seconds to
 sample.  The default
 is 100.  Most GPS are configured to emit one fix per second, so 100
 samples would then span 100 seconds.</para>
-  <para>The <option>-r, --redo</option> option replots from a JSON logfile
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-r</option>
+    </term>
+    <term>
+     <option>--redo</option>
+    </term>
+    <listitem>
+  <para>Replot from a JSON logfile
 (such as <option>-l, logfile</option> produces) on standard input. Both
 <option>-n, --wait</option> and <option>-l, --logfile</option> options are
 ignored when this one is selected.</para>
-  <para>The <option>-S, --subtitle</option> option sets a text string
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-S STR</option>
+    </term>
+    <term>
+     <option>--subtitle STR</option>
+    </term>
+    <listitem>
+  <para>Sets a text string
 to be included in the plot as a subtitle. This will be below the
 title.</para>
-  <para>The <option>-t, --title</option> option sets a text string to be
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-t STR</option>
+    </term>
+    <term>
+     <option>--title STR</option>
+    </term>
+    <listitem>
+  <para>Sets a text string to be
 the plot title. This will replace the default title.</para>
-  <para>The <option>-T, --terminal</option> option generates a terminal
-type setting into the gnuplot code. Typical usage is "-T png", or "-T
-pngcairo" telling gnuplot to write a PNG file. Without this option
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-T TERM</option>
+    </term>
+    <term>
+     <option>--terminal TERM</option>
+    </term>
+    <listitem>
+  <para>Add a terminal
+type setting into the gnuplot code. Typical usage is "<option>-T png</option>", or "<option>-T
+pngcairo</option>" telling gnuplot to write a PNG file. Without this option
 gnuplot will call its X11 display code.</para>
   <para>Different installations of <application>gnuplot</application> will
 support different terminal types.  Different terminal types may work better
-for you than other ones.  "-T png" will generate PNG images.  Use "-T jpeg"
-to generate JPEG images.  "-T pngcairo" often works best, but is not
+for you than other ones.  "<option>-T png</option>" will generate PNG images.  Use "<option>-T jpeg</option>"
+to generate JPEG images.  "<option>-T pngcairo</option>" often works best, but is not
 supported by some distributions.  The same terminal type may work
 very differently on different distributions.</para>
   <para>To see which terminal types your copy of
@@ -251,6 +341,9 @@ very differently on different distributions.</para>
 gnuplot -e "set terminal"
 </programlisting>
   </para>
+    </listitem>
+   </varlistentry>
+   </variablelist>
  </refsect1>
  <refsect1 id='signals'>
   <title>SIGNALS</title>
