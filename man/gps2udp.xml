@@ -8,7 +8,7 @@ SPDX-License-Identifier: BSD-2-clause
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gps2udp.1'>
  <refentryinfo>
-  <date>30 March 2020</date>
+  <date>6 December 2020</date>
  </refentryinfo>
  <refmeta>
   <refentrytitle>gps2udp</refentrytitle>
@@ -24,27 +24,27 @@ SPDX-License-Identifier: BSD-2-clause
   <cmdsynopsis>
    <command>gps2udp</command>
    <arg choice='opt'>--ais</arg>
-   <arg choice='opt'>--count <replaceable>count</replaceable>
+   <arg choice='opt'>--count <replaceable>COUNT</replaceable>
    </arg>
    <arg choice='opt'>--daemonize</arg>
-   <arg choice='opt'>--debug <replaceable>1|2</replaceable>
+   <arg choice='opt'>--debug <replaceable>LVL</replaceable>
    </arg>
    <arg choice='opt'>--help</arg>
    <arg choice='opt'>--json</arg>
    <arg choice='opt'>--nmea</arg>
    <arg choice='opt'>--tpv</arg>
-   <arg choice='opt'>--udp <replaceable>hostname:udpport</replaceable>
+   <arg choice='opt'>--udp <replaceable>HOST:PORT</replaceable>
    </arg>
    <arg choice='opt'>-a</arg>
-   <arg choice='opt'>-c <replaceable>count</replaceable>
+   <arg choice='opt'>-c <replaceable>COUNT</replaceable>
    </arg>
-   <arg choice='opt'>-d <replaceable>1|2</replaceable>
+   <arg choice='opt'>-d <replaceable>LVL</replaceable>
    </arg>
    <arg choice='opt'>-h</arg>
    <arg choice='opt'>-j</arg>
    <arg choice='opt'>-n</arg>
    <arg choice='opt'>-t</arg>
-   <arg choice='opt'>-u <replaceable>hostname:udpport</replaceable>
+   <arg choice='opt'>-u <replaceable>HOST:PORT</replaceable>
    </arg>
    <arg choice='opt'>-V</arg>
    <arg choice='opt'>-V</arg>
@@ -71,42 +71,146 @@ aishub, marinetraffic, shipfinder,... </para>
    <application>gps2udp</application> does not require root
 privileges, and can be run concurrently with other tools connecting
 to the local <application>gpsd</application> without causing problems.</para>
-  <para>The output will consist of one or both of NMEA (-n option) or
-JSON (-j option) <application>gpsd</application> sentences. The
+  <para>The output will consist of one or both of NMEA (<option>-n</option> option) or
+JSON (<option>-j</option> option) <application>gpsd</application> sentences. The
 output is sent to one or many destinations host through a UDP network
-socket (-u host:port options) .</para>
+socket (<option>-u HOST:PORT</option> options) .</para>
   <para>Optionally a server, TCP/IP port number and remote device can be given.
 If omitted, <application>gps2udp</application> connects to localhost on
 the default port (2947) and watches all devices opened by
 <application>gpsd</application>.</para>
   <para>
-   <application>gps2udp</application> may be run as a daemon (-b
+   <application>gps2udp</application> may be run as a daemon (<option>-b</option>
 option).</para>
   <para>
    <application>gps2udp</application> is designed to run smoothly in
 background; it reconnects automatically to
 <application>gpsd</application> whenever it is restarted. For
 debugging purporses, there is an option to exit gracefully after a given
-count of packets (-c option).</para>
+count of packets (<option>-c</option> option).</para>
  </refsect1>
  <refsect1 id='options'>
   <title>OPTIONS</title>
-  <para>-a, --ais, output only AIS messages.</para>
-  <para>-b, --daemon, causes <application>gps2udp</application> to run as a
-daemon.</para>
-  <para>-c count, --count count, causes [count] sentences to be output.
-<application>gps2udp</application> will then exit gracefully.</para>
-  <para>-d lvl, --debug lvl. [lvl] 0 prints nothing.
-[lvl] 1 prints sent packet on stdout. [lvl] 2 print ignored packets.</para>
-  <para>-h, --help, makes <application>gps2udp</application> print
-a usage message and exit.</para>
-  <para>-j, --json, causes JSON sentences to be output.</para>
-  <para>-n, --nmea, causes NMEA sentences to be output.</para>
-  <para>-t, --tpv, Only output TPV sentences.  Implies --json.</para>
-  <para>-u host:port, --udp host:port, UDP destination for output sentenses
-(up to five destinations).</para>
-  <para>-v prints the version, then exits (deprecated).</para>
-  <para>-V, --version, prints the version, then exits.</para>
+  <variablelist>
+   <varlistentry>
+    <term>
+     <option>-?</option>
+    </term>
+    <term>
+     <option>-h</option>
+    </term>
+    <term>
+     <option>--help</option>
+    </term>
+    <listitem>
+     <para>-Print a usage message and exit.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-a</option>
+    </term>
+    <term>
+     <option>--ais</option>
+    </term>
+    <listitem>
+     <para>Send only AIS messages.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-b</option>
+    </term>
+    <term>
+     <option>--daemon</option>
+    </term>
+    <listitem>
+     <para>Causes <application>gps2udp</application> to run as a daemon.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-c COUNT</option>
+    </term>
+    <term>
+     <option>--count COUNT</option>
+    </term>
+    <listitem>
+     <para>Exit after COUNT sentences are sent.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-d LVL</option>
+    </term>
+    <term>
+     <option>--debug LVL</option>
+    </term>
+    <listitem>
+     <para>Set debug level to LVL. LVL = 0 prints nothing.
+LVL =1 prints sent packet on stdout.  LVL =2 prints ignored packets.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-j</option>
+    </term>
+    <term>
+     <option>--json</option>
+    </term>
+    <listitem>
+     <para>Causes JSON sentences to be output.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-n</option>
+    </term>
+    <term>
+     <option>--nmea</option>
+    </term>
+    <listitem>
+     <para>Causes NMEA sentences to be output.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-t</option>
+    </term>
+    <term>
+     <option>--tpv</option>
+    </term>
+    <listitem>
+     <para>Only output TPV sentences.  Implies --json.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-u HOST:PORT</option>
+    </term>
+    <term>
+     <option>--udp HOST:PORT</option>
+    </term>
+    <listitem>
+     <para>UDP destination for output sentenses (up to five destinations).</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>-v</option>
+    </term>
+    <term>
+     <option>-V</option>
+    </term>
+    <term>
+     <option>--version</option>
+    </term>
+    <listitem>
+     <para>Prints the program version, then exit.  -v is deprecated December
+2020.</para>
+    </listitem>
+   </varlistentry>
+  </variablelist>
  </refsect1>
  <refsect1 id='exampletitle'>
   <title>EXAMPLE</title>
