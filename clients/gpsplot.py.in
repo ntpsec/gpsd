@@ -299,7 +299,12 @@ else:
 
 try:
     while True:
-        report = session.next()
+        try:
+            report = session.next()
+        except StopIteration:
+            # end of data
+            break
+
         if report['class'] != options.mclass:
             continue
 

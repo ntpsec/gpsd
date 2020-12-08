@@ -126,6 +126,13 @@ parser.add_argument(
     help='Fields to process. '' for all.  Default varies by class.'
 )
 parser.add_argument(
+    '-f', '--file',
+    dest='input_file_name',
+    default=None,
+    metavar='FILE',
+    help='Read gpsd JSON from FILE instead of a gpsd instance.',
+)
+parser.add_argument(
     '--header',
     dest='header',
     default=1,
@@ -299,6 +306,7 @@ else:
 
 try:
     session = gps.gps(host=options.host, port=options.port,
+                      input_file_name=options.input_file_name,
                       verbose=options.debug)
 except socket.error:
     sys.stderr.write("gpscsv: Could not connect to gpsd daemon\n")
@@ -322,7 +330,12 @@ else:
 
 try:
     while True:
-        report = session.next()
+        try:
+            report = session.next()
+        except StopIteration:
+            # end of data
+            break
+
         if report['class'] != options.mclass:
             continue
         if 'SAT' == options.subclass:

@@ -8,7 +8,7 @@ SPDX-License-Identifier: BSD-2-clause
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gpscat.1'>
  <refentryinfo>
-  <date>6 December 2020</date>
+  <date>7 December 2020</date>
  </refentryinfo>
  <refmeta>
   <refentrytitle>gpscsv</refentrytitle>
@@ -34,6 +34,8 @@ SPDX-License-Identifier: BSD-2-clause
    <arg choice='opt'>--device<replaceable> DEVICE</replaceable>
    </arg>
    <arg choice='opt'>--fields<replaceable> FIELDS</replaceable>
+   </arg>
+   <arg choice='opt'>--file <replaceable>FILE</replaceable>
    </arg>
    <arg choice='opt'>--header<replaceable> HEADER</replaceable>
    </arg>
@@ -147,6 +149,14 @@ Defaults to all.</para>
     <listitem>
      <para>The FIELDS from the JSON message to dump to the output.
 Set FIELD to empty ('') for all fields Default varies by CLASS.</para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>--file FILE</option>
+    </term>
+    <listitem>
+     <para>Read JSON from FILE instead of from gpsd..</para>
     </listitem>
    </varlistentry>
    <varlistentry>
