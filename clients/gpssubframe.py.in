@@ -973,6 +973,8 @@ if 'time' in all_data['tpv']:
         print("Current position: lat %.8f lon %.8f altHAE %.3f" %
               (all_data['tpv']['lat'], all_data['tpv']['lon'],
                all_data['tpv']['altHAE']))
+elif 0 < options.debug:
+    print("Warning: No TPV")
 
 if gps_week and all_data['ionosphere']:
     print("\nSubframe 4, page 18")
