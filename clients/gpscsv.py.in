@@ -126,7 +126,7 @@ parser.add_argument(
     help='Fields to process. '' for all.  Default varies by class.'
 )
 parser.add_argument(
-    '-f', '--file',
+    '--file',
     dest='input_file_name',
     default=None,
     metavar='FILE',
