@@ -248,8 +248,9 @@ if __name__ == '__main__':
         '-o',
         '--options',
         dest='options',
-        metavar='OPT',
-        help='Pass options OPT to the daemon.',
+        metavar='="OPT"',
+        help=('Pass options ="OPT" to the daemon.\n'
+              'The equal sign and Quotes required.'),
     )
     parser.add_argument(
         '-p',

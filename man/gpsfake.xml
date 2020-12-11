@@ -8,7 +8,7 @@ SPDX-License-Identifier: BSD-2-clause
    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
 <refentry id='gpsfake.1'>
  <refentryinfo>
-  <date>6 December 2020</date>
+  <date>10 December 2020</date>
  </refentryinfo>
  <refmeta>
   <refentrytitle>gpsfake</refentrytitle>
@@ -36,7 +36,7 @@ SPDX-License-Identifier: BSD-2-clause
    <arg choice='opt'>--monitor <replaceable>monitor</replaceable>
    </arg>
    <arg choice='opt'>--nowait</arg>
-   <arg choice='opt'>--options <replaceable>options</replaceable>
+   <arg choice='opt'>--options=<replaceable>options</replaceable>
    </arg>
    <arg choice='opt'>--pipe</arg>
    <arg choice='opt'>--port <replaceable>port</replaceable>
@@ -68,7 +68,7 @@ SPDX-License-Identifier: BSD-2-clause
    <arg choice='opt'>-m <replaceable>monitor</replaceable>
    </arg>
    <arg choice='opt'>-n</arg>
-   <arg choice='opt'>-o <replaceable>options</replaceable>
+   <arg choice='opt'>-o=<replaceable>options</replaceable>
    </arg>
    <arg choice='opt'>-p</arg>
    <arg choice='opt'>-P <replaceable>port</replaceable>
@@ -294,18 +294,20 @@ daemon to start the daemon reading the GPS without waiting for a client
    </varlistentry>
    <varlistentry>
     <term>
-     <option>-o OPTS</option>
+     <option>-o="OPTS"</option>
     </term>
     <term>
-     <option>--option OPTS</option>
+     <option>--option="OPTS"</option>
     </term>
     <listitem>
-     <para>Specify options to pass to the daemon. The <option>-n</option>
-option passes <option>-n</option> to start the daemon reading the GPS
-without waiting for a client (equivalent to <option>-o="-n"</option>).
-The <option>-D</option> passes a <option>-D</option> option to the
-daemon: thus <option>-D 4</option> is shorthand for <option>-o="-D
-4"</option>.</para>
+     <para>Specify options to pass to the daemon.  The equal sign
+(=) and quotes are required so that gpsd options are not confused
+with gpsfake options.  To start the daemon reading the GPS without
+waiting for a client use <option>-o="-n"</option> (equivalent
+to the <option>-n</option>) which passes <option>-n</option> to
+the gpsd daemon.  The option <option>-o="-D 4"</option> passes a
+<option>-D 4</option> to the daemon, equivalent to the using <option>-D
+4</option>.</para>
     </listitem>
    </varlistentry>
    <varlistentry>
