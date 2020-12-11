@@ -3858,6 +3858,13 @@ void json_att_dump(const struct gps_data_t *gpsdata,
     assert(replylen > sizeof(char *));
     (void)strlcpy(reply, "{\"class\":\"ATT\",", replylen);
     str_appendf(reply, replylen, "\"device\":\"%s\",", gpsdata->dev.path);
+    if (0 < gpsdata->attitude.mtime.tv_sec) {
+        char tbuf[JSON_DATE_MAX+1];
+        str_appendf(reply, replylen,
+                       ",\"time\":\"%s\"",
+                       timespec_to_iso8601(gpsdata->attitude.mtime,
+                                      tbuf, sizeof(tbuf)));
+    }
     if (isfinite(gpsdata->attitude.heading) != 0) {
         /* Trimble outputs %.3f, so we do too. */
         str_appendf(reply, replylen,
