@@ -923,6 +923,7 @@ have_flake8 = False
 have_pycodestyle = False
 have_pylint = False
 have_scan_build = False
+have_tar = False
 have_valgrind = False
 have_xmllint = False
 
@@ -934,6 +935,10 @@ if not cleaning and not helping:
     if not config.CheckCC():
         announce("ERROR: CC doesn't work")
 
+    have_tar = config.CheckProg(env['TAR'])
+    if not have_tar:
+        announce('WARNING: %s not found.  Can not build tar files.' %
+                 env['TAR'])
     if ((config.CheckCompilerOption("-pthread") and
          not sys.platform.startswith('darwin'))):
         config.env.MergeFlags("-pthread")
@@ -2740,7 +2745,7 @@ if env['socket_export'] and env['python']:
         # oddly this runs in build root, but needs to run in variant_dir
         gps_rebuilds.append(Utility(
             'gps-makeregress-' + gps_log[:-4],
-             [gps_herald, gps_log],
+            [gps_herald, gps_log],
             'cd %s; ./regress-driver -bq -o -t '
             '$REGRESSOPTS %s ' % (variantdir, gps_log)))
     if GetOption('num_jobs') <= 1:
@@ -3170,35 +3175,35 @@ target = '#gpsd-${VERSION}.zip'
 dozip = env.Zip(target, distfiles)
 ziptgt = env.Alias('zip', dozip)
 
-target = '#gpsd-%s.tar' % gpsd_version
-# .tar.gz archive
-gzenv = Environment(TARFLAGS='-c -z')
-targz = gzenv.Tar(target + '.gz', distfiles)
-# .tar.xz archive
-xzenv = Environment(TARFLAGS='-c -J')
-tarxz = xzenv.Tar(target + '.xz', distfiles)
-env.Alias('tar', [targz, tarxz])
-env.Alias('dist', [ziptgt, targz, tarxz])
+if have_tar:
+    target = '#gpsd-%s.tar' % gpsd_version
+    # .tar.gz archive
+    gzenv = Environment(TARFLAGS='-c -z')
+    targz = gzenv.Tar(target + '.gz', distfiles)
+    # .tar.xz archive
+    xzenv = Environment(TARFLAGS='-c -J')
+    tarxz = xzenv.Tar(target + '.xz', distfiles)
+    env.Alias('tar', [targz, tarxz])
+    env.Alias('dist', [ziptgt, targz, tarxz])
 
-Clean('build', [targz, tarxz, dozip])
+    Clean('build', [targz, tarxz, dozip])
 
-# Make sure build-from-tarball works.
-testbuild = Utility('#testbuild', [targz], [
-    'rm -Rf testbuild',
-    'mkdir testbuild',
-    'cd testbuild;'
-    'pwd;'
-    '${TAR} -xzvf ../gpsd-${VERSION}.tar.gz;'
-    'cd gpsd-${VERSION}; scons;',
-])
-env.Alias('testbuild', [testbuild])
-
-releasecheck = env.Alias('releasecheck', [
-    testbuild,
-    check,
-    audits,
-    flocktest,
-])
+    # Make sure build-from-tarball works.
+    testbuild = Utility('#testbuild', [targz], [
+        'rm -Rf testbuild',
+        'mkdir testbuild',
+        'cd testbuild;'
+        'pwd;'
+        '${TAR} -xzvf ../gpsd-${VERSION}.tar.gz;'
+        'cd gpsd-${VERSION}; scons;',
+    ])
+    env.Alias('testbuild', [testbuild])
+    releasecheck = env.Alias('releasecheck', [
+        testbuild,
+        check,
+        audits,
+        flocktest,
+    ])
 
 # The chmod copes with the fact that scp will give a
 # replacement the permissions of the *original*...
