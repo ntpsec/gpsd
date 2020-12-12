@@ -2967,8 +2967,9 @@ describe = UtilityWithHerald(
 env.Pseudo(describe)
 
 # Delete all test programs
-test_exes = [str(p) for p in Flatten(testprogs)]
-test_objs = [p + '.o' for p in test_exes]
+testclean = Utility('testclean', [], 'rm -fr %s/tests' % variantdir)
+env.Pseudo(testclean)
+env.Alias('testclean', testclean)
 
 test_nondaemon = [
     aivdm_regress,
