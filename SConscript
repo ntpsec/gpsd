@@ -935,10 +935,6 @@ if not cleaning and not helping:
     if not config.CheckCC():
         announce("ERROR: CC doesn't work")
 
-    have_tar = config.CheckProg(env['TAR'])
-    if not have_tar:
-        announce('WARNING: %s not found.  Can not build tar files.' %
-                 env['TAR'])
     if ((config.CheckCompilerOption("-pthread") and
          not sys.platform.startswith('darwin'))):
         config.env.MergeFlags("-pthread")
@@ -1439,6 +1435,7 @@ if not cleaning and not helping:
         have_pycodestyle = config.CheckProg('pycodestyle')
         have_pylint = config.CheckProg('pylint')
         have_scan_build = config.CheckProg('scan-build')
+        have_tar = config.CheckProg(env['TAR'])
         have_valgrind = config.CheckProg('valgrind')
         have_xmllint = config.CheckProg('xmllint')
     except AttributeError:
@@ -1461,6 +1458,9 @@ if not cleaning and not helping:
         announce("Program pylint not found -- skipping pylint checks")
     if not have_scan_build:
         announce("Program scan-build not found -- skipping scan-build checks")
+    if not have_tar:
+        announce('WARNING: %s not found.  Can not build tar files.' %
+                 env['TAR'])
     if not have_valgrind:
         announce("Program valgrind not found -- skipping valgrind checks")
     if not have_xmllint:
