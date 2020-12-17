@@ -17,7 +17,7 @@ release    - ship a release
 --clean    - clean all normal build targets
 -c         - clean all normal build targets
 
-Usefuk options:
+Useful options:
 --warn=all - to see scons warnings
 
 Setting the DESTDIR environment variable will prefix the install destinations

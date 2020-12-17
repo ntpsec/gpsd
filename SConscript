@@ -39,7 +39,7 @@ import SCons
 pdb_module = sys.modules.get('pdb')
 if pdb_module:
     pdb_module.set_trace()
-    pass  # Breakpoint default file is now SConstruct
+    pass  # Breakpoint default file is now SConscript
 
 # gpsd needs Scons version at least 2.3
 EnsureSConsVersion(2, 3, 0)
@@ -1876,7 +1876,7 @@ gpsmon_sources = [
 # Internal imports within 'gps' package
 env.Depends('gps/__init__.py', ['gps/gps.py', 'gps/misc.py'])
 # All Python programs import the 'gps' package
-# FIXME: should be python targets, no sources
+# FIXME: should be python targets, not sources
 env.Depends(python_progs, ['gps/__init__.py', 'gps/misc.py'])
 # Additional specific import cases
 env.Depends('clients/gpscat', ['gps/packet.py', 'gps/misc.py'])
