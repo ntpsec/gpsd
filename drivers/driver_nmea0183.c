@@ -1228,12 +1228,13 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
      *   1..32:  GPS
      *   33..64: Various SBAS systems (EGNOS, WAAS, SDCM, GAGAN, MSAS)
      *   65..96: GLONASS
+     *   101..136: Quectel Querk, (not NMEA), seems to be Galileo
      *   152..158: Various SBAS systems (EGNOS, WAAS, SDCM, GAGAN, MSAS)
      *   173..182: IMES
      *   193..197: QZSS   (undocumented u-blox goes to 199)
-     *   201..235: Beidou (not NMEA, not u-blox?)
+     *   201..264: BeiDou (not NMEA, not u-blox?) Quectel Querk.
      *   301..336: Galileo
-     *   401..437: Beidou
+     *   401..437: BeiDou
      *   null: GLONASS unused
      *   500-509: NavIC (IRNSS)  NOT STANDARD!
      *
@@ -1275,7 +1276,11 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
             } else if (65 > nmea_satnum) {
                 /* 1 = SBAS      33-64 */
                 *ubx_gnssid = 1;
-                *ubx_svid = 87 + nmea_satnum;
+                *ubx_svid = nmea_satnum + 87;
+            } else if (137 > nmea_satnum) {
+                // 3 = Galileo, 101-136, NOT NMEA.  Quectel Querk
+                *ubx_gnssid = 3;
+                *ubx_svid = nmea_satnum - 100;
             } else if (152 > nmea_satnum) {
                 /* Huh? */
                 *ubx_gnssid = 0;
@@ -1295,6 +1300,10 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
                 /* undocumented u-blox goes to 199 */
                 *ubx_gnssid = 3;
                 *ubx_svid = nmea_satnum - 192;
+            } else if (265 > nmea_satnum) {
+                // 3 = BeiDor, 201-264, NOT NMEA.  Quectel Querk
+                *ubx_gnssid = 3;
+                *ubx_svid = nmea_satnum - 200;
             } else {
                 /* Huh? */
                 *ubx_gnssid = 0;
@@ -1305,32 +1314,60 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
         case 2:
             /*  2 = GLONASS   65-96, nul */
             *ubx_gnssid = 6;
-            *ubx_svid = nmea_satnum;
+            if (64 > nmea_satnum) {
+                // NMEA 1 - 64
+                *ubx_svid = nmea_satnum;
+            } else {
+                // SiRF 65-96
+                *ubx_svid = nmea_satnum - 64;
+            }
+            nmea2_prn = 64 + *ubx_svid;
             break;
         case 3:
             /*  3 = Galileo   1-36 */
             *ubx_gnssid = 2;
-            *ubx_svid = nmea_satnum;
-            nmea2_prn = 300 + nmea_satnum;
+            if (100 > nmea_satnum) {
+                // NMEA
+                *ubx_svid = nmea_satnum;
+            } else {
+                // Quectel Querk, NOT NMEA, 101 - 199
+                *ubx_svid = nmea_satnum - 100;
+            }
+            nmea2_prn = 300 + *ubx_svid;    // 301 - 399
             break;
         case 4:
             /*  4 - BeiDou    1-37 */
             *ubx_gnssid = 3;
-            *ubx_svid = nmea_satnum;
-            nmea2_prn = 300 + nmea_satnum;
+            if (100 > nmea_satnum) {
+                // NMEA 1 - 99
+                *ubx_svid = nmea_satnum;
+            } else {
+                // Quectel Querk, NOT NMEA, 201 - 299
+                *ubx_svid = nmea_satnum - 200;
+            }
+            // put it at 400+ where NMEA 4.11 wants it
+            nmea2_prn = 400 + *ubx_svid;
             break;
         case 5:
             //  5 - QZSS, 1 - 10, NMEA 4.11
             *ubx_gnssid = 5;
-            *ubx_svid = nmea_satnum;
+            if (100 > nmea_satnum) {
+                // NMEA 1 - 99
+                *ubx_svid = nmea_satnum;
+            } else {
+                // Telit uses 193 - 199
+                *ubx_svid = nmea_satnum - 192;
+            }
+
+            // put it at 193 to 199 where NMEA 4.11 wants it
             // huh?  space for only 7?
-            nmea2_prn = 192 + nmea_satnum;
+            nmea2_prn = 192 + *ubx_svid;;
             break;
         case 6:
             /*  6 - NavIC (IRNSS)    1-15 */
             *ubx_gnssid = 7;
             *ubx_svid = nmea_satnum;
-            nmea2_prn = 500 + nmea_satnum;  // This is wrong...
+            nmea2_prn = nmea_satnum + 500;  // This is wrong...
             break;
         }
 
@@ -1864,16 +1901,21 @@ static gps_mask_t processGSV(int count, char *field[],
         session->nmea.last_gsv_sigid = ubx_sigid; /* UNUSED */
         switch (GSV_TALKER) {
         case 'A':        // GA Galileo
+            nmea_gnssid = 3;
             session->nmea.seen_gagsv = true;
             break;
         case 'B':        // GB BeiDou
             FALLTHROUGH
         case 'D':        // BD BeiDou
-            FALLTHROUGH
+            nmea_gnssid = 4;
+            session->nmea.seen_bdgsv = true;
+            break;
         case 'L':        // GL GLONASS
+            nmea_gnssid = 2;
             session->nmea.seen_glgsv = true;
             break;
         case 'I':        // GI IRNSS
+            nmea_gnssid = 6;
             session->nmea.seen_gigsv = true;
             break;
         case 'N':        // GN GNSS
@@ -1882,11 +1924,11 @@ static gps_mask_t processGSV(int count, char *field[],
         case 'P':        // GP GPS
             session->nmea.seen_gpgsv = true;
             break;
-        case 'Q':        // GQ, and PQ (Quectel) QZAA
-            /* Quectel EC25 & EC21 use PQGSA for BeiDou */
-            session->nmea.seen_bdgsv = true;
-            break;
+        case 'Q':        // GQ, and PQ (Quectel Querk) QZSS
+            // Quectel EC25 & EC21 use PQGSA for QZSS
+            FALLTHROUGH
         case 'Z':        // QZ QZSS
+            nmea_gnssid = 5;
             session->nmea.seen_qzgsv = true;
             break;
         default:

@@ -5,6 +5,9 @@
 #
 # Note: Odd PRN 102 in GAGSV.
 #       Undocumented PGLOR
+#       mixed GSV w and w/o signal ID
+#          $GAGSV,2,1,04,102,28,167,40,103,69,097,33*61
+#          $GAGSV,2,2,04,102,,,40,103,,,29,1*7F
 #
 # This file is Copyright (c) 2020 by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.
