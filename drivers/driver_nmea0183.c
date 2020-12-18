@@ -1645,6 +1645,7 @@ static gps_mask_t processGSA(int count, char *field[],
         switch (session->nmea.last_gsa_talker) {
         case 'A':
             // GA Galileo
+            nmea_gnssid = 3;
             session->nmea.seen_gagsa = true;
             break;
         case 'B':
@@ -1652,14 +1653,17 @@ static gps_mask_t processGSA(int count, char *field[],
             FALLTHROUGH
         case 'D':
             // BD BeiDou
+            nmea_gnssid = 4;
             session->nmea.seen_bdgsa = true;
             break;
         case 'I':
             // GI IRNSS
+            nmea_gnssid = 6;
             session->nmea.seen_gigsa = true;
             break;
         case 'L':
             // GL GLONASS
+            nmea_gnssid = 2;
             session->nmea.seen_glgsa = true;
             break;
         case 'N':
@@ -1672,7 +1676,10 @@ static gps_mask_t processGSA(int count, char *field[],
             break;
         case 'Q':
             // Quectel EC25 & EC21 use PQGSA for QZSS
+            FALLTHROUGH
+        case 'Z':        // QZ QZSS
             // NMEA 4.11 GQGSA for QZSS
+            nmea_gnssid = 5;
             session->nmea.seen_qzgsa = true;
             break;
         }
@@ -1910,13 +1917,13 @@ static gps_mask_t processGSV(int count, char *field[],
             nmea_gnssid = 4;
             session->nmea.seen_bdgsv = true;
             break;
-        case 'L':        // GL GLONASS
-            nmea_gnssid = 2;
-            session->nmea.seen_glgsv = true;
-            break;
         case 'I':        // GI IRNSS
             nmea_gnssid = 6;
             session->nmea.seen_gigsv = true;
+            break;
+        case 'L':        // GL GLONASS
+            nmea_gnssid = 2;
+            session->nmea.seen_glgsv = true;
             break;
         case 'N':        // GN GNSS
             session->nmea.seen_gngsv = true;
