@@ -1231,7 +1231,7 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
      *   101..136: Quectel Querk, (not NMEA), seems to be Galileo
      *   152..158: Various SBAS systems (EGNOS, WAAS, SDCM, GAGAN, MSAS)
      *   173..182: IMES
-     *   193..197: QZSS   (undocumented u-blox goes to 199)
+     *   193..202: QZSS   (u-blox extended 4.10)
      *   201..264: BeiDou (not NMEA, not u-blox?) Quectel Querk.
      *   301..336: Galileo
      *   401..437: BeiDou

@@ -2090,12 +2090,13 @@ struct satellite_t {
      * gnssid:svid:sigid, as defined by NMEA 4.11, NOT USED HERE!
      *  1 = GPS       1-32
      *  1 = SBAS      33-64, 152-158
-     *  1 = QZSS      193-197  Undocumetned u-blox goes to 199
-     *  2 = GLONASS   1-32, nul
+     *  1 = QZSS      193-202  (u-blox extended NMEA 4.10)
+     *  2 = GLONASS   65-96, null
      *  3 = Galileo   1-36
      *  4 - BeiDou    1-37
-     *  x = IMES                Not defined by NMEA
+     *  5 = QZSS      1-10 (NMEA 4.11)
      *  6 = NavIC (IRNSS)               NMEA 4.11+
+     *  x = IMES      173-182 (u-blox extended NMEA 3.10)
      *
      * Note: other GNSS receivers use different mappings!
      */
@@ -2124,9 +2125,11 @@ struct satellite_t {
      * sigid as defined by NMEA 4.10, NOT used here
      * GPS:      1 = L1C/A, 6 = L2 CL, 5 = L2 CM
      * Galileo:  7 = E1 C,  7 = E1 B,  2 = E5 bl, 2 = E5 bQ
-     * BeiDou:   1 = B1|D1, 1 = B1|D2, 3 = B2|D1, 3 = B2|D2
      * QZSS:     not defined
      * GLONASS:  1 = L1 OF, 3 = L2 OF
+     *
+     * chnaged sigid as defined by NMEA 4.11, NOT used here
+     * BeiDou:   1 = B1|D1, 1 = B1|D2, 11 = B2|D1, 11 = B2|D2
      */
     unsigned char sigid;
     signed char freqid;         /* The GLONASS (Only) frequency, 0 - 13 */
