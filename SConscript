@@ -129,6 +129,10 @@ if SCons.__version__ in ['2.3.0', '2.3.1']:
     os.symlink = _forced_symlink
 
 
+# SCons 2.3.0 is also missing the Psuedo method.  See the workaround after
+# the initial 'env' setup.
+
+
 # TODO: this list is missing stuff.
 # built man pages found in all_manpages
 generated_sources = [
@@ -531,6 +535,13 @@ for var in import_env:
 envs["GPSD_HOME"] = os.getcwd() + os.sep + 'gpsd'
 
 env = Environment(tools=["default", "tar", "textfile"], options=opts, ENV=envs)
+
+# SCons 2.3.0 lacks the Pseudo method.  If it's missing here, make it a
+# dummy and hope for the best.
+try:
+    env.Pseudo
+except AttributeError:
+    env.Pseudo = lambda x: None
 
 #  Minimal build turns off every option not set on the command line,
 if ARGUMENTS.get('minimal'):
