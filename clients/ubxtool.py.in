@@ -139,7 +139,7 @@ parser.add_argument(
     dest='gpsd_device',
     default=None,
     metavar='DEVICE',
-    help='The gpsd device to connect to. [Default %(default)s)]',
+    help='The gpsd device to connect to. [Default %(default)s]',
 )
 parser.add_argument(
     '-f', '--file',
@@ -170,7 +170,7 @@ parser.add_argument(
     default=None,
     metavar='PORTID',
     help=('Specifies receiver PORTID (interface) for port-related commands. '
-          '[Default %(default)s)]'),
+          '[Default %(default)s]'),
 )
 parser.add_argument(
     '--port',
@@ -178,7 +178,7 @@ parser.add_argument(
     default=gps.GPSD_PORT,
     metavar='PORT',
     type=int,
-    help='The gpsd port to connect to. [Default %(default)s)]',
+    help='The gpsd port to connect to. [Default %(default)s]',
 )
 parser.add_argument(
     '-p', '--preset',
@@ -192,7 +192,7 @@ parser.add_argument(
     dest='protver',
     default=10.0,
     type=float,
-    help='Protocol version for sending commands. [Default %(default)s)]',
+    help='Protocol version for sending commands. [Default %(default)s]',
 )
 parser.add_argument(
     '-r', '--readonly',
@@ -239,7 +239,7 @@ parser.add_argument(
     default=0,
     metavar='VERB',
     type=int,
-    help='Set verbosity level to V, 0 to 5. [Default %(default)s)]',
+    help='Set verbosity level to V, 0 to 5. [Default %(default)s]',
 )
 parser.add_argument(
     '-V', '--version',
@@ -253,7 +253,7 @@ parser.add_argument(
     default=2.0,
     metavar='WAIT',
     type=float,
-    help='Wait for WAIT seconds before exiting.. [Default %(default)s)]',
+    help='Wait for WAIT seconds before exiting.. [Default %(default)s]',
 )
 parser.add_argument(
     '-x', '--delitem',

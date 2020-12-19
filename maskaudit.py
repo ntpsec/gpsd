@@ -100,7 +100,7 @@ if __name__ == '__main__':
         default=False,
         dest='daemongen',
         help=('Generate C code to dump masks for debugging'
-              ' [Default %(default)s)]'),
+              ' [Default %(default)s]'),
     )
     parser.add_argument(
         '-c',
@@ -109,7 +109,7 @@ if __name__ == '__main__':
         default=False,
         dest='clientgen',
         help=('Generate C code to dump masks for debugging'
-              ' [Default %(default)s)]'),
+              ' [Default %(default)s]'),
     )
     parser.add_argument(
         '-p',
@@ -117,7 +117,7 @@ if __name__ == '__main__':
         action="store_true",
         default=False,
         dest='pythonize',
-        help=('Dump a Python status mask list. [Default %(default)s)]'),
+        help=('Dump a Python status mask list. [Default %(default)s]'),
     )
     parser.add_argument(
         '-t',
@@ -126,7 +126,7 @@ if __name__ == '__main__':
         default=False,
         dest='tabulate',
         help=('Tabulate usage of defines to find unused ones. '
-              ' Requires -c or -d. [Default %(default)s)]'),
+              ' Requires -c or -d. [Default %(default)s]'),
     )
     # parser.add_argument(
     #     '-V', '--version',

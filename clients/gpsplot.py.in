@@ -103,21 +103,21 @@ parser.add_argument(
     '--debug',
     default=0,
     dest='debug',
-    help='Set level of debug. Must be integer. [Default %(default)s)]',
+    help='Set level of debug. Must be integer. [Default %(default)s]',
     type=int,
 )
 parser.add_argument(
     '--device',
     default='',
     dest='device',
-    help='The device to connect. [Default %(default)s)]',
+    help='The device to connect. [Default %(default)s]',
 )
 parser.add_argument(
     '--fields',
     choices=['llh', 'llm'],
     default='llh',
     dest='fields',
-    help='Fields to plot. [Default %(default)s)]',
+    help='Fields to plot. [Default %(default)s]',
 )
 parser.add_argument(
     '-f', '--file',
@@ -130,14 +130,14 @@ parser.add_argument(
     '--host',
     default='localhost',
     dest='host',
-    help='The host to connect. [Default %(default)s)]',
+    help='The host to connect. [Default %(default)s]',
 )
 parser.add_argument(
     '-n',
     '--count',
     default=0,
     dest='count',
-    help='Count of messages to parse. 0 to disable. [Default %(default)s)]',
+    help='Count of messages to parse. 0 to disable. [Default %(default)s]',
     type=int,
 )
 parser.add_argument(
@@ -145,20 +145,20 @@ parser.add_argument(
     choices=['scatterplot', 'stripchart'],
     default='scatterplot',
     dest='plottype',
-    help='Plot type. [Default %(default)s)]',
+    help='Plot type. [Default %(default)s]',
 )
 parser.add_argument(
     '--port',
     default=gps.GPSD_PORT,
     dest='port',
-    help='The port to connect. [Default %(default)s)]',
+    help='The port to connect. [Default %(default)s]',
 )
 parser.add_argument(
     '-u', '--units',
     choices=['i', 'imperial', 'n', 'nautical', 'm', 'metric'],
     default=default_units.name,
     dest='units',
-    help='Units [Default %(default)s)]',
+    help='Units [Default %(default)s]',
 )
 parser.add_argument(
     '-V', '--version',
@@ -171,7 +171,7 @@ parser.add_argument(
     '--seconds',
     default=0,
     dest='seconds',
-    help='Seconds of messages to parse. 0 to disable. [Default %(default)s)]',
+    help='Seconds of messages to parse. 0 to disable. [Default %(default)s]',
     type=int,
 )
 parser.add_argument(

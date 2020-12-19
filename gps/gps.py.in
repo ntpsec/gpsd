@@ -729,7 +729,7 @@ if __name__ == '__main__':
         dest='verbose',
         default=0,
         action='count',
-        help='Verbose. Repeat for more verbosity. [Default %(default)s)]',
+        help='Verbose. Repeat for more verbosity. [Default %(default)s]',
     )
     parser.add_argument(
         '-V', '--version',

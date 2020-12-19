@@ -616,7 +616,7 @@ parser.add_argument(
     default=False,
     action="store_true",
     help=('INOP: Continuously calculate a SatPos() after -x SECONDS '
-           '[Default %(default)s)]')
+           '[Default %(default)s]')
 )
 parser.add_argument(
     '-D',
@@ -624,20 +624,20 @@ parser.add_argument(
     dest='debug',
     default=0,
     type=int,
-    help='Set level of debug. Must be integer. [Default %(default)s)]'
+    help='Set level of debug. Must be integer. [Default %(default)s]'
 )
 parser.add_argument(
     '--desc',
     dest='desc',
     default=False,
     action="store_true",
-    help='Print long descriptions [Default %(default)s)]'
+    help='Print long descriptions [Default %(default)s]'
 )
 parser.add_argument(
     '--device',
     dest='device',
     default='',
-    help='The device to connect. [Default %(default)s)]'
+    help='The device to connect. [Default %(default)s]'
 )
 parser.add_argument(
     '-f', '--file',
@@ -650,7 +650,7 @@ parser.add_argument(
     '--host',
     dest='host',
     default='localhost',
-    help='The host to connect. [Default %(default)s)]'
+    help='The host to connect. [Default %(default)s]'
 )
 parser.add_argument(
     '-n',
@@ -658,7 +658,7 @@ parser.add_argument(
     dest='count',
     default=0,
     type=int,
-    help='Count of messages to parse. 0 to disable. [Default %(default)s)]'
+    help='Count of messages to parse. 0 to disable. [Default %(default)s]'
 )
 parser.add_argument(
     '--load',
@@ -666,27 +666,27 @@ parser.add_argument(
     default=None,
     type=str,
     help=('Load saved JSON Subframe data trom loadfile. '
-          ' [Default %(default)s)]')
+          ' [Default %(default)s]')
 )
 parser.add_argument(
     '--port',
     dest='port',
     default=gps.GPSD_PORT,
-    help='The port to connect. [Default %(default)s)]'
+    help='The port to connect. [Default %(default)s]'
 )
 parser.add_argument(
     '--progress',
     dest='progress',
     default=False,
     action="store_true",
-    help='Print progress reports [Default %(default)s)]'
+    help='Print progress reports [Default %(default)s]'
 )
 parser.add_argument(
     '--satpos',
     dest='satpos',
     default=False,
     action="store_true",
-    help='Compute Satellite Positions [Default %(default)s)]'
+    help='Compute Satellite Positions [Default %(default)s]'
 )
 parser.add_argument(
     '--save',
@@ -694,14 +694,14 @@ parser.add_argument(
     default=None,
     type=str,
     help=('Save decoded Subframe data in savefile as JSON. '
-          ' [Default %(default)s)]')
+          ' [Default %(default)s]')
 )
 parser.add_argument(
     '--test',
     action="store_true",
     dest='test',
     default=False,
-    help='Run tests of the algorithms [Default %(default)s)]'
+    help='Run tests of the algorithms [Default %(default)s]'
 )
 parser.add_argument(
     '--time',
@@ -723,7 +723,7 @@ parser.add_argument(
     dest='seconds',
     default=16,
     type=int,
-    help='Seconds of messages to parse. 0 to disable. [Default %(default)s)]'
+    help='Seconds of messages to parse. 0 to disable. [Default %(default)s]'
 )
 parser.add_argument(
     'target',

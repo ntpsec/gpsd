@@ -1132,19 +1132,19 @@ if __name__ == '__main__':
         dest='debug',
         default=0,
         type=int,
-        help='Set level of debug. Must be integer. [Default %(default)s)]',
+        help='Set level of debug. Must be integer. [Default %(default)s]',
     )
     parser.add_argument(
         '-d', '--dumpfile',
         dest='dumpfile',
         default=None,
-        help='Set dumpfile. [Default %(default)s)]',
+        help='Set dumpfile. [Default %(default)s]',
     )
     parser.add_argument(
         '--device',
         dest='device',
         default='',
-        help='The device to connect. [Default %(default)s)]',
+        help='The device to connect. [Default %(default)s]',
     )
     parser.add_argument(
         '-f', '--formatter',
@@ -1158,26 +1158,26 @@ if __name__ == '__main__':
                  ),
         dest='plotmode',
         default='space',
-        help='Formatter to use. [Default %(default)s)]',
+        help='Formatter to use. [Default %(default)s]',
     )
     parser.add_argument(
         '--host',
         dest='host',
         default='localhost',
-        help='The host to connect. [Default %(default)s)]',
+        help='The host to connect. [Default %(default)s]',
     )
     parser.add_argument(
         '-l',
         '--logfile',
         dest='logfile',
         default=None,
-        help='Select logfile for JSON. [Default %(default)s)]',
+        help='Select logfile for JSON. [Default %(default)s]',
     )
     parser.add_argument(
         '-m', '--threshold',
         dest='threshold',
         default=None,
-        help='Select logfile. [Default %(default)s)]',
+        help='Select logfile. [Default %(default)s]',
         type=int,
     )
     parser.add_argument(
@@ -1185,14 +1185,14 @@ if __name__ == '__main__':
         dest='wait',
         default='100',
         help=('Select wait time in seconds before plotting.\n'
-              '[Default %(default)s)]'),
+              '[Default %(default)s]'),
         type=str,
     )
     parser.add_argument(
         '--port',
         dest='port',
         default=gps.GPSD_PORT,
-        help='The port to connect. [Default %(default)s)]',
+        help='The port to connect. [Default %(default)s]',
     )
     parser.add_argument(
         '-r', '--redo',
@@ -1200,25 +1200,25 @@ if __name__ == '__main__':
         dest='redo',
         default=False,
         help=('Redo from a previous JSON logfile on stdin.\n'
-              '[Default %(default)s)]'),
+              '[Default %(default)s]'),
     )
     parser.add_argument(
         '-S', '--subtitle',
         dest='subtitle',
         default=None,
-        help='Plot subtitle. [Default %(default)s)]',
+        help='Plot subtitle. [Default %(default)s]',
     )
     parser.add_argument(
         '-t', '--title',
         dest='title',
         default=None,
-        help='Plot title. [Default %(default)s)]',
+        help='Plot title. [Default %(default)s]',
     )
     parser.add_argument(
         '-T', '--terminal',
         dest='terminal',
         default=None,
-        help='gnuplot terminal type. [Default %(default)s)]',
+        help='gnuplot terminal type. [Default %(default)s]',
     )
     parser.add_argument(
         '-V', '--version',

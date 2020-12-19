@@ -117,40 +117,40 @@ if __name__ == "__main__":
         '-d', '--kmldir',
         default='.',
         dest='kmldir',
-        help='Google Earth kml directory. [Default %(default)s)]',
+        help='Google Earth kml directory. [Default %(default)s]',
     )
     parser.add_argument(
         '-D',
         '--debug',
         default=0,
         dest='debug',
-        help='Set level of debug. Must be integer. [Default %(default)s)]',
+        help='Set level of debug. Must be integer. [Default %(default)s]',
         type=int,
     )
     parser.add_argument(
         '--device',
         default='',
         dest='device',
-        help='The device to connect. [Default %(default)s)]',
+        help='The device to connect. [Default %(default)s]',
     )
     parser.add_argument(
         '--host',
         default='localhost',
         dest='host',
-        help='The host to connect. [Default %(default)s)]',
+        help='The host to connect. [Default %(default)s]',
     )
     parser.add_argument(
         '-i', '--initialize',
         action='store_true',
         default=False,
         dest='initialize',
-        help='Google Earth kml directory. [Default %(default)s)]',
+        help='Google Earth kml directory. [Default %(default)s]',
     )
     parser.add_argument(
         '--port',
         default=gps.GPSD_PORT,
         dest='port',
-        help='The port to connect. [Default %(default)s)]',
+        help='The port to connect. [Default %(default)s]',
     )
     parser.add_argument(
         '-V', '--version',

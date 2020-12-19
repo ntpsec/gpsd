@@ -84,7 +84,7 @@ if __name__ == '__main__':
         dest='debug',
         default=0,
         type=int,
-        help='Set level of debug. Must be integer. [Default %(default)s)]',
+        help='Set level of debug. Must be integer. [Default %(default)s]',
     )
     parser.add_argument(
         '-p', '--packetizer',

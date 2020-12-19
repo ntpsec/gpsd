@@ -95,7 +95,7 @@ parser.add_argument(
     '--class',
     dest='mclass',         # class is a reserved word
     default='TPV',
-    help='Message class to process. [Default %(default)s)]'
+    help='Message class to process. [Default %(default)s]'
 )
 parser.add_argument(
     '--cvt-isotime',
@@ -110,13 +110,13 @@ parser.add_argument(
     dest='debug',
     default=0,
     type=int,
-    help='Set level of debug. Must be integer. [Default %(default)s)]'
+    help='Set level of debug. Must be integer. [Default %(default)s]'
 )
 parser.add_argument(
     '--device',
     dest='device',
     default='',
-    help='The device to connect. [Default %(default)s)]'
+    help='The device to connect. [Default %(default)s]'
 )
 parser.add_argument(
     '-f',
@@ -137,13 +137,13 @@ parser.add_argument(
     dest='header',
     default=1,
     type=int,
-    help='0: No header, 1: fields, 2: comment. [Default %(default)s)]'
+    help='0: No header, 1: fields, 2: comment. [Default %(default)s]'
 )
 parser.add_argument(
     '--host',
     dest='host',
     default='localhost',
-    help='The host to connect. [Default %(default)s)]'
+    help='The host to connect. [Default %(default)s]'
 )
 parser.add_argument(
     '-n',
@@ -151,20 +151,20 @@ parser.add_argument(
     dest='count',
     default=0,
     type=int,
-    help='Count of messages to parse. 0 to disable. [Default %(default)s)]'
+    help='Count of messages to parse. 0 to disable. [Default %(default)s]'
 )
 parser.add_argument(
     '--port',
     dest='port',
     default=gps.GPSD_PORT,
-    help='The port to connect. [Default %(default)s)]'
+    help='The port to connect. [Default %(default)s]'
 )
 parser.add_argument(
     '--separator',
     dest='separator',
     default=',',
     type=str,
-    help='CSV field separator character. [Default %(default)s)]'
+    help='CSV field separator character. [Default %(default)s]'
 )
 parser.add_argument(
     '-V', '--version',
@@ -178,7 +178,7 @@ parser.add_argument(
     dest='seconds',
     default=0,
     type=int,
-    help='Seconds of messages to parse. 0 to disable. [Default %(default)s)]'
+    help='Seconds of messages to parse. 0 to disable. [Default %(default)s]'
 )
 parser.add_argument(
     'target',

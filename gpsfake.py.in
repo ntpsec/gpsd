@@ -165,7 +165,7 @@ if __name__ == '__main__':
         default=False,
         action="store_true",
         help=('Logfile is interpreted once only rather than repeatedly. '
-              '[Default %(default)s)]')
+              '[Default %(default)s]')
     )
     parser.add_argument(
         '-b',
@@ -174,7 +174,7 @@ if __name__ == '__main__':
         default=False,
         action="store_true",
         help=('Enable a twirling-baton progress indicator. '
-              '[Default %(default)s)]')
+              '[Default %(default)s]')
     )
     parser.add_argument(
         '-c',
@@ -184,7 +184,7 @@ if __name__ == '__main__':
         metavar='CYCLE',
         type=float,
         help=('Sets the delay between sentences in seconds. '
-              '[Default %(default)s)]'),
+              '[Default %(default)s]'),
     )
     parser.add_argument(
         '-D',
@@ -216,7 +216,7 @@ if __name__ == '__main__':
         dest='promptme',
         default=False,
         action="store_true",
-        help=('Single-stepping through logfile. [Default %(default)s)]'),
+        help=('Single-stepping through logfile. [Default %(default)s]'),
     )
     parser.add_argument(
         '-l',
@@ -225,7 +225,7 @@ if __name__ == '__main__':
         default=False,
         action="store_true",
         help=('Dump a line or packet number just before each sentence. '
-              '[Default %(default)s)]'),
+              '[Default %(default)s]'),
     )
     parser.add_argument(
         '-m',
@@ -258,7 +258,7 @@ if __name__ == '__main__':
         dest='pipe',
         default=False,
         action="store_true",
-        help='Sets watcher mode and dump to stdout. [Default %(default)s)]',
+        help='Sets watcher mode and dump to stdout. [Default %(default)s]',
     )
     parser.add_argument(
         '-P',
@@ -267,7 +267,7 @@ if __name__ == '__main__':
         dest='port',
         metavar='PORT',
         type=int,
-        help="Sets the daemon's listening port to PORT [Default %(default)s)]",
+        help="Sets the daemon's listening port to PORT [Default %(default)s]",
     )
     parser.add_argument(
         '-q',
@@ -275,7 +275,7 @@ if __name__ == '__main__':
         dest='quiet',
         default=False,
         action="store_true",
-        help='Act in a quiet manner. [Default %(default)s)]',
+        help='Act in a quiet manner. [Default %(default)s]',
     )
     parser.add_argument(
         '-r',
@@ -284,7 +284,7 @@ if __name__ == '__main__':
         dest='client_init',
         metavar='STR',
         help=('Specifies an initialization command to use in pipe mode. '
-              '[Default %(default)s)]'),
+              '[Default %(default)s]'),
     )
     parser.add_argument(
         '-s',
@@ -293,7 +293,7 @@ if __name__ == '__main__':
         dest='speed',
         metavar='SPEED',
         type=int,
-        help='Sets the baud rate for the slave tty. [Default %(default)s)]',
+        help='Sets the baud rate for the slave tty. [Default %(default)s]',
     )
     parser.add_argument(
         '-S',
@@ -302,7 +302,7 @@ if __name__ == '__main__':
         default=False,
         action="store_true",
         help=('Insert realistic delays in the test input.  '
-              '[Default %(default)s)]'),
+              '[Default %(default)s]'),
     )
     parser.add_argument(
         '-t',
@@ -310,7 +310,7 @@ if __name__ == '__main__':
         dest='tcp',
         default=False,
         action="store_true",
-        help='Force TCP. [Default %(default)s)]',
+        help='Force TCP. [Default %(default)s]',
     )
     parser.add_argument(
         '-T',
@@ -326,7 +326,7 @@ if __name__ == '__main__':
         dest='udp',
         default=False,
         action="store_true",
-        help='Force UDP. [Default %(default)s)]',
+        help='Force UDP. [Default %(default)s]',
     )
     parser.add_argument(
         '-v',
@@ -334,7 +334,7 @@ if __name__ == '__main__':
         dest='verbose',
         default=0,
         action='count',
-        help='Verbose. Repeat for more verbosity. [Default %(default)s)]',
+        help='Verbose. Repeat for more verbosity. [Default %(default)s]',
     )
     parser.add_argument(
         '-W',
@@ -343,7 +343,7 @@ if __name__ == '__main__':
         dest='timeout',
         metavar='SEC',
         type=int,
-        help='Specify timeout. [Default %(default)s)]',
+        help='Specify timeout. [Default %(default)s]',
     )
     parser.add_argument(
         '-V', '--version',
@@ -357,7 +357,7 @@ if __name__ == '__main__':
         dest='predump',
         default=False,
         action="store_true",
-        help='Dump packets as gpsfake gathers them. [Default %(default)s)]',
+        help='Dump packets as gpsfake gathers them. [Default %(default)s]',
     )
     parser.add_argument(
         'arguments',
