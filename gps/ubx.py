@@ -2712,7 +2712,7 @@ Programming the fixed seed for host interface signature"""
                    flag_s(u[3], self.cfg_nmea_flags)))
 
             if 11 < len(buf):
-                s += ("\n  gnssToFilter (%s) svNumbering (%s)"
+                s += ("\n  gnssToFilter (%s) svNumbering (%s) "
                       "mainTalkerId (%s)"
                       "\n  gsvTalkerId (%s)" %
                       (flag_s(u[4], self.cfg_nmea_gnssfilt),
@@ -6696,6 +6696,12 @@ High Precision GNSS products only."""
         # set UBX-CFG-LOGFILTER
         self.gps_send(6, 0x47, m_data)
 
+    def send_able_nav_sig(self, able, args):
+        """dis/enable UBX-NAV-SIG Time Pulse"""
+        rate = 1 if able else 0
+        m_data = bytearray([0x1, 0x43, rate])
+        self.gps_send(6, 1, m_data)
+
     def send_able_ned(self, able, args):
         """Enable NAV-RELPOSNED and VELNED messages.
 protver 15+ required for VELNED
@@ -7541,6 +7547,9 @@ Always double check with "-p CFG-GNSS".
         # en/dis able LOG
         "LOG": {"command": send_able_logfilter,
                 "help": "Data Logger"},
+        # en/dis able NAV-SIG Cmessage
+        "NAV-SIG": {"command": send_able_nav_sig,
+                    "help": "NAV-SIG Signal Information message"},
         # en/dis able NED
         "NED": {"command": send_able_ned,
                 "help": "NAV-VELNED and NAV-RELPOSNED"},
@@ -7562,7 +7571,7 @@ Always double check with "-p CFG-GNSS".
         # en/dis able TP time pulse message (deprecated)
         "TIM-TP": {"command": send_able_tp,
                    "help": "TIM-TP Time Pulse message"},
-        # en/dis able TP time pulse message (deprecated)
+        # en/dis able TP time pulse message
         "TP": {"command": send_able_tp,
                "help": "TP Time Pulse message (Deprecated, use TIM-TP)"},
         # en/dis able TMODE2 Survey-in
