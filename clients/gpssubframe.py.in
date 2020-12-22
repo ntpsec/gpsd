@@ -1039,7 +1039,9 @@ if gps_week and options.satpos:
             print("\n%5s Ephemeris position:" % sv)
 
             # mash into one dict
-            eph = all_data['ephemeris1'][sv]
+            # careful, = makes a link, not a copy, on dictionaries
+            # careful, update makes a link, not a copy, on dictionaries
+            eph = all_data['ephemeris1'][sv].copy()
             eph.update(all_data['ephemeris2'][sv])
             eph.update(all_data['ephemeris3'][sv])
 
@@ -1055,7 +1057,8 @@ if gps_week and options.satpos:
         if sv in all_data['almanac']:
             print("\n%s Almanac position:" % sv)
 
-            ephm = all_data['almanac'][sv]
+            # careful, = makes a link, not a copy, on dictionaries
+            ephm = all_data['almanac'][sv].copy()
             ephm.update({'i0': ephm['deltai'] + 0.30,
                          'deltan': 0,
                          'IDOT': 0,
