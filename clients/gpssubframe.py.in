@@ -241,10 +241,12 @@ return (x, y, z, deltatsv) of satellite at gps_tow t
         # SV Clock Correction
         deltatsv = (ephm['af0'] + ephm['af1'] * toff +
                     ephm['af2'] * toff ** 2 + deltatr)
-        print("deltatr %e deltatsv %e Tgd %.e\n"
-              "URE %s Health %s" %
-              (deltatr, deltatsv, ephm['Tgd'], ura2ure[ephm['ura']],
-               health_str[ephm['hlth'] & 0x1f]))
+        print("deltatr %e deltatsv %e Tgd %.e" %
+              (deltatr, deltatsv, ephm['Tgd']))
+        if 'ura' in ephm:
+            # ephemeris, not almanac
+            print("URE %s Health %s" %
+                  (ura2ure[ephm['ura']], health_str[ephm['hlth'] & 0x1f]))
     else:
         deltatsv = 0.0
 
