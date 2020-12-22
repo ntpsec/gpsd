@@ -793,16 +793,23 @@ try:
             break
 
         if 'SUBFRAME' == msg['class']:
-            if 1 < options.debug:
-                print("Subframe %d TOW17 %s WN %d" %
-                      (msg["frame"], msg['TOW17'], subframe1_WN))
             # use %02d so it sorts nicely.
-            if 'tSV' in msg:
-                idx = "GP%02d" % msg['tSV']
-            elif 'dataid' in msg:
+            if 'dataid' in msg:
+                # data id in subframes 4 and 5
+                if 0 == msg['dataid']:
+                    # dummy SV
+                    continue
                 idx = "GP%02d" % msg['dataid']
+            elif 'tSV' in msg:
+                # tSV in all subframes
+                idx = "GP%02d" % msg['tSV']
             else:
-                idx = 0
+                # huh?
+                idx = "X"
+
+            if 1 < options.debug:
+                print("Subframe %d idx %s TOW17 %s WN %d" %
+                      (msg["frame"], idx, msg['TOW17'], subframe1_WN))
 
             if 1 == msg['frame']:
                 if 'WN' in msg['EPHEM1']:
@@ -838,9 +845,9 @@ try:
                               (idx, msg['EPHEM3']['IODE']))
                     all_data['ephemeris3'][idx] = msg['EPHEM3']
             elif 4 <= msg['frame'] <= 5:
-                if 'ALMANAC' in msg and 0 != idx:
+                if 'ALMANAC' in msg:
                     # save it if:
-                    #  not dummy
+                    #  not dummy (data id != 0)
                     #  don't already have it
                     #  newer than what we have
                     if ((idx not in all_data['almanac'] or
@@ -851,6 +858,7 @@ try:
                             print("Received Almanac dataid %2d  toa %d" %
                                   (msg['dataid'], msg['ALMANAC']['toa']))
                         all_data['almanac'][idx] = msg['ALMANAC']
+
                 elif 'IONO' in msg:
                     if ((not all_data['ionosphere'] or
                          msg['IONO']['tot'] < all_data['ionosphere']['tot'])):
