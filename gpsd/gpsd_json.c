@@ -777,12 +777,13 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                     (unsigned int)subframe->pageid);
         if (subframe->is_almanac) {
             if (scaled) {
+                // IS-GPS-240 uses 14 digits past decimal, so we do too
                 str_appendf(buf, buflen,
                             ",\"ALMANAC\":{\"ID\":%d,\"Health\":%u,"
-                            "\"e\":%.10e,\"toa\":%lu,"
-                            "\"deltai\":%.10e,\"Omegad\":%.10e,\"sqrtA\":%.10e,"
-                            "\"Omega0\":%.10e,\"omega\":%.10e,\"M0\":%.11e,"
-                            "\"af0\":%.10e,\"af1\":%.10e}",
+                            "\"e\":%.14e,\"toa\":%lu,"
+                            "\"deltai\":%.14e,\"Omegad\":%.14e,\"sqrtA\":%.14e,"
+                            "\"Omega0\":%.14e,\"omega\":%.14e,\"M0\":%.14e,"
+                            "\"af0\":%.14e,\"af1\":%.14e}",
                             (int)subframe->sub5.almanac.sv,
                             (unsigned int)subframe->sub5.almanac.svh,
                             subframe->sub5.almanac.d_eccentricity,

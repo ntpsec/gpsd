@@ -225,7 +225,8 @@ return (x, y, z, deltatsv) of satellite at gps_tow t
     #       + x * sinOmegak + y * cosik * cosOmegak)
     # vz = y * sinik
 
-    # Almanac does not have toc, or ure
+    # Almanac does not have af2, toc, or ure
+    # but it does have af0 and af1, so compute what we can
     if 'toc' in ephm:
         # relativistic correction term, seconds
         deltatr = gps.GPS_F * ephm['e'] * ephm['sqrtA'] * sinEk
@@ -1069,9 +1070,12 @@ if gps_week and options.satpos:
 
             # careful, = makes a link, not a copy, on dictionaries
             ephm = all_data['almanac'][sv].copy()
-            ephm.update({'i0': ephm['deltai'] + 0.30,
+            ephm.update({'af2': 0,
                          'deltan': 0,
+                         'i0': ephm['deltai'] + 0.30,
                          'IDOT': 0,
+                         'Tgd': 0,
+                         'toc': ephm['toa'],
                          'toe': ephm['toa']})
 
             # convert semi-circles to radians
