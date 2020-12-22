@@ -669,10 +669,12 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
     switch (subframe->subframe_num) {
     case 1:
         if (scaled) {
+            // NASA uses RINEX 2 to report current ephemeris
+            // RINEX 2, everything is %.12e, so we will too.
             str_appendf(buf, buflen,
                         ",\"EPHEM1\":{\"WN\":%u,\"IODC\":%u,\"L2\":%u,"
-                        "\"ura\":%u,\"hlth\":%u,\"L2P\":%u,\"Tgd\":%e,"
-                        "\"toc\":%lu,\"af2\":%.4e,\"af1\":%.7e,\"af0\":%.8e}",
+                        "\"ura\":%u,\"hlth\":%u,\"L2P\":%u,\"Tgd\":%.12e,"
+                        "\"toc\":%lu,\"af2\":%.12e,\"af1\":%.12e,\"af0\":%.12e}",
                         (unsigned int)subframe->sub1.WN,
                         (unsigned int)subframe->sub1.IODC,
                         (unsigned int)subframe->sub1.l2,
@@ -704,10 +706,13 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
         break;
     case 2:
         if (scaled) {
+            // NASA uses RINEX 2 to report current ephemeris
+            // RINEX 2, everything is %.12e, so we will too.
             str_appendf(buf, buflen,
-                        ",\"EPHEM2\":{\"IODE\":%u,\"Crs\":%.6e,\"deltan\":%.6e,"
-                        "\"M0\":%.11e,\"Cuc\":%.6e,\"e\":%.11e,\"Cus\":%.6e,"
-                        "\"sqrtA\":%.11e,\"toe\":%lu,\"FIT\":%u,\"AODO\":%u}",
+                        ",\"EPHEM2\":{\"IODE\":%u,\"Crs\":%.12e,"
+                        "\"deltan\":%.12e,\"M0\":%.12e,\"Cuc\":%.12e,"
+                        "\"e\":%.12e,\"Cus\":%.12e," "\"sqrtA\":%.12e,"
+                        "\"toe\":%lu,\"FIT\":%u,\"AODO\":%u}",
                         (unsigned int)subframe->sub2.IODE,
                         subframe->sub2.d_Crs,
                         subframe->sub2.d_deltan,
@@ -739,10 +744,13 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
         break;
     case 3:
         if (scaled) {
+            // NASA uses RINEX 2 to report current ephemeris
+            // RINEX 2, everything is %.12e, so we will too.
             str_appendf(buf, buflen,
-                        ",\"EPHEM3\":{\"IODE\":%3u,\"IDOT\":%.6e,\"Cic\":%.6e,"
-                        "\"Omega0\":%.11e,\"Cis\":%.7e,\"i0\":%.11e,"
-                        "\"Crc\":%.7e,\"omega\":%.11e,\"Omegad\":%.9e}",
+                        ",\"EPHEM3\":{\"IODE\":%3u,\"IDOT\":%.12e,"
+                        "\"Cic\":%.12e,\"Omega0\":%.12e,\"Cis\":%.12e,"
+                        "\"i0\":%.12e,\"Crc\":%.12e,\"omega\":%.12e,"
+                        "\"Omegad\":%.12e}",
                         (unsigned int)subframe->sub3.IODE,
                         subframe->sub3.d_IDOT,
                         subframe->sub3.d_Cic,
