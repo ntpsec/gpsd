@@ -911,7 +911,9 @@ all_sv = (list(all_data['ephemeris1'].keys()) +
           list(all_data['ephemeris3'].keys()) +
           list(all_data['almanac'].keys()))
 
-for sv in sorted(set(all_sv)):
+all_sv = sorted(set(all_sv))
+
+for sv in all_sv:
     print("\n%s" % sv)
     print("  Subframe 1, Clock Data")
     if sv in all_data['ephemeris1']:
