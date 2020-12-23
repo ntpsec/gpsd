@@ -185,8 +185,8 @@ python_progs = [
     "clients/gegps",
     "clients/gpscat",
     "clients/gpscsv",
-    "clients/gpsprof",
     "clients/gpsplot",
+    "clients/gpsprof",
     "clients/gpssubframe",
     "clients/ubxtool",
     "clients/xgps",
@@ -1878,25 +1878,38 @@ gpsmon_sources = [
     'gpsmon/monitor_ubx.c',
 ]
 
-# Python import dependencies
+# Python dependencies
+# For generated dependencies, this causes them to be generated as needed.
+# For non-generated dependencies, it causes them to be duplicated into
+# the build tree as needed.
+
+# Import dependencies
 # Update these whenever the imports change
-# These are technically unnecessary in cases where the dependency isn't
-# a generated file, but this section avoids any knowledge of which files
-# are generated and which aren't.
 
 # Internal imports within 'gps' package
 env.Depends('gps/__init__.py', ['gps/gps.py', 'gps/misc.py'])
+env.Depends('gps/aiogps.py', ['gps/client.py', 'gps/gps.py', 'gps/misc.py'])
+env.Depends('gps/client.py', ['gps/misc.py', 'gps/watch_options.py'])
+env.Depends('gps/gps.py',
+            ['gps/client.py', 'gps/misc.py', 'gps/watch_options.py'])
+env.Depends('gps/fake.py', 'gps/packet.py')
+env.Depends('gps/packet.py', 'gps/misc.py')
+
 # All Python programs import the 'gps' package
-# FIXME: should be python targets, not sources
-env.Depends(python_progs, ['gps/__init__.py', 'gps/misc.py'])
+env.Depends(python_progs, 'gps/__init__.py')
+
 # Additional specific import cases
 env.Depends('clients/gpscat', ['gps/packet.py', 'gps/misc.py'])
-env.Depends('clients/gpssubframe', ['gps/packet.py', 'gps/misc.py'])
-env.Depends('clients/ubxtool', 'gps/misc.py')
+env.Depends('clients/gpsplot', 'gps/clienthelpers.py')
+env.Depends('clients/gpsprof', 'gps/clienthelpers.py')
+env.Depends('clients/ubxtool', 'gps/ubx.py')
 env.Depends('clients/xgps', 'gps/clienthelpers.py')
+env.Depends('clients/xgpsspeed', 'gps/clienthelpers.py')
 env.Depends('clients/zerk', 'gps/misc.py')
-env.Depends('gpsfake', 'gps/fake.py')
-env.Depends('gps/fake.py', 'gps/packet.py')
+env.Depends('gpsfake', ['gps/fake.py', 'gps/misc.py'])
+
+# Non-import dependencies
+# Dependency on program
 env.Depends('regress-driver', 'gpsfake')
 # Dependency on FFI packet library
 env.Depends('gps/packet.py', packet_ffi_shared)
