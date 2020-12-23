@@ -227,28 +227,26 @@ return (x, y, z, deltatsv) of satellite at gps_tow t
 
     # Almanac does not have af2, toc, or ure
     # but it does have af0 and af1, so compute what we can
-    if 'toc' in ephm:
-        # relativistic correction term, seconds
-        deltatr = gps.GPS_F * ephm['e'] * ephm['sqrtA'] * sinEk
-        # toff == SV PRN code phase offset, seconds
-        # we want tgps, but our t (tsv) is close enough.
-        toff = t - ephm['toc']
-        # handle week rollover
-        if 302400 < toff:
-            toff -= 604800
-        elif -302400 > toff:
-            toff += 604800
-        # SV Clock Correction
-        deltatsv = (ephm['af0'] + ephm['af1'] * toff +
-                    ephm['af2'] * toff ** 2 + deltatr)
-        print("deltatr %e deltatsv %e Tgd %.e" %
-              (deltatr, deltatsv, ephm['Tgd']))
-        if 'ura' in ephm:
-            # ephemeris, not almanac
-            print("URE %s Health %s" %
-                  (ura2ure[ephm['ura']], health_str[ephm['hlth'] & 0x1f]))
-    else:
-        deltatsv = 0.0
+
+    # relativistic correction term, seconds
+    deltatr = gps.GPS_F * ephm['e'] * ephm['sqrtA'] * sinEk
+    # toff == SV PRN code phase offset, seconds
+    # we want tgps, but our t (tsv) is close enough.
+    toff = t - ephm['toc']
+    # handle week rollover
+    if 302400 < toff:
+        toff -= 604800
+    elif -302400 > toff:
+        toff += 604800
+    # SV Clock Correction
+    deltatsv = (ephm['af0'] + ephm['af1'] * toff +
+                ephm['af2'] * toff ** 2 + deltatr)
+    print("deltatr %.9e deltatsv %.9e Tgd %.9e toff %.3f" %
+          (deltatr, deltatsv, ephm['Tgd'], toff))
+    if 'ura' in ephm:
+        # ephemeris, not almanac
+        print("URE %s Health %s" %
+              (ura2ure[ephm['ura']], health_str[ephm['hlth'] & 0x1f]))
 
     if 1 < options.debug:
         if 2 < options.debug:
