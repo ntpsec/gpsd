@@ -181,7 +181,7 @@ generated_www = [
 
 # All installed python programs
 # All are templated
-python_progs = [
+python_clients = [
     "clients/gegps",
     "clients/gpscat",
     "clients/gpscsv",
@@ -192,6 +192,8 @@ python_progs = [
     "clients/xgps",
     "clients/xgpsspeed",
     "clients/zerk",
+    ]
+python_progs = python_clients + [
     "gpsfake",
 ]
 
@@ -1883,6 +1885,11 @@ gpsmon_sources = [
 # For non-generated dependencies, it causes them to be duplicated into
 # the build tree as needed.
 
+# Symlink creator for uplevel access to the 'gps' package
+def PylibLink(target, source, env):
+    _ = source, env
+    os.symlink('../gps', target[0].get_path())
+
 # Import dependencies
 # Update these whenever the imports change
 
@@ -1907,6 +1914,9 @@ env.Depends('clients/xgps', 'gps/clienthelpers.py')
 env.Depends('clients/xgpsspeed', 'gps/clienthelpers.py')
 env.Depends('clients/zerk', 'gps/misc.py')
 env.Depends('gpsfake', ['gps/fake.py', 'gps/misc.py'])
+
+# Symlink for the clients to find the 'gps' package in the build tree
+env.Depends(python_clients, env.Command('clients/gps', '', PylibLink))
 
 # Non-import dependencies
 # Dependency on program
@@ -2059,6 +2069,10 @@ env.Depends('tests/test_clienthelpers.py',
             ['gps/__init__.py', 'gps/clienthelpers.py', 'gps/misc.py'])
 env.Depends('tests/test_misc.py', ['gps/__init__.py', 'gps/misc.py'])
 env.Depends('valgrind-audit.py', ['gps/__init__.py', 'gps/fake.py'])
+
+# Symlink for the programs to find the 'gps' package in the build tree
+env.Depends(['tests/test_clienthelpers.py', 'tests/test_misc.py'],
+            env.Command('tests/gps', '', PylibLink))
 
 # Glob() has to be run after all buildable objects defined
 # FIXME: confirm this is true here.
@@ -2496,7 +2510,6 @@ env.Pseudo(python_compilation_regress)
 vchk = ''
 verenv = env['ENV'].copy()
 verenv['DISPLAY'] = ''  # Avoid launching X11 in X11 progs
-verenv['PYTHONPATH'] = env['SRCDIR']  # Use new gps module, not system's
 pp = []
 for p in python_progs:
     if not env['xgps_deps']:
@@ -2504,9 +2517,7 @@ for p in python_progs:
             # do not have xgps* dependencies, don't test
             # FIXME: make these do -V w/o dependencies.
             continue
-    # need to run in variantdir to:
-    #     find libgpsdpacket
-    #     gps module in pwd trumps the one in PYTHONPATH
+    # need to run in variantdir to find libgpsdpacket
     tgt = Utility(
         'version-%s' % p, p,
         'cd %s; $PYTHON %s -V' % (variantdir, p),
@@ -2917,17 +2928,13 @@ unpack_regress = UtilityWithHerald(
         ' $SRCDIR/test/clientlib/*.log', ])
 env.Pseudo(unpack_regress)
 # Unit-test the bitfield extractor
-# PYTHONPATH to help find the new copy of gps module
-verenv = env['ENV'].copy()
-verenv['PYTHONPATH'] = env['SRCDIR']  # Use new gps module, not system's
 misc_regress = Utility('misc-regress', [
     'tests/test_clienthelpers.py',
     'tests/test_misc.py', ],
     [
     'cd %s; %s tests/test_clienthelpers.py' %
     (variantdir, target_python_path),
-    'cd %s; %s tests/test_misc.py' % (variantdir, target_python_path), ],
-    ENV=verenv)
+    'cd %s; %s tests/test_misc.py' % (variantdir, target_python_path), ])
 env.Pseudo(misc_regress)
 
 
