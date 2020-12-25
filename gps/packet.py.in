@@ -25,7 +25,7 @@ import ctypes
 import ctypes.util
 import os
 import os.path
-import sys              # for sys.stderr.write()
+import sys
 import gps.misc
 
 
@@ -82,6 +82,8 @@ Returns tha library handle."""
 
     for packet_path in packet_paths:
         try:
+            if sys.flags.verbose:
+                print('try_packet_lib: %s' % packet_path, file=sys.stderr)
             lib = ctypes.cdll.LoadLibrary(packet_path)
             # get the library version from the library
             gpsd_version = ctypes.c_char_p.in_dll(lib, "gpsd_version").value
