@@ -26,6 +26,8 @@ import ctypes.util
 import os
 import os.path
 import sys
+
+import gps  # For gps.__path__
 import gps.misc
 
 
@@ -41,23 +43,30 @@ class PacketLibraryNotFoundError(Exception):
 def importado():
     """
 Load the packet library or throw a PacketLibraryNotFoundError trying.
-Look in, current directory, GPSD_HOME, then use find_library().
+See below for search order.
 find_library() looks in: LD_LIBRARY_PATH, DYLD_LIBRARY_PATH,
 $home/lib, /.usr/local/lib, /usr/lib, /lib
-Returns tha library handle."""
+Returns the library handle."""
 
-    packet_paths = []         # places to look
     packet_name = '@GPSPACKET@'
+    packet_dirs = []         # places to look
+    lib_dir = '@LIBDIR@'
 
-    # look in current dir first.  To match what "import" does.
-    # Make sure it is a full path
-    packet_paths.append(os.path.abspath(packet_name))
+    # First look in the directory containing this 'gps' package, possibly
+    # following a symlink in the process.
+    # This is the normal location within the build tree.  It is expected
+    # to fail when running the installed version.
+    packet_dirs.append(os.path.dirname(os.path.realpath(gps.__path__[0])))
 
-    # Check GPSD_HOME environment variable, look there second
-    if 'GPSD_HOME' in os.environ:
-        # Make sure it is a full path
-        packet_paths.append(os.path.abspath(os.environ['GPSD_HOME'] +
-                                            os.sep + packet_name))
+    # Next look in the library install directory.
+    # This is the expected location when running the installed version.
+    packet_dirs.append(os.path.realpath(lib_dir))
+
+    # Form full paths to candidates so far
+    packet_paths = [os.path.join(os.path.abspath(x), packet_name)
+                    for x in packet_dirs]
+
+    # Finally try find_library().
 
     # find_library() looks for bare library name, using dlopen()
     # May, or may not, return a full path.  Either way use as is.
@@ -72,6 +81,8 @@ Returns tha library handle."""
     #  DYLD_LIBRARY_PATH,
     #  current working directory,
     #  DYLD_FALLBACK_LIBRARY_PATH (default: $HOME/lib:/usr/local/lib:/usr/lib)
+    # Note that some recent macOS versions have stopped honoring *_LIBRARY_PATH,
+    # for security reasons.
     #
     # Linux:
     #   find_library() does not usually return a full path.
