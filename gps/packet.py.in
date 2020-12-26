@@ -32,9 +32,15 @@ import gps.misc
 # Packet types and  Logging levels extracted from gpsd.h
 @PYPACKETH@
 
+
+class PacketLibraryNotFoundError(Exception):
+    """Error loading packet library."""
+    pass
+
+
 def importado():
     """
-Load the packet library or throw an OSError trying.
+Load the packet library or throw a PacketLibraryNotFoundError trying.
 Look in, current directory, GPSD_HOME, then use find_library().
 find_library() looks in: LD_LIBRARY_PATH, DYLD_LIBRARY_PATH,
 $home/lib, /.usr/local/lib, /usr/lib, /lib
@@ -96,7 +102,7 @@ Returns tha library handle."""
         except OSError:
             pass
 
-    raise OSError("Can't find packet library")
+    raise PacketLibraryNotFoundError("Can't find packet library")
 
 
 _loaded = None
