@@ -330,13 +330,17 @@ PYTHON_SYSCONFIG_IMPORT = 'from distutils import sysconfig'
 
 
 def Utility(target, source, action, **kwargs):
-    target = env.Command(target=target, source=source, action=action, **kwargs)
+    targ = env.Command(target=target, source=source, action=action, **kwargs)
     # why always build?  wasteful?
     # when gpsdecode is the source this rebuilds the entire daemon!
-    # env.AlwaysBuild(target)
+    # env.AlwaysBuild(targ)
     # Why precious?
-    env.Precious(target)
-    return target
+    env.Precious(targ)
+    # Is pseudo really needed (didn't used to be)?
+    env.Pseudo(targ)
+    # Alias to make name work without variantdir prefix
+    env.Alias(target, targ)
+    return targ
 
 
 def UtilityWithHerald(herald, target, source, action, **kwargs):
@@ -2503,7 +2507,6 @@ for p in python_all:
 
 python_compilation_regress = Utility('python-compilation-regress',
                                      python_all, check_compile)
-env.Pseudo(python_compilation_regress)
 
 # get version from each python prog
 # this ensures they can run and gps_versions match
@@ -2522,7 +2525,6 @@ for p in python_progs:
         'version-%s' % p, p,
         'cd %s; $PYTHON %s -V' % (variantdir, p),
         ENV=verenv)
-    env.Pseudo(tgt)
     pp.append(tgt)
 python_versions = env.Alias('python-versions', pp)
 
@@ -2559,6 +2561,7 @@ uninstall = env.Command('uninstall', '',
                         Flatten(Uninstall(Alias("install"))) or "")
 env.AlwaysBuild(uninstall)
 env.Precious(uninstall)
+env.Alias('uninstall', uninstall)
 
 # Target selection for '.' is badly broken. This is a general scons problem,
 # not a glitch in this particular recipe. Avoid triggering the bug.
@@ -2598,8 +2601,6 @@ cppcheck = Utility("cppcheck",
                    "--enable=all --inline-suppr "
                    "--suppress='*:drivers/driver_proto.c' "
                    "--force $SRCDIR")
-env.Pseudo(cppcheck)
-env.Alias('cppcheck', cppcheck)
 
 # Use deheader to remove headers not required.  If the statistics line
 # ends with other than '0 removed' there's work to be done.
@@ -2612,8 +2613,6 @@ deheader = Utility("deheader", generated_sources, [
     '-m "MORECFLAGS=\'-Werror -Wfatal-errors -DDEBUG \' %s +Q"' %
     (variantdir, variantdir, scons_executable_name,),
 ])
-env.Pseudo(deheader)
-env.Alias('deheader', deheader)
 
 # Conflicts with pycodestyle:
 #   E121 continuation line under-indented for hanging indent
@@ -2624,8 +2623,6 @@ env.Alias('deheader', deheader)
 flake8 = Utility("flake8", python_lint,
                  ['flake8 --ignore=E121,E122,E123,E241,E401,E501,W504,W602 '
                   '--exit-zero $SOURCES'])
-env.Pseudo(flake8)
-env.Alias('flake8', flake8)
 
 # Additional Python readability style checks
 # Oddly these only happen when called this way?
@@ -2637,10 +2634,8 @@ env.Alias('flake8', flake8)
 pycodestyle = Utility("pep8", python_lint,
                       ['pycodestyle --ignore=E121,E122,E123,E241,W504,W602 '
                        '$SOURCES; exit 0'])
-env.Pseudo(pycodestyle)
-env.Alias('pycodestyle', pycodestyle)
 # pep8 was renamed to pycodestyle, same thing
-env.Alias('pep8', pycodestyle)
+env.Alias('pycodestyle', pycodestyle)
 
 # Sanity-check Python code.
 # Bletch.  We don't really want to suppress W0231 E0602 E0611 E1123,
@@ -2661,23 +2656,18 @@ pylint = Utility("pylint", python_lint, [
     'W0121,W0123,W0231,W0232,W0234,W0401,W0403,W0141,W0142,W0603,'
     'W0614,W0640,W0621,W1504,E0602,E0611,E1101,E1102,E1103,E1123,'
     'F0401,I0011 $SOURCES'])
-env.Pseudo(pylint)
-env.Alias('pylint', pylint)
 
 # Check with scan-build, an analyzer, part of clang
 scan_build = Utility("scan-build",
                      ["include/gpsd.h", "include/packet_names.h"],
                      "scan-build " + scons_executable_name)
-env.Pseudo(scan_build)
-env.Alias('scan_build', scan_build)
+env.Alias('scan_build', scan_build)  # For '_' vs. '-'
 
 # Run a valgrind audit on the daemon  - not in normal tests
 valgrind = Utility('valgrind', [
     'valgrind-audit.py', gpsd],
     '$PYTHON $SRCDIR/valgrind-audit.py'
 )
-env.Pseudo(valgrind)
-env.Alias('valgrind', valgrind)
 
 # Check the documentation for bogons, too
 # xmllint is part of the libxml2 package
@@ -2685,8 +2675,6 @@ env.Alias('valgrind', valgrind)
 xmllint = Utility("xmllint", [
     glob.glob("man/*xml"), glob.glob("www/*.xml")],
     "for xml in $SOURCES; do xmllint --nonet --noout --valid $$xml; done")
-env.Pseudo(xmllint)
-env.Alias('xmllint', xmllint)
 
 # Perform all (possible) local code-sanity checks (but not the Coverity scan).
 audits = []
@@ -2719,19 +2707,16 @@ env.Alias('audit', audits)
 bits_regress = Utility('bits-regress', [test_bits], [
     '$SRCDIR/tests/test_bits --quiet'
 ])
-env.Pseudo(bits_regress)
 
 # Unit-test the deg_to_str() converter
 deg_regress = Utility('deg-regress', [test_gpsdclient], [
     '$SRCDIR/tests/test_gpsdclient'
 ])
-env.Pseudo(deg_regress)
 
 # Unit-test the bitfield extractor
 matrix_regress = Utility('matrix-regress', [test_matrix], [
     '$SRCDIR/tests/test_matrix --quiet'
 ])
-env.Pseudo(matrix_regress)
 
 # using regress-drivers requires socket_export being enabled and Python
 if env['socket_export'] and env['python']:
@@ -2740,7 +2725,6 @@ if env['socket_export'] and env['python']:
     gps_herald = Utility(
         'gps-herald', [gpsd, gpsctl, '$SRCDIR/gpsfake'],
         'cd %s; $PYTHON $PYTHON_COVERAGE $SRCDIR/gpsfake -T' % variantdir)
-    env.Pseudo(gps_herald)
 
     gps_log_pattern = "test/daemon/*.log"
     gps_logs = Glob(gps_log_pattern, strings=True)
@@ -2752,7 +2736,6 @@ if env['socket_export'] and env['python']:
             [gps_herald, gps_log],
             'cd %s; ./regress-driver -q -o -t $REGRESSOPTS %s' %
             (variantdir, gps_log))
-        env.Pseudo(tgt)
         gps_tests.append(tgt)
     gps_regress = env.Alias('gps-regress', gps_tests)
 
@@ -2767,7 +2750,6 @@ if env['socket_export'] and env['python']:
             [gps_herald, gpsfake_logs],
             'cd %s; ./regress-driver $REGRESSOPTS -q %s %s' %
             (variantdir, opts, 'test/daemon/passthrough.log'))
-        env.Pseudo(tgt)
         gpsfake_tests.append(tgt)
     env.Alias('gpsfake-tests', gpsfake_tests)
 
@@ -2820,7 +2802,6 @@ if env["rtcm104v2"]:
         '    || echo "Test FAILED!"; '
         '    rm -f $${TMPFILE}; ',
     ])
-    env.Pseudo(rtcm_regress)
 else:
     announce("RTCM2 regression tests suppressed because rtcm104v2 is off.")
     rtcm_regress = None
@@ -2880,7 +2861,6 @@ if env["aivdm"]:
         '    | diff -ub - $${TMPFILE} || echo "Test FAILED!"; '
         '    rm -f $${TMPFILE}; ',
     ])
-    env.Pseudo(aivdm_regress)
 else:
     announce("AIVDM regression tests suppressed because aivdm is off.")
     aivdm_regress = None
@@ -2899,7 +2879,6 @@ packet_regress = UtilityWithHerald(
     'Testing detection of invalid packets...',
     'packet-regress', [test_packet],
     ['$SRCDIR/tests/test_packet | diff -u test/packet.test.chk -', ])
-env.Pseudo(packet_regress)
 
 # Rebuild the packet-getter regression test
 Utility('packet-makeregress', [test_packet], [
@@ -2909,13 +2888,11 @@ Utility('packet-makeregress', [test_packet], [
 geoid_regress = UtilityWithHerald(
     'Testing the geoid and variation models...',
     'geoid-regress', [test_geoid], ['$SRCDIR/tests/test_geoid'])
-env.Pseudo(geoid_regress)
 
 # Regression-test the calendar functions
 time_regress = Utility('time-regress', [test_mktime], [
     '$SRCDIR/tests/test_mktime'
 ])
-env.Pseudo(time_regress)
 
 # Regression test the unpacking code in libgps
 # the log files must be dependencies so they get copied into variant_dir
@@ -2926,7 +2903,6 @@ unpack_regress = UtilityWithHerald(
     'unpack-regress', [test_libgps, 'regress-driver', clientlib_logs], [
         '$SRCDIR/regress-driver $REGRESSOPTS -c'
         ' $SRCDIR/test/clientlib/*.log', ])
-env.Pseudo(unpack_regress)
 # Unit-test the bitfield extractor
 misc_regress = Utility('misc-regress', [
     'tests/test_clienthelpers.py',
@@ -2935,7 +2911,6 @@ misc_regress = Utility('misc-regress', [
     'cd %s; %s tests/test_clienthelpers.py' %
     (variantdir, target_python_path),
     'cd %s; %s tests/test_misc.py' % (variantdir, target_python_path), ])
-env.Pseudo(misc_regress)
 
 
 # Build the regression test for the sentence unpacker
@@ -2948,7 +2923,6 @@ Utility('unpack-makeregress', [test_libgps], [
 if env['socket_export']:
     json_regress = Utility('json-regress', [test_json],
                            ['$SRCDIR/tests/test_json'])
-    env.Pseudo(json_regress)
 else:
     json_regress = None
 
@@ -2956,26 +2930,22 @@ else:
 timespec_regress = Utility('timespec-regress', [test_timespec], [
     '$SRCDIR/tests/test_timespec'
 ])
-env.Pseudo(timespec_regress)
 
 # Unit-test float math
 float_regress = Utility('float-regress', [test_float], [
     '$SRCDIR/tests/test_float'
 ])
-env.Pseudo(float_regress)
 
 # Unit-test trig math
 trig_regress = Utility('trig-regress', [test_trig], [
     '$SRCDIR/tests/test_trig'
 ])
-env.Pseudo(trig_regress)
 
 # consistency-check the driver methods
 method_regress = UtilityWithHerald(
     'Consistency-checking driver methods...',
     'method-regress', [test_packet], [
         '$SRCDIR/tests/test_packet -c >/dev/null', ])
-env.Pseudo(method_regress)
 
 # Test the xgps/xgpsspeed dependencies
 if env['xgps_deps']:
@@ -2983,7 +2953,6 @@ if env['xgps_deps']:
         'Testing xgps/xgpsspeed dependencies (since xgps=yes)...',
         'test-xgps-deps', ['$SRCDIR/tests/test_xgps_deps.py'], [
             '$PYTHON $SRCDIR/tests/test_xgps_deps.py'])
-    env.Pseudo(test_xgps_deps)
 else:
     test_xgps_deps = None
 
@@ -2995,12 +2964,9 @@ flocktest = Utility("flocktest", [], "cd devtools; ./flocktest " + gitrepo)
 describe = UtilityWithHerald(
     'Run normal regression tests for %s...' % gpsd_revision.strip(),
     'describe', [], [])
-env.Pseudo(describe)
 
 # Delete all test programs
 testclean = Utility('testclean', [], 'rm -fr %s/tests' % variantdir)
-env.Pseudo(testclean)
-env.Alias('testclean', testclean)
 
 test_nondaemon = [
     aivdm_regress,
@@ -3052,8 +3018,6 @@ shmclean = Utility('shmclean', [], ["ipcrm  -M 0x4e545030;"
                                     "ipcrm  -M 0x4e545036;"
                                     "ipcrm  -M 0x47505345;"
                                     ])
-env.Pseudo(shmclean)
-env.Alias('shmclean', shmclean)
 
 # The website directory
 #
@@ -3247,19 +3211,16 @@ upload_release = Utility('upload-release', ['dist'], [
     'chmod ug=rw,o=r gpsd-${VERSION}.tar.* gpsd-${VERSION}.zip',
     'scp gpsd-${VERSION}.tar.* gpsd-${VERSION}.zip ' + scpupload,
 ])
-env.Pseudo(upload_release)
-env.Alias('upload_release', upload_release)
+env.Alias('upload_release', upload_release)  # For '_' vs. '-'
 
 # How to tag a release
 tag_release = Utility('tag-release', [], [
     'git tag -s -m "Tagged for external release ${VERSION}" \
      release-${VERSION}'])
-env.Pseudo(tag_release)
-env.Alias('tag_release', tag_release)
+env.Alias('tag_release', tag_release)  # For '_' vs. '-'
 
 upload_tags = Utility('upload-tags', [], ['git push --tags'])
-env.Pseudo(upload_tags)
-env.Alias('upload_tags', upload_tags)
+env.Alias('upload_tags', upload_tags)  # For '_' vs. '-'
 
 
 # Local release preparation. This production will require Internet access,
@@ -3283,8 +3244,6 @@ website = Utility("website", [www],
                   ['rsync --exclude="*.in" -avz %s/www/ %s ' %
                    (variantdir, www_dest),
                    'cp TODO NEWS %s ' % (www_dest)])
-env.Pseudo(website)
-env.Alias('website', website)
 
 # All a buildup to this.
 env.Alias("release", [releaseprep,
@@ -3297,8 +3256,6 @@ undoprep = Utility("undoprep", [],
                    ['rm -f gpsd-${VERSION}.tar.?z',
                     'rm -f gpsd-$VERSION}.zip',
                     'git tag -d release-${VERSION};'])
-env.Pseudo(undoprep)
-env.Alias('undoprep', undoprep)
 
 #######
 # start Debian stuff
@@ -3307,8 +3264,7 @@ env.Alias('undoprep', undoprep)
 # Make RPM from the specfile in packaging
 # untested
 dist_rpm = Utility('dist-rpm', 'dist', 'rpmbuild -ta gpsd-${VERSION}.tar.gz')
-env.Pseudo(dist_rpm)
-env.Alias('dist_rpm', dist_rpm)
+env.Alias('dist_rpm', dist_rpm)  # For '_' vs. '-'
 
 # Experimental release mechanics using shipper
 # This will ship a freecode metadata update
@@ -3316,8 +3272,6 @@ env.Alias('dist_rpm', dist_rpm)
 ship = Utility("ship", ['dist', "control"],
                ['cd %s; shipper version=%s | sh -e -x' %
                 (variantdir, gpsd_version)])
-env.Pseudo(ship)
-env.Alias('ship', ship)
 #######
 # end Debian stuff
 #######
