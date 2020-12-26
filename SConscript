@@ -1029,7 +1029,7 @@ if not cleaning and not helping:
         # set internal lib versions at link time.
         libgps_flags = ["-Wl,-current_version,%s" % libgps_version,
                         "-Wl,-compatibility_version,%s" % libgps_version,
-                        "-Wl,-install_name,%s/$TARGET" %
+                        "-Wl,-install_name,%s/$TARGET.srcpath" %
                         installdir('libdir', add_destdir=False)]
     elif sys.platform.startswith('freebsd'):
         # for isascii(), putenv(), nice(), strptime()
