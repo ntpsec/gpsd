@@ -37,7 +37,7 @@ debian-unstable:gcc:
   stage: advanced_build
   variables:
     SCONSOPTS: 'qt=yes xgps=yes'
-    PACKAGES: 'build-essential ccache debhelper po-debconf python3-all-dev python3-all-dbg xsltproc docbook-xsl docbook-xml asciidoctor libncurses-dev libusb-1.0-0-dev libdbus-1-dev libglib2.0-dev makedev libbluetooth-dev qtbase5-dev libqt5network5 lsb-release bc dpkg-dev scons chrpath dh-buildinfo pps-tools dh-systemd'
+    PACKAGES: 'build-essential ccache debhelper po-debconf python3-all-dev python3-all-dbg xsltproc docbook-xsl docbook-xml asciidoctor libncurses-dev libusb-1.0-0-dev libdbus-1-dev libglib2.0-dev makedev libbluetooth-dev qtbase5-dev libqt5network5 lsb-release bc dpkg-dev scons chrpath dh-buildinfo pps-tools dh-systemd python3-lib2to3 python3'
   <<: *debian_build
 
 debian-experimental:gcc:
@@ -46,7 +46,7 @@ debian-experimental:gcc:
   stage: advanced_build
   variables:
     SCONSOPTS: 'qt=yes xgps=yes'
-    PACKAGES: 'build-essential ccache debhelper po-debconf python3-all-dev python3-all-dbg xsltproc docbook-xsl docbook-xml asciidoctor libncurses-dev libusb-1.0-0-dev libdbus-1-dev libglib2.0-dev makedev libbluetooth-dev qtbase5-dev libqt5network5 lsb-release bc dpkg-dev scons chrpath dh-buildinfo pps-tools dh-systemd'
+    PACKAGES: 'build-essential ccache debhelper po-debconf python3-all-dev python3-all-dbg xsltproc docbook-xsl docbook-xml asciidoctor libncurses-dev libusb-1.0-0-dev libdbus-1-dev libglib2.0-dev makedev libbluetooth-dev qtbase5-dev libqt5network5 lsb-release bc dpkg-dev scons chrpath dh-buildinfo pps-tools dh-systemd python3-lib2to3 python3'
     EXPERIMENTAL_PACKAGES: 'gcc g++'
   <<: *debian_build
 
@@ -57,7 +57,7 @@ debian-unstable:clang:
     SCONSOPTS: 'qt=yes xgps=yes'
     CC: 'clang'
     CXX: 'clang++'
-    PACKAGES: 'clang build-essential ccache debhelper po-debconf python3-all-dev python3-all-dbg xsltproc docbook-xsl docbook-xml asciidoctor libncurses-dev libusb-1.0-0-dev libdbus-1-dev libglib2.0-dev makedev libbluetooth-dev qtbase5-dev libqt5network5 lsb-release bc dpkg-dev scons chrpath dh-buildinfo pps-tools dh-systemd'
+    PACKAGES: 'clang build-essential ccache debhelper po-debconf python3-all-dev python3-all-dbg xsltproc docbook-xsl docbook-xml asciidoctor libncurses-dev libusb-1.0-0-dev libdbus-1-dev libglib2.0-dev makedev libbluetooth-dev qtbase5-dev libqt5network5 lsb-release bc dpkg-dev scons chrpath dh-buildinfo pps-tools dh-systemd python3-lib2to3 python3'
   <<: *debian_build
 
 debian-experimental:clang:
@@ -68,7 +68,7 @@ debian-experimental:clang:
     SCONSOPTS: 'qt=yes xgps=yes'
     CC: 'clang'
     CXX: 'clang++'
-    PACKAGES: 'build-essential ccache debhelper po-debconf python3-all-dev python3-all-dbg xsltproc docbook-xsl docbook-xml asciidoctor libncurses-dev libusb-1.0-0-dev libdbus-1-dev libglib2.0-dev makedev libbluetooth-dev qtbase5-dev libqt5network5 lsb-release bc dpkg-dev scons chrpath dh-buildinfo pps-tools dh-systemd'
+    PACKAGES: 'build-essential ccache debhelper po-debconf python3-all-dev python3-all-dbg xsltproc docbook-xsl docbook-xml asciidoctor libncurses-dev libusb-1.0-0-dev libdbus-1-dev libglib2.0-dev makedev libbluetooth-dev qtbase5-dev libqt5network5 lsb-release bc dpkg-dev scons chrpath dh-buildinfo pps-tools dh-systemd python3-lib2to3 python3'
     EXPERIMENTAL_PACKAGES: 'clang'
   <<: *debian_build
 
@@ -78,7 +78,7 @@ debian-unstable:minimal:
   variables:
     SCONSOPTS: 'aivdm=no ashtech=no bluez=no control_socket=no controlsend=no coveraging=no dbus_export=no debug=no earthmate=no evermore=no force_global=no fury=no fv18=no garmin=no garmintxt=no geostar=no gpsclock=no gpsdclients=no greis=no implicit_link=no isync=no itrax=no leapfetch=no libgpsmm=no magic_hat=no manbuild=no minimal=no mtk3301=no navcom=no ncurses=no netfeed=no nmea0183=no nmea2000=no nostrip=no ntrip=no oceanserver=no oncore=no oscillator=no passthrough=no profiling=no python=no qt=no reconfigure=no rtcm104v2=no rtcm104v3=no shared=no shm_export=no sirf=no skytraq=no slow=no socket_export=yes squelch=no superstar2=no systemd=no timeservice=no tnt=no tripmate=no tsip=no ublox=no usb=no xgps=no'
     NOCHECK: 'true'
-    PACKAGES: 'build-essential ccache scons chrpath lsb-release python3-all-dev'
+    PACKAGES: 'build-essential ccache scons chrpath lsb-release python3-all-dev python3-lib2to3 python3'
   <<: *debian_build
 
 
