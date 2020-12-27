@@ -306,11 +306,11 @@ dist-1f33:
   script:
   - dnf install -y gcc-c++ python3-devel scons xmlto asciidoctor bzip2 xz git dnf-plugins-core
   - scons dist
-  - dnf builddep -y packaging/rpm/gpsd.spec
+  - dnf builddep -y gpsd-*/packaging/rpm/gpsd.spec
   - dnf install -y chrpath fedora-packager rpmdevtools
   - rpmdev-setuptree
   - cp gpsd-*.tar.* ~/rpmbuild/SOURCES/
-  - rpmbuild -ba packaging/rpm/gpsd.spec
+  - rpmbuild -ba gpsd-*/packaging/rpm/gpsd.spec
   - dnf install -y createrepo_c
   - mkdir -pv .pages .public/repos/Fedora/33/gpsd/x86_64/RPMS
   - mv -v /root/rpmbuild/RPMS/x86_64/*.rpm .public/repos/Fedora/33/gpsd/x86_64/RPMS
@@ -319,7 +319,7 @@ dist-1f33:
     paths:
     - .public/repos/Fedora/33/gpsd/x86_64/RPMS/
     - gpsd-*.tar.*
-    - packaging/rpm/gpsd.spec
+    - gpsd-*/packaging/rpm/gpsd.spec
     expire_in: 2 weeks
   only:
   - schedules
