@@ -149,7 +149,7 @@ centos-8-latest:
     SCONSOPTS: 'qt=yes xgps=yes'
   script:
   - dnf -y install dnf-plugins-core epel-release python3
-  - dnf config-manager --set-enabled PowerTools
+  - dnf config-manager --set-enabled powertools
   - dnf -y update
   - dnf -y install diffutils python3-scons bc ncurses-devel qt5-qtbase-devel pps-tools-devel libnsl2-devel bluez-libs-devel platform-python-devel dbus-devel libusbx-devel gtk3-devel python3-pyserial python3-cairo python3-gobject-base libxslt docbook-style-xsl ccache
   - .ci-build/build.sh
