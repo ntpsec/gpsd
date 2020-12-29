@@ -2425,7 +2425,7 @@ if have_dia:
 # Where it all comes together
 
 build_src = [libraries, sbin_binaries, bin_binaries, "clients/gpsd.php",
-             manpage_targets, webpages, "libgps.pc", "gpsd.rules"]
+             manpage_targets, icon_files, webpages, "libgps.pc", "gpsd.rules"]
 if env['python']:
     build_src.append(python_targets)
 build = env.Alias('build', build_src)
@@ -2535,7 +2535,6 @@ if qt_env:
 
 
 # icons to install
-iconinstall = []
 for icon in icon_files:
     dest_icon = os.path.join(installdir('icondir'), os.path.basename(icon))
     docinstall.append(env.InstallAs(source=icon, target=dest_icon))
