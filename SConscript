@@ -2459,9 +2459,10 @@ binaryinstall.append(env.Install(installdir('bindir'), bin_binaries))
 binaryinstall.append(GPSLibraryInstall(env, installdir('libdir'),
                                        libgps_shared,
                                        libgps_version))
-binaryinstall.append(GPSLibraryInstall(env, installdir('libdir'),
-                                       packet_ffi_shared,
-                                       libgps_version))
+# FFI library is always shared
+binaryinstall.append(env.InstallVersionedLib(installdir('libdir'),
+                                             packet_ffi_shared,
+                                             SHLIBVERSION=libgps_version))
 
 if qt_env:
     binaryinstall.append(GPSLibraryInstall(qt_env, installdir('libdir'),
