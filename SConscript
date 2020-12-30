@@ -3282,6 +3282,7 @@ undoprep = Utility("undoprep", [],
 # Make RPM from the specfile in packaging
 # untested
 dist_rpm = Utility('dist-rpm', 'dist', 'rpmbuild -ta gpsd-${VERSION}.tar.gz')
+env.Pseudo(dist_rpm)            # mark as fake target.
 env.Alias('distrpm', dist_rpm)  # For '_' vs. '-'
 
 # Experimental release mechanics using shipper
