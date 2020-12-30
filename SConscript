@@ -3252,8 +3252,6 @@ releaseprep = env.Alias("releaseprep",
                          ["rm -f include/gpsd_config.h"]),
                          tag_release,
                          'dist'])
-env.Pseudo(releaseprep)
-env.Alias('releaseprep', releaseprep)
 
 # How to update the website.  Assumes a local GitLab pages setup.
 # See "pages:" in .gitlab-ci.yml
