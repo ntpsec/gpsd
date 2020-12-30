@@ -2220,11 +2220,6 @@ substmap = (
 substmap_dated = substmap + (('@DATE@', time.asctime()),)
 
 # explicit templated files
-# ignore files in subfolder called './contrib/gps' - just links
-# ignore files in subfolder called 'debian' - the Debian packaging
-# tools will handle them.
-# ignore files in subfolder called './devtools/gps' - just links
-# ignore files in subfolder called './tests/gps' - just links
 templated = {
     "android/gpsd_config": "android/gpsd_config.in",
     "clients/gegps": "clients/gegps.py.in",
@@ -2422,10 +2417,33 @@ if have_dia:
     Utility("www/cycle.svg", ["www/cycle.dia"],
             ["cd %s; dia -e www/cycle.svg www/cycle.dia" % variantdir])
 
+packing = [
+    'packaging/deb/etc_default_gpsd',
+    'packaging/deb/etc_init.d_gpsd',
+    'packaging/gpsd-setup.py',
+    'packaging/README.PACKAGERS',
+    'packaging/rpm/gpsd.init',
+    'packaging/rpm/gpsd.spec',
+    'packaging/rpm/gpsd.sysconfig',
+    'packaging/X11/xgps.desktop',
+    'packaging/X11/xgpsspeed.desktop',
+    ]
+
 # Where it all comes together
 
-build_src = [libraries, sbin_binaries, bin_binaries, "clients/gpsd.php",
-             manpage_targets, icon_files, webpages, "libgps.pc", "gpsd.rules"]
+build_src = [
+    bin_binaries,
+    "clients/gpsd.php",
+    "gpsd.rules",
+    icon_files,
+    "libgps.pc",
+    libraries,
+    manpage_targets,
+    packing,
+    sbin_binaries,
+    webpages,
+    ]
+
 if env['python']:
     build_src.append(python_targets)
 build = env.Alias('build', build_src)
