@@ -279,10 +279,10 @@ desktop-file-install \
 * Thu Aug 06 2020 James Browning <jamesb.fe80@gmail.com> - 3.21-0
 - Rebuilt for upstream inclusion
 
-* Thu Oct 03 2019 Miro Hrončok <mhroncok@redhat.com> - 3.19-4
+* Thu Oct 03 2019 Miro Hroncok <mhroncok@redhat.com> - 3.19-4
 - Rebuilt for Python 3.8.0rc1 (#1748018)
 
-* Mon Aug 19 2019 Miro Hrončok <mhroncok@redhat.com> - 3.19-3
+* Mon Aug 19 2019 Miro Hroncok <mhroncok@redhat.com> - 3.19-3
 - Rebuilt for Python 3.8
 
 * Thu Jul 25 2019 Fedora Release Engineering <releng@fedoraproject.org> - 3.19-2
@@ -311,7 +311,7 @@ desktop-file-install \
 * Fri Jul 13 2018 Fedora Release Engineering <releng@fedoraproject.org> - 3.17-5
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
 
-* Tue Jun 19 2018 Miro Hrončok <mhroncok@redhat.com> - 3.17-4
+* Tue Jun 19 2018 Miro Hroncok <mhroncok@redhat.com> - 3.17-4
 - Rebuilt for Python 3.7
 
 * Wed Feb 07 2018 Fedora Release Engineering <releng@fedoraproject.org> - 3.17-3
