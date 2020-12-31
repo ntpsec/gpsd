@@ -452,7 +452,7 @@ desktop-file-install \
 * Tue Sep 14 2010 Miroslav Lichvar <mlichvar@redhat.com> - 2.95-4
 - don't crash in gpscat when started without arguments (#633117)
 
-* Fri Aug 27 2010 Dan Horák <dan[at]danny.cz> - 2.95-3
+* Fri Aug 27 2010 Dan Horak <dan[at]danny.cz> - 2.95-3
 - no USB on s390(x)
 
 * Wed Jul 21 2010 David Malcolm <dmalcolm@redhat.com> - 2.95-2
