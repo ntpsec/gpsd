@@ -3188,12 +3188,14 @@ for fn in distfiles_ignore:
     if fn in distfiles:
         distfiles.remove(fn)
 
-# We do not need generated files
+# tar balls do not need all generated files
 # distfiles += generated_sources
 
-if "packaging/rpm/gpsd.spec" not in distfiles:
-    # should not be in git, gnerated file, we need it
-    distfiles.append("packaging/rpm/gpsd.spec")
+# tar balls do need packaging
+for f in packing:
+    if f not in distfiles:
+        # should not be in git, generated file, we need it
+        distfiles.append(f)
 
 # zip archive
 target = '#gpsd-${VERSION}.zip'
