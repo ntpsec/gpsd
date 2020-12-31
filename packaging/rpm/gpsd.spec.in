@@ -98,10 +98,6 @@ different gps devices.
 %prep
 %setup -q
 
-# set gpsd revision string to include package revision
-sed -i 's|^revision=.*REVISION.*$|revision='\'\
-'#define REVISION "%{version}-%{release}'\"\'\| SConstruct
-
 # fix systemd path
 sed -i 's|systemd_dir =.*|systemd_dir = '\'%{_unitdir}\''|' SConstruct
 
@@ -115,26 +111,27 @@ export LINKFLAGS="%{__global_ldflags}"
 # breaks with %{_smp_mflags}
 echo %{_docdir}
 scons \
-	dbus_export=yes \
-	systemd=yes \
-	libQgpsmm=yes \
-	debug=yes \
-	leapfetch=no \
-	prefix=%{_prefix} \
-	sysconfdif=%{_sysconfdir} \
 	bindir=%{_bindir} \
-	includedir=%{_includedir} \
-	libdir=%{_libdir} \
-	sbindir=%{_sbindir} \
-	mandir=%{_mandir} \
+	build packaging \
+	dbus_export=yes \
+	debug=yes \
 	docdir=%{_docdir} \
 	icondir=%{_datadir}/gpsd \
-	python_shebang="/usr/bin/python3" \
+	includedir=%{_includedir} \
+	leapfetch=no \
+	libdir=%{_libdir} \
+	libQgpsmm=yes \
+	mandir=%{_mandir} \
 	pkgconfigdir=%{_libdir}/pkgconfig \
-	udevdir=$(dirname %{_udevrulesdir}) \
-	target_python=python3 \
+	prefix=%{_prefix} \
 	python_libdir=%{python3_sitearch} \
-	build packaging
+	python_shebang="/usr/bin/python3" \
+	release=%{release} \
+	sbindir=%{_sbindir} \
+	sysconfdif=%{_sysconfdir} \
+	systemd=yes \
+	target_python=python3 \
+	udevdir=$(dirname %{_udevrulesdir})
 
 
 %install
