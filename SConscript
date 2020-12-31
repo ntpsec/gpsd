@@ -245,42 +245,8 @@ icon_files = [
     'packaging/X11/gpsd-logo.png',
 ]
 
-# Release identification begins here.
-#
-# Actual releases follow the normal X.Y or X.Y.Z scheme.  The version
-# number in git between releases has the form X.Y~dev, when it is
-# expected that X.Y will be the next actual release.  As an example,
-# when 3.20 is the last release, and 3.20.1 is the expected next
-# release, the version in git will be 3.20.1~dev.  Note that ~ is used,
-# because there is some precedent, ~ is an allowed version number in
-# the Debian version rules, and it does not cause confusion with
-# whether - separates components of the package name, separates the
-# name from the version, or separates version components.
-#
 # gpsd_version, and variantdir, from SConstruct
 Import('*')
-
-if 'dev' in gpsd_version:
-    (st, gpsd_revision) = _getstatusoutput('git describe --tags')
-    if st != 0:
-        # Only if git describe failed
-        # Use timestamp from latest relevant file,
-        # ignoring generated files (../$variantdir)
-        # from root, not from $variantdir
-        files = FileList(['../*.c', '../*/*.c', '../*.cpp', '../*/*.cpp',
-                          '../include/*.h', '../*.in', '../*/*.in',
-                          '../SConstruct', '../SConscript'],
-                         '../%s' % variantdir)
-        timestamps = map(GetMtime, files)
-        if timestamps:
-            from datetime import datetime
-            latest = datetime.fromtimestamp(sorted(timestamps)[-1])
-            gpsd_revision = '%s-%s' % (gpsd_version, latest.isoformat())
-        else:
-            gpsd_revision = gpsd_version  # Paranoia
-else:
-    gpsd_revision = gpsd_version
-gpsd_revision = gpsd_revision.strip()
 
 # API (JSON) version
 api_version_major = 3
@@ -473,7 +439,8 @@ nonboolopts = (
     ("python_libdir",    "",            "Python module directory prefix"),
     ("python_shebang",   def_python_shebang, "Python shebang"),
     ("qt_versioned",     "",            "version for versioned Qt"),
-    ("rundir",           rundir,       "Directory for run-time variable data"),
+    ("release",          "",            "Suffix for gpsd version"),
+    ("rundir",           rundir,        "Directory for run-time variable data"),
     ("sysroot",          "",
      "Logical root directory for headers and libraries.\n"
      "For cross-compiling, or building with multiple local toolchains.\n"
@@ -508,6 +475,7 @@ pathopts = (
 for (name, default, helpd) in pathopts:
     opts.Add(PathVariable(name, helpd, default, PathVariable.PathAccept))
 
+
 #
 # Environment creation
 #
@@ -541,6 +509,46 @@ for var in import_env:
 envs["GPSD_HOME"] = os.getcwd() + os.sep + 'gpsd'
 
 env = Environment(tools=["default", "tar", "textfile"], options=opts, ENV=envs)
+
+# Release identification begins here.
+#
+# Actual releases follow the normal X.Y or X.Y.Z scheme.  The version
+# number in git between releases has the form X.Y~dev, when it is
+# expected that X.Y will be the next actual release.  As an example,
+# when 3.20 is the last release, and 3.20.1 is the expected next
+# release, the version in git will be 3.20.1~dev.  Note that ~ is used,
+# because there is some precedent, ~ is an allowed version number in
+# the Debian version rules, and it does not cause confusion with
+# whether - separates components of the package name, separates the
+# name from the version, or separates version components.
+
+if 'dev' in gpsd_version:
+    (st, gpsd_revision) = _getstatusoutput('git describe --tags')
+    if st != 0:
+        # Only if git describe failed
+        # Use timestamp from latest relevant file,
+        # ignoring generated files (../$variantdir)
+        # from root, not from $variantdir
+        files = FileList(['../*.c', '../*/*.c', '../*.cpp', '../*/*.cpp',
+                          '../include/*.h', '../*.in', '../*/*.in',
+                          '../SConstruct', '../SConscript'],
+                         '../%s' % variantdir)
+        timestamps = map(GetMtime, files)
+        if timestamps:
+            from datetime import datetime
+            latest = datetime.fromtimestamp(sorted(timestamps)[-1])
+            gpsd_revision = '%s-%s' % (gpsd_version, latest.isoformat())
+        else:
+            gpsd_revision = gpsd_version  # Paranoia
+else:
+    gpsd_revision = gpsd_version
+
+gpsd_revision = polystr(gpsd_revision.strip())
+
+# Distros like to add a suffix to the version.  Fedora, and others,
+# call it the "rele4ase".  It often looks like: r1
+if env['release']:
+    gpsd_revision += "-" + polystr(env['release'])
 
 # SCons 2.3.0 lacks the Pseudo method.  If it's missing here, make it a
 # dummy and hope for the best.
@@ -961,7 +969,7 @@ if not cleaning and not helping:
     confdefs.append('#ifndef GPSD_CONFIG_H\n')
 
     confdefs.append('#define VERSION "%s"' % gpsd_version)
-    confdefs.append('#define REVISION "%s"' % polystr(gpsd_revision))
+    confdefs.append('#define REVISION "%s"' % gpsd_revision)
     confdefs.append('#define GPSD_PROTO_VERSION_MAJOR %u' % api_version_major)
     confdefs.append('#define GPSD_PROTO_VERSION_MINOR %u' % api_version_minor)
 
