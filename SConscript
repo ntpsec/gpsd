@@ -332,6 +332,7 @@ def filtered_spawn(sh, escape, cmd, args, env):
 #
 
 
+# guess systemd defaults
 systemd_dir = '/lib/systemd/system'
 systemd = os.path.exists(systemd_dir)
 
@@ -461,17 +462,18 @@ for (name, default, helpd) in nonboolopts:
     opts.Add(name, helpd, default)
 
 pathopts = (
-    ("bindir",              "bin",           "application binaries directory"),
-    ("docdir",              "share/gpsd/doc",     "documents directory"),
-    ("icondir",             "share/gpsd/icons",   "icon directory"),
-    ("includedir",          "include",       "header file directory"),
-    ("libdir",              "lib",           "system libraries"),
-    ("mandir",              "share/man",     "manual pages directory"),
-    ("pkgconfig",           "$libdir/pkgconfig", "pkgconfig file directory"),
-    ("sbindir",             "sbin",          "system binaries directory"),
-    ("sharedir",            "share/gpsd",    "share directory"),
-    ("sysconfdir",          "etc",           "system configuration directory"),
-    ("udevdir",             "/lib/udev",     "udev rules directory"),
+    ("bindir",       "bin",                "application binaries directory"),
+    ("docdir",       "share/gpsd/doc",     "documents directory"),
+    ("icondir",      "share/gpsd/icons",   "icon directory"),
+    ("includedir",   "include",            "header file directory"),
+    ("libdir",       "lib",                "system libraries"),
+    ("mandir",       "share/man",          "manual pages directory"),
+    ("pkgconfig",    "$libdir/pkgconfig",  "pkgconfig file directory"),
+    ("sbindir",      "sbin",               "system binaries directory"),
+    ("sharedir",     "share/gpsd",         "share directory"),
+    ("sysconfdir",   "etc",                "system configuration directory"),
+    ("udevdir",      "/lib/udev",          "udev rules directory"),
+    ("unitdir",      systemd_dir,          "Directory for systemd unit files"),
 )
 
 # now step on the path options just read from '.scons-option-cache'
@@ -3101,7 +3103,7 @@ Utility("validation-list", [www], validation_list)
 # udevadm trigger --sysname-match=ttyUSB0 --action add
 
 if env['systemd']:
-    systemdinstall_target = [env.Install(DESTDIR + systemd_dir,
+    systemdinstall_target = [env.Install(DESTDIR + env['unitdir'],
                              "systemd/%s" % (x,)) for x in
                              ("gpsdctl@.service", "gpsd.service",
                               "gpsd.socket")]
