@@ -131,7 +131,8 @@ scons \
 	sysconfdif=%{_sysconfdir} \
 	systemd=yes \
 	target_python=python3 \
-	udevdir=$(dirname %{_udevrulesdir})
+	udevdir=$(dirname %{_udevrulesdir}) \
+	unitdir=%{_unitdir}
 
 
 %install
