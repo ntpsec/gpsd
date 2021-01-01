@@ -300,24 +300,24 @@ pages:
     - public
   <<: *should_build_pages
 
-dist-1f33:
-  image: fedora:33
+.frpm_build: &frpm_build
   stage: advanced_build
+  before_script:
+  - dnf install -y bluez-libs-devel bzip2 chrpath createrepo_c dbus-devel dbus-glib-devel desktop-file-utils dnf-plugins-core gcc-c++ git ncurses-devel qt-devel pps-tools-devel python3-devel rpmdevtools systemd xmlto xz
+  - dnf install -y asciidoctor libusb1-devel python3-devel python3-scons fedora-packager
   script:
-  - dnf install -y gcc-c++ python3-devel scons xmlto asciidoctor bzip2 xz git dnf-plugins-core
-  - scons dist
-  - dnf builddep -y gpsd-*/packaging/rpm/gpsd.spec
-  - dnf install -y chrpath fedora-packager rpmdevtools
-  - rpmdev-setuptree
-  - cp gpsd-*.tar.* ~/rpmbuild/SOURCES/
-  - rpmbuild -ba gpsd-*/packaging/rpm/gpsd.spec
-  - dnf install -y createrepo_c
-  - mkdir -pv .pages .public/repos/Fedora/33/gpsd/x86_64/RPMS
-  - mv -v /root/rpmbuild/RPMS/x86_64/*.rpm .public/repos/Fedora/33/gpsd/x86_64/RPMS
-  - createrepo_c -v --deltas --retain-old-md 1 .public/repos/Fedora/33/gpsd/x86_64/RPMS
+  - python3 $(command -v scons) -c
+  - python3 $(command -v scons) build
+  - python3 $(command -v scons) dist
+  - python3 $(command -v scons) distrpm
+  after_script:
+  - ls -laR /root/rpmbuild/RPMS/
+  - mkdir -pv .pages .public/repos/$REPOPATH/gpsd/x86_64/RPMS
+  - mv -v /root/rpmbuild/RPMS/x86_64/*.rpm .public/repos/$REPOPATH/gpsd/x86_64/RPMS
+  - createrepo_c -v --deltas --retain-old-md 1 .public/repos/$REPOPATH/gpsd/x86_64/RPMS
   artifacts:
     paths:
-    - .public/repos/Fedora/33/gpsd/x86_64/RPMS/
+    - .public/repos/*/*/gpsd/x86_64/RPMS/
     - gpsd-*.tar.*
     - gpsd-*/packaging/rpm/gpsd.spec
     expire_in: 2 weeks
@@ -325,3 +325,22 @@ dist-1f33:
   - schedules
   - tags
   - web
+
+dist-f32:
+  variables:
+    REPOPATH: "Fedora/32"
+  image: fedora:32
+  <<: *frpm_build
+
+dist-f33:
+  variables:
+    REPOPATH: "Fedora/33"
+  image: fedora:33
+  <<: *frpm_build
+
+dist-f34:
+  variables:
+    REPOPATH: "Fedora/34"
+  image: fedora:34
+  <<: *frpm_build
+
