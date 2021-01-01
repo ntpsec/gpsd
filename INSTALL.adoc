@@ -361,7 +361,7 @@ X11 server installed, but it still pulls in a lot of packages.
 
 --------------------------------------------------------------
 # apt-get install python-gi-dev python-cairo-dev
-# apt-get install python-gobject-dev libgtk-3-dev
+# apt-get install python-gobject-2-dev libgtk-3-dev
 --------------------------------------------------------------
 
 Ubxtool and zerk may optionally use the pyserial module for
