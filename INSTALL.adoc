@@ -720,6 +720,34 @@ Then install the normal way.
 --------------------------------------------------------------
 
 == Special Notes for Fedora derivatives
+=== Special Notes for Fedora 32, 33 Installation
+
+gpsd currently will build, install and run on Fedora 32, 33.
+
+Install the gcc compiler and tools.  Clone the gpsd source, and then
+build it.
+
+--------------------------------------------------------------
+# dnf install -y gcc-c++ python3-devel scons xmlto asciidoctor bzip2
+# dnf install -y xz git dnf-plugins-core
+# git clone https://gitlab.com/gpsd/gpsd.git
+# cd gpsd
+# scons
+# dnf builddep -y gpsd-*/packaging/rpm/gpsd.spec
+# scons
+--------------------------------------------------------------
+
+If you wish to make an rpm of your build:
+
+--------------------------------------------------------------
+# scons dist
+# dnf install -y chrpath fedora-packager rpmdevtools
+# rpmdev-setuptree
+# cp gpsd-3*.tar.* ~/rpmbuild/SOURCES/
+# rpmbuild -ba gpsd-3*/packaging/rpm/gpsd.spec
+--------------------------------------------------------------
+
+
 === Special Notes for CentOS 7 Installation
 
 gpsd currently will build, install and run on CentOS 7.
