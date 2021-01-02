@@ -3226,7 +3226,7 @@ if have_tar:
     Clean('build', [targz, tarxz, dozip])
 
     # Make sure build-from-tarball works.
-    testbuild = Utility('#testbuild', [targz], [
+    testbuild = Utility('testbuild', [targz], [
         'rm -Rf testbuild',
         'mkdir testbuild',
         'cd testbuild;'
@@ -3234,7 +3234,6 @@ if have_tar:
         '${TAR} -xzvf ../gpsd-${VERSION}.tar.gz;'
         'cd gpsd-${VERSION}; scons;',
     ])
-    env.Alias('testbuild', [testbuild])
     releasecheck = env.Alias('releasecheck', [
         testbuild,
         check,
