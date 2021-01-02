@@ -55,8 +55,8 @@ variantdir = 'gpsd-' + gpsd_version
 # also, for brutal effect, you can do: git clean -dfx
 if GetOption('clean'):
     # .pages and .public are GitLab "pages".
-    atexit.register(lambda: os.system("rm -rf %s .public .pages testbuild" %
-                    variantdir))
+    clean_targets = '%s buildtmp .public .pages testbuild' % variantdir
+    atexit.register(lambda: os.system('rm -rf ' + clean_targets))
 
 # Not everything respects this  chdir()
 SConscriptChdir(1)

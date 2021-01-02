@@ -251,6 +251,14 @@ icon_files = [
 # gpsd_version, and variantdir, from SConstruct
 Import('*')
 
+# Create a fixed-name symlink to the build tree, for scripts and symlinks.
+# FIXME: Make this work with Execute()
+vdir_parent = os.path.dirname(os.path.abspath(os.path.dirname(variantdir)))
+try:
+    os.symlink(variantdir, os.path.join(vdir_parent, 'buildtmp'))
+except OSError:
+    pass  # May already exist
+
 # API (JSON) version
 api_version_major = 3
 api_version_minor = 14
