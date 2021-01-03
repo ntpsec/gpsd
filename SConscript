@@ -46,6 +46,11 @@ EnsureSConsVersion(2, 3, 0)
 # gpsd needs Python version at least 2.6
 EnsurePythonVersion(2, 6)
 
+# By user choice, or due to system-dependent availability, the scons
+# executable may be called using names other than plain "scons",
+# e.g. "scons-3" on CentOS 8.
+scons_executable_name = os.path.basename(sys.argv[0]) or 'scons'
+
 # Have scons rebuild an existing target when the source(s) MD5 changes
 # Do not use time to prevent rebuilding when sources, like gpsd_config.h,
 # are rebuilt, but with no changes.
@@ -2617,15 +2622,6 @@ AlwaysBuild(Alias(".", [], error_action))
 # start audit checks section
 #
 
-# By user choice, or due to system-dependent availability, the scons
-# executable may be called using names other than plain "scons",
-# e.g. "scons-3" on CentOS 8.
-# Try to make "scan-build" and "deheader" targets call the same scons
-# executable that is currently executing this SConstruct.
-scons_executable_name = os.path.basename(sys.argv[0])
-if not scons_executable_name:
-    scons_executable_name = "scons"
-
 # Putting in all these -U flags speeds up cppcheck and allows it to look
 # at configurations we actually care about.
 # https://github.com/danmar/cppcheck
@@ -2640,6 +2636,9 @@ cppcheck = Utility("cppcheck",
                    "--enable=all --inline-suppr "
                    "--suppress='*:drivers/driver_proto.c' "
                    "--force $SRCDIR")
+
+# Try to make "scan-build" and "deheader" targets call the same scons
+# executable that is currently executing this SConstruct.
 
 # Use deheader to remove headers not required.  If the statistics line
 # ends with other than '0 removed' there's work to be done.
@@ -3226,14 +3225,28 @@ if have_tar:
     Clean('build', [targz, tarxz, dozip])
 
     # Make sure build-from-tarball works.
+
+    # Use possibly nonstandard name for scons
+    scons_cmd = [scons_executable_name]
+
+    # Inherit selected options from this scons run
+    if GetOption('silent'):
+        scons_cmd.append('-s')
+    if GetOption('no_progress'):  # Undocumented name
+        scons_cmd.append('-Q')
+    njobs = GetOption('num_jobs')
+    if njobs != 1:
+        scons_cmd.append('-j%d' % njobs)
+
     testbuild = Utility('testbuild', [targz], [
         'rm -Rf testbuild',
         'mkdir testbuild',
         'cd testbuild;'
         'pwd;'
         '${TAR} -xzvf ../gpsd-${VERSION}.tar.gz;'
-        'cd gpsd-${VERSION}; scons;',
+        'cd gpsd-${VERSION}; %s;' % ' '.join(scons_cmd),
     ])
+
     releasecheck = env.Alias('releasecheck', [
         testbuild,
         check,
