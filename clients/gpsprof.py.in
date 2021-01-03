@@ -888,7 +888,7 @@ set size square
 set key lmargin
 
 # this places a compass label on the outside
-set_label(x, text) = sprintf(
+set_label(x, text) = sprintf( \
     "set label '%s' at (93*cos(%f)), (93*sin(%f)) center", text, x, x)
 
 # here all labels are created
