@@ -208,6 +208,7 @@ class stats(object):
 
 class plotter(object):
     """Generic class for gathering and plotting sensor statistics."""
+    requires_time = False  # Default
 
     def __init__(self):
         """Init class plotter."""
@@ -216,7 +217,6 @@ class plotter(object):
         self.in_replot = False
         self.session = None
         self.start_time = int(time.time())
-        self.requires_time = False
         self.watch = set(['TPV'])
 
     def whatami(self):
