@@ -401,7 +401,7 @@ class spaceplot(plotter):
         stat_lon_r = stats()
         stat_alt_r = stats()
 
-        if self.fixes:
+        if not self.fixes:
             print("plot(): fixes array is empty\n")
             raise Exception('When plotting, there are no fixes.')
 
