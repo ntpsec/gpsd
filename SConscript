@@ -812,7 +812,7 @@ docbook_html_uri = docbook_url_stem + 'html/docbook.xsl'
 
 def CheckXsltproc(context):
     context.Message('Checking that xsltproc can make man pages... ')
-    # ofp = open(env['SRCDIR'] + "/man/xmltest.xml", "w")
+    # open() happens in variantdir
     ofp = open("xmltest.xml", "w")
     ofp.write('''
        <refentry id="foo.1">
@@ -828,10 +828,12 @@ def CheckXsltproc(context):
     </refentry>
 ''')
     ofp.close()
-    probe = ("xsltproc --encoding UTF-8 --output man/foo.1 --nonet "
-             "--noout '%s' xmltest.xml" % (docbook_man_uri,))
+    probe = ("xsltproc --encoding UTF-8 --output %s/man/foo.1 --nonet "
+             "--noout '%s' %s/xmltest.xml" %
+             (variantdir, docbook_man_uri, variantdir))
     (ret, out) = context.TryAction(probe)
     # out should be empty, don't bother to test.
+    # next 3 lines happen in variantdir
     os.remove("xmltest.xml")
     if os.path.exists("man/foo.1"):
         os.remove("man/foo.1")
