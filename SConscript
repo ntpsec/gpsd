@@ -2440,10 +2440,18 @@ for glb in webpages_x_list:
 webpages = htmlpages + asciidocs + wwwpage_targets + webpages_in + webpages_x
 www = env.Alias('www', webpages)
 
+# On the Mac (at least), some X11 programs launch the X11 server even when
+# they're not actually using the display.  Clearing DISPLAY in the
+# environment avoids this.  We leave the main environment untouched just in
+# case it might be needed.
+nox11_env = env['ENV'].copy()
+nox11_env['DISPLAY'] = ''
+
 # The diagram editor dia is required in order to edit the diagram masters
 if have_dia:
-    Utility("www/cycle.svg", ["www/cycle.dia"],
-            ["cd %s; dia -e www/cycle.svg www/cycle.dia" % variantdir])
+    env.Command("www/cycle.svg", ["www/cycle.dia"],
+                ["cd %s; dia -e www/cycle.svg www/cycle.dia" % variantdir],
+                ENV=nox11_env)
 
 packing = [
     'packaging/deb/etc_default_gpsd',
@@ -2558,8 +2566,6 @@ python_compilation_regress = Utility('python-compilation-regress',
 # get version from each python prog
 # this ensures they can run and gps_versions match
 vchk = ''
-verenv = env['ENV'].copy()
-verenv['DISPLAY'] = ''  # Avoid launching X11 in X11 progs
 pp = []
 for p in python_progs:
     if not env['xgps_deps']:
@@ -2571,7 +2577,7 @@ for p in python_progs:
     tgt = Utility(
         'version-%s' % p, p,
         'cd %s; $PYTHON %s -V' % (variantdir, p),
-        ENV=verenv)
+        ENV=nox11_env)
     pp.append(tgt)
 python_versions = env.Alias('python-versions', pp)
 
