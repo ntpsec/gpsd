@@ -78,7 +78,7 @@ class SourceExtractor(object):
 
 
 if __name__ == '__main__':
-    description = 'Create dynamic plots from gpsd with matplotlib.'
+    description = 'Tool for reporting gpsd status masks.'
     usage = '%(prog)s [OPTIONS] [host[:port[:device]]]'
     epilog = ('BSD terms apply: see the file COPYING in the distribution root'
               ' for details.')
