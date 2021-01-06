@@ -652,10 +652,10 @@ class spaceplot(plotter):
                 '%s\\n'
                 '%s\\n'
                 '%s"\n'
-                ) % ('{:>15}'.format(latstring),
-                     '{:>15}'.format(lonstring),
-                     '{:>15.3f}'.format(stat_alt.mean),
-                     '{:>15.1f}'.format(stat_used.mean))
+                ) % ('{0:>15}'.format(latstring),
+                     '{0:>15}'.format(lonstring),
+                     '{0:>15.3f}'.format(stat_alt.mean),
+                     '{0:>15.1f}'.format(stat_used.mean))
 
         fmt += ('set label 14 at screen 0.23, screen 0.12 '
                 '"\\n'
@@ -665,24 +665,24 @@ class spaceplot(plotter):
                 '%s %s %s meters %s %s\\n'
                 '%s %s %s meters %s %s\\n'
                 '%12d %12d %s sats"\n'
-                ) % ('{:>10.3f}'.format(lat_min_o),
-                     '{:>10.3f}'.format(lat_max_o),
-                     '{:>10.3f}'.format(stat_lat_r.sigma),
-                     '{:>10.1f}'.format(stat_lat_r.skewness),
-                     '{:>10.1f}'.format(stat_lat_r.kurtosis),
-                     '{:>10.3f}'.format(lon_min_o),
-                     '{:>10.3f}'.format(lon_max_o),
-                     '{:>10.3f}'.format(stat_lon_r.sigma),
-                     '{:>10.1f}'.format(stat_lon_r.skewness),
-                     '{:>10.1f}'.format(stat_lon_r.kurtosis),
-                     '{:>10.3f}'.format(stat_alt_r.min),
-                     '{:>10.3f}'.format(stat_alt_r.max),
-                     '{:>10.3f}'.format(stat_alt_r.sigma),
-                     '{:>10.1f}'.format(stat_alt_r.skewness),
-                     '{:>10.1f}'.format(stat_alt_r.kurtosis),
+                ) % ('{0:>10.3f}'.format(lat_min_o),
+                     '{0:>10.3f}'.format(lat_max_o),
+                     '{0:>10.3f}'.format(stat_lat_r.sigma),
+                     '{0:>10.1f}'.format(stat_lat_r.skewness),
+                     '{0:>10.1f}'.format(stat_lat_r.kurtosis),
+                     '{0:>10.3f}'.format(lon_min_o),
+                     '{0:>10.3f}'.format(lon_max_o),
+                     '{0:>10.3f}'.format(stat_lon_r.sigma),
+                     '{0:>10.1f}'.format(stat_lon_r.skewness),
+                     '{0:>10.1f}'.format(stat_lon_r.kurtosis),
+                     '{0:>10.3f}'.format(stat_alt_r.min),
+                     '{0:>10.3f}'.format(stat_alt_r.max),
+                     '{0:>10.3f}'.format(stat_alt_r.sigma),
+                     '{0:>10.1f}'.format(stat_alt_r.skewness),
+                     '{0:>10.1f}'.format(stat_alt_r.kurtosis),
                      stat_used.min,
                      stat_used.max,
-                     '{:>10.1f}'.format(stat_used.sigma))
+                     '{0:>10.1f}'.format(stat_used.sigma))
 
         if 1 < options.debug:
             fmt += ('set label 15 at screen 0.6, screen 0.12 '
@@ -691,9 +691,9 @@ class spaceplot(plotter):
                     '%s\\n'
                     '%s\\n'
                     '%s"\n'
-                    ) % ('{:>15.9f}'.format(stat_lat_r.min),
-                         '{:>15.9f}'.format(stat_lon_r.min),
-                         '{:>15.3f}'.format(stat_alt.min))
+                    ) % ('{0:>15.9f}'.format(stat_lat_r.min),
+                         '{0:>15.9f}'.format(stat_lon_r.min),
+                         '{0:>15.3f}'.format(stat_alt.min))
 
             fmt += ('set label 16 at screen 0.75, screen 0.12 '
                     '"\\n'
@@ -701,9 +701,9 @@ class spaceplot(plotter):
                     '%s\\n'
                     '%s\\n'
                     '%s"\n'
-                    ) % ('{:>15.9f}'.format(stat_lat_r.max),
-                         '{:>15.9f}'.format(stat_lon_r.max),
-                         '{:>15.3f}'.format(stat_alt.max))
+                    ) % ('{0:>15.9f}'.format(stat_lat_r.max),
+                         '{0:>15.9f}'.format(stat_lon_r.max),
+                         '{0:>15.3f}'.format(stat_alt.max))
 
         if len(self.fixes) > 1000:
             plot_style = 'dots'
