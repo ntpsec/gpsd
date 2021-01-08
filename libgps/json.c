@@ -446,13 +446,13 @@ static int json_internal_read_object(const char *cp,
             break;
             /* coverity[unterminated_case] */
         case post_val:
-	    // Ignore whitespace after either string or token values.
-	    if (isspace(*cp)) {
-		while (*cp != '\0' && isspace((unsigned char) *cp)) {
-		    ++cp;
-		}
-		json_debug_trace((1, "Skipped trailing whitespace: value \"%s\"\n", valbuf));
-	    }
+            // Ignore whitespace after either string or token values.
+            if (isspace(*cp)) {
+                while (*cp != '\0' && isspace((unsigned char) *cp)) {
+                    ++cp;
+                }
+                json_debug_trace((1, "Skipped trailing whitespace: value \"%s\"\n", valbuf));
+            }
             /*
              * We know that cursor points at the first spec matching
              * the current attribute.  We don't know that it's *the*
@@ -623,7 +623,7 @@ static int json_internal_read_object(const char *cp,
         return JSON_ERR_EMPTY;
     }
 
-  good_parse:
+good_parse:
     /* in case there's another object following, consume trailing WS */
     while (isspace((unsigned char) *cp))
         ++cp;

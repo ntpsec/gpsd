@@ -126,30 +126,30 @@ char *json_quote(const char *, char *, size_t, size_t);
 }
 #endif
 
-#define JSON_ERR_OBSTART        1       /* non-WS when expecting object start */
-#define JSON_ERR_ATTRSTART      2       /* non-WS when expecting attrib start */
-#define JSON_ERR_BADATTR        3       /* unknown attribute name */
-#define JSON_ERR_ATTRLEN        4       /* attribute name too long */
-#define JSON_ERR_NOARRAY        5       /* saw [ when not expecting array */
-#define JSON_ERR_NOBRAK         6       /* array element specified, but no [ */
-#define JSON_ERR_STRLONG        7       /* string value too long */
-#define JSON_ERR_TOKLONG        8       /* token value too long */
-#define JSON_ERR_BADTRAIL       9   // garbage while expecting comma or } or ]
-#define JSON_ERR_ARRAYSTART     10      /* didn't find expected array start */
-#define JSON_ERR_OBJARR         11      /* error while parsing object array */
-#define JSON_ERR_SUBTOOLONG     12      /* too many array elements */
+#define JSON_ERR_OBSTART         1      // non-WS when expecting object start
+#define JSON_ERR_ATTRSTART       2      // non-WS when expecting attrib start
+#define JSON_ERR_BADATTR         3      // unknown attribute name
+#define JSON_ERR_ATTRLEN         4      // attribute name too long
+#define JSON_ERR_NOARRAY         5      // saw [ when not expecting array
+#define JSON_ERR_NOBRAK          6      // array element specified, but no [
+#define JSON_ERR_STRLONG         7      // string value too long
+#define JSON_ERR_TOKLONG         8      // token value too long
+#define JSON_ERR_BADTRAIL        9      // garbage while expecting comma or } or ]
+#define JSON_ERR_ARRAYSTART     10      // didn't find expected array start
+#define JSON_ERR_OBJARR         11      // error while parsing object array
+#define JSON_ERR_SUBTOOLONG     12      // too many array elements
 #define JSON_ERR_BADSUBTRAIL    13      // garbage while expecting array comma
-#define JSON_ERR_SUBTYPE        14      /* unsupported array element type */
-#define JSON_ERR_BADSTRING      15      /* error while string parsing */
-#define JSON_ERR_CHECKFAIL      16      /* check attribute not matched */
-#define JSON_ERR_NOPARSTR       17  // can't support strings in parallel arrays
-#define JSON_ERR_BADENUM        18      /* invalid enumerated value */
-#define JSON_ERR_QNONSTRING     19  // saw quoted value when expecting nonstring
-#define JSON_ERR_NONQSTRING 20 // didn't see quoted value when expecting string
-#define JSON_ERR_MISC           21      /* other data conversion error */
-#define JSON_ERR_BADNUM         22  // error while parsing a numerical argument
-#define JSON_ERR_NULLPTR      23  // unexpected null value or attribute pointer
-#define JSON_ERR_NOCURLY        24      /* object element specified, but no { */
+#define JSON_ERR_SUBTYPE        14      // unsupported array element type
+#define JSON_ERR_BADSTRING      15      // error while string parsing
+#define JSON_ERR_CHECKFAIL      16      // check attribute not matched
+#define JSON_ERR_NOPARSTR       17      // can't support strings in parallel arrays
+#define JSON_ERR_BADENUM        18      // invalid enumerated value
+#define JSON_ERR_QNONSTRING     19      // saw quoted value when expecting nonstring
+#define JSON_ERR_NONQSTRING     20      // didn't see quoted value when expecting string
+#define JSON_ERR_MISC           21      // other data conversion error
+#define JSON_ERR_BADNUM         22      // error while parsing a numerical argument
+#define JSON_ERR_NULLPTR        23      // unexpected null value or attribute pointer
+#define JSON_ERR_NOCURLY        24      // object element specified, but no {
 #define JSON_ERR_EMPTY          25      // input was empty or white-space only
 
 /*
