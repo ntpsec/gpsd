@@ -413,6 +413,23 @@ char ed24a[] = "This, that, the other thing.",
      ed24l[] = "\\u0001\\u0007\\u0015",
      ed24u[] = "±176°42′13″ 𠜎 𠜱 𠝹 𠱓";
 
+static char *json_str25a = "{\"class\":\"\",\"mode\":-1}";
+static char *json_str25b = "{\"class\":\"f\",\"mode\":-2}";
+static char *json_str25c = "{\"class\":\"fo\",\"mode\":-3}";
+static char *json_str25d = "{\"class\":\"foo\",\"mode\":-4}";
+static char *json_str25e = "{\"class\":\"foob\",\"mode\":-5}";
+static char *json_str25f = "{\"class\":\"fooba\",\"mode\":-6}";
+static char *json_str25t = "{\"class\":\"TPV\",\"mode\":3}";
+
+int i25 = 25;
+static const struct json_attr_t json_attrs_25[] = {
+    {"class", t_check, .dflt.check = "TPV"},
+    {"mode", t_integer, .addr.integer = &i25, .dflt.integer = -9},
+    {NULL},
+};
+
+
+char str32[] = "\f\n\r\t\v";
 /* *INDENT-ON* */
 
 static void jsontest(int i)
@@ -710,7 +727,57 @@ static void jsontest(int i)
         assert_string1("unicode", pbuf, ed24u);
         break;
 
-#define MAXTEST 24
+    // Check for strings from (25) "" to (28) "foo" --
+    // should return JSON_ERR_CHECKFAIL (16)
+    case 25:
+        status = json_read_object(json_str25a, json_attrs_25, NULL);
+        assert_integer("mode", i25, -9);
+        assert_integer("status", status, JSON_ERR_CHECKFAIL);
+        break;
+
+    case 26:
+        status = json_read_object(json_str25b, json_attrs_25, NULL);
+        assert_integer("mode", i25, -9);
+        assert_integer("status", status, JSON_ERR_CHECKFAIL);
+        break;
+
+    case 27:
+        status = json_read_object(json_str25c, json_attrs_25, NULL);
+        assert_integer("mode", i25, -9);
+        assert_integer("status", status, JSON_ERR_CHECKFAIL);
+        break;
+
+    case 28:
+        status = json_read_object(json_str25d, json_attrs_25, NULL);
+        assert_integer("mode", i25, -9);
+        assert_integer("status", status, JSON_ERR_CHECKFAIL);
+        break;
+
+    // check strings "foob" and "fooba" --  should return JSON_ERR_STRLONG (7)
+    case 29:
+        status = json_read_object(json_str25e, json_attrs_25, NULL);
+        assert_integer("mode", i25, -9);
+        assert_integer("status", status, JSON_ERR_STRLONG);
+        break;
+
+    case 30:
+        status = json_read_object(json_str25f, json_attrs_25, NULL);
+        assert_integer("mode", i25, -9);
+        assert_integer("status", status, JSON_ERR_STRLONG);
+        break;
+
+    case 31: // Check string "TPV" -- should return success (0)
+        status = json_read_object(json_str25t, json_attrs_25, NULL);
+        assert_integer("mode", i25, 3);
+        assert_integer("status", status, 0);
+        break;
+
+    case 32: // Check that whitespace-only JSON returns an issue
+        status = json_read_object(str32, json_attrs_25, NULL);
+        assert_integer("status", status, -1);
+        break;
+
+#define MAXTEST 32
 
     default:
         (void)fputs("Unknown test number\n", stderr);
