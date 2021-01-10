@@ -370,7 +370,7 @@ static int json_internal_read_object(const char *cp,
                 json_debug_trace((1, "Collected string value %s\n", valbuf));
                 state = post_val;
             } else if (pval > valbuf + JSON_VAL_MAX - 1
-                       || pval > valbuf + maxlen) {
+                       || pval > valbuf + maxlen - 1) {
                 json_debug_trace((1, "String value too long.\n"));
                 /* don't update end here, leave at value start */
                 return JSON_ERR_STRLONG;        /*  */
@@ -509,8 +509,12 @@ static int json_internal_read_object(const char *cp,
               foundit:
                 (void)snprintf(valbuf, sizeof(valbuf), "%d", mp->value);
             }
-            lptr = json_target_address(cursor, parent, offset);
-            if (lptr != NULL)
+            if (cursor->type == t_check) {
+                lptr = cursor->dflt.check;
+            } else {
+                lptr = json_target_address(cursor, parent, offset);
+            }
+            if (lptr != NULL) {
                 switch (cursor->type) {
                 case t_byte:
                     {
@@ -595,7 +599,8 @@ static int json_internal_read_object(const char *cp,
                     }
                     break;
                 }
-            FALLTHROUGH
+            }
+        FALLTHROUGH
         case post_element:
             if (isspace((unsigned char) *cp))
                 continue;
