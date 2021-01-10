@@ -1,5 +1,7 @@
                         GPSD project news
 
+3.22.1~dev: unreleased
+
 3.22: 2020-01-08
   Added client/gpscsv to convert gpsd JSON to csv.
   Added client/gpsplot to dynamically plot gpsd JSON.
