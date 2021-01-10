@@ -150,6 +150,7 @@ char *json_quote(const char *, char *, size_t, size_t);
 #define JSON_ERR_BADNUM         22  // error while parsing a numerical argument
 #define JSON_ERR_NULLPTR      23  // unexpected null value or attribute pointer
 #define JSON_ERR_NOCURLY        24      /* object element specified, but no { */
+#define JSON_ERR_EMPTY          25      // input was empty or white-space only
 
 /*
  * Use the following macros to declare template initializers for structobject

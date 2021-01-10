@@ -772,9 +772,9 @@ static void jsontest(int i)
         assert_integer("status", status, 0);
         break;
 
-    case 32: // Check that whitespace-only JSON returns an issue
+    case 32: // Check that whitespace-only JSON returns JSON_ERR_EMPTY (25)
         status = json_read_object(str32, json_attrs_25, NULL);
-        assert_integer("status", status, -1);
+        assert_integer("status", status, JSON_ERR_EMPTY);
         break;
 
 #define MAXTEST 32

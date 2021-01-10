@@ -618,6 +618,10 @@ static int json_internal_read_object(const char *cp,
             break;
         }
     }
+    if (state == init) {
+        json_debug_trace((1, "Input was empty or white-space only\n"));
+        return JSON_ERR_EMPTY;
+    }
 
   good_parse:
     /* in case there's another object following, consume trailing WS */
@@ -847,6 +851,7 @@ const char *json_error_string(int err)
         "other data conversion error",
         "unexpected null value or attribute pointer",
         "object element specified, but no {",
+        "input was empty or white-space only",
     };
 
     if (err <= 0 || err >= (int)(sizeof(errors) / sizeof(errors[0])))
