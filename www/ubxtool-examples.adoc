@@ -1,6 +1,7 @@
 :Author: Gary E. Miller
+:toc:
 :Email: <gem@rellim.com>
-:Date: 11 June 2020
+:Date: 13 JAnuary 2021
 :Description: U-blox GNSS receiver configuration examples
 :keywords: u-blox, examples, configuration
 
