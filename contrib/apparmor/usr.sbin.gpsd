@@ -7,23 +7,11 @@
 # This software is distributed under a BSD-style license. See the
 # file "COPYING" in the top-level directory of the distribution for details.
 #
-# Apparmor profiles are meant to cover and allow for the most common use
-# cases and that is what this profile tries to cover. Due to the nature of
-# the program there are various different use-cases and if you trigger
-# apparmor denies (see dmesg and journal) it is recommended to add matching
-# local overrides for your use-case. See:
-# gitlab.com/apparmor/apparmor/-/blob/master/profiles/apparmor.d/local/README
-# This way your changes do not conflict with further updates of the program.
+# WARNING: using gps with apparmor will drive you crazy and is not recommended.
+# gpsd depends on system libraries that change frequently.  They use
+# system calls that change frequently for many reasons.  Thus no whitelist
+# will ever be correct.  You will be playing whack-a-mole.
 #
-# If you consider this use case common please report a bug upstream so that
-# the rule can be added to the default profile.
-#
-# If instead you are just frustrated and want to get it silenced it is
-# recommended to set it to complain mode:
-#  $ sudo aa-complain usr.sbin.gpsd
-# That way nothing will be blocked anymore, but you will be able to see and
-# report the denials of your use case. That way there is a chance to update
-# the default profile for it.
 # ------------------------------------------------------------------
 
 #include <tunables/global>
