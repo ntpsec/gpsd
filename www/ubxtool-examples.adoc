@@ -1,11 +1,11 @@
+= ubxtool examples
 :Author: Gary E. Miller
-:toc:
-:Email: <gem@rellim.com>
-:Date: 13 JAnuary 2021
+:Date: 13 January 2021
 :Description: U-blox GNSS receiver configuration examples
+:Email: <gem@rellim.com>
 :keywords: u-blox, examples, configuration
+:toc:
 
-= ubxtool recipes
 
 WARNING: This document assumes you are using gpsd from git head, or
 version 3.21 or higher.  Using older gpsd versions will fail in strange
