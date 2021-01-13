@@ -1,8 +1,12 @@
-= AIVDM/AIVDO protocol decoding =
-:description: The AIVDM Marine AIS protocol demystified, for programmers.
-:keywords: AIS, AIVDM, AIVDO, standard, protocol, Automatic Identification System
+= AIVDM/AIVDO protocol decoding
 Eric S. Raymond <esr@thyrsus.com>
-v1.54, Nov 2019
+v1.55, Jan 2021
+:author: Eric S. Raymond
+:Date: 13 January 2021
+:description: The AIVDM Marine AIS protocol demystified, for programmers.
+:email: <esr@thyrsus.com>
+:keywords: AIS, AIVDM, AIVDO, standard, protocol, Automatic Identification System
+:toc:
 
 This document is mastered in asciidoc format.  If you are reading it in HTML,
 you can find the original at the GPSD project website
@@ -16,7 +20,7 @@ money - please contribute to maintaining it by supporting the author's
 full-time open-source work through <<PATREON>>. Even a few dollars a
 week can make a difference.
 
-== Introduction ==
+== Introduction
 
 This is a description of how to decode AIVDM/AIVDO sentences.  It
 collects and integrates information from publicly available sources
@@ -54,7 +58,7 @@ A lengthy description of AIS, focusing on the goals and history of the
 system, but not describing the data protocols in any detail, can be
 found at <<AIS>>.
 
-== Standards ==
+== Standards
 
 Multiple standards bear on the AIVDM/AIVDO format.  This document
 exists because assembling them into a complete picture is technically
@@ -86,7 +90,7 @@ indicate that it has been "harmonized" with some version of NMEA 0183,
 which I also have not looked at because it too is proprietary and
 expensive, and surrounded by rapacious attack lawyers.
 
-== Information Sources ==
+== Information Sources
 
 Together, the IALA Technical Clarifications at <<IALA>> and the
 Coast Guard's AIS pages at <<NAVCEN>> describe AIS message payloads
@@ -137,7 +141,7 @@ information, especially for the less common sentences, comes from
 inspection of sentences forwarded to me from AIS Hub by various
 interested parties, and more recently from AIS Hub itself.
 
-== Improving This Document ==
+== Improving This Document
 
 To avoid copyright difficulties, I rely only on freely redistributable
 public documents and paraphrased reports from people who have seen the
@@ -155,7 +159,7 @@ decoded dumps of their field values.  Please note that sample
 sentences not accompanied by field dumps are *not* useful; I can get
 plenty of those.
 
-== Open-Source Implementations ==
+== Open-Source Implementations
 
 The GPSD project ships an AIVDM/AIVDO sentence decoder as part of the
 daemon. This document was developed to be the specification for it,
@@ -178,7 +182,7 @@ looks to be pretty high-quality and can be exercised through a
 public web form. This is a useful resource for anyone qualifying
 an AIS decoder.
 
-== AIVDM/AIVDO Sentence Layer ==
+== AIVDM/AIVDO Sentence Layer
 
 AIVDM/AIVDO is a two-layer protocol.  The outer layer is a variant of
 NMEA 0183, the ancient standard for data interchange in marine
@@ -245,7 +249,7 @@ encapsulated data.
 It is, however, a safe bet that any such sentence containing an A or B
 channel code in field 5 is AIVDM/AIVDO.
 
-== Talker IDS ==
+== Talker IDS
 
 The AI prefix commonly found on these sentences is an NMEA talker ID
 for a mobile AIS station.  Other possible values are as listed:
@@ -265,7 +269,7 @@ for a mobile AIS station.  Other possible values are as listed:
 | !SA | NMEA 4.0 Physical Shore AIS Station
 |======
 
-== AIVDM/AIVDO Payload Armoring ==
+== AIVDM/AIVDO Payload Armoring
 
 The data payload is an ASCII-encoded bit vector.  Each character
 represents six bits of data.  To recover the six bits, subtract 48
@@ -347,7 +351,7 @@ intermediate range "X" (88) to "\_" (95) is not used.
 Concatenate all six-bit quantities found in the payload, MSB first.
 This is the binary payload of the sentence.
 
-== AIS Payload Data Types ==
+== AIS Payload Data Types
 
 Data in AIS message payloads (what you get after undoing the AIVDM/AIVDO
 armoring) is encoded as bit fields in the sentence.  Bit fields may be
@@ -428,7 +432,7 @@ Trailing string fields are often specified as "up to" a certain number of bits.
 Decoders should be prepared to handle any field length up to that
 number, including zero.
 
-== AIS Payload Interpretation ==
+== AIS Payload Interpretation
 
 The following table describes message types that are international
 standards from <<ITU1371>> and its revisions.  There are also local
@@ -576,7 +580,7 @@ wrong payload length for their type occur with about 0.3% frequency on
 AISHub; if you don't reject these, your clients will see spurious
 zeros or garbage.
 
-=== Types 1, 2 and 3: Position Report Class A ===
+=== Types 1, 2 and 3: Position Report Class A
 
 Type 1, 2 and 3 messages share a common reporting structure for
 navigational information; we'll call it the Common Navigation Block
@@ -732,7 +736,7 @@ a detailed description of this flag.
 Bits 149-167 are diagnostic information for the radio system.  Consult
 <<IALA>> for detailed description of the latter.
 
-=== Type 4: Base Station Report ===
+=== Type 4: Base Station Report
 
 This message is to be used by fixed-location base stations to
 periodically report a position and time reference. Total of 168 bits,
@@ -782,7 +786,7 @@ type value 15 (all field bits 1) is not uncommon in the wild; it
 appears some receivers emit it as the undefined value. Decoders should
 be prepared to accept this.
 
-=== Type 5: Static and Voyage Related Data ===
+=== Type 5: Static and Voyage Related Data
 
 Message has a total of 424 bits, occupying two AIVDM sentences.
 
@@ -932,7 +936,7 @@ treat these like value 0 rather than throwing an exception until and
 unless the controlled vocabulary is extended to include the unknown
 values.
 
-=== Type 6: Binary Addressed Message ===
+=== Type 6: Binary Addressed Message
 
 Message type 6 is an addressed point-to-point message with unspecified
 binary payload.  The St. Lawrence Seaway AIS system, the USG PAWSS
@@ -1002,7 +1006,7 @@ collisions have been in the wild; but see the parallel note for Type 8.)
 
 A list of binary layouts for selected subtypes of message 6 follows.
 
-==== IMO236 Dangerous Cargo Indication ====
+==== IMO236 Dangerous Cargo Indication
 
 This message should be used as a response to a request for Dangerous
 Cargo Indication from a competent authority. The message content is
@@ -1056,7 +1060,7 @@ This is the <<IMO236>> version, now deprecated; there is a later
 |3    |metric kilotons
 |======
 
-==== IMO236 Tidal Window ====
+==== IMO236 Tidal Window
 
 This message should be used by shore stations to inform vessels about
 tidal windows which allow a vessel the safe passage of a fairway.  The
@@ -1103,7 +1107,7 @@ different widths for the latitude, longitude, and current-speed fields
 The group of fields from longitude on may repeat twice more to convey up to
 three points of tidal information.
 
-==== IMO236 Number of persons on board ====
+==== IMO236 Number of persons on board
 
 This message should be used by a ship to report the number of persons
 on board, e.g. on request by a competent authority.  Acknowledgment
@@ -1157,7 +1161,7 @@ them.
 |101-135 | 35 |Spare                |          |x|Not used
 |======
 
-==== IMO289 Clearance Time To Enter Port ====
+==== IMO289 Clearance Time To Enter Port
 
 This message provides specific ships with information on the port to call and
 time to enter.  It should be transmitted by an authority competent to grant
@@ -1193,7 +1197,7 @@ A message 6 subtype. DAC = 001 FID = 18. Fixed length: 360 bits.
 |317-359 | 43 |Spare                |           |x|Not used
 |======
 
-==== IMO 289 Berthing Data (addressed) ====
+==== IMO 289 Berthing Data (addressed)
 
 This message provides information on the ship's berth. If sent from a
 ship it is a berthing request; if it is transmitted by a competent
@@ -1293,7 +1297,7 @@ The longitude and latitude refer to the center of the berth.
 |3    |Not to be used
 |======
 
-==== IMO289 Area Notice (addressed) ====
+==== IMO289 Area Notice (addressed)
 
 This should be used to convey time- and location-dependent information about
 hazards to navigation.  For information-lifetime restrictions and usage
@@ -1631,7 +1635,7 @@ an implied boundary from the last polygon vertex to the zero vertex.
 |3-86    |84  |Text               |text        |t|14 chars of packed 6-bit.
 |======
 
-==== IMO289 Dangerous Cargo Indication ====
+==== IMO289 Dangerous Cargo Indication
 
 See the IMO236 variant for the meaning of this message.
 
@@ -1716,7 +1720,7 @@ the cargotype is 5 = MARPOL Annex II).
 |5-7  | reserved for future use
 |======
 
-==== IMO289 Route Information (addressed) ====
+==== IMO289 Route Information (addressed)
 
 The content of this message is a time and a list of waypoints describing a
 course. It has a broadcast equivalent that is a message 8 subtype.
@@ -1776,7 +1780,7 @@ end with 1 to 16 waypoints.
 |31   |Cancel route identified by message linkage
 |======
 
-==== IMO289 Text description (addressed) ====
+==== IMO289 Text description (addressed)
 
 This message may be used to attach a text description to another message with
 a Message Linkage ID matching this one.  It is intended that the combination
@@ -1807,7 +1811,7 @@ via the Message Linkage ID field.
 
 There is an equivalent subtype of message 8 that is a broadcast description.
 
-==== Tidal Window (IMO289) ====
+==== Tidal Window (IMO289)
 
 See the <<IMO239>> version of this message for intended meaning.
 
@@ -1852,7 +1856,7 @@ different bit widths for the latitude and longitude fields.
 The group of fields from longitude on may repeat twice more to convey up to
 three points of tidal information.
 
-==== ETA at lock/bridge/terminal (Inland AIS) ====
+==== ETA at lock/bridge/terminal (Inland AIS)
 
 A message 6 subtype. DAC = 200 FID = 21. Fixed length, 248 bits.
 
@@ -1901,7 +1905,7 @@ number".
 OPEN-QUESTION: <<INLAND>> does not specify whether ETA time is UTC
 or local.
 
-==== RTA at lock/bridge/terminal (Inland AIS) ====
+==== RTA at lock/bridge/terminal (Inland AIS)
 
 A message 6 subtype. DAC = 200 FID = 22. Fixed length, 232 bits.
 
@@ -1949,7 +1953,7 @@ OPEN-QUESTION: No default is specified for the Status field.
 | 3 | N/A
 |======
 
-==== Number of persons on board (Inland AIS) ====
+==== Number of persons on board (Inland AIS)
 
 This message should be sent by inland vessels only, to inform about
 the number of persons (passengers, crew, and shipboard personnel) on
@@ -1983,7 +1987,7 @@ A message 6 subtype. DAC = 200 FID = 55.  Fixed length, 168 bits.
 |117-167 | 51 |Spare                |          |x|Not used
 |======
 
-==== AtoN monitoring data (GLA) ====
+==== AtoN monitoring data (GLA)
 
 This message provides AtoN (Aid to navigation) monitoring data for the General
 Lighthouse Authorities (GLA), which consists of Trinity House (England &
@@ -2044,7 +2048,7 @@ process this variant.
 |132-135 |  4 |Spare             |           |x|Not used
 |======
 
-=== Type 7: Binary Acknowledge ===
+=== Type 7: Binary Acknowledge
 
 Message type 7 is a receipt acknowledgment to the senders of a
 previous messages of type 6.  Total length varies between 72 and 168
@@ -2073,7 +2077,7 @@ Use of the MMSI sequence fields was introduced in ITU-1371-5 to
 indicate the sequence number of the Type 6 to which this responds.
 In earlier versions these were spare fields.
 
-=== Type 8: Binary Broadcast Message ===
+=== Type 8: Binary Broadcast Message
 
 Message type 8 is a broadcast message with unspecified binary payload.
 The St. Lawrence Seaway AIS system, the USG PAWSS system, and the Port
@@ -2152,7 +2156,7 @@ update for it in <<IMO289>>.
 
 Breakdowns of Message 8 subtypes from <<IMO289>> follow.
 
-==== Meteorological and Hydrological Data (IMO236) ====
+==== Meteorological and Hydrological Data (IMO236)
 
 A message 8 subtype. DAC = 001 FID = 11. Fixed length, 352 bits.
 This is in use and described in <<IMO236>>, but has been deprecated by
@@ -2312,7 +2316,7 @@ WMO 306 Code table 4.201 specifies the following precipitation type values:
 |14-15|               |Reserved
 |======
 
-==== Fairway Closed ====
+==== Fairway Closed
 
 This message should be broadcast from shore stations to inform ships,
 in particular to give guidance to large vessels about temporary closed
@@ -2349,7 +2353,7 @@ Described in <<IMO236>> but deprecated by <<IMO289>>.
 
 No default is specified for the radius field in the standard.
 
-==== IMO236 Extended Ship Static and Voyage Related Data ====
+==== IMO236 Extended Ship Static and Voyage Related Data
 
 This message should be used by a ship to report the height over keel.
 
@@ -2372,7 +2376,7 @@ Deprecated in <<IMO289>>.
 |67-71   |  5 |Spare                |          |x|Not used
 |======
 
-==== VTS-Generated/Synthetic targets ====
+==== VTS-Generated/Synthetic targets
 
 A message 8 subtype. DAC = 001 FID = 17. Variable length: 176-536
 bits.  This message is laid out identically in <<IMO236>> and
@@ -2421,7 +2425,7 @@ with AIS big-endian encoding. Settling this awaits live testing.
 The trailing eight fields may be repeated up to 3 times (for a total of 1 to 4
 field groups) to represent up to 4 targets.
 
-==== IMO289 Marine Traffic Signal ====
+==== IMO289 Marine Traffic Signal
 
 This message provides information on a signal station and status of
 the control signal at the entrance of a harbor or channel where the
@@ -2488,7 +2492,7 @@ length: 360 bits.
 |14-31|Reserved
 |======
 
-==== IMO289 Weather observation report from ship ====
+==== IMO289 Weather observation report from ship
 
 There are two variants of this message.  They are distinguished by bit 56,
 the WMO bit.  Field layouts after that bit vary depending on it.
@@ -2731,7 +2735,7 @@ This is incorrect; the decrement needs to be 90 for the range to be -90..+90.
 
 Swell directions are arrival directions.
 
-==== IMO289 Area Notice (broadcast) ====
+==== IMO289 Area Notice (broadcast)
 
 This should be used to broadcast time- and location-dependent information about
 hazards to navigation.  For information-lifetime restrictions and usage
@@ -2789,7 +2793,7 @@ is the message header format:
 The sub-area indications are as described under the addressed form,
 message type 6 with DAC = 1 and FID = 23.
 
-==== IMO289 Extended Ship Static and Voyage Related Data ====
+==== IMO289 Extended Ship Static and Voyage Related Data
 
 This message should be used by a ship to report the height over keel.
 
@@ -2936,7 +2940,7 @@ VHF channel number is encoded according to Recommendation ITU-R M.1084.
 
 The lshiptype field uses Lloyd's Register STATCODE 5 encoding.
 
-==== IMO289 Environmental ====
+==== IMO289 Environmental
 
 A message 8 subtype. DAC = 001 FID = 26. Variable length: 168-1008 bits.
 
@@ -3445,7 +3449,7 @@ distance measured from the surface of the water to the sensor.
 
 The timestamp is for the forecast air gap.
 
-==== IMO289 Route Information (broadcast) ====
+==== IMO289 Route Information (broadcast)
 
 The content of this message is a time and a list of waypoints describing a
 course.  It has an addressed equivalent that is a message 6 subtype.
@@ -3489,7 +3493,7 @@ end with 1 to 16 waypoints.
 For interpretation of the Route Type field, see the table under the "Route
 Information (addressed)" message (DAC=1, FID=28).
 
-==== IMO289 Text description (broadcast) ====
+==== IMO289 Text description (broadcast)
 
 A message 8 subtype. DAC = 001 FID = 29. Variable length: 72-1032 bits.
 
@@ -3512,7 +3516,7 @@ via the Message Linkage ID field.
 
 There is an equivalent subtype of message 6 that is an addressed description.
 
-==== Meteorological and Hydrological Data (IMO289) ===
+==== Meteorological and Hydrological Data (IMO289)
 
 A message 8 subtype. DAC = 001 FID = 31. Fixed length, 360 bits.
 Supersedes an <<IMO236>> message with the same title but FID = 11 and
@@ -3628,7 +3632,7 @@ decimeters), and (c) end padding changes from 6 to 10 bits.
 
 Precipitation types and Beaufort scale are as for the <<IMO236>> version.
 
-==== Inland ship static and voyage related data (Inland AIS) ====
+==== Inland ship static and voyage related data (Inland AIS)
 
 A message 8 subtype. DAC = 200 FID = 10. Fixed length, 168 bits.
 
@@ -3752,7 +3756,7 @@ expand both.  Full ERI codes have been observed in the wild.
 | 2 | Loaded
 |======
 
-==== EMMA Warning Report (Inland AIS) ====
+==== EMMA Warning Report (Inland AIS)
 
 A message 8 subtype. DAC = 200 FID = 23. Fixed length, 256 bits.
 
@@ -3841,7 +3845,7 @@ are UTC or local.
 |  8 | NW | North West
 |======
 
-==== Water Levels (Inland AIS) ====
+==== Water Levels (Inland AIS)
 
 A message 6 subtype. DAC = 200 FID = 24. Fixed length, 168 bits.
 
@@ -3870,7 +3874,7 @@ messages.
 Water levels are relative to the local standard, e.g. GIW in Germany
 and RNW on the Danube.
 
-==== Signal Strength (Inland AIS) ====
+==== Signal Strength (Inland AIS)
 
 A message 8 subtype. DAC = 200 FID = 40. Fixed length, 168 bits.
 
@@ -3937,7 +3941,7 @@ following way:
 | 7 | Yellow flashing.
 |======
 
-=== Type 9: Standard SAR Aircraft Position Report ===
+=== Type 9: Standard SAR Aircraft Position Report
 
 Tracking information for search-and-rescue aircraft.  Total number of
 bits is 168.
@@ -3977,7 +3981,7 @@ are encoded identically as in the common navigation block and
 are even at the same bit offsets.  Time stamp has the same special
 values as in the common navigation block, but is at a different offset.
 
-=== Type 10: UTC/Date Inquiry ===
+=== Type 10: UTC/Date Inquiry
 
 Request for UTC/Date information from an AIS base station. Total
 number of bits is 72.
@@ -3994,11 +3998,11 @@ number of bits is 72.
 |70-71   | 2  |Spare              |           |x|Not used
 |======
 
-=== Type 11: UTC/Date Response ===
+=== Type 11: UTC/Date Response
 
 Identical to message 4, with the semantics of a response to inquiry.
 
-=== Type 12: Addressed Safety-Related Message ===
+=== Type 12: Addressed Safety-Related Message
 
 This is a point-to-point text message.  The payload is interpreted as
 six-bit text.  This message is variable in length up to a maximum of
@@ -4031,13 +4035,13 @@ Such apparently garbled content does *not* mean there is an error in
 your decoder. It may indicate faulty encoders, operator error, or even
 the use of private encodings for non-ASCII character sets.
 
-=== Type 13: Safety-Related Acknowledgment ===
+=== Type 13: Safety-Related Acknowledgment
 
 Message type 13 is a receipt acknowledgement to senders of
 previous messages of type 12.  The message layout is identical to
 a type 7 Binary Acknowledge.
 
-=== Type 14: Safety-Related Broadcast Message ===
+=== Type 14: Safety-Related Broadcast Message
 
 This is a broadcast text message.  The payload is interpreted as
 six-bit text.  This message is variable in length up to a maximum of
@@ -4062,7 +4066,7 @@ messages are required to be padded to an 8-bit byte boundary by
 Also see the pragmatic note on message content attached to type 12; it
 applies to type 14 messages as well.
 
-=== Type 15: Interrogation ===
+=== Type 15: Interrogation
 
 Message type 15 is used by a base station to query one or two other AIS
 transceivers for status messages of specified types. "Source MMSI" is
@@ -4113,7 +4117,7 @@ with the first queried MMSI should be zeroed.
 4. One station is interrogated for two message types, and a second for
 one message type.  Length is 160 bits.
 
-=== Type 16: Assignment Mode Command ===
+=== Type 16: Assignment Mode Command
 
 Message type 16 is used by a base station with control authority to
 configure the scheduling of AIS informational messages from
@@ -4185,7 +4189,7 @@ longitude, 91 \* 60 \* 10 = 0xd548 for latitude.)
 The <<IALA>> description of the payload portion sub-fields has been
 omitted, as it appears to be tied to the now obsolete RTCM2 protocol.
 
-=== Type 18: Standard Class B CS Position Report ===
+=== Type 18: Standard Class B CS Position Report
 
 A less detailed report than types 1-3 for vessels using Class B
 transmitters.  Omits navigational status and rate of turn.  Fields are
@@ -4236,7 +4240,7 @@ understand these fields."
 The radio status is 20 bits rather than 19 because an extra first bit
 selects whether it should be interpreted as a SOTDMA or ITDMA state.
 
-=== Type 19: Extended Class B CS Position Report ===
+=== Type 19: Extended Class B CS Position Report
 
 A slightly more detailed report than type 18 for vessels using Class B
 transmitters.  Omits navigational status and rate of turn.  Fields are
@@ -4280,7 +4284,7 @@ gathered automatically from sensors.
 |308-311  |  4 |Spare                  |             |x|Unused, should be zero
 |======
 
-=== Type 20 Data Link Management Message ===
+=== Type 20 Data Link Management Message
 
 This message is used to pre-allocate TDMA slots within an AIS base
 station network.  It contains no navigational information, and is
@@ -4316,7 +4320,7 @@ the number of slot reservations (1 to 4) in the message.
 
 See <<IALA>> for details on the meaning of these fields.
 
-=== Type 21: Aid-to-Navigation Report ===
+=== Type 21: Aid-to-Navigation Report
 
 Identification and location message to be emitted by aids to
 navigation such as buoys and lighthouses.
@@ -4420,7 +4424,7 @@ i.e. no @-character should be used."  A decoder can deduce the bit length
 of the name extension field by subtracting 272 from the total message
 bit length.
 
-=== Type 22: Channel Management ===
+=== Type 22: Channel Management
 
 This message is broadcast by a competent authority (an AIS network
 control base station) to set VHF parameters for an AIS coverage
@@ -4486,7 +4490,7 @@ control jurisdiction. The semantics of these fields are complicated,
 controlling transmitter behavior as it moves between jurisdictions;
 see <<IALA>> for full details.
 
-=== Type 23: Group Assignment Command ===
+=== Type 23: Group Assignment Command
 
 This message is intended to be broadcast by a competent authority (an
 AIS network-control base station) to set operational parameters for
@@ -4582,7 +4586,7 @@ a quiet time command, it will continue to schedule nominal
 transmission time periods, but is not to transmit message 18 or 24
 during the quiet period.
 
-=== Type 24: Static Data Report  ===
+=== Type 24: Static Data Report
 
 Equivalent of a Type 5 message for ships using Class B equipment.  Also
 used to associate an MMSI with a name on either class A or class B equipment.
@@ -4653,7 +4657,7 @@ in the 3, 4 and 5 positions are the MID (the three-digit country code
 as described in <<ITU-MID>>) and (3) YYYY is any decimal literal from
 0000 to 9999.
 
-=== Type 25: Single Slot Binary Message   ===
+=== Type 25: Single Slot Binary Message
 
 Maximum of 168 bits (a single slot). Fields after the Destination
 MMSI are at variable offsets depending on that flag and the Destination
@@ -4690,7 +4694,7 @@ radio status block.
 Note: Type 25 is extremely rare. As of April 2011 it has not been
 observed even in long-duration samples from AISHub.
 
-=== Type 26: Multiple Slot Binary Message ===
+=== Type 26: Multiple Slot Binary Message
 
 Takes up 60-1064 bits (up to 5 slots).
 
@@ -4724,7 +4728,7 @@ whether it should be interpreted as a SOTDMA or ITDMA state.
 Note: Type 26 is extremely rare. As of April 2011 it has not been
 observed even in long-duration samples from AISHub.
 
-=== Type 27: Long Range AIS Broadcast message  ===
+=== Type 27: Long Range AIS Broadcast message
 
 ITU-1371-4 says this message is primarily intended for long-range
 detection of AIS Class A equipped vessels (typically by
@@ -4761,7 +4765,7 @@ should warn when this occurs but decode the first 96 bits.
 |95-95   | 1    |Spare               |         |x|Not used
 |======
 
-== Local extensions ==
+== Local extensions
 
 Some regional authorities extend the AIS message set.
 
@@ -4790,7 +4794,7 @@ covers portions of the Danube River and Black Sea which does conform.
 PAWSS messages for DAC 1, the international jurisdiction code. However,
 in some cases identically named subtypes are assigned different FIDs.
 
-=== U.S. Coast Guard Extended AIVDM ===
+=== U.S. Coast Guard Extended AIVDM
 
 You may occasionally see AIVDM packets with additional comma-separated
 fields following the checksum.  This is a semi-obsolescent
@@ -4838,7 +4842,7 @@ language time function. Both date and time to the nearest second can be
 derived from this field. This field is always provided, regardless of
 the type of AIS equipment.
 
-== NMEA Tag Blocks ==
+== NMEA Tag Blocks
 
 Beginning with NMEA 4.10, the standard describes a way to intersperse
 "tag blocks" with AIS sentences in order to supply additional
@@ -4907,13 +4911,13 @@ We do not yet have more definite information on the meaning of these
 fields or how they are related to nearby AIVDM/AIVDO sentences.  We
 hope to add this in a future revision.
 
-== AIS Payload Byte Alignment, Padding, and Bit Stuffing ==
+== AIS Payload Byte Alignment, Padding, and Bit Stuffing
 
 Warning: Here there be dragons. Read with care. Once you get through
 it, you will at least not encounter anything more confusing in the
 rest of this document.
 
-=== Byte Alignment ===
+=== Byte Alignment
 
 AIS is a bit-sync protocol.  While some fields within AIS payloads are
 8-bit-byte-aligned with preceding padding, most are not. Furthermore,
@@ -4946,7 +4950,7 @@ account. The binary data in message types 8 and 17 is also guaranteed
 to *begin* on a byte boundary, but this is not true of the addressed
 variants of type 25 and 26.
 
-=== Interaction with AIVDM padding ===
+=== Interaction with AIVDM padding
 
 AIVDM armoring introduces a second layer of padding, with confusing
 consequences.  The real payload, already padded to a bit length that
@@ -4981,7 +4985,7 @@ For messages with a variable-length trailing payload (6, 8, 12, 14,
 be wrong.  If it is, this will manifest as truncation of the last
 nibble or extra trailing zero data.
 
-=== Bit Stuffing ===
+=== Bit Stuffing
 
 The following probably will not affect decoders. Nevertheless, we
 document it here because it is just the sort of thing that is (a)
@@ -5006,7 +5010,7 @@ radio link layer at transmission time and undone at reception time,
 and should not be visible in AIVDM payloads reported by the
 receiver.
 
-== AIS feed sites ==
+== AIS feed sites
 
 Most sites that advertise "live" AIS feeds actually give you a map
 display through a browser.  Here are a few from which you can get raw
@@ -5025,7 +5029,7 @@ to delayed data.
 - http://hd-sf.com:9009
 Free San Francisco Bay Area AIS feed. For non-commercial use only.
 
-== JSON-AIS encoding ==
+== JSON-AIS encoding
 
 Here is an application of the JSON metaformat to present AIS data in a
 form more convenient for application use than AIVDM/AIVDO sentences.
@@ -5169,7 +5173,7 @@ fields (presently "waycount" in Route Info messages") are not dumped.
 dumped as the value of an attribute the name of which is specified by
 the idtype field.
 
-== Open Questions ==
+== Open Questions
 
 The AIS standards are not marvels of clear and unambiguous drafting.
 We list here some open questions which could usefully be addressed
@@ -5216,7 +5220,7 @@ zero" is to be interpreted, but it is not possible to reconcile
 interpreting it as the leading bit of the field with AIS big-endian
 encoding. Settling this awaits live testing.
 
-== References ==
+== References
 
 [bibliography]
 - [[[AIS]]] https://en.wikipedia.org/wiki/Automatic_Identification_System[Automatic
@@ -5310,7 +5314,7 @@ Identification System]
 
 - [[NMEA-ADVANCE]] http://www.nmea.org/Assets/0183_advancements_nmea_oct_1_2010%20(2).pdf
 
-== Change history ==
+== Change history
 
 Version 1.0 was the initial release covering messages 1-3, 4, and 5.
 
@@ -5481,5 +5485,7 @@ Application-Specific Message (ASM) registry.
 
 Version 1.54 adds information on subarea fields in IMO289 Area Notice
 messages.
+
+Version 1.55 add Table of Contents.  Markup cleanup.
 
 // end
