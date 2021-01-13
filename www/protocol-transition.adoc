@@ -1,13 +1,17 @@
-= Moving to GPSD-NG: a Guide for Client Developers =
+= Moving to GPSD-NG: a Guide for Client Developers
+Eric S. Raymond <esr@thyrsus.com>
+v1.11, Jan 2021
+:author: Eric S. Raymond
+:date: 13 January 2021
+:email: <esr@thyrsus.com>
 :description: A Guide for Client Developers moving to GPSD-ND
 :keywords: time, GPSD, gpsd, guide, developers, client
-Eric S. Raymond <esr@thyrsus.com>
-v1.10, February 2011
+:toc:
 
 This document is mastered in asciidoc format.  If you are reading it in HTML,
 you can find the original at the GPSD project website.
 
-== Why a new protocol? ==
+== Why a new protocol?
 
 GPSD has moved to a new request/response protocol.  This move has been
 forced upon us because the old one ran out of namespace.  It was
@@ -33,7 +37,7 @@ responses to a client. This was a problem for returning things like
 [RINEX] format, which we'd like to be able to do when a device can
 report pseudoranges.
 
-== The transition plan ==
+== The transition plan
 
 We need to shed the code complexity and overhead of maintaining both
 protocols at once. This will happen sooner than it otherwise might
@@ -69,7 +73,7 @@ are likely to experience.  The rest of this document will explain both
 theory and practice, and give you specific pointers on how to fix
 client code.
 
-== Virtue is rewarded ==
+== Virtue is rewarded
 
 Since 2004, the way you were *supposed* to be using gpsd was through
 one of the client libraries (in C or Python). If you have been doing
@@ -151,7 +155,7 @@ functional equivalents in languages other than C).  Scrap your
 hand-rolled interface code!  When you use libgps, compatibility issues
 become *our* problem to solve rather than *yours*.
 
-== Binary stability ==
+== Binary stability
 
 In the past, the GPSD project has not been very good about preserving
 stability of the binary structure layout for struct gpsdata_t between
@@ -167,7 +171,7 @@ conditionalized; instead, we have moved a number of fields into
 a union. From 2.90 on, the structure layout will change rarely,
 only at major version bumps.
 
-== When the bough breaks ==
+== When the bough breaks
 
 Even virtuous clients have to worry about version skew. Supposing you
 have used libgps and not done anything exotic, you will still have
@@ -180,7 +184,7 @@ to ship libgps and gpsd updates at the same time, with sane
 package dependencies. If that goes smoothly, applications may
 not even notice the changes.  We can hope...
 
-== Why threads are gone ==
+== Why threads are gone
 
 We have deleted the two functions in the API that managed a
 library-internal thread hook.  Here's why:
@@ -197,7 +201,7 @@ library-internal thread hook.  Here's why:
    regression test for the thread stuff, and writing one would
    have been a painful expenditure of time better spent elsewhere.
 
-== On not doing things by halves ==
+== On not doing things by halves
 
 At the same time that pressure has been building to redesign the
 protocol, we've been gaining experience in gpsd's application domain
@@ -221,9 +225,9 @@ how to issue new-style commands and interpret responses. The third, if
 you have relied on the structure in a way that now breaks your
 compile, is how that structure has changed.
 
-== How the theory has changed ==
+== How the theory has changed
 
-=== Channels are gone ===
+=== Channels are gone
 
 In old protocol, when you requested data from the daemon, it would
 search for a device supplying the kind of data you had told it you
@@ -259,7 +263,7 @@ device reporting different kinds of data (e.g. a marine navigation
 system reporting both GPS and AIS) and (b) you have several devices
 reporting different kinds of data.
 
-=== From lockstep to streaming ===
+=== From lockstep to streaming
 
 A subtler change has to do with the difference between a lockstep
 or conversational interface and a streaming, stateless one.
@@ -281,7 +285,7 @@ gpsd could include other kinds of data, such as the take from
 a digital compass, water-temperature sensors, or even aircraft
 transponders.
 
-=== Asynchronous-write handling ===
+=== Asynchronous-write handling
 
 The old client code had an assumption baked into it that gps_poll()
 can do one read call end expect the daemon to hand it an entire
@@ -294,7 +298,7 @@ before, but the incoming data is now buffered; the logic to interpret
 the buffer and empty it is called only when the read() contains a \n.
 When that happens, the validity flags include the PACKET_SET mask.
 
-== How the command set has changed ==
+== How the command set has changed
 
 If your code issues old-protocol commands 'A', 'D', 'E', 'M', 'P',
 'T', 'U', or 'V', it is a wretched hive of scum and villainy that
@@ -357,7 +361,7 @@ The old 'Z' and '$' commands, used by the developers for profiling,
 have equivalents, which are presently considered unstable and thus
 are undocumented.
 
-== How the C API and gps_data_t structure has changed ==
+== How the C API and gps_data_t structure has changed
 
 gps_open() now takes a third argument and is re-entrant - it's the
 old undocumented gps_open_r().
@@ -414,14 +418,14 @@ daemon. It blocks but takes a timeout value.
 
 The raw_hook member is gone.
 
-== C++  client library changes ==
+== C++  client library changes
 
 In API version 5, the C++ library defines a single object using RAII.
 There are no explicit open() and close() methods; instead, you initialize
 the object handing it a host and server, and the connection is shut down
 when the object is deleted or goes out of scope.
 
-== Python client library changes ==
+== Python client library changes
 
 There is a new stream() method analogous to the gps_stream() call in
 the C library.  As in the C library, the query() method is gone, for

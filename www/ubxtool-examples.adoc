@@ -1,4 +1,5 @@
 = ubxtool examples
+Gary E. Miller <gem@rellim.com>
 :Author: Gary E. Miller
 :Date: 13 January 2021
 :Description: U-blox GNSS receiver configuration examples
@@ -8,7 +9,7 @@
 
 
 WARNING: This document assumes you are using gpsd from git head, or
-version 3.21 or higher.  Using older gpsd versions will fail in strange
+version 3.22 or higher.  Using older gpsd versions will fail in strange
 ways.
 
 == Introduction

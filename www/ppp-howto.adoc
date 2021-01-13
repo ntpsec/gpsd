@@ -1,12 +1,16 @@
 = Precise Point Positioning (PPP) HOWTO
+Gary E. Miller <gem@rellim.com>
+13 Jan 2021
+:author: Gary E. Miller
+:email: <gem@rellim.com>
+:date: 13 January 2021
 :description: This document is a guide getting high accuracy from your GPS using Precise Point Positioning (PPP).
 :keywords: Precise Point Positioning, PPP, GPSD, GPS
-Gary E. Miller <gem@rellim.com>
-Blursday 86 March 2020
+:toc:
 
 == WARNING
 
-This document assumes you are using gpsd versions 3.21 or git
+This document assumes you are using gpsd versions 3.22 or git
 head.  Using older versions will fail in strange ways.
 
 == Introduction
@@ -74,7 +78,7 @@ out.
 
 == Requirements
 
-This document assumes that you have installed gpsd version 3.21 or later,
+This document assumes that you have installed gpsd version 3.22 or later,
 basic knowledge of how to use _gpsd_.  Before continuing you should know how
 to start and stop _gpsd_, and how to use _cgps_ to see you current
 position and fix status.

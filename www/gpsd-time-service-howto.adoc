@@ -1,8 +1,10 @@
 = GPSD Time Service HOWTO
+Gary E. Miller <gem@rellim.com>, Eric S. Raymond <esr@thyrsus.com>
+13 Jan 2021
+:date: 13 Jan 2021
 :description: How to set up an NTP Stratum 1 server using GPSD.
 :keywords: time, GPSD, NTP, time, precision, 1PPS, PPS, stratum, jitter
-Gary E. Miller <gem@rellim.com>, Eric S. Raymond <esr@thyrsus.com>
-28 June 2020
+:toc:
 
 This document is mastered in asciidoc format.  If you are reading it in HTML,
 you can find the original at the GPSD project website.
@@ -23,7 +25,7 @@ into more detail about the steps.
   which to use yet if you have easy access to both, but knowing which
   alternatives are readily available to you is a good place to start.
 
-. Verify that your gpsd version is at least 3.21.  Many problems are
+. Verify that your gpsd version is at least 3.22.  Many problems are
   caused by the use of old versions.  When in doubt, reinstall
   gpsd from the upstream source.  Many distributions ship old
   and/or broken versions of gpsd.
@@ -408,7 +410,7 @@ is <<CHRONYDEFAULT>>. If you don't already know enough about time
 service to have a preference, the functional differences between them
 are unlikely to be significant to you; flip a coin.
 
-=== NTPSec ===
+=== NTPSec
 If you choose the ntpd option, it's best to go with the NTPsec version
 rather than legacy ntpd.  NTPsec shares some maintainers with GPSD,
 and has some significant improvements in security and performance.
@@ -1865,7 +1867,7 @@ by Jaap Winius <jwinius@rjsystems.nl>.
 
 - [[[GITLAB-SOURCE]]] https://gitlab.com/NTPsec/ntpsec[NTPSec source on Gitlab]
 
-== Changelog ==
+== Changelog
 
 1.1, Nov 2013::
       Initial release.
@@ -1925,4 +1927,6 @@ by Jaap Winius <jwinius@rjsystems.nl>.
 2.11 June 2019::
     Check all links, and update to https where possible
 
+2.12 January 2021::
+    Add Table of Contents.  Markup cleanup.
 // end

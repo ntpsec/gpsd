@@ -1,13 +1,17 @@
-= Introduction to Time Service =
-:description: A primer on precision time sources and services.
-:keywords: time, UTC, atomic clock, GPS, NTP
+= Introduction to Time Service
 Eric S. Raymond <esr@thyrsus.com>
-v1.5, 2015-12-08
+v1.6, Jan 2021
+:author: Eric S. Raymond
+:date: 13 January 2021
+:description: A primer on precision time sources and services.
+:email: <esr@thyrsus.com>
+:keywords: time, UTC, atomic clock, GPS, NTP
+:toc:
 
 This document is mastered in asciidoc format.  If you are reading it in HTML,
 you can find the original at the GPSD project website.
 
-== Introduction ==
+== Introduction
 
 This is a background paper on technological means for high-precision
 time measurement. We discuss time source types, relative accuracy,
@@ -15,7 +19,7 @@ relative cost, and how those figures of merit have changed in recent
 decades. A brief introduction to NTP (Network Time Protocol) is
 included.
 
-== Use cases for precision time service ==
+== Use cases for precision time service
 
 More applications than are commonly realized require precise time;
 which, in practice, means time accurate to a tenth of a second or
@@ -47,7 +51,7 @@ width of its short-term random variation from its "correct" time -
 range of interest for most precision time applications is from 100 ms
 down to 1000 ns.
 
-== Time service types ==
+== Time service types
 
 A "primary time source" is a very high-precision, very stable
 oscillator (popularly called an "atomic clock") used as a source
@@ -88,7 +92,7 @@ landline phone; the U.S.'s has two, supported by NIST and the U.S.
 Naval Observatory. NIST has a claimed accuracy of "a few milliseconds"
 <<ACTS1>>; USNO says 4 ms <<ACTS2>>.
 
-== Clock types ==
+== Clock types
 
 A clock, in this context, is a device for delivering an approximation
 of a national time standard at a user's location.
@@ -156,7 +160,7 @@ shipped with significant and variable delay after 1PPS, typically on
 the order of 100 ms. By contrast, 1PPS time output total error will
 typically be close to 1&mu;s.
 
-== Basics of NTP ==
+== Basics of NTP
 
 NTP (Network Time Protocol) is a set of protocols that attempts to
 synchronize computer clocks across the Internet - ultimately, Universal
@@ -209,7 +213,7 @@ Jitter induced by variable WAN propagation delays
 impractical to try to improve the accuracy of NTP time to much better
 than the "a few tens of milliseconds" of <<RFC-5905>>.
 
-== Cost-effective clocks ==
+== Cost-effective clocks
 
 There is about three orders of magnitude between the best achievable
 wide-area-network accuracy and even the lowest-end GPS-constrained
@@ -256,7 +260,7 @@ least one major timing-systems vendor (Spectracom) bailed out of the
 time-radio market entirely, and it is not clear there are any high-end
 vendors at all left in the U.S.
 
-== Summary ==
+== Summary
 
 Some figures in this table are from <<GPSD-HOWTO>> and are explained
 in more detail there.
@@ -280,12 +284,12 @@ in more detail there.
 |Jitter of in-band GPS time     | > 100 ms (100000000 ns)
 |==============================================================
 
-== Further Reading ==
+== Further Reading
 
 You can find a practical how-to on setting up a local Stratum 1 time
 server using GPSD and an inexpensive GPS at <<GPSD-HOWTO>>.
 
-== References ==
+== References
 
 [bibliography]
 
@@ -324,7 +328,7 @@ Clock via Modem]
 
 - [[WWVB]] http://www.nist.gov/pml/div688/grp40/wwvb.cfm[NIST Radio Station WWVB]
 
-== History ==
+== History
 
 v1.0, 2015-03-10::
       Initial version.
@@ -347,5 +351,8 @@ v1.5, 2015-12-10::
 
 v1.6, 2019-06-02::
       Fix linkrot, and link to https where possible.
+
+v1.7, 2021-01-13::
+      Add Table of Contents.  Cleanup markup.
 
 //end
