@@ -514,7 +514,7 @@ static int json_internal_read_object(const char *cp,
             } else {
                 lptr = json_target_address(cursor, parent, offset);
             }
-            if (lptr != NULL) {
+            if (lptr != NULL)
                 switch (cursor->type) {
                 case t_byte:
                     {
@@ -599,8 +599,7 @@ static int json_internal_read_object(const char *cp,
                     }
                     break;
                 }
-            }
-        FALLTHROUGH
+            FALLTHROUGH
         case post_element:
             if (isspace((unsigned char) *cp))
                 continue;
@@ -623,7 +622,7 @@ static int json_internal_read_object(const char *cp,
         return JSON_ERR_EMPTY;
     }
 
-good_parse:
+  good_parse:
     /* in case there's another object following, consume trailing WS */
     while (isspace((unsigned char) *cp))
         ++cp;
