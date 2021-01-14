@@ -2379,9 +2379,8 @@ if adoc_prog:
     for stem, leaf in adocfiles:
         asciidocs.append('www/%s.html' % leaf)
         env.Command('www/%s.html' % leaf, '%s.adoc' % stem,
-                    ['cd %s;'
-                     '%s -a compat -b html5 -a toc -o www/%s.html '
-                     '%s.adoc' % (variantdir, adoc_prog, leaf, stem)])
+                    ['cd %s; %s -b html5 -o www/%s.html %s.adoc' %
+                     (variantdir, adoc_prog, leaf, stem)])
 else:
     announce("WARNING: Neither AsciiDoctor nor AsciiDoc found.\n"
              "WARNING: Some documentation and html will not be built.",
