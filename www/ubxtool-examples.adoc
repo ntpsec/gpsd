@@ -4,7 +4,7 @@ Gary E. Miller <gem@rellim.com>
 :Date: 13 January 2021
 :Description: U-blox GNSS receiver configuration examples
 :Email: <gem@rellim.com>
-:keywords: u-blox, examples, configuration
+:keywords: u-blox, examples, configuration, sudo
 :robots: index,follow
 :sectlinks:
 :toc: left
@@ -40,6 +40,21 @@ You also need a copy of the "Interface Description" for your exact
 u-blox device.  The examples here will refer to a lot of messages and
 variables that are defined in that document.  Keep it open while reading
 this document and refer to it often.
+
+=== Sudo?  Sudon't!
+
+For some reason some users persist in using sudo with ubxtool.  This is
+wrong for many reasons:
+
+* ubxtool never needs root access.
+
+* sudo is *_not_* the same as running as root.  Using sudo with some of
+these examples *_will_* break them.
+
+* sudo is "Security Theater".  Having sudo enabled on a computer makes
+it demonstrably less secure.
+
+If you must be root, then become, and stay root.  Just sudon't.
 
 === Protocol Version
 
