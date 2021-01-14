@@ -5,6 +5,8 @@ Gary E. Miller <gem@rellim.com>
 :Description: U-blox GNSS receiver configuration examples
 :Email: <gem@rellim.com>
 :keywords: u-blox, examples, configuration
+:robots: index,follow
+:title: ubxtool examples
 :toc:
 
 

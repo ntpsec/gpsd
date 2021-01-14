@@ -2,10 +2,12 @@
 Eric S. Raymond <esr@thyrsus.com>
 v2.24, Jan 2021
 :author: Eric S. Raymond
-:email: <esr@thyrsus.com>
 :date: 13 January 2021
 :description: A programmer's guide to NMEA0183, the GPS protocol reporting standard
+:email: <esr@thyrsus.com>
 :keywords: NMEA0183, GPS, standard, protocol
+:robots: index,follow
+:title: NMEA Revealed
 :toc:
 
 NMEA 0183 is a proprietary protocol issued by the National Marine

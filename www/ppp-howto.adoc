@@ -2,10 +2,12 @@
 Gary E. Miller <gem@rellim.com>
 13 Jan 2021
 :author: Gary E. Miller
-:email: <gem@rellim.com>
 :date: 13 January 2021
 :description: This document is a guide getting high accuracy from your GPS using Precise Point Positioning (PPP).
+:email: <gem@rellim.com>
 :keywords: Precise Point Positioning, PPP, GPSD, GPS
+:robots: index,follow
+:title: Precise Point Positioning (PPP) HOWTO
 :toc:
 
 == WARNING

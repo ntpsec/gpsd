@@ -6,6 +6,8 @@ v1.55, Jan 2021
 :description: The AIVDM Marine AIS protocol demystified, for programmers.
 :email: <esr@thyrsus.com>
 :keywords: AIS, AIVDM, AIVDO, standard, protocol, Automatic Identification System
+:robots: index,follow
+:title: = AIVDM/AIVDO protocol decoding
 :toc:
 
 This document is mastered in asciidoc format.  If you are reading it in HTML,
