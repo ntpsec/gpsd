@@ -7,7 +7,7 @@ Gary E. Miller <gem@rellim.com>
 :email: <gem@rellim.com>
 :keywords: Precise Point Positioning, PPP, GPSD, GPS
 :robots: index,follow
-:title: Precise Point Positioning (PPP) HOWTO
+:sectlinks:
 :toc:
 
 == WARNING

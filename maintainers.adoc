@@ -1,4 +1,10 @@
 = GPSD area maintainers =
+:date: 13 January 2021
+:description: GPSD maintainers
+:keywords: GPSD, mainatiners
+:robots: index,follow
+:sectlinks:
+:toc:
 
 This file points at responsible submaintainers for various portions
 of the GPSD code, packaging, and ports.

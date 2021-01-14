@@ -3,7 +3,7 @@
 :description: Steps for Building GPSD from source
 :keywords: GPSD, GPS, installation
 :robots: index,follow
-:title: Building GPSD from source
+:sectlinks:
 :toc:
 
 This is a guide to building GPSD from a bare source tree.  It includes

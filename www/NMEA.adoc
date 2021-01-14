@@ -7,7 +7,7 @@ v2.24, Jan 2021
 :email: <esr@thyrsus.com>
 :keywords: NMEA0183, GPS, standard, protocol
 :robots: index,follow
-:title: NMEA Revealed
+:sectlinks:
 :toc:
 
 NMEA 0183 is a proprietary protocol issued by the National Marine

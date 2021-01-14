@@ -6,6 +6,7 @@ v1.20, Jan 2021
 :description: This document is a guide to interfacing client applications with GPSD.
 :email: <esr@thyrsus.com>
 :keywords: time, GPSD, NTP, time, precision, 1PPS, PPS, stratum, jitter
+:sectlinks:
 :toc:
 
 == Introduction

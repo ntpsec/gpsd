@@ -6,7 +6,7 @@ Gary E. Miller <gem@rellim.com>
 :Email: <gem@rellim.com>
 :keywords: u-blox, examples, configuration
 :robots: index,follow
-:title: ubxtool examples
+:sectlinks:
 :toc:
 
 

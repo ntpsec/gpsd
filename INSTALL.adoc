@@ -5,7 +5,7 @@
 :email: <esr@thyrsus.com>
 :keywords: GPSD, GPS, installation
 :robots: index,follow
-:title: GPSD Installation Instructions
+:sectlinks:
 :toc:
 
 Here are the steps for installing GPSD and verifying its performance.
