@@ -6,7 +6,7 @@
 :keywords: GPSD, GPS, installation
 :robots: index,follow
 :sectlinks:
-:toc:
+:toc: left
 
 Here are the steps for installing GPSD and verifying its performance.
 They assume you have GPSD available as an installable binary package,

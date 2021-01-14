@@ -4,7 +4,7 @@
 :keywords: GPSD, GPS, installation
 :robots: index,follow
 :sectlinks:
-:toc:
+:toc: left
 
 This is a guide to building GPSD from a bare source tree.  It includes
 guidance on how to cross-build the package.  This document overlaps and

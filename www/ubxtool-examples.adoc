@@ -7,7 +7,7 @@ Gary E. Miller <gem@rellim.com>
 :keywords: u-blox, examples, configuration
 :robots: index,follow
 :sectlinks:
-:toc:
+:toc: left
 
 
 WARNING: This document assumes you are using gpsd from git head, or

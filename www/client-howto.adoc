@@ -7,7 +7,7 @@ v1.20, Jan 2021
 :email: <esr@thyrsus.com>
 :keywords: time, GPSD, NTP, time, precision, 1PPS, PPS, stratum, jitter
 :sectlinks:
-:toc:
+:toc: left
 
 == Introduction
 
