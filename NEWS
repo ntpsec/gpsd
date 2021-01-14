@@ -1,6 +1,7 @@
                         GPSD project news
 
 3.22.1~dev: unreleased
+  Allow either asciidoc or asciidoctor, to build from AsciiDoc files.
 
 3.22: 2020-01-08
   Added client/gpscsv to convert gpsd JSON to csv.

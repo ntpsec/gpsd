@@ -2355,7 +2355,13 @@ for doc in doc_files:
 
 # asciidoc documents
 asciidocs = []
-if env.WhereIs('asciidoctor'):
+# prefer AsciiDoctor, which needs a lot of Ruby
+adoc_prog = env.WhereIs('asciidoctor')
+if not adoc_prog:
+    # fall back to AsciiDoc, which only needs Python
+    adoc_prog = env.WhereIs('asciidoc')
+
+if adoc_prog:
     adocfiles = (('build', 'building'),
                  ('INSTALL', 'installation'),
                  ('README', 'README'),
@@ -2374,10 +2380,10 @@ if env.WhereIs('asciidoctor'):
         asciidocs.append('www/%s.html' % leaf)
         env.Command('www/%s.html' % leaf, '%s.adoc' % stem,
                     ['cd %s;'
-                     'asciidoctor -a compat -b html5 -a toc -o www/%s.html '
-                     '%s.adoc' % (variantdir, leaf, stem)])
+                     '%s -a compat -b html5 -a toc -o www/%s.html '
+                     '%s.adoc' % (variantdir, adoc_prog, leaf, stem)])
 else:
-    announce("WARNING: asciidoctor not found.\n"
+    announce("WARNING: Neither AsciiDoctor nor AsciiDoc found.\n"
              "WARNING: Some documentation and html will not be built.",
              end=True)
 

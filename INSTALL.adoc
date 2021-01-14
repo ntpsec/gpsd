@@ -1,9 +1,12 @@
 = GPSD Installation Instructions
-:title: GPSD Installation Instructions
+:author: Eric S. Raymond
+:date: 13 January 2021
 :description: Steps for installing GPSD and verifying its performance.
+:email: <esr@thyrsus.com>
 :keywords: GPSD, GPS, installation
-:author: Eric S. Raymond <esr@thyrsus.com>
-:robots:index,follow
+:robots: index,follow
+:title: GPSD Installation Instructions
+:toc:
 
 Here are the steps for installing GPSD and verifying its performance.
 They assume you have GPSD available as an installable binary package,
@@ -102,6 +105,9 @@ various additional features have additional prerequisites:
 |python-cairo                 | for python-GI
 |Qt                           | libQgpsmm depends on this
 |===============================================================================
+
+The package AsciiDoc may be substituted for AsciiDoctor.  If both are
+installed then AsciiDoctor is preferred.
 
 Some ncurses packages contain the terminfo library; some break it out
 separately as libtinfo5 or libtinfo.

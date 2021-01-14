@@ -1,4 +1,10 @@
 = Building GPSD from source
+:date: 13 January 2021
+:description: Steps for Building GPSD from source
+:keywords: GPSD, GPS, installation
+:robots: index,follow
+:title: Building GPSD from source
+:toc:
 
 This is a guide to building GPSD from a bare source tree.  It includes
 guidance on how to cross-build the package.  This document overlaps and
@@ -248,14 +254,23 @@ process:
 |libxslt            | xsltproc is used to build man pages from xml
 |docbook-xsl        | style file for xml to man translation
 |xmlto              | DocBook formatter program
-|asciidoctor        | Documentation front end with light markup
 |============================================================================
+
+To rebuild files from AsciiDoc (.adoc) files you need one of:
+
+|============================================================================
+|asciidoctor        | Documentation front end with light markup
+|asciidoc           | Documentation front end with light markup
+|============================================================================
+
+If both are present, then AsciiDoctor is preferred.
 
 On Gentoo systems those packages are named:
 
 |==============================================================================
 |app-text/xmlto                   | DocBook formatter program
 |app-text/asciidoctor             | Documentation front end with light markup
+|app-text/asciidoc                | Documentation front end with light markup
 |==============================================================================
 
 The build degrades gracefully in the absence of any of these. You should
