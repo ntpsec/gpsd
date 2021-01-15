@@ -46,7 +46,7 @@ this document and refer to it often.
 For some reason some users persist in using sudo with ubxtool.  This is
 wrong for many reasons:
 
-* ubxtool never needs root access.
+* ubxtool never needs root access, but will run fine as root.
 
 * sudo is *_not_* the same as running as root.  Using sudo with some of
 these examples *_will_* break them.
@@ -823,7 +823,7 @@ LOT of data.
 To enable the RTCM 3 output on the USB port:
 
 ----
-$ ubxtool -e RTCM3 -P 27 -v 2 
+$ ubxtool -e RTCM3 -P 27 -v 2
 ubxtool: enable RTCM3
 
 sent:
@@ -846,7 +846,7 @@ RTCM3 packet: type 1077
 To be able to do anything else, you must disable the RTCM3:
 
 ----
-$ ubxtool -d RTCM3 -P 27 -v 2 
+$ ubxtool -d RTCM3 -P 27 -v 2
 ubxtool: disable RTCM3
 [...]
 ----
@@ -1126,6 +1126,135 @@ UBX-CFG-VALGET:
   layers (ram)
     item CFG-SIGNAL-BDS_B2_ENA/0x1031000e val 1
 ----
+
+== Saving U-blox configuration
+
+Now that you have your GNSS receiver configuration just the way you want
+it, you will want to save it.  Saving is very dependent on your receiver
+configuration.  For now, we'll look at the legacy, pre-9, way of doing
+things.
+
+A u-blox receiver may have any, all, or none of: Battery backed RAM (BBR),
+Flash, Electrically Erasable Programmable ROM (EEPROM) and SPI Flash.
+If you have BBR that uses a real battery, the battery will only last a few
+years.  Some BBR uses a Super Capacitor that will not degrade with age.
+
+The current configuration is stored in RAM, and will disappear on power
+loss, device reset, configuration load, or configuration change.
+
+It is not easy to tell what storage options are available.  There may
+even be none.  You can sometimes tell if your device has flash with
+MON-VER:
+
+----
+$ ubxtool -p MON-VER -P 27.12
+[...]
+UBX-MON-VER:
+  swVersion EXT CORE 1.00 (f10c36)
+  hwVersion 00190000
+  extension ROM BASE 0x118B2060
+  extension FWVER=HPG 1.13
+  extension PROTVER=27.12
+  extension MOD=ZED-F9P
+  extension GPS;GLO;GAL;BDS
+  extension SBAS;QZSS
+----
+
+"swVersion EXT CORE" means your firmware loaded from FLASH memory, so
+you have FLASH memory.  It also means that you can update the firmware
+on your device.
+
+If you have no FLASH, then you will see "swVersion ROM CORE":
+
+----
+$ ubxtool -p MON-VER -P 18
+[...]
+UBX-MON-VER:
+  swVersion ROM CORE 3.01 (107888)
+  hwVersion 00080000
+  extension FWVER=SPG 3.01
+  extension PROTVER=18.00
+  extension GPS;GLO;GAL;BDS
+  extension SBAS;IMES;QZSS
+----
+
+The only way to detect the other storage options is to try to store
+into, and load from, each storage option.  And see which worked.  I
+leave that as an exercise for the reader.  Ubxtool just tries to store
+everywhere and see what sticks.
+
+First we need a data item to store.  The Dynamic Platform Model (dynModel)
+is a common one to change.  See what it is currently:
+
+----
+$ ubxtool -p CFG-NAV5  -P 27 -v 2
+UBX-CFG-NAV5:
+ mask 0xffff dynModel 0 fixmode 3 fixedAlt 0 FixedAltVar 10000
+ minElev 10 drLimit 0 pDop 250 tDop 250 pAcc 100 tAcc 350
+ staticHoldThresh 0 dgpsTimeOut 60 cnoThreshNumSVs 0
+ cnoThresh 0 res 0 staticHoldMaxDist 0 utcStandard 0
+ reserved x0 0
+   dynModel (Portable) fixMode (Auto 2D/3D) utcStandard (Default)
+   mask (dyn minEl posFixMode drLim posMask timeMask staticHoldMask
+         dgpsMask cnoThreshold utc)
+----
+
+Your can see that dynModel is set to "Portable" (0).  The most common
+default setting.  But you want to use your receiver on your boat, so you
+want to set dynModel to "Sea" (5).  Then verify that worked:
+
+----
+ubxtool -p MODEL,5  -P 27 -v 2
+connected to tcp://localhost:2947
+ubxtool: poll MODEL,5
+
+sent:
+UBX-CFG-NAV5:
+ mask 0x1 dynModel 5 fixmode 0 fixedAlt 0 FixedAltVar 0
+ minElev 0 drLimit 0 pDop 0 tDop 0 pAcc 0 tAcc 0
+ staticHoldThresh 0 dgpsTimeOut 0 cnoThreshNumSVs 0
+ cnoThresh 0 res 0 staticHoldMaxDist 0 utcStandard 0
+ reserved x0 0
+   dynModel (Sea) fixMode (Unk) utcStandard (Default)
+   mask ()
+[...]
+
+$ ubxtool -p CFG-NAV5  -P 27 -v 2
+[...]
+UBX-CFG-NAV5:
+ mask 0xffff dynModel 5 fixmode 3 fixedAlt 0 FixedAltVar 10000
+ minElev 10 drLimit 0 pDop 250 tDop 250 pAcc 100 tAcc 350
+ staticHoldThresh 0 dgpsTimeOut 60 cnoThreshNumSVs 0
+ cnoThresh 0 res 0 staticHoldMaxDist 0 utcStandard 0
+ reserved x0 0
+   dynModel (Sea) fixMode (Auto 2D/3D) utcStandard (Default)
+   mask (dyn minEl posFixMode drLim posMask timeMask staticHoldMask
+         dgpsMask cnoThreshold utc)
+----
+
+It did, but if we now power down the receiver, then it will revert to
+the last saved configuration or default.  So we want to save the current
+configuration in RAM, as much as possible, to whatever storage we have,
+if possible.  The "-p SAVE" option does that:
+
+----
+$ # ubxtool -p SAVE  -P 27 -v 2
+connected to tcp://localhost:2947
+ubxtool: poll SAVE
+
+sent:
+UBX-CFG-CFG:
+  clearMask: 0x0 ()
+  saveMask: 0xf1f (ioPort msgConf infMsg navConf rxmConf senConf rinvConf
+                   antConf logConf)
+  loadMask: 0xf1f (ioPort msgConf infMsg navConf rxmConf senConf rinvConf
+                   antConf logConf)
+  deviceMask: 0x17 (devBBR devFlash devEEPROM devSpiFlash)
+----
+
+You can now power down your receiver.  Power it back up, and verify
+with "-p CFG-NAV5" that dynModel "Sea" was saved.  Or, most likely, for
+almost all GPS mice, not.
 
 
 // vim: set syntax=asciidoc:
