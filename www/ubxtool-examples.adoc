@@ -1,7 +1,7 @@
 = ubxtool examples
 Gary E. Miller <gem@rellim.com>
 :Author: Gary E. Miller
-:Date: 13 January 2021
+:Date: 15 January 2021
 :Description: U-blox GNSS receiver configuration examples
 :Email: <gem@rellim.com>
 :keywords: u-blox, examples, configuration, sudo
@@ -136,6 +136,23 @@ $ ubxtool -e BINARY
 $ ubxtool -d NMEA
 ----
 
+== ACK-ACK
+
+ACK-ACK is the sound of a cat coughing up a hairball.  Otherwise it is
+not of much use to us.  The u-blox documentation claims that every well
+formed CFG message sent to one of their GNSS receivers will receive a
+UBX-ACK-ACK or UBX-ACK-NAK in response.  That is not always true.  Valid
+messages may elicit no ACK-ACK or ACK-NAK.  Invalid ones may invoke an
+ACK-ACK, yet not be executed.  The only thing you can count on is that
+an ACK-NAK meant you sent something invalid.
+
+Always double check that any settings changes stuck.
+
+This text, and these examples will ignore ACK-ACK responses.  If any
+cause an ACK-NAK for you then you either found a bug in this document, your
+receiver does not support the requested operation, or you mistypes
+something.
+
 == Dynamic Platform Model
 
 The most common variable mis-configured in a u-blox receiver is the
@@ -184,7 +201,7 @@ UBX-CFG-NAV5:
 ----
 
 
-=== Changing Dynamic Platform Model with Configuration Items
+=== With Configuration Items
 
 If the receiver is a 9-series one then you can change the model using
 Configuration Items.  These allow you to get, set and delete individual
@@ -267,7 +284,7 @@ Pedestrian, and then confirm the setting:
 ----
 $ ubxtool -z CFG-NAVSPG-DYNMODEL,0
 [...]
-$ ubxtool -z CFG-NAVSPG-DYNMODEL,0
+$ ubxtool -g CFG-NAVSPG-DYNMODEL,0
 [...]
 UBX-CFG-VALGET:
  version 1 layer 0 position 0
@@ -889,7 +906,7 @@ experiments with gpsprof, it will be hard for you to improve on the
 defaults.  If you still must fiddle, then read on, after completing the
 above section on Initial Setup.
 
-=== Changing Constellations
+=== Checking Constellations
 
 First you must understand what your GNSS receiver is capable of.  Find
 this out with the UBX-MON-GNSS message.
@@ -1199,7 +1216,7 @@ UBX-CFG-NAV5:
          dgpsMask cnoThreshold utc)
 ----
 
-Your can see that dynModel is set to "Portable" (0).  The most common
+You can see that dynModel is set to "Portable" (0).  The most common
 default setting.  But you want to use your receiver on your boat, so you
 want to set dynModel to "Sea" (5).  Then verify that worked:
 
@@ -1256,5 +1273,81 @@ You can now power down your receiver.  Power it back up, and verify
 with "-p CFG-NAV5" that dynModel "Sea" was saved.  Or, most likely, for
 almost all GPS mice, not.
 
+=== With Configuration Items
+
+UBX-CFG-CFG, used by "-p SAVE", is deprecated in protocol versions
+greater than 23.01.  It also works differently than before.  So on
+newer receivers you should clear, save, and load configurations with
+Configuration Items.  Before continuing this section, read the ubxtool
+man page on Configuration Items.
+
+As always, this example starts with a receiver that has just been reset
+to its default configuration.  Check the value of dynModel in all four
+possible layers.  One at a time, as the LAYER option to UBX-CFG-VALGET is
+an index..  The layers, as used by UBX-CFG-VALGET, are:
+
+* 0 -- RAM -- running value
+* 1 -- BBR -- value saved in BBR
+* 2 -- Flash -- value saved in Flash
+* 7 -- Default -- the firmware default value
+
+----
+$ ubxtool -g CFG-NAVSPG-DYNMODEL,0
+[...]
+UBX-CFG-VALGET:
+ version 1 layer 0 position 0
+  layers (ram)
+    item CFG-NAVSPG-DYNMODEL/0x20110021 val 0
+[...]
+$ ubxtool -g CFG-NAVSPG-DYNMODEL,1
+[...]
+UBX-ACK-NAK:
+  NAK to Class x06 (CFG) ID x8b (VALGET)
+[...]
+$ ubxtool -g CFG-NAVSPG-DYNMODEL,2
+[...]
+UBX-ACK-NAK:
+  NAK to Class x06 (CFG) ID x8b (VALGET)
+[...]
+$ ubxtool -g CFG-NAVSPG-DYNMODEL,7
+[...]
+UBX-CFG-VALGET:
+ version 1 layer 7 position 0
+  layers (default)
+    item CFG-NAVSPG-DYNMODEL/0x20110021 val 0
+----
+
+The current dynModel is 0, and the default dynModel is 0, but you see
+a NAK for BBR and Flash!  Nothing wrong there, it is just telling that
+dynModel is not set in BBR or Flash.  We can fix that, by setting
+dynModel to 2 (Stationary).  Here is how to do that in all layers,
+except the default layer.
+
+----
+$ ubxtool -z CFG-NAVSPG-DYNMODEL,2
+[...]
+ UBX-CFG-VALSET:
+ version 0 layer 0x7 transaction 0x0 reserved 0
+  layers (ram bbr flash) transaction (Transactionless)
+    item CFG-NAVSPG-DYNMODEL/0x20110021 val 2
+[...]
+$ ubxtool -g CFG-NAVSPG-DYNMODEL,2
+[...]
+UBX-CFG-VALGET:
+ version 1 layer 2 position 0
+  layers (flash)
+    item CFG-NAVSPG-DYNMODEL/0x20110021 val 2
+----
+
+The -z without the third, layer, argument sets all of: RAM, BBR, and
+flash.  After doing the above, you can read the value of dynModel saved
+in Flash.  Not shown, but also in RAM and BBR.
+
+The LAYER index is not to be confused by the LAYER bitmap used by
+UBX-CFG-VALDEL and UBX-CFG-VALSET.  The bitmap for those is:
+
+* 1 -- RAM layer
+* 2 -- BBR layer
+* 4 -- Flash layer
 
 // vim: set syntax=asciidoc:
