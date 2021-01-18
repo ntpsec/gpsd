@@ -2362,25 +2362,25 @@ if not adoc_prog:
     adoc_prog = env.WhereIs('asciidoc')
 
 if adoc_prog:
-    adocfiles = (('build', 'building'),
-                 ('INSTALL', 'installation'),
-                 ('README', 'README'),
-                 ('www/AIVDM', 'AIVDM'),
-                 ('www/client-howto', 'client-howto'),
-                 ('www/gpsd-time-service-howto', 'gpsd-time-service-howto'),
-                 ('www/NMEA', 'NMEA'),
-                 ('www/ppp-howto', 'ppp-howto'),
-                 ('www/protocol-evolution', 'protocol-evolution'),
-                 ('www/protocol-transition', 'protocol-transition'),
-                 ('SUPPORT', 'SUPPORT'),
-                 ('www/time-service-intro', 'time-service-intro'),
-                 ('www/ubxtool-examples', 'ubxtool-examples'),
+    adocfiles = (('build', 'www/building'),
+                 ('INSTALL', 'www/installation'),
+                 ('README', 'www/README'),
+                 ('www/AIVDM', 'www/AIVDM'),
+                 ('www/client-howto', 'www/client-howto'),
+                 ('www/gpsd-time-service-howto', 'www/gpsd-time-service-howto'),
+                 ('www/NMEA', 'www/NMEA'),
+                 ('www/ppp-howto', 'www/ppp-howto'),
+                 ('www/protocol-evolution', 'www/protocol-evolution'),
+                 ('www/protocol-transition', 'www/protocol-transition'),
+                 ('SUPPORT', 'www/SUPPORT'),
+                 ('www/time-service-intro', 'www/time-service-intro'),
+                 ('www/ubxtool-examples', 'www/ubxtool-examples'),
                  )
-    for stem, leaf in adocfiles:
-        asciidocs.append('www/%s.html' % leaf)
-        env.Command('www/%s.html' % leaf, '%s.adoc' % stem,
-                    ['cd %s; %s -b html5 -o www/%s.html %s.adoc' %
-                     (variantdir, adoc_prog, leaf, stem)])
+    for src, tgt in adocfiles:
+        asciidocs.append('%s.html' % tgt)
+        env.Command('%s.html' % tgt, '%s.adoc' % src,
+                    ['cd %s; %s -b html5 -o %s.html %s.adoc' %
+                     (variantdir, adoc_prog, tgt, src)])
 else:
     announce("WARNING: Neither AsciiDoctor nor AsciiDoc found.\n"
              "WARNING: Some documentation and html will not be built.",
