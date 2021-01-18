@@ -2339,7 +2339,7 @@ env.Command('www/hardware.html',
 maninstall = []
 if manbuilder:
     for manpage in all_manpages:
-        if not manbuilder and not os.path.exists(manpage):
+        if not os.path.exists(manpage):
             continue
         section = manpage.split(".")[1]
         dest = os.path.join(installdir('mandir'), "man" + section,
@@ -2377,10 +2377,10 @@ if adoc_prog:
                  ('www/ubxtool-examples', 'www/ubxtool-examples'),
                  )
     for src, tgt in adocfiles:
-        asciidocs.append('%s.html' % tgt)
-        env.Command('%s.html' % tgt, '%s.adoc' % src,
-                    ['cd %s; %s -b html5 -o %s.html %s.adoc' %
-                     (variantdir, adoc_prog, tgt, src)])
+        target = '%s.html' % tgt
+        asciidocs.append(target)
+        env.Command(target, '%s.adoc' % src,
+                    ['%s -b html5 -o $TARGET $SOURCE' % (adoc_prog)])
 else:
     announce("WARNING: Neither AsciiDoctor nor AsciiDoc found.\n"
              "WARNING: Some documentation and html will not be built.",
