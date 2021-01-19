@@ -1,16 +1,21 @@
 = ppscheck(8)
 :author: Eric S. Raymond
+:date: 19 January 2021
 :email: <esr@thyrsus.com.>
-:date: 18 January 2021
+:keywords: gps, PPS, ppscheck
 :manmanual: GPSD Documentation
 :mansource: The GPSD Project
+:robots: index,follow
+:sectlinks:
+:toc: left
 :type: manpage
+:webfonts!:
 
-== Name
+== NAME
 
 ppscheck - tool to check a serial port for PPS
 
-== Synopsis
+== SYNOPSIS
 
 *ppscheck* [-?]  [--help] [--version] [-h] [-V] device
 
@@ -67,7 +72,7 @@ contact the vendor for confirmation that your device does supply PPS.
 
 *gpsd*(8)
 
-== Resources
+== RESOURCES
 
 *Project web site:* https://gpsd.io
 

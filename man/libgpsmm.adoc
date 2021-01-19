@@ -1,16 +1,21 @@
 = libgpsmm(3)
 :Author: Alfredo Pironti
-:Date: 18 January 2021
+:Date: 19 January 2021
 :email: <alfredio@users.sourceforge.net>
+:keywords: gps, libgpsmm, libQgpsm
 :manmanual: GPSD Documentation
 :mansource: The GPSD Project
+:robots: index,follow
+:sectlinks:
+:toc: left
 :type: manpage
+:webfonts!:
 
-== Name
+== NAME
 
 libgpsmm, libQgpsm - C++ and QT class wrappers for the GPS daemon
 
-== Synopsis
+== SYNOPSIS
 
 $$C++:$$
 
@@ -46,7 +51,7 @@ destructor.
 
 *gpsd*(8), *gps*(1), *libgps*(3)
 
-== Resources
+== RESOURCES
 
 *Project web site:* https://gpsd.io
 

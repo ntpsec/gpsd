@@ -1,16 +1,21 @@
 = gpsdctl(8)
 :author: Eric S. Raymond
+:date: 19 January 2021
 :email: <esr@thyrsus.com.>
-:date: 18 January 2021
+:keywords: gps, gpsdctl
 :manmanual: GPSD Documentation
 :mansource: The GPSD Project
+:robots: index,follow
+:sectlinks:
+:toc: left
 :type: manpage
+:webfonts!:
 
-== Name
+== NAME
 
 gpsdctl -- tool for sending commands to gpsd over its control socket
 
-== Synopsis
+== SYNOPSIS
 
 *gpsdctl* _action_ _device_
 
@@ -51,7 +56,7 @@ tool launches it. It defaults to an empty string.
 *gpsd*(8), *gpsctl*(1), *gps*(1), *libgps*(3), *libgpsmm*(3), *gpsprof*(1),
 *gpsfake*(1).
 
-== Resources
+== RESOURCES
 
 *Project web site:* https://gpsd.io
 
