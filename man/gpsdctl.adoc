@@ -1,15 +1,14 @@
 = gpsdctl(8)
-Eric S. Raymond <esr@thyrsus.com.>
-3.22.1~dev, 18 January 2021
-:email: esr@thyrsus.com.
+:author: Eric S. Raymond
+:email: <esr@thyrsus.com.>
+:date: 18 January 2021
 :manmanual: GPSD Documentation
 :mansource: The GPSD Project
-:Name: Eric S. Raymond
 :type: manpage
 
 == Name
 
-gpsdctl - tool for sending commands to gpsd over its control socket
+gpsdctl -- tool for sending commands to gpsd over its control socket
 
 == Synopsis
 
@@ -45,12 +44,12 @@ tool launches it. It defaults to an empty string.
 == RETURN VALUES
 
 *0*:: on success.
-
 *1*:: if the action was unknown or the write to the control socket failed,
 
 == SEE ALSO
 
-gpsd(8), gpsctl(1), gps(1), libgps(3), libgpsmm(3), gpsprof(1), gpsfake(1).
+*gpsd*(8), *gpsctl*(1), *gps*(1), *libgps*(3), *libgpsmm*(3), *gpsprof*(1),
+*gpsfake*(1).
 
 == Resources
 
