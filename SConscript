@@ -232,7 +232,7 @@ all_manpages = {
     "man/libgpsmm.3": "man/libgpsmm.adoc",
     "man/libQgpsmm.3": "man/libgpsmm.adoc",
     "man/ntpshmmon.1": "man/ntpshmmon.xml",
-    "man/ppscheck.8": "man/ppscheck.xml",
+    "man/ppscheck.8": "man/ppscheck.adoc",
     "man/ubxtool.1": "man/ubxtool.xml",
     "man/xgps.1": "man/xgps.xml",
     "man/xgpsspeed.1": "man/xgps.xml",
