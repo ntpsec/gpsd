@@ -1,0 +1,95 @@
+= gpscat(1)
+:author: Eric S. Raymond
+:date: 19 January 2021
+:email: <esr@thyrsus.com.>
+:keywords: gps, gpscat
+:manmanual: GPSD Documentation
+:mansource: The GPSD Project
+:robots: index,follow
+:sectlinks:
+:toc: left
+:type: manpage
+:webfonts!:
+
+== NAME
+
+gpscat - dump the output from a GPS
+
+== SYNOPSIS
+
+*gpscat* [OPTIONS] file-or-serial-port
+
+*gpscat* -h
+
+*gpscat* -V
+
+== DESCRIPTION
+
+*gpscat* is a simple program for logging and packetizing GPS data streams.
+It takes input from a specified file or serial device (presumed to have
+a GPS attached) and reports to standard output. The program runs until
+end of input or it is interrupted by ^C or other means. It does not
+terminate on a bad packet; this is intentional.
+
+In raw mode (the default) *gpscat* simply dumps its input to standard
+output. Nonprintable characters other than ASCII whitespace are rendered
+as hexadecimal string escapes.
+
+In packetizing mode, *gpscat* uses the same code as *gpsd*(8)'s packet
+sniffer to break the input into packets. Packets are reported one per
+line; line breaks in the packets themselves are escaped.
+
+This program is useful as a sanity checker when examining a new device.
+It can be used as a primitive NMEA logger, but beware that (a)
+interrupting it likely to cut off output in mid-sentence, and (b) to
+avoid displaying incomplete NMEA sentences right up next to shell
+prompts that often contain a $, raw mode always emits an extra final
+linefeed.
+
+Also, be aware that packetizing mode will produce useless results \--
+probably consuming the entirety of input and appearing to hang \-- if
+it is fed data that is not a sequence of packets of one of the known
+types.
+
+== OPTIONS
+
+The program accepts the following options:
+
+*-?*, *-h*, *--help*::
+  Display program usage and exit.
+*-D LVL*, *--debug LVL*::
+  In packetizer mode, enable progress messages from the packet getter.
+  Probably only of interest to developers testing packet getter changes.
+  Higher arguments to *-D* produce more output.
+*-p*, *--packetizer*::
+  Invoke packetizer mode.
+*-s SPEED*, *--speed SPEED*::
+  Set the port's baud rate (and optionally its parity and stop bits) to
+  SPEED before reading. Argument should begin with one of the normal
+  integer baud rates (300, 1200, 4800, 9600, 19200, 38400, etc.). It may
+  be followed by an optional suffix [NOE][12] to set parity (None, Odd,
+  Even) and stop bits (1 or 2).
+  Specifying *-s 4800N1* is frequently helpful with unknown devices.
+*-t*, *--typeflag*::
+  Invoke packetizer mode, with the packet type and length (in
+  parentheses) reported before a colon and space on each line.
+*-V*, *--version*::
+  Display program version and exit.
+
+== RETURN VALUES
+
+*0*:: on success.
+*1*:: if the action was unknown or the write to the control socket failed,
+
+== SEE ALSO
+
+*gpsd*(8), *gps*(1), *gpsfake*(1). *cgps*(1)
+
+== RESOURCES
+
+*Project web site:* https://gpsd.io
+
+== COPYING
+
+This file is Copyright 2013 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause
