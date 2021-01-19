@@ -1,0 +1,62 @@
+= gpsdctl(8)
+Eric S. Raymond <esr@thyrsus.com.>
+3.22.1~dev, 18 January 2021
+:email: esr@thyrsus.com.
+:manmanual: GPSD Documentation
+:mansource: The GPSD Project
+:Name: Eric S. Raymond
+:type: manpage
+
+== Name
+
+gpsdctl - tool for sending commands to gpsd over its control socket
+
+== Synopsis
+
+*gpsdctl* _action_ _device_
+
+== OPTIONS
+
+*action*:: may be _add_ or _remove_. If no daemon instance
+is running when an _add_ is requested, this program will launch one.
+
+*device*:: argument should be the pathname of a device. The device
+will be opened by *gpsd* to read sensor data.
+
+== DESCRIPTION
+
+This is a tool for sending an instance of *gpsd* commands over its control
+socket to add or remove devices from the daemon's device list. It is not
+intended to be called by users, but rather by the Linux hotplug system
+and similar facilities.
+
+== ENVIRONMENT
+
+Two environment variables are interpreted.
+
+*GPSD_SOCKET*:: sets the location of the control socket. If the effective
+user ID of this program is root then it usually defaults to
+_/run/gpsd.sock_, although some systems may use the deprecated
+_/var/run/gpsd.sock_ instead. Non-root users will use _/tmp/gpsd.sock_.
+
+*GPSD_OPTIONS*:: may be a list of options to be passed to gpsd when this
+tool launches it. It defaults to an empty string.
+
+== RETURN VALUES
+
+*0*:: on success.
+
+*1*:: if the action was unknown or the write to the control socket failed,
+
+== SEE ALSO
+
+gpsd(8), gpsctl(1), gps(1), libgps(3), libgpsmm(3), gpsprof(1), gpsfake(1).
+
+== Resources
+
+*Project web site:* https://gpsd.io
+
+== COPYING
+
+This file is Copyright 2013 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause

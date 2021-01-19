@@ -215,7 +215,7 @@ all_manpages = {
     "man/gpscat.1": "man/gpscat.xml",
     "man/gpsctl.1": "man/gpsctl.xml",
     "man/gpsd.8": "man/gpsd.xml",
-    "man/gpsdctl.8": "man/gpsdctl.xml",
+    "man/gpsdctl.8": "man/gpsdctl.adoc",
     "man/gpsdecode.1": "man/gpsdecode.xml",
     "man/gpsd_json.5": "man/gpsd_json.xml",
     "man/gpsfake.1": "man/gpsfake.xml",
@@ -2314,13 +2314,49 @@ for (tgt, src) in templated.items():
 for fn in glob.glob("www/*.in"):
     env.Depends(fn[:-3], ["SConstruct", "SConscript"])
 
+# asciidoc documents
+asciidocs = []
+# prefer AsciiDoctor, which needs a lot of Ruby
+adoc_prog = env.WhereIs('asciidoctor')
+if not adoc_prog:
+    # fall back to AsciiDoc, which only needs Python
+    adoc_prog = env.WhereIs('asciidoc')
+if not adoc_prog:
+    announce("WARNING: Neither AsciiDoctor nor AsciiDoc found.\n"
+             "WARNING: Some documentation and html will not be built.",
+             end=True)
+
 man_env = env.Clone()
 if man_env.GetOption('silent'):
     man_env['SPAWN'] = filtered_spawn  # Suppress stderr chatter
 manpage_targets = []
+maninstall = []
 if manbuilder:
-    for (man, xml) in all_manpages.items():
-        manpage_targets.append(man_env.Man(source=xml, target=man))
+    for (man, src) in all_manpages.items():
+        # build it
+        # .xml or .adoc?
+        type = src.split(".")[1]
+        if 'xml' == type:
+            manpage_targets.append(man_env.Man(source=src, target=man))
+        elif adoc_prog:
+            # asciidoc, and can use it
+            # nroff man page
+            asciidocs.append(man)
+            env.Command(man, src,
+                        ['%s -b manpage -o $TARGET $SOURCE' % (adoc_prog)])
+            # html man page
+            target = 'www/%s.html' % os.path.basename(man[:-2])
+            asciidocs.append(target)
+            env.Command(target, src,
+                        '%s -b html5 -d manpage -o $TARGET $SOURCE' %
+                        (adoc_prog))
+
+        # install it
+        section = man.split(".")[1]
+        dest = os.path.join(installdir('mandir'), "man" + section,
+                            os.path.basename(man))
+        maninstall.append(env.InstallAs(source=man, target=dest))
+
 
 # The hardware page
 www_xml_files = []
@@ -2336,30 +2372,12 @@ env.Command('www/hardware.html',
              '$SC_PYTHON gpscap.py && cat hardware-tail.html) '
              '> hardware.html' % variantdir])
 
-maninstall = []
-if manbuilder:
-    for manpage in all_manpages:
-        if not os.path.exists(manpage):
-            continue
-        section = manpage.split(".")[1]
-        dest = os.path.join(installdir('mandir'), "man" + section,
-                            os.path.basename(manpage))
-        maninstall.append(env.InstallAs(source=manpage, target=dest))
-
 # doc to install
 docinstall = []
 for doc in doc_files:
     dest_doc = os.path.join(installdir('docdir'),
                             os.path.basename(doc))
     docinstall.append(env.InstallAs(source=doc, target=dest_doc))
-
-# asciidoc documents
-asciidocs = []
-# prefer AsciiDoctor, which needs a lot of Ruby
-adoc_prog = env.WhereIs('asciidoctor')
-if not adoc_prog:
-    # fall back to AsciiDoc, which only needs Python
-    adoc_prog = env.WhereIs('asciidoc')
 
 if adoc_prog:
     adocfiles = (('build', 'www/building'),
@@ -2381,10 +2399,6 @@ if adoc_prog:
         asciidocs.append(target)
         env.Command(target, '%s.adoc' % src,
                     ['%s -b html5 -o $TARGET $SOURCE' % (adoc_prog)])
-else:
-    announce("WARNING: Neither AsciiDoctor nor AsciiDoc found.\n"
-             "WARNING: Some documentation and html will not be built.",
-             end=True)
 
 # Non-asciidoc, non xml, plain html webpages only
 htmlpages = [
