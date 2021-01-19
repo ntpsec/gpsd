@@ -354,6 +354,9 @@ request/response protocol of the <code>gpsd</code> daemon.</dd>
 <dt><a href="gpsinit.html">gpsinit.8</a></dt>
 <dd>Initialize kernel modules for use with <code>gpsd</code> daemon.</dd>
 
+<dt><a href="ppscheck.html">ppscheck.8</a></dt>
+<dd>Tool to check a serial port for PPS.</dd>
+
 </dl>
 
 <p>Also, see the <a href="faq.html">FAQ</a>.</p>
