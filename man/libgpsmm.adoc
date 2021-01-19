@@ -1,0 +1,56 @@
+= libgpsmm(3)
+:Author: Alfredo Pironti
+:Date: 18 January 2021
+:email: <alfredio@users.sourceforge.net>
+:manmanual: GPSD Documentation
+:mansource: The GPSD Project
+:type: manpage
+
+== Name
+
+libgpsmm, libQgpsm - C++ and QT class wrappers for the GPS daemon
+
+== Synopsis
+
+$$C++:$$
+
+$$#include <libgpsmm>$$
+
+struct gps_data_t * open(char * host char * port)
+
+struct gps_data_t * open(void)
+
+struct gps_data_t * send(char * request)
+
+struct gps_data_t * read(void)
+
+struct gps_data_t * waiting(int)
+
+struct gps_data_t * stream unsigned(int flags)
+
+== DESCRIPTION
+
+_libgpsmm_ and _libQgpsmm_ are mere wrappers over _libgps_. The important
+difference between the libraries is that _libgpsmm_ is targeted at C++
+applications and contained in _libgps_, while _libQgpsmm_ is platform
+independent by using _QTcpSocket_ to connect to _gpsd_ and shipped as an
+additional library due to the necessary linking to QT. Method names are
+the same as the analogue C functions. For a detailed description of the
+functions please read libgps(3). `open()` must be called after class
+constructor and before any other method (open()` is not inside the
+constructor since it may fail, however constructors have no return
+value). The analogue of the C function `gps_close()` is in the
+destructor.
+
+== SEE ALSO
+
+*gpsd*(8), *gps*(1), *libgps*(3)
+
+== Resources
+
+*Project web site:* https://gpsd.io
+
+== COPYING
+
+This file is Copyright 2013 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause
