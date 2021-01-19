@@ -1,0 +1,98 @@
+= gpsinit(8)
+Reinhard Arlt reinhard.arlt@t-online.de.
+:author: Reinhard Arlt
+:date: 19 January 2021
+:email: reinhard.arlt@t-online.de.
+:keywords: gps, gpsinit
+:manmanual: GPSD Documentation
+:mansource: The GPSD Project
+:robots: index,follow
+:sectlinks:
+:toc: left
+:type: manpage
+:webfonts!:
+
+== NAME
+
+gpsinit - initialize CAN kernel modules for GPSD
+
+== SYNOPSIS
+
+*gpsinit* [-n control] [-s speed] module_name [interface_name]
+
+*gpsinit* -h
+
+*gpsinit* -V
+
+== DESCRIPTION
+
+*gpsinit* initializes whatever kernel-level modules are needed to enable
+special non-serial hardware to communicate with a gpsd instance. Note:
+it will need root permissions to load modules and perform other special
+operations, such as changing kernel-interface baudrates.
+
+At present, all modes of this tool are concerned with setting up
+kernel-level interfaces to hardware on a CAN (Control Area Network)
+speaking NMEA2000.
+
+The program accepts the following options:
+
+*-h*::
+  Display a brief help text.
+*-n*::
+  Set the CAN network number. The default is 0.
+*-s*::
+  Set the baudrate to be used to communicate over the serial line to the
+  CAN hardware. The default is 38400 baud.
+*-V*::
+  Display the version of gpsinit.
+
+The parameter *module_name* is mandatory. The socket CAN driver module
+*module_name.ko* will be loaded. *gpsinit* recognize the following
+module names:
+
+*plx_pci*, *esd_usb2*, *vcan*, *slcan*::
+  The parameter *interface_name* and *-s* *speed* can used here.
+*beaglebone*::
+  The dcan module needed for the beaglebone is part of the Linux kernel,
+  so no module is loaded in this case.
+
+The parameter *interface_name* is needed for slcan hardware only. It
+gives the name of the serial device to which the SL CAN hardware is
+connected. The default is /dev/ttyUSB0.
+
+== EXAMPLES
+
+All the following examples probably need to be run as root.
+
+*gpsinit plx_pci*::
+  Attempt to load the module plx_pci and initialize net 0 for the
+  connection to a NMEA2000 network. It will set the baudrate to
+  250kBits.
+*gpsinit -n 1 plx_pci*::
+  As above, but use net 1.
+*gpsinit -s 38400 slcan /dev/ttyUSB0*::
+  Attempt to load the module slcan and talk to the hardware at 38400
+  baud connected to port /dev/ttyUSB0.
+*gpsinit -h*::
+  Display a brief help message.
+*gpsinit -v*::
+  Display the version of gpsinit.
+
+== RETURN VALUES
+
+*0*:: on success.
+*1*:: if the action was unknown or the write to the control socket failed,
+
+== SEE ALSO
+
+*gpsd*(8), *gps*(1)
+
+== RESOURCES
+
+*Project web site:* https://gpsd.io
+
+== COPYING
+
+This file is Copyright 2013 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause

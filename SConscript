@@ -219,7 +219,7 @@ all_manpages = {
     "man/gpsdecode.1": "man/gpsdecode.xml",
     "man/gpsd_json.5": "man/gpsd_json.xml",
     "man/gpsfake.1": "man/gpsfake.xml",
-    "man/gpsinit.8": "man/gpsinit.xml",
+    "man/gpsinit.8": "man/gpsinit.adoc",
     "man/gpsmon.1": "man/gpsmon.xml",
     "man/gpspipe.1": "man/gpspipe.xml",
     "man/gpsplot.1": "man/gpsplot.xml",
