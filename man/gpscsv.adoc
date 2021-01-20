@@ -1,0 +1,188 @@
+= gpscsv(1)
+:author: Gary E. Miller
+:date: 20 January 2021
+:email: gem@rellim.com.
+:keywords: gps, gpsd, gpscsv, csv
+:manmanual: GPSD Documentation
+:mansource: The GPSD Project
+:robots: index,follow
+:sectlinks:
+:toc: left
+:type: manpage
+:webfonts!:
+
+== NAME
+
+gpscsv - dump the JSON output from gpsd as CSV
+
+== SYNOPSIS
+
+*gpscsv* [OPTIONS] [host[:port[:device]]]
+
+*gpscsv* -h
+
+*gpscsv* -V
+
+== DESCRIPTION
+
+*gpscsv* is a simple Python program for reading *gpsd* JSON data streams
+and outputting them in Comma Separated Values (CSV) format. It takes
+input from a specified *gpsd* and reports to standard output. The program
+runs until the *gpsd* dies, "*-n COUNT*" messages are processed,
+"*-x SECONDS*" have passed, or it is interrupted by ^C or other means.
+
+One good use of *gpscsv* is to create CSV files for use with the gnuplot
+program.
+
+*gpscsv* does not need root, but will run fine as root.
+
+== OPTIONS
+
+The program accepts the following options:
+
+*-?*, *-h*, *--help*::
+  Show help information and exit.
+*-c MCLASS*, *--class MCLASS*::
+  Select the JSON class messages of type MCLASS. Default is TPV.
+*--cvt-isotime*::
+  Convert fields named "time" from ISO time to UNIX time.
+*-D LVL*, *--debug LVL*::
+  Set debug level to LVL. Default 0. Higher arguments than 0 produce
+  more debug output.
+*--device DEVICE*::
+  The DEVICE on the *gpsd* to connect to. Defaults to all.
+*-f FIELDS*, *-fields FIELDS*::
+  The FIELDS from the JSON message to dump to the output. Set FIELD to
+  empty ('') for all fields Default varies by CLASS.
+*--file FILE*::
+  Read JSON from FILE instead of from *gpsd*.
+*--header HEADER*::
+  Set header style to HEADER. 0 for no header, 1 output fields as
+  header, 2 send fields as a comment ('#'). Defaults to 1.
+*--host HOST*::
+  Connect to the *gpsd* on HOST. Defaults to localhost.
+*-n COUNT*, *--count COUNT*::
+  Exit after outputting COUNT records. Set COUNT to 0 to disable.
+  Default is 0
+*--port PORT*::
+  Use PORT to connect to *gpsd*. Defaults to 2947.
+*--separator SEPARATOR*::
+  Use SEPARATOR as the field separator. Default separator is a comma
+  (',').
+*-V*, *--version*::
+  Show *gpscsv* version, and exit.
+*-x SECONDS*, *--seconds SECONDS*::
+  Exit after SECONDS number of seconds have passed. Set SECONDS to 0 to
+  disable. Default is 0
+
+== EXAMPLES
+
+Some basic examples, do them in exact order shown:
+
+Grab 100 samples of time,lat,lon,altHAE:
+
+----
+  $ gpscsv -n 100 --cvt-isotime  > tpv.dat
+----
+
+Grab 100 samples of time,epx,epy,epv,eph,sep
+
+----
+  $ gpscsv -n 100 --cvt-isotime -f time,epx,epy,epv,eph,sep > ep.dat
+----
+
+Grab 100 samples of time,xdop,ydop,vdop,tdop,hdop,gdop,pdop
+
+----
+  $ gpscsv -n 100 --cvt-isotime -c SKY  > sky.dat
+----
+
+Grab 100 samples of time,nSat,uSat
+
+----
+  $ gpscsv -n 100 --cvt-isotime -c SKY -f time,nSat,uSat  > sat.dat
+----
+
+start gnuplot in interactive mode:
+
+----
+  $ gnuplot
+----
+
+Some gnuplot housekeeping:
+
+----
+  # this are csv files
+  gnuplot> set datafile separator ','
+  # use the first line as title
+  gnuplot> set key autotitle columnhead
+  # X axis is UNIT time in seconds.
+  gnuplot> set xdata time
+  gnuplot> set timefmt "%s"
+----
+
+Now to plot time vs latitude:
+
+----
+  gnuplot> plot 'tpv.dat' using 1:2
+----
+
+Then to plot longitude and altHAE, in separate plots:
+
+----
+  gnuplot> plot 'tpv.dat' using 1:3
+  gnuplot> plot 'tpv.dat' using 1:4
+----
+
+Put both latitude and longitude on one plot:
+
+----
+  gnuplot> set y2tics
+  gnuplot> plot 'tpv.dat' using 1:2, '' using 1:3 axes x1y2
+----
+
+Plot epx, epy, epv, eph, and sep in one plot:
+
+----
+  gnuplot> plot 'ep.dat' using 1:2, '' using 1:3, \
+           '' using 1:4, '' using 1:5, '' using 1:6
+----
+
+Plot all the DOPs on one plot:
+
+----
+  gnuplot> plot 'sky.dat' using 1:2, '' using 1:3, '' using 1:4, \
+           '' using 1:5, '' using 1:6, '' using 1:7, '' using 1:8
+----
+
+Plot nSat and uSat together:
+
+----
+  gnuplot> plot 'sat.dat' using 1:2, '' using 1:3
+----
+
+Lat/lon scatter plot:
+
+----
+  # x is no longer time
+  gnuplot> set xdata
+  gnuplot> plot 'tpv.dat' using 3:2 title 'fix'
+----
+
+== RETURN VALUES
+
+*0*:: on success.
+*1*:: on failure
+
+== SEE ALSO
+
+*gpsd*(8)
+
+== RESOURCES
+
+*Project web site:* https://gpsd.io
+
+== COPYING
+
+This file is Copyright 2013 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause
