@@ -1,0 +1,114 @@
+= gpssubframe(1)
+:author: Gary E. Miller
+:date: 19 January 2021
+:email: gem@rellim.com.
+:keywords: gpsd, gps, subframe
+:manmanual: GPSD Documentation
+:mansource: The GPSD Project
+:robots: index,follow
+:sectlinks:
+:toc: left
+:type: manpage
+:webfonts!:
+
+== NAME
+
+gpssubframe - tool to dump subframe sentences from gpsd
+
+== SYNOPSIS
+
+*gpssubframe* [OPTIONS] [server[:port[:device]]]
+
+*gpssubframe* -h
+
+*gpssubframe* -V
+
+== DESCRIPTION
+
+*gpssubframe* is a tool to connect to gpsd and dump decoded subframe data
+to stdout. This is only useful if your GNSS receiver can output GPS
+subframe messages, and is configured to do so. A working knowledge of
+IS-GPS-200 is also required. Keep your copy close at hand.
+
+*gpssubframe* does not require root privileges, but will run fine as
+root.  It can be run concurrently with other tools connecting to the
+local gpsd without causing problems.
+
+The program will accumulate subframe messages and output them by GPS
+satellite number on exit. By default the program never exits unless the
+user selects the number of seconds to run or number of messages to
+capture.
+
+By default *gpssubframe* connects to a gpsd running on the local host.
+Optionally a host, TCP/IP port number and remote device can be given.
+
+== OPTIONS
+
+*-?*, *-h*, *--help*::
+  -Print a usage message and exit.
+*-c COUNT*, *--count COUNT*::
+  Exit after COUNT subframe messages.
+*--device DEVICE*::
+  Connect to device DEVICE on gpsd host.
+*-D LVL*, *--debug LVL*::
+  Set debug level to LVL.
+*--file FILE*::
+  Read JSON from FILE instead of from gpsd..
+*--host HOST*::
+  Connect to gpsd on host HOST.
+*--port PORT*::
+  Connect to gpsd on port PORT.
+*--progress*::
+  Print progress reports as messages are received.
+*--satpos*::
+  Compute GPS satellite positions before exit.
+*--time SEC*::
+  Compute satellite position at time SEC in POSIX seconds.
+*--test*::
+  Run *--satpos* selftest code.
+*-V*, *--version*::
+  Print the program version, then exit.
+*-x SEC*, *--seconds SEC*::
+  Seconds of messages to parse. 0 to disable.
+
+== EXAMPLES
+
+First configure a u-blox 9-series to output subframe messages. Then have
+*gpssubframe* gather one complete set of subframes, then print the data
+organized by GPS satellite number.  Be sure to replace *-P 22* with the
+correct protocol version for your receiver. Then calculate and print the
+known satellite positions as well as the azimuth, elevation, and range
+from the current position:
+
+----
+ubxtool -P 22 -e SFRBX
+gpssubframe -x 750 --satpos
+----
+
+If staring at a blank screen for 12.5 minutes is too stressful, then
+enable progress messages:
+
+----
+gpssubframe -x 750 --satpos --progress
+----
+
+== RETURN VALUES
+
+*0*:: on success.
+*1*:: if the action was unknown or the write to the control socket failed,
+
+== SEE ALSO
+
+*gpsd*(8), *gps*(1), *gpsprof*(1), *gpsfake*(1).
+
+IS-GPS-200 "NAVSTAR GPS Space Segment/Navigation User Segment
+Interfaces"
+
+== RESOURCES
+
+*Project web site:* https://gpsd.io
+
+== COPYING
+
+This file is Copyright 2013 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause
