@@ -1,0 +1,104 @@
+= gpsplot(1)
+:author: Gary E. Miller
+:date: 19 January 2021
+:email: <gem@rellim.com.>
+:keywords: gps, gpsplot, scatterplot. strip chart
+:manmanual: GPSD Documentation
+:mansource: The GPSD Project
+:robots: index,follow
+:sectlinks:
+:toc: left
+:type: manpage
+:webfonts!:
+
+== NAME
+
+gpsplot - tool to dynamically dump plot data from gpsd
+
+== SYNOPSIS
+
+*gpsplot* [OPTIONS] [server[:port[:device]]]
+
+*gpsplot* -h
+
+*gpsplot* -V
+
+== DESCRIPTION
+
+*gpsplot* is a tool to connect to *gpsd* and dynamically plot data to the
+users screen. Plot types include scatterplots and stripcharts.
+
+Plotting requires the Python Matplot lib module, and its many
+dependencies be installed on the display host.  If the display
+host is not the *gpsd* host, then Matplot is not required to be on the
+*gpsd* host.
+
+== OPTIONS
+
+*-?*, *-h*, *--help*::
+  Print a usage message and exit.
+*-d LVL*, *--debug LVL*::
+  Set debug level to LVL.
+*--device DEVICE*::
+  The DEVICE on the *gpsd* to connect to. Defaults to all.
+*--fields FIELDS*::
+  The code for the fields to plot. FIELDS is one of: llh
+  (lat/lon/altHAE) or llm (lat/lon/altMSL).
+*--file FILE*::
+  Read JSON from FILE instead of from *gpsd*..
+*--host HOST*::
+  Connect to the *gpsd* on HOST (server). Defaults to localhost.
+*--plottype PLOTTYPE*::
+  The type of plot to make. PLOTTYPE is one of 'scatterplot'
+  or 'stripchart'.
+*-n COUNT*, *--count COUNT*::
+  Exit after COUNT plot messages.
+*-p PORT*, *--port PORT*::
+  Use PORT to connect to *gpsd*. Defaults to 2947.
+*-V*, *--version*::
+  Print the program version and exit.
+*-x SECONDS*, *--seconds SECONDS*::
+  Wait for SECONDS seconds before exiting. Set to zero to disable.
+  Default 0.
+
+== EXAMPLES
+
+Generate a scatterplot of Latitude, Longitude and the Altitude above
+Mean Sea Level (altMSL). Stop after 60 seconds:
+
+----
+gpsplot --seconds 60 --fields llm
+----
+
+Generate a scatterplot of Latitude, Longitude and the Height Above
+Ellipsoid (altHAE). Stop after 60 fixes:
+
+----
+gpsplot --count 60 --plottype stripchart
+----
+
+Generate a scatterplot locally of Latitude, Longitude and altMSL from a
+remote *gpsd* instannce at host "example.com" and the remote device
+"/dev/ttyS0". Stop after 60 fixes:
+
+----
+gpsplot --count 60 --fields llm example.com::/dev/ttyS0
+----
+
+== RETURN VALUES
+
+*0*:: on success.
+*1*:: if the action was unknown or the write to the control socket failed,
+
+== SEE ALSO
+
+*gpsd*(8), *gpsprof*(1), *gpsfake*(1).
+
+== RESOURCES
+
+*Project web site:* https://gpsd.io
+
+== COPYING
+
+This file is Copyright 2013 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause

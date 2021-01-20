@@ -222,7 +222,7 @@ all_manpages = {
     "man/gpsinit.8": "man/gpsinit.adoc",
     "man/gpsmon.1": "man/gpsmon.xml",
     "man/gpspipe.1": "man/gpspipe.xml",
-    "man/gpsplot.1": "man/gpsplot.xml",
+    "man/gpsplot.1": "man/gpsplot.adoc",
     "man/gpsprof.1": "man/gpsprof.xml",
     "man/gpsrinex.1": "man/gpsrinex.xml",
     "man/gpssubframe.1": "man/gpssubframe.xml",
