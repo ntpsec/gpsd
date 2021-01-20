@@ -1,0 +1,115 @@
+= gpsdecode(1)
+:author: Eric S. Raymond
+:date: 19 January 2021
+:email: <esr@thyrsus.com.>
+:keywords: gps, gpsd, gpsdecode
+:manmanual: GPSD Documentation
+:mansource: The GPSD Project
+:robots: index,follow
+:sectlinks:
+:toc: left
+:type: manpage
+:webfonts!:
+
+== NAME
+
+gpsdecode - decode GPS, RTCM or AIS streams into a readable format
+
+== SYNOPSIS
+
+*gpsdecode* [OPTIONS]
+
+*gpsdecode* -h
+
+*gpsdecode* -V
+
+== DESCRIPTION
+
+*gpsdecode* tool is a batch-mode decoder for NMEA and various binary
+packet formats associated with GPS, AIS, and differential-correction
+services.  It produces a JSON dump on standard output from binary on
+standard input. The JSON is the same format documented by *gpsd*; this
+tool uses the same decoding logic as *gpsd*, but with a simpler interface
+intended for batch processing of data files.
+
+All sensor-input formats known to the GPSD project can be decoded by
+this tool. These include: NMEA, AIVDM (the NMEA-derived sentence format
+used by AIS, the marine Automatic Identification System), RTCM2, and all
+supported GPS binary formats (notably including SiRF). See *gpsd*(8) for
+applicable standards and known limitations of the decoding logic.
+
+You can use this tool with *nc*(1) to examine AIS feeds from AIS pooling
+services, RTCM feeds from RTCM receivers or NTRIP broadcasters.
+
+== OPTIONS
+
+*-?*, *-h*, *--help*::
+  Output a usage mssage, then exit.
+*-c*, *--json*::
+  Sets the AIS dump format to separate fields with an ASCII pipe symbol.
+  Fields are dumped in the order they occur in the AIS packet. Numerics
+  are not scaled (*-u* is forced). Strings are unpacked from six-bit
+  to full ASCII
+*-d*, *--decode*::
+  Decode packets presented on standard input to standard output. This is
+  the default behavior.
+*-D LVL*, *--debug LVL*::
+  Set the debug verbosity level to LVL. It is mainly of interest to for
+  troubleshooting.
+*-e*, *--encode*::
+  Encode JSON on standard input to JSON on standard output. This option
+  is only useful for regression-testing of the JSON dumping and parsing
+  code.
+*-j*, *--json*::
+  Sets the output dump format to JSON (the default behavior).
+*-m*, *--minlength*::
+  Dump minimum lengths for each packet type in the input (ignoring
+  comment packets). This is probably of interest only to GSD developers.
+*-n*, *--nmea*::
+  Dump the generated pseudo-NME0183.
+*-s*, *--split24*::
+  Report AIS Type 24 sentence halves separately rather than attempting
+  to aggregate them.
+*-t TYPES*, *--types TYPES*::
+  A comma-separated list of numeric types. Packets with a numeric AIS,
+  RTCM2, or RTCM3 type are passed through and output only if they match
+  a type in the list. Packets of other kinds (in particular GPS packets)
+  are passed through unconditionally.
+*-u*, *--unsscaled*::
+  Suppress scaling of AIS data to float quantities and text expansion of
+  numeric codes. A dump with this option is lossless.
+*-v*, *--verbose*::
+  Dump textual packets to output as they are received on input,
+  immediately preceding corresponding output.
+*-V*, *--version*::
+  Print version number, then exit.
+
+== AIS DSV FORMAT
+
+With the *-c* or *--ais* option, dump lines are values of AIS payload
+fields, pipe-separated, in the order that they occur in the payload.
+Spans of fields expressing a date are emitted as an ISO8601 timestamp
+(look for colons and the trailing Z indicating Zulu/UTC time), and the
+19-bit group of TDMA status fields found at the end of message types 1-4
+are are dumped as a single unsigned integer (in hex preceded by "0x").
+Unused regional-authority fields are also dumped (in hex preceded by
+"0x"). Variable-length binary fields are dumped as an integer bit
+length, followed by a colon, followed by a hex dump.
+
+== RETURN VALUES
+
+*0*:: on success.
+*1*:: if the action was unknown or the write to the control socket failed,
+
+== SEE ALSO
+
+*gpsd*(8), *gps*(1)
+
+== RESOURCES
+
+*Project web site:* https://gpsd.io
+
+== COPYING
+
+This file is Copyright 2013 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause
