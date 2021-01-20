@@ -1,0 +1,113 @@
+= gps2udp(1)
+:author: Fulup Ar Foll
+:date: 19 January 2021
+:email: fulup@sinagot.net.
+:keywords: gps, gpsd, gps2udp, AIS
+:manmanual: GPSD Documentation
+:mansource: The GPSD Project
+:robots: index,follow
+:sectlinks:
+:toc: left
+:type: manpage
+:webfonts!:
+
+== NAME
+
+gps2udp - feed the take from gpsd to one or more aggregation sites
+
+== SYNOPSIS
+
+*gps2udp* [OPTIONS] [server[:port[:device]]]
+
+*gps2udp* -h
+
+*gps2udp* -V
+
+== DESCRIPTION
+
+*gps2udp* is a tool to connect to *gpsd* and output the received sentences
+to one or many UDP host:port destinations. This makes the program useful
+for feeding AIS information from *gpsd* to aishub, marinetraffic,
+shipfinder,...
+
+*gps2udp* does not require root privileges, but can run as root.  It
+can be run concurrently with other tools connecting to the local *gpsd*
+without causing problems.
+
+The output will consist of one or both of NMEA (*-n* option) or JSON
+(*-j* option) *gpsd* sentences. The output is sent to one or many
+destinations host through a UDP network socket (*-u HOST:PORT*
+options) .
+
+Optionally a server, TCP/IP port number and remote device can be given.
+If omitted, *gps2udp* connects to localhost on the default port (2947) and
+watches all devices opened by *gpsd*.
+
+*gps2udp* may be run as a daemon (*-b* option).
+
+*gps2udp* is designed to run smoothly in background; it reconnects
+automatically to *gpsd* whenever it is restarted. For debugging purporses,
+there is an option to exit gracefully after a given count of packets
+(*-c* option).
+
+== OPTIONS
+
+*-?*, *-h*, *--help*::
+  -Print a usage message and exit.
+*-a*, *--ais*::
+  Send only AIS messages.
+*-b*, *--daemon*::
+  Causes *gps2udp* to run as a daemon.
+*-c COUNT*, *--count COUNT*::
+  Exit after COUNT sentences are sent.
+*-d LVL*, *--debug LVL*::
+  Set debug level to LVL. LVL = 0 prints nothing. LVL = 1 prints sent
+  packet on stdout. LVL = 2 prints ignored packets.
+*-j*, *--json*::
+  Causes JSON sentences to be output.
+*-n*, *--nmea*::
+  Causes NMEA sentences to be output.
+*-t*, *--tpv*::
+  Only output TPV sentences. Implies --json.
+*-u HOST:PORT*, *--udp HOST:PORT*::
+  UDP destination for output sentenses (up to five destinations).
+*-v*, *-V*, *--version*::
+  Prints the program version, then exit. -v is deprecated December 2020.
+
+== EXAMPLES
+
+With a running *gpsd* accessible on the network this will collect data
+from localhost:gpsd display them on stdout and send a copy to test
+aishub in NMEA format.
+
+----
+gps2udp -d 1 -n -u data.aishub.net:2222
+----
+
+This will collect data from a remote *gpsd* located on fridu.net host,
+will filter AIS messages and send them to 3 destinations (aishub,
+marinetraffic, shipfinder) in NMEA format, while running in background
+mode
+
+----
+gps2udp -a -n -b -u data.aishub.net:2222 -u 5.9.207.224:5321 \
+   -u 109.200.19.151:4001 fridu.net:2947
+----
+
+== RETURN VALUES
+
+*0*:: on success.
+*1*:: on failure
+
+== SEE ALSO
+
+*gpsd*(8), *gps*(1)
+
+== RESOURCES
+
+*Project web site:* https://gpsd.io
+
+== COPYING
+
+This file is Copyright 2013 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause
