@@ -95,7 +95,7 @@ gpssubframe -x 750 --satpos --progress
 == RETURN VALUES
 
 *0*:: on success.
-*1*:: if the action was unknown or the write to the control socket failed,
+*1*:: on failure
 
 == SEE ALSO
 

@@ -100,7 +100,7 @@ If the *-o* option is used, the "Seen@" column is replaced with the
 == RETURN VALUES
 
 *0*:: on success.
-*1*:: if the action was unknown or the write to the control socket failed,
+*1*:: on failure
 
 == SEE ALSO
 
