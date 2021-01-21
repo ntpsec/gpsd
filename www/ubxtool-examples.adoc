@@ -109,7 +109,7 @@ $ export UBXOPTS="-P 15"
 You can add "-v 2" for a little more verbosity.
 
 ----
-$ export UBXOPTS="-P 18 -v 2"
+$ export UBXOPTS="-P 15 -v 2"
 ----
 
 
@@ -146,11 +146,11 @@ messages may elicit no ACK-ACK or ACK-NAK.  Invalid ones may invoke an
 ACK-ACK, yet not be executed.  The only thing you can count on is that
 an ACK-NAK meant you sent something invalid.
 
-Always double check that any settings changes stuck.
+Always double check that any settings changed stuck.
 
 This text, and these examples will ignore ACK-ACK responses.  If any
 cause an ACK-NAK for you then you either found a bug in this document, your
-receiver does not support the requested operation, or you mistypes
+receiver does not support the requested operation, or you mistyped
 something.
 
 == Dynamic Platform Model
@@ -182,8 +182,7 @@ UBX-CFG-NAV5:
 
 That shows the receiver is in the default Portable model.
 
-To change the active model to Automotive (4), and check it again,
-is simply:
+To change the active model to Automotive (4), and check it again:
 
 ----
 $ ubxtool -p MODEL,4
@@ -203,9 +202,9 @@ UBX-CFG-NAV5:
 
 === With Configuration Items
 
-If the receiver is a 9-series one then you can change the model using
+If the receiver is a 9-series, then you can change the model using
 Configuration Items.  These allow you to get, set and delete individual
-settings in the receiver. before continuing this section, read the
+settings in the receiver. Before continuing this section, read the
 ubxtool man page on Configuration Items.
 
 The CFG-NAVSPG Configuration Item group includes the CFG-NAV5 items
@@ -294,7 +293,7 @@ UBX-CFG-VALGET:
 
 == Rate Settings
 
-There can be a good need to change the rate at which your receiver take
+There can be a good need to change the rate at which your receiver takes
 measurements, or how many measurements it uses to compute its navigation
 solution (fix).  Slow down the measurement rate to save power.  Or speed
 it up in fast moving dynamic environments.  Using several measurements
@@ -323,12 +322,15 @@ UBX-CFG-RATE:
  measRate 000 navRate 1 timeRef 1 (GPS)
 ----
 
+The parameter to the RATE command is the number of milliseconds between
+each fix.
+
 === Rate Settings with Configuration Items
 
-If the receiver is a 9-series one then you can change the rate at which
+If the receiver is a 9-series, then you can change the rate at which
 the receiver takes measurements and/or computes the navigation solution
 (fix) using Configuration Items.  These allow you to get, set and delete
-individual settings in the receiver. before continuing this section,
+individual settings in the receiver. Before continuing this section,
 read the ubxtool man page on Configuration Items.
 
 The CFG-NAVSPG Configuration Item group includes the CFG-NAV5 items
@@ -379,9 +381,9 @@ proceeding to the following logging specific steps.
 
 === Logging Prerequisites
 
-For Logging, you need:
+For logging, you need:
 
-1. u-blox 7, 8 or 9 GNSS receiver (protocol version 15+)
+1. u-blox 7, 8 or 9 GNSS receiver (protocol version greater than 15)
 
 2. External SQI flash memory with a valid Flash Information Structure (FIS).
 
@@ -590,7 +592,7 @@ proceeding to these batching specific steps.
 
 For batching, you need:
 
-1. u-blox 8 or 9 GNSS receiver (protocol version 23.01+)
+1. u-blox 8 or 9 GNSS receiver (protocol version greater than 23.01)
 
 2. RAM memory
 
@@ -692,8 +694,8 @@ $ ubxtool -d BATCH
 
 Sometimes your GNSS antenna is fixed and instead of having your receiver
 compute its position, you want it to use the known position to provide a
-more accurate PPS.  Or to compute the errors it sees in the signals it
-measures.  Then transmit those corrections to a nearby receiver.
+more accurate PPS, or to compute the errors it sees in the signals it
+measures.  Corrections can then be transmitted to a nearby receiver.
 
 The receiver with the fixed antenna is called the base, and the nearby
 receiver is a rover.  The corrections are usually in one of the many
@@ -898,6 +900,7 @@ ubxtool: disable SURVEYIN2
 
 == Constellations
 
+<<<<<<< HEAD
 For unknown reasons, one of the first things newbies want to play with
 is the constellation settings.  If you are headed to the polar region
 , into space, or to Asia, then these settings will be of interest to
@@ -906,6 +909,15 @@ are useful in Asia.  Otherwise, unless you have a Rubidium atomic clock
 handy, or run 12-hour experiments with *gpsprof*, it will be hard for you
 to improve on the defaults.  If you still must fiddle, then read on,
 after completing the above section on Initial Setup.
+=======
+For unknown reasons, one of the first things new users want to play with
+is the constellation settings.  If you are headed to the polar regions,
+into space, or to Asia, then these settings will be of interest to you.
+Otherwise, unless you have a Rubidium atomic clock handy, or run 12-hour
+experiments with gpsprof, it will be hard for you to improve on the
+defaults.  If you still must fiddle, then read on, after completing the
+above section on Initial Setup.
+>>>>>>> f15ed32f2 (Proofread the examples for typos, spelling ...)
 
 === Checking Constellations
 
@@ -1002,8 +1014,8 @@ everything.
 Stepping back a bit, the 8-series is more problematic.  Many of them
 can only listen to two out of the three possible frequency bands:  GPS,
 GLONASS and BeiDou.  Most default to GPS and GLONASS, but GPS and Beidou
-may work better.  This is partly because most GPS-only antenna can
-receiver BeiDou, but fail to receive GLONASS.  Partly because BeiDou and
+may work better.  This is partly because most GPS-only antennas can
+receive BeiDou, but fail to receive GLONASS.  Partly because BeiDou and
 GLONASS sats cover different regions of the earth.
 
 If we first try to enable BeiDou, that will fail, as that would enable
@@ -1036,7 +1048,7 @@ After a few minutes, if you are in a location which BeiDou covers, then
 you should start to see BeiDou sats in the cgps sat list.  The 8-series
 has many other constraints on setting CFG-GNSS, the masochistic will
 need to spend a lot of quality time with the u-blox documentation to
-lean the many ways to shoot yourself in the foot.
+lean the many ways to shoot themselves in the foot.
 
 While the need for changing what the 9-series listens for is less, the
 complexity of doing so is increased.  Not only must the constellation
@@ -1222,11 +1234,8 @@ default setting.  But you want to use your receiver on your boat, so you
 want to set dynModel to "Sea" (5).  Then verify that worked:
 
 ----
-ubxtool -p MODEL,5  -P 27 -v 2
-connected to tcp://localhost:2947
-ubxtool: poll MODEL,5
-
-sent:
+$ ubxtool -p MODEL,5  -P 27 -v 2
+[...]
 UBX-CFG-NAV5:
  mask 0x1 dynModel 5 fixmode 0 fixedAlt 0 FixedAltVar 0
  minElev 0 drLimit 0 pDop 0 tDop 0 pAcc 0 tAcc 0
@@ -1256,11 +1265,8 @@ configuration in RAM, as much as possible, to whatever storage we have,
 if possible.  The "-p SAVE" option does that:
 
 ----
-$ # ubxtool -p SAVE  -P 27 -v 2
-connected to tcp://localhost:2947
-ubxtool: poll SAVE
-
-sent:
+$ ubxtool -p SAVE  -P 27 -v 2
+[...]
 UBX-CFG-CFG:
   clearMask: 0x0 ()
   saveMask: 0xf1f (ioPort msgConf infMsg navConf rxmConf senConf rinvConf
