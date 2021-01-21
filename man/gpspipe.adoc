@@ -1,0 +1,145 @@
+= gpspipe(1)
+:author: Gary E. Miller
+:date: 20 January 2021
+:email: gem@rellim.com.
+:keywords: gps, gpsd, gpspipe
+:manmanual: GPSD Documentation
+:mansource: The GPSD Project
+:robots: index,follow
+:sectlinks:
+:toc: left
+:type: manpage
+:webfonts!:
+
+== NAME
+
+gpspipe - tool to connect to gpsd and retrieve sentences
+
+== SYNOPSIS
+
+*gpspipe* [OPTIONS] [server[:port[:device]]]
+
+*gpspipe* -h
+
+*gpspipe* -V
+
+== DESCRIPTION
+
+*gpspipe* is a tool to connect to *gpsd* and output the received sentences
+to stdout. This makes the program useful as a pipe from *gpsd* to another
+program or file.
+
+*gpspipe* does not require root privileges, and can be run concurrently
+with other tools connecting to the local *gpsd* without causing problems.
+
+The output will consist of one or both of the raw NMEA or native *gpsd*
+sentences. Each line can be optionally time stamped. There is also an
+option to exit gracefully after a given count of packets.
+
+Optionally a server, TCP/IP port number and remote device can be given.
+If omitted, *gpspipe* connects to localhost on the default port (2947) and
+watches all devices opened by *gpsd*.
+
+*gpspipe* may be run as a daemon, but requires the *-o, --output* flag
+for writing the output to a file.
+
+== OPTIONS
+
+*-?*, *-h*, *--help*::
+  Print a usage message and exit.
+*-2*, *--split24*::
+  *-2* sets the split24 flag on AIS reports.
+*-d*, *--daemonize*::
+  Run as a daemon.
+*-d LVL*, *--debug LVL*::
+  Set debug level to LVL.
+*-l*, *--sleep*::
+  Sleep for ten seconds before attempting to connect to *gpsd*. This is
+  very useful when running as a daemon, giving *gpsd* time to start before
+  attempting a connection.
+*-n COUNT*, *--count COUNT*::
+  Exit after COUNT messages are output.
+*-o FILE*, *--output FILE*::
+  Cause the collected data to be written to the specified file. Use of
+  this option is mandatory if *gpspipe* is run as a daemon.
+*-p*, *--profile*::
+  Dump profiling information in JSON.
+*-P*, *--pps*::
+  Enables dumping of PPS drift JSON in NMEA and raw modes.
+*-r*, *--nmea*::
+  Cause NMEA sentences to be output. This may be NMEA, pseudo NMEA built
+  from binary data, or some combination of both.
+*-R*, *--raw*::
+  Causes super-raw (gps binary) data to be output. This will forward
+  exactly what the device sent.
+*-s DEV*, *--serial DEV*::
+  Cause the collected data to be written to the specified serial device
+  (DEV) with settings 4800 8N1. Thus *gpspipe* can be used with
+  *-s, --serial* and *-r, --nmea* options to emulate a serial port
+  hardwired to a GPS that *gpsd* is managing.
+*-S*, *--scaled*::
+  Set the scaled flag. This is for AIS and SUBFRAME data only. Scaled
+  data will be output in the JSON, instead of raw data in the JSON.
+*-t*, *--timestamp*::
+  Add a UTC timestamp to each sentence output.
+*-T FMT*, *--timefmt FMT*::
+  Set the format of the timestamp. See *strftime*(3) for the available
+  placeholders. Setting this option implies *-t* (*--timestamp*). Default
+  setting is "%F %T"
+*-u*, *--usec*::
+  Use usec resolution time stamp, implies *-t* (*--timestamp*). Use twice
+  (*-uu*) to output sec.usec.
+
+*-v*, *--spinner*::
+  Show a spinning activity indicator on stderr. This is useful if
+  stdout is redirected into a file or a pipe. By default the spinner is
+  advanced with every messages written; specifying *-v*, or *--spinner*,
+  more than once will double the number of messages required to rotate
+  the spinner.
+
+*-V*, *--version*::
+  Print the program version and exit.
+*-w*, *--json*::
+  Cause native *gpsd* JSON sentences to be output.
+*-x SEC*, *--seconds SEC*::
+  Exit after delay of SEC seconds.
+*-z*, *--zulu*::
+  Set the timestamp format iso8601: implies *-t*.
+
+At least one of *-R*, *-r* or *-w* must be specified.
+
+You must use *-o* if you use *-d*.
+
+== EXAMPLES
+
+When *gpsd* is running, this example will send one hundred raw NMEA
+sentences to standard output, then exit:
+
+----
+gpspipe -r -n 100
+----
+
+When *gpsd* is running, this example will wait at most 5 seconds for a
+TPV message, print it to stdout, then exit:
+
+----
+gpspipe -x 5 -w|sed -n '/TPV/{p;q}'
+----
+
+== RETURN VALUES
+
+*0*:: on success.
+*1*:: on failure
+
+== SEE ALSO
+
+*gpsd*(8), *gps*(1), *gpsfake*(1).
+
+== RESOURCES
+
+*Project web site:* https://gpsd.io
+
+== COPYING
+
+This file is Copyright 2013 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause
