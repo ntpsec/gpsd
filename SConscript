@@ -234,8 +234,8 @@ all_manpages = {
     "man/ntpshmmon.1": "man/ntpshmmon.adoc",
     "man/ppscheck.8": "man/ppscheck.adoc",
     "man/ubxtool.1": "man/ubxtool.xml",
-    "man/xgps.1": "man/xgps.xml",
-    "man/xgpsspeed.1": "man/xgps.xml",
+    "man/xgps.1": "man/xgps.adoc",
+    "man/xgpsspeed.1": "man/xgpsspeed.adoc",
     "man/zerk.1": "man/zerk.xml",
 }
 

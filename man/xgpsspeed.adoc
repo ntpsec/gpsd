@@ -1,0 +1,109 @@
+= xgpsspeed(1)
+Chen Wei; Robin Wittler
+:date: 20 January 2021
+:keywords: gps, gpsd, xgpsspeed
+:manmanual: GPSD Documentation
+:mansource: The GPSD Project
+:robots: index,follow
+:sectlinks:
+:toc: left
+:type: manpage
+:webfonts!:
+
+== NAME
+
+xgpsspeed - sample X client for gpsd
+
+== SYNOPSIS
+
+*xgpsspeed* [OPTIONS] [service[:port[:device]]]
+
+*xgpsspeed* -h
+
+*xgpsspeed* -V
+
+== DESCRIPTION
+
+*xgpsspeed* is a speedometer that uses position information from gpsd.
+
+The default display mode is a speed and track presentation modeled after
+a marine navigation display; for backward compatibility the *--nautical*
+option forces this mode. The *--landspeed* option produces a simple
+speedometer.
+
+The *--speedunits* option can be used to set the speed units for
+display; follow the keyword with "knots" for nautical miles per hour,
+"kmh" for kilometers per hour, or "mph" for miles per hour. The default
+is miles per hour.
+
+In the nautical mode only, *--maxspeed* sets the maximum on the
+speedometer.
+
+*xgpsspeed* will run fine as a normal user, and fine as root.  Running
+*xgpsspeed* under *sudo* will cause some loss of functionality.
+
+== OPTIONS
+
+*-?*, *-h*, *--help*::
+  Causes the client to emit a summary of its options and then exit.
+*-device DEVICE*::
+  The device on the host to connect to. The default is empty (any).
+*-D LVL*, *--debug LVL*::
+  Sets the debug level, it is primarily for use by GPSD developers. It
+  enables various progress messages to standard error.
+*--host HOST*::
+  The host (server) to connect to. The default is localhost.
+*-p PORT*, *--port PORT*::
+  The port to connect to. The default is 2947.
+*-V*, *--version*::
+  This option causes each client to dump the package version and exit.
+
+By default, clients collect data from all compatible devices on
+localhost, using the default GPSD port 2947. An optional argument to any
+client may specify a server to get data from. A colon-separated suffix
+is taken as a port number. If there is a second colon-separated suffix,
+that is taken as a specific device name to be watched. However, if the
+server specification contains square brackets, the part inside them is
+taken as an IPv6 address and port/device suffixes are only parsed after
+the trailing bracket. Possible cases look like this:
+
+localhost:/dev/ttyS1::
+  Look at the default port of localhost, trying both IPv4 and IPv6 and
+  watching output from serial device 1.
+example.com:2317::
+  Look at port 2317 on example.com, trying both IPv4 and IPv6.
+71.162.241.5:2317:/dev/ttyS3::
+  Look at port 2317 at the specified IPv4 address, collecting data from
+  attached serial device 3.
+[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:2317:/dev/ttyS5::
+  Look at port 2317 at the specified IPv6 address, collecting data from
+  attached serial device 5.
+
+== ENVIRONMENT
+
+The environment variable *GPSD_UNITS* is checked if no unit system is
+specified on the command line.  It may be set to 'i'. 'imperial', 'm',
+'metric', or 'n', 'nautical'.
+
+*LC_MEASUREMENT* and then *LANG* are checked if no unit system has been
+specified on the command line, or in *GPSD_UNITS*. If the value is 'C',
+'POSIX', or begins with 'en_US' the unit system is set to imperial. The
+default if no system has been selected defaults to metric.
+
+== RETURN VALUES
+
+*0*:: on success.
+*1*:: on failure
+
+== SEE ALSO
+
+*gpsd*(8), *gps*(1), *xgps*(1)
+
+== RESOURCES
+
+*Project web site:* https://gpsd.io
+
+== COPYING
+
+This file is Copyright 2013 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause

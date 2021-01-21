@@ -1,0 +1,162 @@
+= xgps(1)
+Remco Treffcorn; Derrick Brashear; Russ Nelson; Eric S. Raymond
+:date: 20 January 2021
+:keywords: gps, gpsd, xgps
+:manmanual: GPSD Documentation
+:mansource: The GPSD Project
+:robots: index,follow
+:sectlinks:
+:toc: left
+:type: manpage
+:webfonts!:
+
+== NAME
+
+xgps - sample X client for gpsd
+
+== SYNOPSIS
+
+*xgps* [OPTIONS] [service[:port[:device]]]
+
+*xgps* -h
+
+*xgps* -V
+
+== DESCRIPTION
+
+*xgps* is a simple sample client for gpsd with an X interface. It
+displays current GNSS position/time/velocity information and (for
+GNSS receivers that support the feature) the locations of accessible
+satellites.
+
+In the sky view, satellites are color-coded to indicate quality of
+signal, consult the data display to the left for exact figures in dB.
+Diamond-shaped icons indicate GLONASS satellites, squares are used for
+SBAS (e.g. WAAS, EGNOS), circles indicate GPS, and down-, up-, right-,
+and left-pointing triangles, respectively, indicate Galileo, BeiDou,
+QZSS, and other systems' satellites (e.g. IMES, IRNSS, as well as
+unknown systems). Filled icons were used in the current fix, outline
+icons were not. Hovering over a symbol with the mouse pointer will
+temporarily display a small popup window with the satellite details from
+the Satellite List pane.
+
+*xgps* will run fine as a normal user, and fine as root.  Running *xgps*
+under *sudo* will cause some loss of functionality.
+
+== OPTIONS
+
+*-?*, *-h*, *--help*::
+  Causes the client to emit a summary of its options and then exit.
+*-device DEVICE*::
+  The device on the host to connect to. The default is empty (any).
+*-D LVL*, *--debug LVL*::
+  Sets the debug level, it is primarily for use by GPSD developers. It
+  enables various progress messages to standard error.
+*--host HOST*::
+  The host (server) to connect to. The default is localhost.
+*-l FMT*, *--llfmt FMT*::
+  Set the format of latitude and longitude reports. The value 'd'
+  produces decimal degrees and is the default. The value 'm' produces
+  degrees and decimal minutes. The value 's' produces degrees, minutes,
+  and decimal seconds.
+*-p PORT*, *--port PORT*::
+  The port to connect to. The default is 2947.
+*-r DEG*, *--rotate DEG*::
+  Accepts an argument in degrees, to rotate the skyview
+  counterclockwise.
+*-V*, *--version*::
+  This option causes each client to dump the package version and exit.
+
+By default, clients collect data from all compatible devices on
+localhost, using the default GPSD port 2947. An optional argument to any
+client may specify a server to get data from. A colon-separated suffix
+is taken as a port number. If there is a second colon-separated suffix,
+that is taken as a specific device name to be watched. However, if the
+server specification contains square brackets, the part inside them is
+taken as an IPv6 address and port/device suffixes are only parsed after
+the trailing bracket. Possible cases look like this:
+
+The options for *xgps* can be placed in the XGPSOPTS environment variable.
+XGPSOPTS is processed before the CLI options.
+
+localhost:/dev/ttyS1::
+  Look at the default port of localhost, trying both IPv4 and IPv6 and
+  watching output from serial device 1.
+example.com:2317::
+  Look at port 2317 on example.com, trying both IPv4 and IPv6.
+71.162.241.5:2317:/dev/ttyS3::
+  Look at port 2317 at the specified IPv4 address, collecting data from
+  attached serial device 3.
+[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:2317:/dev/ttyS5::
+  Look at port 2317 at the specified IPv6 address, collecting data from
+  attached serial device 5.
+
+*xgps* looks at variables in the environment to figure out the units for
+display -- imperial, nautical, or metric. Here are the variables and
+values checked:
+
+----
+    GPSD_UNITS one of:
+              i          = miles/feet
+              imperial   = miles/feet
+              n          = knots/feet
+              nautical   = knots/feet
+              m          = km/meters
+              metric     = km/meters
+    LC_MEASUREMENT
+              en_US      = miles/feet
+              C          = miles/feet
+              POSIX      = miles/feet
+              [other]    = km/meters
+    LANG
+              en_US      = miles/feet
+              C          = miles/feet
+              POSIX      = miles/feet
+              [other]    = km/meters
+----
+
+These preferences may be overridden by the *-u*, or *--units* option.
+
+The *-u* option can be used to set the system units for display;
+follow the keyword with 'i' for 'imperial' for American units
+(International Feet in altitude and error estimates, miles per hour in
+speeds), 'n' for 'nautical' (feet in altitude and error estimates, knots
+in speed) or 'm' for 'metric' (meters in altitude and error estimates,
+kilometers per hour in speeds).
+
+Note: The USA Survey Foot is not supported.
+
+== ENVIRONMENT
+
+The environment variable *GPSD_UNITS* is checked if no unit system is
+specified on the command line or in *XPGSOPTS* it may be set to 'i'.
+'imperial', 'm', 'metric', or 'n', 'nautical'.
+
+*LC_MEASUREMENT* and then *LANG* are checked if no unit system has
+been specified on the command line, in *XPGSOPTS* or in
+*GPSD_UNITS*. If the value is 'C', 'POSIX', or begins with 'en_US' the
+unit system is set to imperial. The default if no system has been
+selected defaults to metric.
+
+The *XGPSOPTS>* environment variable may be set to pass commonly used
+command line options to *xgps*. This is often used to set the *-u*
+option for locale specific units. *XGPSOPTS* is processed before the CLI
+options.
+
+== RETURN VALUES
+
+*0*:: on success.
+*1*:: on failure
+
+== SEE ALSO
+
+*gpsd*(8), *gps*(1), *xgpsspeed*(1)
+
+== RESOURCES
+
+*Project web site:* https://gpsd.io
+
+== COPYING
+
+This file is Copyright 2013 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause
