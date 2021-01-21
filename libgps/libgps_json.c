@@ -112,11 +112,15 @@ static int json_tpv_read(const char *buf, struct gps_data_t *gpsdata,
                                  .dflt.real = NAN},
         {"relD", t_real,  .addr.real = &gpsdata->fix.NED.relPosD,
                                  .dflt.real = NAN},
-        {"velN", t_real,  .addr.real = &gpsdata->fix.NED.relPosN,
+        {"relH", t_real,  .addr.real = &gpsdata->fix.NED.relPosH,
                                  .dflt.real = NAN},
-        {"velE", t_real,  .addr.real = &gpsdata->fix.NED.relPosE,
+        {"relL", t_real,  .addr.real = &gpsdata->fix.NED.relPosL,
                                  .dflt.real = NAN},
-        {"velD", t_real,  .addr.real = &gpsdata->fix.NED.relPosD,
+        {"velN", t_real,  .addr.real = &gpsdata->fix.NED.velN,
+                                 .dflt.real = NAN},
+        {"velE", t_real,  .addr.real = &gpsdata->fix.NED.velE,
+                                 .dflt.real = NAN},
+        {"velD", t_real,  .addr.real = &gpsdata->fix.NED.velD,
                                  .dflt.real = NAN},
         {"geoidSep", t_real,  .addr.real = &gpsdata->fix.geoid_sep,
                                  .dflt.real = NAN},
@@ -677,6 +681,16 @@ int libgps_json_unpack(const char *buf,
             0 != isfinite(gpsdata->fix.wspeedr) ||
             0 != isfinite(gpsdata->fix.wspeedt)) {
             gpsdata->set |= NAVDATA_SET;
+        }
+        if (0 != isfinite(gpsdata->fix.NED.relPosN) ||
+            0 != isfinite(gpsdata->fix.NED.relPosE) ||
+            0 != isfinite(gpsdata->fix.NED.relPosD) ||
+            0 != isfinite(gpsdata->fix.NED.relPosH) ||
+            0 != isfinite(gpsdata->fix.NED.relPosL) ||
+            0 != isfinite(gpsdata->fix.NED.velN) ||
+            0 != isfinite(gpsdata->fix.NED.velE) ||
+            0 != isfinite(gpsdata->fix.NED.velD)) {
+            gpsdata->set |= NED_SET;
         }
         return FILTER(status);
     } else if (str_starts_with(classtag, "\"class\":\"GST\"")) {
