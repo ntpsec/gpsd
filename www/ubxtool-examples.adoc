@@ -899,12 +899,13 @@ ubxtool: disable SURVEYIN2
 == Constellations
 
 For unknown reasons, one of the first things newbies want to play with
-is the constellation settings.  If you are headed to the polar regions,
-into space, or to Asia, then these settings will be of interest to you.
-Otherwise, unless you have a Rubidium atomic clock handy, or run 12-hour
-experiments with gpsprof, it will be hard for you to improve on the
-defaults.  If you still must fiddle, then read on, after completing the
-above section on Initial Setup.
+is the constellation settings.  If you are headed to the polar region
+, into space, or to Asia, then these settings will be of interest to
+you.  GLONASS works better at high latitudes than GPS.  QZSS and NaVIC
+are useful in Asia.  Otherwise, unless you have a Rubidium atomic clock
+handy, or run 12-hour experiments with *gpsprof*, it will be hard for you
+to improve on the defaults.  If you still must fiddle, then read on,
+after completing the above section on Initial Setup.
 
 === Checking Constellations
 
