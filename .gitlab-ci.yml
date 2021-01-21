@@ -170,7 +170,7 @@ freebsd:
   - freebsd
   script:
   - .ci-build/build.sh
-  timeout: 1 h 10m
+  timeout: 2 h
 
 # to avoid failed builds on MRs/forks where no builder with the
 # tag `sparc64` is available, run this job only if
