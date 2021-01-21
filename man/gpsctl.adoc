@@ -1,0 +1,183 @@
+= gpsctl(1)
+:author: Eric S. Raymond
+:date: 20 January 2021
+:email: <esr@thyrsus.com.>
+:keywords: gps, gpsd, gpsctl
+:manmanual: GPSD Documentation
+:mansource: The GPSD Project
+:robots: index,follow
+:sectlinks:
+:toc: left
+:type: manpage
+:webfonts!:
+
+== NAME
+
+gpsctl - control the modes of a GNSS receiver
+
+== SYNOPSIS
+
+*gpsctl* [OPTIONS] [serial-port]
+
+*gpsctl* -h
+
+*gpsctl* -V
+
+== DESCRIPTION
+
+*gpsctl* can switch a dual-mode GNSS receiver between NMEA and
+vendor-binary modes.  It can also be used to set the device baud
+rate. Note: Not all devices have these capabilities.
+
+If you have only one GNSS receiver attached to your machine, and *gpsd*
+is running, it is not necessary to specify the device; *gpsctl* does its
+work through *gpsd*, which will locate it for you.
+
+When *gpsd* is running, *gpsctl* may be run as any user, or as root.
+
+When *gpsd* is not running, the device specification is required, and you
+will need to be running as root or be a member of the device's owning
+group in order to have write access to the device. On many Unix variants
+the owning group will be named 'dialout'.
+
+Running under *sudo* will cause some loss of functionality.
+
+== OPTIONS
+
+The program accepts the following options:
+
+*-?*, *-h*, *--help*::
+  Display program usage and exit.
+*-b*, *--binary*::
+  Put the GNSS receiver into native (binary) mode.
+*-c RATE*, *--rate RATE*::
+  Change the receivers's cycle time. Units are seconds. Note, most
+  receivers have a fixed cycle time of 1 second.
+
+*-D LVL*, *--debug LVL*::
+  Set level of debug messages.
+*-e*, *--echo*::
+  Generate the packet from any other arguments specified and ship it to
+  standard output instead of the device. This switch can be used with
+  the *-t* option without specifying a device. Note: the packet data
+  for a binary prototype will be raw, not ASCII-ized in any way.
+*-f*, *--force*::
+  Force low-level access (not through the daemon).
+*-l*, *--list*::
+  List a table showing which option switches can be applied to which
+  device types, and exit.
+*-n*, *--nmea*::
+  Put the GNSS receiver into NMEA mode.
+*-r*, *--reset*::
+  Reset the GNSS receiver. Device port and type must be specified.
+*-R*, *--rmshm*::
+  Remove the GPSD shared-memory segment used for SHM export. This option
+  will normally only be of interest to GPSD developers.
+*-s SPEED*, *--speed SPEED*::
+  Set the baud rate at which the receiver emits packets.
+
+Use the *-s* option with caution. On USB and Bluetooth GPSes it is also
+possible for serial mode setting to fail either because the serial
+adaptor chip does not support non-8N1 modes or because the device
+firmware does not properly synchronize the serial adaptor chip with
+the UART on the GPS chipset when the speed changes. These failures can
+hang your device, possibly requiring a GPS power cycle or (in extreme
+cases) physically disconnecting the NVRAM backup battery.
+
+*-t TYPE*, *--type TYPE*::
+  Force the device type.
+*-T TIMEOUT*, *--timeout TIMEOUT*::
+  Change the sampling timeout. Defaults to 8 seconds, which should
+  always be sufficient to get an identifying packet from a device
+  emitting at the normal rate of 1 per second.
+*-V*, *--version*::
+  Display program version and exit.
+*-x STR*, *--ship STR*::
+  Send a specified control string to the GPS, *gpsctl* will provide packet
+  headers and trailers and checksum as appropriate for binary packet
+  types, and whatever checksum and trailer is required for text packet
+  types. (You must include the leading $ for NMEA packets.) When sending
+  to a UBX device, the first two bytes of the string supplied will
+  become the message class and type, and the remainder the payload. When
+  sending to a Navcom NCT or Trimble TSIP device, the first byte is
+  interpreted as the command ID and the rest as payload. When sending to
+  a Zodiac device, the first two bytes are used as a message ID of type
+  little-endian short, and the remainder as payload in byte pairs
+  interpreted as little-endian short. For all other supported binary
+  GPSes (notably including SiRF) the string is taken as the entire
+  message payload and wrapped with appropriate header, trailer and
+  checksum bytes. C-style backslash escapes in the string, notably \xNN
+  for hex, will be interpreted; additionally, \e will be replaced with
+  ESC. This switch implies *-f*.
+
+The argument of the forcing option, *-t*, should be a string which is
+contained in exactly one of the known driver names; for a list, do
+*gpsctl -l*.
+
+Forcing the device type behaves somewhat differently depending on
+whether this tool is going through the daemon or not. In high-level
+mode, if the device that daemon selects for you doesn't match the driver
+you specified, *gpsctl* exits with a warning. (This may be useful in
+scripts.)
+
+In low-level mode, if the device identifies as a Generic NMEA, use the
+selected driver instead. This will be useful if you have a GPS device of
+known type that is in NMEA mode and not responding to probes. (This
+option was originally implemented for talking to SiRFStar I chips, which
+don't respond to the normal SiRF ID probe.)
+
+If no options are given, the program will display a message identifying
+the GPS type of the selected device and exit.
+
+Reset (*-r*) operations must stand alone; others can be combined.
+Multiple options will be executed in this order: mode changes (*-b*
+and -*n*) first, speed changes (*-s*) second, and control-string
+sends (*-c*) last.
+
+[[environment]]
+== ENVIRONMENT VARIABLES
+
+By setting the environment variable *GPSD_SHM_KEY*, you can control
+the key value used to designate the shared-memory segment removed with
+the -R option. This will be useful mainly when isolating test instances
+of *gpsd* from production ones.
+
+== EXAMPLES
+
+*gpsctl /dev/ttyUSB0*::
+  Attempt to identify the device on USB serial device 0. Time out after
+  the default number of seconds. Adding the *-f* will force low-level
+  access and suppress the normal complaint when this tool can't find a
+  GPSD to work through.
+
+*gpsctl -f -n -s 9600 /dev/ttyUSB0*::
+  Use low-level operations (not going through a *gpsd* instance) to switch
+  a GPS to NMEA mode at 9600bps. The tool will identify the GPS type
+  itself.
+
+== BUGS
+
+SiRF GPSes can only be identified by the success of an attempt to flip
+them into SiRF binary mode. Thus, the process of probing one of these
+running in NMEA will change its behavior.
+
+Baud rate and mode changes work in direct mode but are not reliable in
+client mode. This will be fixed in a future release.
+
+== RETURN VALUES
+
+*0*:: on success.
+*1*:: on failure
+
+== SEE ALSO
+
+*gpsd*(8), *gpsdctl*(1), *gps*(1), *ubxtool*(1), *zerk*(1)
+
+== RESOURCES
+
+*Project web site:* https://gpsd.io
+
+== COPYING
+
+This file is Copyright 2013 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause
