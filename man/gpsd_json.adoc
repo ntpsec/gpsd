@@ -987,7 +987,7 @@ The applicable standard for RTCM Version 2.x is RTCM Recommended
 Standards for Differential NAVSTAR GPS Service RTCM Paper 194-93/SC
 104-STD. For RTCM 3.1 it is RTCM Paper 177-2006-SC104-STD. Ordering
 instructions for both standards are accessible from the website of the
-http://www.rtcm.org/[Radio Technical Commission for Maritime Services]
+https://www.rtcm.org/[Radio Technical Commission for Maritime Services]
 under "Publications".
 
 === RTCM WIRE TRANSMISSIONS

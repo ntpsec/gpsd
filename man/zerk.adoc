@@ -216,7 +216,7 @@ zerk -v 2 -w 5 server
 
 *zerk* is written to conform to the official Javad documentation for the
 GREIS protocol.
-http://www.javad.com/downloads/javadgnss/manuals/GREIS/GREIS_Reference_Guide.pdf[GREIS Guide].
+https://www.javad.com/downloads/javadgnss/manuals/GREIS/GREIS_Reference_Guide.pdf[GREIS Guide].
 
 *gpsd*(8)
 
