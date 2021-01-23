@@ -106,7 +106,8 @@ u-blox 8:
 $ export UBXOPTS="-P 15"
 ----
 
-You can add "-v 2" for a little more verbosity.
+You can use "-P 18 -v 2" if you have a newer u-blox 8, and for a little
+more verbosity.
 
 ----
 $ export UBXOPTS="-P 15 -v 2"
@@ -182,7 +183,8 @@ UBX-CFG-NAV5:
 
 That shows the receiver is in the default Portable model.
 
-To change the active model to Automotive (4), and check it again:
+To change the active model to Automotive (4), and check it again,
+is simply:
 
 ----
 $ ubxtool -p MODEL,4
@@ -322,8 +324,7 @@ UBX-CFG-RATE:
  measRate 000 navRate 1 timeRef 1 (GPS)
 ----
 
-The parameter to the RATE command is the number of milliseconds between
-each fix.
+The parameter to the RATE command is the number of milliseconds.
 
 === Rate Settings with Configuration Items
 
