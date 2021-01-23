@@ -110,7 +110,7 @@ You can use "-P 18 -v 2" if you have a newer u-blox 8, and for a little
 more verbosity.
 
 ----
-$ export UBXOPTS="-P 15 -v 2"
+$ export UBXOPTS="-P 18 -v 2"
 ----
 
 
