@@ -1,0 +1,231 @@
+= zerk(1)
+Gary E. Miller <gem@rellim.com.>
+:author: Gary E. Miller
+:date: 22 January 2021
+:email: gem@rellim.com
+:keywords: gps, gpsd, zerk, JavaD, GREIS
+:manmanual: GPSD Documentation
+:mansource: The GPSD Project
+:robots: index,follow
+:sectlinks:
+:toc: left
+:type: manpage
+:webfonts!:
+
+== NAME
+
+zerk - All purpose GREIS fitting
+
+== OPTIONS
+
+*zerk* [OPTIONS] [server[:port[:device]]]
+
+*zerk* -h
+
+*zerk* -V
+
+== DESCRIPTION
+
+*zerk* is an all purpose GREIS fitting. If you do not have a Javad GPS
+that speaks the GREIS protocol then you can stop reading now.
+
+This tool operates with your Javad GPS at a very low level. To
+understand *zerk* you must first be familiar with your Javad GPS and the
+documentation for the GREIS protocol.
+http://www.javad.com/downloads/javadgnss/manuals/GREIS/GREIS_Reference_Guide.pdf[GREIS
+(GNSS Receiver External Interface Specification) Guide].
+
+*zerk* can decode common GREIS messages, poll the GPS status, enable and
+disable GPS features, and send user generated commands to the GPS. It
+can read GREIS messages from a file. It can read and write directly
+through a serial device, or through a running *gpsd* instance.
+
+*zerk* does not require root privileges, except maybe to access the
+serial port in direct mode.  It will run fine as root.  Running under
+sudo will cause loss of functionality.
+
+== OPTIONS
+
+The program accepts the following options:
+
+*-?*, *-h*::
+  Makes *zerk* print a usage message and exit.
+*-c COMMAND*::
+  Send a text string to the GPS. Accepts one parameter, COMMAND, the
+  command string to send to the GPS. The string is sent verbatim, except
+  a newline is appended.
+*-d OPTION*::
+  Disable an option in the GPS. Accepts one parameter, OPTION, the
+  option to disable. *zerk* will exit after the GPS acknowledges the
+  command, unless the *-W* is given.
+
+4HZ;;
+Disable basic GREIS messages at 4Hz. The messages
+are: [RT], [UO], [GT], [PV], [SG], [DP], [SI], [EL], [AZ], [EC], [SS], and [ET]
+COMPASS;;
+Disable use of the COMPASS (BeiDou) constellation.
+CONS;;
+Disable use of all constellations.
+DEFMSG;;
+Disable the default message set (/dev/msg) at 1Hz.
+GALILEO;;
+Disable use of the GALILEO constellation.
+GLONASS;;
+Disable use of the GLONASS constellation.
+GPS;;
+Disable use of the GPS constellation.
+IPR;;
+Disable all Integer Pseudo Range messages. These are [rx], [rc],
+[r1], [r2], [r3], [r5], [rl].
+IRNSS;;
+Disable use of the IRNSS constellation.
+NMEA;;
+Disable basic NMEA 4.1e messages at 4Hz. The messages are GBS, GGA,
+GSA, GST, GSV, RMC, VTG, and ZDA.
+QZSS;;
+Disable use of the QZSS constellation.
+SBAS;;
+Disable use of the SBAS constellation.
+SNR;;
+Disable all SNR messages, except [EC]. The messages disabled are:
+[E1], [E2], [E3], [E5], [El].
+
+*-e OPTION*::
+Enable an option in the GPS. Accepts one parameter, OPTION, the option
+to enable. *zerk* will exit after the GPS acknowledges the command,
+unless the *-W* is given. *-e* accepts the same OPTIONs as *-d*, except the
+action is to enable the option.
+*-f FILE*::
+Connect to a file or device. Accepts one parameter, FILE, the file or
+device to open. Files are opened read-only. Character devices are
+opened read/write, unless the -r parameter is given. Requires the
+pyserial module.
+*-O OAF*::
+Load an Option Authorization File (OAF) into the GPS. Accepts one
+parameter, OAF, command file to read. The OAF is just a special case
+of a '.jpo' (GREIS command file). -O will send any valid .jpo file to
+the GPS.
+*-p PRESET*::
+Send a preset command the GPS. Accepts one parameter, PRESET, the name
+of the command to send. *zerk* will exit after the GPS acknowledges the
+command, unless the *-W* is given.
+
+COLDBOOT;;
+Coldboot the GPS.
+CONS;;
+Poll the enabled constellations.
+DM;;
+Disable all periodic GREIS messages.
+ID;;
+Poll the receiver ID.
+IPR;;
+Poll all Integer Pseudo Range messages. These are [rx], [rc], [r1],
+[r2], [r3], [r5], [rl].
+OAF;;
+Poll all OAF options.
+RESET;;
+Reset (reboot) the GPS.
+SERIAL;;
+Poll receiver serial number.
+SNR;;
+Poll all Signal to Noise Ratio (SNR) messages. [EC], [E1], [E2],
+[E3], [E5], [El].
+VENDOR;;
+Poll GPS vendor.
+VER;;
+Poll GPS version.
+
+*-r*::
+Read only. Do not send anything to the GPS.
+*-R RAW*::
+Save all raw data from the GPS into the file RAW.
+*-S SPEED*::
+Configure the GPS serial speed to SPEED bps.
+*-s SPEED*::
+Set local serial port speed to SPEED bps. Default 115,200 bps.
+*-V*::
+Print *zerk* version and exit.
+*-v VERBOSITY*::
+Set verbosity level to VERBOSITY. Verbosity can be from 0 (very
+quiet), to 4 (very noisy). Default 2.
+*-W*::
+Force waiting the entire wait time. No early exit for completion of
+*-d*, *-e* or *-p* command.
+*-w WAIT*::
+Wait for WAIT seconds before exiting. Will exit early on command
+completion of *-d*, *-e* or *-p* command, unless *-W* is given. Default 2.0
+second.
+*[server[:port[:device]]]*::
+By default, *zerk* collects data from all compatible devices on
+localhost, using the default GPSD port 2947. An optional argument may
+specify a server to get data from. A colon-separated suffix is taken
+as a port number. If there is a second colon-separated suffix, that is
+taken as a specific device name to be watched. Further details on the
+*gps*(1) man page.
+
+== ENVIRONMENT
+
+Options can be placed in the ZERKOPTS environment variable. ZERKOPTS is
+processed before the CLI options.
+
+== EXAMPLES
+
+Print current Javad serial port of GPS connected to local running
+*gpsd*:
+
+----
+ zerk -c "print,/cur/term"
+----
+
+Decode raw log file:
+
+----
+zerk -r -f greis-binary.log -v 2
+----
+
+Change GPS port speed of device on /dev/ttyAMA0 to 230,400 bps:
+
+----
+zerk -S 230400 -f /dev/ttyAMA0
+----
+
+Watch entire GPS reset cycle:
+
+----
+zerk -p RESET -v 2 -w 20 -W
+----
+
+Poll SVs Status:
+
+----
+zerk -W -w 2 -v 2 -c "out,,jps/{CS,ES,GS,Is,WS,QS}"
+----
+
+Dump *gpsd* data from remote server:
+
+----
+zerk -v 2 -w 5 server
+----
+
+== RETURN VALUES
+
+*0*:: on success.
+*1*:: on failure
+
+== SEE ALSO
+
+*zerk* is written to conform to the official Javad documentation for the
+GREIS protocol.
+http://www.javad.com/downloads/javadgnss/manuals/GREIS/GREIS_Reference_Guide.pdf[GREIS
+(GNSS Receiver External Interface Specification) Guide].
+
+*gpsd*(8)
+
+== RESOURCES
+
+*Project web site:* https://gpsd.io
+
+== COPYING
+
+This file is Copyright 2013 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause
