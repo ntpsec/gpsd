@@ -593,7 +593,7 @@ proceeding to these batching specific steps.
 
 For batching, you need:
 
-1. u-blox 8 or 9 GNSS receiver (protocol version greater than 23.01)
+1. u-blox 8 or 9 GNSS receiver (protocol version 23.01 or greater)
 
 2. RAM memory
 
@@ -1226,6 +1226,10 @@ want to set dynModel to "Sea" (5).  Then verify that worked:
 
 ----
 $ ubxtool -p MODEL,5  -P 27 -v 2
+connected to tcp://localhost:2947
+ubxtool: poll MODEL,5
+
+sent:
 [...]
 UBX-CFG-NAV5:
  mask 0x1 dynModel 5 fixmode 0 fixedAlt 0 FixedAltVar 0
