@@ -224,7 +224,7 @@ all_manpages = {
     "man/gpspipe.1": "man/gpspipe.adoc",
     "man/gpsplot.1": "man/gpsplot.adoc",
     "man/gpsprof.1": "man/gpsprof.xml",
-    "man/gpsrinex.1": "man/gpsrinex.xml",
+    "man/gpsrinex.1": "man/gpsrinex.adoc",
     "man/gpssubframe.1": "man/gpssubframe.adoc",
     "man/gpxlogger.1": "man/gpxlogger.adoc",
     "man/lcdgps.1": "man/gps.xml",

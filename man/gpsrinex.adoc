@@ -1,0 +1,250 @@
+= gpsrinex(1)
+:author: Gary E. Miller
+:date: 22 January 2021
+:email: gem@rellim.com
+:keywords: gps, gpsd, gpsrinex, RINEX, ubxtool
+:manmanual: GPSD Documentation
+:mansource: The GPSD Project
+:robots: index,follow
+:sectlinks:
+:toc: left
+:type: manpage
+:webfonts!:
+
+== NAME
+
+gpsrinex- Read data from gpsd convert to RINEX3 and save to a file.
+
+== SYNOPSIS
+
+*gpsrinex* [OPTIONS] [server[:port[:device]]]
+
+*gpsrinex* -h
+
+*gpsrinex* -V
+
+== DESCRIPTION
+
+*gpsrinex* is a tool to connect to *gpsd* and output the received raw
+measurements as a RINEX 3 observation file. This is useful for sending
+raw measurements (pseudorange and carrierphase) from *gpsd* to a Precise
+Point Positioning (PPP) program or service.
+
+*gpsrinex* does not require root privileges, but may be run as root.
+Some of the examples in this file may not work when run under *sudo*.
+It can be run concurrently with other tools connecting to a local or
+remote *gpsd* without causing problems.
+
+*gpsrinex* needs the GNSS receiver to be sending raw measurements to *gpsd*.
+Only a few GNSS have this capability. In addition, the *gpsd* driver for
+that GNSS must support raw mode. Currently only the u-blox driver has
+this support. Only a few u-blox 8 and 9 receivers implement the required
+UBX-RXM-RAWX message. The NEO-M8T is known to work, but requires
+configuration with *ubxtool*.
+
+Before using *ubxtool* be sure to set the UBXOPTS environment variable
+with the correct protocol version for your u-blox receiver. If your
+protocol version is 32.00, you would do this:
+
+----
+export UBXOPTS="-P 32.00"
+----
+
+RINEX has its own definitions and abbreviations. Be sure to consult
+their documentation. An observation file (.obs) contains data sets,
+called epochs, that contain the pseudorange and carrierphase for each
+satellite seen.
+
+*gpsrinex* by default will acquire 20 epochs spaced apart by 30 seconds.
+That will take 10 minutes to complete. Most users consider the 30 second
+interval to be optimal. Many PPP programs require at least 1 or 2 hours
+data, but no more than 24 or 48 hours of data. Most users consider 4 to
+6 hours of data as a minimum for good accuracy. Additional hours will
+not yield much improvement.
+
+The output will consist of one RINEX 3 observation file that is ready to
+be read by your PPP program. The default filename will be in the form:
+gpsrinex.obs. You can override this filename with the
+*-f* option.
+
+Optionally a server, TCP/IP port number and remote device can be given.
+If omitted, *gpsrinex* connects to localhost on the default port (2947)
+and watches all devices opened by *gpsd*.
+
+== OPTIONS
+
+*-?*, *-h*, *--help*::
+  Print a usage message and exit.
+*-D LVL*, *-debug LVL*::
+  Set debug level to LVL.
+*-f FILE*, *--fileout FILE*::
+  save RINEX into FILE.
+*-i SECS*, *--interval SECS*::
+  wait [interval] seconds between epochs. The interval can be specified
+  to the millisecond. OPUS accepts intervals of 1, 2, 3, 5, 10, 15 or,30
+  seconds. OPUS then reduces the data to 30 second intervals. Default is
+  30.000.
+*-n COUNT*, *--count COUNT*::
+  Causes COUNT epochs to be output. OPUS requires a minimum af 15
+  minutes, and a maximum of 48 hours, of data.
+*-V*, *--version*::
+  makes *gpsrinex* print its version and exit.
+
+The following options set strings that are placed in the generated RINEX
+3 obs file. They do not change how *gpsrinex* computes anything.
+
+*--agency AGENCY*::
+  The name of the agency creating the current file.
+*--ant_num NUMBER*::
+  The antenna serial number.
+*--ant_type TYPE*::
+  The antenna type.
+*--marker_name NAME*::
+  The marker name.
+*--marker_type TYPE*::
+  The marker type
+*--observer OBSERVER*::
+  The name of the observer (you).
+*--rec_num NUM*::
+  The receiver serial number.
+*--rec_type TYPE*::
+  The receiver type.
+*--rec_vers VERS*::
+  The receiver version.
+
+The following options set floating point numbers that are placed in the
+generated RINEX 3 obs file. They do not change how *gpsrinex* computes
+anything.
+
+*--ant_e EASTING*::
+  The antenna easting from marker in meters.
+*--ant_h HEIGHT*::
+  The antenna height from marker in meters.
+*--ant_n NORTHING*::
+  The antenna northing from marker in meters.
+
+== EXAMPLES
+
+Example 1:
+
+Create a 4 hour .obs file. With a running *gpsd* accessible on the
+localhost do all of the following, in order. Order matters.
+
+The raw measurement messages are long. Be sure your serial port speed is
+high enough:
+
+----
+gpsctl -s 115200
+----
+
+Disable all NMEA messages, and enable binary messages:
+
+----
+ubxtool -d NMEA
+ubxtool -e BINARY
+----
+
+The NEO-M8N will only reliably output raw measurements when only the GPS
+and QZSS constellations are enabled. If your PPP service can use
+GLONASS, then enable that as well. Be sure to disable, before enable, so
+as not to momentarily have too many constellations selected. *ubxtool*, as
+recommended by u-blox, enables the QZSS constellation in tandem with
+GPS. Disable all constellations, except GPS (and QZSS):
+
+----
+ubxtool -d BEIDOU
+ubxtool -d GALILEO
+ubxtool -d GLONASS
+ubxtool -d SBAS
+ubxtool -e GPS
+----
+
+Verify the constellations enabled:
+
+----
+ubxtool -p CFG-GNSS
+----
+
+Enable the good stuff, the raw measurement messages:
+
+----
+ubxtool -e RAWX
+----
+
+Verify raw data messages are being sent:
+
+----
+ubxtool | fgrep RAWX
+----
+
+You should see this output:
+
+----
+UBX-RXM-RAWX:
+UBX-RXM-RAWX:
+----
+
+Collect 4 hours of samples at 30 second intervals, save the RINEX 3
+observations in the file today.obs:
+
+----
+gpsrinex -i 30 -n 480 -f today.obs
+----
+
+Wait 4 hours. Enjoy a meal, or do some exercise. When *gpsrinex* finishes,
+upload the file today.obs to your favorite PPP service.
+
+Example 2:
+
+Collect raw measurement data from a remote *gpsd*. Then process it later
+with *gpsrinex* and *gpsprof*.
+
+Ensure the receiver is configured properly, as shown in Example 1.
+
+Grab 4 hours of raw live data from remote *gpsd* at 10.168.1.2:
+
+----
+gpspipe -x 14400 -R 10.168.1.2 > 4h-raw.ubx
+----
+
+When gpspipe is complete, feed the data to gpsfake:
+
+----
+gpsfake -1 -P 3000 4h-raw.ubx
+----
+
+In another window, feed the data to *gpsrinex*. Use *-n 10000000* so that
+all the data from the raw file is used:
+
+----
+gpsrinex -i 30 -n 1000000 :3000
+----
+
+Repeat the process with gpsfake to send the data to *gpsprof*.
+
+== RETURN VALUES
+
+*0*:: on success.
+*1*:: on failure
+
+== SEE ALSO
+
+One service known to work with gbsrinex output is at:
+https://webapp.geod.nrcan.gc.ca/geod/tools-outils/ppp.php
+
+OPUS requires 2 frequency observation files.
+https://www.ngs.noaa.gov/OPUS/
+
+The curious can find the RINEX 3.04 format described here:
+ftp://igs.org/pub/data/format/rinex304.pdf
+
+*gpsd*(8), *gps*(1), *gpsprof*(1), *gpsfake*(1). *ubxtool*(1)
+
+== RESOURCES
+
+*Project web site:* https://gpsd.io
+
+== COPYING
+
+This file is Copyright 2013 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause
