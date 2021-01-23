@@ -1,4 +1,4 @@
-= ntpshmmon(1)
+= gpsfake(1)
 :author: Eric S. Raymond
 :date: 22 January 2021
 :email: <esr@thyrsus.com.>

@@ -1,4 +1,4 @@
-= ntpshmmon(1)
+= gps_json(1)
 :author: Eric S. Raymond
 :date: 21 January 2021
 :email: <esr@thyrsus.com.>
@@ -95,7 +95,7 @@ reports a value to *gpsd*, then *gpsd* will report that value. Otherwise
 // asciidoctor ignores width/autowidth in manpages
 
 .TPV object
-[cols="2,1,2,4",options="header",%autowidth, stretch]
+[cols="1,1,1,4",options="header", stretch]
 |===
 |Name |Always? |Type |Description
 |class |Yes |string |Fixed: "TPV"
