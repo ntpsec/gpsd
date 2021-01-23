@@ -1,0 +1,229 @@
+= ntpshmmon(1)
+:author: Eric S. Raymond
+:date: 22 January 2021
+:email: <esr@thyrsus.com.>
+:keywords: gps, gpsd, gpssfake
+:manmanual: GPSD Documentation
+:mansource: The GPSD Project
+:robots: index,follow
+:sectlinks:
+:toc: left
+:type: manpage
+:webfonts!:
+
+== NAME
+
+gpsfake - test harness for gpsd, simulating a GNSS receiver
+
+== SYNOPSIS
+
+*gpsfake* [OPTIONS] infile
+
+*gpsfake* -h
+
+*gpsfake* -V
+
+
+== DESCRIPTION
+
+*gpsfake* is a test harness for *gpsd* and its clients. It opens a pty
+(pseudo-TTY), launches a *gpsd* instance that thinks the slave side of
+the pty is its GNSS device, and repeatedly feeds the contents of one
+or more test logfiles through the master side to the GNSS receiver. If
+there are multiple logfiles, sentences from them are interleaved in the
+order the files are specified.
+
+*gpsfake* does not require root privileges, but will run fine as root.
+It can be run concurrently with a production *gpsd* instance without
+causing problems, as long as you use the *-P* option.  Runing under sudo
+will cause minor loss of functionality.
+
+The logfiles may contain packets in any supported format, including in
+particular NMEA, SiRF, TSIP, or Zodiac. Leading lines beginning with #
+will be treated as comments and ignored, except in the following special
+cases:
+
+* a comment of the form *#Date: yyyy-mm-dd* (ISO8601 date format) may be
+used to set the initial date for the log.
+* a comment of the form *#Serial: [0-9] [78][NOE][12]* may be used to set
+serial parameters for the log - baud rate, word length, stop bits.
+* a comment of the form *#Transport: UDP* may be used to fake a UDP source
+rather than the normal pty.
+
+The *gpsd* instance is run in foreground. The thread sending fake GNSS data
+to the daemon is run in background.
+
+== OPTIONS
+
+*-?*, *-h*, *--help*::
+  Print a usage message and exit.
+*-1*, *--singleshot*::
+  The logfile is interpreted once only rather than repeatedly. This
+  option is intended to facilitate regression testing.
+*-b*, *--baton*::
+  Enable a twirling-baton progress indicator on standard error. At
+  termination, it reports elapsed time.
+*-c COUNT*, *--cycle COUNT*::
+  Sets the delay between sentences in seconds. Fractional values of
+  seconds are legal. The default is zero (no delay).
+*-d LVL*, *--debug LVL*::
+  Pass a *-D* option to the daemon: thus *-D
+  4* is shorthand for *-o="-D 4"*.
+*-g*, *-G*, *--gdb*, *--lldb*::
+  Use the monitor facility to run the *gpsd* instance within *gpsfake* under
+  control of *gdb* or *lldb*, respectively. They also disable the timeout on
+  daemon inactivity, to allow for breakpointing. If necessary, the
+  timeout can be reenabled by a subsequent *-W* or *--wait* . If
+  *xterm* and $DISPLAY are available, these options launch the debugger in
+  a separate *xterm* window, to separate the debugger dialog from the
+  program output, but otherwise run it directly. In the *gdb* case,
+  *-tui* is used with *xterm* but not otherwise, since curses and
+  program output don't play nicely together. Although *lldb* lacks an
+  equivalent option, some versions have a 'gui' command.
+*-i*, *--promptme*::
+  Single-step through logfiles. It dumps the line or packet number (and
+  the sentence if the protocol is textual) followed by "? ". Only when
+  the user keys Enter is the line actually fed to *gpsd*.
+*-l*, *--linedump*::
+  Print a line or packet number just before each sentence is fed to the
+  daemon. If the sentence is textual (e.g. NMEA), the text is printed as
+  well. If not, the packet will be printed in hexadecimal (except for
+  RTCM packets, which aren't dumped at all). This option is useful for
+  checking that *gpsfake* is getting packet boundaries right.
+*-m PROG*, *--monitor PROG*::
+  Specify a monitor program (PROG) inside which the daemon should be
+  run. This option is intended to be used with *valgrind*(1) , *gdb*(1) and
+  similar programs.
+*-n*, *--nowait*::
+  Pass *-n* to the daemon to start the daemon reading the GNSS receiver
+  without waiting for a client (equivalent to *-o="-n"*).
+*-o="OPTS"*, *--option="OPTS"*::
+  Specify options to pass to the daemon. The equal sign (=) and quotes
+  are required so that *gpsd* options are not confused with *gpsfake*
+  options. To start the daemon reading the GNSS receiver without waiting
+  for a client use *-o="-n"* (equivalent to the *-n*) which passes *-n*
+  to the *gpsd* daemon. The option *-o="-D 4"* passes a *-D 4* to the
+  daemon, equivalent to the using *-D 4*.
+
+*-p*, *--pipe*::
+  Sets watcher mode and dump the NMEA and GPSD notifications generated
+  by the log to standard output. This is useful for regression testing.
+*-p PORT*, *--port PORT*::
+  Sets the daemon's listening port to PORT.
+*-q*, *--quiet*::
+  Tell *gpsfake* to suppress normal progress output and thus act in a
+  quiet manner.
+*-r STR*, *--clientinit STR*::
+  Specify an initialization command to use in pipe mode. The default is
+  *?WATCH={"enable":true,"json":true}*.
+*-s SPEED*, *--speed SPEED*::
+  Sets the baud rate for the slave tty. The default is 4800.
+*-S*, *--slow*::
+  Tells *gpsfake* to insert realistic delays in the test input rather than
+  trying to stuff it through the daemon as fast as possible. This will
+  make the test(s) run much slower, but avoids flaky failures due to
+  machine load and possible race conditions in the pty layer.
+*-t*, *--tcp*::
+  Forces the test framework to use TCP rather than pty devices. Besides
+  being a test of TCP source handling, this may be useful for testing
+  from within chroot jails where access to pty devices is locked out.
+*-T*, *--sysinfo*::
+  Makes *gpsfake* print some system information and then exit.
+*-u*, *--udp*::
+  Forces the test framework to use UDP rather than pty devices. Besides
+  being a test of UDP source handling, this may be useful for testing
+  from within chroot jails where access to pty devices is locked out.
+*-v*, *--verbose*::
+  Enable verbose progress reports to stderr. Use multiple times to
+  increase verbosity. It is mainly useful for debugging *gpsfake* itself.
+*-w SEC*, *--wait SEC*::
+  Set the timeout on daemon inactivity, in seconds. The default timeout
+  is 60 seconds, and a value of 0 suppresses the timeout altogether.
+  Note that the actual timeout is longer due to internal delays,
+  typically by about 20 seconds.
+*-x*, *--predump*::
+  Dump packets as *gpsfake* gathers them. It is mainly useful for
+  debugging *gpsfake* itself.
+
+The last argument(s) must be the name of a file or files containing the
+data to be cycled at the device. *gpsfake* will print a notification each
+time it cycles.
+
+Normally, *gpsfake* creates a pty for each logfile and passes the slave
+side of the device to the daemon. If the header comment in the logfile
+contains the string "UDP", packets are instead shipped via UDP port 5000
+to the address 192.168.0.1.255. You can monitor the packet with *tcpdump*
+this way:
+
+----
+tcpdump -s0 -n -A -i lo udp and port 5000
+----
+
+== MAGIC COMMENTS
+
+Certain magic comments in test load headers can change the conditions of
+the test. These are:
+
+*Serial*::
+  May contain a serial-port setting such as 4800 7N2 - baud rate
+  followed by 7 or 8 for byte length, N or O or E for parity and 1 or 2
+  for stop bits. The test is run with those settings on the slave port
+  that the daemon sees.
+*Transport*::
+  Values 'TCP' and 'UDP' force the use of TCP and UDP feeds respectively
+  (the default is a pty).
+*Delay-Cookie*::
+  Must be followed by two whitespace-separated fields, a delimiter
+  character and a numeric delay in seconds. Instead of being broken up
+  by packet boundaries, the test load is split on the delimiters. The
+  delay is performed after each feed. Can be useful for imposing write
+  boundaries in the middle of packets.
+
+== CUSTOM TESTS
+
+*gpsfake* is a trivial wrapper around a Python module, also named *gpsfake*,
+that can be used to fully script sessions involving a *gpsd* instance, any
+number of client sessions, and any number of fake GPSes feeding the
+daemon instance with data from specified sentence logs.
+
+Source and embedded documentation for this module is shipped with the
+*gpsd* development tools. You can use it to torture test either *gpsd*
+itself or any *gpsd*-aware client application.
+
+Logfiles for the use with *gpsfake* can be retrieved using *gpspipe*,
+*gpscat*, or *cgps* from the *gpsd* distribution, or any other application
+which is able to create a compatible output.
+
+== ENVIRONMENT
+
+=== WRITE_PAD
+
+For unknown reasons *gpsfake* may sometimes time out and fail. Set the
+WRITE_PAD environment value to a larger value to avoid this issue. A
+starting point might be "WRITE_PAD = 0.005". Values as large os 0.200
+may be required.
+
+=== GPSD_HOME
+
+If *gpsfake* exits with "Cannot execute gpsd: executable not found." the
+environment variable GPSD_HOME can be set to the path where *gpsd* can be
+found. (instead of adding that folder to the PATH environment variable
+
+== RETURN VALUES
+
+*0*:: on success.
+*1*:: on failure
+
+== SEE ALSO
+
+*gpsd*(8), *gps*(1), *gpspipe*(1), *gpscat*(1), *cgps*(1), *tcpdump*(1),
+*gdb*(1), *lldb*(1), *valgrind*(1)
+
+== RESOURCES
+
+*Project web site:* https://gpsd.io
+
+== COPYING
+
+This file is Copyright 2013 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause
