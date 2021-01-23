@@ -26,17 +26,17 @@ zerk - All purpose GREIS fitting
 
 == DESCRIPTION
 
-*zerk* is an all purpose GREIS fitting. If you do not have a Javad GPS
-that speaks the GREIS protocol then you can stop reading now.
+*zerk* is an all purpose GREIS (GNSS Receiver External Interface
+Specification) fitting. If you do not have a Javad GPS that speaks
+the GREIS protocol then you can stop reading now.
 
 This tool operates with your Javad GPS at a very low level. To
 understand *zerk* you must first be familiar with your Javad GPS and the
 documentation for the GREIS protocol.
-http://www.javad.com/downloads/javadgnss/manuals/GREIS/GREIS_Reference_Guide.pdf[GREIS
-(GNSS Receiver External Interface Specification) Guide].
+https://www.javad.com/downloads/javadgnss/manuals/GREIS/GREIS_Reference_Guide.pdf[GREIS Guide].
 
 *zerk* can decode common GREIS messages, poll the GPS status, enable and
-disable GPS features, and send user generated commands to the GPS. It
+disable GPS features, and send user-generated commands to the GPS. It
 can read GREIS messages from a file. It can read and write directly
 through a serial device, or through a running *gpsd* instance.
 
@@ -216,8 +216,7 @@ zerk -v 2 -w 5 server
 
 *zerk* is written to conform to the official Javad documentation for the
 GREIS protocol.
-http://www.javad.com/downloads/javadgnss/manuals/GREIS/GREIS_Reference_Guide.pdf[GREIS
-(GNSS Receiver External Interface Specification) Guide].
+http://www.javad.com/downloads/javadgnss/manuals/GREIS/GREIS_Reference_Guide.pdf[GREIS Guide].
 
 *gpsd*(8)
 
