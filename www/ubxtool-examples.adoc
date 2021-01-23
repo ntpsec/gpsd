@@ -384,7 +384,7 @@ proceeding to the following logging specific steps.
 
 For logging, you need:
 
-1. u-blox 7, 8 or 9 GNSS receiver (protocol version greater than 15)
+1. u-blox 7, 8 or 9 GNSS receiver (protocol version greater than, or equal to, 15)
 
 2. External SQI flash memory with a valid Flash Information Structure (FIS).
 
@@ -1278,7 +1278,7 @@ almost all GPS mice, not.
 === With Configuration Items
 
 UBX-CFG-CFG, used by "-p SAVE", is deprecated in protocol versions
-greater than 23.01.  It also works differently than before.  So on
+greater than, or equal to, 23.01.  It also works differently than before.  So on
 newer receivers you should clear, save, and load configurations with
 Configuration Items.  Before continuing this section, read the ubxtool
 man page on Configuration Items.
