@@ -109,7 +109,7 @@ static void usage(void)
                   "  --daemonize      Run as daemon.\n"
                   "  --help           Show this help and exit.\n"
                   "  --json           Dump gpsd native JSON data.\n"
-                  "  --nmea           Dump (psuedo) NMEA.\n"
+                  "  --nmea           Dump (pseudo) NMEA.\n"
                   "  --output FILE    Write output to FILE.\n"
                   "  --pps            Include PPS JSON in NMEA or raw mode.\n"
                   "  --profile        Include profiling info in the JSON.\n"
