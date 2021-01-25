@@ -13,7 +13,7 @@
 
 == NAME
 
-gpsdctl -- tool for sending commands to gpsd over its control socket
+gpsdctl - tool for sending commands to gpsd over its control socket
 
 == SYNOPSIS
 
