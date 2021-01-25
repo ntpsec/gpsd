@@ -13,7 +13,7 @@
 
 == NAME
 
-gpsrinex- Read data from gpsd convert to RINEX3 and save to a file.
+gpsrinex - Read data from gpsd convert to RINEX3 and save to a file.
 
 == SYNOPSIS
 
