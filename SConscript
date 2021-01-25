@@ -207,9 +207,9 @@ python_progs = python_clients + [
 
 # All man pages.  Always build them all.
 all_manpages = {
-    "man/cgps.1": "man/gps.xml",
-    "man/gegps.1": "man/gps.xml",
-    "man/gps.1": "man/gps.xml",
+    "man/cgps.1": "man/cgps.adoc",
+    "man/gegps.1": "man/cgps.adoc",
+    "man/gps.1": "man/cgps.adoc",
     "man/gps2udp.1": "man/gps2udp.adoc",
     "man/gpscsv.1": "man/gpscsv.adoc",
     "man/gpscat.1": "man/gpscat.adoc",
@@ -227,7 +227,7 @@ all_manpages = {
     "man/gpsrinex.1": "man/gpsrinex.adoc",
     "man/gpssubframe.1": "man/gpssubframe.adoc",
     "man/gpxlogger.1": "man/gpxlogger.adoc",
-    "man/lcdgps.1": "man/gps.xml",
+    "man/lcdgps.1": "man/cgps.adoc",
     "man/libgps.3": "man/libgps.adoc",
     "man/libgpsmm.3": "man/libgpsmm.adoc",
     "man/libQgpsmm.3": "man/libgpsmm.adoc",

@@ -1,0 +1,167 @@
+= gps(1)
+:date: 24 January 2021
+:keywords: gps, gpsd, cgps
+:manmanual: GPSD Documentation
+:mansource: The GPSD Project
+:robots: index,follow
+:sectlinks:
+:toc: left
+:type: manpage
+:webfonts!:
+
+== NAME
+
+cgps - curses terminal client for gpsd
+
+gegps - google earth client for gpsd
+
+lcdgps - LCD client for gpsd
+
+== SYNOPSIS
+
+*cgps* [OPTIONS] [server[:port[:device]]]
+
+*cgps* -h
+
+*cgps* -V
+
+*gegps* [OPTIONS] [server[:port[:device]]]
+
+*gegps* -h
+
+*gegps* -V
+
+*lcdgps* [OPTIONS] [server[:port[:device]]]
+
+*lcdgps* -h
+
+*lcdgps* -V
+
+== DESCRIPTION
+
+These are some simple clients shipped with gpsd. They have some common
+options:
+
+*-?*, *-h*, *--help*::
+  Print a summary of options and then exit.
+*-V*, *--version*::
+  Print the package version and exit.
+
+By default, clients collect data from all compatible devices on
+localhost, using the default GPSD port 2947. An optional argument to any
+client may specify a server to get data from. A colon-separated suffix
+is taken as a port number. If there is a second colon-separated suffix,
+that is taken as a specific device name to be watched. However, if the
+server specification contains square brackets, the part inside them is
+taken as an IPv6 address and port/device suffixes are only parsed after
+the trailing bracket. Possible cases look like this:
+
+localhost:/dev/ttyS1::
+  Look at the default port of localhost, trying both IPv4 and IPv6 and
+  watching output from serial device 1.
+example.com:2317::
+  Look at port 2317 on example.com, trying both IPv4 and IPv6.
+71.162.241.5:2317:/dev/ttyS3::
+  Look at port 2317 at the specified IPv4 address, collecting data from
+  attached serial device 3.
+[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:2317:/dev/ttyS5::
+  Look at port 2317 at the specified IPv6 address, collecting data from
+  attached serial device 5.
+
+=== cgps
+
+*cgps* is a client resembling xgps, but without the pictorial satellite
+display and able to run on a serial terminal or terminal emulator.
+
+*-D LVL*, *--debug LVL*::
+  Sets the debug level; it is primarily for use by GPSD developers. It
+  enables various progress messages to standard error.
+*-l FMT*, *--llfmt FMT*::
+  Sets the format of latitude and longitude reports. The value 'd'
+  produces decimal degrees and is the default. The value 'm' produces
+  degrees and decimal minutes. The value 's' produces degrees, minutes,
+  and decimal seconds.
+*-s*, *--silent*::
+  Prevents *cgps* from displaying the data coming from the daemon. This
+  display can also be toggled with the s command.
+*-m*, *--magtrack*::
+  Display your magnetic track (as opposed to your true track). This is a
+  calculated value, not a measured value. Magnetic variation is always
+  potentially subject to large errors, but is usually better than two
+  degrees.
+*-u UNITS*, *--units UNITS*::
+  Set the system units for display; follow the keyword with 'i' for
+  'imperial' for American units (International Feet in altitude and
+  error estimates, miles per hour in speeds), 'n' for 'nautical' (feet
+  in altitude and error estimates, knots in speed) or 'm' for 'metric'
+  (meters in altitude and error estimates, kilometers per hour in
+  speeds).
+  *
+  Note: The USA Survey Foot is not supported.
+
+*cgps* terminates when you send it a SIGHUP or SIGINT; given default
+terminal settings this will happen when you type Ctrl-C at it. It will
+also terminate on 'q'
+
+=== gegps
+
+This program collects fixes from gpsd and feeds them to a running
+instance of Google Earth for live location tracking.
+
+*-d DIR*, *--kmldir DIR*::
+  Specify the location of the Google Earth installation directory. If
+  not specified, it defaults to the current directory.
+*-D LVL*, *--debug LVL*::
+  Sets the debug level; it is primarily for use by GPSD developers. It
+  enables various progress messages to standard error.
+*--device DEVICE*::
+  Connect to device DEVICE on gpsd host.
+*--host HOST*::
+  Connect to gpsd on host HOST.
+*-i*, *--initialize*::
+If you have the free (non-subscription) version, start by running with
+the *-i* option to drop a clue in the Google Earth installation
+directory, as 'Open_in_Google_Earth_RT_GPS.kml', then open that file
+in Places (File > Open...). Run *gegps* in the normal way after that.
+*--port PORT*::
+  Connect to gpsd on port PORT.
+
+=== lcdgps
+
+A client that passes gpsd data to lcdproc, turning your car computer
+into a very expensive and nearly feature-free GPS receiver. Currently
+assumes a 4x40 LCD and writes data formatted to fit that size screen.
+Also displays 4- or 6-character Maidenhead grid square output.
+
+*-s*, *--sleep*::
+  Sleep for 10 seconds before starting.
+
+== ENVIRONMENT
+
+The environment variable *GPSD_UNITS* is checked if no unit system is
+specified on the command line. It may be set to 'i'. 'imperial', 'm',
+'metric', or 'n', 'nautical'.
+
++LC_MEASUREMENT+ and then +LANG+ are checked if no unit system has
+been specified on the command line, or in +GPSD_UNITS+. If the value
+is 'C', 'POSIX', or begins with 'en_US' the unit system is set to
+imperial. The default if no system has been selected defaults to metric.
+
+== RETURN VALUES
+
+*0*:: on success.
+*1*:: on failure
+
+== SEE ALSO
+
+*gpsd*(8), *gpsctl*(1), *gps*(1), *libgps*(3), *libgpsmm*(3), *gpsprof*(1),
+*gpsfake*(1), *gpscat*(1), *gpspipe*(1), *gpsmon*(1), *xgps*(1). *xgpsspeed*(1)
+
+== RESOURCES
+
+*Project web site:* https://gpsd.io
+
+== COPYING
+
+This file is Copyright 2013 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause
