@@ -955,6 +955,7 @@ bluezflags = []
 confdefs = []
 dbusflags = []
 htmlbuilder = False
+adoc_prog = False
 ncurseslibs = []
 mathlibs = []
 xtlibs = []
@@ -1411,7 +1412,6 @@ if not cleaning and not helping:
 #endif /* GPSD_CONFIG_H */
 ''')
 
-    adoc_prog = htmlbuilder = None
     if config.env['manbuild']:
         if config.CheckXsltproc():
             build = ("xsltproc --encoding UTF-8 --output $TARGET"
