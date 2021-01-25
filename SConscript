@@ -228,7 +228,7 @@ all_manpages = {
     "man/gpssubframe.1": "man/gpssubframe.adoc",
     "man/gpxlogger.1": "man/gpxlogger.adoc",
     "man/lcdgps.1": "man/gps.xml",
-    "man/libgps.3": "man/libgps.xml",
+    "man/libgps.3": "man/libgps.adoc",
     "man/libgpsmm.3": "man/libgpsmm.adoc",
     "man/libQgpsmm.3": "man/libgpsmm.adoc",
     "man/ntpshmmon.1": "man/ntpshmmon.adoc",

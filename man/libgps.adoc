@@ -1,0 +1,285 @@
+= libgps(2)
+:author: Eric S. Raymond
+:date: 23 January 2021
+:email: <esr@thyrsus.com.>
+:keywords: gps, gpsd, libgps
+:manmanual: GPSD Documentation
+:mansource: The GPSD Project
+:robots: index,follow
+:sectlinks:
+:toc: left
+:type: manpage
+:webfonts!:
+
+== NAME
+
+libgps - C service library for communicating with the GPS daemon
+
+== SYNOPSIS
+
+$$C:$$
+
+----
+#include <gps.h>
+
+int gps_open(char * server, char * port, struct gps_data_t * gpsdata)
+
+int gps_send(struct gps_data_t * gpsdata, char * fmt, ...)
+
+int gps_read(struct gps_data_t * gpsdata, char * message,
+             int message_size)
+
+bool gps_waiting(const struct gps_data_t * gpsdata, int timeout)
+
+char * gps_data(const struct gps_data_t * gpsdata)
+
+int gps_unpack(char * buf, struct gps_data_t * gpsdata)
+
+int gps_close(struct gps_data_t * gpsdata)
+
+int gps_stream(struct gps_data_t * gpsdata, unsigned int flags,
+               void * data)
+
+int gps_mainloop(struct gps_data_t * gpsdata, int timeout,
+                 void (* hook)(struct gps_data_t *gpsdata))
+
+const char * gps_errstr(int err)
+----
+
+Python:
+
+----
+import gps
+session = gps.gps(host="localhost", port="2947")
+session.stream(flags=gps.WATCH_JSON)
+for report in session:
+    process(report) del session
+----
+
+== DESCRIPTION
+
+*libgps* is a service library which supports communicating with an
+instance of the *gpsd*(8); link it with the linker option *-lgps*.
+
+[WARNING]
+====
+Take care to conditionalize your code on the major and minor API version
+symbols in *gps.h*; ideally, force a compilation failure if
+GPSD_API_MAJOR_VERSION is not a version you recognize. See the GPSD
+project website for more information on the protocol and API changes.
+====
+
+Calling *gps_open()* initializes a GPS-data structure to hold the data
+collected by the GPS, and sets up access to *gpsd*(8) via either the socket
+or shared-memory export. The shared-memory export is faster, but does
+not carry information about device activation and deactivation events
+and will not allow you to monitor device packet traffic.
+
+*gps_open()* returns 0 on success, -1 on errors and is re-entrant.
+errno is set depending on the error returned from the socket or
+shared-memory interface; see *gps.h* for values and explanations; also
+see *gps_errstr()*. The host address may be a DNS name, an IPv4 dotted
+quad, an IPV6 address, or the special value *GPSD_SHARED_MEMORY*
+referring to the shared-memory export; the library will do the right
+thing for any of these.
+
+*gps_close()* ends the session and should only be called after a
+successful *gps_open()*. It returns 0 on success, -1 on errors. The
+shared-memory interface close always returns 0, whereas a socket close
+can result in an error. For a socket close error it will have set an
+errno from the call to the system's *close()*.
+
+*gps_send()* writes a command to the *gpsd* daemon. It does nothing when
+using the shared-memory export. The second argument must be a format
+string containing elements from the command set documented at *gpsd*(8).
+It may have % elements as for sprintf(3), which will be filled in
+from any following arguments. This function returns a -1 if there was
+a Unix-level write error, otherwise 0. Please read the LIMITATIONS
+section for additional information and cautions. See *gps_stream()* as a
+possible alternative.
+
+*gps_read()* accepts a response, or sequence of responses, from the
+*gpsd* daemon and interprets. This function does either a nonblocking
+read for data from the *gpsd* daemon or a fetch from shared memory;
+it returns a count of bytes read for success, -1 with errno set on a
+Unix-level read error, -1 with errno not set if the socket to the *gpsd*
+daemon has closed or if the shared-memory segment was unavailable, and 0
+if no data is available.
+
+*gps_waiting()* can be used to check whether there is new data from the
+*gpsd* daemon. The second argument is the maximum amount of time to wait
+(in microseconds) on input before returning. It returns true if there is
+input waiting, false on timeout (no data waiting) or error condition.
+When using the socket export, this function is a convenience wrapper
+around a select 2 call, and zeros *errno* on entry; you can test *errno*
+after exit to get more information about error conditions.  Warning:
+under the shared-memory interface there is a tiny race window between
+*gps_waiting()* and a following *gps_read()*; in that context, because
+the latter does not block, it is probably better to write a simple read
+loop.
+
+*gps_mainloop()* enables the provided hook function to be continually
+called whenever there is *gpsd* data. The second argument is the maximum
+amount of time to wait (in microseconds) on input before exiting the
+loop (and return a value of -1). It will also return a negative value on
+various errors.
+
+*gps_unpack()* parses JSON from the argument buffer into the target of
+the session structure pointer argument. Included in case your
+application wishes to manage socket I/O itself.
+
+*gps_data()* returns the contents of the client data buffer (it
+returns NULL when using the shared-memory export). Use with care; this
+may fail to be a NUL-terminated string if WATCH_RAW is enabled.
+
+*gps_stream()* asks *gpsd* to stream the reports it has at you, to be
+made available when you poll (not available when using the shared-memory
+export). The second argument is a flag mask that sets various policy
+bits; see the list below. Calling *gps_stream()* more than once with
+different flag masks is allowed.
+
+WATCH_DISABLE::
+  Disable the reporting modes specified by the other WATCH_ flags.
+WATCH_ENABLE::
+  Enable the reporting modes specified by the other WATCH_ flags. This
+  is the default.
+WATCH_JSON::
+  Enable JSON reporting of data. If WATCH_ENABLE is set, and no other
+  WATCH flags are set, this is the default.
+WATCH_NMEA::
+  Enable generated pseudo-NMEA reporting on binary devices.
+WATCH_RARE::
+  Enable reporting of binary packets in encoded hex.
+WATCH_RAW::
+  Enable literal passthrough of binary packets.
+WATCH_SCALED::
+  When reporting AIS or Subframe data, scale integer quantities to
+  floats if they have a divisor or rendering formula associated with
+  them.
+WATCH_NEWSTYLE::
+  Force issuing a JSON initialization and getting new-style responses.
+  This is the default.
+WATCH_OLDSTYLE::
+  Force issuing a W or R command and getting old-style responses.
+  Warning: this flag (and the capability) will be removed in a future
+  release.
+WATCH_DEVICE::
+  Restrict watching to a specified device. The device path string is
+  given as the third argument (data).
+
+*gps_errstr()* returns an ASCII string (in English) describing the
+error indicated by a nonzero return value from *gps_open()*.
+
+Consult *gps.h* to learn more about the data members and associated
+timestamps. Note that information will accumulate in the session
+structure over time, and the 'valid' field is not automatically zeroed
+by each *gps_read()*. It is up to the client to zero that field when
+appropriate and to keep an eye on the fix and sentence timestamps.
+
+The Python implementation supports the same facilities as the
+socket-export calls in the C library; there is no shared-memory
+interface. *gps_open()* is replaced by the initialization of a gps
+session object; the other calls are methods of that object, and have the
+same names as the corresponding C functions. However, it is simpler just
+to use the session object as an iterator, as in the example given below.
+Resources within the session object will be properly released when it is
+garbage-collected.
+
+----
+import gps
+session = gps.gps(host="localhost", port="2947")
+session.stream(flags=gps.WATCH_JSON)
+for report in session:
+    process(report) del session
+----
+
+== ENVIRONMENT VARIABLES
+
+By setting the environment variable *GPSD_SHM_KEY*, you can control
+the key value used to create shared-memory segment used for
+communication with *gpsd*. This will be useful mainly when isolating test
+instances of *gpsd* from production ones.
+
+== CODE EXAMPLE
+
+The following is an excerpted and simplified version of the libgps
+interface code from *cgps*(1).
+
+----
+    struct gps_data_t gps_data;
+
+    ret = gps_open(hostName, hostPort, &gps_data);
+
+    (void) gps_stream(&gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
+
+    /* Put this in a loop with a call to a high resolution sleep () in it. */
+    if (gps_waiting(&gps_data, 500)) {
+        errno = 0;
+        if (gps_read(&gps_data, NULL, 0) == -1) {
+            ...
+        } else {
+            /* Display data from the GPS receiver. */
+            if (gps_data.set & ...
+        }
+    }
+
+    /* When you are done... */
+    (void) gps_stream(&gps_data, WATCH_DISABLE, NULL);
+    (void) gps_close (&gps_data);
+----
+
+== LIMITATIONS
+
+On some systems (those which do not support implicit linking in
+libraries) you may need to add *-lm* to your link line when you link
+libgps. It is always safe to do this.
+
+In the C API, incautious use of *gps_send()* may lead to subtle bugs.
+In order to not bloat struct gps_data_t with space used by responses
+that are not expected to be shipped in close sequence with each other,
+the storage for fields associated with certain responses are combined in
+a union.
+
+The risky set of responses includes VERSION, DEVICELIST, RTCM2, RTCM3,
+SUBFRAME, AIS, GST, and ERROR; it may not be limited to that set. The
+logic of the *gpsd* daemon's watcher mode is careful to avoid dangerous
+sequences, but you should read and understand the layout of struct
+gps_data_t before using *gps_send()* to request any of these
+responses.
+
+== COMPATIBILITY
+
+The *gps_query()* supported in major versions 1 and 2 of this library
+has been removed. With the new streaming-oriented wire protocol behind
+this library, it is extremely unwise to assume that the first
+transmission from the *gpsd* daemon after a command is shipped to it will be
+the response to command.
+
+If you must send commands to the *gpsd* daemon explicitly, use *gps_send()*
+but beware that this ties your code to the GPSD wire protocol. It is not
+recommended.
+
+In earlier versions of the API *gps_read()* was a blocking call and
+there was a POLL_NONBLOCK option to make it nonblocking.
+*gps_waiting()* was added to reduce the number of wrong ways to code a
+polling loop.
+
+See the comment above the symbol GPSD_API_MAJOR_VERSION in *gps.h* for
+recent changes.
+
+== ACKNOWLEDGEMENTS
+
+C sample code Charles Curley <charlescurley@charlescurley.com>
+
+== SEE ALSO
+
+*gpsd*(8), *gps*(1), *libgpsmm*(3)
+
+== RESOURCES
+
+*Project web site:* https://gpsd.io
+
+== COPYING
+
+This file is Copyright 2013 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause
