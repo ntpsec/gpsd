@@ -95,7 +95,6 @@ reports a value to *gpsd*, then *gpsd* will report that value. Otherwise
 // asciidoctor ignores width/autowidth in manpages
 
 .TPV object
-[cols="1,1,1,4",options="header", stretch]
 |===
 |Name |Always? |Type |Description
 |class |Yes |string |Fixed: "TPV"
