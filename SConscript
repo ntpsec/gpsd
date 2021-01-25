@@ -2413,11 +2413,6 @@ htmlpages = [
 
 wwwpage_targets = []
 if htmlbuilder:
-    # xml manual pages
-    for xml in glob.glob("../man/*.xml"):
-        wwwpage_targets.append(env.HTML(
-            'www/%s.html' % os.path.basename(xml[:-4]), xml))
-
     # DocBook documents
     for stem in ['writing-a-driver', 'performance/performance',
                  'replacing-nmea']:
