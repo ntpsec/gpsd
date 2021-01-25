@@ -955,7 +955,6 @@ bluezflags = []
 confdefs = []
 dbusflags = []
 htmlbuilder = False
-manbuilder = False
 ncurseslibs = []
 mathlibs = []
 xtlibs = []
@@ -1412,26 +1411,32 @@ if not cleaning and not helping:
 #endif /* GPSD_CONFIG_H */
 ''')
 
-    manbuilder = htmlbuilder = None
+    adoc_prog = htmlbuilder = None
     if config.env['manbuild']:
         if config.CheckXsltproc():
             build = ("xsltproc --encoding UTF-8 --output $TARGET"
                      " --nonet %s $SOURCE")
             htmlbuilder = build % docbook_html_uri
-            manbuilder = build % docbook_man_uri
         elif WhereIs("xmlto"):
             xmlto = "xmlto -o `dirname $TARGET` %s $SOURCE"
             htmlbuilder = xmlto % "html-nochunks"
-            manbuilder = xmlto % "man"
         else:
             announce("Neither xsltproc nor xmlto found, documentation "
                      "cannot be built.")
+
+        # prefer AsciiDoctor, which needs a lot of Ruby
+        adoc_prog = env.WhereIs('asciidoctor')
+        if not adoc_prog:
+            # fall back to AsciiDoc, which only needs Python
+            adoc_prog = env.WhereIs('asciidoc')
+        if not adoc_prog:
+            announce("WARNING: Neither AsciiDoctor nor AsciiDoc found.\n"
+                     "WARNING: Some documentation and html will not be built.",
+                     end=True)
     else:
         announce("Build of man and HTML documentation is disabled.")
-    if manbuilder:
+    if htmlbuilder:
         # 18.2. Attaching a Builder to a Construction Environment
-        config.env.Append(BUILDERS={"Man": Builder(action=manbuilder,
-                                                   src_suffix=".xml")})
         config.env.Append(BUILDERS={"HTML": Builder(action=htmlbuilder,
                                                     src_suffix=".xml",
                                                     suffix=".html")})
@@ -2316,40 +2321,25 @@ for fn in glob.glob("www/*.in"):
 
 # asciidoc documents
 asciidocs = []
-# prefer AsciiDoctor, which needs a lot of Ruby
-adoc_prog = env.WhereIs('asciidoctor')
-if not adoc_prog:
-    # fall back to AsciiDoc, which only needs Python
-    adoc_prog = env.WhereIs('asciidoc')
-if not adoc_prog:
-    announce("WARNING: Neither AsciiDoctor nor AsciiDoc found.\n"
-             "WARNING: Some documentation and html will not be built.",
-             end=True)
 
 man_env = env.Clone()
 if man_env.GetOption('silent'):
     man_env['SPAWN'] = filtered_spawn  # Suppress stderr chatter
 manpage_targets = []
 maninstall = []
-if manbuilder:
+if adoc_prog:
     for (man, src) in all_manpages.items():
         # build it
-        # .xml or .adoc?
-        type = src.split(".")[1]
-        if 'xml' == type:
-            manpage_targets.append(man_env.Man(source=src, target=man))
-        elif adoc_prog:
-            # asciidoc, and can use it
-            # nroff man page
-            asciidocs.append(man)
-            env.Command(man, src,
-                        ['%s -b manpage -o $TARGET $SOURCE' % (adoc_prog)])
-            # html man page
-            target = 'www/%s.html' % os.path.basename(man[:-2])
-            asciidocs.append(target)
-            env.Command(target, src,
-                        '%s -b html5 -d manpage -o $TARGET $SOURCE' %
-                        (adoc_prog))
+        # make nroff man page
+        asciidocs.append(man)
+        env.Command(man, src,
+                    ['%s -b manpage -o $TARGET $SOURCE' % (adoc_prog)])
+        # make html man page
+        target = 'www/%s.html' % os.path.basename(man[:-2])
+        asciidocs.append(target)
+        env.Command(target, src,
+                    '%s -b html5 -d manpage -o $TARGET $SOURCE' %
+                    (adoc_prog))
 
         # install it
         section = man.split(".")[1]
@@ -2357,6 +2347,8 @@ if manbuilder:
                             os.path.basename(man))
         maninstall.append(env.InstallAs(source=man, target=dest))
 
+    # add in the built man pages
+    distfiles += all_manpages.keys()
 
 # The hardware page
 www_xml_files = []
@@ -3205,9 +3197,6 @@ env.Command('#TAGS', sources, ['etags ' + " ".join(sources)])
 # We need to be in the actual project repo (i.e. not doing a -Y build)
 # for these productions to work.
 
-if manbuilder:
-    # add in the built man pages
-    distfiles += all_manpages.keys()
 distfiles.sort()
 
 # remove git and CI stuff from files to tar/zip
