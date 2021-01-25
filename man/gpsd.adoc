@@ -1,0 +1,694 @@
+= gpsd(8)
+:date: 24 January 2021
+:keywords: gps, gpsd, gnss
+:manmanual: GPSD Documentation
+:mansource: The GPSD Project
+:robots: index,follow
+:sectlinks:
+:toc: left
+:type: manpage
+:webfonts!:
+
+== NAME
+
+gpsd - interface daemon for GPS receivers
+
+== SYNOPSSIS
+
+*gpsd* [OPTIONS]
+
+*gpsd* -h
+
+*gpsd* -V
+
+== QUICK START
+
+If you have a GPS attached on the lowest-numbered USB port of a Linux
+system, and want to read reports from it on TCP/IP port 2947, it will
+normally suffice to do this, as root:
+
+----
+# gpsd /dev/ttyUSB0
+----
+
+For the lowest-numbered serial port:
+
+----
+# gpsd /dev/ttyS0
+----
+
+*gpsd* may be started as a normal user, or by using sudo, but some
+functionality will be lost.
+
+Change the device number as appropriate if you need to use a different
+port. Command-line flags enable verbose logging, a control port, and
+other optional extras but should not be needed for basic operation; the
+one exception, on very badly designed hardware, might be *-b* (which
+see).
+
+On Linux systems supporting udev, *gpsd* is normally started automatically
+when a USB plugin event fires (if it is not already running) and is
+handed the name of the newly active device. In that case no invocation
+is required at all.
+
+For your initial tests set your GPS hardware to speak NMEA, as *gpsd* is
+guaranteed to be able to process that. If your GPS has a native or
+binary mode with better performance that *gpsd* knows how to speak, *gpsd*
+may autoconfigure that mode.
+
+You can verify correct operation by first starting *gpsd*.  Then *xgps*,
+the X windows test client or *cgps* the curses based terminal client.
+
+If you have problems, the GPSD project maintains a FAQ to assist
+troubleshooting.
+
+== DESCRIPTION
+
+*gpsd* is a monitor daemon that collects information from GPSes,
+differential-GPS radios, or AIS receivers attached to the host machine.
+Each GPS, DGPS radio, or AIS receiver is expected to be directly
+connected to the host via a USB or RS232C serial device. The serial
+device may be specified to *gpsd* at startup, or it may be set via a
+command shipped down a local control socket (e.g. by a USB hotplug
+script). Given a GPS device by either means, *gpsd* discovers the
+correct port speed and protocol for it.
+
+*gpsd* should be able to query any GPS that speaks either the standard
+textual NMEA 0183 protocol, or the (differing) extended NMEA dialects
+used by MKT-3301, iTrax, Motorola OnCore, Sony CXD2951, Ashtech/Thales
+and some other devices. It can also interpret the binary protocols used
+by EverMore, Garmin, Javad, Navcom, Rockwell/Zodiac, SiRF, Trimble, and
+u-blox devices. Under Linux it can read NMEA2000 packets through the
+kernel CAN socket. It can read heading and attitude information from the
+Oceanserver 5000 or TNT Revolution digital compasses.
+
+The GPS reporting formats supported by your binary of *gpsd* may differ
+depending on how it was compiled; general-purpose versions support many,
+but it can be built with protocol subsets down to a singleton for use in
+constrained environments. For a list of the GPS protocols supported by
+your binary, see the output of *gpsd -l*
+
+*gpsd* effectively hides the differences among the GPS types it supports.
+It also knows about and uses commands that tune these GPSes for lower
+latency. By using *gpsd* as an intermediary, applications avoid contention
+for serial devices.
+
+*gpsd* can use differential-GPS corrections from a DGPS radio or over
+the net, from a ground station running a DGPSIP server or a Ntrip
+broadcaster that reports RTCM-104 data; this may shrink position errors.
+When *gpsd* opens a serial device emitting RTCM-104, it automatically
+recognizes this and uses the device as a correction source for all
+connected GPSes that accept RTCM corrections (this is dependent on the
+type of the GPS; not all GPSes have the firmware capability to accept
+RTCM correction packets).
+
+Client applications typically communicate with *gpsd* via a TCP/IP port,
+port 2947 by default. Both IPv4 and IPv6 connections are supported and a
+client may connect via either.
+
+The program accepts the following options:
+
+*-?*, *-h*, *---help*::
+  Display help message and terminate.
+*-b*, *--readonly*::
+  Broken-device-safety mode, otherwise known as read-only mode. A few
+  bluetooth and USB receivers lock up or become totally inaccessible
+  when probed or reconfigured; see the hardware compatibility list on
+  the GPSD project website for details. This switch prevents *gpsd* from
+  writing to a receiver. This means that *gpsd* cannot configure the
+  receiver for optimal performance, but it also means that *gpsd* cannot
+  break the receiver. A better solution would be for Bluetooth to not be
+  so fragile. A platform independent method to identify
+  serial-over-Bluetooth devices would also be nice.
+*-D LVL*, *--debug LVL*::
+  Set debug level. Default is 0. At debug levels 2 and above, *gpsd*
+  reports incoming sentence and actions to standard error if *gpsd* is in
+  the foreground (*-N*) or to syslog if in the background.
+*-F FILE*, *--sockfile FILE*::
+  Create a control socket for device addition and removal commands.
+  Default is None. You must specify a valid pathname on your local
+  filesystem; this will be created as a Unix-domain socket to which you
+  can write commands that edit the daemon's internal device list.
+*-f FRAME*, *--framing FRAME*::
+  Fix the framing to the GNSS device. The framing parameter is of the
+  form: [78][ENO][012]. Most GNSS are 8N1. Some Trimble default to 8O1.
+  The default is to search for the correct framing.
+*-G*, *--listenany*::
+  This flag causes *gpsd* to listen on all addresses (INADDR_ANY) rather
+  than just the loop back (INADDR_LOOPBACK) address. For the sake of
+  privacy and security, *gpsd* information is private by default to the
+  local machine until the user makes an effort to expose this to the
+  world.
+
+*-l*, *--drivers*::
+  List all drivers compiled into this *gpsd* instance. The letters to the
+  left of each driver name are the *gpsd* control commands supported by
+  that driver. Then exit.
+*n*, *--nowait*::
+  Don't wait for a client to connect before polling whatever GPS is
+  associated with it. Some RS232 GPSes wait in a standby mode (drawing
+  less power) when the host machine is not asserting DTR, and some
+  cellphone and handheld embedded GPSes have similar behaviors.
+  Accordingly, waiting for a watch request to open the device may save
+  battery power. (This capability is rare in consumer-grade devices).
+  You should use this option if you plan to use *gpsd* to provide
+  reference clock information to ntpd or chronyd.  This option will also
+  enable clients to see data from the receiver sooner on connection.
+
+*-N*, *--foreground*::
+  Don't daemonize; run in foreground. This switch is mainly useful for
+  debugging.
+*-p*, *--passive*::
+  Passive mode. Do not autoconfigure the receiver, but allow manual
+  configuration changes.
+*-P FILE*, *--pidfile FILE*::
+  Specify the name and path to record the daemon's process ID.
+*-r*, *--badtime*::
+  Use GPS time even with no current fix. Some GPSs have battery powered
+  Real Time Clocks (RTC's) built in, making them a valid time source
+  even before a fix is acquired. This can be useful on a Raspberry Pi,
+  or other device that has no battery powered RTC, and thus has no valid
+  time at startup.  Use with caution.
+*--port PORT*, *-S PORT*::
+  Set TCP/IP port on which to listen for GPSD clients (default is 2947).
+*-s SPEED*, *--speed SPEED*::
+  Fix the serial port speed to the GNSS device. Allowed speeds are:
+  4800, 9600, 19200, 38400, 57600, 115200, 230400, and 460800. The
+  default is to autobaud. Note that some devices with integrated USB
+  ignore port speed.
+*-V*, *--version*::
+  Dump version and exit.
+
+Arguments are interpreted as the names of data sources. Normally, a data
+source is the device pathname of a local device from which the daemon
+may expect GPS data. But there are three other special source types
+recognized, for a total of four:
+
+Local serial or USB device::
+  A normal Unix device name of a serial or USB device to which a sensor
+  is attached. Example: */dev/ttyUSB0*.
+Local PPS device::
+  A normal Unix device name of a PPS device to which a PPS source is
+  attached. The device name must start with "/dev/pps" and a local
+  serial or USB GPS device must also be available. Example:
+  */dev/pps0*.
+TCP feed::
+  A URI with the prefix "tcp://", followed by a hostname, a colon, and a
+  port number. The daemon will open a socket to the indicated address
+  and port and read data packets from it, which will be interpreted as
+  though they had been issued by a serial device. Example:
+  *tcp://data.aishub.net:4006*.
+UDP feed::
+  A URI with the prefix "udp://", followed by a hostname, a colon, and a
+  port number. The daemon will open a socket listening for UDP datagrams
+  arriving in the indicated address and port, which will be interpreted
+  as though they had been issued by a serial device. Example:
+  *udp://127.0.0.1:5000*.
+Ntrip caster::
+  A URI with the prefix "ntrip://" followed by the name of an Ntrip
+  caster (Ntrip is a protocol for broadcasting differential-GPS fixes
+  over the net). For Ntrip services that require authentication, a
+  prefix of the form "username:password@" can be added before the name
+  of the Ntrip broadcaster. For Ntrip service, you must specify which
+  stream to use; the stream is given in the form "/streamname". An
+  example DGPSIP URI could be "dgpsip://dgpsip.example.com" and a Ntrip
+  URI could be "ntrip://foo:bar@ntrip.example.com:80/example-stream".
+  Corrections from the caster will be sent to each attached GPS with the
+  capability to accept them.
+DGPSIP server::
+  A URI with the prefix "dgpsip://" followed by a hostname, a colon, and
+  an optional colon-separated port number (defaulting to 2101). The
+  daemon will handshake with the DGPSIP server and read RTCM2 correction
+  data from it. Corrections from the server will be set to each attached
+  GPS with the capability to accept them. Example:
+  *dgpsip://dgps.wsrcc.com:2101*.
+Remote gpsd feed::
+  A URI with the prefix "gpsd://", followed by a hostname and optionally
+  a colon and a port number (if the port is absent the default *gpsd* port
+  will be used). Then followed optionally by a second colon and the
+  remote device name The daemon will open a socket to the indicated
+  address and port and emulate a *gpsd* client, collecting JSON reports
+  from the remote *gpsd* instance that will be passed to local clients.
+  Example: *gpsd://gpsd.io:2947:/dev/ttyAMA0*.
+NMEA2000 CAN data::
+  A URI with the prefix "nmea2000://", followed by a CAN devicename.
+  Only Linux socket CAN interfaces are supported. The interface must be
+  configured to receive CAN messages before *gpsd* can be started. If
+  there is more than one unit on the CAN bus that provides GPS data,
+  *gpsd* chooses the unit from which a GPS message is first seen. Example:
+  *nmea2000://can0*.
+
+(The "ais:://" source type supported in some older versions of the
+daemon has been retired in favor of the more general "tcp://".)
+
+Additionally, two serial device name have a side effect, if your
+binary was compiled with the MAGIC_HAT option:
+
+/dev/ttyAMA0::
+  The UART device on a Raspberry Pi. Has the side effect of opening
+  /dev/pps0 for RFC2783 1PPS data.
+/dev/gpsd0::
+  Generic GPS device 0. Has the side effect of opening /dev/pps0 for
+  RFC2783 1PPS data.
+
+Note, however, that if /dev/pps0 is the fake "ktimer" PPS, then
+/dev/pps1 will be used instead.
+
+Internally, the daemon maintains a device pool holding the pathnames of
+devices and remote servers known to the daemon. Initially, this list is
+the list of device-name arguments specified on the command line. That
+list may be empty, in which case the daemon will have no devices on its
+search list until they are added by a control-socket command.  Daemon
+startup will abort with an error if no devices and no control socket is
+specified.
+
+When a device is activated (i.e. a client requests data from it), *gpsd*
+attempts to execute a hook from */etc/gpsd/device-hook* with first
+command line argument set to the pathname of the device and the second
+to *ACTIVATE*. On deactivation, it does the same passing
+*DEACTIVATE* for the second argument.
+
+*gpsd* can export data to client applications in three ways: via a sockets
+interface, via a shared-memory segment, and via D-Bus. The next three
+major sections describe these interfaces.
+
+== THE SOCKET INTERFACE
+
+Clients may communicate with the daemon via textual request and
+responses over a socket. It is a bad idea for applications to speak the
+protocol directly: rather, they should use the libgps client library and
+take appropriate care to conditionalize their code on the major and
+minor protocol version symbols.
+
+The request-response protocol for the socket interface is fully
+documented in gpsd_json(5).
+
+== SHARED-MEMORY AND DBUS INTERFACES
+
+*gpsd* has two other (read-only) interfaces.
+
+Whenever the daemon recognizes a packet from any attached device, it
+writes the accumulated state from that device to a shared memory
+segment. The C and C++ client libraries shipped with GPSD can read this
+segment. Client methods, and various restrictions associated with the
+read-only nature of this interface, are documented at libgps(3). The
+shared-memory interface is intended primarily for embedded deployments
+in which *gpsd* monitors a single device, and its principal advantage is
+that a daemon instance configured with shared memory but without the
+sockets interface loses a significant amount of runtime weight.
+
+The daemon may be configured to emit a D-Bus signal each time an
+attached device delivers a fix. The signal path is "path /org/gpsd", the
+signal interface is "org.gpsd", and the signal name is "fix". The signal
+payload layout is as follows:
+
+.Satellite object
+[cols=",",options="header",]
+|===
+|Type |Description
+|DBUS_TYPE_DOUBLE |Time (seconds since Unix epoch)
+
+|DBUS_TYPE_INT32 |mode
+
+|DBUS_TYPE_DOUBLE |Time uncertainty (seconds).
+
+|DBUS_TYPE_DOUBLE |Latitude in degrees.
+
+|DBUS_TYPE_DOUBLE |Longitude in degrees.
+
+|DBUS_TYPE_DOUBLE |Horizontal uncertainty in meter.
+
+|DBUS_TYPE_DOUBLE |Altitude MSL in meters.
+
+|DBUS_TYPE_DOUBLE |Altitude uncertainty in meters.
+
+|DBUS_TYPE_DOUBLE |Course in degrees from true north.
+
+|DBUS_TYPE_DOUBLE |Course uncertainty in meters
+
+|DBUS_TYPE_DOUBLE |Speed, meters per second.
+
+|DBUS_TYPE_DOUBLE |Speed uncertainty in meters per second.
+
+|DBUS_TYPE_DOUBLE |Climb, meters per second.
+
+|DBUS_TYPE_DOUBLE |Climb uncertainty in meters per second.
+
+|DBUS_TYPE_STRING |Device name
+|===
+
+Uncertainty values are provided by the GNSS receiver.  Check your
+receiver documentation to see if is specifies what its "uncertainty"
+means.
+
+== GPS DEVICE MANAGEMENT
+
+*gpsd* maintains an internal list of GPS devices (the "device pool"). If
+you specify devices on the command line, the list is initialized with
+those pathnames, otherwise the list starts empty. Commands to add and
+remove GPS device paths from the daemon's device list must be written to
+a local Unix-domain socket which will be accessible only to programs
+running as root. This control socket will be located wherever the *-F*
+option specifies it.
+
+A device may will also be dropped from the pool if GPSD gets a zero
+length read from it. This end-of-file condition indicates that the
+device has been disconnected.
+
+When *gpsd* is installed along with working hotplug notifier scripts
+feeding it device-add commands over the control socket, *gpsd* should
+require no configuration or user action to find hotplug devices.
+
+Sending SIGHUP to a running *gpsd* forces it to close all GPSes and all
+client connections. It will then attempt to reconnect to any GPSes on
+its device list and resume listening for client connections. This may be
+useful if your GPS enters a wedged or confused state but can be
+soft-reset by pulling down DTR.
+
+When *gpsd* is called with no initial devices (thus, expecting devices
+to be passed to it by notifications to the control socket), and reaches
+a state where there are no devices connected and no subscribers after
+some devices have been seen, it shuts down gracefully. It is expected
+that future device hotplug events will reactivate it.
+
+To point *gpsd* at a device that may be a GPS, write to the control socket
+a plus sign ('\+') followed by the device name followed by LF or CR-LF.
+Thus, to point the daemon at */dev/foo*. send "+/dev/foo\n". To tell
+the daemon that a device has been disconnected and is no longer
+available, send a minus sign ('-') followed by the device name followed
+by LF or CR-LF. Thus, to remove */dev/foo* from the search list, send
+"-/dev/foo\n".
+
+To send a control string to a specified device, write to the control
+socket a '!', followed by the device name, followed by '=', followed by
+the control string.
+
+To send a binary control string to a specified device, write to the
+control socket a '&', followed by the device name, followed by '=',
+followed by the control string in paired hex digits.
+
+Your client may await a response, which will be a line beginning with
+either "OK" or "ERROR". An ERROR response to an 'add' command means the
+device did not emit data recognizable as GPS packets, an ERROR response
+to a remove command means the specified device was not in *gpsd*'s device
+pool. An ERROR response to a '!' command means the daemon did not
+recognize the devicename specified.
+
+The control socket is intended for use by hotplug scripts and other
+device-discovery services. This control channel is separate from the
+public *gpsd* service port, and only locally accessible, in order to
+prevent remote denial-of-service and spoofing attacks.
+
+== ACCURACY
+
+The base User Estimated Range Error (UERE) of GPSes is 8 meters or less
+at 66% confidence, 15 meters or less at 95% confidence. Actual
+horizontal error will be UERE times a dilution factor dependent on
+current satellite position. Altitude determination is more sensitive to
+variability in ionospheric signal lag than latitude/longitude is, and is
+also subject to errors in the estimation of local mean sea level, base
+error is 12 meters at 66% confidence, 23 meters at 95% confidence.
+Again, this will be multiplied by a vertical dilution of precision
+(VDOP) dependent on satellite geometry, and VDOP is typically larger
+than HDOP. Users should _not_ rely on GPS altitude for life-critical
+tasks such as landing an airplane.
+
+These errors are intrinsic to the design and physics of the GPS system.
+*gpsd* does its internal computations at sufficient accuracy that it will
+add no measurable position error of its own.
+
+DGPS correction may reduce UERE, provided you are within about 100
+miles (160 km) of a DGPS ground station from which you are receiving
+corrections.
+
+On a 4800bps connection, the time latency of fixes provided by *gpsd* will
+be one second or less 95% of the time. Most of this lag is due to the
+fact that GPSes normally emit fixes once per second, thus expected
+latency is 0.5sec. On the personal-computer hardware available in 2005
+and later, computation lag induced by *gpsd* will be negligible, on the
+order of a millisecond. Nevertheless, latency can introduce significant
+errors for vehicles in motion, at 50 km/h (31 mi/h) of speed over
+ground, 1 second of lag corresponds to 13.8 meters change in position
+between updates.
+
+The time reporting of the GPS system itself has an intrinsic accuracy
+limit of 14 nanoseconds, but this can only be approximated by
+specialized receivers using that send the high-accuracy PPS
+(Pulse-Per-Second) over RS232 to cue a clock crystal. Most GPS receivers
+only report time to a precision of 0.01s or 0.001s, and with no accuracy
+guarantees below 1sec.
+
+If your GPS uses a SiRF chipset at firmware level 231, reported UTC time
+may be off by the difference between whatever default leap-second offset
+has been compiled in and whatever leap-second correction is currently
+applicable, from startup until complete subframe information is
+received. Firmware levels 232 and up don't have this problem. You may
+run *gpsd* at debug level 4 to see the chipset type and firmware revision
+level.
+
+There are exactly two circumstances under which *gpsd* relies on the
+host-system clock:
+
+In the GPS broadcast signal, GPS time is represented using a week number
+that rolls over after 2^10 or 2^13 weeks (about 19.6 years, or 157
+years), depending on the spacecraft. Receivers are required to
+disambiguate this to the correct date, but may have difficulty due to
+not knowing time to within half this interval, or may have bugs. Users
+have reported incorrect dates which appear to be due to this issue. *gpsd*
+uses the startup time of the daemon detect and compensate for rollovers
+while it is running, but otherwise reports the date as it is reported by
+the receiver without attempting to correct it.
+
+If you are using an NMEA-only GPS (that is, not using SiRF or Garmin or
+Zodiac binary mode), *gpsd* relies on the system clock to tell it the
+current century. If the system clock returns an invalid value near zero,
+and the GPS does not emit GPZDA at the start of its update cycle (which
+most consumer-grade NMEA GPSes do not) then the century part of the
+dates *gpsd* delivers may be wrong. Additionally, near the century
+turnover, a range of dates as wide in seconds as the accuracy of your
+system clock may be referred to the wrong century.
+
+[[ntp]]
+== USE WITH NTP
+
+*gpsd* can provide reference clock information to ntpd or chronyd, to
+keep the system clock synchronized to the time provided by the GPS
+receiver.
+
+On Linux, *gpsd* includes support for interpreting the PPS pulses emitted
+at the start of every clock second on the carrier-detect lines of some
+serial GPSes, this pulse can be used to update NTP at much higher
+accuracy than message time provides. You can determine whether your GPS
+emits this pulse by running at *-D 5* and watching for carrier-detect
+state change messages in the logfile. In addition, if your kernel
+provides the RFC 2783 kernel PPS API then *gpsd* will use that for extra
+accuracy.
+
+Detailed instructions for using GPSD to set up a high-quality time
+service can be found among the documentation on the GPSD website.
+
+[[dbus]]
+== USE WITH D-BUS
+
+On operating systems that support D-BUS, *gpsd* can be built to broadcast
+GPS fixes to D-BUS-aware applications. As D-BUS is still at a pre-1.0
+stage, we will not attempt to document this interface here. Read the
+*gpsd* source code to learn more.
+
+[[security]]
+== SECURITY AND PERMISSIONS ISSUES
+
+*gpsd*, if given the -G flag, will listen for connections from any
+reachable host, and then disclose the current position. Before using the
+-G flag, consider whether you consider your computer's location to be
+sensitive data to be kept private or something that you wish to publish.
+
+*gpsd* must start up as root in order to open the NTPD shared-memory
+segment, open its logfile, and create its local control socket.
+Note that starting gpsd with sudo is not the same as starting as
+root.  Before doing any processing of GPS data, it tries to drop root
+privileges by setting its UID to "nobody" (or another configured userid)
+and its group ID to the group of the initial GPS passed on the command
+line -- or, if that device doesn't exist, to the group of */dev/ttyS0*.
+
+Privilege-dropping is a hedge against the possibility that carefully
+crafted data, either presented from a client socket or from a subverted
+serial device posing as a GPS, could be used to induce misbehavior in
+the internals of *gpsd*. It ensures that any such compromises cannot be
+used for privilege elevation to root.
+
+The assumption behind *gpsd*'s particular behavior is that all the tty
+devices to which a GPS might be connected are owned by the same non-root
+group and allow group read/write, though the group may vary because of
+distribution-specific or local administrative practice. If this
+assumption is false, *gpsd* may not be able to open GPS devices in order
+to read them (such failures will be logged).
+
+In order to fend off inadvertent denial-of-service attacks by port
+scanners (not to mention deliberate ones), *gpsd* will time out inactive
+client connections. Before the client has issued a command that requests
+a channel assignment, a short timeout (60 seconds) applies. There is no
+timeout for clients in watcher or raw modes; rather, *gpsd* drops these
+clients if they fail to read data long enough for the outbound socket
+write buffer to fill. Clients with an assigned device in polling mode
+are subject to a longer timeout (15 minutes).
+
+== LIMITATIONS
+
+If multiple NMEA talkers are feeding RMC, GLL, and GGA sentences to the
+same serial device (possible with an RS422 adapter hooked up to some
+marine-navigation systems), a 'TPV' response may mix an altitude from
+one device's GGA with latitude/longitude from another's RMC/GLL after
+the second sentence has arrived.
+
+*gpsd* may change control settings on your GPS (such as the emission
+frequency of various sentences or packets) and not restore the original
+settings on exit. This is a result of inadequacies in NMEA and the
+vendor binary GPS protocols, which often do not give clients any way to
+query the values of control settings in order to be able to restore them
+later.
+
+Some receivers do not report VDOP/TDOP/GDOP figures and associated error
+estimates.  In that case they may be computed by *gpsd* instead.  This
+computation does not exactly match what chips do internally, which
+includes some satellite weighting using parameters *gpsd* cannot see.
+
+Autobauding on the Trimble GPSes can take as long as 20 seconds, or
+more, if the device speed is not matched to the GPS speed.  Use the
+*-s* option to avoid autobaud delays.
+
+Generation of position error estimates (eph, epv, epd, eps, epc) from
+the incomplete data handed back by GPS reporting protocols involves both
+a lot of mathematical black art and fragile device-dependent
+assumptions. This code has been bug-prone in the past and problems may
+still lurk there.
+
+AIDVM decoding of types 16-17, 22-23, and 25-26 is unverified.
+
+GPSD presently fully recognizes only the 2.1 level of RTCM2 (message
+types 1, 3, 4, 5, 6, 7, 9, 16). The 2.3 message types 13, 14, and 31 are
+recognized and reported. Message types 8, 10-12, 15-27, 28-30
+(undefined), 31-37, 38-58 (undefined), and 60-63 are not yet supported.
+
+The ISGPS used for RTCM2 and subframes decoder logic is sufficiently
+convoluted to confuse some compiler optimizers, notably in GCC 3.x at
+-O2, into generating bad code.
+
+Devices meant to use PPS for high-precision timekeeping may fail if they
+are specified after startup by a control-socket command, as opposed to
+on the daemon's original command line. Root privileges are dropped
+early, and some Unix variants require them in order to set the PPS line
+discipline. Under Linux the POSIX capability to set the line discipline
+is retained, but other platforms cannot use this code.
+
+USB GPS devices often do not identify themselves through the USB
+subsystem; they typically present as the class 00h (undefined) or class
+FFh (vendor-specific) of USB-to-serial adapters. Because of this, the
+Linux hotplug scripts must tell *gpsd* to sniff data from every
+USB-to-serial adapter that goes active and is known to be of a type used
+in GPSes. No such device is sent configuration strings until after it
+has been identified as a GPS, and *gpsd* never opens a device that is
+opened by another process. But there is a tiny window for non-GPS
+devices not opened; if the application that wants them loses a race with
+GPSD its device open will fail and have to be retried after GPSD sniffs
+the device (normally less than a second later).
+
+== FILES
+
+*/dev/ttyS0*::
+  Prototype TTY device. After startup, *gpsd* sets its group ID to the
+  owning group of this device if no GPS device was specified on the
+  command line does not exist.
+*/etc/gpsd/device-hook*::
+  Optional file containing the device activation/deactivation script.
+  Note that while */etc/gpsd* is the default system configuration
+  directory, it is possible to build the GPSD source code with different
+  assumptions. See above for further details on the device-hook
+  mechanism.
+
+== ENVIRONMENT VARIABLES
+
+By setting the environment variable *GPSD_SHM_KEY*, you can control
+the key value used to create the shared-memory segment used for
+communication with the client library. This will be useful mainly when
+isolating test instances of *gpsd* from production ones.
+
+
+== RETURN VALUES
+
+*0*:: on success.
+*1*:: on failure
+
+== APPLICABLE STANDARDS
+
+The official NMEA protocol standards for NMEA0183 and NMEA2000 are
+available from the National Marine Electronics Association, but are
+proprietary and expensive; the maintainers of *gpsd* have made a point of
+not looking at them. The GPSD project website links to several documents
+that collect publicly disclosed information about the protocol.
+
+*gpsd* parses the following NMEA sentences: RMC, GGA, GLL, GSA, GSV, VTG,
+ZDA, GBS, HDT, DBT, GST. It recognizes these with either the normal GP
+talker-ID prefix, or with the GN prefix used by GLONASS, or with the II
+prefix emitted by Seahawk Autohelm marine navigation systems, or with
+the IN prefix emitted by some Garmin units, or with the EC prefix
+emitted by ECDIS units, or with the SD prefix emitted by depth sounders,
+or with the HC and TI prefix emitted by some Airmar equipment. It
+recognizes some vendor extensions: the PGRME emitted by some Garmin GPS
+models, the OHPR emitted by Oceanserver digital compasses, the PTNTHTM
+emitted by True North digital compasses, the PMTK omitted by some San
+Jose Navigation GPSes, and the PASHR sentences emitted by some Ashtech
+GPSes.
+
+Note that *gpsd* JSON returns pure decimal degrees, not the hybrid
+degree/minute format described in the NMEA standard.
+
+Differential-GPS corrections are conveyed by the RTCM protocols. The
+applicable standard for RTCM-104 V2 is RTCM Recommended Standards for
+Differential GNSS (Global Navigation Satellite) Service RTCM Paper
+136-2001/SC 104-STD. The applicable standard for RTCM-104 V3 is RTCM
+Standard 10403.1 for Differential GNSS Services - Version 3 RTCM Paper
+177-2006-SC104-STD. Ordering instructions for the RTCM standards are
+accessible from the website of the Radio Technical Commission for
+Maritime Services under "Publications".
+
+AIS is defined by ITU Recommendation M.1371, Technical Characteristics
+for a Universal Shipborne Automatic Identification System Using Time
+Division Multiple Access. The AIVDM/AIVDO format understood by this
+program is defined by IEC-PAS 61162-100, Maritime navigation and
+radiocommunication equipment and systems. A more accessible description
+of both can be found at AIVDM/AIVDO Protocol Decoding, on the references
+page of the GPSD project website.
+
+Subframe data is defined by IS-GPS-200, GLOBAL POSITIONING SYSTEM WING
+(GPSW) SYSTEMS ENGINEERING & INTEGRATION, INTERFACE SPECIFICATION
+IS-GPS-200. The format understood by this program is defined
+in Section 20 (Appendix II),
+
+JSON is specified by RFC 7159, The JavaScript Object Notation (JSON)
+Data Interchange Format.
+
+The API for PPS time service is specified by RFC 2783, Pulse-Per-Second
+API for UNIX-like Operating Systems, Version 1.0
+
+== AUTHORS
+
+Authors: Eric S. Raymond, Chris Kuethe, Gary Miller. Former authors
+whose bits have been plowed under by code turnover: Remco Treffcorn,
+Derrick Brashear, Russ Nelson.
+
+This manual page by Eric S. Raymond <esr@thyrsus.com>.
+
+== SEE ALSO
+
+*gpsd*(8), *gpsctl*(1), *gps*(1), *libgps*(3), *libgpsmm*(3), *gpsprof*(1),
+*gpsfake*(1).  gpsdctl(8), gpsd_json(5), *gpscat(1)
+
+== RESOURCES
+
+*Project web site:* https://gpsd.io
+
+== COPYING
+
+This file is Copyright 2013 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause

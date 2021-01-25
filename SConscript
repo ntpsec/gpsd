@@ -214,7 +214,7 @@ all_manpages = {
     "man/gpscsv.1": "man/gpscsv.adoc",
     "man/gpscat.1": "man/gpscat.adoc",
     "man/gpsctl.1": "man/gpsctl.adoc",
-    "man/gpsd.8": "man/gpsd.xml",
+    "man/gpsd.8": "man/gpsd.adoc",
     "man/gpsdctl.8": "man/gpsdctl.adoc",
     "man/gpsdecode.1": "man/gpsdecode.adoc",
     "man/gpsd_json.5": "man/gpsd_json.adoc",
