@@ -2385,6 +2385,7 @@ if adoc_prog:
                  ('SUPPORT', 'www/SUPPORT'),
                  ('www/time-service-intro', 'www/time-service-intro'),
                  ('www/ubxtool-examples', 'www/ubxtool-examples'),
+                 ('www/writing-a-driver', 'www/writing-a-driver'),
                  )
     for src, tgt in adocfiles:
         target = '%s.html' % tgt
@@ -2414,8 +2415,7 @@ htmlpages = [
 wwwpage_targets = []
 if htmlbuilder:
     # DocBook documents
-    for stem in ['writing-a-driver', 'performance/performance',
-                 'replacing-nmea']:
+    for stem in ['performance/performance', 'replacing-nmea']:
         wwwpage_targets.append(env.HTML(
             'www/%s.html' % stem, 'www/%s.xml' % stem))
 
