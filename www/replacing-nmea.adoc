@@ -11,6 +11,12 @@ Eric S. Raymond <esr@thyrsus.com.>
 :type: article
 :webfonts!:
 
+== Abstract
+
+The NMEA 0183 protocol used by GPS units might best be described as
+"layer upon layer of cruft".  In this paper, we examine the problems
+and consider a cleaner design.
+
 == What's Wrong with NMEA 0183, and Why Fix It?
 
 The protocol used by GPS devices to report to computers is a small

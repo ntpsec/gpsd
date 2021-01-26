@@ -11,6 +11,12 @@ Mick Durkin <mick.durkin@saunalahti.fi>
 :type: article
 :webfonts!:
 
+== Abstract
+
+If you are thinking of writing a GPSD driver for some GPS-like device,
+these notes by a person who did it may help you decide whether or not
+it's a good idea, and if it is, help you get started.
+
 == Introduction
 
 First, ask yourself "Why would I write a driver?" and do that several
