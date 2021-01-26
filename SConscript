@@ -2375,6 +2375,7 @@ if adoc_prog:
     adocfiles = (('build', 'www/building'),
                  ('INSTALL', 'www/installation'),
                  ('README', 'www/README'),
+                 ('SUPPORT', 'www/SUPPORT'),
                  ('www/AIVDM', 'www/AIVDM'),
                  ('www/client-howto', 'www/client-howto'),
                  ('www/gpsd-time-service-howto', 'www/gpsd-time-service-howto'),
@@ -2382,7 +2383,7 @@ if adoc_prog:
                  ('www/ppp-howto', 'www/ppp-howto'),
                  ('www/protocol-evolution', 'www/protocol-evolution'),
                  ('www/protocol-transition', 'www/protocol-transition'),
-                 ('SUPPORT', 'www/SUPPORT'),
+                 ('www/replacing-nmea', 'www/replacing-nmea'),
                  ('www/time-service-intro', 'www/time-service-intro'),
                  ('www/ubxtool-examples', 'www/ubxtool-examples'),
                  ('www/writing-a-driver', 'www/writing-a-driver'),
@@ -2415,7 +2416,7 @@ htmlpages = [
 wwwpage_targets = []
 if htmlbuilder:
     # DocBook documents
-    for stem in ['performance/performance', 'replacing-nmea']:
+    for stem in ['performance/performance']:
         wwwpage_targets.append(env.HTML(
             'www/%s.html' % stem, 'www/%s.xml' % stem))
 
