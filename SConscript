@@ -2387,6 +2387,7 @@ if adoc_prog:
                  ('www/time-service-intro', 'www/time-service-intro'),
                  ('www/ubxtool-examples', 'www/ubxtool-examples'),
                  ('www/writing-a-driver', 'www/writing-a-driver'),
+                 ('www/performance/performance', 'www/performance/performance'),
                  )
     for src, tgt in adocfiles:
         target = '%s.html' % tgt
@@ -2415,10 +2416,6 @@ htmlpages = [
 
 wwwpage_targets = []
 if htmlbuilder:
-    # DocBook documents
-    for stem in ['performance/performance']:
-        wwwpage_targets.append(env.HTML(
-            'www/%s.html' % stem, 'www/%s.xml' % stem))
 
     # The internals manual.
     internals = env.HTML('www/internals.html', '#doc/internals.xml')
