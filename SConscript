@@ -2436,6 +2436,8 @@ webpages_x_list = ('../www/*.css',
                    '../www/*.js',
                    '../www/*.png',
                    '../www/*.svg',
+                   '../www/performance/*png',
+                   '../www/performance/*txt',
                    )
 webpages_x = []
 for glb in webpages_x_list:
