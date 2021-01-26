@@ -2351,15 +2351,11 @@ if adoc_prog:
     distfiles += all_manpages.keys()
 
 # The hardware page
-www_xml_files = []
-for file in glob.iglob('../doc/*xml'):
-    www_xml_files.append(file[3:])
 env.Command('www/hardware.html',
             ['www/gpscap.py',
              'www/hardware-head.html',
              'www/gpscap.ini',
-             'www/hardware-tail.html',
-             www_xml_files],
+             'www/hardware-tail.html'],
             ['cd %s/www; (cat hardware-head.html && PYTHONIOENCODING=utf-8 '
              '$SC_PYTHON gpscap.py && cat hardware-tail.html) '
              '> hardware.html' % variantdir])
