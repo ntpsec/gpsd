@@ -1,6 +1,6 @@
 = Where's the Latency? Performance analysis of GPSes and GPSD
 Eric S. Raymond <esr@thysus.com
-2.4, 25 January 2020
+2.4, 27 January 2020
 :date: 25 January 2021
 :keywords: gps, gpsd, performance
 :manmanual: GPSD Documentation
@@ -192,11 +192,11 @@ fast machine in early 2005, but average processor utilization remained
 low throughout the tests.
 
 The version of the GPSD software I used for the test was released as
-2.13. It was configured with MDASHMDASHenable-profiling. All graphs and
+2.13. It was configured with *--enable-profiling*. All graphs and
 figures were generated with gpsprof1, a tool built for this purpose and
 included in the distribution.
 
-One of the effects of building with NDASHNDASHenable-profiling is that a
+One of the effects of building with *--enable-profiling* is that a
 form of the B command that normally just reports the RS232 parameters
 can be used to set them (it ships a SiRF-II control string to the GPS
 and then changes the line settings).
@@ -233,7 +233,7 @@ As in the previous graph, each group of three lines is a single GPS
 reporting cycle. By comparing this graph to the previous one, it is
 pretty clear that the profiling reports are not introducing any
 measurable latency. But what is more interesting is to notice that D1 +
-W + E2 + T2 + D2 vanishes MDASH at this timescale, all we can see is E1
+W + E2 + T2 + D2 vanishes -- at this timescale, all we can see is E1
 and T1.
 
 The link:profile2.txt[raw data] bears this out. All times besides E1 and
@@ -252,7 +252,7 @@ image::graph3.png[Split latency report]
 
 The reason for the comb pattern in the previous graphs is now apparent;
 latency is constant for any given sentence type. The obvious correlate
-would be sentence length MDASH but looking at the link:profile3.txt[raw
+would be sentence length -- but looking at the link:profile3.txt[raw
 data], we see that that is not the only factor. Consider this table:
 
 [cols=",,",options="header",]
@@ -286,7 +286,7 @@ Now let's look at how the picture changes when we double the baud rate.
 image::graph4.png[Split latency report, 9600bps]
 
 This graph looks almost identical to the previous one, except for
-vertical scale MDASH latency has been cut neatly in half. Transmission
+vertical scale -- latency has been cut neatly in half. Transmission
 times for GPRMC go from about 0.15sec to 0.075sec. Oddly, average E1 is
 also cut almost in half. I don't know how to explain this, unless a lot
 of what looks like E1 is actually RS232 transmission time spent before
@@ -435,7 +435,7 @@ characteristics of the output.
 
 For the best tradeoff between minimizing latency and use of application
 resources, an argument similar to Nyquist's Theorem tells us to poll
-gpsd once every half-cycle MDASH that is, on almost all GPSes at time of
+gpsd once every half-cycle -- that is, on almost all GPSes at time of
 writing, twice a second.
 
 With the SiRF chips still used in most consumer-grade GPSes at time of

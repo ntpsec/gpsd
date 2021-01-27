@@ -1,6 +1,6 @@
 = Towards a Better GPS Protocol
 Eric S. Raymond <esr@thyrsus.com.>
-1.7, 25 January 2020
+1.7, 27 January 2020
 :date: 25 January 2021
 :keywords: gps, gpsd, NMEA
 :manmanual: GPSD Documentation
@@ -34,7 +34,7 @@ asterisk, a checksum, and LF/CR. This is a simple, clean format with
 good extensibility, easy to parse and generate. It is well adapted to
 its job, which is to pass small amounts of numeric and status
 information. The textual format makes it easy to log NMEA sessions, edit
-them, and play them back MDASH a substantial advantage in developing
+them, and play them back -- a substantial advantage in developing
 talker and parser software.
 
 Unfortunately, the good news ends there. The design of the upper layers
@@ -53,7 +53,7 @@ velocity, some (GPGGA) report time and 3D position, some (GPVTG) report
 velocity only. As a result, the API for a protocol client is complicated
 by the necessity of maintaining separate age indications for 2D
 position, 3D position, and velocity,
-* NMEA sentences have at least three kinds of validity indicators MDASH
+* NMEA sentences have at least three kinds of validity indicators --
 mode (GPGSA only), status (GPGLL, GPGGA), and the Active/Void field
 (GPRMC, GPGLL). And that's before we get into the FAA extensions in late
 revisions of the protocol. Interpreting these status bits is a black art
@@ -62,7 +62,7 @@ involving knowledge of undocumented and often vendor-specific quirks.
 time/position/velocity report is invalid (e.g. because the device does
 not have a fix of the required quality). Many devices simply report 0
 for invalid fields, which doesn't sound bad unless you're near the
-zero-zero point in the Bay of Benin MDASH or at sea level. It is also
+zero-zero point in the Bay of Benin -- or at sea level. It is also
 not generally possible to distinguish between information a GPS is not
 yet reporting but will return on a good fix (such as altitude) from
 information it will never report (such as, on many units, local magnetic
