@@ -1,7 +1,9 @@
                         GPSD project news
 
 3.22.1~dev: unreleased
-  Allow either asciidoc or asciidoctor, to build from AsciiDoc files.
+  doc/*xml all moved into www/internals.adoc
+  Convert all DocBook (.xml) to AsciiDoc (.adoc)
+  Remove all XSL remnants.
 
 3.22: 2020-01-08
   Added client/gpscsv to convert gpsd JSON to csv.

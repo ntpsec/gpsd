@@ -804,47 +804,6 @@ def CheckPKG(context, name):
     return ret
 
 
-# Stylesheet URLs for making HTML and man pages from DocBook XML.
-docbook_url_stem = 'http://docbook.sourceforge.net/release/xsl/current/'
-docbook_man_uri = docbook_url_stem + 'manpages/docbook.xsl'
-docbook_html_uri = docbook_url_stem + 'html/docbook.xsl'
-
-
-def CheckXsltproc(context):
-    context.Message('Checking that xsltproc can make man pages... ')
-    # open() happens in variantdir
-    ofp = open("xmltest.xml", "w")
-    ofp.write('''
-       <refentry id="foo.1">
-      <refmeta>
-        <refentrytitle>foo</refentrytitle>
-        <manvolnum>1</manvolnum>
-        <refmiscinfo class='date'>9 Aug 2004</refmiscinfo>
-      </refmeta>
-      <refnamediv id='name'>
-        <refname>foo</refname>
-        <refpurpose>check man page generation from docbook source</refpurpose>
-      </refnamediv>
-    </refentry>
-''')
-    ofp.close()
-    probe = ("xsltproc --encoding UTF-8 --output %s/man/foo.1 --nonet "
-             "--noout '%s' %s/xmltest.xml" %
-             (variantdir, docbook_man_uri, variantdir))
-    (ret, out) = context.TryAction(probe)
-    # out should be empty, don't bother to test.
-    # next 3 lines happen in variantdir
-    os.remove("xmltest.xml")
-    if os.path.exists("man/foo.1"):
-        os.remove("man/foo.1")
-
-    # don't fail due to missing output file
-    # scons may return cached result, instead of running the probe
-
-    context.Result(ret)
-    return ret
-
-
 def CheckTime_t(context):
     context.Message('Checking if sizeof(time_t) is 64 bits... ')
     ret = context.TryLink("""
@@ -941,7 +900,6 @@ config = Configure(env, custom_tests={
     'CheckC11': CheckC11,
     'CheckCompilerOption': CheckCompilerOption,
     'CheckPKG': CheckPKG,
-    'CheckXsltproc': CheckXsltproc,
     'CheckTime_t': CheckTime_t,
     'GetPythonValue': GetPythonValue,
     })
@@ -954,7 +912,6 @@ rtlibs = []
 bluezflags = []
 confdefs = []
 dbusflags = []
-htmlbuilder = False
 adoc_prog = False
 ncurseslibs = []
 mathlibs = []
@@ -1413,17 +1370,6 @@ if not cleaning and not helping:
 ''')
 
     if config.env['manbuild']:
-        if config.CheckXsltproc():
-            build = ("xsltproc --encoding UTF-8 --output $TARGET"
-                     " --nonet %s $SOURCE")
-            htmlbuilder = build % docbook_html_uri
-        elif WhereIs("xmlto"):
-            xmlto = "xmlto -o `dirname $TARGET` %s $SOURCE"
-            htmlbuilder = xmlto % "html-nochunks"
-        else:
-            announce("Neither xsltproc nor xmlto found, documentation "
-                     "cannot be built.")
-
         # prefer AsciiDoctor, which needs a lot of Ruby
         adoc_prog = env.WhereIs('asciidoctor')
         if not adoc_prog:
@@ -1435,11 +1381,6 @@ if not cleaning and not helping:
                      end=True)
     else:
         announce("Build of man and HTML documentation is disabled.")
-    if htmlbuilder:
-        # 18.2. Attaching a Builder to a Construction Environment
-        config.env.Append(BUILDERS={"HTML": Builder(action=htmlbuilder,
-                                                    src_suffix=".xml",
-                                                    suffix=".html")})
 
     # Determine if Qt network libraries are present, and
     # if not, force qt to off
