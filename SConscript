@@ -1373,10 +1373,7 @@ if not cleaning and not helping:
         # prefer AsciiDoctor, which needs a lot of Ruby
         adoc_prog = env.WhereIs('asciidoctor')
         if not adoc_prog:
-            # fall back to AsciiDoc, which only needs Python
-            adoc_prog = env.WhereIs('asciidoc')
-        if not adoc_prog:
-            announce("WARNING: Neither AsciiDoctor nor AsciiDoc found.\n"
+            announce("WARNING: AsciiDoctor not found.\n"
                      "WARNING: Some documentation and html will not be built.",
                      end=True)
     else:
