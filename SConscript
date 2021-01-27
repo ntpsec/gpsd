@@ -927,7 +927,6 @@ have_pylint = False
 have_scan_build = False
 have_tar = False
 have_valgrind = False
-have_xmllint = False
 
 # skip config part if cleaning or helping.
 # per SCons 4.0.1 doc: Section 23.9. Not Configuring When Cleaning Targets
@@ -1425,7 +1424,6 @@ if not cleaning and not helping:
         have_scan_build = config.CheckProg('scan-build')
         have_tar = config.CheckProg(env['TAR'])
         have_valgrind = config.CheckProg('valgrind')
-        have_xmllint = config.CheckProg('xmllint')
     except AttributeError:
         # scons versions before Sep 2015 (2.4.0) don't have CheckProg
         # gpsd only asks for 2.3.0 or higher
@@ -1451,8 +1449,6 @@ if not cleaning and not helping:
                  env['TAR'])
     if not have_valgrind:
         announce("Program valgrind not found -- skipping valgrind checks")
-    if not have_xmllint:
-        announce("Program xmllint not found -- skipping xmllint checks")
 
 
 # Set up configuration for target Python
@@ -2333,7 +2329,7 @@ if adoc_prog:
                     ['%s -b html5 %s -o $TARGET $SOURCE' %
                      (adoc_prog, adoc_args)])
 
-# Non-asciidoc, non xml, plain html webpages only
+# Non-asciidoc, plain html webpages only
 htmlpages = [
     'www/bt.html',
     'www/bu_303b.html',
@@ -2652,13 +2648,6 @@ valgrind = Utility('valgrind', [
     '$PYTHON $SRCDIR/valgrind-audit.py'
 )
 
-# Check the documentation for bogons, too
-# xmllint is part of the libxml2 package
-# do not test xml in doc/*xml as those are fragments, not complete xml
-xmllint = Utility("xmllint", [
-    glob.glob("man/*xml"), glob.glob("www/*.xml")],
-    "for xml in $SOURCES; do xmllint --nonet --noout --valid $$xml; done")
-
 # Perform all (possible) local code-sanity checks (but not the Coverity scan).
 audits = []
 if have_cppcheck:
@@ -2673,8 +2662,6 @@ if have_scan_build:
     audits.append(scan_build)
 if have_valgrind:
     audits.append(valgrind)
-if have_xmllint:
-    audits.append(xmllint)
 env.Alias('audit', audits)
 
 #
