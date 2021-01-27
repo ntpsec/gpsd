@@ -1,6 +1,6 @@
 = GPSD Installation Instructions
 :author: Eric S. Raymond
-:date: 13 January 2021
+:date: 26 January 2021
 :description: Steps for installing GPSD and verifying its performance.
 :email: <esr@thyrsus.com>
 :keywords: GPSD, GPS, installation
@@ -238,14 +238,13 @@ do so is to first install the MacPorts package.  Follow their install
 procedure at: http://www.macports.org/install.php
 
 Then use their port command to install scons.  Optionally git if you
-want to access the development source.  Optionally install libxslt and
-xmlto to build the documentation.
+want to access the development source.  Optionally install asciidoctor
+to build the documentation.
 
 --------------------------------------------------------------
 # port install scons
 # port install git
-# port install libxslt
-# port install xmlto
+# port install asciidoctor
 --------------------------------------------------------------
 
 Currently the osX port does not work with Qt5.  To see the build
@@ -396,7 +395,7 @@ a source tarball (scons dist).  To install the tools to build the
 documentation:
 
 --------------------------------------------------------------
-apt-get install xsltproc docbook-xsl xmlto asciidoctor
+apt-get install asciidoctor
 --------------------------------------------------------------
 
 The rest of the installation is just as for any other source based
@@ -532,7 +531,7 @@ a source tarball (scons dist).  To install the tools to build the
 documentation:
 
 --------------------------------------------------------------
-apt install xsltproc docbook-xsl xmlto asciidoctor
+apt install asciidoctor
 --------------------------------------------------------------
 
 The rest of the installation is just as for any other source based
@@ -566,7 +565,7 @@ a source tarball (scons dist).  To install the tools to build the
 documentation:
 
 --------------------------------------------------------------
-apt install xsltproc docbook-xsl xmlto asciidoctor
+apt install asciidoctor
 --------------------------------------------------------------
 
 The rest of the installation is just as for any other source based
@@ -734,7 +733,7 @@ Install the gcc compiler and tools.  Clone the gpsd source, and then
 build it.
 
 --------------------------------------------------------------
-# dnf install -y gcc-c++ python3-devel scons xmlto asciidoctor bzip2
+# dnf install -y gcc-c++ python3-devel scons asciidoctor bzip2
 # dnf install -y xz git dnf-plugins-core
 # git clone https://gitlab.com/gpsd/gpsd.git
 # cd gpsd
@@ -822,7 +821,6 @@ Python
 SCons (preferably 3.0+)
 ncurses-dev (to build/run cgps and gpsmon)
 asciidoctor (to build the documentation)
-xmlto (to build the man pages)
 ----
 
 Optionally, the following packages might also be installed
