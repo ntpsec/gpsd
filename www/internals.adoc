@@ -1,0 +1,1638 @@
+= A Tour of the GPSD Internals
+Mick Durkin <mick.durkin@saunalahti.fi>
+2.3, 26 January 2021
+:keywords: gps, gpsd, internals
+:manmanual: GPSD Documentation
+:mansource: The GPSD Project
+:robots: index,follow
+:sectlinks:
+:toc: left
+:type: article
+:webfonts!:
+
+== Abstract
+
+These notes are meant as an aid to reading and understanding some
+of the main code files forming the *gpsd* daemon and its support
+libraries. They are not a line-by-line explanation but only pick out the
+important (or unusual) aspects of the code.
+
+They do not address the many programs that are used for test purposes,
+the individual device driver files or any of the supplied applications
+that use *gpsd*.
+
+This guide was written in 2007 before the move to a JSON-based protocol
+and before AIS support was added.  The machinery relating to JSON and
+AIS is not yet documented here.  While the information on the rest of
+the code has been updated as of 2011.
+
+== `+bits.h+`
+
+[cols="",]
+|===
+|This file only contains macros that convert data variables from the
+native format of the device output (MSB-first or LSB-first) into a
+standard form for `+gpsd+` use. This makes data parsing consistent
+regardless of the underlying format. If the device driver file makes no
+deliberate selection, the default is to assume the device emits data in
+big-endian (network byte) order.
+|===
+
+Notes based on code as of Mon Apr 5 21:38:06 2010 -0400.
+
+== `+dbusexport.c+`
+
+[cols=",",options="header",]
+|===
+|Functions: |Handles initialization of and communication with the DBUS.
+|`+int initialize_dbus_connection(void)+` |Initializes the DBUS
+connection.
+
+|`+void send_dbus_fix(struct gps_device_t* channel)+` |Sends the current
+fix data for this channel via dbus
+|===
+
+Notes based on code as of Mon Apr 5 21:38:06 2010 -0400.
+
+== `+driver_nmea.c+`
+
+[cols=",",options="header",]
+|===
+|Functions: |Parser for NMEA strings, generic and proprietary.
+|`+static void do_lat_lon(char *field[], struct gps_fix_t *out)+` |Reads
+a four element array containing the value and hemisphere of the latitude
+and longitude of a location as text. It converts them into signed (-ve
+for S and W) values. The gps_data_t structure is updated with the new
+value(s).
+
+|`+static void merge_ddmmyy(char *ddmmyy, struct gps_device_t *session)+`
+|If the century has not yet been stored in the nmea driver private data,
+take the supplied ddmmyy date and generate and store a ddmmyyyy date,
+using the century value compiled in from `+gpsd.h+`.
+
+|`+static void merge_hhmmss(char *hhmmss, struct gps_device_t *session)+`
+|Stash the present hour value before updating it from the incoming data.
+If the new hour is less than the stashed value, we have passed midnight,
+so update the day value. Finally update the minutes, seconds and
+fractions of a second from the incoming data.
+
+|`+static gps_mask_t processGPRMC(int count, char *field[], struct gps_device_t *session)+`
+a|
+Handle a $GPRMC sentence stored in an array of strings, one member per
+field.
+
+Check if the message is stamped valid or not.
+
+If it is invalid, set the status and fix mode to NO_FIX and save the
+corresponding flags locally; also save the online flag to indicate we
+have handled a known sentence.
+
+If the fix is autonomous and valid, start to decode the fields.
+
+First, test if there are enough fields available; then handle the date
+and time via `+merge_ddmmyy()+` and `+merge_hhmmss()+`, storing the
+TIME_SET flag and storing the fix time as a UNIX-epoch relative value.
+
+If the sentence time and this fix time are different, we have started a
+new cycle of observation, so update the sentence time and the store the
+CYCLE_START_SET flag.
+
+Whatever the number of fields, store the fix coordinates via
+`+do_lat_lon()+`, store the speed and the track and save the
+corresponding flags.
+
+Return the local aggregated flags to allow the main copy in the session
+data to be updated.
+
+|`+static gps_mask_t processGPGLL(int count, char *field[], struct gps_device_t *session)+`
+a|
+Preload the local flag with the ERROR_SET flag.
+
+Check that the sentence is usable, exiting with the preset error flag if
+it is not.
+
+If it is usable, clear the local flags and start processing the fields,
+updating any local flag fields on the way.
+
+If the year is already known, update the time and check for the start of
+cycle (see `+processGPRMC()+` above).
+
+Handle the fix location and, if the number of received fixes is more
+than 8 and the status is differential, stash the new status as
+STATUS_DGPS_FIX; otherwise stash STATUS_FIX.
+
+If the present mode is less than 2D_FIX, update it to 2D_FIX.
+
+Write the stashed value of newstatus into the session status and return
+all the locally aggregated flags.
+
+|`+static gps_mask_t processGPGGA(int c UNUSED, char *field[], struct gps_device_t *session)+`
+a|
+Stash the last fix time. Set the status to the value in the message and
+update the local flag variable.
+
+If the status is STATUS_NO_FIX, exit immediately, returning the locally
+aggregated flags. If there is a fix, process it.
+
+Handle the time as in `+processGPGLL()+` above. Handle the latitiude and
+longitude with a call to `+do_lat_lon()+` above and set the local flag.
+
+Update the `+satellites_used+` field and stash the altitude.
+
+If the altitude is empty, force the fix mode and status to 2D if it was
+3D previously.
+
+If it is not empty, stash the old value of altitude and replace it with
+the new value stashed earlier and set the local flag variable. If the
+mode is presently less than 3D, update it to 3D and set the local flag.
+
+If the stashed old altitude is NaN or the stashed fix time and current
+fix time are equal, set the climb rate to 0 otherwise calculate it by
+dividing the altitude difference by the time difference and set the
+local flag.
+
+If the geoid separation is available, store it, otherwise store the
+value from `+wgs84_separation()+` that depends on current location.
+
+Finally, return all the locally aggregated flags.
+
+|`+static gps_mask_t processGPGSA(int count, char *field[], struct gps_device_t *session)+`
+a|
+Start with a simple validity check on the number of fields (for i.Trek
+M3) and bail out with a simple indication of on-line status if it fails.
+
+Set the fix mode from the sentence and either clear the local flag
+variable (if an Antaris chipset says we are in dead-reckoning mode) or
+set the MODE_SET flag.
+
+Update all the DOP fields from the sentence, clear the count of used
+satellites, then scan all the satellite data.
+
+If any satellite is good (prn != 0), store the prn and increment the
+count of used satellites.
+
+Finally, set the local flags to indicate that DOPs are available and
+return all the locally aggregated flags.
+
+|`+static gps_mask_t processGPGSV(int count, char *field[], struct gps_device_t *session)+`
+a|
+Check if the sentence has too few fields or the wrong number of fields.
+In this case, clear the data for all satellites and return with an error
+indication.
+
+Start to parse the sentence. First, note how many sentences are to be
+expected to complete the data transfer.
+
+If the sentence number is invalid, clear the data for all satellites and
+return with an error indication.
+
+If this is the first sentence of the sequence, clear the data for all
+satellites.
+
+Loop through the sentence fields, updating the session's satellite data.
+
+If any satellite number is higher than the number of channels, clear all
+satellite data and break out of the loop.
+
+Assuming this is not a buggy chipset (e.g. Motorola Oncore GT+), update
+the satellite count and loop again.
+
+If this was the last sentence of the block and the number of satellites
+seen is not the same as the number reported, generate an error log.
+
+If this is not the last sentence of the block, exit early and return an
+error flag as a guard.
+
+Finally, on the last sentence, carry out a sanity check and either
+return an error flag or a SATELLITE_SET flag.
+
+|`+static gps_mask_t processPGRME(int c UNUSED, char *field[], struct gps_device_t *session)+`
+a|
+Check that the error estimate data is good. If not, set all error
+estimate fields to 100m and return an error flag.
+
+If they are good, calculate the error value and store it. Return the
+appropriate flag values.
+
+|`+static gps_mask_t processGPZDA(int c UNUSED, char *field[], struct gps_device_t *session)+`
+a|
+Set the local flag variable to indicate that the time is available.
+
+Store the actual time by a call to `+merge_hhmmss()+` and fill in the
+other fields from the sentence data.
+
+If the sentence is not timestamped the same as the fixtime, set the
+CYCLE_START_SET flag.
+
+Update the fixtime to the sentence timestamp.
+
+Finally, return all the locally aggregated flags.
+
+|`+static gps_mask_t processTNTHTM(int c UNUSED, char *field[], struct gps_device_t *session)+`
+a|
+Set the local variable to indicate the unit is on-line.
+
+Fill all appropriate fields from the sentence and set the associated
+flags in the local flag variable.
+
+Set the fix status and return all the locally aggregated flags.
+
+|`+static short nmea_checksum(char *sentence, unsigned char *correct_sum)+`
+|Calculate and return the checksum of an NMEA sentence.
+
+|`+gps_mask_t nmea_parse(char *sentence, struct gps_device_t *session)+`
+a|
+Test that the length of the NMEA sentence is acceptable, simply
+returning an on-line indication if it is too long to handle.
+
+If it is within limits, make a local copy and split it on the commas
+into an array, one field per element.
+
+Use the first element to match the command to the table of decodable
+commands.
+
+Check if it is supported and the number of fields is reasonable, invoke
+the correct decoder and return the value from that call.
+
+If it fails the check, simply return an on-line status.
+
+This function is also responsible for performing adaptive end-of-cycle
+detection.
+
+|`+void nmea_add_checksum(char *sentence)+` |Calculate the checksum then
+append '*' + the checksum + CR/LF to the end of an NMEA sentence,
+skipping any existing '*'.
+
+|`+int nmea_write(struct gps_device_t *session, const char *fmt, ... )+`
+|Ship a string to an NMEA device, adding a checksum and CR/LF if needed.
+A checksum is added only if the sentence begins with '$'. Bytes written
+are returned.
+
+|`+int nmea_send(struct gps_device_t *session, , const char *fmt, ... )+`
+|A wrapper around `+nmea_write()+` to give it sprintf-like varargs
+behavior.
+|===
+
+Notes based on code as of Mon Apr 5 21:38:06 2010 -0400.
+
+== `+driver_proto.c+`
+
+[cols="",]
+|===
+|This is a dummy file to use as a skeleton for writing a new driver. The
+driver is heavily commented, so refer to the source code.
+|===
+
+Notes based on code as of Mon Apr 5 21:38:06 2010 -0400.
+
+== `+driver_rtcm2.c+`
+
+[cols=",",options="header",]
+|===
+|Functions: |This is a decoder for the RTCM-104 serial protocol.
+|`+void rtcm2_unpack(struct rtcm2_t *tp, char *buf)+` |Splits RTCM2 raw
+data into fields.
+
+|`+bool rtcm2_repack(struct rtcm2_t *tp, isgps30bits_t *buf)+` |Packs
+RTCM2 fields into a raw data stream.
+
+|`+static bool preamble_match(isgps30bits_t *w)+` |Tells if the preamble
+field in a message is valid or not.
+
+|`+static bool length_check(struct gps_packet_t *lexer)+` |Tells if the
+message length is valid or not.
+
+|`+enum isgpsstat_t rtcm2_decode(struct gps_packet_t *lexer, unsigned int c)+`
+|A simple call to `+isgps_decode()+`.
+
+|`+void rtcm2_dump(struct rtcm2_t *rtcm2, char buf[], size_t buflen)+`
+|Dump the contents of a parsed RTCM104v2 message.
+
+|`+void rtcm2_output_magnavox(isgps30bits_t *ip, FILE *fp)+` |Ship an
+RTCM2 message in the format emitted by Magnavox DGPS receivers.
+|===
+
+Notes based on code as of Mon Apr 5 21:38:06 2010 -0400.
+
+== `+drivers.c+`
+
+[cols=",",options="header",]
+|===
+|Functions: |This is the main driver for NMEA, both plain vanilla and
+any manufacturer specific variety of NMEA output. This is NOT where
+manufacturer specific binary matters are handled.
+|`+ssize_t generic_get(struct gps_device_t *session)+` |This is a
+wrapper to call the real packet getter function, `+packet_get()+`.
+
+|`+ssize_t pass_rtcm(struct gps_device_t *session, char *buf, size_t rtcmbytes)+`
+|This writes the rtcm data to the device.
+
+|`+gps_mask_t nmea_parse_input(struct gps_device_t *session)+` a|
+If the packet is a comment packet, ignore it and return 0.
+
+If it is one of several binary packets, issue a warning to that effect.
+
+If the relevant driver exists, switch to that driver and get it to parse
+the packet. The return value is that of the binary parser.
+
+If the driver does not exist, ignore the packet and return 0.
+
+If after all this, it is likely to be an NMEA packet, so try to parse it
+with the NMEA parser. If that returns a 0 (unsuccessful), then check if
+it is a trigger packet for one of the triggerable drivers.
+
+If this succeeds, return 1, otherwise issue an unrecognised packet
+error.
+
+Finally checks are made against openBSD's NMEA Line Discipline to make
+use of timestamping and if ntpd synchronising is active, the time is
+passed to the ntp daemon.
+
+|`+static void nmea_probe_subtype(struct gps_device_t *session, unsigned int seq)+`
+|This tries to probe for the NMEA mode of several popular chipsets. Most
+are detected by a trigger string.
+
+| |Several functions are omitted which are device specific. These are
+not covered here since they ARE device specific.
+
+|`+static gps_mask_t rtcm104_analyze(struct gps_device_t *session)+`
+|This function calls `+rtcm_unpack()+` to unpack rtcm packets into the
+session buffer.
+
+| |The last important thing in this code is an array of addresses, one
+for each compiled-in driver. This address gets us to the
+"`capabilities`" table in the bottom of each driver where we find what
+functions a driver supports and the entry address for each function.
+|===
+
+Notes based on code as of Mon Apr 5 21:38:06 2010 -0400.
+
+== `+geoid.c+`
+
+[cols=",",options="header",]
+|===
+|Functions: |Provides conversion between the ECEF and WGS84 coordinate
+reference systems.
+|`+static double bilinear(double x1, double y1, double x2, double y2, double x, double y, double z11, double z12, double z21, double z22)+`
+|This is a piece of mathematical manipulation only used internally in
+this code, so wrestle with it if you will! It's used to perform bilinear
+interpolation on the grid points in the WGS4 geoidal-separation array.
+
+|`+double wgs84_separation(double lat, double lon)+` |This is used by
+drivers to get the separation of MSL from the WGS84 datum at a pair of
+Latitude/Longitude coordinates. The data is in a pre-defined table.
+
+|`+void ecef_to_wgs84fix(struct gps_data_t *gpsdata, double x,
+double y, double z, double vx, double vy, double vz)+` |This does
+exactly what it says! Coordinate system conversion from ecef to the
+wgs84 equivalent.
+
+|`+static double fix_minuz(double d)+` |This forces a value of -0.0 to
+be the same as 0.0 so that certain trig functions act in a predictable
+manner.
+
+|`+int main(int argc, char **argv)+` |This is a local test routine which
+exercises the other code for debugging purposes. It is normally shut off
+by an `+#ifdef+`.
+|===
+
+Notes based on code as of Mon Apr 5 21:38:06 2010 -0400.
+
+== `+gps.h+`
+
+[cols=",",options="header",]
+|===
+|Structures: |The interface of the libgps library, provides data
+structures the library needs and that the daemon fills.
+|`+struct gps_fix_t {}+` |This is the fix related data gathered from the
+gps device. Each client session has 2, the current fix and the previous
+fix.
+
+|`+struct rtcm2_t {}+` |This holds the data being processed by the rtcm
+functions.
+
+|`+struct gps_data_t {}+` |This contains ALL the data available from the
+daemon; the actual fix, status flags, headings etc. Basically any good
+stuff that we might want goes here.
+|===
+
+Notes based on code as of Mon Apr 5 21:38:06 2010 -0400.
+
+== `+gpsd.c+`
+
+[cols=",",options="header",]
+|===
+|Functions: |This is the main body of the daemon.
+|`+static void onsig(int sig)+` |This is a simple catchall routine to
+trap wanted signal. Simply store the signal number in a variable to
+advise the main loop which signal to handle.
+
+|`+static int daemonize(void)+` a|
+Try to `+fork()+` a child process. The parent will get a return value of
+either -1 (on a failure to `+fork()+`) or non-zero (the child's PID).
+The parent routine will use this information to either return -1 or exit
+with an exit code of 0 (i.e. the parent terminates, leaving the child
+running).
+
+The child instance gets a return value of 0 (on an unsuccessful
+`+fork()+` there is no child), so this value is used as the trigger to
+do the following useful stuff.
+
+First, the child tries to create a new session, returning -1 if unable
+to do so. If successful, it will have inherited the exiting parent's
+session.
+
+Next switch to the root directory and try to open "`/dev/null`". If that
+succeeds, force stdin, stdout and stderr to duplicate the fd of
+"`/dev/null`". If the fd being used for the operation is >2, release it.
+
+Finally, set the flag which indicates the process is in the background
+and return a value of 0.
+
+|`+static void usage(void)+` |Simply print a big list of the invocation
+parameters to the default gpsd port (2947, allocated by IANA).
+
+|`+static int passivesock_af(char *service, char *tcp_or_udp, int qlen)+`
+a|
+Initialise an Internet socket address structure and preload the family
+and address fields to accept Internet Protocol and any address.
+
+Test to see if the incoming service and protocol exist in
+`+/etc/services+`. If they do, store the port number in the structure
+(massaging byte order as needed); if they don't, exit with a -1.
+
+Test to see if the protocol is listed in `+/etc/services+`, exiting with
+-1 if it is not.
+
+Test if the protocol is udp or not, setting the type accordingly.
+
+Try to open a socket with the accumulated settings, exiting with -1 if
+it fails.
+
+Try to set the socket options correctly, again exiting with -1 if it
+fails.
+
+Try to bind to the open socket; if it fails exit with -1 as earlier, but
+give a special warning if the error indicates that gpsd may already be
+active on the socket.
+
+If we are using a stream type socket and we are unable to listen to the
+port we exit with -1.
+
+The last possibility is a successful set of operations which is
+signalled by returning the socket fd number.
+
+|`+static int passivesocks(char *service, char *tcp_or_udp, int qlen, int socks[])+`
+a|
+Open a passive socket for each supported address family; presently the
+supported families are IPV4 and IPv6. This socket will be used to listen
+for client command connections. Sockets are left in the final array
+argument, and the number successfully opened is returned.
+
+|`+static int filesock(char *filename)+` a|
+Try and open a socket for Local (UNIX) communications in streaming mode.
+If the open fails, return with a -1.
+
+If it opens, copy the incoming filename into the socket control
+structure, bind to the socket and try to listen on it.
+
+Signal a failure by returning -1 and success by returning the socket fd
+number.
+
+|`+static void adjust_max_fd(int fd, bool on)+` a|
+If the incoming boolean flag is active, check if the fd number passed is
+greater than the highest seen so far. If so, save it as the new highest
+value.
+
+If the boolean is passive we can take some further action, depending if
+we are interested in limiting the maximum number of devices and client
+fds (set by compile time options).
+
+If we are not limiting ourselves, then we check for the case when we are
+actually at the highest fd seen so far. In that case, scan through all
+fds available to the system and store the highest active fd number in
+our allocation set as the new highest value.
+
+|`+static struct subscriber_t* allocate_client(void)+` a|
+Scan through all the client file descriptors, looking for one which does
+not have a device allocated to it.
+
+On a match, exit early, returning this fd.
+
+If none are available, return a NULL.
+
+|`+static void detach_client(struct subscriber_t *sub)+` a|
+Close the given fd and remove it from our allocation set.
+
+Make a call to `+adjust_max_fd()+` to housekeep the highest fd marker if
+needed.
+
+Set important fields in the client's datablock to safe values for the
+next re-use, then return.
+
+|`+static ssize_t throttled_write(struct subscriber_t *sub, char *buf, ssize_t len)+`
+a|
+Check if we have a high enough debug level active to warrant printing
+out the information we are about to send to the client.
+
+Make the actual `+write()+` call and if that was successful, return the
+counter value from that operation.
+
+If we have suffered some kind of failure, try to analyse it.
+
+On a short write, detach the client and return a 0.
+
+Trap `+EAGAIN+` or `+EINTR+` and return a 0.
+
+Trap `+EBADF+` or a `+EWOULDBLOCK+` where the client has not read data
+for more than a reasonable amount of time and generate a suitable
+report.
+
+For all other errors, generate a general error. In these last several
+cases, call `+detach_cient()+`.
+
+Finally, return the status (-1 in this case).
+
+|`+static void notify_watchers(struct gps_device_t *device, const char *sentence, ...)+`
+a|
+For every possible subscriber, check if the subscriber is in watcher
+mode and is interested in the gps device indicated in the calling
+parameter `+gps_device_t+`.
+
+If so, send the data via a call to `+throttled_write()+`.
+
+|`+static struct gps_device_t *find_device(const char *device_name)+` a|
+For every possible channel, check if the channel is allocated and if the
+device on the channel is the one passed to us.
+
+If it is so, exit early and return the channel number.
+
+If there is no match, return a NULL.
+
+|`+static void deactivate_device(struct gps_device_t *device)+`
+|Deactivate device, but leave it in the device pool; do not free it.
+This means it will be available to be watched on subsequent client
+opens.
+
+|`+bool open_device(struct gps_device_t *devp)+` a|
+Try to activate the device via a call to `+gpsd_activate()+`.
+
+If this fails return "`false`".
+
+If it succeeds, add the fd to our list of active fds, housekeep the
+highest fd number and return "`true`".
+
+|`+static bool add_device(const char *device_name)+` |Add a device to
+the pool of those available. If in nowait mode, open it immediately;
+otherwise initialize it and make it available for future watches, but
+don't open it yet.
+
+|`+static bool awaken(struct subscriber_t *user, struct gps_device_t *device)+`
+a|
+If the device is not initialized, attempt to open the specified device
+on behalf of the specified user. If you succeed and the device has an
+active fd, you're done. If it does not, make a call to
+`+gpsd_activate()+`.
+
+If this fails, return "`false`", if not, add the fd to our list of
+active fds and housekeep the highest fd.
+
+Check if the user is in watcher mode but not tied to a specific device.
+
+|`+static char *snarfline(char *p, char **out)+` |Copy the input line
+into a new buffer stopping at the first non-printable or whitespace
+character.
+
+|`+static bool privileged_user(struct gps_device_t *device)+` |Scan all
+subscribers and count all who are connected to the device. If only the
+one user is connected, return "`true`", otherwise return "`false`".
+
+|`+static void handle_request(struct subscriber_t* sub, char *buf, const char **after, char *reply, size_t replylen)+`
+|Perform a single GPSD JSON command. Accept the command response into a
+reply buffer, and update the after pointer to point just after the
+parsed JSON object.
+
+|`+static int handle_gpsd_request(struct subscriber_t *sub, const char *buf)
++` |Parse multiple GPSD JSON commands out of a buffer and perform each.
+Ship all responses back to the user via `+throttled_write()+`.
+
+|`+static void handle_control(int sfd, char *buf)+` a|
+This code is similar in function to `+handle_gpsd_request()+` in that it
+parses user input. It expects the commands to be one per line and
+despatches them according to the leading character, which is limited to
+one of '-', '+' or '!'.
+
+In the first case, the body of the command is assumed to be a device to
+remove from the search list. If found, it is removed, any clients are
+advised and "`OK`" is written to the calling socket fd. If the device is
+not found "`ERROR`" is written to the calling socket fd.
+
+In the second case, the body of the command is assumed to be a device to
+be used by the daemon. If the device is already known, or does not
+respond to `+open_device()+`, "`ERROR`" is written to the calling socket
+fd, otherwise "`OK`" is written.
+
+In the third case, the command is assumed to be a device-specific
+control string in the form "`!device_name=control_string`". If the
+string is ill-formed or the device is not found "`ERROR`" is written to
+the calling socket fd. If all is well, the control string is written to
+the device and "`OK`" is written to the calling socket fd.
+
+|`+int main(int argc, char *argv[])+` a|
+If the 1PPS function is compiled in, initialise the local mutex
+structure for use by the program.
+
+A `+while()+` loop reads in any command line arguments which are options
+and handles the options. Most set an internal variable to control action
+when running, either to a fixed value or to the associated option's
+parameter.
+
+Carry out a series of calls to routines to set things up ready for the
+main task (e.g. opening a control socket if one is needed). We also take
+care of tasks such as daemonizing when appropriate. The last piece of
+preparation is to set the permissions of the default devices correctly
+if we are daemonizing and are presently running as root.
+
+Switch to the compiled in user name (typically "`nobody`") and the group
+used by the tty devices.
+
+Now we clear important data for all the records in the subscriber list.
+
+Use `+setjmp()+` to prepare things for when the daemon terminates.
+
+Clear the semaphore variable which will contain the signal number if one
+arrives and set some important signals so they are trapped by the stub
+handler in `+onsig()+`.
+
+Add the command and RTCM sockets (if active) to the list of active fds,
+housekeeping the highest fd number and pre-clear the list of control
+fds.
+
+Process the remaining parameter on the command line which should be the
+device name and try to open the specified device.
+
+Enter the main execution loop, a `+while()+` loop which terminates if a
+signal sets the semaphore variable. What follows will repeat over and
+over until an external termination happens.
+
+First we make a working copy of the active fds and then we make a
+time-limited (1 second time limit) call to `+select()+` using the
+working copy of the fds. This means that when the `+select()+` returns,
+we will either have returned on timeout or because some fd became ready
+to read.
+
+First we check if any new clients have come active and (if we have
+resources) allocate a subscriber slot to it, doing housekeeping such as
+adding it to the main list of active fds and removing it from the local
+copy of the list. If RTCM support is compiled in, the last operation is
+repeated for any new RTCM client. The operation is then repeated for any
+new control socket clients.
+
+If we are expecting DGPS reports, make a call to `+netgnss_poll()+` and
+if there are no ready reports, clear the fd from the main and local
+active fd lists.
+
+Check if any of the active control sockets has sent one or more
+commands.
+
+For every one which has sent commands, make calls to
+`+handle_control()+` to process them and remove the associated fd from
+the main and control lists of active fds.
+
+Poll every active gps device and send RTCM data to it (if needed),
+followed by reading its output (if any). If the device returns an error,
+disable the device. If it has gone off-line, disable the device.
+
+If we get here, we have something to handle, so we take care of a device
+which we know about, but do not have a subtype for.
+
+We send the available data to all subscribers who are connected to this
+device. If the data is RTCM information, pass it to all GPS devices that
+can accept the data.
+
+Handle any subscribers who are in watcher mode building up an
+appropriate set of requests, depending on the available data and passing
+the requests to `+handle_gpsd_request()+`.
+
+If we care about DBUS, send the fix to the DBUS.
+
+_Note that this small section of code is presently disabled pending
+development of the DGNSS function._ If DGNSS is available and we have a
+fix, we poll a DGNSS report via `+dgnss_autoconnect()+`.
+
+Loop round all clients and process active ones. We check for input from
+them and if the read fails, the client is released with
+`+detach_client()+`. If it succeeds, any data is handled via
+`+handle_rtc_request()+` or `+handle_gpsd_request()+`.
+
+If the transaction fails, the client is released with
+`+detach_client()+`.
+
+If the client has timed out with no device assigned, it is released with
+`+detach_client()+`.
+
+If the client has a device, but has timed out on no response (when not
+in raw or watcher modes) it is released with `+detach_client()+`.
+
+If we are not running in "`nowait`" mode, we are supposed to go idle
+after a timeout when there are no clients.
+
+If a device (with a known type) has no active clients, then we can
+actually make it idle via `+gpsd_deactivate()+`.
+
+If we reach here, we are out of the endless while loop. We check if the
+signal was `+SIGHUP+` and restart the program if it was. If it is any
+other signal, we deallocate all channels and wrap up any devices.
+Finally we check for the existence of a control socket or a pid file and
+delete them.
+
+|===
+
+Notes based on code as of Mon Apr 5 21:38:06 2010 -0400.
+
+== `+gpsd.h+`
+
+[cols=",",options="header",]
+|===
+|Structures: |Provides fundamental types and structures for the GPS
+daemon. Only key structures are analysed here. Simple definitions and
+prototype definitions are ignored.
+|This file is created at `+configure+` time by combining
+`+gpsd.h-head+`, certain configuration options from the auto-generated
+file `+gpsd_configure.h+` and `+gpsd.h-tail+`. This file (`+gpsd.h+`)
+should not be edited directly, neither should `+gpsd.h-head+`. You
+should only edit `+gpsd.h-tail+` as needed. |
+
+|`+struct gps_packet_t {}+` |Provides the data structure used by
+`+packet_getter()+`. 1 per gpsd session.
+
+|`+struct gps_context_t {}+` |Provides context data like number of good
+fixes seen. 1 per gpsd session.
+
+|`+struct gps_type_t {}+` |This is the method table that every driver
+uses to communicate with the daemon. It is a table of entry points or
+externally visible data. 1 per driver type.
+
+|`+struct gps_device_t {}+` |This is the data belonging to a session
+(global state) and also private storage for the session's associated
+device driver (if needed). 1 per gpsd session.
+|===
+
+Notes based on code as of Mon Apr 5 21:38:06 2010 -0400.
+
+== `+gpsd_log.c+`
+
+[cols=",",options="header",]
+|===
+|Functions: |Direct access to GPSes on serial or USB devices.
+|`+void gpsd_log(int errlevel, const struct errout_t, const char *fmt, ... )+`
+a|
+This code is used for error reporting, but is dependant on
+SQUELCH_DISABLE so that embedded systems (for example) are not burdened
+with unnecessary noise. The first thing to check is if the error level
+offered is high enough to be of interest (controlled by the debug level
+we are running at).
+
+If we are interested, the first step is to protect the code with a mutex
+if we are using the 1PPS input.
+
+Now we build a message buffer which has a fixed header ("`gpsd: `") and
+the incoming data. The output buffer is prepared (load the start with a
+NULL) and then the input buffer is scanned, byte-by-byte, up to its
+terminating NULL. The scanned data is transferred on the fly to the
+output buffer subject to the following tests:
+
+If the character is printable, it passes through unchanged.
+
+If it is a space and either of the next two bytes is NULL it will also
+pass through unchanged.
+
+In any other case, it is copied across as a hexadecimal string like
+"`x09`".
+
+The completed output buffer is then either sent to the system logger if
+we are in background mode (daemon) or to the stderr file if we are in
+foreground mode.
+
+|`+int gpsd_switch_driver(struct gps_device_t *session, char* typename)+`
+a|
+Test if the function is called with the same name as the active driver.
+
+If it is, test if the driver has a configurator function and is able to
+be reconfigured. A good result here will call the driver event hook with
+type 'driver_switch', and return a 0.
+
+For an entry with a different driver name, scan all available drivers to
+see if the wanted one is there. An unmatched name exits, returning 0.
+
+If we got a match, get the baudrate for the device with
+`+gpsd_assert_sync()+`, probe for the subtype if we have one.
+
+If the device has a configurator and is reconfigurable, trigger the
+configurator.
+
+Return a 1 to indicate a device switch.
+
+|`+void gpsd_init(struct gps_device_t *session, struct gps_context_t *context, const char *device)+`
+|Copy the device name to the session data structure, initialise
+important data fields and call `+gpsd_tty_init()+`,
+`+gpsd_zero_satellites()+` and `+packet_reset()+`.
+
+|`+void gpsd_deactivate(struct gps_device_t *session)+` a|
+All actions below, except the last one are conditional on the `+ntpd+`
+interface being compiled in.
+
+Release the `+ntpd+` resources, including the 1PPS resources if they are
+active.
+
+If the device has a revert function, trigger it.
+
+If it has an NMEA mode switcher, invoke it.
+
+If it has a wrapup routine, invoke it.
+
+Finally, close the device.
+
+|`+static void *gpsd_ppsmonitor(void *arg)+` a|
+An `+ioctl()+` call is made which returns either 0 if the status of the
+port changed, or an error.
+
+If we got a change, we read the modem control bits and extract the 1PPS
+information.
+
+We check the returned value and see if it has changed recently. A
+counter of 10 unchanged events will disable further testing.
+
+If we are still hanging in there, we now see if we already have had more
+than 4 good fixes, otherwise we can't trust the 1PPS.
+
+We then finally test the pulse duration. If it is either a genuine 1PPS
+or a 2Hz square wave, we call `+ntpshm_pps()+`.
+
+Short or long PPS pulses are dropped with an error report.
+
+|`+int gpsd_activate(struct gps_device_t *session, bool reconfigurable)+`
+a|
+If the devicename matches an NTRIP or DGNSS URI, hand off to special
+code for opening a socket to that source over the network.
+
+Try and open the device, returning -1 if we fail.
+
+Probe all possible drivers to see if one recognises the device.
+
+Set some fundamental data to a clean value.
+
+Handle the initialisation of NTP and 1PPS functions if needed.
+
+If we did succeed in probing some device type, try and get the subtype.
+
+If we need to do so, we now configure the device.
+
+Finally, signal success by returning the file descriptor given by the
+device open call.
+
+|`+void gpsd_error_model(struct gps_device_t *session, struct gps_fix_t *fix, struct gps_fix_t *oldfix)+`
+a|
+Check we have a 2D fix (or better) and if the gps didn't provide an eph
+value, use the HDOP to calculate one or fail to NAN.
+
+Do the same with epv/VDOP if we have a 3D or better fix.
+
+Do the same with epe/PDOP.
+
+Consider speed error; check if we have two fixes with differing
+timestamps and use their times and eph values to calculate the speed.
+
+If we have two valid 3D fixes, we can calculate the climb/sink rate.
+
+Finally, just before exiting, save this fix as the old fix for the next
+comparison round.
+
+|`+gps_mask_t gpsd_poll(struct gps_device_t *session)+` a|
+Make a call to `+gps_clear_fix()+` to prepare the newdata structure to
+receive data from an incoming packet.
+
+Check if we know the device type. If we do, stash the count of of
+characters we are able to get from it.
+
+If the read has given a full packet, we can call the subtype probing
+method, if the device supports it.
+
+If we don't know the device type, try and figure out what it is, exiting
+if we can't.
+
+Make some checks if the device is offline or the packet is incomplete,
+using the stashed count of characters and the full packet indicator.
+
+If a full packet is available, we try to get the fix data and update the
+main data structure. We also compute the DOPs so we can fill them in if
+they are not included in the gps device output.
+
+Mopst of the possible driver events are called from somewhere in here.
+
+|`+void gpsd_wrap(struct gps_device_t *session)+` |Simple call to
+`+gpsd_deactivate(session)+`.
+
+|`+void gpsd_zero_satellites(struct gps_data_t *out)+` |Zero the status
+data for all satellites.
+|===
+
+Notes based on code as of Mon Apr 5 21:38:06 2010 -0400.
+
+== `+gpsutils.c+`
+
+[cols=",",options="header",]
+|===
+|Functions: |Code shared between low-level and high-level interfaces.
+Most of them do exactly what they say on the tin.
+|`+void gps_clear_fix(struct gps_fix_t *fixp)+` |Stuff a fix structure
+with recognizable out-of-band values.
+
+|`+unsigned int gps_valid_fields(struct gps_fix_t *fixp)+` |Clears
+certain status flags, depending if the associated fields are invalid.
+
+|`+time_t mkgmtime(register struct tm *t)+` |Convert a struct `+tm {}+`
+(see `+time.h+`) to seconds since UNIX Epoch.
+
+|`+timespec_t iso8601_to_timespec(char *isotime)+` |Convert an ISO8601
+UTC string (like 2006-01-25T13:15:22.9Z) to a timespec_t (time_t,long).
+
+|`+char *timespec_to_iso8601(timespec_t ts, char isotime[], int len)+`
+|Convert a struct timepsec into an ISO8601 UTC string (like
+2006-01-25T13:15:22.9Z).
+
+|`+static double CalcRad(double lat)+` |Return the earth's radius of
+curvature in meters at specified latitude.
+
+|`+double earth_distance(double lat1, double lon1, double lat2, double lon2)+`
+|Return the distance in meters between two points specified in degrees.
+
+|`+static int invert(double mat[4][4], double inverse[4][4])+` |Try and
+invert an array. If it is possible, fill the inverted array and return a
+1. Return a 0 if it is not possible.
+
+|`+gps_mask_t dop(struct gps_data_t *gpsdata)+` |Take a gps data
+structure and try to calculate the DOP values from the other data in it.
+Return 0 if it is not possible or update the appropriate DOP fields in
+the structure and set a mask which tells which fields were updated.
+|===
+
+Notes based on code as of Mon Apr 5 21:38:06 2010 -0400.
+
+== `+isgps.c+`
+
+[cols=",",options="header",]
+|===
+|Functions: |This contains low level handling for the data transmission
+format of the satellite downlink and the RTCM2 radio data stream. ESR
+comments "`You are not expected to understand any of this.`". Let's try
+anyhow.
+|`+static unsigned char parity_array[]+` |An array of parity values to
+allow fast lookup instead of calculation.
+
+|`+static unsigned int reverse_bits[]+` |An array of conversion values
+to allow fast lookup instead of calculation.
+
+|`+unsigned int isgps_parity(isgps30bits_t th)+` |Calculate the ISGPS
+parity for the incoming 30 bit word. This involves lots of masking (with
+preset values or values searched through `+parity_array[]+`) and
+shifting
+
+|`+void isgps_init(struct gps_packet_t *session)+` |Initialise the ISGPS
+data for the current session.
+
+|`+enum isgpsstat_t isgps_decode(struct gps_packet_t *session, bool (*preamble_match)(isgps30bits_t *), bool (*length_check)(struct gps_packet_t *), size_t maxlen, unsigned int c)+`
+a|
+Check the validity of the ISGPS word tag (incoming data
+`+unsigned int c+`) and exit with an error if it is not valid.
+
+If the session has not already locked with the datastream, loop through
+the data and try and sync up. If sync is achieved, exit early with an
+indication of sync, or fall through still marked unsynced.
+
+If the session is already locked to the datastream, read the data into
+the session buffer. All the while, take care that the datastream is not
+corrupted. Any error will result in an early return with an appropriate
+error code. At the end of this section, return the status of the
+operations.
+
+Finally, if the above two sections failed, exit with an error indicating
+that lock was not achieved.
+
+|`+void isgps_output_magnavox(isgps30bits_t *ip, unsigned int len, FILE *fp)+`
+|Ship an IS-GPS-200 message to standard output in Magnavox format.
+|===
+
+Notes based on code as of Mon Apr 5 21:38:06 2010 -0400.
+
+== `+libgps_core.c+`
+
+[cols=",",options="header",]
+|===
+|Functions: |The client interface library for the gpsd daemon.
+|`+struct gps_data_t *gps_open(const char *host, const char *port)+` a|
+Open a connection to a gps daemon.
+
+Try to get a `+gps_data_t+` structure. If it fails, return a NULL.
+
+Test for a specified host and/or port number, using defaults if nothing
+is specified in the command line invocation.
+
+Try to connect to the now defined socket; on error, release the
+resources and return NULL. On success, initialise an internal struct
+gps_data_t and return the pointer to it.
+
+|`+struct gps_data_t *gps_open_r(const char *host, const char *port, struct gps_data_t *gpsdata)+`
+|Variant of `+gps_open()+` for when re-entrancy is required. Initializes
+storage passed by the caller.
+
+|`+int gps_close(struct gps_data_t *gpsdata)+` a|
+Close the fd associated with the `+gps_data_t+` structure and stash the
+result.
+
+If there is a device id stored, NULL it and the associated path.
+
+If the device list has any data in it, free this and mark the number of
+available devices as invalid.
+
+Free the `+gps_data_t+` structure itself and return the stashed
+`+close()+` result.
+
+|`+static void gps_unpack(char *buf, struct gps_data_t *gpsdata)+` a|
+Keep looping through the data in `+buf+` for JSON objects. Each time one
+is found, analyze it and unpack it into the struct pointed at by
+gpsdata, setting the gpsdata->set mask appropriately to indicate which
+data is valid
+
+This function is intended for GPSD internal use only and should not be
+considered a stable part oof the API.
+
+|`+int gps_poll(struct gps_data_t *gpsdata)+` a|
+Poll the daemon and if there is no data or an error, return -1.
+
+If there is something to read, clear the buffer, note the time as the
+received data time and the online time, then unpack the data.
+
+If profiling is active, use the received data time, the fix time and the
+present time to calculate the decode time and the client receipt time.
+
+|`+int gps_send(struct gps_data_t *gpsdata, const char *fmt, ... )+` a|
+Gather up the instructions to a gpsd instance for information to return
+and write them to the device.
+
+If the write fails, return -1. This entry point is deprecated in favor
+of `+gps_stream()+`
+
+|`+bool gps_waiting(struct gps_data_t *gpsdata)+` |Return a boolean
+indicating whether input data is waiting on the daemon socket. Does not
+block.
+
+|`+int gps_stream(struct gps_data_t *gpsdata, unsigned int, void *d)+`
+|Set watch and policy flags. This evaluates the flag mask passed as the
+second argument, composes a corresponding command in the GPSD write
+protocol, and ships it to the daemon.
+
+| |The following three functions are guarded by an `+#ifdef+` so they
+only compile if it is required to be able to test the library and set up
+a command line exerciser interface.
+
+|`+static void data_dump(struct gps_data_t *collect, time_t now)+` |A
+data dumper used when debugging. It outputs data according to the
+command line input data.
+
+|`+static void dumpline(struct gps_data_t *ud UNUSED, char *buf, size_t ulen UNUSED, int level UNUSED)+`
+|A simple call to UNIX `+puts()+`.
+
+|`+int main(int argc, char *argv[])+` |A simple command line parser and
+endless loop to exercise the daemon when debugging.
+|===
+
+Notes based mostly on code as of Mon Apr 5 21:38:06 2010 -040.
+
+== `+libgps.c+`
+
+[cols=",",options="header",]
+|===
+|Functions: |The client interface library for the gpsd daemon.
+|`+char *deg_to_str(enum deg_str_type type, double f)+` a|
+Convert the absolute value of double degrees to a static string and
+return a pointer to it.
+
+Makes a simple check on invalid degree values (not more than 360) and
+returns "nan" on error.
+
+For valid values, it generates the appropriate string according to the
+string type enumeration: dd, ddmm or ddmmss.
+
+Warning: not thread safe.
+
+|`+char *deg_to_str2(enum deg_str_type type, double f, char *buf,
+    unsigned int buf_size, const char *suffix_pos, const char *suffix_neg)
+    +` a|
+Convert the absolute value of double degrees to a string and place in
+the buffer "buf". Return a pointer to the buffer. "buf_size" is the size
+of the buffer.
+
+Makes a simple check on invalid degree values (not more than 360) and
+returns "nan" on error.
+
+For valid values, it generates the appropriate string according to the
+string type enumeration: dd, ddmm or ddmmss. If the degrees are
+positive, append "suffix_pos", else append "suffix_neg".
+
+|`+enum unit gpsd_units(void)+` |Simple check of the environment to
+determine what units are required. If all else fails, use compiled in
+units.
+|===
+
+Notes based on code as of Mon Apr 5 21:38:06 2010 -0400.
+
+== `+libgpsd_core.c+`
+
+[cols=",",options="header",]
+|===
+|Functions: |General string output routine for any module to use.
+|`+void gpsd_log(int errlevel, struct gpsd_errout_t, const char *fmt, ... )+`
+|Provides the outputting of strings to stderr or through a specified
+hook function in the errout structure for anyone who needs it. Used
+extensively by many functions to log errors or progress. Responds
+according to the `+errlevel+` argument, which is filled by the DEBUG
+command line argument, so that the verbosity of output is conditional on
+the user's wishes at runtime.
+|===
+
+Notes based on code as of Sat Mar 7 10:11:55 EST 2015
+
+
+== `+libgpsmm.cpp+`
+
+[cols="",]
+|===
+|C++ class wrapper for the `+libgps+` C binding.
+|===
+
+Notes based on code as of Mon Apr 5 21:38:06 2010 -0400.
+
+== `+libgpsmm.h+`
+
+[cols="",]
+|===
+|Headers for `+libgpsmm.cpp+`.
+|===
+
+Notes based on code as of Mon Apr 5 21:38:06 2010 -0400.
+
+== `+net_dgnss_dispatch.c+`
+
+[cols=",",options="header",]
+|===
+|Functions: |This file provides the interface to Differential GNSS
+(Global Navigation Satellite Systems) services.
+|`+bool netgnss_url(char *name)+` |Check if a URL is valid for GNSS/DGPS
+service.
+
+|`+int netgnss_open(struct gps_context_t *context, char *dgnss_service)+`
+|Try to open a connection to the nominated service. If the service
+cannot be opened, the return is -1. The supported services are
+`+dgpsip+` (differential corrections via IP) and `+ntrip+` (differential
+corrections in http form).
+
+|`+int netgnss_poll(struct gps_context_t *context)+` |Try to poll the
+GNSS service for a correction report. If no socket is active, simply
+return 0. If a socket is active, on successful read it stores the
+current timestamp and the report in the context buffer then returns 0.
+If no data is ready or an error (except EAGAIN) occurs, drop the
+connection and return -1.
+
+|`+void netgnss_report(struct gps_device_t *session)+` |Call the
+`+dgpsip_report()+` or `+ntrip_report()+` function if either is active.
+
+|`+void netgnss_autoconnect(struct gps_context_t *context, double lat, double lon)+`
+|Call the `+autoconnect()+` function in `+dgpsip.c+`
+
+|`+void rtcm_relay(struct gps_device_t *session)+` |If there is a DGNSS
+connection report in the context buffer, pass it to the caller. If the
+transaction fails, generate an error log, otherwise, update the session
+timestamp.
+|===
+
+Notes based on code as of Mon Apr 5 21:38:06 2010 -0400.
+
+== `+net_dgpsip.c+`
+
+[cols=",",options="header",]
+|===
+|Functions: |This file provides the actual services for dgpsip
+corrections to `+dgnss.c+`.
+|`+socket_t dgpsip_open(struct gps_context_t *context, const char *dgpsserver)+`
+|Tries to open a connection to a dgpsip server. Returns either -1 on
+failure or the socket number on success. On success, it initializes the
+connection, sends a "`HELO`" to the server and stores the type of dgnss
+service in the context data.
+
+|`+void dgpsip_report(struct gps_device_t *session)+` |If we have not
+contacted the server and we have at received least 10 fixes, send a
+report to the server and set the flag, so we don't do it again.
+
+|`+static int srvcmp(const void *s, const void *t)+` |Compare the
+distance of two servers from our location. Return -ve, 0 or +ve
+depending if server `+s+` is nearer, the same distance away or further
+away than server `+t+`.
+
+|`+void dgpsip_autoconnect(struct gps_context_t *context, double lat, double lon, const char *serverlist)+`
+|This function takes a list of servers and tries to get a connection to
+the closest one relative to our location. If no servers are within 1600
+km or none are in the list, the dsock value is set to -2 to lock out the
+function.
+|===
+
+Notes based on code as of Mon Apr 5 21:38:06 2010 -0400.
+
+== `+net_ntrip.c+`
+
+[cols=",",options="header",]
+|===
+|Functions: |Gather and dispatch DGNSS data from Ntrip broadcasters.
+|`+static char *ntrip_field_iterate(char *start, char *prev, const char *eol)+`
+|Extract individual fields from the STR data block using ';' as the
+separator but handling string-embedded ';' characters correctly.
+
+|`+static void ntrip_str_parse(char *str, size_t len, struct ntrip_stream_t *hold)+`
+|Break an STR data block down using `+ntrip_field_iterate()+` and store
+the relevant details in an accumulation buffer.
+
+|`+static int ntrip_sourcetable_parse(int fd, char *buf, ssize_t blen, const char *stream, struct ntrip_stream_t *keep)+`
+a|
+Parse a block of ntrip data by passing the STR data to
+`+ntrip_str_parse()+`.
+
+Return a 0 on success or -1 on any of the many possible failures.
+
+|`+static int ntrip_stream_probe(const char *caster, const char *port, const char *stream, struct ntrip_stream_t *keep)+`
+|
+Send a request to the broadcaster for a block of correction data.
+
+If successful, return the result of parsing the table. On error return
+-1.
+
+|`+static int ntrip_auth_encode(const struct ntrip_stream_t *stream, const char *auth, char buf[], size_t size)+`
+|Check the authorisation of the stream and return 0 if there is none or
+it is basic. Return -1 in all other cases.
+
+|`+static int ntrip_stream_open(const char *caster, const char *port, const char *auth, struct gps_context_t *context, struct ntrip_stream_t *stream)+`
+a|
+Check the authorisation of the stream and if successful, try to connect.
+
+On connection, try to read data and test for various errors.
+
+On success, return the socket number, on error return -1.
+
+|`+int ntrip_open(struct gps_context_t *context, char *caster)+` |Try to
+establish a connection to the ntrip server. On success, return the
+socket number. Signal error with a return of -1.
+
+|`+void ntrip_report(struct gps_device_t *session)+` |If we have not
+contacted the server already and we have at least 10 fixes, send a
+report to the server and set the flag, so we don't do it again.
+|===
+
+Notes based on codec as of Tue Apr 6 10:17:55 2010 -0400.
+
+== `+netlib.c+`
+
+[cols=",",options="header",]
+|===
+|Functions: |This provides socket connectivity.
+|`+int netlib_connectsock(const char *host, const char *service, const char *protocol)+`
+|This attempts to connect the to nominated service on the nominated host
+using the nominated protocol. On success, the return value is the socket
+number. On error, an appropriate system defined error code is returned.
+
+|`+char *sock2ip(int fd)+` |This makes a call to `+getpeername+` using
+the supplied fd. On success, the returned string is the ip address in
+dotted notation. On error, "<unknown>" is returned.
+|===
+
+Notes based on code as of Mon Apr 5 21:38:06 2010 -0400.
+
+== `+ntpshmwrite.c+`
+
+[cols=",",options="header",]
+|===
+|Functions: |This puts time information into a shared memory segment
+for the ntp daemon to use.
+|`+static struct shmTime *getShmTime(int unit)+` |This requests a block
+of shared memory to communicate to the ntp daemon. It returns a pointer
+to the memory on success or NULL on failure.
+
+|`+void ntpshm_init(struct gps_context_t *context, bool enablepps)+`
+|Attaches all ntp shared memory segments, flagging the availability of
+the NMEA and 1pps capabilities as appropriate.
+
+|`+int ntpshm_alloc(struct gps_context_t *context)+` a|
+This tries to allocate a free ntp shared memory segment.
+
+If one is available, initialise it for use and flag it as in use.
+
+Returns the segment number on success or -1 on failure.
+
+|`+bool ntpshm_free(struct gps_context_t *context, int segment)+` |This
+tries to release a previously allocated ntp shared memory segment.
+Indicates the outcome by returning true (success) or false.
+
+|`+int ntpshm_put(struct gps_device_t *session, double fixtime)+` a|
+If the shared memory index allocated to the session is valid and the
+`+shmTime+` structure of the session is valid, store the time of the
+fix.
+
+Success is indicated by a return value of 1 and errors are indicated by
+a return value of 0.
+
+|`+int ntpshm_pps(struct gps_device_t *session, struct timeval *tv)+` a|
+This code is only available if the 1PPS function is compiled in.
+
+The shared memory structures are checked for validity and if not valid,
+a 0 is returned.
+
+The time received is then checked to be within 100 milliseconds of the
+PC's internal time and if not, a -1 is returned.
+
+The time received is then checked to be within 500 milliseconds of the
+second boundary and if not, the shared memory structure is advised that
+lock is lost and a -1 is returned.
+
+If good, the time is stored in the shared memory and 1 is returned.
+
+|===
+
+Notes based on code as of Tue Apr 6 10:17:55 2010 -0400.
+
+== `+packet.c+`
+
+[cols=",",options="header",]
+|===
+|Functions: |The packet-sniffing engine for reading data packets from
+GPS devices.
+|`+static void nextstate(struct gps_packet_t *lexer, unsigned char c)+`
+a|
+This is the main packet-sniffer loop. It scans the character against the
+definitions of all the packet structures known to gpsd and, if possible,
+sets a new packet state.
+
+If the state is "`xxx_RECOGNIZED`", the packet_parse routine will
+dispatch the packet to the appropriate driver.
+
+|`+static void packet_accept(struct gps_packet_t *lexer, int packet_type)+`
+|This shifts a packet that has been recognized into the output buffer,
+provided it is not bigger than the buffer.
+
+|`+static void packet_discard(struct gps_packet_t *lexer)+` |This clears
+a handled packet out of the input buffer.
+
+|`+static void character_discard(struct gps_packet_t *lexer)+` a|
+This is called if the `+nextstate()+` function returns "`GROUND_STATE`".
+
+In this case the character does not match any pattern, so to discard it,
+the input buffer is shifted back by one character to overwrite the
+"`bad`" character.
+
+|`+ssize_t packet_parse(struct gps_packet_t *lexer, size_t fix)+` a|
+Call the `+nextstate()+` function to process the available data and set
+the recognition state correctly.
+
+When a packet is matched to a driver, call `+packet_accept()+` and
+`+packet_discard()+` to handle the packet. If it is not matched, call
+`+packet_discard()+` and set the state to "`GROUND_STATE`"
+
+Return the number of characters handled.
+
+|`+ssize_t packet_get(int fd, struct gps_packet_t *lexer)+` a|
+Reads raw data from the input port.
+
+Returns the number of characters read (0 or more) or BAD_PACKET if there
+was an error in reading.
+
+Errors EAGAIN and EINTR are not classed as failures and cause a return
+of 0.
+
+In case of a good read of more than 0 characters, the return value is
+the output from a call to `+packet_parse()+`.
+
+|`+void packet_reset(struct gps_packet_t *lexer)+` |This simply resets
+the entire packet state machine to the ground state.
+
+|`+void packet_nit(struct gps_packet_t *lexer)+` |Zeros some counters,
+then resets the entire packet state machine to the ground state.
+
+|`+void packet_pushback(struct gps_packet_t *lexer)+` |This pushes back
+the last packet from the output buffer to the input buffer, provided
+doing so would not overflow the input buffer.
+|===
+
+Notes based on code as of Tue Apr 6 10:17:55 2010 -0400.
+
+== `+packet_names.h+`
+
+[cols="",]
+|===
+|This is a file generated by the "`make`" process from
+`+packet_states.h+`. It takes all the state names in that file and
+surrounds them with speech marks. These values are read into a table of
+packet names, `+state_table[]+`, in `+packet.c+`.
+|===
+
+Notes based on code as of Tue Apr 6 10:17:55 2010 -0400.
+
+== `+packet_states.h+`
+
+[cols="",]
+|===
+|This is a list of every possible state generated by every driver. The
+inclusion of each driver's states is controlled by `+#ifdef+` blocks, so
+we only include the states for drivers selected for compilation. These
+form an enumeration list in `+packet.c+` which indexes the
+`+state_table[]+` array mentioned in `+packet_names.h+`.
+|===
+
+Notes based on code as of Tue Apr 6 10:17:55 2010 -0400.
+
+== `+pseudonmea.c+`
+
+[cols=",",options="header",]
+|===
+|Functions: |Generate pseudo-NMEA corresponding to binary packet
+reports
+|`+static double degtodm(double a)+` |Converts a fractional degree value
+(like 125.3567) into an NMEA field as dddmm.xxx (like 12521.402).
+
+|`+void gpsd_position_fix_dump(struct gps_device_t *session, /char bufp[], size_t len)+`
+|If possible, create a $GPGGA message (full time, position and fix data)
+from the fix data, taking care about the validity of subsidiary fields
+like HDOP and altitude.
+
+|`+static void gpsd_transit_fix_dump(struct gps_device_t *session, char bufp[], size_t len)+`
+|Create a $GPRMC message (minimum navigation data) from the fix data.
+
+|`+static void gpsd_binary_fix_dump(struct gps_device_t *session, char bufp[], size_t len)+`
+|Make a call to `+gpsd_position_fix_dump()+` and
+`+gpsd_transit_fix_dump()+`.
+
+|`+static void gpsd_binary_satellite_dump(struct gps_device_t *session, char bufp[], size_t len)+`
+|Create one or more $GPGSV messages from the status data of all
+satellites we know about.
+
+|`+static void gpsd_binary_quality_dump(struct gps_device_t *session, char bufp[], size_t len)+`
+a|
+Create a $GPGSA message taking care that if any xDOP is not valid, we
+substitute a "`0.0`" value.
+
+If any of the error estimates is available, generate a $PGRME message
+again taking care about possibly invalid values.
+
+|`+static void gpsd_binary_dump(struct gps_device_t *session, char bufp[], size_t len)+`
+|Dump such binary data as we have available; a fix, a quality value and
+a satellite status block. Each is enabled by the appropriate status bits
+in the session mask variable.
+|===
+
+Notes based on code as of Mon Apr 5 21:38:06 2010 -0400.
+
+== `+serial.c+`
+
+[cols=",",options="header",]
+|===
+|Functions: |This provides serial port handling services to the daemon.
+It handles the tricky task of scanning for and changing port parameters,
+especially baudrate.
+|`+void gpsd_tty_init(struct gps_device_t *session)+` a|
+To be called on allocating a device. Mark GPS fd closed and its baud
+rate unknown.
+
+If we are supporting `+ntpd+` shared memory segments, ensure they are
+initially unused.
+
+|`+void cfmakeraw(struct termios *termios_p)+` |Workaround for systems
+(Cygwin, Solaris), which are missing `+cfmakeraw()+`. It is pasted from
+man page and added in `+serial.c+` arbitrarily.
+
+|`+speed_t gpsd_get_speed(struct termios* ttyctl)+` |Calls
+`+cfgetospeed()+` and returns the baud rate, if known. Default otherwise
+is 115200.
+
+|`+bool gpsd_set_raw(struct gps_device_t *session)+` |Tries to set port
+to raw mode and returns success or not.
+
+|`+void gpsd_set_speed(struct gps_device_t *session, speed_t speed, unsigned char parity, unsigned int stopbits)+`
+a|
+Sets the speed, parity and stopbits.
+
+Lots of black magic fiddling goes on to ensure the port is flushed on
+the baud rate change and wakeup strings are fired off just in case the
+device needs prodding into life.
+
+READ THE CODE AND COMMENTS!!!
+
+Prior to exit, a call is made to `+packet_reset()+` to ensure the packet
+state machine is initialised.
+
+|`+int gpsd_open(struct gps_device_t *session)+` a|
+Test the device and flag it as R/W if it is a character device, or R/O
+if it isn't.
+
+Try to open it in non-blocking and no-control mode.
+
+If that fails, try again, adding read-only mode. If that also fails,
+exit with an error.
+
+On no error, force the saved baudrate if we have a fixed port speed
+(typically embedded devices). Check if we have a saved baudrate and if
+so, activate it.
+
+Preset the packet type to BAD_PACKET.
+
+Check if the device we have opened is a tty. If it is a tty, read the
+original terminal parameters.
+
+Exit with an error code -1 on failure to do so.
+
+Save the old parameters, set important control flags, then set the
+speed.
+
+Finally, return the allocated fd.
+
+|`+bool gpsd_write(struct gps_device_t *session, void const *buf, size_t len)+`
+a|
+If the device is read-only, simply return 0.
+
+If not, try to write `+len+` characters to the device. Waiting until all
+data has been sent.
+
+Return the number of bytes written.
+
+|`+bool gpsd_next_hunt_setting(struct gps_device_t *session)+` a|
+Check if we have had SNIFF_RETRIES attempts at current baudrate. If not,
+return "`true`".
+
+If we have exceeded the limit, reset the counter and see if there are
+any more rates to try at.
+
+If no (fixed baudrate or all attempts exhausted), return "`false`",
+otherwise, set the next speed and return "`true`".
+
+|`+void gpsd_assert_sync(struct gps_device_t *session)+` |To be called
+when we want to register that we've synced with a device. We've achieved
+first sync with the device. Remember the baudrate so we can try it first
+next time this device is opened.
+
+|`+void gpsd_close(struct gps_device_t *session)+` a|
+If there is an active fd, check if it is a tty device. If it is, force
+the baudrate to 0 (should terminate the connection and de-assert control
+lines).
+
+Set the HUPCL flag in the original data, write the old data to the port,
+close the fd and clear that fd number from the session data.
+
+|===
+
+Notes based on code as of Tue Apr 6 10:17:55 2010 -0400.
+
+== `+subframe.c+`
+
+[cols=",",options="header",]
+|===
+|Functions: |This code interprets satellite RTCM-104 subframe data.
+|`+void gpsd_interpret_subframe(struct gps_device_t *session,unsigned int words[])+`
+|Extracts leap-second from RTCM-104 subframe data.
+|===
+
+Notes based on code as of Tue Apr 6 10:17:55 2010 -0400.
+
+== Signoff
+
+Mick Durkin <mick.durkin@saunalahti.fi>
+
+Helsinki
+
+November 2007
+
+== Revision History
+
+|===
+|Revision |Date|Author |Remarks
+|2.3| 25 January 2020 |gem | Converted to AsciiDoc
+
+|2.2 |25 Jan 2011 |esr |The raw_hook member is gone.
+
+|2.1 |6 April 2010 |esr
+|Updated to match current reality, as far as it
+goes. Some newer parts of the codebase, notably the JSON parsing
+machinery and AIS support, aren't documented.
+
+|2.0 |14 November 2007 |md
+|Updated to version svn revision 4420
+|===
+
+== COPYING
+
+This file is Copyright 2007 by the GPSD project
+SPDX-License-Identifier: BSD-2-clause

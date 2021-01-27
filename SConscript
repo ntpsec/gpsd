@@ -2375,6 +2375,7 @@ if adoc_prog:
                  ('www/AIVDM', 'www/AIVDM'),
                  ('www/client-howto', 'www/client-howto'),
                  ('www/gpsd-time-service-howto', 'www/gpsd-time-service-howto'),
+                 ('www/internals', 'www/internals'),
                  ('www/NMEA', 'www/NMEA'),
                  ('www/ppp-howto', 'www/ppp-howto'),
                  ('www/protocol-evolution', 'www/protocol-evolution'),
@@ -2411,13 +2412,6 @@ htmlpages = [
     ]
 
 wwwpage_targets = []
-if htmlbuilder:
-
-    # The internals manual.
-    internals = env.HTML('www/internals.html', '#doc/internals.xml')
-    # Depends on the subpages
-    env.Depends(internals, glob.glob('../doc/*xml'))
-    wwwpage_targets.append(internals)
 
 # webapges from .in files
 webpages_in = list(map(lambda f: f[3:-3], glob.glob("../www/*.in")))
