@@ -15,8 +15,9 @@ want to use it, you need
 
 -   an apparmor installation. Please consult the documentation of your
 distribution, some useful documentation can be found in
+[Arch Wiki](https://wiki.archlinux.org/index.php/AppArmor).
 [Debian Wiki](https://wiki.debian.org/AppArmor/HowToUse) and
-[Arch Wiki](https://wiki.archlinux.org/index.php/AppArmor). Make sure
+[Ubuntu](https://ubuntu.com/server/docs/security-apparmor).  Make sure
 apparmor in general is working as expected before adding new profiles.
 
 -   to copy the file to */etc/apparmor.d* and name it according to the
