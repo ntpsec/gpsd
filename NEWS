@@ -5,7 +5,7 @@
   Convert all DocBook (.xml) to AsciiDoc (.adoc)
   Remove all XSL remnants.
 
-3.22: 2020-01-08
+3.22: 2021-01-08
   Added client/gpscsv to convert gpsd JSON to csv.
   Added client/gpsplot to dynamically plot gpsd JSON.
   Added client/gpssubframe to decode gpsd SUBFRAME JSON.
