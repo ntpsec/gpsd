@@ -320,6 +320,6 @@ angle changed to climb/sink rate.
 
 == COPYING
 
-This file is Copyright 2004 by the GPSD project
-This file is Copyright 2004 by Eric S. Raymond
+This file is Copyright 2004 by the GPSD project+
+This file is Copyright 2004 by Eric S. Raymond+
 SPDX-License-Identifier: BSD-2-clause

@@ -357,4 +357,8 @@ v1.6, 2019-06-02::
 v1.7, 2021-01-13::
       Add Table of Contents.  Cleanup markup.
 
+== COPYING
+
+This file is Copyright 2010 by the GPSD project+
+SPDX-License-Identifier: BSD-2-clause
 //end

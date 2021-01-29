@@ -1931,4 +1931,9 @@ by Jaap Winius <jwinius@rjsystems.nl>.
 
 2.12 January 2021::
     Add Table of Contents.  Markup cleanup.
+
+== COPYING
+
+This file is Copyright 2013 by the GPSD project+
+SPDX-License-Identifier: BSD-2-clause
 // end

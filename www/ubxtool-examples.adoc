@@ -1352,4 +1352,9 @@ UBX-CFG-VALDEL and UBX-CFG-VALSET.  The bitmap for those is:
 * 2 -- BBR layer
 * 4 -- Flash layer
 
+== COPYING
+
+This file is Copyright 2020 by the GPSD project+
+SPDX-License-Identifier: BSD-2-clause
+
 // vim: set syntax=asciidoc:
