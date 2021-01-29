@@ -1480,5 +1480,5 @@ the members of the corresponding JSON object type.
 
 == COPYING
 
-This file is Copyright 2013 by the GPSD project
+This file is Copyright 2013 by the GPSD project+
 SPDX-License-Identifier: BSD-2-clause

@@ -212,5 +212,5 @@ gnuplot < polarunused.plot  > polarunused.png
 
 == COPYING
 
-This file is Copyright 2013 by the GPSD project
+This file is Copyright 2013 by the GPSD project+
 SPDX-License-Identifier: BSD-2-clause

@@ -109,5 +109,5 @@ gps2udp -a -n -b -u data.aishub.net:2222 -u 5.9.207.224:5321 \
 
 == COPYING
 
-This file is Copyright 2013 by the GPSD project
+This file is Copyright 2013 by the GPSD project+
 SPDX-License-Identifier: BSD-2-clause
