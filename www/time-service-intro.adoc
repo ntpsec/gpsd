@@ -359,6 +359,6 @@ v1.7, 2021-01-13::
 
 == COPYING
 
-This file is Copyright 2010 by the GPSD project+
+This file is Copyright 2010 by the GPSD project +
 SPDX-License-Identifier: BSD-2-clause
 //end

@@ -1354,7 +1354,7 @@ UBX-CFG-VALDEL and UBX-CFG-VALSET.  The bitmap for those is:
 
 == COPYING
 
-This file is Copyright 2020 by the GPSD project+
+This file is Copyright 2020 by the GPSD project +
 SPDX-License-Identifier: BSD-2-clause
 
 // vim: set syntax=asciidoc:

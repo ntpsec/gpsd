@@ -1634,5 +1634,5 @@ machinery and AIS support, aren't documented.
 
 == COPYING
 
-This file is Copyright 2007 by the GPSD project+
+This file is Copyright 2007 by the GPSD project +
 SPDX-License-Identifier: BSD-2-clause

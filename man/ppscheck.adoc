@@ -78,5 +78,5 @@ contact the vendor for confirmation that your device does supply PPS.
 
 == COPYING
 
-This file is Copyright 2013 by the GPSD project+
+This file is Copyright 2013 by the GPSD project +
 SPDX-License-Identifier: BSD-2-clause

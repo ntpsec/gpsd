@@ -724,5 +724,5 @@ and document the control_send method.
 
 == COPYING
 
-This file is Copyright 2006 by the GPSD project+
+This file is Copyright 2006 by the GPSD project +
 SPDX-License-Identifier: BSD-2-clause
