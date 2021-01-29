@@ -221,7 +221,7 @@ found. (instead of adding that folder to the PATH environment variable
 
 == RESOURCES
 
-*Project web site:* https://gpsd.io
+*Project web site:* {gpsdweb}
 
 == COPYING
 

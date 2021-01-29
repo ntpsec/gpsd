@@ -58,7 +58,7 @@ tool launches it. It defaults to an empty string.
 
 == RESOURCES
 
-*Project web site:* https://gpsd.io
+*Project web site:* {gpsdweb}
 
 == COPYING
 

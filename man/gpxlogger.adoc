@@ -110,7 +110,7 @@ With *-e shm, --export shm* this program will listen to the local
 
 == RESOURCES
 
-*Project web site:* https://gpsd.io
+*Project web site:* {gpsdweb}
 
 == COPYING
 

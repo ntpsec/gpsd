@@ -1476,7 +1476,7 @@ the members of the corresponding JSON object type.
 
 == RESOURCES
 
-*Project web site:* https://gpsd.io
+*Project web site:* {gpsdweb}
 
 == COPYING
 

@@ -242,7 +242,7 @@ ftp://igs.org/pub/data/format/rinex304.pdf
 
 == RESOURCES
 
-*Project web site:* https://gpsd.io
+*Project web site:* {gpsdweb}
 
 == COPYING
 

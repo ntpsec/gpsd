@@ -388,7 +388,7 @@ https://www.u-blox.com/en/product-resources[]
 
 == RESOURCES
 
-*Project web site:* https://gpsd.io
+*Project web site:* {gpsdweb}
 
 == COPYING
 

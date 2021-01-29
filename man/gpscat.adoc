@@ -87,7 +87,7 @@ The program accepts the following options:
 
 == RESOURCES
 
-*Project web site:* https://gpsd.io
+*Project web site:* {gpsdweb}
 
 == COPYING
 

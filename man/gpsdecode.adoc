@@ -107,7 +107,7 @@ length, followed by a colon, followed by a hex dump.
 
 == RESOURCES
 
-*Project web site:* https://gpsd.io
+*Project web site:* {gpsdweb}
 
 == COPYING
 

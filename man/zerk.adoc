@@ -222,7 +222,7 @@ https://www.javad.com/downloads/javadgnss/manuals/GREIS/GREIS_Reference_Guide.pd
 
 == RESOURCES
 
-*Project web site:* https://gpsd.io
+*Project web site:* {gpsdweb}
 
 == COPYING
 

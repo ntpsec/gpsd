@@ -277,7 +277,7 @@ C sample code Charles Curley <charlescurley@charlescurley.com>
 
 == RESOURCES
 
-*Project web site:* https://gpsd.io
+*Project web site:* {gpsdweb}
 
 == COPYING
 

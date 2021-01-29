@@ -159,7 +159,7 @@ imperial. The default if no system has been selected defaults to metric.
 
 == RESOURCES
 
-*Project web site:* https://gpsd.io
+*Project web site:* {gpsdweb}
 
 == COPYING
 

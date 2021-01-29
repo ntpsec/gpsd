@@ -686,7 +686,7 @@ This manual page by Eric S. Raymond <esr@thyrsus.com>.
 
 == RESOURCES
 
-*Project web site:* https://gpsd.io
+*Project web site:* {gpsdweb}
 
 == COPYING
 

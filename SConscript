@@ -2266,18 +2266,20 @@ if man_env.GetOption('silent'):
 manpage_targets = []
 maninstall = []
 if adoc_prog:
+    adoc_args = ('-a gpsdweb=%s ' % (website))
     for (man, src) in all_manpages.items():
         # build it
         # make nroff man page
         asciidocs.append(man)
         env.Command(man, src,
-                    ['%s -b manpage -o $TARGET $SOURCE' % (adoc_prog)])
+                    ['%s -b manpage %s -o $TARGET $SOURCE' %
+                     (adoc_prog, adoc_args)])
         # make html man page
         target = 'www/%s.html' % os.path.basename(man[:-2])
         asciidocs.append(target)
         env.Command(target, src,
-                    '%s -b html5 -d manpage -o $TARGET $SOURCE' %
-                    (adoc_prog))
+                    '%s -b html5 -d manpage %s -o $TARGET $SOURCE' %
+                    (adoc_prog, adoc_args))
 
         # install it
         section = man.split(".")[1]
@@ -2328,7 +2330,8 @@ if adoc_prog:
         target = '%s.html' % tgt
         asciidocs.append(target)
         env.Command(target, '%s.adoc' % src,
-                    ['%s -b html5 -o $TARGET $SOURCE' % (adoc_prog)])
+                    ['%s -b html5 %s -o $TARGET $SOURCE' %
+                     (adoc_prog, adoc_args)])
 
 # Non-asciidoc, non xml, plain html webpages only
 htmlpages = [

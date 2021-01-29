@@ -96,7 +96,7 @@ gpsplot --count 60 --fields llm example.com::/dev/ttyS0
 
 == RESOURCES
 
-*Project web site:* https://gpsd.io
+*Project web site:* {gpsdweb}
 
 == COPYING
 

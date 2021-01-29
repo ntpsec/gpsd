@@ -105,7 +105,7 @@ gps2udp -a -n -b -u data.aishub.net:2222 -u 5.9.207.224:5321 \
 
 == RESOURCES
 
-*Project web site:* https://gpsd.io
+*Project web site:* {gpsdweb}
 
 == COPYING
 

@@ -108,7 +108,7 @@ If the *-o* option is used, the "Seen@" column is replaced with the
 
 == RESOURCES
 
-*Project web site:* https://gpsd.io
+*Project web site:* {gpsdweb}
 
 == COPYING
 

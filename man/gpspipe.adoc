@@ -137,7 +137,7 @@ gpspipe -x 5 -w|sed -n '/TPV/{p;q}'
 
 == RESOURCES
 
-*Project web site:* https://gpsd.io
+*Project web site:* {gpsdweb}
 
 == COPYING
 

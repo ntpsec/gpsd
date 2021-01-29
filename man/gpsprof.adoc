@@ -208,7 +208,7 @@ gnuplot < polarunused.plot  > polarunused.png
 
 == RESOURCES
 
-*Project web site:* https://gpsd.io
+*Project web site:* {gpsdweb}
 
 == COPYING
 
