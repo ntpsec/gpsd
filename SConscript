@@ -9,6 +9,7 @@ from __future__ import print_function
 
 import ast
 import atexit      # for atexit.register()
+import distutils.util   # for distutils.util.strtobool()
 import functools
 import glob
 import operator
@@ -414,7 +415,6 @@ boolopts = (
     ("implicit_link", imloads, "implicit linkage is supported in shared libs"),
     ("magic_hat", sys.platform.startswith('linux'),
      "special Linux PPS hack for Raspberry Pi et al"),
-    ("manbuild",      True,  "build help in man and HTML formats"),
     ("minimal", False, "turn off every option not set on the command line"),
     ("nostrip",       False, "don't symbol-strip binaries at link time"),
     ("profiling",     False, "build with profiling enabled"),
@@ -449,6 +449,8 @@ else:
 nonboolopts = (
     ("gpsd_group",       def_group,     "privilege revocation group"),
     ("gpsd_user",        "nobody",      "privilege revocation user",),
+    ("manbuild",         "auto",
+     "build help in man and HTML formats.  No/Auto/Yes."),
     ("max_clients",      '64',          "maximum allowed clients"),
     ("max_devices",      '4',           "maximum allowed devices"),
     ("prefix",           "/usr/local",  "installation directory prefix"),
@@ -1368,15 +1370,38 @@ if not cleaning and not helping:
 #endif /* GPSD_CONFIG_H */
 ''')
 
-    if config.env['manbuild']:
-        # prefer AsciiDoctor, which needs a lot of Ruby
-        adoc_prog = env.WhereIs('asciidoctor')
-        if not adoc_prog:
+    # handle manbuild = no/auto/yes
+    # do we have asciidoctor?
+    adoc_prog = env.WhereIs('asciidoctor')
+
+    config.env['manbuild'] = config.env['manbuild'].lower()
+    if ((not config.env['manbuild'] or
+         'auto' == config.env['manbuild'])):
+        if adoc_prog:
+            config.env['manbuild'] = 1
+            announce("Build of man and HTML documentation enabled.")
+        else:
+            config.env['manbuild'] = 0
             announce("WARNING: AsciiDoctor not found.\n"
                      "WARNING: Some documentation and html will not be built.",
                      end=True)
     else:
-        announce("Build of man and HTML documentation is disabled.")
+        try:
+            config.env['manbuild'] = distutils.util.strtobool(
+                config.env['manbuild'])
+        except ValueError:
+            announce("ERROR: manbuild must be no/auto/yes.")
+            sys.exit(1)
+
+        if 0 == config.env['manbuild']:
+            adoc_prog = None
+            announce("Build of man and HTML documentation disabled.")
+        elif 1 == config.env['manbuild'] and not adoc_prog:
+            announce("ERROR: manbuild=True, but AsciiDoctor not found.\n")
+            sys.exit(1)
+        else:
+            announce("Build of man and HTML documentation enabled.")
+    # end  handle manbuild = no/auto/yes
 
     # Determine if Qt network libraries are present, and
     # if not, force qt to off
