@@ -459,7 +459,8 @@ nonboolopts = (
     ("python_shebang",   def_python_shebang, "Python shebang"),
     ("qt_versioned",     "",            "version for versioned Qt"),
     ("release",          "",            "Suffix for gpsd version"),
-    ("rundir",           rundir,        "Directory for run-time variable data"),
+    ("rundir",           rundir,
+     "Directory for run-time variable data"),
     ("sysroot",          "",
      "Logical root directory for headers and libraries.\n"
      "For cross-compiling, or building with multiple local toolchains.\n"
@@ -1881,10 +1882,12 @@ gpsmon_sources = [
 # For non-generated dependencies, it causes them to be duplicated into
 # the build tree as needed.
 
+
 # Symlink creator for uplevel access to the 'gps' package
 def PylibLink(target, source, env):
     _ = source, env
     os.symlink('../gps', target[0].get_path())
+
 
 # Import dependencies
 # Update these whenever the imports change
@@ -2335,7 +2338,8 @@ if adoc_prog:
                  ('SUPPORT', 'www/SUPPORT'),
                  ('www/AIVDM', 'www/AIVDM'),
                  ('www/client-howto', 'www/client-howto'),
-                 ('www/gpsd-time-service-howto', 'www/gpsd-time-service-howto'),
+                 ('www/gpsd-time-service-howto',
+                  'www/gpsd-time-service-howto'),
                  ('www/internals', 'www/internals'),
                  ('www/NMEA', 'www/NMEA'),
                  ('www/ppp-howto', 'www/ppp-howto'),
@@ -2345,7 +2349,8 @@ if adoc_prog:
                  ('www/time-service-intro', 'www/time-service-intro'),
                  ('www/ubxtool-examples', 'www/ubxtool-examples'),
                  ('www/writing-a-driver', 'www/writing-a-driver'),
-                 ('www/performance/performance', 'www/performance/performance'),
+                 ('www/performance/performance',
+                  'www/performance/performance'),
                  )
     for src, tgt in adocfiles:
         target = '%s.html' % tgt
