@@ -1618,6 +1618,8 @@ if not cleaning and not helping and config.env['python']:
 # get a list of the files from git, so they can go in distribution zip/tar
 distfiles = config.TryAction("git ls-files > $TARGET")[1]
 distfiles = polystr(distfiles).split()
+# add in the built man pages, zip and tar files must contain man pages.
+distfiles += all_manpages.keys()
 
 env = config.Finish()
 # All configuration should be finished.  env can now be modified.
@@ -2312,9 +2314,6 @@ if adoc_prog:
         dest = os.path.join(installdir('mandir'), "man" + section,
                             os.path.basename(man))
         maninstall.append(env.InstallAs(source=man, target=dest))
-
-    # add in the built man pages
-    distfiles += all_manpages.keys()
 
 # The hardware page
 env.Command('www/hardware.html',
