@@ -1,5 +1,5 @@
 = gpsd(8)
-:date: 24 January 2021
+:date: 4 February 2021
 :keywords: gps, gpsd, gnss
 :manmanual: GPSD Documentation
 :mansource: The GPSD Project
@@ -106,6 +106,8 @@ Client applications typically communicate with *gpsd* via a TCP/IP port,
 port 2947 by default. Both IPv4 and IPv6 connections are supported and a
 client may connect via either.
 
+== OPTIONS
+
 The program accepts the following options:
 
 *-?*, *-h*, *---help*::
@@ -144,7 +146,7 @@ The program accepts the following options:
   List all drivers compiled into this *gpsd* instance. The letters to the
   left of each driver name are the *gpsd* control commands supported by
   that driver. Then exit.
-*n*, *--nowait*::
+*-n*, *--nowait*::
   Don't wait for a client to connect before polling whatever GPS is
   associated with it. Some RS232 GPSes wait in a standby mode (drawing
   less power) when the host machine is not asserting DTR, and some
