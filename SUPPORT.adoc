@@ -1,8 +1,13 @@
-gpsd SUPPORT information
-------------------------
+= gpsd SUPPORT information
+:date: 4 February 2021
+:keywords: gps, gpsd, gnss
+:robots: index,follow
+:sectlinks:
+:toc: left
+:type: article
+:webfonts!:
 
-GENERAL
-~~~~~~~
+== GENERAL
 
 gpsd is developed and maintained by the open source community, and the
 project does not formally offer support.  Many people are usually
@@ -14,31 +19,30 @@ to the community.  This file explains how to ask for help.
 projects, note that this file is not attempting to say anything
 radical or unusual.)
 
-There is much documentation online at
-  https://gpsd.io/
+There is much documentation online at +
+{gpsdweb} +
 and that documentation should be consulted before asking for help.
 
-Details of gpsd support is described at
+Details of gpsd support is described at +
   https://gpsd.io/faq.html#bug-reporting
 
 
 The following link is very useful to give a sense of how to ask
-questions:
+questions: +
 
   http://www.catb.org/esr/faqs/smart-questions.html
 
 gpsd has not adopted the policy implicit in the following link, but it
 is an interesting discussion which may provide some insight into the
-response to requests for help:
+response to requests for help: +
 
   https://berthub.eu/articles/posts/anonymous-help/
 
 
-ISSUE TRACKER
-~~~~~~~~~~~~~
+== ISSUE TRACKER
 
-The gpsd source control website is at
-  https://gitlab.com/gpsd/gpsd/
+The gpsd source control website is at +
+  https://gitlab.com/gpsd/gpsd/ +
 and contains an issue tracker.
 
 Issues may be created when you believe that something is wrong in the
@@ -58,12 +62,10 @@ present in the latest release are OK too.)
 Issues that are not valid issues (not a bug, or lack of a reasonable
 attempt to provide enough information) may be summarily closed.
 
+== USER MAILINGLIST
 
-USER MAILINGLIST
-~~~~~~~~~~~~~~~~
-
-The user mailinglist at
-  https://lists.gnu.org/mailman/listinfo/gpsd-users
+The user mailinglist at +
+  https://lists.gnu.org/mailman/listinfo/gpsd-users +
 is appropriate for questions about gpsd, after a reasonable attempt
 has been made to answer the question by reading the documentation.
 
@@ -79,19 +81,17 @@ mailinglist has shown an interest in addressing issues in old
 versions.
 
 
-DEVELOPMENT MAILINGLIST
-~~~~~~~~~~~~~~~~~~~~~~~
+== DEVELOPMENT MAILINGLIST
 
-The development mailinglist at
-  https://lists.gnu.org/mailman/listinfo/gpsd-dev
+The development mailinglist at +
+  https://lists.gnu.org/mailman/listinfo/gpsd-dev +
 is appropriate for technical discussion about what changes should be
 made to gpsd.  Questions about how to do things with gpsd are
 inappropriate on this list.  (If you aren't reading the code, this
 list is likely not for you.)
 
 
-PRIVATE MAIL TO MAINTAINERS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+== PRIVATE MAIL TO MAINTAINERS
 
 A quick perusal of the lists will make it clear who is maintaining
 gpsd and contributing changes.  Do not send private mail to these
@@ -105,9 +105,7 @@ free help from the project.
 It is acceptable to send private email when disclosing a security
 issue.
 
-
-LONG TERM STABLE PACKAGING
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+== LONG TERM STABLE PACKAGING
 
 Note that there are a variety of distributions and packaging systems
 that contain gpsd.  Some of these are kept relatively up to date, and
@@ -129,3 +127,12 @@ encourages improvements to gpsd to be contributed back for the benefit
 of the greater gpsd community, and also to remove reasons for people
 to use old versions.  People using an old version from a vendor should
 seek support from their vendor.
+
+== RESOURCES
+
+*Project web site:* {gpsdweb}
+
+== COPYING
+
+This file is Copyright 2020 by the GPSD project +
+SPDX-License-Identifier: BSD-2-clause
