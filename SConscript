@@ -2077,8 +2077,8 @@ env.Depends('valgrind-audit.py', ['gps/__init__.py', 'gps/fake.py'])
 env.Depends(['tests/test_clienthelpers.py', 'tests/test_misc.py'],
             env.Command('tests/gps', '', PylibLink))
 
-# Glob() has to be run after all buildable objects defined
-# FIXME: confirm this is true here.
+# Glob() has to be run after all buildable objects defined.
+# Glob(), by default, looks in the file tree, and current buildable objects.
 python_modules = Glob('gps/*.py', strings=True) + ['gps/__init__.py',
                                                    'gps/gps.py',
                                                    'gps/packet.py']
@@ -2302,18 +2302,26 @@ if adoc_prog:
         env.Command(man, src,
                     ['%s -b manpage %s -o $TARGET $SOURCE' %
                      (adoc_prog, adoc_args)])
+        # install nroff man page
+        section = man.split(".")[1]
+        dest = os.path.join(installdir('mandir'), "man" + section,
+                            os.path.basename(man))
+        maninstall.append(env.InstallAs(source=man, target=dest))
+
         # make html man page
         target = 'www/%s.html' % os.path.basename(man[:-2])
         asciidocs.append(target)
         env.Command(target, src,
                     '%s -b html5 -d manpage %s -o $TARGET $SOURCE' %
                     (adoc_prog, adoc_args))
-
-        # install it
+else:
+    # can't build man pages, maybe we have pre-built ones?
+    for man in Glob('man/*.?', strings=True):
         section = man.split(".")[1]
         dest = os.path.join(installdir('mandir'), "man" + section,
                             os.path.basename(man))
         maninstall.append(env.InstallAs(source=man, target=dest))
+
 
 # The hardware page
 env.Command('www/hardware.html',
