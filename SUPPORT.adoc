@@ -29,13 +29,11 @@ Details of gpsd support is described at +
 
 The following link is very useful to give a sense of how to ask
 questions: +
-
   http://www.catb.org/esr/faqs/smart-questions.html
 
 gpsd has not adopted the policy implicit in the following link, but it
 is an interesting discussion which may provide some insight into the
 response to requests for help: +
-
   https://berthub.eu/articles/posts/anonymous-help/
 
 
