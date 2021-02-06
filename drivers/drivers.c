@@ -1048,6 +1048,8 @@ static void mtk3301_event_hook(struct gps_device_t *session, event_t event)
 16 NMEA_SEN_MDBG, PMTKDBG interval – MTK debug information
 17 NMEA_SEN_ZDA,  GPZDA   interval - Time & Date
 18 NMEA_SEN_MCHN, PMTKCHN interval – GPS channel status
+// MTK 3333
+19 NMEA_SEN_DTM,  GPDTM   interval - Datum reference
 
 "$PMTK314,1,1,1,1,1,5,1,1,0,0,0,0,0,0,0,0,0,1,0"
 
@@ -1056,11 +1058,15 @@ static void mtk3301_event_hook(struct gps_device_t *session, event_t event)
         return;
     if (event == event_triggermatch) {
         (void)nmea_send(session, "$PMTK320,0"); /* power save off */
-        (void)nmea_send(session, "$PMTK300,1000,0,0,0.0,0.0");/* Fix interval */
+        // Fix interval, 1000 millseconds
+        (void)nmea_send(session, "$PMTK300,1000,0,0,0.0,0.0");
+        // Set NMEA sentences.
         (void)nmea_send(session,
                         "$PMTK314,0,1,0,1,1,5,1,1,0,0,0,0,0,0,0,0,0,1,0");
-        (void)nmea_send(session, "$PMTK301,2"); /* DGPS is WAAS */
-        (void)nmea_send(session, "$PMTK313,1"); /* SBAS enable */
+        // DGPS is WAAS
+        (void)nmea_send(session, "$PMTK301,2");
+        // SBAS enable
+        (void)nmea_send(session, "$PMTK313,1");
 
         /* PMTK_API_Q_OUTPUT_CTL - Query PPS pulse width - Trimble only?
          * http://trl.trimble.com/docushare/dsweb/Get/Document-482603/CONDOR_UG_2C_75263-00.pdf *
