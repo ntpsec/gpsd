@@ -3366,7 +3366,7 @@ static gps_mask_t processMTK3301(int c UNUSED, char *field[],
                      field[1], mtk_reasons[reason]);
         }
         else
-            GPSD_LOG(LOG_DATA, &session->context->errout,
+            GPSD_LOG(LOG_PROG, &session->context->errout,
                      "NMEA0183: MTK ACK: %s\n", field[1]);
         return ONLINE_SET;
     case 424:                   /* PPS pulse width response */
@@ -3423,9 +3423,17 @@ static gps_mask_t processMTK3301(int c UNUSED, char *field[],
             (void)nmea_send(session, "$PMTK324,0,0,1,0,127875");
         return ONLINE_SET;
     case 705:                   /* return device subtype */
-        (void)strlcat(session->subtype, field[1], sizeof(session->subtype));
+        // Firmware release name and version
+        (void)strlcpy(session->subtype, field[1], sizeof(session->subtype));
         (void)strlcat(session->subtype, "-", sizeof(session->subtype));
+        // Build ID
         (void)strlcat(session->subtype, field[2], sizeof(session->subtype));
+        (void)strlcat(session->subtype, "-", sizeof(session->subtype));
+        // Product Model
+        (void)strlcat(session->subtype, field[3], sizeof(session->subtype));
+        (void)strlcat(session->subtype, "-", sizeof(session->subtype));
+        // SDK Version
+        (void)strlcat(session->subtype, field[4], sizeof(session->subtype));
         return ONLINE_SET;
     default:
         GPSD_LOG(LOG_PROG, &session->context->errout,
