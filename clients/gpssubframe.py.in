@@ -241,29 +241,29 @@ return (x, y, z, deltatsv) of satellite at gps_tow t
     # SV Clock Correction
     deltatsv = (ephm['af0'] + ephm['af1'] * toff +
                 ephm['af2'] * toff ** 2 + deltatr)
-    print("deltatr %.9e deltatsv %.9e Tgd %.9e toff %.3f" %
+    print("  deltatr %.9e deltatsv %.9e Tgd %.9e\n  toff %.3f" %
           (deltatr, deltatsv, ephm['Tgd'], toff))
     if 'ura' in ephm:
         # ephemeris, not almanac
-        print("URE %s Health %s" %
+        print("  URE %s Health %s" %
               (ura2ure[ephm['ura']], health_str[ephm['hlth'] & 0x1f]))
 
     if 1 < options.debug:
         if 2 < options.debug:
             print(ephm)
-        print("t %.3f tk %.3f" % (t, tk))
-        print("A %s n0 %s n %s\nMk %s Ek %s" % (A, n0, n, Mk, Ek))
-        print("nuk %.10g Phik %.10g" % (nuk, Phik))
-        print("deltauk %.10g deltark %.10g deltaik %.10g" %
+        print("   t %.3f tk %.3f" % (t, tk))
+        print("   A %s n0 %s n %s\nMk %s Ek %s" % (A, n0, n, Mk, Ek))
+        print("   nuk %.10g Phik %.10g" % (nuk, Phik))
+        print("   deltauk %.10g deltark %.10g deltaik %.10g" %
               (deltauk, deltark, deltaik))
-        print("uk %.10g rk %.10g ik %.10g" % (uk, rk, ik))
-        print("xkprime %.10g ykprime %.10g Omegak %.10g" %
+        print("   uk %.10g rk %.10g ik %.10g" % (uk, rk, ik))
+        print("   xkprime %.10g ykprime %.10g Omegak %.10g" %
               (xkprime, ykprime, Omegak))
         # compute distance from earth's center, and orbital speed, as
         # simple cross-check
         # GPS orbit radius about 26,600 km
         dist = math.sqrt((x * x) + (y * y) + (z * z))
-        print("dist %13.3f" % dist)
+        print("   dist %13.3f" % dist)
 
     # FIXME: broken
     # if 1 < options.debug:
@@ -281,25 +281,11 @@ def SatPosSum(eph, gps_tow):
 Compute Velocities.  Use deltatsv to correct pseudorange.
 """
 
+    print(" Computing using gps_tow of reception %0.9f" % gps_tow)
     (x, y, z, deltatsv) = SatPos(eph, gps_tow)
 
-    # lat/lon/alt
-    (lat, lon, altHAE) = gps.ecef2lla(x, y, z)
-    print(" x %13.3f  y %13.3f  z %13.3f deltatsv %g\n"
-          "lat %.6f lon %.6f altHAE %.3f" %
-          (x, y, z, deltatsv, lat, lon, altHAE))
-
-    # compute sat velocity by subtracting two postions.
-    # because I can't get the direct method to work...
-    delta_t = 0.1
-    (x2, y2, z2, deltatsv2) = SatPos(eph, gps_tow + delta_t)
-    vx = (x2 - x) / delta_t
-    vy = (y2 - y) / delta_t
-    vz = (z2 - z) / delta_t
-    # GPS orbit speed about 3.9 km/sec
-    speed = math.sqrt((vx * vx) + (vy * vy) + (vz * vz))
-    print("vx %13.3f  yv %13.3f  zv %13.3f speed %13.3f" %
-          (vx, vy, vz, speed))
+    print("  Sat: x %13.3f  y %13.3f  z %13.3f deltatsv %g" %
+          (x, y, z, deltatsv))
 
     # Try ecef first, no trig.  This agrees to the meter level
     # with the next range calculation that uses lat/Log/AltHAE.
@@ -311,32 +297,59 @@ Compute Velocities.  Use deltatsv to correct pseudorange.
         dy = y - all_data['tpv']['ecefy']
         dz = z - all_data['tpv']['ecefz']
         rng = math.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
-        print("sta x %.3f y %.3f z %.3f\n"
-              "rng %.3f" %
+        print("  Antenna position: x %.3f y %.3f z %.3f\n"
+              "  rng %.3f" %
               (all_data['tpv']['ecefx'], all_data['tpv']['ecefy'],
                all_data['tpv']['ecefz'], rng))
+    else:
+        rng = 0
 
-    # ax and el to sat
-    if (('lat' in all_data['tpv'] and
-         'lon' in all_data['tpv'] and
-         'altHAE' in all_data['tpv'])):
-        (E, N, U) = gps.ecef2enu(
-            x, y, z, all_data['tpv']['lat'], all_data['tpv']['lon'],
-            all_data['tpv']['altHAE'])
-        (az, el, rng) = gps.enu2aer(E, N, U)
-        print("E %.3f N %.3f U %.3f\n"
-              "az %.3f el %.3f rng %.3f" %
-              (E, N, U, az, el, rng))
+    # lat/lon/alt
+    (lat, lon, altHAE) = gps.ecef2lla(x, y, z)
+    print("  Sat lat %.6f lon %.6f altHAE %.3f" % (lat, lon, altHAE))
 
-        (E2, N2, U2) = gps.ecef2enu(
-            x2, y2, z2, all_data['tpv']['lat'], all_data['tpv']['lon'],
-            all_data['tpv']['altHAE'])
-        (az2, el2, rng2) = gps.enu2aer(E2, N2, U2)
-        range_speed = (rng2 - rng) / delta_t
-        # doppler is postive when sat egetting nearer
-        dopplerl1 = -2 * range_speed / gps.GPS_L1_WL
-        print("range speed %.3f L1 doppler %.3f" %
-              (range_speed, dopplerl1))
+    if 0 < rng:
+        # compute sat position at time signal sent.  That speed of light thing.
+        delta_t = rng / gps.CLIGHT
+        new_t = gps_tow - delta_t
+        # someday deal with clock errors, etc.
+        print(" Computing using gps_tow of sending %.9f" % new_t)
+        (x2, y2, z2, deltatsv2) = SatPos(eph, new_t)
+
+        print("  Sat: x %13.3f  y %13.3f  z %13.3f deltatsv %g" %
+              (x2, y2, z2, deltatsv2))
+
+        # compute sat velocity by subtracting two postions.
+        # because I can't get the direct method to work...
+        vx = (x2 - x) / delta_t
+        vy = (y2 - y) / delta_t
+        vz = (z2 - z) / delta_t
+        # GPS orbit speed about 3.9 km/sec
+        speed = math.sqrt((vx * vx) + (vy * vy) + (vz * vz))
+        print("  Sat: vx %13.3f  yv %13.3f  zv %13.3f speed %13.3f" %
+              (vx, vy, vz, speed))
+
+        # ax and el to sat, using trig
+        if (('lat' in all_data['tpv'] and
+             'lon' in all_data['tpv'] and
+             'altHAE' in all_data['tpv'])):
+            (E, N, U) = gps.ecef2enu(
+                x, y, z, all_data['tpv']['lat'], all_data['tpv']['lon'],
+                all_data['tpv']['altHAE'])
+            (az, el, rng) = gps.enu2aer(E, N, U)
+            print("  E %.3f N %.3f U %.3f\n"
+                  "  az %.3f el %.3f rng %.3f" %
+                  (E, N, U, az, el, rng))
+
+            (E2, N2, U2) = gps.ecef2enu(
+                x2, y2, z2, all_data['tpv']['lat'], all_data['tpv']['lon'],
+                all_data['tpv']['altHAE'])
+            (az2, el2, rng2) = gps.enu2aer(E2, N2, U2)
+            range_speed = (rng2 - rng) / delta_t
+            # doppler is postive when sat egetting nearer
+            dopplerl1 = -2 * range_speed / gps.GPS_L1_WL
+            print("  range speed %.3f L1 doppler %.3f" %
+                  (range_speed, dopplerl1))
 
     # pseudorange is range + C * clock_errors + C * path_delays
 
@@ -1047,7 +1060,7 @@ if gps_week and options.satpos:
              all_data['ephemeris2'][sv]['IODE'] ==
              all_data['ephemeris3'][sv]['IODE'])):
 
-            print("\n%5s Ephemeris position:" % sv)
+            print("\n%s Ephemeris position:" % sv)
 
             # mash into one dict
             # careful, = makes a link, not a copy, on dictionaries
