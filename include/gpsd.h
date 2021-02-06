@@ -101,16 +101,7 @@ extern "C" {
 #if !defined(AIVDM_ENABLE) && defined(NMEA2000_ENABLE)
 #define AIVDM_ENABLE
 #endif
-#if !defined(NMEA0183_ENABLE) && (defined(ASHTECH_ENABLE) || \
-                                  defined(FV18_ENABLE) ||  \
-                                  defined(OCEANSERVER_ENABLE) ||  \
-                                  defined(GPSCLOCK_ENABLE) ||  \
-                                  defined(FURY_ENABLE) || \
-                                  defined(SKYTRAQ_ENABLE) || \
-                                  defined(TRIPMATE_ENABLE) || \
-                                  defined(TNT_ENABLE))
-#define NMEA0183_ENABLE
-#endif
+
 #ifdef EARTHMATE_ENABLE
 #define ZODIAC_ENABLE
 #endif
