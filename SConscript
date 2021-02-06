@@ -365,7 +365,8 @@ boolopts = (
     ("geostar",       True,  "Geostar Protocol support"),
     ("greis",         True,  "Javad GREIS support"),
     ("itrax",         True,  "iTrax hardware support"),
-    ("mtk3301",       True,  "MTK-3301 support"),
+    # for back compatibility, deprecated Feb 2021
+    ("mtk3301",       True,  "alias for NMEA0183 support, deprecated"),
     ("navcom",        True,  "Navcom NCT support"),
     ("nmea0183",      True,  "NMEA0183 support"),
     ("nmea2000",      True,  "NMEA2000/CAN support"),
@@ -593,7 +594,6 @@ if ARGUMENTS.get('timeservice'):
     timerelated = ("gpsd",
                    "ipv6",
                    "magic_hat",
-                   "mtk3301",    # For the Adafruit HAT
                    "ncurses",
                    "nmea0183",   # For generic hats of unknown type.
                    "oscillator",

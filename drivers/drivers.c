@@ -235,14 +235,12 @@ static void nmea_event_hook(struct gps_device_t *session, event_t event)
             (void)ubx_write(session, 0x06, 0x00, NULL, 0);
             break;
 #endif /* UBLOX_ENABLE */
-#ifdef MTK3301_ENABLE
         case 8:
             /* probe for MTK-3301 -- expect $PMTK705 */
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "=> Probing for MediaTek\n");
             (void)nmea_send(session, "$PMTK605");
             break;
-#endif /* MTK3301_ENABLE */
 #ifdef GREIS_ENABLE
         case 9:
             /* probe for Javad GREIS -- expect reply with JAVAD */
@@ -1005,7 +1003,6 @@ static const struct gps_type_t driver_garmintxt = {
 /* *INDENT-ON* */
 #endif /* GARMINTXT_ENABLE */
 
-#ifdef MTK3301_ENABLE
 /**************************************************************************
  *
  * MediaTek MTK-3301, 3329, 3333, 3339
@@ -1029,6 +1026,8 @@ static const struct gps_type_t driver_garmintxt = {
  *
  * The Adafruit GPS HAT for the Raspberry Pi is an MTK3339. It works with this
  * driver; in fact AdaFruit's overview page for the product features GPSD.
+ *
+ * SIMCom DIM68M appears to be an MTK3333.
  *
  **************************************************************************/
 
@@ -1110,7 +1109,6 @@ const struct gps_type_t driver_mtk3301 = {
     .time_offset     = NULL,
 };
 /* *INDENT-ON* */
-#endif /* MTK3301_ENABLE */
 
 #ifdef ISYNC_ENABLE
 /**************************************************************************
@@ -1699,9 +1697,7 @@ static const struct gps_type_t *gpsd_driver_array[] = {
 #ifdef GARMIN_ENABLE
     &driver_garmin,
 #endif /* GARMIN_ENABLE */
-#ifdef MTK3301_ENABLE
     &driver_mtk3301,
-#endif /*  MTK3301_ENABLE */
 #ifdef OCEANSERVER_ENABLE
     &driver_oceanServer,
 #endif /* OCEANSERVER_ENABLE */

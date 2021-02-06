@@ -103,7 +103,6 @@ extern "C" {
 #endif
 #if !defined(NMEA0183_ENABLE) && (defined(ASHTECH_ENABLE) || \
                                   defined(FV18_ENABLE) ||  \
-                                  defined(MTK3301_ENABLE) ||  \
                                   defined(OCEANSERVER_ENABLE) ||  \
                                   defined(GPSCLOCK_ENABLE) ||  \
                                   defined(FURY_ENABLE) || \

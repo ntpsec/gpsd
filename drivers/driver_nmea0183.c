@@ -3319,7 +3319,6 @@ static gps_mask_t processMWV(int c UNUSED, char *field[],
     return mask;
 }
 
-#ifdef MTK3301_ENABLE
 static gps_mask_t processMTK3301(int c UNUSED, char *field[],
                                struct gps_device_t *session)
 {
@@ -3411,7 +3410,6 @@ static gps_mask_t processMTK3301(int c UNUSED, char *field[],
         return ONLINE_SET;              /* ignore */
     }
 }
-#endif /* MTK3301_ENABLE */
 
 #ifdef SKYTRAQ_ENABLE
 
@@ -3691,14 +3689,12 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PASHR", 3, false, processPASHR},
 #endif /* ASHTECH_ENABLE */
         {"PMGNST", 8, false, processPMGNST},    /* Magellan Status */
-#ifdef MTK3301_ENABLE
         {"PMTK", 3,  false, processMTK3301},
         /* for some reason the parser no longer triggering on leading chars */
         {"PMTK001", 3,  false, processMTK3301},
         {"PMTK424", 3,  false, processMTK3301},
         {"PMTK705", 3,  false, processMTK3301},
         {"PMTKCHN", 0, false, NULL},    /* ignore MediaTek Channel Status */
-#endif /* MTK3301_ENABLE */
         {"PRHS ", 2,  false, processPRHS},  // smart watch sensors, Yes: space!
         {"PRWIZCH", 0, false, NULL},    /* ignore Rockwell Channel Status */
         {"PSRFEPE", 7, false, processPSRFEPE},  /* SiRF Estimated Errors */

@@ -102,9 +102,7 @@ static const struct monitor_object_t *monitor_objects[] = {
 #ifdef GPSCLOCK_ENABLE
     &gpsclock_mmt,
 #endif /* GPSCLOCK_ENABLE */
-#ifdef MTK3301_ENABLE
     &mtk3301_mmt,
-#endif /* MTK3301_ENABLE */
 #ifdef AIVDM_ENABLE
     &aivdm_mmt,
 #endif /* AIVDM_ENABLE */

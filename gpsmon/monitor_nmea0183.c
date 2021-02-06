@@ -582,7 +582,6 @@ const struct monitor_object_t gpsclock_mmt = {
 };
 #endif /* GPSCLOCK_ENABLE */
 
-#ifdef MTK3301_ENABLE
 extern const struct gps_type_t driver_mtk3301;
 
 const struct monitor_object_t mtk3301_mmt = {
@@ -593,7 +592,6 @@ const struct monitor_object_t mtk3301_mmt = {
     .min_y = HEIGHT, .min_x = WIDTH,
     .driver = &driver_mtk3301,
 };
-#endif /* MTK3301_ENABLE */
 
 #ifdef AIVDM_ENABLE
 extern const struct gps_type_t driver_aivdm;
