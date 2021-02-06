@@ -373,6 +373,29 @@ static void register_fractional_time(const char *tag, const char *fld,
  *
  **************************************************************************/
 
+static gps_mask_t processACCURACY(int c UNUSED, char *field[],
+                                  struct gps_device_t *session)
+{
+    /*
+     * $GPACCURACY,961.2*04
+     *
+     * ACCURACY,x.x*hh<cr><lf>
+     *
+     * The only data field is "accuracy".
+     * The MT3333 manual just says "The smaller the number is, the be better"
+     */
+    gps_mask_t mask = ONLINE_SET;
+
+    if ( 0 == strlen(field[1])) {
+        /* no data */
+        return mask;
+    }
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: $GPACCURACY: %10s.\n", field[1]);
+    return mask;
+}
+
 /* process xxVTG
  *     $GPVTG,054.7,T,034.4,M,005.5,N,010.2,K
  *     $GPVTG,054.7,T,034.4,M,005.5,N,010.2,K,A
@@ -3655,6 +3678,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
              *    infinite loop.
              */
         {"AAM", 0,  false, NULL},    /* ignore Waypoint Arrival Alarm  */
+        {"ACCURACY", 1,  true,  processACCURACY},
         {"ALM", 0,  false, NULL},    // ignore GPS Almanac Data
         {"APB", 0,  false, NULL},    /* ignore Autopilot Sentence B  */
         {"BOD", 0,  false, NULL},    /* ignore Bearing Origin to Destination  */
