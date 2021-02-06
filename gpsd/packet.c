@@ -225,10 +225,9 @@ static bool character_pushback(struct gps_lexer_t *lexer, unsigned int newstate)
     --lexer->inbufptr;
     --lexer->char_counter;
     lexer->state = newstate;
-    if (lexer->errout.debug >= LOG_RAW + 2)
-    {
+    if (lexer->errout.debug >= LOG_RAW2) {
         unsigned char c = *lexer->inbufptr;
-        GPSD_LOG(LOG_RAW + 2, &lexer->errout,
+        GPSD_LOG(LOG_RAW, &lexer->errout,
                  "%08ld: character '%c' [%02x]  pushed back, state set to %s\n",
                  lexer->char_counter,
                  (isprint((int)c) ? c : '.'), c,
@@ -243,9 +242,9 @@ static void character_discard(struct gps_lexer_t *lexer)
 {
     memmove(lexer->inbuffer, lexer->inbuffer + 1, (size_t)-- lexer->inbuflen);
     lexer->inbufptr = lexer->inbuffer;
-    if (lexer->errout.debug >= LOG_RAW + 1) {
+    if (lexer->errout.debug >= LOG_RAW1) {
         char scratchbuf[MAX_PACKET_LENGTH*4+1];
-        GPSD_LOG(LOG_RAW + 1, &lexer->errout,
+        GPSD_LOG(LOG_RAW1, &lexer->errout,
                  "Character discarded, buffer %zu chars = %s\n",
                  lexer->inbuflen,
                  gpsd_packetdump(scratchbuf, sizeof(scratchbuf),
@@ -944,9 +943,9 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             lexer->state = SKY_DELIVERED;
         break;
     case SKY_DELIVERED:
-        if ( lexer->errout.debug >= LOG_RAW + 1) {
-            char scratchbuf[MAX_PACKET_LENGTH*4+1];
-            GPSD_LOG(LOG_RAW + 1, &lexer->errout,
+        if ( lexer->errout.debug >= LOG_RAW1) {
+            char scratchbuf[MAX_PACKET_LENGTH * 4 + 1];
+            GPSD_LOG(LOG_RAW, &lexer->errout,
                      "Skytraq = %s\n",
                      gpsd_packetdump(scratchbuf,  sizeof(scratchbuf),
                          (char *)lexer->inbuffer,
@@ -1216,7 +1215,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             break;
         }
     }
-        GPSD_LOG(LOG_RAW + 1, &lexer->errout,
+        GPSD_LOG(LOG_RAW1, &lexer->errout,
                  "Zodiac header id=%u len=%u flags=%x\n",
                  getzuword(1), getzuword(2), getzuword(3));
         if (lexer->length == 0) {
@@ -1561,7 +1560,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             lexer->state = JSON_STRINGLITERAL;
             lexer->json_after = JSON_END_ATTRIBUTE;
         } else {
-            GPSD_LOG(LOG_RAW + 1, &lexer->errout,
+            GPSD_LOG(LOG_RAW1, &lexer->errout,
                      "%08ld: missing attribute start after header\n",
                      lexer->char_counter);
             lexer->state = GROUND_STATE;
@@ -1658,9 +1657,9 @@ static void packet_accept(struct gps_lexer_t *lexer, int packet_type)
         lexer->outbuflen = packetlen;
         lexer->outbuffer[packetlen] = '\0';
         lexer->type = packet_type;
-        if (lexer->errout.debug >= LOG_RAW + 1) {
-            char scratchbuf[MAX_PACKET_LENGTH*4+1];
-            GPSD_LOG(LOG_RAW + 1, &lexer->errout,
+        if (lexer->errout.debug >= LOG_RAW1) {
+            char scratchbuf[MAX_PACKET_LENGTH * 4 + 1];
+            GPSD_LOG(LOG_RAW1, &lexer->errout,
                      "Packet type %d accepted %zu = %s\n",
                      packet_type, packetlen,
                      gpsd_packetdump(scratchbuf,  sizeof(scratchbuf),
@@ -1681,9 +1680,9 @@ static void packet_discard(struct gps_lexer_t *lexer)
     size_t remaining = lexer->inbuflen - discard;
     lexer->inbufptr = memmove(lexer->inbuffer, lexer->inbufptr, remaining);
     lexer->inbuflen = remaining;
-    if (lexer->errout.debug >= LOG_RAW + 1) {
-        char scratchbuf[MAX_PACKET_LENGTH*4+1];
-        GPSD_LOG(LOG_RAW + 1, &lexer->errout,
+    if (lexer->errout.debug >= LOG_RAW1) {
+        char scratchbuf[MAX_PACKET_LENGTH * 4 + 1];
+        GPSD_LOG(LOG_RAW1, &lexer->errout,
                  "Packet discard of %zu, chars remaining is %zu = %s\n",
                  discard, remaining,
                  gpsd_packetdump(scratchbuf, sizeof(scratchbuf),
@@ -1699,9 +1698,9 @@ static void packet_stash(struct gps_lexer_t *lexer)
 
     memcpy(lexer->stashbuffer, lexer->inbuffer, stashlen);
     lexer->stashbuflen = stashlen;
-    if (lexer->errout.debug >= LOG_RAW+1) {
-        char scratchbuf[MAX_PACKET_LENGTH*4+1];
-        GPSD_LOG(LOG_RAW + 1, &lexer->errout,
+    if (lexer->errout.debug >= LOG_RAW1) {
+        char scratchbuf[MAX_PACKET_LENGTH * 4 + 1];
+        GPSD_LOG(LOG_RAW1, &lexer->errout,
                  "Packet stash of %zu = %s\n",
                  stashlen,
                  gpsd_packetdump(scratchbuf, sizeof(scratchbuf),
@@ -1721,9 +1720,9 @@ static void packet_unstash(struct gps_lexer_t *lexer)
         memcpy(lexer->inbuffer, lexer->stashbuffer, stashlen);
         lexer->inbuflen += stashlen;
         lexer->stashbuflen = 0;
-        if (lexer->errout.debug >= LOG_RAW+1) {
-            char scratchbuf[MAX_PACKET_LENGTH*4+1];
-            GPSD_LOG(LOG_RAW + 1, &lexer->errout,
+        if (lexer->errout.debug >= LOG_RAW1) {
+            char scratchbuf[MAX_PACKET_LENGTH * 4 + 1];
+            GPSD_LOG(LOG_RAW1, &lexer->errout,
                      "Packet unstash of %zu, reconstructed is %zu = %s\n",
                      stashlen, lexer->inbuflen,
                      gpsd_packetdump(scratchbuf, sizeof(scratchbuf),
@@ -1761,7 +1760,7 @@ void packet_parse(struct gps_lexer_t *lexer)
         unsigned int oldstate = lexer->state;
         if (!nextstate(lexer, c))
             continue;
-        GPSD_LOG(LOG_RAW + 2, &lexer->errout,
+        GPSD_LOG(LOG_RAW2, &lexer->errout,
                  "%08ld: character '%c' [%02x], %s -> %s\n",
                  lexer->char_counter, (isprint(c) ? c : '.'), c,
                  state_table[oldstate], state_table[lexer->state]);
@@ -1962,7 +1961,7 @@ void packet_parse(struct gps_lexer_t *lexer)
             if (dlecnt > 2) {
                 dlecnt -= 2;
                 dlecnt /= 2;
-                GPSD_LOG(LOG_RAW + 1, &lexer->errout,
+                GPSD_LOG(LOG_RAW1, &lexer->errout,
                          "Unstuffed %d DLEs\n", dlecnt);
                 packetlen -= dlecnt;
             }
@@ -2019,7 +2018,7 @@ void packet_parse(struct gps_lexer_t *lexer)
                 packet_discard(lexer);
                 break;
               not_garmin:;
-                GPSD_LOG(LOG_RAW + 1, &lexer->errout,
+                GPSD_LOG(LOG_RAW1, &lexer->errout,
                          "Not a Garmin packet\n");
 #endif /* GARMIN_ENABLE */
 #ifdef TSIP_ENABLE
@@ -2222,7 +2221,7 @@ void packet_parse(struct gps_lexer_t *lexer)
                 packet_discard(lexer);
                 break;
               not_tsip:
-                GPSD_LOG(LOG_RAW + 1, &lexer->errout, "Not a TSIP packet\n");
+                GPSD_LOG(LOG_RAW1, &lexer->errout, "Not a TSIP packet\n");
                 /*
                  * More attempts to recognize ambiguous TSIP-like
                  * packet types could go here.
@@ -2537,18 +2536,18 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
                  sizeof(lexer->inbuffer) - (lexer->inbuflen));
     if (recvd == -1) {
         if ((errno == EAGAIN) || (errno == EINTR)) {
-            GPSD_LOG(LOG_RAW + 2, &lexer->errout, "no bytes ready\n");
+            GPSD_LOG(LOG_RAW2, &lexer->errout, "no bytes ready\n");
             recvd = 0;
             /* fall through, input buffer may be nonempty */
         } else {
-            GPSD_LOG(LOG_RAW + 2, &lexer->errout,
+            GPSD_LOG(LOG_RAW2, &lexer->errout,
                      "errno: %s\n", strerror(errno));
             return -1;
         }
     } else {
-        if (lexer->errout.debug >= LOG_RAW + 1) {
-            char scratchbuf[MAX_PACKET_LENGTH*4+1];
-            GPSD_LOG(LOG_RAW + 1, &lexer->errout,
+        if (lexer->errout.debug >= LOG_RAW1) {
+            char scratchbuf[MAX_PACKET_LENGTH * 4 + 1];
+            GPSD_LOG(LOG_RAW1, &lexer->errout,
                      "Read %zd chars to buffer offset %zd (total %zd): %s\n",
                      recvd, lexer->inbuflen, lexer->inbuflen + recvd,
                      gpsd_packetdump(scratchbuf, sizeof(scratchbuf),

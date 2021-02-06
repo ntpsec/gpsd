@@ -147,20 +147,26 @@ static void gpsd_vlog(const int errlevel,
     case LOG_INF:
             err_str = "INFO: ";
             break;
-    case LOG_DATA:
-            err_str = "DATA: ";
-            break;
     case LOG_PROG:
             err_str = "PROG: ";
             break;
     case LOG_IO:
             err_str = "IO: ";
             break;
+    case LOG_DATA:
+            err_str = "DATA: ";
+            break;
     case LOG_SPIN:
             err_str = "SPIN: ";
             break;
     case LOG_RAW:
             err_str = "RAW: ";
+            break;
+    case LOG_RAW1:
+            err_str = "RAW1: ";
+            break;
+    case LOG_RAW2:
+            err_str = "RAW2: ";
             break;
     default:
             err_str = "UNK: ";
@@ -1294,7 +1300,7 @@ int gpsd_await_data(fd_set *rfds,
 
     FD_ZERO(efds);
     *rfds = *all_fds;
-    GPSD_LOG(LOG_RAW + 1, errout, "select waits, maxfd %d\n", maxfd);
+    GPSD_LOG(LOG_RAW1, errout, "select waits, maxfd %d\n", maxfd);
     /*
      * Poll for user commands or GPS data.  The timeout doesn't
      * actually matter here since select returns whenever one of
@@ -1484,7 +1490,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
     }
 
     /* update the scoreboard structure from the GPS */
-    GPSD_LOG(LOG_RAW + 1, &session->context->errout,
+    GPSD_LOG(LOG_RAW1, &session->context->errout,
              "%s sent %zd new characters\n",
              session->gpsdata.dev.path, newlen);
 
@@ -1584,7 +1590,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
     }
 
     if (session->lexer.outbuflen == 0) {      /* got new data, but no packet */
-        GPSD_LOG(LOG_RAW + 1, &session->context->errout,
+        GPSD_LOG(LOG_RAW1, &session->context->errout,
                  "New data on %s, not yet a packet\n",
                  session->gpsdata.dev.path);
         return ONLINE_SET;
@@ -1592,7 +1598,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
         gps_mask_t received = PACKET_SET;
         (void)clock_gettime(CLOCK_REALTIME, &session->gpsdata.online);
 
-        GPSD_LOG(LOG_RAW + 1, &session->context->errout,
+        GPSD_LOG(LOG_RAW1, &session->context->errout,
                  "Accepted packet on %s.\n",
                  session->gpsdata.dev.path);
 
@@ -1768,7 +1774,7 @@ int gpsd_multipoll(const bool data_ready,
     {
         int fragments;
 
-        GPSD_LOG(LOG_RAW + 1, &device->context->errout,
+        GPSD_LOG(LOG_RAW1, &device->context->errout,
                  "polling %d\n", device->gpsdata.gps_fd);
 
 #ifdef NETFEED_ENABLE

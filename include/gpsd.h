@@ -837,6 +837,8 @@ struct gps_device_t {
 #define LOG_DATA        6       /* log data management messages */
 #define LOG_SPIN        7       /* logging for catching spin bugs */
 #define LOG_RAW         8       /* raw low-level I/O */
+#define LOG_RAW1        9       // rawer
+#define LOG_RAW2       10       // rawest
 
 #define ISGPS_ERRLEVEL_BASE     LOG_RAW
 

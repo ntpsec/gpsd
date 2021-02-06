@@ -2373,7 +2373,7 @@ int main(int argc, char *argv[])
     while (0 == signalled) {
         fd_set efds;
 
-        GPSD_LOG(LOG_RAW + 1, &context.errout, "await data\n");
+        GPSD_LOG(LOG_RAW1, &context.errout, "await data\n");
         switch(gpsd_await_data(&rfds, &efds, maxfd, &all_fds, &context.errout))
         {
         case AWAIT_GOT_INPUT:
@@ -2472,7 +2472,7 @@ int main(int argc, char *argv[])
         }
 
         /* read any commands that came in over the control socket */
-        GPSD_LOG(LOG_RAW + 1, &context.errout, "read control commands");
+        GPSD_LOG(LOG_RAW1, &context.errout, "read control commands");
         for (cfd = 0; cfd < (int)FD_SETSIZE; cfd++)
             if (FD_ISSET(cfd, &control_fds)) {
                 char buf[BUFSIZ];
@@ -2495,7 +2495,7 @@ int main(int argc, char *argv[])
 #endif /* CONTROL_SOCKET_ENABLE */
 
         /* poll all active devices */
-        GPSD_LOG(LOG_RAW + 1, &context.errout, "poll active devices\n");
+        GPSD_LOG(LOG_RAW1, &context.errout, "poll active devices\n");
         for (device = devices; device < devices + MAX_DEVICES; device++)
             if (allocated_device(device) && device->gpsdata.gps_fd > 0)
                 switch (gpsd_multipoll(FD_ISSET(device->gpsdata.gps_fd, &rfds),
