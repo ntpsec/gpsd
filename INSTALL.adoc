@@ -106,9 +106,6 @@ various additional features have additional prerequisites:
 |Qt                           | libQgpsmm depends on this
 |===============================================================================
 
-The package AsciiDoc may be substituted for AsciiDoctor.  If both are
-installed then AsciiDoctor is preferred.
-
 Some ncurses packages contain the terminfo library; some break it out
 separately as libtinfo5 or libtinfo.
 
