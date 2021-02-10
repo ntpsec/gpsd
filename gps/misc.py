@@ -442,5 +442,19 @@ def isotime(s):
     # else:
     raise TypeError
 
+def posix2gps(posix, leapseconds):
+    """Convert POSIX time in seconds,  using leapseconds, to gps time.
+
+Return (gps_time, gps_week, gps_tow)
+"""
+
+    # GPS Epoch starts: Jan 1980 00:00:00 UTC, POSIX/Unix time: 315964800
+    gps_time = posix - 315964800
+    gps_time += leapseconds
+    # 604,800 in a GPS week
+    (gps_week, gps_tow) = divmod(gps_time, 604800)
+    return (gps_time, gps_week, gps_tow)
+
+
 # End
 # vim: set expandtab shiftwidth=4

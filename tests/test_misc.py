@@ -114,6 +114,23 @@ for (lat1, lon1, lat2, lon2, dist) in tests:
             % (lat1, lon1, lat2, lon2, dist, distance))
         errors += 1
 
+tests1 = [
+    # posix, leap, gps_time, gps_week, gps_tow
+    (315964800, 0, 0, 0, 0),   # Start of gps epoch
+    (935280000, 13, 619315213, 1024, 13),   # 1999-08-22T00:00:00
+    (1609459200, 18, 1293494418, 2138, 432018),   # 1/Jan/2021 0:0:0
+]
+
+for (posix, leap, gps_time, gps_week, gps_tow) in tests1:
+    (gpstime, gpsweek, gpstow) = gps.posix2gps(posix, leap)
+    if ((gps_time != gpstime or
+         gps_week != gpsweek or
+         gps_tow != gpstow)):
+        sys.stderr.write("posix2gps(%d, %d) = (%d, %d, %d) s/b (%d, %d, %d)\n" %
+                         (posix, leap, gpstime, gpsweek, gpstow, 
+                          gps_time, gps_week, gps_tow))
+        errors += 1
+
 if errors:
     print("test_misc.py: failed")
     sys.exit(1)
