@@ -369,8 +369,10 @@ all_data = {
     'health2': {},
     # ionosphere, subframe 4, page 18, data id 56
     'ionosphere': {},
+    # raw for comparison
+    'raw': None,
     # for current time and position
-    'tpv': None
+    'tpv': None,
     }
 
 
@@ -901,9 +903,15 @@ try:
                         all_data['health2'] = msg['HEALTH2']
                 # else nothing to do
             # else, bad packet...
+        elif 'RAW' == msg['class']:
+            # message is a "dictwrapper" not a dictionary
+            # Python does not document what a "dictwarapper" is.
+            # we just keep the last one, for comparison purposes
+            all_data['raw'] = dict(msg)
         elif 'TPV' == msg['class']:
             # message is a "dictwrapper" not a dictionary
             # Python does not document what a "dictwarapper" is.
+            # we just keep the last one, for current PVT.
             all_data['tpv'] = dict(msg)
 
         if 0 < options.count:
@@ -969,36 +977,39 @@ gps_tow = None
 if 'time' in all_data['tpv']:
     if 'leapseconds' in all_data['tpv']:
         leapseconds = all_data['tpv']['leapseconds']
-        print("\nCurrent leapseconds: %s" % all_data['tpv']['leapseconds'])
+        print("\nTPV leapseconds: %s" % all_data['tpv']['leapseconds'])
     else:
         leapseconds = 18
-        print("\nCurrent leapseconds: Unknown, assuming 18")
+        print("\nTPV leapseconds: Unknown, assuming 18")
     # convert to UNIX time
     unix_time = gps.isotime(all_data['tpv']['time'])
-    # GPS Epoch starts: Jan 1980 00:00:00 UTC, Unix time: 315964800
-    gps_time = unix_time - 315964800
-    gps_time += leapseconds
-    # 604,800 in a GPS week
-    (gps_week, gps_tow) = divmod(gps_time, 604800)
+    (gps_time, gps_week, gps_tow) = gps.posix2gps(unix_time, leapseconds)
 
-    print("Current time: %s, gps time: %s, week: %s tow: %s" %
+    print("TPV time: %s, gps time: %s, week: %s tow: %.3f" %
           (unix_time, gps_time, int(gps_week), gps_tow))
-    if options.timeat:
-        gps_time = options.timeat - 315964800
-        gps_time += leapseconds
-        # 604,800 in a GPS week
-        (gps_week, gps_tow) = divmod(gps_time, 604800)
-        print("Use time: %s, gps time: %s, week: %s tow: %s" %
-              (options.timeat, gps_time, int(gps_week), gps_tow))
-
     if (('lat' in all_data['tpv'] and
          'lon' in all_data['tpv'] and
          'altHAE' in all_data['tpv'])):
-        print("Current position: lat %.8f lon %.8f altHAE %.3f" %
+        print("TPV position: lat %.8f lon %.8f altHAE %.3f" %
               (all_data['tpv']['lat'], all_data['tpv']['lon'],
                all_data['tpv']['altHAE']))
 elif 0 < options.debug:
     print("Warning: No TPV")
+
+if 'time' in all_data['raw']:
+    raw_time = int(all_data['raw']['time'])
+    if 'nsec' in all_data['raw']:
+        raw_time += float(all_data['raw']['nsec']) / 1e9
+    (gps_time, gps_week, gps_tow) = gps.posix2gps(raw_time, leapseconds)
+    print("\nRAW time: %s, gps time: %s, week: %s tow: %.3f" %
+          (raw_time, gps_time, int(gps_week), gps_tow))
+# don't warn on missing RAW, it will be rare.
+
+if options.timeat:
+    (gps_week, gps_tow) = divmod(gps_time, 604800)
+    (gps_time, gps_week, gps_tow) = gps.posix2gps(options.timeat, leapseconds)
+    print("Use time: %s, gps time: %s, week: %s tow: %.3f" %
+          (options.timeat, gps_time, int(gps_week), gps_tow))
 
 if gps_week and all_data['ionosphere']:
     print("\nSubframe 4, page 18")
