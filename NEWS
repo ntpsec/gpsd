@@ -2,7 +2,7 @@
 
 3.22.1~dev: unreleased
   doc/*xml all moved into www/internals.adoc
-  Convert all DocBook (.xml) to AsciiDoc (.adoc)
+  Convert all DocBook (.xml) to AsciiDoctor (.adoc)
   Remove all XSL remnants.
 
 3.22: 2021-01-08
