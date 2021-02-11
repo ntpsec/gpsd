@@ -129,7 +129,7 @@ def SatPos(ephm, t):
 
 Calculations from IS-GPS-200 table 20-IV
 
-return (x, y, z, deltatsv) of satellite at gps_tow t
+return (x, y, z, delta_tsv) of satellite at gps_tow t
 """
 
     # Semi-major axis
@@ -238,11 +238,12 @@ return (x, y, z, deltatsv) of satellite at gps_tow t
         toff -= 604800
     elif -302400 > toff:
         toff += 604800
-    # SV Clock Correction
-    deltatsv = (ephm['af0'] + ephm['af1'] * toff +
+    # IS-GPS-200, Section 20.3.3.3.3.1 SV Clock Correction
+    delta_tsv = (ephm['af0'] + ephm['af1'] * toff +
                 ephm['af2'] * toff ** 2 + deltatr)
-    print("  deltatr %.9e deltatsv %.9e Tgd %.9e\n  toff %.3f" %
-          (deltatr, deltatsv, ephm['Tgd'], toff))
+    # we don't use Tgd because it is small, and we do not know the freuency.
+    print("  deltatr %.9e delta_tsv %.9e Tgd %.9e\n  toff %.3f" %
+          (deltatr, delta_tsv, ephm['Tgd'], toff))
     if 'ura' in ephm:
         # ephemeris, not almanac
         print("  URE %s Health %s" %
@@ -252,7 +253,7 @@ return (x, y, z, deltatsv) of satellite at gps_tow t
         if 2 < options.debug:
             print(ephm)
         print("   t %.3f tk %.3f" % (t, tk))
-        print("   A %s n0 %s n %s\nMk %s Ek %s" % (A, n0, n, Mk, Ek))
+        print("   A %s n0 %s n %s\n   Mk %s Ek %s" % (A, n0, n, Mk, Ek))
         print("   nuk %.10g Phik %.10g" % (nuk, Phik))
         print("   deltauk %.10g deltark %.10g deltaik %.10g" %
               (deltauk, deltark, deltaik))
@@ -272,20 +273,20 @@ return (x, y, z, deltatsv) of satellite at gps_tow t
         # print("speed %13.3f" % speed)
     # print("vx %13.3f yv %13.3f zv %13.3f" % (vx, vy, vz))
 
-    return (x, y, z, deltatsv)
+    return (x, y, z, delta_tsv)
 
 
 def SatPosSum(eph, gps_tow):
     """Call SatPos() many times to compute and display more data.
 
-Compute Velocities.  Use deltatsv to correct pseudorange.
+Compute Velocities.  Use delta_tsv to correct pseudorange.
 """
 
     print(" Computing using gps_tow of reception %0.9f" % gps_tow)
-    (x, y, z, deltatsv) = SatPos(eph, gps_tow)
+    (x, y, z, delta_tsv) = SatPos(eph, gps_tow)
 
-    print("  Sat: x %13.3f  y %13.3f  z %13.3f deltatsv %g" %
-          (x, y, z, deltatsv))
+    print("  Sat: x %13.3f  y %13.3f  z %13.3f delta_tsv %g" %
+          (x, y, z, delta_tsv))
 
     # Try ecef first, no trig.  This agrees to the meter level
     # with the next range calculation that uses lat/Log/AltHAE.
@@ -310,14 +311,23 @@ Compute Velocities.  Use deltatsv to correct pseudorange.
 
     if 0 < rng:
         # compute sat position at time signal sent.  That speed of light thing.
-        delta_t = rng / gps.CLIGHT
+        delta_tC = rng / gps.CLIGHT
+        delta_t = delta_tC
+        # delta_tiono ionosphere corrections
+        delta_t -= delta_tiono
+        # delta_tsv from previous SatPos()
+        delta_t -= delta_tsv
         new_t = gps_tow - delta_t
         # someday deal with clock errors, etc.
         print(" Computing using gps_tow of sending %.9f" % new_t)
-        (x2, y2, z2, deltatsv2) = SatPos(eph, new_t)
+        if 1 < options.debug:
+            print("  delta_tC %.9f delta_tiono %.9f delta_tsv %.9f" %
+                  (delta_tC, delta_tiono, delta_tsv))
 
-        print("  Sat: x %13.3f  y %13.3f  z %13.3f deltatsv %g" %
-              (x2, y2, z2, deltatsv2))
+        (x2, y2, z2, delta_tsv2) = SatPos(eph, new_t)
+
+        print("  Sat: x %13.3f  y %13.3f  z %13.3f delta_tsv2 %g" %
+              (x2, y2, z2, delta_tsv2))
 
         # compute sat velocity by subtracting two postions.
         # because I can't get the direct method to work...
@@ -338,8 +348,8 @@ Compute Velocities.  Use deltatsv to correct pseudorange.
                 all_data['tpv']['altHAE'])
             (az, el, rng) = gps.enu2aer(E, N, U)
             print("  E %.3f N %.3f U %.3f\n"
-                  "  az %.3f el %.3f rng %.3f" %
-                  (E, N, U, az, el, rng))
+                  "  rng %.3f az %.3f el %.3f" %
+                  (E, N, U, rng, az, el))
 
             (E2, N2, U2) = gps.ecef2enu(
                 x2, y2, z2, all_data['tpv']['lat'], all_data['tpv']['lon'],
@@ -1011,6 +1021,8 @@ if options.timeat:
     print("Use time: %s, gps time: %s, week: %s tow: %.3f" %
           (options.timeat, gps_time, int(gps_week), gps_tow))
 
+delta_tutc = 0.0
+delta_tiono = 0.0
 if gps_week and all_data['ionosphere']:
     print("\nSubframe 4, page 18")
     # IS-GPS-200, Section 20.3.3.5.2.5, says if we use
@@ -1018,13 +1030,13 @@ if gps_week and all_data['ionosphere']:
     _print_msg(all_data['ionosphere'], ionosphere_fields)
     if gps_tow:
         # tUTC = tLS + A0 + A1 (tE - tot + 604800 (WN - WNt))
-        deltatutc = (all_data['ionosphere']['ls'] +
-                     all_data['ionosphere']['A0'] +
-                     all_data['ionosphere']['A1'] *
-                     (gps_tow - all_data['ionosphere']['tot'] +
-                      604800 * (gps_week - all_data['ionosphere']['WNt']))
+        delta_tiono = (all_data['ionosphere']['A0'] +
+                       all_data['ionosphere']['A1'] *
+                       (gps_tow - all_data['ionosphere']['tot'] +
+                        604800 * (gps_week - all_data['ionosphere']['WNt']))
                      )
-        print("  deltatutc %.9f" % deltatutc)
+        delta_tutc = all_data['ionosphere']['ls'] + delta_tiono
+        print("  delta_tutc %.9f delta_tiono %.9f" % (delta_tutc, delta_tiono))
 
 if all_data['health']:
     print("\nSubframe 4, page 25")
