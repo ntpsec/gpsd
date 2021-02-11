@@ -3,7 +3,7 @@ Chen Wei; Robin Wittler
 :date: 20 January 2021
 :keywords: gps, gpsd, xgpsspeed
 :manmanual: GPSD Documentation
-:mansource: The GPSD Project
+:mansource: GPSD, Version {gpsdver}
 :robots: index,follow
 :sectlinks:
 :toc: left

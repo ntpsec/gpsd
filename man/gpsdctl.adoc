@@ -4,7 +4,7 @@
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsdctl
 :manmanual: GPSD Documentation
-:mansource: The GPSD Project
+:mansource: GPSD, Version {gpsdver}
 :robots: index,follow
 :sectlinks:
 :toc: left

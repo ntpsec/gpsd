@@ -2294,7 +2294,7 @@ if man_env.GetOption('silent'):
 manpage_targets = []
 maninstall = []
 if adoc_prog:
-    adoc_args = ('-a gpsdweb=%s ' % (website))
+    adoc_args = ('-a gpsdweb=%s -a gpsdver=%s ' % (website, gpsd_version))
     for (man, src) in all_manpages.items():
         # build it
         # make nroff man page

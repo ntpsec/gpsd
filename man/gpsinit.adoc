@@ -5,7 +5,7 @@ Reinhard Arlt reinhard.arlt@t-online.de.
 :email: reinhard.arlt@t-online.de.
 :keywords: gps, gpsinit
 :manmanual: GPSD Documentation
-:mansource: The GPSD Project
+:mansource: GPSD, Version {gpsdver}
 :robots: index,follow
 :sectlinks:
 :toc: left

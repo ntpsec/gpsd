@@ -5,7 +5,7 @@ Gary E. Miller <gem@rellim.com.>
 :email: gem@rellim.com
 :keywords: gps, gpsd, zerk, JavaD, GREIS
 :manmanual: GPSD Documentation
-:mansource: The GPSD Project
+:mansource: GPSD, Version {gpsdver}
 :robots: index,follow
 :sectlinks:
 :toc: left
