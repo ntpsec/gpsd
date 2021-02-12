@@ -1,10 +1,10 @@
 = gpsplot(1)
 :author: Gary E. Miller
-:date: 19 January 2021
+:date: 11 February 2021
 :email: <gem@rellim.com.>
 :keywords: gps, gpsplot, scatterplot. strip chart
 :manmanual: GPSD Documentation
-:mansource: GPSD, Version {gpsdver}
+:mansource: GPSD {gpsdver}
 :robots: index,follow
 :sectlinks:
 :toc: left
@@ -28,10 +28,15 @@ gpsplot - tool to dynamically dump plot data from gpsd
 *gpsplot* is a tool to connect to *gpsd* and dynamically plot data to the
 users screen. Plot types include scatterplots and stripcharts.
 
-Plotting requires the Python Matplot lib module, and its many
+Plotting requires the Python Matplotlib module, and its many
 dependencies be installed on the display host.  If the display
 host is not the *gpsd* host, then Matplot is not required to be on the
 *gpsd* host.
+
+*gpslot* does not require root privileges, but can be run as root.
+Running under sudo may cause some loss of functioanality. It can be run
+concurrently with other tools connecting to the local *gpsd* without
+causing problems.
 
 == OPTIONS
 
@@ -100,5 +105,5 @@ gpsplot --count 60 --fields llm example.com::/dev/ttyS0
 
 == COPYING
 
-This file is Copyright 2013 by the GPSD project +
+This file is Copyright 2020 by the GPSD project +
 SPDX-License-Identifier: BSD-2-clause
