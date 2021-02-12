@@ -7,6 +7,10 @@
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
 #
+# This code has been profiled and speed tested.  Some code choices
+# that appear suboptimal are done for speed.  Check all changes for
+# speed.
+#
 # Codacy D203 and D211 conflict, I choose D203
 # Codacy D212 and D213 conflict, I choose D212
 """gpsplot -- plot gpsd data in real time with matplotlib."""
@@ -51,32 +55,38 @@ if gps.__version__ != gps_version:
 
 def _do_one_line(data):
     """Dump one report line."""
+
+    # multicolor dots looked cool, but are 3x to 6x slower..
     if options.stripchart:
         if 'time' not in data:
-            plt.pause(0.05)
+            # pause so we do not block
+            plt.pause(0.001)
             return
 
         timestr = datetime.datetime.strptime(data['time'],
                                              '%Y-%m-%dT%H:%M:%S.%fZ')
 
         if fields[0] in data and fields[2] in data:
-            axs[0].scatter(timestr, data[fields[0]])
-            axs[1].scatter(timestr, data[fields[2]])
+            axs[0].plot(timestr, data[fields[0]], 'r.')
+            axs[1].plot(timestr, data[fields[2]], 'g.')
         if fields[4] in data:
-            axs[2].scatter(timestr, data[fields[4]] * conversion.altfactor)
+            axs[2].plot(timestr, data[fields[4]] * conversion.altfactor, 'b.')
     else:
         # must be scatterplot
         if fields[0] in data and fields[2] in data:
-            axs[0].scatter(data[fields[2]], data[fields[0]])
+            axs[0].plot(data[fields[2]], data[fields[0]], 'r.', alpha=0.5)
         if fields[4] in data:
-            axs[1].scatter(0.5, data[fields[4]] * conversion.altfactor)
+            axs[1].plot(0.5, data[fields[4]] * conversion.altfactor,
+                        'g.', alpha=0.5)
 
-    plt.pause(0.05)
-    try:
-        # try to tighten up the plot.  let it fail silently
-        plt.tight_layout(h_pad=.2)
-    except ValueError:
-        pass
+    # pause so we do not block
+    plt.pause(0.001)
+    if options.stripchart:
+        try:
+            # try to tighten up the plot.  let it fail silently
+            plt.tight_layout(h_pad=.2)
+        except ValueError:
+            pass
 
 
 # get default units from the environment
