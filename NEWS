@@ -4,6 +4,7 @@
   doc/*xml all moved into www/internals.adoc
   Convert all DocBook (.xml) to AsciiDoctor (.adoc)
   Remove all XSL remnants.
+  gpsplot: speedup, add new options.
 
 3.22: 2021-01-08
   Added client/gpscsv to convert gpsd JSON to csv.

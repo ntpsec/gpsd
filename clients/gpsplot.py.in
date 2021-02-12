@@ -30,6 +30,7 @@ else:
     have_display = True
     try:
         # Don't fail until after check for -h or -V.
+        import matplotlib
         from matplotlib import pyplot as plt
         have_matplotlib = True
     except (ImportError, RuntimeError):
@@ -79,7 +80,7 @@ def _do_one_line(data):
             axs[1].plot(0.5, data[fields[4]] * conversion.altfactor,
                         'g.', alpha=0.5)
 
-    # pause so we do not block
+    # pause so we do not block, pause() also draws
     plt.pause(0.001)
     if options.stripchart:
         try:
@@ -123,6 +124,13 @@ parser.add_argument(
     help='The device to connect. [Default %(default)s]',
 )
 parser.add_argument(
+    '--exit',
+    dest='exit',
+    default=False,
+    action="store_true",
+    help='Exit after --count, --file, or  --file completes'
+)
+parser.add_argument(
     '--fields',
     choices=['llh', 'llm'],
     default='llh',
@@ -143,11 +151,21 @@ parser.add_argument(
     help='The host to connect. [Default %(default)s]',
 )
 parser.add_argument(
+    '--image',
+    dest='image_name',
+    default=None,
+    help=('Save plot as IMAGE.EXT.  EXT determines image type '
+          '(.jpg, .png, etc.)'),
+    metavar='IMAGE.EXT',
+)
+parser.add_argument(
     '-n',
     '--count',
     default=0,
     dest='count',
-    help='Count of messages to parse. 0 to disable. [Default %(default)s]',
+    help=('Stop after COUNT messages to parse. 0 to disable. '
+          ' [Default %(default)s]'),
+    metavar='COUNT',
     type=int,
 )
 parser.add_argument(
@@ -181,7 +199,8 @@ parser.add_argument(
     '--seconds',
     default=0,
     dest='seconds',
-    help='Seconds of messages to parse. 0 to disable. [Default %(default)s]',
+    help='Stop after SECONDS. 0 to disable. [Default %(default)s]',
+    metavar='SECONDS',
     type=int,
 )
 parser.add_argument(
@@ -241,6 +260,14 @@ else:
     # stripchart
     options.stripchart = True
 
+if ((options.exit and
+     not options.count and
+     not options.input_file_name and
+     not options.seconds)):
+    sys.stderr.write("gpsplot: --exit requires one of: "
+                     " --count, --file or --seconds")
+    sys.exit(1)
+
 options.mclass = 'TPV'
 # Fields to parse
 # autodetect, read one message, use those fields
@@ -259,7 +286,10 @@ except socket.error:
 
 session.stream(gps.WATCH_ENABLE | gps.WATCH_SCALED, devpath=options.device)
 
+# FIXME: add option for backend?
+# matplotlib.use('wxagg')
 
+# plt.ion() and plt.ioff() seem to have no speed effect
 plt.ion()
 
 x = []
@@ -334,6 +364,11 @@ except KeyboardInterrupt:
     # FIXME: plot is in different process, does not come here...
     print()
     sys.exit(1)
+
+fig.savefig(options.image_name, dpi = 200)
+
+if options.exit:
+    sys.exit(0)
 
 # make the plot persist until window closed.
 plt.show(block=True)
