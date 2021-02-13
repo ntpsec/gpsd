@@ -31,7 +31,7 @@ else:
     try:
         # Don't fail until after check for -h or -V.
         import matplotlib
-        from matplotlib import pyplot as plt
+        import matplotlib.pyplot
         have_matplotlib = True
     except (ImportError, RuntimeError):
         have_matplotlib = False
@@ -61,7 +61,7 @@ def _do_one_line(data):
     if options.stripchart:
         if 'time' not in data:
             # pause so we do not block
-            plt.pause(0.001)
+            matplotlib.pyplot.pause(0.001)
             return
 
         timestr = datetime.datetime.strptime(data['time'],
@@ -81,11 +81,11 @@ def _do_one_line(data):
                         'g.', alpha=0.5)
 
     # pause so we do not block, pause() also draws
-    plt.pause(0.001)
+    matplotlib.pyplot.pause(0.001)
     if options.stripchart:
         try:
             # try to tighten up the plot.  let it fail silently
-            plt.tight_layout(h_pad=.2)
+            matplotlib.pyplot.tight_layout(h_pad=.2)
         except ValueError:
             pass
 
@@ -289,17 +289,18 @@ session.stream(gps.WATCH_ENABLE | gps.WATCH_SCALED, devpath=options.device)
 # FIXME: add option for backend?
 # matplotlib.use('wxagg')
 
-# plt.ion() and plt.ioff() seem to have no speed effect
-plt.ion()
+# matplotlib.pyplot.ion() and matplotlib.pyplot.ioff()
+# seem to have no speed effect
+matplotlib.pyplot.ion()
 
 x = []
 y = []
 
 if options.scatterplot:
-    fig = plt.figure(figsize=(7, 7))
+    fig = matplotlib.pyplot.figure(figsize=(7, 7))
     # x/y
     ax = fig.add_axes([0.18, 0.17, 0.65, 0.65])
-    plt.xticks(rotation=30, ha='right')
+    matplotlib.pyplot.xticks(rotation=30, ha='right')
     # z
     ax1 = fig.add_axes([0.85, 0.17, 0.02, 0.65])
     axs = [ax, ax1]
@@ -316,16 +317,16 @@ if options.scatterplot:
     axs[1].yaxis.tick_right()
 
 elif options.stripchart:
-    fig, axs = plt.subplots(3, sharex=True, figsize=(7, 7))
+    fig, axs = matplotlib.pyplot.subplots(3, sharex=True, figsize=(7, 7))
     for ax in axs:
         ax.ticklabel_format(useOffset=False)
         ax.tick_params(direction='in', top=True, right=True)
     axs[0].set_title(fields[1])
     axs[1].set_title(fields[3])
     axs[2].set_title("%s (%s)" % (fields[5], conversion.altunits))
-    # plt.xticks(rotation=30, ha='right')
+    # matplotlib.pyplot.xticks(rotation=30, ha='right')
     fig.autofmt_xdate(rotation=30, ha='right')
-    plt.subplots_adjust(left=0.16, bottom=0.10)
+    matplotlib.pyplot.subplots_adjust(left=0.16, bottom=0.10)
 else:
     sys.stderr.write("Error: Unknown plot type\n")
     sys.exit(1)
@@ -365,10 +366,11 @@ except KeyboardInterrupt:
     print()
     sys.exit(1)
 
-fig.savefig(options.image_name, dpi = 200)
+if options.image_name:
+    fig.savefig(options.image_name, dpi = 200)
 
 if options.exit:
     sys.exit(0)
 
 # make the plot persist until window closed.
-plt.show(block=True)
+matplotlib.pyplot.show(block=True)
