@@ -1217,7 +1217,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '-T', '--terminal',
         dest='terminal',
-        default=None,
+        default='x11',
         help='gnuplot terminal type. [Default %(default)s]',
     )
     parser.add_argument(
@@ -1293,10 +1293,13 @@ if __name__ == '__main__':
             options.title = options.title.replace('"', '\\"')
         if options.subtitle:
             options.title += '\\n' + options.subtitle
-        if options.terminal:
-            sys.stdout.write("set terminal %s truecolor enhanced size"
-                             " 800,950\n"
-                             % options.terminal)
+        term_opts = ""
+        truecolor_terms = ['png', 'sixelgd', 'wxt']
+        if options.terminal in truecolor_terms:
+            term_opts = 'truecolor'
+        sys.stdout.write("set terminal %s size 800,950 %s\n"
+                         "set termoption enhanced\n"
+                         % (options.terminal, term_opts))
         # double quotes on title so \n is parsed by gnuplot
         sys.stdout.write('set title noenhanced "%s\\n\\n"\n' % options.title)
         sys.stdout.write(plot.plot())

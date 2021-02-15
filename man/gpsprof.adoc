@@ -1,6 +1,6 @@
 = gpsprof(1)
 :author: Eric S. Raymond
-:date: 23 January 2021
+:date: 14 February 2021
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, gpsprof, gpspipe
 :manmanual: GPSD Documentation
@@ -39,7 +39,7 @@ local or remote running gpsd. Or it can read data from a saved logfile.
 *gpsprof* is designed to be lightweight and use minimal host resources. No
 graphics subsystem needs to be installed on the host running *gpsprof*.
 Simply copy the resultant plot file to another host to be rendered with
-gnuplot.
+*gnuplot(1)*.
 
 *gpsprof* does not require root privileges, but it will run fine as root.
 
@@ -119,7 +119,7 @@ of the cycle time, above which reports are discarded.
 *-?*, *-h*, *--help*::
   Print a usage message and exit.
 *-d FILE*, *--dumpfile FILE*::
-  Dump the plot data, without attached gnuplot code, to a specified file
+  Dump the plot data, without attached *gnuplot(1)* code, to a specified file
   for post-analysis.
 *-d LVL*, *--debug LVL*::
   Sets debug level.
@@ -141,19 +141,18 @@ of the cycle time, above which reports are discarded.
   Sets a text string to be the plot title. This will replace the default
   title.
 *-T TERM*, *--terminal TERM*::
-  Add a terminal type setting into the gnuplot code. Typical usage is
-  "*-T png*", or "*-T
-  pngcairo*" telling gnuplot to write a PNG file. Without this option
-  gnuplot will call its X11 display code.
-
-Different installations of gnuplot will support different terminal
+  Specify the terminal type setting in the *gnuplot(1)* code. Typical usage is
+  "*-T png*", or "*-T pngcairo*" telling *gnuplot(1)* to write a PNG file.
+  The default terminal is "x11".
++
+Different installations of *gnuplot(1)* will support different terminal
 types. Different terminal types may work better for you than other
 ones. "*-T png*" will generate PNG images. Use "*-T jpeg*" to
 generate JPEG images. "*-T pngcairo*" often works best, but is not
 supported by some distributions. The same terminal type may work very
 differently on different distributions.
-
-To see which terminal types your copy of gnuplot supports:
++
+To see which terminal types your copy of *gnuplot(1)* supports:
 
 ----
 gnuplot -e "set terminal"
@@ -167,8 +166,8 @@ startup message is the process ID to signal.
 
 == EXAMPLES
 
-To display the graph, use gnuplot 1 . Thus, for example, to display the
-default spatial scatter plot, do this:
+To display the graph, use *gnuplot(1)* . Thus, for example, to display the
+default spatial scatter plot on your x11 display, do this:
 
 ----
 gpsprof | gnuplot -persist
