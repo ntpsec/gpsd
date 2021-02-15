@@ -367,7 +367,7 @@ except KeyboardInterrupt:
     sys.exit(1)
 
 if options.image_name:
-    fig.savefig(options.image_name, dpi = 200)
+    fig.savefig(options.image_name, dpi=200)
 
 if options.exit:
     sys.exit(0)
