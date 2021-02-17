@@ -24,9 +24,10 @@
 <div id="Menu">
     <img src="gpsd-logo-small.png" alt="Small gpsd Logo" height="126"
     width="105"><br>
-    Home<br>
     <div>
+    <a href="@WEBSITE@">Home</a><br>
     <a href="#news">News</a><br>
+    <a href="#install">Installation &amp; Building</a><br>
     <a href="#downloads">Downloads</a><br>
     <a href="#support">Support</a><br>
     <a href="#documentation">Documentation</a><br>
@@ -192,10 +193,7 @@ documentation, (2) a few (as in, no more than three) eval units, and (3)
 an engineering contact at your firm.  For more, see our page
 <a href='for-vendors.html'>welcoming vendor cooperation</a>.</p>
 
-<p>There are simple <a href="/installation.html">installation
-instructions</a> for people running distributions with binary package
-systems.  Instructions for <a href="/building.html">building gpsd from
-source</a>.  See the <a href='/faq.html'>FAQ</a> for information on how
+  See the <a href='/faq.html'>FAQ</a> for information on how
 to report bugs.</p>
 
 <p>If you appreciate GPSD, and especially if you make money from it,
@@ -208,6 +206,18 @@ project's <a href='NEWS'>news file</a> or <a href='TODO'>to-do
 list</a> here.  Note: because of the way this website is maintained,
 these files may reflect the state of the repository tip (development
 version) rather than the latest released stable version.</p>
+
+<h1 id='install'>Installation &amp; Building</h1>
+
+<dl>
+<dt><a href="/installation.html">INSTALL</a></dt>
+<dd>Installation instructions for people running distributions
+with binary package systems.</dd>
+</dt>
+
+<dt><a href="/building.html">BUILD</a></dt>
+<dd>Instructions for building gpsd from source.</dd>
+</dl>
 
 <h1 id='downloads'>Repository, Downloads and Packages</h1>
 
