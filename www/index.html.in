@@ -210,6 +210,10 @@ version) rather than the latest released stable version.</p>
 <h1 id='install'>Installation &amp; Building</h1>
 
 <dl>
+<dt><a href="/README.html">README</a></dt>
+<dd>Project README file.</dd>
+</dt>
+
 <dt><a href="/installation.html">INSTALL</a></dt>
 <dd>Installation instructions for people running distributions
 with binary package systems.</dd>
