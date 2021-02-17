@@ -1,6 +1,6 @@
 = GPSD Installation Instructions
 :author: Eric S. Raymond
-:date: 26 January 2021
+:date: 17 February 2021
 :description: Steps for installing GPSD and verifying its performance.
 :email: <esr@thyrsus.com>
 :keywords: GPSD, GPS, installation
@@ -122,6 +122,11 @@ distribution instructions.
 
 == Installing gpsd
 
+Before installing gpsd on your system, make sure that all parts of any
+previous installation have been removed.  Do not mix gpsd parts from
+different sources.  The gpsd clients and the server must be of the same
+version.
+
 === Install your distributions package(s)
 
 Up-to-date gpsd packages are generally available for Linux distributions
@@ -145,32 +150,37 @@ in the source distribution.
 
 == How to test the software
 
-1. Start gpsd.  You'll need to give it as an argument a path to
+1. You should start gpsd while running as root.  Starting as a normal
+user will cause some loss of functionality.  Starting with sudo will cause
+a different loss of functionality.
+
+2. Start gpsd.  You'll need to give it as an argument a path to
 a serial or USB port with a GPS attached to it.  Your test command
 should look something like this:
 
        gpsd -D 5 -N -n /dev/ttyUSB0
 
-2. Once gpsd is running, telnet to port 2947. You should see a
+3. Once gpsd is running, telnet to port 2947. You should see a
 greeting line that's a JSON object describing GPSD's version.
 Now plug in your GPS (or AIS receiver, or RTCM2 receiver).
 
-3. Type '?WATCH={"enable":true,"json":true};' to start raw and
+4. Type '?WATCH={"enable":true,"json":true};' to start raw and
 watcher modes.  You should see lines beginning with '{' that are
 JSON objects representing reports from your GPS; these are reports
 in GPSD protocol.
 
-4. Start the xgps or cgps client.  Calling it with no arguments
+5. Start the xgps or cgps client.  Calling it with no arguments
 should do the right thing.  You should see a display panel with
 position/velocity-time information, and a satellite display.  The
 displays won't look very interesting until the GPS acquires satellite
 lock.
 
-5. Have patience.  If you are cold-starting a new GPS, it may take
-15-20 minutes after it gets a skyview for it to download an ephemeris
-and begin delivering fixes.
+6. Have patience.  If you are cold-starting a new GPS, it may take 15-20
+minutes after it gets a good skyview for it to download an ephemeris
+for each satellites in view, and the current almanac.  Only then can it
+deliver the best quality fixes.
 
-6. A FAQ and troubleshooting instructions can be found at the GPSD
+7. A FAQ and troubleshooting instructions can be found at the GPSD
 project site.
 
 == Once you have verified correct operation
