@@ -1,17 +1,21 @@
-gpsd README file
-----------------
+= gpsd README file
+:date: 17 February 2021
+:description: README for GPSD
+:keywords: GPSD, GPS
+:robots: index,follow
+:sectlinks:
+:type: article
+:toc: left
 
-WARNING
-~~~~~~~
+WARNING:
 
 The files at https://gitlab.com/gpsd/gpsd/-/tags are NOT the gpsd
 release files.  DO NOT use them.  The release files are at:
     http://download-mirror.savannah.gnu.org/releases/gpsd/
 
-GENERAL
-~~~~~~~
+== GENERAL
 
-gpsd is a userland daemon acting as a translator between GPS and
+gpsd is a userland daemon acting as a translator between GPS, GNSS, and
 AIS receivers and their clients. gpsd listens on port 2947 for clients
 requesting position/time/velocity information.  The receivers are
 expected to generate position information in a well-known format -- as
@@ -32,14 +36,12 @@ instructions for building from source.  The packaging/ directory
 contains resources and suggestions for packagers and distribution
 integrators.
 
-LICENSE
-~~~~~~~
+== LICENSE
 
 This software (gpsd) is released under the terms and conditions of the BSD
 License, a copy of which is included in the file COPYING.
 
-1.X CREDITS
-~~~~~~~~~~~
+== 1.X CREDITS
 
 Remco Treffkorn designed and originated the code.
 
@@ -64,8 +66,7 @@ writing the portion for other GPS receivers.
 None of these people have been active in 2.X and later versions; gpsd
 has evolved out of recognition from the 1.X codebase.
 
-2.X CREDITS
-~~~~~~~~~~~
+== 2.X CREDITS
 
 Eric S. Raymond drastically rewrote this code in late 2004/early 2005
 to clean it up and extend it.  The 2.X architecture has become
@@ -106,7 +107,7 @@ Chris Kuethe <ckuethe@mainframe.cx> maintains the OpenBSD port, shipped
 the 2.34 release, is our SiRF and low-level protocols expert, and does a
 lot of general hacking and support.  He has release authority.
 
-Gary Miller <gem@rellim.com> wrote the driver for Garmin binary protocol
+Gary E. Miller <gem@rellim.com> wrote the driver for Garmin binary protocol
 and most of the support for PPS handling on serial devices. He has release
 authority.
 
@@ -123,9 +124,18 @@ We are also delighted to acknowledge the assistance of Timo Ylhainen, VP of
 Software Operations at Fastrax. He clarified some points about
 the iTalk protocol, helping to further development of iTalk support.
 
-3.X CREDITS
-~~~~~~~~~~~
+== 3.X CREDITS
 
 The main feature of the 3.x versions is a stabilized and finalized
-version of the JSON command/response protocol. This was designed and mainly
-implemented by ESR.  Gary Miller wrote the subframe support.
+version of the JSON command/response protocol. This was designed and
+mainly implemented by ESR. Gary E. Miller <gem@rellim.com> wrote the
+subframe support, gpsplot, gpscsv, and gpssubframe.
+
+== RESOURCES
+
+*Project web site:* {gpsdweb}
+
+== COPYING
+
+This file is Copyright 2013 by the GPSD project +
+SPDX-License-Identifier: BSD-2-clause
