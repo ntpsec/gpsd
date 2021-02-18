@@ -201,11 +201,20 @@ please @TIPLINK@.</p>
 
 <h1 id='news'>News</h1>
 
-<p>This web page was last updated on @DATE@.  You can browse the
-project's <a href='NEWS'>news file</a> or <a href='TODO'>to-do
-list</a> here.  Note: because of the way this website is maintained,
-these files may reflect the state of the repository tip (development
-version) rather than the latest released stable version.</p>
+<dl>
+<dt><a href='NEWS'>NEWS</a> </dt>
+<dd>The project's News file.  Changes by revision.</dd>
+</dl>
+
+<dl>
+<dt><a href='TODO'>TODO</a></dt>
+<dd>The project's TODO list</dd>
+</dl>
+
+<p> This web page was last updated on @DATE@. Note: because of the
+way this website is maintained, these files reflect the state of the
+repository tip (development version) rather than the latest released
+version.</p>
 
 <h1 id='install'>Installation &amp; Building</h1>
 
@@ -216,7 +225,8 @@ version) rather than the latest released stable version.</p>
 
 <dt><a href="/installation.html">INSTALL</a></dt>
 <dd>Installation instructions for people running distributions
-with binary package systems.</dd>
+with binary package systems.  The GPSD project does not release any
+binary packages.</dd>
 </dt>
 
 <dt><a href="/building.html">BUILD</a></dt>
