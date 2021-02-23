@@ -1733,7 +1733,7 @@ ubx_msg_nav_timegps(struct gps_device_t *session, unsigned char *buf,
         ts_tow.tv_nsec += (long)getles32(buf, 4);
         session->newdata.time = gpsd_gpstime_resolv(session, week, ts_tow);
 
-        tAcc = (double)getleu32(buf, 12);     /* tAcc in ms */
+        tAcc = (double)getleu32(buf, 12);     // tAcc in ns
         session->newdata.ept = tAcc * 1e-9;
         mask |= (TIME_SET | NTPTIME_IS);
     }
@@ -1741,6 +1741,51 @@ ubx_msg_nav_timegps(struct gps_device_t *session, unsigned char *buf,
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "TIMEGPS: time=%s mask={TIME}\n",
              timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)));
+    return mask;
+}
+
+/**
+ * UBX-NAV-TIMEUTC
+ */
+static gps_mask_t
+ubx_msg_nav_timeutc(struct gps_device_t *session, unsigned char *buf,
+                    size_t data_len)
+{
+    uint8_t valid;         // Validity Flags
+    gps_mask_t mask = 0;
+
+    if (20 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-NAV-TIMEUTC message, runt payload len %zd", data_len);
+        return 0;
+    }
+
+    session->driver.ubx.iTOW = getles32(buf, 0);
+    valid = getub(buf, 19);
+    if (4 == (4 & valid)) {
+        // UTC is valid
+        // mask |= (TIME_SET | NTPTIME_IS);
+        uint32_t tAcc = getleu32(buf, 4);          // tAcc in ns
+        // nano can be negative, so this is not normalized UTC.
+        int32_t nano = getles32(buf, 8);           // fract sec in ns
+        unsigned year = getleu16(buf, 12);         // year, 1999..2099
+        uint8_t month = getub(buf, 14);            // month 1..12
+        uint8_t day = getub(buf, 15);              // day 1..31
+        uint8_t hour = getub(buf, 16);             // hour 0..23
+        uint8_t min = getub(buf, 17);              // min 0..59
+        uint8_t sec = getub(buf, 18);              // sec 0..60
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "TIMEUTC: iTOW=%lld valid=%02x %04d-%02d-%02d "
+                 "%02d:%02d:%02d.%09d tAcc=%llu\n",
+                 (long long)session->driver.ubx.iTOW,
+                 valid, year, month, day, hour, min, sec, nano,
+                 (long long unsigned)tAcc);
+    } else {
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "TIMEUTC: iTOW=%lld valid=%02x\n",
+                 (long long)session->driver.ubx.iTOW,
+                 valid);
+    }
     return mask;
 }
 
@@ -1962,7 +2007,7 @@ ubx_msg_nav_velecef(struct gps_device_t *session, unsigned char *buf,
     session->newdata.ecef.vAcc = getleu32(buf, 16) / 100.0;
     GPSD_LOG(LOG_DATA, &session->context->errout,
         "UBX-NAV-VELECEF: iTOW=%lld ECEF vx=%.2f vy=%.2f vz=%.2f vAcc=%.2f\n",
-         (long long)session->driver.ubx.iTOW,
+        (long long)session->driver.ubx.iTOW,
         session->newdata.ecef.vx,
         session->newdata.ecef.vy,
         session->newdata.ecef.vz,
@@ -2794,7 +2839,7 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         ubx_msg_nav_timels(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_TIMEUTC:
-        GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-NAV-TIMEUTC\n");
+        mask = ubx_msg_nav_timeutc(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_VELECEF:
         GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-NAV-VELECEF\n");
