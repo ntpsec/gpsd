@@ -950,6 +950,8 @@ ubx_msg_nav_hpposllh(struct gps_device_t *session, unsigned char *buf,
 
 /*
  * Navigation Position ECEF message
+ *
+ * This message does not bother to tell us if it is valid.
  */
 static gps_mask_t
 ubx_msg_nav_posecef(struct gps_device_t *session, unsigned char *buf,
@@ -1375,6 +1377,106 @@ ubx_msg_nav_sol(struct gps_device_t *session, unsigned char *buf,
 
 
 /**
+ * Receiver navigation status
+ * UBX-NAV-STATUS Class 1, ID 3
+ *
+ * Present in Antaris to 9-series
+ */
+static gps_mask_t
+ubx_msg_nav_status(struct gps_device_t *session, unsigned char *buf,
+                   size_t data_len)
+{
+    uint8_t gpsFix;
+    uint8_t flags;
+    uint8_t fixStat;
+    uint8_t flags2;
+    uint32_t ttff;
+    uint32_t msss;
+    int *status = &session->newdata.status;
+    int *mode = &session->newdata.mode;
+    gps_mask_t mask = 0;
+
+    if (16 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-NAV-STATUS message, runt payload len %zd", data_len);
+        return 0;
+    }
+
+    session->driver.ubx.iTOW = getleu32(buf, 0);
+    gpsFix = (unsigned char)getub(buf, 4);
+    flags = (unsigned int)getub(buf, 5);
+    fixStat = (unsigned int)getub(buf, 6);
+    flags2 = (unsigned int)getub(buf, 7);
+    ttff = getleu32(buf, 8);
+    msss = getleu32(buf, 12);
+
+    // FIXME: how does this compare with other places ubx sets mode/status?
+    if (0 == (1 & fixStat)) {
+        // gpsFix not OK
+        *mode = MODE_NO_FIX;
+        *status = STATUS_NO_FIX;
+    } else {
+        switch (gpsFix) {
+        case UBX_MODE_TMONLY:
+            // 5 - Surveyed-in, so a precise 3D.
+            *mode = MODE_3D;
+            *status = STATUS_TIME;
+            break;
+
+        case UBX_MODE_3D:
+            // 3
+            FALLTHROUGH
+        case UBX_MODE_GPSDR:
+            // 4
+            *mode = MODE_3D;
+            if (2 == (2 & fixStat)) {
+                *status = STATUS_DGPS_FIX;
+            } else {
+                *status = STATUS_FIX;
+            }
+            break;
+
+        case UBX_MODE_2D:
+            // 2
+            FALLTHROUGH
+        case UBX_MODE_DR:           /* consider this too as 2D */
+            // 1
+            *mode = MODE_2D;
+            if (2 == (2 & fixStat)) {
+                *status = STATUS_DGPS_FIX;
+            } else {
+                *status = STATUS_FIX;
+            }
+            break;
+
+        case UBX_MODE_NOFIX:
+            // 0
+            FALLTHROUGH
+        default:
+            // > 5
+            *mode = MODE_NO_FIX;
+            *status = STATUS_NO_FIX;
+            break;
+        }
+    }
+    mask |= STATUS_SET | MODE_SET;
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+         "NAV-STATUS: iTOW=%lld gpsFix=%u flags=%02x fixStat=%02x flags2=%02x "
+         "ttff=%llu msss=%llu mode=%u status=%u\n",
+         (long long)session->driver.ubx.iTOW,
+         gpsFix,
+         flags,
+         fixStat,
+         flags2,
+         (long long unsigned)ttff,
+         (long long unsigned)msss,
+         session->newdata.mode,
+         session->newdata.status);
+    return mask;
+}
+
+/**
  * Navigation time to leap second: UBX-NAV-TIMELS
  *
  * Sets leap_notify if leap second is < 23 hours away.
@@ -1489,6 +1591,7 @@ static void ubx_msg_nav_timels(struct gps_device_t *session,
  * Geodetic position solution message
  * UBX-NAV-POSLLH, Class 1, ID 2
  *
+ * This message does not bother to tell us if it is valid.
  * No mode, so limited usefulness
  */
 static gps_mask_t
@@ -1502,8 +1605,6 @@ ubx_msg_nav_posllh(struct gps_device_t *session, unsigned char *buf,
                  "UBX-NAV-POSLLH message, runt payload len %zd", data_len);
         return 0;
     }
-
-    mask = ONLINE_SET | HERR_SET | VERR_SET | LATLON_SET | ALTITUDE_SET;
 
     session->driver.ubx.iTOW = getles32(buf, 0);
     session->newdata.longitude = 1e-7 * getles32(buf, 4);
@@ -1528,6 +1629,8 @@ ubx_msg_nav_posllh(struct gps_device_t *session, unsigned char *buf,
         session->newdata.altHAE,
         session->newdata.eph,
         session->newdata.epv);
+
+    mask = ONLINE_SET | HERR_SET | VERR_SET | LATLON_SET | ALTITUDE_SET;
     return mask;
 }
 
@@ -2615,7 +2718,6 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-NAV-ORB\n");
         break;
     case UBX_NAV_POSECEF:
-        GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-NAV-POSECEF\n");
         mask = ubx_msg_nav_posecef(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_POSLLH:
@@ -2656,7 +2758,7 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         mask |= REPORT_IS;
         break;
     case UBX_NAV_STATUS:
-        GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-NAV-STATUS\n");
+        mask = ubx_msg_nav_status(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_SVIN:
         GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-NAV-SVIN\n");
@@ -2686,7 +2788,6 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-NAV-TIMEGLO\n");
         break;
     case UBX_NAV_TIMEGPS:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-TIMEGPS\n");
         mask = ubx_msg_nav_timegps(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_TIMELS:
