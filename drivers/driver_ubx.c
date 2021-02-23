@@ -465,7 +465,7 @@ static gps_mask_t
 ubx_msg_log_batch(struct gps_device_t *session, unsigned char *buf UNUSED,
                   size_t data_len)
 {
-    struct tm unpacked_date;
+    struct tm unpacked_date = {0};
     unsigned char contentValid, timeValid, flags, psmState;
     bool gnssFixOK, diffSoln;
     char ts_buf[TIMESPEC_LEN];
@@ -484,7 +484,6 @@ ubx_msg_log_batch(struct gps_device_t *session, unsigned char *buf UNUSED,
         return 0;
     }
 
-    memset(&unpacked_date, 0, sizeof(unpacked_date));
     unpacked_date.tm_year = getleu16(buf, 8) - 1900;
     unpacked_date.tm_mon = getub(buf, 10) - 1;
     unpacked_date.tm_mday = getub(buf, 11);
@@ -595,7 +594,7 @@ static gps_mask_t
 ubx_msg_log_info(struct gps_device_t *session, unsigned char *buf UNUSED,
                  size_t data_len)
 {
-    struct tm oldest_date, newest_date;
+    struct tm oldest_date = {0}, newest_date = {0};
     timespec_t oldest = {0, 0};
     timespec_t newest = {0, 0};
     unsigned char version, status;
@@ -622,7 +621,6 @@ ubx_msg_log_info(struct gps_device_t *session, unsigned char *buf UNUSED,
     entryCount = getleu32(buf, 24);
     status = getub(buf, 44);
 
-    memset(&oldest_date, 0, sizeof(oldest_date));
     oldest_date.tm_year = getleu16(buf, 28);
     if (0 != oldest_date.tm_year) {
         oldest_date.tm_year -= 1900;
@@ -636,7 +634,6 @@ ubx_msg_log_info(struct gps_device_t *session, unsigned char *buf UNUSED,
         TS_NORM(&oldest);
     }
 
-    memset(&newest_date, 0, sizeof(newest_date));
     newest_date.tm_year = getleu16(buf, 36);
     if (0 != newest_date.tm_year) {
         newest_date.tm_year -= 1900;
@@ -674,7 +671,7 @@ static gps_mask_t
 ubx_msg_log_retrievepos(struct gps_device_t *session, unsigned char *buf UNUSED,
                         size_t data_len)
 {
-    struct tm unpacked_date;
+    struct tm unpacked_date = {0};
     unsigned char fixType;
     gps_mask_t mask = 0;
 
@@ -685,7 +682,6 @@ ubx_msg_log_retrievepos(struct gps_device_t *session, unsigned char *buf UNUSED,
                  "UBX-LOG-RETRIEVEPOS: runt len %zd", data_len);
         return 0;
     }
-    memset(&unpacked_date, 0, sizeof(unpacked_date));
     unpacked_date.tm_year = getleu16(buf, 30);
     if (1900 > unpacked_date.tm_year) {
         // useless, no date
@@ -765,7 +761,7 @@ static gps_mask_t
 ubx_msg_log_retrieveposextra(struct gps_device_t *session,
                              unsigned char *buf UNUSED, size_t data_len)
 {
-    struct tm unpacked_date;
+    struct tm unpacked_date = {0};
     gps_mask_t mask = 0;
 
     gps_clear_log(&session->gpsdata.log);
@@ -776,7 +772,6 @@ ubx_msg_log_retrieveposextra(struct gps_device_t *session,
         return 0;
     }
 
-    memset(&unpacked_date, 0, sizeof(unpacked_date));
     unpacked_date.tm_year = getleu16(buf, 6);
     if (1900 > unpacked_date.tm_year) {
         // useless, no date
@@ -814,7 +809,7 @@ static gps_mask_t
 ubx_msg_log_retrievestring(struct gps_device_t *session,
                            unsigned char *buf UNUSED, size_t data_len)
 {
-    struct tm unpacked_date;
+    struct tm unpacked_date = {0};
     unsigned int byteCount;
     gps_mask_t mask = 0;
 
@@ -826,7 +821,6 @@ ubx_msg_log_retrievestring(struct gps_device_t *session,
         return 0;
     }
 
-    memset(&unpacked_date, 0, sizeof(unpacked_date));
     unpacked_date.tm_year = getleu16(buf, 6);
     if (1900 > unpacked_date.tm_year) {
         // useless, no date
@@ -1764,22 +1758,32 @@ ubx_msg_nav_timeutc(struct gps_device_t *session, unsigned char *buf,
     valid = getub(buf, 19);
     if (4 == (4 & valid)) {
         // UTC is valid
+        struct tm date = {0};
         // mask |= (TIME_SET | NTPTIME_IS);
         uint32_t tAcc = getleu32(buf, 4);          // tAcc in ns
         // nano can be negative, so this is not normalized UTC.
         int32_t nano = getles32(buf, 8);           // fract sec in ns
-        unsigned year = getleu16(buf, 12);         // year, 1999..2099
-        uint8_t month = getub(buf, 14);            // month 1..12
-        uint8_t day = getub(buf, 15);              // day 1..31
-        uint8_t hour = getub(buf, 16);             // hour 0..23
-        uint8_t min = getub(buf, 17);              // min 0..59
-        uint8_t sec = getub(buf, 18);              // sec 0..60
+        date.tm_year = getleu16(buf, 12) - 1900;   // year, 1999..2099
+        date.tm_mon = getub(buf, 14) - 1;          // month 1..12
+        date.tm_mday = getub(buf, 15);             // day 1..31
+        date.tm_hour = getub(buf, 16);             // hour 0..23
+        date.tm_min = getub(buf, 17);              // min 0..59
+        date.tm_sec = getub(buf, 18);              // sec 0..60
+        session->newdata.time.tv_sec = mkgmtime(&date);
+        // nano, can be negative! So normalize
+        TS_NORM(&session->newdata.time);
+        // other timestamped messages lack nano, so time will jump around...
+        mask |= TIME_SET | NTPTIME_IS | GOODTIME_IS;
+
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "TIMEUTC: iTOW=%lld valid=%02x %04d-%02d-%02d "
-                 "%02d:%02d:%02d.%09d tAcc=%llu\n",
+                 "%02d:%02d:%02d.%09d tAcc=%llu time %lld.%09lld\n",
                  (long long)session->driver.ubx.iTOW,
-                 valid, year, month, day, hour, min, sec, nano,
-                 (long long unsigned)tAcc);
+                 valid, date.tm_year + 1900, date.tm_mon + 1, date.tm_mday,
+                 date.tm_hour, date.tm_min, date.tm_sec, nano,
+                 (long long unsigned)tAcc,
+                 (long long)session->newdata.time.tv_sec,
+                 (long long)session->newdata.time.tv_nsec);
     } else {
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "TIMEUTC: iTOW=%lld valid=%02x\n",
