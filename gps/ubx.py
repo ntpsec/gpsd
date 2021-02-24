@@ -4683,7 +4683,7 @@ Oddly this is the poll for UBX-LOG-BATCH
         5: "Inactive",
         }
 
-    # protver 27+
+    # in UBX-NAV-STATUS since Antaris 4
     carrSoln = {
         0: "None",
         1: "Floating",
@@ -5013,12 +5013,52 @@ High Precision GNSS products only."""
 
         return s
 
+    nav_status_fixStat = {
+        1: "diffCorr",
+        2: "carrSolnValid",
+        }
+
+    nav_status_mapMatching = {
+        0: "None",
+        0x40: "Too old",
+        0x80: "Valid10",
+        0xC0: "Valid11",
+        }
+
+    nav_status_psmState = {
+        0: "Acquisition",
+        1: "Tracking",
+        2: "Power Optimized Tracking",
+        3: "Inactive",
+        }
+
+    nav_status_spoofDetState = {
+        0: "Deactivated",
+        1: "None indicated",
+        2: "Indicated",
+        3: "Multiple Indicated",
+        }
+
     def nav_status(self, buf):
         """UBX-NAV-STATUS decode"""
 
         u = struct.unpack_from('<LBBBBLL', buf, 0)
-        return ('  iTOW:%d ms, fix:%d flags:%#x fixstat:%#x flags2:%#x\n'
-                '  ttff:%d, msss:%d' % u)
+        s = ('  iTOW %d gpsFix %d flags %#x fixStat %#x flags2 %#x\n'
+             '  ttff %d, msss %d' % u)
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ("\n   gpsfix (%s)"
+                  "\n   flags (%s)"
+                  "\n   fixStat (%s) mapMatching (%s)"
+                  "\n   flags2 (psmState %s spoofDetState %s carrSoln %s)" %
+                  (index_s(u[1], self.nav_pvt_fixType),
+                   flag_s(u[2], self.nav_sol_flags),
+                   flag_s(0x3f & u[3], self.nav_status_fixStat),
+                   index_s(0xc0 & u[3], self.nav_status_mapMatching),
+                   index_s(3 & u[4], self.nav_status_psmState),
+                   index_s(3 & (u[4] >> 3), self.nav_status_spoofDetState),
+                   index_s(3 & (u[4] >> 6), self.carrSoln)))
+        return s
+
 
     def nav_svin(self, buf):
         """UBX-NAV-SVIN decode, Survey-in data"""

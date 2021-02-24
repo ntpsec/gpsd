@@ -1425,15 +1425,15 @@ ubx_msg_nav_status(struct gps_device_t *session, unsigned char *buf,
     }
 
     session->driver.ubx.iTOW = getleu32(buf, 0);
-    gpsFix = (unsigned char)getub(buf, 4);
-    flags = (unsigned int)getub(buf, 5);
-    fixStat = (unsigned int)getub(buf, 6);
-    flags2 = (unsigned int)getub(buf, 7);
+    gpsFix = getub(buf, 4);
+    flags = getub(buf, 5);
+    fixStat = getub(buf, 6);
+    flags2 = getub(buf, 7);
     ttff = getleu32(buf, 8);
     msss = getleu32(buf, 12);
 
     // FIXME: how does this compare with other places ubx sets mode/status?
-    if (0 == (1 & fixStat)) {
+    if (0 == (1 & flags)) {
         // gpsFix not OK
         *mode = MODE_NO_FIX;
         *status = STATUS_NO_FIX;
