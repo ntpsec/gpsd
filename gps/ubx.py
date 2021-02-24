@@ -2503,12 +2503,12 @@ Programming the fixed seed for host interface signature"""
         return s
 
     utc_std = {
-        0: "Default",
+        0: "Auto",
         1: "CRL",
         2: "NIST",
         3: "USNO",
         4: "BIPM",
-        5: "tbd",
+        5: "EU",
         6: "SU",
         7: "NTSC",
         }
@@ -5191,7 +5191,7 @@ High Precision GNSS products only."""
         """UBX-NAV-TIMEUTC decode"""
 
         u = struct.unpack_from('<LLlHbbbbbB', buf, 0)
-        s = ("  iTOW %d tAcc %d nano %d Time  %d/%d/%d %d:%d:%d\n"
+        s = ("  iTOW %u tAcc %u nano %d Time  %4u/%02u/%02u %02u:%02u:%02u\n"
              "  valid x%x" % u)
 
         if gps.VERB_DECODE <= self.verbosity:
