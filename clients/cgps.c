@@ -1201,13 +1201,14 @@ int main(int argc, char *argv[])
 
     /* heart of the client */
     for (;;) {
-        int c;
 
         /* wait 1/2 second for gpsd */
         if (!gps_waiting(&gpsdata, 500000)) {
-            /* 240 tries at 0.5 seconds a try is a 2 minute timeout */
-            if ( 240 < wait_clicks++ )
+            // 240 tries at 0.5 seconds a try is a 2 minute timeout
+            if (240 < wait_clicks++) {
+                (void)fprintf(stderr, "cgps: timeout contactong gpsd\n");
                 die(GPS_TIMEOUT);
+            }
         } else {
             wait_clicks = 0;
             errno = 0;
@@ -1226,22 +1227,20 @@ int main(int argc, char *argv[])
             }
         }
 
-        /* Check for user input. */
-        c = wgetch(datawin);
-
-        switch (c) {
-            /* Quit */
+        // Check for user input.
+        switch (wgetch(datawin)) {
         case 'q':
+            // Quit
             die(CGPS_QUIT);
             break;
 
-            /* Toggle spewage of raw gpsd data. */
         case 's':
+            // Toggle (pause/unpause) spewage of raw gpsd data.
             silent_flag = !silent_flag;
             break;
 
-            /* Clear the spewage area. */
         case 'c':
+            // Clear the spewage area.
             (void)werase(messages);
             break;
 
