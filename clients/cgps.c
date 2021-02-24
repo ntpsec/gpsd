@@ -200,21 +200,30 @@ static char *ep_to_str(double ep, double factor, char *units)
     return buf;
 }
 
-/* format an ECEF p and v into a string, handle NAN, INFINITE */
+// format an ECEF p and v into a string, handle NAN, INFINITE
 static char *ecef_to_str(double pos, double vel, double factor, char *units)
 {
     static char buf[128];
 
     if (isfinite(pos) == 0) {
         if (isfinite(vel) == 0) {
+            // no position, no velocity
             return "             n/a    n/a      ";
         } else {
+            // no position, have velocity
             (void)snprintf(buf, sizeof(buf), "  n/a %8.3f%.4s/s",
                            vel * factor, units);
         }
     } else {
-        (void)snprintf(buf, sizeof(buf), "% 14.3f%.4s %8.3f%.4s/s",
-                       pos * factor, units,  vel * factor, units);
+        if (isfinite(vel) == 0) {
+            // have position, no velocity
+            (void)snprintf(buf, sizeof(buf), "% 14.3f%.4s   n/a       ",
+                           pos * factor, units);
+        } else {
+            // have position, have velocity
+            (void)snprintf(buf, sizeof(buf), "% 14.3f%.4s %8.3f%.4s/s",
+                           pos * factor, units,  vel * factor, units);
+        }
     }
     return buf;
 }
