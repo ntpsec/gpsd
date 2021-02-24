@@ -295,6 +295,34 @@ static short ubx_to_prn(int ubx_PRN, unsigned char *gnssId,
     return ubx2_to_prn(*gnssId, *svId);
 }
 
+/* UBX-CFG-RATE */
+static void ubx_msg_cfg_rate(struct gps_device_t *session, unsigned char *buf,
+                             size_t data_len)
+{
+    uint16_t measRate, navRate, timeRef;
+
+    if (6 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-CFG-RATE message, runt payload len %zd", data_len);
+        return;
+    }
+
+    measRate = getleu16(buf, 0);  // Measurement rate (ms)
+    navRate = getleu16(buf, 2);   // Navigation rate (cycles)
+    timeRef = getleu16(buf, 4);   // Time system, e.g. UTC, GPS, ...
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "UBX-CFG-RATE: measRate %ums, navRate %u cycle(s), "
+             "timeRef %u\n",
+             (unsigned)measRate, (unsigned)navRate,
+             (unsigned)timeRef);
+
+    /* Update our notion of what the device's measurement rate is */
+    MSTOTS(&session->gpsdata.dev.cycle, measRate);
+
+    return;
+}
+
 /**
  * Receiver/Software Version
  * UBX-MON-VER
@@ -1496,7 +1524,7 @@ static void ubx_msg_nav_timels(struct gps_device_t *session,
 
     session->driver.ubx.iTOW = getles32(buf, 0);
     version = getsb(buf, 4);
-    /* Only version 0 is defined so far. */
+    // Only version 0 is defined up to ub-blox 9
     flags = (unsigned int)getub(buf, 23);
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "UBX-NAV-TIMELS: flags 0x%x message version %d\n",
@@ -2482,6 +2510,49 @@ static void ubx_msg_inf(struct gps_device_t *session, unsigned char *buf,
 }
 
 /**
+ * Survey-in data - UBX-TIM-SVIN
+ * Time Sync products only
+ */
+static gps_mask_t
+ubx_msg_tim_svin(struct gps_device_t *session, unsigned char *buf,
+                 size_t data_len)
+{
+    gps_mask_t mask = ONLINE_SET;
+    uint32_t dur;
+    int32_t meanX;
+    int32_t meanY;
+    int32_t meanZ;
+    uint32_t meanV;
+    uint32_t obs;
+    uint8_t valid;
+    uint8_t active;
+
+    if (28 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-TIM-SVIN message, runt payload len %zd", data_len);
+        return 0;
+    }
+
+    dur = getleu32(buf, 0);
+    meanX = getles32(buf, 4);
+    meanY = getles32(buf, 8);
+    meanZ = getles32(buf, 12);
+    meanV = getleu32(buf, 16);
+    obs = getleu32(buf, 20);
+    valid = getub(buf, 24);
+    active = getub(buf, 25);
+    // two reserved bytes
+
+    /* casts for 32 bit compatibility */
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "TIM-SVIN: dur=%lu meanX=%ld meanY=%ld meanZ=%ld meanV=%lu "
+             "obs=%lu valid=%u active=%u\n",
+             (unsigned long)dur, (long)meanX, (long)meanY, (long)meanZ,
+             (long)meanV, (unsigned long)obs, valid, active);
+    return mask;
+}
+
+/**
  * Time Pulse Timedata - UBX-TIM-TP
  */
 static gps_mask_t
@@ -2550,34 +2621,6 @@ ubx_msg_tim_tp(struct gps_device_t *session, unsigned char *buf,
              (unsigned long)towMS, (unsigned long)towSubMS, (long)qErr,
               week, flags, refInfo);
     return mask;
-}
-
-/* UBX-CFG-RATE */
-static void ubx_msg_cfg_rate(struct gps_device_t *session, unsigned char *buf,
-                             size_t data_len)
-{
-    uint16_t measRate, navRate, timeRef;
-
-    if (6 > data_len) {
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-CFG-RATE message, runt payload len %zd", data_len);
-        return;
-    }
-
-    measRate = getleu16(buf, 0);  // Measurement rate (ms)
-    navRate = getleu16(buf, 2);   // Navigation rate (cycles)
-    timeRef = getleu16(buf, 4);   // Time system, e.g. UTC, GPS, ...
-
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "UBX-CFG-RATE: measRate %ums, navRate %u cycle(s), "
-             "timeRef %u\n",
-             (unsigned)measRate, (unsigned)navRate,
-             (unsigned)timeRef);
-
-    /* Update our notion of what the device's measurement rate is */
-    MSTOTS(&session->gpsdata.dev.cycle, measRate);
-
-    return;
 }
 
 gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
@@ -2810,7 +2853,7 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         mask = ubx_msg_nav_status(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_SVIN:
-        GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-NAV-SVIN\n");
+        mask = ubx_msg_tim_svin(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_SVINFO:
         /* UBX-NAV-SVINFO deprecated, use UBX-NAV-SAT instead */
