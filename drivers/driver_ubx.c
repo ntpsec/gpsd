@@ -1798,6 +1798,7 @@ ubx_msg_nav_timeutc(struct gps_device_t *session, unsigned char *buf,
         date.tm_min = getub(buf, 17);              // min 0..59
         date.tm_sec = getub(buf, 18);              // sec 0..60
         session->newdata.time.tv_sec = mkgmtime(&date);
+        session->newdata.time.tv_nsec = nano;
         // nano, can be negative! So normalize
         TS_NORM(&session->newdata.time);
         // other timestamped messages lack nano, so time will jump around...
