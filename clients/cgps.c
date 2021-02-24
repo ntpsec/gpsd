@@ -979,6 +979,10 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
         (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET + 9, "%-*s",
                         18, str);
 
+        // short screen, no ECEF, warn user to expand up/down
+        if (!show_ecefs) {
+            (void)mvwprintw(datawin, row, 2, "%s", "More...");
+        }
     }
 
     /* Be quiet if the user requests silence. */
