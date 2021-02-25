@@ -105,12 +105,15 @@ terminal settings this will happen when you type Ctrl-C at it.
 *cgps* will accept a few single letter commands while running:
 
 *c*:: Clear the bottom window.
+*D*:: Show lat/lon as dd.dddddddd
 *h*:: Popup a help window.
 *i*:: Use imperial units.
 *m*:: Use metric units.
+*M*:: Show lat/lon as dd mm.mmmmmm
 *n*:: Use nautical units.
 *q*:: Clear screen and exit
 *s*:: Toggle showing raw JSON data in the bottom window.
+*S*:: Show lat/lon as dd mm ss.ssss
 
 === gegps
 

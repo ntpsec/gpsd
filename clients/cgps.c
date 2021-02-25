@@ -1166,6 +1166,35 @@ static void dialog(char *str)
 }
 // end popup code shameless taken from "man overlay".
 
+// Set global degree format from c
+static int set_degree(char c)
+{
+    int ret = 0;
+
+    switch (c) {
+    case 'd':
+        FALLTHROUGH
+    case 'D':
+        deg_type = deg_dd;
+        break;
+    case 'm':
+        FALLTHROUGH
+    case 'M':
+        deg_type = deg_ddmm;
+        break;
+    case 's':
+        FALLTHROUGH
+    case 'S':
+        deg_type = deg_ddmmss;
+        break;
+    default:
+        ret = -1;
+        break;
+    }
+    return ret;
+}
+
+// Set global units from c
 static int set_units(char c)
 {
     int ret = 0;
@@ -1224,6 +1253,7 @@ int main(int argc, char *argv[])
     };
 #endif
 
+    // FIXME: set_degree() too...
     (void)set_units(gpsd_units());
 
     /* Process the options.  Print help if requested. */
@@ -1245,17 +1275,7 @@ int main(int argc, char *argv[])
             gps_enable_debug(debug, stderr);
             break;
         case 'l':
-            switch (optarg[0]) {
-            case 'd':
-                deg_type = deg_dd;
-                continue;
-            case 'm':
-                deg_type = deg_ddmm;
-                continue;
-            case 's':
-                deg_type = deg_ddmmss;
-                continue;
-            default:
+            if (0 != set_degree(optarg[0])) {
                 (void)fprintf(stderr, "Unknown -l argument: %s\n", optarg);
                 exit(EXIT_FAILURE);
             }
@@ -1350,16 +1370,23 @@ int main(int argc, char *argv[])
             // Clear the spewage area.
             (void)werase(messages);
             break;
+        case 'D':
+            // set dd.ddddd
+            (void)set_degree('D');
+            break;
         case 'h':
             dialog(
 "Help:\n"
 "c -- clear raw data area\n"
+"D -- dd.dddddddd\n"
 "h -- this help\n"
 "i -- imperial units\n"
 "m -- metric units\n"
+"M -- dd mm.mmmmmm\n"
 "n -- nautical units\n"
 "q -- quit\n"
-"s -- toggle raw data output");
+"s -- toggle raw data output\n"
+"S -- dd mm ss.ssss");
 
             break;
         case 'i':
@@ -1369,6 +1396,10 @@ int main(int argc, char *argv[])
         case 'm':
             // set metric units
             (void)set_units('m');
+            break;
+        case 'M':
+            // set dd.mmmmm
+            (void)set_degree('M');
             break;
         case 'n':
             // set nautical units
@@ -1381,6 +1412,10 @@ int main(int argc, char *argv[])
         case 's':
             // Toggle (pause/unpause) spewage of raw gpsd data.
             silent_flag = !silent_flag;
+            break;
+        case 'S':
+            // set dd.mm.sss
+            (void)set_degree('S');
             break;
         default:
             break;
