@@ -1,4 +1,4 @@
-= gps(1)
+= cgps(1)
 :date: 25 February 2021
 :keywords: gps, gpsd, cgps
 :manmanual: GPSD Documentation
@@ -13,8 +13,6 @@
 
 cgps - curses terminal client for gpsd
 
-lcdgps - LCD client for gpsd
-
 == SYNOPSIS
 
 *cgps* [OPTIONS] [server[:port[:device]]]
@@ -23,48 +21,25 @@ lcdgps - LCD client for gpsd
 
 *cgps* -V
 
-*lcdgps* [OPTIONS] [server[:port[:device]]]
-
-*lcdgps* -h
-
-*lcdgps* -V
-
 == DESCRIPTION
 
-These are two simple clients shipped with gpsd. They have some common
-options:
+*cgps* is an ncurses based *gpsd* client. It is able to run on a serial
+terminal or terminal emulator. It resembles *xgps*(1), but without the
+pictorial satellite display and does not require X or other windowing
+system.
+
+*cgps* does not require root privileges. It will also run fine as root.
+Running under sudo will cause loss of functionality.
+
+None of the error estimates provided by *gpsd*, and displayed by *cgps*,
+should be taken as anything other than "goodness" levels.  GNSS receiver
+manufactures often do not document the basis for their estimates.  Those
+that do ar inconsistent about what they mean.
+
+== OPTIONS
 
 *-?*, *-h*, *--help*::
   Print a summary of options and then exit.
-*-V*, *--version*::
-  Print the package version and exit.
-
-By default, clients collect data from all compatible devices on
-localhost, using the default GPSD port 2947. An optional argument to any
-client may specify a server to get data from. A colon-separated suffix
-is taken as a port number. If there is a second colon-separated suffix,
-that is taken as a specific device name to be watched. However, if the
-server specification contains square brackets, the part inside them is
-taken as an IPv6 address and port/device suffixes are only parsed after
-the trailing bracket. Possible cases look like this:
-
-localhost:/dev/ttyS1::
-  Look at the default port of localhost, trying both IPv4 and IPv6 and
-  watching output from serial device 1.
-example.com:2317::
-  Look at port 2317 on example.com, trying both IPv4 and IPv6.
-71.162.241.5:2317:/dev/ttyS3::
-  Look at port 2317 at the specified IPv4 address, collecting data from
-  attached serial device 3.
-[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:2317:/dev/ttyS5::
-  Look at port 2317 at the specified IPv6 address, collecting data from
-  attached serial device 5.
-
-=== cgps
-
-*cgps* is a client resembling xgps, but without the pictorial satellite
-display and able to run on a serial terminal or terminal emulator.
-
 *-D LVL*, *--debug LVL*::
   Sets the debug level; it is primarily for use by GPSD developers. It
   enables various progress messages to standard error.
@@ -90,6 +65,33 @@ display and able to run on a serial terminal or terminal emulator.
   speeds).
   *
   Note: The USA Survey Foot is not supported.
+*-V*, *--version*::
+  Print the package version and exit.
+
+== ARGUMENTS
+
+By default, clients collect data from all compatible devices on
+localhost, using the default GPSD port 2947. An optional argument to any
+client may specify a server to get data from. A colon-separated suffix
+is taken as a port number. If there is a second colon-separated suffix,
+that is taken as a specific device name to be watched. However, if the
+server specification contains square brackets, the part inside them is
+taken as an IPv6 address and port/device suffixes are only parsed after
+the trailing bracket. Possible cases look like this:
+
+localhost:/dev/ttyS1::
+  Look at the default port of localhost, trying both IPv4 and IPv6 and
+  watching output from serial device 1.
+example.com:2317::
+  Look at port 2317 on example.com, trying both IPv4 and IPv6.
+71.162.241.5:2317:/dev/ttyS3::
+  Look at port 2317 at the specified IPv4 address, collecting data from
+  attached serial device 3.
+[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:2317:/dev/ttyS5::
+  Look at port 2317 at the specified IPv6 address, collecting data from
+  attached serial device 5.
+
+== COMMANDS
 
 *cgps* terminates when you send it a SIGHUP or SIGINT; given default
 terminal settings this will happen when you type Ctrl-C at it.
@@ -106,19 +108,6 @@ terminal settings this will happen when you type Ctrl-C at it.
 *q*:: Clear screen and exit
 *s*:: Toggle showing raw JSON data in the bottom window.
 *S*:: Show lat/lon as dd mm ss.ssss
-
-*cgps* does not require root privileges. It will also run fine as root.
-Running under sudo will cause loss of functionality.
-
-=== lcdgps
-
-A client that passes gpsd data to lcdproc, turning your car computer
-into a very expensive and nearly feature-free GPS receiver. Currently
-assumes a 4x40 LCD and writes data formatted to fit that size screen.
-Also displays 4- or 6-character Maidenhead grid square output.
-
-*-s*, *--sleep*::
-  Sleep for 10 seconds before starting.
 
 == ENVIRONMENT
 
