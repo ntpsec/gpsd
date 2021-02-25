@@ -209,7 +209,7 @@ python_progs = python_clients + [
 # All man pages.  Always build them all.
 all_manpages = {
     "man/cgps.1": "man/cgps.adoc",
-    "man/gegps.1": "man/cgps.adoc",
+    "man/gegps.1": "man/gegps.adoc",
     "man/gps.1": "man/cgps.adoc",
     "man/gps2udp.1": "man/gps2udp.adoc",
     "man/gpscsv.1": "man/gpscsv.adoc",

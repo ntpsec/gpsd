@@ -301,10 +301,15 @@ latest stable version.</p>
 <dt><a href="gpsd.html">gpsd.8</a></dt>
 <dd>The <code>gpsd</code> daemon.</dd>
 
+<dt><a href="cgps.html">cgps.1</a></dt>
+<dd>A command line ncurses client for <code>gpsd</code>.</dd>
+
+<dt><a href="gegps.html">gegps.1</a></dt>
+<dd><code>gegps</code> feeds your location to Google Earth for live
+<location tracking. /dd>
+
 <dt><a href="gps.html">gps.1</a></dt>
-<dd>The <code>gpsd</code> sample clients. <code>cgps</code> using
-ncurses. <code>xgps</code> for X. <code>lcdgps</code> for use on 4x40
-LCD. <code>gegps</code> for use with Google Earth.</dd>
+<dd>The <code>gpsd</code> sample clients.</dd>
 
 <dt><a href="gps2udp.html">gps2udp.1</a></dt>
 <dd>Feed the take from <code>gpsd</code> to one or more aggregation
@@ -350,6 +355,9 @@ into a RINEX 3 file.</dd>
 <dt><a href="gpssubframe.html">gpssubframe.1</a></dt>
 <dd>The <code>gpssubframe</code> tool for reading gpsd JSON subframe
 sentences and decoding them.</dd>
+
+<dt><a href="lcdgps.html">lcdgps.1</a></dt>
+<dd>A <code>gpsd</code> client to display on a 4x20 LCD screen..</dd>
 
 <dt><a href="ntpshmmon.html">ntpshmmon.1</a></dt>
 <dd>Monitor the NTP shared-memory segments created by GPSD.</dd>

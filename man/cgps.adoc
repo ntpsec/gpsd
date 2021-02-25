@@ -1,5 +1,5 @@
 = gps(1)
-:date: 24 January 2021
+:date: 25 February 2021
 :keywords: gps, gpsd, cgps
 :manmanual: GPSD Documentation
 :mansource: GPSD Version {gpsdver}
@@ -13,8 +13,6 @@
 
 cgps - curses terminal client for gpsd
 
-gegps - google earth client for gpsd
-
 lcdgps - LCD client for gpsd
 
 == SYNOPSIS
@@ -25,12 +23,6 @@ lcdgps - LCD client for gpsd
 
 *cgps* -V
 
-*gegps* [OPTIONS] [server[:port[:device]]]
-
-*gegps* -h
-
-*gegps* -V
-
 *lcdgps* [OPTIONS] [server[:port[:device]]]
 
 *lcdgps* -h
@@ -39,7 +31,7 @@ lcdgps - LCD client for gpsd
 
 == DESCRIPTION
 
-These are some simple clients shipped with gpsd. They have some common
+These are two simple clients shipped with gpsd. They have some common
 options:
 
 *-?*, *-h*, *--help*::
@@ -115,28 +107,8 @@ terminal settings this will happen when you type Ctrl-C at it.
 *s*:: Toggle showing raw JSON data in the bottom window.
 *S*:: Show lat/lon as dd mm ss.ssss
 
-=== gegps
-
-This program collects fixes from gpsd and feeds them to a running
-instance of Google Earth for live location tracking.
-
-*-d DIR*, *--kmldir DIR*::
-  Specify the location of the Google Earth installation directory. If
-  not specified, it defaults to the current directory.
-*-D LVL*, *--debug LVL*::
-  Sets the debug level; it is primarily for use by GPSD developers. It
-  enables various progress messages to standard error.
-*--device DEVICE*::
-  Connect to device DEVICE on gpsd host.
-*--host HOST*::
-  Connect to gpsd on host HOST.
-*-i*, *--initialize*::
-If you have the free (non-subscription) version, start by running with
-the *-i* option to drop a clue in the Google Earth installation
-directory, as 'Open_in_Google_Earth_RT_GPS.kml', then open that file
-in Places (File > Open...). Run *gegps* in the normal way after that.
-*--port PORT*::
-  Connect to gpsd on port PORT.
+*cgps* does not require root privileges. It will also run fine as root.
+Running under sudo will cause loss of functionality.
 
 === lcdgps
 
@@ -166,8 +138,12 @@ imperial. The default if no system has been selected defaults to metric.
 
 == SEE ALSO
 
-*gpsd*(8), *gpsctl*(1), *gps*(1), *libgps*(3), *libgpsmm*(3), *gpsprof*(1),
-*gpsfake*(1), *gpscat*(1), *gpspipe*(1), *gpsmon*(1), *xgps*(1). *xgpsspeed*(1)
+*gegps*(1), *gpsctl*(1), *gps*(1), gpsprof*(1), *gpsfake*(1),
+*gpscat*(1), *gpspipe*(1), *gpsmon*(1), xgps*(1). *xgpsspeed*(1)
+
+*libgps*(3), *libgpsmm*(3)
+
+*gpsd*(8)
 
 == RESOURCES
 

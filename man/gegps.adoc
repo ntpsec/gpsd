@@ -1,0 +1,98 @@
+= gegps(1)
+:date: 25 February 2021
+:keywords: gps, gpsd, gegps
+:manmanual: GPSD Documentation
+:mansource: GPSD Version {gpsdver}
+:robots: index,follow
+:sectlinks:
+:toc: left
+:type: manpage
+:webfonts!:
+
+== NAME
+
+gegps - google earth client for gpsd
+
+== SYNOPSIS
+
+*gegps* [OPTIONS] [server[:port[:device]]]
+
+*gegps* -h
+
+*gegps* -V
+
+== DESCRIPTION
+
+*gegps* program collects fixes from gpsd and feeds them to a running
+instance of Google Earth for live location tracking.
+
+By default, clients collect data from all compatible devices on
+localhost, using the default GPSD port 2947. An optional argument to any
+client may specify a server to get data from. A colon-separated suffix
+is taken as a port number. If there is a second colon-separated suffix,
+that is taken as a specific device name to be watched. However, if the
+server specification contains square brackets, the part inside them is
+taken as an IPv6 address and port/device suffixes are only parsed after
+the trailing bracket. Possible cases look like this:
+
+localhost:/dev/ttyS1::
+  Look at the default port of localhost, trying both IPv4 and IPv6 and
+  watching output from serial device 1.
+example.com:2317::
+  Look at port 2317 on example.com, trying both IPv4 and IPv6.
+71.162.241.5:2317:/dev/ttyS3::
+  Look at port 2317 at the specified IPv4 address, collecting data from
+  attached serial device 3.
+[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:2317:/dev/ttyS5::
+  Look at port 2317 at the specified IPv6 address, collecting data from
+  attached serial device 5.
+
+== OPTIONS
+
+*-?*, *-h*, *--help*::
+  Print a summary of options and then exit.
+*-d DIR*, *--kmldir DIR*::
+  Specify the location of the Google Earth installation directory. If
+  not specified, it defaults to the current directory.
+*-D LVL*, *--debug LVL*::
+  Sets the debug level; it is primarily for use by GPSD developers. It
+  enables various progress messages to standard error.
+*--device DEVICE*::
+  Connect to device DEVICE on gpsd host.
+*--host HOST*::
+  Connect to gpsd on host HOST.
+*-i*, *--initialize*::
+If you have the free (non-subscription) version, start by running with
+the *-i* option to drop a clue in the Google Earth installation
+directory, as 'Open_in_Google_Earth_RT_GPS.kml', then open that file
+in Places (File > Open...). Run *gegps* in the normal way after that.
+*--port PORT*::
+  Connect to gpsd on port PORT.
+*-V*, *--version*::
+  Print the package version and exit.
+
+*gegps* does not require root privileges, it should be run as the
+same user that your Google Earth client is running as.
+
+== RETURN VALUES
+
+*0*:: on success.
+*1*:: on failure
+
+== SEE ALSO
+
+*gpsctl*(1), *gps*(1), *gpsprof*(1), fake*(1), *gpscat*(1),
+*gps*gpspipe*(1), *gpsmon*(1), *xgps*(1). *xgpsspeed*(1)
+
+*libgps*(3), *libgpsmm*(3)
+
+*gpsd*(8)
+
+== RESOURCES
+
+*Project web site:* {gpsdweb}
+
+== COPYING
+
+This file is Copyright 2013 by the GPSD project +
+SPDX-License-Identifier: BSD-2-clause
