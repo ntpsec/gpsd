@@ -1059,33 +1059,37 @@ static void usage(char *prog,  int exit_code)
 static int popup(WINDOW **work, WINDOW **save, int nrows, int ncols,
                  int row, int col)
 {
-     int mr, mc;
+    int mr, mc;
 
-     getmaxyx(curscr, mr, mc);
-     // Windows are limited to the size of curscr.
-     if (mr < nrows)
-          nrows = mr;
-     if (mc < ncols)
-          ncols = mc;
-     // Center dimensions.
-     if (row == -1)
-          row = (mr - nrows) / 2;
-     if (col == -1)
-          col = (mc - ncols) / 2;
-     // The window must fit entirely in curscr.
-     if (mr < row + nrows)
-          row = 0;
-     if (mc < col + ncols)
-          col = 0;
-     *work = newwin(nrows, ncols, row, col);
-     if (NULL == *work)
-          return -1;
-     if (NULL == (*save = dupwin(*work))) {
-          delwin(*work);
-          return -1;
-     }
-     overwrite(curscr, *save);
-     return 0;
+    getmaxyx(curscr, mr, mc);
+    // Windows are limited to the size of curscr.
+    if (mr < nrows)
+        nrows = mr;
+    if (mc < ncols)
+        ncols = mc;
+    // Center dimensions.
+    if (row == -1)
+        row = (mr - nrows) / 2;
+    if (col == -1)
+        col = (mc - ncols) / 2;
+    // The window must fit entirely in curscr.
+    if (mr < row + nrows)
+        row = 0;
+    if (mc < col + ncols)
+        col = 0;
+    // sanity check for coverity
+    if (0 >= nrows || 0 >= ncols) {
+        return -1;
+    }
+    *work = newwin(nrows, ncols, row, col);
+    if (NULL == *work)
+        return -1;
+    if (NULL == (*save = dupwin(*work))) {
+        delwin(*work);
+        return -1;
+    }
+    overwrite(curscr, *save);
+    return 0;
 }
 
 /*
@@ -1096,9 +1100,9 @@ static int popup(WINDOW **work, WINDOW **save, int nrows, int ncols,
  */
 static void popdown(WINDOW *work, WINDOW *save)
 {
-     (void)wnoutrefresh(save);
-     (void)delwin(save);
-     (void)delwin(work);
+    (void)wnoutrefresh(save);
+    (void)delwin(save);
+    (void)delwin(work);
 }
 
 /*
@@ -1107,22 +1111,22 @@ static void popdown(WINDOW *work, WINDOW *save)
  */
 static void dialsize(char *str, int *nrows, int *ncols)
 {
-     int rows, cols, col;
+    int rows, cols, col;
 
-     for (rows = 1, cols = col = 0; *str != '\0'; ++str) {
-          if (*str == '\n') {
-               if (cols < col)
-                   cols = col;
-               col = 0;
-               ++rows;
-          } else {
-               ++col;
-          }
-      }
-      if (cols < col)
-           cols = col;
-      *nrows = rows;
-      *ncols = cols;
+    for (rows = 1, cols = col = 0; *str != '\0'; ++str) {
+        if (*str == '\n') {
+            if (cols < col)
+                cols = col;
+            col = 0;
+            ++rows;
+        } else {
+            ++col;
+        }
+    }
+    if (cols < col)
+        cols = col;
+    *nrows = rows;
+    *ncols = cols;
 }
 
 /*
@@ -1130,36 +1134,37 @@ static void dialsize(char *str, int *nrows, int *ncols)
  */
 static void dialfill(WINDOW *w, char *s)
 {
-     int row;
+    int row;
 
-     (void)wmove(w, 1, 1);
-     for (row = 1; *s != '\0'; ++s) {
-          (void)waddch(w, *((unsigned char*) s));
-          if (*s == '\n') {
-               wmove(w, ++row, 1);
-          }
-     }
-     box(w, 0, 0);
+    (void)wmove(w, 1, 1);
+    for (row = 1; *s != '\0'; ++s) {
+        // FIXME: don't do one char at a time...
+        (void)waddch(w, *((unsigned char*) s));
+        if (*s == '\n') {
+            wmove(w, ++row, 1);
+        }
+    }
+    box(w, 0, 0);
 }
 
 // popup a dialog box containing str
 static void dialog(char *str)
 {
-     WINDOW *work, *save;
-     int nrows, ncols;
+    WINDOW *work, *save;
+    int nrows, ncols;
 
-     // Figure out size of window.
-     dialsize(str, &nrows, &ncols);
-     // Create a centered working window with extra room for a border.
-     (void)popup(&work, &save, nrows + 2, ncols + 2, -1, -1);
-     // Write text into the working window.
-     dialfill(work, str);
-     // Pause for input.  wgetch() will do a wrefresh() for us.
-     (void)wgetch(work);
-     // Restore curscr and free windows.
-     popdown(work, save);
-     // Redraw curscr to remove window from physical screen.
-     (void)doupdate();
+    // Figure out size of window.
+    dialsize(str, &nrows, &ncols);
+    // Create a centered working window with extra room for a border.
+    (void)popup(&work, &save, nrows + 2, ncols + 2, -1, -1);
+    // Write text into the working window.
+    dialfill(work, str);
+    // Pause for input.  wgetch() will do a wrefresh() for us.
+    (void)wgetch(work);
+    // Restore curscr and free windows.
+    popdown(work, save);
+    // Redraw curscr to remove window from physical screen.
+    (void)doupdate();
 }
 // end popup code shameless taken from "man overlay".
 
