@@ -201,7 +201,7 @@ static char *ep_to_str(double ep, double factor, char *units)
 }
 
 // format an ECEF p and v into a string, handle NAN, INFINITE
-static char *ecef_to_str(double pos, double vel, double factor, char *units)
+static char *ecef_to_str(double pos, double vel)
 {
     static char buf[128];
 
@@ -211,18 +211,19 @@ static char *ecef_to_str(double pos, double vel, double factor, char *units)
             return "             n/a    n/a      ";
         } else {
             // no position, have velocity
-            (void)snprintf(buf, sizeof(buf), "  n/a %8.3f%.4s/s",
-                           vel * factor, units);
+            (void)snprintf(buf, sizeof(buf), "  n/a % 8.3f %2.2s/s",
+                           vel * altfactor, altunits);
         }
     } else {
         if (isfinite(vel) == 0) {
             // have position, no velocity
-            (void)snprintf(buf, sizeof(buf), "% 14.3f%.4s   n/a       ",
-                           pos * factor, units);
+            (void)snprintf(buf, sizeof(buf), "% 14.3f %2.2s   n/a       ",
+                           pos * altfactor, altunits);
         } else {
             // have position, have velocity
-            (void)snprintf(buf, sizeof(buf), "% 14.3f%.4s %8.3f%.4s/s",
-                           pos * factor, units,  vel * factor, units);
+            (void)snprintf(buf, sizeof(buf), "% 14.3f %2.2s % 8.3f %2.2s/s",
+                           pos * altfactor, altunits,
+                           vel * altfactor, altunits);
         }
     }
     return buf;
@@ -412,14 +413,14 @@ static void windowsetup(void)
         (void)refresh();
 
         /* Do the initial field label setup. */
-        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Time:");
-        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Latitude:");
-        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Longitude:");
-        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Alt (HAE, MSL):");
-        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Speed:");
-        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Track ");
-        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Climb:");
-        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Status:");
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Time");
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Latitude");
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Longitude");
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Alt (HAE, MSL)");
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Speed");
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Track");
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Climb");
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Status");
 
         /* Note that the following fields are exceptions to the
          * sizing rule.  The minimum window size does not include these
@@ -431,11 +432,11 @@ static void windowsetup(void)
 
         if (window_ysize >= MAX_GPS_DATAWIN_YSIZE) {
             (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                            "Long Err  (XDOP, EPX):");
+                            "Long Err  (XDOP, EPX)");
             (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                            "Lat Err   (YDOP, EPY):");
+                            "Lat Err   (YDOP, EPY)");
             (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                            "Alt Err   (VDOP, EPV):");
+                            "Alt Err   (VDOP, EPV)");
 
             if (show_more_dops) {
                 (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
@@ -450,22 +451,22 @@ static void windowsetup(void)
 
             if (show_ecefs) {
                 (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                                "ECEF X, VX:");
+                                "ECEF X, VX");
                 (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                                "ECEF Y, VY:");
+                                "ECEF Y, VY");
                 (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                                "ECEF Z, VZ:");
+                                "ECEF Z, VZ");
             }
 
             (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                            "Speed Err (EPS):");
+                            "Speed Err (EPS)");
             (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                            "Track Err (EPD):");
+                            "Track Err (EPD)");
             /* it's actually esr that thought *these* were interesting */
             (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                            "Time offset:");
+                            "Time offset");
             (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                            "Grid Square:");
+                            "Grid Square");
         }
 
         (void)wborder(datawin, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -929,19 +930,16 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
             char *estr;
 
             /* Fill in the ECEF's. */
-            estr = ecef_to_str(gpsdata->fix.ecef.x, gpsdata->fix.ecef.vx,
-                               1, " m");
-            (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET - 3, "%-*s",
+            estr = ecef_to_str(gpsdata->fix.ecef.x, gpsdata->fix.ecef.vx);
+            (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET - 4, "%-*s",
                             27, estr);
 
-            estr = ecef_to_str(gpsdata->fix.ecef.y, gpsdata->fix.ecef.vy,
-                               1, " m");
-            (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET - 3, "%-*s",
+            estr = ecef_to_str(gpsdata->fix.ecef.y, gpsdata->fix.ecef.vy);
+            (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET - 4, "%-*s",
                             27, estr);
 
-            estr = ecef_to_str(gpsdata->fix.ecef.z, gpsdata->fix.ecef.vz,
-                               1, " m");
-            (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET - 3, "%-*s",
+            estr = ecef_to_str(gpsdata->fix.ecef.z, gpsdata->fix.ecef.vz);
+            (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET - 4, "%-*s",
                             27, estr);
         }
 
@@ -1168,6 +1166,43 @@ static void dialog(char *str)
 }
 // end popup code shameless taken from "man overlay".
 
+static int set_units(char c)
+{
+    int ret = 0;
+
+    switch (c) {
+    case 'i':
+        FALLTHROUGH
+    case imperial:
+        altfactor = METERS_TO_FEET;
+        altunits = "ft";
+        speedfactor = MPS_TO_MPH;
+        speedunits = "mph";
+        break;
+    case 'n':
+        FALLTHROUGH
+    case nautical:
+        altfactor = METERS_TO_FEET;
+        altunits = "ft";
+        speedfactor = MPS_TO_KNOTS;
+        speedunits = "knots";
+        break;
+    case 'm':
+        FALLTHROUGH
+    case metric:
+        altfactor = 1;
+        altunits = "m";
+        speedfactor = MPS_TO_KPH;
+        speedunits = "km/h";
+        break;
+    default:
+        // huh?
+        ret = 1;
+        break;
+    }
+    return ret;
+}
+
 int main(int argc, char *argv[])
 {
     unsigned int flags = WATCH_ENABLE;
@@ -1189,29 +1224,7 @@ int main(int argc, char *argv[])
     };
 #endif
 
-    switch (gpsd_units()) {
-    case imperial:
-        altfactor = METERS_TO_FEET;
-        altunits = "ft";
-        speedfactor = MPS_TO_MPH;
-        speedunits = "mph";
-        break;
-    case nautical:
-        altfactor = METERS_TO_FEET;
-        altunits = "ft";
-        speedfactor = MPS_TO_KNOTS;
-        speedunits = "knots";
-        break;
-    case metric:
-        altfactor = 1;
-        altunits = "m";
-        speedfactor = MPS_TO_KPH;
-        speedunits = "km/h";
-        break;
-    default:
-        /* leave the default alone */
-        break;
-    }
+    (void)set_units(gpsd_units());
 
     /* Process the options.  Print help if requested. */
     while (1) {
@@ -1244,6 +1257,7 @@ int main(int argc, char *argv[])
                 continue;
             default:
                 (void)fprintf(stderr, "Unknown -l argument: %s\n", optarg);
+                exit(EXIT_FAILURE);
             }
             break;
         case 'm':
@@ -1253,27 +1267,9 @@ int main(int argc, char *argv[])
             silent_flag = true;
             break;
         case 'u':
-            switch (optarg[0]) {
-            case 'i':
-                altfactor = METERS_TO_FEET;
-                altunits = "ft";
-                speedfactor = MPS_TO_MPH;
-                speedunits = "mph";
-                continue;
-            case 'n':
-                altfactor = METERS_TO_FEET;
-                altunits = "ft";
-                speedfactor = MPS_TO_KNOTS;
-                speedunits = "knots";
-                continue;
-            case 'm':
-                altfactor = 1;
-                altunits = "m";
-                speedfactor = MPS_TO_KPH;
-                speedunits = "km/h";
-                continue;
-            default:
+            if (0 != set_units(optarg[0])) {
                 (void)fprintf(stderr, "Unknown -u argument: %s\n", optarg);
+                exit(EXIT_FAILURE);
             }
             break;
         case 'V':
@@ -1350,29 +1346,42 @@ int main(int argc, char *argv[])
 
         // Check for user input.
         switch (wgetch(datawin)) {
-        case 'q':
-            // Quit
-            die(CGPS_QUIT);
-            break;
-
-        case 's':
-            // Toggle (pause/unpause) spewage of raw gpsd data.
-            silent_flag = !silent_flag;
-            break;
-
         case 'c':
             // Clear the spewage area.
             (void)werase(messages);
             break;
-
         case 'h':
             dialog(
 "Help:\n"
 "c -- clear raw data area\n"
 "h -- this help\n"
+"i -- imperial units\n"
+"m -- metric units\n"
+"n -- nautical units\n"
 "q -- quit\n"
 "s -- toggle raw data output");
 
+            break;
+        case 'i':
+            // set imperial units
+            (void)set_units('i');
+            break;
+        case 'm':
+            // set metric units
+            (void)set_units('m');
+            break;
+        case 'n':
+            // set nautical units
+            (void)set_units('n');
+            break;
+        case 'q':
+            // Quit
+            die(CGPS_QUIT);
+            break;
+        case 's':
+            // Toggle (pause/unpause) spewage of raw gpsd data.
+            silent_flag = !silent_flag;
+            break;
         default:
             break;
         }

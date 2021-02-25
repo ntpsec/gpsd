@@ -105,7 +105,10 @@ terminal settings this will happen when you type Ctrl-C at it.
 *cgps* will accept a few single letter commands while running:
 
 *c*:: Clear the bottom window.
-*h*:: Pupup a help window.
+*h*:: Popup a help window.
+*i*:: Use imperial units.
+*m*:: Use metric units.
+*n*:: Use nautical units.
 *q*:: Clear screen and exit
 *s*:: Toggle showing raw JSON data in the bottom window.
 
