@@ -1366,14 +1366,8 @@ int main(int argc, char *argv[])
 
         // Check for user input.
         switch (wgetch(datawin)) {
-        case 'c':
-            // Clear the spewage area.
-            (void)werase(messages);
-            break;
-        case 'D':
-            // set dd.ddddd
-            (void)set_degree('D');
-            break;
+        case '?':
+            FALLTHROUGH
         case 'h':
             dialog(
 "Help:\n"
@@ -1388,6 +1382,14 @@ int main(int argc, char *argv[])
 "s -- toggle raw data output\n"
 "S -- dd mm ss.ssss");
 
+            break;
+        case 'c':
+            // Clear the spewage area.
+            (void)werase(messages);
+            break;
+        case 'D':
+            // set dd.ddddd
+            (void)set_degree('D');
             break;
         case 'i':
             // set imperial units
