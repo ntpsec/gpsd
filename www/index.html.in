@@ -357,7 +357,8 @@ into a RINEX 3 file.</dd>
 sentences and decoding them.</dd>
 
 <dt><a href="lcdgps.html">lcdgps.1</a></dt>
-<dd>A <code>gpsd</code> client to display on a 4x20 LCD screen..</dd>
+<dd>A <code>gpsd</code> client to display on a 4x20 LCD screen, using
+<code>lcdproc</code>.</dd>
 
 <dt><a href="ntpshmmon.html">ntpshmmon.1</a></dt>
 <dd>Monitor the NTP shared-memory segments created by GPSD.</dd>

@@ -23,7 +23,7 @@ lcdgps - LCD client for gpsd
 
 == DESCRIPTION
 
-*lcdgps* is a client that passes *gpsd* data to lcdproc, turning your
+*lcdgps* is a client that passes *gpsd* data to *lcdproc*, turning your
 car computer into a very expensive and nearly feature-free GPS receiver.
 Currently assumes a 4x40 LCD and writes data formatted to fit that size
 screen. Also displays 4- or 6-character Maidenhead grid square output.
@@ -42,7 +42,7 @@ Running under sudo will cause loss of functionality.
 
 == ARGUMENTS
 
-By default, clients collect data from all compatible devices on
+By default, *lcdgps* collect data from all compatible devices on
 localhost, using the default GPSD port 2947.
 
 For an expanded explanation of how "[server[:port[:device]]]" can
