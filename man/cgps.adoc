@@ -100,8 +100,14 @@ display and able to run on a serial terminal or terminal emulator.
   Note: The USA Survey Foot is not supported.
 
 *cgps* terminates when you send it a SIGHUP or SIGINT; given default
-terminal settings this will happen when you type Ctrl-C at it. It will
-also terminate on 'q'
+terminal settings this will happen when you type Ctrl-C at it.
+
+*cgps* will accept a few single letter commands while running:
+
+*c*:: Clear the bottom window.
+*h*:: Pupup a help window.
+*q*:: Clear screen and exit
+*s*:: Toggle showing raw JSON data in the bottom window.
 
 === gegps
 
