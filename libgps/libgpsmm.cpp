@@ -5,57 +5,53 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include <cstdlib>
 #include "../include/libgpsmm.h"
 
 struct gps_data_t* gpsmm::gps_inner_open(const char *host, const char *port)
 {
-    const bool err = (gps_open(host, port, gps_state()) != 0);
-    if ( err ) {
+    if (0 != (gps_open(host, port, gps_state()))) {
         to_user = NULL;
         return NULL;
     }
-    else { // connection successfully opened
-        to_user= new struct gps_data_t;
-        return backup(); //we return the backup of our internal structure
-    }
+    // else, connection successfully opened
+    to_user = new struct gps_data_t;
+    return backup(); // we return the backup of our internal structure
 }
 
 struct gps_data_t* gpsmm::stream(int flags)
 {
-    if (to_user == NULL)
-        return NULL;
-    else if (gps_stream(gps_state(),flags, NULL)==-1) {
+    if (NULL == to_user) {
         return NULL;
     }
-    else {
-        return backup();
+    if (-1 == gps_stream(gps_state(),flags, NULL)) {
+        return NULL;
     }
+    // else
+    return backup();
 }
 
 struct gps_data_t* gpsmm::send(const char *request)
 {
-    if (gps_send(gps_state(),request)==-1) {
+    if (-1 == gps_send(gps_state(),request)) {
         return NULL;
     }
-    else {
-        return backup();
-    }
+    // else
+    return backup();
 }
 
 struct gps_data_t* gpsmm::read(void)
 {
-    if (gps_read(gps_state(), NULL, 0)<=0) {
-        // we return null if there was a read() error, if no
-        // data was ready in POLL_NOBLOCK mode, or if the
-        // connection is closed by gpsd
+    if (0 >= gps_read(gps_state(), NULL, 0)) {
+        // we return null if there was a read() error, or
+        // if no data is ready in POLL_NOBLOCK (default) mode, or
+        // if the connection is closed by gpsd
         return NULL;
     }
-    else {
-        return backup();
-    }
+    // else
+    return backup();
 }
 
 bool gpsmm::waiting(int timeout)
@@ -88,7 +84,7 @@ bool gpsmm::is_open(void)
 
 gpsmm::~gpsmm()
 {
-    if ( to_user != NULL ) {
+    if (NULL != to_user) {
         (void)gps_close(gps_state());
         delete to_user;
     }
