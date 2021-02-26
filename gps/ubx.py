@@ -2228,14 +2228,14 @@ Deprecated in protVer 34.00
     cfg_cfg_dev = {
         0x1: 'devBBR',
         0x2: 'devFlash',
-        0x4: 'devEEPROM',
-        0x10: 'devSpiFlash',
+        0x4: 'devEEPROM',             # only protVer less then 14.00
+        0x10: 'devSpiFlash',          # only protVer less than 14.00
         }
 
     def cfg_cfg(self, buf):
         """UBX-CFG-CFG decode
 
-"not  completely  backwards-compatible.  "
+"not completely  backwards-compatible."
 
 Deprecated in protVer 34.00
 """
@@ -2243,8 +2243,10 @@ Deprecated in protVer 34.00
 
         if 12 == m_len:
             u = struct.unpack_from('<LLL', buf, 0)
-        else:
+        elif 13 == m_len:
             u = struct.unpack_from('<LLLB', buf, 0)
+        else:
+            return "  Bad Length %s" % m_len
 
         s = ('  clearMask: %#x (%s)\n' %
              (u[0], flag_s(u[0], self.cfg_cfg_mask)))
