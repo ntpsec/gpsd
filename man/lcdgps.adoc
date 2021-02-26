@@ -42,12 +42,12 @@ Running under sudo will cause loss of functionality.
 
 == ARGUMENTS
 
-By default, *lcdgps* collect data from all compatible devices on
-localhost, using the default GPSD port 2947.
+By default, clients collect data from the local *gpsd* daemon running
+on localhost, using the default GPSD port 2947. The optional argument
+to any client may override this behavior: *[server[:port[:device]]]*
 
-For an expanded explanation of how "[server[:port[:device]]]" can
-be used to connect to remote or non-standard *gpsd* daemons see the
-*cgps*(1) man page.
+For further explanation, and examples, see the *ARGUMENTS* section in
+the *gps*(1) man page
 
 == ENVIRONMENT
 

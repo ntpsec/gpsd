@@ -1,6 +1,6 @@
 = gpssubframe(1)
 :author: Gary E. Miller
-:date: 10 February 2021
+:date: 25 February 2021
 :email: gem@rellim.com.
 :keywords: gpsd, gps, subframe
 :manmanual: GPSD Documentation
@@ -84,6 +84,15 @@ Optionally a host, TCP/IP port number and remote device can be given.
   Print the program version, then exit.
 *-x SEC*, *--seconds SEC*::
   Seconds of messages to parse. 0 to disable.
+
+== ARGUMENTS
+
+By default, clients collect data from the local *gpsd* daemon running
+on localhost, using the default GPSD port 2947. The optional argument
+to any client may override this behavior: *[server[:port[:device]]]*
+
+For further explanation, and examples, see the *ARGUMENTS* section in
+the *gps*(1) man page
 
 == EXAMPLES
 

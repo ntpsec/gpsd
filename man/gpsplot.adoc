@@ -1,6 +1,6 @@
 = gpsplot(1)
 :author: Gary E. Miller
-:date: 12 February 2021
+:date: 25 February 2021
 :email: <gem@rellim.com.>
 :keywords: gps, gpsplot, scatterplot. strip chart
 :manmanual: GPSD Documentation
@@ -29,9 +29,9 @@ gpsplot - tool to dynamically dump plot data from gpsd
 users screen. Plot types include scatterplots and stripcharts.
 
 Plotting requires the Python Matplotlib module, and its many
-dependencies be installed on the display host.  If the display
-host is not the *gpsd* host, then Matplotlib is not required to be on the
-*gpsd* host.
+dependencies be installed on the display host. If the display host is
+not the *gpsd* host, then Matplotlib is not required to be on the *gpsd*
+host.
 
 *gpslot* does not require root privileges, but can be run as root.
 Running under sudo may cause some loss of functionality. It can be run
@@ -69,6 +69,15 @@ causing problems.
   Print the program version and exit.
 *-x SECONDS*, *--seconds SECONDS*::
  Stop after SECONDS. 0 to disable. Default 0',
+
+== ARGUMENTS
+
+By default, clients collect data from the local *gpsd* daemon running
+on localhost, using the default GPSD port 2947. The optional argument
+to any client may override this behavior: *[server[:port[:device]]]*
+
+For further explanation, and examples, see the *ARGUMENTS* section in
+the *gps*(1) man page
 
 == EXAMPLES
 

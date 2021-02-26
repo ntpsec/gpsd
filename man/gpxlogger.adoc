@@ -3,7 +3,7 @@ Amaury Jacquot; Petter Reinholdtsen; Chris Kuethe
 :email_1: sxpert@sxpert.org
 :email_2: pere@hungry.com
 :email_3: chris.kuethe@gmail.com
-:date: 19 January 2021
+:date: 25 February 2021
 :keywords: gps, gpsd, gpx, gpxlogger
 :manmanual: GPSD Documentation
 :mansource: GPSD, Version {gpsdver}
@@ -54,34 +54,11 @@ colon-terminated method names from the *-l*, *--exports* table.
   If D-Bus support is available on the host, GPSD is configured to use
   it, and *-e dbus*, or *--export dbus* is specified, this program
   listens to DBUS broadcasts from *gpsd* via org.gpsd.fix.
-
++
 With *-e sockets*, or if sockets is the method defaulted to, you may
-give a server-port-device specification as arguments.
-
-The sockets default is to all devices on the localhost, using the
-default GPSD port 2947. An optional argument to any client may specify
-a server to get data from. A colon-separated suffix is taken as a port
-number. If there is a second colon-separated suffix, that is taken as
-a specific device name to be watched. However, if the server
-specification contains square brackets, the part inside them is taken
-as an IPv6 address and port/device suffixes are only parsed after the
-trailing bracket. Possible cases look like this:
-
-  localhost:/dev/ttyS1;;
-    Look at the default port of localhost, trying both IPv4 and IPv6 and
-    watching output from serial device 1.
-
-  example.com:2317;;
-    Look at port 2317 on example.com, trying both IPv4 and IPv6.
-
-  71.162.241.5:2317:/dev/ttyS3;;
-    Look at port 2317 at the specified IPv4 address, collecting data
-    from attached serial device 3.
-
-  [FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:2317:/dev/ttyS5;;
-    Look at port 2317 at the specified IPv6 address, collecting data
-    from attached serial device 5.
-
+give a [server[:port[:device]]] specification as arguments.  See the
+*ARGUMENTS* section below for more details.
++
 With *-e shm, --export shm* this program will listen to the local
 *gpsd* using shared memory.
 
@@ -98,6 +75,15 @@ With *-e shm, --export shm* this program will listen to the local
   this case.
 *-V*, *--version*::
   Dump the package version and exit.
+
+== ARGUMENTS
+
+By default, clients collect data from the local *gpsd* daemon running
+on localhost, using the default GPSD port 2947. The optional argument
+to any client may override this behavior: *[server[:port[:device]]]*
+
+For further explanation, and examples, see the *ARGUMENTS* section in
+the *gps*(1) man page
 
 == RETURN VALUES
 

@@ -1,6 +1,6 @@
-= libgps(2)
+= libgps(3)
 :author: Eric S. Raymond
-:date: 22 February 2021
+:date: 25 February 2021
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, libgps
 :manmanual: GPSD Documentation

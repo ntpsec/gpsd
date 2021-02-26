@@ -8,6 +8,7 @@
   driver_ubx.c: Add decode for UBX-NAV-STATUS
   gps/ubx.py: Improve decode for UBX-NAV-STATUS
   cgps: Add popup help, interactive options.
+  Reorganize and split the man pages.
 
 3.22: 2021-01-08
   Added client/gpscsv to convert gpsd JSON to csv.

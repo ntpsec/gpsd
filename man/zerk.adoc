@@ -1,7 +1,7 @@
 = zerk(1)
 Gary E. Miller <gem@rellim.com.>
 :author: Gary E. Miller
-:date: 22 January 2021
+:date: 25 February 2021
 :email: gem@rellim.com
 :keywords: gps, gpsd, zerk, JavaD, GREIS
 :manmanual: GPSD Documentation
@@ -155,13 +155,15 @@ Force waiting the entire wait time. No early exit for completion of
 Wait for WAIT seconds before exiting. Will exit early on command
 completion of *-d*, *-e* or *-p* command, unless *-W* is given. Default 2.0
 second.
-*[server[:port[:device]]]*::
-By default, *zerk* collects data from all compatible devices on
-localhost, using the default GPSD port 2947. An optional argument may
-specify a server to get data from. A colon-separated suffix is taken
-as a port number. If there is a second colon-separated suffix, that is
-taken as a specific device name to be watched. Further details on the
-*gps*(1) man page.
+
+== ARGUMENTS
+
+By default, clients collect data from the local *gpsd* daemon running
+on localhost, using the default GPSD port 2947. The optional argument
+to any client may override this behavior: *[server[:port[:device]]]*
+
+For further explanation, and examples, see the *ARGUMENTS* section in
+the *gps*(1) man page
 
 == ENVIRONMENT
 

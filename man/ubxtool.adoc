@@ -1,7 +1,7 @@
 = ubxtool(1)
 Gary E. Miller <gem@rellim.com>
 :author: Gary E. Miller
-:date: 23 January 2021
+:date: 25 February 2021
 :email: <gem@rellim.com.>
 :keywords: gps, gpsd, ubxtool, u-blox
 :manmanual: GPSD Documentation
@@ -189,13 +189,15 @@ the output by adding the "-v 2" or "-v 3" options.
   (UBX-CFG-VALSET). VAL and the bit mask LAYERS are decimal. ",LAYERS"
   is optional. The default LAYERS are RAM and FLASH. See the section on
   CONFIGURATION ITEMS
-*[server[:port[:device]]]*::
-  By default, *ubxtool* collects data from all compatible devices on
-  localhost, using the default GPSD port 2947. An optional argument may
-  specify a server to get data from. A colon-separated suffix is taken
-  as a port number. If there is a second colon-separated suffix, that is
-  taken as a specific device name to be watched. Further details on the
-  *gps*(1) man page.
+
+== ARGUMENTS
+
+By default, clients collect data from the local *gpsd* daemon running
+on localhost, using the default GPSD port 2947. The optional argument
+to any client may override this behavior: *[server[:port[:device]]]*
+
+For further explanation, and examples, see the *ARGUMENTS* section in
+the *gps*(1) man page
 
 [[configitems]]
 == CONFIGURATION ITEMS

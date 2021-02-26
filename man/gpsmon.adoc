@@ -1,6 +1,6 @@
 = gpsmon(1)
 :author: Eric S. Raymond
-:date: 22 January 2021
+:date: 25 February 2021
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, gpsmon
 :manmanual: GPSD Documentation
@@ -54,29 +54,6 @@ operating in constrained environments and over telnet or ssh
 connections. If run in a larger window, the size of the packet-log
 window will be increased to fit.
 
-This program may be run in either of two modes, as a client for the *gpsd*
-daemon (and its associated control socket) or directly connected to a
-specified serial device. When run with no argument, it attempts to
-connect to the daemon. If the argument begins with a server:port
-specification it will also attempt to connect to the daemon. If the
-argument looks like a bare server name it will attempt to connect to a
-daemon running on the default *gpsd* port on that server. Only if the
-device argument contains slashes but no colons will it be treated as a
-serial device for direct connection. In direct-connect mode *gpsmon* will
-hunt for a correct baud rate and lock on to it automatically. Possible
-cases look like this:
-
-localhost:/dev/ttyS1::
-  Look at the default port of localhost, trying both IPv4 and IPv6 and
-  watching output from serial device 1.
-example.com:2317::
-  Look at port 2317 on example.com, trying both IPv4 and IPv6.
-71.162.241.5:2317:/dev/ttyS3::
-  Look at port 2317 at the specified IPv4 address, collecting data from
-  attached serial device 3.
-[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:2317:/dev/ttyS5::
-  Look at port 2317 at the specified IPv6 address, collecting data from
-  attached serial device 5.
 
 After startup (without *-a* or *--nocurses*), the top part of the screen
 reports the contents of several especially interesting packet types. The
@@ -130,6 +107,24 @@ serial port in direct mode.  It will run fine as root.
   speed, and rate switching if the driver selected by the packet type
   lacks those capabilities. Most useful when the packet type is NMEA but
   the device is known to have a binary mode, such as SiRF binary.
+
+== ARGUMENTS
+
+This program may be run in either of two modes, as a client for the *gpsd*
+daemon (and its associated control socket) or directly connected to a
+specified serial device.
+
+By default, clients collect data from the local *gpsd* daemon running
+on localhost, using the default GPSD port 2947. The optional argument
+to any client may override this behavior: *[server[:port[:device]]]*
+
+For further explanation, and examples, see the *ARGUMENTS* section in
+the *gps*(1) man page
+
+If instead the argument contains slashes but no colons will it be
+treated as a serial device for direct connection. In direct-connect
+mode *gpsmon* will hunt for a correct baud rate and lock on to it
+automatically.
 
 == COMMANDS
 

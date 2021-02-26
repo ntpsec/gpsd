@@ -70,27 +70,12 @@ Note: The USA Survey Foot is not supported.
 
 == ARGUMENTS
 
-By default, clients collect data from all compatible devices on
-localhost, using the default GPSD port 2947. An optional argument
-to any client may specify a different server to get data from. A
-colon-separated suffix is taken as a port number. If there is a second
-colon-separated suffix, that is taken as a specific device name to be
-watched. However, if the server specification contains square brackets,
-the part inside them is taken as an IPv6 address and port/device
-suffixes are only parsed after the trailing bracket. Possible cases look
-like this:
+By default, clients collect data from the local *gpsd* daemon running
+on localhost, using the default GPSD port 2947. The optional argument
+to any client may override this behavior: *[server[:port[:device]]]*
 
-localhost:/dev/ttyS1::
-  Look at the default port of localhost, trying both IPv4 and IPv6 and
-  watching output from serial device 1.
-example.com:2317::
-  Look at port 2317 on example.com, trying both IPv4 and IPv6.
-71.162.241.5:2317:/dev/ttyS3::
-  Look at port 2317 at the specified IPv4 address, collecting data from
-  attached serial device 3.
-[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:2317:/dev/ttyS5::
-  Look at port 2317 at the specified IPv6 address, collecting data from
-  attached serial device 5.
+For further explanation, and examples, see the *ARGUMENTS* section in
+the *gps*(1) man page
 
 == COMMANDS
 

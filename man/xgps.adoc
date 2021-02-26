@@ -67,33 +67,25 @@ under *sudo* will cause some loss of functionality.
 *-V*, *--version*::
   This option causes each client to dump the package version and exit.
 
-By default, clients collect data from all compatible devices on
-localhost, using the default GPSD port 2947. An optional argument to any
-client may specify a server to get data from. A colon-separated suffix
-is taken as a port number. If there is a second colon-separated suffix,
-that is taken as a specific device name to be watched. However, if the
-server specification contains square brackets, the part inside them is
-taken as an IPv6 address and port/device suffixes are only parsed after
-the trailing bracket. Possible cases look like this:
+== ARGUMENTS
 
-The options for *xgps* can be placed in the XGPSOPTS environment variable.
-XGPSOPTS is processed before the CLI options.
+By default, clients collect data from the local *gpsd* daemon running
+on localhost, using the default GPSD port 2947. The optional argument
+to any client may override this behavior: *[server[:port[:device]]]*
 
-localhost:/dev/ttyS1::
-  Look at the default port of localhost, trying both IPv4 and IPv6 and
-  watching output from serial device 1.
-example.com:2317::
-  Look at port 2317 on example.com, trying both IPv4 and IPv6.
-71.162.241.5:2317:/dev/ttyS3::
-  Look at port 2317 at the specified IPv4 address, collecting data from
-  attached serial device 3.
-[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:2317:/dev/ttyS5::
-  Look at port 2317 at the specified IPv6 address, collecting data from
-  attached serial device 5.
+For further explanation, and examples, see the *ARGUMENTS* section in
+the *gps*(1) man page
 
-*xgps* looks at variables in the environment to figure out the units for
-display -- imperial, nautical, or metric. Here are the variables and
-values checked:
+== ENVIRONMENT
+
+The *XGPSOPTS>* environment variable may be set to pass commonly used
+command line options to *xgps*. This is often used to set the *-u*
+option for locale specific units. *XGPSOPTS* is processed before the CLI
+options.
+
+*xgps* also looks at other variables in the environment to figure out
+the units for display -- imperial, nautical, or metric. Here are the
+variables and values checked:
 
 ----
     GPSD_UNITS one of:
@@ -126,8 +118,6 @@ kilometers per hour in speeds).
 
 Note: The USA Survey Foot is not supported.
 
-== ENVIRONMENT
-
 The environment variable *GPSD_UNITS* is checked if no unit system is
 specified on the command line or in *XPGSOPTS* it may be set to 'i'.
 'imperial', 'm', 'metric', or 'n', 'nautical'.
@@ -137,11 +127,6 @@ been specified on the command line, in *XPGSOPTS* or in
 *GPSD_UNITS*. If the value is 'C', 'POSIX', or begins with 'en_US' the
 unit system is set to imperial. The default if no system has been
 selected defaults to metric.
-
-The *XGPSOPTS>* environment variable may be set to pass commonly used
-command line options to *xgps*. This is often used to set the *-u*
-option for locale specific units. *XGPSOPTS* is processed before the CLI
-options.
 
 == RETURN VALUES
 

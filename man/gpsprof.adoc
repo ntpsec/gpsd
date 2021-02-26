@@ -1,6 +1,6 @@
 = gpsprof(1)
 :author: Eric S. Raymond
-:date: 14 February 2021
+:date: 25 February 2021
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, gpsprof, gpspipe
 :manmanual: GPSD Documentation
@@ -157,6 +157,15 @@ To see which terminal types your copy of *gnuplot(1)* supports:
 ----
 gnuplot -e "set terminal"
 ----
+
+== ARGUMENTS
+
+By default, clients collect data from the local *gpsd* daemon running
+on localhost, using the default GPSD port 2947. The optional argument
+to any client may override this behavior: *[server[:port[:device]]]*
+
+For further explanation, and examples, see the *ARGUMENTS* section in
+the *gps*(1) man page
 
 == SIGNALS
 
