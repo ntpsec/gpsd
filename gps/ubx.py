@@ -5336,7 +5336,6 @@ protVer 34 and up
                   (flag_s(u[5], self.nav_timeqzss_valid)))
         return s
 
-
     nav_timeutc_valid = {
         1: "validTOW",
         2: "validWKN",
@@ -5526,7 +5525,43 @@ protVer 34 and up
 
         return s
 
-    # UBX-RXM-PMREQ, protVer 34 and up
+    rxm_pmreq_flags = {
+        1: "backup",
+        2: "force",
+        }
+
+    rxm_pmreq_wakeup = {
+        4: "uartrx",
+        0x10: "extint0",
+        0x20: "extint1",
+        0x40: "spics",
+        }
+
+    def rxm_pmreq(self, buf):
+        """UBX-RXM-PMREQ decode Power management request
+
+protVer 34 and up
+"""
+
+        m_len = len(buf)
+        if 4 == m_len:
+            # short poll
+            u = struct.unpack_from('<Ll', buf, 0)
+            s = ' duration %u flags %u' % u
+            if gps.VERB_DECODE < self.verbosity:
+                s += '\n flags (%s)' % flag_s(u[1], self.rxm_pmreq_flags)
+        elif 16 == m_len:
+            # long  poll
+            u = struct.unpack_from('<BBHLLL', buf, 0)
+            s = (' version %u reserved %u %u duration %u flags x%x\n'
+                 ' wakeupSources x%x' % u)
+            if gps.VERB_DECODE < self.verbosity:
+                s += ('\n flags (%s) wakeupSources (s)' %
+                      (flag_s(u[4], self.rxm_pmreq_flags),
+                       flag_s(u[5], self.rxm_pmreq_wakeup)))
+        else:
+            s = "  Bad Length %s" % m_len
+        return s
 
     def rxm_raw(self, buf):
         """UBX-RXM-RAW decode"""
@@ -6172,7 +6207,8 @@ protVer 34 and up
                0x32: {'str': 'RTCM', 'dec': rxm_rtcm, 'minlen': 8,
                       'name': 'UBX-RXM-RTCM'},
                # Broadcom calls this BRM-ASC-SCLEEP
-               0x41: {'str': 'PMREQ', 'minlen': 8, 'name': 'UBX-RXM-PMREQ'},
+               0x41: {'str': 'PMREQ', 'dec': rxm_pmreq, 'minlen': 4,
+                      'name': 'UBX-RXM-PMREQ'},
                0x59: {'str': 'RLM', 'dec': rxm_rlm, 'minlen': 16,
                       'name': 'UBX-RXM-RLM'},
                0x61: {'str': 'IMES', 'dec': rxm_imes, 'minlen': 4,
