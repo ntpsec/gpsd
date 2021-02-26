@@ -132,6 +132,11 @@ static const fw_protver_map_entry_t fw_protver_map[] = {
     {NULL, 0.0},
 };
 
+/*
+ * Model  Fw          Protver
+ * M10    SPG 5.00    34.00
+ */
+
 /* make up an NMEA 4.0 (extended) PRN based on gnssId:svId,
  * using Appendix A from * u-blox ZED-F9P Interface Description
  *

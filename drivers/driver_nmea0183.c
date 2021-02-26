@@ -754,7 +754,7 @@ static gps_mask_t processGNS(int count UNUSED, char *field[],
     /* Introduced in NMEA 4.0?
      *
      * This mostly duplicates RMC, except for the multi GNSS mode
-     * indicatore.
+     * indicator.
      *
      * Example.  Ignore the line break.
      * $GPGNS,224749.00,3333.4268304,N,11153.3538273,W,D,19,0.6,406.110,
@@ -3731,7 +3731,6 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PRWIZCH", 0, false, NULL},    /* ignore Rockwell Channel Status */
         {"PSRFEPE", 7, false, processPSRFEPE},  /* SiRF Estimated Errors */
         {"PTFTTXT", 0, false, NULL},    /* ignore unknown uptime */
-        {"PUBX", 0, false, NULL},       /* ignore u-blox Antaris */
 #ifdef TNT_ENABLE
         {"PTNTHTM", 9, false, processTNTHTM},
         {"PTNTA", 8, false, processTNTA},
@@ -3742,6 +3741,8 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
 #endif /* SKYTRAQ_ENABLE */
         // $PSTM ST Micro STA8088xx/STA8089xx/STA8090xx
         {"PSTM", 0, false, NULL},
+        {"PUBX", 0, false, NULL},       // ignore u-blox and Antaris
+        {"RLM", 0, false, NULL},        // ignore Return Link Message
         /* ignore Recommended Minimum Navigation Info, waypoint */
         {"RMB", 0,  false, NULL},       // ignore Recommended Min Nav Info
         {"RMC", 8,  false, processRMC},

@@ -2175,7 +2175,10 @@ class ubx(object):
         }
 
     def cfg_ant(self, buf):
-        """UBX-CFG-ANT decode"""
+        """UBX-CFG-ANT decode
+
+Deprecated in protVer 34.00
+"""
 
         u = struct.unpack_from('<HH', buf, 0)
         s = ' flags x%x pins x%x ' % u
@@ -2196,7 +2199,10 @@ class ubx(object):
         }
 
     def cfg_batch(self, buf):
-        """UBX-CFG-BATCH decode"""
+        """UBX-CFG-BATCH decoda
+
+Deprecated in protVer 34.00
+"""
 
         u = struct.unpack_from('<BBHHBB', buf, 0)
         s = ("  version %u flags x%x bufsize %u notifThrs %u\n"
@@ -2227,7 +2233,12 @@ class ubx(object):
         }
 
     def cfg_cfg(self, buf):
-        """UBX-CFG-CFG decode"""
+        """UBX-CFG-CFG decode
+
+"not  completely  backwards-compatible.  "
+
+Deprecated in protVer 34.00
+"""
         m_len = len(buf)
 
         if 12 == m_len:
@@ -2249,7 +2260,10 @@ class ubx(object):
         return s
 
     def cfg_dat(self, buf):
-        """UBX-CFG-DAT decode, Standard Datum configuration"""
+        """UBX-CFG-DAT decode, Standard Datum configuration
+
+Deprecated in protVer 34.00
+"""
 
         # u-blox 5 to 9, protVer 4.00 to 29
         m_len = len(buf)
@@ -2354,7 +2368,12 @@ Programming the fixed seed for host interface signature"""
         return s
 
     def cfg_geofence(self, buf):
-        """UBX-CFG-GEOFENCE decode, Geofencing configuration"""
+        """UBX-CFG-GEOFENCE decode, Geofencing configuration
+
+Deprecated in protVer 34.00
+"""
+
+        # not in M10, protVer 34 and up
 
         u = struct.unpack_from('<BBBBBBBB', buf, 0)
         s = (" version %u numFences %u confLvl %u reserved1 %u\n"
@@ -2384,7 +2403,10 @@ Programming the fixed seed for host interface signature"""
         }
 
     def cfg_gnss(self, buf):
-        """UBX-CFG-GNSS decode, GNSS system configuration"""
+        """UBX-CFG-GNSS decode, GNSS system configuration
+
+Deprecated in protVer 34.00
+"""
 
         u = struct.unpack_from('<BBBB', buf, 0)
         s = " msgVer %u  numTrkChHw %u numTrkChUse %u numConfigBlocks %u" % u
@@ -2428,7 +2450,10 @@ Programming the fixed seed for host interface signature"""
         }
 
     def cfg_inf(self, buf):
-        """UBX-CFG-INF decode, Poll configuration for one protocol"""
+        """UBX-CFG-INF decode, Poll configuration for one protocol
+
+Deprecated in protVer 34.00
+"""
 
         m_len = len(buf)
         if 1 == m_len:
@@ -2467,7 +2492,10 @@ Programming the fixed seed for host interface signature"""
         }
 
     def cfg_itfm(self, buf):
-        """UBX-CFG-ITFM decode, Jamming/Interference Monitor configuration"""
+        """UBX-CFG-ITFM decode, Jamming/Interference Monitor configuration
+
+Deprecated in protVer 34.00
+"""
 
         u = struct.unpack_from('<LL', buf, 0)
         s = " config x%x config2 x%x" % u
@@ -2544,7 +2572,10 @@ Programming the fixed seed for host interface signature"""
         }
 
     def cfg_nav5(self, buf):
-        """UBX-CFG-NAV5 nav Engine Settings"""
+        """UBX-CFG-NAV5 nav Engine Settings
+
+Deprecated in protVer 34.00
+"""
 
         u = struct.unpack_from('<HBBlLbBHHHHbbbbHHbBL', buf, 0)
         s = (' mask %#x dynModel %u fixmode %d fixedAlt %d FixedAltVar %u\n'
@@ -2581,7 +2612,10 @@ Programming the fixed seed for host interface signature"""
         }
 
     def cfg_navx5(self, buf):
-        """UBX-CFG-NAVX5 decode, Navigation Engine Expert Settings"""
+        """UBX-CFG-NAVX5 decode, Navigation Engine Expert Settings
+
+Deprecated in protVer 34.00
+"""
 
         # deprecated protver 23+
         # length == 20 case seems broken?
@@ -2610,7 +2644,10 @@ Programming the fixed seed for host interface signature"""
         return s
 
     def cfg_msg(self, buf):
-        """UBX-CFG-MSG decode"""
+        """UBX-CFG-MSG decode
+
+Deprecated in protVer 34.00
+"""
         m_len = len(buf)
         if 2 == m_len:
             u = struct.unpack_from('<BB', buf, 0)
@@ -2683,7 +2720,10 @@ Programming the fixed seed for host interface signature"""
         }
 
     def cfg_nmea(self, buf):
-        """UBX-CFG-NMEA decode, NMEA protocol configuration"""
+        """UBX-CFG-NMEA decode, NMEA protocol configuration
+
+Deprecated in protVer 34.00
+"""
 
         # old u-blox have 4 octets, e.g. u-blox 6 w/ protVer < 14
         # less old u-blox have 12 octets, e.g. u-blox 7 w/ protVer == 14
@@ -2759,7 +2799,10 @@ Save and Load non-volatile storage data"""
         }
 
     def cfg_odo(self, buf):
-        """UBX-CFG-ODO decode, Odometer, Low-speed COG Engine Settings"""
+        """UBX-CFG-ODO decode, Odometer, Low-speed COG Engine Settings
+
+Deprecated in protVer 34.00
+"""
 
         u = struct.unpack_from('<BBBBBBBBBBBBBBBBBBBB', buf, 0)
         s = (" version %u reserved1 %u %u %u flags x%x odoCfg x%x\n"
@@ -2818,7 +2861,10 @@ Save and Load non-volatile storage data"""
         }
 
     def cfg_pm2(self, buf):
-        """UBX-CFG-PM2 decode, Extended Power Mode Configuration"""
+        """UBX-CFG-PM2 decode, Extended Power Mode Configuration
+
+Deprecated in protVer 34.00
+"""
 
         # three versions, two lengths
         # "version" 1 is 44 bytes
@@ -2861,7 +2907,10 @@ Save and Load non-volatile storage data"""
                       }
 
     def cfg_pms(self, buf):
-        """UBX-CFG-PMS decode, Power Mode Setup"""
+        """UBX-CFG-PMS decode, Power Mode Setup
+
+Deprecated in protVer 34.00
+"""
 
         u = struct.unpack_from('<BBHHBB', buf, 0)
         s = (' version %u powerSetupValue %u'
@@ -2884,7 +2933,10 @@ Save and Load non-volatile storage data"""
         }
 
     def cfg_prt(self, buf):
-        """UBX-CFG-PRT decode, Port Configuration """
+        """UBX-CFG-PRT decode, Port Configuration
+
+Deprecated in protVer 34.00
+"""
 
         m_len = len(buf)
 
@@ -2936,7 +2988,10 @@ Save and Load non-volatile storage data"""
         }
 
     def cfg_pwr(self, buf):
-        """UBX-CFG-PWR decode, Put receiver in a defined power state"""
+        """UBX-CFG-PWR decode, Put receiver in a defined power state
+
+Deprecated in protVer 34.00
+"""
 
         u = struct.unpack_from('<BBBBL', buf, 0)
         s = (" version %u reserved %u %u %u state %u" %
@@ -2965,7 +3020,10 @@ Save and Load non-volatile storage data"""
         }
 
     def cfg_rinv(self, buf):
-        """UBX-CFG-RINV decode, Contents of Remote Inventory"""
+        """UBX-CFG-RINV decode, Contents of Remote Inventory
+
+Deprecated in protVer 34.00
+"""
 
         # u-blox 5, protVer 6.00 to 6.02
         m_len = len(buf)
@@ -3035,7 +3093,10 @@ Save and Load non-volatile storage data"""
         }
 
     def cfg_rxm(self, buf):
-        """UBX-CFG-RXM decode, Navigation/Measurement"""
+        """UBX-CFG-RXM decode, Navigation/Measurement
+
+Deprecated in protVer 34.00
+"""
 
         u = struct.unpack_from('<BB', buf, 0)
         s = (" reserved1 %u lpMode %u (%s)" %
@@ -3099,7 +3160,10 @@ Save and Load non-volatile storage data"""
         }
 
     def cfg_sbas(self, buf):
-        """UBX-CFG-SBAS decode, SBAS Configuration"""
+        """UBX-CFG-SBAS decode, SBAS Configuration
+
+Deprecated in protVer 34.00
+"""
 
         u = struct.unpack_from('<BBBBL', buf, 0)
         s = (" mode x%x usage x%x maxSBAS %u scanMode2 x%x"
@@ -3279,7 +3343,11 @@ Save and Load non-volatile storage data"""
         }
 
     def cfg_tp5(self, buf):
-        """UBX-CFG-TP5 decode, Time Pulse Parameters"""
+        """UBX-CFG-TP5 decode, Time Pulse Parameters
+
+Deprecated in protVer 34.00
+"""
+
         m_len = len(buf)
 
         if 1 == m_len:
@@ -3311,7 +3379,11 @@ Save and Load non-volatile storage data"""
                          }
 
     def cfg_usb(self, buf):
-        """UBX-CFG-USB decode, USB Configuration"""
+        """UBX-CFG-USB decode, USB Configuration
+
+Only for models with built in USB.
+"""
+
 
         u = struct.unpack_from('<HHHHHH', buf, 0)
         s = ('  vendorID %#x productID %#x reserved1 %u reserved2 %u\n'
@@ -4068,7 +4140,12 @@ Oddly this is the poll for UBX-LOG-BATCH
         }
 
     def mon_hw(self, buf):
-        """UBX-MON-HW decode, Hardware Status"""
+        """UBX-MON-HW decode, Hardware Status
+
+extended in protVer 34
+
+Deprecated in protVer 34.00
+"""
 
         u = struct.unpack_from('<LLLLHHBBBBLBBBBBBBBBBBBBBBBBBBBLLL', buf, 0)
         s = ('  pinSel %#x pinBank %#x pinDir %#x pinVal %#x noisePerMS %u\n'
@@ -4347,6 +4424,8 @@ Oddly this is the poll for UBX-LOG-BATCH
                    index_s(u[5], self.mon_smgr_discSrc)))
         return s
 
+    # UBX-MON-SPAN protVer 34.00 and up
+
     def mon_txbuf(self, buf):
         """UBX-MON-TXBUF decode, Transmitter Buffer Status"""
 
@@ -4379,6 +4458,7 @@ Oddly this is the poll for UBX-LOG-BATCH
 
     def mon_ver(self, buf):
         """UBX-MON-VER decode, Poll Receiver/Software Version"""
+
         # min len = 40 in u-blox 5/6
         # min len = 70 in u-blox 9
         m_len = len(buf)
@@ -4998,7 +5078,8 @@ High Precision GNSS products only."""
     def nav_sol(self, buf):
         """UBX-NAV-SOL decode, Navigation Solution Information"""
 
-        #  deprecated by u-blox
+        # removed from protVer 34 and up
+        # deprecated by u-blox
 
         u = struct.unpack_from('<LlhBBlllLlllLHBBL', buf, 0)
         s = ('  iTOW %u fTOW %d week %d gpsFix %u flags x%x\n'
@@ -5103,6 +5184,7 @@ High Precision GNSS products only."""
     def nav_svinfo(self, buf):
         """UBX-NAV-SVINFO decode"""
 
+        # removed from protVer 34 and up
         # in M8 Timing and FTS only
         m_len = len(buf)
 
@@ -5226,6 +5308,8 @@ High Precision GNSS products only."""
         2: "validWKN",
         4: "validUTC",
         }
+
+    # UBX-NAV-TIMEQZSS protVer 34 and up
 
     def nav_timeutc(self, buf):
         """UBX-NAV-TIMEUTC decode"""
@@ -5371,6 +5455,7 @@ High Precision GNSS products only."""
     def rxm_imes(self, buf):
         """UBX-RXM-IMES decode, Indoor Messaging System Information"""
 
+        # not supported in M1
         u = struct.unpack_from('<BBH', buf, 0)
         s = ' numTx %u version %u reserved1 %u' % u
 
@@ -6011,6 +6096,9 @@ High Precision GNSS products only."""
 
     def rxm_svsi(self, buf):
         """UBX-RXM-SVSI decode, SV Status Info"""
+
+        # not in M10, protVer 34 and up
+        # Use UBX-NAV-ORB instead
         m_len = len(buf)
 
         u = struct.unpack_from('<LhBB', buf, 0)
@@ -6056,14 +6144,8 @@ High Precision GNSS products only."""
                }
 
     # UBX-SEC-
-    def sec_uniqid(self, buf):
-        """UBX-SEC_UNIQID decode Unique chip ID"""
 
-        # protVer 18 to 23
-        u = struct.unpack_from('<BBHBBBBB', buf, 0)
-        s = ("  version %u reserved %u %u uniqueId %#02x%02x%02x%02x%02x"
-             % u)
-        return s
+    # UBX-SEC-SESSID in protVer 34 and up
 
     def sec_sign(self, buf):
         """UBX-SEC_SIGN decode, Signature of a previous message"""
@@ -6080,6 +6162,18 @@ High Precision GNSS products only."""
                0x03: {'str': 'UNIQID', 'minlen': 9, 'dec': sec_uniqid,
                       'name': 'UBX-SEC-UNIQID'},
                }
+
+    def sec_uniqid(self, buf):
+        """UBX-SEC_UNIQID decode Unique chip ID
+
+changed in protVer 34
+"""
+
+        # protVer 18 to 23
+        u = struct.unpack_from('<BBHBBBBB', buf, 0)
+        s = ("  version %u reserved %u %u uniqueId %#02x%02x%02x%02x%02x"
+             % u)
+        return s
 
     # UBX-TIM-
     def tim_svin(self, buf):
@@ -6099,7 +6193,10 @@ High Precision GNSS products only."""
         return s
 
     def tim_tp(self, buf):
-        """UBX-TIM-TP decode, Time Pulse Timedata"""
+        """UBX-TIM-TP decode, Time Pulse Timedata
+
+qErrInvalid add in protVer 34 and up
+"""
 
         u = struct.unpack_from('<LLlHbb', buf, 0)
         s = ('  towMS %u towSubMS %u qErr %d week %d\n'
@@ -7670,6 +7767,7 @@ Always double check with "-p CFG-GNSS".
         "WARMBOOT": {"command": send_cfg_rst,
                      "help": "UBX-CFG-RST warmboot the GPS",
                      "opt": 1},
+        # UBX-AID-* removed from ProtVer 34 and up.
         # UBX-AID-ALM
         "AID-ALM": {"command": send_poll, "opt": [0x0b, 0x30],
                     "help": "poll UBX-AID-ALM Poll GPS Aiding Almanac Data"},
