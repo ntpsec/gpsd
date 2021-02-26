@@ -3384,7 +3384,6 @@ Deprecated in protVer 34.00
 Only for models with built in USB.
 """
 
-
         u = struct.unpack_from('<HHHHHH', buf, 0)
         s = ('  vendorID %#x productID %#x reserved1 %u reserved2 %u\n'
              '  powerConsumption %u mA flags %#x' % u)
@@ -4557,6 +4556,20 @@ Deprecated in protVer 34.00
         1: "PR+PRR correction",
         }
 
+    def nav_cov(self, buf):
+        """UBX-NAV-COV decode, Covariance matrices
+
+protVer 34 and up
+"""
+
+        u = struct.unpack_from('<LBBBLLBffffffffffff', buf, 0)
+        return('  iTOW %u version %u posCovValid %u velCovValid %u '
+               'reserved0 %u %u %u\n'
+               ' posCovNN %f posCovNE  %f posCovND %f\n'
+               ' posCovEE %f posCovED  %f posCovDD %f\n'
+               ' velCovNN %f velCovNE  %f velCovND %f\n'
+               ' velCovEE %f velCovED  %f velCovDD %f\n' % u)
+
     def nav_dgps(self, buf):
         """UBX-NAV-DGPS decode, DGPS Data used for NAV"""
 
@@ -5140,7 +5153,6 @@ High Precision GNSS products only."""
                    index_s(3 & (u[4] >> 6), self.carrSoln)))
         return s
 
-
     def nav_svin(self, buf):
         """UBX-NAV-SVIN decode, Survey-in data"""
 
@@ -5384,6 +5396,7 @@ High Precision GNSS products only."""
                       'name': 'UBX-NAV-TIMEGAL'},
                0x26: {'str': 'TIMELS', 'dec': nav_timels, 'minlen': 24,
                       'name': 'UBX-NAV-TIMELS'},
+               # 0x27 - UBX-NAV-TIMEQZSS, protVer 34 and up
                0x30: {'str': 'SVINFO', 'dec': nav_svinfo, 'minlen': 8,
                       'name': 'UBX-NAV-SVINFO'},
                0x31: {'str': 'DGPS', 'dec': nav_dgps, 'minlen': 16,
@@ -5395,6 +5408,8 @@ High Precision GNSS products only."""
                # Broadcom calls this BRM-PVT-SAT
                0x35: {'str': 'SAT', 'dec': nav_sat, 'minlen': 8,
                       'name': 'UBX-NAV-SAT'},
+               0x36: {'str': 'COV', 'dec': nav_cov, 'minlen': 64,
+                      'name': 'UBX-NAV-COV'},
                0x39: {'str': 'GEOFENCE', 'dec': nav_geofence, 'minlen': 8,
                       'name': 'UBX-NAV-GEOFENCE'},
                0x3B: {'str': 'SVIN', 'dec': nav_svin, 'minlen': 40,
@@ -5489,6 +5504,8 @@ High Precision GNSS products only."""
             i += 1
 
         return s
+
+    # UBX-RXM-PMREQ, protVer 34 and up
 
     def rxm_raw(self, buf):
         """UBX-RXM-RAW decode"""
@@ -6157,23 +6174,29 @@ High Precision GNSS products only."""
         s += gps.polystr(binascii.hexlify(buf[8:39]))
         return s
 
-    sec_ids = {0x01: {'str': 'SIGN', 'minlen': 40, 'dec': sec_sign,
-                      'name': 'UBX-SEC-SIGN'},
-               0x03: {'str': 'UNIQID', 'minlen': 9, 'dec': sec_uniqid,
-                      'name': 'UBX-SEC-UNIQID'},
-               }
-
     def sec_uniqid(self, buf):
         """UBX-SEC_UNIQID decode Unique chip ID
 
 changed in protVer 34
 """
 
-        # protVer 18 to 23
+        # protVer 18 is 9 bytes
+        # 10 bytes in protVer 34 and up
+        m_len = len(buf)
         u = struct.unpack_from('<BBHBBBBB', buf, 0)
         s = ("  version %u reserved %u %u uniqueId %#02x%02x%02x%02x%02x"
              % u)
+        if (9 < m_len):
+            u = struct.unpack_from('<B', buf, 9)
+            s += "%02x" % u
+
         return s
+
+    sec_ids = {0x01: {'str': 'SIGN', 'minlen': 40, 'dec': sec_sign,
+                      'name': 'UBX-SEC-SIGN'},
+               0x03: {'str': 'UNIQID', 'minlen': 9, 'dec': sec_uniqid,
+                      'name': 'UBX-SEC-UNIQID'},
+               }
 
     # UBX-TIM-
     def tim_svin(self, buf):
