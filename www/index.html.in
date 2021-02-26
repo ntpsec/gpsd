@@ -301,15 +301,15 @@ latest stable version.</p>
 <dt><a href="gpsd.html">gpsd.8</a></dt>
 <dd>The <code>gpsd</code> daemon.</dd>
 
+<dt><a href="gps.html">gps.1</a></dt>
+<dd>Overview of <code>gpsd</code> client and helper programs.</dd>
+
 <dt><a href="cgps.html">cgps.1</a></dt>
 <dd>A command line ncurses client for <code>gpsd</code>.</dd>
 
 <dt><a href="gegps.html">gegps.1</a></dt>
 <dd><code>gegps</code> feeds your location to Google Earth for live
 <location tracking. /dd>
-
-<dt><a href="gps.html">gps.1</a></dt>
-<dd>The <code>gpsd</code> sample clients.</dd>
 
 <dt><a href="gps2udp.html">gps2udp.1</a></dt>
 <dd>Feed the take from <code>gpsd</code> to one or more aggregation

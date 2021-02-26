@@ -1,6 +1,6 @@
 = xgps(1)
 Remco Treffcorn; Derrick Brashear; Russ Nelson; Eric S. Raymond
-:date: 20 January 2021
+:date: 25 February 2021
 :keywords: gps, gpsd, xgps
 :manmanual: GPSD Documentation
 :mansource: GPSD, Version {gpsdver}
@@ -12,7 +12,7 @@ Remco Treffcorn; Derrick Brashear; Russ Nelson; Eric S. Raymond
 
 == NAME
 
-xgps - sample X client for gpsd
+xgps - X client for gpsd
 
 == SYNOPSIS
 

@@ -1,0 +1,201 @@
+= gps(1)
+:date: 25 February 2021
+:keywords: gps, gpsd
+:manmanual: GPSD Documentation
+:mansource: GPSD Version {gpsdver}
+:robots: index,follow
+:sectlinks:
+:toc: left
+:type: manpage
+:webfonts!:
+
+== NAME
+
+gps - Overview of gpsd clients and helpers
+
+== SYNOPSIS
+
+Clients:
+
+*cgps* [OPTIONS] [server[:port[:device]]]
+
+*gegps* [OPTIONS] [server[:port[:device]]]
+
+*gps2udp* [OPTIONS] [server[:port[:device]]]
+
+*gpscsv* [OPTIONS] [server[:port[:device]]]
+
+*gpsmon* [OPTIONS] [server[:port[:device]]]
+
+*gpspipe* [OPTIONS] [server[:port[:device]]]
+
+*gpsplot* [OPTIONS] [server[:port[:device]]]
+
+*gpsprof* [OPTIONS] [server[:port[:device]]]
+
+*gpsrinex* [OPTIONS] [server[:port[:device]]]
+
+*gpssubframe* [OPTIONS] [server[:port[:device]]]
+
+*gpxlogger* [OPTIONS] [server[:port[:device]]]
+
+*lcdgps* [OPTIONS] [server[:port[:device]]]
+
+*ubxtool* [OPTIONS] [server[:port[:device]]]
+
+*xgps* [OPTIONS] [server[:port[:device]]]
+
+*xgpsspeed* [OPTIONS] [server[:port[:device]]]
+
+*zerk* [OPTIONS] [server[:port[:device]]]
+
+Helpers:
+
+*gpscat* [OPTIONS] file-or-serial-port
+
+*gpsctl* [OPTIONS]
+
+*gpsdctl* action device
+
+*gpsdecode* [OPTIONS]
+
+*gpsfake* [OPTIONS]
+
+*gpsinit* [OPTIONS]
+
+*ntpshmmon* [OPTIONS]
+
+*ppscheck* [OPTIONS] device
+
+== DESCRIPTION
+
+*gpsd* is a daemon for managing GPS receivers, GNSS receivers, AIS
+receivers, and more.  Over time it has agglomerated a number of
+diverse clients that communicate with *gpsd* for various tasks.
+
+=== CLIENTS
+
+Each of the *gpsd* clients connects to a *gpsd* daemon to use the
+data in various ways.  See the sections ARGUMENTS and OPTIONS for
+more information on the clients.
+
+*cgps*:: curses terminal client for gpsd
+*gegps*:: Google Earth client for gpsd
+*gps*:: Overview of gpsd clients and helpers
+*gpscsv*:: dump the JSON output from gpsd as CSV
+*gpsdecode*:: decode GPS, RTCM or AIS streams into a readable format
+*gpsmon*:: real-time GPS packet monitor and control utility
+*gpspipe*:: tool to connect to gpsd and retrieve sentences
+*gpsplot*:: tool to dynamically dump plot data from gpsd
+*gpsprof*:: profile a GPS and gpsd, plotting latency information
+*gpsrinex*:: Read data from gpsd convert to RINEX3 and save to a file.
+*gpssubframe*:: tool to dump subframe sentences from gpsd
+*gpxlogger*:: Tool to connect to gpsd and generate a GPX file
+*lcdgps*:: LCD client for gpsd
+*xgps*:: X client for gpsd
+*xgpsspeed*:: X speedometer for gpsd
+
+=== HELPERS
+
+The *gpsd* helpers can be used for administration of *gpsd* systems.
+
+*gps2udp*::  feed the take from gpsd to one or more aggregation sites
+*gpscat*::  dump the output from a GPS
+*gpsctl*::  control the modes of a GNSS receiver
+*gpsdctl*::  tool for sending commands to gpsd over its control socket
+*gpsfake*::  test harness for gpsd, simulating a GNSS receiver
+*gpsinit*::  initialize CAN kernel modules for GPSD
+*ntploggps*::  log gpsd data
+*ntpshmmon*::  capture samples from gpsd or other ntpd refclock sources
+
+=== LIBRARIES
+
+Programmers can find additional information on the *gpsd* here:
+
+*gpsd_json*::  gpsd request/response protocol
+*libgps*::  C service library for communicating with the GPS daemon
+*libgpsmm*::  C++ and QT class wrappers for the GPS daemon
+*libQgpsmm*::  C++ and QT class wrappers for the GPS daemon
+
+== OPTIONS
+
+The *gpsd* clients share a few common options:
+
+*-?*, *-h*, *--help*::
+  Print a summary of options and then exit.
+*-V*, *--version*::
+  Print the package version and exit.
+
+== ARGUMENTS
+
+By default, clients collect data from the local *gpsd* daemon running
+on localhost, using the default GPSD port 2947. The optional argument
+to any client may override this behavior:
+
+*[server[:port[:device]]]*
+
+*server*:: The optional host name, IPv4 address, or IPv6 address of
+the *gpsd* daemon to connect to. If the server specification contains
+square brackets, the part inside them is taken as an IPv6 address and
+port/device suffixes are only parsed after the trailing bracket. The
+default is localhost.
+
+*port*:: The optional TCP port of the daemon to connect to. The default
+is 2947.
+
+*device*:: The optional device name to be watched.
+
+Some possible cases look like this:
+
+example.com;;
+  Connect to the default port 2497 on example.com, trying both IPv4 and IPv6.
+example.com:2317;;
+  Look at port 2317 on example.com, trying both IPv4 and IPv6.
+localhost::/dev/ttyS1;;
+  Look at the default port, 2947, of localhost, trying both IPv4 and IPv6 and
+  watching output from serial device 1.
+71.162.241.5:2317:/dev/ttyS3;;
+  Look at port 2317 at the specified IPv4 address, collecting data from
+  attached serial device 3.
+[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:2317:/dev/ttyS5;;
+  Look at port 2317 at the specified IPv6 address, collecting data from
+  attached serial device 5.
+
+== ENVIRONMENT
+
+Most of the *gpsd* clients check for the environment variables
+*GPSD_UNITS*, *LC_MEASUREMENT*, and *LANG*.  Maybe more.
+
+*GPSD_UNITS* is checked if no unit system is specified on the command
+line. It may be set to 'i'. 'imperial', 'm', 'metric', or 'n',
+'nautical'.
+
+*LC_MEASUREMENT* and then *LANG* are checked if no unit system has been
+specified on the command line, or in *GPSD_UNITS*. If the value is 'C',
+'POSIX', or begins with 'en_US' the unit system is set to imperial. The
+default if no system has been selected is metric.
+
+== RETURN VALUES
+
+The *gpsd* clients return simple success or failure codes:
+
+*0*:: on success.
+*1*:: on failure
+
+== SEE ALSO
+
+*gegps*(1), *gpsctl*(1), gpsprof*(1), *gpsfake*(1),
+*gpscat*(1), *gpspipe*(1), *gpsmon*(1), xgps*(1). *xgpsspeed*(1)
+
+*libgps*(3), *libgpsmm*(3)
+
+*gpsd*(8)
+
+== RESOURCES
+
+*Project web site:* {gpsdweb}
+
+== COPYING
+
+This file is Copyright 2013 by the GPSD project +
+SPDX-License-Identifier: BSD-2-clause

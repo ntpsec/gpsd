@@ -1,6 +1,6 @@
 = xgpsspeed(1)
 Chen Wei; Robin Wittler
-:date: 20 January 2021
+:date: 25 February 2021
 :keywords: gps, gpsd, xgpsspeed
 :manmanual: GPSD Documentation
 :mansource: GPSD, Version {gpsdver}
@@ -12,7 +12,7 @@ Chen Wei; Robin Wittler
 
 == NAME
 
-xgpsspeed - sample X client for gpsd
+xgpsspeed - X speedometer for gpsd
 
 == SYNOPSIS
 
