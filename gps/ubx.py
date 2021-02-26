@@ -5315,13 +5315,33 @@ High Precision GNSS products only."""
                    flag_s(u[15], self.nav_timels_valid)))
         return s
 
+    nav_timeqzss_valid = {
+        1: "qzssTowValid",
+        2: "qzssWnoValid",
+        4: "leapSValid",
+        }
+
+    def nav_timeqzss(self, buf):
+        """UBX-NAV-TIMEQZSS decode, QZSS time solution
+
+protVer 34 and up
+"""
+
+        u = struct.unpack_from('<LLlhbBL', buf, 0)
+        s = ("  iTOW %u qzssTow %u fQzssTow %d qzssWno %d leapS %d\n"
+             "  valid x%x tAcc %d" % u)
+
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ("\n   valid (%s)" %
+                  (flag_s(u[5], self.nav_timeqzss_valid)))
+        return s
+
+
     nav_timeutc_valid = {
         1: "validTOW",
         2: "validWKN",
         4: "validUTC",
         }
-
-    # UBX-NAV-TIMEQZSS protVer 34 and up
 
     def nav_timeutc(self, buf):
         """UBX-NAV-TIMEUTC decode"""
@@ -5396,7 +5416,8 @@ High Precision GNSS products only."""
                       'name': 'UBX-NAV-TIMEGAL'},
                0x26: {'str': 'TIMELS', 'dec': nav_timels, 'minlen': 24,
                       'name': 'UBX-NAV-TIMELS'},
-               # 0x27 - UBX-NAV-TIMEQZSS, protVer 34 and up
+               0x27: {'str': 'TIMEQZSS', 'dec': nav_timeqzss, 'minlen': 20,
+                      'name': 'UBX-NAV-QZSS'},
                0x30: {'str': 'SVINFO', 'dec': nav_svinfo, 'minlen': 8,
                       'name': 'UBX-NAV-SVINFO'},
                0x31: {'str': 'DGPS', 'dec': nav_dgps, 'minlen': 16,
