@@ -4425,7 +4425,20 @@ Deprecated in protVer 34.00
                    index_s(u[5], self.mon_smgr_discSrc)))
         return s
 
-    # UBX-MON-SPAN protVer 34.00 and up
+    def mon_span(self, buf):
+        """UBX-MON-SPAN decode, Signal characteristics
+
+protVer 34.00 and up
+"""
+
+        u = struct.unpack_from('<BBH', buf, 0)
+        s = "  version %u numRfBlocks %u reserved0 %u" % u
+        for i in range(0, u[1]):
+            # skip the 256 bytes of raw data for now...
+            u = struct.unpack_from('<LLLBHB', buf, 260 + i * 272)
+            s += "\n   span %u res %u center %u pga %u" % u
+
+        return s
 
     def mon_txbuf(self, buf):
         """UBX-MON-TXBUF decode, Transmitter Buffer Status"""
@@ -4516,6 +4529,8 @@ Deprecated in protVer 34.00
                       'name': 'UBX-MON-GNSS'},
                0x2e: {'str': 'SMGR', 'dec': mon_smgr, 'minlen': 16,
                       'name': 'UBX-MON-SMGR'},
+               0x31: {'str': 'SPAN', 'dec': mon_span, 'minlen': 4,
+                      'name': 'UBX-MON-SPAN'},
                0x32: {'str': 'BATCH', 'dec': mon_batch, 'minlen': 12,
                       'name': 'UBX-MON-BATCH'},
                0x36: {'str': 'COMMS', 'dec': mon_comms, 'minlen': 8,
@@ -6246,6 +6261,7 @@ changed in protVer 34
         s = ("  version %u reserved %u %u uniqueId %#02x%02x%02x%02x%02x"
              % u)
         if (9 < m_len):
+            # version 2
             u = struct.unpack_from('<B', buf, 9)
             s += "%02x" % u
 
