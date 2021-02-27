@@ -1372,24 +1372,28 @@ int main(int argc, char *argv[])
             dialog(
 "Help:\n"
 "c -- clear raw data area\n"
-"D -- dd.dddddddd\n"
+"d -- toggle dd.ddd, dd mm.m and dd mm ss.s\n"
 "h -- this help\n"
 "i -- imperial units\n"
 "m -- metric units\n"
-"M -- dd mm.mmmmmm\n"
 "n -- nautical units\n"
 "q -- quit\n"
 "s -- toggle raw data output\n"
-"S -- dd mm ss.ssss");
+"t -- toggle true/magnetic track");
 
             break;
         case 'c':
             // Clear the spewage area.
             (void)werase(messages);
             break;
-        case 'D':
-            // set dd.ddddd
-            (void)set_degree('D');
+        case 'd':
+            if (deg_dd == deg_type) {;
+                deg_type = deg_ddmm;
+            } else if (deg_ddmm == deg_type) {
+                deg_type = deg_ddmmss;
+            } else {
+                deg_type = deg_dd;
+            }
             break;
         case 'i':
             // set imperial units
@@ -1398,10 +1402,6 @@ int main(int argc, char *argv[])
         case 'm':
             // set metric units
             (void)set_units('m');
-            break;
-        case 'M':
-            // set dd.mmmmm
-            (void)set_degree('M');
             break;
         case 'n':
             // set nautical units
@@ -1415,9 +1415,9 @@ int main(int argc, char *argv[])
             // Toggle (pause/unpause) spewage of raw gpsd data.
             silent_flag = !silent_flag;
             break;
-        case 'S':
-            // set dd.mm.sss
-            (void)set_degree('S');
+        case 't':
+            // Toggle magnetic/true track
+            magnetic_flag = !magnetic_flag;
             break;
         default:
             break;
