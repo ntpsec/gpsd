@@ -9,7 +9,7 @@
   gps/ubx.py: Improve decode for UBX-NAV-STATUS
   cgps: Add popup help, interactive options.
   Reorganize and split the man pages.
-  Small updates for u-blox M10
+  Small updates for u-blox M8 and M10
 
 3.22: 2021-01-08
   Added client/gpscsv to convert gpsd JSON to csv.

@@ -3750,6 +3750,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"RPM", 0,  false, NULL},       // ignore Revolutions
         {"RSA", 0,  false, NULL},       // ignore Rudder Sensor Angle
         {"RTE", 0,  false, NULL},       /* ignore Routes */
+        {"THS", 0,  false, NULL},       // True Heading and Status (u-blox 8)
         {"TXT", 5,  false, processTXT},
         {"VBW", 0,  false, NULL},       // ignore Dual Ground/Water Speed
         {"VDR", 0,  false, NULL},       // ignore Set and Drift

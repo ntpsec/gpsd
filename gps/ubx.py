@@ -2199,7 +2199,7 @@ Deprecated in protVer 34.00
         }
 
     def cfg_batch(self, buf):
-        """UBX-CFG-BATCH decoda
+        """UBX-CFG-BATCH decode
 
 Deprecated in protVer 34.00
 """
@@ -2332,6 +2332,14 @@ Programming the dynamic seed for host interface signature"""
         s = " version %u reserved1 %u %u seedHi %u seedLo %u" % u
         return s
 
+    # UBX-CFG-ESFALG, protVer 15.01 and up, ADR and UDR only
+
+    # UBX-CFG-ESFA, protVer 19 and up, UDR only
+
+    # UBX-CFG-ESFG, protVer 19 and up, UDR only
+
+    # UBX-CFG-ESFWT, protVer 15.01 and up, ADR only
+
     def cfg_esrc(self, buf):
         """UBX-CFG-ESRC decode, External synchronization source
         configuration"""
@@ -2390,16 +2398,20 @@ Deprecated in protVer 34.00
     # top byte used, but not defined
     cfg_gnss_sig = {
         0: {0x010000: "L1C/A",    # GPS
-            0x100000: "L2C"},
+            0x100000: "L2C",
+            0x200000: "L5"},
         1: {0x010000: "L1C/A"},   # SBAS
         2: {0x010000: "E1",       # Galileo
+            0x100000: "E5a",
             0x200000: "E5b"},
         3: {0x010000: "B1I",      # BeiDou
-            0x100000: "B2I"},
+            0x100000: "B2I",
+            0x800000: "B2A"},
         4: {0x010000: "L1"},      # IMES
         5: {0x010000: "L1C/A",    # QZSS
             0x040000: "L1S",
-            0x100000: "L2C"},
+            0x100000: "L2C",
+            0x200000: "L5"},
         6: {0x010000: "L1",       # GLONASS
             0x100000: "L2"},
         }
@@ -2407,6 +2419,7 @@ Deprecated in protVer 34.00
     def cfg_gnss(self, buf):
         """UBX-CFG-GNSS decode, GNSS system configuration
 
+Present in protVer 15 and up
 Deprecated in protVer 34.00
 """
 
@@ -3070,7 +3083,10 @@ Deprecated in protVer 34.00
         }
 
     def cfg_rst(self, buf):
-        """"UBX-CFG-RST decode, Reset Receiver/Clear Backup Data Structures"""
+        """UBX-CFG-RST decode, Reset Receiver/Clear Backup Data Structures
+
+protVer 15 and up
+"""
 
         u = struct.unpack_from('<HBB', buf, 0)
         s = ' navBbrmask x%x resetMode %u reserved %u' % u
@@ -3179,6 +3195,8 @@ Deprecated in protVer 34.00
                    flag_s(u[4], self.cfg_sbas_scanmode1)))
 
         return s
+
+    # UBX-CFG-SENIF, protVer 19 and up, ADR and UDR only
 
     cfg_slas_mode = {
         1: "enabled",
@@ -3624,18 +3642,24 @@ Only for models with built in USB.
         # Broadcom calls this BRM-STP-ME_SETTINGS
         0x3e: {'str': 'GNSS', 'dec': cfg_gnss, 'minlen': 4,
                'name': 'UBX-CFG-GNSS'},
+        # protVer 19 and up, UDR only
+        0x40: {'str': 'ESFG', 'minlen': 20, 'name': 'UBX-CFG-ESFG'},
         # in u-blox 7+  Not in u-blox 6-
         0x47: {'str': 'LOGFILTER', 'dec': cfg_logfilter, 'minlen': 12,
                'name': 'UBX-CFG-LOGFILTER'},
+        # protVer 19 and up, UDR only
+        0x4c: {'str': 'ESFA', 'minlen': 20, 'name': 'UBX-CFG-ESFA'},
         # Not in u-blox 7-, FTS only
         0x53: {'str': 'TXSLOT', 'minlen': 2, 'name': 'UBX-CFG-TXSLOT'},
+        # protVer 15.01 and up, ADR and UDR only
+        0x56: {'str': 'ESFALG', 'minlen': 12, 'name': 'UBX-CFG-ESFALG'},
         # Not in u-blox 7-
         0x57: {'str': 'PWR', 'dec': cfg_pwr, 'minlen': 8,
                'name': 'UBX-CFG-PWR'},
         # Not in u-blox 8-
         0x5c: {'str': 'HNR', 'dec': cfg_hnr, 'minlen': 4,
                'name': 'UBX-CFG-HNR'},
-        # Not in u-blox 7-
+        # Not in u-blox 7-, protVer 16 and up,  TFS only
         0x60: {'str': 'ESRC', 'dec': cfg_esrc, 'minlen': 4,
                'name': 'UBX-CFG-ESRC'},
         # Not in u-blox 8-
@@ -3644,6 +3668,8 @@ Only for models with built in USB.
         # Not in u-blox 8-
         0x62: {'str': 'SMGR', 'dec': cfg_smgr, 'minlen': 20,
                'name': 'UBX-CFG-SMGR'},
+        # protVer 15.01 and up, ADR and UDR only
+        0x64: {'str': 'SPT', 'minlen': 12, 'name': 'UBX-CFG-SPT'},
         # Not in u-blox 8-
         0x69: {'str': 'GEOFENCE', 'dec': cfg_geofence, 'minlen': 8,
                'name': 'UBX-CFG-GEOFENCE'},
@@ -3654,6 +3680,8 @@ Only for models with built in USB.
         # undocumented, but present in ZED-F9T
         0x71: {'str': 'TMODE3', 'dec': cfg_tmode3, 'minlen': 40,
                'name': 'UBX-CFG-TMODE3'},
+        # protVer 15.01 and up, ADR only
+        0x82: {'str': 'ESFWT', 'minlen': 32, 'name': 'UBX-CFG-ESFWT'},
         # Not in u-blox 7-
         0x84: {'str': 'FIXSEED', 'dec': cfg_fixseed, 'minlen': 12,
                'name': 'UBX-CFG-FIXSEED'},
@@ -3664,6 +3692,8 @@ Only for models with built in USB.
         # Broadcom calls this BRM-STP-PWR_MODE
         0x86: {'str': 'PMS', 'dec': cfg_pms, 'minlen': 8,
                'name': 'UBX-CFG-PMS'},
+        # protVer 19 and up, ADR and UDR only
+        0x88: {'str': 'SENIF', 'minlen': 6, 'name': 'UBX-CFG-SENIF'},
         # in u-blox 9
         0x8a: {'str': 'VALSET', 'dec': cfg_valset, 'minlen': 4,
                'name': 'UBX-CFG-VALSET'},
@@ -3688,12 +3718,14 @@ Only for models with built in USB.
     esf_ids = {0x02: {'str': 'MEAS', 'minlen': 8, 'name': "UBX-ESF-MEAS"},
                0x03: {'str': 'RAW', 'minlen': 4, 'name': "UBX-ESF-RAW"},
                0x10: {'str': 'STATUS', 'minlen': 16, 'name': "UBX-ESF-STATUS"},
+               0x14: {'str': 'ALG', 'minlen': 16, 'name': "UBX-ESF-ALG"},
                0x15: {'str': 'INS', 'minlen': 16, 'name': "UBX-ESF-INS"},
                }
 
     # UBX-HNR-
     # only with ADR or UDR products
     hnr_ids = {0x00: {'str': 'PVT', 'minlen': 72, 'name': "UBX-HNR-PVT"},
+               0x01: {'str': 'ATT', 'minlen': 32, 'name': "UBX-HNR-ATT"},
                0x02: {'str': 'INS', 'minlen': 36, 'name': "UBX-HNR-INS"},
                }
 
@@ -4440,6 +4472,8 @@ protVer 34.00 and up
 
         return s
 
+    # UBX-CFG-SPT, protVer 15.01 and up, ADR and UDR only
+
     def mon_txbuf(self, buf):
         """UBX-MON-TXBUF decode, Transmitter Buffer Status"""
 
@@ -4529,6 +4563,8 @@ protVer 34.00 and up
                       'name': 'UBX-MON-GNSS'},
                0x2e: {'str': 'SMGR', 'dec': mon_smgr, 'minlen': 16,
                       'name': 'UBX-MON-SMGR'},
+               # protVer 19 and up, ADR and UDR only
+               0x2f: {'str': 'SPT', 'minlen': 4, 'name': 'UBX-MON-SPT'},
                0x31: {'str': 'SPAN', 'dec': mon_span, 'minlen': 4,
                       'name': 'UBX-MON-SPAN'},
                0x32: {'str': 'BATCH', 'dec': mon_batch, 'minlen': 12,
@@ -4614,6 +4650,8 @@ protVer 34 and up
         s = ('  iTOW %u gDOP %u pDOP %u tDOP %u vDOP %u\n'
              '  hDOP %u nDOP %u eDOP %u' % u)
         return s
+
+    # UBX-NAV-EELL, protVer 19.1 and up, ADR only
 
     def nav_eoe(self, buf):
         """UBX-NAV-EOE decode, End Of Epoch"""
@@ -5454,6 +5492,8 @@ protVer 34 and up
                # M8P length = 40, M9P length = 64
                0x3C: {'str': 'RELPOSNED', 'dec': nav_relposned, 'minlen': 40,
                       'name': 'UBX-NAV-RELPOSNED'},
+               # protVer 19.1 and up, ADR only
+               0x3d: {'str': 'EELL', 'minlen': 16, 'name': 'UBX-NAV-EELL'},
                # deprecated in u-blox 6, SFDR only
                0x40: {'str': 'EKFSTATUS', 'minlen': 36,
                       'name': 'UBX-NAV-EKFSTATUS'},
@@ -6898,7 +6938,11 @@ qErrInvalid add in protVer 34 and up
         self.send_cfg_gnss1(5, able, args)
 
     def send_able_galileo(self, able, args):
-        """dis/enable GALILEO"""
+        """dis/enable GALILEO
+
+"If Galileo is enabled, UBX-CFG-GNSS must be followed by UBX-CFG-RST
+with resetMode set to Hardware reset."
+"""
         self.send_cfg_gnss1(2, able, args)
 
     def send_able_glonass(self, able, args):
