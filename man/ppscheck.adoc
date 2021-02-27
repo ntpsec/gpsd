@@ -1,6 +1,6 @@
 = ppscheck(8)
 :author: Eric S. Raymond
-:date: 19 January 2021
+:date: 26 February 2021
 :email: <esr@thyrsus.com.>
 :keywords: gps, PPS, ppscheck
 :manmanual: GPSD Documentation
@@ -27,6 +27,9 @@ ioctl(...., TIOCMIWAIT, ...) in a loop. When it sees a state change it
 emits a timestamped line of output dumping the state of the handshake
 signals. It's useful for checking whether a device is emitting PPS.
 
+*ppscheck* can run as a normal user, but that user must have permissions
+to read the target device.  Running as root will always work.
+
 To check the first serial port do this:
 
 ----
@@ -37,12 +40,16 @@ ppscheck /dev/ttyS0
 purposes. Once you have verified a particular device can output PPS
 signals you will never need to use it again on that device.
 
+== OPTIONS
+
 The program accepts the following options:
 
 `+-?+, `+-h+, `+--help+`::
   Display help message and terminate.
 `+-V+, `+--version+`::
   Dump version and exit.
+
+== ARGUMENTS
 
 The _device_ argument should be the pathname of a device. Such as
 /dev/ttyS0 or /dev/pps0. It will be the device monitored.

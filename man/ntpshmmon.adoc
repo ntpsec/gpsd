@@ -1,6 +1,6 @@
 = ntpshmmon(1)
 :author: Eric S. Raymond
-:date: 19 January 2021
+:date: 26 February 2021
 :email: <esr@thyrsus.com.>
 :keywords: gps, ntpshmmon, ntp, ntpd, pps, shm
 :manmanual: GPSD Documentation
@@ -30,6 +30,10 @@ possibly other refclock sources, as a way of communicating with *ntpd*,
 the Network Time Protocol daemon. It reads these in exactly the way an
 *ntpd* instance does. It can be run concurrently with *ntpd* without
 interfering with *ntpd*'s normal operation.
+
+*ntpshmmon* requires root privileges to access the root only NTP0 and
+NTP1.  Running as a normal user will only allow access to NTP2 and NTP3.
+cause loss of functionality.
 
 This program runs forever, or until a termination option is matched, or
 until interrupted, generating sample reports to standard output. Each
