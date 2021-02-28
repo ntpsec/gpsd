@@ -1,6 +1,6 @@
 = gpsplot(1)
 :author: Gary E. Miller
-:date: 25 February 2021
+:date: 26 February 2021
 :email: <gem@rellim.com.>
 :keywords: gps, gpsplot, scatterplot. strip chart
 :manmanual: GPSD Documentation
@@ -34,7 +34,7 @@ not the *gpsd* host, then Matplotlib is not required to be on the *gpsd*
 host.
 
 *gpslot* does not require root privileges, but can be run as root.
-Running under sudo may cause some loss of functionality. It can be run
+Running under sudo will cause some loss of functionality. It can be run
 concurrently with other tools connecting to the local *gpsd* without
 causing problems.
 
@@ -42,6 +42,12 @@ causing problems.
 
 *-?*, *-h*, *--help*::
   Print a usage message and exit.
+*-b BACKEND*, *--backend BACKEND*::
+  Set the Matplotlib interactive backend to BACKEND.
+*-B*, *--backends*::
+  Print available Matplotlib interactive backends, then exit.
+  The Matplotlib backends vary wildly in how fst they run and
+  how good they look.  Try them all to see for yourself.
 *-d LVL*, *--debug LVL*::
   Set debug level to LVL.
 *--device DEVICE*::
@@ -79,6 +85,12 @@ to any client may override this behavior: *[server[:port[:device]]]*
 For further explanation, and examples, see the *ARGUMENTS* section in
 the *gps*(1) man page
 
+== ENVIRONMENT
+
+You can set the environment varable *MPLBACKEND* to your desired
+Matplotlib backend.  This save you from using *-b BACKEND* every time
+you run *gpsplot*.
+
 == EXAMPLES
 
 Generate a scatterplot of Latitude, Longitude and the Altitude above
@@ -92,6 +104,14 @@ Generate a scatterplot of Latitude, Longitude and the Height Above
 Ellipsoid (altHAE). Stop after 60 fixes:
 
 ----
+gpsplot --count 60 --plottype stripchart
+----
+
+Use the *WXAgg* backend to repeat the last experiment to see if it is
+faster or looks better to you.
+
+----
+export MPLBACKEND=WX
 gpsplot --count 60 --plottype stripchart
 ----
 

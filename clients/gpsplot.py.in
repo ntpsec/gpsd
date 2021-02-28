@@ -96,8 +96,13 @@ default_units = gps.clienthelpers.unit_adjustments()
 
 description = 'Create dynamic plots from gpsd with matplotlib.'
 usage = '%(prog)s [OPTIONS] [host[:port[:device]]]'
-epilog = ('BSD terms apply: see the file COPYING in the distribution root'
-          ' for details.')
+epilog = ('''
+The desired Matplotlib backend can be placed in the MPLBACKEND environment
+variable.
+
+BSD terms apply: see the file COPYING in the distribution root for details.
+'''
+)
 
 parser = argparse.ArgumentParser(
     description=description,
@@ -108,6 +113,19 @@ parser.add_argument(
     '-?',
     action="help",
     help='show this help message and exit'
+)
+parser.add_argument(
+    '-b', '--backend',
+    default='',
+    dest='backend',
+    metavar='BACKEND',
+    help='Set the Matplotlib interactive backend to BACKEND.',
+)
+parser.add_argument(
+    '-B', '--backends',
+    action="store_true",
+    dest='backends',
+    help='Print available Matplotlib interactive backends, then exit',
 )
 parser.add_argument(
     '-D',
@@ -220,6 +238,17 @@ if not have_matplotlib:
                      "matplotlib not found\n")
     sys.exit(1)
 
+if options.backends:
+    print("Available Matplotlib interactive backends:")
+    for b in matplotlib.rcsetup.interactive_bk:
+        # validate it works
+        try:
+            matplotlib.pyplot.switch_backend(b)
+            print("  ", b)
+        except:
+            continue
+    sys.exit(0)
+
 # get conversion factors
 conversion = gps.clienthelpers.unit_adjustments(units=options.units)
 flds = {'llh': ('lat', 'Latitude', 'lon', 'Longitude', 'altHAE', 'altHAE'),
@@ -286,8 +315,8 @@ except socket.error:
 
 session.stream(gps.WATCH_ENABLE | gps.WATCH_SCALED, devpath=options.device)
 
-# FIXME: add option for backend?
-# matplotlib.use('wxagg')
+if options.backend:
+    matplotlib.use(options.backend)
 
 # matplotlib.pyplot.ion() and matplotlib.pyplot.ioff()
 # seem to have no speed effect
