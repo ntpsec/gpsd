@@ -2971,7 +2971,6 @@ static gps_mask_t processTXT(int count, char *field[],
     return mask;
 }
 
-#ifdef TNT_ENABLE
 static gps_mask_t processTNTHTM(int c UNUSED, char *field[],
                                 struct gps_device_t *session)
 {
@@ -3080,7 +3079,6 @@ static gps_mask_t processTNTA(int c UNUSED, char *field[],
     }
     return mask;
 }
-#endif /* TNT_ENABLE */
 
 #ifdef OCEANSERVER_ENABLE
 static gps_mask_t processOHPR(int c UNUSED, char *field[],
@@ -3131,7 +3129,6 @@ static gps_mask_t processOHPR(int c UNUSED, char *field[],
 }
 #endif /* OCEANSERVER_ENABLE */
 
-#ifdef ASHTECH_ENABLE
 /* Ashtech sentences take this format:
  * $PASHDR,type[,val[,val]]*CS
  * type is an alphabetic subsentence type
@@ -3275,7 +3272,6 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
     }
     return mask;
 }
-#endif /* ASHTECH_ENABLE */
 
 static gps_mask_t processMWD(int c UNUSED, char *field[],
                               struct gps_device_t *session)
@@ -3441,8 +3437,6 @@ static gps_mask_t processMTK3301(int c UNUSED, char *field[],
         return ONLINE_SET;              /* ignore */
     }
 }
-
-#ifdef SKYTRAQ_ENABLE
 
 /*  Recommended Minimum 3D GNSS Data */
 static gps_mask_t processPSTI030(int count, char *field[],
@@ -3637,7 +3631,6 @@ static gps_mask_t processSTI(int count, char *field[],
 
     return mask;
 }
-#endif /* SKYTRAQ_ENABLE */
 
 /**************************************************************************
  *
@@ -3716,10 +3709,8 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"OHPR", 18, false, processOHPR},
 #endif /* OCEANSERVER_ENABLE */
         {"OSD", 0,  false, NULL},       // ignore Own Ship Data
-#ifdef ASHTECH_ENABLE
         /* general handler for Ashtech */
         {"PASHR", 3, false, processPASHR},
-#endif /* ASHTECH_ENABLE */
         {"PMGNST", 8, false, processPMGNST},    /* Magellan Status */
         {"PMTK", 3,  false, processMTK3301},
         /* for some reason the parser no longer triggering on leading chars */
@@ -3731,14 +3722,10 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PRWIZCH", 0, false, NULL},    /* ignore Rockwell Channel Status */
         {"PSRFEPE", 7, false, processPSRFEPE},  /* SiRF Estimated Errors */
         {"PTFTTXT", 0, false, NULL},    /* ignore unknown uptime */
-#ifdef TNT_ENABLE
         {"PTNTHTM", 9, false, processTNTHTM},
         {"PTNTA", 8, false, processTNTA},
-#endif /* TNT_ENABLE */
-#ifdef SKYTRAQ_ENABLE
         {"PSTI", 2, false, processPSTI},        /* $PSTI Skytraq */
         {"STI", 2, false, processSTI},          /* $STI  Skytraq */
-#endif /* SKYTRAQ_ENABLE */
         // $PSTM ST Micro STA8088xx/STA8089xx/STA8090xx
         {"PSTM", 0, false, NULL},
         {"PUBX", 0, false, NULL},       // ignore u-blox and Antaris
@@ -3771,9 +3758,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
     volatile char *t;
     char ts_buf1[TIMESPEC_LEN];
     char ts_buf2[TIMESPEC_LEN];
-#ifdef SKYTRAQ_ENABLE
     bool skytraq_sti = false;
-#endif
 
     /*
      * We've had reports that on the Garmin GPS-10 the device sometimes
@@ -3848,11 +3833,8 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
             break;
         }
         if (strlen(nmea_phrase[i].name) == 3
-#ifdef SKYTRAQ_ENABLE
+            && !skytraq_sti) {
                 /* $STI is special */
-                && !skytraq_sti
-#endif
-                ) {
             s += 2;             /* skip talker ID */
         }
         if (strcmp(nmea_phrase[i].name, s) == 0) {
