@@ -9,7 +9,9 @@
 # Codacy D203 and D211 conflict, I choose D203
 # Codacy D212 and D213 conflict, I choose D212
 
-"""ntpshmviz - graph the drift of NTP servers
+"""
+ntpshmviz - graph the drift of NTP servers
+
 Written by Keane Wolter <daemoneye2@gmail.com>
 """
 #
