@@ -225,7 +225,7 @@ Field 7 (0) is the number of fill bits requires to pad the data
 payload to a 6 bit boundary, ranging from 0 to 5.  Equivalently,
 subtracting 5 from this tells how many least significant bits of the
 last 6-bit nibble in the data payload should be ignored. Note that
-this pad byte has a tricky interaction with the <<<ITU-1371>>>
+this pad byte has a tricky interaction with the <<ITU-1371>>
 requirement for byte alignment in over-the-air AIS messages; see the
 detailed discussion of message lengths and alignment in a later
 section.
@@ -4026,7 +4026,7 @@ six-bit text.  This message is variable in length up to a maximum of
                                                   May be shorter than 936 bits.
 |======
 
-Pragmatic note: On <<<AISHUB>>> the actual content of these messages is
+Pragmatic note: On <<AISHUB>> the actual content of these messages is
 highly variable, ranging from fairly plain English ("PLEASE REPORT TO
 JOBOURG TRAFFIC CHANNEL 13") through snippets of tabular data ("PAX
 589 FG 36 IX 74 MOTO 10 CREW 108+1" through what look like opaque
@@ -4063,7 +4063,7 @@ six-bit text.  This message is variable in length up to a maximum of
 
 Note: 161 * 6 = 966. <<IALA>> specifies 968 because over-the-air
 messages are required to be padded to an 8-bit byte boundary by
-<<<ITU1371>>>.
+<<ITU1371>>.
 
 Also see the pragmatic note on message content attached to type 12; it
 applies to type 14 messages as well.
@@ -4107,7 +4107,7 @@ the length of the data packet to determine which it is seeing:
 
 2. One station is interrogated for two message types, Length is 110
 bits. There is a design error in the standard here; according to the
-<<<ITU1371>>> requirement for padding to 8 bits, this should have been
+<<ITU1371>> requirement for padding to 8 bits, this should have been
 112 with a 4-bit trailing spare field, and decoders should be prepared
 to handle that length as well. See the discussion of byte alignment
 elsewhere in this document for context.
