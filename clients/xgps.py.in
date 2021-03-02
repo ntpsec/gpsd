@@ -1202,7 +1202,7 @@ frame * {
         return "n/a"
 
     def update_err_speed(self, data, errtype):
-        """update speed error estimate in the GPS Data window."""
+        """Update speed error estimate in the GPS Data window."""
         if hasattr(data, errtype):
             return "%8.3f %s" % (
                 getattr(data, errtype) * self.conversions.speedfactor,
@@ -1211,7 +1211,7 @@ frame * {
         return "n/a"
 
     def update_err_degrees(self, data, errtype):
-        """update heading error estimate in the GPS Data window."""
+        """Update heading error estimate in the GPS Data window."""
         if hasattr(data, errtype):
             return ("%s " %
                     (gps.clienthelpers.deg_to_str(self.deg_type,
