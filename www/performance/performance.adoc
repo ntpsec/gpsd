@@ -17,7 +17,7 @@ Many GPS manufacturers tout binary protocols more dense than NMEA and
 baud rates higher than the NMEA-standard 4800 bps as ways to increase
 GPS performance.  While working on *gpsd*, I became interested in
 evaluating these claims, which have some implications for the design of
-gpsd.  Later, the average and peak latency
+*gpsd*.  Later, the average and peak latency
 became of interest for modeling the performance of GPS as a time
 service. This paper discusses the theory and the results of profiling
 the code, and reaches some conclusions about system tuning and latency
