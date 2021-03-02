@@ -341,6 +341,7 @@ class plotter(object):
 
 class spaceplot(plotter):
     """Spatial scattergram of fixes."""
+
     name = "space"
     requires_time = False
 
@@ -782,6 +783,7 @@ class spaceplot(plotter):
 
 class polarplot(plotter):
     """Polar plot of signal strength."""
+
     name = "polar"
     requires_time = False
     seen_used = []          # count of seen and used in each SKY
@@ -1047,6 +1049,7 @@ plot "-" using 0:1 title "Total time" with impulses
 
 class instrumented(plotter):
     """Latency as analyzed by instrumentation."""
+
     name = "instrumented"
     requires_time = True
 
