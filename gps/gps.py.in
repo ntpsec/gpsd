@@ -1,7 +1,8 @@
 #!@PYSHEBANG@
 # -*- coding: utf-8 -*-
 # @GENERATED@
-"""gps.py -- Python interface to GPSD.
+"""
+gps.py -- Python interface to GPSD.
 
 This interface has a lot of historical cruft in it related to old
 protocol, and was modeled on the C interface. It won't be thrown
@@ -487,7 +488,7 @@ class gpsdata(object):
                 "ny"[self.used])
 
     def __init__(self):
-        # Initialize all data members
+        """Initialize all data members."""
         self.online = 0                 # NZ if GPS on, zero if not
 
         self.valid = 0
