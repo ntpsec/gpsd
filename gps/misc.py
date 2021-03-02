@@ -184,7 +184,6 @@ def Rad2Deg(x):
 def lla2ecef(lat, lon, altHAE):
     """Convert Lat, lon (in degrees) and altHAE in meters
 to ECEF x, y and z in meters."""
-
     # convert degrees to radians
     lat *= DEG_2_RAD
     lon *= DEG_2_RAD
