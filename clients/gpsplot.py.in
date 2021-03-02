@@ -102,7 +102,7 @@ variable.
 
 BSD terms apply: see the file COPYING in the distribution root for details.
 '''
-)
+          )
 
 parser = argparse.ArgumentParser(
     description=description,
@@ -241,11 +241,13 @@ if not have_matplotlib:
 if options.backends:
     print("Available Matplotlib interactive backends:")
     for b in matplotlib.rcsetup.interactive_bk:
-        # validate it works
+        # matplotlib.rcsetup.interactive_bk is all possible backends.
+        # not guaranteed to work.  Validate it works.
         try:
             matplotlib.pyplot.switch_backend(b)
             print("  ", b)
-        except:
+        except (ImportError, RuntimeError):
+            # ImportError to shut up codacy
             continue
     sys.exit(0)
 
