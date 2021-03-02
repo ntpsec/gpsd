@@ -3721,13 +3721,12 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PRHS ", 2,  false, processPRHS},  // smart watch sensors, Yes: space!
         {"PRWIZCH", 0, false, NULL},    /* ignore Rockwell Channel Status */
         {"PSRFEPE", 7, false, processPSRFEPE},  /* SiRF Estimated Errors */
+        {"PSTI", 2, false, processPSTI},        /* $PSTI Skytraq */
+        // $PSTM ST Micro STA8088xx/STA8089xx/STA8090xx
+        {"PSTM", 0, false, NULL},
         {"PTFTTXT", 0, false, NULL},    /* ignore unknown uptime */
         {"PTNTHTM", 9, false, processTNTHTM},
         {"PTNTA", 8, false, processTNTA},
-        {"PSTI", 2, false, processPSTI},        /* $PSTI Skytraq */
-        {"STI", 2, false, processSTI},          /* $STI  Skytraq */
-        // $PSTM ST Micro STA8088xx/STA8089xx/STA8090xx
-        {"PSTM", 0, false, NULL},
         {"PUBX", 0, false, NULL},       // ignore u-blox and Antaris
         {"RLM", 0, false, NULL},        // ignore Return Link Message
         /* ignore Recommended Minimum Navigation Info, waypoint */
@@ -3737,11 +3736,12 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"RPM", 0,  false, NULL},       // ignore Revolutions
         {"RSA", 0,  false, NULL},       // ignore Rudder Sensor Angle
         {"RTE", 0,  false, NULL},       /* ignore Routes */
+        {"STI", 2, false, processSTI},  // $STI  Skytraq
         {"THS", 0,  false, NULL},       // True Heading and Status (u-blox 8)
         {"TXT", 5,  false, processTXT},
         {"VBW", 0,  false, NULL},       // ignore Dual Ground/Water Speed
-        {"VDR", 0,  false, NULL},       // ignore Set and Drift
         {"VDO", 0,  false, NULL},       // ignore Own Vessel's Information
+        {"VDR", 0,  false, NULL},       // ignore Set and Drift
         {"VHW", 0,  false, NULL},       /* ignore Water Speed and Heading */
         {"VLW", 0,  false, NULL},       /* ignore Dual ground/water distance */
         {"VTG", 5,  false, processVTG},
