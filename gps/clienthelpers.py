@@ -944,12 +944,14 @@ def __bilinear(lat, lon, table):
 
 def mag_var(lat, lon):
     """Return magnetic variation (declination) in degrees.
+
 Given a lat/lon in degrees"""
     return __bilinear(lat, lon, magvar_table)
 
 
 def wgs84_separation(lat, lon):
     """Return MSL-WGS84 geodetic separation in meters.
+
 Given a lat/lon in degrees"""
     return __bilinear(lat, lon, GEOID_DELTA)
 
