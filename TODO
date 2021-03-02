@@ -262,27 +262,6 @@ seem to be any way to query these settings.
 
 ** Future features (?)
 
-*** Industry-standard format dumping of raw satellite data
-
-It would be useful to be able to report raw GPS data (pseudoranges,
-clock, doppler carrier) from any GPS device that can report
-pseudoranges etc.  This belongs in the daemon because the device
-drivers are already doing the packet-cracking needed to get the data
-off the chips.
-
-Several commodity chipsets (ANTARIS, iTrax3, SiRF and Trimble) readily
-output enough data to make this a chore, rather than a hard problem.
-Probably the best way to do this would be to add support for unscaled
-output of pseudoranges in SKY and add clock and doppler carrier
-phase. This JSON could then be interpreted by a client program and
-dumped in various standard formats.
-
-Currently the RT-IGS format is looking like the favorite for
-implementation; it's a fairly lightweight protocol, flexible enough to
-handle all the quantities required, and it is actually in use in
-production reference networks. RT-IGS is also a packet-oriented
-format, rather than a file-oriented format like RINEX.
-
 *** Support for more survey / professional / up-scale receivers.
 
 Devices such as the Javad JNSCore, Hemisphere Crescent, Septentrio
