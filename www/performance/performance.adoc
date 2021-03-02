@@ -283,7 +283,7 @@ perhaps the speed/track computation is expensive.
 Now let's look at how the picture changes when we double the baud rate.
 `+gpsprof -t "Haicom 204s" -T png -s 9600+` gives us this:
 
-image::graph4.png[Split latency report, 9600bps]
+image::graph4.png[Split latency report -- 9600bps]
 
 This graph looks almost identical to the previous one, except for
 vertical scale -- latency has been cut neatly in half. Transmission
@@ -296,7 +296,7 @@ also view the link:profile4.txt[raw data].
 For comparison, here's the same plot made with a BU303b, a different USB
 GPS mouse using the same SiRF-II/PL2303 combination:
 
-image::graph5.png[Split latency report, 9600bps]
+image::graph5.png[Split latency report -- 9600bps]
 
 This, and the link:profile5.txt[raw data], look very similar to the
 Haicom numbers. The main difference seems to be that the BU303b firmware
@@ -372,7 +372,7 @@ With the new profiling tools, one graph (made with
 the same Haicom 204s used in the 2005 tests. You can see the exact
 figures in the link:profile6.txt[raw data].
 
-image::graph6.png[Per-cycle latency report, 19200bps]
+image::graph6.png[Per-cycle latency report -- 19200bps]
 
 Fix latency (S - T, the purple time segment in each sample) is
 consistently about 120msec. Some of this represents on-chip processing.
@@ -395,7 +395,7 @@ Total fix latency is steady at about 310ms. Transmission time dominates.
 It is instructive to compare this with the graph (and the
 link:profile7.txt[raw data]) from the same device at 9600bps.
 
-image::graph7.png[Per-cycle latency report, 9600bps]
+image::graph7.png[Per-cycle latency report -- 9600bps]
 
 As we might expect, RS232 time changes drastically and the other
 components barely change at all. This gives us reason to be confident
@@ -407,11 +407,11 @@ It is equally instructive to compare these graphs with graphs taken from
 the same GPS, at the same speed, running in NMEA rather than vendor
 binary mode. Consider, for example, these:
 
-image::graph8.png[Per-cycle latency report, NMEA mode, 9600bps]
+image::graph8.png[Per-cycle latency report, NMEA mode -- 9600bps]
 
 (Raw data is link:profile8.txt[here].)
 
-image::graph9.png[Per-cycle latency report, NMEA mode, 19200bps]
+image::graph9.png[Per-cycle latency report, NMEA mode -- 19200bps]
 
 (Raw data is link:profile8.txt[here].)
 
