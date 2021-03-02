@@ -216,14 +216,12 @@ static void nmea_event_hook(struct gps_device_t *session, event_t event)
             (void)nmea_send(session, "$PFEC,GPsrq");
             break;
 #endif /* GPSCLOCK_ENABLE */
-#ifdef ASHTECH_ENABLE
         case 6:
             /* probe for Ashtech -- expect $PASHR,RID */
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "=> Probing for Ashtech\n");
             (void)nmea_send(session, "$PASHQ,RID");
             break;
-#endif /* ASHTECH_ENABLE */
 #ifdef UBLOX_ENABLE
         case 7:
             // probe for UBX
@@ -387,7 +385,6 @@ const struct gps_type_t driver_garmin = {
 /* *INDENT-ON* */
 #endif /* GARMIN_ENABLE && NMEA0183_ENABLE */
 
-#ifdef ASHTECH_ENABLE
 /**************************************************************************
  *
  * Ashtech (then Thales, now Magellan Professional) Receivers
@@ -447,7 +444,6 @@ const struct gps_type_t driver_ashtech = {
     .time_offset     = NULL,            /* no method for NTP fudge factor */
 };
 /* *INDENT-ON* */
-#endif /* ASHTECH_ENABLE */
 
 #ifdef FV18_ENABLE
 /**************************************************************************
@@ -1688,9 +1684,7 @@ static const struct gps_type_t *gpsd_driver_array[] = {
     &driver_unknown,
 #ifdef NMEA0183_ENABLE
     &driver_nmea0183,
-#ifdef ASHTECH_ENABLE
     &driver_ashtech,
-#endif /* ASHTECH_ENABLE */
 #ifdef TRIPMATE_ENABLE
     &driver_tripmate,
 #endif /* TRIPMATE_ENABLE */

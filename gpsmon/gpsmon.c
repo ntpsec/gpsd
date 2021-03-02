@@ -93,9 +93,7 @@ static const struct monitor_object_t *monitor_objects[] = {
 #if defined(GARMIN_ENABLE) && defined(BINARY_ENABLE)
     &garmin_bin_ser_mmt,
 #endif /* defined(GARMIN_ENABLE) && defined(BINARY_ENABLE) */
-#ifdef ASHTECH_ENABLE
     &ashtech_mmt,
-#endif /* ASHTECH_ENABLE */
 #ifdef FV18_ENABLE
     &fv18_mmt,
 #endif /* FV18_ENABLE */

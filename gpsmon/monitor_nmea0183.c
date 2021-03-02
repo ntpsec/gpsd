@@ -457,7 +457,6 @@ const struct monitor_object_t nmea_mmt = {
  *
  *****************************************************************************/
 
-#if defined(ASHTECH_ENABLE)
 static void monitor_nmea_send(const char *fmt, ...)
 {
     char buf[BUFSIZ];
@@ -468,7 +467,6 @@ static void monitor_nmea_send(const char *fmt, ...)
     va_end(ap);
     (void)monitor_control_send((unsigned char *)buf, strlen(buf));
 }
-#endif /* defined(ASHTECH_ENABLE) */
 
 /*
  * Yes, it's OK for most of these to be clones of the generic NMEA monitor
@@ -492,7 +490,6 @@ const struct monitor_object_t garmin_mmt = {
 };
 #endif /* GARMIN_ENABLE && NMEA0183_ENABLE */
 
-#ifdef ASHTECH_ENABLE
 extern const struct gps_type_t driver_ashtech;
 
 #define ASHTECH_SPEED_9600 5
@@ -554,7 +551,6 @@ const struct monitor_object_t ashtech_mmt = {
     .min_y = HEIGHT, .min_x = WIDTH,
     .driver = &driver_ashtech,
 };
-#endif /* ASHTECH_ENABLE */
 
 #ifdef FV18_ENABLE
 extern const struct gps_type_t driver_fv18;

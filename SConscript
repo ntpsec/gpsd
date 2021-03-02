@@ -355,7 +355,8 @@ imloads = True
 
 boolopts = (
     # GPS protocols
-    ("ashtech",       True,  "Ashtech support"),
+    # for back compatibility, deprecated Feb 2021
+    ("ashtech",       True,  "alias for NMEA0183 support, deprecated"),
     ("earthmate",     True,  "DeLorme EarthMate Zodiac support"),
     ("evermore",      True,  "EverMore binary support"),
     ("fury",          True,  "Jackson Labs Fury and Firefly support"),
