@@ -138,15 +138,6 @@ if SCons.__version__ in ['2.3.0', '2.3.1']:
 # SCons 2.3.0 is also missing the Psuedo method.  See the workaround after
 # the initial 'env' setup.
 
-generated_www = [
-    'www/faq.html',
-    'www/gps_report.cgi',
-    'www/hacking.html',
-    'www/hardware.html',
-    'www/index.html',
-    'www/SUPPORT.html',
-   ]
-
 # All installed python programs
 # All are templated
 python_clients = [
