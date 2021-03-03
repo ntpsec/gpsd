@@ -138,47 +138,6 @@ if SCons.__version__ in ['2.3.0', '2.3.1']:
 # SCons 2.3.0 is also missing the Psuedo method.  See the workaround after
 # the initial 'env' setup.
 
-
-# TODO: this list is missing stuff.
-# built man pages found in all_manpages
-generated_sources = [
-    'android/gpsd_config',
-    'clients/gegps',
-    'clients/gpscat',
-    'clients/gpscsv',
-    'clients/gpsd.php',
-    'clients/gpsprof',
-    'clients/gpsplot',
-    'clients/gpssubframe',
-    'clients/ubxtool',
-    'clients/xgps',
-    'clients/xgpsspeed',
-    'clients/zerk',
-    'contrib/ntpshmviz',
-    'contrib/skyview2svg.py',
-    'contrib/webgps',
-    'control',
-    'gpsd.rules',
-    'gpsfake',
-    'gps/gps.py',
-    'gps/packet.py',
-    'gps/__init__.py',
-    'include/gpsd_config.h',
-    'include/packet_names.h',
-    'libgps.pc',
-    'libgps/ais_json.i',
-    'libgps/gps_maskdump.c',
-    'libQgpsmm.prl',
-    'packaging/rpm/gpsd.init',
-    'packaging/rpm/gpsd.spec',
-    'packaging/X11/xgps.desktop',
-    'packaging/X11/xgpsspeed.desktop',
-    'Qgpsmm.pc',
-    'systemd/gpsd.service',
-    'systemd/gpsd.socket',
-    'systemd/gpsdctl@.service',
-   ]
-
 generated_www = [
     'www/faq.html',
     'www/gps_report.cgi',
@@ -721,10 +680,6 @@ def installdir(idir, add_destdir=True):
 if env["sysroot"]:
     env.Prepend(LIBPATH=[env["sysroot"] + installdir('libdir',
                 add_destdir=False)])
-
-# Give deheader a way to set compiler flags
-if 'MORECFLAGS' in os.environ:
-    env.Append(CFLAGS=Split(os.environ['MORECFLAGS']))
 
 # Don't change CCFLAGS if already set by environment.
 if 'CCFLAGS' in os.environ:
@@ -1491,14 +1446,13 @@ PYTHON_CONFIG_CALL = ('sysconfig.get_config_vars(%s)'
                       % ', '.join(PYTHON_CONFIG_QUOTED))
 
 
-# flag that we have xgps* dependencies, so xgps* should run OK
-config.env['xgps_deps'] = False
-
 python_config = {}  # Dummy for all non-Python-build cases
 
 target_python_path = ''
 py_config_text = str(eval(PYTHON_CONFIG_CALL))
 python_libdir = str(eval(PYTHON_LIBDIR_CALL))
+
+# flag if we have xgps* dependencies, so xgps* should run OK
 config.env['xgps_deps'] = False
 
 if not cleaning and not helping and config.env['python']:
@@ -2623,21 +2577,6 @@ cppcheck = Utility("cppcheck",
                    "--suppress='*:drivers/driver_proto.c' "
                    "--force $SRCDIR")
 
-# Try to make "scan-build" and "deheader" targets call the same scons
-# executable that is currently executing this SConstruct.
-
-# Use deheader to remove headers not required.  If the statistics line
-# ends with other than '0 removed' there's work to be done.
-# https://gitlab.com/esr/deheader
-# deheader gets slightly confused, so is not part of audits, but is helpful.
-deheader = Utility("deheader", generated_sources, [
-    'deheader -x cpp -x contrib -x libgps/gpspacket.c '
-    '-x monitor_proto.c -i include/gpsd_config.h -i include/gpsd.h '
-    '-x %s/ -x %s/.sconf_temp '
-    '-m "MORECFLAGS=\'-Werror -Wfatal-errors -DDEBUG \' %s +Q"' %
-    (variantdir, variantdir, scons_executable_name,),
-])
-
 # Conflicts with pycodestyle:
 #   E121 continuation line under-indented for hanging indent
 #   E123 closing bracket does not match indentation of opening bracket's line
@@ -2680,6 +2619,9 @@ pylint = Utility("pylint", python_lint, [
     'W0121,W0123,W0231,W0232,W0234,W0401,W0403,W0141,W0142,W0603,'
     'W0614,W0640,W0621,W1504,E0602,E0611,E1101,E1102,E1103,E1123,'
     'F0401,I0011 $SOURCES'])
+
+# Try to make "scan-build" call the same scons
+# executable that is currently executing this SConstruct.
 
 # Check with scan-build, an analyzer, part of clang
 scan_build = Utility("scan-build",
@@ -3172,7 +3114,6 @@ for fn in distfiles_ignore:
         distfiles.remove(fn)
 
 # tar balls do not need all generated files
-# distfiles += generated_sources
 
 # tar balls do need packaging
 for f in packing:
