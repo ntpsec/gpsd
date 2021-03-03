@@ -11,6 +11,7 @@
   Reorganize and split the man pages.
   Small updates for u-blox M8 and M10
   Deprecated mtk3331 and ashtech build options.  Use nmea0183.
+  gpssnmp: Move from contrib/ to clients, add manpage
 
 3.22: 2021-01-08
   Added client/gpscsv to convert gpsd JSON to csv.

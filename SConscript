@@ -226,6 +226,7 @@ all_manpages = {
     "man/gpsplot.1": "man/gpsplot.adoc",
     "man/gpsprof.1": "man/gpsprof.adoc",
     "man/gpsrinex.1": "man/gpsrinex.adoc",
+    "man/gpssnmp.1": "man/gpssnmp.adoc",
     "man/gpssubframe.1": "man/gpssubframe.adoc",
     "man/gpxlogger.1": "man/gpxlogger.adoc",
     "man/lcdgps.1": "man/lcdgps.adoc",
@@ -1930,29 +1931,35 @@ env.Depends('gps/packet.py', packet_ffi_shared)
 
 # Production programs
 
-gpsd = env.Program('gpsd/gpsd', gpsd_sources,
-                   LIBS=[libgpsd_static, libgps_static],
-                   parse_flags=gpsdflags + gpsflags)
-gpsdecode = env.Program('clients/gpsdecode', ['clients/gpsdecode.c'],
-                        LIBS=[libgpsd_static, libgps_static],
-                        parse_flags=gpsdflags + gpsflags)
+cgps = env.Program('clients/cgps', ['clients/cgps.c'],
+                   LIBS=[libgps_static],
+                   parse_flags=gpsflags + ncurseslibs)
+gps2udp = env.Program('clients/gps2udp', ['clients/gps2udp.c'],
+                      LIBS=[libgps_static],
+                      parse_flags=gpsflags)
 gpsctl = env.Program('gpsctl', ['gpsctl.c'],
                      LIBS=[libgpsd_static, libgps_static],
                      parse_flags=gpsdflags + gpsflags)
+gpsd = env.Program('gpsd/gpsd', gpsd_sources,
+                   LIBS=[libgpsd_static, libgps_static],
+                   parse_flags=gpsdflags + gpsflags)
+gpsdctl = env.Program('clients/gpsdctl', ['clients/gpsdctl.c'],
+                      LIBS=[libgps_static],
+                      parse_flags=gpsflags)
+gpsdecode = env.Program('clients/gpsdecode', ['clients/gpsdecode.c'],
+                        LIBS=[libgpsd_static, libgps_static],
+                        parse_flags=gpsdflags + gpsflags)
 # FIXME: gpsmon should not link to gpsd server sources!
 gpsmon = env.Program('gpsmon/gpsmon', gpsmon_sources,
                      LIBS=[libgpsd_static, libgps_static],
                      parse_flags=gpsdflags + gpsflags + ncurseslibs)
-gpsdctl = env.Program('clients/gpsdctl', ['clients/gpsdctl.c'],
-                      LIBS=[libgps_static],
-                      parse_flags=gpsflags)
 gpspipe = env.Program('clients/gpspipe', ['clients/gpspipe.c'],
                       LIBS=[libgps_static],
                       parse_flags=gpsflags)
 gpsrinex = env.Program('clients/gpsrinex', ['clients/gpsrinex.c'],
                        LIBS=[libgps_static],
                        parse_flags=gpsflags)
-gps2udp = env.Program('clients/gps2udp', ['clients/gps2udp.c'],
+gpssnmp = env.Program('clients/gpssnmp', ['clients/gpssnmp.c'],
                       LIBS=[libgps_static],
                       parse_flags=gpsflags)
 gpxlogger = env.Program('clients/gpxlogger', ['clients/gpxlogger.c'],
@@ -1961,9 +1968,6 @@ gpxlogger = env.Program('clients/gpxlogger', ['clients/gpxlogger.c'],
 lcdgps = env.Program('clients/lcdgps', ['clients/lcdgps.c'],
                      LIBS=[libgps_static],
                      parse_flags=gpsflags)
-cgps = env.Program('clients/cgps', ['clients/cgps.c'],
-                   LIBS=[libgps_static],
-                   parse_flags=gpsflags + ncurseslibs)
 ntpshmmon = env.Program('clients/ntpshmmon', ['clients/ntpshmmon.c'],
                         LIBS=[libgpsd_static, libgps_static],
                         parse_flags=gpsflags)
@@ -1984,6 +1988,7 @@ if env["gpsdclients"]:
         gpsdecode,
         gpspipe,
         gpsrinex,
+        gpssnmp,
         gpxlogger,
         lcdgps
     ]
