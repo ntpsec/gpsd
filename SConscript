@@ -138,24 +138,6 @@ if SCons.__version__ in ['2.3.0', '2.3.1']:
 # SCons 2.3.0 is also missing the Psuedo method.  See the workaround after
 # the initial 'env' setup.
 
-# All installed python programs
-# All are templated
-python_clients = [
-    "clients/gegps",
-    "clients/gpscat",
-    "clients/gpscsv",
-    "clients/gpsplot",
-    "clients/gpsprof",
-    "clients/gpssubframe",
-    "clients/ubxtool",
-    "clients/xgps",
-    "clients/xgpsspeed",
-    "clients/zerk",
-    ]
-python_progs = python_clients + [
-    "gpsfake",
-]
-
 # All man pages.  Always build them all.
 all_manpages = {
     "man/cgps.1": "man/cgps.adoc",
@@ -1840,6 +1822,23 @@ def PylibLink(target, source, env):
     os.symlink('../gps', target[0].get_path())
 
 
+# All installed python programs
+# All are templated
+python_progs = [
+    "clients/gegps",
+    "clients/gpscat",
+    "clients/gpscsv",
+    "clients/gpsplot",
+    "clients/gpsprof",
+    "clients/gpssubframe",
+    "clients/ubxtool",
+    "clients/zerk",
+    "gpsfake",
+]
+if env['xgps']:
+    python_progs.append("clients/xgps")
+    python_progs.append("clients/xgpsspeed")
+
 # Import dependencies
 # Update these whenever the imports change
 
@@ -1866,7 +1865,7 @@ env.Depends('clients/zerk', 'gps/misc.py')
 env.Depends('gpsfake', ['gps/fake.py', 'gps/misc.py'])
 
 # Symlink for the clients to find the 'gps' package in the build tree
-env.Depends(python_clients, env.Command('clients/gps', '', PylibLink))
+env.Depends(python_progs, env.Command('clients/gps', '', PylibLink))
 
 # Non-import dependencies
 # Dependency on program
@@ -2467,42 +2466,41 @@ python_install = [python_modules_install,
 
 python_lint = (python_misc + python_modules + python_progs +
                ['SConstruct', 'SConscript'])
+
 if env['python']:
-    python_all = python_lint
+    # Check that Python modules compile properly
+    # FIXME: why not install some of the .pyc?
+    check_compile = []
+    for p in python_lint:
+        # split in two lines for readability
+        check_compile.append(
+            'cp %s/%s tmp.py; %s -tt -m py_compile tmp.py;' %
+            (variantdir, p, target_python_path))
+        # tmp.py may have inherited non-writable permissions
+        check_compile.append('rm -f tmp.py*')
+
+    python_compilation_regress = Utility('python-compilation-regress',
+                                         python_lint, check_compile)
+
+    # get version from each python prog
+    # this ensures they can run and gps_versions match
+    vchk = ''
+    pp = []
+    for p in python_progs:
+        if not env['xgps_deps']:
+            if p in ['clients/xgps', 'clients/xgpsspeed']:
+                # do not have xgps* dependencies, don't test
+                # FIXME: make these do -V w/o dependencies.
+                continue
+        # need to run in variantdir to find libgpsdpacket
+        tgt = Utility(
+            'version-%s' % p, p,
+            'cd %s; $PYTHON %s -V' % (variantdir, p),
+            ENV=nox11_env)
+        pp.append(tgt)
+    python_versions = env.Alias('python-versions', pp)
 else:
-    python_all = []
-
-# Check that Python modules compile properly
-# FIXME: why not install some of the .pyc?
-check_compile = []
-for p in python_all:
-    # split in two lines for readability
-    check_compile.append(
-        'cp %s/%s tmp.py; %s -tt -m py_compile tmp.py;' %
-        (variantdir, p, target_python_path))
-    # tmp.py may have inherited non-writable permissions
-    check_compile.append('rm -f tmp.py*')
-
-python_compilation_regress = Utility('python-compilation-regress',
-                                     python_all, check_compile)
-
-# get version from each python prog
-# this ensures they can run and gps_versions match
-vchk = ''
-pp = []
-for p in python_progs:
-    if not env['xgps_deps']:
-        if p in ['clients/xgps', 'clients/xgpsspeed']:
-            # do not have xgps* dependencies, don't test
-            # FIXME: make these do -V w/o dependencies.
-            continue
-    # need to run in variantdir to find libgpsdpacket
-    tgt = Utility(
-        'version-%s' % p, p,
-        'cd %s; $PYTHON %s -V' % (variantdir, p),
-        ENV=nox11_env)
-    pp.append(tgt)
-python_versions = env.Alias('python-versions', pp)
+    python_install = []
 
 pc_install = [env.Install(installdir('pkgconfig'), 'libgps.pc')]
 if qt_env:
