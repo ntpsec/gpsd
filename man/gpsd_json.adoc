@@ -83,6 +83,12 @@ fix. Error estimates will be emitted after the fix components they're
 associated with. Others may be reported or not depending on the fix
 quality.
 
+The "status" feild, aka fix type, is a modifier (adjective) to mode.
+It is not a replacement for, or superset of, the "mode" feild.  It
+is almost, but not quite, the same as the NMEA 4.x xxGGA GPS Quality
+Indicator Values.  Many GNSS receivers do not supply it.  Those that
+do interpret the specification in various incompatible ways.
+
 All error estimates (epc, epd, epe, eph, ept, epv, epx, epy) are
 guessed to be 95% confidence, may also be 50%, one sigma, or two sigma
 confidence. Many GNSS receivers do not specify a confidence level.
@@ -90,6 +96,9 @@ None specify how the value is calculated. Use error estimates with
 caution, and only as relative "goodness" indicators. If the GPS
 reports a value to *gpsd*, then *gpsd* will report that value. Otherwise
 *gpsd* will try to compute the value from the skyview.
+
+See the file *include/gps.h*, especially *struct gps_data_t*, for
+expanded notes on the items and values in the TPV message.
 
 // asciidoctor ignores column percentages/proportions in manpages
 // asciidoctor ignores width/autowidth in manpages
@@ -101,10 +110,9 @@ reports a value to *gpsd*, then *gpsd* will report that value. Otherwise
 
 |device |No |string |Name of the originating device.
 
-|status |No |numeric |GPS fix status: 1=Normal fix, 2=DGPS fix, 3=RTK Fixed
-point, 4=RTK Floating point, 5=DR fix, 6=GNSSDR fix, 7=Time (surveyed)
-fix, 8=Simulated, 9=P(Y) fix, otherwise not present. Similar to FAA
-Quality Indicator in NMEA.
+|status |No |numeric |GPS fix status: 1=Normal fix, 2=DGPS fix, 3=RTK
+Fixed point, 4=RTK Floating point, 5=DR fix, 6=GNSSDR fix, 7=Time (surveyed)
+fix, 8=Simulated, 9=P(Y) fix, otherwise not present.
 
 |mode |Yes |numeric |NMEA mode: 0=no mode value yet seen, 1=no
 fix, 2=2D, 3=3D.

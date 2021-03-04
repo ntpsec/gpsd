@@ -145,10 +145,13 @@ struct gps_fix_t {
 #define MODE_2D         2       /* good for latitude/longitude */
 #define MODE_3D         3       /* good for altitude/climb too */
 
-    /* GPS status, aka fix type, almost, but not quite the
-     * same as the NMEA xxGGA GPS Quality Indicator Values */
-    int    status;              /* Do we have a fix? */
-#define STATUS_NO_FIX   0       // no, or unknown
+    /* GPS status, aka fix type, is a modifier (adjective) to
+     * gps_data.mode.  It is not a replacement for, or superset of, mode.
+     * It is almost, but not quite, the same as the NMEA 4.x xxGGA GPS
+     * Quality Indicator Values.  Many GNSS receivers do not supply it.
+     */
+    int    status;              /* What kind of fix? */
+#define STATUS_NO_FIX   0       // Unknown status, maybe no fix.
 /* yes, plain GPS (SPS Mode), without DGPS, PPS, RTK, DR, etc. */
 #define STATUS_FIX      1
 #define STATUS_DGPS_FIX 2       /* yes, with DGPS */
