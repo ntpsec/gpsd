@@ -1,6 +1,6 @@
-= gps_json(1)
+= gpsd_json(1)
 :author: Eric S. Raymond
-:date: 21 January 2021
+:date: 6 March 2021
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, JSON, libgps
 :manmanual: GPSD Documentation
@@ -25,8 +25,7 @@ Clients may communicate with *gpsd* via textual requests and responses
 over a socket. It is a bad idea for applications to speak the protocol
 directly: rather, they should use the libgps client library (for C;
 bindings also exist for other languages) and take appropriate care to
-conditionalize their code on the major and minor protocol version
-symbols.
+check in their code for the expected major and minor protocol versions.
 
 The GPSD protocol is built on top of JSON, JavaScript Object Notation,
 as specified in RFC 7159: The JavaScript Object Notation (JSON) Data
@@ -83,8 +82,8 @@ fix. Error estimates will be emitted after the fix components they're
 associated with. Others may be reported or not depending on the fix
 quality.
 
-The "status" feild, aka fix type, is a modifier (adjective) to mode.
-It is not a replacement for, or superset of, the "mode" feild.  It
+The "status" field, aka fix type, is a modifier (adjective) to mode.
+It is not a replacement for, or superset of, the "mode" field.  It
 is almost, but not quite, the same as the NMEA 4.x xxGGA GPS Quality
 Indicator Values.  Many GNSS receivers do not supply it.  Those that
 do interpret the specification in various incompatible ways.
@@ -121,7 +120,7 @@ fix, 2=2D, 3=3D.
 fractional part of up to .001sec precision. May be absent if the mode
 is not 2D or 3D.
 
-|altHAE |No |numeric |Altitude, height above allipsoid, in meters.
+|altHAE |No |numeric |Altitude, height above ellipsoid, in meters.
 Probably WGS84.
 
 |altMSL |No |numeric |MSL Altitude in meters. The geoid used is rarely
@@ -153,7 +152,7 @@ Also known as Estimated Position Error (epe). Certainty unknown.
 |eps |No |numeric |Estimated speed error in meters per second.
 Certainty unknown.
 
-|ept |No |numeric |Estimated timestamp error in seconds. Certainty
+|ept |No |numeric |Estimated time stamp error in seconds. Certainty
 unknown.
 
 |epx |No |numeric |Longitude error estimate in meters. Certainty
@@ -223,7 +222,7 @@ meters.
 
 |velD |No |numeric |Down velocity component in meters.
 
-|velE |No |numeric |wEast velocity component in meters.
+|velE |No |numeric |East velocity component in meters.
 
 |velN |No |numeric |North velocity component in meters.
 
@@ -243,7 +242,8 @@ assert validity bits in the top-level set member for each field
 received; see gps.h for bitmask names and values.
 
 Invalid or unknown floating-point values will be set to NAN. Always
-check floating points with isfinite() before use.
+check floating point values with isfinite() before use.  isnan() is
+not sufficient.
 
 Here's an example:
 
@@ -546,7 +546,7 @@ A TOFF object has the following elements:
 This message is emitted once per second to watchers of a device and is
 intended to report the timestamps of the in-band report of the GPS and
 seconds as reported by the system clock (which may be NTP-corrected)
-when the first valid timestamp of the reporting cycle was seen.
+when the first valid time stamp of the reporting cycle was seen.
 
 The message contains two second/nanosecond pairs: real_sec and
 real_nsec contain the time the GPS thinks it was at the start of the
@@ -888,7 +888,7 @@ being reported, or for which they are to be applied. This attribute
 may be omitted only when there is exactly one subscribed channel.
 
 |activated |No |string |Time the device was activated as an ISO8601
-timestamp. If the device is inactive this attribute is absent.
+time stamp. If the device is inactive this attribute is absent.
 
 |flags |No |integer |Bit vector of property flags. Currently defined
 flags are: describe packet types seen so far (GPS, RTCM2, RTCM3, AIS).
