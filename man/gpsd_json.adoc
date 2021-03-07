@@ -23,7 +23,7 @@ kinematic sensors.
 
 Clients may communicate with *gpsd* via textual requests and responses
 over a socket. It is a bad idea for applications to speak the protocol
-directly: rather, they should use the libgps client library (for C;
+directly: rather, they should use the *libgps* client library (for C;
 bindings also exist for other languages) and take appropriate care to
 check in their code for the expected major and minor protocol versions.
 
@@ -75,18 +75,17 @@ Here are the core-protocol responses.
 
 === TPV
 
-A TPV object is a time-position-velocity report. The "class" and
-"mode" fields will reliably be present. The "mode" field will be
-emitted before optional fields that may be absent when there is no
-fix. Error estimates will be emitted after the fix components they're
-associated with. Others may be reported or not depending on the fix
-quality.
+A TPV object is a time-position-velocity report. The "class" and "mode"
+fields will reliably be present.  When "mode" is 0 (Unknown) there is
+likely no usable data in the sentence.  The remaining fields are optional,
+their presence depends on what data the GNSS receiver has sent, and
+what *gpsd* may calculate from that data.
 
-The "status" field, aka fix type, is a modifier (adjective) to mode.
-It is not a replacement for, or superset of, the "mode" field.  It
-is almost, but not quite, the same as the NMEA 4.x xxGGA GPS Quality
-Indicator Values.  Many GNSS receivers do not supply it.  Those that
-do interpret the specification in various incompatible ways.
+The optional "status" field (aka fix type), is a modifier (adjective) to
+mode.  It is not a replacement for, or superset of, the "mode" field.
+It is almost, but not quite, the same as the NMEA 4.x xxGGA GPS Quality
+Indicator Values.  Many GNSS receivers do not supply it.  Those that do
+interpret the specification in various incompatible ways.
 
 All error estimates (epc, epd, epe, eph, ept, epv, epx, epy) are
 guessed to be 95% confidence, may also be 50%, one sigma, or two sigma
@@ -109,12 +108,23 @@ expanded notes on the items and values in the TPV message.
 
 |device |No |string |Name of the originating device.
 
-|status |No |numeric |GPS fix status: 1=Normal fix, 2=DGPS fix, 3=RTK
-Fixed point, 4=RTK Floating point, 5=DR fix, 6=GNSSDR fix, 7=Time (surveyed)
-fix, 8=Simulated, 9=P(Y) fix, otherwise not present.
+|mode |Yes |numeric |NMEA mode: +
+0=unknown, +
+1=no fix, +
+2=2D, +
+3=3D.
 
-|mode |Yes |numeric |NMEA mode: 0=no mode value yet seen, 1=no
-fix, 2=2D, 3=3D.
+|status |No |numeric |GPS fix status: +
+0=Unknown, +
+1=Normal, +
+2=DGPS, +
+3=RTK Fixed, +
+4=RTK Floating, +
+5=DR, +
+6=GNSSDR, +
+7=Time (surveyed), +
+8=Simulated, +
+9=P(Y)
 
 |time |No |string |Time/date stamp in ISO8601 format, UTC. May have a
 fractional part of up to .001sec precision. May be absent if the mode
@@ -245,7 +255,7 @@ Invalid or unknown floating-point values will be set to NAN. Always
 check floating point values with isfinite() before use.  isnan() is
 not sufficient.
 
-Here's an example:
+Here's an example TPV sentence:
 
 ----
 {"class":"TPV","device":"/dev/pts/1",
