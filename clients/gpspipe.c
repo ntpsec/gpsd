@@ -28,7 +28,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #ifdef HAVE_GETOPT_LONG
-       #include <getopt.h>   // for getopt_long()
+#include <getopt.h>   // for getopt_long()
 #endif
 #include <stdbool.h>
 #include <stdio.h>
@@ -62,7 +62,7 @@ static void spinner(unsigned int, unsigned int);
 
 /* Serial port variables */
 static struct termios oldtio, newtio;
-static int fd_out = 1;          /* output initially goes to standard output */
+static int fd_out = STDOUT_FILENO; /* output initially goes to standard output */
 static char serbuf[255];
 static int debug;
 
@@ -309,7 +309,7 @@ int main(int argc, char **argv)
         case '?':
         case 'h':
             usage();
-            exit(0);
+            exit(EXIT_SUCCESS);
         default:
             usage();
             exit(EXIT_FAILURE);
@@ -317,9 +317,9 @@ int main(int argc, char **argv)
     }
 
     /* Grok the server, port, and device. */
-    if (optind < argc) {
+    if (optind < argc)
         gpsd_source_spec(argv[optind], &source);
-    } else
+    else
         gpsd_source_spec(NULL, &source);
 
     if (serialport != NULL && !raw) {
@@ -349,20 +349,16 @@ int main(int argc, char **argv)
     if (sleepy)
         (void)sleep(10);
 
-    /* Open the output file if the user requested it.  If the user
+    /* Open the output file if the user requested it. If the user
      * requested '-R', we use the 'b' flag in fopen() to "do the right
      * thing" in non-linux/unix OSes. */
-    if (outfile == NULL) {
+    if (outfile == NULL)
         fp = stdout;
-    } else {
-        if (binary)
-            fp = fopen(outfile, "wb");
-        else
-            fp = fopen(outfile, "w");
-
+    else {
+        fp = fopen(outfile, binary ? "wb" : "w");
         if (fp == NULL) {
             (void)fprintf(stderr,
-                          "gpspipe: unable to open output file:  %s\n",
+                          "gpspipe: unable to open output file: %s\n",
                           outfile);
             exit(EXIT_FAILURE);
         }
@@ -399,13 +395,13 @@ int main(int argc, char **argv)
         errno = 0;
         r = pselect(gpsdata.gps_fd+1, &fds, NULL, NULL, &tv, NULL);
         if (r >= 0 && exit_timer && time(NULL) >= exit_timer)
-                break;
+            break;
         if (r == -1 && errno != EINTR) {
             (void)fprintf(stderr, "gpspipe: select error %s(%d)\n",
                           strerror(errno), errno);
             exit(EXIT_FAILURE);
         } else if (r == 0)
-                continue;
+            continue;
 
         if (vflag)
             spinner(vflag, l++);
@@ -430,11 +426,11 @@ int main(int argc, char **argv)
                     (void)clock_gettime(CLOCK_REALTIME, &now);
                     (void)gmtime_r((time_t *)&(now.tv_sec), &tmp_now);
                     (void)strftime(tmstr, sizeof(tmstr), format, &tmp_now);
-                    new_line = 0;
+                    new_line = false;
 
-                    switch( option_u ) {
+                    switch (option_u) {
                     case 2:
-                        if(iso8601){
+                        if (iso8601) {
                             written = strlen(tmstr);
                             tmstr[written] = 'Z';
                             tmstr[written+1] = '\0';
@@ -448,7 +444,7 @@ int main(int argc, char **argv)
                         written = snprintf(tmstr_u, sizeof(tmstr_u),
                                            ".%06ld", (long)now.tv_nsec/1000);
 
-                        if((0 < written) && (40 > written) && iso8601){
+                        if ((0 < written) && (40 > written) && iso8601) {
                             tmstr_u[written-1] = 'Z';
                             tmstr_u[written] = '\0';
                         }
