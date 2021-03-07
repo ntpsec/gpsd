@@ -1,6 +1,6 @@
 = libgps(3)
 :author: Eric S. Raymond
-:date: 25 February 2021
+:date: 6 March 2021
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, libgps
 :manmanual: GPSD Documentation
@@ -59,7 +59,8 @@ for report in session:
 == DESCRIPTION
 
 *libgps* is a service library which supports communicating with an
-instance of the *gpsd*(8); link it with the linker option *-lgps*.
+instance of the *gpsd*(8), link it with the linker option *-lgps*.
+Some systems may also require *-lm*.
 
 [WARNING]
 ====
@@ -134,16 +135,17 @@ enabled.
 
 *gps_waiting()*::
 *gps_waiting()* can be used to check whether there is new data from the
-*gpsd* daemon. The second argument is the maximum amount of time to wait
-(in microseconds) on input before returning. It returns true if there is
+*gpsd* daemon. The second argument is the maximum amount of time to block
+(in microseconds) waiting on input before returning. It returns true if there is
 input waiting, false on timeout (no data waiting) or error condition.
 When using the socket export, this function is a convenience wrapper
 around a *select*(2) call, and zeros *errno* on entry; you can test *errno*
-after exit to get more information about error conditions.  Warning:
-under the shared-memory interface there is a tiny race window between
-*gps_waiting()* and a following *gps_read()*; in that context, because
-the latter does not block, it is probably better to write a simple read
-loop.
+after exit to get more information about error conditions.
++
+Warning: under the shared-memory interface there is a tiny race window
+between *gps_waiting()* and a following *gps_read()*; in that context,
+because the latter does not block, it is probably better to write a
+simple read loop.
 
 *gps_mainloop()*::
 *gps_mainloop()* enables the provided hook function to be continually
@@ -226,35 +228,74 @@ the key value used to create shared-memory segment used for
 communication with *gpsd*. This will be useful mainly when isolating test
 instances of *gpsd* from production ones.
 
-== CODE EXAMPLE
+== EXAMPLES
 
-The following is an excerpted and simplified version of the libgps
-interface code from *cgps*(1).
+The following is a fully functional minimal C client.  Check
+the C source for the other *gpsd* clients for more ideas.
 
 ----
-    #include "gps.h"
+// example  gpsd client
+// compile this way:
+//    gcc example .c -o example -lgps -lm
+#include <gps.h>
+#include <math.h>        // for isfinite()
+#include <unistd.h>      // for sleep()
 
+#define MODE_STR_NUM 4
+char *mode_str[MODE_STR_NUM] = {
+    "n/a",
+    "None",
+    "2D",
+    "3D"
+};
+
+int main(int argc, char *argv[])
+{
     struct gps_data_t gps_data;
 
-    ret = gps_open(hostName, hostPort, &gps_data);
+    if ( 0 != gps_open("localhost", "2947", &gps_data)) {
+        printf("Open error.  Bye, bye\n");
+        return 1;
+    }
 
     (void)gps_stream(&gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
 
-    // Put this in a loop with a call to a
-    // high resolution sleep () in it.
-    if (gps_waiting(&gps_data, 500)) {
-        errno = 0;
+    while (gps_waiting(&gps_data, 5000000)) {
         if (gps_read(&gps_data, NULL, 0) == -1) {
-            ...
+            printf("Read error.  Bye, bye\n");
+            break;
+        }
+        if (MODE_SET != (MODE_SET & gps_data.set)) {
+            // did not even get mode, nothing to see here
+            continue;
+        }
+        if (0 > gps_data.fix.mode ||
+            MODE_STR_NUM <= gps_data.fix.mode) {
+            gps_data.fix.mode = 0;
+        }
+        printf("Fix mode: %s (%d) Time: ",
+               mode_str[gps_data.fix.mode],
+               gps_data.fix.mode);
+        if (TIME_SET == (TIME_SET & gps_data.set)) {
+            // not 32 bit safe
+            printf("%ld.%09ld ", gps_data.fix.time.tv_sec,
+                   gps_data.fix.time.tv_nsec);
         } else {
-            /* Display data from the GPS receiver. */
-            if (gps_data.set & ...
+            puts("n/a ");
+        }
+        if (isfinite(gps_data.fix.latitude) &&
+            isfinite( gps_data.fix.longitude)) {
+            // Display data from the GPS receiver if valid.
+            printf("Lat %.6f Lon %.6f\n",
+                   gps_data.fix.latitude, gps_data.fix.longitude);
         }
     }
 
     /* When you are done... */
     (void)gps_stream(&gps_data, WATCH_DISABLE, NULL);
-    (void)gps_close (&gps_data);
+    (void)gps_close(&gps_data);
+    return 0;
+}
 ----
 
 == LIMITATIONS
@@ -298,7 +339,8 @@ recent changes.
 
 == ACKNOWLEDGEMENTS
 
-C sample code Charles Curley <charlescurley@charlescurley.com>
+C sample code by Gary E. Miller <gem@rellim.com> and
+Charles Curley <charlescurley@charlescurley.com>
 
 == SEE ALSO
 
