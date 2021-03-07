@@ -1,6 +1,6 @@
 = gpspipe(1)
 :author: Gary E. Miller
-:date: 25 February 2021
+:date: 7 March 2021
 :email: gem@rellim.com.
 :keywords: gps, gpsd, gpspipe
 :manmanual: GPSD Documentation
@@ -99,7 +99,7 @@ for writing the output to a file.
   Cause native *gpsd* JSON sentences to be output.
 *-x SEC*, *--seconds SEC*::
   Exit after delay of SEC seconds.
-*-z*, *--zulu*::
+*-Z*, *--zulu*::
   Set the timestamp format iso8601: implies *-t*.
 
 At least one of *-R*, *-r* or *-w* must be specified.
