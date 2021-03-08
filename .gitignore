@@ -11,6 +11,8 @@ nohup.out
 # contrib fluff
 contrib/clock_test
 contrib/gpsd-dbus
+contrib/*.o
+contrib/.sconsign.dblite
 # common log file
 nohup.out
 # vi swap files
