@@ -179,7 +179,6 @@ int main(int argc, char **argv)
     bool new_line = true;
     bool raw = false;
     bool watch = false;
-    bool profile = false;
     int option_u = 0;                   // option to show uSeconds
     long count = -1;
     time_t exit_timer = 0;
@@ -202,7 +201,7 @@ int main(int argc, char **argv)
         {"nmea", no_argument, NULL, 'r' },
         {"output", required_argument, NULL, 'o'},
         {"pps", no_argument, NULL, 'P' },
-        {"profile", no_argument, NULL, 'P' },
+        {"profile", no_argument, NULL, 'p' },
         {"scaled", no_argument, NULL, 'S' },
         {"seconds", required_argument, NULL, 'x'},
         {"serial", no_argument, NULL, 'r' },
@@ -256,7 +255,7 @@ int main(int argc, char **argv)
             flags |= WATCH_PPS;
             break;
         case 'p':
-            profile = true;
+            flags |= WATCH_TIMING;
             break;
         case 'R':
             flags |= WATCH_RAW;
@@ -380,9 +379,6 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    if (profile) {
-        flags |= WATCH_TIMING;
-    }
     if (source.device != NULL) {
         flags |= WATCH_DEVICE;
     }
