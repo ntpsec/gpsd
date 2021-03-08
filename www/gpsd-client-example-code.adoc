@@ -7,22 +7,41 @@ Gary E. Miller <gem@rellim.com>
 :keywords: gpsd, example
 :robots: index,follow
 :sectlinks:
+:source-highlighter: rouge
 :toc: left
+
+== ABSTRACT
+
+This document supplies some code examples that show how to write
+good *gpsd* clients.  It is an attempt to supplant the myriad bad
+StackOverflow examples of *gpsd* clients.
 
 == EXAMPLE 1
 
+A simple *gpsd* client that connects to the already running *gpsd* on
+the _localhost_ running on the default port _2947_, using TCP.
 
-[source,linenums]
+This client prints the "mode" (Fix Type), "time" (Fix Time), "latitude"
+and "longitude" if available.  This the Time and Position parts of
+TPV.  Otherwise it prints nothing.
+
+It runs fine as a normal user as it does not require any special
+permissions.  Use "^C" to exit.
+
+// The source highlighter and line numbers require pygments to be installed
+// Keep the line numbers in sync with the text.
+
+[source,c,numbered]
 ----
 // example  gpsd client
 // compile this way:
-//    gcc example .c -o example -lgps -lm
+//    gcc example.c -o example -lgps -lm
 #include <gps.h>
 #include <math.h>        // for isfinite()
 #include <unistd.h>      // for sleep()
 
 #define MODE_STR_NUM 4
-char *mode_str[MODE_STR_NUM] = {
+static char *mode_str[MODE_STR_NUM] = {
     "n/a",
     "None",
     "2D",
@@ -78,3 +97,28 @@ int main(int argc, char *argv[])
 }
 ----
 
+Line by line commmentary:
+
+2 to 4::  All you need to compile is *libgps*, and *gps.h*, installed on your
+host.  Some systems require the libm be explicitly linked in.
+
+5 to 6:: System includes to get isfinite() and sleep().
+
+8 to 14::  An array of strings used to convert "mode" integer to a nice
+"Fix Type" string.
+
+16:: All we need is a simple main().  For clarity no options
+handling is done.  Real programs will implement *-h*, *-V*,
+*[server[;port[;device]]*, etc.
+
+18:: All state variables are contained in *struct gps_data_a gps_data*
+which is defined, and documented, in *gps.h*.
+
+20 to 23::  Connect to the already running *gpsd* on the _localhost_
+running on the default port _2947_.  Or exit loudly.  There may be
+significant delays opening the connection if *gpsd* is not running with
+the "*-n" option.  See the *libgps* man page for details on *gps_open()*
+and the other *gps_*()* function calls.
+
+25::  Tell *gpsd* to send us reports using JSON.  See the *gpsd_json* an
+page for details on the JSON messages.

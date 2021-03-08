@@ -236,13 +236,13 @@ the C source for the other *gpsd* clients for more ideas.
 ----
 // example  gpsd client
 // compile this way:
-//    gcc example .c -o example -lgps -lm
+//    gcc example.c -o example -lgps -lm
 #include <gps.h>
 #include <math.h>        // for isfinite()
 #include <unistd.h>      // for sleep()
 
 #define MODE_STR_NUM 4
-char *mode_str[MODE_STR_NUM] = {
+static char *mode_str[MODE_STR_NUM] = {
     "n/a",
     "None",
     "2D",

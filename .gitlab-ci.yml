@@ -292,6 +292,7 @@ pages:
   stage: build
   script:
   - apk update && apk add python3 asciidoctor scons rsync musl-dev gcc
+  - gem install rouge
   - mkdir .pages; WEBSITE=.public scons website=.pages website; mv .public public
   - find public -type f -regex '.*\.\(htm\|html\|txt\|text\|js\|css\)$' -exec gzip -f -k {} \;
   - ls -lR public
