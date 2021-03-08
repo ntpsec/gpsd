@@ -1,6 +1,6 @@
 = libgps(3)
 :author: Eric S. Raymond
-:date: 6 March 2021
+:date: 7 March 2021
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, libgps
 :manmanual: GPSD Documentation
@@ -344,7 +344,7 @@ Charles Curley <charlescurley@charlescurley.com>
 
 == SEE ALSO
 
-*gpsd*(8), *gps*(1), *libgpsmm*(3)
+*gpsd*(8), *gps*(1), *gpsd_json*(1), *libgpsmm*(3)
 
 == RESOURCES
 
