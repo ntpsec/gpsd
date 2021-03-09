@@ -2324,6 +2324,7 @@ if adoc_prog:
 htmlpages = [
     'www/bt.html',
     'www/bu_303b.html',
+    'www/example1.c',
     'www/excellence.html',
     'www/for-vendors.html',
     'www/future.html',

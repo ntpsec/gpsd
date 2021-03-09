@@ -1,6 +1,6 @@
 = gpsd Client Example Code
 Gary E. Miller <gem@rellim.com>
-8 March 2021
+9 March 2021
 :author: Gary E. Miller
 :date: 8 March 2021
 :description: Annotated gpsd client example code
@@ -20,23 +20,40 @@ Stack Overflow examples of *gpsd* clients.
 == EXAMPLE 1
 
 A simple *gpsd* client that connects to the already running *gpsd* on
-the _localhost_ running on the default port _2947_, using TCP.
+the _localhost_ running on the default port _2947_, using TCP.  You need
+to already have *gpsd* installed, with its libraries, and running your
+host for this example to run.
 
-This client prints the "mode" (Fix Type), "time" (Fix Time), "latitude"
-and "longitude" if available.  This the Time and Position parts of
-the acronym _TPV_.  Otherwise it prints nothing.
+Grab a copy of https://gpsd.io/example1.c[example1.c], compile it, and
+run it. i The example builds and runs fine as a normal user as it does
+not require any special permissions. Use "^C" to exit.  Like this:
 
-It runs fine as a normal user as it does not require any special
-permissions.  Use "^C" to exit.
+----
+$ wget https://gpsd.io/example1.c
+$ gcc example1.c -o example1 -lgps -lm
+$ ./example1
+Fix mode: 3D (3) Time: 1615325173.000000000 Lat 44.068861 Lon -121.314085
+Fix mode: 3D (3) Time: 1615325174.000000000 Lat 44.068861 Lon -121.314085
+Fix mode: 3D (3) Time: 1615325175.000000000 Lat 44.068861 Lon -121.314085
+^C
+----
+ 
+As you can see above, this client prints the "Fix Mode" ("mode", Time
+("time"), "latitude" and "longitude" if available. This the Time and
+Position parts of the acronym _TPV_. Otherwise it prints nothing.
+
+Note: The "Time" is the time of the fix, not the current time.
 
 // The source highlighter and line numbers requires rouge to be installed
 // Keep the line numbers in sync with the text.
+
+The complete example1.c:
 
 [source%nowrap,c,numbered]
 ----
 // example  gpsd client
 // compile this way:
-//    gcc example.c -o example -lgps -lm
+//    gcc example1.c -o example1 -lgps -lm
 #include <gps.h>
 #include <math.h>        // for isfinite()
 #include <unistd.h>      // for sleep()
@@ -98,32 +115,93 @@ int main(int argc, char *argv[])
 }
 ----
 
+=== COMMENTARY
+
 Line by line commentary:
 
-2 to 4::  All you need to compile is *libgps*, and *gps.h*, installed on your
-host.  Some systems require the libm be explicitly linked in.
+Lines 1 to 4::
+[source%nowrap,c,numbered]
+----
+// example  gpsd client
+// compile this way:
+//    gcc example1.c -o example1 -lgps -lm
+#include <gps.h>
+----
 
-5 to 6:: System includes to get isfinite() and sleep().
+All you need to compile is *libgps*, and *gps.h*, installed on your
+host. The gcc option *-lgps* links in *libgps* and *-lm* links in libm.
+Some systems will automatically link in libm.
 
-8 to 14::  An array of strings used to convert _fix.mode_ integer to a
-nice "Fix Type" string.
+Lines 5 to 6::
+[source%nowrap,c,numbered,start=5]
+----
+#include <math.h>        // for isfinite()
+#include <unistd.h>      // for sleep()
+----
 
-16:: All we need is a simple main().  For clarity no options
-handling is done.  Real programs will implement *-h*, *-V*,
-*[server[;port[;device]]*, etc.
+The system includes are to get prototypes for *isfinite()* and *sleep()*.
 
-18:: All state variables are contained in *struct gps_data_a gps_data*
-which is defined, and documented, in *gps.h*.  The _TPV_ data is
-in _gps_data.fix_ which is a *struct gps_fix_t* also defined in *gps.h*.
+Lines 8 to 14::
+[source%nowrap,c,numbered,start=8]
+----
+#define MODE_STR_NUM 4
+static char *mode_str[MODE_STR_NUM] = {
+    "n/a",
+    "None",
+    "2D",
+    "3D"
+};
+----
+An array of strings used to convert _fix.mode_ integer to a
+nice Fix Type string.
 
-20 to 23::  Connect to the already running *gpsd* on the _localhost_
-running on the default port _2947_.  Or exit loudly.  There may be
-significant delays opening the connection if *gpsd* is not running with
-the "*-n" option.  See the *libgps* man page for details on *gps_open()*
-and the other *gps_*()* function calls.
+Lines 16 to 17::
+[source%nowrap,c,numbered,start=16]
+----
+int main(int argc, char *argv[])
+{
+----
 
-25:: Tell *gpsd* to send us reports using JSON.  See the *gpsd_json* an
-page for details on the JSON messages.
+All we need is a simple main(). For clarity no options handling is done
+in this example. Real programs will implement options and arguments:
+*-h*; *-V*; *[server[;port[;device]]*; etc.
+
+Line 18::
+[source%nowrap,c,numbered,start=18]
+----
+    struct gps_data_t gps_data;
+----
+
+Every variable we care about, all variables, are contained in
+*struct gps_data_t gps_data* which is defined, and documented, in
+*gps.h*. *gps_data* contains a *struct gps_fix_t fix*_ which is also
+defined in *gps.h*. The _TPV_ data is in _gps_data.fix_.
+
+Line 20 to 23::
+[source%nowrap,c,numbered,start=20]
+----
+    if ( 0 != gps_open("localhost", "2947", &gps_data)) {
+        printf("Open error.  Bye, bye\n");
+        return 1;
+    }
+----
+
+Connect to the already running *gpsd* on the _localhost_ running on the
+default port _2947_. Or exit loudly. See the *gpsd(3)* man page for
+details on starting *gpsd*. There may be significant delays opening
+the connection if *gpsd* is not running with the "*-n" option. See the
+*libgps* man page for details on *gps_open()* and the other *gps_XXX()*
+function calls.
+
+Line 25::
+[source%nowrap,c,numbered,start=25]
+----
+    (void)gps_stream(&gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
+----
+
+Tell *gpsd* to send us reports using JSON. Later on *gpsd_read()* will
+decode those JSON messsages for us. See the *gpsd_json* man page for
+details on the JSON messages.
 
 27:: The main loop.  Wait, using *gps_waiting()* until *gpsd* data is
 available, then run the body of the loop.  Exit if no data seen in 5
@@ -178,7 +256,7 @@ and return success.  Mother always said to clean up after myself.
 * [[[IEEE 754]]] https://standards.ieee.org/standard/754-2019.html[IEEE Standard
 for Floating-Point Arithmetic]
 
-*gpsd_json(1)*, *libgps(3)*, *gpsd(8)*
+*gpsd_json(1)*, *isfinite(3)*, *sleep(3)**libgps(3)*, *gpsd(8)*
 
 == RESOURCES
 
