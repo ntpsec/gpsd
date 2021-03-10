@@ -23,6 +23,8 @@ import time
 from distutils import sysconfig
 import SCons
 
+# FIXME: InstallAs() breaks --install-sandbox=, use Install()
+
 # scons does not like targets that come and go (if cleaning, if python,
 # etc). All targets are needed for proper cleaning. If a target should
 # not be built (if not python), then do not include the target in the
@@ -178,8 +180,10 @@ doc_files = [
     'AUTHORS',
     'build.adoc',
     'COPYING',
+    'www/example1.c',
     'NEWS',
-    'README.adoc'
+    'README.adoc',
+    'SUPPORT.adoc',
 ]
 
 # doc files to install in share/gpsd/doc
@@ -2283,12 +2287,8 @@ env.Command('www/hardware.html',
              '$SC_PYTHON gpscap.py && cat hardware-tail.html) '
              '> hardware.html' % variantdir])
 
-# doc to install
-docinstall = []
-for doc in doc_files:
-    dest_doc = os.path.join(installdir('docdir'),
-                            os.path.basename(doc))
-    docinstall.append(env.InstallAs(source=doc, target=dest_doc))
+# doc to install in 'docdir'
+docinstall = env.Install(target=installdir('docdir'), source=doc_files)
 
 if adoc_prog:
     adocfiles = (('build', 'www/building'),
@@ -2512,9 +2512,7 @@ if qt_env:
 
 
 # icons to install
-for icon in icon_files:
-    dest_icon = os.path.join(installdir('icondir'), os.path.basename(icon))
-    docinstall.append(env.InstallAs(source=icon, target=dest_icon))
+docinstall += env.Install(target=installdir('icondir'), source=icon_files)
 
 # and now we know everything to install
 install_src = (binaryinstall + maninstall + pc_install + headerinstall +
