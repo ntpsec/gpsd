@@ -21,7 +21,7 @@ Stack Overflow examples of *gpsd* clients.
 
 A simple *gpsd* client that connects to the already running *gpsd* on
 the _localhost_ running on the default port _2947_, using TCP.  You need
-to already have *gpsd* installed, with its libraries, and running your
+to already have *gpsd* installed, with its libraries, and running, on your
 host for this example to run.
 
 Grab a copy of https://gpsd.io/example1.c[example1.c], compile it, and
@@ -39,8 +39,10 @@ Fix mode: 3D (3) Time: 1615325175.000000000 Lat 44.068861 Lon -121.314085
 ----
  
 As you can see above, this client prints the "Fix Mode" ("mode", Time
-("time"), "latitude" and "longitude" if available. This the Time and
+("time"), "latitude" and "longitude" if available. These are the Time and
 Position parts of the acronym _TPV_. Otherwise it prints nothing.
+
+Adding Velocity output is left as an exercise to the reader.
 
 Note: The "Time" is the time of the fix, not the current time.
 
