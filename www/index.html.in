@@ -412,6 +412,10 @@ that describes particularly egregious vendor blunders.</p>
 <dd>An in-depth essay on the architecture and practices of GPSD,
 published in <cite>The Architecture of Open Source, Volume 2</cite>.</dd>
 
+<dt><a href="gpsd-client-example-code.html">GPSD Client Example Code</a></dt>
+<dd>A line by line code walk-through of a simple <code>gpsd</code> client
+written in C.  With a focus on common mistakes. </dd>
+
 <dt><a href="client-howto.html">GPSD Client HOWTO</a></dt>
 <dd>A programmer's guide to interfacing with <code>gpsd</code> from
 client applications. Explains the theory, points at working example

@@ -1,9 +1,8 @@
 = gpsd Client Example Code
 Gary E. Miller <gem@rellim.com>
-9 March 2021
+10 March 2021
 :author: Gary E. Miller
-:date: 8 March 2021
-:description: Annotated gpsd client example code
+:description: A line by line code walk-through of a simple gpsd C client.
 :email: <gem@rellim.com>
 :keywords: gpsd, example
 :robots: index,follow
@@ -38,6 +37,9 @@ Fix mode: 3D (3) Time: 1615325175.000000000 Lat 44.068861 Lon -121.314085
 ^C
 ----
  
+The paranoid reader will have read https://gpsd.io/example1.c[example1.c]
+before running it so as not to lose all their Bitcoin.
+
 As you can see above, this client prints the "Fix Mode" ("mode", Time
 ("time"), "latitude" and "longitude" if available. These are the Time and
 Position parts of the acronym _TPV_. Otherwise it prints nothing.
@@ -130,9 +132,11 @@ Lines 1 to 4::
 #include <gps.h>
 ----
 
-All you need to compile is *libgps*, and *gps.h*, installed on your
-host. The gcc option *-lgps* links in *libgps* and *-lm* links in libm.
-Some systems will automatically link in libm.
+All you need to compile this example is *libgps*, and *gps.h*, installed
+on your host.  Those two files should have been installed when you
+installed *gpsd* on your system.  The gcc option *-lgps* links in
+*libgps* and *-lm* links in libm.  Some systems will automatically link
+in *libm*.
 
 Lines 5 to 6::
 [source%nowrap,c,numbered,start=5]
@@ -205,7 +209,7 @@ Line 25::
 ----
 
 Tell *gpsd* to send us reports using JSON. Later on *gpsd_read()* will
-decode those JSON messsages for us. See the *gpsd_json* man page for
+decode those JSON messsages for us. See the <<gpsd_json>> man page for
 details on the JSON messages.
 
 Line 27::
@@ -338,11 +342,18 @@ for Floating-Point Arithmetic]
 
 * [[[Yoda]]] https://en.wikipedia.org/wiki/Yoda_conditions[Yoda Conditions]
 
-*gpsd_json(1)*, *isfinite(3)*, *sleep(3)**libgps(3)*, *gpsd(8)*
+* [[[libgps]]] {gpsdweb}libgps.html[libgps(3)]
 
-== RESOURCES
+* [[[gpsd_json]]] {gpsdweb}gpsd_json.html[gpsd_json(5)]
 
-*Project web site:* {gpsdweb}
+* [[[gpsd]]] {gpsdweb}gpsd.html[*gpsd(8)]
+
+* {gpsdweb}client-howto.html[GPSD Client HOWTO} is a different look at
+*gpsd* clients.
+
+* *isfinite(3)*, *sleep(3)*
+
+* *GPSD Project web site:* {gpsdweb}
 
 == COPYING
 
