@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
 {
     struct gps_data_t gps_data;
 
-    if ( 0 != gps_open("localhost", "2947", &gps_data)) {
+    if (0 != gps_open("localhost", "2947", &gps_data)) {
         printf("Open error.  Bye, bye\n");
         return 1;
     }
@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     (void)gps_stream(&gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
 
     while (gps_waiting(&gps_data, 5000000)) {
-        if (gps_read(&gps_data, NULL, 0) == -1) {
+        if (-1 == gps_read(&gps_data, NULL, 0)) {
             printf("Read error.  Bye, bye\n");
             break;
         }
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    /* When you are done... */
+    // When you are done...
     (void)gps_stream(&gps_data, WATCH_DISABLE, NULL);
     (void)gps_close(&gps_data);
     return 0;

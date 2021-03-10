@@ -25,7 +25,7 @@ to already have *gpsd* installed, with its libraries, and running your
 host for this example to run.
 
 Grab a copy of https://gpsd.io/example1.c[example1.c], compile it, and
-run it. i The example builds and runs fine as a normal user as it does
+run it.  The example builds and runs fine as a normal user as it does
 not require any special permissions. Use "^C" to exit.  Like this:
 
 ----
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
     (void)gps_stream(&gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
 
     while (gps_waiting(&gps_data, 5000000)) {
-        if (gps_read(&gps_data, NULL, 0) == -1) {
+        if (-1 == gps_read(&gps_data, NULL, 0)) {
             printf("Read error.  Bye, bye\n");
             break;
         }
@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    /* When you are done... */
+    // When you are done...
     (void)gps_stream(&gps_data, WATCH_DISABLE, NULL);
     (void)gps_close(&gps_data);
     return 0;
@@ -152,7 +152,7 @@ static char *mode_str[MODE_STR_NUM] = {
     "3D"
 };
 ----
-An array of strings used to convert _fix.mode_ integer to a
+An array of strings used to convert _gps_data.fix.mode_ integer to a
 nice Fix Type string.
 
 Lines 16 to 17::
@@ -175,7 +175,7 @@ Line 18::
 Every variable we care about, all variables, are contained in
 *struct gps_data_t gps_data* which is defined, and documented, in
 *gps.h*. *gps_data* contains a *struct gps_fix_t fix*_ which is also
-defined in *gps.h*. The _TPV_ data is in _gps_data.fix_.
+defined in *gps.h*. The _TPV_ data we will use is in _gps_data.fix_.
 
 Line 20 to 23::
 [source%nowrap,c,numbered,start=20]
@@ -193,6 +193,9 @@ the connection if *gpsd* is not running with the "*-n" option. See the
 *libgps* man page for details on *gps_open()* and the other *gps_XXX()*
 function calls.
 
+Note the use of <<Yoda>> conditions. These prevent many hard to spot
+code errors.
+
 Line 25::
 [source%nowrap,c,numbered,start=25]
 ----
@@ -203,58 +206,135 @@ Tell *gpsd* to send us reports using JSON. Later on *gpsd_read()* will
 decode those JSON messsages for us. See the *gpsd_json* man page for
 details on the JSON messages.
 
-27:: The main loop.  Wait, using *gps_waiting()* until *gpsd* data is
-available, then run the body of the loop.  Exit if no data seen in 5
-seconds.
+Line 27::
+[source%nowrap,c,numbered,start=27]
+----
+    while (gps_waiting(&gps_data, 5000000)) {
+----
 
-28:: Read the waiting data using *gpsd_read()* into *gps_data*.  Exit
-loudly on errors.  No telling, yet, what the data is.  It could be
+The main loop. Wait, using *gps_waiting()* until data from the *gpsd*
+connectio is available, then run the body of the loop. Exit if no data
+seen in 5 seconds (5000000 micro seconds).
+
+Lines 28 to 31::
+[source%nowrap,c,numbered,start=28]
+----
+        if (-1 == gps_read(&gps_data, NULL, 0)) {
+            printf("Read error.  Bye, bye\n");
+            break;
+        }
+----
+
+Read the waiting data using *gpsd_read()* and parse it into *gps_data*.
+Exit loudly on errors. No telling, yet, what the data is. It could be
 from *TPV", *SKY*, *AIS*, or other message classes.
 
-32 to 34:: Here is the part that most programmers miss.  Check that *TPV*
-data was received.  The flag *MODE_SET* is set IFF a *TPV* JSON sentence
-was received.  If no *MODE_SET* then do not bother to look at the rest
-of the data in _gpsdata.fix_.
+Lines 32 to 35::
+[source%nowrap,c,numbered,start=32]
+----
+        if (MODE_SET != (MODE_SET & gps_data.set)) {
+            // did not even get mode, nothing to see here
+            continue;
+        }
+----
 
-35 to 39:: Range check _gpsdata.fix.mode_ so we can use it as an index
-into _mode_str_.  Array overruns are bad.  New versions of *gpsd* often
-extend the range of unenumerated types.
+Here is a part that most programmers miss. Check that *TPV* data was
+received, not some other data, like *SKY*. The flag *MODE_SET* is set
+IFF a *TPV* JSON sentence was received. If no *MODE_SET* then do not
+bother to look at the rest of the data in _gpsdata.fix_.
 
-40 to 42:: Print the Fix mode as an integer, and a string.
+Lines 36 to 39::
+[source%nowrap,c,numbered,start=36]
+----
+        if (0 > gps_data.fix.mode ||
+            MODE_STR_NUM <= gps_data.fix.mode) {
+            gps_data.fix.mode = 0;
+        }
+----
 
-45 to 49:: Print the _gps_data.fix.time_ as seconds and nano seconds
-into the UNIX epoch, if we have it, else "n/a". _fix.time_ is a _struct
-timespec_.  An explanation of _struct timepec_ can be found on the
-*clock_gettime()* man page.
-+
+Range check _gpsdata.fix.mode_ so we can use it as an index into
+_mode_str_. New versions of *gpsd* often extend the range of
+unenumerated types, so protecct your self from an array overrun. Array
+overruns are bad.
+
+Lines 40 to 42::
+[source%nowrap,c,numbered,start=40]
+----
+        printf("Fix mode: %s (%d) Time: ",
+               mode_str[gps_data.fix.mode],
+               gps_data.fix.mode);
+----
+
+Print the Fix mode as an integer, and a string.
+
+Lines 43 to 48::
+[source%nowrap,c,numbered,start=43]
+----
+        if (TIME_SET == (TIME_SET & gps_data.set)) {
+            // not 32 bit safe
+            printf("%ld.%09ld ", gps_data.fix.time.tv_sec,
+                   gps_data.fix.time.tv_nsec);
+        } else {
+            puts("n/a ");
+        }
+----
+
+Print the _gps_data.fix.time_ as seconds and nano seconds into the UNIX
+epoch, if we have it, else "n/a". _fix.time_ is a *struct timespec*. An
+explanation of *struct timespec* can be found on the *clock_gettime()*
+man page.
+
 Just because we have a "valid" time does not mean it bears any relation
 to UTC.  Many GPS/GNSS receivers output random time when they do not
 have a fix.  Worse, some continue to do so for minutes after reporting
 that they have a valid fix.
 
-50 to 55:: Just because we have a "3D" fix does not mean we have
-_latitude_ and _longitude_.  The receiver may not have sent that data
-yet.  Conversely, some receivers will send them, without a fix, based on
-some best guess.  This example prints them if we get them regardless of
-fix "mode" or "status".
-+
+Lines 50 to 55::
+[source%nowrap,c,numbered,start=50]
+----
+        if (isfinite(gps_data.fix.latitude) &&
+            isfinite( gps_data.fix.longitude)) {
+            // Display data from the GPS receiver if valid.
+            printf("Lat %.6f Lon %.6f\n",
+                   gps_data.fix.latitude, gps_data.fix.longitude);
+        }
+----
+
+Just because we have a "3D" fix does not mean we have _latitude_ and
+_longitude_. The receiver may not have sent that data yet. Conversely,
+some receivers will send them, without a fix, based on some best guess.
+This example prints them if we get them regardless of fix "mode" or
+"status".
+
 When *gpsd* does not know the value of a floating point variable, it
 sets that variable to *NaN* (Not a Number).  So the example checks if
 _latitude_ and _longitude_ are set by seeing if they are finite numbers by
 using *isfinite()* from *libm*.  Do not use *isnan()*!
-+
-<<IEEE 754>> floating point math sometimes defies common logic.
-A zero divided by a one returns _+Inf_ (positive infinity).  But
-*isnan(_+Inf_)* returns _False_!  _+Inf_ is one of many _NaN_, but it is
-special.  That is why the example uses *isfinite()*.
 
-59 to 61::  When falling out of the loop, close the TCP connection nicely
+<<IEEE754>> floating point math sometimes defies common logic.
+A one divided by a zero returns _+Inf_ (positive infinity).  But cruelly
+*isnan(_+Inf_)* returns _False_!  _+Inf_ is one of many _NaN_, but it is
+special.  That is why *gpsd* always uses *isfinite()*.
+
+Lines 58 to 61::
+[source%nowrap,c,numbered,start=58]
+----
+    // When you are done...
+    (void)gps_stream(&gps_data, WATCH_DISABLE, NULL);
+    (void)gps_close(&gps_data);
+    return 0;
+----
+
+When falling out of the loop, close the TCP connection nicely
 and return success.  Mother always said to clean up after myself.
 
 == REFERENCES
 
-* [[[IEEE 754]]] https://standards.ieee.org/standard/754-2019.html[IEEE Standard
+[bibliography]
+* [[[IEEE754]]] https://standards.ieee.org/standard/754-2019.html[IEEE Standard
 for Floating-Point Arithmetic]
+
+* [[[Yoda]]] https://en.wikipedia.org/wiki/Yoda_conditions[Yoda Conditions]
 
 *gpsd_json(1)*, *isfinite(3)*, *sleep(3)**libgps(3)*, *gpsd(8)*
 
