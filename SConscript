@@ -23,8 +23,6 @@ import time
 from distutils import sysconfig
 import SCons
 
-# FIXME: InstallAs() breaks --install-sandbox=, use Install()
-
 # scons does not like targets that come and go (if cleaning, if python,
 # etc). All targets are needed for proper cleaning. If a target should
 # not be built (if not python), then do not include the target in the
@@ -2258,9 +2256,8 @@ if adoc_prog:
                      (adoc_prog, adoc_args)])
         # install nroff man page
         section = man.split(".")[1]
-        dest = os.path.join(installdir('mandir'), "man" + section,
-                            os.path.basename(man))
-        maninstall.append(env.InstallAs(source=man, target=dest))
+        dest = os.path.join(installdir('mandir'), "man" + section)
+        maninstall.append(env.Install(target=dest, source=man))
 
         # make html man page
         target = 'www/%s.html' % os.path.basename(man[:-2])
@@ -2272,9 +2269,8 @@ else:
     # can't build man pages, maybe we have pre-built ones?
     for man in Glob('man/*.?', strings=True):
         section = man.split(".")[1]
-        dest = os.path.join(installdir('mandir'), "man" + section,
-                            os.path.basename(man))
-        maninstall.append(env.InstallAs(source=man, target=dest))
+        dest = os.path.join(installdir('mandir'), "man" + section)
+        maninstall.append(env.Install(target=dest, source=man))
 
 
 # The hardware page
