@@ -344,7 +344,7 @@ Charles Curley <charlescurley@charlescurley.com>
 
 == SEE ALSO
 
-*gpsd*(8), *gps*(1), *gpsd_json*(1), *libgpsmm*(3)
+*gpsd*(8), *gps*(1), *gpsd_json*(5), *libgpsmm*(3)
 
 == RESOURCES
 
