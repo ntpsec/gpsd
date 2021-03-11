@@ -19,7 +19,7 @@ handles numbers.  This white paper will explore many of those choices.
 
 == NaN ain't your Nana
 
-The most obviously confounding choice is the use in *gpsd* of *NaN*s
+The most obviously confounding choice is the use in *gpsd* of *NaNs*
 (Not A Number). *gpsd* keeps track of a large number of individual
 numbers, most of them are invalid at any one time. To keep track of
 which integers are valid, a bit field is used. When an integer is
@@ -31,6 +31,8 @@ When *gpsd* marks a floating point number invalid, it sets the value to
 <<NaN>>. So before using any *gpsd* floating point number, check that
 it is valid. C obeys <<IEEE754>>. Python sort of does, enough for our
 purposes.
+
+=== C NaN
 
 A little C program will make the behavior of <<NaN>> easy to see:
 
@@ -118,12 +120,54 @@ What do you expect to see whan that program is run?  Try it:
 a: n/a
 ----
 
-Exactly the desired result.  Now you know why isfinite() is all over
+Exactly the desired result.  Now you know why *isfinite()* is all over
 *gpsd* client code.
 
+=== Python NaN
 
-<<NaN>>s have many other interesting uses, be sure to read up on the
-subject. The <<IEEE754>> document is a closed source standard. For a
+Python is similar, it almost follows <<IEEE754>>, but has many undocumented
+"features" that conflict with <<IEEE754>>:
+
+[source%nowrap,numbered]
+----
+# python
+>>> a = 1.0 / 0.0
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+ZeroDivisionError: float division by zero
+----
+
+For shame.  It does provide a sideways method to set a variable to
+various <<NaN>>s:
+
+----
+~ $ python
+>>> Inf = float('inf')
+>>> Ninf = float('-inf')
+>>> NaN = float('NaN')
+>>> print("Inf: %f Ninf: %f NaN: %f" % (Inf, Ninf, NaN))
+Inf: inf Ninf: -inf NaN: nan
+----
+
+And *math.isnan()* and *math.isfinite()* work as expected.  Continuing
+the previous example:
+
+----
+>>> import math
+>>> math.isnan(Inf)
+False
+>>> math.isnan(NaN)
+True
+>>> math.isfinite(NaN)
+False
+>>> math.isfinite(Inf)
+False
+----
+
+And that is why *gpsd* uses *math.isfinite()* instead of *math.isnan()*.
+
+<<NaN>>s have many other interesting properties, be sure to read up on
+the subject. The <<IEEE754>> document is a closed source standard. For a
 public description look at the Wikipedia <<NaN>> article.
 
 == REFERENCES
