@@ -313,14 +313,10 @@ This example prints them if we get them regardless of fix "mode" or
 "status".
 
 When *gpsd* does not know the value of a floating point variable, it
-sets that variable to *NaN* (Not a Number).  So the example checks if
+sets that variable to a *NaN* (Not a Number).  So the example checks if
 _latitude_ and _longitude_ are set by seeing if they are finite numbers by
-using *isfinite()* from *libm*.  Do not use *isnan()*!
-
-<<IEEE754>> floating point math sometimes defies common logic.
-A one divided by a zero returns _+Inf_ (positive infinity).  But cruelly
-*isnan(_+Inf_)* returns _False_!  _+Inf_ is one of many _NaN_, but it is
-special.  That is why *gpsd* always uses *isfinite()*.
+using *isfinite()* from *libm*.  Do not use *isnan()*!  See <<NUMBERS>>
+for a more detailed explanation about this issue.
 
 Lines 58 to 61::
 [source%nowrap,c,numbered,start=58]
@@ -348,8 +344,10 @@ for Floating-Point Arithmetic]
 
 * [[[gpsd]]] {gpsdweb}gpsd.html[*gpsd(8)]
 
-* {gpsdweb}client-howto.html[GPSD Client HOWTO} is a different look at
+* {gpsdweb}client-howto.html[GPSD Client HOWTO] is a different look at
 *gpsd* clients.
+
+* [[[NUMBERS]]] {gpsdweb}gpsd-numbers-matter.html[GPSD Numbers Matter]
 
 * *isfinite(3)*, *sleep(3)*
 
