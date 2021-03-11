@@ -348,7 +348,12 @@ Charles Curley <charlescurley@charlescurley.com>
 
 == RESOURCES
 
-*Project web site:* {gpsdweb}
+* {gpsdweb}gpsd-client-example-code.html[GPSD Client Example Code] An
+annotated example client.
+
+* {gpsdweb}client-howto.html[GPSD Client HOWTO} A GPS client HOWTP
+
+* *Project web site:* {gpsdweb}
 
 == COPYING
 
