@@ -1,0 +1,142 @@
+= GPSD Numbers Matter
+Gary E. Miller <gem@rellim.com>
+10 March 2021
+:author: Gary E. Miller
+:description: How and why  GPSD tortures numbers.
+:email: <gem@rellim.com>
+:keywords: gpsd, NaN, precision
+:robots: index,follow
+:sectlinks:
+:source-highlighter: rouge
+:toc: left
+
+== ABSTRACT
+
+Geodesy tortures numbers harder than almost any other discipline.  It
+requires that very large numbers be known to very small precision.  This
+leads to some unexpected, sometimes perplexing, choices in how *gpsd*
+handles numbers.  This white paper will explore many of those choices.
+
+== NaN ain't your Nana
+
+The most obviously confounding choice is the use in *gpsd* of *NaN*s
+(Not A Number). *gpsd* keeps track of a large number of individual
+numbers, most of them are invalid at any one time. To keep track of
+which integers are valid, a bit field is used. When an integer is
+valid, a corresponding bit is set. Keeping track of which bit matches
+which integer is challenging. <<IEEE754>> eliminates that problem with
+floating point numbers.
+
+When *gpsd* marks a floating point number invalid, it sets the value to
+<<NaN>>. So before using any *gpsd* floating point number, check that
+it is valid. C obeys <<IEEE754>>. Python sort of does, enough for our
+purposes.
+
+A little C program will make the behavior of <<NaN>> easy to see:
+
+[source%nowrap,c,numbered]
+----
+// Compile with: gcc nan.c -o nan
+#include <stdio.h>     // for printf()
+
+int main(int argc, char **argv)
+{
+    double a = 1.0 / 0.0;
+    double b = -1.0 / 0.0;
+    printf("a: %f b: %f\n", a, b);
+}
+----
+
+What do you expect to see whan that program is run?  Try it:
+
+----
+~ $ gcc nan.c -o nan
+~ $ ./nan
+a: inf b: -inf
+----
+
+1.0 divided by 0.0 is infinity.  -1.0 divided by 0.0 is negative infinity.
+
+Any program that printed out a lot of "inf" or -inf" would annoy the users
+and they would complain.  To avoid that, *gpsd* clients check, and print
+out "n/a" instead.
+
+Here is a common solution:
+
+[source%nowrap,c,numbered]
+----
+// Compile with: gcc nan.c -o nan
+#include <math.h>      // for isnan()
+#include <stdio.h>     // for printf()
+  
+int main(int argc, char **argv)
+{
+    double a = 1.0 / 0.0;
+    if (isnan(a)) {
+        printf("a: n/a\n");
+    } else {
+        printf("a: %f\n", a);
+    }
+}
+----
+
+What do you expect to see whan that program is run?  Try it:
+
+----
+~ $ gcc  nan.c -o nan
+~ $ ./nan
+a: inf
+----
+
+Whoops.  All <<NaN>>s are not <<NaN>>s!  Very confusing, rather than try to
+explain, I'll send you to the Wikipedia explanation: <<NaN>>.  But there
+is a simple solution.  We do not really care if a number if <<NaN>>, or if it
+is infinity.  We care that it is finite, and that is easy to test for:
+
+[source%nowrap,c,numbered]
+----
+// Compile with: gcc nan.c -o nan
+#include <math.h>      // for isfinite()
+#include <stdio.h>     // for printf()
+  
+int main(int argc, char **argv)
+{
+    double a = 1.0 / 0.0;
+    if (isfinite(a)) {
+        printf("a: %f\n", a);
+    } else {
+        printf("a: n/a\n");
+    }
+}
+----
+
+What do you expect to see whan that program is run?  Try it:
+
+----
+~ $ gcc  nan.c -o nan
+~ $ ./nan
+a: n/a
+----
+
+Exactly the desired result.  Now you know why isfinite() is all over
+*gpsd* client code.
+
+
+<<NaN>>s have many other interesting uses, be sure to read up on the
+subject. The <<IEEE754>> document is a closed source standard. For a
+public description look at the Wikipedia <<NaN>> article.
+
+== REFERENCES
+
+[bibliography]
+* [[[IEEE754]]] https://standards.ieee.org/standard/754-2019.html[IEEE Standard
+for Floating-Point Arithmetic]
+
+* [[[NaN]]] https://en.wikipedia.org/wiki/NaN[NaN] Wikipedia Article
+
+* *GPSD Project web site:* {gpsdweb}
+
+== COPYING
+
+This file is Copyright 2021 by the GPSD project +
+SPDX-License-Identifier: BSD-2-clause

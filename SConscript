@@ -2293,6 +2293,8 @@ if adoc_prog:
                  ('SUPPORT', 'www/SUPPORT'),
                  ('www/AIVDM', 'www/AIVDM'),
                  ('www/client-howto', 'www/client-howto'),
+                 ('www/gpsd-numbers-matter',
+                  'www/gpsd-numbers-matter'),
                  ('www/gpsd-client-example-code',
                   'www/gpsd-client-example-code'),
                  ('www/gpsd-time-service-howto',

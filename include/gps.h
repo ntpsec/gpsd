@@ -130,7 +130,8 @@ extern "C" {
  */
 
 /* WARNING: Check all floats and doubles with isfinite() before using them!
- * isnan() is not sufficient.
+ * isnan() is not sufficient. See:
+ *     https://gps.io/gpsd-numbers-matter.html
  */
 
 typedef struct timespec timespec_t;     /* Unix time as sec, nsec */

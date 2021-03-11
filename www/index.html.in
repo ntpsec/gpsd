@@ -421,6 +421,9 @@ written in C.  With a focus on common mistakes. </dd>
 client applications. Explains the theory, points at working example
 source code, warns you what the edge cases and gotchas are.</dd>
 
+<dt><a href="gpsd-numbers-matter.html">GPSD Numbers Matter</a></dt>
+<dd>A wandering discourse on the numerology of <code>gpsd</code>.</dd>
+
 <dt><a href="gps-hacking.html">ESR's Guide to Hacking With GPS</a></dt>
 <dd>If you are new to GPS technology and don't quite understand what
 <code>gpsd</code> is about, you might find this interesting.</dd>
