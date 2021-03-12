@@ -70,7 +70,7 @@ GPSD Frequently Asked Questions
 <div id="Content">
 
 <ul>
-  <li>Troubleshooting GPSD: the basics
+  <li><a href='#troubleshooting'>Troubleshooting GPSD: the basics</a>
   <ul>
     <li><a href='#verify'>How can I verify operation of a new GPS?</a></li>
     <li><a href='#willitwork'>Will a GPS not on the GPSD hardware list work?</a></li>
@@ -80,7 +80,7 @@ GPSD Frequently Asked Questions
     <li><a href='#raspberry'>Time is wrong on my Raspberry Pi</a></li>
   </ul>
   </li>
-  <li>Licensing and support
+  <li><a href='#licensing'>Licensing and support</a>
   <ul>
     <li><a href='#bug-reporting'>How do I report bugs in GPSD?</a></li>
     <li><a href='#support'>What support channels does GPSD have?</a></li>
@@ -88,7 +88,7 @@ GPSD Frequently Asked Questions
     <li><a href='#commercial'>Can I use GPSD in commercial products?</a></li>
   </ul>
   </li>
-  <li>GPS performance
+  <li><a href='#performance'>GPS performance</a>
   <ul>
     <li><a href='#startup'>Why does getting a fix take so long after powerup?</a></li>
     <li><a href='#timelag'>Why does GPS time lag wall time by 11-15 seconds?</a></li>
@@ -101,14 +101,14 @@ GPSD Frequently Asked Questions
   </ul>
   </li>
 
-  <li>Problems with specific applications
+  <li><a href='#applications'>Problems with specific applications</a>
   <ul>
     <li><a href='#gpsdrive'>Why do I get implausibly low speeds when using gpsdrive?</a></li>
     <li><a href='#kismet'>Why do I get no results when I try to use <code>gpsd</code> with Kismet?</a></li>
   </ul>
   </li>
 
-  <li>Troubleshooting GPSD: advanced topics
+  <li><a href='#advanced'>Troubleshooting GPSD: advanced topics</a>
   <ul>
     <li><a href='#baud'>What about serial port speed (baud rate)?</a></li>
     <li><a href='#conflict'>Why does GPSD open non-GPS USB devices?</a></li>
@@ -117,7 +117,7 @@ GPSD Frequently Asked Questions
   </ul>
   </li>
 
-  <li>Application development with GPSD
+  <li><a href='#development'>Application development with GPSD</a>
   <ul>
     <li><a href='#why_not_parse_nmea'>Why use the <code>gpsd</code> protocol rather than parsing raw NMEA?</a></li>
     <li><a href='#interfacing'>How should  I interface my application with <code>gpsd</code>?</a></li>
@@ -125,7 +125,7 @@ GPSD Frequently Asked Questions
   </ul>
   </li>
 
-  <li>Linux issues
+  <li><a href='#linux'>Linux issues</a>
   <ul>
     <li><a href='#bluetooth'>Why do I have to restart <code>gpsd</code> whenever I power-cycle my Bluetooth device?</a></li>
     <li><a href='#sleep'>Why does my GPS get lost when I sleep/wake my laptop?</a></li>
