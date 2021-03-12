@@ -108,16 +108,15 @@ extern "C" {
  * the same as NaN. Check "gps_mask_t set" before using integers and flags.
  *
  * Error estimates are at 95% confidence.  Except when they are not.
- */
-/* WARNING!  loss of precision telling time as a double.
- * A double is 53 significant bits.
+ *
+ * WARNING!  loss of precision telling time as a double.
  * UNIX time to nanoSec precision is 62 significant bits
  * UNIX time to nanoSec precision after 2038 is 63 bits
- * UNIX time as a double is only microSec precision
- * UNIX time as a double and PPS do not play well together
- */
-
-/* The u-blox ZED-F9P reports 0.1 mm, and 1e-9 (0.000000001) degree,
+ * That is why gpsd uses struct timespec.
+ *
+ * For more info:  https://gps.io/gpsd-numbers-matter.html
+ *
+ * The u-blox ZED-F9P reports 0.1 mm, and 1e-9 (0.000000001) degree,
  * precision.  That is about 12 decimal digits of precision.
  * It is certainly not that accurate, maybe soon.
  *
@@ -125,12 +124,13 @@ extern "C" {
  * printf() format %f defaults to %.6f, which will truncate the result.
  * so print with %.7f, or even %9f, if you have a survey grade GPS.
  *
- * See for more info:  https://gps.io/gpsd-numbers-matter.html
+ * For more info:  https://gps.io/gpsd-numbers-matter.html
  *
  * All double values use NAN to indicate data not available.
  * WARNING: Check all floats and doubles with isfinite() before using them!
  * isnan() is not sufficient.
- * See for more info:  https://gps.io/gpsd-numbers-matter.html
+ *
+ * For more info:  https://gps.io/gpsd-numbers-matter.html
  */
 
 typedef struct timespec timespec_t;     /* Unix time as sec, nsec */

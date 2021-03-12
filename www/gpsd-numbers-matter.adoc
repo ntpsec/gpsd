@@ -27,11 +27,11 @@ decimal digits of precision. It is certainly not that accurate, maybe
 soon. No matter, *gpsd* wants to not lose the precision of the data it
 is given.
 
-12 digits of precision fits in a C double which has 15.95 digits
-of precision.  printf() format %f defaults to %.6f, which will truncate
-the result. so print with %.7f, or even %9f, if you have a survey grade
-GPS.  Here is a rought idea of how degrees relate to distance, at the
-equator:
+12 digits of precision fits in a C double which has 15.95 decimal
+digits of precision (53 binary bits of precision). printf() format %f
+defaults to %.6f, which will truncate the result. so print with %.7f, or
+even %9f, if you have a survey grade GPS. Here is a rought idea of how
+degrees relate to distance, at the equator:
 
 |====
 |Degrees|DMS|Distance at equator
@@ -47,6 +47,36 @@ Python floats are very similar to C doubles, plus some annoying bugs
 related to <<NaN>>.
 
 See <<DD>> for more information on Decimal Degrees and precision.
+
+== Time
+
+In the "Latitude and Longitude" section above we learned that C doubles
+are just fine tor holding position information.  The same can not be said
+for "Time". There is loss of precision when storing time as a double!
+
+ * A double is 53 significant bits.
+ * POSIX time to nanoSec precision is 62 significant bits
+ * POSIX time to nanoSec precision after 2038 is 63 bits
+ * POSIX time as a double is only microSec precision
+
+That is why POSIX time as a double and PPS do not play well together.
+
+WARNING:: Loss of precision telling time as a double!
+
+That is why *gpsd* tells time using *struct timespec*.  That look like this:
+
+[source,c]
+----
+  struct timespec {
+      time_t  tv_sec;  /* Seconds */
+      long    tv_nsec; /* Nanoseconds */
+  };
+----
+
+*time_t* is usually a 64-bit integer. Older systems, and some 32-bit
+systems, define *time_t* as a 32-bit integer, which is deprecated. A
+32-bit integer will overflow at: 03:14:07 UTC on 19 January 2038. Plan
+for that apocalypse now.  Source: <<2038>>
 
 == NaN ain't your Nana
 
@@ -205,6 +235,8 @@ public description look at the Wikipedia <<NaN>> article.
 
 [bibliography]
 * [[[DD]]] https://en.wikipedia.org/wiki/Decimal_degrees[Decimal Degrees] Wikipedia Article
+
+* [[[2038]]] https://en.wikipedia.org/wiki/Year_2038_problem[2038 Problem] Wikipedia article
 
 * [[[IEEE754]]] https://standards.ieee.org/standard/754-2019.html[IEEE Standard
 for Floating-Point Arithmetic]
