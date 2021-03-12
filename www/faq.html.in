@@ -97,6 +97,7 @@ GPSD Frequently Asked Questions
     <li><a href='#accuracy'>How can I improve fix accuracy from my GPS?</a></li>
     <li><a href='#time'>How can I improve time reference accuracy from my GPS?</a></li>
     <li><a href='#waas'>How can I tell if SBAS Augmentation (eg WAAS/EGNOS) is working?</a></li>
+    <li><a href='#toff'>Why does TOFF jump around so much?</a></li>
   </ul>
   </li>
 
@@ -722,6 +723,17 @@ fact.</p>
 
 <p>It has been found that while SiRF-II chips generally had WAAS
 working, SiRF-III support varies by firmware level.</p>
+
+<h1 id='toff'>Why does TOFF jump around so much?</h1>
+
+<p>Your GNSS receiver uses interative math to compute its position.  That
+needs then be encoded into variable length NMEA sentences.  Plus there are
+a variable number of NMEA sentences every fix epoch.  Then they all need
+to fit through a slow serial line.</p>
+
+<p>If you want to reduce your TOFF jitter, then use a faster serial port
+rate, and use a fixed length binary protocol. To make TOFF much less
+important, use PPS.</p1>
 
 <h1 id='agps'>Can GPSD use Assisted GPS data from cellphone networks?</h1>
 
