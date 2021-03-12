@@ -103,12 +103,11 @@ extern "C" {
  * This is what GPSes are meant to produce; all the other info is
  * technical impedimenta.
  *
- * All double values use NAN to indicate data not available.
+ * All the information in this structure was considered "valid"
+ * by the GPS at the time of update.  But "valid" doubles are likely
+ * the same as NaN. Check "gps_mask_t set" before using integers and flags.
  *
- * All the information in this structure was considered valid
- * by the GPS at the time of update.
- *
- * Error estimates are at 95% confidence.
+ * Error estimates are at 95% confidence.  Except when they are not.
  */
 /* WARNING!  loss of precision telling time as a double.
  * A double is 53 significant bits.
@@ -118,20 +117,20 @@ extern "C" {
  * UNIX time as a double and PPS do not play well together
  */
 
-/* we want cm accuracy and 0.0000001 degrees is 1.11 cm at the equator
- * the equator is best case for longitude. At 45lat cut that in half.
- * at 85lat make it 0.00000001
+/* The u-blox ZED-F9P reports 0.1 mm, and 1e-9 (0.000000001) degree,
+ * precision.  That is about 12 decimal digits of precision.
+ * It is certainly not that accurate, maybe soon.
  *
  * this easily fits in a C double which has 15.95 digits of precision
  * printf() format %f defaults to %.6f, which will truncate the result.
- * so print with %.7f if you have a survey grade GPS.
+ * so print with %.7f, or even %9f, if you have a survey grade GPS.
  *
- * ref: https://en.wikipedia.org/wiki/Decimal_degrees
- */
-
-/* WARNING: Check all floats and doubles with isfinite() before using them!
- * isnan() is not sufficient. See:
- *     https://gps.io/gpsd-numbers-matter.html
+ * See for more info:  https://gps.io/gpsd-numbers-matter.html
+ *
+ * All double values use NAN to indicate data not available.
+ * WARNING: Check all floats and doubles with isfinite() before using them!
+ * isnan() is not sufficient.
+ * See for more info:  https://gps.io/gpsd-numbers-matter.html
  */
 
 typedef struct timespec timespec_t;     /* Unix time as sec, nsec */

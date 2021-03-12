@@ -17,6 +17,37 @@ requires that very large numbers be known to very small precision.  This
 leads to some unexpected, sometimes perplexing, choices in how *gpsd*
 handles numbers.  This white paper will explore many of those choices.
 
+== Latitude and Longitude
+
+Your GNSS receiver starts with really big, numbers. Like the Earth's
+polar radius: 6356752.314245. Then with the help of a lot of math,
+computes your position to a high precision. The u-blox ZED-F9P reports
+0.1 mm (1e-9 or 0.000000001 degree) precision. That is about 12
+decimal digits of precision. It is certainly not that accurate, maybe
+soon. No matter, *gpsd* wants to not lose the precision of the data it
+is given.
+
+12 digits of precision fits in a C double which has 15.95 digits
+of precision.  printf() format %f defaults to %.6f, which will truncate
+the result. so print with %.7f, or even %9f, if you have a survey grade
+GPS.  Here is a rought idea of how degrees relate to distance, at the
+equator:
+
+|====
+|Degrees|DMS|Distance at equator
+
+|0.0001|0° 00′ 0.36″|11.132 m
+|0.000001|0° 00′ 0.0036″|11.132 cm
+|0.00000001|0° 00′ 0.000036″|1.1132 mm
+|====
+Source: <<DD>>
+
+
+Python floats are very similar to C doubles, plus some annoying bugs
+related to <<NaN>>.
+
+See <<DD>> for more information on Decimal Degrees and precision.
+
 == NaN ain't your Nana
 
 The most obviously confounding choice is the use in *gpsd* of *NaNs*
@@ -173,6 +204,8 @@ public description look at the Wikipedia <<NaN>> article.
 == REFERENCES
 
 [bibliography]
+* [[[DD]]] https://en.wikipedia.org/wiki/Decimal_degrees[Decimal Degrees] Wikipedia Article
+
 * [[[IEEE754]]] https://standards.ieee.org/standard/754-2019.html[IEEE Standard
 for Floating-Point Arithmetic]
 
