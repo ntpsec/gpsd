@@ -273,6 +273,22 @@ was working.
 <p>On the BSDs and Mac OS X, you're out of luck. As of April 2013 we
 don't know of any shim that makes USB Garmins work on these.</p>
 
+<h2 id='agps'>Can GPSD use Assisted GPS data from cellphone networks?</h2>
+
+<p>Sadly, no. There are both hardware and software barriers to this.</p>
+
+<p>Using AGPS would requires picking up and interpreting information
+broadcast by cellphone towers, so it would at minimum need another
+receiver (separate from the GPS mouse) operating in those frequency
+bands. Of course, a cellphone has one of those built in. Standalone
+GPS sensors don't.</p>
+
+<p>There's another level of the problem, too. Supposing we had the
+right sort of receiver, AGPS systems are carrier-dependent.  As far as
+we know there aren't any published standards for the format of the
+corrections.  So even if we had the signals, GPSD couldn't know what to
+do with them.</p>
+
 <h2 id='raspberry'>Time is wrong on my Raspberry Pi</h2>
 
 <p>The Raspberry Pi has no real-time clock.  Without this, the GPS may
@@ -741,22 +757,6 @@ to fit through a slow serial line.</p>
 rate, and use a fixed length binary protocol. To make TOFF much less
 important, use PPS.</p1>
 
-<h2 id='agps'>Can GPSD use Assisted GPS data from cellphone networks?</h2>
-
-<p>Sadly, no. There are both hardware and software barriers to this.</p>
-
-<p>Using AGPS would requires picking up and interpreting information
-broadcast by cellphone towers, so it would at minimum need another
-receiver (separate from the GPS mouse) operating in those frequency
-bands. Of course, a cellphone has one of those built in. Standalone
-GPS sensors don't.</p>
-
-<p>There's another level of the problem, too. Supposing we had the
-right sort of receiver, AGPS systems are carrier-dependent.  As far as
-we know there aren't any published standards for the format of the
-corrections.  So even if we had the signals, GPSD couldn't know what to
-do with them.</p>
-
 <h1 id='applications'>Problems with specific applications </h1>
 
 <h2 id='gpsdrive'>Why do I get implausibly low speeds when using gpsdrive?</h2>
@@ -991,7 +991,7 @@ in meters is the most obvious example; climb/sink is another.  When a GPS
 doesn't supply these, <code>gpsd</code> can fill them in using the
 same sorts of computation that more capable GPSes use.</p>
 
-<h2 id='interfacing'>How should  I interface my application with <code>gpsd</code>?</h2>
+<h2 id='interfacing'>How should I interface my application with <code>gpsd</code>?</h2>
 
 <p>The <code>gpsd</code> package provides two ways for C code to get
 data from a GPS or AIS receiver.  Both go through the libgps.a library,
