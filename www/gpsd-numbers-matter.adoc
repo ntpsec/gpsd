@@ -76,7 +76,7 @@ That is why *gpsd* tells time using *struct timespec*.  That look like this:
 *time_t* is usually a 64-bit integer. Older systems, and some 32-bit
 systems, define *time_t* as a 32-bit integer, which is deprecated. A
 32-bit integer will overflow at: 03:14:07 UTC on 19 January 2038. Plan
-for that apocalypse now.  Source: <<2038>>
+for that apocalypse now.  Source: <<Y2038>>
 
 == NaN ain't your Nana
 
@@ -236,7 +236,7 @@ public description look at the Wikipedia <<NaN>> article.
 [bibliography]
 * [[[DD]]] https://en.wikipedia.org/wiki/Decimal_degrees[Decimal Degrees] Wikipedia Article
 
-* [[[2038]]] https://en.wikipedia.org/wiki/Year_2038_problem[2038 Problem] Wikipedia article
+* [[[Y2038]]] https://en.wikipedia.org/wiki/Year_2038_problem[2038 Problem] Wikipedia article
 
 * [[[IEEE754]]] https://standards.ieee.org/standard/754-2019.html[IEEE Standard
 for Floating-Point Arithmetic]
