@@ -79,6 +79,8 @@ void ntp_write(volatile struct shmTime *shmseg,
     shmseg->precision = precision;
     memory_barrier();
     shmseg->count++;
+    // make sure that is flushed, then mark valid
+    memory_barrier();
     shmseg->valid = 1;
 }
 
