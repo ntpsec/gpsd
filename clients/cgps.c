@@ -877,6 +877,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
         char *ep_str;
         char *dop_str;
         char *str;
+        static time_t last_time;
 
         /* Fill in the estimated latitude position error, XDOP. */
         ep_str = ep_to_str(gpsdata->fix.epx, altfactor, altunits);
@@ -953,21 +954,26 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
         (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET + 8, "%-*s ",
                         14, ep_str);
 
-        /* Fill in the time offset, milliseconds. */
+        // Fill in the time offset, milliseconds.  If we have a time.
+        // Only the first in every epoch.
+        // Use TOFF??
         if (0 < gpsdata->fix.time.tv_sec) {
-            timespec_t ts_now, ts_diff;
-            char ts_str[TIMESPEC_LEN];
+            if (last_time != gpsdata->fix.time.tv_sec) {
+                last_time = gpsdata->fix.time.tv_sec;
+                timespec_t ts_now, ts_diff;
+                char ts_str[TIMESPEC_LEN];
 
-            (void)clock_gettime(CLOCK_REALTIME, &ts_now);
-            TS_SUB(&ts_diff, &ts_now, &gpsdata->fix.time);
+                (void)clock_gettime(CLOCK_REALTIME, &ts_now);
+                TS_SUB(&ts_diff, &ts_now, &gpsdata->fix.time);
 
-            (void)snprintf(scr, sizeof(scr), "%s s",
-                           timespec_str(&ts_diff, ts_str, sizeof(ts_str)));
-        } else {
-            (void)strlcpy(scr, " n/a", sizeof(scr));
+                (void)snprintf(scr, sizeof(scr), "%s s",
+                               timespec_str(&ts_diff, ts_str, sizeof(ts_str)));
+                (void)mvwprintw(datawin, row, DATAWIN_VALUE_OFFSET + 8,
+                                "%-*s", 18, scr);
+            }
         }
-        (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET + 8, "%-*s", 18,
-                        scr);
+        row++;
+
         /* Fill in the grid square (esr thought *this* one was interesting). */
         if ((isfinite(gpsdata->fix.longitude) != 0 &&
              isfinite(gpsdata->fix.latitude) != 0))
