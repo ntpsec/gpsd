@@ -1922,6 +1922,7 @@ ppscheck = env.Program('clients/ppscheck', ['clients/ppscheck.c'],
                        parse_flags=gpsflags)
 
 bin_binaries = []
+bin_scripts = []
 sbin_binaries = []
 if env["gpsd"]:
     sbin_binaries += [gpsd]
@@ -1931,13 +1932,15 @@ if env["gpsdclients"]:
     bin_binaries += [
         gps2udp,
         gpsctl,
-        'clients/gpsdebuginfo',
         gpsdecode,
         gpspipe,
         gpsrinex,
         gpssnmp,
         gpxlogger,
         lcdgps
+    ]
+    bin_scripts += [
+        'clients/gpsdebuginfo',
     ]
 
 if env["timeservice"] or env["gpsdclients"]:
@@ -2393,6 +2396,7 @@ packing = [
 
 build_src = [
     bin_binaries,
+    bin_scripts,
     "clients/gpsd.php",
     "gpsd.rules",
     icon_files,
@@ -2449,6 +2453,8 @@ if qt_env:
 if ((not env['debug'] and not env['debug_opt'] and not env['profiling'] and
      not env['nostrip'] and not sys.platform.startswith('darwin'))):
     env.AddPostAction(binaryinstall, '$STRIP $TARGET')
+
+binaryinstall.append(env.Install(installdir('bindir'), bin_scripts))
 
 python_module_dir = str(python_libdir) + os.sep + 'gps'
 
@@ -2514,8 +2520,12 @@ if qt_env:
 docinstall += env.Install(target=installdir('icondir'), source=icon_files)
 
 # and now we know everything to install
-install_src = (binaryinstall + maninstall + pc_install + headerinstall +
-               docinstall + python_install)
+install_src = (binaryinstall +
+               docinstall +
+               headerinstall +
+               maninstall +
+               pc_install +
+               python_install)
 
 install = env.Alias('install', install_src)
 
