@@ -1,0 +1,32 @@
+#! /bin/sh
+
+if (( $UID != 0 )); then
+    echo "Please run as root"
+fi
+
+# print what we do
+set -x
+id
+uname -a
+cat /etc/*release
+which gpsd
+gpsd -V
+# use netstat or ss, depending
+if [ `which netstat` ]; then
+    netstat -apn | fgrep ':2947 '
+elif [ `which ss` ]; then
+    ss -apn | fgrep ':2947 '
+fi
+ps ax | fgrep gpsd
+which gpspipe
+gpspipe -V
+gpspipe -w -n 2
+echo PYTHONPATH $PYTHONPATH
+if [ `which python` ]; then
+    python -V
+    python -c "import gps;print(gps.__version__)"
+fi
+if [ `which python3` ]; then
+    python3 -V
+    python3 -c "import gps;print(gps.__version__)"
+fi

@@ -1931,6 +1931,7 @@ if env["gpsdclients"]:
     bin_binaries += [
         gps2udp,
         gpsctl,
+        'clients/gpsdebuginfo',
         gpsdecode,
         gpspipe,
         gpsrinex,
