@@ -13,15 +13,17 @@ which gpsd
 gpsd -V
 # use netstat or ss, depending
 if [ `which netstat` ]; then
-    netstat -apn | fgrep ':2947 '
+    # FreeBSD does not support "-n"
+    netstat -lp | egrep "gpsd|:2947"
 elif [ `which ss` ]; then
-    ss -apn | fgrep ':2947 '
+    ss -lpn | egrep 'gpsd|:2947 '
 fi
 ps ax | fgrep gpsd
 which gpspipe
 gpspipe -V
 gpspipe -w -n 2
 echo PYTHONPATH $PYTHONPATH
+head -n 1 `which xgps`
 if [ `which python` ]; then
     python -V
     python -c "import gps;print(gps.__version__)"
