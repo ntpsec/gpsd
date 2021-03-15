@@ -14,8 +14,12 @@ uname -a
 cat /etc/*release
 which gpsd
 gpsd -V
-# use netstat or ss, depending
-if command -v netstat; then
+# use sockstat, lsof, netstat or ss, depending
+if command -v sockstat; then
+    sockstat -l | egrep 'gpsd|:2947 '
+elif command -v lsof; then
+    lsof -iTCP:2947 -s TCP:LISTEN
+elif command -v netstat; then
     # FreeBSD does not support "-n"
     netstat -lp | egrep "gpsd|:2947"
 elif command -v ss; then
