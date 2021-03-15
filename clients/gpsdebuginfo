@@ -1,5 +1,8 @@
 #! /bin/sh
 
+# make it easy to pipe/save stderr
+exec 2>&1
+
 if (( $UID != 0 )); then
     echo "Please run as root"
 fi
@@ -12,10 +15,10 @@ cat /etc/*release
 which gpsd
 gpsd -V
 # use netstat or ss, depending
-if [ `which netstat` ]; then
+if command -v netstat; then
     # FreeBSD does not support "-n"
     netstat -lp | egrep "gpsd|:2947"
-elif [ `which ss` ]; then
+elif command -v ss; then
     ss -lpn | egrep 'gpsd|:2947 '
 fi
 ps ax | fgrep gpsd
@@ -24,11 +27,20 @@ gpspipe -V
 gpspipe -w -n 2
 echo PYTHONPATH $PYTHONPATH
 head -n 1 `which xgps`
-if [ `which python` ]; then
+if command -v python; then
     python -V
     python -c "import gps;print(gps.__version__)"
 fi
-if [ `which python3` ]; then
+if command -v python3; then
     python3 -V
     python3 -c "import gps;print(gps.__version__)"
+fi
+
+if command -v systemctl; then
+        cat /etc/{default,sysconfig}/gpsd
+	systemctl cat gpsd.service
+	systemctl cat gpsd.socket
+	systemctl status gpsd.service
+	systemctl status gpsd.socket
+	journalctl -u gpsd.service --since today
 fi
