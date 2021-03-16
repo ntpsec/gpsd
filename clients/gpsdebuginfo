@@ -26,7 +26,7 @@ elif command -v netstat; then
 elif command -v ss; then
     ss -ltpn | sed -nE '1p;/:2947 |gpsd/p'
 fi
-ps ax | fgrep gpsd
+ps ax | sed -nE '1p;/gpsd/p'
 which gpspipe
 gpspipe -V
 gpspipe -w -n 2
