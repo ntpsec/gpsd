@@ -315,9 +315,6 @@ latest stable version.</p>
 <dd>Feed the take from <code>gpsd</code> to one or more aggregation
 sites via UDP.</dd>
 
-<dt><a href="gpsfake.html">gpsfake.1</a></dt>
-<dd>The <code>gpsfake</code> test harness simulating a GPS.</dd>
-
 <dt><a href="gpscsv.html">gpscsv.1</a></dt>
 <dd>The <code>gpscsv</code> tool for reading gpsd JSON sentences and
 converting them in CSV files.</dd>
@@ -329,8 +326,14 @@ converting them in CSV files.</dd>
 <dd>The <code>gpscat</code> tool dumps output from a serial
 device. Optionally, it can packetize the data.</dd>
 
+<dt><a href="gpsdebuginfo.html">gpsdebuginfo.1</a></dt>
+<dd>A shell script to dump debugging information.</dd>
+
 <dt><a href="gpsdecode.html">gpsdecode.1</a></dt>
 <dd>The <code>gpsdecode</code> packet decoder.</dd>
+
+<dt><a href="gpsfake.html">gpsfake.1</a></dt>
+<dd>The <code>gpsfake</code> test harness simulating a GPS.</dd>
 
 <dt><a href="gpsmon.html">gpsmon.1</a></dt>
 <dd>The <code>gpsmon</code> real-time packet monitor and diagnostic

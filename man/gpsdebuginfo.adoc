@@ -1,0 +1,62 @@
+= gpsdebuginfo(1)
+:author: Gary E. Miller
+:date: 16 March 2021
+:email: <gem@rellim.com.>
+:keywords: gpsd, gps, gpsdebuginfo
+:manmanual: GPSD Documentation
+:mansource: GPSD Version {gpsdver}
+:robots: index,follow
+:sectlinks:
+:toc: left
+:type: manpage
+:webfonts!:
+
+== NAME
+
+gpsdebuginfo - Generate a gpsd debug dump of your host.
+
+== SYNOPSIS
+
+*gpsdebuginfo*
+
+== DESCRIPTION
+
+*gpsdebuginfo* is a shell script to run a series of short tests to
+see the state of *gpsd* on you machine.  Run it, and send the complete
+output, without change, when you request support help.
+
+The script should not collect any Personally Identifiable Information
+(PII).  You may wish to study the output before sending it to verify that.
+
+*gpsdebuginfo* should be run as root.  It may be run as a normal user,
+but with loss of functionality.  Running under *sudo* may cause
+misleading results.
+
+== OPTIONS
+
+None.
+
+== ENVIRONMENT
+
+This script depends on the following environment variables:
+
+PATH:: To find *gpsd*, *gpspipe*, and other installed *gpsd* parts.
+
+PYTHONPATH:: To find the *gps* Python module.
+
+== RETURN VALUES
+
+*0*:: on success.
+
+== SEE ALSO
+
+*gpsd*(8), *cgps*(1), *gps*(1), *gpspipe*(1)
+
+== RESOURCES
+
+*Project web site:* {gpsdweb}
+
+== COPYING
+
+This file is Copyright 2021 by the GPSD project +
+SPDX-License-Identifier: BSD-2-clause
