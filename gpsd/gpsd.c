@@ -190,23 +190,32 @@ static void typelist(void)
     }
     (void)printf("# n: mode switch, b: speed switch, "
         "c: rate switch, *: non-NMEA packet type.\n");
-#if defined(SOCKET_EXPORT_ENABLE)
-    (void)printf("# Socket export enabled.\n");
+#if defined(CONTROL_SOCKET_ENABLE)
+    (void)printf("# Control socket for hotplug notifications enabled.\n");
+#endif
+#if defined(DBUS_EXPORT_ENABLE)
+    (void)printf("# DBUS export enabled.\n");
+#endif
+#if defined(HAVE_SYS_TIMEPPS_H)
+    (void)printf("# KPPS enabled.\n");
+#endif
+#if defined(MAGIC_HAT_ENABLE)
+    (void)printf("# Magic Hat enabled.\n");
+#endif
+#if defined(NETFEED_ENABLE)
+    (void)printf("# Netfeed enabled.\n");
+#endif
+#if defined(NTRIP_ENABLE)
+    (void)printf("# NTRIP enabled.\n");
 #endif
 #if defined(SHM_EXPORT_ENABLE)
     (void)printf("# Shared memory export enabled.\n");
 #endif
-#if defined(DBUS_EXPORT_ENABLE)
-    (void)printf("# DBUS export enabled\n");
-#endif
-#if defined(CONTROL_SOCKET_ENABLE)
-    (void)printf("# Control socket for hotplug notifications enabled\n");
-#endif
-#if defined(MAGIC_HAT_ENABLE)
-    (void)printf("# Magic Hat enabled\n");
+#if defined(SOCKET_EXPORT_ENABLE)
+    (void)printf("# Socket export enabled.\n");
 #endif
 #if defined(SYSTEMD_ENABLE)
-    (void)printf("# systemd socket activation enabled\n");
+    (void)printf("# systemd socket activation enabled.\n");
 #endif
     exit(EXIT_SUCCESS);
 }
