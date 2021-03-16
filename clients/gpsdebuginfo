@@ -3,12 +3,12 @@
 # make it easy to pipe/save stderr
 exec 2>&1
 
-if (( $UID != 0 )); then
+# print what we do
+set -x
+if [ $UID != 0 ]; then
     echo "Please run as root"
 fi
 
-# print what we do
-set -x
 id
 uname -a
 cat /etc/*release
