@@ -16,14 +16,15 @@ which gpsd
 gpsd -V
 # use sockstat, lsof, netstat or ss, depending
 if command -v sockstat; then
-    sockstat -l | egrep 'gpsd|:2947 '
+    # sockstat for FreeBSD
+    sockstat -l | sed -nE '1p;/:2947 |gpsd/p'
 elif command -v lsof; then
     lsof -iTCP:2947 -s TCP:LISTEN
 elif command -v netstat; then
     # FreeBSD does not support "-n"
-    netstat -lp | egrep "gpsd|:2947"
+    netstat -lp | sed -nE '2p;/:2947 |gpsd/p'
 elif command -v ss; then
-    ss -lpn | egrep 'gpsd|:2947 '
+    ss -ltpn | sed -nE '1p;/:2947 |gpsd/p'
 fi
 ps ax | fgrep gpsd
 which gpspipe
