@@ -13,14 +13,19 @@ id
 uname -a
 cat /etc/*release
 if command -v gpsd; then
+    # get version
     gpsd -V
+    # get as-built options
+    gpsd -h | grep '^#.*enabled'
 fi
-# use sockstat, lsof, netstat or ss, depending
+# use sockstat, lsof, netstat or ss, depending, for owner of port 2947
 if command -v sockstat; then
     # sockstat for FreeBSD
     sockstat -l | sed -nE '1p;/:2947 |gpsd/p'
 elif command -v lsof; then
     lsof -iTCP:2947 -s TCP:LISTEN
+    # gpsd open files
+    lsof -c gpsd | sed -nE '1p;/CHR|LISTEN/p'
 elif command -v netstat; then
     # FreeBSD does not support "-n"
     netstat -lp | sed -nE '2p;/:2947 |gpsd/p'
