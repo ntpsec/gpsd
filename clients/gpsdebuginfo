@@ -30,7 +30,7 @@ which gpspipe
 gpspipe -V
 gpspipe -w -n 2
 echo PYTHONPATH $PYTHONPATH
-head -n 1 `which xgps`
+head -n 1 `which gpscat`
 if command -v python; then
     python -V
     python -c "import gps;print(gps.__version__)"
