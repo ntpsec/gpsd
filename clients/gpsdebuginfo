@@ -12,8 +12,9 @@ set -x
 id
 uname -a
 cat /etc/*release
-which gpsd
-gpsd -V
+if command -v gpsd; then
+    gpsd -V
+fi
 # use sockstat, lsof, netstat or ss, depending
 if command -v sockstat; then
     # sockstat for FreeBSD
@@ -27,12 +28,14 @@ elif command -v ss; then
     ss -ltpn | sed -nE '1p;/:2947 |gpsd/p'
 fi
 ps ax | sed -nE '1p;/gpsd/p'
-which gpspipe
-gpspipe -V
-gpspipe -w -n 2
+if command -v gpspipe; then
+    gpspipe -V
+    # try to get JSON header
+    gpspipe -w -n 2 -x 20
+fi
 echo PYTHONPATH $PYTHONPATH
 if command -v gpscat; then
-    head -n 1 `which gpscat`
+    head -n 1 `command -v gpscat`
 fi
 if command -v python; then
     python -V
