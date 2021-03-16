@@ -54,4 +54,7 @@ if command -v systemctl; then
 	systemctl status gpsd.socket
 	journalctl -u gpsd.service --since today
 fi
+# do not print the rest
+set +x
 echo "Please send the entire, untouched output."
+exit 0
