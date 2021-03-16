@@ -31,7 +31,9 @@ which gpspipe
 gpspipe -V
 gpspipe -w -n 2
 echo PYTHONPATH $PYTHONPATH
-head -n 1 `which gpscat`
+if command -v gpscat; then
+    head -n 1 `which gpscat`
+fi
 if command -v python; then
     python -V
     python -c "import gps;print(gps.__version__)"
@@ -49,3 +51,4 @@ if command -v systemctl; then
 	systemctl status gpsd.socket
 	journalctl -u gpsd.service --since today
 fi
+echo "Please send the entire, untouched output."
