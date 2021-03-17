@@ -2365,7 +2365,9 @@ webpages_x = []
 for glb in webpages_x_list:
     webpages_x += list(map(lambda f: f[3:], glob.glob(glb)))
 
-webpages_static = [('www/gpsdebuginfo', 'clients/gpsdebuginfo'),
+webpages_static = [('www/NEWS', 'NEWS'),
+                   ('www/TODO', 'TODO'),
+                   ('www/gpsdebuginfo', 'clients/gpsdebuginfo'),
                    ]
 for page in webpages_static:
     targ = env.Command(page[0], page[1], 'cp $SOURCE $TARGET')
@@ -3212,10 +3214,8 @@ releaseprep = env.Alias("releaseprep",
 # How to update the website.  Assumes a local GitLab pages setup.
 # See "pages:" in .gitlab-ci.yml
 www_dest = os.environ.get('WEBSITE', '.public')
-website = Utility("website", [www],
-                  ['rsync --exclude="*.in" -avz %s/www/ %s ' %
-                   (variantdir, www_dest),
-                   'cp TODO NEWS %s ' % (www_dest)])
+website = Utility("website", www,
+                  'rsync --exclude="*.in" -avz buildtmp/www/ %s ' % www_dest)
 
 # All a buildup to this.
 env.Alias("release", [releaseprep,
