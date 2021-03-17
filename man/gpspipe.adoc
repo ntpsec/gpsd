@@ -47,7 +47,7 @@ for writing the output to a file.
   *-2* sets the split24 flag on AIS reports.
 *-d*, *--daemonize*::
   Run as a daemon.
-*-d LVL*, *--debug LVL*::
+*-D LVL*, *--debug LVL*::
   Set debug level to LVL.
 *-l*, *--sleep*::
   Sleep for ten seconds before attempting to connect to *gpsd*. This is

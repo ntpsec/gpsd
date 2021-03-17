@@ -107,6 +107,7 @@ static void usage(void)
 #ifdef HAVE_GETOPT_LONG
                   "  --count COUNT    Exit after COUNT packets.\n"
                   "  --daemonize      Run as daemon.\n"
+                  "  --debug LVL      Set debug level to LVL.\n"
                   "  --help           Show this help and exit.\n"
                   "  --json           Dump gpsd native JSON data.\n"
                   "  --nmea           Dump (pseudo) NMEA.\n"
@@ -135,6 +136,7 @@ static void usage(void)
 #endif
                   "  -2               Set the split24 flag.\n"
                   "  -d               Run as a daemon.\n"
+                  "  -D LVL           Set debug level to LVL.\n"
                   "  -h               Show this help and exit.\n"
                   "  -l               Sleep for ten seconds before "
                   "connecting to gpsd.\n"
@@ -196,6 +198,7 @@ int main(int argc, char **argv)
     static struct option long_options[] = {
         {"count", required_argument, NULL, 'n'},
         {"daemonize", no_argument, NULL, 'd'},
+        {"debug", required_argument, NULL, 'D'},
         {"help", no_argument, NULL, 'h'},
         {"json", no_argument, NULL, 'w'},
         {"nmea", no_argument, NULL, 'r' },
