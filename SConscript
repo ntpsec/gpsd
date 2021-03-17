@@ -2369,7 +2369,7 @@ webpages_static = [('www/gpsdebuginfo', 'clients/gpsdebuginfo'),
                    ]
 for page in webpages_static:
     targ = env.Command(page[0], page[1], 'cp $SOURCE $TARGET')
-    webpages_x = targ
+    webpages_x += targ
 
 webpages = htmlpages + asciidocs + wwwpage_targets + webpages_in + webpages_x
 www = env.Alias('www', webpages)
