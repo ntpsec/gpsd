@@ -351,7 +351,7 @@ Charles Curley <charlescurley@charlescurley.com>
 * {gpsdweb}gpsd-client-example-code.html[GPSD Client Example Code] An
 annotated example client.
 
-* {gpsdweb}client-howto.html[GPSD Client HOWTO} A GPS client HOWTP
+* {gpsdweb}client-howto.html[GPSD Client HOWTO] A GPS client HOWTO.
 
 * *Project web site:* {gpsdweb}
 
