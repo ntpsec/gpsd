@@ -5,7 +5,7 @@ exec 2>&1
 
 # print what we do
 set -x
-if [ $UID != 0 ]; then
+if [ $(id -u) != 0 ]; then
     echo "Please run as root"
 fi
 
