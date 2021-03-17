@@ -456,7 +456,8 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
                  service, strerror(errno));
         if (errno == EADDRINUSE) {
             GPSD_LOG(LOG_ERROR, &context.errout,
-                     "maybe gpsd is already running!\n");
+                     "maybe gpsd is already running!  "
+                     "Or systemd has the port?\n");
         }
         (void)close(s);
         return -1;
