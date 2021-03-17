@@ -327,7 +327,8 @@ converting them in CSV files.</dd>
 device. Optionally, it can packetize the data.</dd>
 
 <dt><a href="gpsdebuginfo.html">gpsdebuginfo.1</a></dt>
-<dd>A shell script to dump debugging information.</dd>
+<dd>A shell script to dump debugging information.  For you convenience
+<a href="gpsdebuginfo">gpsdebuginfo</a> is available for direct download.</dd>
 
 <dt><a href="gpsdecode.html">gpsdecode.1</a></dt>
 <dd>The <code>gpsdecode</code> packet decoder.</dd>
