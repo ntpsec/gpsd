@@ -2394,6 +2394,7 @@ static gps_mask_t ubx_msg_rxm_rawx(struct gps_device_t *session,
 
 /*
  * Raw Subframes - UBX-RXM-SFRB
+ * In u-blox 7, only in raw firmware option
  * Not in u-blox 8 or 9
  */
 static gps_mask_t ubx_msg_rxm_sfrb(struct gps_device_t *session,
@@ -2415,24 +2416,26 @@ static gps_mask_t ubx_msg_rxm_sfrb(struct gps_device_t *session,
 
     /* UBX does all the parity checking, but still bad data gets through */
     for (i = 0; i < 10; i++) {
-        words[i] = (uint32_t)getleu32(buf, 4 * i + 2) & 0xffffff;
+        // bits 24 to 31 undefined, remove them.
+        words[i] = (uint32_t)getleu32(buf, 4 * i + 2) & 0x00ffffff;
     }
 
-    return gpsd_interpret_subframe(session, svid, words);
+    // probably GPS, could be SBAS
+    return gpsd_interpret_subframe(session, GNSSID_GPS, svid, words);
 }
 
 /*
  * Raw Subframes - UBX-RXM-SFRBX
- * Note: u-blox F9P abd HPG only
- * This version, only handles GPS constellation (no Galileo,
- * BeiDou, Glonass, etc.)
+ * in u-blox 8, protver 17 and up, time sync firmware only
+ * in u-blox F9P abd HPG only
+ * not present  before u-blox8
  */
 static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
                                     unsigned char *buf, size_t data_len)
 {
     unsigned i;
     uint8_t gnssId, svId, freqId, numWords, chn, version;
-    uint32_t words[10];
+    uint32_t words[17];
 
     if (8 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -2451,7 +2454,12 @@ static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
     gnssId = getub(buf, 0);
     svId = getub(buf, 1);
     freqId = getub(buf, 2);
-    chn = getub(buf, 5);
+    if (1 < version) {
+        // GLONASS channel in version 2 and up.
+        chn = getub(buf, 5);
+    } else {
+        chn = 255;         // valid range 0 to 13
+    }
     version = getub(buf, 6);
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -2459,18 +2467,18 @@ static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
              "freqId %u words %u\n",
              version, gnssId, chn, svId, freqId, numWords);
 
-    if (0 != gnssId || 2 != version) {
-        // not a GPS (USA) satellite, no code yet to parse the
-        // subframe words from other constellations.
-        // or wrong version
+    if (0 == version) {
+        // unknown ersion
         return 0;
     }
 
-    for (i = 0; i < 10; i++) {
+    memset(words, 0, sizeof(words));
+    for (i = 0; i < numWords; i++) {
         words[i] = (uint32_t)getleu32(buf, 4 * i + 8) >> 6;
     }
 
-    return gpsd_interpret_subframe(session, svId, words);
+    // do we need freqId or chn?
+    return gpsd_interpret_subframe(session, gnssId, svId, words);
 }
 
 /* UBX-INF-* */

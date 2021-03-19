@@ -515,7 +515,8 @@ static gps_mask_t sky_msg_E0(struct gps_device_t *session,
              "Skytraq: 50B MID 0xE0: prn=%u, subf=%u\n",
              prn, subf);
 
-    return gpsd_interpret_subframe(session, prn, words);
+    // could be SBAS?
+    return gpsd_interpret_subframe(session, GNSSID_GPS, prn, words);
 }
 
 /*

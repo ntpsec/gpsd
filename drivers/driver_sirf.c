@@ -1335,6 +1335,7 @@ static gps_mask_t sirf_msg_navdata(struct gps_device_t *session,
         /* some USB are also too slow, no way to tell which ones */
         if (session->context->readonly ||
             session->context->passive) {
+            // FIXME: duplicated in gpsd_internet_subframe_raw()
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "WARNING: SiRF: link too slow.\n");
         } else {
@@ -1344,7 +1345,7 @@ static gps_mask_t sirf_msg_navdata(struct gps_device_t *session,
         }
     }
 
-    return gpsd_interpret_subframe_raw(session, svid, words);
+    return gpsd_interpret_subframe_raw(session, GNSSID_GPS, svid, words);
 }
 
 /* max channels allowed in old MID 4 SiRF format */

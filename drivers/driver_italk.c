@@ -255,7 +255,7 @@ static gps_mask_t decode_itk_subframe(struct gps_device_t *session,
     for (i = 0; i < 10; i++)
         words[i] = (uint32_t)(getleu32(buf, 7 + 14 + 4 * i) >> 6) & 0xffffff;
 
-    return gpsd_interpret_subframe(session, prn, words);
+    return gpsd_interpret_subframe(session, GNSSID_GPS, prn, words);
 }
 
 static gps_mask_t decode_itk_pseudo(struct gps_device_t *session,

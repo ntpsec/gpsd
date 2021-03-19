@@ -14,6 +14,7 @@
 #define uint2int(u, bit) ((u & (1<<(bit-1))) ? u - (1<<bit) : u)
 
 gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
+                                       unsigned int gnssId,
                                        unsigned int tSVID, uint32_t words[])
 {
     unsigned int i;
@@ -84,7 +85,7 @@ gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
         words[i] = (words[i] >> 6) & 0xffffff;
     }
 
-    return gpsd_interpret_subframe(session, tSVID, words);
+    return gpsd_interpret_subframe(session, gnssId, tSVID, words);
 }
 
 /* you can find up to date almanac data for comparison here:
@@ -162,7 +163,8 @@ static void subframe_almanac(const struct gpsd_errout_t *errout,
 }
 
 gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
-                             unsigned int tSVID, uint32_t words[])
+                                   unsigned int gnssId, unsigned int tSVID,
+                                   uint32_t words[])
 {
     /*
      * Heavy black magic begins here!
@@ -181,9 +183,9 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
     struct subframe_t *subp = &session->gpsdata.subframe;
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "50B: gpsd_interpret_subframe: (%d) "
+             "50B: gpsd_interpret_subframe: (%u, %u) "
              "%06x %06x %06x %06x %06x %06x %06x %06x %06x %06x\n",
-             tSVID, words[0], words[1], words[2], words[3], words[4],
+             gnssId, tSVID, words[0], words[1], words[2], words[3], words[4],
              words[5], words[6], words[7], words[8], words[9]);
 
     preamble = (uint8_t)((words[0] >> 16) & 0x0FF);
