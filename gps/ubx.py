@@ -5756,6 +5756,7 @@ protVer 34 and up
         # Galileo_OS_SIS_ICD_v2.0.pdf
         # See u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf
         # Section 10.5 Galileo
+        # gotta decode the u-blox munging and the Galileo packing...
         # always zero on E5b-I, always 1 on E1-B
         even = words[0] >> 31
         # zero for nominal page, one for alert page
@@ -5774,28 +5775,79 @@ protVer 34 and up
             s += "\n    page flipped!?"
             return s
 
+        # untangle u-blox words into a Galileo 128 bit page
+        # except we get 130 bits...
+        # even (1), page (1), 128 data bits
+        page = words[0] << 32
+        page |= words[1]
+        page <<= 32
+        page |= words[2]
+        page <<= 18
+        page |= (words[3] >> 14) & 0x03ffff
+        page <<= 16
+        page |= (words[4] >> 14) & 0x0ffff
+
+        # sanity check
+        if (word_type != ((page >> 122) & 0x3f)):
+            s += "\n    Math Error!"
+            return s
+
+        # all unscaled
         if (0 == word_type):
             s += "\n    Spare Word"
         elif (1 == word_type):
-            s += "\n    Ephemeris 1"
+            IODnav = (page >> 112) & 0x03ff
+            t0e = (page >> 98) & 0x03fff
+            M0 = (page >> 66) & 0x0ffffffff
+            e = (page >> 34) & 0x0ffffffff
+            sqrt_A = (page >> 2) & 0x0ffffffff
+            s += ("\n    Ephemeris 1: IODnav %u t0e %u M0 %u e %u  sqrt_A %u" %
+                  (IODnav, t0e, M0, e, sqrt_A))
         elif (2 == word_type):
-            s += "\n    Ephemeris 2"
+            IODnav = (page >> 112) & 0x03ff
+            Omega0 = (page >> 80) & 0x0ffffffff
+            i0 = (page >> 48) & 0x0ffffffff
+            omega = (page >> 16) & 0x0ffffffff
+            i_dot = (page >> 2) & 0x03fff
+            s += ("\n    Ephemeris 2: IODnav %u Omega0 %u i0 %u"
+                  "\n       omega %u i_dot %u" %
+                  (IODnav, Omega0, i0, omega, i_dot))
         elif (3 == word_type):
-            s += "\n    Ephemeris 3"
+            IODnav = (words[0] >> 14) & 0x03ff
+            s += "\n    Ephemeris 3: IODnav %u" % IODnav
         elif (4 == word_type):
-            s += "\n    Ephemeris 4"
+            IODnav = (words[0] >> 14) & 0x03ff
+            SVID = (words[0] >> 8) & 0x03f
+            s += ("\n    Ephemeris 4: IODnav %u SVID %u" %
+                  (IODnav, SVID))
         elif (5 == word_type):
-            s += "\n    Ionosphere"
+            WN = (page >> 43) & 0x0fff     # good
+            TOW = (page >> 23) & 0x0fffff  # good
+            s += ("\n    Ionosphere: WN %u TOW %u" %
+                  (WN, TOW))
         elif (6 == word_type):
-            s += "\n    GST-UTC"
+            WNot = (page >> 50) & 0x0ff
+            TOW = (page >> 3) & 0x0fffff   # good
+            s += ("\n    GST-UTC: WNot %u TOW %u" %
+                  (WNot, TOW))
         elif (7 == word_type):
-            s += "\n    Almanac svid 1 part 1"
+            IODa = (words[0] >> 20) & 0x03f
+            WNa = (words[0] >> 20) & 0x03
+            s += ("\n    Almanac svid 1 part 1: IODa %u WNa %u" %
+                  (IODa, WNa))
         elif (8 == word_type):
-            s += "\n    Almanac svid 1 part 2"
+            IODa = (words[0] >> 20) & 0x03f
+            s += ("\n    Almanac svid 1 part 2: IODa %u" %
+                  (IODa))
         elif (9 == word_type):
-            s += "\n    Almanac svid 2 part 1"
+            IODa = (words[0] >> 20) & 0x03f
+            WNa = (words[0] >> 18) & 0x03
+            s += ("\n    Almanac svid 2 part 1: IODa %u WNa %u" %
+                  (IODa, WNa))
         elif (10 == word_type):
-            s += "\n    Almanac svid 3 part 2"
+            IODa = (words[0] >> 20) & 0x03f
+            s += ("\n    Almanac svid 3 part 2: IODa %u" %
+                  (IODa))
         elif (16 == word_type):
             s += "\n    Reduced Clock and Ephemeris Data"
         elif (17 <= word_type and 20 >= word_type):
