@@ -5751,6 +5751,60 @@ protVer 34 and up
                unpack_s11(words[9], 11) * (2 ** -38)))
         return s
 
+    def _decode_gal_sfrbx(self, words):
+        """Decode UBX-RXM-SFRBX Galileo I/NAV frames"""
+        # Galileo_OS_SIS_ICD_v2.0.pdf
+        # See u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf
+        # Section 10.5 Galileo
+        # always zero on E5b-I, always 1 on E1-B
+        even = words[0] >> 31
+        # zero for nominal page, one for alert page
+        page_type = (words[0] >> 30) & 1
+        word_type = (words[0] >> 24) & 0x03f
+        s = ("\n    GAL: even %u page_type %u word_type %u" %
+             (even, page_type, word_type))
+
+        if (1 == page_type):
+            # Alerts pages are all "Reserved"
+            s += "\n    Alert page"
+            return s
+
+        if (1 == even):
+            # page flipped!?
+            s += "\n    page flipped!?"
+            return s
+
+        if (0 == word_type):
+            s += "\n    Spare Word"
+        elif (1 == word_type):
+            s += "\n    Ephemeris 1"
+        elif (2 == word_type):
+            s += "\n    Ephemeris 2"
+        elif (3 == word_type):
+            s += "\n    Ephemeris 3"
+        elif (4 == word_type):
+            s += "\n    Ephemeris 4"
+        elif (5 == word_type):
+            s += "\n    Ionosphere"
+        elif (6 == word_type):
+            s += "\n    GST-UTC"
+        elif (7 == word_type):
+            s += "\n    Almanac svid 1 part 1"
+        elif (8 == word_type):
+            s += "\n    Almanac svid 1 part 2"
+        elif (9 == word_type):
+            s += "\n    Almanac svid 2 part 1"
+        elif (10 == word_type):
+            s += "\n    Almanac svid 3 part 2"
+        elif (16 == word_type):
+            s += "\n    Reduced Clock and Ephemeris Data"
+        elif (17 <= word_type and 20 >= word_type):
+            s += "\n    FEC2 Reed-Solomon for Clock and Ephemeris Data"
+        elif (63 == word_type):
+            s += "\n    Dummy Page"
+
+        return s
+
     cnav_msgids = {
         10: "Ephemeris 1",
         11: "Ephemeris 2",
@@ -5879,7 +5933,7 @@ protVer 34 and up
         """UBX-RXM-SFRBX decode, Broadcast Navigation Data Subframe"""
 
         # The way u-blox packs the subfram data is perverse, and
-        # undocuemnted.  Even more perverse than native subframes.
+        # barely undocumnted.  Even more perverse than native subframes.
 
         u = struct.unpack_from('<BBBBBBBB', buf, 0)
         s = (' gnssId %u svId %3u reserved1 %u freqId %u numWords %u\n'
@@ -6221,6 +6275,10 @@ protVer 34 and up
                               tuple(sv))
                     else:
                         s += "    Reserved"
+
+        elif 2 == u[0]:
+            # Galileo
+            s += self._decode_gal_sfrbx(words)
 
         return s
 
