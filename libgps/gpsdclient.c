@@ -245,11 +245,18 @@ void gpsd_source_spec(const char *arg, struct fixsource_t *source)
             if (colon1 != source->spec) {
                 source->server = source->spec;
             }
-            source->port = colon1 + 1;
-            colon2 = strchr(source->port, ':');
+            if ('\0' != colon1[1] &&
+                ':' != colon1[1]) {
+                // override default only if there is a port string.
+                source->port = colon1 + 1;
+            }
+            colon2 = strchr(colon1 + 1, ':');
             if (colon2 != NULL) {
                 *colon2 = '\0';
-                source->device = colon2 + 1;
+                if ('\0' != colon2[1]) {
+                    // override default only if there is a device string.
+                    source->device = colon2 + 1;
+                }
             }
         } else if (strchr(source->spec, '/') != NULL) {
             source->device = source->spec;

@@ -18,6 +18,7 @@
 
 #include "../include/compiler.h"       // for FALLTHROUGH
 #include "../include/gpsdclient.h"
+#include "../include/os_compat.h"
 
 struct test {
     double deg;
@@ -188,6 +189,43 @@ struct test2 tests2[] = {
 };
 
 
+struct fixsource_t tests3[] = {
+    {"", "", "2947", NULL},
+    {":", "localhost", "2947", NULL},
+    {"::", "localhost", "2947", NULL},
+    {"::/dev/111", "localhost", "2947", "/dev/111"},
+    {":1111", "localhost", "1111", NULL},
+    {":1111:", "localhost", "1111", NULL},
+    {":1111:/dev/111", "localhost", "1111", "/dev/111"},
+    {"example.com", "example.com", "2947", NULL},
+    {"example.com:", "example.com", "2947", NULL},
+    {"example.com::", "example.com", "2947", NULL},
+    {"example.com:1111", "example.com", "1111", NULL},
+    {"example.com:1111:", "example.com", "1111", NULL},
+    {"example.com:1111:/dev/111", "example.com", "1111", "/dev/111"},
+    // IPv6 literals
+    {"[fe80:1:1::1]", "fe80:1:1::1", "2947", NULL},
+    {"[fe80:1:1::1]:1111", "fe80:1:1::1", "1111", NULL},
+    {"[fe80:1:1::1]:1111:", "fe80:1:1::1", "1111", NULL},
+    {"[fe80:1:1::1]:1111:/dev/111", "fe80:1:1::1", "1111", "/dev/111"},
+};
+
+// Compare strings, allowing for NULL
+static int strcmp_null(char *s1, char *s2)
+{
+    if (NULL == s1) {
+        if (NULL == s2) {
+            return 0;
+        }
+        return 1;
+    }
+    if (NULL == s2) {
+        return -1;
+    }
+    return strcmp(s1, s2);
+}
+
+
 int main(int argc, char **argv)
 {
     char buf[20];
@@ -196,6 +234,7 @@ int main(int argc, char **argv)
     int verbose = 0;
     int fail_count = 0;
     int option;
+    struct fixsource_t source;
 
     while ((option = getopt(argc, argv, "h?vV")) != -1) {
         switch (option) {
@@ -280,6 +319,35 @@ int main(int argc, char **argv)
         }
     }
 
+    for (i = 0; i < (sizeof(tests3)/sizeof(struct fixsource_t)); i++) {
+        char spec[200];
+
+        // no leftovers wanted
+        memset(&source, 0, sizeof(source));
+        // test.spec has to be r/w
+        strlcpy(spec, tests3[i].spec, sizeof(spec));
+        // gpsd_source_spec() eats spec
+        gpsd_source_spec(spec, &source);
+        if (0 != strcmp_null(source.server, tests3[i].server) ||
+            0 != strcmp_null(source.port, tests3[i].port) ||
+            0 != strcmp_null(source.device, tests3[i].device)) {
+            printf("ERROR: spec: '%s' '%s' '%s' '%s' s/b '%s' '%s' '%s'\n",
+                   tests3[i].spec, source.server, source.port, source.device,
+                   tests3[i].server, tests3[i].port, tests3[i].device);
+            fail_count++;
+        } else if (0 < verbose) {
+            printf("spec: '%s' is '%s' '%s' '%s'\n",
+                   tests3[i].spec,
+                   tests3[i].server,
+                   tests3[i].port,
+                   tests3[i].device);
+        }
+    }
+    if (0 < fail_count) {
+        printf("%s: Error Count: %u\n", "test_gpsdclient", fail_count);
+    } else if (0 < verbose) {
+        printf("%s: Pass\n", "test_gpsdclient");
+    }
     exit(fail_count);
 }
 

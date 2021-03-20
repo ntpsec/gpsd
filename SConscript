@@ -2936,6 +2936,7 @@ testclean = Utility('testclean', [], 'rm -fr %s/tests' % variantdir)
 test_nondaemon = [
     aivdm_regress,
     bits_regress,
+    deg_regress,
     describe,
     float_regress,
     geoid_regress,

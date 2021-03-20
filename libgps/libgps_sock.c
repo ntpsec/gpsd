@@ -79,9 +79,9 @@ static bool windows_finish(void)
 int gps_sock_open(const char *host, const char *port,
                   struct gps_data_t *gpsdata)
 {
-    if (!host)
+    if (NULL == host)
         host = "localhost";
-    if (!port)
+    if (NULL == port)
         port = DEFAULT_GPSD_PORT;
 
     libgps_debug_trace((DEBUG_CALLS, "gps_sock_open(%s, %s)\n", host, port));
