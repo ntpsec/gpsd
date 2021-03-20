@@ -193,7 +193,7 @@ documentation, (2) a few (as in, no more than three) eval units, and (3)
 an engineering contact at your firm.  For more, see our page
 <a href='for-vendors.html'>welcoming vendor cooperation</a>.</p>
 
-  See the <a href='/faq.html'>FAQ</a> for information on how
+  See the <a href='faq.html'>FAQ</a> for information on how
 to report bugs.</p>
 
 <p>If you appreciate GPSD, and especially if you make money from it,
@@ -219,7 +219,7 @@ version.</p>
 <h1 id='install'>Installation &amp; Building</h1>
 
 <dl>
-<dt><a href="/README.html">README</a></dt>
+<dt><a href="README.html">README</a></dt>
 <dd>Project README file.</dd>
 </dt>
 
@@ -229,7 +229,7 @@ with binary package systems.  The GPSD project does not release any
 binary packages.</dd>
 </dt>
 
-<dt><a href="/building.html">BUILD</a></dt>
+<dt><a href="building.html">BUILD</a></dt>
 <dd>Instructions for building gpsd from source.</dd>
 </dl>
 
