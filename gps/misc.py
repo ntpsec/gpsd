@@ -120,14 +120,16 @@ WGS84E = 6.694379990141e-3        # 1st eccentricity squared
 WGS84E2 = 6.739496742276e-3       # 2nd eccentricy squared
 # WGS 84 value of the earth's gravitational constant for GPS user
 # GMgpsnav, valid 8-JUl-2014
+# Galileo uses μ = 3.986004418 × 1014 m3/s2
 WGS84GM = 3.9860050e14            # m^3/second^2
 # Earth's Angular Velocity, Omega dot e
 # valid 8-Jul-2014:
+# also Galileo
 WGS84AV = 7.2921151467e-5         # rad/sec
 
 # speed of light (m/s), exact
 CLIGHT = 299792458.0
-# GPS_PI.  Exact!  The military says so.
+# GPS_PI.  Exact!  The GPS and Galileo say so.
 GPS_PI = 3.1415926535898
 # GPS F, sec/sqrt(m), == -2*sqrt(WGS*$M)/c^2
 GPS_F = -4.442807633e-10
