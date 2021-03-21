@@ -219,7 +219,7 @@ libgps_version = "%d.%d.%d" % (libgps_version_current, libgps_version_age,
 # There are no project-dependent URLs or references to the hosting site
 # anywhere else in the distribution; preserve this property!
 annmail = "gpsd-announce@nongnu.org"
-bugtracker = "https://gitlab.com/gpsd/gpsd/issues"
+bugtracker = "https://gitlab.com/gpsd/gpsd/-/issues"
 cgiupload = "root@thyrsus.com:/var/www/cgi-bin/"
 clonerepo = "git@gitlab.com:gpsd/gpsd.git"
 devmail = "gpsd-dev@lists.nongnu.org"
