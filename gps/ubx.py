@@ -5837,15 +5837,42 @@ protVer 34 and up
                   "\n       t0c %u af0 %u af1 %u af2 %u" %
                   (IODnav, SVID, Cic, Cis, t0c, af0, af1, af2))
         elif (5 == word_type):
+            Ax_af0 = (page >> 111) & 0x7ff
+            Ax_af1 = (page >> 100) & 0x7ff
+            Ax_af2 = (page >> 86) & 0x3fff
+            Iono1 = (page >> 84) & 3
+            Iono2 = (page >> 82) & 3
+            Iono3 = (page >> 81) & 1
+            Iono4 = (page >> 80) & 1
+            Iono5 = (page >> 79) & 1
+            BGD_E1E5a = (page >> 69) & 0x3ff
+            BGD_E1E5b = (page >> 59) & 0x3ff
+            E5BHS = (page >> 58) & 1
+            E1BHS = (page >> 57) & 1
+            E5BDVS = (page >> 56) & 1
+            E1BDVS = (page >> 55) & 1
             WN = (page >> 43) & 0x0fff
             TOW = (page >> 23) & 0x0fffff
-            s += ("\n    Ionosphere: WN %u TOW %u" %
-                  (WN, TOW))
+            s += ("\n    Ionosphere: Ax_af0 %u Ax_af1 %u Ax_af2 %u"
+                  "\n       Iono1 %u Iono2 %u Iono3 %u Iono4 %u Iono5 %u"
+                  "\n       BGD_E1E5a %u BGD_E1E5b %u E5BHS %u E1BHS %u"
+                  "\n       E5BDVS %u E1BDVS %u WN %u TOW %u" %
+                  (Ax_af0, Ax_af1, Ax_af2, Iono1, Iono2, Iono3, Iono4, Iono5,
+                   BGD_E1E5a, BGD_E1E5b, E5BHS, E1BHS, E5BDVS, E1BDVS,
+                   WN, TOW))
         elif (6 == word_type):
-            WNot = (page >> 50) & 0x0ff
+            A0 = (page >> 90) & 0x0ffffffff
+            A1 = (page >> 66) & 0x0ffffff
+            delta_tLS = (page >> 66) & 0x0ff
+            t0t = (page >> 58) & 0x0ff
+            WN0t = (page >> 50) & 0x0ff
+            WNLSF = (page >> 42) & 0x0ff
+            DN = (page >> 31) & 0x0ff
+            delta_tLSF = (page >> 23) & 0x0ff
             TOW = (page >> 3) & 0x0fffff
-            s += ("\n    GST-UTC: WNot %u TOW %u" %
-                  (WNot, TOW))
+            s += ("\n    GST-UTC: A0 %u A1 %u delta_tLS %u t0t %u WN0t %u"
+                  "\n       WNLSF %u DN %u delta_tLSF %u TOW %u" %
+                   (A0, A1, delta_tLS, t0t, WN0t, WNLSF, DN, delta_tLSF, TOW))
         elif (7 == word_type):
             IODa = (words[0] >> 20) & 0x03f
             WNa = (words[0] >> 20) & 0x03
