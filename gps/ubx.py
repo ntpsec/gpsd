@@ -5847,8 +5847,8 @@ protVer 34 and up
             Iono5 = (page >> 79) & 1
             BGD_E1E5a = (page >> 69) & 0x3ff
             BGD_E1E5b = (page >> 59) & 0x3ff
-            E5BHS = (page >> 58) & 1
-            E1BHS = (page >> 57) & 1
+            E5BHS = (page >> 58) & 3
+            E1BHS = (page >> 57) & 3
             E5BDVS = (page >> 56) & 1
             E1BDVS = (page >> 55) & 1
             WN = (page >> 43) & 0x0fff
@@ -5874,23 +5874,78 @@ protVer 34 and up
                   "\n       WNLSF %u DN %u delta_tLSF %u TOW %u" %
                    (A0, A1, delta_tLS, t0t, WN0t, WNLSF, DN, delta_tLSF, TOW))
         elif (7 == word_type):
-            IODa = (words[0] >> 20) & 0x03f
-            WNa = (words[0] >> 20) & 0x03
-            s += ("\n    Almanac svid 1 part 1: IODa %u WNa %u" %
-                  (IODa, WNa))
+            IODa = (page >> 118) & 0x0f
+            WNa = (page >> 116) & 0x03
+            t0a = (page >> 106) & 0x03ff
+            SVID1 = (page >> 100) & 0x03f
+            delta_sqrtA = (page >> 87) & 0x01fff
+            e = (page >> 76) & 0x07ff
+            omega = (page >> 60) & 0x0ffff
+            delta_i = (page >> 49) & 0x07ff
+            Omage0 = (page >> 33) & 0x0ffff
+            Omage_dot = (page >> 22) & 0x07ff
+            M0 = (page >> 6) & 0x0ffff
+            s += ("\n    Almanac SVID1 (1/2): IODa %u WNa %u t0a %u SVID1 %u"
+                  "\n       delta_sqrtA %u e %u omega %u delta_i %u Omage0 %u"
+                  "\n       Omage_dot %u M0 %u" %
+                  (IODa, WNa, t0a, SVID1, delta_sqrtA, e, omega, delta_i,
+                   Omage0, Omage_dot, M0))
         elif (8 == word_type):
-            IODa = (words[0] >> 20) & 0x03f
-            s += ("\n    Almanac svid 1 part 2: IODa %u" %
-                  (IODa))
+            IODa = (page >> 118) & 0x0f
+            af0 = (page >> 102) & 0x0ffff
+            af1 = (page >> 89) & 0x01fff
+            E5BHS = (page >> 87) & 3
+            E1BHS = (page >> 85) & 3
+            SVID2 = (page >> 79) & 0x03f
+            delta_sqrtA = (page >> 66) & 0x01fff
+            e = (page >> 55) & 0x07ff
+            omega = (page >> 39) & 0x0ffff
+            delta_i = (page >> 28) & 0x07ff
+            Omage0 = (page >> 12) & 0x0ffff
+            Omage_dot = (page >> 1) & 0x07ff
+            s += ("\n    Almanac SVID1 (2/2): IODa %u af0 %u af1 %u E5BHS %u "
+                  "E1BHS %u"
+                  "\n       SVID2 %u delta_sqrtA %u e %u omega %u delta_i %u"
+                  "\n       Omage0 %u Omage_dot %u" %
+                  (IODa, af0, af1, E5BHS, E1BHS, SVID2, delta_sqrtA, e, omega,
+                   delta_i, Omage0, Omage_dot))
         elif (9 == word_type):
-            IODa = (words[0] >> 20) & 0x03f
-            WNa = (words[0] >> 18) & 0x03
-            s += ("\n    Almanac svid 2 part 1: IODa %u WNa %u" %
-                  (IODa, WNa))
+            IODa = (page >> 118) & 0x0f
+            WNa = (page >> 116) & 0x03
+            t0a = (page >> 106) & 0x03ff
+            M0 = (page >> 90) & 0x0ffff
+            af0 = (page >> 74) & 0x0ffff
+            af1 = (page >> 61) & 0x01fff
+            E5BHS = (page >> 59) & 3
+            E1BHS = (page >> 57) & 3
+            SVID3 = (page >> 51) & 0x03f
+            delta_sqrtA = (page >> 38) & 0x01fff
+            e = (page >> 27) & 0x07ff
+            omega = (page >> 11) & 0x0ffff
+            delta_i = page & 0x07ff
+            s += ("\n    Almanac SVID2 (2/2): IODa %u WNa %u t0a %u M0 %u"
+                  "\n       af0 %u af1 %u E5BHS %u E1BHS %u"
+                  "\n       SVID3 %u delta_sqrtA %u e %u omega %u delta_i %u" %
+                  (IODa, WNa, t0a, M0, af0, af1, E5BHS, E1BHS, SVID3,
+                   delta_sqrtA, e, omega, delta_i))
         elif (10 == word_type):
-            IODa = (words[0] >> 20) & 0x03f
-            s += ("\n    Almanac svid 3 part 2: IODa %u" %
-                  (IODa))
+            IODa = (page >> 118) & 0x0f
+            Omage0 = (page >> 102) & 0x0ffff
+            Omage_dot = (page >> 91) & 0x07ff
+            M0 = (page >> 75) & 0x0ffff
+            af0 = (page >> 59) & 0x0ffff
+            af1 = (page >> 46) & 0x01fff
+            E5BHS = (page >> 44) & 3
+            E1BHS = (page >> 42) & 3
+            A0G = (page >> 26) & 0x0ffff
+            A1G = (page >> 14) & 0x0fff
+            t0G = (page >> 6) & 0x0ff
+            WN0G = page & 0x3f
+            s += ("\n    Almanac SVID3 (2/2): IODa %u Omage0 %u Omage_dot %u"
+                  "\n       M0 %u af0 %u af1 %u E5BHS %u E1BHS %u"
+                  "\n       A0G %u A1G %u t0G %u WN0G %u" %
+                  (IODa, Omage0, Omage_dot, M0, af0, af1, E5BHS, E1BHS,
+                   A0G, A1G, t0G, WN0G))
         elif (16 == word_type):
             s += "\n    Reduced Clock and Ephemeris Data"
         elif (17 <= word_type and 20 >= word_type):
