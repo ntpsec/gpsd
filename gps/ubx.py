@@ -5813,21 +5813,37 @@ protVer 34 and up
                   "\n       omega %u i_dot %u" %
                   (IODnav, Omega0, i0, omega, i_dot))
         elif (3 == word_type):
-            IODnav = (words[0] >> 14) & 0x03ff
-            s += "\n    Ephemeris 3: IODnav %u" % IODnav
+            IODnav = (page >> 112) & 0x03ff
+            Omega_dot = (page >> 64) & 0x0ffffff
+            delta_n = (page >> 48) & 0x0ffff
+            Cuc = (page >> 40) & 0x0ffff
+            Cus = (page >> 32) & 0x0ffff
+            Crc = (page >> 24) & 0x0ffff
+            Crs = (page >> 8) & 0x0ffff
+            SISA = page & 0x0ff
+            s += ("\n    Ephemeris 3: IODnav %u Omega_dot %u delta_n %u"
+                  "\n       Cuc %u Cus %u Crs %u Crs %u SISA %u" %
+                  (IODnav, Omega_dot, delta_n, Cuc, Cus, Crc, Crc, SISA))
         elif (4 == word_type):
             IODnav = (words[0] >> 14) & 0x03ff
-            SVID = (words[0] >> 8) & 0x03f
-            s += ("\n    Ephemeris 4: IODnav %u SVID %u" %
-                  (IODnav, SVID))
+            SVID = (page >> 106) & 0x03f
+            Cic = (page >> 90) & 0x0ffff
+            Cis = (page >> 74) & 0x0ffff
+            t0c = (page >> 60) & 0x03fff
+            af0 = (page >> 29) & 0x07fffffff
+            af1 = (page >> 8) & 0x01fffff
+            af2 = (page >> 2) & 0x03f
+            s += ("\n    Ephemeris 4: IODnav %u SVID %u Cic %u Cis %u"
+                  "\n       t0c %u af0 %u af1 %u af2 %u" %
+                  (IODnav, SVID, Cic, Cis, t0c, af0, af1, af2))
         elif (5 == word_type):
-            WN = (page >> 43) & 0x0fff     # good
-            TOW = (page >> 23) & 0x0fffff  # good
+            WN = (page >> 43) & 0x0fff
+            TOW = (page >> 23) & 0x0fffff
             s += ("\n    Ionosphere: WN %u TOW %u" %
                   (WN, TOW))
         elif (6 == word_type):
             WNot = (page >> 50) & 0x0ff
-            TOW = (page >> 3) & 0x0fffff   # good
+            TOW = (page >> 3) & 0x0fffff
             s += ("\n    GST-UTC: WNot %u TOW %u" %
                   (WNot, TOW))
         elif (7 == word_type):
