@@ -5947,7 +5947,19 @@ protVer 34 and up
                   (IODa, Omage0, Omage_dot, M0, af0, af1, E5BHS, E1BHS,
                    A0G, A1G, t0G, WN0G))
         elif (16 == word_type):
-            s += "\n    Reduced Clock and Ephemeris Data"
+            deltaAred = (page >> 117) & 0x01f
+            exred = (page >> 104) & 0x01fff
+            eyred = (page >> 104) & 0x01fff
+            deltai0red = (page >> 91) & 0x01ffff
+            Omega0red = (page >> 74) & 0x07fffff
+            lambda0red = (page >> 51) & 0x07fffff
+            af0red = (page >> 28) & 0x03fffff
+            af1red = (page >> 6) & 0x03f
+            s += ("\n    Reduced Clock and Ephemeris Data: deltaAred %u"
+                  "\n       exred %u eyred %u deltai0red %u Omega0red %u"
+                  "\n       lambda0red %u af0red %u af1red %u" %
+                  (deltaAred, exred, eyred, deltai0red, Omega0red,
+                   lambda0red, af0red, af1red))
         elif (17 <= word_type and 20 >= word_type):
             s += "\n    FEC2 Reed-Solomon for Clock and Ephemeris Data"
         elif (63 == word_type):
