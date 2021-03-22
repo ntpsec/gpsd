@@ -5971,27 +5971,69 @@ protVer 34 and up
         """Decode UBX-RXM-SFRBX GLONASS frames"""
         # See u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf
         # Section 10.3 GLONASS
-        # ICD-GLONASS-CDMA-L1.-Edition-1.0-2016.pdf
+        # L10F and L20F only
+        # ICD_GLONASS_5.1_(2008)_en.pdf "ICD L1, L2 GLONASS"
         # gotta decode the u-blox munging and the GLONASS packing...
         # u-blox stripts preamble
         stringnum = (words[0] >> 27) & 0x0f
 
         page = 0
-        for i in range(0, 3):
+        for i in range(0, 4):
             page <<= 32
             page |=  words[i] & 0x0ffffffff
 
         # sanity check
         if (stringnum != ((page >> 123) & 0x0f)):
-            s += ("\n    Math Error! %u != %u" %
-                  (stringnum, (page >> 123) & 0xf))
+            s = ("\n    GLO: Math Error! %u != %u"
+                 "\n      page %u" %
+                  (stringnum, (page >> 123) & 0xf, page))
             return s
 
         frame = page & 0x0ff
         superframe = (page >> 16) & 0x0ffff
 
-        s = ("\n    GLO: stringnum %u superfraem %u frame %u" %
-             (stringnum, superframe, frame))
+        s = ("\n    GLO: superframe %u frame %u stringnum %u" %
+             (superframe, frame, stringnum))
+        if 1 == stringnum:
+            P1 = (page >> 119) & 3
+            tk = (page >> 109) & 0x0fff
+            s += "\n        Ephemeris 1: P1 %u tk %u" % (P1, tk)
+        if 2 == stringnum:
+            s += "\n        Ephemeris 2"
+        if 3 == stringnum:
+            s += "\n        Ephemeris 3"
+        if 4 == stringnum:
+            s += "\n        Ephemeris 4"
+        if 5 == stringnum:
+            NA = (page >> 112) & 0x07ff
+            tauc = (page >> 82) & 0x0ffffffff
+            N4 = (page >> 76) & 0x01f
+            tauGPS = (page >> 54) & 0x03fffff
+            ln = (page >> 53) & 1
+            s += ("\n        Time: NA %u tauc %u N4 %u tauGPS %u ln %u" %
+                  (NA, tauc, N4, tauGPS, ln))
+        if 6 == stringnum:
+            if 1 == frame:
+                s += "\n        Almanac SVID 1 (1/2)"
+            if 2 == frame:
+                s += "\n        Almanac SVID 6 (1/2)"
+            if 3 == frame:
+                s += "\n        Almanac SVID 11 (1/2)"
+            if 4 == frame:
+                s += "\n        Almanac SVID 16 (1/2)"
+            if 5 == frame:
+                s += "\n        Almanac SVID 21 (1/2)"
+        if 7 == stringnum:
+            if 1 == frame:
+                s += "\n        Almanac SVID 1 (2/2)"
+            if 2 == frame:
+                s += "\n        Almanac SVID 6 (2/2)"
+            if 3 == frame:
+                s += "\n        Almanac SVID 11 (2/2)"
+            if 4 == frame:
+                s += "\n        Almanac SVID 16 (2/2)"
+            if 5 == frame:
+                s += "\n        Almanac SVID 21 (2/2)"
 
         return s
 
@@ -6011,7 +6053,7 @@ protVer 34 and up
         # 213 bits
 
         page = 0
-        for i in range(0, 7):
+        for i in range(0, 8):
             page |=  words[i] & 0x0ffffffff
             page <<= 32
         # trim parity and pad
@@ -6019,7 +6061,7 @@ protVer 34 and up
 
         s = "\n   SBAS: preamble %u type %u" % (preamble, msg_type)
         # sanity check
-        if (msg_type != ((page >> 212) & 0x03f)):
+        if (msg_type != ((page >> 244) & 0x03f)):
             s += ("\n    Math Error! %u != %u"
                   "\n    x%x" %
                   (msg_type, (page >> 212) & 0x3f, page))
