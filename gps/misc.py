@@ -121,13 +121,35 @@ WGS84E2 = 6.739496742276e-3       # 2nd eccentricy squared
 # WGS 84 value of the earth's gravitational constant for GPS user
 # GMgpsnav, valid 8-JUl-2014
 # Galileo uses μ = 3.986004418 × 1014 m3/s2
+# GLONASS uses 3.986004418e14 м3/s2
 WGS84GM = 3.9860050e14            # m^3/second^2
 # Earth's Angular Velocity, Omega dot e
 # valid 8-Jul-2014:
 # also Galileo
+# GLONASS uses 7.292115x10-5
 WGS84AV = 7.2921151467e-5         # rad/sec
 
+# GLONASS
+# ICD_GLONASS_5.1_(2008)_en.pdf
+# Table 3.2 Geodesic constants and parametres uniearth ellipsoid ПЗ 90.02
+# Earth rotation rate 7,292115x10-5 rad/s
+# Gravitational constant 398 600,4418×109 м3/s2
+# Gravitational constant of atmosphere( fMa ) 0.35×109 м3/s2
+# Speed of light 299 792 458 м/s
+# Semi-major axis 6 378 136 м
+# Flattening 1/298,257 84
+# Equatorial acceleration of gravity 978 032,84 мGal
+# Correction to acceleration of gravity at sea-level due to Atmosphere
+# 0,87 мGal
+# Second zonal harmonic of the geopotential ( J2 0 ) 1082625,75×10-9
+# Fourth zonal harmonic of the geopotential ( J4 0 ) (- 2370,89×10-9)
+# Sixth zonal harmonic of the geopotential( J6 0 ) 6,08×10-9
+# Eighth zonal harmonic of the geopotential ( J8 0 ) 1,40×10-11
+# Normal potential at surface of common terrestrial ellipsoid  (U0)
+# 62 636 861,4 м2/s2
+
 # speed of light (m/s), exact
+# same as GLONASS
 CLIGHT = 299792458.0
 # GPS_PI.  Exact!  The GPS and Galileo say so.
 GPS_PI = 3.1415926535898
