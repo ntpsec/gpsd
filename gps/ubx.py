@@ -5751,7 +5751,7 @@ protVer 34 and up
                unpack_s11(words[9], 11) * (2 ** -38)))
         return s
 
-    def _decode_gal_sfrbx(self, words):
+    def _decode_sfrbx_gal(self, words):
         """Decode UBX-RXM-SFRBX Galileo I/NAV frames"""
         # Galileo_OS_SIS_ICD_v2.0.pdf
         # See u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf
@@ -5967,6 +5967,97 @@ protVer 34 and up
 
         return s
 
+    def _decode_sfrbx_sbas(self, words):
+        """Decode UBX-RXM-SFRBX SBAS subframes"""
+        # See u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf
+        # Section 10.6 SBAS
+        # The WAAS Spec is RTCA DO-229, and is not cheap!
+        # the function coded w/o access to that document.
+        # WAAS message described here:
+        # https://gssc.esa.int/navipedia/index.php/The_EGNOS_SBAS_Message_Format_Explained
+
+        # preamble is 83, then 154, the 198, then repeats.
+        preamble = (words[0] >> 24) & 0x0ff
+        msg_type = (words[0] >> 18) & 0x03f
+        # untangle u-blox words into just message type and data
+        # 213 bits
+
+        page = 0
+        for i in range(0, 7):
+            page |=  words[i] & 0x0ffffffff
+            page <<= 32
+        # trim parity and pad
+        page >>= 30
+
+        s = "   SBAS: preamble %u type %u" % (preamble, msg_type)
+        # sanity check
+        if (msg_type != ((page >> 212) & 0x03f)):
+            s += ("\n    Math Error! %u != %u"
+                  "\n    x%x" %
+                  (msg_type, (page >> 212) & 0x3f, page))
+            return s
+
+        if 0 == msg_type:
+            s += "\n       Don't use"
+        elif 1 == msg_type:
+            s += "\n       PRN mask assignments"
+        elif 2 == msg_type:
+            s += "\n       Fast Corrections 2"
+        elif 3 == msg_type:
+            s += "\n       Fast Corrections 3"
+        elif 4 == msg_type:
+            s += "\n       Fast Corrections 4"
+        elif 5 == msg_type:
+            s += "\n       Fast Corrections 5"
+        elif 6 == msg_type:
+            s += "\n       Integity information"
+        elif 7 == msg_type:
+            s += "\n       Degradation Parameters"
+        elif 9 == msg_type:
+            s += "\n       Geo Navigation message (X,Y,Z, time, etc.)"
+        elif 10 == msg_type:
+            s += "\n       Degradation parameters"
+        elif 12 == msg_type:
+            s += "\n       SBAS Network time/UTC offset parameters"
+        elif 17 == msg_type:
+            s += "\n       Geo satellite almanacs"
+        elif 18 == msg_type:
+            s += "\n       Ionospheric grid points masks"
+        elif 24 == msg_type:
+            s += "\n       Mixed fast/long term satellite error corrections"
+        elif 25 == msg_type:
+            s += "\n       Long term satellite error corrections"
+        elif 26 == msg_type:
+            s += "\n       Ionospheric delay corrections"
+        elif 27 == msg_type:
+            s += "\n       SBAS Service message"
+        elif 28 == msg_type:
+            s += "\n       Clock Ephemeris Covariance Matrix message"
+        elif 31 == msg_type:
+            s += "\n       L5 Satellite Mask"
+        elif 32 == msg_type:
+            s += "\n       L5 Clock-Ephemeris Corrections/Covariance Matrix "
+        elif 34 == msg_type:
+            s += "\n       L5 Integrity message"
+        elif 35 == msg_type:
+            s += "\n       L5 Integrity message"
+        elif 36 == msg_type:
+            s += "\n       L5 Integrity message"
+        elif 37 == msg_type:
+            s += "\n       L5 Degradation Parameters and DREI Scale Table"
+        elif 39 == msg_type:
+            s += "\n       L5 SBAS Sats Ephemeris and Covariance Matrix"
+        elif 40 == msg_type:
+            s += "\n       L5 SBAS Sats Ephemeris and Covariance Matrix"
+        elif 47 == msg_type:
+            s += "\n       L5 SBAS broadcasting Satellite Almanac"
+        elif 62 == msg_type:
+            s += "\n       Instant Test Message"
+        elif 63 == msg_type:
+            s += "\n       Null Message"
+
+
+        return s
     cnav_msgids = {
         10: "Ephemeris 1",
         11: "Ephemeris 2",
@@ -6438,9 +6529,13 @@ protVer 34 and up
                     else:
                         s += "    Reserved"
 
+        elif 1 == u[0]:
+            # SBAS
+            s += self._decode_sfrbx_sbas(words)
+
         elif 2 == u[0]:
             # Galileo
-            s += self._decode_gal_sfrbx(words)
+            s += self._decode_sfrbx_gal(words)
 
         return s
 
