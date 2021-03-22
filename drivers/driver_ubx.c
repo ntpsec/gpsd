@@ -2444,23 +2444,26 @@ static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
     }
 
     numWords = getub(buf, 4);
-    if (data_len != (size_t)(8 + (4 * numWords))) {
+    if (data_len != (size_t)(8 + (4 * numWords)) ||
+        16 < numWords) {
+        // test numwords directly to shut up Coverity
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX-RXM-SFRBX message, wrong payload len %zd s/b %u",
-                 data_len, 8 + (4 * numWords));
+                 "UBX-RXM-SFRBX message, wrong payload len %zd, numwords %u "
+                 "s/b %u",
+                 data_len, 8 + (4 * numWords), numWords);
         return 0;
     }
 
     gnssId = getub(buf, 0);
     svId = getub(buf, 1);
     freqId = getub(buf, 2);
+    version = getub(buf, 6);
     if (1 < version) {
-        // GLONASS channel in version 2 and up.
+        // receiver channel in version 2 and up.
         chn = getub(buf, 5);
     } else {
         chn = 255;         // valid range 0 to 13
     }
-    version = getub(buf, 6);
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "UBX-RXM-SFRBX: version %u gnssId %u chn %u svId %u "

@@ -5967,6 +5967,34 @@ protVer 34 and up
 
         return s
 
+    def _decode_sfrbx_glo(self, words):
+        """Decode UBX-RXM-SFRBX GLONASS frames"""
+        # See u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf
+        # Section 10.3 GLONASS
+        # ICD-GLONASS-CDMA-L1.-Edition-1.0-2016.pdf
+        # gotta decode the u-blox munging and the GLONASS packing...
+        # u-blox stripts preamble
+        stringnum = (words[0] >> 27) & 0x0f
+
+        page = 0
+        for i in range(0, 3):
+            page <<= 32
+            page |=  words[i] & 0x0ffffffff
+
+        # sanity check
+        if (stringnum != ((page >> 123) & 0x0f)):
+            s += ("\n    Math Error! %u != %u" %
+                  (stringnum, (page >> 123) & 0xf))
+            return s
+
+        frame = page & 0x0ff
+        superframe = (page >> 16) & 0x0ffff
+
+        s = ("\n    GLO: stringnum %u superfraem %u frame %u" %
+             (stringnum, superframe, frame))
+
+        return s
+
     def _decode_sfrbx_sbas(self, words):
         """Decode UBX-RXM-SFRBX SBAS subframes"""
         # See u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf
@@ -5989,7 +6017,7 @@ protVer 34 and up
         # trim parity and pad
         page >>= 30
 
-        s = "   SBAS: preamble %u type %u" % (preamble, msg_type)
+        s = "\n   SBAS: preamble %u type %u" % (preamble, msg_type)
         # sanity check
         if (msg_type != ((page >> 212) & 0x03f)):
             s += ("\n    Math Error! %u != %u"
@@ -6536,6 +6564,10 @@ protVer 34 and up
         elif 2 == u[0]:
             # Galileo
             s += self._decode_sfrbx_gal(words)
+
+        elif 6 == u[0]:
+            # GLONASS
+            s += self._decode_sfrbx_glo(words)
 
         return s
 
