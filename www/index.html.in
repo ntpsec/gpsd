@@ -223,7 +223,7 @@ version.</p>
 <dd>Project README file.</dd>
 </dt>
 
-<dt><a href="/installation.html">INSTALL</a></dt>
+<dt><a href="installation.html">INSTALL</a></dt>
 <dd>Installation instructions for people running distributions
 with binary package systems.  The GPSD project does not release any
 binary packages.</dd>

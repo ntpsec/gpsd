@@ -565,7 +565,7 @@ sustainability; @TIPLINK@.</p>
 between 0.1 and 0.6 seconds to handshake with your hardware, but this can
 vary widely.  After
 that you will receive GPS reports within a second of when the sensor
-issues them.  GPSD itself adds <a href="/performance/performance.html"
+issues them.  GPSD itself adds <a href="performance/performance.html"
 >almost nomeasurable latency</a>, but RS-232 transmission time to
 <code>gpsd</code> can be more significant; you can cut this time by
 increasing the serial port speed (baud rate).</p>
