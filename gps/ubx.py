@@ -5751,6 +5751,58 @@ protVer 34 and up
                unpack_s11(words[9], 11) * (2 ** -38)))
         return s
 
+    def _decode_sfrbx_bds(self, words):
+        """Decode UBX-RXM-SFRBX BeiDou frames"""
+        # See u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf
+        # Section 10.4 BeiDou
+        # gotta decode the u-blox munging and the BeiDou packing...
+        # http://en.beidou.gov.cn/SYSTEMS/ICD/
+        # BeiDou Interface Control Document v1.0
+        Rev = (words[0] >> 15) & 0x0f
+        FraID = (words[0] >> 12) & 7
+
+        # unmung u-blox 30 bit words in 32 bits
+        page = 0
+        for i in range(0, 10):
+            page <<= 30
+            page |=  words[i] & 0x03fffffff
+
+        # sanity check
+        if (FraID != ((page >> 282) & 7)):
+            s = ("\n    BDS: Math Error! %u != %u"
+                 "\n      page %u" %
+                  (FraID, (page >> 282) & 7, page))
+            return s
+
+        # common to all pages
+        SOW = ((page >> 274) & 0x0f) << 12
+        SOW |= (page >> 258) & 0x0fff
+        s = ("\n    BDS: Rev %u FraID %i SOW %u" %
+             (Rev, FraID, SOW))
+        if 1 == FraID:
+            SatH1 = (page >> 257) & 1
+            AODC = (page >> 252) & 0x01f
+            URAI = (page >> 248) & 0x0f
+            WN = (page >> 227) & 0x01fff
+            s += ("\n    SatH1 %u AODC %u URAI %u WN %u" %
+                  (SatH1, AODC, URAI, WN))
+        elif 2 == FraID:
+            deltan = ((page >> 248) & 0x03ff) << 6
+            deltan |= (page >> 238) & 0x03f
+            s += ("\n    deltan %u" %
+                  (deltan))
+        elif 3 == FraID:
+            t0e = (page >> 248) & 0x03ff
+            s += ("\n    t0e %u" %
+                  (t0e))
+        elif FraID in [4, 5]:
+            REV1 = (page >> 257) & 1
+            Pnum = (page >> 250) & 0x07f
+            s += ("\n    REV1 %u Pnum %u" %
+                  (REV1, Pnum))
+
+        return s
+
     def _decode_sfrbx_gal(self, words):
         """Decode UBX-RXM-SFRBX Galileo I/NAV frames"""
         # Galileo_OS_SIS_ICD_v2.0.pdf
@@ -6447,6 +6499,9 @@ protVer 34 and up
 
                     s += ("\n   dataid %u svid %u (page %s)\n" %
                           (words[2] >> 28, svid, page))
+                    if 'Unk' == page:
+                        s += "\n   Unknown page ????"
+                        return s
 
                     if 6 == page:
                         s += "    reserved"
@@ -6618,8 +6673,11 @@ protVer 34 and up
 
                     s += ("\n   dataid %u svid %u (page %s)\n" %
                           (words[2] >> 28, svid, page))
+                    if 'Unk' == page:
+                        s += "\n   Unknown page ????"
+                        return s
 
-                    if 1 <= int(page) <= 24:
+                    if 1 <= page <= 24:
                         s += self.almanac(words)
                     elif 25 == page:
                         toa = (words[2] >> 14) & 0xff
@@ -6648,6 +6706,10 @@ protVer 34 and up
         elif 2 == u[0]:
             # Galileo
             s += self._decode_sfrbx_gal(words)
+
+        elif 3 == u[0]:
+            # BeiDou
+            s += self._decode_sfrbx_bds(words)
 
         elif 6 == u[0]:
             # GLONASS
