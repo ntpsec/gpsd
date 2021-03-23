@@ -5996,34 +5996,59 @@ protVer 34 and up
              (superframe, frame, stringnum))
         if 1 == stringnum:
             P1 = (page >> 119) & 3
-            tk = (page >> 109) & 0x0fff
-            s += "\n        Ephemeris 1: P1 %u tk %u" % (P1, tk)
+            tk = (page >> 107) & 0x0fff
+            xnp = (page >> 83) & 0x0ffffffff
+            xnpp = (page >> 78) & 0x01f
+            xn = (page >> 51) & 0xa30ffffffff
+            s += ("\n        Ephemeris 1: P1 %u tk %u xnp %u xnpp %u xn %u" %
+                  (P1, tk, xnp, xnpp, xn))
         if 2 == stringnum:
             Bn = (page >> 120) & 7
             P2 = (page >> 119) & 1
             tb = (page >> 112) & 0x07f
-            s += ("\n        Ephemeris 2: Bn %u P2 %u tb %u" %
-                  (Bn, P2, tb))
+            ynp = (page >> 83) & 0x0ffffffff
+            ynpp = (page >> 78) & 0x01f
+            yn = (page >> 51) & 0xa30ffffffff
+            s += ("\n        Ephemeris 2: Bn %u P2 %u tb %u ynp %u ynpp %u "
+                  "yn %u" %
+                  (Bn, P2, tb, ynp, ynpp, yn))
         if 3 == stringnum:
             P3 = (page >> 122) & 1
-            s += "\n        Ephemeris 3: P3 %u" % (P3)
+            lambdan = (page >> 111) & 0x07fff
+            p = (page >> 108) & 3
+            ln = (page >> 107) & 1
+            znp = (page >> 83) & 0x0ffffffff
+            znpp = (page >> 78) & 0x01f
+            zn = (page >> 51) & 0xa30ffffffff
+            s += ("\n        Ephemeris 3: P3 %u znp %u znpp %u zn %u" %
+                  (P3, znp, znpp, zn))
         if 4 == stringnum:
             # n is SVID
-            n = (page >> 55) & 0x1f
-            M = (page >> 53) & 3
-            s += ("\n        Ephemeris 4: n %u M %u" %
-                  (n, M))
+            taun = (page >> 101) & 0x03ffffff
+            deltataun = (page >> 96) & 0x01f
+            En = (page >> 91) & 0x01f
+            P4 = (page >> 76) & 1
+            FT = (page >> 72) & 0x0f
+            NT = (page >> 58) & 0x03fff
+            n = (page >> 53) & 0x1f
+            M = (page >> 51) & 3
+            s += ("\n        Ephemeris 4: taun %u deltataun %u En %u P4 %u"
+                  "\n           FT %u NT %u n %u M %u" %
+                  (taun, deltataun, En, P4, FT, NT, n, M))
         if 5 == stringnum:
             NA = (page >> 112) & 0x07ff
-            tauc = (page >> 82) & 0x0ffffffff
-            N4 = (page >> 76) & 0x01f
-            tauGPS = (page >> 54) & 0x03fffff
-            ln = (page >> 53) & 1
+            tauc = (page >> 80) & 0x0ffffffff
+            N4 = (page >> 74) & 0x01f
+            tauGPS = (page >> 52) & 0x03fffff
+            ln = (page >> 51) & 1
             s += ("\n        Time: NA %u tauc %u N4 %u tauGPS %u ln %u" %
                   (NA, tauc, N4, tauGPS, ln))
         if stringnum in [6, 8, 10, 12, 14]:
             if 5 == frame:
-                s += "\n        Extra 1"
+                B1 = (page >> 112) & 0x07ff
+                B2 = (page >> 102) & 0x03ff
+                KP = (page >> 100) & 3
+                s += "\n        Extra 1: B1 %u B2 %u KP %u" % (B1, B2, KP)
             else:
                 Cn = (page >> 122) & 1
                 m = (page >> 120) & 3
@@ -6038,7 +6063,8 @@ protVer 34 and up
                       (Cn, m, nA, tauA, lambdaA, deltaiA, epsilonA))
         if stringnum in [7, 9, 11, 13, 15]:
             if 5 == frame:
-                s += "\n        Extra 2"
+                ln = (page >> 51) & 1
+                s += "\n        Extra 2: ln %u" % ln
             else:
                 omegaA = (page >> 107) & 0x0ffff
                 tA = (page >> 86) & 0x01fffff
@@ -6593,7 +6619,7 @@ protVer 34 and up
                     s += ("\n   dataid %u svid %u (page %s)\n" %
                           (words[2] >> 28, svid, page))
 
-                    if 1 <= page <= 24:
+                    if 1 <= int(page) <= 24:
                         s += self.almanac(words)
                     elif 25 == page:
                         toa = (words[2] >> 14) & 0xff

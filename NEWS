@@ -14,6 +14,7 @@
   gpssnmp: Move from contrib/ to clients, add manpage
   Add www/gpsd-client-example-code.adoc
   Add gpsdebuginfo script and man page.
+  ubxtool: Add GLONASS, QZSS, SBAS, Galileo subframe decodes
 
 3.22: 2021-01-08
   Added client/gpscsv to convert gpsd JSON to csv.
