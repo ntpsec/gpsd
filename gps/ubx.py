@@ -5999,11 +5999,20 @@ protVer 34 and up
             tk = (page >> 109) & 0x0fff
             s += "\n        Ephemeris 1: P1 %u tk %u" % (P1, tk)
         if 2 == stringnum:
-            s += "\n        Ephemeris 2"
+            Bn = (page >> 120) & 7
+            P2 = (page >> 119) & 1
+            tb = (page >> 112) & 0x07f
+            s += ("\n        Ephemeris 2: Bn %u P2 %u tb %u" %
+                  (Bn, P2, tb))
         if 3 == stringnum:
-            s += "\n        Ephemeris 3"
+            P3 = (page >> 122) & 1
+            s += "\n        Ephemeris 3: P3 %u" % (P3)
         if 4 == stringnum:
-            s += "\n        Ephemeris 4"
+            # n is SVID
+            n = (page >> 55) & 0x1f
+            M = (page >> 53) & 3
+            s += ("\n        Ephemeris 4: n %u M %u" %
+                  (n, M))
         if 5 == stringnum:
             NA = (page >> 112) & 0x07ff
             tauc = (page >> 82) & 0x0ffffffff
@@ -6012,28 +6021,34 @@ protVer 34 and up
             ln = (page >> 53) & 1
             s += ("\n        Time: NA %u tauc %u N4 %u tauGPS %u ln %u" %
                   (NA, tauc, N4, tauGPS, ln))
-        if 6 == stringnum:
-            if 1 == frame:
-                s += "\n        Almanac SVID 1 (1/2)"
-            if 2 == frame:
-                s += "\n        Almanac SVID 6 (1/2)"
-            if 3 == frame:
-                s += "\n        Almanac SVID 11 (1/2)"
-            if 4 == frame:
-                s += "\n        Almanac SVID 16 (1/2)"
+        if stringnum in [6, 8, 10, 12, 14]:
             if 5 == frame:
-                s += "\n        Almanac SVID 21 (1/2)"
-        if 7 == stringnum:
-            if 1 == frame:
-                s += "\n        Almanac SVID 1 (2/2)"
-            if 2 == frame:
-                s += "\n        Almanac SVID 6 (2/2)"
-            if 3 == frame:
-                s += "\n        Almanac SVID 11 (2/2)"
-            if 4 == frame:
-                s += "\n        Almanac SVID 16 (2/2)"
+                s += "\n        Extra 1"
+            else:
+                Cn = (page >> 122) & 1
+                m = (page >> 120) & 3
+                nA = (page >> 115) & 0x1f
+                tauA = (page >> 105) & 0x03ff
+                lambdaA = (page >> 84) & 0x01ffffff
+                deltaiA = (page >> 66) & 0x03ffff
+                epsilonA = (page >> 51) & 0x07fff
+                s += ("\n        Almanac: Cn %u m %u nA %u tauA %u "
+                      "lambdaA %u deltaiA %u"
+                      "\n          epsilonA %u" %
+                      (Cn, m, nA, tauA, lambdaA, deltaiA, epsilonA))
+        if stringnum in [7, 9, 11, 13, 15]:
             if 5 == frame:
-                s += "\n        Almanac SVID 21 (2/2)"
+                s += "\n        Extra 2"
+            else:
+                omegaA = (page >> 107) & 0x0ffff
+                tA = (page >> 86) & 0x01fffff
+                deltaTA = (page >> 64) & 0x03ffffff
+                deltaTpA = (page >> 57) & 0x07f
+                HA = (page >> 52) & 0x01f
+                ln = (page >> 51) & 1
+                s += ("\n        Almanac: omegaA %u tA %u deltaTA %u "
+                      "deltaTpA %u HA %u ln %u" %
+                      (omegaA, tA, deltaTA, deltaTpA, HA, ln))
 
         return s
 
@@ -6270,8 +6285,9 @@ protVer 34 and up
             s += " %08x" % u1
             words += (u1[0],)
 
-        if 0 == u[0]:
-            # GPS
+        if (0 == u[0] or
+            5 == u[0]):
+            # GPS and QZSS
             preamble = words[0] >> 24
             if 0x8b == preamble:
                 # CNAV
