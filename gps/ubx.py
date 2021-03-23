@@ -5784,13 +5784,55 @@ protVer 34 and up
             AODC = (page >> 252) & 0x01f
             URAI = (page >> 248) & 0x0f
             WN = (page >> 227) & 0x01fff
-            s += ("\n    SatH1 %u AODC %u URAI %u WN %u" %
-                  (SatH1, AODC, URAI, WN))
+            t0c = ((page >> 218) & 0x01ff) << 8
+            t0c |= (page >> 206) & 0x0ff
+            TGD1 = (page >> 196) & 0x3ff
+            TGD2 = ((page >> 192) & 0x0f) << 6
+            TGD2 |= (page >> 182) & 0x03f
+            alpha0 = (page >> 174) & 0x0ff
+            alpha1 = (page >> 166) & 0x0ff
+            alpha2 = (page >> 154) & 0x0ff
+            alpha3 = (page >> 136) & 0x0ff
+            beta0 = ((page >> 128) & 0x0f) << 2
+            beta0 |= (page >> 122) & 3
+            beta1 = (page >> 114) & 0x0ff
+            beta2 = (page >> 106) & 0x0ff
+            beta3 = ((page >> 104) & 0x0f) << 4
+            beta3 |= (page >> 86) & 0x0f
+            a2 = (page >> 75) & 0x07ff
+            a0 = ((page >> 68) & 0x07f) << 17
+            a0 |= (page >> 43) & 0x01ffff
+            a1 = ((page >> 38) & 0x01f) << 17
+            a1 |= (page >> 13) & 0x01ffff
+            AODE = (page >> 8) & 0x01f
+            s += ("\n    SatH1 %u AODC %u URAI %u WN %u t0c %u TGD1 %u "
+                  "TGD2 %u"
+                  "\n      alpha0 %u alpha1 %u alpha2 %u alpha3 %u"
+                  "\n      beta0 %u beta1 %u beta2 %u beta3 %u"
+                  "\n      a2 %u a0 %u a1 %u AODE %u" %
+                  (SatH1, AODC, URAI, WN, t0c, TGD1, TGD2, alpha0, alpha1,
+                   alpha2, alpha3, beta0, beta1, beta2, beta3,
+                   a2, a0, a1, AODE))
         elif 2 == FraID:
-            deltan = ((page >> 248) & 0x03ff) << 6
-            deltan |= (page >> 238) & 0x03f
-            s += ("\n    deltan %u" %
-                  (deltan))
+            deltan = ((page >> 278) & 0x03ff) << 6
+            deltan |= (page >> 234) & 0x03f
+            Cuc = ((page >> 228) & 0x0ffff) << 2
+            Cuc |= (page >> 208) & 3
+            M0 = ((page >> 188) & 0x0fffff) << 12
+            M0 |= (page >> 168) & 0x0fff
+            e = ((page >> 158) & 0x03ff) << 22
+            e |= (page >> 128) & 0x03fffff
+            Cus = (page >> 102) & 0x03ffff
+            Crc = ((page >> 98) & 0x0f) << 14
+            Crc |= (page >> 76) & 0x03fff
+            Crs = ((page >> 88) & 0x0f) << 10
+            Crs |= (page >> 50) & 0x03ff
+            sqrtA = ((page >> 38) & 0x0fff) << 20
+            sqrtA |= (page >> 10) & 0x0fffff
+            t0eMSB = (page >> 8) & 3
+            s += ("\n    deltan %u Cuc %u M0 %u e %u Cus %u Crc %u Crs %u"
+                  "\n    sqrtA %u t0eMSB %u" %
+                  (deltan, Cuc, M0, e, Cus, Crc, Crs, sqrtA, t0eMSB))
         elif 3 == FraID:
             t0e = (page >> 248) & 0x03ff
             s += ("\n    t0e %u" %
