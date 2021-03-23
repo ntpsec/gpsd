@@ -2143,7 +2143,7 @@ substmap = (
     ('@ICONPATH@',   installdir('icondir', add_destdir=False)),
     ('@INCLUDEDIR@', installdir('includedir', add_destdir=False)),
     ('@IRCCHAN@',    ircchan),
-    ('@ISSUES@',     'https://gitlab.com/gpsd/gpsd/issues'),
+    ('@ISSUES@',     bugtracker),
     ('@LIBDIR@',     installdir('libdir', add_destdir=False)),
     ('@LIBGPSVERSION@', libgps_version),
     ('@MAILMAN@',    mailman),
