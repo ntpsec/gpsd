@@ -5834,9 +5834,26 @@ protVer 34 and up
                   "\n    sqrtA %u t0eMSB %u" %
                   (deltan, Cuc, M0, e, Cus, Crc, Crs, sqrtA, t0eMSB))
         elif 3 == FraID:
-            t0e = (page >> 248) & 0x03ff
-            s += ("\n    t0e %u" %
-                  (t0e))
+            t0eLSB = ((page >> 248) & 0x03ff) << 5
+            t0eLSB |= (page >> 235) & 0x01f
+            i0 = ((page >> 218) & 0x01ffff) << 15
+            i0 |= (page >> 195) & 0x07fff
+            Cic = ((page >> 188) & 0x07f) << 11
+            Cic |= (page >> 137) & 0x07fff
+            Omegadot = ((page >> 158) & 0x07ff) << 13
+            Omegadot |= (page >> 137) & 0x01fff
+            Cis = ((page >> 128) & 0x01ff) << 9
+            Cis |= (page >> 111) & 0x01ff
+            IDOT = ((page >> 98) & 0x01fffff) << 1
+            IDOT |= (page >> 49) & 1
+            Omega0 = ((page >> 68) & 0x01fffff) << 11
+            Omega0 |= (page >> 49) & 0x07ff
+            omega = ((page >> 38) & 0x07ff) << 21
+            omega |= (page >> 9) & 0x01fffff
+            Rev = (page >> 8) & 1
+            s += ("\n    t0eLSB %u i0 %u Cic %u Omegadot %u Cis % u IDOT %u"
+                  "\n      Omega0 %u omega %u Rev %u" %
+                  (t0eLSB, i0, Cic, Omegadot, Cis,IDOT, Omega0, omega, Rev))
         elif FraID in [4, 5]:
             REV1 = (page >> 257) & 1
             Pnum = (page >> 250) & 0x07f
