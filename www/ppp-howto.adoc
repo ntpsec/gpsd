@@ -10,6 +10,8 @@ Gary E. Miller <gem@rellim.com>
 :sectlinks:
 :toc: left
 
+include::inc-menu.adoc[]
+
 == WARNING
 
 This document assumes you are using gpsd versions 3.22 or git

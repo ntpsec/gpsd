@@ -10,6 +10,8 @@ v2.24, Jan 2021
 :sectlinks:
 :toc: left
 
+include::inc-menu.adoc[]
+
 NMEA 0183 is a proprietary protocol issued by the National Marine
 Electronics Association for use in boat navigation and control
 systems.  Because early GPS sensors were designed for compatibility

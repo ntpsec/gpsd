@@ -9,6 +9,8 @@ v1.21, Feb 2021
 :sectlinks:
 :toc: left
 
+include::inc-menu.adoc[]
+
 == Introduction
 
 This document is a guide to interfacing client applications with GPSD.

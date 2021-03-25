@@ -9,3 +9,10 @@ body {
   background: #eee;
   border: 1px dashed #999;
 }
+
+.sidebarblock {
+  display: inline-block;
+  float: right;
+  margin-left: 20px;
+  margin-bottom: 20px;
+}

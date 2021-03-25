@@ -9,6 +9,7 @@ Gary E. Miller <gem@rellim.com>
 :sectlinks:
 :toc: left
 
+include::inc-menu.adoc[]
 
 WARNING: This document assumes you are using gpsd from git head, or
 version 3.22 or higher.  Using older gpsd versions will fail in strange

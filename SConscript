@@ -2304,6 +2304,7 @@ if adoc_prog:
                   'www/gpsd-client-example-code'),
                  ('www/gpsd-time-service-howto',
                   'www/gpsd-time-service-howto'),
+                 ('www/inc-menu', 'www/inc-menu'),
                  ('www/internals', 'www/internals'),
                  ('www/NMEA', 'www/NMEA'),
                  ('www/ppp-howto', 'www/ppp-howto'),

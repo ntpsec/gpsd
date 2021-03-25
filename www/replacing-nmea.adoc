@@ -11,6 +11,8 @@ Eric S. Raymond <esr@thyrsus.com.>
 :type: article
 :webfonts!:
 
+include::inc-menu.adoc[]
+
 == Abstract
 
 The NMEA 0183 protocol used by GPS units might best be described as

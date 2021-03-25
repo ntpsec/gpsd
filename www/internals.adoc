@@ -10,6 +10,8 @@ Mick Durkin <mick.durkin@saunalahti.fi>
 :type: article
 :webfonts!:
 
+include::inc-menu.adoc[]
+
 == Abstract
 
 These notes are meant as an aid to reading and understanding some

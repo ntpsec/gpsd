@@ -10,6 +10,8 @@ Gary E. Miller <gem@rellim.com>
 :source-highlighter: rouge
 :toc: left
 
+include::inc-menu.adoc[]
+
 == ABSTRACT
 
 This document supplies some code examples that show how to write

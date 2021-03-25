@@ -11,6 +11,8 @@ Mick Durkin <mick.durkin@saunalahti.fi>
 :type: article
 :webfonts!:
 
+include::inc-menu.adoc[]
+
 == Abstract
 
 If you are thinking of writing a GPSD driver for some GPS-like device,
