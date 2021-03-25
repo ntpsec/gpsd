@@ -5785,19 +5785,19 @@ protVer 34 and up
             URAI = (page >> 248) & 0x0f
             WN = (page >> 227) & 0x01fff
             t0c = ((page >> 218) & 0x01ff) << 8
-            t0c |= (page >> 206) & 0x0ff
-            TGD1 = (page >> 196) & 0x3ff
-            TGD2 = ((page >> 192) & 0x0f) << 6
-            TGD2 |= (page >> 182) & 0x03f
-            alpha0 = (page >> 174) & 0x0ff
-            alpha1 = (page >> 166) & 0x0ff
-            alpha2 = (page >> 154) & 0x0ff
-            alpha3 = (page >> 136) & 0x0ff
-            beta0 = ((page >> 128) & 0x0f) << 2
-            beta0 |= (page >> 122) & 3
-            beta1 = (page >> 114) & 0x0ff
-            beta2 = (page >> 106) & 0x0ff
-            beta3 = ((page >> 104) & 0x0f) << 4
+            t0c |= (page >> 202) & 0x0ff
+            TGD1 = (page >> 192) & 0x3ff
+            TGD2 = ((page >> 188) & 0x0f) << 6
+            TGD2 |= (page >> 174) & 0x03f
+            alpha0 = (page >> 166) & 0x0ff
+            alpha1 = (page >> 158) & 0x0ff
+            alpha2 = (page >> 142) & 0x0ff
+            alpha3 = (page >> 134) & 0x0ff
+            beta0 = ((page >> 128) & 0x03f) << 2
+            beta0 |= (page >> 118) & 3
+            beta1 = (page >> 110) & 0x0ff
+            beta2 = (page >> 102) & 0x0ff
+            beta3 = ((page >> 98) & 0x0f) << 4
             beta3 |= (page >> 86) & 0x0f
             a2 = (page >> 75) & 0x07ff
             a0 = ((page >> 68) & 0x07f) << 17
@@ -5814,10 +5814,10 @@ protVer 34 and up
                    alpha2, alpha3, beta0, beta1, beta2, beta3,
                    a2, a0, a1, AODE))
         elif 2 == FraID:
-            deltan = ((page >> 278) & 0x03ff) << 6
+            deltan = ((page >> 248) & 0x03ff) << 6
             deltan |= (page >> 234) & 0x03f
-            Cuc = ((page >> 228) & 0x0ffff) << 2
-            Cuc |= (page >> 208) & 3
+            Cuc = ((page >> 218) & 0x0ffff) << 2
+            Cuc |= (page >> 210) & 3
             M0 = ((page >> 188) & 0x0fffff) << 12
             M0 |= (page >> 168) & 0x0fff
             e = ((page >> 158) & 0x03ff) << 22
@@ -5825,7 +5825,7 @@ protVer 34 and up
             Cus = (page >> 102) & 0x03ffff
             Crc = ((page >> 98) & 0x0f) << 14
             Crc |= (page >> 76) & 0x03fff
-            Crs = ((page >> 88) & 0x0f) << 10
+            Crs = ((page >> 68) & 0x0f) << 10
             Crs |= (page >> 50) & 0x03ff
             sqrtA = ((page >> 38) & 0x0fff) << 20
             sqrtA |= (page >> 10) & 0x0fffff
@@ -5844,7 +5844,7 @@ protVer 34 and up
             Omegadot |= (page >> 137) & 0x01fff
             Cis = ((page >> 128) & 0x01ff) << 9
             Cis |= (page >> 111) & 0x01ff
-            IDOT = ((page >> 98) & 0x01fffff) << 1
+            IDOT = ((page >> 98) & 0x01fff) << 1
             IDOT |= (page >> 49) & 1
             Omega0 = ((page >> 68) & 0x01fffff) << 11
             Omega0 |= (page >> 49) & 0x07ff
@@ -5859,6 +5859,38 @@ protVer 34 and up
             Pnum = (page >> 250) & 0x07f
             s += ("\n    REV1 %u Pnum %u" %
                   (REV1, Pnum))
+            if ((4 == FraID and (1 <= Pnum <= 24)) or
+                (1 <= Pnum <= 6) or
+                (11 <= Pnum <= 23)):
+                # Subfram 4, page 1 to 24: Almanac
+                # Subfram 5, page 1 to 6: Almanac
+                # Subfram 5, page 11 to 23: maybe Almanac
+                AmEpID = (page >> 8) & 3
+                if 3 != AmEpID:
+                    # not Almanac
+                    s += "\n     Reserved AmEpID %u" % AmEpID
+                else:
+                    sqrtA = ((page >> 248) & 0x03fffff) << 22
+                    sqrtA |= (page >> 218) & 0x03fffff
+                    a1 = (page >> 199) & 0x07f
+                    a0 = (page >> 188) & 0x07f
+                    Omega0 = ((page >> 158) & 0x3fffff) << 2
+                    Omega0 |= (page >> 148) & 3
+                    e = (page >> 131) & 0x01ffff
+                    deltai = ((page >> 128) & 3) << 13
+                    deltai |= (page >> 107) & 0x01ffff
+                    t0a = (page >> 99) & 0x0ff
+                    Omegadot = ((page >> 98) & 1) << 16
+                    Omegadot |= (page >> 74) & 0x0ffff
+                    omega = ((page >> 68) & 0x03f) << 18
+                    omega |= (page >> 42) & 0x03ffff
+                    M0 = ((page >> 38) & 0x0ff) << 20
+                    M0 |= (page >> 10) & 0x0fffff
+                    s += ("\n      Almanac; sqrtA %u a1 %u a0 %u Omega0 %u"
+                          "\n         e %u deltai %u t0a %u Omegadot %u"
+                          "\n         omega %u M0 %u AmEpID %u" %
+                          (sqrtA, a1, a0, Omega0, e, deltai, t0a, Omegadot,
+                           omega, M0, AmEpID))
 
         return s
 
