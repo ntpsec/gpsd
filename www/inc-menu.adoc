@@ -18,8 +18,8 @@ link:wishlist.html[Wish List] +
 link:hall-of-shame.html[Hall of Shame] +
 link:troubleshooting.html[Troubleshooting Guide] +
 link:hacking.html[Hacker's Guide] +
-link:protocol-transition.html[Application Compatibility]
 link:references.html[References] +
+link:protocol-transition.html[Application Compatibility] +
 link:history.html[History] +
 link:future.html[Future] +
 http://www.catb.org/hacker-emblem/[image:glider.png[hacker
