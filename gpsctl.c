@@ -636,7 +636,7 @@ int main(int argc, char **argv)
     } else if (reset) {
         /* hard reset will go through lower-level operations */
         const int speeds[] = {4800, 9600, 19200, 38400, 57600, 115200, 230400,
-                              460800};
+                              460800, 921600};
         static struct gps_device_t      session;        /* zero this too */
         int i;
 
