@@ -7,6 +7,8 @@
 :type: article
 :webfonts!:
 
+include::www/inc-menu.adoc[]
+
 == GENERAL
 
 *gpsd* is developed and maintained by the open source community, and the

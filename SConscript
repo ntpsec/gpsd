@@ -2292,7 +2292,8 @@ env.Command('www/hardware.html',
 docinstall = env.Install(target=installdir('docdir'), source=doc_files)
 
 if adoc_prog:
-    adocfiles = (('build', 'www/building'),
+    adocfiles = (('www/inc-menu', 'www/inc-menu'),
+                 ('build', 'www/building'),
                  ('INSTALL', 'www/installation'),
                  ('README', 'www/README'),
                  ('SUPPORT', 'www/SUPPORT'),
@@ -2304,7 +2305,6 @@ if adoc_prog:
                   'www/gpsd-client-example-code'),
                  ('www/gpsd-time-service-howto',
                   'www/gpsd-time-service-howto'),
-                 ('www/inc-menu', 'www/inc-menu'),
                  ('www/internals', 'www/internals'),
                  ('www/NMEA', 'www/NMEA'),
                  ('www/ppp-howto', 'www/ppp-howto'),

@@ -8,6 +8,8 @@
 :sectlinks:
 :toc: left
 
+include::www/inc-menu.adoc[]
+
 Here are the steps for installing GPSD and verifying its performance.
 They assume you have GPSD available as an installable binary package,
 

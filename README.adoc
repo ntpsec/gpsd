@@ -7,6 +7,8 @@
 :type: article
 :toc: left
 
+include::www/inc-menu.adoc[]
+
 WARNING:
 
 The files at https://gitlab.com/gpsd/gpsd/-/tags are NOT the gpsd

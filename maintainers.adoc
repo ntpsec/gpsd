@@ -6,6 +6,8 @@
 :sectlinks:
 :toc: left
 
+include::www/inc-menu.adoc[]
+
 This file points at responsible submaintainers for various portions
 of the GPSD code, packaging, and ports.
 

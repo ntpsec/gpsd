@@ -6,6 +6,8 @@
 :sectlinks:
 :toc: left
 
+include::www/inc-menu.adoc[]
+
 This is a guide to building GPSD from a bare source tree.  It includes
 guidance on how to cross-build the package.  This document overlaps and
 interweaves with INSTALL.adoc.  INSTALL.adoc contains distribution
