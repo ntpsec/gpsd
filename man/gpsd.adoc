@@ -175,7 +175,7 @@ The program accepts the following options:
   Set TCP/IP port on which to listen for GPSD clients (default is 2947).
 *-s SPEED*, *--speed SPEED*::
   Fix the serial port speed to the GNSS device. Allowed speeds are:
-  4800, 9600, 19200, 38400, 57600, 115200, 230400, and 460800. The
+  4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800 and 921600. The
   default is to autobaud. Note that some devices with integrated USB
   ignore port speed.
 *-V*, *--version*::

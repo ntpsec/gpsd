@@ -241,7 +241,8 @@ class ubx(object):
         pass
 
     # allowable speeds
-    speeds = (460800, 230400, 153600, 115200, 57600, 38400, 19200, 9600, 4800)
+    speeds = (921600, 460800, 230400, 153600, 115200, 57600, 38400, 19200,
+              9600, 4800)
 
     # UBX Satellite Numbering
     gnss_id = {0: 'GPS',
