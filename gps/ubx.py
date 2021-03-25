@@ -5765,13 +5765,13 @@ protVer 34 and up
         page = 0
         for i in range(0, 10):
             page <<= 30
-            page |=  words[i] & 0x03fffffff
+            page |= words[i] & 0x03fffffff
 
         # sanity check
         if (FraID != ((page >> 282) & 7)):
             s = ("\n    BDS: Math Error! %u != %u"
                  "\n      page %u" %
-                  (FraID, (page >> 282) & 7, page))
+                 (FraID, (page >> 282) & 7, page))
             return s
 
         # common to all pages
@@ -5853,15 +5853,15 @@ protVer 34 and up
             Rev = (page >> 8) & 1
             s += ("\n    t0eLSB %u i0 %u Cic %u Omegadot %u Cis % u IDOT %u"
                   "\n      Omega0 %u omega %u Rev %u" %
-                  (t0eLSB, i0, Cic, Omegadot, Cis,IDOT, Omega0, omega, Rev))
+                  (t0eLSB, i0, Cic, Omegadot, Cis, IDOT, Omega0, omega, Rev))
         elif FraID in [4, 5]:
             REV1 = (page >> 257) & 1
             Pnum = (page >> 250) & 0x07f
             s += ("\n    REV1 %u Pnum %u" %
                   (REV1, Pnum))
-            if ((4 == FraID and (1 <= Pnum <= 24)) or
-                (1 <= Pnum <= 6) or
-                (11 <= Pnum <= 23)):
+            if (((4 == FraID and (1 <= Pnum <= 24)) or
+                 (1 <= Pnum <= 6) or
+                 (11 <= Pnum <= 23))):
                 # Subfram 4, page 1 to 24: Almanac
                 # Subfram 5, page 1 to 6: Almanac
                 # Subfram 5, page 11 to 23: maybe Almanac
@@ -6029,7 +6029,7 @@ protVer 34 and up
             TOW = (page >> 3) & 0x0fffff
             s += ("\n    GST-UTC: A0 %u A1 %u delta_tLS %u t0t %u WN0t %u"
                   "\n       WNLSF %u DN %u delta_tLSF %u TOW %u" %
-                   (A0, A1, delta_tLS, t0t, WN0t, WNLSF, DN, delta_tLSF, TOW))
+                  (A0, A1, delta_tLS, t0t, WN0t, WNLSF, DN, delta_tLSF, TOW))
         elif (7 == word_type):
             IODa = (page >> 118) & 0x0f
             WNa = (page >> 116) & 0x03
@@ -6137,13 +6137,13 @@ protVer 34 and up
         page = 0
         for i in range(0, 4):
             page <<= 32
-            page |=  words[i] & 0x0ffffffff
+            page |= words[i] & 0x0ffffffff
 
         # sanity check
         if (stringnum != ((page >> 123) & 0x0f)):
             s = ("\n    GLO: Math Error! %u != %u"
                  "\n      page %u" %
-                  (stringnum, (page >> 123) & 0xf, page))
+                 (stringnum, (page >> 123) & 0xf, page))
             return s
 
         frame = page & 0x0ff
@@ -6252,7 +6252,7 @@ protVer 34 and up
 
         page = 0
         for i in range(0, 8):
-            page |=  words[i] & 0x0ffffffff
+            page |= words[i] & 0x0ffffffff
             page <<= 32
         # trim parity and pad
         page >>= 30
@@ -6324,8 +6324,8 @@ protVer 34 and up
         elif 63 == msg_type:
             s += "\n       Null Message"
 
-
         return s
+
     cnav_msgids = {
         10: "Ephemeris 1",
         11: "Ephemeris 2",
@@ -6458,18 +6458,21 @@ protVer 34 and up
 
         u = struct.unpack_from('<BBBBBBBB', buf, 0)
         s = (' gnssId %u svId %3u reserved1 %u freqId %u numWords %u\n'
-             '  chn %u version %u reserved2 %u\n' % u)
-        s += '    dwrd'
+             '  chn %u version %u reserved2 %u' % u)
         words = ()
         for i in range(0, u[4]):
             u1 = struct.unpack_from('<L', buf, 8 + (i * 4))
-            if 6 == (i % 7):
-                s += "\n        "
-            s += " %08x" % u1
             words += (u1[0],)
 
-        if (0 == u[0] or
-            5 == u[0]):
+        if gps.VERB_DECODE <= self.verbosity:
+            s += '\n    dwrd'
+            for word in words:
+                if 6 == (i % 7):
+                    s += "\n        "
+                s += " %08x" % word
+
+        if ((0 == u[0] or
+             5 == u[0])):
             # GPS and QZSS
             preamble = words[0] >> 24
             if 0x8b == preamble:
