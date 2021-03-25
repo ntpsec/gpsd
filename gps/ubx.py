@@ -5891,6 +5891,20 @@ protVer 34 and up
                           "\n         omega %u M0 %u AmEpID %u" %
                           (sqrtA, a1, a0, Omega0, e, deltai, t0a, Omegadot,
                            omega, M0, AmEpID))
+        elif 5 == FraID:
+            if 7 == Pnum:
+                s += "\n      Health 1 to 19"
+            elif 8 == Pnum:
+                WNa = (page >> 103) & 0x0ff
+                t0a = ((page >> 98) & 0x01f) << 3
+                t0a |= (page >> 87) & 3
+                s += "\n      Health 8 to 30 WNa %u t0a %u" % (WNa, t0a)
+            if 9 == Pnum:
+                s += "\n      Timing"
+            if 10 == Pnum:
+                s += "\n      Timing"
+            if 24 == Pnum:
+                s += "\n      Health/Reserved"
 
         return s
 
