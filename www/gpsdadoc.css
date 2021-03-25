@@ -4,6 +4,7 @@ body {
   background: url(paper.gif);
 }
 
+.sidebarblock,
 #toc.toc2 {
   background: #eee;
   border: 1px dashed #999;

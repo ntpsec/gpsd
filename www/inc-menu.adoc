@@ -1,0 +1,29 @@
+
+[[Menu]]
+****
+image:gpsd-logo-small.png[Small gpsd Logo,width=105,height=126] +
+link:index.html[Home] +
+link:index.html#news[News] +
+link:index.html#install[Installation & Building] +
+link:index.html#downloads[Downloads] +
+link:index.html#mailing-lists[Mailing lists] +
+link:index.html#documentation[Documentation] +
+link:faq.html[FAQ] +
+link:xgps-sample.html[Screenshots] +
+link:index.html#recipes[Recipes] +
+link:index.html#others[Other GPSDs] +
+link:hardware.html[Hardware] +
+link:for-vendors.html[For GPS Vendors] +
+link:wishlist.html[Wish List] +
+link:hall-of-shame.html[Hall of Shame] +
+link:troubleshooting.html[Troubleshooting Guide] +
+link:hacking.html[Hacker's Guide] +
+link:protocol-transition.html[Application Compatibility]
+link:references.html[References] +
+link:history.html[History] +
+link:future.html[Future] +
+http://www.catb.org/hacker-emblem/[image:glider.png[hacker
+emblem,width=55,height=55]] +
+ +
+https://validator.w3.org/check/referer[image:https://www.w3.org/Icons/valid-html401[Valid HTML 4.0,1!,width=88,height=31]]
+****
