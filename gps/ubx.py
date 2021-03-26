@@ -5892,7 +5892,7 @@ protVer 34 and up
                            omega, M0, AmEpID))
             elif 5 == FraID:
                 if 7 == Pnum:
-                    s += "\n      Health 1 to 19:"
+                    s += "Health 1 to 19:\n       "
                     hlth = 0
                     for i in range(0, 10):
                        hlth <<= 22
@@ -5910,7 +5910,18 @@ protVer 34 and up
                     t0a |= (page >> 87) & 3
                     s += "Health 8 to 30 WNa %u t0a %u" % (WNa, t0a)
                 elif 9 == Pnum:
-                    s += "Timing"
+                    A0GPS = (page >> 106) & 0x03fff
+                    A1GPS = ((page >> 188) & 0x03) << 14
+                    A1GPS |= (page >> 166) & 0x03fff
+                    A0GAL = ((page >> 158) & 0x0ff) << 6
+                    A0GAL |= (page >> 144) & 0x03f
+                    A1GAL = (page >> 128) & 0x0ffff
+                    A0GLO = (page >> 106) & 0x03fff
+                    A1GLO = ((page >> 98) & 0x0f) << 8
+                    A1GLO |= (page >> 82) & 0x0f
+                    s += ("Timing A0GPS %u A1GPS %u A0GAL %u A1GAL %u"
+                          "\n       A0GLO %u A1GLO %u" %
+                          (A0GPS, A1GPS, A0GAL, A1GAL, A0GLO, A1GLO))
                 elif 10 == Pnum:
                     s += "Timing"
                 elif 24 == Pnum:
