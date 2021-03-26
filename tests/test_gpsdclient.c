@@ -344,7 +344,7 @@ int main(int argc, char **argv)
         }
     }
     if (0 < fail_count) {
-        printf("%s: Error Count: %u\n", "test_gpsdclient", fail_count);
+        printf("%s: Error Count: %d\n", "test_gpsdclient", fail_count);
     } else if (0 < verbose) {
         printf("%s: Pass\n", "test_gpsdclient");
     }
