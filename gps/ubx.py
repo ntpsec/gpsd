@@ -5856,10 +5856,8 @@ protVer 34 and up
                   "\n      Omega0 %u omega %u Rev %u" %
                   (t0eLSB, i0, Cic, Omegadot, Cis, IDOT, Omega0, omega, Rev))
         elif FraID in [4, 5]:
-            REV1 = (page >> 257) & 1
             Pnum = (page >> 250) & 0x07f
-            s += ("\n    REV1 %u Pnum %u" %
-                  (REV1, Pnum))
+            s += "\n    Pnum %u: " % Pnum
             if (((4 == FraID and (1 <= Pnum <= 24)) or
                  (1 <= Pnum <= 6) or
                  (11 <= Pnum <= 23))):
@@ -5869,7 +5867,7 @@ protVer 34 and up
                 AmEpID = (page >> 8) & 3
                 if 3 != AmEpID:
                     # not Almanac
-                    s += "\n     Reserved AmEpID %u" % AmEpID
+                    s += "Reserved AmEpID %u" % AmEpID
                 else:
                     sqrtA = ((page >> 248) & 0x03fffff) << 22
                     sqrtA |= (page >> 218) & 0x03fffff
@@ -5887,25 +5885,36 @@ protVer 34 and up
                     omega |= (page >> 42) & 0x03ffff
                     M0 = ((page >> 38) & 0x0ff) << 20
                     M0 |= (page >> 10) & 0x0fffff
-                    s += ("\n      Almanac; sqrtA %u a1 %u a0 %u Omega0 %u"
+                    s += ("Almanac; sqrtA %u a1 %u a0 %u Omega0 %u"
                           "\n         e %u deltai %u t0a %u Omegadot %u"
                           "\n         omega %u M0 %u AmEpID %u" %
                           (sqrtA, a1, a0, Omega0, e, deltai, t0a, Omegadot,
                            omega, M0, AmEpID))
-        elif 5 == FraID:
-            if 7 == Pnum:
-                s += "\n      Health 1 to 19"
-            elif 8 == Pnum:
-                WNa = (page >> 103) & 0x0ff
-                t0a = ((page >> 98) & 0x01f) << 3
-                t0a |= (page >> 87) & 3
-                s += "\n      Health 8 to 30 WNa %u t0a %u" % (WNa, t0a)
-            if 9 == Pnum:
-                s += "\n      Timing"
-            if 10 == Pnum:
-                s += "\n      Timing"
-            if 24 == Pnum:
-                s += "\n      Health/Reserved"
+            elif 5 == FraID:
+                if 7 == Pnum:
+                    s += "\n      Health 1 to 19:"
+                    hlth = 0
+                    for i in range(0, 10):
+                       hlth <<= 22
+                       # remove parity
+                       hlth |= (words[i] >> 8) & 0x3fffff
+                    # remove 7 reserved bits from last word
+                    hlth >>= 7
+                    for i in range(0, 19):
+                        # take 9 bits at a time from the top
+                        h = (hlth >> ((19 - i) * 9)) & 0x1f
+                        s += " %2x" % h
+                elif 8 == Pnum:
+                    WNa = (page >> 103) & 0x0ff
+                    t0a = ((page >> 98) & 0x01f) << 3
+                    t0a |= (page >> 87) & 3
+                    s += "Health 8 to 30 WNa %u t0a %u" % (WNa, t0a)
+                elif 9 == Pnum:
+                    s += "Timing"
+                elif 10 == Pnum:
+                    s += "Timing"
+                elif 24 == Pnum:
+                    s += "Health/Reserved"
 
         return s
 
