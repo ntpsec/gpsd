@@ -52,10 +52,10 @@
     <a href='http://www.catb.org/hacker-emblem/'><img
     src='glider.png' alt='hacker emblem' height="55" width="55"></a><br>
 
-    <script src="https://www.openhub.net/p/3944/widgets/project_thin_badge.js"></script>
+    <script type="text/javascript" src="https://www.openhub.net/p/3944/widgets/project_thin_badge.js"></script>
 
     <hr>
-    <script><!--
+    <script type="text/javascript"><!--
     google_ad_client = "pub-1458586455084261";
     google_ad_width = 160;
     google_ad_height = 600;
@@ -63,7 +63,7 @@
     google_ad_type = "text";
     google_ad_channel = "";
     //--></script>
-    <script src="https://pagead2.googlesyndication.com/pagead/show_ads.js">
+    <script type="text/javascript" src="https://pagead2.googlesyndication.com/pagead/show_ads.js">
     </script>
     <hr>
 
@@ -77,22 +77,22 @@
 <table class="centered" style="background-color:white;border:1px;width:80%;border-collapse:separate;border-spacing:20px;" >
 <tr>
 <td>
-<script
+<script type="text/javascript"
 src="https://www.openhub.net/p/3944/widgets/project_basic_stats.js">
 </script>
 </td>
 <td>
-<script src="https://www.openhub.net/p/3944/widgets/project_factoids.js">
+<script type="text/javascript" src="https://www.openhub.net/p/3944/widgets/project_factoids.js">
 </script>
 </td>
 </tr>
 <tr>
 <td>
-<script src="https://www.openhub.net/p/3944/widgets/project_languages.js">
+<script type="text/javascript" src="https://www.openhub.net/p/3944/widgets/project_languages.js">
 </script>
 </td>
 <td>
-<script src="https://www.openhub.net/p/3944/widgets/project_cocomo.js">
+<script type="text/javascript" src="https://www.openhub.net/p/3944/widgets/project_cocomo.js">
 </script>
 </td>
 </tr>
@@ -193,7 +193,7 @@ documentation, (2) a few (as in, no more than three) eval units, and (3)
 an engineering contact at your firm.  For more, see our page
 <a href='for-vendors.html'>welcoming vendor cooperation</a>.</p>
 
-  See the <a href='faq.html'>FAQ</a> for information on how
+<p>See the <a href='faq.html'>FAQ</a> for information on how
 to report bugs.</p>
 
 <p>If you appreciate GPSD, and especially if you make money from it,
@@ -221,13 +221,11 @@ version.</p>
 <dl>
 <dt><a href="README.html">README</a></dt>
 <dd>Project README file.</dd>
-</dt>
 
 <dt><a href="installation.html">INSTALL</a></dt>
 <dd>Installation instructions for people running distributions
 with binary package systems.  The GPSD project does not release any
 binary packages.</dd>
-</dt>
 
 <dt><a href="building.html">BUILD</a></dt>
 <dd>Instructions for building gpsd from source.</dd>
@@ -309,7 +307,7 @@ latest stable version.</p>
 
 <dt><a href="gegps.html">gegps.1</a></dt>
 <dd><code>gegps</code> feeds your location to Google Earth for live
-<location tracking. /dd>
+location tracking.</dd>
 
 <dt><a href="gps2udp.html">gps2udp.1</a></dt>
 <dd>Feed the take from <code>gpsd</code> to one or more aggregation
@@ -628,7 +626,7 @@ Web
 </div>
 
 <hr>
-<script src="datestamp.js"></script>
+<script type="text/javascript" src="datestamp.js"></script>
 </div>
 </body>
 </html>
