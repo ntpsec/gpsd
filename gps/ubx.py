@@ -5923,9 +5923,26 @@ protVer 34 and up
                           "\n       A0GLO %u A1GLO %u" %
                           (A0GPS, A1GPS, A0GAL, A1GAL, A0GLO, A1GLO))
                 elif 10 == Pnum:
-                    s += "Timing"
+                    deltatLS = ((page >> 248) & 0x03) << 6
+                    deltatLS |= (page >> 234) & 0x03f
+                    deltatLSF = (page >> 226) & 0x0ff
+                    WNLSF = (page >> 218) & 0x0ff
+                    A0UTC = ((page >> 188) & 0x03fffff) << 10
+                    A0UTC |= (page >> 170) & 0x03ff
+                    A1UTC = ((page >> 158) & 0x0fff) << 12
+                    A1UTC |= (page >> 138) & 0x0fff
+                    DN = (page >> 130) & 0x0ff
+                    s += ("Timing: deltatLS %u deltatLSF %u WNLSF %u A0UTC %u"
+                          " A1UTC %u" % 
+                          (deltatLS, deltatLSF, WNLSF, A0UTC, A1UTC))
                 elif 24 == Pnum:
-                    s += "Health/Reserved"
+                    # ICD calls this AmID and AmEpID
+                    AmEpID = (page >> 83) & 3
+                    if 3 != AmEpID:
+                        # not Almanac
+                        s += "Reserved AmEpID %u" % AmEpID
+                    else:
+                        s += "Health: AmEpID %u" % AmEpID
 
         return s
 
