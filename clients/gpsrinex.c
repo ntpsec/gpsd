@@ -15,7 +15,7 @@
  *    # gpsctl -s 115200
  *    # sleep 2
  *    # ubxtool -d NMEA
- *    # ubstool -e BINARY
+ *    # ubxtool -e BINARY
  *    # ubxtool -d GLONASS
  *    # ubxtool -d BEIDOU
  *    # ubxtool -d GALILEO
