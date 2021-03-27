@@ -5892,18 +5892,18 @@ protVer 34 and up
                            omega, M0, AmEpID))
             elif 5 == FraID:
                 if 7 == Pnum:
-                    s += "Health 1 to 19:\n       "
+                    s += "Health 1 to 19:\n   "
                     hlth = 0
                     for i in range(0, 10):
-                       hlth <<= 22
-                       # remove parity
-                       hlth |= (words[i] >> 8) & 0x3fffff
+                        hlth <<= 22
+                        # remove top two random bits and last 8 bits parity
+                        hlth |= (words[i] & 0x3fffff) >> 8
                     # remove 7 reserved bits from last word
                     hlth >>= 7
-                    for i in range(0, 19):
+                    for i in range(1, 20):
                         # take 9 bits at a time from the top
-                        h = (hlth >> ((19 - i) * 9)) & 0x1f
-                        s += " %2x" % h
+                        h = (hlth >> ((19 - i) * 9)) & 0x1ff
+                        s += " %3x" % h
                 elif 8 == Pnum:
                     WNa = (page >> 103) & 0x0ff
                     t0a = ((page >> 98) & 0x01f) << 3
@@ -6504,10 +6504,12 @@ protVer 34 and up
 
         if gps.VERB_DECODE <= self.verbosity:
             s += '\n    dwrd'
+            i = 0
             for word in words:
+                s += " %08x" % word
                 if 6 == (i % 7):
                     s += "\n        "
-                s += " %08x" % word
+                i += 1
 
         if ((0 == u[0] or
              5 == u[0])):
