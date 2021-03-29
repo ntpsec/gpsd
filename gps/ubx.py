@@ -5908,7 +5908,18 @@ protVer 34 and up
                     WNa = (page >> 103) & 0x0ff
                     t0a = ((page >> 98) & 0x01f) << 3
                     t0a |= (page >> 87) & 3
-                    s += "Health 8 to 30 WNa %u t0a %u" % (WNa, t0a)
+                    hlth = 0
+                    for i in range(0, 10):
+                        hlth <<= 22
+                        # remove top two random bits and last 8 bits parity
+                        hlth |= (words[i] & 0x3fffff) >> 8
+                    # remove 79 reserved bits from last word
+                    hlth >>= 79
+                    if WNa != ((hlth >> 8) & 0x0ff):
+                        s += "\n    Math Error! s/b %u " % ((page >> 8) & 0x0ff)
+                    if t0a != (hlth & 0x0ff):
+                        s += "\n    Math Error2 s/b %u " % (page & 0x0ff)
+                    s += "Health 20 to 30 WNa %u t0a %u" % (WNa, t0a)
                 elif 9 == Pnum:
                     A0GPS = (page >> 106) & 0x03fff
                     A1GPS = ((page >> 188) & 0x03) << 14

@@ -1254,10 +1254,16 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         break;
     case UBX_LENGTH_1:
         lexer->length += (c << 8);
-        if (lexer->length <= MAX_PACKET_LENGTH)
+        if (0 == lexer->length) {
+            // no payload
+            lexer->state = UBX_CHECKSUM_A;
+        } else if (MAX_PACKET_LENGTH >= lexer->length) {
+            // normal size payload
             lexer->state = UBX_LENGTH_2;
-        else
+        } else {
+            // bad length
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case UBX_LENGTH_2:
         lexer->state = UBX_PAYLOAD;
