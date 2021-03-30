@@ -10,11 +10,12 @@
   cgps: Add popup help, interactive options.
   Reorganize and split the man pages.
   Small updates for u-blox M8 and M10
-  Deprecated mtk3331 and ashtech build options.  Use nmea0183.
+  Deprecated mtk3331 and ashtech build options.  Use nmea0183 instead.
   gpssnmp: Move from contrib/ to clients, add manpage
   Add www/gpsd-client-example-code.adoc
   Add gpsdebuginfo script and man page.
-  ubxtool: Add GLONASS, QZSS, SBAS, Galileo subframe decodes
+  ubxtool: Add BeiDou, Galileo, GLONASS, QZSS, and partial SBAS subframe decodes
+  Max serial port speed raised to 921,600.
 
 3.22: 2021-01-08
   Added client/gpscsv to convert gpsd JSON to csv.

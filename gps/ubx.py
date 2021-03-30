@@ -7369,8 +7369,8 @@ qErrInvalid add in protVer 34 and up
                 # check checksum
                 chk = self.checksum(m_raw, len(m_raw))
                 if (chk[0] != m_ck_a) or (chk[1] != m_ck_b):
-                    print("gps/ubx: ERROR checksum failed,"
-                          "was (%d,%d) s/b (%d, %d)\n" %
+                    print("gps/ubx: ERROR checksum failed, "
+                          "was (%02x,%02x) s/b (%02x, %02x)\n" %
                           (m_ck_a, m_ck_b, chk[0], chk[1]))
 
                 s_payload = ''.join('{:02x} '.format(x) for x in m_payload)
