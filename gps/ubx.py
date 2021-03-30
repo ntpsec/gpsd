@@ -5891,13 +5891,16 @@ protVer 34 and up
                           (sqrtA, a1, a0, Omega0, e, deltai, t0a, Omegadot,
                            omega, M0, AmEpID))
             elif 5 == FraID:
-                if 7 == Pnum:
-                    s += "Health 1 to 19:\n   "
+                if Pnum in [7, 8]:
+                    # make a packed integer
                     hlth = 0
                     for i in range(0, 10):
                         hlth <<= 22
                         # remove top two random bits and last 8 bits parity
-                        hlth |= (words[i] & 0x3fffff) >> 8
+                        hlth |= (words[i] & 0x3fffffff) >> 8
+
+                if 7 == Pnum:
+                    s += "Health 1 to 19:\n   "
                     # remove 7 reserved bits from last word
                     hlth >>= 7
                     for i in range(1, 20):
@@ -5905,21 +5908,17 @@ protVer 34 and up
                         h = (hlth >> ((19 - i) * 9)) & 0x1ff
                         s += " %3x" % h
                 elif 8 == Pnum:
-                    WNa = (page >> 103) & 0x0ff
-                    t0a = ((page >> 98) & 0x01f) << 3
-                    t0a |= (page >> 87) & 3
-                    hlth = 0
-                    for i in range(0, 10):
-                        hlth <<= 22
-                        # remove top two random bits and last 8 bits parity
-                        hlth |= (words[i] & 0x3fffff) >> 8
-                    # remove 79 reserved bits from last word
-                    hlth >>= 79
-                    if WNa != ((hlth >> 8) & 0x0ff):
-                        s += "\n    Math Error! s/b %u " % ((page >> 8) & 0x0ff)
-                    if t0a != (hlth & 0x0ff):
-                        s += "\n    Math Error2 s/b %u " % (page & 0x0ff)
-                    s += "Health 20 to 30 WNa %u t0a %u" % (WNa, t0a)
+                    # remove 63 reserved bits from LSBs
+                    hlth >>= 63
+                    WNa = (hlth >> 8) & 0x0ff
+                    t0a = hlth & 0x0ff
+                    # Hea20 to Hea30 now in the LSB
+                    hlth >>= 16
+                    s += "Health 20 to 30 WNa %u t0a %u\n       " % (WNa, t0a)
+                    for i in range(20, 31):
+                        # take 9 bits at a time from the top
+                        h = (hlth >> ((30 - i) * 9)) & 0x1ff
+                        s += " %3x" % h
                 elif 9 == Pnum:
                     A0GPS = (page >> 106) & 0x03fff
                     A1GPS = ((page >> 188) & 0x03) << 14
@@ -5953,7 +5952,11 @@ protVer 34 and up
                         # not Almanac
                         s += "Reserved AmEpID %u" % AmEpID
                     else:
-                        s += "Health: AmEpID %u" % AmEpID
+                        s += "Health 31 to 43: AmEpID %u" % AmEpID
+                else:
+                    s += "Unknown page number"
+            else:
+                s += "Unknown page number"
 
         return s
 
