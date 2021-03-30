@@ -1310,7 +1310,9 @@ static gps_mask_t sirf_msg_swversion(struct gps_device_t *session,
     return DEVICEID_SET;
 }
 
-/* subframe data MID 8 */
+/* subframe data MID 8
+ * Use Message ID 14 and 15 instead?
+ * Use Message ID 56, Sub ID 5, instead? */
 static gps_mask_t sirf_msg_navdata(struct gps_device_t *session,
                                    unsigned char *buf, size_t len)
 {
@@ -1324,6 +1326,7 @@ static gps_mask_t sirf_msg_navdata(struct gps_device_t *session,
     svid = (unsigned int)getub(buf, 2);
 
     for (i = 0; i < 10; i++) {
+        // packing undocumented...
         words[i] = (uint32_t)getbeu32(buf, 4 * i + 3);
     }
 

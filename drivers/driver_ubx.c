@@ -2436,6 +2436,7 @@ static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
     unsigned i;
     uint8_t gnssId, svId, freqId, numWords, chn, version;
     uint32_t words[17];
+    char *chn_s;
 
     if (8 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -2458,17 +2459,19 @@ static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
     svId = getub(buf, 1);
     freqId = getub(buf, 2);
     version = getub(buf, 6);
+    chn = getub(buf, 5);
     if (1 < version) {
         // receiver channel in version 2 and up.
-        chn = getub(buf, 5);
+        // valid range 0 to 13?
+        chn_s = "chn";
     } else {
-        chn = 255;         // valid range 0 to 13
+        chn_s = "reserved";
     }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX-RXM-SFRBX: version %u gnssId %u chn %u svId %u "
+             "UBX-RXM-SFRBX: version %u gnssId %u %s %u svId %u "
              "freqId %u words %u\n",
-             version, gnssId, chn, svId, freqId, numWords);
+             version, gnssId, chn_s, chn, svId, freqId, numWords);
 
     if (0 == version) {
         // unknown ersion
@@ -2477,6 +2480,7 @@ static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
 
     memset(words, 0, sizeof(words));
     for (i = 0; i < numWords; i++) {
+        // remove 6 LSBs of GPS parity. GPS Only
         words[i] = (uint32_t)getleu32(buf, 4 * i + 8) >> 6;
     }
 
