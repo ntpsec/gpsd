@@ -5953,6 +5953,14 @@ protVer 34 and up
                         s += "Reserved AmEpID %u" % AmEpID
                     else:
                         s += "Health 31 to 43: AmEpID %u" % AmEpID
+                        # Hea31 to Hea43 now in the LSB
+                        hlth >>= 85
+                        s += ("Health 31 to 43 WNa %u t0a %u\n       " %
+                              (WNa, t0a))
+                        for i in range(31, 44):
+                            # take 9 bits at a time from the top
+                            h = (hlth >> ((43 - i) * 9)) & 0x1ff
+                            s += " %3x" % h
                 else:
                     s += "Unknown page number"
             else:
