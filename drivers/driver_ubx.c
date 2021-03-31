@@ -2480,12 +2480,12 @@ static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
 
     memset(words, 0, sizeof(words));
     for (i = 0; i < numWords; i++) {
-        // remove 6 LSBs of GPS parity. GPS Only
-        words[i] = (uint32_t)getleu32(buf, 4 * i + 8) >> 6;
+        // grab the words, don't mangle them
+        words[i] = (uint32_t)getleu32(buf, 4 * i + 8);
     }
 
     // do we need freqId or chn?
-    return gpsd_interpret_subframe(session, gnssId, svId, words);
+    return gpsd_interpret_subframe_raw(session, gnssId, svId, words);
 }
 
 /* UBX-INF-* */
