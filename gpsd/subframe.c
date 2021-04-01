@@ -13,264 +13,6 @@
 /* convert unsigned to signed */
 #define uint2int(u, bit) ((u & (1<<(bit-1))) ? u - (1<<bit) : u)
 
-/* Stub of code to decode BeiDou Subframes
- *
- * for now only handles the 10 word subframe.
- *
- * http://en.beidou.gov.cn/SYSTEMS/ICD/
- * BeiDou Interface Control Document v1.0
- * See u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf
- * Section 10.4 BeiDou
- * or
- * ZED-F9P_IntegrationManual_(UBX-18010802).pdf
- * Section 3.13.1.4 BeiDou
- * gotta decode the u-blox munging and the BeiDou packing...
- */
-static gps_mask_t bds_subframe(struct gps_device_t *session,
-                               unsigned int tSVID,
-                               uint32_t words[],
-                               unsigned int numwords)
-{
-    char *word_desc = "";
-    unsigned FraID = (words[0] >> 12) & 7;
-
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "50B,BSD: %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x\n",
-             words[0], words[1], words[2], words[3], words[4],
-             words[5], words[6], words[7], words[8], words[9]);
-
-
-    GPSD_LOG(LOG_PROG, &session->context->errout,
-             "50B,BDS: FraID %u (%s)\n",
-             FraID, word_desc);
-
-    return 0;
-}
-
-/* Stub of code to decode Galileo Subframes
- *
- * for now only handles the 8 word subframe.
- *
- * Galileo_OS_SIS_ICD_v2.0.pdf
- * See u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf
- * Section 10.5 Galileo
- * gotta decode the u-blox munging and the Galileo packing...
- */
-static gps_mask_t gal_subframe(struct gps_device_t *session,
-                               unsigned int tSVID,
-                               uint32_t words[],
-                               unsigned int numwords)
-{
-    char *word_desc = "";
-    // always zero on E5b-I, always 1 on E1-B
-    unsigned even = words[0] >> 31;
-    // # zero for nominal page, one for alert page
-    unsigned page_type = (words[0] >> 30) & 1;
-    unsigned word_type = (words[0] >> 24) & 0x03f;
-
-    if (8 > numwords) {
-        // Later on there will be different lengths than 8.
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "50B: GAL: expected 8 words, got %u\n",
-                 numwords);
-        return 0;
-    }
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "50B: GAL tSVID %u len %u: "
-             "%08x %08x %08x %08x %08x %08x %08x %08x\n", tSVID, numwords,
-             words[0], words[1], words[2], words[3], words[4],
-             words[5], words[6], words[7]);
-
-    if (1 == page_type) {
-        // Alerts pages are all "Reserved"
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "50B: GAL: ignoring Alert Page \n");
-        return 0;
-    }
-    if (1 == even) {
-        // Alerts pages are all "Reserved"
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "50B: GAL: page flipped?\n");
-        return 0;
-    }
-    switch (word_type) {
-    case 0:
-        word_desc = "Spare Word";
-        break;
-    case 1:
-        word_desc = "Ephemeris 1";
-        break;
-    case 2:
-        word_desc = "Ephemeris 2";
-        break;
-    case 3:
-        word_desc = "Ephemeris 3";
-        break;
-    case 4:
-        word_desc = "Ephemeris 4";
-        break;
-    case 5:
-        word_desc = "Ionosphere";
-        break;
-    case 6:
-        word_desc = "GST-UTC";
-        break;
-    case 7:
-        word_desc = "Almanacs 1";
-        break;
-    case 8:
-        word_desc = "Almanacs 2";
-        break;
-    case 9:
-        word_desc = "Almanacs 3";
-        break;
-    case 10:
-        word_desc = "Almanacs 4";
-        break;
-    case 16:
-        word_desc = "Reduced Clock and Ephemeris Data";
-        break;
-    case 17:
-        word_desc = "FEC2 Reed-Solomon for Clock and Ephemeris Data";
-        break;
-    case 63:
-        word_desc = "Dummy Page";
-        break;
-    default:
-        word_desc = "Unknown Word";
-        break;
-    }
-
-    GPSD_LOG(LOG_PROG, &session->context->errout,
-             "50B: GAL: len %u even %u page_type %u word_type %u (%s)\n",
-             numwords, even, page_type, word_type, word_desc);
-
-    return 0;
-}
-
-
-gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
-                                       unsigned int gnssId,
-                                       unsigned int tSVID,
-                                       uint32_t words[],
-                                       unsigned int numwords)
-{
-    unsigned int i;
-    uint8_t preamble;
-    unsigned int numwords_expected = 0;
-
-    if (session->subframe_count++ == 0) {
-        speed_t speed = gpsd_get_speed(session);
-
-        if (speed < 38400) {
-            GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "50B: speed less than 38,400 may cause data lag and "
-                     "loss of functionality\n");
-        }
-    }
-
-    switch (gnssId) {
-    case GNSSID_GPS:
-        FALLTHROUGH
-    case GNSSID_QZSS:
-        // GPS and QZSS ue the same subframe structure
-        numwords_expected = 10;
-        break;
-    case GNSSID_SBAS:
-        GPSD_LOG(LOG_INFO, &session->context->errout,
-                 "50B: SBAS subframe protocol is not publicly documented");
-        return 0;
-    case GNSSID_GAL:
-        numwords_expected = 8;
-        if (numwords_expected == numwords) {
-            return gal_subframe(session, tSVID, words, numwords);
-        }
-        break;
-
-    case GNSSID_BD:
-        numwords_expected = 10;
-        if (numwords_expected == numwords) {
-            return bds_subframe(session, tSVID, words, numwords);
-        }
-        break;
-    case GNSSID_IMES:
-        FALLTHROUGH
-    case GNSSID_GLO:
-        FALLTHROUGH
-    case GNSSID_IRNSS:
-        FALLTHROUGH
-    default:
-        GPSD_LOG(LOG_INFO, &session->context->errout,
-                 "50B: Unsupportd gnssId %u\n", gnssId);
-        return 0;
-    }
-
-    if (numwords_expected > numwords) {
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "50B: gnssId %u  Expected numwords %u, got %u\n",
-                 gnssId, numwords_expected, numwords);
-        return 0;
-    }
-
-    /*
-     * This function assumes an array of 10 ints, each of which carries
-     * a raw 30-bit GPS word use your favorite search engine to find the
-     * latest version of the specification: IS-GPS-200.
-     *
-     * Each raw 30-bit word is made of 24 data bits and 6 parity bits. The
-     * raw word and transport word are emitted from the GPS MSB-first and
-     * right justified. In other words, masking the raw word against 0x3f
-     * will return just the parity bits. Masking with 0x3fffffff and shifting
-     * 6 bits to the right returns just the 24 data bits. The top two bits
-     * (b31 and b30) are undefined; chipset designers may store copies of
-     * the bits D29* and D30* here to aid parity checking.
-     *
-     * Since bits D29* and D30* are not available in word 0, it is tested for
-     * a known preamble to help check its validity and determine whether the
-     * word is inverted.
-     *
-     */
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "50B: gpsd_interpret_subframe_raw: "
-             "%08x %08x %08x %08x %08x %08x %08x %08x %08x %08x\n",
-             words[0], words[1], words[2], words[3], words[4],
-             words[5], words[6], words[7], words[8], words[9]);
-
-    preamble = (uint8_t)((words[0] >> 22) & 0xFF);
-    if (preamble == 0x8b) {     /* preamble is inverted */
-        words[0] ^= 0x3fffffc0; /* invert */
-    } else if (preamble != 0x74) {
-        /* strangely this is very common, so don't log it */
-        GPSD_LOG(LOG_DATA, &session->context->errout,
-                 "50B: gpsd_interpret_subframe_raw: bad preamble 0x%x\n",
-                 preamble);
-        return 0;
-    }
-    words[0] = (words[0] >> 6) & 0xffffff;
-
-    for (i = 1; i < 10; i++) {
-        int invert;
-        uint32_t parity;
-        /* D30* says invert */
-        invert = (words[i] & 0x40000000) ? 1 : 0;
-        /* inverted data, invert it back */
-        if (invert) {
-            words[i] ^= 0x3fffffc0;
-        }
-        parity = (uint32_t)isgps_parity((isgps30bits_t)words[i]);
-        if (parity != (words[i] & 0x3f)) {
-            GPSD_LOG(LOG_DATA, &session->context->errout,
-                     "50B: gpsd_interpret_subframe_raw parity fail "
-                     "words[%d] 0x%x != 0x%x\n",
-                     i, parity, (words[i] & 0x1));
-            return 0;
-        }
-        words[i] = (words[i] >> 6) & 0xffffff;
-    }
-
-    return gpsd_interpret_subframe(session, gnssId, tSVID, words);
-}
-
 /* you can find up to date almanac data for comparison here:
  * https://gps.afspc.af.mil/gps/Current/current.alm
  *
@@ -364,7 +106,9 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
     /* FIXME!! I really doubt this is Big Endian compatible */
     uint8_t preamble;
     struct subframe_t *subp = &session->gpsdata.subframe;
+    memset(&session->gpsdata.subframe, 0, sizeof(session->gpsdata.subframe));
     subp->gnssId = gnssId;
+    subp->tSVID = (uint8_t)tSVID;
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "50B: gpsd_interpret_subframe: (%u, %u) "
@@ -387,7 +131,6 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
     }
     subp->integrity = (bool)((words[0] >> 1) & 0x01);
     /* The subframe ID is in the Hand Over Word (page 80) */
-    subp->tSVID = (uint8_t)tSVID;
     // subframe_num is 1 to 5
     subp->subframe_num = ((words[1] >> 2) & 0x07);
     subp->antispoof = (bool)((words[1] >> 5) & 0x01);
@@ -1042,6 +785,331 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
         return 0;
     }
     return SUBFRAME_SET;
+}
+
+/* Stub of code to decode BeiDou Subframes
+ *
+ * for now only handles the 10 word subframe.
+ *
+ * http://en.beidou.gov.cn/SYSTEMS/ICD/
+ * BeiDou Interface Control Document v1.0
+ * See u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf
+ * Section 10.4 BeiDou
+ * or
+ * ZED-F9P_IntegrationManual_(UBX-18010802).pdf
+ * Section 3.13.1.4 BeiDou
+ * gotta decode the u-blox munging and the BeiDou packing...
+ *
+ * 10 words.  ignore top 2 bits, so 30 bits.  The 8 LSB are parity.
+ * except words[0] is 4 parity
+ */
+static gps_mask_t bds_subframe(struct gps_device_t *session,
+                               unsigned int tSVID,
+                               uint32_t words[],
+                               unsigned int numwords)
+{
+    char *word_desc = "";
+    unsigned FraID = (words[0] >> 12) & 7;
+    unsigned SOW;
+    struct subframe_t *subp = &session->gpsdata.subframe;
+    memset(&session->gpsdata.subframe, 0, sizeof(session->gpsdata.subframe));
+    subp->gnssId = GNSSID_BD;
+    subp->tSVID = (uint8_t)tSVID;
+    SOW = ((words[0] >> 4) & 0x0ff) << 12;
+    SOW |= (words[1] >> 18) & 0x0fff;
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "50B,BSD: %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x\n",
+             words[0], words[1], words[2], words[3], words[4],
+             words[5], words[6], words[7], words[8], words[9]);
+
+    switch (FraID) {
+    case 1:
+        word_desc = "Ephemeris 1";
+        break;
+    case 2:
+        word_desc = "Ephemeris 2";
+        break;
+    case 3:
+        word_desc = "Ephemeris 3";
+        break;
+    case 4:
+        {
+            unsigned Pnum = (words[1] >> 10) & 0x7f;
+            unsigned AmEpID = (words[9] >> 8) & 3;
+            if (1 <= Pnum && 24 >= Pnum && 3 == AmEpID) {
+                word_desc = "Almanac 1";
+            } else {
+                word_desc = "Reserved";
+            }
+        }
+        break;
+    case 5:
+        {
+            unsigned Pnum = (words[1] >> 10) & 0x7f;
+            unsigned AmEpID = (words[9] >> 8) & 3;
+            if ((1 <= Pnum && 6 >= Pnum) || (11 <= Pnum && 23 >= Pnum)) {
+                if (3 == AmEpID) {
+                    word_desc = "Almanac 2";
+                } else {
+                    word_desc = "Reserved";
+                }
+            } else if (7 == Pnum) {
+                word_desc = "Health 1";
+            } else if (8 == Pnum) {
+                word_desc = "Health 20";
+            } else if (9 == Pnum) {
+                word_desc = "GST-GPS";
+            } else if (10 == Pnum) {
+                word_desc = "GST-UTC";
+            } else {
+                word_desc = "Other";
+            }
+        }
+        break;
+    default:
+        word_desc = "Unknown FraID";
+        break;
+    }
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "50B,BDS: FraID %u (%s) SOW %u\n",
+             FraID, word_desc, SOW);
+
+    return 0;
+}
+
+/* Stub of code to decode Galileo Subframes
+ *
+ * for now only handles the 8 word subframe.
+ *
+ * Galileo_OS_SIS_ICD_v2.0.pdf
+ * See u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf
+ * Section 10.5 Galileo
+ * gotta decode the u-blox munging and the Galileo packing...
+ */
+static gps_mask_t gal_subframe(struct gps_device_t *session,
+                               unsigned int tSVID,
+                               uint32_t words[],
+                               unsigned int numwords)
+{
+    char *word_desc = "";
+    // always zero on E5b-I, always 1 on E1-B
+    unsigned even = words[0] >> 31;
+    // # zero for nominal page, one for alert page
+    unsigned page_type;
+    unsigned word_type;
+    struct subframe_t *subp;
+
+    if (8 > numwords) {
+        // Later on there will be different lengths than 8.
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "50B: GAL: expected 8 words, got %u\n",
+                 numwords);
+        return 0;
+    }
+    subp = &session->gpsdata.subframe;
+    memset(&session->gpsdata.subframe, 0, sizeof(session->gpsdata.subframe));
+    subp->gnssId = GNSSID_GAL;
+    subp->tSVID = (uint8_t)tSVID;
+
+    page_type = (words[0] >> 30) & 1;
+    word_type = (words[0] >> 24) & 0x03f;
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "50B: GAL tSVID %u len %u: "
+             "%08x %08x %08x %08x %08x %08x %08x %08x\n", tSVID, numwords,
+             words[0], words[1], words[2], words[3], words[4],
+             words[5], words[6], words[7]);
+
+    if (1 == page_type) {
+        // Alerts pages are all "Reserved"
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "50B: GAL: ignoring Alert Page \n");
+        return 0;
+    }
+    if (1 == even) {
+        // Alerts pages are all "Reserved"
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "50B: GAL: page flipped?\n");
+        return 0;
+    }
+    switch (word_type) {
+    case 0:
+        word_desc = "Spare Word";
+        break;
+    case 1:
+        word_desc = "Ephemeris 1";
+        break;
+    case 2:
+        word_desc = "Ephemeris 2";
+        break;
+    case 3:
+        word_desc = "Ephemeris 3";
+        break;
+    case 4:
+        word_desc = "Ephemeris 4";
+        break;
+    case 5:
+        word_desc = "Ionosphere";
+        break;
+    case 6:
+        word_desc = "GST-UTC";
+        break;
+    case 7:
+        word_desc = "Almanacs 1";
+        break;
+    case 8:
+        word_desc = "Almanacs 2";
+        break;
+    case 9:
+        word_desc = "Almanacs 3";
+        break;
+    case 10:
+        word_desc = "Almanacs 4";
+        break;
+    case 16:
+        word_desc = "Reduced Clock and Ephemeris Data";
+        break;
+    case 17:
+        word_desc = "FEC2 Reed-Solomon for Clock and Ephemeris Data";
+        break;
+    case 63:
+        word_desc = "Dummy Page";
+        break;
+    default:
+        word_desc = "Unknown Word";
+        break;
+    }
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "50B: GAL: len %u even %u page_type %u word_type %u (%s)\n",
+             numwords, even, page_type, word_type, word_desc);
+
+    return 0;
+}
+
+
+gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
+                                       unsigned int gnssId,
+                                       unsigned int tSVID,
+                                       uint32_t words[],
+                                       unsigned int numwords)
+{
+    unsigned int i;
+    uint8_t preamble;
+    unsigned int numwords_expected = 0;
+
+    if (session->subframe_count++ == 0) {
+        speed_t speed = gpsd_get_speed(session);
+
+        if (speed < 38400) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "50B: speed less than 38,400 may cause data lag and "
+                     "loss of functionality\n");
+        }
+    }
+
+    switch (gnssId) {
+    case GNSSID_GPS:
+        FALLTHROUGH
+    case GNSSID_QZSS:
+        // GPS and QZSS ue the same subframe structure
+        numwords_expected = 10;
+        break;
+    case GNSSID_SBAS:
+        GPSD_LOG(LOG_INFO, &session->context->errout,
+                 "50B: SBAS subframe protocol is not publicly documented");
+        return 0;
+    case GNSSID_GAL:
+        numwords_expected = 8;
+        if (numwords_expected == numwords) {
+            return gal_subframe(session, tSVID, words, numwords);
+        }
+        break;
+
+    case GNSSID_BD:
+        numwords_expected = 10;
+        if (numwords_expected == numwords) {
+            return bds_subframe(session, tSVID, words, numwords);
+        }
+        break;
+    case GNSSID_IMES:
+        FALLTHROUGH
+    case GNSSID_GLO:
+        FALLTHROUGH
+    case GNSSID_IRNSS:
+        FALLTHROUGH
+    default:
+        GPSD_LOG(LOG_INFO, &session->context->errout,
+                 "50B: Unsupportd gnssId %u\n", gnssId);
+        return 0;
+    }
+
+    if (numwords_expected > numwords) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "50B: gnssId %u  Expected numwords %u, got %u\n",
+                 gnssId, numwords_expected, numwords);
+        return 0;
+    }
+
+    /*
+     * This function assumes an array of 10 ints, each of which carries
+     * a raw 30-bit GPS word use your favorite search engine to find the
+     * latest version of the specification: IS-GPS-200.
+     *
+     * Each raw 30-bit word is made of 24 data bits and 6 parity bits. The
+     * raw word and transport word are emitted from the GPS MSB-first and
+     * right justified. In other words, masking the raw word against 0x3f
+     * will return just the parity bits. Masking with 0x3fffffff and shifting
+     * 6 bits to the right returns just the 24 data bits. The top two bits
+     * (b31 and b30) are undefined; chipset designers may store copies of
+     * the bits D29* and D30* here to aid parity checking.
+     *
+     * Since bits D29* and D30* are not available in word 0, it is tested for
+     * a known preamble to help check its validity and determine whether the
+     * word is inverted.
+     *
+     */
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "50B: gpsd_interpret_subframe_raw: "
+             "%08x %08x %08x %08x %08x %08x %08x %08x %08x %08x\n",
+             words[0], words[1], words[2], words[3], words[4],
+             words[5], words[6], words[7], words[8], words[9]);
+
+    preamble = (uint8_t)((words[0] >> 22) & 0xFF);
+    if (preamble == 0x8b) {     /* preamble is inverted */
+        words[0] ^= 0x3fffffc0; /* invert */
+    } else if (preamble != 0x74) {
+        /* strangely this is very common, so don't log it */
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "50B: gpsd_interpret_subframe_raw: bad preamble 0x%x\n",
+                 preamble);
+        return 0;
+    }
+    words[0] = (words[0] >> 6) & 0xffffff;
+
+    for (i = 1; i < 10; i++) {
+        int invert;
+        uint32_t parity;
+        /* D30* says invert */
+        invert = (words[i] & 0x40000000) ? 1 : 0;
+        /* inverted data, invert it back */
+        if (invert) {
+            words[i] ^= 0x3fffffc0;
+        }
+        parity = (uint32_t)isgps_parity((isgps30bits_t)words[i]);
+        if (parity != (words[i] & 0x3f)) {
+            GPSD_LOG(LOG_DATA, &session->context->errout,
+                     "50B: gpsd_interpret_subframe_raw parity fail "
+                     "words[%d] 0x%x != 0x%x\n",
+                     i, parity, (words[i] & 0x1));
+            return 0;
+        }
+        words[i] = (words[i] >> 6) & 0xffffff;
+    }
+
+    return gpsd_interpret_subframe(session, gnssId, tSVID, words);
 }
 
 // vim: set expandtab shiftwidth=4
