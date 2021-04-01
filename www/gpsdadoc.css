@@ -1,6 +1,8 @@
 @import "https://cdn.jsdelivr.net/gh/asciidoctor/asciidoctor@2.0/data/stylesheets/asciidoctor-default.css";
 
+#header > h1:first-child,
 body {
+  color: #000;
 }
 
 .sidebarblock,
@@ -11,7 +13,45 @@ body {
 
 .sidebarblock {
   display: inline-block;
-  float: right;
-  margin-left: 20px;
+  float: left;
+  margin-right: 20px;
   margin-bottom: 20px;
+}
+
+#toctitle {
+  display: none;
+}
+
+#content #toc.toc {
+  background: inherit;
+  border: none;
+  padding: 0em;
+}
+
+#header,
+#content,
+#footnotes,
+#footer {
+  max-width: initial;
+}
+
+@media screen and (min-width: 768px) {
+  body {
+    --left-col: 15em;
+  }
+
+  #content #Menu {
+    border: 1px dashed #999;
+    bottom: 2px;
+    left: 2px;
+    margin: 0 20px 20px 0;
+    position: absolute;
+    top: 2px;
+    width: var(--left-col);
+  }
+
+  #content #preamble,
+  #content .sect1 {
+    margin-left: calc(var(--left-col) + 22px);
+  }
 }
