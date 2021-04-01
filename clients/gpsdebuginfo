@@ -7,6 +7,7 @@ exec 2>&1
 set -x
 if [ $(id -u) != 0 ]; then
     echo "Please run as root"
+    exit 1
 fi
 
 id
@@ -45,6 +46,10 @@ if command -v ntpshmmon; then
 fi
 # check for /dev/pps*, /dev/ttyA*, /dev/ttyU*
 ls -l /dev/pps* /dev/tty[AU]*
+# check for USB receivers
+if command -v lsusb; then
+    lsusb
+fi
 echo PYTHONPATH $PYTHONPATH
 if command -v gpscat; then
     head -n 1 `command -v gpscat`
