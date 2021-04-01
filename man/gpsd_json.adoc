@@ -81,6 +81,14 @@ likely no usable data in the sentence.  The remaining fields are optional,
 their presence depends on what data the GNSS receiver has sent, and
 what *gpsd* may calculate from that data.
 
+A TPV object will usually be sent at least once for every measurement
+epoch as determined by the "time" field. Unless the receiver has a
+solid fix, and knows the current leap second, the time may be random.
+
+Multiple TPV objects are often sent per epoch.  When the receiver dribbles
+data to *gpsd*, then *gpsd* has no choice but to dribble it to the
+client in multiple TPV messages.
+
 The optional "status" field (aka fix type), is a modifier (adjective) to
 mode.  It is not a replacement for, or superset of, the "mode" field.
 It is almost, but not quite, the same as the NMEA 4.x xxGGA GPS Quality
@@ -1487,6 +1495,19 @@ specific to that subframe page type. Those sub-object fields have names
 and types similar to those specified in the IS-GPS-200 document; each
 message field table may be directly interpreted as a specification for
 the members of the corresponding JSON object type.
+
+.SUBFRAME object
+|===
+|Name |Always? |Type |Description
+|class |Yes |string |Fixed: "SUBFRAME"
+|device |Yes |string |Name of the originating device.
+|gnssId |Yes |integer |Constellation of transmitting satellite
+|tSV |Yes |integer |ID of transmitting satellite (Not PRN)
+|TOW17 |No |integer |Type 17 bits of the next GPS Time Of Week
+|frame |No |integer |Frame number
+|scaled |Yes |boolean |True is values scaled
+|===
+
 
 == SEE ALSO
 

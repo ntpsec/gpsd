@@ -1602,15 +1602,17 @@ Notes based on code as of Tue Apr 6 10:17:55 2010 -0400.
 
 [cols=",",options="header",]
 |===
-|Functions: |This code interprets satellite RTCM-104 subframe data.
+|Functions: |This code interprets satellite subframe data.
 |*void gpsd_interpret_subframe(struct gps_device_t *session, +
                                 unsigned int gnssID, +
                                 unsigned int prn, +
-                                unsigned int words[])*
-|Extracts leap-second from RTCM-104 subframe data.
+                                unsigned int words[] +
+                                unsigned int numwords)*
+|Extracts leap-second from subframe data.
 |===
 
-Notes based on code as of Tue Apr 6 10:17:55 2010 -0400.
+Notes based on code as of Tue Apr 6 10:17:55 2010 -0400.  With a
+few updates.
 
 == Signoff
 

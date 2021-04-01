@@ -659,8 +659,10 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
 
     // TOW17 is always scaled
     (void)snprintf(buf, buflen, "{\"class\":\"SUBFRAME\",\"device\":\"%s\","
-                   "\"tSV\":%u,\"TOW17\":%lu,\"frame\":%u,\"scaled\":%s",
+                   "\"gnssId\":%u,\"tSV\":%u,\"TOW17\":%lu,\"frame\":%u,"
+                   "\"scaled\":%s",
                    datap->dev.path,
+                   (unsigned int)subframe->gnssId,
                    (unsigned int)subframe->tSVID,
                    subframe->l_TOW17,
                    (unsigned int)subframe->subframe_num,

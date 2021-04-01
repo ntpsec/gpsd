@@ -83,11 +83,12 @@ extern "C" {
  *       Add wspeedt, wspeedr, wanglem, wanglet, wangler to  gps_fix_t
  *       Remove unused gps_data_t.navadata_t.
  *       Add relPosL and relPosH to gps_fix_t.NED
- * 10.1  long l_toa becomes unsigned long l_toa
+ * 11    long l_toa becomes unsigned long l_toa
  *       fix sub4_18 types.
+ * 12    subframe_t expanded for more gnssId's
  *
  */
-#define GPSD_API_MAJOR_VERSION  11      /* bump on incompatible changes */
+#define GPSD_API_MAJOR_VERSION  12      /* bump on incompatible changes */
 #define GPSD_API_MINOR_VERSION  0       /* bump on compatible changes */
 
 #define MAXCHANNELS     140     /* u-blox 9 tracks 140 signals */
@@ -831,7 +832,9 @@ struct almanac_t
 };
 
 struct subframe_t {
-    /* subframe number, 3 bits, unsigned, 1 to 5 */
+    // different gnss use different subframes.
+    uint8_t gnssId;
+    // subframe number, 3 bits, unsigned, 1 to 5
     uint8_t subframe_num;
     /* data_id, denotes the NAV data structure of D(t), 2 bits, in
      * IS-GPS-200 always == 0x1 */

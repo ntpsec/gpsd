@@ -15,18 +15,56 @@
 
 gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
                                        unsigned int gnssId,
-                                       unsigned int tSVID, uint32_t words[])
+                                       unsigned int tSVID,
+                                       uint32_t words[],
+                                       unsigned int numwords)
 {
     unsigned int i;
     uint8_t preamble;
+    unsigned int numwords_expected = 0;
 
     if (session->subframe_count++ == 0) {
         speed_t speed = gpsd_get_speed(session);
 
-        if (speed < 38400)
+        if (speed < 38400) {
             GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "speed less than 38,400 may cause data lag and "
+                     "50B: speed less than 38,400 may cause data lag and "
                      "loss of functionality\n");
+        }
+    }
+
+    switch (gnssId) {
+    case GNSSID_GPS:
+        FALLTHROUGH
+    case GNSSID_QZSS:
+        // GPS and QZSS ue the same subframe structure
+        numwords_expected = 10;
+        break;
+    case GNSSID_SBAS:
+        GPSD_LOG(LOG_INFO, &session->context->errout,
+                 "50B: SBAS subframe protocol is not publicly documented");
+        return 0;
+    case GNSSID_GAL:
+        FALLTHROUGH
+    case GNSSID_BD:
+        FALLTHROUGH
+    case GNSSID_IMES:
+        FALLTHROUGH
+    case GNSSID_GLO:
+        FALLTHROUGH
+    case GNSSID_IRNSS:
+        FALLTHROUGH
+    default:
+        GPSD_LOG(LOG_INFO, &session->context->errout,
+                 "50B: Unsupportd gnssId %u\n", gnssId);
+        return 0;
+    }
+
+    if (numwords_expected != numwords) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "50B: Expected numwords %u, got %u",
+                 numwords_expected, numwords);
+        return 0;
     }
 
     /*
@@ -181,6 +219,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
     /* FIXME!! I really doubt this is Big Endian compatible */
     uint8_t preamble;
     struct subframe_t *subp = &session->gpsdata.subframe;
+    subp->gnssId = gnssId;
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "50B: gpsd_interpret_subframe: (%u, %u) "

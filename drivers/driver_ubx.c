@@ -2485,7 +2485,7 @@ static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
     }
 
     // do we need freqId or chn?
-    return gpsd_interpret_subframe_raw(session, gnssId, svId, words);
+    return gpsd_interpret_subframe_raw(session, gnssId, svId, words, numWords);
 }
 
 /* UBX-INF-* */

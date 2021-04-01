@@ -16,6 +16,7 @@
   Add gpsdebuginfo script and man page.
   ubxtool: Add BeiDou, Galileo, GLONASS, QZSS, and partial SBAS subframe decodes
   Max serial port speed raised to 921,600.
+  SUBFRAME JSON now includes new fields to support multiple constellations.
 
 3.22: 2021-01-08
   Added client/gpscsv to convert gpsd JSON to csv.

@@ -1318,6 +1318,7 @@ static gps_mask_t sirf_msg_navdata(struct gps_device_t *session,
 {
     unsigned int i, chan, svid;
     uint32_t words[10];
+    const unsigned int numwords = 10;
 
     if (len != 43)
         return 0;
@@ -1325,7 +1326,7 @@ static gps_mask_t sirf_msg_navdata(struct gps_device_t *session,
     chan = (unsigned int)getub(buf, 1);
     svid = (unsigned int)getub(buf, 2);
 
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < numwords; i++) {
         // packing undocumented...
         words[i] = (uint32_t)getbeu32(buf, 4 * i + 3);
     }
@@ -1348,7 +1349,8 @@ static gps_mask_t sirf_msg_navdata(struct gps_device_t *session,
         }
     }
 
-    return gpsd_interpret_subframe_raw(session, GNSSID_GPS, svid, words);
+    return gpsd_interpret_subframe_raw(session, GNSSID_GPS, svid, words,
+                                       numwords);
 }
 
 /* max channels allowed in old MID 4 SiRF format */
