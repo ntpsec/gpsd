@@ -13,6 +13,40 @@
 /* convert unsigned to signed */
 #define uint2int(u, bit) ((u & (1<<(bit-1))) ? u - (1<<bit) : u)
 
+/* Stub of code to decode BeiDou Subframes
+ *
+ * for now only handles the 10 word subframe.
+ *
+ * http://en.beidou.gov.cn/SYSTEMS/ICD/
+ * BeiDou Interface Control Document v1.0
+ * See u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf
+ * Section 10.4 BeiDou
+ * or
+ * ZED-F9P_IntegrationManual_(UBX-18010802).pdf
+ * Section 3.13.1.4 BeiDou
+ * gotta decode the u-blox munging and the BeiDou packing...
+ */
+static gps_mask_t bds_subframe(struct gps_device_t *session,
+                               unsigned int tSVID,
+                               uint32_t words[],
+                               unsigned int numwords)
+{
+    char *word_desc = "";
+    unsigned FraID = (words[0] >> 12) & 7;
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "50B,BSD: %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x\n",
+             words[0], words[1], words[2], words[3], words[4],
+             words[5], words[6], words[7], words[8], words[9]);
+
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "50B,BDS: FraID %u (%s)\n",
+             FraID, word_desc);
+
+    return 0;
+}
+
 /* Stub of code to decode Galileo Subframes
  *
  * for now only handles the 8 word subframe.
@@ -154,7 +188,11 @@ gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
         break;
 
     case GNSSID_BD:
-        FALLTHROUGH
+        numwords_expected = 10;
+        if (numwords_expected == numwords) {
+            return bds_subframe(session, tSVID, words, numwords);
+        }
+        break;
     case GNSSID_IMES:
         FALLTHROUGH
     case GNSSID_GLO:
