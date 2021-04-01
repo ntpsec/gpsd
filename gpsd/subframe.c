@@ -13,6 +13,108 @@
 /* convert unsigned to signed */
 #define uint2int(u, bit) ((u & (1<<(bit-1))) ? u - (1<<bit) : u)
 
+/* Stub of code to decode Galileo Subframes
+ *
+ * for now only handles the 8 word subframe.
+ *
+ * Galileo_OS_SIS_ICD_v2.0.pdf
+ * See u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf
+ * Section 10.5 Galileo
+ * gotta decode the u-blox munging and the Galileo packing...
+ */
+static gps_mask_t gal_subframe(struct gps_device_t *session,
+                               unsigned int tSVID,
+                               uint32_t words[],
+                               unsigned int numwords)
+{
+    char *word_desc = "";
+    // always zero on E5b-I, always 1 on E1-B
+    unsigned even = words[0] >> 31;
+    // # zero for nominal page, one for alert page
+    unsigned page_type = (words[0] >> 30) & 1;
+    unsigned word_type = (words[0] >> 24) & 0x03f;
+
+    if (8 > numwords) {
+        // Later on there will be different lengths than 8.
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "50B: GAL: expected 8 words, got %u\n",
+                 numwords);
+        return 0;
+    }
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "50B: GAL tSVID %u len %u: "
+             "%08x %08x %08x %08x %08x %08x %08x %08x\n", tSVID, numwords,
+             words[0], words[1], words[2], words[3], words[4],
+             words[5], words[6], words[7]);
+
+    if (1 == page_type) {
+        // Alerts pages are all "Reserved"
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "50B: GAL: ignoring Alert Page \n");
+        return 0;
+    }
+    if (1 == even) {
+        // Alerts pages are all "Reserved"
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "50B: GAL: page flipped?\n");
+        return 0;
+    }
+    switch (word_type) {
+    case 0:
+        word_desc = "Spare Word";
+        break;
+    case 1:
+        word_desc = "Ephemeris 1";
+        break;
+    case 2:
+        word_desc = "Ephemeris 2";
+        break;
+    case 3:
+        word_desc = "Ephemeris 3";
+        break;
+    case 4:
+        word_desc = "Ephemeris 4";
+        break;
+    case 5:
+        word_desc = "Ionosphere";
+        break;
+    case 6:
+        word_desc = "GST-UTC";
+        break;
+    case 7:
+        word_desc = "Almanacs 1";
+        break;
+    case 8:
+        word_desc = "Almanacs 2";
+        break;
+    case 9:
+        word_desc = "Almanacs 3";
+        break;
+    case 10:
+        word_desc = "Almanacs 4";
+        break;
+    case 16:
+        word_desc = "Reduced Clock and Ephemeris Data";
+        break;
+    case 17:
+        word_desc = "FEC2 Reed-Solomon for Clock and Ephemeris Data";
+        break;
+    case 63:
+        word_desc = "Dummy Page";
+        break;
+    default:
+        word_desc = "Unknown Word";
+        break;
+    }
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "50B: GAL: len %u even %u page_type %u word_type %u (%s)\n",
+             numwords, even, page_type, word_type, word_desc);
+
+    return 0;
+}
+
+
 gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
                                        unsigned int gnssId,
                                        unsigned int tSVID,
@@ -45,7 +147,12 @@ gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
                  "50B: SBAS subframe protocol is not publicly documented");
         return 0;
     case GNSSID_GAL:
-        FALLTHROUGH
+        numwords_expected = 8;
+        if (numwords_expected == numwords) {
+            return gal_subframe(session, tSVID, words, numwords);
+        }
+        break;
+
     case GNSSID_BD:
         FALLTHROUGH
     case GNSSID_IMES:
@@ -60,10 +167,10 @@ gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
         return 0;
     }
 
-    if (numwords_expected != numwords) {
+    if (numwords_expected > numwords) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "50B: Expected numwords %u, got %u",
-                 numwords_expected, numwords);
+                 "50B: gnssId %u  Expected numwords %u, got %u\n",
+                 gnssId, numwords_expected, numwords);
         return 0;
     }
 
