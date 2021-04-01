@@ -5974,13 +5974,21 @@ protVer 34 and up
         # See u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf
         # Section 10.5 Galileo
         # gotta decode the u-blox munging and the Galileo packing...
+
+        if 8 > len(words):
+            return "\n    GAL: runt message, len %u" % len(words)
+
+        s = ""
+        if 8 != len(words):
+            s = "\n    GAL: long message? len %u" % len(words)
+
         # always zero on E5b-I, always 1 on E1-B
         even = words[0] >> 31
         # zero for nominal page, one for alert page
         page_type = (words[0] >> 30) & 1
         word_type = (words[0] >> 24) & 0x03f
-        s = ("\n    GAL: even %u page_type %u word_type %u" %
-             (even, page_type, word_type))
+        s += ("\n    GAL: even %u page_type %u word_type %u" %
+              (even, page_type, word_type))
 
         if (1 == page_type):
             # Alerts pages are all "Reserved"
