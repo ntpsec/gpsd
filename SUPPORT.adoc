@@ -3,7 +3,7 @@
 :keywords: gps, gpsd, gnss
 :robots: index,follow
 :sectlinks:
-:toc: left
+:toc: macro
 :type: article
 :webfonts!:
 

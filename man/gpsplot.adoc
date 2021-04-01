@@ -7,9 +7,11 @@
 :mansource: GPSD {gpsdver}
 :robots: index,follow
 :sectlinks:
-:toc: left
+:toc: macro
 :type: manpage
 :webfonts!:
+
+include::../www/inc-menu.adoc[]
 
 == NAME
 

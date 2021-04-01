@@ -8,9 +8,11 @@ Gary E. Miller <gem@rellim.com.>
 :mansource: GPSD, Version {gpsdver}
 :robots: index,follow
 :sectlinks:
-:toc: left
 :type: manpage
 :webfonts!:
+:toc: macro
+
+include::../www/inc-menu.adoc[]
 
 == NAME
 

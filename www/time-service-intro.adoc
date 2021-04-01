@@ -8,7 +8,7 @@ v1.6, Jan 2021
 :keywords: time, UTC, atomic clock, GPS, NTP
 :robots: index,follow
 :sectlinks:
-:toc: left
+:toc: macro
 
 include::inc-menu.adoc[]
 

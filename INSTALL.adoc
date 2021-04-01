@@ -6,7 +6,7 @@
 :keywords: GPSD, GPS, installation
 :robots: index,follow
 :sectlinks:
-:toc: left
+:toc: macro
 
 include::www/inc-menu.adoc[]
 

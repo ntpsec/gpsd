@@ -7,7 +7,7 @@ Mick Durkin <mick.durkin@saunalahti.fi>
 :mansource: The GPSD Project
 :robots: index,follow
 :sectlinks:
-:toc: left
+:toc: macro
 :type: article
 :webfonts!:
 

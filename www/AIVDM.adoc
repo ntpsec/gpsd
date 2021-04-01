@@ -8,7 +8,7 @@ v1.55, Jan 2021
 :keywords: AIS, AIVDM, AIVDO, standard, protocol, Automatic Identification System
 :robots: index,follow
 :sectlinks:
-:toc: left
+:toc: macro
 
 include::inc-menu.adoc[]
 

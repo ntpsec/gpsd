@@ -7,9 +7,11 @@ Eric S. Raymond <esr@thysus.com
 :mansource: The GPSD Project
 :robots: index,follow
 :sectlinks:
-:toc: left
+:toc: macro
 :type: manpage
 :webfonts!:
+
+include::../inc-menu.adoc[]
 
 == Abstract
 

@@ -5,7 +5,7 @@
 :robots: index,follow
 :sectlinks:
 :type: article
-:toc: left
+:toc: macro
 
 include::www/inc-menu.adoc[]
 

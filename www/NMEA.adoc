@@ -8,7 +8,7 @@ v2.24, Jan 2021
 :keywords: NMEA0183, GPS, standard, protocol
 :robots: index,follow
 :sectlinks:
-:toc: left
+:toc: macro
 
 include::inc-menu.adoc[]
 

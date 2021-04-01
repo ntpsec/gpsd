@@ -6,7 +6,7 @@ Gary E. Miller <gem@rellim.com>, Eric S. Raymond <esr@thyrsus.com>
 :keywords: time, GPSD, NTP, time, precision, 1PPS, PPS, stratum, jitter
 :robots: index,follow
 :sectlinks:
-:toc: left
+:toc: macro
 
 include::inc-menu.adoc[]
 
