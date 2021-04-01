@@ -2,7 +2,7 @@
 Eric S. Raymond <esr@thyrsus.com>
 v1.55, Jan 2021
 :author: Eric S. Raymond
-:Date: 13 January 2021
+:date: 13 January 2021
 :description: The AIVDM Marine AIS protocol demystified, for programmers.
 :email: <esr@thyrsus.com>
 :keywords: AIS, AIVDM, AIVDO, standard, protocol, Automatic Identification System
@@ -5458,7 +5458,7 @@ Vendor ID field and adds information on AIS standards for inland
 waterways. Also Inland AIS standard messages are now covered.
 
 Version 1.44 adds substantial new information on MMSIs and updates
-the <<MMSI link>>, which was stale.
+the <<MMSI>> link, which was stale.
 
 Version 1.45 adds a description of variant AIS talker IDs and NMEA
 4.10 tag blocks.
