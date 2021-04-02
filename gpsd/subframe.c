@@ -13,6 +13,32 @@
 /* convert unsigned to signed */
 #define uint2int(u, bit) ((u & (1<<(bit-1))) ? u - (1<<bit) : u)
 
+// initialize an orbit_t
+static void init_orbit(orbit_t *orbit)
+{
+    orbit->type = 0;
+    orbit->sv = 0;
+    orbit->time = -1;
+    orbit->svh = -1;
+    orbit->WN = -1;
+    orbit->af0 = NAN;
+    orbit->af1 = NAN;
+    orbit->af2 = NAN;
+    orbit->Cic = NAN;
+    orbit->Cis = NAN;
+    orbit->Crc = NAN;
+    orbit->Crs = NAN;
+    orbit->Cuc = NAN;
+    orbit->Cus = NAN;
+    orbit->eccentricity = NAN;
+    orbit->i0 = NAN;
+    orbit->M0 = NAN;
+    orbit->Omega0 = NAN;
+    orbit->Omegad = NAN;
+    orbit->omega = NAN;
+    orbit->sqrtA = NAN;
+}
+
 /* you can find up to date almanac data for comparison here:
  * https://gps.afspc.af.mil/gps/Current/current.alm
  *
@@ -816,6 +842,7 @@ static gps_mask_t bds_subframe(struct gps_device_t *session,
     memset(&session->gpsdata.subframe, 0, sizeof(session->gpsdata.subframe));
     subp->gnssId = GNSSID_BD;
     subp->tSVID = (uint8_t)tSVID;
+    init_orbit(&subp->orbit);
     SOW = ((words[0] >> 4) & 0x0ff) << 12;
     SOW |= (words[1] >> 18) & 0x0fff;
 
@@ -915,6 +942,7 @@ static gps_mask_t gal_subframe(struct gps_device_t *session,
     memset(&session->gpsdata.subframe, 0, sizeof(session->gpsdata.subframe));
     subp->gnssId = GNSSID_GAL;
     subp->tSVID = (uint8_t)tSVID;
+    init_orbit(&subp->orbit);
 
     page_type = (words[0] >> 30) & 1;
     word_type = (words[0] >> 24) & 0x03f;
@@ -1009,9 +1037,16 @@ static gps_mask_t glo_subframe(struct gps_device_t *session,
                                unsigned int numwords)
 {
     char *word_desc = "";
+    struct subframe_t *subp;
     unsigned stringnum = (words[0] >> 27) & 0x0f;
     unsigned supernum = (words[3] >> 16) & 0x0f;
     unsigned framenum = words[3] & 0x0f;
+
+    subp = &session->gpsdata.subframe;
+    memset(&session->gpsdata.subframe, 0, sizeof(session->gpsdata.subframe));
+    subp->gnssId = GNSSID_GLO;
+    subp->tSVID = (uint8_t)tSVID;
+    init_orbit(&subp->orbit);
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "50B,GLO: tSVID %u len %u: "

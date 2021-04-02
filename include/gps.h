@@ -86,6 +86,7 @@ extern "C" {
  * 11    long l_toa becomes unsigned long l_toa
  *       fix sub4_18 types.
  * 12    subframe_t expanded for more gnssId's
+ *       Add orbit_t for generic orbital parameters
  *
  */
 #define GPSD_API_MAJOR_VERSION  12      /* bump on incompatible changes */
@@ -785,6 +786,71 @@ struct rtcm3_t {
 #define MESSAGE_INTERVAL_UNITS          0.1             /* 1013, DF047 */
 
 /*
+ * The one true structure for (most) orbital data.
+ * Before using any datum, check for validity, or isfinite()
+ *
+ * Why only store scaled data?  With 7 constellations, each with an
+ * almanac and ephemeris, that would be 14 unique non-scaled sets.
+ * Too much work.
+ *
+ */
+struct orbit
+{
+    // orbit type, 0 == invalid, 1 = ephemeris, 2 == almanac
+    uint8_t type;
+    // The satellite this refers to, zero if struct invalid
+    uint8_t sv;
+    // Week Number, -1 if invalid
+    int WN;
+    // SV health data, random format, -1 if invalid
+    int svh;
+    // toa, almanac reference time, -1 if invalid
+    long time;
+    // deltai, correction to inclination, semi-circles
+    double deltai;
+    // af0, SV clock correction constant term, seconds
+    double af0;
+    // af1, SV clock correction first order term, seconds/second
+    double af1;
+    // af2, SV clock correction second order term, seconds/second**2
+    double af2;
+    /* Cic, Amplitude of the Cosine Harmonic Correction Term to the
+     * Angle of Inclination, radians*/
+    double Cic;
+    /* Cis, Amplitude of the Sine Harmonic Correction Term to the
+     * Angle of Inclination, radians */
+    double Cis;
+    /* Crc, Amplitude of the Cosine Harmonic Correction Term to the
+     * Orbit Radius, meters */
+    double Crc;
+    /* Crs, Amplitude of the Sine Harmonic Correction Term to the
+     * Orbit Radius, signed, meters */
+    double Crs;
+    /* Cuc, Amplitude of the Cosine Harmonic Correction Term to the
+     * Argument of Latitude, 16 bits, radians */
+    double Cuc;
+    /* Cus, Amplitude of the Sine Harmonic Correction Term to the
+     * Argument of Latitude, radians */
+    double Cus;
+    // eccentricity, unsigned, dimensionless
+    double eccentricity;
+    // i0, Inclination Angle at Reference Time, 32 bits, signed, semi-circles
+    double i0;
+    // M0, Mean Anomaly at Reference Time, semi-circles
+    double M0;
+    /* Omega0, Longitude of Ascending Node of Orbit Plane at Weekly Epoch,
+     * semi-circles */
+    double Omega0;
+    // Omega dot, Rate of Right Ascension, semi-circles/sec
+    double Omegad;
+    // omega, Argument of Perigee, semi-circles
+    double omega;
+    // sqrt A, Square Root of the Semi-Major Axis, square_root(meters)
+    double sqrtA;
+};
+typedef struct orbit orbit_t;
+
+/*
  * Raw IS_GPS subframe data
  */
 
@@ -854,8 +920,11 @@ struct subframe_t {
     bool alert;
     /* antispoof, A-S mode is ON in that SV, 1 bit */
     bool antispoof;
+    // 1 == almanac, 2 == orbit
     int is_almanac;
     union {
+        // generic almanac, ephemeris
+        orbit_t orbit;
         /* subframe 1, part of ephemeris, see IS-GPS-200, Table 20-II
          * and Table 20-I */
         struct {
