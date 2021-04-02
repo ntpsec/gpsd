@@ -11,7 +11,35 @@ Eric S. Raymond <esr@thysus.com
 :type: manpage
 :webfonts!:
 
-include::../inc-menu.adoc[]
+[#Menu]
+****
+
+image:../gpsd-logo-small.png[Small gpsd Logo,width=105,height=126] +
+link:../index.html[Home] +
+link:../faq.html[FAQ] +
+link:../xgps-sample.html[Screenshots] +
+link:../hardware.html[Hardware] +
+link:../for-vendors.html[For GPS Vendors] +
+link:../wishlist.html[Wish List] +
+link:../hall-of-shame.html[Hall of Shame] +
+link:../troubleshooting.html[Troubleshooting Guide] +
+link:../hacking.html[Hacker's Guide] +
+link:../references.html[References] +
+link:../protocol-transition.html[Application Compatibility] +
+link:../history.html[History] +
+link:../future.html[Future] +
+
+'''
+
+toc::[]
+
+'''
+
+http://www.catb.org/hacker-emblem/[image:../glider.png[hacker emblem,width=55,height=55]] +
+ +
+https://validator.w3.org/check/referer[image:https://github.com/bradleytaunt/html5-valid-badge/raw/master/html5-validator-badge.png[Valid HTML 5,width=88,height=31]]
+
+****
 
 == Abstract
 

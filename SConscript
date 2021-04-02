@@ -2268,8 +2268,9 @@ if adoc_prog:
         target = 'www/%s.html' % os.path.basename(man[:-2])
         asciidocs.append(target)
         env.Command(target, src,
-                    '%s -b html5 -d manpage %s -o $TARGET $SOURCE' %
+                    '%s -b html5 %s -o $TARGET $SOURCE' %
                     (adoc_prog, adoc_args))
+        env.Depends(target, 'www/gpsdadoc.css')
 else:
     # can't build man pages, maybe we have pre-built ones?
     for man in Glob('man/*.?', strings=True):
@@ -2323,6 +2324,7 @@ if adoc_prog:
         env.Command(target, '%s.adoc' % src,
                     ['%s -b html5 %s -o $TARGET $SOURCE' %
                      (adoc_prog, adoc_args)])
+        env.Depends(target, 'www/gpsdadoc.css')
 
 # Non-asciidoc, plain html webpages only
 htmlpages = [
@@ -2356,6 +2358,7 @@ for fn in webpages_in_not:
 # webapges extras: images, css, js
 webpages_x_list = ('../www/*.css',
                    '../www/*.gif',
+                   '../www/*.ico',
                    '../www/*.js',
                    '../www/*.png',
                    '../www/*.svg',
