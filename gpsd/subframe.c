@@ -819,7 +819,9 @@ static gps_mask_t bds_subframe(struct gps_device_t *session,
     SOW |= (words[1] >> 18) & 0x0fff;
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "50B,BSD: %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x\n",
+             "50B,BDS len %u: "
+             "%08x %08x %08x %08x %08x %08x %08x %08x %08x %08x\n",
+             numwords,
              words[0], words[1], words[2], words[3], words[4],
              words[5], words[6], words[7], words[8], words[9]);
 
@@ -990,6 +992,38 @@ static gps_mask_t gal_subframe(struct gps_device_t *session,
 }
 
 
+/* Stub of code to decode GLONASS Subframes
+ *
+ * ZED-F9P_IntegrationManual_(UBX-18010802).pdf
+ * Section 3.13.1.3 GLONASS
+ * L10F and L20F only
+ * ICD_GLONASS_5.1_(2008)_en.pdf "ICD L1, L2 GLONASS"
+ * gotta decode the u-blox munging and the GLONASS packing...
+ *
+ * 4 words
+ */
+static gps_mask_t glo_subframe(struct gps_device_t *session,
+                               unsigned int tSVID,
+                               uint32_t words[],
+                               unsigned int numwords)
+{
+    char *word_desc = "";
+    unsigned stringnum = (words[0] >> 27) & 0x0f;
+    unsigned supernum = (words[3] >> 16) & 0x0f;
+    unsigned framenum = words[3] & 0x0f;
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "50B,GLO tSVID %u len %u: "
+             "%08x %08x %08x %08x\n", tSVID, numwords,
+             words[0], words[1], words[2], words[3]);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "50B,GLO: len %u supernum %u framenum %u stringnum %u (%s)\n",
+             numwords, supernum, framenum, stringnum, word_desc);
+    return 0;
+}
+
+
 gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
                                        unsigned int gnssId,
                                        unsigned int tSVID,
@@ -1034,9 +1068,13 @@ gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
             return bds_subframe(session, tSVID, words, numwords);
         }
         break;
-    case GNSSID_IMES:
-        FALLTHROUGH
     case GNSSID_GLO:
+        numwords_expected = 4;
+        if (numwords_expected == numwords) {
+            return glo_subframe(session, tSVID, words, numwords);
+        }
+        break;
+    case GNSSID_IMES:
         FALLTHROUGH
     case GNSSID_IRNSS:
         FALLTHROUGH
