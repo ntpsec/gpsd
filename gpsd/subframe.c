@@ -18,7 +18,7 @@ static void init_orbit(orbit_t *orbit)
 {
     orbit->type = 0;
     orbit->sv = 0;
-    orbit->time = -1;
+    orbit->tref = -1;
     orbit->svh = -1;
     orbit->WN = -1;
     orbit->af0 = NAN;
@@ -835,6 +835,7 @@ static gps_mask_t bds_subframe(struct gps_device_t *session,
                                uint32_t words[],
                                unsigned int numwords)
 {
+    gps_mask_t mask = 0;
     char *word_desc = "";
     unsigned FraID = (words[0] >> 12) & 7;
     unsigned SOW;
@@ -866,9 +867,64 @@ static gps_mask_t bds_subframe(struct gps_device_t *session,
     case 4:
         {
             unsigned Pnum = (words[1] >> 10) & 0x7f;
-            unsigned AmEpID = (words[9] >> 8) & 3;
-            if (1 <= Pnum && 24 >= Pnum && 3 == AmEpID) {
+            // unsigned AmEpID = (words[9] >> 8) & 3; // unused, for now
+            if (1 <= Pnum && 24 >= Pnum) {
+                long tmp;
                 word_desc = "Almanac 1";
+                subp->subframe_num = 4;
+                subp->TOW17 = SOW;
+                subp->is_almanac = SUBFRAME_ORBIT;
+                subp->orbit.type = ORBIT_ALMANAC;
+                subp->orbit.sv = Pnum;
+
+                tmp = ((words[1] >> 8) & 3) << 22;
+                tmp |= (words[2] >> 8) & 0x03fffff;
+                subp->orbit.sqrtA = tmp * pow(2.0,-11);
+
+                tmp = (words[3] >> 19) & 0x07ff;
+                tmp = uint2int(tmp, 11);
+                subp->orbit.af1 = tmp * pow(2.0,-38);
+
+                tmp = (words[3] >> 8) & 0x07ff;
+                tmp = uint2int(tmp, 11);
+                subp->orbit.af0 = tmp * pow(2.0,-20);
+
+                tmp = ((words[4] >> 8) & 0x3fffff) << 2;
+                tmp |= (words[5] >> 28) & 3;
+                tmp = uint2int(tmp, 24);
+                subp->orbit.Omega0 = tmp * pow(2.0,-23);
+
+                tmp = (words[5] >> 11) & 0x001ffff;
+                subp->orbit.eccentricity = tmp * pow(2.0,-21);
+
+                tmp = ((words[5] >> 3) & 0x03f) << 13;
+                tmp |= (words[6] >> 17) & 0x01ffff;
+                tmp = uint2int(tmp, 16);
+                subp->orbit.i0 = tmp * pow(2.0,-19);
+                // also convert deltai to i0
+                if ((1 <= subp->orbit.sv && 6 >= subp->orbit.sv) ||
+                    (59 <= subp->orbit.sv && 63 >= subp->orbit.sv)) {
+                    // GEO sats add 0, MEO/IGSO adding 0.30
+                    subp->orbit.i0 = tmp * pow(2.0,-19);
+                }
+
+                subp->orbit.tref = ((words[6] >> 9) & 0x0ff) << 12;  // t0a
+
+                tmp = ((words[6] >> 8) & 1) << 16;
+                tmp |= (words[7] >> 14) & 0x0ffff;
+                subp->orbit.Omegad = tmp * pow(2.0,-38);
+
+                tmp = ((words[7] >> 8) & 0x03f) << 18;
+                tmp |= (words[8] >> 12) & 0x03ffff;
+                tmp = uint2int(tmp, 24);
+                subp->orbit.omega = tmp * pow(2.0,-23);
+
+                tmp = ((words[8] >> 8) & 0x0f) << 20;
+                tmp |= (words[9] >> 10) & 0x0fffff;
+                tmp = uint2int(tmp, 24);
+                subp->orbit.M0 = tmp * pow(2.0,-23);
+
+                mask = SUBFRAME_SET;
             } else {
                 word_desc = "Reserved";
             }
@@ -906,7 +962,7 @@ static gps_mask_t bds_subframe(struct gps_device_t *session,
              "50B,BDS: FraID %u (%s) SOW %u\n",
              FraID, word_desc, SOW);
 
-    return 0;
+    return mask;
 }
 
 /* Stub of code to decode Galileo Subframes

@@ -798,6 +798,9 @@ struct orbit
 {
     // orbit type, 0 == invalid, 1 = ephemeris, 2 == almanac
     uint8_t type;
+#define ORBIT_INVALID 0
+#define ORBIT_EPHEMERIS 1
+#define ORBIT_ALMANAC 2
     // The satellite this refers to, zero if struct invalid
     uint8_t sv;
     // Week Number, -1 if invalid
@@ -805,9 +808,8 @@ struct orbit
     // SV health data, random format, -1 if invalid
     int svh;
     // toa, almanac reference time, -1 if invalid
-    long time;
-    // deltai, correction to inclination, semi-circles
-    double deltai;
+    // toe, ephemeris reference time, -1 if invalid
+    long tref;
     // af0, SV clock correction constant term, seconds
     double af0;
     // af1, SV clock correction first order term, seconds/second
@@ -832,18 +834,21 @@ struct orbit
     /* Cus, Amplitude of the Sine Harmonic Correction Term to the
      * Argument of Latitude, radians */
     double Cus;
+    // deltai, correction to inclination, semi-circles
+    // we don't store deltai, but convert it to i0 for consistency
     // eccentricity, unsigned, dimensionless
     double eccentricity;
-    // i0, Inclination Angle at Reference Time, 32 bits, signed, semi-circles
+    // i0, Inclination Angle at Reference Time, signed, semi-circles
+    // range +/- 1
     double i0;
-    // M0, Mean Anomaly at Reference Time, semi-circles
+    // M0, Mean Anomaly at Reference Time, semi-circles, range +/- 1
     double M0;
     /* Omega0, Longitude of Ascending Node of Orbit Plane at Weekly Epoch,
-     * semi-circles */
+     * semi-circles, range +/- 1 */
     double Omega0;
     // Omega dot, Rate of Right Ascension, semi-circles/sec
     double Omegad;
-    // omega, Argument of Perigee, semi-circles
+    // omega, Argument of Perigee, semi-circles, range +/- 1
     double omega;
     // sqrt A, Square Root of the Semi-Major Axis, square_root(meters)
     double sqrtA;
@@ -922,6 +927,8 @@ struct subframe_t {
     bool antispoof;
     // 1 == almanac, 2 == orbit
     int is_almanac;
+#define SUBFRAME_ALMANAC 1
+#define SUBFRAME_ORBIT 2
     union {
         // generic almanac, ephemeris
         orbit_t orbit;

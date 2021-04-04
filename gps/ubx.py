@@ -5869,10 +5869,10 @@ protVer 34 and up
                     # not Almanac
                     s += "Reserved AmEpID %u" % AmEpID
                 else:
-                    sqrtA = ((page >> 248) & 0x03fffff) << 22
+                    sqrtA = ((page >> 248) & 3) << 22
                     sqrtA |= (page >> 218) & 0x03fffff
-                    a1 = (page >> 199) & 0x07f
-                    a0 = (page >> 188) & 0x07f
+                    a1 = (page >> 199) & 0x07ff
+                    a0 = (page >> 188) & 0x07ff
                     Omega0 = ((page >> 158) & 0x3fffff) << 2
                     Omega0 |= (page >> 148) & 3
                     e = (page >> 131) & 0x01ffff
@@ -5883,7 +5883,7 @@ protVer 34 and up
                     Omegadot |= (page >> 74) & 0x0ffff
                     omega = ((page >> 68) & 0x03f) << 18
                     omega |= (page >> 42) & 0x03ffff
-                    M0 = ((page >> 38) & 0x0ff) << 20
+                    M0 = ((page >> 38) & 0x0f) << 20
                     M0 |= (page >> 10) & 0x0fffff
                     s += ("Almanac; sqrtA %u a1 %u a0 %u Omega0 %u"
                           "\n         e %u deltai %u t0a %u Omegadot %u"

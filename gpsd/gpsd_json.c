@@ -657,16 +657,85 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
 {
     const struct subframe_t *subframe = &datap->subframe;
 
-    // TOW17 is always scaled
     (void)snprintf(buf, buflen, "{\"class\":\"SUBFRAME\",\"device\":\"%s\","
-                   "\"gnssId\":%u,\"tSV\":%u,\"TOW17\":%lu,\"frame\":%u,"
-                   "\"scaled\":%s",
+                   "\"gnssId\":%u,\"tSV\":%u,\"frame\":%u",
                    datap->dev.path,
                    (unsigned int)subframe->gnssId,
                    (unsigned int)subframe->tSVID,
-                   subframe->l_TOW17,
-                   (unsigned int)subframe->subframe_num,
-                   JSON_BOOL(scaled));
+                   (unsigned int)subframe->subframe_num);
+
+    if (SUBFRAME_ORBIT == subframe->is_almanac){
+        str_appendf(buf, buflen, ",\"scaled\":true");
+        if (ORBIT_ALMANAC == subframe->orbit.type) {
+            str_appendf(buf, buflen,
+                        ",\"SOW\":%d,\"ALMANAC\":{\"sv\":%d",
+                        subframe->TOW17,
+                        subframe->orbit.sv);
+            if (0 != isfinite(subframe->orbit.af0)) {
+                str_appendf(buf, buflen, ",\"af0\":%.12e",
+                            subframe->orbit.af0);
+            }
+            if (0 != isfinite(subframe->orbit.af1)) {
+                str_appendf(buf, buflen, ",\"af1\":%.12e",
+                            subframe->orbit.af1);
+            }
+            if (0 != isfinite(subframe->orbit.af2)) {
+                str_appendf(buf, buflen, ",\"af2\":%.12e",
+                            subframe->orbit.af2);
+            }
+            if (0 != isfinite(subframe->orbit.eccentricity)) {
+                str_appendf(buf, buflen, ",\"e\":%.12e",
+                            subframe->orbit.eccentricity);
+            }
+            if (0 != isfinite(subframe->orbit.i0)) {
+                str_appendf(buf, buflen, ",\"i0\":%.16f",
+                            subframe->orbit.i0);
+            }
+            if (0 != isfinite(subframe->orbit.M0)) {
+                str_appendf(buf, buflen, ",\"M0\":%.16f",
+                            subframe->orbit.M0);
+            }
+            if (0 != isfinite(subframe->orbit.Omega0)) {
+                str_appendf(buf, buflen, ",\"Omega0\":%.16f",
+                            subframe->orbit.Omega0);
+            }
+            if (0 != isfinite(subframe->orbit.Omegad)) {
+                str_appendf(buf, buflen, ",\"Omegad\":%.12e",
+                            subframe->orbit.Omegad);
+            }
+            if (0 != isfinite(subframe->orbit.omega)) {
+                str_appendf(buf, buflen, ",\"omega\":%.16f",
+                            subframe->orbit.omega);
+            }
+            if (0 != isfinite(subframe->orbit.sqrtA)) {
+                str_appendf(buf, buflen, ",\"sqrtA\":%.12f",
+                            subframe->orbit.sqrtA);
+            }
+            if (0 <= subframe->orbit.tref) {
+                // maybe t0e, maybe t0a
+                str_appendf(buf, buflen, ",\"tref\":%ld",
+                            subframe->orbit.tref);
+            }
+            if (0 <= subframe->orbit.WN) {
+                str_appendf(buf, buflen, ",\"WN\":%d",
+                            subframe->orbit.WN);
+            }
+            (void)strlcat(buf, "}", buflen);
+        } else if (ORBIT_EPHEMERIS == subframe->orbit.type) {
+            // RINEX 2, everything is %.12e, so we will too.
+            str_appendf(buf, buflen,
+                        ",\"EPHEM1\":{");
+            (void)strlcat(buf, "}", buflen);
+        }
+        (void)strlcat(buf, "}\r\n", buflen);
+        return;
+    }
+
+    // TOW17 is always scaled
+    str_appendf(buf, buflen, ",\"TOW17\":%lu,\"scaled\":%s",
+               subframe->l_TOW17,
+               JSON_BOOL(scaled));
+
 
     switch (subframe->subframe_num) {
     case 1:
