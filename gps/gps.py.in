@@ -48,6 +48,14 @@ VERB_INFO = 3    # more info
 VERB_RAW = 4     # raw info
 VERB_PROG = 5    # program trace
 
+GNSSID_GPS = 0
+GNSSID_SBAS = 1
+GNSSID_GAL = 2
+GNSSID_BD = 3
+GNSSID_IMES = 4
+GNSSID_QZSS = 5
+GNSSID_GLO = 6
+GNSSID_IRNSS = 7            # ZED-F9T mapping
 
 def isfinite(f):
     """Check if f is finite."""

@@ -12,8 +12,9 @@
 from __future__ import print_function
 
 import argparse
-import json           # for json.dumps()
+import json            # for json.dumps()
 import math
+import os.path         # for os.path.isfile()
 import socket
 import sys
 import time            # for time.time()
@@ -435,14 +436,15 @@ almanac_fields = {
     2: ('e', 'Eccentricity '),
     3: ('toa', '(s) Almanac Rference Time'),
     4: ('deltai', '(sc) Inclination offset from 0.3 semicircles (= 54 deg)'),
-    5: ('Omegad', '(sc/s) Rate of Right Ascension'),
-    6: ('sqrtA', '(m-2)Square Root of the Semi-Major Axis'),
-    7: ('Omega0',
+    5: ('i0', '(sc) Inclination, computed from deltai'),
+    6: ('Omegad', '(sc/s) Rate of Right Ascension'),
+    7: ('sqrtA', '(m-2)Square Root of the Semi-Major Axis'),
+    8: ('Omega0',
         '(sc) Longitude of Ascending Node of Orbit Plane Week beginning'),
-    8: ('omega', '(sc) Argument of Perigee'),
-    9: ('M0', '(sc) Mean Anomaly at Reference Time'),
-    10: ('af0', '(s) SV Clock Bias Correction Coefficient'),
-    11: ('af1', '(s/s) SV Clock Drift Correction Coefficient'),
+    9: ('omega', '(sc) Argument of Perigee'),
+    10: ('M0', '(sc) Mean Anomaly at Reference Time'),
+    11: ('af0', '(s) SV Clock Bias Correction Coefficient'),
+    12: ('af1', '(s/s) SV Clock Drift Correction Coefficient'),
     }
 
 # see IS-GPS-200 Section 20.3.3.5.2.4 Coordinated Universal Time (UTC).
@@ -470,7 +472,11 @@ def _print_msg(ephem, fields):
     """Print Subframe Data."""
     for index in sorted(fields.keys()):
         fld = fields[index]
-        print("%10s %s" % (fld[0], ephem[fld[0]]))
+        if fld[0] in ephem:
+            print("%10s %s" % (fld[0], ephem[fld[0]]))
+        else:
+            # missing field
+            print("%10s MISSING" % (fld[0]))
         if options.desc:
             print("           %-48s " % (fld[1]))
 
@@ -782,6 +788,11 @@ if options.test:
     ret = test()
     sys.exit(ret)
 
+if options.input_file_name and not os.path.isfile(options.input_file_name):
+    sys.stderr.write("gpssubframe: File does not exist: %s\n" %
+        options.input_file_name)
+    sys.exit(1)
+
 if not options.port:
     options.port = 2947
 
@@ -792,7 +803,7 @@ try:
                       port=options.port,
                       verbose=options.debug)
 except socket.error:
-    sys.stderr.write("gpscsv: Could not connect to gpsd daemon\n")
+    sys.stderr.write("gpssubframe: Could not connect to gpsd daemon\n")
     sys.exit(1)
 
 session.stream(gps.WATCH_ENABLE | gps.WATCH_SCALED, devpath=options.device)
@@ -818,24 +829,51 @@ try:
             # most likely end of file, maybe lost connection to gpsd
             break
 
+        if not msg or 'class' not in msg:
+            # ??
+            continue;
+
         if 'SUBFRAME' == msg['class']:
+            if gps.GNSSID_GPS == msg['gnssId']:
+                gnss = 'GP'
+            elif gps.GNSSID_SBAS == msg['gnssId']:
+                gnss = 'SB'
+            elif gps.GNSSID_GAL == msg['gnssId']:
+                gnss = 'GA'
+            elif gps.GNSSID_BD == msg['gnssId']:
+                gnss = 'BD'
+            elif gps.GNSSID_IMES == msg['gnssId']:
+                gnss = 'IM'
+            elif gps.GNSSID_QZSS == msg['gnssId']:
+                gnss = 'QZ'
+            elif gps.GNSSID_GLO == msg['gnssId']:
+                gnss = 'GL'
+            elif gps.GNSSID_IRNSS == msg['gnssId']:
+                gnss = 'IR'
+            else:
+                gnss = 'UN'
+
             # use %02d so it sorts nicely.
             if 'dataid' in msg:
                 # data id in subframes 4 and 5
                 if 0 == msg['dataid']:
                     # dummy SV
                     continue
-                idx = "GP%02d" % msg['dataid']
+                idx = "%2s%02d" % (gnss, msg['dataid'])
             elif 'tSV' in msg:
                 # tSV in all subframes
-                idx = "GP%02d" % msg['tSV']
+                idx = "%2s%02d" % (gnss, msg['tSV'])
             else:
                 # huh?
                 idx = "X"
 
             if 1 < options.debug:
-                print("Subframe %d idx %s TOW17 %s WN %d" %
-                      (msg["frame"], idx, msg['TOW17'], subframe1_WN))
+                if 'TOW17' in msg:
+                    print("Subframe %d idx %s TOW17 %s WN %d" %
+                          (msg["frame"], idx, msg['TOW17'], subframe1_WN))
+                elif 'SOW' in msg:
+                    print("Subframe %d idx %s SOW %s WN %d" %
+                          (msg["frame"], idx, msg['SOW'], subframe1_WN))
 
             if 1 == msg['frame']:
                 if 'WN' in msg['EPHEM1']:
@@ -872,6 +910,12 @@ try:
                     all_data['ephemeris3'][idx] = msg['EPHEM3']
             elif 4 <= msg['frame'] <= 5:
                 if 'ALMANAC' in msg:
+                    if 'tref' in msg['ALMANAC']:
+                         # adjust new style almanac
+                         msg['ALMANAC']['toa'] = msg['ALMANAC']['tref']
+                         # hack to get the target sv
+                         msg['dataid'] = msg['ALMANAC']['sv']
+
                     # save it if:
                     #  not dummy (data id != 0)
                     #  don't already have it
@@ -947,33 +991,34 @@ all_sv = sorted(set(all_sv))
 
 for sv in all_sv:
     print("\n%s" % sv)
-    print("  Subframe 1, Clock Data")
-    if sv in all_data['ephemeris1']:
-        _print_msg(all_data['ephemeris1'][sv], ephem1_fields)
-    else:
-        print("    Missing")
-    print("  Subframe 2, Orbit Data")
-    if sv in all_data['ephemeris2']:
-        _print_msg(all_data['ephemeris2'][sv], ephem2_fields)
-    else:
-        print("    Missing")
-    print("  Subframe 3, Orbit Data")
-    if sv in all_data['ephemeris3']:
-        _print_msg(all_data['ephemeris3'][sv], ephem3_fields)
-    else:
-        print("    Missing")
-    print("  Subframe 4 page 25 %s" % sv)
-    svid = "SV%d" % int(sv[2:])
-    if all_data['health'] and svid in all_data['health']:
-        if 0x3f == all_data['health'][svid]:
-            print("       Flags  %2d (n/a)" % all_data['health'][svid])
+    if 'GP' == sv[0:1]:
+        print("  Subframe 1, Clock Data")
+        if sv in all_data['ephemeris1']:
+            _print_msg(all_data['ephemeris1'][sv], ephem1_fields)
         else:
-            print("       Flags  %2d (A/S %3s Config %s)" %
-                  (all_data['health'][svid],
-                   'Yes' if (all_data['health'][svid] & 8) else 'No',
-                   sv_conf[all_data['health'][svid] & 0x7]))
-    else:
-        print("    Missing")
+            print("    Missing")
+        print("  Subframe 2, Orbit Data")
+        if sv in all_data['ephemeris2']:
+            _print_msg(all_data['ephemeris2'][sv], ephem2_fields)
+        else:
+            print("    Missing")
+        print("  Subframe 3, Orbit Data")
+        if sv in all_data['ephemeris3']:
+            _print_msg(all_data['ephemeris3'][sv], ephem3_fields)
+        else:
+            print("    Missing")
+        print("  Subframe 4 page 25 %s" % sv)
+        svid = "SV%d" % int(sv[2:])
+        if all_data['health'] and svid in all_data['health']:
+            if 0x3f == all_data['health'][svid]:
+                print("       Flags  %2d (n/a)" % all_data['health'][svid])
+            else:
+                print("       Flags  %2d (A/S %3s Config %s)" %
+                      (all_data['health'][svid],
+                       'Yes' if (all_data['health'][svid] & 8) else 'No',
+                       sv_conf[all_data['health'][svid] & 0x7]))
+        else:
+            print("    Missing")
     print("  Almanac")
     if sv in all_data['almanac']:
         _print_msg(all_data['almanac'][sv], almanac_fields)
@@ -984,7 +1029,7 @@ gps_time = None
 gps_week = None
 gps_tow = None
 
-if 'time' in all_data['tpv']:
+if all_data['tpv'] and 'time' in all_data['tpv']:
     if 'leapseconds' in all_data['tpv']:
         leapseconds = all_data['tpv']['leapseconds']
         print("\nTPV leapseconds: %s" % all_data['tpv']['leapseconds'])
@@ -1006,7 +1051,7 @@ if 'time' in all_data['tpv']:
 elif 0 < options.debug:
     print("Warning: No TPV")
 
-if 'time' in all_data['raw']:
+if all_data['raw'] and 'time' in all_data['raw']:
     raw_time = int(all_data['raw']['time'])
     if 'nsec' in all_data['raw']:
         raw_time += float(all_data['raw']['nsec']) / 1e9
@@ -1108,11 +1153,13 @@ if gps_week and options.satpos:
             ephm = all_data['almanac'][sv].copy()
             ephm.update({'af2': 0,
                          'deltan': 0,
-                         'i0': ephm['deltai'] + 0.30,
                          'IDOT': 0,
                          'Tgd': 0,
                          'toc': ephm['toa'],
                          'toe': ephm['toa']})
+            if 'i0' not in ephm and 'deltai' in ephm:
+                # old style almanac
+                ephm.update({'i0': ephm['deltai'] + 0.30})
 
             # convert semi-circles to radians
             # use military PI, not real pi.

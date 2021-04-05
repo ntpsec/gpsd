@@ -808,6 +808,7 @@ struct orbit
     // SV health data, random format, -1 if invalid
     int svh;
     // toa, almanac reference time, -1 if invalid
+    // toc, ephemeris reference time, -1 if invalid
     // toe, ephemeris reference time, -1 if invalid
     long tref;
     // af0, SV clock correction constant term, seconds
