@@ -2252,7 +2252,7 @@ manpage_targets = []
 maninstall = []
 if adoc_prog:
     adoc_args_m = (' -a gpsdweb=%s -a gpsdver=%s ' % (website, gpsd_version))
-    adoc_args = (adoc_args_m + ' -a linkcss -a stylesheet=gpsdadoc.css ')
+    adoc_args = (adoc_args_m + '-a docinfo=shared ')
     for (man, src) in all_manpages.items():
         # build it
         # make nroff man page
@@ -2269,9 +2269,9 @@ if adoc_prog:
         target = 'www/%s.html' % os.path.basename(man[:-2])
         asciidocs.append(target)
         env.Command(target, src,
-                    '%s -b html5 %s -o $TARGET $SOURCE' %
+                    '%s -b html5 %s -a docinfodir=../www/ -o $TARGET $SOURCE' %
                     (adoc_prog, adoc_args))
-        env.Depends(target, ['www/gpsdadoc.css', 'www/inc-menu.adoc'])
+        env.Depends(target, ['www/docinfo.html', 'www/inc-menu.adoc'])
 else:
     # can't build man pages, maybe we have pre-built ones?
     for man in Glob('man/*.?', strings=True):
@@ -2325,7 +2325,7 @@ if adoc_prog:
         env.Command(target, '%s.adoc' % src,
                     ['%s -b html5 %s -o $TARGET $SOURCE' %
                      (adoc_prog, adoc_args)])
-        env.Depends(target, ['www/gpsdadoc.css', 'www/inc-menu.adoc'])
+        env.Depends(target, ['www/docinfo.html', 'www/inc-menu.adoc'])
 
 # Non-asciidoc, plain html webpages only
 htmlpages = [
@@ -2358,12 +2358,12 @@ for fn in webpages_in_not:
 
 # webapges extras: images, css, js
 webpages_x_list = ('../www/*.css',
-                   '../www/**/*.css',
                    '../www/*.gif',
                    '../www/*.ico',
                    '../www/*.js',
                    '../www/*.png',
                    '../www/*.svg',
+                   '../www/performance/*css',
                    '../www/performance/*png',
                    '../www/performance/*txt',
                    )
