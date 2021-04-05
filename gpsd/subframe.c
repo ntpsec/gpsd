@@ -830,7 +830,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
  * 10 words.  ignore top 2 bits, so 30 bits.  The 8 LSB are parity.
  * except words[0] is 4 parity
  */
-static gps_mask_t bds_subframe(struct gps_device_t *session,
+static gps_mask_t subframe_bds(struct gps_device_t *session,
                                unsigned int tSVID,
                                uint32_t words[],
                                unsigned int numwords)
@@ -844,6 +844,7 @@ static gps_mask_t bds_subframe(struct gps_device_t *session,
     subp->gnssId = GNSSID_BD;
     subp->tSVID = (uint8_t)tSVID;
     init_orbit(&subp->orbit);
+    init_orbit(&subp->orbit1);
     SOW = ((words[0] >> 4) & 0x0ff) << 12;
     SOW |= (words[1] >> 18) & 0x0fff;
 
@@ -974,7 +975,7 @@ static gps_mask_t bds_subframe(struct gps_device_t *session,
  * Section 10.5 Galileo
  * gotta decode the u-blox munging and the Galileo packing...
  */
-static gps_mask_t gal_subframe(struct gps_device_t *session,
+static gps_mask_t subframe_gal(struct gps_device_t *session,
                                unsigned int tSVID,
                                uint32_t words[],
                                unsigned int numwords)
@@ -999,6 +1000,7 @@ static gps_mask_t gal_subframe(struct gps_device_t *session,
     subp->gnssId = GNSSID_GAL;
     subp->tSVID = (uint8_t)tSVID;
     init_orbit(&subp->orbit);
+    init_orbit(&subp->orbit1);
 
     page_type = (words[0] >> 30) & 1;
     word_type = (words[0] >> 24) & 0x03f;
@@ -1087,7 +1089,7 @@ static gps_mask_t gal_subframe(struct gps_device_t *session,
  *
  * 4 words
  */
-static gps_mask_t glo_subframe(struct gps_device_t *session,
+static gps_mask_t subframe_glo(struct gps_device_t *session,
                                unsigned int tSVID,
                                uint32_t words[],
                                unsigned int numwords)
@@ -1200,20 +1202,20 @@ gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
     case GNSSID_GAL:
         numwords_expected = 8;
         if (numwords_expected == numwords) {
-            return gal_subframe(session, tSVID, words, numwords);
+            return subframe_gal(session, tSVID, words, numwords);
         }
         break;
 
     case GNSSID_BD:
         numwords_expected = 10;
         if (numwords_expected == numwords) {
-            return bds_subframe(session, tSVID, words, numwords);
+            return subframe_bds(session, tSVID, words, numwords);
         }
         break;
     case GNSSID_GLO:
         numwords_expected = 4;
         if (numwords_expected == numwords) {
-            return glo_subframe(session, tSVID, words, numwords);
+            return subframe_glo(session, tSVID, words, numwords);
         }
         break;
     case GNSSID_IMES:

@@ -87,6 +87,7 @@ extern "C" {
  *       fix sub4_18 types.
  * 12    subframe_t expanded for more gnssId's
  *       Add orbit_t for generic orbital parameters
+ *       Add subframe.orbit and subframe.orbit1 to store orbit_t's
  *
  */
 #define GPSD_API_MAJOR_VERSION  12      /* bump on incompatible changes */
@@ -933,6 +934,8 @@ struct subframe_t {
     union {
         // generic almanac, ephemeris
         orbit_t orbit;
+        // Galileo sends two 1/2 almanacs at one time.  2nd one goes here.
+        orbit_t orbit1;
         /* subframe 1, part of ephemeris, see IS-GPS-200, Table 20-II
          * and Table 20-I */
         struct {
