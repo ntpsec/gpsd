@@ -2269,7 +2269,7 @@ if adoc_prog:
         target = 'www/%s.html' % os.path.basename(man[:-2])
         asciidocs.append(target)
         env.Command(target, src,
-                    '%s -b html5 %s -a docinfodir=../www/ -o $TARGET $SOURCE' %
+                    '%s -b html5 %s -a docinfodir=www/ -o $TARGET $SOURCE' %
                     (adoc_prog, adoc_args))
         env.Depends(target, ['www/docinfo.html', 'www/inc-menu.adoc'])
 else:
@@ -2323,7 +2323,7 @@ if adoc_prog:
         target = '%s.html' % tgt
         asciidocs.append(target)
         env.Command(target, '%s.adoc' % src,
-                    ['%s -b html5 %s -o $TARGET $SOURCE' %
+                    ['%s -b html5 %s -a docinfodir=www/ -o $TARGET $SOURCE' %
                      (adoc_prog, adoc_args)])
         env.Depends(target, ['www/docinfo.html', 'www/inc-menu.adoc'])
 
