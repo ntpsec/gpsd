@@ -52,10 +52,10 @@
     <a href='http://www.catb.org/hacker-emblem/'><img
     src='glider.png' alt='hacker emblem' height="55" width="55"></a><br>
 
-    <script type="text/javascript" src="https://www.openhub.net/p/3944/widgets/project_thin_badge.js"></script>
+    <script src="https://www.openhub.net/p/3944/widgets/project_thin_badge.js"></script>
 
     <hr>
-    <script type="text/javascript"><!--
+    <script><!--
     google_ad_client = "pub-1458586455084261";
     google_ad_width = 160;
     google_ad_height = 600;
@@ -63,7 +63,7 @@
     google_ad_type = "text";
     google_ad_channel = "";
     //--></script>
-    <script type="text/javascript" src="https://pagead2.googlesyndication.com/pagead/show_ads.js">
+    <script src="https://pagead2.googlesyndication.com/pagead/show_ads.js">
     </script>
     <hr>
 
@@ -77,22 +77,22 @@
 <table class="centered" style="background-color:white;border:1px;width:80%;border-collapse:separate;border-spacing:20px;" >
 <tr>
 <td>
-<script type="text/javascript"
+<script
 src="https://www.openhub.net/p/3944/widgets/project_basic_stats.js">
 </script>
 </td>
 <td>
-<script type="text/javascript" src="https://www.openhub.net/p/3944/widgets/project_factoids.js">
+<script src="https://www.openhub.net/p/3944/widgets/project_factoids.js">
 </script>
 </td>
 </tr>
 <tr>
 <td>
-<script type="text/javascript" src="https://www.openhub.net/p/3944/widgets/project_languages.js">
+<script src="https://www.openhub.net/p/3944/widgets/project_languages.js">
 </script>
 </td>
 <td>
-<script type="text/javascript" src="https://www.openhub.net/p/3944/widgets/project_cocomo.js">
+<script src="https://www.openhub.net/p/3944/widgets/project_cocomo.js">
 </script>
 </td>
 </tr>
@@ -626,7 +626,7 @@ Web
 </div>
 
 <hr>
-<script type="text/javascript" src="datestamp.js"></script>
+<script src="datestamp.js"></script>
 </div>
 </body>
 </html>
