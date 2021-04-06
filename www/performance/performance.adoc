@@ -438,11 +438,11 @@ It is equally instructive to compare these graphs with graphs taken from
 the same GPS, at the same speed, running in NMEA rather than vendor
 binary mode. Consider, for example, these:
 
-image::graph8.png[Per-cycle latency report, NMEA mode -- 9600bps]
+image::graph8.png[Per-cycle latency report NMEA mode -- 9600bps]
 
 (Raw data is link:profile8.txt[here].)
 
-image::graph9.png[Per-cycle latency report, NMEA mode -- 19200bps]
+image::graph9.png[Per-cycle latency report NMEA mode -- 19200bps]
 
 (Raw data is link:profile8.txt[here].)
 
