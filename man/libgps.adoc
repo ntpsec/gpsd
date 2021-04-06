@@ -121,8 +121,8 @@ possible alternative.
 
 *gps_read()*::
 *gps_read()* accepts a response, or sequence of responses, from the
-*gpsd* daemon and decodes the response into a *gps_data_t*. This
-function does either a nonblocking read for data from the *gpsd*
+*gpsd* daemon and decodes the response into a *gps_data_t*.  By default,
+this function does either a blocking read for data from the *gpsd*
 daemon or a fetch from shared memory; it returns a count of bytes read
 for success, -1 with errno set on a Unix-level read error, -1 with
 errno not set if the socket to the *gpsd* daemon has closed or if the
@@ -262,7 +262,9 @@ int main(int argc, char *argv[])
 
     (void)gps_stream(&gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
 
+    // Wait for data available.
     while (gps_waiting(&gps_data, 5000000)) {
+        // will not block because we know data is available.
         if (-1 == gps_read(&gps_data, NULL, 0)) {
             printf("Read error.  Bye, bye\n");
             break;
@@ -331,7 +333,7 @@ If you must send commands to the *gpsd* daemon explicitly, use *gps_send()*
 but beware that this ties your code to the GPSD wire protocol. It is not
 recommended.
 
-In earlier versions of the API *gps_read()* was a blocking call and
+In some versions of the API *gps_read()* is a blocking call and
 there was a POLL_NONBLOCK option to make it nonblocking.
 *gps_waiting()* was added to reduce the number of wrong ways to code a
 polling loop.
