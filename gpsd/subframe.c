@@ -53,10 +53,9 @@ static void subframe_almanac(const struct gpsd_errout_t *errout,
                              uint8_t data_id,
                              struct almanac_t *almp)
 {
-    long tmp;
     almp->sv     = sv; /* ignore the 0 sv problem for now */
     almp->e      = ( words[2] & 0x00FFFF);
-    almp->d_eccentricity  = pow(2.0,-21) * almp->e;
+    almp->d_eccentricity  = pow(2.0, -21) * almp->e;
     /* careful, each SV can have more than 2 toa's active at the same time
      * you can not just store one or two almanacs for each sat */
     almp->toa      = ((words[3] >> 16) & 0x0000FF);
@@ -71,7 +70,7 @@ static void subframe_almanac(const struct gpsd_errout_t *errout,
     almp->d_Omegad = pow(2.0, -38) * almp->Omegad;
     almp->svh      = ( words[4] & 0x0000FF);
     almp->sqrtA    = ( words[5] & 0xFFFFFF);
-    almp->d_sqrtA  = pow(2.0,-11) * almp->sqrtA;
+    almp->d_sqrtA  = pow(2.0, -11) * almp->sqrtA;
     // Longitude of Ascending Node of Orbit Plane at Weekly Epoch, semi-circles
     // aka Tight Ascen at Week
     almp->Omega0   = ( words[6] & 0xFFFFFF);
@@ -82,21 +81,21 @@ static void subframe_almanac(const struct gpsd_errout_t *errout,
     almp->omega    = uint2int(almp->omega, 24);
     almp->d_omega  = pow(2.0, -23) * almp->omega;
     // Mean Anomaly at Reference Time, semi-circles
-    tmp =  words[8] & 0x00FFFFFF;
-    tmp = uint2int(tmp, 24);
+    almp->M0 = words[8] & 0x00FFFFFF;
+    almp->M0 = uint2int(almp->M0, 24);
     /* if you want radians, multiply by GPS_PI, but we do semi-circles
      * to match IS-GPS-200 */
-    almp->d_M0     = pow(2.0,-23) * tmp;
+    almp->d_M0     = pow(2.0, -23) * almp->M0;
     // SV Clock Drift Correction Coefficient, seconds/second
     almp->af1      = ((words[9] >>  5) & 0x0007FF);
     almp->af1      = (short)uint2int(almp->af1, 11);
-    almp->d_af1    = pow(2.0,-38) * almp->af1;
+    almp->d_af1    = pow(2.0, -38) * almp->af1;
     // SV Clock Bias Correction Coefficient, seconds
     almp->af0      = ((words[9] >> 16) & 0x0000FF);
     almp->af0    <<= 3;
     almp->af0     |= ((words[9] >>  2) & 0x000007);
     almp->af0      = (short)uint2int(almp->af0, 11);
-    almp->d_af0    = pow(2.0,-20) * almp->af0;
+    almp->d_af0    = pow(2.0, -20) * almp->af0;
     GPSD_LOG(LOG_PROG, errout,
              "50B,GPS: SF:%d SV:%2u TSV:%2u data_id %d e:%g toa:%lu "
              "deltai:%.10e Omegad:%.5e svh:%u sqrtA:%.10g Omega0:%.10e "
@@ -231,23 +230,23 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
         /* subframe 2: ephemeris for transmitting SV */
         subp->sub2.IODE   = ((words[2] >> 16) & 0x00FF);
         subp->sub2.Crs    = (int16_t)( words[2] & 0x00FFFF);
-        subp->sub2.d_Crs  = pow(2.0,-5) * subp->sub2.Crs;
+        subp->sub2.d_Crs  = pow(2.0, -5) * subp->sub2.Crs;
         subp->sub2.deltan = (int16_t)((words[3] >>  8) & 0x00FFFF);
-        subp->sub2.d_deltan  = pow(2.0,-43) * subp->sub2.deltan;
+        subp->sub2.d_deltan  = pow(2.0, -43) * subp->sub2.deltan;
         subp->sub2.M0     = (int32_t)( words[3] & 0x0000FF);
         subp->sub2.M0   <<= 24;
         subp->sub2.M0    |= ( words[4] & 0x00FFFFFF);
         /* if you want radians, multiply by GPS_PI, but we do semi-circles
          * to match IS-GPS-200 */
-        subp->sub2.d_M0   = pow(2.0,-31) * subp->sub2.M0;
+        subp->sub2.d_M0   = pow(2.0, -31) * subp->sub2.M0;
         subp->sub2.Cuc    = (int16_t)((words[5] >>  8) & 0x00FFFF);
-        subp->sub2.d_Cuc  = pow(2.0,-29) * subp->sub2.Cuc;
+        subp->sub2.d_Cuc  = pow(2.0, -29) * subp->sub2.Cuc;
         subp->sub2.e      = ( words[5] & 0x0000FF);
         subp->sub2.e    <<= 24;
         subp->sub2.e     |= ( words[6] & 0x00FFFFFF);
-        subp->sub2.d_eccentricity  = pow(2.0,-33) * subp->sub2.e;
+        subp->sub2.d_eccentricity  = pow(2.0, -33) * subp->sub2.e;
         subp->sub2.Cus    = (int16_t)((words[7] >>  8) & 0x00FFFF);
-        subp->sub2.d_Cus  = pow(2.0,-29) * subp->sub2.Cus;
+        subp->sub2.d_Cus  = pow(2.0, -29) * subp->sub2.Cus;
         subp->sub2.sqrtA  = ( words[7] & 0x0000FF);
         subp->sub2.sqrtA <<= 24;
         subp->sub2.sqrtA |= ( words[8] & 0x00FFFFFF);
@@ -542,11 +541,11 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
 
                 subp->sub4_18.A1     = (int32_t)((words[5] >>  0) & 0xFFFFFF);
                 subp->sub4_18.A1     = uint2int(subp->sub4_18.A1, 24);
-                subp->sub4_18.d_A1   = pow(2.0,-50) * subp->sub4_18.A1;
+                subp->sub4_18.d_A1   = pow(2.0, -50) * subp->sub4_18.A1;
                 subp->sub4_18.A0     = (int32_t)((words[6] >>  0) & 0xFFFFFF);
                 subp->sub4_18.A0   <<= 8;
                 subp->sub4_18.A0    |= ((words[7] >> 16) & 0x0000FF);
-                subp->sub4_18.d_A0   = pow(2.0,-30) * subp->sub4_18.A0;
+                subp->sub4_18.d_A0   = pow(2.0, -30) * subp->sub4_18.A0;
 
                 /* careful WN is 10 bits, but WNt is 8 bits! */
                 /* WNt (Week Number of LSF) */
@@ -881,50 +880,50 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
 
                 tmp = ((words[1] >> 8) & 3) << 22;
                 tmp |= (words[2] >> 8) & 0x03fffff;
-                subp->orbit.sqrtA = tmp * pow(2.0,-11);
+                subp->orbit.sqrtA = tmp * pow(2.0, -11);
 
                 tmp = (words[3] >> 19) & 0x07ff;
                 tmp = uint2int(tmp, 11);
-                subp->orbit.af1 = tmp * pow(2.0,-38);
+                subp->orbit.af1 = tmp * pow(2.0, -38);
 
                 tmp = (words[3] >> 8) & 0x07ff;
                 tmp = uint2int(tmp, 11);
-                subp->orbit.af0 = tmp * pow(2.0,-20);
+                subp->orbit.af0 = tmp * pow(2.0, -20);
 
                 tmp = ((words[4] >> 8) & 0x3fffff) << 2;
                 tmp |= (words[5] >> 28) & 3;
                 tmp = uint2int(tmp, 24);
-                subp->orbit.Omega0 = tmp * pow(2.0,-23);
+                subp->orbit.Omega0 = tmp * pow(2.0, -23);
 
                 tmp = (words[5] >> 11) & 0x001ffff;
-                subp->orbit.eccentricity = tmp * pow(2.0,-21);
+                subp->orbit.eccentricity = tmp * pow(2.0, -21);
 
                 tmp = ((words[5] >> 3) & 0x03f) << 13;
                 tmp |= (words[6] >> 17) & 0x01ffff;
                 tmp = uint2int(tmp, 16);
-                subp->orbit.i0 = tmp * pow(2.0,-19);
+                subp->orbit.i0 = tmp * pow(2.0, -19);
                 // also convert deltai to i0
                 if ((1 <= subp->orbit.sv && 6 >= subp->orbit.sv) ||
                     (59 <= subp->orbit.sv && 63 >= subp->orbit.sv)) {
                     // GEO sats add 0, MEO/IGSO adding 0.30
-                    subp->orbit.i0 = tmp * pow(2.0,-19);
+                    subp->orbit.i0 = tmp * pow(2.0, -19);
                 }
 
                 subp->orbit.tref = ((words[6] >> 9) & 0x0ff) << 12;  // t0a
 
                 tmp = ((words[6] >> 8) & 1) << 16;
                 tmp |= (words[7] >> 14) & 0x0ffff;
-                subp->orbit.Omegad = tmp * pow(2.0,-38);
+                subp->orbit.Omegad = tmp * pow(2.0, -38);
 
                 tmp = ((words[7] >> 8) & 0x03f) << 18;
                 tmp |= (words[8] >> 12) & 0x03ffff;
                 tmp = uint2int(tmp, 24);
-                subp->orbit.omega = tmp * pow(2.0,-23);
+                subp->orbit.omega = tmp * pow(2.0, -23);
 
                 tmp = ((words[8] >> 8) & 0x0f) << 20;
                 tmp |= (words[9] >> 10) & 0x0fffff;
                 tmp = uint2int(tmp, 24);
-                subp->orbit.M0 = tmp * pow(2.0,-23);
+                subp->orbit.M0 = tmp * pow(2.0, -23);
 
                 mask = SUBFRAME_SET;
             } else {
@@ -975,6 +974,7 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
  * See u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf
  * Section 10.5 Galileo
  * gotta decode the u-blox munging and the Galileo packing...
+ * porting to none u-blox will require separate mungin
  */
 static gps_mask_t subframe_gal(struct gps_device_t *session,
                                unsigned int tSVID,
@@ -1058,14 +1058,37 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
             subp->orbit.WN = (words[0] >> 18) & 3;                // WNa
             subp->orbit.tref = (words[0] >> 8) & 0x03ff;          // t0a
             subp->orbit.sv = (words[0] >> 2) & 0x03f;             // SVN1
-            if (0 == subp->orbit.sv) {
-                // dummy almanac
+            if (0 == subp->orbit.sv || 36 < subp->orbit.sv) {
+                // dummy, or reserved, almanac
                 break;
             }
-            tmp = ((words[3] >> 14) & 0x07f) << 9;     // M0
-            tmp |= (words[4] >> 20) & 0x01ff;
+            tmp = (words[0] & 3) << 1;         // delta sqrtA ?
+            tmp |= (words[1] >> 22) & 0x07ff;
+            tmp = uint2int(tmp, 13);
+            // Table 1 from ICD
+            subp->orbit.sqrtA = (tmp * pow(2.0, -9)) + sqrt(29600000);
+
+            tmp = (words[1] >> 1)  & 0x03ff;   // e
+            subp->orbit.eccentricity = tmp * pow(2.0, -16);
+
+            tmp = (words[1] & 1) << 1;  // deltai
+            tmp |= (words[2] >> 22) & 0x03ff;  // deltai
+            tmp = uint2int(tmp, 11);
+            subp->orbit.Omega0 = tmp * pow(2.0, -14);
+
+            tmp = (words[2] >> 6) & 0x0ffff;  // Omega0
             tmp = uint2int(tmp, 16);
-            subp->orbit.M0 = tmp * pow(2.0,-15);
+            subp->orbit.Omega0 = tmp * pow(2.0, -35);
+
+            tmp = (words[2] & 0x03f) << 5;     // Omegadot
+            tmp |= (words[3] >> 20) & 0x01f;
+            tmp = uint2int(tmp, 11);
+            subp->orbit.Omegad = tmp * pow(2.0, -33);
+
+            tmp = ((words[3] >> 14) & 0x03f) << 10;     // M0
+            tmp |= (words[4] >> 20) & 0x03ff;
+            tmp = uint2int(tmp, 16);
+            subp->orbit.M0 = tmp * pow(2.0, -15);
         }
 
         mask = SUBFRAME_SET;
