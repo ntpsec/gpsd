@@ -2294,8 +2294,7 @@ env.Command('www/hardware.html',
 docinstall = env.Install(target=installdir('docdir'), source=doc_files)
 
 if adoc_prog:
-    adocfiles = (('www/inc-menu', 'www/inc-menu'),
-                 ('build', 'www/building'),
+    adocfiles = (('build', 'www/building'),
                  ('INSTALL', 'www/installation'),
                  ('README', 'www/README'),
                  ('SUPPORT', 'www/SUPPORT'),
