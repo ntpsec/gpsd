@@ -667,9 +667,11 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
     if (SUBFRAME_ORBIT == subframe->is_almanac){
         str_appendf(buf, buflen, ",\"scaled\":true");
         if (ORBIT_ALMANAC == subframe->orbit.type) {
-            str_appendf(buf, buflen,
-                        ",\"SOW\":%d,\"ALMANAC\":{\"sv\":%d",
-                        subframe->TOW17,
+            if (0 <= subframe->TOW17) {
+                // Galileo doe not have...
+                str_appendf(buf, buflen, ",\"SOW\":%d", subframe->TOW17);
+            }
+            str_appendf(buf, buflen, ",\"ALMANAC\":{\"sv\":%d",
                         subframe->orbit.sv);
             if (0 != isfinite(subframe->orbit.af0)) {
                 str_appendf(buf, buflen, ",\"af0\":%.12e",
@@ -686,6 +688,10 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
             if (0 != isfinite(subframe->orbit.eccentricity)) {
                 str_appendf(buf, buflen, ",\"e\":%.12e",
                             subframe->orbit.eccentricity);
+            }
+            if (0 <= subframe->orbit.IOD) {
+                str_appendf(buf, buflen, ",\"IOD\":%d",
+                            subframe->orbit.IOD);
             }
             if (0 != isfinite(subframe->orbit.i0)) {
                 str_appendf(buf, buflen, ",\"i0\":%.16f",
@@ -731,9 +737,9 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
         return;
     }
 
-    // TOW17 is always scaled
-    str_appendf(buf, buflen, ",\"TOW17\":%lu,\"scaled\":%s",
-               subframe->l_TOW17,
+    // TOW17 is always avalid and scaled
+    str_appendf(buf, buflen, ",\"TOW17\":%d,\"scaled\":%s",
+               subframe->TOW17,
                JSON_BOOL(scaled));
 
 

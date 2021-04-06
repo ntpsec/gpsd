@@ -18,6 +18,7 @@ static void init_orbit(orbit_t *orbit)
 {
     orbit->type = 0;
     orbit->sv = 0;
+    orbit->IOD = -1;
     orbit->tref = -1;
     orbit->svh = -1;
     orbit->WN = -1;
@@ -52,6 +53,7 @@ static void subframe_almanac(const struct gpsd_errout_t *errout,
                              uint8_t data_id,
                              struct almanac_t *almp)
 {
+    long tmp;
     almp->sv     = sv; /* ignore the 0 sv problem for now */
     almp->e      = ( words[2] & 0x00FFFF);
     almp->d_eccentricity  = pow(2.0,-21) * almp->e;
@@ -80,11 +82,11 @@ static void subframe_almanac(const struct gpsd_errout_t *errout,
     almp->omega    = uint2int(almp->omega, 24);
     almp->d_omega  = pow(2.0, -23) * almp->omega;
     // Mean Anomaly at Reference Time, semi-circles
-    almp->M0       = ( words[8] & 0x00FFFFFF);
-    almp->M0       = uint2int(almp->M0, 24);
+    tmp =  words[8] & 0x00FFFFFF;
+    tmp = uint2int(tmp, 24);
     /* if you want radians, multiply by GPS_PI, but we do semi-circles
      * to match IS-GPS-200 */
-    almp->d_M0     = pow(2.0,-23) * almp->M0;
+    almp->d_M0     = pow(2.0,-23) * tmp;
     // SV Clock Drift Correction Coefficient, seconds/second
     almp->af1      = ((words[9] >>  5) & 0x0007FF);
     almp->af1      = (short)uint2int(almp->af1, 11);
@@ -161,11 +163,10 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
     subp->subframe_num = ((words[1] >> 2) & 0x07);
     subp->antispoof = (bool)((words[1] >> 5) & 0x01);
     subp->alert = (bool)((words[1] >> 6) & 0x01);
-    subp->TOW17 = ((words[1] >> 7) & 0x01FFFF);
-    subp->l_TOW17 = (unsigned long)subp->TOW17 * 6;
+    subp->TOW17 = (long)((words[1] >> 7) & 0x01FFFF) * 6;
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "50B,GPS: SF:%d SV:%2u TOW17:%7lu Alert:%u AS:%u IF:%d\n",
-             subp->subframe_num, subp->tSVID, subp->l_TOW17,
+             "50B,GPS: SF:%d SV:%2u TOW17:%7d Alert:%u AS:%u IF:%d\n",
+             subp->subframe_num, subp->tSVID, subp->TOW17,
              (unsigned)subp->alert, (unsigned)subp->antispoof,
              (unsigned)subp->integrity);
     /*
@@ -980,6 +981,7 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
                                uint32_t words[],
                                unsigned int numwords)
 {
+    gps_mask_t mask = 0;
     char *word_desc = "";
     // always zero on E5b-I, always 1 on E1-B
     unsigned even = words[0] >> 31;
@@ -995,13 +997,6 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
                  numwords);
         return 0;
     }
-    subp = &session->gpsdata.subframe;
-    memset(&session->gpsdata.subframe, 0, sizeof(session->gpsdata.subframe));
-    subp->gnssId = GNSSID_GAL;
-    subp->tSVID = (uint8_t)tSVID;
-    init_orbit(&subp->orbit);
-    init_orbit(&subp->orbit1);
-
     page_type = (words[0] >> 30) & 1;
     word_type = (words[0] >> 24) & 0x03f;
 
@@ -1023,6 +1018,14 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
                  "50B,GAL: page flipped?\n");
         return 0;
     }
+    subp = &session->gpsdata.subframe;
+    memset(&session->gpsdata.subframe, 0, sizeof(session->gpsdata.subframe));
+    subp->gnssId = GNSSID_GAL;
+    subp->TOW17 = -1;
+    subp->tSVID = (uint8_t)tSVID;
+    init_orbit(&subp->orbit);
+    init_orbit(&subp->orbit1);
+
     switch (word_type) {
     case 0:
         word_desc = "Spare Word";
@@ -1046,7 +1049,26 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         word_desc = "GST-UTC";
         break;
     case 7:
-        word_desc = "Almanacs 1";
+        {
+            long tmp;
+            word_desc = "Almanacs 1";
+            subp->is_almanac = SUBFRAME_ORBIT;
+            subp->orbit.type = ORBIT_ALMANAC;
+            subp->orbit.IOD = (words[0] >> 20) & 0x0f;            // IODa
+            subp->orbit.WN = (words[0] >> 18) & 3;                // WNa
+            subp->orbit.tref = (words[0] >> 8) & 0x03ff;          // t0a
+            subp->orbit.sv = (words[0] >> 2) & 0x03f;             // SVN1
+            if (0 == subp->orbit.sv) {
+                // dummy almanac
+                break;
+            }
+            tmp = ((words[3] >> 14) & 0x07f) << 9;     // M0
+            tmp |= (words[4] >> 20) & 0x01ff;
+            tmp = uint2int(tmp, 16);
+            subp->orbit.M0 = tmp * pow(2.0,-15);
+        }
+
+        mask = SUBFRAME_SET;
         break;
     case 8:
         word_desc = "Almanacs 2";
@@ -1075,7 +1097,7 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
              "50B,GAL: len %u even %u page_type %u word_type %u (%s)\n",
              numwords, even, page_type, word_type, word_desc);
 
-    return 0;
+    return mask;
 }
 
 

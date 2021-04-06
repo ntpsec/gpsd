@@ -804,6 +804,9 @@ struct orbit
 #define ORBIT_ALMANAC 2
     // The satellite this refers to, zero if struct invalid
     uint8_t sv;
+    // SV health data, random format, -1 if invalid
+    // Issue of Data, IODa, IODc, IODe.
+    int8_t IOD;
     // Week Number, -1 if invalid
     int WN;
     // SV health data, random format, -1 if invalid
@@ -917,9 +920,8 @@ struct subframe_t {
     /* tSVID, SV ID of the sat that transmitted this frame, 6 bits unsigned */
     uint8_t tSVID;
     /* TOW17, Time of Week of next Subframe.
-     * 17 bits unsigned, 0 to 100,799, scale 6, seconds */
-    uint32_t TOW17;            // 0 to 100,799
-    unsigned long l_TOW17;     // 0 to 604,794
+     * 17 bits unsigned, 0 to 100,799, scale 6, seconds, -1 if invalid */
+    int32_t TOW17;            // 0 to 100,799, or 0 to 604,794
     /* integrity, URA bounds flag, 1 bit */
     bool integrity;
     /* alert, alert flag, SV URA and/or the SV User Differential Range
