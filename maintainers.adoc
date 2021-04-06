@@ -1,6 +1,7 @@
 = GPSD area maintainers =
 :date: 13 January 2021
 :description: GPSD maintainers
+:docinfodir: www
 :keywords: GPSD, mainatiners
 :robots: index,follow
 :sectlinks:

@@ -2,6 +2,7 @@
 :author: Eric S. Raymond
 :date: 17 February 2021
 :description: Steps for installing GPSD and verifying its performance.
+:docinfodir: www
 :email: <esr@thyrsus.com>
 :keywords: GPSD, GPS, installation
 :robots: index,follow

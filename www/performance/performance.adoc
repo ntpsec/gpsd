@@ -2,6 +2,7 @@
 Eric S. Raymond <esr@thysus.com
 2.4, 27 January 2020
 :date: 25 January 2021
+:docinfodir: ../
 :keywords: gps, gpsd, performance
 :manmanual: GPSD Documentation
 :mansource: The GPSD Project

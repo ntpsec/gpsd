@@ -2251,15 +2251,15 @@ if man_env.GetOption('silent'):
 manpage_targets = []
 maninstall = []
 if adoc_prog:
-    adoc_args_m = (' -a gpsdweb=%s -a gpsdver=%s ' % (website, gpsd_version))
-    adoc_args = (adoc_args_m + '-a docinfo=shared ')
+    adoc_args_m = ('-v -a gpsdweb=%s -a gpsdver=%s' % (website, gpsd_version))
+    adoc_args = (adoc_args_m + ' -a docinfo=shared')
     for (man, src) in all_manpages.items():
         # build it
         # make nroff man page
         asciidocs.append(man)
         env.Command(man, src,
-                    ['%s -b manpage %s -o $TARGET $SOURCE' %
-                     (adoc_prog, adoc_args_m)])
+                    '%s -b manpage %s -o $TARGET $SOURCE' %
+                    (adoc_prog, adoc_args_m))
         # install nroff man page
         section = man.split(".")[1]
         dest = os.path.join(installdir('mandir'), "man" + section)
@@ -2267,11 +2267,11 @@ if adoc_prog:
 
         # make html man page
         target = 'www/%s.html' % os.path.basename(man[:-2])
-        asciidocs.append(target)
-        env.Command(target, src,
-                    '%s -b html5 %s -a docinfodir=www/ -o $TARGET $SOURCE' %
-                    (adoc_prog, adoc_args))
-        env.Depends(target, ['www/docinfo.html', 'www/inc-menu.adoc'])
+        env.Depends(src, ['www/docinfo.html', 'www/inc-menu.adoc'])
+        tgt = env.Command(target, src,
+            '%s -b html5 %s -a docinfodir=../www/ -o $TARGET $SOURCE' %
+            (adoc_prog, adoc_args))
+        asciidocs.append(tgt)
 else:
     # can't build man pages, maybe we have pre-built ones?
     for man in Glob('man/*.?', strings=True):
@@ -2321,11 +2321,11 @@ if adoc_prog:
                  )
     for src, tgt in adocfiles:
         target = '%s.html' % tgt
-        asciidocs.append(target)
-        env.Command(target, '%s.adoc' % src,
-                    ['%s -b html5 %s -a docinfodir=www/ -o $TARGET $SOURCE' %
-                     (adoc_prog, adoc_args)])
-        env.Depends(target, ['www/docinfo.html', 'www/inc-menu.adoc'])
+        env.Depends(src, ['www/docinfo.html', 'www/inc-menu.adoc'])
+        tgt = env.Command(target, '%s.adoc' % src,
+            '%s -b html5 %s -o $TARGET $SOURCE' %
+            (adoc_prog, adoc_args))
+        asciidocs.append(tgt)
 
 # Non-asciidoc, plain html webpages only
 htmlpages = [

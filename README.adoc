@@ -1,6 +1,7 @@
 = gpsd README file
 :date: 17 February 2021
 :description: README for GPSD
+:docinfodir: www
 :keywords: GPSD, GPS
 :robots: index,follow
 :sectlinks:
