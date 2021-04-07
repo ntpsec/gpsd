@@ -874,8 +874,32 @@ try:
                 elif 'SOW' in msg:
                     print("Subframe %d idx %s SOW %s WN %d" %
                           (msg["frame"], idx, msg['SOW'], subframe1_WN))
+                else:
+                    # Galileo, no time
+                    print("Subframe %d idx %s" %
+                          (msg["frame"], idx))
 
-            if 1 == msg['frame']:
+            if 'GA' == gnss:
+                if 'ALMANAC' in msg:
+                    if 'tref' in msg['ALMANAC']:
+                         # adjust new style almanac
+                         msg['ALMANAC']['toa'] = msg['ALMANAC']['tref']
+                         # hack to get the target sv
+                         msg['dataid'] = msg['ALMANAC']['sv']
+
+                    # save it if:
+                    #  not dummy (data id != 0)
+                    #  don't already have it
+                    #  newer than what we have
+                    if ((idx not in all_data['almanac'] or
+                         all_data['almanac'][idx]['toa'] <
+                         msg['ALMANAC']['toa'])):
+                        # FIXME: handle week rollover
+                        if options.progress:
+                            print("Received Almanac dataid %2d  toa %d" %
+                                  (msg['dataid'], msg['ALMANAC']['toa']))
+                        all_data['almanac'][idx] = msg['ALMANAC']
+            elif 1 == msg['frame']:
                 if 'WN' in msg['EPHEM1']:
                     # save WN for later use
                     subframe1_WN = msg['EPHEM1']['WN']
@@ -991,7 +1015,7 @@ all_sv = sorted(set(all_sv))
 
 for sv in all_sv:
     print("\n%s" % sv)
-    if 'GP' == sv[0:1]:
+    if 'GP' == sv[0:2]:
         print("  Subframe 1, Clock Data")
         if sv in all_data['ephemeris1']:
             _print_msg(all_data['ephemeris1'][sv], ephem1_fields)
@@ -1163,12 +1187,22 @@ if gps_week and options.satpos:
 
             # convert semi-circles to radians
             # use military PI, not real pi.
+            # check that we have required data.
+            # Galileo splits almanacs over many frames...
+            needed = True;
             cvt = ('deltan', 'i0', 'IDOT', 'M0', 'omega', 'Omega0',
                    'Omegad')
             for i in cvt:
-                ephm[i] *= gps.GPS_PI
+                if i in ephm:
+                    # Galileo splits almanacs over many frames...
+                    # GPS_PI != math.pi!
+                    ephm[i] *= gps.GPS_PI
+                else:
+                    needed = False
+                    break;
 
-            SatPosSum(ephm, gps_tow)
+            if needed:
+                SatPosSum(ephm, gps_tow)
 
 if options.savefile:
     with open(options.savefile, 'w') as save_file:
