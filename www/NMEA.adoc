@@ -2939,15 +2939,15 @@ Described in <<MALTESE>>, actually a Maltese government document.
   "Procurement of a Fixed-Wing Maritime Patrol Aircraft"
   https://secure2.gov.mt/eprocurement/Tenders/file.ashx?f=9832DB05E65C774258580284031EC72CC315D954A7108B5E.
 
-- [[NMEA-ADVANCE]]
+- [[[NMEA-ADVANCE]]]
   "NMEA 0183 Advancements" (describes 'P' value of FAA mode)
   http://www.nmea.org/Assets/0183_advancements_nmea_oct_1_2010%20(2).pdf
 
-- [[CDDSC]]
+- [[[CDDSC]]]
   "Data Interface in Digital Selective Calling Class-D Radios"
   http://continuouswave.com/whaler/reference/DSC_Datagrams.html
 
-- [[ANON]]
+- [[[ANON]]]
   Anonymous commentator(s) are persons who have volunteered information
   about the NMEA standard(s) but do not wish to be identified.
 
