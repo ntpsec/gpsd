@@ -807,6 +807,8 @@ struct orbit
     // SV health data, random format, -1 if invalid
     // Issue of Data, IODa, IODc, IODe.
     int8_t IOD;
+    int8_t E5bHS;        // Galileo E5b health status, -1 invalid
+    int8_t E1BHS;        // Galileo E1B health status, -1 invalid
     // Week Number, -1 if invalid
     int WN;
     // SV health data, random format, -1 if invalid

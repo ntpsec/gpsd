@@ -685,6 +685,14 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                 str_appendf(buf, buflen, ",\"af2\":%.12e",
                             subframe->orbit.af2);
             }
+            if (0 <= subframe->orbit.E1BHS) {
+                str_appendf(buf, buflen, ",\"E1BHS\":%d",
+                            subframe->orbit.E1BHS);
+            }
+            if (0 <= subframe->orbit.E5bHS) {
+                str_appendf(buf, buflen, ",\"E5bHS\":%d",
+                            subframe->orbit.E5bHS);
+            }
             if (0 != isfinite(subframe->orbit.eccentricity)) {
                 str_appendf(buf, buflen, ",\"e\":%.12e",
                             subframe->orbit.eccentricity);

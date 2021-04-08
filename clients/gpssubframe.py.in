@@ -433,18 +433,20 @@ ephem3_fields = {
 almanac_fields = {
     # 1: ('ID' same as SV
     1: ('Health', 'SV health'),
-    2: ('e', 'Eccentricity '),
-    3: ('toa', '(s) Almanac Rference Time'),
-    4: ('deltai', '(sc) Inclination offset from 0.3 semicircles (= 54 deg)'),
-    5: ('i0', '(sc) Inclination, computed from deltai'),
-    6: ('Omegad', '(sc/s) Rate of Right Ascension'),
-    7: ('sqrtA', '(m-2)Square Root of the Semi-Major Axis'),
-    8: ('Omega0',
+    2: ('E1BHS', 'E1B health'),
+    3: ('E5bHS', 'E5b health'),
+    4: ('e', 'Eccentricity '),
+    5: ('toa', '(s) Almanac Rference Time'),
+    6: ('deltai', '(sc) Inclination offset from 0.3 semicircles (= 54 deg)'),
+    7: ('i0', '(sc) Inclination, computed from deltai'),
+    8: ('Omegad', '(sc/s) Rate of Right Ascension'),
+    9: ('sqrtA', '(m-2)Square Root of the Semi-Major Axis'),
+    10: ('Omega0',
         '(sc) Longitude of Ascending Node of Orbit Plane Week beginning'),
-    9: ('omega', '(sc) Argument of Perigee'),
-    10: ('M0', '(sc) Mean Anomaly at Reference Time'),
-    11: ('af0', '(s) SV Clock Bias Correction Coefficient'),
-    12: ('af1', '(s/s) SV Clock Drift Correction Coefficient'),
+    11: ('omega', '(sc) Argument of Perigee'),
+    12: ('M0', '(sc) Mean Anomaly at Reference Time'),
+    13: ('af0', '(s) SV Clock Bias Correction Coefficient'),
+    14: ('af1', '(s/s) SV Clock Drift Correction Coefficient'),
     }
 
 # see IS-GPS-200 Section 20.3.3.5.2.4 Coordinated Universal Time (UTC).
@@ -892,13 +894,20 @@ try:
                     #  don't already have it
                     #  newer than what we have
                     if ((idx not in all_data['almanac'] or
-                         all_data['almanac'][idx]['toa'] <
-                         msg['ALMANAC']['toa'])):
-                        # FIXME: handle week rollover
+                         all_data['almanac'][idx]['IOD'] <
+                         msg['ALMANAC']['IOD'])):
+                        # FIXME: handle rollover
                         if options.progress:
-                            print("Received Almanac dataid %2d  toa %d" %
-                                  (msg['dataid'], msg['ALMANAC']['toa']))
+                            print("Received Almanac dataid %2d  IOD %d" %
+                                  (msg['dataid'], msg['ALMANAC']['IOD']))
                         all_data['almanac'][idx] = msg['ALMANAC']
+                    elif (all_data['almanac'][idx]['IOD'] ==
+                           msg['ALMANAC']['IOD']):
+                        ## maybe other half, merge in
+                        all_data['almanac'][idx].update(msg['ALMANAC'])
+                        if options.progress:
+                            print("Received Almanac 1/2 dataid %2d  IOD %d" %
+                                  (msg['dataid'], msg['ALMANAC']['IOD']))
             elif 1 == msg['frame']:
                 if 'WN' in msg['EPHEM1']:
                     # save WN for later use
@@ -1190,8 +1199,8 @@ if gps_week and options.satpos:
             # check that we have required data.
             # Galileo splits almanacs over many frames...
             needed = True;
-            cvt = ('deltan', 'i0', 'IDOT', 'M0', 'omega', 'Omega0',
-                   'Omegad')
+            cvt = ('af0', 'af1', 'deltan', 'i0', 'IDOT', 'M0', 'omega',
+                   'Omega0', 'Omegad')
             for i in cvt:
                 if i in ephm:
                     # Galileo splits almanacs over many frames...

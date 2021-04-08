@@ -19,6 +19,8 @@ static void init_orbit(orbit_t *orbit)
     orbit->type = 0;
     orbit->sv = 0;
     orbit->IOD = -1;
+    orbit->E5bHS = -1;
+    orbit->E1BHS = -1;
     orbit->tref = -1;
     orbit->svh = -1;
     orbit->WN = -1;
@@ -989,6 +991,7 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
     unsigned page_type;
     unsigned word_type;
     struct subframe_t *subp;
+    long tmp;
 
     if (8 > numwords) {
         // Later on there will be different lengths than 8.
@@ -1050,57 +1053,72 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         word_desc = "GST-UTC";
         break;
     case 7:
-        {
-            long tmp;
-            word_desc = "Almanacs 1";
-            subp->is_almanac = SUBFRAME_ORBIT;
-            subp->orbit.type = ORBIT_ALMANAC;
-            subp->orbit.IOD = (words[0] >> 20) & 0x0f;            // IODa
-            subp->orbit.WN = (words[0] >> 18) & 3;                // WNa
-            subp->orbit.tref = ((words[0] >> 8) & 0x03ff) * 600;  // t0a
-            subp->orbit.sv = (words[0] >> 2) & 0x03f;             // SVN1
-            if (0 == subp->orbit.sv || 36 < subp->orbit.sv) {
-                // dummy, or reserved, almanac
-                break;
-            }
-            tmp = (words[0] & 3) << 11;         // delta sqrtA ?
-            tmp |= (words[1] >> 21) & 0x07ff;
-            tmp = uint2int(tmp, 13);
-            // Table 1 from ICD
-            subp->orbit.sqrtA = (tmp * pow(2.0, -9)) + sqrt(29600000);
-
-            tmp = (words[1] >> 10)  & 0x03ff;   // e
-            subp->orbit.eccentricity = tmp * pow(2.0, -16);
-
-            tmp = (words[1] & 0x03ff) << 6;         // omega
-            tmp |= (words[2] >> 26) & 0x03f;
-            tmp = uint2int(tmp, 16);
-            subp->orbit.omega = tmp * pow(2.0, -15);
-
-            tmp = (words[2] >> 11) & 0x07ff;  // deltai
-            tmp = uint2int(tmp, 11);
-            // Table 1 from ICD
-            subp->orbit.i0 = (tmp * pow(2.0, -14)) + (56.0 / 180.0);
-
-            tmp = (words[2] & 0x07fff) << 1;        // Omega0
-            tmp |= (words[3] >> 31) & 1;
-            tmp = uint2int(tmp, 16);
-            subp->orbit.Omega0 = tmp * pow(2.0, -35);
-
-            tmp = (words[3] >> 20) & 0x07fff;     // Omegadot
-            tmp = uint2int(tmp, 11);
-            subp->orbit.Omegad = tmp * pow(2.0, -33);
-
-            tmp = ((words[3] >> 14) & 0x03f) << 10;     // M0
-            tmp |= (words[4] >> 20) & 0x03ff;
-            tmp = uint2int(tmp, 16);
-            subp->orbit.M0 = tmp * pow(2.0, -15);
+        word_desc = "Almanacs 1";
+        subp->is_almanac = SUBFRAME_ORBIT;
+        subp->orbit.type = ORBIT_ALMANAC;
+        subp->orbit.IOD = (words[0] >> 20) & 0x0f;            // IODa
+        subp->orbit.WN = (words[0] >> 18) & 3;                // WNa
+        subp->orbit.tref = ((words[0] >> 8) & 0x03ff) * 600;  // t0a
+        subp->orbit.sv = (words[0] >> 2) & 0x03f;             // SVN1
+        if (0 == subp->orbit.sv || 36 < subp->orbit.sv) {
+            // dummy, or reserved, almanac
+            break;
         }
+        tmp = (words[0] & 3) << 11;         // delta sqrtA ?
+        tmp |= (words[1] >> 21) & 0x07ff;
+        tmp = uint2int(tmp, 13);
+        // Table 1 from ICD
+        subp->orbit.sqrtA = (tmp * pow(2.0, -9)) + sqrt(29600000);
+
+        tmp = (words[1] >> 10)  & 0x03ff;   // e
+        subp->orbit.eccentricity = tmp * pow(2.0, -16);
+
+        tmp = (words[1] & 0x03ff) << 6;         // omega
+        tmp |= (words[2] >> 26) & 0x03f;
+        tmp = uint2int(tmp, 16);
+        subp->orbit.omega = tmp * pow(2.0, -15);
+
+        tmp = (words[2] >> 11) & 0x07ff;  // deltai
+        tmp = uint2int(tmp, 11);
+        // Table 1 from ICD
+        subp->orbit.i0 = (tmp * pow(2.0, -14)) + (56.0 / 180.0);
+
+        tmp = (words[2] & 0x07fff) << 1;        // Omega0
+        tmp |= (words[3] >> 31) & 1;
+        tmp = uint2int(tmp, 16);
+        subp->orbit.Omega0 = tmp * pow(2.0, -35);
+
+        tmp = (words[3] >> 20) & 0x07fff;     // Omegadot
+        tmp = uint2int(tmp, 11);
+        subp->orbit.Omegad = tmp * pow(2.0, -33);
+
+        tmp = ((words[3] >> 14) & 0x03f) << 10;     // M0
+        tmp |= (words[4] >> 20) & 0x03ff;
+        tmp = uint2int(tmp, 16);
+        subp->orbit.M0 = tmp * pow(2.0, -15);
 
         mask = SUBFRAME_SET;
         break;
     case 8:
+        // Now it gets weird.  1/2 of Almanac 1, and half of Almanac 2
         word_desc = "Almanacs 2";
+        subp->is_almanac = SUBFRAME_ORBIT;
+        subp->orbit.type = ORBIT_ALMANAC;
+        subp->orbit.IOD = (words[0] >> 20) & 0x0f;    // IODa
+
+        tmp = (words[0] >> 4) & 0x0ffff;              // af0
+        tmp = uint2int(tmp, 16);
+        subp->orbit.af0 = tmp * pow(2.0, -19);
+
+        tmp = (words[0] & 0x0f) << 9;                 // af1
+        tmp |= (words[1] >> 23) & 0x01ff;
+        tmp = uint2int(tmp, 13);
+        subp->orbit.af1 = tmp * pow(2.0, -38);
+
+        subp->orbit.E5bHS = (words[1] >> 21) & 3;
+        subp->orbit.E1BHS = (words[1] >> 19) & 3;
+
+        mask = SUBFRAME_SET;
         break;
     case 9:
         word_desc = "Almanacs 3";
