@@ -140,7 +140,7 @@ This field may be empty.  In pre-2.3 versions it is omitted. <<NTUM>> says
 that according to the NMEA specification, it dominates the Status field --
 the Status field will be set to "A" (data valid) for Mode Indicators A
 and D, and to "V" (data invalid) for all other values of the Mode
-Indicator.  This is confirmed by <<IEC>>.
+Indicator.  This is confirmed by <<IEC61162-1>>.
 
 In NMEA 3.0, the GBS sentence reports a complete set of error estimates. Note
 however that many receivers claiming to emit "3.0" or "3.01" don't
