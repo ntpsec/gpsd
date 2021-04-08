@@ -194,7 +194,7 @@ Most computers are just NTP clients.  They send NTP requests to a set
 of servers and use the replies to adjust the local clock.  It is
 generally expected that NTP clients will have an accuracy (that is,
 maximum divergence from the master atomic clock) of of "a few tens of
-milliseconds" <<RFC5985>>; however, problems such as asymmetric
+milliseconds" <<RFC-5905>>; however, problems such as asymmetric
 routing, bufferbloat, or large time jitter (especially likely on cable
 networks) can degrade accuracy to around 100 ms and even worse in
 extreme cases.
