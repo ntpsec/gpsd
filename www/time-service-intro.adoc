@@ -330,7 +330,7 @@ Clock via Modem]
 
 - [[[GPSD-HOWTO]]] link:gpsd-time-service-howto.html[GPSD Time Service HOWTO]
 
-- [[WWVB]] http://www.nist.gov/pml/div688/grp40/wwvb.cfm[NIST Radio Station WWVB]
+- [[[WWVB]]] http://www.nist.gov/pml/div688/grp40/wwvb.cfm[NIST Radio Station WWVB]
 
 == History
 
