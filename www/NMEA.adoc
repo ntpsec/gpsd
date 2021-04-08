@@ -2958,3 +2958,7 @@ Described in <<MALTESE>>, actually a Maltese government document.
 - [[[TALKERS]]]
   "Talker Identifier Mnemonics"
   https://www.nmea.org/Assets/NMEA%200183%20Talker%20Identifier%20Mnemonics.pdf
+
+- [[[GLOBALSAT]]]
+  "iGlobalSat WorldCom Corporation"
+  https://www.globalsat.com.tw/
