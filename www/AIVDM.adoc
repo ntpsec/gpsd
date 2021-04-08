@@ -1201,7 +1201,7 @@ A message 6 subtype. DAC = 001 FID = 18. Fixed length: 360 bits.
 |317-359 | 43 |Spare                |           |x|Not used
 |======
 
-==== IMO 289 Berthing Data (addressed)
+==== IMO289 Berthing Data (addressed)
 
 This message provides information on the ship's berth. If sent from a
 ship it is a berthing request; if it is transmitted by a competent
@@ -5406,7 +5406,7 @@ AIS Type 1, 2, and 3 messages,
 Version 1.27 describes the sometime U.S. practice of omitting the leading
 '3' region code from MMSIs.
 
-Version 1.28 merges updates from IMO 289, communicated by Kurt Schwehr.
+Version 1.28 merges updates from IMO289, communicated by Kurt Schwehr.
 
 Version 1.29 added much information on WMO special message formats in
 types 6 and 8.
@@ -5429,7 +5429,7 @@ Version 1.34 fixes a typo in the MMSI 2 field offset of message 7.
 Version 1.35 notes that 24A and 24B messages don't necessarily come
 in neat adjacent pairs and that decoders need to handle this.
 
-Version 1.36 corrects erroneous scale factors in the IMO 289 Area
+Version 1.36 corrects erroneous scale factors in the IMO289 Area
 Notice and Time to Enter Port descriptions.
 
 Version 1.36 adds breakdowns of Aid to Navigation monitoring messages
