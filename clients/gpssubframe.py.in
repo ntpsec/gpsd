@@ -432,21 +432,22 @@ ephem3_fields = {
 
 almanac_fields = {
     # 1: ('ID' same as SV
-    1: ('Health', 'SV health'),
-    2: ('E1BHS', 'E1B health'),
-    3: ('E5bHS', 'E5b health'),
-    4: ('e', 'Eccentricity '),
-    5: ('toa', '(s) Almanac Rference Time'),
-    6: ('deltai', '(sc) Inclination offset from 0.3 semicircles (= 54 deg)'),
-    7: ('i0', '(sc) Inclination, computed from deltai'),
-    8: ('Omegad', '(sc/s) Rate of Right Ascension'),
-    9: ('sqrtA', '(m-2)Square Root of the Semi-Major Axis'),
-    10: ('Omega0',
+    1: ('IOD', 'IOD health'),
+    2: ('Health', 'SV health'),
+    3: ('E1BHS', 'E1B health'),
+    4: ('E5bHS', 'E5b health'),
+    5: ('e', 'Eccentricity '),
+    6: ('toa', '(s) Almanac Rference Time'),
+    7: ('deltai', '(sc) Inclination offset from 0.3 semicircles (= 54 deg)'),
+    8: ('i0', '(sc) Inclination, computed from deltai'),
+    9: ('Omegad', '(sc/s) Rate of Right Ascension'),
+    10: ('sqrtA', '(m-2)Square Root of the Semi-Major Axis'),
+    11: ('Omega0',
          '(sc) Longitude of Ascending Node of Orbit Plane Week beginning'),
-    11: ('omega', '(sc) Argument of Perigee'),
-    12: ('M0', '(sc) Mean Anomaly at Reference Time'),
-    13: ('af0', '(s) SV Clock Bias Correction Coefficient'),
-    14: ('af1', '(s/s) SV Clock Drift Correction Coefficient'),
+    12: ('omega', '(sc) Argument of Perigee'),
+    13: ('M0', '(sc) Mean Anomaly at Reference Time'),
+    14: ('af0', '(s) SV Clock Bias Correction Coefficient'),
+    15: ('af1', '(s/s) SV Clock Drift Correction Coefficient'),
     }
 
 # see IS-GPS-200 Section 20.3.3.5.2.4 Coordinated Universal Time (UTC).
@@ -1212,7 +1213,7 @@ if gps_week and options.satpos:
             ephm = all_data['almanac'][sv].copy()
             if 'toa' not in ephm:
                 # partial almanac
-                break
+                continue
             ephm.update({'af2': 0,
                          'deltan': 0,
                          'IDOT': 0,
