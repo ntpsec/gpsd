@@ -912,7 +912,7 @@ struct almanac_t
 struct subframe_t {
     // different gnss use different subframes.
     uint8_t gnssId;
-    // subframe number, 3 bits, unsigned, 1 to 5
+    // subframe number, GPS, 3 bits, unsigned, 1 to 5, 0 == invalid
     uint8_t subframe_num;
     /* data_id, denotes the NAV data structure of D(t), 2 bits, in
      * IS-GPS-200 always == 0x1 */
@@ -935,11 +935,11 @@ struct subframe_t {
     int is_almanac;
 #define SUBFRAME_ALMANAC 1
 #define SUBFRAME_ORBIT 2
+    // generic almanac, ephemeris
+    orbit_t orbit;
+    // Galileo sends two 1/2 almanacs at one time.  2nd one goes here.
+    orbit_t orbit1;
     union {
-        // generic almanac, ephemeris
-        orbit_t orbit;
-        // Galileo sends two 1/2 almanacs at one time.  2nd one goes here.
-        orbit_t orbit1;
         /* subframe 1, part of ephemeris, see IS-GPS-200, Table 20-II
          * and Table 20-I */
         struct {

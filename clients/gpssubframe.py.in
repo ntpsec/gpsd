@@ -241,7 +241,7 @@ return (x, y, z, delta_tsv) of satellite at gps_tow t
         toff += 604800
     # IS-GPS-200, Section 20.3.3.3.3.1 SV Clock Correction
     delta_tsv = (ephm['af0'] + ephm['af1'] * toff +
-                ephm['af2'] * toff ** 2 + deltatr)
+                 ephm['af2'] * toff ** 2 + deltatr)
     # we don't use Tgd because it is small, and we do not know the freuency.
     print("  deltatr %.9e delta_tsv %.9e Tgd %.9e\n  toff %.3f" %
           (deltatr, delta_tsv, ephm['Tgd'], toff))
@@ -442,7 +442,7 @@ almanac_fields = {
     8: ('Omegad', '(sc/s) Rate of Right Ascension'),
     9: ('sqrtA', '(m-2)Square Root of the Semi-Major Axis'),
     10: ('Omega0',
-        '(sc) Longitude of Ascending Node of Orbit Plane Week beginning'),
+         '(sc) Longitude of Ascending Node of Orbit Plane Week beginning'),
     11: ('omega', '(sc) Argument of Perigee'),
     12: ('M0', '(sc) Mean Anomaly at Reference Time'),
     13: ('af0', '(s) SV Clock Bias Correction Coefficient'),
@@ -792,7 +792,7 @@ if options.test:
 
 if options.input_file_name and not os.path.isfile(options.input_file_name):
     sys.stderr.write("gpssubframe: File does not exist: %s\n" %
-        options.input_file_name)
+                     options.input_file_name)
     sys.exit(1)
 
 if not options.port:
@@ -833,7 +833,7 @@ try:
 
         if not msg or 'class' not in msg:
             # ??
-            continue;
+            continue
 
         if 'SUBFRAME' == msg['class']:
             if gps.GNSSID_GPS == msg['gnssId']:
@@ -842,6 +842,10 @@ try:
                 gnss = 'SB'
             elif gps.GNSSID_GAL == msg['gnssId']:
                 gnss = 'GA'
+                if 'ALMANAC' in msg:
+                    # hack to get the target sv
+                    msg['dataid'] = msg['ALMANAC']['sv']
+
             elif gps.GNSSID_BD == msg['gnssId']:
                 gnss = 'BD'
             elif gps.GNSSID_IMES == msg['gnssId']:
@@ -883,11 +887,9 @@ try:
 
             if 'GA' == gnss:
                 if 'ALMANAC' in msg:
+                    # adjust new style almanac
                     if 'tref' in msg['ALMANAC']:
-                         # adjust new style almanac
-                         msg['ALMANAC']['toa'] = msg['ALMANAC']['tref']
-                         # hack to get the target sv
-                         msg['dataid'] = msg['ALMANAC']['sv']
+                        msg['ALMANAC']['toa'] = msg['ALMANAC']['tref']
 
                     # save it if:
                     #  not dummy (data id != 0)
@@ -898,16 +900,41 @@ try:
                          msg['ALMANAC']['IOD'])):
                         # FIXME: handle rollover
                         if options.progress:
-                            print("Received Almanac dataid %2d  IOD %d" %
-                                  (msg['dataid'], msg['ALMANAC']['IOD']))
+                            print("Received Almanac %s  IOD %d" %
+                                  (idx, msg['ALMANAC']['IOD']))
                         all_data['almanac'][idx] = msg['ALMANAC']
                     elif (all_data['almanac'][idx]['IOD'] ==
-                           msg['ALMANAC']['IOD']):
-                        ## maybe other half, merge in
+                          msg['ALMANAC']['IOD']):
+                        # maybe other half, merge in
                         all_data['almanac'][idx].update(msg['ALMANAC'])
                         if options.progress:
-                            print("Received Almanac 1/2 dataid %2d  IOD %d" %
-                                  (msg['dataid'], msg['ALMANAC']['IOD']))
+                            print("Received Almanac 1/2 idx %s  IOD %d" %
+                                  (idx, msg['ALMANAC']['IOD']))
+                if 'ALMANAC1' in msg:
+                    # adjust new style almanac
+                    if 'tref' in msg['ALMANAC1']:
+                        msg['ALMANAC']['toa'] = msg['ALMANAC1']['tref']
+
+                    idx = "%2s%02d" % (gnss, msg['ALMANAC1']['sv'])
+                    # save it if:
+                    #  not dummy (data id != 0)
+                    #  don't already have it
+                    #  newer than what we have
+                    if ((idx not in all_data['almanac'] or
+                         all_data['almanac'][idx]['IOD'] <
+                         msg['ALMANAC1']['IOD'])):
+                        # FIXME: handle rollover
+                        if options.progress:
+                            print("Received Almanac1 %s:  IOD %d" %
+                                  (idx, msg['ALMANAC1']['IOD']))
+                        all_data['almanac'][idx] = msg['ALMANAC1']
+                    elif (all_data['almanac'][idx]['IOD'] ==
+                          msg['ALMANAC1']['IOD']):
+                        # maybe other half, merge in
+                        all_data['almanac'][idx].update(msg['ALMANAC1'])
+                        if options.progress:
+                            print("Received Almanac 2/2 %s:  IOD %d" %
+                                  (idx, msg['ALMANAC1']['IOD']))
             elif 1 == msg['frame']:
                 if 'WN' in msg['EPHEM1']:
                     # save WN for later use
@@ -944,10 +971,10 @@ try:
             elif 4 <= msg['frame'] <= 5:
                 if 'ALMANAC' in msg:
                     if 'tref' in msg['ALMANAC']:
-                         # adjust new style almanac
-                         msg['ALMANAC']['toa'] = msg['ALMANAC']['tref']
-                         # hack to get the target sv
-                         msg['dataid'] = msg['ALMANAC']['sv']
+                        # adjust new style almanac
+                        msg['ALMANAC']['toa'] = msg['ALMANAC']['tref']
+                        # hack to get the target sv
+                        msg['dataid'] = msg['ALMANAC']['sv']
 
                     # save it if:
                     #  not dummy (data id != 0)
@@ -1111,8 +1138,7 @@ if gps_week and all_data['ionosphere']:
         delta_tiono = (all_data['ionosphere']['A0'] +
                        all_data['ionosphere']['A1'] *
                        (gps_tow - all_data['ionosphere']['tot'] +
-                        604800 * (gps_week - all_data['ionosphere']['WNt']))
-                     )
+                        604800 * (gps_week - all_data['ionosphere']['WNt'])))
         delta_tutc = all_data['ionosphere']['ls'] + delta_tiono
         print("  delta_tutc %.9f delta_tiono %.9f" % (delta_tutc, delta_tiono))
 
@@ -1184,6 +1210,9 @@ if gps_week and options.satpos:
 
             # careful, = makes a link, not a copy, on dictionaries
             ephm = all_data['almanac'][sv].copy()
+            if 'toa' not in ephm:
+                # partial almanac
+                break
             ephm.update({'af2': 0,
                          'deltan': 0,
                          'IDOT': 0,
@@ -1198,7 +1227,7 @@ if gps_week and options.satpos:
             # use military PI, not real pi.
             # check that we have required data.
             # Galileo splits almanacs over many frames...
-            needed = True;
+            needed = True
             cvt = ('af0', 'af1', 'deltan', 'i0', 'IDOT', 'M0', 'omega',
                    'Omega0', 'Omegad')
             for i in cvt:
@@ -1208,7 +1237,7 @@ if gps_week and options.satpos:
                     ephm[i] *= gps.GPS_PI
                 else:
                     needed = False
-                    break;
+                    break
 
             if needed:
                 SatPosSum(ephm, gps_tow)

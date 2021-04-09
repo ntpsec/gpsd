@@ -1027,8 +1027,9 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
     subp->TOW17 = -1;
     subp->tSVID = (uint8_t)tSVID;
     subp->subframe_num = word_type;
+    subp->pageid = word_type;
     init_orbit(&subp->orbit);
-    init_orbit(&subp->orbit1);
+    memcpy(&subp->orbit1, &subp->orbit, sizeof(subp->orbit1));
 
     switch (word_type) {
     case 0:
@@ -1100,9 +1101,18 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         mask = SUBFRAME_SET;
         break;
     case 8:
-        // Now it gets weird.  1/2 of Almanac 1, and half of Almanac 2
+        // Now it gets weird.  2/2 of Almanac 1, and 1/2 of Almanac 2
         word_desc = "Almanacs 2";
+        subp->orbit1.sv = (words[0] >> 2) & 0x03f;             // SVN1
+        if (0 >= subp->orbit1.sv || 36 < subp->orbit1.sv) {
+            // dummy, or reserved, almanac
+            break;
+        }
         subp->is_almanac = SUBFRAME_ORBIT;
+
+        // how do we know the SVID1?  It is one less.
+        subp->orbit.sv = subp->orbit1.sv - 1;
+
         subp->orbit.type = ORBIT_ALMANAC;
         subp->orbit.IOD = (words[0] >> 20) & 0x0f;    // IODa
 
@@ -1117,6 +1127,35 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
 
         subp->orbit.E5bHS = (words[1] >> 21) & 3;
         subp->orbit.E1BHS = (words[1] >> 19) & 3;
+
+        // start of 2nd SV
+        subp->orbit1.IOD = subp->orbit.IOD;     // IODa
+        tmp = (words[1] >> 5) & 0x07ff;         // delta sqrtA ?
+        tmp = uint2int(tmp, 13);
+        // Table 1 from ICD
+        subp->orbit1.sqrtA = (tmp * pow(2.0, -9)) + sqrt(29600000);
+
+        tmp = (words[2] >> 21)  & 0x07ff;       // e
+        subp->orbit1.eccentricity = tmp * pow(2.0, -16);
+
+        tmp = (words[2] >> 5) & 0x0ffff;        // omega
+        tmp = uint2int(tmp, 16);
+        subp->orbit1.omega = tmp * pow(2.0, -15);
+
+        tmp = (words[2] & 0x01f) << 6;        // deltai
+        tmp |= (words[3] >> 26) & 0x3f;
+        tmp = uint2int(tmp, 11);
+        // Table 1 from ICD
+        subp->orbit1.i0 = (tmp * pow(2.0, -14)) + (56.0 / 180.0);
+
+        tmp = (words[3] & 0x0fff) << 4;        // Omega0
+        tmp |= (words[3] >> 12) & 0x0f;
+        tmp = uint2int(tmp, 16);
+        subp->orbit1.Omega0 = tmp * pow(2.0, -35);
+
+        tmp = (words[3] >> 1) & 0x07fff;     // Omegadot
+        tmp = uint2int(tmp, 11);
+        subp->orbit1.Omegad = tmp * pow(2.0, -33);
 
         mask = SUBFRAME_SET;
         break;
