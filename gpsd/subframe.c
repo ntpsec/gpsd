@@ -1221,6 +1221,32 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         break;
     case 10:
         word_desc = "Almanacs 4";
+        subp->is_almanac = SUBFRAME_ORBIT;
+        subp->orbit.type = ORBIT_ALMANAC;
+
+        // how do we know the SVID3?
+        tmp = (words[0] >> 4) & 0x0ff;        // Omega0
+        tmp = uint2int(tmp, 16);
+        subp->orbit.Omega0 = tmp * pow(2.0, -35);
+
+        tmp = (words[3] & 0x0f) << 7;         // Omegadot
+        tmp |= (words[3] >> 25) & 0x07f;
+        tmp = uint2int(tmp, 11);
+        subp->orbit.Omegad = tmp * pow(2.0, -33);
+
+        tmp = (words[1] >> 9) & 0x0ffff;       // M0
+        tmp = uint2int(tmp, 16);
+        subp->orbit.M0 = tmp * pow(2.0, -15);
+
+        tmp = (words[1] & 0x01ff) << 7;              // af0
+        tmp |= (words[2] >> 25) & 0x07f;
+        tmp = uint2int(tmp, 16);
+        subp->orbit.af0 = tmp * pow(2.0, -19);
+
+        tmp = (words[2] >> 12) & 0x01fff;            // af1
+        tmp = uint2int(tmp, 13);
+        subp->orbit.af1 = tmp * pow(2.0, -38);
+
         break;
     case 16:
         word_desc = "Reduced Clock and Ephemeris Data";

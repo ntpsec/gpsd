@@ -6039,10 +6039,10 @@ protVer 34 and up
                   (IODnav, Omega0, i0, omega, i_dot))
         elif (3 == word_type):
             IODnav = (page >> 112) & 0x03ff
-            Omega_dot = (page >> 64) & 0x0ffffff
-            delta_n = (page >> 48) & 0x0ffff
-            Cuc = (page >> 40) & 0x0ffff
-            Cus = (page >> 32) & 0x0ffff
+            Omega_dot = (page >> 88) & 0x0ffffff
+            delta_n = (page >> 72) & 0x0ffff
+            Cuc = (page >> 56) & 0x0ffff
+            Cus = (page >> 40) & 0x0ffff
             Crc = (page >> 24) & 0x0ffff
             Crs = (page >> 8) & 0x0ffff
             SISA = page & 0x0ff
@@ -6050,7 +6050,7 @@ protVer 34 and up
                   "\n       Cuc %u Cus %u Crs %u Crs %u SISA %u" %
                   (IODnav, Omega_dot, delta_n, Cuc, Cus, Crc, Crc, SISA))
         elif (4 == word_type):
-            IODnav = (words[0] >> 14) & 0x03ff
+            IODnav = (page >> 112) & 0x03ff
             SVID = (page >> 106) & 0x03f
             Cic = (page >> 90) & 0x0ffff
             Cis = (page >> 74) & 0x0ffff
@@ -6065,14 +6065,14 @@ protVer 34 and up
             Ax_af0 = (page >> 111) & 0x7ff
             Ax_af1 = (page >> 100) & 0x7ff
             Ax_af2 = (page >> 86) & 0x3fff
-            Iono1 = (page >> 84) & 3
-            Iono2 = (page >> 82) & 3
-            Iono3 = (page >> 81) & 1
-            Iono4 = (page >> 80) & 1
-            Iono5 = (page >> 79) & 1
-            BGD_E1E5a = (page >> 69) & 0x3ff
-            BGD_E1E5b = (page >> 59) & 0x3ff
-            E5BHS = (page >> 58) & 3
+            Iono1 = (page >> 85) & 1
+            Iono2 = (page >> 84) & 1
+            Iono3 = (page >> 83) & 1
+            Iono4 = (page >> 82) & 1
+            Iono5 = (page >> 81) & 1
+            BGD_E1E5a = (page >> 71) & 0x3ff
+            BGD_E1E5b = (page >> 61) & 0x3ff
+            E5BHS = (page >> 59) & 3
             E1BHS = (page >> 57) & 3
             E5BDVS = (page >> 56) & 1
             E1BDVS = (page >> 55) & 1
@@ -6088,11 +6088,11 @@ protVer 34 and up
         elif (6 == word_type):
             A0 = (page >> 90) & 0x0ffffffff
             A1 = (page >> 66) & 0x0ffffff
-            delta_tLS = (page >> 66) & 0x0ff
-            t0t = (page >> 58) & 0x0ff
-            WN0t = (page >> 50) & 0x0ff
-            WNLSF = (page >> 42) & 0x0ff
-            DN = (page >> 31) & 0x0ff
+            delta_tLS = (page >> 58) & 0x0ff
+            t0t = (page >> 50) & 0x0ff
+            WN0t = (page >> 42) & 0x0ff
+            WNLSF = (page >> 34) & 0x0ff
+            DN = (page >> 31) & 7
             delta_tLSF = (page >> 23) & 0x0ff
             TOW = (page >> 3) & 0x0fffff
             s += ("\n    GST-UTC: A0 %u A1 %u delta_tLS %u t0t %u WN0t %u"
@@ -6136,7 +6136,7 @@ protVer 34 and up
                    delta_i, Omage0, Omage_dot))
         elif (9 == word_type):
             IODa = (page >> 118) & 0x0f
-            WNa = (page >> 116) & 0x03
+            WNa = (page >> 116) & 3
             t0a = (page >> 106) & 0x03ff
             M0 = (page >> 90) & 0x0ffff
             af0 = (page >> 74) & 0x0ffff
@@ -6174,12 +6174,12 @@ protVer 34 and up
         elif (16 == word_type):
             deltaAred = (page >> 117) & 0x01f
             exred = (page >> 104) & 0x01fff
-            eyred = (page >> 104) & 0x01fff
-            deltai0red = (page >> 91) & 0x01ffff
-            Omega0red = (page >> 74) & 0x07fffff
-            lambda0red = (page >> 51) & 0x07fffff
-            af0red = (page >> 28) & 0x03fffff
-            af1red = (page >> 6) & 0x03f
+            eyred = (page >> 91) & 0x01fff
+            deltai0red = (page >> 74) & 0x01ffff
+            Omega0red = (page >> 51) & 0x07fffff
+            lambda0red = (page >> 28) & 0x07fffff
+            af0red = (page >> 6) & 0x03fffff
+            af1red = page & 0x03f
             s += ("\n    Reduced Clock and Ephemeris Data: deltaAred %u"
                   "\n       exred %u eyred %u deltai0red %u Omega0red %u"
                   "\n       lambda0red %u af0red %u af1red %u" %
