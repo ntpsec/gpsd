@@ -735,6 +735,10 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                    (unsigned int)subframe->tSVID,
                    (unsigned int)subframe->subframe_num);
 
+    if (0 <= subframe->WN) {
+     str_appendf(buf, buflen, ",\"WN\":%d", subframe->WN);
+    }
+
     if (SUBFRAME_ORBIT == subframe->is_almanac){
         str_appendf(buf, buflen, ",\"scaled\":true");
         if (ORBIT_ALMANAC == subframe->orbit.type) {

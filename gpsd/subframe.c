@@ -42,6 +42,18 @@ static void init_orbit(orbit_t *orbit)
     orbit->sqrtA = NAN;
 }
 
+// init a subrame_t
+void init_subframe(struct subframe_t *subp, uint8_t gnssId, uint8_t tSVID)
+{
+    memset(subp, 0, sizeof(struct subframe_t));
+    subp->gnssId = gnssId;
+    subp->tSVID = tSVID;
+    subp->WN = -1;
+    subp->TOW17 = -1;
+    init_orbit(&subp->orbit);
+    memcpy(&subp->orbit1, &subp->orbit, sizeof(subp->orbit1));
+}
+
 /* you can find up to date almanac data for comparison here:
  * https://gps.afspc.af.mil/gps/Current/current.alm
  *
@@ -135,9 +147,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
     /* FIXME!! I really doubt this is Big Endian compatible */
     uint8_t preamble;
     struct subframe_t *subp = &session->gpsdata.subframe;
-    memset(&session->gpsdata.subframe, 0, sizeof(session->gpsdata.subframe));
-    subp->gnssId = gnssId;
-    subp->tSVID = (uint8_t)tSVID;
+    init_subframe(&session->gpsdata.subframe, gnssId, (uint8_t)tSVID);
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "50B,GPS: gpsd_interpret_subframe: (%u, %u) "
@@ -842,11 +852,8 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
     unsigned FraID = (words[0] >> 12) & 7;
     unsigned SOW;
     struct subframe_t *subp = &session->gpsdata.subframe;
-    memset(&session->gpsdata.subframe, 0, sizeof(session->gpsdata.subframe));
-    subp->gnssId = GNSSID_BD;
-    subp->tSVID = (uint8_t)tSVID;
-    init_orbit(&subp->orbit);
-    init_orbit(&subp->orbit1);
+    init_subframe(&session->gpsdata.subframe, GNSSID_BD, (uint8_t)tSVID);
+
     SOW = ((words[0] >> 4) & 0x0ff) << 12;
     SOW |= (words[1] >> 18) & 0x0fff;
 
@@ -1022,18 +1029,17 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         return 0;
     }
     subp = &session->gpsdata.subframe;
-    memset(&session->gpsdata.subframe, 0, sizeof(session->gpsdata.subframe));
-    subp->gnssId = GNSSID_GAL;
-    subp->TOW17 = -1;
-    subp->tSVID = (uint8_t)tSVID;
+    init_subframe(subp, GNSSID_GAL, (uint8_t)tSVID);
     subp->subframe_num = word_type;
     subp->pageid = word_type;
-    init_orbit(&subp->orbit);
-    memcpy(&subp->orbit1, &subp->orbit, sizeof(subp->orbit1));
 
     switch (word_type) {
     case 0:
         word_desc = "Spare Word";
+        subp->WN = (words[3] >> 18) & 0x0fff;               // WN
+        subp->TOW17 = ((words[3] >> 14) & 0x0f) << 16;      // TOW
+        subp->TOW17 |= (words[4] >> 14) & 0x0ffff;
+        mask = SUBFRAME_SET;
         break;
     case 1:
         word_desc = "Ephemeris 1";
@@ -1049,9 +1055,16 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         break;
     case 5:
         word_desc = "Ionosphere";
+        subp->WN = (words[2] >> 9) & 0x0fff;                 // WN
+        subp->TOW17 = (words[2] & 0x01ff) << 11;             // TOW
+        subp->TOW17 |= (words[3] >> 21) & 0x07ff;
+        mask = SUBFRAME_SET;
         break;
     case 6:
         word_desc = "GST-UTC";
+        subp->TOW17 = ((words[3] >> 14) & 0x07f) << 13;       // TOW
+        subp->TOW17 |= (words[4] >> 17) & 0x01fff;
+        mask = SUBFRAME_SET;
         break;
     case 7:
         word_desc = "Almanacs 1";
@@ -1292,10 +1305,7 @@ static gps_mask_t subframe_glo(struct gps_device_t *session,
     unsigned framenum = words[3] & 0x0f;
 
     subp = &session->gpsdata.subframe;
-    memset(&session->gpsdata.subframe, 0, sizeof(session->gpsdata.subframe));
-    subp->gnssId = GNSSID_GLO;
-    subp->tSVID = (uint8_t)tSVID;
-    init_orbit(&subp->orbit);
+    init_subframe(subp, GNSSID_GLO, (uint8_t)tSVID);
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "50B,GLO: tSVID %u len %u: "
@@ -1383,7 +1393,7 @@ gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
     case GNSSID_GPS:
         FALLTHROUGH
     case GNSSID_QZSS:
-        // GPS and QZSS ue the same subframe structure
+        // GPS and QZSS use the same subframe structure
         numwords_expected = 10;
         break;
     case GNSSID_SBAS:

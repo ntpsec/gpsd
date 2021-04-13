@@ -1213,6 +1213,8 @@ if gps_week and options.satpos:
             ephm = all_data['almanac'][sv].copy()
             if 'toa' not in ephm:
                 # partial almanac
+                if gps.VERB_INFO <= options.debug:
+                    print("   Missing toa")
                 continue
             ephm.update({'af2': 0,
                          'deltan': 0,
@@ -1238,6 +1240,8 @@ if gps_week and options.satpos:
                     ephm[i] *= gps.GPS_PI
                 else:
                     needed = False
+                    if gps.VERB_INFO <= options.debug:
+                        print("   Missing %s" % i)
                     break
 
             if needed:

@@ -85,7 +85,7 @@ extern "C" {
  *       Add relPosL and relPosH to gps_fix_t.NED
  * 11    long l_toa becomes unsigned long l_toa
  *       fix sub4_18 types.
- * 12    subframe_t expanded for more gnssId's
+ * 12    subframe_t expanded for more gnssId's, WN, etc.
  *       Add orbit_t for generic orbital parameters
  *       Add subframe.orbit and subframe.orbit1 to store orbit_t's
  *
@@ -931,6 +931,8 @@ struct subframe_t {
     bool alert;
     /* antispoof, A-S mode is ON in that SV, 1 bit */
     bool antispoof;
+    // Week Number for sending constellation, -1 for invalid
+    int WN;
     // 1 == almanac, 2 == orbit
     int is_almanac;
 #define SUBFRAME_ALMANAC 1
