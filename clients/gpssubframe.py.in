@@ -437,17 +437,18 @@ almanac_fields = {
     3: ('E1BHS', 'E1B health'),
     4: ('E5bHS', 'E5b health'),
     5: ('e', 'Eccentricity '),
-    6: ('toa', '(s) Almanac Rference Time'),
-    7: ('deltai', '(sc) Inclination offset from 0.3 semicircles (= 54 deg)'),
-    8: ('i0', '(sc) Inclination, computed from deltai'),
-    9: ('Omegad', '(sc/s) Rate of Right Ascension'),
-    10: ('sqrtA', '(m-2)Square Root of the Semi-Major Axis'),
-    11: ('Omega0',
+    6: ('toa', '(s) Almanac Reference Time'),
+    7: ('WN', '(wk) Almanac Reference Week'),
+    8: ('deltai', '(sc) Inclination offset from 0.3 semicircles (= 54 deg)'),
+    9: ('i0', '(sc) Inclination, computed from deltai'),
+    10: ('Omegad', '(sc/s) Rate of Right Ascension'),
+    11: ('sqrtA', '(m-2)Square Root of the Semi-Major Axis'),
+    12: ('Omega0',
          '(sc) Longitude of Ascending Node of Orbit Plane Week beginning'),
-    12: ('omega', '(sc) Argument of Perigee'),
-    13: ('M0', '(sc) Mean Anomaly at Reference Time'),
-    14: ('af0', '(s) SV Clock Bias Correction Coefficient'),
-    15: ('af1', '(s/s) SV Clock Drift Correction Coefficient'),
+    13: ('omega', '(sc) Argument of Perigee'),
+    14: ('M0', '(sc) Mean Anomaly at Reference Time'),
+    15: ('af0', '(s) SV Clock Bias Correction Coefficient'),
+    16: ('af1', '(s/s) SV Clock Drift Correction Coefficient'),
     }
 
 # see IS-GPS-200 Section 20.3.3.5.2.4 Coordinated Universal Time (UTC).
@@ -876,13 +877,28 @@ try:
 
             if 1 < options.debug:
                 if 'TOW17' in msg:
-                    print("Subframe %d idx %s TOW17 %s WN %d" %
-                          (msg["frame"], idx, msg['TOW17'], subframe1_WN))
+                    if 0 <= subframe1_WN:
+                        s = " WN %d" % subframe1_WN
+                    else:
+                        s = ''
+                    print("Subframe %d idx %s TOW17 %s%s" %
+                          (msg["frame"], idx, msg['TOW17'], s))
                 elif 'SOW' in msg:
-                    print("Subframe %d idx %s SOW %s WN %d" %
-                          (msg["frame"], idx, msg['SOW'], subframe1_WN))
+                    if 'WN' in msg:
+                        s = " WN %d" % msg['WN']
+                    else:
+                        s = ''
+                    print("Subframe %d idx %s SOW %s%s" %
+                          (msg["frame"], idx, msg['SOW'], s))
+                elif 'TOW' in msg:
+                    if 'WN' in msg:
+                        s = " WN %d" % msg['WN']
+                    else:
+                        s = ''
+                    print("Subframe %d idx %s TOW %s%s" %
+                          (msg["frame"], idx, msg['TOW'], s))
                 else:
-                    # Galileo, no time
+                    # no time
                     print("Subframe %d idx %s" %
                           (msg["frame"], idx))
 

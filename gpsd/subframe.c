@@ -43,7 +43,8 @@ static void init_orbit(orbit_t *orbit)
 }
 
 // init a subrame_t
-void init_subframe(struct subframe_t *subp, uint8_t gnssId, uint8_t tSVID)
+static void init_subframe(struct subframe_t *subp, uint8_t gnssId,
+                          uint8_t tSVID)
 {
     memset(subp, 0, sizeof(struct subframe_t));
     subp->gnssId = gnssId;
@@ -853,9 +854,11 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
     unsigned SOW;
     struct subframe_t *subp = &session->gpsdata.subframe;
     init_subframe(&session->gpsdata.subframe, GNSSID_BD, (uint8_t)tSVID);
+    subp->subframe_num = FraID;
 
     SOW = ((words[0] >> 4) & 0x0ff) << 12;
     SOW |= (words[1] >> 18) & 0x0fff;
+    subp->TOW17 = SOW;
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "50B,BDS: len %u: "
@@ -867,12 +870,20 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
     switch (FraID) {
     case 1:
         word_desc = "Ephemeris 1";
+        subp->WN = (words[2] >> 17) & 0x01fff;
+        subp->is_almanac = SUBFRAME_ORBIT;
+        subp->orbit.type = ORBIT_EPHEMERIS;
+        mask = SUBFRAME_SET;
         break;
     case 2:
         word_desc = "Ephemeris 2";
+        subp->is_almanac = SUBFRAME_ORBIT;
+        subp->orbit.type = ORBIT_EPHEMERIS;
         break;
     case 3:
         word_desc = "Ephemeris 3";
+        subp->is_almanac = SUBFRAME_ORBIT;
+        subp->orbit.type = ORBIT_EPHEMERIS;
         break;
     case 4:
         {
@@ -881,8 +892,6 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
             if (1 <= Pnum && 24 >= Pnum) {
                 long tmp;
                 word_desc = "Almanac 1";
-                subp->subframe_num = 4;
-                subp->TOW17 = SOW;
                 subp->is_almanac = SUBFRAME_ORBIT;
                 subp->orbit.type = ORBIT_ALMANAC;
                 subp->orbit.sv = Pnum;
@@ -947,6 +956,8 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
             if ((1 <= Pnum && 6 >= Pnum) || (11 <= Pnum && 23 >= Pnum)) {
                 if (3 == AmEpID) {
                     word_desc = "Almanac 2";
+                    subp->is_almanac = SUBFRAME_ORBIT;
+                    subp->orbit.type = ORBIT_EPHEMERIS;
                 } else {
                     word_desc = "Reserved";
                 }
@@ -1023,7 +1034,6 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         return 0;
     }
     if (1 == even) {
-        // Alerts pages are all "Reserved"
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "50B,GAL: page flipped?\n");
         return 0;
@@ -1116,7 +1126,7 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
     case 8:
         // Now it gets weird.  2/2 of Almanac 1, and 1/2 of Almanac 2
         word_desc = "Almanacs 2";
-        subp->orbit1.sv = (words[0] >> 2) & 0x03f;             // SVID2
+        subp->orbit1.sv = (words[1] >> 11) & 0x03f;             // SVID2
         if (0 >= subp->orbit1.sv || 36 < subp->orbit1.sv) {
             // dummy, or reserved, almanac
             break;

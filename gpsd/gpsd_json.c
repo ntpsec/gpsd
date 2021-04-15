@@ -739,29 +739,48 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
      str_appendf(buf, buflen, ",\"WN\":%d", subframe->WN);
     }
 
+    if (0 <= subframe->TOW17) {
+        // TOW17 is always scaled
+        switch (subframe->gnssId){
+        case GNSSID_GPS:
+            FALLTHROUGH
+        case GNSSID_SBAS:
+            str_appendf(buf, buflen, ",\"TOW17\":%d", subframe->TOW17);
+            break;
+        case GNSSID_BD:
+            str_appendf(buf, buflen, ",\"SOW\":%d", subframe->TOW17);
+            break;
+        case GNSSID_GAL:
+            FALLTHROUGH
+        default:
+            str_appendf(buf, buflen, ",\"TOW\":%d", subframe->TOW17);
+            break;
+        }
+    }
+
     if (SUBFRAME_ORBIT == subframe->is_almanac){
         str_appendf(buf, buflen, ",\"scaled\":true");
-        if (ORBIT_ALMANAC == subframe->orbit.type) {
-            if (0 <= subframe->TOW17) {
-                // Galileo does not have...
-                str_appendf(buf, buflen, ",\"SOW\":%d", subframe->TOW17);
-            }
+        switch (subframe->orbit.type) {
+        case ORBIT_ALMANAC:
             (void)strlcat(buf, ",\"ALMANAC\":{", buflen);
             json_subframe_dump_orb(&subframe->orbit, scaled, buf, buflen);
             if (0 < subframe->orbit1.sv) {
                 (void)strlcat(buf, ",\"ALMANAC1\":{", buflen);
                 json_subframe_dump_orb(&subframe->orbit1, scaled, buf, buflen);
             }
+            break;
+        case ORBIT_EPHEMERIS:
+            // Not yet...
+            break;
+        default:
+            // Huh?
+            break;
         }
         (void)strlcat(buf, "}\r\n", buflen);
         return;
     }
 
-    // TOW17 is always avalid and scaled
-    str_appendf(buf, buflen, ",\"TOW17\":%d,\"scaled\":%s",
-               subframe->TOW17,
-               JSON_BOOL(scaled));
-
+    str_appendf(buf, buflen, ",\"scaled\":%s", JSON_BOOL(scaled));
 
     switch (subframe->subframe_num) {
     case 1:
