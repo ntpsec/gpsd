@@ -952,7 +952,7 @@ try:
                         if options.progress:
                             print("Received Almanac 2/2 %s:  IOD %d" %
                                   (idx, msg['ALMANAC1']['IOD']))
-            elif 1 == msg['frame']:
+            elif 'GP' == gnss and 1 == msg['frame']:
                 if 'WN' in msg['EPHEM1']:
                     # save WN for later use
                     subframe1_WN = msg['EPHEM1']['WN']
@@ -969,7 +969,7 @@ try:
                               msg['EPHEM1']['af0'])
                         sys.exit(1)
                     all_data['ephemeris1'][idx] = msg['EPHEM1']
-            elif 2 == msg['frame']:
+            elif 'GP' == gnss and 2 == msg['frame']:
                 if ((idx not in all_data['ephemeris2'] or
                      msg['EPHEM2']['IODE'] !=
                      all_data['ephemeris2'][idx]['IODE'])):
@@ -977,7 +977,7 @@ try:
                         print("Received Ephemeris2 %5s, IODE %3d" %
                               (idx, msg['EPHEM2']['IODE']))
                     all_data['ephemeris2'][idx] = msg['EPHEM2']
-            elif 3 == msg['frame']:
+            elif 'GP' == gnss and 3 == msg['frame']:
                 if ((idx not in all_data['ephemeris3'] or
                      msg['EPHEM3']['IODE'] !=
                      all_data['ephemeris3'][idx]['IODE'])):
@@ -985,7 +985,7 @@ try:
                         print("Received Ephemeris3 %5s, IODE %3d" %
                               (idx, msg['EPHEM3']['IODE']))
                     all_data['ephemeris3'][idx] = msg['EPHEM3']
-            elif 4 <= msg['frame'] <= 5:
+            elif 'GP' == gnss and 4 <= msg['frame'] <= 5:
                 if 'ALMANAC' in msg:
                     if 'tref' in msg['ALMANAC']:
                         # adjust new style almanac
