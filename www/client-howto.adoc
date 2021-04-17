@@ -386,7 +386,7 @@ Set watch policy. What you should use instead of send().
 |gps_waiting()		|gpsmm.waiting()	|gps.waiting()		|
 Blocking check with timeout to see if input is waiting.
 |gps_read()		|gpsmm.read()		|gps.read()		|
-Non-blocking read for data from the daemon.
+Read data from the daemon.  Usually blocking.
 |gps_unpack()		|			|gps.unpack()		|
 Parse JSON from a specified buffer into a session structure
 |gps_close()		|gpsmm.~gpsmm()		|gps.close()		|
