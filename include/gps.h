@@ -805,24 +805,55 @@ struct orbit
     // The satellite this refers to, zero if struct invalid
     uint8_t sv;
     // SV health data, random format, -1 if invalid
-    // Issue of Data, IODa, IODc, IODe.
-    int8_t IOD;
+    // Issue of Data, IODa, IODc, IODe., -1 is invalid
+    int8_t IODA;
+    int8_t IODC;
+    int8_t IODE;
+
     int8_t E5bHS;        // Galileo E5b health status, -1 invalid
     int8_t E1BHS;        // Galileo E1B health status, -1 invalid
-    // Week Number, -1 if invalid
-    int WN;
+    // AODC, Age of Data Clock, BDS, -1 if invalid
+    int AODC;
+    // AODE, Age of Data Ephemeris, BDS, -1 if invalid
+    int AODE;
+    // TGD1, TGD2, Time Group Delay 1, 2, valid if AODC is valid
+    int TGD1;
+    int TGD2;
+    // toa, time of almanac, -1 if invalid
+    int toa;
+    // toc, time of clock, -1 if invalid
+    int toc;
+    // toe, time of ephemeris, -1 if invalid
+    int toe;
     // SV health data, random format, -1 if invalid
     int svh;
-    // toa, almanac reference time, -1 if invalid
-    // toc, ephemeris reference time, -1 if invalid
-    // toe, ephemeris reference time, -1 if invalid
-    long tref;
-    // af0, SV clock correction constant term, seconds
+    // Week Number, -1 if invalid
+    int WN;
+    // af0, aka a0, SV clock correction constant term, seconds
     double af0;
-    // af1, SV clock correction first order term, seconds/second
+    // af1, aka a1, SV clock correction first order term, seconds/second
     double af1;
-    // af2, SV clock correction second order term, seconds/second**2
+    // af2, aka a2, SV clock correction second order term, seconds/second**2
     double af2;
+
+    /* alpha0, seconds */
+    double alpha0;
+    /* alpha1, seconds/semi-circle */
+    double alpha1;
+    /* alpha2, seconds/semi-circle**2 */
+    double alpha2;
+    /* alpha3, seconds/semi-circle**3 */
+    double alpha3;
+
+    /* beta0, seconds */
+    double beta0;
+    /* beta1, seconds/semi-circle */
+    double beta1;
+    /* beta2, seconds/semi-circle**2 */
+    double beta2;
+    /* beta3, seconds/semi-circle**3 */
+    double beta3;
+
     /* Cic, Amplitude of the Cosine Harmonic Correction Term to the
      * Angle of Inclination, radians*/
     double Cic;

@@ -659,6 +659,14 @@ static void json_subframe_dump_orb(const orbit_t *orbit,
 {
     str_appendf(buf, buflen, "\"sv\":%d", orbit->sv);
 
+    if (0 <= orbit->AODC) {
+        str_appendf(buf, buflen, ",\"AODC\":%d",
+                    orbit->AODC);
+    }
+    if (0 <= orbit->AODE) {
+        str_appendf(buf, buflen, ",\"AODE\":%d",
+                    orbit->AODE);
+    }
     if (0 != isfinite(orbit->af0)) {
         str_appendf(buf, buflen, ",\"af0\":%.12e",
                     orbit->af0);
@@ -670,6 +678,38 @@ static void json_subframe_dump_orb(const orbit_t *orbit,
     if (0 != isfinite(orbit->af2)) {
         str_appendf(buf, buflen, ",\"af2\":%.12e",
                     orbit->af2);
+    }
+    if (0 != isfinite(orbit->alpha0)) {
+        str_appendf(buf, buflen, ",\"alpha0\":%.12e",
+                    orbit->alpha0);
+    }
+    if (0 != isfinite(orbit->alpha1)) {
+        str_appendf(buf, buflen, ",\"alpha1\":%.12e",
+                    orbit->alpha1);
+    }
+    if (0 != isfinite(orbit->alpha2)) {
+        str_appendf(buf, buflen, ",\"alpha2\":%.12e",
+                    orbit->alpha2);
+    }
+    if (0 != isfinite(orbit->alpha3)) {
+        str_appendf(buf, buflen, ",\"alpha3\":%.12e",
+                    orbit->alpha3);
+    }
+    if (0 != isfinite(orbit->beta0)) {
+        str_appendf(buf, buflen, ",\"beta0\":%.12e",
+                    orbit->beta0);
+    }
+    if (0 != isfinite(orbit->beta1)) {
+        str_appendf(buf, buflen, ",\"beta1\":%.12e",
+                    orbit->beta1);
+    }
+    if (0 != isfinite(orbit->beta2)) {
+        str_appendf(buf, buflen, ",\"beta2\":%.12e",
+                    orbit->beta2);
+    }
+    if (0 != isfinite(orbit->beta3)) {
+        str_appendf(buf, buflen, ",\"beta3\":%.12e",
+                    orbit->beta3);
     }
     if (0 <= orbit->E1BHS) {
         str_appendf(buf, buflen, ",\"E1BHS\":%d",
@@ -683,9 +723,13 @@ static void json_subframe_dump_orb(const orbit_t *orbit,
         str_appendf(buf, buflen, ",\"e\":%.12e",
                     orbit->eccentricity);
     }
-    if (0 <= orbit->IOD) {
-        str_appendf(buf, buflen, ",\"IOD\":%d",
-                    orbit->IOD);
+    if (0 <= orbit->IODA) {
+        str_appendf(buf, buflen, ",\"IODA\":%d",
+                    orbit->IODA);
+    }
+    if (0 <= orbit->IODE) {
+        str_appendf(buf, buflen, ",\"IODE\":%d",
+                    orbit->IODE);
     }
     if (0 != isfinite(orbit->i0)) {
         str_appendf(buf, buflen, ",\"i0\":%.16f",
@@ -707,14 +751,25 @@ static void json_subframe_dump_orb(const orbit_t *orbit,
         str_appendf(buf, buflen, ",\"omega\":%.16f",
                     orbit->omega);
     }
+    if (0 <= orbit->toc) {
+        str_appendf(buf, buflen, ",\"toc\":%d",
+                    orbit->toc);
+    }
     if (0 != isfinite(orbit->sqrtA)) {
         str_appendf(buf, buflen, ",\"sqrtA\":%.12f",
                     orbit->sqrtA);
     }
-    if (0 <= orbit->tref) {
-        // maybe t0e, maybe t0a
-        str_appendf(buf, buflen, ",\"tref\":%ld",
-                    orbit->tref);
+    if (0 <= orbit->AODC) {
+        str_appendf(buf, buflen, ",\"TGD1\":%d,\"TGD2\":%d",
+                    orbit->TGD1, orbit->TGD2);
+    }
+    if (0 <= orbit->toa) {
+        str_appendf(buf, buflen, ",\"toa\":%ld",
+                    orbit->toa);
+    }
+    if (0 <= orbit->toe) {
+        str_appendf(buf, buflen, ",\"toe\":%ld",
+                    orbit->toe);
     }
     if (0 <= orbit->WN) {
         str_appendf(buf, buflen, ",\"WN\":%d",
@@ -770,7 +825,8 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
             }
             break;
         case ORBIT_EPHEMERIS:
-            // Not yet...
+            (void)strlcat(buf, ",\"EPHEMERIS\":{", buflen);
+            json_subframe_dump_orb(&subframe->orbit, scaled, buf, buflen);
             break;
         default:
             // Huh?

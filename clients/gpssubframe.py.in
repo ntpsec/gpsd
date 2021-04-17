@@ -371,6 +371,7 @@ Compute Velocities.  Use delta_tsv to correct pseudorange.
 all_data = {
     # current almanac here: https://www.navcen.uscg.gov/?pageName=gpsAlmanacs
     'almanac': {},
+    'ephemeris': {},                # new style combined ephemeris
     'ephemeris1': {},
     'ephemeris2': {},
     'ephemeris3': {},
@@ -902,56 +903,59 @@ try:
                     print("Subframe %d idx %s" %
                           (msg["frame"], idx))
 
-            if 'GA' == gnss:
+            if gnss in ['BD', 'GA']:
                 if 'ALMANAC' in msg:
-                    # adjust new style almanac
-                    if 'tref' in msg['ALMANAC']:
-                        msg['ALMANAC']['toa'] = msg['ALMANAC']['tref']
+                    # new style almanac
 
-                    # save it if:
-                    #  not dummy (data id != 0)
-                    #  don't already have it
-                    #  newer than what we have
-                    if ((idx not in all_data['almanac'] or
-                         all_data['almanac'][idx]['IOD'] <
-                         msg['ALMANAC']['IOD'])):
+                    # save, ore merge, it if???
+                    print(msg)
+                    if idx not in all_data['almanac']:
+                        if options.progress:
+                            print("Received Almanac %s" % idx)
+                        all_data['almanac'][idx] = msg['ALMANAC']
+                    elif (('IODA' in msg['ALMANAC'] and
+                           ('IODA' not in all_data['almanac'][idx] or
+                            (all_data['almanac'][idx]['IODA'] <=
+                             msg['ALMANAC']['IODA']))) or
+                          ('toa' in msg['ALMANAC'] and
+                           ('toa' not in all_data['almanac'][idx] or
+                            (all_data['almanac'][idx]['toa'] <=
+                             msg['ALMANAC']['toa'])))):
                         # FIXME: handle rollover
                         if options.progress:
-                            print("Received Almanac %s  IOD %d" %
-                                  (idx, msg['ALMANAC']['IOD']))
-                        all_data['almanac'][idx] = msg['ALMANAC']
-                    elif (all_data['almanac'][idx]['IOD'] ==
-                          msg['ALMANAC']['IOD']):
-                        # maybe other half, merge in
+                            print("Received Almanac %s" % idx)
                         all_data['almanac'][idx].update(msg['ALMANAC'])
-                        if options.progress:
-                            print("Received Almanac 1/2 idx %s  IOD %d" %
-                                  (idx, msg['ALMANAC']['IOD']))
                 if 'ALMANAC1' in msg:
-                    # adjust new style almanac
-                    if 'tref' in msg['ALMANAC1']:
-                        msg['ALMANAC']['toa'] = msg['ALMANAC1']['tref']
-
                     idx = "%2s%02d" % (gnss, msg['ALMANAC1']['sv'])
                     # save it if:
                     #  not dummy (data id != 0)
                     #  don't already have it
                     #  newer than what we have
                     if ((idx not in all_data['almanac'] or
-                         all_data['almanac'][idx]['IOD'] <
-                         msg['ALMANAC1']['IOD'])):
+                         all_data['almanac'][idx]['IODA'] <
+                         msg['ALMANAC1']['IODA'])):
                         # FIXME: handle rollover
                         if options.progress:
-                            print("Received Almanac1 %s:  IOD %d" %
-                                  (idx, msg['ALMANAC1']['IOD']))
+                            print("Received Almanac1 %s:  IODA %d" %
+                                  (idx, msg['ALMANAC1']['IODA']))
                         all_data['almanac'][idx] = msg['ALMANAC1']
-                    elif (all_data['almanac'][idx]['IOD'] ==
-                          msg['ALMANAC1']['IOD']):
+                    elif (all_data['almanac'][idx]['IODA'] ==
+                          msg['ALMANAC1']['IODA']):
                         # maybe other half, merge in
                         all_data['almanac'][idx].update(msg['ALMANAC1'])
                         if options.progress:
-                            print("Received Almanac 2/2 %s:  IOD %d" %
-                                  (idx, msg['ALMANAC1']['IOD']))
+                            print("Received Almanac 2/2 %s:  IODA %d" %
+                                  (idx, msg['ALMANAC1']['IODA']))
+                if 'EPHEMERIS' in msg:
+                    # new style ephemeris
+
+                    if idx not in all_data['ephemeris']:
+                        all_data['ephemeris'][idx] = msg['EPHEMERIS']
+                    else:
+                        # merge in
+                        all_data['ephemeris'][idx].update(msg['EPHEMERIS'])
+                    if options.progress:
+                        print("Received Ephemeris idx %s" % (idx))
             elif 'GP' == gnss and 1 == msg['frame']:
                 if 'WN' in msg['EPHEM1']:
                     # save WN for later use
@@ -987,12 +991,6 @@ try:
                     all_data['ephemeris3'][idx] = msg['EPHEM3']
             elif 'GP' == gnss and 4 <= msg['frame'] <= 5:
                 if 'ALMANAC' in msg:
-                    if 'tref' in msg['ALMANAC']:
-                        # adjust new style almanac
-                        msg['ALMANAC']['toa'] = msg['ALMANAC']['tref']
-                        # hack to get the target sv
-                        msg['dataid'] = msg['ALMANAC']['sv']
-
                     # save it if:
                     #  not dummy (data id != 0)
                     #  don't already have it
