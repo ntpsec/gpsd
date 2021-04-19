@@ -819,16 +819,19 @@ struct orbit
     // TGD1, TGD2, Time Group Delay 1, 2, valid if AODC is valid
     int TGD1;
     int TGD2;
-    // toa, time of almanac, -1 if invalid
-    int toa;
-    // toc, time of clock, -1 if invalid
-    int toc;
-    // toe, time of ephemeris, -1 if invalid
-    int toe;
     // SV health data, random format, -1 if invalid
     int svh;
     // Week Number, -1 if invalid
     int WN;
+
+    // longs
+    // toa, time of almanac, -1 if invalid
+    long toa;
+    // toc, time of clock, -1 if invalid
+    long toc;
+    // toe, time of ephemeris, -1 if invalid
+    long toe;
+
     // af0, aka a0, SV clock correction constant term, seconds
     double af0;
     // af1, aka a1, SV clock correction first order term, seconds/second

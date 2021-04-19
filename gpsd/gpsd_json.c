@@ -751,10 +751,6 @@ static void json_subframe_dump_orb(const orbit_t *orbit,
         str_appendf(buf, buflen, ",\"omega\":%.16f",
                     orbit->omega);
     }
-    if (0 <= orbit->toc) {
-        str_appendf(buf, buflen, ",\"toc\":%d",
-                    orbit->toc);
-    }
     if (0 != isfinite(orbit->sqrtA)) {
         str_appendf(buf, buflen, ",\"sqrtA\":%.12f",
                     orbit->sqrtA);
@@ -766,6 +762,10 @@ static void json_subframe_dump_orb(const orbit_t *orbit,
     if (0 <= orbit->toa) {
         str_appendf(buf, buflen, ",\"toa\":%ld",
                     orbit->toa);
+    }
+    if (0 <= orbit->toc) {
+        str_appendf(buf, buflen, ",\"toc\":%ld",
+                    orbit->toc);
     }
     if (0 <= orbit->toe) {
         str_appendf(buf, buflen, ",\"toe\":%ld",
