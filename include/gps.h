@@ -816,6 +816,8 @@ struct orbit
     int AODC;
     // AODE, Age of Data Ephemeris, BDS, -1 if invalid
     int AODE;
+    // IDOT, Rate of inclination angle, BDS, -1 if invalid
+    int IDOT;
     // TGD1, TGD2, Time Group Delay 1, 2, valid if AODC is valid
     int TGD1;
     int TGD2;
@@ -831,7 +833,9 @@ struct orbit
     long toc;
     // toe, time of ephemeris, -1 if invalid
     long toe;
-    // top two MSBs of toe, seconds, -1 if invalid
+    // LSBs of toe, seconds, -1 if invalid
+    long toeLSB; 
+    // MSBs of toe, seconds, scaled, -1 if invalid
     long toeMSB; 
 
     // af0, aka a0, SV clock correction constant term, seconds

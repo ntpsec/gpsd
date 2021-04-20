@@ -727,6 +727,10 @@ static void json_subframe_dump_orb(const orbit_t *orbit,
         str_appendf(buf, buflen, ",\"e\":%.12e",
                     orbit->eccentricity);
     }
+    if (0 <= orbit->IDOT) {
+        str_appendf(buf, buflen, ",\"IDOT\":%d",
+                    orbit->IDOT);
+    }
     if (0 <= orbit->IODA) {
         str_appendf(buf, buflen, ",\"IODA\":%d",
                     orbit->IODA);
@@ -774,8 +778,10 @@ static void json_subframe_dump_orb(const orbit_t *orbit,
     if (0 <= orbit->toe) {
         str_appendf(buf, buflen, ",\"toe\":%ld",
                     orbit->toe);
-    }
-    if (0 <= orbit->toeMSB) {
+    } else if (0 <= orbit->toeLSB) {
+        str_appendf(buf, buflen, ",\"toeLSB\":%ld",
+                    orbit->toeLSB);
+    } else if (0 <= orbit->toeMSB) {
         str_appendf(buf, buflen, ",\"toeMSB\":%ld",
                     orbit->toeMSB);
     }

@@ -20,14 +20,19 @@ static void init_orbit(orbit_t *orbit)
     orbit->sv = 0;
     orbit->AODC = -1;
     orbit->AODE = -1;
+    orbit->IDOT = -1;
     orbit->IODA = -1;
     orbit->IODC = -1;
     orbit->IODE = -1;
     orbit->E5bHS = -1;
     orbit->E1BHS = -1;
+    orbit->TGD1 = -1;
+    orbit->TGD2 = -1;
     orbit->toa = -1;
     orbit->toc = -1;
     orbit->toe = -1;
+    orbit->toeLSB = -1;
+    orbit->toeMSB = -1;
     orbit->svh = -1;
     orbit->WN = -1;
     orbit->af0 = NAN;
@@ -43,6 +48,7 @@ static void init_orbit(orbit_t *orbit)
     orbit->Crs = NAN;
     orbit->Cuc = NAN;
     orbit->Cus = NAN;
+    orbit->deltan = NAN;
     orbit->eccentricity = NAN;
     orbit->i0 = NAN;
     orbit->M0 = NAN;
@@ -864,6 +870,7 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
     unsigned SOW;
     struct subframe_t *subp = &session->gpsdata.subframe;
     long tmp;
+    long long tmpll;
 
     init_subframe(&session->gpsdata.subframe, GNSSID_BD, (uint8_t)tSVID);
     subp->subframe_num = FraID;
@@ -966,10 +973,10 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
         tmp = uint2int(tmp, 18);
         subp->orbit.Cuc = tmp * pow(2.0, -31);
 
-        tmp = ((words[3] >> 8) & 0x0fffff) << 12;   // M0
-        tmp |= (words[4] >> 28) & 0x0fff;
-        tmp = uint2int(tmp, 32);
-        subp->orbit.Cuc = tmp * pow(2.0, -31);
+        tmpll = ((words[3] >> 8) & 0x0fffff) << 12;   // M0
+        tmpll |= (words[4] >> 28) & 0x0fff;
+        tmpll = uint2int(tmpll, 32);
+        subp->orbit.Cuc = tmpll * pow(2.0, -31);
 
         tmp = ((words[4] >> 8) & 0x03ff) << 22;   // e
         tmp |= (words[5] >> 8) & 0x03fffff;
@@ -1001,6 +1008,46 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
         word_desc = "Ephemeris 3";
         subp->is_almanac = SUBFRAME_ORBIT;
         subp->orbit.type = ORBIT_EPHEMERIS;
+
+        tmp = ((words[1] >> 8) & 0x03ff) << 5;   // toeLSB
+        tmp |= (words[2] >> 25) & 0x01f;
+        subp->orbit.toeLSB = tmp;
+
+        tmpll = ((words[2] >> 8) & 0x01ffff) << 15;   // i0
+        tmpll |= (words[3] >> 15) & 0x07fff;
+        tmpll = uint2int(tmpll, 32);
+        subp->orbit.i0 = tmpll * pow(2.0, -31);
+
+        tmp = ((words[3] >> 8) & 0x07f) << 11;   // Cic
+        tmp |= (words[4] >> 20) & 0x07ff;
+        tmp = uint2int(tmp, 18);
+        subp->orbit.Cic = tmp * pow(2.0, -6);
+
+        tmp = ((words[4] >> 8) & 0x07ff) << 13;   // Omegad
+        tmp |= (words[5] >> 17) & 0x01fff;
+        tmp = uint2int(tmp, 24);
+        subp->orbit.Omegad = tmp * pow(2.0, -43);
+
+        tmp = ((words[5] >> 8) & 0x01ff) << 9;   // Cis
+        tmp |= (words[6] >> 21) & 0x01ff;
+        tmp = uint2int(tmp, 18);
+        subp->orbit.Cis = tmp * pow(2.0, -6);
+
+        tmp = ((words[6] >> 8) & 0x01fff) << 1;   // IDOT
+        tmp |= (words[7] >> 29) & 1;
+        tmp = uint2int(tmp, 14);
+        subp->orbit.IDOT = tmp * pow(2.0, -53);
+
+        tmp = ((words[7] >> 8) & 0x01fffff) << 11;   // Omega0
+        tmp |= (words[8] >> 19) & 0x03ff;
+        tmp = uint2int(tmp, 32);
+        subp->orbit.Omega0 = tmp * pow(2.0, -31);
+
+        tmp = ((words[8] >> 8) & 0x07ff) << 21;   // omega
+        tmp |= (words[9] >> 19) & 0x01fffff;
+        tmp = uint2int(tmp, 32);
+        subp->orbit.omega = tmp * pow(2.0, -31);
+
         break;
     case 4:
         {
