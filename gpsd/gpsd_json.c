@@ -711,6 +711,10 @@ static void json_subframe_dump_orb(const orbit_t *orbit,
         str_appendf(buf, buflen, ",\"beta3\":%.12e",
                     orbit->beta3);
     }
+    if (0 != isfinite(orbit->deltai)) {
+        str_appendf(buf, buflen, ",\"deltai\":%.12e",
+                    orbit->deltai);
+    }
     if (0 != isfinite(orbit->deltan)) {
         str_appendf(buf, buflen, ",\"deltan\":%.12e",
                     orbit->deltan);

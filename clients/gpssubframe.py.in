@@ -476,7 +476,7 @@ ephem_fields = {
     }
 
 almanac_fields = {
-    # 1: ('ID' same as SV
+    # 'ID': same as SV
     'af0': ( '(s) SV Clock Bias Correction Coefficient'),
     'af1': ( '(s/s) SV Clock Drift Correction Coefficient'),
     'deltai': ( '(sc) Inclination offset from 0.3 semicircles (= 54 deg)'),
@@ -906,6 +906,10 @@ try:
 
             elif gps.GNSSID_BD == msg['gnssId']:
                 gnss = 'BD'
+                if 'ALMANAC' in msg:
+                    # hack to get the target sv
+                    msg['dataid'] = msg['ALMANAC']['sv']
+
             elif gps.GNSSID_IMES == msg['gnssId']:
                 gnss = 'IM'
             elif gps.GNSSID_QZSS == msg['gnssId']:
@@ -1009,6 +1013,13 @@ try:
                     else:
                         # merge in
                         all_data['ephemeris'][idx].update(msg['EPHEMERIS'])
+                        if (('toeMSB' in all_data['ephemeris'][idx] and
+                             'toeLSB' in all_data['ephemeris'][idx])):
+                            # fix BDS toa mess
+                            all_data['ephemeris'][idx]['toe'] = (
+                                all_data['ephemeris'][idx]['toeMSB'] +
+                                all_data['ephemeris'][idx]['toeLSB'])
+
                     if options.progress:
                         print("Received Ephemeris idx %s" % (idx))
             elif 'GP' == gnss and 1 == msg['frame']:
@@ -1320,6 +1331,8 @@ if gps_week and options.satpos:
                     if gps.VERB_INFO <= options.debug:
                         print("   Missing %s" % i)
                     break
+            if 'sqrtA' not in ephm:
+                needed = False
 
             if needed:
                 SatPosSum(ephm, gps_tow)
