@@ -831,6 +831,8 @@ struct orbit
     long toc;
     // toe, time of ephemeris, -1 if invalid
     long toe;
+    // top two MSBs of toe, seconds, -1 if invalid
+    long toeMSB; 
 
     // af0, aka a0, SV clock correction constant term, seconds
     double af0;
@@ -875,10 +877,13 @@ struct orbit
     /* Cus, Amplitude of the Sine Harmonic Correction Term to the
      * Argument of Latitude, radians */
     double Cus;
-    // deltai, correction to inclination, semi-circles
-    // we don't store deltai, but convert it to i0 for consistency
+    // deltan, Mean motion difference from computed value, semicircles/sec
+    double deltan;
     // eccentricity, unsigned, dimensionless
     double eccentricity;
+
+    // deltai, correction to inclination, semi-circles
+    // we don't store deltai, but convert it to i0 for consistency
     // i0, Inclination Angle at Reference Time, signed, semi-circles
     // range +/- 1
     double i0;

@@ -955,6 +955,47 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
         word_desc = "Ephemeris 2";
         subp->is_almanac = SUBFRAME_ORBIT;
         subp->orbit.type = ORBIT_EPHEMERIS;
+
+        tmp = ((words[1] >> 8) & 0x03ff) << 6;    // deltan
+        tmp |= (words[2] >> 24) & 0x03f;
+        tmp = uint2int(tmp, 16);
+        subp->orbit.deltan = tmp * pow(2.0, -43);
+
+        tmp = ((words[2] >> 8) & 0x0ffff) << 2;   // Cuc
+        tmp |= (words[3] >> 28) & 3;
+        tmp = uint2int(tmp, 18);
+        subp->orbit.Cuc = tmp * pow(2.0, -31);
+
+        tmp = ((words[3] >> 8) & 0x0fffff) << 12;   // M0
+        tmp |= (words[4] >> 28) & 0x0fff;
+        tmp = uint2int(tmp, 32);
+        subp->orbit.Cuc = tmp * pow(2.0, -31);
+
+        tmp = ((words[4] >> 8) & 0x03ff) << 22;   // e
+        tmp |= (words[5] >> 8) & 0x03fffff;
+        subp->orbit.Cuc = tmp * pow(2.0, -33);
+
+        tmp = (words[6] >> 18) & 0x03ffff;   // Cus
+        tmp = uint2int(tmp, 18);
+        subp->orbit.Cus = tmp * pow(2.0, -31);
+
+        tmp = ((words[6] >> 8) & 0x0f) << 14;   // Crc
+        tmp |= (words[7] >> 28) & 0x03fff;
+        tmp = uint2int(tmp, 18);
+        subp->orbit.Crc = tmp * pow(2.0, -6);
+
+        tmp = ((words[7] >> 8) & 0x0ff) << 10;   // Crs
+        tmp |= (words[8] >> 20) & 0x03ff;
+        tmp = uint2int(tmp, 18);
+        subp->orbit.Crs = tmp * pow(2.0, -6);
+
+        tmp = ((words[8] >> 8) & 0x0fff) << 20;   // sqrtA
+        tmp |= (words[9] >> 10) & 0x0fffff;
+        subp->orbit.sqrtA = tmp * pow(2.0, -19);
+
+        tmp = (words[9] >> 8) & 3;                // toe MSBs
+        subp->orbit.toeMSB = tmp << 15;
+
         break;
     case 3:
         word_desc = "Ephemeris 3";
