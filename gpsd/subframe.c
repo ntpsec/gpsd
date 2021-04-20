@@ -38,6 +38,10 @@ static void init_orbit(orbit_t *orbit)
     orbit->af0 = NAN;
     orbit->af1 = NAN;
     orbit->af2 = NAN;
+    orbit->alpha0 = NAN;
+    orbit->alpha1 = NAN;
+    orbit->alpha2 = NAN;
+    orbit->alpha3 = NAN;
     orbit->beta0 = NAN;
     orbit->beta1 = NAN;
     orbit->beta2 = NAN;
@@ -1003,6 +1007,7 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
         tmp = (words[9] >> 8) & 3;                // toe MSBs
         subp->orbit.toeMSB = tmp << 15;
 
+        mask = SUBFRAME_SET;
         break;
     case 3:
         word_desc = "Ephemeris 3";
@@ -1048,6 +1053,7 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
         tmp = uint2int(tmp, 32);
         subp->orbit.omega = tmp * pow(2.0, -31);
 
+        mask = SUBFRAME_SET;
         break;
     case 4:
         {

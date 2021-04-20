@@ -431,25 +431,68 @@ ephem3_fields = {
     9: ('IDOT', '(sc/s) Rate of Inclination Angle'),
     }
 
+ephem_fields = {
+    'af0': ('(sc) SV Clock Bias Correction Coefficient'),
+    'af1': ('(s) SV Clock Drift Correction Coefficient'),
+    'af2': ('(s/s) Drift Rate Correction Coefficient'),
+    'alpha0': ('(s) Ionospheric delay model'),
+    'alpha1': ('(s/sc) Ionospheric delay model'),
+    'alpha2': ('(s/sc2) Ionospheric delay model'),
+    'alpha3': ('(s/sc3) Ionospheric delay model'),
+    'AODC': ('(s) Age of Data Clock'),
+    'AODE': ('(s) Age of Data Ephemeris'),
+    'AODO': ('(s) Age of Data Offset'),
+    'beta0': ('(s) Ionospheric delay model'),
+    'beta1': ('(s/sc) Ionospheric delay model'),
+    'beta2': ('(s/sc2) Ionospheric delay model'),
+    'beta3': ('(s/sc3) Ionospheric delay model'),
+    'Cic': ('(rad) Cosine Harmonic Correction Amplitude Angle of Inclination'),
+    'Cis': ('(rad) Sine Harmonic Correction Amplitude Angle of Inclination'),
+    'Crc': ( '(m) Cosine Harmonic Correction Amplitude Orbit Radius'),
+    'Crs': ('(m) Sine Correction Amplitude Term to Orbit Radius'),
+    'Cuc': ('(rad) Sine Harmonic Correction Term to Arg of Lat'),
+    'Cus': ('(rad) Cosine Correction Amplitude Term to Orbit Radius'),
+    'deltan': ('(sc/s) Mean Motion Difference from Computed Value'),
+    'e': ('Eccentricity '),
+    'FIT': ('Fit Interval Flag'),
+    'hlth': ('SV health'),
+    'i0': ('(sc) Inclination Angle at Reference Time'),
+    'IDOT': ('(sc/s) Rate of Inclination Angle'),
+    'IODC': ('Issue of Data, Clock'),
+    'IODE': ('Issue of Data, Ephemeris'),
+    'IODE': ('Issue of Data, Ephemeris'),
+    'L2': ('Code on L2'),
+    'L2P': ('L2 P data flag'),
+    'M0': ('(sc) Mean Anomaly at Reference Time'),
+    'Omega0': ('(sc) Longitude Ascending Node of Orbit Plane Week t0'),
+    'Omegad': ( '(sc/s) Rate of Right Ascension'),
+    'omega': ( '(sc) Argument of Perigee'),
+    'sqrtA': ( '(sqrt(m))Square Root of the Semi-Major Axis'),
+    'Tgd': ( '(s) Group Delay Differential'),
+    'toc': ( '(s) Time of Clock'),
+    'toe': ( '(s) Reference Time Ephemeris'),
+    'ura': ( 'URA Index'),
+    'WN': ( 'Data Sequence Propagation Week Number'),
+    }
+
 almanac_fields = {
     # 1: ('ID' same as SV
-    1: ('IOD', 'IOD health'),
-    2: ('Health', 'SV health'),
-    3: ('E1BHS', 'E1B health'),
-    4: ('E5bHS', 'E5b health'),
-    5: ('e', 'Eccentricity '),
-    6: ('toa', '(s) Almanac Reference Time'),
-    7: ('WN', '(wk) Almanac Reference Week'),
-    8: ('deltai', '(sc) Inclination offset from 0.3 semicircles (= 54 deg)'),
-    9: ('i0', '(sc) Inclination, computed from deltai'),
-    10: ('Omegad', '(sc/s) Rate of Right Ascension'),
-    11: ('sqrtA', '(m-2)Square Root of the Semi-Major Axis'),
-    12: ('Omega0',
-         '(sc) Longitude of Ascending Node of Orbit Plane Week beginning'),
-    13: ('omega', '(sc) Argument of Perigee'),
-    14: ('M0', '(sc) Mean Anomaly at Reference Time'),
-    15: ('af0', '(s) SV Clock Bias Correction Coefficient'),
-    16: ('af1', '(s/s) SV Clock Drift Correction Coefficient'),
+    'af0': ( '(s) SV Clock Bias Correction Coefficient'),
+    'af1': ( '(s/s) SV Clock Drift Correction Coefficient'),
+    'deltai': ( '(sc) Inclination offset from 0.3 semicircles (= 54 deg)'),
+    'E1BHS': ( 'E1B health'),
+    'E5bHS': ( 'E5b health'),
+    'e': ( 'Eccentricity '),
+    'Health': ( 'SV health'),
+    'i0': ( '(sc) Inclination, computed from deltai'),
+    'IOD': ( 'IOD health'),
+    'M0': ( '(sc) Mean Anomaly at Reference Time'),
+    'Omega0': ('(sc) Longitude of Ascending Node of Orbit Plane Week t0'),
+    'Omegad': ( '(sc/s) Rate of Right Ascension'),
+    'omega': ( '(sc) Argument of Perigee'),
+    'sqrtA': ( '(m-2)Square Root of the Semi-Major Axis'),
+    'toa': ( '(s) Almanac Reference Time'),
+    'WN': ( '(wk) Almanac Reference Week'),
     }
 
 # see IS-GPS-200 Section 20.3.3.5.2.4 Coordinated Universal Time (UTC).
@@ -484,6 +527,18 @@ def _print_msg(ephem, fields):
             print("%10s MISSING" % (fld[0]))
         if options.desc:
             print("           %-48s " % (fld[1]))
+
+
+def _print_msg1(ephem, fields):
+    """Print Subframe Data. New style"""
+    for key in fields.keys():
+        if key in ephem:
+            print("%10s %s" % (key, ephem[key]))
+        if options.desc or gps.VERB_INFO <= options.debug:
+            # missing field
+            print("%10s MISSING" % (key))
+        if options.desc:
+            print("           %-48s " % (fields[key]))
 
 
 def test():
@@ -908,7 +963,6 @@ try:
                     # new style almanac
 
                     # save, ore merge, it if???
-                    print(msg)
                     if idx not in all_data['almanac']:
                         if options.progress:
                             print("Received Almanac %s" % idx)
@@ -926,6 +980,7 @@ try:
                             print("Received Almanac %s" % idx)
                         all_data['almanac'][idx].update(msg['ALMANAC'])
                 if 'ALMANAC1' in msg:
+                    # weird Galileo almanac fragment
                     idx = "%2s%02d" % (gnss, msg['ALMANAC1']['sv'])
                     # save it if:
                     #  not dummy (data id != 0)
@@ -1057,7 +1112,8 @@ except KeyboardInterrupt:
     print()
     sys.exit(1)
 
-all_sv = (list(all_data['ephemeris1'].keys()) +
+all_sv = (list(all_data['ephemeris'].keys()) +
+          list(all_data['ephemeris1'].keys()) +
           list(all_data['ephemeris2'].keys()) +
           list(all_data['ephemeris3'].keys()) +
           list(all_data['almanac'].keys()))
@@ -1094,9 +1150,16 @@ for sv in all_sv:
                        sv_conf[all_data['health'][svid] & 0x7]))
         else:
             print("    Missing")
+    else:
+        # new style combined ephemeris
+        print("  Ephemeris")
+        if sv in all_data['ephemeris']:
+            _print_msg1(all_data['ephemeris'][sv], ephem_fields)
+        else:
+            print("    Missing")
     print("  Almanac")
     if sv in all_data['almanac']:
-        _print_msg(all_data['almanac'][sv], almanac_fields)
+        _print_msg1(all_data['almanac'][sv], almanac_fields)
     else:
         print("    Missing")
 
