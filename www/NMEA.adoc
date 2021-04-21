@@ -1,8 +1,7 @@
 = NMEA Revealed
 Eric S. Raymond <esr@thyrsus.com>
-v2.24, Jan 2021
+v2.25, Apr 2021
 :author: Eric S. Raymond
-:date: 13 January 2021
 :description: A programmer's guide to NMEA0183, the GPS protocol reporting standard
 :email: <esr@thyrsus.com>
 :keywords: NMEA0183, GPS, standard, protocol
@@ -1872,10 +1871,13 @@ Example: $GPRMB,A,0.66,L,003,004,4917.24,N,12309.57,W,001.3,052.5,000.5,V*0B
 This is one of the sentences commonly emitted by GPS units.
 
 ------------------------------------------------------------------------------
-                                                          12
-        1         2 3       4 5        6  7   8   9    10 11|  13
-        |         | |       | |        |  |   |   |    |  | |   |
- $--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a,m,*hh<CR><LF>
+        1         2 3       4 5        6  7   8   9    10 11
+        |         | |       | |        |  |   |   |    |  |
+ $--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a,*hh<CR><LF>
+NMEA2.3:
+ $--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a,m*hh<CR><LF>
+NMEA4.1:
+ $--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a,m,s*hh<CR><LF>
 ------------------------------------------------------------------------------
 
 Field Number:
@@ -1892,6 +1894,14 @@ Field Number:
 10. Magnetic Variation, degrees
 11. E or W
 12. FAA mode indicator (NMEA 2.3 and later)
+13. Nav Status (NMEA 4.1 and later)
+     A=autonomous,
+     D=differential,
+     E=Estimated,
+     M=Manual input mode
+     N=not valid,
+     S=Simulator,
+     V = Valid
 13. Checksum
 
 A status of V means the GPS has a valid fix that is below an internal
