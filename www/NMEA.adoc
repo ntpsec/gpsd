@@ -908,8 +908,10 @@ earlier versions) <<ANON>>.
 
 ------------------------------------------------------------------------------
                                                          12
-        1         2       3 4        5 6   7 8   9 10  11|    13 14
-        |         |       | |        | |   | |   | |   | |    |   |
+        1         2       3 4        5 6   7 8   9 10  11|   13
+        |         |       | |        | |   | |   | |   | |    |
+ $--BWC,hhmmss.ss,llll.ll,a,yyyyy.yy,a,x.x,T,x.x,M,x.x,N,c--c*hh<CR><LF>
+NMEA 2.3:
  $--BWC,hhmmss.ss,llll.ll,a,yyyyy.yy,a,x.x,T,x.x,M,x.x,N,c--c,m*hh<CR><LF>
 ------------------------------------------------------------------------------
 
@@ -937,9 +939,11 @@ Example 2: GPBWC,220516,5130.02,N,00046.34,W,213.8,T,218.0,M,0004.6,N,EGLM*11
 === BWR - Bearing and Distance to Waypoint - Rhumb Line
 
 ------------------------------------------------------------------------------
-                                                       11       14
-        1         2       3 4        5 6   7 8   9 10  | 12   13 |
-        |         |       | |        | |   | |   | |   | |    |  |
+                                                       11
+        1         2       3 4        5 6   7 8   9 10  | 12  13
+        |         |       | |        | |   | |   | |   | |    |
+ $--BWR,hhmmss.ss,llll.ll,a,yyyyy.yy,a,x.x,T,x.x,M,x.x,N,c--c*hh<CR><LF>
+NMEA 2.3:
  $--BWR,hhmmss.ss,llll.ll,a,yyyyy.yy,a,x.x,T,x.x,M,x.x,N,c--c,m*hh<CR><LF>
 ------------------------------------------------------------------------------
 
@@ -1247,8 +1251,10 @@ Field Number:
 This is one of the sentences commonly emitted by GPS units.
 
 ------------------------------------------------------------------------------
-        1       2 3        4 5         6 7   8
-        |       | |        | |         | |   |
+        1       2 3        4 5         6 7
+        |       | |        | |         | |
+ $--GLL,llll.ll,a,yyyyy.yy,a,hhmmss.ss,a*hh<CR><LF>
+NMEA 2.3:
  $--GLL,llll.ll,a,yyyyy.yy,a,hhmmss.ss,a,m*hh<CR><LF>
 ------------------------------------------------------------------------------
 
@@ -1841,8 +1847,10 @@ To be sent by a navigation receiver when a destination waypoint is active.
 
 ------------------------------------------------------------------------------
                                                              14
-        1 2   3 4    5    6       7 8        9 10  11  12  13|  15
-        | |   | |    |    |       | |        | |   |   |   | |   |
+        1 2   3 4    5    6       7 8        9 10  11  12  13|
+        | |   | |    |    |       | |        | |   |   |   | |
+ $--RMB,A,x.x,a,c--c,c--c,llll.ll,a,yyyyy.yy,a,x.x,x.x,x.x,A*hh<CR><LF>
+NMEA 2.3:
  $--RMB,A,x.x,a,c--c,c--c,llll.ll,a,yyyyy.yy,a,x.x,x.x,x.x,A,m*hh<CR><LF>
 ------------------------------------------------------------------------------
 
@@ -1874,9 +1882,9 @@ This is one of the sentences commonly emitted by GPS units.
         1         2 3       4 5        6  7   8   9    10 11
         |         | |       | |        |  |   |   |    |  |
  $--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a*hh<CR><LF>
-NMEA2.3:
+NMEA 2.3:
  $--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a,m*hh<CR><LF>
-NMEA4.1:
+NMEA 4.1:
  $--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a,m,s*hh<CR><LF>
 ------------------------------------------------------------------------------
 
@@ -2350,8 +2358,10 @@ Field Number:
 This is one of the sentences commonly emitted by GPS units.
 
 ------------------------------------------------------------------------------
-         1  2  3  4  5  6  7  8 9   10
-         |  |  |  |  |  |  |  | |   |
+         1  2  3  4  5  6  7  8 9
+         |  |  |  |  |  |  |  | |
+ $--VTG,x.x,T,x.x,M,x.x,N,x.x,K*hh<CR><LF>
+NMEA 2.3:
  $--VTG,x.x,T,x.x,M,x.x,N,x.x,K,m*hh<CR><LF>
 ------------------------------------------------------------------------------
 
@@ -2506,8 +2516,10 @@ $HCXDR,A,171,D,PITCH,A,-37,D,ROLL,G,367,,MAGX,G,2420,,MAGY,G,-8984,,MAGZ*41
 === XTE - Cross-Track Error, Measured
 
 ------------------------------------------------------------------------------
-        1 2 3   4 5 6   7
-        | | |   | | |   |
+        1 2 3   4 5 6
+        | | |   | | |
+ $--XTE,A,A,x.x,a,N*hh<CR><LF>
+NMEA 2.3:
  $--XTE,A,A,x.x,a,N,m*hh<CR><LF>
 ------------------------------------------------------------------------------
 
