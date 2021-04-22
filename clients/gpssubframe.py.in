@@ -534,7 +534,7 @@ def _print_msg1(ephem, fields):
     for key in fields.keys():
         if key in ephem:
             print("%10s %s" % (key, ephem[key]))
-        if options.desc or gps.VERB_INFO <= options.debug:
+        elif options.desc or gps.VERB_INFO <= options.debug:
             # missing field
             print("%10s MISSING" % (key))
         if options.desc:
