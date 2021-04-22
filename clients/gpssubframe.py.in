@@ -966,22 +966,27 @@ try:
                 if 'ALMANAC' in msg:
                     # new style almanac
 
-                    # save, ore merge, it if???
+                    # save, or merge, it if???
+                    s = ''
                     if idx not in all_data['almanac']:
                         if options.progress:
-                            print("Received Almanac %s" % idx)
+                            if 'IODA' in msg['ALMANAC']:
+                               s = " IODA %d" % msg['ALMANAC']['IODA']
+                            if 'toa' in msg['ALMANAC']:
+                               s += " toa %d" % msg['ALMANAC']['toa']
+                            print("New Almanac %s%s" % (idx, s))
                         all_data['almanac'][idx] = msg['ALMANAC']
-                    elif (('IODA' in msg['ALMANAC'] and
-                           ('IODA' not in all_data['almanac'][idx] or
-                            (all_data['almanac'][idx]['IODA'] <=
-                             msg['ALMANAC']['IODA']))) or
-                          ('toa' in msg['ALMANAC'] and
-                           ('toa' not in all_data['almanac'][idx] or
-                            (all_data['almanac'][idx]['toa'] <=
-                             msg['ALMANAC']['toa'])))):
+                    elif ('IODA' in msg['ALMANAC'] and
+                          ('IODA' not in all_data['almanac'][idx] or
+                           (all_data['almanac'][idx]['IODA'] <
+                            msg['ALMANAC']['IODA']))):
                         # FIXME: handle rollover
                         if options.progress:
-                            print("Received Almanac %s" % idx)
+                            if 'IODA' in msg['ALMANAC']:
+                               s = " IODA %d" % msg['ALMANAC']['IODA']
+                            if 'toa' in msg['ALMANAC']:
+                               s += " toa %d" % msg['ALMANAC']['toa']
+                            print("Merged Almanac %s%s" % (idx, s))
                         all_data['almanac'][idx].update(msg['ALMANAC'])
                 if 'ALMANAC1' in msg:
                     # weird Galileo almanac fragment
@@ -990,21 +995,26 @@ try:
                     #  not dummy (data id != 0)
                     #  don't already have it
                     #  newer than what we have
+                    s = ''
                     if ((idx not in all_data['almanac'] or
-                         all_data['almanac'][idx]['IODA'] <
-                         msg['ALMANAC1']['IODA'])):
+                         (all_data['almanac'][idx]['IODA'] <
+                          msg['ALMANAC1']['IODA']))):
                         # FIXME: handle rollover
                         if options.progress:
-                            print("Received Almanac1 %s:  IODA %d" %
-                                  (idx, msg['ALMANAC1']['IODA']))
+                            if 'toa' in msg['ALMANAC']:
+                               s = " toa %d" % msg['ALMANAC']['toa']
+                            print("New Almanac1 %s: IODA %d%s" %
+                                  (idx, msg['ALMANAC1']['IODA'], s))
                         all_data['almanac'][idx] = msg['ALMANAC1']
                     elif (all_data['almanac'][idx]['IODA'] ==
                           msg['ALMANAC1']['IODA']):
                         # maybe other half, merge in
                         all_data['almanac'][idx].update(msg['ALMANAC1'])
                         if options.progress:
-                            print("Received Almanac 2/2 %s:  IODA %d" %
-                                  (idx, msg['ALMANAC1']['IODA']))
+                            if 'toa' in msg['ALMANAC']:
+                               s = " toa %d" % msg['ALMANAC']['toa']
+                            print("Merged Almanac1 2/2 %s:  IODA %d%s" %
+                                  (idx, msg['ALMANAC1']['IODA'], s))
                 if 'EPHEMERIS' in msg:
                     # new style ephemeris
 
