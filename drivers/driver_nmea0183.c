@@ -494,7 +494,7 @@ static gps_mask_t processRMC(int count, char *field[],
      *                     M=Manual input mode
      *                     N=not valid,
      *                     S=Simulator,
-     *                     V = Valid
+     *                     V=Valid
      * *68        mandatory nmea_checksum
      *
      * SiRF chipsets don't return either Mode Indicator or magnetic variation.
