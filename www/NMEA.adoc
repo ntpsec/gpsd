@@ -749,7 +749,7 @@ This sentence expresses orbital data for a specified GPS satellite.
 ------------------------------------------------------------------------------
         1   2   3  4   5  6    7  8    9    10     11     12     13     14  15   16
         |   |   |  |   |  |    |  |    |    |      |      |      |      |   |    |
- $--ALM,x.x,x.x,xx,x.x,hh,hhhh,hh,hhhh,hhhh,hhhhhh,hhhhhh,hhhhhh,hhhhhh,hhh,hhh,*hh<CR><LF>
+ $--ALM,x.x,x.x,xx,x.x,hh,hhhh,hh,hhhh,hhhh,hhhhhh,hhhhhh,hhhhhh,hhhhhh,hhh,hhh*hh<CR><LF>
 ------------------------------------------------------------------------------
 
 Field Number:
@@ -882,7 +882,7 @@ Field Number:
 6. origin Waypoint
 7. Checksum
 
-Example 1: $GPBOD,099.3,T,105.6,M,POINTB,*01
+Example 1: $GPBOD,099.3,T,105.6,M,POINTB*01
 
 Waypoint ID: "POINTB" Bearing 99.3 True, 105.6 Magnetic This sentence
 is transmitted in the GOTO mode, without an active route on your
@@ -910,7 +910,7 @@ earlier versions) <<ANON>>.
                                                          12
         1         2       3 4        5 6   7 8   9 10  11|    13 14
         |         |       | |        | |   | |   | |   | |    |   |
- $--BWC,hhmmss.ss,llll.ll,a,yyyyy.yy,a,x.x,T,x.x,M,x.x,N,c--c,m,*hh<CR><LF>
+ $--BWC,hhmmss.ss,llll.ll,a,yyyyy.yy,a,x.x,T,x.x,M,x.x,N,c--c,m*hh<CR><LF>
 ------------------------------------------------------------------------------
 
 Field Number:
@@ -930,7 +930,7 @@ Field Number:
 13. FAA mode indicator (NMEA 2.3 and later, optional)
 14. Checksum
 
-Example 1: $GPBWC,081837,,,,,,T,,M,,N,*13
+Example 1: $GPBWC,081837,,,,,,T,,M,,N*13
 
 Example 2: GPBWC,220516,5130.02,N,00046.34,W,213.8,T,218.0,M,0004.6,N,EGLM*11
 
@@ -1209,7 +1209,7 @@ Field Number:
 
 Example:
 
-$GNGGA,001043.00,4404.14036,N,12118.85961,W,1,12,0.98,1113.0,M,-21.3,M,,*47
+$GNGGA,001043.00,4404.14036,N,12118.85961,W,1,12,0.98,1113.0,M,-21.3,M*47
 
 === GLC - Geographic Position, Loran-C
 
@@ -1249,7 +1249,7 @@ This is one of the sentences commonly emitted by GPS units.
 ------------------------------------------------------------------------------
         1       2 3        4 5         6 7   8
         |       | |        | |         | |   |
- $--GLL,llll.ll,a,yyyyy.yy,a,hhmmss.ss,a,m,*hh<CR><LF>
+ $--GLL,llll.ll,a,yyyyy.yy,a,hhmmss.ss,a,m*hh<CR><LF>
 ------------------------------------------------------------------------------
 
 Field Number:
@@ -1308,14 +1308,14 @@ each system, the character can have a value (table may be incomplete):
 * R = RTK Integer
 * S = Simulator Mode
 
-Example: $GPGNS,112257.00,3844.24011,N,00908.43828,W,AN,03,10.5,,,,*57
+Example: $GPGNS,112257.00,3844.24011,N,00908.43828,W,AN,03,10.5,,*57
 
 === GRS - GPS Range Residuals
 
 ------------------------------------------------------------------------------
               1    2  3  4  5  6  7  8  9 10 11 12 13 14  15
               |    |  |  |  |  |  |  |  |  |  |  |  |  |   |
- $ --GRS,hhmmss.ss,m,xx,xx,xx,xx,xx,xx,xx,xx,xx,xx,xx,xx,*hh<CR><LF>
+ $ --GRS,hhmmss.ss,m,xx,xx,xx,xx,xx,xx,xx,xx,xx,xx,xx,xx*hh<CR><LF>
 ------------------------------------------------------------------------------
 
 Field Number:
@@ -1341,7 +1341,7 @@ xx. Checksum
 
 The order of satellites MUST match those in the last GSA.
 
-Example: $GPGRS,024603.00,1,-1.8,-2.7,0.3,,,,,,,,,*6C
+Example: $GPGRS,024603.00,1,-1.8,-2.7,0.3,,,,,,,*6C
 
 Note that the talker ID may be GP, GL, or GN, depending on if the residuals
 are for GPS-only, GLONASS-only, or combined solution, respectively.
@@ -1351,7 +1351,7 @@ are for GPS-only, GLONASS-only, or combined solution, respectively.
 ------------------------------------------------------------------------------
               1    2 3 4 5 6 7 8   9
               |    | | | | | | |   |
- $ --GST,hhmmss.ss,x,x,x,x,x,x,x,*hh<CR><LF>
+ $ --GST,hhmmss.ss,x,x,x,x,x,x,x*hh<CR><LF>
 ------------------------------------------------------------------------------
 
 Field Number:
@@ -1453,7 +1453,7 @@ report quads for satellites they aren't tracking, in which case the
 SNR field will be null; we don't know whether this is formally allowed
 or not.
 
-Example: $GLGSV,3,3,09,88,07,028,*51
+Example: $GLGSV,3,3,09,88,07,028*51
 
 Note: NMEA 4.1+ systems (u-blox 9, Quectel LCD79) may emit an extra field,
 Signal ID, just before the checksum.
@@ -1575,7 +1575,7 @@ From <<GLOBALSAT>>. Shown with a "@II" leader rather than "$GP".
 ------------------------------------------------------------------------------
         1   2 3   4  5
         |   | |   |  |
- $--HSC,x.x,T,x.x,M,*hh<CR><LF>
+ $--HSC,x.x,T,x.x,M*hh<CR><LF>
 ------------------------------------------------------------------------------
 
 Field Number:
@@ -1701,7 +1701,7 @@ Field Number:
 5. Channel number
 6. Checksum
 
-Example: $GPMSS,0,0,0.000000,200,*5A
+Example: $GPMSS,0,0,0.000000,200*5A
 
 === MTW - Mean Temperature of Water
 
@@ -1843,7 +1843,7 @@ To be sent by a navigation receiver when a destination waypoint is active.
                                                              14
         1 2   3 4    5    6       7 8        9 10  11  12  13|  15
         | |   | |    |    |       | |        | |   |   |   | |   |
- $--RMB,A,x.x,a,c--c,c--c,llll.ll,a,yyyyy.yy,a,x.x,x.x,x.x,A,m,*hh<CR><LF>
+ $--RMB,A,x.x,a,c--c,c--c,llll.ll,a,yyyyy.yy,a,x.x,x.x,x.x,A,m*hh<CR><LF>
 ------------------------------------------------------------------------------
 
 Field Number:
@@ -1873,7 +1873,7 @@ This is one of the sentences commonly emitted by GPS units.
 ------------------------------------------------------------------------------
         1         2 3       4 5        6  7   8   9    10 11
         |         | |       | |        |  |   |   |    |  |
- $--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a,*hh<CR><LF>
+ $--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a*hh<CR><LF>
 NMEA2.3:
  $--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a,m*hh<CR><LF>
 NMEA4.1:
@@ -2042,7 +2042,7 @@ and produces a single output.
 ------------------------------------------------------------------------------
         1   2
         |   |
- $--STN,x.x,*hh<CR><LF>
+ $--STN,x.x*hh<CR><LF>
 ------------------------------------------------------------------------------
 
 Field Number:
@@ -2352,7 +2352,7 @@ This is one of the sentences commonly emitted by GPS units.
 ------------------------------------------------------------------------------
          1  2  3  4  5  6  7  8 9   10
          |  |  |  |  |  |  |  | |   |
- $--VTG,x.x,T,x.x,M,x.x,N,x.x,K,m,*hh<CR><LF>
+ $--VTG,x.x,T,x.x,M,x.x,N,x.x,K,m*hh<CR><LF>
 ------------------------------------------------------------------------------
 
 Field Number:
@@ -2373,7 +2373,7 @@ Note: in some older versions of NMEA 0183, the sentence looks like this:
 ------------------------------------------------------------------------------
          1  2  3   4  5
          |  |  |   |  |
- $--VTG,x.x,x,x.x,x.x,*hh<CR><LF>
+ $--VTG,x.x,x,x.x,x.x*hh<CR><LF>
 ------------------------------------------------------------------------------
 
 Field Number:
@@ -2508,7 +2508,7 @@ $HCXDR,A,171,D,PITCH,A,-37,D,ROLL,G,367,,MAGX,G,2420,,MAGY,G,-8984,,MAGZ*41
 ------------------------------------------------------------------------------
         1 2 3   4 5 6   7
         | | |   | | |   |
- $--XTE,A,A,x.x,a,N,m,*hh<CR><LF>
+ $--XTE,A,A,x.x,a,N,m*hh<CR><LF>
 ------------------------------------------------------------------------------
 
 Field Number:
@@ -2767,7 +2767,7 @@ Only emitted by the now-obsolete Zodiac (Rockwell) chipset.
 === PUBX 00 - u-blox Lat/Long Position Data
 
 ------------------------------------------------------------------------------
- $PUBX,00,hhmmss.ss,Latitude,N,Longitude,E,AltRef,NavStat,Hacc,Vacc,SOG,COG,Vvel,+ageC,HDOP,VDOP,TDOP,GU,RU,DR,*hh<CR><LF>
+ $PUBX,00,hhmmss.ss,Latitude,N,Longitude,E,AltRef,NavStat,Hacc,Vacc,SOG,COG,Vvel,+ageC,HDOP,VDOP,TDOP,GU,RU,DR*hh<CR><LF>
 ------------------------------------------------------------------------------
 
 Example:
@@ -2782,7 +2782,7 @@ The $PUBX,01 is a UTM (Universal Transverse Mercator projection) version
 of the $PUBX,00 sentence.
 
 ------------------------------------------------------------------------------
-$PUBX,01,hhmmss.ss,Easting,E,Northing,N,AltMSL,NavStat,Hacc,Vacc,SOG,COG,Vvel,ag+eC,HDOP,VDOP,TDOP,GU,RU,DR,*hh<CR><LF>
+$PUBX,01,hhmmss.ss,Easting,E,Northing,N,AltMSL,NavStat,Hacc,Vacc,SOG,COG,Vvel,ag+eC,HDOP,VDOP,TDOP,GU,RU,DR*hh<CR><LF>
 ------------------------------------------------------------------------------
 
 Example:
@@ -2794,7 +2794,7 @@ Only emitted by u-blox Antaris chipset.
 === PUBX 03 - u-blox Satellite Status
 
 ------------------------------------------------------------------------------
- $PUBX,03,GT{,ID,s,AZM,EL,SN,LK},*hh<CR><LF>
+ $PUBX,03,GT{,ID,s,AZM,EL,SN,LK}*hh<CR><LF>
 ------------------------------------------------------------------------------
 
 Example:
@@ -2808,12 +2808,12 @@ Only emitted by u-blox Antaris chipset.
 === PUBX 04 - u-blox Time of Day and Clock Information
 
 ------------------------------------------------------------------------------
-$PUBX,04,hhmmss.ss,ddmmyy,UTC_TOW,week,reserved,Clk_B,Clk_D,PG,*hh<CR><LF>
+$PUBX,04,hhmmss.ss,ddmmyy,UTC_TOW,week,reserved,Clk_B,Clk_D,PG*hh<CR><LF>
 ------------------------------------------------------------------------------
 
 Example:
 
-$PUBX,04,073731.00,091202,113851.00,1196,113851.00,1930035,-2660.664,43,*3C<CR><+LF>
+$PUBX,04,073731.00,091202,113851.00,1196,113851.00,1930035,-2660.664,43*3C<CR><+LF>
 
 Only emitted by u-blox Antaris chipset.
 
