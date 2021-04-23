@@ -816,6 +816,10 @@ struct orbit
     int AODC;
     // AODE, Age of Data Ephemeris, BDS, -1 if invalid
     int AODE;
+    // SISA(E1,E5a), -1 if invalid
+    int SISAa;
+    // SISA(E1,E5b), -1 if invalid
+    int SISAb;
     // TGD1, TGD2, Time Group Delay 1, 2, valid if AODC is valid
     int TGD1;
     int TGD2;

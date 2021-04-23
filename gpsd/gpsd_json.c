@@ -660,140 +660,131 @@ static void json_subframe_dump_orb(const orbit_t *orbit,
     str_appendf(buf, buflen, "\"sv\":%d", orbit->sv);
 
     if (0 <= orbit->AODC) {
-        str_appendf(buf, buflen, ",\"AODC\":%d",
-                    orbit->AODC);
+        str_appendf(buf, buflen, ",\"AODC\":%d", orbit->AODC);
     }
     if (0 <= orbit->AODE) {
-        str_appendf(buf, buflen, ",\"AODE\":%d",
-                    orbit->AODE);
+        str_appendf(buf, buflen, ",\"AODE\":%d", orbit->AODE);
     }
     if (0 != isfinite(orbit->af0)) {
-        str_appendf(buf, buflen, ",\"af0\":%.12e",
-                    orbit->af0);
+        str_appendf(buf, buflen, ",\"af0\":%.12e", orbit->af0);
     }
     if (0 != isfinite(orbit->af1)) {
-        str_appendf(buf, buflen, ",\"af1\":%.12e",
-                    orbit->af1);
+        str_appendf(buf, buflen, ",\"af1\":%.12e", orbit->af1);
     }
     if (0 != isfinite(orbit->af2)) {
-        str_appendf(buf, buflen, ",\"af2\":%.12e",
-                    orbit->af2);
+        str_appendf(buf, buflen, ",\"af2\":%.12e", orbit->af2);
     }
     if (0 != isfinite(orbit->alpha0)) {
-        str_appendf(buf, buflen, ",\"alpha0\":%.12e",
-                    orbit->alpha0);
+        str_appendf(buf, buflen, ",\"alpha0\":%.12e", orbit->alpha0);
     }
     if (0 != isfinite(orbit->alpha1)) {
-        str_appendf(buf, buflen, ",\"alpha1\":%.12e",
-                    orbit->alpha1);
+        str_appendf(buf, buflen, ",\"alpha1\":%.12e", orbit->alpha1);
     }
     if (0 != isfinite(orbit->alpha2)) {
-        str_appendf(buf, buflen, ",\"alpha2\":%.12e",
-                    orbit->alpha2);
+        str_appendf(buf, buflen, ",\"alpha2\":%.12e", orbit->alpha2);
     }
     if (0 != isfinite(orbit->alpha3)) {
-        str_appendf(buf, buflen, ",\"alpha3\":%.12e",
-                    orbit->alpha3);
+        str_appendf(buf, buflen, ",\"alpha3\":%.12e", orbit->alpha3);
     }
     if (0 != isfinite(orbit->beta0)) {
-        str_appendf(buf, buflen, ",\"beta0\":%.12e",
-                    orbit->beta0);
+        str_appendf(buf, buflen, ",\"beta0\":%.12e", orbit->beta0);
     }
     if (0 != isfinite(orbit->beta1)) {
-        str_appendf(buf, buflen, ",\"beta1\":%.12e",
-                    orbit->beta1);
+        str_appendf(buf, buflen, ",\"beta1\":%.12e", orbit->beta1);
     }
     if (0 != isfinite(orbit->beta2)) {
-        str_appendf(buf, buflen, ",\"beta2\":%.12e",
-                    orbit->beta2);
+        str_appendf(buf, buflen, ",\"beta2\":%.12e", orbit->beta2);
     }
     if (0 != isfinite(orbit->beta3)) {
-        str_appendf(buf, buflen, ",\"beta3\":%.12e",
-                    orbit->beta3);
+        str_appendf(buf, buflen, ",\"beta3\":%.12e", orbit->beta3);
+    }
+    if (0 != isfinite(orbit->Cic)) {
+        str_appendf(buf, buflen, ",\"Cic\":%.12e", orbit->Cic);
+    }
+    if (0 != isfinite(orbit->Cis)) {
+        str_appendf(buf, buflen, ",\"Cis\":%.12e", orbit->Cis);
+    }
+    if (0 != isfinite(orbit->Crc)) {
+        str_appendf(buf, buflen, ",\"Crc\":%.12e", orbit->Crc);
+    }
+    if (0 != isfinite(orbit->Crs)) {
+        str_appendf(buf, buflen, ",\"Crs\":%.12e", orbit->Crs);
+    }
+    if (0 != isfinite(orbit->Cuc)) {
+        str_appendf(buf, buflen, ",\"Cuc\":%.12e", orbit->Cuc);
+    }
+    if (0 != isfinite(orbit->Cus)) {
+        str_appendf(buf, buflen, ",\"Cus\":%.12e", orbit->Cus);
     }
     if (0 != isfinite(orbit->deltai)) {
-        str_appendf(buf, buflen, ",\"deltai\":%.12e",
-                    orbit->deltai);
+        str_appendf(buf, buflen, ",\"deltai\":%.12e", orbit->deltai);
     }
     if (0 != isfinite(orbit->deltan)) {
-        str_appendf(buf, buflen, ",\"deltan\":%.12e",
-                    orbit->deltan);
+        str_appendf(buf, buflen, ",\"deltan\":%.12e", orbit->deltan);
     }
     if (0 <= orbit->E1BHS) {
-        str_appendf(buf, buflen, ",\"E1BHS\":%d",
-                    orbit->E1BHS);
+        str_appendf(buf, buflen, ",\"E1BHS\":%d", orbit->E1BHS);
     }
     if (0 <= orbit->E5bHS) {
-        str_appendf(buf, buflen, ",\"E5bHS\":%d",
-                    orbit->E5bHS);
+        str_appendf(buf, buflen, ",\"E5bHS\":%d", orbit->E5bHS);
     }
     if (0 != isfinite(orbit->eccentricity)) {
-        str_appendf(buf, buflen, ",\"e\":%.12e",
-                    orbit->eccentricity);
+        str_appendf(buf, buflen, ",\"e\":%.12e", orbit->eccentricity);
     }
     if (0 != isfinite(orbit->IDOT)) {
-        str_appendf(buf, buflen, ",\"IDOT\":%.16e",
-                    orbit->IDOT);
+        str_appendf(buf, buflen, ",\"IDOT\":%.16e", orbit->IDOT);
     }
     if (0 <= orbit->IODA) {
-        str_appendf(buf, buflen, ",\"IODA\":%d",
-                    orbit->IODA);
+        str_appendf(buf, buflen, ",\"IODA\":%d", orbit->IODA);
     }
     if (0 <= orbit->IODE) {
-        str_appendf(buf, buflen, ",\"IODE\":%d",
-                    orbit->IODE);
+        str_appendf(buf, buflen, ",\"IODE\":%d", orbit->IODE);
     }
     if (0 != isfinite(orbit->i0)) {
-        str_appendf(buf, buflen, ",\"i0\":%.16f",
-                    orbit->i0);
+        str_appendf(buf, buflen, ",\"i0\":%.16f", orbit->i0);
     }
     if (0 != isfinite(orbit->M0)) {
-        str_appendf(buf, buflen, ",\"M0\":%.16f",
-                    orbit->M0);
+        str_appendf(buf, buflen, ",\"M0\":%.16f", orbit->M0);
     }
     if (0 != isfinite(orbit->Omega0)) {
-        str_appendf(buf, buflen, ",\"Omega0\":%.16f",
-                    orbit->Omega0);
+        str_appendf(buf, buflen, ",\"Omega0\":%.16f", orbit->Omega0);
     }
     if (0 != isfinite(orbit->Omegad)) {
-        str_appendf(buf, buflen, ",\"Omegad\":%.12e",
-                    orbit->Omegad);
+        str_appendf(buf, buflen, ",\"Omegad\":%.12e", orbit->Omegad);
     }
     if (0 != isfinite(orbit->omega)) {
-        str_appendf(buf, buflen, ",\"omega\":%.16f",
-                    orbit->omega);
+        str_appendf(buf, buflen, ",\"omega\":%.16f", orbit->omega);
     }
     if (0 != isfinite(orbit->sqrtA) &&
         2600 < orbit->sqrtA) {
         // Sanity check: A must be greater than Earth radius
-        str_appendf(buf, buflen, ",\"sqrtA\":%.12f",
-                    orbit->sqrtA);
+        str_appendf(buf, buflen, ",\"sqrtA\":%.12f", orbit->sqrtA);
+    }
+    if (0 <= orbit->SISAa) {
+        str_appendf(buf, buflen, ",\"SISAa\":%d", orbit->SISAa);
+    }
+    if (0 <= orbit->SISAb) {
+        str_appendf(buf, buflen, ",\"SISAb\":%d", orbit->SISAb);
     }
     if (0 <= orbit->AODC) {
         str_appendf(buf, buflen, ",\"TGD1\":%d,\"TGD2\":%d",
                     orbit->TGD1, orbit->TGD2);
     }
     if (0 <= orbit->toa) {
-        str_appendf(buf, buflen, ",\"toa\":%ld",
-                    orbit->toa);
+        str_appendf(buf, buflen, ",\"toa\":%ld", orbit->toa);
     }
     if (0 <= orbit->toc) {
-        str_appendf(buf, buflen, ",\"toc\":%ld",
-                    orbit->toc);
+        str_appendf(buf, buflen, ",\"toc\":%ld", orbit->toc);
     }
     if (0 <= orbit->toe) {
-        str_appendf(buf, buflen, ",\"toe\":%ld",
-                    orbit->toe);
+        str_appendf(buf, buflen, ",\"toe\":%ld", orbit->toe);
     } else if (0 <= orbit->toeLSB) {
-        str_appendf(buf, buflen, ",\"toeLSB\":%ld",
-                    orbit->toeLSB);
+        str_appendf(buf, buflen, ",\"toeLSB\":%ld", orbit->toeLSB);
     } else if (0 <= orbit->toeMSB) {
-        str_appendf(buf, buflen, ",\"toeMSB\":%ld",
-                    orbit->toeMSB);
+        str_appendf(buf, buflen, ",\"toeMSB\":%ld", orbit->toeMSB);
     }
     if (0 <= orbit->WN) {
-        str_appendf(buf, buflen, ",\"WN\":%d",
-                    orbit->WN);
+        str_appendf(buf, buflen, ",\"WN\":%d", orbit->WN);
     }
     (void)strlcat(buf, "}", buflen);
 }

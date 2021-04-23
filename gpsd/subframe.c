@@ -25,6 +25,8 @@ static void init_orbit(orbit_t *orbit)
     orbit->IODE = -1;
     orbit->E5bHS = -1;
     orbit->E1BHS = -1;
+    orbit->SISAa = -1;
+    orbit->SISAb = -1;
     orbit->TGD1 = -1;
     orbit->TGD2 = -1;
     orbit->toa = -1;
@@ -1222,6 +1224,9 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
  * gotta decode the u-blox munging and the Galileo packing...
  * porting to none u-blox will require separate mungin
  *
+ * Current Galileo Ephemeris can be found here:
+ * https://cddis.gsfc.nasa.gov/Data_and_Derived_Products/GNSS/daily_gnss_l.html
+ *
  * Current Galileo Almanac can be found here:
  * https://www.gsc-europa.eu/product-almanacs
  */
@@ -1343,17 +1348,80 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         word_desc = "Ephemeris 3";
         subp->orbit.sv = tSVID;
         subp->orbit.IODE = (words[0] >> 20) & 0x0f;           // IODnav
+
+        tmp = (words[0] & 0x03fff) << 10;                     // Omegad
+        tmp |= (words[1] >> 24) & 0x03ff;
+        tmp = uint2int(tmp, 24);
+        subp->orbit.Omegad = tmp * pow(2.0, -34);
+
+        tmp = (words[1] >> 6) & 0x0ffff;                      // deltan
+        tmp = uint2int(tmp, 16);
+        subp->orbit.deltan = tmp * pow(2.0, -43);
+
+        tmp = (words[1] & 0x3f) << 10;                        // Cuc
+        tmp |= (words[2] >> 24) & 0x03ff;
+        tmp = uint2int(tmp, 16);
+        subp->orbit.Cuc = tmp * pow(2.0, -29);
+
+        tmp = (words[2] >> 6) & 0x0ffff;                      // Cus
+        tmp = uint2int(tmp, 16);
+        subp->orbit.Cus = tmp * pow(2.0, -29);
+
+        tmp = (words[2] & 0x3f) << 10;                        // Crc
+        tmp |= (words[3] >> 22) & 0x03ff;
+        tmp = uint2int(tmp, 16);
+        subp->orbit.Crc = tmp * pow(2.0, -5);
+
+        tmp = (words[3] & 0xff) << 8;                         // Crs
+        tmp |= (words[4] >> 24) & 0x0ff;
+        tmp = uint2int(tmp, 16);
+        subp->orbit.Crs = tmp * pow(2.0, -5);
+
+        subp->orbit.SISAb = (words[4] >> 6) & 0x0ff;          // SISA(E1,E5b)
+
         subp->is_almanac = SUBFRAME_ORBIT;
         subp->orbit.type = ORBIT_EPHEMERIS;
         mask = SUBFRAME_SET;
         break;
     case 4:
         word_desc = "Ephemeris 4";
+        mask = SUBFRAME_SET;
         subp->orbit.sv = tSVID;
         subp->orbit.IODE = (words[0] >> 20) & 0x0f;           // IODnav
+        tmp = (words[0] >> 8) & 0x03f;                        // SVID
+        if (tSVID != tmp) {
+            // WTF?
+            mask = 0;
+        }
+        tmp = (words[0] & 0xff) << 8;                         // Cic
+        tmp |= (words[1] >> 24) & 0x0ff;
+        tmp = uint2int(tmp, 16);
+        subp->orbit.Cic = tmp * pow(2.0, -29);
+
+        tmp = (words[1] >> 8) & 0x0ffff;                      // Cis
+        tmp = uint2int(tmp, 16);
+        subp->orbit.Cis = tmp * pow(2.0, -29);
+
+        tmp = (words[1] & 0xff) << 6;                         // toc
+        tmp |= (words[2] >> 26) & 0x03f;
+        subp->orbit.toc = tmp * 60;
+
+        tmp = (words[2] & 0x03ffffff) << 5;                   // af0
+        tmp |= (words[3] >> 27) & 0x01f;
+        tmp = uint2int(tmp, 31);
+        subp->orbit.af0 = tmp * pow(2.0, -34);
+
+        tmp = (words[3] & 0x01fff) << 8;                      // af1
+        tmp |= (words[4] >> 26) & 0x0ff;
+        tmp = uint2int(tmp, 31);
+        subp->orbit.af1 = tmp * pow(2.0, -46);
+
+        tmp = (words[4] >> 18) & 0x0ffff;                     // af2
+        tmp = uint2int(tmp, 16);
+        subp->orbit.af2 = tmp * pow(2.0, -59);
+
         subp->is_almanac = SUBFRAME_ORBIT;
         subp->orbit.type = ORBIT_EPHEMERIS;
-        mask = SUBFRAME_SET;
         break;
     case 5:
         word_desc = "Ionosphere";

@@ -468,6 +468,8 @@ ephem_fields = {
     'Omegad': ( '(sc/s) Rate of Right Ascension'),
     'omega': ( '(sc) Argument of Perigee'),
     'sqrtA': ( '(sqrt(m))Square Root of the Semi-Major Axis'),
+    'SISAa': ( 'Signal-In-Space Accuracy (E1,E5a)'),
+    'SISAb': ( 'Signal-In-Space Accuracy (E1,E5b)'),
     'Tgd': ( '(s) Group Delay Differential'),
     'toc': ( '(s) Time of Clock'),
     'toe': ( '(s) Reference Time Ephemeris'),
