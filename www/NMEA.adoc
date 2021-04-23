@@ -917,7 +917,7 @@ NMEA 2.3:
 
 Field Number:
 
-1. UTC Time or observation
+1. UTC Time or observation, hh is hours, mm is minutes, ss.ss is seconds
 2. Waypoint Latitude
 3. N = North, S = South
 4. Waypoint Longitude
@@ -949,7 +949,7 @@ NMEA 2.3:
 
 Field Number:
 
-1. UTC Time of observation
+1. UTC Time of observation, hh is hours, mm is minutes, ss.ss is seconds
 2. Waypoint Latitude
 3. N = North, S = South
 4. Waypoint Longitude
@@ -1152,7 +1152,8 @@ Field Number:
 
 Field Number:
 
-1. UTC time of the GGA or GNS fix associated with this sentence
+1. UTC time of the GGA or GNS fix associated with this sentence.
+     hh is hours, mm is minutes, ss.ss is seconds
 2. Expected 1-sigma error in latitude (meters)
 3. Expected 1-sigma error in longitude (meters)
 4. Expected 1-sigma  error in altitude (meters)
@@ -1177,15 +1178,15 @@ Time, Position and fix related data for a GPS receiver.
                                                       11
         1         2       3 4        5 6 7  8   9  10 |  12 13  14   15
         |         |       | |        | | |  |   |   | |   | |   |    |
- $--GGA,hhmmss.ss,llll.ll,a,yyyyy.yy,a,x,xx,x.x,x.x,M,x.x,M,x.x,xxxx*hh<CR><LF>
+ $--GGA,hhmmss.ss,ddmm.mm,a,ddmm.mmy,a,x,xx,x.x,x.x,M,x.x,M,x.x,xxxx*hh<CR><LF>
 ------------------------------------------------------------------------------
 
 Field Number:
 
-1. UTC of this position report
-2. Latitude
+1. UTC of this position report, hh is hours, mm is minutes, ss.ss is seconds.
+2. Latitude, dd is degrees, mm.mm is minutes
 3. N or S (North or South)
-4. Longitude
+4. Longitude, dd is degrees, mm.mm is minutes
 5. E or W (East or West)
 6. GPS Quality Indicator (non null)
      - 0 - fix not available,
@@ -1210,6 +1211,9 @@ Field Number:
      type 1 or 9 update, null field when DGPS is not used
 14. Differential reference station ID, 0000-1023
 15. Checksum
+
+The number of digits past the decimal point for Time, Latitude and
+Longitude is model dependent.
 
 Example:
 
@@ -1253,21 +1257,24 @@ This is one of the sentences commonly emitted by GPS units.
 ------------------------------------------------------------------------------
         1       2 3        4 5         6 7
         |       | |        | |         | |
- $--GLL,llll.ll,a,yyyyy.yy,a,hhmmss.ss,a*hh<CR><LF>
+ $--GLL,ddmm.mm,a,dddmm.mm,a,hhmmss.ss,a*hh<CR><LF>
 NMEA 2.3:
- $--GLL,llll.ll,a,yyyyy.yy,a,hhmmss.ss,a,m*hh<CR><LF>
+ $--GLL,ddmm.mm,a,dddmm.mm,a,hhmmss.ss,a,m*hh<CR><LF>
 ------------------------------------------------------------------------------
 
 Field Number:
 
-1. Latitude
+1. Latitude, dd is degrees, mm.mm is minutes
 2. N or S (North or South)
-3. Longitude
+3. Longitude, dd is degrees, mm.mm is minutes
 4. E or W (East or West)
-5. UTC of this position
+5. UTC of this position, hh is hours, mm is minutes, ss.ss is seconds
 6. Status A - Data Valid, V - Data Invalid
 7. FAA mode indicator (NMEA 2.3 and later)
 8. Checksum
+
+The number of digits past the decimal point for Time, Latitude and
+Longitude is model dependent.
 
 Example: $GNGLL,4404.14012,N,12118.85993,W,001037.00,A,A*67
 
@@ -1276,15 +1283,15 @@ Example: $GNGLL,4404.14012,N,12118.85993,W,001037.00,A,A*67
 ------------------------------------------------------------------------------
        1         2       3 4        5 6    7  8   9   10  11  12  13
        |         |       | |        | |    |  |   |   |   |   |   |
-$--GNS,hhmmss.ss,llll.ll,a,yyyyy.yy,a,c--c,xx,x.x,x.x,x.x,x.x,x.x*hh
+$--GNS,hhmmss.ss,ddmm.mm,a,dddmm.mm,a,c--c,xx,x.x,x.x,x.x,x.x,x.x*hh
 ------------------------------------------------------------------------------
 
 Field Number:
 
-1. UTC of position
-2. Latitude
+1. UTC of position, hh is hours, mm is minutes, ss.ss is seconds.
+2. Latitude, dd is minutes, mm.mm is minutes
 3. N or S (North or South)
-4. Longitude
+4. Longitude, dd is minutes, mm.mm is minutes
 5. E or W (East or West)
 6. Mode indicator (non-null)
 7. Total number of satellites in use, 00-99
@@ -1314,6 +1321,9 @@ each system, the character can have a value (table may be incomplete):
 * R = RTK Integer
 * S = Simulator Mode
 
+The number of digits past the decimal point for Time, Latitude and
+Longitude is model dependent.
+
 Example: $GPGNS,112257.00,3844.24011,N,00908.43828,W,AN,03,10.5,,*57
 
 === GRS - GPS Range Residuals
@@ -1326,7 +1336,8 @@ Example: $GPGNS,112257.00,3844.24011,N,00908.43828,W,AN,03,10.5,,*57
 
 Field Number:
 
-1. UTC time of associated GGA fix
+1. UTC time of associated GGA fix.
+   hh is hours, mm is minutes, ss.ss is seconds.
 2. 0 = Residuals used in GGA, 1 = residuals calculated after GGA
 3. Satellite 1 residual in meters
 4. Satellite 2 residual in meters
@@ -1489,19 +1500,22 @@ Location and time of TRANSIT fix at waypoint
 ------------------------------------------------------------------------------
         1         2       3 4        5 6    7 8
         |         |       | |        | |    | |
- $--GXA,hhmmss.ss,llll.ll,a,yyyyy.yy,a,c--c,X*hh<CR><LF>
+ $--GXA,hhmmss.ss,ddmm.mm,a,dddmm.mm,a,c--c,X*hh<CR><LF>
 ------------------------------------------------------------------------------
 
 Field Number:
 
-1. UTC of position fix
-2. Latitude
+1. UTC of position fix, hh is hours, mm is minutes, ss.ss is seconds.
+2. Latitude, dd is degrees, mm.mm is minutes
 3. East or West
-4. Longitude
+4. Longitude, dd is degrees, mm.mm is minutes
 5. North or South
 6. Waypoint ID
 7. Satellite number
 8. Checksum
+
+The number of digits past the decimal point for Time, Latitude and
+Longitude is model dependent.
 
 (The GXA sentence is obsolete as of 3.01.)
 
@@ -1812,7 +1826,7 @@ n) checksum
 Field Number:
 
 1. Beacon ID
-2. Time of Reception
+2. Time of Reception, hh is hours, mm is minutes, ss.ss is seconds.
 3. Message Code
 4. Message Body
 5. Checksum
@@ -1881,20 +1895,20 @@ This is one of the sentences commonly emitted by GPS units.
 ------------------------------------------------------------------------------
         1         2 3       4 5        6  7   8   9    10 11
         |         | |       | |        |  |   |   |    |  |
- $--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a*hh<CR><LF>
+ $--RMC,hhmmss.ss,A,ddmm.mm,a,dddmm.mm,a,x.x,x.x,xxxx,x.x,a*hh<CR><LF>
 NMEA 2.3:
- $--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a,m*hh<CR><LF>
+ $--RMC,hhmmss.ss,A,ddmm.mm,a,dddmm.mm,a,x.x,x.x,xxxx,x.x,a,m*hh<CR><LF>
 NMEA 4.1:
- $--RMC,hhmmss.ss,A,llll.ll,a,yyyyy.yy,a,x.x,x.x,xxxx,x.x,a,m,s*hh<CR><LF>
+ $--RMC,hhmmss.ss,A,ddmm.mm,a,dddmm.mm,a,x.x,x.x,xxxx,x.x,a,m,s*hh<CR><LF>
 ------------------------------------------------------------------------------
 
 Field Number:
 
-1. UTC Time of position
+1. UTC of position fix, hh is hours, mm is minutes, ss.ss is seconds.
 2. Status, A = Valid, V = Warning
-3. Latitude
+3. Latitude, dd is degrees. mm.mm is minutes.
 4. N or S
-5. Longitude
+5. Longitude, ddd is degrees. mm.mm is minutes.
 6. E or W
 7. Speed over ground, knots
 8. Track made good, degrees true
@@ -1915,6 +1929,9 @@ Field Number:
 A status of V means the GPS has a valid fix that is below an internal
 quality threshold, e.g. because the dilution of precision is too high
 or an elevation mask test failed.
+
+The number of digits past the decimal point for Time, Latitude and
+Longitude is model dependent.
 
 Example: $GNRMC,001031.00,A,4404.13993,N,12118.86023,W,0.146,,100117,,,A*7B
 
@@ -2114,20 +2131,23 @@ Target number references to target number in TTM (and/or TLL) messages.
 ------------------------------------------------------------------------------
         1  2       3 4        5 6    7         8 9 10
         |  |       | |        | |    |         | | |
- $--TLL,xx,llll.ll,a,yyyyy.yy,a,c--c,hhmmss.ss,a,a*hh<CR><LF>
+ $--TLL,xx,ddmm.mm,a,dddmm.mm,a,c--c,hhmmss.ss,a,a*hh<CR><LF>
 ------------------------------------------------------------------------------
 
 Field Number:
 
 1. Target Number (0-99)
-2. Target Latitude
+2. Target Latitude, dd is degrees, mm.mm is minutes.
 3. N=north, S=south
-4. Target Longitude
+4. Target Longitude, dd is degrees, mm.mm is minutes.
 5. E=east, W=west
 6. Target name
-7. UTC of data
+7. UTC of data, hh is hours, mm is minutes, ss.ss is seconds.
 8. Status (L=lost, Q=acquisition, T=tracking)
 9. R= reference target; null (,,)= otherwise
+
+The number of digits past the decimal point for Time, Latitude and
+Longitude is model dependent.
 
 === TPC - Trawl Position Cartesian Coordinates
 
@@ -2200,16 +2220,16 @@ From <<GLOBALSAT>>. Shown with a "@II" leader rather than "$GP".
                                                                     13
         1         2      3       4 5        6 7   8   9   10  11  12|
         |         |      |       | |        | |   |   |   |   |   | |
- $--TRF,hhmmss.ss,xxxxxx,llll.ll,a,yyyyy.yy,a,x.x,x.x,x.x,x.x,xxx,A*hh<CR><LF>
+ $--TRF,hhmmss.ss,xxxxxx,ddmm.mm,a,dddmm.mm,a,x.x,x.x,x.x,x.x,xxx,A*hh<CR><LF>
 ------------------------------------------------------------------------------
 
 Field Number:
 
-1. UTC Time
+1. UTC of fix, hh is hours, mm is minutes, ss.ss is seconds.
 2. Date, ddmmyy
-3. Latitude
+3. Latitude, dd is degrees, mm.mm is minutes.
 4. N or S
-5. Longitude
+5. Longitude, dd is degrees, mm.mm is minutes.
 6. E or W
 7. Elevation Angle
 8. Number of iterations
@@ -2218,6 +2238,9 @@ Field Number:
 11. Satellite ID
 12. Data Validity
 13. Checksum
+
+The number of digits past the decimal point for Time, Latitude and
+Longitude is model dependent.
 
 (The TRF sentence is obsolete as of 2.3.0)
 
@@ -2246,6 +2269,7 @@ Field Number:
 12. Target Status
 13. Reference Target
 14. UTC of data (NMEA 3 and above)
+    hh is hours, mm is minutes, ss.ss is seconds.
 15. Type, A = Auto, M = Manual, R = Reported (NMEA 3 and above)
 16. Checksum
 
@@ -2589,6 +2613,7 @@ Example: $GPZDA,160012.71,11,03,2004,-1,00*7D
 Field Number:
 
 1. Universal Time Coordinated (UTC)
+   hh is hours, mm is minutes, ss.ss is seconds.
 2. Elapsed Time
 3. Origin Waypoint ID
 4. Checksum
@@ -2604,6 +2629,7 @@ Field Number:
 Field Number:
 
 1. UTC of observation
+   hh is hours, mm is minutes, ss.ss is seconds.
 2. Time Remaining
 3. Destination Waypoint ID
 4. Checksum
@@ -2655,7 +2681,7 @@ $PASHR,hhmmss.sss,hhh.hh,T,rrr.rr,ppp.pp,xxx.xx,a.aaa,b.bbb,c.ccc,d,e*hh<CR><LF>
 
 Field Number:
 
-1.  hhmmss.sss - UTC time
+1.  UTC time.  mm is minutes, ss.sss is seconds.
 2.  hhh.hh - Heading in degrees
 3.  T - flag to indicate that the Heading is True Heading (i.e. to True North)
 4.  rrr.rr - Roll Angle in degrees
