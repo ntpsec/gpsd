@@ -20,7 +20,6 @@ static void init_orbit(orbit_t *orbit)
     orbit->sv = 0;
     orbit->AODC = -1;
     orbit->AODE = -1;
-    orbit->IDOT = -1;
     orbit->IODA = -1;
     orbit->IODC = -1;
     orbit->IODE = -1;
@@ -56,6 +55,7 @@ static void init_orbit(orbit_t *orbit)
     orbit->deltan = NAN;
     orbit->eccentricity = NAN;
     orbit->i0 = NAN;
+    orbit->IDOT = NAN;
     orbit->M0 = NAN;
     orbit->Omega0 = NAN;
     orbit->Omegad = NAN;
@@ -860,6 +860,10 @@ static gps_mask_t almanac_bds(uint32_t words[], struct subframe_t *subp)
         return 0;
     }
     subp->orbit.sqrtA = tmp * pow(2.0, -11);
+    if (2600 > subp->orbit.sqrtA) {
+        // Sanity check: A must be greater than Earth radius
+        return 0;
+    }
 
     tmp = (words[3] >> 19) & 0x07ff;                // af1
     tmp = uint2int(tmp, 11);
@@ -1026,6 +1030,7 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
         break;
     case 2:
         word_desc = "Ephemeris 2";
+        mask = SUBFRAME_SET;
         subp->is_almanac = SUBFRAME_ORBIT;
         subp->orbit.type = ORBIT_EPHEMERIS;
 
@@ -1065,11 +1070,14 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
         tmp = ((words[8] >> 8) & 0x0fff) << 20;            // sqrtA
         tmp |= (words[9] >> 10) & 0x0fffff;
         subp->orbit.sqrtA = tmp * pow(2.0, -19);
+        if (2600 > subp->orbit.sqrtA) {
+            // Sanity check: A must be greater than Earth radius
+            mask = 0;
+        }
 
         tmp = (words[9] >> 8) & 3;                         // toe MSBs
         subp->orbit.toeMSB = tmp << 15;
 
-        mask = SUBFRAME_SET;
         break;
     case 3:
         word_desc = "Ephemeris 3";
@@ -1267,22 +1275,85 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
     switch (word_type) {
     case 0:
         word_desc = "Spare Word";
-        subp->WN = (words[3] >> 18) & 0x0fff;               // WN
-        subp->TOW17 = ((words[3] >> 14) & 0x0f) << 16;      // TOW
-        subp->TOW17 |= (words[4] >> 14) & 0x0ffff;
-        mask = SUBFRAME_SET;
+        subp->orbit.sv = tSVID;
+        tmp = (words[0] >> 22) & 3;
+        if ( 3 == tmp) {
+            // valid time
+            subp->WN = (words[3] >> 18) & 0x0fff;             // WN
+            subp->TOW17 = ((words[3] >> 14) & 0x0f) << 16;    // TOW
+            subp->TOW17 |= (words[4] >> 14) & 0x0ffff;
+            subp->is_almanac = SUBFRAME_ORBIT;
+            mask = SUBFRAME_SET;
+        }
         break;
     case 1:
         word_desc = "Ephemeris 1";
+        mask = SUBFRAME_SET;
+        subp->orbit.sv = tSVID;
+        subp->orbit.IODE = (words[0] >> 20) & 0x0f;           // IODnav
+        subp->orbit.toe = (words[0] & 0x03fff) * 60;          // toe
+
+        tmp = words[1] & 0x0ffffffff;                         // M0
+        tmp = uint2int(tmp, 32);
+        subp->orbit.M0 = tmp * pow(2.0, -31);
+
+        tmp = words[2] & 0x0ffffffff;                         // e
+        subp->orbit.eccentricity = tmp * pow(2.0, -33);
+
+        tmp = ((words[3] >> 14) & 0x03ffff) << 14;             // sqrtA
+        tmp |= (words[4] >> 16) & 0x03fff;
+        subp->orbit.sqrtA = tmp * pow(2.0, -19);
+        if (2600 > subp->orbit.sqrtA) {
+            // Sanity check: A must be greater than Earth radius
+            mask = 0;
+        }
+
+        subp->is_almanac = SUBFRAME_ORBIT;
+        subp->orbit.type = ORBIT_EPHEMERIS;
         break;
     case 2:
         word_desc = "Ephemeris 2";
+        subp->orbit.sv = tSVID;
+        subp->orbit.IODE = (words[0] >> 20) & 0x0f;           // IODnav
+
+        tmp = (words[0] & 0x03fff) << 18;                     // Omega0
+        tmp |= (words[1] >> 14) & 0x03ffff;
+        tmp = uint2int(tmp, 32);
+        subp->orbit.Omega0 = tmp * pow(2.0, -31);
+
+        tmp = (words[1] & 0x03fff) << 18;                     // i0
+        tmp |= (words[2] >> 14) & 0x03ffff;
+        tmp = uint2int(tmp, 32);
+        subp->orbit.i0 = tmp * pow(2.0, -31);
+
+        tmp = (words[2] & 0x03fff) << 18;                     // omega
+        tmp |= (words[3] >> 14) & 0x03ffff;
+        tmp = uint2int(tmp, 32);
+        subp->orbit.i0 = tmp * pow(2.0, -31);
+
+        tmp = (words[4] >> 16) & 0x0fff;                      // idot
+        tmp = uint2int(tmp, 14);
+        subp->orbit.IDOT = tmp * pow(2.0, -43);
+
+        subp->is_almanac = SUBFRAME_ORBIT;
+        subp->orbit.type = ORBIT_EPHEMERIS;
+        mask = SUBFRAME_SET;
         break;
     case 3:
         word_desc = "Ephemeris 3";
+        subp->orbit.sv = tSVID;
+        subp->orbit.IODE = (words[0] >> 20) & 0x0f;           // IODnav
+        subp->is_almanac = SUBFRAME_ORBIT;
+        subp->orbit.type = ORBIT_EPHEMERIS;
+        mask = SUBFRAME_SET;
         break;
     case 4:
         word_desc = "Ephemeris 4";
+        subp->orbit.sv = tSVID;
+        subp->orbit.IODE = (words[0] >> 20) & 0x0f;           // IODnav
+        subp->is_almanac = SUBFRAME_ORBIT;
+        subp->orbit.type = ORBIT_EPHEMERIS;
+        mask = SUBFRAME_SET;
         break;
     case 5:
         word_desc = "Ionosphere";
@@ -1299,6 +1370,7 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         break;
     case 7:
         word_desc = "Almanacs 1";
+        mask = SUBFRAME_SET;
         subp->is_almanac = SUBFRAME_ORBIT;
         subp->orbit.type = ORBIT_ALMANAC;
         subp->orbit.IODA = (words[0] >> 20) & 0x0f;           // IODa
@@ -1307,6 +1379,7 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         subp->orbit.sv = (words[0] >> 2) & 0x03f;             // SVN1
         if (0 == subp->orbit.sv || 36 < subp->orbit.sv) {
             // dummy, or reserved, almanac
+            mask = 0;
             break;
         }
         tmp = (words[0] & 3) << 11;                           // delta sqrtAx ?
@@ -1314,6 +1387,10 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         tmp = uint2int(tmp, 13);
         // Table 1 from ICD
         subp->orbit.sqrtA = (tmp * pow(2.0, -9)) + sqrt(29600000);
+        if (2600 > subp->orbit.sqrtA) {
+            // Sanity check: A must be greater than Earth radius
+            mask = 0;
+        }
 
         tmp = (words[1] >> 10)  & 0x03ff;                     // e
         subp->orbit.eccentricity = tmp * pow(2.0, -16);
@@ -1342,7 +1419,6 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         tmp = uint2int(tmp, 16);
         subp->orbit.M0 = tmp * pow(2.0, -15);
 
-        mask = SUBFRAME_SET;
         break;
     case 8:
         // Now it gets weird.  2/2 of Almanac 1, and 1/2 of Almanac 2
@@ -1350,8 +1426,10 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         subp->orbit1.sv = (words[1] >> 13) & 0x03f;           // SVID2
         if (0 >= subp->orbit1.sv || 36 < subp->orbit1.sv) {
             // dummy, or reserved, almanac
+            mask = 0;
             break;
         }
+        mask = SUBFRAME_SET;
         subp->is_almanac = SUBFRAME_ORBIT;
         subp->orbit.type = ORBIT_ALMANAC;
 
@@ -1379,6 +1457,10 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         tmp = uint2int(tmp, 13);
         // Table 1 from ICD
         subp->orbit1.sqrtA = (tmp * pow(2.0, -9)) + sqrt(29600000);
+        if (2600 > subp->orbit.sqrtA) {
+            // Sanity check: A must be greater than Earth radius
+            mask = 0;
+        }
 
         tmp = (words[2] >> 21)  & 0x07ff;                     // e
         subp->orbit1.eccentricity = tmp * pow(2.0, -16);
@@ -1402,15 +1484,16 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         tmp = uint2int(tmp, 11);
         subp->orbit1.Omegad = tmp * pow(2.0, -33);
 
-        mask = SUBFRAME_SET;
         break;
     case 9:
         word_desc = "Almanacs 3";
         subp->orbit1.sv = (words[2] >> 17) & 0x03f;           // SVID3
         if (0 >= subp->orbit1.sv || 36 < subp->orbit1.sv) {
             // dummy, or reserved, almanac
+            mask = 0;
             break;
         }
+        mask = SUBFRAME_SET;
         subp->is_almanac = SUBFRAME_ORBIT;
         subp->orbit.type = ORBIT_ALMANAC;
 
@@ -1446,6 +1529,10 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         tmp = uint2int(tmp, 13);
         // Table 1 from ICD
         subp->orbit1.sqrtA = (tmp * pow(2.0, -9)) + sqrt(29600000);
+        if (2600 > subp->orbit.sqrtA) {
+            // Sanity check: A must be greater than Earth radius
+            mask = 0;
+        }
 
         tmp = (words[2] & 0x0f) << 7;                         // af1
         tmp |= (words[3] >> 11) & 0x03f;
@@ -1461,7 +1548,6 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         // Table 1 from ICD
         subp->orbit1.i0 = (tmp * pow(2.0, -14)) + (56.0 / 180.0);
 
-        mask = SUBFRAME_SET;
         break;
     case 10:
         word_desc = "Almanacs 4";

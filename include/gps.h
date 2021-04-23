@@ -816,8 +816,6 @@ struct orbit
     int AODC;
     // AODE, Age of Data Ephemeris, BDS, -1 if invalid
     int AODE;
-    // IDOT, Rate of inclination angle, BDS, -1 if invalid
-    int IDOT;
     // TGD1, TGD2, Time Group Delay 1, 2, valid if AODC is valid
     int TGD1;
     int TGD2;
@@ -888,10 +886,11 @@ struct orbit
     // eccentricity, unsigned, dimensionless
     double eccentricity;
 
-    // deltai, correction to inclination, semi-circles
     // i0, Inclination Angle at Reference Time, signed, semi-circles
     // range +/- 1
     double i0;
+    // IDOT (BDS), idot (GAL) Rate of Inclination Angle, * semi-circles/sec
+    double IDOT;
     // M0, Mean Anomaly at Reference Time, semi-circles, range +/- 1
     double M0;
     /* Omega0, Longitude of Ascending Node of Orbit Plane at Weekly Epoch,

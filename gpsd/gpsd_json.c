@@ -731,8 +731,8 @@ static void json_subframe_dump_orb(const orbit_t *orbit,
         str_appendf(buf, buflen, ",\"e\":%.12e",
                     orbit->eccentricity);
     }
-    if (0 <= orbit->IDOT) {
-        str_appendf(buf, buflen, ",\"IDOT\":%d",
+    if (0 != isfinite(orbit->IDOT)) {
+        str_appendf(buf, buflen, ",\"IDOT\":%.16e",
                     orbit->IDOT);
     }
     if (0 <= orbit->IODA) {
@@ -763,7 +763,9 @@ static void json_subframe_dump_orb(const orbit_t *orbit,
         str_appendf(buf, buflen, ",\"omega\":%.16f",
                     orbit->omega);
     }
-    if (0 != isfinite(orbit->sqrtA)) {
+    if (0 != isfinite(orbit->sqrtA) &&
+        2600 < orbit->sqrtA) {
+        // Sanity check: A must be greater than Earth radius
         str_appendf(buf, buflen, ",\"sqrtA\":%.12f",
                     orbit->sqrtA);
     }
