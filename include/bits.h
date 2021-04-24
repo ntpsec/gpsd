@@ -17,6 +17,9 @@
 #include <stdint.h>
 #include <limits.h>
 
+// return a bitmask of n ones. For example:  BITMASK(4) == 0x0f
+#define BITMASK(n) ((1ULL << (n)) - 1ULL)
+
 /* number of bytes requited to contain a bit array of specified length */
 #define BITS_TO_BYTES(bitlen)   (((bitlen) + CHAR_BIT - 1) / CHAR_BIT)
 

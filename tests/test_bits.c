@@ -126,6 +126,24 @@ struct unsigned_test
     char *description;
 };
 
+struct bitmask
+{
+    int shift;
+    unsigned long long mask;
+};
+static struct bitmask bitmask_tests[] = {
+    {0, 0},
+    {1, 1},
+    {2, 3},
+    {3, 7},
+    {15, 0x07fff},
+    {16, 0x0ffff},
+    {31, 0x07fffffff},
+    {32, 0x0ffffffff},
+    {40, 0x0ffffffffff},
+    {255, 0},     // 255 marks end
+};
+
 int main(int argc, char *argv[])
 {
     bool failures = false;
@@ -147,6 +165,7 @@ int main(int argc, char *argv[])
         {(unsigned char *)"\x19\x23\f6",
          7, 2, 2, false, "2 bits crossing 1st to 2nd byte (0x1923)"},
     };
+    struct bitmask *bits = bitmask_tests;
 
     memcpy(buf, "\x01\x02\x03\x04\x05\x06\x07\x08", 8);
     memcpy(buf + 8, "\xff\xfe\xfd\xfc\xfb\xfa\xf9\xf8", 8);
@@ -246,6 +265,18 @@ int main(int argc, char *argv[])
     LASSERT(3, 0xc1);
 #undef LASSERT
 
+
+    if (!quiet)
+        (void)printf("Testing BITMASK(N)\n");
+
+    while (129 > bits->shift) {
+        if (bits->mask != BITMASK(bits->shift)) {
+            failures++;
+            printf("BITMASK(0) FAILED, %llu s/b %llu\n",
+               bits->mask, BITMASK(bits->shift));
+        }
+        bits++;
+    }
 
     exit(failures ? EXIT_FAILURE : EXIT_SUCCESS);
 
