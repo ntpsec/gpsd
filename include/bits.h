@@ -17,6 +17,9 @@
 #include <stdint.h>
 #include <limits.h>
 
+// convert unsigned "bit" wide integer to signed integer.  long long too.
+#define UINT2INT(u, bit) (long long)((u & (1LL<<(bit-1))) ? u - (1LL<<bit) : u)
+
 // return a bitmask of n ones. For example:  BITMASK(4) == 0x0f
 #define BITMASK(n) ((1ULL << (n)) - 1ULL)
 

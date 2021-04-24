@@ -9,9 +9,7 @@
 #include <math.h>
 
 #include "../include/gpsd.h"
-
-/* convert unsigned to signed */
-#define uint2int(u, bit) ((u & (1LL<<(bit-1))) ? u - (1LL<<bit) : u)
+#include "../include/bits.h"
 
 // initialize an orbit_t
 static void init_orbit(orbit_t *orbit)
@@ -112,27 +110,27 @@ static void subframe_almanac(const struct gpsd_errout_t *errout,
     // Longitude of Ascending Node of Orbit Plane at Weekly Epoch, semi-circles
     // aka Tight Ascen at Week
     almp->Omega0   = ( words[6] & 0xFFFFFF);
-    almp->Omega0   = uint2int(almp->Omega0, 24);
+    almp->Omega0   = UINT2INT(almp->Omega0, 24);
     almp->d_Omega0 = pow(2.0, -23) * almp->Omega0;
     // Argument of Perigee, semi-circles
     almp->omega    = ( words[7] & 0xFFFFFF);
-    almp->omega    = uint2int(almp->omega, 24);
+    almp->omega    = UINT2INT(almp->omega, 24);
     almp->d_omega  = pow(2.0, -23) * almp->omega;
     // Mean Anomaly at Reference Time, semi-circles
     almp->M0 = words[8] & 0x00FFFFFF;
-    almp->M0 = uint2int(almp->M0, 24);
+    almp->M0 = UINT2INT(almp->M0, 24);
     /* if you want radians, multiply by GPS_PI, but we do semi-circles
      * to match IS-GPS-200 */
     almp->d_M0     = pow(2.0, -23) * almp->M0;
     // SV Clock Drift Correction Coefficient, seconds/second
     almp->af1      = ((words[9] >>  5) & 0x0007FF);
-    almp->af1      = (short)uint2int(almp->af1, 11);
+    almp->af1      = (short)UINT2INT(almp->af1, 11);
     almp->d_af1    = pow(2.0, -38) * almp->af1;
     // SV Clock Bias Correction Coefficient, seconds
     almp->af0      = ((words[9] >> 16) & 0x0000FF);
     almp->af0    <<= 3;
     almp->af0     |= ((words[9] >>  2) & 0x000007);
-    almp->af0      = (short)uint2int(almp->af0, 11);
+    almp->af0      = (short)UINT2INT(almp->af0, 11);
     almp->d_af0    = pow(2.0, -20) * almp->af0;
     GPSD_LOG(LOG_PROG, errout,
              "50B,GPS: SF:%d SV:%2u TSV:%2u data_id %d e:%g toa:%lu "
@@ -241,7 +239,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
         subp->sub1.af1  = (int16_t)( words[8] & 0x00FFFF);
         subp->sub1.d_af1  = pow(2.0, -43) * subp->sub1.af1;
         subp->sub1.af0  = (int32_t)((words[9] >>  2) & 0x03FFFFF);
-        subp->sub1.af0  = uint2int(subp->sub1.af0, 22);
+        subp->sub1.af0  = UINT2INT(subp->sub1.af0, 22);
         subp->sub1.d_af0  = pow(2.0, -31) * subp->sub1.af0;
         subp->sub1.IODC <<= 8;
         subp->sub1.IODC |= ((words[7] >> 16) & 0x00FF);
@@ -331,12 +329,12 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
         subp->sub3.d_omega  = pow(2.0, -31) * subp->sub3.omega;
         // Rate of Right Ascension
         subp->sub3.Omegad   = (int32_t)(words[8] & 0x00FFFFFF);
-        subp->sub3.Omegad   = uint2int(subp->sub3.Omegad, 24);
+        subp->sub3.Omegad   = UINT2INT(subp->sub3.Omegad, 24);
         // -6.33E-07 to 0, semi-circles/sec
         subp->sub3.d_Omegad = pow(2.0, -43) * subp->sub3.Omegad;
         subp->sub3.IODE     = ((words[9] >> 16) & 0x0000FF);
         subp->sub3.IDOT     = (int16_t)((words[9] >>  2) & 0x003FFF);
-        subp->sub3.IDOT     = uint2int(subp->sub3.IDOT, 14);
+        subp->sub3.IDOT     = UINT2INT(subp->sub3.IDOT, 14);
         subp->sub3.d_IDOT   = pow(2.0, -43) * subp->sub3.IDOT;
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "50B,GPS: SF:3 SV:%2u IODE:%3u I IDOT:%.6g Cic:%.6e "
@@ -443,7 +441,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
 
                 for (i = 1; i < 31; i++) {
                     // sign extend 6 bit to 8 bit
-                    subp->sub4_13.ERD[i]  = uint2int(subp->sub4_13.ERD[i], 6);
+                    subp->sub4_13.ERD[i]  = UINT2INT(subp->sub4_13.ERD[i], 6);
                 }
                 // ERD for SV 32 never sent, test for it to shut up coverity.
                 if (32 > subp->tSVID) {
@@ -576,7 +574,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                 subp->sub4_18.d_beta3 = pow(2.0, 16) * (int)subp->sub4_18.beta3;
 
                 subp->sub4_18.A1     = (int32_t)((words[5] >>  0) & 0xFFFFFF);
-                subp->sub4_18.A1     = uint2int(subp->sub4_18.A1, 24);
+                subp->sub4_18.A1     = UINT2INT(subp->sub4_18.A1, 24);
                 subp->sub4_18.d_A1   = pow(2.0, -50) * subp->sub4_18.A1;
                 subp->sub4_18.A0     = (int32_t)((words[6] >>  0) & 0xFFFFFF);
                 subp->sub4_18.A0   <<= 8;
@@ -868,16 +866,16 @@ static gps_mask_t almanac_bds(uint32_t words[], struct subframe_t *subp)
     }
 
     tmp = (words[3] >> 19) & 0x07ff;                // af1
-    tmp = uint2int(tmp, 11);
+    tmp = UINT2INT(tmp, 11);
     subp->orbit.af1 = tmp * pow(2.0, -38);
 
     tmp = (words[3] >> 8) & 0x07ff;                 // af0
-    tmp = uint2int(tmp, 11);
+    tmp = UINT2INT(tmp, 11);
     subp->orbit.af0 = tmp * pow(2.0, -20);
 
     tmp = ((words[4] >> 8) & 0x03fffff) << 2;       // Omega0
     tmp |= (words[5] >> 28) & 3;
-    tmp = uint2int(tmp, 24);
+    tmp = UINT2INT(tmp, 24);
     subp->orbit.Omega0 = tmp * pow(2.0, -23);
 
     tmp = (words[5] >> 11) & 0x01ffff;              // e
@@ -885,7 +883,7 @@ static gps_mask_t almanac_bds(uint32_t words[], struct subframe_t *subp)
 
     tmp = ((words[5] >> 8) & 0x07) << 13;
     tmp |= (words[6] >> 17) & 0x01fff;
-    tmp = uint2int(tmp, 16);
+    tmp = UINT2INT(tmp, 16);
     subp->orbit.deltai = tmp * pow(2.0, -19);
     // also convert deltai to i0
     if ((1 <= subp->orbit.sv && 6 >= subp->orbit.sv) ||
@@ -901,17 +899,17 @@ static gps_mask_t almanac_bds(uint32_t words[], struct subframe_t *subp)
 
     tmp = ((words[6] >> 8) & 1) << 16;                  // Omagad
     tmp |= (words[7] >> 14) & 0x0ffff;
-    tmp = uint2int(tmp, 17);
+    tmp = UINT2INT(tmp, 17);
     subp->orbit.Omegad = tmp * pow(2.0, -38);
 
     tmp = ((words[7] >> 8) & 0x03f) << 18;              // omega
     tmp |= (words[8] >> 12) & 0x03ffff;
-    tmp = uint2int(tmp, 24);
+    tmp = UINT2INT(tmp, 24);
     subp->orbit.omega = tmp * pow(2.0, -23);
 
     tmp = ((words[8] >> 8) & 0x0f) << 20;               // M0
     tmp |= (words[9] >> 10) & 0x0fffff;
-    tmp = uint2int(tmp, 24);
+    tmp = UINT2INT(tmp, 24);
     subp->orbit.M0 = tmp * pow(2.0, -23);
     return mask;
 }
@@ -971,58 +969,58 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
         subp->orbit.toc <<= 8;
 
         tmp = (words[3] >> 12) & 0x03ff;                   // TGD1
-        subp->orbit.TGD1 = uint2int(tmp, 10);
+        subp->orbit.TGD1 = UINT2INT(tmp, 10);
 
         tmp = ((words[3] >> 8) & 0x0f) << 6;               // TGD2
         tmp |= (words[4] >> 26) & 0x03f;
-        subp->orbit.TGD2 = uint2int(tmp, 10);
+        subp->orbit.TGD2 = UINT2INT(tmp, 10);
 
         tmp = (words[4] >> 16) & 0x0ff;                    // alpha0
-        tmp = uint2int(tmp, 8);
+        tmp = UINT2INT(tmp, 8);
         subp->orbit.alpha0 = tmp * pow(2.0, -30);
 
         tmp = (words[4] >> 8) & 0x0ff;                     // alpha1
-        tmp = uint2int(tmp, 8);
+        tmp = UINT2INT(tmp, 8);
         subp->orbit.alpha1 = tmp * pow(2.0, -27);
 
         tmp = (words[5] >> 22) & 0x0ff;                    // alpha2
-        tmp = uint2int(tmp, 8);
+        tmp = UINT2INT(tmp, 8);
         subp->orbit.alpha2 = tmp * pow(2.0, -24);
 
         tmp = (words[5] >> 14) & 0x0ff;                    // alpha3
-        tmp = uint2int(tmp, 8);
+        tmp = UINT2INT(tmp, 8);
         subp->orbit.alpha3 = tmp * pow(2.0, -24);
 
         tmp = ((words[4] >> 8) & 0x03f) << 2;              // beta0
         tmp |= (words[5] >> 28) & 3;
-        tmp = uint2int(tmp, 8);
+        tmp = UINT2INT(tmp, 8);
         subp->orbit.beta0 = tmp << 14;
 
         tmp = (words[5] >> 20) & 0x0ff;                    // beta1
-        tmp = uint2int(tmp, 8);
+        tmp = UINT2INT(tmp, 8);
         subp->orbit.beta1 = tmp << 14;
 
         tmp = (words[5] >> 12) & 0x0ff;                    // beta2
-        tmp = uint2int(tmp, 8);
+        tmp = UINT2INT(tmp, 8);
         subp->orbit.beta2 = tmp << 16;
 
         tmp = ((words[5] >> 8) & 0x03f) << 4;              // beta3
         tmp |= (words[6] >> 26) & 0x0f;
-        tmp = uint2int(tmp, 8);
+        tmp = UINT2INT(tmp, 8);
         subp->orbit.beta3 = tmp << 16;
 
         tmp = (words[6] >> 15) & 0x03ff;                   // a2
-        tmp = uint2int(tmp, 11);
+        tmp = UINT2INT(tmp, 11);
         subp->orbit.af2 = tmp * pow(2.0, -66);
 
         tmp = ((words[7] >> 8) & 0x03f) << 17;             // a0
         tmp |= (words[8] >> 13) & 0x01ffff;
-        tmp = uint2int(tmp, 24);
+        tmp = UINT2INT(tmp, 24);
         subp->orbit.af0 = tmp * pow(2.0, -33);
 
         tmp = ((words[8] >> 8) & 0x01f) << 17;             // a1
         tmp |= (words[9] >> 13) & 0x01ffff;
-        tmp = uint2int(tmp, 22);
+        tmp = UINT2INT(tmp, 22);
         subp->orbit.af1 = tmp * pow(2.0, -52);
 
         subp->orbit.AODE = (words[8] >> 8) & 0x01f;        // AODE
@@ -1038,17 +1036,17 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
 
         tmp = ((words[1] >> 8) & 0x03ff) << 6;             // deltan
         tmp |= (words[2] >> 24) & 0x03f;
-        tmp = uint2int(tmp, 16);
+        tmp = UINT2INT(tmp, 16);
         subp->orbit.deltan = tmp * pow(2.0, -43);
 
         tmp = ((words[2] >> 8) & 0x0ffff) << 2;            // Cuc
         tmp |= (words[3] >> 28) & 3;
-        tmp = uint2int(tmp, 18);
+        tmp = UINT2INT(tmp, 18);
         subp->orbit.Cuc = tmp * pow(2.0, -31);
 
         tmp = ((words[3] >> 8) & 0x0fffff) << 12;        // M0
         tmp |= (words[4] >> 28) & 0x0fff;
-        tmp = uint2int(tmp, 32);
+        tmp = UINT2INT(tmp, 32);
         subp->orbit.M0 = tmp * pow(2.0, -31);
 
         tmp = ((words[4] >> 8) & 0x03ff) << 22;          // e
@@ -1056,17 +1054,17 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
         subp->orbit.eccentricity = tmp * pow(2.0, -33);
 
         tmp = (words[6] >> 18) & 0x03ffff;                 // Cus
-        tmp = uint2int(tmp, 18);
+        tmp = UINT2INT(tmp, 18);
         subp->orbit.Cus = tmp * pow(2.0, -31);
 
         tmp = ((words[6] >> 8) & 0x0f) << 14;              // Crc
         tmp |= (words[7] >> 28) & 0x03fff;
-        tmp = uint2int(tmp, 18);
+        tmp = UINT2INT(tmp, 18);
         subp->orbit.Crc = tmp * pow(2.0, -6);
 
         tmp = ((words[7] >> 8) & 0x0ff) << 10;             // Crs
         tmp |= (words[8] >> 20) & 0x03ff;
-        tmp = uint2int(tmp, 18);
+        tmp = UINT2INT(tmp, 18);
         subp->orbit.Crs = tmp * pow(2.0, -6);
 
         tmp = ((words[8] >> 8) & 0x0fff) << 20;            // sqrtA
@@ -1092,37 +1090,37 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
 
         tmp = ((words[2] >> 8) & 0x01ffff) << 15;        // i0
         tmp |= (words[3] >> 15) & 0x07fff;
-        tmp = uint2int(tmp, 32);
+        tmp = UINT2INT(tmp, 32);
         subp->orbit.i0 = tmp * pow(2.0, -31);
 
         tmp = ((words[3] >> 8) & 0x07f) << 11;             // Cic
         tmp |= (words[4] >> 20) & 0x07ff;
-        tmp = uint2int(tmp, 18);
+        tmp = UINT2INT(tmp, 18);
         subp->orbit.Cic = tmp * pow(2.0, -6);
 
         tmp = ((words[4] >> 8) & 0x07ff) << 13;            // Omegad
         tmp |= (words[5] >> 17) & 0x01fff;
-        tmp = uint2int(tmp, 24);
+        tmp = UINT2INT(tmp, 24);
         subp->orbit.Omegad = tmp * pow(2.0, -43);
 
         tmp = ((words[5] >> 8) & 0x01ff) << 9;             // Cis
         tmp |= (words[6] >> 21) & 0x01ff;
-        tmp = uint2int(tmp, 18);
+        tmp = UINT2INT(tmp, 18);
         subp->orbit.Cis = tmp * pow(2.0, -6);
 
         tmp = ((words[6] >> 8) & 0x01fff) << 1;            // IDOT
         tmp |= (words[7] >> 29) & 1;
-        tmp = uint2int(tmp, 14);
+        tmp = UINT2INT(tmp, 14);
         subp->orbit.IDOT = tmp * pow(2.0, -53);
 
         tmp = ((words[7] >> 8) & 0x01fffff) << 11;         // Omega0
         tmp |= (words[8] >> 19) & 0x03ff;
-        tmp = uint2int(tmp, 32);
+        tmp = UINT2INT(tmp, 32);
         subp->orbit.Omega0 = tmp * pow(2.0, -31);
 
         tmp = ((words[8] >> 8) & 0x07ff) << 21;            // omega
         tmp |= (words[9] >> 19) & 0x01fffff;
-        tmp = uint2int(tmp, 32);
+        tmp = UINT2INT(tmp, 32);
         subp->orbit.omega = tmp * pow(2.0, -31);
 
         mask = SUBFRAME_SET;
@@ -1298,11 +1296,11 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         subp->orbit.IODE = (words[0] >> 20) & 0x0f;           // IODnav
         subp->orbit.toe = (words[0] & 0x03fff) * 60;          // toe
 
-        tmp = words[1] & 0x0ffffffff;                         // M0
-        tmp = uint2int(tmp, 32);
+        tmp = words[1] & BITMASK(32);                         // M0
+        tmp = UINT2INT(tmp, 32);
         subp->orbit.M0 = tmp * pow(2.0, -31);
 
-        tmp = words[2] & 0x0ffffffff;                         // e
+        tmp = words[2] & BITMASK(32);                         // e
         subp->orbit.eccentricity = tmp * pow(2.0, -33);
 
         tmp = ((words[3] >> 14) & 0x03ffff) << 14;             // sqrtA
@@ -1323,21 +1321,21 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
 
         tmp = (words[0] & 0x03fff) << 18;                     // Omega0
         tmp |= (words[1] >> 14) & 0x03ffff;
-        tmp = uint2int(tmp, 32);
+        tmp = UINT2INT(tmp, 32);
         subp->orbit.Omega0 = tmp * pow(2.0, -31);
 
         tmp = (words[1] & 0x03fff) << 18;                     // i0
         tmp |= (words[2] >> 14) & 0x03ffff;
-        tmp = uint2int(tmp, 32);
+        tmp = UINT2INT(tmp, 32);
         subp->orbit.i0 = tmp * pow(2.0, -31);
 
         tmp = (words[2] & 0x03fff) << 18;                     // omega
         tmp |= (words[3] >> 14) & 0x03ffff;
-        tmp = uint2int(tmp, 32);
+        tmp = UINT2INT(tmp, 32);
         subp->orbit.i0 = tmp * pow(2.0, -31);
 
         tmp = (words[4] >> 16) & 0x0fff;                      // idot
-        tmp = uint2int(tmp, 14);
+        tmp = UINT2INT(tmp, 14);
         subp->orbit.IDOT = tmp * pow(2.0, -43);
 
         subp->is_almanac = SUBFRAME_ORBIT;
@@ -1351,30 +1349,30 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
 
         tmp = (words[0] & 0x03fff) << 10;                     // Omegad
         tmp |= (words[1] >> 24) & 0x03ff;
-        tmp = uint2int(tmp, 24);
+        tmp = UINT2INT(tmp, 24);
         subp->orbit.Omegad = tmp * pow(2.0, -34);
 
         tmp = (words[1] >> 6) & 0x0ffff;                      // deltan
-        tmp = uint2int(tmp, 16);
+        tmp = UINT2INT(tmp, 16);
         subp->orbit.deltan = tmp * pow(2.0, -43);
 
         tmp = (words[1] & 0x3f) << 10;                        // Cuc
         tmp |= (words[2] >> 24) & 0x03ff;
-        tmp = uint2int(tmp, 16);
+        tmp = UINT2INT(tmp, 16);
         subp->orbit.Cuc = tmp * pow(2.0, -29);
 
         tmp = (words[2] >> 6) & 0x0ffff;                      // Cus
-        tmp = uint2int(tmp, 16);
+        tmp = UINT2INT(tmp, 16);
         subp->orbit.Cus = tmp * pow(2.0, -29);
 
         tmp = (words[2] & 0x3f) << 10;                        // Crc
         tmp |= (words[3] >> 22) & 0x03ff;
-        tmp = uint2int(tmp, 16);
+        tmp = UINT2INT(tmp, 16);
         subp->orbit.Crc = tmp * pow(2.0, -5);
 
         tmp = (words[3] & 0xff) << 8;                         // Crs
         tmp |= (words[4] >> 24) & 0x0ff;
-        tmp = uint2int(tmp, 16);
+        tmp = UINT2INT(tmp, 16);
         subp->orbit.Crs = tmp * pow(2.0, -5);
 
         subp->orbit.SISAb = (words[4] >> 6) & 0x0ff;          // SISA(E1,E5b)
@@ -1395,11 +1393,11 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         }
         tmp = (words[0] & 0xff) << 8;                         // Cic
         tmp |= (words[1] >> 24) & 0x0ff;
-        tmp = uint2int(tmp, 16);
+        tmp = UINT2INT(tmp, 16);
         subp->orbit.Cic = tmp * pow(2.0, -29);
 
         tmp = (words[1] >> 8) & 0x0ffff;                      // Cis
-        tmp = uint2int(tmp, 16);
+        tmp = UINT2INT(tmp, 16);
         subp->orbit.Cis = tmp * pow(2.0, -29);
 
         tmp = (words[1] & 0xff) << 6;                         // toc
@@ -1408,16 +1406,16 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
 
         tmp = (words[2] & 0x03ffffff) << 5;                   // af0
         tmp |= (words[3] >> 27) & 0x01f;
-        tmp = uint2int(tmp, 31);
+        tmp = UINT2INT(tmp, 31);
         subp->orbit.af0 = tmp * pow(2.0, -34);
 
         tmp = (words[3] & 0x01fff) << 8;                      // af1
         tmp |= (words[4] >> 26) & 0x0ff;
-        tmp = uint2int(tmp, 31);
+        tmp = UINT2INT(tmp, 31);
         subp->orbit.af1 = tmp * pow(2.0, -46);
 
         tmp = (words[4] >> 18) & 0x0ffff;                     // af2
-        tmp = uint2int(tmp, 16);
+        tmp = UINT2INT(tmp, 16);
         subp->orbit.af2 = tmp * pow(2.0, -59);
 
         subp->is_almanac = SUBFRAME_ORBIT;
@@ -1452,7 +1450,7 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         }
         tmp = (words[0] & 3) << 11;                           // delta sqrtAx ?
         tmp |= (words[1] >> 21) & 0x07ff;
-        tmp = uint2int(tmp, 13);
+        tmp = UINT2INT(tmp, 13);
         // Table 1 from ICD
         subp->orbit.sqrtA = (tmp * pow(2.0, -9)) + sqrt(29600000);
         if (2600 > subp->orbit.sqrtA) {
@@ -1465,26 +1463,26 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
 
         tmp = (words[1] & 0x03ff) << 6;                       // omega
         tmp |= (words[2] >> 26) & 0x03f;
-        tmp = uint2int(tmp, 16);
+        tmp = UINT2INT(tmp, 16);
         subp->orbit.omega = tmp * pow(2.0, -15);
 
         tmp = (words[2] >> 11) & 0x07ff;                      // deltai
-        tmp = uint2int(tmp, 11);
+        tmp = UINT2INT(tmp, 11);
         // Table 1 from ICD
         subp->orbit.i0 = (tmp * pow(2.0, -14)) + (56.0 / 180.0);
 
         tmp = (words[2] & 0x07fff) << 1;                      // Omega0
         tmp |= (words[3] >> 31) & 1;
-        tmp = uint2int(tmp, 16);
+        tmp = UINT2INT(tmp, 16);
         subp->orbit.Omega0 = tmp * pow(2.0, -35);
 
         tmp = (words[3] >> 20) & 0x07fff;                     // Omegadot
-        tmp = uint2int(tmp, 11);
+        tmp = UINT2INT(tmp, 11);
         subp->orbit.Omegad = tmp * pow(2.0, -33);
 
         tmp = ((words[3] >> 14) & 0x03f) << 10;               // M0
         tmp |= (words[4] >> 20) & 0x03ff;
-        tmp = uint2int(tmp, 16);
+        tmp = UINT2INT(tmp, 16);
         subp->orbit.M0 = tmp * pow(2.0, -15);
 
         break;
@@ -1507,12 +1505,12 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         subp->orbit.IODA = (words[0] >> 20) & 0x0f;           // IODa
 
         tmp = (words[0] >> 4) & 0x0ffff;                      // af0
-        tmp = uint2int(tmp, 16);
+        tmp = UINT2INT(tmp, 16);
         subp->orbit.af0 = tmp * pow(2.0, -19);
 
         tmp = (words[0] & 0x0f) << 9;                         // af1
         tmp |= (words[1] >> 23) & 0x01ff;
-        tmp = uint2int(tmp, 13);
+        tmp = UINT2INT(tmp, 13);
         subp->orbit.af1 = tmp * pow(2.0, -38);
 
         subp->orbit.E5bHS = (words[1] >> 21) & 3;
@@ -1522,7 +1520,7 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         subp->orbit1.type = ORBIT_ALMANAC;
         subp->orbit1.IODA = subp->orbit.IODA;                 // IODa
         tmp = words[1] & 0x01fff;                             // delta sqrtA?
-        tmp = uint2int(tmp, 13);
+        tmp = UINT2INT(tmp, 13);
         // Table 1 from ICD
         subp->orbit1.sqrtA = (tmp * pow(2.0, -9)) + sqrt(29600000);
         if (2600 > subp->orbit.sqrtA) {
@@ -1534,22 +1532,22 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         subp->orbit1.eccentricity = tmp * pow(2.0, -16);
 
         tmp = (words[2] >> 5) & 0x0ffff;                      // omega
-        tmp = uint2int(tmp, 16);
+        tmp = UINT2INT(tmp, 16);
         subp->orbit1.omega = tmp * pow(2.0, -15);
 
         tmp = (words[2] & 0x01f) << 6;                        // deltai
         tmp |= (words[3] >> 26) & 0x3f;
-        tmp = uint2int(tmp, 11);
+        tmp = UINT2INT(tmp, 11);
         // Table 1 from ICD
         subp->orbit1.i0 = (tmp * pow(2.0, -14)) + (56.0 / 180.0);
 
         tmp = (words[3] & 0x0fff) << 4;                       // Omega0
         tmp |= (words[4] >> 12) & 0x0f;
-        tmp = uint2int(tmp, 16);
+        tmp = UINT2INT(tmp, 16);
         subp->orbit1.Omega0 = tmp * pow(2.0, -35);
 
         tmp = (words[4] >> 1) & 0x07fff;                      // Omegadot
-        tmp = uint2int(tmp, 11);
+        tmp = UINT2INT(tmp, 11);
         subp->orbit1.Omegad = tmp * pow(2.0, -33);
 
         break;
@@ -1575,16 +1573,16 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
 
         tmp = (words[0] & 0x0ff) << 8;     // M0
         tmp |= (words[1] >> 24) & 0x0ff;
-        tmp = uint2int(tmp, 16);
+        tmp = UINT2INT(tmp, 16);
         subp->orbit.M0 = tmp * pow(2.0, -15);
 
         tmp = (words[1] >> 8) & 0x0ffff;                      // af0
-        tmp = uint2int(tmp, 16);
+        tmp = UINT2INT(tmp, 16);
         subp->orbit.af0 = tmp * pow(2.0, -19);
 
         tmp = (words[1] & 0x0ff) << 8;                        // af1
         tmp |= (words[2] >> 27) & 0x01f;
-        tmp = uint2int(tmp, 13);
+        tmp = UINT2INT(tmp, 13);
         subp->orbit.af1 = tmp * pow(2.0, -38);
 
         subp->orbit.E5bHS = (words[2] >> 25) & 3;
@@ -1594,7 +1592,7 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         subp->orbit1.type = ORBIT_ALMANAC;
         subp->orbit1.IODA = subp->orbit.IODA;                 // IODa
         tmp = (words[2] >> 6) & 0x07ff;                       // delta sqrtA?
-        tmp = uint2int(tmp, 13);
+        tmp = UINT2INT(tmp, 13);
         // Table 1 from ICD
         subp->orbit1.sqrtA = (tmp * pow(2.0, -9)) + sqrt(29600000);
         if (2600 > subp->orbit.sqrtA) {
@@ -1608,11 +1606,11 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
 
         tmp = (words[3] & 0x07ff) << 5;                       // omega
         tmp |= (words[4] >> 11) & 0x01f;
-        tmp = uint2int(tmp, 16);
+        tmp = UINT2INT(tmp, 16);
         subp->orbit1.omega = tmp * pow(2.0, -15);
 
         tmp = (words[4] >> 26) & 0x3f;                        // i0
-        tmp = uint2int(tmp, 11);
+        tmp = UINT2INT(tmp, 11);
         // Table 1 from ICD
         subp->orbit1.i0 = (tmp * pow(2.0, -14)) + (56.0 / 180.0);
 
@@ -1624,25 +1622,25 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
 
         // how do we know the SVID3?
         tmp = (words[0] >> 4) & 0x0ff;                        // Omega0
-        tmp = uint2int(tmp, 16);
+        tmp = UINT2INT(tmp, 16);
         subp->orbit.Omega0 = tmp * pow(2.0, -35);
 
         tmp = (words[3] & 0x0f) << 7;                         // Omegadot
         tmp |= (words[3] >> 25) & 0x07f;
-        tmp = uint2int(tmp, 11);
+        tmp = UINT2INT(tmp, 11);
         subp->orbit.Omegad = tmp * pow(2.0, -33);
 
         tmp = (words[1] >> 9) & 0x0ffff;                      // M0
-        tmp = uint2int(tmp, 16);
+        tmp = UINT2INT(tmp, 16);
         subp->orbit.M0 = tmp * pow(2.0, -15);
 
         tmp = (words[1] & 0x01ff) << 7;                       // af0
         tmp |= (words[2] >> 25) & 0x07f;
-        tmp = uint2int(tmp, 16);
+        tmp = UINT2INT(tmp, 16);
         subp->orbit.af0 = tmp * pow(2.0, -19);
 
         tmp = (words[2] >> 12) & 0x01fff;                     // af1
-        tmp = uint2int(tmp, 13);
+        tmp = UINT2INT(tmp, 13);
         subp->orbit.af1 = tmp * pow(2.0, -38);
 
         break;

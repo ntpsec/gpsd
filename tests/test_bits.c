@@ -143,10 +143,40 @@ static struct bitmask bitmask_tests[] = {
     {40, 0x0ffffffffff},
     {255, 0},     // 255 marks end
 };
+struct uint2int
+{
+    unsigned long long uint;
+    int bits;
+    long long res;
+};
+static struct uint2int uint2_tests[] = {
+    {0, 2, 0},
+    {1, 2, 1},
+    {2, 2, -2},
+    {3, 2, -1},
+    {0x1b, 5, -5},
+    {5, 5, 5},
+    {0x07f, 8, 127},
+    {0x080, 8, -128},
+    {0x0ff, 8, -1},
+    {0x07fff, 16, 32767},
+    {0x08000, 16, -32768},
+    {0x0ffff, 16, -1},
+    {0x07ffff, 20, 524287},
+    {0x080000, 20, -524288},
+    {0x0fffff, 20, -1},
+    {0x07fffffff, 32, 2147483647},
+    {0x080000000, 32, -2147483648},
+    {0x0ffffffff, 32, -1},
+    {0x07ffffffff, 36, 34359738367},
+    {0x0800000000, 36, -34359738368},
+    {0x0fffffffff, 36, -1},
+    {0, 255, 0},     // 255 marks end
+};
 
 int main(int argc, char *argv[])
 {
-    bool failures = false;
+    int failures = 0;
     bool quiet = (argc > 1) && (strcmp(argv[1], "--quiet") == 0);
 
     struct unsigned_test *up, unsigned_tests[] = {
@@ -165,7 +195,8 @@ int main(int argc, char *argv[])
         {(unsigned char *)"\x19\x23\f6",
          7, 2, 2, false, "2 bits crossing 1st to 2nd byte (0x1923)"},
     };
-    struct bitmask *bits = bitmask_tests;
+    struct bitmask *bitm = bitmask_tests;
+    struct uint2int *uint2 = uint2_tests;
 
     memcpy(buf, "\x01\x02\x03\x04\x05\x06\x07\x08", 8);
     memcpy(buf + 8, "\xff\xfe\xfd\xfc\xfb\xfa\xf9\xf8", 8);
@@ -237,7 +268,7 @@ int main(int argc, char *argv[])
         uint64_t res = ubits((unsigned char *)buf, up->start, up->width, up->le);
         bool success = (res == up->expected);
         if (!success)
-            failures = true;
+            failures++;
         if (!success || !quiet)
             (void)printf("ubits(%s, %d, %d, %s) %s should be %" PRIx64
                          ", is %" PRIx64 ": %s\n",
@@ -269,13 +300,26 @@ int main(int argc, char *argv[])
     if (!quiet)
         (void)printf("Testing BITMASK(N)\n");
 
-    while (129 > bits->shift) {
-        if (bits->mask != BITMASK(bits->shift)) {
+    while (129 > bitm->shift) {
+        if (bitm->mask != BITMASK(bitm->shift)) {
             failures++;
             printf("BITMASK(0) FAILED, %llu s/b %llu\n",
-               bits->mask, BITMASK(bits->shift));
+               bitm->mask, BITMASK(bitm->shift));
         }
-        bits++;
+        bitm++;
+    }
+
+    if (!quiet)
+        (void)printf("Testing UINT2INT(U, N)\n");
+
+    while (129 > uint2->bits) {
+        if (uint2->res != UINT2INT(uint2->uint, uint2->bits)) {
+            failures++;
+            printf("UINt2INT(x%llx, %u) FAILED, %lld s/b %lld\n",
+               uint2->uint, uint2->bits,
+               uint2->res, UINT2INT(uint2->uint, uint2->bits));
+        }
+        uint2++;
     }
 
     exit(failures ? EXIT_FAILURE : EXIT_SUCCESS);
