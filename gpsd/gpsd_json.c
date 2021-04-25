@@ -737,6 +737,9 @@ static void json_subframe_dump_orb(const orbit_t *orbit,
     if (0 <= orbit->IODA) {
         str_appendf(buf, buflen, ",\"IODA\":%d", orbit->IODA);
     }
+    if (0 <= orbit->IODC) {
+        str_appendf(buf, buflen, ",\"IODC\":%d", orbit->IODC);
+    }
     if (0 <= orbit->IODE) {
         str_appendf(buf, buflen, ",\"IODE\":%d", orbit->IODE);
     }
@@ -765,6 +768,9 @@ static void json_subframe_dump_orb(const orbit_t *orbit,
     }
     if (0 <= orbit->SISAb) {
         str_appendf(buf, buflen, ",\"SISAb\":%d", orbit->SISAb);
+    }
+    if (0 <= orbit->svh) {
+        str_appendf(buf, buflen, ",\"svh\":%d", orbit->svh);
     }
     if (0 <= orbit->AODC) {
         str_appendf(buf, buflen, ",\"TGD1\":%d,\"TGD2\":%d",
