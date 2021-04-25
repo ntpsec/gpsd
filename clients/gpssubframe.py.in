@@ -988,7 +988,8 @@ try:
                                s = " IODA %d" % msg['ALMANAC']['IODA']
                             if 'toa' in msg['ALMANAC']:
                                s += " toa %d" % msg['ALMANAC']['toa']
-                            print("New Almanac %s%s" % (idx, s))
+                            print("New Almanac %s frame %d%s" %
+                                  (idx, msg['frame'], s))
                         all_data['almanac'][idx] = msg['ALMANAC']
                     elif ('IODA' in msg['ALMANAC'] and
                           ('IODA' not in all_data['almanac'][idx] or
@@ -1000,7 +1001,8 @@ try:
                                s = " IODA %d" % msg['ALMANAC']['IODA']
                             if 'toa' in msg['ALMANAC']:
                                s += " toa %d" % msg['ALMANAC']['toa']
-                            print("Merged Almanac %s%s" % (idx, s))
+                            print("Merged Almanac %s frame %d%s" %
+                                  (idx, msg['frame'], s))
                         all_data['almanac'][idx].update(msg['ALMANAC'])
                 if 'ALMANAC1' in msg:
                     # weird Galileo almanac fragment
@@ -1033,6 +1035,7 @@ try:
                     # new style ephemeris
 
                     if idx not in all_data['ephemeris']:
+                        # new
                         all_data['ephemeris'][idx] = msg['EPHEMERIS']
                     else:
                         # merge in
@@ -1045,7 +1048,8 @@ try:
                                 all_data['ephemeris'][idx]['toeLSB'])
 
                     if options.progress:
-                        print("Received Ephemeris idx %s" % (idx))
+                        print("Received Ephemeris %s frame %d" %
+                              (idx, msg['frame']))
             elif 'GP' == gnss and 1 == msg['frame']:
                 if 'WN' in msg['EPHEM1']:
                     # save WN for later use
@@ -1321,17 +1325,31 @@ if gps_week and options.satpos:
             # careful, = makes a link, not a copy, on dictionaries
             # careful, update makes a link, not a copy, on dictionaries
             eph = all_data['ephemeris'][sv].copy()
+            needed = True
             # convert semi-circles to radians
             # use military PI, not real pi.
             cvt = ('deltan', 'i0', 'IDOT', 'M0', 'omega', 'Omega0',
                    'Omegad')
             for i in cvt:
-                eph[i] *= gps.GPS_PI
-            # Galileo has no Tgd?
+                if i in ephm:
+                    # GPS_PI != math.pi!
+                    ephm[i] *= gps.GPS_PI
+                else:
+                    needed = False
+                    if gps.VERB_INFO <= options.debug:
+                        print("   Missing %s" % i)
+                    break
+            # Galileo has no Tgd?  Use TGD1 or TGD2?
             ephm.update({'Tgd': 0,})
+            need = ('Cic', 'Cis', 'Crc', 'Crs', 'Cuc', 'Cus', 'sqrtA')
+            for i in need:
+                if i not  in ephm:
+                    needed = False
+                    break;
 
-            print("\n%s Ephemeris position:" % sv)
-            SatPosSum(eph, gps_tow)
+            if needed:
+                print("\n%s Ephemeris position:" % sv)
+                SatPosSum(eph, gps_tow)
 
         if sv in all_data['almanac']:
             print("\n%s Almanac position:" % sv)
