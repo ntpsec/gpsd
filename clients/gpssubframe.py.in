@@ -242,9 +242,12 @@ return (x, y, z, delta_tsv) of satellite at gps_tow t
     # IS-GPS-200, Section 20.3.3.3.3.1 SV Clock Correction
     delta_tsv = (ephm['af0'] + ephm['af1'] * toff +
                  ephm['af2'] * toff ** 2 + deltatr)
-    # we don't use Tgd because it is small, and we do not know the freuency.
-    print("  deltatr %.9e delta_tsv %.9e Tgd %.9e\n  toff %.3f" %
-          (deltatr, delta_tsv, ephm['Tgd'], toff))
+    print("  deltatr %.9e delta_tsv %.9e toff %.3f" %
+          (deltatr, delta_tsv, toff))
+    if 'Tgd' in ephm:
+        # we don't use Tgd because it is small, do not know the freuency.
+        print("  Tgd %.9e" % ephm['Tgd'])
+
     if 'ura' in ephm:
         # ephemeris, not almanac
         print("  URE %s Health %s" %
@@ -1304,6 +1307,21 @@ if gps_week and options.satpos:
             for i in cvt:
                 eph[i] *= gps.GPS_PI
 
+            SatPosSum(eph, gps_tow)
+        elif sv in all_data['ephemeris']:
+            # careful, = makes a link, not a copy, on dictionaries
+            # careful, update makes a link, not a copy, on dictionaries
+            eph = all_data['ephemeris'][sv].copy()
+            # convert semi-circles to radians
+            # use military PI, not real pi.
+            cvt = ('deltan', 'i0', 'IDOT', 'M0', 'omega', 'Omega0',
+                   'Omegad')
+            for i in cvt:
+                eph[i] *= gps.GPS_PI
+            # Galileo has no Tgd?
+            ephm.update({'Tgd': 0,})
+
+            print("\n%s Ephemeris position:" % sv)
             SatPosSum(eph, gps_tow)
 
         if sv in all_data['almanac']:
