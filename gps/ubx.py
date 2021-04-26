@@ -5891,7 +5891,7 @@ protVer 34 and up
                           (sqrtA, a1, a0, Omega0, e, deltai, t0a, Omegadot,
                            omega, M0, AmEpID))
             elif 5 == FraID:
-                if Pnum in [7, 8]:
+                if Pnum in [7, 8, 24]:
                     # make a packed integer
                     hlth = 0
                     for i in range(0, 10):
@@ -5955,8 +5955,7 @@ protVer 34 and up
                         s += "Health 31 to 43: AmEpID %u" % AmEpID
                         # Hea31 to Hea43 now in the LSB
                         hlth >>= 85
-                        s += ("Health 31 to 43 WNa %u t0a %u\n       " %
-                              (WNa, t0a))
+                        s += "Health 31 to 43 t0a %u\n       " % SOW
                         for i in range(31, 44):
                             # take 9 bits at a time from the top
                             h = (hlth >> ((43 - i) * 9)) & 0x1ff
@@ -6020,6 +6019,13 @@ protVer 34 and up
         # all unscaled
         if (0 == word_type):
             s += "\n    Spare Word"
+            time = (page >> 120) & 3;
+            if 2 == time:
+                # valid time
+                WN = (page >> 20) & 0x0fff
+                TOW =  page & 0x0fffff
+                s += " WN %u TOW %u" % (WN, TOW)
+
         elif (1 == word_type):
             IODnav = (page >> 112) & 0x03ff
             t0e = (page >> 98) & 0x03fff
