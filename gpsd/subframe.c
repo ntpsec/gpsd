@@ -1515,7 +1515,7 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         tmp = (words[2] & BITMASK(15)) << 1;                  // Omega0
         tmp |= (words[3] >> 31) & 1;
         tmp = UINT2INT(tmp, 16);
-        subp->orbit.Omega0 = tmp * pow(2.0, -35);
+        subp->orbit.Omega0 = tmp * pow(2.0, -15);
 
         tmp = (words[3] >> 20) & BITMASK(11);                 // Omegadot
         tmp = UINT2INT(tmp, 11);
@@ -1583,9 +1583,9 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         subp->orbit1.i0 = (tmp * pow(2.0, -14)) + (56.0 / 180.0);
 
         tmp = ((words[3] >> 14) & BITMASK(12)) << 4;          // Omega0
-        tmp |= (words[4] >> 28) & BITMASK(4);
+        tmp |= (words[4] >> 26) & BITMASK(4);
         tmp = UINT2INT(tmp, 16);
-        subp->orbit1.Omega0 = tmp * pow(2.0, -35);
+        subp->orbit1.Omega0 = tmp * pow(2.0, -15);
 
         tmp = (words[4] >> 15) & BITMASK(11);                 // Omegadot
         tmp = UINT2INT(tmp, 11);
@@ -1670,7 +1670,7 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         subp->orbit.IODA = (words[0] >> 20) & BITMASK(4);     // IODa
         tmp = (words[0] >> 4) & BITMASK(16);                  // Omega0
         tmp = UINT2INT(tmp, 16);
-        subp->orbit.Omega0 = tmp * pow(2.0, -35);
+        subp->orbit.Omega0 = tmp * pow(2.0, -15);
 
         tmp = (words[0] & BITMASK(4)) << 7;                   // Omegadot
         tmp |= (words[1] >> 25) & BITMASK(7);
