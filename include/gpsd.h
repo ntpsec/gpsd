@@ -84,6 +84,7 @@ extern "C" {
  *      Add gps_context_t.batteryRTC
  * 3.21.1~dev
  *      Add gps_device_t.ubx.last_protver
+ *      Add gps_device_t last_word_gal and last_svid3_gal
  *
  */
 
@@ -557,6 +558,8 @@ struct gps_device_t {
     int observed;                       /* which packet type`s have we seen? */
     bool cycle_end_reliable;            /* does driver signal REPORT_MASK */
     int fixcnt;                         /* count of fixes from this device */
+    int last_word_gal;                  // last subframe word from Galileo
+    int last_svid3_gal;                 // last SVID3 from Galileo
     struct gps_fix_t newdata;           /* where drivers put their data */
     struct gps_fix_t lastfix;           /* not quite yet ready for oldfix */
     struct gps_fix_t oldfix;            /* previous fix for error modeling */

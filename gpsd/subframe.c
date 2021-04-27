@@ -1321,7 +1321,7 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         word_desc = "Spare Word";
         subp->orbit.sv = tSVID;
         tmp = (words[0] >> 22) & BITMASK(2);;
-        if ( 3 == tmp) {
+        if (2 == tmp) {
             // valid time
             subp->WN = (words[3] >> 18) & BITMASK(12);        // WN
             subp->TOW17 = ((words[3] >> 14) & BITMASK(4)) << 16;    // TOW
@@ -1600,6 +1600,8 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
             mask = 0;
             break;
         }
+        // save for use in word 10
+        session->last_svid3_gal = subp->orbit1.sv;
         mask = SUBFRAME_SET;
         subp->is_almanac = SUBFRAME_ORBIT;
         subp->orbit.type = ORBIT_ALMANAC;
@@ -1658,8 +1660,13 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         word_desc = "Almanacs 4";
         subp->is_almanac = SUBFRAME_ORBIT;
         subp->orbit.type = ORBIT_ALMANAC;
+        mask = SUBFRAME_SET;
 
         // how do we know the SVID3?
+        if (9 == session->last_word_gal ||
+            10 == session->last_word_gal) {
+            subp->orbit.sv = session->last_svid3_gal;
+        }
         subp->orbit.IODA = (words[0] >> 20) & BITMASK(4);     // IODa
         tmp = (words[0] >> 4) & BITMASK(16);                  // Omega0
         tmp = UINT2INT(tmp, 16);
@@ -1715,6 +1722,8 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         word_desc = "Unknown Word";
         break;
     }
+    // save word_type for SVID3 detection
+    session->last_word_gal = word_type;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "50B,GAL: len %u even %u page_type %u word_type %u (%s)\n",
