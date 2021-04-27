@@ -1295,7 +1295,6 @@ if all_data['health2']:
 
 if gps_week and options.satpos:
     for sv in all_sv:
-        # Ensure we have all 3 parts, and their IODx matches.
         if ((sv in all_data['ephemeris1'] and
              sv in all_data['ephemeris2'] and
              sv in all_data['ephemeris3'] and
@@ -1303,6 +1302,7 @@ if gps_week and options.satpos:
              all_data['ephemeris2'][sv]['IODE'] and
              all_data['ephemeris2'][sv]['IODE'] ==
              all_data['ephemeris3'][sv]['IODE'])):
+            # Ensure we have all 3 parts of GPS, and their IODx matches.
 
             print("\n%s Ephemeris position:" % sv)
 
@@ -1322,9 +1322,10 @@ if gps_week and options.satpos:
 
             SatPosSum(eph, gps_tow)
         elif sv in all_data['ephemeris']:
+            print("\n%s Ephemeris position:" % sv)
             # careful, = makes a link, not a copy, on dictionaries
             # careful, update makes a link, not a copy, on dictionaries
-            eph = all_data['ephemeris'][sv].copy()
+            ephm = all_data['ephemeris'][sv].copy()
             needed = True
             # convert semi-circles to radians
             # use military PI, not real pi.
@@ -1336,20 +1337,19 @@ if gps_week and options.satpos:
                     ephm[i] *= gps.GPS_PI
                 else:
                     needed = False
-                    if gps.VERB_INFO <= options.debug:
-                        print("   Missing %s" % i)
+                    print("   Missing %s" % i)
                     break
             # Galileo has no Tgd?  Use TGD1 or TGD2?
-            ephm.update({'Tgd': 0,})
-            need = ('Cic', 'Cis', 'Crc', 'Crs', 'Cuc', 'Cus', 'sqrtA')
+            ephm.update({'Tgd': 0})
+            need = ('Cic', 'Cis', 'Crc', 'Crs', 'Cuc', 'Cus', 'sqrtA', 'toc')
             for i in need:
-                if i not  in ephm:
+                if i not in ephm:
                     needed = False
+                    print("   Missing %s" % i)
                     break;
 
             if needed:
-                print("\n%s Ephemeris position:" % sv)
-                SatPosSum(eph, gps_tow)
+                SatPosSum(ephm, gps_tow)
 
         if sv in all_data['almanac']:
             print("\n%s Almanac position:" % sv)

@@ -825,6 +825,8 @@ struct orbit
     int TGD2;
     // SV health data, random format, -1 if invalid
     int svh;
+    // URAI, BDS, -1 if invalid
+    int URAI;
     // Week Number, -1 if invalid
     int WN;
 

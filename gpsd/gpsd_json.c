@@ -789,6 +789,9 @@ static void json_subframe_dump_orb(const orbit_t *orbit,
     } else if (0 <= orbit->toeMSB) {
         str_appendf(buf, buflen, ",\"toeMSB\":%ld", orbit->toeMSB);
     }
+    if (0 <= orbit->URAI) {
+        str_appendf(buf, buflen, ",\"URAI\":%d", orbit->URAI);
+    }
     if (0 <= orbit->WN) {
         str_appendf(buf, buflen, ",\"WN\":%d", orbit->WN);
     }

@@ -5830,13 +5830,13 @@ protVer 34 and up
             Crs |= (page >> 50) & 0x03ff
             sqrtA = ((page >> 38) & 0x0fff) << 20
             sqrtA |= (page >> 10) & 0x0fffff
-            t0eMSB = (page >> 8) & 3
-            s += ("\n    deltan %u Cuc %u M0 %u e %u Cus %u Crc %u Crs %u"
-                  "\n    sqrtA %u t0eMSB %u" %
-                  (deltan, Cuc, M0, e, Cus, Crc, Crs, sqrtA, t0eMSB))
+            toeMSB = (page >> 8) & 3
+            s += ("\n    deltan %u Cuc %u M0 %u e %u Cus %u Crc %u"
+                  "\n    Crs %u sqrtA %u toeMSB %u" %
+                  (deltan, Cuc, M0, e, Cus, Crc, Crs, sqrtA, toeMSB))
         elif 3 == FraID:
-            t0eLSB = ((page >> 248) & 0x03ff) << 5
-            t0eLSB |= (page >> 235) & 0x01f
+            toeLSB = ((page >> 248) & 0x03ff) << 5
+            toeLSB |= (page >> 235) & 0x01f
             i0 = ((page >> 218) & 0x01ffff) << 15
             i0 |= (page >> 195) & 0x07fff
             Cic = ((page >> 188) & 0x07f) << 11
@@ -5852,9 +5852,9 @@ protVer 34 and up
             omega = ((page >> 38) & 0x07ff) << 21
             omega |= (page >> 9) & 0x01fffff
             Rev = (page >> 8) & 1
-            s += ("\n    t0eLSB %u i0 %u Cic %u Omegadot %u Cis % u IDOT %u"
-                  "\n      Omega0 %u omega %u Rev %u" %
-                  (t0eLSB, i0, Cic, Omegadot, Cis, IDOT, Omega0, omega, Rev))
+            s += ("\n    toeLSB %u i0 %u Cic %u Omegadot %u Cis %u"
+                  "\n    IDOT %u Omega0 %u omega %u Rev %u" %
+                  (toeLSB, i0, Cic, Omegadot, Cis, IDOT, Omega0, omega, Rev))
         elif FraID in [4, 5]:
             Pnum = (page >> 250) & 0x07f
             s += "\n    Pnum %u: " % Pnum
@@ -6028,12 +6028,12 @@ protVer 34 and up
 
         elif (1 == word_type):
             IODnav = (page >> 112) & 0x03ff
-            t0e = (page >> 98) & 0x03fff
+            toe = (page >> 98) & 0x03fff
             M0 = (page >> 66) & 0x0ffffffff
             e = (page >> 34) & 0x0ffffffff
             sqrt_A = (page >> 2) & 0x0ffffffff
-            s += ("\n    Ephemeris 1: IODnav %u t0e %u M0 %u e %u  sqrt_A %u" %
-                  (IODnav, t0e, M0, e, sqrt_A))
+            s += ("\n    Ephemeris 1: IODnav %u toe %u M0 %u e %u  sqrt_A %u" %
+                  (IODnav, toe, M0, e, sqrt_A))
         elif (2 == word_type):
             IODnav = (page >> 112) & 0x03ff
             Omega0 = (page >> 80) & 0x0ffffffff
