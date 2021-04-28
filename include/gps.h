@@ -820,9 +820,6 @@ struct orbit
     int SISAa;
     // SISA(E1,E5b), -1 if invalid
     int SISAb;
-    // TGD1, TGD2, Time Group Delay 1, 2, valid if AODC is valid
-    int TGD1;
-    int TGD2;
     // SV health data, random format, -1 if invalid
     int svh;
     // URAI, BDS, -1 if invalid
@@ -908,6 +905,9 @@ struct orbit
     double omega;
     // sqrt A, Square Root of the Semi-Major Axis, square_root(meters)
     double sqrtA;
+    // TGD1, TGD2, Time Group Delay 1, 2, BDS, seconds
+    double TGD1;
+    double TGD2;
 };
 typedef struct orbit orbit_t;
 

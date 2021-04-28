@@ -25,8 +25,6 @@ static void init_orbit(orbit_t *orbit)
     orbit->E1BHS = -1;
     orbit->SISAa = -1;
     orbit->SISAb = -1;
-    orbit->TGD1 = -1;
-    orbit->TGD2 = -1;
     orbit->toa = -1;
     orbit->toc = -1;
     orbit->toe = -1;
@@ -62,6 +60,8 @@ static void init_orbit(orbit_t *orbit)
     orbit->Omegad = NAN;
     orbit->omega = NAN;
     orbit->sqrtA = NAN;
+    orbit->TGD1 = NAN;
+    orbit->TGD2 = NAN;
 }
 
 // init a subrame_t
@@ -1014,11 +1014,11 @@ static gps_mask_t subframe_bds(struct gps_device_t *session,
         subp->orbit.toc <<= 3;
 
         tmp = (words[3] >> 12) & BITMASK(10);                 // TGD1
-        subp->orbit.TGD1 = UINT2INT(tmp, 10);
+        subp->orbit.TGD1 = UINT2INT(tmp, 10) * 0.1;
 
         tmp = ((words[3] >> 8) & BITMASK(4)) << 6;            // TGD2
         tmp |= (words[4] >> 24) & BITMASK(6);
-        subp->orbit.TGD2 = UINT2INT(tmp, 10);
+        subp->orbit.TGD2 = UINT2INT(tmp, 10) * 0.1;
 
         tmp = (words[4] >> 16) & BITMASK(8);                  // alpha0
         tmp = UINT2INT(tmp, 8);

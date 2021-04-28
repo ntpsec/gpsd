@@ -772,9 +772,11 @@ static void json_subframe_dump_orb(const orbit_t *orbit,
     if (0 <= orbit->svh) {
         str_appendf(buf, buflen, ",\"svh\":%d", orbit->svh);
     }
-    if (0 <= orbit->AODC) {
-        str_appendf(buf, buflen, ",\"TGD1\":%d,\"TGD2\":%d",
-                    orbit->TGD1, orbit->TGD2);
+    if (0 != isfinite(orbit->TGD1)) {
+        str_appendf(buf, buflen, ",\"TGD1\":%.1f", orbit->TGD1);
+    }
+    if (0 != isfinite(orbit->TGD2)) {
+        str_appendf(buf, buflen, ",\"TGD2\":%.1f", orbit->TGD2);
     }
     if (0 <= orbit->toa) {
         str_appendf(buf, buflen, ",\"toa\":%ld", orbit->toa);
