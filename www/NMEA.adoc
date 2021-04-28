@@ -1178,7 +1178,7 @@ Time, Position and fix related data for a GPS receiver.
                                                       11
         1         2       3 4        5 6 7  8   9  10 |  12 13  14   15
         |         |       | |        | | |  |   |   | |   | |   |    |
- $--GGA,hhmmss.ss,ddmm.mm,a,ddmm.mmy,a,x,xx,x.x,x.x,M,x.x,M,x.x,xxxx*hh<CR><LF>
+ $--GGA,hhmmss.ss,ddmm.mm,a,ddmm.mm,a,x,xx,x.x,x.x,M,x.x,M,x.x,xxxx*hh<CR><LF>
 ------------------------------------------------------------------------------
 
 Field Number:
@@ -2787,7 +2787,7 @@ Field Number:
 5. Time left on the GPS battery in hours
 6. Numbers change (freq. compensation?)
 7. PRN number receiving current focus
-8. nmea_checksum
+8. Checksum
 
 Only supported on Magellan receivers.
 
@@ -2874,7 +2874,7 @@ Field Number:
    re-identified
 5. Target alias. Can be changed when the target identification data is
    edited.  Symbols “$”, “*” “,” and “.”  are not allowed to be used
-   within the alias word. This field is variable length, at most 21v
+   within the alias word. This field is variable length, at most 21
    characters.
 6. Latitude in degrees (two leading digits) and decimal minutes
    (trailing digits).
@@ -2888,7 +2888,7 @@ Field Number:
 13. Fixed to N, indicates decimal speed in knots.
 14. T or D. T = tracked, D = dropped. Message with status
     “dropped” is sent only once after target is dropped.
-15. NMEA checksum.
+15. Checksum.
 
 Transas is a mnanufacturer of proprietary ECDIS systems.
 
