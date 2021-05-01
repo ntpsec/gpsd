@@ -41,6 +41,9 @@ if command -v gpspipe; then
     # try to get JSON header
     gpspipe -w -n 2 -x 20
 fi
+if command -v ipcs; then
+    ipcs -m | sed -nE '/key/p;/KEY/p;/0x4e5450/p'
+fi
 if command -v ntpshmmon; then
     ntpshmmon -V
     # 6 lines, or 10 seconds, of ntpshmmon
