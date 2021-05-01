@@ -7,6 +7,7 @@
 #include "../include/gpsd_config.h"  /* must be before all includes */
 
 #include <math.h>
+#include <string.h>                  // for memcpy()
 
 #include "../include/gpsd.h"
 #include "../include/bits.h"
