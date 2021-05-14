@@ -195,7 +195,6 @@ various additional capabilities and extensions:
 |============================================================================
 |C++ compiler     | allows building libgpsmm C++ wrapper for client library
 |Qt 4.53+         | allows building libQgpsmm C++ wrapper for client library
-|libcap           | Capabilities library, improved security under Linux
 |(n)curses        | curses screen-painting library, used by cgps and gpsmon
 |pps-tools        | adds support for the KPPS API, for improved timing
 |libusb           | Userspace access to USB devices
@@ -206,7 +205,6 @@ On Gentoo systems those packages are named:
 |=============================================================================
 |dev-qt/qtcore       | Basic Qt
 |dev-qt/qtnetwork    | Qt network components
-|sys-libs/libcap     | Capabilities library
 |sys-libs/ncurses    | curses screen-painting library, used by cgps and gpsmon
 |net-misc/pps-tools  | adds support for the KPPS API, for improved timing
 |virtual/libusb      | Userspace access to USB devices
@@ -224,9 +222,20 @@ compiler supported by Qt (tested on GCC 4.4.0/mingw on Windows and GCC
 http://qt.nokia.com/doc/4.6/platform-specific.html for platform
 specific building documentation
 
-For working with DBUS, you'll need the DBUS development
-headers and libraries installed.  Under Debian/Ubuntu this
-is the package libdbus-1-dev.
+For working with D-Bus, you'll need the D-Bus development
+headers and libraries installed.
+
+Under Debian/Ubuntu this is the package"
+
+|==============================================================================
+|libdbus-1-dev        | D-Bus Development package
+|==============================================================================
+
+On Gentoo the package will already be installed if D-Bus is in use:
+
+|==============================================================================
+|sys-apps/dbus        | D-Bus
+|==============================================================================
 
 Under Ubuntu, the ncurses package you want is libncurses5-dev.  Under
 Fedora, it's ncurses-devel.  Depending on how your distribution
@@ -253,7 +262,7 @@ Asciidoctor is to generate nroff -man source from asciidoc markup.  The
 following packages are used in this process:
 
 |============================================================================
-|asciidoctor        | Documentation front end with light markup
+|asciidoctor          | Documentation front end with light markup
 |============================================================================
 
 If both are present, then AsciiDoctor is preferred.
@@ -261,7 +270,7 @@ If both are present, then AsciiDoctor is preferred.
 On Gentoo systems this packages is named:
 
 |==============================================================================
-|app-text/asciidoctor             | Documentation front end with light markup
+|dev-ruby/asciidoctor | Documentation front end with light markup
 |==============================================================================
 
 The build degrades gracefully in the absence of any of these. You should
@@ -342,6 +351,76 @@ generator included with the distribution. To install it, copy the file
 'gpsd.php' to your HTML document directory. Then see the
 post-installation instructions in INSTALL.adoc for how to configure it.
 
+=== Gentoo Build
+
+A cheat sheet for building gpsd from git source on a freshly installed
+Gentoo.  Perform these steps, in order, as root.
+
+The '--noreplace' option to 'emerge' prevents reinstalling packages that
+are already installed.
+
+----
+# install the required build tools
+emerge --noreplace dev-util/scons dev-vcs/git
+
+# optional, to support the KPPS API, for improved timing
+emerge --noreplace net-misc/pps-tools
+
+# optional, for cgps and gpsmon
+emerge --noreplace sys-libs/ncurses
+
+# optional, for ubxtool and zerl serial port support
+emerge --noreplace dev-python/pyserial
+
+# optional, to support Garmin USB devices
+emerge --noreplace virtual/libusb
+
+# optional, to support Bluetooth GPS devices
+emerge --noreplace net-wireless/bluez
+
+# Skip the following optionals on a minimal system:
+
+# optional, to build man page and html pages
+emerge --noreplace dev-ruby/asciidoctor
+
+# Optionals for desktop (X) systems:
+
+# optional, for xgps and xgpsspeed
+emerge --noreplace dev-python/pygobject dev-python/pycairo
+
+# optional, for gpsplot
+emerge --noreplace dev-python/matplotlib
+
+# D-Bus support
+emerge --noreplace sys-apps/dbus
+
+# To build Qt compatible library.
+emerge --noreplace dev-qt/qtcore dev-qt/qtnetwork
+
+# prerequisites now installed
+
+# make a place to keep the source
+mkdir -p /usr/local/src/GPSD
+cd /usr/local/src/GPSD
+
+# grab a shallow clone of gpsd from git.
+git clone --depth 1 https://gitlab.com/gpsd/gpsd.git
+cd gpsd
+
+# clean the tree, just in case
+scons -c
+
+# build the project
+scons
+
+# check the results
+scons check
+
+# and install if it looks good
+scons install
+----
+
+
 == Leap Seconds
 
 The header gpsd.h contains the value BUILD_LEAPSECONDS.  This is set,
@@ -385,10 +464,10 @@ it is possible to build gpsd without thread support if you build
 with pps=no.  You'll lose support for updating the clock from PPS
 pulses.
 
-dbus_export=no: for systems using DBUS: gpsd includes support for
-shipping fixes as DBUS notifications, compiled in by default.  This
+dbus_export=no: for systems using D-Bus: gpsd includes support for
+shipping fixes as D-Bus notifications, compiled in by default.  This
 may lead to complaint messages during testing  on systems that don't
-support DBUS. Build with the option "dbus_export=no" to disable it
+support D-Bus. Build with the option "dbus_export=no" to disable it
 
 qt=yes: libQgpsmm is a Qt version of the libgps/libgpsmm
 pair. Thanks to the multi-platform approach of Qt, it allows the gpsd
