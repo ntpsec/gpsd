@@ -1433,7 +1433,7 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         subp->orbit.sv = tSVID;
         subp->orbit.IODE = (words[0] >> 14) & BITMASK(10);    // IODnav
         tmp = (words[0] >> 8) & BITMASK(6);                   // SVID
-        if (tSVID != tmp) {
+        if (tSVID != (unsigned)tmp) {
             // WTF?
             mask = 0;
         }
