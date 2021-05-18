@@ -3730,9 +3730,11 @@ Only for models with built in USB.
         12: "gyro temp",
         13: "gyro y",
         14: "gyro x",
-        15: "accel x",
-        16: "accel y",
-        17: "accel z",
+        # no 15 ?
+        16: "accel x",
+        17: "accel y",
+        18: "accel z",
+        # 98 ?
         }
 
     def esf_raw(self, buf):
