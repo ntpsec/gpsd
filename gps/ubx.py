@@ -3714,10 +3714,34 @@ Only for models with built in USB.
         # 0xb0:
         }
 
+    def esf_raw(self, buf):
+        """UBX-ESF-RAW decode, raw sensor information"""
+
+        # at least protver 15
+        if 15 > self.protver:
+            self.protver = 15
+
+        m_len = len(buf)
+        blocks = int((m_len - 4) / 8)
+        if ((blocks * 8) + 4) != m_len:
+            s = ("ERROR: invalid m_len %d blocks %f" %
+                 (m_len, (m_len - 4) / 8))
+            return s
+
+        u = struct.unpack_from('<L', buf, 0)
+        s = ' reserved1 x%x blocks %u' % (u[0], blocks)
+        n = 0
+        while n < blocks:
+            u = struct.unpack_from('<LL', buf, 4 + (8 * n))
+            s  += '\n   n %3d data x%08x sTtag x%08x' % (n, u[0], u[1])
+            n += 1
+        return s
+
     # UBX-ESF-
     # only with ADR or UDR products
     esf_ids = {0x02: {'str': 'MEAS', 'minlen': 8, 'name': "UBX-ESF-MEAS"},
-               0x03: {'str': 'RAW', 'minlen': 4, 'name': "UBX-ESF-RAW"},
+               0x03: {'str': 'RAW', 'dec': esf_raw, 'minlen': 4,
+                      'name': "UBX-ESF-RAW"},
                0x10: {'str': 'STATUS', 'minlen': 16, 'name': "UBX-ESF-STATUS"},
                0x14: {'str': 'ALG', 'minlen': 16, 'name': "UBX-ESF-ALG"},
                0x15: {'str': 'INS', 'minlen': 16, 'name': "UBX-ESF-INS"},
