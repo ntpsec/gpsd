@@ -3714,6 +3714,27 @@ Only for models with built in USB.
         # 0xb0:
         }
 
+    esf_raw_type = {
+        0: "none",
+        1: "reserved",
+        2: "reserved",
+        3: "reserved",
+        4: "reserved",
+        5: "gyro z",
+        6: "Front Left ticks",
+        7: "Front Right ticks",
+        8: "Rear Left ticks",
+        9: "Rear Right ticks",
+        10: "speed tick",
+        11: "speed",
+        12: "gyro temp",
+        13: "gyro y",
+        14: "gyro x",
+        15: "accel x",
+        16: "accel y",
+        17: "accel z",
+        }
+
     def esf_raw(self, buf):
         """UBX-ESF-RAW decode, raw sensor information"""
 
@@ -3733,7 +3754,12 @@ Only for models with built in USB.
         n = 0
         while n < blocks:
             u = struct.unpack_from('<LL', buf, 4 + (8 * n))
-            s  += '\n   n %3d data x%08x sTtag x%08x' % (n, u[0], u[1])
+            data_type = (u[0] >> 24) & 0x0ff
+            data = u[0] & 0x0ffffff
+            s += ('\n   n %3d type %3u data x%08x sTtag x%08x' %
+                  (n, data_type, data, u[1]))
+            if gps.VERB_DECODE <= self.verbosity:
+                s += "\n     %s" % index_s(data_type, self.esf_raw_type)
             n += 1
         return s
 
