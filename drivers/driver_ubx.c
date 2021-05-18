@@ -328,6 +328,135 @@ static void ubx_msg_cfg_rate(struct gps_device_t *session, unsigned char *buf,
     return;
 }
 
+// UBX-ESF-ALG
+static gps_mask_t
+ubx_msg_esf_alg(struct gps_device_t *session, unsigned char *buf,
+                size_t data_len)
+{
+    unsigned version, flags, reserved1;
+    static gps_mask_t mask = 0;
+
+    if (16 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-ESF-ALG message, runt payload len %zd", data_len);
+        return mask;
+    }
+
+    session->driver.ubx.iTOW = getleu32(buf, 9);
+    version = getub(buf, 4);
+    flags = getub(buf, 5);
+    reserved1 = getub(buf, 7);
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "UBX-ESF-ALG: iTOW %lld  version %u lags x%x reserved1 x%x\n",
+            (long long)session->driver.ubx.iTOW, version, flags, reserved1);
+
+    return mask;
+}
+
+// UBX-ESF-INS
+static gps_mask_t
+ubx_msg_esf_ins(struct gps_device_t *session, unsigned char *buf,
+                size_t data_len)
+{
+    unsigned long long bitfield0, reserved1;
+    static gps_mask_t mask = 0;
+
+    if (16 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-ESF-INS message, runt payload len %zd", data_len);
+        return mask;
+    }
+
+    bitfield0 = getleu32(buf, 0);
+    reserved1 = getleu32(buf, 4);
+    session->driver.ubx.iTOW = getleu32(buf, 8);
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "UBX-ESF-INS: bitfield0 %llu, reserved1 %llu, iTOW %lld\n",
+            bitfield0, reserved1,
+            (long long)session->driver.ubx.iTOW);
+
+    return mask;
+}
+
+// UBX-ESF-MEAS
+static gps_mask_t
+ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
+                 size_t data_len)
+{
+    unsigned long long timetag;
+    static gps_mask_t mask = 0;
+
+    if (8 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-ESF-MEAS message, runt payload len %zd", data_len);
+        return mask;
+    }
+
+    timetag = getleu32(buf, 1);
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "UBX-ESF-MEAS: timetag %llu\n",
+            timetag);
+
+    return mask;
+}
+
+// UBX-ESF-RAW
+static gps_mask_t
+ubx_msg_esf_raw(struct gps_device_t *session, unsigned char *buf,
+                             size_t data_len)
+{
+    unsigned long reserved1;
+    uint16_t blocks;
+    static gps_mask_t mask = 0;
+
+    if (4> data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-ESF-RAW message, runt payload len %zd", data_len);
+        return mask;
+    }
+
+    reserved1 = getleu32(buf, 0);  // reserved1
+    if (0 != ((data_len - 4) % 8)) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-ESF-RAW message, weird payload len %zd", data_len);
+        return mask;
+    }
+    blocks = (data_len - 4) / 8;
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "UBX-ESF-RAW:reserved1 x%lx, blocks %u\n",
+             reserved1, blocks);
+
+    return mask;
+}
+
+// UBX-ESF-STATUS
+static gps_mask_t
+ubx_msg_esf_status(struct gps_device_t *session, unsigned char *buf,
+                   size_t data_len)
+{
+    unsigned version;
+    static gps_mask_t mask = 0;
+
+    if (16 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-ESF-STATUS message, runt payload len %zd", data_len);
+        return mask;
+    }
+
+    session->driver.ubx.iTOW = getleu32(buf, 0);
+    version = getub(buf, 4);
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "UBX-ESF-STATUS: iTOW %lld  version %u\n",
+            (long long)session->driver.ubx.iTOW, version);
+
+    return mask;
+}
+
 /**
  * Receiver/Software Version
  * UBX-MON-VER
@@ -2696,6 +2825,22 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         break;
     case UBX_CFG_NAVX5:
         GPSD_LOG(LOG_DATA, &session->context->errout, "UBX-CFG-NAVX5\n");
+        break;
+
+    case UBX_ESF_ALG:
+        ubx_msg_esf_alg(session, &buf[UBX_PREFIX_LEN], data_len);
+        break;
+    case UBX_ESF_INS:
+        ubx_msg_esf_ins(session, &buf[UBX_PREFIX_LEN], data_len);
+        break;
+    case UBX_ESF_MEAS:
+        ubx_msg_esf_meas(session, &buf[UBX_PREFIX_LEN], data_len);
+        break;
+    case UBX_ESF_RAW:
+        ubx_msg_esf_raw(session, &buf[UBX_PREFIX_LEN], data_len);
+        break;
+    case UBX_ESF_STATUS:
+        ubx_msg_esf_status(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
 
     case UBX_INF_DEBUG:
