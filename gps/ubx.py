@@ -3737,6 +3737,57 @@ Only for models with built in USB.
         # 98 ?
         }
 
+    def esf_alg(self, buf):
+        """UBX-ESF-ALG decode, IMU alignment information"""
+
+        # at least protver 19
+        if 19 > self.protver:
+            self.protver = 19
+
+        u = struct.unpack_from('<LBBBBLhh', buf, 0)
+        s = (' iTOW %u version %u flags x%x error x%x reserved1 x%x\n'
+             '   yaw %u pitch %d roll %d' % u)
+        return s
+
+    def esf_ins(self, buf):
+        """UBX-ESF-INS decode, Vehicle dynamics information"""
+
+        # at least protver 19
+        if 19 > self.protver:
+            self.protver = 19
+
+        u = struct.unpack_from('<LLLllllll', buf, 0)
+        s = (' bitfield0 x%x reserved1 x%x iTOW %u\n'
+             '   xAngRate %d yAngRate %d zAngRate %d]n'
+             '   xAccel %d yAccel %d zAccel %d]n' % u)
+        return s
+
+    def esf_meas(self, buf):
+        """UBX-ESF-MEAS decode, External sensor fusion measurements"""
+
+        # at least protver 15
+        if 15 > self.protver:
+            self.protver = 15
+
+        m_len = len(buf)
+        blocks = int((m_len - 8) / 4)
+        if ((blocks * 4) + 8) != m_len:
+            s = ("ERROR: invalid m_len %d blocks %f" %
+                 (m_len, (m_len - 8) / 4))
+            return s
+
+        u = struct.unpack_from('<LHH', buf, 0)
+        s = ' timetag %u flags x%x id %u\n' % u
+        n = 0
+        while n < blocks:
+            u = struct.unpack_from('<L', buf, 8 + (4 * n))
+            data_type = (u[0] >> 24) & 0x03f
+            data = u[0] & 0x0ffffff
+            s += ('\n   n %3d dataType %3u dataField x%06x' %
+                  (n, data_type, data))
+            n += 1
+        return s
+
     def esf_raw(self, buf):
         """UBX-ESF-RAW decode, raw sensor information"""
 
@@ -3758,21 +3809,50 @@ Only for models with built in USB.
             u = struct.unpack_from('<LL', buf, 4 + (8 * n))
             data_type = (u[0] >> 24) & 0x0ff
             data = u[0] & 0x0ffffff
-            s += ('\n   n %3d type %3u data x%08x sTtag x%08x' %
+            s += ('\n   n %3d type %3u data x%06x sTtag x%08x' %
                   (n, data_type, data, u[1]))
             if gps.VERB_DECODE <= self.verbosity:
                 s += "\n     %s" % index_s(data_type, self.esf_raw_type)
             n += 1
         return s
 
+    def esf_status(self, buf):
+        """UBX-ESF-STATUS decode, raw sensor status"""
+
+        # at least protver 15
+        if 15 > self.protver:
+            self.protver = 15
+
+        m_len = len(buf)
+        blocks = int((m_len - 16) / 4)
+        if ((blocks * 4) + 16) != m_len:
+            s = ("ERROR: invalid m_len %d blocks %f" %
+                 (m_len, (m_len - 16) / 4))
+            return s
+
+        u = struct.unpack_from('<LBBBBBBBBBHB', buf, 0)
+        s = (' iTOW x%x version %u reserved1 %x %x %x %x %x %x %x \n'
+             '   fusionMode %u reserved2 %x numSens %u ' %
+             u)
+        n = 0
+        while n < blocks:
+            u = struct.unpack_from('<BBBB', buf, 16 + (4 * n))
+            s += '\n   sensStatus1 %x sensStatus2 %x freq %u faults %u' % u
+            n += 1
+        return s
+
     # UBX-ESF-
     # only with ADR or UDR products
-    esf_ids = {0x02: {'str': 'MEAS', 'minlen': 8, 'name': "UBX-ESF-MEAS"},
+    esf_ids = {0x02: {'str': 'MEAS', 'dec': esf_meas, 'minlen': 8,
+                      'name': "UBX-ESF-MEAS"},
                0x03: {'str': 'RAW', 'dec': esf_raw, 'minlen': 4,
                       'name': "UBX-ESF-RAW"},
-               0x10: {'str': 'STATUS', 'minlen': 16, 'name': "UBX-ESF-STATUS"},
-               0x14: {'str': 'ALG', 'minlen': 16, 'name': "UBX-ESF-ALG"},
-               0x15: {'str': 'INS', 'minlen': 16, 'name': "UBX-ESF-INS"},
+               0x10: {'str': 'STATUS', 'dec': esf_status, 'minlen': 16,
+                      'name': "UBX-ESF-STATUS"},
+               0x14: {'str': 'ALG', 'dec': esf_alg, 'minlen': 16,
+                      'name': "UBX-ESF-ALG"},
+               0x15: {'str': 'INS', 'dec': esf_ins, 'minlen': 16,
+                      'name': "UBX-ESF-INS"},
                }
 
     # UBX-HNR-
@@ -5995,7 +6075,7 @@ protVer 34 and up
                     A1UTC |= (page >> 138) & 0x0fff
                     DN = (page >> 130) & 0x0ff
                     s += ("Timing: deltatLS %u deltatLSF %u WNLSF %u A0UTC %u"
-                          " A1UTC %u" % 
+                          " A1UTC %u" %
                           (deltatLS, deltatLSF, WNLSF, A0UTC, A1UTC))
                 elif 24 == Pnum:
                     # ICD calls this AmID and AmEpID
@@ -6071,11 +6151,11 @@ protVer 34 and up
         # all unscaled
         if (0 == word_type):
             s += "\n    Spare Word"
-            time = (page >> 120) & 3;
+            time = (page >> 120) & 3
             if 2 == time:
                 # valid time
                 WN = (page >> 20) & 0x0fff
-                TOW =  page & 0x0fffff
+                TOW = page & 0x0fffff
                 s += " WN %u TOW %u" % (WN, TOW)
 
         elif (1 == word_type):
@@ -8801,13 +8881,12 @@ Always double check with "-p CFG-GNSS".
         # UBX-CFG-USB
         "CFG-USB": {"command": send_poll, "opt": [0x06, 0x1b],
                     "help": "poll UBX-CFG-USB USB config"},
+        # UBX-ESF-ALG
+        "ESF-ALG": {"command": send_poll, "opt": [0x10, 0x14],
+                    "help": "poll UBX-ESF-ALG IMU alignment information"},
         # UBX-ESF-INS
         "ESF-INS": {"command": send_poll, "opt": [0x10, 0x15],
                     "help": "poll UBX-ESF-INS Vehicle dynamics info"},
-        # UBX-ESF-MEAS
-        "ESF-MEAS": {"command": send_poll, "opt": [0x10, 0x02],
-                     "help": "poll UBX-ESF-MEAS External sensor fusion "
-                             "measurements"},
         # UBX-ESF-STATUS
         "ESF-STATUS": {"command": send_poll, "opt": [0x10, 0x10],
                        "help": "poll UBX-ESF-STATUS External sensor fusion "
