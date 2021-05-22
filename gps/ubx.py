@@ -2333,13 +2333,58 @@ Programming the dynamic seed for host interface signature"""
         s = " version %u reserved1 %u %u seedHi %u seedLo %u" % u
         return s
 
-    # UBX-CFG-ESFALG, protVer 15.01 and up, ADR and UDR only
+    def cfg_esfa(self, buf):
+        """UBX-CFG-ESFA decode, Accelerometer sensor configuration
+protVer 19 and up, UDR only"""
 
-    # UBX-CFG-ESFA, protVer 19 and up, UDR only
+        # at least protver 19
+        if 19 > self.protver:
+            self.protver = 19
 
-    # UBX-CFG-ESFG, protVer 19 and up, UDR only
+        u = struct.unpack_from('<BLLBBBHHL', buf, 0)
+        s = (' version %u reserved1 x%x %x %x accelRmsThdl %u frequency %u\n'
+             '  latency %u accuracy %u reserved2 x%x' % u)
+        return s
 
-    # UBX-CFG-ESFWT, protVer 15.01 and up, ADR only
+    def cfg_esfalg(self, buf):
+        """UBX-CFG-ESFALG decode, IMU-mount misalignment configuration
+protVer 15.01 and up, ADR and UDR only"""
+
+        # at least protver 15
+        if 15 > self.protver:
+            self.protver = 15
+
+        u = struct.unpack_from('<LLhh', buf, 0)
+        s = ' bitfield x%x aw %u pitch %d roll %d' % u
+        return s
+
+    def cfg_esfg(self, buf):
+        """UBX-CFG-ESFG decode, Gyro sensor configuration
+protVer 19 and up, UDR only"""
+
+        # at least protver 19
+        if 19 > self.protver:
+            self.protver = 19
+
+        u = struct.unpack_from('<BLLHBHBBHHL', buf, 0)
+        s = (' version %u reserved1 x%x %x %x tcTableSaveRate %u\n'
+             '  gyroRmsThdl %u frequency %u latency %u accuracy %u\n'
+             '  reserved2 x%x' % u)
+        return s
+
+    def cfg_esfwt(self, buf):
+        """UBX-CFG-ESFWT decode, Wheel tick configuration
+protVer 15.01 and up, ADR only"""
+
+        # at least protver 15
+        if 15 > self.protver:
+            self.protver = 15
+
+        u = struct.unpack_from('<BBBBLLLHBBHLLH', buf, 0)
+        s = (' version %u flags1 x%x flags2 x%x reserved1 x%x wtFactor %u\n'
+             '  wtQuantError %u wtCountMax %u wtLatency %u wtFrequency %u\n'
+             '  flags3 x%x speedDeadBand %ureserved2 x%x %x %x' % u)
+        return s
 
     def cfg_esrc(self, buf):
         """UBX-CFG-ESRC decode, External synchronization source
@@ -3644,16 +3689,19 @@ Only for models with built in USB.
         0x3e: {'str': 'GNSS', 'dec': cfg_gnss, 'minlen': 4,
                'name': 'UBX-CFG-GNSS'},
         # protVer 19 and up, UDR only
-        0x40: {'str': 'ESFG', 'minlen': 20, 'name': 'UBX-CFG-ESFG'},
+        0x40: {'str': 'ESFG', 'dec': cfg_esfg, 'minlen': 20,
+               'name': 'UBX-CFG-ESFG'},
         # in u-blox 7+  Not in u-blox 6-
         0x47: {'str': 'LOGFILTER', 'dec': cfg_logfilter, 'minlen': 12,
                'name': 'UBX-CFG-LOGFILTER'},
         # protVer 19 and up, UDR only
-        0x4c: {'str': 'ESFA', 'minlen': 20, 'name': 'UBX-CFG-ESFA'},
+        0x4c: {'str': 'ESFA', 'dec': cfg_esfg, 'minlen': 20,
+               'name': 'UBX-CFG-ESFA'},
         # Not in u-blox 7-, FTS only
         0x53: {'str': 'TXSLOT', 'minlen': 2, 'name': 'UBX-CFG-TXSLOT'},
         # protVer 15.01 and up, ADR and UDR only
-        0x56: {'str': 'ESFALG', 'minlen': 12, 'name': 'UBX-CFG-ESFALG'},
+        0x56: {'str': 'ESFALG', 'dec': cfg_esfalg,  'minlen': 12,
+               'name': 'UBX-CFG-ESFALG'},
         # Not in u-blox 7-
         0x57: {'str': 'PWR', 'dec': cfg_pwr, 'minlen': 8,
                'name': 'UBX-CFG-PWR'},
@@ -3682,7 +3730,8 @@ Only for models with built in USB.
         0x71: {'str': 'TMODE3', 'dec': cfg_tmode3, 'minlen': 40,
                'name': 'UBX-CFG-TMODE3'},
         # protVer 15.01 and up, ADR only
-        0x82: {'str': 'ESFWT', 'minlen': 32, 'name': 'UBX-CFG-ESFWT'},
+        0x82: {'str': 'ESFWT', 'dec': cfg_esfwt, 'minlen': 32,
+               'name': 'UBX-CFG-ESFWT'},
         # Not in u-blox 7-
         0x84: {'str': 'FIXSEED', 'dec': cfg_fixseed, 'minlen': 12,
                'name': 'UBX-CFG-FIXSEED'},
@@ -8756,8 +8805,20 @@ Always double check with "-p CFG-GNSS".
                       "help": "poll UBX-CFG-DGNSS DGNSS configuration"},
         # UBX-CFG-DOSC
         "CFG-DOSC": {"command": send_poll, "opt": [0x06, 0x61],
-                     "help": "poll UBX-CFG-DOSC Disciplined oscillator "
+                     "help": "poll UBX-CFG-DOSC Disciplined oscillator"
                      "configuration"},
+        # UBX-CFG-ESFA
+        "CFG-ESFA": {"command": send_poll, "opt": [0x06, 0x4c],
+                     "help": "poll UBX-CFG-ESFA Accelerometer configuration"},
+        # UBX-CFG-ESFALG
+        "CFG-ESFALG": {"command": send_poll, "opt": [0x06, 0x56],
+                       "help": "poll UBX-CFG-ESFALG IMU alignment config"},
+        # UBX-CFG-ESFG
+        "CFG-ESFG": {"command": send_poll, "opt": [0x06, 0x4D],
+                     "help": "poll UBX-CFG-ESFG Gyro configuration"},
+        # UBX-CFG-ESWTF
+        "CFG-ESFWT": {"command": send_poll, "opt": [0x06, 0x82],
+                      "help": "poll UBX-CFG-ESFWY Wheel tick configuration"},
         # UBX-CFG-ESRC
         "CFG-ESRC": {"command": send_poll, "opt": [0x06, 0x60],
                      "help": "poll UBX-CFG-ESRC External synchronization "
