@@ -317,7 +317,7 @@ UBX-CFG-RATE:
 To change to a 10 Hz measurement and fix rate, then check your work:
 
 ----
-$ ubxtool -p RATE,100
+$ ubxtool -p CFG-RATE,100
 [...]
 $ ubxtool -p CFG-RATE
 [...]
