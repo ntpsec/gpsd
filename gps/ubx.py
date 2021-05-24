@@ -3807,8 +3807,8 @@ Only for models with built in USB.
 
         u = struct.unpack_from('<LLLllllll', buf, 0)
         s = (' bitfield0 x%x reserved1 x%x iTOW %u\n'
-             '   xAngRate %d yAngRate %d zAngRate %d]n'
-             '   xAccel %d yAccel %d zAccel %d]n' % u)
+             '   xAngRate %d yAngRate %d zAngRate %d\n'
+             '   xAccel %d yAccel %d zAccel %d\n' % u)
         return s
 
     def esf_meas(self, buf):
