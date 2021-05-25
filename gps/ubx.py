@@ -2346,6 +2346,10 @@ protVer 19 and up, UDR only"""
              '  latency %u accuracy %u reserved2 x%x' % u)
         return s
 
+    cfg_esfalg_bitfield = {
+        0x1: 'doAutoMntAlg',
+        }
+
     def cfg_esfalg(self, buf):
         """UBX-CFG-ESFALG decode, IMU-mount misalignment configuration
 protVer 15.01 and up, ADR and UDR only"""
@@ -2356,6 +2360,10 @@ protVer 15.01 and up, ADR and UDR only"""
 
         u = struct.unpack_from('<LLhh', buf, 0)
         s = ' bitfield x%x aw %u pitch %d roll %d' % u
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ("\n    bitfield (%s) version %u" %
+                  (flag_s((u[0] >> 8) & 1, self.cfg_esfalg_bitfield),
+                   u[0] & 0x0ff))
         return s
 
     def cfg_esfg(self, buf):
@@ -2372,6 +2380,20 @@ protVer 19 and up, UDR only"""
              '  reserved2 x%x' % u)
         return s
 
+    cfg_esfwt_flags1 = {
+        0x1: 'combineTicks',
+        0x10: 'useWtSpeed',
+        0x20: 'dirPinPol',
+        0x40: 'useWtPin',
+        }
+
+    cfg_esfwt_flags2 = {
+        0x1: 'autoWtCountMaxOff',
+        0x2: 'autoDirPinPolOff',
+        0x4: 'autoSoftwareWtOff',
+        0x8: 'autoUseWtSpeedOff',
+        }
+
     def cfg_esfwt(self, buf):
         """UBX-CFG-ESFWT decode, Wheel tick configuration
 protVer 15.01 and up, ADR only"""
@@ -2384,6 +2406,10 @@ protVer 15.01 and up, ADR only"""
         s = (' version %u flags1 x%x flags2 x%x reserved1 x%x wtFactor %u\n'
              '  wtQuantError %u wtCountMax %u wtLatency %u wtFrequency %u\n'
              '  flags3 x%x speedDeadBand %ureserved2 x%x %x %x' % u)
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ("\n    flags1 (%s) flags2 (%s)" %
+                  (flag_s(u[1], self.cfg_esfwt_flags1),
+                   flag_s(u[2], self.cfg_esfwt_flags2)))
         return s
 
     def cfg_esrc(self, buf):
