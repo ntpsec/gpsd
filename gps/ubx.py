@@ -3824,6 +3824,15 @@ Only for models with built in USB.
              '   yaw %u pitch %d roll %d' % u)
         return s
 
+    esf_status_bitfield0 = {
+        0x10: 'xAngRateValid',
+        0x20: 'yAngRateValid',
+        0x40: 'zAngRateValid',
+        0x80: 'xAccelValid',
+        0x100: 'yAccelValid',
+        0x200: 'zAccelValid',
+    }
+
     def esf_ins(self, buf):
         """UBX-ESF-INS decode, Vehicle dynamics information"""
 
@@ -3834,7 +3843,11 @@ Only for models with built in USB.
         u = struct.unpack_from('<LLLllllll', buf, 0)
         s = (' bitfield0 x%x reserved1 x%x iTOW %u\n'
              '   xAngRate %d yAngRate %d zAngRate %d\n'
-             '   xAccel %d yAccel %d zAccel %d\n' % u)
+             '   xAccel %d yAccel %d zAccel %d' % u)
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ("\n   bitfield0 (version %u %s)" %
+                  (u[0] & 0xff,
+                   flag_s(u[0] & 0x0ff00, self.esf_status_bitfield0)))
         return s
 
     esf_meas_flags = {
