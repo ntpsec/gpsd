@@ -3837,6 +3837,15 @@ Only for models with built in USB.
              '   xAccel %d yAccel %d zAccel %d\n' % u)
         return s
 
+    esf_meas_flags = {
+        1: 'timeMarkSent-on-Ext0',
+        2: 'timeMarkSent-on-Ext1',
+        4: 'timeMarkEdge-falling',
+        8: 'calibTtagValid',
+        0x10: 'Unk',
+        0x20: 'Unk',
+        }
+
     def esf_meas(self, buf):
         """UBX-ESF-MEAS decode, External sensor fusion measurements"""
 
@@ -3852,15 +3861,34 @@ Only for models with built in USB.
             return s
 
         u = struct.unpack_from('<LHH', buf, 0)
-        s = ' timetag %u flags x%x id %u\n' % u
+        s = ' timetag %u flags x%x id %u' % u
+        numMeas = (u[1] >> 11) & 0x1f
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ("\n   flags (%s) numMeas %u" %
+                  (flag_s(u[1] & 0x7ff, self.esf_meas_flags), numMeas))
+        if u[1] & 0x08:
+            # calibTtagValid
+            blocks -= 1
+
+        if numMeas != blocks:
+            s += "\nERROR:  numMeas != blocks!!"
+            return s
+
         n = 0
+        s1 = ''
         while n < blocks:
-            u = struct.unpack_from('<L', buf, 8 + (4 * n))
-            data_type = (u[0] >> 24) & 0x03f
-            data = u[0] & 0x0ffffff
-            s += ('\n   n %3d dataType %3u dataField x%06x' %
-                  (n, data_type, data))
+            u1 = struct.unpack_from('<L', buf, 8 + (4 * n))
+            data_type = (u1[0] >> 24) & 0x03f
+            data = u1[0] & 0x0ffffff
+            if gps.VERB_DECODE <= self.verbosity:
+                s1 = ' (%s)' % index_s(data_type, self.esf_raw_type)
+            s += ('\n     n %3d dataType %3u%s dataField x%06x' %
+                  (n, data_type, s1, data))
             n += 1
+        if u[1] & 0x08:
+            # calibTtagValid
+            u1 = struct.unpack_from('<L', buf, 8 + (4 * numMeas))
+            s += '\n   calibTtag %u' % u[0]
         return s
 
     def esf_raw(self, buf):
@@ -3880,14 +3908,15 @@ Only for models with built in USB.
         u = struct.unpack_from('<L', buf, 0)
         s = ' reserved1 x%x blocks %u' % (u[0], blocks)
         n = 0
+        s1 = ''
         while n < blocks:
             u = struct.unpack_from('<LL', buf, 4 + (8 * n))
             data_type = (u[0] >> 24) & 0x0ff
             data = u[0] & 0x0ffffff
-            s += ('\n   n %3d type %3u data x%06x sTtag x%08x' %
-                  (n, data_type, data, u[1]))
             if gps.VERB_DECODE <= self.verbosity:
-                s += "\n     %s" % index_s(data_type, self.esf_raw_type)
+                s1 = " (%s)" % index_s(data_type, self.esf_raw_type)
+            s += ('\n   n %3d data_type %3u%s data x%06x sTtag x%08x' %
+                  (n, data_type, s1, data, u[1]))
             n += 1
         return s
 
