@@ -3920,6 +3920,13 @@ Only for models with built in USB.
             n += 1
         return s
 
+    esf_status_fusionMode = {
+        0: 'Initialization mode',
+        1: 'Fusion mode',
+        2: 'Susended fusion mode',
+        3: 'Disabled fusion mode',
+        }
+
     def esf_status(self, buf):
         """UBX-ESF-STATUS decode, raw sensor status"""
 
@@ -3935,13 +3942,20 @@ Only for models with built in USB.
             return s
 
         u = struct.unpack_from('<LBBBBBBBBBHB', buf, 0)
-        s = (' iTOW x%x version %u reserved1 %x %x %x %x %x %x %x \n'
-             '   fusionMode %u reserved2 %x numSens %u ' %
-             u)
+        s = (' iTOW %u version %u reserved1 %x %x %x %x %x %x %x \n'
+             '   fusionMode %u reserved2 %x numSens %u ' % u)
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ("\n     fusionMode (%s)" %
+                  index_s(u[10], self.esf_status_fusionMode))
         n = 0
         while n < blocks:
             u = struct.unpack_from('<BBBB', buf, 16 + (4 * n))
             s += '\n   sensStatus1 %x sensStatus2 %x freq %u faults %u' % u
+            if gps.VERB_DECODE <= self.verbosity:
+                s += ("\n      type (%s) used %s ready %s" %
+                      (index_s(u[0] & 0x3f, self.esf_raw_type),
+                       'Yes' if (u[0] & 0x40) else 'No',
+                       'Yes' if (u[0] & 0x80) else 'No'))
             n += 1
         return s
 
