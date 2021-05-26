@@ -3812,6 +3812,14 @@ Only for models with built in USB.
         # 98 ?
         }
 
+    esf_alg_status = {
+        0: 'user-defined/fixed angles',
+        1: 'roll/pitch angles alignment is ongoing',
+        2: 'roll/pitch/yaw angles alignment is ongoing',
+        3: 'coarse alingment used',
+        4: 'fine alingment used',
+    }
+
     def esf_alg(self, buf):
         """UBX-ESF-ALG decode, IMU alignment information"""
 
@@ -3822,6 +3830,10 @@ Only for models with built in USB.
         u = struct.unpack_from('<LBBBBLhh', buf, 0)
         s = (' iTOW %u version %u flags x%x error x%x reserved1 x%x\n'
              '   yaw %u pitch %d roll %d' % u)
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ("\n   flags (%s) status (%s)" %
+                  ('autoMntAlgOn' if (u[2] & 1) else '',
+                   index_s((u[2] >> 1) & 7, self.esf_alg_status)))
         return s
 
     esf_status_bitfield0 = {
