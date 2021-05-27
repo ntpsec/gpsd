@@ -353,7 +353,19 @@ ubx_msg_esf_alg(struct gps_device_t *session, unsigned char *buf,
     pitch = getleu16(buf, 12);
     roll = getleu16(buf, 14);
 
-    GPSD_LOG(LOG_PROG, &session->context->errout,
+    if (0 == (2 & error)) {
+        // no yawAlgError
+        session->gpsdata.attitude.yaw = 0.01 * yaw;
+        mask |= ATTITUDE_SET;
+    }
+    if (0 == (5 & error)) {
+        // no tiltAlgError or angleError
+        session->gpsdata.attitude.roll = 0.01 * roll;
+        session->gpsdata.attitude.pitch = 0.01 * pitch;
+        mask |= ATTITUDE_SET;
+    }
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
              "UBX-ESF-ALG: iTOW %lld version %u flags x%x error x%x"
              " reserved1 x%x yaw %ld pitch %u roll %u\n",
             (long long)session->driver.ubx.iTOW, version, flags, error,

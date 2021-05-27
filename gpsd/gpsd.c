@@ -1520,6 +1520,9 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
 #ifdef SOCKET_EXPORT_ENABLE
     struct subscriber_t *sub;
 
+    GPSD_LOG(LOG_DATA, &context.errout, "all_reports(): changed %s\n",
+             gps_maskdump(changed));
+
     /* add any just-identified device to watcher lists */
     if ((changed & DRIVER_IS) != 0) {
         bool listeners = false;
