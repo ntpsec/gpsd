@@ -333,7 +333,9 @@ static gps_mask_t
 ubx_msg_esf_alg(struct gps_device_t *session, unsigned char *buf,
                 size_t data_len)
 {
-    unsigned version, flags, reserved1;
+    unsigned version, flags, error, reserved1;
+    unsigned long yaw;
+    int pitch, roll;
     static gps_mask_t mask = 0;
 
     if (16 > data_len) {
@@ -342,14 +344,20 @@ ubx_msg_esf_alg(struct gps_device_t *session, unsigned char *buf,
         return mask;
     }
 
-    session->driver.ubx.iTOW = getleu32(buf, 9);
+    session->driver.ubx.iTOW = getleu32(buf, 0);
     version = getub(buf, 4);
     flags = getub(buf, 5);
+    error = getub(buf, 6);
     reserved1 = getub(buf, 7);
+    yaw = getleu32(buf, 8);
+    pitch = getleu16(buf, 12);
+    roll = getleu16(buf, 14);
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "UBX-ESF-ALG: iTOW %lld  version %u lags x%x reserved1 x%x\n",
-            (long long)session->driver.ubx.iTOW, version, flags, reserved1);
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "UBX-ESF-ALG: iTOW %lld version %u flags x%x error x%x"
+             " reserved1 x%x yaw %ld pitch %u roll %u\n",
+            (long long)session->driver.ubx.iTOW, version, flags, error,
+            reserved1, yaw, pitch, roll);
 
     return mask;
 }
@@ -360,6 +368,8 @@ ubx_msg_esf_ins(struct gps_device_t *session, unsigned char *buf,
                 size_t data_len)
 {
     unsigned long long bitfield0, reserved1;
+    long xAngRate, yAngRate, zAngRate;
+    long xAccel, yAccel, zAccel;
     static gps_mask_t mask = 0;
 
     if (16 > data_len) {
@@ -371,11 +381,20 @@ ubx_msg_esf_ins(struct gps_device_t *session, unsigned char *buf,
     bitfield0 = getleu32(buf, 0);
     reserved1 = getleu32(buf, 4);
     session->driver.ubx.iTOW = getleu32(buf, 8);
+    xAngRate = getles32(buf, 12);
+    yAngRate = getles32(buf, 16);
+    zAngRate = getles32(buf, 20);
+    xAccel = getles32(buf, 24);
+    yAccel = getles32(buf, 28);
+    zAccel = getles32(buf, 32);
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "UBX-ESF-INS: bitfield0 %llu, reserved1 %llu, iTOW %lld\n",
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "UBX-ESF-INS: bitfield0 %llu, reserved1 %llu iTOW %lld"
+             " xAngRate %ld yAngRate %ld zAngRate %ld"
+             " xAccel %ld yAccel %ld zAccel %ld\n",
             bitfield0, reserved1,
-            (long long)session->driver.ubx.iTOW);
+            (long long)session->driver.ubx.iTOW,
+            xAngRate, yAngRate, zAngRate, xAccel, yAccel, zAccel);
 
     return mask;
 }
@@ -386,6 +405,7 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
                  size_t data_len)
 {
     unsigned long long timetag;
+    unsigned flags, id, numMeas, expected_len;
     static gps_mask_t mask = 0;
 
     if (8 > data_len) {
@@ -394,11 +414,24 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
         return mask;
     }
 
-    timetag = getleu32(buf, 1);
+    timetag = getleu32(buf, 0);
+    flags = getleu16(buf, 4);
+    numMeas = (flags >> 11) & 0x01f;
+    id = getleu16(buf, 6);
+    expected_len = 8 + (4 * numMeas);
+    if (0x08 & flags) {
+        expected_len += 4;
+    }
+    if (expected_len != data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-ESF-MEAS: bad length.  Got %zd, expected %u",
+                 data_len, expected_len);
+        return mask;
+    }
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "UBX-ESF-MEAS: timetag %llu\n",
-            timetag);
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "UBX-ESF-MEAS: timetag %llu flags x%x (numMeas %u) id %u\n",
+            timetag, flags, numMeas, id);
 
     return mask;
 }
@@ -426,8 +459,8 @@ ubx_msg_esf_raw(struct gps_device_t *session, unsigned char *buf,
     }
     blocks = (data_len - 4) / 8;
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "UBX-ESF-RAW:reserved1 x%lx, blocks %u\n",
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "UBX-ESF-RAW: reserved1 x%lx, blocks %u\n",
              reserved1, blocks);
 
     return mask;
@@ -438,7 +471,7 @@ static gps_mask_t
 ubx_msg_esf_status(struct gps_device_t *session, unsigned char *buf,
                    size_t data_len)
 {
-    unsigned version;
+    unsigned version, fusionMode, numSens, expected_len;
     static gps_mask_t mask = 0;
 
     if (16 > data_len) {
@@ -449,10 +482,20 @@ ubx_msg_esf_status(struct gps_device_t *session, unsigned char *buf,
 
     session->driver.ubx.iTOW = getleu32(buf, 0);
     version = getub(buf, 4);
+    fusionMode = getub(buf, 12);
+    numSens = getub(buf, 15);
+    expected_len = 16 + (4 * numSens);
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "UBX-ESF-STATUS: iTOW %lld  version %u\n",
-            (long long)session->driver.ubx.iTOW, version);
+    if (expected_len != data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-ESF-STATUS: bad length.  Expected %u got %zd",
+                 expected_len, data_len);
+        return mask;
+    }
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "UBX-ESF-STATUS: iTOW %lld version %u fusionMode %u numSens %u\n",
+            (long long)session->driver.ubx.iTOW, version, fusionMode, numSens);
 
     return mask;
 }
