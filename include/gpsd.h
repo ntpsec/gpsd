@@ -126,9 +126,6 @@ extern "C" {
 #if defined(TRIPMATE_ENABLE) || defined(BINARY_ENABLE)
 #define NON_NMEA0183_ENABLE
 #endif
-#if defined(TNT_ENABLE) || defined(OCEANSERVER_ENABLE)
-#define COMPASS_ENABLE
-#endif
 #ifdef ISYNC_ENABLE
 #define STASH_ENABLE
 #endif

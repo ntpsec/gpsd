@@ -4053,10 +4053,9 @@ void json_aivdm_dump(const struct ais_t *ais,
 }
 #endif /* defined(AIVDM_ENABLE) */
 
-#ifdef COMPASS_ENABLE
+/* dump the contents of an attitude_t structure as JSON */
 void json_att_dump(const struct gps_data_t *gpsdata,
                    char *reply, size_t replylen)
-/* dump the contents of an attitude_t structure as JSON */
 {
     assert(replylen > sizeof(char *));
     (void)strlcpy(reply, "{\"class\":\"ATT\",", replylen);
@@ -4153,7 +4152,6 @@ void json_att_dump(const struct gps_data_t *gpsdata,
     str_rstrip_char(reply, ',');
     (void)strlcat(reply, "}\r\n", replylen);
 }
-#endif /* COMPASS_ENABLE */
 
 #ifdef OSCILLATOR_ENABLE
 void json_oscillator_dump(const struct gps_data_t *datap,
@@ -4201,11 +4199,9 @@ void json_data_report(const gps_mask_t changed,
         json_raw_dump(datap, buf+strlen(buf), buflen-strlen(buf));
     }
 
-#ifdef COMPASS_ENABLE
     if ((changed & ATTITUDE_SET) != 0) {
         json_att_dump(datap, buf+strlen(buf), buflen-strlen(buf));
     }
-#endif /* COMPASS_ENABLE */
 
 #ifdef RTCM104V2_ENABLE
     if ((changed & RTCM2_SET) != 0) {
