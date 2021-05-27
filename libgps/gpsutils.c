@@ -302,22 +302,23 @@ void gps_clear_fix(struct gps_fix_t *fixp)
 void gps_clear_att(struct attitude_t *attp)
 {
     memset(attp, 0, sizeof(struct attitude_t));
-    attp->pitch = NAN;
-    attp->roll = NAN;
-    attp->yaw = NAN;
-    attp->dip = NAN;
-    attp->mag_len = NAN;
-    attp->mag_x = NAN;
-    attp->mag_y = NAN;
-    attp->mag_z = NAN;
     attp->acc_len = NAN;
     attp->acc_x = NAN;
     attp->acc_y = NAN;
     attp->acc_z = NAN;
+    attp->depth = NAN;
+    attp->dip = NAN;
     attp->gyro_x = NAN;
     attp->gyro_y = NAN;
+    attp->gyro_z = NAN;
+    attp->mag_len = NAN;
+    attp->mag_x = NAN;
+    attp->mag_y = NAN;
+    attp->mag_z = NAN;
+    attp->pitch = NAN;
+    attp->roll = NAN;
     attp->temp = NAN;
-    attp->depth = NAN;
+    attp->yaw = NAN;
 }
 
 void gps_clear_dop( struct dop_t *dop)

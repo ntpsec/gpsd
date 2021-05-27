@@ -4139,6 +4139,9 @@ void json_att_dump(const struct gps_data_t *gpsdata,
     if (isfinite(gpsdata->attitude.gyro_y) != 0)
         str_appendf(reply, replylen,
                        "\"gyro_y\":%.3f,", gpsdata->attitude.gyro_y);
+    if (isfinite(gpsdata->attitude.gyro_z) != 0)
+        str_appendf(reply, replylen,
+                       "\"gyro_z\":%.3f,", gpsdata->attitude.gyro_z);
 
     if (isfinite(gpsdata->attitude.temp) != 0)
         str_appendf(reply, replylen,

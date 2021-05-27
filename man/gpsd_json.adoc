@@ -501,6 +501,8 @@ the magnetic field points downward (into the Earth).
 
 |gyro_y |No |numeric |Y component of acceleration.
 
+|gyro_z |No |numeric |Z component of acceleration.
+
 |depth |No |numeric |Water depth in meters.
 
 |temp |No |numeric |Temperature at the sensor, degrees centigrade.

@@ -381,6 +381,8 @@ static int json_att_read(const char *buf, struct gps_data_t *gpsdata,
                                       .dflt.real = NAN},
         {"gyro_y",    t_real,      .addr.real = &gpsdata->attitude.gyro_y,
                                       .dflt.real = NAN},
+        {"gyro_z",    t_real,      .addr.real = &gpsdata->attitude.gyro_z,
+                                      .dflt.real = NAN},
 
         {"temp", t_real, .addr.real = &gpsdata->attitude.temp,
                                  .dflt.real = NAN},

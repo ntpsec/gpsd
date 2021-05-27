@@ -88,6 +88,7 @@ extern "C" {
  * 12    subframe_t expanded for more gnssId's, WN, etc.
  *       Add orbit_t for generic orbital parameters
  *       Add subframe.orbit and subframe.orbit1 to store orbit_t's
+ *       add gyro_z to attitude_t
  *
  */
 #define GPSD_API_MAJOR_VERSION  12      /* bump on incompatible changes */
@@ -2290,6 +2291,7 @@ struct attitude_t {
     double dip;
     double gyro_x;
     double gyro_y;
+    double gyro_z;
     double heading;
     double mag_len; /* unitvector sqrt(x^2 + y^2 +z^2) */
     double mag_x;
