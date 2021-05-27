@@ -3812,6 +3812,12 @@ Only for models with built in USB.
         # 98 ?
         }
 
+    esf_alg_error = {
+        1: 'tiltAlgError',
+        2: 'yawAlgError',
+        4: 'angleError',
+    }
+
     esf_alg_status = {
         0: 'user-defined/fixed angles',
         1: 'roll/pitch angles alignment is ongoing',
@@ -3831,9 +3837,11 @@ Only for models with built in USB.
         s = (' iTOW %u version %u flags x%x error x%x reserved1 x%x\n'
              '   yaw %u pitch %d roll %d' % u)
         if gps.VERB_DECODE <= self.verbosity:
-            s += ("\n   flags (%s) status (%s)" %
+            s += ("\n   flags (%s) status (%s)"
+                  "\n   error (%s)" %
                   ('autoMntAlgOn' if (u[2] & 1) else '',
-                   index_s((u[2] >> 1) & 7, self.esf_alg_status)))
+                   index_s((u[2] >> 1) & 7, self.esf_alg_status),
+                   flag_s(u[3], self.esf_alg_error)))
         return s
 
     esf_status_bitfield0 = {
@@ -3891,7 +3899,7 @@ Only for models with built in USB.
         if gps.VERB_DECODE <= self.verbosity:
             s += ("\n   flags (%s) numMeas %u" %
                   (flag_s(u[1] & 0x7ff, self.esf_meas_flags), numMeas))
-        if u[1] & 0x08:
+        if (u[1] & 0x08) and (0 < blocks):
             # calibTtagValid
             blocks -= 1
 
@@ -3907,8 +3915,8 @@ Only for models with built in USB.
             data = u1[0] & 0x0ffffff
             if gps.VERB_DECODE <= self.verbosity:
                 s1 = ' (%s)' % index_s(data_type, self.esf_raw_type)
-            s += ('\n     n %3d dataType %3u%s dataField x%06x' %
-                  (n, data_type, s1, data))
+            s += ('\n     dataType %3u%s dataField x%06x' %
+                  (data_type, s1, data))
             n += 1
         if u[1] & 0x08:
             # calibTtagValid
@@ -3940,8 +3948,8 @@ Only for models with built in USB.
             data = u[0] & 0x0ffffff
             if gps.VERB_DECODE <= self.verbosity:
                 s1 = " (%s)" % index_s(data_type, self.esf_raw_type)
-            s += ('\n   n %3d data_type %3u%s data x%06x sTtag x%08x' %
-                  (n, data_type, s1, data, u[1]))
+            s += ('\n   data_type %3u%s data x%06x sTtag x%08x' %
+                  (data_type, s1, data, u[1]))
             n += 1
         return s
 
