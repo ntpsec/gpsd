@@ -1661,10 +1661,14 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
 
 
         /* Get data from current packet into the fix structure */
-        if (session->lexer.type != COMMENT_PACKET)
-            if (session->device_type != NULL
-                && session->device_type->parse_packet != NULL)
+        if (session->lexer.type != COMMENT_PACKET) {
+            if (NULL != session->device_type &&
+                NULL != session->device_type->parse_packet) {
                 received |= session->device_type->parse_packet(session);
+                GPSD_LOG(LOG_SPIN, &session->context->errout,
+                         "parse_packet() = %s\n", gps_maskdump(received));
+            }
+        }
 
         /*
          * We may want to revert to the last driver that was marked

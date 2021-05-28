@@ -2282,11 +2282,11 @@ struct satellite_t {
 };
 
 struct attitude_t {
-    timespec_t  mtime;  /* time of measurement */
-    double acc_len; /* unitvector sqrt(x^2 + y^2 +z^2) */
-    double acc_x;
-    double acc_y;
-    double acc_z;
+    timespec_t  mtime;  // time of measurement
+    double acc_len;     // unitvector sqrt(x^2 + y^2 +z^2)
+    double acc_x;       // x-axis acceleration (m/s^2)
+    double acc_y;       // y-axis acceleration (m/s^2)
+    double acc_z;       // x-axis acceleration (m/s^2)
     double depth;
     double dip;
     double gyro_x;

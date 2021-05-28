@@ -4058,8 +4058,8 @@ void json_att_dump(const struct gps_data_t *gpsdata,
                    char *reply, size_t replylen)
 {
     assert(replylen > sizeof(char *));
-    (void)strlcpy(reply, "{\"class\":\"ATT\",", replylen);
-    str_appendf(reply, replylen, "\"device\":\"%s\",", gpsdata->dev.path);
+    (void)strlcpy(reply, "{\"class\":\"ATT\"", replylen);
+    str_appendf(reply, replylen, ",\"device\":\"%s\"", gpsdata->dev.path);
     if (0 < gpsdata->attitude.mtime.tv_sec) {
         char tbuf[JSON_DATE_MAX+1];
         str_appendf(reply, replylen,
@@ -4070,86 +4070,85 @@ void json_att_dump(const struct gps_data_t *gpsdata,
     if (isfinite(gpsdata->attitude.heading) != 0) {
         /* Trimble outputs %.3f, so we do too. */
         str_appendf(reply, replylen,
-                       "\"heading\":%.3f,", gpsdata->attitude.heading);
+                       ",\"heading\":%.3f", gpsdata->attitude.heading);
         if (gpsdata->attitude.mag_st != '\0')
             str_appendf(reply, replylen,
-                           "\"mag_st\":\"%c\",", gpsdata->attitude.mag_st);
+                           ",\"mag_st\":\"%c\"", gpsdata->attitude.mag_st);
 
     }
     if (isfinite(gpsdata->attitude.pitch) != 0) {
         str_appendf(reply, replylen,
-                       "\"pitch\":%.2f,", gpsdata->attitude.pitch);
+                       ",\"pitch\":%.2f", gpsdata->attitude.pitch);
         if (gpsdata->attitude.pitch_st != '\0')
             str_appendf(reply, replylen,
-                           "\"pitch_st\":\"%c\",",
+                           ",\"pitch_st\":\"%c\"",
                            gpsdata->attitude.pitch_st);
 
     }
     if (isfinite(gpsdata->attitude.yaw) != 0) {
         str_appendf(reply, replylen,
-                       "\"yaw\":%.2f,", gpsdata->attitude.yaw);
+                       ",\"yaw\":%.2f", gpsdata->attitude.yaw);
         if (gpsdata->attitude.yaw_st != '\0')
             str_appendf(reply, replylen,
-                           "\"yaw_st\":\"%c\",", gpsdata->attitude.yaw_st);
+                           ",\"yaw_st\":\"%c\"", gpsdata->attitude.yaw_st);
 
     }
     if (isfinite(gpsdata->attitude.roll) != 0) {
         str_appendf(reply, replylen,
-                       "\"roll\":%.2f,", gpsdata->attitude.roll);
+                       ",\"roll\":%.2f", gpsdata->attitude.roll);
         if (gpsdata->attitude.roll_st != '\0')
             str_appendf(reply, replylen,
-                           "\"roll_st\":\"%c\",", gpsdata->attitude.roll_st);
+                           ",\"roll_st\":\"%c\"", gpsdata->attitude.roll_st);
 
     }
 
     if (isfinite(gpsdata->attitude.dip) != 0)
         str_appendf(reply, replylen,
-                       "\"dip\":%.3f,", gpsdata->attitude.dip);
+                       ",\"dip\":%.3f", gpsdata->attitude.dip);
 
     if (isfinite(gpsdata->attitude.mag_len) != 0)
         str_appendf(reply, replylen,
-                       "\"mag_len\":%.3f,", gpsdata->attitude.mag_len);
+                       ",\"mag_len\":%.3f", gpsdata->attitude.mag_len);
     if (isfinite(gpsdata->attitude.mag_x) != 0)
         str_appendf(reply, replylen,
-                       "\"mag_x\":%.3f,", gpsdata->attitude.mag_x);
+                       ",\"mag_x\":%.3f", gpsdata->attitude.mag_x);
     if (isfinite(gpsdata->attitude.mag_y) != 0)
         str_appendf(reply, replylen,
-                       "\"mag_y\":%.3f,", gpsdata->attitude.mag_y);
+                       ",\"mag_y\":%.3f", gpsdata->attitude.mag_y);
     if (isfinite(gpsdata->attitude.mag_z) != 0)
         str_appendf(reply, replylen,
-                       "\"mag_z\":%.3f,", gpsdata->attitude.mag_z);
+                       ",\"mag_z\":%.3f", gpsdata->attitude.mag_z);
 
     if (isfinite(gpsdata->attitude.acc_len) != 0)
         str_appendf(reply, replylen,
-                       "\"acc_len\":%.3f,", gpsdata->attitude.acc_len);
+                       ",\"acc_len\":%.3f", gpsdata->attitude.acc_len);
     if (isfinite(gpsdata->attitude.acc_x) != 0)
         str_appendf(reply, replylen,
-                       "\"acc_x\":%.3f,", gpsdata->attitude.acc_x);
+                       ",\"acc_x\":%.3f", gpsdata->attitude.acc_x);
     if (isfinite(gpsdata->attitude.acc_y) != 0)
         str_appendf(reply, replylen,
-                       "\"acc_y\":%.3f,", gpsdata->attitude.acc_y);
+                       ",\"acc_y\":%.3f", gpsdata->attitude.acc_y);
     if (isfinite(gpsdata->attitude.acc_z) != 0)
         str_appendf(reply, replylen,
-                       "\"acc_z\":%.3f,", gpsdata->attitude.acc_z);
+                       ",\"acc_z\":%.3f", gpsdata->attitude.acc_z);
 
     if (isfinite(gpsdata->attitude.gyro_x) != 0)
         str_appendf(reply, replylen,
-                       "\"gyro_x\":%.3f,", gpsdata->attitude.gyro_x);
+                       ",\"gyro_x\":%.3f", gpsdata->attitude.gyro_x);
     if (isfinite(gpsdata->attitude.gyro_y) != 0)
         str_appendf(reply, replylen,
-                       "\"gyro_y\":%.3f,", gpsdata->attitude.gyro_y);
+                       ",\"gyro_y\":%.3f", gpsdata->attitude.gyro_y);
     if (isfinite(gpsdata->attitude.gyro_z) != 0)
         str_appendf(reply, replylen,
-                       "\"gyro_z\":%.3f,", gpsdata->attitude.gyro_z);
+                       ",\"gyro_z\":%.3f", gpsdata->attitude.gyro_z);
 
     if (isfinite(gpsdata->attitude.temp) != 0)
         str_appendf(reply, replylen,
-                       "\"temp\":%.3f,", gpsdata->attitude.temp);
+                       ",\"temp\":%.3f", gpsdata->attitude.temp);
     if (isfinite(gpsdata->attitude.depth) != 0)
         str_appendf(reply, replylen,
-                       "\"depth\":%.3f,", gpsdata->attitude.depth);
+                       ",\"depth\":%.3f", gpsdata->attitude.depth);
 
-    str_rstrip_char(reply, ',');
     (void)strlcat(reply, "}\r\n", replylen);
 }
 

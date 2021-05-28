@@ -491,17 +491,17 @@ the magnetic field points downward (into the Earth).
 
 |acc_len |No |numeric |Scalar acceleration.
 
-|acc_x |No |numeric |X component of acceleration.
+|acc_x |No |numeric |X component of acceleration (m/s^2).
 
-|acc_y |No |numeric |Y component of acceleration.
+|acc_y |No |numeric |Y component of acceleration (m/s^2).
 
-|acc_z |No |numeric |Z component of acceleration.
+|acc_z |No |numeric |Z component of acceleration (m/s^2).
 
-|gyro_x |No |numeric |X component of acceleration.
+|gyro_x |No |numeric |X component of angular rate (deg/s)
 
-|gyro_y |No |numeric |Y component of acceleration.
+|gyro_y |No |numeric |Y component of angular rate (deg/s)
 
-|gyro_z |No |numeric |Z component of acceleration.
+|gyro_z |No |numeric |Z component of angular rate (deg/s)
 
 |depth |No |numeric |Water depth in meters.
 

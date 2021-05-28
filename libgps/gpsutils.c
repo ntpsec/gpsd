@@ -311,6 +311,7 @@ void gps_clear_att(struct attitude_t *attp)
     attp->gyro_x = NAN;
     attp->gyro_y = NAN;
     attp->gyro_z = NAN;
+    attp->heading = NAN;
     attp->mag_len = NAN;
     attp->mag_x = NAN;
     attp->mag_y = NAN;
