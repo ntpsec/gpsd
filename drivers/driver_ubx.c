@@ -337,7 +337,6 @@ ubx_msg_esf_alg(struct gps_device_t *session, unsigned char *buf,
     unsigned long yaw;
     int pitch, roll;
     static gps_mask_t mask = 0;
-    timespec_t ts_tow;
 
     if (16 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -369,7 +368,8 @@ ubx_msg_esf_alg(struct gps_device_t *session, unsigned char *buf,
     }
 
     if (0 != mask) {
-        // got good data, set the meanrement time
+        timespec_t ts_tow;
+        // got good data, set the measurement time
         MSTOTS(&ts_tow, session->driver.ubx.iTOW);
         session->gpsdata.attitude.mtime =
             gpsd_gpstime_resolv(session, session->context->gps_week, ts_tow);
@@ -384,6 +384,7 @@ ubx_msg_esf_alg(struct gps_device_t *session, unsigned char *buf,
 }
 
 // UBX-ESF-INS
+// protVer 19 and up.  ADR and UDR only
 static gps_mask_t
 ubx_msg_esf_ins(struct gps_device_t *session, unsigned char *buf,
                 size_t data_len)
@@ -412,17 +413,17 @@ ubx_msg_esf_ins(struct gps_device_t *session, unsigned char *buf,
 
     if (0x10 == (0x10 & bitfield0)) {
         // xAngRateValid
-        session->gpsdata.attitude.gyro_x = 0.01 * xAngRate;  // m/s^2
+        session->gpsdata.attitude.gyro_x = 0.001 * xAngRate;  // m/s^2
         mask |= ATTITUDE_SET;
     }
     if (0x20 == (0x20 & bitfield0)) {
         // yAngRateValid
-        session->gpsdata.attitude.gyro_x = 0.01 * yAngRate;  // m/s^2
+        session->gpsdata.attitude.gyro_x = 0.001 * yAngRate;  // m/s^2
         mask |= ATTITUDE_SET;
     }
     if (0x40 == (0x40 & bitfield0)) {
         // zAngRateValid
-        session->gpsdata.attitude.gyro_x = 0.01 * zAngRate;  // m/s^2
+        session->gpsdata.attitude.gyro_x = 0.001 * zAngRate;  // m/s^2
         mask |= ATTITUDE_SET;
     }
     if (0x80 == (0x80 & bitfield0)) {
@@ -442,7 +443,8 @@ ubx_msg_esf_ins(struct gps_device_t *session, unsigned char *buf,
     }
 
     if (0 != mask) {
-        // got good data, set the meanrement time
+        timespec_t ts_tow;
+        // got good data, set the measurement time
         MSTOTS(&ts_tow, session->driver.ubx.iTOW);
         session->gpsdata.attitude.mtime =
             gpsd_gpstime_resolv(session, session->context->gps_week, ts_tow);
@@ -466,6 +468,7 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
     unsigned long long timetag;
     unsigned flags, id, numMeas, expected_len;
     static gps_mask_t mask = 0;
+    unsigned i;
 
     if (8 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -485,12 +488,64 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "UBX-ESF-MEAS: bad length.  Got %zd, expected %u",
                  data_len, expected_len);
-        return mask;
+        return 0;
     }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "UBX-ESF-MEAS: timetag %llu flags x%x (numMeas %u) id %u\n",
             timetag, flags, numMeas, id);
+
+    for (i = 0; i < numMeas; i++) {
+        unsigned long data, dataField;
+        unsigned char dataType;
+
+        data = getleu32(buf, 8 + (i * 4));
+        dataType = (unsigned char)(data >> 24) & 0x3f;
+        dataField = data & 0x0ffffff;
+        switch (dataType) {
+        case 5:            // gyro z angular rate, deg/s
+            session->gpsdata.attitude.gyro_z = dataField * pow(2.0, -12);
+            mask |= ATTITUDE_SET;
+            break;
+        case 13:           // gyro y angular rate, deg/s
+            session->gpsdata.attitude.gyro_y = dataField * pow(2.0, -12);
+            mask |= ATTITUDE_SET;
+            break;
+        case 14:           // gyro x angular rate, deg/s
+            session->gpsdata.attitude.gyro_x = dataField * pow(2.0, -12);
+            mask |= ATTITUDE_SET;
+            break;
+        case 16:            // accel x, m/s^2
+            session->gpsdata.attitude.gyro_x = dataField * pow(2.0, -10);
+            mask |= ATTITUDE_SET;
+            break;
+        case 17:           // accel y, m/s^2
+            session->gpsdata.attitude.gyro_y = dataField * pow(2.0, -10);
+            mask |= ATTITUDE_SET;
+            break;
+        case 18:           // accel z, m/s^2
+            session->gpsdata.attitude.gyro_z = dataField * pow(2.0, -10);
+            mask |= ATTITUDE_SET;
+            break;
+        // case 12:           // gyro temp, deg C
+        // case 6:            // front-left wheel ticks
+        // case 7:            // front-right wheel ticks
+        // case 8:            // rear-left wheel ticks
+        // case 9:            // rear-right wheel ticks
+        // case 10:           // speed tick
+        // case 11:           // speed, m/s
+        default:
+            // ignore all else
+            break;
+        }
+
+        mask = 0;  // WIP, not ready to push an ATT yet!
+
+        GPSD_LOG(LOG_PROG + 1, &session->context->errout,
+                 "UBX-ESF-MEAS: dataType %u dataField %lu\n",
+                 dataType, dataField);
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout, "\n");
 
     return mask;
 }
