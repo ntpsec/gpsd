@@ -328,7 +328,12 @@ static void ubx_msg_cfg_rate(struct gps_device_t *session, unsigned char *buf,
     return;
 }
 
-// UBX-ESF-ALG
+/* UBX-ESF-ALG
+ *
+ * UBX-ESF-ALG, and UBX-ESF-INS are synchronous to the GNSS epoch.
+ * They need to be combined and reported together with the rest of
+ * the epoch.
+ */
 static gps_mask_t
 ubx_msg_esf_alg(struct gps_device_t *session, unsigned char *buf,
                 size_t data_len)
@@ -383,8 +388,14 @@ ubx_msg_esf_alg(struct gps_device_t *session, unsigned char *buf,
     return mask;
 }
 
-// UBX-ESF-INS
-// protVer 19 and up.  ADR and UDR only
+/* UBX-ESF-INS
+ *
+ * protVer 19 and up.  ADR and UDR only
+ *
+ * UBX-ESF-ALG, and UBX-ESF-INS are synchronous to the GNSS epoch.
+ * They need to be combined and reported together with the rest of
+ * the epoch.
+ */
 static gps_mask_t
 ubx_msg_esf_ins(struct gps_device_t *session, unsigned char *buf,
                 size_t data_len)
@@ -460,7 +471,15 @@ ubx_msg_esf_ins(struct gps_device_t *session, unsigned char *buf,
     return mask;
 }
 
-// UBX-ESF-MEAS
+/* UBX-ESF-MEAS
+ *
+ * protVer 15 and up.  ADR only
+ * protVer 19 and up.  ADR and UDR only
+ *
+ * asynchronous to the GNSS epoch, and at a higher rate.
+ * Needs to be reported immediately.
+ *
+ */
 static gps_mask_t
 ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
                  size_t data_len)
@@ -469,12 +488,16 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
     unsigned flags, id, numMeas, expected_len;
     static gps_mask_t mask = 0;
     unsigned i;
+    // where to store the IMU data.
+    struct attitude_t *datap = &session->gpsdata.imu;
 
     if (8 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "UBX-ESF-MEAS message, runt payload len %zd", data_len);
         return mask;
     }
+    // do not acumulate IMU data
+    gps_clear_att(datap);
 
     timetag = getleu32(buf, 0);
     flags = getleu16(buf, 4);
@@ -504,28 +527,28 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
         dataField = data & 0x0ffffff;
         switch (dataType) {
         case 5:            // gyro z angular rate, deg/s
-            session->gpsdata.attitude.gyro_z = dataField * pow(2.0, -12);
-            mask |= ATTITUDE_SET;
+            datap->gyro_z = dataField * pow(2.0, -12);
+            mask |= IMU_SET;
             break;
         case 13:           // gyro y angular rate, deg/s
-            session->gpsdata.attitude.gyro_y = dataField * pow(2.0, -12);
-            mask |= ATTITUDE_SET;
+            datap->gyro_y = dataField * pow(2.0, -12);
+            mask |= IMU_SET;
             break;
         case 14:           // gyro x angular rate, deg/s
-            session->gpsdata.attitude.gyro_x = dataField * pow(2.0, -12);
-            mask |= ATTITUDE_SET;
+            datap->gyro_x = dataField * pow(2.0, -12);
+            mask |= IMU_SET;
             break;
         case 16:            // accel x, m/s^2
-            session->gpsdata.attitude.gyro_x = dataField * pow(2.0, -10);
-            mask |= ATTITUDE_SET;
+            datap->gyro_x = dataField * pow(2.0, -10);
+            mask |= IMU_SET;
             break;
         case 17:           // accel y, m/s^2
-            session->gpsdata.attitude.gyro_y = dataField * pow(2.0, -10);
-            mask |= ATTITUDE_SET;
+            datap->gyro_y = dataField * pow(2.0, -10);
+            mask |= IMU_SET;
             break;
         case 18:           // accel z, m/s^2
-            session->gpsdata.attitude.gyro_z = dataField * pow(2.0, -10);
-            mask |= ATTITUDE_SET;
+            datap->gyro_z = dataField * pow(2.0, -10);
+            mask |= IMU_SET;
             break;
         // case 12:           // gyro temp, deg C
         // case 6:            // front-left wheel ticks
@@ -539,8 +562,6 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
             break;
         }
 
-        mask = 0;  // WIP, not ready to push an ATT yet!
-
         GPSD_LOG(LOG_PROG + 1, &session->context->errout,
                  "UBX-ESF-MEAS: dataType %u dataField %lu\n",
                  dataType, dataField);
@@ -550,7 +571,15 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
     return mask;
 }
 
-// UBX-ESF-RAW
+/* UBX-ESF-RAW
+ *
+ * protVer 15 and up.  ADR only
+ * protVer 19 and up.  ADR and UDR only
+ *
+ * asynchronous to the GNSS epoch, and a a higher rate.
+ * Needs to be reported immediately.
+ *
+ */
 static gps_mask_t
 ubx_msg_esf_raw(struct gps_device_t *session, unsigned char *buf,
                              size_t data_len)

@@ -4056,15 +4056,16 @@ void json_aivdm_dump(const struct ais_t *ais,
 #endif /* defined(AIVDM_ENABLE) */
 
 /* dump the contents of an attitude_t structure as JSON
- * maybe gpsdata.attitude, maybe gpsdata.imu
+ * maybe gpsdata.attitude (class ATT), maybe gpsdata.imu (class IMU)
  */
 void json_att_dump(const struct gps_data_t *gpsdata,
                    char *reply, size_t replylen,
-                   const struct attitude_t *att)
+                   const struct attitude_t *att, const char *class)
 {
-    assert(replylen > sizeof(char *));
-    (void)strlcpy(reply, "{\"class\":\"ATT\"", replylen);
-    str_appendf(reply, replylen, ",\"device\":\"%s\"", gpsdata->dev.path);
+    (void)snprintf(reply, replylen,
+                   "{\"class\":\"%s\",\"device\":\"%s\"",
+                   class, gpsdata->dev.path);
+
     if (0 < att->mtime.tv_sec) {
         char tbuf[JSON_DATE_MAX+1];
         str_appendf(reply, replylen,
@@ -4173,11 +4174,11 @@ void json_oscillator_dump(const struct gps_data_t *datap,
 }
 #endif /* OSCILLATOR_ENABLE */
 
+// report a session state in JSON
 void json_data_report(const gps_mask_t changed,
-                 const struct gps_device_t *session,
-                 const struct gps_policy_t *policy,
-                 char *buf, size_t buflen)
-/* report a session state in JSON */
+                      const struct gps_device_t *session,
+                      const struct gps_policy_t *policy,
+                      char *buf, size_t buflen)
 {
     const struct gps_data_t *datap = &session->gpsdata;
     buf[0] = '\0';
@@ -4203,9 +4204,13 @@ void json_data_report(const gps_mask_t changed,
         json_raw_dump(datap, buf+strlen(buf), buflen-strlen(buf));
     }
 
-    if ((changed & ATTITUDE_SET) != 0) {
+    if (0 != (changed & ATTITUDE_SET)) {
         json_att_dump(datap, buf+strlen(buf), buflen-strlen(buf),
-                      &datap->attitude);
+                      &datap->attitude, "ATT");
+    }
+    if (0 != (changed & IMU_SET)) {
+        json_att_dump(datap, buf+strlen(buf), buflen-strlen(buf),
+                      &datap->imu, "IMU");
     }
 
 #ifdef RTCM104V2_ENABLE
