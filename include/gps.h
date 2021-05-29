@@ -89,6 +89,8 @@ extern "C" {
  *       Add orbit_t for generic orbital parameters
  *       Add subframe.orbit and subframe.orbit1 to store orbit_t's
  *       add gyro_z to attitude_t
+ *       add imu, and matching IMU_SET flag
+ *       move attitude out of the union, to stop conflicts.
  *
  */
 #define GPSD_API_MAJOR_VERSION  12      /* bump on incompatible changes */
@@ -2508,7 +2510,8 @@ struct gps_data_t {
 #define NED_SET         (1llu<<40)
 #define VNED_SET        (1llu<<41)
 #define LOG_SET         (1llu<<42)
-#define SET_HIGH_BIT    43
+#define IMU_SET         (1llu<<43)
+#define SET_HIGH_BIT    44
     timespec_t online;          /* NZ if GPS is on line, 0 if not.
                                  *
                                  * Note: gpsd clears this time when sentences
@@ -2551,7 +2554,7 @@ struct gps_data_t {
     } devices;
 
     /* pack things never reported together to reduce structure size */
-#define UNION_SET       (AIS_SET|ATTITUDE_SET|ERROR_SET|GST_SET| \
+#define UNION_SET       (AIS_SET|ERROR_SET|GST_SET| \
                          LOGMESSAGE_SET|OSCILLATOR_SET|PPS_SET|RAW_SET| \
                          RTCM2_SET|RTCM3_SET|SUBFRAME_SET|TOFF_SET|VERSION_SET)
 
@@ -2561,7 +2564,6 @@ struct gps_data_t {
         struct rtcm3_t  rtcm3;
         struct subframe_t subframe;
         struct ais_t ais;
-        struct attitude_t attitude;
         struct rawdata_t raw;
         struct gst_t gst;
         struct oscillator_t osc;
@@ -2569,6 +2571,13 @@ struct gps_data_t {
         struct version_t version;
         char error[256];
     };
+    /* attitude and imu are similar
+     * attitude is synchronous to the GNNS epoch, and cumulative in the epoch
+     * imus is async to the epoch, and sent immediately
+     *
+     */
+    struct attitude_t attitude;
+    struct attitude_t imu;
 
     /* time stuff */
     /* FIXME! next lib rev need to add a place to put PPS precision */
