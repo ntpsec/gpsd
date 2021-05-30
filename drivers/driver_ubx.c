@@ -35,7 +35,7 @@
 #if defined(UBLOX_ENABLE) && defined(BINARY_ENABLE)
 #include "../include/driver_ubx.h"
 
-#include "../include/bits.h"
+#include "../include/bits.h"       // For UINT2INT()
 #include "../include/timespec.h"
 
 /*
@@ -357,8 +357,8 @@ ubx_msg_esf_alg(struct gps_device_t *session, unsigned char *buf,
     error = getub(buf, 6);
     reserved1 = getub(buf, 7);
     yaw = getleu32(buf, 8);
-    pitch = getleu16(buf, 12);
-    roll = getleu16(buf, 14);
+    pitch = getles16(buf, 12);
+    roll = getles16(buf, 14);
 
     if (0 == (2 & error)) {
         // no yawAlgError
@@ -523,30 +523,30 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
 
         data = getleu32(buf, 8 + (i * 4));
         dataType = (unsigned char)(data >> 24) & 0x3f;
-        dataField = data & 0x0ffffff;
+        dataField = data & BITMASK(24);
         switch (dataType) {
         case 5:            // gyro z angular rate, deg/s
-            datap->gyro_z = dataField * pow(2.0, -12);
+            datap->gyro_z = UINT2INT(dataField, 24) * pow(2.0, -12);
             mask |= IMU_SET;
             break;
         case 13:           // gyro y angular rate, deg/s
-            datap->gyro_y = dataField * pow(2.0, -12);
+            datap->gyro_y = UINT2INT(dataField, 24) * pow(2.0, -12);
             mask |= IMU_SET;
             break;
         case 14:           // gyro x angular rate, deg/s
-            datap->gyro_x = dataField * pow(2.0, -12);
+            datap->gyro_x = UINT2INT(dataField, 24) * pow(2.0, -12);
             mask |= IMU_SET;
             break;
         case 16:            // accel x, m/s^2
-            datap->acc_x = dataField * pow(2.0, -10);
+            datap->acc_x = UINT2INT(dataField, 24) * pow(2.0, -10);
             mask |= IMU_SET;
             break;
         case 17:           // accel y, m/s^2
-            datap->acc_y = dataField * pow(2.0, -10);
+            datap->acc_y = UINT2INT(dataField, 24) * pow(2.0, -10);
             mask |= IMU_SET;
             break;
         case 18:           // accel z, m/s^2
-            datap->acc_z = dataField * pow(2.0, -10);
+            datap->acc_z = UINT2INT(dataField, 24) * pow(2.0, -10);
             mask |= IMU_SET;
             break;
         // case 12:           // gyro temp, deg C
