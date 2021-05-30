@@ -603,11 +603,12 @@ static void decode(FILE *fpin, FILE*fpout)
             (void)fputs((char *)session.lexer.outbuffer, fpout);
         if (session.lexer.outbuflen < minima[session.lexer.type+1])
             minima[session.lexer.type+1] = session.lexer.outbuflen;
-        /* mask should match what's in report_data() */
-        if ((changed & (REPORT_IS|GST_SET|SATELLITE_SET|SUBFRAME_SET|
-                        ATTITUDE_SET|RTCM2_SET|RTCM3_SET|AIS_SET|
-                        PASSTHROUGH_IS)) == 0)
+        // mask should match what's in gpsd/gpsd.c report_data()
+        if (0 == (changed & (AIS_SET|ATTITUDE_SET|GST_SET|IMU_SET|REPORT_IS|
+                             RTCM2_SET|RTCM3_SET|SATELLITE_SET|
+                             SUBFRAME_SET))) {
             continue;
+        }
         if (!filter(changed, &session))
             continue;
         else if (json) {
