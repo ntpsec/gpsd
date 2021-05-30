@@ -70,10 +70,12 @@ DIAMETER = 200
 
 def parseargs():
     """Parse arguments sys.argv"""
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
-    # `duration` is not required, but when `required=False` is set, error appears:
-    # TypeError: 'required' is an invalid argument for positionals
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    # `duration` is not required, but when `required=False` is set,
+    # error appears:
+    #   TypeError: 'required' is an invalid argument for positionals
     # so `nargs='?'` is using here
     parser.add_argument('duration', default="0", nargs='?')
     parser.add_argument('--no-html-head', default=False, action="store_true",
@@ -213,8 +215,9 @@ class SatTracks(gps):
 \t</style>
 \t<script src='%s'></script>
 </head><body onload="draw_satview();">""" % jsfile)
-        fh.write('\t<div style="grid-area: sky;"><table class="num tall">')
-        fh.write('\t\t<tr><th>PRN:</th><th>Elev:</th><th>Azim:</th><th>SNR:</th><th>Used:</th></tr>')
+        fh.write('\t<div style="grid-area: sky;"><table class="num tall">'
+                 '\t\t<tr><th>PRN:</th><th>Elev:</th><th>Azim:</th>'
+                 '<th>SNR:</th><th>Used:</th></tr>')
         sats = self.satellites[:]
         sats.sort(key=lambda x: x.PRN)
         for s in sats:
