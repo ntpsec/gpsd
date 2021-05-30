@@ -319,6 +319,7 @@ void gps_clear_att(struct attitude_t *attp)
     attp->pitch = NAN;
     attp->roll = NAN;
     attp->temp = NAN;
+    attp->timeTag = -1;
     attp->yaw = NAN;
 }
 

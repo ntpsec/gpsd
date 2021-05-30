@@ -4068,19 +4068,18 @@ void json_att_dump(const struct gps_data_t *gpsdata,
 
     if (0 < att->mtime.tv_sec) {
         char tbuf[JSON_DATE_MAX+1];
-        str_appendf(reply, replylen,
-                       ",\"time\":\"%s\"",
-                       timespec_to_iso8601(att->mtime,
-                                      tbuf, sizeof(tbuf)));
+        str_appendf(reply, replylen, ",\"time\":\"%s\"",
+                       timespec_to_iso8601(att->mtime, tbuf, sizeof(tbuf)));
     }
-    if (isfinite(att->heading) != 0) {
+    if (0 <= att->timeTag) {
+        str_appendf(reply, replylen, ",\"timeTag\":\"%lld\"", 
+                    (long long)att->timeTag);
+    }
+    if (0 != isfinite(att->heading)) {
         /* Trimble outputs %.3f, so we do too. */
-        str_appendf(reply, replylen,
-                       ",\"heading\":%.3f", att->heading);
+        str_appendf(reply, replylen, ",\"heading\":%.3f", att->heading);
         if (att->mag_st != '\0')
-            str_appendf(reply, replylen,
-                           ",\"mag_st\":\"%c\"", att->mag_st);
-
+            str_appendf(reply, replylen, ",\"mag_st\":\"%c\"", att->mag_st);
     }
     if (isfinite(att->pitch) != 0) {
         str_appendf(reply, replylen,

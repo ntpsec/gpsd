@@ -484,7 +484,6 @@ static gps_mask_t
 ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
                  size_t data_len)
 {
-    unsigned long long timetag;
     unsigned flags, id, numMeas, expected_len;
     static gps_mask_t mask = 0;
     unsigned i;
@@ -499,7 +498,7 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
     // do not acumulate IMU data
     gps_clear_att(datap);
 
-    timetag = getleu32(buf, 0);
+    datap->timeTag = getleu32(buf, 0);
     flags = getleu16(buf, 4);
     numMeas = (flags >> 11) & 0x01f;
     id = getleu16(buf, 6);
@@ -515,8 +514,8 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
     }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX-ESF-MEAS: timetag %llu flags x%x (numMeas %u) id %u\n",
-            timetag, flags, numMeas, id);
+             "UBX-ESF-MEAS: timeTag %lld flags x%x (numMeas %u) id %u\n",
+            (long long)datap->timeTag, flags, numMeas, id);
 
     for (i = 0; i < numMeas; i++) {
         unsigned long data, dataField;
@@ -539,15 +538,15 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
             mask |= IMU_SET;
             break;
         case 16:            // accel x, m/s^2
-            datap->gyro_x = dataField * pow(2.0, -10);
+            datap->acc_x = dataField * pow(2.0, -10);
             mask |= IMU_SET;
             break;
         case 17:           // accel y, m/s^2
-            datap->gyro_y = dataField * pow(2.0, -10);
+            datap->acc_y = dataField * pow(2.0, -10);
             mask |= IMU_SET;
             break;
         case 18:           // accel z, m/s^2
-            datap->gyro_z = dataField * pow(2.0, -10);
+            datap->acc_z = dataField * pow(2.0, -10);
             mask |= IMU_SET;
             break;
         // case 12:           // gyro temp, deg C

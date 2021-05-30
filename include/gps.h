@@ -88,7 +88,7 @@ extern "C" {
  * 12    subframe_t expanded for more gnssId's, WN, etc.
  *       Add orbit_t for generic orbital parameters
  *       Add subframe.orbit and subframe.orbit1 to store orbit_t's
- *       add gyro_z to attitude_t
+ *       Add gyro_z, timeTag, to attitude_t
  *       add imu, and matching IMU_SET flag
  *       move attitude out of the union, to stop conflicts.
  *
@@ -2285,6 +2285,7 @@ struct satellite_t {
 
 struct attitude_t {
     timespec_t  mtime;  // time of measurement
+    int64_t timeTag;    // arbitrary time tag (see UBX-ESF-MEAS)
     double acc_len;     // unitvector sqrt(x^2 + y^2 +z^2)
     double acc_x;       // x-axis acceleration (m/s^2)
     double acc_y;       // y-axis acceleration (m/s^2)
