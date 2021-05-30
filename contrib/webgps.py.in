@@ -52,6 +52,7 @@ import math
 import os
 import sys
 import time
+import argparse
 
 from gps import *
 
@@ -64,8 +65,25 @@ if gps.__version__ != gps_version:
 
 TRACKMAX = 1024
 STALECOUNT = 10
-
 DIAMETER = 200
+
+
+def parseargs():
+    """Parse arguments sys.argv"""
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    # `duration` is not required, but when `required=False` is set, error appears:
+    # TypeError: 'required' is an invalid argument for positionals
+    # so `nargs='?'` is using here
+    parser.add_argument('duration', default="0", nargs='?')
+    parser.add_argument('--no-html-head', default=False, action="store_true",
+                        help='Do not put HTML page header')
+    parser.add_argument('-V', '--version', action='version',
+                        version="%(prog)s: Version " + gps_version + "\n",
+                        help='Output version to stderr, then exit')
+    args = parser.parse_args()
+
+    return args
 
 
 def polartocart(el, az):
@@ -120,7 +138,8 @@ class SatTracks(gps):
 
     def html(self, fh, jsfile):
         """Writh HTML."""
-        fh.write("""<!DOCTYPE html>
+        if not args.no_html_head:
+            fh.write("""<!DOCTYPE html>
 <html lang="en"><head>
 \t<meta http-equiv="Refresh" content="300">
 \t<meta charset='utf-8'>
@@ -193,11 +212,9 @@ class SatTracks(gps):
 \t\t}
 \t</style>
 \t<script src='%s'></script>
-</head><body onload="draw_satview();">
-\t<div style="grid-area: sky;"><table class="num tall">
-\t\t<tr><th>PRN:</th><th>Elev:</th><th>Azim:</th><th>SNR:</th><th>Used:</th></tr>
-""" % jsfile)
-
+</head><body onload="draw_satview();">""" % jsfile)
+        fh.write('\t<div style="grid-area: sky;"><table class="num tall">')
+        fh.write('\t\t<tr><th>PRN:</th><th>Elev:</th><th>Azim:</th><th>SNR:</th><th>Used:</th></tr>')
         sats = self.satellites[:]
         sats.sort(key=lambda x: x.PRN)
         for s in sats:
@@ -336,8 +353,9 @@ class SatTracks(gps):
 \t\t<button onclick="document.body.classList.toggle('dark')"
  >light switch</button>
 \t</div>
-</body></html>
 """)
+        if not args.no_html_head:
+            fh.write('</body></html>')
 
     def js(self, fh):
         """Write the js."""
@@ -491,12 +509,14 @@ function draw_satview() {
 
 def main():
     """Main."""
-    argv = sys.argv[1:]
+    global args
+    args = parseargs()
 
+    # Convert 'duration' into seconds
     factors = {
         's': 1, 'm': 60, 'h': 60 * 60, 'd': 24 * 60 * 60
     }
-    arg = argv and argv[0] or '0'
+    arg = args.duration
     if arg[-1:] in factors.keys():
         period = int(arg[:-1]) * factors[arg[-1]]
     elif arg == 'c':
