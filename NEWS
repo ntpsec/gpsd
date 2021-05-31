@@ -17,7 +17,7 @@
   ubxtool: Add BeiDou, Galileo, GLONASS, QZSS, and partial SBAS subframe decodes
   Max serial port speed raised to 921,600.
   SUBFRAME JSON now includes new fields to support multiple constellations.
-  gpsd.c: Add some ADR and UDR message partial decodes.
+  gpsd: Add some ADR and UDR message partial decodes.
   ubxtool: Add some ADR and UDR message polls and decodes.
   Remove COMPASS_ENABLE.  Always compile attitude code.
 

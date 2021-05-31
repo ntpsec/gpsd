@@ -451,6 +451,12 @@ depth.
 The "class" and "mode" fields will reliably be present. Others may be
 reported or not depending on the specific device type.
 
+The ATT object is synchronous to the GNSS epoch. Some devices report
+attitude information with arbitrary, even out of order, time scales.
+*gpsd* reports those in an IMU object. The ATT and IMU objects have
+the same fields, but IMU objects are output as soon as possible. Some
+devices output both types with arbitrary interleaving.
+
 .ATT object
 [cols=",,,",options="header",]
 |===
@@ -461,6 +467,8 @@ reported or not depending on the specific device type.
 
 |time |No |string |Time/date stamp in ISO8601 format, UTC. May have a
 fractional part of up to .001sec precision.
+
+|timeTag |No |string |Arbitrary time tag of measurement.
 
 |heading |No |numeric |Heading, degrees from true north.
 
@@ -535,6 +543,16 @@ Here's an example:
     "pitch":169.00,"pitch_st":"N", "roll":-43.00,"roll_st":"N",
     "dip":13641.000,"mag_x":2454.000}
 ----
+
+=== IMU
+
+The IMU object is asynchronous to the GNSS epoch. It is reported
+with arbitrary, even out of order, time scales.
+
+The ATT and IMU objects have the same fields, but IMU objects are output
+as soon as possible.
+
+Seee the ATT onject description for field details.
 
 === TOFF
 
