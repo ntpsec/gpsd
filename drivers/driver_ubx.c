@@ -485,7 +485,7 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
                  size_t data_len)
 {
     unsigned flags, id, numMeas, expected_len;
-    static gps_mask_t mask = 0;
+    gps_mask_t mask = 0;
     unsigned i;
     // where to store the IMU data.
     struct attitude_t *datap = &session->gpsdata.imu;
@@ -519,6 +519,7 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
 
     for (i = 0; i < numMeas; i++) {
         unsigned long data, dataField;
+        long dataF;
         unsigned char dataType;
 
         data = getleu32(buf, 8 + (i * 4));
@@ -526,27 +527,33 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
         dataField = data & BITMASK(24);
         switch (dataType) {
         case 5:            // gyro z angular rate, deg/s
-            datap->gyro_z = UINT2INT(dataField, 24) * pow(2.0, -12);
+            dataF = UINT2INT(dataField, 24);
+            datap->gyro_z = dataF * pow(2.0, -12);
             mask |= IMU_SET;
             break;
         case 13:           // gyro y angular rate, deg/s
-            datap->gyro_y = UINT2INT(dataField, 24) * pow(2.0, -12);
+            dataF = UINT2INT(dataField, 24);
+            datap->gyro_y = dataF * pow(2.0, -12);
             mask |= IMU_SET;
             break;
         case 14:           // gyro x angular rate, deg/s
-            datap->gyro_x = UINT2INT(dataField, 24) * pow(2.0, -12);
+            dataF = UINT2INT(dataField, 24);
+            datap->gyro_x = dataF * pow(2.0, -12);
             mask |= IMU_SET;
             break;
         case 16:            // accel x, m/s^2
-            datap->acc_x = UINT2INT(dataField, 24) * pow(2.0, -10);
+            dataF = UINT2INT(dataField, 24);
+            datap->acc_x = dataF * pow(2.0, -10);
             mask |= IMU_SET;
             break;
         case 17:           // accel y, m/s^2
-            datap->acc_y = UINT2INT(dataField, 24) * pow(2.0, -10);
+            dataF = UINT2INT(dataField, 24);
+            datap->acc_y = dataF * pow(2.0, -10);
             mask |= IMU_SET;
             break;
         case 18:           // accel z, m/s^2
-            datap->acc_z = UINT2INT(dataField, 24) * pow(2.0, -10);
+            dataF = UINT2INT(dataField, 24);
+            datap->acc_z = dataF * pow(2.0, -10);
             mask |= IMU_SET;
             break;
         // case 12:           // gyro temp, deg C
@@ -558,14 +565,14 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
         // case 11:           // speed, m/s
         default:
             // ignore all else
+            dataF = dataField;
             break;
         }
 
         GPSD_LOG(LOG_PROG + 1, &session->context->errout,
-                 "UBX-ESF-MEAS: dataType %u dataField %lu\n",
-                 dataType, dataField);
+                 "UBX-ESF-MEAS: dataType %2u dataField %9ld\n",
+                 dataType, dataF);
     }
-    GPSD_LOG(LOG_PROG, &session->context->errout, "\n");
 
     return mask;
 }
@@ -584,8 +591,12 @@ ubx_msg_esf_raw(struct gps_device_t *session, unsigned char *buf,
                              size_t data_len)
 {
     unsigned long reserved1;
+    unsigned i;
     uint16_t blocks;
-    static gps_mask_t mask = 0;
+    gps_mask_t mask = 0;
+    struct attitude_t *datap = &session->gpsdata.imu;
+    // do not acumulate IMU data
+    gps_clear_att(datap);
 
     if (4> data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -605,6 +616,64 @@ ubx_msg_esf_raw(struct gps_device_t *session, unsigned char *buf,
              "UBX-ESF-RAW: reserved1 x%lx, blocks %u\n",
              reserved1, blocks);
 
+    // loop over all block, but only output the last one for now...
+    for (i = 0; i < blocks; i++) {
+        unsigned long data, dataField;
+        long dataF;
+        unsigned char dataType;
+
+        data = getleu32(buf, 4 + (i * 8));
+        dataType = (unsigned char)(data >> 24) & 0x3f;
+        dataField = data & BITMASK(24);
+        datap->timeTag = getleu32(buf, 8 + (i * 8));
+        switch (dataType) {
+        case 5:            // gyro z angular rate, deg/s
+            dataF = UINT2INT(dataField, 24);
+            datap->gyro_z = dataF * pow(2.0, -12);
+            mask |= IMU_SET;
+            break;
+        case 13:           // gyro y angular rate, deg/s
+            dataF = UINT2INT(dataField, 24);
+            datap->gyro_y = dataF * pow(2.0, -12);
+            mask |= IMU_SET;
+            break;
+        case 14:           // gyro x angular rate, deg/s
+            dataF = UINT2INT(dataField, 24);
+            datap->gyro_x = dataF * pow(2.0, -12);
+            mask |= IMU_SET;
+            break;
+        case 16:            // accel x, m/s^2
+            dataF = UINT2INT(dataField, 24);
+            datap->acc_x = dataF * pow(2.0, -10);
+            mask |= IMU_SET;
+            break;
+        case 17:           // accel y, m/s^2
+            dataF = UINT2INT(dataField, 24);
+            datap->acc_y = dataF * pow(2.0, -10);
+            mask |= IMU_SET;
+            break;
+        case 18:           // accel z, m/s^2
+            dataF = UINT2INT(dataField, 24);
+            datap->acc_z = dataF * pow(2.0, -10);
+            mask |= IMU_SET;
+            break;
+        // case 12:           // gyro temp, deg C
+        // case 6:            // front-left wheel ticks
+        // case 7:            // front-right wheel ticks
+        // case 8:            // rear-left wheel ticks
+        // case 9:            // rear-right wheel ticks
+        // case 10:           // speed tick
+        // case 11:           // speed, m/s
+        default:
+            // ignore all else
+            dataF = dataField;
+            break;
+        }
+
+        GPSD_LOG(LOG_PROG + 1, &session->context->errout,
+                 "UBX-ESF-RAW: dataType %2u dataField %9ld sTtag %lu\n",
+                 dataType, dataF, datap->timeTag);
+    }
     return mask;
 }
 
