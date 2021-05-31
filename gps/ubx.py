@@ -35,6 +35,13 @@ def erd_s(erd):
     return "%3s" % erd
 
 
+def uint2int(u, bit):
+    """Convert unsigned "bit" wide integer to signed integer"""
+    if u & (1 << (bit - 1)):
+        u -= (1 << bit)
+    return u
+
+
 # I'd like to use pypy module bitstring or bitarray, but
 # people complain when non stock python modules are used here.
 def unpack_s11(word, pos):
@@ -3913,9 +3920,12 @@ Only for models with built in USB.
             u1 = struct.unpack_from('<L', buf, 8 + (4 * n))
             data_type = (u1[0] >> 24) & 0x03f
             data = u1[0] & 0x0ffffff
+            if data_type in [5, 11, 12, 13, 14, 16, 17, 18]:
+                # 24 signed data
+                data = uint2int(data, 24)
             if gps.VERB_DECODE <= self.verbosity:
                 s1 = ' (%s)' % index_s(data_type, self.esf_raw_type)
-            s += ('\n     dataType %3u%s dataField x%06x' %
+            s += ('\n     dataType %3u%s dataField %7d' %
                   (data_type, s1, data))
             n += 1
         if u[1] & 0x08:
@@ -3946,9 +3956,12 @@ Only for models with built in USB.
             u = struct.unpack_from('<LL', buf, 4 + (8 * n))
             data_type = (u[0] >> 24) & 0x0ff
             data = u[0] & 0x0ffffff
+            if data_type in [5, 11, 12, 13, 14, 16, 17, 18]:
+                # 24 bit signed data
+                data = uint2int(data, 24)
             if gps.VERB_DECODE <= self.verbosity:
                 s1 = " (%s)" % index_s(data_type, self.esf_raw_type)
-            s += ('\n   data_type %3u%s data x%06x sTtag x%08x' %
+            s += ('\n   data_type %3u%s data %8d sTtag %u' %
                   (data_type, s1, data, u[1]))
             n += 1
         return s
