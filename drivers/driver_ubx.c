@@ -488,7 +488,7 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
     gps_mask_t mask = 0;
     unsigned i;
     // where to store the IMU data.
-    struct attitude_t *datap = &session->gpsdata.imu;
+    struct attitude_t *datap = &session->gpsdata.imu[0];
 
     if (8 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -556,7 +556,11 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
             datap->acc_z = dataF * pow(2.0, -10);
             mask |= IMU_SET;
             break;
-        // case 12:           // gyro temp, deg C
+        case 12:           // gyro temp, deg C
+            dataF = UINT2INT(dataField, 24);
+            datap->gyro_temp = dataF * 0.01;
+            mask |= IMU_SET;
+            break;
         // case 6:            // front-left wheel ticks
         // case 7:            // front-right wheel ticks
         // case 8:            // rear-left wheel ticks
@@ -594,7 +598,7 @@ ubx_msg_esf_raw(struct gps_device_t *session, unsigned char *buf,
     unsigned i;
     uint16_t blocks;
     gps_mask_t mask = 0;
-    struct attitude_t *datap = &session->gpsdata.imu;
+    struct attitude_t *datap = &session->gpsdata.imu[0];
     // do not acumulate IMU data
     gps_clear_att(datap);
 
@@ -657,7 +661,11 @@ ubx_msg_esf_raw(struct gps_device_t *session, unsigned char *buf,
             datap->acc_z = dataF * pow(2.0, -10);
             mask |= IMU_SET;
             break;
-        // case 12:           // gyro temp, deg C
+        case 12:           // gyro temp, deg C
+            dataF = UINT2INT(dataField, 24);
+            datap->gyro_temp = dataF * 0.01;
+            mask |= IMU_SET;
+            break;
         // case 6:            // front-left wheel ticks
         // case 7:            // front-right wheel ticks
         // case 8:            // rear-left wheel ticks

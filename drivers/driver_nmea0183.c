@@ -2867,6 +2867,7 @@ static gps_mask_t processHDT(int c UNUSED, char *field[],
         return mask;
     }
     /* good data */
+    gps_clear_att(&session->gpsdata.attitude);
     session->gpsdata.attitude.heading = heading;
 
     mask |= (ATTITUDE_SET);

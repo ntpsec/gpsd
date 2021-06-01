@@ -4062,8 +4062,7 @@ void json_att_dump(const struct gps_data_t *gpsdata,
                    char *reply, size_t replylen,
                    const struct attitude_t *att, const char *class)
 {
-    (void)snprintf(reply, replylen,
-                   "{\"class\":\"%s\",\"device\":\"%s\"",
+    (void)snprintf(reply, replylen, "{\"class\":\"%s\",\"device\":\"%s\"",
                    class, gpsdata->dev.path);
 
     if (0 < att->mtime.tv_sec) {
@@ -4082,77 +4081,59 @@ void json_att_dump(const struct gps_data_t *gpsdata,
             str_appendf(reply, replylen, ",\"mag_st\":\"%c\"", att->mag_st);
     }
     if (isfinite(att->pitch) != 0) {
-        str_appendf(reply, replylen,
-                       ",\"pitch\":%.2f", att->pitch);
+        str_appendf(reply, replylen, ",\"pitch\":%.2f", att->pitch);
         if (att->pitch_st != '\0')
-            str_appendf(reply, replylen,
-                           ",\"pitch_st\":\"%c\"",
-                           att->pitch_st);
+            str_appendf(reply, replylen, ",\"pitch_st\":\"%c\"",
+                        att->pitch_st);
 
     }
     if (isfinite(att->yaw) != 0) {
-        str_appendf(reply, replylen,
-                       ",\"yaw\":%.2f", att->yaw);
+        str_appendf(reply, replylen, ",\"yaw\":%.2f", att->yaw);
         if (att->yaw_st != '\0')
-            str_appendf(reply, replylen,
-                           ",\"yaw_st\":\"%c\"", att->yaw_st);
+            str_appendf(reply, replylen, ",\"yaw_st\":\"%c\"", att->yaw_st);
 
     }
     if (isfinite(att->roll) != 0) {
-        str_appendf(reply, replylen,
-                       ",\"roll\":%.2f", att->roll);
+        str_appendf(reply, replylen, ",\"roll\":%.2f", att->roll);
         if (att->roll_st != '\0')
-            str_appendf(reply, replylen,
-                           ",\"roll_st\":\"%c\"", att->roll_st);
+            str_appendf(reply, replylen, ",\"roll_st\":\"%c\"", att->roll_st);
 
     }
 
     if (isfinite(att->dip) != 0)
-        str_appendf(reply, replylen,
-                       ",\"dip\":%.3f", att->dip);
+        str_appendf(reply, replylen, ",\"dip\":%.3f", att->dip);
 
     if (isfinite(att->mag_len) != 0)
-        str_appendf(reply, replylen,
-                       ",\"mag_len\":%.3f", att->mag_len);
+        str_appendf(reply, replylen, ",\"mag_len\":%.3f", att->mag_len);
     if (isfinite(att->mag_x) != 0)
-        str_appendf(reply, replylen,
-                       ",\"mag_x\":%.3f", att->mag_x);
+        str_appendf(reply, replylen, ",\"mag_x\":%.3f", att->mag_x);
     if (isfinite(att->mag_y) != 0)
-        str_appendf(reply, replylen,
-                       ",\"mag_y\":%.3f", att->mag_y);
+        str_appendf(reply, replylen, ",\"mag_y\":%.3f", att->mag_y);
     if (isfinite(att->mag_z) != 0)
-        str_appendf(reply, replylen,
-                       ",\"mag_z\":%.3f", att->mag_z);
+        str_appendf(reply, replylen, ",\"mag_z\":%.3f", att->mag_z);
 
     if (isfinite(att->acc_len) != 0)
-        str_appendf(reply, replylen,
-                       ",\"acc_len\":%.3f", att->acc_len);
+        str_appendf(reply, replylen, ",\"acc_len\":%.3f", att->acc_len);
     if (isfinite(att->acc_x) != 0)
-        str_appendf(reply, replylen,
-                       ",\"acc_x\":%.3f", att->acc_x);
+        str_appendf(reply, replylen, ",\"acc_x\":%.3f", att->acc_x);
     if (isfinite(att->acc_y) != 0)
-        str_appendf(reply, replylen,
-                       ",\"acc_y\":%.3f", att->acc_y);
+        str_appendf(reply, replylen, ",\"acc_y\":%.3f", att->acc_y);
     if (isfinite(att->acc_z) != 0)
-        str_appendf(reply, replylen,
-                       ",\"acc_z\":%.3f", att->acc_z);
+        str_appendf(reply, replylen, ",\"acc_z\":%.3f", att->acc_z);
 
+    if (isfinite(att->gyro_temp) != 0)
+        str_appendf(reply, replylen, ",\"gyro_temp\":%.3f", att->gyro_temp);
     if (isfinite(att->gyro_x) != 0)
-        str_appendf(reply, replylen,
-                       ",\"gyro_x\":%.3f", att->gyro_x);
+        str_appendf(reply, replylen, ",\"gyro_x\":%.3f", att->gyro_x);
     if (isfinite(att->gyro_y) != 0)
-        str_appendf(reply, replylen,
-                       ",\"gyro_y\":%.3f", att->gyro_y);
+        str_appendf(reply, replylen, ",\"gyro_y\":%.3f", att->gyro_y);
     if (isfinite(att->gyro_z) != 0)
-        str_appendf(reply, replylen,
-                       ",\"gyro_z\":%.3f", att->gyro_z);
+        str_appendf(reply, replylen, ",\"gyro_z\":%.3f", att->gyro_z);
 
     if (isfinite(att->temp) != 0)
-        str_appendf(reply, replylen,
-                       ",\"temp\":%.3f", att->temp);
+        str_appendf(reply, replylen, ",\"temp\":%.3f", att->temp);
     if (isfinite(att->depth) != 0)
-        str_appendf(reply, replylen,
-                       ",\"depth\":%.3f", att->depth);
+        str_appendf(reply, replylen, ",\"depth\":%.3f", att->depth);
 
     (void)strlcat(reply, "}\r\n", replylen);
 }
@@ -4209,7 +4190,7 @@ void json_data_report(const gps_mask_t changed,
     }
     if (0 != (changed & IMU_SET)) {
         json_att_dump(datap, buf+strlen(buf), buflen-strlen(buf),
-                      &datap->imu, "IMU");
+                      &datap->imu[0], "IMU");
     }
 
 #ifdef RTCM104V2_ENABLE

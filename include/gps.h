@@ -88,8 +88,8 @@ extern "C" {
  * 12    subframe_t expanded for more gnssId's, WN, etc.
  *       Add orbit_t for generic orbital parameters
  *       Add subframe.orbit and subframe.orbit1 to store orbit_t's
- *       Add gyro_z, timeTag, to attitude_t
- *       add imu, and matching IMU_SET flag
+ *       Add gyro_temp, gyro_z, timeTag, to attitude_t
+ *       add imu[], and matching IMU_SET flag
  *       move attitude out of the union, to stop conflicts.
  *
  */
@@ -2292,6 +2292,7 @@ struct attitude_t {
     double acc_z;       // x-axis acceleration (m/s^2)
     double depth;
     double dip;
+    double gyro_temp;
     double gyro_x;
     double gyro_y;
     double gyro_z;
@@ -2578,7 +2579,8 @@ struct gps_data_t {
      *
      */
     struct attitude_t attitude;
-    struct attitude_t imu;
+    // u-blox 8 seems to need 10 IMU for UBX-ESF-RAW
+    struct attitude_t imu[10];
 
     /* time stuff */
     /* FIXME! next lib rev need to add a place to put PPS precision */
