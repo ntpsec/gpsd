@@ -4070,6 +4070,9 @@ void json_att_dump(const struct gps_data_t *gpsdata,
         str_appendf(reply, replylen, ",\"time\":\"%s\"",
                        timespec_to_iso8601(att->mtime, tbuf, sizeof(tbuf)));
     }
+    if (NULL != att->msg) {
+        str_appendf(reply, replylen, ",\"msg\":\"%.15s\"", att->msg);
+    }
     if (0 <= att->timeTag) {
         str_appendf(reply, replylen, ",\"timeTag\":\"%lld\"", 
                     (long long)att->timeTag);
@@ -4177,7 +4180,8 @@ void json_data_report(const gps_mask_t changed,
     }
 
     if ((changed & SUBFRAME_SET) != 0) {
-        json_subframe_dump(datap, policy->scaled, buf+strlen(buf), buflen-strlen(buf));
+        json_subframe_dump(datap, policy->scaled, buf+strlen(buf),
+                           buflen-strlen(buf));
     }
 
     if ((changed & RAW_IS) != 0) {
@@ -4189,8 +4193,16 @@ void json_data_report(const gps_mask_t changed,
                       &datap->attitude, "ATT");
     }
     if (0 != (changed & IMU_SET)) {
-        json_att_dump(datap, buf+strlen(buf), buflen-strlen(buf),
-                      &datap->imu[0], "IMU");
+        int max_imu, cur_imu = 0;
+
+        max_imu = sizeof(datap->imu) / sizeof(struct attitude_t);
+        for (cur_imu = 0; cur_imu < max_imu; cur_imu++ ) {
+            if (NULL == datap->imu[cur_imu].msg) {
+               break;
+            }
+            json_att_dump(datap, buf+strlen(buf), buflen-strlen(buf),
+                          &datap->imu[cur_imu], "IMU");
+        }
     }
 
 #ifdef RTCM104V2_ENABLE

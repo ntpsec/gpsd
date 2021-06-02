@@ -497,6 +497,7 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
     }
     // do not acumulate IMU data
     gps_clear_att(datap);
+    datap->msg = "UBX-ESF-MEAS";
 
     datap->timeTag = getleu32(buf, 0);
     flags = getleu16(buf, 4);
@@ -594,15 +595,15 @@ static gps_mask_t
 ubx_msg_esf_raw(struct gps_device_t *session, unsigned char *buf,
                              size_t data_len)
 {
-    unsigned long reserved1;
+    unsigned long reserved1, last_sTtag = 0;
     unsigned i;
     uint16_t blocks;
     gps_mask_t mask = 0;
-    struct attitude_t *datap = &session->gpsdata.imu[0];
-    // do not acumulate IMU data
-    gps_clear_att(datap);
+    struct attitude_t *datap;
+    int max_imu, cur_imu = -1;
+    max_imu = sizeof(session->gpsdata.imu) / sizeof(struct attitude_t);
 
-    if (4> data_len) {
+    if (4 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "UBX-ESF-RAW message, runt payload len %zd", data_len);
         return mask;
@@ -620,16 +621,32 @@ ubx_msg_esf_raw(struct gps_device_t *session, unsigned char *buf,
              "UBX-ESF-RAW: reserved1 x%lx, blocks %u\n",
              reserved1, blocks);
 
-    // loop over all block, but only output the last one for now...
+    // loop over all blocks, use the next imu[] when time changes.
     for (i = 0; i < blocks; i++) {
-        unsigned long data, dataField;
+        unsigned long data, dataField, sTtag;
         long dataF;
         unsigned char dataType;
+
+        sTtag = getleu32(buf, 8 + (i * 8));
+        if ((-1 == cur_imu) || (last_sTtag != sTtag)) {
+            cur_imu++;
+            if (max_imu <= cur_imu) {
+                GPSD_LOG(LOG_WARN, &session->context->errout,
+                         "UBX-ESF-RAW message, too many imu max %d block %u\n",
+                         max_imu, i);
+                break;
+            }
+            last_sTtag = sTtag;
+            datap = &session->gpsdata.imu[cur_imu];
+            // do not acumulate IMU data
+            gps_clear_att(datap);
+            datap->msg = "UBX-ESF-RAW";
+        }
 
         data = getleu32(buf, 4 + (i * 8));
         dataType = (unsigned char)(data >> 24) & 0x3f;
         dataField = data & BITMASK(24);
-        datap->timeTag = getleu32(buf, 8 + (i * 8));
+        datap->timeTag = sTtag;
         switch (dataType) {
         case 5:            // gyro z angular rate, deg/s
             dataF = UINT2INT(dataField, 24);
