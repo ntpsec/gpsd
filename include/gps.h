@@ -2285,12 +2285,12 @@ struct satellite_t {
 
 struct attitude_t {
     timespec_t  mtime;  // time of measurement
-    int64_t timeTag;    // arbitrary time tag (see UBX-ESF-MEAS)
+    unsigned long timeTag;    // arbitrary time tag (see UBX-ESF-MEAS)
     /* source message name.
      * Used to disambiguate UBX-ESF-RAW and UBX-ESF-MEAS
      * Also used to mark this struct as used
      */
-    const char *msg;
+    char msg[16];
     double acc_len;     // unitvector sqrt(x^2 + y^2 +z^2)
     double acc_x;       // x-axis acceleration (m/s^2)
     double acc_y;       // y-axis acceleration (m/s^2)

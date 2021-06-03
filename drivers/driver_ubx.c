@@ -497,7 +497,7 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
     }
     // do not acumulate IMU data
     gps_clear_att(datap);
-    datap->msg = "UBX-ESF-MEAS";
+    (void)strlcpy(datap->msg, "UBX-ESF-MEAS", sizeof(datap->msg));
 
     datap->timeTag = getleu32(buf, 0);
     flags = getleu16(buf, 4);
@@ -515,8 +515,8 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
     }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "UBX-ESF-MEAS: timeTag %lld flags x%x (numMeas %u) id %u\n",
-            (long long)datap->timeTag, flags, numMeas, id);
+             "UBX-ESF-MEAS: timeTag %lu flags x%x (numMeas %u) id %u\n",
+             datap->timeTag, flags, numMeas, id);
 
     for (i = 0; i < numMeas; i++) {
         unsigned long data, dataField;
@@ -640,7 +640,7 @@ ubx_msg_esf_raw(struct gps_device_t *session, unsigned char *buf,
             datap = &session->gpsdata.imu[cur_imu];
             // do not acumulate IMU data
             gps_clear_att(datap);
-            datap->msg = "UBX-ESF-RAW";
+            (void)strlcpy(datap->msg, "UBX-ESF-RAW", sizeof(datap->msg));
         }
 
         data = getleu32(buf, 4 + (i * 8));

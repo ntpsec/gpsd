@@ -4070,12 +4070,12 @@ void json_att_dump(const struct gps_data_t *gpsdata,
         str_appendf(reply, replylen, ",\"time\":\"%s\"",
                        timespec_to_iso8601(att->mtime, tbuf, sizeof(tbuf)));
     }
-    if (NULL != att->msg) {
+    if ('\0' != att->msg[0]) {
         str_appendf(reply, replylen, ",\"msg\":\"%.15s\"", att->msg);
     }
-    if (0 <= att->timeTag) {
-        str_appendf(reply, replylen, ",\"timeTag\":\"%lld\"", 
-                    (long long)att->timeTag);
+    if (0 != att->timeTag) {
+        // yeah, a tiny chance the timeTag really is zero.
+        str_appendf(reply, replylen, ",\"timeTag\":\"%lu\"", att->timeTag);
     }
     if (0 != isfinite(att->heading)) {
         /* Trimble outputs %.3f, so we do too. */
