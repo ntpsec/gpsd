@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <unistd.h>
+#include <unistd.h>          // for _exit()
 
 #include "../include/gps.h"
 #include "../include/gpsdclient.h"
@@ -182,14 +182,15 @@ static void conditionally_log_fix(struct gps_data_t *gpsdata)
     print_fix(gpsdata, ts_time);
 }
 
+static int sig_flag = 0;
+
 static void quit_handler(int signum)
 {
-    /* don't clutter the logs on Ctrl-C */
-    if (signum != SIGINT)
-        syslog(LOG_INFO, "exiting, signal %d received", signum);
-    print_gpx_footer();
-    (void)gps_close(&gpsdata);
-    exit(EXIT_SUCCESS);
+    // CWE-479: Signal Handler Use of a Non-reentrant Function
+    // See: The C Standard, 7.14.1.1, paragraph 5 [ISO/IEC 9899:2011]
+    // Can't log in a signal handler.  Can't even call exit().
+    sig_flag = signum;
+    return;
 }
 
 /**************************************************************************
@@ -414,14 +415,23 @@ int main(int argc, char **argv)
     print_gpx_header();
 
     while (gps_mainloop(&gpsdata, timeout * 1000000, conditionally_log_fix) < 0 &&
-           reconnect) {
+           reconnect &&
+           0 == sig_flag) {
         /* avoid busy-calling gps_mainloop() */
         (void)sleep(timeout);
+        if (0 != sig_flag) {
+            break;
+        }
         syslog(LOG_INFO, "timeout; about to reconnect");
     }
 
     print_gpx_footer();
     (void)gps_close(&gpsdata);
+    /* don't clutter the logs on Ctrl-C */
+    if (0 != sig_flag && SIGINT != sig_flag) {
+        syslog(LOG_INFO, "exiting, signal %d received", sig_flag);
+        exit(EXIT_FAILURE);
+    }
 
     exit(EXIT_SUCCESS);
 }

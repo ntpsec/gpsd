@@ -10,18 +10,18 @@
 #include <assert.h>
 #include <errno.h>
 #ifdef HAVE_GETOPT_LONG
-       #include <getopt.h>
+   #include <getopt.h>
 #endif
 #include <signal.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>       /* for strlcat() and strlcpy() */
+#include <string.h>       // for strlcat() and strlcpy()
 #include <sys/select.h>
 #include <sys/time.h>
 #include <time.h>
-#include <unistd.h>
+#include <unistd.h>       // for _exit()
 
 #include "include/gpsd.h"
 
@@ -143,12 +143,13 @@ static bool gps_query(struct gps_data_t *gpsdata,
 
 static void onsig(int sig)
 {
+    // CWE-479: Signal Handler Use of a Non-reentrant Function
+    // See: The C Standard, 7.14.1.1, paragraph 5 [ISO/IEC 9899:2011]
+    // Can't log in a signal handler.  Can't even call exit().
     if (sig == SIGALRM) {
-        GPSD_LOG(LOG_ERROR, &context.errout, "packet recognition timed out.\n");
-        exit(EXIT_FAILURE);
+        _exit(EXIT_FAILURE);
     } else {
-        GPSD_LOG(LOG_ERROR, &context.errout, "killed by signal %d\n", sig);
-        exit(EXIT_SUCCESS);
+        _exit(EXIT_SUCCESS);
     }
 }
 
