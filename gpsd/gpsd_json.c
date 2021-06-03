@@ -4197,7 +4197,7 @@ void json_data_report(const gps_mask_t changed,
 
         max_imu = sizeof(datap->imu) / sizeof(struct attitude_t);
         for (cur_imu = 0; cur_imu < max_imu; cur_imu++ ) {
-            if (NULL == datap->imu[cur_imu].msg) {
+            if ('\0' == datap->imu[cur_imu].msg[0]) {
                break;
             }
             json_att_dump(datap, buf+strlen(buf), buflen-strlen(buf),
