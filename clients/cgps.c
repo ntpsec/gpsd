@@ -229,11 +229,21 @@ static char *ecef_to_str(double pos, double vel)
     return buf;
 }
 
+static int sig_flag = 0;
+
+static void quit_handler(int signum)
+{
+    // CWE-479: Signal Handler Use of a Non-reentrant Function
+    // See: The C Standard, 7.14.1.1, paragraph 5 [ISO/IEC 9899:2011]
+    // Can't log in a signal handler.  Can't even call exit().
+    sig_flag = signum;
+    return;
+}
+
 /* Function to call when we're all done.  Does a bit of clean-up. */
 static void die(int sig)
 {
-    if (!isendwin())
-    {
+    if (!isendwin()) {
         /* Move the cursor to the bottom left corner. */
         (void)mvcur(0, COLS - 1, LINES - 1, 0);
 
@@ -489,11 +499,14 @@ static void windowsetup(void)
 }
 
 
+// cope with terminal resize
 static void resize(int sig UNUSED)
-/* cope with terminal resize */
 {
-    if (!isendwin())
-    {
+    // FIXME!!
+    // CWE-479: Signal Handler Use of a Non-reentrant Function
+    // See: The C Standard, 7.14.1.1, paragraph 5 [ISO/IEC 9899:2011]
+    // Can't log in a signal handler.  Can't even call exit().
+    if (!isendwin()) {
         (void)endwin();
         windowsetup();
     }
@@ -1330,8 +1343,8 @@ int main(int argc, char *argv[])
     }
 
     /* note: we're assuming BSD-style reliable signals here */
-    (void)signal(SIGINT, die);
-    (void)signal(SIGHUP, die);
+    (void)signal(SIGINT, quit_handler);
+    (void)signal(SIGHUP, quit_handler);
     (void)signal(SIGWINCH, resize);
 
     windowsetup();
@@ -1344,9 +1357,18 @@ int main(int argc, char *argv[])
 
     /* heart of the client */
     for (;;) {
+        int ret;
+
+        if (0 != sig_flag) {
+            die(sig_flag);
+        }
 
         /* wait 1/2 second for gpsd */
-        if (!gps_waiting(&gpsdata, 500000)) {
+        ret = gps_waiting(&gpsdata, 500000);
+        if (0 != sig_flag) {
+            die(sig_flag);
+        }
+        if (!ret) {
             // 240 tries at 0.5 seconds a try is a 2 minute timeout
             if (240 < wait_clicks++) {
                 (void)fprintf(stderr, "cgps: timeout contactong gpsd\n");
@@ -1368,6 +1390,9 @@ int main(int argc, char *argv[])
 #endif /* TRUENORTH */
                     update_gps_panel(&gpsdata, message);
             }
+        }
+        if (0 != sig_flag) {
+            die(sig_flag);
         }
 
         // Check for user input.
