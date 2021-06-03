@@ -15,13 +15,25 @@
  *
  * For example a t_character must be in quotes, but a t_byte
  * is a bare number. */
-typedef enum {t_integer, t_uinteger, t_real,
-              t_string, t_boolean, t_character,
-              t_time,
-              t_object, t_structobject, t_array,
-              t_check, t_ignore,
-              t_short, t_ushort, t_byte, t_ubyte}
-    json_type;
+typedef enum {t_array,
+    t_boolean,
+    t_byte,
+    t_character,
+    t_check,
+    t_ignore,
+    t_integer,
+    t_longint,
+    t_object,
+    t_real,
+    t_short,
+    t_string,
+    t_structobject,
+    t_time,
+    t_ubyte,
+    t_uinteger,
+    t_ulongint,
+    t_ushort}
+json_type;
 
 struct json_enum_t {
     char        *name;
@@ -54,6 +66,12 @@ struct json_array_t {
             unsigned int *store;
         } uintegers;
         struct {
+            long *store;
+        } longint;
+        struct {
+            unsigned long *store;
+        } ulongint;
+        struct {
             short *store;
         } shorts;
         struct {
@@ -82,11 +100,13 @@ struct json_attr_t {
         char *string;
         double *real;
         int *integer;
+        long *longint;
         short *shortint;
         size_t offset;
         struct json_array_t array;
         unsigned char *ubyte;
         unsigned int *uinteger;
+        unsigned long *ulongint;
         unsigned short *ushortint;
         struct timespec *ts;
     } addr;
@@ -97,9 +117,11 @@ struct json_attr_t {
         char *check;
         double real;
         int integer;
+        long longint;
         short shortint;
         unsigned char ubyte;
         unsigned int uinteger;
+        unsigned long ulongint;
         unsigned short ushortint;
         struct timespec ts;
     } dflt;

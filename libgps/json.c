@@ -131,6 +131,12 @@ static char *json_target_address(const struct json_attr_t *cursor,
         case t_uinteger:
             targetaddr = (char *)&cursor->addr.uinteger[offset];
             break;
+        case t_longint:
+            targetaddr = (char *)&cursor->addr.longint[offset];
+            break;
+        case t_ulongint:
+            targetaddr = (char *)&cursor->addr.ulongint[offset];
+            break;
         case t_short:
             targetaddr = (char *)&cursor->addr.shortint[offset];
             break;
@@ -211,6 +217,13 @@ static int json_internal_read_object(const char *cp,
                     break;
                 case t_uinteger:
                     memcpy(lptr, &cursor->dflt.uinteger, sizeof(unsigned int));
+                    break;
+                case t_longint:
+                    memcpy(lptr, &cursor->dflt.longint, sizeof(long));
+                    break;
+                case t_ulongint:
+                    memcpy(lptr, &cursor->dflt.ulongint,
+                           sizeof(unsigned long));
                     break;
                 case t_short:
                     memcpy(lptr, &cursor->dflt.shortint, sizeof(short));
@@ -473,20 +486,29 @@ static int json_internal_read_object(const char *cp,
                     bool decimal = strchr(valbuf, '.') != NULL;
                     if (decimal && seeking == t_real)
                         break;
-                    if (!decimal && (seeking == t_integer
-                                     || seeking == t_uinteger))
+                    if (!decimal && (seeking == t_byte ||
+                                     seeking == t_ubyte ||
+                                     seeking == t_integer ||
+                                     seeking == t_uinteger ||
+                                     seeking == t_longint ||
+                                     seeking == t_ulongint ||
+                                     seeking == t_short ||
+                                     seeking == t_ushort))
                         break;
                 }
-                if (cursor[1].attribute==NULL)  /* out of possibilities */
+                if (NULL == cursor[1].attribute)  /* out of possibilities */
                     break;
-                if (strcmp(cursor[1].attribute, attrbuf)!=0)
+                if (0 != strcmp(cursor[1].attribute, attrbuf))
                     break;
                 ++cursor;
             }
-            if (value_quoted
-                && (cursor->type != t_string && cursor->type != t_character
-                    && cursor->type != t_check && cursor->type != t_time
-                    && cursor->type != t_ignore && cursor->map == 0)) {
+            if (value_quoted &&
+                (cursor->type != t_string &&
+                 cursor->type != t_character &&
+                 cursor->type != t_check &&
+                 cursor->type != t_time &&
+                 cursor->type != t_ignore &&
+                 cursor->map == 0)) {
                 json_debug_trace((1, "Saw quoted value when expecting"
                                   " non-string.\n"));
                 return JSON_ERR_QNONSTRING;
@@ -536,8 +558,20 @@ static int json_internal_read_object(const char *cp,
                     break;
                 case t_uinteger:
                     {
-                        unsigned int tmp = (unsigned int)atoi(valbuf);
+                        unsigned int tmp = (unsigned int)atol(valbuf);
                         memcpy(lptr, &tmp, sizeof(unsigned int));
+                    }
+                    break;
+                case t_longint:
+                    {
+                        long tmp = atol(valbuf);
+                        memcpy(lptr, &tmp, sizeof(long));
+                    }
+                    break;
+                case t_ulongint:
+                    {
+                        unsigned long tmp = (unsigned long)atoll(valbuf);
+                        memcpy(lptr, &tmp, sizeof(unsigned long));
                     }
                     break;
                 case t_short:
@@ -711,6 +745,20 @@ int json_read_array(const char *cp, const struct json_array_t *arr,
         case t_uinteger:
             arr->arr.uintegers.store[offset] = (unsigned int)strtoul(cp,
                                                                      &ep, 0);
+            if (ep == cp)
+                return JSON_ERR_BADNUM;
+            else
+                cp = ep;
+            break;
+        case t_longint:
+            arr->arr.longint.store[offset] = strtol(cp, &ep, 0);
+            if (ep == cp)
+                return JSON_ERR_BADNUM;
+            else
+                cp = ep;
+            break;
+        case t_ulongint:
+            arr->arr.ulongint.store[offset] = strtoul(cp, &ep, 0);
             if (ep == cp)
                 return JSON_ERR_BADNUM;
             else
