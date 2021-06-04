@@ -4,9 +4,8 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
-#include <assert.h>
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -87,7 +86,12 @@ int gps_sock_open(const char *host, const char *port,
     libgps_debug_trace((DEBUG_CALLS, "gps_sock_open(%s, %s)\n", host, port));
 
 #ifdef USE_QT
+        // FIXNE: prevent CWE-690 warning: dereference of possibly-NULL pointer
         QTcpSocket *sock = new QTcpSocket();
+        if (NULL == sock) {
+            // out of memory
+            exit(1);
+        }
         gpsdata->gps_fd = sock;
         sock->connectToHost(host, QString(port).toInt());
         if (!sock->waitForConnected())
