@@ -7,6 +7,7 @@
 
 #include "../include/gpsd_config.h"  // must be before all includes
 
+#include <assert.h>                  // for assert()
 #include <cstdlib>
 #include "../include/libgpsmm.h"
 
@@ -18,6 +19,9 @@ struct gps_data_t* gpsmm::gps_inner_open(const char *host, const char *port)
     }
     // else, connection successfully opened
     to_user = new struct gps_data_t;
+
+    // prevent CWE-690 warning: dereference of possibly-NULL pinter
+    assert(NULL != to_user);
     return backup(); // we return the backup of our internal structure
 }
 
