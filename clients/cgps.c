@@ -229,17 +229,6 @@ static char *ecef_to_str(double pos, double vel)
     return buf;
 }
 
-static int sig_flag = 0;
-
-static void quit_handler(int signum)
-{
-    // CWE-479: Signal Handler Use of a Non-reentrant Function
-    // See: The C Standard, 7.14.1.1, paragraph 5 [ISO/IEC 9899:2011]
-    // Can't log in a signal handler.  Can't even call exit().
-    sig_flag = signum;
-    return;
-}
-
 /* Function to call when we're all done.  Does a bit of clean-up. */
 static void die(int sig)
 {
@@ -498,19 +487,6 @@ static void windowsetup(void)
     }
 }
 
-
-// cope with terminal resize
-static void resize(int sig UNUSED)
-{
-    // FIXME!!
-    // CWE-479: Signal Handler Use of a Non-reentrant Function
-    // See: The C Standard, 7.14.1.1, paragraph 5 [ISO/IEC 9899:2011]
-    // Can't log in a signal handler.  Can't even call exit().
-    if (!isendwin()) {
-        (void)endwin();
-        windowsetup();
-    }
-}
 
 #ifdef TRUENORTH
 /* This gets called once for each new compass sentence. */
@@ -1251,6 +1227,38 @@ static int set_units(char c)
     return ret;
 }
 
+static int resize_flag = 0;
+
+// cope with terminal resize signal
+static void resize(int sig UNUSED)
+{
+    // CWE-479: Signal Handler Use of a Non-reentrant Function
+    // See: The C Standard, 7.14.1.1, paragraph 5 [ISO/IEC 9899:2011]
+    // Can't log in a signal handler.  Can't even call exit().
+    resize_flag = 1;
+}
+
+// do the terminal resize
+static void do_resize(void)
+{
+    resize_flag = 0;
+    if (!isendwin()) {
+        (void)endwin();
+        windowsetup();
+    }
+}
+
+static int sig_flag = 0;
+
+static void quit_handler(int signum)
+{
+    // CWE-479: Signal Handler Use of a Non-reentrant Function
+    // See: The C Standard, 7.14.1.1, paragraph 5 [ISO/IEC 9899:2011]
+    // Can't log in a signal handler.  Can't even call exit().
+    sig_flag = signum;
+    return;
+}
+
 int main(int argc, char *argv[])
 {
     unsigned int flags = WATCH_ENABLE;
@@ -1362,11 +1370,17 @@ int main(int argc, char *argv[])
         if (0 != sig_flag) {
             die(sig_flag);
         }
+        if (0 != resize_flag) {
+            do_resize();
+        }
 
         /* wait 1/2 second for gpsd */
         ret = gps_waiting(&gpsdata, 500000);
         if (0 != sig_flag) {
             die(sig_flag);
+        }
+        if (0 != resize_flag) {
+            do_resize();
         }
         if (!ret) {
             // 240 tries at 0.5 seconds a try is a 2 minute timeout
@@ -1393,6 +1407,9 @@ int main(int argc, char *argv[])
         }
         if (0 != sig_flag) {
             die(sig_flag);
+        }
+        if (0 != resize_flag) {
+            do_resize();
         }
 
         // Check for user input.
