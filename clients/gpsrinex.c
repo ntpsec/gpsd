@@ -998,18 +998,15 @@ static void print_raw(struct gps_data_t *gpsdata)
     sample_count--;
 }
 
-/* quit_handler()
- * quit nicely on ^C.  That is: print the header and observation records
- * gathered so far.  Then exit.
- */
+static int sig_flag = 0;
+
 static void quit_handler(int signum)
 {
-    /* don't clutter the logs on Ctrl-C */
-    if (signum != SIGINT)
-        syslog(LOG_INFO, "exiting, signal %d received", signum);
-    print_rinex_footer();
-    (void)gps_close(&gpsdata);
-    exit(EXIT_SUCCESS);
+    // CWE-479: Signal Handler Use of a Non-reentrant Function
+    // See: The C Standard, 7.14.1.1, paragraph 5 [ISO/IEC 9899:2011]
+    // Can't log in a signal handler.  Can't even call exit().
+    sig_flag = signum;
+    return;
 }
 
 /* conditionally_log_fix()
@@ -1324,16 +1321,25 @@ int main(int argc, char **argv)
     }
 
     for (;;) {
+        if (0 != sig_flag) {
+            break;
+        }
         /* wait for gpsd */
         if (!gps_waiting(&gpsdata, timeout * 1000000)) {
             (void)fprintf(stderr, "gpsrinex: timeout\n");
             syslog(LOG_INFO, "timeout;");
             break;
         }
+        if (0 != sig_flag) {
+            break;
+        }
         (void)gps_read(&gpsdata, NULL, 0);
         if (ERROR_SET & gpsdata.set) {
             fprintf(stderr, "gps_read() error '%s'\n", gpsdata.error);
             exit(6);
+        }
+        if (0 != sig_flag) {
+            break;
         }
         conditionally_log_fix(&gpsdata);
         if (0 >= sample_count) {
@@ -1346,6 +1352,9 @@ int main(int argc, char **argv)
 
     // remove the temp file
     (void)unlink(tmp_fname);
+    if (0 != sig_flag && SIGINT != sig_flag) {
+        syslog(LOG_INFO, "exiting, signal %d received", sig_flag);
+    }
     exit(EXIT_SUCCESS);
 }
 
