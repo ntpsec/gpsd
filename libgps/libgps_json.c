@@ -335,7 +335,7 @@ static int json_sky_read(const char *buf, struct gps_data_t *gpsdata,
     return 0;
 }
 
-// decode class ATT
+// decode class ATT, almost the same as IMU
 static int json_att_read(const char *buf, struct gps_data_t *gpsdata,
                          const char **endptr)
 {
@@ -377,6 +377,76 @@ static int json_att_read(const char *buf, struct gps_data_t *gpsdata,
          .dflt.real = NAN},
         {"mag_z",     t_real,      .addr.real = &datap->mag_z,
          .dflt.real = NAN},
+        {"msg",       t_string,    .addr.string = datap->msg,
+         .len = sizeof(datap->msg)},
+        {"pitch_st",  t_character, .addr.character = &datap->pitch_st},
+        {"pitch",     t_real,      .addr.real = &datap->pitch,
+         .dflt.real = NAN},
+        {"roll_st",   t_character, .addr.character = &datap->roll_st},
+        {"roll",      t_real,      .addr.real = &datap->roll,
+         .dflt.real = NAN},
+        {"temp",      t_real,      .addr.real = &datap->temp,
+         .dflt.real = NAN},
+        {"time",      t_time,      .addr.ts = &datap->mtime, .dflt.ts = {0, 0}},
+        {"timeTag",   t_ulongint,  .addr.ulongint = &datap->timeTag,
+         .dflt.ulongint = 0},
+        {"yaw_st",    t_character, .addr.character = &datap->yaw_st},
+        {"yaw",       t_real,      .addr.real = &datap->yaw, .dflt.real = NAN},
+
+        // ignore unknown keys, for cross-version compatibility
+        {"", t_ignore},
+        {NULL},
+        /* *INDENT-ON* */
+    };
+
+    return json_read_object(buf, json_attrs_1, endptr);
+}
+
+// decode class IMU, almost the ame as ATT
+static int json_imu_read(const char *buf, struct gps_data_t *gpsdata,
+                         const char **endptr)
+{
+    // the client only uses the first slot.
+    struct attitude_t *datap = &gpsdata->imu[0];
+
+    const struct json_attr_t json_attrs_1[] = {
+        /* *INDENT-OFF* */
+        {"class",     t_check,     .dflt.check = "IMU"},
+        {"device",    t_string,    .addr.string = gpsdata->dev.path,
+         .len = sizeof(gpsdata->dev.path)},
+        {"acc_len",   t_real,      .addr.real = &datap->acc_len,
+         .dflt.real = NAN},
+        {"acc_x",     t_real,      .addr.real = &datap->acc_x,
+         .dflt.real = NAN},
+        {"acc_y",     t_real,      .addr.real = &datap->acc_y,
+         .dflt.real = NAN},
+        {"acc_z",     t_real,      .addr.real = &datap->acc_z,
+         .dflt.real = NAN},
+        {"depth",     t_real,      .addr.real = &datap->depth,
+         .dflt.real = NAN},
+        {"dip",       t_real,      .addr.real = &datap->dip,
+         .dflt.real = NAN},
+        {"gyro_temp", t_real,      .addr.real = &datap->gyro_temp,
+         .dflt.real = NAN},
+        {"gyro_x",    t_real,      .addr.real = &datap->gyro_x,
+         .dflt.real = NAN},
+        {"gyro_y",    t_real,      .addr.real = &datap->gyro_y,
+         .dflt.real = NAN},
+        {"gyro_z",    t_real,      .addr.real = &datap->gyro_z,
+         .dflt.real = NAN},
+        {"heading",   t_real,      .addr.real = &datap->heading,
+         .dflt.real = NAN},
+        {"mag_len",   t_real,      .addr.real = &datap->mag_len,
+         .dflt.real = NAN},
+        {"mag_st",    t_character, .addr.character = &datap->mag_st},
+        {"mag_x",     t_real,      .addr.real = &datap->mag_x,
+         .dflt.real = NAN},
+        {"mag_y",     t_real,      .addr.real = &datap->mag_y,
+         .dflt.real = NAN},
+        {"mag_z",     t_real,      .addr.real = &datap->mag_z,
+         .dflt.real = NAN},
+        {"msg",       t_string,    .addr.string = datap->msg,
+         .len = sizeof(datap->msg)},
         {"pitch_st",  t_character, .addr.character = &datap->pitch_st},
         {"pitch",     t_real,      .addr.real = &datap->pitch,
          .dflt.real = NAN},
@@ -713,8 +783,13 @@ int libgps_json_unpack(const char *buf,
     } else if (str_starts_with(classtag, "\"class\":\"ATT\"")) {
         status = json_att_read(buf, gpsdata, end);
         if (PASS(status)) {
-            gpsdata->set &= ~UNION_SET;
             gpsdata->set |= ATTITUDE_SET;
+        }
+        return FILTER(status);
+    } else if (str_starts_with(classtag, "\"class\":\"IMU\"")) {
+        status = json_imu_read(buf, gpsdata, end);
+        if (PASS(status)) {
+            gpsdata->set |= IMU_SET;
         }
         return FILTER(status);
     } else if (str_starts_with(classtag, "\"class\":\"DEVICES\"")) {
