@@ -12,14 +12,6 @@
   Kind of a curses version of xgps for use with gpsd.
 */
 
-/*
- * The True North compass fails with current gpsd versions for reasons
- * the dev team has been unable to diagnose due to not having test hardware.
- * The support for it is conditioned out in order to simplify moving
- * to the new JSON-based protocol and reduce startup time.
- */
-#undef TRUENORTH
-
 /* ==================================================================
    These #defines should be modified if changing the number of fields
    to be displayed.
@@ -45,7 +37,7 @@
 /* This is how many display fields are output in the 'datawin' window
    when in COMPASS mode.  Change this value if you add or remove fields
    from the 'datawin' window for the COMPASS mode. */
-#define DATAWIN_COMPASS_FIELDS 6
+#define DATAWIN_COMPASS_FIELDS 10
 
 /* This is how far over in the 'datawin' window to indent the field
    descriptions. */
@@ -133,9 +125,7 @@ static bool silent_flag = false;
 static bool magnetic_flag = false;
 static int window_ysize = 0;
 static int display_sats = 0;        /* number of rows of sats to display */
-#ifdef TRUENORTH
-static bool compass_flag = false;
-#endif /* TRUENORTH */
+static bool imu_flag = false;
 
 /* pseudo-signals indicating reason for termination */
 #define CGPS_QUIT       0       /* voluntary termination */
@@ -304,8 +294,7 @@ static void windowsetup(void)
     /* turn off cursor */
     curs_set(0);
 
-#ifdef TRUENORTH
-    if (compass_flag) {
+    if (imu_flag) {
         if (ysize == MIN_COMPASS_DATAWIN_YSIZE) {
             raw_flag = false;
             window_ysize = MIN_COMPASS_DATAWIN_YSIZE;
@@ -320,9 +309,7 @@ static void windowsetup(void)
             (void)sleep(5);
             die(0);
         }
-    } else
-#endif /* TRUENORTH */
-    {
+    } else {
         if (ysize > MAX_GPS_DATAWIN_YSIZE + 10) {
             raw_flag = true;
             show_ecefs = true;
@@ -364,10 +351,9 @@ static void windowsetup(void)
         display_sats = window_ysize - SATWIN_OVERHEAD - (int)raw_flag;
     }
 
-#ifdef TRUENORTH
-    /* Set up the screen for either a compass or a gps receiver. */
-    if (compass_flag) {
-        /* We're a compass, set up accordingly. */
+    /* Set up the screen for either an IMU or a GNSS receiver. */
+    if (imu_flag) {
+        /* We're an IMU, set up accordingly. */
         int row = 1;
 
         datawin = newwin(window_ysize, DATAWIN_WIDTH, 0, 0);
@@ -381,19 +367,19 @@ static void windowsetup(void)
 
         (void)refresh();
 
-        /* Do the initial field label setup. */
+        // Do the initial compass field label setup.
         (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET, "Time:");
-        /* FIXME: prolly should be heading... */
-        (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET, "Track:");
-        (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET, "Pitch:");
-        (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET, "Roll:");
-        (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET, "Dip:");
-        (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET, "Rcvr Type:");
+        (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET, "timeTag:");
+        (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET, "msg:");
+        (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET, "Accel X:");
+        (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET, "Accel Y:");
+        (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET, "Accel Z:");
+        (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET, "Gyro X:");
+        (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET, "Gyro Y:");
+        (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET, "Gyro Z:");
         (void)wborder(datawin, 0, 0, 0, 0, 0, 0, 0, 0);
 
-    } else
-#endif /* TRUENORTH */
-    {
+    } else {
         /* We're a GPS, set up accordingly. */
         int row = 1;
 
@@ -488,49 +474,78 @@ static void windowsetup(void)
 }
 
 
-#ifdef TRUENORTH
-/* This gets called once for each new compass sentence. */
-static void update_compass_panel(struct gps_data_t *gpsdata)
+// This gets called once for each new sentence.
+static void update_compass_panel(struct gps_data_t *gpsdata,
+                                 const char *message)
 {
     char scr[128];
     int row = 1;
-    /* Print time/date. */
-    if (0 < gpsdata->fix.time.tv_sec) {
-        (void)timespec_to_iso8601(gpsdata->fix.time, scr, sizeof(scr));
-    } else
+    struct attitude_t *datap;
+
+    datap = &gpsdata->imu[0];
+    // datap = &gpsdata->attitude;
+    if ('\0' == datap->msg[0]) {
+        // no IMU data
+        return;
+    }
+
+    // Print time/date.
+    if (0 < datap->mtime.tv_sec) {
+        (void)timespec_to_iso8601(datap->mtime, scr, sizeof(scr));
+    } else {
         (void)strlcpy(scr, "n/a", sizeof(scr));
+    }
+    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
+    // Print timeTag
+    if (0 == datap->timeTag) {
+        (void)strlcpy(scr, "n/a", sizeof(scr));
+    } else {
+        (void)snprintf(scr, sizeof(scr), "%lu", datap->timeTag);
+    }
     (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
 
-    /* Fill in the track. */
-    /* FIXME: prolly should be heading... */
-    if (isfinite(gpsdata->fix.track) != 0) {
-        (void)snprintf(scr, sizeof(scr), "%.1f degrees", gpsdata->fix.track);
-    } else
+    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, datap->msg);
+
+    // Fill in the accelerometers
+    if (0 == isfinite(datap->acc_x)) {
         (void)strlcpy(scr, "n/a", sizeof(scr));
+    } else {
+        (void)snprintf(scr, sizeof(scr), "%.3f", datap->acc_x);
+    }
+    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
+    if (0 == isfinite(datap->acc_y)) {
+        (void)strlcpy(scr, "n/a", sizeof(scr));
+    } else {
+        (void)snprintf(scr, sizeof(scr), "%.3f", datap->acc_y);
+    }
     (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
 
-    /* Fill in the climb. */
-    if (isfinite(gpsdata->fix.climb) != 0) {
-        (void)snprintf(scr, sizeof(scr), "%.2f", gpsdata->fix.climb);
-    } else
+    if (0 == isfinite(datap->acc_z)) {
         (void)strlcpy(scr, "n/a", sizeof(scr));
+    } else {
+        (void)snprintf(scr, sizeof(scr), "%.3f", datap->acc_z);
+    }
     (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
 
-    /* Fill in the speed. */
-    if (isfinite(gpsdata->fix.speed) != 0)
-        (void)snprintf(scr, sizeof(scr), "%.2f", gpsdata->fix.speed);
-    else
+    // Fill in the gyros.
+    if (0 == isfinite(datap->gyro_x)) {
         (void)strlcpy(scr, "n/a", sizeof(scr));
+    } else {
+        (void)snprintf(scr, sizeof(scr), "%.3f", datap->gyro_x);
+    }
+    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
+    if (0 == isfinite(datap->gyro_y)) {
+        (void)strlcpy(scr, "n/a", sizeof(scr));
+    } else {
+        (void)snprintf(scr, sizeof(scr), "%.3f", datap->gyro_y);
+    }
     (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
 
-    /* Fill in the altitude. */
-    if (isfinite(gpsdata->fix.altHAE) != 0)
-        (void)snprintf(scr, sizeof(scr), "%.3f", gpsdata->fix.altHAE);
-    else
+    if (0 == isfinite(datap->gyro_z)) {
         (void)strlcpy(scr, "n/a", sizeof(scr));
-    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
-
-    /* When we need to fill in receiver type again, do it here. */
+    } else {
+        (void)snprintf(scr, sizeof(scr), "%.3f", datap->gyro_z);
+    }
     (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
 
     (void)wrefresh(datawin);
@@ -541,7 +556,6 @@ static void update_compass_panel(struct gps_data_t *gpsdata)
         (void)wrefresh(messages);
     }
 }
-#endif /* TRUENORTH */
 
 /* sort the skyviews
  * Used = Y first, then used = N
@@ -1012,6 +1026,7 @@ static void usage(char *prog,  int exit_code)
 #ifdef HAVE_GETOPT_LONG
         "  --debug DEBUG       Set debug level\n"
         "  --help              Show this help, then exit\n"
+        "  --imu               Display IMU data, not GNSS data\n"
         "  --llfmt FMT         Select lat/lon format, same as -l\n"
         "  --magtrack          Display track as estimated magnetic track.\n"
         "  --silent            Be silent, don't print raw gpsd JSON.\n"
@@ -1020,6 +1035,7 @@ static void usage(char *prog,  int exit_code)
 #endif
         "  -D DEBUG            Set debug level\n"
         "  -h                  Show this help, then exit\n"
+        "  -i                  Display IMU data, not GNSS data\n"
         "  -l {d|m|s}          Select lat/lon format\n"
         "                          d = DD.ddddddd\n"
         "                          m = DD MM.mmmmmm'\n"
@@ -1265,12 +1281,13 @@ int main(int argc, char *argv[])
     int wait_clicks = 0;  /* cycles to wait before gpsd timeout */
     /* buffer to hold one JSON message */
     char message[GPS_JSON_RESPONSE_MAX];
-    const char *optstring = "?D:hl:msu:V";
+    const char *optstring = "?D:hil:msu:V";
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
     static struct option long_options[] = {
         {"debug", required_argument, NULL, 'D'},
         {"help", no_argument, NULL, 'h'},
+        {"imu", no_argument, NULL, 'i'},
         {"llfmt", required_argument, NULL, 'l'},
         {"magtrack", no_argument, NULL, 'm' },
         {"silent", no_argument, NULL, 's' },
@@ -1300,6 +1317,9 @@ int main(int argc, char *argv[])
         case 'D':
             debug = atoi(optarg);
             gps_enable_debug(debug, stderr);
+            break;
+        case 'i':
+            imu_flag = true;
             break;
         case 'l':
             if (0 != set_degree(optarg[0])) {
@@ -1394,16 +1414,14 @@ int main(int argc, char *argv[])
             *message = '\0';
             if (gps_read(&gpsdata, message, sizeof(message)) == -1) {
                 (void)fprintf(stderr, "cgps: socket error 4\n");
+                // reconnect?
                 die(errno == 0 ? GPS_GONE : GPS_ERROR);
-            } else {
-                /* Here's where updates go now that things are established. */
-#ifdef TRUENORTH
-                if (compass_flag)
-                    update_compass_panel(&gpsdata);
-                else
-#endif /* TRUENORTH */
-                    update_gps_panel(&gpsdata, message);
             }
+            // Here's where updates go now that things are established.
+            if (imu_flag)
+                update_compass_panel(&gpsdata, message);
+            else
+                update_gps_panel(&gpsdata, message);
         }
         if (0 != sig_flag) {
             die(sig_flag);
