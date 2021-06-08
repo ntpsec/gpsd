@@ -2285,31 +2285,35 @@ struct satellite_t {
 
 struct attitude_t {
     timespec_t  mtime;  // time of measurement
-    unsigned long timeTag;    // arbitrary time tag (see UBX-ESF-MEAS)
+    // arbitrary time tag (see UBX-ESF-MEAS), 32 bit unsigned
+    unsigned long timeTag;
     /* source message name.
      * Used to disambiguate UBX-ESF-RAW and UBX-ESF-MEAS
      * Also used to mark this struct as used
      */
     char msg[16];
     double acc_len;     // unitvector sqrt(x^2 + y^2 +z^2)
+    // u-blox, acc_X ==  24 bit signed / 1024
     double acc_x;       // x-axis acceleration (m/s^2)
     double acc_y;       // y-axis acceleration (m/s^2)
     double acc_z;       // x-axis acceleration (m/s^2)
     double depth;
     double dip;
-    double gyro_temp;
-    double gyro_x;
-    double gyro_y;
-    double gyro_z;
+    // u-blox, gyro_temp ==  24 bit signed / 100
+    double gyro_temp;   // deg C
+    // u-blox, gyro_X ==  24 bit signed / 4096
+    double gyro_x;      // deg/s^2
+    double gyro_y;      // deg/s^2
+    double gyro_z;      // deg/s^2
     double heading;
-    double mag_len; /* unitvector sqrt(x^2 + y^2 +z^2) */
+    double mag_len;     // unitvector sqrt(x^2 + y^2 +z^2)
     double mag_x;
     double mag_y;
     double mag_z;
-    double pitch;
-    double roll;
-    double temp;
-    double yaw;
+    double pitch;       // deg
+    double roll;        // deg
+    double temp;        // deg C
+    double yaw;         // deg
     /* compass status -- TrueNorth (and any similar) devices only */
     char mag_st;
     char pitch_st;

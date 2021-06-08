@@ -4109,29 +4109,29 @@ void json_att_dump(const struct gps_data_t *gpsdata,
     if (isfinite(att->mag_len) != 0)
         str_appendf(reply, replylen, ",\"mag_len\":%.3f", att->mag_len);
     if (isfinite(att->mag_x) != 0)
-        str_appendf(reply, replylen, ",\"mag_x\":%.3f", att->mag_x);
+        str_appendf(reply, replylen, ",\"mag_x\":%.5f", att->mag_x);
     if (isfinite(att->mag_y) != 0)
-        str_appendf(reply, replylen, ",\"mag_y\":%.3f", att->mag_y);
+        str_appendf(reply, replylen, ",\"mag_y\":%.5f", att->mag_y);
     if (isfinite(att->mag_z) != 0)
-        str_appendf(reply, replylen, ",\"mag_z\":%.3f", att->mag_z);
+        str_appendf(reply, replylen, ",\"mag_z\":%.5f", att->mag_z);
 
     if (isfinite(att->acc_len) != 0)
-        str_appendf(reply, replylen, ",\"acc_len\":%.3f", att->acc_len);
+        str_appendf(reply, replylen, ",\"acc_len\":%.5f", att->acc_len);
     if (isfinite(att->acc_x) != 0)
-        str_appendf(reply, replylen, ",\"acc_x\":%.3f", att->acc_x);
+        str_appendf(reply, replylen, ",\"acc_x\":%.5f", att->acc_x);
     if (isfinite(att->acc_y) != 0)
-        str_appendf(reply, replylen, ",\"acc_y\":%.3f", att->acc_y);
+        str_appendf(reply, replylen, ",\"acc_y\":%.5f", att->acc_y);
     if (isfinite(att->acc_z) != 0)
-        str_appendf(reply, replylen, ",\"acc_z\":%.3f", att->acc_z);
+        str_appendf(reply, replylen, ",\"acc_z\":%.5f", att->acc_z);
 
     if (isfinite(att->gyro_temp) != 0)
-        str_appendf(reply, replylen, ",\"gyro_temp\":%.3f", att->gyro_temp);
+        str_appendf(reply, replylen, ",\"gyro_temp\":%.2f", att->gyro_temp);
     if (isfinite(att->gyro_x) != 0)
-        str_appendf(reply, replylen, ",\"gyro_x\":%.3f", att->gyro_x);
+        str_appendf(reply, replylen, ",\"gyro_x\":%.5f", att->gyro_x);
     if (isfinite(att->gyro_y) != 0)
-        str_appendf(reply, replylen, ",\"gyro_y\":%.3f", att->gyro_y);
+        str_appendf(reply, replylen, ",\"gyro_y\":%.5f", att->gyro_y);
     if (isfinite(att->gyro_z) != 0)
-        str_appendf(reply, replylen, ",\"gyro_z\":%.3f", att->gyro_z);
+        str_appendf(reply, replylen, ",\"gyro_z\":%.5f", att->gyro_z);
 
     if (isfinite(att->temp) != 0)
         str_appendf(reply, replylen, ",\"temp\":%.3f", att->temp);
