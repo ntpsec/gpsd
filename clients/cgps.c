@@ -17,6 +17,9 @@
    to be displayed.
    ================================================================== */
 
+// Width of Compass/IMU window
+#define IMU_WIDTH 80
+
 /* This defines how much overhead is contained in the 'datawin' window
    (eg, box around the window takes two lines). */
 #define DATAWIN_OVERHEAD 2
@@ -37,7 +40,7 @@
 /* This is how many display fields are output in the 'datawin' window
    when in COMPASS mode.  Change this value if you add or remove fields
    from the 'datawin' window for the COMPASS mode. */
-#define DATAWIN_COMPASS_FIELDS 10
+#define DATAWIN_COMPASS_FIELDS 18
 
 /* This is how far over in the 'datawin' window to indent the field
    descriptions. */
@@ -356,7 +359,7 @@ static void windowsetup(void)
         /* We're an IMU, set up accordingly. */
         int row = 1;
 
-        datawin = newwin(window_ysize, DATAWIN_WIDTH, 0, 0);
+        datawin = newwin(window_ysize, IMU_WIDTH, 0, 0);
         (void)nodelay(datawin, (bool) TRUE);
         if (raw_flag) {
             messages = newwin(0, 0, window_ysize, 0);
@@ -368,15 +371,32 @@ static void windowsetup(void)
         (void)refresh();
 
         // Do the initial compass field label setup.
-        (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET, "Time:");
-        (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET, "timeTag:");
-        (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET, "msg:");
-        (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET, "Accel X:");
-        (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET, "Accel Y:");
-        (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET, "Accel Z:");
-        (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET, "Gyro X:");
-        (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET, "Gyro Y:");
-        (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET, "Gyro Z:");
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "msg:");
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Time:");
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "timeTag:");
+        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Accel X:");
+        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "m/s^2");
+        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Accel Y:");
+        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "m/s^2");
+        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Accel Z:");
+        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "m/s^2");
+        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Gyro T:");
+        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg C");
+        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Gyro X:");
+        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "m/s^2");
+        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Gyro Y:");
+        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "m/s^2");
+        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Gyro Z:");
+        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "m/s^2");
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Mag X:");
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Mag Y:");
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Mag Z:");
+        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Yaw:");
+        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg");
+        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Pitch:");
+        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg");
+        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Roll:");
+        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg");
         (void)wborder(datawin, 0, 0, 0, 0, 0, 0, 0, 0);
 
     } else {
@@ -474,81 +494,82 @@ static void windowsetup(void)
 }
 
 
-// This gets called once for each new sentence.
-static void update_compass_panel(struct gps_data_t *gpsdata,
-                                 const char *message)
+#define LINE(val)                                           \
+    if (0 != isfinite(val)) {                               \
+        (void)mvwprintw(datawin, row, col, "% 8.4f", val);  \
+    }                                                       \
+    row++;
+
+static void update_imu(struct attitude_t *datap, int col)
 {
     char scr[128];
     int row = 1;
-    struct attitude_t *datap;
+    int col_width = 10;
 
-    datap = &gpsdata->imu[0];
-    // datap = &gpsdata->attitude;
-    if ('\0' == datap->msg[0]) {
-        // no IMU data
-        return;
-    }
-
+    (void)mvwprintw(datawin, row++, col, "%-*s", col_width, datap->msg);
     // Print time/date.
     if (0 < datap->mtime.tv_sec) {
         (void)timespec_to_iso8601(datap->mtime, scr, sizeof(scr));
-    } else {
-        (void)strlcpy(scr, "n/a", sizeof(scr));
+        (void)mvwprintw(datawin, row, col, "%-*s", col_width, scr);
     }
-    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
+    row++;
     // Print timeTag
-    if (0 == datap->timeTag) {
-        (void)strlcpy(scr, "n/a", sizeof(scr));
-    } else {
-        (void)snprintf(scr, sizeof(scr), "%lu", datap->timeTag);
+    if (0 != datap->timeTag) {
+        (void)mvwprintw(datawin, row, col, "%10lu", datap->timeTag);
     }
-    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
-
-    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, datap->msg);
+    row++;
 
     // Fill in the accelerometers
-    if (0 == isfinite(datap->acc_x)) {
-        (void)strlcpy(scr, "n/a", sizeof(scr));
-    } else {
-        (void)snprintf(scr, sizeof(scr), "%.3f", datap->acc_x);
-    }
-    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
-    if (0 == isfinite(datap->acc_y)) {
-        (void)strlcpy(scr, "n/a", sizeof(scr));
-    } else {
-        (void)snprintf(scr, sizeof(scr), "%.3f", datap->acc_y);
-    }
-    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
+    LINE(datap->acc_x);
+    LINE(datap->acc_y);
+    LINE(datap->acc_z);
 
-    if (0 == isfinite(datap->acc_z)) {
-        (void)strlcpy(scr, "n/a", sizeof(scr));
-    } else {
-        (void)snprintf(scr, sizeof(scr), "%.3f", datap->acc_z);
-    }
-    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
+    // Gyro
+    LINE(datap->gyro_temp);
+    LINE(datap->gyro_x);
+    LINE(datap->gyro_y);
+    LINE(datap->gyro_z);
 
-    // Fill in the gyros.
-    if (0 == isfinite(datap->gyro_x)) {
-        (void)strlcpy(scr, "n/a", sizeof(scr));
-    } else {
-        (void)snprintf(scr, sizeof(scr), "%.3f", datap->gyro_x);
-    }
-    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
-    if (0 == isfinite(datap->gyro_y)) {
-        (void)strlcpy(scr, "n/a", sizeof(scr));
-    } else {
-        (void)snprintf(scr, sizeof(scr), "%.3f", datap->gyro_y);
-    }
-    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
+    // Magnetic
+    LINE(datap->mag_x);
+    LINE(datap->mag_y);
+    LINE(datap->mag_z);
 
-    if (0 == isfinite(datap->gyro_z)) {
-        (void)strlcpy(scr, "n/a", sizeof(scr));
-    } else {
-        (void)snprintf(scr, sizeof(scr), "%.3f", datap->gyro_z);
-    }
-    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
+    LINE(datap->yaw);
+    LINE(datap->pitch);
+    LINE(datap->roll);
+}
 
-    (void)wrefresh(datawin);
+// This gets called once for each new sentence.
+static void update_imu_panel(struct gps_data_t *gpsdata,
+                                 const char *message)
+{
+    int update = 0;
+    struct attitude_t *datap;
+
+    datap = &gpsdata->attitude;
+    if (0 < datap->mtime.tv_sec) {
+        if ('\0' == datap->msg[0]) {
+            strncpy(datap->msg, "  ATT", sizeof(datap->msg));
+        }
+        update_imu(datap, 12);
+        update = 1;
+    }
+
+    datap = &gpsdata->imu[0];
+    if ('\0' != datap->msg[0]) {
+        if (0 == strcmp("UBX-ESF-MEAS", datap->msg)) {
+            update_imu(datap, 40);
+            update = 1;
+        }
+        if (0 == strcmp("UBX-ESF-RAW", datap->msg)) {
+            update_imu(datap, 60);
+            update = 1;
+        }
+    }
+    if (0 != update) {
+        (void)wrefresh(datawin);
+    }
 
     if (raw_flag && !silent_flag) {
         /* Be quiet if the user requests silence. */
@@ -1419,7 +1440,7 @@ int main(int argc, char *argv[])
             }
             // Here's where updates go now that things are established.
             if (imu_flag)
-                update_compass_panel(&gpsdata, message);
+                update_imu_panel(&gpsdata, message);
             else
                 update_gps_panel(&gpsdata, message);
         }
