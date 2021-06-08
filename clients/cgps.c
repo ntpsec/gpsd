@@ -383,11 +383,11 @@ static void windowsetup(void)
         (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Gyro T:");
         (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg C");
         (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Gyro X:");
-        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "m/s^2");
+        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg/s^2");
         (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Gyro Y:");
-        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "m/s^2");
+        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg/s^2");
         (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Gyro Z:");
-        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "m/s^2");
+        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg/s^2");
         (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Mag X:");
         (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Mag Y:");
         (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Mag Z:");
