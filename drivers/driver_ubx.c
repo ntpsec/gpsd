@@ -527,39 +527,39 @@ ubx_msg_esf_meas(struct gps_device_t *session, unsigned char *buf,
         dataType = (unsigned char)(data >> 24) & 0x3f;
         dataField = data & BITMASK(24);
         switch (dataType) {
-        case 5:            // gyro z angular rate, deg/s
+        case 5:            // gyro z angular rate, deg/s^2
             dataF = UINT2INT(dataField, 24);
-            datap->gyro_z = dataF * pow(2.0, -12);
-            mask |= IMU_SET;
-            break;
-        case 13:           // gyro y angular rate, deg/s
-            dataF = UINT2INT(dataField, 24);
-            datap->gyro_y = dataF * pow(2.0, -12);
-            mask |= IMU_SET;
-            break;
-        case 14:           // gyro x angular rate, deg/s
-            dataF = UINT2INT(dataField, 24);
-            datap->gyro_x = dataF * pow(2.0, -12);
-            mask |= IMU_SET;
-            break;
-        case 16:            // accel x, m/s^2
-            dataF = UINT2INT(dataField, 24);
-            datap->acc_x = dataF * pow(2.0, -10);
-            mask |= IMU_SET;
-            break;
-        case 17:           // accel y, m/s^2
-            dataF = UINT2INT(dataField, 24);
-            datap->acc_y = dataF * pow(2.0, -10);
-            mask |= IMU_SET;
-            break;
-        case 18:           // accel z, m/s^2
-            dataF = UINT2INT(dataField, 24);
-            datap->acc_z = dataF * pow(2.0, -10);
+            datap->gyro_z = dataF / 4096.0;
             mask |= IMU_SET;
             break;
         case 12:           // gyro temp, deg C
             dataF = UINT2INT(dataField, 24);
-            datap->gyro_temp = dataF * 0.01;
+            datap->gyro_temp = dataF / 100.0;
+            mask |= IMU_SET;
+            break;
+        case 13:           // gyro y angular rate, deg/s^2
+            dataF = UINT2INT(dataField, 24);
+            datap->gyro_y = dataF / 4096.0;
+            mask |= IMU_SET;
+            break;
+        case 14:           // gyro x angular rate, deg/s^2
+            dataF = UINT2INT(dataField, 24);
+            datap->gyro_x = dataF / 4096.0;
+            mask |= IMU_SET;
+            break;
+        case 16:            // accel x, m/s^2
+            dataF = UINT2INT(dataField, 24);
+            datap->acc_x = dataF / 1024.0;
+            mask |= IMU_SET;
+            break;
+        case 17:           // accel y, m/s^2
+            dataF = UINT2INT(dataField, 24);
+            datap->acc_y = dataF / 1024.0;
+            mask |= IMU_SET;
+            break;
+        case 18:           // accel z, m/s^2
+            dataF = UINT2INT(dataField, 24);
+            datap->acc_z = dataF / 1024.0;
             mask |= IMU_SET;
             break;
         // case 6:            // front-left wheel ticks
@@ -648,39 +648,39 @@ ubx_msg_esf_raw(struct gps_device_t *session, unsigned char *buf,
         dataField = data & BITMASK(24);
         datap->timeTag = sTtag;
         switch (dataType) {
-        case 5:            // gyro z angular rate, deg/s
+        case 5:            // gyro z angular rate, deg/s^2
             dataF = UINT2INT(dataField, 24);
-            datap->gyro_z = dataF * pow(2.0, -12);
-            mask |= IMU_SET;
-            break;
-        case 13:           // gyro y angular rate, deg/s
-            dataF = UINT2INT(dataField, 24);
-            datap->gyro_y = dataF * pow(2.0, -12);
-            mask |= IMU_SET;
-            break;
-        case 14:           // gyro x angular rate, deg/s
-            dataF = UINT2INT(dataField, 24);
-            datap->gyro_x = dataF * pow(2.0, -12);
-            mask |= IMU_SET;
-            break;
-        case 16:            // accel x, m/s^2
-            dataF = UINT2INT(dataField, 24);
-            datap->acc_x = dataF * pow(2.0, -10);
-            mask |= IMU_SET;
-            break;
-        case 17:           // accel y, m/s^2
-            dataF = UINT2INT(dataField, 24);
-            datap->acc_y = dataF * pow(2.0, -10);
-            mask |= IMU_SET;
-            break;
-        case 18:           // accel z, m/s^2
-            dataF = UINT2INT(dataField, 24);
-            datap->acc_z = dataF * pow(2.0, -10);
+            datap->gyro_z = dataF / 4096.0;
             mask |= IMU_SET;
             break;
         case 12:           // gyro temp, deg C
             dataF = UINT2INT(dataField, 24);
-            datap->gyro_temp = dataF * 0.01;
+            datap->gyro_temp = dataF / 100.0;
+            mask |= IMU_SET;
+            break;
+        case 13:           // gyro y angular rate, deg/s^2
+            dataF = UINT2INT(dataField, 24);
+            datap->gyro_y = dataF / 4096.0;
+            mask |= IMU_SET;
+            break;
+        case 14:           // gyro x angular rate, deg/s^2
+            dataF = UINT2INT(dataField, 24);
+            datap->gyro_x = dataF / 4096.0;
+            mask |= IMU_SET;
+            break;
+        case 16:            // accel x, m/s^2
+            dataF = UINT2INT(dataField, 24);
+            datap->acc_x = dataF / 1024.0;
+            mask |= IMU_SET;
+            break;
+        case 17:           // accel y, m/s^2
+            dataF = UINT2INT(dataField, 24);
+            datap->acc_y = dataF / 1024.0;
+            mask |= IMU_SET;
+            break;
+        case 18:           // accel z, m/s^2
+            dataF = UINT2INT(dataField, 24);
+            datap->acc_z = dataF / 1024.0;
             mask |= IMU_SET;
             break;
         // case 6:            // front-left wheel ticks
