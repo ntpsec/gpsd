@@ -330,10 +330,10 @@ pages:
   - tags
   - web
 
-dist-f32:
+dist-f35:
   variables:
-    REPOPATH: "Fedora/32"
-  image: fedora:32
+    REPOPATH: "Fedora/35"
+  image: fedora:35
   <<: *frpm_build
 
 dist-f33:
