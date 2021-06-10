@@ -336,6 +336,10 @@ try:
             # end of data
             break
 
+        if 'class' not in report:
+            # invalid input.
+            sys.stderr.write("WARNING: Malformed input %s\n" % report)
+            continue;
         if report['class'] != options.mclass:
             continue
         if 'SAT' == options.subclass:
