@@ -511,54 +511,6 @@ class SkyView(Gtk.DrawingArea):
         self.queue_draw()
 
 
-class NoiseView(object):
-
-    """Encapsulate view object for watching noise statistics."""
-    COLUMNS = 2
-    ROWS = 4
-    noisefields = (
-        # First column
-        ("Time", "time"),
-        ("Latitude", "lat"),
-        ("Longitude", "lon"),
-        ("Altitude", "alt"),
-        # Second column
-        ("RMS", "rms"),
-        ("Major", "major"),
-        ("Minor", "minor"),
-        ("Orient", "orient"),
-    )
-
-    def __init__(self):
-        """Initialize class NoiseView."""
-        self.widget = Gtk.Grid()
-        self.noisewidgets = []
-        for i in range(len(NoiseView.noisefields)):
-            colbase = (i // NoiseView.ROWS) * 2
-            label = Gtk.Label()
-            label.set_markup("<span font_desc='sans 10'> %s:</span>" %
-                             NoiseView.noisefields[i][0])
-            # force right alignment
-            label.set_halign(Gtk.Align.END)
-            self.widget.attach(label, colbase, i % NoiseView.ROWS, 1, 1)
-            entry = Gtk.Label()
-            # span gets lost later
-            entry.set_markup("<span font_desc='monospace 10'> n/a </span>")
-            self.widget.attach_next_to(entry, label,
-                                       Gtk.PositionType.RIGHT, 1, 1)
-            self.noisewidgets.append((NoiseView.noisefields[i][1], entry))
-
-    def update(self, noise):
-        """Update the GPGST data fields."""
-        markup = "<span font_desc='monospace 10'>%s </span>"
-        for (attrname, widget) in self.noisewidgets:
-            if hasattr(noise, attrname):
-                s = str(getattr(noise, attrname))
-            else:
-                s = " n/a "
-            widget.set_markup(markup % s)
-
-
 class AISView(object):
     """Encapsulate store and view objects for watching AIS data."""
     AIS_ENTRIES = 10
@@ -680,6 +632,112 @@ class AISView(object):
                      "", where, ais.aid_type_text))
 
 
+class IMUView(object):
+
+    """Encapsulate view object for watching ATT/IMU data."""
+    COLUMNS = 4
+    ROWS = 4
+    imufields = (
+        # First column
+        ("timeTag", "timeTag"),
+        ("Acc x", "acc_x"),
+        ("Acc y", "acc_y"),
+        ("Acc z", "acc_z"),
+        # Second column
+        ("Gyro t", "gyro_temp"),
+        ("Gyro x", "gyro_x"),
+        ("Gyro y", "gyro_y"),
+        ("Gyro z", "gyro_z"),
+        # third column
+        ("", "YY"),
+        ("Mag x", "mag_x"),
+        ("Mag y", "mag_y"),
+        ("Mag z", "mag_z"),
+        # fourth column
+        ("time", "time"),
+        ("Pitch", "pitch"),
+        ("Roll", "roll"),
+        ("Yaw", "yaw"),
+    )
+
+    def __init__(self):
+        """Initialize class IMUView."""
+        self.widget = Gtk.Grid()
+        self.imuwidgets = []
+        for i in range(len(IMUView.imufields)):
+            colbase = (i // IMUView.ROWS) * 2
+            label = Gtk.Label()
+            label.set_markup("<span font_desc='sans 10'> %s:</span>" %
+                             IMUView.imufields[i][0])
+            # force right alignment
+            label.set_halign(Gtk.Align.END)
+            self.widget.attach(label, colbase, i % IMUView.ROWS, 1, 1)
+            entry = Gtk.Label()
+            # span gets lost later
+            entry.set_markup("<span font_desc='monospace 10'> n/a </span>")
+            self.widget.attach_next_to(entry, label,
+                                       Gtk.PositionType.RIGHT, 1, 1)
+            self.imuwidgets.append((IMUView.imufields[i][1], entry))
+
+    def update(self, msg):
+        """Update the IMU data fields."""
+        markup = "<span font_desc='monospace 10'>%s </span>"
+        for (attrname, widget) in self.imuwidgets:
+            if hasattr(msg, attrname):
+                s = str(getattr(msg, attrname))
+            else:
+                s = " n/a "
+            widget.set_markup(markup % s)
+
+
+class NoiseView(object):
+
+    """Encapsulate view object for watching noise statistics."""
+    COLUMNS = 2
+    ROWS = 4
+    noisefields = (
+        # First column
+        ("Time", "time"),
+        ("Latitude", "lat"),
+        ("Longitude", "lon"),
+        ("Altitude", "alt"),
+        # Second column
+        ("RMS", "rms"),
+        ("Major", "major"),
+        ("Minor", "minor"),
+        ("Orient", "orient"),
+    )
+
+    def __init__(self):
+        """Initialize class NoiseView."""
+        self.widget = Gtk.Grid()
+        self.noisewidgets = []
+        for i in range(len(NoiseView.noisefields)):
+            colbase = (i // NoiseView.ROWS) * 2
+            label = Gtk.Label()
+            label.set_markup("<span font_desc='sans 10'> %s:</span>" %
+                             NoiseView.noisefields[i][0])
+            # force right alignment
+            label.set_halign(Gtk.Align.END)
+            self.widget.attach(label, colbase, i % NoiseView.ROWS, 1, 1)
+            entry = Gtk.Label()
+            # span gets lost later
+            entry.set_markup("<span font_desc='monospace 10'> n/a </span>")
+            self.widget.attach_next_to(entry, label,
+                                       Gtk.PositionType.RIGHT, 1, 1)
+            self.noisewidgets.append((NoiseView.noisefields[i][1], entry))
+
+    def update(self, noise):
+        """Update the GPGST data fields."""
+        markup = "<span font_desc='monospace 10'>%s </span>"
+        for (attrname, widget) in self.noisewidgets:
+            if hasattr(noise, attrname):
+                s = str(getattr(noise, attrname))
+            else:
+                s = " n/a "
+            widget.set_markup(markup % s)
+
+
 class Base(object):
 
     """Base class for all the output"""
@@ -754,7 +812,15 @@ class Base(object):
         self.rotate = rotation
         self.conversions = gps.clienthelpers.unit_adjustments()
         self.saved_mode = -1
+        # Flag to turn on AISView if we see AIS, once
         self.ais_latch = False
+        # Flag to turn on ATT if we see ATT, once
+        self.att_latch = False
+        # Flag to turn on IMU RAW if we see IMU RAW, once
+        self.imumeas_latch = False
+        # Flag to turn on IMU RAW if we see IMU RAW, once
+        self.imuraw_latch = False
+        # Flag to turn on MoiseView if we see GST, once
         self.noise_latch = False
         self.last_transition = 0.0
         self.daemon = None
@@ -830,11 +896,14 @@ frame * {
         submenu = Gtk.Menu()
         topmenu.set_submenu(submenu)
 
-        views = [["Skyview", True, "<Control>S", "Skyview"],
-                 ["Responses", True, "<Control>R", "Responses"],
+        views = [["AIS Data", False, "<Control>A", "AIS"],
+                 ["ATT Data", False, "<Control>T", "ATT"],
                  ["GPS Data", True, "<Control>G", "GPS"],
+                 ["IMU MEAS Data", False, "<Control>M", "IMU MEAS"],
+                 ["IMU RAW Data", False, "<Control>I", "IMU RAW"],
                  ["Noise Statistics", False, "<Control>N", "Noise"],
-                 ["AIS Data", False, "<Control>A", "AIS"],
+                 ["Responses", True, "<Control>R", "Responses"],
+                 ["Skyview", True, "<Control>S", "Skyview"],
                  ]
 
         self.menumap = {}
@@ -940,6 +1009,7 @@ frame * {
 
         vbox.pack_start(menubar, expand=False, fill=True, padding=0)
 
+        # Gtk.HBox() is deprecated, use Gtk.Box() or Gtk.Grid().
         self.satbox = Gtk.HBox(homogeneous=False, spacing=0)
         vbox.add(self.satbox)
 
@@ -973,17 +1043,17 @@ frame * {
 
         viewframe = Gtk.Frame(label="Skyview")
         self.satbox.add(viewframe)
-        self.skyview = SkyView(self.rotate)
+        self.sky_view = SkyView(self.rotate)
         try:
             # mouseovers fail with remote DISPLAY
-            self.skyview.set_property('events',
-                                      Gdk.EventMask.POINTER_MOTION_MASK)
+            self.sky_view.set_property('events',
+                                       Gdk.EventMask.POINTER_MOTION_MASK)
         except NotImplementedError:
             # keep going anyway, w/o popups
             sys.stderr.write("xgps: WARNING: failed to grab mouse events, "
                              "popups disabled\n")
 
-        viewframe.add(self.skyview)
+        viewframe.add(self.sky_view)
 
         # Display area for incoming JSON
         self.rawdisplay = Gtk.Entry()
@@ -1018,34 +1088,68 @@ frame * {
             gpswidgets.append(entry)
         vbox.add(self.dataframe)
 
+        # Add AIS
+        self.ais_box = Gtk.Box(homogeneous=False, spacing=0)
+        vbox.add(self.ais_box)
+        aisframe = Gtk.Frame(label="AIS Data")
+        self.ais_box.add(aisframe)
+        self.ais_view = AISView(self.deg_type)
+        aisframe.add(self.ais_view.widget)
+
+        # Add ATT
+        self.att_box = Gtk.Box(homogeneous=False, spacing=0)
+        vbox.add(self.att_box)
+        att_frame = Gtk.Frame(label="ATT")
+        self.att_box.add(att_frame)
+        self.att_view = IMUView()
+        att_frame.add(self.att_view.widget)
+
+        # Add IMU MEAS and RAW
+        self.imumeas_box = Gtk.Box(homogeneous=False, spacing=0)
+        vbox.add(self.imumeas_box)
+        imumeas_frame = Gtk.Frame(label="IMU MEAS")
+        self.imumeas_box.add(imumeas_frame)
+        self.imumeas_view = IMUView()
+        imumeas_frame.add(self.imumeas_view.widget)
+
+        self.imuraw_box = Gtk.Box(homogeneous=False, spacing=0)
+        vbox.add(self.imuraw_box)
+        imuraw_frame = Gtk.Frame(label="IMU RAW")
+        self.imuraw_box.add(imuraw_frame)
+        self.imuraw_view = IMUView()
+        imuraw_frame.add(self.imuraw_view.widget)
+
         # Add noise box
-        self.noisebox = Gtk.HBox(homogeneous=False, spacing=0)
+        # FIXME: GtkBox() is deprecated, use Gtk.Grid()
+        self.noisebox = Gtk.Box(homogeneous=False, spacing=0)
         vbox.add(self.noisebox)
         noiseframe = Gtk.Frame(label="Noise Statistics")
         self.noisebox.add(noiseframe)
-        self.noiseview = NoiseView()
-        noiseframe.add(self.noiseview.widget)
-
-        self.aisbox = Gtk.HBox(homogeneous=False, spacing=0)
-        vbox.add(self.aisbox)
-        aisframe = Gtk.Frame(label="AIS Data")
-        self.aisbox.add(aisframe)
-        self.aisview = AISView(self.deg_type)
-        aisframe.add(self.aisview.widget)
+        self.noise_view = NoiseView()
+        noiseframe.add(self.noise_view.widget)
 
         self.window.show_all()
+        # Hide the ATT/IMU windows until first data seen
+        self.att_box.hide()
+        self.imumeas_box.hide()
+        self.imuraw_box.hide()
+
         # Hide the Noise Statistics window until user selects it.
         self.noisebox.hide()
 
         # Hide the AIS window until user selects it.
-        self.aisbox.hide()
+        self.ais_box.hide()
 
         self.view_name_to_widget = {
-            "Skyview": self.satbox,
-            "Responses": self.rawdisplay,
+            "AIS": self.ais_box,
+            "ATT": self.att_box,
             "GPS": self.dataframe,
+            "IMU MEAS": self.imumeas_box,
+            "IMU RAW": self.imuraw_box,
             "Noise": self.noisebox,
-            "AIS": self.aisbox}
+            "Responses": self.rawdisplay,
+            "Skyview": self.satbox,
+            }
 
         # Discard field labels and associate data hooks with their widgets
         Base.gpsfields = [(label_hook_widget[0][1], label_hook_widget[1])
@@ -1057,10 +1161,8 @@ frame * {
 
         # print("View toggle:", action.get_active(), name)
         if hasattr(self, 'view_name_to_widget'):
-            if action.get_active():
-                self.view_name_to_widget[name].show()
-            else:
-                self.view_name_to_widget[name].hide()
+            is_vis = self.view_name_to_widget[name].is_visible()
+            self.view_name_to_widget[name].set_visible(not is_vis)
         # The effect we're after is to make the top-level window
         # resize itself to fit when we show or hide widgets.
         # This is undocumented magic to do that.
@@ -1285,13 +1387,13 @@ frame * {
         for (hook, widget) in Base.gpsfields[:27]:
             if hook:  # Remove this guard when we have all hooks
                 widget.set_markup(markup % hook(self, tpv))
-        if self.skyview:
+        if self.sky_view:
             if ((self.rotate is None and
                  hasattr(tpv, 'lat') and hasattr(tpv, 'lon'))):
-                self.skyview.rotate = gps.clienthelpers.mag_var(tpv.lat,
-                                                                tpv.lon)
+                self.sky_view.rotate = gps.clienthelpers.mag_var(tpv.lat,
+                                                                 tpv.lon)
             elif self.rotate is True and 'track' in tpv:
-                self.skyview.rotate = tpv.track
+                self.sky_view.rotate = tpv.track
 
     def update_version(self, ver):
         """Update the Version."""
@@ -1385,7 +1487,7 @@ frame * {
             satellites = ()
 
         # repaint Skyview
-        self.skyview.redraw(satellites)
+        self.sky_view.redraw(satellites)
 
         markup = "<span font_desc='monospace 10'>%s </span>"
         # the first 27 fields are updated using TPV data
@@ -1400,20 +1502,20 @@ frame * {
         """Change the grid orientation."""
         self.rotate = handle
         if handle is not None:
-            self.skyview.rotate = handle
+            self.sky_view.rotate = handle
 
     def set_step_of_grid(self, system, handle):
         """Change the step of grid."""
         # print("set_step_of_grid:", system, handle)
         if hasattr(self, 'skyview') and self.skyview is not None:
-            self.skyview.step_of_grid = handle
+            self.sky_view.step_of_grid = handle
 
     def set_deg(self, _unused, handle):
         """Change the degree format."""
         # print("set_deg:", _unused, handle)
         self.deg_type = handle
-        if hasattr(self, 'mvview') and self.mvview is not None:
-            self.mvview.deg_type = handle
+        if hasattr(self, 'mv_view') and self.mv_view is not None:
+            self.mv_view.deg_type = handle
 
     def set_units(self, _unused, handle):
         """Change the display units."""
@@ -1443,24 +1545,43 @@ frame * {
                  self.device != self.daemon.data["device"])):
                 return True
             self.rawdisplay.set_text(self.daemon.response.strip())
-            if self.daemon.data["class"] == "VERSION":
-                self.update_version(self.daemon.version)
-            elif self.daemon.data["class"] == "SKY":
-                self.update_skyview(self.daemon.data)
-            elif self.daemon.data["class"] == "TPV":
-                self.update_gpsdata(self.daemon.data)
+            if self.daemon.data["class"] == "AIS":
+                self.ais_view.update(self.daemon.data)
+                if not self.ais_latch:
+                    self.ais_latch = True
+                    self.menumap['AIS'].set_active(True)
+                    self.ais_box.show()
+            elif self.daemon.data["class"] == "ATT":
+                self.att_view.update(self.daemon.data)
+                if not self.att_latch:
+                    self.att_latch = True
+                    self.menumap['ATT'].set_active(True)
+                    self.att_box.show()
             elif self.daemon.data["class"] == "GST":
-                self.noiseview.update(self.daemon.data)
+                self.noise_view.update(self.daemon.data)
                 if not self.noise_latch:
                     self.noise_latch = True
                     self.menumap['Noise'].set_active(True)
                     self.noisebox.show()
-            elif self.daemon.data["class"] == "AIS":
-                self.aisview.update(self.daemon.data)
-                if not self.ais_latch:
-                    self.ais_latch = True
-                    self.menumap['AIS'].set_active(True)
-                    self.aisbox.show()
+            elif self.daemon.data["class"] == "IMU":
+                if 'UBX-ESF-MEAS' == self.daemon.data["msg"]:
+                    self.imumeas_view.update(self.daemon.data)
+                    if not self.ais_latch:
+                        self.imumeas_latch = True
+                        self.menumap['IMU MEAS'].set_active(True)
+                        self.imumeas_box.show()
+                elif 'UBX-ESF-RAW' == self.daemon.data["msg"]:
+                    self.imuraw_view.update(self.daemon.data)
+                    if not self.imuraw_latch:
+                        self.imuraw_latch = True
+                        self.menumap['IMU RAW'].set_active(True)
+                        self.imuraw_box.show()
+            elif self.daemon.data["class"] == "SKY":
+                self.update_skyview(self.daemon.data)
+            elif self.daemon.data["class"] == "TPV":
+                self.update_gpsdata(self.daemon.data)
+            elif self.daemon.data["class"] == "VERSION":
+                self.update_version(self.daemon.version)
 
         return True
 
