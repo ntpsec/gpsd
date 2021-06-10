@@ -5207,7 +5207,7 @@ High Precision GNSS products only."""
             flags = u1[13]
         elif (0 == u[0] and 40 <= m_len):
             # valid version 0 packet, u-blox 8, and some u-blox 9
-            u1 = struct.unpack_from('<bbbbLLLLLLL', buf, 20)
+            u1 = struct.unpack_from('<bbbbLLLL', buf, 20)
             s += ('  relPosHPN %d relPosHPE %d relPosHPD %d reserved2 %u\n'
                   '  accN %u accE %u accD %u flags x%x' % u1)
             flags = u1[7]
