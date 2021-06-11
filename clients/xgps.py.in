@@ -666,15 +666,19 @@ class IMUView(object):
         self.imuwidgets = []
         for i in range(len(IMUView.imufields)):
             colbase = (i // IMUView.ROWS) * 2
+            # attribute / label
             label = Gtk.Label()
             label.set_markup("<span font_desc='sans 10'> %s:</span>" %
                              IMUView.imufields[i][0])
             # force right alignment
             label.set_halign(Gtk.Align.END)
             self.widget.attach(label, colbase, i % IMUView.ROWS, 1, 1)
+            # value
             entry = Gtk.Label()
+            entry.set_xalign(1)            # right align data
             # span gets lost later
             entry.set_markup("<span font_desc='monospace 10'> n/a </span>")
+            entry.set_width_chars(10)
             self.widget.attach_next_to(entry, label,
                                        Gtk.PositionType.RIGHT, 1, 1)
             self.imuwidgets.append((IMUView.imufields[i][1], entry))
@@ -1097,7 +1101,7 @@ frame * {
         aisframe.add(self.ais_view.widget)
 
         # Add ATT
-        self.att_box = Gtk.Box(homogeneous=False, spacing=0)
+        self.att_box = Gtk.Grid()
         vbox.add(self.att_box)
         att_frame = Gtk.Frame(label="ATT")
         self.att_box.add(att_frame)
@@ -1105,14 +1109,14 @@ frame * {
         att_frame.add(self.att_view.widget)
 
         # Add IMU MEAS and RAW
-        self.imumeas_box = Gtk.Box(homogeneous=False, spacing=0)
+        self.imumeas_box = Gtk.Grid()
         vbox.add(self.imumeas_box)
         imumeas_frame = Gtk.Frame(label="IMU MEAS")
         self.imumeas_box.add(imumeas_frame)
         self.imumeas_view = IMUView()
         imumeas_frame.add(self.imumeas_view.widget)
 
-        self.imuraw_box = Gtk.Box(homogeneous=False, spacing=0)
+        self.imuraw_box = Gtk.Grid()
         vbox.add(self.imuraw_box)
         imuraw_frame = Gtk.Frame(label="IMU RAW")
         self.imuraw_box.add(imuraw_frame)
