@@ -4021,7 +4021,41 @@ Only for models with built in USB.
 
     # UBX-HNR-
     # only with ADR or UDR products
-    hnr_ids = {0x00: {'str': 'PVT', 'minlen': 72, 'name': "UBX-HNR-PVT"},
+
+    # at ad diff from nav_pvt_flags
+    hnr_pvt_flags = {
+        1: "GpsFixOK",
+        2: "diffSoln",
+        4: "WKNSET",
+        8: "TOWSET",
+        0x10: "headVehValid",
+        }
+
+    def hnr_pvt(self, buf):
+        """UBX-HNR-PVT decode, High rate output of PVT solution"""
+        m_len = len(buf)
+
+        # Not before protVet 19
+        # 72 bytes long in protver 19.
+
+        u = struct.unpack_from('<LHBBBBBBLBBHllllllllLLLLL', buf, 0)
+        s = ('  iTOW %u time %u/%u/%u %02u:%02u:%02u valid x%x\n'
+             '  nano %d gpsFix %u flags x%x reserved1 x%x\n'
+             '  lon %d lat %d height %d hMSL %d\n'
+             '  gSpeed %d speed %d headMot %d headVeh %d\n'
+             '  hAcc %u vAcc %u sAcc %u headAcc %u reserved2 x%x' % u)
+
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ("\n    valid (%s)"
+                  "\n    gpsFix (%s)"
+                  "\n    flags (%s)" %
+                  (flag_s(u[7], self.nav_pvt_valid),
+                   index_s(u[9], self.nav_pvt_fixType),
+                   flag_s(u[10], self.hnr_pvt_flags)))
+        return s
+
+    hnr_ids = {0x00: {'str': 'PVT', 'dec': hnr_pvt, 'minlen': 72,
+                      'name': "UBX-HNR-PVT"},
                0x01: {'str': 'ATT', 'minlen': 32, 'name': "UBX-HNR-ATT"},
                0x02: {'str': 'INS', 'minlen': 36, 'name': "UBX-HNR-INS"},
                }
