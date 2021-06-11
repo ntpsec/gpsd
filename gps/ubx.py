@@ -8336,6 +8336,18 @@ Always double check with "-p CFG-GNSS".
         m_data[11] = 0          # flags, bits 24:31, unused
         self.gps_send(6, 0x3e, m_data)
 
+    def send_poll_cfg_hnr(self, args):
+        """UBX-CFG-HNR, poll/set optional highNavRate"""
+
+        if 0 < len(args):
+            # optional set highNavRate
+            m_data = bytearray(4)
+            m_data[0] = int(args[0])
+        else:
+            m_data = bytearray(0)
+
+        self.gps_send(6, 0x5c, m_data)
+
     def poll_cfg_inf(self):
         """UBX-CFG-INF, poll"""
 
@@ -8949,8 +8961,13 @@ Always double check with "-p CFG-GNSS".
         "CFG-GNSS": {"command": send_poll, "opt": [0x06, 0x3e],
                      "help": "poll UBX-CFG-GNSS GNSS config"},
         # UBX-CFG-HNR
-        "CFG-HNR": {"command": send_poll, "opt": [0x06, 0x5c],
-                    "help": "poll UBX-CFG-HNR High Navigation Rate Settings"},
+        "CFG-HNR": {"command": send_poll_cfg_hnr,
+                    "help": "poll UBX-CFG-HNR Settings\n"
+                            "                    "
+                            "set UBX-CFG-HNR,[highNavRate]\n"
+                            "                    "
+                            "highNavRate is optional and sets rate.",
+                    "args": 0},
         # UBX-CFG-INF
         "CFG-INF": {"command": poll_cfg_inf,
                     "help": "poll UBX-CFG-INF Information Message "
