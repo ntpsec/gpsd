@@ -3738,7 +3738,7 @@ Only for models with built in USB.
         # Not in u-blox 7-
         0x57: {'str': 'PWR', 'dec': cfg_pwr, 'minlen': 8,
                'name': 'UBX-CFG-PWR'},
-        # Not in u-blox 8-
+        # Not before u-blox 8, protVer 15, ADR and UDR only
         0x5c: {'str': 'HNR', 'dec': cfg_hnr, 'minlen': 4,
                'name': 'UBX-CFG-HNR'},
         # Not in u-blox 7-, protVer 16 and up,  TFS only
@@ -9067,6 +9067,15 @@ Always double check with "-p CFG-GNSS".
         "ESF-STATUS": {"command": send_poll, "opt": [0x10, 0x10],
                        "help": "poll UBX-ESF-STATUS External sensor fusion "
                                "status"},
+        # UBX-HNR-ATT
+        "HNR-ATT": {"command": send_poll, "opt": [0x28, 0x01],
+                    "help": "poll UBX-HNR-ATT Attitude solution"},
+        # UBX-HNR-INS
+        "HNR-INS": {"command": send_poll, "opt": [0x28, 0x02],
+                    "help": "poll UBX-HNR-INS Vehicle dynamics information"},
+        # UBX-HNR-PVT
+        "HNR-PVT": {"command": send_poll, "opt": [0x28, 0x00],
+                    "help": "poll UBX-HNR-PVT HNR PVT solution"},
         # UBX-LOG-CREATE
         "LOG-CREATE": {"command": send_poll,
                        "opt": [0x21, 0x07, 0, 1, 0, 0, 0, 0, 0, 0],
