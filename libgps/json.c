@@ -146,6 +146,9 @@ static char *json_target_address(const struct json_attr_t *cursor,
         case t_time:
             targetaddr = (char *)&cursor->addr.ts[offset];
             break;
+        case t_timespec:
+            targetaddr = (char *)&cursor->addr.ts[offset];
+            break;
         case t_real:
             targetaddr = (char *)&cursor->addr.real[offset];
             break;
@@ -233,6 +236,9 @@ static int json_internal_read_object(const char *cp,
                            sizeof(unsigned short));
                     break;
                 case t_time:
+                    memcpy(lptr, &cursor->dflt.ts, sizeof(timespec_t));
+                    break;
+                case t_timespec:
                     memcpy(lptr, &cursor->dflt.ts, sizeof(timespec_t));
                     break;
                 case t_real:
@@ -592,6 +598,19 @@ static int json_internal_read_object(const char *cp,
                         memcpy(lptr, &ts_tmp, sizeof(timespec_t));
                     }
                     break;
+                case t_timespec:
+                    {
+                        double sec_tmp = safe_atof(valbuf);
+                        timespec_t ts_tmp;
+                        if (0 == isfinite(sec_tmp)) {
+                            ts_tmp.tv_sec = 0;
+                            ts_tmp.tv_nsec = 0;
+                        } else {
+                            DTOTS(&ts_tmp, sec_tmp);
+                        }
+                        memcpy(lptr, &ts_tmp, sizeof(timespec_t));
+                    }
+                    break;
                 case t_real:
                     {
                         double tmp = safe_atof(valbuf);
@@ -810,6 +829,10 @@ int json_read_array(const char *cp, const struct json_array_t *arr,
                 else
                     ++cp;
             }
+            break;
+        case t_timespec:
+            // TODO not sure how to implement this
+            return JSON_ERR_BADNUM;
             break;
         case t_real:
             arr->arr.reals.store[offset] = strtod(cp, &ep);
