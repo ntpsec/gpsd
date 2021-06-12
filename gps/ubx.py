@@ -2375,13 +2375,14 @@ protVer 15.01 and up, ADR and UDR only"""
 
     def cfg_esfg(self, buf):
         """UBX-CFG-ESFG decode, Gyro sensor configuration
+
 protVer 19 and up, UDR only"""
 
-        # at least protver 19
+        # u-blox 8, protver 19 and up
         if 19 > self.protver:
             self.protver = 19
 
-        u = struct.unpack_from('<BLLHBHBBHHL', buf, 0)
+        u = struct.unpack_from('<BLHBHBBHHL', buf, 0)
         s = (' version %u reserved1 x%x %x %x tcTableSaveRate %u\n'
              '  gyroRmsThdl %u frequency %u latency %u accuracy %u\n'
              '  reserved2 x%x' % u)
@@ -8755,9 +8756,21 @@ Always double check with "-p CFG-GNSS".
         """generic send poll request"""
         self.gps_send(m_data[0], m_data[1], m_data[2:])
 
+    def send_cmds(self, cmds):
+        """Send a list of commands"""
+        # blast them for now, should do one at a time...
+        # for some reason NEO-M8U responds in different order!
+        # so can not depend on response order, or any response at all.
+        for cmd in cmds:
+            self.send_poll(cmd)
+
     CFG_ANT = [0x06, 0x13]
     CFG_BATCH = [0x06, 0x93]
     CFG_DAT = [0x06, 0x06]
+    CFG_ESFA = [0x06, 0x4c]
+    CFG_ESFALG = [0x06, 0x56]
+    CFG_ESFG = [0x06, 0x4d]
+    CFG_ESFWT = [0x06, 0x82]
     CFG_GNSS = [0x06, 0x3e]
     CFG_GEOFENCE = [0x06, 0x69]
     CFG_HNR = [0x06, 0x5c]
@@ -8776,6 +8789,9 @@ Always double check with "-p CFG-GNSS".
     CFG_TMODE3 = [0x06, 0x71]
     CFG_TP5 = [0x06, 0x31]
     CFG_USB = [0x06, 0x1b]
+    ESF_ALG = [0x10, 0x14]
+    ESF_INS = [0x10, 0x15]
+    ESF_STATUS = [0x10, 0x10]
     HNR_ATT = [0x28, 0x01]
     HNR_INS = [0x28, 0x02]
     HNR_PVT = [0x28, 0x00]
@@ -8794,8 +8810,22 @@ Always double check with "-p CFG-GNSS".
     NAV_SVIN = [0x01, 0x3b]
     TIM_SVIN = [0x0d, 0x04]
 
+    def send_poll_esf(self):
+        """HNR.  poll ESF messages"""
+
+        cmds = [ubx.CFG_ESFA,
+                ubx.CFG_ESFALG,
+                ubx.CFG_ESFG,
+                ubx.CFG_ESFWT,
+                ubx.ESF_ALG,
+                ubx.ESF_INS,
+                ubx.ESF_STATUS,
+                ]
+
+        self.send_cmds(cmds)
+
     def send_poll_hnr(self):
-        """HNR.  poll HNR message"""
+        """HNR.  poll HNR messages"""
 
         cmds = [ubx.CFG_HNR,
                 ubx.HNR_ATT,
@@ -8803,10 +8833,7 @@ Always double check with "-p CFG-GNSS".
                 ubx.HNR_PVT,
                 ]
 
-        # blast them for now, should do one at a time...
-        # for some reason NEO-M8U responds in different order!
-        for cmd in cmds:
-            self.send_poll(cmd)
+        self.send_cmds(cmds)
 
     def get_config(self):
         """CONFIG.  Get a bunch of config messages"""
@@ -8842,9 +8869,7 @@ Always double check with "-p CFG-GNSS".
         if 22 < self.protver:
             cmds.append(ubx.CFG_BATCH)   # UBX-CFG-BATCH, protVer 23.01+
 
-        # blast them for now, should do one at a time...
-        for cmd in cmds:
-            self.send_poll(cmd)
+        self.send_cmds(cmds)
 
     def get_status(self):
         """STATUS.  Get a bunch of status messages"""
@@ -8875,9 +8900,7 @@ Always double check with "-p CFG-GNSS".
                      ubx.TIM_SVIN,        # UBX-TIM-SVIN
                      ])
 
-        # blast them for now, should do one at a time...
-        for cmd in cmds:
-            self.send_poll(cmd)
+        self.send_cmds(cmds)
 
     able_commands = {
         # en/dis able BATCH
@@ -9028,16 +9051,16 @@ Always double check with "-p CFG-GNSS".
                      "help": "poll UBX-CFG-DOSC Disciplined oscillator"
                      "configuration"},
         # UBX-CFG-ESFA
-        "CFG-ESFA": {"command": send_poll, "opt": [0x06, 0x4c],
+        "CFG-ESFA": {"command": send_poll, "opt": CFG_ESFA,
                      "help": "poll UBX-CFG-ESFA Accelerometer configuration"},
         # UBX-CFG-ESFALG
-        "CFG-ESFALG": {"command": send_poll, "opt": [0x06, 0x56],
+        "CFG-ESFALG": {"command": send_poll, "opt": CFG_ESFALG,
                        "help": "poll UBX-CFG-ESFALG IMU alignment config"},
         # UBX-CFG-ESFG
-        "CFG-ESFG": {"command": send_poll, "opt": [0x06, 0x4D],
+        "CFG-ESFG": {"command": send_poll, "opt": CFG_ESFG,
                      "help": "poll UBX-CFG-ESFG Gyro configuration"},
         # UBX-CFG-ESWTF
-        "CFG-ESFWT": {"command": send_poll, "opt": [0x06, 0x82],
+        "CFG-ESFWT": {"command": send_poll, "opt": CFG_ESFWT,
                       "help": "poll UBX-CFG-ESFWY Wheel tick configuration"},
         # UBX-CFG-ESRC
         "CFG-ESRC": {"command": send_poll, "opt": [0x06, 0x60],
@@ -9167,14 +9190,16 @@ Always double check with "-p CFG-GNSS".
         # UBX-CFG-USB
         "CFG-USB": {"command": send_poll, "opt": [0x06, 0x1b],
                     "help": "poll UBX-CFG-USB USB config"},
+        # UBX-EFS-
+        "ESF": {"command": send_poll_esf, "help": "poll ESF-*"},
         # UBX-ESF-ALG
-        "ESF-ALG": {"command": send_poll, "opt": [0x10, 0x14],
+        "ESF-ALG": {"command": send_poll, "opt": ESF_ALG,
                     "help": "poll UBX-ESF-ALG IMU alignment information"},
         # UBX-ESF-INS
-        "ESF-INS": {"command": send_poll, "opt": [0x10, 0x15],
+        "ESF-INS": {"command": send_poll, "opt": ESF_INS,
                     "help": "poll UBX-ESF-INS Vehicle dynamics info"},
         # UBX-ESF-STATUS
-        "ESF-STATUS": {"command": send_poll, "opt": [0x10, 0x10],
+        "ESF-STATUS": {"command": send_poll, "opt": ESF_STATUS,
                        "help": "poll UBX-ESF-STATUS External sensor fusion "
                                "status"},
         # UBX-HNR-
