@@ -8760,6 +8760,7 @@ Always double check with "-p CFG-GNSS".
     CFG_DAT = [0x06, 0x06]
     CFG_GNSS = [0x06, 0x3e]
     CFG_GEOFENCE = [0x06, 0x69]
+    CFG_HNR = [0x06, 0x5c]
     CFG_INF_0 = [0x06, 0x02, 0]
     CFG_INF_1 = [0x06, 0x02, 1]
     CFG_LOGFILTER = [0x06, 0x47]
@@ -8775,6 +8776,9 @@ Always double check with "-p CFG-GNSS".
     CFG_TMODE3 = [0x06, 0x71]
     CFG_TP5 = [0x06, 0x31]
     CFG_USB = [0x06, 0x1b]
+    HNR_ATT = [0x28, 0x01]
+    HNR_INS = [0x28, 0x02]
+    HNR_PVT = [0x28, 0x00]
     LOG_INFO = [0x21, 0x08]
     MON_COMMS = [0x0a, 0x36]
     MON_GNSS = [0x0a, 0x28]
@@ -8789,6 +8793,20 @@ Always double check with "-p CFG-GNSS".
     MON_VER = [0x0a, 0x04]
     NAV_SVIN = [0x01, 0x3b]
     TIM_SVIN = [0x0d, 0x04]
+
+    def send_poll_hnr(self):
+        """HNR.  poll HNR message"""
+
+        cmds = [ubx.CFG_HNR,
+                ubx.HNR_ATT,
+                ubx.HNR_INS,
+                ubx.HNR_PVT,
+                ]
+
+        # blast them for now, should do one at a time...
+        # for some reason NEO-M8U responds in different order!
+        for cmd in cmds:
+            self.send_poll(cmd)
 
     def get_config(self):
         """CONFIG.  Get a bunch of config messages"""
@@ -9159,6 +9177,9 @@ Always double check with "-p CFG-GNSS".
         "ESF-STATUS": {"command": send_poll, "opt": [0x10, 0x10],
                        "help": "poll UBX-ESF-STATUS External sensor fusion "
                                "status"},
+        # UBX-HNR-
+        "HNR": {"command": send_poll_hnr,
+                "help": "poll CFG-HNR and HNR-*"},
         # UBX-HNR-ATT
         "HNR-ATT": {"command": send_poll, "opt": [0x28, 0x01],
                     "help": "poll UBX-HNR-ATT Attitude solution"},
