@@ -3722,15 +3722,15 @@ Only for models with built in USB.
         # Broadcom calls this BRM-STP-ME_SETTINGS
         0x3e: {'str': 'GNSS', 'dec': cfg_gnss, 'minlen': 4,
                'name': 'UBX-CFG-GNSS'},
-        # protVer 19 and up, UDR only
-        0x40: {'str': 'ESFG', 'dec': cfg_esfg, 'minlen': 20,
-               'name': 'UBX-CFG-ESFG'},
         # in u-blox 7+  Not in u-blox 6-
         0x47: {'str': 'LOGFILTER', 'dec': cfg_logfilter, 'minlen': 12,
                'name': 'UBX-CFG-LOGFILTER'},
         # protVer 19 and up, UDR only
-        0x4c: {'str': 'ESFA', 'dec': cfg_esfg, 'minlen': 20,
+        0x4c: {'str': 'ESFA', 'dec': cfg_esfa, 'minlen': 20,
                'name': 'UBX-CFG-ESFA'},
+        # protVer 19 and up, UDR only
+        0x4d: {'str': 'ESFG', 'dec': cfg_esfg, 'minlen': 20,
+               'name': 'UBX-CFG-ESFG'},
         # Not in u-blox 7-, FTS only
         0x53: {'str': 'TXSLOT', 'minlen': 2, 'name': 'UBX-CFG-TXSLOT'},
         # protVer 15.01 and up, ADR and UDR only
