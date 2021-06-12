@@ -4020,9 +4020,47 @@ Only for models with built in USB.
                }
 
     # UBX-HNR-
-    # only with ADR or UDR products
+    # only with ADR or UDR products, protVer 19 and up
 
-    # at ad diff from nav_pvt_flags
+    def hnr_att(self, buf):
+        """UBX-HNR-ATT decode, HNR Attitude solution"""
+
+        # Not before protVet 19.2
+        # 32 bytes long in protver 19.2
+
+        u = struct.unpack_from('<LBBBBlllLLL', buf, 0)
+        s = ('  iTOW %u version %u reserved1 x%x %x %x\n'
+             '  roll %d pitch %d heading %d\n'
+             '  accRoll %u accPitch %u accHeading %u' % u)
+        return s
+
+    hnr_ins_bitfield0 = {
+        0x100: 'xAngRateValid',
+        0x200: 'yAngRateValid',
+        0x400: 'zAngRateValid',
+        0x800: 'xAccelValid',
+        0x1000: 'yAccelValid',
+        0x2000: 'zAccelValid',
+        }
+
+    def hnr_ins(self, buf):
+        """UBX-HNR-INS decode, HNR Vehicle dynamics information"""
+
+        # Not before protVet 19.1
+        # 36 bytes long in protver 19.1
+
+        u = struct.unpack_from('<LLLlllLLL', buf, 0)
+        s = ('  bitfield0 x%x reserved1 x%x iTOW %u\n'
+             '  xAngRate %d yAngRate %d zAngRate %d\n'
+             '  xAccel %d zAccel %d zAccel %d' % u)
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ("\n    version %u"
+                  "\n    bitfield0 (%s)" %
+                  (u[0] & 0x0ff,
+                   flag_s(u[0] & 0xffffff00, self.hnr_ins_bitfield0)))
+        return s
+
+    # diff from nav_pvt_flags
     hnr_pvt_flags = {
         1: "GpsFixOK",
         2: "diffSoln",
@@ -4054,10 +4092,13 @@ Only for models with built in USB.
                    flag_s(u[10], self.hnr_pvt_flags)))
         return s
 
+    # ADR, UDR only, protVer 19 and up
     hnr_ids = {0x00: {'str': 'PVT', 'dec': hnr_pvt, 'minlen': 72,
                       'name': "UBX-HNR-PVT"},
-               0x01: {'str': 'ATT', 'minlen': 32, 'name': "UBX-HNR-ATT"},
-               0x02: {'str': 'INS', 'minlen': 36, 'name': "UBX-HNR-INS"},
+               0x01: {'str': 'ATT', 'dec': hnr_att, 'minlen': 32,
+                      'name': "UBX-HNR-ATT"},
+               0x02: {'str': 'INS', 'dec': hnr_ins, 'minlen': 36,
+                      'name': "UBX-HNR-INS"},
                }
 
     def inf_debug(self, buf):
