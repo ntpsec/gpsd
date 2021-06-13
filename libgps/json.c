@@ -602,19 +602,18 @@ static int json_internal_read_object(const char *cp,
                     {
                         double sec_tmp = safe_atof(valbuf);
                         timespec_t ts_tmp;
-                        if (0 == isfinite(sec_tmp)) {
-                            ts_tmp.tv_sec = 0;
-                            ts_tmp.tv_nsec = 0;
-                        } else {
+                        if (0 != isfinite(sec_tmp)) {
                             DTOTS(&ts_tmp, sec_tmp);
-                        }
-                        memcpy(lptr, &ts_tmp, sizeof(timespec_t));
+                            memcpy(lptr, &ts_tmp, sizeof(timespec_t));
+                        } // else leave at .dflt
                     }
                     break;
                 case t_real:
                     {
                         double tmp = safe_atof(valbuf);
-                        memcpy(lptr, &tmp, sizeof(double));
+                        if (0 != isfinite(tmp)) {
+                            memcpy(lptr, &tmp, sizeof(double));
+                        } // else leave at .dflt
                     }
                     break;
                 case t_string:
