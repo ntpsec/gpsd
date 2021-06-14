@@ -84,7 +84,7 @@ int json_device_read(const char *buf,
         dev->mincycle.tv_sec = 0;
         dev->mincycle.tv_nsec = 0;
     } else {
-        DTOTS(&dev->cycle, d_mincycle);
+        DTOTS(&dev->mincycle, d_mincycle);
     }
 
     return 0;
