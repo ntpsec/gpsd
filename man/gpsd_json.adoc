@@ -1,6 +1,6 @@
 = gpsd_json(5)
 :author: Eric S. Raymond
-:date: 10 June 2021
+:date: 14 June 2021
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, JSON, libgps
 :manmanual: GPSD Documentation
@@ -843,11 +843,12 @@ The POLL command requests data from the last-seen fixes on all active
 GPS devices. Devices must previously have been activated by ?WATCH to
 be pollable.
 
-Polling can lead to possibly surprising results when it is used on a
-device such as an NMEA GPS for which a complete fix has to be
+Polling can lead to possibly surprising results when it is used on
+a device such as an NMEA GPS for which a complete fix has to be
 accumulated from several sentences. If you poll while those sentences
-are being emitted, the response will contain the last complete fix
-data and may be as much as one cycle time (typically 1 second) stale.
+are being emitted, the response will contain only the fix data collected
+so far in the current epoch. It may be as much as one cycle time
+(typically 1 second) stale.
 
 The POLL response will contain a timestamped list of TPV objects
 describing cached data, and a timestamped list of SKY objects
