@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>              // for struct timespec
 
 #include "../include/gpsd.h"
 #include "../include/gps_json.h"
@@ -83,6 +84,21 @@ static void assert_boolean(char *attr, bool fld, bool val)
         (void)fprintf(stderr,
                       "'%s' boolean attribute eval failed, value = %s.\n",
                       attr, fld ? "true" : "false");
+        exit(EXIT_FAILURE);
+    }
+}
+
+static void assert_ts(const char *attr, struct timespec fld,
+                      struct timespec val)
+{
+    if (fld.tv_sec != val.tv_sec ||
+        fld.tv_nsec != val.tv_nsec) {
+        (void)fprintf(stderr, "case %d FAILED\n", current_test);
+        (void)fprintf(stderr,
+                      "'%s' timespec eval failed, value = %ld %ld s/b "
+                      " %ld %ld.\n",
+                      attr, fld.tv_sec, fld.tv_nsec,
+                      val.tv_sec, val.tv_nsec);
         exit(EXIT_FAILURE);
     }
 }
@@ -176,6 +192,8 @@ static unsigned int maxuint;
 static unsigned int dftuinteger;
 static long dftlongint;
 static unsigned long dftulongint;
+static struct timespec ts;
+static struct timespec maxts;
 
 static const struct json_attr_t json_attrs_4[] = {
     {"dftbyte",  t_byte, .addr.byte = &dftbyte, .dflt.byte = -4},
@@ -193,6 +211,8 @@ static const struct json_attr_t json_attrs_4[] = {
     {"maxuint",  t_uinteger, .addr.uinteger = &maxuint, .dflt.uinteger = 65535},
     {"flag1",   t_boolean, .addr.boolean = &flag1,},
     {"flag2",   t_boolean, .addr.boolean = &flag2,},
+    {"dftts",  t_timespec, .addr.ts = &ts, .dflt.ts = {0,0}},
+    {"maxts",  t_timespec, .addr.ts = &maxts, .dflt.ts = {0x0ffff,9}},
     {NULL},
 };
 
@@ -201,7 +221,8 @@ static const struct json_attr_t json_attrs_4[] = {
 static const char *json_str5 = "{\"class\":\"DEVICE\",\
            \"path\":\"/dev/ttyUSB0\",\
            \"flags\":5,\
-           \"driver\":\"Foonly\",\"subtype\":\"Foonly Frob\"\
+           \"driver\":\"Foonly\",\"subtype\":\"Foonly Frob\",\
+           \"cycle\":1.1,\"mincycle\":0.002\
            }";
 
 /* Case 6: test parsing of subobject list into array of structures */
@@ -459,6 +480,7 @@ static void jsontest(int i)
     int n;            /* generic index */
     char buffer[500];
     char *pbuf;
+    struct timespec expected_ts;
 
     if (0 < debug) {
         (void)fprintf(stderr, "Running test #%d.\n", i);
@@ -526,6 +548,12 @@ static void jsontest(int i)
         assert_int("maxuint", "t_uinteger", maxuint, 65535);
         assert_boolean("flag1", flag1, true);
         assert_boolean("flag2", flag2, false);
+        expected_ts.tv_sec = 0;
+        expected_ts.tv_nsec = 0;
+        assert_ts("dflts", ts, expected_ts);
+        expected_ts.tv_sec = 0x0ffff;
+        expected_ts.tv_nsec = 9;
+        assert_ts("maxts", maxts, expected_ts);
         break;
 
     case 5:
@@ -534,6 +562,12 @@ static void jsontest(int i)
         assert_string("path", gpsdata.dev.path, "/dev/ttyUSB0");
         assert_int("flags", "t_integer", gpsdata.dev.flags, 5);
         assert_string("driver", gpsdata.dev.driver, "Foonly");
+        expected_ts.tv_sec = 1;
+        expected_ts.tv_nsec = 100000000;
+        assert_ts("cycle", gpsdata.dev.cycle, expected_ts);
+        expected_ts.tv_sec = 0;
+        expected_ts.tv_nsec = 2000000;
+        assert_ts("mincycle", gpsdata.dev.mincycle, expected_ts);
         break;
 
     case 6:
