@@ -2359,6 +2359,7 @@ protVer 19 and up, UDR only"""
 
     def cfg_esfalg(self, buf):
         """UBX-CFG-ESFALG decode, IMU-mount misalignment configuration
+
 protVer 15.01 and up, ADR and UDR only"""
 
         # at least protver 15
@@ -8412,6 +8413,18 @@ Always double check with "-p CFG-GNSS".
         m_data[11] = 0          # flags, bits 24:31, unused
         self.gps_send(6, 0x3e, m_data)
 
+    def send_poll_cfg_esfalg(self, args):
+        """UBX-CFG-ESFALG, poll/set optional doAutoMntAlg"""
+
+        if 0 < len(args):
+            # optional set doAutoMntAlg
+            m_data = bytearray(12)
+            m_data[1] = int(args[0])
+        else:
+            m_data = bytearray(0)
+
+        self.gps_send(6, 0x56, m_data)
+
     def send_poll_cfg_hnr(self, args):
         """UBX-CFG-HNR, poll/set optional highNavRate"""
 
@@ -9054,8 +9067,11 @@ Always double check with "-p CFG-GNSS".
         "CFG-ESFA": {"command": send_poll, "opt": CFG_ESFA,
                      "help": "poll UBX-CFG-ESFA Accelerometer configuration"},
         # UBX-CFG-ESFALG
-        "CFG-ESFALG": {"command": send_poll, "opt": CFG_ESFALG,
-                       "help": "poll UBX-CFG-ESFALG IMU alignment config"},
+        "CFG-ESFALG": {"command": send_poll_cfg_esfalg,
+                       "help": "poll UBX-CFG-ESFALG IMU alignment config\n"
+                               "                    "
+                               "UBX-CFG-ESFALG[,doAutoMntAlg] optional",
+                       "args": 0},
         # UBX-CFG-ESFG
         "CFG-ESFG": {"command": send_poll, "opt": CFG_ESFG,
                      "help": "poll UBX-CFG-ESFG Gyro configuration"},
