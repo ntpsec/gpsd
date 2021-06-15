@@ -8464,8 +8464,9 @@ Always double check with "-p CFG-GNSS".
             m_data[2] = int(args[2])
         else:
             m_data = bytearray(2)
-        m_data[0] = int(args[0])
-        m_data[1] = int(args[1])
+        # allow binary, hex and octal.
+        m_data[0] = int(args[0], base=0)
+        m_data[1] = int(args[1], base=0)
 
         self.gps_send(6, 1, m_data)
 
