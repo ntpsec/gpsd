@@ -8052,6 +8052,27 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
         # set NAV-RELPOSNED rate
         self.send_cfg_msg(1, 0x3C, able)
 
+    def send_able_esf(self, able, args):
+        """dis/enable basic ESF messages"""
+
+        esf_toggle = (
+            ubx.ESF_ALG,
+            ubx.ESF_INS,
+            # ESF-MEAS too much
+            # ESF-RAW too much
+            ubx.ESF_STATUS,
+            )
+
+        rate = 1 if able else 0
+
+        m_data = bytearray(3)
+        for (cls, mid) in esf_toggle:
+            m_data[0] = cls
+            m_data[1] = mid
+            m_data[2] = rate
+            # UBX-CFG-MSG
+            self.gps_send(6, 1, m_data)
+
     def send_able_nmea(self, able, args):
         """dis/enable basic NMEA messages"""
 
@@ -8929,6 +8950,9 @@ Always double check with "-p CFG-GNSS".
         # en/dis able ECEF
         "ECEF": {"command": send_able_ecef,
                  "help": "ECEF"},
+        # en/dis able basic ESF messages
+        "ESF": {"command": send_able_esf,
+                 "help": "basic ESF messages"},
         # en/dis able GPS
         "GPS": {"command": send_able_gps,
                 "help": "GPS and QZSS L1C/A. GPS,2 for L1C/A and L2C"},
