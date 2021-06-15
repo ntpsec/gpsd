@@ -7979,6 +7979,27 @@ qErrInvalid add in protVer 34 and up
         # set NAV-VELECEF rate
         self.send_cfg_msg(1, 0x11, able)
 
+    def send_able_esf(self, able, args):
+        """dis/enable basic ESF messages"""
+
+        esf_toggle = (
+            ubx.ESF_ALG,
+            ubx.ESF_INS,
+            # ESF-MEAS too much
+            # ESF-RAW too much
+            ubx.ESF_STATUS,
+            )
+
+        rate = 1 if able else 0
+
+        m_data = bytearray(3)
+        for (cls, mid) in esf_toggle:
+            m_data[0] = cls
+            m_data[1] = mid
+            m_data[2] = rate
+            # UBX-CFG-MSG
+            self.gps_send(6, 1, m_data)
+
     def send_able_gps(self, able, args):
         """dis/enable GPS/QZSS"""
         # GPS and QZSS both on, or both off, together
@@ -8000,6 +8021,25 @@ with resetMode set to Hardware reset."
         # Two frequency GPS use BeiDou or GLONASS
         # disable, then enable
         self.send_cfg_gnss1(6, able, args)
+
+    def send_able_hnr(self, able, args):
+        """dis/enable HNR messages"""
+
+        esf_toggle = (
+            ubx.HNR_ATT,
+            ubx.HNR_INS,
+            ubx.HNR_PVT,
+            )
+
+        rate = 1 if able else 0
+
+        m_data = bytearray(3)
+        for (cls, mid) in esf_toggle:
+            m_data[0] = cls
+            m_data[1] = mid
+            m_data[2] = rate
+            # UBX-CFG-MSG
+            self.gps_send(6, 1, m_data)
 
     def send_able_logfilter(self, able, args):
         """Enable logging"""
@@ -8051,27 +8091,6 @@ protver 20+, and HP GNSS, required for RELPOSNED"""
 
         # set NAV-RELPOSNED rate
         self.send_cfg_msg(1, 0x3C, able)
-
-    def send_able_esf(self, able, args):
-        """dis/enable basic ESF messages"""
-
-        esf_toggle = (
-            ubx.ESF_ALG,
-            ubx.ESF_INS,
-            # ESF-MEAS too much
-            # ESF-RAW too much
-            ubx.ESF_STATUS,
-            )
-
-        rate = 1 if able else 0
-
-        m_data = bytearray(3)
-        for (cls, mid) in esf_toggle:
-            m_data[0] = cls
-            m_data[1] = mid
-            m_data[2] = rate
-            # UBX-CFG-MSG
-            self.gps_send(6, 1, m_data)
 
     def send_able_nmea(self, able, args):
         """dis/enable basic NMEA messages"""
@@ -8962,6 +8981,9 @@ Always double check with "-p CFG-GNSS".
         # en/dis able GLONASS
         "GLONASS": {"command": send_able_glonass,
                     "help": "GLONASS L1. GLONASS,2 for L1 and L2"},
+        # en/dis able HNR messages
+        "HNR": {"command": send_able_hnr,
+                 "help": "basic HNR messages"},
         # en/dis able LOG
         "LOG": {"command": send_able_logfilter,
                 "help": "Data Logger"},
