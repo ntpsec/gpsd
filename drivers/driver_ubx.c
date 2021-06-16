@@ -422,32 +422,32 @@ ubx_msg_esf_ins(struct gps_device_t *session, unsigned char *buf,
     yAccel = getles32(buf, 28);
     zAccel = getles32(buf, 32);
 
-    if (0x10 == (0x10 & bitfield0)) {
+    if (0x100 == (0x100 & bitfield0)) {
         // xAngRateValid
-        session->gpsdata.attitude.gyro_x = 0.001 * xAngRate;  // m/s^2
+        session->gpsdata.attitude.gyro_x = 0.001 * xAngRate;  // deg/s
         mask |= ATTITUDE_SET;
     }
-    if (0x20 == (0x20 & bitfield0)) {
+    if (0x200 == (0x200 & bitfield0)) {
         // yAngRateValid
-        session->gpsdata.attitude.gyro_x = 0.001 * yAngRate;  // m/s^2
+        session->gpsdata.attitude.gyro_x = 0.001 * yAngRate;  // deg/s
         mask |= ATTITUDE_SET;
     }
-    if (0x40 == (0x40 & bitfield0)) {
+    if (0x400 == (0x400 & bitfield0)) {
         // zAngRateValid
-        session->gpsdata.attitude.gyro_x = 0.001 * zAngRate;  // m/s^2
+        session->gpsdata.attitude.gyro_x = 0.001 * zAngRate;  // deg/s
         mask |= ATTITUDE_SET;
     }
-    if (0x80 == (0x80 & bitfield0)) {
+    if (0x800 == (0x800 & bitfield0)) {
         // xAccelValid
         session->gpsdata.attitude.acc_x = 0.01 * xAccel;  // m/s^2
         mask |= ATTITUDE_SET;
     }
-    if (0x100 == (0x100 & bitfield0)) {
+    if (0x1000 == (0x1000 & bitfield0)) {
         // yAccelValid
         session->gpsdata.attitude.acc_y = 0.01 * yAccel;  // m/s^2
         mask |= ATTITUDE_SET;
     }
-    if (0x200 == (0x200 & bitfield0)) {
+    if (0x2000 == (0x2000 & bitfield0)) {
         // zAccelValid
         session->gpsdata.attitude.acc_z = 0.01 * zAccel;  // m/s^2
         mask |= ATTITUDE_SET;
