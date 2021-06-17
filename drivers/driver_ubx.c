@@ -737,6 +737,171 @@ ubx_msg_esf_status(struct gps_device_t *session, unsigned char *buf,
 }
 
 /**
+ * High rate output of PVT solution
+ * UBX-HNR-PVT Class x28, ID 2
+ *
+ * Not before u-blox 8, protVer 19 and up.
+ * only on ADR, and UDR
+ */
+static gps_mask_t
+ubx_msg_hnr_pvt(struct gps_device_t *session, unsigned char *buf,
+                size_t data_len)
+{
+    uint8_t valid;
+    uint8_t flags;
+    uint8_t gpsFix;
+    struct tm unpacked_date;
+    int *status = &session->newdata.status;
+    int *mode = &session->newdata.mode;
+    gps_mask_t mask = 0;
+    char ts_buf[TIMESPEC_LEN];
+
+    if (72 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-HNR-PVT message, runt payload len %zd", data_len);
+        return 0;
+    }
+
+    if (19 > session->driver.ubx.protver) {
+        // this GPS is at least protver 19
+        session->driver.ubx.protver = 19;
+    }
+    session->driver.ubx.iTOW = getleu32(buf, 0);
+    // valid same as UBX-NAV-PVT valid
+    valid = (unsigned int)getub(buf, 11);
+    // gpsFix same as UBX-NAV-PVT fixType
+    gpsFix = (unsigned char)getub(buf, 16);
+    // flags NOT same as UBX-NAV-PVT flags
+    flags = (unsigned int)getub(buf, 17);
+
+    switch (gpsFix) {
+    case UBX_MODE_TMONLY:
+        // 5 - Surveyed-in, so a precise 3D.
+        *mode = MODE_3D;
+        *status = STATUS_TIME;
+        mask |= STATUS_SET | MODE_SET;
+        break;
+
+    case UBX_MODE_3D:
+        // 3
+        FALLTHROUGH
+    case UBX_MODE_GPSDR:
+        // 4
+        if (*mode != MODE_3D) {
+            *mode = MODE_3D;
+            mask |= MODE_SET;
+        }
+        if (UBX_NAV_PVT_FLAG_DGPS == (flags & UBX_NAV_PVT_FLAG_DGPS)) {
+            *status = STATUS_DGPS_FIX;
+            mask |= STATUS_SET;
+        } else {
+            *status = STATUS_FIX;
+            mask |= STATUS_SET;
+        }
+        mask |=   LATLON_SET;
+        break;
+
+    case UBX_MODE_2D:
+        // 2
+        FALLTHROUGH
+    case UBX_MODE_DR:           /* consider this too as 2D */
+        // 1
+        if (*mode != MODE_2D) {
+            *mode = MODE_2D;
+            mask |= MODE_SET;
+        };
+        if (*status != STATUS_FIX) {
+            *status = STATUS_FIX;
+            mask |= STATUS_SET;
+        }
+        mask |= LATLON_SET | SPEED_SET;
+        break;
+
+    case UBX_MODE_NOFIX:
+        // 0
+        FALLTHROUGH
+    default:
+        // huh?
+        if (*mode != MODE_NO_FIX) {
+            *mode = MODE_NO_FIX;
+            mask |= MODE_SET;
+        };
+        if (*status != STATUS_NO_FIX) {
+            *status = STATUS_NO_FIX;
+            mask |= STATUS_SET;
+        }
+        break;
+    }
+
+    if (UBX_NAV_PVT_VALID_DATE_TIME == (valid & UBX_NAV_PVT_VALID_DATE_TIME)) {
+        unpacked_date.tm_year = (uint16_t)getleu16(buf, 4) - 1900;
+        unpacked_date.tm_mon = (uint8_t)getub(buf, 6) - 1;
+        unpacked_date.tm_mday = (uint8_t)getub(buf, 7);
+        unpacked_date.tm_hour = (uint8_t)getub(buf, 8);
+        unpacked_date.tm_min = (uint8_t)getub(buf, 9);
+        unpacked_date.tm_sec = (uint8_t)getub(buf, 10);
+        unpacked_date.tm_isdst = 0;
+        unpacked_date.tm_wday = 0;
+        unpacked_date.tm_yday = 0;
+        session->newdata.time.tv_sec = mkgmtime(&unpacked_date);
+        // field 9, nano, can be negative! So normalize
+        session->newdata.time.tv_nsec = getles32(buf, 12);
+        TS_NORM(&session->newdata.time);
+        mask |= TIME_SET | NTPTIME_IS | GOODTIME_IS;
+    }
+
+    session->newdata.longitude = 1e-7 * getles32(buf, 20);
+    session->newdata.latitude = 1e-7 * getles32(buf, 24);
+    // altitude WGS84
+    session->newdata.altHAE = 1e-3 * getles32(buf, 28);
+    // altitude MSL
+    session->newdata.altMSL = 1e-3 * getles32(buf, 32);
+    // Let gpsd_error_model() deal with geoid_sep
+
+    // gSpeed (2D)
+    session->newdata.speed = 1e-3 * (int32_t)getles32(buf, 36);
+    // offset 40,  Speed (3D) do what with it?
+    // u-blox calls this headMot (Heading of motion 2-D)
+    session->newdata.track = 1e-5 * (int32_t)getles32(buf, 44);
+    // offset 48, headVeh (Heading of Vehicle 2-D)
+    mask |= LATLON_SET | ALTITUDE_SET | SPEED_SET | TRACK_SET;
+
+    /* u-blox does not document the basis for the following "accuracy"
+     * estimates.  Maybe CEP(50), one sigma, two sigma, CEP(99), etc. */
+
+    // Horizontal Accuracy estimate, in mm
+    session->newdata.eph = (double)(getles32(buf, 52) / 1000.0);
+    // Vertical Accuracy estimate, in mm
+    session->newdata.epv = (double)(getles32(buf, 56) / 1000.0);
+    // Speed Accuracy estimate, in mm/s
+    session->newdata.eps = (double)(getles32(buf, 60) / 1000.0);
+    // headAcc (Heading Accuracy)
+    session->newdata.epd = (double)getles32(buf, 64) * 1e-5;
+    /* let gpsd_error_model() do the rest */
+
+    // 4 final bytes reserved
+
+    mask |= HERR_SET | SPEEDERR_SET | VERR_SET;
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+         "HNR-PVT: flags=%02x time=%s lat=%.2f lon=%.2f altHAE=%.2f "
+         "track=%.2f speed=%.2f climb=%.2f mode=%d status=%d used=%d\n",
+         flags,
+         timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
+         session->newdata.latitude,
+         session->newdata.longitude,
+         session->newdata.altHAE,
+         session->newdata.track,
+         session->newdata.speed,
+         session->newdata.climb,
+         session->newdata.mode,
+         session->newdata.status,
+         session->gpsdata.satellites_used);
+
+    return mask;
+}
+
+/**
  * Receiver/Software Version
  * UBX-MON-VER
  *
@@ -3129,6 +3294,17 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         mask = ubx_msg_esf_status(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
 
+    case UBX_HNR_ATT:
+        GPSD_LOG(LOG_DATA, &session->context->errout, "UBX_HNR_ATT\n");
+        break;
+    case UBX_HNR_INS:
+        GPSD_LOG(LOG_DATA, &session->context->errout, "UBX_HNR_INS\n");
+        break;
+    case UBX_HNR_PVT:
+        GPSD_LOG(LOG_DATA, &session->context->errout, "UBX_HNR_PVT\n");
+        mask = ubx_msg_hnr_pvt(session, &buf[UBX_PREFIX_LEN], data_len);
+        break;
+
     case UBX_INF_DEBUG:
         FALLTHROUGH
     case UBX_INF_ERROR:
@@ -3437,9 +3613,6 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_DATA, &session->context->errout, "UBX_SEC_UNIQID\n");
         break;
 
-    case UBX_HNR_PVT:
-        GPSD_LOG(LOG_DATA, &session->context->errout, "UBX_HNR_PVT\n");
-        break;
 
     default:
         GPSD_LOG(LOG_WARN, &session->context->errout,
