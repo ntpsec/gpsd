@@ -737,6 +737,50 @@ ubx_msg_esf_status(struct gps_device_t *session, unsigned char *buf,
 }
 
 /**
+ * HNR Attitude solution
+ * UBX-HNR-ATT Class x28, ID 1
+ *
+ * Not before u-blox 8, protVer 19.2 and up.
+ * only on ADR, and UDR
+ */
+static gps_mask_t
+ubx_msg_hnr_att(struct gps_device_t *session, unsigned char *buf,
+                size_t data_len)
+{
+    uint8_t version;;
+    gps_mask_t mask = 0;
+    char ts_buf[TIMESPEC_LEN];
+
+    if (32 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-HNR-ATT message, runt payload len %zd", data_len);
+        return 0;
+    }
+
+    if (19 > session->driver.ubx.protver) {
+        // this GPS is at least protver 19.2
+        session->driver.ubx.protver = 19;
+    }
+    session->driver.ubx.iTOW = getleu32(buf, 0);
+    version  = (unsigned int)getub(buf, 4);
+
+    session->gpsdata.attitude.roll = 1e-5 * getles32(buf, 8);
+    session->gpsdata.attitude.pitch = 1e-5 * getles32(buf, 12);
+    session->gpsdata.attitude.heading = 1e-5 * getles32(buf, 16);
+    mask |= ATTITUDE_SET;
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+         "HNR-ATT: time %s version %u roll %.5f pitch %.5f heading %.5f\n",
+         timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
+         version,
+         session->gpsdata.attitude.roll,
+         session->gpsdata.attitude.pitch,
+         session->gpsdata.attitude.heading);
+
+    return mask;
+}
+
+/**
  * High rate output of PVT solution
  * UBX-HNR-PVT Class x28, ID 2
  *
@@ -3295,13 +3339,12 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         break;
 
     case UBX_HNR_ATT:
-        GPSD_LOG(LOG_DATA, &session->context->errout, "UBX_HNR_ATT\n");
+        mask = ubx_msg_hnr_att(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_HNR_INS:
         GPSD_LOG(LOG_DATA, &session->context->errout, "UBX_HNR_INS\n");
         break;
     case UBX_HNR_PVT:
-        GPSD_LOG(LOG_DATA, &session->context->errout, "UBX_HNR_PVT\n");
         mask = ubx_msg_hnr_pvt(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
 
