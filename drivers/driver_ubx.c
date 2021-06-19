@@ -748,8 +748,9 @@ ubx_msg_hnr_att(struct gps_device_t *session, unsigned char *buf,
                 size_t data_len)
 {
     uint8_t version;;
+    int64_t iTOW;
+    timespec_t ts_tow;
     gps_mask_t mask = 0;
-    char ts_buf[TIMESPEC_LEN];
 
     if (32 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -761,7 +762,12 @@ ubx_msg_hnr_att(struct gps_device_t *session, unsigned char *buf,
         // this GPS is at least protver 19.2
         session->driver.ubx.protver = 19;
     }
-    session->driver.ubx.iTOW = getleu32(buf, 0);
+    // don't set session->driver.ubx.iTOW, HNR is off-cycle
+    iTOW = getleu32(buf, 0);
+    MSTOTS(&ts_tow, iTOW);
+    session->gpsdata.attitude.mtime =
+        gpsd_gpstime_resolv(session, session->context->gps_week, ts_tow);
+
     version  = (unsigned int)getub(buf, 4);
 
     session->gpsdata.attitude.roll = 1e-5 * getles32(buf, 8);
@@ -770,12 +776,99 @@ ubx_msg_hnr_att(struct gps_device_t *session, unsigned char *buf,
     mask |= ATTITUDE_SET;
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-         "HNR-ATT: time %s version %u roll %.5f pitch %.5f heading %.5f\n",
-         timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
+         "HNR-ATT: iTOW %lld version %u roll %.5f pitch %.5f heading %.5f\n",
+         (long long)iTOW,
          version,
          session->gpsdata.attitude.roll,
          session->gpsdata.attitude.pitch,
          session->gpsdata.attitude.heading);
+
+    return mask;
+}
+
+/**
+ * HNR Vehicle dynamics information
+ * UBX-HNR-INS Class x28, ID 2
+ *
+ * Not before u-blox 8, protVer 19.1 and up.
+ * only on ADR, and UDR
+ */
+static gps_mask_t
+ubx_msg_hnr_ins(struct gps_device_t *session, unsigned char *buf,
+                size_t data_len)
+{
+    uint8_t version;;
+    uint32_t bitfield0;
+    gps_mask_t mask = 0;
+    int64_t iTOW;
+
+    if (36 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-HNR-INS message, runt payload len %zd", data_len);
+        return 0;
+    }
+
+    if (19 > session->driver.ubx.protver) {
+        // this GPS is at least protver 19.1
+        session->driver.ubx.protver = 19;
+    }
+    version  = (unsigned int)getub(buf, 0);
+
+    bitfield0 = getleu32(buf, 0);
+    // don't set session->driver.ubx.iTOW, HNR is off-cycle
+    iTOW = getleu32(buf, 8);
+
+    if (0x100 == (0x100 & bitfield0)) {
+        // xAngRateValid
+        session->gpsdata.attitude.gyro_x = 0.001 * getles32(buf, 12);  // deg/s
+        mask |= ATTITUDE_SET;
+    }
+    if (0x200 == (0x200 & bitfield0)) {
+        // yAngRateValid
+        session->gpsdata.attitude.gyro_x = 0.001 * getles32(buf, 16);  // deg/s
+        mask |= ATTITUDE_SET;
+    }
+    if (0x400 == (0x400 & bitfield0)) {
+        // zAngRateValid
+        session->gpsdata.attitude.gyro_x = 0.001 * getles32(buf, 20);  // deg/s
+        mask |= ATTITUDE_SET;
+    }
+    if (0x800 == (0x800 & bitfield0)) {
+        // xAccelValid
+        session->gpsdata.attitude.acc_x = 0.01 * getles32(buf, 24);  // m/s^2
+        mask |= ATTITUDE_SET;
+    }
+    if (0x1000 == (0x1000 & bitfield0)) {
+        // yAccelValid
+        session->gpsdata.attitude.acc_y = 0.01 * getles32(buf, 28);  // m/s^2
+        mask |= ATTITUDE_SET;
+    }
+    if (0x2000 == (0x2000 & bitfield0)) {
+        // zAccelValid
+        session->gpsdata.attitude.acc_z = 0.01 * getles32(buf, 32);  // m/s^2
+        mask |= ATTITUDE_SET;
+    }
+
+    if (0 != mask) {
+        timespec_t ts_tow;
+        // got good data, set the measurement time
+        MSTOTS(&ts_tow, iTOW);
+        session->gpsdata.attitude.mtime =
+            gpsd_gpstime_resolv(session, session->context->gps_week, ts_tow);
+    }
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+         "HNR-INS: iTOW %lld version %u bitfield0 x%x "
+         "gyro_x %.3f gyro_y %.3f gyro_z %.3f "
+         "acc_x %.3f acc_y %.3f acc_z %.3f\n",
+         (long long)iTOW,
+         version, bitfield0,
+         session->gpsdata.attitude.gyro_x,
+         session->gpsdata.attitude.gyro_y,
+         session->gpsdata.attitude.gyro_z,
+         session->gpsdata.attitude.acc_x,
+         session->gpsdata.attitude.acc_y,
+         session->gpsdata.attitude.acc_z);
 
     return mask;
 }
@@ -3342,7 +3435,7 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         mask = ubx_msg_hnr_att(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_HNR_INS:
-        GPSD_LOG(LOG_DATA, &session->context->errout, "UBX_HNR_INS\n");
+        mask = ubx_msg_hnr_ins(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_HNR_PVT:
         mask = ubx_msg_hnr_pvt(session, &buf[UBX_PREFIX_LEN], data_len);
