@@ -1021,7 +1021,8 @@ frame * {
         self.satbox.add(skyframe)
 
         self.satlist = Gtk.ListStore(str, str, str, str, str, str, str)
-        view = Gtk.TreeView(model=self.satlist)
+        sat_view = Gtk.TreeView(model=self.satlist)
+        sat_view.set_fixed_height_mode(True)  # supposed to speed up TreeView
 
         satcols = [['', 0],
                    ['svid', 1],
@@ -1034,16 +1035,20 @@ frame * {
 
         for (i, satcol) in enumerate(satcols):
             renderer = Gtk.CellRendererText(xalign=satcol[1])
+            # renderer.props.font = "monospace 11"
+            # renderer.set_fixed_height_from_font(1)
             column = Gtk.TreeViewColumn(satcol[0], renderer)
             column.add_attribute(renderer, 'text', i)
-            view.append_column(column)
+            # required for set_fixed_height_mode(True)
+            column.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
+            sat_view.append_column(column)
 
         self.row_iters = []
         for i in range(options.maxchandisp):
             self.satlist.append(["", "", "", "", "", "", ""])
             self.row_iters.append(self.satlist.get_iter(i))
 
-        skyframe.add(view)
+        skyframe.add(sat_view)
 
         viewframe = Gtk.Frame(label="Skyview")
         self.satbox.add(viewframe)
