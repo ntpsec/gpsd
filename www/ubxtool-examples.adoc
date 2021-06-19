@@ -1,7 +1,7 @@
 = ubxtool examples
 Gary E. Miller <gem@rellim.com>
 :Author: Gary E. Miller
-:Date: 15 January 2021
+:Date: 18 June 2021
 :Description: U-blox GNSS receiver configuration examples
 :Email: <gem@rellim.com>
 :keywords: u-blox, examples, configuration, sudo
@@ -1093,7 +1093,14 @@ UBX-CFG-GNSS:
    GLONASS L1 L2 enabled
 ----
 
-Another reason to always check your work when using ubxtool.
+Another reason to always check your work hen using ubxtool.
+
+u-blox recently recommended to a cold boot after changing
+to some configurations of constellations:
+
+----
+$ unxtool -p COLDBOOT
+----
 
 === Changing Constellations with Configuration Items
 
@@ -1148,6 +1155,262 @@ UBX-CFG-VALGET:
   layers (ram)
     item CFG-SIGNAL-BDS_B2_ENA/0x1031000e val 1
 ----
+
+== ADR and UDR
+
+Some u-blox products have integrated 6-axis Inertial Measurement Units
+(IMU). The receivers need firmware extensions, that add new messages,
+to use the IMU. Currently the extensions are called Automotive Dead
+Reckoning (ADR), and Untethered Dead Reckoning (UDR). ADR is similar
+to UDR, with the addition of Wheel Tick information for improved
+performance.
+
+The examples in this section are only for ADR or UDR receivers that have
+protocol version (protVer) of 19.20 or higher. If your receiver does not
+meet this requirement, then you can skip this section.
+
+A NEO-M8U, with UDR, looks like this:
+
+----
+$ ubxtool -p MON-VER
+UBX-MON-VER:
+  swVersion EXT CORE 3.01 (86c0ce)
+  hwVersion 00080000
+  extension ROM BASE 2.01 (75331)
+  extension FWVER=UDR 1.50
+  extension PROTVER=19.20
+  extension MOD=NEO-M8U-0
+  extension FIS=0xEF4015 (200061)
+  extension GPS;GLO;GAL;BDS
+  extension SBAS;IMES;QZSS
+[...]
+----
+
+ADR/UDR add two new messages classes: External Sensor Fusion (UBX-ESF-),
+amd High Navigation Rate (UBX-HNR-),  See the u-blox documentation for
+all the nitty gritty details.
+
+You can poll your receiver for most of the possible UBX-ESF- and UBX-HNR-
+messages this way:
+
+----
+$ ubxtool -p ESF -v 2
+[...]
+
+UBX-CFG-ESFA:
+ version 0 reserved1 x50000000 0 0 accelRmsThdl 32 frequency 0
+  latency 0 accuracy 0 reserved2 x0
+
+UBX-CFG-ESFALG:
+ bitfield x20a88800 aw 0 pitch 0 roll 0
+    bitfield () version 0
+
+UBX-CFG-ESFG:
+ version 0 reserved1 x10000000 0 0 tcTableSaveRate 1200
+  gyroRmsThdl 132 frequency 0 latency 0 accuracy 0
+  reserved2 x0
+[...]
+
+UBX-ESF-STATUS:
+ iTOW 519517000 version 2 reserved1 20 2 0 0 0 0 0
+   fusionMode 0 reserved2 0 numSens 6
+     fusionMode (Initialization mode)
+   sensStatus1 85 sensStatus2 4 freq 10 faults 0
+      type (gyro z) used No ready Yes
+   sensStatus1 8d sensStatus2 4 freq 10 faults 0
+      type (gyro y) used No ready Yes
+   sensStatus1 8e sensStatus2 4 freq 10 faults 0
+      type (gyro x) used No ready Yes
+   sensStatus1 90 sensStatus2 4 freq 10 faults 0
+      type (accel x) used No ready Yes
+   sensStatus1 91 sensStatus2 4 freq 10 faults 0
+      type (accel y) used No ready Yes
+   sensStatus1 92 sensStatus2 4 freq 10 faults 0
+      type (accel z) used No ready Yes
+
+UBX-ESF-ALG:
+ iTOW 519517000 version 1 flags x90 error x0 reserved1 x20
+   yaw 0 pitch 0 roll 0
+   flags () status (user-defined/fixed angles)
+   error ()
+
+UBX-ESF-INS:
+ bitfield0 x1 reserved1 x0 iTOW 519517000
+   xAngRate 0 yAngRate 0 zAngRate 0
+   xAccel 0 yAccel 0 zAccel 0
+   bitfield0 (version 1 )
+[...]
+
+$ ubxtool -p HNR -v 2
+[...]
+UBX-CFG-HNR:
+ highNavRate 10 reserved 0 0 0
+
+UBX-HNR-PVT:
+  iTOW 519523700 time 2021/6/19 00:18:25 valid x37
+  nano 700000003 gpsFix 3 flags x1d reserved1 x1b57
+  lon -1213140584 lat 440688360 height 1109033 hMSL 1130383
+  gSpeed 14 speed 23 headMot 23505708 headVeh 23505708
+  hAcc 2057 vAcc 5293 sAcc 277 headAcc 3542198 reserved2 xfffffffe
+    valid (validDate ValidTime fullyResolved)
+    gpsFix (3D)
+    flags (GpsFixOK WKNSET TOWSET headVehValid)
+
+UBX-HNR-ATT:
+  iTOW 519523700 version 1 reserved1 x32 35 2e
+  roll 0 pitch 7874389 heading 23505708
+  accRoll 2000000 accPitch 4337821 accHeading 3542198
+
+UBX-HNR-INS:
+  bitfield0 x332c4000 reserved1 x2c38312c iTOW 519523700
+  xAngRate 0 yAngRate 0 zAngRate 0
+  xAccel 0 zAccel 0 zAccel 0
+    version 0
+    bitfield0 ()
+[...]
+----
+
+Sadly UBX-ESF-MEAS and UBX-ESF-RAW can not be polled.
+
+You paid extra for those messages, so you will want to enable then to
+be send periodically.
+
+----
+$ ubxtool -e ESF
+$ ubxtool -e HNR
+----
+
+That does not enable UBX-ESF-MEAS and UBX-ESF-RAW as they are a flood
+of raw data, reported in JSON ATT, that is hard to process.  To see
+them, just enable them as you enable any other periodic messages:
+
+----
+$ ubxtool -P 19 -p CFG-MSG,0x10,2,1
+$ ubxtool -P 19 -p CFG-MSG,0x10,3,1
+---
+
+The trailing 1 enables the messages.  When you tire of the data, replace the
+1 with a zero to disable them.  Unlike other messages, the message rate
+can not be changed.
+
+To see the results:
+
+----
+
+$ ubxtool -v 2
+[...]
+UBX-ESF-MEAS:
+ timetag 273945517 flags x2018 id 0
+     dataType  14 dataField    4816
+     dataType  13 dataField   -4867
+     dataType   5 dataField   -3749
+     dataType  12 dataField    3895
+   calibTtag 273945517
+
+UBX-ESF-RAW:
+ reserved1 x105413ae blocks 70
+   data_type  16 data     -619 sTtag 5808411
+   data_type  17 data    -4333 sTtag 5808411
+   data_type  18 data     8661 sTtag 5808411
+   data_type  14 data     5276 sTtag 5808411
+   data_type  13 data    -5214 sTtag 5808411
+   data_type   5 data    -3435 sTtag 5808411
+   data_type  12 data     3895 sTtag 5808411
+   data_type  16 data     -599 sTtag 5808663
+   data_type  17 data    -4349 sTtag 5808663
+   data_type  18 data     8650 sTtag 5808663
+   data_type  14 data     5307 sTtag 5808663
+   data_type  13 data    -4715 sTtag 5808663
+   data_type   5 data    -3435 sTtag 5808663
+   data_type  12 data     3898 sTtag 5808663
+   data_type  16 data     -613 sTtag 5808918
+   data_type  17 data    -4344 sTtag 5808918
+   data_type  18 data     8667 sTtag 5808918
+   data_type  14 data     4995 sTtag 5808918
+   data_type  13 data    -4683 sTtag 5808918
+   data_type   5 data    -3809 sTtag 5808918
+   data_type  12 data     3894 sTtag 5808918
+   data_type  16 data     -621 sTtag 5809171
+   data_type  17 data    -4319 sTtag 5809171
+   data_type  18 data     8662 sTtag 5809171
+   data_type  14 data     4526 sTtag 5809171
+   data_type  13 data    -4902 sTtag 5809171
+   data_type   5 data    -3778 sTtag 5809171
+   data_type  12 data     3895 sTtag 5809171
+   data_type  16 data     -623 sTtag 5809423
+   data_type  17 data    -4319 sTtag 5809423
+   data_type  18 data     8672 sTtag 5809423
+   data_type  14 data     4401 sTtag 5809423
+   data_type  13 data    -4777 sTtag 5809423
+   data_type   5 data    -3965 sTtag 5809423
+   data_type  12 data     3894 sTtag 5809423
+   data_type  16 data     -630 sTtag 5809677
+   data_type  17 data    -4324 sTtag 5809677
+   data_type  18 data     8659 sTtag 5809677
+   data_type  14 data     4682 sTtag 5809677
+   data_type  13 data    -4871 sTtag 5809677
+   data_type   5 data    -4059 sTtag 5809677
+   data_type  12 data     3895 sTtag 5809677
+   data_type  16 data     -618 sTtag 5809930
+   data_type  17 data    -4326 sTtag 5809930
+   data_type  18 data     8672 sTtag 5809930
+   data_type  14 data     4682 sTtag 5809930
+   data_type  13 data    -4496 sTtag 5809930
+   data_type   5 data    -3497 sTtag 5809930
+   data_type  12 data     3896 sTtag 5809930
+   data_type  16 data     -608 sTtag 5810204
+   data_type  17 data    -4330 sTtag 5810204
+   data_type  18 data     8671 sTtag 5810204
+   data_type  14 data     4839 sTtag 5810204
+   data_type  13 data    -4465 sTtag 5810204
+   data_type   5 data    -3622 sTtag 5810204
+   data_type  12 data     3894 sTtag 5810204
+   data_type  16 data     -615 sTtag 5810457
+   data_type  17 data    -4333 sTtag 5810457
+   data_type  18 data     8663 sTtag 5810457
+   data_type  14 data     4870 sTtag 5810457
+   data_type  13 data    -4715 sTtag 5810457
+   data_type   5 data    -3528 sTtag 5810457
+   data_type  12 data     3895 sTtag 5810457
+   data_type  16 data     -607 sTtag 5810711
+   data_type  17 data    -4338 sTtag 5810711
+   data_type  18 data     8680 sTtag 5810711
+   data_type  14 data     4995 sTtag 5810711
+   data_type  13 data    -5089 sTtag 5810711
+   data_type   5 data    -3372 sTtag 5810711
+   data_type  12 data     3889 sTtag 5810711
+
+UBX-ESF-MEAS:
+ timetag 273945624 flags x1818 id 0
+     dataType  16 dataField    -612
+     dataType  17 dataField   -4332
+     dataType  18 dataField    8671
+   calibTtag 273945624
+
+UBX-ESF-MEAS:
+ timetag 273945619 flags x2018 id 0
+     dataType  14 dataField    4735
+     dataType  13 dataField   -4848
+     dataType   5 dataField   -3693
+     dataType  12 dataField    3894
+   calibTtag 273945619
+[...]
+
+----
+
+Notice the UBX-ESF-MEAS sample time stamp (timeTag) is in arbitrary
+units, and jumps forward and back!  The UBX-ESF-RAW sTtag is in
+unrelated units, but at lease always increases.
+
+The receiver insists on completing an autoconfiguration mode before
+entering fusion mode.  That requires driving the receiver around in
+a car.  You can partially, but not completely, disable this with the
+doAutoMntAlg flag:
+
+----
+$ ubxtool -p CFG-ESFALG,0
+----
+
 
 == Saving U-blox configuration
 
