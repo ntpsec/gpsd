@@ -270,20 +270,22 @@ static socket_t filesock(char *filename)
 
     if (BAD_SOCKET(sock = socket(AF_UNIX, SOCK_STREAM, 0))) {
         GPSD_LOG(LOG_ERROR, &context.errout,
-                 "Can't create device-control socket\n");
+                 "Can't create device-control socket. %s\n", strerror(errno));
         return -1;
     }
     (void)strlcpy(addr.sun_path, filename, sizeof(addr.sun_path));
     addr.sun_family = (sa_family_t)AF_UNIX;
     if (bind(sock, (struct sockaddr *)&addr, (socklen_t)sizeof(addr)) < 0) {
         GPSD_LOG(LOG_ERROR, &context.errout,
-                 "can't bind to local socket %s\n", filename);
+                 "can't bind to local socket %s. %s\n",
+                 filename, strerror(errno));
         (void)close(sock);
         return -1;
     }
     if (listen(sock, QLEN) == -1) {
         GPSD_LOG(LOG_ERROR, &context.errout,
-                 "can't listen on local socket %s\n", filename);
+                 "can't listen on local socket %s %s\n",
+                 filename, strerror(errno));
         (void)close(sock);
         return -1;
     }
@@ -417,7 +419,8 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
             if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, &on,
                            (socklen_t)sizeof(on)) == -1) {
                 GPSD_LOG(LOG_ERROR, &context.errout,
-                         "Error: SETSOCKOPT IPV6_V6ONLY\n");
+                         "Error: SETSOCKOPT IPV6_V6ONLY, %s\n",
+                         strerror(errno));
                 (void)close(s);
                 return -1;
             }
@@ -446,7 +449,7 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
     if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&one,
                    (socklen_t)sizeof(one)) == -1) {
         GPSD_LOG(LOG_ERROR, &context.errout,
-                 "Error: SETSOCKOPT SO_REUSEADDR\n");
+                 "Error: SETSOCKOPT SO_REUSEADDR %s\n", strerror(errno));
         (void)close(s);
         return -1;
     }
@@ -464,7 +467,7 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
     }
     if (type == SOCK_STREAM && listen(s, qlen) == -1) {
         GPSD_LOG(LOG_ERROR, &context.errout,
-                 "can't listen on port %s\n", service);
+                 "can't listen on port %s, %s\n", service, strerror(errno));
         (void)close(s);
         return -1;
     }
@@ -2163,18 +2166,19 @@ int main(int argc, char *argv[])
         /* not SuS/POSIX portable, but we have our own fallback version */
         if (os_daemon(0, 0) != 0)
             GPSD_LOG(LOG_ERROR, &context.errout,
-                     "daemonization failed: %s\n",strerror(errno));
+                     "daemonization failed: %s\n", strerror(errno));
     }
 
     if (pid_file != NULL) {
         FILE *fp;
 
-        if ((fp = fopen(pid_file, "w")) != NULL) {
+        if (NULL == (fp = fopen(pid_file, "w"))) {
+            GPSD_LOG(LOG_ERROR, &context.errout,
+                     "Cannot create PID file: %s. %s\n",
+                     pid_file, strerror(errno));
+        } else {
             (void)fprintf(fp, "%u\n", (unsigned int)getpid());
             (void)fclose(fp);
-        } else {
-            GPSD_LOG(LOG_ERROR, &context.errout,
-                     "Cannot create PID file: %s.\n", pid_file);
         }
     }
 
@@ -2204,7 +2208,7 @@ int main(int argc, char *argv[])
         if (nice(NICEVAL) == -1 && errno != 0)
             GPSD_LOG(LOG_WARN, &context.errout,
                      "PPS: o=priority setting failed. Time accuracy "
-                     "will be degraded\n");
+                     "will be degraded, %s\n", strerror(errno));
     }
     /*
      * By initializing before we drop privileges, we guarantee that even
@@ -2306,7 +2310,7 @@ int main(int argc, char *argv[])
                      "changing to group %d\n", stb.st_gid);
             if (setgid(stb.st_gid) != 0)
                 GPSD_LOG(LOG_ERROR, &context.errout,
-                         "setgid() failed, errno %s\n",
+                         "setgid() failed, %s\n",
                          strerror(errno));
         }
 #endif
@@ -2314,7 +2318,7 @@ int main(int argc, char *argv[])
         if (pw)
             if (setuid(pw->pw_uid) != 0)
                 GPSD_LOG(LOG_ERROR, &context.errout,
-                            "setuid() failed, errno %s\n",
+                            "setuid() failed, %s\n",
                             strerror(errno));
     }
     // sometimes getegid() and geteuid() are longs
@@ -2441,12 +2445,13 @@ int main(int argc, char *argv[])
                                  "no subscriber slots available\n", c_ip,
                                     ssock);
                         (void)close(ssock);
-                    } else
-                        if (setsockopt
-                            (ssock, SOL_SOCKET, SO_LINGER, (char *)&linger,
-                             (int)sizeof(struct linger)) == -1) {
+                    } else if (-1 == setsockopt(ssock,
+                                                SOL_SOCKET, SO_LINGER,
+                                                (char *)&linger,
+                                                (int)sizeof(struct linger))) {
                         GPSD_LOG(LOG_ERROR, &context.errout,
-                                 "Error: SETSOCKOPT SO_LINGER\n");
+                                 "Error: SETSOCKOPT SO_LINGER. %s\n",
+                                 strerror(errno));
                         (void)close(ssock);
                     } else {
                         char announce[GPS_JSON_RESPONSE_MAX];
