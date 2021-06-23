@@ -539,18 +539,20 @@ void gpsd_set_speed(struct gps_device_t *session,
      * Bluetooth devices may spam devices that aren't GPSes at all and
      * could become confused.
      */
-    if (!session->context->readonly
-                && session->sourcetype != SOURCE_USB
-                && session->sourcetype != SOURCE_BLUETOOTH) {
-        if (isatty(session->gpsdata.gps_fd) != 0
+    if (!session->context->readonly &&
+        SOURCE_USB != session->sourcetype &&
+        SOURCE_BLUETOOTH != session->sourcetype) {
+
+        if (0 != isatty(session->gpsdata.gps_fd)
             && !session->context->readonly) {
-            if (session->device_type == NULL) {
+            if (NULL == session->device_type) {
                 const struct gps_type_t **dp;
                 for (dp = gpsd_drivers; *dp; dp++)
-                    if ((*dp)->event_hook != NULL)
+                    if (NULL != (*dp)->event_hook)
                         (*dp)->event_hook(session, event_wakeup);
-            } else if (session->device_type->event_hook != NULL)
+            } else if (NULL != session->device_type->event_hook) {
                 session->device_type->event_hook(session, event_wakeup);
+            }
         }
     }
     packet_reset(&session->lexer);
@@ -578,8 +580,8 @@ int gpsd_serial_open(struct gps_device_t *session)
         return PLACEHOLDING_FD;
     }
 
-    if (session->context->readonly
-        || (session->sourcetype <= SOURCE_BLOCKDEV)) {
+    if (session->context->readonly ||
+        (SOURCE_BLOCKDEV >= session->sourcetype)) {
         mode = (mode_t) O_RDONLY;
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "SER: opening read-only GPS data source type %d and at '%s'\n",
@@ -667,8 +669,8 @@ int gpsd_serial_open(struct gps_device_t *session)
      *
      * We also exclude bluetooth device because the bluetooth daemon opens them.
      */
-    if (!(session->sourcetype == SOURCE_PTY ||
-          session->sourcetype == SOURCE_BLUETOOTH)) {
+    if (!(SOURCE_PTY == session->sourcetype ||
+          SOURCE_BLUETOOTH == session->sourcetype)) {
 #ifdef TIOCEXCL
         /*
          * Try to block other processes from using this device while we
@@ -759,7 +761,7 @@ int gpsd_serial_open(struct gps_device_t *session)
      * to read from an unresponsive receiver. */
 
     /* required so parity field won't be '\0' if saved speed matches */
-    if (session->sourcetype <= SOURCE_BLOCKDEV) {
+    if (SOURCE_BLOCKDEV >= session->sourcetype) {
         session->gpsdata.dev.parity = 'N';
         session->gpsdata.dev.stopbits = 1;
     }
@@ -810,8 +812,9 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
         return false;
 
     /* ...or if it's nominally a tty but delivers only PPS and no data */
-    if (session->sourcetype == SOURCE_PPS)
+    if (SOURCE_PPS == session->sourcetype) {
         return false;
+    }
 
     if (session->lexer.retry_counter++ >= SNIFF_RETRIES) {
         char new_parity;   // E, N, O

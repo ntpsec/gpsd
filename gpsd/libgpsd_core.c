@@ -348,9 +348,9 @@ void gpsd_deactivate(struct gps_device_t *session)
              "closing GPS=%s (%d)\n",
              session->gpsdata.dev.path, session->gpsdata.gps_fd);
 #if defined(NMEA2000_ENABLE)
-    if (session->sourcetype == SOURCE_CAN)
+    if (SOURCE_CAN == session->sourcetype) {
         (void)nmea2000_close(session);
-    else
+    } else
 #endif /* of defined(NMEA2000_ENABLE) */
         (void)gpsd_close(session);
     if (session->mode == O_OPTIMIZE)
@@ -643,7 +643,7 @@ int gpsd_activate(struct gps_device_t *session, const int mode)
 #ifdef NON_NMEA0183_ENABLE
     /* if it's a sensor, it must be probed */
     if ((session->servicetype == service_sensor) &&
-        (session->sourcetype != SOURCE_CAN)) {
+        (SOURCE_CAN != session->sourcetype)) {
         const struct gps_type_t **dp;
 
         for (dp = gpsd_drivers; *dp; dp++) {

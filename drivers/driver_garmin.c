@@ -939,45 +939,43 @@ static bool garmin_usb_detect(struct gps_device_t *session UNUSED)
      * fronm being rudely elbowed aside by this one if they happen
      * to be trying to coexist with the Garmin.
      */
-    if (session->sourcetype != SOURCE_USB)
+    if (SOURCE_USB != session->sourcetype) {
         return false;
-    else {
-#ifdef HAVE_LIBUSB
-        if (!is_usb_device(session->gpsdata.dev.path, 0x091e, 0x0003,
-                &session->context->errout))
-            return false;
-
-        if (!gpsd_set_raw(session)) {
-            GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "Garmin: garmin_usb_detect: error changing port attributes: %s\n",
-                     strerror(errno));
-            return false;
-        }
-
-        if (sizeof(session->driver.garmin.Buffer) < sizeof(Packet_t)) {
-            /* dunno how this happens, but it does on some compilers */
-            GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "Garmin: garmin_usb_detect: Compile error, garmin.Buffer too small.\n");
-            return false;
-        }
-
-        // FIXME!!! needs to use libusb totally and move garmin_gps aside */
-        // set Mode 1, mode 0 is broken somewhere past 2.6.14
-        // but how?
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "Garmin: Set garmin_gps driver mode = 0\n");
-        Build_Send_USB_Packet(session, GARMIN_LAYERID_PRIVATE,
-                              PRIV_PKTID_SET_MODE, 4, MODE_GARMIN_SERIAL);
-        // expect no return packet !?
-
-        return true;
-#else
-        return false;
-#endif /* HAVE_LIBUSB */
     }
-#else
-    return false;
+
+#ifdef HAVE_LIBUSB
+    if (!is_usb_device(session->gpsdata.dev.path, 0x091e, 0x0003,
+            &session->context->errout))
+        return false;
+
+    if (!gpsd_set_raw(session)) {
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "Garmin: garmin_usb_detect: error changing port "
+                 "attributes: %s\n",
+                 strerror(errno));
+        return false;
+    }
+
+    if (sizeof(session->driver.garmin.Buffer) < sizeof(Packet_t)) {
+        /* dunno how this happens, but it does on some compilers */
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "Garmin: garmin_usb_detect: Compile error, garmin.Buffer too small.\n");
+        return false;
+    }
+
+    // FIXME!!! needs to use libusb totally and move garmin_gps aside */
+    // set Mode 1, mode 0 is broken somewhere past 2.6.14
+    // but how?
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "Garmin: Set garmin_gps driver mode = 0\n");
+    Build_Send_USB_Packet(session, GARMIN_LAYERID_PRIVATE,
+                          PRIV_PKTID_SET_MODE, 4, MODE_GARMIN_SERIAL);
+    // expect no return packet !?
+
+    return true;
+#endif /* HAVE_LIBUSB */
 #endif /* __linux__ */
+    return false;
 }
 
 static void garmin_event_hook(struct gps_device_t *session, event_t event)
@@ -1232,7 +1230,7 @@ static ssize_t garmin_control_send(struct gps_device_t *session,
 
 static double garmin_time_offset(struct gps_device_t *session)
 {
-    if (session->sourcetype == SOURCE_USB) {
+    if (SOURCE_USB == session->sourcetype) {
         return 0.035;           /* Garmin USB, expect +/- 40mS jitter */
     }
     /* only two sentences ships time */
