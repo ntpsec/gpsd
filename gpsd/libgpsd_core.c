@@ -225,23 +225,25 @@ static void gpsd_run_device_hook(struct gpsd_errout_t *errout,
 {
     struct stat statbuf;
 
-    if (stat(DEVICEHOOKPATH, &statbuf) == -1)
+    if (-1 == stat(DEVICEHOOKPATH, &statbuf)) {
         GPSD_LOG(LOG_PROG, errout,
-                 "no %s present, skipped running %s hook\n",
-                 DEVICEHOOKPATH, hook);
-    else {
+                 "no %s present, skipped running %s hook. %s\n",
+                 DEVICEHOOKPATH, hook, strerror(errno));
+    } else {
         int status;
         char buf[HOOK_CMD_MAX];
         (void)snprintf(buf, sizeof(buf), "%s %s %s",
                        DEVICEHOOKPATH, device_name, hook);
         GPSD_LOG(LOG_INF, errout, "running %s\n", buf);
         status = system(buf);
-        if (status == -1)
-            GPSD_LOG(LOG_ERROR, errout, "error running %s\n", buf);
-        else
+        if (-1 == status) {
+            GPSD_LOG(LOG_ERROR, errout, "error %s running %s\n",
+                     strerror(errno), buf);
+        } else {
             GPSD_LOG(LOG_INF, errout,
                      "%s returned %d\n", DEVICEHOOKPATH,
                      WEXITSTATUS(status));
+        }
     }
 }
 
@@ -1316,25 +1318,26 @@ int gpsd_await_data(fd_set *rfds,
     errno = 0;
 
     status = pselect(maxfd + 1, rfds, NULL, NULL, NULL, NULL);
-    if (status == -1) {
+    if (-1 == status) {
         if (errno == EINTR)
             return AWAIT_NOT_READY;
-        else if (errno == EBADF) {
+
+        if (errno == EBADF) {
             int fd;
             for (fd = 0; fd < (int)FD_SETSIZE; fd++)
                 /*
                  * All we care about here is a cheap, fast, uninterruptible
                  * way to check if a file descriptor is valid.
                  */
-                if (FD_ISSET(fd, all_fds) && fcntl(fd, F_GETFL, 0) == -1) {
+                if (FD_ISSET(fd, all_fds) && -1 == fcntl(fd, F_GETFL, 0)) {
                     FD_CLR(fd, all_fds);
                     FD_SET(fd, efds);
                 }
             return AWAIT_NOT_READY;
-        } else {
-            GPSD_LOG(LOG_ERROR, errout, "select: %s\n", strerror(errno));
-            return AWAIT_FAILED;
         }
+        //  else
+        GPSD_LOG(LOG_ERROR, errout, "select: %s\n", strerror(errno));
+        return AWAIT_FAILED;
     }
 
     if (errout->debug >= LOG_SPIN) {
@@ -1355,10 +1358,10 @@ int gpsd_await_data(fd_set *rfds,
 
         (void)clock_gettime(CLOCK_REALTIME, &ts_now);
         GPSD_LOG(LOG_SPIN, errout,
-                 "pselect() {%s} at %s (errno %d)\n",
+                 "pselect() {%s} at %s (%s)\n",
                  dbuf,
                  timespec_str(&ts_now, ts_str, sizeof(ts_str)),
-                 errno);
+                 strerror(errno));
     }
 
     return AWAIT_GOT_INPUT;
