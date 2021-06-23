@@ -48,7 +48,7 @@ static sourcetype_t gpsd_classify(struct gps_device_t *session)
     struct stat sb;
     const char *path = session->gpsdata.dev.path;
 
-    if (stat(path, &sb) == -1) {
+    if (-1 == stat(path, &sb)) {
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "SER: stat(%s) failed: %s\n",
                  session->gpsdata.dev.path, strerror(errno));
@@ -57,16 +57,16 @@ static sourcetype_t gpsd_classify(struct gps_device_t *session)
     if (S_ISREG(sb.st_mode))
         return source_blockdev;
 
-    /* this assumes we won't get UDP from a filesystem socket */
+    // this assumes we won't get UDP from a filesystem socket
     if (S_ISSOCK(sb.st_mode))
         return source_tcp;
 
-    /* OS-independent check for ptys using Unix98 naming convention */
-    if (strncmp(path, "/dev/pts/", 9) == 0)
+    // OS-independent check for ptys using Unix98 naming convention
+    if (0 == strncmp(path, "/dev/pts/", 9))
         return source_pty;
 
     // some more direct way to check for PPS?
-    if (strncmp(path, "/dev/pps", 8) == 0)
+    if (0 == strncmp(path, "/dev/pps", 8))
         return source_pps;
 
     if (S_ISFIFO(sb.st_mode))
@@ -84,15 +84,59 @@ static sourcetype_t gpsd_classify(struct gps_device_t *session)
          * for other Unixes where either or both assumptions may break.
          */
         int devmajor = major(sb.st_rdev);
-        /* 207 are Freescale i.MX UARTs (ttymxc*) */
-        if (devmajor == 4 || devmajor == 204 || devmajor == 207)
-            devtype = source_rs232;
-        else if (devmajor == 188 || devmajor == 166)
-            devtype = source_usb;
-        else if (devmajor == 216 || devmajor == 217)
-            devtype = source_bluetooth;
-        else if (devmajor == 3 || (devmajor >= 136 && devmajor <= 143))
+        int devminor = minor(sb.st_rdev);
+
+        switch (devmajor) {
+        case 3:      // First MFM, RLL and IDE hard disk/CD-ROM interface ?
+            FALLTHROUGH
+        case 136:    // Unix98 PTY slaves
+            FALLTHROUGH
+        case 137:    // Unix98 PTY slaves
+            FALLTHROUGH
+        case 138:    // Unix98 PTY slaves
+            FALLTHROUGH
+        case 139:    // Unix98 PTY slaves
+            FALLTHROUGH
+        case 140:    // Unix98 PTY slaves
+            FALLTHROUGH
+        case 141:    // Unix98 PTY slaves
+            FALLTHROUGH
+        case 142:    // Unix98 PTY slaves
+            FALLTHROUGH
+        case 143:    // Unix98 PTY slaves
             devtype = source_pty;
+            break;
+
+        case 4:      // TTY devices
+            FALLTHROUGH
+        case 204:    // ow-density serial ports
+            FALLTHROUGH
+        case 207:    // 207 are Freescale i.MX UARTs (ttymxc*)
+            devtype = source_rs232;
+            break;
+
+        case 10:      // Non-serial mice, misc features
+            if (223 == devminor) {
+                devtype = source_pps;
+            } // else WTF?
+            break;
+
+        case 166:    // ACM USB modems
+            FALLTHROUGH
+        case 188:    // USB serial converters
+            devtype = source_usb;
+            break;
+
+        case 216:    // Bluetooth RFCOMM TTY devices
+            FALLTHROUGH
+        case 217:    // Bluetooth RFCOMM TTY devices (alternate devices)
+            devtype = source_bluetooth;
+            break;
+
+        default:     // Give up, default to rs232
+            devtype = source_rs232;
+            break;
+        }
 #endif /* __linux__ */
         /*
          * See http://nadeausoftware.com/articles/2012/01/c_c_tip_how_use_compiler_predefined_macros_detect_operating_system
