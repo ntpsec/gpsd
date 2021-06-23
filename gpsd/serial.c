@@ -52,28 +52,28 @@ static sourcetype_t gpsd_classify(struct gps_device_t *session)
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "SER: stat(%s) failed: %s\n",
                  session->gpsdata.dev.path, strerror(errno));
-        return source_unknown;
+        return SOURCE_UNKNOWN;
     }
     if (S_ISREG(sb.st_mode))
-        return source_blockdev;
+        return SOURCE_BLOCKDEV;
 
     // this assumes we won't get UDP from a filesystem socket
     if (S_ISSOCK(sb.st_mode))
-        return source_tcp;
+        return SOURCE_TCP;
 
     // OS-independent check for ptys using Unix98 naming convention
     if (0 == strncmp(path, "/dev/pts/", 9))
-        return source_pty;
+        return SOURCE_PTY;
 
     // some more direct way to check for PPS?
     if (0 == strncmp(path, "/dev/pps", 8))
-        return source_pps;
+        return SOURCE_PPS;
 
     if (S_ISFIFO(sb.st_mode))
-        return source_pipe;
+        return SOURCE_PIPE;
 
      if (S_ISCHR(sb.st_mode)) {
-        sourcetype_t devtype = source_rs232;
+        sourcetype_t devtype = SOURCE_RS232;
 #ifdef __linux__
         /* Linux major device numbers live here
          *
@@ -104,37 +104,37 @@ static sourcetype_t gpsd_classify(struct gps_device_t *session)
         case 142:    // Unix98 PTY slaves
             FALLTHROUGH
         case 143:    // Unix98 PTY slaves
-            devtype = source_pty;
+            devtype = SOURCE_PTY;
             break;
 
-        case 4:      // TTY devices
+        case 4:      // TTY Devices
             FALLTHROUGH
-        case 204:    // ow-density serial ports
+        case 204:    // Low-density serial ports
             FALLTHROUGH
-        case 207:    // 207 are Freescale i.MX UARTs (ttymxc*)
-            devtype = source_rs232;
+        case 207:    // 207 FREESCALE I.MX UARTS (TTYMXC*)
+            devtype = SOURCE_RS232;
             break;
 
         case 10:      // Non-serial mice, misc features
             if (223 == devminor) {
-                devtype = source_pps;
+                devtype = SOURCE_PPS;
             } // else WTF?
             break;
 
         case 166:    // ACM USB modems
             FALLTHROUGH
         case 188:    // USB serial converters
-            devtype = source_usb;
+            devtype = SOURCE_USB;
             break;
 
         case 216:    // Bluetooth RFCOMM TTY devices
             FALLTHROUGH
         case 217:    // Bluetooth RFCOMM TTY devices (alternate devices)
-            devtype = source_bluetooth;
+            devtype = SOURCE_BLUETOOTH;
             break;
 
         default:     // Give up, default to rs232
-            devtype = source_rs232;
+            devtype = SOURCE_RS232;
             break;
         }
 #endif /* __linux__ */
@@ -169,16 +169,16 @@ static sourcetype_t gpsd_classify(struct gps_device_t *session)
          */
         if (strncmp(path, "/dev/ttyp", 9) == 0 ||
             strncmp(path, "/dev/ttyq", 9) == 0)
-            devtype = source_pty;
+            devtype = SOURCE_PTY;
         else if (strncmp(path, "/dev/ttyU", 9) == 0 ||
             strncmp(path, "/dev/dtyU", 9) == 0)
-            devtype = source_usb;
+            devtype = SOURCE_USB;
         /* XXX bluetooth */
 #endif /* BSD */
         return devtype;
     }
 
-    return source_unknown;
+    return SOURCE_UNKNOWN;
 }
 
 #ifdef __linux__
@@ -540,8 +540,8 @@ void gpsd_set_speed(struct gps_device_t *session,
      * could become confused.
      */
     if (!session->context->readonly
-                && session->sourcetype != source_usb
-                && session->sourcetype != source_bluetooth) {
+                && session->sourcetype != SOURCE_USB
+                && session->sourcetype != SOURCE_BLUETOOTH) {
         if (isatty(session->gpsdata.gps_fd) != 0
             && !session->context->readonly) {
             if (session->device_type == NULL) {
@@ -568,18 +568,18 @@ int gpsd_serial_open(struct gps_device_t *session)
     session->sourcetype = gpsd_classify(session);
     session->servicetype = service_sensor;
 
-    if (source_unknown == session->sourcetype) {
+    if (SOURCE_UNKNOWN == session->sourcetype) {
         return UNALLOCATED_FD;
     }
 
     /* we may need to hold on to this slot without opening the device */
-    if (source_pps == session->sourcetype) {
+    if (SOURCE_PPS == session->sourcetype) {
         (void)gpsd_switch_driver(session, "PPS");
         return PLACEHOLDING_FD;
     }
 
     if (session->context->readonly
-        || (session->sourcetype <= source_blockdev)) {
+        || (session->sourcetype <= SOURCE_BLOCKDEV)) {
         mode = (mode_t) O_RDONLY;
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "SER: opening read-only GPS data source type %d and at '%s'\n",
@@ -667,8 +667,8 @@ int gpsd_serial_open(struct gps_device_t *session)
      *
      * We also exclude bluetooth device because the bluetooth daemon opens them.
      */
-    if (!(session->sourcetype == source_pty ||
-          session->sourcetype == source_bluetooth)) {
+    if (!(session->sourcetype == SOURCE_PTY ||
+          session->sourcetype == SOURCE_BLUETOOTH)) {
 #ifdef TIOCEXCL
         /*
          * Try to block other processes from using this device while we
@@ -759,7 +759,7 @@ int gpsd_serial_open(struct gps_device_t *session)
      * to read from an unresponsive receiver. */
 
     /* required so parity field won't be '\0' if saved speed matches */
-    if (session->sourcetype <= source_blockdev) {
+    if (session->sourcetype <= SOURCE_BLOCKDEV) {
         session->gpsdata.dev.parity = 'N';
         session->gpsdata.dev.stopbits = 1;
     }
@@ -810,7 +810,7 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
         return false;
 
     /* ...or if it's nominally a tty but delivers only PPS and no data */
-    if (session->sourcetype == source_pps)
+    if (session->sourcetype == SOURCE_PPS)
         return false;
 
     if (session->lexer.retry_counter++ >= SNIFF_RETRIES) {

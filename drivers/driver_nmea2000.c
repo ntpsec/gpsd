@@ -1895,7 +1895,7 @@ int nmea2000_open(struct gps_device_t *session)
 
     gpsd_switch_driver(session, "NMEA2000");
     session->gpsdata.gps_fd = sock;
-    session->sourcetype = source_can;
+    session->sourcetype = SOURCE_CAN;
     session->servicetype = service_sensor;
     session->driver.nmea2000.can_net = can_net;
 

@@ -304,7 +304,7 @@ void gpsd_init(struct gps_device_t *session, struct gps_context_t *context,
     session->device_type = NULL;        /* start by hunting packets */
     session->last_controller = NULL;
     session->observed = 0;
-    session->sourcetype = source_unknown;       /* gpsd_open() sets this */
+    session->sourcetype = SOURCE_UNKNOWN;       /* gpsd_open() sets this */
     session->servicetype = service_unknown;     /* gpsd_open() sets this */
     session->context = context;
     memset(session->subtype, 0, sizeof(session->subtype));
@@ -348,7 +348,7 @@ void gpsd_deactivate(struct gps_device_t *session)
              "closing GPS=%s (%d)\n",
              session->gpsdata.dev.path, session->gpsdata.gps_fd);
 #if defined(NMEA2000_ENABLE)
-    if (session->sourcetype == source_can)
+    if (session->sourcetype == SOURCE_CAN)
         (void)nmea2000_close(session);
     else
 #endif /* of defined(NMEA2000_ENABLE) */
@@ -508,7 +508,7 @@ int gpsd_open(struct gps_device_t *session)
     if (netgnss_uri_check(session->gpsdata.dev.path)) {
         session->gpsdata.gps_fd = netgnss_uri_open(session,
                                                    session->gpsdata.dev.path);
-        session->sourcetype = source_tcp;
+        session->sourcetype = SOURCE_TCP;
         GPSD_LOG(LOG_SPIN, &session->context->errout,
                  "netgnss_uri_open(%s) returns socket on fd %d\n",
                  session->gpsdata.dev.path, session->gpsdata.gps_fd);
@@ -537,7 +537,7 @@ int gpsd_open(struct gps_device_t *session)
             GPSD_LOG(LOG_SPIN, &session->context->errout,
                      "TCP device opened on fd %d\n", dsock);
         session->gpsdata.gps_fd = dsock;
-        session->sourcetype = source_tcp;
+        session->sourcetype = SOURCE_TCP;
         return session->gpsdata.gps_fd;
     /* or could be UDP */
     } else if (str_starts_with(session->gpsdata.dev.path, "udp://")) {
@@ -563,7 +563,7 @@ int gpsd_open(struct gps_device_t *session)
             GPSD_LOG(LOG_SPIN, &session->context->errout,
                      "UDP device opened on fd %d\n", dsock);
         session->gpsdata.gps_fd = dsock;
-        session->sourcetype = source_udp;
+        session->sourcetype = SOURCE_UDP;
         return session->gpsdata.gps_fd;
     }
 #endif /* NETFEED_ENABLE */
@@ -607,7 +607,7 @@ int gpsd_open(struct gps_device_t *session)
                      "remote gpsd feed opened on fd %d\n", dsock);
         /* watch to remote is issued when WATCH is */
         session->gpsdata.gps_fd = dsock;
-        session->sourcetype = source_gpsd;
+        session->sourcetype = SOURCE_GPSD;
         return session->gpsdata.gps_fd;
     }
 #endif /* PASSTHROUGH_ENABLE */
@@ -643,7 +643,7 @@ int gpsd_activate(struct gps_device_t *session, const int mode)
 #ifdef NON_NMEA0183_ENABLE
     /* if it's a sensor, it must be probed */
     if ((session->servicetype == service_sensor) &&
-        (session->sourcetype != source_can)) {
+        (session->sourcetype != SOURCE_CAN)) {
         const struct gps_type_t **dp;
 
         for (dp = gpsd_drivers; *dp; dp++) {

@@ -235,7 +235,7 @@ int ntpshm_put(struct gps_device_t *session, volatile struct shmTime *shmseg,
     // FIXME: make NMEA precision -1
     if (shmseg == session->shm_pps) {
         /* precision is a floor so do not make it tight */
-        if ( source_usb == session->sourcetype ) {
+        if ( SOURCE_USB == session->sourcetype ) {
             /* if PPS over USB, then precision = -10, 1 milli sec  */
             precision = -10;
         } else {
@@ -361,7 +361,7 @@ static char *report_hook(volatile struct pps_thread_t *pps_thread,
 
     /* PPS only source never get any serial info
      * so no NTPTIME_IS or fixcnt */
-    if ( source_pps != session->sourcetype) {
+    if (SOURCE_PPS != session->sourcetype) {
         /* FIXME! these two validations need to move back into ppsthread.c */
 
         if ( !session->ship_to_ntpd)
@@ -417,10 +417,10 @@ void ntpshm_link_deactivate(struct gps_device_t *session)
 void ntpshm_link_activate(struct gps_device_t *session)
 {
     /* don't talk to NTP when we're running inside the test harness */
-    if (session->sourcetype == source_pty)
+    if (session->sourcetype == SOURCE_PTY)
         return;
 
-    if (session->sourcetype != source_pps ) {
+    if (session->sourcetype != SOURCE_PPS) {
         /* allocate a shared-memory segment for "NMEA" time data */
         session->shm_clock = ntpshm_alloc(session->context);
 
@@ -431,9 +431,9 @@ void ntpshm_link_activate(struct gps_device_t *session)
         }
     }
 
-    if (session->sourcetype == source_usb ||
-        session->sourcetype == source_rs232 ||
-        session->sourcetype == source_pps) {
+    if (session->sourcetype == SOURCE_USB ||
+        session->sourcetype == SOURCE_RS232 ||
+        session->sourcetype == SOURCE_PPS) {
         /* We also have the 1pps capability, allocate a shared-memory segment
          * for the 1pps time data and launch a thread to capture the 1pps
          * transitions

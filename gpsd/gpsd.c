@@ -785,7 +785,7 @@ static int write_gps(char *device, char *hex) {
         GPSD_LOG(LOG_INF, &context.errout, "GPS <=: %s not active\n", device);
         return 1;
     }
-    if (devp->context->readonly || (devp->sourcetype <= source_blockdev)) {
+    if (devp->context->readonly || (devp->sourcetype <= SOURCE_BLOCKDEV)) {
         GPSD_LOG(LOG_WARN, &context.errout,
                  "GPS <=: attempted to write to a read-only device\n");
         return 1;
@@ -888,7 +888,7 @@ static void handle_control(int sfd, char *buf)
             *eq++ = '\0';
             if ((devp = find_device(stash))) {
                 if (devp->context->readonly ||
-                    (devp->sourcetype <= source_blockdev)) {
+                    (devp->sourcetype <= SOURCE_BLOCKDEV)) {
                     GPSD_LOG(LOG_WARN, &context.errout,
                              "<= control(%d): attempted to write to a "
                              "read-only device\n",
@@ -1148,7 +1148,7 @@ static void handle_request(struct subscriber_t *sub,
                     for (devp = devices; devp < devices + MAX_DEVICES; devp++)
                         if (allocated_device(devp)) {
                             (void)awaken(devp);
-                            if (devp->sourcetype == source_gpsd) {
+                            if (devp->sourcetype == SOURCE_GPSD) {
                                 // wake all, so no devpath/remote issues
                                 (void)gpsd_write(devp, start,
                                                  (size_t)(end-start));
@@ -1171,7 +1171,7 @@ static void handle_request(struct subscriber_t *sub,
                                  "response: %s\n", reply);
                         goto bailout;
                     } else if (awaken(devp)) {
-                        if (devp->sourcetype == source_gpsd) {
+                        if (devp->sourcetype == SOURCE_GPSD) {
                             /* FIXME: the device into this daemon is
                              * not the device to pass to the remote daemon.
                              * local device = gpsd://host::/device
@@ -1634,7 +1634,7 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
 
         /* propagate this in-band-time to all PPS-only devices */
         for (ppsonly = devices; ppsonly < devices + MAX_DEVICES; ppsonly++)
-            if (ppsonly->sourcetype == source_pps)
+            if (ppsonly->sourcetype == SOURCE_PPS)
                 pps_thread_fixin(&ppsonly->pps_thread, &td);
 
         if (device->shm_clock != NULL) {
@@ -1781,7 +1781,7 @@ static void ship_pps_message(struct gps_device_t *session,
     char buf[GPS_JSON_RESPONSE_MAX];
     char ts_str[TIMESPEC_LEN];
 
-    if ( source_usb == session->sourcetype) {
+    if ( SOURCE_USB == session->sourcetype) {
         /* PPS over USB not so good */
         precision = -10;
     }

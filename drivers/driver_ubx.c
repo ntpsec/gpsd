@@ -3344,7 +3344,7 @@ ubx_msg_tim_tp(struct gps_device_t *session, unsigned char *buf,
          // FIXME!! this qErr can only apply to one PPS!
          /* propagate this in-band-time to all PPS-only devices */
          for (ppsonly = devices; ppsonly < devices + MAX_DEVICES; ppsonly++)
-             if (ppsonly->sourcetype == source_pps)
+             if (ppsonly->sourcetype == SOURCE_PPS)
                  pps_thread_qErrin(&ppsonly->pps_thread, qErr,
                                    session->gpsdata.qErr_time);
         }

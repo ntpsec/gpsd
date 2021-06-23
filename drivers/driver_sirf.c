@@ -1478,7 +1478,7 @@ static double sirf_time_offset(struct gps_device_t *session)
 
     /* the Navigation Solution message */
     else if (session->driver.sirf.lastid == (unsigned char)2) {
-        if (session->sourcetype == source_usb) {
+        if (session->sourcetype == SOURCE_USB) {
             retval = 0.640;     /* USB, expect +/- 50mS jitter */
         } else {
             switch (session->gpsdata.dev.baudrate) {

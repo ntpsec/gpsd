@@ -939,7 +939,7 @@ static bool garmin_usb_detect(struct gps_device_t *session UNUSED)
      * fronm being rudely elbowed aside by this one if they happen
      * to be trying to coexist with the Garmin.
      */
-    if (session->sourcetype != source_usb)
+    if (session->sourcetype != SOURCE_USB)
         return false;
     else {
 #ifdef HAVE_LIBUSB
@@ -1232,7 +1232,7 @@ static ssize_t garmin_control_send(struct gps_device_t *session,
 
 static double garmin_time_offset(struct gps_device_t *session)
 {
-    if (session->sourcetype == source_usb) {
+    if (session->sourcetype == SOURCE_USB) {
         return 0.035;           /* Garmin USB, expect +/- 40mS jitter */
     }
     /* only two sentences ships time */

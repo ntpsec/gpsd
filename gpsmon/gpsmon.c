@@ -1342,8 +1342,8 @@ int main(int argc, char **argv)
 
     if (serial) {
         /* this guard suppresses a warning on Bluetooth devices */
-        if (session.sourcetype == source_rs232 ||
-            session.sourcetype == source_usb) {
+        if (session.sourcetype == SOURCE_RS232 ||
+            session.sourcetype == SOURCE_USB) {
             session.pps_thread.report_hook = pps_report;
             #ifdef MAGIC_HAT_ENABLE
             /*

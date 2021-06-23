@@ -454,18 +454,18 @@ struct gps_type_t {
  * We should never see a block device; that would indicate a serious error
  * in command-line usage or the hotplug system.
  */
-typedef enum {source_unknown,
-              source_blockdev,  /* block devices can't be GPS sources */
-              source_rs232,     /* potential GPS source, not discoverable */
-              source_usb,       /* potential GPS source, discoverable */
-              source_bluetooth, /* potential GPS source, discoverable */
-              source_can,       /* potential GPS source, fixed CAN format */
-              source_pty,       /* PTY: we don't require exclusive access */
-              source_tcp,       /* TCP/IP stream: case detected but not used */
-              source_udp,       /* UDP stream: case detected but not used */
-              source_gpsd,      /* Remote gpsd instance over TCP/IP */
-              source_pps,       /* PPS-only device, such as /dev/ppsN */
-              source_pipe,      /* Unix FIFO; don't use blocking I/O */
+typedef enum {SOURCE_UNKNOWN,
+              SOURCE_BLOCKDEV,  /* block devices can't be GPS sources */
+              SOURCE_RS232,     /* potential GPS source, not discoverable */
+              SOURCE_USB,       /* potential GPS source, discoverable */
+              SOURCE_BLUETOOTH, /* potential GPS source, discoverable */
+              SOURCE_CAN,       /* potential GPS source, fixed CAN format */
+              SOURCE_PTY,       /* PTY: we don't require exclusive access */
+              SOURCE_TCP,       /* TCP/IP stream: case detected but not used */
+              SOURCE_UDP,       /* UDP stream: case detected but not used */
+              SOURCE_GPSD,      /* Remote gpsd instance over TCP/IP */
+              SOURCE_PPS,       /* PPS-only device, such as /dev/ppsN */
+              SOURCE_PIPE,      /* Unix FIFO; don't use blocking I/O */
 } sourcetype_t;
 
 /*
