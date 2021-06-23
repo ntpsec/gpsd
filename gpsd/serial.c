@@ -42,26 +42,37 @@
 #  endif /* CNEW_RTSCTS */
 #endif /* !CRTSCTS */
 
-static sourcetype_t gpsd_classify(const char *path)
-/* figure out what kind of device we're looking at */
+// figure out what kind of device we're looking at
+static sourcetype_t gpsd_classify(struct gps_device_t *session)
 {
     struct stat sb;
+    const char *path = session->gpsdata.dev.path;
 
-    if (stat(path, &sb) == -1)
+    if (stat(path, &sb) == -1) {
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "SER: stat(%s) failed: %s\n",
+                 session->gpsdata.dev.path, strerror(errno));
         return source_unknown;
-    else if (S_ISREG(sb.st_mode))
+    }
+    if (S_ISREG(sb.st_mode))
         return source_blockdev;
+
     /* this assumes we won't get UDP from a filesystem socket */
-    else if (S_ISSOCK(sb.st_mode))
+    if (S_ISSOCK(sb.st_mode))
         return source_tcp;
+
     /* OS-independent check for ptys using Unix98 naming convention */
-    else if (strncmp(path, "/dev/pts/", 9) == 0)
+    if (strncmp(path, "/dev/pts/", 9) == 0)
         return source_pty;
-    else if (strncmp(path, "/dev/pps", 8) == 0)
+
+    // some more direct way to check for PPS?
+    if (strncmp(path, "/dev/pps", 8) == 0)
         return source_pps;
-    else if (S_ISFIFO(sb.st_mode))
+
+    if (S_ISFIFO(sb.st_mode))
         return source_pipe;
-    else if (S_ISCHR(sb.st_mode)) {
+
+     if (S_ISCHR(sb.st_mode)) {
         sourcetype_t devtype = source_rs232;
 #ifdef __linux__
         /* Linux major device numbers live here
@@ -121,22 +132,27 @@ static sourcetype_t gpsd_classify(const char *path)
         /* XXX bluetooth */
 #endif /* BSD */
         return devtype;
-    } else
-        return source_unknown;
+    }
+
+    return source_unknown;
 }
 
 #ifdef __linux__
 
-/* return true if any process has the specified path open */
-static int fusercount(const char *path)
+// return true if any process has the specified path open
+static int fusercount(struct gps_device_t *session)
 {
+    const char *path = session->gpsdata.dev.path;
     DIR *procd, *fdd;
     struct dirent *procentry, *fdentry;
     char procpath[GPS_PATH_MAX], fdpath[GPS_PATH_MAX], linkpath[GPS_PATH_MAX];
     int cnt = 0;
 
-    if (NULL == (procd = opendir("/proc")))
+    if (NULL == (procd = opendir("/proc"))) {
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "SER: opendir(/proc) failed: %s\n", strerror(errno));
         return -1;
+    }
     while (NULL != (procentry = readdir(procd))) {
         if (0 == isdigit(procentry->d_name[0]))
             continue;
@@ -266,8 +282,10 @@ int gpsd_get_stopbits(const struct gps_device_t *dev)
 
 bool gpsd_set_raw(struct gps_device_t * session)
 {
+    // on some OS cfmakeraw() returns an int, POSIX says it is void.
     (void)cfmakeraw(&session->ttyset);
-    if (-1 == tcsetattr(session->gpsdata.gps_fd, TCIOFLUSH, &session->ttyset)) {
+    if (-1 == tcsetattr(session->gpsdata.gps_fd, TCIOFLUSH,
+                        &session->ttyset)) {
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "SER: error changing port attributes: %s\n", strerror(errno));
         return false;
@@ -503,8 +521,12 @@ int gpsd_serial_open(struct gps_device_t *session)
 {
     mode_t mode = (mode_t) O_RDWR;
 
-    session->sourcetype = gpsd_classify(session->gpsdata.dev.path);
+    session->sourcetype = gpsd_classify(session);
     session->servicetype = service_sensor;
+
+    if (source_unknown == session->sourcetype) {
+        return UNALLOCATED_FD;
+    }
 
     /* we may need to hold on to this slot without opening the device */
     if (source_pps == session->sourcetype) {
@@ -616,7 +638,7 @@ int gpsd_serial_open(struct gps_device_t *session)
         /*
          * Don't touch devices already opened by another process.
          */
-        if (fusercount(session->gpsdata.dev.path) > 1) {
+        if (1 < fusercount(session)) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "SER: %s already opened by another process\n",
                      session->gpsdata.dev.path);
