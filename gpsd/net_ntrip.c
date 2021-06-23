@@ -202,14 +202,14 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                 return 1;
             }
             GPSD_LOG(LOG_ERROR, &device->context->errout,
-                     "ntrip stream read error %d on fd %d\n",
-                     errno, fd);
+                     "ntrip stream read error %s on fd %d\n",
+                     strerror(errno), fd);
             return -1;
         } else if (rlen == 0) { // server closed the connection
             GPSD_LOG(LOG_ERROR, &device->context->errout,
-                     "ntrip stream unexpected close %d on fd %d "
+                     "ntrip stream unexpected close %s on fd %d "
                      "during sourcetable read\n",
-                     errno, fd);
+                     strerror(errno), fd);
             return -1;
         }
 
@@ -316,7 +316,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                      line);
         }
         /* message too big to fit into buffer */
-        if ((size_t)len == blen - 1)
+        if ((size_t)len == (blen - 1))
             return -1;
 
         if (len > 0)
@@ -351,9 +351,9 @@ static int ntrip_stream_req_probe(const struct ntrip_stream_t *stream,
     r = write(dsock, buf, strlen(buf));
     if (r != (ssize_t)strlen(buf)) {
         GPSD_LOG(LOG_ERROR, errout,
-                 "ntrip stream write error %d on fd %d "
+                 "ntrip stream write error %s on fd %d "
                  "during probe request %zd\n",
-                 errno, dsock, r);
+                 strerror(errno), dsock, r);
         (void)close(dsock);
         return -1;
     }
@@ -414,8 +414,8 @@ static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
             "\r\n", stream->mountpoint, VERSION, stream->url, stream->authStr);
     if (write(dsock, buf, strlen(buf)) != (ssize_t) strlen(buf)) {
         GPSD_LOG(LOG_ERROR, errout,
-                 "ntrip stream write error %d on fd %d during get request\n",
-                 errno, dsock);
+                 "ntrip stream write error %s on fd %d during get request\n",
+                 strerror(errno), dsock);
         (void)close(dsock);
         return -1;
     }
@@ -433,8 +433,8 @@ static int ntrip_stream_get_parse(const struct ntrip_stream_t *stream,
         if (errno == EINTR)
             continue;
         GPSD_LOG(LOG_ERROR, errout,
-                 "ntrip stream read error %d on fd %d during get rsp\n", errno,
-                 dsock);
+                 "ntrip stream read error %s on fd %d during get rsp\n",
+                 strerror(errno), dsock);
         goto close;
     }
     buf[sizeof(buf) - 1] = '\0';   // pacify coverity about NUL-terminated.
