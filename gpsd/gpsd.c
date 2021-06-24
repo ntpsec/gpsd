@@ -1941,6 +1941,7 @@ int main(int argc, char *argv[])
     bool device_opened = false;
     bool go_background = true;
     volatile bool in_restart;
+    const char *sudo = getenv("SUDO_COMMAND");
 
     gps_context_init(&context, "gpsd");
 
@@ -2094,6 +2095,9 @@ int main(int argc, char *argv[])
     if (0 != getuid()) {
        GPSD_LOG(LOG_WARN, &context.errout,
                 "gpsd not started as root, can not drop privileges.\n");
+    } else if (NULL != sudo && 0 == strcmp(argv[0], sudo)) {
+       GPSD_LOG(LOG_WARN, &context.errout,
+                "gpsd running under sudo. Some functions impaired..\n");
     }
 #if defined(SYSTEMD_ENABLE) && defined(CONTROL_SOCKET_ENABLE)
     sd_socket_count = sd_get_socket_count();
