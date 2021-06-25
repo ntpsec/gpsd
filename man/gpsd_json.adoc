@@ -1,6 +1,6 @@
 = gpsd_json(5)
 :author: Eric S. Raymond
-:date: 14 June 2021
+:date: 25 June 2021
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, JSON, libgps
 :manmanual: GPSD Documentation
@@ -54,9 +54,12 @@ The order of JSON attributes within a response object is never
 significant, and you may specify command attributes in any order.
 Responses never contain the special JSON value null; instead, attributes
 with empty or undefined values are omitted. The length limit for
-responses and reports is 1536 characters, including the trailing CR-NL.
-Longer responses will be truncated, so client code must be prepared for
-the possibility of invalid JSON fragments.
+responses and reports is currently 10240 characters, including the
+trailing CR-NL. Longer responses will be truncated, so client code must
+be prepared for the possibility of invalid JSON fragments.
+
+The default maximum message length is set by GPS_JSON_RESPONSE_MAX in
+*include/gpsd_json.h*. at compile time.
 
 In JSON reports, if an attribute is present only if the parent attribute
 is present or has a particular range, then the parent attribute is
