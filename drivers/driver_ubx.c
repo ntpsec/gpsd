@@ -884,14 +884,15 @@ static gps_mask_t
 ubx_msg_hnr_pvt(struct gps_device_t *session, unsigned char *buf,
                 size_t data_len)
 {
-    uint8_t valid;
+    char ts_buf[TIMESPEC_LEN];
+    gps_mask_t mask = 0;
+    int64_t iTOW;
+    int *mode = &session->newdata.mode;
+    int *status = &session->newdata.status;
+    struct tm unpacked_date;
     uint8_t flags;
     uint8_t gpsFix;
-    struct tm unpacked_date;
-    int *status = &session->newdata.status;
-    int *mode = &session->newdata.mode;
-    gps_mask_t mask = 0;
-    char ts_buf[TIMESPEC_LEN];
+    uint8_t valid;
 
     if (72 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -903,7 +904,8 @@ ubx_msg_hnr_pvt(struct gps_device_t *session, unsigned char *buf,
         // this GPS is at least protver 19
         session->driver.ubx.protver = 19;
     }
-    session->driver.ubx.iTOW = getleu32(buf, 0);
+    // don't set session->driver.ubx.iTOW, HNR is off-cycle
+    iTOW = getleu32(buf, 0);
     // valid same as UBX-NAV-PVT valid
     valid = (unsigned int)getub(buf, 11);
     // gpsFix same as UBX-NAV-PVT fixType
@@ -1019,11 +1021,12 @@ ubx_msg_hnr_pvt(struct gps_device_t *session, unsigned char *buf,
     // 4 final bytes reserved
 
     mask |= HERR_SET | SPEEDERR_SET | VERR_SET;
+    mask |= REPORT_IS;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-         "HNR-PVT: flags=%02x time=%s lat=%.2f lon=%.2f altHAE=%.2f "
-         "track=%.2f speed=%.2f climb=%.2f mode=%d status=%d used=%d\n",
-         flags,
+         "HNR-PVT: iTOW %lld flags %02x time %s lat %.2f lon %.2f altHAE %.2f "
+         "track %.2f speed %.2f climb %.2f mode %d status %d used %d\n",
+         (long long)iTOW, flags,
          timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
          session->newdata.latitude,
          session->newdata.longitude,
@@ -1860,6 +1863,7 @@ ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
     /* let gpsd_error_model() do the rest */
 
     mask |= HERR_SET | SPEEDERR_SET | VERR_SET;
+    mask |= REPORT_IS;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
          "NAV-PVT: flags=%02x time=%s lat=%.2f lon=%.2f altHAE=%.2f "
@@ -2098,6 +2102,7 @@ ubx_msg_nav_sol(struct gps_device_t *session, unsigned char *buf,
         session->newdata.status = STATUS_DGPS_FIX;
 
     mask |= MODE_SET | STATUS_SET;
+    mask |= REPORT_IS;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "UBX-NAV-SOL: time=%s ecef x:%.2f y:%.2f z:%.2f track=%.2f "
@@ -3587,7 +3592,6 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
     case UBX_NAV_PVT:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-PVT\n");
         mask = ubx_msg_nav_pvt(session, &buf[UBX_PREFIX_LEN], data_len);
-        mask |= REPORT_IS;
         break;
     case UBX_NAV_RELPOSNED:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-RELPOSNED\n");
@@ -3612,7 +3616,6 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
          * Use UBX-NAV-PVT instead */
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-SOL\n");
         mask = ubx_msg_nav_sol(session, &buf[UBX_PREFIX_LEN], data_len);
-        mask |= REPORT_IS;
         break;
     case UBX_NAV_STATUS:
         mask = ubx_msg_nav_status(session, &buf[UBX_PREFIX_LEN], data_len);
@@ -3783,13 +3786,12 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
             /* time changed, new cycle ender */
             session->driver.ubx.end_msgid = session->driver.ubx.last_msgid;
             session->driver.ubx.last_iTOW = session->driver.ubx.iTOW;
-            /* debug
-            GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "UBX: new ender %x, iTOW %.2f last %u PROTVER %u\n",
-                     session->driver.ubx.end_msgid, iTOW,
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "UBX: new ender %x, iTOW %lld last %u PROTVER %u\n",
+                     session->driver.ubx.end_msgid,
+                     (long long)session->driver.ubx.iTOW,
                      session->driver.ubx.last_protver,
                      session->driver.ubx.protver);
-             */
 
             // Did protver change?
             if (session->driver.ubx.last_protver !=
