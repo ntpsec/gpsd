@@ -69,12 +69,17 @@ if command -v python3; then
 fi
 
 if command -v systemctl; then
-        cat /etc/*/gpsd
-	systemctl cat gpsd.service
-	systemctl cat gpsd.socket
-	systemctl status gpsd.service
-	systemctl status gpsd.socket
-	journalctl -u gpsd.service --since today
+    cat /etc/*/gpsd
+    systemctl cat gpsd.service
+    systemctl cat gpsd.socket
+    systemctl status gpsd.service
+    systemctl status gpsd.socket
+    journalctl -u gpsd.service --since today
+fi
+if command -v aa-status; then
+    aa-status
+elif command -v apparmor_status; then
+    apparmor_status
 fi
 # do not print the rest
 set +x
