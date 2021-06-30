@@ -8865,7 +8865,7 @@ Always double check with "-p CFG-GNSS".
     TIM_SVIN = [0x0d, 0x04]
 
     def send_poll_esf(self):
-        """HNR.  poll ESF messages"""
+        """ESR. poll ESF messages"""
 
         cmds = [ubx.CFG_ESFA,
                 ubx.CFG_ESFALG,
@@ -8879,7 +8879,7 @@ Always double check with "-p CFG-GNSS".
         self.send_cmds(cmds)
 
     def send_poll_hnr(self):
-        """HNR.  poll HNR messages"""
+        """HNR. poll HNR messages"""
 
         cmds = [ubx.CFG_HNR,
                 ubx.HNR_ATT,
@@ -8890,7 +8890,7 @@ Always double check with "-p CFG-GNSS".
         self.send_cmds(cmds)
 
     def get_config(self):
-        """CONFIG.  Get a bunch of config messages"""
+        """CONFIG. Get a bunch of config messages"""
 
         cmds = [ubx.MON_VER,          # UBX-MON-VER
                 ubx.CFG_ANT,          # UBX-CFG-ANT
