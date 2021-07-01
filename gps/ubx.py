@@ -4416,6 +4416,21 @@ Oddly this is the poll for UBX-LOG-BATCH
                }
 
     # UBX-MGA-
+    def mga_ano(self, buf):
+        """UBX-MGA-ANO- decode, Multiple GNSS AssistNow Offline assistance
+
+u-blox 8, protVer 15 and up
+"""
+
+        u = struct.unpack_from('<BBBBBBBB', buf, 0)
+        s = (' type %u version %u svId %u gnssId %u'
+             ' year %u month %u day %u reserved1 x%s' % u)
+        # plus some anonymous data...
+        if gps.VERB_DECODE <= self.verbosity:
+            s += '\n    gnssId (%s)' % (index_s(u[3], self.gnss_id))
+
+        return s
+
     def mga_dbd(self, buf):
         """UBX-MGA-DBD- decode, Navigation Database Dump Entry"""
         # max 172
@@ -4433,7 +4448,8 @@ Oddly this is the poll for UBX-LOG-BATCH
                0x05: {'str': 'QZSS', 'minlen': 12, 'name': "UBX-MGA-QZSS"},
                0x06: {'str': 'GLO', 'minlen': 20, 'name': "UBX-MGA-GLO"},
                # Braodcam calls this BRM-AST-LTO
-               0x20: {'str': 'ANO', 'minlen': 76, 'name': "UBX-MGA-ANO"},
+               0x20: {'str': 'ANO', 'dec': mga_ano, 'minlen': 76,
+                      'name': "UBX-MGA-ANO"},
                0x21: {'str': 'FLASH', 'minlen': 2, 'name': "UBX-MGA-FLASH"},
                # Braodcam calls this BRM-AST-REF_LOCATION
                # Braodcam calls this BRM-AST-REF_TIME_UTC
