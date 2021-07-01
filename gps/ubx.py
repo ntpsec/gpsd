@@ -4416,6 +4416,36 @@ Oddly this is the poll for UBX-LOG-BATCH
                }
 
     # UBX-MGA-
+    mga_ack_type = {0: 'NACK',
+                    1: 'ACK',
+                    }
+
+    mga_ack_infoCode = {0: 'OK',
+                        1: 'Missing time',
+                        2: 'Unsupported version',
+                        3: 'Wrong size',
+                        4: 'Storage failure',
+                        5: 'Not ready',
+                        5: 'Unknown Message',
+                        }
+
+    def mga_ack(self, buf):
+        """UBX-MGA-ACK decode, Multiple GNSS acknowledge
+
+u-blox 8, protVer 15 and up
+"""
+
+        u = struct.unpack_from('<BBBBL', buf, 0)
+        s = (' type %u version %u infoCode %u msgId %u'
+             ' msgPayloadStart x%s' % u)
+        # plus some anonymous data...
+        if gps.VERB_DECODE <= self.verbosity:
+            s += ('\n    type (%s)' %
+                  (index_s(u[0], self.mga_ack_type),
+                   index_s(u[2], self.mga_ack_infoCode)))
+
+        return s
+
     def mga_ano(self, buf):
         """UBX-MGA-ANO- decode, Multiple GNSS AssistNow Offline assistance
 
@@ -4455,7 +4485,8 @@ u-blox 8, protVer 15 and up
                # Braodcam calls this BRM-AST-REF_TIME_UTC
                0x40: {'str': 'INI', 'minlen': 12, 'name': "UBX-MGA-INI"},
                # Braodcam calls this BRM-AST-ACK
-               0x60: {'str': 'ACK', 'minlen': 8, 'name': "UBX-MGA-ACK"},
+               0x60: {'str': 'ACK', 'dec': mga_ack,  'minlen': 8,
+                      'name': "UBX-MGA-ACK"},
                # Braodcam calls this BRM-AST-NVMEM
                0x80: {'str': 'DBD', 'dec': mga_dbd, 'minlen': 12,
                       'name': "UBX-MGA-DBD"},
