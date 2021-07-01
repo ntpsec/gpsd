@@ -21,6 +21,7 @@
   ubxtool: Add some ADR and UDR message polls and decodes.
   Remove COMPASS_ENABLE.  Always compile attitude code.
   contrib/webgps.py: use argparse, arguments -V, --version, --no-html-head.
+  Add readonly flag to DEVICE JSON.
 
 3.22: 2021-01-08
   Added client/gpscsv to convert gpsd JSON to csv.

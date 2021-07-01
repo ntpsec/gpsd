@@ -951,6 +951,8 @@ returned.
 |subtype1 |No |string |More version information the device driver
 returned.
 
+|readonly |No |boolean |True if device is read-only.
+
 |bps |No |integer |Device speed in bits per second.
 
 |parity |No |string |N, O or E for no parity, odd, or even.
