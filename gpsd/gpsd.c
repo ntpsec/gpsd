@@ -584,17 +584,17 @@ static void detach_client(struct subscriber_t *sub)
     unlock_subscriber(sub);
 }
 
-/* write to client -- throttle if it's gone or we're close to buffer overrun */
+// write to client -- throttle if it's gone or we're close to buffer overrun
 static ssize_t throttled_write(struct subscriber_t *sub, char *buf,
-                               size_t len)
+                               const size_t len)
 {
     ssize_t status;
 
-    if (context.errout.debug >= LOG_CLIENT) {
-        if (isprint((unsigned char) buf[0]))
+    if (LOG_CLIENT <= context.errout.debug) {
+        if (isprint((unsigned char) buf[0])) {
             GPSD_LOG(LOG_CLIENT, &context.errout,
                      "=> client(%d): %s\n", sub_index(sub), buf);
-        else {
+        } else {
             char *cp, buf2[MAX_PACKET_LENGTH * 3];
             buf2[0] = '\0';
             for (cp = buf; cp < buf + len; cp++)
@@ -609,27 +609,33 @@ static ssize_t throttled_write(struct subscriber_t *sub, char *buf,
     status = send(sub->fd, buf, len, 0);
     gpsd_release_reporting_lock();
 
-    if (status == (ssize_t) len)
+    if ((ssize_t)len == status) {
         return status;
-    else if (status > -1) {
+    }
+    if (-1 < status) {
         GPSD_LOG(LOG_INF, &context.errout,
-                 "short write disconnecting client(%d)\n",
-                 sub_index(sub));
+                 "short write disconnecting client(%d), %s\n",
+                 sub_index(sub), strerror(errno));
         detach_client(sub);
         return 0;
-    } else if (errno == EAGAIN || errno == EINTR)
-        return 0;               /* no data written, and errno says to retry */
-    else if (errno == EBADF)
-        GPSD_LOG(LOG_WARN, &context.errout,
-                 "client(%d) has vanished.\n", sub_index(sub));
-    else if (errno == EWOULDBLOCK
-             && time(NULL) - sub->active > NOREAD_TIMEOUT)
-        GPSD_LOG(LOG_INF, &context.errout,
-                 "client(%d) timed out.\n", sub_index(sub));
-    else
-        GPSD_LOG(LOG_INF, &context.errout,
-                 "client(%d) write: %s\n",
+    }
+    if (EAGAIN == errno || EINTR == errno) {
+        /* no data written, and errno says to retry */
+        GPSD_LOG(LOG_INF, &context.errout, "client(%d) write: %s\n",
                  sub_index(sub), strerror(errno));
+        return 0;
+    }
+    if (EBADF == errno) {
+        GPSD_LOG(LOG_WARN, &context.errout, "client(%d) has vanished.\n",
+                 sub_index(sub));
+    } else if (EWOULDBLOCK == errno &&
+               NOREAD_TIMEOUT < (time(NULL) - sub->active)) {
+        GPSD_LOG(LOG_INF, &context.errout, "client(%d) timed out.\n",
+                 sub_index(sub));
+    } else {
+        GPSD_LOG(LOG_INF, &context.errout, "client(%d) write: %s\n",
+                 sub_index(sub), strerror(errno));
+    }
     detach_client(sub);
     return status;
 }
