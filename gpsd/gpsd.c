@@ -784,39 +784,41 @@ bool gpsd_add_device(const char *device_name, bool flag_nowait)
 }
 
 #if defined(SOCKET_EXPORT_ENABLE) || defined(CONTROL_SOCKET_ENABLE)
-/* convert hex to binary, write it, unchanged, to GPS */
-static int write_gps(char *device, char *hex) {
+/* convert hex to binary, write it, unchanged, to GPS
+ * Returns: NULL, or pointer to error string
+ */
+static const char * write_gps(char *device, char *hex) {
     struct gps_device_t *devp;
     size_t len;
     int st;
 
-    if ((devp = find_device(device)) == NULL) {
+    if (NULL == (devp = find_device(device))) {
         GPSD_LOG(LOG_INF, &context.errout, "GPS <=: %s not active\n", device);
-        return 1;
+        return "Device not active";
     }
     if (devp->context->readonly || (SOURCE_BLOCKDEV >= devp->sourcetype)) {
         GPSD_LOG(LOG_WARN, &context.errout,
                  "GPS <=: attempted to write to a read-only device\n");
-        return 1;
+        return "Attempted to write to a read-only device";
     }
 
     len = strlen(hex);
-    /* NOTE: this destroys the original buffer contents */
+    // NOTE: this destroys the original buffer contents
     st = gpsd_hexpack(hex, hex, len);
-    if (st <= 0) {
+    if (0 >= st) {
         GPSD_LOG(LOG_INF, &context.errout,
                  "GPS <=: invalid hex string (error %d).\n", st);
-        return 1;
+        return  "invalid hex string";
     }
     GPSD_LOG(LOG_INF, &context.errout,
              "GPS <=: writing %d bytes fromhex(%s) to %s\n",
              st, hex, device);
-    if (write(devp->gpsdata.gps_fd, hex, (size_t) st) <= 0) {
+    if (0 >= write(devp->gpsdata.gps_fd, hex, (size_t)st)) {
         GPSD_LOG(LOG_WARN, &context.errout,
                  "GPS <=: write to device failed\n");
-        return 1;
+        return "write to device failed";
     }
-    return 0;
+    return NULL;
 }
 #endif /* defined(SOCKET_EXPORT_ENABLE) || defined(CONTROL_SOCKET_ENABLE) */
 
@@ -935,8 +937,10 @@ static void handle_control(int sfd, char *buf)
                      sfd);
             ignore_return(write(sfd, ERROR, sizeof(ERROR) - 1));
         } else {
+            const char *ret;
             *eq++ = '\0';
-            if (0 == write_gps(stash, eq)) {
+            ret = write_gps(stash, eq);
+            if (NULL == ret) {
                 ignore_return(write(sfd, ACK, sizeof(ACK) - 1));
             } else {
                 ignore_return(write(sfd, ERROR, sizeof(ERROR) - 1));
@@ -1344,8 +1348,9 @@ static void handle_request(struct subscriber_t *sub,
                         }
                     }
                     if ('\0' != devconf.hexdata[0]) {
-                        if (0 == write_gps(device->gpsdata.dev.path,
-                                           devconf.hexdata)) {
+                        const char *ret = write_gps(device->gpsdata.dev.path,
+                                                    devconf.hexdata);
+                        if (NULL == ret) {
                             ignore_return(write(sub->fd, ACK, sizeof(ACK) - 1));
                         } else {
                             ignore_return(write(sub->fd, ERROR,
