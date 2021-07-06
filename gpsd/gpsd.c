@@ -65,6 +65,7 @@
 
 #define ACK "{\"class\":\"ACK\"}\r\n"
 #define ERROR "{\"class\":\"ERROR\"}\r\n"
+#define OK "{\"class\":\"OK\"}\r\n"
 
 /*
  * Timeout policy.  We can't rely on clients closing connections
@@ -841,7 +842,8 @@ static char *snarfline(char *p, char **out)
     return p;
 }
 
-/* handle privileged commands coming through the control socket */
+// handle privileged commands coming through the control socket
+// FIXMLE ignore_return(write()) s/b repalced by throttled_write().
 static void handle_control(int sfd, char *buf)
 {
     char *stash;
@@ -937,10 +939,10 @@ static void handle_control(int sfd, char *buf)
                      sfd);
             ignore_return(write(sfd, ERROR, sizeof(ERROR) - 1));
         } else {
-            const char *ret;
+            const char *rtn;
             *eq++ = '\0';
-            ret = write_gps(stash, eq);
-            if (NULL == ret) {
+            rtn = write_gps(stash, eq);
+            if (NULL == rtn) {
                 ignore_return(write(sfd, ACK, sizeof(ACK) - 1));
             } else {
                 ignore_return(write(sfd, ERROR, sizeof(ERROR) - 1));
@@ -953,7 +955,7 @@ static void handle_control(int sfd, char *buf)
             ignore_return(write(sfd, path, strlen(path)));
             ignore_return(write(sfd, "\n", 1));
         }
-        ignore_return(write(sfd, ACK, sizeof(ACK) - 1));
+        ignore_return(write(sfd, OK, sizeof(OK) - 1));
     } else {
         /* unknown command */
         ignore_return(write(sfd, ERROR, sizeof(ERROR) - 1));
@@ -1348,13 +1350,14 @@ static void handle_request(struct subscriber_t *sub,
                         }
                     }
                     if ('\0' != devconf.hexdata[0]) {
-                        const char *ret = write_gps(device->gpsdata.dev.path,
+                        const char *rtn = write_gps(device->gpsdata.dev.path,
                                                     devconf.hexdata);
-                        if (NULL == ret) {
-                            ignore_return(write(sub->fd, ACK, sizeof(ACK) - 1));
+                        if (NULL == rtn) {
+                            (void)strlcpy(reply, ACK, replylen);
                         } else {
-                            ignore_return(write(sub->fd, ERROR,
-                                          sizeof(ERROR) - 1));
+                            (void)snprintf(reply, replylen,
+                                           "{\"class\":\"ERROR\",\"message\":"
+                                           "\"%s\"}\r\n", rtn);
                         }
                     }
                 }
