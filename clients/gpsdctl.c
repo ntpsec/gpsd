@@ -25,18 +25,18 @@
 static char *control_socket = DEFAULT_GPSD_SOCKET;
 static char *gpsd_options = "";
 
-static int gpsd_control(char *action, char *argument)
-/* pass a command to gpsd; start the daemon if not already running */
+// pass a command to gpsd; start the daemon if not already running
+static int gpsd_control(const char *action, const char *argument)
 {
     int connect = -1;
     char buf[512];
     int status;
 
     (void)syslog(LOG_ERR, "gpsd_control(action=%s, arg=%s)", action, argument);
-    if (access(control_socket, F_OK) == 0 &&
-            (connect = netlib_localsocket(control_socket, SOCK_STREAM)) >= 0)
+    if (0 == access(control_socket, F_OK) &&
+        0 <= (connect = netlib_localsocket(control_socket, SOCK_STREAM))) {
         syslog(LOG_INFO, "reached a running gpsd");
-    else if (strcmp(action, "add") == 0) {
+    } else if (0 == strcmp(action, "add")) {
         (void)snprintf(buf, sizeof(buf),
                        "gpsd %s -F %s", gpsd_options, control_socket);
         (void)syslog(LOG_NOTICE, "launching %s", buf);
@@ -47,7 +47,7 @@ static int gpsd_control(char *action, char *argument)
         if (access(control_socket, F_OK) == 0)
             connect = netlib_localsocket(control_socket, SOCK_STREAM);
     }
-    if (connect < 0) {
+    if (0 > connect) {
         syslog(LOG_ERR, "can't reach gpsd");
         return -1;
     }
@@ -61,7 +61,7 @@ static int gpsd_control(char *action, char *argument)
      * gpsd.c. Be careful about keeping them in sync, or hotplugging
      * will have mysterious failures.
      */
-    if (strcmp(action, "add") == 0) {
+    if (0 == strcmp(action, "add")) {
         /*
          * Force the group-read & group-write bits on, so gpsd will still be
          * able to use this device after dropping root privileges.
@@ -73,10 +73,12 @@ static int gpsd_control(char *action, char *argument)
             (void)chmod(argument, sb.st_mode | S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
         (void)snprintf(buf, sizeof(buf), "+%s\r\n", argument);
         status = (int)write(connect, buf, strlen(buf));
+        // FIXME: return never checked
         ignore_return(read(connect, buf, 12));
-    } else if (strcmp(action, "remove") == 0) {
+    } else if (0 == strcmp(action, "remove")) {
         (void)snprintf(buf, sizeof(buf), "-%s\r\n", argument);
         status = (int)write(connect, buf, strlen(buf));
+        // FIXME: return never checked
         ignore_return(read(connect, buf, 12));
     } else {
         (void)syslog(LOG_ERR, "unknown action \"%s\"", action);
@@ -93,6 +95,7 @@ int main(int argc, char *argv[])
     char *optenv = getenv("GPSD_OPTIONS");
     size_t len;
 
+    // FIXME: add usage()
     openlog("gpsdctl", 0, LOG_DAEMON);
     if (3 != argc) {
         (void)syslog(LOG_ERR, "requires action and argument (%d)", argc);
