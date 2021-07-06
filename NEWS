@@ -22,6 +22,7 @@
   Remove COMPASS_ENABLE.  Always compile attitude code.
   contrib/webgps.py: use argparse, arguments -V, --version, --no-html-head.
   Add readonly flag to DEVICE JSON.
+  Control messages to gpsd now return JSON, instead of, sometimes, OK or ERROR.
 
 3.22: 2021-01-08
   Added client/gpscsv to convert gpsd JSON to csv.

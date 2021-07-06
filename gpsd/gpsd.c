@@ -63,6 +63,9 @@
 #define PROTO_TTY "/dev/ttyS0"  /* correct for Linux */
 #endif
 
+#define ACK "{\"class\":\"ACK\"}\r\n"
+#define ERROR "{\"class\":\"ERROR\"}\r\n"
+
 /*
  * Timeout policy.  We can't rely on clients closing connections
  * correctly, so we need timeouts to tell us when it's OK to
@@ -640,10 +643,10 @@ static ssize_t throttled_write(struct subscriber_t *sub, char *buf,
     return status;
 }
 
+// notify all JSON-watching clients of a given device about an event
 static void notify_watchers(struct gps_device_t *device,
                             bool onjson, bool onpps,
                             const char *sentence, ...)
-/* notify all JSON-watching clients of a given device about an event */
 {
     va_list ap;
     char buf[BUFSIZ];
@@ -856,9 +859,9 @@ static void handle_control(int sfd, char *buf)
         if ((devp = find_device(stash))) {
             deactivate_device(devp);
             free_device(devp);
-            ignore_return(write(sfd, "OK\n", 3));
+            ignore_return(write(sfd, ACK, sizeof(ACK) - 1));
         } else
-            ignore_return(write(sfd, "ERROR\n", 6));
+            ignore_return(write(sfd, ERROR, sizeof(ERROR) - 1));
     } else if (buf[0] == '+') {
         /* add device named after + */
         (void)snarfline(buf + 1, &stash);
@@ -866,14 +869,14 @@ static void handle_control(int sfd, char *buf)
             GPSD_LOG(LOG_INF, &context.errout,
                      "<= control(%d): %s already active \n", sfd,
                      stash);
-            ignore_return(write(sfd, "ERROR\n", 6));
+            ignore_return(write(sfd, ERROR, sizeof(ERROR) - 1));
         } else {
             GPSD_LOG(LOG_INF, &context.errout,
                      "<= control(%d): adding %s\n", sfd, stash);
             if (gpsd_add_device(stash, nowait))
-                ignore_return(write(sfd, "OK\n", 3));
+                ignore_return(write(sfd, ACK, sizeof(ACK) - 1));
             else {
-                ignore_return(write(sfd, "ERROR\n", 6));
+                ignore_return(write(sfd, ERROR, sizeof(ERROR) - 1));
                 GPSD_LOG(LOG_INF, &context.errout,
                          "control(%d): adding %s failed, too many "
                          "devices active\n",
@@ -889,7 +892,7 @@ static void handle_control(int sfd, char *buf)
             GPSD_LOG(LOG_WARN, &context.errout,
                      "<= control(%d): ill-formed command \n",
                      sfd);
-            ignore_return(write(sfd, "ERROR\n", 6));
+            ignore_return(write(sfd, ERROR, sizeof(ERROR) - 1));
         } else {
             *eq++ = '\0';
             if ((devp = find_device(stash))) {
@@ -899,7 +902,7 @@ static void handle_control(int sfd, char *buf)
                              "<= control(%d): attempted to write to a "
                              "read-only device\n",
                              sfd);
-                    ignore_return(write(sfd, "ERROR\n", 6));
+                    ignore_return(write(sfd, ERROR, sizeof(ERROR) - 1));
                 } else {
                     GPSD_LOG(LOG_INF, &context.errout,
                              "<= control(%d): writing to %s \n", sfd,
@@ -908,16 +911,16 @@ static void handle_control(int sfd, char *buf)
                         GPSD_LOG(LOG_WARN, &context.errout,
                                  "<= control(%d): write to device failed\n",
                                  sfd);
-                        ignore_return(write(sfd, "ERROR\n", 6));
+                        ignore_return(write(sfd, ERROR, sizeof(ERROR) - 1));
                     } else {
-                        ignore_return(write(sfd, "OK\n", 3));
+                        ignore_return(write(sfd, ACK, sizeof(ACK) - 1));
                     }
                 }
             } else {
                 GPSD_LOG(LOG_INF, &context.errout,
                          "<= control(%d): %s not active \n", sfd,
                          stash);
-                ignore_return(write(sfd, "ERROR\n", 6));
+                ignore_return(write(sfd, ERROR, sizeof(ERROR) - 1));
             }
         }
     } else if (buf[0] == '&') {
@@ -930,13 +933,13 @@ static void handle_control(int sfd, char *buf)
             GPSD_LOG(LOG_WARN, &context.errout,
                      "<= control(%d): ill-formed command\n",
                      sfd);
-            ignore_return(write(sfd, "ERROR\n", 6));
+            ignore_return(write(sfd, ERROR, sizeof(ERROR) - 1));
         } else {
             *eq++ = '\0';
             if (0 == write_gps(stash, eq)) {
-                ignore_return(write(sfd, "OK\n", 3));
+                ignore_return(write(sfd, ACK, sizeof(ACK) - 1));
             } else {
-                ignore_return(write(sfd, "ERROR\n", 6));
+                ignore_return(write(sfd, ERROR, sizeof(ERROR) - 1));
             }
         }
     } else if (strstr(buf, "?devices")==buf) {
@@ -946,10 +949,10 @@ static void handle_control(int sfd, char *buf)
             ignore_return(write(sfd, path, strlen(path)));
             ignore_return(write(sfd, "\n", 1));
         }
-        ignore_return(write(sfd, "OK\n", 3));
+        ignore_return(write(sfd, ACK, sizeof(ACK) - 1));
     } else {
         /* unknown command */
-        ignore_return(write(sfd, "ERROR\n", 6));
+        ignore_return(write(sfd, ERROR, sizeof(ERROR) - 1));
     }
 }
 #endif /* CONTROL_SOCKET_ENABLE */
@@ -1341,7 +1344,13 @@ static void handle_request(struct subscriber_t *sub,
                         }
                     }
                     if ('\0' != devconf.hexdata[0]) {
-                        write_gps(device->gpsdata.dev.path, devconf.hexdata);
+                        if (0 == write_gps(device->gpsdata.dev.path,
+                                           devconf.hexdata)) {
+                            ignore_return(write(sub->fd, ACK, sizeof(ACK) - 1));
+                        } else {
+                            ignore_return(write(sub->fd, ERROR,
+                                          sizeof(ERROR) - 1));
+                        }
                     }
                 }
             }
@@ -2417,9 +2426,9 @@ int main(int argc, char *argv[])
                  * implementation error in FD_ISSET().
                  */
                 if (allocated_device(device) &&
-                    (0 <= device->gpsdata.gps_fd &&
-                     device->gpsdata.gps_fd < (socket_t)FD_SETSIZE) &&
-                     FD_ISSET(device->gpsdata.gps_fd, &efds)) {
+                    0 <= device->gpsdata.gps_fd &&
+                    device->gpsdata.gps_fd < (socket_t)FD_SETSIZE &&
+                    FD_ISSET(device->gpsdata.gps_fd, &efds)) {
                     deactivate_device(device);
                     free_device(device);
                 }
@@ -2503,9 +2512,11 @@ int main(int argc, char *argv[])
             FD_CLR(csock, &rfds);
         }
 
-        /* read any commands that came in over the control socket */
+        // read any commands that came in over the control socket
+        // Linux man page says FD_* and select() are obsolete...
         GPSD_LOG(LOG_RAW1, &context.errout, "read control commands");
         for (cfd = 0; cfd < (int)FD_SETSIZE; cfd++)
+            // Do we really need to check all 1024 possible file descriptors?
             if (FD_ISSET(cfd, &control_fds)) {
                 char buf[BUFSIZ];
                 ssize_t rd;
