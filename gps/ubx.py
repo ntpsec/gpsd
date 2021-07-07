@@ -4508,6 +4508,7 @@ u-blox 8, protVer 15 and up
         1: "NMEA",
         2: "RTCM2",
         5: "RTCM3",
+        6: "SPARTN",
         255: "None",
         }
 
@@ -5401,6 +5402,7 @@ High Precision GNSS products only."""
         0x10000: "sbasCorrUsed",
         0x20000: "rtcmCorrUsed",
         0x40000: "slasCorrUsed",
+        0x80000: "spartnCorrUsed",
         0x100000: "prCorrUsed",
         0x200000: "crCorrUsed",
         0x400000: "doCorrUsed",
@@ -5409,8 +5411,8 @@ High Precision GNSS products only."""
     def nav_sat(self, buf):
         """UBX-NAV-SAT decode"""
 
-        u = struct.unpack_from('<LBBBB', buf, 0)
-        s = '  iTOW %u version %u numSvs %u reserved1 %u %u' % u
+        u = struct.unpack_from('<LBBH', buf, 0)
+        s = '  iTOW %u version %u numSvs %u reserved1 x%x' % u
 
         for i in range(0, u[2]):
             u = struct.unpack_from('<BBBbhhL', buf, 8 + (i * 12))
@@ -5488,6 +5490,7 @@ High Precision GNSS products only."""
         4: "RTCM3 OSR",
         5: "RTCM3 SSR",
         6: "QZSS SLAS",
+        7: "SPARTN",
         }
 
     nav_sig_ionoModel = {
@@ -7455,6 +7458,12 @@ qErrInvalid add in protVer 34 and up
             s += "RAIM active"
         else:
             s += "RAIM ??"
+
+        # 9-series, protVer 32 and up.
+        if 0x08 & u[4]:
+            s += "Quantization error valid"
+        else:
+            s += "Quantization error invalid"
         return s
 
     tim_vrfy_flags = {
@@ -9018,7 +9027,7 @@ Always double check with "-p CFG-GNSS".
                  "help": "ECEF"},
         # en/dis able basic ESF messages
         "ESF": {"command": send_able_esf,
-                 "help": "basic ESF messages"},
+                "help": "basic ESF messages"},
         # en/dis able GPS
         "GPS": {"command": send_able_gps,
                 "help": "GPS and QZSS L1C/A. GPS,2 for L1C/A and L2C"},
@@ -9030,7 +9039,7 @@ Always double check with "-p CFG-GNSS".
                     "help": "GLONASS L1. GLONASS,2 for L1 and L2"},
         # en/dis able HNR messages
         "HNR": {"command": send_able_hnr,
-                 "help": "basic HNR messages"},
+                "help": "basic HNR messages"},
         # en/dis able LOG
         "LOG": {"command": send_able_logfilter,
                 "help": "Data Logger"},
