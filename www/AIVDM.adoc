@@ -1,8 +1,7 @@
 = AIVDM/AIVDO protocol decoding
 Eric S. Raymond <esr@thyrsus.com>
-v1.55, Jan 2021
+v1.56, 8 July 2021
 :author: Eric S. Raymond
-:date: 13 January 2021
 :description: The AIVDM Marine AIS protocol demystified, for programmers.
 :email: <esr@thyrsus.com>
 :keywords: AIS, AIVDM, AIVDO, standard, protocol, Automatic Identification System
@@ -2374,9 +2373,9 @@ Deprecated in <<IMO289>>.
 |38-39   |  2 |Spare                |          |x|Not used
 |40-49   | 10 |DAC                  |dac       |u|DAC = 001
 |50-55   |  6 |FID                  |fid       |u|FID = 15
-|55-66   | 11 |Air Draught          |airdraught|u|Height in meters,
+|55-66   | 11 |Air Draught          |airdraught|u|Height in 0.1m steps
                                                   0 = N/A (default),
-                                                  2047 = >= 2047 m,
+                                                  204.7 = >= 204.7 m,
 |67-71   |  5 |Spare                |          |x|Not used
 |======
 
@@ -2815,7 +2814,7 @@ Replaces a deprecated trial message from <<IMO236>>.
 |40-49   | 10 |DAC                    |dac           |u|DAC = 001
 |50-55   |  6 |FID                    |fid           |u|FID = 24
 |56-65   | 10 |Message Linkage ID     |linkage       |u|Unsigned integer
-|66-78   | 13 |Air Draught            |airdraught    |u|Unsigned int, in 0.1m
+|66-78   | 13 |Air Draught            |airdraught    |u|Unsigned int, in 0.01m
                                                         1-81.9 m.
                                                         0 = N/A (default)
                                                         81.91 = >= 81.91 m
@@ -2883,9 +2882,11 @@ Replaces a deprecated trial message from <<IMO236>>.
 |350-359 | 10 |Spare                  |              |x|Not used
 |======
 
-The special value of 81.91 for air draught is probably a drafting
-error in <<IMO289>>, as the scaled field does not have the precision
-required to represent it. The actual special value is unknown.
+IMO289 says air draught is in 0.1m steps, but this is incompatible with the
+two digits of precision in the range.
+
+The special value of 81.91 for air draught in <<IMO289>>, also implies
+the step size is really 0.01m.
 
 The 2-bit _state fields describe the operational state of various sorts of
 SOLAS-required navigational equipment.  GNSS systems may include GPS, Loran-C, or GLONASS. BNWAS is the Bridge Navigational Watch Alarm System.  THD is a
@@ -3102,7 +3103,7 @@ The timestamp group is intended as a valid time of forecast.
 |Field   |Len |Description              |Member     |T|Units
 |0-0     | 1  |Water Level Type         |absolute   |b|False if relative to
                                                        reference datum.
-|1-16    | 16 |Water Level              |level      |i|In 0.001 meter steps,
+|1-16    | 16 |Water Level              |level      |i|In 0.01 meter steps,
                                                       -327.67 to 327.67,
                                                       -32767 = -327.67m or less,
                                                       32767 = 327.67m or more,
@@ -3428,17 +3429,17 @@ there is none.
 [frame="topbot",options="header"]
 |======
 |Field   |Len |Description         |Member     |T|Units
-|0-12    | 13 |Air Draught         |airdraught |U1|1-81.9m in 0.1m steps,
+|0-12    | 13 |Air Draught         |airdraught |U1|1-81.9m in 0.01m steps,
                                                    8191 = distance >= 81.91m,
                                                    0 = N/A (default).
-|13-25   | 13 |Air Gap             |airgap     |U1|1-81.9m in 0.1m steps,
+|13-25   | 13 |Air Gap             |airgap     |U1|1-81.9m in 0.01m steps,
                                                    8191 = distance >= 81.91m,
                                                    0 = N/A (default).
 |26-27   |  2 |Air Gap Trend       |gaptrend   |e|0 = steady,
                                                    1 = rising,
                                                    2 = falling,
                                                    3 = N/A (default).
-|28-40   | 13 |Forecast Air Gap    |fairgap    |U1|1-81.9m in 0.1m steps,
+|28-40   | 13 |Forecast Air Gap    |fairgap    |U1|1-81.9m in 0.01m steps,
                                                    8191 = distance >= 81.91m,
                                                    0 = N/A (default).
 |41-45  |  5 |Day (UTC)            |day             |u|1-31; 0 = N/A (default)
@@ -3450,6 +3451,9 @@ there is none.
 Air draught is the vertical distance measured from the ship's
 waterline to the highest point on the ship. Air gap is the vertical
 distance measured from the surface of the water to the sensor.
+
+IMO289 says steps are in 0.1m steps, but this is incompatible with the
+two digits of precision in the range.
 
 The timestamp is for the forecast air gap.
 
@@ -4854,7 +4858,7 @@ metadata, usually a Unix timestamp to be associated with a sentence
 (or contiguous group of sentences such as an armored AIS Type 5).
 
 The tag block facility is complex, in some respects poorly specified,
-and there has been yet much public discussion of it.  This section
+and there has not yet been much public discussion of it.  This section
 should be considered provisional and in need of improvement.
 
 The general format of a tag block is: an opening backslash, followed
@@ -5491,5 +5495,8 @@ Version 1.54 adds information on subarea fields in IMO289 Area Notice
 messages.
 
 Version 1.55 add Table of Contents.  Markup cleanup.
+
+Version 1.56 fix typos per Jim J. Jewett
+
 
 // end
