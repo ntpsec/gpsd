@@ -1287,7 +1287,7 @@ them, just enable them as you enable any other periodic messages:
 ----
 $ ubxtool -P 19 -p CFG-MSG,0x10,2,1
 $ ubxtool -P 19 -p CFG-MSG,0x10,3,1
----
+----
 
 The trailing 1 enables the messages.  When you tire of the data, replace the
 1 with a zero to disable them.  Unlike other messages, the message rate
@@ -1296,7 +1296,6 @@ can not be changed.
 To see the results:
 
 ----
-
 $ ubxtool -v 2
 [...]
 UBX-ESF-MEAS:
@@ -1395,7 +1394,6 @@ UBX-ESF-MEAS:
      dataType  12 dataField    3894
    calibTtag 273945619
 [...]
-
 ----
 
 Notice the UBX-ESF-MEAS sample time stamp (timeTag) is in arbitrary

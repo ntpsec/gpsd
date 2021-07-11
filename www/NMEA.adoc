@@ -1924,7 +1924,7 @@ Field Number:
      N=not valid,
      S=Simulator,
      V = Valid
-13. Checksum
+14. Checksum
 
 A status of V means the GPS has a valid fix that is below an internal
 quality threshold, e.g. because the dilution of precision is too high
