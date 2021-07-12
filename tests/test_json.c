@@ -180,7 +180,7 @@ static const char *json_str4 = "{\"flag1\":true,\"flag2\":false}";
 
 static bool flag1, flag2;
 static double dftreal;
-// char can be signed or unsigned!
+// char can be signed or unsigned!  We can only use range 0 to 127
 static char dftbyte;
 static char maxbyte;
 static char minbyte;
@@ -196,7 +196,8 @@ static struct timespec ts;
 static struct timespec maxts;
 
 static const struct json_attr_t json_attrs_4[] = {
-    {"dftbyte",  t_byte, .addr.byte = &dftbyte, .dflt.byte = -4},
+    // t_byte can be signed, or unsigned, so can only use range 0 - 127
+    {"dftbyte",  t_byte, .addr.byte = &dftbyte, .dflt.byte = 1},
     {"dftubyte", t_ubyte, .addr.ubyte = &dftubyte, .dflt.ubyte = 9},
     {"dftint",  t_integer, .addr.integer = &dftinteger, .dflt.integer = -5},
     {"dftuint", t_uinteger, .addr.uinteger = &dftuinteger, .dflt.uinteger = 10},
@@ -534,7 +535,7 @@ static void jsontest(int i)
         status = json_read_object(json_str4, json_attrs_4, NULL);
         assert_case(status);
         // did the defaults work?
-        assert_int("dftbyte", "t_byte", dftbyte, -4);
+        assert_int("dftbyte", "t_byte", dftbyte, 1);
         assert_uint("dftubyte", "t_ubyte", dftubyte, 9);
         assert_int("dftint", "t_integer", dftinteger, -5);
         assert_uint("dftuint", "t_uinteger", dftuinteger, 10);
