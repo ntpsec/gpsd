@@ -54,7 +54,7 @@ opts=""
 quiet=false
 quieter=false
 testing=daemon
-while getopts cl:sStbuvo:qQh opt
+while getopts bcChl:o:qQsStuv opt
 do
     case $opt in
         b) mode=build ;;                # Rebuild regression check files
