@@ -58,6 +58,17 @@ struct classmap_t classmap[CLASSMAP_NITEMS] = {
 };
 /* *INDENT-ON* */
 
+// prevent negative zero confusion.
+// Dif arch will return 0.0, or -0.0.
+static inline double fix_zero(double d, double p)
+{
+    // prevent -0.000
+    if (p > fabs(d)) {
+	return 0.0;
+    }
+    return d;
+}
+
 char *json_stringify(char *to,
                      size_t len,
                      const char *from)
@@ -293,8 +304,11 @@ void json_tpv_dump(const gps_mask_t changed, const struct gps_device_t *session,
                             gpsdata->fix.magnetic_var);
         if (isfinite(gpsdata->fix.speed) != 0)
             str_appendf(reply, replylen, ",\"speed\":%.3f", gpsdata->fix.speed);
-        if ((gpsdata->fix.mode >= MODE_3D) && isfinite(gpsdata->fix.climb) != 0)
-            str_appendf(reply, replylen, ",\"climb\":%.3f", gpsdata->fix.climb);
+        if (MODE_3D <= gpsdata->fix.mode &&
+            0 != isfinite(gpsdata->fix.climb)) {
+            str_appendf(reply, replylen, ",\"climb\":%.3f",
+                        fix_zero(gpsdata->fix.climb, 0.00049));
+        }
         if (isfinite(gpsdata->fix.epd) != 0)
             str_appendf(reply, replylen, ",\"epd\":%.4f", gpsdata->fix.epd);
         if (isfinite(gpsdata->fix.eps) != 0)
