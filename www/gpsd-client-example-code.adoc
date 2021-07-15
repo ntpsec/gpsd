@@ -22,7 +22,7 @@ Stack Overflow examples of *gpsd* clients.
 
 A simple *gpsd* client that connects to the already running *gpsd* on
 the _localhost_ running on the default port _2947_, using TCP.  You need
-to already have *gpsd* installed with its libraries, and running on your
+to already have *gpsd* installed, with its libraries, and running, on your
 host for this example to run.
 
 Grab a copy of https://gpsd.io/example1.c[example1.c], compile it, and
@@ -43,8 +43,8 @@ The paranoid reader will have read https://gpsd.io/example1.c[example1.c]
 before running it so as not to lose all their Bitcoin.
 
 As you can see above, this client prints the "Fix Mode" ("mode"), Time
-("time"), "latitude" and "longitude" if available. These are the Time and
-Position parts of the acronym _TPV_. Otherwise it prints nothing.
+("time"), "latitude" and "longitude" if available.  These are the Time and
+Position parts of the acronym _TPV_.  Otherwise it prints nothing.
 
 Adding Velocity output is left as an exercise to the reader.
 
@@ -170,8 +170,8 @@ int main(int argc, char *argv[])
 {
 ----
 
-All we need is a simple main(). For clarity no options handling is done
-in this example. Real programs will implement options and arguments:
+All we need is a simple main().  For clarity no options handling is done
+in this example.  Real programs will implement options and arguments:
 *-h*; *-V*; *[server[;port[;device]]*; etc.
 
 Line 18::
@@ -183,7 +183,7 @@ Line 18::
 Every variable we care about, all variables, are contained in
 *struct gps_data_t gps_data* which is defined, and documented, in
 *gps.h*. *gps_data* contains a *struct gps_fix_t fix* which is also
-defined in *gps.h*. The _TPV_ data we will use is in _gps_data.fix_.
+defined in *gps.h*.  The _TPV_ data we will use is in _gps_data.fix_.
 
 Line 20 to 23::
 [source%nowrap,c,numbered,start=20]
@@ -195,13 +195,13 @@ Line 20 to 23::
 ----
 
 Connect to the already running *gpsd* on the _localhost_ running on the
-default port _2947_. Or exit loudly. See the *gpsd(3)* man page for
+default port _2947_.  Or exit loudly.  See the *gpsd(3)* man page for
 details on starting *gpsd*. There may be significant delays opening
 the connection if *gpsd* is not running with the "-n" option. See the
 *libgps* man page for details on *gps_open()* and the other *gps_XXX()*
 function calls.
 
-Note the use of <<Yoda>> conditions. These prevent many hard to spot
+Note the use of <<Yoda>> conditions.  These prevent many hard to spot
 code errors.
 
 Line 25::
@@ -211,7 +211,7 @@ Line 25::
 ----
 
 Tell *gpsd* to send us reports using JSON. Later on *gpsd_read()* will
-decode those JSON messsages for us. See the <<gpsd_json>> man page for
+decode those JSON messsages for us.  See the <<gpsd_json>> man page for
 details on the JSON messages.
 
 Line 27::
@@ -221,7 +221,7 @@ Line 27::
 ----
 
 The main loop. Wait, using *gps_waiting()* until data from the *gpsd*
-connection is available, then run the body of the loop. Exit if no data
+connection is available, then run the body of the loop.  Exit if no data
 seen in 5 seconds (5000000 micro seconds).
 
 Lines 28 to 31::
@@ -234,7 +234,7 @@ Lines 28 to 31::
 ----
 
 Read the waiting data using *gpsd_read()* and parse it into *gps_data*.
-Exit loudly on errors. No telling, yet, what the data is. It could be
+Exit loudly on errors. No telling, yet, what the data is.  It could be
 from *TPV*, *SKY*, *AIS*, or other message classes.
 
 Lines 32 to 35::
@@ -246,9 +246,9 @@ Lines 32 to 35::
         }
 ----
 
-Here is a part that most programmers miss. Check that *TPV* data was
-received, not some other data, like *SKY*. The flag *MODE_SET* is set
-IFF a *TPV* JSON sentence was received. If no *MODE_SET* then do not
+Here is a part that most programmers miss.  Check that *TPV* data was
+received, not some other data, like *SKY*.  The flag *MODE_SET* is set
+IFF a *TPV* JSON sentence was received.  If no *MODE_SET* then do not
 bother to look at the rest of the data in _gpsdata.fix_.
 
 Lines 36 to 39::
@@ -261,8 +261,8 @@ Lines 36 to 39::
 ----
 
 Range check _gpsdata.fix.mode_ so we can use it as an index into
-_mode_str_. New versions of *gpsd* often extend the range of
-unenumerated types, so protect yourself from an array overrun. Array
+_mode_str_.  New versions of *gpsd* often extend the range of
+unenumerated types, so protect yourself from an array overrun.  Array
 overruns are bad.
 
 Lines 40 to 42::
@@ -288,7 +288,7 @@ Lines 43 to 48::
 ----
 
 Print the _gps_data.fix.time_ as seconds and nano seconds into the UNIX
-epoch, if we have it, else "n/a". _fix.time_ is a *struct timespec*. An
+epoch, if we have it, else "n/a". _fix.time_ is a *struct timespec*.  An
 explanation of *struct timespec* can be found on the *clock_gettime()*
 man page.
 
@@ -309,7 +309,7 @@ Lines 50 to 55::
 ----
 
 Just because we have a "3D" fix does not mean we have _latitude_ and
-_longitude_. The receiver may not have sent that data yet. Conversely,
+_longitude_.  The receiver may not have sent that data yet.  Conversely,
 some receivers will send them, without a fix, based on some best guess.
 This example prints them if we get them regardless of fix "mode" or
 "status".
