@@ -64,7 +64,7 @@ static inline double fix_zero(double d, double p)
 {
     // prevent -0.000
     if (p > fabs(d)) {
-	return 0.0;
+        return 0.0;
     }
     return d;
 }
@@ -307,7 +307,7 @@ void json_tpv_dump(const gps_mask_t changed, const struct gps_device_t *session,
         if (MODE_3D <= gpsdata->fix.mode &&
             0 != isfinite(gpsdata->fix.climb)) {
             str_appendf(reply, replylen, ",\"climb\":%.3f",
-                        fix_zero(gpsdata->fix.climb, 0.00049));
+                        fix_zero(gpsdata->fix.climb, 0.0005));
         }
         if (isfinite(gpsdata->fix.epd) != 0)
             str_appendf(reply, replylen, ",\"epd\":%.4f", gpsdata->fix.epd);
@@ -366,12 +366,12 @@ void json_tpv_dump(const gps_mask_t changed, const struct gps_device_t *session,
                 // 2D fix needs velN and velE
                 str_appendf(reply, replylen,
                             ",\"velN\":%.3f,\"velE\":%.3f",
-                            gpsdata->fix.NED.velN,
-                            gpsdata->fix.NED.velE);
+                            fix_zero(gpsdata->fix.NED.velN, 0.0005),
+                            fix_zero(gpsdata->fix.NED.velE, 0.0005));
                 if (0 != isfinite(gpsdata->fix.NED.velD)) {
                     // 3D fix add velD
                     str_appendf(reply, replylen, ",\"velD\":%.3f",
-                                gpsdata->fix.NED.velD);
+                                fix_zero(gpsdata->fix.NED.velD, 0.0005));
                 }
             }
             if (0 != isfinite(gpsdata->fix.geoid_sep))
