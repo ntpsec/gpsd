@@ -328,13 +328,13 @@ void json_tpv_dump(const gps_mask_t changed, const struct gps_device_t *session,
                             gpsdata->fix.ecef.z);
             if (0 != isfinite(gpsdata->fix.ecef.vx))
                 str_appendf(reply, replylen, ",\"ecefvx\":%.2f",
-                            gpsdata->fix.ecef.vx);
+                            fix_zero(gpsdata->fix.ecef.vx, 0.005));
             if (0 != isfinite(gpsdata->fix.ecef.vy))
                 str_appendf(reply, replylen, ",\"ecefvy\":%.2f",
-                            gpsdata->fix.ecef.vy);
+                            fix_zero(gpsdata->fix.ecef.vy, 0.005));
             if (0 != isfinite(gpsdata->fix.ecef.vz))
                 str_appendf(reply, replylen, ",\"ecefvz\":%.2f",
-                            gpsdata->fix.ecef.vz);
+                            fix_zero(gpsdata->fix.ecef.vz, 0.005));
             if (0 != isfinite(gpsdata->fix.ecef.pAcc))
                 str_appendf(reply, replylen, ",\"ecefpAcc\":%.2f",
                             gpsdata->fix.ecef.pAcc);
