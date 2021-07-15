@@ -1,6 +1,6 @@
 = gpsd Client Example Code
 Gary E. Miller <gem@rellim.com>
-10 March 2021
+15 July 2021
 :author: Gary E. Miller
 :description: A line by line code walk-through of a simple gpsd C client.
 :email: <gem@rellim.com>
