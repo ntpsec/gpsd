@@ -22,12 +22,12 @@ Stack Overflow examples of *gpsd* clients.
 
 A simple *gpsd* client that connects to the already running *gpsd* on
 the _localhost_ running on the default port _2947_, using TCP.  You need
-to already have *gpsd* installed, with its libraries, and running, on your
+to already have *gpsd* installed with its libraries, and running on your
 host for this example to run.
 
 Grab a copy of https://gpsd.io/example1.c[example1.c], compile it, and
 run it.  The example builds and runs fine as a normal user as it does
-not require any special permissions. Use "^C" to exit.  Like this:
+not require any special permissions. Use "^C" to exit. Like this:
 
 ----
 $ wget https://gpsd.io/example1.c
@@ -42,7 +42,7 @@ Fix mode: 3D (3) Time: 1615325175.000000000 Lat 44.068861 Lon -121.314085
 The paranoid reader will have read https://gpsd.io/example1.c[example1.c]
 before running it so as not to lose all their Bitcoin.
 
-As you can see above, this client prints the "Fix Mode" ("mode", Time
+As you can see above, this client prints the "Fix Mode" ("mode"), Time
 ("time"), "latitude" and "longitude" if available. These are the Time and
 Position parts of the acronym _TPV_. Otherwise it prints nothing.
 
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 {
     struct gps_data_t gps_data;
 
-    if ( 0 != gps_open("localhost", "2947", &gps_data)) {
+    if (0 != gps_open("localhost", "2947", &gps_data)) {
         printf("Open error.  Bye, bye\n");
         return 1;
     }
@@ -182,13 +182,13 @@ Line 18::
 
 Every variable we care about, all variables, are contained in
 *struct gps_data_t gps_data* which is defined, and documented, in
-*gps.h*. *gps_data* contains a *struct gps_fix_t fix*_ which is also
+*gps.h*. *gps_data* contains a *struct gps_fix_t fix* which is also
 defined in *gps.h*. The _TPV_ data we will use is in _gps_data.fix_.
 
 Line 20 to 23::
 [source%nowrap,c,numbered,start=20]
 ----
-    if ( 0 != gps_open("localhost", "2947", &gps_data)) {
+    if (0 != gps_open("localhost", "2947", &gps_data)) {
         printf("Open error.  Bye, bye\n");
         return 1;
     }
@@ -197,7 +197,7 @@ Line 20 to 23::
 Connect to the already running *gpsd* on the _localhost_ running on the
 default port _2947_. Or exit loudly. See the *gpsd(3)* man page for
 details on starting *gpsd*. There may be significant delays opening
-the connection if *gpsd* is not running with the "*-n" option. See the
+the connection if *gpsd* is not running with the "-n" option. See the
 *libgps* man page for details on *gps_open()* and the other *gps_XXX()*
 function calls.
 
@@ -221,7 +221,7 @@ Line 27::
 ----
 
 The main loop. Wait, using *gps_waiting()* until data from the *gpsd*
-connectio is available, then run the body of the loop. Exit if no data
+connection is available, then run the body of the loop. Exit if no data
 seen in 5 seconds (5000000 micro seconds).
 
 Lines 28 to 31::
@@ -235,7 +235,7 @@ Lines 28 to 31::
 
 Read the waiting data using *gpsd_read()* and parse it into *gps_data*.
 Exit loudly on errors. No telling, yet, what the data is. It could be
-from *TPV", *SKY*, *AIS*, or other message classes.
+from *TPV*, *SKY*, *AIS*, or other message classes.
 
 Lines 32 to 35::
 [source%nowrap,c,numbered,start=32]
@@ -262,7 +262,7 @@ Lines 36 to 39::
 
 Range check _gpsdata.fix.mode_ so we can use it as an index into
 _mode_str_. New versions of *gpsd* often extend the range of
-unenumerated types, so protecct your self from an array overrun. Array
+unenumerated types, so protect yourself from an array overrun. Array
 overruns are bad.
 
 Lines 40 to 42::
@@ -344,7 +344,7 @@ for Floating-Point Arithmetic]
 
 * [[[gpsd_json]]] {gpsdweb}gpsd_json.html[gpsd_json(5)]
 
-* [[[gpsd]]] {gpsdweb}gpsd.html[*gpsd(8)]
+* [[[gpsd]]] {gpsdweb}gpsd.html[gpsd(8)]
 
 * {gpsdweb}client-howto.html[GPSD Client HOWTO] is a different look at
 *gpsd* clients.
