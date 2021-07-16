@@ -1,6 +1,6 @@
 # ------------------------------------------------------------------
 #
-# Copyright (C) 2018 Canonical Ltd.
+# Copyright 2018 Canonical Ltd.
 # This file is Copyright 2020 by the GPSD project
 # SPDX-License-Identifier: BSD-2-clause
 #
@@ -70,8 +70,10 @@
   /sys/devices/virtual/pps    r,
   /sys/devices/virtual/pps/** r,
 
-  # gpsd device to share
+  # gpsd device to share, no idea who uses these
   /dev/gpsd[0-9] rw,
+  # default receiver to use, a symbolic link to a tty
+  /dev/gps0 rw,
 
   # libusb device access to GPS devices
   /proc/      r,
