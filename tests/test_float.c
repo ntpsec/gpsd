@@ -4,6 +4,7 @@
  * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
+#include <fenv.h>         // for fegetround()
 #include <stdio.h>        // for puts(), printf()
 #include <string.h>       // for strncmp()
 
@@ -314,6 +315,15 @@ static int test_printf(void)
 
 int main(void) {
     int errcnt = 0;
+    int val;
+
+    // test for C99 default rounding mode
+    val = fegetround();
+    if (0 != val) {
+        // 0, aka FE_DOWNWARD, which is not a required C99 define
+        printf("WARNING: Unsupported rounding mode %d\n", val);
+        errcnt++;
+    }
 
     if (0 != test_single()) {
         puts("WARNING: Single-precision floating point math might be broken\n");
