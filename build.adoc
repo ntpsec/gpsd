@@ -213,7 +213,13 @@ On Gentoo systems those packages are named:
 If you have libusb-1.0.0 or later, the GPSD build will autodetect
 this and use it to discover Garmin USB GPSes, rather than groveling
 through /proc/bus/usb/devices (which has been deprecated by the
-Linux kernel team).
+Linux kernel team).  You will need the libusb development headers in this case.
+
+Under Debian/Ubuntu this is the package:
+
+|==============================================================================
+|libusb-1.0-0-dev	| D-Bus Development package
+|==============================================================================
 
 You can build libQgpsmm if you have Qt (specifically QtCore and
 QtNetwork modules) version 4.5.3 or higher.  You will also need a C++
@@ -225,7 +231,7 @@ specific building documentation
 For working with D-Bus, you'll need the D-Bus development
 headers and libraries installed.
 
-Under Debian/Ubuntu this is the package"
+Under Debian/Ubuntu this is the package:
 
 |==============================================================================
 |libdbus-1-dev        | D-Bus Development package
