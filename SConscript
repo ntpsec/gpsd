@@ -1734,7 +1734,7 @@ libgps_shared = GPSLibrary(env=env,
                            parse_flags=rtlibs + libgps_flags)
 
 libgps_static = env.StaticLibrary(
-    terget="gps_static",
+    target="gps_static",
     source=[env.StaticObject(s) for s in libgps_sources],
     parse_flags=rtlibs)
 
