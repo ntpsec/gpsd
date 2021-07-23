@@ -248,13 +248,15 @@ void gpsd_time_init(struct gps_context_t *context, time_t starttime)
 
 void gpsd_set_century(struct gps_device_t *session)
 /*
- * Interpret "Date: yyyy-mm-dd", setting the session context
+ * Interpret "#Date: yyyy-mm-dd", setting the session context
  * century from the year.  We do this so the behavior of the
  * regression tests won't depend on what century the daemon
  * started up in.
  */
 {
     char *end;
+
+    // FIXME: unused code, does it even work?
     if (strstr((char *)session->lexer.outbuffer, "Date:") != NULL) {
         int year;
         unsigned char *cp = session->lexer.outbuffer + 5;
@@ -262,6 +264,9 @@ void gpsd_set_century(struct gps_device_t *session)
             ++cp;
         year = (int)strtol((char *)cp, &end, 10);
         session->context->century = year - (year % 100);
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "Setting century: %d", session->context->century);
+
     }
 }
 
