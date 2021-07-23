@@ -1476,7 +1476,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
         session->lexer.start_time = ts_now;
     }
 
-    if (session->lexer.type >= COMMENT_PACKET) {
+    if (COMMENT_PACKET <= session->lexer.type) {
         session->observed |= PACKET_TYPEMASK(session->lexer.type);
     }
 
@@ -1499,7 +1499,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
 
     (void)clock_gettime(CLOCK_REALTIME, &ts_now);
     TS_SUB(&delta, &ts_now, &session->gpsdata.online);
-    if (newlen < 0) {           /* read error */
+    if (0 > newlen) {           /* read error */
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "GPS on %s returned error %zd (%s sec since data)\n",
                  session->gpsdata.dev.path, newlen,
@@ -1507,7 +1507,8 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
         session->gpsdata.online.tv_sec = 0;
         session->gpsdata.online.tv_nsec = 0;
         return ERROR_SET;
-    } else if (newlen == 0) {           /* zero length read, possible EOF */
+    }
+    if (0 == newlen) {           /* zero length read, possible EOF */
         /*
          * Multiplier is 2 to avoid edge effects due to sampling at the exact
          * wrong time...
@@ -1523,252 +1524,249 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
             session->gpsdata.online.tv_nsec = 0;
         }
         return NODATA_IS;
-    } else /* (newlen > 0) */ {
-        GPSD_LOG(LOG_RAW, &session->context->errout,
-                 "packet sniff on %s finds type %d\n",
-                 session->gpsdata.dev.path, session->lexer.type);
-        if (session->lexer.type == COMMENT_PACKET) {
-            if (strcmp((const char *)session->lexer.outbuffer, "# EOF\n") == 0) {
-                GPSD_LOG(LOG_PROG, &session->context->errout,
-                         "synthetic EOF\n");
-                return EOF_IS;
-            }
-            else
-                GPSD_LOG(LOG_PROG, &session->context->errout,
-                         "comment, sync lock deferred\n");
-            /* FALL THROUGH */
-        } else if (session->lexer.type > COMMENT_PACKET) {
-            if (session->device_type == NULL)
-                driver_change = true;
-            else {
-                int newtype = session->lexer.type;
-                /*
-                 * Are we seeing a new packet type? Then we probably
-                 * want to change drivers.
-                 */
-                bool new_packet_type =
-                    (newtype != session->device_type->packet_type);
-                /*
-                 * Possibly the old driver has a mode-switcher method, in
-                 * which case we know it can handle NMEA itself and may
-                 * want to do special things (like tracking whether a
-                 * previous mode switch to binary succeeded in suppressing
-                 * NMEA).
-                 */
-                bool dependent_nmea = (newtype == NMEA_PACKET &&
-                                   session->device_type->mode_switcher != NULL);
+    }
+    // else (0 < newlen)
 
-                /*
-                 * Compute whether to switch drivers.
-                 * If the previous driver type was sticky and this one
-                 * isn't, we'll revert after processing the packet.
-                 */
-                driver_change = new_packet_type && !dependent_nmea;
-            }
-            if (driver_change) {
-                const struct gps_type_t **dp;
-
-                for (dp = gpsd_drivers; *dp; dp++)
-                    if (session->lexer.type == (*dp)->packet_type) {
-                        GPSD_LOG(LOG_PROG, &session->context->errout,
-                                 "switching to match packet type %d: %s\n",
-                                 session->lexer.type, gpsd_prettydump(session));
-                        (void)gpsd_switch_driver(session, (*dp)->type_name);
-                        break;
-                    }
-            }
-            session->badcount = 0;
-            session->gpsdata.dev.driver_mode =
-                (session->lexer.type > NMEA_PACKET) ? MODE_BINARY : MODE_NMEA;
-            /* FALL THROUGH */
-        } else if (hunt_failure(session) && !gpsd_next_hunt_setting(session)) {
-            (void)clock_gettime(CLOCK_REALTIME, &ts_now);
-            TS_SUB(&delta, &ts_now, &session->gpsdata.online);
-            GPSD_LOG(LOG_INF, &session->context->errout,
-                     "hunt on %s failed (%s sec since data)\n",
-                     session->gpsdata.dev.path,
-                     timespec_str(&delta, ts_buf, sizeof(ts_buf)));
-            return ERROR_SET;
+    GPSD_LOG(LOG_RAW, &session->context->errout,
+             "packet sniff on %s finds type %d\n",
+             session->gpsdata.dev.path, session->lexer.type);
+    if (COMMENT_PACKET == session->lexer.type) {
+        if (0 == strcmp((const char *)session->lexer.outbuffer,
+                        "# EOF\n")) {
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "synthetic EOF\n");
+            return EOF_IS;
         }
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "comment, sync lock deferred\n");
+    } else if (COMMENT_PACKET < session->lexer.type) {
+        if (NULL == session->device_type) {
+            driver_change = true;
+        } else {
+            int newtype = session->lexer.type;
+            /*
+             * Are we seeing a new packet type? Then we probably
+             * want to change drivers.
+             */
+            bool new_packet_type =
+                (newtype != session->device_type->packet_type);
+            /*
+             * Possibly the old driver has a mode-switcher method, in
+             * which case we know it can handle NMEA itself and may
+             * want to do special things (like tracking whether a
+             * previous mode switch to binary succeeded in suppressing
+             * NMEA).
+             */
+            bool dependent_nmea = (NMEA_PACKET == newtype &&
+                               NULL != session->device_type->mode_switcher);
+
+            /*
+             * Compute whether to switch drivers.
+             * If the previous driver type was sticky and this one
+             * isn't, we'll revert after processing the packet.
+             */
+            driver_change = new_packet_type && !dependent_nmea;
+        }
+        if (driver_change) {
+            const struct gps_type_t **dp;
+
+            for (dp = gpsd_drivers; *dp; dp++)
+                if (session->lexer.type == (*dp)->packet_type) {
+                    GPSD_LOG(LOG_PROG, &session->context->errout,
+                             "switching to match packet type %d: %s\n",
+                             session->lexer.type, gpsd_prettydump(session));
+                    (void)gpsd_switch_driver(session, (*dp)->type_name);
+                    break;
+                }
+        }
+        session->badcount = 0;
+        session->gpsdata.dev.driver_mode =
+            (session->lexer.type > NMEA_PACKET) ? MODE_BINARY : MODE_NMEA;
+    } else if (hunt_failure(session) && !gpsd_next_hunt_setting(session)) {
+        (void)clock_gettime(CLOCK_REALTIME, &ts_now);
+        TS_SUB(&delta, &ts_now, &session->gpsdata.online);
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "hunt on %s failed (%s sec since data)\n",
+                 session->gpsdata.dev.path,
+                 timespec_str(&delta, ts_buf, sizeof(ts_buf)));
+        return ERROR_SET;
     }
 
-    if (session->lexer.outbuflen == 0) {      /* got new data, but no packet */
+    if (0 == session->lexer.outbuflen) {      // got new data, but no packet
         GPSD_LOG(LOG_RAW1, &session->context->errout,
                  "New data on %s, not yet a packet\n",
                  session->gpsdata.dev.path);
         return ONLINE_SET;
-    } else {                    /* we have recognized a packet */
-        gps_mask_t received = PACKET_SET;
-        (void)clock_gettime(CLOCK_REALTIME, &session->gpsdata.online);
+    }
 
-        GPSD_LOG(LOG_RAW1, &session->context->errout,
-                 "Accepted packet on %s.\n",
-                 session->gpsdata.dev.path);
+    // we have recognized a packet
+    gps_mask_t received = PACKET_SET;
+    (void)clock_gettime(CLOCK_REALTIME, &session->gpsdata.online);
 
-        /* track the packet count since achieving sync on the device */
-        if (driver_change &&
-            (session->drivers_identified & (1 << session->driver_index)) == 0) {
-            speed_t speed = gpsd_get_speed(session);
+    GPSD_LOG(LOG_RAW1, &session->context->errout,
+             "Accepted packet on %s.\n",
+             session->gpsdata.dev.path);
 
-            /* coverity[var_deref_op] */
-            GPSD_LOG(LOG_INF, &session->context->errout,
-                     "%s identified as type %s, %ld sec @ %ubps\n",
-                     session->gpsdata.dev.path,
-                     session->device_type->type_name,
-                     (long)(time(NULL) - session->opentime),
-                     (unsigned int)speed);
+    /* track the packet count since achieving sync on the device */
+    if (driver_change &&
+        (session->drivers_identified & (1 << session->driver_index)) == 0) {
+        speed_t speed = gpsd_get_speed(session);
 
-            /* fire the init_query method */
-            if (session->device_type != NULL
-                && session->device_type->init_query != NULL) {
-                /*
-                 * We can force readonly off knowing this method does
-                 * not alter device state.
-                 */
-                bool saved = session->context->readonly;
-                session->context->readonly = false;
-                session->device_type->init_query(session);
-                session->context->readonly = saved;
-            }
+        /* coverity[var_deref_op] */
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "%s identified as type %s, %ld sec @ %ubps\n",
+                 session->gpsdata.dev.path,
+                 session->device_type->type_name,
+                 (long)(time(NULL) - session->opentime),
+                 (unsigned int)speed);
 
-            /* fire the identified hook */
-            if (session->device_type != NULL
-                && session->device_type->event_hook != NULL)
-                session->device_type->event_hook(session, event_identified);
-            session->lexer.counter = 0;
+        /* fire the init_query method */
+        if (session->device_type != NULL
+            && session->device_type->init_query != NULL) {
+            /*
+             * We can force readonly off knowing this method does
+             * not alter device state.
+             */
+            bool saved = session->context->readonly;
+            session->context->readonly = false;
+            session->device_type->init_query(session);
+            session->context->readonly = saved;
+        }
 
-            /* let clients know about this. */
-            received |= DRIVER_IS;
-
-            /* mark the fact that this driver has been seen */
-            session->drivers_identified |= (1 << session->driver_index);
-        } else
-            session->lexer.counter++;
-
-        /* fire the configure hook, on every packet.  Seems excessive... */
+        /* fire the identified hook */
         if (session->device_type != NULL
             && session->device_type->event_hook != NULL)
-            session->device_type->event_hook(session, event_configure);
+            session->device_type->event_hook(session, event_identified);
+        session->lexer.counter = 0;
 
-        /*
-         * The guard looks superfluous, but it keeps the rather expensive
-         * gpsd_packetdump() function from being called even when the debug
-         * level does not actually require it.
-         */
-        if (session->context->errout.debug >= LOG_RAW)
-            GPSD_LOG(LOG_RAW, &session->context->errout,
-                     "raw packet of type %d, %zd:%s\n",
-                     session->lexer.type,
-                     session->lexer.outbuflen,
-                     gpsd_prettydump(session));
+        /* let clients know about this. */
+        received |= DRIVER_IS;
 
-
-        /* Get data from current packet into the fix structure */
-        if (session->lexer.type != COMMENT_PACKET) {
-            if (NULL != session->device_type &&
-                NULL != session->device_type->parse_packet) {
-                received |= session->device_type->parse_packet(session);
-                GPSD_LOG(LOG_SPIN, &session->context->errout,
-                         "parse_packet() = %s\n", gps_maskdump(received));
-            }
-        }
-
-        /*
-         * We may want to revert to the last driver that was marked
-         * sticky.  What this accomplishes is that if we've just
-         * processed something like AIVDM, but a driver with control
-         * methods or an event hook had been active before that, we
-         * keep the information about those capabilities.
-         */
-        if (!STICKY(session->device_type)
-            && session->last_controller != NULL
-            && STICKY(session->last_controller)) {
-            session->device_type = session->last_controller;
-            GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "reverted to %s driver...\n",
-                     session->device_type->type_name);
-        }
-
-        /* are we going to generate a report? if so, count characters */
-        if ((received & REPORT_IS) != 0) {
-            session->chars = session->lexer.char_counter -
-                                 session->lexer.start_char;
-        }
-
-        session->gpsdata.set = ONLINE_SET | received;
-
-        /*
-         * Compute fix-quality data from the satellite positions.
-         * These will not overwrite any DOPs reported from the packet
-         * we just got.
-         */
-        if ((received & SATELLITE_SET) != 0
-            && session->gpsdata.satellites_visible > 0) {
-            session->gpsdata.set |= fill_dop(&session->context->errout,
-                                             &session->gpsdata,
-                                             &session->gpsdata.dop);
-        }
-
-        /* copy/merge device data into staging buffers */
-        if ((session->gpsdata.set & CLEAR_IS) != 0) {
-            /* CLEAR_IS should only be set on first sentence of cycle */
-            gps_clear_fix(&session->gpsdata.fix);
-            gps_clear_att(&session->gpsdata.attitude);
-        }
-
-        /* GPSD_LOG(LOG_PROG, &session->context->errout,
-                         "transfer mask: %s\n",
-                         gps_maskdump(session->gpsdata.set)); */
-        gps_merge_fix(&session->gpsdata.fix,
-                      session->gpsdata.set, &session->newdata);
-
-        gpsd_error_model(session);
-
-        /*
-         * Count good fixes. We used to check
-         *      session->gpsdata.fix.status > STATUS_NO_FIX
-         * here, but that wasn't quite right.  That tells us whether
-         * we think we have a valid fix for the current cycle, but remains
-         * true while following non-fix packets are received.  What we
-         * really want to know is whether the last packet received was a
-         * fix packet AND held a valid fix. We must ignore non-fix packets
-         * AND packets which have fix data but are flagged as invalid. Some
-         * devices output fix packets on a regular basis, even when unable
-         * to derive a good fix. Such packets should set STATUS_NO_FIX.
-         */
-        if (0 != (session->gpsdata.set & (LATLON_SET|ECEF_SET))) {
-            if ( session->gpsdata.fix.status > STATUS_NO_FIX) {
-                session->context->fixcnt++;
-                session->fixcnt++;
-            } else {
-                session->context->fixcnt = 0;
-                session->fixcnt = 0;
-            }
-        }
-
-        /*
-         * Sanity check.  This catches a surprising number of port and
-         * driver errors, including 32-vs.-64-bit problems.
-         */
-        if ((session->gpsdata.set & TIME_SET) != 0) {
-            if (session->newdata.time.tv_sec >
-                (time(NULL) + (60 * 60 * 24 * 365))) {
-                GPSD_LOG(LOG_WARN, &session->context->errout,
-                         "date (%lld) more than a year in the future!\n",
-                         (long long)session->newdata.time.tv_sec);
-            } else if (session->newdata.time.tv_sec < 0) {
-                GPSD_LOG(LOG_ERROR, &session->context->errout,
-                         "date (%lld) is negative!\n",
-                         (long long)session->newdata.time.tv_sec);
-            }
-        }
-
-        return session->gpsdata.set;
+        /* mark the fact that this driver has been seen */
+        session->drivers_identified |= (1 << session->driver_index);
+    } else {
+        session->lexer.counter++;
     }
-    /* Should never get here */
-    GPSD_LOG(LOG_EMERG, &session->context->errout,
-             "fell out of gps_poll()!\n");
-    return 0;
+
+    /* fire the configure hook, on every packet.  Seems excessive... */
+    if (session->device_type != NULL
+        && session->device_type->event_hook != NULL)
+        session->device_type->event_hook(session, event_configure);
+
+    /*
+     * The guard looks superfluous, but it keeps the rather expensive
+     * gpsd_packetdump() function from being called even when the debug
+     * level does not actually require it.
+     */
+    if (session->context->errout.debug >= LOG_RAW)
+        GPSD_LOG(LOG_RAW, &session->context->errout,
+                 "raw packet of type %d, %zd:%s\n",
+                 session->lexer.type,
+                 session->lexer.outbuflen,
+                 gpsd_prettydump(session));
+
+
+    /* Get data from current packet into the fix structure */
+    if (COMMENT_PACKET != session->lexer.type) {
+        if (NULL != session->device_type &&
+            NULL != session->device_type->parse_packet) {
+            received |= session->device_type->parse_packet(session);
+            GPSD_LOG(LOG_SPIN, &session->context->errout,
+                     "parse_packet() = %s\n", gps_maskdump(received));
+        }
+    }
+
+    /*
+     * We may want to revert to the last driver that was marked
+     * sticky.  What this accomplishes is that if we've just
+     * processed something like AIVDM, but a driver with control
+     * methods or an event hook had been active before that, we
+     * keep the information about those capabilities.
+     */
+    if (!STICKY(session->device_type)
+        && session->last_controller != NULL
+        && STICKY(session->last_controller)) {
+        session->device_type = session->last_controller;
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "reverted to %s driver...\n",
+                 session->device_type->type_name);
+    }
+
+    /* are we going to generate a report? if so, count characters */
+    if ((received & REPORT_IS) != 0) {
+        session->chars = session->lexer.char_counter -
+                             session->lexer.start_char;
+    }
+
+    session->gpsdata.set = ONLINE_SET | received;
+
+    /*
+     * Compute fix-quality data from the satellite positions.
+     * These will not overwrite any DOPs reported from the packet
+     * we just got.
+     */
+    if ((received & SATELLITE_SET) != 0
+        && session->gpsdata.satellites_visible > 0) {
+        session->gpsdata.set |= fill_dop(&session->context->errout,
+                                         &session->gpsdata,
+                                         &session->gpsdata.dop);
+    }
+
+    /* copy/merge device data into staging buffers */
+    if ((session->gpsdata.set & CLEAR_IS) != 0) {
+        /* CLEAR_IS should only be set on first sentence of cycle */
+        gps_clear_fix(&session->gpsdata.fix);
+        gps_clear_att(&session->gpsdata.attitude);
+    }
+
+    /* GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "transfer mask: %s\n",
+                     gps_maskdump(session->gpsdata.set)); */
+    gps_merge_fix(&session->gpsdata.fix,
+                  session->gpsdata.set, &session->newdata);
+
+    gpsd_error_model(session);
+
+    /*
+     * Count good fixes. We used to check
+     *      session->gpsdata.fix.status > STATUS_NO_FIX
+     * here, but that wasn't quite right.  That tells us whether
+     * we think we have a valid fix for the current cycle, but remains
+     * true while following non-fix packets are received.  What we
+     * really want to know is whether the last packet received was a
+     * fix packet AND held a valid fix. We must ignore non-fix packets
+     * AND packets which have fix data but are flagged as invalid. Some
+     * devices output fix packets on a regular basis, even when unable
+     * to derive a good fix. Such packets should set STATUS_NO_FIX.
+     */
+    if (0 != (session->gpsdata.set & (LATLON_SET|ECEF_SET))) {
+        if ( session->gpsdata.fix.status > STATUS_NO_FIX) {
+            session->context->fixcnt++;
+            session->fixcnt++;
+        } else {
+            session->context->fixcnt = 0;
+            session->fixcnt = 0;
+        }
+    }
+
+    /*
+     * Sanity check.  This catches a surprising number of port and
+     * driver errors, including 32-vs.-64-bit problems.
+     */
+    if (0 != (session->gpsdata.set & TIME_SET)) {
+        if (session->newdata.time.tv_sec >
+            (time(NULL) + (60 * 60 * 24 * 365))) {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "date (%lld) more than a year in the future!\n",
+                     (long long)session->newdata.time.tv_sec);
+        } else if (0 > session->newdata.time.tv_sec) {
+            GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "date (%lld) is negative!\n",
+                     (long long)session->newdata.time.tv_sec);
+        }
+    }
+
+    return session->gpsdata.set;
 }
 
 /* consume and handle packets from a specified device */
