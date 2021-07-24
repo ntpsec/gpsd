@@ -325,6 +325,23 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
      * do not bother to check uid, just go for the open() */
 
     ret = open(path, O_RDWR);
+#else /* not __linux__ */
+    /*
+     * On BSDs that support RFC2783, one uses the API calls on serial
+     * port file descriptor.
+     *
+     * FIXME! need more specific than 'not linux'
+     */
+    (void)strlcpy(path, pps_thread->devicename, sizeof(path));
+    ret  = pps_thread->devicefd;
+
+    /* If this is a PPS device, the devicefd is simply a placeholder */
+    if (PLACEHOLDING_FD == ret) {
+        ret = open(path, O_RDWR);
+    }
+#endif
+
+    /* Should be a valid descriptor by this point */
     if (0 > ret) {
         char errbuf[BUFSIZ] = "unknown error";
         pps_strerror_r(errno, errbuf, sizeof(errbuf));
@@ -336,17 +353,7 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
                     path, errbuf);
         return -1;
     }
-#else /* not __linux__ */
-    /*
-     * On BSDs that support RFC2783, one uses the API calls on serial
-     * port file descriptor.
-     *
-     * FIXME! need more specific than 'not linux'
-     */
-    (void)strlcpy(path, pps_thread->devicename, sizeof(path));
-    ret  = pps_thread->devicefd;
-#endif
-    /* assert(ret >= 0); */
+
     pps_thread->log_hook(pps_thread, THREAD_INF,
                 "KPPS:%s RFC2783 path:%s, fd is %d\n",
                 pps_thread->devicename, path,
