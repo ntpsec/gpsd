@@ -1,6 +1,6 @@
 # Chipset: Quectel EC2526EC21
 # Submitter: Tom Isaacson <tom.isaacson@teknique.com> 
-# Date: 8 October 2020
+# Date: 2020-10-08
 # Location: Auckland, NZ  36.44 S, 174.44E
 #
 # Note: Odd signal loss behavior with $GPGGA and $GPRMC.

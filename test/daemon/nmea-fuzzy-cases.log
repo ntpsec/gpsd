@@ -1,6 +1,6 @@
 # Name: NMEA cases causing "fuzzy arithmetic" problems (+1 non-failure).
 # Submitter: Fred Wright <fw@fwright.net>
-# Date: 29 June 2020
+# Date: 2020-06-29
 # Note: Lifted from nmea-rtk.log (Trimble NMEA with RTK-4 fix).
 #
 # This file is Copyright 2020 by the GPSD project

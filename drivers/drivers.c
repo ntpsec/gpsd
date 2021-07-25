@@ -24,15 +24,17 @@ ssize_t generic_get(struct gps_device_t *session)
     return packet_get(session->gpsdata.gps_fd, &session->lexer);
 }
 
+// This handles only bad, comment, and maybe NMEA packets.
 gps_mask_t generic_parse_input(struct gps_device_t *session)
 {
-    if (session->lexer.type == BAD_PACKET)
+    if (BAD_PACKET == session->lexer.type ||
+        COMMENT_PACKET == session->lexer.type) {
+        // ignore bad packets and comment packets
         return 0;
-    else if (session->lexer.type == COMMENT_PACKET) {
-        gpsd_set_century(session);
-        return 0;
+    }
+
 #ifdef NMEA0183_ENABLE
-    } else if (session->lexer.type == NMEA_PACKET) {
+    if (NMEA_PACKET == session->lexer.type) {
         const struct gps_type_t **dp;
         gps_mask_t st = 0;
         char *sentence = (char *)session->lexer.outbuffer;
@@ -65,13 +67,13 @@ gps_mask_t generic_parse_input(struct gps_device_t *session)
             }
         }
         return st;
-#endif /* NMEA0183_ENABLE */
-    } else {
-        GPSD_LOG(LOG_SHOUT, &session->context->errout,
-                 "packet type %d fell through (should never happen): %s.\n",
-                 session->lexer.type, gpsd_prettydump(session));
-        return 0;
     }
+#endif /* NMEA0183_ENABLE */
+
+    GPSD_LOG(LOG_SHOUT, &session->context->errout,
+             "packet type %d fell through (should never happen): %s.\n",
+             session->lexer.type, gpsd_prettydump(session));
+    return 0;
 }
 
 /**************************************************************************

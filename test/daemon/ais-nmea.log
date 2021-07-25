@@ -1,5 +1,5 @@
 # From: Владимир Калачихин  <v.kalachikhin@gmail.com>
-# Date: 8 APril 2020
+# Date: 2020-04-08
 # Note: NMEA 0183 and AIS data
 #
 $GPGSA,A,3,11,32,14,28,22,03,10,08,17,,,,2.02,1.03,1.74*00

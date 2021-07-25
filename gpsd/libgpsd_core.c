@@ -1531,14 +1531,29 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
              "packet sniff on %s finds type %d\n",
              session->gpsdata.dev.path, session->lexer.type);
     if (COMMENT_PACKET == session->lexer.type) {
+        // deal with regression test helper macros
+        const char date_str[] = "# Date: ";
         if (0 == strcmp((const char *)session->lexer.outbuffer,
                         "# EOF\n")) {
+            // undocumented, used by gpsfake to signal EOF
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "synthetic EOF\n");
             return EOF_IS;
         }
+        if (0 == strncmp((const char *)session->lexer.outbuffer,
+                         date_str, sizeof(date_str) - 1)) {
+            // # Date: yyyy-mm-dd
+            // used by regression tests to correct
+            // change start time, gps weeks, etc.
+            gpsd_set_century(session);
+
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "start_time %lld\n",
+                     (long long)session->context->start_time);
+        }
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "comment, sync lock deferred\n");
+                 "comment, sync lock deferred: >%s<\n",
+                 session->lexer.outbuffer);
     } else if (COMMENT_PACKET < session->lexer.type) {
         if (NULL == session->device_type) {
             driver_change = true;

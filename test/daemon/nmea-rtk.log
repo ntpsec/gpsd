@@ -1,7 +1,7 @@
 # Name: Trimble NMEA with RTK-4 fix.
 # Chipset: Trimble
 # Submitter: "pisymbol ." <pisymbol@gmail.com>
-# Date: 18 March 2020
+# Date: 2020-03-18
 # Note: Part of the file is just 3D Fix.  Part is RTK fix.
 #
 # This file is Copyright 2020 by the GPSD project

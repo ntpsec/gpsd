@@ -185,7 +185,7 @@ class TestLoad(object):
                 commentlen += len(packet)
                 # Some comments are magic
                 if b"Serial:" in packet:
-                    # Change serial parameters
+                    # "#Serial:' -- Change serial parameters
                     packet = packet[1:].strip()
                     try:
                         (_xx, baud, params) = packet.split()
@@ -207,10 +207,13 @@ class TestLoad(object):
                                             self.name)
                     self.serial = (baud, databits, parity, stopbits)
                 elif b"Transport: UDP" in packet:
+                    # "#Transport:'
                     self.sourcetype = "UDP"
                 elif b"Transport: TCP" in packet:
+                    # "#Transport:'
                     self.sourcetype = "TCP"
                 elif b"Delay-Cookie:" in packet:
+                    # "#Delay-Cookie:'
                     if packet.startswith(b"#"):
                         packet = packet[1:]
                     try:
@@ -221,6 +224,10 @@ class TestLoad(object):
                         raise TestLoadError("bad Delay-Cookie line in %s" %
                                             self.name)
                     self.resplit = True
+                elif b"Date:" in packet:
+                    # "# Date: yyyy-mm-dd' -- preset date
+                    self.sentences.append(packet)
+                # drop all other comments silently
             else:
                 if type_latch is None:
                     type_latch = ptype

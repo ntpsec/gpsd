@@ -43,14 +43,21 @@ will cause minor loss of functionality.
 The logfiles may contain packets in any supported format, including in
 particular NMEA, SiRF, TSIP, or Zodiac. Leading lines beginning with #
 will be treated as comments and ignored, except in the following special
-cases:
+cases.
 
-* a comment of the form *#Date: yyyy-mm-dd* (ISO8601 date format) may be
-used to set the initial date for the log.
+Thse are interpreted directly by *gpsfake*:
+
 * a comment of the form *#Serial: [0-9] [78][NOE][12]* may be used to set
 serial parameters for the log - baud rate, word length, stop bits.
 * a comment of the form *#Transport: UDP* may be used to fake a UDP source
 rather than the normal pty.
+* a comment of the form *#Transport: TCP* may be used to fake a TCP source
+rather than the normal pty.
+
+Thse are interpreted directly by *gpsd*:
+
+* a comment of the form *# Date: yyyy-mm-dd* (ISO8601 date format) may be
+used to set the initial date for the log.
 
 The *gpsd* instance is run in foreground. The thread sending fake GNSS data
 to the daemon is run in background.
