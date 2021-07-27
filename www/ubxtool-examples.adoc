@@ -150,10 +150,93 @@ an ACK-NAK meant you sent something invalid.
 
 Always double check that any settings changed stuck.
 
-This text, and these examples will ignore ACK-ACK responses.  If any
+This text, and these examples, will ignore ACK-ACK responses.  If any
 cause an ACK-NAK for you then you either found a bug in this document, your
 receiver does not support the requested operation, or you mistyped
 something.
+
+== Enabling and Disabling Periodic Messages.
+
+Some individual messages, or sets of messages, can be enabled with the
+"-e ABLE". The same messages can be disabled with the "-d ABLE" option.
+The available options for ABLE will be see in the verbose help:
+
+----
+$ ubxtool --help -v 2 | less
+----
+
+If you wanted to enable the UBX-NAV-VELNED and UBX-NAV-RELPOSNED
+messages:
+
+----
+$ ubxtool --enable NED
+----
+
+When you realize that is not what you wanted, disable them:
+
+----
+$ ubxtool --disable NED
+----
+
+The advanced user will want to enable and disable messages that are not
+in the limited set of ABLE options.  You can use the preset command
+"-p CFG-MSG,class,ID[,rate]" to poll, or set, the message rate for any
+UBX message.
+
+To poll the rate at which UBX-NAV-SOL is sent from the receiver:
+
+----
+$ ubxtool -p CFG-MSG,1,6
+UBX-CFG-MSG:
+ Class x01 (NAV) ID x06 (SOL) Rates 0 0 0 0 0 0
+----
+
+UBX-NAV-SOL is Class 1, ID 6.  The above shows that UBX-NAV-SOL is not
+being output on any of the 6 ports.
+
+To send UBX-NAV-SOL, on the current port, on every second navigation
+solution, and verify the setting:
+
+----
+$ ubxtool -p CFG-MSG,1,6,2
+[...]
+# ubxtool -p CFG-MSG,1,6
+UBX-CFG-MSG:
+ Class x01 (NAV) ID x06 (SOL) Rates 0 0 0 2 0 0
+----
+
+That shows UBX-NAV-SOL is output every second navigation solution on
+port 3 (USB).
+
+Now we turn it back off, and verify.
+
+----
+$ ubxtool -p CFG-MSG,1,6,0
+[...]
+# ubxtool -p CFG-MSG,1,6
+UBX-CFG-MSG:
+ Class x01 (NAV) ID x06 (SOL) Rates 0 0 0 0 0 0
+----
+
+CFG-MSG is also used to set the rate on NMEA messages.  NMEA messages
+are all Class 0xf0.  Refer to the u-blox documentation for the ID's
+of specific NMEA messages.
+
+
+To enable $GNGNS once every nav solution:
+
+----
+$ ubxtool -p CFG-MSG,0xf0,0x0d,1 -v 2
+----
+
+Note the use of "-v 2", otherwise *ubxtool* does not show the NMEA messages
+in its output.
+
+We finish the example by turning $GNGNS back off:
+
+----
+$ ubxtool -p CFG-MSG,0xf0,0x0d,0
+----
 
 == Dynamic Platform Model
 
