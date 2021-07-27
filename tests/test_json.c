@@ -93,12 +93,12 @@ static void assert_ts(const char *attr, struct timespec fld,
 {
     if (fld.tv_sec != val.tv_sec ||
         fld.tv_nsec != val.tv_nsec) {
-        (void)fprintf(stderr, "case %d FAILED\n", current_test);
-        (void)fprintf(stderr,
-                      "'%s' timespec eval failed, value = %ld %ld s/b "
-                      " %ld %ld.\n",
-                      attr, fld.tv_sec, fld.tv_nsec,
-                      val.tv_sec, val.tv_nsec);
+        (void)fprintf(stderr,"case %d FAILED\n"
+                      "  '%s' timespec eval failed, value = %lld %ld s/b "
+                      "%lld %ld.\n",
+                      current_test, attr,
+                      (long long)fld.tv_sec, fld.tv_nsec,
+                      (long long)val.tv_sec, val.tv_nsec);
         exit(EXIT_FAILURE);
     }
 }
