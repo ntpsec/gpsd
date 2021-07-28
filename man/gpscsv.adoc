@@ -1,6 +1,6 @@
 = gpscsv(1)
 :author: Gary E. Miller
-:date: 27 July 2021
+:date: 28 July 2021
 :email: gem@rellim.com.
 :keywords: gps, gpsd, gpscsv, csv
 :manmanual: GPSD Documentation
@@ -33,6 +33,9 @@ input from a specified *gpsd* and reports to standard output. The program
 runs until the *gpsd* dies, "*-n COUNT*" messages are processed,
 "*-x SECONDS*" have passed, or it is interrupted by ^C or other means.
 
+*gpscsv* can only collect data that your *gpsd* is already sending.  Use
+*gpspipe* to see what JSON message classes it is sending.
+
 One good use of *gpscsv* is to create CSV files for use with the gnuplot
 program.
 
@@ -46,7 +49,7 @@ The program accepts the following options:
   Show help information and exit.
 *-c MCLASS*, *--class MCLASS*::
   Select the JSON class messages of type MCLASS. Overrides the default
-  class of TPV.
+  class of TPV.  See the <<Classes>> section below for more information.
 *--cvt-isotime*::
   Convert fields named "time" from ISO time to UNIX time.
 *-D LVL*, *--debug LVL*::
@@ -81,6 +84,28 @@ The program accepts the following options:
 All the above individual options may be specified multiple times, but  t
 only the last one off each will be used.
 
+== Classes
+
+Some of the *gpsd* JSON message classes include sub-classes.  *gpscsv*
+allows direct access to them using a meta-class (MCLASS).
+
+|===
+|MCLASS |Class |Description
+
+|ALMANAC |SUBFRAME | ALMANAC from SUBFRAME JSON
+|HEALTH |SUBFRAME | HEALTH from SUBFRAME JSON
+|HEALTH2 |SUBFRAME | HEALTH2 from SUBFRAME JSON
+|IONO |SUBFRAME | IONO from SUBFRAME JSON
+|NMCT |SUBFRAME | NMCT from SUBFRAME JSON
+|SUBFRAME1 |SUBFRAME | SUBFRAME1 (Ephemeris 1) from SUBFRAME JSON
+|SUBFRAME2 |SUBFRAME | SUBFRAME2 (Ephemeris 2) from SUBFRAME JSON
+|SUBFRAME3 |SUBFRAME | SUBFRAME3 (Ephemeris 3) from SUBFRAME JSON
+|SAT |SKY | Individual satellites from SKY
+|SKY |SKY | The basic parts of SKY JSON
+|TPV |TPV | The basic parts of TPV JSON
+
+|===
+
 == ARGUMENTS
 
 By default, clients collect data from the local *gpsd* daemon running
@@ -92,7 +117,48 @@ the *gps*(1) man page
 
 == EXAMPLES
 
-Some basic examples, do them in exact order shown:
+Some basic standalone examples:
+
+Grab three cycles of TPV data:
+
+----
+$ gpscsv -c TPV -n 3
+time,lat,lon,altHAE
+2021-07-28T22:38:37.000Z,44.0688638,-121.3140643,1108.223
+2021-07-26T22:38:37.000Z,44.068863833,-121.314064333,1108.3
+2021-07-28T22:38:38.000Z,44.0688637,-121.314065,1108.363
+----
+
+Grab one set of satellite data:
+
+----
+$ gpscsv -c SAT -n 1
+time,gnssid,svid,PRN,az,el,ss,used,health
+2021-07-28T22:37:46.000Z,0,8,8,311.0,28.0,33.0,True,1
+2021-07-28T22:37:46.000Z,0,10,10,290.0,74.0,50.0,True,1
+2021-07-28T22:37:46.000Z,0,15,15,45.0,18.0,31.0,False,1
+2021-07-28T22:37:46.000Z,0,16,16,244.0,7.0,23.0,True,1
+2021-07-28T22:37:46.000Z,0,18,18,109.0,43.0,37.0,True,1
+2021-07-28T22:37:46.000Z,0,23,23,49.0,62.0,38.0,True,1
+2021-07-28T22:37:46.000Z,0,24,24,87.0,16.0,28.0,True,1
+2021-07-28T22:37:46.000Z,0,27,27,280.0,52.0,42.0,True,1
+2021-07-28T22:37:46.000Z,0,32,32,188.0,32.0,42.0,True,1
+2021-07-28T22:37:46.000Z,5,3,195,305.0,6.0,13.0,False,1
+2021-07-28T22:37:46.000Z,6,2,66,38.0,8.0,21.0,False,1
+2021-07-28T22:37:46.000Z,6,3,67,34.0,60.0,32.0,True,1
+2021-07-28T22:37:46.000Z,6,4,68,226.0,63.0,34.0,True,1
+2021-07-28T22:37:46.000Z,6,5,69,220.0,12.0,32.0,True,1
+2021-07-28T22:37:46.000Z,6,11,75,-999,4.0,0.0,False,2
+2021-07-28T22:37:46.000Z,6,12,76,47.0,0.0,0.0,False,1
+2021-07-28T22:37:46.000Z,6,17,81,142.0,8.0,31.0,True,1
+2021-07-28T22:37:46.000Z,6,18,82,138.0,57.0,40.0,True,1
+2021-07-28T22:37:46.000Z,6,19,83,333.0,70.0,29.0,True,1
+2021-07-28T22:37:46.000Z,6,20,84,323.0,10.0,0.0,False,1
+----
+
+=== Plot Examples
+
+Some plot examples, do them in exact order shown:
 
 Grab 100 samples of time,lat,lon,altHAE:
 
@@ -193,7 +259,7 @@ Lat/lon scatter plot:
 
 == SEE ALSO
 
-*gpsd*(8), *gnuplot*(1)
+*gpspipe*(1), *gpsd_json*(5), *gpsd*(8), *gnuplot*(1)
 
 == RESOURCES
 
