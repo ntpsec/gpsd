@@ -1,6 +1,6 @@
 = gpscsv(1)
 :author: Gary E. Miller
-:date: 25 February 2021
+:date: 27 July 2021
 :email: gem@rellim.com.
 :keywords: gps, gpsd, gpscsv, csv
 :manmanual: GPSD Documentation
@@ -45,7 +45,8 @@ The program accepts the following options:
 *-?*, *-h*, *--help*::
   Show help information and exit.
 *-c MCLASS*, *--class MCLASS*::
-  Select the JSON class messages of type MCLASS. Default is TPV.
+  Select the JSON class messages of type MCLASS. Overrides the default
+  class of TPV.
 *--cvt-isotime*::
   Convert fields named "time" from ISO time to UNIX time.
 *-D LVL*, *--debug LVL*::
@@ -55,7 +56,7 @@ The program accepts the following options:
   The DEVICE on the *gpsd* to connect to. Defaults to all.
 *-f FIELDS*, *-fields FIELDS*::
   The FIELDS from the JSON message to dump to the output. Set FIELD to
-  empty ('') for all fields Default varies by CLASS.
+  empty ('') for all initially seen fields. Default varies by CLASS.
 *--file FILE*::
   Read JSON from FILE instead of from *gpsd*.
 *--header HEADER*::
@@ -76,6 +77,9 @@ The program accepts the following options:
 *-x SECONDS*, *--seconds SECONDS*::
   Exit after SECONDS number of seconds have passed. Set SECONDS to 0 to
   disable. Default is 0
+
+All the above individual options may be specified multiple times, but  t
+only the last one off each will be used.
 
 == ARGUMENTS
 
@@ -114,7 +118,9 @@ Grab 100 samples of time,nSat,uSat
   $ gpscsv -n 100 --cvt-isotime -c SKY -f time,nSat,uSat  > sat.dat
 ----
 
-start gnuplot in interactive mode:
+=== Viewing CSV data with gnuplot
+
+Start gnuplot in interactive mode:
 
 ----
   $ gnuplot
@@ -132,7 +138,7 @@ Some gnuplot housekeeping:
   gnuplot> set timefmt "%s"
 ----
 
-Now to plot time vs latitude:
+Now to plot time vs latitude, using *tpv.dat* from above:
 
 ----
   gnuplot> plot 'tpv.dat' using 1:2
@@ -152,14 +158,14 @@ Put both latitude and longitude on one plot:
   gnuplot> plot 'tpv.dat' using 1:2, '' using 1:3 axes x1y2
 ----
 
-Plot epx, epy, epv, eph, and sep in one plot:
+Plot epx, epy, epv, eph, and sep in one plot, using *ep.dat* from above:
 
 ----
   gnuplot> plot 'ep.dat' using 1:2, '' using 1:3, \
            '' using 1:4, '' using 1:5, '' using 1:6
 ----
 
-Plot all the DOPs on one plot:
+Plot all the DOPs on one plot, from *sky.dat* above:
 
 ----
   gnuplot> plot 'sky.dat' using 1:2, '' using 1:3, '' using 1:4, \
@@ -187,7 +193,7 @@ Lat/lon scatter plot:
 
 == SEE ALSO
 
-*gpsd*(8)
+*gpsd*(8), *gnuplot*(1)
 
 == RESOURCES
 
@@ -195,5 +201,5 @@ Lat/lon scatter plot:
 
 == COPYING
 
-This file is Copyright 2013 by the GPSD project +
+This file is Copyright 2020 by the GPSD project +
 SPDX-License-Identifier: BSD-2-clause
