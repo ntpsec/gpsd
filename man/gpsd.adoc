@@ -127,7 +127,8 @@ The program accepts the following options:
 *-D LVL*, *--debug LVL*::
   Set debug level. Default is 0. At debug levels 2 and above, *gpsd*
   reports incoming sentence and actions to standard error if *gpsd* is in
-  the foreground (*-N*) or to syslog if in the background.
+  the foreground (*-N*) or to syslog if in the background. See <<LOGGING>>
+  below.
 *-F FILE*, *--sockfile FILE*::
   Create a control socket for device addition and removal commands.
   Default is None. You must specify a valid pathname on your local
@@ -275,6 +276,22 @@ to *ACTIVATE*. On deactivation, it does the same passing
 *gpsd* can export data to client applications in three ways: via a sockets
 interface, via a shared-memory segment, and via D-Bus. The next three
 major sections describe these interfaces.
+
+== LOGGING
+
+When *gpsd* is running as a daemon (not in the foreground) is sends
+all of its logging to *syslog*(3).  Logging is sent with ident "gpsd"
+using facility "LOG_USER".
+
+If you are using syslog-ng, then you can send all *gpsd*
+logs to a file */var/log/gpsd*. Put this at the end of your
+*/etc/syslog-ng/syslog-ng.conf* file:
+
+----
+destination gpsdf { file("/var/log/gpsd"); };
+filter f_gpsd { program("gpsd"); };
+log { source(src); filter(f_gpsd); destination(gpsdf); };
+----
 
 == THE SOCKET INTERFACE
 
@@ -686,7 +703,7 @@ This manual page by Eric S. Raymond <esr@thyrsus.com>.
 == SEE ALSO
 
 *gpsd*(8), *gpsctl*(1), *gps*(1), *libgps*(3), *libgpsmm*(3), *gpsprof*(1),
-*gpsfake*(1).  gpsdctl(8), gpsd_json(5), *gpscat(1)
+*gpsfake*(1). gpsdctl(8), gpsd_json(5), *gpscat(1)
 
 == RESOURCES
 

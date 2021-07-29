@@ -180,12 +180,14 @@ static void gpsd_vlog(const int errlevel,
 
     visibilize(outbuf, outlen, buf, strlen(buf));
 
-    if (getpid() == getsid(getpid()))
+    if (getpid() == getsid(getpid())) {
+        // FIXME: map more gpsd log levels to syslog log levels.
         syslog((errlevel <= LOG_SHOUT) ? LOG_ERR : LOG_NOTICE, "%s", outbuf);
-    else if (errout->report != NULL)
+    } else if (errout->report != NULL) {
         errout->report(outbuf);
-    else
+    } else {
         (void)fputs(outbuf, stderr);
+    }
     gpsd_release_reporting_lock();
 #endif /* !SQUELCH_ENABLE */
 }
