@@ -300,11 +300,10 @@ http://www.prolific.com.tw/US/ShowProduct.aspx?p_id=229&pcid=41
 
 == Special Notes for Raspberry Pi Installation
 
-gpsd will build, install and run on the Raspberry Pi (RasPi) and Pi 2
-using Debian jessie.  Other distributions based on
-Debian (raspbian, etc) will work fine as well.  The gpsd
-package in Debian Wheezy is known to be flaky, be sure to update to a
-new version of gpsd from source.
+*gpsd* will build, install and run on the Raspberry Pi (RasPi) and Pi 2
+using Debian Jessie. Other distributions based on Debian (raspbian, etc)
+will work fine as well. The *gpsd* package in Debian Wheezy is known to be
+flaky, be sure to update to a new version of gpsd from source.
 
 === Raspbian
 

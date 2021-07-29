@@ -175,7 +175,7 @@ On Gentoo systems that package is named:
 |dev-python/pyserial
 |============================================================================
 
-The gpsplot client requires Matplotlib to do its job of creating dynamic
+The *gpsplot( client requires Matplotlib to do its job of creating dynamic
 plots.
 
 On Gentoo systems that package is named:
@@ -198,7 +198,13 @@ various additional capabilities and extensions:
 |(n)curses        | curses screen-painting library, used by cgps and gpsmon
 |pps-tools        | adds support for the KPPS API, for improved timing
 |libusb           | Userspace access to USB devices
+|dbus             | D-Bus support
 |============================================================================
+
+If you have libusb-1.0.0 or later, the GPSD build will autodetect
+this and use it to discover Garmin USB GPSes, rather than groveling
+through /proc/bus/usb/devices (which has been deprecated by the
+Linux kernel team).
 
 On Gentoo systems those packages are named:
 
@@ -208,17 +214,28 @@ On Gentoo systems those packages are named:
 |sys-libs/ncurses    | curses screen-painting library, used by cgps and gpsmon
 |net-misc/pps-tools  | adds support for the KPPS API, for improved timing
 |virtual/libusb      | Userspace access to USB devices
+|sys-apps/dbus       | D-Bus
 |=============================================================================
 
-If you have libusb-1.0.0 or later, the GPSD build will autodetect
-this and use it to discover Garmin USB GPSes, rather than groveling
-through /proc/bus/usb/devices (which has been deprecated by the
-Linux kernel team).  You will need the libusb development headers in this case.
+Debian/Ubuntu, and Fedora/RHEL, derived systems often split packages
+into binary, and development packages. Raspbian is Debian derived. This
+does not apply to Gentoo derived systems.
 
-Under Debian/Ubuntu this is the package:
+These development packages usually have a "-dev" suffix. Installing the
+development package usually installs the binary package for you.
+
+The development Debian/Ubuntu/Raspbian pacakages are:
 
 |==============================================================================
-|libusb-1.0-0-dev	| D-Bus Development package
+|libncurses5-dev      | curses screen-painting library, used by cgps and gpsmon
+|libusb-1.0-0-dev     | userspace USB programming library development files
+|libdbus-1-dev        | D-Bus Development package
+|==============================================================================
+
+The development Fedora/RHEL packages are:
+
+|==============================================================================
+|ncurses-devel        | curses screen-painting library, used by cgps and gpsmon
 |==============================================================================
 
 You can build libQgpsmm if you have Qt (specifically QtCore and
@@ -228,34 +245,13 @@ compiler supported by Qt (tested on GCC 4.4.0/mingw on Windows and GCC
 http://qt.nokia.com/doc/4.6/platform-specific.html for platform
 specific building documentation
 
-For working with D-Bus, you'll need the D-Bus development
-headers and libraries installed.
-
-Under Debian/Ubuntu this is the package:
-
-|==============================================================================
-|libdbus-1-dev        | D-Bus Development package
-|==============================================================================
-
-On Gentoo the package will already be installed if D-Bus is in use:
-
-|==============================================================================
-|sys-apps/dbus        | D-Bus
-|==============================================================================
-
-Under Ubuntu, the ncurses package you want is libncurses5-dev.  Under
-Fedora, it's ncurses-devel.  Depending on how your distribution
-packages ncurses you may also require libtinfo5, a separate terminfo
-library.
+Depending on how your distribution packages ncurses you may also require
+libtinfo5, a separate terminfo library.
 
 On some older versions of Ubuntu (notably 11.10) there is a packaging
 defect that may cause your build to blow up in SCons. It's a missing
 package info file for the tinfo library. To fix this, install the file
 packaging/tinfo.pc in /usr/lib/pkgconfig/tinfo.pc. 13.10 fixed this.
-
-We've seen a report that compiling on the Raspberry Pi fails with
-a complaint about curses.h not being found.  You need to install
-Raspbian's curses development library if this happens.
 
 If your kernel provides the RFC 2783 KPPS (kernel PPS) API, gpsd will
 use that for extra accuracy. Many Linux distributions have a package
