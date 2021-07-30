@@ -10,12 +10,12 @@
 #include <libgen.h>
 #include <math.h>
 #ifdef HAVE_GETOPT_LONG
-       #include <getopt.h>   // for getopt_long()
+   #include <getopt.h>   // for getopt_long()
 #endif
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <stdlib.h>          // for atexit()
 #include <string.h>
 #include <time.h>
 #include <unistd.h>          // for _exit()
@@ -40,6 +40,7 @@ static bool intrack = false;
 static time_t timeout = 5;      /* seconds */
 static double minmove = 0;      /* meters */
 static int debug;
+static int sig_flag = 0;
 
 static void print_gpx_header(void)
 {
@@ -137,11 +138,29 @@ static void print_fix(struct gps_data_t *gpsdata, timespec_t ts_time)
     (void)fflush(logfile);
 }
 
+// cleanup as an atexit() handler
+static void cleanup(void)
+{
+        print_gpx_footer();
+        (void)gps_close(&gpsdata);
+        /* don't clutter the logs on Ctrl-C */
+        if (0 != sig_flag && SIGINT != sig_flag) {
+            syslog(LOG_INFO, "exiting, signal %d received", sig_flag);
+        }
+}
+
 static void conditionally_log_fix(struct gps_data_t *gpsdata)
 {
     static timespec_t ts_time, old_ts_time, ts_diff;
     static double old_lat, old_lon;
     static bool first = true;
+
+    if (0 != sig_flag) {
+        if (SIGINT != sig_flag) {
+            exit(EXIT_FAILURE);
+        }
+        exit(EXIT_SUCCESS);
+    }
 
     ts_time = gpsdata->fix.time;
     if (TS_EQ(&ts_time, &old_ts_time) || gpsdata->fix.mode < MODE_2D)
@@ -181,8 +200,6 @@ static void conditionally_log_fix(struct gps_data_t *gpsdata)
     }
     print_fix(gpsdata, ts_time);
 }
-
-static int sig_flag = 0;
 
 static void quit_handler(int signum)
 {
@@ -413,23 +430,24 @@ int main(int argc, char **argv)
     (void)gps_stream(&gpsdata, flags, source.device);
 
     print_gpx_header();
+    // make sure footer added on exit
+    if (0 != atexit(cleanup)) {
+        syslog(LOG_ERR, "atexit() failed");
+    }
 
-    while (gps_mainloop(&gpsdata, timeout * 1000000, conditionally_log_fix) < 0 &&
-           reconnect &&
-           0 == sig_flag) {
-        /* avoid busy-calling gps_mainloop() */
-        (void)sleep(timeout);
-        if (0 != sig_flag) {
+    while (0 > gps_mainloop(&gpsdata, timeout * 1000000,
+                            conditionally_log_fix)) {
+        // fell out of mainloop, some sort of error, or just a timeout
+        if (!reconnect || 0 != sig_flag) {
+            // give up
             break;
         }
+        // avoid banging on reconnect
+        (void)sleep(timeout);
         syslog(LOG_INFO, "timeout; about to reconnect");
     }
 
-    print_gpx_footer();
-    (void)gps_close(&gpsdata);
-    /* don't clutter the logs on Ctrl-C */
     if (0 != sig_flag && SIGINT != sig_flag) {
-        syslog(LOG_INFO, "exiting, signal %d received", sig_flag);
         exit(EXIT_FAILURE);
     }
 
