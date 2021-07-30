@@ -173,9 +173,13 @@ void gps_shm_close(struct gps_data_t *gpsdata)
     }
 }
 
+/* run a shm main loop with a specified handler
+ *
+ * Returns: -1 on timeout or read error
+ * FIXME: read error should return different than timeout
+ */
 int gps_shm_mainloop(struct gps_data_t *gpsdata, int timeout,
-                         void (*hook)(struct gps_data_t *gpsdata))
-/* run a shm main loop with a specified handler */
+                     void (*hook)(struct gps_data_t *gpsdata))
 {
     for (;;) {
         if (!gps_shm_waiting(gpsdata, timeout)) {

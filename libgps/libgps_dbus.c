@@ -133,10 +133,14 @@ int gps_dbus_open(struct gps_data_t *gpsdata)
     return 0;
 }
 
+/* run a DBUS main loop with a specified handler
+ *
+ * Returns: -1 on timeout or read error
+ * FIXME: read error should return different than timeout
+ */
 int gps_dbus_mainloop(struct gps_data_t *gpsdata,
                        int timeout,
                        void (*hook)(struct gps_data_t *))
-/* run a DBUS main loop with a specified handler */
 {
     share_gpsdata = gpsdata;
     PRIVATE(share_gpsdata)->handler = (void (*)(struct gps_data_t *))hook;

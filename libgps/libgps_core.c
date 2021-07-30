@@ -235,6 +235,11 @@ bool gps_waiting(const struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
     return waiting;
 }
 
+/* run a main loop with a specified handler
+ *
+ * Returns: -1 on timeout or read error
+ * FIXME: read error should return different than timeout
+ */
 int gps_mainloop(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
                  int timeout CONDITIONALLY_UNUSED,
                  void (*hook)(struct gps_data_t *gpsdata) CONDITIONALLY_UNUSED)

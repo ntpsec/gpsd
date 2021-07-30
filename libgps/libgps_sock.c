@@ -487,7 +487,11 @@ int gps_sock_stream(struct gps_data_t *gpsdata, unsigned int flags, void *d)
     return gps_send(gpsdata, buf);
 }
 
-/* run a socket main loop with a specified handler */
+/* run a socket main loop with a specified handler
+ *
+ * Returns: -1 on timeout or read error
+ * FIXME: read error should return different than timeout
+ */
 int gps_sock_mainloop(struct gps_data_t *gpsdata, int timeout,
                       void (*hook)(struct gps_data_t *gpsdata))
 {
