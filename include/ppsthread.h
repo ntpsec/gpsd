@@ -36,8 +36,8 @@ struct pps_thread_t {
     char *devicename;           /* device path */
     char *(*report_hook)(volatile struct pps_thread_t *,
                          struct timedelta_t *);
-    void (*log_hook)(volatile struct pps_thread_t *,
-                     int errlevel, const char *fmt, ...);
+    PRINTF_FUNC(3, 4) void (*log_hook)(volatile struct pps_thread_t *,
+                                       int errlevel, const char *fmt, ...);
     struct timedelta_t fix_in;  // real & clock time when in-band fix received
     struct timedelta_t pps_out; /* real & clock time of last PPS event */
     int ppsout_count;
