@@ -300,7 +300,8 @@ static short ubx_to_prn(int ubx_PRN, unsigned char *gnssId,
     return ubx2_to_prn(*gnssId, *svId);
 }
 
-/* UBX-CFG-RATE */
+// UBX-CFG-RATE
+// Deprecated in u-blox 10
 static void ubx_msg_cfg_rate(struct gps_device_t *session, unsigned char *buf,
                              size_t data_len)
 {
@@ -2650,7 +2651,7 @@ ubx_msg_nav_sat(struct gps_device_t *session, unsigned char *buf,
 
 /**
  * GPS Satellite Info -- deprecated - UBX-NAV-SVINFO
- * Not in u-blox 9, use UBX-NAV-SAT instead
+ * Not in u-blox 9 or 10, use UBX-NAV-SAT instead
  */
 static gps_mask_t
 ubx_msg_nav_svinfo(struct gps_device_t *session, unsigned char *buf,
@@ -3403,7 +3404,16 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         }
         break;
 
+    case UBX_CFG_NAV5:
+        // deprecated in u-blox 10
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-CFG-NAV5\n");
+        break;
+    case UBX_CFG_NAVX5:
+        // deprecated in u-blox 10
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-CFG-NAVX5\n");
+        break;
     case UBX_CFG_PRT:
+        // deprecated in u-blox 10
         if (session->driver.ubx.port_id != buf[UBX_PREFIX_LEN + 0] ) {
             session->driver.ubx.port_id = buf[UBX_PREFIX_LEN + 0];
             GPSD_LOG(LOG_INF, &session->context->errout,
@@ -3411,14 +3421,9 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         }
         break;
     case UBX_CFG_RATE:
+        // deprecated in u-blox 10
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-CFG-RATE\n");
         ubx_msg_cfg_rate(session, &buf[UBX_PREFIX_LEN], data_len);
-        break;
-    case UBX_CFG_NAV5:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-CFG-NAV5\n");
-        break;
-    case UBX_CFG_NAVX5:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-CFG-NAVX5\n");
         break;
 
     case UBX_ESF_ALG:
@@ -3501,6 +3506,9 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
     case UBX_MON_HW2:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-HW2\n");
         break;
+    case UBX_MON_HW3:
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-HW3\n");
+        break;
     case UBX_MON_IO:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-IO\n");
         break;
@@ -3512,6 +3520,9 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         break;
     case UBX_MON_PATCH:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-PATCH\n");
+        break;
+    case UBX_MON_RF:
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-RF\n");
         break;
     case UBX_MON_RXBUF:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-RXBUF\n");
@@ -3525,6 +3536,9 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         break;
     case UBX_MON_SMGR:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-SMGR\n");
+        break;
+    case UBX_MON_SPAN:
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-SPAN\n");
         break;
     case UBX_MON_TXBUF:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-MON-TXBUF\n");
@@ -3600,9 +3614,6 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
     case UBX_NAV_RESETODO:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-RESETODO\n");
         break;
-    case UBX_NAV_SIG:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-SIG\n");
-        break;
     case UBX_NAV_SAT:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-SAT\n");
         mask = ubx_msg_nav_sat(session, &buf[UBX_PREFIX_LEN], data_len);
@@ -3611,8 +3622,11 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-SBAS\n");
         mask = ubx_msg_nav_sbas(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
+    case UBX_NAV_SIG:
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-SIG\n");
+        break;
     case UBX_NAV_SOL:
-        /* UBX-NAV-SOL deprecated in u-blox 6, gone in u-blox 9.
+        /* UBX-NAV-SOL deprecated in u-blox 6, gone in u-blox 9 and 10.
          * Use UBX-NAV-PVT instead */
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-SOL\n");
         mask = ubx_msg_nav_sol(session, &buf[UBX_PREFIX_LEN], data_len);
@@ -3652,6 +3666,9 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         break;
     case UBX_NAV_TIMELS:
         mask = ubx_msg_nav_timels(session, &buf[UBX_PREFIX_LEN], data_len);
+        break;
+    case UBX_NAV_TIMEQZSS:
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-TIMEQZSS\n");
         break;
     case UBX_NAV_TIMEUTC:
         mask = ubx_msg_nav_timeutc(session, &buf[UBX_PREFIX_LEN], data_len);
@@ -3709,7 +3726,19 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         mask = ubx_msg_rxm_sfrbx(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_RXM_SVSI:
+        // Gone in u-blox 10, use UBX-NAV-ORB instead
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-RXM-SVSI\n");
+        break;
+
+    // undocumented
+    // case UBX_SEC_SESSID:
+    //     GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-SEC-SESSID\n");
+    //     break;
+    case UBX_SEC_SIGN:
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX_SEC_SIGN\n");
+        break;
+    case UBX_SEC_UNIQID:
+        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX_SEC_UNIQID\n");
         break;
 
     case UBX_TIM_DOSC:
@@ -3744,13 +3773,6 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         break;
     case UBX_TIM_VRFY:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-TIM-VRFY\n");
-        break;
-
-    case UBX_SEC_SIGN:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX_SEC_SIGN\n");
-        break;
-    case UBX_SEC_UNIQID:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX_SEC_UNIQID\n");
         break;
 
 
@@ -3902,7 +3924,7 @@ static void ubx_event_hook(struct gps_device_t *session, event_t event)
     if (event == event_identified) {
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX identified\n");
 
-        /* no longer set UBX-CFG-SBAS here, u-blox 9 does not have it */
+        // no longer set UBX-CFG-SBAS here, u-blox 9 and 10 do not have it
 
         /*
          * Turn off NMEA output, turn on UBX on this port.
@@ -4295,7 +4317,8 @@ static bool ubx_rate(struct gps_device_t *session, double cycletime)
     msg[0] = (unsigned char)(measRate & 0xff);
     msg[1] = (unsigned char)(measRate >> 8);
 
-    return ubx_write(session, UBX_CLASS_CFG, 0x08, msg, 6); /* CFG-RATE */
+    // UBX-CFG-RATE deprecated in u-blox 10
+    return ubx_write(session, UBX_CLASS_CFG, 0x08, msg, 6); // CFG-RATE
 }
 
 /* This is everything we export */
