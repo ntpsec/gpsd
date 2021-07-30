@@ -1,6 +1,6 @@
                         GPSD project news
 
-3.22.1~dev: unreleased
+3.23~rc1: unreleased
   doc/*xml all moved into www/internals.adoc
   Convert all DocBook (.xml) to AsciiDoctor (.adoc)
   Remove all XSL remnants.
@@ -25,6 +25,7 @@
   Control messages to gpsd now return JSON, instead of, sometimes, OK or ERROR.
   gpsfake uses "# Date: yyyy-mm-dd" to set initial time.
   Don't compute wrong GPS rollover after 2020-10-23.
+  Bump libgps to version 29.
 
 3.22: 2021-01-08
   Added client/gpscsv to convert gpsd JSON to csv.
