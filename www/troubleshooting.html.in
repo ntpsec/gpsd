@@ -479,7 +479,18 @@ udev end of the configuration is working.</p>
 
 <h2>Systemd Interaction</h2>
 
-<p>gpsd must be installed. We want gpsd itself and, for testing, the gpsd clients, at least cgps and possibly xgps.</p>
+<p>Sometimes it is best to debug gpsd without it interactioning with
+systemd.  Once gpsd is working, you can try to get systemd to work
+with gpsd.  To disable systema, do this as rootd:</p>
+
+<pre>
+systemctl stop gpsd.socket gpsd.service
+systemctl disable gpsd.socket gpsd.service
+reboot
+</pre>
+
+<p>gpsd must be installed. We want gpsd itself and, for testing, the gpsd
+clients, at least cgps and possibly xgps.</p>
 
 <p>gpsd must running and reading from the GPS receiver. For general gpsd debugging, it is helpful to know that gpsd is running, and that the GPS receiver device file is present. For a u-blox receiver:</p>
 
