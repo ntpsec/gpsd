@@ -2016,8 +2016,12 @@ class ubx(object):
                    'name': 'UBX-ACK-ACK'}}
 
     # UBX-AID-
+    # All UBX-AID- removed in u-blox 10
     def aid_alm(self, buf):
-        """UBX-AID-ALM decode, GPS Aiding Almanac Data"""
+        """UBX-AID-ALM decode, GPS Aiding Almanac Data
+
+Removed in M10 (protVer 34.00 and up)
+"""
         m_len = len(buf)
 
         if 1 == m_len:
@@ -2037,7 +2041,10 @@ class ubx(object):
         return s
 
     def aid_alp(self, buf):
-        """UBX-AID-ALP decode, AlmanacPlus"""
+        """UBX-AID-ALP decode, AlmanacPlus
+
+Removed in M10 (protVer 34.00 and up)
+"""
 
         # u-blox 6, protVer 6 to 7
 
@@ -2061,7 +2068,10 @@ class ubx(object):
         return s
 
     def aid_alpsrv(self, buf):
-        """UBX-AID-ALPSRV decode, AlmanacPlus"""
+        """UBX-AID-ALPSRV decode, AlmanacPlus
+
+Removed in M10 (protVer 34.00 and up)
+"""
 
         # u-blox 6, protVer 6 to 7
 
@@ -2073,7 +2083,10 @@ class ubx(object):
         return s
 
     def aid_aop(self, buf):
-        """UBX-AID-AOP decode, AssistNow Autonomous data"""
+        """UBX-AID-AOP decode, AssistNow Autonomous data
+
+Removed in M10 (protVer 34.00 and up)
+"""
         m_len = len(buf)
 
         if 1 == m_len:
@@ -2090,7 +2103,10 @@ class ubx(object):
         return s
 
     def aid_data(self, buf):
-        """UBX-AID-DATA decode, Poll all GPS Initial Aiding Data"""
+        """UBX-AID-DATA decode, Poll all GPS Initial Aiding Data
+
+Removed in M10 (protVer 34.00 and up)
+"""
 
         # u-blox 6
         # If this poll is received, the messages AID-INI, AID-HUI,
@@ -2098,7 +2114,10 @@ class ubx(object):
         return "  Poll all GPS Initial Aiding Data"
 
     def aid_eph(self, buf):
-        """UBX-AID-EPH decode, GPS Aiding Ephemeris Data"""
+        """UBX-AID-EPH decode, GPS Aiding Ephemeris Data
+
+Removed in M10 (protVer 34.00 and up)
+"""
         m_len = len(buf)
 
         if 1 == m_len:
@@ -2122,7 +2141,10 @@ class ubx(object):
         return s
 
     def aid_hui(self, buf):
-        """UBX-AID-HUI decode, GPS Heatlh, UTC, Ionosphere"""
+        """UBX-AID-HUI decode, GPS Heatlh, UTC, Ionosphere
+
+Removed in M10 (protVer 34.00 and up)
+"""
 
         u = struct.unpack_from('<LddlhhhhhhffffffffL', buf, 0)
         s = (' health x%x utcA0 %e utcA1 %e utcTOW %d'
@@ -2134,7 +2156,10 @@ class ubx(object):
         return s
 
     def aid_ini(self, buf):
-        """UBX-AID-INI decode, Aiding position, time, frequency, clock drift"""
+        """UBX-AID-INI decode, Aiding position, time, frequency, clock drift
+
+Removed in M10 (protVer 34.00 and up)
+"""
 
         u = struct.unpack_from('<lllLHHLlLLlLL', buf, 0)
         s = (' ecefXOrLat %d ecefYOrLon %d ecefZOrAlt %d posAcc %u'
@@ -2145,11 +2170,15 @@ class ubx(object):
         return s
 
     def aid_req(self, buf):
-        """UBX-AID-REQ decode, Sends a poll for all GPS Aiding Data"""
+        """UBX-AID-REQ decode, Sends a poll for all GPS Aiding Data
+
+Removed in M10 (protVer 34.00 and up)
+"""
 
         return "  poll (AID-DATA) for all GPS Aiding Data"
 
-    # All UBX-AID messages are deprecated; use UBX-MGA messages instead
+    # All UBX-AID messages are deprecated, gone in M10 (protVer 34)
+    # use UBX-MGA messages instead
     aid_ids = {
                # u-blox 6
                0x00: {'str': 'REQ', 'dec': aid_req, 'minlen': 0,
@@ -3103,7 +3132,10 @@ Deprecated in protVer 34.00
         }
 
     def cfg_rate(self, buf):
-        """UBX-CFG-RATE decode, Navigation/Measurement Rate Settings"""
+        """UBX-CFG-RATE decode, Navigation/Measurement Rate Settings
+
+Deprecated in protVer 34.00
+"""
 
         u = struct.unpack_from('<HHH', buf, 0)
         s = (" measRate %u navRate %u timeRef %u (%s)" %
@@ -5568,10 +5600,12 @@ High Precision GNSS products only."""
         }
 
     def nav_sol(self, buf):
-        """UBX-NAV-SOL decode, Navigation Solution Information"""
+        """UBX-NAV-SOL decode, Navigation Solution Information
 
-        # removed from protVer 34 and up
-        # deprecated by u-blox
+deprecated by u-blox
+removed from u-blox 10 (protVer 34 and up)
+Use UBX-NAV-PVT instead
+"""
 
         u = struct.unpack_from('<LlhBBlllLlllLHBBL', buf, 0)
         s = ('  iTOW %u fTOW %d week %d gpsFix %u flags x%x\n'
@@ -5673,10 +5707,12 @@ High Precision GNSS products only."""
         }
 
     def nav_svinfo(self, buf):
-        """UBX-NAV-SVINFO decode"""
+        """UBX-NAV-SVINFO decode
 
-        # removed from protVer 34 and up
-        # in M8 Timing and FTS only
+removed from u-blox 10 (protVer 34 and up)
+Use UBX-NAV-SAT or UBX-NAV-SIG instead
+Present in M8 Timing and FTS only
+"""
         m_len = len(buf)
 
         u = struct.unpack_from('<LbbH', buf, 0)
@@ -7325,10 +7361,11 @@ protVer 34 and up
         return s
 
     def rxm_svsi(self, buf):
-        """UBX-RXM-SVSI decode, SV Status Info"""
+        """UBX-RXM-SVSI decode, SV Status Info
 
-        # not in M10, protVer 34 and up
-        # Use UBX-NAV-ORB instead
+Gone in M10 (protVer 34)
+Use UBX-NAV-ORB instead
+"""
         m_len = len(buf)
 
         u = struct.unpack_from('<LhBB', buf, 0)
@@ -8129,8 +8166,10 @@ with resetMode set to Hardware reset."
 
     def send_able_ned(self, able, args):
         """Enable NAV-RELPOSNED and VELNED messages.
+
 protver 15+ required for VELNED
-protver 20+, and HP GNSS, required for RELPOSNED"""
+protver 20+, and HP GNSS, required for RELPOSNED
+"""
         if 15 > self.protver:
             sys.stderr.write('gps/ubx: WARNING: protver %d too low for NED\n' %
                              (self.protver))
@@ -8709,9 +8748,11 @@ Always double check with "-p CFG-GNSS".
         self.gps_send(6, 0, m_data)
 
     def send_cfg_valdel(self, keys):
-        """UBX-CFG-VALDEL, delete config items by key"""
-        # present in u-blox NEO-D9S+, protver 24
-        # present in 9-series and higher
+        """UBX-CFG-VALDEL, delete config items by key
+
+present in u-blox NEO-D9S+, protver 24
+present in 9-series and higher
+"""
 
         m_data = bytearray(4)
         m_data[0] = 0       # version, 0 = transactionless, 1 = transaction
