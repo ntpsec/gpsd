@@ -139,8 +139,8 @@ static struct bitmask bitmask_tests[] = {
     {15, 0x07fff},
     {16, 0x0ffff},
     {31, 0x07fffffff},
-    {32, 0x0ffffffff},
-    {40, 0x0ffffffffff},
+    {32, 0x0ffffffffULL},
+    {40, 0x0ffffffffffULL},
     {255, 0},     // 255 marks end
 };
 struct uint2int
@@ -166,11 +166,11 @@ static struct uint2int uint2_tests[] = {
     {0x080000, 20, -524288},
     {0x0fffff, 20, -1},
     {0x07fffffff, 32, 2147483647},
-    {0x080000000, 32, -2147483648},
-    {0x0ffffffff, 32, -1},
-    {0x07ffffffff, 36, 34359738367},
-    {0x0800000000, 36, -34359738368},
-    {0x0fffffffff, 36, -1},
+    {0x080000000ULL, 32, -2147483648LL},
+    {0x0ffffffffULL, 32, -1},
+    {0x07ffffffffULL, 36, 34359738367LL},
+    {0x0800000000ULL, 36, -34359738368LL},
+    {0x0fffffffffULL, 36, -1},
     {0, 255, 0},     // 255 marks end
 };
 
@@ -315,7 +315,7 @@ int main(int argc, char *argv[])
     while (129 > uint2->bits) {
         if (uint2->res != UINT2INT(uint2->uint, uint2->bits)) {
             failures++;
-            printf("UINt2INT(x%llx, %u) FAILED, %lld s/b %lld\n",
+            printf("UINT2INT(x%llx, %u) FAILED, %lld s/b %lld\n",
                uint2->uint, uint2->bits,
                uint2->res, UINT2INT(uint2->uint, uint2->bits));
         }
