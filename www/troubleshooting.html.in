@@ -481,7 +481,7 @@ udev end of the configuration is working.</p>
 
 <p>Sometimes it is best to debug gpsd without it interactioning with
 systemd.  Once gpsd is working, you can try to get systemd to work
-with gpsd.  To disable systema, do this as rootd:</p>
+with gpsd.  To disable systemd, do this as root:</p>
 
 <pre>
 systemctl stop gpsd.socket gpsd.service
