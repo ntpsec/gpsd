@@ -427,12 +427,16 @@ int main(int argc, char **argv)
 
     if (source.device != NULL)
         flags |= WATCH_DEVICE;
-    (void)gps_stream(&gpsdata, flags, source.device);
+    if (0 > gps_stream(&gpsdata, flags, source.device)) {
+        syslog(LOG_ERR, "gps_stream() failed");
+        exit(EXIT_FAILURE);
+    }
 
     print_gpx_header();
     // make sure footer added on exit
     if (0 != atexit(cleanup)) {
         syslog(LOG_ERR, "atexit() failed");
+        exit(EXIT_FAILURE);
     }
 
     while (0 > gps_mainloop(&gpsdata, timeout * 1000000,
