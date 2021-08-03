@@ -144,7 +144,9 @@ expanded notes on the items and values in the TPV message.
 
 |time |No |string |Time/date stamp in ISO8601 format, UTC. May have a
 fractional part of up to .001sec precision. May be absent if the mode
-is not 2D or 3D.
+is not 2D or 3D.  May be present, but invalid, irfs no fix.  Verify
+3 consecutive 3D fixes before beliving it is UTC.  Even then it may be
+off by several seconds until the current leap secinds is known.
 
 |altHAE |No |numeric |Altitude, height above ellipsoid, in meters.
 Probably WGS84.
