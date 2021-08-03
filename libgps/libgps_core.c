@@ -168,7 +168,11 @@ int gps_read(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
     return status;
 }
 
-/* send a command to the gpsd instance */
+/* send a command to the gpsd instance
+ *
+ * Return: 0 -- success
+ * Return: negative -- fail
+ */
 int gps_send(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
              const char *fmt CONDITIONALLY_UNUSED, ...)
 {
@@ -189,6 +193,11 @@ int gps_send(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
     return status;
 }
 
+/* setup a stream
+ *
+ * Return: 0 -- success
+ * Return: negative -- fail
+ */
 int gps_stream(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
         unsigned int flags CONDITIONALLY_UNUSED,
         void *d CONDITIONALLY_UNUSED)

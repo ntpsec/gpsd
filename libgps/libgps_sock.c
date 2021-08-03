@@ -410,8 +410,12 @@ const char *gps_sock_data(const struct gps_data_t *gpsdata)
     return PRIVATE(gpsdata)->buffer;
 }
 
+/* send a command to the gpsd instance
+ *
+ * Return: 0 -- success
+ * Return: negative -- fail
+ */
 int gps_sock_send(struct gps_data_t *gpsdata, const char *buf)
-/* send a command to the gpsd instance */
 {
 #ifdef USE_QT
     QTcpSocket *sock = (QTcpSocket *) gpsdata->gps_fd;
