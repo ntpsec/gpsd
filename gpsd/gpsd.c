@@ -2246,10 +2246,10 @@ int main(int argc, char *argv[])
     (void)ntpshm_context_init(&context);
 
 #if defined(DBUS_EXPORT_ENABLE)
-    /* we need to connect to dbus as root */
+    // we need to connect to dbus as root
     if (initialize_dbus_connection()) {
-        /* the connection could not be started */
-        GPSD_LOG(LOG_ERROR, &context.errout,
+        // the connection could not be started, maybe user does not want it
+        GPSD_LOG(LOG_WARNING, &context.errout,
                  "unable to connect to the DBUS system bus\n");
     } else
         GPSD_LOG(LOG_PROG, &context.errout,
