@@ -420,22 +420,25 @@ int gps_sock_send(struct gps_data_t *gpsdata, const char *buf)
 #ifdef USE_QT
     QTcpSocket *sock = (QTcpSocket *) gpsdata->gps_fd;
     sock->write(buf, strlen(buf));
-    if (sock->waitForBytesWritten())
+    if (sock->waitForBytesWritten()) {
         return 0;
-    else {
-        qDebug() << "libgps::send error: " << sock->errorString();
-        return -1;
     }
+
+    qDebug() << "libgps::send error: " << sock->errorString();
 #else   // USE_QT
+    ssize_t sent;
 #ifdef HAVE_WINSOCK2_H
-    if (send(gpsdata->gps_fd, buf, strlen(buf), 0) == (ssize_t) strlen(buf))
+    sent = send(gpsdata->gps_fd, buf, strlen(buf), 0);
 #else
-    if (write(gpsdata->gps_fd, buf, strlen(buf)) == (ssize_t) strlen(buf))
+    sent = write(gpsdata->gps_fd, buf, strlen(buf));
 #endif /* HAVE_WINSOCK2_H */
+    if ((ssize_t)strlen(buf) != sent) {
         return 0;
-    else
-        return -1;
+    }
+    (void)fprintf(stderr, "gps_sock_send() write %ld, s/b %ld\n",
+                  (long)sent, (long)strlen(buf));
 #endif  // USE_QT
+    return -1;
 }
 
 /* ask gpsd to stream reports at you, hiding the command details */
