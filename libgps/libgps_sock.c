@@ -432,7 +432,7 @@ int gps_sock_send(struct gps_data_t *gpsdata, const char *buf)
 #else
     sent = write(gpsdata->gps_fd, buf, strlen(buf));
 #endif /* HAVE_WINSOCK2_H */
-    if ((ssize_t)strlen(buf) != sent) {
+    if ((ssize_t)strlen(buf) == sent) {
         return 0;
     }
     (void)fprintf(stderr, "gps_sock_send() write %ld, s/b %ld\n",
