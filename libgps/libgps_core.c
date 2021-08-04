@@ -195,6 +195,8 @@ int gps_send(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
 
 /* setup a stream
  *
+ * FIXME: works on socket streams, but not on shared memory stream.
+ *
  * Return: 0 -- success
  * Return: negative -- fail
  */

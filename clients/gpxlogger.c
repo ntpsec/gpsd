@@ -427,9 +427,12 @@ int main(int argc, char **argv)
 
     if (source.device != NULL)
         flags |= WATCH_DEVICE;
-    if (0 > gps_stream(&gpsdata, flags, source.device)) {
-        syslog(LOG_ERR, "gps_stream() failed");
-        exit(EXIT_FAILURE);
+    if (NULL != source.port) {
+        // only to sockets, not shared memory or dbus
+        if (0 > gps_stream(&gpsdata, flags, source.device)) {
+            syslog(LOG_ERR, "gps_stream() failed");
+            exit(EXIT_FAILURE);
+        }
     }
 
     print_gpx_header();
