@@ -1637,9 +1637,12 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
      */
     if ((changed & TIME_SET) == 0) {
         //GPSD_LOG(LOG_PROG, &context.errout, "NTP: No time this packet\n");
-    } else if (0 >= device->fixcnt && false == context.batteryRTC) {
-        /* many GPS spew random times until a valid GPS fix */
-        /* allow override with -r option */
+    } else if (NTP_MIN_FIXES >= device->fixcnt &&
+               false == context.batteryRTC) {
+        /* Many GPS spew random times until after several valid GPS fixes.
+         * Garmin says wait at least 3.
+         * Allow override with -r option as some GPS say they always output
+         * good time from an RTC */
         //GPSD_LOG(LOG_PROG, &context.errout, "NTP: no fix\n");
     } else if (0 == device->newdata.time.tv_sec) {
         //GPSD_LOG(LOG_PROG, &context.errout, "NTP: bad new time\n");
