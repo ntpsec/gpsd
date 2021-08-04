@@ -1764,8 +1764,12 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
             session->context->fixcnt = 0;
             session->fixcnt = 0;
         }
+    } else if (0 != (session->gpsdata.set & (MODE_SET))) {
+        if ( session->gpsdata.fix.status == STATUS_NO_FIX) {
+            session->context->fixcnt = 0;
+            session->fixcnt = 0;
+        }
     }
-
     /*
      * Sanity check.  This catches a surprising number of port and
      * driver errors, including 32-vs.-64-bit problems.
