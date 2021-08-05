@@ -179,7 +179,7 @@ doc_files = [
     'AUTHORS',
     'build.adoc',
     'COPYING',
-    'www/example1.c',
+    'www/example1.c.txt',
     'NEWS',
     'README.adoc',
     'SUPPORT.adoc',
