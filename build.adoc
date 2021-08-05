@@ -186,6 +186,7 @@ On Gentoo systems that package is named:
 === Scons
 
 You will need scons version 2.3.0 (from 2013-03-02) or later to build the code.
+(Note that there is no evidence of recent testing of scons older than about 3.1.)
 
 === Optional build components
 
