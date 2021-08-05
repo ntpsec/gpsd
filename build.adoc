@@ -354,6 +354,34 @@ generator included with the distribution. To install it, copy the file
 'gpsd.php' to your HTML document directory. Then see the
 post-installation instructions in INSTALL.adoc for how to configure it.
 
+=== Setting prefix and customizing install locations
+
+Adding prefix=/usr/foo will cause scons to install to /usr/foo instead
+of the default /usr/local, much as --prefix=/usr/foo works with
+autoconf.
+
+In addition, there are a number of other scons command-line variables
+that can be used to control the location of various install
+directories.  Many of these, such as bindir -- which unsurprisingly
+defaults to "bin" -- are unlikely to be ever used.  Generally, these
+can be set to absolute paths or relative paths.  Relative paths are
+under prefix.  See SConscript and search for "bindir" to see the list.
+
+Some of these variables are typically used to adapt to differing
+layout conventions.  For example, pkgsrc would use
+docdir=share/doc/gpsd as per-package documentation is placed in
+prefix/share/doc/PKGNAME, and mandir=man as man pages are in
+prefix/man rather than prefix/share/man.
+
+The includedir= argument sets the location to which gpsd's include
+files (gps.h, libgpsmm.h) are installed.  So using prefix=/usr/foo and
+includedir=/usr/bar/include will install everything but includes in
+/usr/foo and put the includes in /usr/bar.  This is highly unlikely to
+be desired, but given to illustrate the behavior.
+
+The includedir=/usr/foo/include argument has no other effects; in
+particular it does add -I/usr/foo/include to compilation lines.
+
 === Gentoo Build
 
 A cheat sheet for building gpsd from git source on a freshly installed
