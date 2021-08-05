@@ -2327,10 +2327,13 @@ if adoc_prog:
         asciidocs.append(tgt)
 
 # Non-asciidoc, plain html webpages only
+# example1.c has a .txt extension to avoid an scons bug where the
+# install rule for gps.h is invoked during the build step when there
+# is a CPPFLAGS matching gpsd's install prefix.
 htmlpages = [
     'www/bt.html',
     'www/bu_303b.html',
-    'www/example1.c',
+    'www/example1.c.txt',
     'www/excellence.html',
     'www/for-vendors.html',
     'www/future.html',

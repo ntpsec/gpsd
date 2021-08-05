@@ -25,12 +25,14 @@ the _localhost_ running on the default port _2947_, using TCP.  You need
 to already have *gpsd* installed, with its libraries, and running, on your
 host for this example to run.
 
-Grab a copy of https://gpsd.io/example1.c[example1.c], compile it, and
-run it.  The example builds and runs fine as a normal user as it does
-not require any special permissions. Use "^C" to exit. Like this:
+Grab a copy of https://gpsd.io/example1.c.txt[example1.c], rename it
+to not have the .txt extension (an scons bug workaround), compile it,
+and run it. i The example builds and runs fine as a normal user as it
+does not require any special permissions. Use "^C" to exit.  Like
+this:
 
 ----
-$ wget https://gpsd.io/example1.c
+$ wget -o example1.c https://gpsd.io/example1.c.txt
 $ gcc example1.c -o example1 -lgps -lm
 $ ./example1
 Fix mode: 3D (3) Time: 1615325173.000000000 Lat 44.068861 Lon -121.314085
