@@ -382,6 +382,34 @@ be desired, but given to illustrate the behavior.
 The includedir=/usr/foo/include argument has no other effects; in
 particular it does add -I/usr/foo/include to compilation lines.
 
+=== Specifiying locations for prerequisites
+
+This section explains how to configure the build to find
+prerequisites.  It can be skipped by those who find that the build
+succeeds.
+
+Software that is needed to build gpsd may in general be in various
+locations.  (While many GNU/Linux users doing a straightforward build
+will have all prerequisites in /usr, most other operating systems have
+additional software in other than /usr, and even on Linux one may wish
+to build a separate copy of gpsd with alternate versions of
+prerequisites.)  
+
+The build will invoke the compiler and linker, so that headers and
+libraries in the default compiler and linker search paths will be
+found without any additional configuration.
+
+In addition, scons will use pkgconfig to find some prerequisites.
+These will be found if the pc files are in the default pkgconfig
+search path, and the resulting -I and -L flags added to the compile
+and link lines.
+
+The gpsd scons build scripts also support passing in CPPFLAGS and
+LDFLAGS via environment variables, similar to how these are used with
+autoconf and almost all other build systems.  As an example,
+CPPFLAGS=-I/usr/foo/include will cause -I/usr/foo/include to be added
+to compilation lines.
+
 === Gentoo Build
 
 A cheat sheet for building gpsd from git source on a freshly installed
