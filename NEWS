@@ -1,6 +1,6 @@
                         GPSD project news
 
-3.23~rc2: unreleased
+3.23: 2020-08-06
   doc/*xml all moved into www/internals.adoc
   Convert all DocBook (.xml) to AsciiDoctor (.adoc)
   Remove all XSL remnants.
