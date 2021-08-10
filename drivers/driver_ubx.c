@@ -1929,7 +1929,7 @@ ubx_msg_nav_relposned(struct gps_device_t *session, unsigned char *buf,
      * 64 bytes in Version 1, protVer 27.11+ */
 
     session->newdata.dgps_station = getleu16(buf, 2);          // 0 to 4095
-    session->driver.ubx.iTOW = getles32(buf, 4);
+    session->driver.ubx.iTOW = getleu32(buf, 4);
     if (1 > version) {
         // version 0
         flags = getleu32(buf, 36);
@@ -2047,6 +2047,7 @@ ubx_msg_nav_sol(struct gps_device_t *session, unsigned char *buf,
 
         MSTOTS(&ts_tow, session->driver.ubx.iTOW);
         ts_tow.tv_nsec += (long)getles32(buf, 4);
+        TS_NORM(&ts_tow);
         week = (unsigned short)getles16(buf, 8);
         session->newdata.time = gpsd_gpstime_resolv(session, week, ts_tow);
         mask |= TIME_SET | NTPTIME_IS | GOODTIME_IS;
@@ -2247,7 +2248,7 @@ ubx_msg_nav_timels(struct gps_device_t *session, unsigned char *buf,
         return 0;
     }
 
-    session->driver.ubx.iTOW = getles32(buf, 0);
+    session->driver.ubx.iTOW = getleu32(buf, 0);
     version = getsb(buf, 4);
     // Only version 0 is defined up to ub-blox 9
     flags = (unsigned int)getub(buf, 23);
@@ -2354,7 +2355,7 @@ ubx_msg_nav_posllh(struct gps_device_t *session, unsigned char *buf,
         return 0;
     }
 
-    session->driver.ubx.iTOW = getles32(buf, 0);
+    session->driver.ubx.iTOW = getleu32(buf, 0);
     session->newdata.longitude = 1e-7 * getles32(buf, 4);
     session->newdata.latitude = 1e-7 * getles32(buf, 8);
     /* altitude WGS84 */
@@ -2395,7 +2396,7 @@ ubx_msg_nav_dop(struct gps_device_t *session, unsigned char *buf,
         return 0;
     }
 
-    session->driver.ubx.iTOW = getles32(buf, 0);
+    session->driver.ubx.iTOW = getleu32(buf, 0);
     /*
      * We make a deliberate choice not to clear DOPs from the
      * last skyview here, but rather to treat this as a supplement
@@ -2436,7 +2437,7 @@ ubx_msg_nav_eoe(struct gps_device_t *session, unsigned char *buf,
         /* this GPS is at least protver 18 */
         session->driver.ubx.protver = 18;
     }
-    session->driver.ubx.iTOW = getles32(buf, 0);
+    session->driver.ubx.iTOW = getleu32(buf, 0);
     GPSD_LOG(LOG_PROG, &session->context->errout, "EOE: iTOW=%lld\n",
              (long long)session->driver.ubx.iTOW);
     /* nothing to report, but the iTOW for cycle ender is good */
@@ -2460,7 +2461,7 @@ ubx_msg_nav_timegps(struct gps_device_t *session, unsigned char *buf,
         return 0;
     }
 
-    session->driver.ubx.iTOW = getles32(buf, 0);
+    session->driver.ubx.iTOW = getleu32(buf, 0);
     valid = getub(buf, 11);
     // Valid leap seconds ?
     if ((valid & UBX_TIMEGPS_VALID_LEAP_SECOND) ==
@@ -2479,6 +2480,7 @@ ubx_msg_nav_timegps(struct gps_device_t *session, unsigned char *buf,
         week = getles16(buf, 8);
         MSTOTS(&ts_tow, session->driver.ubx.iTOW);
         ts_tow.tv_nsec += (long)getles32(buf, 4);
+        TS_NORM(&ts_tow);
         session->newdata.time = gpsd_gpstime_resolv(session, week, ts_tow);
 
         tAcc = (double)getleu32(buf, 12);     // tAcc in ns
@@ -2508,7 +2510,7 @@ ubx_msg_nav_timeutc(struct gps_device_t *session, unsigned char *buf,
         return 0;
     }
 
-    session->driver.ubx.iTOW = getles32(buf, 0);
+    session->driver.ubx.iTOW = getleu32(buf, 0);
     valid = getub(buf, 19);
     if (4 == (4 & valid)) {
         // UTC is valid
@@ -2570,7 +2572,7 @@ ubx_msg_nav_sat(struct gps_device_t *session, unsigned char *buf,
         /* this GPS is at least protver 15 */
         session->driver.ubx.protver = 15;
     }
-    session->driver.ubx.iTOW = getles32(buf, 0);
+    session->driver.ubx.iTOW = getleu32(buf, 0);
     MSTOTS(&ts_tow, session->driver.ubx.iTOW);
     session->gpsdata.skyview_time =
         gpsd_gpstime_resolv(session, session->context->gps_week, ts_tow);
@@ -2666,7 +2668,7 @@ ubx_msg_nav_svinfo(struct gps_device_t *session, unsigned char *buf,
         return 0;
     }
 
-    session->driver.ubx.iTOW = getles32(buf, 0);
+    session->driver.ubx.iTOW = getleu32(buf, 0);
     MSTOTS(&ts_tow, session->driver.ubx.iTOW);
     session->gpsdata.skyview_time =
         gpsd_gpstime_resolv(session, session->context->gps_week, ts_tow);
@@ -2759,7 +2761,7 @@ ubx_msg_nav_velecef(struct gps_device_t *session, unsigned char *buf,
         return 0;
     }
 
-    session->driver.ubx.iTOW = getles32(buf, 0);
+    session->driver.ubx.iTOW = getleu32(buf, 0);
     session->newdata.ecef.vx = getles32(buf, 4) / 100.0;
     session->newdata.ecef.vy = getles32(buf, 8) / 100.0;
     session->newdata.ecef.vz = getles32(buf, 12) / 100.0;
@@ -2790,7 +2792,7 @@ ubx_msg_nav_velned(struct gps_device_t *session, unsigned char *buf,
         return 0;
     }
 
-    session->driver.ubx.iTOW = getles32(buf, 0);
+    session->driver.ubx.iTOW = getleu32(buf, 0);
     session->newdata.NED.velN = getles32(buf, 4) / 100.0;
     session->newdata.NED.velE = getles32(buf, 8) / 100.0;
     session->newdata.NED.velD = getles32(buf, 12) / 100.0;
@@ -2827,7 +2829,7 @@ ubx_msg_nav_sbas(struct gps_device_t *session, unsigned char *buf,
         return 0;
     }
 
-    session->driver.ubx.iTOW = getles32(buf, 0);
+    session->driver.ubx.iTOW = getleu32(buf, 0);
     ubx_PRN = getub(buf, 4);
     cnt = getub(buf, 8);
     GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -3778,14 +3780,14 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
 
     default:
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "UBX: unknown packet id 0x%04hx (length %zd)\n",
+                 "UBX: unknown packet id x%04hx (length %zd)\n",
                  msgid, len);
     }
     /* end of cycle ? */
     if (session->driver.ubx.end_msgid == msgid) {
         /* end of cycle, report it */
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "UBX: cycle end %x\n", msgid);
+                 "UBX: cycle end x%04x\n", msgid);
         mask |= REPORT_IS;
     }
     /* start of cycle ? */
