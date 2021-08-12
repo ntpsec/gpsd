@@ -912,7 +912,7 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
     gps_mask_t mask = ONLINE_SET;
     int newstatus;
     char last_last_gga_talker = session->nmea.last_gga_talker;
-    int fix;
+    int fix;              // a.k.a Quality flag
     int satellites_visible;
     session->nmea.last_gga_talker = field[0][1];
 
@@ -924,6 +924,7 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
     } else {
         fix = atoi(field[6]);
     }
+    // Jackson Labs Micro JLT uses nonstadard fix flag, not handled
     switch (fix) {
     case 0:     /* no fix */
         newstatus = STATUS_NO_FIX;
@@ -1341,7 +1342,8 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
                 // NMEA 1 - 64
                 *ubx_svid = nmea_satnum;
             } else {
-                // SiRF 65-96
+                // SiRF quirk 65-96
+                // Jackson Labs Micro JLT quirk 65-96
                 *ubx_svid = nmea_satnum - 64;
             }
             nmea2_prn = 64 + *ubx_svid;
@@ -1352,9 +1354,12 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
             if (100 > nmea_satnum) {
                 // NMEA
                 *ubx_svid = nmea_satnum;
-            } else {
+            } else if (100 < nmea_satnum && 200 > nmea_satnum) {
                 // Quectel Querk, NOT NMEA, 101 - 199
                 *ubx_svid = nmea_satnum - 100;
+            } else if (300 < nmea_satnum && 400 > nmea_satnum) {
+                // Jackson Labs quirk, NOT NMEA, 301 - 399
+                *ubx_svid = nmea_satnum - 300;
             }
             nmea2_prn = 300 + *ubx_svid;    // 301 - 399
             break;
@@ -1364,9 +1369,12 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
             if (100 > nmea_satnum) {
                 // NMEA 1 - 99
                 *ubx_svid = nmea_satnum;
-            } else {
+            } else if (200 < nmea_satnum && 300 > nmea_satnum) {
                 // Quectel Querk, NOT NMEA, 201 - 299
                 *ubx_svid = nmea_satnum - 200;
+            } else if (400 < nmea_satnum && 500 > nmea_satnum) {
+                // Jackson Labs quirk, NOT NMEA, 401 - 499
+                *ubx_svid = nmea_satnum - 400;
             }
             // put it at 400+ where NMEA 4.11 wants it
             nmea2_prn = 400 + *ubx_svid;
@@ -1378,7 +1386,7 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
                 // NMEA 1 - 99
                 *ubx_svid = nmea_satnum;
             } else {
-                // Telit uses 193 - 199
+                // Telit quirk, not NMEA 193 - 199
                 *ubx_svid = nmea_satnum - 192;
             }
 
@@ -3704,28 +3712,31 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"MLA", 0,  false, NULL},       // ignore GLONASS Almana Data
         {"MSS", 0,  false, NULL},       /* ignore beacon receiver status */
         {"MTW", 0,  false, NULL},       /* ignore Water Temperature */
-        {"MWD", 0,  false, processMWD},      // Wind Direction and Speed
-        {"MWV", 0,  false, processMWV},      // Wind Speed and Angle
+        {"MWD", 0,  false, processMWD},       // Wind Direction and Speed
+        {"MWV", 0,  false, processMWV},       // Wind Speed and Angle
 #ifdef OCEANSERVER_ENABLE
         {"OHPR", 18, false, processOHPR},
 #endif /* OCEANSERVER_ENABLE */
-        {"OSD", 0,  false, NULL},       // ignore Own Ship Data
-        /* general handler for Ashtech */
+        {"OSD", 0,  false, NULL},             // ignore Own Ship Data
+        // general handler for Ashtech
         {"PASHR", 3, false, processPASHR},
-        {"PMGNST", 8, false, processPMGNST},    /* Magellan Status */
+        // Jackson Labs proprietary
+        {"PJLTS", 11,  false, NULL},          // GPSDO status
+        {"PJLTV", 4,  false, NULL},           // Time and 3D velocity
+        {"PMGNST", 8, false, processPMGNST},  // Magellan Status
         {"PMTK", 3,  false, processMTK3301},
         /* for some reason the parser no longer triggering on leading chars */
         {"PMTK001", 3,  false, processMTK3301},
         {"PMTK424", 3,  false, processMTK3301},
         {"PMTK705", 3,  false, processMTK3301},
-        {"PMTKCHN", 0, false, NULL},    /* ignore MediaTek Channel Status */
+        {"PMTKCHN", 0, false, NULL},          // MediaTek Channel Status
         {"PRHS ", 2,  false, processPRHS},  // smart watch sensors, Yes: space!
-        {"PRWIZCH", 0, false, NULL},    /* ignore Rockwell Channel Status */
-        {"PSRFEPE", 7, false, processPSRFEPE},  /* SiRF Estimated Errors */
-        {"PSTI", 2, false, processPSTI},        /* $PSTI Skytraq */
+        {"PRWIZCH", 0, false, NULL},          // Rockwell Channel Status
+        {"PSRFEPE", 7, false, processPSRFEPE},  // SiRF Estimated Errors
+        {"PSTI", 2, false, processPSTI},        // $PSTI Skytraq
         // $PSTM ST Micro STA8088xx/STA8089xx/STA8090xx
         {"PSTM", 0, false, NULL},
-        {"PTFTTXT", 0, false, NULL},    /* ignore unknown uptime */
+        {"PTFTTXT", 0, false, NULL},            // unknown uptime
         {"PTNTHTM", 9, false, processTNTHTM},
         {"PTNTA", 8, false, processTNTA},
         {"PUBX", 0, false, NULL},       // ignore u-blox and Antaris

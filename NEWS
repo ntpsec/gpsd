@@ -1,6 +1,8 @@
                         GPSD project news
 
 3.23.1~dev: unreleased
+  Improve ubx cycle detection.
+  Add quirks for Jackson Labs nonstandard NMEA
 
 3.23: 2020-08-06
   doc/*xml all moved into www/internals.adoc
