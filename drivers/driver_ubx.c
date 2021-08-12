@@ -78,9 +78,9 @@ static gps_mask_t ubx_msg_log_retrieveposextra(struct gps_device_t *session,
 static gps_mask_t ubx_msg_log_retrievestring(struct gps_device_t *session,
                                              unsigned char *buf,
                                              size_t data_len);
-static gps_mask_t ubx_msg_nav_eoe(struct gps_device_t *session,
-                                  unsigned char *buf, size_t data_len);
 static gps_mask_t ubx_msg_nav_dop(struct gps_device_t *session,
+                                  unsigned char *buf, size_t data_len);
+static gps_mask_t ubx_msg_nav_eoe(struct gps_device_t *session,
                                   unsigned char *buf, size_t data_len);
 static gps_mask_t ubx_msg_inf(struct gps_device_t *session, unsigned char *buf,
                               size_t data_len);
@@ -2384,6 +2384,62 @@ ubx_msg_nav_posllh(struct gps_device_t *session, unsigned char *buf,
 }
 
 /**
+ * Clock Solution
+ *
+ * Present in u-blox 7
+ */
+static gps_mask_t
+ubx_msg_nav_clock(struct gps_device_t *session, unsigned char *buf,
+                  size_t data_len)
+{
+    long clkB, clkD;
+    unsigned long tAcc, fAcc;
+
+    if (20 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-NAV-CLOCK message, runt payload len %zd", data_len);
+        return 0;
+    }
+
+    session->driver.ubx.iTOW = getleu32(buf, 0);
+    clkB = getles32(buf, 4);
+    clkD = getles32(buf, 8);
+    tAcc = getleu32(buf, 12);
+    fAcc = getleu32(buf, 16);
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NAV-CLOCK: iTOW=%lld clkB %ld clkD %ld tAcc %lu fAcc %lu\n",
+             (long long)session->driver.ubx.iTOW, clkB, clkD, tAcc, fAcc);
+    return 0;
+}
+
+/**
+ * DGPS Data Used for NAV
+ *
+ * May be good cycle ender
+ *
+ * Present in u-blox 7
+ */
+static gps_mask_t
+ubx_msg_nav_dgps(struct gps_device_t *session, unsigned char *buf,
+                size_t data_len)
+{
+    long age;
+
+    if (16 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-NAV-DGPS message, runt payload len %zd", data_len);
+        return 0;
+    }
+
+    session->driver.ubx.iTOW = getleu32(buf, 0);
+    age = getleu32(buf, 4);
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NAV-DGPS: iTOW=%lld age %ld\n",
+             (long long)session->driver.ubx.iTOW, age);
+    return 0;
+}
+
+/**
  * Dilution of precision message
  */
 static gps_mask_t
@@ -2409,7 +2465,7 @@ ubx_msg_nav_dop(struct gps_device_t *session, unsigned char *buf,
     session->gpsdata.dop.vdop = (double)(getleu16(buf, 10) / 100.0);
     session->gpsdata.dop.hdop = (double)(getleu16(buf, 12) / 100.0);
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "NAVDOP: gdop=%.2f pdop=%.2f "
+             "NAV-DOP: gdop=%.2f pdop=%.2f "
              "hdop=%.2f vdop=%.2f tdop=%.2f mask={DOP}\n",
              session->gpsdata.dop.gdop,
              session->gpsdata.dop.hdop,
@@ -2438,7 +2494,7 @@ ubx_msg_nav_eoe(struct gps_device_t *session, unsigned char *buf,
         session->driver.ubx.protver = 18;
     }
     session->driver.ubx.iTOW = getleu32(buf, 0);
-    GPSD_LOG(LOG_PROG, &session->context->errout, "EOE: iTOW=%lld\n",
+    GPSD_LOG(LOG_PROG, &session->context->errout, "NAV-EOE: iTOW=%lld\n",
              (long long)session->driver.ubx.iTOW);
     /* nothing to report, but the iTOW for cycle ender is good */
     return 0;
@@ -2533,7 +2589,7 @@ ubx_msg_nav_timeutc(struct gps_device_t *session, unsigned char *buf,
         mask |= TIME_SET | NTPTIME_IS | GOODTIME_IS;
 
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TIMEUTC: iTOW=%lld valid=%02x %04d-%02d-%02d "
+                 "UBX-NAV-TIMEUTC: iTOW=%lld valid=%02x %04d-%02d-%02d "
                  "%02d:%02d:%02d.%09d tAcc=%llu time %lld.%09lld\n",
                  (long long)session->driver.ubx.iTOW,
                  valid, date.tm_year + 1900, date.tm_mon + 1, date.tm_mday,
@@ -3213,6 +3269,36 @@ static gps_mask_t ubx_msg_rxm_sfrbx(struct gps_device_t *session,
     return gpsd_interpret_subframe_raw(session, gnssId, svId, words, numWords);
 }
 
+/**
+ * SV Status Info
+ *
+ * May be good cycle ender
+ *
+ * Present in u-blox 7
+ */
+static gps_mask_t
+ubx_msg_rxm_svsi(struct gps_device_t *session, unsigned char *buf,
+                 size_t data_len)
+{
+    unsigned numVis, numSV;
+
+    if (8 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-RXM-SVSI message, runt payload len %zd", data_len);
+        return 0;
+    }
+
+    session->driver.ubx.iTOW = getleu32(buf, 0);
+    session->context->gps_week = getleu16(buf, 4);
+    numVis = getub(buf, 6);
+    numSV = getub(buf, 7);
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NAV-CLOCK: iTOW=%lld week %d numVis %u numSV %u\n",
+             (long long)session->driver.ubx.iTOW,
+            session->context->gps_week, numVis, numSV);
+    return 0;
+}
+
 /* UBX-INF-* */
 static gps_mask_t
 ubx_msg_inf(struct gps_device_t *session, unsigned char *buf, size_t data_len)
@@ -3561,21 +3647,19 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-ATT\n");
         break;
     case UBX_NAV_CLOCK:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-CLOCK\n");
+        mask = ubx_msg_nav_clock(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_DGPS:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-DGPS\n");
+        mask = ubx_msg_nav_dgps(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_DOP:
         // DOP seems to be the last NAV sent in a cycle, unless NAV-EOE
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-DOP\n");
         mask = ubx_msg_nav_dop(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_EKFSTATUS:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-EKFSTATUS\n");
         break;
     case UBX_NAV_EOE:
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-EOE\n");
         mask = ubx_msg_nav_eoe(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_GEOFENCE:
@@ -3729,7 +3813,7 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         break;
     case UBX_RXM_SVSI:
         // Gone in u-blox 10, use UBX-NAV-ORB instead
-        GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-RXM-SVSI\n");
+        mask = ubx_msg_rxm_svsi(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
 
     // undocumented
@@ -3777,56 +3861,56 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-TIM-VRFY\n");
         break;
 
-
     default:
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "UBX: unknown packet id x%04hx (length %zd)\n",
                  msgid, len);
     }
-    /* end of cycle ? */
-    if (session->driver.ubx.end_msgid == msgid) {
-        /* end of cycle, report it */
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "UBX: cycle end x%04x\n", msgid);
-        mask |= REPORT_IS;
-    }
-    /* start of cycle ? */
-    if ( -1 < session->driver.ubx.iTOW) {
-        /* this sentence has a good time */
-        /* debug
-        GPSD_LOG(LOG_ERROR, &session->context->errout,
-                 "UBX:      time %.2f      msgid %x\n",
-                 session->newdata.time, msgid);
-        GPSD_LOG(LOG_ERROR, &session->context->errout,
-                 "     last_time %s last_msgid %x\n",
-                 timespec_str(&session->driver.ubx.last_time, ts_buf,
-                              sizeof(ts_buf)),
-                 session->driver.ubx.last_msgid);
-         */
-        /* iTOW is to ms, can go forward or backwards */
-        if ((session->driver.ubx.last_iTOW != session->driver.ubx.iTOW) &&
-            (session->driver.ubx.end_msgid !=
-             session->driver.ubx.last_msgid)) {
-            /* time changed, new cycle ender */
-            session->driver.ubx.end_msgid = session->driver.ubx.last_msgid;
-            session->driver.ubx.last_iTOW = session->driver.ubx.iTOW;
-            GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "UBX: new ender %x, iTOW %lld last %u PROTVER %u\n",
-                     session->driver.ubx.end_msgid,
-                     (long long)session->driver.ubx.iTOW,
-                     session->driver.ubx.last_protver,
-                     session->driver.ubx.protver);
+#ifdef __UNUSED
+    // debug
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "UBX: msgid x%04x end x%04x last x%04x iTOW %lld last %lld\n",
+             msgid,
+             session->driver.ubx.end_msgid,
+             session->driver.ubx.last_msgid,
+             (long long)session->driver.ubx.iTOW,
+             (long long)session->driver.ubx.last_iTOW);
+#endif
 
-            // Did protver change?
-            if (session->driver.ubx.last_protver !=
-                session->driver.ubx.protver) {
-                /* Assumption: we just did init, but did not have
-                 * protver then, so init is not complete.  Finish now. */
-                if (session->mode == O_OPTIMIZE) {
-                    ubx_mode(session, MODE_BINARY);
-                }
-                session->driver.ubx.last_protver = session->driver.ubx.protver;
+    // iTOW drives the cycle start/end detection
+    // iTOW is in ms, can go forward or backward
+    if (-1 < session->driver.ubx.iTOW) {
+        int64_t iTOW_diff;
+
+        // this sentence has a (maybe good) time
+        // end of cycle ?
+        if (session->driver.ubx.end_msgid == msgid) {
+            // got known cycle ender.  Assume end of cycle, report it
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "UBX: cycle end x%04x iTOW %lld\n",
+                     msgid, (long long)session->driver.ubx.iTOW);
+            mask |= REPORT_IS;
+        }
+
+        // start of cycle?  Start can equal end if only one message per epoch
+        // u-blox iTOW can have ms jitter in the same epoch!
+        iTOW_diff = session->driver.ubx.last_iTOW - session->driver.ubx.iTOW;
+        if (10 < llabs(iTOW_diff)) {
+            // time changed more than 10 ms (100 Hz), cycle start
+
+            if (session->driver.ubx.end_msgid !=
+                session->driver.ubx.last_msgid) {
+                // new cycle ender
+                GPSD_LOG(LOG_PROG, &session->context->errout,
+                         "UBX: new ender x%04x was x%04x iTOW %lld was %lld\n",
+                         session->driver.ubx.last_msgid,
+                         session->driver.ubx.end_msgid,
+                         (long long)session->driver.ubx.iTOW,
+                         (long long)session->driver.ubx.last_iTOW);
+                session->driver.ubx.end_msgid = session->driver.ubx.last_msgid;
             }
+            session->driver.ubx.last_iTOW = session->driver.ubx.iTOW;
+            mask |= CLEAR_IS;;
         }
 
         session->driver.ubx.last_msgid = msgid;
@@ -3839,6 +3923,21 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
                  "UBX: No time, msgid %x\n", msgid);
          */
     }
+
+    // Did protver change?
+    if (session->driver.ubx.last_protver != session->driver.ubx.protver) {
+        /* Assumption: we just did init, but did not have
+         * protver then, so init is not complete.  Finish now. */
+        if (session->mode == O_OPTIMIZE) {
+            ubx_mode(session, MODE_BINARY);
+        }
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "UBX: new PROTVER %u was %u\n",
+                 session->driver.ubx.protver,
+                 session->driver.ubx.last_protver);
+        session->driver.ubx.last_protver = session->driver.ubx.protver;
+    }
+
     return mask | ONLINE_SET;
 }
 
