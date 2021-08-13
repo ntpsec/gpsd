@@ -249,6 +249,7 @@ bool gps_waiting(const struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
 /* run a main loop with a specified handler
  *
  * Returns: -1 on timeout or read error
+ *          -2 read error
  * FIXME: read error should return different than timeout
  */
 int gps_mainloop(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
@@ -260,16 +261,22 @@ int gps_mainloop(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
     libgps_debug_trace((DEBUG_CALLS, "gps_mainloop() begins\n"));
 
 #ifdef SHM_EXPORT_ENABLE
-    if ((intptr_t)(gpsdata->gps_fd) == SHM_PSEUDO_FD)
+    if ((intptr_t)(gpsdata->gps_fd) == SHM_PSEUDO_FD) {
+        libgps_debug_trace((DEBUG_CALLS, "gps_shm_mainloop() begins\n"));
         status = gps_shm_mainloop(gpsdata, timeout, hook);
+    }
 #endif /* SHM_EXPORT_ENABLE */
 #ifdef DBUS_EXPORT_ENABLE
-    if ((intptr_t)(gpsdata->gps_fd) == DBUS_PSEUDO_FD)
+    if ((intptr_t)(gpsdata->gps_fd) == DBUS_PSEUDO_FD) {
+        libgps_debug_trace((DEBUG_CALLS, "gps_dbus_mainloop() begins\n"));
         status = gps_dbus_mainloop(gpsdata, timeout, hook);
+    }
 #endif /* DBUS_EXPORT_ENABLE */
 #ifdef SOCKET_EXPORT_ENABLE
-    if ((intptr_t)(gpsdata->gps_fd) >= 0)
+    if ((intptr_t)(gpsdata->gps_fd) >= 0) {
+        libgps_debug_trace((DEBUG_CALLS, "gps_sock_mainloop() begins\n"));
         status = gps_sock_mainloop(gpsdata, timeout, hook);
+    }
 #endif /* SOCKET_EXPORT_ENABLE */
 
     libgps_debug_trace((DEBUG_CALLS, "gps_mainloop() -> %d (%s)\n",

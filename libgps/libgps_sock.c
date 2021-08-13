@@ -496,25 +496,27 @@ int gps_sock_stream(struct gps_data_t *gpsdata, unsigned int flags, void *d)
 
 /* run a socket main loop with a specified handler
  *
- * Returns: -1 on timeout or read error
+ * Returns: -1 on timeout
+ *          -2 on read error
  * FIXME: read error should return different than timeout
  */
 int gps_sock_mainloop(struct gps_data_t *gpsdata, int timeout,
                       void (*hook)(struct gps_data_t *gpsdata))
 {
+    int status;
+
     for (;;) {
         if (!gps_waiting(gpsdata, timeout)) {
             return -1;
-        } else {
-            int status = gps_read(gpsdata, NULL, 0);
-
-            if (status == -1)
-                return -1;
-            if (status > 0)
-                (*hook)(gpsdata);
         }
+        status = gps_read(gpsdata, NULL, 0);
+
+        if (status == -1)
+            break;
+        if (status > 0)
+            (*hook)(gpsdata);
     }
-    //return 0;
+    return -2;
 }
 
 #endif /* SOCKET_EXPORT_ENABLE */

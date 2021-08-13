@@ -18,6 +18,7 @@
 
 #include "../include/gps.h"
 #include "../include/libgps.h"
+#include "../include/timespec.h"
 
 #if defined(DBUS_EXPORT_ENABLE)
 #include <syslog.h>
@@ -135,21 +136,44 @@ int gps_dbus_open(struct gps_data_t *gpsdata)
 
 /* run a DBUS main loop with a specified handler
  *
- * Returns: -1 on timeout or read error
+ * timeout is in micro seconds
+ *
+ * Returns: -1 on timeout
+ *          -2 on error or disconnect
  * FIXME: read error should return different than timeout
  */
 int gps_dbus_mainloop(struct gps_data_t *gpsdata,
                        int timeout,
                        void (*hook)(struct gps_data_t *))
 {
+    bool status;
+    struct timespec ts_from, ts_to;
+    double diff, d_timeout;
+
+    d_timeout = (double)timeout / 1000000;  // timeout in seconds
     share_gpsdata = gpsdata;
     PRIVATE(share_gpsdata)->handler = (void (*)(struct gps_data_t *))hook;
-    for (;;)
-        if (TRUE != dbus_connection_read_write_dispatch(connection,
-                                                        (int)(timeout/1000))) {
+    for (;;) {
+        if (0 != clock_gettime(CLOCK_MONOTONIC, &ts_from)) {
+            return -2;
+        }
+
+        status = dbus_connection_read_write_dispatch(connection,
+                                                     (int)(timeout/1000));
+        if (FALSE == status) {
+            // lost connection
+            break;
+        }
+        if (0 != clock_gettime(CLOCK_MONOTONIC, &ts_to)) {
+            return -2;
+        }
+        diff = TS_SUB_D(&ts_to, &ts_from);
+        if (d_timeout <= diff) {
+            // timeout
             return -1;
         }
-    return 0;
+    }
+    return -2;
 }
 
 #endif /* defined(DBUS_EXPORT_ENABLE) */
