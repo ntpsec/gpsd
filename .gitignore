@@ -1,5 +1,5 @@
-# temp dir for building, no files outside of gpsd-3.21~dev should change.
-gpsd-3.22.1~dev
+# temp dir for building, no files outside of gpsd-3.*~dev/ should change.
+gpsd-3.23.1~dev
 buildtmp
 .sconf_temp
 __pycache__
