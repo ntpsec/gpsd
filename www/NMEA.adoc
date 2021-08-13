@@ -565,6 +565,9 @@ unworkable.  New GPS denote each satellite, and their signals, by their
 constellation (gnssID), satellite id in that constellation (svId), and
 signal type (sigId).  NMEA, as of version 4, has not adapted.
 
+Note: Jackson Labs, Quectel and Telit sometimes use non-standard PRN
+numbering.
+
 == NMEA 4.11 System ID and Signal ID
 
 |========================================================================
@@ -1219,6 +1222,8 @@ Example:
 
 $GNGGA,001043.00,4404.14036,N,12118.85961,W,1,12,0.98,1113.0,M,-21.3,M*47
 
+Note: Jackson Labs replaces the Quality indicator with GPSDO status.
+
 === GLC - Geographic Position, Loran-C
 
 This sentence is obsolete over most of its former coverage area.  The
@@ -1450,7 +1455,7 @@ Field Number:
 1. total number of GSV sentences to be transmitted in this group
 2. Sentence number, 1-9 of this GSV message within current group
 3. total number of satellites in view (leading zeros sent)
-4. satellite ID number (leading zeros sent)
+4. satellite ID or PRN number (leading zeros sent)
 5. elevation in degrees (-90 to 90) (leading zeros sent)
 6. azimuth in degrees to true north (000 to 359) (leading zeros sent)
 7. SNR in dB (00-99) (leading zeros sent)
@@ -1474,6 +1479,10 @@ Example: $GLGSV,3,3,09,88,07,028*51
 
 Note: NMEA 4.1+ systems (u-blox 9, Quectel LCD79) may emit an extra field,
 Signal ID, just before the checksum.
+
+Note: $GNGSV uses PRN in field 4.  Other $GxGSV use the satellite ID in
+field 4.  Jackson Labs, Quectel, Telit, and others get this wrong, in
+various conflicting ways.
 
 === GTD - Geographic Location in Time Differences
 
@@ -2769,6 +2778,45 @@ Field Number:
 4. Checksum
 
 Example:  $PGRMZ,2282,f,3*21
+
+=== PJLTS - Jackson Labs GPSDO Status
+
+------------------------------------------------------------------------------
+          1     2      3  4    5        6        7    8   9  10
+          |     |      |  |    |        |        |    |   |   |
+ $PJLTS,aaa.aa,bbb.bb,ccc,d,e.eeeeeee,ff.ffff,g.gEhh,iii,jj,kkkk*hh<CR><LF>
+------------------------------------------------------------------------------
+
+Field Number:
+
+1. Filtered UTC offset in ns
+2. Raw UTC offset in ns from the time interval counter,
+3. Number of captured input 1PPS signals,
+4. Lock status
+5. EFC voltage
+6. EFC percentage
+7. Estimated frequency accuracy
+8. Seconds in holdover
+9. Number of satellites tracked.
+10. Health status
+
+=== PJLTS - Jackson Labs Time and 3D velocity
+
+------------------------------------------------------------------------------
+          1     2      3   4      5       6   7
+          |     |      |   |      |       |   |
+ $PJLTV,aaaaa,bbbbb,ccccc,ddd,eeeeeeeee,ffff,gg*hh<CR><LF>
+------------------------------------------------------------------------------
+
+Field Number:
+
+1. X velocity (cm/s)
+2. Y velocity (cm/s)
+3. Z velocity (cm/s)
+4. speed accuracy estimate (cm/s)
+5. GPS TOW in seconds
+6. GPS week number
+7. UTC leap second offset in seconds
 
 === PMGNST - Magellan Status
 
