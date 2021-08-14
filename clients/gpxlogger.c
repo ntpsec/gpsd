@@ -267,7 +267,7 @@ int main(int argc, char **argv)
         {"daemonize", no_argument, NULL, 'd'},
         {"debug", required_argument, NULL, 'D'},
         {"export", required_argument, NULL, 'e'},
-        {"exports", required_argument, NULL, 'l'},
+        {"exports", no_argument, NULL, 'l'},
         {"help", no_argument, NULL, 'h'},
         {"interval", required_argument, NULL, 'i'},
         {"minmove", required_argument, NULL, 'm'},
