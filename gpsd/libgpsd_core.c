@@ -1465,12 +1465,15 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
 
             gap = TS_SUB_D(&ts_now, &session->lexer.start_time);
 
-            if (gap > min_cycle)
-                GPSD_LOG(LOG_WARN, &session->context->errout,
-                         "cycle-start detector failed.\n");
-            else if (gap > quiet_time) {
+            // used to comare gap > min_cycle, but min_cycle is now
+            // so variable as to be not helpful.  Some GPS models can
+            // vary from 20Hz to 1Hz.
+            if (gap > quiet_time) {
+                // quiet_time is getting less useful as GNSS receivers
+                // have more data to send.
                 GPSD_LOG(LOG_PROG, &session->context->errout,
-                         "transmission pause of %f\n", gap);
+                         "transmission pause. gap %f quiet_time %f\n",
+                         gap, quiet_time);
                 session->sor = ts_now;
                 session->lexer.start_char = session->lexer.char_counter;
             }

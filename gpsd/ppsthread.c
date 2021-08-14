@@ -565,6 +565,7 @@ static int get_edge_rfc2783(struct inner_context_t *inner_context,
                             volatile struct timedelta_t *last_fixtime)
 {
     pps_info_t pi;
+    struct timespec pi_diff;
     char ts_str1[TIMESPEC_LEN], ts_str2[TIMESPEC_LEN];
     struct timespec kernelpps_tv;
     volatile struct pps_thread_t *thread_context = inner_context->pps_thread;
@@ -622,23 +623,11 @@ static int get_edge_rfc2783(struct inner_context_t *inner_context,
         thread_unlock(thread_context);
     }
 
-
     // find the last edge
-    if (pi.assert_timestamp.tv_sec > pi.clear_timestamp.tv_sec) {
-        /* assert 1 sec or more after than clear */
+    TS_SUB(&pi_diff, &pi.assert_timestamp, &pi.clear_timestamp);
+    if (TS_GZ(&pi_diff)) {
+        // assert after clear
         *edge = 1;
-    } else if (pi.assert_timestamp.tv_sec < pi.clear_timestamp.tv_sec) {
-        /* assert 1 sec or more before than clear */
-        *edge = 0;
-    } else if (pi.assert_timestamp.tv_nsec > pi.clear_timestamp.tv_nsec) {
-        /* assert less than 1 sec after clear */
-        *edge = 1;
-    } else {
-        /* assert less than 1 sec before clear */
-        *edge = 0;
-    }
-    if (1 == *edge) {
-        /* assert after clear */
         *prev_edge = 0;
         if (0 == pi.clear_timestamp.tv_sec) {
                 /* brain damaged pps-gpio sometimes never fills in clear
@@ -651,6 +640,8 @@ static int get_edge_rfc2783(struct inner_context_t *inner_context,
         }
         *clock_ts = pi.assert_timestamp;
     } else {
+        // assert before clear
+        *edge = 0;
         /* assert before clear */
         *prev_edge = 1;
         *prev_clock_ts = pi.assert_timestamp;
