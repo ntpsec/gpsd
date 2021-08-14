@@ -18,6 +18,7 @@
 
 #include "../include/gps.h"
 #include "../include/libgps.h"
+#include "../include/os_compat.h"
 #include "../include/timespec.h"
 
 #if defined(DBUS_EXPORT_ENABLE)
@@ -154,7 +155,7 @@ int gps_dbus_mainloop(struct gps_data_t *gpsdata,
     share_gpsdata = gpsdata;
     PRIVATE(share_gpsdata)->handler = (void (*)(struct gps_data_t *))hook;
     for (;;) {
-        if (0 != clock_gettime(CLOCK_MONOTONIC, &ts_from)) {
+        if (0 != clock_gettime(CLOCK_REALTIME, &ts_from)) {
             return -2;
         }
 
@@ -164,7 +165,7 @@ int gps_dbus_mainloop(struct gps_data_t *gpsdata,
             // lost connection
             break;
         }
-        if (0 != clock_gettime(CLOCK_MONOTONIC, &ts_to)) {
+        if (0 != clock_gettime(CLOCK_REALTIME, &ts_to)) {
             return -2;
         }
         diff = TS_SUB_D(&ts_to, &ts_from);
