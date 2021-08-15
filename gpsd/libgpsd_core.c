@@ -1301,6 +1301,7 @@ int gpsd_await_data(fd_set *rfds,
                      struct gpsd_errout_t *errout)
 {
     int status;
+    timespec_t ts_timeout = {3, 0};   // timeout for pselect()
 
     FD_ZERO(efds);
     *rfds = *all_fds;
@@ -1314,12 +1315,12 @@ int gpsd_await_data(fd_set *rfds,
      * low-clock-rate SBCs and the like).
      *
      * As used here, there is no difference between pselect()
-     * or select().  No timeout is used, this cuts power consumption,
-     * but can lead to infinite hang.
+     * or select().  A 3 second timeout is used, this adds a bit
+     * of power consumption, but prevents infinite hang during autobaud.
      */
     errno = 0;
 
-    status = pselect(maxfd + 1, rfds, NULL, NULL, NULL, NULL);
+    status = pselect(maxfd + 1, rfds, NULL, NULL, &ts_timeout, NULL);
     if (-1 == status) {
         if (errno == EINTR)
             return AWAIT_NOT_READY;
