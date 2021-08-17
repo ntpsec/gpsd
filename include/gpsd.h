@@ -1019,6 +1019,7 @@ extern int gpsd_open(struct gps_device_t *);
 extern int gpsd_activate(struct gps_device_t *, const int);
 extern void gpsd_deactivate(struct gps_device_t *);
 
+#define AWAIT_TIMEOUT 2
 #define AWAIT_GOT_INPUT 1
 #define AWAIT_NOT_READY 0
 #define AWAIT_FAILED    -1

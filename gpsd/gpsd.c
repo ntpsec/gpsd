@@ -2428,6 +2428,8 @@ int main(int argc, char *argv[])
         switch(gpsd_await_data(&rfds, &efds, maxfd, &all_fds, &context.errout))
         {
         case AWAIT_GOT_INPUT:
+            FALLTHROUGH
+        case AWAIT_TIMEOUT:
             break;
         case AWAIT_NOT_READY:
             for (device = devices; device < devices + MAX_DEVICES; device++)
