@@ -1339,13 +1339,12 @@ int gpsd_await_data(fd_set *rfds,
                 }
             return AWAIT_NOT_READY;
         }
-        if (0 == status) {
-            return AWAIT_TIMEOUT;
-        }
-
         //  else
         GPSD_LOG(LOG_ERROR, errout, "select: %s\n", strerror(errno));
         return AWAIT_FAILED;
+    }
+    if (0 == status) {
+        return AWAIT_TIMEOUT;
     }
 
     if (errout->debug >= LOG_SPIN) {
