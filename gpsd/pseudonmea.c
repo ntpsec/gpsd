@@ -122,7 +122,7 @@ void gpsd_position_fix_dump(struct gps_device_t *session,
         char lon_str[BUF_SZ];
 
         switch(session->gpsdata.fix.status) {
-        case STATUS_NO_FIX:
+        case STATUS_UNK:
             fixquality = FIX_QUALITY_INVALID;
             break;
         case STATUS_FIX:

@@ -127,40 +127,40 @@ static int faa_mode(char mode)
     int newstatus = STATUS_FIX;
 
     switch (mode) {
-    case '\0':  /* missing */
-        newstatus = STATUS_NO_FIX;
+    case '\0':  // missing
+        newstatus = STATUS_UNK;
         break;
-    case 'A':   /* Autonomous */
+    case 'A':   // Autonomous
     default:
         newstatus = STATUS_FIX;
         break;
     case 'C':   // Quectel unique: Caution
-        newstatus = STATUS_NO_FIX;
+        newstatus = STATUS_UNK;
         break;
-    case 'D':   /* Differential */
+    case 'D':   // Differential
         newstatus = STATUS_DGPS_FIX;
         break;
-    case 'E':   /* Estimated dead reckoning */
+    case 'E':   // Estimated dead reckoning
         newstatus = STATUS_DR;
         break;
-    case 'F':   /* Float RTK */
+    case 'F':   // Float RTK
         newstatus = STATUS_RTK_FLT;
         break;
-    case 'N':   /* Data Not Valid */
+    case 'N':   // Data Not Valid
         /* already handled, for paranoia sake also here */
-        newstatus = STATUS_NO_FIX;
+        newstatus = STATUS_UNK;
         break;
-    case 'P':   /* Precise (NMEA 4+) */
-        newstatus = STATUS_DGPS_FIX;    /* sort of DGPS */
+    case 'P':   // Precise (NMEA 4+)
+        newstatus = STATUS_DGPS_FIX;    // sort of DGPS
         break;
-    case 'R':   /* fixed RTK */
+    case 'R':   // fixed RTK
         newstatus = STATUS_RTK_FIX;
         break;
-    case 'S':   /* simulator */
-        newstatus = STATUS_NO_FIX;      /* or maybe MODE_FIX? */
+    case 'S':   // simulator
+        newstatus = STATUS_SIM;
         break;
     case 'U':   // Quectel unique: Unsafe
-        newstatus = STATUS_NO_FIX;
+        newstatus = STATUS_UNK;
         break;
     }
     return newstatus;
@@ -565,7 +565,7 @@ static gps_mask_t processRMC(int count, char *field[],
                 mask |= MODE_SET;
             }
         } else {
-            newstatus = STATUS_NO_FIX;
+            newstatus = STATUS_UNK;
             session->newdata.mode = MODE_NO_FIX;
             mask |= MODE_SET;
         }
@@ -699,7 +699,7 @@ static gps_mask_t processGLL(int count, char *field[],
     if ('\0' == field[6][0] ||
         'V' == field[6][0]) {
         /* Invalid */
-        session->newdata.status = STATUS_NO_FIX;
+        session->newdata.status = STATUS_UNK;
         session->newdata.mode = MODE_NO_FIX;
     } else if ('A' == field[6][0] &&
         (count < 8 || *status != 'N') &&
@@ -732,7 +732,7 @@ static gps_mask_t processGLL(int count, char *field[],
         }
         session->newdata.status = newstatus;
     } else {
-        session->newdata.status = STATUS_NO_FIX;
+        session->newdata.status = STATUS_UNK;
         session->newdata.mode = MODE_NO_FIX;
     }
     mask |= STATUS_SET | MODE_SET;
@@ -927,7 +927,7 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
     // Jackson Labs Micro JLT uses nonstadard fix flag, not handled
     switch (fix) {
     case 0:     /* no fix */
-        newstatus = STATUS_NO_FIX;
+        newstatus = STATUS_UNK;
         if ('\0' == field[1][0]) {
             /* No time available. That breaks cycle end detector
              * Force report to bypass cycle detector and get report out.
@@ -943,30 +943,30 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
         /* could be 2D, 3D, GNSSDR */
         newstatus = STATUS_FIX;
         break;
-    case 2:     /* differential */
+    case 2:     // differential
         newstatus = STATUS_DGPS_FIX;
         break;
     case 3:
-        /* GPS PPS, fix valid, could be 2D, 3D, GNSSDR */
+        // GPS PPS, fix valid, could be 2D, 3D, GNSSDR
         newstatus = STATUS_PPS_FIX;
         break;
-    case 4:     /* RTK integer */
+    case 4:     // RTK integer
         newstatus = STATUS_RTK_FIX;
         break;
-    case 5:     /* RTK float */
+    case 5:     // RTK float
         newstatus = STATUS_RTK_FLT;
         break;
     case 6:
-        /* dead reckoning, could be valid or invalid */
+        // dead reckoning, could be valid or invalid
         newstatus = STATUS_DR;
         break;
     case 7:
-        /* manual input, surveyed */
+        // manual input, surveyed
         newstatus = STATUS_TIME;
         break;
     case 8:
-        /* simulated mode */
-        /* Garmin GPSMAP and Gecko sends an 8, but undocumented why */
+        /* simulated mode
+         * Garmin GPSMAP and Gecko sends an 8, but undocumented why */
         newstatus = STATUS_SIM;
         break;
     case -1:
@@ -1003,7 +1003,7 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
     }
 
     if (session->nmea.latch_mode) {
-        session->newdata.status = STATUS_NO_FIX;
+        session->newdata.status = STATUS_UNK;
         session->newdata.mode = MODE_NO_FIX;
         mask |= MODE_SET | STATUS_SET;
         GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -3183,13 +3183,13 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
          */
         mask |= MODE_SET | STATUS_SET | CLEAR_IS;
         if (0 == strlen(field[2])) {
-            /* empty first field means no 3D fix is available */
-            session->newdata.status = STATUS_NO_FIX;
+            // empty first field means no 3D fix is available
+            session->newdata.status = STATUS_UNK;
             session->newdata.mode = MODE_NO_FIX;
         } else {
             int satellites_used;
 
-            /* if we make it this far, we at least have a 3D fix */
+            // if we make it this far, we at least have a 3D fix
             session->newdata.mode = MODE_3D;
             if (1 <= atoi(field[2]))
                 session->newdata.status = STATUS_DGPS_FIX;
@@ -3481,8 +3481,8 @@ static gps_mask_t processPSTI030(int count, char *field[],
 
     if ('V' == field[3][0] ||
         'N' == field[13][0]) {
-        /* nav warning, or FAA not valid, ignore the rest of the data */
-        session->newdata.status = STATUS_NO_FIX;
+        // nav warning, or FAA not valid, ignore the rest of the data
+        session->newdata.status = STATUS_UNK;
         session->newdata.mode = MODE_NO_FIX;
         mask |= MODE_SET | STATUS_SET;
     } else if ('A' == field[3][0]) {

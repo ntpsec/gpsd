@@ -57,7 +57,7 @@ static gps_mask_t decode_itk_navfix(struct gps_device_t *session,
     //cflags = (unsigned short) getleu16(buf, 7 + 6);
     pflags = (unsigned short) getleu16(buf, 7 + 8);
 
-    session->newdata.status = STATUS_NO_FIX;
+    session->newdata.status = STATUS_UNK;
     session->newdata.mode = MODE_NO_FIX;
     mask = ONLINE_SET | MODE_SET | STATUS_SET | CLEAR_IS;
 

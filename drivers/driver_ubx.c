@@ -966,8 +966,8 @@ ubx_msg_hnr_pvt(struct gps_device_t *session, unsigned char *buf,
             *mode = MODE_NO_FIX;
             mask |= MODE_SET;
         };
-        if (*status != STATUS_NO_FIX) {
-            *status = STATUS_NO_FIX;
+        if (*status != STATUS_UNK) {
+            *status = STATUS_UNK;
             mask |= STATUS_SET;
         }
         break;
@@ -1481,7 +1481,7 @@ ubx_msg_log_retrievepos(struct gps_device_t *session, unsigned char *buf UNUSED,
     default:
         // huh?
         session->gpsdata.log.fixType = MODE_NO_FIX;
-        session->gpsdata.log.status = STATUS_NO_FIX;
+        session->gpsdata.log.status = STATUS_UNK;
         break;
     }
 
@@ -1815,8 +1815,8 @@ ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
             *mode = MODE_NO_FIX;
             mask |= MODE_SET;
         };
-        if (*status != STATUS_NO_FIX) {
-            *status = STATUS_NO_FIX;
+        if (*status != STATUS_UNK) {
+            *status = STATUS_UNK;
             mask |= STATUS_SET;
         }
         break;
@@ -2096,7 +2096,7 @@ ubx_msg_nav_sol(struct gps_device_t *session, unsigned char *buf,
         break;
     default:
         session->newdata.mode = MODE_NO_FIX;
-        session->newdata.status = STATUS_NO_FIX;
+        session->newdata.status = STATUS_UNK;
         break;
     }
 
@@ -2161,7 +2161,7 @@ ubx_msg_nav_status(struct gps_device_t *session, unsigned char *buf,
     if (0 == (1 & flags)) {
         // gpsFix not OK
         *mode = MODE_NO_FIX;
-        *status = STATUS_NO_FIX;
+        *status = STATUS_UNK;
     } else {
         switch (gpsFix) {
         case UBX_MODE_TMONLY:
@@ -2202,7 +2202,7 @@ ubx_msg_nav_status(struct gps_device_t *session, unsigned char *buf,
         default:
             // > 5
             *mode = MODE_NO_FIX;
-            *status = STATUS_NO_FIX;
+            *status = STATUS_UNK;
             break;
         }
     }

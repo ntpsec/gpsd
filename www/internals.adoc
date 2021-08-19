@@ -133,7 +133,7 @@ a|
 Stash the last fix time. Set the status to the value in the message and
 update the local flag variable.
 
-If the status is STATUS_NO_FIX, exit immediately, returning the locally
+If the status is STATUS_UNK, exit immediately, returning the locally
 aggregated flags. If there is a fix, process it.
 
 Handle the time as in `+processGPGLL()+` above. Handle the latitiude and

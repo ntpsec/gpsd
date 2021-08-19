@@ -432,7 +432,7 @@ gps_mask_t PrintSERPacket(struct gps_device_t *session, unsigned char pkt_id,
         case 1:
         default:
             // no fix
-            session->newdata.status = STATUS_NO_FIX;
+            session->newdata.status = STATUS_UNK;
             session->newdata.mode = MODE_NO_FIX;
             break;
         case 2:

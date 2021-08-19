@@ -128,7 +128,7 @@ class gpssim(object):
         self.output = None
         self.satellites_used = 0
         self.skyview = None
-        self.status = gps.STATUS_NO_FIX
+        self.status = gps.STATUS_SIM
         self.validity = "V"
 
     def parse_tdl(self, line):

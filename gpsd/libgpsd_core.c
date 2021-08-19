@@ -1757,7 +1757,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
 
     /*
      * Count good fixes. We used to check
-     *      session->gpsdata.fix.status > STATUS_NO_FIX
+     *      session->gpsdata.fix.status > STATUS_UNK
      * here, but that wasn't quite right.  That tells us whether
      * we think we have a valid fix for the current cycle, but remains
      * true while following non-fix packets are received.  What we
@@ -1765,10 +1765,10 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
      * fix packet AND held a valid fix. We must ignore non-fix packets
      * AND packets which have fix data but are flagged as invalid. Some
      * devices output fix packets on a regular basis, even when unable
-     * to derive a good fix. Such packets should set STATUS_NO_FIX.
+     * to derive a good fix. Such packets should set STATUS_UNK.
      */
     if (0 != (session->gpsdata.set & (LATLON_SET|ECEF_SET))) {
-        if ( session->gpsdata.fix.status > STATUS_NO_FIX) {
+        if ( session->gpsdata.fix.status > STATUS_UNK) {
             session->context->fixcnt++;
             session->fixcnt++;
         } else {
@@ -1776,7 +1776,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
             session->fixcnt = 0;
         }
     } else if (0 != (session->gpsdata.set & (MODE_SET))) {
-        if ( session->gpsdata.fix.status == STATUS_NO_FIX) {
+        if ( session->gpsdata.fix.status == STATUS_UNK) {
             session->context->fixcnt = 0;
             session->fixcnt = 0;
         }

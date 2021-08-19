@@ -1539,7 +1539,7 @@ static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
 
     /* fix status is byte 19 */
     navtype = (unsigned short)getub(buf, 19);
-    session->newdata.status = STATUS_NO_FIX;
+    session->newdata.status = STATUS_UNK;
     session->newdata.mode = MODE_NO_FIX;
     if ((navtype & 0x80) != 0)
         session->newdata.status = STATUS_DGPS_FIX;
@@ -1638,7 +1638,7 @@ static gps_mask_t sirf_msg_geodetic(struct gps_device_t *session,
     session->gpsdata.sentence_length = 91;
 
     navtype = (unsigned short)getbeu16(buf, 3);
-    session->newdata.status = STATUS_NO_FIX;
+    session->newdata.status = STATUS_UNK;
     if (navtype & 0x80)
         session->newdata.status = STATUS_DGPS_FIX;
     else if ((navtype & 0x07) > 0 && (navtype & 0x07) < 7)
@@ -1820,7 +1820,7 @@ static gps_mask_t sirf_msg_ublox(struct gps_device_t *session,
     session->newdata.track = (double)getbes32(buf, 21) * RAD_2_DEG * 1e-8;
 
     navtype = (unsigned short)getub(buf, 25);
-    session->newdata.status = STATUS_NO_FIX;
+    session->newdata.status = STATUS_UNK;
     session->newdata.mode = MODE_NO_FIX;
     if (navtype & 0x80)
         session->newdata.status = STATUS_DGPS_FIX;

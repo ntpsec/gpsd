@@ -70,7 +70,7 @@ static DBusHandlerResult handle_gps_fix(DBusMessage * message)
     if (share_gpsdata->fix.mode > MODE_NO_FIX )
         share_gpsdata->fix.status = STATUS_FIX;
     else
-        share_gpsdata->fix.status = STATUS_NO_FIX;
+        share_gpsdata->fix.status = STATUS_UNK;
 
     dbus_error_free(&error);
 

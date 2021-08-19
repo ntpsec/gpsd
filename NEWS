@@ -3,6 +3,7 @@
 3.23.1~dev: unreleased
   Improve ubx cycle detection.
   Add quirks for Jackson Labs nonstandard NMEA
+  Change STATUS_NO_FIX to STATUS_UNK to avoid confusion with mode.
 
 3.23: 2020-08-06
   doc/*xml all moved into www/internals.adoc

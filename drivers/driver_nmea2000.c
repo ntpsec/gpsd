@@ -614,7 +614,7 @@ static gps_mask_t hnd_129029(unsigned char *bu, int len, PGN *pgn,
 //  printf("mode %x %x\n", (bu[31] >> 4) & 0x0f, bu[31]);
     switch ((bu[31] >> 4) & 0x0f) {
     case 0:
-        session->newdata.status = STATUS_NO_FIX;
+        session->newdata.status = STATUS_UNK;
         break;
     case 1:
         session->newdata.status = STATUS_FIX;
@@ -628,7 +628,7 @@ static gps_mask_t hnd_129029(unsigned char *bu, int len, PGN *pgn,
         session->newdata.status = STATUS_FIX; /* Is this correct ? */
         break;
     default:
-        session->newdata.status = STATUS_NO_FIX;
+        session->newdata.status = STATUS_UNK;
         break;
     }
     mask |= STATUS_SET;

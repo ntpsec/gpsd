@@ -327,7 +327,7 @@ gps_mask_t garmintxt_parse(struct gps_device_t * session)
     /* assume that position is unknown; if the position is known we
      * will fix status information later */
     session->newdata.mode = MODE_NO_FIX;
-    session->newdata.status = STATUS_NO_FIX;
+    session->newdata.status = STATUS_UNK;
     mask |= MODE_SET | STATUS_SET | CLEAR_IS | REPORT_IS;
 
     /* process position */
@@ -393,7 +393,7 @@ gps_mask_t garmintxt_parse(struct gps_device_t * session)
             break;
         default:
             session->newdata.mode = MODE_NO_FIX;
-            session->newdata.status = STATUS_NO_FIX;
+            session->newdata.status = STATUS_UNK;
         }
         mask |= MODE_SET | STATUS_SET | LATLON_SET;
     } while (0);

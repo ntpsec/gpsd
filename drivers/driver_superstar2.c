@@ -140,7 +140,7 @@ static gps_mask_t superstar2_msg_navsol_lla(struct gps_device_t *session,
         session->newdata.status = STATUS_FIX;
         break;
     default:
-        session->newdata.status = STATUS_NO_FIX;
+        session->newdata.status = STATUS_UNK;
         session->newdata.mode = MODE_NO_FIX;
     }
 

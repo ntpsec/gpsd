@@ -424,7 +424,7 @@ static gps_mask_t sky_msg_DF(struct gps_device_t *session,
 
     /* fix status is byte 2 */
     navstat = (unsigned short)getub(buf, 2);
-    session->newdata.status = STATUS_NO_FIX;
+    session->newdata.status = STATUS_UNK;
     session->newdata.mode = MODE_NO_FIX;
     switch ( navstat ) {
     case 1:

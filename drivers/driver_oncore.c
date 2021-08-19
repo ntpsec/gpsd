@@ -205,7 +205,7 @@ oncore_msg_navsol(struct gps_device_t *session, unsigned char *buf,
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "oncore NAVSOL no fix - flags 0x%02x\n", flags);
         session->newdata.mode = MODE_NO_FIX;
-        session->newdata.status = STATUS_NO_FIX;
+        session->newdata.status = STATUS_UNK;
     }
     mask |= MODE_SET | STATUS_SET;
 

@@ -420,7 +420,7 @@ static gps_mask_t handle_0xb1(struct gps_device_t *session)
     /* Nav mode */
     nav_mode = (uint8_t) getub(buf, 22);
     if (-nav_mode & 0x80) {
-        session->newdata.status = STATUS_NO_FIX;
+        session->newdata.status = STATUS_UNK;
         session->newdata.mode = MODE_NO_FIX;
     } else {
         session->newdata.mode = ((nav_mode & 0x40)!=0 ? MODE_3D : MODE_2D);
@@ -708,7 +708,7 @@ static gps_mask_t handle_0x86(struct gps_device_t *session)
         session->newdata.status = STATUS_FIX;
         break;
     default:
-        session->newdata.status = STATUS_NO_FIX;
+        session->newdata.status = STATUS_UNK;
     }
 
     GPSD_LOG(LOG_DATA, &session->context->errout,

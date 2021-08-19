@@ -157,7 +157,7 @@ struct gps_fix_t {
      * Quality Indicator Values.  Many GNSS receivers do not supply it.
      */
     int    status;              /* What kind of fix? */
-#define STATUS_NO_FIX   0       // Unknown status, maybe no fix.
+#define STATUS_UNK      0       // Unknown status, maybe no fix.
 /* yes, plain GPS (SPS Mode), without DGPS, PPS, RTK, DR, etc. */
 #define STATUS_FIX      1
 #define STATUS_DGPS_FIX 2       /* yes, with DGPS */

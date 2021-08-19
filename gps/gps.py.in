@@ -101,7 +101,7 @@ EOF_SET = (1 << 33)
 SET_HIGH_BIT = 34
 UNION_SET = (RTCM2_SET | RTCM3_SET | SUBFRAME_SET | AIS_SET | VERSION_SET |
              DEVICELIST_SET | ERROR_SET | GST_SET)
-STATUS_NO_FIX = 0
+STATUS_UNK = 0
 STATUS_FIX = 1
 STATUS_DGPS_FIX = 2
 STATUS_RTK_FIX = 3
@@ -159,7 +159,7 @@ class gpsfix(object):
         self.relD = NaN
         self.sep = NaN              # a.k.a. epe
         self.speed = NaN            # Knots
-        self.status = STATUS_NO_FIX
+        self.status = STATUS_UNK
         self.time = NaN
         self.track = NaN            # Degrees from true north
         self.velN = NaN
@@ -502,7 +502,7 @@ class gpsdata(object):
         self.valid = 0
         self.fix = gpsfix()
 
-        self.status = STATUS_NO_FIX
+        self.status = STATUS_UNK
         self.utc = ""
 
         self.satellites_used = 0        # Satellites used in last fix
