@@ -3,44 +3,44 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
-#include <ctype.h>              /* for isdigit() */
-#include <dirent.h>             /* for DIR */
+#include <ctype.h>                   // for isdigit()
+#include <dirent.h>                  // for DIR
 #include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/ioctl.h>
-#include <sys/param.h>          /* defines BSD */
+#include <sys/param.h>               // defines BSD
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #ifdef HAVE_SYS_SYSMACROS_H
-#include <sys/sysmacros.h>      /* defines major() */
-#endif  /* HAVE_SYS_SYSMACROS_H */
+    #include <sys/sysmacros.h>       // defines major()
+#endif   // HAVE_SYS_SYSMACROS_H
 
 #ifdef ENABLE_BLUEZ
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/hci.h>
-#include <bluetooth/hci_lib.h>
-#include <bluetooth/rfcomm.h>
-#endif /* ENABLE_BLUEZ */
+    #include <bluetooth/bluetooth.h>
+    #include <bluetooth/hci.h>
+    #include <bluetooth/hci_lib.h>
+    #include <bluetooth/rfcomm.h>
+#endif   // ENABLE_BLUEZ
 
-#include "../include/compiler.h"   // for FALLTHROUGH
+#include "../include/compiler.h"     // for FALLTHROUGH
 #include "../include/gpsd.h"
 
-/* Workaround for HP-UX 11.23, which is missing CRTSCTS */
+// Workaround for HP-UX 11.23, which is missing CRTSCTS
 #ifndef CRTSCTS
 #  ifdef CNEW_RTSCTS
 #    define CRTSCTS CNEW_RTSCTS
 #  else
 #    define CRTSCTS 0
-#  endif /* CNEW_RTSCTS */
-#endif /* !CRTSCTS */
+#  endif  // CNEW_RTSCTS
+#endif    // !CRTSCTS
 
 // figure out what kind of device we're looking at
 static sourcetype_t gpsd_classify(struct gps_device_t *session)
@@ -137,7 +137,7 @@ static sourcetype_t gpsd_classify(struct gps_device_t *session)
             devtype = SOURCE_RS232;
             break;
         }
-#endif /* __linux__ */
+#endif  // __linux__
         /*
          * See http://nadeausoftware.com/articles/2012/01/c_c_tip_how_use_compiler_predefined_macros_detect_operating_system
          * for discussion how this works.  Key graphs:
@@ -173,8 +173,8 @@ static sourcetype_t gpsd_classify(struct gps_device_t *session)
         else if (strncmp(path, "/dev/ttyU", 9) == 0 ||
             strncmp(path, "/dev/dtyU", 9) == 0)
             devtype = SOURCE_USB;
-        /* XXX bluetooth */
-#endif /* BSD */
+        // XXX bluetooth
+#endif  // BSD
         return devtype;
     }
 
@@ -200,7 +200,7 @@ static int fusercount(struct gps_device_t *session)
     while (NULL != (procentry = readdir(procd))) {
         if (0 == isdigit(procentry->d_name[0]))
             continue;
-        /* longest procentry->d_name I could find was 12 */
+        // longest procentry->d_name I could find was 12
         (void)snprintf(procpath, sizeof(procpath),
                        "/proc/%.20s/fd/", procentry->d_name);
         if (NULL == (fdd = opendir(procpath)))
@@ -226,12 +226,12 @@ static int fusercount(struct gps_device_t *session)
 
     return cnt;
 }
-#endif /* __linux__ */
+#endif   // __linux__
 
+// to be called on allocating a device
 void gpsd_tty_init(struct gps_device_t *session)
-/* to be called on allocating a device */
 {
-    /* mark GPS fd closed and its baud rate unknown */
+    // mark GPS fd closed and its baud rate unknown
     session->gpsdata.gps_fd = -1;
     session->saved_baud = -1;
     session->zerokill = false;
@@ -242,8 +242,9 @@ void gpsd_tty_init(struct gps_device_t *session)
 /*
  * Local implementation of cfmakeraw (which is not specified by
  * POSIX; see matching declaration in gpsd.h).
+ *
+ * Pasted from man page; added in serial.c arbitrarily
  */
-/* Pasted from man page; added in serial.c arbitrarily */
 void cfmakeraw(struct termios *termios_p)
 {
     termios_p->c_iflag &=
@@ -253,7 +254,7 @@ void cfmakeraw(struct termios *termios_p)
     termios_p->c_cflag &= ~(CSIZE | PARENB);
     termios_p->c_cflag |= CS8;
 }
-#endif /* !defined(HAVE_CFMAKERAW) */
+#endif   // !defined(HAVE_CFMAKERAW)
 
 static speed_t gpsd_get_speed_termios(const struct termios *ttyctl)
 {
@@ -289,7 +290,7 @@ static speed_t gpsd_get_speed_termios(const struct termios *ttyctl)
         // not a valid POSIX speed
         return (921600);
 #endif
-    default: /* B0 */
+    default:   // B0
         return 0;
     }
 }
@@ -399,7 +400,7 @@ void gpsd_set_speed(struct gps_device_t *session,
 #endif  // B460800
 
 
-    /* backward-compatibility hack */
+    // backward-compatibility hack
     switch (parity) {
     case 'E':
         FALLTHROUGH
@@ -416,7 +417,7 @@ void gpsd_set_speed(struct gps_device_t *session,
     case (char)0:
         FALLTHROUGH
     default:
-        parity = 'N';   /* without this we might emit malformed JSON */
+        parity = 'N';   // without this we might emit malformed JSON
         break;
     }
 
@@ -516,7 +517,7 @@ void gpsd_set_speed(struct gps_device_t *session,
          */
         (void)tcflush(session->gpsdata.gps_fd, TCIOFLUSH);
 
-        /* wait 200,000 uSec */
+        // wait 200,000 uSec
         delay.tv_sec = 0;
         delay.tv_nsec = 200000000L;
         nanosleep(&delay, NULL);
@@ -575,7 +576,7 @@ int gpsd_serial_open(struct gps_device_t *session)
         return UNALLOCATED_FD;
     }
 
-    /* we may need to hold on to this slot without opening the device */
+    // we may need to hold on to this slot without opening the device
     if (SOURCE_PPS == session->sourcetype) {
         (void)gpsd_switch_driver(session, "PPS");
         return PLACEHOLDING_FD;
@@ -627,7 +628,7 @@ int gpsd_serial_open(struct gps_device_t *session)
                  "SER: bluez device open success: %s %s\n",
                  session->gpsdata.dev.path, strerror(errno));
     } else
-#endif /* BLUEZ */
+#endif   // BLUEZ
     {
         /*
          * We open with O_NONBLOCK because we want to not get hung if
@@ -693,7 +694,7 @@ int gpsd_serial_open(struct gps_device_t *session)
             session->gpsdata.gps_fd = UNALLOCATED_FD;
             return UNALLOCATED_FD;
         }
-#endif /* __linux__ */
+#endif   // __linux__
     }
 
     if (0 < session->context->fixed_port_speed) {
@@ -718,11 +719,11 @@ int gpsd_serial_open(struct gps_device_t *session)
         char new_parity;   // E, N, O
         unsigned int new_stop;
 
-        /* Save original terminal parameters */
+        // Save original terminal parameters
         if (tcgetattr(session->gpsdata.gps_fd, &session->ttyset_old) != 0)
             return UNALLOCATED_FD;
         session->ttyset = session->ttyset_old;
-        /* twiddle the speed, parity, etc. but only on real serial ports */
+        // twiddle the speed, parity, etc. but only on real serial ports
         memset(session->ttyset.c_cc, 0, sizeof(session->ttyset.c_cc));
         //session->ttyset.c_cc[VTIME] = 1;
         /*
@@ -761,7 +762,7 @@ int gpsd_serial_open(struct gps_device_t *session)
     /* Used to turn off O_NONBLOCK here, but best not to block trying
      * to read from an unresponsive receiver. */
 
-    /* required so parity field won't be '\0' if saved speed matches */
+    // required so parity field won't be '\0' if saved speed matches
     if (SOURCE_BLOCKDEV >= session->sourcetype) {
         session->gpsdata.dev.parity = 'N';
         session->gpsdata.dev.stopbits = 1;
@@ -778,20 +779,21 @@ ssize_t gpsd_serial_write(struct gps_device_t * session,
 {
     ssize_t status;
     bool ok;
-    if (session == NULL ||
-        session->context == NULL || session->context->readonly)
+    char scratchbuf[MAX_PACKET_LENGTH*2+1];
+
+    if (NULL == session ||
+        NULL == session->context ||
+        session->context->readonly)
         return 0;
+
     status = write(session->gpsdata.gps_fd, buf, len);
     ok = (status == (ssize_t) len);
     (void)tcdrain(session->gpsdata.gps_fd);
-    /* extra guard prevents expensive hexdump calls */
-    if (session->context->errout.debug >= LOG_IO) {
-        char scratchbuf[MAX_PACKET_LENGTH*2+1];
-        GPSD_LOG(LOG_IO, &session->context->errout,
-                 "SER: => GPS: %s%s\n",
-                 gpsd_packetdump(scratchbuf, sizeof(scratchbuf),
-                                 (char *)buf, len), ok ? "" : " FAILED");
-    }
+
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "SER: => GPS: %s%s\n",
+             gpsd_packetdump(scratchbuf, sizeof(scratchbuf),
+                             (char *)buf, len), ok ? "" : " FAILED");
     return status;
 }
 
@@ -803,16 +805,16 @@ ssize_t gpsd_serial_write(struct gps_device_t * session,
  */
 #define SNIFF_RETRIES   (MAX_PACKET_LENGTH + 128)
 
-/* advance to the next hunt setting  */
+// advance to the next hunt setting
 bool gpsd_next_hunt_setting(struct gps_device_t * session)
 {
     // every rate we're likely to see on an GNSS receiver
 
-    /* don't waste time in the hunt loop if this is not actually a tty */
+    // don't waste time in the hunt loop if this is not actually a tty
     if (0 == isatty(session->gpsdata.gps_fd))
         return false;
 
-    /* ...or if it's nominally a tty but delivers only PPS and no data */
+    // ...or if it's nominally a tty but delivers only PPS and no data
     if (SOURCE_PPS == session->sourcetype) {
         return false;
     }
@@ -858,10 +860,10 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
                        new_stop);
         session->lexer.retry_counter = 0;
     }
-    return true;                /* keep hunting */
+    return true;                // keep hunting
 }
 
-/* to be called when we want to register that we've synced with a device */
+// to be called when we want to register that we've synced with a device
 void gpsd_assert_sync(struct gps_device_t *session)
 {
     /*
@@ -878,17 +880,17 @@ void gpsd_close(struct gps_device_t *session)
     if (!BAD_SOCKET(session->gpsdata.gps_fd)) {
 #ifdef TIOCNXCL
         (void)ioctl(session->gpsdata.gps_fd, (unsigned long)TIOCNXCL);
-#endif /* TIOCNXCL */
+#endif  // TIOCNXCL
         if (!session->context->readonly)
                 (void)tcdrain(session->gpsdata.gps_fd);
         if (isatty(session->gpsdata.gps_fd) != 0) {
-            /* force hangup on close on systems that don't do HUPCL properly */
+            // force hangup on close on systems that don't do HUPCL properly
             (void)cfsetispeed(&session->ttyset, (speed_t) B0);
             (void)cfsetospeed(&session->ttyset, (speed_t) B0);
             (void)tcsetattr(session->gpsdata.gps_fd, TCSANOW,
                             &session->ttyset);
         }
-        /* this is the clean way to do it */
+        // this is the clean way to do it
         session->ttyset_old.c_cflag |= HUPCL;
         /*
          * Don't revert the serial parameters if we didn't have to mess with
