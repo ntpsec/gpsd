@@ -439,7 +439,7 @@ static gps_mask_t sky_msg_DF(struct gps_device_t *session,
         session->newdata.mode = MODE_3D;
         break;
     case 4:
-        session->newdata.status = STATUS_DGPS_FIX;
+        session->newdata.status = STATUS_DGPS;
         session->newdata.mode = MODE_3D;
         break;
     default:

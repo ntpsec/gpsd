@@ -103,7 +103,7 @@ UNION_SET = (RTCM2_SET | RTCM3_SET | SUBFRAME_SET | AIS_SET | VERSION_SET |
              DEVICELIST_SET | ERROR_SET | GST_SET)
 STATUS_UNK = 0
 STATUS_GPS = 1
-STATUS_DGPS_FIX = 2
+STATUS_DGPS = 2
 STATUS_RTK_FIX = 3
 STATUS_RTK_FLT = 4
 STATUS_DR = 5
@@ -539,6 +539,7 @@ class gpsdata(object):
             st += "Track:    ?\n"
         else:
             st += "Track:    %f\n" % (self.fix.track)
+        # FIXME: what about other status values?
         st += "Status:   STATUS_%s\n" \
               % ("NO_FIX", "FIX", "DGPS_FIX")[self.status]
         st += "Mode:     MODE_%s\n" \

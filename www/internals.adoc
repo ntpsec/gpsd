@@ -120,8 +120,7 @@ If the year is already known, update the time and check for the start of
 cycle (see `+processGPRMC()+` above).
 
 Handle the fix location and, if the number of received fixes is more
-than 8 and the status is differential, stash the new status as
-STATUS_DGPS_FIX; otherwise stash STATUS_GPS.
+than 8 and set fix status.
 
 If the present mode is less than 2D_FIX, update it to 2D_FIX.
 

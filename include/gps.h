@@ -158,9 +158,9 @@ struct gps_fix_t {
      */
     int    status;              // What kind of fix?
 #define STATUS_UNK      0       // Unknown status
-/* yes, plain GPS (SPS Mode), without DGPS, PPS, RTK, DR, etc. */
+// plain GPS (SPS Mode), without DGPS, PPS, RTK, DR, etc.
 #define STATUS_GPS      1
-#define STATUS_DGPS_FIX 2       // with DGPS
+#define STATUS_DGPS     2       // with DGPS
 #define STATUS_RTK_FIX  3       // with RTK Fixed
 #define STATUS_RTK_FLT  4       // with RTK Float
 #define STATUS_DR       5       // with dead reckoning
@@ -220,8 +220,8 @@ struct gps_fix_t {
         double relPosL, relPosH;            // relative length and heading
         double velN, velE, velD;            // NED velocities
     } NED;
-    char datum[40];             /* map datum */
-    /* DGPS stuff, often from xxGGA, or xxGNS */
+    char datum[40];             // map datum
+    // DGPS stuff, often from xxGGA, or xxGNS
     double dgps_age;            /* age of DGPS data in tenths of seconds,
                                  * -1 invalid */
     /* DGPS Station used, max size is a guess

@@ -932,7 +932,7 @@ ubx_msg_hnr_pvt(struct gps_device_t *session, unsigned char *buf,
             mask |= MODE_SET;
         }
         if (UBX_NAV_PVT_FLAG_DGPS == (flags & UBX_NAV_PVT_FLAG_DGPS)) {
-            *status = STATUS_DGPS_FIX;
+            *status = STATUS_DGPS;
             mask |= STATUS_SET;
         } else {
             *status = STATUS_GPS;
@@ -1266,7 +1266,7 @@ ubx_msg_log_batch(struct gps_device_t *session, unsigned char *buf UNUSED,
         session->gpsdata.log.gSpeed = 1.0e-3 * getles32(buf, 64);
         session->gpsdata.log.heading = 1.0e-5 * getles32(buf, 68);
         if (diffSoln) {
-            session->gpsdata.log.status = STATUS_DGPS_FIX;
+            session->gpsdata.log.status = STATUS_DGPS;
         } else {
             session->gpsdata.log.status = STATUS_GPS;
         }
@@ -1782,7 +1782,7 @@ ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
             mask |= MODE_SET;
         }
         if ((flags & UBX_NAV_PVT_FLAG_DGPS) == UBX_NAV_PVT_FLAG_DGPS) {
-            *status = STATUS_DGPS_FIX;
+            *status = STATUS_DGPS;
             mask |= STATUS_SET;
         } else {
             *status = STATUS_GPS;
@@ -2102,8 +2102,8 @@ ubx_msg_nav_sol(struct gps_device_t *session, unsigned char *buf,
         break;
     }
 
-    if ((flags & UBX_SOL_FLAG_DGPS) != 0)
-        session->newdata.status = STATUS_DGPS_FIX;
+    if (0 != (flags & UBX_SOL_FLAG_DGPS))
+        session->newdata.status = STATUS_DGPS;
 
     mask |= MODE_SET | STATUS_SET;
     mask |= REPORT_IS;
@@ -2179,7 +2179,7 @@ ubx_msg_nav_status(struct gps_device_t *session, unsigned char *buf,
             // 4
             *mode = MODE_3D;
             if (2 == (2 & fixStat)) {
-                *status = STATUS_DGPS_FIX;
+                *status = STATUS_DGPS;
             } else {
                 // FIXME:  Set DR if this is DR
                 *status = STATUS_GPS;
@@ -2189,12 +2189,13 @@ ubx_msg_nav_status(struct gps_device_t *session, unsigned char *buf,
         case UBX_MODE_2D:
             // 2
             FALLTHROUGH
-        case UBX_MODE_DR:           /* consider this too as 2D */
+        case UBX_MODE_DR:           // consider this too as 2D
             // 1
             *mode = MODE_2D;
             if (2 == (2 & fixStat)) {
-                *status = STATUS_DGPS_FIX;
+                *status = STATUS_DGPS;
             } else {
+                // FIXME:  Set DR if this is DR
                 *status = STATUS_GPS;
             }
             break;

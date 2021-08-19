@@ -148,8 +148,8 @@ static void json_log_dump(const struct gps_device_t *session,
         str_appendf(reply, replylen, ",\"string\":%s", logp->string);
     }
 
-    if (STATUS_DGPS_FIX <= logp->status) {
-        /* to save rebuilding all the regressions, skip NO_FIX and FIX */
+    if (STATUS_DGPS <= logp->status) {
+        // to save rebuilding all the regressions, skip UNK and GPS
         str_appendf(reply, replylen, ",\"status\":%d", logp->status);
     }
     // Sometimes char is signed, sometimes unsigned, handle both
@@ -230,10 +230,10 @@ void json_tpv_dump(const gps_mask_t changed, const struct gps_device_t *session,
     assert(replylen > sizeof(char *));
     (void)strlcpy(reply, "{\"class\":\"TPV\"", replylen);
     if (gpsdata->dev.path[0] != '\0')
-        /* Note: Assumes /dev paths are always plain ASCII */
+        // Note: Assumes /dev paths are always plain ASCII
         str_appendf(reply, replylen, ",\"device\":\"%s\"", gpsdata->dev.path);
-    if (STATUS_DGPS_FIX <= gpsdata->fix.status) {
-        /* to save rebuilding all the regressions, skip NO_FIX and FIX */
+    if (STATUS_DGPS <= gpsdata->fix.status) {
+        // to save rebuilding all the regressions, skip UNK and GPS
         str_appendf(reply, replylen, ",\"status\":%d", gpsdata->fix.status);
     }
     str_appendf(reply, replylen, ",\"mode\":%d", gpsdata->fix.mode);

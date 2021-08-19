@@ -128,11 +128,11 @@ static gps_mask_t superstar2_msg_navsol_lla(struct gps_device_t *session,
         break;
     case 4:
         session->newdata.mode = MODE_3D;
-        session->newdata.status = STATUS_DGPS_FIX;
+        session->newdata.status = STATUS_DGPS;
         break;
     case 5:
         session->newdata.mode = MODE_2D;
-        session->newdata.status = STATUS_DGPS_FIX;
+        session->newdata.status = STATUS_DGPS;
         break;
     case 3:
     case 6:

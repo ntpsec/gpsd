@@ -839,7 +839,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
 
         newstate = gpsdata->fix.mode;
         switch (gpsdata->fix.status) {
-        case STATUS_DGPS_FIX:
+        case STATUS_DGPS:
             mod = "DGPS ";
             break;
         case STATUS_RTK_FIX:

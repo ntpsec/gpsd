@@ -107,9 +107,10 @@ static void print_fix(struct gps_data_t *gpsdata, timespec_t ts_time)
 
     (void)fprintf(logfile,"    <time>%s</time>\n",
                  timespec_to_iso8601(ts_time, tbuf, sizeof(tbuf)));
-    if (gpsdata->fix.status == STATUS_DGPS_FIX)
+    if (STATUS_DGPS == gpsdata->fix.status) {
+        // FIXME: other status values?
         (void)fprintf(logfile,"    <fix>dgps</fix>\n");
-    else
+    } else {
         switch (gpsdata->fix.mode) {
         case MODE_3D:
             (void)fprintf(logfile,"    <fix>3d</fix>\n");
@@ -124,6 +125,7 @@ static void print_fix(struct gps_data_t *gpsdata, timespec_t ts_time)
             /* don't print anything if no fix indicator */
             break;
         }
+    }
 
     if ((gpsdata->fix.mode > MODE_NO_FIX) && (gpsdata->satellites_used > 0))
         (void)fprintf(logfile,"    <sat>%d</sat>\n", gpsdata->satellites_used);

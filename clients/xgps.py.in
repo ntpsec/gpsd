@@ -1355,7 +1355,7 @@ frame * {
 
         sub_status = ''
         if hasattr(data, 'status'):
-            if gps.STATUS_DGPS_FIX == data.status:
+            if gps.STATUS_DGPS == data.status:
                 sub_status = " DGPS"
             elif gps.STATUS_RTK_FIX == data.status:
                 sub_status = " RTKfix"

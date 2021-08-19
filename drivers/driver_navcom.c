@@ -425,7 +425,7 @@ static gps_mask_t handle_0xb1(struct gps_device_t *session)
     } else {
         session->newdata.mode = ((nav_mode & 0x40)!=0 ? MODE_3D : MODE_2D);
         session->newdata.status =
-            ((nav_mode & 0x03)!=0 ? STATUS_DGPS_FIX : STATUS_GPS);
+            ((nav_mode & 0x03)!=0 ? STATUS_DGPS : STATUS_GPS);
     }
 
     /* altHAE */
@@ -702,7 +702,7 @@ static gps_mask_t handle_0x86(struct gps_device_t *session)
     /* Fix mode */
     switch (sol_status & 0x05) {
     case 0x05:
-        session->newdata.status = STATUS_DGPS_FIX;
+        session->newdata.status = STATUS_DGPS;
         break;
     case 0x01:
         session->newdata.status = STATUS_GPS;

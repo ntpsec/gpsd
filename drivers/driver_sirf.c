@@ -79,7 +79,7 @@ static unsigned char navparams[] = {
     0x00, 0x00, 0xb0, 0xb3
 };
 
-/* DGPS Source MID 133 */
+// DGPS Source MID 133
 static unsigned char dgpscontrol[] = {
     0xa0, 0xa2, 0x00, 0x07,
     0x85,               /* MID 133 */
@@ -1424,8 +1424,8 @@ static gps_mask_t sirf_msg_svinfo(struct gps_device_t *session,
     for (i = 0; i < st; i++) {
         int prn = session->gpsdata.skyview[i].PRN;
         if ((120 <= prn && 158 >= prn) &&
-            session->lastfix.status == STATUS_DGPS_FIX &&
-            session->driver.sirf.dgps_source == SIRF_DGPS_SOURCE_SBAS) {
+            STATUS_DGPS  == session->lastfix.status &&
+            SIRF_DGPS_SOURCE_SBAS == session->driver.sirf.dgps_source) {
             /* used does not seem right, DGPS means got the correction
              * data, not that the geometry was improved... */
             session->gpsdata.skyview[i].used = true;
@@ -1542,7 +1542,7 @@ static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
     session->newdata.status = STATUS_UNK;
     session->newdata.mode = MODE_NO_FIX;
     if ((navtype & 0x80) != 0)
-        session->newdata.status = STATUS_DGPS_FIX;
+        session->newdata.status = STATUS_DGPS;
     else if ((navtype & 0x07) > 0 && (navtype & 0x07) < 7)
         session->newdata.status = STATUS_GPS;
     if ((navtype & 0x07) == 4 || (navtype & 0x07) == 6)
@@ -1640,7 +1640,7 @@ static gps_mask_t sirf_msg_geodetic(struct gps_device_t *session,
     navtype = (unsigned short)getbeu16(buf, 3);
     session->newdata.status = STATUS_UNK;
     if (navtype & 0x80)
-        session->newdata.status = STATUS_DGPS_FIX;
+        session->newdata.status = STATUS_DGPS;
     else if ((navtype & 0x07) > 0 && (navtype & 0x07) < 7)
         session->newdata.status = STATUS_GPS;
     session->newdata.mode = MODE_NO_FIX;
@@ -1786,8 +1786,8 @@ static gps_mask_t sirf_msg_sysparam(struct gps_device_t *session,
     return 0;
 }
 
-/* DGPS status MID 27 (0x1b) */
-/* only documentented from prorocol version 1.7 (2005) onwards */
+/* DGPS status MID 27 (0x1b)
+ * only documentented from prorocol version 1.7 (2005) onwards */
 static gps_mask_t sirf_msg_dgpsstatus(struct gps_device_t *session,
                                  unsigned char *buf, size_t len UNUSED)
 {
@@ -1823,7 +1823,7 @@ static gps_mask_t sirf_msg_ublox(struct gps_device_t *session,
     session->newdata.status = STATUS_UNK;
     session->newdata.mode = MODE_NO_FIX;
     if (navtype & 0x80)
-        session->newdata.status = STATUS_DGPS_FIX;
+        session->newdata.status = STATUS_DGPS;
     else if ((navtype & 0x07) > 0 && (navtype & 0x07) < 7)
         session->newdata.status = STATUS_GPS;
     if ((navtype & 0x07) == 4 || (navtype & 0x07) == 6)
@@ -2149,13 +2149,13 @@ gps_mask_t sirf_parse(struct gps_device_t * session, unsigned char *buf,
     case 0x13:                  /* Navigation Parameters MID 19 (0x13) */
         return sirf_msg_sysparam(session, buf, len);
 
-    case 0x1b:                  /* DGPS status MID 27 */
+    case 0x1b:                  // DGPS status MID 27
         return sirf_msg_dgpsstatus(session, buf, len);
 
     case 0x1c:                  /* Navigation Library Measurement Data MID 28 */
         return sirf_msg_nlmd(session, buf, len);
 
-    case 0x1d:                  /* Navigation Library DGPS Data MID 29 */
+    case 0x1d:                  // Navigation Library DGPS Data MID 29
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF: unused MID 29 (0x1d) NLDG\n");
         return 0;

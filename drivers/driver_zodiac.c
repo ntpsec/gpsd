@@ -322,7 +322,7 @@ static void handle1005(struct gps_device_t *session UNUSED)
     else if (0 == numcorrections)
         session->newdata.status = STATUS_GPS;
     else
-        session->newdata.status = STATUS_DGPS_FIX;
+        session->newdata.status = STATUS_DGPS;
 }
 
 static gps_mask_t handle1011(struct gps_device_t *session)
@@ -470,24 +470,24 @@ static double zodiac_time_offset(struct gps_device_t *session UNUSED)
 /* *INDENT-OFF* */
 const struct gps_type_t driver_zodiac =
 {
-    .type_name      = "Zodiac",         /* full name of type */
-    .packet_type    = ZODIAC_PACKET,    /* associated lexer packet type */
-    .flags          = DRIVER_STICKY,    /* no flags set */
-    .trigger        = NULL,             /* no trigger */
-    .channels       = 12,               /* consumer-grade GPS */
-    .probe_detect   = NULL,             /* no probe */
-    .get_packet     = generic_get,      /* use the generic packet getter */
-    .parse_packet   = zodiac_analyze,   /* parse message packets */
-    .rtcm_writer    = zodiac_send_rtcm, /* send DGPS correction */
-    .init_query     = NULL,             /* non-perturbing initial query */
-    .event_hook     = NULL,             /* no configuration */
-    .speed_switcher = zodiac_speed_switch,/* we can change baud rate */
-    .mode_switcher  = NULL,             /* no mode switcher */
-    .rate_switcher  = NULL,             /* no sample-rate switcher */
-    .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
-    .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-    .control_send   = zodiac_control_send,      /* for gpsctl and friends */
-    .time_offset     = zodiac_time_offset,      /* compute NTO fudge factor */
+    .type_name      = "Zodiac",            // full name of type
+    .packet_type    = ZODIAC_PACKET,       // associated lexer packet type
+    .flags          = DRIVER_STICKY,       // no flags set
+    .trigger        = NULL,                // no trigger
+    .channels       = 12,                  // consumer-grade GPS
+    .probe_detect   = NULL,                // no probe
+    .get_packet     = generic_get,         // use the generic packet getter
+    .parse_packet   = zodiac_analyze,      // parse message packets
+    .rtcm_writer    = zodiac_send_rtcm,    // send DGPS correction
+    .init_query     = NULL,                // non-perturbing initial query
+    .event_hook     = NULL,                // no configuration
+    .speed_switcher = zodiac_speed_switch, // we can change baud rate
+    .mode_switcher  = NULL,                // no mode switcher
+    .rate_switcher  = NULL,                // no sample-rate switcher
+    .min_cycle.tv_sec  = 1,                // not relevant, no rate switch
+    .min_cycle.tv_nsec = 0,                // not relevant, no rate switch
+    .control_send   = zodiac_control_send, // for gpsctl and friends
+    .time_offset     = zodiac_time_offset, // compute NTO fudge factor
 };
 /* *INDENT-ON* */
 

@@ -381,7 +381,7 @@ gps_mask_t garmintxt_parse(struct gps_device_t * session)
             break;
         case 'D':
             session->newdata.mode = MODE_3D;
-            session->newdata.status = STATUS_DGPS_FIX;
+            session->newdata.status = STATUS_DGPS;
             break;
         case 'g':
             session->newdata.mode = MODE_2D;
@@ -389,7 +389,7 @@ gps_mask_t garmintxt_parse(struct gps_device_t * session)
             break;
         case 'd':
             session->newdata.mode = MODE_2D;
-            session->newdata.status = STATUS_DGPS_FIX;
+            session->newdata.status = STATUS_DGPS;
             break;
         default:
             session->newdata.mode = MODE_NO_FIX;

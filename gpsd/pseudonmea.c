@@ -128,7 +128,7 @@ void gpsd_position_fix_dump(struct gps_device_t *session,
         case STATUS_GPS:
             fixquality = FIX_QUALITY_GPS;
             break;
-        case STATUS_DGPS_FIX:
+        case STATUS_DGPS:
             fixquality = FIX_QUALITY_DGPS;
             break;
         case STATUS_RTK_FIX:

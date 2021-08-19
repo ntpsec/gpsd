@@ -1416,7 +1416,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         u1 = getub(buf, 0);
         if (3 == (u1 & 3)) {
             /* currently mode 3 (auto DGPS) and so have DGPS */
-            session->newdata.status = STATUS_DGPS_FIX;
+            session->newdata.status = STATUS_DGPS;
             mask |= STATUS_SET;
         }
         GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -1629,7 +1629,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             if ((u2 & 0x01) == (uint8_t) 0) {         // Fix Available
                 session->newdata.status = STATUS_GPS;
                 if ((u2 & 0x02) != (uint8_t) 0)       // DGPS Corrected
-                    session->newdata.status = STATUS_DGPS_FIX;
+                    session->newdata.status = STATUS_DGPS;
                 if ((u2 & 0x04) != (uint8_t) 0)       // Fix Dimension
                     session->newdata.mode = MODE_2D;
                 else
@@ -1715,7 +1715,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             if ((u2 & 0x01) == (uint8_t) 0) {          // Fix Available
                 session->newdata.status = STATUS_GPS;
                 if ((u2 & 0x02) != (uint8_t) 0)        // DGPS Corrected
-                    session->newdata.status = STATUS_DGPS_FIX;
+                    session->newdata.status = STATUS_DGPS;
                 if ((u2 & 0x04) != (uint8_t) 0)        // Fix Dimension
                     session->newdata.mode = MODE_2D;
                 else
@@ -3405,23 +3405,23 @@ void configuration_packets_res360(struct gps_device_t *session)
 /* *INDENT-OFF* */
 const struct gps_type_t driver_tsip =
 {
-    .type_name      = "Trimble TSIP",   /* full name of type */
-    .packet_type    = TSIP_PACKET,      /* associated lexer packet type */
-    .flags          = DRIVER_STICKY,    /* remember this */
-    .trigger        = NULL,             /* no trigger */
-    .channels       = TSIP_CHANNELS,    /* consumer-grade GPS */
-    .probe_detect   = tsip_detect,      /* probe for 9600O81 device */
-    .get_packet     = generic_get,      /* use the generic packet getter */
-    .parse_packet   = tsip_parse_input, /* parse message packets */
-    .rtcm_writer    = NULL,             /* doesn't accept DGPS corrections */
-    .init_query     = tsip_init_query,  /* non-perturbing initial query */
-    .event_hook     = tsip_event_hook,  /* fire on various lifetime events */
-    .speed_switcher = tsip_speed_switch,/* change baud rate */
-    .mode_switcher  = tsip_mode,        /* there is a mode switcher */
-    .rate_switcher  = NULL,             /* no rate switcher */
-    .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
-    .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-    .control_send   = tsip_control_send,/* how to send commands */
+    .type_name      = "Trimble TSIP",     // full name of type
+    .packet_type    = TSIP_PACKET,        // associated lexer packet type
+    .flags          = DRIVER_STICKY,      // remember this
+    .trigger        = NULL,               // no trigger
+    .channels       = TSIP_CHANNELS,      // consumer-grade GPS
+    .probe_detect   = tsip_detect,        // probe for 9600O81 device
+    .get_packet     = generic_get,        // use the generic packet getter
+    .parse_packet   = tsip_parse_input,   // parse message packets
+    .rtcm_writer    = NULL,               // doesn't accept DGPS corrections
+    .init_query     = tsip_init_query,    // non-perturbing initial query
+    .event_hook     = tsip_event_hook,    // fire on various lifetime events
+    .speed_switcher = tsip_speed_switch,  // change baud rate
+    .mode_switcher  = tsip_mode,          // there is a mode switcher
+    .rate_switcher  = NULL,               // no rate switcher
+    .min_cycle.tv_sec  = 1,               // not relevant, no rate switch
+    .min_cycle.tv_nsec = 0,               // not relevant, no rate switch
+    .control_send   = tsip_control_send,  // how to send commands
     .time_offset     = NULL,
 };
 /* *INDENT-ON* */

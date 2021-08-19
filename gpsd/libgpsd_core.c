@@ -957,12 +957,12 @@ static void gpsd_error_model(struct gps_device_t *session)
      * The UERE constants are our assumption about the base error of
      * GPS fixes in different directions.
      */
-#define H_UERE_NO_DGPS          15.0    /* meters, 95% confidence */
-#define H_UERE_WITH_DGPS        3.75    /* meters, 95% confidence */
-#define V_UERE_NO_DGPS          23.0    /* meters, 95% confidence */
-#define V_UERE_WITH_DGPS        5.75    /* meters, 95% confidence */
-#define P_UERE_NO_DGPS          19.0    /* meters, 95% confidence */
-#define P_UERE_WITH_DGPS        4.75    /* meters, 95% confidence */
+#define H_UERE_NO_DGPS          15.0    // meters, 95% confidence
+#define H_UERE_WITH_DGPS        3.75    // meters, 95% confidence
+#define V_UERE_NO_DGPS          23.0    // meters, 95% confidence
+#define V_UERE_WITH_DGPS        5.75    // meters, 95% confidence
+#define P_UERE_NO_DGPS          19.0    // meters, 95% confidence
+#define P_UERE_WITH_DGPS        4.75    // meters, 95% confidence
     double h_uere, v_uere, p_uere;
 
     if (NULL == session)
@@ -992,13 +992,13 @@ static void gpsd_error_model(struct gps_device_t *session)
     // adjusting UERE for DGPS is dodgy...
     h_uere =
         (session->gpsdata.fix.status ==
-         STATUS_DGPS_FIX ? H_UERE_WITH_DGPS : H_UERE_NO_DGPS);
+         STATUS_DGPS ? H_UERE_WITH_DGPS : H_UERE_NO_DGPS);
     v_uere =
         (session->gpsdata.fix.status ==
-         STATUS_DGPS_FIX ? V_UERE_WITH_DGPS : V_UERE_NO_DGPS);
+         STATUS_DGPS ? V_UERE_WITH_DGPS : V_UERE_NO_DGPS);
     p_uere =
         (session->gpsdata.fix.status ==
-         STATUS_DGPS_FIX ? P_UERE_WITH_DGPS : P_UERE_NO_DGPS);
+         STATUS_DGPS ? P_UERE_WITH_DGPS : P_UERE_NO_DGPS);
 
     if (0 == isfinite(fix->latitude) ||
         0 == isfinite(fix->longitude) ||  /* both lat/lon, or none */

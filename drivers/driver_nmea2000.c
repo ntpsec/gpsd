@@ -620,7 +620,7 @@ static gps_mask_t hnd_129029(unsigned char *bu, int len, PGN *pgn,
         session->newdata.status = STATUS_GPS;
         break;
     case 2:
-        session->newdata.status = STATUS_DGPS_FIX;
+        session->newdata.status = STATUS_DGPS;
         break;
     case 3:
     case 4:

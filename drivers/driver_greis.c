@@ -246,10 +246,10 @@ static gps_mask_t greis_msg_PV(struct gps_device_t *session,
     session->newdata.ecef.vAcc = v_sigma;
 
     /* GREIS Reference Guide 3.4.2 "General Notes" part "Solution Types" */
-    if (solution_type > 0 && solution_type < 5) {
+    if (0 < solution_type && 5 > solution_type) {
         session->newdata.mode = MODE_3D;
         if (solution_type > 1)
-            session->newdata.status = STATUS_DGPS_FIX;
+            session->newdata.status = STATUS_DGPS;
         else
             session->newdata.status = STATUS_GPS;
     }

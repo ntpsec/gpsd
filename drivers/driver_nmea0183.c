@@ -138,7 +138,7 @@ static int faa_mode(char mode)
         newstatus = STATUS_UNK;
         break;
     case 'D':   // Differential
-        newstatus = STATUS_DGPS_FIX;
+        newstatus = STATUS_DGPS;
         break;
     case 'E':   // Estimated dead reckoning
         newstatus = STATUS_DR;
@@ -151,7 +151,7 @@ static int faa_mode(char mode)
         newstatus = STATUS_UNK;
         break;
     case 'P':   // Precise (NMEA 4+)
-        newstatus = STATUS_DGPS_FIX;    // sort of DGPS
+        newstatus = STATUS_DGPS;    // sort of DGPS
         break;
     case 'R':   // fixed RTK
         newstatus = STATUS_RTK_FIX;
@@ -524,8 +524,8 @@ static gps_mask_t processRMC(int count, char *field[],
         mask |= STATUS_SET | MODE_SET;
         break;
     case 'D':
-        /* Differential Fix */
-        // STATUS_DGPS_FIX set below, after lat/lon check
+        /* Differential Fix
+         * STATUS_DGPS set below, after lat/lon check */
         FALLTHROUGH
     case 'A':
         /* Valid Fix */
@@ -548,7 +548,7 @@ static gps_mask_t processRMC(int count, char *field[],
 
         if (0 == do_lat_lon(&field[3], &session->newdata)) {
             if ('D' == status) {
-                newstatus = STATUS_DGPS_FIX;
+                newstatus = STATUS_DGPS;
             } else {
                 newstatus = STATUS_GPS;
             }
@@ -858,10 +858,10 @@ static gps_mask_t processGNS(int count UNUSED, char *field[],
     session->newdata.status = newstatus;
     mask |= MODE_SET | STATUS_SET;
 
-    /* get DGPS stuff */
+    // get DGPS stuff
     if ('\0' != field[11][0] &&
         '\0' != field[12][0]) {
-        /* both, or neither */
+        // both, or neither
         session->newdata.dgps_age = safe_atof(field[11]);
         session->newdata.dgps_station = atoi(field[12]);
     }
@@ -944,7 +944,7 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
         newstatus = STATUS_GPS;
         break;
     case 2:     // differential
-        newstatus = STATUS_DGPS_FIX;
+        newstatus = STATUS_DGPS;
         break;
     case 3:
         // GPS PPS, fix valid, could be 2D, 3D, GNSSDR
@@ -1079,7 +1079,7 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
         session->gpsdata.dop.hdop = safe_atof(field[8]);
     }
 
-    /* get DGPS stuff */
+    // get DGPS stuff
     if ('\0' != field[13][0] &&
         '\0' != field[14][0]) {
         /* both, or neither */
@@ -3192,7 +3192,7 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
             // if we make it this far, we at least have a 3D fix
             session->newdata.mode = MODE_3D;
             if (1 <= atoi(field[2]))
-                session->newdata.status = STATUS_DGPS_FIX;
+                session->newdata.status = STATUS_DGPS;
             else
                 session->newdata.status = STATUS_GPS;
 
@@ -3660,16 +3660,16 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         nmea_decoder decoder;
     } nmea_phrase[NMEA_NUM] = {
         {"PGLOR", 2,  false, processPGLOR},  // Android something or other
-        {"PGRMB", 0,  false, NULL},     /* ignore Garmin DGPS Beacon Info */
-        {"PGRMC", 0,  false, NULL},     /* ignore Garmin Sensor Config */
+        {"PGRMB", 0,  false, NULL},          // ignore Garmin DGPS Beacon Info
+        {"PGRMC", 0,  false, NULL},          // ignore Garmin Sensor Config
         {"PGRME", 7,  false, processPGRME},
-        {"PGRMF", 15, false, processPGRMF},     /* Garmin GPS Fix Data */
-        {"PGRMH", 0,  false, NULL},     /* ignore Garmin Aviation Height... */
-        {"PGRMI", 0,  false, NULL},     /* ignore Garmin Sensor Init */
-        {"PGRMM", 2,  false, processPGRMM},     /* Garmin Map Datum */
-        {"PGRMO", 0,  false, NULL},     /* ignore Garmin Sentence Enable */
-        {"PGRMT", 0,  false, NULL},     /* ignore Garmin Sensor Info */
-        {"PGRMV", 0,  false, NULL},     /* ignore Garmin 3D Velocity Info */
+        {"PGRMF", 15, false, processPGRMF},  // Garmin GPS Fix Data
+        {"PGRMH", 0,  false, NULL},          // ignore Garmin Aviation Height
+        {"PGRMI", 0,  false, NULL},          // ignore Garmin Sensor Init
+        {"PGRMM", 2,  false, processPGRMM},  // Garmin Map Datum
+        {"PGRMO", 0,  false, NULL},          // ignore Garmin Sentence Enable
+        {"PGRMT", 0,  false, NULL},          // ignore Garmin Sensor Info
+        {"PGRMV", 0,  false, NULL},          // ignore Garmin 3D Velocity Info
         {"PGRMZ", 4,  false, processPGRMZ},
             /*
              * Basic sentences must come after the PG* ones, otherwise

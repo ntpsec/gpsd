@@ -447,12 +447,12 @@ gps_mask_t PrintSERPacket(struct gps_device_t *session, unsigned char pkt_id,
             break;
         case 4:
             // 2D Differential fix
-            session->newdata.status = STATUS_DGPS_FIX;
+            session->newdata.status = STATUS_DGPS;
             session->newdata.mode = MODE_2D;
             break;
         case 5:
             // 3D differential fix
-            session->newdata.status = STATUS_DGPS_FIX;
+            session->newdata.status = STATUS_DGPS;
             session->newdata.mode = MODE_3D;
             break;
         }
@@ -1253,23 +1253,23 @@ static double garmin_time_offset(struct gps_device_t *session)
 /* *INDENT-OFF* */
 const struct gps_type_t driver_garmin_usb_binary =
 {
-    .type_name      = "Garmin USB binary",      /* full name of type */
-    .packet_type    = GARMIN_PACKET,    /* associated lexer packet type */
-    .flags          = DRIVER_STICKY,    /* remember this */
-    .trigger        = NULL,             /* no trigger, it has a probe */
-    .channels       = GARMIN_CHANNELS,  /* consumer-grade GPS */
-    .probe_detect   = garmin_usb_detect,/* how to detect at startup time */
-    .get_packet     = generic_get,      /* how to grab a packet */
-    .parse_packet   = garmin_ser_parse, /* parse message packets */
-    .rtcm_writer    = NULL,             /* don't send DGPS corrections */
-    .init_query     = NULL,             /* non-perturbing initial query */
-    .event_hook     = garmin_event_hook,/* lifetime ebent handler */
-    .speed_switcher = NULL,             /* no speed switcher */
-    .mode_switcher  = NULL,             /* Garmin USB Binary has no NMEA */
-    .rate_switcher  = NULL,             /* no sample-rate switcher */
+    .type_name      = "Garmin USB binary",  // full name of type
+    .packet_type    = GARMIN_PACKET,        // associated lexer packet type
+    .flags          = DRIVER_STICKY,        // remember this
+    .trigger        = NULL,                 // no trigger, it has a probe
+    .channels       = GARMIN_CHANNELS,      // consumer-grade GPS
+    .probe_detect   = garmin_usb_detect,    // how to detect at startup time
+    .get_packet     = generic_get,          // how to grab a packet
+    .parse_packet   = garmin_ser_parse,     // parse message packets
+    .rtcm_writer    = NULL,                 // don't send DGPS corrections
+    .init_query     = NULL,                 // non-perturbing initial query
+    .event_hook     = garmin_event_hook,    // lifetime ebent handler
+    .speed_switcher = NULL,                 // no speed switcher
+    .mode_switcher  = NULL,                 // Garmin USB Binary has no NMEA
+    .rate_switcher  = NULL,                 // no sample-rate switcher
     .min_cycle.tv_sec  = 0,
-    .min_cycle.tv_nsec = 10000000,      /* 10Hz */
-    .control_send   = garmin_control_send,      /* send raw bytes */
+    .min_cycle.tv_nsec = 10000000,          // 10Hz
+    .control_send   = garmin_control_send,  // send raw bytes
     .time_offset     = garmin_time_offset,
 };
 /* *INDENT-ON* */
@@ -1277,25 +1277,25 @@ const struct gps_type_t driver_garmin_usb_binary =
 /* *INDENT-OFF* */
 const struct gps_type_t driver_garmin_ser_binary =
 {
-    .type_name      = "Garmin Serial binary",   /* full name of type */
-    .packet_type    = GARMIN_PACKET,    /* associated lexer packet type */
-    .flags          = DRIVER_STICKY,    /* remember this */
-    .trigger        = NULL,             /* no trigger, it has a probe */
-    .channels       = GARMIN_CHANNELS,  /* consumer-grade GPS */
-    .probe_detect   = NULL,             /* how to detect at startup time */
-    .get_packet     = generic_get,       /* how to grab a packet */
-    .parse_packet   = garmin_ser_parse, /* parse message packets */
-    .rtcm_writer    = NULL,             /* don't send DGPS corrections */
-    .init_query     = NULL,             /* non-perturbing initial query */
+    .type_name      = "Garmin Serial binary",  // full name of type
+    .packet_type    = GARMIN_PACKET,           // associated lexer packet type
+    .flags          = DRIVER_STICKY,           // remember this
+    .trigger        = NULL,                    // no trigger, it has a probe
+    .channels       = GARMIN_CHANNELS,         // consumer-grade GPS
+    .probe_detect   = NULL,                    // how to detect at startup time
+    .get_packet     = generic_get,             // how to grab a packet
+    .parse_packet   = garmin_ser_parse,        // parse message packets
+    .rtcm_writer    = NULL,                    // don't send DGPS corrections
+    .init_query     = NULL,                    // non-perturbing initial query
     /* The Garmin Gek0 301 needs to be kicked to start sending binary.
      * like the Garmin USB. */
-    .event_hook     = garmin_event_hook,        /* lifetime event handler */
-    .speed_switcher = NULL,             /* no speed switcher */
-    .mode_switcher  = garmin_switcher,  /* how to change modes */
-    .rate_switcher  = NULL,             /* no sample-rate switcher */
+    .event_hook     = garmin_event_hook,       // lifetime event handler
+    .speed_switcher = NULL,                    // no speed switcher
+    .mode_switcher  = garmin_switcher,         // how to change modes
+    .rate_switcher  = NULL,                    // no sample-rate switcher
     .min_cycle.tv_sec  = 0,
-    .min_cycle.tv_nsec = 10000000,      /* 10Hz */
-    .control_send   = garmin_control_send,      /* send raw bytes */
+    .min_cycle.tv_nsec = 10000000,             // 10Hz
+    .control_send   = garmin_control_send,     // send raw bytes
     .time_offset     = garmin_time_offset,
 };
 /* *INDENT-ON* */
