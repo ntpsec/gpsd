@@ -85,6 +85,8 @@ extern "C" {
  * 3.21.1~dev
  *      Add gps_device_t.ubx.last_protver
  *      Add gps_device_t last_word_gal and last_svid3_gal
+ * 3.23.1~dev
+ *      Add timespec ts_startCurrentBaud to gps_device_t
  *
  */
 
@@ -541,8 +543,9 @@ struct gps_device_t {
     time_t releasetime;
     bool zerokill;
     time_t reawake;
-    timespec_t sor;             /* time start of this reporting cycle */
-    unsigned long chars;        /* characters in the cycle */
+    timespec_t sor;                   // time start of this reporting cycle
+    timespec_t ts_startCurrentBaud;   // time start of current autobaud hunt
+    unsigned long chars;              // characters in the cycle
     bool ship_to_ntpd;
     volatile struct shmTime *shm_clock;
     volatile struct shmTime *shm_pps;

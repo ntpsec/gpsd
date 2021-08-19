@@ -556,6 +556,7 @@ void gpsd_set_speed(struct gps_device_t *session,
         }
     }
     packet_reset(&session->lexer);
+    clock_gettime(CLOCK_REALTIME, &session->ts_startCurrentBaud);
 }
 
 /* open a device for access to its data
