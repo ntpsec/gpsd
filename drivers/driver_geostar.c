@@ -199,11 +199,10 @@ static gps_mask_t geostar_analyze(struct gps_device_t *session)
         if (ul1 != 0) {
             session->newdata.status = STATUS_UNK;
             mask |= STATUS_SET;
-        } else {
-            if (session->newdata.status < STATUS_FIX) {
-                session->newdata.status = STATUS_FIX;
-                mask |= STATUS_SET;
-            }
+        } else if (session->newdata.status < STATUS_GPS) {
+            // Don't step on previously set status
+            session->newdata.status = STATUS_GPS;
+            mask |= STATUS_SET;
         }
         mask |= TIME_SET | NTPTIME_IS | LATLON_SET | ALTITUDE_SET |
                 SPEED_SET | STATUS_SET | TRACK_SET | DOP_SET | USED_IS |
@@ -240,7 +239,7 @@ static gps_mask_t geostar_analyze(struct gps_device_t *session)
             session->newdata.mode = MODE_3D;
         }
         if(ul1 & (1<<2)) {
-            session->newdata.status = STATUS_FIX;
+            session->newdata.status = STATUS_GPS;
         }
         else {
             session->newdata.status = STATUS_UNK;

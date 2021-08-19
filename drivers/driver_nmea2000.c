@@ -617,7 +617,7 @@ static gps_mask_t hnd_129029(unsigned char *bu, int len, PGN *pgn,
         session->newdata.status = STATUS_UNK;
         break;
     case 1:
-        session->newdata.status = STATUS_FIX;
+        session->newdata.status = STATUS_GPS;
         break;
     case 2:
         session->newdata.status = STATUS_DGPS_FIX;
@@ -625,7 +625,7 @@ static gps_mask_t hnd_129029(unsigned char *bu, int len, PGN *pgn,
     case 3:
     case 4:
     case 5:
-        session->newdata.status = STATUS_FIX; /* Is this correct ? */
+        session->newdata.status = STATUS_GPS;   // Is this correct ?
         break;
     default:
         session->newdata.status = STATUS_UNK;

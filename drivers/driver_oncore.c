@@ -185,10 +185,10 @@ oncore_msg_navsol(struct gps_device_t *session, unsigned char *buf,
     flags = (unsigned char)getub(buf, 72);
 
     if (flags & 0x20) {
-        session->newdata.status = STATUS_FIX;
+        session->newdata.status = STATUS_GPS;
         session->newdata.mode = MODE_3D;
     } else if (flags & 0x10) {
-        session->newdata.status = STATUS_FIX;
+        session->newdata.status = STATUS_GPS;
         session->newdata.mode = MODE_2D;
     } else if ((flags & 0x08) &&
                session->driver.oncore.pos_hold_mode ==

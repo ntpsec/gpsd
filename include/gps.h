@@ -156,18 +156,18 @@ struct gps_fix_t {
      * It is almost, but not quite, the same as the NMEA 4.x xxGGA GPS
      * Quality Indicator Values.  Many GNSS receivers do not supply it.
      */
-    int    status;              /* What kind of fix? */
-#define STATUS_UNK      0       // Unknown status, maybe no fix.
+    int    status;              // What kind of fix?
+#define STATUS_UNK      0       // Unknown status
 /* yes, plain GPS (SPS Mode), without DGPS, PPS, RTK, DR, etc. */
-#define STATUS_FIX      1
-#define STATUS_DGPS_FIX 2       /* yes, with DGPS */
-#define STATUS_RTK_FIX  3       /* yes, with RTK Fixed */
-#define STATUS_RTK_FLT  4       /* yes, with RTK Float */
-#define STATUS_DR       5       /* yes, with dead reckoning */
-#define STATUS_GNSSDR   6       /* yes, with GNSS + dead reckoning */
-#define STATUS_TIME     7       /* yes, time only (surveyed in, manual) */
+#define STATUS_GPS      1
+#define STATUS_DGPS_FIX 2       // with DGPS
+#define STATUS_RTK_FIX  3       // with RTK Fixed
+#define STATUS_RTK_FLT  4       // with RTK Float
+#define STATUS_DR       5       // with dead reckoning
+#define STATUS_GNSSDR   6       // with GNSS + dead reckoning
+#define STATUS_TIME     7       // time only (surveyed in, manual)
 // Note that STATUS_SIM and MODE_NO_FIX can go together.
-#define STATUS_SIM      8       /* yes, simulated */
+#define STATUS_SIM      8       // simulated
 /* yes, Precise Positioning Service (PPS)
  * Not to be confused with Pulse per Second (PPS)
  * PPS is the encrypted military P(Y)-code */

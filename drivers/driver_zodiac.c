@@ -317,10 +317,10 @@ static void handle1005(struct gps_device_t *session UNUSED)
     /* sequence           = getzword(8); */
     int numcorrections = (int)getzword(12);
 
-    if (session->newdata.mode == MODE_NO_FIX)
+    if (MODE_NO_FIX == session->newdata.mode)
         session->newdata.status = STATUS_UNK;
-    else if (numcorrections == 0)
-        session->newdata.status = STATUS_FIX;
+    else if (0 == numcorrections)
+        session->newdata.status = STATUS_GPS;
     else
         session->newdata.status = STATUS_DGPS_FIX;
 }

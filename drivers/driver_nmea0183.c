@@ -124,7 +124,7 @@ static int do_lat_lon(char *field[], struct gps_fix_t *out)
  */
 static int faa_mode(char mode)
 {
-    int newstatus = STATUS_FIX;
+    int newstatus = STATUS_GPS;
 
     switch (mode) {
     case '\0':  // missing
@@ -132,7 +132,7 @@ static int faa_mode(char mode)
         break;
     case 'A':   // Autonomous
     default:
-        newstatus = STATUS_FIX;
+        newstatus = STATUS_GPS;
         break;
     case 'C':   // Quectel unique: Caution
         newstatus = STATUS_UNK;
@@ -550,7 +550,7 @@ static gps_mask_t processRMC(int count, char *field[],
             if ('D' == status) {
                 newstatus = STATUS_DGPS_FIX;
             } else {
-                newstatus = STATUS_FIX;
+                newstatus = STATUS_GPS;
             }
             mask |= LATLON_SET;
             if (MODE_2D >= session->lastfix.mode) {
@@ -708,7 +708,7 @@ static gps_mask_t processGLL(int count, char *field[],
 
         mask |= LATLON_SET;
 
-        newstatus = STATUS_FIX;
+        newstatus = STATUS_GPS;
         if (count >= 8) {
             newstatus = faa_mode(*status);
         }
@@ -941,7 +941,7 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
         break;
     case 1:
         /* could be 2D, 3D, GNSSDR */
-        newstatus = STATUS_FIX;
+        newstatus = STATUS_GPS;
         break;
     case 2:     // differential
         newstatus = STATUS_DGPS_FIX;
@@ -3194,7 +3194,7 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
             if (1 <= atoi(field[2]))
                 session->newdata.status = STATUS_DGPS_FIX;
             else
-                session->newdata.status = STATUS_FIX;
+                session->newdata.status = STATUS_GPS;
 
             /* don't use as this breaks the GPGSV counter
              * session->gpsdata.satellites_used = atoi(field[3]);  */

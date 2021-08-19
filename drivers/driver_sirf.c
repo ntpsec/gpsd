@@ -1544,7 +1544,7 @@ static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
     if ((navtype & 0x80) != 0)
         session->newdata.status = STATUS_DGPS_FIX;
     else if ((navtype & 0x07) > 0 && (navtype & 0x07) < 7)
-        session->newdata.status = STATUS_FIX;
+        session->newdata.status = STATUS_GPS;
     if ((navtype & 0x07) == 4 || (navtype & 0x07) == 6)
         session->newdata.mode = MODE_3D;
     else if (session->newdata.status != 0)
@@ -1642,7 +1642,7 @@ static gps_mask_t sirf_msg_geodetic(struct gps_device_t *session,
     if (navtype & 0x80)
         session->newdata.status = STATUS_DGPS_FIX;
     else if ((navtype & 0x07) > 0 && (navtype & 0x07) < 7)
-        session->newdata.status = STATUS_FIX;
+        session->newdata.status = STATUS_GPS;
     session->newdata.mode = MODE_NO_FIX;
     if ((navtype & 0x07) == 4 || (navtype & 0x07) == 6)
         session->newdata.mode = MODE_3D;
@@ -1825,7 +1825,7 @@ static gps_mask_t sirf_msg_ublox(struct gps_device_t *session,
     if (navtype & 0x80)
         session->newdata.status = STATUS_DGPS_FIX;
     else if ((navtype & 0x07) > 0 && (navtype & 0x07) < 7)
-        session->newdata.status = STATUS_FIX;
+        session->newdata.status = STATUS_GPS;
     if ((navtype & 0x07) == 4 || (navtype & 0x07) == 6)
         session->newdata.mode = MODE_3D;
     else if (session->newdata.status)

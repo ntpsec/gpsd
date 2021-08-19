@@ -431,11 +431,11 @@ static gps_mask_t sky_msg_DF(struct gps_device_t *session,
         /* fix prediction, ignore */
         break;
     case 2:
-        session->newdata.status = STATUS_FIX;
+        session->newdata.status = STATUS_GPS;
         session->newdata.mode = MODE_2D;
         break;
     case 3:
-        session->newdata.status = STATUS_FIX;
+        session->newdata.status = STATUS_GPS;
         session->newdata.mode = MODE_3D;
         break;
     case 4:

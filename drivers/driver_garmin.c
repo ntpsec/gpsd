@@ -437,12 +437,12 @@ gps_mask_t PrintSERPacket(struct gps_device_t *session, unsigned char pkt_id,
             break;
         case 2:
             // 2D fix
-            session->newdata.status = STATUS_FIX;
+            session->newdata.status = STATUS_GPS;
             session->newdata.mode = MODE_2D;
             break;
         case 3:
             // 3D fix
-            session->newdata.status = STATUS_FIX;
+            session->newdata.status = STATUS_GPS;
             session->newdata.mode = MODE_3D;
             break;
         case 4:

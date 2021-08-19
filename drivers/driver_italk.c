@@ -111,7 +111,7 @@ static gps_mask_t decode_itk_navfix(struct gps_device_t *session,
         if (pflags & FIX_FLAG_DGPS_CORRECTION)
             session->newdata.status = STATUS_DGPS_FIX;
         else
-            session->newdata.status = STATUS_FIX;
+            session->newdata.status = STATUS_GPS;
     }
 
     GPSD_LOG(LOG_DATA, &session->context->errout,

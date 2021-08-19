@@ -67,8 +67,8 @@ static DBusHandlerResult handle_gps_fix(DBusMessage * message)
                           DBUS_TYPE_DOUBLE, &share_gpsdata->fix.epc,
                           DBUS_TYPE_STRING, &gpsd_devname, DBUS_TYPE_INVALID);
 
-    if (share_gpsdata->fix.mode > MODE_NO_FIX )
-        share_gpsdata->fix.status = STATUS_FIX;
+    if (MODE_NO_FIX < share_gpsdata->fix.mode)
+        share_gpsdata->fix.status = STATUS_GPS;
     else
         share_gpsdata->fix.status = STATUS_UNK;
 

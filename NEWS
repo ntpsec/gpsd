@@ -3,7 +3,8 @@
 3.23.1~dev: unreleased
   Improve ubx cycle detection.
   Add quirks for Jackson Labs nonstandard NMEA
-  Change STATUS_NO_FIX to STATUS_UNK to avoid confusion with mode.
+  Change STATUS_NO_FIX to STATUS_UNK to avoid confusion with fix mode.
+  Change STATUS_FIX to STATUS_GPS to avoid confusion with fix mode.
 
 3.23: 2020-08-06
   doc/*xml all moved into www/internals.adoc

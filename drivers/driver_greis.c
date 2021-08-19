@@ -251,7 +251,7 @@ static gps_mask_t greis_msg_PV(struct gps_device_t *session,
         if (solution_type > 1)
             session->newdata.status = STATUS_DGPS_FIX;
         else
-            session->newdata.status = STATUS_FIX;
+            session->newdata.status = STATUS_GPS;
     }
 
     GPSD_LOG(LOG_DATA, &session->context->errout,

@@ -642,8 +642,8 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         if ((uint8_t)0 != u1) {
             session->newdata.status = STATUS_UNK;
             mask |= STATUS_SET;
-        } else if (session->newdata.status < STATUS_FIX) {
-            session->newdata.status = STATUS_FIX;
+        } else if (STATUS_GPS > session->newdata.status) {
+            session->newdata.status = STATUS_GPS;
             mask |= STATUS_SET;
         }
         GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -1236,11 +1236,11 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             session->newdata.mode = MODE_3D;
             break;
         case 3:
-            session->newdata.status = STATUS_FIX;
+            session->newdata.status = STATUS_GPS;
             session->newdata.mode = MODE_2D;
             break;
         case 4:
-            session->newdata.status = STATUS_FIX;
+            session->newdata.status = STATUS_GPS;
             session->newdata.mode = MODE_3D;
             break;
         case 2:
@@ -1336,11 +1336,11 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 session->newdata.mode = MODE_3D;
                 break;
             case 3:
-                session->newdata.status = STATUS_FIX;
+                session->newdata.status = STATUS_GPS;
                 session->newdata.mode = MODE_2D;
                 break;
             case 4:
-                session->newdata.status = STATUS_FIX;
+                session->newdata.status = STATUS_GPS;
                 session->newdata.mode = MODE_3D;
                 break;
             case 2:
@@ -1626,11 +1626,11 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
 
             session->newdata.status = STATUS_UNK;
             session->newdata.mode = MODE_NO_FIX;
-            if ((u2 & 0x01) == (uint8_t) 0) {   /* Fix Available */
-                session->newdata.status = STATUS_FIX;
-                if ((u2 & 0x02) != (uint8_t) 0) /* DGPS Corrected */
+            if ((u2 & 0x01) == (uint8_t) 0) {         // Fix Available
+                session->newdata.status = STATUS_GPS;
+                if ((u2 & 0x02) != (uint8_t) 0)       // DGPS Corrected
                     session->newdata.status = STATUS_DGPS_FIX;
-                if ((u2 & 0x04) != (uint8_t) 0) /* Fix Dimension */
+                if ((u2 & 0x04) != (uint8_t) 0)       // Fix Dimension
                     session->newdata.mode = MODE_2D;
                 else
                     session->newdata.mode = MODE_3D;
@@ -1712,11 +1712,11 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 gpsd_gpstime_resolv(session, week, ts_tow);
             session->newdata.status = STATUS_UNK;
             session->newdata.mode = MODE_NO_FIX;
-            if ((u2 & 0x01) == (uint8_t) 0) {   /* Fix Available */
-                session->newdata.status = STATUS_FIX;
-                if ((u2 & 0x02) != (uint8_t) 0) /* DGPS Corrected */
+            if ((u2 & 0x01) == (uint8_t) 0) {          // Fix Available
+                session->newdata.status = STATUS_GPS;
+                if ((u2 & 0x02) != (uint8_t) 0)        // DGPS Corrected
                     session->newdata.status = STATUS_DGPS_FIX;
-                if ((u2 & 0x04) != (uint8_t) 0) /* Fix Dimension */
+                if ((u2 & 0x04) != (uint8_t) 0)        // Fix Dimension
                     session->newdata.mode = MODE_2D;
                 else
                     session->newdata.mode = MODE_3D;
@@ -1893,8 +1893,8 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 session->newdata.status = STATUS_UNK;
                 mask |= STATUS_SET;
             } else {
-                if (session->newdata.status < STATUS_FIX) {
-                    session->newdata.status = STATUS_FIX;
+                if (session->newdata.status < STATUS_GPS) {
+                    session->newdata.status = STATUS_GPS;
                     mask |= STATUS_SET;
                 }
             }
@@ -1941,22 +1941,22 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                  *   Acutime 360
                  */
                 FALLTHROUGH
-            case 3:             /* forced 2D Position Fix */
-                //session->newdata.status = STATUS_FIX;
+            case 3:             // forced 2D Position Fix
+                //session->newdata.status = STATUS_GPS;
                 session->newdata.mode = MODE_2D;
                 break;
-            case 1:             /* Single Satellite Time */
+            case 1:             // Single Satellite Time
                 /* Present in:
                  *   Acutime 360
                  */
                 FALLTHROUGH
-            case 7:             /* overdetermined clock */
+            case 7:             // overdetermined clock
                 /* Present in:
                  *   Acutiome 360
                  */
                 FALLTHROUGH
-            case 4:             /* forced 3D position Fix */
-                //session->newdata.status = STATUS_FIX;
+            case 4:             // forced 3D position Fix
+                //session->newdata.status = STATUS_GPS;
                 session->newdata.mode = MODE_3D;
                 break;
             default:

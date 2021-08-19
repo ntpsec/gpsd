@@ -935,7 +935,7 @@ ubx_msg_hnr_pvt(struct gps_device_t *session, unsigned char *buf,
             *status = STATUS_DGPS_FIX;
             mask |= STATUS_SET;
         } else {
-            *status = STATUS_FIX;
+            *status = STATUS_GPS;
             mask |= STATUS_SET;
         }
         mask |=   LATLON_SET;
@@ -944,14 +944,15 @@ ubx_msg_hnr_pvt(struct gps_device_t *session, unsigned char *buf,
     case UBX_MODE_2D:
         // 2
         FALLTHROUGH
-    case UBX_MODE_DR:           /* consider this too as 2D */
+    case UBX_MODE_DR:           // consider this too as 2D
         // 1
-        if (*mode != MODE_2D) {
+        if (MODE_2D != *mode) {
             *mode = MODE_2D;
             mask |= MODE_SET;
         };
-        if (*status != STATUS_FIX) {
-            *status = STATUS_FIX;
+        if (STATUS_GPS != *status) {
+            // FIXME: Set DR status if it is DR
+            *status = STATUS_GPS;
             mask |= STATUS_SET;
         }
         mask |= LATLON_SET | SPEED_SET;
@@ -1267,7 +1268,7 @@ ubx_msg_log_batch(struct gps_device_t *session, unsigned char *buf UNUSED,
         if (diffSoln) {
             session->gpsdata.log.status = STATUS_DGPS_FIX;
         } else {
-            session->gpsdata.log.status = STATUS_FIX;
+            session->gpsdata.log.status = STATUS_GPS;
         }
         if (3 <= session->gpsdata.log.fixType) {
             // good 3D fix
@@ -1464,11 +1465,11 @@ ubx_msg_log_retrievepos(struct gps_device_t *session, unsigned char *buf UNUSED,
         break;
     case 2:
         session->gpsdata.log.fixType = MODE_2D;
-        session->gpsdata.log.status = STATUS_FIX;
+        session->gpsdata.log.status = STATUS_GPS;
         break;
     case 3:
         session->gpsdata.log.fixType = MODE_3D;
-        session->gpsdata.log.status = STATUS_FIX;
+        session->gpsdata.log.status = STATUS_GPS;
         break;
     case 4:
         // doc is unclear: 2D or 3D?
@@ -1784,7 +1785,7 @@ ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
             *status = STATUS_DGPS_FIX;
             mask |= STATUS_SET;
         } else {
-            *status = STATUS_FIX;
+            *status = STATUS_GPS;
             mask |= STATUS_SET;
         }
         mask |=   LATLON_SET;
@@ -1795,12 +1796,13 @@ ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
         FALLTHROUGH
     case UBX_MODE_DR:           /* consider this too as 2D */
         // 1
-        if (*mode != MODE_2D) {
+        if (MODE_2D != *mode) {
             *mode = MODE_2D;
             mask |= MODE_SET;
         };
-        if (*status != STATUS_FIX) {
-            *status = STATUS_FIX;
+        if (STATUS_GPS != *status) {
+            // FIXME: Set DR if this is DR
+            *status = STATUS_GPS;
             mask |= STATUS_SET;
         }
         mask |= LATLON_SET | SPEED_SET;
@@ -2074,23 +2076,23 @@ ubx_msg_nav_sol(struct gps_device_t *session, unsigned char *buf,
     navmode = (unsigned char)getub(buf, 10);
     switch (navmode) {
     case UBX_MODE_TMONLY:
-        /* Surveyed-in, better not have moved */
+        // Surveyed-in, better not have moved
         session->newdata.mode = MODE_3D;
         session->newdata.status = STATUS_TIME;
         break;
     case UBX_MODE_3D:
         session->newdata.mode = MODE_3D;
-        session->newdata.status = STATUS_FIX;
+        session->newdata.status = STATUS_GPS;
         break;
     case UBX_MODE_2D:
         session->newdata.mode = MODE_2D;
-        session->newdata.status = STATUS_FIX;
+        session->newdata.status = STATUS_GPS;
         break;
-    case UBX_MODE_DR:           /* consider this too as 2D */
+    case UBX_MODE_DR:           // consider this too as 2D
         session->newdata.mode = MODE_2D;
         session->newdata.status = STATUS_DR;
         break;
-    case UBX_MODE_GPSDR:        /* DR-aided GPS is valid 3D */
+    case UBX_MODE_GPSDR:        // DR-aided GPS is valid 3D
         session->newdata.mode = MODE_3D;
         session->newdata.status = STATUS_GNSSDR;
         break;
@@ -2179,7 +2181,8 @@ ubx_msg_nav_status(struct gps_device_t *session, unsigned char *buf,
             if (2 == (2 & fixStat)) {
                 *status = STATUS_DGPS_FIX;
             } else {
-                *status = STATUS_FIX;
+                // FIXME:  Set DR if this is DR
+                *status = STATUS_GPS;
             }
             break;
 
@@ -2192,7 +2195,7 @@ ubx_msg_nav_status(struct gps_device_t *session, unsigned char *buf,
             if (2 == (2 & fixStat)) {
                 *status = STATUS_DGPS_FIX;
             } else {
-                *status = STATUS_FIX;
+                *status = STATUS_GPS;
             }
             break;
 
