@@ -382,16 +382,13 @@ if __name__ == '__main__':
         options.linedump = True
 
     # debug options to pass to gpsd
-    doptions = []
+    doptions = ''
     if options.debug:
-        for dopt in options.debug:
-            doptions.append("-D " + dopt)
-    if options.options:
-        for opt in options.options:
-            doptions.append(opt)
+        doptions += "-D " + options.debug[0] + " "
     if options.nowait:
-        doptions.append("-n")
-    doptions = ' '.join(doptions)
+        doptions += "-n "
+    if options.options:
+        doptions += options.options
 
     monitor = ()
     timeout = 0
