@@ -298,35 +298,39 @@ void gps_context_init(struct gps_context_t *context,
 void gpsd_init(struct gps_device_t *session, struct gps_context_t *context,
                const char *device)
 {
-    if (device != NULL)
+    (void)memset(session, 0, sizeof(struct gps_device_t));
+
+    if (device != NULL) {
         (void)strlcpy(session->gpsdata.dev.path, device,
                       sizeof(session->gpsdata.dev.path));
-    session->device_type = NULL;        // start by hunting packets
-    session->last_controller = NULL;
-    session->observed = 0;
+    }
+
+    /* with memset(), no need to set NULLs, or zeros
+     *
+     * session->device_type = NULL;        // start by hunting packets
+     * session->last_controller = NULL;
+     * session->observed = 0;
+     * memset(session->subtype, 0, sizeof(session->subtype));
+     * memset(session->subtype1, 0, sizeof(session->subtype1));
+     * memset(&(session->nmea), 0, sizeof(session->nmea));
+     * session->gpsdata.set = 0;
+     * session->sor = (timespec_t){0, 0};
+     * session->ts_startCurrentBaud = (timespec_t){0, 0};
+     * session->chars = 0;
+     *
+     */
     session->sourcetype = SOURCE_UNKNOWN;       // gpsd_open() sets this
     session->servicetype = service_unknown;     // gpsd_open() sets this
     session->context = context;
-    memset(session->subtype, 0, sizeof(session->subtype));
-    memset(session->subtype1, 0, sizeof(session->subtype1));
-#ifdef NMEA0183_ENABLE
-    memset(&(session->nmea), 0, sizeof(session->nmea));
-#endif  // NMEA0183_ENABLE
     gps_clear_fix(&session->gpsdata.fix);
     gps_clear_fix(&session->newdata);
     gps_clear_fix(&session->lastfix);
     gps_clear_fix(&session->oldfix);
-    session->gpsdata.set = 0;
     gps_clear_att(&session->gpsdata.attitude);
     gps_clear_dop(&session->gpsdata.dop);
     gps_clear_log(&session->gpsdata.log);
-    session->gpsdata.dev.mincycle.tv_sec = 1;
-    session->gpsdata.dev.mincycle.tv_nsec = 0;
-    session->gpsdata.dev.cycle.tv_sec = 1;
-    session->gpsdata.dev.cycle.tv_nsec = 0;
-    session->sor.tv_sec = 0;
-    session->sor.tv_nsec = 0;
-    session->chars = 0;
+    session->gpsdata.dev.mincycle = (timespec_t){1, 0};
+    session->gpsdata.dev.cycle =(timespec_t){1, 0};
     // tty-level initialization
     gpsd_tty_init(session);
     // necessary in case we start reading in the middle of a GPGSV sequence
