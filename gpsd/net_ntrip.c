@@ -361,6 +361,7 @@ static int ntrip_stream_req_probe(const struct ntrip_stream_t *stream,
              "ntrip stream for req probe connected on fd %d\n", dsock);
     (void)snprintf(buf, sizeof(buf),
             "GET / HTTP/1.1\r\n"
+            "Ntrip-Version: Ntrip/2.0\r\n"
             "User-Agent: NTRIP gpsd/%s\r\n"
             "Host: %s\r\n"
             "Connection: close\r\n"
@@ -423,6 +424,7 @@ static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
 
     (void)snprintf(buf, sizeof(buf),
             "GET /%s HTTP/1.1\r\n"
+            "Ntrip-Version: Ntrip/2.0\r\n"
             "User-Agent: NTRIP gpsd/%s\r\n"
             "Host: %s\r\n"
             "Accept: rtk/rtcm, dgps/rtcm\r\n"
