@@ -2,6 +2,9 @@
  *
  * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
+ *
+ * See:
+ * https://igs.bkg.bund.de/root_ftp/NTRIP/documentation/NtripDocumentation.pdf
  */
 
 #include "../include/gpsd_config.h"  /* must be before all includes */
@@ -64,6 +67,9 @@ static char *ntrip_field_iterate(char *start,
 }
 
 
+/* Decode a stream record from the sourcetable
+ * See: http://software.rtcm-ntrip.org/wiki/STR
+ */
 static void ntrip_str_parse(char *str, size_t len,
                             struct ntrip_stream_t *hold,
                             const struct gpsd_errout_t *errout)
@@ -108,8 +114,10 @@ static void ntrip_str_parse(char *str, size_t len,
             hold->format = fmt_rtcm3_2;
         else if (strcasecmp("RTCM 3.3", s) == 0)
             hold->format = fmt_rtcm3_3;
-        else
+        else {
             hold->format = fmt_unknown;
+            GPSD_LOG(LOG_WARN, errout, "NTRIP: Got unknown format '%s'\n", s);
+        }
     }
     /* <format-details> */
     s = ntrip_field_iterate(NULL, s, eol, errout);
@@ -149,7 +157,7 @@ static void ntrip_str_parse(char *str, size_t len,
                      "NTRIP: Got unknown {compress,encrypt}ion '%s'\n", s);
         }
     }
-    /* <authentication> */
+    // <authentication>
     if ((s = ntrip_field_iterate(NULL, s, eol, errout))) {
         if (strcasecmp("N", s) == 0)
             hold->authentication = auth_none;
@@ -157,8 +165,11 @@ static void ntrip_str_parse(char *str, size_t len,
             hold->authentication = auth_basic;
         else if (strcasecmp("D", s) == 0)
             hold->authentication = auth_digest;
-        else
+        else {
             hold->authentication = auth_unknown;
+            GPSD_LOG(LOG_WARN, errout,
+                     "NTRIP: Got unknown authenticatiion '%s'\n", s);
+        }
     }
     /* <fee> */
     if ((s = ntrip_field_iterate(NULL, s, eol, errout))) {
@@ -302,11 +313,17 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                 /* TODO: compare stream location to own location to
                  * find nearest stream if user hasn't provided one */
             }
-            /* TODO: parse CAS */
-            /* else if (str_starts_with(line, NTRIP_CAS)); */
-
-            /* TODO: parse NET */
-            /* else if (str_starts_with(line, NTRIP_NET)); */
+            else if (str_starts_with(line, NTRIP_CAS)) {
+                // TODO: parse CAS
+                // See: http://software.rtcm-ntrip.org/wiki/CAS
+                GPSD_LOG(LOG_WARN, &device->context->errout,
+                         "NTRIP: Can't parse CAS '%s'\n", line);
+            } else if (str_starts_with(line, NTRIP_NET)) {
+                // TODO: parse NET
+                // See: http://software.rtcm-ntrip.org/wiki/NET
+                GPSD_LOG(LOG_WARN, &device->context->errout,
+                         "NTRIP: Can't parse NET '%s'\n", line);
+            }
 
             llen += strlen(NTRIP_BR);
             line += llen;
