@@ -544,7 +544,9 @@ struct gps_device_t {
     bool zerokill;
     time_t reawake;
     timespec_t sor;                   // time start of this reporting cycle
-    timespec_t ts_startCurrentBaud;   // time start of current autobaud hunt
+    // time start of current autobaud hunt.
+    // maybe should be in struct device_t, but should not be client visible.
+    timespec_t ts_startCurrentBaud;
     unsigned long chars;              // characters in the cycle
     bool ship_to_ntpd;
     volatile struct shmTime *shm_clock;
