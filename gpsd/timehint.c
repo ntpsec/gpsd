@@ -235,7 +235,8 @@ int ntpshm_put(struct gps_device_t *session, volatile struct shmTime *shmseg,
     // FIXME: make NMEA precision -1
     if (shmseg == session->shm_pps) {
         /* precision is a floor so do not make it tight */
-        if (SOURCE_USB == session->sourcetype) {
+        if (SOURCE_USB == session->sourcetype ||
+            SOURCE_ACM == session->sourcetype) {
             /* if PPS over USB, then precision = -10, 1 milli sec  */
             precision = -10;
         } else {
@@ -432,6 +433,7 @@ void ntpshm_link_activate(struct gps_device_t *session)
     }
 
     if (SOURCE_USB == session->sourcetype ||
+        SOURCE_ACM == session->sourcetype ||
         SOURCE_RS232 == session->sourcetype ||
         SOURCE_PPS == session->sourcetype) {
         /* We also have the 1pps capability, allocate a shared-memory segment

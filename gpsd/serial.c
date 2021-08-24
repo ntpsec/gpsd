@@ -122,8 +122,9 @@ static sourcetype_t gpsd_classify(struct gps_device_t *session)
             break;
 
         case 166:    // ACM USB modems
-            // FIXME: ACM has no speed, so should be differnt than SOURCE_USB
-            FALLTHROUGH
+            // ACM has no speed, otherwise similar to SOURCE_USB
+            devtype = SOURCE_ACM;
+            break;
         case 188:    // USB serial converters
             devtype = SOURCE_USB;
             break;
@@ -542,6 +543,7 @@ void gpsd_set_speed(struct gps_device_t *session,
      * shipping probe strings to unknown USB serial adaptors or
      * Bluetooth devices may spam devices that aren't GPSes at all and
      * could become confused.
+     * For now we probe SOURCE_ACM...
      */
     if (!session->context->readonly &&
         SOURCE_USB != session->sourcetype &&

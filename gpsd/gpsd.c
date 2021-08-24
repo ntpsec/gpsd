@@ -1809,7 +1809,8 @@ static void ship_pps_message(struct gps_device_t *session,
     char buf[GPS_JSON_RESPONSE_MAX];
     char ts_str[TIMESPEC_LEN];
 
-    if (SOURCE_USB == session->sourcetype) {
+    if (SOURCE_USB == session->sourcetype ||
+        SOURCE_ACM == session->sourcetype) {
         /* PPS over USB not so good */
         precision = -10;
     }

@@ -470,6 +470,7 @@ typedef enum {SOURCE_UNKNOWN,
               SOURCE_GPSD,      // Remote gpsd instance over TCP/IP
               SOURCE_PPS,       // PPS-only device, such as /dev/ppsN
               SOURCE_PIPE,      // Unix FIFO; don't use blocking I/O
+              SOURCE_ACM,       // potential GPS source, discoverable, no speed
 } sourcetype_t;
 
 /*
