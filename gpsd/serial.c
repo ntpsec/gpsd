@@ -293,6 +293,21 @@ static speed_t gpsd_get_speed_termios(const struct termios *ttyctl)
         // not a valid POSIX speed
         return (921600);
 #endif
+#ifdef B1000000
+    case B1000000:
+        // not a valid POSIX speed
+        return (1000000);
+#endif
+#ifdef B1152000
+    case B1152000:
+        // not a valid POSIX speed
+        return (1152000);
+#endif
+#ifdef B1500000
+    case B1500000:
+        // not a valid POSIX speed
+        return (1500000);
+#endif
     default:   // B0
         return 0;
     }
@@ -364,45 +379,58 @@ void gpsd_set_speed(struct gps_device_t *session,
      * do this, and you aren't on Linux where baud rate is preserved
      * across port closings, you've screwed yourself. Don't do that!
      */
-    if (speed < 300)
+    if (300 > speed)
         // in POSIX B0 means do not touch the speed
         rate = B0;
-    else if (speed < 1200)
+    else if (1200 > speed)
         rate = B300;
-    else if (speed < 2400)
+    else if (2400 > speed)
         rate = B1200;
-    else if (speed < 4800)
+    else if (4800 > speed)
         rate = B2400;
-    else if (speed < 9600)
+    else if (9600 > speed)
         rate = B4800;
-    else if (speed < 19200)
+    else if (19200 > speed)
         rate = B9600;
-    else if (speed < 38400)
+    else if (38400 > speed)
         rate = B19200;
-    else if (speed < 57600)
+    else if (57600 > speed)
         rate = B38400;
-    else if (speed < 115200)
+    else if (115200 > speed)
         rate = B57600;
-    else if (speed < 230400)
+    else if (230400 > speed)
         rate = B115200;
 #ifdef B460800
-    else if (speed < 460800)
+    else if (460800 > speed)
+        // not a valid POSIX speed
         rate = B230400;
-#ifdef B921600
-    else if (speed < 921600)
+    else if (460800 == speed)
         rate = B460800;
-    else
+#endif  // B460800
+#ifdef B921600
+    else if (921600 == speed)
         // not a valid POSIX speed
         rate = B921600;
-#else
-    else
-        // not a valid POSIX speed
-        rate = B460800;
 #endif   // B921600
-#else
-    else
-        rate = B230400;
-#endif  // B460800
+#ifdef B1000000
+    else if (1000000 == speed)
+        // not a valid POSIX speed
+        rate = B1000000;
+#endif   // B1000000
+#ifdef B1152000
+    else if (B1152000 == speed)
+        // not a valid POSIX speed
+        rate = B1152000;
+#endif   // B1152000
+#ifdef B1500000
+    else if (B1500000 == speed)
+        // not a valid POSIX speed
+        rate = B1500000;
+#endif   // B1500000
+    else {
+        // we are confused
+        rate = B9600;
+    }
 
 
     // backward-compatibility hack
@@ -843,6 +871,7 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
         char new_parity;   // E, N, O
         unsigned int new_stop;
         // u-blox 9 can do 921600
+        // Javad can ro 1.5 mbps
         static unsigned int rates[] =
             {0, 4800, 9600, 19200, 38400, 57600, 115200, 230400,
              460800, 921600};
