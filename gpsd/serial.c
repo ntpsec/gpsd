@@ -813,6 +813,8 @@ ssize_t gpsd_serial_write(struct gps_device_t * session,
 // advance to the next hunt setting
 bool gpsd_next_hunt_setting(struct gps_device_t * session)
 {
+    struct timespec ts_now, ts_diff;
+
     // every rate we're likely to see on an GNSS receiver
 
     // don't waste time in the hunt loop if this is not actually a tty
@@ -825,12 +827,17 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
         return false;
     }
 
+    clock_gettime(CLOCK_REALTIME, &ts_now);
+         TS_SUB(&ts_diff, &session->ts_startCurrentBaud, &ts_now);
+
     GPSD_LOG(LOG_IO, &session->context->errout,
              "SER: gpsd_next_hunt_setting(%d) retries %lu start %lld\n",
              session->gpsdata.gps_fd,
              session->lexer.retry_counter,
              (long long)session->ts_startCurrentBaud.tv_sec);
-    if (SNIFF_RETRIES <= session->lexer.retry_counter++) {
+    if (SNIFF_RETRIES <= session->lexer.retry_counter++ ||
+        3 < ts_diff.tv_sec) {
+        // no lock after 3 seconds or SNIFF_RETRIES
         char new_parity;   // E, N, O
         unsigned int new_stop;
         // u-blox 9 can do 921600
