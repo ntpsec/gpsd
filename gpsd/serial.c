@@ -259,6 +259,7 @@ void cfmakeraw(struct termios *termios_p)
 }
 #endif   // !defined(HAVE_CFMAKERAW)
 
+// Read the port speed from termios
 static speed_t gpsd_get_speed_termios(const struct termios *ttyctl)
 {
     speed_t code = cfgetospeed(ttyctl);
@@ -418,12 +419,12 @@ void gpsd_set_speed(struct gps_device_t *session,
         rate = B1000000;
 #endif   // B1000000
 #ifdef B1152000
-    else if (B1152000 == speed)
+    else if (1152000 == speed)
         // not a valid POSIX speed
         rate = B1152000;
 #endif   // B1152000
 #ifdef B1500000
-    else if (B1500000 == speed)
+    else if (1500000 == speed)
         // not a valid POSIX speed
         rate = B1500000;
 #endif   // B1500000
@@ -471,6 +472,8 @@ void gpsd_set_speed(struct gps_device_t *session,
         if (rate != B0) {
             (void)cfsetispeed(&session->ttyset, rate);
             (void)cfsetospeed(&session->ttyset, rate);
+            GPSD_LOG(LOG_IO, &session->context->errout,
+                     "SER: set rate %d\n", rate);
         }
         session->ttyset.c_iflag &= ~(PARMRK | INPCK);
         session->ttyset.c_cflag &= ~(CSIZE | CSTOPB | PARENB | PARODD);
@@ -556,7 +559,7 @@ void gpsd_set_speed(struct gps_device_t *session,
         (void)tcflush(session->gpsdata.gps_fd, TCIOFLUSH);
     }
     GPSD_LOG(LOG_INF, &session->context->errout,
-             "SER: speed %lu, %d%c%d\n",
+             "SER: current speed %lu, %d%c%d\n",
              (unsigned long)gpsd_get_speed(session), 9 - stopbits, parity,
              stopbits);
 
@@ -734,13 +737,16 @@ int gpsd_serial_open(struct gps_device_t *session)
 
     if (0 < session->context->fixed_port_speed) {
         session->saved_baud = session->context->fixed_port_speed;
-    }
-
-    if (-1 == session->saved_baud) {
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "SER: fixed speed %d\n", session->saved_baud);
+    } else if (-1 == session->saved_baud) {
         (void)cfsetispeed(&session->ttyset, (speed_t)session->saved_baud);
         (void)cfsetospeed(&session->ttyset, (speed_t)session->saved_baud);
-        if (0 != tcsetattr(session->gpsdata.gps_fd, TCSANOW,
+        if (0 == tcsetattr(session->gpsdata.gps_fd, TCSANOW,
                            &session->ttyset)) {
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "SER: set speed %d\n", session->saved_baud);
+        } else {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "SER: Error setting port attributes: %s(%d)\n",
                      strerror(errno), errno);
