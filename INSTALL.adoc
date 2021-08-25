@@ -14,7 +14,7 @@ include::www/inc-menu.adoc[]
 Here are the steps for installing GPSD and verifying its performance.
 They assume you have GPSD available as an installable binary package.
 
-Most of these installation instructions are generic to Linux.
+Most of these installation instructions are generic to POSIX.
 
 Instructions for building GPSD from source (including cross-building), and
 some special notes on installation on *BSD, WSL, OS X, macOS, and the
