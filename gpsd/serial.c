@@ -809,6 +809,8 @@ int gpsd_serial_open(struct gps_device_t *session)
         session->gpsdata.dev.stopbits = 1;
     }
 
+    // start the autobaud hunt clock.
+    clock_gettime(CLOCK_REALTIME, &session->ts_startCurrentBaud);
     GPSD_LOG(LOG_IO, &session->context->errout,
              "SER: open(%s) -> %d in gpsd_serial_open()\n",
              session->gpsdata.dev.path, session->gpsdata.gps_fd);
