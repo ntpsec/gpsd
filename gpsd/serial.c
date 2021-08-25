@@ -760,7 +760,7 @@ int gpsd_serial_open(struct gps_device_t *session)
         char new_parity;   // E, N, O
         unsigned int new_stop;
 
-        // Save original terminal parameters
+        // Save original terminal parameters, why?
         if (0 != tcgetattr(session->gpsdata.gps_fd, &session->ttyset_old))
             return UNALLOCATED_FD;
         session->ttyset = session->ttyset_old;
@@ -940,35 +940,33 @@ void gpsd_close(struct gps_device_t *session)
 #endif  // TIOCNXCL
         if (!session->context->readonly)
                 (void)tcdrain(session->gpsdata.gps_fd);
+
+        // Save current terminal parameters
+        if (0 != tcgetattr(session->gpsdata.gps_fd, &session->ttyset_old)) {
+            GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "SER: tcgetattr(%d) failed: %s(%d)\n",
+                     session->gpsdata.dev.baudrate,
+                     strerror(errno), errno);
+        }
         if (0 != isatty(session->gpsdata.gps_fd)) {
             // force hangup on close on systems that don't do HUPCL properly
+            // is this still an issue?
             (void)cfsetispeed(&session->ttyset, (speed_t) B0);
             (void)cfsetospeed(&session->ttyset, (speed_t) B0);
-            (void)tcsetattr(session->gpsdata.gps_fd, TCSANOW,
-                            &session->ttyset);
+            if (0 != tcsetattr(session->gpsdata.gps_fd, TCSANOW,
+                               &session->ttyset)) {
+                GPSD_LOG(LOG_ERROR, &session->context->errout,
+                         "SER: tcsetattr(B0) failed: %s(%d)\n",
+                         strerror(errno), errno);
+            }
         }
         // this is the clean way to do it
         session->ttyset_old.c_cflag |= HUPCL;
-        /*
-         * Don't revert the serial parameters if we didn't have to mess with
-         * them the first time.  Economical, and avoids tripping over an
-         * obscure Linux 2.6 kernel bug that disables threaded
-         * ioctl(TIOCMIWAIT) on a device after tcsetattr() is called.
-         */
-        if ((cfgetispeed(&session->ttyset_old) !=
-             cfgetispeed(&session->ttyset)) ||
-            ((session->ttyset_old.c_cflag & CSTOPB) !=
-             (session->ttyset.c_cflag & CSTOPB))) {
-            /*
-             * If we revert, keep the most recent baud rate.
-             * Cuts down on autobaud overhead the next time.
-             */
-            (void)cfsetispeed(&session->ttyset_old,
-                              (speed_t) session->gpsdata.dev.baudrate);
-            (void)cfsetospeed(&session->ttyset_old,
-                              (speed_t) session->gpsdata.dev.baudrate);
-            (void)tcsetattr(session->gpsdata.gps_fd, TCSANOW,
-                            &session->ttyset_old);
+        if (0 != tcsetattr(session->gpsdata.gps_fd, TCSANOW,
+                           &session->ttyset_old)) {
+            GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "SER: tcsetattr(%d) failed: %s(%d)\n",
+                     session->gpsdata.dev.baudrate, strerror(errno), errno);
         }
         GPSD_LOG(LOG_IO, &session->context->errout,
                  "SER: close(%d) in gpsd_close(%s)\n",
