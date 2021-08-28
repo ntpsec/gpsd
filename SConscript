@@ -3060,7 +3060,7 @@ if env['systemd']:
     hotplug_wrapper_install = []
 else:
     hotplug_wrapper_install = [
-        'cp $SRCDIR/gpsd.hotplug ' + DESTDIR + env['udevdir'],
+        'cp $SRCDIR/../gpsd.hotplug ' + DESTDIR + env['udevdir'],
         'chmod a+x ' + DESTDIR + env['udevdir'] + '/gpsd.hotplug'
     ]
 
