@@ -2216,7 +2216,8 @@ int main(int argc, char *argv[])
     }
 
     openlog("gpsd", LOG_PID, LOG_USER);
-    GPSD_LOG(LOG_INF, &context.errout, "launching (Version %s)\n", VERSION);
+    GPSD_LOG(LOG_INF, &context.errout, "launching (Version %s, revision %s)\n",
+             VERSION, REVISION);
 
 #ifdef SOCKET_EXPORT_ENABLE
     if (!gpsd_service)
