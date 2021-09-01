@@ -259,8 +259,92 @@ void cfmakeraw(struct termios *termios_p)
 }
 #endif   // !defined(HAVE_CFMAKERAW)
 
+// FIXME: convert speed2code() and code2speed() to be table driven
+
 // Convert speed code into speed
-static speed_t code2speed(const speed_t code)
+static speed_t speed2code(const int speed)
+{
+    speed_t rate;
+
+    if (1200 > speed)
+        rate = B300;
+    else if (2400 > speed)
+        rate = B1200;
+    else if (4800 > speed)
+        rate = B2400;
+    else if (9600 > speed)
+        rate = B4800;
+    else if (19200 > speed)
+        rate = B9600;
+    else if (38400 > speed)
+        rate = B19200;
+    else if (57600 > speed)
+        rate = B38400;
+    else if (115200 > speed)
+        rate = B57600;
+    else if (230400 > speed)
+        rate = B115200;
+#ifdef B460800
+    else if (460800 > speed)
+        // not a valid POSIX speed
+        rate = B230400;
+    else if (921600 > speed)
+        rate = B460800;
+#endif  // B460800
+#ifdef B921600
+    else if (1000000 > speed)
+        // not a valid POSIX speed
+        rate = B921600;
+#endif   // B921600
+#ifdef B1000000
+    else if (1152000 > speed)
+        // not a valid POSIX speed
+        rate = B1000000;
+#endif   // B1000000
+#ifdef B1152000
+    else if (1500000 > speed)
+        // not a valid POSIX speed
+        rate = B1152000;
+#endif   // B1152000
+#ifdef B1500000
+    else if (2000000 > speed)
+        // not a valid POSIX speed
+        rate = B1500000;
+#endif   // B1500000
+#ifdef B2000000
+    else if (2500000 > speed)
+        // not a valid POSIX speed
+        rate = B2000000;
+#endif   // B2000000
+#ifdef B2500000
+    else if (3000000 > speed)
+        // not a valid POSIX speed
+        rate = B2500000;
+#endif   // B2500000
+#ifdef B3000000
+    else if (3500000 > speed)
+        // not a valid POSIX speed
+        rate = B3500000;
+#endif   // B3000000
+#ifdef B3500000
+    else if (4000000 > speed)
+        // not a valid POSIX speed
+        rate = B3500000;
+#endif   // B3500000
+#ifdef B4000000
+    else if (4000000 == speed)
+        // not a valid POSIX speed
+        rate = B4000000;
+#endif   // B4000000
+    else {
+        // we are confused
+        rate = B9600;
+    }
+    return rate;
+}
+
+// Convert speed code into speed
+static int code2speed(const speed_t code)
 {
     switch (code) {
     case B300:
@@ -380,61 +464,7 @@ void gpsd_set_speed(struct gps_device_t *session,
      * across port closings, you've screwed yourself. Don't do that!
      * Setting the speed to B0 instructs the modem to "hang up".
      */
-    if (1200 > speed)
-        rate = B300;
-    else if (2400 > speed)
-        rate = B1200;
-    else if (4800 > speed)
-        rate = B2400;
-    else if (9600 > speed)
-        rate = B4800;
-    else if (19200 > speed)
-        rate = B9600;
-    else if (38400 > speed)
-        rate = B19200;
-    else if (57600 > speed)
-        rate = B38400;
-    else if (115200 > speed)
-        rate = B57600;
-    else if (230400 > speed)
-        rate = B115200;
-#ifdef B460800
-    else if (460800 > speed)
-        // not a valid POSIX speed
-        rate = B230400;
-    else if (921600 > speed)
-        rate = B460800;
-#endif  // B460800
-#ifdef B921600
-    else if (921600 == speed)
-        // not a valid POSIX speed
-        rate = B921600;
-    else if (1000000 > speed)
-        rate = B921600;
-#endif   // B921600
-#ifdef B1000000
-    else if (1000000 == speed)
-        // not a valid POSIX speed
-        rate = B1000000;
-    else if (1152000 > speed)
-        rate = B1000000;
-#endif   // B1000000
-#ifdef B1152000
-    else if (1152000 == speed)
-        // not a valid POSIX speed
-        rate = B1152000;
-    else if (1500000 > speed)
-        rate = B1152000;
-#endif   // B1152000
-#ifdef B1500000
-    else if (1500000 == speed)
-        // not a valid POSIX speed
-        rate = B1500000;
-#endif   // B1500000
-    else {
-        // we are confused
-        rate = B9600;
-    }
+    rate = speed2code(speed);
 
     // backward-compatibility hack
     switch (parity) {
@@ -617,6 +647,10 @@ void gpsd_set_speed(struct gps_device_t *session,
  */
 int gpsd_serial_open(struct gps_device_t *session)
 {
+    speed_t new_speed;
+    char new_parity;   // E, N, O
+    unsigned int new_stop;
+
     mode_t mode = (mode_t) O_RDWR;
 
     session->sourcetype = gpsd_classify(session);
@@ -749,10 +783,21 @@ int gpsd_serial_open(struct gps_device_t *session)
 #endif   // __linux__
     }
 
+    session->lexer.type = BAD_PACKET;
+
+    if (0 == isatty(session->gpsdata.gps_fd)) {
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "SER: gpsd_serial_open(%s) -> %d, Not tty\n",
+                 session->gpsdata.dev.path, session->gpsdata.gps_fd);
+        return session->gpsdata.gps_fd;
+    }
+
     // Save original terminal parameters, why?
     //  At least it tests we can read port parameters.
-    if (0 != tcgetattr(session->gpsdata.gps_fd, &session->ttyset_old))
+    if (0 != tcgetattr(session->gpsdata.gps_fd, &session->ttyset_old)) {
+        // Maybe still useable somehow?
         return UNALLOCATED_FD;
+    }
     session->ttyset = session->ttyset_old;
 
     if (0 < session->context->fixed_port_speed) {
@@ -760,6 +805,7 @@ int gpsd_serial_open(struct gps_device_t *session)
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SER: fixed speed %d\n", session->saved_baud);
     }
+
     if (-1 != session->saved_baud) {
         (void)cfsetispeed(&session->ttyset, (speed_t)session->saved_baud);
         (void)cfsetospeed(&session->ttyset, (speed_t)session->saved_baud);
@@ -776,51 +822,41 @@ int gpsd_serial_open(struct gps_device_t *session)
         (void)tcflush(session->gpsdata.gps_fd, TCIOFLUSH);
     }
 
-    session->lexer.type = BAD_PACKET;
-    if (0 == isatty(session->gpsdata.gps_fd)) {
-        GPSD_LOG(LOG_ERROR, &session->context->errout,
-                 "SER: gps_fd %d, not a tty!\n",
-                 session->gpsdata.gps_fd);
+    // twiddle the speed, parity, etc. but only on real serial ports
+    memset(session->ttyset.c_cc, 0, sizeof(session->ttyset.c_cc));
+    //session->ttyset.c_cc[VTIME] = 1;
+    /*
+     * Tip from Chris Kuethe: the FIDI chip used in the Trip-Nav
+     * 200 (and possibly other USB GPSes) gets completely hosed
+     * in the presence of flow control.  Thus, turn off CRTSCTS.
+     *
+     * This is not ideal.  Setting no parity here will mean extra
+     * initialization time for some devices, like certain Trimble
+     * boards, that want 7O2 or other non-8N1 settings. But starting
+     * the hunt loop at 8N1 will minimize the average sync time
+     * over all devices.
+     */
+    session->ttyset.c_cflag &= ~(PARENB | PARODD | CRTSCTS | CSTOPB);
+    session->ttyset.c_cflag |= CREAD | CLOCAL;
+    session->ttyset.c_iflag = session->ttyset.c_oflag =
+        session->ttyset.c_lflag = (tcflag_t) 0;
+
+    session->baudindex = 0;  // FIXME: fixed speed
+    if (0 < session->context->fixed_port_speed) {
+        new_speed = session->context->fixed_port_speed;
     } else {
-        speed_t new_speed;
-        char new_parity;   // E, N, O
-        unsigned int new_stop;
-
-        // twiddle the speed, parity, etc. but only on real serial ports
-        memset(session->ttyset.c_cc, 0, sizeof(session->ttyset.c_cc));
-        //session->ttyset.c_cc[VTIME] = 1;
-        /*
-         * Tip from Chris Kuethe: the FIDI chip used in the Trip-Nav
-         * 200 (and possibly other USB GPSes) gets completely hosed
-         * in the presence of flow control.  Thus, turn off CRTSCTS.
-         *
-         * This is not ideal.  Setting no parity here will mean extra
-         * initialization time for some devices, like certain Trimble
-         * boards, that want 7O2 or other non-8N1 settings. But starting
-         * the hunt loop at 8N1 will minimize the average sync time
-         * over all devices.
-         */
-        session->ttyset.c_cflag &= ~(PARENB | PARODD | CRTSCTS | CSTOPB);
-        session->ttyset.c_cflag |= CREAD | CLOCAL;
-        session->ttyset.c_iflag = session->ttyset.c_oflag =
-            session->ttyset.c_lflag = (tcflag_t) 0;
-
-        session->baudindex = 0;
-        if (0 < session->context->fixed_port_speed) {
-            new_speed = session->context->fixed_port_speed;
-        } else {
-            new_speed = gpsd_get_speed_old(session);
-        }
-        if ('\0' == session->context->fixed_port_framing[0]) {
-            new_parity = 'N';
-            new_stop = 1;
-        } else {
-            // ignore length, stopbits=2 forces length 7.
-            new_parity = session->context->fixed_port_framing[1];
-            new_stop = session->context->fixed_port_framing[2] - '0';
-        }
-        gpsd_set_speed(session, new_speed, new_parity, new_stop);
+        new_speed = gpsd_get_speed_old(session);
     }
+    if ('\0' == session->context->fixed_port_framing[0]) {
+        new_parity = 'N';
+        new_stop = 1;
+    } else {
+        // ignore length, stopbits=2 forces length 7.
+        new_parity = session->context->fixed_port_framing[1];
+        new_stop = session->context->fixed_port_framing[2] - '0';
+    }
+    // FIXME: setting speed twice??
+    gpsd_set_speed(session, new_speed, new_parity, new_stop);
 
     /* Used to turn off O_NONBLOCK here, but best not to block trying
      * to read from an unresponsive receiver. */
@@ -960,17 +996,23 @@ void gpsd_close(struct gps_device_t *session)
 #ifdef TIOCNXCL
         (void)ioctl(session->gpsdata.gps_fd, (unsigned long)TIOCNXCL);
 #endif  // TIOCNXCL
-        if (!session->context->readonly)
-                (void)tcdrain(session->gpsdata.gps_fd);
-
-        // Save current terminal parameters
-        if (0 != tcgetattr(session->gpsdata.gps_fd, &session->ttyset_old)) {
-            GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "SER: tcgetattr(%d) failed: %s(%d)\n",
-                     session->gpsdata.dev.baudrate,
-                     strerror(errno), errno);
+        if (!session->context->readonly) {
+            // Be sure all output is sent.
+            if (0 != tcdrain(session->gpsdata.gps_fd)) {
+                GPSD_LOG(LOG_ERROR, &session->context->errout,
+                         "SER: gpsd_close() tcdrain() failed: %s(%d)\n",
+                         strerror(errno), errno);
+            }
         }
+
         if (0 != isatty(session->gpsdata.gps_fd)) {
+            // Save current terminal parameters.  Why?
+            if (0 != tcgetattr(session->gpsdata.gps_fd, &session->ttyset_old)) {
+                GPSD_LOG(LOG_ERROR, &session->context->errout,
+                         "SER: gpsd_close() tcgetattr() failed: %s(%d)\n",
+                         strerror(errno), errno);
+            }
+
             // force hangup on close on systems that don't do HUPCL properly
             // is this still an issue?
             (void)cfsetispeed(&session->ttyset, (speed_t)B0);
@@ -981,18 +1023,21 @@ void gpsd_close(struct gps_device_t *session)
                          "SER: tcsetattr(B0) failed: %s(%d)\n",
                          strerror(errno), errno);
             }
-        }
-        // this is the clean way to do it
-        session->ttyset_old.c_cflag |= HUPCL;
-        if (0 != tcsetattr(session->gpsdata.gps_fd, TCSANOW,
-                           &session->ttyset_old)) {
-            GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "SER: tcsetattr(%d) failed: %s(%d)\n",
-                     session->gpsdata.dev.baudrate, strerror(errno), errno);
+
+            // this is the clean way to do it
+            session->ttyset_old.c_cflag |= HUPCL;
+            if (0 != tcsetattr(session->gpsdata.gps_fd, TCSANOW,
+                               &session->ttyset_old)) {
+                GPSD_LOG(LOG_ERROR, &session->context->errout,
+                         "SER: tcsetattr(%d) failed: %s(%d)\n",
+                         session->gpsdata.dev.baudrate, strerror(errno),
+                         errno);
+            }
         }
         GPSD_LOG(LOG_IO, &session->context->errout,
-                 "SER: close(%d) in gpsd_close(%s)\n",
-                 session->gpsdata.gps_fd, session->gpsdata.dev.path);
+                 "SER: gpsd_close(%s), close(%d)\n",
+                 session->gpsdata.dev.path,
+                 session->gpsdata.gps_fd);
         (void)close(session->gpsdata.gps_fd);
         session->gpsdata.gps_fd = -1;
     }
