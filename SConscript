@@ -484,21 +484,28 @@ env = Environment(tools=["default", "tar", "textfile"], options=opts, ENV=envs)
 if 'dev' in gpsd_version:
     (st, gpsd_revision) = _getstatusoutput('git describe --tags')
     if st != 0:
-        # Only if git describe failed
-        # Use timestamp from latest relevant file,
-        # ignoring generated files (../$variantdir)
-        # from root, not from $variantdir
-        files = FileList(['../*.c', '../*/*.c', '../*.cpp', '../*/*.cpp',
-                          '../include/*.h', '../*.in', '../*/*.in',
-                          '../SConstruct', '../SConscript'],
-                         '../%s' % variantdir)
-        timestamps = map(GetMtime, files)
-        if timestamps:
-            from datetime import datetime
-            latest = datetime.fromtimestamp(sorted(timestamps)[-1])
-            gpsd_revision = '%s-%s' % (gpsd_version, latest.isoformat())
+        # If git describe failed
+        # Try to use current commit hash
+        (st, gpsd_commit) = _getstatusoutput('git rev-parse HEAD | cut -b 1-9')
+        if st == 0 and gpsd_commit:
+            # Format output similar to normal revision
+            gpsd_revision = '%s-g%s' % (gpsd_version, gpsd_commit)
         else:
-            gpsd_revision = gpsd_version  # Paranoia
+            # Only if git describe and git rev-parse failed
+            # Use timestamp from latest relevant file,
+            # ignoring generated files (../$variantdir)
+            # from root, not from $variantdir
+            files = FileList(['../*.c', '../*/*.c', '../*.cpp', '../*/*.cpp',
+                              '../include/*.h', '../*.in', '../*/*.in',
+                              '../SConstruct', '../SConscript'],
+                              '../%s' % variantdir)
+            timestamps = map(GetMtime, files)
+            if timestamps:
+                from datetime import datetime
+                latest = datetime.fromtimestamp(sorted(timestamps)[-1])
+                gpsd_revision = '%s-%s' % (gpsd_version, latest.isoformat())
+            else:
+                gpsd_revision = gpsd_version  # Paranoia
 else:
     gpsd_revision = gpsd_version
 
