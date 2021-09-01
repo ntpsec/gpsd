@@ -288,9 +288,19 @@ static speed_t speed2code(const int speed)
     else if (460800 > speed)
         // not a valid POSIX speed
         rate = B230400;
-    else if (921600 > speed)
+    else if (500000 > speed)
         rate = B460800;
 #endif  // B460800
+#ifdef B500000
+    else if (576000 > speed)
+        // not a valid POSIX speed
+        rate = B500000;
+#endif   // B500000
+#ifdef B576000
+    else if (921600 > speed)
+        // not a valid POSIX speed
+        rate = B576000;
+#endif   // B500000
 #ifdef B921600
     else if (1000000 > speed)
         // not a valid POSIX speed
@@ -371,6 +381,16 @@ static int code2speed(const speed_t code)
     case B460800:
         // not a valid POSIX speed
         return 460800;
+#endif
+#ifdef B500000
+    case B500000:
+        // not a valid POSIX speed
+        return 500000;
+#endif
+#ifdef B576000
+    case B576000:
+        // not a valid POSIX speed
+        return 576000;
 #endif
 #ifdef B921600
     case B921600:
