@@ -351,16 +351,19 @@ static int code2speed(const speed_t code)
     return speed;
 }
 
-speed_t gpsd_get_speed(const struct gps_device_t *dev)
+// return the speed for a device.  B0, B9600, etc.
+int gpsd_get_speed(const struct gps_device_t *dev)
 {
     return code2speed(cfgetospeed(&dev->ttyset));
 }
 
-speed_t gpsd_get_speed_old(const struct gps_device_t *dev)
+// return the old speed for a device.  B0, B9600, etc.
+int gpsd_get_speed_old(const struct gps_device_t *dev)
 {
     return code2speed(cfgetospeed(&dev->ttyset_old));
 }
 
+// return the parity for a device.  N, O or E.
 char gpsd_get_parity(const struct gps_device_t *dev)
 {
     char parity = 'N';
@@ -371,6 +374,7 @@ char gpsd_get_parity(const struct gps_device_t *dev)
     return parity;
 }
 
+// return the stop bits for a device.  0, 1 or 2
 int gpsd_get_stopbits(const struct gps_device_t *dev)
 {
     int stopbits = 0;
@@ -451,6 +455,7 @@ static void gpsd_flush(struct gps_device_t * session)
     }
 }
 
+// Set device into raw mode
 bool gpsd_set_raw(struct gps_device_t * session)
 {
     // on some OS cfmakeraw() returns an int, POSIX says it is void.

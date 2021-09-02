@@ -319,18 +319,19 @@ void gpsd_init(struct gps_device_t *session, struct gps_context_t *context,
      * session->chars = 0;
      *
      */
-    session->sourcetype = SOURCE_UNKNOWN;       // gpsd_open() sets this
-    session->servicetype = service_unknown;     // gpsd_open() sets this
     session->context = context;
-    gps_clear_fix(&session->gpsdata.fix);
-    gps_clear_fix(&session->newdata);
-    gps_clear_fix(&session->lastfix);
-    gps_clear_fix(&session->oldfix);
+    session->gpsdata.dev.cycle =(timespec_t){1, 0};
+    session->gpsdata.dev.mincycle = (timespec_t){1, 0};
+    session->gpsdata.dev.parity = ' ';          // will be E, N, or O
+    session->servicetype = service_unknown;     // gpsd_open() sets this
+    session->sourcetype = SOURCE_UNKNOWN;       // gpsd_open() sets this
     gps_clear_att(&session->gpsdata.attitude);
     gps_clear_dop(&session->gpsdata.dop);
+    gps_clear_fix(&session->gpsdata.fix);
+    gps_clear_fix(&session->lastfix);
+    gps_clear_fix(&session->newdata);
+    gps_clear_fix(&session->oldfix);
     gps_clear_log(&session->gpsdata.log);
-    session->gpsdata.dev.mincycle = (timespec_t){1, 0};
-    session->gpsdata.dev.cycle =(timespec_t){1, 0};
     // tty-level initialization
     gpsd_tty_init(session);
     // necessary in case we start reading in the middle of a GPGSV sequence

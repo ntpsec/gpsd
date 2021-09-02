@@ -626,9 +626,11 @@ void json_device_dump(const struct gps_device_t *device,
                 str_appendf(reply, replylen, ",\"flags\":%d", mask);
         }
         if (device->servicetype == service_sensor) {
-            /* speed can be 0 if the device is not currently active */
-            speed_t speed = gpsd_get_speed(device);
-            if (speed != 0)
+            /* speed can be 0 if the device is not currently active,
+             * or device is a file, pipe, /dev/pps, ttyACM, etc.
+             * can be -1 if never configured. */
+            int speed = gpsd_get_speed(device);
+            if (0 < speed)
                 str_appendf(reply, replylen,
                             ",\"native\":%d,\"bps\":%d,\"parity\":\"%c\","
                             "\"stopbits\":%u,\"cycle\":%lld.%02ld",
