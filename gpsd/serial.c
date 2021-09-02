@@ -846,7 +846,15 @@ ssize_t gpsd_serial_write(struct gps_device_t * session,
 
     status = write(session->gpsdata.gps_fd, buf, len);
     ok = (status == (ssize_t) len);
-    (void)tcdrain(session->gpsdata.gps_fd);
+    if (0 != isatty(session->gpsdata.gps_fd)) {
+        // do we really need to block on tcdrain?
+        if (0 != tcdrain(session->gpsdata.gps_fd)) {
+            GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "SER: gpsd_serial_write(%d) tcdrain() failed: %s(%d)\n",
+                     session->gpsdata.gps_fd,
+                     strerror(errno), errno);
+        }
+    }
 
     GPSD_LOG(LOG_IO, &session->context->errout,
              "SER: => GPS: %s%s\n",
@@ -957,7 +965,8 @@ void gpsd_close(struct gps_device_t *session)
             // Be sure all output is sent.
             if (0 != tcdrain(session->gpsdata.gps_fd)) {
                 GPSD_LOG(LOG_ERROR, &session->context->errout,
-                         "SER: gpsd_close() tcdrain() failed: %s(%d)\n",
+                         "SER: gpsd_close(%d) tcdrain() failed: %s(%d)\n",
+                         session->gpsdata.gps_fd,
                          strerror(errno), errno);
             }
         }
