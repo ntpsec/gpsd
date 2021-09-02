@@ -259,162 +259,96 @@ void cfmakeraw(struct termios *termios_p)
 }
 #endif   // !defined(HAVE_CFMAKERAW)
 
-// FIXME: convert speed2code() and code2speed() to be table driven
+// speed conversion table for speed2code() and code2speed()
+static struct speed_code_t {
+    speed_t code;
+    int speed;
+} const speed_code[] = {
+    // 4800 is gpsd minimum
+    // list must be sorted ascending speed;
+    {B4800, 4800},
+    {B9600, 9600},
+    {B19200, 19200},
+    {B38400, 38400},
+    {B57600, 57600},
+    {B115200, 115200},
+    {B230400, 230400},
+#ifdef B460800
+    {B460800, 460800},
+#endif
+#ifdef B500000
+    {B500000, 500000},
+#endif
+#ifdef B576000
+    {B576000, 576000},
+#endif
+#ifdef B921600
+    {B921600, 921600},
+#endif
+#ifdef B1000000
+    {B1000000, 1000000},
+#endif
+#ifdef B1152000
+    {B1152000, 1152000},
+#endif
+#ifdef B1500000
+    {B1500000, 1500000},
+#endif
+#ifdef B2000000
+    {B2000000, 2000000},
+#endif
+#ifdef B2500000
+    {B2500000, 2500000},
+#endif
+#ifdef B3000000
+    {B3000000, 3000000},
+#endif
+#ifdef B3500000
+    {B3500000, 3500000},
+#endif
+#ifdef B4000000
+    {B4000000, 4000000},
+#endif
+   {B0, 0},           // flag for end of list
+};
 
 // Convert speed code into speed
 static speed_t speed2code(const int speed)
 {
-    speed_t rate;
+    speed_t code = B9600;          // fall back
+    speed_t last_code = B9600;     // fall back
+    int index;
 
-    if (1200 > speed)
-        rate = B300;
-    else if (2400 > speed)
-        rate = B1200;
-    else if (4800 > speed)
-        rate = B2400;
-    else if (9600 > speed)
-        rate = B4800;
-    else if (19200 > speed)
-        rate = B9600;
-    else if (38400 > speed)
-        rate = B19200;
-    else if (57600 > speed)
-        rate = B38400;
-    else if (115200 > speed)
-        rate = B57600;
-    else if (230400 > speed)
-        rate = B115200;
-#ifdef B460800
-    else if (460800 > speed)
-        // not a valid POSIX speed
-        rate = B230400;
-    else if (500000 > speed)
-        rate = B460800;
-#endif  // B460800
-#ifdef B500000
-    else if (576000 > speed)
-        // not a valid POSIX speed
-        rate = B500000;
-#endif   // B500000
-#ifdef B576000
-    else if (921600 > speed)
-        // not a valid POSIX speed
-        rate = B576000;
-#endif   // B500000
-#ifdef B921600
-    else if (1000000 > speed)
-        // not a valid POSIX speed
-        rate = B921600;
-#endif   // B921600
-#ifdef B1000000
-    else if (1152000 > speed)
-        // not a valid POSIX speed
-        rate = B1000000;
-#endif   // B1000000
-#ifdef B1152000
-    else if (1500000 > speed)
-        // not a valid POSIX speed
-        rate = B1152000;
-#endif   // B1152000
-#ifdef B1500000
-    else if (2000000 > speed)
-        // not a valid POSIX speed
-        rate = B1500000;
-#endif   // B1500000
-#ifdef B2000000
-    else if (2500000 > speed)
-        // not a valid POSIX speed
-        rate = B2000000;
-#endif   // B2000000
-#ifdef B2500000
-    else if (3000000 > speed)
-        // not a valid POSIX speed
-        rate = B2500000;
-#endif   // B2500000
-#ifdef B3000000
-    else if (3500000 > speed)
-        // not a valid POSIX speed
-        rate = B3500000;
-#endif   // B3000000
-#ifdef B3500000
-    else if (4000000 > speed)
-        // not a valid POSIX speed
-        rate = B3500000;
-#endif   // B3500000
-#ifdef B4000000
-    else if (4000000 == speed)
-        // not a valid POSIX speed
-        rate = B4000000;
-#endif   // B4000000
-    else {
-        // we are confused
-        rate = B9600;
+    // dumb linear search
+    for (index = 0; 0 != speed_code[index].speed; index++) {
+        if (speed < speed_code[index].speed) {
+            // went past desired speed, use next slower valid speed
+            code = last_code;
+            break;
+        }
+        if (speed == speed_code[index].speed) {
+            code = speed_code[index].code;
+            break;
+        }
+        last_code = speed_code[index].code;
     }
-    return rate;
+    return code;
 }
 
 // Convert speed code into speed
 static int code2speed(const speed_t code)
 {
-    switch (code) {
-    case B300:
-        return 300;
-    case B1200:
-        return 1200;
-    case B2400:
-        return 2400;
-    case B4800:
-        return 4800;
-    case B9600:
-        return 9600;
-    case B19200:
-        return 19200;
-    case B38400:
-        return 38400;
-    case B57600:
-        return 57600;
-    case B115200:
-        return 115200;
-    case B230400:
-        return 230400;
-#ifdef B460800
-    case B460800:
-        // not a valid POSIX speed
-        return 460800;
-#endif
-#ifdef B500000
-    case B500000:
-        // not a valid POSIX speed
-        return 500000;
-#endif
-#ifdef B576000
-    case B576000:
-        // not a valid POSIX speed
-        return 576000;
-#endif
-#ifdef B921600
-    case B921600:
-        // not a valid POSIX speed
-        return 921600;
-#endif
-#ifdef B1000000
-    case B1000000:
-        // not a valid POSIX speed
-        return 1000000;
-#endif
-#ifdef B1152000
-    case B1152000:
-        // not a valid POSIX speed
-        return 1152000;
-#endif
-#ifdef B1500000
-    case B1500000:
-        // not a valid POSIX speed
-        return 1500000;
-#endif
-    default:   // Unknown speed
-        return 0;
+    int speed = 9600;     // fall back
+    int index;
+
+    // dumb linear search
+    for (index = 0; 0 != speed_code[index].speed; index++) {
+        if (code == speed_code[index].code) {
+            speed = speed_code[index].speed;
+            break;
+        }
     }
+    return speed;
 }
 
 speed_t gpsd_get_speed(const struct gps_device_t *dev)
