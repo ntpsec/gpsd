@@ -403,6 +403,8 @@ void gpsd_set_speed(struct gps_device_t *session,
     speed_t rate;
     struct timespec delay;
 
+    // FIXME:  just return if !isatty() ?
+
     if (0 < session->context->fixed_port_speed) {
         speed = session->context->fixed_port_speed;
     }
@@ -462,6 +464,7 @@ void gpsd_set_speed(struct gps_device_t *session,
          * aren't so nice.
          */
         if (rate == B0) {
+            // how does one get here?
             GPSD_LOG(LOG_IO, &session->context->errout,
                      "SER: keeping old speed %d(%d)\n",
                      code2speed(cfgetispeed(&session->ttyset)),
@@ -865,7 +868,6 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
 {
     struct timespec ts_now, ts_diff;
 
-    // every rate we're likely to see on an GNSS receiver
 
     // don't waste time in the hunt loop if this is not actually a tty
     // FIXME: Check for ttys like /dev/ttyACM that have no speed.
@@ -878,13 +880,13 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
     }
 
     clock_gettime(CLOCK_REALTIME, &ts_now);
-         TS_SUB(&ts_diff, &session->ts_startCurrentBaud, &ts_now);
+    TS_SUB(&ts_diff, &ts_now, &session->ts_startCurrentBaud);
 
     GPSD_LOG(LOG_IO, &session->context->errout,
-             "SER: gpsd_next_hunt_setting(%d) retries %lu start %lld\n",
+             "SER: gpsd_next_hunt_setting(%d) retries %lu diff %lld\n",
              session->gpsdata.gps_fd,
              session->lexer.retry_counter,
-             (long long)session->ts_startCurrentBaud.tv_sec);
+             (long long)ts_diff.tv_sec);
     if (SNIFF_RETRIES <= session->lexer.retry_counter++ ||
         3 < ts_diff.tv_sec) {
         // no lock after 3 seconds or SNIFF_RETRIES
@@ -892,6 +894,7 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
         unsigned int new_stop;
         // u-blox 9 can do 921600
         // Javad can ro 1.5 mbps
+        // every rate we're likely to see on a GNSS receiver
         static unsigned int rates[] =
             {0, 4800, 9600, 19200, 38400, 57600, 115200, 230400,
              460800, 921600};
@@ -907,12 +910,12 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
 
             session->baudindex = 0;
             if ('\0' != session->context->fixed_port_framing[0]) {
-                return false;   /* hunt is over, no sync */
+                return false;   // hunt is over, no sync.  Restart hunt?
             }
 
             // More stop bits to try?
             if (2 <= session->gpsdata.dev.stopbits++) {
-                return false;   /* hunt is over, no sync */
+                return false;   // hunt is over, no sync.  Restart hunt?
             }
         }
 
