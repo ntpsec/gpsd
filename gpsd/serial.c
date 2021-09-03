@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>                  // for realpath()
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/param.h>               // defines BSD
@@ -185,25 +186,44 @@ static sourcetype_t gpsd_classify(struct gps_device_t *session)
 
 #ifdef __linux__
 
-// return true if any process has the specified path open
-// FIXME: this does not appear to work...
+/* Try to find how many times a file is open.  0 to n.
+ * return -1 on failure
+ */
 static int fusercount(struct gps_device_t *session)
 {
-    const char *path = session->gpsdata.dev.path;
     DIR *procd, *fdd;
     struct dirent *procentry, *fdentry;
     char procpath[GPS_PATH_MAX], fdpath[GPS_PATH_MAX], linkpath[GPS_PATH_MAX];
+    char *fullpath = NULL;        // what dev.path points to
     int cnt = 0;
 
     if (NULL == (procd = opendir("/proc"))) {
         GPSD_LOG(LOG_ERROR, &session->context->errout,
-                 "SER: opendir(/proc) failed: %s(%d)\n",
+                 "SER: fusercount(): opendir(/proc) failed: %s(%d)\n",
                  strerror(errno), errno);
         return -1;
     }
+    // POSIX 2008
+    fullpath = realpath(session->gpsdata.dev.path, NULL);
+    if (NULL == fullpath) {
+        // Huh?
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "SER: fusercount(): realpath(%s) failed: %s(%d)\n",
+                 session->gpsdata.dev.path,
+                 strerror(errno), errno);
+        return -1;
+    }
+
+    // debug
+    // GPSD_LOG(LOG_SHOUT, &session->context->errout,
+    //          "SER: fusercount: path %s fullpath %s\n",
+    //          session->gpsdata.dev.path, fullpath);
+
     while (NULL != (procentry = readdir(procd))) {
-        if (0 == isdigit(procentry->d_name[0]))
+        if (0 == isdigit(procentry->d_name[0])) {
+            // skip non-precess entries
             continue;
+        }
         // longest procentry->d_name I could find was 12
         (void)snprintf(procpath, sizeof(procpath),
                        "/proc/%.20s/fd/", procentry->d_name);
@@ -212,21 +232,40 @@ static int fusercount(struct gps_device_t *session)
         while (NULL != (fdentry = readdir(fdd))) {
             ssize_t rd;
 
+            if (0 == isdigit(fdentry->d_name[0])) {
+                // skip . and ..
+                continue;
+            }
             (void)strlcpy(fdpath, procpath, sizeof(fdpath));
             (void)strlcat(fdpath, fdentry->d_name, sizeof(fdpath));
-            // readlink does not NUL terminate.
+
+            // readlink does not always NUL terminate.
             rd = readlink(fdpath, linkpath, sizeof(linkpath) - 1);
-            if (0 > rd)
+            if (0 > rd) {
+                // maybe access error, maybe too long, maybe...
                 continue;
+            }
             // pacify coverity by setting NUL
             linkpath[rd] = '\0';
-            if (0 == strcmp(linkpath, path)) {
+            if ('/' != linkpath[0]) {
+                // not a full path
+                continue;
+            }
+            // debug
+            // GPSD_LOG(LOG_SHOUT, &session->context->errout,
+            //          "SER: fusercount: %s linkpath %s fullpath %s\n",
+            //          fdpath, linkpath, fullpath);
+            if (0 == strcmp(linkpath, fullpath)) {
                 ++cnt;
             }
         }
         (void)closedir(fdd);
     }
     (void)closedir(procd);
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "SER: fusercount: path %s fullpath %s cnt %d\n",
+             session->gpsdata.dev.path, fullpath, cnt);
+    free(fullpath);
 
     return cnt;
 }
@@ -736,6 +775,31 @@ int gpsd_serial_open(struct gps_device_t *session)
      */
     if (!(SOURCE_PTY == session->sourcetype ||
           SOURCE_BLUETOOTH == session->sourcetype)) {
+        // FIXME: OK to open PPS devices twice.
+        // FIXME: Check for duplicates before opening device.
+
+#ifdef __linux__
+        int cnt;
+        /*
+         * Don't touch devices already opened by another process.
+         */
+        cnt = fusercount(session);
+        if (1 < cnt) {
+            GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "SER: %s already opened by another process\n",
+                     session->gpsdata.dev.path);
+            // since this never worked until now, just let user be bad
+            // (void)close(session->gpsdata.gps_fd);
+            // session->gpsdata.gps_fd = UNALLOCATED_FD;
+            // return UNALLOCATED_FD;
+        }
+        if (0 == cnt) {
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "SER: fusercount(%s) failed to find own use.\n",
+                     session->gpsdata.dev.path);
+        }
+#endif   // __linux__
+
 #ifdef TIOCEXCL
         /*
          * Try to block other processes from using this device while we
@@ -744,20 +808,6 @@ int gpsd_serial_open(struct gps_device_t *session)
          */
         (void)ioctl(session->gpsdata.gps_fd, (unsigned long)TIOCEXCL);
 #endif /* TIOCEXCL */
-
-#ifdef __linux__
-        /*
-         * Don't touch devices already opened by another process.
-         */
-        if (1 < fusercount(session)) {
-            GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "SER: %s already opened by another process\n",
-                     session->gpsdata.dev.path);
-            (void)close(session->gpsdata.gps_fd);
-            session->gpsdata.gps_fd = UNALLOCATED_FD;
-            return UNALLOCATED_FD;
-        }
-#endif   // __linux__
     }
 
     session->lexer.type = BAD_PACKET;
