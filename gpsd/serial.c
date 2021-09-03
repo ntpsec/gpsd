@@ -667,8 +667,7 @@ void gpsd_set_speed(struct gps_device_t *session,
         SOURCE_USB != session->sourcetype &&
         SOURCE_BLUETOOTH != session->sourcetype) {
 
-        if (0 < gpsd_serial_isatty(session) &&
-            !session->context->readonly) {
+        if (0 < gpsd_serial_isatty(session) && !session->context->readonly) {
             if (NULL == session->device_type) {
                 const struct gps_type_t **dp;
                 for (dp = gpsd_drivers; *dp; dp++)
@@ -948,7 +947,7 @@ ssize_t gpsd_serial_write(struct gps_device_t * session,
 
     status = write(session->gpsdata.gps_fd, buf, len);
     ok = (status == (ssize_t) len);
-    if (0 != isatty(session->gpsdata.gps_fd)) {
+    if (0 < gpsd_serial_isatty(session)) {
         // do we really need to block on tcdrain?
         if (0 != tcdrain(session->gpsdata.gps_fd)) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
@@ -981,7 +980,7 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
 
     // don't waste time in the hunt loop if this is not actually a tty
     // FIXME: Check for ttys like /dev/ttyACM that have no speed.
-    if (0 == isatty(session->gpsdata.gps_fd))
+    if (0 >= gpsd_serial_isatty(session))
         return false;
 
     // ...or if it's nominally a tty but delivers only PPS and no data
@@ -1079,7 +1078,7 @@ void gpsd_close(struct gps_device_t *session)
         }
     }
 
-    if (0 < isatty(session->gpsdata.gps_fd)) {
+    if (0 < gpsd_serial_isatty(session)) {
         // Save current terminal parameters.  Why?
         if (0 != tcgetattr(session->gpsdata.gps_fd, &session->ttyset_old)) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
