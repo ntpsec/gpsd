@@ -186,6 +186,7 @@ static sourcetype_t gpsd_classify(struct gps_device_t *session)
 #ifdef __linux__
 
 // return true if any process has the specified path open
+// FIXME: this does not appear to work...
 static int fusercount(struct gps_device_t *session)
 {
     const char *path = session->gpsdata.dev.path;
@@ -772,6 +773,10 @@ int gpsd_serial_open(struct gps_device_t *session)
     //  At least it tests we can read port parameters.
     if (0 != tcgetattr(session->gpsdata.gps_fd, &session->ttyset_old)) {
         // Maybe still useable somehow?
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "SER: gpsd_serial_open() tcgetattr(%d) failed: %s(%d)\n",
+                 session->gpsdata.gps_fd,
+                 strerror(errno), errno);
         return UNALLOCATED_FD;
     }
     session->ttyset = session->ttyset_old;
@@ -974,57 +979,62 @@ void gpsd_assert_sync(struct gps_device_t *session)
         session->saved_baud = (int)cfgetispeed(&session->ttyset);
 }
 
+// Close an open serial device
 void gpsd_close(struct gps_device_t *session)
 {
-    if (!BAD_SOCKET(session->gpsdata.gps_fd)) {
-#ifdef TIOCNXCL
-        (void)ioctl(session->gpsdata.gps_fd, (unsigned long)TIOCNXCL);
-#endif  // TIOCNXCL
-        if (!session->context->readonly) {
-            // Be sure all output is sent.
-            if (0 != tcdrain(session->gpsdata.gps_fd)) {
-                GPSD_LOG(LOG_ERROR, &session->context->errout,
-                         "SER: gpsd_close(%d) tcdrain() failed: %s(%d)\n",
-                         session->gpsdata.gps_fd,
-                         strerror(errno), errno);
-            }
-        }
-
-        if (0 != isatty(session->gpsdata.gps_fd)) {
-            // Save current terminal parameters.  Why?
-            if (0 != tcgetattr(session->gpsdata.gps_fd, &session->ttyset_old)) {
-                GPSD_LOG(LOG_ERROR, &session->context->errout,
-                         "SER: gpsd_close() tcgetattr() failed: %s(%d)\n",
-                         strerror(errno), errno);
-            }
-
-            // force hangup on close on systems that don't do HUPCL properly
-            // is this still an issue?
-            (void)cfsetispeed(&session->ttyset, (speed_t)B0);
-            (void)cfsetospeed(&session->ttyset, (speed_t)B0);
-            if (0 != tcsetattr(session->gpsdata.gps_fd, TCSANOW,
-                               &session->ttyset)) {
-                GPSD_LOG(LOG_ERROR, &session->context->errout,
-                         "SER: tcsetattr(B0) failed: %s(%d)\n",
-                         strerror(errno), errno);
-            }
-
-            // this is the clean way to do it
-            session->ttyset_old.c_cflag |= HUPCL;
-            if (0 != tcsetattr(session->gpsdata.gps_fd, TCSANOW,
-                               &session->ttyset_old)) {
-                GPSD_LOG(LOG_ERROR, &session->context->errout,
-                         "SER: tcsetattr(%d) failed: %s(%d)\n",
-                         session->gpsdata.dev.baudrate, strerror(errno),
-                         errno);
-            }
-        }
-        GPSD_LOG(LOG_IO, &session->context->errout,
-                 "SER: gpsd_close(%s), close(%d)\n",
-                 session->gpsdata.dev.path,
-                 session->gpsdata.gps_fd);
-        (void)close(session->gpsdata.gps_fd);
-        session->gpsdata.gps_fd = -1;
+    if (BAD_SOCKET(session->gpsdata.gps_fd) ||
+        PLACEHOLDING_FD == session->gpsdata.gps_fd) {
+        // bad socket or PPS.  Nothing to do.
+        session->gpsdata.gps_fd = UNALLOCATED_FD;
+        return;
     }
+#ifdef TIOCNXCL
+    (void)ioctl(session->gpsdata.gps_fd, (unsigned long)TIOCNXCL);
+#endif  // TIOCNXCL
+    if (!session->context->readonly) {
+        // Be sure all output is sent.
+        if (0 != tcdrain(session->gpsdata.gps_fd)) {
+            GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "SER: gpsd_close(%d) tcdrain() failed: %s(%d)\n",
+                     session->gpsdata.gps_fd,
+                     strerror(errno), errno);
+        }
+    }
+
+    if (0 != isatty(session->gpsdata.gps_fd)) {
+        // Save current terminal parameters.  Why?
+        if (0 != tcgetattr(session->gpsdata.gps_fd, &session->ttyset_old)) {
+            GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "SER: gpsd_close() tcgetattr() failed: %s(%d)\n",
+                     strerror(errno), errno);
+        }
+
+        // force hangup on close on systems that don't do HUPCL properly
+        // is this still an issue?
+        (void)cfsetispeed(&session->ttyset, (speed_t)B0);
+        (void)cfsetospeed(&session->ttyset, (speed_t)B0);
+        if (0 != tcsetattr(session->gpsdata.gps_fd, TCSANOW,
+                           &session->ttyset)) {
+            GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "SER: tcsetattr(B0) failed: %s(%d)\n",
+                     strerror(errno), errno);
+        }
+
+        // this is the clean way to do it
+        session->ttyset_old.c_cflag |= HUPCL;
+        if (0 != tcsetattr(session->gpsdata.gps_fd, TCSANOW,
+                           &session->ttyset_old)) {
+            GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "SER: tcsetattr(%d) failed: %s(%d)\n",
+                     session->gpsdata.dev.baudrate, strerror(errno),
+                     errno);
+        }
+    }
+    GPSD_LOG(LOG_IO, &session->context->errout,
+             "SER: gpsd_close(%s), close(%d)\n",
+             session->gpsdata.dev.path,
+             session->gpsdata.gps_fd);
+    (void)close(session->gpsdata.gps_fd);
+    session->gpsdata.gps_fd = UNALLOCATED_FD;
 }
 // vim: set expandtab shiftwidth=4

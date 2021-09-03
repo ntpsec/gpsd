@@ -502,9 +502,8 @@ int parse_uri_dest(char *s, char **host, char **service, char **device)
 
 /* open a device for access to its data *
  * return: the opened file descriptor
- *         PLACEHOLDING_FD - for /dev/ppsX
- *         UNALLOCATED_FD - for open failure
- *         -1 - for open failure
+ *         PLACEHOLDING_FD (-2) - for /dev/ppsX
+ *         UNALLOCATED_FD (-1) - for open failure
  */
 int gpsd_open(struct gps_device_t *session)
 {
