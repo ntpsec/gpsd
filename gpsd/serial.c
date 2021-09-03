@@ -511,6 +511,33 @@ bool gpsd_set_raw(struct gps_device_t * session)
     return true;
 }
 
+/* Check if an fd is a tty
+ * Return 1 if yes
+ *        0 if no
+ */
+int gpsd_serial_isatty(struct gps_device_t *session)
+{
+    if (0 > session->gpsdata.gps_fd) {
+        // PLACEHOLDING_FD, or UNALLOCATED_FD
+        // no need for expensive iotcl()
+        return 0;
+    }
+    if (0 < isatty(session->gpsdata.gps_fd)) {
+        // is a tty
+        return 1;
+    }
+    if (ENOTTY == errno) {
+        // is not a tty
+        return 0;
+    }
+    // else failure
+    GPSD_LOG(LOG_ERROR, &session->context->errout,
+             "SER: gpsd_serial_isatty(%d) failed: %s(%d)\n",
+             session->gpsdata.gps_fd,
+             strerror(errno), errno);
+    return 0;
+}
+
 // Set the port speed
 void gpsd_set_speed(struct gps_device_t *session,
                     speed_t speed, char parity, unsigned int stopbits)
@@ -640,8 +667,8 @@ void gpsd_set_speed(struct gps_device_t *session,
         SOURCE_USB != session->sourcetype &&
         SOURCE_BLUETOOTH != session->sourcetype) {
 
-        if (0 != isatty(session->gpsdata.gps_fd)
-            && !session->context->readonly) {
+        if (0 < gpsd_serial_isatty(session) &&
+            !session->context->readonly) {
             if (NULL == session->device_type) {
                 const struct gps_type_t **dp;
                 for (dp = gpsd_drivers; *dp; dp++)
@@ -757,8 +784,9 @@ int gpsd_serial_open(struct gps_device_t *session)
             }
 
             GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "SER: file device open of %s succeeded\n",
-                     session->gpsdata.dev.path);
+                     "SER: file device open of %s succeeded fd %d\n",
+                     session->gpsdata.dev.path,
+                     session->gpsdata.gps_fd);
         }
     }
 
@@ -812,7 +840,7 @@ int gpsd_serial_open(struct gps_device_t *session)
 
     session->lexer.type = BAD_PACKET;
 
-    if (0 == isatty(session->gpsdata.gps_fd)) {
+    if (0 >= gpsd_serial_isatty(session)) {
         GPSD_LOG(LOG_IO, &session->context->errout,
                  "SER: gpsd_serial_open(%s) -> %d, Not tty\n",
                  session->gpsdata.dev.path, session->gpsdata.gps_fd);
@@ -1051,7 +1079,7 @@ void gpsd_close(struct gps_device_t *session)
         }
     }
 
-    if (0 != isatty(session->gpsdata.gps_fd)) {
+    if (0 < isatty(session->gpsdata.gps_fd)) {
         // Save current terminal parameters.  Why?
         if (0 != tcgetattr(session->gpsdata.gps_fd, &session->ttyset_old)) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
