@@ -323,7 +323,7 @@ void gpsd_init(struct gps_device_t *session, struct gps_context_t *context,
     session->gpsdata.dev.cycle =(timespec_t){1, 0};
     session->gpsdata.dev.mincycle = (timespec_t){1, 0};
     session->gpsdata.dev.parity = ' ';          // will be E, N, or O
-    session->servicetype = service_unknown;     // gpsd_open() sets this
+    session->servicetype = SERVICE_UNKNOWN;     // gpsd_open() sets this
     session->sourcetype = SOURCE_UNKNOWN;       // gpsd_open() sets this
     gps_clear_att(&session->gpsdata.attitude);
     gps_clear_dop(&session->gpsdata.dop);
@@ -649,7 +649,7 @@ int gpsd_activate(struct gps_device_t *session, const int mode)
 
 #ifdef NON_NMEA0183_ENABLE
     // if it's a sensor, it must be probed
-    if ((session->servicetype == service_sensor) &&
+    if ((SERVICE_SENSOR == session->servicetype) &&
         (SOURCE_CAN != session->sourcetype)) {
         const struct gps_type_t **dp;
 
@@ -1824,8 +1824,8 @@ int gpsd_multipoll(const bool data_ready,
          * connection * may not yet be completed.
          * Try to ratchet things forward.
          */
-        if (device->servicetype == service_ntrip
-            && device->ntrip.conn_state != ntrip_conn_established) {
+        if (SERVICE_NTRIP == device->servicetype &&
+            device->ntrip.conn_state != ntrip_conn_established) {
 
             (void)ntrip_open(device, "");
             if (device->ntrip.conn_state == ntrip_conn_err) {

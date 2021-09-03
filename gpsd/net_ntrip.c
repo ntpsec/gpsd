@@ -506,7 +506,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
          * because it is needed for multi-stage connection */
         // strlcpy() ensures dup is NUL terminated.
         strlcpy(dup, orig, 255);
-        device->servicetype = service_ntrip;
+        device->servicetype = SERVICE_NTRIP;
         device->ntrip.works = false;
         device->ntrip.sourcetable_parse = false;
         device->ntrip.stream.set = false;

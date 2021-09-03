@@ -696,7 +696,7 @@ int gpsd_serial_open(struct gps_device_t *session)
     mode_t mode = (mode_t) O_RDWR;
 
     session->sourcetype = gpsd_classify(session);
-    session->servicetype = service_sensor;
+    session->servicetype = SERVICE_SENSOR;
 
     if (SOURCE_UNKNOWN == session->sourcetype) {
         return UNALLOCATED_FD;

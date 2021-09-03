@@ -55,12 +55,13 @@ int netgnss_uri_open(struct gps_device_t *dev, char *netgnss_service)
 void netgnss_report(struct gps_context_t *context,
                     struct gps_device_t *gps, struct gps_device_t *dgnss)
 {
-    if (dgnss->servicetype == service_dgpsip)
+    if (SERVICE_DGPSIP == dgnss->servicetype) {
         dgpsip_report(context, gps, dgnss);
 #ifdef NTRIP_ENABLE
-    else if (dgnss->servicetype == service_ntrip)
+    } else if (SERVICE_NTRIP == dgnss->servicetype) {
         ntrip_report(context, gps, dgnss);
 #endif
+    }
 }
 
 /* end */

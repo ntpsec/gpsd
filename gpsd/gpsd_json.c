@@ -609,7 +609,7 @@ void json_device_dump(const struct gps_device_t *device,
         (void)strlcat(reply, ",\"readonly\":\"true\"", replylen);
     }
     /*
-     * There's an assumption here: Anything that we type service_sensor is
+     * There's an assumption here: Anything that we type SERVICE_SENSOR is
      * a serial device with the usual control parameters.
      */
     if (0 < device->gpsdata.online.tv_sec) {
@@ -625,7 +625,7 @@ void json_device_dump(const struct gps_device_t *device,
             if (mask != 0)
                 str_appendf(reply, replylen, ",\"flags\":%d", mask);
         }
-        if (device->servicetype == service_sensor) {
+        if (SERVICE_SENSOR == device->servicetype) {
             /* speed can be 0 if the device is not currently active,
              * or device is a file, pipe, /dev/pps, ttyACM, etc.
              * can be -1 if never configured. */

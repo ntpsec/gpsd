@@ -56,7 +56,7 @@ socket_t dgpsip_open(struct gps_device_t *device, const char *dgpsserver)
 
     if (opts >= 0)
         (void)fcntl(device->gpsdata.gps_fd, F_SETFL, opts | O_NONBLOCK);
-    device->servicetype = service_dgpsip;
+    device->servicetype = SERVICE_DGPSIP;
     return device->gpsdata.gps_fd;
 }
 

@@ -476,10 +476,10 @@ typedef enum {SOURCE_UNKNOWN,
 /*
  * Each input source also has an associated service type.
  */
-typedef enum {service_unknown,
-              service_sensor,
-              service_dgpsip,
-              service_ntrip,
+typedef enum {SERVICE_UNKNOWN,
+              SERVICE_SENSOR,
+              SERVICE_DGPSIP,
+              SERVICE_NTRIP,
 } servicetype_t;
 
 /*
@@ -805,7 +805,7 @@ struct gps_device_t {
     /*
      * State of an NTRIP connection.  We don't want to zero this on every
      * activation, otherwise the connection state will get lost.  Information
-     * in this substructure is only valid if servicetype is service_ntrip.
+     * in this substructure is only valid if servicetype is SERVICE_NTRIP.
      */
     struct {
         /* state information about the stream */
