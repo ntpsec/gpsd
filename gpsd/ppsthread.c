@@ -526,8 +526,9 @@ static int get_edge_tiocmiwait(volatile struct pps_thread_t *thread_context,
         char errbuf[BUFSIZ] = "unknown error";
         pps_strerror_r(errno, errbuf, sizeof(errbuf));
         thread_context->log_hook(thread_context, THREAD_ERROR,
-                    "TPPS:%s ioctl(TIOCMGET) failed: %d:%.100s\n",
-                    thread_context->devicename, errno, errbuf);
+                    "TPPS:%s ioctl(%d, TIOCMGET) failed: %.100s(%d)\n",
+                    thread_context->devicename, thread_context->devicefd,
+                    errbuf, errno);
         return -1;
     }
     // end of time critical section
