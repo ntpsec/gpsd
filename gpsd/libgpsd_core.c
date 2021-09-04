@@ -1381,10 +1381,13 @@ int gpsd_await_data(fd_set *rfds,
     return AWAIT_GOT_INPUT;
 }
 
+/* Return false - don't go to next hunt setting
+ *        true - time to go to next hunt setting
+ */
 static bool hunt_failure(struct gps_device_t *session)
-/* after a bad packet, what should cue us to go to next autobaud setting? */
 {
     /*
+     * After a bad packet, what should cue us to go to next autobaud setting?
      * We have tried three different tests here.
      *
      * The first was session->badcount++>1.  This worked very well on
@@ -1408,14 +1411,20 @@ static bool hunt_failure(struct gps_device_t *session)
      * of test/daemon/tcp-torture.log.
      *
      * Our third attempt, isatty(session->gpsdata.gps_fd) != 0
-     * && session->badcount++>1, reverts to the old test that worked
+     * && session->badcount++ > 1, reverts to the old test that worked
      * well on ttys for ttys and prevents non-tty devices from *ever*
      * having hunt failures. This has the cost that non-tty devices
      * will never get kicked off for presenting bad packets.
      *
+     * Slightly refactored, but equivalent, in 3.23.1
+     *
      * This test may need further revision.
      */
-    return isatty(session->gpsdata.gps_fd) != 0 && session->badcount++>1;
+    if (0 >= gpsd_serial_isatty(session)) {
+        // Not a tty, so can't hunt.
+        return false;
+    }
+    return 1 < session->badcount++;
 }
 
 /* update the stuff in the scoreboard structure */
