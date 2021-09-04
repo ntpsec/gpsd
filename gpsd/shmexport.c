@@ -66,7 +66,7 @@ bool shm_acquire(struct gps_context_t *context)
     return true;
 }
 
-/* release the shared-memory segment used for export */
+// release the shared-memory segment used for export
 void shm_release(struct gps_context_t *context)
 {
     if (NULL == context->shmexport)
@@ -78,10 +78,14 @@ void shm_release(struct gps_context_t *context)
      */
     if (-1 == shmctl(context->shmid, IPC_RMID, NULL)) {
         GPSD_LOG(LOG_WARN, &context->errout,
-                 "shmctl for IPC_RMID failed, errno = %d (%s)\n",
-                 errno, strerror(errno));
+                 "shmctl(%d) for IPC_RMID failed, %s(%d)\n",
+                 context->shmid, strerror(errno), errno);
     }
-    (void)shmdt((const void *)context->shmexport);
+    if (-1 == shmdt((const void *)context->shmexport)) {
+        GPSD_LOG(LOG_WARN, &context->errout,
+                 "shmdt) for id %d, %s(%d)\n",
+                 context->shmid, strerror(errno), errno);
+    }
 }
 
 /* export an update to all listeners */
