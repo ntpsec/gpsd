@@ -910,7 +910,7 @@ extern void ntrip_report(struct gps_context_t *,
                          struct gps_device_t *);
 
 extern bool gpsd_set_raw(struct gps_device_t *);
-extern int gpsd_serial_isatty(struct gps_device_t *);
+extern int gpsd_serial_isatty(const struct gps_device_t *);
 extern int gpsd_serial_open(struct gps_device_t *);
 extern void gpsd_tty_init(struct gps_device_t *);
 extern ssize_t gpsd_serial_write(struct gps_device_t *,

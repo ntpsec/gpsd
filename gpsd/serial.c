@@ -515,7 +515,7 @@ bool gpsd_set_raw(struct gps_device_t * session)
  * Return 1 if yes
  *        0 if no
  */
-int gpsd_serial_isatty(struct gps_device_t *session)
+int gpsd_serial_isatty(const struct gps_device_t *session)
 {
     if (0 > session->gpsdata.gps_fd) {
         // PLACEHOLDING_FD, or UNALLOCATED_FD
@@ -1059,8 +1059,7 @@ void gpsd_assert_sync(struct gps_device_t *session)
 // Close an open serial device
 void gpsd_close(struct gps_device_t *session)
 {
-    if (BAD_SOCKET(session->gpsdata.gps_fd) ||
-        PLACEHOLDING_FD == session->gpsdata.gps_fd) {
+    if (0 > session->gpsdata.gps_fd) {
         // bad socket or PPS.  Nothing to do.
         session->gpsdata.gps_fd = UNALLOCATED_FD;
         return;
