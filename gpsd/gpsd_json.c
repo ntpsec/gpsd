@@ -626,11 +626,13 @@ void json_device_dump(const struct gps_device_t *device,
                 str_appendf(reply, replylen, ",\"flags\":%d", mask);
         }
         if (SERVICE_SENSOR == device->servicetype) {
+            int speed = 0;
             /* speed can be 0 if the device is not currently active,
              * or device is a file, pipe, /dev/pps, ttyACM, etc.
              * can be -1 if never configured. */
-            int speed = gpsd_get_speed(device);
-            if (0 < speed)
+            if (0 < gpsd_serial_isatty(device) ||
+   -            0 != (speed = gpsd_get_speed(device))) {
+
                 str_appendf(reply, replylen,
                             ",\"native\":%d,\"bps\":%d,\"parity\":\"%c\","
                             "\"stopbits\":%u,\"cycle\":%lld.%02ld",
@@ -640,13 +642,15 @@ void json_device_dump(const struct gps_device_t *device,
                             device->gpsdata.dev.stopbits,
                             (long long)device->gpsdata.dev.cycle.tv_sec,
                             device->gpsdata.dev.cycle.tv_nsec / 10000000);
-            if (device->device_type != NULL
-                && device->device_type->rate_switcher != NULL)
+            }
+            if (NULL != device->device_type &&
+                NULL != device->device_type->rate_switcher) {
                 str_appendf(reply, replylen,
                                ",\"mincycle\":%lld.%02ld",
                                (long long)device->device_type->min_cycle.tv_sec,
                                device->device_type->min_cycle.tv_nsec /
                                10000000);
+            }
         }
     }
     (void)strlcat(reply, "}\r\n", replylen);
