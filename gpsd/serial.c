@@ -607,14 +607,16 @@ void gpsd_set_speed(struct gps_device_t *session,
         if (rate == B0) {
             // how does one get here?
             GPSD_LOG(LOG_IO, &session->context->errout,
-                     "SER: keeping old speed %d(%d)\n",
+                     "SER: fd %d keeping old speed %d(%d)\n",
+                     session->gpsdata.gps_fd,
                      code2speed(cfgetispeed(&session->ttyset)),
                      cfgetispeed(&session->ttyset));
         } else {
             (void)cfsetispeed(&session->ttyset, rate);
             (void)cfsetospeed(&session->ttyset, rate);
             GPSD_LOG(LOG_IO, &session->context->errout,
-                     "SER: set speed %d(%d)\n",
+                     "SER: fd %d set speed %d(%d)\n",
+                     session->gpsdata.gps_fd,
                      code2speed(cfgetispeed(&session->ttyset)), rate);
         }
         session->ttyset.c_iflag &= ~(PARMRK | INPCK);
@@ -637,16 +639,18 @@ void gpsd_set_speed(struct gps_device_t *session,
              * so ignore for now, as we always have, until it can
              * be nailed down.
              */
-             GPSD_LOG(LOG_PROG, &session->context->errout,
-                      "SER: error setting port attributes: %s(%d), "
+             GPSD_LOG(LOG_WARN, &session->context->errout,
+                      "SER: fd %d error setting port attributes: %s(%d), "
                       "sourcetype: %d\n",
+                      session->gpsdata.gps_fd,
                       strerror(errno), errno, session->sourcetype);
         }
 
         gpsd_flush(session);
     }
     GPSD_LOG(LOG_INF, &session->context->errout,
-             "SER: current speed %lu, %d%c%d\n",
+             "SER: fd %d current speed %lu, %d%c%d\n",
+             session->gpsdata.gps_fd,
              (unsigned long)gpsd_get_speed(session), 9 - stopbits, parity,
              stopbits);
 
@@ -861,21 +865,28 @@ int gpsd_serial_open(struct gps_device_t *session)
     if (0 < session->context->fixed_port_speed) {
         session->saved_baud = session->context->fixed_port_speed;
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "SER: fixed speed %d\n", session->saved_baud);
+                 "SER: fd %d fixed speed %d\n",
+                 session->gpsdata.gps_fd, session->saved_baud);
+    } else if (0 < session->saved_baud) {
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "SER: fd %d saved speed %d\n",
+                 session->gpsdata.gps_fd, session->saved_baud);
     }
 
-    if (-1 != session->saved_baud) {
+    if (0 < session->saved_baud) {
+        // FIXME! use gpsd_set_speed()
         (void)cfsetispeed(&session->ttyset, (speed_t)session->saved_baud);
         (void)cfsetospeed(&session->ttyset, (speed_t)session->saved_baud);
         if (0 == tcsetattr(session->gpsdata.gps_fd, TCSANOW,
                            &session->ttyset)) {
             GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "SER: set speed %d(%d)\n", session->saved_baud,
+                     "SER: fd %d restoring fixed/saved speed %d(%d)\n",
+                     session->gpsdata.gps_fd, session->saved_baud,
                      cfgetispeed(&session->ttyset));
         } else {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "SER: Error setting port attributes: %s(%d)\n",
-                     strerror(errno), errno);
+                     "SER: fd %d Error setting port attributes: %s(%d)\n",
+                     session->gpsdata.gps_fd, strerror(errno), errno);
         }
         gpsd_flush(session);
     }
@@ -906,6 +917,7 @@ int gpsd_serial_open(struct gps_device_t *session)
         new_speed = gpsd_get_speed_old(session);
     }
     if ('\0' == session->context->fixed_port_framing[0]) {
+        // FIXME! Try the parity, stop, as it is on startup first.
         new_parity = 'N';
         new_stop = 1;
     } else {
@@ -1052,7 +1064,7 @@ void gpsd_assert_sync(struct gps_device_t *session)
      * baudrate so we can try it first next time this device
      * is opened.
      */
-    if (-1 == session->saved_baud)
+    if (0 >= session->saved_baud)
         session->saved_baud = (int)cfgetispeed(&session->ttyset);
 }
 
