@@ -197,12 +197,6 @@ static int fusercount(struct gps_device_t *session)
     char *fullpath = NULL;        // what dev.path points to
     int cnt = 0;
 
-    if (NULL == (procd = opendir("/proc"))) {
-        GPSD_LOG(LOG_ERROR, &session->context->errout,
-                 "SER: fusercount(): opendir(/proc) failed: %s(%d)\n",
-                 strerror(errno), errno);
-        return -1;
-    }
     // POSIX 2008
     fullpath = realpath(session->gpsdata.dev.path, NULL);
     if (NULL == fullpath) {
@@ -210,6 +204,14 @@ static int fusercount(struct gps_device_t *session)
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "SER: fusercount(): realpath(%s) failed: %s(%d)\n",
                  session->gpsdata.dev.path,
+                 strerror(errno), errno);
+        return -1;
+    }
+
+    if (NULL == (procd = opendir("/proc"))) {
+        free(fullpath);
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "SER: fusercount(): opendir(/proc) failed: %s(%d)\n",
                  strerror(errno), errno);
         return -1;
     }
