@@ -8322,39 +8322,59 @@ protver 20+, and HP GNSS, required for RELPOSNED
         m_data = bytearray([0x2, sid, rate])
         self.gps_send(6, 1, m_data)
 
+    def get_int_arg(self, args, ndx, default = 0):
+        if ndx >= len(args):
+            return default
+        if len(args[ndx]) == 0:
+            return default
+        return int(args[ndx])
+
+    def get_bits(self, number, bits):
+        return (number >> bits[0]) & ((1 << (bits[1] - bits[0])) - 1)
+
     def send_able_pps(self, able, args):
         """dis/enable PPS, using UBX-CFG-TP5"""
 
+        tpIdx              = self.get_int_arg(args, 0)
+        antCableDelay      = self.get_int_arg(args, 1, 2)
+        rfGroupDelay       = self.get_int_arg(args, 2)
+        freqPeriod         = self.get_int_arg(args, 3, 1000000) # 1M us
+        freqPeriodLock     = self.get_int_arg(args, 4, 1000000) # 1M us
+        pulseLenRatio      = self.get_int_arg(args, 5)
+        pulseLenRatioLock  = self.get_int_arg(args, 6, 100000) # 100k us
+        userConfigDelay    = self.get_int_arg(args, 7)
+        flags              = self.get_int_arg(args, 8, 0x77)
+
         m_data = bytearray(32)
-        m_data[0] = 0         # tpIdx
-        m_data[1] = 1         # version
-        m_data[2] = 0         # reserved
-        m_data[3] = 0         # reserved
-        m_data[4] = 2         # antCableDelay
-        m_data[5] = 0         # antCableDelay
-        m_data[6] = 0         # rfGroupDelay
-        m_data[7] = 0         # rfGroupDelay
-        m_data[8] = 0x40      # freqPeriod
-        m_data[9] = 0x42      # freqPeriod
-        m_data[10] = 0x0f     # freqPeriod
-        m_data[11] = 0        # freqPeriod
-        m_data[12] = 0x40     # freqPeriodLock
-        m_data[13] = 0x42     # freqPeriodLock
-        m_data[14] = 0x0f     # freqPeriodLock
-        m_data[15] = 0        # freqPeriodLock
-        m_data[16] = 0        # pulseLenRatio
-        m_data[17] = 0        # pulseLenRatio
-        m_data[18] = 0        # pulseLenRatio
-        m_data[19] = 0        # pulseLenRatio
-        m_data[20] = 0xa0     # pulseLenRatioLock
-        m_data[21] = 0x86     # pulseLenRatioLock
-        m_data[22] = 0x1      # pulseLenRatioLock
-        m_data[23] = 0        # pulseLenRatioLock
-        m_data[24] = 0        # userConfigDelay
-        m_data[25] = 0        # userConfigDelay
-        m_data[26] = 0        # userConfigDelay
-        m_data[27] = 0        # userConfigDelay
-        m_data[28] = 0x77     # flags
+        m_data[0]  = tpIdx
+        m_data[1]  = 1        # version
+        m_data[2]  = 0        # reserved
+        m_data[3]  = 0        # reserved
+        m_data[4]  = self.get_bits(antCableDelay, [0, 8])
+        m_data[5]  = self.get_bits(antCableDelay, [8, 16])
+        m_data[6]  = self.get_bits(rfGroupDelay, [0, 8])
+        m_data[7]  = self.get_bits(rfGroupDelay, [8, 16])
+        m_data[8]  = self.get_bits(freqPeriod, [0, 8])
+        m_data[9]  = self.get_bits(freqPeriod, [8, 16])
+        m_data[10] = self.get_bits(freqPeriod, [16, 24])
+        m_data[11] = self.get_bits(freqPeriod, [24, 32])
+        m_data[12] = self.get_bits(freqPeriodLock, [0, 8])
+        m_data[13] = self.get_bits(freqPeriodLock, [8, 16])
+        m_data[14] = self.get_bits(freqPeriodLock, [16, 24])
+        m_data[15] = self.get_bits(freqPeriodLock, [24, 32])
+        m_data[16] = self.get_bits(pulseLenRatio, [0, 8])
+        m_data[17] = self.get_bits(pulseLenRatio, [8, 16])
+        m_data[18] = self.get_bits(pulseLenRatio, [16, 24])
+        m_data[19] = self.get_bits(pulseLenRatio, [24, 32])
+        m_data[20] = self.get_bits(pulseLenRatioLock, [0, 8])
+        m_data[21] = self.get_bits(pulseLenRatioLock, [8, 16])
+        m_data[22] = self.get_bits(pulseLenRatioLock, [16, 24])
+        m_data[23] = self.get_bits(pulseLenRatioLock, [24, 32])
+        m_data[24] = self.get_bits(userConfigDelay, [0, 8])
+        m_data[25] = self.get_bits(userConfigDelay, [8, 16])
+        m_data[26] = self.get_bits(userConfigDelay, [16, 24])
+        m_data[27] = self.get_bits(userConfigDelay, [24, 32])
+        m_data[28] = flags
         m_data[29] = 0        # flags
         m_data[30] = 0        # flags
         m_data[31] = 0        # flags
