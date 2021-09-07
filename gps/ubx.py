@@ -195,12 +195,12 @@ def unpack_u8(word, pos):
     return u[0]
 
 
-def pack_u16(self, number):
+def pack_u16(number):
     """Convert an unsigned 16 bit int to 2 bytes (little endian)"""
     return struct.pack('<H', number)
 
 
-def pack_u32(self, number):
+def pack_u32(number):
     """Convert an unsigned 32 bit int to 4 bytes (little endian)"""
     return struct.pack('<I', number)
 
@@ -8362,14 +8362,14 @@ pulseLenRadio, pulseLenRadioLock, userConfigDelay, flags
         m_data[1]     = 1        # version
         m_data[2]     = 0        # reserved
         m_data[3]     = 0        # reserved
-        m_data[ 4: 6] = self.pack_u16(antCableDelay)
-        m_data[ 6: 8] = self.pack_u16(rfGroupDelay)
-        m_data[ 8:12] = self.pack_u32(freqPeriod)
-        m_data[12:16] = self.pack_u32(freqPeriodLock)
-        m_data[16:20] = self.pack_u32(pulseLenRatio)
-        m_data[20:24] = self.pack_u32(pulseLenRatioLock)
-        m_data[24:28] = self.pack_u32(userConfigDelay)
-        m_data[28:32] = self.pack_u32(flags)
+        m_data[ 4: 6] = pack_u16(antCableDelay)
+        m_data[ 6: 8] = pack_u16(rfGroupDelay)
+        m_data[ 8:12] = pack_u32(freqPeriod)
+        m_data[12:16] = pack_u32(freqPeriodLock)
+        m_data[16:20] = pack_u32(pulseLenRatio)
+        m_data[20:24] = pack_u32(pulseLenRatioLock)
+        m_data[24:28] = pack_u32(userConfigDelay)
+        m_data[28:32] = pack_u32(flags)
 
         if not able:
             m_data[28] &= ~1  # bit 0 is active
