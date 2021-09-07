@@ -5138,7 +5138,16 @@ protVer 34 and up
              '  hDOP %u nDOP %u eDOP %u' % u)
         return s
 
-    # UBX-NAV-EELL, protVer 19.1 and up, ADR only
+    def nav_eell(self, buf):
+        """UBX-NAV-EOE decode, Position error ellipse parameters
+
+UBX-NAV-EELL, protVer 19.1 and up, ADR and HPS only
+"""
+
+        u = struct.unpack_from('<LBBHLL', buf, 0)
+        return (' iTOW %u version %u reserved0 %u\n'
+                '  errEllipseOrient %u errEllipseMajor %u errEllipseMinor %u' %
+                u)
 
     def nav_eoe(self, buf):
         """UBX-NAV-EOE decode, End Of Epoch"""
@@ -5986,7 +5995,8 @@ protVer 34 and up
                0x3C: {'str': 'RELPOSNED', 'dec': nav_relposned, 'minlen': 40,
                       'name': 'UBX-NAV-RELPOSNED'},
                # protVer 19.1 and up, ADR only
-               0x3d: {'str': 'EELL', 'minlen': 16, 'name': 'UBX-NAV-EELL'},
+               0x3d: {'str': 'EELL', 'dec': nav_eell, 'minlen': 16,
+                      'name': 'UBX-NAV-EELL'},
                # deprecated in u-blox 6, SFDR only
                0x40: {'str': 'EKFSTATUS', 'minlen': 36,
                       'name': 'UBX-NAV-EKFSTATUS'},
