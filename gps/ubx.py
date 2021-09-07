@@ -390,6 +390,18 @@ class ubx(object):
          "ANT0 PIO number"),
         ("CFG-HW-ANT_SUP_OPEN_PIN", 0x20a30038, "U1", 1, "",
          "ANT2 PIO number"),
+        # M10S, protVer 34.00
+        ("CFG-HW-ANT_SUP_ENGINE", 0x20a30054, "E1", 1, "",
+         "Antenna supervisor engine selection"),
+        # M10S, protVer 34.00
+        ("CFG-HW-ANT_SUP_SHORT_THR", 0x20a30055, "U1", 1, "mV",
+         "Antenna supervisor MADC engine short detection threshold"),
+        # M10S, protVer 34.00
+        ("CFG-HW-ANT_SUP_OPEN_THR", 0x20a30056, "U1", 1, "mV",
+         "Antenna supervisor MADC engine open detection threshold"),
+        # M10S, protVer 34.00
+        ("CFG-HW-RF_LNA_MODE", 0x20a30057, "E1", 1, "",
+         "Mode for internal LNA"),
         # CFG-I2C
         ("CFG-I2C", 0x2051ffff, "", 0, "",
          "get all CFG-I2C"),
@@ -399,6 +411,9 @@ class ubx(object):
          "Flag to disable timeouting the interface after 1.5 s"),
         ("CFG-I2C-ENABLED", 0x10510003, "L", 1, "",
          "Flag to indicate if the I2C interface should be enabled"),
+        # M10S, protVer 34.00
+        ("CFG-I2C-REMAP", 0x10510004, "L", 1, "",
+         "I2C remapping"),
         # CFG-I2CINPROT
         ("CFG-I2CINPROT", 0x1071ffff, "", 0, "",
          "get all CFG-I2CINPROT"),
@@ -1076,6 +1091,13 @@ class ubx(object):
          "Output rate of the UBX-NAV-SBAS message on port UART2"),
         ("CFG-MSGOUT-UBX_NAV_SBAS_USB", 0x2091006d, "U1", 1, "",
          "Output rate of the UBX-NAV-SBAS message on port USB"),
+        # M10S, protVer 34.00
+        ("CFG-MSGOUT-UBX_NAV_EELL_I2V", 0x20910313, "U1", 1, "",
+         "Output rate of the UBX-NAV-EELL message on port I2C"),
+        ("CFG-MSGOUT-UBX_NAV_EELL_SPI", 0x20910317, "U1", 1, "",
+         "Output rate of the UBX-NAV-EELL message on port SPI"),
+        ("CFG-MSGOUT-UBX_NAV_EELL_UART1", 0x20910314, "U1", 1, "",
+         "Output rate of the UBX-NAV-EELL message on port UART1"),
         ("CFG-MSGOUT-UBX_NAV_SIG_I2C", 0x20910345, "U1", 1, "",
          "Output rate of the UBX-NAV-SIG message on port I2C"),
         ("CFG-MSGOUT-UBX_NAV_SIG_SPI", 0x20910349, "U1", 1, "",
@@ -1513,6 +1535,17 @@ class ubx(object):
          "Use SBAS integrity information"),
         ("CFG-SBAS-PRNSCANMASK", 0x50360006, "X8", 1, "",
          "SBAS PRN search configuration"),
+        # CFG-SEC-
+        # M10S, protVer 34.00
+        ("CFG-SEC", 0x10f6ffff, "", 0, "",
+         "get all CFG-SEC"),
+        ("CFG-SEC-CFG_LOCK", 0x10f60009, "L", 1, "",
+         "Configuration lockdown"),
+        ("CFG-SEC-CFG_LOCK_UNLOCKGRP1", 0x10f6000a, "U2", 1, "",
+         "Configuration lockdown exempted group 1"),
+        ("CFG-SEC-CFG_LOCK_UNLOCKGRP2", 0x10f6000b, "U2", 1, "",
+         "Configuration lockdown exempted group 2"),
+
         # CFG-SIGNAL-
         ("CFG-SIGNAL", 0x1031ffff, "", 0, "",
          "get all CFG-SIGNAL"),
