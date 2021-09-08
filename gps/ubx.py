@@ -8289,51 +8289,14 @@ protver 20+, and HP GNSS, required for RELPOSNED
         m_data = bytearray([0x2, sid, rate])
         self.gps_send(6, 1, m_data)
 
-    def get_int_arg(self, args, ndx, default = 0):
-        """Convert args[ndx] to int, return default if not present"""
-        if type(args) is not list:
-            return default
-        if ndx >= len(args):
-            return default
-        if len(args[ndx]) == 0:
-            return default
-        return int(args[ndx], base = 0)
-
     def send_able_pps(self, able, args):
-        """dis/enable PPS, using UBX-CFG-TP5. Optional args:
+        """dis/enable PPS, using UBX-CFG-TP5. Optional arg: tpIdx"""
 
-tpIdx, antCableDelay, rfGroupDelay, freqPeriod, freqPeriodLock,
-pulseLenRadio, pulseLenRadioLock, userConfigDelay, flags
-"""
+        # This is actually a shortcut for a regular CFG-TP5 message
+        tp5_args = [''] * 9
+        tp5_args[8] = '0x77' if able else '0x76'
 
-        tpIdx             = self.get_int_arg(args, 0)
-        antCableDelay     = self.get_int_arg(args, 1, 2)
-        rfGroupDelay      = self.get_int_arg(args, 2)
-        freqPeriod        = self.get_int_arg(args, 3, 1000000) # 1M us
-        freqPeriodLock    = self.get_int_arg(args, 4, 1000000) # 1M us
-        pulseLenRatio     = self.get_int_arg(args, 5)
-        pulseLenRatioLock = self.get_int_arg(args, 6, 100000) # 100k us
-        userConfigDelay   = self.get_int_arg(args, 7)
-        flags             = self.get_int_arg(args, 8, 0x77)
-
-        m_data = bytearray(32)
-        m_data[0]     = tpIdx
-        m_data[1]     = 1        # version
-        m_data[2]     = 0        # reserved
-        m_data[3]     = 0        # reserved
-        m_data[ 4: 6] = pack_u16(antCableDelay)
-        m_data[ 6: 8] = pack_u16(rfGroupDelay)
-        m_data[ 8:12] = pack_u32(freqPeriod)
-        m_data[12:16] = pack_u32(freqPeriodLock)
-        m_data[16:20] = pack_u32(pulseLenRatio)
-        m_data[20:24] = pack_u32(pulseLenRatioLock)
-        m_data[24:28] = pack_u32(userConfigDelay)
-        m_data[28:32] = pack_u32(flags)
-
-        if not able:
-            m_data[28] &= ~1  # bit 0 is active
-
-        self.gps_send(6, 0x31, m_data)
+        self.send_cfg_tp5(tp5_args)
 
     def send_able_sbas(self, able, args):
         """dis/enable SBAS"""
@@ -8723,15 +8686,53 @@ Always double check with "-p CFG-GNSS".
 
         self.gps_send(6, 0x8d, m_data)
 
-    def send_cfg_tp5(self, args):
-        """UBX-CFG-TP5, get time0 decodes"""
+    def get_int_arg(self, args, ndx, default=0):
+        """Convert args[ndx] to int, return default if not present"""
+        if type(args) is not list:
+            return default
+        if ndx >= len(args):
+            return default
+        if len(args[ndx]) == 0:
+            return default
+        return int(args[ndx], base=0)
 
-        if 0 == len(args):
-            # poll default tpIdx 0
+    def send_cfg_tp5(self, args):
+        """UBX-CFG-TP5, get/set timepulse config. Optional args:
+
+tpIdx, antCableDelay, rfGroupDelay, freqPeriod, freqPeriodLock,
+pulseLenRadio, pulseLenRadioLock, userConfigDelay, flags
+"""
+        if len(args) == 0:
+            # poll with default tpIdx 0
             m_data = []
-        else:
-            # tpIdx
+        elif len(args) == 1:
+            # poll with the specified tpIdx
             m_data = bytearray([int(args[0])])
+        else:
+            # get/set timepulse
+            tpIdx = self.get_int_arg(args, 0)
+            antCableDelay = self.get_int_arg(args, 1, 2)
+            rfGroupDelay = self.get_int_arg(args, 2)
+            freqPeriod = self.get_int_arg(args, 3, 1000000)        # 1M us
+            freqPeriodLock = self.get_int_arg(args, 4, 1000000)    # 1M us
+            pulseLenRatio = self.get_int_arg(args, 5)
+            pulseLenRatioLock = self.get_int_arg(args, 6, 100000)  # 100k us
+            userConfigDelay = self.get_int_arg(args, 7)
+            flags = self.get_int_arg(args, 8, 0x77)
+
+            m_data = bytearray(32)
+            m_data[0] = tpIdx
+            m_data[1] = 1  # version
+            m_data[2] = 0  # reserved
+            m_data[3] = 0  # reserved
+            m_data[4:6] = pack_u16(antCableDelay)
+            m_data[6:8] = pack_u16(rfGroupDelay)
+            m_data[8:12] = pack_u32(freqPeriod)
+            m_data[12:16] = pack_u32(freqPeriodLock)
+            m_data[16:20] = pack_u32(pulseLenRatio)
+            m_data[20:24] = pack_u32(pulseLenRatioLock)
+            m_data[24:28] = pack_u32(userConfigDelay)
+            m_data[28:32] = pack_u32(flags)
 
         self.gps_send(6, 0x31, m_data)
 
