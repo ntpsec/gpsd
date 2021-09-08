@@ -8290,7 +8290,7 @@ protver 20+, and HP GNSS, required for RELPOSNED
         self.gps_send(6, 1, m_data)
 
     def send_able_pps(self, able, args):
-        """dis/enable PPS, using UBX-CFG-TP5. Optional arg: tpIdx"""
+        """dis/enable PPS, using UBX-CFG-TP5"""
 
         # This is actually a shortcut for a regular CFG-TP5 message
         tp5_args = [''] * 9
