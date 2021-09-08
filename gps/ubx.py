@@ -8291,6 +8291,8 @@ protver 20+, and HP GNSS, required for RELPOSNED
 
     def get_int_arg(self, args, ndx, default = 0):
         """Convert args[ndx] to int, return default if not present"""
+        if type(args) is not list:
+            return default
         if ndx >= len(args):
             return default
         if len(args[ndx]) == 0:
