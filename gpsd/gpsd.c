@@ -2542,7 +2542,7 @@ int main(int argc, char *argv[])
                     buf[rd] = '\0';
                     GPSD_LOG(LOG_CLIENT, &context.errout,
                              "<= control(%d): %s\n", cfd, buf);
-                    /* coverity[tainted_data] Safe, never handed to exec */
+                    // coverity[tainted_data] Safe, never handed to exec
                     handle_control(cfd, buf);
                 }
                 GPSD_LOG(LOG_SPIN, &context.errout,
@@ -2552,9 +2552,9 @@ int main(int argc, char *argv[])
                 FD_CLR(cfd, &control_fds);
                 adjust_max_fd(cfd, false);
             }
-#endif /* CONTROL_SOCKET_ENABLE */
+#endif // CONTROL_SOCKET_ENABLE
 
-        /* poll all active devices */
+        // poll all active devices
         GPSD_LOG(LOG_RAW1, &context.errout, "poll active devices\n");
         for (device = devices; device < devices + MAX_DEVICES; device++)
             if (allocated_device(device) && device->gpsdata.gps_fd > 0)
@@ -2570,8 +2570,15 @@ int main(int argc, char *argv[])
                     adjust_max_fd(device->gpsdata.gps_fd, false);
                     break;
                 case DEVICE_ERROR:
+                    FALLTHROUGH
                 case DEVICE_EOF:
                     deactivate_device(device);
+                    break;
+                case DEVICE_UNCHANGED:
+                    /* pselect() timed out, got nothing.
+                     * gpsd_next_hunt_setting() will try next hunt speed
+                     * if device is a tty. */
+                    gpsd_next_hunt_setting(device);
                     break;
                 default:
                     break;
@@ -2589,13 +2596,14 @@ int main(int argc, char *argv[])
                 }
             }
         }
-#endif /* __UNUSED_AUTOCONNECT__ */
+#endif // __UNUSED_AUTOCONNECT_
 
 #ifdef SOCKET_EXPORT_ENABLE
-        /* accept and execute commands for all clients */
+        // accept and execute commands for all clients
         for (sub = subscribers; sub < subscribers + MAX_CLIENTS; sub++) {
-            if (sub->active == 0)
+            if (sub->active == 0) {
                 continue;
+            }
 
             lock_subscriber(sub);
             if (FD_ISSET(sub->fd, &rfds)) {
