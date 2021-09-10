@@ -612,14 +612,14 @@ void gpsd_set_speed(struct gps_device_t *session,
                      "SER: fd %d keeping old speed %d(%d)\n",
                      session->gpsdata.gps_fd,
                      code2speed(cfgetispeed(&session->ttyset)),
-                     cfgetispeed(&session->ttyset));
+                     (int) cfgetispeed(&session->ttyset));
         } else {
             (void)cfsetispeed(&session->ttyset, rate);
             (void)cfsetospeed(&session->ttyset, rate);
             GPSD_LOG(LOG_IO, &session->context->errout,
                      "SER: fd %d set speed %d(%d)\n",
                      session->gpsdata.gps_fd,
-                     code2speed(cfgetispeed(&session->ttyset)), rate);
+                     code2speed(cfgetispeed(&session->ttyset)), (int) rate);
         }
         session->ttyset.c_iflag &= ~(PARMRK | INPCK);
         session->ttyset.c_cflag &= ~(CSIZE | CSTOPB | PARENB | PARODD);
@@ -884,7 +884,7 @@ int gpsd_serial_open(struct gps_device_t *session)
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "SER: fd %d restoring fixed/saved speed %d(%d)\n",
                      session->gpsdata.gps_fd, session->saved_baud,
-                     cfgetispeed(&session->ttyset));
+                     (int) cfgetispeed(&session->ttyset));
         } else {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "SER: fd %d Error setting port attributes: %s(%d)\n",
