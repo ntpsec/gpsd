@@ -307,9 +307,10 @@ static socket_t filesock(char *filename)
 /*
  * This array fills from the bottom, so as an extreme case you can
  * reduce MAX_DEVICES to 1 in the build recipe.
- * Yes, the "= {{{0}}}" is redundant with "static".
+ * The static" ensure devices is zerod on startup.
+ * Some compilers, in 2012, still choke on  = {0}.
  */
-static struct gps_device_t devices[MAX_DEVICES] = {{{0}}};
+static struct gps_device_t devices[MAX_DEVICES];
 
 static void adjust_max_fd(int fd, bool on)
 /* track the largest fd currently in use */
