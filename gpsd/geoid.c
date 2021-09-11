@@ -945,15 +945,15 @@ gps_mask_t ecef_to_wgs84fix(struct gps_fix_t *fix,
 
     /* geodetic location */
     lambda = atan2(y, x);
-    sincos(lambda, &sin_lambda, &cos_lambda);
+    gpsd_sincos(lambda, &sin_lambda, &cos_lambda);
 
     p = sqrt(pow(x, 2) + pow(y, 2));
     theta = atan2(z * WGS84A, p * WGS84B);
-    sincos(theta, &sin_theta, &cos_theta);
+    gpsd_sincos(theta, &sin_theta, &cos_theta);
 
     phi = atan2(z + WGS84E2 * WGS84B * pow(sin_theta, 3),
                 p - WGS84E * WGS84A * pow(cos_theta, 3));
-    sincos(phi, &sin_phi, &cos_phi);
+    gpsd_sincos(phi, &sin_phi, &cos_phi);
 
     n = WGS84A / sqrt(1.0 - WGS84E * pow(sin_phi, 2));
 

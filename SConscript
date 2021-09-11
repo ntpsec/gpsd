@@ -1237,13 +1237,7 @@ if not cleaning and not helping:
         else:
             confdefs.append("/* #undef HAVE_%s */\n" % f.upper())
 
-    # Apple may supply sincos() as __sincos(), or not at all
-    if config.CheckFunc('sincos', '#include <math.h>'):
-        confdefs.append('#define HAVE_SINCOS\n')
-    elif config.CheckFunc('__sincos'):
-        confdefs.append('#define sincos __sincos\n#define HAVE_SINCOS\n')
-    else:
-        confdefs.append('/* #undef HAVE_SINCOS */\n')
+    # used to check for sincos(), but making that work with -Werror did not work.
 
     if config.CheckHeader(["sys/types.h", "sys/time.h", "sys/timepps.h"]):
         confdefs.append("#define HAVE_SYS_TIMEPPS_H 1\n")
