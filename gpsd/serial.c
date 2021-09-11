@@ -532,6 +532,14 @@ int gpsd_serial_isatty(const struct gps_device_t *session)
         // is not a tty
         return 0;
     }
+
+#if defined(EADDRNOTAVAIL)
+    if (EADDRNOTAVAIL == errno) {
+        // is not a tty -- hack for bug in FreeBSD.  Not POSIX.
+        return 0;
+    }
+#endif  // defined(EADDRNOTAVAIL)
+
     // else failure
     GPSD_LOG(LOG_ERROR, &session->context->errout,
              "SER: gpsd_serial_isatty(%d) failed: %s(%d)\n",
