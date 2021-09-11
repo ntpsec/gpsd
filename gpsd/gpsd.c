@@ -2557,10 +2557,11 @@ int main(int argc, char *argv[])
         // poll all active devices
         GPSD_LOG(LOG_RAW1, &context.errout, "poll active devices\n");
         for (device = devices; device < devices + MAX_DEVICES; device++)
-            if (allocated_device(device) && device->gpsdata.gps_fd > 0)
+            if (allocated_device(device) &&
+                0 < device->gpsdata.gps_fd) {
+
                 switch (gpsd_multipoll(FD_ISSET(device->gpsdata.gps_fd, &rfds),
-                                       device, all_reports, DEVICE_REAWAKE))
-                {
+                                       device, all_reports, DEVICE_REAWAKE)) {
                 case DEVICE_READY:
                     FD_SET(device->gpsdata.gps_fd, &all_fds);
                     adjust_max_fd(device->gpsdata.gps_fd, true);
@@ -2578,11 +2579,15 @@ int main(int argc, char *argv[])
                     /* pselect() timed out, got nothing.
                      * gpsd_next_hunt_setting() will try next hunt speed
                      * if device is a tty. */
-                    gpsd_next_hunt_setting(device);
+                    GPSD_LOG(LOG_SHOUT, &context.errout,
+                             "gpsd_multipoll(%d) DEVICE_UNCHANGED\n",
+                             device->gpsdata.gps_fd);
+                    // gpsd_next_hunt_setting(device);
                     break;
                 default:
                     break;
                 }
+        }
 
 #ifdef __UNUSED_AUTOCONNECT__
         if (context.fixcnt > 0 && !context.autconnect) {
