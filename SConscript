@@ -1238,7 +1238,7 @@ if not cleaning and not helping:
             confdefs.append("/* #undef HAVE_%s */\n" % f.upper())
 
     # Apple may supply sincos() as __sincos(), or not at all
-    if config.CheckFunc('sincos'):
+    if config.CheckFunc('sincos', '#include <math.h>'):
         confdefs.append('#define HAVE_SINCOS\n')
     elif config.CheckFunc('__sincos'):
         confdefs.append('#define sincos __sincos\n#define HAVE_SINCOS\n')
