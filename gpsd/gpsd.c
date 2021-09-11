@@ -2579,9 +2579,9 @@ int main(int argc, char *argv[])
                     /* pselect() timed out, got nothing.
                      * gpsd_next_hunt_setting() will try next hunt speed
                      * if device is a tty. */
-                    GPSD_LOG(LOG_SHOUT, &context.errout,
-                             "gpsd_multipoll(%d) DEVICE_UNCHANGED\n",
-                             device->gpsdata.gps_fd);
+                    // GPSD_LOG(LOG_SHOUT, &context.errout,
+                    //          "gpsd_multipoll(%d) DEVICE_UNCHANGED\n",
+                    //          device->gpsdata.gps_fd);
                     // gpsd_next_hunt_setting(device);
                     break;
                 default:
