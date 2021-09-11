@@ -875,6 +875,7 @@ have_valgrind = False
 # per SCons 4.0.1 doc: Section 23.9. Not Configuring When Cleaning Targets
 if not cleaning and not helping:
     # OS X aliases gcc to clang
+    announce("cc is %s, version %s" % (env['CC'], env['CCVERSION']))
     # clang accepts -pthread, then warns it is unused.
     if not config.CheckCC():
         announce("ERROR: CC doesn't work")
