@@ -2576,7 +2576,14 @@ int main(int argc, char *argv[])
                     deactivate_device(device);
                     break;
                 case DEVICE_UNCHANGED:
-                    /* pselect() timed out, got nothing.
+                    /* pselect() returned.  Most likely data on one
+                     * of the connections.  Maybe this one, maybe another
+                     * one.  Maybe a timeout.
+                     *
+                     * So no data on this device, if it is a ttty, tells us
+                     * nothing about if data not coming in on this device
+                     * due to wrong speed.
+                     *
                      * gpsd_next_hunt_setting() will try next hunt speed
                      * if device is a tty. */
                     // GPSD_LOG(LOG_SHOUT, &context.errout,
