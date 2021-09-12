@@ -1833,13 +1833,13 @@ int gpsd_multipoll(const bool data_ready,
          * Try to ratchet things forward.
          */
         if (SERVICE_NTRIP == device->servicetype &&
-            device->ntrip.conn_state != ntrip_conn_established) {
+            NTRIP_CONN_ESTABLISHED != device->ntrip.conn_state) {
 
             (void)ntrip_open(device, "");
-            if (device->ntrip.conn_state == ntrip_conn_err) {
+            if (NTRIP_CONN_ERR == device->ntrip.conn_state) {
                 GPSD_LOG(LOG_WARN, &device->context->errout,
                          "connection to ntrip server failed\n");
-                device->ntrip.conn_state = ntrip_conn_init;
+                device->ntrip.conn_state = NTRIP_CONN_INIT;
                 return DEVICE_ERROR;
             }
             //  else

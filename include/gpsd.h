@@ -87,7 +87,7 @@ extern "C" {
  *      Add gps_device_t last_word_gal and last_svid3_gal
  * 3.23.1~dev
  *      Add timespec ts_startCurrentBaud to gps_device_t
- *
+ *      ntrip_conn_* to NTRIP_CONN_*
  */
 
 #define JSON_DATE_MAX   24      /* ISO8601 timestamp with 2 decimal places */
@@ -813,11 +813,11 @@ struct gps_device_t {
 
         /* state information about our response parsing */
         enum {
-            ntrip_conn_init,
-            ntrip_conn_sent_probe,
-            ntrip_conn_sent_get,
-            ntrip_conn_established,
-            ntrip_conn_err
+            NTRIP_CONN_INIT,
+            NTRIP_CONN_SENT_PROBE,
+            NTRIP_CONN_SENT_GET,
+            NTRIP_CONN_ESTABLISHED,
+            NTRIP_CONN_ERR
         } conn_state;   /* connection state for multi stage connect */
         bool works; // marks a working connection, so we try to reconnect once
         bool sourcetable_parse; /* have we read the sourcetable header? */
