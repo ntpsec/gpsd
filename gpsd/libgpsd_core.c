@@ -1814,14 +1814,13 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
     return session->gpsdata.set;
 }
 
-/* consume and handle packets from a specified device */
+// consume and handle packets from a specified device
 int gpsd_multipoll(const bool data_ready,
                    struct gps_device_t *device,
                    void (*handler)(struct gps_device_t *, gps_mask_t),
                    float reawake_time)
 {
-    if (data_ready)
-    {
+    if (data_ready) {
         int fragments;
 
         GPSD_LOG(LOG_RAW1, &device->context->errout,
@@ -1842,53 +1841,55 @@ int gpsd_multipoll(const bool data_ready,
                          "connection to ntrip server failed\n");
                 device->ntrip.conn_state = ntrip_conn_init;
                 return DEVICE_ERROR;
-            } else {
-                return DEVICE_READY;
             }
+            //  else
+            return DEVICE_READY;
         }
 #endif /* NETFEED_ENABLE */
 
         for (fragments = 0; ; fragments++) {
             gps_mask_t changed = gpsd_poll(device);
 
-            if (changed == EOF_IS) {
+            if (EOF_IS == changed) {
                 GPSD_LOG(LOG_WARN, &device->context->errout,
                          "device signed off %s\n",
                          device->gpsdata.dev.path);
                 return DEVICE_EOF;
-            } else if (changed == ERROR_SET) {
+            }
+            if (ERROR_SET == changed) {
                 GPSD_LOG(LOG_WARN, &device->context->errout,
                          "device read of %s returned error or "
                          "packet sniffer failed sync (flags %s)\n",
                          device->gpsdata.dev.path,
                          gps_maskdump(changed));
                 return DEVICE_ERROR;
-            } else if (changed == NODATA_IS) {
+            }
+            if (NODATA_IS == changed) {
                 /*
                  * No data on the first fragment read means the device
                  * fd may have been in an end-of-file condition on select.
                  */
-                if (fragments == 0) {
+                if (0 == fragments) {
                     GPSD_LOG(LOG_DATA, &device->context->errout,
                              "%s returned zero bytes\n",
                              device->gpsdata.dev.path);
                     if (device->zerokill) {
-                        /* failed timeout-and-reawake, kill it */
+                        // failed timeout-and-reawake, kill it
                         gpsd_deactivate(device);
                         if (device->ntrip.works) {
                             // reset so we try this once only
                             device->ntrip.works = false;
-                            if (gpsd_activate(device, O_CONTINUE) < 0) {
+                            if (0 > gpsd_activate(device, O_CONTINUE)) {
                                 GPSD_LOG(LOG_WARN, &device->context->errout,
                                          "reconnect to ntrip server failed\n");
                                 return DEVICE_ERROR;
-                            } else {
-                                GPSD_LOG(LOG_INF, &device->context->errout,
-                                         "reconnecting to ntrip server\n");
-                                return DEVICE_READY;
                             }
+                            // else
+                            GPSD_LOG(LOG_INF, &device->context->errout,
+                                     "reconnecting to ntrip server\n");
+                            return DEVICE_READY;
                         }
-                    } else if (reawake_time == 0) {
+                    } else if (0 == reawake_time) {
                         return DEVICE_ERROR;
                     } else {
                         /*
@@ -1911,32 +1912,35 @@ int gpsd_multipoll(const bool data_ready,
                 break;
             }
 
-            /* we got actual data, head off the reawake special case */
+            // we got actual data, head off the reawake special case
             device->zerokill = false;
             device->reawake = (time_t)0;
 
-            /* must have a full packet to continue */
-            if ((changed & PACKET_SET) == 0)
+            // must have a full packet to continue
+            if (0 == (changed & PACKET_SET)) {
                 break;
+            }
 
-            /* conditional prevents mask dumper from eating CPU */
-            if (device->context->errout.debug >= LOG_DATA) {
-                if (device->lexer.type == BAD_PACKET)
+            // conditional prevents mask dumper from eating CPU
+            if (LOG_DATA <= device->context->errout.debug) {
+                if (BAD_PACKET == device->lexer.type) {
                     GPSD_LOG(LOG_DATA, &device->context->errout,
                              "packet with bad checksum from %s\n",
                              device->gpsdata.dev.path);
-                else
+                } else {
                     GPSD_LOG(LOG_DATA, &device->context->errout,
                              "packet type %d from %s with %s\n",
                              device->lexer.type,
                              device->gpsdata.dev.path,
                              gps_maskdump(device->gpsdata.set));
+                }
             }
 
 
-            /* handle data contained in this packet */
-            if (device->lexer.type != BAD_PACKET)
+            // handle data contained in this packet
+            if (BAD_PACKET != device->lexer.type) {
                 handler(device, changed);
+            }
 
 #ifdef __future__
             // this breaks: test/daemon/passthrough.log ??
@@ -1951,13 +1955,14 @@ int gpsd_multipoll(const bool data_ready,
              * It might also reduce the latency from a received packet to
              * it being output by gpsd.
              */
-            if ((changed & PACKET_SET) != 0)
+            if (0 != (changed & PACKET_SET)) {
                break;
+            }
 #endif /* __future__ */
         }
-    }
-    else if (device->reawake>0 && time(NULL) >device->reawake) {
-        /* device may have had a zero-length read */
+    } else if (0 < device->reawake &&
+               time(NULL) > device->reawake) {
+        // device may have had a zero-length read
         GPSD_LOG(LOG_DATA, &device->context->errout,
                  "%s reawakened after zero-length read\n",
                  device->gpsdata.dev.path);
@@ -1970,7 +1975,7 @@ int gpsd_multipoll(const bool data_ready,
     return DEVICE_UNCHANGED;
 }
 
-/* end-of-session wrapup */
+// end-of-session wrapup
 void gpsd_wrap(struct gps_device_t *session)
 {
     if (!BAD_SOCKET(session->gpsdata.gps_fd))
