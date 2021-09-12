@@ -1295,17 +1295,17 @@ static void gpsd_error_model(struct gps_device_t *session)
 #endif // __UNUSED__
 
     if (0 < fix->time.tv_sec) {
-        /* save lastfix, not yet oldfix, for later error computations */
+        // save lastfix, not yet oldfix, for later error computations
         *lastfix = *fix;
     }
 }
 
-/* await data from any socket in the all_fds set */
+// await data from any socket in the all_fds set
 int gpsd_await_data(fd_set *rfds,
                     fd_set *efds,
-                     const int maxfd,
-                     fd_set *all_fds,
-                     struct gpsd_errout_t *errout)
+                    const int maxfd,
+                    fd_set *all_fds,
+                    struct gpsd_errout_t *errout)
 {
     int status;
     const timespec_t ts_timeout = {5, 0};   // timeout for pselect()
@@ -1330,12 +1330,15 @@ int gpsd_await_data(fd_set *rfds,
 
     status = pselect(maxfd + 1, rfds, NULL, NULL, &ts_timeout, NULL);
     if (-1 == status) {
-        if (errno == EINTR)
+        if (EINTR == errno) {
+            // caught a signal
             return AWAIT_NOT_READY;
+        }
 
-        if (errno == EBADF) {
+        if (EBADF == errno) {
+            // Invalid file descriptor.
             int fd;
-            for (fd = 0; fd < (int)FD_SETSIZE; fd++)
+            for (fd = 0; fd < (int)FD_SETSIZE; fd++) {
                 /*
                  * All we care about here is a cheap, fast, uninterruptible
                  * way to check if a file descriptor is valid.
@@ -1344,31 +1347,38 @@ int gpsd_await_data(fd_set *rfds,
                     FD_CLR(fd, all_fds);
                     FD_SET(fd, efds);
                 }
+            }
             return AWAIT_NOT_READY;
         }
         //  else
-        GPSD_LOG(LOG_ERROR, errout, "select: %s\n", strerror(errno));
+        GPSD_LOG(LOG_ERROR, errout, "pselect: %s(%d)\n",
+                 strerror(errno), errno);
         return AWAIT_FAILED;
     }
     if (0 == status) {
+        // pselect timeout
         return AWAIT_TIMEOUT;
     }
 
-    if (errout->debug >= LOG_SPIN) {
+    if (LOG_SPIN <= errout->debug) {
         int i;
         char dbuf[BUFSIZ];
         timespec_t ts_now;
         char ts_str[TIMESPEC_LEN];
 
         dbuf[0] = '\0';
-        for (i = 0; i < (int)FD_SETSIZE; i++)
-            if (FD_ISSET(i, all_fds))
+        for (i = 0; i < (int)FD_SETSIZE; i++) {
+            if (FD_ISSET(i, all_fds)) {
                 str_appendf(dbuf, sizeof(dbuf), "%d ", i);
+            }
+        }
         str_rstrip_char(dbuf, ' ');
         (void)strlcat(dbuf, "} -> {", sizeof(dbuf));
-        for (i = 0; i < (int)FD_SETSIZE; i++)
-            if (FD_ISSET(i, rfds))
+        for (i = 0; i < (int)FD_SETSIZE; i++) {
+            if (FD_ISSET(i, rfds)) {
                 str_appendf(dbuf, sizeof(dbuf), " %d ", i);
+            }
+        }
 
         (void)clock_gettime(CLOCK_REALTIME, &ts_now);
         GPSD_LOG(LOG_SPIN, errout,
