@@ -486,10 +486,10 @@ if 'dev' in gpsd_version:
     if st != 0:
         # If git describe failed
         # Try to use current commit hash
-        (st, gpsd_commit) = _getstatusoutput('git rev-parse HEAD | cut -b 1-9')
+        (st, gpsd_commit) = _getstatusoutput('git rev-parse HEAD')
         if st == 0 and gpsd_commit:
             # Format output similar to normal revision
-            gpsd_revision = '%s-g%s' % (gpsd_version, gpsd_commit)
+            gpsd_revision = '%s-g%s' % (gpsd_version, polystr(gpsd_commit[:9]))
         else:
             # Only if git describe and git rev-parse failed
             # Use timestamp from latest relevant file,
