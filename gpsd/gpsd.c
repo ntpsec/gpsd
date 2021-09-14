@@ -2130,7 +2130,8 @@ int main(int argc, char *argv[])
     }
 #if defined(SYSTEMD_ENABLE) && defined(CONTROL_SOCKET_ENABLE)
     sd_socket_count = sd_get_socket_count();
-    if (sd_socket_count > 0 && control_socket != NULL) {
+    if (0 < sd_socket_count &&
+        NULL == control_socket) {
         GPSD_LOG(LOG_WARN, &context.errout,
                  "control socket passed on command line ignored\n");
         control_socket = NULL;
@@ -2140,15 +2141,12 @@ int main(int argc, char *argv[])
 #if defined(CONTROL_SOCKET_ENABLE) || defined(SYSTEMD_ENABLE)
     if (
 #ifdef CONTROL_SOCKET_ENABLE
-        control_socket == NULL
-#endif
-#if defined(CONTROL_SOCKET_ENABLE) && defined(SYSTEMD_ENABLE)
-        &&
+        NULL == control_socket &&
 #endif
 #ifdef SYSTEMD_ENABLE
-        sd_socket_count <= 0
+        0 >= sd_socket_count &&
 #endif
-        && optind >= argc) {
+        optind >= argc) {
         GPSD_LOG(LOG_ERROR, &context.errout,
                  "can't run with neither control socket nor devices\n");
         exit(EXIT_FAILURE);
@@ -2160,7 +2158,7 @@ int main(int argc, char *argv[])
      * the socket before it's created.
      */
 #if defined(SYSTEMD_ENABLE) && defined(CONTROL_SOCKET_ENABLE)
-    if (sd_socket_count > 0) {
+    if (0 < sd_socket_count) {
         csock = SD_SOCKET_FDS_START;
         FD_SET(csock, &all_fds);
         adjust_max_fd(csock, true);
@@ -2174,10 +2172,11 @@ int main(int argc, char *argv[])
                      "control socket create failed, netlib error %d\n",
                      csock);
             exit(EXIT_FAILURE);
-        } else
+        } else {
             GPSD_LOG(LOG_SPIN, &context.errout,
                      "control socket %s is fd %d\n",
                      control_socket, csock);
+        }
         FD_SET(csock, &all_fds);
         adjust_max_fd(csock, true);
         GPSD_LOG(LOG_PROG, &context.errout,
@@ -2191,19 +2190,20 @@ int main(int argc, char *argv[])
                  "can't run with no devices specified\n");
         exit(EXIT_FAILURE);
     }
-#endif /* defined(CONTROL_SOCKET_ENABLE) || defined(SYSTEMD_ENABLE) */
+#endif  // defined(CONTROL_SOCKET_ENABLE) || defined(SYSTEMD_ENABLE)
 
     // TODO, a dump of all options here at LOG_xx would be nice.
 
-    /* might be time to daemonize */
+    // might be time to daemonize
     if (go_background) {
-        /* not SuS/POSIX portable, but we have our own fallback version */
-        if (os_daemon(0, 0) != 0)
+        // not SuS/POSIX portable, but we have our own fallback version
+        if (0 != os_daemon(0, 0)) {
             GPSD_LOG(LOG_ERROR, &context.errout,
                      "daemonization failed: %s\n", strerror(errno));
+        }
     }
 
-    if (pid_file != NULL) {
+    if (NULL != pid_file) {
         FILE *fp;
 
         if (NULL == (fp = fopen(pid_file, "w"))) {
@@ -2221,22 +2221,24 @@ int main(int argc, char *argv[])
              VERSION, REVISION);
 
 #ifdef SOCKET_EXPORT_ENABLE
-    if (!gpsd_service)
+    if (!gpsd_service) {
         gpsd_service =
             getservbyname("gpsd", "tcp") ? "gpsd" : DEFAULT_GPSD_PORT;
-    if (passivesocks(gpsd_service, "tcp", QLEN, msocks) < 1) {
+    }
+    if (1 > passivesocks(gpsd_service, "tcp", QLEN, msocks)) {
         GPSD_LOG(LOG_ERROR, &context.errout,
                  "command sockets creation failed, netlib errors %d, %d\n",
                  msocks[0], msocks[1]);
-        if (pid_file != NULL)
+        if (NULL != pid_file) {
             (void)unlink(pid_file);
+        }
         exit(EXIT_FAILURE);
     }
     GPSD_LOG(LOG_INF, &context.errout, "listening on port %s\n",
                        gpsd_service);
-#endif /* SOCKET_EXPORT_ENABLE */
+#endif  // SOCKET_EXPORT_ENABLE
 
-    if (getuid() == 0) {
+    if (0 == getuid()) {
         errno = 0;
         // nice() can ONLY succeed when run as root!
         // do not even bother as non-root
@@ -2258,9 +2260,10 @@ int main(int argc, char *argv[])
         // the connection could not be started, maybe user does not want it
         GPSD_LOG(LOG_WARNING, &context.errout,
                  "unable to connect to the DBUS system bus\n");
-    } else
+    } else {
         GPSD_LOG(LOG_PROG, &context.errout,
                  "successfully connected to the DBUS system bus\n");
+    }
 #endif /* defined(DBUS_EXPORT_ENABLE) */
 
 #ifdef SHM_EXPORT_ENABLE
@@ -2286,10 +2289,10 @@ int main(int argc, char *argv[])
 
     if (
 #ifdef CONTROL_SOCKET_ENABLE
-       control_socket == NULL &&
+       NULL == control_socket &&
 #endif
 #ifdef SYSTEMD_ENABLE
-       sd_socket_count <= 0 &&
+       0 >= sd_socket_count &&
 #endif
        !device_opened) {
        GPSD_LOG(LOG_ERROR, &context.errout,
@@ -2311,7 +2314,7 @@ int main(int argc, char *argv[])
                GPSD_LOG(LOG_ERROR, &context.errout,
                         "Over long device path %s\n", argv[i]);
             }
-            if (stat(argv[i], &stb) == 0) {
+            if (0 == stat(argv[i], &stb)) {
                 /* This fails if not running as root, or have group
                  * access to the file. */
                 (void)chmod(argv[i], stb.st_mode | S_IRGRP | S_IWGRP);
@@ -2325,36 +2328,42 @@ int main(int argc, char *argv[])
          * of any compromises in the code.  It requires that all GPS
          * devices have their group read/write permissions set.
          */
-        if (setgroups(0, NULL) != 0)
+        if (0 != setgroups(0, NULL)) {
             GPSD_LOG(LOG_ERROR, &context.errout,
                      "setgroups() failed, errno %s\n",
                      strerror(errno));
+        }
 #ifdef GPSD_GROUP
         {
             struct group *grp = getgrnam(GPSD_GROUP);
-            if (grp)
-                if (setgid(grp->gr_gid) != 0)
+            if (grp) {
+                if (0 != setgid(grp->gr_gid)) {
                     GPSD_LOG(LOG_ERROR, &context.errout,
-                             "setgid() failed, errno %s\n",
-                             strerror(errno));
+                             "setgid() failed, %s(%d)\n",
+                             strerror(errno), errno);
+                }
+            }
         }
 #else
-        if ((optind < argc && stat(argv[optind], &stb) == 0)
-            || stat(PROTO_TTY, &stb) == 0) {
+        if ((optind < argc &&
+             0 == stat(argv[optind], &stb)) ||
+            0 == stat(PROTO_TTY, &stb)) {
             GPSD_LOG(LOG_PROG, &context.errout,
                      "changing to group %d\n", stb.st_gid);
-            if (setgid(stb.st_gid) != 0)
+            if (0 != setgid(stb.st_gid)) {
                 GPSD_LOG(LOG_ERROR, &context.errout,
-                         "setgid() failed, %s\n",
-                         strerror(errno));
+                         "setgid() failed, %s(%d)\n", strerror(errno), errno);
+            }
         }
 #endif
         pw = getpwnam(GPSD_USER);
-        if (pw)
-            if (setuid(pw->pw_uid) != 0)
+        if (pw) {
+            if (setuid(pw->pw_uid) != 0) {
                 GPSD_LOG(LOG_ERROR, &context.errout,
                             "setuid() failed, %s\n",
                             strerror(errno));
+            }
+        }
     }
     // sometimes getegid() and geteuid() are longs
     GPSD_LOG(LOG_INF, &context.errout,
@@ -2391,7 +2400,7 @@ int main(int argc, char *argv[])
     }
 
     /* daemon got termination or interrupt signal */
-    if (setjmp(restartbuf) > 0) {
+    if (0 < setjmp(restartbuf)) {
         gpsd_terminate(&context);
         in_restart = true;
         GPSD_LOG(LOG_WARN, &context.errout, "gpsd restarted by SIGHUP\n");
@@ -2399,11 +2408,12 @@ int main(int argc, char *argv[])
 
     signalled = 0;
 
-    for (i = 0; i < AFCOUNT; i++)
-        if (msocks[i] >= 0) {
+    for (i = 0; i < AFCOUNT; i++) {
+        if (0 <= msocks[i]) {
             FD_SET(msocks[i], &all_fds);
             adjust_max_fd(msocks[i], true);
         }
+    }
 #ifdef CONTROL_SOCKET_ENABLE
     FD_ZERO(&control_fds);
 #endif /* CONTROL_SOCKET_ENABLE */
@@ -2416,7 +2426,7 @@ int main(int argc, char *argv[])
      * through these won't work, as we've dropped privileges and can
      * no longer change line disciplines.
      */
-    if (in_restart)
+    if (in_restart) {
         for (i = optind; i < argc; i++) {
           if (!gpsd_add_device(argv[i], nowait)) {
                 GPSD_LOG(LOG_ERROR, &context.errout,
@@ -2424,19 +2434,20 @@ int main(int argc, char *argv[])
                          argv[i]);
             }
         }
+    }
 
     while (0 == signalled) {
         fd_set efds;
 
         GPSD_LOG(LOG_RAW1, &context.errout, "await data\n");
-        switch(gpsd_await_data(&rfds, &efds, maxfd, &all_fds, &context.errout))
-        {
+        switch(gpsd_await_data(&rfds, &efds, maxfd, &all_fds,
+                               &context.errout)) {
         case AWAIT_GOT_INPUT:
             FALLTHROUGH
         case AWAIT_TIMEOUT:
             break;
         case AWAIT_NOT_READY:
-            for (device = devices; device < devices + MAX_DEVICES; device++)
+            for (device = devices; device < devices + MAX_DEVICES; device++) {
                 /*
                  * The file descriptor validity check is required on some ARM
                  * platforms to prevent a core dump.  This may be due to an
@@ -2444,11 +2455,12 @@ int main(int argc, char *argv[])
                  */
                 if (allocated_device(device) &&
                     0 <= device->gpsdata.gps_fd &&
-                    device->gpsdata.gps_fd < (socket_t)FD_SETSIZE &&
+                    (socket_t)FD_SETSIZE > device->gpsdata.gps_fd &&
                     FD_ISSET(device->gpsdata.gps_fd, &efds)) {
                     deactivate_device(device);
                     free_device(device);
                 }
+            }
             continue;
         case AWAIT_FAILED:
             exit(EXIT_FAILURE);
@@ -2462,21 +2474,22 @@ int main(int argc, char *argv[])
                 socket_t ssock =
                     accept(msocks[i], (struct sockaddr *)&fsin, &alen);
 
-                if (BAD_SOCKET(ssock))
+                if (BAD_SOCKET(ssock)) {
                     GPSD_LOG(LOG_ERROR, &context.errout,
                              "accept: fail: %s\n", strerror(errno));
-                else {
+                } else {
                     struct subscriber_t *client = NULL;
                     int opts = fcntl(ssock, F_GETFL);
                     static struct linger linger = { 1, RELEASE_TIMEOUT };
                     char *c_ip;
 
-                    if (opts >= 0)
+                    if (0 <= opts) {
                         (void)fcntl(ssock, F_SETFL, opts | O_NONBLOCK);
+                    }
 
                     c_ip = netlib_sock2ip(ssock);
                     client = allocate_client();
-                    if (client == NULL) {
+                    if (NULL == client) {
                         GPSD_LOG(LOG_ERROR, &context.errout,
                                  "Client %s connect on fd %d -"
                                  "no subscriber slots available\n", c_ip,
@@ -2507,18 +2520,18 @@ int main(int argc, char *argv[])
                 FD_CLR(msocks[i], &rfds);
             }
         }
-#endif /* SOCKET_EXPORT_ENABLE */
+#endif  // SOCKET_EXPORT_ENABLE
 
 #ifdef CONTROL_SOCKET_ENABLE
-        /* also be open to new control-socket connections */
+        // also be open to new control-socket connections
         if (csock > -1 && FD_ISSET(csock, &rfds)) {
             socklen_t alen = (socklen_t) sizeof(fsin);
             socket_t ssock = accept(csock, (struct sockaddr *)&fsin, &alen);
 
-            if (BAD_SOCKET(ssock))
+            if (BAD_SOCKET(ssock)) {
                 GPSD_LOG(LOG_ERROR, &context.errout,
                          "accept: %s\n", strerror(errno));
-            else {
+            } else {
                 GPSD_LOG(LOG_INF, &context.errout,
                          "control socket connect on fd %d\n",
                          ssock);
@@ -2532,13 +2545,13 @@ int main(int argc, char *argv[])
         // read any commands that came in over the control socket
         // Linux man page says FD_* and select() are obsolete...
         GPSD_LOG(LOG_RAW1, &context.errout, "read control commands");
-        for (cfd = 0; cfd < (int)FD_SETSIZE; cfd++)
+        for (cfd = 0; cfd < (int)FD_SETSIZE; cfd++) {
             // Do we really need to check all 1024 possible file descriptors?
             if (FD_ISSET(cfd, &control_fds)) {
                 char buf[BUFSIZ];
                 ssize_t rd;
 
-                while ((rd = read(cfd, buf, sizeof(buf) - 1)) > 0) {
+                while (0 < (rd = read(cfd, buf, sizeof(buf) - 1))) {
                     buf[rd] = '\0';
                     GPSD_LOG(LOG_CLIENT, &context.errout,
                              "<= control(%d): %s\n", cfd, buf);
@@ -2552,48 +2565,51 @@ int main(int argc, char *argv[])
                 FD_CLR(cfd, &control_fds);
                 adjust_max_fd(cfd, false);
             }
-#endif // CONTROL_SOCKET_ENABLE
+        }
+#endif  // CONTROL_SOCKET_ENABLE
 
         // poll all active devices
         GPSD_LOG(LOG_RAW1, &context.errout, "poll active devices\n");
-        for (device = devices; device < devices + MAX_DEVICES; device++)
-            if (allocated_device(device) &&
-                0 < device->gpsdata.gps_fd) {
+        for (device = devices; device < devices + MAX_DEVICES; device++) {
+            if (!allocated_device(device) ||
+                0 >= device->gpsdata.gps_fd) {
+                continue;
+            }
 
-                switch (gpsd_multipoll(FD_ISSET(device->gpsdata.gps_fd, &rfds),
-                                       device, all_reports, DEVICE_REAWAKE)) {
-                case DEVICE_READY:
-                    FD_SET(device->gpsdata.gps_fd, &all_fds);
-                    adjust_max_fd(device->gpsdata.gps_fd, true);
-                    break;
-                case DEVICE_UNREADY:
-                    FD_CLR(device->gpsdata.gps_fd, &all_fds);
-                    adjust_max_fd(device->gpsdata.gps_fd, false);
-                    break;
-                case DEVICE_ERROR:
-                    FALLTHROUGH
-                case DEVICE_EOF:
-                    deactivate_device(device);
-                    break;
-                case DEVICE_UNCHANGED:
-                    /* pselect() returned.  Most likely data on one
-                     * of the connections.  Maybe this one, maybe another
-                     * one.  Maybe a timeout.
-                     *
-                     * So no data on this device, if it is a ttty, tells us
-                     * nothing about if data not coming in on this device
-                     * due to wrong speed.
-                     *
-                     * gpsd_next_hunt_setting() will try next hunt speed
-                     * if device is a tty. */
-                    // GPSD_LOG(LOG_SHOUT, &context.errout,
-                    //          "gpsd_multipoll(%d) DEVICE_UNCHANGED\n",
-                    //          device->gpsdata.gps_fd);
-                    // gpsd_next_hunt_setting(device);
-                    break;
-                default:
-                    break;
-                }
+            switch (gpsd_multipoll(FD_ISSET(device->gpsdata.gps_fd, &rfds),
+                                   device, all_reports, DEVICE_REAWAKE)) {
+            case DEVICE_READY:
+                FD_SET(device->gpsdata.gps_fd, &all_fds);
+                adjust_max_fd(device->gpsdata.gps_fd, true);
+                break;
+            case DEVICE_UNREADY:
+                FD_CLR(device->gpsdata.gps_fd, &all_fds);
+                adjust_max_fd(device->gpsdata.gps_fd, false);
+                break;
+            case DEVICE_ERROR:
+                FALLTHROUGH
+            case DEVICE_EOF:
+                deactivate_device(device);
+                break;
+            case DEVICE_UNCHANGED:
+                /* pselect() returned.  Most likely data on one
+                 * of the connections.  Maybe this one, maybe another
+                 * one.  Maybe a timeout.
+                 *
+                 * So no data on this device, if it is a ttty, tells us
+                 * nothing about if data not coming in on this device
+                 * due to wrong speed.
+                 *
+                 * gpsd_next_hunt_setting() will try next hunt speed
+                 * if device is a tty. */
+                // GPSD_LOG(LOG_SHOUT, &context.errout,
+                //          "gpsd_multipoll(%d) DEVICE_UNCHANGED\n",
+                //          device->gpsdata.gps_fd);
+                // gpsd_next_hunt_setting(device);
+                break;
+            default:
+                break;
+            }
         }
 
 #ifdef __UNUSED_AUTOCONNECT__
@@ -2608,12 +2624,12 @@ int main(int argc, char *argv[])
                 }
             }
         }
-#endif // __UNUSED_AUTOCONNECT_
+#endif  // __UNUSED_AUTOCONNECT_
 
 #ifdef SOCKET_EXPORT_ENABLE
         // accept and execute commands for all clients
         for (sub = subscribers; sub < subscribers + MAX_CLIENTS; sub++) {
-            if (sub->active == 0) {
+            if (0 == sub->active) {
                 continue;
             }
 
@@ -2657,14 +2673,14 @@ int main(int argc, char *argv[])
                      * COMMAND_TIMEOUT useful.
                      */
                     sub->active = time(NULL);
-                    if (handle_gpsd_request(sub, buf) < 0)
+                    if (0 > handle_gpsd_request(sub, buf))
                         detach_client(sub);
                 }
             } else {
                 unlock_subscriber(sub);
 
-                if (!sub->policy.watcher
-                    && time(NULL) - sub->active > COMMAND_TIMEOUT) {
+                if (!sub->policy.watcher &&
+                    (time(NULL) - sub->active) > COMMAND_TIMEOUT) {
                     GPSD_LOG(LOG_WARN, &context.errout,
                              "client(%d) timed out on command wait.\n",
                              sub_index(sub));
