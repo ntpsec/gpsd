@@ -1082,7 +1082,7 @@ static bool mtk3301_speed_switcher(struct gps_device_t* session,
     int i;
     char buf[BUFSIZ] = {0};
 
-    (void)snprintf(buf, sizeof(buf), "$PQBAUD,W,%u", speed);
+    (void)snprintf(buf, sizeof(buf), "$PQBAUD,W,%d", (int) speed);
 
     // Calling PQBAUD fails to set the receiver's baud rate
     // some of the time.  Sending it twice seems to work every time.
