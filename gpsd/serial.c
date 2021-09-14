@@ -533,6 +533,12 @@ int gpsd_serial_isatty(const struct gps_device_t *session)
         return 0;
     }
 
+#if defined(ENXIO)
+    if (ENXIO == errno) {
+        // is not a tty -- hack for Fred's bug.  Not POSIX.
+        return 0;
+    }
+#endif  // defined(EADDRNOTAVAIL)
 #if defined(EADDRNOTAVAIL)
     if (EADDRNOTAVAIL == errno) {
         // is not a tty -- hack for bug in FreeBSD.  Not POSIX.
