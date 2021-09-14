@@ -344,9 +344,9 @@ void gpsd_init(struct gps_device_t *session, struct gps_context_t *context,
 // temporarily release the GPS device
 void gpsd_deactivate(struct gps_device_t *session)
 {
-    if (!session->context->readonly
-        && session->device_type != NULL
-        && session->device_type->event_hook != NULL) {
+    if (!session->context->readonly &&
+        NULL != session->device_type  &&
+        NULL != session->device_type->event_hook) {
         session->device_type->event_hook(session, event_deactivate);
     }
     GPSD_LOG(LOG_INF, &session->context->errout,
@@ -357,11 +357,14 @@ void gpsd_deactivate(struct gps_device_t *session)
         (void)nmea2000_close(session);
     } else
 #endif  // of defined(NMEA2000_ENABLE)
+    {
         (void)gpsd_close(session);
-    if (session->mode == O_OPTIMIZE)
+    }
+    if (O_OPTIMIZE == session->mode) {
         gpsd_run_device_hook(&session->context->errout,
                              session->gpsdata.dev.path,
                              HOOK_DEACTIVATE);
+    }
     // tell any PPS-watcher thread to die
     session->pps_thread.report_hook = NULL;
     // mark it inactivated
@@ -415,7 +418,7 @@ void gpsd_clear(struct gps_device_t *session)
     session->badcount = 0;
 
     // clear the private data union
-    memset( (void *)&session->driver, '\0', sizeof(session->driver));
+    memset((void *)&session->driver, '\0', sizeof(session->driver));
     // set up the context structure for the PPS thread monitor
     memset((void *)&session->pps_thread, 0, sizeof(session->pps_thread));
     session->pps_thread.devicefd = session->gpsdata.gps_fd;
@@ -532,7 +535,7 @@ int gpsd_open(struct gps_device_t *session)
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "opening TCP feed at %s, port %s.\n", host,
                  port);
-        if ((dsock = netlib_connectsock(AF_UNSPEC, host, port, "tcp")) < 0) {
+        if (0 > (dsock = netlib_connectsock(AF_UNSPEC, host, port, "tcp"))) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "TCP device open error %s.\n",
                      netlib_errstr(dsock));
@@ -559,14 +562,15 @@ int gpsd_open(struct gps_device_t *session)
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "opening UDP feed at %s, port %s.\n", host,
                  port);
-        if ((dsock = netlib_connectsock(AF_UNSPEC, host, port, "udp")) < 0) {
+        if (0 > (dsock = netlib_connectsock(AF_UNSPEC, host, port, "udp"))) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "UDP device open error %s.\n",
                      netlib_errstr(dsock));
             return -1;
-        } else
+        } else {
             GPSD_LOG(LOG_SPIN, &session->context->errout,
                      "UDP device opened on fd %d\n", dsock);
+        }
         session->gpsdata.gps_fd = dsock;
         session->sourcetype = SOURCE_UDP;
         return session->gpsdata.gps_fd;
@@ -631,12 +635,14 @@ int gpsd_open(struct gps_device_t *session)
 // acquire a connection to the GPS device
 int gpsd_activate(struct gps_device_t *session, const int mode)
 {
-    if (O_OPTIMIZE == mode)
+    if (O_OPTIMIZE == mode) {
         gpsd_run_device_hook(&session->context->errout,
                              session->gpsdata.dev.path, HOOK_ACTIVATE);
+    }
     session->gpsdata.gps_fd = gpsd_open(session);
-    if (O_CONTINUE != mode)
+    if (O_CONTINUE != mode) {
         session->mode = mode;
+    }
 
     if (0 > session->gpsdata.gps_fd) {
         // return could be -1, PLACEHOLDING_FD, of UNALLOCATED_FD
@@ -654,13 +660,13 @@ int gpsd_activate(struct gps_device_t *session, const int mode)
         const struct gps_type_t **dp;
 
         for (dp = gpsd_drivers; *dp; dp++) {
-            if ((*dp)->probe_detect != NULL) {
+            if (NULL != (*dp)->probe_detect) {
                 GPSD_LOG(LOG_PROG, &session->context->errout,
                          "Probing \"%s\" driver...\n",
                          (*dp)->type_name);
                 // toss stale data
                 (void)tcflush(session->gpsdata.gps_fd, TCIOFLUSH);
-                if ((*dp)->probe_detect(session) != 0) {
+                if (0 != (*dp)->probe_detect(session)) {
                     GPSD_LOG(LOG_PROG, &session->context->errout,
                              "Probe found \"%s\" driver...\n",
                              (*dp)->type_name);
