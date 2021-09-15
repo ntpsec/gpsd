@@ -1970,6 +1970,7 @@ int main(int argc, char *argv[])
     bool device_opened = false;
     bool go_background = true;
     volatile bool in_restart;
+    struct timespec now;
     const char *sudo = getenv("SUDO_COMMAND");
 
     gps_context_init(&context, "gpsd");
@@ -2602,10 +2603,18 @@ int main(int argc, char *argv[])
                  *
                  * gpsd_next_hunt_setting() will try next hunt speed
                  * if device is a tty. */
-                // GPSD_LOG(LOG_SHOUT, &context.errout,
-                //          "gpsd_multipoll(%d) DEVICE_UNCHANGED\n",
-                //          device->gpsdata.gps_fd);
-                // gpsd_next_hunt_setting(device);
+
+                // If this device has either never received GPS data,
+                // or hasn't received GPS data for the last 5 seconds,
+                // then try the next hunt speed.
+                (void)clock_gettime(CLOCK_REALTIME, &now);
+                if (5 <= (now.tv_sec - device->lexer.start_time.tv_sec)) {
+                    GPSD_LOG(LOG_PROG, &context.errout,
+                        "gpsd_multipoll(%d) DEVICE_UNCHANGED\n",
+                        device->gpsdata.gps_fd);
+                    gpsd_next_hunt_setting(device);
+                }
+
                 break;
             default:
                 break;
