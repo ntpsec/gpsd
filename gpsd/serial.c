@@ -55,23 +55,28 @@ static sourcetype_t gpsd_classify(struct gps_device_t *session)
                  session->gpsdata.dev.path, strerror(errno), errno);
         return SOURCE_UNKNOWN;
     }
-    if (S_ISREG(sb.st_mode))
+    if (S_ISREG(sb.st_mode)) {
         return SOURCE_BLOCKDEV;
+    }
 
     // this assumes we won't get UDP from a filesystem socket
-    if (S_ISSOCK(sb.st_mode))
+    if (S_ISSOCK(sb.st_mode)) {
         return SOURCE_TCP;
+    }
 
     // OS-independent check for ptys using Unix98 naming convention
-    if (0 == strncmp(path, "/dev/pts/", 9))
+    if (0 == strncmp(path, "/dev/pts/", 9)) {
         return SOURCE_PTY;
+    }
 
     // some more direct way to check for PPS?
-    if (0 == strncmp(path, "/dev/pps", 8))
+    if (0 == strncmp(path, "/dev/pps", 8)) {
         return SOURCE_PPS;
+    }
 
-    if (S_ISFIFO(sb.st_mode))
+    if (S_ISFIFO(sb.st_mode)) {
         return SOURCE_PIPE;
+    }
 
      if (S_ISCHR(sb.st_mode)) {
         sourcetype_t devtype = SOURCE_RS232;
@@ -170,12 +175,13 @@ static sourcetype_t gpsd_classify(struct gps_device_t *session)
          * Hacky check for pty, which is what really matters for avoiding
          * adaptive delay.
          */
-        if (strncmp(path, "/dev/ttyp", 9) == 0 ||
-            strncmp(path, "/dev/ttyq", 9) == 0)
+        if (0 == strncmp(path, "/dev/ttyp", 9) ||
+            0 == strncmp(path, "/dev/ttyq", 9)) {
             devtype = SOURCE_PTY;
-        else if (strncmp(path, "/dev/ttyU", 9) == 0 ||
-            strncmp(path, "/dev/dtyU", 9) == 0)
+        } else if (0 == strncmp(path, "/dev/ttyU", 9) ||
+                   0 == strncmp(path, "/dev/dtyU", 9)) {
             devtype = SOURCE_USB;
+        }
         // XXX bluetooth
 #endif  // BSD
         return devtype;
@@ -229,8 +235,9 @@ static int fusercount(struct gps_device_t *session)
         // longest procentry->d_name I could find was 12
         (void)snprintf(procpath, sizeof(procpath),
                        "/proc/%.20s/fd/", procentry->d_name);
-        if (NULL == (fdd = opendir(procpath)))
+        if (NULL == (fdd = opendir(procpath))) {
             continue;
+        }
         while (NULL != (fdentry = readdir(fdd))) {
             ssize_t rd;
 
@@ -409,10 +416,12 @@ int gpsd_get_speed_old(const struct gps_device_t *dev)
 char gpsd_get_parity(const struct gps_device_t *dev)
 {
     char parity = 'N';
-    if ((dev->ttyset.c_cflag & (PARENB | PARODD)) == (PARENB | PARODD))
+
+    if ((PARENB | PARODD) == (dev->ttyset.c_cflag & (PARENB | PARODD))) {
         parity = 'O';
-    else if ((dev->ttyset.c_cflag & PARENB) == PARENB)
+    } else if (PARENB == (dev->ttyset.c_cflag & PARENB)) {
         parity = 'E';
+    }
     return parity;
 }
 
@@ -420,10 +429,11 @@ char gpsd_get_parity(const struct gps_device_t *dev)
 int gpsd_get_stopbits(const struct gps_device_t *dev)
 {
     int stopbits = 0;
-    if ((dev->ttyset.c_cflag & CS8) == CS8)
+    if (CS8 == (dev->ttyset.c_cflag & CS8)) {
         stopbits = 1;
-    else if ((dev->ttyset.c_cflag & (CS7 | CSTOPB)) == (CS7 | CSTOPB))
+    } else if ((CS7 | CSTOPB) == (dev->ttyset.c_cflag & (CS7 | CSTOPB))) {
         stopbits = 2;
+    }
     return stopbits;
 }
 
@@ -535,7 +545,7 @@ int gpsd_serial_isatty(const struct gps_device_t *session)
 
 #if defined(ENXIO)
     if (ENXIO == errno) {
-        // is not a tty -- hack for Fred's bug.  Not POSIX.
+        // is not a tty -- hack for OSX 10.9 bug.  Not POSIX.
         return 0;
     }
 #endif  // defined(EADDRNOTAVAIL)
@@ -620,7 +630,7 @@ void gpsd_set_speed(struct gps_device_t *session,
          * get packet lock within 1.5 seconds.  Alas, the BSDs and OS X
          * aren't so nice.
          */
-        if (rate == B0) {
+        if (B0 == rate) {
             // how does one get here?
             GPSD_LOG(LOG_IO, &session->context->errout,
                      "SER: fd %d keeping old speed %d(%d)\n",
@@ -1005,7 +1015,6 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
 {
     struct timespec ts_now, ts_diff;
 
-
     // don't waste time in the hunt loop if this is not actually a tty
     // FIXME: Check for ttys like /dev/ttyACM that have no speed.
     if (0 >= gpsd_serial_isatty(session))
@@ -1080,8 +1089,9 @@ void gpsd_assert_sync(struct gps_device_t *session)
      * baudrate so we can try it first next time this device
      * is opened.
      */
-    if (0 >= session->saved_baud)
+    if (0 >= session->saved_baud) {
         session->saved_baud = (int)cfgetispeed(&session->ttyset);
+    }
 }
 
 // Close an open serial device
