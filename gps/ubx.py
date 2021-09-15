@@ -9521,6 +9521,9 @@ present in 9-series and higher
         # UBX-NAV-DOP
         "NAV-DOP": {"command": send_poll, "opt": [0x01, 0x04],
                     "help": "poll UBX-NAV-DOP Dilution of Precision"},
+        # UBX-NAV-EELL
+        "NAV-EELL": {"command": send_poll, "opt": [0x01, 0x3d],
+                    "help": "poll UBX-NAV-EELL Position error ellipse"},
         # UBX-NAV-GEOFENCE
         "NAV-GEOFENCE": {"command": send_poll, "opt": [0x01, 0x39],
                          "help": "poll UBX-NAV-GEOFENCE Geofence status"},
