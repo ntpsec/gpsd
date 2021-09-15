@@ -2482,6 +2482,43 @@ ubx_msg_nav_dop(struct gps_device_t *session, unsigned char *buf,
 }
 
 /**
+ * Position error ellipse parameters
+ * protVer 19.1 and up
+ * Not in u-blox 5, 6 or 7
+ * Present in some u-blox 8, 9 and 10 (ADR, HPS)
+ */
+static gps_mask_t
+ubx_msg_nav_eell(struct gps_device_t *session, unsigned char *buf,
+                size_t data_len)
+{
+    unsigned version;
+    unsigned errEllipseOrient;
+    unsigned long errEllipseMajor, errEllipseMinor;
+
+    if (16 > data_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "UBX-NAV-EELL message, runt payload len %zd", data_len);
+        return 0;
+    }
+
+    if (18 > session->driver.ubx.protver) {
+        /* this GPS is at least protver 18 */
+        session->driver.ubx.protver = 18;
+    }
+    session->driver.ubx.iTOW = getleu32(buf, 0);
+    version = getub(buf, 4);
+    errEllipseOrient = getleu16(buf, 6);
+    errEllipseMajor = getleu32(buf, 8);
+    errEllipseMinor = getleu32(buf, 12);
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "UBX-NAV-EELL: iTOW %lld version %u errEllipseOrient %u "
+             "errEllipseMajor %lu errEllipseMinor %lu\n",
+             (long long)session->driver.ubx.iTOW, version, errEllipseOrient,
+             errEllipseMajor, errEllipseMinor);
+    return 0;
+}
+
+/**
  * End of Epoch
  * Not in u-blox 5, 6 or 7
  * Present in u-blox 8 and 9
@@ -3662,6 +3699,9 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
     case UBX_NAV_DOP:
         // DOP seems to be the last NAV sent in a cycle, unless NAV-EOE
         mask = ubx_msg_nav_dop(session, &buf[UBX_PREFIX_LEN], data_len);
+        break;
+    case UBX_NAV_EELL:
+        mask = ubx_msg_nav_eell(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_EKFSTATUS:
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-EKFSTATUS\n");
