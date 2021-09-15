@@ -773,6 +773,7 @@ ubx_msg_hnr_att(struct gps_device_t *session, unsigned char *buf,
 
     session->gpsdata.attitude.roll = 1e-5 * getles32(buf, 8);
     session->gpsdata.attitude.pitch = 1e-5 * getles32(buf, 12);
+    // seems to be true heading
     session->gpsdata.attitude.heading = 1e-5 * getles32(buf, 16);
     mask |= ATTITUDE_SET;
 
@@ -1264,6 +1265,7 @@ ubx_msg_log_batch(struct gps_device_t *session, unsigned char *buf UNUSED,
         session->gpsdata.log.lon = 1.0e-7 * getles32(buf, 28);
         session->gpsdata.log.lat = 1.0e-7 * getles32(buf, 32);
         session->gpsdata.log.gSpeed = 1.0e-3 * getles32(buf, 64);
+        // seems to be true heading
         session->gpsdata.log.heading = 1.0e-5 * getles32(buf, 68);
         if (diffSoln) {
             session->gpsdata.log.status = STATUS_DGPS;
@@ -1453,6 +1455,7 @@ ubx_msg_log_retrievepos(struct gps_device_t *session, unsigned char *buf UNUSED,
     // hAcc CEP() unspecified...
     session->gpsdata.log.hAcc = getleu32(buf, 16) * 1.0e-3;
     session->gpsdata.log.gSpeed = getleu32(buf, 20) * 1.0e-3;
+    // seems to be true heading
     session->gpsdata.log.heading = getleu32(buf, 24) * 1.0e-5;
     fixType = getub(buf, 29);
     session->gpsdata.log.numSV = getub(buf, 38);

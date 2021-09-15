@@ -3016,6 +3016,7 @@ static gps_mask_t processTNTHTM(int c UNUSED, char *field[],
      */
     gps_mask_t mask = ONLINE_SET;
 
+    // True heading
     session->gpsdata.attitude.heading = safe_atof(field[1]);
     session->gpsdata.attitude.mag_st = *field[2];
     session->gpsdata.attitude.pitch = safe_atof(field[3]);
@@ -3116,6 +3117,7 @@ static gps_mask_t processOHPR(int c UNUSED, char *field[],
      */
     gps_mask_t mask = ONLINE_SET;
 
+    // True heading?
     session->gpsdata.attitude.heading = safe_atof(field[1]);
     session->gpsdata.attitude.pitch = safe_atof(field[2]);
     session->gpsdata.attitude.roll = safe_atof(field[3]);
@@ -3271,6 +3273,7 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
             register_fractional_time(field[0], field[1], session);
             /* mask |= TIME_SET; confuses cycle order */
         }
+        // Assume true heading
         session->gpsdata.attitude.heading = safe_atof(field[2]);
         session->gpsdata.attitude.roll = safe_atof(field[4]);
         session->gpsdata.attitude.pitch = safe_atof(field[5]);
