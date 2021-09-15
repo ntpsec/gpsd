@@ -2874,8 +2874,9 @@ static gps_mask_t processHDT(int c UNUSED, char *field[],
         /* bad data */
         return mask;
     }
-    /* good data */
+    // good data
     gps_clear_att(&session->gpsdata.attitude);
+    // True heading
     session->gpsdata.attitude.heading = heading;
 
     mask |= (ATTITUDE_SET);
@@ -3725,7 +3726,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PJLTV", 4,  false, NULL},           // Time and 3D velocity
         {"PMGNST", 8, false, processPMGNST},  // Magellan Status
         {"PMTK", 3,  false, processMTK3301},
-        /* for some reason the parser no longer triggering on leading chars */
+        // for some reason the parser no longer triggering on leading chars
         {"PMTK001", 3,  false, processMTK3301},
         {"PMTK424", 3,  false, processMTK3301},
         {"PMTK705", 3,  false, processMTK3301},
@@ -3737,6 +3738,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         // $PSTM ST Micro STA8088xx/STA8089xx/STA8090xx
         {"PSTM", 0, false, NULL},
         {"PTFTTXT", 0, false, NULL},            // unknown uptime
+        {"PTKM", 0, false, NULL},               // Robertson RGC12 Gyro
         {"PTNTHTM", 9, false, processTNTHTM},
         {"PTNTA", 8, false, processTNTA},
         {"PUBX", 0, false, NULL},       // ignore u-blox and Antaris
