@@ -412,41 +412,59 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         break;
 #ifdef NMEA0183_ENABLE
     case NMEA_DOLLAR:
-        if (c == 'G')
-            lexer->state = NMEA_PUB_LEAD;
-        else if (c == 'P')      /* vendor sentence */
-            lexer->state = NMEA_VENDOR_LEAD;
-        else if (c == 'I')      /* Seatalk */
-            lexer->state = SEATALK_LEAD_1;
-        else if (c == 'W')      /* Weather instrument */
-            lexer->state = WEATHER_LEAD_1;
-        else if (c == 'H')      /* Heading/compass */
-            lexer->state = HEADCOMP_LEAD_1;
-        else if (c == 'T')      /* Turn indicator */
-            lexer->state = TURN_LEAD_1;
-        else if (c == 'A')      /* SiRF Ack */
+        switch (c) {
+        case 'A':           // SiRF Ack
             lexer->state = SIRF_ACK_LEAD_1;
-        else if (c == 'E')      /* ECDIS */
-            // codacy thinks this is impossible
-            lexer->state = ECDIS_LEAD_1;
-        else if (c == 'S')
-            lexer->state = SOUNDER_LEAD_1;
-        else if (c == 'Y')
-            lexer->state = TRANSDUCER_LEAD_1;
-        else if (c == 'B')
+            break;
+        case 'B':           // $BD
             lexer->state = BEIDOU_LEAD_1;
-        else if (c == 'Q') {
-            lexer->state = QZSS_LEAD_1;
+            break;
 #ifdef OCEANSERVER_ENABLE
-        } else if (c == 'C') {
+        case 'C':
             // is this ever used?
             lexer->state = NMEA_LEADER_END;
-        } else if (c == 'O') {
+            break;
+#endif /* OCEANSERVER_ENABLE */
+        case 'E':           // ECDIS
+            // codacy thinks this is impossible
+            lexer->state = ECDIS_LEAD_1;
+            break;
+        case 'G':           // $GP, $GN, etc.
+            lexer->state = NMEA_PUB_LEAD;
+            break;
+        case 'H':           // Heading/compass. gyro
+            lexer->state = HEADCOMP_LEAD_1;
+            break;
+        case 'I':           // Seatalk
+            lexer->state = SEATALK_LEAD_1;
+            break;
+#ifdef OCEANSERVER_ENABLE
+        case 'O':
             // for $OHPR
             lexer->state = NMEA_LEADER_END;
+            break;
 #endif /* OCEANSERVER_ENABLE */
-        } else {
+        case 'P':           // vendor sentence
+            lexer->state = NMEA_VENDOR_LEAD;
+            break;
+        case 'Q':          // $QZ
+            lexer->state = QZSS_LEAD_1;
+            break;
+        case 'S':
+            lexer->state = SOUNDER_LEAD_1;
+            break;
+        case 'T':           // Turn indicator
+            lexer->state = TURN_LEAD_1;
+            break;
+        case 'W':           // Weather instrument
+            lexer->state = WEATHER_LEAD_1;
+            break;
+        case 'Y':
+            lexer->state = TRANSDUCER_LEAD_1;
+            break;
+        default:
             (void) character_pushback(lexer, GROUND_STATE);
+            break;
         }
         break;
     case NMEA_PUB_LEAD:
@@ -612,97 +630,109 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             (void) character_pushback(lexer, GROUND_STATE);
         break;
     case NMEA_CR:
-        if (c == '\n')
+        if ('\n' == c) {
             lexer->state = NMEA_RECOGNIZED;
-        /*
-         * There's a GPS called a Jackson Labs Firefly-1a that emits \r\r\n
-         * at the end of each sentence.  Don't be confused by this.
-         */
-        else if (c == '\r')
+        } else if ('\r' == c) {
+            /*
+             * There's a GPS called a Jackson Labs Firefly-1a that emits \r\r\n
+             * at the end of each sentence.  Don't be confused by this.
+             */
             lexer->state = NMEA_CR;
-        else
+        } else {
             (void) character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case NMEA_RECOGNIZED:
-        if (c == '#')
+        if ('#' == c) {
             lexer->state = COMMENT_BODY;
-        else if (c == '$')
+        } else if ('$' == c) {
             // codacy thinks this state is impossible
             lexer->state = NMEA_DOLLAR;
-        else if (c == '!')
+        } else if ('!' == c) {
             lexer->state = NMEA_BANG;
 #ifdef UBLOX_ENABLE
-        else if (c == 0xb5)  // LEA-5H can/ will output NMEA/UBX back to back
+        } else if (0xb5 == c) {
+            // LEA-5H can/will output NMEA/UBX back to back
             // codacy says this state impossible?
             lexer->state = UBX_LEADER_1;
-#endif
+#endif  // UBLOX_ENABLE
 #ifdef PASSTHROUGH_ENABLE
-        else if (c == '{')
+        } else if ('{' == c) {
             // codacy says this state impossible?
             return character_pushback(lexer, JSON_LEADER);
-#endif /* PASSTHROUGH_ENABLE */
-        else
+#endif  // PASSTHROUGH_ENABLE
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case SEATALK_LEAD_1:
-        if (c == 'I' || c == 'N')       /* II or IN are accepted */
+        if ('I' == c ||
+            'N' == c) {         // $II or $IN are accepted
             lexer->state = NMEA_LEADER_END;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case WEATHER_LEAD_1:
-        if (c == 'I')           /* Weather instrument leader accepted */
+        if ('I' == c) {         // $WI, Weather instrument leader accepted
             lexer->state = NMEA_LEADER_END;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case HEADCOMP_LEAD_1:
-        if (c == 'C')           /* Heading/compass leader accepted */
+        if ('C' == c ||         // $HC, Heading/compass leader accepted
+            'E' == c) {         // $HE, Gyro, north seeking
             lexer->state = NMEA_LEADER_END;
-        else if (c == 'E')      /* Gyro, north seeking */
-            lexer->state = NMEA_LEADER_END;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case TURN_LEAD_1:
-        if (c == 'I')           /* Turn indicator leader accepted */
+        if ('I' == c) {           // $TI, Turn indicator leader accepted
             lexer->state = NMEA_LEADER_END;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case ECDIS_LEAD_1:
-        if (c == 'C')           /* ECDIS leader accepted */
+        if ('C' == c) {           // $EC, ECDIS leader accepted
             lexer->state = NMEA_LEADER_END;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case SOUNDER_LEAD_1:
-        if (c == 'D')           /* Depth-sounder leader accepted */
+        if ('D' == c) {                   // $SD, Depth-sounder leader accepted
             lexer->state = NMEA_LEADER_END;
 #ifdef SKYTRAQ_ENABLE
-        else if (c == 'T')              /* $ST leader accepted, to $STI */
+        } else if ('T' == c) {              // $ST leader accepted, to $STI
             lexer->state = NMEA_LEADER_END;
 #endif /* SKYTRAQ_ENABLE */
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case TRANSDUCER_LEAD_1:
-        if (c == 'X')           /* Transducer leader accepted */
+        if ('X' == c) {           // $YX, Transducer leader accepted
             lexer->state = NMEA_LEADER_END;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case BEIDOU_LEAD_1:
-        if (c == 'D')           /* Beidou leader accepted */
+        if ('D' == c) {           // $BD, Beidou leader accepted
             lexer->state = NMEA_LEADER_END;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case QZSS_LEAD_1:
-        if (c == 'Z')           /* QZSS leader accepted */
+        if ('Z' == c) {           // $QZ, QZSS leader accepted
             lexer->state = NMEA_LEADER_END;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
 #ifdef TRIPMATE_ENABLE
     case ASTRAL_1:
@@ -859,18 +889,20 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         break;
 #endif /* EARTHMATE_ENABLE */
     case SIRF_ACK_LEAD_1:
-        if (c == 'c')
+        if ('c' == c) {                // $Ac
             lexer->state = SIRF_ACK_LEAD_2;
-        else if (c == 'I')
+        } else if ('I' == c) {         // $AI, Alarm Indicator, AIS?
             lexer->state = AIS_LEAD_2;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case SIRF_ACK_LEAD_2:
-        if (c == 'k')
+        if ('k' == c) {                // $Ack
             lexer->state = NMEA_LEADER_END;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
 #endif /* NMEA0183_ENABLE */
 #if defined(SIRF_ENABLE) || defined(SKYTRAQ_ENABLE)
@@ -2321,7 +2353,7 @@ void packet_parse(struct gps_lexer_t *lexer)
                 ck_b == lexer->inbuffer[len - 1])
                 packet_accept(lexer, UBX_PACKET);
             else {
-                GPSD_LOG(LOG_IO, &lexer->errout, 
+                GPSD_LOG(LOG_IO, &lexer->errout,
                          "UBX checksum 0x%02hhx%02hhx over length %d,"
                          " expecting 0x%02hhx%02hhx (type 0x%02hhx%02hhx)\n",
                          ck_a,
