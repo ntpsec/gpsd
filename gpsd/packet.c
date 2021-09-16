@@ -1715,7 +1715,7 @@ static void packet_stash(struct gps_lexer_t *lexer)
     }
 }
 
-/* return stash to start of input buffer */
+// return stash to start of input buffer
 static void packet_unstash(struct gps_lexer_t *lexer)
 {
     size_t available = sizeof(lexer->inbuffer) - lexer->inbuflen;
@@ -1726,7 +1726,7 @@ static void packet_unstash(struct gps_lexer_t *lexer)
         memcpy(lexer->inbuffer, lexer->stashbuffer, stashlen);
         lexer->inbuflen += stashlen;
         lexer->stashbuflen = 0;
-        if (lexer->errout.debug >= LOG_RAW1) {
+        if (LOG_RAW1 <= lexer->errout.debug) {
             char scratchbuf[MAX_PACKET_LENGTH * 4 + 1];
             GPSD_LOG(LOG_RAW1, &lexer->errout,
                      "Packet unstash of %zu, reconstructed is %zu = %s\n",
@@ -1740,48 +1740,56 @@ static void packet_unstash(struct gps_lexer_t *lexer)
         lexer->stashbuflen = 0;
     }
 }
-#endif /* STASH_ENABLE */
+#endif  // STASH_ENABLE
 
-/* entry points begin here */
+// entry points begin here
 
+// reset lexer structure
 void lexer_init(struct gps_lexer_t *lexer)
 {
-    lexer->char_counter = 0;
-    lexer->retry_counter = 0;
-#ifdef PASSTHROUGH_ENABLE
-    lexer->json_depth = 0;
-#endif /* PASSTHROUGH_ENABLE */
-    lexer->start_time.tv_sec = 0;
-    lexer->start_time.tv_nsec = 0;
+    memset(lexer, 0, sizeof(struct gps_lexer_t));
+    /* lel memset() do all the zeros
+     *
+     *  lexer->char_counter = 0;
+     *  lexer->retry_counter = 0;
+     * #ifdef PASSTHROUGH_ENABLE
+     *  lexer->json_depth = 0;
+     * #endif // PASSTHROUGH_ENABLE
+     *  lexer->start_time.tv_sec = 0;
+     *  lexer->start_time.tv_nsec = 0;
+     */
+    // set start_time to help out autobaud.
+    (void)clock_gettime(CLOCK_REALTIME, &lexer->start_time);
     packet_reset(lexer);
     errout_reset(&lexer->errout);
 }
 
-/* grab a packet from the input buffer */
+// grab a packet from the input buffer
 void packet_parse(struct gps_lexer_t *lexer)
 {
     lexer->outbuflen = 0;
-    while (packet_buffered_input(lexer) > 0) {
+    while (0 < packet_buffered_input(lexer)) {
         unsigned char c = *lexer->inbufptr++;
         unsigned int oldstate = lexer->state;
-        if (!nextstate(lexer, c))
+        if (!nextstate(lexer, c)) {
             continue;
+        }
         GPSD_LOG(LOG_RAW2, &lexer->errout,
                  "%08ld: character '%c' [%02x], %s -> %s\n",
                  lexer->char_counter, (isprint(c) ? c : '.'), c,
                  state_table[oldstate], state_table[lexer->state]);
         lexer->char_counter++;
 
-        if (lexer->state == GROUND_STATE) {
+        if (GROUND_STATE == lexer->state) {
             character_discard(lexer);
-        } else if (lexer->state == COMMENT_RECOGNIZED) {
+        } else if (COMMENT_RECOGNIZED == lexer->state) {
             packet_accept(lexer, COMMENT_PACKET);
             packet_discard(lexer);
             lexer->state = GROUND_STATE;
             break;
         }
 #ifdef NMEA0183_ENABLE
-        else if (lexer->state == NMEA_RECOGNIZED) {
+        else if (NMEA_RECOGNIZED == lexer->state) {
             /*
              * $PASHR packets have no checksum. Avoid the possibility
              * that random garbage might make it look like they do.
@@ -1795,14 +1803,18 @@ void packet_parse(struct gps_lexer_t *lexer)
                  * at least one GPS (the Firefly 1a) emits \r\r\n
                  */
                 for (end = (char *)lexer->inbufptr - 1;
-                     isspace((unsigned char) *end); end--)
+                     isspace((unsigned char) *end); end--) {
                     continue;
-                while (strchr("0123456789ABCDEF", *end))
+                }
+                while (strchr("0123456789ABCDEF", *end)) {
                     --end;
-                if (*end == '*') {
+                }
+                if ('*' == *end) {
                     unsigned int n, crc = 0;
-                    for (n = 1; (char *)lexer->inbuffer + n < end; n++)
+
+                    for (n = 1; (char *)lexer->inbuffer + n < end; n++) {
                         crc ^= lexer->inbuffer[n];
+                    }
                     (void)snprintf(csum, sizeof(csum), "%02X", crc);
                     checksum_ok = (csum[0] == toupper((unsigned char) end[1]) &&
                                    csum[1] == toupper((unsigned char) end[2]));
@@ -1814,10 +1826,10 @@ void packet_parse(struct gps_lexer_t *lexer)
                     packet_accept(lexer, BAD_PACKET);
                     lexer->state = GROUND_STATE;
                     packet_discard(lexer);
-                    break;    /* exit case */
+                    break;    // exit case
                 }
             }
-            /* checksum passed or not present */
+            // checksum passed or not present
 #ifdef AIVDM_ENABLE
             /* !ABVDx  - NMEA 4.0 Base AIS station
              * !ADVDx  - MMEA 4.0 Dependent AIS Base Station
@@ -1862,35 +1874,38 @@ void packet_parse(struct gps_lexer_t *lexer)
                  str_starts_with((char *)lexer->inbuffer, "!SAVDO,"))) {
                 packet_accept(lexer, AIVDM_PACKET);
             } else
-#endif /* AIVDM_ENABLE */
+#endif  // AIVDM_ENABLE
                 packet_accept(lexer, NMEA_PACKET);
             packet_discard(lexer);
 #ifdef STASH_ENABLE
-            if (lexer->stashbuflen)
+            if (lexer->stashbuflen) {
                 packet_unstash(lexer);
-#endif /* STASH_ENABLE */
+            }
+#endif  // STASH_ENABLE
             break;
         }
 #endif /* NMEA0183_ENABLE */
 #ifdef SIRF_ENABLE
-        else if (lexer->state == SIRF_RECOGNIZED) {
+        else if (SIRF_RECOGNIZED == lexer->state) {
             unsigned char *trailer = lexer->inbufptr - 4;
             unsigned int checksum =
                 (unsigned)((trailer[0] << 8) | trailer[1]);
             unsigned int n, crc = 0;
-            for (n = 4; n < (unsigned)(trailer - lexer->inbuffer); n++)
+
+            for (n = 4; n < (unsigned)(trailer - lexer->inbuffer); n++) {
                 crc += (int)lexer->inbuffer[n];
+            }
             crc &= 0x7fff;
-            if (checksum == crc)
+            if (checksum == crc) {
                 packet_accept(lexer, SIRF_PACKET);
-            else {
+            } else {
                 packet_accept(lexer, BAD_PACKET);
                 lexer->state = GROUND_STATE;
             }
             packet_discard(lexer);
             break;
         }
-#endif /* SIRF_ENABLE */
+#endif  // SIRF_ENABLE
 #ifdef SKYTRAQ_ENABLE
         else if (lexer->state == SKY_RECOGNIZED) {
             packet_accept(lexer, SKY_PACKET);
@@ -2613,8 +2628,8 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
         return recvd;
 }
 
+// return the packet machine to the ground state
 void packet_reset(struct gps_lexer_t *lexer)
-/* return the packet machine to the ground state */
 {
     lexer->type = BAD_PACKET;
     lexer->state = GROUND_STATE;
@@ -2622,10 +2637,10 @@ void packet_reset(struct gps_lexer_t *lexer)
     lexer->inbufptr = lexer->inbuffer;
 #ifdef BINARY_ENABLE
     isgps_init(lexer);
-#endif /* BINARY_ENABLE */
+#endif  // BINARY_ENABLE
 #ifdef STASH_ENABLE
     lexer->stashbuflen = 0;
-#endif /* STASH_ENABLE */
+#endif  // STASH_ENABLE
 }
 
 
