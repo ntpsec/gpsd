@@ -2609,7 +2609,8 @@ int main(int argc, char *argv[])
                 // then try the next hunt speed.
                 (void)clock_gettime(CLOCK_REALTIME, &now);
                 TS_SUB(&delta, &now, &device->lexer.start_time);
-                if (5 <= delta.tv_sec) {
+                // llabs() in case the system time jumped
+                if (5 <= llabs(delta.tv_sec)) {
                     GPSD_LOG(LOG_PROG, &context.errout,
                         "gpsd_multipoll(%d) DEVICE_UNCHANGED for %lld\n",
                         device->gpsdata.gps_fd, (long long)delta.tv_sec);
