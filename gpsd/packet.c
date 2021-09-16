@@ -659,6 +659,8 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
     case HEADCOMP_LEAD_1:
         if (c == 'C')           /* Heading/compass leader accepted */
             lexer->state = NMEA_LEADER_END;
+        else if (c == 'E')      /* Gyro, north seeking */
+            lexer->state = NMEA_LEADER_END;
         else
             return character_pushback(lexer, GROUND_STATE);
         break;
