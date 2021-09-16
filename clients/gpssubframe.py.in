@@ -451,7 +451,7 @@ ephem_fields = {
     'beta3': ('(s/sc3) Ionospheric delay model'),
     'Cic': ('(rad) Cosine Harmonic Correction Amplitude Angle of Inclination'),
     'Cis': ('(rad) Sine Harmonic Correction Amplitude Angle of Inclination'),
-    'Crc': ( '(m) Cosine Harmonic Correction Amplitude Orbit Radius'),
+    'Crc': ('(m) Cosine Harmonic Correction Amplitude Orbit Radius'),
     'Crs': ('(m) Sine Correction Amplitude Term to Orbit Radius'),
     'Cuc': ('(rad) Sine Harmonic Correction Term to Arg of Lat'),
     'Cus': ('(rad) Cosine Correction Amplitude Term to Orbit Radius'),
@@ -491,22 +491,22 @@ ephem_fields = {
 
 almanac_fields = {
     # 'ID': same as SV
-    'af0': ( '(s) SV Clock Bias Correction Coefficient'),
-    'af1': ( '(s/s) SV Clock Drift Correction Coefficient'),
-    'deltai': ( '(sc) Inclination offset from 0.3 semicircles (= 54 deg)'),
-    'E1BHS': ( 'E1B health'),
-    'E5bHS': ( 'E5b health'),
-    'e': ( 'Eccentricity '),
-    'Health': ( 'SV health'),
-    'i0': ( '(sc) Inclination, computed from deltai'),
-    'IOD': ( 'IOD health'),
-    'M0': ( '(sc) Mean Anomaly at Reference Time'),
+    'af0': ('(s) SV Clock Bias Correction Coefficient'),
+    'af1': ('(s/s) SV Clock Drift Correction Coefficient'),
+    'deltai': ('(sc) Inclination offset from 0.3 semicircles (= 54 deg)'),
+    'E1BHS': ('E1B health'),
+    'E5bHS': ('E5b health'),
+    'e': ('Eccentricity '),
+    'Health': ('SV health'),
+    'i0': ('(sc) Inclination, computed from deltai'),
+    'IOD': ('IOD health'),
+    'M0': ('(sc) Mean Anomaly at Reference Time'),
     'Omega0': ('(sc) Longitude of Ascending Node of Orbit Plane Week t0'),
-    'Omegad': ( '(sc/s) Rate of Right Ascension'),
-    'omega': ( '(sc) Argument of Perigee'),
-    'sqrtA': ( '(m-2)Square Root of the Semi-Major Axis'),
-    'toa': ( '(s) Almanac Reference Time'),
-    'WN': ( '(wk) Almanac Reference Week'),
+    'Omegad': ('(sc/s) Rate of Right Ascension'),
+    'omega': ('(sc) Argument of Perigee'),
+    'sqrtA': ('(m-2)Square Root of the Semi-Major Axis'),
+    'toa': ('(s) Almanac Reference Time'),
+    'WN': ('(wk) Almanac Reference Week'),
     }
 
 # see IS-GPS-200 Section 20.3.3.5.2.4 Coordinated Universal Time (UTC).
@@ -985,9 +985,9 @@ try:
                     if idx not in all_data['almanac']:
                         if options.progress:
                             if 'IODA' in msg['ALMANAC']:
-                               s = " IODA %d" % msg['ALMANAC']['IODA']
+                                s = " IODA %d" % msg['ALMANAC']['IODA']
                             if 'toa' in msg['ALMANAC']:
-                               s += " toa %d" % msg['ALMANAC']['toa']
+                                s += " toa %d" % msg['ALMANAC']['toa']
                             print("New Almanac %s frame %d%s" %
                                   (idx, msg['frame'], s))
                         all_data['almanac'][idx] = msg['ALMANAC']
@@ -998,9 +998,9 @@ try:
                         # FIXME: handle rollover
                         if options.progress:
                             if 'IODA' in msg['ALMANAC']:
-                               s = " IODA %d" % msg['ALMANAC']['IODA']
+                                s = " IODA %d" % msg['ALMANAC']['IODA']
                             if 'toa' in msg['ALMANAC']:
-                               s += " toa %d" % msg['ALMANAC']['toa']
+                                s += " toa %d" % msg['ALMANAC']['toa']
                             print("Merged Almanac %s frame %d%s" %
                                   (idx, msg['frame'], s))
                         all_data['almanac'][idx].update(msg['ALMANAC'])
@@ -1018,7 +1018,7 @@ try:
                         # FIXME: handle rollover
                         if options.progress:
                             if 'toa' in msg['ALMANAC']:
-                               s = " toa %d" % msg['ALMANAC']['toa']
+                                s = " toa %d" % msg['ALMANAC']['toa']
                             print("New Almanac1 %s: IODA %d%s" %
                                   (idx, msg['ALMANAC1']['IODA'], s))
                         all_data['almanac'][idx] = msg['ALMANAC1']
@@ -1028,7 +1028,7 @@ try:
                         all_data['almanac'][idx].update(msg['ALMANAC1'])
                         if options.progress:
                             if 'toa' in msg['ALMANAC']:
-                               s = " toa %d" % msg['ALMANAC']['toa']
+                                s = " toa %d" % msg['ALMANAC']['toa']
                             print("Merged Almanac1 2/2 %s:  IODA %d%s" %
                                   (idx, msg['ALMANAC1']['IODA'], s))
                 if 'EPHEMERIS' in msg:
@@ -1346,7 +1346,7 @@ if gps_week and options.satpos:
                 if i not in ephm:
                     needed = False
                     print("   Missing %s" % i)
-                    break;
+                    break
 
             if needed:
                 SatPosSum(ephm, gps_tow)
