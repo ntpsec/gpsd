@@ -534,11 +534,14 @@ int gpsd_serial_isatty(const struct gps_device_t *session)
         // no need for expensive iotcl()
         return 0;
     }
+    // POSIX says isatty() does not have to set errno on error...
+    errno = 0;
     if (0 < isatty(session->gpsdata.gps_fd)) {
         // is a tty
         return 1;
     }
-    if (ENOTTY == errno) {
+    if (ENOTTY == errno ||
+        0 == errno) {
         // is not a tty
         return 0;
     }
@@ -562,9 +565,9 @@ int gpsd_serial_isatty(const struct gps_device_t *session)
     }
 #endif  // defined(EOPNOTSUPP)
 
-    // else failure
-    GPSD_LOG(LOG_ERROR, &session->context->errout,
-             "SER: gpsd_serial_isatty(%d) failed: %s(%d)\n",
+    // else warning, and assume a tty.
+    GPSD_LOG(LOG_WARNING, &session->context->errout,
+             "SER: gpsd_serial_isatty(%d) < 1: %s(%d)\n",
              session->gpsdata.gps_fd,
              strerror(errno), errno);
     return 0;
