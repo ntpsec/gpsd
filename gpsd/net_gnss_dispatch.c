@@ -33,7 +33,7 @@ int netgnss_uri_open(struct gps_device_t *dev, char *netgnss_service)
 {
 #ifdef NTRIP_ENABLE
     if (str_starts_with(netgnss_service, NETGNSS_NTRIP)) {
-        dev->ntrip.conn_state = ntrip_conn_init;
+        dev->ntrip.conn_state = NTRIP_CONN_INIT;
         return ntrip_open(dev, netgnss_service + strlen(NETGNSS_NTRIP));
     }
 #endif

@@ -127,11 +127,8 @@ size_t strlcpy(char *dst, const char *src, size_t size);
 #define O_NOCTTY   0400
 #endif
 
-/* Provide missing sincos() if needed */
-
-#ifndef HAVE_SINCOS
-void sincos(double x, double *sinp, double *cosp);
-#endif
+// getting scons to test for sincos() and pass -Werror not possible
+void gpsd_sincos(double x, double *sinp, double *cosp);
 
 # ifdef __cplusplus
 }

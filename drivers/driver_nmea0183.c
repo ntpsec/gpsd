@@ -2874,8 +2874,9 @@ static gps_mask_t processHDT(int c UNUSED, char *field[],
         /* bad data */
         return mask;
     }
-    /* good data */
+    // good data
     gps_clear_att(&session->gpsdata.attitude);
+    // True heading
     session->gpsdata.attitude.heading = heading;
 
     mask |= (ATTITUDE_SET);
@@ -3015,6 +3016,7 @@ static gps_mask_t processTNTHTM(int c UNUSED, char *field[],
      */
     gps_mask_t mask = ONLINE_SET;
 
+    // True heading
     session->gpsdata.attitude.heading = safe_atof(field[1]);
     session->gpsdata.attitude.mag_st = *field[2];
     session->gpsdata.attitude.pitch = safe_atof(field[3]);
@@ -3115,6 +3117,7 @@ static gps_mask_t processOHPR(int c UNUSED, char *field[],
      */
     gps_mask_t mask = ONLINE_SET;
 
+    // True heading?
     session->gpsdata.attitude.heading = safe_atof(field[1]);
     session->gpsdata.attitude.pitch = safe_atof(field[2]);
     session->gpsdata.attitude.roll = safe_atof(field[3]);
@@ -3270,6 +3273,7 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
             register_fractional_time(field[0], field[1], session);
             /* mask |= TIME_SET; confuses cycle order */
         }
+        // Assume true heading
         session->gpsdata.attitude.heading = safe_atof(field[2]);
         session->gpsdata.attitude.roll = safe_atof(field[4]);
         session->gpsdata.attitude.pitch = safe_atof(field[5]);
@@ -3725,7 +3729,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PJLTV", 4,  false, NULL},           // Time and 3D velocity
         {"PMGNST", 8, false, processPMGNST},  // Magellan Status
         {"PMTK", 3,  false, processMTK3301},
-        /* for some reason the parser no longer triggering on leading chars */
+        // for some reason the parser no longer triggering on leading chars
         {"PMTK001", 3,  false, processMTK3301},
         {"PMTK424", 3,  false, processMTK3301},
         {"PMTK705", 3,  false, processMTK3301},
@@ -3737,6 +3741,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         // $PSTM ST Micro STA8088xx/STA8089xx/STA8090xx
         {"PSTM", 0, false, NULL},
         {"PTFTTXT", 0, false, NULL},            // unknown uptime
+        {"PTKM", 0, false, NULL},               // Robertson RGC12 Gyro
         {"PTNTHTM", 9, false, processTNTHTM},
         {"PTNTA", 8, false, processTNTA},
         {"PUBX", 0, false, NULL},       // ignore u-blox and Antaris

@@ -17,8 +17,14 @@ release    - ship a release
 --clean    - clean all normal build targets
 -c         - clean all normal build targets
 
-Useful options:
---warn=all - to see scons warnings
+Useful configuration options:
+debug=yes     -- Compile and link with debugging options. Turns off
+                 optimizations,
+debug_opt=yes -- Compile and link with debugging options. Leaves on
+                 optimizations,
+
+Useful scons options:
+--warn=all -- to see scons warnings
 
 Setting the DESTDIR environment variable will prefix the install destinations
 without changing the --prefix prefix.

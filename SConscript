@@ -486,10 +486,10 @@ if 'dev' in gpsd_version:
     if st != 0:
         # If git describe failed
         # Try to use current commit hash
-        (st, gpsd_commit) = _getstatusoutput('git rev-parse HEAD | cut -b 1-9')
+        (st, gpsd_commit) = _getstatusoutput('git rev-parse HEAD')
         if st == 0 and gpsd_commit:
             # Format output similar to normal revision
-            gpsd_revision = '%s-g%s' % (gpsd_version, gpsd_commit)
+            gpsd_revision = '%s-g%s' % (gpsd_version, polystr(gpsd_commit[:9]))
         else:
             # Only if git describe and git rev-parse failed
             # Use timestamp from latest relevant file,
@@ -875,6 +875,7 @@ have_valgrind = False
 # per SCons 4.0.1 doc: Section 23.9. Not Configuring When Cleaning Targets
 if not cleaning and not helping:
     # OS X aliases gcc to clang
+    announce("cc is %s, version %s" % (env['CC'], env['CCVERSION']))
     # clang accepts -pthread, then warns it is unused.
     if not config.CheckCC():
         announce("ERROR: CC doesn't work")
@@ -1236,13 +1237,7 @@ if not cleaning and not helping:
         else:
             confdefs.append("/* #undef HAVE_%s */\n" % f.upper())
 
-    # Apple may supply sincos() as __sincos(), or not at all
-    if config.CheckFunc('sincos'):
-        confdefs.append('#define HAVE_SINCOS\n')
-    elif config.CheckFunc('__sincos'):
-        confdefs.append('#define sincos __sincos\n#define HAVE_SINCOS\n')
-    else:
-        confdefs.append('/* #undef HAVE_SINCOS */\n')
+    # used to check for sincos(), but making that work with -Werror did not work.
 
     if config.CheckHeader(["sys/types.h", "sys/time.h", "sys/timepps.h"]):
         confdefs.append("#define HAVE_SYS_TIMEPPS_H 1\n")

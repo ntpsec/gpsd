@@ -465,6 +465,7 @@ def isotime(s):
     # else:
     raise TypeError
 
+
 def posix2gps(posix, leapseconds):
     """Convert POSIX time in seconds,  using leapseconds, to gps time.
 

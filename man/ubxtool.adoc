@@ -281,6 +281,30 @@ Dump *gpsd* data from a remote server named x.example.com:
 ubxtool -w 5 x.example.com
 ----
 
+=== CFG-TP5
+
+Some of the "-p" and "--preset" commands can take multiple options.  One of
+these is "--preset CFG-TP5".
+
+Synopsis:
+----
+-p CFG-TP5,[tpIdx = 0],[antCableDelay = 2],[rfGroupDelay = 0],[freqPeriod = 1000000],[freqPeriodLock = 1000000],[pulseLenRatio = 0],[pulseLenRatioLock = 100000],[userConfigDelay = 0],[flags = 0x77]
+----
+
+Leave a positional parameter empty for it to take the default value.
+
+To set the pulse period to 0.25 s and its length to 0.1 s:
+
+----
+$ ubxtool -p CFG-TP5,,,,250000,250000,100000,100000
+----
+
+To set the pulse period to 0.1 s and length to 0.1 s in the presence of lock:
+
+----
+$ ubxtool -p CFG-TP5,,,,,100000,,50000
+----
+
 === Version 27+ examples
 
 The following examples require a GPS supporting protocol 27 or greater.

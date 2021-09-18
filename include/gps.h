@@ -2305,7 +2305,7 @@ struct attitude_t {
     double gyro_x;      // deg/s^2
     double gyro_y;      // deg/s^2
     double gyro_z;      // deg/s^2
-    double heading;
+    double heading;     // true heading
     double mag_len;     // unitvector sqrt(x^2 + y^2 +z^2)
     double mag_x;
     double mag_y;

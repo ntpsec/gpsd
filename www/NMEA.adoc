@@ -298,22 +298,30 @@ the following are well known:
 
 .Common talker IDs
 |================================================================
-|BD     | BeiDou (China)
-|CD     | Digital Selective Calling (DSC)
-|EC     | Electronic Chart Display & Information System (ECDIS)
-|GA     | Galileo Positioning System
-|GB     | BeiDou (China)
-|GI     | NavIC, IRNSS (India)
-|GL     | GLONASS, according to IEIC 61162-1
-|GN     | Combination of multiple satellite systems (NMEA 1083)
-|GP     | Global Positioning System receiver
-|GQ     | QZSS regional GPS augmentation system (Japan)
-|II     | Integrated Instrumentation
-|IN     | Integrated Navigation
-|LC     | Loran-C receiver (obsolete)
-|Pxxx   | Proprietary (Vendor specific)
-|PQ     | QZSS (Quectel Quirk)
-|QZ     | QZSS regional GPS augmentation system (Japan)
+|$AI     | Alarm Indicator, (AIS?)
+|$BD     | BeiDou (China)
+|$CD     | Digital Selective Calling (DSC)
+|$EC     | Electronic Chart Display & Information System (ECDIS)
+|$GA     | Galileo Positioning System
+|$GB     | BeiDou (China)
+|$GI     | NavIC, IRNSS (India)
+|$GL     | GLONASS, according to IEIC 61162-1
+|$GN     | Combination of multiple satellite systems (NMEA 1083)
+|$GP     | Global Positioning System receiver
+|$GQ     | QZSS regional GPS augmentation system (Japan)
+|$HC     | Heading/Compass
+|$HE     | Gyro, north seeking
+|$II     | Integrated Instrumentation
+|$IN     | Integrated Navigation
+|$LC     | Loran-C receiver (obsolete)
+|$Pxxx   | Proprietary (Vendor specific)
+|$PQ     | QZSS (Quectel Quirk)
+|$QZ     | QZSS regional GPS augmentation system (Japan)
+|$SD     | Depth Sounder
+|$ST     | Skytraq
+|$TI     | Turn Indicator
+|$YX     | Transducer
+|$WI     | Weather Instrument
 |================================================================
 
 EC -- ECDIS is a specialized geographical information system intended

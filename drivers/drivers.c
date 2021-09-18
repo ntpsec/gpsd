@@ -1073,6 +1073,27 @@ static void mtk3301_event_hook(struct gps_device_t *session, event_t event)
     }
 }
 
+// mtk3301_speed_switcher()
+// Always returns True
+static bool mtk3301_speed_switcher(struct gps_device_t* session,
+                                   speed_t speed, char parity UNUSED,
+                                   int stopbits UNUSED)
+{
+    int i;
+    char buf[BUFSIZ] = {0};
+
+    (void)snprintf(buf, sizeof(buf), "$PQBAUD,W,%d", (int) speed);
+
+    // Calling PQBAUD fails to set the receiver's baud rate
+    // some of the time.  Sending it twice seems to work every time.
+    // So just for good measure, send it three times.
+    for (i = 0; i < 3; i++) {
+        (void)nmea_send(session, buf);
+    }
+
+    return true;
+}
+
 static bool mtk3301_rate_switcher(struct gps_device_t *session, double rate)
 {
     char buf[78];
@@ -1104,7 +1125,7 @@ const struct gps_type_t driver_mtk3301 = {
     .rtcm_writer    = gpsd_write,       /* write RTCM data straight */
     .init_query     = NULL,             /* non-perturbing initial query */
     .event_hook     = mtk3301_event_hook,       /* lifetime event handler */
-    .speed_switcher = NULL,             /* no speed switcher */
+    .speed_switcher = mtk3301_speed_switcher,   // sample speed switcher
     .mode_switcher  = NULL,             /* no mode switcher */
     .rate_switcher  = mtk3301_rate_switcher,    /* sample rate switcher */
     .min_cycle.tv_sec  = 0,

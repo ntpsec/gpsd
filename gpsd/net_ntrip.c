@@ -501,7 +501,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
     socket_t ret = -1;
 
     switch (device->ntrip.conn_state) {
-    case ntrip_conn_init:
+    case NTRIP_CONN_INIT:
         /* this has to be done here,
          * because it is needed for multi-stage connection */
         // strlcpy() ensures dup is NUL terminated.
@@ -532,7 +532,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
             GPSD_LOG(LOG_ERROR, &device->context->errout,
                      "can't extract Ntrip stream from %s\n",
                      caster);
-            device->ntrip.conn_state = ntrip_conn_err;
+            device->ntrip.conn_state = NTRIP_CONN_ERR;
             return -1;
         }
         if ((colon = strchr(caster, ':')) != NULL) {
@@ -573,16 +573,16 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         ret = ntrip_stream_req_probe(&device->ntrip.stream,
                                      &device->context->errout);
         if (ret == -1) {
-            device->ntrip.conn_state = ntrip_conn_err;
+            device->ntrip.conn_state = NTRIP_CONN_ERR;
             return -1;
         }
         device->gpsdata.gps_fd = ret;
-        device->ntrip.conn_state = ntrip_conn_sent_probe;
+        device->ntrip.conn_state = NTRIP_CONN_SENT_PROBE;
         return ret;
-    case ntrip_conn_sent_probe:
+    case NTRIP_CONN_SENT_PROBE:
         ret = ntrip_sourcetable_parse(device);
         if (ret == -1) {
-            device->ntrip.conn_state = ntrip_conn_err;
+            device->ntrip.conn_state = NTRIP_CONN_ERR;
             return -1;
         }
         if (ret == 0 && device->ntrip.stream.set == false) {
@@ -593,31 +593,32 @@ int ntrip_open(struct gps_device_t *device, char *orig)
                               device->ntrip.stream.credentials,
                               device->ntrip.stream.authStr,
                               sizeof(device->ntrip.stream.authStr)) != 0) {
-            device->ntrip.conn_state = ntrip_conn_err;
+            device->ntrip.conn_state = NTRIP_CONN_ERR;
             return -1;
         }
         ret = ntrip_stream_get_req(&device->ntrip.stream,
                                    &device->context->errout);
         if (ret == -1) {
-            device->ntrip.conn_state = ntrip_conn_err;
+            device->ntrip.conn_state = NTRIP_CONN_ERR;
             return -1;
         }
         device->gpsdata.gps_fd = ret;
-        device->ntrip.conn_state = ntrip_conn_sent_get;
+        device->ntrip.conn_state = NTRIP_CONN_SENT_GET;
         break;
-    case ntrip_conn_sent_get:
+    case NTRIP_CONN_SENT_GET:
         ret = ntrip_stream_get_parse(&device->ntrip.stream,
                                      device->gpsdata.gps_fd,
                                      &device->context->errout);
         if (ret == -1) {
-            device->ntrip.conn_state = ntrip_conn_err;
+            device->ntrip.conn_state = NTRIP_CONN_ERR;
             return -1;
         }
-        device->ntrip.conn_state = ntrip_conn_established;
+        device->ntrip.conn_state = NTRIP_CONN_ESTABLISHED;
         device->ntrip.works = true; // we know, this worked.
         break;
-    case ntrip_conn_established:
-    case ntrip_conn_err:
+    case NTRIP_CONN_ESTABLISHED:
+        FALLTHROUGH
+    case NTRIP_CONN_ERR:
         return -1;
     }
     return ret;

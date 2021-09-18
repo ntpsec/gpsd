@@ -455,7 +455,7 @@ static void refresh_cmdwin(void)
 {
     report_lock();
     (void)wmove(cmdwin, 0, 0);
-    (void)wprintw(cmdwin, type_name);
+    (void)wprintw(cmdwin, "%s", type_name);
     promptlen = strlen(type_name);
     if (fallback != NULL && strcmp(fallback->type_name, type_name) != 0) {
         (void)waddch(cmdwin, (chtype)' ');

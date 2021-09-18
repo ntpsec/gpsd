@@ -344,9 +344,9 @@ void gpsd_init(struct gps_device_t *session, struct gps_context_t *context,
 // temporarily release the GPS device
 void gpsd_deactivate(struct gps_device_t *session)
 {
-    if (!session->context->readonly
-        && session->device_type != NULL
-        && session->device_type->event_hook != NULL) {
+    if (!session->context->readonly &&
+        NULL != session->device_type  &&
+        NULL != session->device_type->event_hook) {
         session->device_type->event_hook(session, event_deactivate);
     }
     GPSD_LOG(LOG_INF, &session->context->errout,
@@ -357,11 +357,14 @@ void gpsd_deactivate(struct gps_device_t *session)
         (void)nmea2000_close(session);
     } else
 #endif  // of defined(NMEA2000_ENABLE)
+    {
         (void)gpsd_close(session);
-    if (session->mode == O_OPTIMIZE)
+    }
+    if (O_OPTIMIZE == session->mode) {
         gpsd_run_device_hook(&session->context->errout,
                              session->gpsdata.dev.path,
                              HOOK_DEACTIVATE);
+    }
     // tell any PPS-watcher thread to die
     session->pps_thread.report_hook = NULL;
     // mark it inactivated
@@ -415,7 +418,7 @@ void gpsd_clear(struct gps_device_t *session)
     session->badcount = 0;
 
     // clear the private data union
-    memset( (void *)&session->driver, '\0', sizeof(session->driver));
+    memset((void *)&session->driver, '\0', sizeof(session->driver));
     // set up the context structure for the PPS thread monitor
     memset((void *)&session->pps_thread, 0, sizeof(session->pps_thread));
     session->pps_thread.devicefd = session->gpsdata.gps_fd;
@@ -532,7 +535,7 @@ int gpsd_open(struct gps_device_t *session)
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "opening TCP feed at %s, port %s.\n", host,
                  port);
-        if ((dsock = netlib_connectsock(AF_UNSPEC, host, port, "tcp")) < 0) {
+        if (0 > (dsock = netlib_connectsock(AF_UNSPEC, host, port, "tcp"))) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "TCP device open error %s.\n",
                      netlib_errstr(dsock));
@@ -559,14 +562,15 @@ int gpsd_open(struct gps_device_t *session)
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "opening UDP feed at %s, port %s.\n", host,
                  port);
-        if ((dsock = netlib_connectsock(AF_UNSPEC, host, port, "udp")) < 0) {
+        if (0 > (dsock = netlib_connectsock(AF_UNSPEC, host, port, "udp"))) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "UDP device open error %s.\n",
                      netlib_errstr(dsock));
             return -1;
-        } else
+        } else {
             GPSD_LOG(LOG_SPIN, &session->context->errout,
                      "UDP device opened on fd %d\n", dsock);
+        }
         session->gpsdata.gps_fd = dsock;
         session->sourcetype = SOURCE_UDP;
         return session->gpsdata.gps_fd;
@@ -631,12 +635,14 @@ int gpsd_open(struct gps_device_t *session)
 // acquire a connection to the GPS device
 int gpsd_activate(struct gps_device_t *session, const int mode)
 {
-    if (O_OPTIMIZE == mode)
+    if (O_OPTIMIZE == mode) {
         gpsd_run_device_hook(&session->context->errout,
                              session->gpsdata.dev.path, HOOK_ACTIVATE);
+    }
     session->gpsdata.gps_fd = gpsd_open(session);
-    if (O_CONTINUE != mode)
+    if (O_CONTINUE != mode) {
         session->mode = mode;
+    }
 
     if (0 > session->gpsdata.gps_fd) {
         // return could be -1, PLACEHOLDING_FD, of UNALLOCATED_FD
@@ -654,13 +660,13 @@ int gpsd_activate(struct gps_device_t *session, const int mode)
         const struct gps_type_t **dp;
 
         for (dp = gpsd_drivers; *dp; dp++) {
-            if ((*dp)->probe_detect != NULL) {
+            if (NULL != (*dp)->probe_detect) {
                 GPSD_LOG(LOG_PROG, &session->context->errout,
                          "Probing \"%s\" driver...\n",
                          (*dp)->type_name);
                 // toss stale data
                 (void)tcflush(session->gpsdata.gps_fd, TCIOFLUSH);
-                if ((*dp)->probe_detect(session) != 0) {
+                if (0 != (*dp)->probe_detect(session)) {
                     GPSD_LOG(LOG_PROG, &session->context->errout,
                              "Probe found \"%s\" driver...\n",
                              (*dp)->type_name);
@@ -1295,17 +1301,17 @@ static void gpsd_error_model(struct gps_device_t *session)
 #endif // __UNUSED__
 
     if (0 < fix->time.tv_sec) {
-        /* save lastfix, not yet oldfix, for later error computations */
+        // save lastfix, not yet oldfix, for later error computations
         *lastfix = *fix;
     }
 }
 
-/* await data from any socket in the all_fds set */
+// await data from any socket in the all_fds set
 int gpsd_await_data(fd_set *rfds,
                     fd_set *efds,
-                     const int maxfd,
-                     fd_set *all_fds,
-                     struct gpsd_errout_t *errout)
+                    const int maxfd,
+                    fd_set *all_fds,
+                    struct gpsd_errout_t *errout)
 {
     int status;
     const timespec_t ts_timeout = {5, 0};   // timeout for pselect()
@@ -1330,12 +1336,15 @@ int gpsd_await_data(fd_set *rfds,
 
     status = pselect(maxfd + 1, rfds, NULL, NULL, &ts_timeout, NULL);
     if (-1 == status) {
-        if (errno == EINTR)
+        if (EINTR == errno) {
+            // caught a signal
             return AWAIT_NOT_READY;
+        }
 
-        if (errno == EBADF) {
+        if (EBADF == errno) {
+            // Invalid file descriptor.
             int fd;
-            for (fd = 0; fd < (int)FD_SETSIZE; fd++)
+            for (fd = 0; fd < (int)FD_SETSIZE; fd++) {
                 /*
                  * All we care about here is a cheap, fast, uninterruptible
                  * way to check if a file descriptor is valid.
@@ -1344,31 +1353,38 @@ int gpsd_await_data(fd_set *rfds,
                     FD_CLR(fd, all_fds);
                     FD_SET(fd, efds);
                 }
+            }
             return AWAIT_NOT_READY;
         }
         //  else
-        GPSD_LOG(LOG_ERROR, errout, "select: %s\n", strerror(errno));
+        GPSD_LOG(LOG_ERROR, errout, "pselect: %s(%d)\n",
+                 strerror(errno), errno);
         return AWAIT_FAILED;
     }
     if (0 == status) {
+        // pselect timeout
         return AWAIT_TIMEOUT;
     }
 
-    if (errout->debug >= LOG_SPIN) {
+    if (LOG_SPIN <= errout->debug) {
         int i;
         char dbuf[BUFSIZ];
         timespec_t ts_now;
         char ts_str[TIMESPEC_LEN];
 
         dbuf[0] = '\0';
-        for (i = 0; i < (int)FD_SETSIZE; i++)
-            if (FD_ISSET(i, all_fds))
+        for (i = 0; i < (int)FD_SETSIZE; i++) {
+            if (FD_ISSET(i, all_fds)) {
                 str_appendf(dbuf, sizeof(dbuf), "%d ", i);
+            }
+        }
         str_rstrip_char(dbuf, ' ');
         (void)strlcat(dbuf, "} -> {", sizeof(dbuf));
-        for (i = 0; i < (int)FD_SETSIZE; i++)
-            if (FD_ISSET(i, rfds))
+        for (i = 0; i < (int)FD_SETSIZE; i++) {
+            if (FD_ISSET(i, rfds)) {
                 str_appendf(dbuf, sizeof(dbuf), " %d ", i);
+            }
+        }
 
         (void)clock_gettime(CLOCK_REALTIME, &ts_now);
         GPSD_LOG(LOG_SPIN, errout,
@@ -1814,14 +1830,13 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
     return session->gpsdata.set;
 }
 
-/* consume and handle packets from a specified device */
+// consume and handle packets from a specified device
 int gpsd_multipoll(const bool data_ready,
                    struct gps_device_t *device,
                    void (*handler)(struct gps_device_t *, gps_mask_t),
                    float reawake_time)
 {
-    if (data_ready)
-    {
+    if (data_ready) {
         int fragments;
 
         GPSD_LOG(LOG_RAW1, &device->context->errout,
@@ -1834,61 +1849,63 @@ int gpsd_multipoll(const bool data_ready,
          * Try to ratchet things forward.
          */
         if (SERVICE_NTRIP == device->servicetype &&
-            device->ntrip.conn_state != ntrip_conn_established) {
+            NTRIP_CONN_ESTABLISHED != device->ntrip.conn_state) {
 
             (void)ntrip_open(device, "");
-            if (device->ntrip.conn_state == ntrip_conn_err) {
+            if (NTRIP_CONN_ERR == device->ntrip.conn_state) {
                 GPSD_LOG(LOG_WARN, &device->context->errout,
                          "connection to ntrip server failed\n");
-                device->ntrip.conn_state = ntrip_conn_init;
+                device->ntrip.conn_state = NTRIP_CONN_INIT;
                 return DEVICE_ERROR;
-            } else {
-                return DEVICE_READY;
             }
+            //  else
+            return DEVICE_READY;
         }
 #endif /* NETFEED_ENABLE */
 
         for (fragments = 0; ; fragments++) {
             gps_mask_t changed = gpsd_poll(device);
 
-            if (changed == EOF_IS) {
+            if (EOF_IS == changed) {
                 GPSD_LOG(LOG_WARN, &device->context->errout,
                          "device signed off %s\n",
                          device->gpsdata.dev.path);
                 return DEVICE_EOF;
-            } else if (changed == ERROR_SET) {
+            }
+            if (ERROR_SET == changed) {
                 GPSD_LOG(LOG_WARN, &device->context->errout,
                          "device read of %s returned error or "
                          "packet sniffer failed sync (flags %s)\n",
                          device->gpsdata.dev.path,
                          gps_maskdump(changed));
                 return DEVICE_ERROR;
-            } else if (changed == NODATA_IS) {
+            }
+            if (NODATA_IS == changed) {
                 /*
                  * No data on the first fragment read means the device
                  * fd may have been in an end-of-file condition on select.
                  */
-                if (fragments == 0) {
+                if (0 == fragments) {
                     GPSD_LOG(LOG_DATA, &device->context->errout,
                              "%s returned zero bytes\n",
                              device->gpsdata.dev.path);
                     if (device->zerokill) {
-                        /* failed timeout-and-reawake, kill it */
+                        // failed timeout-and-reawake, kill it
                         gpsd_deactivate(device);
                         if (device->ntrip.works) {
                             // reset so we try this once only
                             device->ntrip.works = false;
-                            if (gpsd_activate(device, O_CONTINUE) < 0) {
+                            if (0 > gpsd_activate(device, O_CONTINUE)) {
                                 GPSD_LOG(LOG_WARN, &device->context->errout,
                                          "reconnect to ntrip server failed\n");
                                 return DEVICE_ERROR;
-                            } else {
-                                GPSD_LOG(LOG_INF, &device->context->errout,
-                                         "reconnecting to ntrip server\n");
-                                return DEVICE_READY;
                             }
+                            // else
+                            GPSD_LOG(LOG_INF, &device->context->errout,
+                                     "reconnecting to ntrip server\n");
+                            return DEVICE_READY;
                         }
-                    } else if (reawake_time == 0) {
+                    } else if (0 == reawake_time) {
                         return DEVICE_ERROR;
                     } else {
                         /*
@@ -1911,32 +1928,35 @@ int gpsd_multipoll(const bool data_ready,
                 break;
             }
 
-            /* we got actual data, head off the reawake special case */
+            // we got actual data, head off the reawake special case
             device->zerokill = false;
             device->reawake = (time_t)0;
 
-            /* must have a full packet to continue */
-            if ((changed & PACKET_SET) == 0)
+            // must have a full packet to continue
+            if (0 == (changed & PACKET_SET)) {
                 break;
+            }
 
-            /* conditional prevents mask dumper from eating CPU */
-            if (device->context->errout.debug >= LOG_DATA) {
-                if (device->lexer.type == BAD_PACKET)
+            // conditional prevents mask dumper from eating CPU
+            if (LOG_DATA <= device->context->errout.debug) {
+                if (BAD_PACKET == device->lexer.type) {
                     GPSD_LOG(LOG_DATA, &device->context->errout,
                              "packet with bad checksum from %s\n",
                              device->gpsdata.dev.path);
-                else
+                } else {
                     GPSD_LOG(LOG_DATA, &device->context->errout,
                              "packet type %d from %s with %s\n",
                              device->lexer.type,
                              device->gpsdata.dev.path,
                              gps_maskdump(device->gpsdata.set));
+                }
             }
 
 
-            /* handle data contained in this packet */
-            if (device->lexer.type != BAD_PACKET)
+            // handle data contained in this packet
+            if (BAD_PACKET != device->lexer.type) {
                 handler(device, changed);
+            }
 
 #ifdef __future__
             // this breaks: test/daemon/passthrough.log ??
@@ -1951,13 +1971,14 @@ int gpsd_multipoll(const bool data_ready,
              * It might also reduce the latency from a received packet to
              * it being output by gpsd.
              */
-            if ((changed & PACKET_SET) != 0)
+            if (0 != (changed & PACKET_SET)) {
                break;
+            }
 #endif /* __future__ */
         }
-    }
-    else if (device->reawake>0 && time(NULL) >device->reawake) {
-        /* device may have had a zero-length read */
+    } else if (0 < device->reawake &&
+               time(NULL) > device->reawake) {
+        // device may have had a zero-length read
         GPSD_LOG(LOG_DATA, &device->context->errout,
                  "%s reawakened after zero-length read\n",
                  device->gpsdata.dev.path);
@@ -1970,7 +1991,7 @@ int gpsd_multipoll(const bool data_ready,
     return DEVICE_UNCHANGED;
 }
 
-/* end-of-session wrapup */
+// end-of-session wrapup
 void gpsd_wrap(struct gps_device_t *session)
 {
     if (!BAD_SOCKET(session->gpsdata.gps_fd))

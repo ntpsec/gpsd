@@ -196,12 +196,12 @@ def unpack_u8(word, pos):
 
 
 def pack_u16(number):
-    """Convert an unsigned 16 bit int to 2 bytes (little endian)"""
+    """Convert a number to 2 bytes (little endian unsigned)"""
     return struct.pack('<H', number)
 
 
 def pack_u32(number):
-    """Convert an unsigned 32 bit int to 4 bytes (little endian)"""
+    """Convert a number to 4 bytes (little endian unsigned)"""
     return struct.pack('<I', number)
 
 
@@ -8731,12 +8731,11 @@ Always double check with "-p CFG-GNSS".
 
     def get_int_arg(self, args, ndx, default=0):
         """Convert args[ndx] to int, return default if not present"""
-        if type(args) is not list:
+        if ((type(args) is not list or
+             ndx >= len(args) or
+             0 == len(args[ndx]))):
             return default
-        if ndx >= len(args):
-            return default
-        if len(args[ndx]) == 0:
-            return default
+        # Allow hex (0x, decimal, octal (0o) and binary (0b10) string input
         return int(args[ndx], base=0)
 
     def send_cfg_tp5(self, args):
@@ -8745,10 +8744,10 @@ Always double check with "-p CFG-GNSS".
 tpIdx, antCableDelay, rfGroupDelay, freqPeriod, freqPeriodLock,
 pulseLenRadio, pulseLenRadioLock, userConfigDelay, flags
 """
-        if len(args) == 0:
+        if 0 == len(args):
             # poll with default tpIdx 0
             m_data = []
-        elif len(args) == 1:
+        elif 1 == len(args):
             # poll with the specified tpIdx
             m_data = bytearray([int(args[0])])
         else:
@@ -9404,7 +9403,15 @@ present in 9-series and higher
         "CFG-TP5": {"command": send_cfg_tp5,
                     "help": "poll UBX-TIM-TP5 time pulse decodes.\n"
                             "                    "
-                            "CFG-TP5[,tpIdx]  Default tpIdx is 0",
+                            "CFG-TP5[,tpIdx]  Default tpIdx is 0\n"
+                            "                  "
+                            "set UBX-TIM-TP5 time pulse decodes.\n"
+                            "                    "
+                            "CFG-TP5,[tpIdx],[antCableDelay],[rfGroupDelay]\n"
+                            "                      "
+                            ",[freqPeriod],[freqPeriodLock],[pulseLenRadio]\n"
+                            "                      "
+                            ",[pulseLenRadioLock],[userConfigDelay],[flags]",
                     "args": 1},
         # UBX-CFG-USB
         "CFG-USB": {"command": send_poll, "opt": [0x06, 0x1b],
@@ -9537,6 +9544,9 @@ present in 9-series and higher
         # UBX-NAV-DOP
         "NAV-DOP": {"command": send_poll, "opt": [0x01, 0x04],
                     "help": "poll UBX-NAV-DOP Dilution of Precision"},
+        # UBX-NAV-EELL
+        "NAV-EELL": {"command": send_poll, "opt": [0x01, 0x3d],
+                     "help": "poll UBX-NAV-EELL Position error ellipse"},
         # UBX-NAV-GEOFENCE
         "NAV-GEOFENCE": {"command": send_poll, "opt": [0x01, 0x39],
                          "help": "poll UBX-NAV-GEOFENCE Geofence status"},
