@@ -565,7 +565,7 @@ int gpsd_serial_isatty(const struct gps_device_t *session)
     }
 #endif  // defined(EOPNOTSUPP)
 
-    // else warning, and assume a tty.
+    // else warning, and assume not a tty.
     GPSD_LOG(LOG_WARNING, &session->context->errout,
              "SER: gpsd_serial_isatty(%d) < 1: %s(%d)\n",
              session->gpsdata.gps_fd,
