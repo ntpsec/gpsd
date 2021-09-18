@@ -1492,6 +1492,76 @@ doAutoMntAlg flag:
 $ ubxtool -p CFG-ESFALG,0
 ----
 
+== Timepulse
+Some U-blox receivers provide one or more pins delivering a Timepulse (TP)
+signal. This signal can be configured in terms of pulse period (or frequency),
+pulse length (or duty cycle) and polarity. It is also possible to define
+different signal behavior depending on whether the receiver is locked to
+ GPS time.
+
+Timepulse signals are configured using the UBX-CFG-TP5 message. This
+is the message sent when you enable and disable the TIMEPULSE pin by means
+of the PPS option. In particular, -d PPS is actually a shortcut for:
+
+----
+$ ubxtool -p CFG-TP5,,,,,,,,,0x76
+----
+
+While -e PPS is a shortcut for:
+
+----
+$ ubxtool -p CFG-TP5,,,,,,,,,0x77
+----
+
+UBX-CFG-TP5 messages can take several forms. For example, to
+poll the current Timepulse configuration for the TIMEPULSE and
+TIMEPULSE2 pins respectively:
+
+----
+$ ubxtool -p CFG-TP5,0
+[...]
+UBX-CFG-TP5:
+  tpIdx 0 version 0 reserved1 0
+  antCableDelay 2 rfGroupDelay 0 freqPeriod 1000000 freqPeriodLock 1000000
+  pulseLenRatio 0 pulseLenRatioLock 100000 userConfigDelay 0
+  flags x77
+$ ubxtool -p CFG-TP5,1
+[...]
+UBX-CFG-TP5:
+  tpIdx 1 version 0 reserved1 0
+  antCableDelay 2 rfGroupDelay 0 freqPeriod 4 freqPeriodLock 1
+  pulseLenRatio 125000 pulseLenRatioLock 100000 userConfigDelay 0
+  flags xfe
+----
+
+=== Timepulse period and length
+Timepulse settings can be specified in two ways: period/length (in
+microseconds) and frequency/duty cycle (in Hz and fractions of 2^32^-1
+respectively).
+
+Let us say you want 1 PPS with 100 ms pulse length in the absence of lock
+and 4 PPS with 25 ms length in the presence of it in the TIMEPULSE pin.
+You can specify this either in period/length form:
+
+----
+$ ubxtool -p CFG-TP5,0,,,1000000,250000,100000,25000,,0x77
+----
+
+or in frequency/duty cycle form:
+
+----
+$ ubxtool -p CFG-TP5,0,,,1,4,429496729,429496729,,0x6f
+----
+
+in which 429496729 represents a 10% duty cycle (as it is simply the
+10% of 2^32^-1 = 4294967295).
+
+Duty cycles can also be specified in hexadecimal form. For example,
+if you wanted a 50% duty cycle instead, you could do:
+
+----
+$ ubxtool -p CFG-TP5,0,,,1,4,0x80000000,0x80000000,,0x6f
+----
 
 == Saving U-blox configuration
 
