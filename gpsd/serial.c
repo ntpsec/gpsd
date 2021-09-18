@@ -541,29 +541,19 @@ int gpsd_serial_isatty(const struct gps_device_t *session)
         return 1;
     }
     if (ENOTTY == errno ||
+#if defined(ENXIO)
+        ENXIO == errno ||         // Some OSXes return this.  Not POSIX.
+#endif  // defined(ENXIO)
+#if defined(EADDRNOTAVAIL)
+        EADDRNOTAVAIL == errno || // Some BSDs return this.  Not POSIX.
+#endif  // defined(EADDRNOTAVAIL)
+#if defined(EOPNOTSUPP)
+        EOPNOTSUPP == errno ||    // Some BSDs/OSXes return this.  Not POSIX.
+#endif  // defined(EOPNOTSUPP)
         0 == errno) {
         // is not a tty
         return 0;
     }
-
-#if defined(ENXIO)
-    if (ENXIO == errno) {
-        // is not a tty -- Some OSXes return this.  Not POSIX.
-        return 0;
-    }
-#endif  // defined(ENXIO)
-#if defined(EADDRNOTAVAIL)
-    if (EADDRNOTAVAIL == errno) {
-        // is not a tty -- Some BSDs return this.  Not POSIX.
-        return 0;
-    }
-#endif  // defined(EADDRNOTAVAIL)
-#if defined(EOPNOTSUPP)
-    if (EOPNOTSUPP == errno) {
-        // is not a tty -- Some BSDs/OSXes return this.  Not POSIX.
-        return 0;
-    }
-#endif  // defined(EOPNOTSUPP)
 
     // else warning, and assume not a tty.
     GPSD_LOG(LOG_WARNING, &session->context->errout,
