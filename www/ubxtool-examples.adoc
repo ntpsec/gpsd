@@ -1499,9 +1499,10 @@ pulse length (or duty cycle) and polarity. It is also possible to define
 different signal behavior depending on whether the receiver is locked to
  GPS time.
 
-Timepulse signals are configured using the UBX-CFG-TP5 message. This
-is the message sent when you enable and disable the TIMEPULSE pin by means
-of the PPS option. In particular, -d PPS is actually a shortcut for:
+Timepulse signals are configured using the UBX-CFG-TP5 message. This is
+also the message sent when you enable and disable the TIMEPULSE pin by
+means of the PPS option. In particular, -d PPS is actually a shortcut
+for:
 
 ----
 $ ubxtool -p CFG-TP5,,,,,,,,,0x76
