@@ -7,13 +7,13 @@
   Change STATUS_FIX to STATUS_GPS to avoid confusion with fix mode.
   Change STATUS_DGPS_FIX to STATUS_DGPS to avoid confusion with fix mode.
   Split SOURCE_ACM from SOURCE_USB.  ACM has no speeds.
-  Add speeds 1 mbps, 1.152 mbps, and 1.5 mbps.  When libc supports them.
+  Add speeds 1 mbps, 1.152 mbps, 1.5 mbps, and higher.  When libc supports them.
   Improve autobaud.
   Add new u-blox M10 messages.
-  Fix u-blox M7, M8 initialization issues.
+  Fix u-blox M6, M7 initialization issues.
   Various ubxtool and gpxlogger updates.
   Add mtk3301_speed_switcher()
-  No API, ABI cahnges.
+  No API, ABI changes.
 
 3.23: 2020-08-06
   doc/*xml all moved into www/internals.adoc
