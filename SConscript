@@ -369,7 +369,7 @@ boolopts = (
 for (name, default, helpd) in boolopts:
     opts.Add(BoolVariable(name, helpd, default))
 
-def_target_python = "python"
+def_target_python = "python3"
 def_python_shebang = "/usr/bin/env %s" % def_target_python
 
 # Gentoo, Fedora, openSUSE systems use uucp for ttyS* and ttyUSB*

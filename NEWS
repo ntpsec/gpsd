@@ -14,6 +14,7 @@
   Various ubxtool and gpxlogger updates.
   Add mtk3301_speed_switcher()
   No API, ABI changes.
+  Removal of /usr/bin/python from Ubuntu forces python3 as a hard dependency.
 
 3.23: 2020-08-06
   doc/*xml all moved into www/internals.adoc
