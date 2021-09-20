@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """Simple program to exact 5x5 geoid separations in EGM2008.
 

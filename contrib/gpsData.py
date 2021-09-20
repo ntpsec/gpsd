@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/python3
 # Written by Dan Mandle http://dan.mandle.me September 2012
 # http://www.danmandle.com/blog/getting-gpsd-to-work-with-python/
 # License: GPL 2.0

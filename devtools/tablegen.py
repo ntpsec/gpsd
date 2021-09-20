@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # This code runs compatibly under Python 2 and 3.x for x >= 2.
 # Preserve this property!
 

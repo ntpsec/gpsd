@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Codacy D203 and D211 conflict, I choose D203
 # Codacy D212 and D213 conflict, I choose D212
