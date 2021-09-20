@@ -369,6 +369,9 @@ boolopts = (
 for (name, default, helpd) in boolopts:
     opts.Add(BoolVariable(name, helpd, default))
 
+# See PEP 394 for why 'python' is the preferred name for Python.
+# override with "target_python=XX" on scons command line if want different
+# Later there are tests for OS specifics.
 def_target_python = "python"
 def_python_shebang = "/usr/bin/env %s" % def_target_python
 
@@ -1443,9 +1446,33 @@ if not cleaning and not helping and config.env['python']:
             target_python_path = config.env['target_python']
         else:
             target_python_path = config.CheckProg(config.env['target_python'])
+
+        if ((not target_python_path and
+             'python' == config.env['target_python'])):
+            # some distros don't install a python target, only python3
+            announce("Target Python '%s' doesn't exist.  "
+                     "Trying 'python3'." %
+                     config.env['target_python'])
+            config.env['target_python'] = 'python3'
+            python_shebang = "/usr/bin/env %s" % def_target_python
+            try:
+                config.CheckProg
+            except AttributeError:
+                # FIXME: duplicates code above
+                # scons versions before Nov 2015 (2.4.1) don't
+                # have CheckProg # gpsd only asks for 2.3.0 or higher
+                target_python_path = config.env['target_python']
+            else:
+                target_python_path = config.CheckProg(
+                    config.env['target_python'])
+
         if not target_python_path:
-            announce("Target Python doesn't exist - disabling Python.")
+            announce("Target Python '%s' doesn't exist.  Disabling Python." %
+                     config.env['target_python'])
+            announce("Use the target_python=XX configuration option if you "
+                     "have a working python target.")
             config.env['python'] = False
+
 
     if config.env['python']:
         if not target_python_path:
