@@ -1,6 +1,6 @@
                         GPSD project news
 
-3.23.1~rc1: unreleased
+3.23.1: 2021-09-21
   Improve ubx cycle detection.
   Add quirks for Jackson Labs nonstandard NMEA
   Change STATUS_NO_FIX to STATUS_UNK to avoid confusion with fix mode.
@@ -14,8 +14,9 @@
   Various ubxtool and gpxlogger updates.
   Add mtk3301_speed_switcher()
   No API, ABI changes.
+  Fallback to "python3" if "python" not found.
 
-3.23: 2020-08-06
+3.23: 2021-08-06
   doc/*xml all moved into www/internals.adoc
   Convert all DocBook (.xml) to AsciiDoctor (.adoc)
   Remove all XSL remnants.
