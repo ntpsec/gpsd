@@ -3223,7 +3223,7 @@ upload_release = Utility('upload-release', ['dist'], [
     'gpg -b gpsd-${VERSION}.tar.xz',
     'gpg -b gpsd-${VERSION}.zip',
     'chmod ug=rw,o=r gpsd-${VERSION}.tar.* gpsd-${VERSION}.zip',
-    'scp gpsd-${VERSION}.tar.* gpsd-${VERSION}.zip.*' + scpupload,
+    'scp gpsd-${VERSION}.tar.* gpsd-${VERSION}.zip.* ' + scpupload,
 ])
 env.Alias('upload_release', upload_release)  # For '_' vs. '-'
 
