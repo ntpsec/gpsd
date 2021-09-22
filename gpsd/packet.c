@@ -489,7 +489,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         break;
     /*
      * Without the following six states (NMEA_PASH_*, NMEA_BINARY_*)
-     * DLE in a $PASHR can fool the  sniffer into thinking it sees a 
+     * DLE in a $PASHR can fool the  sniffer into thinking it sees a
      * TSIP packet.  Hilarity ensues.
      */
     case NMEA_PASHR_A:
@@ -627,8 +627,9 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             break;
 #endif  // GARMINTXT_ENABLE
         default:
-            if (!isprint(c))
+            if (!isprint(c)) {
                 return character_pushback(lexer, GROUND_STATE);
+            }
         }
         break;
 #endif  // TNT_ENABLE || GARMINTXT_ENABLE || ONCORE_ENABLE
@@ -658,7 +659,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
              */
             lexer->state = NMEA_CR;
         } else {
-            (void) character_pushback(lexer, GROUND_STATE);
+            (void)character_pushback(lexer, GROUND_STATE);
         }
         break;
     case NMEA_RECOGNIZED:
@@ -755,156 +756,165 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         break;
 #ifdef TRIPMATE_ENABLE
     case ASTRAL_1:
-        if (c == 'S') {
+        if ('S' == c) {       // AS
 #ifdef RTCM104V2_ENABLE
-            if ((isgpsstat = rtcm2_decode(lexer, c)) == ISGPS_SYNC) {
+            if (ISGPS_SYNC == (isgpsstat = rtcm2_decode(lexer, c))) {
                 lexer->state = RTCM2_SYNC_STATE;
                 break;
-            } else if (isgpsstat == ISGPS_MESSAGE) {
+            } else if (ISGPS_MESSAGE == isgpsstat) {
                 lexer->state = RTCM2_RECOGNIZED;
                 break;
             }
-#endif /* RTCM104V2_ENABLE */
+#endif  // RTCM104V2_ENABLE
             lexer->state = ASTRAL_2;
         } else
-            (void) character_pushback(lexer, GROUND_STATE);
+            (void)character_pushback(lexer, GROUND_STATE);
         break;
     case ASTRAL_2:
-        if (c == 'T') {
+        if ('T' == c) {        // AST
 #ifdef RTCM104V2_ENABLE
-            if ((isgpsstat = rtcm2_decode(lexer, c)) == ISGPS_SYNC) {
+            if (ISGPS_SYNC == (isgpsstat = rtcm2_decode(lexer, c))) {
                 lexer->state = RTCM2_SYNC_STATE;
                 break;
-            } else if (isgpsstat == ISGPS_MESSAGE) {
+            } else if (ISGPS_MESSAGE == isgpsstat) {
                 lexer->state = RTCM2_RECOGNIZED;
                 break;
             }
-#endif /* RTCM104V2_ENABLE */
+#endif  // RTCM104V2_ENABLE
             lexer->state = ASTRAL_3;
-        } else
-            (void) character_pushback(lexer, GROUND_STATE);
+        } else {
+            (void)character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case ASTRAL_3:
-        if (c == 'R') {
+        if ('R' == c) {      // ASTR
 #ifdef RTCM104V2_ENABLE
-            if ((isgpsstat = rtcm2_decode(lexer, c)) == ISGPS_SYNC) {
+            if (ISGPS_SYNC == (isgpsstat = rtcm2_decode(lexer, c))) {
                 lexer->state = RTCM2_SYNC_STATE;
                 break;
-            } else if (isgpsstat == ISGPS_MESSAGE) {
+            } else if (ISGPS_MESSAGE == isgpsstat) {
                 lexer->state = RTCM2_RECOGNIZED;
                 break;
             }
-#endif /* RTCM104V2_ENABLE */
+#endif  // RTCM104V2_ENABLE
             lexer->state = ASTRAL_5;
-        } else
-            (void) character_pushback(lexer, GROUND_STATE);
+        } else {
+            (void)character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case ASTRAL_4:
-        if (c == 'A') {
+        if ('A' == c) {    // ASTRA
 #ifdef RTCM104V2_ENABLE
-            if ((isgpsstat = rtcm2_decode(lexer, c)) == ISGPS_SYNC) {
+            if (ISGPS_SYNC == (isgpsstat = rtcm2_decode(lexer, c))) {
                 lexer->state = RTCM2_SYNC_STATE;
                 break;
-            } else if (isgpsstat == ISGPS_MESSAGE) {
+            } else if (ISGPS_MESSAGE == isgpsstat) {
                 lexer->state = RTCM2_RECOGNIZED;
                 break;
             }
-#endif /* RTCM104V2_ENABLE */
+#endif  // RTCM104V2_ENABLE
             lexer->state = ASTRAL_2;
-        } else
-            (void) character_pushback(lexer, GROUND_STATE);
+        } else {
+            (void)character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case ASTRAL_5:
-        if (c == 'L') {
+        if ('L' == c) {       // ASTRAL
 #ifdef RTCM104V2_ENABLE
-            if ((isgpsstat = rtcm2_decode(lexer, c)) == ISGPS_SYNC) {
+            if (ISGPS_SYNC == (isgpsstat = rtcm2_decode(lexer, c))) {
                 lexer->state = RTCM2_SYNC_STATE;
                 break;
-            } else if (isgpsstat == ISGPS_MESSAGE) {
+            } else if (ISGPS_MESSAGE == isgpsstat) {
                 lexer->state = RTCM2_RECOGNIZED;
                 break;
             }
-#endif /* RTCM104V2_ENABLE */
+#endif  // RTCM104V2_ENABLE
             lexer->state = NMEA_RECOGNIZED;
-        } else
-            (void) character_pushback(lexer, GROUND_STATE);
+        } else {
+            (void)character_pushback(lexer, GROUND_STATE);
+        }
         break;
-#endif /* TRIPMATE_ENABLE */
+#endif  // TRIPMATE_ENABLE
 #ifdef EARTHMATE_ENABLE
     case EARTHA_1:
-        if (c == 'A') {
+        if ('A' == c) {     // EA
 #ifdef RTCM104V2_ENABLE
-            if ((isgpsstat = rtcm2_decode(lexer, c)) == ISGPS_SYNC) {
+            if (ISGPS_SYNC == (isgpsstat = rtcm2_decode(lexer, c))) {
                 lexer->state = RTCM2_SYNC_STATE;
                 break;
-            } else if (isgpsstat == ISGPS_MESSAGE) {
+            } else if (ISGPS_MESSAGE == isgpsstat) {
                 lexer->state = RTCM2_RECOGNIZED;
                 break;
             }
-#endif /* RTCM104V2_ENABLE */
+#endif  // RTCM104V2_ENABLE
             lexer->state = EARTHA_2;
-        } else
-            (void) character_pushback(lexer, GROUND_STATE);
+        } else {
+            (void)character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case EARTHA_2:
-        if (c == 'R') {
+        if ('R' == c) {     // EAR
 #ifdef RTCM104V2_ENABLE
-            if ((isgpsstat = rtcm2_decode(lexer, c)) == ISGPS_SYNC) {
+            if (ISGPS_SYNC == (isgpsstat = rtcm2_decode(lexer, c))) {
                 lexer->state = RTCM2_SYNC_STATE;
                 break;
-            } else if (isgpsstat == ISGPS_MESSAGE) {
+            } else if (ISGPS_MESSAGE == isgpsstat) {
                 lexer->state = RTCM2_RECOGNIZED;
                 break;
             }
-#endif /* RTCM104V2_ENABLE */
+#endif  // RTCM104V2_ENABLE
             lexer->state = EARTHA_3;
-        } else
-            (void) character_pushback(lexer, GROUND_STATE);
+        } else {
+            (void)character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case EARTHA_3:
-        if (c == 'T') {
+        if ('T' == c) {       // EART
 #ifdef RTCM104V2_ENABLE
-            if ((isgpsstat = rtcm2_decode(lexer, c)) == ISGPS_SYNC) {
+            if (ISGPS_SYNC == (isgpsstat = rtcm2_decode(lexer, c))) {
                 lexer->state = RTCM2_SYNC_STATE;
                 break;
-            } else if (isgpsstat == ISGPS_MESSAGE) {
+            } else if (ISGPS_MESSAGE == isgpsstat) {
                 lexer->state = RTCM2_RECOGNIZED;
                 break;
             }
-#endif /* RTCM104V2_ENABLE */
+#endif  // RTCM104V2_ENABLE
             lexer->state = EARTHA_4;
-        } else
-            (void) character_pushback(lexer, GROUND_STATE);
+        } else {
+            (void)character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case EARTHA_4:
-        if (c == 'H') {
+        if ('H' == c) {        // EARTH
 #ifdef RTCM104V2_ENABLE
-            if ((isgpsstat = rtcm2_decode(lexer, c)) == ISGPS_SYNC) {
+            if (ISGPS_SYNC == (isgpsstat = rtcm2_decode(lexer, c))) {
                 lexer->state = RTCM2_SYNC_STATE;
                 break;
-            } else if (isgpsstat == ISGPS_MESSAGE) {
+            } else if (ISGPS_MESSAGE == isgpsstat) {
                 lexer->state = RTCM2_RECOGNIZED;
                 break;
             }
-#endif /* RTCM104V2_ENABLE */
+#endif  // RTCM104V2_ENABLE
             lexer->state = EARTHA_5;
-        } else
-            (void) character_pushback(lexer, GROUND_STATE);
+        } else {
+            (void)character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case EARTHA_5:
-        if (c == 'A') {
+        if ('A' == c) {     // EARTHA
 #ifdef RTCM104V2_ENABLE
-            if ((isgpsstat = rtcm2_decode(lexer, c)) == ISGPS_SYNC) {
+            if (ISGPS_SYNC == (isgpsstat = rtcm2_decode(lexer, c))) {
                 lexer->state = RTCM2_SYNC_STATE;
                 break;
-            } else if (isgpsstat == ISGPS_MESSAGE) {
+            } else if (ISGPS_MESSAGE == isgpsstat) {
                 lexer->state = RTCM2_RECOGNIZED;
                 break;
             }
-#endif /* RTCM104V2_ENABLE */
+#endif  // RTCM104V2_ENABLE
             lexer->state = NMEA_RECOGNIZED;
-        } else
-            (void) character_pushback(lexer, GROUND_STATE);
+        } else {
+            (void)character_pushback(lexer, GROUND_STATE);
+        }
         break;
 #endif /* EARTHMATE_ENABLE */
     case SIRF_ACK_LEAD_1:
