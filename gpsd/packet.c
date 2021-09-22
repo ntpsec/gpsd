@@ -138,6 +138,7 @@ static char *state_table[] = {
 #define DLE     (unsigned char)0x10
 #define STX     (unsigned char)0x02
 #define ETX     (unsigned char)0x03
+#define MICRO   (unsigned char)0xb5
 
 #if defined(TSIP_ENABLE)
 /* Maximum length a TSIP packet can be */
@@ -267,10 +268,10 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
     static int n = 0;
 #ifdef RTCM104V2_ENABLE
     enum isgpsstat_t isgpsstat;
-#endif /* RTCM104V2_ENABLE */
+#endif  // RTCM104V2_ENABLE
 #ifdef SUPERSTAR2_ENABLE
     static unsigned char ctmp;
-#endif /* SUPERSTAR2_ENABLE */
+#endif  // SUPERSTAR2_ENABLE
     n++;
     switch (lexer->state) {
     case GROUND_STATE:
@@ -278,140 +279,130 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
 #ifdef STASH_ENABLE
         lexer->stashbuflen = 0;
 #endif
-        if (c == '#') {
-            lexer->state = COMMENT_BODY;
-            break;
-        }
-#ifdef NMEA0183_ENABLE
-        if (c == '$') {
-            lexer->state = NMEA_DOLLAR;
-            break;
-        }
-        if (c == '!') {
-            lexer->state = NMEA_BANG;
-            break;
-        }
-#endif /* NMEA0183_ENABLE */
-#if defined(TNT_ENABLE) || defined(GARMINTXT_ENABLE) || defined(ONCORE_ENABLE)
-        if (c == '@') {
-#ifdef RTCM104V2_ENABLE
-            if (rtcm2_decode(lexer, c) == ISGPS_MESSAGE) {
-                lexer->state = RTCM2_RECOGNIZED;
-                break;
-            }
-#endif /* RTCM104V2_ENABLE */
-            lexer->state = AT1_LEADER;
-            break;
-        }
-#endif
-#if defined(SIRF_ENABLE) || defined(SKYTRAQ_ENABLE)
-        if (c == 0xa0) {
-            lexer->state = SIRF_LEADER_1;
-            break;
-        }
-#endif /* SIRF_ENABLE || SKYTRAQ_ENABLE */
+        switch (c) {
 #ifdef SUPERSTAR2_ENABLE
-        if (c == SOH) {
+        case SOH:          // 0x01
             lexer->state = SUPERSTAR2_LEADER;
             break;
-        }
 #endif /* SUPERSTAR2_ENABLE */
-#if defined(TSIP_ENABLE) || defined(EVERMORE_ENABLE) || defined(GARMIN_ENABLE)
-        if (c == DLE) {
-            lexer->state = DLE_LEADER;
-            break;
-        }
-#endif /* TSIP_ENABLE || EVERMORE_ENABLE || GARMIN_ENABLE */
-#ifdef TRIPMATE_ENABLE
-        if (c == 'A') {
-#ifdef RTCM104V2_ENABLE
-            if (rtcm2_decode(lexer, c) == ISGPS_MESSAGE) {
-                lexer->state = RTCM2_RECOGNIZED;
-                break;
-            }
-#endif /* RTCM104V2_ENABLE */
-            lexer->state = ASTRAL_1;
-            break;
-        }
-#endif /* TRIPMATE_ENABLE */
-#ifdef EARTHMATE_ENABLE
-        if (c == 'E') {
-#ifdef RTCM104V2_ENABLE
-            if (rtcm2_decode(lexer, c) == ISGPS_MESSAGE) {
-                lexer->state = RTCM2_RECOGNIZED;
-                break;
-            }
-#endif /* RTCM104V2_ENABLE */
-            lexer->state = EARTHA_1;
-            break;
-        }
-#endif /* EARTHMATE_ENABLE */
-#ifdef ZODIAC_ENABLE
-        if (c == 0xff) {
-            lexer->state = ZODIAC_LEADER_1;
-            break;
-        }
-#endif /* ZODIAC_ENABLE */
-#ifdef UBLOX_ENABLE
-        if (c == 0xb5) {
-            lexer->state = UBX_LEADER_1;
-            break;
-        }
-#endif /* UBLOX_ENABLE */
-#ifdef ITRAX_ENABLE
-        if (c == '<') {
-            lexer->state = ITALK_LEADER_1;
-            break;
-        }
-#endif /* ITRAX_ENABLE */
 #ifdef NAVCOM_ENABLE
-        if (c == 0x02) {
+        case STX:          // 0x02
             lexer->state = NAVCOM_LEADER_1;
             break;
-        }
-#endif /* NAVCOM_ENABLE */
+#endif  // NAVCOM_ENABLE
+#if defined(TSIP_ENABLE) || defined(EVERMORE_ENABLE) || defined(GARMIN_ENABLE)
+        case DLE:          // 0x10
+            lexer->state = DLE_LEADER;
+            break;
+#endif  // TSIP_ENABLE || EVERMORE_ENABLE || GARMIN_ENABLE
+#ifdef NMEA0183_ENABLE
+        case '!':
+            lexer->state = NMEA_BANG;
+            break;
+#endif  // NMEA0183_ENABLE
+        case '#':
+            lexer->state = COMMENT_BODY;
+            break;
+#ifdef NMEA0183_ENABLE
+        case '$':
+            lexer->state = NMEA_DOLLAR;
+            break;
+#endif  // NMEA0183_ENABLE
+#if defined(TNT_ENABLE) || defined(GARMINTXT_ENABLE) || defined(ONCORE_ENABLE)
+        case '@':
+#ifdef RTCM104V2_ENABLE
+            if (ISGPS_MESSAGE == rtcm2_decode(lexer, c)) {
+                lexer->state = RTCM2_RECOGNIZED;
+                break;
+            }
+#endif  // RTCM104V2_ENABLE
+            lexer->state = AT1_LEADER;
+            break;
+#endif // TNT_ENABLE, GARMINTXT_ENABLE, ONCORE_ENABLE
+#ifdef ITRAX_ENABLE
+        case '<':
+            lexer->state = ITALK_LEADER_1;
+            break;
+#endif  // ITRAX_ENABLE
+#ifdef TRIPMATE_ENABLE
+        case 'A':
+#ifdef RTCM104V2_ENABLE
+            if (ISGPS_MESSAGE == rtcm2_decode(lexer, c)) {
+                lexer->state = RTCM2_RECOGNIZED;
+                break;
+            }
+#endif  // RTCM104V2_ENABLE
+            lexer->state = ASTRAL_1;
+            break;
+#endif  // TRIPMATE_ENABLE
+#ifdef EARTHMATE_ENABLE
+        case 'E':
+#ifdef RTCM104V2_ENABLE
+            if (ISGPS_MESSAGE == rtcm2_decode(lexer, c)) {
+                lexer->state = RTCM2_RECOGNIZED;
+                break;
+            }
+#endif  // RTCM104V2_ENABLE
+            lexer->state = EARTHA_1;
+            break;
+#endif  // EARTHMATE_ENABLE
 #ifdef GEOSTAR_ENABLE
-        if (c == 'P') {
+        case 'P':
             lexer->state = GEOSTAR_LEADER_1;
             break;
-        }
-#endif /* GEOSTAR_ENABLE */
+#endif  // GEOSTAR_ENABLE
 #ifdef GREIS_ENABLE
-        if (c == 'R') {
+        case 'R':
             lexer->state = GREIS_REPLY_1;
             break;
-        }
-        /* Not the only possibility, but it is a distinctive cycle starter. */
-        if (c == '~') {
+#endif  // GREIS_ENABLE
+#ifdef PASSTHROUGH_ENABLE
+        case '{':
+            return character_pushback(lexer, JSON_LEADER);
+#endif  // PASSTHROUGH_ENABLE
+#ifdef GREIS_ENABLE
+        // Tilda, Not the only possibility, but a distinctive cycle starter.
+        case '~':
             lexer->state = GREIS_ID_1;
             break;
-        }
-#endif /* GREIS_ENABLE */
-#ifdef RTCM104V2_ENABLE
-        if ((isgpsstat = rtcm2_decode(lexer, c)) == ISGPS_SYNC) {
-            lexer->state = RTCM2_SYNC_STATE;
+#endif  // GREIS_ENABLE
+#if defined(SIRF_ENABLE) || defined(SKYTRAQ_ENABLE)
+        case 0xa0:     // latin1 non breaking space
+            lexer->state = SIRF_LEADER_1;
             break;
-        } else if (isgpsstat == ISGPS_MESSAGE) {
-            lexer->state = RTCM2_RECOGNIZED;
+#endif  // SIRF_ENABLE || SKYTRAQ_ENABLE
+#ifdef UBLOX_ENABLE
+        case MICRO:      // latin1 micro, 0xb5
+            lexer->state = UBX_LEADER_1;
             break;
-        }
-#endif /* RTCM104V2_ENABLE */
+#endif  // UBLOX_ENABLE
 #ifdef RTCM104V3_ENABLE
-        if (c == 0xD3) {
+        case 0xD3:      // latin1 capital O acute
             lexer->state = RTCM3_LEADER_1;
             break;
+#endif  // RTCM104V3_ENABLE
+#ifdef ZODIAC_ENABLE
+        case 0xff:      // lattin1 smal y with diaeresis
+            lexer->state = ZODIAC_LEADER_1;
+            break;
+#endif  // ZODIAC_ENABLE
+        default:
+#ifdef RTCM104V2_ENABLE
+            if (ISGPS_SYNC == (isgpsstat = rtcm2_decode(lexer, c))) {
+                lexer->state = RTCM2_SYNC_STATE;
+            } else if (ISGPS_MESSAGE == isgpsstat) {
+                lexer->state = RTCM2_RECOGNIZED;
+            }
+#endif  // RTCM104V2_ENABLE
+            break;
         }
-#endif /* RTCM104V3_ENABLE */
-#ifdef PASSTHROUGH_ENABLE
-        if (c == '{')
-            return character_pushback(lexer, JSON_LEADER);
-#endif /* PASSTHROUGH_ENABLE */
         break;
     case COMMENT_BODY:
-        if (c == '\n')
+        if ('\n' == c) {
             lexer->state = COMMENT_RECOGNIZED;
-        else if (!isprint(c))
+        } else if (!isprint(c)) {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
 #ifdef NMEA0183_ENABLE
     case NMEA_DOLLAR:
@@ -427,7 +418,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             // is this ever used?
             lexer->state = NMEA_LEADER_END;
             break;
-#endif /* OCEANSERVER_ENABLE */
+#endif  // OCEANSERVER_ENABLE
         case 'E':           // ECDIS
             // codacy thinks this is impossible
             lexer->state = ECDIS_LEAD_1;
@@ -446,7 +437,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             // for $OHPR
             lexer->state = NMEA_LEADER_END;
             break;
-#endif /* OCEANSERVER_ENABLE */
+#endif  // OCEANSERVER_ENABLE
         case 'P':           // vendor sentence
             lexer->state = NMEA_VENDOR_LEAD;
             break;
@@ -654,7 +645,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         } else if ('!' == c) {
             lexer->state = NMEA_BANG;
 #ifdef UBLOX_ENABLE
-        } else if (0xb5 == c) {
+        } else if (MICRO == c) {   // latin1 micro, 0xb5
             // LEA-5H can/will output NMEA/UBX back to back
             // codacy says this state impossible?
             lexer->state = UBX_LEADER_1;
@@ -1314,7 +1305,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         lexer->state = UBX_RECOGNIZED;
         break;
     case UBX_RECOGNIZED:
-        if (c == 0xb5)
+        if (c == MICRO)       // latin1 micro, 0xb5
             lexer->state = UBX_LEADER_1;
 #ifdef NMEA0183_ENABLE
         else if (c == '$')  // LEA-5H can/will output NMEA/UBX back to back
