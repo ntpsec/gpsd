@@ -1151,47 +1151,49 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
 #if defined(TSIP_ENABLE) || defined(EVERMORE_ENABLE) || defined(GARMIN_ENABLE)
     case DLE_LEADER:
 #ifdef EVERMORE_ENABLE
-        if (c == STX) {
+        if (STX == c) {        // DLE (0x10), STX (0x01)
             lexer->state = EVERMORE_LEADER_2;
             break;
         }
-#endif /* EVERMORE_ENABLE */
+#endif  // EVERMORE_ENABLE
 #if defined(TSIP_ENABLE) || defined(GARMIN_ENABLE) || defined(NAVCOM_ENABLE)
-        /* garmin is special case of TSIP */
-        /* check last because there's no checksum */
+        // garmin is special case of TSIP
+        // check last because there's no checksum
 #if defined(TSIP_ENABLE)
-        if (c >= 0x13) {
+        if (0x13 <= c) {       // DLE (0x10), DC3
             lexer->length = TSIP_MAX_PACKET;
             lexer->state = TSIP_PAYLOAD;
             break;
         }
-#endif /* TSIP_ENABLE */
-        if (c == DLE) {
+#endif  // TSIP_ENABLE
+        if (DLE == c) {        // DLE (0x10), DLE (0x10)
             lexer->state = GROUND_STATE;
             break;
         }
-        /* give up */
+        // give up
         lexer->state = GROUND_STATE;
         break;
-#endif /* TSIP_ENABLE */
+#endif  // TSIP_ENABLE
 #ifdef NAVCOM_ENABLE
     case NAVCOM_LEADER_1:
-        if (c == 0x99)
+        if (0x99 == c) {        // latin1 TM (0x99)
             lexer->state = NAVCOM_LEADER_2;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case NAVCOM_LEADER_2:
-        if (c == 0x66)
+        if ('f' == c) {        // (TM), f
             lexer->state = NAVCOM_LEADER_3;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case NAVCOM_LEADER_3:
         lexer->state = NAVCOM_ID;
         break;
     case NAVCOM_ID:
-        lexer->length = (size_t) c - 4;
+        lexer->length = (size_t)c - 4;
         lexer->state = NAVCOM_LENGTH_1;
         break;
     case NAVCOM_LENGTH_1:
@@ -1199,74 +1201,82 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         lexer->state = NAVCOM_LENGTH_2;
         break;
     case NAVCOM_LENGTH_2:
-        if (--lexer->length == 0)
+        if (0 == --lexer->length) {
             lexer->state = NAVCOM_PAYLOAD;
+        }
         break;
     case NAVCOM_PAYLOAD:
-    {
-        unsigned char csum = lexer->inbuffer[3];
-        for (n = 4;
-             (unsigned char *)(lexer->inbuffer + n) < lexer->inbufptr - 1;
-             n++)
-            csum ^= lexer->inbuffer[n];
-        if (csum != c) {
-            GPSD_LOG(LOG_IO, &lexer->errout,
-                     "Navcom packet type 0x%hhx bad checksum 0x%hhx, "
-                     "expecting 0x%x\n",
-                     lexer->inbuffer[3], csum, c);
-            lexer->state = GROUND_STATE;
-            break;
+        {
+            unsigned char csum = lexer->inbuffer[3];
+            for (n = 4;
+                 (unsigned char *)(lexer->inbuffer + n) < lexer->inbufptr - 1;
+                 n++)
+                csum ^= lexer->inbuffer[n];
+            if (csum != c) {
+                GPSD_LOG(LOG_IO, &lexer->errout,
+                         "Navcom packet type 0x%hhx bad checksum 0x%hhx, "
+                         "expecting 0x%x\n",
+                         lexer->inbuffer[3], csum, c);
+                lexer->state = GROUND_STATE;
+                break;
+            }
         }
-    }
         lexer->state = NAVCOM_CSUM;
         break;
     case NAVCOM_CSUM:
-        if (c == 0x03)
+        if (ETX == c) {     // ETX (0x03)
             lexer->state = NAVCOM_RECOGNIZED;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case NAVCOM_RECOGNIZED:
-        if (c == 0x02)
+        if (STX == c) {     // STX (0x02
             lexer->state = NAVCOM_LEADER_1;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
-#endif /* NAVCOM_ENABLE */
-#endif /* TSIP_ENABLE || EVERMORE_ENABLE || GARMIN_ENABLE */
+#endif  // NAVCOM_ENABLE
+#endif  // TSIP_ENABLE || EVERMORE_ENABLE || GARMIN_ENABLE
 #ifdef RTCM104V3_ENABLE
     case RTCM3_LEADER_1:
-        /* high 6 bits must be zero, low 2 bits are MSB of a 10-bit length */
-        if ((c & 0xFC) == 0) {
+        // high 6 bits must be zero, low 2 bits are MSB of a 10-bit length
+        if (0 == (c & 0xFC)) {
             lexer->length = (size_t) (c << 8);
             lexer->state = RTCM3_LEADER_2;
-        } else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case RTCM3_LEADER_2:
-        /* third byte is the low 8 bits of the RTCM3 packet length */
+        // third byte is the low 8 bits of the RTCM3 packet length
         lexer->length |= c;
-        lexer->length += 3;     /* to get the three checksum bytes */
+        lexer->length += 3;     // to get the three checksum bytes
         lexer->state = RTCM3_PAYLOAD;
         break;
     case RTCM3_PAYLOAD:
-        if (--lexer->length == 0)
+        if (0 == --lexer->length) {
             lexer->state = RTCM3_RECOGNIZED;
+        }
         break;
-#endif /* RTCM104V3_ENABLE */
+#endif  // RTCM104V3_ENABLE
 #ifdef ZODIAC_ENABLE
     case ZODIAC_EXPECTED:
+        FALLTHROUGH
     case ZODIAC_RECOGNIZED:
-        if (c == 0xff)
+        if (0xff == c) {         // y with diaeresis
             lexer->state = ZODIAC_LEADER_1;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case ZODIAC_LEADER_1:
-        if (c == 0x81)
+        if (0x81 == c) {         // latin1 non-printing
             lexer->state = ZODIAC_LEADER_2;
-        else
-            (void) character_pushback(lexer, GROUND_STATE);
+        } else {
+            (void)character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case ZODIAC_LEADER_2:
         lexer->state = ZODIAC_ID_1;
@@ -1275,7 +1285,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         lexer->state = ZODIAC_ID_2;
         break;
     case ZODIAC_ID_2:
-        lexer->length = (size_t) c;
+        lexer->length = (size_t)c;
         lexer->state = ZODIAC_LENGTH_1;
         break;
     case ZODIAC_LENGTH_1:
@@ -1292,37 +1302,40 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         lexer->state = ZODIAC_HSUM_1;
         break;
     case ZODIAC_HSUM_1:
-    {
-        short sum = getzword(0) + getzword(1) + getzword(2) + getzword(3);
-        sum *= -1;
-        if (sum != getzword(4)) {
-            GPSD_LOG(LOG_IO, &lexer->errout,
-                     "Zodiac Header checksum 0x%x expecting 0x%x\n",
-                     sum, getzword(4));
-            lexer->state = GROUND_STATE;
-            break;
+        {
+            short sum = getzword(0) + getzword(1) + getzword(2) + getzword(3);
+            sum *= -1;
+            if (sum != getzword(4)) {
+                GPSD_LOG(LOG_IO, &lexer->errout,
+                         "Zodiac Header checksum 0x%x expecting 0x%x\n",
+                         sum, getzword(4));
+                lexer->state = GROUND_STATE;
+                break;
+            }
         }
-    }
         GPSD_LOG(LOG_RAW1, &lexer->errout,
                  "Zodiac header id=%u len=%u flags=%x\n",
                  getzuword(1), getzuword(2), getzuword(3));
-        if (lexer->length == 0) {
+        if (0 == lexer->length) {
             lexer->state = ZODIAC_RECOGNIZED;
             break;
         }
-        lexer->length *= 2;     /* word count to byte count */
-        lexer->length += 2;     /* checksum */
-        /* 10 bytes is the length of the Zodiac header */
-        if (lexer->length <= MAX_PACKET_LENGTH - 10)
+        lexer->length *= 2;     // word count to byte count
+        lexer->length += 2;     // checksum
+        // 10 bytes is the length of the Zodiac header
+        // no idea what Zodiac max length really is
+        if ((MAX_PACKET_LENGTH - 10) >= lexer->length) {
             lexer->state = ZODIAC_PAYLOAD;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case ZODIAC_PAYLOAD:
-        if (--lexer->length == 0)
+        if (0 == --lexer->length) {
             lexer->state = ZODIAC_RECOGNIZED;
+        }
         break;
-#endif /* ZODIAC_ENABLE */
+#endif  // ZODIAC_ENABLE
 #ifdef UBLOX_ENABLE
     case UBX_LEADER_1:
         if (c == 0x62)
