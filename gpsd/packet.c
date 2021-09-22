@@ -407,29 +407,29 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
 #ifdef NMEA0183_ENABLE
     case NMEA_DOLLAR:
         switch (c) {
-        case 'A':           // SiRF Ack
+        case 'A':           // $A, SiRF Ack
             lexer->state = SIRF_ACK_LEAD_1;
             break;
         case 'B':           // $BD
             lexer->state = BEIDOU_LEAD_1;
             break;
 #ifdef OCEANSERVER_ENABLE
-        case 'C':
+        case 'C':           // $C
             // is this ever used?
             lexer->state = NMEA_LEADER_END;
             break;
 #endif  // OCEANSERVER_ENABLE
-        case 'E':           // ECDIS
+        case 'E':           // $E, ECDIS
             // codacy thinks this is impossible
             lexer->state = ECDIS_LEAD_1;
             break;
         case 'G':           // $GP, $GN, etc.
             lexer->state = NMEA_PUB_LEAD;
             break;
-        case 'H':           // Heading/compass. gyro
+        case 'H':           // $H, Heading/compass. gyro
             lexer->state = HEADCOMP_LEAD_1;
             break;
-        case 'I':           // Seatalk
+        case 'I':           // $I, Seatalk
             lexer->state = SEATALK_LEAD_1;
             break;
 #ifdef OCEANSERVER_ENABLE
@@ -438,26 +438,26 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             lexer->state = NMEA_LEADER_END;
             break;
 #endif  // OCEANSERVER_ENABLE
-        case 'P':           // vendor sentence
+        case 'P':           // $P, vendor sentence
             lexer->state = NMEA_VENDOR_LEAD;
             break;
         case 'Q':          // $QZ
             lexer->state = QZSS_LEAD_1;
             break;
-        case 'S':
+        case 'S':          // $S
             lexer->state = SOUNDER_LEAD_1;
             break;
-        case 'T':           // Turn indicator
+        case 'T':           // $T, Turn indicator
             lexer->state = TURN_LEAD_1;
             break;
-        case 'W':           // Weather instrument
+        case 'W':           // $W, Weather instrument
             lexer->state = WEATHER_LEAD_1;
             break;
-        case 'Y':
+        case 'Y':           // $Y
             lexer->state = TRANSDUCER_LEAD_1;
             break;
         default:
-            (void) character_pushback(lexer, GROUND_STATE);
+            (void)character_pushback(lexer, GROUND_STATE);
             break;
         }
         break;
@@ -465,111 +465,135 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         /*
          * $GP == GPS, $GL = GLONASS only, $GN = mixed GPS and GLONASS,
          * according to NMEA (IEIC 61162-1) DRAFT 02/06/2009.
-         * We have a log from China with a Beidou device using $GB
+         * We have a log from China with a BeiDou device using $GB
          * rather than $BD.
          */
-        if (c == 'B' || c == 'P' || c == 'N' || c == 'L' || c == 'A')
+        if ('A' == c ||      // $GA, Galileo only
+            'B' == c ||      // $GB, BeiDou only
+            'L' == c ||      // $GL, GLONASS only
+            'N' == c ||      // $GN, mixed
+            'P' == c) {      // $GP, GPS
             lexer->state = NMEA_LEADER_END;
-        else
-            (void) character_pushback(lexer, GROUND_STATE);
+        } else {
+            (void)character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case NMEA_VENDOR_LEAD:
-        if (c == 'A')
+        if ('A' == c) {            // $PA
             lexer->state = NMEA_PASHR_A;
-        else if (isalpha(c))
+        } else if (isalpha(c)) {
             lexer->state = NMEA_LEADER_END;
-        else
+        } else {
             (void) character_pushback(lexer, GROUND_STATE);
+        }
         break;
     /*
-     * Without the following six states, DLE in a $PASHR can fool the
-     * sniffer into thinking it sees a TSIP packet.  Hilarity ensues.
+     * Without the following six states (NMEA_PASH_*, NMEA_BINARY_*)
+     * DLE in a $PASHR can fool the  sniffer into thinking it sees a 
+     * TSIP packet.  Hilarity ensues.
      */
     case NMEA_PASHR_A:
-        if (c == 'S')
+        if ('S' == c) {        // $PAS
             lexer->state = NMEA_PASHR_S;
-        else if (isalpha(c))
+        } else if (isalpha(c)) {
             lexer->state = NMEA_LEADER_END;
-        else
-            (void) character_pushback(lexer, GROUND_STATE);
+        } else {
+            (void)character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case NMEA_PASHR_S:
-        if (c == 'H')
+        if ('H' == c) {        // $PASH
             lexer->state = NMEA_PASHR_H;
-        else if (isalpha(c))
+        } else if (isalpha(c)) {
             lexer->state = NMEA_LEADER_END;
-        else
-            (void) character_pushback(lexer, GROUND_STATE);
+        } else {
+            (void)character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case NMEA_PASHR_H:
-        if (c == 'R')
+        if ('R' == c) {         // $PASHR
             lexer->state = NMEA_BINARY_BODY;
-        else if (isalpha(c))
+        } else if (isalpha(c)) {
             lexer->state = NMEA_LEADER_END;
-        else
+        } else {
             (void) character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case NMEA_BINARY_BODY:
-        if (c == '\r')
+        if ('\r' == c) {
             lexer->state = NMEA_BINARY_CR;
+        }
         break;
     case NMEA_BINARY_CR:
-        if (c == '\n')
+        if (c == '\n') {
             lexer->state = NMEA_BINARY_NL;
-        else
+        } else {
             lexer->state = NMEA_BINARY_BODY;
+        }
         break;
     case NMEA_BINARY_NL:
-        if (c == '$')
-            (void) character_pushback(lexer, NMEA_RECOGNIZED);
-        else
+        if ('$' == c) {
+            (void)character_pushback(lexer, NMEA_RECOGNIZED);
+        } else {
             lexer->state = NMEA_BINARY_BODY;
+        }
         break;
+    // end PASHR, TSIP mitigation
     case NMEA_BANG:
-        if (c == 'A')
+        if ('A' == c) {          // !A
             lexer->state = AIS_LEAD_1;
-        else if (c == 'B')
+        } else if ('B' == c) {   // !B
             lexer->state = AIS_LEAD_ALT1;
-        else if (c == 'S')
+        } else if ('S' == c) {   // !S
             lexer->state = AIS_LEAD_ALT3;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case AIS_LEAD_1:
-        if (strchr("BDINRSTX", c) != NULL)
+        if (NULL != strchr("BDINRSTX", c)) {
+            // !AB, !AD, !AI, !AN, !AR, !AS, !AT, !AX"
             lexer->state = AIS_LEAD_2;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case AIS_LEAD_2:
-        if (isalpha(c))
+        if (isalpha(c)) {
             lexer->state = NMEA_LEADER_END;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case AIS_LEAD_ALT1:
-        if (c == 'S')
+        if ('S' == c) {
+            // !BS
             lexer->state = AIS_LEAD_ALT2;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case AIS_LEAD_ALT2:
-        if (isalpha(c))
+        if (isalpha(c)) {
             lexer->state = NMEA_LEADER_END;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case AIS_LEAD_ALT3:
-        if (c == 'A')
+        if ('A' == c) {
+            // !SA
             lexer->state = AIS_LEAD_ALT4;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case AIS_LEAD_ALT4:
-        if (isalpha(c))
+        if (isalpha(c)) {
             lexer->state = NMEA_LEADER_END;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
 #if defined(TNT_ENABLE) || defined(GARMINTXT_ENABLE) || defined(ONCORE_ENABLE)
     case AT1_LEADER:
@@ -578,7 +602,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         case '@':
             lexer->state = ONCORE_AT2;
             break;
-#endif /* ONCORE_ENABLE */
+#endif  // ONCORE_ENABLE
 #ifdef TNT_ENABLE
         case '*':
             /*
@@ -590,7 +614,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
              */
             lexer->state = NMEA_LEADER_END;
             break;
-#endif /* TNT_ENABLE */
+#endif  // TNT_ENABLE
 #if defined(GARMINTXT_ENABLE)
         case '\r':
             /* stay in this state, next character should be '\n' */
@@ -598,30 +622,31 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             lexer->state = AT1_LEADER;
             break;
         case '\n':
-            /* end of packet found */
+            // end of packet found
             lexer->state = GTXT_RECOGNIZED;
             break;
-#endif /* GARMINTXT_ENABLE */
+#endif  // GARMINTXT_ENABLE
         default:
             if (!isprint(c))
                 return character_pushback(lexer, GROUND_STATE);
         }
         break;
-#endif // TNT_ENABLE || GARMINTXT_ENABLE || ONCORE_ENABLE
+#endif  // TNT_ENABLE || GARMINTXT_ENABLE || ONCORE_ENABLE
     case NMEA_LEADER_END:
-        if (c == '\r')
+        if ('\r' == c) {
             lexer->state = NMEA_CR;
-        else if (c == '\n')
-            /* not strictly correct, but helps for interpreting logfiles */
+        } else if ('\n' == c) {
+            // not strictly correct, but helps for interpreting logfiles
             lexer->state = NMEA_RECOGNIZED;
-        else if (c == '$') {
+        } else if ('$' == c) {
 #ifdef STASH_ENABLE
-            (void) character_pushback(lexer, STASH_RECOGNIZED);
+            (void)character_pushback(lexer, STASH_RECOGNIZED);
 #else
-            (void) character_pushback(lexer, GROUND_STATE);
+            (void)character_pushback(lexer, GROUND_STATE);
 #endif
-        } else if (!isprint(c))
-            (void) character_pushback(lexer, GROUND_STATE);
+        } else if (!isprint(c)) {
+            (void)character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case NMEA_CR:
         if ('\n' == c) {
