@@ -933,93 +933,105 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             return character_pushback(lexer, GROUND_STATE);
         }
         break;
-#endif /* NMEA0183_ENABLE */
+#endif  // NMEA0183_ENABLE
 #if defined(SIRF_ENABLE) || defined(SKYTRAQ_ENABLE)
     case SIRF_LEADER_1:
-# ifdef SIRF_ENABLE
-        /* SIRF leads with 0xA0,0xA2 */
-        if (c == 0xa2)
-            lexer->state = SIRF_LEADER_2;
-        else
-# endif /* SIRF_ENABLE */
 # ifdef SKYTRAQ_ENABLE
-        /* Skytraq leads with 0xA0,0xA1 */
-        if (c == 0xa1)
+        // Skytraq leads with 0xA0,0xA1
+        if (0xa1 == c) {
             lexer->state = SKY_LEADER_2;
-        else
-# endif /* SKYTRAQ_ENABLE */
-            return character_pushback(lexer, GROUND_STATE);
+            break;
+        }
+# endif // SKYTRAQ_ENABLE
+# ifdef SIRF_ENABLE
+        // SIRF leads with 0xA0,0xA2
+        if (0xa2 == c) {
+            lexer->state = SIRF_LEADER_2;
+            break;
+        }
+# endif // SIRF_ENABLE
+        return character_pushback(lexer, GROUND_STATE);
         break;
-#endif /* SIRF_ENABLE || SKYTRAQ_ENABLE */
+#endif  // SIRF_ENABLE || SKYTRAQ_ENABLE
 #ifdef SIRF_ENABLE
     case SIRF_LEADER_2:
+        // first part of length
         lexer->length = (size_t) (c << 8);
         lexer->state = SIRF_LENGTH_1;
         break;
     case SIRF_LENGTH_1:
+        // second part of length
         lexer->length += c + 2;
-        if (lexer->length <= MAX_PACKET_LENGTH)
+        if (lexer->length <= MAX_PACKET_LENGTH) {
             lexer->state = SIRF_PAYLOAD;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case SIRF_PAYLOAD:
-        if (--lexer->length == 0)
+        if (0 == --lexer->length) {
             lexer->state = SIRF_DELIVERED;
+        }
         break;
     case SIRF_DELIVERED:
-        if (c == 0xb0)
+        if (0xb0 == c) {     // latin1 degree sign
             lexer->state = SIRF_TRAILER_1;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case SIRF_TRAILER_1:
-        if (c == 0xb3)
+        if (0xb3 == c) {     // latin1 superscript 3
             lexer->state = SIRF_RECOGNIZED;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case SIRF_RECOGNIZED:
-        if (c == 0xa0)
+        if (0xa0 == c) {     // latin1 no break space
             lexer->state = SIRF_LEADER_1;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
-#endif /* SIRF_ENABLE */
+#endif  // SIRF_ENABLE
 #ifdef SKYTRAQ_ENABLE
     case SKY_LEADER_2:
-        /* MSB of length is first */
-        lexer->length = (size_t) (c << 8);
+        // MSB of length is first
+        lexer->length = (size_t)(c << 8);
         lexer->state = SKY_LENGTH_1;
         break;
     case SKY_LENGTH_1:
-        /* Skytraq length can be any 16 bit number, except 0 */
+        // Skytraq length can be any 16 bit number, except 0
         lexer->length += c;
-        if ( 0 == lexer->length )
+        if (0 == lexer->length) {
             return character_pushback(lexer, GROUND_STATE);
-        if (lexer->length > MAX_PACKET_LENGTH)
+        }
+        if (MAX_PACKET_LENGTH < lexer->length) {
             return character_pushback(lexer, GROUND_STATE);
+        }
         lexer->state = SKY_PAYLOAD;
         break;
     case SKY_PAYLOAD:
-        if ( 00 == --lexer->length)
+        if (0 == --lexer->length) {
             lexer->state = SKY_DELIVERED;
+        }
         break;
     case SKY_DELIVERED:
-        if ( lexer->errout.debug >= LOG_RAW1) {
+        {
             char scratchbuf[MAX_PACKET_LENGTH * 4 + 1];
+            unsigned char csum = 0;
+
             GPSD_LOG(LOG_RAW, &lexer->errout,
                      "Skytraq = %s\n",
                      gpsd_packetdump(scratchbuf,  sizeof(scratchbuf),
                          (char *)lexer->inbuffer,
                          lexer->inbufptr - (unsigned char *)lexer->inbuffer));
-        }
-        {
-            unsigned char csum = 0;
             for (n = 4;
                  (unsigned char *)(lexer->inbuffer + n) < lexer->inbufptr - 1;
-                 n++)
+                 n++) {
                 csum ^= lexer->inbuffer[n];
+            }
             if (csum != c) {
                 GPSD_LOG(LOG_IO, &lexer->errout,
                          "Skytraq bad checksum 0x%hhx, expecting 0x%x\n",
@@ -1031,98 +1043,111 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         lexer->state = SKY_CSUM;
         break;
     case SKY_CSUM:
-        if ( 0x0d != c)
+        if ('\r' != c) {
             return character_pushback(lexer, GROUND_STATE);
+        }
         lexer->state = SKY_TRAILER_1;
         break;
     case SKY_TRAILER_1:
-        if ( 0x0a != c)
+        if ('\n' != c) {
             return character_pushback(lexer, GROUND_STATE);
+        }
         lexer->state = SKY_RECOGNIZED;
         break;
     case SKY_RECOGNIZED:
-        if ( 0xa0 != c)
+        if (0xa0 != c) {     // non break space
             return character_pushback(lexer, GROUND_STATE);
+        }
         lexer->state = SIRF_LEADER_1;
         break;
-#endif /* SKYTRAQ */
+#endif  // SKYTRAQ
 #ifdef SUPERSTAR2_ENABLE
     case SUPERSTAR2_LEADER:
-        ctmp = c;
+        ctmp = c;          // seems a dodgy way to keep state...
         lexer->state = SUPERSTAR2_ID1;
         break;
     case SUPERSTAR2_ID1:
-        if ((ctmp ^ 0xff) == c)
+        if ((ctmp ^ 0xff) == c) {
             lexer->state = SUPERSTAR2_ID2;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case SUPERSTAR2_ID2:
         lexer->length = (size_t) c;  // how many data bytes follow this byte
-        if (lexer->length)
+        if (lexer->length) {
             lexer->state = SUPERSTAR2_PAYLOAD;
-        else
-            lexer->state = SUPERSTAR2_CKSUM1;   /* no data, jump to checksum */
+        } else {
+            lexer->state = SUPERSTAR2_CKSUM1;   // no data, jump to checksum
+        }
         break;
     case SUPERSTAR2_PAYLOAD:
-        if (--lexer->length == 0)
+        if (0 == --lexer->length) {
+            // Done with payload
             lexer->state = SUPERSTAR2_CKSUM1;
+        }
         break;
     case SUPERSTAR2_CKSUM1:
         lexer->state = SUPERSTAR2_CKSUM2;
         break;
     case SUPERSTAR2_CKSUM2:
+        // checksum not checked here?
         lexer->state = SUPERSTAR2_RECOGNIZED;
         break;
     case SUPERSTAR2_RECOGNIZED:
-        if (c == SOH)
+        if (SOH == c) {
             lexer->state = SUPERSTAR2_LEADER;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
-#endif /* SUPERSTAR2_ENABLE */
+#endif  // SUPERSTAR2_ENABLE
 #ifdef ONCORE_ENABLE
     case ONCORE_AT2:
         if (isupper(c)) {
-            lexer->length = (size_t) c;
+            lexer->length = (size_t)c;
             lexer->state = ONCORE_ID1;
-        } else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case ONCORE_ID1:
-        if (isalpha(c)) {
-            lexer->length =
-                oncore_payload_cksum_length((unsigned char)lexer->length, c);
-            if (lexer->length != 0) {
-                lexer->state = ONCORE_PAYLOAD;
-                break;
-            }
-        } else
+        if (!isalpha(c)) {
             return character_pushback(lexer, GROUND_STATE);
+        }
+        lexer->length =
+            oncore_payload_cksum_length((unsigned char)lexer->length, c);
+        if (0 != lexer->length) {
+            lexer->state = ONCORE_PAYLOAD;
+        }
+        // else?
         break;
     case ONCORE_PAYLOAD:
-        if (--lexer->length == 0)
+        if (0 == --lexer->length) {
             lexer->state = ONCORE_CHECKSUM;
+        }
         break;
     case ONCORE_CHECKSUM:
-        if (c != '\r')
+        if ('\r' != c) {
             return character_pushback(lexer, GROUND_STATE);
-        else
-            lexer->state = ONCORE_CR;
+        }
+        lexer->state = ONCORE_CR;
         break;
     case ONCORE_CR:
-        if (c == '\n')
+        if ('\n' == c) {
             lexer->state = ONCORE_RECOGNIZED;
-        else
+        } else {
             lexer->state = ONCORE_PAYLOAD;
+        }
         break;
     case ONCORE_RECOGNIZED:
-        if (c == '@')
+        if ('@' == c) {
             lexer->state = AT1_LEADER;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
-#endif /* ONCORE_ENABLE */
+#endif  // ONCORE_ENABLE
 #if defined(TSIP_ENABLE) || defined(EVERMORE_ENABLE) || defined(GARMIN_ENABLE)
     case DLE_LEADER:
 #ifdef EVERMORE_ENABLE
