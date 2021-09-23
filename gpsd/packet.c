@@ -1231,7 +1231,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         }
         break;
     case NAVCOM_RECOGNIZED:
-        if (STX == c) {     // STX (0x02
+        if (STX == c) {     // STX (0x02)
             lexer->state = NAVCOM_LEADER_1;
         } else {
             return character_pushback(lexer, GROUND_STATE);
@@ -1338,10 +1338,11 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
 #endif  // ZODIAC_ENABLE
 #ifdef UBLOX_ENABLE
     case UBX_LEADER_1:
-        if (c == 0x62)
+        if ('b' == c) {      // micro, b
             lexer->state = UBX_LEADER_2;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case UBX_LEADER_2:
         lexer->state = UBX_CLASS_ID;
@@ -1350,7 +1351,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         lexer->state = UBX_MESSAGE_ID;
         break;
     case UBX_MESSAGE_ID:
-        lexer->length = (size_t) c;
+        lexer->length = (size_t)c;
         lexer->state = UBX_LENGTH_1;
         break;
     case UBX_LENGTH_1:
@@ -1370,47 +1371,53 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         lexer->state = UBX_PAYLOAD;
         break;
     case UBX_PAYLOAD:
-        if (--lexer->length == 0)
+        if (0 == --lexer->length) {
             lexer->state = UBX_CHECKSUM_A;
-        /* else stay in payload state */
+        }
+        // else stay in payload state
         break;
     case UBX_CHECKSUM_A:
         lexer->state = UBX_RECOGNIZED;
         break;
     case UBX_RECOGNIZED:
-        if (c == MICRO)       // latin1 micro, 0xb5
+        if (MICRO == c) {       // latin1 micro (0xb5)
             lexer->state = UBX_LEADER_1;
 #ifdef NMEA0183_ENABLE
-        else if (c == '$')  // LEA-5H can/will output NMEA/UBX back to back
+        } else if ('$' == c) {  // LEA-5H can/will output NMEA/UBX back to back
             lexer->state = NMEA_DOLLAR;
-#endif /* NMEA0183_ENABLE */
+#endif  // NMEA0183_ENABLE
 #ifdef PASSTHROUGH_ENABLE
-        else if (c == '{')
+        } else if ('{' == c) {
             return character_pushback(lexer, JSON_LEADER);
-#endif /* PASSTHROUGH_ENABLE */
-        else
+#endif  // PASSTHROUGH_ENABLE
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
-#endif /* UBLOX_ENABLE */
+#endif  // UBLOX_ENABLE
 #ifdef EVERMORE_ENABLE
     case EVERMORE_LEADER_1:
-        if (c == STX)
+        if (STX == c) {        // DLE, STX
             lexer->state = EVERMORE_LEADER_2;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case EVERMORE_LEADER_2:
-        lexer->length = (size_t) c;
-        if (c == DLE)
+        lexer->length = (size_t)c;
+        if (DLE == c) {
             lexer->state = EVERMORE_PAYLOAD_DLE;
-        else
+        } else {
             lexer->state = EVERMORE_PAYLOAD;
+        }
         break;
     case EVERMORE_PAYLOAD:
-        if (c == DLE)
+        if (DLE == c) {
+            // Evermore doubles DLE's
             lexer->state = EVERMORE_PAYLOAD_DLE;
-        else if (--lexer->length == 0)
+        } else if (0 == --lexer->length) {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case EVERMORE_PAYLOAD_DLE:
         switch (c) {
@@ -1425,71 +1432,79 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         }
         break;
     case EVERMORE_RECOGNIZED:
-        if (c == DLE)
+        if (DLE == c) {
             lexer->state = EVERMORE_LEADER_1;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
-#endif /* EVERMORE_ENABLE */
+#endif  // EVERMORE_ENABLE
 #ifdef ITRAX_ENABLE
     case ITALK_LEADER_1:
-        if (c == '!')
+        if ('!' == c) {      // <!
             lexer->state = ITALK_LEADER_2;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case ITALK_LEADER_2:
-        lexer->length = (size_t) (lexer->inbuffer[6] & 0xff);
+        lexer->length = (size_t)(lexer->inbuffer[6] & 0xff);
         lexer->state = ITALK_LENGTH;
         break;
     case ITALK_LENGTH:
-        lexer->length += 1;     /* fix number of words in payload */
-        lexer->length *= 2;     /* convert to number of bytes */
-        lexer->length += 3;     /* add trailer length */
+        lexer->length += 1;     // fix number of words in payload
+        lexer->length *= 2;     // convert to number of bytes
+        lexer->length += 3;     // add trailer length
         lexer->state = ITALK_PAYLOAD;
         break;
     case ITALK_PAYLOAD:
-        /* lookahead for "<!" because sometimes packets are short but valid */
-        if ((c == '>') && (lexer->inbufptr[0] == '<') &&
-            (lexer->inbufptr[1] == '!')) {
+        // lookahead for "<!" because sometimes packets are short but valid
+        if (('>' == c) &&
+            ('<' == lexer->inbufptr[0]) &&
+            ('!' == lexer->inbufptr[1])) {
             lexer->state = ITALK_RECOGNIZED;
             GPSD_LOG(LOG_IO, &lexer->errout,
                      "ITALK: trying to process runt packet\n");
-            break;
-        } else if (--lexer->length == 0)
+        } else if (0 == --lexer->length) {
             lexer->state = ITALK_DELIVERED;
+        }
         break;
     case ITALK_DELIVERED:
-        if (c == '>')
+        if ('>' == c) {
             lexer->state = ITALK_RECOGNIZED;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case ITALK_RECOGNIZED:
-        if (c == '<')
+        if ('<' == c) {
             lexer->state = ITALK_LEADER_1;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
-#endif /* ITRAX_ENABLE */
+#endif  // ITRAX_ENABLE
 #ifdef GEOSTAR_ENABLE
     case GEOSTAR_LEADER_1:
-        if (c == 'S')
+        if ('S' == c) {     // PS
             lexer->state = GEOSTAR_LEADER_2;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case GEOSTAR_LEADER_2:
-        if (c == 'G')
+        if ('G' == c) {     // PSG
             lexer->state = GEOSTAR_LEADER_3;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case GEOSTAR_LEADER_3:
-        if (c == 'G')
+        if ('G' == c) {     // PSGG
             lexer->state = GEOSTAR_LEADER_4;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case GEOSTAR_LEADER_4:
         lexer->state = GEOSTAR_MESSAGE_ID_1;
@@ -1498,23 +1513,25 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         lexer->state = GEOSTAR_MESSAGE_ID_2;
         break;
     case GEOSTAR_MESSAGE_ID_2:
-        lexer->length = (size_t)(c * 4);
+        lexer->length = (size_t)c * 4;
         lexer->state = GEOSTAR_LENGTH_1;
         break;
     case GEOSTAR_LENGTH_1:
         lexer->length += (c << 8) * 4;
-        if (lexer->length <= MAX_PACKET_LENGTH)
+        if (MAX_PACKET_LENGTH >= lexer->length) {
             lexer->state = GEOSTAR_LENGTH_2;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case GEOSTAR_LENGTH_2:
         lexer->state = GEOSTAR_PAYLOAD;
         break;
     case GEOSTAR_PAYLOAD:
-        if (--lexer->length == 0)
+        if (0 == --lexer->length) {
             lexer->state = GEOSTAR_CHECKSUM_A;
-        /* else stay in payload state */
+        }
+        // else stay in payload state
         break;
     case GEOSTAR_CHECKSUM_A:
         lexer->state = GEOSTAR_CHECKSUM_B;
@@ -1526,14 +1543,16 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         lexer->state = GEOSTAR_RECOGNIZED;
         break;
     case GEOSTAR_RECOGNIZED:
-        if (c == 'P')
+        if ('P' == c) {      // P
             lexer->state = GEOSTAR_LEADER_1;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
-#endif /* GEOSTAR_ENABLE */
+#endif  // GEOSTAR_ENABLE
 #ifdef GREIS_ENABLE
     case GREIS_EXPECTED:
+        FALLTHROUGH
     case GREIS_RECOGNIZED:
         if (!isascii(c)) {
             return character_pushback(lexer, GROUND_STATE);
