@@ -47,6 +47,8 @@ PERMISSIONS
 #include "../include/crc24q.h"
 #include "../include/strfuncs.h"
 
+// FIXME: STASH_ENABLE never, ever defined, why all the code?
+
 /*
  * The packet-recognition state machine.  This takes an incoming byte stream
  * and tries to segment it into packets.  There are four types of packets:
@@ -1556,11 +1558,13 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
     case GREIS_RECOGNIZED:
         if (!isascii(c)) {
             return character_pushback(lexer, GROUND_STATE);
-        } else if (c == '#') {
-            /* Probably a comment used by the testsuite */
+        }
+        if ('#' == c) {
+            // Probably a comment used by the testsuite
             lexer->state = COMMENT_BODY;
-        } else if (c == '\r' || c == '\n') {
-            /* Arbitrary CR/LF allowed here, so continue to expect GREIS */
+        } else if ('\n' == c ||
+                   '\r' == c) {
+            // Arbitrary CR/LF allowed here, so continue to expect GREIS
             lexer->state = GREIS_EXPECTED;
             character_discard(lexer);
         } else {
@@ -1568,55 +1572,64 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         }
         break;
     case GREIS_REPLY_1:
-        if (c != 'E')
+        if ('E' != c) {       // RE
             return character_pushback(lexer, GROUND_STATE);
+        }
         lexer->state = GREIS_REPLY_2;
         break;
     case GREIS_ID_1:
-        if (!isascii(c))
+        if (!isascii(c)) {
             return character_pushback(lexer, GROUND_STATE);
+        }
         lexer->state = GREIS_ID_2;
         break;
     case GREIS_REPLY_2:
+        FALLTHROUGH
     case GREIS_ID_2:
-        if (!isxdigit(c))
+        if (!isxdigit(c)) {
             return character_pushback(lexer, GROUND_STATE);
+        }
         lexer->length = greis_hex2bin(c) << 8;
         lexer->state = GREIS_LENGTH_1;
         break;
     case GREIS_LENGTH_1:
-        if (!isxdigit(c))
+        if (!isxdigit(c)) {
             return character_pushback(lexer, GROUND_STATE);
+        }
         lexer->length += greis_hex2bin(c) << 4;
         lexer->state = GREIS_LENGTH_2;
         break;
     case GREIS_LENGTH_2:
-        if (!isxdigit(c))
+        if (!isxdigit(c)) {
             return character_pushback(lexer, GROUND_STATE);
+        }
         lexer->length += greis_hex2bin(c);
         lexer->state = GREIS_PAYLOAD;
         break;
     case GREIS_PAYLOAD:
-        if (--lexer->length == 0)
+        if (0 == --lexer->length) {
             lexer->state = GREIS_RECOGNIZED;
-        /* else stay in payload state */
+        }
+        // else stay in payload state
         break;
-#endif /* GREIS_ENABLE */
+#endif  // GREIS_ENABLE
 #ifdef TSIP_ENABLE
     case TSIP_LEADER:
-        /* unused case */
-        if (c >= 0x13) {
+        // unused case. see TSIP_RECOGNIZED
+        if (0x13 <= c) {       // DC3
             lexer->length = TSIP_MAX_PACKET;
             lexer->state = TSIP_PAYLOAD;
-        } else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case TSIP_PAYLOAD:
-        if (c == DLE)
+        if (DLE == c) {
             lexer->state = TSIP_DLE;
-        if ( 0 == --lexer->length ) {
-            /* uh, oh, packet too long, probably was never TSIP */
-            /* note lexer->length is unsigned */
+        }
+        if (0 == --lexer->length ) {
+            // uh, oh, packet too long, probably was never TSIP
+            // note lexer->length is unsigned
             lexer->state = GROUND_STATE;
         }
         break;
@@ -1635,7 +1648,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         }
         break;
     case TSIP_RECOGNIZED:
-        if (c == DLE)
+        if (DLE == c) {
             /*
              * Don't go to TSIP_LEADER state -- TSIP packets aren't
              * checksummed, so false positives are easy.  We might be
@@ -1643,22 +1656,24 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
              * or Garmin streaming binary.
              */
             lexer->state = DLE_LEADER;
-        else
+        } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
-#endif /* TSIP_ENABLE */
+#endif  // TSIP_ENABLE
 #ifdef RTCM104V2_ENABLE
     case RTCM2_SYNC_STATE:
+        FALLTHROUGH
     case RTCM2_SKIP_STATE:
-        if ((isgpsstat = rtcm2_decode(lexer, c)) == ISGPS_MESSAGE) {
+        if (ISGPS_MESSAGE == (isgpsstat = rtcm2_decode(lexer, c))) {
             lexer->state = RTCM2_RECOGNIZED;
-            break;
-        } else if (isgpsstat == ISGPS_NO_SYNC)
+        } else if (ISGPS_NO_SYNC == isgpsstat) {
             lexer->state = GROUND_STATE;
+        }
         break;
 
     case RTCM2_RECOGNIZED:
-        if (c == '#')
+        if ('#' == c) {
             /*
              * There's a remote possibility this could fire when # =
              * 0x23 is legitimate in-stream RTCM2 data.  No help for
@@ -1666,26 +1681,39 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
              * # EOF and we'll miss a packet.
              */
             return character_pushback(lexer, GROUND_STATE);
-        else if (rtcm2_decode(lexer, c) == ISGPS_SYNC) {
+        }
+        if (ISGPS_SYNC == rtcm2_decode(lexer, c)) {
             lexer->state = RTCM2_SYNC_STATE;
-            break;
-        } else
+        } else {
             lexer->state = GROUND_STATE;
+        }
         break;
-#endif /* RTCM104V2_ENABLE */
+#endif  // RTCM104V2_ENABLE
 #ifdef PASSTHROUGH_ENABLE
     case JSON_LEADER:
-        if (c == '{' || c == '[') {
+        switch (c) {
+        case '{':
+            FALLTHROUGH
+        case '[':
             lexer->json_depth++;
-        } else if (c == '}' || c == ']') {
-            if (--lexer->json_depth == 0)
-                lexer->state = JSON_RECOGNIZED;
-        } else if (isspace(c) || c == ',')
             break;
-        else if (c == '"') {
+        case '}':
+            FALLTHROUGH
+        case ']':
+            if (0 == --lexer->json_depth) {
+                lexer->state = JSON_RECOGNIZED;
+            }
+            break;
+        case ',':
+            break;
+        case '"':
             lexer->state = JSON_STRINGLITERAL;
             lexer->json_after = JSON_END_ATTRIBUTE;
-        } else {
+            break;
+        default:
+            if (isspace(c)) {
+                break;
+            }
             GPSD_LOG(LOG_RAW1, &lexer->errout,
                      "%08ld: missing attribute start after header\n",
                      lexer->char_counter);
@@ -1693,43 +1721,79 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         }
         break;
     case JSON_STRINGLITERAL:
-        if (c == '\\')
+        if ('\\' == c) {
             lexer->state = JSON_STRING_SOLIDUS;
-        else if (c == '"')
+        } else if ('"' == c) {
             lexer->state = lexer->json_after;
+        }
         break;
     case JSON_STRING_SOLIDUS:
         lexer->state = JSON_STRINGLITERAL;
         break;
     case JSON_END_ATTRIBUTE:
-        if (isspace(c))
+        if (isspace(c)) {
             break;
-        else if (c == ':')
+        }
+        if (':' == c) {
             lexer->state = JSON_EXPECT_VALUE;
-        else
-            /* saw something other than value start after colon */
+        } else {
+            // saw something other than value start after colon
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case JSON_EXPECT_VALUE:
-        if (isspace(c))
+        if (isspace(c)) {
             break;
-        else if (c == '"') {
+        }
+        switch (c) {
+        case '"':
             lexer->state = JSON_STRINGLITERAL;
             lexer->json_after = JSON_END_VALUE;
-        } else if (c == '{' || c == '[') {
+            break;
+        case '{':
+            FALLTHROUGH
+        case '[':
             return character_pushback(lexer, JSON_LEADER);
-        } else if (strchr("-0123456789", c) != NULL) {
+            break;
+        case '-':
+            FALLTHROUGH
+        case '0':
+            FALLTHROUGH
+        case '1':
+            FALLTHROUGH
+        case '2':
+            FALLTHROUGH
+        case '3':
+            FALLTHROUGH
+        case '4':
+            FALLTHROUGH
+        case '5':
+            FALLTHROUGH
+        case '6':
+            FALLTHROUGH
+        case '7':
+            FALLTHROUGH
+        case '8':
+            FALLTHROUGH
+        case '9':
             lexer->state = JSON_NUMBER;
-        } else if (c == 't' || c == 'f' || c == 'n')
+            break;
+        case 'f':
+            FALLTHROUGH
+        case 'n':
+            FALLTHROUGH
+        case 't':
             /*
              * This is a bit more permissive than strictly necessary, as
              * GPSD JSON does not include the null token.  Still, it's
              * futureproofing.
              */
             lexer->state = JSON_SPECIAL;
-        else
+            break;
+        default:
             /* couldn't recognize start of value literal */
             return character_pushback(lexer, GROUND_STATE);
+        }
         break;
     case JSON_NUMBER:
         /*
@@ -1740,41 +1804,45 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
          * possible result if it happens is our JSON parser will
          * quietly chuck out the object.
          */
-        if (strchr("1234567890.eE+-", c) == NULL) {
+        if (NULL == strchr("1234567890.eE+-", c)) {
             return character_pushback(lexer, JSON_END_VALUE);
         }
         break;
     case JSON_SPECIAL:
-        if (strchr("truefalsnil", c) == NULL)
+        if (NULL == strchr("truefalsnil", c)) {
             return character_pushback(lexer, JSON_END_VALUE);
+        }
         break;
     case JSON_END_VALUE:
-        if (isspace(c))
+        if (isspace(c)) {
             break;
-        else if (c == ',')
-            lexer->state = JSON_LEADER;
-        else if (c == '}' || c == ']')
+        }
+        if ('}' == c ||
+            ']' == c) {
             return character_pushback(lexer, JSON_LEADER);
-        else
+        }
+        if (',' != c) {
             /* trailing garbage after JSON value */
             return character_pushback(lexer, GROUND_STATE);
+        }
+        lexer->state = JSON_LEADER;
         break;
-#endif /* PASSTHROUGH_ENABLE */
+#endif  // PASSTHROUGH_ENABLE
 #ifdef STASH_ENABLE
     case STASH_RECOGNIZED:
-        if (c == '$')
-            lexer->state = NMEA_DOLLAR;
-        else
+        if ('$' != c) {
             return character_pushback(lexer, GROUND_STATE);
+        }
+        lexer->state = NMEA_DOLLAR;
         break;
-#endif /* STASH_ENABLE */
+#endif  // STASH_ENABLE
     }
 
-    return true;        /* no pushback */
+    return true;        // no pushback
 }
 
+// packet grab succeeded, move to output buffer
 static void packet_accept(struct gps_lexer_t *lexer, int packet_type)
-/* packet grab succeeded, move to output buffer */
 {
     size_t packetlen = lexer->inbufptr - lexer->inbuffer;
 
