@@ -979,8 +979,10 @@ ssize_t gpsd_serial_write(struct gps_device_t * session,
 
     if (NULL == session ||
         NULL == session->context ||
-        session->context->readonly)
+        0 > session->gpsdata.gps_fd ||
+        session->context->readonly) {
         return 0;
+    }
 
     status = write(session->gpsdata.gps_fd, buf, len);
     ok = (status == (ssize_t) len);
