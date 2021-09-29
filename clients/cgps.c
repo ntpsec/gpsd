@@ -611,13 +611,14 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
         /* got version, check it */
         /* FIXME: expected API version not available ? */
         if (0 != strcmp(gpsdata->version.release, VERSION)) {
-            (void)fprintf(stderr, "cgps: WARNING gpsd release %s, API: %d.%d, "
-                                  "expected %s ",
+            (void)fprintf(stderr, 
+                          "cgps: WARNING gpsd server release %s, expected %s, "
+                          "API: %d.%d",
                           gpsdata->version.release,
+                          VERSION,
                           gpsdata->version.proto_major,
-                          gpsdata->version.proto_minor,
-                          VERSION);
-            sleep(2);
+                          gpsdata->version.proto_minor);
+            sleep(4);
         }
     }
 
