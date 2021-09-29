@@ -1022,9 +1022,9 @@ static bool privileged_user(struct gps_device_t *device)
      */
     return subcount <= 1;
 }
-#endif /* __UNUSED_RECONFIGURE__ */
+#endif  // __UNUSED_RECONFIGURE__
 
-/* set serial parameters for a device from a speed and modestring */
+// set serial parameters for a device from a speed and modestring
 static void set_serial(struct gps_device_t *device,
                        speed_t speed, char *modestring)
 {
@@ -1047,16 +1047,15 @@ static void set_serial(struct gps_device_t *device,
             }
         }
     }
-#endif /* __clang_analyzer__ */
+#endif  // __clang_analyzer__
 
     GPSD_LOG(LOG_PROG, &context.errout,
-             "set_serial(%s,%u,%s) %c%d\n",
+             "SER: set_serial(%s,%u,%s) %c%d\n",
              device->gpsdata.dev.path,
              (unsigned int)speed, modestring, parity, stopbits);
-    /* no support for other word sizes yet */
-    /* *INDENT-OFF* */
-    if (wordsize == (int)(9 - stopbits)
-        && device->device_type->speed_switcher != NULL) {
+    // no support for other word sizes yet
+    if (wordsize == (int)(9 - stopbits) &&
+        NULL != device->device_type->speed_switcher) {
         if (device->device_type->speed_switcher(device, speed,
                                                 parity, (int)stopbits)) {
             /*
@@ -1075,9 +1074,14 @@ static void set_serial(struct gps_device_t *device,
              * The minimum delay time is probably constant
              * across any given type of UART.
              */
-            (void)tcdrain(device->gpsdata.gps_fd);
+            if (0 != tcdrain(device->gpsdata.gps_fd)) {
+                GPSD_LOG(LOG_ERROR, &device->context->errout,
+                         "SER: set_serial(%d) tcdrain() failed: %s(%d)\n",
+                         device->gpsdata.gps_fd,
+                         strerror(errno), errno);
+            }
 
-            /* wait 50,000 uSec */
+            // wait 50,000 uSec
             delay.tv_sec = 0;
             delay.tv_nsec = 50000000L;
             nanosleep(&delay, NULL);
@@ -1085,7 +1089,6 @@ static void set_serial(struct gps_device_t *device,
             gpsd_set_speed(device, speed, parity, stopbits);
         }
     }
-    /* *INDENT-ON* */
 }
 
 #ifdef SOCKET_EXPORT_ENABLE
