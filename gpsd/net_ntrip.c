@@ -1,13 +1,15 @@
-/* net_ntrip.c -- gather and dispatch DGNSS data from Ntrip broadcasters
+/* net_ntrip.c -- gather and dispatch DGNSS data from NTRIP broadcasters
  *
  * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  *
  * See:
  * https://igs.bkg.bund.de/root_ftp/NTRIP/documentation/NtripDocumentation.pdf
+ *
+ * NTRIP is not an open protocol.  So this file is based on guesswork.
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include <errno.h>
 #include <fcntl.h>
@@ -28,12 +30,17 @@
 
 #define NTRIP_SOURCETABLE       "SOURCETABLE 200 OK\r\n"
 #define NTRIP_ENDSOURCETABLE    "ENDSOURCETABLE"
+#define NTRIP_SOURCETABLE2      "Content-Type: gnss/sourcetable\r\n"
+#define NTRIP_BODY              "\r\n\r\n"
 #define NTRIP_CAS               "CAS;"
 #define NTRIP_NET               "NET;"
 #define NTRIP_STR               "STR;"
 #define NTRIP_BR                "\r\n"
 #define NTRIP_QSC               "\";\""
+// NTRIP 1.0 caster response.  Based on Icecast audio servers
 #define NTRIP_ICY               "ICY 200 OK"
+// NTRIP 2.0 caster response.  Based on HTTP 1.1
+#define NTRIP_HTTP              "HTTP/1.1 200 OK"
 #define NTRIP_UNAUTH            "401 Unauthorized"
 
 static char *ntrip_field_iterate(char *start,
@@ -53,7 +60,7 @@ static char *ntrip_field_iterate(char *start,
             return NULL;
     }
 
-    /* ignore any quoted ; chars as they are part of the field content */
+    // ignore any quoted ; chars as they are part of the field content
     t = s;
     while ((u = strstr(t, NTRIP_QSC)))
         t = u + strlen(NTRIP_QSC);
@@ -61,7 +68,7 @@ static char *ntrip_field_iterate(char *start,
     if ((t = strstr(t, ";")))
         *t = '\0';
 
-    GPSD_LOG(LOG_RAW, errout, "Next Ntrip source table field %s\n", s);
+    GPSD_LOG(LOG_RAW, errout, "NTRIP: Next source table field %s\n", s);
 
     return s;
 }
@@ -200,11 +207,13 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
 
         memset(&buf[len], 0, (size_t) (blen - len));
         rlen = read(fd, &buf[len], (size_t)(blen - 1 - len));
-        if (rlen == -1) {
-            if (errno == EINTR) {
+        if (-1 == rlen) {
+            if (EINTR == errno) {
                 continue;
             }
-            if (sourcetable && !match && errno == EAGAIN) {
+            if (sourcetable &&
+                !match &&
+                EAGAIN == errno) {
                 /* we have not yet found a match, but there currently
                  * is no more data */
                 return 0;
@@ -213,14 +222,15 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                 return 1;
             }
             GPSD_LOG(LOG_ERROR, &device->context->errout,
-                     "ntrip stream read error %s on fd %d\n",
-                     strerror(errno), fd);
+                     "NTRIP: stream read error %s(%d) on fd %d\n",
+                     strerror(errno), errno, fd);
             return -1;
-        } else if (rlen == 0) { // server closed the connection
+        }
+        if (0 == rlen) {     // server closed the connection
             GPSD_LOG(LOG_ERROR, &device->context->errout,
-                     "ntrip stream unexpected close %s on fd %d "
+                     "NTRIP: stream unexpected close %s(%d) on fd %d "
                      "during sourcetable read\n",
-                     strerror(errno), fd);
+                     strerror(errno), errno, fd);
             return -1;
         }
 
@@ -229,27 +239,36 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
         line[rlen] = '\0';      // pacify coverity that this is NUL terminated
 
         GPSD_LOG(LOG_RAW, &device->context->errout,
-                 "Ntrip source table buffer %s\n", buf);
+                 "NTRIP: source table buffer %s\n", buf);
 
         sourcetable = device->ntrip.sourcetable_parse;
         if (!sourcetable) {
-            /* parse SOURCETABLE */
             if (str_starts_with(line, NTRIP_SOURCETABLE)) {
+                // parse SOURCETABLE, NTRIP 1.0
                 sourcetable = true;
                 device->ntrip.sourcetable_parse = true;
-                llen = (ssize_t) strlen(NTRIP_SOURCETABLE);
+                llen = (ssize_t)strlen(NTRIP_SOURCETABLE);
                 line += llen;
+                len -= llen;
+            } else if (NULL != strstr(line, NTRIP_SOURCETABLE2) &&
+                       NULL != (line = strstr(line, NTRIP_BODY))) {
+                // parse sourcetable, NTRIP 2.0
+                sourcetable = true;
+                device->ntrip.sourcetable_parse = true;
+                // FIXME: should parse length in header, this a hack
+                llen = (ssize_t)strlen(NTRIP_BODY);
+                line += 4;
                 len -= llen;
             } else {
                 GPSD_LOG(LOG_WARN, &device->context->errout,
-                         "Received unexpected Ntrip reply %s.\n",
+                         "NTRIP: Unexpected reply: %s.\n",
                          buf);
                 return -1;
             }
         }
 
-        while (len > 0) {
-            /* parse ENDSOURCETABLE */
+        while (0 < len) {
+            // parse ENDSOURCETABLE
             if (str_starts_with(line, NTRIP_ENDSOURCETABLE))
                 goto done;
 
@@ -259,7 +278,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
             }
 
             GPSD_LOG(LOG_DATA, &device->context->errout,
-                     "next Ntrip source table line %s\n", line);
+                     "NTRIP: next source table line %s\n", line);
 
             *eol = '\0';
             llen = (ssize_t) (eol - line);
@@ -276,14 +295,14 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                     /* TODO: support for RTCM 3.0, SBAS (WAAS, EGNOS), ... */
                     if (hold.format == fmt_unknown) {
                         GPSD_LOG(LOG_ERROR, &device->context->errout,
-                                 "Ntrip stream %s format not supported\n",
+                                 "NTRIP: stream %s format not supported\n",
                                  line);
                         return -1;
                     }
                     /* TODO: support encryption and compression algorithms */
                     if (hold.compr_encryp != cmp_enc_none) {
                         GPSD_LOG(LOG_ERROR, &device->context->errout,
-                                 "Ntrip stream %s compression/encryption "
+                                 "NTRIP. stream %s compression/encryption "
                                  "algorithm not supported\n",
                                  line);
                         return -1;
@@ -292,7 +311,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                     if (hold.authentication != auth_none
                             && hold.authentication != auth_basic) {
                         GPSD_LOG(LOG_ERROR, &device->context->errout,
-                                 "Ntrip stream %s authentication method "
+                                 "NTRIP. stream %s authentication method "
                                  "not supported\n",
                                 line);
                         return -1;
@@ -329,7 +348,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
             line += llen;
             len -= llen;
             GPSD_LOG(LOG_RAW, &device->context->errout,
-                     "Remaining Ntrip source table buffer %zd %s\n", len,
+                     "NTRIP: Remaining source table buffer %zd %s\n", len,
                      line);
         }
         /* message too big to fit into buffer */
@@ -354,11 +373,11 @@ static int ntrip_stream_req_probe(const struct ntrip_stream_t *stream,
     dsock = netlib_connectsock(AF_UNSPEC, stream->url, stream->port, "tcp");
     if (dsock < 0) {
         GPSD_LOG(LOG_ERROR, errout,
-                 "ntrip stream connect error %d in req probe\n", dsock);
+                 "NTRIP: stream connect error %d in req probe\n", dsock);
         return -1;
     }
     GPSD_LOG(LOG_SPIN, errout,
-             "ntrip stream for req probe connected on fd %d\n", dsock);
+             "NTRIP: stream for req probe connected on fd %d\n", dsock);
     (void)snprintf(buf, sizeof(buf),
             "GET / HTTP/1.1\r\n"
             "Ntrip-Version: Ntrip/2.0\r\n"
@@ -369,7 +388,7 @@ static int ntrip_stream_req_probe(const struct ntrip_stream_t *stream,
     r = write(dsock, buf, strlen(buf));
     if (r != (ssize_t)strlen(buf)) {
         GPSD_LOG(LOG_ERROR, errout,
-                 "ntrip stream write error %s on fd %d "
+                 "NTRIP: stream write error %s on fd %d "
                  "during probe request %zd\n",
                  strerror(errno), dsock, r);
         (void)close(dsock);
@@ -398,12 +417,10 @@ static int ntrip_auth_encode(const struct ntrip_stream_t *stream,
             return -1;
         (void)snprintf(buf, size - 1, "Authorization: Basic %s\r\n", authenc);
     } else {
-        /* TODO: support digest authentication */
+        // TODO: support digest authentication
     }
     return 0;
 }
-
-/* *INDENT-ON* */
 
 static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
                                      const struct gpsd_errout_t *errout)
@@ -414,12 +431,12 @@ static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
     dsock = netlib_connectsock(AF_UNSPEC, stream->url, stream->port, "tcp");
     if (BAD_SOCKET(dsock)) {
         GPSD_LOG(LOG_ERROR, errout,
-                 "ntrip stream connect error %d\n", dsock);
+                 "NTRIP: stream connect error %d\n", dsock);
         return -1;
     }
 
     GPSD_LOG(LOG_SPIN, errout,
-             "netlib_connectsock() returns socket on fd %d\n",
+             "NTRIP: netlib_connectsock() returns socket on fd %d\n",
              dsock);
 
     (void)snprintf(buf, sizeof(buf),
@@ -433,7 +450,7 @@ static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
             "\r\n", stream->mountpoint, VERSION, stream->url, stream->authStr);
     if (write(dsock, buf, strlen(buf)) != (ssize_t) strlen(buf)) {
         GPSD_LOG(LOG_ERROR, errout,
-                 "ntrip stream write error %s on fd %d during get request\n",
+                 "NTRIP: stream write error %s on fd %d during get request\n",
                  strerror(errno), dsock);
         (void)close(dsock);
         return -1;
@@ -441,56 +458,61 @@ static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
     return dsock;
 }
 
+/* parse the stream header
+ * Return: 0 == OK
+ *         -1 == fail
+ */
 static int ntrip_stream_get_parse(const struct ntrip_stream_t *stream,
                                   const int dsock,
                                   const struct gpsd_errout_t *errout)
 {
     char buf[BUFSIZ];
     int opts;
+
     memset(buf, 0, sizeof(buf));
-    while (read(dsock, buf, sizeof(buf) - 1) == -1) {
-        if (errno == EINTR)
+    while (-1 == read(dsock, buf, sizeof(buf) - 1)) {
+        if (EINTR == errno) {
             continue;
+        }
         GPSD_LOG(LOG_ERROR, errout,
-                 "ntrip stream read error %s on fd %d during get rsp\n",
-                 strerror(errno), dsock);
-        goto close;
+                 "NTRIP: stream read error %s(%d) on fd %d during get rsp\n",
+                 strerror(errno), errno, dsock);
+        return -1;
     }
     buf[sizeof(buf) - 1] = '\0';   // pacify coverity about NUL-terminated.
 
-    /* parse 401 Unauthorized */
+    // parse 401 Unauthorized
     if (NULL != strstr(buf, NTRIP_UNAUTH)) {
         GPSD_LOG(LOG_ERROR, errout,
-                 "not authorized for Ntrip stream %s/%s\n", stream->url,
+                 "NTRIP: not authorized for stream %s/%s\n", stream->url,
                  stream->mountpoint);
-        goto close;
+        return -1;
     }
-    /* parse SOURCETABLE */
+    // can't parse SOURCETABLE here
     if (NULL != strstr(buf, NTRIP_SOURCETABLE)) {
         GPSD_LOG(LOG_ERROR, errout,
-                 "Broadcaster doesn't recognize Ntrip stream %s:%s/%s\n",
+                 "NTRIP: caster doesn't recognize stream %s:%s/%s\n",
                  stream->url, stream->port, stream->mountpoint);
-        goto close;
+        return -1;
     }
-    /* parse ICY 200 OK */
-    if (NULL == strstr(buf, NTRIP_ICY)) {
+    // parse "ICY 200 OK" or "HTTP/1.1 200 OK"
+    if (NULL == strstr(buf, NTRIP_ICY) &&
+        NULL == strstr(buf, NTRIP_HTTP)) {
         GPSD_LOG(LOG_ERROR, errout,
-                 "Unknown reply %s from Ntrip service %s:%s/%s\n", buf,
+                 "NTRIP: Unknown reply %s from caster: %s:%s/%s\n", buf,
                  stream->url, stream->port, stream->mountpoint);
-        goto close;
+        return -1;
     }
     opts = fcntl(dsock, F_GETFL);
 
-    if (opts >= 0)
+    if (0 <= opts) {
         (void)fcntl(dsock, F_SETFL, opts | O_NONBLOCK);
+    }
 
-    return dsock;
-close:
-    (void)close(dsock);
-    return -1;
+    return 0;
 }
 
-/* open a connection to a Ntrip broadcaster */
+// open a connection to a Ntrip broadcaster
 int ntrip_open(struct gps_device_t *device, char *orig)
 {
     char *amp, *colon, *slash;
@@ -499,6 +521,10 @@ int ntrip_open(struct gps_device_t *device, char *orig)
     char *stream = NULL;
     char *url = NULL;
     socket_t ret = -1;
+
+    GPSD_LOG(LOG_PROG, &device->context->errout,
+             "NTRIP: ntrip_open(%s) state = %d\n",
+             orig, device->ntrip.conn_state);
 
     switch (device->ntrip.conn_state) {
     case NTRIP_CONN_INIT:
@@ -510,32 +536,33 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         device->ntrip.works = false;
         device->ntrip.sourcetable_parse = false;
         device->ntrip.stream.set = false;
+        device->gpsdata.gps_fd = UNALLOCATED_FD;
 
         /* Test cases
          * ntrip://userid:passwd@ntrip.com:2101/MOUNT-POINT
          * ntrip://a@b.com:passwd@ntrip.com:2101/MOUNT-POINT
          * ntrip://userid:passwd@@@ntrip.com:2101/MOUNT-POINT
          * ntrip://a@b.com:passwd@@@ntrip.com:2101/MOUNT-POINT */
-        if ((amp = strrchr(caster, '@')) != NULL) {
-            if (((colon = strchr(caster, ':')) != NULL) && colon < amp) {
-                auth = caster;
-                *amp = '\0';
-                caster = amp + 1;
-                url = caster;
-            }
+        if (NULL != (amp = strrchr(caster, '@')) &&
+            NULL != (colon = strchr(caster, ':')) &&
+            colon < amp) {
+            auth = caster;
+            *amp = '\0';
+            caster = amp + 1;
+            url = caster;
         }
-        if ((slash = strchr(caster, '/')) != NULL) {
+        if (NULL != (slash = strchr(caster, '/'))) {
             *slash = '\0';
             stream = slash + 1;
         } else {
-            /* TODO: add autoconnect like in dgpsip.c */
+            // TODO: add autoconnect like in dgpsip.c
             GPSD_LOG(LOG_ERROR, &device->context->errout,
-                     "can't extract Ntrip stream from %s\n",
+                     "NTRIP: can't extract stream from %s\n",
                      caster);
             device->ntrip.conn_state = NTRIP_CONN_ERR;
             return -1;
         }
-        if ((colon = strchr(caster, ':')) != NULL) {
+        if (NULL != (colon = strchr(caster, ':'))) {
             port = colon + 1;
             *colon = '\0';
         }
@@ -546,33 +573,33 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         }
         if (!port) {
             port = "rtcm-sc104";
-            if (!getservbyname(port, "tcp"))
+            if (!getservbyname(port, "tcp")) {
                 port = DEFAULT_RTCM_PORT;
+            }
         }
 
         (void)strlcpy(device->ntrip.stream.mountpoint,
-                stream,
-                sizeof(device->ntrip.stream.mountpoint));
-        if (auth != NULL)
+                      stream, sizeof(device->ntrip.stream.mountpoint));
+        if (NULL != auth) {
             (void)strlcpy(device->ntrip.stream.credentials,
-                          auth,
-                          sizeof(device->ntrip.stream.credentials));
+                          auth, sizeof(device->ntrip.stream.credentials));
+        }
         /*
          * Semantically url and port ought to be non-NULL by now,
          * but just in case...this code appeases Coverity.
          */
-        if (url != NULL)
+        if (NULL != url) {
             (void)strlcpy(device->ntrip.stream.url,
-                          url,
-                          sizeof(device->ntrip.stream.url));
-        if (port != NULL)
+                          url, sizeof(device->ntrip.stream.url));
+        }
+        if (NULL != port) {
             (void)strlcpy(device->ntrip.stream.port,
-                          port,
-                          sizeof(device->ntrip.stream.port));
+                          port, sizeof(device->ntrip.stream.port));
+        }
 
         ret = ntrip_stream_req_probe(&device->ntrip.stream,
                                      &device->context->errout);
-        if (ret == -1) {
+        if (-1 == ret) {
             device->ntrip.conn_state = NTRIP_CONN_ERR;
             return -1;
         }
@@ -581,24 +608,26 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         return ret;
     case NTRIP_CONN_SENT_PROBE:
         ret = ntrip_sourcetable_parse(device);
-        if (ret == -1) {
+        if (-1 == ret) {
             device->ntrip.conn_state = NTRIP_CONN_ERR;
             return -1;
         }
-        if (ret == 0 && device->ntrip.stream.set == false) {
+        if (0 == ret &&
+            false == device->ntrip.stream.set) {
             return ret;
         }
         (void)close(device->gpsdata.gps_fd);
-        if (ntrip_auth_encode(&device->ntrip.stream,
-                              device->ntrip.stream.credentials,
-                              device->ntrip.stream.authStr,
-                              sizeof(device->ntrip.stream.authStr)) != 0) {
+        if (0 != ntrip_auth_encode(&device->ntrip.stream,
+                                   device->ntrip.stream.credentials,
+                                   device->ntrip.stream.authStr,
+                                   sizeof(device->ntrip.stream.authStr))) {
             device->ntrip.conn_state = NTRIP_CONN_ERR;
             return -1;
         }
         ret = ntrip_stream_get_req(&device->ntrip.stream,
                                    &device->context->errout);
-        if (ret == -1) {
+        if (-1 == ret) {
+            device->gpsdata.gps_fd = UNALLOCATED_FD;
             device->ntrip.conn_state = NTRIP_CONN_ERR;
             return -1;
         }
@@ -609,12 +638,14 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         ret = ntrip_stream_get_parse(&device->ntrip.stream,
                                      device->gpsdata.gps_fd,
                                      &device->context->errout);
-        if (ret == -1) {
+        if (-1 == ret) {
+            (void)close(device->gpsdata.gps_fd);
+            device->gpsdata.gps_fd = UNALLOCATED_FD;
             device->ntrip.conn_state = NTRIP_CONN_ERR;
             return -1;
         }
         device->ntrip.conn_state = NTRIP_CONN_ESTABLISHED;
-        device->ntrip.works = true; // we know, this worked.
+        device->ntrip.works = true;   // we know, this worked.
         break;
     case NTRIP_CONN_ESTABLISHED:
         FALLTHROUGH
@@ -624,7 +655,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
     return ret;
 }
 
-/* may be time to ship a usage report to the Ntrip caster */
+// may be time to ship a usage report to the NTRIP caster
 void ntrip_report(struct gps_context_t *context,
                   struct gps_device_t *gps,
                   struct gps_device_t *caster)
@@ -632,7 +663,7 @@ void ntrip_report(struct gps_context_t *context,
     static int count;
     /*
      * 10 is an arbitrary number, the point is to have gotten several good
-     * fixes before reporting usage to our Ntrip caster.
+     * fixes before reporting usage to our NTRIP caster.
      *
      * count % 5 is as arbitrary a number as the fixcnt. But some delay
      * was needed here
@@ -648,7 +679,7 @@ void ntrip_report(struct gps_context_t *context,
                 GPSD_LOG(LOG_IO, &context->errout, "=> dgps %s\n", buf);
             } else {
                 GPSD_LOG(LOG_IO, &context->errout,
-                         "ntrip report write failed\n");
+                         "NTRIP: report write failed\n");
             }
         }
     }
