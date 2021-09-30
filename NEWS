@@ -1,5 +1,8 @@
                         GPSD project news
 
+3.23.2: unreleased
+  NTRIP 2.0 now works.
+
 3.23.1: 2021-09-21
   Improve ubx cycle detection.
   Add quirks for Jackson Labs nonstandard NMEA
@@ -13,7 +16,8 @@
   Fix u-blox M6, M7 initialization issues.
   Various ubxtool and gpxlogger updates.
   Add mtk3301_speed_switcher()
-  No API, ABI changes.
+  No API changes, except for STATUS_* as above.
+  No ABI changes.
   Fallback to "python3" if "python" not found.
 
 3.23: 2021-08-06
