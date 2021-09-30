@@ -494,6 +494,8 @@ struct ntrip_stream_t
     char port[32];   // in my /etc/services 16 was the longest
     bool set;        // found and set
     enum ntrip_fmt {
+        FMT_UNKNOWN = 0,
+        FMT_CMRP,        // CMR+, dunno what it is.  ORGN uses it
         FMT_RTCM2,
         FMT_RTCM2_0,
         FMT_RTCM2_1,
@@ -503,7 +505,6 @@ struct ntrip_stream_t
         FMT_RTCM3_1,
         FMT_RTCM3_2,
         FMT_RTCM3_3,
-        FMT_UNKNOWN
     } format;
     int carrier;
     double latitude;

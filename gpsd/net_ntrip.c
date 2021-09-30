@@ -49,10 +49,11 @@
 #define NTRIP_UNAUTH            "401 Unauthorized"
 
 // table to convert format string to enum ntrip_fmt
-struct ntrip_fmt_s {
+static struct ntrip_fmt_s {
     const char *string;
     const enum ntrip_fmt format;
-} static const ntrip_fmts[] = {
+} const ntrip_fmts[] = {
+    {"CMR+", FMT_CMRP},
     // RTCM1 required for the SAPOS derver in Gemany, confirmed as RTCM2.3
     {"RTCM1_", FMT_RTCM2_3},
     {"RTCM 2.0", FMT_RTCM2_0},
