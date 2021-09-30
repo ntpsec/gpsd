@@ -172,7 +172,8 @@ static void ntrip_str_parse(char *str, size_t len,
     s = ntrip_field_iterate(NULL, s, eol, errout);
     // <compr-encryp>
     if (NULL != (s = ntrip_field_iterate(NULL, s, eol, errout))) {
-        if ((0 == strcmp(" ", s)) || (0 == strlen(s)) ||
+        if ((0 == strcmp(" ", s)) ||
+            (0 == strlen(s)) ||
             (0 == strcasecmp("none", s))) {
             hold->compr_encryp = CMP_ENC_NONE;
         } else {
@@ -310,14 +311,14 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                 if (0 == strcmp(device->ntrip.stream.mountpoint,
                                 hold.mountpoint)) {
                     // TODO: support for RTCM 3.0, SBAS (WAAS, EGNOS), ...
-                    if (hold.format == FMT_UNKNOWN) {
+                    if (FMT_UNKNOWN == hold.format) {
                         GPSD_LOG(LOG_ERROR, &device->context->errout,
                                  "NTRIP: stream %s format not supported\n",
                                  line);
                         return -1;
                     }
                     // TODO: support encryption and compression algorithms
-                    if (hold.compr_encryp != CMP_ENC_NONE) {
+                    if (CMP_ENC_NONE != hold.compr_encryp) {
                         GPSD_LOG(LOG_ERROR, &device->context->errout,
                                  "NTRIP. stream %s compression/encryption "
                                  "algorithm not supported\n",
@@ -325,8 +326,8 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                         return -1;
                     }
                     // TODO: support digest authentication
-                    if (hold.authentication != AUTH_NONE
-                            && hold.authentication != AUTH_BASIC) {
+                    if (AUTH_NONE != hold.authentication &&
+                        AUTH_BASIC != hold.authentication) {
                         GPSD_LOG(LOG_ERROR, &device->context->errout,
                                  "NTRIP. stream %s authentication method "
                                  "not supported\n",
@@ -423,9 +424,9 @@ static int ntrip_auth_encode(const struct ntrip_stream_t *stream,
                              size_t size)
 {
     memset(buf, 0, size);
-    if (stream->authentication == AUTH_NONE) {
+    if (AUTH_NONE == stream->authentication) {
         return 0;
-    } else if (stream->authentication == AUTH_BASIC) {
+    } else if (AUTH_BASIC == stream->authentication) {
         char authenc[64];
         if (!auth)
             return -1;
@@ -467,7 +468,7 @@ static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
             "%s"
             "Connection: close\r\n"
             "\r\n", stream->mountpoint, VERSION, stream->url, stream->authStr);
-    if (write(dsock, buf, strlen(buf)) != (ssize_t) strlen(buf)) {
+    if ((ssize_t)strlen(buf) != write(dsock, buf, strlen(buf))) {
         GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: stream write error %s(%d) on fd %d during "
                  "get request\n",
