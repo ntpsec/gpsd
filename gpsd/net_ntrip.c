@@ -215,6 +215,12 @@ static void ntrip_str_parse(char *str, size_t len,
     while (NULL != (s = ntrip_field_iterate(NULL, s, eol, errout)));
 }
 
+/* Parse the sourcetable, looking for a match to requested stream.
+ *
+ * Return 1 -- found match
+ *        0 -- no match, maybe more data to parse?
+ *        -1 --  error
+ */
 static int ntrip_sourcetable_parse(struct gps_device_t *device)
 {
     struct ntrip_stream_t hold;
@@ -303,7 +309,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
             }
 
             GPSD_LOG(LOG_DATA, &device->context->errout,
-                     "NTRIP: remaning source table lines %s\n", line);
+                     "NTRIP: remaining source table lines %s\n", line);
 
             *eol = '\0';
             llen = (ssize_t)(eol - line);
@@ -317,7 +323,10 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                                 &hold, &device->context->errout);
                 if (0 == strcmp(device->ntrip.stream.mountpoint,
                                 hold.mountpoint)) {
-                    // TODO: support for RTCM 3.0, SBAS (WAAS, EGNOS), ...
+                    // Found a match to requested stream
+
+                    // TODO: support for more formats.  Not that we care
+                    // about the format.
                     if (FMT_UNKNOWN == hold.format) {
                         GPSD_LOG(LOG_ERROR, &device->context->errout,
                                  "NTRIP: stream %s format not supported\n",
@@ -356,8 +365,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                 }
                 /* TODO: compare stream location to own location to
                  * find nearest stream if user hasn't provided one */
-            }
-            else if (str_starts_with(line, NTRIP_CAS)) {
+            } else if (str_starts_with(line, NTRIP_CAS)) {
                 // TODO: parse CAS
                 // See: http://software.rtcm-ntrip.org/wiki/CAS
                 GPSD_LOG(LOG_WARN, &device->context->errout,
@@ -564,7 +572,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         device->ntrip.works = false;
         device->ntrip.sourcetable_parse = false;
         device->ntrip.stream.set = false;
-        device->gpsdata.gps_fd = UNALLOCATED_FD;
+        device->gpsdata.gps_fd = PLACEHOLDING_FD;
 
         /* Test cases
          * ntrip://userid:passwd@ntrip.com:2101/MOUNT-POINT
@@ -628,6 +636,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         ret = ntrip_stream_req_probe(&device->ntrip.stream,
                                      &device->context->errout);
         if (-1 == ret) {
+            device->gpsdata.gps_fd = PLACEHOLDING_FD;
             device->ntrip.conn_state = NTRIP_CONN_ERR;
             return -1;
         }
@@ -636,6 +645,9 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         return ret;
     case NTRIP_CONN_SENT_PROBE:
         ret = ntrip_sourcetable_parse(device);
+        GPSD_LOG(LOG_PROG, &device->context->errout,
+                 "NTRIP: ntrip_sourcetable_parse(%s) = %d\n",
+                 device->ntrip.stream.mountpoint, ret);
         if (-1 == ret) {
             device->ntrip.conn_state = NTRIP_CONN_ERR;
             return -1;
@@ -645,6 +657,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
             return ret;
         }
         (void)close(device->gpsdata.gps_fd);
+        device->gpsdata.gps_fd = PLACEHOLDING_FD;
         if (0 != ntrip_auth_encode(&device->ntrip.stream,
                                    device->ntrip.stream.credentials,
                                    device->ntrip.stream.authStr,
@@ -655,7 +668,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         ret = ntrip_stream_get_req(&device->ntrip.stream,
                                    &device->context->errout);
         if (-1 == ret) {
-            device->gpsdata.gps_fd = UNALLOCATED_FD;
+            device->gpsdata.gps_fd = PLACEHOLDING_FD;
             device->ntrip.conn_state = NTRIP_CONN_ERR;
             return -1;
         }
@@ -668,7 +681,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
                                      &device->context->errout);
         if (-1 == ret) {
             (void)close(device->gpsdata.gps_fd);
-            device->gpsdata.gps_fd = UNALLOCATED_FD;
+            device->gpsdata.gps_fd = PLACEHOLDING_FD;
             device->ntrip.conn_state = NTRIP_CONN_ERR;
             return -1;
         }
