@@ -493,7 +493,7 @@ struct ntrip_stream_t
     char url[256];
     char port[32];   // in my /etc/services 16 was the longest
     bool set;        // found and set
-    enum {
+    enum ntrip_fmt {
         FMT_RTCM2,
         FMT_RTCM2_0,
         FMT_RTCM2_1,

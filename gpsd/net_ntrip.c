@@ -48,6 +48,33 @@
 // HTTP 1.1
 #define NTRIP_UNAUTH            "401 Unauthorized"
 
+// table to convert format string to enum ntrip_fmt
+struct ntrip_fmt_s {
+    const char *string;
+    const enum ntrip_fmt format;
+} static const ntrip_fmts[] = {
+    // RTCM1 required for the SAPOS derver in Gemany, confirmed as RTCM2.3
+    {"RTCM1_", FMT_RTCM2_3},
+    {"RTCM 2.0", FMT_RTCM2_0},
+    {"RTCM 2.1", FMT_RTCM2_1},
+    {"RTCM 2.2", FMT_RTCM2_2},
+    {"RTCM22", FMT_RTCM2_2},
+    {"RTCM 2.3", FMT_RTCM2_3},
+    {"RTCM2.3", FMT_RTCM2_3},
+    {"RTCM2", FMT_RTCM2},
+    {"RTCM2", FMT_RTCM2},
+    {"RTCM 3.0", FMT_RTCM3_0},
+    {"RTCM3.0", FMT_RTCM3_0},
+    {"RTCM 3.1", FMT_RTCM3_1},
+    {"RTCM3.1", FMT_RTCM3_1},
+    {"RTCM 3.2", FMT_RTCM3_2},
+    {"RTCM32", FMT_RTCM3_2},
+    {"RTCM 3.3", FMT_RTCM3_3},
+    {"RTCM 3", FMT_RTCM3_0},
+    {"RTCM3", FMT_RTCM3_0},
+    {NULL, FMT_UNKNOWN},
+};
+
 /* Return pointer to one NUL terminated source table field
  * Return NULL on error
  * fields are separated by a semicolon (;)
@@ -106,37 +133,16 @@ static void ntrip_str_parse(char *str, size_t len,
     s = ntrip_field_iterate(NULL, s, eol, errout);
     // <format>
     if (NULL != (s = ntrip_field_iterate(NULL, s, eol, errout))) {
-        if ((strcasecmp("RTCM 2", s) == 0) ||
-            (strcasecmp("RTCM2", s) == 0))
-            hold->format = FMT_RTCM2;
-        else if (strcasecmp("RTCM 2.0", s) == 0)
-            hold->format = FMT_RTCM2_0;
-        else if (strcasecmp("RTCM 2.1", s) == 0)
-            hold->format = FMT_RTCM2_1;
-        else if ((strcasecmp("RTCM 2.2", s) == 0) ||
-                 (strcasecmp("RTCM22", s) == 0))
-            hold->format = FMT_RTCM2_2;
-        else if ((strcasecmp("RTCM2.3", s) == 0) ||
-                 (strcasecmp("RTCM 2.3", s) == 0))
-            hold->format = FMT_RTCM2_3;
-        // required for the SAPOS derver in Gemany, confirmed as RTCM2.3
-        else if (strcasecmp("RTCM1_", s) == 0)
-            hold->format = FMT_RTCM2_3;
-        else if ((strcasecmp("RTCM 3", s) == 0) ||
-                 (strcasecmp("RTCM 3.0", s) == 0) ||
-                 (strcasecmp("RTCM3.0", s) == 0) ||
-                 (strcasecmp("RTCM3", s) == 0))
-            hold->format = FMT_RTCM3_0;
-        else if ((strcasecmp("RTCM3.1", s) == 0) ||
-                 (strcasecmp("RTCM 3.1", s) == 0))
-            hold->format = FMT_RTCM3_1;
-        else if ((strcasecmp("RTCM 3.2", s) == 0) ||
-                 (strcasecmp("RTCM32", s) == 0))
-            hold->format = FMT_RTCM3_2;
-        else if (strcasecmp("RTCM 3.3", s) == 0)
-            hold->format = FMT_RTCM3_3;
-        else {
-            hold->format = FMT_UNKNOWN;
+        struct ntrip_fmt_s const *pfmt;
+
+        hold->format = FMT_UNKNOWN;
+        for (pfmt = ntrip_fmts; NULL != pfmt->string; pfmt++) {
+            if (0 == strcasecmp(pfmt->string, s)) {
+                hold->format = pfmt->format;
+                break;
+            }
+        }
+        if (FMT_UNKNOWN == hold->format) {
             GPSD_LOG(LOG_WARN, errout, "NTRIP: Got unknown format '%s'\n", s);
         }
     }
