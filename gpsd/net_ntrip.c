@@ -62,7 +62,7 @@ static struct ntrip_fmt_s {
     {"RTCM22", FMT_RTCM2_2},
     {"RTCM 2.3", FMT_RTCM2_3},
     {"RTCM2.3", FMT_RTCM2_3},
-    {"RTCM2", FMT_RTCM2},
+    {"RTCM 2", FMT_RTCM2},
     {"RTCM2", FMT_RTCM2},
     {"RTCM 3.0", FMT_RTCM3_0},
     {"RTCM3.0", FMT_RTCM3_0},
@@ -303,10 +303,10 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
             }
 
             GPSD_LOG(LOG_DATA, &device->context->errout,
-                     "NTRIP: next source table line %s\n", line);
+                     "NTRIP: remaning source table lines %s\n", line);
 
             *eol = '\0';
-            llen = (ssize_t) (eol - line);
+            llen = (ssize_t)(eol - line);
 
             // TODO: parse headers
 
@@ -707,7 +707,8 @@ void ntrip_report(struct gps_context_t *context,
             gpsd_position_fix_dump(gps, buf, sizeof(buf));
             ret = write(caster->gpsdata.gps_fd, buf, strlen(buf));
             if ((ssize_t)strlen(buf) == ret) {
-                GPSD_LOG(LOG_IO, &context->errout, "=> dgps %s\n", buf);
+                GPSD_LOG(LOG_IO, &context->errout, "NTRIP: => caster %s\n",
+                         buf);
             } else if (0 > ret) {
                 GPSD_LOG(LOG_ERROR, &context->errout,
                          "NTRIP: ntrip_report() write(%d) error %s(%d)\n",
