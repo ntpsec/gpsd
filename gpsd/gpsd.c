@@ -1545,7 +1545,7 @@ static void pseudonmea_report(struct subscriber_t *sub,
 }
 #endif /* SOCKET_EXPORT_ENABLE */
 
-/* report on the current packet from a specified device */
+// report on the current packet from a specified device
 static void all_reports(struct gps_device_t *device, gps_mask_t changed)
 {
 #ifdef SOCKET_EXPORT_ENABLE
@@ -1554,8 +1554,8 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
     GPSD_LOG(LOG_DATA, &context.errout, "all_reports(): changed %s\n",
              gps_maskdump(changed));
 
-    /* add any just-identified device to watcher lists */
-    if ((changed & DRIVER_IS) != 0) {
+    // add any just-identified device to watcher lists
+    if (0 != (changed & DRIVER_IS)) {
         bool listeners = false;
         for (sub = subscribers;
              sub < subscribers + MAX_CLIENTS; sub++)
@@ -1568,60 +1568,61 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
         }
     }
 
-    /* handle laggy response to a firmware version query */
-    if ((changed & (DEVICEID_SET | DRIVER_IS)) != 0) {
-        if (device->device_type == NULL)
+    // handle laggy response to a firmware version query
+    if (0 != (changed & (DEVICEID_SET | DRIVER_IS))) {
+        if (NULL == device->device_type) {
             GPSD_LOG(LOG_ERROR, &context.errout,
                      "internal error - device type of %s not set "
                      "when expected\n",
                      device->gpsdata.dev.path);
-        else
-        {
+        } else {
             char id2[GPS_JSON_RESPONSE_MAX];
             json_device_dump(device, id2, sizeof(id2));
             notify_watchers(device, true, false, id2);
         }
     }
-#endif /* SOCKET_EXPORT_ENABLE */
+#endif  // SOCKET_EXPORT_ENABLE
 
     /*
      * If the device provided an RTCM packet, repeat it to all devices.
      */
-    if ((changed & RTCM2_SET) != 0 || (changed & RTCM3_SET) != 0) {
-        if ((changed & RTCM2_SET) != 0
-                   && device->lexer.outbuflen > RTCM_MAX) {
+    if (0 != (changed & RTCM2_SET) ||
+        0 != (changed & RTCM3_SET)) {
+        if (0 != (changed & RTCM2_SET) &&
+            RTCM_MAX < device->lexer.outbuflen) {
             GPSD_LOG(LOG_ERROR, &context.errout,
                      "overlong RTCM packet (%zd bytes)\n",
                      device->lexer.outbuflen);
-        } else if ((changed & RTCM3_SET) != 0
-                   && device->lexer.outbuflen > RTCM3_MAX) {
+        } else if (0 != (changed & RTCM3_SET) &&
+                   RTCM3_MAX < device->lexer.outbuflen) {
             GPSD_LOG(LOG_ERROR, &context.errout,
                      "overlong RTCM3 packet (%zd bytes)\n",
                      device->lexer.outbuflen);
         } else {
             struct gps_device_t *dp;
-            for (dp = devices; dp < devices+MAX_DEVICES; dp++) {
-                if (allocated_device(dp)) {
-/* *INDENT-OFF* */
-                    if (NULL != dp->device_type &&
-                        NULL != dp->device_type->rtcm_writer) {
-                        // FIXME: don't write back to source
-                        ssize_t ret = dp->device_type->rtcm_writer(dp,
-                                         (const char *)device->lexer.outbuffer,
-                                         device->lexer.outbuflen);
-                        if (0 < ret) {
-                            GPSD_LOG(LOG_IO, &context.errout,
-                                     "<= DGPS: %zd bytes of RTCM relayed.\n",
+            for (dp = devices; dp < (devices + MAX_DEVICES); dp++) {
+                if (!allocated_device(dp) ||
+                    0 > device->gpsdata.gps_fd) {
+                    continue;
+                }
+                if (NULL != dp->device_type &&
+                    NULL != dp->device_type->rtcm_writer) {
+                    // FIXME: don't write back to source
+                    ssize_t ret = dp->device_type->rtcm_writer(dp,
+                                     (const char *)device->lexer.outbuffer,
                                      device->lexer.outbuflen);
-                        } else if (0 == ret) {
-                            // nothing written, probably read_only
-                        } else {
-                            GPSD_LOG(LOG_ERROR, &context.errout,
-                                     "Write to RTCM sink failed, type %s\n",
-                                     dp->device_type->type_name);
-                        }
+                    if (0 < ret) {
+                        GPSD_LOG(LOG_IO, &context.errout,
+                                 "<= DGPS/NTRIP: %zd bytes of RTCM relayed.\n",
+                                 device->lexer.outbuflen);
+                    } else if (0 == ret) {
+                        // nothing written, probably read_only
+                    } else {
+                        GPSD_LOG(LOG_ERROR, &context.errout,
+                                 "<= DGPS/NTRIP: Write to RTCM sink failed, "
+                                 " type %s\n",
+                                 dp->device_type->type_name);
                     }
-/* *INDENT-ON* */
                 }
             }
         }
@@ -1632,44 +1633,46 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
      * Time is eligible for shipping to NTPD if the driver has
      * asserted NTPTIME_IS at any point in the current cycle.
      */
-    if ((changed & CLEAR_IS)!=0)
+    if (0 != (changed & CLEAR_IS)) {
         device->ship_to_ntpd = false;
-    if ((changed & NTPTIME_IS)!=0)
+    }
+    if (0 != (changed & NTPTIME_IS)) {
         device->ship_to_ntpd = true;
+    }
     /*
      * Only update the NTP time if we've seen the leap-seconds data.
      * Else we may be providing GPS time.
      */
-    if ((changed & TIME_SET) == 0) {
-        //GPSD_LOG(LOG_PROG, &context.errout, "NTP: No time this packet\n");
+    if (0 == (changed & TIME_SET)) {
+        // GPSD_LOG(LOG_PROG, &context.errout, "NTP: No time this packet\n");
     } else if (NTP_MIN_FIXES >= device->fixcnt &&
                false == context.batteryRTC) {
         /* Many GPS spew random times until after several valid GPS fixes.
          * Garmin says wait at least 3.
          * Allow override with -r option as some GPS say they always output
          * good time from an RTC */
-        //GPSD_LOG(LOG_PROG, &context.errout, "NTP: no fix\n");
+        // GPSD_LOG(LOG_PROG, &context.errout, "NTP: no fix\n");
     } else if (0 == device->newdata.time.tv_sec) {
-        //GPSD_LOG(LOG_PROG, &context.errout, "NTP: bad new time\n");
+        // GPSD_LOG(LOG_PROG, &context.errout, "NTP: bad new time\n");
     } else if (device->newdata.time.tv_sec <=
                device->pps_thread.fix_in.real.tv_sec) {
-        //GPSD_LOG(LOG_PROG, &context.errout, "NTP: Not a new time\n");
+        // GPSD_LOG(LOG_PROG, &context.errout, "NTP: Not a new time\n");
     } else if (!device->ship_to_ntpd) {
-        //GPSD_LOG(LOG_PROG, &context.errout,
-        //         "NTP: No precision time report\n");
+        // GPSD_LOG(LOG_PROG, &context.errout,
+        //          "NTP: No precision time report\n");
     } else {
         struct timedelta_t td;
         struct gps_device_t *ppsonly;
 
         ntp_latch(device, &td);
 
-        /* propagate this in-band-time to all PPS-only devices */
-        for (ppsonly = devices; ppsonly < devices + MAX_DEVICES; ppsonly++)
+        // propagate this in-band-time to all PPS-only devices
+        for (ppsonly = devices; ppsonly < (devices + MAX_DEVICES); ppsonly++)
             if (SOURCE_PPS == ppsonly->sourcetype) {
                 pps_thread_fixin(&ppsonly->pps_thread, &td);
             }
 
-        if (device->shm_clock != NULL) {
+        if (NULL != device->shm_clock) {
             (void)ntpshm_put(device, device->shm_clock, &td);
         }
 
@@ -1690,28 +1693,33 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
      * a sentence changes position or mode. Likely to
      * cause display jitter.
      */
-    if (!device->cycle_end_reliable && (changed & (LATLON_SET | MODE_SET))!=0)
+    if (!device->cycle_end_reliable &&
+        0 != (changed & (LATLON_SET | MODE_SET))) {
         changed |= REPORT_IS;
+    }
 
-    /* a few things are not per-subscriber reports */
-    if ((changed & REPORT_IS) != 0) {
+    // a few things are not per-subscriber reports
+    if (0 != (changed & REPORT_IS)) {
 #ifdef NETFEED_ENABLE
-        if (device->gpsdata.fix.mode == MODE_3D) {
+        if (MODE_3D == device->gpsdata.fix.mode) {
             struct gps_device_t *dgnss;
             /*
              * Pass the fix to every potential caster, here.
              * netgnss_report() individual caster types get to
              * make filtering decisiona.
              */
-            for (dgnss = devices; dgnss < devices + MAX_DEVICES; dgnss++)
-                if (dgnss != device)
+            for (dgnss = devices; dgnss < (devices + MAX_DEVICES); dgnss++) {
+                if (dgnss != device) {
                     netgnss_report(&context, device, dgnss);
+                }
+            }
         }
-#endif /* NETFEED_ENABLE */
+#endif  // NETFEED_ENABLE
 #if defined(DBUS_EXPORT_ENABLE)
-        if (device->gpsdata.fix.mode > MODE_NO_FIX)
+        if (MODE_NO_FIX < device->gpsdata.fix.mode) {
             send_dbus_fix(device);
-#endif /* defined(DBUS_EXPORT_ENABLE) */
+        }
+#endif  // defined(DBUS_EXPORT_ENABLE)
     }
 
 #ifdef SHM_EXPORT_ENABLE
@@ -1721,17 +1729,20 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
         // SHM clients updated more often than TCP clients.
         shm_update(&context, &device->gpsdata);
     }
-#endif /* SHM_EXPORT_ENABLE */
+#endif  // SHM_EXPORT_ENABLE
 
 #ifdef SOCKET_EXPORT_ENABLE
-    /* update all subscribers associated with this device */
-    for (sub = subscribers; sub < subscribers + MAX_CLIENTS; sub++) {
-        if (sub == NULL || sub->active == 0 || !subscribed(sub, device))
+    // update all subscribers associated with this device
+    for (sub = subscribers; sub < (subscribers + MAX_CLIENTS); sub++) {
+        if (NULL == sub ||
+            0 == sub->active ||
+            !subscribed(sub, device)) {
             continue;
+        }
 
 #ifdef PASSTHROUGH_ENABLE
-        /* this is for passing through JSON packets */
-        if ((changed & PASSTHROUGH_IS) != 0) {
+        // this is for passing through JSON packets
+        if (0 != (changed & PASSTHROUGH_IS)) {
             (void)strlcat((char *)device->lexer.outbuffer,
                           "\r\n",
                           sizeof(device->lexer.outbuffer));
@@ -1740,12 +1751,12 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
                                   device->lexer.outbuflen+2);
             continue;
         }
-#endif /* PASSTHROUGH_ENABLE */
+#endif  // PASSTHROUGH_ENABLE
 
-        /* report raw packets to users subscribed to those */
+        // report raw packets to users subscribed to those
         raw_report(sub, device);
 
-        /* some listeners may be in watcher mode */
+        // some listeners may be in watcher mode
         if (sub->policy.watcher) {
             if (changed & DATA_IS) {
                 GPSD_LOG(LOG_PROG, &context.errout,
@@ -1753,32 +1764,35 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
                          "cycle detection\n",
                          gps_maskdump(changed),
                          device->cycle_end_reliable ? "" : "un");
-                if ((changed & REPORT_IS) != 0)
+                if (0 != (changed & REPORT_IS)) {
                     GPSD_LOG(LOG_PROG, &context.errout,
                              "time to report a fix\n");
+                }
 
-                if (sub->policy.nmea)
+                if (sub->policy.nmea) {
                     pseudonmea_report(sub, changed, device);
+                }
 
                 if (sub->policy.json) {
                     char buf[GPS_JSON_RESPONSE_MAX * 4];
 
-                    if ((changed & AIS_SET) != 0)
-                        if (device->gpsdata.ais.type == 24
-                            && device->gpsdata.ais.type24.part != both
-                            && !sub->policy.split24)
-                            continue;
+                    if (0 != (changed & AIS_SET) &&
+                        24 == device->gpsdata.ais.type &&
+                        device->gpsdata.ais.type24.part != both &&
+                        !sub->policy.split24) {
+                        continue;
+                    }
 
                     json_data_report(changed, device, &sub->policy,
                                      buf, sizeof(buf));
-                    if (buf[0] != '\0')
+                    if ('\0' != buf[0]) {
                         (void)throttled_write(sub, buf, strlen(buf));
-
+                    }
                 }
             }
         }
-    } /* subscribers */
-#endif /* SOCKET_EXPORT_ENABLE */
+    }   // subscribers
+#endif  // SOCKET_EXPORT_ENABLE
 }
 
 #ifdef SOCKET_EXPORT_ENABLE
@@ -1854,8 +1868,8 @@ static void ship_pps_message(struct gps_device_t *session,
 
 
 #ifdef __UNUSED_AUTOCONNECT__
-#define DGPS_THRESHOLD  1600000 /* max. useful dist. from DGPS server (m) */
-#define SERVER_SAMPLE   12      /* # of servers within threshold to check */
+#define DGPS_THRESHOLD  1600000   // max. useful dist. from DGPS server (m)
+#define SERVER_SAMPLE   12        // # of servers within threshold to check
 
 struct dgps_server_t
 {
@@ -1866,12 +1880,12 @@ struct dgps_server_t
 
 static int srvcmp(const void *s, const void *t)
 {
-    /* fixes: warning: cast discards qualifiers from pointer target type */
+    // fixes: warning: cast discards qualifiers from pointer target type
     return (int)(((const struct dgps_server_t *)s)->dist -
                  ((const struct dgps_server_t *)t)->dist);
 }
 
-/* tell the library to talk to the nearest DGPSIP server */
+// tell the library to talk to the nearest DGPSIP server
 static void netgnss_autoconnect(struct gps_context_t *context,
                                 double lat, double lon, const char *serverlist)
 {
@@ -1879,12 +1893,12 @@ static void netgnss_autoconnect(struct gps_context_t *context,
     char buf[BUFSIZ];
     FILE *sfp = fopen(serverlist, "r");
 
-    if (sfp == NULL) {
+    if (NULL == sfp) {
         GPSD_LOG(LOG_ERROR, &context.errout, "no DGPS server list found.\n");
         return;
     }
 
-    for (sp = keep; sp < keep + SERVER_SAMPLE; sp++) {
+    for (sp = keep; sp < (keep + SERVER_SAMPLE); sp++) {
         sp->dist = DGPS_THRESHOLD;
         sp->server[0] = '\0';
     }
@@ -1913,7 +1927,7 @@ static void netgnss_autoconnect(struct gps_context_t *context,
     }
     (void)fclose(sfp);
 
-    if (keep[0].server[0] == '\0') {
+    if ('\0' == keep[0].server[0]) {
         GPSD_LOG(LOG_ERROR, &context.errout,
                  "no DGPS servers within %dm.\n",
                  (int)(DGPS_THRESHOLD / 1000));
