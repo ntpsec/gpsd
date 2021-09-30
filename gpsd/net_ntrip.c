@@ -108,35 +108,35 @@ static void ntrip_str_parse(char *str, size_t len,
     if (NULL != (s = ntrip_field_iterate(NULL, s, eol, errout))) {
         if ((strcasecmp("RTCM 2", s) == 0) ||
             (strcasecmp("RTCM2", s) == 0))
-            hold->format = fmt_rtcm2;
+            hold->format = FMT_RTCM2;
         else if (strcasecmp("RTCM 2.0", s) == 0)
-            hold->format = fmt_rtcm2_0;
+            hold->format = FMT_RTCM2_0;
         else if (strcasecmp("RTCM 2.1", s) == 0)
-            hold->format = fmt_rtcm2_1;
+            hold->format = FMT_RTCM2_1;
         else if ((strcasecmp("RTCM 2.2", s) == 0) ||
                  (strcasecmp("RTCM22", s) == 0))
-            hold->format = fmt_rtcm2_2;
+            hold->format = FMT_RTCM2_2;
         else if ((strcasecmp("RTCM2.3", s) == 0) ||
                  (strcasecmp("RTCM 2.3", s) == 0))
-            hold->format = fmt_rtcm2_3;
+            hold->format = FMT_RTCM2_3;
         // required for the SAPOS derver in Gemany, confirmed as RTCM2.3
         else if (strcasecmp("RTCM1_", s) == 0)
-            hold->format = fmt_rtcm2_3;
+            hold->format = FMT_RTCM2_3;
         else if ((strcasecmp("RTCM 3", s) == 0) ||
                  (strcasecmp("RTCM 3.0", s) == 0) ||
                  (strcasecmp("RTCM3.0", s) == 0) ||
                  (strcasecmp("RTCM3", s) == 0))
-            hold->format = fmt_rtcm3_0;
+            hold->format = FMT_RTCM3_0;
         else if ((strcasecmp("RTCM3.1", s) == 0) ||
                  (strcasecmp("RTCM 3.1", s) == 0))
-            hold->format = fmt_rtcm3_1;
+            hold->format = FMT_RTCM3_1;
         else if ((strcasecmp("RTCM 3.2", s) == 0) ||
                  (strcasecmp("RTCM32", s) == 0))
-            hold->format = fmt_rtcm3_2;
+            hold->format = FMT_RTCM3_2;
         else if (strcasecmp("RTCM 3.3", s) == 0)
-            hold->format = fmt_rtcm3_3;
+            hold->format = FMT_RTCM3_3;
         else {
-            hold->format = fmt_unknown;
+            hold->format = FMT_UNKNOWN;
             GPSD_LOG(LOG_WARN, errout, "NTRIP: Got unknown format '%s'\n", s);
         }
     }
@@ -174,9 +174,9 @@ static void ntrip_str_parse(char *str, size_t len,
     if (NULL != (s = ntrip_field_iterate(NULL, s, eol, errout))) {
         if ((0 == strcmp(" ", s)) || (0 == strlen(s)) ||
             (0 == strcasecmp("none", s))) {
-            hold->compr_encryp = cmp_enc_none;
+            hold->compr_encryp = CMP_ENC_NONE;
         } else {
-            hold->compr_encryp = cmp_enc_unknown;
+            hold->compr_encryp = CMP_ENC_UNKNOWN;
             GPSD_LOG(LOG_WARN, errout,
                      "NTRIP: Got unknown {compress,encrypt}ion '%s'\n", s);
         }
@@ -184,13 +184,13 @@ static void ntrip_str_parse(char *str, size_t len,
     // <authentication>
     if (NULL != (s = ntrip_field_iterate(NULL, s, eol, errout))) {
         if (0 == strcasecmp("N", s)) {
-            hold->authentication = auth_none;
+            hold->authentication = AUTH_NONE;
         } else if (0 == strcasecmp("B", s)) {
-            hold->authentication = auth_basic;
+            hold->authentication = AUTH_BASIC;
         } else if (0 == strcasecmp("D", s)) {
-            hold->authentication = auth_digest;
+            hold->authentication = AUTH_DIGEST;
         } else {
-            hold->authentication = auth_unknown;
+            hold->authentication = AUTH_UNKNOWN;
             GPSD_LOG(LOG_WARN, errout,
                      "NTRIP: Got unknown authenticatiion '%s'\n", s);
         }
@@ -310,14 +310,14 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                 if (0 == strcmp(device->ntrip.stream.mountpoint,
                                 hold.mountpoint)) {
                     // TODO: support for RTCM 3.0, SBAS (WAAS, EGNOS), ...
-                    if (hold.format == fmt_unknown) {
+                    if (hold.format == FMT_UNKNOWN) {
                         GPSD_LOG(LOG_ERROR, &device->context->errout,
                                  "NTRIP: stream %s format not supported\n",
                                  line);
                         return -1;
                     }
                     // TODO: support encryption and compression algorithms
-                    if (hold.compr_encryp != cmp_enc_none) {
+                    if (hold.compr_encryp != CMP_ENC_NONE) {
                         GPSD_LOG(LOG_ERROR, &device->context->errout,
                                  "NTRIP. stream %s compression/encryption "
                                  "algorithm not supported\n",
@@ -325,8 +325,8 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                         return -1;
                     }
                     // TODO: support digest authentication
-                    if (hold.authentication != auth_none
-                            && hold.authentication != auth_basic) {
+                    if (hold.authentication != AUTH_NONE
+                            && hold.authentication != AUTH_BASIC) {
                         GPSD_LOG(LOG_ERROR, &device->context->errout,
                                  "NTRIP. stream %s authentication method "
                                  "not supported\n",
@@ -423,9 +423,9 @@ static int ntrip_auth_encode(const struct ntrip_stream_t *stream,
                              size_t size)
 {
     memset(buf, 0, size);
-    if (stream->authentication == auth_none) {
+    if (stream->authentication == AUTH_NONE) {
         return 0;
-    } else if (stream->authentication == auth_basic) {
+    } else if (stream->authentication == AUTH_BASIC) {
         char authenc[64];
         if (!auth)
             return -1;

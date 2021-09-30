@@ -143,11 +143,11 @@ extern "C" {
  * The current hog champion is the Skytraq S2525F8 which emits
  * a 100-character PSTI message.
  */
-#define NMEA_MAX        102     /* max length of NMEA sentence */
-#define NMEA_MAX_FLD    100     // max fields in an NMEA sentence
-#define NMEA_BIG_BUF    (2*NMEA_MAX+1)  /* longer than longest NMEA sentence */
+#define NMEA_MAX        102             // max length of NMEA sentence
+#define NMEA_MAX_FLD    100             // max fields in an NMEA sentence
+#define NMEA_BIG_BUF    (2*NMEA_MAX+1)  // longer than longest NMEA sentence
 
-/* a few bits of ISGPS magic */
+// a few bits of ISGPS magic
 enum isgpsstat_t {
     ISGPS_NO_SYNC, ISGPS_SYNC, ISGPS_SKIP, ISGPS_MESSAGE,
 };
@@ -491,29 +491,34 @@ struct ntrip_stream_t
     char credentials[128];
     char authStr[128];
     char url[256];
-    char port[32]; /* in my /etc/services 16 was the longest */
-    bool set; /* found and set */
-    enum
-    {
-        fmt_rtcm2,
-        fmt_rtcm2_0,
-        fmt_rtcm2_1,
-        fmt_rtcm2_2,
-        fmt_rtcm2_3,
-        fmt_rtcm3_0,
-        fmt_rtcm3_1,
-        fmt_rtcm3_2,
-        fmt_rtcm3_3,
-        fmt_unknown
+    char port[32];   // in my /etc/services 16 was the longest
+    bool set;        // found and set
+    enum {
+        FMT_RTCM2,
+        FMT_RTCM2_0,
+        FMT_RTCM2_1,
+        FMT_RTCM2_2,
+        FMT_RTCM2_3,
+        FMT_RTCM3_0,
+        FMT_RTCM3_1,
+        FMT_RTCM3_2,
+        FMT_RTCM3_3,
+        FMT_UNKNOWN
     } format;
     int carrier;
     double latitude;
     double longitude;
     int nmea;
-    enum
-    { cmp_enc_none, cmp_enc_unknown } compr_encryp;
-    enum
-    { auth_none, auth_basic, auth_digest, auth_unknown } authentication;
+    enum {
+        CMP_ENC_NONE,
+        CMP_ENC_UNKNOWN
+    } compr_encryp;
+    enum {
+        AUTH_NONE,
+        AUTH_BASIC,
+        AUTH_DIGEST,
+        AUTH_UNKNOWN
+    } authentication;
     int fee;
     int bitrate;
 };
