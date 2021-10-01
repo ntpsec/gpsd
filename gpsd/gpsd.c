@@ -209,9 +209,7 @@ static void typelist(void)
 #if defined(NETFEED_ENABLE)
     (void)printf("# Netfeed enabled.\n");
 #endif
-#if defined(NTRIP_ENABLE)
     (void)printf("# NTRIP enabled.\n");
-#endif
 #if defined(SHM_EXPORT_ENABLE)
     (void)printf("# Shared memory export enabled.\n");
 #endif

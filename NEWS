@@ -1,7 +1,8 @@
                         GPSD project news
 
 3.23.2: unreleased
-  NTRIP 2.0 now works.
+  NTRIP 2.0 now works.  But still only plain HTML, not RTP, etc.
+  Remove ntrip options and NTRIP_ENABLE.  Always build in NTRIP.
 
 3.23.1: 2021-09-21
   Improve ubx cycle detection.

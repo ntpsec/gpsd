@@ -319,7 +319,6 @@ boolopts = (
     ("aivdm",         True,  "AIVDM support"),
     ("gpsclock",      True,  "GPSClock support"),
     ("isync",         True,  "Spectratime iSync LNRClok/GRCLOK support"),
-    ("ntrip",         True,  "NTRIP support"),
     ("oceanserver",   True,  "OceanServer support"),
     ("passthrough",   True,  "build support for passing through JSON"),
     ("rtcm104v2",     True,  "rtcm104v2 support"),
