@@ -567,7 +567,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         /* this has to be done here,
          * because it is needed for multi-stage connection */
         // strlcpy() ensures dup is NUL terminated.
-        strlcpy(dup, orig, 255);
+        strlcpy(dup, orig, sizeof(dup) - 1);
         device->servicetype = SERVICE_NTRIP;
         device->ntrip.works = false;
         device->ntrip.sourcetable_parse = false;
@@ -658,6 +658,19 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         }
         (void)close(device->gpsdata.gps_fd);
         device->gpsdata.gps_fd = PLACEHOLDING_FD;
+        GPSD_LOG(LOG_PROG, &device->context->errout,
+                 "NTRIP: found %s: %s: %d,%d,%f,%f,%d,%d,%d,%d,%d\n",
+                 device->ntrip.stream.url,
+                 device->ntrip.stream.mountpoint,
+                 device->ntrip.stream.format,
+                 device->ntrip.stream.carrier,
+                 device->ntrip.stream.latitude,
+                 device->ntrip.stream.longitude,
+                 device->ntrip.stream.nmea,
+                 device->ntrip.stream.compr_encryp,
+                 device->ntrip.stream.authentication,
+                 device->ntrip.stream.fee,
+                 device->ntrip.stream.bitrate);
         if (0 != ntrip_auth_encode(&device->ntrip.stream,
                                    device->ntrip.stream.credentials,
                                    device->ntrip.stream.authStr,
