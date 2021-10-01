@@ -556,6 +556,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
     char *port = NULL;
     char *stream = NULL;
     char *url = NULL;
+    size_t len = 0;
     socket_t ret = -1;
 
     GPSD_LOG(LOG_PROG, &device->context->errout,
@@ -575,6 +576,9 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         device->gpsdata.gps_fd = PLACEHOLDING_FD;
 
         /* Test cases
+         * ntrip://ntrip.com/MOUNT-POINT
+         * ntrip://ntrip.com:2101/MOUNT-POINT
+         * ntrip://userid:passwd@ntrip.com/MOUNT-POINT
          * ntrip://userid:passwd@ntrip.com:2101/MOUNT-POINT
          * ntrip://a@b.com:passwd@ntrip.com:2101/MOUNT-POINT
          * ntrip://userid:passwd@@@ntrip.com:2101/MOUNT-POINT
@@ -591,7 +595,6 @@ int ntrip_open(struct gps_device_t *device, char *orig)
             *slash = '\0';
             stream = slash + 1;
         } else {
-            // TODO: add autoconnect like in dgpsip.c
             GPSD_LOG(LOG_ERROR, &device->context->errout,
                      "NTRIP: can't extract stream from %s\n",
                      caster);
@@ -612,6 +615,22 @@ int ntrip_open(struct gps_device_t *device, char *orig)
             if (!getservbyname(port, "tcp")) {
                 port = DEFAULT_RTCM_PORT;
             }
+        }
+        // what remains in stream is the mountpoint
+        len = strlen(stream);
+        if (0 == len) {
+            GPSD_LOG(LOG_ERROR, &device->context->errout,
+                     "NTRIP: ntrip_open(%s) missing mountpoint.\n", orig);
+            device->gpsdata.gps_fd = PLACEHOLDING_FD;
+            device->ntrip.conn_state = NTRIP_CONN_ERR;
+            return -1;
+        } else if ('/' == stream[len - 1]) {
+            GPSD_LOG(LOG_ERROR, &device->context->errout,
+                     "NTRIP: ntrip_open(%s) mountpoint (%s) has illegal "
+                     "trailing /.\n", orig, stream);
+            device->gpsdata.gps_fd = PLACEHOLDING_FD;
+            device->ntrip.conn_state = NTRIP_CONN_ERR;
+            return -1;
         }
 
         (void)strlcpy(device->ntrip.stream.mountpoint,
