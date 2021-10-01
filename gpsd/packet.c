@@ -297,19 +297,15 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             lexer->state = DLE_LEADER;
             break;
 #endif  // TSIP_ENABLE || EVERMORE_ENABLE || GARMIN_ENABLE
-#ifdef NMEA0183_ENABLE
         case '!':
             lexer->state = NMEA_BANG;
             break;
-#endif  // NMEA0183_ENABLE
         case '#':
             lexer->state = COMMENT_BODY;
             break;
-#ifdef NMEA0183_ENABLE
         case '$':
             lexer->state = NMEA_DOLLAR;
             break;
-#endif  // NMEA0183_ENABLE
 #if defined(TNT_ENABLE) || defined(GARMINTXT_ENABLE) || defined(ONCORE_ENABLE)
         case '@':
 #ifdef RTCM104V2_ENABLE
@@ -404,7 +400,6 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             return character_pushback(lexer, GROUND_STATE);
         }
         break;
-#ifdef NMEA0183_ENABLE
     case NMEA_DOLLAR:
         switch (c) {
         case 'A':           // $A, SiRF Ack
@@ -931,7 +926,6 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             return character_pushback(lexer, GROUND_STATE);
         }
         break;
-#endif  // NMEA0183_ENABLE
 #if defined(SIRF_ENABLE) || defined(SKYTRAQ_ENABLE)
     case SIRF_LEADER_1:
 # ifdef SKYTRAQ_ENABLE
@@ -1380,10 +1374,8 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
     case UBX_RECOGNIZED:
         if (MICRO == c) {       // latin1 micro (0xb5)
             lexer->state = UBX_LEADER_1;
-#ifdef NMEA0183_ENABLE
         } else if ('$' == c) {  // LEA-5H can/will output NMEA/UBX back to back
             lexer->state = NMEA_DOLLAR;
-#endif  // NMEA0183_ENABLE
         } else if ('{' == c) {
             return character_pushback(lexer, JSON_LEADER);
         } else {
@@ -1963,9 +1955,7 @@ void packet_parse(struct gps_lexer_t *lexer)
             packet_discard(lexer);
             lexer->state = GROUND_STATE;
             break;
-        }
-#ifdef NMEA0183_ENABLE
-        else if (NMEA_RECOGNIZED == lexer->state) {
+        } else if (NMEA_RECOGNIZED == lexer->state) {
             /*
              * $PASHR packets have no checksum. Avoid the possibility
              * that random garbage might make it look like they do.
@@ -2059,10 +2049,8 @@ void packet_parse(struct gps_lexer_t *lexer)
             }
 #endif  // STASH_ENABLE
             break;
-        }
-#endif  // NMEA0183_ENABLE
 #ifdef SIRF_ENABLE
-        else if (SIRF_RECOGNIZED == lexer->state) {
+        } else if (SIRF_RECOGNIZED == lexer->state) {
             unsigned char *trailer = lexer->inbufptr - 4;
             unsigned int checksum =
                 (unsigned)((trailer[0] << 8) | trailer[1]);
@@ -2080,17 +2068,15 @@ void packet_parse(struct gps_lexer_t *lexer)
             }
             packet_discard(lexer);
             break;
-        }
 #endif  // SIRF_ENABLE
 #ifdef SKYTRAQ_ENABLE
-        else if (SKY_RECOGNIZED == lexer->state) {
+        } else if (SKY_RECOGNIZED == lexer->state) {
             packet_accept(lexer, SKY_PACKET);
             packet_discard(lexer);
             break;
-        }
 #endif /* SKYTRAQ_ENABLE */
 #ifdef SUPERSTAR2_ENABLE
-        else if (SUPERSTAR2_RECOGNIZED == lexer->state) {
+        } else if (SUPERSTAR2_RECOGNIZED == lexer->state) {
             unsigned a = 0, b;
             size_t n;
 
@@ -2118,10 +2104,9 @@ void packet_parse(struct gps_lexer_t *lexer)
             }
             packet_discard(lexer);
             break;
-        }
 #endif /* SUPERSTAR2_ENABLE */
 #ifdef ONCORE_ENABLE
-        else if (ONCORE_RECOGNIZED == lexer->state) {
+        } else if (ONCORE_RECOGNIZED == lexer->state) {
             char a, b;
             int i, len;
 
@@ -2145,10 +2130,9 @@ void packet_parse(struct gps_lexer_t *lexer)
             }
             packet_discard(lexer);
             break;
-        }
 #endif  // ONCORE_ENABLE
 #if defined(TSIP_ENABLE) || defined(GARMIN_ENABLE)
-        else if (TSIP_RECOGNIZED == lexer->state) {
+        } else if (TSIP_RECOGNIZED == lexer->state) {
             size_t packetlen = lexer->inbufptr - lexer->inbuffer;
 #ifdef TSIP_ENABLE
             unsigned int pos, dlecnt;

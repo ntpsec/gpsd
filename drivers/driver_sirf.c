@@ -2262,15 +2262,14 @@ gps_mask_t sirf_parse(struct gps_device_t * session, unsigned char *buf,
 
 static gps_mask_t sirfbin_parse_input(struct gps_device_t *session)
 {
-    if (session->lexer.type == SIRF_PACKET) {
+    if (SIRF_PACKET == session->lexer.type) {
         return sirf_parse(session, session->lexer.outbuffer,
                         session->lexer.outbuflen);
-#ifdef NMEA0183_ENABLE
-    } else if (session->lexer.type == NMEA_PACKET) {
+    }
+    if (NMEA_PACKET == session->lexer.type) {
         return nmea_parse((char *)session->lexer.outbuffer, session);
-#endif /* NMEA0183_ENABLE */
-    } else
-        return 0;
+    }
+    return 0;
 }
 
 static void sirfbin_init_query(struct gps_device_t *session)
@@ -2278,7 +2277,7 @@ static void sirfbin_init_query(struct gps_device_t *session)
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "SiRF: Probing for firmware version.\n");
 
-    /* reset binary init steps */
+    // reset binary init steps
     session->cfg_stage = 0;
     session->cfg_step = 0;
 

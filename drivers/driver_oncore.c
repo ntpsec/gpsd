@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -430,12 +430,12 @@ oncore_msg_svinfo(struct gps_device_t *session, unsigned char *buf,
     nchan = (unsigned int)getub(buf, 4);
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "oncore SVINFO - %d satellites:\n", nchan);
-    /* Then we clamp the value to not read outside the table. */
+    // Then we clamp the value to not read outside the table.
     if (nchan > 12)
         nchan = 12;
     session->driver.oncore.visible = (int)nchan;
     for (i = 0; i < nchan; i++) {
-        /* get info for one channel/satellite */
+        // get info for one channel/satellite
         unsigned int off = 5 + 7 * i;
 
         int sv = (int)getub(buf, off);
@@ -445,7 +445,7 @@ oncore_msg_svinfo(struct gps_device_t *session, unsigned char *buf,
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "%2d %2d %2d %3d\n", i, sv, el, az);
 
-        /* Store for use when Ea messages come. */
+        // Store for use when Ea messages come.
         session->driver.oncore.PRN[i] = sv;
         session->driver.oncore.elevation[i] = (short)el;
         session->driver.oncore.azimuth[i] = (short)az;
@@ -461,9 +461,9 @@ oncore_msg_svinfo(struct gps_device_t *session, unsigned char *buf,
  *
  *       m         - mode, 0=GPS, 1=UTC
  */
-static gps_mask_t
-oncore_msg_time_mode(struct gps_device_t *session UNUSED,
-                     unsigned char *buf UNUSED, size_t data_len UNUSED)
+static gps_mask_t oncore_msg_time_mode(struct gps_device_t *session UNUSED,
+                                       unsigned char *buf UNUSED,
+                                       size_t data_len UNUSED)
 {
     int time_mode;
 
@@ -480,9 +480,9 @@ oncore_msg_time_mode(struct gps_device_t *session UNUSED,
 /**
  * GPS Time RAIM
  */
-static gps_mask_t
-oncore_msg_time_raim(struct gps_device_t *session UNUSED,
-                     unsigned char *buf UNUSED, size_t data_len UNUSED)
+static gps_mask_t oncore_msg_time_raim(struct gps_device_t *session UNUSED,
+                                       unsigned char *buf UNUSED,
+                                       size_t data_len UNUSED)
 {
     int sawtooth_ns;
 
@@ -493,7 +493,7 @@ oncore_msg_time_raim(struct gps_device_t *session UNUSED,
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "oncore PPS sawtooth: %d\n",sawtooth_ns);
 
-    /* session->driver.oncore.traim_sawtooth_ns = sawtooth_ns; */
+    // session->driver.oncore.traim_sawtooth_ns = sawtooth_ns;
 
     return 0;
 }
@@ -501,9 +501,9 @@ oncore_msg_time_raim(struct gps_device_t *session UNUSED,
 /**
  * GPS Firmware
  */
-static gps_mask_t
-oncore_msg_firmware(struct gps_device_t *session UNUSED,
-                    unsigned char *buf UNUSED, size_t data_len UNUSED)
+static gps_mask_t oncore_msg_firmware(struct gps_device_t *session UNUSED,
+                                      unsigned char *buf UNUSED,
+                                      size_t data_len UNUSED)
 {
     return 0;
 }
@@ -518,12 +518,13 @@ gps_mask_t oncore_dispatch(struct gps_device_t * session, unsigned char *buf,
 {
     unsigned int type;
 
-    if (len == 0)
+    if (0 == len) {
         return 0;
+    }
 
     type = ONCTYPE(buf[2], buf[3]);
 
-    /* we may need to dump the raw packet */
+    // we may need to dump the raw packet
     GPSD_LOG(LOG_RAW, &session->context->errout,
              "raw Oncore packet type 0x%04x\n", type);
 
@@ -632,42 +633,41 @@ static double oncore_time_offset(struct gps_device_t *session UNUSED)
 
 static gps_mask_t oncore_parse_input(struct gps_device_t *session)
 {
-    if (session->lexer.type == ONCORE_PACKET) {
+    if (ONCORE_PACKET == session->lexer.type) {
         return oncore_dispatch(session, session->lexer.outbuffer,
                              session->lexer.outbuflen);
-#ifdef NMEA0183_ENABLE
-    } else if (session->lexer.type == NMEA_PACKET) {
+    }
+    if (NMEA_PACKET == session->lexer.type) {
         return nmea_parse((char *)session->lexer.outbuffer, session);
-#endif /* NMEA0183_ENABLE */
-    } else
-        return 0;
+    }
+    return 0;
 }
 
-/* This is everything we export */
-/* *INDENT-OFF* */
+// This is everything we export
+// *INDENT-OFF*
 const struct gps_type_t driver_oncore = {
 
-    .type_name        = "Motorola Oncore",      /* Full name of type */
-    .packet_type      = ONCORE_PACKET,          /* numeric packet type */
-    .flags            = DRIVER_STICKY,          /* remember this */
-    .trigger          = NULL,                   /* identifying response */
-    .channels         = 12,                     /* device channel count */
-    .probe_detect     = NULL,                   /* no probe */
-    .get_packet       = generic_get,            /* packet getter */
-    .parse_packet     = oncore_parse_input,     /* packet parser */
-    .rtcm_writer      = gpsd_write,             /* device accepts RTCM */
-    .init_query       = NULL,                   /* non-perturbing query */
-    .event_hook       = oncore_event_hook,      /* lifetime event hook */
-    .speed_switcher   = NULL,                   /* no speed setter */
-    .mode_switcher    = NULL,                   /* no mode setter */
-    .rate_switcher    = NULL,                   /* no speed setter */
-    .min_cycle.tv_sec  = 1,                     /* 1Hz */
+    .type_name        = "Motorola Oncore",      // Full name of type
+    .packet_type      = ONCORE_PACKET,          // numeric packet type
+    .flags            = DRIVER_STICKY,          // remember this
+    .trigger          = NULL,                   // identifying response
+    .channels         = 12,                     // device channel count
+    .probe_detect     = NULL,                   // no probe
+    .get_packet       = generic_get,            // packet getter
+    .parse_packet     = oncore_parse_input,     // packet parser
+    .rtcm_writer      = gpsd_write,             // device accepts RTCM
+    .init_query       = NULL,                   // non-perturbing query
+    .event_hook       = oncore_event_hook,      // lifetime event hook
+    .speed_switcher   = NULL,                   // no speed setter
+    .mode_switcher    = NULL,                   // no mode setter
+    .rate_switcher    = NULL,                   // no speed setter
+    .min_cycle.tv_sec  = 1,                     // 1Hz
     .min_cycle.tv_nsec = 0,
-    /* Control string sender - should provide checksum and headers/trailer */
-    .control_send   = oncore_control_send,      /* to send control strings */
-    .time_offset = oncore_time_offset,          /* NTP offset array */
+    // Control string sender - should provide checksum and headers/trailer
+    .control_send   = oncore_control_send,      // to send control strings
+    .time_offset = oncore_time_offset,          // NTP offset array
 };
-/* *INDENT-ON* */
-#endif /* defined(ONCORE_ENABLE) && defined(BINARY_ENABLE) */
+// *INDENT-ON*
+#endif  // defined(ONCORE_ENABLE) && defined(BINARY_ENABLE)
 
 // vim: set expandtab shiftwidth=4

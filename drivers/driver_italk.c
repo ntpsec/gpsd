@@ -423,25 +423,24 @@ static gps_mask_t italk_parse(struct gps_device_t *session,
 
 static gps_mask_t italk_parse_input(struct gps_device_t *session)
 {
-    if (session->lexer.type == ITALK_PACKET) {
+    if (ITALK_PACKET == session->lexer.type) {
         return italk_parse(session, session->lexer.outbuffer,
                            session->lexer.outbuflen);;
-#ifdef NMEA0183_ENABLE
-    } else if (session->lexer.type == NMEA_PACKET) {
+    }
+    if (NMEA_PACKET == session->lexer.type) {
         return nmea_parse((char *)session->lexer.outbuffer, session);
-#endif /* NMEA0183_ENABLE */
-    } else
-        return 0;
+    }
+    return 0;
 }
 
 #ifdef __UNUSED__
+// send a "ping". it may help us detect an itrax more quickly
 static void italk_ping(struct gps_device_t *session)
-/* send a "ping". it may help us detect an itrax more quickly */
 {
     char *ping = "<?>";
     (void)gpsd_write(session, ping, 3);
 }
-#endif /* __UNUSED__ */
+#endif  // __UNUSED__
 
 /* *INDENT-OFF* */
 const struct gps_type_t driver_italk =

@@ -1,45 +1,43 @@
-/* edit packet_states.h to add new packet types. */
-   GROUND_STATE,        /* we don't know what packet type to expect */
+// edit packet_states.h to add new packet types
+   GROUND_STATE,        // we don't know what packet type to expect
 
-   COMMENT_BODY,        /* pound comment for a test load */
-   COMMENT_RECOGNIZED,  /* comment recognized */
-   NMEA_DOLLAR,         /* we've seen first character of NMEA leader */
+   COMMENT_BODY,        // pound comment for a test load
+   COMMENT_RECOGNIZED,  // comment recognized
+   NMEA_DOLLAR,         // we've seen first character of NMEA leader
 
-#ifdef NMEA0183_ENABLE
-   NMEA_BANG,           /* we've seen first character of an AIS message '!' */
-   NMEA_PUB_LEAD,       /* seen second character of NMEA G leader */
-   NMEA_VENDOR_LEAD,    /* seen second character of NMEA P leader */
-   NMEA_LEADER_END,     /* seen end char of NMEA leader, in body */
-   NMEA_PASHR_A,        /* grind through recognizing $PASHR */
-   NMEA_PASHR_S,        /* grind through recognizing $PASHR */
-   NMEA_PASHR_H,        /* grind through recognizing $PASHR */
-   NMEA_BINARY_BODY,    /* Ashtech-style binary packet body, skip until \r\n */
-   NMEA_BINARY_CR,      /* \r on end of Ashtech-style binary packet */
-   NMEA_BINARY_NL,      /* \n on end of Ashtech-style binary packet */
-   NMEA_CR,             /* seen terminating \r of NMEA packet */
-   NMEA_RECOGNIZED,     /* saw trailing \n of NMEA packet */
+   NMEA_BANG,           // we've seen first character of an AIS message '!'
+   NMEA_PUB_LEAD,       // seen second character of NMEA G leader
+   NMEA_VENDOR_LEAD,    // seen second character of NMEA P leader
+   NMEA_LEADER_END,     // seen end char of NMEA leader, in body
+   NMEA_PASHR_A,        // grind through recognizing $PASHR
+   NMEA_PASHR_S,        // grind through recognizing $PASHR
+   NMEA_PASHR_H,        // grind through recognizing $PASHR
+   NMEA_BINARY_BODY,    // Ashtech-style binary packet body, skip until \r\n
+   NMEA_BINARY_CR,      // \r on end of Ashtech-style binary packet
+   NMEA_BINARY_NL,      // \n on end of Ashtech-style binary packet
+   NMEA_CR,             // seen terminating \r of NMEA packet
+   NMEA_RECOGNIZED,     // saw trailing \n of NMEA packet
 
-   SIRF_ACK_LEAD_1,     /* seen A of possible SiRF Ack */
-   SIRF_ACK_LEAD_2,     /* seen c of possible SiRF Ack */
-   AIS_LEAD_1,          /* seen initial A of possible AIS message */
-   AIS_LEAD_2,          /* seen second I/B/N/X of possible AIS message */
-   AIS_LEAD_ALT1,       /* seen initial B of possible AIS message */
-   AIS_LEAD_ALT2,       /* seen second S of possible AIS message */
-   AIS_LEAD_ALT3,       /* seen initial S of possible AIS message */
-   AIS_LEAD_ALT4,       /* seen second A of possible AIS message */
+   SIRF_ACK_LEAD_1,     // seen A of possible SiRF Ack
+   SIRF_ACK_LEAD_2,     // seen c of possible SiRF Ack
+   AIS_LEAD_1,          // seen initial A of possible AIS message
+   AIS_LEAD_2,          // seen second I/B/N/X of possible AIS message
+   AIS_LEAD_ALT1,       // seen initial B of possible AIS message
+   AIS_LEAD_ALT2,       // seen second S of possible AIS message
+   AIS_LEAD_ALT3,       // seen initial S of possible AIS message
+   AIS_LEAD_ALT4,       // seen second A of possible AIS message
 
-   SEATALK_LEAD_1,      /* SeaTalk/Garmin packet leader 'I' */
-   WEATHER_LEAD_1,      /* Weather instrument packet leader 'W' */
-   HEADCOMP_LEAD_1,     /* Heading/compass packet leader 'H' */
-   TURN_LEAD_1,         /* Turn indicator packet leader 'T' */
-   ECDIS_LEAD_1,        /* ECDIS packet leader 'E' */
-   SOUNDER_LEAD_1,      /* Depth sounder packet leader 'S' */
-   TRANSDUCER_LEAD_1,   /* Generic transducer packet leader 'Y' */
-   BEIDOU_LEAD_1,       /* Beidou leader */
-   QZSS_LEAD_1,         /* Quasi-Zenith Satellite System leader */
-#endif /* NMEA0183_ENABLE */
+   SEATALK_LEAD_1,      // SeaTalk/Garmin packet leader 'I'
+   WEATHER_LEAD_1,      // Weather instrument packet leader 'W'
+   HEADCOMP_LEAD_1,     // Heading/compass packet leader 'H'
+   TURN_LEAD_1,         // Turn indicator packet leader 'T'
+   ECDIS_LEAD_1,        // ECDIS packet leader 'E'
+   SOUNDER_LEAD_1,      // Depth sounder packet leader 'S'
+   TRANSDUCER_LEAD_1,   // Generic transducer packet leader 'Y'
+   BEIDOU_LEAD_1,       // Beidou leader
+   QZSS_LEAD_1,         // Quasi-Zenith Satellite System leader
 
-   DLE_LEADER,          /* we've seen the TSIP/EverMore leader (DLE) */
+   DLE_LEADER,          // we've seen the TSIP/EverMore leader (DLE)
 
 #ifdef TRIPMATE_ENABLE
    ASTRAL_1,            /* ASTRAL leader A */

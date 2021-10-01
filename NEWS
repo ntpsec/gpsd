@@ -2,7 +2,9 @@
 
 3.23.2: unreleased
   NTRIP 2.0 now works.  But still only plain HTML, not RTP, etc.
-  Remove ntrip options and NTRIP_ENABLE.  Always build in NTRIP.
+  Remove ntrip option and NTRIP_ENABLE.  Always build.
+  Remove passthrough option and PASSTHROUGH_ENABLE.  Always build.
+  Remove nmea0183 option and NMEA0183_ENABLE.  Always build.
 
 3.23.1: 2021-09-21
   Improve ubx cycle detection.

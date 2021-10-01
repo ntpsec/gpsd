@@ -7,13 +7,13 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"   // must be before all includes
 
 #include <assert.h>
 #include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include <stdlib.h> /* for labs() */
+#include <stdlib.h>                   // for labs()
 #include <string.h>
 #include <unistd.h>
 
@@ -22,7 +22,6 @@
 #include "../include/gpsdclient.h"
 #include "../include/strfuncs.h"
 
-#ifdef NMEA0183_ENABLE
 extern const struct gps_type_t driver_nmea0183;
 
 static WINDOW *cookedwin, *nmeawin, *satwin, *gprmcwin;
@@ -477,7 +476,7 @@ static void monitor_nmea_send(const char *fmt, ...)
  * display or implement device-specific commands.
  */
 
-#if defined(GARMIN_ENABLE) && defined(NMEA0183_ENABLE)
+#if defined(GARMIN_ENABLE)
 extern const struct gps_type_t driver_garmin;
 
 const struct monitor_object_t garmin_mmt = {
@@ -488,7 +487,7 @@ const struct monitor_object_t garmin_mmt = {
     .min_y = HEIGHT, .min_x = WIDTH,
     .driver = &driver_garmin,
 };
-#endif /* GARMIN_ENABLE && NMEA0183_ENABLE */
+#endif  // GARMIN_ENABLE
 
 extern const struct gps_type_t driver_ashtech;
 
@@ -600,7 +599,6 @@ const struct monitor_object_t aivdm_mmt = {
     .min_y = HEIGHT, .min_x = WIDTH,
     .driver = &driver_aivdm,
 };
-#endif /* AIVDM_ENABLE */
-#endif /* NMEA0183_ENABLE */
+#endif  // AIVDM_ENABLE
 
 /* vim: set expandtab shiftwidth=4: */

@@ -295,7 +295,6 @@ void gpsd_set_century(struct gps_device_t *session)
     gpsd_time_init(context, context->start_time);
 }
 
-#ifdef NMEA0183_ENABLE
 // resolve a UTC date, checking for rollovers
 timespec_t gpsd_utc_resolve(struct gps_device_t *session)
 {
@@ -370,7 +369,6 @@ void gpsd_century_update(struct gps_device_t *session, int century)
         session->context->valid &=~ CENTURY_VALID;
     }
 }
-#endif /* NMEA0183_ENABLE */
 
 // gpsd_gpstime_resolv() convert GPS week/tow to UTC as a timespec
 timespec_t gpsd_gpstime_resolv(struct gps_device_t *session,

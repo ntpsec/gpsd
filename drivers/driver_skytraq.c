@@ -7,14 +7,14 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include <ctype.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>       /* for strlcpy() */
+#include <string.h>       // for strlcpy()
 #include <strings.h>
 #include <unistd.h>
 
@@ -622,45 +622,45 @@ static gps_mask_t sky_parse(struct gps_device_t * session, unsigned char *buf,
 
     switch (buf[0]) {
     case 0x80:
-        /* 128 */
+        // 128
         return sky_msg_80(session, buf, len);
 
     case 0x83:
-        /* 131 - ACK */
+        // 131 - ACK
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "Skytraq: ACK to MID %#02x\n", buf[1]);
         break;
     case 0x84:
-        /* 132 - NACK */
+        // 132 - NACK
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "Skytraq: NACK to MID %#02x\n", buf[1]);
         break;
     case 0xDC:
-        /* 220 */
+        // 220
         return sky_msg_DC(session, buf, len);
 
     case 0xDD:
-        /* 221 */
+        // 221
         return sky_msg_DD(session, buf, len);
 
     case 0xDE:
-        /* 222 */
+        // 222
         return sky_msg_DE(session, buf, len);
 
     case 0xDF:
-        /* 223 - Nave status (PVT)  */
+        // 223 - Nave status (PVT)
         return sky_msg_DF(session, buf, len);
 
     case 0xE0:
-        /* 224 */
+        // 224
         return sky_msg_E0(session, buf, len);
 
     case 0xE2:
-        /* 226 - Beidou2 D1 Subframe data */
+        // 226 - Beidou2 D1 Subframe data
         return sky_msg_E2(session, buf, len);
 
     case 0xE3:
-        /* 227 - Beidou2 D2 Subframe data */
+        // 227 - Beidou2 D2 Subframe data
         return sky_msg_E3(session, buf, len);
 
     default:
@@ -673,34 +673,33 @@ static gps_mask_t sky_parse(struct gps_device_t * session, unsigned char *buf,
 
 static gps_mask_t skybin_parse_input(struct gps_device_t *session)
 {
-    if (session->lexer.type ==  SKY_PACKET) {
+    if (SKY_PACKET == session->lexer.type) {
         return  sky_parse(session, session->lexer.outbuffer,
                         session->lexer.outbuflen);
-#ifdef NMEA0183_ENABLE
-    } else if (session->lexer.type == NMEA_PACKET) {
+    }
+    if (NMEA_PACKET == session->lexer.type) {
         return nmea_parse((char *)session->lexer.outbuffer, session);
-#endif /* NMEA0183_ENABLE */
-    } else
-        return 0;
+    }
+    return 0;
 }
 
-/* this is everything we export */
-/* *INDENT-OFF* */
+// this is everything we export
+// *INDENT-OFF*
 const struct gps_type_t driver_skytraq =
 {
-    .type_name      = "Skytraq",                /* full name of type */
-    .packet_type    = SKY_PACKET,       /* associated lexer packet type */
-    .flags          = DRIVER_STICKY,    /* remember this */
-    .trigger        = NULL,             /* no trigger */
-    .channels       =  SKY_CHANNELS,    /* consumer-grade GPS */
-    .probe_detect   = NULL,             /* no probe */
-    .get_packet     = generic_get,      /* be prepared for Skytraq or NMEA */
-    .parse_packet   = skybin_parse_input,/* parse message packets */
-    .rtcm_writer    = gpsd_write,       /* send RTCM data straight */
-    .init_query     = NULL,              /* non-perturbing initial qury */
-    .event_hook     = NULL,              /* lifetime event handler */
+    .type_name      = "Skytraq",             // full name of type
+    .packet_type    = SKY_PACKET,            // associated lexer packet type
+    .flags          = DRIVER_STICKY,         // remember this
+    .trigger        = NULL,                  // no trigger
+    .channels       =  SKY_CHANNELS,         // consumer-grade GPS
+    .probe_detect   = NULL,                  // no probe
+    .get_packet     = generic_get,           // be prepared for Skytraq or NMEA
+    .parse_packet   = skybin_parse_input,    // parse message packets
+    .rtcm_writer    = gpsd_write,            // send RTCM data straight
+    .init_query     = NULL,                  // non-perturbing initial qury
+    .event_hook     = NULL,                  // lifetime event handler
 };
-/* *INDENT-ON* */
-#endif /* defined( SKYTRAQ_ENABLE) && defined(BINARY_ENABLE) */
+// *INDENT-ON*
+#endif // defined( SKYTRAQ_ENABLE) && defined(BINARY_ENABLE)
 
 // vim: set expandtab shiftwidth=4

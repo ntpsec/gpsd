@@ -1165,15 +1165,14 @@ gps_mask_t navcom_parse(struct gps_device_t * session, unsigned char *buf,
 
 static gps_mask_t navcom_parse_input(struct gps_device_t *session)
 {
-    if (session->lexer.type == NAVCOM_PACKET) {
+    if (NAVCOM_PACKET == session->lexer.type) {
         return navcom_parse(session, session->lexer.outbuffer,
                           session->lexer.outbuflen);
-#ifdef NMEA0183_ENABLE
-    } else if (session->lexer.type == NMEA_PACKET) {
+    }
+    if (NMEA_PACKET == session->lexer.type) {
         return nmea_parse((char *)session->lexer.outbuffer, session);;
-#endif /* NMEA0183_ENABLE */
-    } else
-        return 0;
+    }
+    return 0;
 }
 
 static ssize_t navcom_control_send(struct gps_device_t *session,

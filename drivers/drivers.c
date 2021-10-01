@@ -33,20 +33,20 @@ gps_mask_t generic_parse_input(struct gps_device_t *session)
         return 0;
     }
 
-#ifdef NMEA0183_ENABLE
     if (NMEA_PACKET == session->lexer.type) {
         const struct gps_type_t **dp;
         gps_mask_t st = 0;
         char *sentence = (char *)session->lexer.outbuffer;
 
-        if (sentence[strlen(sentence)-1] != '\n')
+        if ('\n' != sentence[strlen(sentence)-1]) {
             GPSD_LOG(LOG_IO, &session->context->errout,
                      "<= GPS: %s\n", sentence);
-        else
+        } else {
             GPSD_LOG(LOG_IO, &session->context->errout,
                      "<= GPS: %s", sentence);
+        }
 
-        if ((st=nmea_parse(sentence, session)) == 0) {
+        if (0 == (st=nmea_parse(sentence, session))) {
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "unknown sentence: \"%s\"\n", sentence);
         }
@@ -68,7 +68,6 @@ gps_mask_t generic_parse_input(struct gps_device_t *session)
         }
         return st;
     }
-#endif /* NMEA0183_ENABLE */
 
     GPSD_LOG(LOG_SHOUT, &session->context->errout,
              "packet type %d fell through (should never happen): %s.\n",
@@ -105,7 +104,6 @@ const struct gps_type_t driver_unknown = {
 };
 /* *INDENT-ON* */
 
-#ifdef NMEA0183_ENABLE
 /**************************************************************************
  *
  * NMEA 0183
@@ -145,14 +143,12 @@ static void nmea_event_hook(struct gps_device_t *session, event_t event)
          * unless there is actual following data.
          */
         switch (session->lexer.counter) {
-#ifdef NMEA0183_ENABLE
         case 0:
             /* probe for Garmin serial GPS -- expect $PGRMC followed by data */
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "=> Probing for Garmin NMEA\n");
             (void)nmea_send(session, "$PGRMCE");
             break;
-#endif /* NMEA0183_ENABLE */
 #ifdef SIRF_ENABLE
         case 1:
             /*
@@ -181,7 +177,6 @@ static void nmea_event_hook(struct gps_device_t *session, event_t event)
                             session->gpsdata.dev.stopbits);
             break;
 #endif /* SIRF_ENABLE */
-#ifdef NMEA0183_ENABLE
         case 2:
             /* probe for the FV-18 -- expect $PFEC,GPint followed by data */
             GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -194,7 +189,6 @@ static void nmea_event_hook(struct gps_device_t *session, event_t event)
                      "=> Probing for Trimble Copernicus\n");
             (void)nmea_send(session, "$PTNLSNM,0139,01");
             break;
-#endif /* NMEA0183_ENABLE */
 #ifdef EVERMORE_ENABLE
         case 4:
             GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -283,7 +277,7 @@ const struct gps_type_t driver_nmea0183 = {
 };
 /* *INDENT-ON* */
 
-#if defined(GARMIN_ENABLE) && defined(NMEA0183_ENABLE)
+#if defined(GARMIN_ENABLE)
 /**************************************************************************
  *
  * Garmin NMEA
@@ -384,8 +378,8 @@ const struct gps_type_t driver_garmin = {
     .control_send   = nmea_write,       /* how to send control strings */
     .time_offset     = NULL,            /* no method for NTP fudge factor */
 };
-/* *INDENT-ON* */
-#endif /* GARMIN_ENABLE && NMEA0183_ENABLE */
+// *INDENT-ON*
+#endif  // GARMIN_ENABLE
 
 /**************************************************************************
  *
@@ -631,8 +625,6 @@ static const struct gps_type_t driver_earthmate = {
 };
 /* *INDENT-ON* */
 #endif /* EARTHMATE_ENABLE */
-
-#endif /* NMEA0183_ENABLE */
 
 #ifdef TNT_ENABLE
 /**************************************************************************
@@ -1519,10 +1511,8 @@ static gps_mask_t aivdm_analyze(struct gps_device_t *session)
             return ONLINE_SET | AIS_SET;
         } else
             return ONLINE_SET;
-#ifdef NMEA0183_ENABLE
     } else if (session->lexer.type == NMEA_PACKET) {
         return nmea_parse((char *)session->lexer.outbuffer, session);
-#endif /* NMEA0183_ENABLE */
     } else
         return 0;
 }
@@ -1700,97 +1690,95 @@ extern const struct gps_type_t driver_tsip;
 extern const struct gps_type_t driver_ubx;
 extern const struct gps_type_t driver_zodiac;
 
-/* the point of this rigamarole is to not have to export a table size */
+// the point of this rigamarole is to not have to export a table size
 static const struct gps_type_t *gpsd_driver_array[] = {
     &driver_unknown,
-#ifdef NMEA0183_ENABLE
     &driver_nmea0183,
     &driver_ashtech,
 #ifdef TRIPMATE_ENABLE
     &driver_tripmate,
-#endif /* TRIPMATE_ENABLE */
+#endif  // TRIPMATE_ENABLE
 #ifdef EARTHMATE_ENABLE
     &driver_earthmate,
-#endif /* EARTHMATE_ENABLE */
+#endif  // EARTHMATE_ENABLE
 #ifdef GPSCLOCK_ENABLE
     &driver_gpsclock,
-#endif /* GPSCLOCK_ENABLE */
+#endif  // GPSCLOCK_ENABLE
 #ifdef GARMIN_ENABLE
     &driver_garmin,
-#endif /* GARMIN_ENABLE */
+#endif  // GARMIN_ENABLE
     &driver_mtk3301,
 #ifdef OCEANSERVER_ENABLE
     &driver_oceanServer,
-#endif /* OCEANSERVER_ENABLE */
+#endif  // OCEANSERVER_ENABLE
 #ifdef FV18_ENABLE
     &driver_fv18,
-#endif /* FV18_ENABLE */
+#endif  // FV18_ENABLE
 #ifdef TNT_ENABLE
     &driver_trueNorth,
-#endif /* TNT_ENABLE */
+#endif  // TNT_ENABLE
 #ifdef FURY_ENABLE
     &driver_fury,
-#endif /* FURY_ENABLE */
+#endif  // FURY_ENABLE
 #ifdef AIVDM_ENABLE
     &driver_aivdm,
-#endif /* AIVDM_ENABLE */
-#endif /* NMEA0183_ENABLE */
+#endif  // AIVDM_ENABLE
 
 #ifdef EVERMORE_ENABLE
     &driver_evermore,
-#endif /* EVERMORE_ENABLE */
+#endif  // EVERMORE_ENABLE
 #ifdef GARMIN_ENABLE
-    /* be sure to try Garmin Serial Binary before Garmin USB Binary */
+    // be sure to try Garmin Serial Binary before Garmin USB Binary
     &driver_garmin_ser_binary,
     &driver_garmin_usb_binary,
-#endif /* GARMIN_ENABLE */
+#endif  // GARMIN_ENABLE
 #ifdef GEOSTAR_ENABLE
     &driver_geostar,
-#endif /* GEOSTAR_ENABLE */
+#endif  // GEOSTAR_ENABLE
 #ifdef GREIS_ENABLE
     &driver_greis,
-#endif /* GREIS_ENABLE */
+#endif  // GREIS_ENABLE
 #ifdef ITRAX_ENABLE
     &driver_italk,
-#endif /* ITRAX_ENABLE */
+#endif  // ITRAX_ENABLE
 #ifdef ONCORE_ENABLE
     &driver_oncore,
-#endif /* ONCORE_ENABLE */
+#endif  // ONCORE_ENABLE
 #ifdef NAVCOM_ENABLE
     &driver_navcom,
-#endif /* NAVCOM_ENABLE */
+#endif  // NAVCOM_ENABLE
 #ifdef SIRF_ENABLE
     &driver_sirf,
-#endif /* SIRF_ENABLE */
+#endif  // SIRF_ENABLE
 #ifdef SKYTRAQ_ENABLE
     &driver_skytraq,
-#endif /* SKYTRAQ_ENABLE */
+#endif  // SKYTRAQ_ENABLE
 #ifdef SUPERSTAR2_ENABLE
     &driver_superstar2,
-#endif /* SUPERSTAR2_ENABLE */
+#endif  // SUPERSTAR2_ENABLE
 #ifdef TSIP_ENABLE
     &driver_tsip,
-#endif /* TSIP_ENABLE */
+#endif  // TSIP_ENABLE
 #ifdef ISYNC_ENABLE
     &driver_isync,
-#endif /* ISYNC_ENABLE */
+#endif  // ISYNC_ENABLE
 #ifdef UBLOX_ENABLE
     &driver_ubx,
-#endif /* UBLOX_ENABLE */
+#endif  // UBLOX_ENABLE
 #ifdef ZODIAC_ENABLE
     &driver_zodiac,
-#endif /* ZODIAC_ENABLE */
+#endif  // ZODIAC_ENABLE
 
 #ifdef NMEA2000_ENABLE
     &driver_nmea2000,
-#endif /* NMEA2000_ENABLE */
+#endif  // NMEA2000_ENABLE
 
 #ifdef RTCM104V2_ENABLE
     &driver_rtcm104v2,
-#endif /* RTCM104V2_ENABLE */
+#endif  // RTCM104V2_ENABLE
 #ifdef RTCM104V3_ENABLE
     &driver_rtcm104v3,
-#endif /* RTCM104V3_ENABLE */
+#endif  // RTCM104V3_ENABLE
 #ifdef GARMINTXT_ENABLE
     &driver_garmintxt,
 #endif  // GARMINTXT_ENABLE

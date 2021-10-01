@@ -302,10 +302,7 @@ boolopts = (
     ("geostar",       True,  "Geostar Protocol support"),
     ("greis",         True,  "Javad GREIS support"),
     ("itrax",         True,  "iTrax hardware support"),
-    # for back compatibility, deprecated Feb 2021
-    ("mtk3301",       True,  "alias for NMEA0183 support, deprecated"),
     ("navcom",        True,  "Navcom NCT support"),
-    ("nmea0183",      True,  "NMEA0183 support"),
     ("nmea2000",      True,  "NMEA2000/CAN support"),
     ("oncore",        True,  "Motorola OnCore chipset support"),
     ("sirf",          True,  "SiRF chipset support"),
@@ -540,7 +537,6 @@ if ARGUMENTS.get('timeservice'):
                    "ipv6",
                    "magic_hat",
                    "ncurses",
-                   "nmea0183",   # For generic hats of unknown type.
                    "oscillator",
                    "socket_export",
                    "ublox",      # For the Uputronics board
@@ -550,23 +546,6 @@ if ARGUMENTS.get('timeservice'):
              not ARGUMENTS.get(name) and
              name not in timerelated)):
             env[name] = False
-
-# Many drivers require NMEA0183 - in case we select timeserver/minimal
-# followed by one of these.
-for driver in ('ashtech',
-               'earthmate',
-               'fury',
-               'fv18',
-               'gpsclock',
-               'mtk3301',
-               'oceanserver',
-               'skytraq',
-               'tnt',
-               'tripmate', ):
-    if env[driver]:
-        env['nmea0183'] = True
-        break
-
 
 # iSync uses ublox underneath, so we force to enable it
 if env['isync']:

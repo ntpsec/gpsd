@@ -38,27 +38,25 @@
 
 #define BUFLEN          2048
 
-/* needed under FreeBSD */
+// needed under FreeBSD
 #ifndef HOST_NAME_MAX
 #define HOST_NAME_MAX   255
-#endif /* HOST_NAME_MAX */
+#endif  // HOST_NAME_MAX
 
-/* external capability tables */
+// external capability tables
 extern struct monitor_object_t nmea_mmt, sirf_mmt, ashtech_mmt;
 extern struct monitor_object_t garmin_mmt, garmin_bin_ser_mmt;
 extern struct monitor_object_t italk_mmt, ubx_mmt, superstar2_mmt;
 extern struct monitor_object_t fv18_mmt, gpsclock_mmt, mtk3301_mmt;
 extern struct monitor_object_t oncore_mmt, tnt_mmt, aivdm_mmt;
-#ifdef NMEA0183_ENABLE
 extern const struct gps_type_t driver_nmea0183;
-#endif /* NMEA0183_ENABLE */
 
-/* These are public */
+// These are public
 struct gps_device_t session;
 WINDOW *devicewin;
 bool serial;
 
-/* These are private */
+// These are private
 static struct gps_context_t context;
 static bool curses_active;
 static WINDOW *statwin, *cmdwin;
@@ -83,44 +81,42 @@ const struct monitor_object_t json_mmt = {
 };
 
 static const struct monitor_object_t *monitor_objects[] = {
-#ifdef NMEA0183_ENABLE
     &nmea_mmt,
-#if defined(GARMIN_ENABLE) && defined(NMEA0183_ENABLE)
+#if defined(GARMIN_ENABLE)
     &garmin_mmt,
-#endif /* GARMIN_ENABLE && NMEA0183_ENABLE */
+#endif  // GARMIN_ENABLE
 #if defined(GARMIN_ENABLE) && defined(BINARY_ENABLE)
     &garmin_bin_ser_mmt,
-#endif /* defined(GARMIN_ENABLE) && defined(BINARY_ENABLE) */
+#endif  // defined(GARMIN_ENABLE) && defined(BINARY_ENABLE)
     &ashtech_mmt,
 #ifdef FV18_ENABLE
     &fv18_mmt,
-#endif /* FV18_ENABLE */
+#endif  // FV18_ENABLE
 #ifdef GPSCLOCK_ENABLE
     &gpsclock_mmt,
-#endif /* GPSCLOCK_ENABLE */
+#endif  // GPSCLOCK_ENABLE
     &mtk3301_mmt,
 #ifdef AIVDM_ENABLE
     &aivdm_mmt,
-#endif /* AIVDM_ENABLE */
-#endif /* NMEA0183_ENABLE */
+#endif  // AIVDM_ENABLE
 #if defined(SIRF_ENABLE) && defined(BINARY_ENABLE)
     &sirf_mmt,
-#endif /* defined(SIRF_ENABLE) && defined(BINARY_ENABLE) */
+#endif  // defined(SIRF_ENABLE) && defined(BINARY_ENABLE)
 #if defined(UBLOX_ENABLE) && defined(BINARY_ENABLE)
     &ubx_mmt,
-#endif /* defined(UBLOX_ENABLE) && defined(BINARY_ENABLE) */
+#endif  // defined(UBLOX_ENABLE) && defined(BINARY_ENABLE)
 #if defined(ITRAX_ENABLE) && defined(BINARY_ENABLE)
     &italk_mmt,
-#endif /* defined(ITALK_ENABLE) && defined(BINARY_ENABLE) */
+#endif  // defined(ITALK_ENABLE) && defined(BINARY_ENABLE)
 #if defined(SUPERSTAR2_ENABLE) && defined(BINARY_ENABLE)
     &superstar2_mmt,
-#endif /* defined(SUPERSTAR2_ENABLE) && defined(BINARY_ENABLE) */
+#endif  // defined(SUPERSTAR2_ENABLE) && defined(BINARY_ENABLE)
 #if defined(ONCORE_ENABLE) && defined(BINARY_ENABLE)
     &oncore_mmt,
-#endif /* defined(ONCORE_ENABLE) && defined(BINARY_ENABLE) */
+#endif  // defined(ONCORE_ENABLE) && defined(BINARY_ENABLE)
 #ifdef TNT_ENABLE
     &tnt_mmt,
-#endif /* TNT_ENABLE */
+#endif  // TNT_ENABLE
     &json_mmt,
     NULL,
 };
@@ -566,33 +562,34 @@ static void select_packet_monitor(struct gps_device_t *device)
      */
     if (device->lexer.type != last_type) {
         const struct gps_type_t *active_type = device->device_type;
-#ifdef NMEA0183_ENABLE
-        if (device->lexer.type == NMEA_PACKET
-            && ((device->device_type->flags & DRIVER_STICKY) != 0))
+        if (NMEA_PACKET == device->lexer.type &&
+            0 != ((device->device_type->flags & DRIVER_STICKY))) {
             active_type = &driver_nmea0183;
-#endif /* NMEA0183_ENABLE */
-        if (!switch_type(active_type))
+        }
+        if (!switch_type(active_type)) {
             longjmp(terminate, TERM_DRIVER_SWITCH);
-        else {
+        } else {
             refresh_statwin();
             refresh_cmdwin();
         }
         last_type = device->lexer.type;
     }
 
-    if (active != NULL
-        && device->lexer.outbuflen > 0
-        && (*active)->update != NULL)
+    if (NULL != active &&
+        0 < device->lexer.outbuflen &&
+        NULL != (*active)->update) {
         (*active)->update();
-    if (devicewin != NULL)
+    }
+    if (NULL != devicewin) {
         (void)wnoutrefresh(devicewin);
+    }
 }
 
-/* Control-L character */
+// Control-L character
 #define CTRL_L 0x0C
 
+// char-by-char nonblocking input, return accumulated command line on \n
 static char *curses_get_command(void)
-/* char-by-char nonblocking input, return accumulated command line on \n */
 {
     static char input[80];
     static char line[80];
@@ -600,14 +597,18 @@ static char *curses_get_command(void)
 
     c = wgetch(cmdwin);
     if (CTRL_L == c) {
-        /* ^L is to repaint the screen */
+        // ^L is to repaint the screen
         (void)clearok(stdscr, true);
-        if (active != NULL && (*active)->initialize != NULL)
+        if (NULL != active &&
+            NULL != (*active)->initialize) {
             (void)(*active)->initialize();
+        }
     } else if (c != '\r' && c != '\n') {
         size_t len = strlen(input);
 
-        if (c == '\b' || c == KEY_LEFT || c == (int)erasechar()) {
+        if ('\b' == c ||
+            KEY_LEFT == c ||
+            (int)erasechar() == c) {
             input[len--] = '\0';
         } else if (isprint(c)) {
             input[len] = (char)c;
@@ -625,7 +626,7 @@ static char *curses_get_command(void)
     (void)wrefresh(cmdwin);
     (void)doupdate();
 
-    /* user finished entering a command */
+    // user finished entering a command
     if (input[0] == '\0')
         return NULL;
     else {

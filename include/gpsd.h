@@ -132,7 +132,7 @@ extern "C" {
 #define STASH_ENABLE
 #endif
 
-/* First, declarations for the packet layer... */
+// First, declarations for the packet layer...
 
 /*
  * NMEA 3.01, Section 5.3 says the max sentence length shall be
@@ -572,7 +572,6 @@ struct gps_device_t {
     struct gps_fix_t newdata;           /* where drivers put their data */
     struct gps_fix_t lastfix;           /* not quite yet ready for oldfix */
     struct gps_fix_t oldfix;            /* previous fix for error modeling */
-#ifdef NMEA0183_ENABLE
     struct {
         unsigned short sats_used[MAXCHANNELS];
         int part, await;                /* for tracking GSV parts */
@@ -622,7 +621,6 @@ struct gps_device_t {
         bool cycle_enders[NMEA_NUM + 1];
         bool cycle_continue;
     } nmea;
-#endif /* NMEA0183_ENABLE */
     /*
      * The rest of this structure is driver-specific private storage.
      * Only put a driver's scratch storage in here if it is never

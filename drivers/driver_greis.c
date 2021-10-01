@@ -1076,15 +1076,14 @@ static void greis_event_hook(struct gps_device_t *session, event_t event)
  */
 static gps_mask_t greis_parse_input(struct gps_device_t *session)
 {
-    if (session->lexer.type == GREIS_PACKET) {
+    if (GREIS_PACKET == session->lexer.type) {
         return greis_dispatch(session, session->lexer.outbuffer,
                               session->lexer.outbuflen);
-#ifdef NMEA0183_ENABLE
-    } else if (session->lexer.type == NMEA_PACKET) {
+    }
+    if (NMEA_PACKET == session->lexer.type) {
         return nmea_parse((char *)session->lexer.outbuffer, session);
-#endif /* NMEA0183_ENABLE */
-    } else
-        return 0;
+    }
+    return 0;
 }
 
 /**

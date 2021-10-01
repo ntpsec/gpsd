@@ -432,15 +432,14 @@ static void _proto__event_hook(struct gps_device_t *session, event_t event)
  */
 static gps_mask_t _proto__parse_input(struct gps_device_t *session)
 {
-    if (session->lexer.type == _PROTO__PACKET) {
+    if (_PROTO__PACKET == session->lexer.type) {
         return _proto__dispatch(session, session->lexer.outbuffer,
                                 session->lexer.outbuflen);
-#ifdef NMEA0183_ENABLE
-    } else if (session->lexer.type == NMEA_PACKET) {
+    }
+    if (NMEA_PACKET == session->lexer.type) {
         return nmea_parse((char *)session->lexer.outbuffer, session);
-#endif /* NMEA0183_ENABLE */
-    } else
-        return 0;
+    }
+    return 0;
 }
 
 static bool _proto__set_speed(struct gps_device_t *session,

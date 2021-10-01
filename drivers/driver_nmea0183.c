@@ -18,7 +18,6 @@
 #include "../include/gpsd.h"
 #include "../include/strfuncs.h"
 
-#ifdef NMEA0183_ENABLE
 #include "../include/timespec.h"
 /**************************************************************************
  *
@@ -3972,7 +3971,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
             }
         }
     } else {
-        /* extend the cycle to an un-timestamped sentence? */
+        // extend the cycle to an un-timestamped sentence?
         if (true == session->nmea.cycle_enders[lasttag]) {
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "NMEA0183: %s is just after a cycle ender.\n",
@@ -3982,7 +3981,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "NMEA0183: %s extends the reporting cycle.\n",
                      session->nmea.field[0]);
-            /* change ender */
+            // change ender
             session->nmea.cycle_enders[lasttag] = false;
             session->nmea.cycle_enders[thistag] = true;
             // have a cycle ender
@@ -3990,7 +3989,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         }
     }
 
-    /* here's where we check for end-of-cycle */
+    // here's where we check for end-of-cycle
     if ((session->nmea.latch_frac_time || session->nmea.cycle_continue)
         && (true == session->nmea.cycle_enders[thistag])) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -4016,10 +4015,9 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
     return mask;
 }
 
-#endif /* NMEA0183_ENABLE */
 
+// add NMEA checksum to a possibly  terminated sentence
 void nmea_add_checksum(char *sentence)
-/* add NMEA checksum to a possibly  *-terminated sentence */
 {
     unsigned char sum = '\0';
     char c, *p = sentence;
