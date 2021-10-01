@@ -48,8 +48,6 @@
 // HTTP 1.1
 #define NTRIP_UNAUTH            "401 Unauthorized"
 
-// FIXME: needs to move to gpsd.h, so it can be link to tests.
-int ntrip_parse_url(struct gps_device_t *, const char *);
 
 // table to convert format string to enum ntrip_fmt
 static struct ntrip_fmt_s {

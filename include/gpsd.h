@@ -88,6 +88,8 @@ extern "C" {
  * 3.23.1~dev
  *      Add timespec ts_startCurrentBaud to gps_device_t
  *      ntrip_conn_* to NTRIP_CONN_*
+ * 3.23.2~dev
+ *      add ntrip_parse_url()
  */
 
 #define JSON_DATE_MAX   24      /* ISO8601 timestamp with 2 decimal places */
@@ -480,20 +482,22 @@ typedef enum {SERVICE_UNKNOWN,
               SERVICE_NTRIP,
 } servicetype_t;
 
+extern int ntrip_parse_url(struct gps_device_t *, const char *);
+
 /*
  * Private state information about an NTRIP stream.
  */
 struct ntrip_stream_t
 {
-    char mountpoint[101];
-    char credentials[128];
-    char authStr[128];
-    char url[256];
-    char port[32];   // in my /etc/services 16 was the longest
-    bool set;        // found and set
+    char mountpoint[101];    // stream name
+    char credentials[128];   // username:password
+    char authStr[128];       // HTTP Authorization: line
+    char url[256];           // really host name or host ip
+    char port[32];           // in my /etc/services 16 was the longest
+    bool set;                // found and set
     enum ntrip_fmt {
         FMT_UNKNOWN = 0,
-        FMT_CMRP,        // CMR+, dunno what it is.  ORGN uses it
+        FMT_CMRP,            // CMR+, dunno what it is.  ORGN uses it
         FMT_RTCM2,
         FMT_RTCM2_0,
         FMT_RTCM2_1,
