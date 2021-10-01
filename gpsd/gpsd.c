@@ -623,8 +623,9 @@ static ssize_t throttled_write(struct subscriber_t *sub, char *buf,
         detach_client(sub);
         return 0;
     }
-    if (EAGAIN == errno || EINTR == errno) {
-        /* no data written, and errno says to retry */
+    if (EAGAIN == errno ||
+        EINTR == errno) {
+        // no data written, and errno says to retry
         GPSD_LOG(LOG_INF, &context.errout, "client(%d) write: %s\n",
                  sub_index(sub), strerror(errno));
         return 0;
@@ -663,9 +664,9 @@ static void notify_watchers(struct gps_device_t *device,
                 (void)throttled_write(sub, buf, strlen(buf));
         }
 }
-#endif /* SOCKET_EXPORT_ENABLE */
+#endif  // SOCKET_EXPORT_ENABLE
 
-/* deactivate device, but leave it in the pool (do not free it) */
+// deactivate device, but leave it in the pool (do not free it)
 static void deactivate_device(struct gps_device_t *device)
 {
 #ifdef SOCKET_EXPORT_ENABLE
@@ -673,7 +674,7 @@ static void deactivate_device(struct gps_device_t *device)
                     "{\"class\":\"DEVICE\",\"path\":\"%s\","
                     "\"activated\":0}\r\n",
                     device->gpsdata.dev.path);
-#endif /* SOCKET_EXPORT_ENABLE */
+#endif  // SOCKET_EXPORT_ENABLE
     if (!BAD_SOCKET(device->gpsdata.gps_fd)) {
         FD_CLR(device->gpsdata.gps_fd, &all_fds);
         adjust_max_fd(device->gpsdata.gps_fd, false);
@@ -683,7 +684,7 @@ static void deactivate_device(struct gps_device_t *device)
 }
 
 #if defined(SOCKET_EXPORT_ENABLE) || defined(CONTROL_SOCKET_ENABLE)
-/* find the device block for an existing device name */
+// find the device block for an existing device name
 static struct gps_device_t *find_device(const char *device_name)
 {
     struct gps_device_t *devp;
@@ -699,7 +700,7 @@ static struct gps_device_t *find_device(const char *device_name)
     }
     return NULL;
 }
-#endif /* defined(SOCKET_EXPORT_ENABLE) || defined(CONTROL_SOCKET_ENABLE) */
+#endif  // defined(SOCKET_EXPORT_ENABLE) || defined(CONTROL_SOCKET_ENABLE)
 
 /* open the input device
  * return: false on failure
@@ -713,25 +714,29 @@ static bool open_device( struct gps_device_t *device)
         return false;
     }
     activated = gpsd_activate(device, O_OPTIMIZE);
-    if ((0 > activated) && (PLACEHOLDING_FD != activated)) {
-        /* failed to open device, and it is not a /dev/ppsX */
+    if (0 > activated &&
+        PLACEHOLDING_FD != activated) {
+        // failed to open device, and it is not a /dev/ppsX
         return false;
     }
 
-    /*
-     * Now is the right time to grab the shared memory segment(s)
-     * to communicate the navigation message derived and (possibly)
-     * 1PPS derived time data to ntpd/chrony.
-     */
-    ntpshm_link_activate(device);
-    GPSD_LOG(LOG_INF, &context.errout,
-             "PPS: activated %s ntpshm_link_activate(): %s\n",
-             device->gpsdata.dev.path,
-             device->shm_clock == NULL ? "PPS" : "Clock");
+    // do not open ntpshm for NTRIP
+    if (SERVICE_NTRIP != device->servicetype) {
+        /*
+         * Now is the right time to grab the shared memory segment(s)
+         * to communicate the navigation message derived and (possibly)
+         * 1PPS derived time data to ntpd/chrony.
+         */
+        ntpshm_link_activate(device);
+        GPSD_LOG(LOG_INF, &context.errout,
+                 "PPS: activated %s ntpshm_link_activate(): %s\n",
+                 device->gpsdata.dev.path,
+                 device->shm_clock == NULL ? "PPS" : "Clock");
 
-    if (PLACEHOLDING_FD == activated) {
-        /* it is a /dev/ppsX, no need to wait on it */
-        return true;
+        if (PLACEHOLDING_FD == activated) {
+            // it is a /dev/ppsX, or something, no need to wait on it
+            return true;
+        }
     }
     FD_SET(device->gpsdata.gps_fd, &all_fds);
     adjust_max_fd(device->gpsdata.gps_fd, true);
@@ -2766,7 +2771,7 @@ int main(int argc, char *argv[])
                 (void)awaken(device);
             }
         }
-#endif /* SOCKET_EXPORT_ENABLE */
+#endif  // SOCKET_EXPORT_ENABLE
 
         /*
          * Might be time for graceful shutdown if no command-line
@@ -2779,17 +2784,23 @@ int main(int argc, char *argv[])
          * has been launched but not yet received its first device
          * over the socket.
          */
-        if (argc == optind && highwater > 0) {
+        if (argc == optind &&
+            0 < highwater) {
             int subcount = 0, devcount = 0;
 #ifdef SOCKET_EXPORT_ENABLE
-            for (sub = subscribers; sub < subscribers + MAX_CLIENTS; sub++)
-                if (sub->active != 0)
+            for (sub = subscribers; sub < (subscribers + MAX_CLIENTS); sub++) {
+                if (0 != sub->active) {
                     ++subcount;
-#endif /* SOCKET_EXPORT_ENABLE */
-            for (device = devices; device < devices + MAX_DEVICES; device++)
-                if (allocated_device(device))
+                }
+            }
+#endif  // SOCKET_EXPORT_ENABLE
+            for (device = devices; device < devices + MAX_DEVICES; device++) {
+                if (allocated_device(device)) {
                     ++devcount;
-            if (subcount == 0 && devcount == 0) {
+                }
+            }
+            if (0 == subcount &&
+                0 == devcount) {
                 GPSD_LOG(LOG_SHOUT, &context.errout,
                          "no subscribers or devices, shutting down.\n");
                 goto shutdown;
@@ -2797,10 +2808,11 @@ int main(int argc, char *argv[])
         }
     }
 
-    /* if we make it here, we got a signal... deal with it */
-    /* restart on SIGHUP, clean up and exit otherwise */
-    if (SIGHUP == (int)signalled)
+    // if we make it here, we got a signal... deal with it
+    // restart on SIGHUP, clean up and exit otherwise
+    if (SIGHUP == (int)signalled) {
         longjmp(restartbuf, 1);
+    }
 
     GPSD_LOG(LOG_WARN, &context.errout,
              "received terminating signal %d.\n", (int)signalled);
@@ -2816,22 +2828,25 @@ shutdown:
      * This is an attempt to avoid the sporadic race errors at the ends
      * of our regression tests.
      */
-    for (sub = subscribers; sub < subscribers + MAX_CLIENTS; sub++) {
-        if (sub->active != 0)
+    for (sub = subscribers; sub < (subscribers + MAX_CLIENTS); sub++) {
+        if (0 != sub->active) {
             detach_client(sub);
+        }
     }
-#endif /* SOCKET_EXPORT_ENABLE */
+#endif  // SOCKET_EXPORT_ENABLE
 
 #ifdef SHM_EXPORT_ENABLE
     shm_release(&context);
-#endif /* SHM_EXPORT_ENABLE */
+#endif  // SHM_EXPORT_ENABLE
 
 #ifdef CONTROL_SOCKET_ENABLE
-    if (control_socket)
+    if (control_socket) {
         (void)unlink(control_socket);
-#endif /* CONTROL_SOCKET_ENABLE */
-    if (pid_file)
+    }
+#endif  // CONTROL_SOCKET_ENABLE
+    if (pid_file) {
         (void)unlink(pid_file);
+    }
     return 0;
 }
 
