@@ -48,6 +48,9 @@
 // HTTP 1.1
 #define NTRIP_UNAUTH            "401 Unauthorized"
 
+// FIXME: needs to move to gpsd.h, so it can be link to tests.
+int ntrip_parse_url(struct gps_device_t *, const char *);
+
 // table to convert format string to enum ntrip_fmt
 static struct ntrip_fmt_s {
     const char *string;
@@ -398,6 +401,10 @@ done:
     return match ? 1 : -1;
 }
 
+/* Connect to NTRIP caster
+ * Return: file descriptor of connection
+ *         negative number on failure
+ */
 static int ntrip_stream_req_probe(const struct ntrip_stream_t *stream,
                                   struct gpsd_errout_t *errout)
 {
@@ -548,15 +555,111 @@ static int ntrip_stream_get_parse(const struct ntrip_stream_t *stream,
     return 0;
 }
 
+/*
+ * parse an ntrip:// url
+ *
+ * Return 0 on success
+ *        < 0 on failure
+ */
+int ntrip_parse_url(struct gps_device_t *device, const char *fullurl)
+{
+    char dup[256], *caster = dup;        // working copy of url
+    char *at;                            // pointer to at
+    char *colon;                         // pointer to colon
+    char *slash;                         // pointer to slash
+    char *auth = NULL;
+    char *port = NULL;
+    char *stream = NULL;                 // mount point
+    char *url = NULL;                    // actually just the host name/IP
+    size_t len = 0;
+
+    /* Test cases
+     * ntrip://ntrip.com/MOUNT-POINT
+     * ntrip://ntrip.com:2101/MOUNT-POINT
+     * ntrip://userid:passwd@ntrip.com/MOUNT-POINT
+     * ntrip://userid:passwd@ntrip.com:2101/MOUNT-POINT
+     * ntrip://a@b.com:passwd@ntrip.com:2101/MOUNT-POINT
+     * ntrip://userid:passwd@@@ntrip.com:2101/MOUNT-POINT
+     * ntrip://a@b.com:passwd@@@ntrip.com:2101/MOUNT-POINT */
+
+    strlcpy(dup, fullurl, sizeof(dup) - 1);    // make a local copy
+    if (NULL != (at = strrchr(caster, '@')) &&
+        NULL != (colon = strchr(caster, ':')) &&
+        colon < at) {
+        auth = caster;
+        *at = '\0';
+        caster = at + 1;
+        url = caster;
+    }
+    if (NULL != auth) {
+        (void)strlcpy(device->ntrip.stream.credentials,
+                      auth, sizeof(device->ntrip.stream.credentials));
+    }
+
+    if (NULL != (slash = strchr(caster, '/'))) {
+        *slash = '\0';
+        stream = slash + 1;
+    } else {
+        GPSD_LOG(LOG_ERROR, &device->context->errout,
+                 "NTRIP: can't extract stream from %s\n",
+                 caster);
+        return -1;
+    }
+    if (NULL != (colon = strchr(caster, ':'))) {
+        port = colon + 1;
+        *colon = '\0';
+    }
+
+    if (NULL == url) {
+        // there was no @ in caster
+        url = caster;
+    }
+    // url ought to be non-NULL by now, but just in case appease Coverity.
+    if (NULL != url) {
+        (void)strlcpy(device->ntrip.stream.url,
+                      url, sizeof(device->ntrip.stream.url));
+    }
+
+    if (NULL == port) {
+        port = "rtcm-sc104";
+        if (!getservbyname(port, "tcp")) {
+            port = DEFAULT_RTCM_PORT;
+        }
+    }
+    // port ought to be non-NULL by now, but just in case appease Coverity.
+    if (NULL != port) {
+        (void)strlcpy(device->ntrip.stream.port,
+                      port, sizeof(device->ntrip.stream.port));
+    }
+
+    // what remains in stream is the mountpoint
+    len = strlen(stream);
+    if (0 == len) {
+        GPSD_LOG(LOG_ERROR, &device->context->errout,
+                 "NTRIP: ntrip_open(%s) missing mountpoint.\n", fullurl);
+        return -1;
+    } else if ('/' == stream[len - 1]) {
+        GPSD_LOG(LOG_ERROR, &device->context->errout,
+                 "NTRIP: ntrip_open(%s) mountpoint (%s) has illegal "
+                 "trailing /.\n", fullurl, stream);
+        return -1;
+    }
+    (void)strlcpy(device->ntrip.stream.mountpoint,
+                  stream, sizeof(device->ntrip.stream.mountpoint));
+
+    GPSD_LOG(LOG_PROG, &device->context->errout,
+             "NTRIP: ntrip_parse_url(%s) credentials %s url %s port %s "
+             "moutpoint %s\n", fullurl,
+             device->ntrip.stream.credentials,
+             device->ntrip.stream.url,
+             device->ntrip.stream.port,
+             device->ntrip.stream.mountpoint);
+    return 0;
+}
+
 // open a connection to a Ntrip broadcaster
 int ntrip_open(struct gps_device_t *device, char *orig)
 {
-    char *amp, *colon, *slash;
-    char *auth = NULL, dup[256], *caster = dup;
-    char *port = NULL;
-    char *stream = NULL;
-    char *url = NULL;
-    size_t len = 0;
     socket_t ret = -1;
 
     GPSD_LOG(LOG_PROG, &device->context->errout,
@@ -568,88 +671,18 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         /* this has to be done here,
          * because it is needed for multi-stage connection */
         // strlcpy() ensures dup is NUL terminated.
-        strlcpy(dup, orig, sizeof(dup) - 1);
         device->servicetype = SERVICE_NTRIP;
         device->ntrip.works = false;
         device->ntrip.sourcetable_parse = false;
         device->ntrip.stream.set = false;
         device->gpsdata.gps_fd = PLACEHOLDING_FD;
 
-        /* Test cases
-         * ntrip://ntrip.com/MOUNT-POINT
-         * ntrip://ntrip.com:2101/MOUNT-POINT
-         * ntrip://userid:passwd@ntrip.com/MOUNT-POINT
-         * ntrip://userid:passwd@ntrip.com:2101/MOUNT-POINT
-         * ntrip://a@b.com:passwd@ntrip.com:2101/MOUNT-POINT
-         * ntrip://userid:passwd@@@ntrip.com:2101/MOUNT-POINT
-         * ntrip://a@b.com:passwd@@@ntrip.com:2101/MOUNT-POINT */
-        if (NULL != (amp = strrchr(caster, '@')) &&
-            NULL != (colon = strchr(caster, ':')) &&
-            colon < amp) {
-            auth = caster;
-            *amp = '\0';
-            caster = amp + 1;
-            url = caster;
-        }
-        if (NULL != (slash = strchr(caster, '/'))) {
-            *slash = '\0';
-            stream = slash + 1;
-        } else {
-            GPSD_LOG(LOG_ERROR, &device->context->errout,
-                     "NTRIP: can't extract stream from %s\n",
-                     caster);
-            device->ntrip.conn_state = NTRIP_CONN_ERR;
-            return -1;
-        }
-        if (NULL != (colon = strchr(caster, ':'))) {
-            port = colon + 1;
-            *colon = '\0';
-        }
-
-        if (NULL == url) {
-            // there was no @ in caster
-            url = caster;
-        }
-        if (!port) {
-            port = "rtcm-sc104";
-            if (!getservbyname(port, "tcp")) {
-                port = DEFAULT_RTCM_PORT;
-            }
-        }
-        // what remains in stream is the mountpoint
-        len = strlen(stream);
-        if (0 == len) {
-            GPSD_LOG(LOG_ERROR, &device->context->errout,
-                     "NTRIP: ntrip_open(%s) missing mountpoint.\n", orig);
+        ret = ntrip_parse_url(device, orig);
+        if (0 > ret) {
+            // failed to parse url
             device->gpsdata.gps_fd = PLACEHOLDING_FD;
             device->ntrip.conn_state = NTRIP_CONN_ERR;
             return -1;
-        } else if ('/' == stream[len - 1]) {
-            GPSD_LOG(LOG_ERROR, &device->context->errout,
-                     "NTRIP: ntrip_open(%s) mountpoint (%s) has illegal "
-                     "trailing /.\n", orig, stream);
-            device->gpsdata.gps_fd = PLACEHOLDING_FD;
-            device->ntrip.conn_state = NTRIP_CONN_ERR;
-            return -1;
-        }
-
-        (void)strlcpy(device->ntrip.stream.mountpoint,
-                      stream, sizeof(device->ntrip.stream.mountpoint));
-        if (NULL != auth) {
-            (void)strlcpy(device->ntrip.stream.credentials,
-                          auth, sizeof(device->ntrip.stream.credentials));
-        }
-        /*
-         * Semantically url and port ought to be non-NULL by now,
-         * but just in case...this code appeases Coverity.
-         */
-        if (NULL != url) {
-            (void)strlcpy(device->ntrip.stream.url,
-                          url, sizeof(device->ntrip.stream.url));
-        }
-        if (NULL != port) {
-            (void)strlcpy(device->ntrip.stream.port,
-                          port, sizeof(device->ntrip.stream.port));
         }
 
         ret = ntrip_stream_req_probe(&device->ntrip.stream,
