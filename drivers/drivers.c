@@ -1552,7 +1552,6 @@ const struct gps_type_t driver_aivdm = {
 /* *INDENT-ON* */
 #endif /* AIVDM_ENABLE */
 
-#ifdef PASSTHROUGH_ENABLE
 /**************************************************************************
  *
  * JSON passthrough driver
@@ -1660,7 +1659,6 @@ const struct gps_type_t driver_json_passthrough = {
 };
 /* *INDENT-ON* */
 
-#endif /* PASSTHROUGH_ENABLE */
 
 /* *INDENT-OFF* */
 const struct gps_type_t driver_pps = {
@@ -1795,11 +1793,9 @@ static const struct gps_type_t *gpsd_driver_array[] = {
 #endif /* RTCM104V3_ENABLE */
 #ifdef GARMINTXT_ENABLE
     &driver_garmintxt,
-#endif /* GARMINTXT_ENABLE */
+#endif  // GARMINTXT_ENABLE
 
-#ifdef PASSTHROUGH_ENABLE
     &driver_json_passthrough,
-#endif /* PASSTHROUGH_ENABLE */
     &driver_pps,
     NULL,
 };

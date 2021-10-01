@@ -71,7 +71,6 @@ static struct fixsource_t source;
 static char hostname[HOST_NAME_MAX];
 static struct timedelta_t time_offset;
 
-#ifdef PASSTHROUGH_ENABLE
 /* no methods, it's all device window */
 extern const struct gps_type_t driver_json_passthrough;
 const struct monitor_object_t json_mmt = {
@@ -82,7 +81,6 @@ const struct monitor_object_t json_mmt = {
     .min_y = 0, .min_x = 80,    /* no need for a device window */
     .driver = &driver_json_passthrough,
 };
-#endif /* PASSTHROUGH_ENABLE */
 
 static const struct monitor_object_t *monitor_objects[] = {
 #ifdef NMEA0183_ENABLE
@@ -123,9 +121,7 @@ static const struct monitor_object_t *monitor_objects[] = {
 #ifdef TNT_ENABLE
     &tnt_mmt,
 #endif /* TNT_ENABLE */
-#ifdef PASSTHROUGH_ENABLE
     &json_mmt,
-#endif /* PASSTHROUGH_ENABLE */
     NULL,
 };
 

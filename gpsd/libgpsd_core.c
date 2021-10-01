@@ -576,7 +576,6 @@ int gpsd_open(struct gps_device_t *session)
         return session->gpsdata.gps_fd;
     }
 #endif  // NETFEED_ENABLE
-#ifdef PASSTHROUGH_ENABLE
     if (str_starts_with(session->gpsdata.dev.path, "gpsd://")) {
         /* could be:
          *    gpsd://[ipv6]
@@ -621,7 +620,6 @@ int gpsd_open(struct gps_device_t *session)
         session->sourcetype = SOURCE_GPSD;
         return session->gpsdata.gps_fd;
     }
-#endif  // PASSTHROUGH_ENABLE
 #if defined(NMEA2000_ENABLE)
     if (str_starts_with(session->gpsdata.dev.path, "nmea2000://")) {
         return nmea2000_open(session);

@@ -266,10 +266,8 @@ struct gps_lexer_t {
         isgps30bits_t   buf[RTCM2_WORDS_MAX];   /* packet data */
         size_t          buflen;                 /* packet length in bytes */
     } isgps;
-#ifdef PASSTHROUGH_ENABLE
     unsigned int json_depth;
     unsigned int json_after;
-#endif /* PASSTHROUGH_ENABLE */
 #ifdef STASH_ENABLE
     unsigned char stashbuffer[MAX_PACKET_LENGTH];
     size_t stashbuflen;

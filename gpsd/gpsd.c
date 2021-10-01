@@ -1738,7 +1738,6 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
             continue;
         }
 
-#ifdef PASSTHROUGH_ENABLE
         // this is for passing through JSON packets
         if (0 != (changed & PASSTHROUGH_IS)) {
             (void)strlcat((char *)device->lexer.outbuffer,
@@ -1749,7 +1748,6 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
                                   device->lexer.outbuflen+2);
             continue;
         }
-#endif  // PASSTHROUGH_ENABLE
 
         // report raw packets to users subscribed to those
         raw_report(sub, device);

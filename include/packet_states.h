@@ -222,7 +222,6 @@
    RTCM3_RECOGNIZED,    /* RTCM3 packet recognized */
 #endif
 
-#ifdef PASSTHROUGH_ENABLE
    JSON_LEADER,         /* JSON leading { found */
    JSON_STRINGLITERAL,  /* start of JSON string literal seen */
    JSON_STRING_SOLIDUS, /* backslash in string */
@@ -232,7 +231,6 @@
    JSON_NUMBER,         /* inside a JSON numeric literal */
    JSON_SPECIAL,        /* inside a JSON special literal (true,false,null) */
    JSON_RECOGNIZED,     /* JSON packet recognized */
-#endif
 
 #ifdef STASH_ENABLE
    STASH_RECOGNIZED,    /* stashable prefix recognized */

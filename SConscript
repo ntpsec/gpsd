@@ -320,7 +320,6 @@ boolopts = (
     ("gpsclock",      True,  "GPSClock support"),
     ("isync",         True,  "Spectratime iSync LNRClok/GRCLOK support"),
     ("oceanserver",   True,  "OceanServer support"),
-    ("passthrough",   True,  "build support for passing through JSON"),
     ("rtcm104v2",     True,  "rtcm104v2 support"),
     ("rtcm104v3",     True,  "rtcm104v3 support"),
     # Time service
