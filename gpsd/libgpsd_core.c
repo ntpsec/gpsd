@@ -124,12 +124,6 @@ static void gpsd_vlog(const int errlevel,
     char buf[BUFSIZ];
     char *err_str;
 
-    // errout should never be NULL, but some code analyzers complain anyway
-    if (NULL == errout ||
-        errout->debug < errlevel) {
-        return;
-    }
-
     gpsd_acquire_reporting_lock();
     switch (errlevel) {
     case LOG_ERROR:
@@ -172,8 +166,11 @@ static void gpsd_vlog(const int errlevel,
             err_str = "UNK: ";
     }
 
-    assert(NULL != errout->label);
-    (void)strlcpy(buf, errout->label, sizeof(buf));
+    if (NULL != errout->label) {
+        (void)strlcpy(buf, errout->label, sizeof(buf));
+    } else {
+        (void)strlcpy(buf, "MISSING", sizeof(buf));
+    }
     (void)strlcat(buf, ":", sizeof(buf));
     (void)strlcat(buf, err_str, sizeof(buf));
     str_vappendf(buf, sizeof(buf), fmt, ap);
@@ -198,6 +195,12 @@ void gpsd_log(const int errlevel, const struct gpsd_errout_t *errout,
 {
     char buf[BUFSIZ];
     va_list ap;
+
+    // errout should never be NULL, but some code analyzers complain anyway
+    if (NULL == errout ||
+        errout->debug < errlevel) {
+        return;
+    }
 
     buf[0] = '\0';
     va_start(ap, fmt);
