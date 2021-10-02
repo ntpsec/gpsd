@@ -482,8 +482,6 @@ typedef enum {SERVICE_UNKNOWN,
               SERVICE_NTRIP,
 } servicetype_t;
 
-extern int ntrip_parse_url(struct gps_device_t *, const char *);
-
 /*
  * Private state information about an NTRIP stream.
  */
@@ -525,6 +523,9 @@ struct ntrip_stream_t
     int fee;
     int bitrate;
 };
+
+extern int ntrip_parse_url(const struct gpsd_errout_t *,
+                           struct ntrip_stream_t *, const char *);
 
 struct gps_device_t {
 /* session object, encapsulates all global state */

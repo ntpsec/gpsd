@@ -559,7 +559,8 @@ static int ntrip_stream_get_parse(const struct ntrip_stream_t *stream,
  * Return 0 on success
  *        < 0 on failure
  */
-int ntrip_parse_url(struct gps_device_t *device, const char *fullurl)
+int ntrip_parse_url(const struct gpsd_errout_t *errout,
+                    struct ntrip_stream_t *stream, const char *fullurl)
 {
     char dup[256], *caster = dup;        // working copy of url
     char *at;                            // pointer to at
@@ -567,18 +568,9 @@ int ntrip_parse_url(struct gps_device_t *device, const char *fullurl)
     char *slash;                         // pointer to slash
     char *auth = NULL;
     char *port = NULL;
-    char *stream = NULL;                 // mount point
+    char *mountpoint = NULL;             // mount point
     char *url = NULL;                    // actually just the host name/IP
     size_t len = 0;
-
-    /* Test cases
-     * ntrip://ntrip.com/MOUNT-POINT
-     * ntrip://ntrip.com:2101/MOUNT-POINT
-     * ntrip://userid:passwd@ntrip.com/MOUNT-POINT
-     * ntrip://userid:passwd@ntrip.com:2101/MOUNT-POINT
-     * ntrip://a@b.com:passwd@ntrip.com:2101/MOUNT-POINT
-     * ntrip://userid:passwd@@@ntrip.com:2101/MOUNT-POINT
-     * ntrip://a@b.com:passwd@@@ntrip.com:2101/MOUNT-POINT */
 
     strlcpy(dup, fullurl, sizeof(dup) - 1);    // make a local copy
     if (NULL != (at = strrchr(caster, '@')) &&
@@ -590,15 +582,15 @@ int ntrip_parse_url(struct gps_device_t *device, const char *fullurl)
         url = caster;
     }
     if (NULL != auth) {
-        (void)strlcpy(device->ntrip.stream.credentials,
-                      auth, sizeof(device->ntrip.stream.credentials));
+        (void)strlcpy(stream->credentials,
+                      auth, sizeof(stream->credentials));
     }
 
     if (NULL != (slash = strchr(caster, '/'))) {
         *slash = '\0';
-        stream = slash + 1;
+        mountpoint = slash + 1;
     } else {
-        GPSD_LOG(LOG_ERROR, &device->context->errout,
+        GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: can't extract stream from %s\n",
                  caster);
         return -1;
@@ -614,8 +606,8 @@ int ntrip_parse_url(struct gps_device_t *device, const char *fullurl)
     }
     // url ought to be non-NULL by now, but just in case appease Coverity.
     if (NULL != url) {
-        (void)strlcpy(device->ntrip.stream.url,
-                      url, sizeof(device->ntrip.stream.url));
+        (void)strlcpy(stream->url,
+                      url, sizeof(stream->url));
     }
 
     if (NULL == port) {
@@ -626,32 +618,32 @@ int ntrip_parse_url(struct gps_device_t *device, const char *fullurl)
     }
     // port ought to be non-NULL by now, but just in case appease Coverity.
     if (NULL != port) {
-        (void)strlcpy(device->ntrip.stream.port,
-                      port, sizeof(device->ntrip.stream.port));
+        (void)strlcpy(stream->port,
+                      port, sizeof(stream->port));
     }
 
-    // what remains in stream is the mountpoint
-    len = strlen(stream);
+    // what remains in mountpoint is the mountpoint
+    len = strlen(mountpoint);
     if (0 == len) {
-        GPSD_LOG(LOG_ERROR, &device->context->errout,
+        GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: ntrip_open(%s) missing mountpoint.\n", fullurl);
         return -1;
-    } else if ('/' == stream[len - 1]) {
-        GPSD_LOG(LOG_ERROR, &device->context->errout,
+    } else if ('/' == mountpoint[len - 1]) {
+        GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: ntrip_open(%s) mountpoint (%s) has illegal "
-                 "trailing /.\n", fullurl, stream);
+                 "trailing /.\n", fullurl, mountpoint);
         return -1;
     }
-    (void)strlcpy(device->ntrip.stream.mountpoint,
-                  stream, sizeof(device->ntrip.stream.mountpoint));
+    (void)strlcpy(stream->mountpoint,
+                  mountpoint, sizeof(stream->mountpoint));
 
-    GPSD_LOG(LOG_PROG, &device->context->errout,
+    GPSD_LOG(LOG_PROG, errout,
              "NTRIP: ntrip_parse_url(%s) credentials %s url %s port %s "
              "moutpoint %s\n", fullurl,
-             device->ntrip.stream.credentials,
-             device->ntrip.stream.url,
-             device->ntrip.stream.port,
-             device->ntrip.stream.mountpoint);
+             stream->credentials,
+             stream->url,
+             stream->port,
+             stream->mountpoint);
     return 0;
 }
 
@@ -675,7 +667,8 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         device->ntrip.stream.set = false;
         device->gpsdata.gps_fd = PLACEHOLDING_FD;
 
-        ret = ntrip_parse_url(device, orig);
+        ret = ntrip_parse_url(&device->context->errout, &device->ntrip.stream,
+                              orig);
         if (0 > ret) {
             // failed to parse url
             device->gpsdata.gps_fd = PLACEHOLDING_FD;
