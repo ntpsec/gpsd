@@ -90,6 +90,7 @@ extern "C" {
  *      ntrip_conn_* to NTRIP_CONN_*
  * 3.23.2~dev
  *      add ntrip_parse_url()
+ *      add host, stream_time, to ntrip_stream_t
  */
 
 #define JSON_DATE_MAX   24      /* ISO8601 timestamp with 2 decimal places */
@@ -487,10 +488,12 @@ typedef enum {SERVICE_UNKNOWN,
  */
 struct ntrip_stream_t
 {
+    timespec_t stream_time;  // time stream was last opened or closed
     char mountpoint[101];    // stream name
     char credentials[128];   // username:password
     char authStr[128];       // HTTP Authorization: line
-    char url[256];           // really host name or host ip
+    char url[256];           // full url: http://user@pass:host:port/mp
+    char host[256];          // hostname or IP
     char port[32];           // in my /etc/services 16 was the longest
     bool set;                // found and set
     enum ntrip_fmt {

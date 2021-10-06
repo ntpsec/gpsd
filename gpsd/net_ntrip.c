@@ -410,7 +410,7 @@ static int ntrip_stream_req_probe(const struct ntrip_stream_t *stream,
     ssize_t r;
     char buf[BUFSIZ];
 
-    dsock = netlib_connectsock(AF_UNSPEC, stream->url, stream->port, "tcp");
+    dsock = netlib_connectsock(AF_UNSPEC, stream->host, stream->port, "tcp");
     if (0 > dsock) {
         GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: stream connect error %d in req probe\n", dsock);
@@ -424,7 +424,7 @@ static int ntrip_stream_req_probe(const struct ntrip_stream_t *stream,
             "User-Agent: NTRIP gpsd/%s\r\n"
             "Host: %s\r\n"
             "Connection: close\r\n"
-            "\r\n", VERSION, stream->url);
+            "\r\n", VERSION, stream->host);
     r = write(dsock, buf, strlen(buf));
     if ((ssize_t)strlen(buf) != r) {
         GPSD_LOG(LOG_ERROR, errout,
@@ -448,8 +448,9 @@ static int ntrip_auth_encode(const struct ntrip_stream_t *stream,
         return 0;
     } else if (AUTH_BASIC == stream->authentication) {
         char authenc[64];
-        if (!auth)
+        if (NULL == auth) {
             return -1;
+        }
         memset(authenc, 0, sizeof(authenc));
         if (0 > b64_ntop((unsigned char *)auth, strlen(auth), authenc,
                          sizeof(authenc) - 1)) {
@@ -468,7 +469,7 @@ static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
     int dsock;
     char buf[BUFSIZ];
 
-    dsock = netlib_connectsock(AF_UNSPEC, stream->url, stream->port, "tcp");
+    dsock = netlib_connectsock(AF_UNSPEC, stream->host, stream->port, "tcp");
     if (BAD_SOCKET(dsock)) {
         GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: stream connect error %d\n", dsock);
@@ -487,7 +488,8 @@ static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
             "Accept: rtk/rtcm, dgps/rtcm\r\n"
             "%s"
             "Connection: close\r\n"
-            "\r\n", stream->mountpoint, VERSION, stream->url, stream->authStr);
+            "\r\n", stream->mountpoint, VERSION, stream->host,
+            stream->authStr);
     if ((ssize_t)strlen(buf) != write(dsock, buf, strlen(buf))) {
         GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: stream write error %s(%d) on fd %d during "
@@ -525,7 +527,7 @@ static int ntrip_stream_get_parse(const struct ntrip_stream_t *stream,
     // parse 401 Unauthorized
     if (NULL != strstr(buf, NTRIP_UNAUTH)) {
         GPSD_LOG(LOG_ERROR, errout,
-                 "NTRIP: not authorized for stream %s/%s\n", stream->url,
+                 "NTRIP: not authorized for %s/%s\n", stream->url,
                  stream->mountpoint);
         return -1;
     }
@@ -533,7 +535,7 @@ static int ntrip_stream_get_parse(const struct ntrip_stream_t *stream,
     if (NULL != strstr(buf, NTRIP_SOURCETABLE)) {
         GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: caster doesn't recognize stream %s:%s/%s\n",
-                 stream->url, stream->port, stream->mountpoint);
+                 stream->host, stream->port, stream->mountpoint);
         return -1;
     }
     // parse "ICY 200 OK" or "HTTP/1.1 200 OK"
@@ -541,7 +543,7 @@ static int ntrip_stream_get_parse(const struct ntrip_stream_t *stream,
         NULL == strstr(buf, NTRIP_HTTP)) {
         GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: Unknown reply %s from caster: %s:%s/%s\n", buf,
-                 stream->url, stream->port, stream->mountpoint);
+                 stream->host, stream->port, stream->mountpoint);
         return -1;
     }
     opts = fcntl(dsock, F_GETFL);
@@ -554,7 +556,9 @@ static int ntrip_stream_get_parse(const struct ntrip_stream_t *stream,
 }
 
 /*
- * parse an ntrip:// url
+ * parse an ntrip:// url, "ntrip://" already stripped off
+ * see tests/test_timespec.c for possible inputs and results
+ * FIXME: merge with test_parse_uri_dest()
  *
  * Return 0 on success
  *        < 0 on failure
@@ -562,57 +566,139 @@ static int ntrip_stream_get_parse(const struct ntrip_stream_t *stream,
 int ntrip_parse_url(const struct gpsd_errout_t *errout,
                     struct ntrip_stream_t *stream, const char *fullurl)
 {
-    char dup[256], *caster = dup;        // working copy of url
+    char dup[256];                       // working copy of url
     char *at;                            // pointer to at
     char *colon;                         // pointer to colon
     char *slash;                         // pointer to slash
+    char *lsb;                           // pointer to left square bracket ([)
+    char *rsb;                           // pointer to right square bracket (])
     char *auth = NULL;
+    char *host = NULL;                   // hostname, IPv4 or IPv6
     char *port = NULL;
     char *mountpoint = NULL;             // mount point
-    char *url = NULL;                    // actually just the host name/IP
     size_t len = 0;
 
-    strlcpy(dup, fullurl, sizeof(dup) - 1);    // make a local copy
-    if (NULL != (at = strrchr(caster, '@')) &&
-        NULL != (colon = strchr(caster, ':')) &&
-        colon < at) {
-        auth = caster;
-        *at = '\0';
-        caster = at + 1;
-        url = caster;
+    // save original URL
+    strlcpy(stream->url, fullurl, sizeof(stream->url) - 1);
+
+    // make a local copy
+    strlcpy(dup, fullurl, sizeof(dup) - 1);
+
+    // find mountpoint, searching from right to left
+    if (NULL == (slash = strrchr(dup, '/'))) {
+        GPSD_LOG(LOG_ERROR, errout,
+                 "NTRIP: can't extract stream from %s\n", dup);
+        return -1;
+    }
+    *slash = '\0';
+    mountpoint = slash + 1;
+    // dup now ends in host or host:port
+
+    len = strlen(mountpoint);
+    if (0 == len) {
+        // this also handle the trailing / case
+        GPSD_LOG(LOG_ERROR, errout,
+                 "NTRIP: ntrip_parse_url(%s) missing mountpoint.\n", fullurl);
+        return -1;
+    }
+    (void)strlcpy(stream->mountpoint,
+                  mountpoint, sizeof(stream->mountpoint));
+
+    // dup now contains in order any of  username, password, host and port
+    // we know "host" has a dot (hostname or IPv4) or a ] (IPv6)
+    at = strrchr(dup, '@');         // user@pass
+    colon = strrchr(dup, ':');      // pass:host:port, pass:host, host:port
+    rsb = strrchr(dup, ']');        // host is IPv6 literal
+    lsb = strrchr(dup, '[');        // host is IPv6 literal
+
+    if (NULL == colon) {
+        // no port (:2101), no auth (user:pass@), not IPv6 [fe80::]
+        port = NULL;
+        auth = NULL;
+        host = dup;
+    } else {
+        /* have a colon, could be:
+         *   user@pass:host
+         *   user@pass:host:port
+         *   [fe80::]
+         *   [fe80::]:port
+         *   user:pass@[fe80::]:port
+         *   user:pass@[fe80::]
+         */
+
+        if (NULL == at) {
+            // no @, so no auth
+            // host:port,  [fe80::], [fe80::]:port
+            if (NULL == rsb ||
+                NULL == lsb) {
+                // allow one of lsb or rsb, could be in the password
+                // host:port
+                auth = NULL;
+                host = dup;
+                *colon = '\0';
+                port = colon + 1;
+            } else {
+                // [fe80::], [fe80::]:port
+                auth = NULL;
+                host = dup + 1;
+                *rsb = '\0';
+                if (rsb < colon) {
+                    // [fe80::]:port
+                    *colon = '\0';
+                    port = colon + 1;
+                } else {
+                    // [fe80::]
+                    port = NULL;
+                }
+            }
+        } else {
+            // NULL != at, have @, so have auth
+            auth = dup;
+            if (colon < at) {
+                // user:pass@host, can't be IPv6, can't have port
+                // better not be a colon in the password!
+                *at = '\0';
+                host = at + 1;
+                port = NULL;
+            } else {
+                // colon > at
+                // user:pass@host:port
+                // user:pass@[fe80::1]
+                // user:pass@[fe80::1]:2101
+                *at = '\0';
+                if (NULL == rsb ||
+                    NULL == lsb) {
+                    // user:pass@host:port
+                    // allow one of lsb or rsb, could be in the password
+                    host = at + 1;
+                    *colon = '\0';
+                    port = colon + 1;
+                } else {
+                    // have lsb and rsb
+                    // user:pass@[fe80::1]
+                    // user:pass@[fe80::1]:2101
+                    host = lsb + 1;
+                    *rsb = '\0';
+                    if (rsb < colon) {
+                        // user:pass@[fe80::1]:2101
+                        port = rsb + 2;
+                    } else {
+                        // user:pass@[fe80::1]
+                        port = NULL;
+                    }
+                }
+            }
+        }
     }
     if (NULL != auth) {
         (void)strlcpy(stream->credentials,
                       auth, sizeof(stream->credentials));
     }
 
-    if (NULL != (slash = strchr(caster, '/'))) {
-        *slash = '\0';
-        mountpoint = slash + 1;
-    } else {
-        GPSD_LOG(LOG_ERROR, errout,
-                 "NTRIP: can't extract stream from %s\n",
-                 caster);
-        return -1;
-    }
-    if (NULL != (colon = strchr(caster, ':'))) {
-        port = colon + 1;
-        *colon = '\0';
-    }
-
-    if (NULL == url) {
-        // there was no @ in caster
-        url = caster;
-    }
-    // url ought to be non-NULL by now, but just in case appease Coverity.
-    if (NULL != url) {
-        (void)strlcpy(stream->url,
-                      url, sizeof(stream->url));
-    }
-
-    if (NULL == port) {
+    if (NULL == port ||
+        '\0' == port[0]) {
         port = "rtcm-sc104";
-        if (!getservbyname(port, "tcp")) {
+        if (NULL == getservbyname(port, "tcp")) {
             port = DEFAULT_RTCM_PORT;
         }
     }
@@ -622,32 +708,24 @@ int ntrip_parse_url(const struct gpsd_errout_t *errout,
                       port, sizeof(stream->port));
     }
 
-    // what remains in mountpoint is the mountpoint
-    len = strlen(mountpoint);
-    if (0 == len) {
-        GPSD_LOG(LOG_ERROR, errout,
-                 "NTRIP: ntrip_open(%s) missing mountpoint.\n", fullurl);
-        return -1;
-    } else if ('/' == mountpoint[len - 1]) {
-        GPSD_LOG(LOG_ERROR, errout,
-                 "NTRIP: ntrip_open(%s) mountpoint (%s) has illegal "
-                 "trailing /.\n", fullurl, mountpoint);
-        return -1;
+    // host ought to be non-NULL by now, but just in case appease Coverity.
+    if (NULL != host) {
+        (void)strlcpy(stream->host,
+                      host, sizeof(stream->host));
     }
-    (void)strlcpy(stream->mountpoint,
-                  mountpoint, sizeof(stream->mountpoint));
 
     GPSD_LOG(LOG_PROG, errout,
-             "NTRIP: ntrip_parse_url(%s) credentials %s url %s port %s "
+             "NTRIP: ntrip_parse_url(%s) credentials %s host %s port %s "
              "moutpoint %s\n", fullurl,
              stream->credentials,
-             stream->url,
+             stream->host,
              stream->port,
              stream->mountpoint);
     return 0;
 }
 
 // open a connection to a Ntrip broadcaster
+// orig contains full url
 int ntrip_open(struct gps_device_t *device, char *orig)
 {
     socket_t ret = -1;
