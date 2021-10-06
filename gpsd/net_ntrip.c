@@ -413,7 +413,8 @@ static int ntrip_stream_req_probe(const struct ntrip_stream_t *stream,
     dsock = netlib_connectsock(AF_UNSPEC, stream->host, stream->port, "tcp");
     if (0 > dsock) {
         GPSD_LOG(LOG_ERROR, errout,
-                 "NTRIP: stream connect error %d in req probe\n", dsock);
+                 "NTRIP: stream connect error %s(%d) in req probe\n",
+                 netlib_errstr(dsock), dsock);
         return -1;
     }
     GPSD_LOG(LOG_SPIN, errout,
@@ -472,7 +473,8 @@ static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
     dsock = netlib_connectsock(AF_UNSPEC, stream->host, stream->port, "tcp");
     if (BAD_SOCKET(dsock)) {
         GPSD_LOG(LOG_ERROR, errout,
-                 "NTRIP: stream connect error %d\n", dsock);
+                 "NTRIP: stream connect error %ss(%d)\n",
+                 netlib_errstr(dsock), dsock);
         return -1;
     }
 
