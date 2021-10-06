@@ -268,22 +268,23 @@ static socket_t filesock(char *filename)
 
     if (BAD_SOCKET(sock = socket(AF_UNIX, SOCK_STREAM, 0))) {
         GPSD_LOG(LOG_ERROR, &context.errout,
-                 "Can't create device-control socket. %s\n", strerror(errno));
+                 "Can't create device-control socket. %s(%d)\n",
+                 strerror(errno), errno);
         return -1;
     }
     (void)strlcpy(addr.sun_path, filename, sizeof(addr.sun_path));
     addr.sun_family = (sa_family_t)AF_UNIX;
     if (bind(sock, (struct sockaddr *)&addr, (socklen_t)sizeof(addr)) < 0) {
         GPSD_LOG(LOG_ERROR, &context.errout,
-                 "can't bind to local socket %s. %s\n",
-                 filename, strerror(errno));
+                 "can't bind to local socket %s. %s(%d)\n",
+                 filename, strerror(errno), errno);
         (void)close(sock);
         return -1;
     }
     if (listen(sock, QLEN) == -1) {
         GPSD_LOG(LOG_ERROR, &context.errout,
-                 "can't listen on local socket %s %s\n",
-                 filename, strerror(errno));
+                 "can't listen on local socket %s %s(%d)\n",
+                 filename, strerror(errno), errno);
         (void)close(sock);
         return -1;
     }
@@ -419,8 +420,8 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
             if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, &on,
                            (socklen_t)sizeof(on)) == -1) {
                 GPSD_LOG(LOG_ERROR, &context.errout,
-                         "Error: SETSOCKOPT IPV6_V6ONLY, %s\n",
-                         strerror(errno));
+                         "Error: SETSOCKOPT IPV6_V6ONLY, %s(%d)\n",
+                         strerror(errno), errno);
                 (void)close(s);
                 return -1;
             }
@@ -449,14 +450,14 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
     if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&one,
                    (socklen_t)sizeof(one)) == -1) {
         GPSD_LOG(LOG_ERROR, &context.errout,
-                 "Error: SETSOCKOPT SO_REUSEADDR %s\n", strerror(errno));
+                 "Error: SETSOCKOPT SO_REUSEADDR %s(%d)\n", strerror(errno), errno);
         (void)close(s);
         return -1;
     }
     if (bind(s, &sat.sa, (socklen_t)sin_len) < 0) {
         GPSD_LOG(LOG_ERROR, &context.errout,
-                 "can't bind to %s port %s, %s\n", af_str,
-                 service, strerror(errno));
+                 "can't bind to %s port %s, %s(%d)\n", af_str,
+                 service, strerror(errno), errno);
         if (errno == EADDRINUSE) {
             GPSD_LOG(LOG_ERROR, &context.errout,
                      "maybe gpsd is already running!  "
@@ -467,7 +468,8 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
     }
     if (type == SOCK_STREAM && listen(s, qlen) == -1) {
         GPSD_LOG(LOG_ERROR, &context.errout,
-                 "can't listen on port %s, %s\n", service, strerror(errno));
+                 "can't listen on port %s, %s(%d)\n",
+                 service, strerror(errno), errno);
         (void)close(s);
         return -1;
     }
@@ -614,16 +616,16 @@ static ssize_t throttled_write(struct subscriber_t *sub, char *buf,
     }
     if (-1 < status) {
         GPSD_LOG(LOG_INF, &context.errout,
-                 "short write disconnecting client(%d), %s\n",
-                 sub_index(sub), strerror(errno));
+                 "short write disconnecting client(%d), %s(%d)\n",
+                 sub_index(sub), strerror(errno), errno);
         detach_client(sub);
         return 0;
     }
     if (EAGAIN == errno ||
         EINTR == errno) {
         // no data written, and errno says to retry
-        GPSD_LOG(LOG_INF, &context.errout, "client(%d) write: %s\n",
-                 sub_index(sub), strerror(errno));
+        GPSD_LOG(LOG_INF, &context.errout, "client(%d) write: %s(%d)\n",
+                 sub_index(sub), strerror(errno), errno);
         return 0;
     }
     if (EBADF == errno) {
@@ -634,8 +636,8 @@ static ssize_t throttled_write(struct subscriber_t *sub, char *buf,
         GPSD_LOG(LOG_INF, &context.errout, "client(%d) timed out.\n",
                  sub_index(sub));
     } else {
-        GPSD_LOG(LOG_INF, &context.errout, "client(%d) write: %s\n",
-                 sub_index(sub), strerror(errno));
+        GPSD_LOG(LOG_INF, &context.errout, "client(%d) write: %s(%d)\n",
+                 sub_index(sub), strerror(errno), errno);
     }
     detach_client(sub);
     return status;
@@ -2212,7 +2214,7 @@ int main(int argc, char *argv[])
         // not SuS/POSIX portable, but we have our own fallback version
         if (0 != os_daemon(0, 0)) {
             GPSD_LOG(LOG_ERROR, &context.errout,
-                     "daemonization failed: %s\n", strerror(errno));
+                     "daemonization failed: %s(%d)\n", strerror(errno), errno);
         }
     }
 
@@ -2221,8 +2223,8 @@ int main(int argc, char *argv[])
 
         if (NULL == (fp = fopen(pid_file, "w"))) {
             GPSD_LOG(LOG_ERROR, &context.errout,
-                     "Cannot create PID file: %s. %s\n",
-                     pid_file, strerror(errno));
+                     "Cannot create PID file: %s. %s(%d)\n",
+                     pid_file, strerror(errno), errno);
         } else {
             (void)fprintf(fp, "%u\n", (unsigned int)getpid());
             (void)fclose(fp);
@@ -2255,10 +2257,12 @@ int main(int argc, char *argv[])
         errno = 0;
         // nice() can ONLY succeed when run as root!
         // do not even bother as non-root
-        if (nice(NICEVAL) == -1 && errno != 0)
+        if (-1 == nice(NICEVAL) &&
+            0 !=  errno) {
             GPSD_LOG(LOG_WARN, &context.errout,
                      "PPS: o=priority setting failed. Time accuracy "
-                     "will be degraded, %s\n", strerror(errno));
+                     "will be degraded, %s(%d)\n", strerror(errno), errno);
+        }
     }
     /*
      * By initializing before we drop privileges, we guarantee that even
@@ -2343,8 +2347,8 @@ int main(int argc, char *argv[])
          */
         if (0 != setgroups(0, NULL)) {
             GPSD_LOG(LOG_ERROR, &context.errout,
-                     "setgroups() failed, errno %s\n",
-                     strerror(errno));
+                     "setgroups() failed, errno %s(%d)\n",
+                     strerror(errno), errno);
         }
 #ifdef GPSD_GROUP
         {
@@ -2373,8 +2377,8 @@ int main(int argc, char *argv[])
         if (pw) {
             if (setuid(pw->pw_uid) != 0) {
                 GPSD_LOG(LOG_ERROR, &context.errout,
-                            "setuid() failed, %s\n",
-                            strerror(errno));
+                            "setuid() failed, %s(%d)\n",
+                            strerror(errno), errno);
             }
         }
     }
@@ -2489,7 +2493,7 @@ int main(int argc, char *argv[])
 
                 if (BAD_SOCKET(ssock)) {
                     GPSD_LOG(LOG_ERROR, &context.errout,
-                             "accept: fail: %s\n", strerror(errno));
+                             "accept: fail: %s(%d)\n", strerror(errno), errno);
                 } else {
                     struct subscriber_t *client = NULL;
                     int opts = fcntl(ssock, F_GETFL);
@@ -2513,8 +2517,8 @@ int main(int argc, char *argv[])
                                                 (char *)&linger,
                                                 (int)sizeof(struct linger))) {
                         GPSD_LOG(LOG_ERROR, &context.errout,
-                                 "Error: SETSOCKOPT SO_LINGER. %s\n",
-                                 strerror(errno));
+                                 "Error: SETSOCKOPT SO_LINGER. %s(%d)\n",
+                                 strerror(errno), errno);
                         (void)close(ssock);
                     } else {
                         char announce[GPS_JSON_RESPONSE_MAX];
@@ -2543,7 +2547,7 @@ int main(int argc, char *argv[])
 
             if (BAD_SOCKET(ssock)) {
                 GPSD_LOG(LOG_ERROR, &context.errout,
-                         "accept: %s\n", strerror(errno));
+                         "accept: %s(%d)\n", strerror(errno), errno);
             } else {
                 GPSD_LOG(LOG_INF, &context.errout,
                          "control socket connect on fd %d\n",
@@ -2755,9 +2759,10 @@ int main(int argc, char *argv[])
                 }
             }
 
-            if (device_needed && BAD_SOCKET(device->gpsdata.gps_fd) &&
-                    (device->opentime == 0 ||
-                    time(NULL) - device->opentime > DEVICE_RECONNECT)) {
+            if (device_needed &&
+                BAD_SOCKET(device->gpsdata.gps_fd) &&
+                (0 == device->opentime  ||
+                 DEVICE_RECONNECT < (time(NULL) - device->opentime))) {
                 device->opentime = time(NULL);
                 GPSD_LOG(LOG_INF, &context.errout,
                          "reconnection attempt on device %d\n",

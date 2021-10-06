@@ -1991,8 +1991,9 @@ int gpsd_multipoll(const bool data_ready,
 // end-of-session wrapup
 void gpsd_wrap(struct gps_device_t *session)
 {
-    if (!BAD_SOCKET(session->gpsdata.gps_fd))
+    if (!BAD_SOCKET(session->gpsdata.gps_fd)) {
         gpsd_deactivate(session);
+    }
 }
 
 void gpsd_zero_satellites( struct gps_data_t *out)
