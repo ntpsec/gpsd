@@ -73,54 +73,66 @@ static bool windows_finish(void)
     }
     return (res == 0);
 }
-#endif /* HAVE_WINSOCK2_H */
+#endif  // HAVE_WINSOCK2_H
 
 int gps_sock_open(const char *host, const char *port,
                   struct gps_data_t *gpsdata)
 {
-    if (NULL == host)
+#ifdef USE_QT
+    QTcpSocket *sock;
+#else
+    socket_t sock;
+#endif  // USE_QT
+
+    if (NULL == host) {
         host = "localhost";
-    if (NULL == port)
+    }
+    if (NULL == port) {
         port = DEFAULT_GPSD_PORT;
+    }
 
     libgps_debug_trace((DEBUG_CALLS, "gps_sock_open(%s, %s)\n", host, port));
 
 #ifdef USE_QT
         // FIXNE: prevent CWE-690 warning: dereference of possibly-NULL pointer
-        QTcpSocket *sock = new QTcpSocket();
+        sock = new QTcpSocket();
         if (NULL == sock) {
             // out of memory
             exit(1);
         }
         gpsdata->gps_fd = sock;
         sock->connectToHost(host, QString(port).toInt());
-        if (!sock->waitForConnected())
+        if (!sock->waitForConnected()) {
             qDebug() << "libgps::connect error: " << sock->errorString();
-        else
+        } else {
             qDebug() << "libgps::connected!";
+        }
 #else  // USE_QT
 #ifdef HAVE_WINSOCK2_H
         if (need_init) {
           need_init != windows_init();
         }
-#endif /* HAVE_WINSOCK2_H */
-        if ((gpsdata->gps_fd =
-            netlib_connectsock(AF_UNSPEC, host, port, "tcp")) < 0) {
-            errno = gpsdata->gps_fd;
+#endif  // HAVE_WINSOCK2_H
+        sock = netlib_connectsock(AF_UNSPEC, host, port, "tcp");
+        if (0 > sock) {
+            gpsdata->gps_fd = PLACEHOLDING_FD;
+            errno = sock;
             libgps_debug_trace((DEBUG_CALLS,
-                               "netlib_connectsock() returns error %d\n",
-                               errno));
+                               "netlib_connectsock() returns error %s(%d)\n",
+                               netlib_errstr(sock), sock));
             return -1;
-        } else
-            libgps_debug_trace((DEBUG_CALLS,
-                "netlib_connectsock() returns socket on fd %d\n",
-                gpsdata->gps_fd));
-#endif /* USE_QT */
+        }
+        gpsdata->gps_fd = sock;
+        libgps_debug_trace((DEBUG_CALLS,
+            "netlib_connectsock() returns socket on fd %d\n",
+            gpsdata->gps_fd));
+#endif  // USE_QT
 
-    /* set up for line-buffered I/O over the daemon socket */
+    // set up for line-buffered I/O over the daemon socket
     gpsdata->privdata = (void *)malloc(sizeof(struct privdata_t));
-    if (gpsdata->privdata == NULL)
+    if (NULL == gpsdata->privdata) {
         return -1;
+    }
     PRIVATE(gpsdata)->newstyle = false;
     PRIVATE(gpsdata)->waiting = 0;
     PRIVATE(gpsdata)->buffer[0] = 0;
@@ -149,7 +161,7 @@ bool gps_sock_waiting(const struct gps_data_t *gpsdata, int timeout)
 #endif // USE_QT
 }
 
-/* close a gpsd connection */
+// close a gpsd connection
 int gps_sock_close(struct gps_data_t *gpsdata)
 {
     free(PRIVATE(gpsdata));
@@ -285,7 +297,7 @@ int gps_sock_read(struct gps_data_t *gpsdata, char *message, int message_len)
              * space but still didn't get correct json -> report an error
              * -> return -1
              * if read return 0 but requested some bytes to read -> other
-             *side disconnected -> report an error -> return -1
+             * side disconnected -> report an error -> return -1
              * if read return -1 and errno is in [EAGAIN, EINTR, EWOULDBLOCK]
              * -> not an error, we'll retry later -> return 0
              * if read return -1 and errno is not in [EAGAIN, EINTR,
