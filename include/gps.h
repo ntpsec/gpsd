@@ -2456,7 +2456,8 @@ struct oscillator_t {
  * binary compatibility.
  */
 typedef int socket_t;
-#define BAD_SOCKET(s)   ((s) == -1)
+// BAD_SOCKET() needs to flag UNALLOCATED_FD (01) and PLACEHOLDING_FD (-2)
+#define BAD_SOCKET(s)   (0 > (s))
 #define INVALIDATE_SOCKET(s)    do { s = -1; } while (0)
 
 /* mode flags for setting streaming policy */
