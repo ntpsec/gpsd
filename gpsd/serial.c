@@ -1099,24 +1099,29 @@ void gpsd_assert_sync(struct gps_device_t *session)
 void gpsd_close(struct gps_device_t *session)
 {
     if (0 > session->gpsdata.gps_fd) {
-        // bad socket or PPS.  Nothing to do.
-        session->gpsdata.gps_fd = UNALLOCATED_FD;
+        // UNALLOCATED_FD (-1) or PLACEHOLDING_FD (-2). Nothing to do.
         return;
-    }
-#ifdef TIOCNXCL
-    (void)ioctl(session->gpsdata.gps_fd, (unsigned long)TIOCNXCL);
-#endif  // TIOCNXCL
-    if (!session->context->readonly) {
-        // Be sure all output is sent.
-        if (0 != tcdrain(session->gpsdata.gps_fd)) {
-            GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "SER: gpsd_close(%d) tcdrain() failed: %s(%d)\n",
-                     session->gpsdata.gps_fd,
-                     strerror(errno), errno);
-        }
     }
 
     if (0 < gpsd_serial_isatty(session)) {
+#ifdef TIOCNXCL
+        // This command resets the exclusive use of a terminal.
+        if (-1 == ioctl(session->gpsdata.gps_fd, (unsigned long)TIOCNXCL)) {
+                GPSD_LOG(LOG_ERROR, &session->context->errout,
+                         "SER: ioctl(%d, TIOCNXCL) failed: %s(%d)\n",
+                         session->gpsdata.gps_fd, strerror(errno), errno);
+        }
+#endif  // TIOCNXCL
+        if (!session->context->readonly) {
+            // Be sure all output is sent.
+            if (0 != tcdrain(session->gpsdata.gps_fd)) {
+                GPSD_LOG(LOG_ERROR, &session->context->errout,
+                         "SER: gpsd_close(%d) tcdrain() failed: %s(%d)\n",
+                         session->gpsdata.gps_fd,
+                         strerror(errno), errno);
+            }
+        }
+
         // Save current terminal parameters.  Why?
         if (0 != tcgetattr(session->gpsdata.gps_fd, &session->ttyset_old)) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
