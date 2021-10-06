@@ -873,7 +873,12 @@ static int test_ntrip_parse_url(int verbose)
                 err = 3;
             }
             if (0 != strcmp(p->port, stream.port)) {
-                err = 4;
+                // Debian does not have rtcm-sc104 in /etc/services...
+                if (0 != strcmp(p->port, DEFAULT_RTCM_PORT) ||
+                    0 != strcmp(stream.port, "rtcm-sc104")) {
+                    // so accept 2101 for rtcm-sc104
+                    err = 4;
+                }
             }
             if (0 != strcmp(p->host, stream.host)) {
                 err = 5;

@@ -699,6 +699,7 @@ int ntrip_parse_url(const struct gpsd_errout_t *errout,
         '\0' == port[0]) {
         port = "rtcm-sc104";
         if (NULL == getservbyname(port, "tcp")) {
+            // Debian does not have rtcm-sc104 in /etc/services!!
             port = DEFAULT_RTCM_PORT;
         }
     }
