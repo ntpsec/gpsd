@@ -540,8 +540,8 @@ int gpsd_open(struct gps_device_t *session)
                  port);
         if (0 > (dsock = netlib_connectsock(AF_UNSPEC, host, port, "tcp"))) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "CORE: TCP device open error %s.\n",
-                     netlib_errstr(dsock));
+                     "CORE: TCP device open error %s(%d).\n",
+                     netlib_errstr(dsock), dsock);
             return -1;
         } else {
             GPSD_LOG(LOG_SPIN, &session->context->errout,
@@ -567,8 +567,8 @@ int gpsd_open(struct gps_device_t *session)
                  port);
         if (0 > (dsock = netlib_connectsock(AF_UNSPEC, host, port, "udp"))) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "CORE: UDP device open error %s.\n",
-                     netlib_errstr(dsock));
+                     "CORE: UDP device open error %s(%d).\n",
+                     netlib_errstr(dsock), dsock);
             return -1;
         } else {
             GPSD_LOG(LOG_SPIN, &session->context->errout,
@@ -611,8 +611,8 @@ int gpsd_open(struct gps_device_t *session)
                  host, port);
         if (0 > (dsock = netlib_connectsock(AF_UNSPEC, host, port, "tcp"))) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "CORE: remote gpsd device open error %s.\n",
-                     netlib_errstr(dsock));
+                     "CORE: remote gpsd device open error %s(%d).\n",
+                     netlib_errstr(dsock), dsock);
             return -1;
         } else {
             GPSD_LOG(LOG_SPIN, &session->context->errout,
