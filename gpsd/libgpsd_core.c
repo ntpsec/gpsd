@@ -355,11 +355,9 @@ void gpsd_deactivate(struct gps_device_t *session)
     GPSD_LOG(LOG_INF, &session->context->errout,
              "CORE: closing %s, fd %d\n",
              session->gpsdata.dev.path, session->gpsdata.gps_fd);
-#ifdef NETFEED_ENABLE
     if (SERVICE_NTRIP == session->servicetype) {
         ntrip_close(session);
     } else
-#endif  // NETFEED_ENABLE
 #if defined(NMEA2000_ENABLE)
     if (SOURCE_CAN == session->sourcetype) {
         (void)nmea2000_close(session);
@@ -518,7 +516,6 @@ int parse_uri_dest(char *s, char **host, char **service, char **device)
  */
 int gpsd_open(struct gps_device_t *session)
 {
-#ifdef NETFEED_ENABLE
     // special case: source may be a URI to a remote GNSS or DGPS service
     if (netgnss_uri_check(session->gpsdata.dev.path)) {
         session->gpsdata.gps_fd = netgnss_uri_open(session,
@@ -583,7 +580,6 @@ int gpsd_open(struct gps_device_t *session)
         session->sourcetype = SOURCE_UDP;
         return session->gpsdata.gps_fd;
     }
-#endif  // NETFEED_ENABLE
     if (str_starts_with(session->gpsdata.dev.path, "gpsd://")) {
         /* could be:
          *    gpsd://[ipv6]
@@ -1844,7 +1840,6 @@ int gpsd_multipoll(const bool data_ready,
         GPSD_LOG(LOG_RAW1, &device->context->errout,
                  "CORE: polling %d\n", device->gpsdata.gps_fd);
 
-#ifdef NETFEED_ENABLE
         /*
          * Strange special case - the opening transaction on an NTRIP
          * connection may not yet be completed.
@@ -1863,7 +1858,6 @@ int gpsd_multipoll(const bool data_ready,
             //  else
             return DEVICE_READY;
         }
-#endif  // NETFEED_ENABLE
 
         for (fragments = 0; ; fragments++) {
             gps_mask_t changed = gpsd_poll(device);

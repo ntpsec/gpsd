@@ -327,7 +327,6 @@ boolopts = (
     ("socket_export", True,  "data export over sockets"),
     # Communication
     ("bluez",         True,  "BlueZ support for Bluetooth devices"),
-    ("netfeed",       True,  "build support for handling TCP/IP data sources"),
     ('usb',           True,  "libusb support for USB devices"),
     # Other daemon options
     ("control_socket", True,  "control socket for hotplug notifications"),

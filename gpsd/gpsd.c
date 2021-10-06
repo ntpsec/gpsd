@@ -206,9 +206,7 @@ static void typelist(void)
 #if defined(MAGIC_HAT_ENABLE)
     (void)printf("# Magic Hat enabled.\n");
 #endif
-#if defined(NETFEED_ENABLE)
     (void)printf("# Netfeed enabled.\n");
-#endif
     (void)printf("# NTRIP enabled.\n");
 #if defined(SHM_EXPORT_ENABLE)
     (void)printf("# Shared memory export enabled.\n");
@@ -236,7 +234,7 @@ static void usage(void)
   -n, --nowait              = don't wait for client connects to poll GPS\n"
 #ifdef FORCE_NOWAIT
 "                             forced on in this binary\n"
-#endif /* FORCE_NOWAIT */
+#endif  // FORCE_NOWAIT
 "  -N, --foreground          = don't go into background\n\
   -P, --pidfile pidfile     = set file to record process ID\n\
   -p, --passive             = do not reconfigure the receiver automatically\n\
@@ -244,7 +242,6 @@ static void usage(void)
   -S, --port PORT           = set port for daemon, default %s\n\
   -s, --speed SPEED         = fix device speed to SPEED, default none\n\
   -V, --version             = emit version and exit.\n"
-#ifdef NETFEED_ENABLE
 "\nA device may be a local serial device for GNSS input, plus an optional\n\
 PPS device, or a URL in one of the following forms:\n\
      tcp://host[:port]\n\
@@ -252,7 +249,6 @@ PPS device, or a URL in one of the following forms:\n\
      {dgpsip|ntrip}://[user:passwd@]host[:port][/stream]\n\
      gpsd://host[:port][:/device]\n\
 in which case it specifies an input source for device, DGPS or ntrip data.\n"
-#endif /* NETFEED_ENABLE */
 "\n\
 The following driver types are compiled into this gpsd instance:\n",
                  DEFAULT_GPSD_PORT);
@@ -1703,7 +1699,6 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
 
     // a few things are not per-subscriber reports
     if (0 != (changed & REPORT_IS)) {
-#ifdef NETFEED_ENABLE
         if (MODE_3D == device->gpsdata.fix.mode) {
             struct gps_device_t *dgnss;
             /*
@@ -1717,7 +1712,6 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
                 }
             }
         }
-#endif  // NETFEED_ENABLE
 #if defined(DBUS_EXPORT_ENABLE)
         if (MODE_NO_FIX < device->gpsdata.fix.mode) {
             send_dbus_fix(device);
