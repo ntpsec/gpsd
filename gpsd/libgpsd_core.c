@@ -1523,8 +1523,8 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
         session->observed |= PACKET_TYPEMASK(session->lexer.type);
     }
 
-    // can we get a full packet from the device?
-    if (session->device_type != NULL) {
+    // can we get a full packet from the device/NTRIP/GGPS?
+    if (NULL != session->device_type) {
         newlen = session->device_type->get_packet(session);
         // coverity[deref_ptr]
         GPSD_LOG(LOG_RAW, &session->context->errout,
@@ -1544,7 +1544,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
     TS_SUB(&delta, &ts_now, &session->gpsdata.online);
     if (0 > newlen) {           // read error
         GPSD_LOG(LOG_INF, &session->context->errout,
-                 "CORE: GPS on %s returned error %zd (%s sec since data)\n",
+                 "CORE: %s returned error %zd (%s sec since data)\n",
                  session->gpsdata.dev.path, newlen,
                  timespec_str(&delta, ts_buf, sizeof(ts_buf)));
         session->gpsdata.online.tv_sec = 0;
@@ -1560,7 +1560,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
             // FIXME: do this with integer math...
             TSTONS(&delta) >= (TSTONS(&session->gpsdata.dev.cycle) * 2)) {
             GPSD_LOG(LOG_INF, &session->context->errout,
-                     "CORE: GPS on %s is offline (%s sec since data)\n",
+                     "CORE: %s is offline (%s sec since data)\n",
                      session->gpsdata.dev.path,
                      timespec_str(&delta, ts_buf, sizeof(ts_buf)));
             session->gpsdata.online.tv_sec = 0;
