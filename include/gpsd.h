@@ -89,7 +89,7 @@ extern "C" {
  *      Add timespec ts_startCurrentBaud to gps_device_t
  *      ntrip_conn_* to NTRIP_CONN_*
  * 3.23.2~dev
- *      add ntrip_parse_url()
+ *      add ntrip_parse_url(), ntrip_close()
  *      add host, stream_time, to ntrip_stream_t
  */
 
@@ -527,8 +527,6 @@ struct ntrip_stream_t
     int bitrate;
 };
 
-extern int ntrip_parse_url(const struct gpsd_errout_t *,
-                           struct ntrip_stream_t *, const char *);
 
 struct gps_device_t {
 /* session object, encapsulates all global state */
@@ -981,6 +979,9 @@ extern void nmea_ais_dump(struct gps_device_t *, char[], size_t);
 extern unsigned int ais_binary_encode(struct ais_t *ais, unsigned char *bits,
                                       int flag);
 
+extern void ntrip_close(struct gps_device_t *);
+extern int ntrip_parse_url(const struct gpsd_errout_t *,
+                           struct ntrip_stream_t *, const char *);
 extern void ntp_latch(struct gps_device_t *device,  struct timedelta_t *td);
 extern void ntpshm_context_init(struct gps_context_t *);
 extern void ntpshm_session_init(struct gps_device_t *);

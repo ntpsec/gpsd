@@ -353,15 +353,20 @@ void gpsd_deactivate(struct gps_device_t *session)
         session->device_type->event_hook(session, event_deactivate);
     }
     GPSD_LOG(LOG_INF, &session->context->errout,
-             "CORE: closing GPS=%s (%d)\n",
+             "CORE: closing %s, fd %d\n",
              session->gpsdata.dev.path, session->gpsdata.gps_fd);
+#ifdef NETFEED_ENABLE
+    if (SERVICE_NTRIP == session->servicetype) {
+        ntrip_close(session);
+    } else
+#endif  // NETFEED_ENABLE
 #if defined(NMEA2000_ENABLE)
     if (SOURCE_CAN == session->sourcetype) {
         (void)nmea2000_close(session);
     } else
-#endif  // of defined(NMEA2000_ENABLE)
+#endif  // NMEA2000_ENABLE
     {
-        (void)gpsd_close(session);
+        gpsd_close(session);
     }
     if (O_OPTIMIZE == session->mode) {
         gpsd_run_device_hook(&session->context->errout,

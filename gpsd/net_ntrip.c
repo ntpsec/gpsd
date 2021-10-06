@@ -413,8 +413,8 @@ static int ntrip_stream_req_probe(const struct ntrip_stream_t *stream,
     dsock = netlib_connectsock(AF_UNSPEC, stream->host, stream->port, "tcp");
     if (0 > dsock) {
         GPSD_LOG(LOG_ERROR, errout,
-                 "NTRIP: stream connect error %s(%d) in req probe\n",
-                 netlib_errstr(dsock), dsock);
+                 "NTRIP: ntrip_stream_req_probe(%s) connect error %s(%d)\n",
+                 stream->url, netlib_errstr(dsock), dsock);
         return -1;
     }
     GPSD_LOG(LOG_SPIN, errout,
@@ -872,4 +872,28 @@ void ntrip_report(struct gps_context_t *context,
     }
 }
 
+// Close an ntrip conenction
+void ntrip_close(struct gps_device_t *session)
+{
+    if (0 > session->gpsdata.gps_fd) {
+        // UNALLOCATED_FD (-1) or PLACEHOLDING_FD (-2). Nothing to do.
+        return;
+    }
+
+    if (-1 == close(session->gpsdata.gps_fd)) {
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "NTRIP: ntrip_close(%s), close(%d), %s(%d)\n",
+                 session->gpsdata.dev.path,
+                 session->gpsdata.gps_fd, strerror(errno), errno);
+    } else {
+        GPSD_LOG(LOG_IO, &session->context->errout,
+                 "NTRIP: ntrip_close(%s), close(%d)\n",
+                 session->gpsdata.dev.path,
+                 session->gpsdata.gps_fd);
+    }
+    // be prepared for a retry
+    (void)clock_gettime(CLOCK_REALTIME, &session->ntrip.stream.stream_time);
+
+    session->gpsdata.gps_fd = PLACEHOLDING_FD;
+}
 // vim: set expandtab shiftwidth=4
