@@ -10,9 +10,9 @@
 extern "C" {
 #endif
 
-#include <inttypes.h>   /* stdint.h would be smaller but not all have it */
+#include <inttypes.h>   // stdint.h would be smaller but not all have it
 #include <limits.h>
-#include <pthread.h>    /* pacifies OpenBSD's compiler */
+#include <pthread.h>    // pacifies OpenBSD's compiler
 #include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -93,12 +93,12 @@ extern "C" {
  *       move attitude out of the union, to stop conflicts.
  *
  */
-#define GPSD_API_MAJOR_VERSION  12      /* bump on incompatible changes */
-#define GPSD_API_MINOR_VERSION  0       /* bump on compatible changes */
+#define GPSD_API_MAJOR_VERSION  12      // bump on incompatible changes
+#define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
 
-#define MAXCHANNELS     140     /* u-blox 9 tracks 140 signals */
-#define MAXUSERDEVS     4       /* max devices per user */
-#define GPS_PATH_MAX    128     /* for names like /dev/serial/by-id/... */
+#define MAXCHANNELS     140     // u-blox 9 tracks 140 signals
+#define MAXUSERDEVS     4       // max devices per user
+#define GPS_PATH_MAX    128     // for names like /dev/serial/by-id/...
 
 // normalize degrees to 0 to 359
 #define DEG_NORM(deg) \
@@ -2702,15 +2702,15 @@ extern void datum_code_string(int code, char *buffer, size_t len);
 #define CLIGHT      299792458.0  /* speed of light (m/s) */
 
 /* netlib_connectsock() errno return values */
-#define NL_NOSERVICE    -1      /* can't get service entry */
-#define NL_NOHOST       -2      /* can't get host entry */
-#define NL_NOPROTO      -3      /* can't get protocol entry */
-#define NL_NOSOCK       -4      /* can't create socket */
-#define NL_NOSOCKOPT    -5      /* error SETSOCKOPT SO_REUSEADDR */
-#define NL_NOCONNECT    -6      /* can't connect to host/socket pair */
-#define SHM_NOSHARED    -7      /* shared-memory segment not available */
-#define SHM_NOATTACH    -8      /* shared-memory attach failed */
-#define DBUS_FAILURE    -9      /* DBUS initialization failure */
+#define NL_NOSERVICE    -1      // can't get service entry
+#define NL_NOHOST       -2      // can't get host entry
+#define NL_NOPROTO      -3      // can't get protocol entry
+#define NL_NOSOCK       -4      // can't create socket
+#define NL_NOSOCKOPT    -5      // error SETSOCKOPT SO_REUSEADDR
+#define NL_NOCONNECT    -6      // can't connect to host/socket pair
+#define SHM_NOSHARED    -7      // shared-memory segment not available
+#define SHM_NOATTACH    -8      // shared-memory attach failed
+#define DBUS_FAILURE    -9      // DBUS initialization failure
 
 #define DEFAULT_GPSD_PORT       "2947"  /* IANA assignment */
 #define DEFAULT_RTCM_PORT       "2101"  /* IANA assignment */

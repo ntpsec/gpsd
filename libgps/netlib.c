@@ -3,52 +3,57 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"   // must be before all includes
 
-#include <fcntl.h>
-#include <string.h>
-#ifdef HAVE_NETDB_H
-#include <netdb.h>
-#endif /* HAVE_NETDB_H */
-#ifndef AF_UNSPEC
-#include <sys/types.h>
-#include <sys/stat.h>
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif /* HAVE_SYS_SOCKET_H */
-#endif /* AF_UNSPEC */
-#ifdef HAVE_SYS_UN_H
-#include <sys/un.h>
-#endif /* HAVE_SYS_UN_H */
-#ifndef INADDR_ANY
-#ifdef HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif /* HAVE_NETINET_IN_H */
-#endif /* INADDR_ANY */
 #ifdef HAVE_ARPA_INET_H
-#include <arpa/inet.h>     /* for htons() and friends */
-#endif /* HAVE_ARPA_INET_H */
-#include <unistd.h>
+#  include <arpa/inet.h>     // for htons() and friends
+#endif  // HAVE_ARPA_INET_H
+#include <fcntl.h>
+#ifdef HAVE_NETDB_H
+#  include <netdb.h>
+#endif  // HAVE_NETDB_H
+#ifndef INADDR_ANY
+#  ifdef HAVE_NETINET_IN_H
+#    include <netinet/in.h>
+#  endif  // HAVE_NETINET_IN_H
+#endif  // INADDR_ANY
 #ifdef HAVE_NETINET_IN_H
-#include <netinet/ip.h>
-#endif /* HAVE_NETINET_IN_H */
+#  include <netinet/ip.h>
+#endif  // HAVE_NETINET_IN_H
+#include <string.h>
+#ifndef AF_UNSPEC
+#  include <sys/types.h>
+#  include <sys/stat.h>
+#  ifdef HAVE_SYS_SOCKET_H
+#    include <sys/socket.h>
+#  endif  // HAVE_SYS_SOCKET_H
+#endif  // AF_UNSPEC
+#ifdef HAVE_SYS_UN_H
+#  include <sys/un.h>
+#endif  // HAVE_SYS_UN_H
+#include <unistd.h>
 #ifdef HAVE_WINSOCK2_H
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#endif
+#  include <winsock2.h>
+#  include <ws2tcpip.h>
+#endif // HAVE_WINSOCK2_H
 
 #include "../include/gpsd.h"
 #include "../include/sockaddr.h"
 
 /* work around the unfinished ipv6 implementation on hurd and OSX <10.6 */
 #ifndef IPV6_TCLASS
-# if defined(__GNU__)
-#  define IPV6_TCLASS 61
-# elif defined(__APPLE__)
-#  define IPV6_TCLASS 36
+#  if defined(__GNU__)
+#    define IPV6_TCLASS 61
+#  elif defined(__APPLE__)
+#    define IPV6_TCLASS 36
 # endif
 #endif
 
+/* connect to host, using service (port) on protocol (TCP/UDP)
+ *
+ * return socket on success
+ *        less than zero on error (NL_*)
+ */
 socket_t netlib_connectsock(int af, const char *host, const char *service,
                             const char *protocol)
 {
@@ -62,23 +67,27 @@ socket_t netlib_connectsock(int af, const char *host, const char *service,
 
     INVALIDATE_SOCKET(s);
     ppe = getprotobyname(protocol);
-    if (strcmp(protocol, "udp") == 0) {
+    if (0 == strcmp(protocol, "udp")) {
         type = SOCK_DGRAM;
         proto = (ppe) ? ppe->p_proto : IPPROTO_UDP;
-    } else {
+    } else if (0 == strcmp(protocol, "tcp")) {
         type = SOCK_STREAM;
         proto = (ppe) ? ppe->p_proto : IPPROTO_TCP;
+    } else {
+        // Unknown protocol (sctp, etc.)
+        return NL_NOPROTO;
     }
 
     /* we probably ought to pass this in as an explicit flag argument */
-    bind_me = (type == SOCK_DGRAM);
+    bind_me = (SOCK_DGRAM == type);
 
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = af;
     hints.ai_socktype = type;
     hints.ai_protocol = proto;
-    if (bind_me)
+    if (bind_me) {
         hints.ai_flags = AI_PASSIVE;
+    }
     if ((ret = getaddrinfo(host, service, &hints, &result))) {
         // result is unchanged on error, so we need to have set it to NULL
         // freeaddrinfo() checks for NULL, the NULL we provided.
@@ -105,24 +114,19 @@ socket_t netlib_connectsock(int af, const char *host, const char *service,
      */
     for (rp = result; rp != NULL; rp = rp->ai_next) {
         ret = NL_NOCONNECT;
-        if ((s = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol)) < 0)
+        if (0 > (s = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol))) {
             ret = NL_NOSOCK;
-        else if (setsockopt
-                 (s, SOL_SOCKET, SO_REUSEADDR, (char *)&one,
-                  sizeof(one)) == -1) {
+        } else if (-1 == setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&one,
+                                    sizeof(one))) {
             ret = NL_NOSOCKOPT;
-        } else {
-            if (bind_me) {
-                if (bind(s, rp->ai_addr, rp->ai_addrlen) == 0) {
-                    ret = 0;
-                    break;
-                }
-            } else {
-                if (connect(s, rp->ai_addr, rp->ai_addrlen) == 0) {
-                    ret = 0;
-                    break;
-                }
+        } else if (bind_me) {
+            if (0 == bind(s, rp->ai_addr, rp->ai_addrlen)) {
+                ret = 0;
+                break;
             }
+        } else if (0 == connect(s, rp->ai_addr, rp->ai_addrlen)) {
+            ret = 0;
+            break;
         }
 
         if (!BAD_SOCKET(s)) {
@@ -134,8 +138,10 @@ socket_t netlib_connectsock(int af, const char *host, const char *service,
         }
     }
     freeaddrinfo(result);
-    if (ret != 0 || BAD_SOCKET(s))
+    if (0 != ret ||
+        BAD_SOCKET(s)) {
         return ret;
+    }
 
 #ifdef IPTOS_LOWDELAY
     {
@@ -154,11 +160,12 @@ socket_t netlib_connectsock(int af, const char *host, const char *service,
      * a large packet.  See https://en.wikipedia.org/wiki/Nagle%27s_algorithm
      * for discussion.
      */
-    if (type == SOCK_STREAM)
+    if (SOCK_STREAM == type) {
         setsockopt(s, IPPROTO_TCP, TCP_NODELAY, (char *)&one, sizeof(one));
+    }
 #endif
 
-    /* set socket to noblocking */
+    // set socket to noblocking
 #ifdef HAVE_FCNTL
     (void)fcntl(s, F_SETFL, fcntl(s, F_GETFL) | O_NONBLOCK);
 #elif defined(HAVE_WINSOCK2_H)
@@ -169,6 +176,7 @@ socket_t netlib_connectsock(int af, const char *host, const char *service,
 }
 
 
+//  Convert NL_* error code to a string
 const char *netlib_errstr(const int err)
 {
     switch (err) {
@@ -189,24 +197,22 @@ const char *netlib_errstr(const int err)
     }
 }
 
-/* acquire a connection to an existing Unix-domain socket */
+// acquire a connection to an existing Unix-domain socket
 socket_t netlib_localsocket(const char *sockfile, int socktype)
 {
 #ifdef HAVE_SYS_UN_H
     int sock;
 
-    if ((sock = socket(AF_UNIX, socktype, 0)) < 0) {
+    if (0 > (sock = socket(AF_UNIX, socktype, 0))) {
         return -1;
     } else {
         struct sockaddr_un saddr;
 
         memset(&saddr, 0, sizeof(struct sockaddr_un));
         saddr.sun_family = AF_UNIX;
-        (void)strlcpy(saddr.sun_path,
-                      sockfile,
-                      sizeof(saddr.sun_path));
+        (void)strlcpy(saddr.sun_path, sockfile, sizeof(saddr.sun_path));
 
-        if (connect(sock, (struct sockaddr *)&saddr, SUN_LEN(&saddr)) < 0) {
+        if (0 < connect(sock, (struct sockaddr *)&saddr, SUN_LEN(&saddr))) {
             (void)close(sock);
             return -2;
         }
@@ -215,10 +221,10 @@ socket_t netlib_localsocket(const char *sockfile, int socktype)
     }
 #else
     return -1;
-#endif /* HAVE_SYS_UN_H */
+#endif  // HAVE_SYS_UN_H
 }
 
-/* retrieve the IP address corresponding to a socket */
+// retrieve the IP address corresponding to a socket
 char *netlib_sock2ip(socket_t fd)
 {
     static char ip[INET6_ADDRSTRLEN];
@@ -227,7 +233,7 @@ char *netlib_sock2ip(socket_t fd)
     sockaddr_t fsin;
     socklen_t alen = (socklen_t) sizeof(fsin);
     r = getpeername(fd, &(fsin.sa), &alen);
-    if (r == 0) {
+    if (0 == r) {
         switch (fsin.sa.sa_family) {
         case AF_INET:
             r = !inet_ntop(fsin.sa_in.sin_family, &(fsin.sa_in.sin_addr),
@@ -242,9 +248,9 @@ char *netlib_sock2ip(socket_t fd)
             return ip;
         }
     }
-    /* Ugh... */
-    if (r != 0)
-#endif /* HAVE_INET_NTOP */
+    // Ugh...
+    if (0 != r)
+#endif  // HAVE_INET_NTOP
         (void)strlcpy(ip, "<unknown>", sizeof(ip));
     return ip;
 }
