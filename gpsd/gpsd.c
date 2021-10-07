@@ -6,9 +6,9 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
-#include <arpa/inet.h>    /* for htons() and friends */
+#include <arpa/inet.h>               // for htons() and friends
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
@@ -16,7 +16,7 @@
 #ifdef HAVE_GETOPT_LONG
        #include <getopt.h>
 #endif
-#include <grp.h>          /* for setgroups() */
+#include <grp.h>                     // for setgroups()
 #include <math.h>
 #include <netdb.h>
 #include <pthread.h>
@@ -25,27 +25,27 @@
 #include <signal.h>
 #include <stdarg.h>
 #include <stdbool.h>
-#include <stdint.h>       /* for uint32_t, etc. */
+#include <stdint.h>                  // for uint32_t, etc.
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>       /* for strlcat(), strcpy(), etc. */
+#include <string.h>                  // for strlcat(), strcpy(), etc.
 #include <syslog.h>
-#include <sys/param.h>    /* for setgroups() */
+#include <sys/param.h>               // for setgroups()
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/un.h>
 #include <time.h>
-#include <unistd.h>       /* for setgroups() */
+#include <unistd.h>                  // for setgroups()
 
 #ifndef AF_UNSPEC
-#include <sys/socket.h>
-#endif /* AF_UNSPEC */
+    #include <sys/socket.h>
+#endif  // AF_UNSPEC
 #ifndef INADDR_ANY
 #include <netinet/in.h>
-#endif /* INADDR_ANY */
+#endif  // INADDR_ANY
 
 #include "../include/gpsd.h"
-#include "../include/gps_json.h"         /* needs gpsd.h */
+#include "../include/gps_json.h"         // needs gpsd.h
 #include "../include/sockaddr.h"
 #include "../include/strfuncs.h"
 
@@ -58,9 +58,9 @@
  * owning group for tty devices is.  Used when we drop privileges.
  */
 #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
-#define PROTO_TTY "/dev/tty00"  /* correct for *BSD */
+#define PROTO_TTY "/dev/tty00"  // correct for *BSD
 #else
-#define PROTO_TTY "/dev/ttyS0"  /* correct for Linux */
+#define PROTO_TTY "/dev/ttyS0"  // correct for Linux
 #endif
 
 #define ACK "{\"class\":\"ACK\"}\r\n"
@@ -121,7 +121,7 @@
      * (2) timeservice mode where we want the GPS always on for timing.
      */
 #define FORCE_NOWAIT
-#endif /* defined(TIMESERVICE_ENABLE) || !defined(SOCKET_EXPORT_ENABLE) */
+#endif  // TIMESERVICE_ENABLE || !SOCKET_EXPORT_ENABLE
 
 #ifdef SOCKET_EXPORT_ENABLE
 /* IP version used by the program */
@@ -130,7 +130,7 @@
  * AF_INET6: IPv6 only
  */
 static const int af_allowed = AF_UNSPEC;
-#endif /* SOCKET_EXPORT_ENABLE */
+#endif  // SOCKET_EXPORT_ENABLE/
 
 #define AFCOUNT 2
 
@@ -140,16 +140,16 @@ static int highwater;
 static bool listen_global = false;
 static int maxfd;
 #ifdef FORCE_NOWAIT
-static bool nowait = true;
+    static bool nowait = true;
 #else /* FORCE_NOWAIT */
-static bool nowait = false;
+    static bool nowait = false;
 #endif /* FORCE_NOWAIT */
 static jmp_buf restartbuf;
 #if defined(SYSTEMD_ENABLE)
-static int sd_socket_count = 0;
+    static int sd_socket_count = 0;
 #endif
 
-/* work around the unfinished ipv6 implementation on hurd and OSX <10.6 */
+// work around the unfinished ipv6 implementation on hurd and OSX <10.6
 #ifndef IPV6_TCLASS
 # if defined(__GNU__)
 #  define IPV6_TCLASS 61
@@ -160,40 +160,46 @@ static int sd_socket_count = 0;
 
 static volatile sig_atomic_t signalled;
 
+// signal handler
 static void onsig(int sig)
 {
-    /* just set a variable, and deal with it in the main loop */
+    // just set a variable, and deal with it in the main loop
     signalled = (sig_atomic_t) sig;
 }
 
+// list installed drivers and enabled features
 static void typelist(void)
-/* list installed drivers and enabled features */
 {
     const struct gps_type_t **dp;
 
     for (dp = gpsd_drivers; *dp; dp++) {
-        if ((*dp)->packet_type == COMMENT_PACKET)
+        if (COMMENT_PACKET == (*dp)->packet_type) {
             continue;
-        if ((*dp)->mode_switcher != NULL)
+        }
+        if (NULL != (*dp)->mode_switcher) {
             (void)fputs("n\t", stdout);
-        else
+        } else {
             (void)fputc('\t', stdout);
-        if ((*dp)->speed_switcher != NULL)
+        }
+        if (NULL != (*dp)->speed_switcher) {
             (void)fputs("b\t", stdout);
-        else
+        } else {
             (void)fputc('\t', stdout);
-        if ((*dp)->rate_switcher != NULL)
+        }
+        if ((*dp)->rate_switcher != NULL) {
             (void)fputs("c\t", stdout);
-        else
+        } else {
             (void)fputc('\t', stdout);
-        if ((*dp)->packet_type > NMEA_PACKET)
+        }
+        if ((*dp)->packet_type > NMEA_PACKET) {
             (void)fputs("*\t", stdout);
-        else
+        } else {
             (void)fputc('\t', stdout);
+        }
         (void)puts((*dp)->type_name);
     }
     (void)printf("# n: mode switch, b: speed switch, "
-        "c: rate switch, *: non-NMEA packet type.\n");
+                 "c: rate switch, *: non-NMEA packet type.\n");
 #if defined(CONTROL_SOCKET_ENABLE)
     (void)printf("# Control socket for hotplug notifications enabled.\n");
 #endif
@@ -206,8 +212,8 @@ static void typelist(void)
 #if defined(MAGIC_HAT_ENABLE)
     (void)printf("# Magic Hat enabled.\n");
 #endif
-    (void)printf("# Netfeed enabled.\n");
-    (void)printf("# NTRIP enabled.\n");
+    (void)printf("# Netfeed enabled.\n"
+                 "# NTRIP enabled.\n");
 #if defined(SHM_EXPORT_ENABLE)
     (void)printf("# Shared memory export enabled.\n");
 #endif
@@ -274,14 +280,14 @@ static socket_t filesock(char *filename)
     }
     (void)strlcpy(addr.sun_path, filename, sizeof(addr.sun_path));
     addr.sun_family = (sa_family_t)AF_UNIX;
-    if (bind(sock, (struct sockaddr *)&addr, (socklen_t)sizeof(addr)) < 0) {
+    if (0 > bind(sock, (struct sockaddr *)&addr, (socklen_t)sizeof(addr))) {
         GPSD_LOG(LOG_ERROR, &context.errout,
                  "can't bind to local socket %s. %s(%d)\n",
                  filename, strerror(errno), errno);
         (void)close(sock);
         return -1;
     }
-    if (listen(sock, QLEN) == -1) {
+    if (-1 == listen(sock, QLEN)) {
         GPSD_LOG(LOG_ERROR, &context.errout,
                  "can't listen on local socket %s %s(%d)\n",
                  filename, strerror(errno), errno);
@@ -289,10 +295,10 @@ static socket_t filesock(char *filename)
         return -1;
     }
 
-    /* coverity[leaked_handle] This is an intentional allocation */
+    // coverity[leaked_handle] This is an intentional allocation
     return sock;
 }
-#endif /* CONTROL_SOCKET_ENABLE */
+#endif  // CONTROL_SOCKET_ENABLE
 
 #define sub_index(s) (int)((s) - subscribers)
 #define allocated_device(devp)   ((devp)->gpsdata.dev.path[0] != '\0')
@@ -307,27 +313,30 @@ static socket_t filesock(char *filename)
  */
 static struct gps_device_t devices[MAX_DEVICES];
 
+// track the largest fd currently in use
 static void adjust_max_fd(int fd, bool on)
-/* track the largest fd currently in use */
 {
     if (on) {
-        if (fd > maxfd)
+        if (fd > maxfd) {
             maxfd = fd;
+        }
     } else if (fd == maxfd) {
         int tfd;
 
-        for (maxfd = tfd = 0; tfd < (int)FD_SETSIZE; tfd++)
-            if (FD_ISSET(tfd, &all_fds))
+        for (maxfd = tfd = 0; tfd < (int)FD_SETSIZE; tfd++) {
+            if (FD_ISSET(tfd, &all_fds)) {
                 maxfd = tfd;
+            }
+        }
     }
 }
 
 #ifdef SOCKET_EXPORT_ENABLE
-#ifndef IPTOS_LOWDELAY
-#define IPTOS_LOWDELAY 0x10
-#endif
+#  ifndef IPTOS_LOWDELAY
+#    define IPTOS_LOWDELAY 0x10
+#  endif  // !IPTOS_LOWDELAY
 
-/* bind a passive command socket for the daemon */
+// bind a passive command socket for the daemon
 static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
                                int qlen)
 {
@@ -345,17 +354,18 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
     int type, proto, one = 1;
     in_port_t port;
     char *af_str = "";
-    const int dscp = IPTOS_LOWDELAY; /* Prioritize packet */
+    const int dscp = IPTOS_LOWDELAY; // Prioritize packet
+
     INVALIDATE_SOCKET(s);
-    if ((pse = getservbyname(service, tcp_or_udp)))
+    if (0 != (pse = getservbyname(service, tcp_or_udp))) {
         port = ntohs((in_port_t) pse->s_port);
-    else if ((port = (in_port_t) atoi(service)) == 0) {
+    } else if (0 == (port = (in_port_t) atoi(service))) {
         GPSD_LOG(LOG_ERROR, &context.errout,
                  "can't get \"%s\" service entry.\n", service);
         return -1;
     }
     ppe = getprotobyname(tcp_or_udp);
-    if (strcmp(tcp_or_udp, "udp") == 0) {
+    if (0 == strcmp(tcp_or_udp, "udp")) {
         type = SOCK_DGRAM;
         proto = (ppe) ? ppe->p_proto : IPPROTO_UDP;
     } else {
@@ -369,21 +379,23 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
 
         memset((char *)&sat.sa_in, 0, sin_len);
         sat.sa_in.sin_family = (sa_family_t) AF_INET;
-        if (!listen_global)
+        if (!listen_global) {
             sat.sa_in.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-        else
+        } else {
             sat.sa_in.sin_addr.s_addr = htonl(INADDR_ANY);
+        }
         sat.sa_in.sin_port = htons(port);
 
         af_str = "IPv4";
-        /* see PF_INET6 case below */
+        // see PF_INET6 case below
         s = socket(PF_INET, type, proto);
-        if (s > -1 ) {
-        /* Set packet priority */
-        if (setsockopt(s, IPPROTO_IP, IP_TOS, &dscp,
-                       (socklen_t)sizeof(dscp)) == -1)
-            GPSD_LOG(LOG_WARN, &context.errout,
-                     "Warning: SETSOCKOPT TOS failed\n");
+        if (-1 < s) {
+            // Set packet priority
+            if ( -1 == setsockopt(s, IPPROTO_IP, IP_TOS, &dscp,
+                                  (socklen_t)sizeof(dscp))) {
+                GPSD_LOG(LOG_WARN, &context.errout,
+                         "Warning: SETSOCKOPT TOS failed\n");
+            }
         }
 
         break;
@@ -392,10 +404,11 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
 
         memset((char *)&sat.sa_in6, 0, sin_len);
         sat.sa_in6.sin6_family = (sa_family_t) AF_INET6;
-        if (!listen_global)
+        if (!listen_global) {
             sat.sa_in6.sin6_addr = in6addr_loopback;
-        else
+        } else {
             sat.sa_in6.sin6_addr = in6addr_any;
+        }
         sat.sa_in6.sin6_port = htons(port);
 
         /*
@@ -415,10 +428,11 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
          * this, trying to listen on in6addr_any will fail with the
          * address-in-use error condition.
          */
-        if (s > -1) {
+        if (-1 < s) {
             int on = 1;
-            if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, &on,
-                           (socklen_t)sizeof(on)) == -1) {
+
+            if (-1 == setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, &on,
+                                 (socklen_t)sizeof(on))) {
                 GPSD_LOG(LOG_ERROR, &context.errout,
                          "Error: SETSOCKOPT IPV6_V6ONLY, %s(%d)\n",
                          strerror(errno), errno);
@@ -426,12 +440,13 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
                 return -1;
             }
 #ifdef IPV6_TCLASS
-            /* Set packet priority */
-            if (setsockopt(s, IPPROTO_IPV6, IPV6_TCLASS, &dscp,
-                           (socklen_t)sizeof(dscp)) == -1)
+            // Set packet priority
+            if (-1 == setsockopt(s, IPPROTO_IPV6, IPV6_TCLASS, &dscp,
+                                 (socklen_t)sizeof(dscp))) {
                 GPSD_LOG(LOG_WARN, &context.errout,
                          "Warning: SETSOCKOPT TOS failed\n");
-#endif /* IPV6_TCLASS */
+            }
+#endif  // IPV6_TCLASS
         }
         break;
     default:
@@ -447,18 +462,19 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
                  "can't create %s socket\n", af_str);
         return -1;
     }
-    if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&one,
-                   (socklen_t)sizeof(one)) == -1) {
+    if (-1 == setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&one,
+                         (socklen_t)sizeof(one))) {
         GPSD_LOG(LOG_ERROR, &context.errout,
-                 "Error: SETSOCKOPT SO_REUSEADDR %s(%d)\n", strerror(errno), errno);
+                 "Error: SETSOCKOPT SO_REUSEADDR %s(%d)\n",
+                 strerror(errno), errno);
         (void)close(s);
         return -1;
     }
-    if (bind(s, &sat.sa, (socklen_t)sin_len) < 0) {
+    if (0 > bind(s, &sat.sa, (socklen_t)sin_len)) {
         GPSD_LOG(LOG_ERROR, &context.errout,
                  "can't bind to %s port %s, %s(%d)\n", af_str,
                  service, strerror(errno), errno);
-        if (errno == EADDRINUSE) {
+        if (EADDRINUSE == errno) {
             GPSD_LOG(LOG_ERROR, &context.errout,
                      "maybe gpsd is already running!  "
                      "Or systemd has the port?\n");
@@ -466,7 +482,8 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
         (void)close(s);
         return -1;
     }
-    if (type == SOCK_STREAM && listen(s, qlen) == -1) {
+    if (SOCK_STREAM == type &&
+        -1 == listen(s, qlen)) {
         GPSD_LOG(LOG_ERROR, &context.errout,
                  "can't listen on port %s, %s(%d)\n",
                  service, strerror(errno), errno);
@@ -478,18 +495,18 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
     return s;
 }
 
-/* *INDENT-OFF* */
 static int passivesocks(char *service, char *tcp_or_udp,
                         int qlen, socket_t socks[])
 {
     int numsocks = AFCOUNT;
     int i;
 
-    for (i = 0; i < AFCOUNT; i++)
+    for (i = 0; i < AFCOUNT; i++) {
         INVALIDATE_SOCKET(socks[i]);
+    }
 
 #if defined(SYSTEMD_ENABLE)
-    if (sd_socket_count > 0) {
+    if (0 < sd_socket_count) {
         for (i = 0; i < AFCOUNT && i < sd_socket_count - 1; i++) {
             socks[i] = SD_SOCKET_FDS_START + i + 1;
         }
