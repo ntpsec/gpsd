@@ -514,33 +514,38 @@ static int passivesocks(char *service, char *tcp_or_udp,
     }
 #endif
 
-    if (AF_UNSPEC == af_allowed || (AF_INET == af_allowed))
+    if (AF_UNSPEC == af_allowed ||
+        AF_INET == af_allowed) {
         socks[0] = passivesock_af(AF_INET, service, tcp_or_udp, qlen);
+    }
 
-    if (AF_UNSPEC == af_allowed || (AF_INET6 == af_allowed))
+    if (AF_UNSPEC == af_allowed ||
+        AF_INET6 == af_allowed) {
         socks[1] = passivesock_af(AF_INET6, service, tcp_or_udp, qlen);
+    }
 
-    for (i = 0; i < AFCOUNT; i++)
-        if (socks[i] < 0)
+    for (i = 0; i < AFCOUNT; i++) {
+        if (0 > socks[i]) {
             numsocks--;
+        }
+    }
 
     /* Return the number of successfully opened sockets
      * The failed ones are identified by negative values */
     return numsocks;
 }
-/* *INDENT-ON* */
 
 struct subscriber_t
 {
-    int fd;                       /* client file descriptor. -1 if unused */
-    time_t active;                /* when subscriber last polled for data */
-    struct gps_policy_t policy;   /* configurable bits */
-    pthread_mutex_t mutex;        /* serialize access to fd */
+    int fd;                       // client file descriptor. -1 if unused
+    time_t active;                // when subscriber last polled for data
+    struct gps_policy_t policy;   // configurable bits
+    pthread_mutex_t mutex;        // serialize access to fd
 };
 
 #define subscribed(sub, devp)    (sub->policy.watcher && (sub->policy.devpath[0]=='\0' || strcmp(sub->policy.devpath, devp->gpsdata.dev.path)==0))
 
-/* indexed by client file descriptor */
+// indexed by client file descriptor
 static struct subscriber_t subscribers[MAX_CLIENTS];
 
 static void lock_subscriber(struct subscriber_t *sub)
@@ -553,8 +558,8 @@ static void unlock_subscriber(struct subscriber_t *sub)
     (void)pthread_mutex_unlock(&sub->mutex);
 }
 
+// return the address of a subscriber structure allocated for a new session
 static struct subscriber_t *allocate_client(void)
-/* return the address of a subscriber structure allocated for a new session */
 {
     int si;
 
@@ -562,27 +567,27 @@ static struct subscriber_t *allocate_client(void)
 #error client allocation code will fail horribly
 #endif
     for (si = 0; si < NITEMS(subscribers); si++) {
-        if (subscribers[si].fd == UNALLOCATED_FD) {
-            subscribers[si].fd = 0;     /* mark subscriber as allocated */
+        if (UNALLOCATED_FD == subscribers[si].fd) {
+            subscribers[si].fd = 0;     // mark subscriber as allocated
             return &subscribers[si];
         }
     }
     return NULL;
 }
 
+// detach a client and terminate the session
 static void detach_client(struct subscriber_t *sub)
-/* detach a client and terminate the session */
 {
     char *c_ip;
+
     lock_subscriber(sub);
-    if (sub->fd == UNALLOCATED_FD) {
+    if (UNALLOCATED_FD == sub->fd) {
         unlock_subscriber(sub);
         return;
     }
     c_ip = netlib_sock2ip(sub->fd);
     (void)shutdown(sub->fd, SHUT_RDWR);
-    GPSD_LOG(LOG_SPIN, &context.errout,
-             "close(%d) in detach_client()\n",
+    GPSD_LOG(LOG_SPIN, &context.errout, "close(%d) in detach_client()\n",
              sub->fd);
     (void)close(sub->fd);
     GPSD_LOG(LOG_INF, &context.errout,
@@ -673,11 +678,14 @@ static void notify_watchers(struct gps_device_t *device,
     (void)vsnprintf(buf, sizeof(buf), sentence, ap);
     va_end(ap);
 
-    for (sub = subscribers; sub < subscribers + MAX_CLIENTS; sub++)
+    for (sub = subscribers; sub < subscribers + MAX_CLIENTS; sub++) {
         if (sub->active != 0 && subscribed(sub, device)) {
-            if ((onjson && sub->policy.json) || (onpps && sub->policy.pps))
+            if ((onjson && sub->policy.json) ||
+                (onpps && sub->policy.pps)) {
                 (void)throttled_write(sub, buf, strlen(buf));
+            }
         }
+    }
 }
 #endif  // SOCKET_EXPORT_ENABLE
 
@@ -715,7 +723,7 @@ static struct gps_device_t *find_device(const char *device_name)
     }
     return NULL;
 }
-#endif  // defined(SOCKET_EXPORT_ENABLE) || defined(CONTROL_SOCKET_ENABLE)
+#endif  // SOCKET_EXPORT_ENABLE) || CONTROL_SOCKET_ENABLE)
 
 /* open the input device
  * return: false on failure
@@ -771,14 +779,14 @@ bool gpsd_add_device(const char *device_name, bool flag_nowait)
     char tbuf[JSON_DATE_MAX+1];
 #endif /* SOCKET_EXPORT_ENABLE */
 
-    /* we can't handle paths longer than GPS_PATH_MAX, so don't try */
-    if (strlen(device_name) >= GPS_PATH_MAX) {
+    // we can't handle paths longer than GPS_PATH_MAX, so don't try
+    if (GPS_PATH_MAX <= strlen(device_name)) {
         GPSD_LOG(LOG_ERROR, &context.errout,
                  "ignoring device %s: path length exceeds maximum %d\n",
                  device_name, GPS_PATH_MAX);
         return false;
     }
-    /* stash devicename away for probing when the first client connects */
+    // stash devicename away for probing when the first client connects
     for (devp = devices; devp < devices + MAX_DEVICES; devp++)
         if (!allocated_device(devp)) {
             gpsd_init(devp, &context, device_name);
@@ -798,7 +806,7 @@ bool gpsd_add_device(const char *device_name, bool flag_nowait)
                             "\"activated\":\"%s\"}\r\n",
                             devp->gpsdata.dev.path,
                             now_to_iso8601(tbuf, sizeof(tbuf)));
-#endif /* SOCKET_EXPORT_ENABLE */
+#endif  // SOCKET_EXPORT_ENABLE
             break;
         }
     return ret;
@@ -808,7 +816,7 @@ bool gpsd_add_device(const char *device_name, bool flag_nowait)
 /* convert hex to binary, write it, unchanged, to GPS
  * Returns: NULL, or pointer to error string
  */
-static const char * write_gps(char *device, char *hex) {
+static const char *write_gps(char *device, char *hex) {
     struct gps_device_t *devp;
     size_t len;
     int st;
@@ -817,7 +825,8 @@ static const char * write_gps(char *device, char *hex) {
         GPSD_LOG(LOG_INF, &context.errout, "GPS <=: %s not active\n", device);
         return "Device not active";
     }
-    if (devp->context->readonly || (SOURCE_BLOCKDEV >= devp->sourcetype)) {
+    if (devp->context->readonly ||
+        SOURCE_BLOCKDEV >= devp->sourcetype) {
         GPSD_LOG(LOG_WARN, &context.errout,
                  "GPS <=: attempted to write to a read-only device\n");
         return "Attempted to write to a read-only device";
@@ -841,11 +850,11 @@ static const char * write_gps(char *device, char *hex) {
     }
     return NULL;
 }
-#endif /* defined(SOCKET_EXPORT_ENABLE) || defined(CONTROL_SOCKET_ENABLE) */
+#endif  // SOCKET_EXPORT_ENABLE || CONTROL_SOCKET_ENABLE
 
 #ifdef CONTROL_SOCKET_ENABLE
+// copy the rest of the command line, before CR-LF
 static char *snarfline(char *p, char **out)
-/* copy the rest of the command line, before CR-LF */
 {
     char *q;
     static char stash[BUFSIZ];
@@ -854,16 +863,17 @@ static char *snarfline(char *p, char **out)
          isprint((unsigned char) *p) &&
          !isspace((unsigned char) *p) &&
          (p - q < (ssize_t)(sizeof(stash) - 1));
-         p++)
+         p++) {
         continue;
-    (void)memcpy(stash, q, (size_t) (p - q));
+    }
+    (void)memcpy(stash, q, (size_t)(p - q));
     stash[p - q] = '\0';
     *out = stash;
     return p;
 }
 
 // handle privileged commands coming through the control socket
-// FIXMLE ignore_return(write()) s/b repalced by throttled_write().
+// FIXME ignore_return(write()) s/b replaced by throttled_write().
 static void handle_control(int sfd, char *buf)
 {
     char *stash;
@@ -875,8 +885,8 @@ static void handle_control(int sfd, char *buf)
       * gpsdctl.c.  Be careful about keeping them in sync, or
       * hotplugging will have mysterious failures.
       */
-    if (buf[0] == '-') {
-        /* remove device named after - */
+    if ('-' == buf[0]) {
+        // remove device named after -
         (void)snarfline(buf + 1, &stash);
         GPSD_LOG(LOG_INF, &context.errout,
                  "<= control(%d): removing %s\n", sfd, stash);
@@ -886,8 +896,8 @@ static void handle_control(int sfd, char *buf)
             ignore_return(write(sfd, ACK, sizeof(ACK) - 1));
         } else
             ignore_return(write(sfd, ERROR, sizeof(ERROR) - 1));
-    } else if (buf[0] == '+') {
-        /* add device named after + */
+    } else if ('+' == buf[0]) {
+        // add device named after +
         (void)snarfline(buf + 1, &stash);
         if (find_device(stash)) {
             GPSD_LOG(LOG_INF, &context.errout,
@@ -907,12 +917,12 @@ static void handle_control(int sfd, char *buf)
                          sfd, stash);
             }
         }
-    } else if (buf[0] == '!') {
-        /* split line after ! into device=string, send string to device */
+    } else if ('!' == buf[0]) {
+        // split line after ! into device=string, send string to device
         char *eq;
         (void)snarfline(buf + 1, &stash);
         eq = strchr(stash, '=');
-        if (eq == NULL) {
+        if (NULL == eq) {
             GPSD_LOG(LOG_WARN, &context.errout,
                      "<= control(%d): ill-formed command \n",
                      sfd);
@@ -947,13 +957,13 @@ static void handle_control(int sfd, char *buf)
                 ignore_return(write(sfd, ERROR, sizeof(ERROR) - 1));
             }
         }
-    } else if (buf[0] == '&') {
-        /* split line after & into dev=hexdata, send unpacked hexdata to dev */
+    } else if ('&' == buf[0]) {
+        // split line after & into dev=hexdata, send unpacked hexdata to dev
         char *eq;
 
         (void)snarfline(buf + 1, &stash);
         eq = strchr(stash, '=');
-        if (eq == NULL) {
+        if (NULL == eq) {
             GPSD_LOG(LOG_WARN, &context.errout,
                      "<= control(%d): ill-formed command\n",
                      sfd);
@@ -968,8 +978,8 @@ static void handle_control(int sfd, char *buf)
                 ignore_return(write(sfd, ERROR, sizeof(ERROR) - 1));
             }
         }
-    } else if (strstr(buf, "?devices")==buf) {
-        /* write back devices list followed by OK */
+    } else if (strstr(buf, "?devices") == buf) {
+        // write back devices list followed by OK
         for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
             char *path = devp->gpsdata.dev.path;
             ignore_return(write(sfd, path, strlen(path)));
@@ -977,17 +987,17 @@ static void handle_control(int sfd, char *buf)
         }
         ignore_return(write(sfd, OK, sizeof(OK) - 1));
     } else {
-        /* unknown command */
+        // unknown command
         ignore_return(write(sfd, ERROR, sizeof(ERROR) - 1));
     }
 }
-#endif /* CONTROL_SOCKET_ENABLE */
+#endif  // CONTROL_SOCKET_ENABLE
 
 #ifdef SOCKET_EXPORT_ENABLE
-/* awaken a device and notify all watchers*/
+// awaken a device and notify all watchers
 static bool awaken(struct gps_device_t *device)
 {
-    /* open that device */
+    // open that device
     if ((!initialized_device(device) &&
          !open_device(device))) {
         GPSD_LOG(LOG_WARN, &context.errout, "%s: open failed\n",
@@ -1008,7 +1018,7 @@ static bool awaken(struct gps_device_t *device)
         GPSD_LOG(LOG_ERROR, &context.errout,
                  "%s: device activation failed, freeing device.\n",
                  device->gpsdata.dev.path);
-        /* FIXME: works around a crash bug, but prevents retries */
+        // FIXME: works around a crash bug, but prevents retries
         free_device(device);
         return false;
     }
@@ -1022,12 +1032,13 @@ static bool awaken(struct gps_device_t *device)
 }
 
 #if __UNUSED_RECONFIGURE__
-/* is this channel privileged to change a device's behavior? */
+// is this channel privileged to change a device's behavior?
 static bool privileged_user(struct gps_device_t *device)
 {
-    /* grant user privilege if he's the only one listening to the device */
+    // grant user privilege if he's the only one listening to the device
     struct subscriber_t *sub;
     int subcount = 0;
+
     for (sub = subscribers; sub < subscribers + MAX_CLIENTS; sub++) {
         if (subscribed(sub, device))
             subcount++;
@@ -1052,15 +1063,20 @@ static void set_serial(struct gps_device_t *device,
     struct timespec delay;
 
 #ifndef __clang_analyzer__
-    while (isspace((unsigned char) *modestring))
+    while (isspace((unsigned char) *modestring)) {
         modestring++;
-    if (*modestring && (NULL != strchr("78", *modestring))) {
+    }
+    if (*modestring &&
+        NULL != strchr("78", *modestring)) {
         wordsize = (int)(*modestring++ - '0');
-        if (*modestring && (NULL != strchr("NOE", *modestring))) {
+        if (*modestring &&
+            NULL != strchr("NOE", *modestring)) {
             parity = *modestring++;
-            while (isspace((unsigned char) *modestring))
+            while (isspace((unsigned char) *modestring)) {
                 modestring++;
-            if (*modestring && (NULL != strchr("12", *modestring))) {
+            }
+            if (*modestring &&
+                NULL != strchr("12", *modestring)) {
                 stopbits = (unsigned int)(*modestring - '0');
             }
         }
@@ -1115,8 +1131,8 @@ static void json_devicelist_dump(char *reply, size_t replylen)
     struct gps_device_t *devp;
     (void)strlcpy(reply, "{\"class\":\"DEVICES\",\"devices\":[", replylen);
     for (devp = devices; devp < devices + MAX_DEVICES; devp++)
-        if (allocated_device(devp)
-            && strlen(reply) + strlen(devp->gpsdata.dev.path) + 3 <
+        if (allocated_device(devp) &&
+            strlen(reply) + strlen(devp->gpsdata.dev.path) + 3 <
             replylen - 1) {
             char *cp;
             json_device_dump(devp,
@@ -1130,12 +1146,13 @@ static void json_devicelist_dump(char *reply, size_t replylen)
     str_rstrip_char(reply, ',');
     (void)strlcat(reply, "]}\r\n", replylen);
 }
-#endif /* SOCKET_EXPORT_ENABLE */
+#endif  // SOCKET_EXPORT_ENABLE
 
+// strip trailing \r\n\t\SP from a string
 static void rstrip(char *str)
-/* strip trailing \r\n\t\SP from a string */
 {
     char *strend;
+
     strend = str + strlen(str) - 1;
     while (isspace((unsigned char) *strend)) {
         *strend = '\0';
@@ -1155,24 +1172,27 @@ static void handle_request(struct subscriber_t *sub,
     if (str_starts_with(buf, "?DEVICES;")) {
         buf += 9;
         json_devicelist_dump(reply, replylen);
-    } else if (str_starts_with(buf, "?WATCH")
-               && (buf[6] == ';' || buf[6] == '=')) {
+    } else if (str_starts_with(buf, "?WATCH") &&
+               (';' == buf[6] ||
+                '=' == buf[6])) {
         const char *start = buf;
+
         buf += 6;
-        if (*buf == ';') {
+        if (';' == *buf) {
             ++buf;
         } else {
             char *host, *port, *device;  // for parse_uri_dest()
             int status = json_watch_read(buf + 1, &sub->policy, &end);
 
-            if (end == NULL)
+            if (NULL == end) {
                 buf += strlen(buf);
-            else {
-                if (*end == ';')
+            } else {
+                if (';' == *end) {
                     ++end;
+                }
                 buf = end;
             }
-            if (status != 0) {
+            if (0 != status) {
                 // failed to parse ?WATCH.
                 (void)snprintf(reply, replylen,
                                "{\"class\":\"ERROR\",\"message\":"
@@ -1200,7 +1220,7 @@ static void handle_request(struct subscriber_t *sub,
                     GPSD_LOG(0, &context.errout, "policy: %s\n", outbuf);
 #endif
                     devp = find_device(sub->policy.devpath);
-                    if (devp == NULL) {
+                    if (NULL == devp) {
                         (void)snprintf(reply, replylen,
                                        "{\"class\":\"ERROR\",\"message\":"
                                        "\"No such device as %s\"}\r\n",
@@ -1231,7 +1251,8 @@ static void handle_request(struct subscriber_t *sub,
                             (void)json_policy_to_watch(&policy_copy,
                                                        watch_buf,
                                                        sizeof(watch_buf));
-                            (void)gpsd_write(devp, watch_buf, strlen(watch_buf));
+                            (void)gpsd_write(devp, watch_buf,
+                                             strlen(watch_buf));
                         }
                     } else {
                         (void)snprintf(reply, replylen,
@@ -1251,25 +1272,29 @@ static void handle_request(struct subscriber_t *sub,
         json_watch_dump(&sub->policy,
                         reply + strlen(reply), replylen - strlen(reply));
     } else if (str_starts_with(buf, "?DEVICE") &&
-               (buf[7] == ';' || buf[7] == '=')) {
+               (';' == buf[7] ||
+                '=' == buf[7])) {
         struct devconfig_t devconf;
+
         buf += 7;
-        devconf.path[0] = '\0'; /* initially, no device selection */
-        if (*buf == ';') {
+        devconf.path[0] = '\0';    // initially, no device selection
+        if (';' == *buf) {
             ++buf;
         } else {
             struct gps_device_t *device;
-            /* first, select a device to operate on */
+
+            // first, select a device to operate on
             int status = json_device_read(buf + 1, &devconf, &end);
-            if (end == NULL)
+            if (NULL == end) {
                 buf += strlen(buf);
-            else {
-                if (*end == ';')
+            } else {
+                if (';' == *end) {
                     ++end;
+                }
                 buf = end;
             }
             device = NULL;
-            if (status != 0) {
+            if (0 != status) {
                 (void)snprintf(reply, replylen,
                                "{\"class\":\"ERROR\","
                                "\"message\":\"Invalid DEVICE: \"%s\"}\r\n",
@@ -1277,11 +1302,12 @@ static void handle_request(struct subscriber_t *sub,
                 GPSD_LOG(LOG_ERROR, &context.errout, "response: %s\n", reply);
                 goto bailout;
             } else {
-                if (devconf.path[0] != '\0') {
-                    /* user specified a path, try to assign it */
+                if ('\0' != devconf.path[0]) {
+                    // user specified a path, try to assign it
                     device = find_device(devconf.path);
-                    /* do not optimize away, we need 'device' later on! */
-                    if (device == NULL || !awaken(device)) {
+                    // do not optimize away, we need 'device' later on!
+                    if (NULL == device ||
+                        !awaken(device)) {
                         (void)snprintf(reply, replylen,
                                        "{\"class\":\"ERROR\","
                                        "\"message\":\"Can't open %s.\"}\r\n",
@@ -1291,14 +1317,15 @@ static void handle_request(struct subscriber_t *sub,
                         goto bailout;
                     }
                 } else {
-                    /* no path specified */
+                    // no path specified
                     int devcount = 0;
+
                     for (devp = devices; devp < devices + MAX_DEVICES; devp++)
                         if (allocated_device(devp)) {
                             device = devp;
                             devcount++;
                         }
-                    if (devcount == 0) {
+                    if (0 == devcount) {
                         (void)strlcat(reply,
                                       "{\"class\":\"ERROR\",\"message\":"
                                       "\"Can't perform DEVICE configuration, "
@@ -1307,7 +1334,7 @@ static void handle_request(struct subscriber_t *sub,
                         GPSD_LOG(LOG_ERROR, &context.errout,
                                  "response: %s\n", reply);
                         goto bailout;
-                    } else if (devcount > 1) {
+                    } else if (1 < devcount) {
                         str_appendf(reply, replylen,
                                     "{\"class\":\"ERROR\",\"message\":"
                                     "\"No path specified in DEVICE, but "
@@ -1316,43 +1343,49 @@ static void handle_request(struct subscriber_t *sub,
                                  "response: %s\n", reply);
                         goto bailout;
                     }
-                    /* we should have exactly one device now */
+                    // we should have exactly one device now
                 }
-                if (device->device_type == NULL)
+                if (NULL == device->device_type) {
                     str_appendf(reply, replylen,
                                    "{\"class\":\"ERROR\","
                                    "\"message\":\"Type of %s is unknown.\""
                                    "}\r\n",
                                    device->gpsdata.dev.path);
-                else {
+                } else {
                     timespec_t delta1, delta2;
                     const struct gps_type_t *dt = device->device_type;
                     bool no_serial_change =
-                        (devconf.baudrate == DEVDEFAULT_BPS)
-                        && (devconf.parity == DEVDEFAULT_PARITY)
-                        && (devconf.stopbits == DEVDEFAULT_STOPBITS);
+                        (DEVDEFAULT_BPS == devconf.baudrate &&
+                         DEVDEFAULT_PARITY == devconf.parity &&
+                         DEVDEFAULT_STOPBITS == devconf.stopbits);
 
-                    /* interpret defaults */
-                    if (devconf.baudrate == DEVDEFAULT_BPS)
+                    // interpret defaults
+                    if (DEVDEFAULT_BPS == devconf.baudrate) {
                         devconf.baudrate =
-                            (unsigned int) gpsd_get_speed(device);
-                    if (devconf.parity == DEVDEFAULT_PARITY)
+                            (unsigned int)gpsd_get_speed(device);
+                    }
+                    if (DEVDEFAULT_PARITY == devconf.parity) {
                         devconf.parity = device->gpsdata.dev.parity;
-                    if (devconf.stopbits == DEVDEFAULT_STOPBITS)
+                    }
+                    if (DEVDEFAULT_STOPBITS == devconf.stopbits) {
                         devconf.stopbits = device->gpsdata.dev.stopbits;
+                    }
                     /* make sure that the cycle is positive, if not, use
                      * current value as to not change cycle later */
                     if (!TS_GZ(&devconf.cycle)) {
                         devconf.cycle = device->gpsdata.dev.cycle;
                     }
 
-                    /* now that channel is selected, apply changes */
-                    if (devconf.driver_mode != device->gpsdata.dev.driver_mode
-                        && devconf.driver_mode != DEVDEFAULT_NATIVE
-                        && dt->mode_switcher != NULL)
+                    // now that channel is selected, apply changes
+                    if (devconf.driver_mode !=
+                            device->gpsdata.dev.driver_mode &&
+                        DEVDEFAULT_NATIVE != devconf.driver_mode &&
+                        NULL != dt->mode_switcher) {
                         dt->mode_switcher(device, devconf.driver_mode);
+                    }
                     if (!no_serial_change) {
                         char serialmode[3];
+
                         serialmode[0] = devconf.parity;
                         serialmode[1] = '0' + devconf.stopbits;
                         serialmode[2] = '\0';
@@ -1361,11 +1394,11 @@ static void handle_request(struct subscriber_t *sub,
                     }
                     TS_SUB(&delta1, &devconf.cycle, &device->gpsdata.dev.cycle);
                     if (TS_NZ(&delta1)) {
-                        /* different cycle time than before */
+                        // different cycle time than before
                         TS_SUB(&delta2, &devconf.cycle, &dt->min_cycle);
                         if (TS_GZ(&delta2) &&
-                            dt->rate_switcher != NULL) {
-                            /* longer than minimum cycle time */
+                            NULL != dt->rate_switcher) {
+                            // longer than minimum cycle time
                             if (dt->rate_switcher(device,
                                                   TSTONS(&devconf.cycle))) {
                                 device->gpsdata.dev.cycle = devconf.cycle;
@@ -1386,18 +1419,18 @@ static void handle_request(struct subscriber_t *sub,
                 }
             }
         }
-        /* dump a response for each selected channel */
+        // dump a response for each selected channel
         for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
-            if (!allocated_device(devp))
+            if (!allocated_device(devp)) {
                 continue;
-            else if (devconf.path[0] != '\0'
-                     && strcmp(devp->gpsdata.dev.path, devconf.path) != 0)
-                continue;
-            else {
-                json_device_dump(devp,
-                                 reply + strlen(reply),
-                                 replylen - strlen(reply));
             }
+            if ('\0' != devconf.path[0] &&
+                0 != strcmp(devp->gpsdata.dev.path, devconf.path)) {
+                continue;
+            }
+            json_device_dump(devp,
+                             reply + strlen(reply),
+                             replylen - strlen(reply));
         }
     } else if (str_starts_with(buf, "?POLL;")) {
         char tbuf[JSON_DATE_MAX+1];
@@ -1405,9 +1438,11 @@ static void handle_request(struct subscriber_t *sub,
 
         buf += 6;
         for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
-            if (allocated_device(devp) && subscribed(sub, devp))
-                if ((devp->observed & GPS_TYPEMASK) != 0)
+            if (allocated_device(devp) && subscribed(sub, devp)) {
+                if (0 != (devp->observed & GPS_TYPEMASK)) {
                     active++;
+                }
+            }
         }
 
         (void)snprintf(reply, replylen,
@@ -1416,7 +1451,7 @@ static void handle_request(struct subscriber_t *sub,
                        now_to_iso8601(tbuf, sizeof(tbuf)), active);
         for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
             if (allocated_device(devp) && subscribed(sub, devp)) {
-                if ((devp->observed & GPS_TYPEMASK) != 0) {
+                if (0 != (devp->observed & GPS_TYPEMASK)) {
                     json_tpv_dump(NAVDATA_SET, devp, &sub->policy,
                                   reply + strlen(reply),
                                   replylen - strlen(reply));
@@ -1429,7 +1464,7 @@ static void handle_request(struct subscriber_t *sub,
         (void)strlcat(reply, "],\"gst\":[", replylen);
         for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
             if (allocated_device(devp) && subscribed(sub, devp)) {
-                if ((devp->observed & GPS_TYPEMASK) != 0) {
+                if (0 != (devp->observed & GPS_TYPEMASK)) {
                     json_noise_dump(&devp->gpsdata,
                                   reply + strlen(reply),
                                   replylen - strlen(reply));
@@ -1442,7 +1477,7 @@ static void handle_request(struct subscriber_t *sub,
         (void)strlcat(reply, "],\"sky\":[", replylen);
         for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
             if (allocated_device(devp) && subscribed(sub, devp)) {
-                if ((devp->observed & GPS_TYPEMASK) != 0) {
+                if (0 != (devp->observed & GPS_TYPEMASK)) {
                     json_sky_dump(&devp->gpsdata,
                                   reply + strlen(reply),
                                   replylen - strlen(reply));
@@ -1462,8 +1497,9 @@ static void handle_request(struct subscriber_t *sub,
         char quoted_error[GPS_JSON_RESPONSE_MAX];
 
         errend = buf + strlen(buf);
-        while (isspace((unsigned char) *errend) && errend > buf)
+        while (isspace((unsigned char) *errend) && errend > buf) {
             --errend;
+        }
         (void)snprintf(reply, replylen,
                        "{\"class\":\"ERROR\",\"message\":"
                        "\"Unrecognized request '%s'\"}\r\n",
@@ -1476,17 +1512,17 @@ static void handle_request(struct subscriber_t *sub,
     *after = buf;
 }
 
-/* report a raw packet to a subscriber */
+// report a raw packet to a subscriber
 static void raw_report(struct subscriber_t *sub, struct gps_device_t *device)
 {
-    /* *INDENT-OFF* */
     /*
      * NMEA and other textual sentences are simply
      * copied to all clients that are in raw or nmea
      * mode.
      */
-    if (TEXTUAL_PACKET_TYPE(device->lexer.type)
-        && (sub->policy.raw > 0 || sub->policy.nmea)) {
+    if (TEXTUAL_PACKET_TYPE(device->lexer.type) &&
+        (0 < sub->policy.raw ||
+         sub->policy.nmea)) {
         (void)throttled_write(sub,
                               (char *)device->lexer.outbuffer,
                               device->lexer.outbuflen);
@@ -1497,7 +1533,7 @@ static void raw_report(struct subscriber_t *sub, struct gps_device_t *device)
      * Also, simply copy if user has specified
      * super-raw mode.
      */
-    if (sub->policy.raw > 1) {
+    if (1 < sub->policy.raw) {
         (void)throttled_write(sub,
                               (char *)device->lexer.outbuffer,
                               device->lexer.outbuflen);
@@ -1507,7 +1543,7 @@ static void raw_report(struct subscriber_t *sub, struct gps_device_t *device)
     /*
      * Maybe the user wants a binary packet hexdumped.
      */
-    if (sub->policy.raw == 1) {
+    if (1 == sub->policy.raw) {
         const char *hd =
             gpsd_hexdump(device->msgbuf, sizeof(device->msgbuf),
                          (char *)device->lexer.outbuffer,
@@ -1515,19 +1551,19 @@ static void raw_report(struct subscriber_t *sub, struct gps_device_t *device)
         (void)strlcat((char *)hd, "\r\n", sizeof(device->msgbuf));
         (void)throttled_write(sub, (char *)hd, strlen(hd));
     }
-#endif /* BINARY_ENABLE */
+#endif  // BINARY_ENABLE
 }
 
-/* report pseudo-NMEA in appropriate circumstances */
+// report pseudo-NMEA in appropriate circumstances
 static void pseudonmea_report(struct subscriber_t *sub,
                           gps_mask_t changed,
                           struct gps_device_t *device)
 {
-    if (GPS_PACKET_TYPE(device->lexer.type)
-        && !TEXTUAL_PACKET_TYPE(device->lexer.type)) {
+    if (GPS_PACKET_TYPE(device->lexer.type) &&
+        !TEXTUAL_PACKET_TYPE(device->lexer.type)) {
         char buf[MAX_PACKET_LENGTH * 3 + 2];
 
-        if ((changed & REPORT_IS) != 0) {
+        if (0 != (changed & REPORT_IS)) {
             nmea_tpv_dump(device, buf, sizeof(buf));
             GPSD_LOG(LOG_IO, &context.errout,
                      "<= GPS (binary tpv) %s: %s\n",
@@ -1535,7 +1571,7 @@ static void pseudonmea_report(struct subscriber_t *sub,
             (void)throttled_write(sub, buf, strlen(buf));
         }
 
-        if ((changed & (SATELLITE_SET|USED_IS)) != 0) {
+        if (0 != (changed & (SATELLITE_SET|USED_IS))) {
             nmea_sky_dump(device, buf, sizeof(buf));
             GPSD_LOG(LOG_IO, &context.errout,
                      "<= GPS (binary sky) %s: %s\n",
@@ -1543,7 +1579,7 @@ static void pseudonmea_report(struct subscriber_t *sub,
             (void)throttled_write(sub, buf, strlen(buf));
         }
 
-        if ((changed & SUBFRAME_SET) != 0) {
+        if (0 != (changed & SUBFRAME_SET)) {
             nmea_subframe_dump(device, buf, sizeof(buf));
             GPSD_LOG(LOG_IO, &context.errout,
                      "<= GPS (binary subframe) %s: %s\n",
