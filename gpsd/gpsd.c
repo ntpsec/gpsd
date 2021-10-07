@@ -2798,7 +2798,8 @@ int main(int argc, char *argv[])
                 continue;
             }
             if (!device_needed) {
-                for (sub=subscribers; sub<subscribers+MAX_CLIENTS; sub++) {
+                for (sub = subscribers; sub < subscribers + MAX_CLIENTS;
+                     sub++) {
                     if (0 == sub->active) {
                         continue;
                     }
@@ -2809,36 +2810,38 @@ int main(int argc, char *argv[])
                 }
             }
 
-            if (!device_needed &&
-                -1 < device->gpsdata.gps_fd &&
-                BAD_PACKET != device->lexer.type) {
-                if (0 == device->releasetime) {
-                    device->releasetime = time(NULL);
-                    GPSD_LOG(LOG_PROG, &context.errout,
-                             "device %d (fd %d) released\n",
-                             (int)(device - devices),
-                             device->gpsdata.gps_fd);
-                } else if (RELEASE_TIMEOUT <
-                           (time(NULL) - device->releasetime)) {
-                    GPSD_LOG(LOG_PROG, &context.errout,
-                             "device %d closed\n",
+            if (device_needed) {
+                // device needed
+                if (BAD_SOCKET(device->gpsdata.gps_fd) &&
+                    (0 == device->opentime  ||
+                     DEVICE_RECONNECT < (time(NULL) - device->opentime))) {
+                    device->opentime = time(NULL);
+                    GPSD_LOG(LOG_INF, &context.errout,
+                             "reconnection attempt on device %d\n",
                              (int)(device - devices));
-                    GPSD_LOG(LOG_RAW, &context.errout,
-                             "unflagging descriptor %d\n",
-                             device->gpsdata.gps_fd);
-                    deactivate_device(device);
+                    (void)awaken(device);
                 }
-            }
-
-            if (device_needed &&
-                BAD_SOCKET(device->gpsdata.gps_fd) &&
-                (0 == device->opentime  ||
-                 DEVICE_RECONNECT < (time(NULL) - device->opentime))) {
-                device->opentime = time(NULL);
-                GPSD_LOG(LOG_INF, &context.errout,
-                         "reconnection attempt on device %d\n",
-                         (int)(device - devices));
-                (void)awaken(device);
+            } else {
+                // not device needed
+                if (-1 < device->gpsdata.gps_fd &&
+                    BAD_PACKET != device->lexer.type) {
+                    if (0 == device->releasetime) {
+                        device->releasetime = time(NULL);
+                        GPSD_LOG(LOG_PROG, &context.errout,
+                                 "device %d (fd %d) released\n",
+                                 (int)(device - devices),
+                                 device->gpsdata.gps_fd);
+                    } else if (RELEASE_TIMEOUT <
+                               (time(NULL) - device->releasetime)) {
+                        GPSD_LOG(LOG_PROG, &context.errout,
+                                 "device %d closed\n",
+                                 (int)(device - devices));
+                        GPSD_LOG(LOG_RAW, &context.errout,
+                                 "unflagging descriptor %d\n",
+                                 device->gpsdata.gps_fd);
+                        deactivate_device(device);
+                    }
+                }
             }
         }
 #endif  // SOCKET_EXPORT_ENABLE
