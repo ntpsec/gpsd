@@ -966,8 +966,13 @@ extern ssize_t hex_escapes(char *, const char *);
 extern void gpsd_position_fix_dump(struct gps_device_t *,
                                    char[], size_t);
 extern void gpsd_clear_data(struct gps_device_t *);
+// FIXME: use in libgps, so should not be in gpsd.h!
+// deprecated Oct 2021, use netlib_connectsock1() instead
 extern socket_t netlib_connectsock(int, const char *, const char *,
                                    const char *);
+extern socket_t netlib_connectsock1(int, const char *, const char *,
+                                    const char *, int);
+// end FIXME
 extern socket_t netlib_localsocket(const char *, int);
 extern const char *netlib_errstr(const int);
 extern char *netlib_sock2ip(socket_t);
@@ -980,6 +985,7 @@ extern unsigned int ais_binary_encode(struct ais_t *ais, unsigned char *bits,
                                       int flag);
 
 extern void ntrip_close(struct gps_device_t *);
+extern int ntrip_reconnect(struct gps_device_t *);
 extern int ntrip_parse_url(const struct gpsd_errout_t *,
                            struct ntrip_stream_t *, const char *);
 extern void ntp_latch(struct gps_device_t *device,  struct timedelta_t *td);

@@ -6,8 +6,9 @@
 #include "../include/gpsd_config.h"   // must be before all includes
 
 #ifdef HAVE_ARPA_INET_H
-#  include <arpa/inet.h>     // for htons() and friends
+#  include <arpa/inet.h>              // for htons() and friends
 #endif  // HAVE_ARPA_INET_H
+#include <errno.h>                    // for errno
 #include <fcntl.h>
 #ifdef HAVE_NETDB_H
 #  include <netdb.h>
@@ -50,12 +51,17 @@
 #endif
 
 /* connect to host, using service (port) on protocol (TCP/UDP)
+ * af - Adress Family
+ * host - host to connect to
+ * service -- aka port
+ * protocol
+ * flags -- can be SOCK_NONBLOCK for non-blocking connect
  *
  * return socket on success
  *        less than zero on error (NL_*)
  */
-socket_t netlib_connectsock(int af, const char *host, const char *service,
-                            const char *protocol)
+socket_t netlib_connectsock1(int af, const char *host, const char *service,
+                             const char *protocol, int flags)
 {
     struct protoent *ppe;
     struct addrinfo hints;
@@ -88,6 +94,7 @@ socket_t netlib_connectsock(int af, const char *host, const char *service,
     if (bind_me) {
         hints.ai_flags = AI_PASSIVE;
     }
+    // FIXME: need a way to bypass these DNS calls if host is an IP.
     if ((ret = getaddrinfo(host, service, &hints, &result))) {
         // result is unchanged on error, so we need to have set it to NULL
         // freeaddrinfo() checks for NULL, the NULL we provided.
@@ -103,6 +110,9 @@ socket_t netlib_connectsock(int af, const char *host, const char *service,
     }
 
     /*
+     * Try to connect to each of the DNS returned addresses, one at a time.
+     * Until success, or no more addresses.
+     *
      * From getaddrinfo(3):
      *     Normally, the application should try using the addresses in the
      *     order in which they are returned.  The sorting function used within
@@ -114,17 +124,29 @@ socket_t netlib_connectsock(int af, const char *host, const char *service,
      */
     for (rp = result; rp != NULL; rp = rp->ai_next) {
         ret = NL_NOCONNECT;
-        if (0 > (s = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol))) {
+        // flags might be zero or SOCK_NONBLOCK
+        if (0 > (s = socket(rp->ai_family, rp->ai_socktype | flags,
+                            rp->ai_protocol))) {
+            // can't get a socket.  Maybe should give up right away?
             ret = NL_NOSOCK;
-        } else if (-1 == setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&one,
+            continue;
+        }
+        // allow reuse of local address is in TIMEWAIT state
+        // useful on a quick gpsd restart to reuse the address.
+        if (-1 == setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&one,
                                     sizeof(one))) {
             ret = NL_NOSOCKOPT;
         } else if (bind_me) {
+            // want a passive socket (SOCK_DGRAM), UDP.
             if (0 == bind(s, rp->ai_addr, rp->ai_addrlen)) {
+                // got a good one
                 ret = 0;
                 break;
             }
-        } else if (0 == connect(s, rp->ai_addr, rp->ai_addrlen)) {
+        } else if (0 == connect(s, rp->ai_addr, rp->ai_addrlen) ||
+                   EINPROGRESS == errno) {
+            // got a good connection, or a non-blocking connection in progress
+            // EINPROGRESS means we will not try next address...
             ret = 0;
             break;
         }
@@ -175,6 +197,14 @@ socket_t netlib_connectsock(int af, const char *host, const char *service,
     return s;
 }
 
+// legacy entry point
+// just call netlib_connectsock() with options = 0;
+// return the result
+socket_t netlib_connectsock(int af, const char *host, const char *service,
+                            const char *protocol)
+{
+    return netlib_connectsock1(af, host, service, protocol, 0);
+}
 
 //  Convert NL_* error code to a string
 const char *netlib_errstr(const int err)
