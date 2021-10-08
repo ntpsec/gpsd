@@ -727,7 +727,7 @@ int ntrip_parse_url(const struct gpsd_errout_t *errout,
     return 0;
 }
 
-// open a connection to a Ntrip broadcaster
+// open a connection to a NTRIP broadcaster
 // orig contains full url
 int ntrip_open(struct gps_device_t *device, char *orig)
 {
@@ -831,6 +831,36 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         return -1;
     }
     return ret;
+}
+
+/* reopen a nonblocking connection to an NTRIP broadcaster
+ * Need to already have the sourcetable from a successful ntrip_open()
+ *
+ * return: fd of socket
+ *         less than zero on error
+ */
+int ntrip_reconnect(struct gps_device_t *device)
+{
+    socket_t dsock = -1;
+
+    GPSD_LOG(LOG_SHOUT, &device->context->errout,
+             "NTRIP: ntrip_reconnect() %s\n",
+             device->gpsdata.dev.path);
+    dsock = netlib_connectsock1(AF_UNSPEC, device->ntrip.stream.host,
+                                device->ntrip.stream.port,
+                                "tcp", SOCK_NONBLOCK);
+    // nonblocking means we have the fd, but the connection is not
+    // finished yet.  Connection may fail, later.
+    if (BAD_SOCKET(dsock)) {
+        // no way to recover from this
+        GPSD_LOG(LOG_ERROR, &device->context->errout,
+                 "NTRIP: ntrip_reconnect(%s) failed\n",
+                 device->gpsdata.dev.path);
+        return -1;
+    }
+    // will have to wait for select() to confirm conenction, then send
+    // the ntrip request again.
+    return dsock;
 }
 
 // may be time to ship a usage report to the NTRIP caster
