@@ -149,13 +149,21 @@ static pthread_mutex_t ppslast_mutex = PTHREAD_MUTEX_INITIALIZER;
  * This is needed to avoid warnings from some overly pedantic compilers.
  * Unfortunately, the return type is platform-dependent, making it
  * impractical to actually use the return value.
+ *
+ * glibc strerror_r() is not POSIX compliant if _GNU_SOURCE is defined!
+ * sometimes glibc strerror_r() returns a pointer to a static, and
+ * leaves buf untouched!
  */
-static void pps_strerror_r(int errnum, char *buf, size_t len)
+static const char *pps_strerror_r(int errnum, char *buf, size_t len)
 {
+#ifdef _GNU_SOURCE
+    return strerror_r(errnum, buf, len);
+#else
     if (strerror_r(errnum, buf, len)) {
-        return;
+        return buf;
     }
-    return;
+    return buf;
+#endif
 }
 
 static void thread_lock(volatile struct pps_thread_t *pps_thread)
@@ -163,10 +171,10 @@ static void thread_lock(volatile struct pps_thread_t *pps_thread)
     int pthread_err = pthread_mutex_lock(&ppslast_mutex);
     if (0 != pthread_err) {
         char errbuf[BUFSIZ] = "unknown error";
-        pps_strerror_r(errno, errbuf, sizeof(errbuf));
         pps_thread->log_hook(pps_thread, THREAD_ERROR,
-                "PPS:%s pthread_mutex_lock() : %d:%s\n",
-                pps_thread->devicename, errno, errbuf);
+                "PPS:%s pthread_mutex_lock() : %s(%d)\n",
+                pps_thread->devicename,
+                pps_strerror_r(errno, errbuf, sizeof(errbuf)), errno);
     }
 }
 
@@ -175,10 +183,10 @@ static void thread_unlock(volatile struct pps_thread_t *pps_thread)
     int pthread_err = pthread_mutex_unlock(&ppslast_mutex);
     if (0 != pthread_err) {
         char errbuf[BUFSIZ] = "unknown error";
-        pps_strerror_r(errno, errbuf, sizeof(errbuf));
         pps_thread->log_hook(pps_thread, THREAD_ERROR,
-                    "TPPS:%s pthread_mutex_unlock(): %d:%s\n",
-                    pps_thread->devicename, errno, errbuf);
+                    "TPPS:%s pthread_mutex_unlock(): %s(%d)\n",
+                    pps_thread->devicename,
+                    pps_strerror_r(errno, errbuf, sizeof(errbuf)), errno);
     }
 }
 
@@ -273,10 +281,10 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
          * Note: this ioctl() requires root, and device is a tty */
         if (0 > ioctl(pps_thread->devicefd, TIOCSETD, &ldisc)) {
             char errbuf[BUFSIZ] = "unknown error";
-            pps_strerror_r(errno, errbuf, sizeof(errbuf));
             pps_thread->log_hook(pps_thread, THREAD_INF,
-                "KPPS:%s cannot set PPS line discipline %d:%s\n",
-                pps_thread->devicename, errno, errbuf);
+                "KPPS:%s cannot set PPS line discipline %s(%d)\n",
+                pps_thread->devicename,
+                pps_strerror_r(errno, errbuf, sizeof(errbuf)), errno);
             return -1;
         }
 
@@ -344,13 +352,13 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
     // Should be a valid descriptor by this point
     if (0 > ret) {
         char errbuf[BUFSIZ] = "unknown error";
-        pps_strerror_r(errno, errbuf, sizeof(errbuf));
         // sometimes geteuid() and geteiud() are long
         pps_thread->log_hook(pps_thread, THREAD_INF,
-                    "KPPS:%s running as %ld/%ld, cannot open %s: %d:%s\n",
+                    "KPPS:%s running as %ld/%ld, cannot open %s: %s(%d)\n",
                     pps_thread->devicename,
                     (long)getuid(), (long)geteuid(),
-                    path, errno, errbuf);
+                    path,
+                    pps_strerror_r(errno, errbuf, sizeof(errbuf)), errno);
         return -1;
     }
 
@@ -364,11 +372,11 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
     if (0 > time_pps_create(ret,
                             (pps_handle_t *)&inner_context->kernelpps_handle)) {
         char errbuf[BUFSIZ] = "unknown error";
-        pps_strerror_r(errno, errbuf, sizeof(errbuf));
         pps_thread->log_hook(pps_thread, THREAD_INF,
-                    "KPPS:%s time_pps_create(%d) failed: %d:%s\n",
+                    "KPPS:%s time_pps_create(%d) failed: %s(%d)\n",
                     pps_thread->devicename,
-                    ret, errno, errbuf);
+                    ret,
+                    pps_strerror_r(errno, errbuf, sizeof(errbuf)), errno);
         return -1;
     }
 
@@ -378,10 +386,10 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
                             &inner_context->pps_caps)) {
         char errbuf[BUFSIZ] = "unknown error";
         inner_context->pps_caps = 0;
-        pps_strerror_r(errno, errbuf, sizeof(errbuf));
         pps_thread->log_hook(pps_thread, THREAD_INF,
-                    "KPPS:%s time_pps_getcap() failed: %d:%.100s\n",
-                    pps_thread->devicename, errno, errbuf);
+                    "KPPS:%s time_pps_getcap() failed: %s(%d)\n",
+                    pps_thread->devicename,
+                    pps_strerror_r(errno, errbuf, sizeof(errbuf)), errno);
         return -1;
     } else {
         pps_thread->log_hook(pps_thread, THREAD_INF,
@@ -436,11 +444,10 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
 
     if (0 > time_pps_setparams(inner_context->kernelpps_handle, &pp)) {
         char errbuf[BUFSIZ] = "unknown error";
-        pps_strerror_r(errno, errbuf, sizeof(errbuf));
         pps_thread->log_hook(pps_thread, THREAD_ERROR,
-            "KPPS:%s time_pps_setparams(mode=0x%02X) failed: %d:%s\n",
+            "KPPS:%s time_pps_setparams(mode=0x%02X) failed: %s(%d)\n",
             pps_thread->devicename, pp.mode,
-            errno, errbuf);
+            pps_strerror_r(errno, errbuf, sizeof(errbuf)), errno);
         (void)time_pps_destroy(inner_context->kernelpps_handle);
         return -1;
     }
@@ -490,10 +497,10 @@ static int get_edge_tiocmiwait(volatile struct pps_thread_t *thread_context,
 
     if (0 != ioctl(thread_context->devicefd, TIOCMIWAIT, PPS_LINE_TIOC)) {
         char errbuf[BUFSIZ] = "unknown error";
-        pps_strerror_r(errno, errbuf, sizeof(errbuf));
         thread_context->log_hook(thread_context, THREAD_WARN,
-                "TPPS:%s ioctl(TIOCMIWAIT) failed: %d:%.40s\n",
-                thread_context->devicename, errno, errbuf);
+                "TPPS:%s ioctl(TIOCMIWAIT) failed: %s(%d)\n",
+                thread_context->devicename,
+                pps_strerror_r(errno, errbuf, sizeof(errbuf)), errno);
         return -1;;
     }
 
@@ -513,10 +520,10 @@ static int get_edge_tiocmiwait(volatile struct pps_thread_t *thread_context,
     if (0 > clock_gettime(CLOCK_REALTIME, clock_ts)) {
         // uh, oh, can not get time!
         char errbuf[BUFSIZ] = "unknown error";
-        pps_strerror_r(errno, errbuf, sizeof(errbuf));
         thread_context->log_hook(thread_context, THREAD_ERROR,
-                    "TPPS:%s clock_gettime() failed: %d:%.100s\n",
-                    thread_context->devicename, errno, errbuf);
+                    "TPPS:%s clock_gettime() failed: %s(%d)\n",
+                    thread_context->devicename,
+                    pps_strerror_r(errno, errbuf, sizeof(errbuf)), errno);
         return -1;;
     }
 
@@ -524,11 +531,10 @@ static int get_edge_tiocmiwait(volatile struct pps_thread_t *thread_context,
      * get the edge state */
     if (0 != ioctl(thread_context->devicefd, (unsigned long)TIOCMGET, state)) {
         char errbuf[BUFSIZ] = "unknown error";
-        pps_strerror_r(errno, errbuf, sizeof(errbuf));
         thread_context->log_hook(thread_context, THREAD_ERROR,
-                    "TPPS:%s ioctl(%d, TIOCMGET) failed: %.100s(%d)\n",
+                    "TPPS:%s ioctl(%d, TIOCMGET) failed: %s(%d)\n",
                     thread_context->devicename, thread_context->devicefd,
-                    errbuf, errno);
+                    pps_strerror_r(errno, errbuf, sizeof(errbuf)), errno);
         return -1;
     }
     // end of time critical section
@@ -600,13 +606,12 @@ static int get_edge_rfc2783(struct inner_context_t *inner_context,
                            &pi, &kernelpps_tv)) {
 
         char errbuf[BUFSIZ] = "unknown error";
-        pps_strerror_r(errno, errbuf, sizeof(errbuf));
         if (ETIMEDOUT == errno || EINTR == errno) {
                 // just a timeout
                 thread_context->log_hook(thread_context, THREAD_INF,
-                                         "KPPS:%s kernel PPS timeout %d:%s\n",
-                                         thread_context->devicename,
-                                         errno, errbuf);
+                    "KPPS:%s kernel PPS timeout %s(%d)\n",
+                    thread_context->devicename,
+                    pps_strerror_r(errno, errbuf, sizeof(errbuf)), errno);
                 return 1;
         }
         thread_context->log_hook(thread_context, THREAD_WARN,
