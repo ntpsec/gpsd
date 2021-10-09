@@ -605,6 +605,107 @@ install, as already described above.
 
 === Other Debian derivatives (including stock)
 
+==== Bullseye (11)
+
+The main difference between Bullseye and Buster (below) is that Python
+2 is not in Bullseye by default. It is available. gpsd is Python 3
+compatible, so that's what we will use on Bullseye.
+
+Multiple versions of gpsd can not co-exist on the same system.  You
+need to ensure gpsd from a package is not on the system. Also check
+for and remove any libgps?? packages.
+
+--------------------------------------------------------------
+# dpkg-query -l libgps* gpsd*
+.....
+# apt purge gpsd libgps28
+--------------------------------------------------------------
+
+Then update your system, and install the packages required by gpsd:
+
+--------------------------------------------------------------
+# apt-get update
+# apt-get dist-upgrade
+# reboot
+# apt-get install scons libncurses-dev python-dev pps-tools
+# apt-get install git-core
+# apt-get install build-essential manpages-dev pkg-config
+--------------------------------------------------------------
+
+If "apt-get install scons ..." fails, check the file "/etc/apt/sources.list".
+
+Git-core is required to build from a git repository.
+pps-tools is for PPS timing.
+Build-essential installs the compiler and associated tools.
+Manpages-dev is for the associated man pages.
+Pkg-config is a helper for scons.
+
+Gtk3 is only required to run xgps and xgpsspeed. You do not need a local
+X11 server installed, but it still pulls in a lot of packages.
+
+--------------------------------------------------------------
+# apt-get install python-gi-dev
+# apt-get install libgtk-3-dev
+--------------------------------------------------------------
+
+Ubxtool and zerk may optionally use the pyserial module for
+direct connection to the GNSS receiver:
+
+--------------------------------------------------------------
+# apt-get install python3-serial
+--------------------------------------------------------------
+
+gpsd may optional connect to dbus with the libdbus package:
+
+--------------------------------------------------------------
+# apt-get install libdbus-1-dev
+--------------------------------------------------------------
+
+gpsplot uses matplotlib, which is in the package
+python3-matplotlib.
+
+--------------------------------------------------------------
+# apt install python3-matplotlib
+--------------------------------------------------------------
+
+Several programs written in Python (xgps, xgpsspeed, etc.) are
+installed locally. So if you intend to use them, set your
+PYTHONPATH. You may wish to add it to your shell's log-in scripts to
+make it permanent. For more information on PYTHONPATH, see:
+https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPATH
+
+Something like this, but see the output from the "scons install"
+command and other scons commands.
+
+--------------------------------------------------------------
+# export PYTHONPATH=${PYTHONPATH}:/usr/local/lib/python3/dist-packages
+--------------------------------------------------------------
+
+Some very old Garmin USB devices need libusb:
+
+--------------------------------------------------------------
+# apt-get install libusb-1.0-0-dev
+--------------------------------------------------------------
+
+If you wish to build the documentation, be warned it pulls in a
+lot of packages. Build the documentation is a prerequisite to
+building the HTML files for the website (www/), and also to make
+a source tarball (scons dist). To install the tools to build the
+documentation:
+
+--------------------------------------------------------------
+apt-get install asciidoctor
+--------------------------------------------------------------
+
+The rest of the installation is just as for any other source based
+install:
+
+--------------------------------------------------------------
+# git clone https://gitlab.com/gpsd/gpsd.git
+# cd gpsd
+# scons -c && scons && scons check && scons install
+--------------------------------------------------------------
+
 ==== Buster (10) with python2
 
 These Buster instructions seem to also work for Devuan and Maemo Leste.
@@ -613,7 +714,7 @@ Multiple versions of gpsd can not co-exist on the same system.  You need
 to ensure gpsd from a package is not on the system:
 
 --------------------------------------------------------------
-# apt purge gpsd
+# apt purge gpsd libgps23
 --------------------------------------------------------------
 
 Then update your system, and install the packages required by gpsd:
@@ -632,7 +733,7 @@ If "apt-get install scons" fails, check the file "/etc/apt/sources.list".
 Git-core is required to build from a git repository.
 pps-tools is for PPS timing.
 Build-essential installs the compiler and associated tools.
-Manpages-dev is the associated man pages.
+Manpages-dev is for the associated man pages.
 Pkg-config is a helper for scons.
 
 Gtk3 is only required to run xgps and xgpsspeed.  You do not need a local
