@@ -172,8 +172,8 @@ struct ts_to_ms_test ts_to_ms_tests[] = {
         { TS_N_ONEM,        -60000, 0},
         { TS_N_ONEH,        -3600000, 0},
         { TS_N_ONED,        -86400000, 0},
-        { { -1, MS_IN_NS},  -999, 0},
-        { { -1, -MS_IN_NS}, -1001, 0},
+        { { -1, NS_IN_MS},  -999, 0},
+        { { -1, -NS_IN_MS}, -1001, 0},
         // Note no (extra) loss of precision on the following
         { TS_2037,          2145916799000ULL, 0},
         { TS_2037_ONE,      2145916799000ULL, 0},

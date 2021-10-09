@@ -10,13 +10,13 @@
 #include <stdbool.h>       /* for bool */
 
 #define NS_IN_SEC       1000000000LL     /* nanoseconds in a second */
-#define MS_IN_NS        1000000LL        /* milliseconds in a nano second */
+#define NS_IN_MS        1000000LL        /* nanoseconds in a millisecond */
 #define US_IN_SEC       1000000LL        /* microseconds in a second */
 #define MS_IN_SEC       1000LL           /* milliseconds in a second */
 
-/* convert a timespec_t to an int64_t of milli seconds */
+/* convert a timespec_t to an int64_t of milliseconds */
 #define TSTOMS(ts) ((int64_t)((ts)->tv_sec) * MS_IN_SEC + \
-                    (int64_t)((ts)->tv_nsec / MS_IN_NS))
+                    (int64_t)((ts)->tv_nsec / NS_IN_MS))
 
 /* normalize a timespec
  *
