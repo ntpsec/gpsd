@@ -93,7 +93,7 @@
  * read. It's there so we avoid spinning forever on an EOF condition.
  *
  * DEVICE_RECONNECT sets interval on retries when (re)connecting to
- * a device.
+ * a device.  In seconds.
  */
 #define COMMAND_TIMEOUT         60*15
 #define NOREAD_TIMEOUT          60*3

@@ -727,8 +727,45 @@ int ntrip_parse_url(const struct gpsd_errout_t *errout,
     return 0;
 }
 
-// open a connection to a NTRIP broadcaster
-// orig contains full url
+/* reopen a nonblocking connection to an NTRIP broadcaster
+ * Need to already have the sourcetable from a successful ntrip_open()
+ *
+ * Return: 0 on success
+ *         less than zero on error
+ */
+static int ntrip_reconnect(struct gps_device_t *device)
+{
+    socket_t dsock = -1;
+
+    GPSD_LOG(LOG_SHOUT, &device->context->errout,
+             "NTRIP: ntrip_reconnect() %s\n",
+             device->gpsdata.dev.path);
+    dsock = netlib_connectsock1(AF_UNSPEC, device->ntrip.stream.host,
+                                device->ntrip.stream.port,
+                                "tcp", SOCK_NONBLOCK);
+    device->gpsdata.gps_fd = dsock;
+    // nonblocking means we have the fd, but the connection is not
+    // finished yet.  Connection may fail, later.
+    if (BAD_SOCKET(dsock)) {
+        // no way to recover from this
+        GPSD_LOG(LOG_ERROR, &device->context->errout,
+                 "NTRIP: ntrip_reconnect(%s) failed\n",
+                 device->gpsdata.dev.path);
+        device->ntrip.conn_state = NTRIP_CONN_ERR;
+        return -1;
+    }
+    // will have to wait for select() to confirm conenction, then send
+    // the ntrip request again.
+    device->ntrip.conn_state = NTRIP_CONN_INPROGRESS;
+    return 0;
+}
+
+/* open a connection to a NTRIP broadcaster
+ * orig contains full url
+ *
+ * Return: 0 on success
+ *         less than zero on failure
+ */
 int ntrip_open(struct gps_device_t *device, char *orig)
 {
     socket_t ret = -1;
@@ -825,42 +862,22 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         device->ntrip.conn_state = NTRIP_CONN_ESTABLISHED;
         device->ntrip.works = true;   // we know, this worked.
         break;
+    case NTRIP_CONN_CLOSED:
+        if (6 > llabs((time(NULL) - device->opentime))) {
+            // wait a bit longer
+            ret = 0;
+            break;
+        }
+        ret = ntrip_reconnect(device);
+        break;
     case NTRIP_CONN_ESTABLISHED:
         FALLTHROUGH
     case NTRIP_CONN_ERR:
+        FALLTHROUGH
+    case NTRIP_CONN_INPROGRESS:
         return -1;
     }
     return ret;
-}
-
-/* reopen a nonblocking connection to an NTRIP broadcaster
- * Need to already have the sourcetable from a successful ntrip_open()
- *
- * return: fd of socket
- *         less than zero on error
- */
-int ntrip_reconnect(struct gps_device_t *device)
-{
-    socket_t dsock = -1;
-
-    GPSD_LOG(LOG_SHOUT, &device->context->errout,
-             "NTRIP: ntrip_reconnect() %s\n",
-             device->gpsdata.dev.path);
-    dsock = netlib_connectsock1(AF_UNSPEC, device->ntrip.stream.host,
-                                device->ntrip.stream.port,
-                                "tcp", SOCK_NONBLOCK);
-    // nonblocking means we have the fd, but the connection is not
-    // finished yet.  Connection may fail, later.
-    if (BAD_SOCKET(dsock)) {
-        // no way to recover from this
-        GPSD_LOG(LOG_ERROR, &device->context->errout,
-                 "NTRIP: ntrip_reconnect(%s) failed\n",
-                 device->gpsdata.dev.path);
-        return -1;
-    }
-    // will have to wait for select() to confirm conenction, then send
-    // the ntrip request again.
-    return dsock;
 }
 
 // may be time to ship a usage report to the NTRIP caster
@@ -907,6 +924,9 @@ void ntrip_close(struct gps_device_t *session)
 {
     if (0 > session->gpsdata.gps_fd) {
         // UNALLOCATED_FD (-1) or PLACEHOLDING_FD (-2). Nothing to do.
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "NTRIP: ntrip_close(%s), close(%d) bad fd\n",
+                 session->gpsdata.dev.path, session->gpsdata.gps_fd);
         return;
     }
 
@@ -922,8 +942,11 @@ void ntrip_close(struct gps_device_t *session)
                  session->gpsdata.gps_fd);
     }
     // be prepared for a retry
-    (void)clock_gettime(CLOCK_REALTIME, &session->ntrip.stream.stream_time);
+    // UNUSED
+    // (void)clock_gettime(CLOCK_REALTIME, &session->ntrip.stream.stream_time);
+    session->opentime = time(NULL);
 
     session->gpsdata.gps_fd = PLACEHOLDING_FD;
+    session->ntrip.conn_state = NTRIP_CONN_CLOSED;
 }
 // vim: set expandtab shiftwidth=4

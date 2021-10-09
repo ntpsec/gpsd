@@ -31,8 +31,11 @@ bool netgnss_uri_check(char *name)
 // open a connection to a DGNSS service
 int netgnss_uri_open(struct gps_device_t *dev, char *netgnss_service)
 {
+    GPSD_LOG(LOG_IO, &dev->context->errout,
+             "DGNSS/NTRIP: netgnss_uri_open(%s)\n", netgnss_service);
+
     if (str_starts_with(netgnss_service, NETGNSS_NTRIP)) {
-        dev->ntrip.conn_state = NTRIP_CONN_INIT;
+        // could be initial open, or reopen, or...
         return ntrip_open(dev, netgnss_service + strlen(NETGNSS_NTRIP));
     }
 

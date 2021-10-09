@@ -821,11 +821,13 @@ struct gps_device_t {
 
         /* state information about our response parsing */
         enum {
-            NTRIP_CONN_INIT,
+            NTRIP_CONN_INIT = 0,
             NTRIP_CONN_SENT_PROBE,
             NTRIP_CONN_SENT_GET,
             NTRIP_CONN_ESTABLISHED,
-            NTRIP_CONN_ERR
+            NTRIP_CONN_ERR,
+            NTRIP_CONN_CLOSED,         // connection closed
+            NTRIP_CONN_INPROGRESS,     // connection in progress
         } conn_state;   /* connection state for multi stage connect */
         bool works; // marks a working connection, so we try to reconnect once
         bool sourcetable_parse; /* have we read the sourcetable header? */
@@ -985,7 +987,6 @@ extern unsigned int ais_binary_encode(struct ais_t *ais, unsigned char *bits,
                                       int flag);
 
 extern void ntrip_close(struct gps_device_t *);
-extern int ntrip_reconnect(struct gps_device_t *);
 extern int ntrip_parse_url(const struct gpsd_errout_t *,
                            struct ntrip_stream_t *, const char *);
 extern void ntp_latch(struct gps_device_t *device,  struct timedelta_t *td);
