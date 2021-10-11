@@ -99,6 +99,7 @@ static void visibilize(char *outbuf, size_t outlen,
     const char *sp;
 
     outbuf[0] = '\0';
+    // FIXME!! snprintf() when strlcat() will do!
     for (sp = inbuf; sp < inbuf + inlen && strlen(outbuf)+6 < outlen; sp++)
         if (isprint((unsigned char) *sp) || (sp[0] == '\n' && sp[1] == '\0')
           || (sp[0] == '\r' && sp[2] == '\0'))
@@ -516,7 +517,7 @@ int parse_uri_dest(char *s, char **host, char **service, char **device)
 
 /* open a device for access to its data *
  * return: the opened file descriptor
- *         PLACEHOLDING_FD (-2) - for /dev/ppsX
+ *         PLACEHOLDING_FD (-2) - for /dev/ppsX, ntrip waiting reconenct, etc.
  *         UNALLOCATED_FD (-1) - for open failure
  */
 int gpsd_open(struct gps_device_t *session)
@@ -526,7 +527,7 @@ int gpsd_open(struct gps_device_t *session)
         session->gpsdata.gps_fd = netgnss_uri_open(session,
                                                    session->gpsdata.dev.path);
         session->sourcetype = SOURCE_TCP;
-        GPSD_LOG(LOG_SPIN, &session->context->errout,
+        GPSD_LOG(LOG_IO, &session->context->errout,
                  "CORE: netgnss_uri_open(%s) returns socket on fd %d\n",
                  session->gpsdata.dev.path, session->gpsdata.gps_fd);
         return session->gpsdata.gps_fd;
@@ -653,8 +654,13 @@ int gpsd_activate(struct gps_device_t *session, const int mode)
 
     if (0 > session->gpsdata.gps_fd) {
         // return could be -1, PLACEHOLDING_FD, of UNALLOCATED_FD
-        if (PLACEHOLDING_FD == session->gpsdata.gps_fd) {
+        // could be ntrip:// reconnect in progress
+        if (PLACEHOLDING_FD == session->gpsdata.gps_fd &&
+            SOURCE_PPS == session->sourcetype) {
             // it is /dev/ppsX, need to set devicename, etc.
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "CORE: to gpsd_clear() %d\n",
+                     session->gpsdata.gps_fd);
             gpsd_clear(session);
         }
         return session->gpsdata.gps_fd;
@@ -694,9 +700,6 @@ foundit:
 #endif  // NON_NMEA0183_ENABLE
 
     gpsd_clear(session);
-    GPSD_LOG(LOG_INF, &session->context->errout,
-             "CORE: gpsd_activate(%d): activated GPS (fd %d)\n",
-             session->mode, session->gpsdata.gps_fd);
     /*
      * We might know the device's type, but we shouldn't assume it has
      * retained its settings.  A revert hook might well have undone
@@ -707,6 +710,10 @@ foundit:
         NULL != session->device_type->event_hook) {
         session->device_type->event_hook(session, event_reactivate);
     }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "CORE: activate fd %d done\n",
+             session->gpsdata.gps_fd);
+
     return session->gpsdata.gps_fd;
 }
 

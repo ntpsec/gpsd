@@ -739,7 +739,9 @@ static bool open_device( struct gps_device_t *device)
     activated = gpsd_activate(device, O_OPTIMIZE);
     if (0 > activated &&
         PLACEHOLDING_FD != activated) {
-        // failed to open device, and it is not a /dev/ppsX
+        // failed to open device, and not a /dev/ppsX or ntrip://, etc.
+        GPSD_LOG(LOG_PROG, &context.errout,
+                 "CORE: from gpsd_activate() fd %d\n", activated);
         return false;
     }
 
@@ -997,6 +999,8 @@ static void handle_control(int sfd, char *buf)
 // awaken a device and notify all watchers
 static bool awaken(struct gps_device_t *device)
 {
+    int ret;
+
     // open that device
     if ((!initialized_device(device) &&
          !open_device(device))) {
@@ -1014,12 +1018,19 @@ static bool awaken(struct gps_device_t *device)
         return true;
     }
 
-    if (0 > gpsd_activate(device, O_OPTIMIZE)) {
-        GPSD_LOG(LOG_ERROR, &context.errout,
-                 "%s: device activation failed, freeing device.\n",
-                 device->gpsdata.dev.path);
-        // FIXME: works around a crash bug, but prevents retries
-        free_device(device);
+    ret = gpsd_activate(device, O_OPTIMIZE);
+    if (0 > ret) {
+        if (PLACEHOLDING_FD == ret) {
+            GPSD_LOG(LOG_PROG, &context.errout,
+                     "awaken(): gpsd_activate() = %d\n", ret);
+        } else {
+            // failed to open device, and not a /dev/ppsX or ntrip://, etc.
+            GPSD_LOG(LOG_ERROR, &context.errout,
+                     "%s: device activation failed, freeing device.\n",
+                     device->gpsdata.dev.path);
+            // FIXME: works around a crash bug, but prevents retries
+            free_device(device);
+        }
         return false;
     }
 

@@ -730,7 +730,7 @@ int ntrip_parse_url(const struct gpsd_errout_t *errout,
 /* reopen a nonblocking connection to an NTRIP broadcaster
  * Need to already have the sourcetable from a successful ntrip_open()
  *
- * Return: 0 on success
+ * Return: socket on success
  *         less than zero on error
  */
 static int ntrip_reconnect(struct gps_device_t *device)
@@ -738,7 +738,7 @@ static int ntrip_reconnect(struct gps_device_t *device)
     socket_t dsock = -1;
 
     GPSD_LOG(LOG_SHOUT, &device->context->errout,
-             "NTRIP: ntrip_reconnect() %s\n",
+             "NTRIP: ntrip_reconnect() %.40s\n",
              device->gpsdata.dev.path);
     dsock = netlib_connectsock1(AF_UNSPEC, device->ntrip.stream.host,
                                 device->ntrip.stream.port,
@@ -757,13 +757,13 @@ static int ntrip_reconnect(struct gps_device_t *device)
     // will have to wait for select() to confirm conenction, then send
     // the ntrip request again.
     device->ntrip.conn_state = NTRIP_CONN_INPROGRESS;
-    return 0;
+    return device->gpsdata.gps_fd;
 }
 
 /* open a connection to a NTRIP broadcaster
  * orig contains full url
  *
- * Return: 0 on success
+ * Return: 0 on success, or the new fd
  *         less than zero on failure
  */
 int ntrip_open(struct gps_device_t *device, char *orig)
@@ -771,8 +771,9 @@ int ntrip_open(struct gps_device_t *device, char *orig)
     socket_t ret = -1;
 
     GPSD_LOG(LOG_PROG, &device->context->errout,
-             "NTRIP: ntrip_open(%s) state = %d\n",
-             orig, device->ntrip.conn_state);
+             "NTRIP: ntrip_open(%s) fd %d state = %d\n",
+             orig, device->gpsdata.gps_fd,
+             device->ntrip.conn_state);
 
     switch (device->ntrip.conn_state) {
     case NTRIP_CONN_INIT:
@@ -863,12 +864,20 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         device->ntrip.works = true;   // we know, this worked.
         break;
     case NTRIP_CONN_CLOSED:
+        GPSD_LOG(LOG_SHOUT, &device->context->errout,
+                 "NTRIP: NTRIP_CONN_CLOSED: 1\n");
         if (6 > llabs((time(NULL) - device->opentime))) {
             // wait a bit longer
-            ret = 0;
+            ret = PLACEHOLDING_FD;
+            GPSD_LOG(LOG_SHOUT, &device->context->errout,
+                     "NTRIP: NTRIP_CONN_CLOSED: 2\n");
             break;
         }
+        GPSD_LOG(LOG_SHOUT, &device->context->errout,
+                 "NTRIP: NTRIP_CONN_CLOSED: 3\n");
         ret = ntrip_reconnect(device);
+        GPSD_LOG(LOG_SHOUT, &device->context->errout,
+                 "NTRIP: NTRIP_CONN_CLOSED: 4\n");
         break;
     case NTRIP_CONN_ESTABLISHED:
         FALLTHROUGH
@@ -927,6 +936,7 @@ void ntrip_close(struct gps_device_t *session)
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "NTRIP: ntrip_close(%s), close(%d) bad fd\n",
                  session->gpsdata.dev.path, session->gpsdata.gps_fd);
+        session->gpsdata.gps_fd = PLACEHOLDING_FD;
         return;
     }
 
