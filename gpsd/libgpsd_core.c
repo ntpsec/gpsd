@@ -404,6 +404,11 @@ static void ppsthread_log(volatile struct pps_thread_t *pps_thread,
         break;
     }
 
+    if (device->context->errout.debug < loglevel) {
+        // skip it
+        return;
+    }
+
     buf[0] = '\0';
     va_start(ap, fmt);
     gpsd_vlog(loglevel, &device->context->errout, buf, sizeof(buf), fmt, ap);
