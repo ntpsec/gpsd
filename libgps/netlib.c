@@ -143,10 +143,14 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
                 ret = 0;
                 break;
             }
-        } else if (0 == connect(s, rp->ai_addr, rp->ai_addrlen) ||
-                   EINPROGRESS == errno) {
-            // got a good connection, or a non-blocking connection in progress
-            // EINPROGRESS means we will not try next address...
+        } else if (0 == connect(s, rp->ai_addr, rp->ai_addrlen)) {
+            // got a good connection
+            ret = 0;
+            break;
+        } else if (EINPROGRESS == errno) {
+            // EINPROGRESS means non-blocking connect() in progress
+            // we will not try next address...
+            // separate case from 0 == connect() to ease debug.
             ret = 0;
             break;
         }
