@@ -731,14 +731,15 @@ int ntrip_parse_url(const struct gpsd_errout_t *errout,
  * Need to already have the sourcetable from a successful ntrip_open()
  *
  * Return: socket on success
- *         less than zero on error
+ *         -1 on error
+ *         PLACEHOLDING_FD (-2) on no connect
  */
 static int ntrip_reconnect(struct gps_device_t *device)
 {
     socket_t dsock = -1;
 
-    GPSD_LOG(LOG_SHOUT, &device->context->errout,
-             "NTRIP: ntrip_reconnect() %.40s\n",
+    GPSD_LOG(LOG_PROG, &device->context->errout,
+             "NTRIP: ntrip_reconnect() %.60s\n",
              device->gpsdata.dev.path);
     dsock = netlib_connectsock1(AF_UNSPEC, device->ntrip.stream.host,
                                 device->ntrip.stream.port,
@@ -746,17 +747,23 @@ static int ntrip_reconnect(struct gps_device_t *device)
     device->gpsdata.gps_fd = dsock;
     // nonblocking means we have the fd, but the connection is not
     // finished yet.  Connection may fail, later.
-    if (BAD_SOCKET(dsock)) {
-        // no way to recover from this
+    if (0 > dsock) {
+        // no way to recover from this, except wait and try again later
         GPSD_LOG(LOG_ERROR, &device->context->errout,
-                 "NTRIP: ntrip_reconnect(%s) failed\n",
-                 device->gpsdata.dev.path);
-        device->ntrip.conn_state = NTRIP_CONN_ERR;
-        return -1;
+                 "NTRIP: ntrip_reconnect(%s) failed: %s(%d)\n",
+                 device->gpsdata.dev.path, netlib_errstr(dsock), dsock);
+        // set time for retry
+        (void)clock_gettime(CLOCK_REALTIME, &device->ntrip.stream.stream_time);
+        // leave in connextion closed state for later retry.
+        device->ntrip.conn_state = NTRIP_CONN_CLOSED;
+        return PLACEHOLDING_FD;
     }
     // will have to wait for select() to confirm conenction, then send
     // the ntrip request again.
     device->ntrip.conn_state = NTRIP_CONN_INPROGRESS;
+    GPSD_LOG(LOG_PROG, &device->context->errout,
+             "NTRIP: ntrip_reconnect(%s) fd %d NTRIP_CONN_INPROGRESS \n",
+             device->gpsdata.dev.path, dsock);
     return device->gpsdata.gps_fd;
 }
 
@@ -769,6 +776,7 @@ static int ntrip_reconnect(struct gps_device_t *device)
 int ntrip_open(struct gps_device_t *device, char *orig)
 {
     socket_t ret = -1;
+    char buf[BUFSIZ];
 
     GPSD_LOG(LOG_PROG, &device->context->errout,
              "NTRIP: ntrip_open(%s) fd %d state = %d\n",
@@ -776,7 +784,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
              device->ntrip.conn_state);
 
     switch (device->ntrip.conn_state) {
-    case NTRIP_CONN_INIT:
+    case NTRIP_CONN_INIT:     // state = 0
         /* this has to be done here,
          * because it is needed for multi-stage connection */
         // strlcpy() ensures dup is NUL terminated.
@@ -805,7 +813,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         device->gpsdata.gps_fd = ret;
         device->ntrip.conn_state = NTRIP_CONN_SENT_PROBE;
         return ret;
-    case NTRIP_CONN_SENT_PROBE:
+    case NTRIP_CONN_SENT_PROBE:     // state = 1
         ret = ntrip_sourcetable_parse(device);
         GPSD_LOG(LOG_PROG, &device->context->errout,
                  "NTRIP: ntrip_sourcetable_parse(%s) = %d\n",
@@ -850,7 +858,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         device->gpsdata.gps_fd = ret;
         device->ntrip.conn_state = NTRIP_CONN_SENT_GET;
         break;
-    case NTRIP_CONN_SENT_GET:
+    case NTRIP_CONN_SENT_GET:          // state = 2
         ret = ntrip_stream_get_parse(&device->ntrip.stream,
                                      device->gpsdata.gps_fd,
                                      &device->context->errout);
@@ -863,27 +871,48 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         device->ntrip.conn_state = NTRIP_CONN_ESTABLISHED;
         device->ntrip.works = true;   // we know, this worked.
         break;
-    case NTRIP_CONN_CLOSED:
-        GPSD_LOG(LOG_SHOUT, &device->context->errout,
-                 "NTRIP: NTRIP_CONN_CLOSED: 1\n");
-        if (6 > llabs((time(NULL) - device->opentime))) {
+    case NTRIP_CONN_CLOSED:           // state = 5
+        if (6 > llabs((time(NULL) - device->ntrip.stream.stream_time.tv_sec))) {
             // wait a bit longer
             ret = PLACEHOLDING_FD;
-            GPSD_LOG(LOG_SHOUT, &device->context->errout,
-                     "NTRIP: NTRIP_CONN_CLOSED: 2\n");
             break;
         }
-        GPSD_LOG(LOG_SHOUT, &device->context->errout,
-                 "NTRIP: NTRIP_CONN_CLOSED: 3\n");
         ret = ntrip_reconnect(device);
-        GPSD_LOG(LOG_SHOUT, &device->context->errout,
-                 "NTRIP: NTRIP_CONN_CLOSED: 4\n");
         break;
-    case NTRIP_CONN_ESTABLISHED:
+    case NTRIP_CONN_INPROGRESS:      // state = 6
+        // Need to send GET within about 40 seconds or caster tiems out.
+        // FIXME: partially duplicates  ntrip_stream_get_req()
+        // try a write, it will fail if connection still in process, or failed.
+        (void)snprintf(buf, sizeof(buf),
+                "GET /%s HTTP/1.1\r\n"
+                "Ntrip-Version: Ntrip/2.0\r\n"
+                "User-Agent: NTRIP gpsd/%s\r\n"
+                "Host: %s\r\n"
+                "Accept: rtk/rtcm, dgps/rtcm\r\n"
+                "%s"
+                "Connection: close\r\n"
+                "\r\n", device->ntrip.stream.mountpoint, VERSION,
+                device->ntrip.stream.host,
+                device->ntrip.stream.authStr);
+        if ((ssize_t)strlen(buf) != write(device->gpsdata.gps_fd, buf,
+                                          strlen(buf))) {
+            GPSD_LOG(LOG_ERROR, &device->context->errout,
+                     "NTRIP: stream write error %s(%d) on fd %d during "
+                     "get request\n",
+                     strerror(errno), errno, device->gpsdata.gps_fd);
+            device->ntrip.conn_state = NTRIP_CONN_ERR;
+            // leave FD so deactivate_device() can remove from the
+            // select() loop
+        } else {
+            GPSD_LOG(LOG_ERROR, &device->context->errout,
+                     "NTRIP: stream write success get request\n");
+            device->ntrip.conn_state = NTRIP_CONN_ESTABLISHED;
+        }
+        ret = device->gpsdata.gps_fd;
+        break;
+    case NTRIP_CONN_ESTABLISHED:     // state = 3
         FALLTHROUGH
-    case NTRIP_CONN_ERR:
-        FALLTHROUGH
-    case NTRIP_CONN_INPROGRESS:
+    case NTRIP_CONN_ERR:             // state = 4
         return -1;
     }
     return ret;
@@ -951,10 +980,8 @@ void ntrip_close(struct gps_device_t *session)
                  session->gpsdata.dev.path,
                  session->gpsdata.gps_fd);
     }
-    // be prepared for a retry
-    // UNUSED
-    // (void)clock_gettime(CLOCK_REALTIME, &session->ntrip.stream.stream_time);
-    session->opentime = time(NULL);
+    // Prepare for a retry, don't use opentime as that gets reset elsewhere
+    (void)clock_gettime(CLOCK_REALTIME, &session->ntrip.stream.stream_time);
 
     session->gpsdata.gps_fd = PLACEHOLDING_FD;
     session->ntrip.conn_state = NTRIP_CONN_CLOSED;

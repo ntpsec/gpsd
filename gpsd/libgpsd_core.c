@@ -1860,11 +1860,24 @@ int gpsd_multipoll(const bool data_ready,
         if (SERVICE_NTRIP == device->servicetype &&
             NTRIP_CONN_ESTABLISHED != device->ntrip.conn_state) {
 
+            timespec_t ts_now;
+            double step;
+
+            (void)clock_gettime(CLOCK_REALTIME, &ts_now);
+
+            step = TS_SUB_D(&ts_now, &device->ntrip.stream.stream_time);
+            // wait 6 seconds between hitting ntrip_open()
+            if (6 > fabs(step)) {
+                return DEVICE_UNCHANGED;
+            }
+            device->ntrip.stream.stream_time = ts_now;
             (void)ntrip_open(device, "");
             if (NTRIP_CONN_ERR == device->ntrip.conn_state) {
                 GPSD_LOG(LOG_WARN, &device->context->errout,
                          "CORE: connection to ntrip server failed\n");
-                device->ntrip.conn_state = NTRIP_CONN_INIT;
+                // FIXME: next stat after error should depend on if
+                // initial connect or reconenct...
+                device->ntrip.conn_state = NTRIP_CONN_CLOSED;
                 return DEVICE_ERROR;
             }
             //  else
@@ -1987,6 +2000,7 @@ int gpsd_multipoll(const bool data_ready,
         }
     } else if (0 < device->reawake &&
                time(NULL) > device->reawake) {
+        // FIXME: what if time went backward?
         // device may have had a zero-length read
         GPSD_LOG(LOG_DATA, &device->context->errout,
                  "CORE: %s reawakened after zero-length read\n",
@@ -1994,7 +2008,32 @@ int gpsd_multipoll(const bool data_ready,
         device->reawake = (time_t)0;
         device->zerokill = true;
         return DEVICE_READY;
-    }
+    } else if (SERVICE_NTRIP == device->servicetype &&
+               NTRIP_CONN_INPROGRESS == device->ntrip.conn_state) {
+
+            timespec_t ts_now;
+            double step;
+
+            (void)clock_gettime(CLOCK_REALTIME, &ts_now);
+
+            step = TS_SUB_D(&ts_now, &device->ntrip.stream.stream_time);
+            // wait 6 seconds between hitting ntrip_open()
+            if (6 > fabs(step)) {
+                return DEVICE_UNCHANGED;
+            }
+            device->ntrip.stream.stream_time = ts_now;
+            (void)ntrip_open(device, "");
+            if (NTRIP_CONN_ERR == device->ntrip.conn_state) {
+                GPSD_LOG(LOG_WARN, &device->context->errout,
+                         "CORE: 2 connection to ntrip server failed\n");
+                // FIXME: next stat after error should depend on if
+                // initial connect or reconenct...
+                device->ntrip.conn_state = NTRIP_CONN_CLOSED;
+                return DEVICE_ERROR;
+            }
+            //  else
+            return DEVICE_READY;
+        }
 
     // no change in device descriptor state
     return DEVICE_UNCHANGED;
