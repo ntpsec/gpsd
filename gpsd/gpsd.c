@@ -1021,6 +1021,7 @@ static bool awaken(struct gps_device_t *device)
     ret = gpsd_activate(device, O_OPTIMIZE);
     if (0 > ret) {
         if (PLACEHOLDING_FD == ret) {
+            // wait and try again later.
             GPSD_LOG(LOG_PROG, &context.errout,
                      "awaken(): gpsd_activate() = %d\n", ret);
         } else {
@@ -2695,9 +2696,8 @@ int main(int argc, char *argv[])
                  * gpsd_next_hunt_setting() will try next hunt speed
                  * if device is a tty. */
 
-                // If this device has either never received GPS data,
-                // or hasn't received GPS data for the last 5 seconds,
-                // then try the next hunt speed.
+                // This device has either never received data,
+                // or hasn't received data for the last 5 seconds,
                 (void)clock_gettime(CLOCK_REALTIME, &now);
                 TS_SUB(&delta, &now, &device->lexer.start_time);
                 // llabs() in case the system time jumped
@@ -2705,7 +2705,17 @@ int main(int argc, char *argv[])
                     GPSD_LOG(LOG_PROG, &context.errout,
                         "gpsd_multipoll(%d) DEVICE_UNCHANGED for %lld\n",
                         device->gpsdata.gps_fd, (long long)delta.tv_sec);
-                    gpsd_next_hunt_setting(device);
+                    if (0 < gpsd_serial_isatty(device)) {
+                        // then try the next hunt speed.
+                        gpsd_next_hunt_setting(device);
+                    } else {
+                        // gpsd://, ntrip:// etc.  Just reset timer for now.
+                        device->lexer.start_time = now;
+                        if (SERVICE_NTRIP != device->servicetype) {
+                            // likely NTRIP_CONN_INPROGRESS, move it along
+                            ntrip_open(device, "");
+                        }
+                    }
                 }
 
                 break;
