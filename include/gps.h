@@ -120,7 +120,7 @@ extern "C" {
  * UNIX time to nanoSec precision after 2038 is 63 bits
  * That is why gpsd uses struct timespec.
  *
- * For more info:  https://gps.io/gpsd-numbers-matter.html
+ * For more info:  https://gpsd.io/gpsd-numbers-matter.html
  *
  * The u-blox ZED-F9P reports 0.1 mm, and 1e-9 (0.000000001) degree,
  * precision.  That is about 12 decimal digits of precision.
@@ -130,7 +130,7 @@ extern "C" {
  * printf() format %f defaults to %.6f, which will truncate the result.
  * so print with %.7f, or even %9f, if you have a survey grade GPS.
  *
- * For more info:  https://gps.io/gpsd-numbers-matter.html
+ * For more info:  https://gpsd.io/gpsd-numbers-matter.html
  *
  * All double values use NAN to indicate data not available.
  * WARNING: Check all floats and doubles with isfinite() before using them!
