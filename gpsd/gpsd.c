@@ -754,7 +754,7 @@ static bool open_device( struct gps_device_t *device)
          */
         ntpshm_link_activate(device);
         GPSD_LOG(LOG_INF, &context.errout,
-                 "PPS: activated %s ntpshm_link_activate(): %s\n",
+                 "SHM: ntpshm_link_activate(%s): %s\n",
                  device->gpsdata.dev.path,
                  device->shm_clock == NULL ? "PPS" : "Clock");
 
