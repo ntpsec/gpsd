@@ -535,6 +535,8 @@ int gpsd_open(struct gps_device_t *session)
     } else if (str_starts_with(session->gpsdata.dev.path, "tcp://")) {
         char server[GPS_PATH_MAX], *host, *port, *device;
         socket_t dsock;
+
+        session->sourcetype = SOURCE_TCP;
         (void)strlcpy(server, session->gpsdata.dev.path + 6, sizeof(server));
         INVALIDATE_SOCKET(session->gpsdata.gps_fd);
         if (-1 == parse_uri_dest(server, &host, &port, &device) ||
@@ -556,12 +558,13 @@ int gpsd_open(struct gps_device_t *session)
                      "CORE: TCP device opened on fd %d\n", dsock);
         }
         session->gpsdata.gps_fd = dsock;
-        session->sourcetype = SOURCE_TCP;
         return session->gpsdata.gps_fd;
     // or could be UDP
     } else if (str_starts_with(session->gpsdata.dev.path, "udp://")) {
         char server[GPS_PATH_MAX], *host, *port, *device;
         socket_t dsock;
+
+        session->sourcetype = SOURCE_UDP;
         (void)strlcpy(server, session->gpsdata.dev.path + 6, sizeof(server));
         INVALIDATE_SOCKET(session->gpsdata.gps_fd);
         if (-1 == parse_uri_dest(server, &host, &port, &device) ||
@@ -583,7 +586,6 @@ int gpsd_open(struct gps_device_t *session)
                      "CORE: UDP device opened on fd %d\n", dsock);
         }
         session->gpsdata.gps_fd = dsock;
-        session->sourcetype = SOURCE_UDP;
         return session->gpsdata.gps_fd;
     }
     if (str_starts_with(session->gpsdata.dev.path, "gpsd://")) {
@@ -603,6 +605,8 @@ int gpsd_open(struct gps_device_t *session)
          */
         char server[GPS_PATH_MAX], *host, *port, *device;
         socket_t dsock;
+
+        session->sourcetype = SOURCE_GPSD;
         (void)strlcpy(server, session->gpsdata.dev.path + 7, sizeof(server));
         INVALIDATE_SOCKET(session->gpsdata.gps_fd);
         if (-1 == parse_uri_dest(server, &host, &port, &device)) {
@@ -627,7 +631,6 @@ int gpsd_open(struct gps_device_t *session)
         }
         // watch to remote is issued when WATCH is
         session->gpsdata.gps_fd = dsock;
-        session->sourcetype = SOURCE_GPSD;
         return session->gpsdata.gps_fd;
     }
 #if defined(NMEA2000_ENABLE)
