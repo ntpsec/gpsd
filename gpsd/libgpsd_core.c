@@ -1681,15 +1681,20 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
     // track the packet count since achieving sync on the device
     if (driver_change &&
         0 == (session->drivers_identified & (1 << session->driver_index))) {
-        speed_t speed = gpsd_get_speed(session);
 
         // coverity[var_deref_op]
         GPSD_LOG(LOG_INF, &session->context->errout,
-                 "CORE: %s identified as type %s, %ld sec @ %ubps\n",
+                 "CORE: %s identified as type %s, %ld sec\n",
                  session->gpsdata.dev.path,
                  session->device_type->type_name,
-                 (long)(time(NULL) - session->opentime),
-                 (unsigned int)speed);
+                 (long)(time(NULL) - session->opentime));
+
+        if (0 < gpsd_serial_isatty(session)) {
+            GPSD_LOG(LOG_INF, &session->context->errout,
+                     "CORE: %s %ubps\n",
+                     session->gpsdata.dev.path,
+                     (unsigned int)gpsd_get_speed(session));
+        }
 
         // fire the init_query method
         if (NULL != session->device_type &&
