@@ -2709,9 +2709,10 @@ int main(int argc, char *argv[])
                         // then try the next hunt speed.
                         gpsd_next_hunt_setting(device);
                     } else {
-                        // gpsd://, ntrip:// etc.  Just reset timer for now.
+                        // gpsd://, tcp:// etc.  Just reset timer for now.
                         device->lexer.start_time = now;
-                        if (SERVICE_NTRIP != device->servicetype) {
+                        if (SERVICE_NTRIP == device->servicetype) {
+                            // ntrip://
                             // likely NTRIP_CONN_INPROGRESS, move it along
                             ntrip_open(device, "");
                         }
