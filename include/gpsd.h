@@ -477,10 +477,10 @@ typedef enum {SOURCE_UNKNOWN,
 /*
  * Each input source also has an associated service type.
  */
-typedef enum {SERVICE_UNKNOWN,
-              SERVICE_SENSOR,
-              SERVICE_DGPSIP,
-              SERVICE_NTRIP,
+typedef enum {SERVICE_UNKNOWN = 0,
+              SERVICE_SENSOR,        // local, or network, sensor
+              SERVICE_DGPSIP,        // dgpsip://
+              SERVICE_NTRIP,         // ntrip://
 } servicetype_t;
 
 /*
