@@ -1095,7 +1095,11 @@ void gpsd_assert_sync(struct gps_device_t *session)
     }
 }
 
-// Close an open serial device
+/* Close an open sensor device
+ * could be serial, udp://, tcp://, etc.
+ *
+ * Return: void
+ */
 void gpsd_close(struct gps_device_t *session)
 {
     if (0 > session->gpsdata.gps_fd) {
@@ -1149,12 +1153,22 @@ void gpsd_close(struct gps_device_t *session)
                      session->gpsdata.dev.baudrate, strerror(errno),
                      errno);
         }
+    } else if (SOURCE_TCP == session->sourcetype) {
+        /* tcp:// sensor source
+         * close, but setup for reconnect
+         */
+        (void)close(session->gpsdata.gps_fd);
+        // Prepare for a retry
+        session->gpsdata.gps_fd = PLACEHOLDING_FD;
+        session->opentime = time(NULL);
     }
     GPSD_LOG(LOG_IO, &session->context->errout,
              "SER: gpsd_close(%s), close(%d)\n",
              session->gpsdata.dev.path,
              session->gpsdata.gps_fd);
-    (void)close(session->gpsdata.gps_fd);
-    session->gpsdata.gps_fd = UNALLOCATED_FD;
+    if (!BAD_SOCKET(session->gpsdata.gps_fd)) {
+        (void)close(session->gpsdata.gps_fd);
+        session->gpsdata.gps_fd = UNALLOCATED_FD;
+    }
 }
 // vim: set expandtab shiftwidth=4

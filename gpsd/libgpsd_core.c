@@ -365,6 +365,7 @@ void gpsd_deactivate(struct gps_device_t *session)
     } else
 #endif  // NMEA2000_ENABLE
     {
+        // could be serial, udp://, tcp://, etc.
         gpsd_close(session);
     }
     if (O_OPTIMIZE == session->mode) {
@@ -542,20 +543,24 @@ int gpsd_open(struct gps_device_t *session)
         if (-1 == parse_uri_dest(server, &host, &port, &device) ||
             !port) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "CORE: Missing service in TCP feed spec.\n");
-            return -1;
+                     "CORE: Missing service in TCP feed spec %s\n",
+                     session->gpsdata.dev.path);
+            return UNALLOCATED_FD ;
         }
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "CORE: opening TCP feed at %s, port %s.\n", host,
                  port);
-        if (0 > (dsock = netlib_connectsock(AF_UNSPEC, host, port, "tcp"))) {
+        // open non-blocking
+        dsock = netlib_connectsock1(AF_UNSPEC, host, port, "tcp", 0);
+                                    // SOCK_NONBLOCK); // not yet...
+        if (0 > dsock) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "CORE: TCP device open error %s(%d).\n",
-                     netlib_errstr(dsock), dsock);
-            return -1;
+                     "CORE: TCP %s open error %s(%d).\n",
+                     session->gpsdata.dev.path, netlib_errstr(dsock), dsock);
         } else {
             GPSD_LOG(LOG_SPIN, &session->context->errout,
-                     "CORE: TCP device opened on fd %d\n", dsock);
+                     "CORE: TCP %s opened on fd %d\n",
+                     session->gpsdata.dev.path, dsock);
         }
         session->gpsdata.gps_fd = dsock;
         return session->gpsdata.gps_fd;
@@ -643,7 +648,14 @@ int gpsd_open(struct gps_device_t *session)
     return gpsd_serial_open(session);
 }
 
-// acquire a connection to the GPS device
+/* acquire a connection to the GPS device
+ * could be serial, udp://, tcp://, etc.
+ *
+ * Return: fd on success
+ *         less than zero on failure
+ *         UNALLOCATED_FD (-1)  -- give up
+ *         PLACEHOLDING_FD (-2) -- retry possible
+ */
 int gpsd_activate(struct gps_device_t *session, const int mode)
 {
     if (O_OPTIMIZE == mode) {

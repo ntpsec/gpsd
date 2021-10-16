@@ -550,7 +550,7 @@ struct gps_device_t {
     /* firmware version or subtype ID, 96 too small for ZED-F9 */
     char subtype[128];
     char subtype1[128];
-    time_t opentime;
+    time_t opentime;                  // FIXME: change to timespec_t
     time_t releasetime;
     bool zerokill;
     time_t reawake;

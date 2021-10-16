@@ -410,6 +410,7 @@ static int ntrip_stream_req_probe(const struct ntrip_stream_t *stream,
     ssize_t r;
     char buf[BUFSIZ];
 
+    // open blocking
     dsock = netlib_connectsock(AF_UNSPEC, stream->host, stream->port, "tcp");
     if (0 > dsock) {
         GPSD_LOG(LOG_ERROR, errout,
@@ -470,6 +471,7 @@ static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
     int dsock;
     char buf[BUFSIZ];
 
+    // open blocking
     dsock = netlib_connectsock(AF_UNSPEC, stream->host, stream->port, "tcp");
     if (BAD_SOCKET(dsock)) {
         GPSD_LOG(LOG_ERROR, errout,
