@@ -2807,7 +2807,7 @@ Deprecated in protVer 34.00
                   "\n   mask2 (%s) aopCfg (%s)" %
                   (flag_s(u[1], self.cfg_navx5_mask1),
                    flag_s(u[2], self.cfg_navx5_mask2),
-                   flag_s(u1[5], self.cfg_navx5_aop)))
+                   flag_s(u[5], self.cfg_navx5_aop)))
 
         return s
 
