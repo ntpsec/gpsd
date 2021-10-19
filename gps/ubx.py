@@ -9641,9 +9641,6 @@ present in 9-series and higher
         # UBX-RXM-RAWX
         "RXM-RAWX": {"command": send_poll, "opt": [0x02, 0x15],
                      "help": "poll UBX-RXM-RAWX raw measurement data"},
-        # UBX-RXM-RTCM
-        "RXM-RTCM": {"command": send_poll, "opt": [0x02, 0x32],
-                     "help": "poll UBX-RXM-RTCM RTCM input status"},
         # UBX-CFG-SBAS
         "SEC-UNIQID": {"command": send_poll, "opt": [0x27, 0x03],
                        "help": "poll UBX-SEC-UNIQID Unique chip ID"},
