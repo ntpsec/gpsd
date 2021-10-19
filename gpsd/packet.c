@@ -143,7 +143,7 @@ static char *state_table[] = {
 #define MICRO   (unsigned char)0xb5
 
 #if defined(TSIP_ENABLE)
-/* Maximum length a TSIP packet can be */
+// Maximum length a TSIP packet can be
 #define TSIP_MAX_PACKET 255
 #endif
 
@@ -199,7 +199,7 @@ static size_t oncore_payload_cksum_length(unsigned char id1, unsigned char id2)
     default:
         return 0;
     }
-    /* *INDENT-ON* */
+    // *INDENT-ON*
 
     return l - 6;               // Subtract header and trailer.
 }
@@ -2730,7 +2730,11 @@ void packet_parse(struct gps_lexer_t *lexer)
     }                           // while
 }
 
-// grab a packet; return -1=>I/O error, 0=>EOF, or a length
+/* grab a packet;
+ * return: greater than zero: length
+ *         0 == EOF
+ *        -1 == I/O error
+ */
 ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
 {
     ssize_t recvd;
@@ -2743,26 +2747,27 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
     if (-1 == recvd) {
         if (EAGAIN == errno ||
             EINTR == errno) {
-            GPSD_LOG(LOG_RAW2, &lexer->errout, "no bytes ready\n");
+            GPSD_LOG(LOG_RAW2, &lexer->errout, "PACKET: no bytes ready\n");
             recvd = 0;
             // fall through, input buffer may be nonempty
         } else {
-            GPSD_LOG(LOG_RAW2, &lexer->errout,
-                     "errno: %s\n", strerror(errno));
+            GPSD_LOG(LOG_WARN, &lexer->errout,
+                     "PACKET: packet_get(%d) errno: %s(%d)\n",
+                     fd, strerror(errno), errno);
             return -1;
         }
     } else {
         char scratchbuf[MAX_PACKET_LENGTH * 4 + 1];
         GPSD_LOG(LOG_RAW1, &lexer->errout,
-                 "Read %zd chars to buffer offset %zd (total %zd): %s\n",
+                 "PACKET: Read %zd chars to buffer[%zd] (total %zd): %s\n",
                  recvd, lexer->inbuflen, lexer->inbuflen + recvd,
                  gpsd_packetdump(scratchbuf, sizeof(scratchbuf),
                                  (char *)lexer->inbufptr, (size_t) recvd));
         lexer->inbuflen += recvd;
     }
     GPSD_LOG(LOG_SPIN, &lexer->errout,
-             "packet_get() fd %d -> %zd (%d)\n",
-             fd, recvd, errno);
+             "PACKET: packet_get() fd %d -> %zd %s(%d)\n",
+             fd, recvd, strerror(errno), errno);
 
     /*
      * Bail out, indicating no more input, only if we just received

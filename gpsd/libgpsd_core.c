@@ -231,8 +231,8 @@ static void gpsd_run_device_hook(struct gpsd_errout_t *errout,
 
     if (-1 == stat(DEVICEHOOKPATH, &statbuf)) {
         GPSD_LOG(LOG_PROG, errout,
-                 "CORE: no %s present, skipped running %s hook. %s\n",
-                 DEVICEHOOKPATH, hook, strerror(errno));
+                 "CORE: no %s present, skipped running %s hook. %s(%d)\n",
+                 DEVICEHOOKPATH, hook, strerror(errno), errno);
     } else {
         int status;
         char buf[HOOK_CMD_MAX];
@@ -551,14 +551,14 @@ int gpsd_open(struct gps_device_t *session)
                  "CORE: opening TCP feed at %s, port %s.\n", host,
                  port);
         // open non-blocking
-        dsock = netlib_connectsock1(AF_UNSPEC, host, port, "tcp", 0);
-                                    // SOCK_NONBLOCK); // not yet...
+        dsock = netlib_connectsock1(AF_UNSPEC, host, port, "tcp",
+                                    SOCK_NONBLOCK);
         if (0 > dsock) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "CORE: TCP %s open error %s(%d).\n",
                      session->gpsdata.dev.path, netlib_errstr(dsock), dsock);
         } else {
-            GPSD_LOG(LOG_SPIN, &session->context->errout,
+            GPSD_LOG(LOG_PROG, &session->context->errout,
                      "CORE: TCP %s opened on fd %d\n",
                      session->gpsdata.dev.path, dsock);
         }
@@ -1473,6 +1473,7 @@ static bool hunt_failure(struct gps_device_t *session)
 }
 
 // update the stuff in the scoreboard structure
+// Also used by gpsdecode.c
 gps_mask_t gpsd_poll(struct gps_device_t *session)
 {
     ssize_t newlen;
@@ -1551,7 +1552,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
         session->observed |= PACKET_TYPEMASK(session->lexer.type);
     }
 
-    // can we get a full packet from the device/NTRIP/GGPS?
+    // can we get a full packet from the device/NTRIP/DGPS/tcp/etc.?
     if (NULL != session->device_type) {
         newlen = session->device_type->get_packet(session);
         // coverity[deref_ptr]

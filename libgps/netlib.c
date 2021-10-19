@@ -57,6 +57,11 @@
  * protocol
  * flags -- can be SOCK_NONBLOCK for non-blocking connect
  *
+ * Notes on nonblocking:
+ * The connect may be non-blocking, but the DNS lookup is blocking.
+ * On non-blocking connect only the first DNS entry is ever used.
+ * FIXME: cache DNS to avoid DNS lookup on re-connect
+ *
  * return socket on success
  *        less than zero on error (NL_*)
  */
