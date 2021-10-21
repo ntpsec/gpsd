@@ -8617,12 +8617,28 @@ Always double check with "-p CFG-GNSS".
         if 2 < len(args):
             # optional set rate
             m_data = bytearray(3)
-            m_data[2] = int(args[2])
+            try:
+                m_data[2] = int(args[2], base=0)
+            except ValueError as e:
+                sys.stderr.write('gps/ubx: ERROR: CFG-MSG invalid rate: %s\n' %
+                                 e)
+                sys.exit(1)
         else:
             m_data = bytearray(2)
+
         # allow binary, hex and octal.
-        m_data[0] = int(args[0], base=0)
-        m_data[1] = int(args[1], base=0)
+        try:
+            m_data[0] = int(args[0], base=0)
+        except ValueError as e:
+            sys.stderr.write('gps/ubx: ERROR: CFG-MSG invalid class: %s\n' %
+                             e)
+            sys.exit(1)
+        try:
+            m_data[1] = int(args[1], base=0)
+        except ValueError as e:
+            sys.stderr.write('gps/ubx: ERROR: CFG-MSG invalid ID: %s\n' %
+                             e)
+            sys.exit(1)
 
         self.gps_send(6, 1, m_data)
 
