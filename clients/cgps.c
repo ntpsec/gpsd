@@ -174,7 +174,7 @@ static char *dop_to_str(double dop)
     return buf;
 }
 
-/* format an EP into a string, handle NAN, INFINITE */
+// format an EP into a string, handle NAN, INFINITE
 static char *ep_to_str(double ep, double factor, char *units)
 {
     static char buf[20];
@@ -183,7 +183,7 @@ static char *ep_to_str(double ep, double factor, char *units)
     if (isfinite(ep) == 0) {
         return " n/a  ";
     }
-    /* somehow these go negative now and then... */
+    // somehow these go negative now and then...
     val = fabs(ep * factor);
     if ( 100 <= val ) {
         (void)snprintf(buf, sizeof(buf), "+/-%5d %.5s", (int)val, units);
@@ -222,21 +222,21 @@ static char *ecef_to_str(double pos, double vel)
     return buf;
 }
 
-/* Function to call when we're all done.  Does a bit of clean-up. */
+// Function to call when we're all done.  Does a bit of clean-up.
 static void die(int sig)
 {
     if (!isendwin()) {
-        /* Move the cursor to the bottom left corner. */
+        // Move the cursor to the bottom left corner.
         (void)mvcur(0, COLS - 1, LINES - 1, 0);
 
-        /* Put input attributes back the way they were. */
+        // Put input attributes back the way they were.
         (void)echo();
 
-        /* Done with curses. */
+        // Done with curses.
         (void)endwin();
     }
 
-    /* We're done talking to gpsd. */
+    // We're done talking to gpsd.
     (void)gps_close(&gpsdata);
 
     switch (sig) {
@@ -256,13 +256,13 @@ static void die(int sig)
         break;
     }
 
-    /* Bye! */
+    // Bye!
     exit(EXIT_SUCCESS);
 }
 
 static enum deg_str_type deg_type = deg_dd;
 
-/* initialize curses and set up screen windows */
+// initialize curses and set up screen windows
 static void windowsetup(void)
 {
     /* Set the window sizes per the following criteria:
@@ -289,15 +289,18 @@ static void windowsetup(void)
      * data window down to show DOPs, ECEFs, etc.
      */
     int xsize, ysize;
+    int row = 1;
 
-    /* Fire up curses. */
+    // Fire up curses.
     (void)initscr();
     (void)noecho();
     getmaxyx(stdscr, ysize, xsize);
-    /* turn off cursor */
+    // turn off cursor
     curs_set(0);
 
     if (imu_flag) {
+        // We're an IMU, set up accordingly.
+
         if (ysize == MIN_COMPASS_DATAWIN_YSIZE) {
             raw_flag = false;
             window_ysize = MIN_COMPASS_DATAWIN_YSIZE;
@@ -312,52 +315,6 @@ static void windowsetup(void)
             (void)sleep(5);
             die(0);
         }
-    } else {
-        if (ysize > MAX_GPS_DATAWIN_YSIZE + 10) {
-            raw_flag = true;
-            show_ecefs = true;
-            show_more_dops = true;
-            window_ysize = MAX_GPS_DATAWIN_YSIZE + 7;
-        } else if (ysize > MAX_GPS_DATAWIN_YSIZE + 6) {
-            raw_flag = true;
-            show_ecefs = false;
-            show_more_dops = true;
-            window_ysize = MAX_GPS_DATAWIN_YSIZE + 4;
-        } else if (ysize > MAX_GPS_DATAWIN_YSIZE) {
-            raw_flag = true;
-            show_ecefs = false;
-            show_more_dops = false;
-            window_ysize = MAX_GPS_DATAWIN_YSIZE;
-        } else if (ysize == MAX_GPS_DATAWIN_YSIZE) {
-            raw_flag = false;
-            show_ecefs = false;
-            show_more_dops = false;
-            window_ysize = MAX_GPS_DATAWIN_YSIZE;
-        } else if (ysize > MIN_GPS_DATAWIN_YSIZE) {
-            raw_flag = true;
-            show_ecefs = false;
-            show_more_dops = false;
-            window_ysize = MIN_GPS_DATAWIN_YSIZE;
-        } else if (ysize == MIN_GPS_DATAWIN_YSIZE) {
-            raw_flag = false;
-            show_ecefs = false;
-            show_more_dops = false;
-            window_ysize = MIN_GPS_DATAWIN_YSIZE;
-        } else {
-            (void)mvprintw(0, 0,
-                           "Your screen must be at least 80x%d to run cgps.",
-                           MIN_GPS_DATAWIN_YSIZE);
-            (void)refresh();
-            (void)sleep(5);
-            die(0);
-        }
-        display_sats = window_ysize - SATWIN_OVERHEAD - (int)raw_flag;
-    }
-
-    /* Set up the screen for either an IMU or a GNSS receiver. */
-    if (imu_flag) {
-        /* We're an IMU, set up accordingly. */
-        int row = 1;
 
         datawin = newwin(window_ysize, IMU_WIDTH, 0, 0);
         (void)nodelay(datawin, (bool) TRUE);
@@ -398,99 +355,137 @@ static void windowsetup(void)
         (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Roll:");
         (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg");
         (void)wborder(datawin, 0, 0, 0, 0, 0, 0, 0, 0);
-
-    } else {
-        /* We're a GPS, set up accordingly. */
-        int row = 1;
-
-        datawin = newwin(window_ysize, DATAWIN_WIDTH, 0, 0);
-        satellites =
-            newwin(window_ysize, SATELLITES_WIDTH, 0, DATAWIN_WIDTH);
-        (void)nodelay(datawin, (bool) TRUE);
-        if (raw_flag) {
-            messages =
-                newwin(ysize - (window_ysize), xsize, window_ysize, 0);
-
-            (void)scrollok(messages, true);
-            (void)wsetscrreg(messages, 0, ysize - (window_ysize));
-        }
-
-        (void)refresh();
-
-        /* Do the initial field label setup. */
-        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Time");
-        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Latitude");
-        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Longitude");
-        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Alt (HAE, MSL)");
-        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Speed");
-        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Track");
-        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Climb");
-        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Status");
-
-        /* Note that the following fields are exceptions to the
-         * sizing rule.  The minimum window size does not include these
-         * fields, if the window is too small, they get excluded.  This
-         * may or may not change if/when the output for these fields is
-         * fixed and/or people request their permanance.  They're only
-         * there in the first place because I arbitrarily thought they
-         * sounded interesting. ;^) */
-
-        if (window_ysize >= MAX_GPS_DATAWIN_YSIZE) {
-            (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                            "Long Err  (XDOP, EPX)");
-            (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                            "Lat Err   (YDOP, EPY)");
-            (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                            "Alt Err   (VDOP, EPV)");
-
-            if (show_more_dops) {
-                (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                                "2D Err    (HDOP, CEP):");
-                (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                                "3D Err    (PDOP, SEP):");
-                (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                                "Time Err  (TDOP):");
-                (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                                "Geo Err   (GDOP):");
-            }
-
-            if (show_ecefs) {
-                (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                                "ECEF X, VX");
-                (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                                "ECEF Y, VY");
-                (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                                "ECEF Z, VZ");
-            }
-
-            (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                            "Speed Err (EPS)");
-            (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                            "Track Err (EPD)");
-            /* it's actually esr that thought *these* were interesting */
-            (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                            "Time offset");
-            (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                            "Grid Square");
-        }
-
-        (void)wborder(datawin, 0, 0, 0, 0, 0, 0, 0, 0);
-        /* PRN is not unique for all GNSS systems.
-         * Each GNSS (GPS, GALILEO, BeiDou, etc.) numbers their PRN from 1.
-         * What we really have here is USI, Universal Sat ID
-         * The USI for each GNSS satellite is unique, starting at 1.
-         * Not all GPS receivers compute the USI the same way. YMMV
-         *
-         * Javad (GREIS) GPS receivers compute USI this way:
-         * GPS is USI 1-37, GLONASS 38-70, GALILEO 71-119, SBAS 120-142,
-         * QZSS 193-197, BeiDou 211-247
-         *
-         * Geostar GPS receivers compute USI this way:
-         * GPS is USI 1 to 32, SBAS is 33 to 64, GLONASS is 65 to 96 */
-        (void)mvwaddstr(satellites, 1, 1,
-                        "GNSS   PRN  Elev   Azim   SNR Use");
-        (void)wborder(satellites, 0, 0, 0, 0, 0, 0, 0, 0);
+        // done with IMU setup
+        return;
     }
+
+    // We're a GPS, set up accordingly.
+    if (ysize > MAX_GPS_DATAWIN_YSIZE + 10) {
+        raw_flag = true;
+        show_ecefs = true;
+        show_more_dops = true;
+        window_ysize = MAX_GPS_DATAWIN_YSIZE + 7;
+    } else if (ysize > MAX_GPS_DATAWIN_YSIZE + 6) {
+        raw_flag = true;
+        show_ecefs = false;
+        show_more_dops = true;
+        window_ysize = MAX_GPS_DATAWIN_YSIZE + 4;
+    } else if (ysize > MAX_GPS_DATAWIN_YSIZE) {
+        raw_flag = true;
+        show_ecefs = false;
+        show_more_dops = false;
+        window_ysize = MAX_GPS_DATAWIN_YSIZE;
+    } else if (ysize == MAX_GPS_DATAWIN_YSIZE) {
+        raw_flag = false;
+        show_ecefs = false;
+        show_more_dops = false;
+        window_ysize = MAX_GPS_DATAWIN_YSIZE;
+    } else if (ysize > MIN_GPS_DATAWIN_YSIZE) {
+        raw_flag = true;
+        show_ecefs = false;
+        show_more_dops = false;
+        window_ysize = MIN_GPS_DATAWIN_YSIZE;
+    } else if (ysize == MIN_GPS_DATAWIN_YSIZE) {
+        raw_flag = false;
+        show_ecefs = false;
+        show_more_dops = false;
+        window_ysize = MIN_GPS_DATAWIN_YSIZE;
+    } else {
+        (void)mvprintw(0, 0,
+                       "Your screen must be at least 80x%d to run cgps.",
+                       MIN_GPS_DATAWIN_YSIZE);
+        (void)refresh();
+        (void)sleep(5);
+        die(0);
+    }
+    display_sats = window_ysize - SATWIN_OVERHEAD - (int)raw_flag;
+
+    datawin = newwin(window_ysize, DATAWIN_WIDTH, 0, 0);
+    satellites = newwin(window_ysize, SATELLITES_WIDTH, 0, DATAWIN_WIDTH);
+    (void)nodelay(datawin, (bool) TRUE);
+    if (raw_flag) {
+        messages =
+            newwin(ysize - (window_ysize), xsize, window_ysize, 0);
+
+        (void)scrollok(messages, true);
+        (void)wsetscrreg(messages, 0, ysize - (window_ysize));
+    }
+
+    (void)refresh();
+
+    // Do the initial field label setup.
+    (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Time");
+    (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Latitude");
+    (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Longitude");
+    (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Alt (HAE, MSL)");
+    (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Speed");
+    (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Track");
+    (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Climb");
+    (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Status");
+
+    /* Note that the following fields are exceptions to the
+     * sizing rule.  The minimum window size does not include these
+     * fields, if the window is too small, they get excluded.  This
+     * may or may not change if/when the output for these fields is
+     * fixed and/or people request their permanance.  They're only
+     * there in the first place because I arbitrarily thought they
+     * sounded interesting. ;^) */
+
+    if (window_ysize >= MAX_GPS_DATAWIN_YSIZE) {
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
+                        "Long Err  (XDOP, EPX)");
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
+                        "Lat Err   (YDOP, EPY)");
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
+                        "Alt Err   (VDOP, EPV)");
+
+        if (show_more_dops) {
+            (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
+                            "2D Err    (HDOP, CEP):");
+            (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
+                            "3D Err    (PDOP, SEP):");
+            (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
+                            "Time Err  (TDOP):");
+            (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
+                            "Geo Err   (GDOP):");
+        }
+
+        if (show_ecefs) {
+            (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
+                            "ECEF X, VX");
+            (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
+                            "ECEF Y, VY");
+            (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
+                            "ECEF Z, VZ");
+        }
+
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
+                        "Speed Err (EPS)");
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
+                        "Track Err (EPD)");
+        /* it's actually esr that thought *these* were interesting */
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
+                        "Time offset");
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
+                        "Grid Square");
+    }
+
+    (void)wborder(datawin, 0, 0, 0, 0, 0, 0, 0, 0);
+    /* PRN is not unique for all GNSS systems.
+     * Each GNSS (GPS, GALILEO, BeiDou, etc.) numbers their PRN from 1.
+     * What we really have here is USI, Universal Sat ID
+     * The USI for each GNSS satellite is unique, starting at 1.
+     * Not all GPS receivers compute the USI the same way. YMMV
+     *
+     * Javad (GREIS) GPS receivers compute USI this way:
+     * GPS is USI 1-37, GLONASS 38-70, GALILEO 71-119, SBAS 120-142,
+     * QZSS 193-197, BeiDou 211-247
+     *
+     * Geostar GPS receivers compute USI this way:
+     * GPS is USI 1 to 32, SBAS is 33 to 64, GLONASS is 65 to 96 */
+    (void)mvwaddstr(satellites, 1, 1,
+                    "GNSS   PRN  Elev   Azim   SNR Use");
+    (void)wborder(satellites, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 
