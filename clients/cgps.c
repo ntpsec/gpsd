@@ -415,6 +415,8 @@ static void windowsetup(void)
 
     (void)refresh();
 
+    (void)wborder(datawin, 0, 0, 0, 0, 0, 0, 0, 0);
+
     // Do the initial field label setup.
     (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Time");
     (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Latitude");
@@ -472,22 +474,6 @@ static void windowsetup(void)
                         "Grid Square");
     }
 
-    (void)wborder(datawin, 0, 0, 0, 0, 0, 0, 0, 0);
-    /* PRN is not unique for all GNSS systems.
-     * Each GNSS (GPS, GALILEO, BeiDou, etc.) numbers their PRN from 1.
-     * What we really have here is USI, Universal Sat ID
-     * The USI for each GNSS satellite is unique, starting at 1.
-     * Not all GPS receivers compute the USI the same way. YMMV
-     *
-     * Javad (GREIS) GPS receivers compute USI this way:
-     * GPS is USI 1-37, GLONASS 38-70, GALILEO 71-119, SBAS 120-142,
-     * QZSS 193-197, BeiDou 211-247
-     *
-     * Geostar GPS receivers compute USI this way:
-     * GPS is USI 1 to 32, SBAS is 33 to 64, GLONASS is 65 to 96 */
-    (void)mvwaddstr(satellites, 1, 1,
-                    "GNSS   PRN  Elev   Azim   SNR Use");
-    (void)wborder(satellites, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 
@@ -600,6 +586,13 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
      * xgps.c.  Note that the satellite list may be truncated based on
      * available screen size, or may only show satellites used for the
      * fix.  */
+
+     // just repaint every time.  Hides a multitude of mistakes.
+    (void)werase(satellites);
+    (void)mvwaddstr(satellites, 1, 1,
+                    "GNSS   PRN  Elev   Azim   SNR Use");
+    (void)wborder(satellites, 0, 0, 0, 0, 0, 0, 0, 0);
+
     (void)mvwprintw(satellites, 0, 19, "Seen %2d/Used %2d",
                     gpsdata->satellites_visible,
                     gpsdata->satellites_used);
@@ -681,8 +674,20 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
             (void)mvwaddstr(satellites, sat_no + 2, column, sigid);
             column += 2;
 
-            /* no GPS uses PRN 0, NMEA 4.0 here
-             * NMEA 4.0 uses 1-437 */
+            /* PRN is not unique for all GNSS systems.
+             * Each GNSS (GPS, GALILEO, BeiDou, etc.) numbers their PRN from 1.
+             * What we really have here is USI, Universal Sat ID
+             * The USI for each GNSS satellite is unique, starting at 1.
+             * Not all GPS receivers compute the USI the same way. YMMV
+             *
+             * Javad (GREIS) GPS receivers compute USI this way:
+             * GPS is USI 1-37, GLONASS 38-70, GALILEO 71-119, SBAS 120-142,
+             * QZSS 193-197, BeiDou 211-247
+             *
+             * Geostar GPS receivers compute USI this way:
+             * GPS is USI 1 to 32, SBAS is 33 to 64, GLONASS is 65 to 96 */
+
+            /* no GPS uses PRN 0, NMEA 4.0 here, NMEA 4.0 uses 1-437 */
             (void)mvwaddstr(satellites, sat_no + 2, column,
                             int_to_str(gpsdata->skyview[sat_no].PRN,
                                        1, 438));
@@ -711,26 +716,11 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
         // Display More... ?
         if (sat_no < gpsdata->satellites_visible) {
             // Too many sats to show them all, tell the user.
-            (void)mvwprintw(satellites, sat_no + 2, 1, "%s", "More...");
-        } else {
-            // Clear old data from the unused lines at bottom.
-            for ( ; sat_no < display_sats; sat_no++) {
-                (void)mvwprintw(satellites, sat_no + 2, 1, "%-*s",
-                                SATELLITES_WIDTH - 3, "");
-            }
-            // remove More...
-            (void)mvwhline(satellites, sat_no + 2, 1, 0, 8);
+            (void)mvwprintw(satellites, display_sats + 2, 1, "%s", "More...");
         }
-    } else {
-        int sat_no = 0;
-        // no sats, clear screen
-        for ( ; sat_no < display_sats; sat_no++) {
-            (void)mvwprintw(satellites, sat_no + 2, 1, "%-*s",
-                            SATELLITES_WIDTH - 3, "");
-        }
-        // remove More...
-        (void)mvwhline(satellites, sat_no + 2, 1, 0, 8);
     }
+    //  else  no sats to display, screen already cleared...
+
     // turn off cursor
     curs_set(0);
 
