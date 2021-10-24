@@ -222,8 +222,13 @@ static char *ecef_to_str(double pos, double vel)
     return buf;
 }
 
-// Function to call when we're all done.  Does a bit of clean-up.
-static void die(int sig)
+/* Function to call when we're all done.  Does a bit of clean-up.
+ *
+ * Print msg to stderr, if there is one.
+ *
+ * never returns, it exits.
+ */
+static void die(int sig, const char *msg)
 {
     if (!isendwin()) {
         // Move the cursor to the bottom left corner.
@@ -234,6 +239,11 @@ static void die(int sig)
 
         // Done with curses.
         (void)endwin();
+    }
+    if (NULL != msg &&
+        '\0' != msg[0]) {
+        fputs(msg, stderr);
+        fputs("\n", stderr);
     }
 
     // We're done talking to gpsd.
@@ -308,12 +318,7 @@ static void windowsetup(void)
             raw_flag = true;
             window_ysize = MIN_COMPASS_DATAWIN_YSIZE;
         } else {
-            (void)mvprintw(0, 0,
-                           "Your screen must be at least 80x%d to run cgps.",
-                           MIN_COMPASS_DATAWIN_YSIZE);
-            (void)refresh();
-            (void)sleep(5);
-            die(0);
+            die(0, "Your screen is too small to run cgps.");
         }
 
         datawin = newwin(window_ysize, IMU_WIDTH, 0, 0);
@@ -391,12 +396,7 @@ static void windowsetup(void)
         show_more_dops = false;
         window_ysize = MIN_GPS_DATAWIN_YSIZE;
     } else {
-        (void)mvprintw(0, 0,
-                       "Your screen must be at least 80x%d to run cgps.",
-                       MIN_GPS_DATAWIN_YSIZE);
-        (void)refresh();
-        (void)sleep(5);
-        die(0);
+        die(0, "Your screen is too small to run cgps.");
     }
     display_sats = window_ysize - SATWIN_OVERHEAD - (int)raw_flag;
 
@@ -1405,7 +1405,7 @@ int main(int argc, char *argv[])
         int ret;
 
         if (0 != sig_flag) {
-            die(sig_flag);
+            die(sig_flag, NULL);
         }
         if (0 != resize_flag) {
             do_resize();
@@ -1414,7 +1414,7 @@ int main(int argc, char *argv[])
         /* wait 1/2 second for gpsd */
         ret = gps_waiting(&gpsdata, 500000);
         if (0 != sig_flag) {
-            die(sig_flag);
+            die(sig_flag, NULL);
         }
         if (0 != resize_flag) {
             do_resize();
@@ -1422,17 +1422,16 @@ int main(int argc, char *argv[])
         if (!ret) {
             // 240 tries at 0.5 seconds a try is a 2 minute timeout
             if (240 < wait_clicks++) {
-                (void)fprintf(stderr, "cgps: timeout contactong gpsd\n");
-                die(GPS_TIMEOUT);
+                die(GPS_TIMEOUT, "cgps: timeout contactong gpsd\n");
             }
         } else {
             wait_clicks = 0;
             errno = 0;
             *message = '\0';
             if (gps_read(&gpsdata, message, sizeof(message)) == -1) {
-                (void)fprintf(stderr, "cgps: socket error 4\n");
                 // reconnect?
-                die(errno == 0 ? GPS_GONE : GPS_ERROR);
+                die(errno == 0 ? GPS_GONE : GPS_ERROR,
+                    "cgps: socket error 4\n");
             }
             // Here's where updates go now that things are established.
             if (imu_flag)
@@ -1441,7 +1440,7 @@ int main(int argc, char *argv[])
                 update_gps_panel(&gpsdata, message);
         }
         if (0 != sig_flag) {
-            die(sig_flag);
+            die(sig_flag, NULL);
         }
         if (0 != resize_flag) {
             do_resize();
@@ -1492,7 +1491,7 @@ int main(int argc, char *argv[])
             break;
         case 'q':
             // Quit
-            die(CGPS_QUIT);
+            die(CGPS_QUIT, NULL);
             break;
         case 's':
             // Toggle (pause/unpause) spewage of raw gpsd data.
