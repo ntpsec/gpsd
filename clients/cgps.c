@@ -121,7 +121,7 @@ static int debug;
 
 static WINDOW *datawin, *satellites, *messages;
 
-static bool raw_flag = false;
+static bool raw_flag = false;            // show raw JSON data
 static bool show_ecefs = false;          // taller screen, show ECEFs
 static bool show_more_dops = false;      // tall screen, show more DOPs
 static bool silent_flag = false;
@@ -143,7 +143,8 @@ static const char *int_to_str(int val, int min, int max)
 {
     static char buf[20];
 
-    if (val < min || val > max) {
+    if (val < min ||
+        val > max) {
         return "n/a";
     }
     (void)snprintf(buf, sizeof(buf), "%3d", val);
@@ -300,7 +301,7 @@ static void windowsetup(void)
      * 4.  If the screen is tall enough to display extra data, expand
      * data window down to show DOPs, ECEFs, etc.
      */
-    int xsize, ysize;
+    int xsize, ysize;         // actual screen size
     int row = 1;
 
     // Fire up curses.
@@ -1271,7 +1272,9 @@ static int set_units(char c)
     return ret;
 }
 
-static int resize_flag = 0;
+// resize_flag gets used in signal handler, so we use volatile and
+// increment/decrement it, but are too lazy to do an atomic operation.
+static volatile int resize_flag = 0;
 
 // cope with terminal resize signal
 static void resize(int sig UNUSED)
@@ -1279,13 +1282,13 @@ static void resize(int sig UNUSED)
     // CWE-479: Signal Handler Use of a Non-reentrant Function
     // See: The C Standard, 7.14.1.1, paragraph 5 [ISO/IEC 9899:2011]
     // Can't log in a signal handler.  Can't even call exit().
-    resize_flag = 1;
+    resize_flag++;
 }
 
 // do the terminal resize
 static void do_resize(void)
 {
-    resize_flag = 0;
+    resize_flag--;
     if (!isendwin()) {
         (void)endwin();
         windowsetup();
@@ -1305,6 +1308,9 @@ static void quit_handler(int signum)
 
 int main(int argc, char *argv[])
 {
+    int ysize, xsize;            // current ysize and xsize
+    int old_ysize, old_xsize;    // saved ysize and xsize
+
     unsigned int flags = WATCH_ENABLE;
     int wait_clicks = 0;      // cycles to wait before gpsd timeout
     // buffer to hold one JSON message
@@ -1406,6 +1412,8 @@ int main(int argc, char *argv[])
 
     windowsetup();
 
+    // for some reason, resize events get lost, so do it the 'hard" way
+    getmaxyx(stdscr, old_ysize, old_xsize);
     status_timer = time(NULL);
 
     if (NULL != source.device) {
@@ -1421,6 +1429,13 @@ int main(int argc, char *argv[])
             die(sig_flag, NULL);
         }
         if (0 != resize_flag) {
+            do_resize();
+        }
+
+        // for some reason, resize events get lost, so do it the 'hard" way
+        getmaxyx(stdscr, ysize, xsize);
+        if (old_xsize != xsize ||
+            old_ysize != ysize) {
             do_resize();
         }
 
@@ -1453,6 +1468,7 @@ int main(int argc, char *argv[])
                 update_gps_panel(&gpsdata, message);
             }
         }
+
         if (0 != sig_flag) {
             die(sig_flag, NULL);
         }
@@ -1520,4 +1536,5 @@ int main(int argc, char *argv[])
         }
     }
 }
+
 // vim: set expandtab shiftwidth=4
