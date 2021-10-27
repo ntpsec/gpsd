@@ -27,15 +27,21 @@
 /* This defines how much overhead is contained in the 'satellites'
    window (eg, box around the window takes two lines, plus the column
    headers take another line). */
-#define SATWIN_OVERHEAD 2
+#define SATWIN_OVERHEAD 3
 
 /* Minimum display rows are output in the 'datawin' window
    when in GPS mode.  Change this value if you add or remove fields
    from the 'datawin' window for the GPS mode. */
-#define DATAWIN_GPS_FIELDS 8
+#define DATAWIN_GPS_ROWS 8
 
-/* Count of optional fields that we'll display if we have the room. */
-#define DATAWIN_OPTIONAL_FIELDS 7
+// rows of DOPS we can show
+#define DATAWIN_DOPS_ROWS 7
+
+// rows of more DOPS we can show
+#define DATAWIN_MDOPS_ROWS 4
+
+// rows of ECEF we can show
+#define DATAWIN_ECEF_ROWS 3
 
 /* This is how many display fields are output in the 'datawin' window
    when in COMPASS mode.  Change this value if you add or remove fields
@@ -46,8 +52,7 @@
    descriptions. */
 #define DATAWIN_DESC_OFFSET 2
 
-/* This is how far over in the 'datawin' window to indent the field
-   values. */
+// This is how far over in the 'datawin' window to indent the field values.
 #define DATAWIN_VALUE_OFFSET 17
 
 /* This is the width of the 'datawin' window.  It's recommended to
@@ -64,13 +69,8 @@
    You shouldn't have to modify any #define values below this line.
    ================================================================ */
 
-/* This is the minimum ysize we'll accept for the 'datawin' window in
-   GPS mode. */
-#define MIN_GPS_DATAWIN_YSIZE (DATAWIN_GPS_FIELDS + DATAWIN_OVERHEAD)
-
-// And the maximum ysize we'll try to use
-#define MAX_GPS_DATAWIN_YSIZE (DATAWIN_GPS_FIELDS + DATAWIN_OPTIONAL_FIELDS + \
-                               DATAWIN_OVERHEAD)
+// This is the minimum ysize we'll accept for the 'datawin' window in GPS mode.
+#define MIN_GPS_DATAWIN_ROWS (DATAWIN_GPS_ROWS + DATAWIN_OVERHEAD)
 
 /* This is the minimum ysize we'll accept for the 'datawin' window in
    COMPASS mode. */
@@ -122,6 +122,7 @@ static int debug;
 static WINDOW *datawin, *satellites, *messages;
 
 static bool raw_flag = false;            // show raw JSON data
+static bool show_dops = false;           // tall screen, show DOPs
 static bool show_ecefs = false;          // taller screen, show ECEFs
 static bool show_more_dops = false;      // tall screen, show more DOPs
 static bool silent_flag = false;         // force raw JSON data off
@@ -302,12 +303,14 @@ static void windowsetup(void)
      * data window down to show DOPs, ECEFs, etc.
      */
     int xsize, ysize;         // actual screen size
+    int ysize_gps;            // ysize, minus rows reserved for raw
     int row = 1;
 
     // Fire up curses.
     (void)initscr();
     (void)noecho();
     getmaxyx(stdscr, ysize, xsize);
+    ysize_gps = ysize;
     // turn off cursor
     curs_set(0);
 
@@ -329,7 +332,6 @@ static void windowsetup(void)
         } else if (ERR == wresize(datawin, window_ysize, IMU_WIDTH)) {
             die(0, "failed to resize data window");
         }
-
         (void)nodelay(datawin, true);
         if (NULL != messages) {
             (void)delwin(messages);
@@ -377,40 +379,71 @@ static void windowsetup(void)
     }
 
     // We're a GPS, set up accordingly.
-    if (ysize > MAX_GPS_DATAWIN_YSIZE + 10) {
+    if (silent_flag) {
+        raw_flag = false;
+        ysize_gps = ysize;
+    } else if (raw_flag) {
+        // leave 4 rows for data win
+        ysize_gps = ysize - 4;
+    }
+    if ((DATAWIN_OVERHEAD + DATAWIN_GPS_ROWS + DATAWIN_DOPS_ROWS +
+         DATAWIN_MDOPS_ROWS + DATAWIN_ECEF_ROWS) <= ysize_gps) {
+        // everything fits
         raw_flag = true;
+        show_dops = true;
         show_ecefs = true;
         show_more_dops = true;
-        window_ysize = MAX_GPS_DATAWIN_YSIZE + 7;
-    } else if (ysize > MAX_GPS_DATAWIN_YSIZE + 6) {
+    } else if ((DATAWIN_OVERHEAD + DATAWIN_GPS_ROWS + DATAWIN_DOPS_ROWS +
+                DATAWIN_MDOPS_ROWS) <= ysize_gps) {
+        // everything fits, except ecef
         raw_flag = true;
+        show_dops = true;
         show_ecefs = false;
         show_more_dops = true;
-        window_ysize = MAX_GPS_DATAWIN_YSIZE + 4;
-    } else if (ysize > MAX_GPS_DATAWIN_YSIZE) {
+    } else if ((DATAWIN_OVERHEAD + DATAWIN_GPS_ROWS + DATAWIN_DOPS_ROWS +
+                DATAWIN_ECEF_ROWS) <= ysize_gps) {
+        // everything fits, except more dops
         raw_flag = true;
-        show_ecefs = false;
+        show_dops = true;
+        show_ecefs = true;
         show_more_dops = false;
-        window_ysize = MAX_GPS_DATAWIN_YSIZE;
-    } else if (ysize == MAX_GPS_DATAWIN_YSIZE) {
-        raw_flag = false;
-        show_ecefs = false;
-        show_more_dops = false;
-        window_ysize = MAX_GPS_DATAWIN_YSIZE;
-    } else if (ysize > MIN_GPS_DATAWIN_YSIZE) {
+    } else if ((DATAWIN_OVERHEAD + DATAWIN_GPS_ROWS +
+                DATAWIN_DOPS_ROWS) <= ysize_gps) {
+        // everything fits, except more dops, and ecefs
         raw_flag = true;
+        show_dops = true;
         show_ecefs = false;
         show_more_dops = false;
-        window_ysize = MIN_GPS_DATAWIN_YSIZE;
-    } else if (ysize == MIN_GPS_DATAWIN_YSIZE) {
+    } else if ((DATAWIN_OVERHEAD + DATAWIN_GPS_ROWS) <= ysize_gps) {
+        // barely fits, no dops,  more dops, or ecefs
         raw_flag = false;
+        show_dops = true;
         show_ecefs = false;
         show_more_dops = false;
-        window_ysize = MIN_GPS_DATAWIN_YSIZE;
     } else {
         die(0, "Your screen is too small to run cgps.");
     }
-    display_sats = window_ysize - SATWIN_OVERHEAD - (int)raw_flag;
+
+    // compute datawin rows
+    window_ysize = DATAWIN_OVERHEAD + DATAWIN_GPS_ROWS;
+    if (show_dops) {
+        window_ysize += DATAWIN_DOPS_ROWS;
+        if (show_more_dops) {
+            window_ysize += DATAWIN_MDOPS_ROWS;
+        }
+    } else {
+        // should never happen
+        show_more_dops = false;
+    }
+    if (show_ecefs) {
+        window_ysize += DATAWIN_ECEF_ROWS;
+    }
+
+    if (silent_flag) {
+        raw_flag = false;
+        window_ysize = ysize;        // use full height
+    }
+    display_sats = window_ysize - SATWIN_OVERHEAD;
 
     if (NULL == datawin) {
         datawin = newwin(window_ysize, DATAWIN_WIDTH, 0, 0);
@@ -457,7 +490,7 @@ static void windowsetup(void)
      * there in the first place because I arbitrarily thought they
      * sounded interesting. ;^) */
 
-    if (window_ysize >= MAX_GPS_DATAWIN_YSIZE) {
+    if (show_dops) {
         (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
                         "Long Err  (XDOP, EPX)");
         (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
@@ -475,16 +508,6 @@ static void windowsetup(void)
             (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
                             "Geo Err   (GDOP):");
         }
-
-        if (show_ecefs) {
-            (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                            "ECEF X, VX");
-            (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                            "ECEF Y, VY");
-            (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
-                            "ECEF Z, VZ");
-        }
-
         (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
                         "Speed Err (EPS)");
         (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
@@ -494,6 +517,14 @@ static void windowsetup(void)
                         "Time offset");
         (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
                         "Grid Square");
+    }
+    if (show_ecefs) {
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
+                        "ECEF X, VX");
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
+                        "ECEF Y, VY");
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
+                        "ECEF Z, VZ");
     }
 
 }
@@ -917,7 +948,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
      * there in the first place because I arbitrarily thought they
      * sounded interesting. ;^) */
 
-    if ((MIN_GPS_DATAWIN_YSIZE + 5) <= window_ysize) {
+    if (show_dops) {
         char *ep_str;
         char *dop_str;
         char *str;
@@ -970,24 +1001,6 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
 
         }
 
-        // extra large screen, show ECEF
-        if (show_ecefs) {
-            char *estr;
-
-            // Fill in the ECEF's.
-            estr = ecef_to_str(gpsdata->fix.ecef.x, gpsdata->fix.ecef.vx);
-            (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET - 4, "%-*s",
-                            27, estr);
-
-            estr = ecef_to_str(gpsdata->fix.ecef.y, gpsdata->fix.ecef.vy);
-            (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET - 4, "%-*s",
-                            27, estr);
-
-            estr = ecef_to_str(gpsdata->fix.ecef.z, gpsdata->fix.ecef.vz);
-            (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET - 4, "%-*s",
-                            27, estr);
-        }
-
         // Fill in the estimated speed error, EPS.
         ep_str = ep_to_str(gpsdata->fix.eps, speedfactor, speedunits);
         (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET + 8,
@@ -1028,10 +1041,30 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
         (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET + 9, "%-*s",
                         18, str);
 
-        // short screen, no ECEF, warn user to expand up/down
-        if (!show_ecefs) {
-            (void)mvwprintw(datawin, row, 2, "%s", "More...");
-        }
+    }
+    // extra large screen, show ECEF
+    if (show_ecefs) {
+        char *estr;
+
+        // Fill in the ECEF's.
+        estr = ecef_to_str(gpsdata->fix.ecef.x, gpsdata->fix.ecef.vx);
+        (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET - 4, "%-*s",
+                        27, estr);
+
+        estr = ecef_to_str(gpsdata->fix.ecef.y, gpsdata->fix.ecef.vy);
+        (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET - 4, "%-*s",
+                        27, estr);
+
+        estr = ecef_to_str(gpsdata->fix.ecef.z, gpsdata->fix.ecef.vz);
+        (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET - 4, "%-*s",
+                        27, estr);
+    }
+
+    // short screen, warn user to expand up/down
+    if (!show_dops ||
+        !show_ecefs ||
+        !show_more_dops) {
+        (void)mvwprintw(datawin, display_sats + 2, 2, "%s", "More...");
     }
 
     // Be quiet if the user requests silence.
@@ -1332,7 +1365,6 @@ int main(int argc, char *argv[])
 {
     int ysize, xsize;            // current ysize and xsize
     int old_ysize, old_xsize;    // saved ysize and xsize
-
     unsigned int flags = WATCH_ENABLE;
     int wait_clicks = 0;      // cycles to wait before gpsd timeout
     // buffer to hold one JSON message
@@ -1436,6 +1468,7 @@ int main(int argc, char *argv[])
 
     // for some reason, resize events get lost, so do it the 'hard" way
     getmaxyx(stdscr, old_ysize, old_xsize);
+
     status_timer = time(NULL);
 
     if (NULL != source.device) {
@@ -1490,7 +1523,6 @@ int main(int argc, char *argv[])
                 update_gps_panel(&gpsdata, message);
             }
         }
-
         if (0 != sig_flag) {
             die(sig_flag, NULL);
         }
@@ -1548,6 +1580,7 @@ int main(int argc, char *argv[])
         case 's':
             // Toggle (pause/unpause) spewage of raw gpsd data.
             silent_flag = !silent_flag;
+            resize(0);
             break;
         case 't':
             // Toggle magnetic/true track
