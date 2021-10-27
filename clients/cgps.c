@@ -29,7 +29,7 @@
    headers take another line). */
 #define SATWIN_OVERHEAD 2
 
-/* This is how many display fields are output in the 'datawin' window
+/* Minimum display rows are output in the 'datawin' window
    when in GPS mode.  Change this value if you add or remove fields
    from the 'datawin' window for the GPS mode. */
 #define DATAWIN_GPS_FIELDS 8
@@ -124,9 +124,9 @@ static WINDOW *datawin, *satellites, *messages;
 static bool raw_flag = false;            // show raw JSON data
 static bool show_ecefs = false;          // taller screen, show ECEFs
 static bool show_more_dops = false;      // tall screen, show more DOPs
-static bool silent_flag = false;
-static bool magnetic_flag = false;
-static int window_ysize = 0;
+static bool silent_flag = false;         // force raw JSON data off
+static bool magnetic_flag = false;       // use magnetic, not true, heading
+static int window_ysize = 0;             // rows in datawin
 static int display_sats = 0;        // number of rows of sats to display
 static bool imu_flag = false;
 
@@ -324,8 +324,17 @@ static void windowsetup(void)
             die(0, "Your screen is too small to run cgps.");
         }
 
-        datawin = newwin(window_ysize, IMU_WIDTH, 0, 0);
-        (void)nodelay(datawin, (bool) TRUE);
+        if (NULL == datawin) {
+            datawin = newwin(window_ysize, IMU_WIDTH, 0, 0);
+        } else if (ERR == wresize(datawin, window_ysize, IMU_WIDTH)) {
+            die(0, "failed to resize data window");
+        }
+
+        (void)nodelay(datawin, true);
+        if (NULL != messages) {
+            (void)delwin(messages);
+            messages = NULL;
+        }
         if (raw_flag) {
             messages = newwin(0, 0, window_ysize, 0);
 
@@ -403,13 +412,25 @@ static void windowsetup(void)
     }
     display_sats = window_ysize - SATWIN_OVERHEAD - (int)raw_flag;
 
-    datawin = newwin(window_ysize, DATAWIN_WIDTH, 0, 0);
-    satellites = newwin(window_ysize, SATELLITES_WIDTH, 0, DATAWIN_WIDTH);
-    (void)nodelay(datawin, (bool) TRUE);
-    if (raw_flag) {
-        messages =
-            newwin(ysize - (window_ysize), xsize, window_ysize, 0);
+    if (NULL == datawin) {
+        datawin = newwin(window_ysize, DATAWIN_WIDTH, 0, 0);
+    } else if (ERR == wresize(datawin, window_ysize, DATAWIN_WIDTH)) {
+        die(0, "failed to resize data window");
+    }
+    if (NULL == satellites) {
+        satellites = newwin(window_ysize, SATELLITES_WIDTH, 0, DATAWIN_WIDTH);
+    } else if (ERR == wresize(satellites, window_ysize, SATELLITES_WIDTH)) {
+        die(0, "failed to resize satellites window");
+    }
 
+    (void)nodelay(datawin, true);
+
+    if (NULL != messages) {
+        (void)delwin(messages);
+        messages = NULL;
+    }
+    if (raw_flag) {
+        messages = newwin(ysize - (window_ysize), xsize, window_ysize, 0);
         (void)scrollok(messages, true);
         (void)wsetscrreg(messages, 0, ysize - (window_ysize));
     }
@@ -468,7 +489,7 @@ static void windowsetup(void)
                         "Speed Err (EPS)");
         (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
                         "Track Err (EPD)");
-        /* it's actually esr that thought *these* were interesting */
+        // it's actually esr that thought *these* were interesting
         (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
                         "Time offset");
         (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
