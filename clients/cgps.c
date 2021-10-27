@@ -603,6 +603,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
     int newstate;
     char scr[80];
     char buf1[20], buf2[20];
+    int row;
 
     /* This is for the satellite status display.  Originally lifted from
      * xgps.c.  Note that the satellite list may be truncated based on
@@ -746,6 +747,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
     // turn off cursor
     curs_set(0);
 
+    row = 1;
     // Print time/date. with (leap_second)
     if (0 < gpsdata->fix.time.tv_sec) {
         (void)timespec_to_iso8601(gpsdata->fix.time, scr, sizeof(scr));
@@ -754,7 +756,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
     }
     (void)snprintf(buf1, sizeof(buf1), " (%d)", gpsdata->leap_seconds);
     (void)strlcat(scr, buf1, sizeof(scr));
-    (void)mvwprintw(datawin, 1, DATAWIN_VALUE_OFFSET - 2, "%-*s", 26, scr);
+    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET - 2, "%-*s", 26, scr);
 
 
     // Fill in the latitude.
@@ -764,7 +766,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
     } else {
         (void)strlcpy(scr, "n/a", sizeof(scr));
     }
-    (void)mvwprintw(datawin, 2, DATAWIN_VALUE_OFFSET, "  %-*s", 25, scr);
+    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "  %-*s", 25, scr);
 
     // Fill in the longitude.
     if (MODE_2D <= gpsdata->fix.mode) {
@@ -773,7 +775,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
     } else {
         (void)strlcpy(scr, "n/a", sizeof(scr));
     }
-    (void)mvwprintw(datawin, 3, DATAWIN_VALUE_OFFSET, "  %-*s", 25, scr);
+    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "  %-*s", 25, scr);
 
     // Fill in the altitudes.
     if (MODE_3D <= gpsdata->fix.mode) {
@@ -797,7 +799,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
     } else {
         (void)strlcpy(scr, "        n/a,       n/a ", sizeof(scr));
     }
-    (void)mvwprintw(datawin, 4, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
+    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
 
     // Fill in the speed.
     if (0 != isfinite(gpsdata->fix.speed)) {
@@ -806,7 +808,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
     } else {
         (void)strlcpy(scr, "  n/a", sizeof(scr));
     }
-    (void)mvwprintw(datawin, 5, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
+    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
 
     /* Fill in the track. */
     if (!magnetic_flag) {
@@ -835,7 +837,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
     } else {
         (void)strlcat(scr, "             n/a", sizeof(scr));
     }
-    (void)mvwprintw(datawin, 6, DATAWIN_VALUE_OFFSET - 10, "%-*s deg",
+    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET - 10, "%-*s deg",
                     32, scr);
 
     // Fill in the rate of climb.
@@ -845,7 +847,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
     } else {
         (void)strlcpy(scr, "  n/a", sizeof(scr));
     }
-    (void)mvwprintw(datawin, 7, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
+    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
 
     // Fill in the GPS status and the time since the last state change.
     if (0 == gpsdata->online.tv_sec &&
@@ -905,7 +907,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
         (void)snprintf(scr, sizeof(scr), fmt,  mod,
                        (int)(time(NULL) - status_timer));
     }
-    (void)mvwprintw(datawin, 8, DATAWIN_VALUE_OFFSET + 1, "%-*s", 26, scr);
+    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET + 1, "%-*s", 26, scr);
 
     /* Note that the following fields are exceptions to the
      * sizing rule.  The minimum window size does not include these
@@ -916,7 +918,6 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
      * sounded interesting. ;^) */
 
     if ((MIN_GPS_DATAWIN_YSIZE + 5) <= window_ysize) {
-        int row = 9;
         char *ep_str;
         char *dop_str;
         char *str;
