@@ -1627,6 +1627,12 @@ Field Number:
 sentence, having to do with water temperature sensors.  It is
 unclear which is correct.
 
+=== HWBIAS - Unknown
+
+Unknown sentence.  Seen from Huawai GPS receivers.
+
+Example: $GPHWBIAS,11.2*21
+
 === ITS - Trawl Door Spread 2 Distance
 
 ------------------------------------------------------------------------------

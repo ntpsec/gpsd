@@ -3698,20 +3698,21 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         /* ignore Bearing & Distance to Waypoint, Great Circle*/
         {"BWC", 0,  false, NULL},
         {"DBT", 7,  true,  processDBT},
-        {"DPT", 0,  false, NULL},       /* ignore depth  */
-        {"DTM", 2,  false, processDTM}, /* datum */
+        {"DPT", 0,  false, NULL},       // ignore depth
+        {"DTM", 2,  false, processDTM}, // datum
         {"GBS", 7,  false, processGBS},
         {"GGA", 13, false, processGGA},
-        {"GLC", 0,  false, NULL},       /* ignore Geographic Position, LoranC */
+        {"GLC", 0,  false, NULL},       // ignore Geographic Position, LoranC
         {"GLL", 7,  false, processGLL},
         {"GNS", 13, false, processGNS},
-        {"GRS", 0,  false, NULL},       /* ignore GNSS Range Residuals */
+        {"GRS", 0,  false, NULL},       // ignore GNSS Range Residuals
         {"GSA", 18, false, processGSA},
         {"GST", 8,  false, processGST},
         {"GSV", 0,  false, processGSV},
         /* ignore Heading, Deviation and Variation */
         {"HDG", 0,  false, processHDG},
         {"HDT", 1,  false, processHDT},
+        {"HWBIAS", 0,  false, NULL},       // Unknown HuaWei sentence
         {"MLA", 0,  false, NULL},       // ignore GLONASS Almana Data
         {"MSS", 0,  false, NULL},       /* ignore beacon receiver status */
         {"MTW", 0,  false, NULL},       /* ignore Water Temperature */
