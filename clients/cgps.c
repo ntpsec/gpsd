@@ -568,11 +568,11 @@ static void update_imu_panel(struct gps_data_t *gpsdata,
  */
 static int sat_cmp(const void *p1, const void *p2)
 {
-   int diff = ((struct satellite_t*)p2)->used - ((struct satellite_t*)p1)->used;
-   if (0 != diff) {
-        return (diff);
-   }
-   return ((struct satellite_t*)p1)->PRN - ((struct satellite_t*)p2)->PRN;
+    int diff = ((struct satellite_t*)p2)->used - ((struct satellite_t*)p1)->used;
+    if (0 == diff) {
+        return ((struct satellite_t*)p1)->PRN - ((struct satellite_t*)p2)->PRN;
+    }
+    return (diff);
 }
 
 
@@ -764,18 +764,18 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
 
     // Fill in the altitudes.
     if (MODE_3D <= gpsdata->fix.mode) {
-        if (0 != isfinite(gpsdata->fix.altHAE)) {
+        if (0 == isfinite(gpsdata->fix.altHAE)) {
+            (void)strlcpy(buf1, "        n/a,", sizeof(buf1));
+        } else {
             (void)snprintf(buf1, sizeof(buf1), "%11.3f,",
                            gpsdata->fix.altHAE * altfactor);
-        } else {
-            (void)strlcpy(buf1, "        n/a,", sizeof(buf1));
         }
 
-        if (0 != isfinite(gpsdata->fix.altMSL)) {
+        if (0 == isfinite(gpsdata->fix.altMSL)) {
+            (void)strlcpy(buf2, "       n/a ", sizeof(buf2));
+        } else {
             (void)snprintf(buf2, sizeof(buf2), "%11.3f ",
                            gpsdata->fix.altMSL * altfactor);
-        } else {
-            (void)strlcpy(buf2, "       n/a ", sizeof(buf2));
         }
 
         (void)strlcpy(scr, buf1, sizeof(scr));
@@ -788,20 +788,20 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
                     "Alt (HAE, MSL) %-*s", 25, scr);
 
     // Fill in the speed.
-    if (0 != isfinite(gpsdata->fix.speed)) {
+    if (0 == isfinite(gpsdata->fix.speed)) {
+        (void)strlcpy(scr, "  n/a", sizeof(scr));
+    } else {
         (void)snprintf(scr, sizeof(scr), "%8.2f %s",
                        gpsdata->fix.speed * speedfactor, speedunits);
-    } else {
-        (void)strlcpy(scr, "  n/a", sizeof(scr));
     }
     (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET,
                     "Speed          %-*s", 27, scr);
 
     /* Fill in the track. */
-    if (!magnetic_flag) {
-        (void)strlcpy(scr, " (true, var):   ", sizeof(scr));
-    } else {
+    if (magnetic_flag) {
         (void)strlcpy(scr, " (mag, var):    ", sizeof(scr));
+    } else {
+        (void)strlcpy(scr, " (true, var):   ", sizeof(scr));
     }
     if (MODE_2D <= gpsdata->fix.mode &&
         0 != isfinite(gpsdata->fix.track)) {
@@ -814,12 +814,12 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
                 gpsdata->fix.magnetic_track);
         }
         (void)strlcat(scr, buf1, sizeof(scr));
-        if (0 != isfinite(gpsdata->fix.magnetic_var)) {
+        if (0 == isfinite(gpsdata->fix.magnetic_var)) {
+            (void)strlcat(scr, "      ", sizeof(scr));
+        } else {
             (void)snprintf(buf2, sizeof(buf2), "%6.1f",
                            gpsdata->fix.magnetic_var);
             (void)strlcat(scr, buf2, sizeof(scr));
-        } else {
-            (void)strlcat(scr, "      ", sizeof(scr));
         }
     } else {
         (void)strlcat(scr, "             n/a", sizeof(scr));
@@ -828,11 +828,11 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
                     "Track%-*s deg", 32, scr);
 
     // Fill in the rate of climb.
-    if (0 != isfinite(gpsdata->fix.climb)) {
+    if (0 == isfinite(gpsdata->fix.climb)) {
+        (void)strlcpy(scr, "  n/a", sizeof(scr));
+    } else {
         (void)snprintf(scr, sizeof(scr), "%8.2f %s/min",
                        gpsdata->fix.climb * altfactor * 60, altunits);
-    } else {
-        (void)strlcpy(scr, "  n/a", sizeof(scr));
     }
     (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET,
                     "Climb          %-*s", 27, scr);
@@ -999,11 +999,11 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
         row++;
 
         // Fill in the grid square (esr thought *this* one was interesting).
-        if ((0 != isfinite(gpsdata->fix.longitude) &&
-             0 != isfinite(gpsdata->fix.latitude))) {
-            str = maidenhead(gpsdata->fix.latitude,gpsdata->fix.longitude);
-        } else {
+        if ((0 == isfinite(gpsdata->fix.longitude) ||
+             0 == isfinite(gpsdata->fix.latitude))) {
             str = "n/a";
+        } else {
+            str = maidenhead(gpsdata->fix.latitude,gpsdata->fix.longitude);
         }
         (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET,
                         "Grid Square             %-*s",
