@@ -473,17 +473,6 @@ static void windowsetup(void)
     (void)werase(datawin);
     (void)wborder(datawin, 0, 0, 0, 0, 0, 0, 0, 0);
 
-    row = 1;
-    // Do the initial field label setup.
-    (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Time");
-    (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Latitude");
-    (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Longitude");
-    (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Alt (HAE, MSL)");
-    (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Speed");
-    (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Track");
-    (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Climb");
-    (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Status");
-
     /* Note that the following fields are exceptions to the
      * sizing rule.  The minimum window size does not include these
      * fields, if the window is too small, they get excluded.  This
@@ -492,6 +481,7 @@ static void windowsetup(void)
      * there in the first place because I arbitrarily thought they
      * sounded interesting. ;^) */
 
+    row = 9;
     if (show_dops) {
         (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET,
                         "Long Err  (XDOP, EPX)");
@@ -786,6 +776,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
     curs_set(0);
 
     row = 1;
+
     // Print time/date. with (leap_second)
     if (0 < gpsdata->fix.time.tv_sec) {
         (void)timespec_to_iso8601(gpsdata->fix.time, scr, sizeof(scr));
@@ -794,26 +785,27 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
     }
     (void)snprintf(buf1, sizeof(buf1), " (%d)", gpsdata->leap_seconds);
     (void)strlcat(scr, buf1, sizeof(scr));
-    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET - 2, "%-*s", 26, scr);
-
+    (void)mvwprintw(datawin, row++, 2, "Time         %-*s", 26, scr);
 
     // Fill in the latitude.
+    (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "");
     if (MODE_2D <= gpsdata->fix.mode) {
         deg_to_str2(deg_type, gpsdata->fix.latitude,
                     scr, sizeof(scr), " N", " S");
     } else {
         (void)strlcpy(scr, "n/a", sizeof(scr));
     }
-    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "  %-*s", 25, scr);
+    (void)mvwprintw(datawin, row++, 2, "Latitude         %-*s", 25, scr);
 
     // Fill in the longitude.
+    (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "");
     if (MODE_2D <= gpsdata->fix.mode) {
         deg_to_str2(deg_type, gpsdata->fix.longitude,
                     scr, sizeof(scr), " E", " W");
     } else {
         (void)strlcpy(scr, "n/a", sizeof(scr));
     }
-    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "  %-*s", 25, scr);
+    (void)mvwprintw(datawin, row++, 2, "Longitude        %-*s", 25, scr);
 
     // Fill in the altitudes.
     if (MODE_3D <= gpsdata->fix.mode) {
@@ -837,7 +829,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
     } else {
         (void)strlcpy(scr, "        n/a,       n/a ", sizeof(scr));
     }
-    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
+    (void)mvwprintw(datawin, row++, 2, "Alt (HAE, MSL) %-*s", 25, scr);
 
     // Fill in the speed.
     if (0 != isfinite(gpsdata->fix.speed)) {
@@ -846,7 +838,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
     } else {
         (void)strlcpy(scr, "  n/a", sizeof(scr));
     }
-    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
+    (void)mvwprintw(datawin, row++, 2, "Speed          %-*s", 27, scr);
 
     /* Fill in the track. */
     if (!magnetic_flag) {
@@ -875,8 +867,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
     } else {
         (void)strlcat(scr, "             n/a", sizeof(scr));
     }
-    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET - 10, "%-*s deg",
-                    32, scr);
+    (void)mvwprintw(datawin, row++, 2, "Track%-*s deg", 32, scr);
 
     // Fill in the rate of climb.
     if (0 != isfinite(gpsdata->fix.climb)) {
@@ -885,7 +876,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
     } else {
         (void)strlcpy(scr, "  n/a", sizeof(scr));
     }
-    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET, "%-*s", 27, scr);
+    (void)mvwprintw(datawin, row++, 2, "Climb          %-*s", 27, scr);
 
     // Fill in the GPS status and the time since the last state change.
     if (0 == gpsdata->online.tv_sec &&
@@ -945,7 +936,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
         (void)snprintf(scr, sizeof(scr), fmt,  mod,
                        (int)(time(NULL) - status_timer));
     }
-    (void)mvwprintw(datawin, row++, DATAWIN_VALUE_OFFSET + 1, "%-*s", 26, scr);
+    (void)mvwprintw(datawin, row++, 2, "Status          %-*s", 26, scr);
 
     /* Note that the following fields are exceptions to the
      * sizing rule.  The minimum window size does not include these
