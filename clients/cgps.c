@@ -44,7 +44,7 @@
 #define DATAWIN_ECEF_ROWS 3
 
 /* This is how many display fields are output in the 'datawin' window
-   when in COMPASS mode.  Change this value if you add or remove fields
+   when in COMPASS (IMU) mode.  Change this value if you add or remove fields
    from the 'datawin' window for the COMPASS mode. */
 #define DATAWIN_COMPASS_FIELDS 18
 
@@ -69,9 +69,6 @@
    You shouldn't have to modify any #define values below this line.
    ================================================================ */
 
-// This is the minimum ysize we'll accept for the 'datawin' window in GPS mode.
-#define MIN_GPS_DATAWIN_ROWS (DATAWIN_GPS_ROWS + DATAWIN_OVERHEAD)
-
 /* This is the minimum ysize we'll accept for the 'datawin' window in
    COMPASS mode. */
 #define MIN_COMPASS_DATAWIN_YSIZE (DATAWIN_COMPASS_FIELDS + DATAWIN_OVERHEAD)
@@ -81,9 +78,6 @@
 
 // This is the maximum ysize we need for the 'satellites' window.
 #define MAX_SATWIN_SIZE (MAX_POSSIBLE_SATS + SATWIN_OVERHEAD)
-
-// Minimum xsize to display 3rd window with DOPs, etc.
-#define MIN_ERRWIN_SIZE 100
 
 #include "../include/gpsd_config.h"    // must be before all includes
 
@@ -108,6 +102,8 @@
 #include "../include/gpsdclient.h"
 #include "../include/os_compat.h"
 #include "../include/timespec.h"
+
+// FILE *dlog = NULL;     // debug
 
 static struct gps_data_t gpsdata;
 static time_t status_timer;     // Time of last state change.
@@ -302,20 +298,28 @@ static void windowsetup(void)
      * 4.  If the screen is tall enough to display extra data, expand
      * data window down to show DOPs, ECEFs, etc.
      */
-    int xsize, ysize;         // actual screen size
+    int ysize;                // actual screen lines
     int ysize_gps;            // ysize, minus rows reserved for raw
     int row = 1;
 
-    // Fire up curses.
     (void)initscr();
+    // initscr sets up COLS and LINES
+    ysize_gps = ysize = LINES;
+
     (void)noecho();
-    getmaxyx(stdscr, ysize, xsize);
-    ysize_gps = ysize;
+    // cbreak() ??
+
+//    fprintf(dlog, "windowsetup(), LINES = %d COLS %d\n", LINES, COLS);
+//    fflush(dlog);
+
     // turn off cursor
     curs_set(0);
 
     if (imu_flag) {
         // We're an IMU, set up accordingly.
+        if (IMU_WIDTH > COLS) {
+            die(0, "Terminal not wide enough");
+        }
 
         if (ysize == MIN_COMPASS_DATAWIN_YSIZE) {
             raw_flag = false;
@@ -327,12 +331,11 @@ static void windowsetup(void)
             die(0, "Your screen is too small to run cgps.");
         }
 
-        if (NULL == datawin) {
-            datawin = newwin(window_ysize, IMU_WIDTH, 0, 0);
-        } else if (ERR == wresize(datawin, window_ysize, IMU_WIDTH)) {
-            die(0, "failed to resize data window");
-        }
+        datawin = newwin(window_ysize, IMU_WIDTH, 0, 0);
+
+        // do not block waiting for user input
         (void)nodelay(datawin, true);
+
         if (NULL != messages) {
             (void)delwin(messages);
             messages = NULL;
@@ -343,8 +346,6 @@ static void windowsetup(void)
             (void)scrollok(messages, true);
             (void)wsetscrreg(messages, 0, ysize - (window_ysize));
         }
-
-        (void)refresh();
 
         // Do the initial compass field label setup.
         (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "msg:");
@@ -375,15 +376,23 @@ static void windowsetup(void)
         (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg");
         (void)wborder(datawin, 0, 0, 0, 0, 0, 0, 0, 0);
         // done with IMU setup
+
+        // make it so
+        (void)refresh();
         return;
+    }
+
+    if ((DATAWIN_WIDTH + SATELLITES_WIDTH) > COLS) {
+        die(0, "Terminal not wide enough");
     }
 
     // We're a GPS, set up accordingly.
     if (silent_flag) {
+        // no messages window, use full height
         raw_flag = false;
         ysize_gps = ysize;
-    } else if (raw_flag) {
-        // leave 4 rows for data win
+    } else {
+        // leave 4 rows for messages window
         ysize_gps = ysize - 4;
     }
     if ((DATAWIN_OVERHEAD + DATAWIN_GPS_ROWS + DATAWIN_DOPS_ROWS +
@@ -445,17 +454,10 @@ static void windowsetup(void)
     }
     display_sats = window_ysize - SATWIN_OVERHEAD;
 
-    if (NULL == datawin) {
-        datawin = newwin(window_ysize, DATAWIN_WIDTH, 0, 0);
-    } else if (ERR == wresize(datawin, window_ysize, DATAWIN_WIDTH)) {
-        die(0, "failed to resize data window");
-    }
-    if (NULL == satellites) {
-        satellites = newwin(window_ysize, SATELLITES_WIDTH, 0, DATAWIN_WIDTH);
-    } else if (ERR == wresize(satellites, window_ysize, SATELLITES_WIDTH)) {
-        die(0, "failed to resize satellites window");
-    }
+    datawin = newwin(window_ysize, DATAWIN_WIDTH, 0, 0);
+    satellites = newwin(window_ysize, SATELLITES_WIDTH, 0, DATAWIN_WIDTH);
 
+    // do not block waiting for user input
     (void)nodelay(datawin, true);
 
     if (NULL != messages) {
@@ -463,15 +465,15 @@ static void windowsetup(void)
         messages = NULL;
     }
     if (raw_flag) {
-        messages = newwin(ysize - (window_ysize), xsize, window_ysize, 0);
+        messages = newwin(ysize - (window_ysize), COLS, window_ysize, 0);
         (void)scrollok(messages, true);
         (void)wsetscrreg(messages, 0, ysize - (window_ysize));
     }
 
-    (void)refresh();
-
+    (void)werase(datawin);
     (void)wborder(datawin, 0, 0, 0, 0, 0, 0, 0, 0);
 
+    row = 1;
     // Do the initial field label setup.
     (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Time");
     (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Latitude");
@@ -527,6 +529,8 @@ static void windowsetup(void)
                         "ECEF Z, VZ");
     }
 
+    // make it so
+    (void)refresh();
 }
 
 
@@ -655,7 +659,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
         // got version, check it
         if (0 != strcmp(gpsdata->version.release, VERSION)) {
             // expected API version not available
-            (void)fprintf(stderr, 
+            (void)fprintf(stderr,
                           "cgps: WARNING gpsd server release %s, expected %s, "
                           "API: %d.%d",
                           gpsdata->version.release,
@@ -770,7 +774,10 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
         // Display More... ?
         if (sat_no < gpsdata->satellites_visible) {
             // Too many sats to show them all, tell the user.
-            (void)mvwprintw(satellites, display_sats + 2, 1, "%s", "More...");
+            if (ERR == mvwprintw(satellites, display_sats + 2, 1, "%s",
+                                 "More...")) {
+            die(0, "failed to print sat win More");
+        }
         }
     }
     //  else  no sats to display, screen already cleared...
@@ -1064,7 +1071,9 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
     if (!show_dops ||
         !show_ecefs ||
         !show_more_dops) {
-        (void)mvwprintw(datawin, display_sats + 2, 2, "%s", "More...");
+        if (ERR == mvwprintw(datawin, display_sats + 2, 2, "%s", "More...")) {
+            die(0, "failed to print datawin More");
+        }
     }
 
     // Be quiet if the user requests silence.
@@ -1143,28 +1152,26 @@ static void usage(char *prog,  int exit_code)
 static int popup(WINDOW **work, WINDOW **save, int nrows, int ncols,
                  int row, int col)
 {
-    int mr, mc;
 
-    getmaxyx(curscr, mr, mc);
     // Windows are limited to the size of curscr.
-    if (mr < nrows) {
-        nrows = mr;
+    if (LINES < nrows) {
+        nrows = LINES;
     }
-    if (mc < ncols) {
-        ncols = mc;
+    if (COLS < ncols) {
+        ncols = COLS;
     }
     // Center dimensions.
     if (row == -1) {
-        row = (mr - nrows) / 2;
+        row = (LINES - nrows) / 2;
     }
     if (col == -1) {
-        col = (mc - ncols) / 2;
+        col = (COLS - ncols) / 2;
     }
     // The window must fit entirely in curscr.
-    if (mr < row + nrows) {
+    if (LINES < (row + nrows)) {
         row = 0;
     }
-    if (mc < col + ncols) {
+    if (COLS < (col + ncols)) {
         col = 0;
     }
     // sanity check for coverity
@@ -1340,14 +1347,30 @@ static void resize(int sig UNUSED)
     resize_flag++;
 }
 
-// do the terminal resize
+// finally do resize signal to do the terminal resize
 static void do_resize(void)
 {
     resize_flag--;
-    if (!isendwin()) {
-        (void)endwin();
-        windowsetup();
+    if (0 > resize_flag) {
+        // huh?
+        resize_flag = 0;
     }
+    // don'l leak memory
+    if (NULL != datawin) {
+        (void)delwin(datawin);
+        datawin = NULL;
+    }
+    if (NULL != satellites) {
+        (void)delwin(satellites);
+        satellites = NULL;
+    }
+    if (NULL != messages) {
+        (void)delwin(messages);
+        messages = NULL;
+    }
+    // the only way to resize (set LINES and COLUMNS) is to end and start over
+    (void)endwin();
+    windowsetup();
 }
 
 static int sig_flag = 0;
@@ -1363,8 +1386,6 @@ static void quit_handler(int signum)
 
 int main(int argc, char *argv[])
 {
-    int ysize, xsize;            // current ysize and xsize
-    int old_ysize, old_xsize;    // saved ysize and xsize
     unsigned int flags = WATCH_ENABLE;
     int wait_clicks = 0;      // cycles to wait before gpsd timeout
     // buffer to hold one JSON message
@@ -1384,6 +1405,7 @@ int main(int argc, char *argv[])
         {NULL, 0, NULL, 0},
     };
 #endif
+    // dlog = fopen("cgps.log", "w");     // debug
 
     // FIXME: set_degree() too...
     (void)set_units(gpsd_units());
@@ -1462,12 +1484,12 @@ int main(int argc, char *argv[])
     // note: we're assuming BSD-style reliable signals here
     (void)signal(SIGINT, quit_handler);
     (void)signal(SIGHUP, quit_handler);
-    (void)signal(SIGWINCH, resize);
 
+    // Fire up curses
     windowsetup();
 
-    // for some reason, resize events get lost, so do it the 'hard" way
-    getmaxyx(stdscr, old_ysize, old_xsize);
+    // ready to handle screen resize events
+    (void)signal(SIGWINCH, resize);
 
     status_timer = time(NULL);
 
@@ -1484,13 +1506,6 @@ int main(int argc, char *argv[])
             die(sig_flag, NULL);
         }
         if (0 != resize_flag) {
-            do_resize();
-        }
-
-        // for some reason, resize events get lost, so do it the 'hard" way
-        getmaxyx(stdscr, ysize, xsize);
-        if (old_xsize != xsize ||
-            old_ysize != ysize) {
             do_resize();
         }
 
