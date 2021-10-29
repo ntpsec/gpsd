@@ -42,7 +42,7 @@ extern char *deg_to_str2(enum deg_str_type type, double f,
 extern void gpsd_source_spec(const char *fromstring,
                              struct fixsource_t *source);
 
-char *maidenhead(double n,double e);
+const char *maidenhead(double n,double e);
 
 /* this needs to match JSON_DATE_MAX in gpsd.h */
 #define CLIENT_DATE_MAX 24

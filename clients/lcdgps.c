@@ -168,16 +168,16 @@ static void reset_lcd(void) {
 
 static enum deg_str_type deg_type = deg_dd;
 
-/* This gets called once for each new sentence. */
+// This gets called once for each new sentence.
 static void update_lcd(struct gps_data_t *gpsdata)
 {
   char tmpbuf[255];
-  char *gridsquare;
+  const char *gridsquare;
 
-  /* Get our location in Maidenhead. */
+  // Get our location in Maidenhead.
   gridsquare = maidenhead(gpsdata->fix.latitude,gpsdata->fix.longitude);
 
-  /* Fill in the latitude and longitude. */
+  // Fill in the latitude and longitude.
   if (gpsdata->fix.mode >= MODE_2D) {
     int track;
     char *s;
@@ -212,7 +212,7 @@ static void update_lcd(struct gps_data_t *gpsdata)
     send_lcd("widget_set gpsd three 1 3 {n/a}\n");
   }
 
-  /* Fill in the altitude and fix status. */
+  // Fill in the altitude and fix status.
   if (gpsdata->fix.mode == MODE_3D) {
     int n;
     for(n=0;n<CLIMB-2;n++) climb[n]=climb[n+1];

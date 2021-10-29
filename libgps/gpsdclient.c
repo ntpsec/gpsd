@@ -220,10 +220,10 @@ enum unit gpsd_units(void)
     return unspecified;
 }
 
-/* standard parsing of a GPS data source spec */
+// standard parsing of a GPS data source spec
 void gpsd_source_spec(const char *arg, struct fixsource_t *source)
 {
-    /* the casts attempt to head off a -Wwrite-strings warning */
+    // the casts attempt to head off a -Wwrite-strings warning
     source->server = (char *)"localhost";
     source->port = (char *)DEFAULT_GPSD_PORT;
     source->device = NULL;
@@ -265,17 +265,22 @@ void gpsd_source_spec(const char *arg, struct fixsource_t *source)
         }
     }
 
-    if (*source->server == '[') {
+    if ('[' == *source->server) {
         char *rbrk = strchr(source->server, ']');
         ++source->server;
-        if (rbrk != NULL)
+        if (NULL != rbrk) {
             *rbrk = '\0';
+        }
     }
 }
 
 
-/* lat/lon to Maidenhead */
-char *maidenhead(double lat, double lon)
+/* lat/lon to Maidenhead
+ * Warning, not thread safe due to static return string
+ *
+ * Return: pointer to NUL terminated static string
+ */
+const char *maidenhead(double lat, double lon)
 {
     /*
      * Specification at
@@ -300,7 +305,12 @@ char *maidenhead(double lat, double lon)
 
     int t1;
 
-    /* longitude */
+    // range check
+    if (180.001 < fabs(lon) ||
+        90.001 < fabs(lat)) {
+        return "    n/a ";
+    }
+    // longitude
     if (179.99999 < lon) {
         /* force 180, just inside lon_sq 'R'
          * otherwise we get illegal 'S' */
@@ -312,7 +322,7 @@ char *maidenhead(double lat, double lon)
     t1 = (int)(lon / 20);
     buf[0] = (char)t1 + 'A';
     if ('R' < buf[0]) {
-        /* A to R */
+        // A to R
         buf[0] = 'R';
     }
     lon -= (float)t1 * 20.0;
@@ -341,7 +351,7 @@ char *maidenhead(double lat, double lon)
     }
     buf[6] = (char) ((char)t1 + '0');
 
-    /* latitude */
+    // latitude
     if (89.99999 < lat) {
         /* force 90 to just inside lat_sq 'R'
          * otherwise we get illegal 'S' */
@@ -353,7 +363,7 @@ char *maidenhead(double lat, double lon)
     t1 = (int)(lat / 10.0);
     buf[1] = (char)t1 + 'A';
     if ('R' < buf[1]) {
-        /* A to R, North Pole is R */
+        // A to R, North Pole is R
         buf[1] = 'R';
     }
     lat -= (float)t1 * 10.0;
@@ -386,22 +396,24 @@ char *maidenhead(double lat, double lon)
     return buf;
 }
 
-#define NITEMS(x) (int)(sizeof(x)/sizeof(x[0])) /* from gpsd.h-tail */
+#define NITEMS(x) (int)(sizeof(x)/sizeof(x[0])) // from gpsd.h-tail
 
-/* Look up an available export method by name */
+// Look up an available export method by name
 struct exportmethod_t *export_lookup(const char *name)
 {
     struct exportmethod_t *mp, *method = NULL;
 
     for (mp = exportmethods;
          mp < exportmethods + NITEMS(exportmethods);
-         mp++)
-        if (strcmp(mp->name, name) == 0)
+         mp++) {
+        if (0 == strcmp(mp->name, name)) {
             method = mp;
+        }
+    }
     return method;
 }
 
-/* list known export methods */
+// list known export methods
 void export_list(FILE *fp)
 {
     struct exportmethod_t *method;
@@ -417,5 +429,4 @@ struct exportmethod_t *export_default(void)
     return (NITEMS(exportmethods) > 0) ? &exportmethods[0] : NULL;
 }
 
-/* gpsdclient.c ends here */
 // vim: set expandtab shiftwidth=4

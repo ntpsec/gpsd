@@ -186,6 +186,10 @@ struct test2 tests2[] = {
     {-33.86881, 151.20929 , "QF56od51", "Sydney, NSW AU"},
     {90, 180, "RR99xx99", "North Pole"},
     {-90, -180, "AA00aa00", "South Pole"},
+    {91, 0, "    n/a ", "Invalid Latitude"},
+    {-91, 0, "    n/a ", "Invalid Latitude"},
+    {0, 200, "    n/a ", "Invalid Longitude"},
+    {0, 1200, "    n/a ", "Invalid Longitude"},
 };
 
 
