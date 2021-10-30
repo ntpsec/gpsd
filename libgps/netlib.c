@@ -10,6 +10,7 @@
 #endif  // HAVE_ARPA_INET_H
 #include <errno.h>                    // for errno
 #include <fcntl.h>
+#include <sys/types.h>   // FreeBSD needs it for netinet/ip.h
 #ifdef HAVE_NETDB_H
 #  include <netdb.h>
 #endif  // HAVE_NETDB_H
@@ -23,7 +24,6 @@
 #endif  // HAVE_NETINET_IN_H
 #include <string.h>
 #ifndef AF_UNSPEC
-#  include <sys/types.h>
 #  include <sys/stat.h>
 #  ifdef HAVE_SYS_SOCKET_H
 #    include <sys/socket.h>
