@@ -109,7 +109,7 @@ static char *speedunits = "mph";
 static struct fixsource_t source;
 static int debug;
 
-static WINDOW *datawin, *satellites, *messages;
+static WINDOW *datawin, *satellites, *messages, *slop;
 
 static bool raw_flag = false;            // show raw JSON data
 static bool show_dops = false;           // tall screen, show DOPs
@@ -295,6 +295,7 @@ static void windowsetup(void)
     int ysize;                // actual screen lines
     int ysize_gps;            // ysize, minus rows reserved for raw
     int row = 1;
+    int slop_width;           // width of the slop window
 
     (void)initscr();
     // initscr sets up COLS and LINES
@@ -450,6 +451,15 @@ static void windowsetup(void)
 
     datawin = newwin(window_ysize, DATAWIN_WIDTH, 0, 0);
     satellites = newwin(window_ysize, SATELLITES_WIDTH, 0, DATAWIN_WIDTH);
+
+    // slop is the area to the right, past satellites, that gathers lint
+    slop_width = COLS - (DATAWIN_WIDTH + SATELLITES_WIDTH);
+    if (0 < slop_width) {
+        slop = newwin(window_ysize, slop_width, 0,
+                      DATAWIN_WIDTH + SATELLITES_WIDTH);
+        (void)werase(slop);
+        (void)wrefresh(slop);
+    }
 
     // do not block waiting for user input
     (void)nodelay(datawin, true);
@@ -1306,6 +1316,10 @@ static void do_resize(void)
     if (NULL != satellites) {
         (void)delwin(satellites);
         satellites = NULL;
+    }
+    if (NULL != slop) {
+        (void)delwin(slop);
+        slop = NULL;
     }
     if (NULL != messages) {
         (void)delwin(messages);
