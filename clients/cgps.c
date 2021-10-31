@@ -378,7 +378,7 @@ static void windowsetup(void)
     }
 
     if ((DATAWIN_WIDTH + SATELLITES_WIDTH) > COLS) {
-        die(0, "Your terminal not wide enough");
+        die(0, "Your terminal not wide enough.  80 columns required.");
     }
 
     // We're a GPS, set up accordingly.
