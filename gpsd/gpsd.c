@@ -2835,12 +2835,14 @@ int main(int argc, char *argv[])
             if (device_needed) {
                 // device needed
                 if (BAD_SOCKET(device->gpsdata.gps_fd) &&
+                    SOURCE_PPS != device->sourcetype &&
                     (0 == device->opentime  ||
                      DEVICE_RECONNECT < (time(NULL) - device->opentime))) {
                     device->opentime = time(NULL);
                     GPSD_LOG(LOG_INF, &context.errout,
-                             "reconnection attempt on device %d\n",
-                             (int)(device - devices));
+                             "reconnection attempt on device %d, %s\n",
+                             (int)(device - devices),
+                             device->gpsdata.dev.path);
                     (void)awaken(device);
                 }
             } else {
