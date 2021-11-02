@@ -312,7 +312,8 @@ static void windowsetup(void)
 
     if (imu_flag) {
         // We're an IMU, set up accordingly.
-        if (IMU_WIDTH > COLS) {
+        if ((IMU_WIDTH - 2) > COLS) {
+            // allow 78, cutting of the two rightmost columns is acceptable
             die(0, "Your terminal not wide enough.  80 columns required.");
         }
 
@@ -377,7 +378,8 @@ static void windowsetup(void)
         return;
     }
 
-    if ((DATAWIN_WIDTH + SATELLITES_WIDTH) > COLS) {
+    if ((DATAWIN_WIDTH + SATELLITES_WIDTH - 2) > COLS) {
+        // allow 78, cutting of the two rightmost columns is acceptable
         die(0, "Your terminal not wide enough.  80 columns required.");
     }
 
@@ -600,7 +602,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
                     "GNSS   PRN  Elev   Azim   SNR Use");
     (void)wborder(satellites, 0, 0, 0, 0, 0, 0, 0, 0);
 
-    (void)mvwprintw(satellites, 0, 19, "Seen %2d/Used %2d",
+    (void)mvwprintw(satellites, 0, 17, "Seen %2d/Used %2d",
                     gpsdata->satellites_visible,
                     gpsdata->satellites_used);
 
