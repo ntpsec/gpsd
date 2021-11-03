@@ -2530,10 +2530,22 @@ int main(int argc, char *argv[])
     while (0 == signalled) {
         fd_set efds;
         timespec_t ts_timeout = {2, 0};   // timeout for pselect()
+        timespec_t before, after;         // time before/after gpsd_await_data()
+        int await;
 
         GPSD_LOG(LOG_RAW1, &context.errout, "await data\n");
-        switch(gpsd_await_data(&rfds, &efds, maxfd, &all_fds,
-                               &context.errout, ts_timeout)) {
+        (void)clock_gettime(CLOCK_REALTIME, &before);
+        await = gpsd_await_data(&rfds, &efds, maxfd, &all_fds, &context.errout,
+                                ts_timeout);
+        (void)clock_gettime(CLOCK_REALTIME, &after);
+        TS_SUB(&delta, &after, &before);
+        if ((1 + ts_timeout.tv_sec) <= llabs(delta.tv_sec)) {
+            GPSD_LOG(LOG_WARN, &context.errout,
+                     "Let's do the time warp again %lld.  "
+                     "It's just a jump to the left\n",
+                     (long long)delta.tv_sec);
+        }
+        switch(await) {
         case AWAIT_GOT_INPUT:
             FALLTHROUGH
         case AWAIT_TIMEOUT:
