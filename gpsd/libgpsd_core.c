@@ -1335,15 +1335,18 @@ static void gpsd_error_model(struct gps_device_t *session)
     }
 }
 
-// await data from any socket in the all_fds set
+/* await data from any socket in the all_fds set
+ *
+ * return: AWAIT_ value
+ */
 int gpsd_await_data(fd_set *rfds,
                     fd_set *efds,
-                    const int maxfd,
+                    int maxfd,
                     fd_set *all_fds,
-                    struct gpsd_errout_t *errout)
+                    struct gpsd_errout_t *errout,
+                    timespec_t ts_timeout)
 {
     int status;
-    const timespec_t ts_timeout = {5, 0};   // timeout for pselect()
 
     FD_ZERO(efds);
     *rfds = *all_fds;
@@ -1357,9 +1360,9 @@ int gpsd_await_data(fd_set *rfds,
      * low-clock-rate SBCs and the like).
      *
      * As used here, there is no difference between pselect()
-     * or select().  A 5 second timeout is used, this adds a bit
+     * or select().  A timeout is used, this adds a bit
      * of power consumption, but prevents infinite hang during autobaud,
-     * or select.
+     * or select.  pselect() may, or may not, modify ts_timeout.
      */
     errno = 0;
 
@@ -1392,6 +1395,7 @@ int gpsd_await_data(fd_set *rfds,
     }
     if (0 == status) {
         // pselect timeout
+        GPSD_LOG(LOG_PROG, errout, "CORE: pselect: timeout\n");
         return AWAIT_TIMEOUT;
     }
 

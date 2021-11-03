@@ -2529,10 +2529,11 @@ int main(int argc, char *argv[])
 
     while (0 == signalled) {
         fd_set efds;
+        timespec_t ts_timeout = {2, 0};   // timeout for pselect()
 
         GPSD_LOG(LOG_RAW1, &context.errout, "await data\n");
         switch(gpsd_await_data(&rfds, &efds, maxfd, &all_fds,
-                               &context.errout)) {
+                               &context.errout, ts_timeout)) {
         case AWAIT_GOT_INPUT:
             FALLTHROUGH
         case AWAIT_TIMEOUT:

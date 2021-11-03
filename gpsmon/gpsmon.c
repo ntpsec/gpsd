@@ -1409,18 +1409,21 @@ int main(int argc, char **argv)
             rare.c_cc[VMIN] = (cc_t)1;
             (void)tcflush(0, TCIFLUSH);
             (void)tcsetattr(0, TCSANOW, &rare);
-        } else if (!curses_init())
+        } else if (!curses_init()) {
             goto quit;
+        }
 
-        for (;;)
-        {
+        for (;;) {
             fd_set efds;
-            switch(gpsd_await_data(&rfds, &efds, maxfd, &all_fds, &context.errout))
-            {
+            timespec_t ts_timeout = {2, 0};   // timeout for pselect()
+            switch(gpsd_await_data(&rfds, &efds, maxfd, &all_fds,
+                                   &context.errout, ts_timeout)) {
             case AWAIT_GOT_INPUT:
+                FALLTHROUGH
+            case AWAIT_TIMEOUT:
                 break;
             case AWAIT_NOT_READY:
-                /* no recovery from bad fd is possible */
+                // no recovery from bad fd is possible
                 if (FD_ISSET(session.gpsdata.gps_fd, &efds))
                     longjmp(terminate, TERM_SELECT_FAILED);
                 continue;
@@ -1430,8 +1433,7 @@ int main(int argc, char **argv)
             }
 
             switch(gpsd_multipoll(FD_ISSET(session.gpsdata.gps_fd, &rfds),
-                                  &session, gpsmon_hook, 0))
-            {
+                                  &session, gpsmon_hook, 0)) {
             case DEVICE_READY:
                 FD_SET(session.gpsdata.gps_fd, &all_fds);
                 break;
@@ -1449,14 +1451,13 @@ int main(int argc, char **argv)
             }
 
             if (FD_ISSET(0, &rfds)) {
-                if (curses_active)
+                if (curses_active) {
                     cmdline = curses_get_command();
-                else
-                {
-                    /* coverity[string_null_argument] */
+                } else {
+                    // coverity[string_null_argument]
                     ssize_t st = read(0, &inbuf, 1);
 
-                    if (st == 1) {
+                    if (1 == st) {
                         report_lock();
                         (void)tcflush(0, TCIFLUSH);
                         (void)tcsetattr(0, TCSANOW, &cooked);
@@ -1465,13 +1466,16 @@ int main(int argc, char **argv)
                         (void)fputs("> ", stdout);
                         (void)putchar(inbuf[0]);
                         cmdline = fgets(inbuf+1, sizeof(inbuf)-1, stdin);
-                        if (cmdline)
+                        if (cmdline) {
                             cmdline--;
+                        }
                         report_unlock();
                     }
                 }
-                if (cmdline != NULL && !do_command(cmdline))
+                if (NULL != cmdline &&
+                    !do_command(cmdline)) {
                     longjmp(terminate, TERM_QUIT);
+                }
                 if (!curses_active) {
                     (void)sleep(2);
                     report_lock();
@@ -1483,19 +1487,22 @@ int main(int argc, char **argv)
     }
 
   quit:
-    /* we'll fall through to here on longjmp() */
+    // we'll fall through to here on longjmp()
 
-    /* Shut down PPS monitoring. */
-    if (serial)
+    // Shut down PPS monitoring.
+    if (serial) {
        (void)pps_thread_deactivate(&session.pps_thread);
+    }
 
     gpsd_close(&session);
-    if (logfile)
+    if (logfile) {
         (void)fclose(logfile);
-    if (curses_active)
+    }
+    if (curses_active) {
         (void)endwin();
-    else
+    } else {
         (void)tcsetattr(0, TCSANOW, &cooked);
+    }
 
     explanation = NULL;
     switch (bailout) {
@@ -1512,18 +1519,20 @@ int main(int argc, char **argv)
         explanation = "Read error from device\n";
         break;
     case TERM_SIGNAL:
+        FALLTHROUGH
     case TERM_QUIT:
-        /* normal exit, no message */
+        // normal exit, no message
         break;
     default:
         explanation = "Unknown error, should never happen.\n";
         break;
     }
 
-    if (explanation != NULL)
+    if (NULL != explanation) {
         (void)fputs(explanation, stderr);
+    }
     exit(EXIT_SUCCESS);
 }
 
-/* gpsmon.c ends here */
+// gpsmon.c ends here
 // vim: set expandtab shiftwidth=4

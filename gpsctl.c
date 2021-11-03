@@ -607,7 +607,7 @@ int main(int argc, char **argv)
                         status = 1;
                     }
                 }
-                if (status == 0)
+                if (0 == status)
                     (void)gps_query(&gpsdata,
                                     DEVICE_SET, (int)timeout,
                                      "?DEVICE={\"path\":\"%s\",\"bps\":%s,"
@@ -626,7 +626,7 @@ int main(int argc, char **argv)
                          gpsdata.dev.path,
                          speed, parity, stopbits);
         }
-        if (rate != NULL) {
+        if (NULL != rate) {
             (void)gps_query(&gpsdata,
                             DEVICE_SET, (int)timeout,
                             "?DEVICE={\"path\":\"%s\",\"cycle\":%s}\r\n",
@@ -635,13 +635,15 @@ int main(int argc, char **argv)
         (void)gps_close(&gpsdata);
         exit(status);
     } else if (reset) {
-        /* hard reset will go through lower-level operations */
+        // hard reset will go through lower-level operations
+        // FIXME: missing speeds, should come from a header.
         const int speeds[] = {4800, 9600, 19200, 38400, 57600, 115200, 230400,
                               460800, 921600};
-        static struct gps_device_t      session;        /* zero this too */
+        static struct gps_device_t      session;        // zero this too
         int i;
 
-        if (device == NULL || forcetype == NULL) {
+        if (NULL == device ||
+            NULL == forcetype) {
                 GPSD_LOG(LOG_ERROR, &context.errout,
                          "device and type must be specified for the "
                          "reset operation.\n");
@@ -664,14 +666,16 @@ int main(int argc, char **argv)
             (void)tcdrain(session.gpsdata.gps_fd);
         }
         gpsd_set_speed(&session, 4800, 'N', 1);
-        for (i = 0; i < 3; i++)
-            if (session.device_type->mode_switcher)
+        for (i = 0; i < 3; i++) {
+            if (session.device_type->mode_switcher) {
                 session.device_type->mode_switcher(&session, MODE_NMEA);
+            }
+        }
         gpsd_wrap(&session);
         exit(EXIT_SUCCESS);
     } else {
-        /* access to the daemon failed, use the low-level facilities */
-        static struct gps_device_t      session;        /* zero this too */
+        // access to the daemon failed, use the low-level facilities
+        static struct gps_device_t      session;        // zero this too
         fd_set all_fds;
         fd_set rfds;
 
@@ -683,10 +687,11 @@ int main(int argc, char **argv)
 
         gps_context_init(&context, "gpsctl");
         context.errout.debug = debuglevel;
-        session.context = &context;     /* in case gps_init isn't called */
+        session.context = &context;     // in case gps_init isn't called
 
-        if (echo)
+        if (echo) {
             context.readonly = true;
+        }
 
         if (timeout > 0) {
             (void) alarm(timeout);
@@ -697,7 +702,8 @@ int main(int argc, char **argv)
          * string (not send it) we now need to try to open the device
          * and find out what is actually there.
          */
-        if (!(forcetype != NULL && echo)) {
+        if (NULL == forcetype ||
+            !echo) {
             socket_t maxfd = 0;
             int activated = -1;
 
@@ -723,20 +729,22 @@ int main(int argc, char **argv)
             GPSD_LOG(LOG_INF, &context.errout,
                      "device %s activated\n", session.gpsdata.dev.path);
             FD_SET(session.gpsdata.gps_fd, &all_fds);
-            if (session.gpsdata.gps_fd > maxfd)
+            if (session.gpsdata.gps_fd > maxfd) {
                  maxfd = session.gpsdata.gps_fd;
+            }
 
-            /* initialize the GPS context's time fields */
+            // initialize the GPS context's time fields
             gpsd_time_init(&context, time(NULL));
 
-            /* grab packets until we time out, get sync, or fail sync */
-            for (hunting = true; hunting; )
-            {
+            // grab packets until we time out, get sync, or fail sync
+            for (hunting = true; hunting; ) {
                 fd_set efds;
+                timespec_t ts_timeout = {2, 0};   // timeout for pselect()
                 switch(gpsd_await_data(&rfds, &efds, maxfd, &all_fds,
-                                       &context.errout))
-                {
+                                       &context.errout, ts_timeout)) {
                 case AWAIT_GOT_INPUT:
+                    FALLTHROUGH
+                case AWAIT_TIMEOUT:
                     break;
                 case AWAIT_NOT_READY:
                     /* no recovery from bad fd is possible */
@@ -923,5 +931,5 @@ int main(int argc, char **argv)
     }
 }
 
-/* end */
+// end
 // vim: set expandtab shiftwidth=4

@@ -1050,9 +1050,10 @@ extern void gpsd_deactivate(struct gps_device_t *);
 #define AWAIT_FAILED    -1
 extern int gpsd_await_data(fd_set *,
                            fd_set *,
-                            const int,
-                            fd_set *,
-                            struct gpsd_errout_t *errout);
+                           int,
+                           fd_set *,
+                           struct gpsd_errout_t *,
+                           timespec_t);
 extern gps_mask_t gpsd_poll(struct gps_device_t *);
 #define DEVICE_EOF      -3
 #define DEVICE_ERROR    -2
