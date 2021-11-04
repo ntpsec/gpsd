@@ -5,7 +5,7 @@
  *
  */
 
-#include "include/gpsd_config.h"  /* must be before all includes */
+#include "include/gpsd_config.h"  // must be before all includes
 
 #include <assert.h>
 #include <errno.h>
@@ -28,13 +28,13 @@
 #ifdef SHM_EXPORT_ENABLE
 #include <sys/ipc.h>
 #include <sys/shm.h>
-#endif /* SHM_EXPORT_ENABLE */
+#endif  // SHM_EXPORT_ENABLE
 
-#define HIGH_LEVEL_TIMEOUT      8
+#define HIGH_LEVEL_TIMEOUT 8
 
 static int debuglevel;
 static bool explicit_timeout = false;
-static unsigned int timeout = 0;        /* no timeout */
+static unsigned int timeout = 0;        // no timeout
 static struct gps_context_t context;
 static bool hunting = true;
 
@@ -42,9 +42,9 @@ static bool hunting = true;
  * Set this as high or higher than the maximum number of subtype
  * probes in drivers.c.
  */
-#define REDIRECT_SNIFF  15
+#define REDIRECT_SNIFF 15
 
-/* allow the device to settle after a control operation */
+// allow the device to settle after a control operation
 static void settle(struct gps_device_t *session)
 {
     struct timespec delay;
@@ -54,7 +54,7 @@ static void settle(struct gps_device_t *session)
      */
     (void)tcdrain(session->gpsdata.gps_fd);
 
-    /* wait 50,000 uSec */
+    // wait 50,000 uSec
     delay.tv_sec = 0;
     delay.tv_nsec = 50000000L;
     nanosleep(&delay, NULL);
@@ -67,13 +67,13 @@ static void settle(struct gps_device_t *session)
  * failure return (due to, for example, a missing driver method) is
  * immediate, but successful responses have unpredictable lag.
  */
-#define NON_ERROR       0       /* must be distinct from any gps_mask_t value */
+#define NON_ERROR 0       // must be distinct from any gps_mask_t value
 
-/* ship a command and wait on an expected response type */
+// ship a command and wait on an expected response type
 static bool gps_query(struct gps_data_t *gpsdata,
-                       gps_mask_t expect,
-                       const int timeout,
-                       const char *fmt, ... )
+                      gps_mask_t expect,
+                      const int timeout,
+                      const char *fmt, ... )
 {
     static fd_set rfds;
     char buf[BUFSIZ];
@@ -92,9 +92,10 @@ static bool gps_query(struct gps_data_t *gpsdata,
     va_start(ap, fmt);
     (void)vsnprintf(buf, sizeof(buf)-2, fmt, ap);
     va_end(ap);
-    if (buf[strlen(buf)-1] != '\n')
+    if (buf[strlen(buf)-1] != '\n') {
         (void)strlcat(buf, "\n", sizeof(buf));
-    if (write(gpsdata->gps_fd, buf, strlen(buf)) <= 0) {
+    }
+    if (0 <= write(gpsdata->gps_fd, buf, strlen(buf))) {
         GPSD_LOG(LOG_ERROR, &context.errout, "gps_query(), write failed\n");
         return false;
     }
@@ -110,12 +111,14 @@ static bool gps_query(struct gps_data_t *gpsdata,
         tv.tv_sec = 2;
         tv.tv_nsec = 0;
         // (socket_t) to pacify codacy.
-        if (pselect((socket_t)gpsdata->gps_fd + 1, &rfds, NULL, NULL,
-                    &tv, &oldset) == -1) {
-            if (errno == EINTR || !FD_ISSET(gpsdata->gps_fd, &rfds))
+        if (-1 == pselect((socket_t)gpsdata->gps_fd + 1, &rfds, NULL, NULL,
+                          &tv, &oldset)) {
+            if (EINTR == errno ||
+                !FD_ISSET(gpsdata->gps_fd, &rfds)) {
                 continue;
-            GPSD_LOG(LOG_ERROR, &context.errout, "select %s\n",
-                     strerror(errno));
+            }
+            GPSD_LOG(LOG_ERROR, &context.errout, "select %s(%d)\n",
+                     strerror(errno), errno);
             exit(EXIT_FAILURE);
         }
 
@@ -128,9 +131,11 @@ static bool gps_query(struct gps_data_t *gpsdata,
             return false;
         }
 
-        if ((expect == NON_ERROR) || (expect & gpsdata->set) != 0)
+        if ((NON_ERROR == expect) ||
+            0 != (expect & gpsdata->set)) {
             return true;
-        else if (timeout > 0 && (time(NULL) - starttime > timeout)) {
+        } else if (0 < timeout &&
+                   (time(NULL) - starttime > timeout)) {
             GPSD_LOG(LOG_ERROR, &context.errout,
                      "timed out after %d seconds\n",
                      timeout);
@@ -153,22 +158,24 @@ static void onsig(int sig)
     }
 }
 
+// full ID of the device for reports, including subtype
 static char *gpsd_id(struct gps_device_t *session)
-/* full ID of the device for reports, including subtype */
 {
     static char buf[128];
-    if ((session == NULL) || (session->device_type == NULL) ||
-        (session->device_type->type_name == NULL))
+    if (NULL == session ||
+        NULL == session->device_type ||
+        NULL == session->device_type->type_name) {
         return "unknown,";
+    }
     (void)strlcpy(buf, session->device_type->type_name, sizeof(buf));
-    if (session->subtype[0] != '\0') {
+    if ('\0' != session->subtype[0]) {
         (void)strlcat(buf, " ", sizeof(buf));
         (void)strlcat(buf, session->subtype, sizeof(buf));
     }
     return (buf);
 }
 
-/* recognize when we've achieved sync */
+// recognize when we've achieved sync
 static void ctlhook(struct gps_device_t *device UNUSED,
                     gps_mask_t changed UNUSED)
 {
@@ -179,10 +186,9 @@ static void ctlhook(struct gps_device_t *device UNUSED,
      * reveal any secret identity (like SiRF or UBX) the chip might have.
      * If it's not, getting more packets might fetch subtype information.
      */
-    if (packet_counter++ >= REDIRECT_SNIFF)
-    {
+    if (REDIRECT_SNIFF <= packet_counter++) {
         hunting = false;
-        (void) alarm(0);
+        (void)alarm(0);
     }
 }
 
@@ -265,7 +271,7 @@ int main(int argc, char **argv)
     };
 #endif
 
-    /* We need this before any logging happens (for report_mutex) */
+    // We need this before any logging happens (for report_mutex)
     gps_context_init(&context, "gpsctl");
 
     while (1) {
@@ -275,30 +281,30 @@ int main(int argc, char **argv)
         ch = getopt(argc, argv, optstring);
 #endif
 
-        if (ch == -1) {
+        if (-1 == ch) {
             break;
         }
 
         switch (ch) {
-        case 'b':               /* switch to vendor binary mode */
+        case 'b':               // switch to vendor binary mode
             to_binary = true;
             break;
         case 'c':
             rate = optarg;
             break;
-        case 'D':               /* set debugging level */
+        case 'D':               // set debugging level
             debuglevel = atoi(optarg);
             gps_enable_debug(debuglevel, stderr);
             break;
-        case 'e':               /* echo specified control string with wrapper */
+        case 'e':               // echo specified control string with wrapper
             lowlevel = true;
             control_stdout = true;  /* Prevent message going to stdout */
             echo = true;
             break;
-        case 'f':               /* force direct access to the device */
+        case 'f':               // force direct access to the device
             lowlevel = true;
             break;
-        case 'l':               /* list known device types */
+        case 'l':               // list known device types
             for (dp = gpsd_drivers; *dp; dp++) {
                 if ((*dp)->mode_switcher != NULL)
                     (void)fputs("-[bn]\t", stdout);
