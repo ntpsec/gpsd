@@ -2529,10 +2529,12 @@ int main(int argc, char *argv[])
 
     while (0 == signalled) {
         fd_set efds;
-        timespec_t ts_timeout = {2, 0};   // timeout for pselect()
-        timespec_t before, after;         // time before/after gpsd_await_data()
+        const timespec_t ts_timeout = {2, 0};   // timeout for pselect()
+        timespec_t before, after;        // time before/after gpsd_await_data()
         int await;
+        bool time_warp;
 
+        time_warp = false;
         GPSD_LOG(LOG_RAW1, &context.errout, "await data\n");
         (void)clock_gettime(CLOCK_REALTIME, &before);
         await = gpsd_await_data(&rfds, &efds, maxfd, &all_fds, &context.errout,
@@ -2544,6 +2546,7 @@ int main(int argc, char *argv[])
                      "Let's do the time warp again %lld.  "
                      "It's just a jump to the left\n",
                      (long long)delta.tv_sec);
+            time_warp = true;
         }
         switch(await) {
         case AWAIT_GOT_INPUT:
@@ -2718,7 +2721,10 @@ int main(int argc, char *argv[])
                     GPSD_LOG(LOG_PROG, &context.errout,
                         "gpsd_multipoll(%d) DEVICE_UNCHANGED for %lld\n",
                         device->gpsdata.gps_fd, (long long)delta.tv_sec);
-                    if (0 < gpsd_serial_isatty(device)) {
+                    if (time_warp) {
+                        // ugh, start over...
+                        device->lexer.start_time = now;
+                    } else if (0 < gpsd_serial_isatty(device)) {
                         // then try the next hunt speed.
                         gpsd_next_hunt_setting(device);
                     } else {
