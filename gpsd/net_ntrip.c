@@ -55,7 +55,7 @@ static struct ntrip_fmt_s {
     const enum ntrip_fmt format;
 } const ntrip_fmts[] = {
     {"CMR+", FMT_CMRP},
-    // RTCM1 required for the SAPOS derver in Gemany, confirmed as RTCM2.3
+    // RTCM1 required for the SAPOS server in Gemany, confirmed as RTCM2.3
     {"RTCM1_", FMT_RTCM2_3},
     {"RTCM 2.0", FMT_RTCM2_0},
     {"RTCM 2.1", FMT_RTCM2_1},
@@ -301,8 +301,9 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
 
         while (0 < len) {
             // parse ENDSOURCETABLE
-            if (str_starts_with(line, NTRIP_ENDSOURCETABLE))
+            if (str_starts_with(line, NTRIP_ENDSOURCETABLE)) {
                 goto done;
+            }
 
             eol = strstr(line, NTRIP_BR);
             if (NULL == eol){
@@ -440,31 +441,65 @@ static int ntrip_stream_req_probe(const struct ntrip_stream_t *stream,
     return dsock;
 }
 
+/* ntrip_auth_encode() - compute the HTTP auth string, if required.
+ *
+ * Return: 0 == OK
+ *         -1 = auth error
+ */
 static int ntrip_auth_encode(const struct ntrip_stream_t *stream,
                              const char *auth,
                              char buf[],
                              size_t size)
 {
+    char authenc[64];       // base 64 encoding of auth (username:password)
+    int ret = 0;
+
     memset(buf, 0, size);
-    if (AUTH_NONE == stream->authentication) {
-        return 0;
-    } else if (AUTH_BASIC == stream->authentication) {
-        char authenc[64];
+    switch (stream->authentication) {
+    case AUTH_NONE:
+        // nothing to do.
+        break;
+    case AUTH_BASIC:
+        // RFC 7617 Basic Access Authentication.
+        // username may not contain a colon (")
         if (NULL == auth) {
-            return -1;
+            ret = -1;
+            break;
         }
         memset(authenc, 0, sizeof(authenc));
         if (0 > b64_ntop((unsigned char *)auth, strlen(auth), authenc,
                          sizeof(authenc) - 1)) {
-            return -1;
+            ret = -1;
+            break;
         }
         (void)snprintf(buf, size - 1, "Authorization: Basic %s\r\n", authenc);
-    } else {
-        // TODO: support digest authentication
+        break;
+    case AUTH_DIGEST:
+        // TODO: support digest authentication, who needs it?
+        // Possibly:  RFC 2617
+        //     HTTP Authentication: Basic and Digest Access Authentication)
+        /* WWW-Authenticate: Digest realm="testrealm@host.com",
+         *              qop="auth,auth-int",
+         *              nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093",
+         *              opaque="5ccc069c403ebaf9f0171e9517f40e41"
+         */
+        ret = -1;
+        break;
+    case AUTH_UNKNOWN:
+        // WTF?
+        FALLTHROUGH
+    default:
+        ret = -1;
+        break;
     }
-    return 0;
+    return ret;
 }
 
+/* netlib_connectsock() open a blockin socket to host.
+ *
+ * Return: socket to ntrip server on success
+ *         less than zero on error
+ */
 static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
                                      const struct gpsd_errout_t *errout)
 {
@@ -507,7 +542,7 @@ static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
 
 /* parse the stream header
  * Return: 0 == OK
- *         -1 == fail
+ *         less than zero == failure
  */
 static int ntrip_stream_get_parse(const struct ntrip_stream_t *stream,
                                   const int dsock,
@@ -565,7 +600,7 @@ static int ntrip_stream_get_parse(const struct ntrip_stream_t *stream,
  * FIXME: merge with test_parse_uri_dest()
  *
  * Return 0 on success
- *        < 0 on failure
+ *        less than zero on failure
  */
 int ntrip_parse_url(const struct gpsd_errout_t *errout,
                     struct ntrip_stream_t *stream, const char *fullurl)
@@ -576,7 +611,7 @@ int ntrip_parse_url(const struct gpsd_errout_t *errout,
     char *slash;                         // pointer to slash
     char *lsb;                           // pointer to left square bracket ([)
     char *rsb;                           // pointer to right square bracket (])
-    char *auth = NULL;
+    char *auth = NULL;                   // user:pass
     char *host = NULL;                   // hostname, IPv4 or IPv6
     char *port = NULL;
     char *mountpoint = NULL;             // mount point
@@ -695,8 +730,7 @@ int ntrip_parse_url(const struct gpsd_errout_t *errout,
         }
     }
     if (NULL != auth) {
-        (void)strlcpy(stream->credentials,
-                      auth, sizeof(stream->credentials));
+        (void)strlcpy(stream->credentials, auth, sizeof(stream->credentials));
     }
 
     if (NULL == port ||
@@ -709,14 +743,12 @@ int ntrip_parse_url(const struct gpsd_errout_t *errout,
     }
     // port ought to be non-NULL by now, but just in case appease Coverity.
     if (NULL != port) {
-        (void)strlcpy(stream->port,
-                      port, sizeof(stream->port));
+        (void)strlcpy(stream->port, port, sizeof(stream->port));
     }
 
     // host ought to be non-NULL by now, but just in case appease Coverity.
     if (NULL != host) {
-        (void)strlcpy(stream->host,
-                      host, sizeof(stream->host));
+        (void)strlcpy(stream->host, host, sizeof(stream->host));
     }
 
     GPSD_LOG(LOG_PROG, errout,
