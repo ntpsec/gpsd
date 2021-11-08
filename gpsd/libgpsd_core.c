@@ -38,7 +38,7 @@
 #include "../include/timespec.h"
 #if defined(NMEA2000_ENABLE)
     #include "../include/driver_nmea2000.h"
-#endif /* defined(NMEA2000_ENABLE) */
+#endif  // defined(NMEA2000_ENABLE)
 
 // pass low-level data to devices straight through
 ssize_t gpsd_write(struct gps_device_t *session,
@@ -64,14 +64,16 @@ static pthread_mutex_t report_mutex;
 void gpsd_acquire_reporting_lock(void)
 {
     int err;
+
+    // pthread_mutex_lock() returns zero, or an error code.
     err = pthread_mutex_lock(&report_mutex);
     if (0 != err) {
         /* POSIX says pthread_mutex_lock() should only fail if the
         thread holding the lock has died.  Best for gpsd to just die
         because things are FUBAR. */
 
-        (void)fprintf(stderr,"pthread_mutex_lock() failed: %s\n",
-                      strerror(err));
+        (void)fprintf(stderr,"pthread_mutex_lock() failed: %s(%d)\n",
+                      strerror(err), err);
         exit(EXIT_FAILURE);
     }
 }
@@ -79,6 +81,8 @@ void gpsd_acquire_reporting_lock(void)
 void gpsd_release_reporting_lock(void)
 {
     int err;
+
+    // pthread_mutex_lock() returns zero, or an error code.
     err = pthread_mutex_unlock(&report_mutex);
     if (0 != err) {
         /* POSIX says pthread_mutex_unlock() should only fail when
@@ -86,8 +90,8 @@ void gpsd_release_reporting_lock(void)
         this thread.  This should never happen, so best for gpsd to die
         because things are FUBAR. */
 
-        (void)fprintf(stderr,"pthread_mutex_unlock() failed: %s\n",
-                      strerror(err));
+        (void)fprintf(stderr,"pthread_mutex_unlock() failed: %s(%d)\n",
+                      strerror(err), err);
         exit(EXIT_FAILURE);
     }
 }
@@ -241,8 +245,8 @@ static void gpsd_run_device_hook(struct gpsd_errout_t *errout,
         GPSD_LOG(LOG_INF, errout, "CORE: running %s\n", buf);
         status = system(buf);
         if (-1 == status) {
-            GPSD_LOG(LOG_ERROR, errout, "CORE: error %s running %s\n",
-                     strerror(errno), buf);
+            GPSD_LOG(LOG_ERROR, errout, "CORE: error %s(%d) running %s\n",
+                     strerror(errno), errno, buf);
         } else {
             GPSD_LOG(LOG_INF, errout,
                      "CORE: %s returned %d\n", DEVICEHOOKPATH,
@@ -1421,10 +1425,10 @@ int gpsd_await_data(fd_set *rfds,
 
         (void)clock_gettime(CLOCK_REALTIME, &ts_now);
         GPSD_LOG(LOG_SPIN, errout,
-                 "CORE: pselect() {%s} at %s (%s)\n",
+                 "CORE: pselect() {%s} at %s, %s(%d)\n",
                  dbuf,
                  timespec_str(&ts_now, ts_str, sizeof(ts_str)),
-                 strerror(errno));
+                 strerror(errno), errno);
     }
 
     return AWAIT_GOT_INPUT;
