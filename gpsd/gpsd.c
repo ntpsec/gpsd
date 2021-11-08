@@ -2059,6 +2059,7 @@ int main(int argc, char *argv[])
     volatile bool in_restart;
     struct timespec now, delta;
     const char *sudo = getenv("SUDO_COMMAND");
+    int uid;
 
     gps_context_init(&context, "gpsd");
 
@@ -2209,13 +2210,14 @@ int main(int argc, char *argv[])
                  "This gpsd will fail at 2038-01-19T03:14:07Z.\n");
     }
 
-    if (0 != getuid()) {
+    uid = getuid();
+    if (0 != uid) {
        GPSD_LOG(LOG_WARN, &context.errout,
                 "gpsd not started as root, can not drop privileges.\n");
     } else if (NULL != sudo &&
                0 == strcmp(argv[0], sudo)) {
        GPSD_LOG(LOG_WARN, &context.errout,
-                "gpsd running under sudo. Some functions impaired..\n");
+                "gpsd running under sudo. Some functions impaired.\n");
     }
 #if defined(SYSTEMD_ENABLE) && defined(CONTROL_SOCKET_ENABLE)
     sd_socket_count = sd_get_socket_count();
@@ -2308,6 +2310,8 @@ int main(int argc, char *argv[])
     openlog("gpsd", LOG_PID, LOG_USER);
     GPSD_LOG(LOG_INF, &context.errout, "launching (Version %s, revision %s)\n",
              VERSION, REVISION);
+    GPSD_LOG(LOG_INF, &context.errout, "starting uid %d, gid %d\n",
+             uid, getgid());
 
 #ifdef SOCKET_EXPORT_ENABLE
     if (!gpsd_service) {
