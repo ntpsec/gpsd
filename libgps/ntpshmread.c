@@ -36,10 +36,13 @@ struct shmTime *shm_get(const int unit, const bool create, const bool forall)
     shmid = shmget((key_t)(NTPD_BASE + unit), sizeof(struct shmTime),
                    (create ? IPC_CREAT : 0) | (forall ? 0666 : 0600));
     if (shmid == -1) {    // error
-        // if ENOENT (2:No such file or directory)
-        // user probably forgot to be root "Permission denied(13)"
-        (void)fprintf(stderr, "WARNING: could not open SHM(%d): %s(%d)\n",
-                      unit, strerror(errno), errno);
+        if (ENOENT != errno) {
+            // if ENOENT (2:No such file or directory)
+            // could be forgot to be root "Permission denied(13)"
+            // we scan for many uncommon, usually non-exitent, SHMs as well.
+            (void)fprintf(stderr, "WARNING: could not open SHM(%d): %s(%d)\n",
+                          unit, strerror(errno), errno);
+        }
         return NULL;
     }
     p = (struct shmTime *)shmat(shmid, 0, 0);
