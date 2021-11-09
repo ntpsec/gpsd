@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"    // must be before all includes
 
 #include <errno.h>
 #include <libgen.h>
@@ -22,9 +22,9 @@
 #include "../include/compiler.h"
 #include "../include/timespec.h"
 
-#define LEAP_NOWARNING  0x0     /* normal, no leap second warning */
+#define LEAP_NOWARNING  0x0     // normal, no leap second warning
 
-/* put a received fix time into shared memory for NTP */
+// put a received fix time into shared memory for NTP
 void ntp_write(volatile struct shmTime *shmseg,
                struct timedelta_t *td, int precision, int leap_notify)
 {
@@ -39,9 +39,10 @@ void ntp_write(volatile struct shmTime *shmseg,
      * ITU-R TF.460-6, Section 2.1, says laep seconds can be primarily
      * in Jun/Dec but may be in March or September
      */
-    (void)gmtime_r( &(td->real.tv_sec), &tm);
-    if ( 5 != tm.tm_mon && 11 != tm.tm_mon ) {
-        /* Not june, not December, no way */
+    (void)gmtime_r(&(td->real.tv_sec), &tm);
+    if (5 != tm.tm_mon &&
+        11 != tm.tm_mon ) {
+        // Not june, not December, no way
         leap_notify = LEAP_NOWARNING;
     }
 
@@ -84,5 +85,4 @@ void ntp_write(volatile struct shmTime *shmseg,
     shmseg->valid = 1;
 }
 
-/* end */
 // vim: set expandtab shiftwidth=4
