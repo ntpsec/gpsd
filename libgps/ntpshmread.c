@@ -1,11 +1,10 @@
-/* ntpshmread.c -- monitor the inner end of an ntpshmwrite.connection
+/* ntpshmread.c -- monitor the client side of an ntpshmwrite.connection
  *
  * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  *
  * Some of this was swiped from the NTPD distribution.
  *
- * FIXME: move out of libgpsd and into libgps.  Only used by ntpshmmon
  */
 
 #include "../include/gpsd_config.h"  // must be before all includes
@@ -68,7 +67,6 @@ enum segstat_t ntp_read(struct shmTime *shm_in, struct shm_stat_t *shm_stat,
 {
     volatile struct shmTime shmcopy, *shm = shm_in;
     volatile int cnt;
-
     unsigned int cns_new, rns_new;
 
     if (NULL == shm) {
