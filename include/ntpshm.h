@@ -12,7 +12,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
-#define NTPD_BASE       0x4e545030      /* "NTP0" */
+#define NTPD_BASE       0x4e545030      // "NTP0"
 
 /*
  * How to read and write fields in an NTP shared segment.
@@ -43,12 +43,12 @@ struct shmTime
     int clockTimeStampUSec;
     time_t receiveTimeStampSec;
     int receiveTimeStampUSec;
-    int leap;                   /* not leapsecond offset, a notification code */
-    int precision;              /* log(2) of source jitter */
-    int nsamples;               /* not used */
+    int leap;                   // not leapsecond offset, a notification code
+    int precision;              // log(2) of source jitter
+    int nsamples;               // not used
     volatile int valid;
-    unsigned        clockTimeStampNSec;     /* Unsigned ns timestamps */
-    unsigned        receiveTimeStampNSec;   /* Unsigned ns timestamps */
+    unsigned        clockTimeStampNSec;     // Unsigned ns timestamps
+    unsigned        receiveTimeStampNSec;   // Unsigned ns timestamps
     int             dummy[8];
 };
 
@@ -60,9 +60,9 @@ enum segstat_t {OK, NO_SEGMENT, NOT_READY, BAD_MODE, CLASH};
 
 struct shm_stat_t {
     enum segstat_t status;
-    struct timespec tvc;    /* System time when SHM read, for debug only */
-    struct timespec tvr;    /* System time at GPS time */
-    struct timespec tvt;    /* GPS time */
+    struct timespec tvc;    // System time when SHM read, for debug only
+    struct timespec tvr;    // System time at GPS time
+    struct timespec tvt;    // GPS time
     int precision;
     int leap;
 };
@@ -75,14 +75,13 @@ struct timedelta_t {
 };
 
 #define TIMEDELTA_DEFINED
-#endif /* TIMEDELTA_DEFINED */
+#endif  // TIMEDELTA_DEFINED
 
 struct shmTime *shm_get(int, bool, bool);
 extern char *ntp_name(const int);
 enum segstat_t ntp_read(struct shmTime *, struct shm_stat_t *, const bool);
 void ntp_write(volatile struct shmTime *, struct timedelta_t *, int, int);
 
-#endif /* GPSD_NTPSHM_H */
+#endif  // GPSD_NTPSHM_H
 
-/* end */
 // vim: set expandtab shiftwidth=4
