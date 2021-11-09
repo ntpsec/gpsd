@@ -252,9 +252,9 @@ int ntpshm_put(struct gps_device_t *session, volatile struct shmTime *shmseg,
     ntp_write(shmseg, td, precision, session->context->leap_notify);
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "NTP: ntpshm_put(%s,%d) %s @ %s\n",
+             "NTP: ntpshm_put(%s, %d) type %d, %s @ %s\n",
              session->gpsdata.dev.path,
-             precision,
+             precision, session->sourcetype,
              timespec_str(&td->real, real_str, sizeof(real_str)),
              timespec_str(&td->clock, clock_str, sizeof(clock_str)));
 
