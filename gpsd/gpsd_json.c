@@ -389,13 +389,14 @@ void json_tpv_dump(const gps_mask_t changed, const struct gps_device_t *session,
             if (session->pps_thread.ppsout_count) {
                 char ts_str[TIMESPEC_LEN];
                 struct timedelta_t timedelta;
-                /* ugh - de-consting this might get us in trouble someday */
+
+                // ugh - de-consting this might get us in trouble someday
                 pps_thread_ppsout(&((struct gps_device_t *)session)->pps_thread,
                                   &timedelta);
                 str_appendf(reply, replylen, ",\"pps\":%s",
                             timespec_str(&timedelta.clock, ts_str,
                                          sizeof(ts_str)));
-                /* TODO: add PPS precision to JSON output */
+                // TODO: add PPS precision to JSON output
             }
             str_appendf(reply, replylen,
                         ",\"sor\":%s,\"chars\":%lu,\"sats\":%2d,"

@@ -1887,13 +1887,14 @@ static int handle_gpsd_request(struct subscriber_t *sub, const char *buf)
 static void ship_pps_message(struct gps_device_t *session,
                              struct timedelta_t *td)
 {
+    // why recompute precision here?  use precision from shmTime
     int precision = -20;
     char buf[GPS_JSON_RESPONSE_MAX];
     char ts_str[TIMESPEC_LEN];
 
     if (SOURCE_USB == session->sourcetype ||
         SOURCE_ACM == session->sourcetype) {
-        /* PPS over USB not so good */
+        // PPS over USB not so good
         precision = -10;
     }
 
@@ -1925,6 +1926,8 @@ static void ship_pps_message(struct gps_device_t *session,
     /*
      * PPS receipt resets the device's timeout.  This keeps PPS-only
      * devices, which never deliver in-band data, from timing out.
+     *
+     * FIXME: this only works when there is a JSON client active
      */
     (void)clock_gettime(CLOCK_REALTIME, &session->gpsdata.online);
 }
