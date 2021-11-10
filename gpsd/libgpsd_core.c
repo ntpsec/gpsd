@@ -332,6 +332,8 @@ void gpsd_init(struct gps_device_t *session, struct gps_context_t *context,
     session->gpsdata.dev.mincycle = (timespec_t){1, 0};
     session->gpsdata.dev.parity = ' ';          // will be E, N, or O
     session->servicetype = SERVICE_UNKNOWN;     // gpsd_open() sets this
+    session->shm_clock_unit = -1;
+    session->shm_pps_unit = -1;
     session->sourcetype = SOURCE_UNKNOWN;       // gpsd_open() sets this
     gps_clear_att(&session->gpsdata.attitude);
     gps_clear_dop(&session->gpsdata.dop);

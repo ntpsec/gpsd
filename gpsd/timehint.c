@@ -128,24 +128,24 @@ static volatile struct shmTime *getShmTime(struct gps_context_t *context,
      * well-secured Linux systems.  This is why ntpshm_context_init() has to be
      * called before privilege-dropping.
      */
-    shmid = shmget((key_t) (NTPD_BASE + unit),
+    shmid = shmget((key_t)(NTPD_BASE + unit),
                    sizeof(struct shmTime), (int)(IPC_CREAT | perms));
     if (shmid == -1) {
         GPSD_LOG(LOG_ERROR, &context->errout,
-                 "NTP: shmget(%ld, %zd, %o) fail: %s(%d)\n",
-                 (long int)(NTPD_BASE + unit), sizeof(struct shmTime),
+                 "NTP:SHM: shmget(NTP%c, %zd, %o) fail: %s(%d)\n",
+                 '0' + unit, sizeof(struct shmTime),
                  (int)perms, strerror(errno), errno);
         return NULL;
     }
     p = (struct shmTime *)shmat(shmid, 0, 0);
     if ((int)(long)p == -1) {
         GPSD_LOG(LOG_ERROR, &context->errout,
-                 "NTP: shmat failed: %s(%d)\n",
-                 strerror(errno), errno);
+                 "NTP:SHM: shmat failed,  unit %d: %s(%d)\n",
+                 unit, strerror(errno), errno);
         return NULL;
     }
     GPSD_LOG(LOG_PROG, &context->errout,
-             "NTP: shmat(%d,0,0) succeeded, segment %d\n",
+             "NTP:SHM: shmat(%d,0,0) succeeded, unit %d\n",
              shmid, unit);
     return p;
 }
@@ -153,28 +153,36 @@ static volatile struct shmTime *getShmTime(struct gps_context_t *context,
 // Attach all NTP SHM segments. Called once at startup, while still root.
 void ntpshm_context_init(struct gps_context_t *context)
 {
-    int i;
+    int unit;
 
-    for (i = 0; i < NTPSHMSEGS; i++) {
-        // Only grab the first two when running as root.
-        // why not all?
-        if (2 <= i ||
-            0 == getuid()) {
-            context->shmTime[i] = getShmTime(context, i);
-        }
+    // Only grab the first two when running as root.
+    // then grab all the rest
+    if (0 == getuid()) {
+	unit  = 0;
+    } else {
+	unit  = 2;
+    }
+    for (; unit < NTPSHMSEGS; unit++) {
+	context->shmTime[unit] = getShmTime(context, unit);
     }
     memset(context->shmTimeInuse, 0, sizeof(context->shmTimeInuse));
 }
 
-// allocate NTP SHM segment.  return its segment number, or -1
-static volatile struct shmTime *ntpshm_alloc(struct gps_context_t *context)
+/* allocate NTP SHM segment
+ * Return: Allocated pointer
+ *         NULL on failure
+ */
+static volatile struct shmTime *ntpshm_alloc(struct gps_device_t *session)
 {
-    int i;
+    int unit;
+    struct gps_context_t *context = session->context;
 
-    for (i = 0; i < NTPSHMSEGS; i++) {
-        if (NULL != context->shmTime[i] &&
-            !context->shmTimeInuse[i]) {
-            context->shmTimeInuse[i] = true;
+    // look at all possible SHM slots
+    for (unit = 0; unit < NTPSHMSEGS; unit++) {
+        // look for unused slot
+        if (NULL != context->shmTime[unit] &&
+            !context->shmTimeInuse[unit]) {
+            context->shmTimeInuse[unit] = true;
 
             /*
              * In case this segment gets sent to ntpd before an
@@ -184,30 +192,31 @@ static volatile struct shmTime *ntpshm_alloc(struct gps_context_t *context)
              * from declaring the GPS a falseticker before it gets
              * all its marbles together.
              */
-            memset((void *)context->shmTime[i], 0, sizeof(struct shmTime));
-            context->shmTime[i]->mode = 1;
-            context->shmTime[i]->leap = LEAP_NOTINSYNC;
-            context->shmTime[i]->precision = -20;  // initially 1 micro sec
-            context->shmTime[i]->nsamples = 3;     // stages of median filter
+            memset((void *)context->shmTime[unit], 0, sizeof(struct shmTime));
+            context->shmTime[unit]->mode = 1;
+            context->shmTime[unit]->leap = LEAP_NOTINSYNC;
+            context->shmTime[unit]->precision = -20;  // initially 1 micro sec
+            context->shmTime[unit]->nsamples = 3;     // stages of median filter
             GPSD_LOG(LOG_PROG, &context->errout,
-                     "NTP:PPS: using SHM(%d)\n", i);
+                     "NTP:SHM: %s, sourcetype %d using SHM(%d)\n",
+		     session->gpsdata.dev.path, session->sourcetype, unit);
 
-            return context->shmTime[i];
+            return context->shmTime[unit];
         }
     }
 
     return NULL;
 }
 
-// free NTP SHM segment
+// free NTP an SHM segment
 static bool ntpshm_free(struct gps_context_t * context,
                         volatile struct shmTime *s)
 {
-    int i;
+    int unit;
 
-    for (i = 0; i < NTPSHMSEGS; i++)
-        if (s == context->shmTime[i]) {
-            context->shmTimeInuse[i] = false;
+    for (unit = 0; unit < NTPSHMSEGS; unit++)
+        if (s == context->shmTime[unit]) {
+            context->shmTimeInuse[unit] = false;
             return true;
         }
 
@@ -217,6 +226,8 @@ static bool ntpshm_free(struct gps_context_t * context,
 void ntpshm_session_init(struct gps_device_t *session)
 {
     // mark NTPD shared memory segments as unused
+    session->shm_clock_unit = -1;
+    session->shm_pps_unit = -1;
     session->shm_clock = NULL;
     session->shm_pps = NULL;
 }
@@ -232,7 +243,7 @@ int ntpshm_put(struct gps_device_t *session, volatile struct shmTime *shmseg,
     int precision = -20;    // default precision, 1 micro sec
 
     if (NULL == shmseg) {
-        GPSD_LOG(LOG_RAW, &session->context->errout, "NTP:PPS: missing shm\n");
+        GPSD_LOG(LOG_RAW, &session->context->errout, "NTP:SHM: missing shm\n");
         return 0;
     }
 
@@ -252,7 +263,7 @@ int ntpshm_put(struct gps_device_t *session, volatile struct shmTime *shmseg,
     ntp_write(shmseg, td, precision, session->context->leap_notify);
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "NTP: ntpshm_put(%s, %d) type %d, %s @ %s\n",
+             "NTP:SHM: ntpshm_put(%s, %d) type %d, %s @ %s\n",
              session->gpsdata.dev.path,
              precision, session->sourcetype,
              timespec_str(&td->real, real_str, sizeof(real_str)),
@@ -294,19 +305,19 @@ static void init_hook(struct gps_device_t *session)
 
     if (0 != access(chrony_path, F_OK)) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                "PPS:%s chrony socket %s doesn't exist\n",
+                "NTP:%s chrony socket %s doesn't exist\n",
                 session->gpsdata.dev.path, chrony_path);
     } else {
         session->chronyfd = netlib_localsocket(chrony_path, SOCK_DGRAM);
         if (0 > session->chronyfd) {
             GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "PPS:%s connect chrony socket failed: %s, error: %d, "
+                     "NTP:%s connect chrony socket failed: %s, error: %d, "
                      "%s(%d)\n",
                      session->gpsdata.dev.path,
                      chrony_path, session->chronyfd, strerror(errno), errno);
         } else {
             GPSD_LOG(LOG_RAW, &session->context->errout,
-                     "PPS:%s using chrony socket: %s\n",
+                     "NTP:%s using chrony socket: %s\n",
                      session->gpsdata.dev.path, chrony_path);
         }
     }
@@ -355,7 +366,7 @@ static void chrony_send(struct gps_device_t *session, struct timedelta_t *td)
     sample._pad = 0;
 
     GPSD_LOG(LOG_RAW, &session->context->errout,
-             "PPS chrony_send %s @ %s Offset: %0.9f\n",
+             "NTP: chrony_send %s @ %s Offset: %0.9f\n",
              timespec_str(&td->real, real_str, sizeof(real_str)),
              timespec_str(&td->clock, clock_str, sizeof(clock_str)),
              sample.offset);
@@ -431,18 +442,29 @@ void ntpshm_link_deactivate(struct gps_device_t *session)
 // set up ntpshm storage for a session
 void ntpshm_link_activate(struct gps_device_t *session)
 {
-    // don't talk to NTP when we're running inside the test harness
-    if (SOURCE_PTY == session->sourcetype) {
+    /* don't talk to NTP when we're:
+     *   reading from a file
+     *   reading from a pipe
+     *   reading from a remote gpsd
+     *   running inside the test harness (PTY)
+     *   over TCP or UDP
+     */
+    if (SOURCE_BLOCKDEV == session->sourcetype ||
+        SOURCE_GPSD == session->sourcetype ||
+        SOURCE_PIPE == session->sourcetype ||
+        SOURCE_PTY == session->sourcetype ||
+        SOURCE_TCP == session->sourcetype ||
+        SOURCE_UDP == session->sourcetype) {
         return;
     }
 
     if (SOURCE_PPS != session->sourcetype) {
         // allocate a shared-memory segment for "NMEA" time data
-        session->shm_clock = ntpshm_alloc(session->context);
+        session->shm_clock = ntpshm_alloc(session);
 
         if (NULL == session->shm_clock) {
             GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "NTP: ntpshm_alloc() failed\n");
+                     "NTP:SHM: ntpshm_alloc(shm_clock) failed\n");
             return;
         }
     }
@@ -455,10 +477,10 @@ void ntpshm_link_activate(struct gps_device_t *session)
          * for the 1pps time data and launch a thread to capture the 1pps
          * transitions
          */
-        session->shm_pps = ntpshm_alloc(session->context);
+        session->shm_pps = ntpshm_alloc(session);
         if (NULL == session->shm_pps) {
             GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "PPS: ntpshm_alloc(1) failed\n");
+                     "NTP:SHM: ntpshm_alloc(shm_pps) failed\n");
         } else {
             init_hook(session);
             session->pps_thread.report_hook = report_hook;
@@ -472,9 +494,10 @@ void ntpshm_link_activate(struct gps_device_t *session)
             if (0 == strcmp(session->pps_thread.devicename, MAGIC_HAT_GPS) ||
                 0 == strcmp(session->pps_thread.devicename, MAGIC_LINK_GPS)) {
                 char *first_pps = pps_get_first();
-                if (access(first_pps, R_OK | W_OK) == 0)
+                if (0 == access(first_pps, R_OK | W_OK)) {
                         session->pps_thread.devicename = first_pps;
                 }
+            }
 #endif  // MAGIC_HAT_ENABLE
             pps_thread_activate(&session->pps_thread);
         }

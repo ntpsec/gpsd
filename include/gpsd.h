@@ -91,6 +91,7 @@ extern "C" {
  * 3.23.2~dev
  *      add ntrip_parse_url(), ntrip_close()
  *      add host, stream_time, to ntrip_stream_t
+ *      add shm_clock_unit and shm_pps_unit to device_t
  */
 
 #define JSON_DATE_MAX   24      /* ISO8601 timestamp with 2 decimal places */
@@ -560,6 +561,8 @@ struct gps_device_t {
     timespec_t ts_startCurrentBaud;
     unsigned long chars;              // characters in the cycle
     bool ship_to_ntpd;
+    int shm_clock_unit;
+    int shm_pps_unit;
     volatile struct shmTime *shm_clock;
     volatile struct shmTime *shm_pps;
     int chronyfd;                       /* for talking to chrony */
