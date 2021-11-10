@@ -169,10 +169,10 @@ void ntpshm_context_init(struct gps_context_t *context)
 }
 
 /* allocate NTP SHM segment
- * Return: Allocated pointer
- *         NULL on failure
+ * Return: Allocated unit
+ *         -1 on failure
  */
-static volatile struct shmTime *ntpshm_alloc(struct gps_device_t *session)
+static int ntpshm_alloc(struct gps_device_t *session)
 {
     int unit;
     struct gps_context_t *context = session->context;
@@ -201,11 +201,12 @@ static volatile struct shmTime *ntpshm_alloc(struct gps_device_t *session)
                      "NTP:SHM: %s, sourcetype %d using SHM(%d)\n",
 		     session->gpsdata.dev.path, session->sourcetype, unit);
 
-            return context->shmTime[unit];
+            return unit;
         }
     }
 
-    return NULL;
+    // no SHM free
+    return -1;
 }
 
 // free NTP an SHM segment
@@ -442,6 +443,8 @@ void ntpshm_link_deactivate(struct gps_device_t *session)
 // set up ntpshm storage for a session
 void ntpshm_link_activate(struct gps_device_t *session)
 {
+    struct gps_context_t *context = session->context;
+
     /* don't talk to NTP when we're:
      *   reading from a file
      *   reading from a pipe
@@ -460,13 +463,15 @@ void ntpshm_link_activate(struct gps_device_t *session)
 
     if (SOURCE_PPS != session->sourcetype) {
         // allocate a shared-memory segment for "NMEA" time data
-        session->shm_clock = ntpshm_alloc(session);
+        session->shm_clock_unit = ntpshm_alloc(session);
 
-        if (NULL == session->shm_clock) {
+        if (0 > session->shm_clock_unit) {
+	    session->shm_clock = NULL;
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "NTP:SHM: ntpshm_alloc(shm_clock) failed\n");
             return;
         }
+        session->shm_clock = context->shmTime[session->shm_clock_unit];
     }
 
     if (SOURCE_USB == session->sourcetype ||
@@ -477,11 +482,13 @@ void ntpshm_link_activate(struct gps_device_t *session)
          * for the 1pps time data and launch a thread to capture the 1pps
          * transitions
          */
-        session->shm_pps = ntpshm_alloc(session);
-        if (NULL == session->shm_pps) {
+        session->shm_pps_unit = ntpshm_alloc(session);
+        if (0 > session->shm_pps_unit) {
+	    session->shm_pps = NULL;
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "NTP:SHM: ntpshm_alloc(shm_pps) failed\n");
         } else {
+	    session->shm_pps = context->shmTime[session->shm_pps_unit];
             init_hook(session);
             session->pps_thread.report_hook = report_hook;
 #ifdef MAGIC_HAT_ENABLE
