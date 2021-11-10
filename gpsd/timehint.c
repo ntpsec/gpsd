@@ -197,9 +197,6 @@ static int ntpshm_alloc(struct gps_device_t *session)
             context->shmTime[unit]->leap = LEAP_NOTINSYNC;
             context->shmTime[unit]->precision = -20;  // initially 1 micro sec
             context->shmTime[unit]->nsamples = 3;     // stages of median filter
-            GPSD_LOG(LOG_PROG, &context->errout,
-                     "NTP:SHM: %s, sourcetype %d using SHM(%d)\n",
-		     session->gpsdata.dev.path, session->sourcetype, unit);
 
             return unit;
         }
@@ -239,6 +236,7 @@ int ntpshm_put(struct gps_device_t *session, volatile struct shmTime *shmseg,
 {
     char real_str[TIMESPEC_LEN];
     char clock_str[TIMESPEC_LEN];
+    int unit;
 
     // Any NMEA will be about -1 or -2. Garmin GPS-18/USB is around -6 or -7
     int precision = -20;    // default precision, 1 micro sec
@@ -250,6 +248,7 @@ int ntpshm_put(struct gps_device_t *session, volatile struct shmTime *shmseg,
 
     // FIXME: make NMEA precision -1
     if (shmseg == session->shm_pps) {
+	unit = session->shm_pps_unit;
         // precision is a floor so do not make it tight
         if (SOURCE_USB == session->sourcetype ||
             SOURCE_ACM == session->sourcetype) {
@@ -259,14 +258,18 @@ int ntpshm_put(struct gps_device_t *session, volatile struct shmTime *shmseg,
             // likely PPS over serial, precision = -20, 1 micro sec
             precision = -20;
         }
+    } else {
+        // not PPS, so serial time
+	unit = session->shm_clock_unit;
+	precision = -1;
     }
 
     ntp_write(shmseg, td, precision, session->context->leap_notify);
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "NTP:SHM: ntpshm_put(%s, %d) type %d, %s @ %s\n",
+             "NTP:SHM: ntpshm_put(NTP%d, %d) %s, %s @ %s\n",
+             unit, precision,
              session->gpsdata.dev.path,
-             precision, session->sourcetype,
              timespec_str(&td->real, real_str, sizeof(real_str)),
              timespec_str(&td->clock, clock_str, sizeof(clock_str)));
 
@@ -471,6 +474,11 @@ void ntpshm_link_activate(struct gps_device_t *session)
                      "NTP:SHM: ntpshm_alloc(shm_clock) failed\n");
             return;
         }
+	GPSD_LOG(LOG_PROG, &context->errout,
+		 "NTP:SHM: ntpshm_alloc(%s), sourcetype %d "
+		 "shm_clock using SHM(%d)\n",
+		 session->gpsdata.dev.path, session->sourcetype,
+		 session->shm_clock_unit);
         session->shm_clock = context->shmTime[session->shm_clock_unit];
     }
 
@@ -488,6 +496,11 @@ void ntpshm_link_activate(struct gps_device_t *session)
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "NTP:SHM: ntpshm_alloc(shm_pps) failed\n");
         } else {
+            GPSD_LOG(LOG_PROG, &context->errout,
+                     "NTP:SHM: ntpshm_alloc(%s), sourcetype %d "
+                     "shm_pps using SHM(%d)\n",
+		     session->gpsdata.dev.path, session->sourcetype,
+		     session->shm_pps_unit);
 	    session->shm_pps = context->shmTime[session->shm_pps_unit];
             init_hook(session);
             session->pps_thread.report_hook = report_hook;
