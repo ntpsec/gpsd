@@ -1338,7 +1338,7 @@ int main(int argc, char **argv)
 
 
     if (serial) {
-        /* this guard suppresses a warning on Bluetooth devices */
+        // this guard suppresses a warning on Bluetooth devices
         if (SOURCE_RS232 == session.sourcetype ||
             SOURCE_ACM == session.sourcetype ||
             SOURCE_USB == session.sourcetype ) {
@@ -1350,13 +1350,14 @@ int main(int argc, char **argv)
              * there is a static "first PPS", and we have access because
              * we're root, assume we want to use KPPS.
              */
-            if (strcmp(session.pps_thread.devicename, MAGIC_HAT_GPS) == 0
-                || strcmp(session.pps_thread.devicename, MAGIC_LINK_GPS) == 0) {
-                char *first_pps = pps_get_first();
-                if (access(first_pps, R_OK | W_OK) == 0)
+            if (0 == strcmp(session.pps_thread.devicename, MAGIC_HAT_GPS) ||
+                0 == strcmp(session.pps_thread.devicename, MAGIC_LINK_GPS)) {
+                const char *first_pps = pps_get_first();
+                if (0 == access(first_pps, R_OK | W_OK)) {
                         session.pps_thread.devicename = first_pps;
                 }
-            #endif /* MAGIC_HAT_ENABLE */
+            }
+            #endif  // MAGIC_HAT_ENABLE
             pps_thread_activate(&session.pps_thread);
         }
     } else if (source.device != NULL) {

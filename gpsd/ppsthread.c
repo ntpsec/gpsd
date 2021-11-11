@@ -222,10 +222,11 @@ int pps_check_fake(const char *name) {
 }
 
 // Get first "real" PPS device, skipping the fake, if any
-char *pps_get_first(void)
+const char *pps_get_first(void)
 {
-    if (pps_check_fake("pps0"))
+    if (pps_check_fake("pps0")) {
         return "/dev/pps1";
+    }
     return "/dev/pps0";
 }
 #endif    // __linux__

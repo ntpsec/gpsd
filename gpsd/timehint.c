@@ -513,9 +513,14 @@ void ntpshm_link_activate(struct gps_device_t *session)
              */
             if (0 == strcmp(session->pps_thread.devicename, MAGIC_HAT_GPS) ||
                 0 == strcmp(session->pps_thread.devicename, MAGIC_LINK_GPS)) {
-                char *first_pps = pps_get_first();
+                const char *first_pps = pps_get_first();
                 if (0 == access(first_pps, R_OK | W_OK)) {
                         session->pps_thread.devicename = first_pps;
+                } else {
+		    GPSD_LOG(LOG_ERROR, &context->errout,
+			     "NTP:SHM: ntpshm_link_activate() unable to "
+                             "read %s. %s(%d)\n",
+			     first_pps, strerror(errno), errno);
                 }
             }
 #endif  // MAGIC_HAT_ENABLE
