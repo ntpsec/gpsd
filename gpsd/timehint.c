@@ -515,7 +515,11 @@ void ntpshm_link_activate(struct gps_device_t *session)
                 0 == strcmp(session->pps_thread.devicename, MAGIC_LINK_GPS)) {
                 const char *first_pps = pps_get_first();
                 if (0 == access(first_pps, R_OK | W_OK)) {
-                        session->pps_thread.devicename = first_pps;
+		    session->pps_thread.devicename = first_pps;
+		    GPSD_LOG(LOG_PROG, &context->errout,
+			     "NTP:SHM: ntpshm_link_activate() MAGIC_HAT "
+                             "using %s for SHM(%d)\n", first_pps,
+			     session->shm_pps_unit);
                 } else {
 		    GPSD_LOG(LOG_ERROR, &context->errout,
 			     "NTP:SHM: ntpshm_link_activate() unable to "
