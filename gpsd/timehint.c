@@ -206,19 +206,18 @@ static int ntpshm_alloc(struct gps_device_t *session)
     return -1;
 }
 
-// free NTP an SHM segment
-static bool ntpshm_free(struct gps_context_t * context,
-                        volatile struct shmTime *s)
+/* free an NTP SHM segment
+ *
+ * Return: void
+ */
+static void ntpshm_free(struct gps_context_t * context, int unit)
 {
-    int unit;
 
-    for (unit = 0; unit < NTPSHMSEGS; unit++)
-        if (s == context->shmTime[unit]) {
-            context->shmTimeInuse[unit] = false;
-            return true;
-        }
+    if (VALID_UNIT(unit)) {
+	context->shmTimeInuse[unit] = false;
+    }
 
-    return false;
+    return;
 }
 
 void ntpshm_session_init(struct gps_device_t *session)
@@ -429,16 +428,19 @@ static char *report_hook(volatile struct pps_thread_t *pps_thread,
 // release ntpshm storage for a session
 void ntpshm_link_deactivate(struct gps_device_t *session)
 {
-    if (NULL != session->shm_clock) {
-        (void)ntpshm_free(session->context, session->shm_clock);
+    if (VALID_UNIT(session->shm_clock_unit)) {
+        ntpshm_free(session->context, session->shm_clock_unit);
+        session->shm_clock_unit = -1;
         session->shm_clock = NULL;
     }
-    if (NULL != session->shm_pps) {
+    if (VALID_UNIT(session->shm_pps_unit)) {
         pps_thread_deactivate(&session->pps_thread);
         if (-1 != session->chronyfd) {
+            // how do we know chronyfd is related to this shm_pps_unit?
             (void)close(session->chronyfd);
         }
-        (void)ntpshm_free(session->context, session->shm_pps);
+        ntpshm_free(session->context, session->shm_pps_unit);
+        session->shm_pps_unit = -1;
         session->shm_pps = NULL;
     }
 }
