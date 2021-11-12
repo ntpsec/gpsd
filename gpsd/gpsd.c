@@ -2286,7 +2286,19 @@ int main(int argc, char *argv[])
     }
 #endif  // CONTROL_SOCKET_ENABLE || SYSTEMD_ENABLE
 
-    // TODO, a dump of all options here at LOG_xx would be nice.
+    // log command line, maybe log all parsed options too?
+    if (LOG_INF <= context.errout.debug) {
+        char buf[2048] = "";
+        int cnt;
+
+        buf[0] = '\0';
+        for (cnt = 0; cnt < argc; cnt++) {
+            (void)strlcat(buf, argv[cnt], sizeof(buf));
+            (void)strlcat(buf, " ", sizeof(buf));
+        }
+
+	GPSD_LOG(LOG_INF, &context.errout, "Command line: %s\n", buf);
+    }
 
     // might be time to daemonize
     if (go_background) {
