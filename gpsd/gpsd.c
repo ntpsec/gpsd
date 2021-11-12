@@ -141,9 +141,9 @@ static bool listen_global = false;
 static int maxfd;
 #ifdef FORCE_NOWAIT
     static bool nowait = true;
-#else /* FORCE_NOWAIT */
+#else  // FORCE_NOWAIT
     static bool nowait = false;
-#endif /* FORCE_NOWAIT */
+#endif  // FORCE_NOWAIT
 static jmp_buf restartbuf;
 #if defined(SYSTEMD_ENABLE)
     static int sd_socket_count = 0;
@@ -176,22 +176,22 @@ static void typelist(void)
         if (COMMENT_PACKET == (*dp)->packet_type) {
             continue;
         }
-        if (NULL != (*dp)->mode_switcher) {
+        if (NULL == (*dp)->mode_switcher) {
+            (void)fputc('\t', stdout);
+        } else {
             (void)fputs("n\t", stdout);
-        } else {
-            (void)fputc('\t', stdout);
         }
-        if (NULL != (*dp)->speed_switcher) {
+        if (NULL == (*dp)->speed_switcher) {
+            (void)fputc('\t', stdout);
+        } else {
             (void)fputs("b\t", stdout);
-        } else {
-            (void)fputc('\t', stdout);
         }
-        if ((*dp)->rate_switcher != NULL) {
+        if (NULL == (*dp)->rate_switcher) {
+            (void)fputc('\t', stdout);
+        } else {
             (void)fputs("c\t", stdout);
-        } else {
-            (void)fputc('\t', stdout);
         }
-        if ((*dp)->packet_type > NMEA_PACKET) {
+        if (NMEA_PACKET < (*dp)->packet_type) {
             (void)fputs("*\t", stdout);
         } else {
             (void)fputc('\t', stdout);
@@ -379,10 +379,10 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
 
         memset((char *)&sat.sa_in, 0, sin_len);
         sat.sa_in.sin_family = (sa_family_t) AF_INET;
-        if (!listen_global) {
-            sat.sa_in.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-        } else {
+        if (listen_global) {
             sat.sa_in.sin_addr.s_addr = htonl(INADDR_ANY);
+        } else {
+            sat.sa_in.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
         }
         sat.sa_in.sin_port = htons(port);
 
@@ -404,10 +404,10 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
 
         memset((char *)&sat.sa_in6, 0, sin_len);
         sat.sa_in6.sin6_family = (sa_family_t) AF_INET6;
-        if (!listen_global) {
-            sat.sa_in6.sin6_addr = in6addr_loopback;
-        } else {
+        if (listen_global) {
             sat.sa_in6.sin6_addr = in6addr_any;
+        } else {
+            sat.sa_in6.sin6_addr = in6addr_loopback;
         }
         sat.sa_in6.sin6_port = htons(port);
 
@@ -779,7 +779,7 @@ bool gpsd_add_device(const char *device_name, bool flag_nowait)
     bool ret = false;
 #ifdef SOCKET_EXPORT_ENABLE
     char tbuf[JSON_DATE_MAX+1];
-#endif /* SOCKET_EXPORT_ENABLE */
+#endif  // SOCKET_EXPORT_ENABLE
 
     // we can't handle paths longer than GPS_PATH_MAX, so don't try
     if (GPS_PATH_MAX <= strlen(device_name)) {
@@ -789,18 +789,18 @@ bool gpsd_add_device(const char *device_name, bool flag_nowait)
         return false;
     }
     // stash devicename away for probing when the first client connects
-    for (devp = devices; devp < devices + MAX_DEVICES; devp++)
+    for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
         if (!allocated_device(devp)) {
             gpsd_init(devp, &context, device_name);
             ntpshm_session_init(devp);
             GPSD_LOG(LOG_INF, &context.errout,
                      "stashing device %s at slot %d\n",
                      device_name, (int)(devp - devices));
-            if (!flag_nowait) {
+            if (flag_nowait) {
+                ret = open_device(devp);
+            } else {
                 devp->gpsdata.gps_fd = UNALLOCATED_FD;
                 ret = true;
-            } else {
-                ret = open_device(devp);
             }
 #ifdef SOCKET_EXPORT_ENABLE
             notify_watchers(devp, true, false,
@@ -811,6 +811,7 @@ bool gpsd_add_device(const char *device_name, bool flag_nowait)
 #endif  // SOCKET_EXPORT_ENABLE
             break;
         }
+    }
     return ret;
 }
 
@@ -943,7 +944,7 @@ static void handle_control(int sfd, char *buf)
                     GPSD_LOG(LOG_INF, &context.errout,
                              "<= control(%d): writing to %s \n", sfd,
                              stash);
-                    if (write(devp->gpsdata.gps_fd, eq, strlen(eq)) <= 0) {
+                    if (0 >= write(devp->gpsdata.gps_fd, eq, strlen(eq))) {
                         GPSD_LOG(LOG_WARN, &context.errout,
                                  "<= control(%d): write to device failed\n",
                                  sfd);
@@ -1052,8 +1053,9 @@ static bool privileged_user(struct gps_device_t *device)
     int subcount = 0;
 
     for (sub = subscribers; sub < subscribers + MAX_CLIENTS; sub++) {
-        if (subscribed(sub, device))
+        if (subscribed(sub, device)) {
             subcount++;
+        }
     }
     /*
      * Yes, zero subscribers is possible. For example, gpsctl talking
@@ -1142,6 +1144,7 @@ static void json_devicelist_dump(char *reply, size_t replylen)
 {
     struct gps_device_t *devp;
     (void)strlcpy(reply, "{\"class\":\"DEVICES\",\"devices\":[", replylen);
+
     for (devp = devices; devp < devices + MAX_DEVICES; devp++)
         if (allocated_device(devp) &&
             strlen(reply) + strlen(devp->gpsdata.dev.path) + 3 <
@@ -1752,7 +1755,7 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
                         device->gpsdata.dev.path,
                         (long long)td.real.tv_sec, td.real.tv_nsec,
                         (long long)td.clock.tv_sec, td.clock.tv_nsec);
-#endif /* SOCKET_EXPORT_ENABLE */
+#endif  // SOCKET_EXPORT_ENABLE
 
     }
 
@@ -1868,8 +1871,9 @@ static int handle_gpsd_request(struct subscriber_t *sub, const char *buf)
     char reply[GPS_JSON_RESPONSE_MAX + 1];
 
     reply[0] = '\0';
-    if (buf[0] == '?') {
+    if ('?' == buf[0]) {
         const char *end;
+
         for (end = buf; *buf != '\0'; buf = end)
             if (isspace((unsigned char) *buf)) {
                 end = buf + 1;
@@ -2102,7 +2106,7 @@ int main(int argc, char *argv[])
 #else
         ch = getopt(argc, argv, optstring);
 #endif
-        if (ch == -1) {
+        if (-1 == ch) {
             break;
         }
 
@@ -2119,7 +2123,7 @@ int main(int argc, char *argv[])
         case 'F':
             control_socket = optarg;
             break;
-#endif /* CONTROL_SOCKET_ENABLE */
+#endif  // CONTROL_SOCKET_ENABLE
         case 'f':
             // framing
             if (3 == strlen(optarg) &&
@@ -2374,12 +2378,12 @@ int main(int argc, char *argv[])
         GPSD_LOG(LOG_PROG, &context.errout,
                  "successfully connected to the DBUS system bus\n");
     }
-#endif /* defined(DBUS_EXPORT_ENABLE) */
+#endif  // defined(DBUS_EXPORT_ENABLE)
 
 #ifdef SHM_EXPORT_ENABLE
     // create the shared segment as root so readers can't mess with it
     (void)shm_acquire(&context);
-#endif /* SHM_EXPORT_ENABLE */
+#endif  // SHM_EXPORT_ENABLE
 
     /*
      * We open devices specified on the command line *before* dropping
@@ -2388,12 +2392,11 @@ int main(int argc, char *argv[])
      */
     in_restart = false;
     for (i = optind; i < argc; i++) {
-      if (!gpsd_add_device(argv[i], nowait)) {
-            GPSD_LOG(LOG_ERROR, &context.errout,
-                     "initial GPS device %s open failed\n",
-                     argv[i]);
-        } else {
+      if (gpsd_add_device(argv[i], nowait)) {
             device_opened = true;
+        } else {
+            GPSD_LOG(LOG_ERROR, &context.errout,
+                     "initial GPS device %s open failed\n", argv[i]);
         }
     }
 
@@ -2499,7 +2502,7 @@ int main(int argc, char *argv[])
          * handler initialization, they're unioned on some architectures.
          */
         sa.sa_restorer = NULL;
-#endif /* __COVERITY__ */
+#endif  // __COVERITY__
         sa.sa_handler = onsig;
         (void)sigfillset(&sa.sa_mask);
         (void)sigaction(SIGHUP, &sa, NULL);
