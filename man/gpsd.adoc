@@ -1,5 +1,5 @@
 = gpsd(8)
-:date: 4 February 2021
+:date: 12 November 2021
 :keywords: gps, gpsd, gnss
 :manmanual: GPSD Documentation
 :mansource: GPSD, Version {gpsdver}
@@ -191,7 +191,7 @@ recognized, for a total of four:
 
 Local serial or USB device::
   A normal Unix device name of a serial or USB device to which a sensor
-  is attached. Example: */dev/ttyUSB0*.
+  is attached. Examples: */dev/ttyS0*, or */dev/ttyUSB0*.
 Local PPS device::
   A normal Unix device name of a PPS device to which a PPS source is
   attached. The device name must start with "/dev/pps" and a local
@@ -505,6 +505,14 @@ state change messages in the logfile. In addition, if your kernel
 provides the RFC 2783 kernel PPS API then *gpsd* will use that for extra
 accuracy.
 
+*gpsd* communicates with *ntpd* using shared memory segments (SHMs).
+The SHMs are numbered SHM(0) to SHM(7). and have a name (key) of
+NTP0 to NTP7.  The first local time source on the command line may
+use NTP0 and NTP1.  The second may use NTP2 and NTP3, etc.
+
+You can see the output of *gpsd* to *ntpd* in real time with the
+*ntpshmmon* command.
+
 Detailed instructions for using GPSD to set up a high-quality time
 service can be found among the documentation on the GPSD website.
 
@@ -702,12 +710,15 @@ This manual page by Eric S. Raymond <esr@thyrsus.com>.
 
 == SEE ALSO
 
-*gpsd*(8), *gpsctl*(1), *gps*(1), *libgps*(3), *libgpsmm*(3), *gpsprof*(1),
-*gpsfake*(1). gpsdctl(8), gpsd_json(5), *gpscat(1)
+*gpsd*(8), *gpsctl*(1), *gps*(1), *gpsprof*(1), *gpsfake*(1).  *gpscat(1),
+*ntpshmmon*(1), *libgps*(3), *libgpsmm*(3), *gpsd_json*(5),  *gpsdctl*(8),
+*ntpd*(8)
 
 == RESOURCES
 
 *Project web site:* {gpsdweb}
+*GPSD Time Service HOWTO:* {gpsdweb}gpsd-time-service-howto.html
+*Introduction to Time Service:* {gpsdweb}time-service-intro.html
 
 == COPYING
 
