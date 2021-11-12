@@ -753,10 +753,25 @@ static bool open_device( struct gps_device_t *device)
          * 1PPS derived time data to ntpd/chrony.
          */
         ntpshm_link_activate(device);
-        GPSD_LOG(LOG_INF, &context.errout,
-                 "SHM: ntpshm_link_activate(%s): %s\n",
-                 device->gpsdata.dev.path,
-                 device->shm_clock == NULL ? "PPS" : "Clock");
+        if (LOG_INF <= context.errout.debug) {
+            char buf1[10], buf2[10];
+
+            if (VALID_UNIT(device->shm_clock_unit)) {
+                (void)snprintf(buf1, sizeof(buf1), "NTP%d",
+                               device->shm_clock_unit);
+            } else {
+                buf1[0] = '\0';
+            }
+            if (VALID_UNIT(device->shm_pps_unit)) {
+                (void)snprintf(buf2, sizeof(buf2), "NTP%d",
+                               device->shm_pps_unit);
+            } else {
+                buf2[0] = '\0';
+            }
+            GPSD_LOG(LOG_INF, &context.errout,
+             "SHM: ntpshm_link_activate(%s): %.4s, %.4s\n",
+                     device->gpsdata.dev.path, buf1, buf2);
+        }
 
         if (PLACEHOLDING_FD == activated) {
             // it is a /dev/ppsX, or something, no need to wait on it
@@ -2301,7 +2316,7 @@ int main(int argc, char *argv[])
             (void)strlcat(buf, " ", sizeof(buf));
         }
 
-	GPSD_LOG(LOG_INF, &context.errout, "Command line: %s\n", buf);
+        GPSD_LOG(LOG_INF, &context.errout, "Command line: %s\n", buf);
     }
 
     // might be time to daemonize

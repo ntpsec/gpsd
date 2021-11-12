@@ -158,12 +158,12 @@ void ntpshm_context_init(struct gps_context_t *context)
     // Only grab the first two when running as root.
     // then grab all the rest
     if (0 == getuid()) {
-	unit  = 0;
+        unit  = 0;
     } else {
-	unit  = 2;
+        unit  = 2;
     }
     for (; unit < NTPSHMSEGS; unit++) {
-	context->shmTime[unit] = getShmTime(context, unit);
+        context->shmTime[unit] = getShmTime(context, unit);
     }
     memset(context->shmTimeInuse, 0, sizeof(context->shmTimeInuse));
 }
@@ -248,7 +248,7 @@ int ntpshm_put(struct gps_device_t *session, volatile struct shmTime *shmseg,
 
     // FIXME: make NMEA precision -1
     if (shmseg == session->shm_pps) {
-	unit = session->shm_pps_unit;
+        unit = session->shm_pps_unit;
         // precision is a floor so do not make it tight
         if (SOURCE_USB == session->sourcetype ||
             SOURCE_ACM == session->sourcetype) {
@@ -260,8 +260,8 @@ int ntpshm_put(struct gps_device_t *session, volatile struct shmTime *shmseg,
         }
     } else {
         // not PPS, so serial time
-	unit = session->shm_clock_unit;
-	precision = -1;
+        unit = session->shm_clock_unit;
+        precision = -1;
     }
 
     ntp_write(shmseg, td, precision, session->context->leap_notify);
@@ -468,17 +468,17 @@ void ntpshm_link_activate(struct gps_device_t *session)
         // allocate a shared-memory segment for "NMEA" time data
         session->shm_clock_unit = ntpshm_alloc(session);
 
-        if (0 > session->shm_clock_unit) {
-	    session->shm_clock = NULL;
+        if (!VALID_UNIT(session->shm_clock_unit)) {
+            session->shm_clock = NULL;
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "NTP:SHM: ntpshm_alloc(shm_clock) failed\n");
             return;
         }
-	GPSD_LOG(LOG_PROG, &context->errout,
-		 "NTP:SHM: ntpshm_alloc(%s), sourcetype %d "
-		 "shm_clock using SHM(%d)\n",
-		 session->gpsdata.dev.path, session->sourcetype,
-		 session->shm_clock_unit);
+        GPSD_LOG(LOG_PROG, &context->errout,
+                 "NTP:SHM: ntpshm_alloc(%s), sourcetype %d "
+                 "shm_clock using SHM(%d)\n",
+                 session->gpsdata.dev.path, session->sourcetype,
+                 session->shm_clock_unit);
         session->shm_clock = context->shmTime[session->shm_clock_unit];
     }
 
@@ -492,16 +492,16 @@ void ntpshm_link_activate(struct gps_device_t *session)
          */
         session->shm_pps_unit = ntpshm_alloc(session);
         if (0 > session->shm_pps_unit) {
-	    session->shm_pps = NULL;
+            session->shm_pps = NULL;
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "NTP:SHM: ntpshm_alloc(shm_pps) failed\n");
         } else {
             GPSD_LOG(LOG_PROG, &context->errout,
                      "NTP:SHM: ntpshm_alloc(%s), sourcetype %d "
                      "shm_pps using SHM(%d)\n",
-		     session->gpsdata.dev.path, session->sourcetype,
-		     session->shm_pps_unit);
-	    session->shm_pps = context->shmTime[session->shm_pps_unit];
+                     session->gpsdata.dev.path, session->sourcetype,
+                     session->shm_pps_unit);
+            session->shm_pps = context->shmTime[session->shm_pps_unit];
             init_hook(session);
             session->pps_thread.report_hook = report_hook;
 #ifdef MAGIC_HAT_ENABLE
@@ -515,16 +515,16 @@ void ntpshm_link_activate(struct gps_device_t *session)
                 0 == strcmp(session->pps_thread.devicename, MAGIC_LINK_GPS)) {
                 const char *first_pps = pps_get_first();
                 if (0 == access(first_pps, R_OK | W_OK)) {
-		    session->pps_thread.devicename = first_pps;
-		    GPSD_LOG(LOG_PROG, &context->errout,
-			     "NTP:SHM: ntpshm_link_activate() MAGIC_HAT "
+                    session->pps_thread.devicename = first_pps;
+                    GPSD_LOG(LOG_PROG, &context->errout,
+                             "NTP:SHM: ntpshm_link_activate() MAGIC_HAT "
                              "using %s for SHM(%d)\n", first_pps,
-			     session->shm_pps_unit);
+                             session->shm_pps_unit);
                 } else {
-		    GPSD_LOG(LOG_ERROR, &context->errout,
-			     "NTP:SHM: ntpshm_link_activate() unable to "
+                    GPSD_LOG(LOG_ERROR, &context->errout,
+                             "NTP:SHM: ntpshm_link_activate() unable to "
                              "read %s. %s(%d)\n",
-			     first_pps, strerror(errno), errno);
+                             first_pps, strerror(errno), errno);
                 }
             }
 #endif  // MAGIC_HAT_ENABLE
