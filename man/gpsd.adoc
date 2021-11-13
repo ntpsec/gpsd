@@ -513,6 +513,9 @@ use NTP0 and NTP1.  The second may use NTP2 and NTP3, etc.
 You can see the output of *gpsd* to *ntpd* in real time with the
 *ntpshmmon* command.
 
+Other daemons, such as *ptp4l* may also be using the same SHMs to
+talk to *ntpd*.
+
 Detailed instructions for using GPSD to set up a high-quality time
 service can be found among the documentation on the GPSD website.
 
