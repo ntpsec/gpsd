@@ -1,5 +1,8 @@
 /* gpsd.h -- fundamental types and structures for the gpsd library
  *
+ * Nothing in this file should be used by any client.  So safe to change
+ * anything here without (directly) affecting the API or ABI.
+ *
  * This file is Copyright 2017 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
@@ -93,6 +96,7 @@ extern "C" {
  *      add host, stream_time, to ntrip_stream_t
  *      add shm_clock_unit and shm_pps_unit to device_t
  *      add VALID_UNIT()
+ *      remove shm_clock and shm_pps from device_t
  */
 
 #define JSON_DATE_MAX   24      /* ISO8601 timestamp with 2 decimal places */
@@ -565,8 +569,6 @@ struct gps_device_t {
 #define VALID_UNIT(u)   (0 <= (u) && (u) < NTPSHMSEGS)
     int shm_clock_unit;
     int shm_pps_unit;
-    volatile struct shmTime *shm_clock;
-    volatile struct shmTime *shm_pps;
     int chronyfd;                       /* for talking to chrony */
     volatile struct pps_thread_t pps_thread;
     /*

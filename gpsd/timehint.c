@@ -132,8 +132,8 @@ static volatile struct shmTime *getShmTime(struct gps_context_t *context,
                    sizeof(struct shmTime), (int)(IPC_CREAT | perms));
     if (shmid == -1) {
         GPSD_LOG(LOG_ERROR, &context->errout,
-                 "NTP:SHM: shmget(NTP%c, %zd, %o) fail: %s(%d)\n",
-                 '0' + unit, sizeof(struct shmTime),
+                 "NTP:SHM: shmget(NTP%d, %zd, %o) fail: %s(%d)\n",
+                 unit, sizeof(struct shmTime),
                  (int)perms, strerror(errno), errno);
         return NULL;
     }
@@ -225,8 +225,6 @@ void ntpshm_session_init(struct gps_device_t *session)
     // mark NTPD shared memory segments as unused
     session->shm_clock_unit = -1;
     session->shm_pps_unit = -1;
-    session->shm_clock = NULL;
-    session->shm_pps = NULL;
 }
 
 /* put a received fix time into shared memory for NTP
@@ -433,7 +431,6 @@ void ntpshm_link_deactivate(struct gps_device_t *session)
     if (VALID_UNIT(session->shm_clock_unit)) {
         ntpshm_free(session->context, session->shm_clock_unit);
         session->shm_clock_unit = -1;
-        session->shm_clock = NULL;
     }
     if (VALID_UNIT(session->shm_pps_unit)) {
         pps_thread_deactivate(&session->pps_thread);
@@ -443,7 +440,6 @@ void ntpshm_link_deactivate(struct gps_device_t *session)
         }
         ntpshm_free(session->context, session->shm_pps_unit);
         session->shm_pps_unit = -1;
-        session->shm_pps = NULL;
     }
 }
 
@@ -473,7 +469,6 @@ void ntpshm_link_activate(struct gps_device_t *session)
         session->shm_clock_unit = ntpshm_alloc(session);
 
         if (!VALID_UNIT(session->shm_clock_unit)) {
-            session->shm_clock = NULL;
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "NTP:SHM: ntpshm_alloc(shm_clock) failed\n");
             return;
@@ -483,7 +478,6 @@ void ntpshm_link_activate(struct gps_device_t *session)
                  "shm_clock using SHM(%d)\n",
                  session->gpsdata.dev.path, session->sourcetype,
                  session->shm_clock_unit);
-        session->shm_clock = context->shmTime[session->shm_clock_unit];
     }
 
     if (SOURCE_USB == session->sourcetype ||
@@ -495,17 +489,12 @@ void ntpshm_link_activate(struct gps_device_t *session)
          * transitions
          */
         session->shm_pps_unit = ntpshm_alloc(session);
-        if (0 > session->shm_pps_unit) {
-            session->shm_pps = NULL;
-            GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "NTP:SHM: ntpshm_alloc(shm_pps) failed\n");
-        } else {
+        if (VALID_UNIT(session->shm_pps_unit)) {
             GPSD_LOG(LOG_PROG, &context->errout,
                      "NTP:SHM: ntpshm_alloc(%s), sourcetype %d "
                      "shm_pps using SHM(%d)\n",
                      session->gpsdata.dev.path, session->sourcetype,
                      session->shm_pps_unit);
-            session->shm_pps = context->shmTime[session->shm_pps_unit];
             init_hook(session);
             session->pps_thread.report_hook = report_hook;
 #ifdef MAGIC_HAT_ENABLE
@@ -533,6 +522,9 @@ void ntpshm_link_activate(struct gps_device_t *session)
             }
 #endif  // MAGIC_HAT_ENABLE
             pps_thread_activate(&session->pps_thread);
+        } else {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "NTP:SHM: ntpshm_alloc(shm_pps) failed\n");
         }
     }
 }
