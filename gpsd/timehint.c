@@ -371,6 +371,7 @@ static char *report_hook(volatile struct pps_thread_t *pps_thread,
 {
     char *log1;
     struct gps_device_t *session = (struct gps_device_t *)pps_thread->context;
+    int precision;
 
     /* PPS only source never get any serial info
      * so no NTPTIME_IS or fixcnt */
@@ -402,24 +403,24 @@ static char *report_hook(volatile struct pps_thread_t *pps_thread,
         log1 = "accepted chrony sock";
         chrony_send(session, td);
     }
-    if (VALID_UNIT(session->shm_pps_unit)) {
-        int precision;
 
-        // precision is a floor so do not make it tight
-        if (SOURCE_USB == session->sourcetype ||
-            SOURCE_ACM == session->sourcetype) {
-            // if PPS over USB, then precision = -10, 1 milli sec
-            precision = -10;
-        } else {
-            // likely PPS over serial, precision = -20, 1 micro sec
-            precision = -20;
-        }
+    // precision is a floor so do not make it tight
+    if (SOURCE_USB == session->sourcetype ||
+	SOURCE_ACM == session->sourcetype) {
+	// if PPS over USB, then precision = -10, 1 milli sec
+	precision = -10;
+    } else {
+	// likely PPS over serial, precision = -20, 1 micro sec
+	precision = -20;
+    }
+
+    if (VALID_UNIT(session->shm_pps_unit)) {
         ntpshm_put(session, session->shm_pps_unit, precision, td);
     }
 
     // session context might have a hook set, too
     if (NULL != session->context->pps_hook) {
-        session->context->pps_hook(session, td);
+        session->context->pps_hook(session, precision, td);
     }
 
     return log1;

@@ -1905,20 +1905,16 @@ static int handle_gpsd_request(struct subscriber_t *sub, const char *buf)
 #endif  // SOCKET_EXPORT_ENABLE
 
 #if defined(CONTROL_SOCKET_ENABLE) && defined(SOCKET_EXPORT_ENABLE)
-// on PPS interrupt, ship a message to all clients
-static void ship_pps_message(struct gps_device_t *session,
+/* on PPS interrupt, ship a message to all clients
+ * use passed in precision
+ *
+ * Return: void
+ */
+static void ship_pps_message(struct gps_device_t *session, int precision,
                              struct timedelta_t *td)
 {
-    // why recompute precision here?  use precision from shmTime
-    int precision = -20;
     char buf[GPS_JSON_RESPONSE_MAX];
     char ts_str[TIMESPEC_LEN];
-
-    if (SOURCE_USB == session->sourcetype ||
-        SOURCE_ACM == session->sourcetype) {
-        // PPS over USB not so good
-        precision = -10;
-    }
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "ship_pps: qErr_time %s qErr %ld, pps.tv_sec %lld\n",
