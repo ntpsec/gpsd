@@ -229,40 +229,31 @@ void ntpshm_session_init(struct gps_device_t *session)
     session->shm_pps = NULL;
 }
 
-// put a received fix time into shared memory for NTP
-int ntpshm_put(struct gps_device_t *session, volatile struct shmTime *shmseg,
-               struct timedelta_t *td)
+/* put a received fix time into shared memory for NTP
+ *  unit is the SHM unit to use
+ *  precision is the NTP precision
+ *      Any NMEA will be about -1 or -2. Garmin GPS-18/USB can be -6 or -7
+ *      PPS over USB, then precision = -10, 1 milli sec
+ *      PPS over serial, precision = -20, 1 micro sec, maybe bettter
+ *  td is the time delta to send
+ *
+ * Return: void
+ */
+void ntpshm_put(struct gps_device_t *session, int unit, int precision,
+                struct timedelta_t *td)
 {
+    volatile struct shmTime *shmseg;
     char real_str[TIMESPEC_LEN];
     char clock_str[TIMESPEC_LEN];
-    int unit;
 
-    // Any NMEA will be about -1 or -2. Garmin GPS-18/USB is around -6 or -7
-    int precision = -20;    // default precision, 1 micro sec
 
-    if (NULL == shmseg) {
-        GPSD_LOG(LOG_RAW, &session->context->errout, "NTP:SHM: missing shm\n");
-        return 0;
+    if (!VALID_UNIT(unit)) {
+        GPSD_LOG(LOG_RAW, &session->context->errout,
+                 "NTP:SHM:  ntpshm_put(,%d,) invalid unit\n", unit);
+        return;
     }
 
-    // FIXME: make NMEA precision -1
-    if (shmseg == session->shm_pps) {
-        unit = session->shm_pps_unit;
-        // precision is a floor so do not make it tight
-        if (SOURCE_USB == session->sourcetype ||
-            SOURCE_ACM == session->sourcetype) {
-            // if PPS over USB, then precision = -10, 1 milli sec
-            precision = -10;
-        } else {
-            // likely PPS over serial, precision = -20, 1 micro sec
-            precision = -20;
-        }
-    } else {
-        // not PPS, so serial time
-        unit = session->shm_clock_unit;
-        precision = -1;
-    }
-
+    shmseg = session->context->shmTime[unit];
     ntp_write(shmseg, td, precision, session->context->leap_notify);
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -272,7 +263,7 @@ int ntpshm_put(struct gps_device_t *session, volatile struct shmTime *shmseg,
              timespec_str(&td->real, real_str, sizeof(real_str)),
              timespec_str(&td->clock, clock_str, sizeof(clock_str)));
 
-    return 1;
+    return;
 }
 
 #define SOCK_MAGIC 0x534f434b
@@ -413,8 +404,19 @@ static char *report_hook(volatile struct pps_thread_t *pps_thread,
         log1 = "accepted chrony sock";
         chrony_send(session, td);
     }
-    if (NULL != session->shm_pps) {
-        (void)ntpshm_put(session, session->shm_pps, td);
+    if (VALID_UNIT(session->shm_pps_unit)) {
+        int precision;
+
+        // precision is a floor so do not make it tight
+        if (SOURCE_USB == session->sourcetype ||
+            SOURCE_ACM == session->sourcetype) {
+            // if PPS over USB, then precision = -10, 1 milli sec
+            precision = -10;
+        } else {
+            // likely PPS over serial, precision = -20, 1 micro sec
+            precision = -20;
+        }
+        ntpshm_put(session, session->shm_pps_unit, precision, td);
     }
 
     // session context might have a hook set, too

@@ -997,8 +997,8 @@ extern int ntrip_parse_url(const struct gpsd_errout_t *,
 extern void ntp_latch(struct gps_device_t *device,  struct timedelta_t *td);
 extern void ntpshm_context_init(struct gps_context_t *);
 extern void ntpshm_session_init(struct gps_device_t *);
-extern int ntpshm_put(struct gps_device_t *, volatile struct shmTime *,
-                      struct timedelta_t *);
+extern void ntpshm_put(struct gps_device_t *, int unit, int precision,
+                       struct timedelta_t *);
 extern void ntpshm_link_deactivate(struct gps_device_t *);
 extern void ntpshm_link_activate(struct gps_device_t *);
 

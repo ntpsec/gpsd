@@ -769,7 +769,7 @@ static bool open_device( struct gps_device_t *device)
                 buf2[0] = '\0';
             }
             GPSD_LOG(LOG_INF, &context.errout,
-             "SHM: ntpshm_link_activate(%s): %.4s, %.4s\n",
+                     "SHM: ntpshm_link_activate(%s): %.4s, %.4s\n",
                      device->gpsdata.dev.path, buf1, buf2);
         }
 
@@ -1758,9 +1758,12 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
                 pps_thread_fixin(&ppsonly->pps_thread, &td);
             }
 
-        if (NULL != device->shm_clock) {
-            (void)ntpshm_put(device, device->shm_clock, &td);
+	if (VALID_UNIT(device->shm_clock_unit)) {
+            // only serial time passes this way, so precision -1
+            // maybe should be better for ttyACM and such.
+            ntpshm_put(device, device->shm_clock_unit, -1, &td);
         }
+	// why not device->shm_pps_unit here too?
 
 #ifdef SOCKET_EXPORT_ENABLE
         notify_watchers(device, false, true,
