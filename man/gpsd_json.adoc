@@ -570,8 +570,9 @@ when the first data for the reporting cycle is received).
 
 This message exactly mirrors the PPS message except for two details.
 
-TOFF emits no NTP precision, this is assumed to be -2. See the NTP
-documentation for their definition of precision.
+TOFF emits no NTP "precisio""n, this is assumed to be -2. See the NTP
+documentation for their definition of precision.  It also does not
+output "shm".
 
 The TOFF message reports the GPS time as derived from the GPS serial
 data stream. The PPS message reports the GPS time as derived from the
@@ -647,6 +648,7 @@ A PPS object has the following elements:
 |clock_sec |Yes |numeric |seconds from the system clock
 |clock_nsec |Yes |numeric |nanoseconds from the system clock
 |precision |Yes |numeric |NTP style estimate of PPS precision
+|shm |Yes |string |shm key of this PPS
 |qErr |No |numeric |Quantization error of the PPS, in picoseconds.
 Sometimes called the "sawtooth" error.
 |===

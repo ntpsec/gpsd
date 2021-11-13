@@ -1910,8 +1910,8 @@ static int handle_gpsd_request(struct subscriber_t *sub, const char *buf)
  *
  * Return: void
  */
-static void ship_pps_message(struct gps_device_t *session, int precision,
-                             struct timedelta_t *td)
+static void ship_pps_message(struct gps_device_t *session, int unit,
+                             int precision, struct timedelta_t *td)
 {
     char buf[GPS_JSON_RESPONSE_MAX];
     char ts_str[TIMESPEC_LEN];
@@ -1922,16 +1922,18 @@ static void ship_pps_message(struct gps_device_t *session, int precision,
              session->gpsdata.qErr,
              (long long)td->real.tv_sec);
 
+    // FIXME: reports /dev/ttyAMA0 instead of /dev/pps0 whith MAGIC_HAT
+
     /* real_XXX - the time the GPS thinks it is at the PPS edge
      * clock_XXX - the time the system clock thinks it is at the PPS edge */
     (void)snprintf(buf, sizeof(buf),
                    "{\"class\":\"PPS\",\"device\":\"%s\",\"real_sec\":%lld,"
                    "\"real_nsec\":%ld,\"clock_sec\":%lld,\"clock_nsec\":%ld,"
-                   "\"precision\":%d",
+                   "\"precision\":%d,\"shm\":\"NTP%d\"",
                    session->gpsdata.dev.path,
                    (long long)td->real.tv_sec, td->real.tv_nsec,
                    (long long)td->clock.tv_sec, td->clock.tv_nsec,
-                   precision);
+                   precision, unit);
 
     // output qErr if timestamps line up
     if (td->real.tv_sec == session->gpsdata.qErr_time.tv_sec) {

@@ -420,7 +420,8 @@ static char *report_hook(volatile struct pps_thread_t *pps_thread,
 
     // session context might have a hook set, too
     if (NULL != session->context->pps_hook) {
-        session->context->pps_hook(session, precision, td);
+        session->context->pps_hook(session, session->shm_pps_unit,
+                                   precision, td);
     }
 
     return log1;

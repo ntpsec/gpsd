@@ -340,7 +340,7 @@ struct gps_context_t {
      * 'optimize' as 'dead code' the writes to SHM */
     volatile struct shmTime *shmTime[NTPSHMSEGS];
     bool shmTimeInuse[NTPSHMSEGS];
-    void (*pps_hook)(struct gps_device_t *, int, struct timedelta_t *);
+    void (*pps_hook)(struct gps_device_t *, int, int, struct timedelta_t *);
 #ifdef SHM_EXPORT_ENABLE
     /* we don't want the compiler to treat writes to shmexport as dead code,
      * and we don't want them reordered either */
