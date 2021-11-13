@@ -1749,6 +1749,9 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
     } else {
         struct timedelta_t td;
         struct gps_device_t *ppsonly;
+        // only serial time passes this way, so precision -1
+        // maybe should be better for ttyACM and such.
+        int precision  = -1;
 
         ntp_latch(device, &td);
 
@@ -1758,21 +1761,21 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
                 pps_thread_fixin(&ppsonly->pps_thread, &td);
             }
 
-	if (VALID_UNIT(device->shm_clock_unit)) {
-            // only serial time passes this way, so precision -1
-            // maybe should be better for ttyACM and such.
-            ntpshm_put(device, device->shm_clock_unit, -1, &td);
+        if (VALID_UNIT(device->shm_clock_unit)) {
+            ntpshm_put(device, device->shm_clock_unit, precision, &td);
         }
-	// why not device->shm_pps_unit here too?
+        // why not device->shm_pps_unit here too?
 
 #ifdef SOCKET_EXPORT_ENABLE
         notify_watchers(device, false, true,
                         "{\"class\":\"TOFF\",\"device\":\"%s\",\"real_sec\":"
                         "%lld, \"real_nsec\":%ld,\"clock_sec\":%lld,"
-                        "\"clock_nsec\":%ld}\r\n",
+                        "\"clock_nsec\":%ld,\"precision\":%d,"
+                        "\"shm\":\"NTP%d\"}\r\n",
                         device->gpsdata.dev.path,
                         (long long)td.real.tv_sec, td.real.tv_nsec,
-                        (long long)td.clock.tv_sec, td.clock.tv_nsec);
+                        (long long)td.clock.tv_sec, td.clock.tv_nsec,
+                        precision, device->shm_clock_unit);
 #endif  // SOCKET_EXPORT_ENABLE
 
     }

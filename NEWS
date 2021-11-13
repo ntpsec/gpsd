@@ -9,6 +9,8 @@
   gpsd will retry ntrip:// and tcp:// connections
   cgps can expand to show more sats.
   maidenhead() checks for input errors.
+  Better SHM logs.
+  PPS and TOFF JSON now include shm used, and real precision.
 
 3.23.1: 2021-09-21
   Improve ubx cycle detection.

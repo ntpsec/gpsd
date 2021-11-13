@@ -214,7 +214,7 @@ static void ntpshm_free(struct gps_context_t * context, int unit)
 {
 
     if (VALID_UNIT(unit)) {
-	context->shmTimeInuse[unit] = false;
+        context->shmTimeInuse[unit] = false;
     }
 
     return;
@@ -406,12 +406,12 @@ static char *report_hook(volatile struct pps_thread_t *pps_thread,
 
     // precision is a floor so do not make it tight
     if (SOURCE_USB == session->sourcetype ||
-	SOURCE_ACM == session->sourcetype) {
-	// if PPS over USB, then precision = -10, 1 milli sec
-	precision = -10;
+        SOURCE_ACM == session->sourcetype) {
+        // if PPS over USB, then precision = -10, 1 milli sec
+        precision = -10;
     } else {
-	// likely PPS over serial, precision = -20, 1 micro sec
-	precision = -20;
+        // likely PPS over serial, precision = -20, 1 micro sec
+        precision = -20;
     }
 
     if (VALID_UNIT(session->shm_pps_unit)) {

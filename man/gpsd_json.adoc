@@ -568,11 +568,7 @@ This message is emitted on each cycle and reports the offset between
 the host's clock time and the GPS time at top of the second (actually,
 when the first data for the reporting cycle is received).
 
-This message exactly mirrors the PPS message except for two details.
-
-TOFF emits no NTP "precisio""n, this is assumed to be -2. See the NTP
-documentation for their definition of precision.  It also does not
-output "shm".
+This message exactly mirrors the PPS message.
 
 The TOFF message reports the GPS time as derived from the GPS serial
 data stream. The PPS message reports the GPS time as derived from the
@@ -618,10 +614,7 @@ Here's an example:
 This message is emitted each time the daemon sees a valid PPS (Pulse
 Per Second) strobe from a device.
 
-This message exactly mirrors the TOFF message except for two details.
-
-PPS emits the NTP precision. See the NTP documentation for their
-definition of precision.
+This message exactly mirrors the TOFF message.
 
 The TOFF message reports the GPS time as derived from the GPS serial
 data stream. The PPS message reports the GPS time as derived from the
@@ -634,6 +627,8 @@ by the variable computation time inside the GPS. Taken together the
 time derived from the start of the GPS cycle can have offsets of 10
 milliseconds to 700 milliseconds and combined jitter and wander of 100
 to 300 milliseconds.
+
+See the NTP documentation for their definition of precision.
 
 A PPS object has the following elements:
 
