@@ -1,6 +1,6 @@
 = GPSD Numbers Matter
 Gary E. Miller <gem@rellim.com>
-10 March 2021
+13 November 2021
 :author: Gary E. Miller
 :description: How and why  GPSD tortures numbers.
 :email: <gem@rellim.com>
@@ -79,6 +79,29 @@ That is why *gpsd* tells time using *struct timespec*.  That look like this:
 systems, define *time_t* as a 32-bit integer, which is deprecated. A
 32-bit integer will overflow at: 03:14:07 UTC on 19 January 2038. Plan
 for that apocalypse now.  Source: <<Y2038>>
+
+In 2021 cosmologists believe the age of the universe is just under
+14 billion years.  That is 4.4 e17 seconds, which fits comfortably
+into a 59 bit unsigned integer.  A 64-bit *time_t* will be good enough
+for a while longer.
+
+The other part of *timespec_t* is a long, carrying the nanosecond part
+of the time stamp.  In 2021, a GNSS receiver can tell you the start of
+every second to about 1 nano second (1 e-9 seconds) accuracy.  That fits
+comfortably into a 30 bit unsigned integer.  As long integer in C is
+always at least 32 bits.
+
+A *timespec_t* fails when you need to measure time to better than 1 nano
+second.  The SI second is defined as 9,192,631,770 cycles of radiation
+from a caesium-133 (Cs) atom.  Close to 0.1 nano seconds.  That requires
+a 34 bit unsigned integer.
+
+In 2021 the smallest frequency difference that can be measured is about
+1 second in 400 million years, one part in about 1.23 e16.  That involves
+clocks composed of strontium atoms, and measuring time differences with
+optical combs.  The time difference between those two is thus 7.9 e-17
+seconds per second.  Needing a 54 bit unsigned integer fraction of a
+second to hold it.
 
 == NaN ain't your Nana
 
