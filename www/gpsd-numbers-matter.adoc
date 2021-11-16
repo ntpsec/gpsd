@@ -110,7 +110,7 @@ what you think it does.  The u-blox ZED-F9T data sheet says it can
 output absolute PPS to 5ns.  But the fine print says: "1-sigma, fixed
 position mode, depends on temperature, atmospheric conditions, baseline
 length, GNSS antenna, multipath conditions, satellite visibility and
-geometry."
+geometry".
 
 There are many distinct embodiments of Universal Coordinated Time
 (UTC).  In the USA there are two, one kept by the National Institute
@@ -130,8 +130,8 @@ nano seconds.
 
 The biggest obstacle to *gpsd* and *ntpd* keeping accurate time is the
 granularity of the local host clock.  The *gpsd* release includes a program
-called *clock_test*, and the NTPsec release includes a program "attic*.
-Both can characterize your system clock.
+called *clock_test*, and the NTPsec release includes a program in the
+attic caled *clock*.  Both can characterize your system clock.
 
 Using these programs you can determine the granularity of you system
 clock.  Some examples:
@@ -141,14 +141,15 @@ clock.  Some examples:
 |Raspberry Pi 3B|1.2GHz|155 ns|120 ns
 |Raspberry Pi 4B|1.5GHz|56 ns|90 ns
 |Xeon E5-1620 v3|3.50GHz|14 ns|46 ns
-|Core i5-4570|3.20GHz|11 ns 231 ns
+|Core i5-4570|3.20GHz|11 ns|231 ns
 |Core i7-8750H|2.2GHz|18 ns|19 ns
 |Ryzen 5 3600|3.6 GHz|10 ns|60 ns
 |====
 
 Consider these best cases.  Any load, reduced clock speed, I/O
 interrupts, interrupt latency, etc. will reduce the accuracy with which
-he system clock can be read or set.
+he system clock can be read or set.  Your goal, and that of NIST stated
+in <<NIST2187>>, is that you can tell time to less than 1 micro second.
 
 == NaN ain't your Nana
 
