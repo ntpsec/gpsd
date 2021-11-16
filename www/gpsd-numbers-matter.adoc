@@ -103,6 +103,53 @@ optical combs.  The time difference between those two is thus 7.9 e-17
 seconds per second.  Needing a 54 bit unsigned integer fraction of a
 second to hold it.
 
+=== Time Accuracy
+
+Just because gpsd can represent a number does not mean the number means
+what you think it does.  The u-blox ZED-F9T data sheet says it can
+output absolute PPS to 5ns.  But the fine print says: "1-sigma, fixed
+position mode, depends on temperature, atmospheric conditions, baseline
+length, GNSS antenna, multipath conditions, satellite visibility and
+geometry."
+
+There are many distinct embodiments of Universal Coordinated Time
+(UTC).  In the USA there are two, one kept by the National Institute
+of Standards and Technology (NIST] and one by the US Naval Observatory
+(USNO).  These are referred to as UTC(NIST) and UTC(USNO).  The primary
+source for UTC(NIST) is in Fort Collins Colorado.  Their secondary
+(backup) source is in Gaithersburg Maryland.  According to <<NIST2187>>,
+in 2021, the secondary UTC(NIST) site is only plus/minus 25 nano seconds
+aligned with the primary source.  Don't expect to tell time better than
+the NIST.
+
+UTC(USNO) supplies the master clock for the GPS system.  In 2020, NIST
+said that UTC(USNO) differed from UTC(NIST) by plus/minus 20 nano
+seconds. See <<NIST USNO>>.  Even if you could track GPS time perfectly,
+and it tracked UTC(USNO) perfectly, you are still off by plus/minus 20
+nano seconds.
+
+The biggest obstacle to *gpsd* and *ntpd* keeping accurate time is the
+granularity of the local host clock.  The *gpsd* release includes a program
+called *clock_test*, and the NTPsec release includes a program "attic*.
+Both can characterize your system clock.
+
+Using these programs you can determine the granularity of you system
+clock.  Some examples:
+
+|====
+|CPU |Clock speed|Clock granularity|Standard deviation
+|Raspberry Pi 3B|1.2GHz|155 ns|120 ns
+|Raspberry Pi 4B|1.5GHz|56 ns|90 ns
+|Xeon E5-1620 v3|3.50GHz|14 ns|46 ns
+|Core i5-4570|3.20GHz|11 ns 231 ns
+|Core i7-8750H|2.2GHz|18 ns|19 ns
+|Ryzen 5 3600|3.6 GHz|10 ns|60 ns
+|====
+
+Consider these best cases.  Any load, reduced clock speed, I/O
+interrupts, interrupt latency, etc. will reduce the accuracy with which
+he system clock can be read or set.
+
 == NaN ain't your Nana
 
 The most obviously confounding choice is the use in *gpsd* of *NaNs*
@@ -258,6 +305,8 @@ public description look at the Wikipedia <<NaN>> article.
 
 == REFERENCES
 
+* *GPSD Project web site:* {gpsdweb}
+
 [bibliography]
 * [[[DD]]] https://en.wikipedia.org/wiki/Decimal_degrees[Decimal Degrees] Wikipedia Article
 
@@ -268,7 +317,9 @@ for Floating-Point Arithmetic]
 
 * [[[NaN]]] https://en.wikipedia.org/wiki/NaN[NaN] Wikipedia Article
 
-* *GPSD Project web site:* {gpsdweb}
+* [[[NIST2187]]] https://nvlpubs.nist.gov/nistpubs/TechnicalNotes/NIST.TN.2187.pdf[NIST TN 2187]
+
+* [[[NIST-USNO]]] https://www.nist.gov/pml/time-and-frequency-division/time-services/nist-usno/nist-usno-2020-archive[NIST USNO]
 
 == COPYING
 
