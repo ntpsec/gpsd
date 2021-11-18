@@ -314,7 +314,7 @@ boolopts = (
     ("ublox",         True,  "u-blox Protocol support"),
     # Non-GPS protocols
     ("aivdm",         True,  "AIVDM support"),
-    ("gpsclock",      True,  "GPSClock support"),
+    ("gpsclock",      True,  "Furuno GPSClock support"),
     ("isync",         True,  "Spectratime iSync LNRClok/GRCLOK support"),
     ("oceanserver",   True,  "OceanServer support"),
     ("rtcm104v2",     True,  "rtcm104v2 support"),
