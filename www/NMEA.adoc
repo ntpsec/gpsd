@@ -1,7 +1,7 @@
 = NMEA Revealed
 Eric S. Raymond <esr@thyrsus.com>
-v2.25, Apr 2021
 :author: Eric S. Raymond
+:date: 18 November 2021
 :description: A programmer's guide to NMEA0183, the GPS protocol reporting standard
 :email: <esr@thyrsus.com>
 :keywords: NMEA0183, GPS, standard, protocol
@@ -125,15 +125,22 @@ information needed by the FAA.  (The values in the GGA mode field were
 extended to carry this information as well.) Here are the values:
 
 FAA Mode Indicator
-     A = Autonomous mode
-     D = Differential Mode
-     E = Estimated (dead-reckoning) mode
-     F = RTK Float mode
-     M = Manual Input Mode
-     N = Data Not Valid
-     P = Precise (4.00 and later)
-     R = RTK Integer mode
-     S = Simulated Mode
+
+[frame="topbot",options="header"]
+|========================================================
+| Mode | Description
+| A | Autonomous mode
+| C | Quectel Querk, "Caution"
+| D | Differential Mode
+| E | Estimated (dead-reckoning) mode
+| F | RTK Float mode
+| M | Manual Input Mode
+| N | Data Not Valid
+| P | Precise (4.00 and later)
+| R | RTK Integer mode
+| S | Simulated Mode
+| U | Quectel Querk, "Unsafe"
+|========================================================
 
 This field may be empty.  In pre-2.3 versions it is omitted. <<NTUM>> says
 that according to the NMEA specification, it dominates the Status field --
