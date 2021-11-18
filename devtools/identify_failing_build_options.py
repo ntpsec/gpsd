@@ -56,7 +56,6 @@ knobs = [
     'navcom',
     'ncurses',
     'netfeed',
-    'nmea0183',
     'nmea2000',
     'nofloats',
     'ntp',
