@@ -1,7 +1,6 @@
 = GPSD Time Service HOWTO
 Gary E. Miller <gem@rellim.com>, Eric S. Raymond <esr@thyrsus.com>
-13 Jan 2021
-:date: 13 January 2021
+:date: 17 November 2021
 :description: How to set up an NTP Stratum 1 server using GPSD.
 :keywords: time, GPSD, NTP, time, precision, 1PPS, PPS, stratum, jitter
 :robots: index,follow
@@ -322,24 +321,26 @@ When gpsd is built with timeservice=yes:
 
 1.  The -n (nowait) option is forced: gpsd opens its command-line devices
     immediately on startup.  Assuming you do not start gpsd with systemd.
+    If you are using systemd ensure it is starting gpsd, not just the gpsd
+    service, on startup.
 
 2.  Forces the building of ntpshmmon and cgps.  Those programs would
     be built by default anyway, unless gpsdclients=no.
 
 3.  The configure will fail if pps is not available.
 
-4.  Most drivers will not be built.  You must specify the ones you need
-    when configuring.
+4.  Most drivers will not be built. You must specify the ones you need
+    when configuring. The NMEA 0183 driver is always built, no matter what.
 
 To configure the minimal timeservice build:
 
 -----------------------------------------------------------------------------
 $ scons -c
-$ scons timeservice=yes nmea0183=yes
+$ scons timeservice=yes
 -----------------------------------------------------------------------------
 
-You may substitute a different GNSS reciver protocol (e.g. "ublox" or
-"sirf").  Besides the daemon, this also builds cgps and ntpshmmon.
+You may add GNSS reciver protocol (e.g. "ublox=yes" or "sirf=yes").
+Besides the daemon, this also builds cgps and ntpshmmon.
 
 If you do not use timeservice=yes, then make sure the build is with
 pps=yes and ntpshm=yes (the defaults).  Like this:
@@ -1933,6 +1934,8 @@ by Jaap Winius <jwinius@rjsystems.nl>.
 
 2.12 January 2021::
     Add Table of Contents.  Markup cleanup.
+
+November 2021:: Minor cleanup around timeservice=yes.
 
 == COPYING
 
