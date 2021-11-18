@@ -875,6 +875,12 @@ int ntrip_open(struct gps_device_t *device, char *orig)
                  device->ntrip.stream.authentication,
                  device->ntrip.stream.fee,
                  device->ntrip.stream.bitrate);
+        if (0 != device->ntrip.stream.nmea) {
+            GPSD_LOG(LOG_WARN, &device->context->errout,
+                     "NTRIP: WARNING mountpoint %s needs NMEA, but gpsd "
+                     "can not provide it.\n",
+                     device->ntrip.stream.url);
+        }
         if (0 != ntrip_auth_encode(&device->ntrip.stream,
                                    device->ntrip.stream.credentials,
                                    device->ntrip.stream.authStr,
