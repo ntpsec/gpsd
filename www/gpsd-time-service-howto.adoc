@@ -895,7 +895,18 @@ SHM(0) time is consistent with your other servers (and other local
 reference clocks, if you have any). We'll describe how to diagnose and
 tune your server configuration in a later section.
 
-Also note that after cold-starting ntpd it will calibrate for up to 15
+NTP is a cluster protocol.  It sorts time sources into clusters, picks
+the best cluster, then the best source in that cluster, for its time
+source.  By default, NTPsec requires 3 "sane" time sources before
+serving time.  This is set with the *minsane* option.  Not at all
+recommended, but you can force *ntpd* to rely sole on your PPS source by
+adjusting *minsane* like this in your ntp.conf:
+
+----
+tos minclock 1 minsane 1
+----
+
+Also note that after cold-starting ntpd it may calibrate for up to 15
 minutes before it starts adjusting the clock. Because the frequency
 error estimate ("drift") that NTP uses isn't right when you first
 start NTP, there will be a phase error that persists while the
