@@ -97,6 +97,7 @@ extern "C" {
  *      add shm_clock_unit and shm_pps_unit to device_t
  *      add VALID_UNIT()
  *      remove shm_clock and shm_pps from device_t
+ *      add pkt_time to lexer_t
  */
 
 #define JSON_DATE_MAX   24      /* ISO8601 timestamp with 2 decimal places */
@@ -210,14 +211,14 @@ struct gpsd_errout_t {
 };
 
 struct gps_lexer_t {
-    /* packet-getter internals */
+    // packet-getter internals
     int type;
 #define BAD_PACKET              -1
 #define COMMENT_PACKET          0
 #define NMEA_PACKET             1
 #define AIVDM_PACKET            2
 #define GARMINTXT_PACKET        3
-#define MAX_TEXTUAL_TYPE        3       /* increment this as necessary */
+#define MAX_TEXTUAL_TYPE        3       // increment this as necessary
 #define SIRF_PACKET             4
 #define ZODIAC_PACKET           5
 #define TSIP_PACKET             6
@@ -231,11 +232,11 @@ struct gps_lexer_t {
 #define GEOSTAR_PACKET          14
 #define NMEA2000_PACKET         15
 #define GREIS_PACKET            16
-#define MAX_GPSPACKET_TYPE      16      /* increment this as necessary */
+#define MAX_GPSPACKET_TYPE      16      // increment this as necessary
 #define RTCM2_PACKET            17
 #define RTCM3_PACKET            18
 #define JSON_PACKET             19
-#define PACKET_TYPES            20      /* increment this as necessary */
+#define PACKET_TYPES            20      // increment this as necessary
 #define SKY_PACKET              21
 #define TEXTUAL_PACKET_TYPE(n)  ((((n)>=NMEA_PACKET) && ((n)<=MAX_TEXTUAL_TYPE)) || (n)==JSON_PACKET)
 #define GPS_PACKET_TYPE(n)      (((n)>=NMEA_PACKET) && ((n)<=MAX_GPSPACKET_TYPE))
@@ -247,15 +248,16 @@ struct gps_lexer_t {
     unsigned char inbuffer[MAX_PACKET_LENGTH*2+1];
     size_t inbuflen;
     unsigned char *inbufptr;
-    /* outbuffer needs to be able to hold 4 GPGSV records at once */
+    // outbuffer needs to be able to hold 4 GPGSV records at once
     unsigned char outbuffer[MAX_PACKET_LENGTH*2+1];
     size_t outbuflen;
-    unsigned long char_counter;         /* count characters processed */
-    unsigned long retry_counter;        /* count sniff retries */
-    unsigned counter;                   /* packets since last driver switch */
-    struct gpsd_errout_t errout;                /* how to report errors */
-    timespec_t start_time;              /* time of first input */
-    unsigned long start_char;           /* char counter at first input */
+    unsigned long char_counter;         // count characters processed
+    unsigned long retry_counter;        // count sniff retries
+    unsigned counter;                   // packets since last driver switch
+    struct gpsd_errout_t errout;        // how to report errors
+    timespec_t start_time;              // time of first input, sort of
+    timespec_t pkt_time;                // time of last packet parsed
+    unsigned long start_char;           // char counter at first input
     /*
      * ISGPS200 decoding context.
      *
@@ -272,15 +274,15 @@ struct gps_lexer_t {
          * Only these should be referenced from elsewhere, and only when
          * RTCM_MESSAGE has just been returned.
          */
-        isgps30bits_t   buf[RTCM2_WORDS_MAX];   /* packet data */
-        size_t          buflen;                 /* packet length in bytes */
+        isgps30bits_t   buf[RTCM2_WORDS_MAX];   // packet data
+        size_t          buflen;                 // packet length in bytes
     } isgps;
     unsigned int json_depth;
     unsigned int json_after;
 #ifdef STASH_ENABLE
     unsigned char stashbuffer[MAX_PACKET_LENGTH];
     size_t stashbuflen;
-#endif /* STASH_ENABLE */
+#endif  // STASH_ENABLE
 };
 
 extern void lexer_init(struct gps_lexer_t *);
@@ -291,31 +293,31 @@ extern ssize_t packet_get(int, struct gps_lexer_t *);
 extern int packet_sniff(struct gps_lexer_t *);
 #define packet_buffered_input(lexer) ((lexer)->inbuffer + (lexer)->inbuflen - (lexer)->inbufptr)
 
-/* Next, declarations for the core library... */
+// Next, declarations for the core library...
 
-/* factors for converting among confidence interval units */
+// factors for converting among confidence interval units
 #define CEP50_SIGMA     1.18
 #define DRMS_SIGMA      1.414
 #define CEP95_SIGMA     2.45
 
-/* this is where we choose the confidence level to use in reports */
+// this is where we choose the confidence level to use in reports
 #define GPSD_CONFIDENCE CEP95_SIGMA
 
-#define NTPSHMSEGS      (MAX_DEVICES * 2)       /* number of NTP SHM segments */
-#define NTP_MIN_FIXES   3  /* # fixes to wait for before shipping NTP time */
+#define NTPSHMSEGS      (MAX_DEVICES * 2)       // number of NTP SHM segments
+#define NTP_MIN_FIXES   3  // # fixes to wait for before shipping NTP time
 
 
-#define AIVDM_CHANNELS  2               /* A, B */
+#define AIVDM_CHANNELS  2               // A, B
 
 struct gps_device_t;
 
 struct gps_context_t {
-    int valid;                          /* member validity flags */
-#define LEAP_SECOND_VALID       0x01    /* we have or don't need correction */
-#define GPS_TIME_VALID          0x02    /* GPS week/tow is valid */
-#define CENTURY_VALID           0x04    /* have received ZDA or 4-digit year */
-    struct gpsd_errout_t errout;        /* debug verbosity level and hook */
-    bool readonly;                      /* if true, never write to device */
+    int valid;                          // member validity flags
+#define LEAP_SECOND_VALID       0x01    // we have or don't need correction
+#define GPS_TIME_VALID          0x02    // GPS week/tow is valid
+#define CENTURY_VALID           0x04    // have received ZDA or 4-digit year
+    struct gpsd_errout_t errout;        // debug verbosity level and hook
+    bool readonly;                      // if true, never write to device
     bool passive;                       // if true, never autoconfigure device
     // if true, remove fix gate to time, for some RTC backed receivers.
     // DANGEROUS
@@ -323,19 +325,19 @@ struct gps_context_t {
     speed_t fixed_port_speed;           // Fixed port speed, if non-zero
     char fixed_port_framing[4];         // Fixed port framing, if non-blank
     /* DGPS status */
-    int fixcnt;                         /* count of good fixes seen */
+    int fixcnt;                         // count of good fixes seen
     /* timekeeping */
-    time_t start_time;                  /* local time of daemon startup */
-    int leap_seconds;                   /* Unix secs to UTC (GPS-UTC offset) */
-    unsigned short gps_week;            /* GPS week, usually 10 bits */
-    timespec_t gps_tow;                 /* GPS time of week */
-    int century;                        /* for NMEA-only devices without ZDA */
-    int rollovers;                      /* rollovers since start of run */
-    int leap_notify;                    /* notification state from subframe */
-#define LEAP_NOWARNING  0x0     /* normal, no leap second warning */
-#define LEAP_ADDSECOND  0x1     /* last minute of day has 60 seconds */
-#define LEAP_DELSECOND  0x2     /* last minute of day has 59 seconds */
-#define LEAP_NOTINSYNC  0x3     /* overload, clock is free running */
+    time_t start_time;                  // local time of daemon startup
+    int leap_seconds;                   // Unix secs to UTC (GPS-UTC offset)
+    unsigned short gps_week;            // GPS week, usually 10 bits
+    timespec_t gps_tow;                 // GPS time of week
+    int century;                        // for NMEA-only devices without ZDA
+    int rollovers;                      // rollovers since start of run
+    int leap_notify;                    // notification state from subframe
+#define LEAP_NOWARNING  0x0     // normal, no leap second warning
+#define LEAP_ADDSECOND  0x1     // last minute of day has 60 seconds
+#define LEAP_DELSECOND  0x2     // last minute of day has 59 seconds
+#define LEAP_NOTINSYNC  0x3     // overload, clock is free running
     /* we need the volatile here to tell the C compiler not to
      * 'optimize' as 'dead code' the writes to SHM */
     volatile struct shmTime *shmTime[NTPSHMSEGS];
@@ -345,13 +347,13 @@ struct gps_context_t {
     /* we don't want the compiler to treat writes to shmexport as dead code,
      * and we don't want them reordered either */
     volatile void *shmexport;
-    int shmid;                          /* ID of SHM  (for later IPC_RMID) */
+    int shmid;                          // ID of SHM  (for later IPC_RMID)
 #endif
     ssize_t (*serial_write)(struct gps_device_t *,
                             const char *buf, const size_t len);
 };
 
-/* state for resolving interleaved Type 24 packets */
+// state for resolving interleaved Type 24 packets
 struct ais_type24a_t {
     unsigned int mmsi;
     char shipname[AIS_SHIPNAME_MAXLEN+1];
