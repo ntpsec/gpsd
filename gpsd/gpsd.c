@@ -679,8 +679,10 @@ static void notify_watchers(struct gps_device_t *device,
     va_end(ap);
 
     for (sub = subscribers; sub < subscribers + MAX_CLIENTS; sub++) {
-        if (sub->active != 0 && subscribed(sub, device)) {
-            if ((onjson && sub->policy.json) ||
+        if (0 != sub->active &&
+            subscribed(sub, device)) {
+            if ((onjson &&
+                 sub->policy.json) ||
                 (onpps && sub->policy.pps)) {
                 (void)throttled_write(sub, buf, strlen(buf));
             }
@@ -1825,8 +1827,7 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
 #ifdef SOCKET_EXPORT_ENABLE
     // update all subscribers associated with this device
     for (sub = subscribers; sub < (subscribers + MAX_CLIENTS); sub++) {
-        if (NULL == sub ||
-            0 == sub->active ||
+        if (0 == sub->active ||
             !subscribed(sub, device)) {
             continue;
         }
