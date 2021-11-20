@@ -2753,10 +2753,10 @@ int main(int argc, char *argv[])
                  * gpsd_next_hunt_setting() will try next hunt speed
                  * if device is a tty. */
 
-                // This device has either never received data,
-                // or hasn't received data for the last 5 seconds,
+                // This device has either never received a message.
+                // or hasn't received a message for the last 5 seconds,
                 (void)clock_gettime(CLOCK_REALTIME, &now);
-                TS_SUB(&delta, &now, &device->lexer.start_time);
+                TS_SUB(&delta, &now, &device->lexer.pkt_time);
                 // llabs() in case the system time jumped
                 if (5 <= llabs(delta.tv_sec)) {
                     GPSD_LOG(LOG_PROG, &context.errout,
@@ -2764,13 +2764,13 @@ int main(int argc, char *argv[])
                         device->gpsdata.gps_fd, (long long)delta.tv_sec);
                     if (time_warp) {
                         // ugh, start over...
-                        device->lexer.start_time = now;
+                        device->lexer.pkt_time = now;
                     } else if (0 < gpsd_serial_isatty(device)) {
                         // then try the next hunt speed.
                         gpsd_next_hunt_setting(device);
                     } else {
                         // gpsd://, tcp:// etc.  Just reset timer for now.
-                        device->lexer.start_time = now;
+                        device->lexer.pkt_time = now;
                         if (SERVICE_NTRIP == device->servicetype) {
                             // ntrip://
                             // likely NTRIP_CONN_INPROGRESS, move it along

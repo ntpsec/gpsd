@@ -1492,6 +1492,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
     timespec_t delta;
     char ts_buf[TIMESPEC_LEN];
 
+    // Maybe only clear when we actually get a new packet?  How?
     gps_clear_fix(&session->newdata);
 
     /*
@@ -1530,8 +1531,13 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
      * with the data they transmit.
      */
 #define MINIMUM_QUIET_TIME      0.25
-    if (session->lexer.outbuflen == 0) {
-        // beginning of a new packet
+    if (0 == session->lexer.outbuflen) {
+        /* beginning of a new packet, or not...
+         * 0 == lexer.outbuf just means the last read was not a full packet.
+         * that works on serial lines that dribble data.
+         * usb tends to only send complete packets.
+         * Worse, we do not know if we have a full packet this time.
+         */
         (void)clock_gettime(CLOCK_REALTIME, &ts_now);
         if (NULL != session->device_type &&
             (0 < session->lexer.start_time.tv_sec ||
@@ -1607,7 +1613,8 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
         }
         return NODATA_IS;
     }
-    // else (0 < newlen)
+    // else (0 < newlen), got a whole message
+    session->lexer.pkt_time = ts_now;
 
     GPSD_LOG(LOG_RAW, &session->context->errout,
              "CORE: packet sniff on %s finds type %d\n",
