@@ -368,16 +368,17 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                 /* TODO: compare stream location to own location to
                  * find nearest stream if user hasn't provided one */
             } else if (str_starts_with(line, NTRIP_CAS)) {
-                // TODO: parse CAS
+                // TODO: parse CAS, why?
                 // See: http://software.rtcm-ntrip.org/wiki/CAS
-                GPSD_LOG(LOG_WARN, &device->context->errout,
-                         "NTRIP: Can't parse CAS '%s'\n", line);
+                GPSD_LOG(LOG_INF, &device->context->errout,
+                         "NTRIP: Skipping: '%s'\n", line);
             } else if (str_starts_with(line, NTRIP_NET)) {
-                // TODO: parse NET
+                // TODO: parse NET, why?
                 // See: http://software.rtcm-ntrip.org/wiki/NET
-                GPSD_LOG(LOG_WARN, &device->context->errout,
-                         "NTRIP: Can't parse NET '%s'\n", line);
+                GPSD_LOG(LOG_INF, &device->context->errout,
+                         "NTRIP: Skipping '%s'\n", line);
             }
+            // else ???
 
             llen += strlen(NTRIP_BR);
             line += llen;
@@ -875,12 +876,6 @@ int ntrip_open(struct gps_device_t *device, char *orig)
                  device->ntrip.stream.authentication,
                  device->ntrip.stream.fee,
                  device->ntrip.stream.bitrate);
-        if (0 != device->ntrip.stream.nmea) {
-            GPSD_LOG(LOG_WARN, &device->context->errout,
-                     "NTRIP: WARNING mountpoint %s needs NMEA, but gpsd "
-                     "can not provide it.\n",
-                     device->ntrip.stream.url);
-        }
         if (0 != ntrip_auth_encode(&device->ntrip.stream,
                                    device->ntrip.stream.credentials,
                                    device->ntrip.stream.authStr,
@@ -964,6 +959,7 @@ void ntrip_report(struct gps_context_t *context,
                   struct gps_device_t *caster)
 {
     static int count;
+
     /*
      * 10 is an arbitrary number, the point is to have gotten several good
      * fixes before reporting usage to our NTRIP caster.
@@ -997,7 +993,7 @@ void ntrip_report(struct gps_context_t *context,
     }
 }
 
-// Close an ntrip conenction
+// Close an ntrip connection
 void ntrip_close(struct gps_device_t *session)
 {
     if (0 > session->gpsdata.gps_fd) {
