@@ -1,6 +1,6 @@
 = gpsmon(1)
 :author: Eric S. Raymond
-:date: 25 February 2021
+:date: 19 November 2021
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, gpsmon
 :manmanual: GPSD Documentation
@@ -33,16 +33,17 @@ used to tweak GPS settings in various ways; some are device-independent,
 some vary with the GPS chipset type. It will behave sanely, just dumping
 packets, when connected to a GPS type it knows nothing about.
 
-*gpsmon* differs from a navigation client in that it mostly dumps raw data
-from the GPS, with only enough data-massaging to allow checks against
-expected output.  There are many raw data types that "gpsd* knows about
-that *gpsmon* does not. In particular, this tool does not do any interpolation
-or modeling to derive climb/sink or error estimates. Nor does it discard
-altitude reports when the fix quality is too low.
+*gpsmon* differs from a navigation client in that it mostly dumps raw
+data from the GPS, with only enough data-massaging to allow checks
+against expected output.  It does not use *gpsd* to decode packets.
+There are many raw data types that *gpsd* knows about that *gpsmon* does
+not. In particular, this tool does not do any interpolation or modeling
+to derive climb/sink or error estimates. Nor does it discard altitude
+reports when the fix quality is too low.
 
-The casue *gpsd* user will be better served by the *cgps* client which
-display navigation data the same way for all GNSS recivers that *gpsd*
-supports.
+The casual *gpsd* user will be better served by the *cgps* clients which
+display navigation data the same way for all GNSS receivers that *gpsd*
+supports.  Such as *cgps* and *xgps*.
 
 Unlike *gpsd*, *gpsmon* never writes control or probe strings to the device
 unless you explicitly tell it to. Thus, while it will auto-sync to
@@ -284,7 +285,7 @@ be fixed in a future release.
 
 == SEE ALSO
 
-*gpsd*(8), *gpsctl*(1), *gps*(1), *cgps*(3)
+*gpsd*(8), *cgps*, (1)*gpsctl*(1), *gps*(1), *xgps(1)
 
 == RESOURCES
 
