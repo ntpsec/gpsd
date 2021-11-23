@@ -402,6 +402,9 @@ done:
 }
 
 /* Connect to NTRIP caster
+ *
+ * Warning: Blocking.  if the host is unresponsive, this will hang forever.
+ *
  * Return: file descriptor of connection
  *         negative number on failure
  */
@@ -840,6 +843,9 @@ int ntrip_open(struct gps_device_t *device, char *orig)
 
         ret = ntrip_stream_req_probe(&device->ntrip.stream,
                                      &device->context->errout);
+        GPSD_LOG(LOG_PROG, &device->context->errout,
+                 "NTRIP: ntrip_stream_req_probe(%s) ret %d\n",
+                 device->ntrip.stream.url, ret);
         if (-1 == ret) {
             device->gpsdata.gps_fd = PLACEHOLDING_FD;
             device->ntrip.conn_state = NTRIP_CONN_ERR;
