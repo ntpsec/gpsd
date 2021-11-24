@@ -79,6 +79,7 @@ SPDX-License-Identifier: BSD-2-clause
 
 /* decode MSM header
  * MSM1 to MSM7 share a common header
+ * TODO: rtklib has C code for these.
  *
  * Return: void
  */
@@ -882,7 +883,6 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * signal strength (high resolution)
          * length 438
          */
-        /* TODO: rtklib has C code for this one.  */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GPS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 7;
         rtcm3_decode_msm(context, rtcm, buf);
@@ -915,42 +915,66 @@ void rtcm3_unpack(const struct gps_context_t *context,
         /* RTCM 3.2
          * GLONASS Multi Signal Message 1
          */
-        unknown_name = "GLO Multi Signal Message 1";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GLO;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 1;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "GLO MSM 1";
         break;
 
     case 1082:
         /* RTCM 3.2
          * GLONASS Multi Signal Message 2
          */
-        unknown_name = "GLO Multi Signal Message 2";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GLO;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 2;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "GLO MSM 2";
         break;
 
     case 1083:
         /* RTCM 3.2
          * GLONASS Multi Signal Message 4
          */
-        unknown_name = "GLO Multi Signal Message 3";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GLO;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 3;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "GLO MSM 3";
         break;
 
     case 1084:
         /* RTCM 3.2
          * GLONASS Multi Signal Message 4
          */
-        unknown_name = "GLO Multi Signal Message 4";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GLO;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 4;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "GLO MSM 4";
         break;
 
     case 1085:
         /* RTCM 3.2
          * GLONASS Multi Signal Message 5
          */
-        unknown_name = "GLO Multi Signal Message 5";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GLO;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 5;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "GLO MSM 5";
         break;
 
     case 1086:
         /* RTCM 3.2
          * GLONASS Multi Signal Message 6
          */
-        unknown_name = "GLO Multi Signal Message 6";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GLO;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 6;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "GLO MSM 6";
         break;
 
     case 1087:
@@ -960,8 +984,11 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * signal strength (high resolution)
          * length 417 or 427
          */
-        /* TODO: rtklib has C code for this one.  */
-        unknown_name = "GLO Multi Signal Message 7";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GLO;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 7;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "GLO MSM 7";
         break;
 
     case 1088:
@@ -989,42 +1016,66 @@ void rtcm3_unpack(const struct gps_context_t *context,
         /* RTCM 3.2
          * Galileo Multi Signal Message 1
          */
-        unknown_name = "GAL Multi Signal Message 1";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GAL;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 1;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "GAL MSM 1";
         break;
 
     case 1092:
         /* RTCM 3.2
          * Galileo Multi Signal Message 2
          */
-        unknown_name = "GAL Multi Signal Message 2";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GAL;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 2;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "GAL MSM 2";
         break;
 
     case 1093:
         /* RTCM 3.2
          * Galileo Multi Signal Message 3
          */
-        unknown_name = "GAL Multi Signal Message 3";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GAL;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 3;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "GAL MSM 3";
         break;
 
     case 1094:
         /* RTCM 3.2
          * Galileo Multi Signal Message 4
          */
-        unknown_name = "GAL Multi Signal Message 4";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GAL;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 4;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "GAL MSM 4";
         break;
 
     case 1095:
         /* RTCM 3.2
          * Galileo Multi Signal Message 5
          */
-        unknown_name = "GAL Multi Signal Message 5";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GAL;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 5;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "GAL MSM 5";
         break;
 
     case 1096:
         /* RTCM 3.2
          * Galileo Multi Signal Message 6
          */
-        unknown_name = "GAL Multi Signal Message 6";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GAL;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 6;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "GAL MSM 6";
         break;
 
     case 1097:
@@ -1034,8 +1085,11 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * signal strength (high resolution)
          * length 96
          */
-        /* TODO: rtklib has C code for this one.  */
-        unknown_name = "GAL Multi Signal Message 7";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GAL;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 7;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "GAL MSM 7";
         break;
 
     case 1098:
@@ -1063,42 +1117,66 @@ void rtcm3_unpack(const struct gps_context_t *context,
         /* RTCM 3.3
          * SBAS Multi Signal Message 1
          */
-        unknown_name = "SBAS Multi Signal Message 1";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_SBAS;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 1;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "SBAS MSM 1";
         break;
 
     case 1102:
         /* RTCM 3.3
          * SBAS Multi Signal Message 2
          */
-        unknown_name = "SBAS Multi Signal Message 2";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_SBAS;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 2;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "SBAS MSM 2";
         break;
 
     case 1103:
         /* RTCM 3.3
          * SBAS Multi Signal Message 3
          */
-        unknown_name = "SBAS Multi Signal Message 3";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_SBAS;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 3;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "SBAS MSM 3";
         break;
 
     case 1104:
         /* RTCM 3.3
          * SBAS Multi Signal Message 4
          */
-        unknown_name = "SBAS Multi Signal Message 4";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_SBAS;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 4;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "SBAS MSM 4";
         break;
 
     case 1105:
         /* RTCM 3.3
          * SBAS Multi Signal Message 5
          */
-        unknown_name = "SBAS Multi Signal Message 5";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_SBAS;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 5;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "SBAS MSM 5";
         break;
 
     case 1106:
         /* RTCM 3.3
          * SBAS Multi Signal Message 6
          */
-        unknown_name = "SBAS Multi Signal Message 6";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_SBAS;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 6;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "SBAS MSM 6";
         break;
 
     case 1107:
@@ -1108,8 +1186,11 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * signal strength (high resolution)
          * length 96
          */
-        /* TODO: rtklib has C code for this one.  */
-        unknown_name = "SBAS Multi Signal Message 7";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_SBAS;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 7;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "SBAS MSM 7";
         break;
 
     case 1108:
