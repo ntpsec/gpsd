@@ -1218,49 +1218,77 @@ void rtcm3_unpack(const struct gps_context_t *context,
         /* RTCM 3.3
          * QZSS Multi Signal Message 1
          */
-        unknown_name = "QZSS Multi Signal Message 1";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_QZSS;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 1;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "QZSS MSM 1";
         break;
 
     case 1112:
         /* RTCM 3.3
          * QZSS Multi Signal Message 2
          */
-        unknown_name = "QZSS Multi Signal Message 2";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_QZSS;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 2;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "QZSS MSM 2";
         break;
 
     case 1113:
         /* RTCM 3.3
          * QZSS Multi Signal Message 3
          */
-        unknown_name = "QZSS Multi Signal Message 3";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_QZSS;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 3;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "QZSS MSM 3";
         break;
 
     case 1114:
         /* RTCM 3.3
          * QZSS Multi Signal Message 4
          */
-        unknown_name = "QZSS Multi Signal Message 4";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_QZSS;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 4;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "QZSS MSM 4";
         break;
 
     case 1115:
         /* RTCM 3.3
          * QZSS Multi Signal Message 5
          */
-        unknown_name = "QZSS Multi Signal Message 5";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_QZSS;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 5;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "QZSS MSM 5";
         break;
 
     case 1116:
         /* RTCM 3.3
          * QZSS Multi Signal Message 6
          */
-        unknown_name = "QZSS Multi Signal Message 6";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_QZSS;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 6;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "QZSS MSM 6";
         break;
 
     case 1117:
         /* RTCM 3.3
          * QZSS Multi Signal Message 7
          */
-        unknown_name = "QZSS Multi Signal Message 7";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_QZSS;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 7;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "QZSS MSM 7";
         break;
 
     case 1118:
@@ -1288,49 +1316,77 @@ void rtcm3_unpack(const struct gps_context_t *context,
         /* RTCM 3.2 A.1
          * BD Multi Signal Message 1
          */
-        unknown_name = "BD Multi Signal Message 1";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_BD;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 1;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "BD MSM 1";
         break;
 
     case 1122:
         /* RTCM 3.2 A.1
          * BD Multi Signal Message 2
          */
-        unknown_name = "BD Multi Signal Message 2";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_BD;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 2;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "BD MSM 2";
         break;
 
     case 1123:
         /* RTCM 3.2 A.1
          * BD Multi Signal Message 3
          */
-        unknown_name = "BD Multi Signal Message 3";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_BD;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 3;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "BD MSM 3";
         break;
 
     case 1124:
         /* RTCM 3.2 A.1
          * BD Multi Signal Message 4
          */
-        unknown_name = "BD Multi Signal Message 4";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_BD;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 4;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "BD MSM 4";
         break;
 
     case 1125:
         /* RTCM 3.2 A.1
          * BeiDou Multi Signal Message 5
          */
-        unknown_name = "BD Multi Signal Message 5";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_BD;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 5;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "BD MSM 5";
         break;
 
     case 1126:
         /* RTCM 3.2 A.1
          * BeiDou Multi Signal Message 6
          */
-        unknown_name = "BD Multi Signal Message 6";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_BD;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 6;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "BD MSM 6";
         break;
 
     case 1127:
         /* RTCM 3.2 A.1
          * BeiDou Multi Signal Message 7
          */
-        unknown_name = "BD Multi Signal Message 7";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_BD;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 7;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "BD MSM 7";
         break;
 
     case 1128:
