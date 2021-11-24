@@ -91,9 +91,10 @@ extern "C" {
  *       Add gyro_temp, gyro_z, msg, timeTag, to attitude_t
  *       add imu[], and matching IMU_SET flag
  *       move attitude out of the union, to stop conflicts.
+ * 13    Add rtcm3_msm_hdr
  *
  */
-#define GPSD_API_MAJOR_VERSION  12      // bump on incompatible changes
+#define GPSD_API_MAJOR_VERSION  13      // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
 
 #define MAXCHANNELS     140     // u-blox 9 tracks 140 signals
@@ -491,97 +492,116 @@ struct rtcm2_t {
                 double rrc;             /* range error rate */
             } sat[MAXCORRECTIONS];
         } glonass_ranges;
-        /* data from type 16 messages */
+        // data from type 16 messages
         char message[(RTCM2_WORDS_MAX - 2) * sizeof(isgps30bits_t)];
-        /* data from messages of unknown type, not including header */
+        // data from messages of unknown type, not including header
         isgps30bits_t   words[RTCM2_WORDS_MAX - 2];
     };
 };
 
-/* RTCM3 report structures begin here */
+// RTCM3 report structures begin here
 
 #define RTCM3_MAX_SATELLITES    64
 #define RTCM3_MAX_DESCRIPTOR    31
 #define RTCM3_MAX_ANNOUNCEMENTS 32
 
-struct rtcm3_rtk_hdr {          /* header data from 1001, 1002, 1003, 1004 */
-    /* Used for both GPS and GLONASS, but their timebases differ */
-    unsigned int station_id;    /* Reference Station ID */
-    time_t tow;                 /* GPS Epoch Time (TOW) in ms,
-                                   or GLONASS Epoch Time in ms */
-    bool sync;                  /* Synchronous GNSS Message Flag */
-    unsigned short satcount;    /* # Satellite Signals Processed */
-    bool smoothing;             /* Divergence-free Smoothing Indicator */
-    unsigned int interval;      /* Smoothing Interval */
+// Used for both GPS and GLONASS, but their timebases differ
+struct rtcm3_rtk_hdr {          // header data from 1001, 1002, 1003, 1004
+    unsigned int station_id;    // Reference Station ID
+    time_t tow;                 // GNSS Epoch Time in ms
+    bool sync;                  // Synchronous GNSS Message Flag
+    unsigned short satcount;    // # Satellite Signals Processed
+    bool smoothing;             // Divergence-free Smoothing Indicator
+    unsigned int interval;      // Smoothing Interval
 };
 
 struct rtcm3_basic_rtk {
-    unsigned char indicator;    /* Indicator */
+    unsigned char indicator;    // Indicator
     unsigned int channel;       /* Satellite Frequency Channel Number
                                    (GLONASS only) */
-    double pseudorange;         /* Pseudorange */
-    double rangediff;           /* PhaseRange - Pseudorange in meters */
-    unsigned char locktime;     /* Lock time Indicator */
+    double pseudorange;         // Pseudorange
+    double rangediff;           // PhaseRange - Pseudorange in meters
+    unsigned char locktime;     // Lock time Indicator
 };
 
 struct rtcm3_extended_rtk {
-    unsigned char indicator;    /* Indicator */
+    unsigned char indicator;    // Indicator
     unsigned int channel;       /* Satellite Frequency Channel Number
                                    (GLONASS only) */
-    double pseudorange;         /* Pseudorange */
-    double rangediff;           /* PhaseRange - L1 Pseudorange */
-    unsigned char locktime;     /* Lock time Indicator */
-    unsigned char ambiguity;    /* Integer Pseudorange
-                                           Modulus Ambiguity */
-    double CNR;                 /* Carrier-to-Noise Ratio */
+    double pseudorange;         // Pseudorange
+    double rangediff;           // PhaseRange - L1 Pseudorange
+    unsigned char locktime;     // Lock time Indicator
+    unsigned char ambiguity;    // Integer Pseudorange Modulus Ambiguity
+    double CNR;                 // Carrier-to-Noise Ratio
+};
+
+// header data from MSM1 to MSM7
+// Used for all GNSS, but their timebases differ
+struct rtcm3_msm_hdr {
+    unsigned int station_id;    // Reference Station ID
+    time_t tow;                 // GNSS Epoch Time in ms
+    bool sync;                  // Synchronous GNSS Message Flag
+    unsigned short IODS;        // IODS – Issue of Data Station  
+    unsigned char reserved;     // reserved
+    unsigned char steering;     // Clock Steering Indicator 
+    unsigned char ext_clk;      // External Clock Indicator 
+    bool smoothing;             // Divergence-free Smoothing Indicator
+    unsigned int interval;      // Smoothing Interval
+    uint64_t sat_mask;          // Satellite Mask  
+    uint32_t sig_mask;          // Signal Mask  
+    uint64_t cell_mask;         // Cell Mask  
+    // not part of the network message:
+    unsigned char gnssid;       // gnssid
+    unsigned char msm;          // 1 to 7, MSMx
+    
 };
 
 struct rtcm3_network_rtk_header {
-    unsigned int network_id;    /* Network ID */
-    unsigned int subnetwork_id; /* Subnetwork ID */
-    time_t time;                /* GPS Epoch Time (TOW) in ms */
-    bool multimesg;             /* GPS Multiple Message Indicator */
-    unsigned master_id;         /* Master Reference Station ID */
-    unsigned aux_id;            /* Auxiliary Reference Station ID */
-    unsigned char satcount;     /* count of GPS satellites */
+    unsigned int network_id;    // Network ID
+    unsigned int subnetwork_id; // Subnetwork ID
+    time_t time;                // GPS Epoch Time (TOW) in ms
+    bool multimesg;             // GPS Multiple Message Indicator
+    unsigned master_id;         // Master Reference Station ID
+    unsigned aux_id;            // Auxiliary Reference Station ID
+    unsigned char satcount;     // count of GPS satellites
 };
 
 struct rtcm3_correction_diff {
-    unsigned char ident;        /* satellite ID */
+    unsigned char ident;        // satellite ID
     enum {reserved, correct, widelane, uncertain} ambiguity;
     unsigned char nonsync;
     double geometric_diff;      /* Geometric Carrier Phase
                                    Correction Difference (1016, 1017) */
-    unsigned char iode;         /* GPS IODE (1016, 1017) */
+    unsigned char iode;         // GPS IODE (1016, 1017)
     double ionospheric_diff;    /* Ionospheric Carrier Phase
                                    Correction Difference (1015, 1017) */
 };
 
 struct rtcm3_t {
-    /* header contents */
-    unsigned type;      /* RTCM 3.x message type */
-    unsigned length;    /* payload length, inclusive of checksum */
+    // header contents
+    unsigned type;      // RTCM 3.x message type
+    unsigned length;    // payload length, inclusive of checksum
 
     union {
-        /* 1001-1013 were present in the 3.0 version */
+        // 1001-1013 were present in the 3.0 version
         struct {
             struct rtcm3_rtk_hdr        header;
             struct rtcm3_1001_t {
-                unsigned ident;                 /* Satellite ID */
+                unsigned ident;                 // Satellite ID
                 struct rtcm3_basic_rtk L1;
             } rtk_data[RTCM3_MAX_SATELLITES];
         } rtcm3_1001;
         struct {
             struct rtcm3_rtk_hdr        header;
             struct rtcm3_1002_t {
-                unsigned ident;                 /* Satellite ID */
+                unsigned ident;                 // Satellite ID
                 struct rtcm3_extended_rtk L1;
             } rtk_data[RTCM3_MAX_SATELLITES];
         } rtcm3_1002;
         struct rtcm3_1003_t {
             struct rtcm3_rtk_hdr        header;
             struct {
-                unsigned ident;                 /* Satellite ID */
+                unsigned ident;                 // Satellite ID
                 struct rtcm3_basic_rtk L1;
                 struct rtcm3_basic_rtk L2;
             } rtk_data[RTCM3_MAX_SATELLITES];
@@ -589,55 +609,55 @@ struct rtcm3_t {
         struct rtcm3_1004_t {
             struct rtcm3_rtk_hdr        header;
             struct {
-                unsigned ident;                 /* Satellite ID */
+                unsigned ident;                 // Satellite ID
                 struct rtcm3_extended_rtk L1;
                 struct rtcm3_extended_rtk L2;
             } rtk_data[RTCM3_MAX_SATELLITES];
         } rtcm3_1004;
         struct rtcm3_1005_t {
-            unsigned int station_id;            /* Reference Station ID */
-            int system;                         /* Which system is it? */
-            bool reference_station;             /* Reference-station indicator */
-            bool single_receiver;               /* Single Receiver Oscillator */
-            double ecef_x, ecef_y, ecef_z;      /* ECEF antenna location */
+            unsigned int station_id;            // Reference Station ID
+            int system;                         // Which system is it?
+            bool reference_station;             // Reference-station indicator
+            bool single_receiver;               // Single Receiver Oscillator
+            double ecef_x, ecef_y, ecef_z;      // ECEF antenna location
         } rtcm3_1005;
         struct rtcm3_1006_t {
-            unsigned int station_id;            /* Reference Station ID */
-            int system;                         /* Which system is it? */
-            bool reference_station;             /* Reference-station indicator */
-            bool single_receiver;               /* Single Receiver Oscillator */
-            double ecef_x, ecef_y, ecef_z;      /* ECEF antenna location */
-            double height;                      /* Antenna height */
+            unsigned int station_id;            // Reference Station ID
+            int system;                         // Which system is it?
+            bool reference_station;             // Reference-station indicator
+            bool single_receiver;               // Single Receiver Oscillator
+            double ecef_x, ecef_y, ecef_z;      // ECEF antenna location
+            double height;                      // Antenna height
         } rtcm3_1006;
         struct {
             unsigned int station_id;                    // Reference Station ID
-            char descriptor[RTCM3_MAX_DESCRIPTOR+1];    /* Description string */
+            char descriptor[RTCM3_MAX_DESCRIPTOR+1];    // Description string
             unsigned int setup_id;
         } rtcm3_1007;
         struct {
             unsigned int station_id;                    // Reference Station ID
-            char descriptor[RTCM3_MAX_DESCRIPTOR+1];    /* Description string */
+            char descriptor[RTCM3_MAX_DESCRIPTOR+1];    // Description string
             unsigned int setup_id;
-            char serial[RTCM3_MAX_DESCRIPTOR+1];        /* Serial # string */
+            char serial[RTCM3_MAX_DESCRIPTOR+1];        // Serial # string
         } rtcm3_1008;
         struct {
             struct rtcm3_rtk_hdr        header;
             struct rtcm3_1009_t {
-                unsigned ident;         /* Satellite ID */
+                unsigned ident;         // Satellite ID
                 struct rtcm3_basic_rtk L1;
             } rtk_data[RTCM3_MAX_SATELLITES];
         } rtcm3_1009;
         struct {
             struct rtcm3_rtk_hdr        header;
             struct rtcm3_1010_t {
-                unsigned ident;         /* Satellite ID */
+                unsigned ident;         // Satellite ID
                 struct rtcm3_extended_rtk L1;
             } rtk_data[RTCM3_MAX_SATELLITES];
         } rtcm3_1010;
         struct {
             struct rtcm3_rtk_hdr        header;
             struct rtcm3_1011_t {
-                unsigned ident;                 /* Satellite ID */
+                unsigned ident;                 // Satellite ID
                 struct rtcm3_extended_rtk L1;
                 struct rtcm3_extended_rtk L2;
             } rtk_data[RTCM3_MAX_SATELLITES];
@@ -645,31 +665,31 @@ struct rtcm3_t {
         struct {
             struct rtcm3_rtk_hdr        header;
             struct rtcm3_1012_t {
-                unsigned ident;                 /* Satellite ID */
+                unsigned ident;                 // Satellite ID
                 struct rtcm3_extended_rtk L1;
                 struct rtcm3_extended_rtk L2;
             } rtk_data[RTCM3_MAX_SATELLITES];
         } rtcm3_1012;
         struct {
-            unsigned int station_id;    /* Reference Station ID */
-            unsigned short mjd;         /* Modified Julian Day (MJD) Number */
-            unsigned int sod;           /* Seconds of Day (UTC) */
-            unsigned char leapsecs;     /* Leap Seconds, GPS-UTC */
-            unsigned char ncount;       /* Count of announcements to follow */
+            unsigned int station_id;    // Reference Station ID
+            unsigned short mjd;         // Modified Julian Day (MJD) Number
+            unsigned int sod;           // Seconds of Day (UTC)
+            unsigned char leapsecs;     // Leap Seconds, GPS-UTC
+            unsigned char ncount;       // Count of announcements to follow
             struct rtcm3_1013_t {
-                unsigned short id;              /* message type ID */
+                unsigned short id;              // message type ID
                 bool sync;
-                unsigned short interval;        /* interval in 0.1sec units */
+                unsigned short interval;        // interval in 0.1sec units
             } announcements[RTCM3_MAX_ANNOUNCEMENTS];
         } rtcm3_1013;
-        /* 1014-1017 were added in the 3.1 version */
+        // 1014-1017 were added in the 3.1 version
         struct rtcm3_1014_t {
-            unsigned int network_id;    /* Network ID */
-            unsigned int subnetwork_id; /* Subnetwork ID */
-            unsigned int stationcount;  /* # auxiliary stations transmitted */
-            unsigned int master_id;     /* Master Reference Station ID */
-            unsigned int aux_id;        /* Auxiliary Reference Station ID */
-            double d_lat, d_lon, d_alt; /* Aux-master location delta */
+            unsigned int network_id;    // Network ID
+            unsigned int subnetwork_id; // Subnetwork ID
+            unsigned int stationcount;  // # auxiliary stations transmitted
+            unsigned int master_id;     // Master Reference Station ID
+            unsigned int aux_id;        // Auxiliary Reference Station ID
+            double d_lat, d_lon, d_alt; // Aux-master location delta
         } rtcm3_1014;
         struct rtcm3_1015_t {
             struct rtcm3_network_rtk_header     header;
@@ -683,15 +703,15 @@ struct rtcm3_t {
             struct rtcm3_network_rtk_header     header;
             struct rtcm3_correction_diff corrections[RTCM3_MAX_SATELLITES];
         } rtcm3_1017;
-        /* 1018-1029 were in the 3.0 version */
+        // 1018-1029 were in the 3.0 version
         struct rtcm3_1019_t {
-            unsigned int ident;         /* Satellite ID */
-            unsigned int week;          /* GPS Week Number */
-            unsigned char sv_accuracy;  /* GPS SV ACCURACY */
+            unsigned int ident;         // Satellite ID
+            unsigned int week;          // GPS Week Number
+            unsigned char sv_accuracy;  // GPS SV ACCURACY
             enum {reserved_code, p, ca, l2c} code;
             double idot;
             unsigned char iode;
-            /* ephemeris fields, not scaled */
+            // ephemeris fields, not scaled
             unsigned int t_sub_oc;
             signed int a_sub_f2;
             signed int a_sub_f1;
@@ -718,9 +738,9 @@ struct rtcm3_t {
             bool fit_interval;
         } rtcm3_1019;
         struct rtcm3_1020_t {
-            unsigned int ident;         /* Satellite ID */
-            unsigned short channel;     /* Satellite Frequency Channel Number */
-            /* ephemeris fields, not scaled */
+            unsigned int ident;         // Satellite ID
+            unsigned short channel;     // Satellite Frequency Channel Number
+            // ephemeris fields, not scaled
             bool C_sub_n;
             bool health_avAilability_indicator;
             unsigned char P1;
@@ -756,20 +776,20 @@ struct rtcm3_t {
             bool M_l_sub_n;
         } rtcm3_1020;
         struct rtcm3_1029_t {
-            unsigned int station_id;    /* Reference Station ID */
-            unsigned short mjd;         /* Modified Julian Day (MJD) Number */
-            unsigned int sod;           /* Seconds of Day (UTC) */
-            size_t len;                 /* # chars to follow */
-            size_t unicode_units;       /* # Unicode units (bytes) in text */
+            unsigned int station_id;    // Reference Station ID
+            unsigned short mjd;         // Modified Julian Day (MJD) Number
+            unsigned int sod;           // Seconds of Day (UTC)
+            size_t len;                 // # chars to follow
+            size_t unicode_units;       // # Unicode units (bytes) in text
             unsigned char text[255];
         } rtcm3_1029;
         struct rtcm3_1033_t {
             unsigned int station_id;                    // Reference Station ID
-            char descriptor[RTCM3_MAX_DESCRIPTOR+1];    /* Description string */
+            char descriptor[RTCM3_MAX_DESCRIPTOR+1];    // Description string */
             unsigned int setup_id;
-            char serial[RTCM3_MAX_DESCRIPTOR+1];        /* Serial # string */
-            char receiver[RTCM3_MAX_DESCRIPTOR+1];      /* Receiver string */
-            char firmware[RTCM3_MAX_DESCRIPTOR+1];      /* Firmware string */
+            char serial[RTCM3_MAX_DESCRIPTOR+1];        // Serial # string
+            char receiver[RTCM3_MAX_DESCRIPTOR+1];      // Receiver string
+            char firmware[RTCM3_MAX_DESCRIPTOR+1];      // Firmware string
         } rtcm3_1033;
         struct {
             unsigned int station_id;                    // Reference Station ID
@@ -780,14 +800,15 @@ struct rtcm3_t {
             int l2_ca_bias;         // GLONASS L2 C/A Code-Phase Bias
             int l2_p_bias;          // GLONASS L2 P Code-Phase Bias
         } rtcm3_1230;
-        unsigned char data[1024];       /* Max RTCM3 msg length is 1023 bytes */
+        struct rtcm3_msm_hdr rtcm3_msm;
+        unsigned char data[1024];       // Max RTCM3 msg length is 1023 bytes
     } rtcmtypes;
 };
 
-/* RTCM3 scaling constants */
-#define GPS_AMBIGUITY_MODULUS           299792.458      /* 1004, DF014*/
-#define GLONASS_AMBIGUITY_MODULUS       599584.916      /* 1012, DF044 */
-#define MESSAGE_INTERVAL_UNITS          0.1             /* 1013, DF047 */
+// RTCM3 scaling constants
+#define GPS_AMBIGUITY_MODULUS           299792.458      // 1004, DF014
+#define GLONASS_AMBIGUITY_MODULUS       599584.916      // 1012, DF044
+#define MESSAGE_INTERVAL_UNITS          0.1             // 1013, DF047
 
 /*
  * The one true structure for (most) orbital data.
