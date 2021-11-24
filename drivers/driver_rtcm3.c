@@ -71,9 +71,52 @@ SPDX-License-Identifier: BSD-2-clause
  * Also look in the BNC source
  * and look at the tklib source: http://www.rtklib.com/
  */
+
+#define ugrab(width)    (bitcount += width, ubits((unsigned char *)buf, \
+                         bitcount-width, width, false))
+#define sgrab(width)    (bitcount += width, sbits((signed char *)buf,  \
+                         bitcount-width, width, false))
+
+/* decode MSM header
+ * MSM1 to MSM7 share a common header
+ *
+ * Return: void
+ */
+static void rtcm3_decode_msm(const struct gps_context_t *context,
+                             struct rtcm3_t *rtcm, char *buf)
+{
+    int bitcount = 36;
+
+    rtcm->rtcmtypes.rtcm3_msm.station_id = (unsigned int)ugrab(12);
+    rtcm->rtcmtypes.rtcm3_msm.tow = (time_t)ugrab(30);
+    rtcm->rtcmtypes.rtcm3_msm.sync = (bool)ugrab(1);
+    rtcm->rtcmtypes.rtcm3_msm.IODS = (unsigned short)ugrab(3);
+    rtcm->rtcmtypes.rtcm3_msm.steering = (unsigned short)ugrab(2);
+    rtcm->rtcmtypes.rtcm3_msm.ext_clk = (unsigned short)ugrab(2);
+    rtcm->rtcmtypes.rtcm3_msm.smoothing = (bool)ugrab(1);
+    rtcm->rtcmtypes.rtcm3_msm.interval = (unsigned)ugrab(3);
+    rtcm->rtcmtypes.rtcm3_msm.sat_mask = (uint64_t)ugrab(64);
+    rtcm->rtcmtypes.rtcm3_msm.sig_mask = (uint32_t)ugrab(32);
+    rtcm->rtcmtypes.rtcm3_msm.cell_mask = (uint64_t)ugrab(64);
+
+    // (long long)tow for 32 bit machines.
+    GPSD_LOG(LOG_PROG, &context->errout, "RTCM3: rtcm3_decode_msm(%u) "
+             "gnssid %u MSM%u id %u tow %lld sync %u IODS %u\n",
+             rtcm->type,
+             rtcm->rtcmtypes.rtcm3_msm.gnssid,
+             rtcm->rtcmtypes.rtcm3_msm.msm,
+             rtcm->rtcmtypes.rtcm3_msm.station_id,
+             (long long)rtcm->rtcmtypes.rtcm3_msm.tow,
+             rtcm->rtcmtypes.rtcm3_msm.IODS,
+             rtcm->rtcmtypes.rtcm3_msm.sync);
+}
+
+/* break out the raw bits into the scaled report-structure fields
+ *
+ * Return: void
+ */
 void rtcm3_unpack(const struct gps_context_t *context,
                   struct rtcm3_t *rtcm, char *buf)
-/* break out the raw bits into the scaled report-structure fields */
 {
     unsigned int n, n2, n3, n4;
     int bitcount = 0;
@@ -82,10 +125,6 @@ void rtcm3_unpack(const struct gps_context_t *context,
     bool unknown = true;              // we don't know how to decode
     const char *unknown_name = NULL;  // no decode, but maybe we know the name
 
-#define ugrab(width)    (bitcount += width, ubits((unsigned char *)buf, \
-                         bitcount-width, width, false))
-#define sgrab(width)    (bitcount += width, sbits((signed char *)buf,  \
-                         bitcount-width, width, false))
 #define GPS_PSEUDORANGE(fld, len) \
     {temp = (unsigned long)ugrab(len);          \
     if (temp == GPS_INVALID_PSEUDORANGE)        \
@@ -102,7 +141,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
     memset(rtcm, 0, sizeof(struct rtcm3_t));
     //assert(ugrab(8) == 0xD3);
     //assert(ugrab(6) == 0x00);
-    ugrab(14);
+    ugrab(14);    // discard preamble.  check for validity?
 
     rtcm->length = (unsigned int)ugrab(10);
     rtcm->type = (unsigned int)ugrab(12);
@@ -774,42 +813,66 @@ void rtcm3_unpack(const struct gps_context_t *context,
         /* RTCM 3.2
          * GPS Multi Signal Message 1
          */
-        unknown_name = "GPS Multi Signal Message 1";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GPS;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 1;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "GPS MSM 1";
         break;
 
     case 1072:
         /* RTCM 3.2
          * GPS Multi Signal Message 2
          */
-        unknown_name = "GPS Multi Signal Message 2";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GPS;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 2;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "GPS MSM 2";
         break;
 
     case 1073:
         /* RTCM 3.2
          * GPS Multi Signal Message 3
          */
-        unknown_name = "GPS Multi Signal Message 3";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GPS;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 3;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "GPS MSM 3";
         break;
 
     case 1074:
         /* RTCM 3.2
          * GPS Multi Signal Message 4
          */
-        unknown_name = "GPS Multi Signal Message 4";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GPS;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 4;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "GPS MSM 4";
         break;
 
     case 1075:
         /* RTCM 3.2
          * GPS Multi Signal Message 5
          */
-        unknown_name = "GPS Multi Signal Message 5";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GPS;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 5;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "GPS MSM 5";
         break;
 
     case 1076:
         /* RTCM 3.2
          * GPS Multi Signal Message 6
          */
-        unknown_name = "GPS Multi Signal Message 6";
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GPS;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 6;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
+        unknown_name = "GPS MSM 6";
         break;
 
     case 1077:
@@ -820,6 +883,10 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * length 438
          */
         /* TODO: rtklib has C code for this one.  */
+        rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GPS;
+        rtcm->rtcmtypes.rtcm3_msm.msm = 7;
+        rtcm3_decode_msm(context, rtcm, buf);
+        // unknown = false;
         unknown_name = "GPS MSM7";
         break;
 
