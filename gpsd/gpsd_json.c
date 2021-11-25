@@ -520,30 +520,39 @@ void json_sky_dump(const struct gps_data_t *datap,
 
     assert(replylen > sizeof(char *));
     (void)strlcpy(reply, "{\"class\":\"SKY\"", replylen);
-    if (datap->dev.path[0] != '\0')
+    if ('\0' != datap->dev.path[0]) {
         str_appendf(reply, replylen, ",\"device\":\"%s\"", datap->dev.path);
+    }
     if (0 < datap->skyview_time.tv_sec) {
         char tbuf[JSON_DATE_MAX+1];
+
         str_appendf(reply, replylen,
                        ",\"time\":\"%s\"",
                        timespec_to_iso8601(datap->skyview_time,
                                       tbuf, sizeof(tbuf)));
     }
-    if (isfinite(datap->dop.xdop) != 0)
+    if (0 != isfinite(datap->dop.xdop)) {
         str_appendf(reply, replylen, ",\"xdop\":%.2f", datap->dop.xdop);
-    if (isfinite(datap->dop.ydop) != 0)
+    }
+    if (0 != isfinite(datap->dop.ydop)) {
         str_appendf(reply, replylen, ",\"ydop\":%.2f", datap->dop.ydop);
-    if (isfinite(datap->dop.vdop) != 0)
+    }
+    if (0 != isfinite(datap->dop.vdop)) {
         str_appendf(reply, replylen, ",\"vdop\":%.2f", datap->dop.vdop);
-    if (isfinite(datap->dop.tdop) != 0)
+    }
+    if (0 != isfinite(datap->dop.tdop)) {
         str_appendf(reply, replylen, ",\"tdop\":%.2f", datap->dop.tdop);
-    if (isfinite(datap->dop.hdop) != 0)
+    }
+    if (0 != isfinite(datap->dop.hdop)) {
         str_appendf(reply, replylen, ",\"hdop\":%.2f", datap->dop.hdop);
-    if (isfinite(datap->dop.gdop) != 0)
+    }
+    if (0 != isfinite(datap->dop.gdop)) {
         str_appendf(reply, replylen, ",\"gdop\":%.2f", datap->dop.gdop);
-    if (isfinite(datap->dop.pdop) != 0)
+    }
+    if (0 != isfinite(datap->dop.pdop)) {
         str_appendf(reply, replylen, ",\"pdop\":%.2f", datap->dop.pdop);
-    /* insurance against flaky drivers */
+    }
+    // insurance against flaky drivers
     for (i = 0; i < datap->satellites_visible; i++)
         if (datap->skyview[i].PRN) {
             reported++;
@@ -614,19 +623,19 @@ void json_device_dump(const struct gps_device_t *device,
     (void)strlcpy(reply, "{\"class\":\"DEVICE\",\"path\":\"", replylen);
     (void)strlcat(reply, device->gpsdata.dev.path, replylen);
     (void)strlcat(reply, "\"", replylen);
-    if (device->device_type != NULL) {
+    if (NULL != device->device_type) {
         (void)strlcat(reply, ",\"driver\":\"", replylen);
         (void)strlcat(reply, device->device_type->type_name, replylen);
         (void)strlcat(reply, "\"", replylen);
     }
-    if (device->subtype[0] != '\0') {
+    if ('\0' != device->subtype[0]) {
         (void)strlcat(reply, ",\"subtype\":\"", replylen);
         (void)strlcat(reply,
                       json_stringify(buf1, sizeof(buf1), device->subtype),
                       replylen);
         (void)strlcat(reply, "\"", replylen);
     }
-    if (device->subtype1[0] != '\0') {
+    if ('\0' != device->subtype1[0]) {
         (void)strlcat(reply, ",\"subtype1\":\"", replylen);
         (void)strlcat(reply,
                       json_stringify(buf1, sizeof(buf1), device->subtype1),
@@ -641,20 +650,25 @@ void json_device_dump(const struct gps_device_t *device,
      * a serial device with the usual control parameters.
      */
     if (0 < device->gpsdata.online.tv_sec) {
-        /* odd, using online, not activated, time */
+        // odd, using online, not activated, time
         str_appendf(reply, replylen, ",\"activated\":\"%s\"",
                     timespec_to_iso8601(device->gpsdata.online,
                                         buf1, sizeof(buf1)));
-        if (device->observed != 0) {
+        if (0 != device->observed) {
             int mask = 0;
-            for (cmp = classmap; cmp < classmap + NITEMS(classmap); cmp++)
-                if ((device->observed & cmp->packetmask) != 0)
+
+            for (cmp = classmap; cmp < classmap + NITEMS(classmap); cmp++) {
+                if (0 != (device->observed & cmp->packetmask)) {
                     mask |= cmp->typemask;
-            if (mask != 0)
+                }
+            }
+            if (0 != mask) {
                 str_appendf(reply, replylen, ",\"flags\":%d", mask);
+            }
         }
         if (SERVICE_SENSOR == device->servicetype) {
             int speed = 0;
+
             /* speed can be 0 if the device is not currently active,
              * or device is a file, pipe, /dev/pps, ttyACM, etc.
              * can be -1 if never configured. */
@@ -700,8 +714,9 @@ void json_watch_dump(const struct gps_policy_t *ccp,
                    ccp->split24 ? "true" : "false",
                    ccp->pps ? "true" : "false");
     // UNUSED: loglevel, remote
-    if (ccp->devpath[0] != '\0')
+    if ('\0' != ccp->devpath[0]) {
         str_appendf(reply, replylen, ",\"device\":\"%s\"", ccp->devpath);
+    }
     (void)strlcat(reply, "}\r\n", replylen);
 }
 
@@ -866,7 +881,7 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                    (unsigned int)subframe->subframe_num);
 
     if (0 <= subframe->WN) {
-     str_appendf(buf, buflen, ",\"WN\":%d", subframe->WN);
+        str_appendf(buf, buflen, ",\"WN\":%d", subframe->WN);
     }
 
     if (0 <= subframe->TOW17) {
@@ -1080,7 +1095,7 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                     ",\"HEALTH2\":{\"toa\":%lu,\"WNa\":%u",
                                subframe->sub5_25.l_toa,
                                (unsigned int)subframe->sub5_25.WNa);
-                /* 1-index loop to construct json */
+                // 1-index loop to construct json
                 for(i = 1 ; i <= 24; i++){
                     str_appendf(buf, buflen,
                                 ",\"SVH%d\":%u",
@@ -1090,7 +1105,7 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                 break;
 
             case 52:    // data ID 52, subframe 4, page 13, aka NMCT
-                /* decoding of ERD to SV is non trivial and not done yet */
+                // decoding of ERD to SV is non trivial and not done yet
                 str_appendf(buf, buflen,
                     ",\"NMCT\":{\"ai\":%u", subframe->sub4_13.ai);
 
@@ -1123,6 +1138,7 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
 
                 {
                     char buf1[25 * 6];
+
                     (void)json_stringify(buf1, sizeof(buf1),
                                          subframe->sub4_17.str);
                     str_appendf(buf, buflen, ",\"system_message\":\"%.144s\"",
@@ -1184,11 +1200,12 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
                                 (int)subframe->sub4_25.svf[1]);
 
                 // 1-index loop to construct json, rather than giant snprintf
-                for(i = 2 ; i <= 32; i++){
+                for(i = 2 ; i <= 32; i++) {
                     str_appendf(buf, buflen, ",\"SV%d\":%u",
                                 i, subframe->sub4_25.svf[i]);
                 }
-                for(i = 0 ; i < 8; i++){ /* 0-index */
+                for(i = 0 ; i < 8; i++) {
+                    // 0-index
                     str_appendf(buf, buflen, ",\"SVH%d\":%u",
                                 i + 25, subframe->sub4_25.svhx[i]);
                 }
@@ -1202,7 +1219,7 @@ void json_subframe_dump(const struct gps_data_t *datap, const bool scaled,
     (void)strlcat(buf, "}\r\n", buflen);
 }
 
-/* RAW dump - should be good enough to make a RINEX 3 file */
+// RAW dump - should be good enough to make a RINEX 3 file
 void json_raw_dump(const struct gps_data_t *gpsdata,
                    char *reply, size_t replylen)
 {
@@ -1210,12 +1227,13 @@ void json_raw_dump(const struct gps_data_t *gpsdata,
 
     assert(replylen > sizeof(char *));
     if (0 == gpsdata->raw.mtime.tv_sec) {
-        /* no data to dump */
+        // no data to dump
         return;
     }
     (void)strlcpy(reply, "{\"class\":\"RAW\"", replylen);
-    if (gpsdata->dev.path[0] != '\0')
+    if ('\0' != gpsdata->dev.path[0]) {
         str_appendf(reply, replylen, ",\"device\":\"%s\"", gpsdata->dev.path);
+    }
 
     str_appendf(reply, replylen, ",\"time\":%lld,\"nsec\":%ld,\"rawdata\":[",
                 (long long)gpsdata->raw.mtime.tv_sec,
@@ -1224,7 +1242,7 @@ void json_raw_dump(const struct gps_data_t *gpsdata,
     for (i = 0; i < MAXCHANNELS; i++) {
         if (0 == gpsdata->raw.meas[i].svid ||
             255 == gpsdata->raw.meas[i].svid) {
-            /* skip empty and GLONASS 255 */
+            // skip empty and GLONASS 255
             continue;
         }
         str_appendf(reply, replylen,
@@ -1258,13 +1276,13 @@ void json_raw_dump(const struct gps_data_t *gpsdata,
                         gpsdata->raw.meas[i].doppler);
         }
 
-        /* L2 C/A pseudo range, RINEX C2C */
+        // L2 C/A pseudo range, RINEX C2C
         if (0 != isfinite(gpsdata->raw.meas[i].c2c) &&
             1.0 < gpsdata->raw.meas[i].c2c) {
             str_appendf(reply, replylen, ",\"c2c\":%f",
                         gpsdata->raw.meas[i].c2c);
 
-            /* L2 C/A carrier phase, RINEX L2C */
+            // L2 C/A carrier phase, RINEX L2C
             if (0 != isfinite(gpsdata->raw.meas[i].l2c)) {
                 str_appendf(reply, replylen, ",\"l2c\":%f",
                             gpsdata->raw.meas[i].l2c);
@@ -1278,18 +1296,19 @@ void json_raw_dump(const struct gps_data_t *gpsdata,
 
 #if defined(RTCM104V2_ENABLE)
 
-/* compare two struct rtk_sat_t */
+// compare two struct rtk_sat_t
 static int rtk_sat_cmp(const void *a, const void *b)
 {
     const struct rtk_sat_t *A = (const struct rtk_sat_t*)a;
     const struct rtk_sat_t *B = (const struct rtk_sat_t*)b;
+
     return A->ident - B->ident;
 }
 
+// dump the contents of a parsed RTCM104 message as JSON
 void json_rtcm2_dump(const struct rtcm2_t *rtcm,
                      const char *device,
                      char buf[], size_t buflen)
-/* dump the contents of a parsed RTCM104 message as JSON */
 {
     char buf1[JSON_VAL_MAX * 2 + 1];
     unsigned int n;
@@ -1300,13 +1319,15 @@ void json_rtcm2_dump(const struct rtcm2_t *rtcm,
     }
 
     (void)snprintf(buf, buflen, "{\"class\":\"RTCM2\",");
-    if (device != NULL && device[0] != '\0')
+    if (NULL != device &&
+        '\0' != device[0]) {
         str_appendf(buf, buflen, "\"device\":\"%s\",", device);
+    }
     str_appendf(buf, buflen,
-                   "\"type\":%u,\"station_id\":%u,\"zcount\":%0.1f,"
-                   "\"seqnum\":%u,\"length\":%u,\"station_health\":%u,",
-                   rtcm->type, rtcm->refstaid, rtcm->zcount, rtcm->seqnum,
-                   rtcm->length, rtcm->stathlth);
+                "\"type\":%u,\"station_id\":%u,\"zcount\":%0.1f,"
+                "\"seqnum\":%u,\"length\":%u,\"station_health\":%u,",
+                rtcm->type, rtcm->refstaid, rtcm->zcount, rtcm->seqnum,
+                rtcm->length, rtcm->stathlth);
 
     switch (rtcm->type) {
     case 1:
@@ -1314,6 +1335,7 @@ void json_rtcm2_dump(const struct rtcm2_t *rtcm,
         (void)strlcat(buf, "\"satellites\":[", buflen);
         for (n = 0; n < rtcm->gps_ranges.nentries; n++) {
             const struct gps_rangesat_t *rsp = &rtcm->gps_ranges.sat[n];
+
             str_appendf(buf, buflen,
                            "{\"ident\":%u,\"udre\":%u,\"iod\":%u,"
                            "\"prc\":%0.3f,\"rrc\":%0.3f},",
@@ -1326,10 +1348,11 @@ void json_rtcm2_dump(const struct rtcm2_t *rtcm,
         break;
 
     case 3:
-        if (rtcm->ref_sta.valid)
+        if (rtcm->ref_sta.valid) {
             str_appendf(buf, buflen,
-                           "\"x\":%.2f,\"y\":%.2f,\"z\":%.2f,",
-                           rtcm->ref_sta.x, rtcm->ref_sta.y, rtcm->ref_sta.z);
+                        "\"x\":%.2f,\"y\":%.2f,\"z\":%.2f,",
+                        rtcm->ref_sta.x, rtcm->ref_sta.y, rtcm->ref_sta.z);
+        }
         break;
 
     case 4:
@@ -1359,6 +1382,7 @@ void json_rtcm2_dump(const struct rtcm2_t *rtcm,
         (void)strlcat(buf, "\"satellites\":[", buflen);
         for (n = 0; n < rtcm->conhealth.nentries; n++) {
             const struct consat_t *csp = &rtcm->conhealth.sat[n];
+
             str_appendf(buf, buflen,
                            "{\"ident\":%u,\"iodl\":%s,\"health\":%1u,"
                            "\"snr\":%d,\"health_en\":%s,\"new_data\":%s,"
@@ -1375,13 +1399,14 @@ void json_rtcm2_dump(const struct rtcm2_t *rtcm,
         (void)strlcat(buf, "]", buflen);
         break;
 
-    case 6:                     /* NOP msg */
+    case 6:                     // NOP msg
         break;
 
     case 7:
         (void)strlcat(buf, "\"satellites\":[", buflen);
         for (n = 0; n < rtcm->almanac.nentries; n++) {
             const struct station_t *ssp = &rtcm->almanac.station[n];
+
             str_appendf(buf, buflen,
                            "{\"lat\":%.4f,\"lon\":%.4f,\"range\":%u,"
                            "\"frequency\":%.1f,\"health\":%u,"
@@ -1417,9 +1442,9 @@ void json_rtcm2_dump(const struct rtcm2_t *rtcm,
 
     case 16:
         str_appendf(buf, buflen,
-                       "\"message\":\"%s\"", json_stringify(buf1,
-                                                            sizeof(buf1),
-                                                            rtcm->message));
+                    "\"message\":\"%s\"", json_stringify(buf1,
+                    sizeof(buf1),
+                    rtcm->message));
         break;
 
     case 18:
@@ -1433,13 +1458,13 @@ void json_rtcm2_dump(const struct rtcm2_t *rtcm,
             str_appendf(buf, buflen,
                         "{\"ident\":%u,\"m\":%u,\"pc\":%u,\"g\":%u,\"dq\":%u,"
                         "\"clc\":%u,\"carrierphase\":%u},",
-                           rtcm->rtk.sat[n].ident,
-                           rtcm->rtk.sat[n].m,
-                           rtcm->rtk.sat[n].pc,
-                           rtcm->rtk.sat[n].g,
-                           rtcm->rtk.sat[n].dq,
-                           rtcm->rtk.sat[n].clc,
-                           rtcm->rtk.sat[n].carrier_phase);
+                        rtcm->rtk.sat[n].ident,
+                        rtcm->rtk.sat[n].m,
+                        rtcm->rtk.sat[n].pc,
+                        rtcm->rtk.sat[n].g,
+                        rtcm->rtk.sat[n].dq,
+                        rtcm->rtk.sat[n].clc,
+                        rtcm->rtk.sat[n].carrier_phase);
         }
         str_rstrip_char(buf, ',');
         (void)strlcat(buf, "]", buflen);
@@ -1456,13 +1481,13 @@ void json_rtcm2_dump(const struct rtcm2_t *rtcm,
             str_appendf(buf, buflen,
                         "{\"ident\":%u,\"m\":%u,\"pc\":%u,\"g\":%u,\"dq\":%u,"
                         "\"me\":%u,\"pseudorange\":%u},",
-                           rtcm->rtk.sat[n].ident,
-                           rtcm->rtk.sat[n].m,
-                           rtcm->rtk.sat[n].pc,
-                           rtcm->rtk.sat[n].g,
-                           rtcm->rtk.sat[n].dq,
-                           rtcm->rtk.sat[n].me,
-                           rtcm->rtk.sat[n].pseudorange);
+                        rtcm->rtk.sat[n].ident,
+                        rtcm->rtk.sat[n].m,
+                        rtcm->rtk.sat[n].pc,
+                        rtcm->rtk.sat[n].g,
+                        rtcm->rtk.sat[n].dq,
+                        rtcm->rtk.sat[n].me,
+                        rtcm->rtk.sat[n].pseudorange);
         }
         str_rstrip_char(buf, ',');
         (void)strlcat(buf, "]", buflen);
@@ -1541,13 +1566,13 @@ void json_rtcm2_dump(const struct rtcm2_t *rtcm,
         for (n = 0; n < rtcm->glonass_ranges.nentries; n++) {
             const struct glonass_rangesat_t *rsp = &rtcm->glonass_ranges.sat[n];
             str_appendf(buf, buflen,
-                           "{\"ident\":%u,\"udre\":%u,\"change\":%s,"
-                           "\"tod\":%u,\"prc\":%0.3f,\"rrc\":%0.3f},",
-                           rsp->ident,
-                           rsp->udre,
-                           JSON_BOOL(rsp->change),
-                           rsp->tod,
-                           rsp->prc, rsp->rrc);
+                        "{\"ident\":%u,\"udre\":%u,\"change\":%s,"
+                        "\"tod\":%u,\"prc\":%0.3f,\"rrc\":%0.3f},",
+                        rsp->ident,
+                        rsp->udre,
+                        JSON_BOOL(rsp->change),
+                        rsp->tod,
+                        rsp->prc, rsp->rrc);
         }
         str_rstrip_char(buf, ',');
         (void)strlcat(buf, "]", buflen);
@@ -1555,8 +1580,9 @@ void json_rtcm2_dump(const struct rtcm2_t *rtcm,
 
     default:
         (void)strlcat(buf, "\"data\":[", buflen);
-        for (n = 0; n < rtcm->length; n++)
+        for (n = 0; n < rtcm->length; n++) {
             str_appendf(buf, buflen, "\"0x%08x\",", rtcm->words[n]);
+        }
         str_rstrip_char(buf, ',');
         (void)strlcat(buf, "]", buflen);
         break;
@@ -1565,7 +1591,7 @@ void json_rtcm2_dump(const struct rtcm2_t *rtcm,
     str_rstrip_char(buf, ',');
     (void)strlcat(buf, "}\r\n", buflen);
 }
-#endif /* defined(RTCM104V2_ENABLE) */
+#endif  // defined(RTCM104V2_ENABLE)
 
 #if defined(RTCM104V3_ENABLE)
 void json_rtcm3_dump(const struct rtcm3_t *rtcm,
