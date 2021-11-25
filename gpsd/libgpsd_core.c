@@ -529,12 +529,15 @@ int parse_uri_dest(char *s, char **host, char **service, char **device)
  */
 int gpsd_open(struct gps_device_t *session)
 {
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "CORE: gpsd_open(%s)\n", session->gpsdata.dev.path);
+
     // special case: source may be a URI to a remote GNSS or DGPS service
     if (netgnss_uri_check(session->gpsdata.dev.path)) {
         session->gpsdata.gps_fd = netgnss_uri_open(session,
                                                    session->gpsdata.dev.path);
         session->sourcetype = SOURCE_TCP;
-        GPSD_LOG(LOG_IO, &session->context->errout,
+        GPSD_LOG(LOG_PROG, &session->context->errout,
                  "CORE: netgnss_uri_open(%s) returns socket on fd %d\n",
                  session->gpsdata.dev.path, session->gpsdata.gps_fd);
         return session->gpsdata.gps_fd;
@@ -553,7 +556,7 @@ int gpsd_open(struct gps_device_t *session)
                      session->gpsdata.dev.path);
             return UNALLOCATED_FD ;
         }
-        GPSD_LOG(LOG_INF, &session->context->errout,
+        GPSD_LOG(LOG_PROG, &session->context->errout,
                  "CORE: opening TCP feed at %s, port %s.\n", host,
                  port);
         // open non-blocking
@@ -584,7 +587,7 @@ int gpsd_open(struct gps_device_t *session)
                      "CORE: Missing service in UDP feed spec.\n");
             return -1;
         }
-        GPSD_LOG(LOG_INF, &session->context->errout,
+        GPSD_LOG(LOG_PROG, &session->context->errout,
                  "CORE: opening UDP feed at %s, port %s.\n", host,
                  port);
         if (0 > (dsock = netlib_connectsock(AF_UNSPEC, host, port, "udp"))) {
@@ -593,7 +596,7 @@ int gpsd_open(struct gps_device_t *session)
                      netlib_errstr(dsock), dsock);
             return -1;
         } else {
-            GPSD_LOG(LOG_SPIN, &session->context->errout,
+            GPSD_LOG(LOG_PROG, &session->context->errout,
                      "CORE: UDP device opened on fd %d\n", dsock);
         }
         session->gpsdata.gps_fd = dsock;
@@ -628,7 +631,7 @@ int gpsd_open(struct gps_device_t *session)
         if (!port) {
             port = DEFAULT_GPSD_PORT;
         }
-        GPSD_LOG(LOG_INF, &session->context->errout,
+        GPSD_LOG(LOG_PROG, &session->context->errout,
                  "CORE: opening remote gpsd feed at %s, port %s.\n",
                  host, port);
         if (0 > (dsock = netlib_connectsock(AF_UNSPEC, host, port, "tcp"))) {
@@ -637,7 +640,7 @@ int gpsd_open(struct gps_device_t *session)
                      netlib_errstr(dsock), dsock);
             return -1;
         } else {
-            GPSD_LOG(LOG_SPIN, &session->context->errout,
+            GPSD_LOG(LOG_PROG, &session->context->errout,
                      "CORE: remote gpsd feed opened on fd %d\n", dsock);
         }
         // watch to remote is issued when WATCH is
