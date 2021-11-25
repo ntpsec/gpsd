@@ -1481,7 +1481,7 @@ UBX-ESF-MEAS:
 
 Notice the UBX-ESF-MEAS sample time stamp (timeTag) is in arbitrary
 units, and jumps forward and back!  The UBX-ESF-RAW sTtag is in
-unrelated units, but at lease always increases.
+unrelated units, but at least always increases.
 
 The receiver insists on completing an autoconfiguration mode before
 entering fusion mode.  That requires driving the receiver around in
