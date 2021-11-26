@@ -1331,6 +1331,7 @@ void json_rtcm2_dump(const struct rtcm2_t *rtcm,
 
     switch (rtcm->type) {
     case 1:
+        FALLTHROUGH
     case 9:
         (void)strlcat(buf, "\"satellites\":[", buflen);
         for (n = 0; n < rtcm->gps_ranges.nentries; n++) {
@@ -1408,14 +1409,14 @@ void json_rtcm2_dump(const struct rtcm2_t *rtcm,
             const struct station_t *ssp = &rtcm->almanac.station[n];
 
             str_appendf(buf, buflen,
-                           "{\"lat\":%.4f,\"lon\":%.4f,\"range\":%u,"
-                           "\"frequency\":%.1f,\"health\":%u,"
-                           "\"station_id\":%u,\"bitrate\":%u},",
-                           ssp->latitude,
-                           ssp->longitude,
-                           ssp->range,
-                           ssp->frequency,
-                           ssp->health, ssp->station_id, ssp->bitrate);
+                        "{\"lat\":%.4f,\"lon\":%.4f,\"range\":%u,"
+                        "\"frequency\":%.1f,\"health\":%u,"
+                        "\"station_id\":%u,\"bitrate\":%u},",
+                        ssp->latitude,
+                        ssp->longitude,
+                        ssp->range,
+                        ssp->frequency,
+                        ssp->health, ssp->station_id, ssp->bitrate);
         }
         str_rstrip_char(buf, ',');
         (void)strlcat(buf, "]", buflen);
@@ -1423,21 +1424,21 @@ void json_rtcm2_dump(const struct rtcm2_t *rtcm,
 
     case 13:
         str_appendf(buf, buflen,
-                       "\"status\":%s,\"rangeflag\":%s,"
-                       "\"lat\":%.2f,\"lon\":%.2f,\"range\":%u,",
-                       JSON_BOOL(rtcm->xmitter.status),
-                       JSON_BOOL(rtcm->xmitter.rangeflag),
-                       rtcm->xmitter.lat,
-                       rtcm->xmitter.lon,
-                       rtcm->xmitter.range);
+                    "\"status\":%s,\"rangeflag\":%s,"
+                    "\"lat\":%.2f,\"lon\":%.2f,\"range\":%u,",
+                    JSON_BOOL(rtcm->xmitter.status),
+                    JSON_BOOL(rtcm->xmitter.rangeflag),
+                    rtcm->xmitter.lat,
+                    rtcm->xmitter.lon,
+                    rtcm->xmitter.range);
         break;
 
     case 14:
         str_appendf(buf, buflen,
-                       "\"week\":%u,\"hour\":%u,\"leapsecs\":%u,",
-                       rtcm->gpstime.week,
-                       rtcm->gpstime.hour,
-                       rtcm->gpstime.leapsecs);
+                    "\"week\":%u,\"hour\":%u,\"leapsecs\":%u,",
+                    rtcm->gpstime.week,
+                    rtcm->gpstime.hour,
+                    rtcm->gpstime.leapsecs);
         break;
 
     case 16:
@@ -1565,6 +1566,7 @@ void json_rtcm2_dump(const struct rtcm2_t *rtcm,
         (void)strlcat(buf, "\"satellites\":[", buflen);
         for (n = 0; n < rtcm->glonass_ranges.nentries; n++) {
             const struct glonass_rangesat_t *rsp = &rtcm->glonass_ranges.sat[n];
+
             str_appendf(buf, buflen,
                         "{\"ident\":%u,\"udre\":%u,\"change\":%s,"
                         "\"tod\":%u,\"prc\":%0.3f,\"rrc\":%0.3f},",
@@ -1594,18 +1596,23 @@ void json_rtcm2_dump(const struct rtcm2_t *rtcm,
 #endif  // defined(RTCM104V2_ENABLE)
 
 #if defined(RTCM104V3_ENABLE)
+/* dump the contents of a parsed RTCM104v3 message as JSON
+ *
+ * return: void
+ */
 void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                      const char *device,
                      char buf[], size_t buflen)
-/* dump the contents of a parsed RTCM104v3 message as JSON */
 {
     char buf1[JSON_VAL_MAX * 2 + 1];
     unsigned short i;
     unsigned int n;
 
     (void)snprintf(buf, buflen, "{\"class\":\"RTCM3\",");
-    if (device != NULL && device[0] != '\0')
+    if (NULL != device &&
+        '\0' != device[0]) {
         str_appendf(buf, buflen, "\"device\":\"%s\",", device);
+    }
     str_appendf(buf, buflen, "\"type\":%u,", rtcm->type);
     str_appendf(buf, buflen, "\"length\":%u,", rtcm->length);
 
@@ -1614,24 +1621,24 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
     switch (rtcm->type) {
     case 1001:
         str_appendf(buf, buflen,
-                       "\"station_id\":%u,\"tow\":%d,\"sync\":\"%s\","
-                       "\"smoothing\":\"%s\",\"interval\":\"%u\",",
-                       rtcm->rtcmtypes.rtcm3_1001.header.station_id,
-                       (int)rtcm->rtcmtypes.rtcm3_1001.header.tow,
-                       JSON_BOOL(rtcm->rtcmtypes.rtcm3_1001.header.sync),
-                       JSON_BOOL(rtcm->rtcmtypes.rtcm3_1001.header.smoothing),
-                       rtcm->rtcmtypes.rtcm3_1001.header.interval);
+                    "\"station_id\":%u,\"tow\":%d,\"sync\":\"%s\","
+                    "\"smoothing\":\"%s\",\"interval\":\"%u\",",
+                    rtcm->rtcmtypes.rtcm3_1001.header.station_id,
+                    (int)rtcm->rtcmtypes.rtcm3_1001.header.tow,
+                    JSON_BOOL(rtcm->rtcmtypes.rtcm3_1001.header.sync),
+                    JSON_BOOL(rtcm->rtcmtypes.rtcm3_1001.header.smoothing),
+                    rtcm->rtcmtypes.rtcm3_1001.header.interval);
         (void)strlcat(buf, "\"satellites\":[", buflen);
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_1001.header.satcount; i++) {
 #define R1001 rtcm->rtcmtypes.rtcm3_1001.rtk_data[i]
             str_appendf(buf, buflen,
-                           "{\"ident\":%u,\"ind\":%u,\"prange\":%.2f,"
-                           "\"delta\":%.4f,\"lockt\":%u},",
-                           R1001.ident,
-                           CODE(R1001.L1.indicator),
-                           R1001.L1.pseudorange,
-                           R1001.L1.rangediff,
-                           INT(R1001.L1.locktime));
+                        "{\"ident\":%u,\"ind\":%u,\"prange\":%.2f,"
+                        "\"delta\":%.4f,\"lockt\":%u},",
+                        R1001.ident,
+                        CODE(R1001.L1.indicator),
+                        R1001.L1.pseudorange,
+                        R1001.L1.rangediff,
+                        INT(R1001.L1.locktime));
 #undef R1001
         }
         str_rstrip_char(buf, ',');
@@ -1640,13 +1647,13 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
 
     case 1002:
         str_appendf(buf, buflen,
-                       "\"station_id\":%u,\"tow\":%d,\"sync\":\"%s\","
-                       "\"smoothing\":\"%s\",\"interval\":\"%u\",",
-                       rtcm->rtcmtypes.rtcm3_1002.header.station_id,
-                       (int)rtcm->rtcmtypes.rtcm3_1002.header.tow,
-                       JSON_BOOL(rtcm->rtcmtypes.rtcm3_1002.header.sync),
-                       JSON_BOOL(rtcm->rtcmtypes.rtcm3_1002.header.smoothing),
-                       rtcm->rtcmtypes.rtcm3_1002.header.interval);
+                    "\"station_id\":%u,\"tow\":%d,\"sync\":\"%s\","
+                    "\"smoothing\":\"%s\",\"interval\":\"%u\",",
+                    rtcm->rtcmtypes.rtcm3_1002.header.station_id,
+                    (int)rtcm->rtcmtypes.rtcm3_1002.header.tow,
+                    JSON_BOOL(rtcm->rtcmtypes.rtcm3_1002.header.sync),
+                    JSON_BOOL(rtcm->rtcmtypes.rtcm3_1002.header.smoothing),
+                    rtcm->rtcmtypes.rtcm3_1002.header.interval);
         (void)strlcat(buf, "\"satellites\":[", buflen);
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_1002.header.satcount; i++) {
 #define R1002 rtcm->rtcmtypes.rtcm3_1002.rtk_data[i]
@@ -1669,32 +1676,32 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
 
     case 1003:
         str_appendf(buf, buflen,
-                       "\"station_id\":%u,\"tow\":%d,\"sync\":\"%s\","
-                       "\"smoothing\":\"%s\",\"interval\":\"%u\",",
-                       rtcm->rtcmtypes.rtcm3_1003.header.station_id,
-                       (int)rtcm->rtcmtypes.rtcm3_1003.header.tow,
-                       JSON_BOOL(rtcm->rtcmtypes.rtcm3_1003.header.sync),
-                       JSON_BOOL(rtcm->rtcmtypes.rtcm3_1003.header.smoothing),
-                       rtcm->rtcmtypes.rtcm3_1003.header.interval);
+                    "\"station_id\":%u,\"tow\":%d,\"sync\":\"%s\","
+                    "\"smoothing\":\"%s\",\"interval\":\"%u\",",
+                    rtcm->rtcmtypes.rtcm3_1003.header.station_id,
+                    (int)rtcm->rtcmtypes.rtcm3_1003.header.tow,
+                    JSON_BOOL(rtcm->rtcmtypes.rtcm3_1003.header.sync),
+                    JSON_BOOL(rtcm->rtcmtypes.rtcm3_1003.header.smoothing),
+                    rtcm->rtcmtypes.rtcm3_1003.header.interval);
         (void)strlcat(buf, "\"satellites\":[", buflen);
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_1003.header.satcount; i++) {
 #define R1003 rtcm->rtcmtypes.rtcm3_1003.rtk_data[i]
             str_appendf(buf, buflen,
-                           "{\"ident\":%u,"
-                           "\"L1\":{\"ind\":%u,\"prange\":%.2f,"
-                           "\"delta\":%.4f,\"lockt\":%u},"
-                           "\"L2\":{\"ind\":%u,\"prange\":%.2f,"
-                           "\"delta\":%.4f,\"lockt\":%u},"
-                           "},",
-                           R1003.ident,
-                           CODE(R1003.L1.indicator),
-                           R1003.L1.pseudorange,
-                           R1003.L1.rangediff,
-                           INT(R1003.L1.locktime),
-                           CODE(R1003.L2.indicator),
-                           R1003.L2.pseudorange,
-                           R1003.L2.rangediff,
-                           INT(R1003.L2.locktime));
+                        "{\"ident\":%u,"
+                        "\"L1\":{\"ind\":%u,\"prange\":%.2f,"
+                        "\"delta\":%.4f,\"lockt\":%u},"
+                        "\"L2\":{\"ind\":%u,\"prange\":%.2f,"
+                        "\"delta\":%.4f,\"lockt\":%u},"
+                        "},",
+                        R1003.ident,
+                        CODE(R1003.L1.indicator),
+                        R1003.L1.pseudorange,
+                        R1003.L1.rangediff,
+                        INT(R1003.L1.locktime),
+                        CODE(R1003.L2.indicator),
+                        R1003.L2.pseudorange,
+                        R1003.L2.rangediff,
+                        INT(R1003.L2.locktime));
 #undef R1003
         }
         str_rstrip_char(buf, ',');
@@ -1703,37 +1710,37 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
 
     case 1004:
         str_appendf(buf, buflen,
-                       "\"station_id\":%u,\"tow\":%d,\"sync\":\"%s\","
-                       "\"smoothing\":\"%s\",\"interval\":\"%u\",",
-                       rtcm->rtcmtypes.rtcm3_1004.header.station_id,
-                       (int)rtcm->rtcmtypes.rtcm3_1004.header.tow,
-                       JSON_BOOL(rtcm->rtcmtypes.rtcm3_1004.header.sync),
-                       JSON_BOOL(rtcm->rtcmtypes.rtcm3_1004.header.smoothing),
-                       rtcm->rtcmtypes.rtcm3_1004.header.interval);
+                    "\"station_id\":%u,\"tow\":%d,\"sync\":\"%s\","
+                    "\"smoothing\":\"%s\",\"interval\":\"%u\",",
+                    rtcm->rtcmtypes.rtcm3_1004.header.station_id,
+                    (int)rtcm->rtcmtypes.rtcm3_1004.header.tow,
+                    JSON_BOOL(rtcm->rtcmtypes.rtcm3_1004.header.sync),
+                    JSON_BOOL(rtcm->rtcmtypes.rtcm3_1004.header.smoothing),
+                    rtcm->rtcmtypes.rtcm3_1004.header.interval);
         (void)strlcat(buf, "\"satellites\":[", buflen);
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_1004.header.satcount; i++) {
 #define R1004 rtcm->rtcmtypes.rtcm3_1004.rtk_data[i]
             str_appendf(buf, buflen,
-                           "{\"ident\":%u,"
-                           "\"L1\":{\"ind\":%u,\"prange\":%0.2f,"
-                           "\"delta\":%.4f,\"lockt\":%u,"
-                           "\"amb\":%u,\"CNR\":%.2f},"
-                           "\"L2\":{\"ind\":%u,\"prange\":%.2f,"
-                           "\"delta\":%.4f,\"lockt\":%u,"
-                           "\"CNR\":%.2f}"
-                           "},",
-                           R1004.ident,
-                           CODE(R1004.L1.indicator),
-                           R1004.L1.pseudorange,
-                           R1004.L1.rangediff,
-                           INT(R1004.L1.locktime),
-                           INT(R1004.L1.ambiguity),
-                           R1004.L1.CNR,
-                           CODE(R1004.L2.indicator),
-                           R1004.L2.pseudorange,
-                           R1004.L2.rangediff,
-                           INT(R1004.L2.locktime),
-                           R1004.L2.CNR);
+                        "{\"ident\":%u,"
+                        "\"L1\":{\"ind\":%u,\"prange\":%0.2f,"
+                        "\"delta\":%.4f,\"lockt\":%u,"
+                        "\"amb\":%u,\"CNR\":%.2f},"
+                        "\"L2\":{\"ind\":%u,\"prange\":%.2f,"
+                        "\"delta\":%.4f,\"lockt\":%u,"
+                        "\"CNR\":%.2f}"
+                        "},",
+                        R1004.ident,
+                        CODE(R1004.L1.indicator),
+                        R1004.L1.pseudorange,
+                        R1004.L1.rangediff,
+                        INT(R1004.L1.locktime),
+                        INT(R1004.L1.ambiguity),
+                        R1004.L1.CNR,
+                        CODE(R1004.L2.indicator),
+                        R1004.L2.pseudorange,
+                        R1004.L2.rangediff,
+                        INT(R1004.L2.locktime),
+                        R1004.L2.CNR);
 #undef R1004
         }
         str_rstrip_char(buf, ',');
@@ -1742,90 +1749,98 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
 
     case 1005:
         str_appendf(buf, buflen,
-                       "\"station_id\":%u,\"system\":[",
-                       rtcm->rtcmtypes.rtcm3_1005.station_id);
-        if ((rtcm->rtcmtypes.rtcm3_1005.system & 0x04)!=0)
+                    "\"station_id\":%u,\"system\":[",
+                    rtcm->rtcmtypes.rtcm3_1005.station_id);
+        if (0 != (rtcm->rtcmtypes.rtcm3_1005.system & 0x04)) {
             (void)strlcat(buf, "\"GPS\",", buflen);
-        if ((rtcm->rtcmtypes.rtcm3_1005.system & 0x02)!=0)
+        }
+        if (0 != (rtcm->rtcmtypes.rtcm3_1005.system & 0x02)) {
             (void)strlcat(buf, "\"GLONASS\",", buflen);
-        if ((rtcm->rtcmtypes.rtcm3_1005.system & 0x01)!=0)
+        }
+        if (0 != (rtcm->rtcmtypes.rtcm3_1005.system & 0x01)) {
             (void)strlcat(buf, "\"GALILEO\",", buflen);
+        }
+        // FIXME: other systems now?
         str_rstrip_char(buf, ',');
         str_appendf(buf, buflen,
-                       "],\"refstation\":%s,\"sro\":%s,"
-                       "\"x\":%.4f,\"y\":%.4f,\"z\":%.4f,",
-                       JSON_BOOL(rtcm->rtcmtypes.rtcm3_1005.reference_station),
-                       JSON_BOOL(rtcm->rtcmtypes.rtcm3_1005.single_receiver),
-                       rtcm->rtcmtypes.rtcm3_1005.ecef_x,
-                       rtcm->rtcmtypes.rtcm3_1005.ecef_y,
-                       rtcm->rtcmtypes.rtcm3_1005.ecef_z);
+                    "],\"refstation\":%s,\"sro\":%s,"
+                    "\"x\":%.4f,\"y\":%.4f,\"z\":%.4f,",
+                    JSON_BOOL(rtcm->rtcmtypes.rtcm3_1005.reference_station),
+                    JSON_BOOL(rtcm->rtcmtypes.rtcm3_1005.single_receiver),
+                    rtcm->rtcmtypes.rtcm3_1005.ecef_x,
+                    rtcm->rtcmtypes.rtcm3_1005.ecef_y,
+                    rtcm->rtcmtypes.rtcm3_1005.ecef_z);
         break;
 
     case 1006:
         str_appendf(buf, buflen,
-                       "\"station_id\":%u,\"system\":[",
-                       rtcm->rtcmtypes.rtcm3_1006.station_id);
-        if ((rtcm->rtcmtypes.rtcm3_1006.system & 0x04)!=0)
+                    "\"station_id\":%u,\"system\":[",
+                    rtcm->rtcmtypes.rtcm3_1006.station_id);
+        if (0 != (rtcm->rtcmtypes.rtcm3_1006.system & 0x04)) {
             (void)strlcat(buf, "\"GPS\",", buflen);
-        if ((rtcm->rtcmtypes.rtcm3_1006.system & 0x02)!=0)
+        }
+        if (0 != (rtcm->rtcmtypes.rtcm3_1006.system & 0x02)) {
             (void)strlcat(buf, "\"GLONASS\",", buflen);
-        if ((rtcm->rtcmtypes.rtcm3_1006.system & 0x01)!=0)
+        }
+        if (0 != (rtcm->rtcmtypes.rtcm3_1006.system & 0x01)) {
             (void)strlcat(buf, "\"GALILEO\",", buflen);
+        }
+        // FIXME: other systems now?
         str_rstrip_char(buf, ',');
         str_appendf(buf, buflen,
-                       "],\"refstation\":%s,\"sro\":%s,"
-                       "\"x\":%.4f,\"y\":%.4f,\"z\":%.4f,",
-                       JSON_BOOL(rtcm->rtcmtypes.rtcm3_1006.reference_station),
-                       JSON_BOOL(rtcm->rtcmtypes.rtcm3_1006.single_receiver),
-                       rtcm->rtcmtypes.rtcm3_1006.ecef_x,
-                       rtcm->rtcmtypes.rtcm3_1006.ecef_y,
-                       rtcm->rtcmtypes.rtcm3_1006.ecef_z);
+                    "],\"refstation\":%s,\"sro\":%s,"
+                    "\"x\":%.4f,\"y\":%.4f,\"z\":%.4f,",
+                    JSON_BOOL(rtcm->rtcmtypes.rtcm3_1006.reference_station),
+                    JSON_BOOL(rtcm->rtcmtypes.rtcm3_1006.single_receiver),
+                    rtcm->rtcmtypes.rtcm3_1006.ecef_x,
+                    rtcm->rtcmtypes.rtcm3_1006.ecef_y,
+                    rtcm->rtcmtypes.rtcm3_1006.ecef_z);
         str_appendf(buf, buflen,
-                       "\"h\":%.4f,",
-                       rtcm->rtcmtypes.rtcm3_1006.height);
+                    "\"h\":%.4f,",
+                    rtcm->rtcmtypes.rtcm3_1006.height);
         break;
 
     case 1007:
         str_appendf(buf, buflen,
-                       "\"station_id\":%u,\"desc\":\"%s\",\"setup_id\":%u",
-                       rtcm->rtcmtypes.rtcm3_1007.station_id,
-                       rtcm->rtcmtypes.rtcm3_1007.descriptor,
-                       rtcm->rtcmtypes.rtcm3_1007.setup_id);
+                    "\"station_id\":%u,\"desc\":\"%s\",\"setup_id\":%u",
+                    rtcm->rtcmtypes.rtcm3_1007.station_id,
+                    rtcm->rtcmtypes.rtcm3_1007.descriptor,
+                    rtcm->rtcmtypes.rtcm3_1007.setup_id);
         break;
 
     case 1008:
         str_appendf(buf, buflen,
-                       "\"station_id\":%u,\"desc\":\"%s\","
-                       "\"setup_id\":%u,\"serial\":\"%s\"",
-                       rtcm->rtcmtypes.rtcm3_1008.station_id,
-                       rtcm->rtcmtypes.rtcm3_1008.descriptor,
-                       INT(rtcm->rtcmtypes.rtcm3_1008.setup_id),
-                       rtcm->rtcmtypes.rtcm3_1008.serial);
+                    "\"station_id\":%u,\"desc\":\"%s\","
+                    "\"setup_id\":%u,\"serial\":\"%s\"",
+                    rtcm->rtcmtypes.rtcm3_1008.station_id,
+                    rtcm->rtcmtypes.rtcm3_1008.descriptor,
+                    INT(rtcm->rtcmtypes.rtcm3_1008.setup_id),
+                    rtcm->rtcmtypes.rtcm3_1008.serial);
         break;
 
     case 1009:
         str_appendf(buf, buflen,
-                       "\"station_id\":%u,\"tow\":%lld,\"sync\":\"%s\","
-                       "\"smoothing\":\"%s\",\"interval\":\"%u\","
-                       "\"satcount\":\"%u\",",
-                       rtcm->rtcmtypes.rtcm3_1009.header.station_id,
-                       (long long)rtcm->rtcmtypes.rtcm3_1009.header.tow,
-                       JSON_BOOL(rtcm->rtcmtypes.rtcm3_1009.header.sync),
-                       JSON_BOOL(rtcm->rtcmtypes.rtcm3_1009.header.smoothing),
-                       rtcm->rtcmtypes.rtcm3_1009.header.interval,
-                       rtcm->rtcmtypes.rtcm3_1009.header.satcount);
+                    "\"station_id\":%u,\"tow\":%lld,\"sync\":\"%s\","
+                    "\"smoothing\":\"%s\",\"interval\":\"%u\","
+                    "\"satcount\":\"%u\",",
+                    rtcm->rtcmtypes.rtcm3_1009.header.station_id,
+                    (long long)rtcm->rtcmtypes.rtcm3_1009.header.tow,
+                    JSON_BOOL(rtcm->rtcmtypes.rtcm3_1009.header.sync),
+                    JSON_BOOL(rtcm->rtcmtypes.rtcm3_1009.header.smoothing),
+                    rtcm->rtcmtypes.rtcm3_1009.header.interval,
+                    rtcm->rtcmtypes.rtcm3_1009.header.satcount);
         (void)strlcat(buf, "\"satellites\":[", buflen);
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_1009.header.satcount; i++) {
 #define R1009 rtcm->rtcmtypes.rtcm3_1009.rtk_data[i]
             str_appendf(buf, buflen,
-                           "{\"ident\":%u,\"ind\":%u,\"channel\":%u,"
-                           "\"prange\":%.2f,\"delta\":%.4f,\"lockt\":%u},",
-                           R1009.ident,
-                           CODE(R1009.L1.indicator),
-                           R1009.L1.channel,
-                           R1009.L1.pseudorange,
-                           R1009.L1.rangediff,
-                           INT(R1009.L1.locktime));
+                        "{\"ident\":%u,\"ind\":%u,\"channel\":%u,"
+                        "\"prange\":%.2f,\"delta\":%.4f,\"lockt\":%u},",
+                        R1009.ident,
+                        CODE(R1009.L1.indicator),
+                        R1009.L1.channel,
+                        R1009.L1.pseudorange,
+                        R1009.L1.rangediff,
+                        INT(R1009.L1.locktime));
 #undef R1009
         }
         str_rstrip_char(buf, ',');
@@ -1834,28 +1849,28 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
 
     case 1010:
         str_appendf(buf, buflen,
-                       "\"station_id\":%u,\"tow\":%d,\"sync\":\"%s\","
-                       "\"smoothing\":\"%s\",\"interval\":\"%u\",",
-                       rtcm->rtcmtypes.rtcm3_1010.header.station_id,
-                       (int)rtcm->rtcmtypes.rtcm3_1010.header.tow,
-                       JSON_BOOL(rtcm->rtcmtypes.rtcm3_1010.header.sync),
-                       JSON_BOOL(rtcm->rtcmtypes.rtcm3_1010.header.smoothing),
-                       rtcm->rtcmtypes.rtcm3_1010.header.interval);
+                    "\"station_id\":%u,\"tow\":%d,\"sync\":\"%s\","
+                    "\"smoothing\":\"%s\",\"interval\":\"%u\",",
+                    rtcm->rtcmtypes.rtcm3_1010.header.station_id,
+                    (int)rtcm->rtcmtypes.rtcm3_1010.header.tow,
+                    JSON_BOOL(rtcm->rtcmtypes.rtcm3_1010.header.sync),
+                    JSON_BOOL(rtcm->rtcmtypes.rtcm3_1010.header.smoothing),
+                    rtcm->rtcmtypes.rtcm3_1010.header.interval);
         (void)strlcat(buf, "\"satellites\":[", buflen);
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_1010.header.satcount; i++) {
 #define R1010 rtcm->rtcmtypes.rtcm3_1010.rtk_data[i]
             str_appendf(buf, buflen,
-                           "{\"ident\":%u,\"ind\":%u,\"channel\":%u,"
-                           "\"prange\":%.2f,\"delta\":%.4f,\"lockt\":%u,"
-                           "\"amb\":%u,\"CNR\":%.2f},",
-                           R1010.ident,
-                           CODE(R1010.L1.indicator),
-                           R1010.L1.channel,
-                           R1010.L1.pseudorange,
-                           R1010.L1.rangediff,
-                           INT(R1010.L1.locktime),
-                           INT(R1010.L1.ambiguity),
-                           R1010.L1.CNR);
+                        "{\"ident\":%u,\"ind\":%u,\"channel\":%u,"
+                        "\"prange\":%.2f,\"delta\":%.4f,\"lockt\":%u,"
+                        "\"amb\":%u,\"CNR\":%.2f},",
+                        R1010.ident,
+                        CODE(R1010.L1.indicator),
+                        R1010.L1.channel,
+                        R1010.L1.pseudorange,
+                        R1010.L1.rangediff,
+                        INT(R1010.L1.locktime),
+                        INT(R1010.L1.ambiguity),
+                        R1010.L1.CNR);
 #undef R1010
         }
         str_rstrip_char(buf, ',');
@@ -1864,32 +1879,32 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
 
     case 1011:
         str_appendf(buf, buflen,
-                       "\"station_id\":%u,\"tow\":%d,\"sync\":\"%s\","
-                       "\"smoothing\":\"%s\",\"interval\":\"%u\",",
-                       rtcm->rtcmtypes.rtcm3_1011.header.station_id,
-                       (int)rtcm->rtcmtypes.rtcm3_1011.header.tow,
-                       JSON_BOOL(rtcm->rtcmtypes.rtcm3_1011.header.sync),
-                       JSON_BOOL(rtcm->rtcmtypes.rtcm3_1011.header.smoothing),
-                       rtcm->rtcmtypes.rtcm3_1011.header.interval);
+                    "\"station_id\":%u,\"tow\":%d,\"sync\":\"%s\","
+                    "\"smoothing\":\"%s\",\"interval\":\"%u\",",
+                    rtcm->rtcmtypes.rtcm3_1011.header.station_id,
+                    (int)rtcm->rtcmtypes.rtcm3_1011.header.tow,
+                    JSON_BOOL(rtcm->rtcmtypes.rtcm3_1011.header.sync),
+                    JSON_BOOL(rtcm->rtcmtypes.rtcm3_1011.header.smoothing),
+                    rtcm->rtcmtypes.rtcm3_1011.header.interval);
         (void)strlcat(buf, "\"satellites\":[", buflen);
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_1011.header.satcount; i++) {
 #define R1011 rtcm->rtcmtypes.rtcm3_1011.rtk_data[i]
             str_appendf(buf, buflen,
-                           "{\"ident\":%u,\"channel\":%u,"
-                           "\"L1\":{\"ind\":%u,"
-                           "\"prange\":%.2f,\"delta\":%.4f,\"lockt\":%u},"
-                           "\"L2:{\"ind\":%u,\"prange\":%.2f,"
-                           "\"delta\":%.4f,\"lockt\":%u}"
-                           "}",
-                           R1011.ident,R1011.L1.channel,
-                           CODE(R1011.L1.indicator),
-                           R1011.L1.pseudorange,
-                           R1011.L1.rangediff,
-                           INT(R1011.L1.locktime),
-                           CODE(R1011.L2.indicator),
-                           R1011.L2.pseudorange,
-                           R1011.L2.rangediff,
-                           INT(R1011.L2.locktime));
+                        "{\"ident\":%u,\"channel\":%u,"
+                        "\"L1\":{\"ind\":%u,"
+                        "\"prange\":%.2f,\"delta\":%.4f,\"lockt\":%u},"
+                        "\"L2:{\"ind\":%u,\"prange\":%.2f,"
+                        "\"delta\":%.4f,\"lockt\":%u}"
+                        "}",
+                        R1011.ident,R1011.L1.channel,
+                        CODE(R1011.L1.indicator),
+                        R1011.L1.pseudorange,
+                        R1011.L1.rangediff,
+                        INT(R1011.L1.locktime),
+                        CODE(R1011.L2.indicator),
+                        R1011.L2.pseudorange,
+                        R1011.L2.rangediff,
+                        INT(R1011.L2.locktime));
 #undef R1011
         }
         str_rstrip_char(buf, ',');
@@ -1898,38 +1913,38 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
 
     case 1012:
         str_appendf(buf, buflen,
-                       "\"station_id\":%u,\"tow\":%d,\"sync\":\"%s\","
-                       "\"smoothing\":\"%s\",\"interval\":\"%u\",",
-                       rtcm->rtcmtypes.rtcm3_1012.header.station_id,
-                       (int)rtcm->rtcmtypes.rtcm3_1012.header.tow,
-                       JSON_BOOL(rtcm->rtcmtypes.rtcm3_1012.header.sync),
-                       JSON_BOOL(rtcm->rtcmtypes.rtcm3_1012.header.smoothing),
-                       rtcm->rtcmtypes.rtcm3_1012.header.interval);
+                    "\"station_id\":%u,\"tow\":%d,\"sync\":\"%s\","
+                    "\"smoothing\":\"%s\",\"interval\":\"%u\",",
+                    rtcm->rtcmtypes.rtcm3_1012.header.station_id,
+                    (int)rtcm->rtcmtypes.rtcm3_1012.header.tow,
+                    JSON_BOOL(rtcm->rtcmtypes.rtcm3_1012.header.sync),
+                    JSON_BOOL(rtcm->rtcmtypes.rtcm3_1012.header.smoothing),
+                    rtcm->rtcmtypes.rtcm3_1012.header.interval);
         (void)strlcat(buf, "\"satellites\":[", buflen);
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_1012.header.satcount; i++) {
 #define R1012 rtcm->rtcmtypes.rtcm3_1012.rtk_data[i]
             str_appendf(buf, buflen,
-                           "{\"ident\":%u,\"channel\":%u,"
-                           "\"L1\":{\"ind\":%u,\"prange\":%.2f,"
-                           "\"delta\":%.4f,\"lockt\":%u,\"amb\":%u,"
-                           "\"CNR\":%.2f},"
-                           "\"L2\":{\"ind\":%u,\"prange\":%.2f,"
-                           "\"delta\":%.4f,\"lockt\":%u,"
-                           "\"CNR\":%.2f}"
-                           "},",
-                           R1012.ident,
-                           R1012.L1.channel,
-                           CODE(R1012.L1.indicator),
-                           R1012.L1.pseudorange,
-                           R1012.L1.rangediff,
-                           INT(R1012.L1.locktime),
-                           INT(R1012.L1.ambiguity),
-                           R1012.L1.CNR,
-                           CODE(R1012.L2.indicator),
-                           R1012.L2.pseudorange,
-                           R1012.L2.rangediff,
-                           INT(R1012.L2.locktime),
-                           R1012.L2.CNR);
+                        "{\"ident\":%u,\"channel\":%u,"
+                        "\"L1\":{\"ind\":%u,\"prange\":%.2f,"
+                        "\"delta\":%.4f,\"lockt\":%u,\"amb\":%u,"
+                        "\"CNR\":%.2f},"
+                        "\"L2\":{\"ind\":%u,\"prange\":%.2f,"
+                        "\"delta\":%.4f,\"lockt\":%u,"
+                        "\"CNR\":%.2f}"
+                        "},",
+                        R1012.ident,
+                        R1012.L1.channel,
+                        CODE(R1012.L1.indicator),
+                        R1012.L1.pseudorange,
+                        R1012.L1.rangediff,
+                        INT(R1012.L1.locktime),
+                        INT(R1012.L1.ambiguity),
+                        R1012.L1.CNR,
+                        CODE(R1012.L2.indicator),
+                        R1012.L2.pseudorange,
+                        R1012.L2.rangediff,
+                        INT(R1012.L2.locktime),
+                        R1012.L2.CNR);
 #undef R1012
         }
         str_rstrip_char(buf, ',');
@@ -1938,35 +1953,35 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
 
     case 1013:
         str_appendf(buf, buflen,
-                       "\"station_id\":%u,\"mjd\":%u,\"sec\":%u,"
-                       "\"leapsecs\":%u,",
-                       rtcm->rtcmtypes.rtcm3_1013.station_id,
-                       rtcm->rtcmtypes.rtcm3_1013.mjd,
-                       rtcm->rtcmtypes.rtcm3_1013.sod,
-                       INT(rtcm->rtcmtypes.rtcm3_1013.leapsecs));
+                    "\"station_id\":%u,\"mjd\":%u,\"sec\":%u,"
+                    "\"leapsecs\":%u,",
+                    rtcm->rtcmtypes.rtcm3_1013.station_id,
+                    rtcm->rtcmtypes.rtcm3_1013.mjd,
+                    rtcm->rtcmtypes.rtcm3_1013.sod,
+                    INT(rtcm->rtcmtypes.rtcm3_1013.leapsecs));
         for (i = 0; i < (unsigned short)rtcm->rtcmtypes.rtcm3_1013.ncount; i++)
             str_appendf(buf, buflen,
-                           "{\"id\":%u,\"sync\":\"%s\",\"interval\":%u}",
-                           rtcm->rtcmtypes.rtcm3_1013.announcements[i].id,
-                           JSON_BOOL(rtcm->rtcmtypes.rtcm3_1013.
-                                announcements[i].sync),
-                           rtcm->rtcmtypes.rtcm3_1013.
-                           announcements[i].interval);
+                        "{\"id\":%u,\"sync\":\"%s\",\"interval\":%u}",
+                        rtcm->rtcmtypes.rtcm3_1013.announcements[i].id,
+                        JSON_BOOL(rtcm->rtcmtypes.rtcm3_1013.
+                             announcements[i].sync),
+                        rtcm->rtcmtypes.rtcm3_1013.
+                        announcements[i].interval);
         break;
 
     case 1014:
         str_appendf(buf, buflen,
-                       "\"netid\":%u,\"subnetid\":%u,\"statcount\":%u"
-                       "\"master\":%u,\"aux\":%u,\"lat\":%f,\"lon\":%f,"
-                       "\"alt\":%f,",
-                       rtcm->rtcmtypes.rtcm3_1014.network_id,
-                       rtcm->rtcmtypes.rtcm3_1014.subnetwork_id,
-                       rtcm->rtcmtypes.rtcm3_1014.stationcount,
-                       rtcm->rtcmtypes.rtcm3_1014.master_id,
-                       rtcm->rtcmtypes.rtcm3_1014.aux_id,
-                       rtcm->rtcmtypes.rtcm3_1014.d_lat,
-                       rtcm->rtcmtypes.rtcm3_1014.d_lon,
-                       rtcm->rtcmtypes.rtcm3_1014.d_alt);
+                    "\"netid\":%u,\"subnetid\":%u,\"statcount\":%u"
+                    "\"master\":%u,\"aux\":%u,\"lat\":%f,\"lon\":%f,"
+                    "\"alt\":%f,",
+                    rtcm->rtcmtypes.rtcm3_1014.network_id,
+                    rtcm->rtcmtypes.rtcm3_1014.subnetwork_id,
+                    rtcm->rtcmtypes.rtcm3_1014.stationcount,
+                    rtcm->rtcmtypes.rtcm3_1014.master_id,
+                    rtcm->rtcmtypes.rtcm3_1014.aux_id,
+                    rtcm->rtcmtypes.rtcm3_1014.d_lat,
+                    rtcm->rtcmtypes.rtcm3_1014.d_lon,
+                    rtcm->rtcmtypes.rtcm3_1014.d_alt);
         break;
 
     case 1015:
@@ -1989,36 +2004,36 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
 
     case 1029:
         str_appendf(buf, buflen,
-                       "\"station_id\":%u,\"mjd\":%u,\"sec\":%u,"
-                       "\"len\":%zd,\"units\":%zd,\"msg\":\"%s\",",
-                       rtcm->rtcmtypes.rtcm3_1029.station_id,
-                       rtcm->rtcmtypes.rtcm3_1029.mjd,
-                       rtcm->rtcmtypes.rtcm3_1029.sod,
-                       rtcm->rtcmtypes.rtcm3_1029.len,
-                       rtcm->rtcmtypes.rtcm3_1029.unicode_units,
-                       json_stringify(buf1, sizeof(buf1),
-                                      (char *)rtcm->rtcmtypes.rtcm3_1029.text));
+                    "\"station_id\":%u,\"mjd\":%u,\"sec\":%u,"
+                    "\"len\":%zd,\"units\":%zd,\"msg\":\"%s\",",
+                    rtcm->rtcmtypes.rtcm3_1029.station_id,
+                    rtcm->rtcmtypes.rtcm3_1029.mjd,
+                    rtcm->rtcmtypes.rtcm3_1029.sod,
+                    rtcm->rtcmtypes.rtcm3_1029.len,
+                    rtcm->rtcmtypes.rtcm3_1029.unicode_units,
+                    json_stringify(buf1, sizeof(buf1),
+                                   (char *)rtcm->rtcmtypes.rtcm3_1029.text));
         break;
 
     case 1033:
         str_appendf(buf, buflen,
-                       "\"station_id\":%u,\"desc\":\"%s\","
-                       "\"setup_id\":%u,\"serial\":\"%s\","
-                       "\"receiver\":\"%s\",\"firmware\":\"%s\"",
-                       rtcm->rtcmtypes.rtcm3_1033.station_id,
-                       rtcm->rtcmtypes.rtcm3_1033.descriptor,
-                       INT(rtcm->rtcmtypes.rtcm3_1033.setup_id),
-                       rtcm->rtcmtypes.rtcm3_1033.serial,
-                       rtcm->rtcmtypes.rtcm3_1033.receiver,
-                       rtcm->rtcmtypes.rtcm3_1033.firmware);
+                    "\"station_id\":%u,\"desc\":\"%s\","
+                    "\"setup_id\":%u,\"serial\":\"%s\","
+                    "\"receiver\":\"%s\",\"firmware\":\"%s\"",
+                    rtcm->rtcmtypes.rtcm3_1033.station_id,
+                    rtcm->rtcmtypes.rtcm3_1033.descriptor,
+                    INT(rtcm->rtcmtypes.rtcm3_1033.setup_id),
+                    rtcm->rtcmtypes.rtcm3_1033.serial,
+                    rtcm->rtcmtypes.rtcm3_1033.receiver,
+                    rtcm->rtcmtypes.rtcm3_1033.firmware);
         break;
 
     case 1230:
         // bias_indicator is undocumented...
         str_appendf(buf, buflen,
-                       "\"station_id\":%u,\"ind\":\"%u\"",
-                       rtcm->rtcmtypes.rtcm3_1230.station_id,
-                       rtcm->rtcmtypes.rtcm3_1230.bias_indicator);
+                    "\"station_id\":%u,\"ind\":\"%u\"",
+                    rtcm->rtcmtypes.rtcm3_1230.station_id,
+                    rtcm->rtcmtypes.rtcm3_1230.bias_indicator);
         // actual mask order is undocumented...
         if (1 & rtcm->rtcmtypes.rtcm3_1230.signals_mask) {
             str_appendf(buf, buflen, ",\"l1_ca\":%d",
@@ -2040,9 +2055,10 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
 
     default:
         (void)strlcat(buf, "\"data\":[", buflen);
-        for (n = 0; n < rtcm->length; n++)
+        for (n = 0; n < rtcm->length; n++) {
             str_appendf(buf, buflen,
                         "\"0x%02x\",",(unsigned int)rtcm->rtcmtypes.data[n]);
+        }
         str_rstrip_char(buf, ',');
         (void)strlcat(buf, "]", buflen);
         break;
@@ -2053,7 +2069,7 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
 #undef CODE
 #undef INT
 }
-#endif /* defined(RTCM104V3_ENABLE) */
+#endif   // defined(RTCM104V3_ENABLE)
 
 #if defined(AIVDM_ENABLE)
 void json_aivdm_dump(const struct ais_t *ais,
