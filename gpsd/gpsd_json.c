@@ -3582,56 +3582,61 @@ void json_aivdm_dump(const struct ais_t *ais,
                 "White flashing",
                 "Yellow flashing.",
             };
-#define STATUS_DISPLAY(n) (((n) < (unsigned int)NITEMS(status_vocabulary)) ? status_vocabulary[n] : "INVALID STATUS")
+
+#define STATUS_DISPLAY(n) (((n) < (unsigned int)NITEMS(status_vocabulary)) ? \
+                           status_vocabulary[n] : "INVALID STATUS")
 
             switch (ais->type8.fid) {
-            case 10:        /* Inland ship static and voyage-related data */
-                for (cp = shiptypes; cp < shiptypes + NITEMS(shiptypes); cp++)
-                    if (cp->code == ais->type8.dac200fid10.shiptype
-                        || cp->ais == ais->type8.dac200fid10.shiptype
-                        || cp->code == 0)
+            case 10:        // Inland ship static and voyage-related data
+                for (cp = shiptypes; cp < shiptypes + NITEMS(shiptypes); cp++) {
+                    if (cp->code == ais->type8.dac200fid10.shiptype ||
+                        cp->ais == ais->type8.dac200fid10.shiptype ||
+                        0 == cp->code) {
                         break;
+                    }
+                }
                 str_appendf(buf, buflen,
-                               ",\"vin\":\"%s\",\"length\":%u,\"beam\":%u,"
-                               "\"shiptype\":%u,\"shiptype_text\":\"%s\","
-                               "\"hazard\":%u,\"hazard_text\":\"%s\","
-                               "\"draught\":%u,"
-                               "\"loaded\":%u,\"loaded_text\":\"%s\","
-                               "\"speed_q\":%s,"
-                               "\"course_q\":%s,"
-                               "\"heading_q\":%s}\r\n",
-                               json_stringify(buf1, sizeof(buf1),
-                               ais->type8.dac200fid10.vin),
-                               ais->type8.dac200fid10.length,
-                               ais->type8.dac200fid10.beam,
-                               ais->type8.dac200fid10.shiptype,
-                               cp->legend,
-                               ais->type8.dac200fid10.hazard,
-                               HTYPE_DISPLAY(ais->type8.dac200fid10.hazard),
-                               ais->type8.dac200fid10.draught,
-                               ais->type8.dac200fid10.loaded,
-                               LSTATUS_DISPLAY(ais->type8.dac200fid10.loaded),
-                               JSON_BOOL(ais->type8.dac200fid10.speed_q),
-                               JSON_BOOL(ais->type8.dac200fid10.course_q),
-                               JSON_BOOL(ais->type8.dac200fid10.heading_q));
+                            ",\"vin\":\"%s\",\"length\":%u,\"beam\":%u,"
+                            "\"shiptype\":%u,\"shiptype_text\":\"%s\","
+                            "\"hazard\":%u,\"hazard_text\":\"%s\","
+                            "\"draught\":%u,"
+                            "\"loaded\":%u,\"loaded_text\":\"%s\","
+                            "\"speed_q\":%s,"
+                            "\"course_q\":%s,"
+                            "\"heading_q\":%s}\r\n",
+                            json_stringify(buf1, sizeof(buf1),
+                            ais->type8.dac200fid10.vin),
+                            ais->type8.dac200fid10.length,
+                            ais->type8.dac200fid10.beam,
+                            ais->type8.dac200fid10.shiptype,
+                            cp->legend,
+                            ais->type8.dac200fid10.hazard,
+                            HTYPE_DISPLAY(ais->type8.dac200fid10.hazard),
+                            ais->type8.dac200fid10.draught,
+                            ais->type8.dac200fid10.loaded,
+                            LSTATUS_DISPLAY(ais->type8.dac200fid10.loaded),
+                            JSON_BOOL(ais->type8.dac200fid10.speed_q),
+                            JSON_BOOL(ais->type8.dac200fid10.course_q),
+                            JSON_BOOL(ais->type8.dac200fid10.heading_q));
                 break;
-            case 23:    /* EMMA warning */
-                if (!ais->type8.structured)
+            case 23:    // EMMA warning
+                if (!ais->type8.structured) {
                     break;
+                }
                 str_appendf(buf, buflen,
-                               ",\"start\":\"%4u-%02u-%02uT%02u:%02u\","
-                               "\"end\":\"%4u-%02u-%02uT%02u:%02u\"",
-                               ais->type8.dac200fid23.start_year + 2000,
-                               ais->type8.dac200fid23.start_month,
-                               ais->type8.dac200fid23.start_hour,
-                               ais->type8.dac200fid23.start_minute,
-                               ais->type8.dac200fid23.start_day,
-                               ais->type8.dac200fid23.end_year + 2000,
-                               ais->type8.dac200fid23.end_month,
-                               ais->type8.dac200fid23.end_day,
-                               ais->type8.dac200fid23.end_hour,
-                               ais->type8.dac200fid23.end_minute);
-                if (scaled)
+                            ",\"start\":\"%4u-%02u-%02uT%02u:%02u\","
+                            "\"end\":\"%4u-%02u-%02uT%02u:%02u\"",
+                            ais->type8.dac200fid23.start_year + 2000,
+                            ais->type8.dac200fid23.start_month,
+                            ais->type8.dac200fid23.start_hour,
+                            ais->type8.dac200fid23.start_minute,
+                            ais->type8.dac200fid23.start_day,
+                            ais->type8.dac200fid23.end_year + 2000,
+                            ais->type8.dac200fid23.end_month,
+                            ais->type8.dac200fid23.end_day,
+                            ais->type8.dac200fid23.end_hour,
+                            ais->type8.dac200fid23.end_minute);
+                if (scaled) {
                     str_appendf(buf, buflen,
                         ",\"start_lon\":%.6f,\"start_lat\":%.6f,"
                         "\"end_lon\":%.6f,\"end_lat\":%.6f",
@@ -3639,7 +3644,7 @@ void json_aivdm_dump(const struct ais_t *ais,
                         ais->type8.dac200fid23.start_lat / AIS_LATLON_DIV,
                         ais->type8.dac200fid23.end_lon / AIS_LATLON_DIV,
                         ais->type8.dac200fid23.end_lat / AIS_LATLON_DIV);
-                else
+                } else {
                     str_appendf(buf, buflen,
                         ",\"start_lon\":%d,\"start_lat\":%d,\"end_lon\":%d,"
                         "\"end_lat\":%d",
@@ -3647,6 +3652,7 @@ void json_aivdm_dump(const struct ais_t *ais,
                         ais->type8.dac200fid23.start_lat,
                         ais->type8.dac200fid23.end_lon,
                         ais->type8.dac200fid23.end_lat);
+                }
                 str_appendf(buf, buflen,
                     ",\"type\":%u,\"type_text\":\"%s\",\"min\":%d,"
                     "\"max\":%d,\"class\":%u,\"class_text\":\"%s\","
@@ -3661,10 +3667,9 @@ void json_aivdm_dump(const struct ais_t *ais,
                     ais->type8.dac200fid23.wind,
                     EMMA_WIND_DISPLAY(ais->type8.dac200fid23.wind));
                 break;
-            case 24:    /* Inland AIS Water Levels */
-                str_appendf(buf, buflen,
-                    ",\"country\":\"%s\",\"gauges\":[",
-                    ais->type8.dac200fid24.country);
+            case 24:    // Inland AIS Water Levels
+                str_appendf(buf, buflen, ",\"country\":\"%s\",\"gauges\":[",
+                            ais->type8.dac200fid24.country);
                 for (i = 0; i < ais->type8.dac200fid24.ngauges; i++) {
                     str_appendf(buf, buflen,
                         "{\"id\":%u,\"level\":%d},",
@@ -3674,17 +3679,18 @@ void json_aivdm_dump(const struct ais_t *ais,
                 str_rstrip_char(buf, ',');
                 (void)strlcat(buf, "]}\r\n", buflen);
                 break;
-            case 40:    /* Inland AIS Signal Strength */
-                if (scaled)
+            case 40:    // Inland AIS Signal Strength
+                if (scaled) {
                     str_appendf(buf, buflen,
                         ",\"lon\":%.6f,\"lat\":%.6f",
                         ais->type8.dac200fid40.lon / AIS_LATLON_DIV,
                         ais->type8.dac200fid40.lat / AIS_LATLON_DIV);
-                else
+                } else {
                     str_appendf(buf, buflen,
                         ",\"lon\":%d,\"lat\":%d",
                         ais->type8.dac200fid40.lon,
                         ais->type8.dac200fid40.lat);
+                }
                 str_appendf(buf, buflen,
                     ",\"form\":%u,\"facing\":%u,\"direction\":%u,"
                     "\"direction_text\":\"%s\",\"status\":%u,"
@@ -3699,7 +3705,7 @@ void json_aivdm_dump(const struct ais_t *ais,
             }
         }
         break;
-    case 9:                     /* Standard SAR Aircraft Position Report */
+    case 9:                     // Standard SAR Aircraft Position Report
         if (scaled) {
             char altlegend[20];
             char speedlegend[20];
@@ -3708,496 +3714,500 @@ void json_aivdm_dump(const struct ais_t *ais,
              * Express altitude as nan if not available,
              * "high" for above the reporting ceiling.
              */
-            if (ais->type9.alt == AIS_ALT_NOT_AVAILABLE)
+            if (AIS_ALT_NOT_AVAILABLE == ais->type9.alt) {
                 (void)strlcpy(altlegend, "\"nan\"", sizeof(altlegend));
-            else if (ais->type9.alt == AIS_ALT_HIGH)
+            } else if (AIS_ALT_HIGH == ais->type9.alt) {
                 (void)strlcpy(altlegend, "\"high\"", sizeof(altlegend));
-            else
+            } else {
                 (void)snprintf(altlegend, sizeof(altlegend),
                                "%u", ais->type9.alt);
+            }
 
             /*
              * Express speed as nan if not available,
              * "high" for above the reporting ceiling.
              */
-            if (ais->type9.speed == AIS_SAR_SPEED_NOT_AVAILABLE)
+            if (AIS_SAR_SPEED_NOT_AVAILABLE == ais->type9.speed) {
                 (void)strlcpy(speedlegend, "\"nan\"", sizeof(speedlegend));
-            else if (ais->type9.speed == AIS_SAR_FAST_MOVER)
+            } else if (AIS_SAR_FAST_MOVER == ais->type9.speed) {
                 (void)strlcpy(speedlegend, "\"fast\"", sizeof(speedlegend));
-            else
+            } else {
                 (void)snprintf(speedlegend, sizeof(speedlegend),
                                "%u", ais->type9.speed);
+            }
 
             str_appendf(buf, buflen,
-                           ",\"alt\":%s,\"speed\":%s,\"accuracy\":%s,"
-                           "\"lon\":%.6f,\"lat\":%.6f,\"course\":%.1f,"
-                           "\"second\":%u,\"regional\":%u,\"dte\":%u,"
-                           "\"raim\":%s,\"radio\":%u}\r\n",
-                           altlegend,
-                           speedlegend,
-                           JSON_BOOL(ais->type9.accuracy),
-                           ais->type9.lon / AIS_LATLON_DIV,
-                           ais->type9.lat / AIS_LATLON_DIV,
-                           ais->type9.course / 10.0,
-                           ais->type9.second,
-                           ais->type9.regional,
-                           ais->type9.dte,
-                           JSON_BOOL(ais->type9.raim), ais->type9.radio);
+                        ",\"alt\":%s,\"speed\":%s,\"accuracy\":%s,"
+                        "\"lon\":%.6f,\"lat\":%.6f,\"course\":%.1f,"
+                        "\"second\":%u,\"regional\":%u,\"dte\":%u,"
+                        "\"raim\":%s,\"radio\":%u}\r\n",
+                        altlegend,
+                        speedlegend,
+                        JSON_BOOL(ais->type9.accuracy),
+                        ais->type9.lon / AIS_LATLON_DIV,
+                        ais->type9.lat / AIS_LATLON_DIV,
+                        ais->type9.course / 10.0,
+                        ais->type9.second,
+                        ais->type9.regional,
+                        ais->type9.dte,
+                        JSON_BOOL(ais->type9.raim), ais->type9.radio);
         } else {
             str_appendf(buf, buflen,
-                           ",\"alt\":%u,\"speed\":%u,\"accuracy\":%s,"
-                           "\"lon\":%d,\"lat\":%d,\"course\":%u,"
-                           "\"second\":%u,\"regional\":%u,\"dte\":%u,"
-                           "\"raim\":%s,\"radio\":%u}\r\n",
-                           ais->type9.alt,
-                           ais->type9.speed,
-                           JSON_BOOL(ais->type9.accuracy),
-                           ais->type9.lon,
-                           ais->type9.lat,
-                           ais->type9.course,
-                           ais->type9.second,
-                           ais->type9.regional,
-                           ais->type9.dte,
-                           JSON_BOOL(ais->type9.raim), ais->type9.radio);
+                        ",\"alt\":%u,\"speed\":%u,\"accuracy\":%s,"
+                        "\"lon\":%d,\"lat\":%d,\"course\":%u,"
+                        "\"second\":%u,\"regional\":%u,\"dte\":%u,"
+                        "\"raim\":%s,\"radio\":%u}\r\n",
+                        ais->type9.alt,
+                        ais->type9.speed,
+                        JSON_BOOL(ais->type9.accuracy),
+                        ais->type9.lon,
+                        ais->type9.lat,
+                        ais->type9.course,
+                        ais->type9.second,
+                        ais->type9.regional,
+                        ais->type9.dte,
+                        JSON_BOOL(ais->type9.raim), ais->type9.radio);
         }
         break;
-    case 10:                    /* UTC/Date Inquiry */
+    case 10:                    // UTC/Date Inquiry
         str_appendf(buf, buflen,
-                       ",\"dest_mmsi\":%u}\r\n", ais->type10.dest_mmsi);
+                    ",\"dest_mmsi\":%u}\r\n", ais->type10.dest_mmsi);
         break;
-    case 12:                    /* Safety Related Message */
+    case 12:                    // Safety Related Message
         str_appendf(buf, buflen,
-                       ",\"seqno\":%u,\"dest_mmsi\":%u,\"retransmit\":%s,"
-                       "\"text\":\"%s\"}\r\n",
-                       ais->type12.seqno,
-                       ais->type12.dest_mmsi,
-                       JSON_BOOL(ais->type12.retransmit),
-                       json_stringify(buf1, sizeof(buf1), ais->type12.text));
+                    ",\"seqno\":%u,\"dest_mmsi\":%u,\"retransmit\":%s,"
+                    "\"text\":\"%s\"}\r\n",
+                    ais->type12.seqno,
+                    ais->type12.dest_mmsi,
+                    JSON_BOOL(ais->type12.retransmit),
+                    json_stringify(buf1, sizeof(buf1), ais->type12.text));
         break;
-    case 14:                    /* Safety Related Broadcast Message */
+    case 14:                    // Safety Related Broadcast Message
         str_appendf(buf, buflen,
-                       ",\"text\":\"%s\"}\r\n",
-                       json_stringify(buf1, sizeof(buf1), ais->type14.text));
+                    ",\"text\":\"%s\"}\r\n",
+                    json_stringify(buf1, sizeof(buf1), ais->type14.text));
         break;
-    case 15:                    /* Interrogation */
+    case 15:                    // Interrogation
         str_appendf(buf, buflen,
-                       ",\"mmsi1\":%u,\"type1_1\":%u,\"offset1_1\":%u,"
-                       "\"type1_2\":%u,\"offset1_2\":%u,\"mmsi2\":%u,"
-                       "\"type2_1\":%u,\"offset2_1\":%u}\r\n",
-                       ais->type15.mmsi1,
-                       ais->type15.type1_1,
-                       ais->type15.offset1_1,
-                       ais->type15.type1_2,
-                       ais->type15.offset1_2,
-                       ais->type15.mmsi2,
-                       ais->type15.type2_1, ais->type15.offset2_1);
+                    ",\"mmsi1\":%u,\"type1_1\":%u,\"offset1_1\":%u,"
+                    "\"type1_2\":%u,\"offset1_2\":%u,\"mmsi2\":%u,"
+                    "\"type2_1\":%u,\"offset2_1\":%u}\r\n",
+                    ais->type15.mmsi1,
+                    ais->type15.type1_1,
+                    ais->type15.offset1_1,
+                    ais->type15.type1_2,
+                    ais->type15.offset1_2,
+                    ais->type15.mmsi2,
+                    ais->type15.type2_1, ais->type15.offset2_1);
         break;
     case 16:
         str_appendf(buf, buflen,
-                       ",\"mmsi1\":%u,\"offset1\":%u,\"increment1\":%u,"
-                       "\"mmsi2\":%u,\"offset2\":%u,\"increment2\":%u}\r\n",
-                       ais->type16.mmsi1,
-                       ais->type16.offset1,
-                       ais->type16.increment1,
-                       ais->type16.mmsi2,
-                       ais->type16.offset2, ais->type16.increment2);
+                    ",\"mmsi1\":%u,\"offset1\":%u,\"increment1\":%u,"
+                    "\"mmsi2\":%u,\"offset2\":%u,\"increment2\":%u}\r\n",
+                    ais->type16.mmsi1,
+                    ais->type16.offset1,
+                    ais->type16.increment1,
+                    ais->type16.mmsi2,
+                    ais->type16.offset2, ais->type16.increment2);
         break;
     case 17:
         if (scaled) {
             str_appendf(buf, buflen,
-                           ",\"lon\":%.1f,\"lat\":%.1f,\"data\":\"%zd:%s\""
-                           "}\r\n",
-                           ais->type17.lon / AIS_GNSS_LATLON_DIV,
-                           ais->type17.lat / AIS_GNSS_LATLON_DIV,
-                           ais->type17.bitcount,
-                           gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
-                                        (char *)ais->type17.bitdata,
-                                        BITS_TO_BYTES(ais->type17.bitcount)));
+                        ",\"lon\":%.1f,\"lat\":%.1f,\"data\":\"%zd:%s\""
+                        "}\r\n",
+                        ais->type17.lon / AIS_GNSS_LATLON_DIV,
+                        ais->type17.lat / AIS_GNSS_LATLON_DIV,
+                        ais->type17.bitcount,
+                        gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
+                                     (char *)ais->type17.bitdata,
+                                     BITS_TO_BYTES(ais->type17.bitcount)));
         } else {
             str_appendf(buf, buflen,
-                           ",\"lon\":%d,\"lat\":%d,\"data\":\"%zd:%s\"}\r\n",
-                           ais->type17.lon,
-                           ais->type17.lat,
-                           ais->type17.bitcount,
-                           gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
-                                        (char *)ais->type17.bitdata,
-                                        BITS_TO_BYTES(ais->type17.bitcount)));
+                        ",\"lon\":%d,\"lat\":%d,\"data\":\"%zd:%s\"}\r\n",
+                        ais->type17.lon,
+                        ais->type17.lat,
+                        ais->type17.bitcount,
+                        gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
+                                     (char *)ais->type17.bitdata,
+                                     BITS_TO_BYTES(ais->type17.bitcount)));
         }
         break;
     case 18:
         if (scaled) {
             str_appendf(buf, buflen,
-                           ",\"reserved\":%u,\"speed\":%.1f,\"accuracy\":%s,"
-                           "\"lon\":%.6f,\"lat\":%.6f,\"course\":%.1f,"
-                           "\"heading\":%u,\"second\":%u,\"regional\":%u,"
-                           "\"cs\":%s,\"display\":%s,\"dsc\":%s,\"band\":%s,"
-                           "\"msg22\":%s,\"raim\":%s,\"radio\":%u}\r\n",
-                           ais->type18.reserved,
-                           ais->type18.speed / 10.0,
-                           JSON_BOOL(ais->type18.accuracy),
-                           ais->type18.lon / AIS_LATLON_DIV,
-                           ais->type18.lat / AIS_LATLON_DIV,
-                           ais->type18.course / 10.0,
-                           ais->type18.heading,
-                           ais->type18.second,
-                           ais->type18.regional,
-                           JSON_BOOL(ais->type18.cs),
-                           JSON_BOOL(ais->type18.display),
-                           JSON_BOOL(ais->type18.dsc),
-                           JSON_BOOL(ais->type18.band),
-                           JSON_BOOL(ais->type18.msg22),
-                           JSON_BOOL(ais->type18.raim), ais->type18.radio);
+                        ",\"reserved\":%u,\"speed\":%.1f,\"accuracy\":%s,"
+                        "\"lon\":%.6f,\"lat\":%.6f,\"course\":%.1f,"
+                        "\"heading\":%u,\"second\":%u,\"regional\":%u,"
+                        "\"cs\":%s,\"display\":%s,\"dsc\":%s,\"band\":%s,"
+                        "\"msg22\":%s,\"raim\":%s,\"radio\":%u}\r\n",
+                        ais->type18.reserved,
+                        ais->type18.speed / 10.0,
+                        JSON_BOOL(ais->type18.accuracy),
+                        ais->type18.lon / AIS_LATLON_DIV,
+                        ais->type18.lat / AIS_LATLON_DIV,
+                        ais->type18.course / 10.0,
+                        ais->type18.heading,
+                        ais->type18.second,
+                        ais->type18.regional,
+                        JSON_BOOL(ais->type18.cs),
+                        JSON_BOOL(ais->type18.display),
+                        JSON_BOOL(ais->type18.dsc),
+                        JSON_BOOL(ais->type18.band),
+                        JSON_BOOL(ais->type18.msg22),
+                        JSON_BOOL(ais->type18.raim), ais->type18.radio);
         } else {
             str_appendf(buf, buflen,
-                           ",\"reserved\":%u,\"speed\":%u,\"accuracy\":%s,"
-                           "\"lon\":%d,\"lat\":%d,\"course\":%u,"
-                           "\"heading\":%u,\"second\":%u,\"regional\":%u,"
-                           "\"cs\":%s,\"display\":%s,\"dsc\":%s,\"band\":%s,"
-                           "\"msg22\":%s,\"raim\":%s,\"radio\":%u}\r\n",
-                           ais->type18.reserved,
-                           ais->type18.speed,
-                           JSON_BOOL(ais->type18.accuracy),
-                           ais->type18.lon,
-                           ais->type18.lat,
-                           ais->type18.course,
-                           ais->type18.heading,
-                           ais->type18.second,
-                           ais->type18.regional,
-                           JSON_BOOL(ais->type18.cs),
-                           JSON_BOOL(ais->type18.display),
-                           JSON_BOOL(ais->type18.dsc),
-                           JSON_BOOL(ais->type18.band),
-                           JSON_BOOL(ais->type18.msg22),
-                           JSON_BOOL(ais->type18.raim), ais->type18.radio);
+                        ",\"reserved\":%u,\"speed\":%u,\"accuracy\":%s,"
+                        "\"lon\":%d,\"lat\":%d,\"course\":%u,"
+                        "\"heading\":%u,\"second\":%u,\"regional\":%u,"
+                        "\"cs\":%s,\"display\":%s,\"dsc\":%s,\"band\":%s,"
+                        "\"msg22\":%s,\"raim\":%s,\"radio\":%u}\r\n",
+                        ais->type18.reserved,
+                        ais->type18.speed,
+                        JSON_BOOL(ais->type18.accuracy),
+                        ais->type18.lon,
+                        ais->type18.lat,
+                        ais->type18.course,
+                        ais->type18.heading,
+                        ais->type18.second,
+                        ais->type18.regional,
+                        JSON_BOOL(ais->type18.cs),
+                        JSON_BOOL(ais->type18.display),
+                        JSON_BOOL(ais->type18.dsc),
+                        JSON_BOOL(ais->type18.band),
+                        JSON_BOOL(ais->type18.msg22),
+                        JSON_BOOL(ais->type18.raim), ais->type18.radio);
         }
         break;
     case 19:
         if (scaled) {
             str_appendf(buf, buflen,
-                           ",\"reserved\":%u,\"speed\":%.1f,\"accuracy\":%s,"
-                           "\"lon\":%.6f,\"lat\":%.6f,\"course\":%.1f,"
-                           "\"heading\":%u,\"second\":%u,\"regional\":%u,"
-                           "\"shipname\":\"%s\","
-                           "\"shiptype\":%u,\"shiptype_text\":\"%s\","
-                           "\"to_bow\":%u,\"to_stern\":%u,\"to_port\":%u,"
-                           "\"to_starboard\":%u,"
-                           "\"epfd\":%u,\"epfd_text\":\"%s\","
-                           "\"raim\":%s,\"dte\":%u,\"assigned\":%s}\r\n",
-                           ais->type19.reserved,
-                           ais->type19.speed / 10.0,
-                           JSON_BOOL(ais->type19.accuracy),
-                           ais->type19.lon / AIS_LATLON_DIV,
-                           ais->type19.lat / AIS_LATLON_DIV,
-                           ais->type19.course / 10.0,
-                           ais->type19.heading,
-                           ais->type19.second,
-                           ais->type19.regional,
-                           json_stringify(buf1, sizeof(buf1),
-                                          ais->type19.shipname),
-                           ais->type19.shiptype,
-                           SHIPTYPE_DISPLAY(ais->type19.shiptype),
-                           ais->type19.to_bow,
-                           ais->type19.to_stern,
-                           ais->type19.to_port,
-                           ais->type19.to_starboard,
-                           ais->type19.epfd,
-                           EPFD_DISPLAY(ais->type19.epfd),
-                           JSON_BOOL(ais->type19.raim),
-                           ais->type19.dte,
-                           JSON_BOOL(ais->type19.assigned));
+                        ",\"reserved\":%u,\"speed\":%.1f,\"accuracy\":%s,"
+                        "\"lon\":%.6f,\"lat\":%.6f,\"course\":%.1f,"
+                        "\"heading\":%u,\"second\":%u,\"regional\":%u,"
+                        "\"shipname\":\"%s\","
+                        "\"shiptype\":%u,\"shiptype_text\":\"%s\","
+                        "\"to_bow\":%u,\"to_stern\":%u,\"to_port\":%u,"
+                        "\"to_starboard\":%u,"
+                        "\"epfd\":%u,\"epfd_text\":\"%s\","
+                        "\"raim\":%s,\"dte\":%u,\"assigned\":%s}\r\n",
+                        ais->type19.reserved,
+                        ais->type19.speed / 10.0,
+                        JSON_BOOL(ais->type19.accuracy),
+                        ais->type19.lon / AIS_LATLON_DIV,
+                        ais->type19.lat / AIS_LATLON_DIV,
+                        ais->type19.course / 10.0,
+                        ais->type19.heading,
+                        ais->type19.second,
+                        ais->type19.regional,
+                        json_stringify(buf1, sizeof(buf1),
+                                       ais->type19.shipname),
+                        ais->type19.shiptype,
+                        SHIPTYPE_DISPLAY(ais->type19.shiptype),
+                        ais->type19.to_bow,
+                        ais->type19.to_stern,
+                        ais->type19.to_port,
+                        ais->type19.to_starboard,
+                        ais->type19.epfd,
+                        EPFD_DISPLAY(ais->type19.epfd),
+                        JSON_BOOL(ais->type19.raim),
+                        ais->type19.dte,
+                        JSON_BOOL(ais->type19.assigned));
         } else {
             str_appendf(buf, buflen,
-                           ",\"reserved\":%u,\"speed\":%u,\"accuracy\":%s,"
-                           "\"lon\":%d,\"lat\":%d,\"course\":%u,"
-                           "\"heading\":%u,\"second\":%u,\"regional\":%u,"
-                           "\"shipname\":\"%s\","
-                           "\"shiptype\":%u,\"shiptype_text\":\"%s\","
-                           "\"to_bow\":%u,\"to_stern\":%u,\"to_port\":%u,"
-                           "\"to_starboard\":%u,"
-                           "\"epfd\":%u,\"epfd_text\":\"%s\","
-                           "\"raim\":%s,\"dte\":%u,\"assigned\":%s}\r\n",
-                           ais->type19.reserved,
-                           ais->type19.speed,
-                           JSON_BOOL(ais->type19.accuracy),
-                           ais->type19.lon,
-                           ais->type19.lat,
-                           ais->type19.course,
-                           ais->type19.heading,
-                           ais->type19.second,
-                           ais->type19.regional,
-                           json_stringify(buf1, sizeof(buf1),
-                                          ais->type19.shipname),
-                           ais->type19.shiptype,
-                           SHIPTYPE_DISPLAY(ais->type19.shiptype),
-                           ais->type19.to_bow,
-                           ais->type19.to_stern,
-                           ais->type19.to_port,
-                           ais->type19.to_starboard,
-                           ais->type19.epfd,
-                           EPFD_DISPLAY(ais->type19.epfd),
-                           JSON_BOOL(ais->type19.raim),
-                           ais->type19.dte,
-                           JSON_BOOL(ais->type19.assigned));
+                        ",\"reserved\":%u,\"speed\":%u,\"accuracy\":%s,"
+                        "\"lon\":%d,\"lat\":%d,\"course\":%u,"
+                        "\"heading\":%u,\"second\":%u,\"regional\":%u,"
+                        "\"shipname\":\"%s\","
+                        "\"shiptype\":%u,\"shiptype_text\":\"%s\","
+                        "\"to_bow\":%u,\"to_stern\":%u,\"to_port\":%u,"
+                        "\"to_starboard\":%u,"
+                        "\"epfd\":%u,\"epfd_text\":\"%s\","
+                        "\"raim\":%s,\"dte\":%u,\"assigned\":%s}\r\n",
+                        ais->type19.reserved,
+                        ais->type19.speed,
+                        JSON_BOOL(ais->type19.accuracy),
+                        ais->type19.lon,
+                        ais->type19.lat,
+                        ais->type19.course,
+                        ais->type19.heading,
+                        ais->type19.second,
+                        ais->type19.regional,
+                        json_stringify(buf1, sizeof(buf1),
+                                       ais->type19.shipname),
+                        ais->type19.shiptype,
+                        SHIPTYPE_DISPLAY(ais->type19.shiptype),
+                        ais->type19.to_bow,
+                        ais->type19.to_stern,
+                        ais->type19.to_port,
+                        ais->type19.to_starboard,
+                        ais->type19.epfd,
+                        EPFD_DISPLAY(ais->type19.epfd),
+                        JSON_BOOL(ais->type19.raim),
+                        ais->type19.dte,
+                        JSON_BOOL(ais->type19.assigned));
         }
         break;
-    case 20:                    /* Data Link Management Message */
+    case 20:                    // Data Link Management Message
         str_appendf(buf, buflen,
-                       ",\"offset1\":%u,\"number1\":%u,"
-                       "\"timeout1\":%u,\"increment1\":%u,"
-                       "\"offset2\":%u,\"number2\":%u,"
-                       "\"timeout2\":%u,\"increment2\":%u,"
-                       "\"offset3\":%u,\"number3\":%u,"
-                       "\"timeout3\":%u,\"increment3\":%u,"
-                       "\"offset4\":%u,\"number4\":%u,"
-                       "\"timeout4\":%u,\"increment4\":%u}\r\n",
-                       ais->type20.offset1,
-                       ais->type20.number1,
-                       ais->type20.timeout1,
-                       ais->type20.increment1,
-                       ais->type20.offset2,
-                       ais->type20.number2,
-                       ais->type20.timeout2,
-                       ais->type20.increment2,
-                       ais->type20.offset3,
-                       ais->type20.number3,
-                       ais->type20.timeout3,
-                       ais->type20.increment3,
-                       ais->type20.offset4,
-                       ais->type20.number4,
-                       ais->type20.timeout4, ais->type20.increment4);
+                    ",\"offset1\":%u,\"number1\":%u,"
+                    "\"timeout1\":%u,\"increment1\":%u,"
+                    "\"offset2\":%u,\"number2\":%u,"
+                    "\"timeout2\":%u,\"increment2\":%u,"
+                    "\"offset3\":%u,\"number3\":%u,"
+                    "\"timeout3\":%u,\"increment3\":%u,"
+                    "\"offset4\":%u,\"number4\":%u,"
+                    "\"timeout4\":%u,\"increment4\":%u}\r\n",
+                    ais->type20.offset1,
+                    ais->type20.number1,
+                    ais->type20.timeout1,
+                    ais->type20.increment1,
+                    ais->type20.offset2,
+                    ais->type20.number2,
+                    ais->type20.timeout2,
+                    ais->type20.increment2,
+                    ais->type20.offset3,
+                    ais->type20.number3,
+                    ais->type20.timeout3,
+                    ais->type20.increment3,
+                    ais->type20.offset4,
+                    ais->type20.number4,
+                    ais->type20.timeout4, ais->type20.increment4);
         break;
-    case 21:                    /* Aid to Navigation */
+    case 21:                    // Aid to Navigation
         if (scaled) {
             str_appendf(buf, buflen,
-                           ",\"aid_type\":%u,\"aid_type_text\":\"%s\","
-                           "\"name\":\"%s\",\"lon\":%.6f,"
-                           "\"lat\":%.6f,\"accuracy\":%s,\"to_bow\":%u,"
-                           "\"to_stern\":%u,\"to_port\":%u,\"to_starboard\":%u,"
-                           "\"epfd\":%u,\"epfd_text\":\"%s\","
-                           "\"second\":%u,\"regional\":%u,"
-                           "\"off_position\":%s,\"raim\":%s,"
-                           "\"virtual_aid\":%s}\r\n",
-                           ais->type21.aid_type,
-                           NAVAIDTYPE_DISPLAY(ais->type21.aid_type),
-                           json_stringify(buf1, sizeof(buf1),
-                                          ais->type21.name),
-                           ais->type21.lon / AIS_LATLON_DIV,
-                           ais->type21.lat / AIS_LATLON_DIV,
-                           JSON_BOOL(ais->type21.accuracy),
-                           ais->type21.to_bow, ais->type21.to_stern,
-                           ais->type21.to_port, ais->type21.to_starboard,
-                           ais->type21.epfd,
-                           EPFD_DISPLAY(ais->type21.epfd),
-                           ais->type21.second,
-                           ais->type21.regional,
-                           JSON_BOOL(ais->type21.off_position),
-                           JSON_BOOL(ais->type21.raim),
-                           JSON_BOOL(ais->type21.virtual_aid));
+                        ",\"aid_type\":%u,\"aid_type_text\":\"%s\","
+                        "\"name\":\"%s\",\"lon\":%.6f,"
+                        "\"lat\":%.6f,\"accuracy\":%s,\"to_bow\":%u,"
+                        "\"to_stern\":%u,\"to_port\":%u,\"to_starboard\":%u,"
+                        "\"epfd\":%u,\"epfd_text\":\"%s\","
+                        "\"second\":%u,\"regional\":%u,"
+                        "\"off_position\":%s,\"raim\":%s,"
+                        "\"virtual_aid\":%s}\r\n",
+                        ais->type21.aid_type,
+                        NAVAIDTYPE_DISPLAY(ais->type21.aid_type),
+                        json_stringify(buf1, sizeof(buf1),
+                                       ais->type21.name),
+                        ais->type21.lon / AIS_LATLON_DIV,
+                        ais->type21.lat / AIS_LATLON_DIV,
+                        JSON_BOOL(ais->type21.accuracy),
+                        ais->type21.to_bow, ais->type21.to_stern,
+                        ais->type21.to_port, ais->type21.to_starboard,
+                        ais->type21.epfd,
+                        EPFD_DISPLAY(ais->type21.epfd),
+                        ais->type21.second,
+                        ais->type21.regional,
+                        JSON_BOOL(ais->type21.off_position),
+                        JSON_BOOL(ais->type21.raim),
+                        JSON_BOOL(ais->type21.virtual_aid));
         } else {
             str_appendf(buf, buflen,
-                           ",\"aid_type\":%u,\"aid_type_text\":\"%s\","
-                           "\"name\":\"%s\",\"accuracy\":%s,"
-                           "\"lon\":%d,\"lat\":%d,\"to_bow\":%u,"
-                           "\"to_stern\":%u,\"to_port\":%u,\"to_starboard\":%u,"
-                           "\"epfd\":%u,\"epfd_text\":\"%s\","
-                           "\"second\":%u,\"regional\":%u,"
-                           "\"off_position\":%s,\"raim\":%s,"
-                           "\"virtual_aid\":%s}\r\n",
-                           ais->type21.aid_type,
-                           NAVAIDTYPE_DISPLAY(ais->type21.aid_type),
-                           json_stringify(buf1, sizeof(buf1),
-                                          ais->type21.name),
-                           JSON_BOOL(ais->type21.accuracy),
-                           ais->type21.lon,
-                           ais->type21.lat,
-                           ais->type21.to_bow,
-                           ais->type21.to_stern,
-                           ais->type21.to_port,
-                           ais->type21.to_starboard,
-                           ais->type21.epfd,
-                           EPFD_DISPLAY(ais->type21.epfd),
-                           ais->type21.second,
-                           ais->type21.regional,
-                           JSON_BOOL(ais->type21.off_position),
-                           JSON_BOOL(ais->type21.raim),
-                           JSON_BOOL(ais->type21.virtual_aid));
+                        ",\"aid_type\":%u,\"aid_type_text\":\"%s\","
+                        "\"name\":\"%s\",\"accuracy\":%s,"
+                        "\"lon\":%d,\"lat\":%d,\"to_bow\":%u,"
+                        "\"to_stern\":%u,\"to_port\":%u,\"to_starboard\":%u,"
+                        "\"epfd\":%u,\"epfd_text\":\"%s\","
+                        "\"second\":%u,\"regional\":%u,"
+                        "\"off_position\":%s,\"raim\":%s,"
+                        "\"virtual_aid\":%s}\r\n",
+                        ais->type21.aid_type,
+                        NAVAIDTYPE_DISPLAY(ais->type21.aid_type),
+                        json_stringify(buf1, sizeof(buf1),
+                                       ais->type21.name),
+                        JSON_BOOL(ais->type21.accuracy),
+                        ais->type21.lon,
+                        ais->type21.lat,
+                        ais->type21.to_bow,
+                        ais->type21.to_stern,
+                        ais->type21.to_port,
+                        ais->type21.to_starboard,
+                        ais->type21.epfd,
+                        EPFD_DISPLAY(ais->type21.epfd),
+                        ais->type21.second,
+                        ais->type21.regional,
+                        JSON_BOOL(ais->type21.off_position),
+                        JSON_BOOL(ais->type21.raim),
+                        JSON_BOOL(ais->type21.virtual_aid));
         }
         break;
-    case 22:                    /* Channel Management */
+    case 22:                    // Channel Management
         str_appendf(buf, buflen,
-                       ",\"channel_a\":%u,\"channel_b\":%u,"
-                       "\"txrx\":%u,\"power\":%s",
-                       ais->type22.channel_a,
-                       ais->type22.channel_b,
-                       ais->type22.txrx, JSON_BOOL(ais->type22.power));
+                    ",\"channel_a\":%u,\"channel_b\":%u,"
+                    "\"txrx\":%u,\"power\":%s",
+                    ais->type22.channel_a,
+                    ais->type22.channel_b,
+                    ais->type22.txrx, JSON_BOOL(ais->type22.power));
         if (ais->type22.addressed) {
             str_appendf(buf, buflen,
-                           ",\"dest1\":%u,\"dest2\":%u",
-                           ais->type22.mmsi.dest1, ais->type22.mmsi.dest2);
+                        ",\"dest1\":%u,\"dest2\":%u",
+                        ais->type22.mmsi.dest1, ais->type22.mmsi.dest2);
         } else if (scaled) {
             str_appendf(buf, buflen,
-                           ",\"ne_lon\":\"%f\",\"ne_lat\":\"%f\","
-                           "\"sw_lon\":\"%f\",\"sw_lat\":\"%f\"",
-                           ais->type22.area.ne_lon / AIS_CHANNEL_LATLON_DIV,
-                           ais->type22.area.ne_lat / AIS_CHANNEL_LATLON_DIV,
-                           ais->type22.area.sw_lon / AIS_CHANNEL_LATLON_DIV,
-                           ais->type22.area.sw_lat /
-                           AIS_CHANNEL_LATLON_DIV);
+                        ",\"ne_lon\":\"%f\",\"ne_lat\":\"%f\","
+                        "\"sw_lon\":\"%f\",\"sw_lat\":\"%f\"",
+                        ais->type22.area.ne_lon / AIS_CHANNEL_LATLON_DIV,
+                        ais->type22.area.ne_lat / AIS_CHANNEL_LATLON_DIV,
+                        ais->type22.area.sw_lon / AIS_CHANNEL_LATLON_DIV,
+                        ais->type22.area.sw_lat /
+                        AIS_CHANNEL_LATLON_DIV);
         } else {
             str_appendf(buf, buflen,
-                           ",\"ne_lon\":%d,\"ne_lat\":%d,"
-                           "\"sw_lon\":%d,\"sw_lat\":%d",
-                           ais->type22.area.ne_lon,
-                           ais->type22.area.ne_lat,
-                           ais->type22.area.sw_lon, ais->type22.area.sw_lat);
+                        ",\"ne_lon\":%d,\"ne_lat\":%d,"
+                        "\"sw_lon\":%d,\"sw_lat\":%d",
+                        ais->type22.area.ne_lon,
+                        ais->type22.area.ne_lat,
+                        ais->type22.area.sw_lon, ais->type22.area.sw_lat);
         }
         str_appendf(buf, buflen,
-                       ",\"addressed\":%s,\"band_a\":%s,"
-                       "\"band_b\":%s,\"zonesize\":%u}\r\n",
-                       JSON_BOOL(ais->type22.addressed),
-                       JSON_BOOL(ais->type22.band_a),
-                       JSON_BOOL(ais->type22.band_b), ais->type22.zonesize);
+                    ",\"addressed\":%s,\"band_a\":%s,"
+                    "\"band_b\":%s,\"zonesize\":%u}\r\n",
+                    JSON_BOOL(ais->type22.addressed),
+                    JSON_BOOL(ais->type22.band_a),
+                    JSON_BOOL(ais->type22.band_b), ais->type22.zonesize);
         break;
-    case 23:                    /* Group Assignment Command */
+    case 23:                    // Group Assignment Command
         if (scaled) {
             str_appendf(buf, buflen,
-                           ",\"ne_lon\":\"%f\",\"ne_lat\":\"%f\","
-                           "\"sw_lon\":\"%f\",\"sw_lat\":\"%f\","
-                           "\"stationtype\":%u,\"stationtype_text\":\"%s\","
-                           "\"shiptype\":%u,\"shiptype_text\":\"%s\","
-                           "\"interval\":%u,\"quiet\":%u}\r\n",
-                           ais->type23.ne_lon / AIS_CHANNEL_LATLON_DIV,
-                           ais->type23.ne_lat / AIS_CHANNEL_LATLON_DIV,
-                           ais->type23.sw_lon / AIS_CHANNEL_LATLON_DIV,
-                           ais->type23.sw_lat / AIS_CHANNEL_LATLON_DIV,
-                           ais->type23.stationtype,
-                           STATIONTYPE_DISPLAY(ais->type23.stationtype),
-                           ais->type23.shiptype,
-                           SHIPTYPE_DISPLAY(ais->type23.shiptype),
-                           ais->type23.interval, ais->type23.quiet);
+                        ",\"ne_lon\":\"%f\",\"ne_lat\":\"%f\","
+                        "\"sw_lon\":\"%f\",\"sw_lat\":\"%f\","
+                        "\"stationtype\":%u,\"stationtype_text\":\"%s\","
+                        "\"shiptype\":%u,\"shiptype_text\":\"%s\","
+                        "\"interval\":%u,\"quiet\":%u}\r\n",
+                        ais->type23.ne_lon / AIS_CHANNEL_LATLON_DIV,
+                        ais->type23.ne_lat / AIS_CHANNEL_LATLON_DIV,
+                        ais->type23.sw_lon / AIS_CHANNEL_LATLON_DIV,
+                        ais->type23.sw_lat / AIS_CHANNEL_LATLON_DIV,
+                        ais->type23.stationtype,
+                        STATIONTYPE_DISPLAY(ais->type23.stationtype),
+                        ais->type23.shiptype,
+                        SHIPTYPE_DISPLAY(ais->type23.shiptype),
+                        ais->type23.interval, ais->type23.quiet);
         } else {
             str_appendf(buf, buflen,
-                           ",\"ne_lon\":%d,\"ne_lat\":%d,"
-                           "\"sw_lon\":%d,\"sw_lat\":%d,"
-                           "\"stationtype\":%u,\"stationtype_text\":\"%s\","
-                           "\"shiptype\":%u,\"shiptype_text\":\"%s\","
-                           "\"interval\":%u,\"quiet\":%u}\r\n",
-                           ais->type23.ne_lon,
-                           ais->type23.ne_lat,
-                           ais->type23.sw_lon,
-                           ais->type23.sw_lat,
-                           ais->type23.stationtype,
-                           STATIONTYPE_DISPLAY(ais->type23.stationtype),
-                           ais->type23.shiptype,
-                           SHIPTYPE_DISPLAY(ais->type23.shiptype),
-                           ais->type23.interval, ais->type23.quiet);
+                        ",\"ne_lon\":%d,\"ne_lat\":%d,"
+                        "\"sw_lon\":%d,\"sw_lat\":%d,"
+                        "\"stationtype\":%u,\"stationtype_text\":\"%s\","
+                        "\"shiptype\":%u,\"shiptype_text\":\"%s\","
+                        "\"interval\":%u,\"quiet\":%u}\r\n",
+                        ais->type23.ne_lon,
+                        ais->type23.ne_lat,
+                        ais->type23.sw_lon,
+                        ais->type23.sw_lat,
+                        ais->type23.stationtype,
+                        STATIONTYPE_DISPLAY(ais->type23.stationtype),
+                        ais->type23.shiptype,
+                        SHIPTYPE_DISPLAY(ais->type23.shiptype),
+                        ais->type23.interval, ais->type23.quiet);
         }
         break;
-    case 24:                    /* Class B CS Static Data Report */
-        if (ais->type24.part != both) {
+    case 24:                    // Class B CS Static Data Report
+        if (both != ais->type24.part) {
             static char *partnames[] = {"AB", "A", "B"};
             str_appendf(buf, buflen,
-                           ",\"part\":\"%s\"",
-                           json_stringify(buf1, sizeof(buf1),
-                                          partnames[ais->type24.part]));
+                        ",\"part\":\"%s\"",
+                        json_stringify(buf1, sizeof(buf1),
+                                       partnames[ais->type24.part]));
         }
-        if (ais->type24.part != part_b)
+        if (part_b != ais->type24.part) {
             str_appendf(buf, buflen,
-                           ",\"shipname\":\"%s\"",
-                           json_stringify(buf1, sizeof(buf1),
-                                      ais->type24.shipname));
-        if (ais->type24.part != part_a) {
+                        ",\"shipname\":\"%s\"",
+                        json_stringify(buf1, sizeof(buf1),
+                                   ais->type24.shipname));
+        }
+        if (part_a != ais->type24.part) {
             str_appendf(buf, buflen,
-                           ",\"shiptype\":%u,\"shiptype_text\":\"%s\","
-                           "\"vendorid\":\"%s\",\"model\":%u,\"serial\":%u,"
-                           "\"callsign\":\"%s\"",
-                           ais->type24.shiptype,
-                           SHIPTYPE_DISPLAY(ais->type24.shiptype),
-                           json_stringify(buf1, sizeof(buf1),
-                                          ais->type24.vendorid),
-                           ais->type24.model,
-                           ais->type24.serial,
-                           json_stringify(buf2, sizeof(buf2),
-                                          ais->type24.callsign));
+                        ",\"shiptype\":%u,\"shiptype_text\":\"%s\","
+                        "\"vendorid\":\"%s\",\"model\":%u,\"serial\":%u,"
+                        "\"callsign\":\"%s\"",
+                        ais->type24.shiptype,
+                        SHIPTYPE_DISPLAY(ais->type24.shiptype),
+                        json_stringify(buf1, sizeof(buf1),
+                                       ais->type24.vendorid),
+                        ais->type24.model,
+                        ais->type24.serial,
+                        json_stringify(buf2, sizeof(buf2),
+                                       ais->type24.callsign));
             if (AIS_AUXILIARY_MMSI(ais->mmsi)) {
                 str_appendf(buf, buflen,
-                               ",\"mothership_mmsi\":%u",
-                               ais->type24.mothership_mmsi);
+                            ",\"mothership_mmsi\":%u",
+                            ais->type24.mothership_mmsi);
             } else {
                 str_appendf(buf, buflen,
-                               ",\"to_bow\":%u,\"to_stern\":%u,"
-                               "\"to_port\":%u,\"to_starboard\":%u",
-                               ais->type24.dim.to_bow,
-                               ais->type24.dim.to_stern,
-                               ais->type24.dim.to_port,
-                               ais->type24.dim.to_starboard);
+                            ",\"to_bow\":%u,\"to_stern\":%u,"
+                            "\"to_port\":%u,\"to_starboard\":%u",
+                            ais->type24.dim.to_bow,
+                            ais->type24.dim.to_stern,
+                            ais->type24.dim.to_port,
+                            ais->type24.dim.to_starboard);
             }
         }
         (void)strlcat(buf, "}\r\n", buflen);
         break;
-    case 25:                    /* Binary Message, Single Slot */
+    case 25:                    // Binary Message, Single Slot
         str_appendf(buf, buflen,
-                       ",\"addressed\":%s,\"structured\":%s,\"dest_mmsi\":%u,"
-                       "\"app_id\":%u,\"data\":\"%zd:%s\"}\r\n",
-                       JSON_BOOL(ais->type25.addressed),
-                       JSON_BOOL(ais->type25.structured),
-                       ais->type25.dest_mmsi,
-                       ais->type25.app_id,
-                       ais->type25.bitcount,
-                       gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
-                                    (char *)ais->type25.bitdata,
-                                    BITS_TO_BYTES(ais->type25.bitcount)));
+                    ",\"addressed\":%s,\"structured\":%s,\"dest_mmsi\":%u,"
+                    "\"app_id\":%u,\"data\":\"%zd:%s\"}\r\n",
+                    JSON_BOOL(ais->type25.addressed),
+                    JSON_BOOL(ais->type25.structured),
+                    ais->type25.dest_mmsi,
+                    ais->type25.app_id,
+                    ais->type25.bitcount,
+                    gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
+                                 (char *)ais->type25.bitdata,
+                                 BITS_TO_BYTES(ais->type25.bitcount)));
         break;
-    case 26:                    /* Binary Message, Multiple Slot */
+    case 26:                    // Binary Message, Multiple Slot
         str_appendf(buf, buflen,
-                       ",\"addressed\":%s,\"structured\":%s,\"dest_mmsi\":%u,"
-                       "\"app_id\":%u,\"data\":\"%zd:%s\",\"radio\":%u}\r\n",
-                       JSON_BOOL(ais->type26.addressed),
-                       JSON_BOOL(ais->type26.structured),
-                       ais->type26.dest_mmsi,
-                       ais->type26.app_id,
-                       ais->type26.bitcount,
-                       gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
-                                    (char *)ais->type26.bitdata,
-                                    BITS_TO_BYTES(ais->type26.bitcount)),
-                       ais->type26.radio);
+                    ",\"addressed\":%s,\"structured\":%s,\"dest_mmsi\":%u,"
+                    "\"app_id\":%u,\"data\":\"%zd:%s\",\"radio\":%u}\r\n",
+                    JSON_BOOL(ais->type26.addressed),
+                    JSON_BOOL(ais->type26.structured),
+                    ais->type26.dest_mmsi,
+                    ais->type26.app_id,
+                    ais->type26.bitcount,
+                    gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
+                                 (char *)ais->type26.bitdata,
+                                 BITS_TO_BYTES(ais->type26.bitcount)),
+                    ais->type26.radio);
         break;
-    case 27:                    /* Long Range AIS Broadcast message */
-        if (scaled)
+    case 27:                    // Long Range AIS Broadcast message
+        if (scaled) {
             str_appendf(buf, buflen,
-                           ",\"status\":\"%s\","
-                           "\"accuracy\":%s,\"lon\":%.1f,\"lat\":%.1f,"
-                           "\"speed\":%u,\"course\":%u,\"raim\":%s,"
-                           "\"gnss\":%s}\r\n",
-                           nav_legends[ais->type27.status],
-                           JSON_BOOL(ais->type27.accuracy),
-                           ais->type27.lon / AIS_LONGRANGE_LATLON_DIV,
-                           ais->type27.lat / AIS_LONGRANGE_LATLON_DIV,
-                           ais->type27.speed,
-                           ais->type27.course,
-                           JSON_BOOL(ais->type27.raim),
-                           JSON_BOOL(ais->type27.gnss));
-        else
+                        ",\"status\":\"%s\","
+                        "\"accuracy\":%s,\"lon\":%.1f,\"lat\":%.1f,"
+                        "\"speed\":%u,\"course\":%u,\"raim\":%s,"
+                        "\"gnss\":%s}\r\n",
+                        nav_legends[ais->type27.status],
+                        JSON_BOOL(ais->type27.accuracy),
+                        ais->type27.lon / AIS_LONGRANGE_LATLON_DIV,
+                        ais->type27.lat / AIS_LONGRANGE_LATLON_DIV,
+                        ais->type27.speed,
+                        ais->type27.course,
+                        JSON_BOOL(ais->type27.raim),
+                        JSON_BOOL(ais->type27.gnss));
+        } else {
             str_appendf(buf, buflen,
-                           ",\"status\":%u,"
-                           "\"accuracy\":%s,\"lon\":%d,\"lat\":%d,"
-                           "\"speed\":%u,\"course\":%u,\"raim\":%s,"
-                           "\"gnss\":%s}\r\n",
-                           ais->type27.status,
-                           JSON_BOOL(ais->type27.accuracy),
-                           ais->type27.lon,
-                           ais->type27.lat,
-                           ais->type27.speed,
-                           ais->type27.course,
-                           JSON_BOOL(ais->type27.raim),
-                           JSON_BOOL(ais->type27.gnss));
+                        ",\"status\":%u,"
+                        "\"accuracy\":%s,\"lon\":%d,\"lat\":%d,"
+                        "\"speed\":%u,\"course\":%u,\"raim\":%s,"
+                        "\"gnss\":%s}\r\n",
+                        ais->type27.status,
+                        JSON_BOOL(ais->type27.accuracy),
+                        ais->type27.lon,
+                        ais->type27.lat,
+                        ais->type27.speed,
+                        ais->type27.course,
+                        JSON_BOOL(ais->type27.raim),
+                        JSON_BOOL(ais->type27.gnss));
+        }
         break;
     default:
         (void)strlcat(buf, "}\r\n", buflen);
         break;
     }
 }
-#endif /* defined(AIVDM_ENABLE) */
+#endif  // defined(AIVDM_ENABLE)
 
 /* dump the contents of an attitude_t structure as JSON
  * maybe gpsdata.attitude (class ATT), maybe gpsdata.imu (class IMU)
@@ -4211,6 +4221,7 @@ void json_att_dump(const struct gps_data_t *gpsdata,
 
     if (0 < att->mtime.tv_sec) {
         char tbuf[JSON_DATE_MAX+1];
+
         str_appendf(reply, replylen, ",\"time\":\"%s\"",
                        timespec_to_iso8601(att->mtime, tbuf, sizeof(tbuf)));
     }
@@ -4222,73 +4233,89 @@ void json_att_dump(const struct gps_data_t *gpsdata,
         str_appendf(reply, replylen, ",\"timeTag\":%lu", att->timeTag);
     }
     if (0 != isfinite(att->heading)) {
-        /* Trimble outputs %.3f, so we do too. */
+        // Trimble outputs %.3f, so we do too.
         str_appendf(reply, replylen, ",\"heading\":%.3f", att->heading);
-        if (att->mag_st != '\0')
+        if ('\0' != att->mag_st) {
             str_appendf(reply, replylen, ",\"mag_st\":\"%c\"", att->mag_st);
+        }
     }
-    if (isfinite(att->pitch) != 0) {
+    if (0 != isfinite(att->pitch)) {
         str_appendf(reply, replylen, ",\"pitch\":%.2f", att->pitch);
-        if (att->pitch_st != '\0')
+        if ('\0' != att->pitch_st) {
             str_appendf(reply, replylen, ",\"pitch_st\":\"%c\"",
                         att->pitch_st);
-
+        }
     }
-    if (isfinite(att->yaw) != 0) {
+    if (0 != isfinite(att->yaw)) {
         str_appendf(reply, replylen, ",\"yaw\":%.2f", att->yaw);
-        if (att->yaw_st != '\0')
+        if ('\0' != att->yaw_st) {
             str_appendf(reply, replylen, ",\"yaw_st\":\"%c\"", att->yaw_st);
-
+        }
     }
-    if (isfinite(att->roll) != 0) {
+    if (0 != isfinite(att->roll)) {
         str_appendf(reply, replylen, ",\"roll\":%.2f", att->roll);
-        if (att->roll_st != '\0')
+        if ('\0' != att->roll_st) {
             str_appendf(reply, replylen, ",\"roll_st\":\"%c\"", att->roll_st);
-
+        }
     }
 
-    if (isfinite(att->dip) != 0)
+    if (0 != isfinite(att->dip)) {
         str_appendf(reply, replylen, ",\"dip\":%.3f", att->dip);
+    }
 
-    if (isfinite(att->mag_len) != 0)
+    if (0 != isfinite(att->mag_len)) {
         str_appendf(reply, replylen, ",\"mag_len\":%.3f", att->mag_len);
-    if (isfinite(att->mag_x) != 0)
+    }
+    if (0 != isfinite(att->mag_x)) {
         str_appendf(reply, replylen, ",\"mag_x\":%.5f", att->mag_x);
-    if (isfinite(att->mag_y) != 0)
+    }
+    if (0 != isfinite(att->mag_y)) {
         str_appendf(reply, replylen, ",\"mag_y\":%.5f", att->mag_y);
-    if (isfinite(att->mag_z) != 0)
+    }
+    if (0 != isfinite(att->mag_z)) {
         str_appendf(reply, replylen, ",\"mag_z\":%.5f", att->mag_z);
+    }
 
-    if (isfinite(att->acc_len) != 0)
+    if (0 != isfinite(att->acc_len)) {
         str_appendf(reply, replylen, ",\"acc_len\":%.5f", att->acc_len);
-    if (isfinite(att->acc_x) != 0)
+    }
+    if (0 != isfinite(att->acc_x)) {
         str_appendf(reply, replylen, ",\"acc_x\":%.5f", att->acc_x);
-    if (isfinite(att->acc_y) != 0)
+    }
+    if (0 != isfinite(att->acc_y)) {
         str_appendf(reply, replylen, ",\"acc_y\":%.5f", att->acc_y);
-    if (isfinite(att->acc_z) != 0)
+    }
+    if (0 != isfinite(att->acc_z)) {
         str_appendf(reply, replylen, ",\"acc_z\":%.5f", att->acc_z);
+    }
 
-    if (isfinite(att->gyro_temp) != 0)
+    if (0 != isfinite(att->gyro_temp)) {
         str_appendf(reply, replylen, ",\"gyro_temp\":%.2f", att->gyro_temp);
-    if (isfinite(att->gyro_x) != 0)
+    }
+    if (0 != isfinite(att->gyro_x)) {
         str_appendf(reply, replylen, ",\"gyro_x\":%.5f", att->gyro_x);
-    if (isfinite(att->gyro_y) != 0)
+    }
+    if (0 != isfinite(att->gyro_y)) {
         str_appendf(reply, replylen, ",\"gyro_y\":%.5f", att->gyro_y);
-    if (isfinite(att->gyro_z) != 0)
+    }
+    if (0 != isfinite(att->gyro_z)) {
         str_appendf(reply, replylen, ",\"gyro_z\":%.5f", att->gyro_z);
+    }
 
-    if (isfinite(att->temp) != 0)
+    if (0 != isfinite(att->temp)) {
         str_appendf(reply, replylen, ",\"temp\":%.3f", att->temp);
-    if (isfinite(att->depth) != 0)
+    }
+    if (0 != isfinite(att->depth)) {
         str_appendf(reply, replylen, ",\"depth\":%.3f", att->depth);
+    }
 
     (void)strlcat(reply, "}\r\n", replylen);
 }
 
 #ifdef OSCILLATOR_ENABLE
+// dump the contents of an oscillator_t structure as JSON
 void json_oscillator_dump(const struct gps_data_t *datap,
                           char *reply, size_t replylen)
-/* dump the contents of an oscillator_t structure as JSON */
 {
     (void)snprintf(reply, replylen,
                    "{\"class\":\"OSC\",\"device\":\"%s\",\"running\":%s,"
@@ -4299,7 +4326,7 @@ void json_oscillator_dump(const struct gps_data_t *datap,
                    JSON_BOOL(datap->osc.disciplined),
                    datap->osc.delta);
 }
-#endif /* OSCILLATOR_ENABLE */
+#endif  // OSCILLATOR_ENABLE
 
 // report a session state in JSON
 void json_data_report(const gps_mask_t changed,
@@ -4310,25 +4337,25 @@ void json_data_report(const gps_mask_t changed,
     const struct gps_data_t *datap = &session->gpsdata;
     buf[0] = '\0';
 
-    if ((changed & REPORT_IS) != 0) {
+    if (0 != (changed & REPORT_IS)) {
         json_tpv_dump(changed, session, policy,
                       buf+strlen(buf), buflen-strlen(buf));
     }
 
-    if ((changed & GST_SET) != 0) {
+    if (0 != (changed & GST_SET)) {
         json_noise_dump(datap, buf+strlen(buf), buflen-strlen(buf));
     }
 
-    if ((changed & SATELLITE_SET) != 0) {
+    if (0 != (changed & SATELLITE_SET)) {
         json_sky_dump(datap, buf+strlen(buf), buflen-strlen(buf));
     }
 
-    if ((changed & SUBFRAME_SET) != 0) {
+    if (0 != (changed & SUBFRAME_SET)) {
         json_subframe_dump(datap, policy->scaled, buf+strlen(buf),
                            buflen-strlen(buf));
     }
 
-    if ((changed & RAW_IS) != 0) {
+    if (0 != (changed & RAW_IS)) {
         json_raw_dump(datap, buf+strlen(buf), buflen-strlen(buf));
     }
 
@@ -4350,40 +4377,38 @@ void json_data_report(const gps_mask_t changed,
     }
 
 #ifdef RTCM104V2_ENABLE
-    if ((changed & RTCM2_SET) != 0) {
+    if (0 != (changed & RTCM2_SET)) {
         json_rtcm2_dump(&datap->rtcm2, datap->dev.path,
                         buf+strlen(buf), buflen-strlen(buf));
     }
-#endif /* RTCM104V2_ENABLE */
+#endif  // RTCM104V2_ENABLE
 
 #ifdef RTCM104V3_ENABLE
-    if ((changed & RTCM3_SET) != 0) {
+    if (0 != (changed & RTCM3_SET)) {
         json_rtcm3_dump(&datap->rtcm3, datap->dev.path,
                         buf+strlen(buf), buflen-strlen(buf));
     }
-#endif /* RTCM104V3_ENABLE */
+#endif  // RTCM104V3_ENABLE
 
 #ifdef AIVDM_ENABLE
-    if ((changed & AIS_SET) != 0) {
+    if (0 != (changed & AIS_SET)) {
         json_aivdm_dump(&datap->ais, datap->dev.path,
                         policy->scaled,
                         buf+strlen(buf), buflen-strlen(buf));
     }
-#endif /* AIVDM_ENABLE */
+#endif  // AIVDM_ENABLE
 
 #ifdef OSCILLATOR_ENABLE
-    if ((changed & OSCILLATOR_SET) != 0) {
+    if (0 != (changed & OSCILLATOR_SET)) {
         json_oscillator_dump(datap, buf+strlen(buf), buflen-strlen(buf));
     }
-#endif /* OSCILLATOR_ENABLE */
-    if ((changed & LOG_SET) != 0) {
+#endif // OSCILLATOR_ENABLE
+    if (0 != (changed & LOG_SET)) {
         json_log_dump(session, buf+strlen(buf), buflen-strlen(buf));
     }
 }
 
 #undef JSON_BOOL
-#endif /* SOCKET_EXPORT_ENABLE */
-
-/* gpsd_json.c ends here */
+#endif  // SOCKET_EXPORT_ENABLE
 
 // vim: set expandtab shiftwidth=4
