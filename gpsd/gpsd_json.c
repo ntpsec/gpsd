@@ -2113,7 +2113,8 @@ void json_aivdm_dump(const struct ais_t *ais,
         "Galileo",
     };
 
-#define EPFD_DISPLAY(n) (((n) < (unsigned int)NITEMS(epfd_legends)) ? epfd_legends[n] : "INVALID EPFD")
+#define EPFD_DISPLAY(n) (((n) < (unsigned int)NITEMS(epfd_legends)) ? \
+                         epfd_legends[n] : "INVALID EPFD")
 
     static char *ship_type_legends[100] = {
         "Not available",
@@ -2242,7 +2243,8 @@ void json_aivdm_dump(const struct ais_t *ais,
         "Reserved for future use",
     };
 
-#define STATIONTYPE_DISPLAY(n) (((n) < (unsigned int)NITEMS(station_type_legends)) ? station_type_legends[n] : "INVALID STATION TYPE")
+#define STATIONTYPE_DISPLAY(n) (((n) < (unsigned)NITEMS(station_type_legends)) ? \
+                                station_type_legends[n] : "INVALID STATION TYPE")
 
     static const char *navaid_type_legends[] = {
         "Unspecified",
@@ -2279,7 +2281,8 @@ void json_aivdm_dump(const struct ais_t *ais,
         "Light Vessel / LANBY / Rigs",
     };
 
-#define NAVAIDTYPE_DISPLAY(n) (((n) < (unsigned int)NITEMS(navaid_type_legends)) ? navaid_type_legends[n] : "INVALID NAVAID TYPE")
+#define NAVAIDTYPE_DISPLAY(n) (((n) < (unsigned)NITEMS(navaid_type_legends)) ? \
+                               navaid_type_legends[n] : "INVALID NAVAID TYPE")
 
     // cppcheck-suppress variableScope
     static const char *signal_legends[] = {
@@ -2300,7 +2303,8 @@ void json_aivdm_dump(const struct ais_t *ais,
         "X = Vessels shall proceed only on direction.",
     };
 
-#define SIGNAL_DISPLAY(n) (((n) < (unsigned int)NITEMS(signal_legends)) ? signal_legends[n] : "INVALID SIGNAL TYPE")
+#define SIGNAL_DISPLAY(n) (((n) < (unsigned)NITEMS(signal_legends)) ? \
+                           signal_legends[n] : "INVALID SIGNAL TYPE")
 
     static const char *route_type[32] = {
         "Undefined (default)",
@@ -2382,14 +2386,18 @@ void json_aivdm_dump(const struct ais_t *ais,
     };
 
     (void)snprintf(buf, buflen, "{\"class\":\"AIS\"");
-    if (device != NULL && device[0] != '\0')
+    if (NULL != device &&
+        '\0' != device[0]) {
         str_appendf(buf, buflen, ",\"device\":\"%s\"", device);
+    }
     str_appendf(buf, buflen,
-                   ",\"type\":%u,\"repeat\":%u,\"mmsi\":%u,\"scaled\":%s",
-                   ais->type, ais->repeat, ais->mmsi, JSON_BOOL(scaled));
+                ",\"type\":%u,\"repeat\":%u,\"mmsi\":%u,\"scaled\":%s",
+                ais->type, ais->repeat, ais->mmsi, JSON_BOOL(scaled));
     switch (ais->type) {
     case 1:                     /* Position Report */
+        FALLTHROUGH
     case 2:
+        FALLTHROUGH
     case 3:
         if (scaled) {
             char turnlegend[20];
@@ -2399,14 +2407,13 @@ void json_aivdm_dump(const struct ais_t *ais,
              * Express turn as nan if not available,
              * "fastleft"/"fastright" for fast turns.
              */
-            if (ais->type1.turn == -128)
+            if (-128 == ais->type1.turn) {
                 (void)strlcpy(turnlegend, "\"nan\"", sizeof(turnlegend));
-            else if (ais->type1.turn == -127)
+            } else if (-127 == ais->type1.turn) {
                 (void)strlcpy(turnlegend, "\"fastleft\"", sizeof(turnlegend));
-            else if (ais->type1.turn == 127)
-                (void)strlcpy(turnlegend, "\"fastright\"",
-                              sizeof(turnlegend));
-            else {
+            } else if (127 == ais->type1.turn) {
+                (void)strlcpy(turnlegend, "\"fastright\"", sizeof(turnlegend));
+            } else {
                 double rot1 = ais->type1.turn / 4.733;
                 (void)snprintf(turnlegend, sizeof(turnlegend),
                                "%.0f", rot1 * rot1);
@@ -2416,507 +2423,520 @@ void json_aivdm_dump(const struct ais_t *ais,
              * Express speed as nan if not available,
              * "fast" for fast movers.
              */
-            if (ais->type1.speed == AIS_SPEED_NOT_AVAILABLE)
+            if (AIS_SPEED_NOT_AVAILABLE == ais->type1.speed) {
                 (void)strlcpy(speedlegend, "\"nan\"", sizeof(speedlegend));
-            else if (ais->type1.speed == AIS_SPEED_FAST_MOVER)
+            } else if (AIS_SPEED_FAST_MOVER == ais->type1.speed) {
                 (void)strlcpy(speedlegend, "\"fast\"", sizeof(speedlegend));
-            else
+            } else {
                 (void)snprintf(speedlegend, sizeof(speedlegend),
                                "%.1f", ais->type1.speed / 10.0);
+            }
 
             str_appendf(buf, buflen,
-                           ",\"status\":%u,\"status_text\":\"%s\","
-                           "\"turn\":%s,\"speed\":%s,"
-                           "\"accuracy\":%s,\"lon\":%.6f,\"lat\":%.6f,"
-                           "\"course\":%.1f,\"heading\":%u,\"second\":%u,"
-                           "\"maneuver\":%u,\"raim\":%s,\"radio\":%u}\r\n",
-                           ais->type1.status,
-                           nav_legends[ais->type1.status],
-                           turnlegend,
-                           speedlegend,
-                           JSON_BOOL(ais->type1.accuracy),
-                           ais->type1.lon / AIS_LATLON_DIV,
-                           ais->type1.lat / AIS_LATLON_DIV,
-                           ais->type1.course / 10.0,
-                           ais->type1.heading,
-                           ais->type1.second,
-                           ais->type1.maneuver,
-                           JSON_BOOL(ais->type1.raim), ais->type1.radio);
+                        ",\"status\":%u,\"status_text\":\"%s\","
+                        "\"turn\":%s,\"speed\":%s,"
+                        "\"accuracy\":%s,\"lon\":%.6f,\"lat\":%.6f,"
+                        "\"course\":%.1f,\"heading\":%u,\"second\":%u,"
+                        "\"maneuver\":%u,\"raim\":%s,\"radio\":%u}\r\n",
+                        ais->type1.status,
+                        nav_legends[ais->type1.status],
+                        turnlegend,
+                        speedlegend,
+                        JSON_BOOL(ais->type1.accuracy),
+                        ais->type1.lon / AIS_LATLON_DIV,
+                        ais->type1.lat / AIS_LATLON_DIV,
+                        ais->type1.course / 10.0,
+                        ais->type1.heading,
+                        ais->type1.second,
+                        ais->type1.maneuver,
+                        JSON_BOOL(ais->type1.raim), ais->type1.radio);
         } else {
             str_appendf(buf, buflen,
-                           ",\"status\":%u,\"status_text\":\"%s\","
-                           "\"turn\":%d,\"speed\":%u,"
-                           "\"accuracy\":%s,\"lon\":%d,\"lat\":%d,"
-                           "\"course\":%u,\"heading\":%u,\"second\":%u,"
-                           "\"maneuver\":%u,\"raim\":%s,\"radio\":%u}\r\n",
-                           ais->type1.status,
-                           nav_legends[ais->type1.status],
-                           ais->type1.turn,
-                           ais->type1.speed,
-                           JSON_BOOL(ais->type1.accuracy),
-                           ais->type1.lon,
-                           ais->type1.lat,
-                           ais->type1.course,
-                           ais->type1.heading,
-                           ais->type1.second,
-                           ais->type1.maneuver,
-                           JSON_BOOL(ais->type1.raim), ais->type1.radio);
+                        ",\"status\":%u,\"status_text\":\"%s\","
+                        "\"turn\":%d,\"speed\":%u,"
+                        "\"accuracy\":%s,\"lon\":%d,\"lat\":%d,"
+                        "\"course\":%u,\"heading\":%u,\"second\":%u,"
+                        "\"maneuver\":%u,\"raim\":%s,\"radio\":%u}\r\n",
+                        ais->type1.status,
+                        nav_legends[ais->type1.status],
+                        ais->type1.turn,
+                        ais->type1.speed,
+                        JSON_BOOL(ais->type1.accuracy),
+                        ais->type1.lon,
+                        ais->type1.lat,
+                        ais->type1.course,
+                        ais->type1.heading,
+                        ais->type1.second,
+                        ais->type1.maneuver,
+                        JSON_BOOL(ais->type1.raim), ais->type1.radio);
         }
         break;
-    case 4:                     /* Base Station Report */
-    case 11:                    /* UTC/Date Response */
-        /* some fields have beem merged to an ISO8601 date */
+    case 4:                     // Base Station Report
+        FALLTHROUGH
+    case 11:                    // UTC/Date Response
+        // some fields have beem merged to an ISO8601 date
         if (scaled) {
             // The use of %u instead of %04u for the year is to allow
             // out-of-band year values.
             str_appendf(buf, buflen,
-                           ",\"timestamp\":\"%04u-%02u-%02uT%02u:%02u:%02uZ\","
-                           "\"accuracy\":%s,\"lon\":%.6f,\"lat\":%.6f,"
-                           "\"epfd\":%u,\"epfd_text\":\"%s\","
-                           "\"raim\":%s,\"radio\":%u}\r\n",
-                           ais->type4.year,
-                           ais->type4.month,
-                           ais->type4.day,
-                           ais->type4.hour,
-                           ais->type4.minute,
-                           ais->type4.second,
-                           JSON_BOOL(ais->type4.accuracy),
-                           ais->type4.lon / AIS_LATLON_DIV,
-                           ais->type4.lat / AIS_LATLON_DIV,
-                           ais->type4.epfd,
-                           EPFD_DISPLAY(ais->type4.epfd),
-                           JSON_BOOL(ais->type4.raim), ais->type4.radio);
+                        ",\"timestamp\":\"%04u-%02u-%02uT%02u:%02u:%02uZ\","
+                        "\"accuracy\":%s,\"lon\":%.6f,\"lat\":%.6f,"
+                        "\"epfd\":%u,\"epfd_text\":\"%s\","
+                        "\"raim\":%s,\"radio\":%u}\r\n",
+                        ais->type4.year,
+                        ais->type4.month,
+                        ais->type4.day,
+                        ais->type4.hour,
+                        ais->type4.minute,
+                        ais->type4.second,
+                        JSON_BOOL(ais->type4.accuracy),
+                        ais->type4.lon / AIS_LATLON_DIV,
+                        ais->type4.lat / AIS_LATLON_DIV,
+                        ais->type4.epfd,
+                        EPFD_DISPLAY(ais->type4.epfd),
+                        JSON_BOOL(ais->type4.raim), ais->type4.radio);
         } else {
             str_appendf(buf, buflen,
-                           ",\"timestamp\":\"%04u-%02u-%02uT%02u:%02u:%02uZ\","
-                           "\"accuracy\":%s,\"lon\":%d,\"lat\":%d,"
-                           "\"epfd\":%u,\"epfd_text\":\"%s\","
-                           "\"raim\":%s,\"radio\":%u}\r\n",
-                           ais->type4.year,
-                           ais->type4.month,
-                           ais->type4.day,
-                           ais->type4.hour,
-                           ais->type4.minute,
-                           ais->type4.second,
-                           JSON_BOOL(ais->type4.accuracy),
-                           ais->type4.lon,
-                           ais->type4.lat,
-                           ais->type4.epfd,
-                           EPFD_DISPLAY(ais->type4.epfd),
-                           JSON_BOOL(ais->type4.raim), ais->type4.radio);
+                        ",\"timestamp\":\"%04u-%02u-%02uT%02u:%02u:%02uZ\","
+                        "\"accuracy\":%s,\"lon\":%d,\"lat\":%d,"
+                        "\"epfd\":%u,\"epfd_text\":\"%s\","
+                        "\"raim\":%s,\"radio\":%u}\r\n",
+                        ais->type4.year,
+                        ais->type4.month,
+                        ais->type4.day,
+                        ais->type4.hour,
+                        ais->type4.minute,
+                        ais->type4.second,
+                        JSON_BOOL(ais->type4.accuracy),
+                        ais->type4.lon,
+                        ais->type4.lat,
+                        ais->type4.epfd,
+                        EPFD_DISPLAY(ais->type4.epfd),
+                        JSON_BOOL(ais->type4.raim), ais->type4.radio);
         }
         break;
-    case 5:                     /* Ship static and voyage related data */
-        /* some fields have beem merged to an ISO8601 partial date */
+    case 5:                     // Ship static and voyage related data
+        // some fields have beem merged to an ISO8601 partial date
         if (scaled) {
-            /* *INDENT-OFF* */
             str_appendf(buf, buflen,
-                           ",\"imo\":%u,\"ais_version\":%u,\"callsign\":\"%s\","
-                           "\"shipname\":\"%s\","
-                           "\"shiptype\":%u,\"shiptype_text\":\"%s\","
-                           "\"to_bow\":%u,\"to_stern\":%u,\"to_port\":%u,"
-                           "\"to_starboard\":%u,"
-                           "\"epfd\":%u,\"epfd_text\":\"%s\","
-                           "\"eta\":\"%02u-%02uT%02u:%02uZ\","
-                           "\"draught\":%.1f,\"destination\":\"%s\","
-                           "\"dte\":%u}\r\n",
-                           ais->type5.imo,
-                           ais->type5.ais_version,
-                           json_stringify(buf1, sizeof(buf1),
-                                          ais->type5.callsign),
-                           json_stringify(buf2, sizeof(buf2),
-                                          ais->type5.shipname),
-                           ais->type5.shiptype,
-                           SHIPTYPE_DISPLAY(ais->type5.shiptype),
-                           ais->type5.to_bow, ais->type5.to_stern,
-                           ais->type5.to_port, ais->type5.to_starboard,
-                           ais->type5.epfd,
-                           EPFD_DISPLAY(ais->type5.epfd),
-                           ais->type5.month,
-                           ais->type5.day,
-                           ais->type5.hour, ais->type5.minute,
-                           ais->type5.draught / 10.0,
-                           json_stringify(buf3, sizeof(buf3),
-                                          ais->type5.destination),
-                           ais->type5.dte);
-            /* *INDENT-ON* */
+                        ",\"imo\":%u,\"ais_version\":%u,\"callsign\":\"%s\","
+                        "\"shipname\":\"%s\","
+                        "\"shiptype\":%u,\"shiptype_text\":\"%s\","
+                        "\"to_bow\":%u,\"to_stern\":%u,\"to_port\":%u,"
+                        "\"to_starboard\":%u,"
+                        "\"epfd\":%u,\"epfd_text\":\"%s\","
+                        "\"eta\":\"%02u-%02uT%02u:%02uZ\","
+                        "\"draught\":%.1f,\"destination\":\"%s\","
+                        "\"dte\":%u}\r\n",
+                        ais->type5.imo,
+                        ais->type5.ais_version,
+                        json_stringify(buf1, sizeof(buf1),
+                                       ais->type5.callsign),
+                        json_stringify(buf2, sizeof(buf2),
+                                       ais->type5.shipname),
+                        ais->type5.shiptype,
+                        SHIPTYPE_DISPLAY(ais->type5.shiptype),
+                        ais->type5.to_bow, ais->type5.to_stern,
+                        ais->type5.to_port, ais->type5.to_starboard,
+                        ais->type5.epfd,
+                        EPFD_DISPLAY(ais->type5.epfd),
+                        ais->type5.month,
+                        ais->type5.day,
+                        ais->type5.hour, ais->type5.minute,
+                        ais->type5.draught / 10.0,
+                        json_stringify(buf3, sizeof(buf3),
+                                       ais->type5.destination),
+                        ais->type5.dte);
         } else {
             str_appendf(buf, buflen,
-                           ",\"imo\":%u,\"ais_version\":%u,\"callsign\":\"%s\","
-                           "\"shipname\":\"%s\","
-                           "\"shiptype\":%u,\"shiptype_text\":\"%s\","
-                           "\"to_bow\":%u,\"to_stern\":%u,\"to_port\":%u,"
-                           "\"to_starboard\":%u,"
-                           "\"epfd\":%u,\"epfd_text\":\"%s\","
-                           "\"eta\":\"%02u-%02uT%02u:%02uZ\","
-                           "\"draught\":%u,\"destination\":\"%s\","
-                           "\"dte\":%u}\r\n",
-                           ais->type5.imo,
-                           ais->type5.ais_version,
-                           json_stringify(buf1, sizeof(buf1),
-                                          ais->type5.callsign),
-                           json_stringify(buf2, sizeof(buf2),
-                                          ais->type5.shipname),
-                           ais->type5.shiptype,
-                           SHIPTYPE_DISPLAY(ais->type5.shiptype),
-                           ais->type5.to_bow,
-                           ais->type5.to_stern,
-                           ais->type5.to_port,
-                           ais->type5.to_starboard,
-                           ais->type5.epfd,
-                           EPFD_DISPLAY(ais->type5.epfd),
-                           ais->type5.month,
-                           ais->type5.day,
-                           ais->type5.hour,
-                           ais->type5.minute,
-                           ais->type5.draught,
-                           json_stringify(buf3, sizeof(buf3),
-                                          ais->type5.destination),
-                           ais->type5.dte);
+                        ",\"imo\":%u,\"ais_version\":%u,\"callsign\":\"%s\","
+                        "\"shipname\":\"%s\","
+                        "\"shiptype\":%u,\"shiptype_text\":\"%s\","
+                        "\"to_bow\":%u,\"to_stern\":%u,\"to_port\":%u,"
+                        "\"to_starboard\":%u,"
+                        "\"epfd\":%u,\"epfd_text\":\"%s\","
+                        "\"eta\":\"%02u-%02uT%02u:%02uZ\","
+                        "\"draught\":%u,\"destination\":\"%s\","
+                        "\"dte\":%u}\r\n",
+                        ais->type5.imo,
+                        ais->type5.ais_version,
+                        json_stringify(buf1, sizeof(buf1),
+                                       ais->type5.callsign),
+                        json_stringify(buf2, sizeof(buf2),
+                                       ais->type5.shipname),
+                        ais->type5.shiptype,
+                        SHIPTYPE_DISPLAY(ais->type5.shiptype),
+                        ais->type5.to_bow,
+                        ais->type5.to_stern,
+                        ais->type5.to_port,
+                        ais->type5.to_starboard,
+                        ais->type5.epfd,
+                        EPFD_DISPLAY(ais->type5.epfd),
+                        ais->type5.month,
+                        ais->type5.day,
+                        ais->type5.hour,
+                        ais->type5.minute,
+                        ais->type5.draught,
+                        json_stringify(buf3, sizeof(buf3),
+                                       ais->type5.destination),
+                        ais->type5.dte);
         }
         break;
-    case 6:                     /* Binary Message */
+    case 6:                     // Binary Message
         str_appendf(buf, buflen,
-                       ",\"seqno\":%u,\"dest_mmsi\":%u,"
-                       "\"retransmit\":%s,\"dac\":%u,\"fid\":%u",
-                       ais->type6.seqno,
-                       ais->type6.dest_mmsi,
-                       JSON_BOOL(ais->type6.retransmit),
-                       ais->type6.dac,
-                       ais->type6.fid);
+                    ",\"seqno\":%u,\"dest_mmsi\":%u,"
+                    "\"retransmit\":%s,\"dac\":%u,\"fid\":%u",
+                    ais->type6.seqno,
+                    ais->type6.dest_mmsi,
+                    JSON_BOOL(ais->type6.retransmit),
+                    ais->type6.dac,
+                    ais->type6.fid);
         if (!ais->type6.structured) {
             str_appendf(buf, buflen,
-                           ",\"data\":\"%zd:%s\"}\r\n",
-                           ais->type6.bitcount,
-                           json_stringify(buf1, sizeof(buf1),
-                              gpsd_hexdump(
-                                  scratchbuf, sizeof(scratchbuf),
-                                  (char *)ais->type6.bitdata,
-                                  BITS_TO_BYTES(ais->type6.bitcount))));
+                        ",\"data\":\"%zd:%s\"}\r\n",
+                        ais->type6.bitcount,
+                        json_stringify(buf1, sizeof(buf1),
+                                       gpsd_hexdump(scratchbuf,
+                                            sizeof(scratchbuf),
+                                            (char *)ais->type6.bitdata,
+                                            BITS_TO_BYTES(ais->type6.bitcount))));
             break;
         }
-        if (ais->type6.dac == 200) {
+        if (200 == ais->type6.dac) {
             switch (ais->type6.fid) {
             case 21:
                 str_appendf(buf, buflen,
-                    ",\"country\":\"%s\",\"locode\":\"%s\","
-                    "\"section\":\"%s\",\"terminal\":\"%s\","
-                    "\"hectometre\":\"%s\",\"eta\":\"%u-%uT%u:%u\","
-                    "\"tugs\":%u,\"airdraught\":%u}\r\n",
-                    ais->type6.dac200fid21.country,
-                    ais->type6.dac200fid21.locode,
-                    ais->type6.dac200fid21.section,
-                    ais->type6.dac200fid21.terminal,
-                    ais->type6.dac200fid21.hectometre,
-                    ais->type6.dac200fid21.month,
-                    ais->type6.dac200fid21.day,
-                    ais->type6.dac200fid21.hour,
-                    ais->type6.dac200fid21.minute,
-                    ais->type6.dac200fid21.tugs,
-                    ais->type6.dac200fid21.airdraught);
+                           ",\"country\":\"%s\",\"locode\":\"%s\","
+                           "\"section\":\"%s\",\"terminal\":\"%s\","
+                           "\"hectometre\":\"%s\",\"eta\":\"%u-%uT%u:%u\","
+                           "\"tugs\":%u,\"airdraught\":%u}\r\n",
+                           ais->type6.dac200fid21.country,
+                           ais->type6.dac200fid21.locode,
+                           ais->type6.dac200fid21.section,
+                           ais->type6.dac200fid21.terminal,
+                           ais->type6.dac200fid21.hectometre,
+                           ais->type6.dac200fid21.month,
+                           ais->type6.dac200fid21.day,
+                           ais->type6.dac200fid21.hour,
+                           ais->type6.dac200fid21.minute,
+                           ais->type6.dac200fid21.tugs,
+                           ais->type6.dac200fid21.airdraught);
                 break;
             case 22:
                 str_appendf(buf, buflen,
-                               ",\"country\":\"%s\",\"locode\":\"%s\","
-                               "\"section\":\"%s\","
-                               "\"terminal\":\"%s\",\"hectometre\":\"%s\","
-                               "\"eta\":\"%u-%uT%u:%u\","
-                               "\"status\":%u,\"status_text\":\"%s\"}\r\n",
-                               ais->type6.dac200fid22.country,
-                               ais->type6.dac200fid22.locode,
-                               ais->type6.dac200fid22.section,
-                               ais->type6.dac200fid22.terminal,
-                               ais->type6.dac200fid22.hectometre,
-                               ais->type6.dac200fid22.month,
-                               ais->type6.dac200fid22.day,
-                               ais->type6.dac200fid22.hour,
-                               ais->type6.dac200fid22.minute,
-                               ais->type6.dac200fid22.status,
-                               rta_status[ais->type6.dac200fid22.status]);
+                            ",\"country\":\"%s\",\"locode\":\"%s\","
+                            "\"section\":\"%s\","
+                            "\"terminal\":\"%s\",\"hectometre\":\"%s\","
+                            "\"eta\":\"%u-%uT%u:%u\","
+                            "\"status\":%u,\"status_text\":\"%s\"}\r\n",
+                            ais->type6.dac200fid22.country,
+                            ais->type6.dac200fid22.locode,
+                            ais->type6.dac200fid22.section,
+                            ais->type6.dac200fid22.terminal,
+                            ais->type6.dac200fid22.hectometre,
+                            ais->type6.dac200fid22.month,
+                            ais->type6.dac200fid22.day,
+                            ais->type6.dac200fid22.hour,
+                            ais->type6.dac200fid22.minute,
+                            ais->type6.dac200fid22.status,
+                            rta_status[ais->type6.dac200fid22.status]);
                 break;
             case 55:
                 str_appendf(buf, buflen,
-                    ",\"crew\":%u,\"passengers\":%u,\"personnel\":%u}\r\n",
-
-                    ais->type6.dac200fid55.crew,
-                    ais->type6.dac200fid55.passengers,
-                    ais->type6.dac200fid55.personnel);
+                            ",\"crew\":%u,\"passengers\":%u,\"personnel\":"
+                            "%u}\r\n",
+                            ais->type6.dac200fid55.crew,
+                            ais->type6.dac200fid55.passengers,
+                            ais->type6.dac200fid55.personnel);
                 break;
             }
-        }
-        else if (ais->type6.dac == 235 || ais->type6.dac == 250) {
+        } else if (235 == ais->type6.dac ||
+                   250 == ais->type6.dac) {
             switch (ais->type6.fid) {
-            case 10:    /* GLA - AtoN monitoring data */
+            case 10:    // GLA - AtoN monitoring data
                 str_appendf(buf, buflen,
-                               ",\"off_pos\":%s,\"alarm\":%s,"
-                               "\"stat_ext\":%u",
-                               JSON_BOOL(ais->type6.dac235fid10.off_pos),
-                               JSON_BOOL(ais->type6.dac235fid10.alarm),
-                               ais->type6.dac235fid10.stat_ext);
-                if (scaled && ais->type6.dac235fid10.ana_int != 0)
+                            ",\"off_pos\":%s,\"alarm\":%s,"
+                            "\"stat_ext\":%u",
+                            JSON_BOOL(ais->type6.dac235fid10.off_pos),
+                            JSON_BOOL(ais->type6.dac235fid10.alarm),
+                            ais->type6.dac235fid10.stat_ext);
+                if (scaled &&
+                    0 != ais->type6.dac235fid10.ana_int) {
                     str_appendf(buf, buflen,
-                                   ",\"ana_int\":%.2f",
-                                   ais->type6.dac235fid10.ana_int*0.05);
-                else
+                                ",\"ana_int\":%.2f",
+                                ais->type6.dac235fid10.ana_int*0.05);
+                } else {
                     str_appendf(buf, buflen,
-                                   ",\"ana_int\":%u",
-                                   ais->type6.dac235fid10.ana_int);
-                if (scaled && ais->type6.dac235fid10.ana_ext1 != 0)
+                                ",\"ana_int\":%u",
+                                ais->type6.dac235fid10.ana_int);
+                }
+                if (scaled &&
+                    0 != ais->type6.dac235fid10.ana_ext1) {
                     str_appendf(buf, buflen,
-                                   ",\"ana_ext1\":%.2f",
-                                   ais->type6.dac235fid10.ana_ext1*0.05);
-                else
+                                ",\"ana_ext1\":%.2f",
+                                ais->type6.dac235fid10.ana_ext1*0.05);
+                } else {
                     str_appendf(buf, buflen,
-                                   ",\"ana_ext1\":%u",
-                                   ais->type6.dac235fid10.ana_ext1);
-                if (scaled && ais->type6.dac235fid10.ana_ext2 != 0)
+                                ",\"ana_ext1\":%u",
+                                ais->type6.dac235fid10.ana_ext1);
+                }
+                if (scaled &&
+                    0 != ais->type6.dac235fid10.ana_ext2) {
                     str_appendf(buf, buflen,
-                                   ",\"ana_ext2\":%.2f",
-                                   ais->type6.dac235fid10.ana_ext2*0.05);
-                else
+                                ",\"ana_ext2\":%.2f",
+                                ais->type6.dac235fid10.ana_ext2*0.05);
+                } else {
                     str_appendf(buf, buflen,
-                                   ",\"ana_ext2\":%u",
-                                   ais->type6.dac235fid10.ana_ext2);
+                                ",\"ana_ext2\":%u",
+                                ais->type6.dac235fid10.ana_ext2);
+                }
                 str_appendf(buf, buflen,
-                               ",\"racon\":%u,"
-                               "\"racon_text\":\"%s\","
-                               "\"light\":%u,"
-                               "\"light_text\":\"%s\"",
-                               ais->type6.dac235fid10.racon,
-                               racon_status[ais->type6.dac235fid10.racon],
-                               ais->type6.dac235fid10.light,
-                               light_status[ais->type6.dac235fid10.light]);
+                            ",\"racon\":%u,"
+                            "\"racon_text\":\"%s\","
+                            "\"light\":%u,"
+                            "\"light_text\":\"%s\"",
+                            ais->type6.dac235fid10.racon,
+                            racon_status[ais->type6.dac235fid10.racon],
+                            ais->type6.dac235fid10.light,
+                            light_status[ais->type6.dac235fid10.light]);
                 (void)strlcat(buf, "}\r\n", buflen);
                 break;
             }
-        }
-        else if (ais->type6.dac == 1) {
+        } else if (1 == ais->type6.dac) {
             char buf4[JSON_VAL_MAX * 2 + 1];
+
             switch (ais->type6.fid) {
-            case 12:    /* IMO236 -Dangerous cargo indication */
-                /* some fields have beem merged to an ISO8601 partial date */
+            case 12:    // IMO236 -Dangerous cargo indication
+                // some fields have beem merged to an ISO8601 partial date
                 str_appendf(buf, buflen,
-                               ",\"lastport\":\"%s\","
-                               "\"departure\":\"%02u-%02uT%02u:%02uZ\","
-                               "\"nextport\":\"%s\","
-                               "\"eta\":\"%02u-%02uT%02u:%02uZ\","
-                               "\"dangerous\":\"%s\",\"imdcat\":\"%s\","
-                               "\"unid\":%u,\"amount\":%u,\"unit\":%u}\r\n",
-                               json_stringify(buf1, sizeof(buf1),
-                                              ais->type6.dac1fid12.lastport),
-                               ais->type6.dac1fid12.lmonth,
-                               ais->type6.dac1fid12.lday,
-                               ais->type6.dac1fid12.lhour,
-                               ais->type6.dac1fid12.lminute,
-                               json_stringify(buf2, sizeof(buf2),
-                                              ais->type6.dac1fid12.nextport),
-                               ais->type6.dac1fid12.nmonth,
-                               ais->type6.dac1fid12.nday,
-                               ais->type6.dac1fid12.nhour,
-                               ais->type6.dac1fid12.nminute,
-                               json_stringify(buf3, sizeof(buf3),
-                                              ais->type6.dac1fid12.dangerous),
-                               json_stringify(buf4, sizeof(buf4),
-                                              ais->type6.dac1fid12.imdcat),
-                               ais->type6.dac1fid12.unid,
-                               ais->type6.dac1fid12.amount,
-                               ais->type6.dac1fid12.unit);
+                            ",\"lastport\":\"%s\","
+                            "\"departure\":\"%02u-%02uT%02u:%02uZ\","
+                            "\"nextport\":\"%s\","
+                            "\"eta\":\"%02u-%02uT%02u:%02uZ\","
+                            "\"dangerous\":\"%s\",\"imdcat\":\"%s\","
+                            "\"unid\":%u,\"amount\":%u,\"unit\":%u}\r\n",
+                            json_stringify(buf1, sizeof(buf1),
+                                           ais->type6.dac1fid12.lastport),
+                            ais->type6.dac1fid12.lmonth,
+                            ais->type6.dac1fid12.lday,
+                            ais->type6.dac1fid12.lhour,
+                            ais->type6.dac1fid12.lminute,
+                            json_stringify(buf2, sizeof(buf2),
+                                           ais->type6.dac1fid12.nextport),
+                            ais->type6.dac1fid12.nmonth,
+                            ais->type6.dac1fid12.nday,
+                            ais->type6.dac1fid12.nhour,
+                            ais->type6.dac1fid12.nminute,
+                            json_stringify(buf3, sizeof(buf3),
+                                           ais->type6.dac1fid12.dangerous),
+                            json_stringify(buf4, sizeof(buf4),
+                                           ais->type6.dac1fid12.imdcat),
+                            ais->type6.dac1fid12.unid,
+                            ais->type6.dac1fid12.amount,
+                            ais->type6.dac1fid12.unit);
                 break;
-            case 15: /* IMO236 - Extended Ship Static and Voyage Related Data */
+            case 15: // IMO236 - Extended Ship Static and Voyage Related Data
                 str_appendf(buf, buflen,
-                    ",\"airdraught\":%u}\r\n",
-                    ais->type6.dac1fid15.airdraught);
+                            ",\"airdraught\":%u}\r\n",
+                            ais->type6.dac1fid15.airdraught);
                 break;
-            case 16:    /* IMO236 - Number of persons on board */
+            case 16:    // IMO236 - Number of persons on board
                 str_appendf(buf, buflen,
-                           ",\"persons\":%u}\r\n",
+                            ",\"persons\":%u}\r\n",
                             ais->type6.dac1fid16.persons);
                 break;
-            case 18:    /* IMO289 - Clearance time to enter port */
+            case 18:    // IMO289 - Clearance time to enter port
                 str_appendf(buf, buflen,
-                               ",\"linkage\":%u,"
-                               "\"arrival\":\"%02u-%02uT%02u:%02uZ\","
-                               "\"portname\":\"%s\",\"destination\":\"%s\"",
-                               ais->type6.dac1fid18.linkage,
-                               ais->type6.dac1fid18.month,
-                               ais->type6.dac1fid18.day,
-                               ais->type6.dac1fid18.hour,
-                               ais->type6.dac1fid18.minute,
-                               json_stringify(buf1, sizeof(buf1),
-                                              ais->type6.dac1fid18.portname),
-                               json_stringify(buf2, sizeof(buf2),
-                                              ais->type6.dac1fid18.destination));
-                if (scaled)
+                            ",\"linkage\":%u,"
+                            "\"arrival\":\"%02u-%02uT%02u:%02uZ\","
+                            "\"portname\":\"%s\",\"destination\":\"%s\"",
+                            ais->type6.dac1fid18.linkage,
+                            ais->type6.dac1fid18.month,
+                            ais->type6.dac1fid18.day,
+                            ais->type6.dac1fid18.hour,
+                            ais->type6.dac1fid18.minute,
+                            json_stringify(buf1, sizeof(buf1),
+                                           ais->type6.dac1fid18.portname),
+                            json_stringify(buf2, sizeof(buf2),
+                                           ais->type6.dac1fid18.destination));
+                if (scaled) {
                     str_appendf(buf, buflen,
-                                   ",\"lon\":%.4f,\"lat\":%.4f}\r\n",
-                                   ais->type6.dac1fid18.lon/AIS_LATLON3_DIV,
-                                   ais->type6.dac1fid18.lat/AIS_LATLON3_DIV);
-                else
+                                ",\"lon\":%.4f,\"lat\":%.4f}\r\n",
+                                ais->type6.dac1fid18.lon/AIS_LATLON3_DIV,
+                                ais->type6.dac1fid18.lat/AIS_LATLON3_DIV);
+                } else {
                     str_appendf(buf, buflen,
-                               ",\"lon\":%d,\"lat\":%d}\r\n",
-                               ais->type6.dac1fid18.lon,
-                               ais->type6.dac1fid18.lat);
+                                ",\"lon\":%d,\"lat\":%d}\r\n",
+                                ais->type6.dac1fid18.lon,
+                                ais->type6.dac1fid18.lat);
+                }
                 break;
-            case 20:        /* IMO289 - Berthing Data */
+            case 20:        // IMO289 - Berthing Data
                 str_appendf(buf, buflen,
-                               ",\"linkage\":%u,\"berth_length\":%u,"
-                               "\"position\":%u,\"position_text\":\"%s\","
-                               "\"arrival\":\"%u-%uT%u:%u\","
-                               "\"availability\":%u,"
-                               "\"agent\":%u,\"fuel\":%u,\"chandler\":%u,"
-                               "\"stevedore\":%u,\"electrical\":%u,"
-                               "\"water\":%u,\"customs\":%u,\"cartage\":%u,"
-                               "\"crane\":%u,\"lift\":%u,\"medical\":%u,"
-                               "\"navrepair\":%u,\"provisions\":%u,"
-                               "\"shiprepair\":%u,\"surveyor\":%u,"
-                               "\"steam\":%u,\"tugs\":%u,\"solidwaste\":%u,"
-                               "\"liquidwaste\":%u,\"hazardouswaste\":%u,"
-                               "\"ballast\":%u,\"additional\":%u,"
-                               "\"regional1\":%u,\"regional2\":%u,"
-                               "\"future1\":%u,\"future2\":%u,"
-                               "\"berth_name\":\"%s\"",
-                               ais->type6.dac1fid20.linkage,
-                               ais->type6.dac1fid20.berth_length,
-                               ais->type6.dac1fid20.position,
-                               position_types[ais->type6.dac1fid20.position],
-                               ais->type6.dac1fid20.month,
-                               ais->type6.dac1fid20.day,
-                               ais->type6.dac1fid20.hour,
-                               ais->type6.dac1fid20.minute,
-                               ais->type6.dac1fid20.availability,
-                               ais->type6.dac1fid20.agent,
-                               ais->type6.dac1fid20.fuel,
-                               ais->type6.dac1fid20.chandler,
-                               ais->type6.dac1fid20.stevedore,
-                               ais->type6.dac1fid20.electrical,
-                               ais->type6.dac1fid20.water,
-                               ais->type6.dac1fid20.customs,
-                               ais->type6.dac1fid20.cartage,
-                               ais->type6.dac1fid20.crane,
-                               ais->type6.dac1fid20.lift,
-                               ais->type6.dac1fid20.medical,
-                               ais->type6.dac1fid20.navrepair,
-                               ais->type6.dac1fid20.provisions,
-                               ais->type6.dac1fid20.shiprepair,
-                               ais->type6.dac1fid20.surveyor,
-                               ais->type6.dac1fid20.steam,
-                               ais->type6.dac1fid20.tugs,
-                               ais->type6.dac1fid20.solidwaste,
-                               ais->type6.dac1fid20.liquidwaste,
-                               ais->type6.dac1fid20.hazardouswaste,
-                               ais->type6.dac1fid20.ballast,
-                               ais->type6.dac1fid20.additional,
-                               ais->type6.dac1fid20.regional1,
-                               ais->type6.dac1fid20.regional2,
-                               ais->type6.dac1fid20.future1,
-                               ais->type6.dac1fid20.future2,
-                               json_stringify(buf1, sizeof(buf1),
-                                              ais->type6.dac1fid20.berth_name));
-                if (scaled)
+                            ",\"linkage\":%u,\"berth_length\":%u,"
+                            "\"position\":%u,\"position_text\":\"%s\","
+                            "\"arrival\":\"%u-%uT%u:%u\","
+                            "\"availability\":%u,"
+                            "\"agent\":%u,\"fuel\":%u,\"chandler\":%u,"
+                            "\"stevedore\":%u,\"electrical\":%u,"
+                            "\"water\":%u,\"customs\":%u,\"cartage\":%u,"
+                            "\"crane\":%u,\"lift\":%u,\"medical\":%u,"
+                            "\"navrepair\":%u,\"provisions\":%u,"
+                            "\"shiprepair\":%u,\"surveyor\":%u,"
+                            "\"steam\":%u,\"tugs\":%u,\"solidwaste\":%u,"
+                            "\"liquidwaste\":%u,\"hazardouswaste\":%u,"
+                            "\"ballast\":%u,\"additional\":%u,"
+                            "\"regional1\":%u,\"regional2\":%u,"
+                            "\"future1\":%u,\"future2\":%u,"
+                            "\"berth_name\":\"%s\"",
+                            ais->type6.dac1fid20.linkage,
+                            ais->type6.dac1fid20.berth_length,
+                            ais->type6.dac1fid20.position,
+                            position_types[ais->type6.dac1fid20.position],
+                            ais->type6.dac1fid20.month,
+                            ais->type6.dac1fid20.day,
+                            ais->type6.dac1fid20.hour,
+                            ais->type6.dac1fid20.minute,
+                            ais->type6.dac1fid20.availability,
+                            ais->type6.dac1fid20.agent,
+                            ais->type6.dac1fid20.fuel,
+                            ais->type6.dac1fid20.chandler,
+                            ais->type6.dac1fid20.stevedore,
+                            ais->type6.dac1fid20.electrical,
+                            ais->type6.dac1fid20.water,
+                            ais->type6.dac1fid20.customs,
+                            ais->type6.dac1fid20.cartage,
+                            ais->type6.dac1fid20.crane,
+                            ais->type6.dac1fid20.lift,
+                            ais->type6.dac1fid20.medical,
+                            ais->type6.dac1fid20.navrepair,
+                            ais->type6.dac1fid20.provisions,
+                            ais->type6.dac1fid20.shiprepair,
+                            ais->type6.dac1fid20.surveyor,
+                            ais->type6.dac1fid20.steam,
+                            ais->type6.dac1fid20.tugs,
+                            ais->type6.dac1fid20.solidwaste,
+                            ais->type6.dac1fid20.liquidwaste,
+                            ais->type6.dac1fid20.hazardouswaste,
+                            ais->type6.dac1fid20.ballast,
+                            ais->type6.dac1fid20.additional,
+                            ais->type6.dac1fid20.regional1,
+                            ais->type6.dac1fid20.regional2,
+                            ais->type6.dac1fid20.future1,
+                            ais->type6.dac1fid20.future2,
+                            json_stringify(buf1, sizeof(buf1),
+                                           ais->type6.dac1fid20.berth_name));
+                if (scaled) {
                     str_appendf(buf, buflen,
-                               ",\"berth_lon\":%.4f,"
-                               "\"berth_lat\":%.4f,"
-                               "\"berth_depth\":%.1f}\r\n",
-                               ais->type6.dac1fid20.berth_lon / AIS_LATLON3_DIV,
-                               ais->type6.dac1fid20.berth_lat / AIS_LATLON3_DIV,
-                               ais->type6.dac1fid20.berth_depth * 0.1);
-                else
+                                ",\"berth_lon\":%.4f,"
+                                "\"berth_lat\":%.4f,"
+                                "\"berth_depth\":%.1f}\r\n",
+                                ais->type6.dac1fid20.berth_lon / AIS_LATLON3_DIV,
+                                ais->type6.dac1fid20.berth_lat / AIS_LATLON3_DIV,
+                                ais->type6.dac1fid20.berth_depth * 0.1);
+                } else {
                     str_appendf(buf, buflen,
-                               ",\"berth_lon\":%d,"
-                               "\"berth_lat\":%d,"
-                               "\"berth_depth\":%u}\r\n",
-                               ais->type6.dac1fid20.berth_lon,
-                               ais->type6.dac1fid20.berth_lat,
-                               ais->type6.dac1fid20.berth_depth);
+                                ",\"berth_lon\":%d,"
+                                "\"berth_lat\":%d,"
+                                "\"berth_depth\":%u}\r\n",
+                                ais->type6.dac1fid20.berth_lon,
+                                ais->type6.dac1fid20.berth_lat,
+                                ais->type6.dac1fid20.berth_depth);
+                }
                 break;
-            case 23:    /* IMO289 - Area notice - addressed */
+            case 23:    // IMO289 - Area notice - addressed
                 break;
-            case 25:    /* IMO289 - Dangerous cargo indication */
+            case 25:    // IMO289 - Dangerous cargo indication
                 str_appendf(buf, buflen,
-                               ",\"unit\":%u,\"amount\":%u,\"cargos\":[",
-                               ais->type6.dac1fid25.unit,
-                               ais->type6.dac1fid25.amount);
-                for (i = 0; i < (int)ais->type6.dac1fid25.ncargos; i++)
+                            ",\"unit\":%u,\"amount\":%u,\"cargos\":[",
+                            ais->type6.dac1fid25.unit,
+                            ais->type6.dac1fid25.amount);
+                for (i = 0; i < (int)ais->type6.dac1fid25.ncargos; i++) {
                     str_appendf(buf, buflen,
-                                   "{\"code\":%u,\"subtype\":%u},",
-
-                                   ais->type6.dac1fid25.cargos[i].code,
-                                   ais->type6.dac1fid25.cargos[i].subtype);
-                str_rstrip_char(buf, ',');
-                (void)strlcat(buf, "]}\r\n", buflen);
-                break;
-            case 28:    /* IMO289 - Route info - addressed */
-                str_appendf(buf, buflen,
-                               ",\"linkage\":%u,\"sender\":%u,"
-                               "\"rtype\":%u,"
-                               "\"rtype_text\":\"%s\","
-                               "\"start\":\"%02u-%02uT%02u:%02uZ\","
-                               "\"duration\":%u,\"waypoints\":[",
-                               ais->type6.dac1fid28.linkage,
-                               ais->type6.dac1fid28.sender,
-                               ais->type6.dac1fid28.rtype,
-                               route_type[ais->type6.dac1fid28.rtype],
-                               ais->type6.dac1fid28.month,
-                               ais->type6.dac1fid28.day,
-                               ais->type6.dac1fid28.hour,
-                               ais->type6.dac1fid28.minute,
-                               ais->type6.dac1fid28.duration);
-                for (i = 0; i < ais->type6.dac1fid28.waycount; i++) {
-                    if (scaled)
-                        str_appendf(buf, buflen,
-                            "{\"lon\":%.6f,\"lat\":%.6f},",
-                            ais->type6.dac1fid28.waypoints[i].lon / AIS_LATLON4_DIV,
-                            ais->type6.dac1fid28.waypoints[i].lat / AIS_LATLON4_DIV);
-                    else
-                        str_appendf(buf, buflen,
-                            "{\"lon\":%d,\"lat\":%d},",
-                            ais->type6.dac1fid28.waypoints[i].lon,
-                            ais->type6.dac1fid28.waypoints[i].lat);
+                                "{\"code\":%u,\"subtype\":%u},",
+                                ais->type6.dac1fid25.cargos[i].code,
+                                ais->type6.dac1fid25.cargos[i].subtype);
                 }
                 str_rstrip_char(buf, ',');
                 (void)strlcat(buf, "]}\r\n", buflen);
                 break;
-            case 30:    /* IMO289 - Text description - addressed */
+            case 28:    // IMO289 - Route info - addressed
                 str_appendf(buf, buflen,
-                       ",\"linkage\":%u,\"text\":\"%s\"}\r\n",
-                       ais->type6.dac1fid30.linkage,
-                       json_stringify(buf1, sizeof(buf1),
-                                      ais->type6.dac1fid30.text));
+                            ",\"linkage\":%u,\"sender\":%u,"
+                            "\"rtype\":%u,"
+                            "\"rtype_text\":\"%s\","
+                            "\"start\":\"%02u-%02uT%02u:%02uZ\","
+                            "\"duration\":%u,\"waypoints\":[",
+                            ais->type6.dac1fid28.linkage,
+                            ais->type6.dac1fid28.sender,
+                            ais->type6.dac1fid28.rtype,
+                            route_type[ais->type6.dac1fid28.rtype],
+                            ais->type6.dac1fid28.month,
+                            ais->type6.dac1fid28.day,
+                            ais->type6.dac1fid28.hour,
+                            ais->type6.dac1fid28.minute,
+                            ais->type6.dac1fid28.duration);
+                for (i = 0; i < ais->type6.dac1fid28.waycount; i++) {
+                    if (scaled) {
+                        str_appendf(buf, buflen,
+                            "{\"lon\":%.6f,\"lat\":%.6f},",
+                            ais->type6.dac1fid28.waypoints[i].lon /
+                            AIS_LATLON4_DIV,
+                            ais->type6.dac1fid28.waypoints[i].lat /
+                            AIS_LATLON4_DIV);
+                    } else {
+                        str_appendf(buf, buflen,
+                            "{\"lon\":%d,\"lat\":%d},",
+                            ais->type6.dac1fid28.waypoints[i].lon,
+                            ais->type6.dac1fid28.waypoints[i].lat);
+                    }
+                }
+                str_rstrip_char(buf, ',');
+                (void)strlcat(buf, "]}\r\n", buflen);
                 break;
-            case 14:    /* IMO236 - Tidal Window */
-            case 32:    /* IMO289 - Tidal Window */
+            case 30:    // IMO289 - Text description - addressed
+                str_appendf(buf, buflen,
+                            ",\"linkage\":%u,\"text\":\"%s\"}\r\n",
+                            ais->type6.dac1fid30.linkage,
+                            json_stringify(buf1, sizeof(buf1),
+                                           ais->type6.dac1fid30.text));
+                break;
+            case 14:    // IMO236 - Tidal Window
+                FALLTHROUGH
+            case 32:    // IMO289 - Tidal Window
               str_appendf(buf, buflen,
-                  ",\"month\":%u,\"day\":%u,\"tidals\":[",
-                  ais->type6.dac1fid32.month,
-                  ais->type6.dac1fid32.day);
+                          ",\"month\":%u,\"day\":%u,\"tidals\":[",
+                          ais->type6.dac1fid32.month,
+                          ais->type6.dac1fid32.day);
               for (i = 0; i < ais->type6.dac1fid32.ntidals; i++) {
                   const struct tidal_t *tp =  &ais->type6.dac1fid32.tidals[i];
-                  if (scaled)
+
+                  if (scaled) {
                       str_appendf(buf, buflen,
                           "{\"lon\":%.4f,\"lat\":%.4f",
                           tp->lon / AIS_LATLON3_DIV,
                           tp->lat / AIS_LATLON3_DIV);
-                  else
+                  } else {
                       str_appendf(buf, buflen,
                           "{\"lon\":%d,\"lat\":%d",
                           tp->lon,
                           tp->lat);
+                  }
                   str_appendf(buf, buflen,
-                      ",\"from_hour\":%u,\"from_min\":%u,"
-                      "\"to_hour\":%u,\"to_min\":%u,\"cdir\":%u",
-                      tp->from_hour,
-                      tp->from_min,
-                      tp->to_hour,
-                      tp->to_min,
-                      tp->cdir);
-                  if (scaled)
-                      str_appendf(buf, buflen,
-                          ",\"cspeed\":%.1f},",
-                          tp->cspeed / 10.0);
-                  else
-                      str_appendf(buf, buflen,
-                          ",\"cspeed\":%u},",
-                          tp->cspeed);
+                              ",\"from_hour\":%u,\"from_min\":%u,"
+                              "\"to_hour\":%u,\"to_min\":%u,\"cdir\":%u",
+                              tp->from_hour,
+                              tp->from_min,
+                              tp->to_hour,
+                              tp->to_min,
+                              tp->cdir);
+                  if (scaled) {
+                      str_appendf(buf, buflen, ",\"cspeed\":%.1f},",
+                                  tp->cspeed / 10.0);
+                  } else {
+                      str_appendf(buf, buflen, ",\"cspeed\":%u},",
+                                  tp->cspeed);
+                  }
               }
               str_rstrip_char(buf, ',');
               (void)strlcat(buf, "]}\r\n", buflen);
@@ -2924,30 +2944,30 @@ void json_aivdm_dump(const struct ais_t *ais,
             }
         }
         break;
-    case 7:                     /* Binary Acknowledge */
-    case 13:                    /* Safety Related Acknowledge */
+    case 7:                     // Binary Acknowledge
+        FALLTHROUGH
+    case 13:                    // Safety Related Acknowledge
         str_appendf(buf, buflen,
-                       ",\"mmsi1\":%u,\"mmsi2\":%u,\"mmsi3\":%u,"
-                       "\"mmsi4\":%u}\r\n",
-                       ais->type7.mmsi1,
-                       ais->type7.mmsi2, ais->type7.mmsi3, ais->type7.mmsi4);
+                    ",\"mmsi1\":%u,\"mmsi2\":%u,\"mmsi3\":%u,"
+                    "\"mmsi4\":%u}\r\n",
+                    ais->type7.mmsi1,
+                    ais->type7.mmsi2, ais->type7.mmsi3, ais->type7.mmsi4);
         break;
-    case 8:                     /* Binary Broadcast Message */
+    case 8:                     // Binary Broadcast Message
         str_appendf(buf, buflen,
-                   ",\"dac\":%u,\"fid\":%u",
+                    ",\"dac\":%u,\"fid\":%u",
                     ais->type8.dac, ais->type8.fid);
         if (!ais->type8.structured) {
             str_appendf(buf, buflen,
-                           ",\"data\":\"%zd:%s\"}\r\n",
-                           ais->type8.bitcount,
-                           json_stringify(buf1, sizeof(buf1),
-                              gpsd_hexdump(
-                                  scratchbuf, sizeof(scratchbuf),
-                                  (char *)ais->type8.bitdata,
-                                  BITS_TO_BYTES(ais->type8.bitcount))));
+                        ",\"data\":\"%zd:%s\"}\r\n",
+                        ais->type8.bitcount,
+                        json_stringify(buf1, sizeof(buf1),
+                           gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
+                                        (char *)ais->type8.bitdata,
+                                        BITS_TO_BYTES(ais->type8.bitcount))));
             break;
         }
-        if (ais->type8.dac == 1) {
+        if (1 == ais->type8.dac) {
             const char *trends[] = {
                 "steady",
                 "increasing",
@@ -2972,143 +2992,152 @@ void json_aivdm_dump(const struct ais_t *ais,
                 "N/A",
             };
             switch (ais->type8.fid) {
-            case 11:        /* IMO236 - Meteorological/Hydrological data */
-                /* some fields have been merged to an ISO8601 partial date */
-                /* layout is almost identical to FID=31 from IMO289 */
-                if (scaled)
+            case 11:        // IMO236 - Meteorological/Hydrological data
+                // some fields have been merged to an ISO8601 partial date
+                // layout is almost identical to FID=31 from IMO289
+                if (scaled) {
                     str_appendf(buf, buflen,
-                                   ",\"lat\":%.4f,\"lon\":%.4f",
-                                   ais->type8.dac1fid11.lat / AIS_LATLON3_DIV,
-                                   ais->type8.dac1fid11.lon / AIS_LATLON3_DIV);
-                else
+                                ",\"lat\":%.4f,\"lon\":%.4f",
+                                ais->type8.dac1fid11.lat / AIS_LATLON3_DIV,
+                                ais->type8.dac1fid11.lon / AIS_LATLON3_DIV);
+                } else {
                     str_appendf(buf, buflen,
-                                   ",\"lat\":%d,\"lon\":%d",
-                                   ais->type8.dac1fid11.lat,
-                                   ais->type8.dac1fid11.lon);
+                                ",\"lat\":%d,\"lon\":%d",
+                                ais->type8.dac1fid11.lat,
+                                ais->type8.dac1fid11.lon);
+                }
                 str_appendf(buf, buflen,
-                               ",\"timestamp\":\"%02uT%02u:%02uZ\","
-                               "\"wspeed\":%u,\"wgust\":%u,\"wdir\":%u,"
-                               "\"wgustdir\":%u,\"humidity\":%u",
-                               ais->type8.dac1fid11.day,
-                               ais->type8.dac1fid11.hour,
-                               ais->type8.dac1fid11.minute,
-                               ais->type8.dac1fid11.wspeed,
-                               ais->type8.dac1fid11.wgust,
-                               ais->type8.dac1fid11.wdir,
-                               ais->type8.dac1fid11.wgustdir,
-                               ais->type8.dac1fid11.humidity);
-                if (scaled)
+                            ",\"timestamp\":\"%02uT%02u:%02uZ\","
+                            "\"wspeed\":%u,\"wgust\":%u,\"wdir\":%u,"
+                            "\"wgustdir\":%u,\"humidity\":%u",
+                            ais->type8.dac1fid11.day,
+                            ais->type8.dac1fid11.hour,
+                            ais->type8.dac1fid11.minute,
+                            ais->type8.dac1fid11.wspeed,
+                            ais->type8.dac1fid11.wgust,
+                            ais->type8.dac1fid11.wdir,
+                            ais->type8.dac1fid11.wgustdir,
+                            ais->type8.dac1fid11.humidity);
+                if (scaled) {
                     str_appendf(buf, buflen,
-                                   ",\"airtemp\":%.1f,\"dewpoint\":%.1f,"
-                                   "\"pressure\":%u,\"pressuretend\":\"%s\"",
-                                   ((signed int)ais->type8.dac1fid11.airtemp - DAC1FID11_AIRTEMP_OFFSET) / DAC1FID11_AIRTEMP_DIV,
-                                   ((signed int)ais->type8.dac1fid11.dewpoint - DAC1FID11_DEWPOINT_OFFSET) / DAC1FID11_DEWPOINT_DIV,
-                                   ais->type8.dac1fid11.pressure - DAC1FID11_PRESSURE_OFFSET,
-                                   trends[ais->type8.dac1fid11.pressuretend]);
-                else
+                                ",\"airtemp\":%.1f,\"dewpoint\":%.1f,"
+                                "\"pressure\":%u,\"pressuretend\":\"%s\"",
+                                ((signed int)ais->type8.dac1fid11.airtemp -
+                                DAC1FID11_AIRTEMP_OFFSET) / DAC1FID11_AIRTEMP_DIV,
+                                ((signed int)ais->type8.dac1fid11.dewpoint -
+                                DAC1FID11_DEWPOINT_OFFSET) /
+                                DAC1FID11_DEWPOINT_DIV,
+                                ais->type8.dac1fid11.pressure -
+                                DAC1FID11_PRESSURE_OFFSET,
+                                trends[ais->type8.dac1fid11.pressuretend]);
                     str_appendf(buf, buflen,
-                                   ",\"airtemp\":%u,\"dewpoint\":%u,"
-                                   "\"pressure\":%u,\"pressuretend\":%u",
-                                   ais->type8.dac1fid11.airtemp,
-                                   ais->type8.dac1fid11.dewpoint,
-                                   ais->type8.dac1fid11.pressure,
-                                   ais->type8.dac1fid11.pressuretend);
-
-                if (scaled)
+                                ",\"visibility\":%.1f",
+                                ais->type8.dac1fid11.visibility /
+                                DAC1FID11_VISIBILITY_DIV);
                     str_appendf(buf, buflen,
-                                   ",\"visibility\":%.1f",
-                                   ais->type8.dac1fid11.visibility / DAC1FID11_VISIBILITY_DIV);
-                else
+                                ",\"waterlevel\":%.1f",
+                                ((signed int)ais->type8.dac1fid11.waterlevel -
+                                DAC1FID11_WATERLEVEL_OFFSET) /
+                                DAC1FID11_WATERLEVEL_DIV);
+                    str_appendf(buf, buflen,
+                                ",\"leveltrend\":\"%s\","
+                                "\"cspeed\":%.1f,\"cdir\":%u,"
+                                "\"cspeed2\":%.1f,\"cdir2\":%u,"
+                                "\"cdepth2\":%u,"
+                                "\"cspeed3\":%.1f,\"cdir3\":%u,"
+                                "\"cdepth3\":%u,"
+                                "\"waveheight\":%.1f,\"waveperiod\":%u,"
+                                "\"wavedir\":%u,"
+                                "\"swellheight\":%.1f,\"swellperiod\":%u,"
+                                "\"swelldir\":%u,"
+                                "\"seastate\":%u,\"watertemp\":%.1f,"
+                                "\"preciptype\":%u,"
+                                "\"preciptype_text\":\"%s\","
+                                "\"salinity\":%.1f,\"ice\":%u,"
+                                "\"ice_text\":\"%s\"",
+                                trends[ais->type8.dac1fid11.leveltrend],
+                                ais->type8.dac1fid11.cspeed /
+                                DAC1FID11_CSPEED_DIV,
+                                ais->type8.dac1fid11.cdir,
+                                ais->type8.dac1fid11.cspeed2 /
+                                DAC1FID11_CSPEED_DIV,
+                                ais->type8.dac1fid11.cdir2,
+                                ais->type8.dac1fid11.cdepth2,
+                                ais->type8.dac1fid11.cspeed3 /
+                                DAC1FID11_CSPEED_DIV,
+                                ais->type8.dac1fid11.cdir3,
+                                ais->type8.dac1fid11.cdepth3,
+                                ais->type8.dac1fid11.waveheight /
+                                DAC1FID11_WAVEHEIGHT_DIV,
+                                ais->type8.dac1fid11.waveperiod,
+                                ais->type8.dac1fid11.wavedir,
+                                ais->type8.dac1fid11.swellheight /
+                                DAC1FID11_WAVEHEIGHT_DIV,
+                                ais->type8.dac1fid11.swellperiod,
+                                ais->type8.dac1fid11.swelldir,
+                                ais->type8.dac1fid11.seastate,
+                                ((signed int)ais->type8.dac1fid11.watertemp -
+                                DAC1FID11_WATERTEMP_OFFSET) /
+                                DAC1FID11_WATERTEMP_DIV,
+                                ais->type8.dac1fid11.preciptype,
+                                preciptypes[ais->type8.dac1fid11.preciptype],
+                                ais->type8.dac1fid11.salinity /
+                                DAC1FID11_SALINITY_DIV,
+                                ais->type8.dac1fid11.ice,
+                                ice[ais->type8.dac1fid11.ice]);
+                } else {
+                    str_appendf(buf, buflen,
+                                ",\"airtemp\":%u,\"dewpoint\":%u,"
+                                "\"pressure\":%u,\"pressuretend\":%u",
+                                ais->type8.dac1fid11.airtemp,
+                                ais->type8.dac1fid11.dewpoint,
+                                ais->type8.dac1fid11.pressure,
+                                ais->type8.dac1fid11.pressuretend);
                     str_appendf(buf, buflen,
                                    ",\"visibility\":%u",
                                    ais->type8.dac1fid11.visibility);
-                if (!scaled)
                     str_appendf(buf, buflen,
                                    ",\"waterlevel\":%d",
                                    ais->type8.dac1fid11.waterlevel);
-                else
                     str_appendf(buf, buflen,
-                                   ",\"waterlevel\":%.1f",
-                                   ((signed int)ais->type8.dac1fid11.waterlevel - DAC1FID11_WATERLEVEL_OFFSET) / DAC1FID11_WATERLEVEL_DIV);
-
-                if (scaled) {
-                    str_appendf(buf, buflen,
-                                   ",\"leveltrend\":\"%s\","
-                                   "\"cspeed\":%.1f,\"cdir\":%u,"
-                                   "\"cspeed2\":%.1f,\"cdir2\":%u,"
-                                   "\"cdepth2\":%u,"
-                                   "\"cspeed3\":%.1f,\"cdir3\":%u,"
-                                   "\"cdepth3\":%u,"
-                                   "\"waveheight\":%.1f,\"waveperiod\":%u,"
-                                   "\"wavedir\":%u,"
-                                   "\"swellheight\":%.1f,\"swellperiod\":%u,"
-                                   "\"swelldir\":%u,"
-                                   "\"seastate\":%u,\"watertemp\":%.1f,"
-                                   "\"preciptype\":%u,"
-                                   "\"preciptype_text\":\"%s\","
-                                   "\"salinity\":%.1f,\"ice\":%u,"
-                                   "\"ice_text\":\"%s\"",
-                                   trends[ais->type8.dac1fid11.leveltrend],
-                                   ais->type8.dac1fid11.cspeed / DAC1FID11_CSPEED_DIV,
-                                   ais->type8.dac1fid11.cdir,
-                                   ais->type8.dac1fid11.cspeed2 / DAC1FID11_CSPEED_DIV,
-                                   ais->type8.dac1fid11.cdir2,
-                                   ais->type8.dac1fid11.cdepth2,
-                                   ais->type8.dac1fid11.cspeed3 / DAC1FID11_CSPEED_DIV,
-                                   ais->type8.dac1fid11.cdir3,
-                                   ais->type8.dac1fid11.cdepth3,
-                                   ais->type8.dac1fid11.waveheight / DAC1FID11_WAVEHEIGHT_DIV,
-                                   ais->type8.dac1fid11.waveperiod,
-                                   ais->type8.dac1fid11.wavedir,
-                                   ais->type8.dac1fid11.swellheight / DAC1FID11_WAVEHEIGHT_DIV,
-                                   ais->type8.dac1fid11.swellperiod,
-                                   ais->type8.dac1fid11.swelldir,
-                                   ais->type8.dac1fid11.seastate,
-                                   ((signed int)ais->type8.dac1fid11.watertemp - DAC1FID11_WATERTEMP_OFFSET) / DAC1FID11_WATERTEMP_DIV,
-                                   ais->type8.dac1fid11.preciptype,
-                                   preciptypes[ais->type8.dac1fid11.preciptype],
-                                   ais->type8.dac1fid11.salinity / DAC1FID11_SALINITY_DIV,
-                                   ais->type8.dac1fid11.ice,
-                                   ice[ais->type8.dac1fid11.ice]);
-                } else
-                    str_appendf(buf, buflen,
-                                   ",\"leveltrend\":%u,"
-                                   "\"cspeed\":%u,\"cdir\":%u,"
-                                   "\"cspeed2\":%u,\"cdir2\":%u,"
-                                   "\"cdepth2\":%u,"
-                                   "\"cspeed3\":%u,\"cdir3\":%u,"
-                                   "\"cdepth3\":%u,"
-                                   "\"waveheight\":%u,\"waveperiod\":%u,"
-                                   "\"wavedir\":%u,"
-                                   "\"swellheight\":%u,\"swellperiod\":%u,"
-                                   "\"swelldir\":%u,"
-                                   "\"seastate\":%u,\"watertemp\":%u,"
-                                   "\"preciptype\":%u,"
-                                   "\"preciptype_text\":\"%s\","
-                                   "\"salinity\":%u,\"ice\":%u,"
-                                   "\"ice_text\":\"%s\"",
-                                   ais->type8.dac1fid11.leveltrend,
-                                   ais->type8.dac1fid11.cspeed,
-                                   ais->type8.dac1fid11.cdir,
-                                   ais->type8.dac1fid11.cspeed2,
-                                   ais->type8.dac1fid11.cdir2,
-                                   ais->type8.dac1fid11.cdepth2,
-                                   ais->type8.dac1fid11.cspeed3,
-                                   ais->type8.dac1fid11.cdir3,
-                                   ais->type8.dac1fid11.cdepth3,
-                                   ais->type8.dac1fid11.waveheight,
-                                   ais->type8.dac1fid11.waveperiod,
-                                   ais->type8.dac1fid11.wavedir,
-                                   ais->type8.dac1fid11.swellheight,
-                                   ais->type8.dac1fid11.swellperiod,
-                                   ais->type8.dac1fid11.swelldir,
-                                   ais->type8.dac1fid11.seastate,
-                                   ais->type8.dac1fid11.watertemp,
-                                   ais->type8.dac1fid11.preciptype,
-                                   preciptypes[ais->type8.dac1fid11.preciptype],
-                                   ais->type8.dac1fid11.salinity,
-                                   ais->type8.dac1fid11.ice,
-                                   ice[ais->type8.dac1fid11.ice]);
+                                ",\"leveltrend\":%u,"
+                                "\"cspeed\":%u,\"cdir\":%u,"
+                                "\"cspeed2\":%u,\"cdir2\":%u,"
+                                "\"cdepth2\":%u,"
+                                "\"cspeed3\":%u,\"cdir3\":%u,"
+                                "\"cdepth3\":%u,"
+                                "\"waveheight\":%u,\"waveperiod\":%u,"
+                                "\"wavedir\":%u,"
+                                "\"swellheight\":%u,\"swellperiod\":%u,"
+                                "\"swelldir\":%u,"
+                                "\"seastate\":%u,\"watertemp\":%u,"
+                                "\"preciptype\":%u,"
+                                "\"preciptype_text\":\"%s\","
+                                "\"salinity\":%u,\"ice\":%u,"
+                                "\"ice_text\":\"%s\"",
+                                ais->type8.dac1fid11.leveltrend,
+                                ais->type8.dac1fid11.cspeed,
+                                ais->type8.dac1fid11.cdir,
+                                ais->type8.dac1fid11.cspeed2,
+                                ais->type8.dac1fid11.cdir2,
+                                ais->type8.dac1fid11.cdepth2,
+                                ais->type8.dac1fid11.cspeed3,
+                                ais->type8.dac1fid11.cdir3,
+                                ais->type8.dac1fid11.cdepth3,
+                                ais->type8.dac1fid11.waveheight,
+                                ais->type8.dac1fid11.waveperiod,
+                                ais->type8.dac1fid11.wavedir,
+                                ais->type8.dac1fid11.swellheight,
+                                ais->type8.dac1fid11.swellperiod,
+                                ais->type8.dac1fid11.swelldir,
+                                ais->type8.dac1fid11.seastate,
+                                ais->type8.dac1fid11.watertemp,
+                                ais->type8.dac1fid11.preciptype,
+                                preciptypes[ais->type8.dac1fid11.preciptype],
+                                ais->type8.dac1fid11.salinity,
+                                ais->type8.dac1fid11.ice,
+                                ice[ais->type8.dac1fid11.ice]);
+                }
                 (void)strlcat(buf, "}\r\n", buflen);
                 break;
             case 13:        /* IMO236 - Fairway closed */
