@@ -231,7 +231,13 @@ const char *pps_get_first(void)
 }
 #endif    // __linux__
 
-// return handle for kernel pps, or -1; requires root privileges
+/* init_kernel_pps() initialize kernel PPS.
+ * sets KPPS file handle into inner_context->kernelpps_handle
+ * usually requires root privileges
+ *
+ * Return: 0 on sucess
+ *         less than zero on error
+ */
 static int init_kernel_pps(struct inner_context_t *inner_context)
 {
     pps_params_t pp;
@@ -353,6 +359,7 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
     // Should be a valid descriptor by this point
     if (0 > ret) {
         char errbuf[BUFSIZ] = "unknown error";
+
         // sometimes geteuid() and geteiud() are long
         pps_thread->log_hook(pps_thread, THREAD_INF,
                     "KPPS:%s running as %ld/%ld, cannot open %s: %s(%d)\n",
@@ -364,15 +371,15 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
     }
 
     pps_thread->log_hook(pps_thread, THREAD_INF,
-                "KPPS:%s RFC2783 path:%s, fd is %d\n",
-                pps_thread->devicename, path,
-                ret);
+                "KPPS:%s RFC2783 path:%s, fd %d\n",
+                pps_thread->devicename, path, ret);
 
     /* RFC 2783 implies the time_pps_setcap() needs privileges *
      * keep root a tad longer just in case */
     if (0 > time_pps_create(ret,
                             (pps_handle_t *)&inner_context->kernelpps_handle)) {
         char errbuf[BUFSIZ] = "unknown error";
+
         pps_thread->log_hook(pps_thread, THREAD_INF,
                     "KPPS:%s time_pps_create(%d) failed: %s(%d)\n",
                     pps_thread->devicename,

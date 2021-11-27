@@ -232,26 +232,27 @@ static void gpsd_run_device_hook(struct gpsd_errout_t *errout,
                                  char *device_name, char *hook)
 {
     struct stat statbuf;
+    int status;
+    char buf[HOOK_CMD_MAX];
 
     if (-1 == stat(DEVICEHOOKPATH, &statbuf)) {
         GPSD_LOG(LOG_PROG, errout,
                  "CORE: no %s present, skipped running %s hook. %s(%d)\n",
                  DEVICEHOOKPATH, hook, strerror(errno), errno);
+        return;
+    }
+
+    (void)snprintf(buf, sizeof(buf), "%s %s %s",
+                   DEVICEHOOKPATH, device_name, hook);
+    GPSD_LOG(LOG_INF, errout, "CORE: running %s\n", buf);
+    status = system(buf);
+    if (-1 == status) {
+        GPSD_LOG(LOG_ERROR, errout, "CORE: error %s(%d) running %s\n",
+                 strerror(errno), errno, buf);
     } else {
-        int status;
-        char buf[HOOK_CMD_MAX];
-        (void)snprintf(buf, sizeof(buf), "%s %s %s",
-                       DEVICEHOOKPATH, device_name, hook);
-        GPSD_LOG(LOG_INF, errout, "CORE: running %s\n", buf);
-        status = system(buf);
-        if (-1 == status) {
-            GPSD_LOG(LOG_ERROR, errout, "CORE: error %s(%d) running %s\n",
-                     strerror(errno), errno, buf);
-        } else {
-            GPSD_LOG(LOG_INF, errout,
-                     "CORE: %s returned %d\n", DEVICEHOOKPATH,
-                     WEXITSTATUS(status));
-        }
+        GPSD_LOG(LOG_INF, errout,
+                 "CORE: %s returned %d\n", DEVICEHOOKPATH,
+                 WEXITSTATUS(status));
     }
 }
 
@@ -261,13 +262,16 @@ int gpsd_switch_driver(struct gps_device_t *session, char *type_name)
     bool first_sync = (session->device_type != NULL);
     unsigned int i;
 
-    if (first_sync && strcmp(session->device_type->type_name, type_name) == 0)
+    if (first_sync &&
+        0 == strcmp(session->device_type->type_name, type_name)) {
+        // no need to switch driver
         return 0;
+    }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "CORE: switch_driver(%s) called...\n", type_name);
     for (dp = gpsd_drivers, i = 0; *dp; dp++, i++)
-        if (strcmp((*dp)->type_name, type_name) == 0) {
+        if (0 == strcmp((*dp)->type_name, type_name)) {
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "CORE: selecting %s driver...\n",
                      (*dp)->type_name);
@@ -276,11 +280,14 @@ int gpsd_switch_driver(struct gps_device_t *session, char *type_name)
             session->driver_index = i;
             session->gpsdata.dev.mincycle = session->device_type->min_cycle;
             // reconfiguration might be required
-            if (first_sync && session->device_type->event_hook != NULL)
+            if (first_sync &&
+                NULL != session->device_type->event_hook) {
                 session->device_type->event_hook(session,
                                                  event_driver_switch);
-            if (STICKY(*dp))
+            }
+            if (STICKY(*dp)) {
                 session->last_controller = *dp;
+            }
             return 1;
         }
     GPSD_LOG(LOG_ERROR, &session->context->errout,
@@ -423,7 +430,12 @@ static void ppsthread_log(volatile struct pps_thread_t *pps_thread,
     va_end(ap);
 }
 
-// device has been opened - clear its storage for use
+/* gpsd_clear().- set and clear some data storage fields.
+ * device has been opened.
+ * So some things like path and gpsdd_fd are already set.
+ *
+ * Return: void
+ */
 void gpsd_clear(struct gps_device_t *session)
 {
     (void)clock_gettime(CLOCK_REALTIME, &session->gpsdata.online);
@@ -669,6 +681,11 @@ int gpsd_open(struct gps_device_t *session)
  */
 int gpsd_activate(struct gps_device_t *session, const int mode)
 {
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "CORE: gpsd_activate(%s, %d) fd %d\n",
+             session->gpsdata.dev.path, mode,
+             session->gpsdata.gps_fd);
+
     if (O_OPTIMIZE == mode) {
         gpsd_run_device_hook(&session->context->errout,
                              session->gpsdata.dev.path, HOOK_ACTIVATE);
@@ -685,8 +702,9 @@ int gpsd_activate(struct gps_device_t *session, const int mode)
             SOURCE_PPS == session->sourcetype) {
             // it is /dev/ppsX, need to set devicename, etc.
             GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "CORE: to gpsd_clear() %d\n",
+                     "CORE: to gpsd_clear() fd %d\n",
                      session->gpsdata.gps_fd);
+            // does this need to be done on awaken() ?
             gpsd_clear(session);
         }
         return session->gpsdata.gps_fd;

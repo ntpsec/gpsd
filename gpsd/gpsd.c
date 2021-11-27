@@ -301,9 +301,9 @@ static socket_t filesock(char *filename)
 #endif  // CONTROL_SOCKET_ENABLE
 
 #define sub_index(s) (int)((s) - subscribers)
-#define allocated_device(devp)   ((devp)->gpsdata.dev.path[0] != '\0')
+#define allocated_device(devp)   ('\0' != (devp)->gpsdata.dev.path[0])
 #define free_device(devp)        (devp)->gpsdata.dev.path[0] = '\0'
-#define initialized_device(devp) ((devp)->context != NULL)
+#define initialized_device(devp) (NULL != (devp)->context)
 
 /*
  * This array fills from the bottom, so as an extreme case you can
@@ -739,6 +739,11 @@ static bool open_device( struct gps_device_t *device)
         // can't happen, to shut up compilers
         return false;
     }
+    GPSD_LOG(LOG_PROG, &context.errout,
+             "CORE: open_device(%s) fd %d\n",
+             device->gpsdata.dev.path,
+             device->gpsdata.gps_fd);
+
     activated = gpsd_activate(device, O_OPTIMIZE);
     if (0 > activated &&
         PLACEHOLDING_FD != activated) {
@@ -760,20 +765,21 @@ static bool open_device( struct gps_device_t *device)
             char buf1[10], buf2[10];
 
             if (VALID_UNIT(device->shm_clock_unit)) {
-                (void)snprintf(buf1, sizeof(buf1), "NTP%d",
+                (void)snprintf(buf1, sizeof(buf1), " NTP%d,",
                                device->shm_clock_unit);
             } else {
                 buf1[0] = '\0';
             }
             if (VALID_UNIT(device->shm_pps_unit)) {
-                (void)snprintf(buf2, sizeof(buf2), "NTP%d",
+                (void)snprintf(buf2, sizeof(buf2), " NTP%d",
                                device->shm_pps_unit);
             } else {
                 buf2[0] = '\0';
             }
             GPSD_LOG(LOG_INF, &context.errout,
-                     "SHM: ntpshm_link_activate(%s): %.4s, %.4s\n",
-                     device->gpsdata.dev.path, buf1, buf2);
+                     "SHM: ntpshm_link_activate(%s):%.4s%.4s "
+                     "activated %d\n",
+                     device->gpsdata.dev.path, buf1, buf2, activated);
         }
 
         if (PLACEHOLDING_FD == activated) {
@@ -1015,7 +1021,11 @@ static void handle_control(int sfd, char *buf)
 #endif  // CONTROL_SOCKET_ENABLE
 
 #ifdef SOCKET_EXPORT_ENABLE
-// awaken a device and notify all watchers
+/* awaken a device and notify all watchers
+ *
+ * Return: true if open
+ *         false on error
+ */
 static bool awaken(struct gps_device_t *device)
 {
     int ret;
@@ -1045,17 +1055,19 @@ static bool awaken(struct gps_device_t *device)
     ret = gpsd_activate(device, O_OPTIMIZE);
     if (0 > ret) {
         if (PLACEHOLDING_FD == ret) {
-            // wait and try again later.
+            /* wait and try again later.
+             * or maybe is is /dev/ppsX */
             GPSD_LOG(LOG_PROG, &context.errout,
                      "awaken(): gpsd_activate() = %d\n", ret);
-        } else {
-            // failed to open device, and not a /dev/ppsX or ntrip://, etc.
-            GPSD_LOG(LOG_ERROR, &context.errout,
-                     "%s: device activation failed, freeing device.\n",
-                     device->gpsdata.dev.path);
-            // FIXME: works around a crash bug, but prevents retries
-            free_device(device);
+            return true;
         }
+
+        // failed to open device, and not a /dev/ppsX or ntrip://, etc.
+        GPSD_LOG(LOG_ERROR, &context.errout,
+                 "%s: device activation failed, freeing device.\n",
+                 device->gpsdata.dev.path);
+        // FIXME: works around a crash bug, but prevents retries
+        free_device(device);
         return false;
     }
 
