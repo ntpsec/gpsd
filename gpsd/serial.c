@@ -724,10 +724,14 @@ int gpsd_serial_open(struct gps_device_t *session)
 
     mode_t mode = (mode_t) O_RDWR;
 
-    GPSD_LOG(LOG_PROG, &session->context->errout,
-             "SER: gpsd_serial_open(%s)\n", session->gpsdata.dev.path);
-
     session->sourcetype = gpsd_classify(session);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "SER: gpsd_serial_open(%s) sourcetype %d fd %d\n",
+             session->gpsdata.dev.path,
+             session->sourcetype,
+             session->gpsdata.gps_fd);
+
     session->servicetype = SERVICE_SENSOR;
 
     if (SOURCE_UNKNOWN == session->sourcetype) {

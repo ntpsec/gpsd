@@ -530,7 +530,9 @@ int parse_uri_dest(char *s, char **host, char **service, char **device)
 int gpsd_open(struct gps_device_t *session)
 {
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "CORE: gpsd_open(%s)\n", session->gpsdata.dev.path);
+             "CORE: gpsd_open(%s) fd %d\n",
+             session->gpsdata.dev.path,
+             session->gpsdata.gps_fd);
 
     // special case: source may be a URI to a remote GNSS or DGPS service
     if (netgnss_uri_check(session->gpsdata.dev.path)) {

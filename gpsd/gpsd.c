@@ -736,6 +736,7 @@ static bool open_device( struct gps_device_t *device)
     int activated = -1;
 
     if (NULL == device) {
+        // can't happen, to shut up compilers
         return false;
     }
     activated = gpsd_activate(device, O_OPTIMIZE);
@@ -1018,6 +1019,11 @@ static void handle_control(int sfd, char *buf)
 static bool awaken(struct gps_device_t *device)
 {
     int ret;
+
+    GPSD_LOG(LOG_PROG, &context.errout,
+             "awaken(%d) fd %d, path %s\n",
+             (int)(device - devices),
+             device->gpsdata.gps_fd, device->gpsdata.dev.path);
 
     // open that device
     if ((!initialized_device(device) &&
