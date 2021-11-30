@@ -1252,8 +1252,9 @@ static void *gpsd_ppsmonitor(void *arg)
 #if defined(HAVE_SYS_TIMEPPS_H)
     if ((pps_handle_t)0 < inner_context.kernelpps_handle) {
         thread_context->log_hook(thread_context, THREAD_PROG,
-            "KPPS:%s descriptor cleaned up\n",
-            thread_context->devicename);
+            "KPPS:%s fd %d cleaned up\n",
+            thread_context->devicename,
+            inner_context.kernelpps_handle);
         (void)time_pps_destroy(inner_context.kernelpps_handle);
     }
 #endif
@@ -1280,7 +1281,7 @@ void pps_thread_activate(volatile struct pps_thread_t *pps_thread)
      * of this function would be guarded by a separate mutex.
      * Either that, or this should be an exception to the no-malloc rule.
      */
-    static struct inner_context_t       inner_context;
+    static struct inner_context_t inner_context;
 
     inner_context.pps_thread = pps_thread;
 #if defined(HAVE_SYS_TIMEPPS_H)
@@ -1311,8 +1312,10 @@ void pps_thread_activate(volatile struct pps_thread_t *pps_thread)
      * core machine, so we need to wait for it to acknowledge its copying
      * of the inner_context struct before proceeding.
      */
-    while (inner_context.pps_thread)
-        (void) nanosleep(&start_delay, NULL);
+    while (inner_context.pps_thread) {
+        (void)nanosleep(&start_delay, NULL);
+
+    }
 }
 
 // cleanly terminate PPS thread
