@@ -432,7 +432,7 @@ static void ppsthread_log(volatile struct pps_thread_t *pps_thread,
 
 /* gpsd_clear().- set and clear some data storage fields.
  * device has been opened.
- * So some things like path and gpsdd_fd are already set.
+ * So some things like path and gpsd_fd are already set.
  *
  * Return: void
  */
@@ -699,12 +699,13 @@ int gpsd_activate(struct gps_device_t *session, const int mode)
         // return could be -1, PLACEHOLDING_FD, of UNALLOCATED_FD
         // could be ntrip:// reconnect in progress
         if (PLACEHOLDING_FD == session->gpsdata.gps_fd &&
-            SOURCE_PPS == session->sourcetype) {
+            SOURCE_PPS == session->sourcetype &&
+            NULL == session->pps_thread.report_hook) {
             // it is /dev/ppsX, need to set devicename, etc.
+            // check report_hook to ensure not already running
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "CORE: to gpsd_clear() fd %d\n",
                      session->gpsdata.gps_fd);
-            // does this need to be done on awaken() ?
             gpsd_clear(session);
         }
         return session->gpsdata.gps_fd;
