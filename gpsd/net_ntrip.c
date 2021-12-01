@@ -851,6 +851,10 @@ int ntrip_open(struct gps_device_t *device, char *orig)
             device->ntrip.conn_state = NTRIP_CONN_ERR;
             return -1;
         }
+        // set timeouts to give time for caster to reply.
+        (void)clock_gettime(CLOCK_REALTIME, &device->lexer.pkt_time);
+        device->ntrip.stream.stream_time = device->lexer.pkt_time;
+
         device->gpsdata.gps_fd = ret;
         device->ntrip.conn_state = NTRIP_CONN_SENT_PROBE;
         return ret;
