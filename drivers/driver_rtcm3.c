@@ -73,9 +73,9 @@ SPDX-License-Identifier: BSD-2-clause
  */
 
 #define ugrab(width)    (bitcount += width, ubits((unsigned char *)buf, \
-                         bitcount-width, width, false))
+                         bitcount - width, width, false))
 #define sgrab(width)    (bitcount += width, sbits((signed char *)buf,  \
-                         bitcount-width, width, false))
+                         bitcount - width, width, false))
 
 /* decode MSM header
  * MSM1 to MSM7 share a common header
@@ -87,6 +87,13 @@ static void rtcm3_decode_msm(const struct gps_context_t *context,
                              struct rtcm3_t *rtcm, char *buf)
 {
     int bitcount = 34;  // 8 preamble, 6 zero, 10 length, 10 type
+
+    if (169 > rtcm->length) {
+        GPSD_LOG(LOG_WARN, &context->errout,
+                 "RTCM3: rtcm3_decode_msm() type %d runt length %d ",
+                 rtcm->type, rtcm->length);
+        return;
+    }
 
     rtcm->rtcmtypes.rtcm3_msm.station_id = (unsigned short)ugrab(12);
     rtcm->rtcmtypes.rtcm3_msm.tow = (time_t)ugrab(30);
@@ -162,8 +169,9 @@ void rtcm3_unpack(const struct gps_context_t *context,
     }
 
     rtcm->length = (unsigned int)ugrab(10);
-    if (0 == rtcm->length) {
+    if (12 > rtcm->length) {
         // ignore zero payload messages, they do not evan have type
+        // need 12 bits to read type.
         return;
     }
     rtcm->type = (unsigned int)ugrab(12);
