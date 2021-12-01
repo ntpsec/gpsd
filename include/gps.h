@@ -538,7 +538,7 @@ struct rtcm3_extended_rtk {
 // header data from MSM1 to MSM7
 // Used for all GNSS, but their timebases differ
 struct rtcm3_msm_hdr {
-    unsigned int station_id;    // Reference Station ID
+    unsigned short station_id;  // Reference Station ID
     time_t tow;                 // GNSS Epoch Time in ms
     bool sync;                  // Synchronous GNSS Message Flag
     unsigned short IODS;        // IODS – Issue of Data Station  
@@ -553,7 +553,6 @@ struct rtcm3_msm_hdr {
     // not part of the network message:
     unsigned char gnssid;       // gnssid
     unsigned char msm;          // 1 to 7, MSMx
-    
 };
 
 struct rtcm3_network_rtk_header {
@@ -579,7 +578,7 @@ struct rtcm3_correction_diff {
 
 struct rtcm3_t {
     // header contents
-    unsigned type;      // RTCM 3.x message type
+    unsigned type;      // RTCM 3.x message number (type)
     unsigned length;    // payload length, inclusive of checksum
 
     union {

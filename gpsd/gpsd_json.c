@@ -1596,7 +1596,7 @@ void json_rtcm2_dump(const struct rtcm2_t *rtcm,
 #endif  // defined(RTCM104V2_ENABLE)
 
 #if defined(RTCM104V3_ENABLE)
-/* dump the contents of a parsed RTCM104v3 message as JSON
+/* dump the contents of a parsed RTCM104v3 message into buf as JSON
  *
  * return: void
  */
@@ -1984,24 +1984,6 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                     rtcm->rtcmtypes.rtcm3_1014.d_alt);
         break;
 
-    case 1015:
-        break;
-
-    case 1016:
-        break;
-
-    case 1017:
-        break;
-
-    case 1018:
-        break;
-
-    case 1019:
-        break;
-
-    case 1020:
-        break;
-
     case 1029:
         str_appendf(buf, buflen,
                     "\"station_id\":%u,\"mjd\":%u,\"sec\":%u,"
@@ -2028,6 +2010,107 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                     rtcm->rtcmtypes.rtcm3_1033.firmware);
         break;
 
+    case 1071:    // GPS MSM 1
+        FALLTHROUGH
+    case 1072:    // GPS MSM 2
+        FALLTHROUGH
+    case 1073:    // GPS MSM 3
+        FALLTHROUGH
+    case 1074:    // GPS MSM 4
+        FALLTHROUGH
+    case 1075:    // GPS MSM 5
+        FALLTHROUGH
+    case 1076:    // GPS MSM 6
+        FALLTHROUGH
+    case 1077:    // GPS MSM 7
+        FALLTHROUGH
+    case 1081:    // GLO MSM 1
+        FALLTHROUGH
+    case 1082:    // GLO MSM 2
+        FALLTHROUGH
+    case 1083:    // GLO MSM 3
+        FALLTHROUGH
+    case 1084:    // GLO MSM 4
+        FALLTHROUGH
+    case 1085:    // GLO MSM 5
+        FALLTHROUGH
+    case 1086:    // GLO MSM 6
+        FALLTHROUGH
+    case 1087:    // GLO MSM 7
+        FALLTHROUGH
+    case 1091:    // GAL MSM 1
+        FALLTHROUGH
+    case 1092:    // GAL MSM 2
+        FALLTHROUGH
+    case 1093:    // GAL MSM 3
+        FALLTHROUGH
+    case 1094:    // GAL MSM 4
+        FALLTHROUGH
+    case 1095:    // GAL MSM 5
+        FALLTHROUGH
+    case 1096:    // GAL MSM 6
+        FALLTHROUGH
+    case 1097:    // GAL MSM 7
+        FALLTHROUGH
+    case 1101:    // SBAS MSM 1
+        FALLTHROUGH
+    case 1102:    // SBAS MSM 2
+        FALLTHROUGH
+    case 1103:    // SBAS MSM 3
+        FALLTHROUGH
+    case 1104:    // SBAS MSM 4
+        FALLTHROUGH
+    case 1105:    // SBAS MSM 5
+        FALLTHROUGH
+    case 1106:    // SBAS MSM 6
+        FALLTHROUGH
+    case 1107:    // SBAS MSM 7
+        FALLTHROUGH
+    case 1111:    // QZSS MSM 1
+        FALLTHROUGH
+    case 1112:    // QZSS MSM 2
+        FALLTHROUGH
+    case 1113:    // QZSS MSM 3
+        FALLTHROUGH
+    case 1114:    // QZSS MSM 4
+        FALLTHROUGH
+    case 1115:    // QZSS MSM 5
+        FALLTHROUGH
+    case 1116:    // QZSS MSM 6
+        FALLTHROUGH
+    case 1117:    // QZSS MSM 7
+        FALLTHROUGH
+    case 1121:    // BD MSM 1
+        FALLTHROUGH
+    case 1122:    // BD MSM 2
+        FALLTHROUGH
+    case 1123:    // BD MSM 3
+        FALLTHROUGH
+    case 1124:    // BD MSM 4
+        FALLTHROUGH
+    case 1125:    // BD MSM 5
+        FALLTHROUGH
+    case 1126:    // BD MSM 6
+        FALLTHROUGH
+    case 1127:    // BD MSM 7
+        str_appendf(buf, buflen,
+                    "\"station_id\":%u,\"gnssid\":%u,\"subtype\":\"MSM%d\","
+                    "\"tow\":%lld,\"sync\":\"%u\",\"IODS\":%u,"
+                    "\"steering\":%u,\"extclk\":%u,"
+                    "\"smoothing\":%u,\"interval\":%u,",
+                    rtcm->rtcmtypes.rtcm3_msm.station_id,
+                    // FIXME: make gnssid a string?
+                    rtcm->rtcmtypes.rtcm3_msm.gnssid,
+                    rtcm->rtcmtypes.rtcm3_msm.msm,
+                    (long long)rtcm->rtcmtypes.rtcm3_msm.tow,
+                    rtcm->rtcmtypes.rtcm3_msm.sync,
+                    rtcm->rtcmtypes.rtcm3_msm.IODS,
+                    rtcm->rtcmtypes.rtcm3_msm.steering,
+                    rtcm->rtcmtypes.rtcm3_msm.ext_clk,
+                    rtcm->rtcmtypes.rtcm3_msm.smoothing,
+                    rtcm->rtcmtypes.rtcm3_msm.interval);
+        break;
+
     case 1230:
         // bias_indicator is undocumented...
         str_appendf(buf, buflen,
@@ -2052,6 +2135,19 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
             rtcm->rtcmtypes.rtcm3_1230.l2_p_bias);
         }
         break;
+
+    case 1015:    // GPS Ionospheric Correction Differences
+        FALLTHROUGH
+    case 1016:    // GPS Geometric Correction Differences
+        FALLTHROUGH
+    case 1017:    // GPS Combined Geometric & Iono Correction Differences
+        FALLTHROUGH
+    case 1018:    // Reserved, alternative Ionospheric Correction Differences
+        FALLTHROUGH
+    case 1019:    // GPS Ephemeris
+        FALLTHROUGH
+    case 1020:    // GLO Ephemeris
+        FALLTHROUGH
 
     default:
         (void)strlcat(buf, "\"data\":[", buflen);
@@ -4379,14 +4475,14 @@ void json_data_report(const gps_mask_t changed,
 #ifdef RTCM104V2_ENABLE
     if (0 != (changed & RTCM2_SET)) {
         json_rtcm2_dump(&datap->rtcm2, datap->dev.path,
-                        buf+strlen(buf), buflen-strlen(buf));
+                        buf + strlen(buf), buflen - strlen(buf));
     }
 #endif  // RTCM104V2_ENABLE
 
 #ifdef RTCM104V3_ENABLE
     if (0 != (changed & RTCM3_SET)) {
         json_rtcm3_dump(&datap->rtcm3, datap->dev.path,
-                        buf+strlen(buf), buflen-strlen(buf));
+                        buf + strlen(buf), buflen - strlen(buf));
     }
 #endif  // RTCM104V3_ENABLE
 
@@ -4394,17 +4490,17 @@ void json_data_report(const gps_mask_t changed,
     if (0 != (changed & AIS_SET)) {
         json_aivdm_dump(&datap->ais, datap->dev.path,
                         policy->scaled,
-                        buf+strlen(buf), buflen-strlen(buf));
+                        buf + strlen(buf), buflen - strlen(buf));
     }
 #endif  // AIVDM_ENABLE
 
 #ifdef OSCILLATOR_ENABLE
     if (0 != (changed & OSCILLATOR_SET)) {
-        json_oscillator_dump(datap, buf+strlen(buf), buflen-strlen(buf));
+        json_oscillator_dump(datap, buf + strlen(buf), buflen - strlen(buf));
     }
 #endif // OSCILLATOR_ENABLE
     if (0 != (changed & LOG_SET)) {
-        json_log_dump(session, buf+strlen(buf), buflen-strlen(buf));
+        json_log_dump(session, buf + strlen(buf), buflen - strlen(buf));
     }
 }
 
