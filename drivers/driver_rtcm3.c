@@ -81,18 +81,21 @@ SPDX-License-Identifier: BSD-2-clause
  * MSM1 to MSM7 share a common header
  * TODO: rtklib has C code for these.
  *
- * Return: void
+ * Return: false if decoded
+ *         true if runt
  */
-static void rtcm3_decode_msm(const struct gps_context_t *context,
+static bool rtcm3_decode_msm(const struct gps_context_t *context,
                              struct rtcm3_t *rtcm, char *buf)
 {
     int bitcount = 34;  // 8 preamble, 6 zero, 10 length, 10 type
 
-    if (169 > rtcm->length) {
+    if (22 > rtcm->length) {
+        // need 169 bits, 21.125 bytes
+        rtcm->length = 0;          // set to zero to prevent JSON decode
         GPSD_LOG(LOG_WARN, &context->errout,
                  "RTCM3: rtcm3_decode_msm() type %d runt length %d ",
                  rtcm->type, rtcm->length);
-        return;
+        return true;
     }
 
     rtcm->rtcmtypes.rtcm3_msm.station_id = (unsigned short)ugrab(12);
@@ -111,7 +114,7 @@ static void rtcm3_decode_msm(const struct gps_context_t *context,
     // (long long)tow for 32 bit machines.
     GPSD_LOG(LOG_PROG, &context->errout, "RTCM3: rtcm3_decode_msm(%u) "
              "gnssid %u MSM%u id %u tow %lld sync %u IODS %u "
-             "steering %u ext_clk %u smoothing %u interval %u\n"
+             "steering %u ext_clk %u smoothing %u interval %u "
              "sat_mask x%llx sig_mask x%lx\n",
              rtcm->type,
              rtcm->rtcmtypes.rtcm3_msm.gnssid,
@@ -126,6 +129,7 @@ static void rtcm3_decode_msm(const struct gps_context_t *context,
              rtcm->rtcmtypes.rtcm3_msm.interval,
              (long long unsigned)rtcm->rtcmtypes.rtcm3_msm.sat_mask,
              (long unsigned)rtcm->rtcmtypes.rtcm3_msm.sig_mask);
+    return false;
 }
 
 /* break out the raw bits into the scaled report-structure fields
@@ -169,9 +173,9 @@ void rtcm3_unpack(const struct gps_context_t *context,
     }
 
     rtcm->length = (unsigned int)ugrab(10);
-    if (12 > rtcm->length) {
+    if (2 > rtcm->length) {
         // ignore zero payload messages, they do not evan have type
-        // need 12 bits to read type.
+        // need 2 bytes just to read 10 bit type.
         return;
     }
     rtcm->type = (unsigned int)ugrab(12);
@@ -845,8 +849,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GPS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 1;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "GPS MSM 1";
         break;
 
@@ -856,8 +859,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GPS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 2;
-        rtcm3_decode_msm(context, rtcm, buf);
-         unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "GPS MSM 2";
         break;
 
@@ -867,8 +869,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GPS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 3;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "GPS MSM 3";
         break;
 
@@ -878,8 +879,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GPS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 4;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "GPS MSM 4";
         break;
 
@@ -889,8 +889,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GPS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 5;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "GPS MSM 5";
         break;
 
@@ -900,8 +899,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GPS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 6;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "GPS MSM 6";
         break;
 
@@ -914,8 +912,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GPS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 7;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "GPS MSM7";
         break;
 
@@ -946,8 +943,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GLO;
         rtcm->rtcmtypes.rtcm3_msm.msm = 1;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "GLO MSM 1";
         break;
 
@@ -957,8 +953,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GLO;
         rtcm->rtcmtypes.rtcm3_msm.msm = 2;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "GLO MSM 2";
         break;
 
@@ -968,8 +963,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GLO;
         rtcm->rtcmtypes.rtcm3_msm.msm = 3;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "GLO MSM 3";
         break;
 
@@ -979,8 +973,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GLO;
         rtcm->rtcmtypes.rtcm3_msm.msm = 4;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "GLO MSM 4";
         break;
 
@@ -990,8 +983,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GLO;
         rtcm->rtcmtypes.rtcm3_msm.msm = 5;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "GLO MSM 5";
         break;
 
@@ -1001,8 +993,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GLO;
         rtcm->rtcmtypes.rtcm3_msm.msm = 6;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "GLO MSM 6";
         break;
 
@@ -1015,8 +1006,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GLO;
         rtcm->rtcmtypes.rtcm3_msm.msm = 7;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "GLO MSM 7";
         break;
 
@@ -1047,8 +1037,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GAL;
         rtcm->rtcmtypes.rtcm3_msm.msm = 1;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "GAL MSM 1";
         break;
 
@@ -1058,8 +1047,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GAL;
         rtcm->rtcmtypes.rtcm3_msm.msm = 2;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "GAL MSM 2";
         break;
 
@@ -1069,8 +1057,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GAL;
         rtcm->rtcmtypes.rtcm3_msm.msm = 3;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "GAL MSM 3";
         break;
 
@@ -1080,8 +1067,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GAL;
         rtcm->rtcmtypes.rtcm3_msm.msm = 4;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "GAL MSM 4";
         break;
 
@@ -1091,8 +1077,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GAL;
         rtcm->rtcmtypes.rtcm3_msm.msm = 5;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "GAL MSM 5";
         break;
 
@@ -1102,8 +1087,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GAL;
         rtcm->rtcmtypes.rtcm3_msm.msm = 6;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "GAL MSM 6";
         break;
 
@@ -1116,8 +1100,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GAL;
         rtcm->rtcmtypes.rtcm3_msm.msm = 7;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "GAL MSM 7";
         break;
 
@@ -1148,8 +1131,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_SBAS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 1;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "SBAS MSM 1";
         break;
 
@@ -1159,8 +1141,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_SBAS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 2;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "SBAS MSM 2";
         break;
 
@@ -1170,8 +1151,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_SBAS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 3;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "SBAS MSM 3";
         break;
 
@@ -1181,8 +1161,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_SBAS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 4;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "SBAS MSM 4";
         break;
 
@@ -1192,8 +1171,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_SBAS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 5;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "SBAS MSM 5";
         break;
 
@@ -1203,8 +1181,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_SBAS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 6;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "SBAS MSM 6";
         break;
 
@@ -1217,8 +1194,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_SBAS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 7;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "SBAS MSM 7";
         break;
 
@@ -1249,8 +1225,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_QZSS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 1;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "QZSS MSM 1";
         break;
 
@@ -1260,8 +1235,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_QZSS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 2;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "QZSS MSM 2";
         break;
 
@@ -1271,8 +1245,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_QZSS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 3;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "QZSS MSM 3";
         break;
 
@@ -1282,8 +1255,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_QZSS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 4;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "QZSS MSM 4";
         break;
 
@@ -1293,8 +1265,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_QZSS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 5;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "QZSS MSM 5";
         break;
 
@@ -1304,8 +1275,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_QZSS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 6;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "QZSS MSM 6";
         break;
 
@@ -1315,8 +1285,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_QZSS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 7;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "QZSS MSM 7";
         break;
 
@@ -1347,8 +1316,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_BD;
         rtcm->rtcmtypes.rtcm3_msm.msm = 1;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "BD MSM 1";
         break;
 
@@ -1358,8 +1326,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_BD;
         rtcm->rtcmtypes.rtcm3_msm.msm = 2;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "BD MSM 2";
         break;
 
@@ -1369,8 +1336,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_BD;
         rtcm->rtcmtypes.rtcm3_msm.msm = 3;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "BD MSM 3";
         break;
 
@@ -1380,8 +1346,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_BD;
         rtcm->rtcmtypes.rtcm3_msm.msm = 4;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "BD MSM 4";
         break;
 
@@ -1391,8 +1356,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_BD;
         rtcm->rtcmtypes.rtcm3_msm.msm = 5;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "BD MSM 5";
         break;
 
@@ -1402,8 +1366,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_BD;
         rtcm->rtcmtypes.rtcm3_msm.msm = 6;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "BD MSM 6";
         break;
 
@@ -1413,8 +1376,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_BD;
         rtcm->rtcmtypes.rtcm3_msm.msm = 7;
-        rtcm3_decode_msm(context, rtcm, buf);
-        unknown = false;
+        unknown = rtcm3_decode_msm(context, rtcm, buf);
         unknown_name = "BD MSM 7";
         break;
 

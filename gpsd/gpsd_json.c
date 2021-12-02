@@ -1608,6 +1608,11 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
     unsigned short i;
     unsigned int n;
 
+    if (0 == rtcm->type ||
+        0 == rtcm->length) {
+        // runt, ignore
+        return;
+    }
     (void)snprintf(buf, buflen, "{\"class\":\"RTCM3\",");
     if (NULL != device &&
         '\0' != device[0]) {
