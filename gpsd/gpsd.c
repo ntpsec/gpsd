@@ -2773,8 +2773,12 @@ int main(int argc, char *argv[])
                  * if device is a tty. */
 
                 // This device has either never received a message.
-                // or hasn't received a message for the last 5 seconds,
                 (void)clock_gettime(CLOCK_REALTIME, &now);
+                if (0 == device->lexer.pkt_time.tv_sec) {
+                    // just activated
+                    device->lexer.pkt_time = now;
+                }
+                // or hasn't received a message for the last 5 seconds,
                 TS_SUB(&delta, &now, &device->lexer.pkt_time);
                 // llabs() in case the system time jumped
                 if (5 <= llabs(delta.tv_sec)) {
