@@ -1023,12 +1023,14 @@ Then install the normal way.
 == Special Notes for Fedora derivatives
 === Special Notes for Fedora 32, 33 Build and Installation
 
-gpsd currently will build, install and run on Fedora 32, 33 and 34.
+gpsd currently will build, install and run on Fedora 32, 33 and 34.  Any
+supported architecture should work.
 
-Install the gcc compiler and tools.  Clone the gpsd source, and then
-build it.
+Upgrade you packages, install the gcc compiler and tools. Clone the gpsd
+source, and then build it.  Fedora recommends a reboot after using dnf.
 
 ----
+# dnf upgrade --refresh
 # dnf install -y gcc-c++ python3-devel scons asciidoctor bzip2
 # dnf install -y xz git dnf-plugins-core
 # git clone https://gitlab.com/gpsd/gpsd.git
