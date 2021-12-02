@@ -1989,6 +1989,24 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                     rtcm->rtcmtypes.rtcm3_1014.d_alt);
         break;
 
+    case 1015:    // GPS Ionospheric Correction Differences
+        FALLTHROUGH
+    case 1016:    // GPS Geometric Correction Differences
+        FALLTHROUGH
+    case 1017:    // GPS Combined Geometric & Iono Correction Differences
+        // just the header for now
+        str_appendf(buf, buflen,
+                    "\"network_id\":%u,\"subnetwork_id\":%u,\"tow\":%lu,"
+                    "\"multimesg\":%u,\"master_id\":%u,\"aux_id\":%u,"
+                    "\"satcount\":%u,",
+                    rtcm->rtcmtypes.rtcm3_1015.header.network_id,
+                    rtcm->rtcmtypes.rtcm3_1015.header.subnetwork_id,
+                    (long)rtcm->rtcmtypes.rtcm3_1015.header.tow,
+                    rtcm->rtcmtypes.rtcm3_1015.header.multimesg,
+                    rtcm->rtcmtypes.rtcm3_1015.header.master_id,
+                    rtcm->rtcmtypes.rtcm3_1015.header.aux_id,
+                    rtcm->rtcmtypes.rtcm3_1015.header.satcount);
+        break;
     case 1029:
         str_appendf(buf, buflen,
                     "\"station_id\":%u,\"mjd\":%u,\"sec\":%u,"
@@ -2141,12 +2159,6 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
         }
         break;
 
-    case 1015:    // GPS Ionospheric Correction Differences
-        FALLTHROUGH
-    case 1016:    // GPS Geometric Correction Differences
-        FALLTHROUGH
-    case 1017:    // GPS Combined Geometric & Iono Correction Differences
-        FALLTHROUGH
     case 1018:    // Reserved, alternative Ionospheric Correction Differences
         FALLTHROUGH
     case 1019:    // GPS Ephemeris

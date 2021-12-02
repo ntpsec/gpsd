@@ -92,6 +92,8 @@ extern "C" {
  *       add imu[], and matching IMU_SET flag
  *       move attitude out of the union, to stop conflicts.
  * 13    Add rtcm3_msm_hdr
+ *       fix tow in never used struct rtcm3_1015_t
+ *       remove never used struct rtcm3_1016_t and struct rtcm3_1017_t
  *
  */
 #define GPSD_API_MAJOR_VERSION  13      // bump on incompatible changes
@@ -558,7 +560,7 @@ struct rtcm3_msm_hdr {
 struct rtcm3_network_rtk_header {
     unsigned int network_id;    // Network ID
     unsigned int subnetwork_id; // Subnetwork ID
-    time_t time;                // GPS Epoch Time (TOW) in ms
+    unsigned long tow;          // GPS Epoch Time (TOW).  scale 0.1 s
     bool multimesg;             // GPS Multiple Message Indicator
     unsigned master_id;         // Master Reference Station ID
     unsigned aux_id;            // Auxiliary Reference Station ID
@@ -567,7 +569,7 @@ struct rtcm3_network_rtk_header {
 
 struct rtcm3_correction_diff {
     unsigned char ident;        // satellite ID
-    enum {reserved, correct, widelane, uncertain} ambiguity;
+    enum {RESERVED, CORRECT, WIDELANE, UNCERTAIN} ambiguity;
     unsigned char nonsync;
     double geometric_diff;      /* Geometric Carrier Phase
                                    Correction Difference (1016, 1017) */
@@ -691,17 +693,10 @@ struct rtcm3_t {
             double d_lat, d_lon, d_alt; // Aux-master location delta
         } rtcm3_1014;
         struct rtcm3_1015_t {
+            // used for 1015, 1016, and 1017
             struct rtcm3_network_rtk_header     header;
             struct rtcm3_correction_diff corrections[RTCM3_MAX_SATELLITES];
         } rtcm3_1015;
-        struct rtcm3_1016_t {
-            struct rtcm3_network_rtk_header     header;
-            struct rtcm3_correction_diff corrections[RTCM3_MAX_SATELLITES];
-        } rtcm3_1016;
-        struct rtcm3_1017_t {
-            struct rtcm3_network_rtk_header     header;
-            struct rtcm3_correction_diff corrections[RTCM3_MAX_SATELLITES];
-        } rtcm3_1017;
         // 1018-1029 were in the 3.0 version
         struct rtcm3_1019_t {
             unsigned int ident;         // Satellite ID

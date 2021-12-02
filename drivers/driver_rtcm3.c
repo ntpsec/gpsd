@@ -77,6 +77,51 @@ SPDX-License-Identifier: BSD-2-clause
 #define sgrab(width)    (bitcount += width, sbits((signed char *)buf,  \
                          bitcount - width, width, false))
 
+/* decode 1015/1016/1017 header
+ * they share a common header
+ * TODO: rtklib has C code for these.
+ *
+ * Return: false if decoded
+ *         true if runt
+ */
+static bool rtcm3_101567(const struct gps_context_t *context,
+                             struct rtcm3_t *rtcm, char *buf)
+{
+    int bitcount = 34;  // 8 preamble, 6 zero, 10 length, 10 type
+
+    if (22 > rtcm->length) {
+        // need 76 bits, 9.5 bytes
+        rtcm->length = 0;          // set to zero to prevent JSON decode
+        GPSD_LOG(LOG_WARN, &context->errout,
+                 "RTCM3: rtcm3_101567_msm() type %d runt length %d ",
+                 rtcm->type, rtcm->length);
+        return false;
+    }
+
+    // 1015, 1016, and 1017 all use the 1015 struct
+    rtcm->rtcmtypes.rtcm3_1015.header.network_id = (unsigned)ugrab(12);
+    rtcm->rtcmtypes.rtcm3_1015.header.subnetwork_id = (unsigned )ugrab(8);
+    rtcm->rtcmtypes.rtcm3_1015.header.tow = (time_t)ugrab(23);
+    rtcm->rtcmtypes.rtcm3_1015.header.multimesg = (bool)ugrab(1);
+    rtcm->rtcmtypes.rtcm3_1015.header.master_id = (unsigned)ugrab(12);
+    rtcm->rtcmtypes.rtcm3_1015.header.aux_id = (unsigned)ugrab(12);
+    rtcm->rtcmtypes.rtcm3_1015.header.satcount = (unsigned char)ugrab(4);
+
+    // (long long)tow for 32 bit machines.
+    GPSD_LOG(LOG_PROG, &context->errout, "RTCM3: rtcm3_10567(%u) "
+             "network_id %u subnetwork_id %u tow %lld multimesg %u "
+             "master_id %u aux_id %u satcount %u",
+             rtcm->type,
+             rtcm->rtcmtypes.rtcm3_1015.header.network_id,
+             rtcm->rtcmtypes.rtcm3_1015.header.subnetwork_id,
+             (long long)rtcm->rtcmtypes.rtcm3_1015.header.tow,
+             rtcm->rtcmtypes.rtcm3_1015.header.multimesg,
+             rtcm->rtcmtypes.rtcm3_1015.header.master_id,
+             rtcm->rtcmtypes.rtcm3_1015.header.aux_id,
+             rtcm->rtcmtypes.rtcm3_1015.header.satcount);
+    return true;
+}
+
 /* decode MSM header
  * MSM1 to MSM7 share a common header
  * TODO: rtklib has C code for these.
@@ -500,6 +545,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * between the master station and one auxiliary station
          * 9 bytes minimum
          */
+        unknown = rtcm3_101567(context, rtcm, buf);
         unknown_name = "GPS Ionospheric Correction Differences";
         break;
 
@@ -509,6 +555,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * the master station and one auxiliary station.
          * 9 bytes minimum
          */
+        unknown = rtcm3_101567(context, rtcm, buf);
         unknown_name = "GPS Geometric Correction Differences";
         break;
 
@@ -519,6 +566,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * (same content as both types 1015 and 1016 together, but less size)
          * 9 bytes minimum
          */
+        unknown = rtcm3_101567(context, rtcm, buf);
         unknown_name = "GPS Combined Geometric and Ionospheric "
                        "Correction Differences";
         break;
