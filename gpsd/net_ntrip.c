@@ -570,8 +570,7 @@ static int ntrip_stream_get_parse(const struct ntrip_stream_t *stream,
     // parse 401 Unauthorized
     if (NULL != strstr(buf, NTRIP_UNAUTH)) {
         GPSD_LOG(LOG_ERROR, errout,
-                 "NTRIP: not authorized for %s/%s\n", stream->url,
-                 stream->mountpoint);
+                 "NTRIP: not authorized for %s\n", stream->url);
         return -1;
     }
     // can't parse SOURCETABLE here
