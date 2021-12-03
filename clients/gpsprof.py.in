@@ -212,7 +212,7 @@ class plotter(object):
 
     def __init__(self):
         """Init class plotter."""
-        self.device = None
+        self.device = []
         self.fixes = []
         self.in_replot = False
         self.session = None
@@ -221,15 +221,15 @@ class plotter(object):
 
     def whatami(self):
         """How do we identify this plotting run?"""
-        desc = "%s, %s, " % \
-               (gps.misc.isotime(self.start_time),
-                self.device.get('driver', "unknown"))
+        desc = "%s" % gps.misc.isotime(self.start_time)
+        if 'driver' in self.device:
+            desc += ", %s" % self.device['driver']
         if 'bps' in self.device:
-            desc += "%d %dN%d, cycle %.3gs" % \
+            desc += ", %d %dN%d, cycle %.3gs" % \
                 (self.device['bps'], 9 - self.device['stopbits'],
                  self.device['stopbits'], self.device['cycle'])
-        else:
-            desc += self.device['path']
+        if 'path' in self.device:
+            desc += ", %s" % self.device['path']
         if 'subtype' in self.device:
             desc += "\\n%s" % self.device['subtype']
 
