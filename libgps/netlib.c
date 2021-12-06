@@ -56,6 +56,9 @@
  * service -- aka port
  * protocol
  * flags -- can be SOCK_NONBLOCK for non-blocking connect
+ * addrbuf -- 50 char buf to put string of IP address conencting
+ *            INET6_ADDRSTRLEN
+ * addrbuf_sz -- sizeof(adddrbuf)
  *
  * Notes on nonblocking:
  * The connect may be non-blocking, but the DNS lookup is blocking.
@@ -66,7 +69,8 @@
  *        less than zero on error (NL_*)
  */
 socket_t netlib_connectsock1(int af, const char *host, const char *service,
-                             const char *protocol, int flags)
+                             const char *protocol, int flags,
+                             char *addrbuf, size_t addrbuf_sz)
 {
     struct protoent *ppe;
     struct addrinfo hints;
@@ -76,6 +80,9 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
     socket_t s;
     bool bind_me;
 
+    if (NULL != addrbuf) {
+        addrbuf[0] = '\0';
+    }
     INVALIDATE_SOCKET(s);
     ppe = getprotobyname(protocol);
     if (0 == strcmp(protocol, "udp")) {
@@ -159,6 +166,12 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
             ret = 0;
             break;
         }
+        if (NULL != addrbuf) {
+            // save the IP used, as a string. into addrbuf
+            if (NULL == inet_ntop(af, rp->ai_addr, addrbuf, addrbuf_sz)) {
+                addrbuf[0] = '\0';
+            }
+        }
 
         if (!BAD_SOCKET(s)) {
 #ifdef HAVE_WINSOCK2_H
@@ -212,7 +225,7 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
 socket_t netlib_connectsock(int af, const char *host, const char *service,
                             const char *protocol)
 {
-    return netlib_connectsock1(af, host, service, protocol, 0);
+    return netlib_connectsock1(af, host, service, protocol, 0, NULL, 0);
 }
 
 //  Convert NL_* error code to a string

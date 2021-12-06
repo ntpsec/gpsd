@@ -98,6 +98,7 @@ extern "C" {
  *      add VALID_UNIT()
  *      remove shm_clock and shm_pps from device_t
  *      add pkt_time to lexer_t
+ *      add netlib_connectsock1()
  */
 
 #define JSON_DATE_MAX   24      /* ISO8601 timestamp with 2 decimal places */
@@ -982,7 +983,8 @@ extern void gpsd_clear_data(struct gps_device_t *);
 extern socket_t netlib_connectsock(int, const char *, const char *,
                                    const char *);
 extern socket_t netlib_connectsock1(int, const char *, const char *,
-                                    const char *, int);
+                                    const char *, int,
+                                    char *, size_t);
 // end FIXME
 extern socket_t netlib_localsocket(const char *, int);
 extern const char *netlib_errstr(const int);

@@ -774,21 +774,23 @@ int ntrip_parse_url(const struct gpsd_errout_t *errout,
 static int ntrip_reconnect(struct gps_device_t *device)
 {
     socket_t dsock = -1;
+    char addrbuf[50];         // INET6_ADDRSTRLEN
 
     GPSD_LOG(LOG_PROG, &device->context->errout,
              "NTRIP: ntrip_reconnect() %.60s\n",
              device->gpsdata.dev.path);
     dsock = netlib_connectsock1(AF_UNSPEC, device->ntrip.stream.host,
                                 device->ntrip.stream.port,
-                                "tcp", SOCK_NONBLOCK);
+                                "tcp", SOCK_NONBLOCK, addrbuf, sizeof(addrbuf));
     device->gpsdata.gps_fd = dsock;
     // nonblocking means we have the fd, but the connection is not
     // finished yet.  Connection may fail, later.
     if (0 > dsock) {
         // no way to recover from this, except wait and try again later
         GPSD_LOG(LOG_ERROR, &device->context->errout,
-                 "NTRIP: ntrip_reconnect(%s) failed: %s(%d)\n",
-                 device->gpsdata.dev.path, netlib_errstr(dsock), dsock);
+                 "NTRIP: ntrip_reconnect(%s) IP %s, failed: %s(%d)\n",
+                 device->gpsdata.dev.path, addrbuf,
+                 netlib_errstr(dsock), dsock);
         // set time for retry
         (void)clock_gettime(CLOCK_REALTIME, &device->ntrip.stream.stream_time);
         // leave in connextion closed state for later retry.
@@ -799,8 +801,8 @@ static int ntrip_reconnect(struct gps_device_t *device)
     // the ntrip request again.
     device->ntrip.conn_state = NTRIP_CONN_INPROGRESS;
     GPSD_LOG(LOG_PROG, &device->context->errout,
-             "NTRIP: ntrip_reconnect(%s) fd %d NTRIP_CONN_INPROGRESS \n",
-             device->gpsdata.dev.path, dsock);
+             "NTRIP: ntrip_reconnect(%s) IP %s, fd %d NTRIP_CONN_INPROGRESS \n",
+             device->gpsdata.dev.path, addrbuf, dsock);
     return device->gpsdata.gps_fd;
 }
 

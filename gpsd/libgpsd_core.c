@@ -559,6 +559,7 @@ int gpsd_open(struct gps_device_t *session)
     } else if (str_starts_with(session->gpsdata.dev.path, "tcp://")) {
         char server[GPS_PATH_MAX], *host, *port, *device;
         socket_t dsock;
+        char addrbuf[50];    // INET6_ADDRSTRLEN
 
         session->sourcetype = SOURCE_TCP;
         (void)strlcpy(server, session->gpsdata.dev.path + 6, sizeof(server));
@@ -575,15 +576,16 @@ int gpsd_open(struct gps_device_t *session)
                  port);
         // open non-blocking
         dsock = netlib_connectsock1(AF_UNSPEC, host, port, "tcp",
-                                    SOCK_NONBLOCK);
+                                    SOCK_NONBLOCK, addrbuf, sizeof(addrbuf));
         if (0 > dsock) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "CORE: TCP %s open error %s(%d).\n",
-                     session->gpsdata.dev.path, netlib_errstr(dsock), dsock);
+                     "CORE: TCP %s IP %s, open error %s(%d).\n",
+                     session->gpsdata.dev.path, addrbuf,
+                     netlib_errstr(dsock), dsock);
         } else {
             GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "CORE: TCP %s opened on fd %d\n",
-                     session->gpsdata.dev.path, dsock);
+                     "CORE: TCP %s IP %s opened on fd %d\n",
+                     session->gpsdata.dev.path, addrbuf, dsock);
         }
         session->gpsdata.gps_fd = dsock;
         return session->gpsdata.gps_fd;
