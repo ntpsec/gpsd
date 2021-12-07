@@ -85,9 +85,9 @@ SPDX-License-Identifier: BSD-2-clause
  *         true if runt
  */
 static bool rtcm3_101567(const struct gps_context_t *context,
-                             struct rtcm3_t *rtcm, char *buf)
+                         struct rtcm3_t *rtcm, char *buf)
 {
-    int bitcount = 34;  // 8 preamble, 6 zero, 10 length, 10 type
+    int bitcount = 36;  // 8 preamble, 6 zero, 10 length, 12 type
 
     if (22 > rtcm->length) {
         // need 76 bits, 9.5 bytes
@@ -95,12 +95,12 @@ static bool rtcm3_101567(const struct gps_context_t *context,
         GPSD_LOG(LOG_WARN, &context->errout,
                  "RTCM3: rtcm3_101567_msm() type %d runt length %d ",
                  rtcm->type, rtcm->length);
-        return false;
+        return true;
     }
 
     // 1015, 1016, and 1017 all use the 1015 struct
     rtcm->rtcmtypes.rtcm3_1015.header.network_id = (unsigned)ugrab(12);
-    rtcm->rtcmtypes.rtcm3_1015.header.subnetwork_id = (unsigned )ugrab(8);
+    rtcm->rtcmtypes.rtcm3_1015.header.subnetwork_id = (unsigned )ugrab(4);
     rtcm->rtcmtypes.rtcm3_1015.header.tow = (time_t)ugrab(23);
     rtcm->rtcmtypes.rtcm3_1015.header.multimesg = (bool)ugrab(1);
     rtcm->rtcmtypes.rtcm3_1015.header.master_id = (unsigned)ugrab(12);
@@ -119,7 +119,7 @@ static bool rtcm3_101567(const struct gps_context_t *context,
              rtcm->rtcmtypes.rtcm3_1015.header.master_id,
              rtcm->rtcmtypes.rtcm3_1015.header.aux_id,
              rtcm->rtcmtypes.rtcm3_1015.header.satcount);
-    return true;
+    return false;
 }
 
 /* decode MSM header
@@ -132,7 +132,7 @@ static bool rtcm3_101567(const struct gps_context_t *context,
 static bool rtcm3_decode_msm(const struct gps_context_t *context,
                              struct rtcm3_t *rtcm, char *buf)
 {
-    int bitcount = 34;  // 8 preamble, 6 zero, 10 length, 10 type
+    int bitcount = 36;  // 8 preamble, 6 zero, 10 length, 12 type
 
     if (22 > rtcm->length) {
         // need 169 bits, 21.125 bytes
