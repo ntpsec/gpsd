@@ -1,6 +1,6 @@
 = GPSD Numbers Matter
 Gary E. Miller <gem@rellim.com>
-13 November 2021
+6 December 2021
 :author: Gary E. Miller
 :description: How and why  GPSD tortures numbers.
 :email: <gem@rellim.com>
@@ -36,14 +36,23 @@ even %9f, if you have a survey grade GPS. Here is a rough idea of how
 degrees relate to distance, at the equator:
 
 |====
-|Degrees|DMS|Distance at equator
+|Degrees|Resolution|DMS|Distance at equator
 
-|0.0001|0° 00′ 0.36″|11.132 m
-|0.000001|0° 00′ 0.0036″|11.132 cm
-|0.00000001|0° 00′ 0.000036″|1.1132 mm
+|0.0001|1e-4|0° 00′ 0.36″|11.132 m
+|0.000001|1e-6|0° 00′ 0.0036″|11.132 cm
+|0.0000001|1e-7|0° 00′ 0.00036″|11.132 mm
+|0.00000001|1e-8|0° 00′ 0.000036″|1.1132 mm
+|0.000000001|1e-9|0° 00′ 0.0000036″|0.1113 mm
 |====
 Source: <<DD>>
 
+u-blox firmware since at least protocol version 4 (Antaris 4)
+has reported latitude and longitude to 0.0000001 (1e-7) with the
+UBX-NAV-POSLLH message. At that time, 1e-7 was wildly optimistic.
+
+Starting with protocol version 20, those u-blox with High Precision
+firmware supports the UBX-NAV-HPPOSLLH message. That message reports to
+0.00000000001 (1e-9) precision, about 0.1 mm.
 
 Python floats are very similar to C doubles, plus some annoying bugs
 related to <<NaN>>.

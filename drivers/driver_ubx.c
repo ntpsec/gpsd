@@ -1608,6 +1608,9 @@ ubx_msg_log_retrievestring(struct gps_device_t *session,
 
 /*
  * UBX-NAV-HPPOSECEF - High Precision Position Solution in ECEF
+ *
+ * Present in u-blox 8 and above, protVwer 20.00 and up.
+ * Only with High Precision firmware.
  */
 static gps_mask_t
 ubx_msg_nav_hpposecef(struct gps_device_t *session, unsigned char *buf,
@@ -1650,6 +1653,9 @@ ubx_msg_nav_hpposecef(struct gps_device_t *session, unsigned char *buf,
  * UBX-NAV-HPPOSLLH, Class 1, ID x14
  *
  * No mode, so limited usefulness.
+ *
+ * Present in u-blox 8 and above, protVwer 20.00 and up.
+ * Only with High Precision firmware.
  */
 static gps_mask_t
 ubx_msg_nav_hpposllh(struct gps_device_t *session, unsigned char *buf,
