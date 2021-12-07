@@ -1976,7 +1976,7 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
 
     case 1014:
         str_appendf(buf, buflen,
-                    "\"netid\":%u,\"subnetid\":%u,\"statcount\":%u"
+                    "\"netid\":%u,\"subnetid\":%u,\"statcount\":%u,"
                     "\"master\":%u,\"aux\":%u,\"lat\":%f,\"lon\":%f,"
                     "\"alt\":%f,",
                     rtcm->rtcmtypes.rtcm3_1014.network_id,
