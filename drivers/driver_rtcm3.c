@@ -1467,6 +1467,79 @@ void rtcm3_unpack(const struct gps_context_t *context,
         }
         break;
 
+    // Message Types 4001 — 4060 Are Reserved
+
+    case 4062:
+        /* RTCM 3.3
+         * Geely Proprietary
+         */
+        unknown_name = "Geely Proprietary";
+        break;
+
+    case 4063:
+        /* RTCM 3.3
+         * CHC Navigation (CHCNAV) Proprietary
+         */
+        unknown_name = "CHC Navigation (CHCNAV) Proprietary";
+        break;
+
+    case 4064:
+        /* RTCM 3.3
+         * NTLab Proprietary
+         */
+        unknown_name = "NTLab Proprietary";
+        break;
+
+    case 4065:
+        /* RTCM 3.3
+         * Allystar Technology (Shenzhen) Co. Ltd. Proprietary
+         */
+        unknown_name = "Allystar Technology (Shenzhen) Co. Ltd. Proprietary";
+        break;
+
+    case 4066:
+        /* RTCM 3.3
+         * Lantmateriet Proprietary
+         */
+        unknown_name = "Lantmateriet Proprietary";
+        break;
+
+    case 4067:
+        /* RTCM 3.x
+         * China Transport telecommunications & Information Center Proprietary
+         */
+        unknown_name = "China Transport telecommunications & Information "
+                       "Center Proprietary";
+        break;
+
+    case 4068:
+        /* RTCM 3.3
+         * Qianxun Location Networks Co. Ltd Proprietary
+         */
+        unknown_name = "Qianxun Location Networks Co. Ltd Proprietary";
+        break;
+
+    case 4069:
+        /* RTCM 3.3
+         * VERIPOS Ltd Proprietary
+         */
+        unknown_name = "VERIPOS Ltd Proprietary";
+        break;
+
+    case 4070:
+        /* RTCM 3.3
+         * Wuhan MengXin Technology
+         */
+        unknown_name = "Wuhan MengXin Technology Proprietary";
+        break;
+
+    case 4071:
+        /* RTCM 3.3
+         * Wuhan Navigation and LBS
+         */
+        unknown_name = "Wuhan Navigation and LBS Proprietary";
+        break;
+
     case 4072:
         /* RTCM 3.x
          * u-blox Proprietary
