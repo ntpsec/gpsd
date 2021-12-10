@@ -202,8 +202,11 @@ static void display_nav_sol(unsigned char *buf, size_t data_len)
     unsigned char navmode;
     struct gps_data_t g;
 
-    if (data_len != 52)
+    if (52 != data_len) {
         return;
+    }
+    // pacify coverity
+    memset(&g, 0, sizeof(g));
 
     navmode = (unsigned char)getub(buf, 10);
     flags = (unsigned int)getub(buf, 11);
@@ -239,6 +242,7 @@ static void display_nav_sol(unsigned char *buf, size_t data_len)
     (void)mvwaddch(navsolwin, 4, 23, ACS_DEGREE);
     (void)mvwaddch(navsolwin, 4, 38, ACS_DEGREE);
     (void)wmove(navsolwin, 5, 11);
+    // coverity says g.fix.track never set.
     (void)wprintw(navsolwin, "%6.2fm/s %5.1fo %6.2fm/s",
                   g.fix.speed, g.fix.track, g.fix.climb);
     (void)mvwaddch(navsolwin, 5, 26, ACS_DEGREE);
