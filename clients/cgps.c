@@ -911,7 +911,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
      * sounded interesting. ;^) */
 
     if (show_dops) {
-        char *ep_str;
+        const char *ep_str;
         char *dop_str;
         static time_t last_time;
 
@@ -998,11 +998,15 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
         row++;
 
         // Fill in the grid square (esr thought *this* one was interesting).
-        // maidenhead checks for invalid lat/lon
+        // maidenhead checks for invalid lat/lon, but not for 2D/3D mode
+        if (MODE_2D <= gpsdata->fix.mode) {
+            ep_str = maidenhead(gpsdata->fix.latitude,
+                                gpsdata->fix.longitude);
+        } else {
+            ep_str = "n/a";
+        }
         (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET,
-                        "Grid Square             %-18s",
-                        maidenhead(gpsdata->fix.latitude,
-                                   gpsdata->fix.longitude));
+                        "Grid Square             %-18s", ep_str);
     }
     // extra large screen, show ECEF
     if (show_ecefs) {
