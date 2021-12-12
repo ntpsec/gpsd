@@ -553,7 +553,7 @@ static void pseudonmea_report(gps_mask_t changed, struct gps_device_t *device)
             (void)fputs(buf, stdout);
         }
 
-        if (0 != (changed & SATELLITE_SET)) {
+        if (0 != (changed & (SATELLITE_SET|USED_IS))) {
             nmea_sky_dump(device, buf, sizeof(buf));
             (void)fputs(buf, stdout);
         }
