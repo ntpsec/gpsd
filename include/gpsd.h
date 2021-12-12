@@ -99,6 +99,7 @@ extern "C" {
  *      remove shm_clock and shm_pps from device_t
  *      add pkt_time to lexer_t
  *      add netlib_connectsock1()
+ *      add nmea.gsx_more to gps_device_t
  */
 
 #define JSON_DATE_MAX   24      /* ISO8601 timestamp with 2 decimal places */
@@ -636,6 +637,7 @@ struct gps_device_t {
         // bit map into nmea_phrase[], +1 to shut up coverity
         bool cycle_enders[NMEA_NUM + 1];
         bool cycle_continue;
+        bool gsx_more;         // more GSV or GSA to come.
     } nmea;
     /*
      * The rest of this structure is driver-specific private storage.

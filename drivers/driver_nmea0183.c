@@ -397,6 +397,54 @@ static gps_mask_t processACCURACY(int c UNUSED, char *field[],
     return mask;
 }
 
+// BWC - Bearing and Distance to Waypoint - Great Circle
+static gps_mask_t processBWC(int count, char *field[],
+                             struct gps_device_t *session)
+{
+    /*
+     * GPBWC,220516,5130.02,N,00046.34,W,213.8,T,218.0,M,0004.6,N,EGLM*11
+     *
+     * 1. UTC Time, hh is hours, mm is minutes, ss.ss is seconds
+     * 2. Waypoint Latitude
+     * 3. N = North, S = South
+     * 4. Waypoint Longitude
+     * 5. E = East, W = West
+     * 6. Bearing, degrees True
+     * 7. T = True
+     * 8. Bearing, degrees Magnetic
+     * 9. M = Magnetic
+     * 10. Distance, Nautical Miles
+     * 11. N = Nautical Miles
+     * 12. Waypoint ID
+     * 13. FAA mode indicator (NMEA 2.3 and later, optional)
+     * 14. Checksum
+     *
+     * Parse this just to get the time, to help the cycle ender
+     */
+    gps_mask_t mask = ONLINE_SET;
+
+    if ('\0' != field[1][0]) {
+        if (0 == merge_hhmmss(field[1], session)) {
+            if (0 == session->nmea.date.tm_year) {
+                GPSD_LOG(LOG_WARN, &session->context->errout,
+                         "NMEA0183: can't use BWC time until after ZDA or RMC"
+                         " has supplied a year.\n");
+            } else {
+                mask = TIME_SET;
+            }
+        }
+    }
+    if (12 <= count) {
+        // NMEA 2.3 and later
+        session->newdata.status = faa_mode(field[12][0]);
+    }
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: BWC: hhmmss=%s faa mode %d\n",
+             field[1], session->newdata.status);
+    return mask;
+}
+
 /* process xxVTG
  *     $GPVTG,054.7,T,034.4,M,005.5,N,010.2,K
  *     $GPVTG,054.7,T,034.4,M,005.5,N,010.2,K,A
@@ -650,7 +698,7 @@ static gps_mask_t processRMC(int count, char *field[],
     return mask;
 }
 
-/* Geographic position - Latitude, Longitude */
+// Geographic position - Latitude, Longitude
 static gps_mask_t processGLL(int count, char *field[],
                              struct gps_device_t *session)
 {
@@ -2078,8 +2126,10 @@ static gps_mask_t processGSV(int count, char *field[],
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "NMEA0183: xxGSV: Partial satellite data (%d of %d).\n",
                  session->nmea.part, session->nmea.await);
+        session->nmea.gsx_more = true;
         return ONLINE_SET;
     }
+    session->nmea.gsx_more = false;
     /*
      * This sanity check catches an odd behavior of SiRFstarII receivers.
      * When they can't see any satellites at all (like, inside a
@@ -2088,9 +2138,11 @@ static gps_mask_t processGSV(int count, char *field[],
      * elevations).  This behavior was observed under SiRF firmware
      * revision 231.000.000_A2.
      */
-    for (n = 0; n < session->gpsdata.satellites_visible; n++)
-        if (session->gpsdata.skyview[n].azimuth != 0)
+    for (n = 0; n < session->gpsdata.satellites_visible; n++) {
+        if (0 != session->gpsdata.skyview[n].azimuth) {
             goto sane;
+        }
+    }
     GPSD_LOG(LOG_WARN, &session->context->errout,
              "NMEA0183: xxGSV: Satellite data no good (%d of %d).\n",
              session->nmea.part, session->nmea.await);
@@ -3269,10 +3321,10 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
         mask |= SATELLITE_SET | USED_IS;
 
     } else if (0 == strcmp("T", field[3])) { /* Assume OxTS PASHR */
-        /* FIXME: decode OxTS $PASHDR, time is wrong, breaks cycle order */
+        // FIXME: decode OxTS $PASHDR, time is wrong, breaks cycle order
         if (0 == merge_hhmmss(field[1], session)) {
-            register_fractional_time(field[0], field[1], session);
-            /* mask |= TIME_SET; confuses cycle order */
+            // register_fractional_time(field[0], field[1], session);
+            // mask |= TIME_SET; confuses cycle order
         }
         // Assume true heading
         session->gpsdata.attitude.heading = safe_atof(field[2]);
@@ -3660,8 +3712,8 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
     static struct
     {
         char *name;
-        int nf;                 /* minimum number of fields required to parse */
-        bool cycle_continue;    /* cycle continuer? */
+        int nf;                 // minimum number of fields required to parse
+        bool cycle_continue;    // cycle continuer?
         nmea_decoder decoder;
     } nmea_phrase[NMEA_NUM] = {
         {"PGLOR", 2,  false, processPGLOR},  // Android something or other
@@ -3692,34 +3744,34 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
              * 4. The mode is changed back to NMEA, resulting in an
              *    infinite loop.
              */
-        {"AAM", 0,  false, NULL},    /* ignore Waypoint Arrival Alarm  */
-        {"ACCURACY", 1,  true,  processACCURACY},
+        {"AAM", 0,  false, NULL},    // ignore Waypoint Arrival Alarm
+        {"ACCURACY", 1,  true, processACCURACY},
         {"ALM", 0,  false, NULL},    // ignore GPS Almanac Data
-        {"APB", 0,  false, NULL},    /* ignore Autopilot Sentence B  */
-        {"BOD", 0,  false, NULL},    /* ignore Bearing Origin to Destination  */
-        /* ignore Bearing & Distance to Waypoint, Great Circle*/
-        {"BWC", 0,  false, NULL},
-        {"DBT", 7,  true,  processDBT},
+        {"APB", 0,  false, NULL},    // ignore Autopilot Sentence B
+        {"BOD", 0,  false, NULL},    // ignore Bearing Origin to Destination
+        // Bearing & Distance to Waypoint, Great Circle
+        {"BWC", 12, false, processBWC},
+        {"DBT", 7,  false, processDBT},
         {"DPT", 0,  false, NULL},       // ignore depth
         {"DTM", 2,  false, processDTM}, // datum
         {"GBS", 7,  false, processGBS},
         {"GGA", 13, false, processGGA},
         {"GLC", 0,  false, NULL},       // ignore Geographic Position, LoranC
-        {"GLL", 7,  false, processGLL},
+        {"GLL", 7,  true, processGLL},
         {"GNS", 13, false, processGNS},
         {"GRS", 0,  false, NULL},       // ignore GNSS Range Residuals
         {"GSA", 18, false, processGSA},
         {"GST", 8,  false, processGST},
         {"GSV", 0,  false, processGSV},
-        /* ignore Heading, Deviation and Variation */
+        // ignore Heading, Deviation and Variation
         {"HDG", 0,  false, processHDG},
         {"HDT", 1,  false, processHDT},
-        {"HWBIAS", 0,  false, NULL},       // Unknown HuaWei sentence
-        {"MLA", 0,  false, NULL},       // ignore GLONASS Almana Data
-        {"MSS", 0,  false, NULL},       /* ignore beacon receiver status */
-        {"MTW", 0,  false, NULL},       /* ignore Water Temperature */
-        {"MWD", 0,  false, processMWD},       // Wind Direction and Speed
-        {"MWV", 0,  false, processMWV},       // Wind Speed and Angle
+        {"HWBIAS", 0, false, NULL},       // Unknown HuaWei sentence
+        {"MLA", 0,  false, NULL},         // ignore GLONASS Almana Data
+        {"MSS", 0,  false, NULL},         // ignore beacon receiver status
+        {"MTW", 0,  false, NULL},         // ignore Water Temperature
+        {"MWD", 0,  false, processMWD},   // Wind Direction and Speed
+        {"MWV", 0,  false, processMWV},   // Wind Speed and Angle
 #ifdef OCEANSERVER_ENABLE
         {"OHPR", 18, false, processOHPR},
 #endif /* OCEANSERVER_ENABLE */
@@ -3732,9 +3784,9 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PMGNST", 8, false, processPMGNST},  // Magellan Status
         {"PMTK", 3,  false, processMTK3301},
         // for some reason the parser no longer triggering on leading chars
-        {"PMTK001", 3,  false, processMTK3301},
-        {"PMTK424", 3,  false, processMTK3301},
-        {"PMTK705", 3,  false, processMTK3301},
+        {"PMTK001", 3, false, processMTK3301},
+        {"PMTK424", 3, false, processMTK3301},
+        {"PMTK705", 3, false, processMTK3301},
         {"PMTKCHN", 0, false, NULL},          // MediaTek Channel Status
         {"PRHS ", 2,  false, processPRHS},  // smart watch sensors, Yes: space!
         {"PRWIZCH", 0, false, NULL},          // Rockwell Channel Status
@@ -3754,20 +3806,20 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"ROT", 0,  false, NULL},       // ignore Rate of Turn
         {"RPM", 0,  false, NULL},       // ignore Revolutions
         {"RSA", 0,  false, NULL},       // ignore Rudder Sensor Angle
-        {"RTE", 0,  false, NULL},       /* ignore Routes */
-        {"STI", 2, false, processSTI},  // $STI  Skytraq
+        {"RTE", 0,  false, NULL},        // ignore Routes
+        {"STI", 2,  false, processSTI}, // $STI  Skytraq
         {"THS", 0,  false, NULL},       // True Heading and Status (u-blox 8)
         {"TXT", 5,  false, processTXT},
         {"VBW", 0,  false, NULL},       // ignore Dual Ground/Water Speed
         {"VDO", 0,  false, NULL},       // ignore Own Vessel's Information
         {"VDR", 0,  false, NULL},       // ignore Set and Drift
-        {"VHW", 0,  false, NULL},       /* ignore Water Speed and Heading */
-        {"VLW", 0,  false, NULL},       /* ignore Dual ground/water distance */
+        {"VHW", 0,  false, NULL},       // ignore Water Speed and Heading
+        {"VLW", 0,  false, NULL},       // ignore Dual ground/water distance
         {"VTG", 5,  false, processVTG},
-        {"XDR", 0,  false, NULL},       /* ignore $HCXDR, IMU? */
-        {"XTE", 0,  false, NULL},       /* ignore Cross-Track Error */
+        {"XDR", 0,  false, NULL},       // ignore $HCXDR, IMU?
+        {"XTE", 0,  false, NULL},       // ignore Cross-Track Error
         {"ZDA", 4,  false, processZDA},
-        {NULL, 0,  false, NULL},        // no more
+        {NULL,  0,  false, NULL},        // no more
     };
 
     int count;
@@ -3813,11 +3865,11 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
     *p = '\0';
     e = p;
 
-    /* split sentence copy on commas, filling the field array */
+    // split sentence copy on commas, filling the field array
     count = 0;
     t = p;                      /* end of sentence */
     p = (char *)session->nmea.fieldcopy + 1; /* beginning of tag, 'G' not '$' */
-    /* while there is a search string and we haven't run off the buffer... */
+    // while there is a search string and we haven't run off the buffer...
     while ((p != NULL) && (p <= t)) {
         session->nmea.field[count] = p; /* we have a field. record it */
         if ((p = strchr(p, ',')) != NULL) {  /* search for the next delimiter */
@@ -3827,13 +3879,15 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         }
     }
 
-    /* point remaining fields at empty string, just in case */
+    // point remaining fields at empty string, just in case
     for (i = (unsigned int)count; i < NMEA_MAX_FLD; i++) {
         session->nmea.field[i] = e;
     }
 
-    /* sentences handlers will tell us when they have fractional time */
+    // sentences handlers will tell us when they have fractional time
     session->nmea.latch_frac_time = false;
+    // GSA and GSV will set this if more in that series to come.
+    session->nmea.gsx_more = false;
 
 #ifdef __UNUSED
     // debug
@@ -3841,7 +3895,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
              "NMEA0183: got %s\n", session->nmea.field[0]);
 #endif // __UNUSED
 
-    /* dispatch on field zero, the sentence tag */
+    // dispatch on field zero, the sentence tag
     for (i = 0; i < NMEA_NUM; ++i) {
         char *s = session->nmea.field[0];
         if (NULL == nmea_phrase[i].name) {
@@ -3851,12 +3905,12 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
                      session->nmea.field[0]);
             break;
         }
-        if (strlen(nmea_phrase[i].name) == 3
-            && !skytraq_sti) {
-                /* $STI is special */
-            s += 2;             /* skip talker ID */
+        if (3 == strlen(nmea_phrase[i].name) &&
+            !skytraq_sti) {
+            // $STI is special
+            s += 2;             // skip talker ID
         }
-        if (strcmp(nmea_phrase[i].name, s) == 0) {
+        if (0 == strcmp(nmea_phrase[i].name, s)) {
             if (NULL == nmea_phrase[i].decoder) {
                 /* no decoder for this sentence */
                 mask = ONLINE_SET;
@@ -3875,8 +3929,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
             }
             mask = (nmea_phrase[i].decoder)(count, session->nmea.field,
                                             session);
-            if (nmea_phrase[i].cycle_continue)
-                session->nmea.cycle_continue = true;
+            session->nmea.cycle_continue = nmea_phrase[i].cycle_continue;
             /*
              * Must force this to be nz, as we're going to rely on a zero
              * value to mean "no previous tag" later.
@@ -3944,12 +3997,15 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
              session->nmea.latch_frac_time,
              session->nmea.cycle_continue);
     lasttag = session->nmea.lasttag;
-    if (session->nmea.latch_frac_time) {
+    if (session->nmea.gsx_more) {
+        // more to come, so ignore for cycle ender
+        // appears that GSA and GSV never start a cycle.
+    } else if (session->nmea.latch_frac_time) {
         timespec_t ts_delta;
         TS_SUB(&ts_delta, &session->nmea.this_frac_time,
                           &session->nmea.last_frac_time);
         if (0.01 < fabs(TSTONS(&ts_delta))) {
-            /* time changed */
+            // time changed
             mask |= CLEAR_IS;
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "NMEA0183: %s starts a reporting cycle. lasttag %d\n",
@@ -3974,6 +4030,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
             }
         }
     } else {
+        // ignore multiple sequential, like GSV, GSA
         // extend the cycle to an un-timestamped sentence?
         if (true == session->nmea.cycle_enders[lasttag]) {
             GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -3993,16 +4050,18 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
     }
 
     // here's where we check for end-of-cycle
-    if ((session->nmea.latch_frac_time || session->nmea.cycle_continue)
-        && (true == session->nmea.cycle_enders[thistag])) {
+    if ((session->nmea.latch_frac_time ||
+         session->nmea.cycle_continue) &&
+        (true == session->nmea.cycle_enders[thistag]) &&
+        !session->nmea.gsx_more) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "NMEA0183: %s ends a reporting cycle.\n",
                  session->nmea.field[0]);
         mask |= REPORT_IS;
     }
-    if (session->nmea.latch_frac_time)
+    if (session->nmea.latch_frac_time) {
         session->nmea.lasttag = thistag;
-
+    }
 
     /* don't downgrade mode if holding previous fix */
     /* usually because of xxRMC which does not report 2D/3D */

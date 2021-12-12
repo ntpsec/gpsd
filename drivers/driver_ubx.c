@@ -200,9 +200,9 @@ static short ubx2_to_prn(int gnssId, int svId)
         }
         break;
     case 4:
-        /* IMES, 1-10 -> to 173-182, per u-blox 8/NMEA 4.0 extended */
+        // IMES, 1-10 -> to 173-182, per u-blox 8/NMEA 4.0 extended
         if (10 < svId) {
-            /* skip bad svId */
+            // skip bad svId
             return 0;
         }
         nmea_PRN = svId + 172;
@@ -226,7 +226,7 @@ static short ubx2_to_prn(int gnssId, int svId)
         nmea_PRN = svId + 64;
         break;
     default:
-        /* Huh? */
+        // Huh?
         return 0;
     }
 
@@ -1024,6 +1024,7 @@ ubx_msg_hnr_pvt(struct gps_device_t *session, unsigned char *buf,
     // 4 final bytes reserved
 
     mask |= HERR_SET | SPEEDERR_SET | VERR_SET;
+    // HNR-PVT interleaves with the normal cycle, so cycle end is a mess
     mask |= REPORT_IS;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -1055,9 +1056,9 @@ static gps_mask_t
 ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
                 size_t data_len)
 {
-    int n = 0;                           /* extended info counter */
-    int num_ext = (data_len - 40) / 30;  /* number of extensions */
-    char obuf[128];                      /* temp version string buffer */
+    int n = 0;                           // extended info counter
+    int num_ext = (data_len - 40) / 30;  // number of extensions
+    char obuf[128];                      // temp version string buffer
     char *cptr;
 
     if (40 > data_len) {
@@ -1066,7 +1067,7 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
         return 0;
     }
 
-    /* save SW and HW Version as subtype */
+    // save SW and HW Version as subtype
     (void)snprintf(obuf, sizeof(obuf),
                    "SW %.30s,HW %.10s",
                    (char *)buf,
@@ -1076,7 +1077,7 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
     (void)strlcpy(session->subtype, obuf, sizeof(session->subtype));
 
     obuf[0] = '\0';
-    /* extract Extended info strings. */
+    // extract Extended info strings.
     for (n = 0; n < num_ext; n++) {
         int start_of_str = 40 + (30 * n);
 
@@ -1875,7 +1876,8 @@ ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
     /* let gpsd_error_model() do the rest */
 
     mask |= HERR_SET | SPEEDERR_SET | VERR_SET;
-    mask |= REPORT_IS;
+    // if cycle ender worked, could get rid of this REPORT_IS.
+    // mask |= REPORT_IS;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
          "NAV-PVT: flags=%02x time=%s lat=%.2f lon=%.2f altHAE=%.2f "
@@ -1892,7 +1894,7 @@ ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
          session->newdata.status,
          session->gpsdata.satellites_used);
     if (92 <= data_len) {
-        /* u-blox 8 and 9 extended */
+        // u-blox 8 and 9 extended
         double magDec = NAN;
         double magAcc = NAN;
 #ifdef __UNUSED
@@ -1901,7 +1903,7 @@ ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
              * why is it different than earlier track? */
             session->newdata.track = (double)(getles32(buf, 84) * 1e-5);
         }
-#endif /* __UNUSED */
+#endif  // __UNUSED
         if (valid & UBX_NAV_PVT_VALID_MAG) {
             magDec = (double)(getles16(buf, 88) * 1e-2);
             magAcc = (double)(getleu16(buf, 90) * 1e-2);
@@ -2033,9 +2035,8 @@ ubx_msg_nav_relposned(struct gps_device_t *session, unsigned char *buf,
  * UBX-NAV-SOL has ECEF and VECEF, so no need for UBX-NAV-POSECEF and
  * UBX-NAV-VELECEF
  */
-static gps_mask_t
-ubx_msg_nav_sol(struct gps_device_t *session, unsigned char *buf,
-                size_t data_len)
+static gps_mask_t ubx_msg_nav_sol(struct gps_device_t *session,
+                                  unsigned char *buf, size_t data_len)
 {
     unsigned int flags;
     unsigned char navmode;
@@ -2115,6 +2116,8 @@ ubx_msg_nav_sol(struct gps_device_t *session, unsigned char *buf,
         session->newdata.status = STATUS_DGPS;
 
     mask |= MODE_SET | STATUS_SET;
+    // older u-blox, cycle ender may be iffy
+    // so err o nthe side of over-reporting TPV
     mask |= REPORT_IS;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -2432,9 +2435,8 @@ ubx_msg_nav_clock(struct gps_device_t *session, unsigned char *buf,
  *
  * Present in u-blox 7
  */
-static gps_mask_t
-ubx_msg_nav_dgps(struct gps_device_t *session, unsigned char *buf,
-                size_t data_len)
+static gps_mask_t ubx_msg_nav_dgps(struct gps_device_t *session,
+                                   unsigned char *buf, size_t data_len)
 {
     long age;
 
@@ -2546,7 +2548,7 @@ ubx_msg_nav_eoe(struct gps_device_t *session, unsigned char *buf,
     session->driver.ubx.iTOW = getleu32(buf, 0);
     GPSD_LOG(LOG_PROG, &session->context->errout, "NAV-EOE: iTOW=%lld\n",
              (long long)session->driver.ubx.iTOW);
-    /* nothing to report, but the iTOW for cycle ender is good */
+    // nothing to report, but the iTOW for cycle ender is good
     return 0;
 }
 
@@ -2715,11 +2717,11 @@ ubx_msg_nav_sat(struct gps_device_t *session, unsigned char *buf,
         nmea_PRN = ubx2_to_prn(gnssId, svId);
 
 #ifdef __UNUSED
-        /* debug */
+        // debug
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "NAV-SAT gnssid %d, svid %d nmea_PRN %d\n",
                  gnssId, svId, nmea_PRN);
-#endif /* __UNUSED */
+#endif  // __UNUSED
 
         session->gpsdata.skyview[st].gnssid = gnssId;
         session->gpsdata.skyview[st].svid = svId;
@@ -2802,15 +2804,15 @@ ubx_msg_nav_svinfo(struct gps_device_t *session, unsigned char *buf,
                               &session->gpsdata.skyview[st].svid);
 
 #ifdef __UNUSED
-        /* debug */
+        // debug
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "NAV-SVINFO ubx_prn %d gnssid %d, svid %d nmea_PRN %d\n",
                  ubx_PRN,
                  session->gpsdata.skyview[st].gnssid,
                  session->gpsdata.skyview[st].svid, nmea_PRN);
-#endif /* __UNUSED */
+#endif  // __UNUSED
         if (1 > nmea_PRN) {
-            /* skip bad PRN */
+            // skip bad PRN
             continue;
         }
         session->gpsdata.skyview[st].PRN = nmea_PRN;
@@ -2977,11 +2979,11 @@ ubx_msg_nav_sbas(struct gps_device_t *session, unsigned char *buf,
 
     nmea_PRN = ubx_to_prn(ubx_PRN, &gnssid, &svid);
 #ifdef __UNUSED
-    /* debug */
+    // debug
     GPSD_LOG(LOG_ERROR, &session->context->errout,
              "UBX-NAV-SBAS ubx_prn %d gnssid %d, svid %d nmea_PRN %d\n",
              ubx_PRN, gnssid, svid, nmea_PRN);
-#endif /* __UNUSED */
+#endif  // __UNUSED
     session->driver.ubx.sbas_in_use = nmea_PRN;
     return 0;
 }
@@ -3493,7 +3495,7 @@ ubx_msg_tim_tp(struct gps_device_t *session, unsigned char *buf,
                                    session->gpsdata.qErr_time);
              }
         }
-#endif /* __UNUSED */
+#endif  // __UNUSED
 
     }
 
@@ -3513,14 +3515,15 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
     unsigned short msgid;
     gps_mask_t mask = 0;
 
-    /* the packet at least contains a head long enough for an empty message */
-    if (len < UBX_PREFIX_LEN)
+    // the packet at least contains a head long enough for an empty message
+    if (UBX_PREFIX_LEN > len) {
         return 0;
+    }
 
     session->cycle_end_reliable = true;
-    session->driver.ubx.iTOW = -1;        /* set by decoder */
+    session->driver.ubx.iTOW = -1;        // set by decoder
 
-    /* extract message id and length */
+    // extract message id and length
     msgid = (buf[2] << 8) | buf[3];
     data_len = (size_t) getles16(buf, 4);
 
@@ -3996,11 +3999,11 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
 
 static gps_mask_t parse_input(struct gps_device_t *session)
 {
-    if (session->lexer.type == UBX_PACKET) {
+    if (UBX_PACKET == session->lexer.type) {
         return ubx_parse(session, session->lexer.outbuffer,
                          session->lexer.outbuflen);
-    } else
-        return generic_parse_input(session);
+    }
+    return generic_parse_input(session);
 }
 
 bool ubx_write(struct gps_device_t * session,

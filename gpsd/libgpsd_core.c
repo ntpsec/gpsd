@@ -1836,15 +1836,15 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
      * These will not overwrite any DOPs reported from the packet
      * we just got.
      */
-    if ((received & SATELLITE_SET) != 0
-        && session->gpsdata.satellites_visible > 0) {
+    if (0 != (received & SATELLITE_SET) &&
+        0 < session->gpsdata.satellites_visible) {
         session->gpsdata.set |= fill_dop(&session->context->errout,
                                          &session->gpsdata,
                                          &session->gpsdata.dop);
     }
 
     // copy/merge device data into staging buffers
-    if ((session->gpsdata.set & CLEAR_IS) != 0) {
+    if (0 != (session->gpsdata.set & CLEAR_IS)) {
         // CLEAR_IS should only be set on first sentence of cycle
         gps_clear_fix(&session->gpsdata.fix);
         gps_clear_att(&session->gpsdata.attitude);
@@ -1901,6 +1901,10 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
         }
     }
 
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "CORE: gpsd_poll(%s) %s\n",
+             session->gpsdata.dev.path,
+             gps_maskdump(session->gpsdata.set));
     return session->gpsdata.set;
 }
 

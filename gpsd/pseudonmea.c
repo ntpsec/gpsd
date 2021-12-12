@@ -428,7 +428,7 @@ static void gpsd_binary_time_dump(struct gps_device_t *session,
                                      char bufp[], size_t len)
 {
 
-    if (MODE_NO_FIX < session->newdata.mode &&
+    if (MODE_NO_FIX < session->gpsdata.fix.mode &&
         0 <= session->gpsdata.fix.time.tv_sec) {
         // shut up clang about uninitialized
         struct tm tm = {0};
@@ -582,22 +582,28 @@ static void gpsd_binary_ais_dump(struct gps_device_t *session,
 }
 #endif  // AIVDM_ENABLE
 
+/* nmea_tpv_dump()
+ * dump current fix as NMEA
+ *
+ * Return: void
+ */
 void nmea_tpv_dump(struct gps_device_t *session,
                    char bufp[], size_t len)
 {
     bufp[0] = '\0';
-    if (0 != (session->gpsdata.set & TIME_SET)) {
+    // maybe all we need is REPORT_IS?
+    if (0 != (session->gpsdata.set & (TIME_SET | REPORT_IS))) {
         gpsd_binary_time_dump(session, bufp + strlen(bufp),
                               len - strlen(bufp));
     }
-    if (0 != (session->gpsdata.set & (LATLON_SET | MODE_SET))) {
+    if (0 != (session->gpsdata.set & (LATLON_SET | MODE_SET | REPORT_IS))) {
         gpsd_position_fix_dump(session, bufp + strlen(bufp),
                                len - strlen(bufp));
         gpsd_transit_fix_dump(session, bufp + strlen(bufp),
                               len - strlen(bufp));
     }
     if (0 != (session->gpsdata.set &
-              (MODE_SET | DOP_SET | USED_IS | HERR_SET))) {
+              (MODE_SET | DOP_SET | USED_IS | HERR_SET | REPORT_IS))) {
         gpsd_binary_quality_dump(session, bufp + strlen(bufp),
                                  len - strlen(bufp));
     }

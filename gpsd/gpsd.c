@@ -1605,10 +1605,15 @@ static void raw_report(struct subscriber_t *sub, struct gps_device_t *device)
 }
 
 // report pseudo-NMEA in appropriate circumstances
+// FIXME: duplicated in clients/gpsdecode.c
 static void pseudonmea_report(struct subscriber_t *sub,
-                          gps_mask_t changed,
-                          struct gps_device_t *device)
+                              gps_mask_t changed,
+                              struct gps_device_t *device)
 {
+    GPSD_LOG(LOG_DATA, &context.errout,
+             "pseudonmea_report() %s mode %d\n",
+             gps_maskdump(changed),  device->gpsdata.fix.mode);
+
     if (GPS_PACKET_TYPE(device->lexer.type) &&
         !TEXTUAL_PACKET_TYPE(device->lexer.type)) {
         char buf[MAX_PACKET_LENGTH * 3 + 2];
@@ -1865,7 +1870,8 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
 
         // some listeners may be in watcher mode
         if (sub->policy.watcher) {
-            if (changed & DATA_IS) {
+            if ((changed & DATA_IS) ||
+                (changed & REPORT_IS)) {
                 GPSD_LOG(LOG_PROG, &context.errout,
                          "Changed mask: %s with %sreliable "
                          "cycle detection\n",
@@ -2740,13 +2746,20 @@ int main(int argc, char *argv[])
         // poll all active devices
         GPSD_LOG(LOG_RAW1, &context.errout, "poll active devices\n");
         for (device = devices; device < devices + MAX_DEVICES; device++) {
+            int multipoll_ret;
+
             if (!allocated_device(device) ||
                 0 >= device->gpsdata.gps_fd) {
                 continue;
             }
 
-            switch (gpsd_multipoll(FD_ISSET(device->gpsdata.gps_fd, &rfds),
-                                   device, all_reports, DEVICE_REAWAKE)) {
+            multipoll_ret = gpsd_multipoll(FD_ISSET(device->gpsdata.gps_fd,
+                                           &rfds), device, all_reports,
+                                           DEVICE_REAWAKE);
+            GPSD_LOG(LOG_DATA, &context.errout,
+                     "gpsd_multipoll(%d) = %d\n",
+                     device->gpsdata.gps_fd, multipoll_ret);
+            switch (multipoll_ret) {
             case DEVICE_READY:
                 FD_SET(device->gpsdata.gps_fd, &all_fds);
                 adjust_max_fd(device->gpsdata.gps_fd, true);
@@ -2765,7 +2778,9 @@ int main(int argc, char *argv[])
                  * of the connections.  Maybe this one, maybe another
                  * one.  Maybe a timeout.
                  *
-                 * So no data on this device, if it is a ttty, tells us
+                 * Roes not mean no data this cycle on this device.
+                 *
+                 * So no data on this device, if it is a tty, tells us
                  * nothing about if data not coming in on this device
                  * due to wrong speed.
                  *
@@ -2801,9 +2816,12 @@ int main(int argc, char *argv[])
                         }
                     }
                 }
-
                 break;
             default:
+                // huh?
+                GPSD_LOG(LOG_WARN, &context.errout,
+                         "gpsd_multipoll(%d) = unknown return value %d\n",
+                         device->gpsdata.gps_fd, multipoll_ret);
                 break;
             }
         }
