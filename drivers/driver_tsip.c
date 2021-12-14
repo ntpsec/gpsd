@@ -246,7 +246,7 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
     unsigned id, sub_id, length, mode;
     unsigned short week;
     uint32_t tow;             // time of week in milli seconds
-    unsigned u1, u2, u3;      // , u4, u5, u6, u7, u8, u9;
+    unsigned u1, u2, u3, u4, u5, u6, u7, u8;   // , u9;
     int s1;
     double d1, d2, d3;
     struct tm date = {0};
@@ -267,6 +267,31 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
     }
     // FIXME: check len/length and checksum
     switch ((id << 8) | sub_id) {
+    case 0x9000:
+        // Protocol Version
+        u1 = (unsigned)buf[6];            // NMEA Major version
+        u2 = (unsigned)buf[7];            // NMEA Minor version
+        u3 = (unsigned)buf[8];            // TSIP version
+        u4 = (unsigned)buf[9];            // Trimble NMEA version
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "TSIPv1: x9000: NMEA %u.%u TSIP %u TNMEA %u\n",
+                 u1, u2, u3, u4);
+        break;
+    case 0x9001:
+        // Receiver Version Information
+        u1 = (unsigned)buf[6];            // Major version
+        u2 = (unsigned)buf[7];            // Minor version
+        u3 = (unsigned)buf[8];            // Build number
+        u4 = (unsigned)buf[9];            // Build month
+        u5 = (unsigned)buf[10];           // Build day
+        u6 = getbeu16(buf, 11);           // Build year
+        u7 = getbeu16(buf, 13);           // Hardware ID
+        u8 = (unsigned)buf[15];           // Product Name length
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "TSIPv1: x9001: Version %u.%u Build %u %u/%u/%u hwid %u, "
+                 "%.*s\n",
+                 u1, u2, u3, u6, u5, u4, u7, u8, buf + u8);
+        break;
     case 0xa100:
         // Timing Information
         // the only message on by default
@@ -297,10 +322,10 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
         d2 = getbef32((char *)buf, 28);     // Bias
         d3 = getbef32((char *)buf, 32);     // Bias Rate
         GPSD_LOG(LOG_DATA, &session->context->errout,
-                 "tow %u week %u %02u:%02u:%02u %4u/%02u/%02u "
+                 "TSIPv1: xa000: tow %u week %u %02u:%02u:%02u %4u/%02u/%02u "
                  "base %u/%u flagsx%x UTC offset %d qErr %f Bias %f/%f\n",
                  tow, week, date.tm_hour, date.tm_min, date.tm_sec,
-                 date.tm_year, date.tm_mon, date.tm_mday,
+                 date.tm_year + 1900, date.tm_mon, date.tm_mday,
                  u1, u2, u3, s1, d1, d2, d3);
         if (3 == (u3 & 3)) {
             // flags say we have good time
@@ -309,12 +334,6 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
         break;
 
     // undecoded:
-    case 0x9000:
-        // Protocol Version
-        FALLTHROUGH
-    case 0x9001:
-        // Receiver Version Information
-        FALLTHROUGH
     case 0x9100:
         // Port COnfiguration
         FALLTHROUGH
