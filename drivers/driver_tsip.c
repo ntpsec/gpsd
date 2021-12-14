@@ -246,8 +246,10 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
     unsigned id, sub_id, length, mode;
     unsigned short week;
     uint32_t tow;             // time of week in milli seconds
-    unsigned u1, u2, u3, u4, u5, u6, u7, u8, u9;
+    unsigned u1, u2, u3;      // , u4, u5, u6, u7, u8, u9;
     int s1;
+    double d1, d2, d3;
+    struct tm date = {0};
 
     id = (unsigned)buf[1];
     sub_id = (unsigned)buf[2];
@@ -258,8 +260,9 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
              "TSIPv1: packet id x%02x subpacket id x%02x length %d/%u "
              "mode %u\n",
              id, sub_id, len, length, mode);
-    if (0 == mode) {
-        // don't decode queries, why would we even see one?
+    if (2 != mode) {
+        /* don't decode queries (mode 0) or set (mode 1)
+         *, why would we even see one? */
         return mask;
     }
     // FIXME: check len/length and checksum
@@ -267,26 +270,42 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
     case 0xa100:
         // Timing Information
         // the only message on by default
-        if (2 != mode) {
-            // unknown mode
-            return mask;
-        }
+
+        // length 32?
+
         tow = getbeu32(buf, 6);
         week = getbeu16(buf, 10);
-        u1 = (unsigned)buf[12];     // hours
-        u2 = (unsigned)buf[13];     // minutes
-        u3 = (unsigned)buf[14];     // seconds
-        u4 = (unsigned)buf[15];     // month
-        u5 = (unsigned)buf[16];     // day of month
-        u6 = getbeu16(buf, 17);     // year
-        u7 = (unsigned)buf[19];     // time base
-        u8 = (unsigned)buf[20];     // PPS base
-        u9 = (unsigned)buf[21];     // flags
-        s1 = getbes16(buf, 22);     // UTC Offset
+
+
+        date.tm_hour = (unsigned)buf[12];            // hours 0 - 23
+        date.tm_min = (unsigned)buf[13];             // minutes 0 -59
+        date.tm_sec = (unsigned)buf[14];             // seconds 0 - 60
+        date.tm_mon = (unsigned)buf[15];             // month 1 - 12
+        date.tm_mday = (unsigned)buf[16];            // day of month 1 - 31
+        date.tm_year = getbeu16(buf, 17) - 1900;     // year
+
+        session->newdata.time.tv_sec = mkgmtime(&date);
+        session->newdata.time.tv_nsec = 0;
+        // nano, can be negative! So normalize
+        TS_NORM(&session->newdata.time);
+
+        u1 = (unsigned)buf[19];             // time base
+        u2 = (unsigned)buf[20];             // PPS base
+        u3 = (unsigned)buf[21];             // flags
+        s1 = getbes16(buf, 22);             // UTC Offset
+        d1 = getbef32((char *)buf, 24);     // PPS Quantization Error
+        d2 = getbef32((char *)buf, 28);     // Bias
+        d3 = getbef32((char *)buf, 32);     // Bias Rate
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "tow %u week %u %02u:%02u:%02u %4u/%02u/%02u "
-                 "base %u/%u flagsx%x UTC offset %d\n",
-                 tow, week, u1, u2, u3, u6, u4, u5, u7, u8, u9, s1);
+                 "base %u/%u flagsx%x UTC offset %d qErr %f Bias %f/%f\n",
+                 tow, week, date.tm_hour, date.tm_min, date.tm_sec,
+                 date.tm_year, date.tm_mon, date.tm_mday,
+                 u1, u2, u3, s1, d1, d2, d3);
+        if (3 == (u3 & 3)) {
+            // flags say we have good time
+            mask |= TIME_SET | NTPTIME_IS;
+        }
         break;
 
     // undecoded:
@@ -625,11 +644,12 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 10;
             break;
         }
-        session->driver.tsip.last_41 = now;     /* keep timestamp for request */
-        ftow = getbef32((char *)buf, 0);        /* gpstime */
-        week = getbeu16(buf, 4);        /* week */
-        f2 = getbef32((char *)buf, 6);  /* leap seconds */
-        if (ftow >= 0.0 && f2 > 10.0) {
+        session->driver.tsip.last_41 = now;     // keep timestamp for request
+        ftow = getbef32((char *)buf, 0);        // gpstime
+        week = getbeu16(buf, 4);                // week
+        f2 = getbef32((char *)buf, 6);          // leap seconds
+        if (0.0 <= ftow &&
+            10.0 < f2) {
             session->context->leap_seconds = (int)round(f2);
             session->context->valid |= LEAP_SECOND_VALID;
             DTOTS(&ts_tow, ftow);
@@ -656,10 +676,10 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 16;
             break;
         }
-        session->newdata.ecef.x = getbef32((char *)buf, 0);  /* X */
-        session->newdata.ecef.y = getbef32((char *)buf, 4);  /* Y */
-        session->newdata.ecef.z = getbef32((char *)buf, 8);  /* Z */
-        ftow = getbef32((char *)buf, 12); /* time-of-fix */
+        session->newdata.ecef.x = getbef32((char *)buf, 0);  // X
+        session->newdata.ecef.y = getbef32((char *)buf, 4);  // Y
+        session->newdata.ecef.z = getbef32((char *)buf, 8);  // Z
+        ftow = getbef32((char *)buf, 12);                    // time-of-fix
         DTOTS(&ts_tow, ftow);
         session->newdata.time = gpsd_gpstime_resolv(session,
                                                     session->context->gps_week,
@@ -692,8 +712,8 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         session->newdata.ecef.vx = getbef32((char *)buf, 0);  // X velocity
         session->newdata.ecef.vy = getbef32((char *)buf, 4);  // Y velocity
         session->newdata.ecef.vz = getbef32((char *)buf, 8);  // Z velocity
-        f4 = getbef32((char *)buf, 12); /* bias rate */
-        ftow = getbef32((char *)buf, 16); /* time-of-fix */
+        f4 = getbef32((char *)buf, 12);                       // bias rate
+        ftow = getbef32((char *)buf, 16);                     // time-of-fix
         DTOTS(&ts_tow, ftow);
         session->newdata.time = gpsd_gpstime_resolv(session,
                                                     session->context->gps_week,
@@ -863,9 +883,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             session->newdata.altMSL = d1;
         }
 
-        //f1 = getbef32((char *)buf, 12);       clock bias */
-        ftow = getbef32((char *)buf, 16);       /* time-of-fix */
-        if ((session->context->valid & GPS_TIME_VALID)!=0) {
+        //f1 = getbef32((char *)buf, 12);       // clock bias
+        ftow = getbef32((char *)buf, 16);       // time-of-fix
+        if (0 != (session->context->valid & GPS_TIME_VALID)) {
             DTOTS(&ts_tow, ftow);
             session->newdata.time =
                 gpsd_gpstime_resolv(session, session->context->gps_week,
@@ -1095,11 +1115,11 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 20;
             break;
         }
-        f1 = getbef32((char *)buf, 0);  /* East velocity */
-        f2 = getbef32((char *)buf, 4);  /* North velocity */
-        f3 = getbef32((char *)buf, 8);  /* Up velocity */
-        f4 = getbef32((char *)buf, 12); /* clock bias rate */
-        ftow = getbef32((char *)buf, 16); /* time-of-fix */
+        f1 = getbef32((char *)buf, 0);     // East velocity
+        f2 = getbef32((char *)buf, 4);     // North velocity
+        f3 = getbef32((char *)buf, 8);     // Up velocity
+        f4 = getbef32((char *)buf, 12);    // clock bias rate
+        ftow = getbef32((char *)buf, 16);  // time-of-fix
         DTOTS(&ts_tow, ftow);
         session->newdata.time = gpsd_gpstime_resolv(session,
                                                     session->context->gps_week,
@@ -1124,16 +1144,16 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        if (len != 8) {
+        if (8 != len) {
             bad_len = 8;
             break;
         }
-        u1 = getub(buf, 0);                     /* Source of information */
-        u2 = getub(buf, 1);                     /* Mfg. diagnostic */
-        ftow = getbef32((char *)buf, 2);        /* gps_time */
-        week = getbeu16(buf, 6);                /* tsip.gps_week */
-        if (getub(buf, 0) == 0x01) {
-            /* good current fix */
+        u1 = getub(buf, 0);                     // Source of information
+        u2 = getub(buf, 1);                     // Mfg. diagnostic
+        ftow = getbef32((char *)buf, 2);        // gps_time
+        week = getbeu16(buf, 6);                // tsip.gps_week
+        if (0x01 == getub(buf, 0)) {
+            // good current fix
             DTOTS(&ts_tow, ftow);
             (void)gpsd_gpstime_resolv(session, week, ts_tow);
             mask |= TIME_SET | NTPTIME_IS;
@@ -1181,25 +1201,25 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   ICM SMT 360 (2018)
          *   RES SMT 360 (2018)
          */
-        if (len != 24) {
+        if (24 != len) {
             bad_len = 24;
             break;
         }
-        u1 = getub(buf, 0);     /* PRN 1-32 */
-        u2 = getub(buf, 1);     /* slot:chan */
-        u3 = getub(buf, 2);     /* Acquisition flag */
-        u4 = getub(buf, 3);     /* Ephemeris flag */
-        f1 = getbef32((char *)buf, 4);  /* Signal level */
-        ftow = getbef32((char *)buf, 8);  /* time of Last measurement */
-        d1 = getbef32((char *)buf, 12) * RAD_2_DEG;     /* Elevation */
-        d2 = getbef32((char *)buf, 16) * RAD_2_DEG;     /* Azimuth */
+        u1 = getub(buf, 0);                 // PRN 1-32
+        u2 = getub(buf, 1);                 // slot:chan
+        u3 = getub(buf, 2);                 // Acquisition flag
+        u4 = getub(buf, 3);                 // Ephemeris flag
+        f1 = getbef32((char *)buf, 4);      // Signal level
+        ftow = getbef32((char *)buf, 8);    // time of Last measurement
+        d1 = getbef32((char *)buf, 12) * RAD_2_DEG;     // Elevation
+        d2 = getbef32((char *)buf, 16) * RAD_2_DEG;     // Azimuth
 
         /* Channel number, bits 0-2 reserved/unused as of 1999.
          * Seems to always start series at zero and increment to last one.
          * No way to know how many there will be.
          * Save current channel to check for last 0x5c message
          */
-        i = (int)(u2 >> 3);     /* channel number */
+        i = (int)(u2 >> 3);     // channel number
         if (0 == i) {
             // start of new cycle, save last count
             session->gpsdata.satellites_visible =
