@@ -232,7 +232,36 @@ static bool tsip_detect(struct gps_device_t *session)
     return ret;
 }
 
-/* This is the meat of parsing all the TSIP packets */
+/* parse TSIP v1 packates.
+ * Currently only in RES720 devices, from 2020 onward.
+ * buf: raw data, with DLE stuffing removed
+ * len:  length of data in buf
+ *
+ * return: mask
+ */
+static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
+                                unsigned char *buf, int len)
+{
+    gps_mask_t mask = 0;
+    unsigned id, sub_id, length, mode;
+
+    id = (unsigned)buf[1];
+    sub_id = (unsigned)buf[2];
+    length = getbeu16(buf, 3);  // expected length
+    mode = (unsigned)buf[5];
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "TSIPv1: packet id x%02x subpacket id x%02x length %d/%u "
+             "mode %u\n",
+             id, sub_id, len, length, mode);
+    return mask;
+}
+
+
+/* This is the meat of parsing all the TSIP packets, except v1
+ *
+ * Return: mask
+ */
 static gps_mask_t tsip_parse_input(struct gps_device_t *session)
 {
     int i, j, len, count;
@@ -256,7 +285,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
     char ts_buf[TIMESPEC_LEN];
     int bad_len = 0;
 
-    if (session->lexer.type != TSIP_PACKET) {
+    if (TSIP_PACKET != session->lexer.type) {
         // this should not happen
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "TSIP: tsip_analyze packet type %d\n",
@@ -264,8 +293,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         return 0;
     }
 
-    if (session->lexer.outbuflen < 4 || session->lexer.outbuffer[0] != 0x10) {
-        /* packet too short, or does not start with DLE */
+    if (4 > session->lexer.outbuflen ||
+        0x10 != session->lexer.outbuffer[0]) {
+        // packet too short, or does not start with DLE
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "TSIP: tsip_analyze packet bad packet\n");
         return 0;
@@ -274,18 +304,21 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
     // get receive time, first
     (void)time(&now);
 
-    /* remove DLE stuffing and put data part of message in buf */
+    // remove DLE stuffing and put data part of message in buf
 
     memset(buf, 0, sizeof(buf));
-    buf2[len = 0] = '\0';
+    len = 0;
+    buf2[0] = '\0';
     for (i = 2; i < (int)session->lexer.outbuflen; i++) {
-        if (session->lexer.outbuffer[i] == 0x10)
-            if (session->lexer.outbuffer[++i] == 0x03)
+        if (0x10 == session->lexer.outbuffer[i] &&
+            0x03 == session->lexer.outbuffer[++i]) {
                 break;
+        }
 
-        // FIXME  expensive way to do hex
+        // FIXME: expensive way to do hex, that is only used when logging
         str_appendf(buf2, sizeof(buf2),
-                       "%02x", buf[len++] = session->lexer.outbuffer[i]);
+                    "%02x", session->lexer.outbuffer[i]);
+        buf[len++] = session->lexer.outbuffer[i];
     }
 
     id = (unsigned)session->lexer.outbuffer[1];
@@ -350,7 +383,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   Lassen SQ (2002)
          *   Lassen iQ (2005) pre fw 1.16
          */
-        u1 = (uint8_t) getub(buf, 0);
+        u1 = (uint8_t)getub(buf, 0);
         // decode by sub-code
         switch (u1) {
         case 0x81:
@@ -375,7 +408,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 if (u7 > (len - 10)) {
                     u7 = len - 10;
                 }
-                /* Product name in ASCII */
+                // Product name in ASCII
                 memcpy(buf2, &buf[10], u7);
                 buf2[u7] = '\0';
 
@@ -1538,7 +1571,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   RES SMT 360
          */
         u1 = (uint8_t) getub(buf, 0);
-        switch (u1) {           /* sub-code ID */
+        switch (u1) {           // sub-code ID
         case 0x15:
             /* Current Datum Values
              * Not Present in:
@@ -1551,12 +1584,12 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 bad_len = 43;
                 break;
             }
-            s1 = getbes16(buf, 1);      /* Datum Index */
-            d1 = getbed64((char *)buf, 3);      /* DX */
-            d2 = getbed64((char *)buf, 11);     /* DY */
-            d3 = getbed64((char *)buf, 19);     /* DZ */
-            d4 = getbed64((char *)buf, 27);     /* A-axis */
-            d5 = getbed64((char *)buf, 35);     /* Eccentricity Squared */
+            s1 = getbes16(buf, 1);              // Datum Index
+            d1 = getbed64((char *)buf, 3);      // DX
+            d2 = getbed64((char *)buf, 11);     // DY
+            d3 = getbed64((char *)buf, 19);     // DZ
+            d4 = getbed64((char *)buf, 27);     // A-axis
+            d5 = getbed64((char *)buf, 35);     // Eccentricity Squared
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "TSIP: Current Datum (0x8f-15) %d %f %f %f %f %f\n",
                      s1, d1, d2, d3, d4, d5);
@@ -1574,45 +1607,47 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   ICM SMT 360
              *   RES SMT 360
              */
-            if ((len != 56) && (len != 64)) {
+            if ((len != 56) &&
+                (len != 64)) {
                 bad_len = 56;
                 break;
             }
-            s1 = getbes16(buf, 2);      /* east velocity */
-            s2 = getbes16(buf, 4);      /* north velocity */
-            s3 = getbes16(buf, 6);      /* up velocity */
-            tow = getbeu32(buf, 8);     /* time in ms */
-            sl1 = getbes32(buf, 12);    /* latitude */
-            ul2 = getbeu32(buf, 16);    /* longitude */
+            s1 = getbes16(buf, 2);      // east velocity
+            s2 = getbes16(buf, 4);      // north velocity
+            s3 = getbes16(buf, 6);      // up velocity
+            tow = getbeu32(buf, 8);     // time in ms
+            sl1 = getbes32(buf, 12);    // latitude
+            ul2 = getbeu32(buf, 16);    // longitude
             // Lassen iQ, and copernicus (ii) doc says this is always altHAE
-            sl2 = getbes32(buf, 20);    /* altitude */
-            u1 = getub(buf, 24);        /* velocity scaling */
-            u2 = getub(buf, 27);        /* fix flags */
-            u3 = getub(buf, 28);        /* num svs */
-            u4 = getub(buf, 29);        /* utc offset */
-            week = getbeu16(buf, 30);   /* tsip.gps_week */
-            /* PRN/IODE data follows */
+            sl2 = getbes32(buf, 20);    // altitude
+            u1 = getub(buf, 24);        // velocity scaling
+            u2 = getub(buf, 27);        // fix flags
+            u3 = getub(buf, 28);        // num svs
+            u4 = getub(buf, 29);        // utc offset
+            week = getbeu16(buf, 30);   // tsip.gps_week
+            // PRN/IODE data follows
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "TSIP: LFwEI (0x8f-20) %d %d %d tow %u %d "
                      " %u %u %x %x %u leap %u week %d\n",
                      s1, s2, s3, tow, sl1, ul2, sl2, u1, u2, u3, u4, week);
 
-            if ((u1 & 0x01) != (uint8_t) 0)     /* check velocity scaling */
+            if ((u1 & 0x01) != (uint8_t) 0) {     // check velocity scaling
                 d5 = 0.02;
-            else
+            } else {
                 d5 = 0.005;
+            }
 
             // 0x8000 is over-range
             if ((int16_t)0x8000 != s2) {
-                d2 = (double)s2 * d5;   /* north velocity m/s */
+                d2 = (double)s2 * d5;   // north velocity m/s
                 session->newdata.NED.velN = d2;
             }
             if ((int16_t)0x8000 != s1) {
-                d1 = (double)s1 * d5;   /* east velocity m/s */
+                d1 = (double)s1 * d5;   // east velocity m/s
                 session->newdata.NED.velE = d1;
             }
             if ((int16_t)0x8000 != s3) {
-                d3 = (double)s3 * d5;       /* up velocity m/s */
+                d3 = (double)s3 * d5;       // up velocity m/s
                 session->newdata.NED.velD = -d3;
             }
 
@@ -1626,14 +1661,16 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
 
             session->newdata.status = STATUS_UNK;
             session->newdata.mode = MODE_NO_FIX;
-            if ((u2 & 0x01) == (uint8_t) 0) {         // Fix Available
+            if ((u2 & 0x01) == (uint8_t)0) {          // Fix Available
                 session->newdata.status = STATUS_GPS;
-                if ((u2 & 0x02) != (uint8_t) 0)       // DGPS Corrected
+                if ((u2 & 0x02) != (uint8_t)0) {      // DGPS Corrected
                     session->newdata.status = STATUS_DGPS;
-                if ((u2 & 0x04) != (uint8_t) 0)       // Fix Dimension
+                }
+                if ((u2 & 0x04) != (uint8_t)0) {      // Fix Dimension
                     session->newdata.mode = MODE_2D;
-                else
+                } else {
                     session->newdata.mode = MODE_3D;
+                }
             }
             session->gpsdata.satellites_used = (int)u3;
             if ((int)u4 > 10) {
@@ -1645,7 +1682,8 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                  * may see BUILD_LEAPSECONDS instead of leap_seconds
                  * from receiver.
                  */
-                if (17 < u4 && 1930 > week) {
+                if (17 < u4 &&
+                    1930 > week) {
                     // leap second 18 added in gps week 1930
                     week += 1024;
                     if (1930 > week) {
@@ -1683,23 +1721,23 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
              *   RES SMT 360
              */
             session->driver.tsip.req_compact = 0;
-            /* CSK sez "i don't trust this to not be oversized either." */
+            // CSK sez "i don't trust this to not be oversized either."
             if (29 > len) {
                 bad_len = 29;
                 break;
             }
-            tow = getbeu32(buf, 1);             /* time in ms */
-            week = getbeu16(buf, 5);            /* tsip.gps_week */
-            u1 = getub(buf, 7);                 /* utc offset */
-            u2 = getub(buf, 8);                 /* fix flags */
-            sl1 = getbes32(buf, 9);             /* latitude */
-            ul2 = getbeu32(buf, 13);            /* longitude */
+            tow = getbeu32(buf, 1);             // time in ms
+            week = getbeu16(buf, 5);            // tsip.gps_week
+            u1 = getub(buf, 7);                 // utc offset
+            u2 = getub(buf, 8);                 // fix flags
+            sl1 = getbes32(buf, 9);             // latitude
+            ul2 = getbeu32(buf, 13);            // longitude
             // Copernicus (ii) doc says this is always altHAE in mm
-            sl3 = getbes32(buf, 17);    /* altitude */
-            /* set xNED here */
-            s2 = getbes16(buf, 21);     /* east velocity */
-            s3 = getbes16(buf, 23);     /* north velocity */
-            s4 = getbes16(buf, 25);     /* up velocity */
+            sl3 = getbes32(buf, 17);    // altitude
+            // set xNED here
+            s2 = getbes16(buf, 21);     // east velocity
+            s3 = getbes16(buf, 23);     // north velocity
+            s4 = getbes16(buf, 25);     // up velocity
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "TSIP: CSP (0x8f-23): %u %d %u %u %d %u %d %d %d %d\n",
                      tow, week, u1, u2, sl1, ul2, sl3, s2, s3, s4);
@@ -1712,14 +1750,16 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 gpsd_gpstime_resolv(session, week, ts_tow);
             session->newdata.status = STATUS_UNK;
             session->newdata.mode = MODE_NO_FIX;
-            if ((u2 & 0x01) == (uint8_t) 0) {          // Fix Available
+            if ((u2 & 0x01) == (uint8_t)0) {          // Fix Available
                 session->newdata.status = STATUS_GPS;
-                if ((u2 & 0x02) != (uint8_t) 0)        // DGPS Corrected
+                if ((u2 & 0x02) != (uint8_t)0) {      // DGPS Corrected
                     session->newdata.status = STATUS_DGPS;
-                if ((u2 & 0x04) != (uint8_t) 0)        // Fix Dimension
+                }
+                if ((u2 & 0x04) != (uint8_t)0) {       // Fix Dimension
                     session->newdata.mode = MODE_2D;
-                else
+                } else {
                     session->newdata.mode = MODE_3D;
+                }
             }
             session->newdata.latitude = (double)sl1 * SEMI_2_DEG;
             session->newdata.longitude = (double)ul2 * SEMI_2_DEG;
@@ -1728,13 +1768,14 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             // Copernicus (ii) doc says this is always altHAE in mm
             session->newdata.altHAE = (double)sl3 * 1e-3;
             mask |= ALTITUDE_SET;
-            if ((u2 & 0x20) != (uint8_t) 0)     /* check velocity scaling */
+            if ((u2 & 0x20) != (uint8_t)0) {     // check velocity scaling
                 d5 = 0.02;
-            else
+            } else {
                 d5 = 0.005;
-            d1 = (double)s2 * d5;       /* east velocity m/s */
-            d2 = (double)s3 * d5;       /* north velocity m/s */
-            d3 = (double)s4 * d5;       /* up velocity m/s */
+            }
+            d1 = (double)s2 * d5;       // east velocity m/s
+            d2 = (double)s3 * d5;       // north velocity m/s
+            d3 = (double)s4 * d5;       // up velocity m/s
             session->newdata.NED.velN = d2;
             session->newdata.NED.velE = d1;
             session->newdata.NED.velD = -d3;
@@ -2536,6 +2577,74 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                      u1);
         }
         break;
+// Start of TSIP V1
+    case 0x90:
+        /* Version Information, TSIP v1
+         * Present in:
+         *   RES720
+         */
+         FALLTHROUGH
+    case 0x91:
+        /* Receiver Configuration, TSIP v1
+         * Present in:
+         *   RES720
+         */
+         FALLTHROUGH
+    case 0x92:
+        /* Resets, TSIP v1
+         * Present in:
+         *   RES720
+         */
+         FALLTHROUGH
+    case 0x93:
+        /* Production & Manufacturing, TSIP v1
+         * Present in:
+         *   RES720
+         */
+         FALLTHROUGH
+    case 0xa0:
+        /* Firmware Upload, TSIP v1
+         * Present in:
+         *   RES720
+         */
+         FALLTHROUGH
+    case 0xa1:
+        /* PVT, TSIP v1
+         * Present in:
+         *   RES720
+         */
+         FALLTHROUGH
+    case 0xa2:
+        /* GNSS Information, TSIP v1
+         * Present in:
+         *   RES720
+         */
+         FALLTHROUGH
+    case 0xa3:
+        /* Alamrs % Status, TSIP v1
+         * Present in:
+         *   RES720
+         */
+         FALLTHROUGH
+    case 0xa4:
+        /* AGNSS, TSIP v1
+         * Present in:
+         *   RES720
+         */
+         FALLTHROUGH
+    case 0xa5:
+        /* Miscellaneous, TSIP v1
+         * Present in:
+         *   RES720
+         */
+         FALLTHROUGH
+    case 0xd0:
+        /* Debug & Logging, TSIP v1
+         * Present in:
+         *   RES720
+         */
+         return tsip_parse_v1(session, buf, len);
+// end of TSIP V1
     case 0xbb:
         /* Navigation Configuration
          * Present in:
