@@ -248,10 +248,10 @@ $GPVID,2006-11-17T12:29:37Z,1.0,Haicom,H204S,SiRF-II,231.00.00*5C
 With the addition of a fourth sentence, $GPSGP, transition to the new
 protocol would be easy. It would have two forms:
 
-$GPSGP,1: directs the receiver to emit GPPVT and GPSVU only, if it is
+$GPGSP,1: directs the receiver to emit GPPVT and GPSVU only, if it is
 not already doing so.
 
-$GPSGP,0: directs the receiver to return to NMEA-classic mode, if it is
+$GPGSP,0: directs the receiver to return to NMEA-classic mode, if it is
 capable of doing so.
 
 Example:
