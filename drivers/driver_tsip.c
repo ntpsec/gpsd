@@ -244,6 +244,10 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
 {
     gps_mask_t mask = 0;
     unsigned id, sub_id, length, mode;
+    unsigned short week;
+    uint32_t tow;             // time of week in milli seconds
+    unsigned u1, u2, u3, u4, u5, u6, u7, u8, u9;
+    int s1;
 
     id = (unsigned)buf[1];
     sub_id = (unsigned)buf[2];
@@ -254,6 +258,112 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
              "TSIPv1: packet id x%02x subpacket id x%02x length %d/%u "
              "mode %u\n",
              id, sub_id, len, length, mode);
+    if (0 == mode) {
+        // don't decode queries, why would we even see one?
+        return mask;
+    }
+    // FIXME: check len/length and checksum
+    switch ((id << 8) | sub_id) {
+    case 0xa100:
+        // Timing Information
+        // the only message on by default
+        if (2 != mode) {
+            // unknown mode
+            return mask;
+        }
+        tow = getbeu32(buf, 6);
+        week = getbeu16(buf, 10);
+        u1 = (unsigned)buf[12];     // hours
+        u2 = (unsigned)buf[13];     // minutes
+        u3 = (unsigned)buf[14];     // seconds
+        u4 = (unsigned)buf[15];     // month
+        u5 = (unsigned)buf[16];     // day of month
+        u6 = getbeu16(buf, 17);     // year
+        u7 = (unsigned)buf[19];     // time base
+        u8 = (unsigned)buf[20];     // PPS base
+        u9 = (unsigned)buf[21];     // flags
+        s1 = getbes16(buf, 22);     // UTC Offset
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "tow %u week %u %02u:%02u:%02u %4u/%02u/%02u "
+                 "base %u/%u flagsx%x UTC offset %d\n",
+                 tow, week, u1, u2, u3, u6, u4, u5, u7, u8, u9, s1);
+        break;
+
+    // undecoded:
+    case 0x9000:
+        // Protocol Version
+        FALLTHROUGH
+    case 0x9001:
+        // Receiver Version Information
+        FALLTHROUGH
+    case 0x9100:
+        // Port COnfiguration
+        FALLTHROUGH
+    case 0x9101:
+        // GNSS Configuration
+        FALLTHROUGH
+    case 0x9102:
+        // NVS Configuration
+        FALLTHROUGH
+    case 0x9103:
+        // Timing Configuration
+        FALLTHROUGH
+    case 0x9104:
+        // Self-Survey Configuration
+        FALLTHROUGH
+    case 0x9105:
+        // Receiver Configuration
+        FALLTHROUGH
+    case 0x9200:
+        // Receiver Reset
+        FALLTHROUGH
+    case 0x9201:
+        // Reset Cause
+        FALLTHROUGH
+    case 0x9300:
+        // Production Information
+        FALLTHROUGH
+    case 0xa000:
+        // Firmware Upload
+        FALLTHROUGH
+    case 0xa102:
+        // Frequency Information
+        FALLTHROUGH
+    case 0xa111:
+        // Position Information
+        FALLTHROUGH
+    case 0xa200:
+        // Satellite Information
+        FALLTHROUGH
+    case 0xa300:
+        // System Alarms
+        FALLTHROUGH
+    case 0xa311:
+        // Receiver Status
+        FALLTHROUGH
+    case 0xa321:
+        // Error Codes
+        FALLTHROUGH
+    case 0xa400:
+        // AGNSS
+        FALLTHROUGH
+    case 0xd000:
+        // Debug Output type packet
+        FALLTHROUGH
+    case 0xd001:
+        // Trimble Debug config packet
+        FALLTHROUGH
+    case 0xd040:
+        // Trimble Debug Output packet
+        FALLTHROUGH
+    case 0xd041:
+        // Trimble Raw GNSS Debug Output packet
+        FALLTHROUGH
+    default:
+         // Huh?
+         break;
+    }
+
     return mask;
 }
 
@@ -2583,67 +2693,67 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          * Present in:
          *   RES720
          */
-         FALLTHROUGH
+        FALLTHROUGH
     case 0x91:
         /* Receiver Configuration, TSIP v1
          * Present in:
          *   RES720
          */
-         FALLTHROUGH
+        FALLTHROUGH
     case 0x92:
         /* Resets, TSIP v1
          * Present in:
          *   RES720
          */
-         FALLTHROUGH
+        FALLTHROUGH
     case 0x93:
         /* Production & Manufacturing, TSIP v1
          * Present in:
          *   RES720
          */
-         FALLTHROUGH
+        FALLTHROUGH
     case 0xa0:
         /* Firmware Upload, TSIP v1
          * Present in:
          *   RES720
          */
-         FALLTHROUGH
+        FALLTHROUGH
     case 0xa1:
         /* PVT, TSIP v1
          * Present in:
          *   RES720
          */
-         FALLTHROUGH
+        FALLTHROUGH
     case 0xa2:
         /* GNSS Information, TSIP v1
          * Present in:
          *   RES720
          */
-         FALLTHROUGH
+        FALLTHROUGH
     case 0xa3:
         /* Alamrs % Status, TSIP v1
          * Present in:
          *   RES720
          */
-         FALLTHROUGH
+        FALLTHROUGH
     case 0xa4:
         /* AGNSS, TSIP v1
          * Present in:
          *   RES720
          */
-         FALLTHROUGH
+        FALLTHROUGH
     case 0xa5:
         /* Miscellaneous, TSIP v1
          * Present in:
          *   RES720
          */
-         FALLTHROUGH
+        FALLTHROUGH
     case 0xd0:
         /* Debug & Logging, TSIP v1
          * Present in:
          *   RES720
          */
-         return tsip_parse_v1(session, buf, len);
+        return tsip_parse_v1(session, buf, len);
 // end of TSIP V1
     case 0xbb:
         /* Navigation Configuration
