@@ -351,6 +351,22 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
                  "PDOP %f hu %f vu %f\n",
                  u1, u2, d1, d2, d3, d4, d5, d6, d7, d8, d9);
         break;
+    case 0xa200:
+        // Satellite Information
+        u1 = (unsigned)buf[6];            // message number, 1 to X
+        // SV type, 1 to 26, mashup of constellation and signal
+        u2 = (unsigned)buf[7];
+        u3 = (unsigned)buf[8];            // PRN 1 to 99
+        d1 = getbef32((char *)buf, 9);    // azimuth, degrees
+        d2 = getbef32((char *)buf, 13);   // elevation, degrees
+        d3 = getbef32((char *)buf, 17);   // signal level, db-Hz
+        u4 = getbeu32(buf, 21);           // Flags
+        tow = getbeu32(buf, 25);          // TOW, seconds
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "TSIPv1: xa200: num %u type %u PRN %u az %f el %f snr %f "
+                 "flags x%0x4 tow %u",
+                 u1, u2, u3, d1, d2, d3, u4, tow);
+        break;
 
     // undecoded:
     case 0x9100:
@@ -385,9 +401,6 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
         FALLTHROUGH
     case 0xa102:
         // Frequency Information
-        FALLTHROUGH
-    case 0xa200:
-        // Satellite Information
         FALLTHROUGH
     case 0xa300:
         // System Alarms
