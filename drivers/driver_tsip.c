@@ -341,6 +341,49 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
                  "rate %u delay %f res x%04x\n",
                  u1, d1, d2, d3, u2, u3, d4, u4);
         break;
+    case 0x9102:
+        // NVS Configuration
+        if (8 > length) {
+            bad_len = true;
+            break;
+        }
+        u1 = (unsigned)buf[6];            // status
+        u2 = getbeu32(buf, 7);            // reserved
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "TSIPv1: x9102: status %u res x%04x\n",
+                 u1, u2);
+        break;
+    case 0x9103:
+        // Timing Configuration
+        if (19 > length) {
+            bad_len = true;
+            break;
+        }
+        u1 = (unsigned)buf[6];            // time basee
+        u2 = (unsigned)buf[7];            // PPS base
+        u3 = (unsigned)buf[8];            // PPS mask
+        u4 = getbeu16(buf, 9);            // reserved
+        u5 = getbeu16(buf, 13);           // PPS width
+        d1 = getbed64((char *)buf, 15);   // PPS offset, in seconds
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "TSIPv1: x9103: time base %u PPS base %u mask %u res x%04x "
+                 "width %u offset %f\n",
+                 u1, u2, u3, u4, u5, d1);
+        break;
+    case 0x9104:
+        // Self-Survey Configuration
+        if (11 > length) {
+            bad_len = true;
+            break;
+        }
+        u1 = (unsigned)buf[6];            // self-survey mask
+        u2 = getbeu32(buf, 7);            // self-survey length, # fixes
+        u3 = getbeu16(buf, 11);           // horz uncertainty, meters
+        u4 = getbeu16(buf, 13);           // vert uncertainty, meters
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "TSIPv1: x9104: mask %u length %u hhorz %u vert %u\n",
+                 u1, u2, u3, u4);
+        break;
     case 0xa100:
         // Timing Information
         // the only message on by default
@@ -351,7 +394,6 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
 
         tow = getbeu32(buf, 6);
         week = getbeu16(buf, 10);
-
 
         date.tm_hour = (unsigned)buf[12];            // hours 0 - 23
         date.tm_min = (unsigned)buf[13];             // minutes 0 -59
@@ -508,15 +550,6 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
         break;
 
     // undecoded:
-    case 0x9102:
-        // NVS Configuration
-        FALLTHROUGH
-    case 0x9103:
-        // Timing Configuration
-        FALLTHROUGH
-    case 0x9104:
-        // Self-Survey Configuration
-        FALLTHROUGH
     case 0x9105:
         // Receiver Configuration
         FALLTHROUGH
