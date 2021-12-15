@@ -1496,7 +1496,7 @@ if not cleaning and not helping and config.env['python']:
                                        'import sys',
                                        '"%d.%d" % sys.version_info[0:2]')
 
-        if sys.version_info <= (3, 6):
+        if tuple(map(int, sysver.split("."))) < (3, 6):
             config.env['aiogps'] = False
             announce("WARNING: Python%s too old (need 3.6): "
                      "gps/aiogps.py will not be installed" %
