@@ -248,7 +248,7 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
     uint32_t tow;             // time of week in milli seconds
     unsigned u1, u2, u3, u4, u5, u6, u7, u8;   // , u9;
     int s1;
-    double d1, d2, d3;
+    double d1, d2, d3, d4, d5, d6, d7, d8, d9;
     struct tm date = {0};
 
     id = (unsigned)buf[1];
@@ -333,6 +333,25 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
         }
         break;
 
+    case 0xa111:
+        // Position Information
+        u1 = (unsigned)buf[6];            // position mask
+        u2 = (unsigned)buf[7];            // fix type
+        d1 = getbed64((char *)buf, 8);    // latitude or X
+        d2 = getbed64((char *)buf, 16);   // longitude or Y
+        d3 = getbed64((char *)buf, 24);   // altitude or Z
+        d4 = getbef32((char *)buf, 32);   // velocity X or E
+        d5 = getbef32((char *)buf, 36);   // velocity Y or N
+        d6 = getbef32((char *)buf, 40);   // velocity Z or U
+        d7 = getbef32((char *)buf, 44);   // PDOP, surveyed or current
+        d8 = getbef32((char *)buf, 48);   // horz uncertainty
+        d9 = getbef32((char *)buf, 52);   // vert uncertainty
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "TSIPv1: xa001: mask %u fix %u Pos %f %f %f Vel %f %f %f "
+                 "PDOP %f hu %f vu %f\n",
+                 u1, u2, d1, d2, d3, d4, d5, d6, d7, d8, d9);
+        break;
+
     // undecoded:
     case 0x9100:
         // Port COnfiguration
@@ -366,9 +385,6 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
         FALLTHROUGH
     case 0xa102:
         // Frequency Information
-        FALLTHROUGH
-    case 0xa111:
-        // Position Information
         FALLTHROUGH
     case 0xa200:
         // Satellite Information
