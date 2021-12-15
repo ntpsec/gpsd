@@ -421,6 +421,40 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
                  "VDOP %f TDOP %f temp %f\n",
                  u1, u2, u3, d1, d2, d3, d4, d5);
         break;
+    case 0xa321:
+        // Error Codes
+        if (5 > length) {
+            bad_len = true;
+            break;
+        }
+        u1 = (unsigned)buf[6];            // reference packet id
+        u2 = (unsigned)buf[7];            // reference sub packet id
+        u3 = (unsigned)buf[8];            // error code
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TSIPv1: xa321: id %u sub_id %u error %u\n",
+                 u1, u2, u3);
+        break;
+    case 0xd000:
+        // Debug Output type packet
+        if (3 > length) {
+            bad_len = true;
+            break;
+        }
+        u1 = (unsigned)buf[6];            // debug output type
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TSIPv1: xd000: debug %u\n", u1);
+        break;
+    case 0xd001:
+        // Trimble Debug config packet
+        if (4 > length) {
+            bad_len = true;
+            break;
+        }
+        u1 = (unsigned)buf[6];            // debug type
+        u2 = (unsigned)buf[7];            // debug level
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TSIPv1: xd001: debug type %u level %u\n", u1, u2);
+        break;
 
     // undecoded:
     case 0x9100:
@@ -456,17 +490,8 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
     case 0xa102:
         // Frequency Information
         FALLTHROUGH
-    case 0xa321:
-        // Error Codes
-        FALLTHROUGH
     case 0xa400:
         // AGNSS
-        FALLTHROUGH
-    case 0xd000:
-        // Debug Output type packet
-        FALLTHROUGH
-    case 0xd001:
-        // Trimble Debug config packet
         FALLTHROUGH
     case 0xd040:
         // Trimble Debug Output packet
