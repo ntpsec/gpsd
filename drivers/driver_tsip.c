@@ -246,7 +246,7 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
     unsigned id, sub_id, length, mode;
     unsigned short week;
     uint32_t tow;             // time of week in milli seconds
-    unsigned u1, u2, u3, u4, u5, u6, u7, u8;   // , u9;
+    unsigned u1, u2, u3, u4, u5, u6, u7, u8, u9;
     int s1;
     double d1, d2, d3, d4, d5, d6, d7, d8, d9;
     struct tm date = {0};
@@ -301,10 +301,49 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
                  "%.*s\n",
                  u1, u2, u3, u6, u5, u4, u7, u8, buf + u8);
         break;
+    case 0x9100:
+        // Port Configuration
+        if (18 > length) {
+            bad_len = true;
+            break;
+        }
+        u1 = (unsigned)buf[6];            // port
+        u2 = (unsigned)buf[7];            // port type
+        u3 = (unsigned)buf[8];            // protocol
+        u4 = (unsigned)buf[9];            // baud rate
+        u5 = (unsigned)buf[10];           // data bits
+        u6 = (unsigned)buf[11];           // parity
+        u7 = (unsigned)buf[12];           // stop bits
+        u8 = getbeu32(buf, 13);           // reserved
+        u9 = getbeu32(buf, 17);           // reserved
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "TSIPv1: x9100: port %u type %u proto %u baud %u bits %u "
+                 "parity %u stop %u res x%04x %04x\n",
+                 u1, u2, u3, u4, u5, u6, u7, u8, u9);
+        break;
+    case 0x9101:
+        // GNSS Configuration
+        if (28 > length) {
+            bad_len = true;
+            break;
+        }
+        // constellation, 0 to 26, mashup of constellation and signal
+        u1 = getbeu32(buf, 6);            // constellation
+        d1 = getbef32((char *)buf, 10);   // elevation mask
+        d2 = getbef32((char *)buf, 14);   // signal mask
+        d3 = getbef32((char *)buf, 18);   // PDOP mask
+        u2 = (unsigned)buf[22];           // anti-jamming
+        u3 = (unsigned)buf[22];           // fix rate
+        d4 = getbef32((char *)buf, 24);   // Antenna CAble delay, seconds
+        u4 = getbeu32(buf, 28);           // reserved
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "TSIPv1: x9101: cons %u el %f signal %f PDOP %f jam %u "
+                 "rate %u delay %f res x%04x\n",
+                 u1, d1, d2, d3, u2, u3, d4, u4);
+        break;
     case 0xa100:
         // Timing Information
         // the only message on by default
-
         if (32 > length) {
             bad_len = true;
             break;
@@ -374,7 +413,7 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
             break;
         }
         u1 = (unsigned)buf[6];            // message number, 1 to X
-        // SV type, 1 to 26, mashup of constellation and signal
+        // SV type, 0 to 26, mashup of constellation and signal
         u2 = (unsigned)buf[7];
         u3 = (unsigned)buf[8];            // PRN 1 to 99
         d1 = getbef32((char *)buf, 9);    // azimuth, degrees
@@ -455,14 +494,20 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "TSIPv1: xd001: debug type %u level %u\n", u1, u2);
         break;
+    case 0xd040:
+        // Trimble Raw GNSS Debug Output packet
+        // length can be zero, contents undefined
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TSIPv1: xd040: raw GNSS data\n");
+        break;
+    case 0xd041:
+        // Trimble Raw GNSS Debug Output packet
+        // length can be zero, contents undefined
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TSIPv1: xd041: raw GNSS data\n");
+        break;
 
     // undecoded:
-    case 0x9100:
-        // Port Configuration
-        FALLTHROUGH
-    case 0x9101:
-        // GNSS Configuration
-        FALLTHROUGH
     case 0x9102:
         // NVS Configuration
         FALLTHROUGH
@@ -492,12 +537,6 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
         FALLTHROUGH
     case 0xa400:
         // AGNSS
-        FALLTHROUGH
-    case 0xd040:
-        // Trimble Debug Output packet
-        FALLTHROUGH
-    case 0xd041:
-        // Trimble Raw GNSS Debug Output packet
         FALLTHROUGH
     default:
          // Huh?
