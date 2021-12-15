@@ -250,6 +250,7 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
     int s1;
     double d1, d2, d3, d4, d5, d6, d7, d8, d9;
     struct tm date = {0};
+    bool bad_len = false;
 
     id = (unsigned)buf[1];
     sub_id = (unsigned)buf[2];
@@ -269,6 +270,10 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
     switch ((id << 8) | sub_id) {
     case 0x9000:
         // Protocol Version
+        if (2 > length) {
+            bad_len = true;
+            break;
+        }
         u1 = (unsigned)buf[6];            // NMEA Major version
         u2 = (unsigned)buf[7];            // NMEA Minor version
         u3 = (unsigned)buf[8];            // TSIP version
@@ -279,6 +284,10 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
         break;
     case 0x9001:
         // Receiver Version Information
+        if (11 > length) {
+            bad_len = true;
+            break;
+        }
         u1 = (unsigned)buf[6];            // Major version
         u2 = (unsigned)buf[7];            // Minor version
         u3 = (unsigned)buf[8];            // Build number
@@ -296,7 +305,10 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
         // Timing Information
         // the only message on by default
 
-        // length 32?
+        if (32 > length) {
+            bad_len = true;
+            break;
+        }
 
         tow = getbeu32(buf, 6);
         week = getbeu16(buf, 10);
@@ -335,6 +347,10 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
 
     case 0xa111:
         // Position Information
+        if (3 > length) {
+            bad_len = true;
+            break;
+        }
         u1 = (unsigned)buf[6];            // position mask
         u2 = (unsigned)buf[7];            // fix type
         d1 = getbed64((char *)buf, 8);    // latitude or X
@@ -353,6 +369,10 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
         break;
     case 0xa200:
         // Satellite Information
+        if (25 > length) {
+            bad_len = true;
+            break;
+        }
         u1 = (unsigned)buf[6];            // message number, 1 to X
         // SV type, 1 to 26, mashup of constellation and signal
         u2 = (unsigned)buf[7];
@@ -367,10 +387,44 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
                  "flags x%0x4 tow %u",
                  u1, u2, u3, d1, d2, d3, u4, tow);
         break;
+    case 0xa300:
+        // System Alarms
+        if (18 > length) {
+            bad_len = true;
+            break;
+        }
+        u1 = getbeu32(buf, 6);            // Minor Alarms
+        u2 = getbeu32(buf, 10);           // reserved
+        u3 = getbeu32(buf, 14);           // Major Alarms
+        u4 = getbeu32(buf, 18);           // reserved
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "TSIPv1: xa300: Minor x%0x4 res x%04x Major x%04x "
+                 "res x%04u\n",
+                 u1, u2, u3, u4);
+        break;
+    case 0xa311:
+        // Receiver Status
+        if (29 > length) {
+            bad_len = true;
+            break;
+        }
+        u1 = (unsigned)buf[6];            // receiver mode
+        u2 = (unsigned)buf[7];            // status
+        u3 = (unsigned)buf[8];            // self survey progress 0 - 100
+        d1 = getbef32((char *)buf, 9);    // PDOP
+        d2 = getbef32((char *)buf, 13);   // HDOP
+        d3 = getbef32((char *)buf, 17);   // VDOP
+        d4 = getbef32((char *)buf, 21);   // TDOP
+        d5 = getbef32((char *)buf, 25);   // Temperature, degrees C
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "TSIPv1: xa311: mode %u status %u survey %u PDOP %f HDOP %f "
+                 "VDOP %f TDOP %f temp %f\n",
+                 u1, u2, u3, d1, d2, d3, d4, d5);
+        break;
 
     // undecoded:
     case 0x9100:
-        // Port COnfiguration
+        // Port Configuration
         FALLTHROUGH
     case 0x9101:
         // GNSS Configuration
@@ -402,12 +456,6 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
     case 0xa102:
         // Frequency Information
         FALLTHROUGH
-    case 0xa300:
-        // System Alarms
-        FALLTHROUGH
-    case 0xa311:
-        // Receiver Status
-        FALLTHROUGH
     case 0xa321:
         // Error Codes
         FALLTHROUGH
@@ -429,6 +477,12 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
     default:
          // Huh?
          break;
+    }
+    if (bad_len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TSIPv1: id 0x%02x-%02x runt\n",
+                 id, sub_id);
+        mask = 0;
     }
 
     return mask;
