@@ -247,6 +247,7 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
     unsigned short week;
     uint32_t tow;             // time of week in milli seconds
     unsigned u1, u2, u3, u4, u5, u6, u7, u8, u9;
+    unsigned u10, u11, u12, u13, u14, u15;    // , u16, u17, u18, u19;
     int s1;
     double d1, d2, d3, d4, d5, d6, d7, d8, d9;
     struct tm date = {0};
@@ -383,6 +384,60 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "TSIPv1: x9104: mask %u length %u hhorz %u vert %u\n",
                  u1, u2, u3, u4);
+        break;
+    case 0x9105:
+        // Receiver Configuration
+        if (18 > length) {
+            bad_len = true;
+            break;
+        }
+        u1 = (unsigned)buf[6];           // port
+        u2 = getbeu32(buf, 7);           // type of output
+        u3 = getbeu32(buf, 11);          // reserved
+        u4 = getbeu32(buf, 15);          // reserved
+        u5 = getbeu32(buf, 19);          // reserved
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "TSIPv1: x9105: port %u type x%04x res x%04x x%04x x%04x\n",
+                 u1, u2, u3, u4, u5);
+        break;
+    case 0x9201:
+        // Reset Cause
+        if (3 > length) {
+            bad_len = true;
+            break;
+        }
+        u1 = (unsigned)buf[6];            // reset cause
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TSIPv1: x9201: cause %u\n", u1);
+        break;
+    case 0x9300:
+        // Production Information
+        if (78 > length) {
+            bad_len = true;
+            break;
+        }
+        u1 = (unsigned)buf[6];            // reserved
+        u2 = getbeu32(buf, 7);            // serial number
+        u3 = getbeu64(buf, 11);           // extended serial number
+        u4 = getbeu64(buf, 19);           // extended serial number
+        u5 = (unsigned)buf[27];           // build day
+        u6 = (unsigned)buf[28];           // build month
+        u7 = getbeu16(buf, 29);           // build year
+        u8 = (unsigned)buf[31];           // build hour
+        u9 = getbeu16(buf, 32);           // machine id
+        u10 = getbeu64(buf, 34);          // hardware ID string
+        u11 = getbeu64(buf, 42);          // hardware ID string
+        u12 = getbeu64(buf, 50);          // product ID string
+        u13 = getbeu64(buf, 58);          // product ID string
+        u14 = getbeu32(buf, 66);          // premium options
+        u15 = getbeu32(buf, 70);          // reserved
+        // ignore 77 Osc search range, and 78–81 Osc offset, always 0xff
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TSIPv1: x9300: res %u ser %u x%04x %04x Build %u/%u/%u %u "
+                 "machine %u hardware x%04x %04x product x%04x %04x "
+                 "options x%04x res x%04x\n",
+                 u1, u2, u3, u4, u7, u6, u5, u8, u9, u10,
+                 u11, u12, u13, u14, u15);
         break;
     case 0xa100:
         // Timing Information
@@ -550,17 +605,8 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
         break;
 
     // undecoded:
-    case 0x9105:
-        // Receiver Configuration
-        FALLTHROUGH
     case 0x9200:
-        // Receiver Reset
-        FALLTHROUGH
-    case 0x9201:
-        // Reset Cause
-        FALLTHROUGH
-    case 0x9300:
-        // Production Information
+        // Receiver Reset, send only
         FALLTHROUGH
     case 0xa000:
         // Firmware Upload
