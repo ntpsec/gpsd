@@ -492,13 +492,14 @@ static void windowsetup(void)
 
 static void update_imu(struct attitude_t *datap, int col)
 {
-    char scr[128];
     int row = 1;
     int col_width = 10;
 
     (void)mvwprintw(datawin, row++, col, "%-*s", col_width, datap->msg);
     // Print time/date.
     if (0 < datap->mtime.tv_sec) {
+        char scr[128];
+
         (void)timespec_to_iso8601(datap->mtime, scr, sizeof(scr));
         (void)mvwprintw(datawin, row, col, "%-*s", col_width, scr);
     }

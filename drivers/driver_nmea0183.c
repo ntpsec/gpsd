@@ -3411,12 +3411,12 @@ static gps_mask_t processMTK3301(int c UNUSED, char *field[],
 
     msg = atoi(&(session->nmea.field[0])[4]);
     switch (msg) {
-    case 001:                   /* ACK / NACK */
+    case 001:                   // ACK / NACK
         reason = atoi(field[2]);
-        if (atoi(field[1]) == -1)
+        if (-1 == atoi(field[1])) {
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "NMEA0183: MTK NACK: unknown sentence\n");
-        else if (reason < 3) {
+        } else if (3 > reason) {
             const char *mtk_reasons[] = {
                 "Invalid",
                 "Unsupported",
@@ -3426,12 +3426,12 @@ static gps_mask_t processMTK3301(int c UNUSED, char *field[],
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "NMEA0183: MTK NACK: %s, reason: %s\n",
                      field[1], mtk_reasons[reason]);
-        }
-        else
+        } else {
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "NMEA0183: MTK ACK: %s\n", field[1]);
+        }
         return ONLINE_SET;
-    case 424:                   /* PPS pulse width response */
+    case 424:                   // PPS pulse width response
         /*
          * Response will look something like: $PMTK424,0,0,1,0,69*12
          * The pulse width is in field 5 (69 in this example).  This
@@ -3905,7 +3905,8 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
                      session->nmea.field[0]);
             break;
         }
-        if (3 == strlen(nmea_phrase[i].name) &&
+        // strnlen() to shut up codacy
+        if (3 == strnlen(nmea_phrase[i].name, 4) &&
             !skytraq_sti) {
             // $STI is special
             s += 2;             // skip talker ID

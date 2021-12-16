@@ -825,8 +825,7 @@ static gps_mask_t sirf_msg_67_16(struct gps_device_t *session,
     uint8_t msg_info = 0;
     uint8_t num_of_sats = 0;
     unsigned int sat_num;
-    int st;                    /* index into skyview */
-    char ts_buf[TIMESPEC_LEN];
+    int st;                    // index into skyview
 
     if (18 > len) {
         /* zero sats is len == 18 */
@@ -871,13 +870,15 @@ static gps_mask_t sirf_msg_67_16(struct gps_device_t *session,
     }
     st = ((msg_info & 0x0f) - 1) * 15;
     num_of_sats = getub(buf, 17);
-    /* got time now */
+    // got time now
     mask |= TIME_SET;
 
-    /* skip all the debug pushing and popping, unless needed */
-    if (session->context->errout.debug >= LOG_IO) {
+    // skip all the debug pushing and popping, unless needed
+    if (LOG_IO <= session->context->errout.debug) {
         /* coerce time_t to long to placate older OS, like 32-bit FreeBSD,
          * where time_t is int */
+        char ts_buf[TIMESPEC_LEN];
+
         GPSD_LOG(LOG_IO, &session->context->errout,
              "GPS Week %d, tow %d.%03d, time %s\n",
              gps_week, gps_tow, gps_tow_sub_ms,
@@ -890,14 +891,14 @@ static gps_mask_t sirf_msg_67_16(struct gps_device_t *session,
     }
 
     session->gpsdata.satellites_visible = num_of_sats;
-    /* used? */
+    // used?
 
     if (MAXCHANNELS < num_of_sats) {
         // shut up coverity
         num_of_sats = MAXCHANNELS;
     }
 
-    /* now decode the individual sat data */
+    // now decode the individual sat data
     /* FIXME: num_of_sats is total sats tracked, not the number of sats
      * in this message, so this looks wrong? */
     for (sat_num = 0; sat_num < num_of_sats; sat_num++) {
