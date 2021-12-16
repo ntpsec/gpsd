@@ -439,6 +439,29 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
                  u1, u2, u3, u4, u7, u6, u5, u8, u9, u10,
                  u11, u12, u13, u14, u15);
         break;
+    case 0xa000:
+        // Firmware Upload
+        // could be length 3, or 8, different data...
+        switch (length) {
+        case 3:
+            u1 = (unsigned)buf[6];            // command
+            GPSD_LOG(LOG_DATA, &session->context->errout,
+                     "TSIPv1: xa000: command %u\n", u1);
+            break;
+        case 8:
+            // ACK/NAK
+            u1 = (unsigned)buf[6];            // command
+            u2 = (unsigned)buf[7];            // status
+            u3 = getbeu16(buf, 8);            // frame
+            GPSD_LOG(LOG_DATA, &session->context->errout,
+                     "TSIPv1: xa000: command %u status %u frame %u\n",
+                     u1, u2, u3);
+            break;
+        default:
+            bad_len = true;
+            break;
+        }
+        break;
     case 0xa100:
         // Timing Information
         // the only message on by default
@@ -470,7 +493,7 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
         d2 = getbef32((char *)buf, 28);     // Bias
         d3 = getbef32((char *)buf, 32);     // Bias Rate
         GPSD_LOG(LOG_DATA, &session->context->errout,
-                 "TSIPv1: xa000: tow %u week %u %02u:%02u:%02u %4u/%02u/%02u "
+                 "TSIPv1: xa100: tow %u week %u %02u:%02u:%02u %4u/%02u/%02u "
                  "base %u/%u flagsx%x UTC offset %d qErr %f Bias %f/%f\n",
                  tow, week, date.tm_hour, date.tm_min, date.tm_sec,
                  date.tm_year + 1900, date.tm_mon, date.tm_mday,
@@ -480,10 +503,26 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
             mask |= TIME_SET | NTPTIME_IS;
         }
         break;
+    case 0xa102:
+        // Frequency Information
+        if (17 > length) {
+            bad_len = true;
+            break;
+        }
+        d1 = getbef32((char *)buf, 6);    // DAC voltage
+        u1 = getbeu16(buf, 10);           // DAC value
+        u2 = (unsigned)buf[12];           // holdover status
+        u3 = getbeu32(buf, 13);           // holdover time
+        d2 = getbef32((char *)buf, 17);   // temperature, degrees C
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "TSIPv1: xa102: DAC voltage %f value %u Holdover status %u "
+                 "time %u temp %f\n",
+                 d1, u1, u2, u3, d2);
+        break;
 
     case 0xa111:
         // Position Information
-        if (3 > length) {
+        if (52 > length) {
             bad_len = true;
             break;
         }
@@ -499,7 +538,7 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
         d8 = getbef32((char *)buf, 48);   // horz uncertainty
         d9 = getbef32((char *)buf, 52);   // vert uncertainty
         GPSD_LOG(LOG_DATA, &session->context->errout,
-                 "TSIPv1: xa001: mask %u fix %u Pos %f %f %f Vel %f %f %f "
+                 "TSIPv1: xa111: mask %u fix %u Pos %f %f %f Vel %f %f %f "
                  "PDOP %f hu %f vu %f\n",
                  u1, u2, d1, d2, d3, d4, d5, d6, d7, d8, d9);
         break;
@@ -608,18 +647,12 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
     case 0x9200:
         // Receiver Reset, send only
         FALLTHROUGH
-    case 0xa000:
-        // Firmware Upload
-        FALLTHROUGH
-    case 0xa102:
-        // Frequency Information
-        FALLTHROUGH
     case 0xa400:
-        // AGNSS
+        // AGNSS, send only
         FALLTHROUGH
     default:
-         // Huh?
-         break;
+        // Huh?
+        break;
     }
     if (bad_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
