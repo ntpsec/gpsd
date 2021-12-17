@@ -252,16 +252,41 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
     double d1, d2, d3, d4, d5, d6, d7, d8, d9;
     struct tm date = {0};
     bool bad_len = false;
+    unsigned char chksum = 0;
 
+    if (9 > len) {
+        // should never happen
+        return mask;
+    }
     id = (unsigned)buf[1];
     sub_id = (unsigned)buf[2];
     length = getbeu16(buf, 3);  // expected length
     mode = (unsigned)buf[5];
 
+    if ((length + 7) != (unsigned)len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TSIPv1: Bad Length. packet id x%02x subpacket id x%02x "
+                 "length %d/%u mode %u\n",
+                 id, sub_id, len, length, mode);
+        return mask;
+    }
+
+    for (s1 = 1; s1 < (len - 3); s1++ ) {
+        chksum ^= buf[s1];
+    }
+    if (0 != chksum) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TSIPv1: Bad Checksum. packet id x%02x subpacket id x%02x "
+                 "length %d/%u mode %u\n",
+                 id, sub_id, len, length, mode);
+        return mask;
+    }
+
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "TSIPv1: packet id x%02x subpacket id x%02x length %d/%u "
              "mode %u\n",
              id, sub_id, len, length, mode);
+
     if (2 != mode) {
         /* don't decode queries (mode 0) or set (mode 1)
          *, why would we even see one? */
