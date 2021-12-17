@@ -537,6 +537,59 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
         d7 = getbef32((char *)buf, 44);   // PDOP, surveyed or current
         d8 = getbef32((char *)buf, 48);   // horz uncertainty
         d9 = getbef32((char *)buf, 52);   // vert uncertainty
+        if (0 == (u1 & 1)) {
+            session->newdata.status = STATUS_GPS;
+        } else {
+            session->newdata.status = STATUS_TIME;
+        }
+        if (0 == (u1 & 2)) {
+            // LLA
+            session->newdata.latitude = d1;
+            session->newdata.longitude = d2;
+            if (0 == (u1 & 4)) {
+                // HAE
+                session->newdata.altHAE = d3;
+            } else {
+                // MSL
+                session->newdata.altMSL = d3;
+            }
+            mask |= LATLON_SET | ALTITUDE_SET;
+        } else {
+            // XYZ ECEF
+            session->newdata.ecef.x = d1;
+            session->newdata.ecef.y = d2;
+            session->newdata.ecef.z = d3;
+            mask |= ECEF_SET;
+        }
+        if (0 == (u1 & 8)) {
+            // Velocity ENU
+            session->newdata.NED.velN = d5;
+            session->newdata.NED.velE = d4;
+            session->newdata.NED.velD = -d6;
+            mask |= VNED_SET;
+        } else {
+            // Velocity ECEF
+            session->newdata.ecef.vx = d4;
+            session->newdata.ecef.vy = d5;
+            session->newdata.ecef.vz = d6;
+            mask |= VECEF_SET;
+        }
+        switch (u2) {
+        default:
+            FALLTHROUGH
+        case 0:
+            session->newdata.mode = MODE_NO_FIX;
+            break;
+        case 1:
+            session->newdata.mode = MODE_2D;
+            break;
+        case 2:
+            session->newdata.mode = MODE_3D;
+        }
+        session->gpsdata.dop.pdop = d7;
+        session->newdata.eph = d8;       // 0 - 100
+        session->newdata.epv = d9;       // 0 - 100
+        mask |= MODE_SET | STATUS_SET | DOP_SET | HERR_SET | VERR_SET;
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "TSIPv1: xa111: mask %u fix %u Pos %f %f %f Vel %f %f %f "
                  "PDOP %f hu %f vu %f\n",
