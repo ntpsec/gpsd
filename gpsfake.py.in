@@ -1,5 +1,11 @@
 #!@PYSHEBANG@
 # @GENERATED@
+"""gpsfake -- test harness for gpsd.
+
+Simulates one or more GPSes, playing back logfiles.
+Most of the logic for this now lives in gps.fake,
+factored out so we can write other test programs with it.
+"""
 #
 #
 # This file is Copyright 2010 by the GPSD project
@@ -10,12 +16,6 @@
 # Codacy D203 and D211 conflict, I choose D203
 # Codacy D212 and D213 conflict, I choose D212
 
-"""gpsfake -- test harness for gpsd.
-
-Simulates one or more GPSes, playing back logfiles.
-Most of the logic for this now lives in gps.fake,
-factored out so we can write other test programs with it.
-"""
 from __future__ import absolute_import, print_function, division
 
 from distutils import spawn

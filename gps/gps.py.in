@@ -123,7 +123,6 @@ class gpsfix(object):
 
     def __init__(self):
         """Init class gpsfix."""
-
         self.altitude = NaN         # Meters DEPRECATED
         self.altHAE = NaN           # Meters
         self.altMSL = NaN           # Meters
@@ -707,7 +706,6 @@ Or maybe a gpsd JSON file.
 
     def stream(self, flags=0, devpath=None):
         """Ask gpsd to stream reports at your client."""
-
         gpsjson.stream(self, flags, devpath)
 
 
@@ -756,7 +754,7 @@ if __name__ == '__main__':
     options = parser.parse_args()
 
     streaming = False
-    if len(arguments) > 2:
+    if arguments and 2 < len(arguments):
         sys.stderr.write("gps.py: too many positional arguments.")
         sys.exit(1)
 

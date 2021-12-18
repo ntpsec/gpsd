@@ -1,6 +1,6 @@
 # misc.py - miscellaneous geodesy and time functions
 # -*- coding: utf-8 -*-
-"""miscellaneous geodesy and time functions"""
+"""miscellaneous geodesy and time functions."""
 #
 # This file is Copyright 2010 by the GPSD project
 # SPDX-License-Identifier: BSD-2-Clause
@@ -87,7 +87,7 @@ else:  # Otherwise we do something real
         raise ValueError
 
     def make_std_wrapper(stream):
-        """Standard input/output wrapper factory function"""
+        """Standard input/output wrapper factory function."""
         # This ensures that the encoding of standard output and standard
         # error on Python 3 matches the binary encoding we use to turn
         # bytes to Unicode in polystr above.

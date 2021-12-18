@@ -1406,7 +1406,6 @@ frame * {
 
     def update_version(self, ver):
         """Update the Version."""
-
         if ver.release != gps_version:
             sys.stderr.write("%s: WARNING gpsd version %s different than "
                              "expected %s\n" %

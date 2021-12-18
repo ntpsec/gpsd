@@ -82,7 +82,7 @@ class satellite(object):
         self.prn = prn
 
     def position(self, time):
-        """Return right ascension and declination of satellite,"""
+        """Return right ascension and declination of satellite."""
         return
 
 # Next, the command interpreter.  This is an object that takes an

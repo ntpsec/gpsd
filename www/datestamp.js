@@ -36,8 +36,8 @@ function dateLastModified()
 
   // check if we have a valid date
   // before proceeding
-  if(0 !== (d1=Date.parse(lmd)))
-  {
+  d1 = Date.parse(lmd)
+  if(0 !== d1) {
     s = "" + dateDdMmmYyyy(new Date(d1));
   }
 
