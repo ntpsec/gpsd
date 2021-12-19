@@ -150,6 +150,16 @@ static unsigned char tsip_gnssid(unsigned svtype, short prn,
     return gnssid;
 }
 
+/* tsip_write() - send olc style TSIP message
+ * id - packet id
+ * buf - rest of the packet
+ * len - length of buf
+ *
+ * Adds leading DLE, and the trailing DLE, ETX
+ *
+ * Return: 0 == OK
+ *         -1 == write fail
+ */
 static int tsip_write(struct gps_device_t *session,
                       unsigned int id, unsigned char *buf, size_t len)
 {
@@ -161,8 +171,9 @@ static int tsip_write(struct gps_device_t *session,
     session->msgbuf[1] = (char)id;
     ep = session->msgbuf + 2;
     for (cp = (char *)buf; olen-- > 0; cp++) {
-        if (*cp == '\x10')
+        if ('\x10' == *cp) {
             *ep++ = '\x10';
+        }
         *ep++ = *cp;
     }
     *ep++ = '\x10';
@@ -232,7 +243,7 @@ static bool tsip_detect(struct gps_device_t *session)
     return ret;
 }
 
-/* parse TSIP v1 packates.
+/* parse TSIP v1 packages.
  * Currently only in RES720 devices, from 2020 onward.
  * buf: raw data, with DLE stuffing removed
  * len:  length of data in buf
@@ -240,7 +251,7 @@ static bool tsip_detect(struct gps_device_t *session)
  * return: mask
  */
 static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
-                                unsigned char *buf, int len)
+                                const unsigned char *buf, int len)
 {
     gps_mask_t mask = 0;
     unsigned id, sub_id, length, mode;
@@ -253,6 +264,7 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
     struct tm date = {0};
     bool bad_len = false;
     unsigned char chksum = 0;
+    unsigned char snd_buf[20];         // send buffer
 
     if (9 > len) {
         // should never happen
@@ -322,6 +334,7 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
         u6 = getbeu16(buf, 11);           // Build year
         u7 = getbeu16(buf, 13);           // Hardware ID
         u8 = (unsigned)buf[15];           // Product Name length
+        session->driver.tsip.hardware_code = u7;
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "TSIPv1: x9001: Version %u.%u Build %u %u/%u/%u hwid %u, "
                  "%.*s\n",
@@ -525,7 +538,17 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
                  u1, u2, u3, s1, d1, d2, d3);
         if (3 == (u3 & 3)) {
             // flags say we have good time
+            // if we have good time, can we guess at fix mode?
             mask |= TIME_SET | NTPTIME_IS;
+        }
+        if (0 == session->driver.tsip.hardware_code) {
+            // Query Receiver Version Information
+            snd_buf[0] = 0x01;    // sub-id
+            snd_buf[1] = 0x00;    // MSB length
+            snd_buf[2] = 0x02;    // LSB length
+            snd_buf[3] = 0x00;    // query
+            snd_buf[4] = 0x83;    // checkwum
+            (void)tsip_write(session, 0x90, snd_buf, 5);
         }
         break;
     case 0xa102:
