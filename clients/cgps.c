@@ -584,7 +584,8 @@ static int sat_cmp(const void *p1, const void *p2)
 
 
 // This gets called once for each new GPS sentence.
-static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
+static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
+                             size_t message_max)
 {
     int newstate;
     char scr[80];
@@ -1039,7 +1040,9 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message)
     // Be quiet if the user requests silence.
     if (!silent_flag && raw_flag) {
         if (NULL != message) {
-            size_t message_len = strlen(message);
+            // codacy does not like strlen()
+            size_t message_len = strnlen(message, message_max);
+
             if (0 < message_len) {
                 if ( '\r' == message[message_len - 1]) {
                     // remove any trailing \r
@@ -1499,7 +1502,7 @@ int main(int argc, char *argv[])
             if (imu_flag) {
                 update_imu_panel(&gpsdata, message);
             } else {
-                update_gps_panel(&gpsdata, message);
+                update_gps_panel(&gpsdata, message, sizeof(message));
             }
         }
         if (0 != sig_flag) {

@@ -441,7 +441,8 @@ int main(int argc, char **argv)
                     switch (option_u) {
                     case 2:
                         if (iso8601) {
-                            written = strlen(tmstr);
+                            // codacy does not like strlen()
+                            written = strnlen(tmstr, sizeof(tmstr));
                             tmstr[written] = 'Z';
                             tmstr[written+1] = '\0';
                         }
