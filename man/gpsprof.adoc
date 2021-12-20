@@ -206,6 +206,31 @@ gpsprof -f polarunused -T jpeg -r < polar.json > polarunused.plot
 gnuplot < polarunused.plot  > polarunused.png
 ----
 
+You can split the pieces up, so you do not need to run the entire chain
+at once.  To allow tweaking settings without recollecting all the data.
+Like this:
+
+----
+gpspipe -w -x 3600 ::/dev/ttyS0 > MY.raw
+gpsdecode  < MY.raw > MY.json
+gpsprof -r -T pngcairo -t "MY Title" < MY.json > MY.plt
+gnuplot MY.plt > MY.png
+display MY.png
+----
+
+The *gpspipe* saves one hour of raw data from the local *gpsd* device
+/dev/ttyS0 into MY.raw.  It will take one hour to complete.
+
+The *gpsdecode* converts the raw data in MY.raw into a *gpsd* JSON file
+called MY.json.
+
+The *gpsprof* reads MY.json and creates a *gnuplot* program in MY.plt.
+
+The *gnuplot* executes the program in MY.plt and creates the image
+file MY.png.
+
+The *display* program paints MY.png on your desktop.
+
 == RETURN VALUES
 
 *0*:: on success.
@@ -213,8 +238,8 @@ gnuplot < polarunused.plot  > polarunused.png
 
 == SEE ALSO
 
-*gpsd*(8), *gpsctl*(1), *gps*(1), *libgps*(3), *libgpsmm*(3), *gpsprof*(1),
-*gpsfake*(1).
+*gpsd*(8), *display*(1), *gnuplot*(1), *gpsctl*(1), *gps*(1),
+*libgps*(3), *libgpsmm*(3), *gpsprof*(1), *gpsfake*(1).
 
 == RESOURCES
 
