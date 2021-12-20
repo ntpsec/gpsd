@@ -150,12 +150,14 @@ static unsigned char tsip_gnssid(unsigned svtype, short prn,
     return gnssid;
 }
 
-/* tsip_write() - send olc style TSIP message
+/* tsip_write() - send old style TSIP message
  * id - packet id
  * buf - rest of the packet
  * len - length of buf
  *
  * Adds leading DLE, and the trailing DLE, ETX
+ *
+ * Note: use tsip_write1() instead
  *
  * Return: 0 == OK
  *         -1 == write fail
@@ -167,6 +169,13 @@ static int tsip_write(struct gps_device_t *session,
     char obuf[100];
     size_t olen = len;
 
+    if (session->context->readonly) {
+        return 0;
+    }
+    if ((sizeof(session->msgbuf) / 2) < len) {
+        // could over run, do not chance it
+        return -1;
+    }
     session->msgbuf[0] = '\x10';
     session->msgbuf[1] = (char)id;
     ep = session->msgbuf + 2;
@@ -181,6 +190,50 @@ static int tsip_write(struct gps_device_t *session,
     session->msgbuflen = (size_t) (ep - session->msgbuf);
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "TSIP: Sent packet id 0x%s\n",
+             gpsd_hexdump(obuf, sizeof(obuf), &session->msgbuf[1], len + 1));
+    if (gpsd_write(session, session->msgbuf, session->msgbuflen) !=
+        (ssize_t) session->msgbuflen)
+        return -1;
+
+    return 0;
+}
+
+/* tsip_write1() - send old style TSIP message, improved tsip_write()
+ * buf - the packet
+ * len - length of buf
+ *
+ * Adds leading DLE, and the trailing DLE, ETX
+ *
+ * Return: 0 == OK
+ *         -1 == write fail
+ */
+static int tsip_write1(struct gps_device_t *session,
+                       char *buf, size_t len)
+{
+    char *ep, *cp;
+    char obuf[100];
+    size_t olen = len;
+
+    if (session->context->readonly) {
+        return 0;
+    }
+    if ((sizeof(session->msgbuf) / 2) < len) {
+        // could over run, do not chance it
+        return -1;
+    }
+    session->msgbuf[0] = '\x10';
+    ep = session->msgbuf + 1;
+    for (cp = buf; olen-- > 0; cp++) {
+        if ('\x10' == *cp) {
+            *ep++ = '\x10';
+        }
+        *ep++ = *cp;
+    }
+    *ep++ = '\x10';
+    *ep++ = '\x03';
+    session->msgbuflen = (size_t)(ep - session->msgbuf);
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "TSIP: tsip_write1(0x%s)\n",
              gpsd_hexdump(obuf, sizeof(obuf), &session->msgbuf[1], len + 1));
     if (gpsd_write(session, session->msgbuf, session->msgbuflen) !=
         (ssize_t) session->msgbuflen)
@@ -264,7 +317,6 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
     struct tm date = {0};
     bool bad_len = false;
     unsigned char chksum = 0;
-    unsigned char snd_buf[20];         // send buffer
 
     if (9 > len) {
         // should never happen
@@ -543,12 +595,7 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
         }
         if (0 == session->driver.tsip.hardware_code) {
             // Query Receiver Version Information
-            snd_buf[0] = 0x01;    // sub-id
-            snd_buf[1] = 0x00;    // MSB length
-            snd_buf[2] = 0x02;    // LSB length
-            snd_buf[3] = 0x00;    // query
-            snd_buf[4] = 0x83;    // checkwum
-            (void)tsip_write(session, 0x90, snd_buf, 5);
+            (void)tsip_write1(session, "\x90\x01\x00\x02\x00\x93", 6);
         }
         break;
     case 0xa102:
@@ -867,9 +914,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
 
             /* Request LFwEI Super Packet instead
              * SMT 360 does not support 0x8e-20 either */
-            putbyte(buf, 0, 0x20);
-            putbyte(buf, 1, 0x01);      /* auto-report */
-            (void)tsip_write(session, 0x8e, buf, 2);
+            (void)tsip_write1(session, "\x8e\x20\x01", 3);
         }
         break;
 
@@ -1370,9 +1415,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 /* set I/O Options for Super Packet output */
                 /* Position: 8F20, ECEF, DP */
                 putbyte(buf, 0, IO1_8F20|IO1_DP|IO1_ECEF);
-                putbyte(buf, 1, 0x00);          /* Velocity: none (via SP) */
-                putbyte(buf, 2, 0x00);          /* Time: GPS */
-                putbyte(buf, 3, IO4_DBHZ);      /* Aux: dBHz */
+                putbyte(buf, 1, 0x00);          // Velocity: none (via SP)
+                putbyte(buf, 2, 0x00);          // Time: GPS
+                putbyte(buf, 3, IO4_DBHZ);      // Aux: dBHz
                 (void)tsip_write(session, 0x35, buf, 4);
                 break;
             case 2:
