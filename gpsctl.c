@@ -92,7 +92,8 @@ static bool gps_query(struct gps_data_t *gpsdata,
     va_start(ap, fmt);
     (void)vsnprintf(buf, sizeof(buf)-2, fmt, ap);
     va_end(ap);
-    if (buf[strlen(buf)-1] != '\n') {
+    // codacy does not like strlen()
+    if ('\n' != buf[strnlen(buf, sizeof(buf) - 1) - 1]) {
         (void)strlcat(buf, "\n", sizeof(buf));
     }
     if (0 <= write(gpsdata->gps_fd, buf, strlen(buf))) {
