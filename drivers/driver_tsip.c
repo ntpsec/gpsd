@@ -150,54 +150,6 @@ static unsigned char tsip_gnssid(unsigned svtype, short prn,
     return gnssid;
 }
 
-/* tsip_write() - send old style TSIP message
- * id - packet id
- * buf - rest of the packet
- * len - length of buf
- *
- * Adds leading DLE, and the trailing DLE, ETX
- *
- * Note: use tsip_write1() instead
- *
- * Return: 0 == OK
- *         -1 == write fail
- */
-static int tsip_write(struct gps_device_t *session,
-                      unsigned int id, char *buf, size_t len)
-{
-    char *ep, *cp;
-    char obuf[100];
-    size_t olen = len;
-
-    if (session->context->readonly) {
-        return 0;
-    }
-    if ((sizeof(session->msgbuf) / 2) < len) {
-        // could over run, do not chance it
-        return -1;
-    }
-    session->msgbuf[0] = '\x10';
-    session->msgbuf[1] = (char)id;
-    ep = session->msgbuf + 2;
-    for (cp = (char *)buf; olen-- > 0; cp++) {
-        if ('\x10' == *cp) {
-            *ep++ = '\x10';
-        }
-        *ep++ = *cp;
-    }
-    *ep++ = '\x10';
-    *ep++ = '\x03';
-    session->msgbuflen = (size_t) (ep - session->msgbuf);
-    GPSD_LOG(LOG_PROG, &session->context->errout,
-             "TSIP: Sent packet id 0x%s\n",
-             gpsd_hexdump(obuf, sizeof(obuf), &session->msgbuf[1], len + 1));
-    if (gpsd_write(session, session->msgbuf, session->msgbuflen) !=
-        (ssize_t) session->msgbuflen)
-        return -1;
-
-    return 0;
-}
-
 /* tsip_write1() - send old style TSIP message, improved tsip_write()
  * buf - the packet
  * len - length of buf
@@ -207,8 +159,8 @@ static int tsip_write(struct gps_device_t *session,
  * Return: 0 == OK
  *         -1 == write fail
  */
-static int tsip_write1(struct gps_device_t *session,
-                       char *buf, size_t len)
+static ssize_t tsip_write1(struct gps_device_t *session,
+                           char *buf, size_t len)
 {
     char *ep, *cp;
     char obuf[100];
@@ -3692,13 +3644,6 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
     return mask;
 }
 
-// not used by the daemon, it's for gpsctl and friends
-static ssize_t tsip_control_send(struct gps_device_t *session,
-                                 char *buf, size_t buflen)
-{
-    return (ssize_t)tsip_write1(session, buf, buflen);
-}
-
 static void tsip_init_query(struct gps_device_t *session)
 {
     // Use 0x1C-03 to Request Hardware Version Information (0x1C-83)
@@ -3937,56 +3882,46 @@ void configuration_packets_acutime_gold(struct gps_device_t *session)
          * 2 == PPS driver switch (PPS is always output) */
         (void)tsip_write1(session, "\x8e\x4e\x02", 3);
 
-        /* Set Primary Receiver Configuration (0xbb-00) */
-        putbyte(buf, 0, 0x00);   /* Subcode */
-        /* Receiver mode, 7 = Force Overdetermined clock */
-        putbyte(buf, 1, 0x07);
-        /* Not enabled = unchanged
-         * must be 0xff on RES SMT 360 */
-        putbyte(buf, 2, 0xff);
-        /* Dynamics code = default
-         * must be 0xff on RES SMT 360 */
-        putbyte(buf, 3, 0x01);
-        /* Solution Mode = default
-         * must be 0xff on RES SMT 360 */
-        putbyte(buf, 4, 0x01);
-        /* Elevation Mask = 10 deg */
-        putbef32((char *)buf, 5, (float)10.0 * DEG_2_RAD);
-        /* AMU Mask. 0 to 55. default is 4.0 */
-        putbef32((char *)buf, 9, (float)4.0);
-        /* PDOP Mask = 8.0, default = 6 */
-        putbef32((char *)buf, 13, (float)8.0);
-        /* PDOP Switch = 6.0, ignored in RES SMT 360 */
-        putbef32((char *)buf, 17, (float)6.0);
-        /* must be 0xff */
-        putbyte(buf, 21, 0xff);
-        /* Anti-Jam Mode, 0=Off, 1=On */
-        putbyte(buf, 22, 0x0);
-        /* Reserved.  Must be 0xffff */
-        putbe16(buf, 23, 0xffff);
+        buf[0] = 0xbb;  // Set Primary Receiver Configuration (0xbb-00)
+        buf[1] = 0x00;  // 00 =  Subcode
+        buf[2] = 0x07;  // Receiver mode, 7 = Force Overdetermined clock
+        buf[3] = 0xff;  // Not enabled = unchanged, must be 0xff on RES SMT 360
+        buf[4] = 0x01;  // Dynamics code = default must be 0xff on RES SMT 360
+        buf[5] = 0x01;  // Solution Mode = default must be 0xff on RES SMT 360
+        // Elevation Mask = 10 deg
+        putbef32((char *)buf, 6, (float)10.0 * DEG_2_RAD);
+        // AMU Mask. 0 to 55. default is 4.0
+        putbef32((char *)buf, 10, (float)4.0);
+        // PDOP Mask = 8.0, default = 6
+        putbef32((char *)buf, 14, (float)8.0);
+        // PDOP Switch = 6.0, ignored in RES SMT 360
+        putbef32((char *)buf, 18, (float)6.0);
+        buf[22] = 0xff;  // must be 0xff
+        buf[23] = 0x0;   // Anti-Jam Mode, 0=Off, 1=On
+        putbe16(buf, 24, 0xffff);  // Reserved.  Must be 0xffff
         /* Measurement Rate and Position Fix Rate = default
          * must be 0xffff on res smt 360 */
-        putbe16(buf, 25, 0x0000);
+        putbe16(buf, 26, 0x0000);
         /* 27 is Constellation on RES SMT 360.
          * 1 = GPS, 2=GLONASS, 8=BeiDou, 0x10=Galileo, 5=QZSS */
-        putbe32(buf, 27, 0xffffffff); /* Reserved */
-        putbe32(buf, 31, 0xffffffff); /* Reserved */
-        putbe32(buf, 35, 0xffffffff); /* Reserved */
-        putbe32(buf, 39, 0xffffffff); /* Reserved */
-        (void)tsip_write(session, 0xbb, buf, 43);
+        putbe32(buf, 28, 0xffffffff);   // Reserved
+        putbe32(buf, 32, 0xffffffff);   // Reserved
+        putbe32(buf, 36, 0xffffffff);   // Reserved
+        putbe32(buf, 40, 0xffffffff);   // Reserved
+        (void)tsip_write1(session, buf, 44);
 
-        /* Set Packet Broadcast Mask (0x8e-a5) */
-        putbyte(buf, 0, 0xa5); /* Subcode */
+        buf[0] = 0x8e;   // Set Packet Broadcast Mask (0x8e-a5)
+        buf[1] = 0xa5;   // Subcode a5
         /* Packets bit field = default + Primary timing,
          *  Supplemental timing 32e1
          *  1=0x8f-ab, 4=0x8f-ac, 0x40=Automatic Output Packets */
-        putbe16(buf, 1, 0x32e1);
-        putbyte(buf, 3, 0x00); /* not used */
-        putbyte(buf, 4, 0x00); /* not used */
-        (void)tsip_write(session, 0x8e, buf, 5);
+        putbe16(buf, 2, 0x32e1);
+        buf[4] = 0x00;   // not used
+        buf[5] = 0x00;   // not used
+        (void)tsip_write1(session, buf, 6);
 }
 
-/* configure RES 360 to a known state */
+// configure RES 360 to a known state
 void configuration_packets_res360(struct gps_device_t *session)
 {
     char buf[100];
@@ -3998,29 +3933,28 @@ void configuration_packets_res360(struct gps_device_t *session)
     /* Self-Survey Parameters (0x8e-a9) is default on
      * query them? */
 
-    /* PPS Output Option (0x8e-4e) is default on */
+    // PPS Output Option (0x8e-4e) is default on
 
-    /* Set Packet Broadcast Mask (0x8e-a5)
-     * RES SMT 360 default 5, 0 */
-    putbyte(buf, 0, 0xa5); /* Subcode */
+    buf[0] = 0x8e;  // Set Packet Broadcast Mask (0x8e-a5)
+    buf[1] = 0xa5;  // a5 = Subcode
     /* Packets bit field = default + Auto output packets
      *  1=0x8f-ab, 4=0x8f-ac, 0x40=Automatic Output Packets */
-    putbe16(buf, 1, 0x0045);
-    putbe16(buf, 3, 0x0000);
-    (void)tsip_write(session, 0x8e, buf, 5);
+    putbe16(buf, 2, 0x0045);
+    putbe16(buf, 4, 0x0000);
+    (void)tsip_write1(session, buf, 6);
 
-    // set I/O Options
+    buf[0] = 0x35;  // set I/O Options
     // RES SMT 360 defaults:  12 02 00 08
     // position and velocity only sent during self-survey.
     // Position
-    putbyte(buf, 0, IO1_DP|IO1_LLA|IO1_ECEF);
+    buf[1] =  IO1_DP|IO1_LLA|IO1_ECEF;
     // Velocity
-    putbyte(buf, 1, IO2_VECEF|IO2_ENU);
+    buf[2] =IO2_VECEF|IO2_ENU;
     // Timing
-    putbyte(buf, 2, 0x01);          // Use 0x8e-a2
+    buf[3] = 0x01;          // Use 0x8e-a2
     // Auxiliary
-    putbyte(buf, 3, 0x08);          // Packet 0x5a off, dBHz
-    (void)tsip_write(session, 0x35, buf, 4);
+    buf[4] = 0x08;         // Packet 0x5a off, dBHz
+    (void)tsip_write1(session, buf, 5);
 
 #ifdef __UNUSED__
     // request I/O Options (0x55)
@@ -4055,7 +3989,7 @@ const struct gps_type_t driver_tsip =
     .rate_switcher  = NULL,               // no rate switcher
     .min_cycle.tv_sec  = 1,               // not relevant, no rate switch
     .min_cycle.tv_nsec = 0,               // not relevant, no rate switch
-    .control_send   = tsip_control_send,  // how to send commands
+    .control_send   = tsip_write1,        // how to send commands
     .time_offset     = NULL,
 };
 /* *INDENT-ON* */
