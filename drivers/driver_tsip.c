@@ -163,7 +163,7 @@ static unsigned char tsip_gnssid(unsigned svtype, short prn,
  *         -1 == write fail
  */
 static int tsip_write(struct gps_device_t *session,
-                      unsigned int id, unsigned char *buf, size_t len)
+                      unsigned int id, char *buf, size_t len)
 {
     char *ep, *cp;
     char obuf[100];
@@ -217,7 +217,8 @@ static int tsip_write1(struct gps_device_t *session,
     if (session->context->readonly) {
         return 0;
     }
-    if ((sizeof(session->msgbuf) / 2) < len) {
+    if ((NULL == buf) ||
+        (sizeof(session->msgbuf) / 2) < len) {
         // could over run, do not chance it
         return -1;
     }
@@ -304,7 +305,7 @@ static bool tsip_detect(struct gps_device_t *session)
  * return: mask
  */
 static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
-                                const unsigned char *buf, int len)
+                                const char *buf, int len)
 {
     gps_mask_t mask = 0;
     unsigned id, sub_id, length, mode;
@@ -830,7 +831,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
     float f1, f2, f3, f4;
     double d1, d2, d3, d4, d5;
     time_t now;
-    unsigned char buf[BUFSIZ];
+    char buf[BUFSIZ];
     char buf2[BUFSIZ];
     uint32_t tow;             // time of week in milli seconds
     double ftow;              // time of week in seconds
@@ -975,8 +976,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 mask |= DEVICEID_SET;
                 if ('\0' == session->subtype1[0]) {
                     // request actual subtype1 from 0x1c-83
-                    putbyte(buf, 0, 0x03);
-                    (void)tsip_write(session, 0x1c, buf, 1);
+                    buf[0] = 0x1c;
+                    buf[1] = 0x03;
+                    (void)tsip_write1(session, buf, 2);
                 }
                 break;
 
@@ -1069,9 +1071,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             break;
         }
         session->driver.tsip.last_41 = now;     // keep timestamp for request
-        ftow = getbef32((char *)buf, 0);        // gpstime
+        ftow = getbef32(buf, 0);                // gpstime
         week = getbeu16(buf, 4);                // week
-        f2 = getbef32((char *)buf, 6);          // leap seconds
+        f2 = getbef32(buf, 6);                  // leap seconds
         if (0.0 <= ftow &&
             10.0 < f2) {
             session->context->leap_seconds = (int)round(f2);
@@ -1100,10 +1102,10 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 16;
             break;
         }
-        session->newdata.ecef.x = getbef32((char *)buf, 0);  // X
-        session->newdata.ecef.y = getbef32((char *)buf, 4);  // Y
-        session->newdata.ecef.z = getbef32((char *)buf, 8);  // Z
-        ftow = getbef32((char *)buf, 12);                    // time-of-fix
+        session->newdata.ecef.x = getbef32(buf, 0);  // X
+        session->newdata.ecef.y = getbef32(buf, 4);  // Y
+        session->newdata.ecef.z = getbef32(buf, 8);  // Z
+        ftow = getbef32(buf, 12);                    // time-of-fix
         DTOTS(&ts_tow, ftow);
         session->newdata.time = gpsd_gpstime_resolv(session,
                                                     session->context->gps_week,
@@ -1133,11 +1135,11 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 20;
             break;
         }
-        session->newdata.ecef.vx = getbef32((char *)buf, 0);  // X velocity
-        session->newdata.ecef.vy = getbef32((char *)buf, 4);  // Y velocity
-        session->newdata.ecef.vz = getbef32((char *)buf, 8);  // Z velocity
-        f4 = getbef32((char *)buf, 12);                       // bias rate
-        ftow = getbef32((char *)buf, 16);                     // time-of-fix
+        session->newdata.ecef.vx = getbef32(buf, 0);  // X velocity
+        session->newdata.ecef.vy = getbef32(buf, 4);  // Y velocity
+        session->newdata.ecef.vz = getbef32(buf, 8);  // Z velocity
+        f4 = getbef32(buf, 12);                       // bias rate
+        ftow = getbef32(buf, 16);                     // time-of-fix
         DTOTS(&ts_tow, ftow);
         session->newdata.time = gpsd_gpstime_resolv(session,
                                                     session->context->gps_week,
@@ -1364,8 +1366,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 name = " SMT 360";
                 /* request actual subtype from 0x1c-81
                  * which in turn requests 0x1c-83 */
-                putbyte(buf, 0, 0x01);
-                (void)tsip_write(session, 0x1c, buf, 1);
+                buf[0] = 0x1c;
+                buf[1] = 0x01;
+                (void)tsip_write1(session, buf, 2);
                 break;
             case 0x32:
                 name = " Acutime 360";
@@ -1375,8 +1378,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 /* request actual subtype from 0x1c-81
                  * which in turn requests 0x1c-83.
                  * Only later firmware Lassen iQ supports this */
-                putbyte(buf, 0, 0x01);
-                (void)tsip_write(session, 0x1c, buf, 1);
+                buf[0] = 0x1c;
+                buf[1] = 0x01;
+                (void)tsip_write1(session, buf, 2);
                 break;
             case 0x61:
                 name = " Acutime 2000";
@@ -1389,8 +1393,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 name = " Copernicus, Thunderbolt E";
                 /* so request actual subtype from 0x1c-81
                  * which in turn requests 0x1c-83 */
-                putbyte(buf, 0, 0x01);
-                (void)tsip_write(session, 0x1c, buf, 1);
+                buf[0] = 0x1c;
+                buf[1] = 0x01;
+                (void)tsip_write1(session, buf, 2);
                 break;
             default:
                  name = "";
@@ -3705,18 +3710,13 @@ static ssize_t tsip_control_send(struct gps_device_t *session,
                                  char *buf, size_t buflen)
 /* not used by the daemon, it's for gpsctl and friends */
 {
-    return (ssize_t) tsip_write(session,
-                                (unsigned int)buf[0],
-                                (unsigned char *)buf + 1, buflen - 1);
+    return (ssize_t)tsip_write1(session, buf, buflen);
 }
 
 static void tsip_init_query(struct gps_device_t *session)
 {
-    unsigned char buf[100];
-
     /* Use 0x1C-03 to Request Hardware Version Information (0x1C-83) */
-    putbyte(buf, 0, 0x03); /* Subcode */
-    (void)tsip_write(session, 0x1c, buf, 1);
+    (void)tsip_write1(session, "\x1c\x03", 2);
     /*
      * After HW information packet is received, a
      * decision is made how to configure the device.
@@ -3725,7 +3725,7 @@ static void tsip_init_query(struct gps_device_t *session)
 
 static void tsip_event_hook(struct gps_device_t *session, event_t event)
 {
-    unsigned char buf[100];
+    char buf[100];
 
     GPSD_LOG(LOG_SPIN, &session->context->errout,
              "TSIP: event_hook event %d ro %d\n",
@@ -3775,7 +3775,7 @@ static void tsip_event_hook(struct gps_device_t *session, event_t event)
 static bool tsip_speed_switch(struct gps_device_t *session,
                               speed_t speed, char parity, int stopbits)
 {
-    unsigned char buf[100];
+    char buf[100];
 
     switch (parity) {
     case 'E':
@@ -3813,7 +3813,7 @@ static bool tsip_speed_switch(struct gps_device_t *session,
 static void tsip_mode(struct gps_device_t *session, int mode)
 {
     if (mode == MODE_NMEA) {
-        unsigned char buf[16];
+        char buf[16];
 
         /* send NMEA Interval and Message Mask Command (0x7a)
         * First turn on the NMEA messages we want */
@@ -3864,7 +3864,7 @@ static void tsip_mode(struct gps_device_t *session, int mode)
 /* configure generic Trimble TSIP device to a known state */
 void configuration_packets_generic(struct gps_device_t *session)
 {
-        unsigned char buf[100];
+        char buf[100];
 
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIP: configuration_packets_generic()\n");
@@ -3882,11 +3882,11 @@ void configuration_packets_generic(struct gps_device_t *session)
         putbyte(buf, 3, IO4_DBHZ);
         (void)tsip_write(session, 0x35, buf, 4);
 
-        /* Request Software Version (0x1f), returns 0x45 */
-        (void)tsip_write(session, 0x1f, NULL, 0);
+        // Request Software Version (0x1f), returns 0x45
+        (void)tsip_write1(session, "\x1f", 1);
 
-        /* Current Time Request (0x21), returns 0x41 */
-        (void)tsip_write(session, 0x21, NULL, 0);
+        // Current Time Request (0x21), returns 0x41
+        (void)tsip_write1(session, "\x21", 1);
 
         /* Set Operating Parameters (0x2c)
          * not present in:
@@ -3913,37 +3913,43 @@ void configuration_packets_generic(struct gps_device_t *session)
 
         /* Set Position Fix Mode (0x22)
          * 0=auto 2D/3D, 1=time only, 3=2D, 4=3D, 10=Overdetermined clock */
-        putbyte(buf, 0, 0x00);
-        (void)tsip_write(session, 0x22, buf, 1);
+        buf[0] = 0x22;
+        buf[1] = 0x00;
+        (void)tsip_write1(session, buf, 2);
 
         /* Request GPS System Message (0x48)
          * not supported on model RES SMT 360 */
-        (void)tsip_write(session, 0x28, NULL, 0);
+        (void)tsip_write1(session, "\x28", 1);
 
         /* Last Position and Velocity Request (0x37)
          * returns 0x57 and (0x42, 0x4a, 0x83, or 0x84) and (0x43 or 0x56)  */
-        (void)tsip_write(session, 0x37, NULL, 0);
-        putbyte(buf, 0, 0x15);
-        (void)tsip_write(session, 0x8e, buf, 1);
+        (void)tsip_write1(session, "\x37", 1);
+
+        // 0x8e-15 request output datum
+        buf[0] = 0x8e;
+        buf[1] = 0x15;
+        (void)tsip_write1(session, buf, 2);
 
         /* Primary Receiver Configuration Parameters Request (0xbb-00)
          * returns  Primary Receiver Configuration Block (0xbb-00) */
-        putbyte(buf, 0, 0x00);
-        (void)tsip_write(session, 0xbb, buf, 1);
+        buf[0] = 0xbb;
+        buf[1] = 0x00;
+        (void)tsip_write1(session, buf, 2);
 }
 
 /* configure Acutime Gold to a known state */
 void configuration_packets_acutime_gold(struct gps_device_t *session)
 {
-        unsigned char buf[100];
+        char buf[100];
 
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIP: configuration_packets_acutime_gold()\n");
 
         /* Request Firmware Version (0x1c-01)
          * returns Firmware component version information (0x1x-81) */
-        putbyte(buf, 0, 0x01);
-        (void)tsip_write(session, 0x1c, buf, 1);
+        buf[0] = 0x1c;
+        buf[1] = 0x01;
+        (void)tsip_write1(session, buf, 2);
 
         /* Set Self-Survey Parameters (0x8e-a9) */
         putbyte(buf, 0, 0xa9); /* Subcode */
@@ -4016,7 +4022,7 @@ void configuration_packets_acutime_gold(struct gps_device_t *session)
 /* configure RES 360 to a known state */
 void configuration_packets_res360(struct gps_device_t *session)
 {
-    unsigned char buf[100];
+    char buf[100];
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "TSIP: configuration_packets_res360()\n");
