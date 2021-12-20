@@ -2485,16 +2485,17 @@ static gps_mask_t processPGRMZ(int c UNUSED, char *field[],
      */
     gps_mask_t mask = ONLINE_SET;
 
+    // codacy does not like strlen()
     if ('f' == field[2][0] &&
-        0 < strlen(field[1])) {
-        /* have a GPS altitude, must be 3D */
-        /* seems to be altMSL.  regressions show this matches GPGGA MSL */
+        0 < strnlen(field[1], 20)) {
+        // have a GPS altitude, must be 3D
+        // seems to be altMSL.  regressions show this matches GPGGA MSL
         session->newdata.altMSL = atoi(field[1]) * FEET_TO_METERS;
         mask |= (ALTITUDE_SET);
     }
     switch (field[3][0]) {
     default:
-        /* Huh? */
+        // Huh?
         break;
     case '1':
         session->newdata.mode = MODE_NO_FIX;
@@ -2517,7 +2518,7 @@ static gps_mask_t processPGRMZ(int c UNUSED, char *field[],
     return mask;
 }
 
-/* Magellan Status */
+// Magellan Status
 static gps_mask_t processPMGNST(int c UNUSED, char *field[],
                                 struct gps_device_t *session)
 {
@@ -3839,27 +3840,29 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
      * legal limit for NMEA, so we can cope by just tossing out overlong
      * packets.  This may be a generic bug of all Garmin chipsets.
      */
-    if (strlen(sentence) > NMEA_MAX) {
+    if (NMEA_MAX < strnlen(sentence, NMEA_MAX + 1)) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NMEA0183: Overlong packet of %zd chars rejected.\n",
                  strlen(sentence));
         return ONLINE_SET;
     }
 
-    /* make an editable copy of the sentence */
+    // make an editable copy of the sentence
     (void)strlcpy((char *)session->nmea.fieldcopy, sentence,
                   sizeof(session->nmea.fieldcopy) - 1);
-    /* discard the checksum part */
+    // discard the checksum part
     for (p = (char *)session->nmea.fieldcopy;
-         (*p != '*') && (*p >= ' ');)
+         (*p != '*') && (*p >= ' ');) {
         ++p;
-    if (*p == '*')
-        *p++ = ',';             /* otherwise we drop the last field */
+    }
+    if (*p == '*') {
+        *p++ = ',';             // otherwise we drop the last field
+    }
 #ifdef SKYTRAQ_ENABLE_UNUSED
-    /* $STI is special, no trailing *, or chacksum */
-    if ( 0 != strncmp( "STI,", sentence, 4) ) {
+    // $STI is special, no trailing *, or chacksum
+    if (0 != strncmp( "STI,", sentence, 4)) {
         skytraq_sti = true;
-        *p++ = ',';             /* otherwise we drop the last field */
+        *p++ = ',';             // otherwise we drop the last field
     }
 #endif
     *p = '\0';
@@ -3867,14 +3870,15 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
 
     // split sentence copy on commas, filling the field array
     count = 0;
-    t = p;                      /* end of sentence */
-    p = (char *)session->nmea.fieldcopy + 1; /* beginning of tag, 'G' not '$' */
+    t = p;                      // end of sentence
+    p = (char *)session->nmea.fieldcopy + 1;  // beginning of tag, 'G' not '$'
     // while there is a search string and we haven't run off the buffer...
-    while ((p != NULL) && (p <= t)) {
-        session->nmea.field[count] = p; /* we have a field. record it */
-        if ((p = strchr(p, ',')) != NULL) {  /* search for the next delimiter */
-            *p = '\0';          /* replace it with a NUL */
-            count++;            /* bump the counters and continue */
+    while ((NULL != p) &&
+           (p <= t)) {
+        session->nmea.field[count] = p;  // we have a field. record it
+        if ((p = strchr(p, ',')) != NULL) {  // search for the next delimiter
+            *p = '\0';          // replace it with a NUL
+            count++;            // bump the counters and continue
             p++;
         }
     }
