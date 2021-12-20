@@ -541,7 +541,7 @@ static void update_imu_panel(struct gps_data_t *gpsdata,
     datap = &gpsdata->attitude;
     if (0 < datap->mtime.tv_sec) {
         if ('\0' == datap->msg[0]) {
-            strncpy(datap->msg, "  ATT", sizeof(datap->msg));
+            strlcpy(datap->msg, "  ATT", sizeof(datap->msg));
         }
         update_imu(datap, 12);
         update = 1;
