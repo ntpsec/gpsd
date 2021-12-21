@@ -191,7 +191,7 @@ SPDX-License-Identifier: BSD-2-clause
 
 *****************************************************************************/
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"   // must be before all includes
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -227,7 +227,7 @@ void gpsd_time_init(struct gps_context_t *context, time_t starttime)
         GPSD_LOG(LOG_ERROR, &context->errout,
                  "system time looks bogus, dates may not be reliable.\n");
     } else {
-        /* we've forced the UTC timezone, so this is actually UTC */
+        // we've forced the UTC timezone, so this is actually UTC
         struct tm *now = localtime(&context->start_time);
         char scr[128];
         timespec_t ts_start_time;
@@ -268,7 +268,8 @@ void gpsd_set_century(struct gps_device_t *session)
         return;
     }
 
-    if (1968 > year || 2200 < year) {
+    if (1968 > year ||
+        2200 < year) {
         // bad year
         return;
     }
@@ -432,5 +433,4 @@ timespec_t gpsd_gpstime_resolv(struct gps_device_t *session,
     return t;
 }
 
-/* end */
 // vim: set expandtab shiftwidth=4

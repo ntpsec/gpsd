@@ -1377,6 +1377,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         } else if ('$' == c) {  // LEA-5H can/will output NMEA/UBX back to back
             lexer->state = NMEA_DOLLAR;
         } else if ('{' == c) {
+            // codacy thinks this can never happen
             return character_pushback(lexer, JSON_LEADER);
         } else {
             return character_pushback(lexer, GROUND_STATE);

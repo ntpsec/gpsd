@@ -4,7 +4,8 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"   // must be before all includes
+
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -114,7 +115,8 @@ static void ledumpall(void)
                  (uint64_t) uL1, (uint64_t) uL2,
                  (uint64_t) getleu64(buf, 0), (uint64_t) getleu64(buf, 8));
     (void)printf("getlef32: %f %f\n", f1, getlef32((const char *)buf, 24));
-    (void)printf("getled64: %.16f %.16f\n", d1, getled64((const char *)buf, 16));
+    (void)printf("getled64: %.16f %.16f\n", d1,
+                 getled64((const char *)buf, 16));
 }
 
 struct unsigned_test
@@ -180,7 +182,7 @@ int main(int argc, char *argv[])
     bool quiet = (argc > 1) && (strcmp(argv[1], "--quiet") == 0);
 
     struct unsigned_test *up, unsigned_tests[] = {
-        /* tests using the big buffer */
+        // tests using the big buffer
         {buf, 0,  1,  0,    false, "first bit of first byte"},
         {buf, 0,  8,  0x01, false, "first 8 bits"},
         {buf, 32, 7,  0x02, false, "first seven bits of fifth byte (0x05)"},
@@ -191,7 +193,7 @@ int main(int argc, char *argv[])
         {buf, 32, 7,  0x20, true, "first seven bits of fifth byte (0x05)"},
         {buf, 56, 12, 0xf10,true, "12 bits crossing 7th to 8th bytes (0x08ff)"},
         {buf, 78, 4,  0xd,  true, "4 bits crossing 8th to 9th byte (0xfefd)"},
-        /* sporadic tests based on found bugs */
+        // sporadic tests based on found bugs
         {(unsigned char *)"\x19\x23\f6",
          7, 2, 2, false, "2 bits crossing 1st to 2nd byte (0x1923)"},
     };
@@ -203,8 +205,9 @@ int main(int argc, char *argv[])
     memcpy(buf + 16, "\x40\x09\x21\xfb\x54\x44\x2d\x18", 8);
     memcpy(buf + 24, "\x40\x49\x0f\xdb", 5);
 
-    if (!quiet)
+    if (!quiet) {
         (void)printf("Testing bitfield extraction\n");
+    }
 
     sb1 = getsb(buf, 0);
     sb2 = getsb(buf, 8);
@@ -215,11 +218,12 @@ int main(int argc, char *argv[])
         unsigned char *sp;
 
         (void)fputs("Test data:", stdout);
-        for (sp = buf; sp < buf + 28; sp++)
+        for (sp = buf; sp < buf + 28; sp++) {
             (void)printf(" %02x", *sp);
+        }
         (void)putc('\n', stdout);
 
-        /* big-endian test */
+        // big-endian test
         printf("Big-endian:\n");
         sw1 = getbes16(buf, 0);
         sw2 = getbes16(buf, 8);
@@ -237,7 +241,7 @@ int main(int argc, char *argv[])
         d1 = getbed64((const char *)buf, 16);
         bedumpall();
 
-        /* little-endian test */
+        // little-endian test
         printf("Little-endian:\n");
         sw1 = getles16(buf, 0);
         sw2 = getles16(buf, 8);
@@ -256,32 +260,45 @@ int main(int argc, char *argv[])
         ledumpall();
     }
 
-    if (sb1 != 1)  printf("getsb(buf, 0) FAILED\n");
-    if (sb2 != -1) printf("getsb(buf, 8) FAILED\n");
-    if (ub1 != 1)  printf("getub(buf, 0) FAILED\n");
-    if (ub2 != 0xff) printf("getub(buf, 8) FAILED\n");
+    if (1 != sb1) {
+        printf("getsb(buf, 0) FAILED\n");
+    }
+    if (-1 != sb2)  {
+        printf("getsb(buf, 8) FAILED\n");
+    }
+    if (1 != ub1) {
+        printf("getub(buf, 0) FAILED\n");
+    }
+    if (0xff != ub2) {
+        printf("getub(buf, 8) FAILED\n");
+    }
 
     for (up = unsigned_tests;
          up <
          unsigned_tests + sizeof(unsigned_tests) / sizeof(unsigned_tests[0]);
          up++) {
-        uint64_t res = ubits((unsigned char *)buf, up->start, up->width, up->le);
+        uint64_t res = ubits((unsigned char *)buf, up->start, up->width,
+                             up->le);
         bool success = (res == up->expected);
-        if (!success)
+        if (!success) {
             failures++;
-        if (!success || !quiet)
+        }
+        if (!success ||
+            !quiet) {
             (void)printf("ubits(%s, %d, %d, %s) %s should be %" PRIx64
                          ", is %" PRIx64 ": %s\n",
                          hexdump(buf, strlen((char *)buf)),
                          up->start, up->width, up->le ? "true" : "false",
                          up->description, up->expected, res,
                          success ? "succeeded" : "FAILED");
+        }
     }
 
 
     shiftleft(buf, 28, 30);
-    if (!quiet)
+    if (!quiet) {
         printf("Left-shifted 30 bits: %s\n", hexdump(buf, 28));
+    }
     /*
      * After the 24-bit shift, the bit array loses its first three bytes:
      * 0x0405060708 = 00000100 00000101 00000110 00000111 00001000
@@ -309,13 +326,14 @@ int main(int argc, char *argv[])
         bitm++;
     }
 
-    if (!quiet)
+    if (!quiet) {
         (void)printf("Testing UINT2INT(U, N)\n");
+    }
 
     while (129 > uint2->bits) {
         if (uint2->res != UINT2INT(uint2->uint, uint2->bits)) {
             failures++;
-            printf("UINT2INT(x%llx, %u) FAILED, %lld s/b %lld\n",
+            printf("UINT2INT(x%llx, %d) FAILED, %lld s/b %lld\n",
                uint2->uint, uint2->bits,
                uint2->res, UINT2INT(uint2->uint, uint2->bits));
         }
