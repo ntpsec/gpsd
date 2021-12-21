@@ -294,12 +294,11 @@ static void windowsetup(void)
      */
     int ysize;                // actual screen lines
     int ysize_gps;            // ysize, minus rows reserved for raw
-    int row = 1;
     int slop_width;           // width of the slop window
 
     (void)initscr();
     // initscr sets up COLS and LINES
-    ysize_gps = ysize = LINES;
+    ysize = LINES;
 
     (void)noecho();
     // cbreak() ??
@@ -312,6 +311,8 @@ static void windowsetup(void)
 
     if (imu_flag) {
         // We're an IMU, set up accordingly.
+        int row = 1;
+
         if ((IMU_WIDTH - 2) > COLS) {
             // allow 78, cutting of the two rightmost columns is acceptable
             die(0, "Your terminal not wide enough.  80 columns required.");
@@ -915,7 +916,6 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
     if (show_dops) {
         const char *ep_str;
         char *dop_str;
-        static time_t last_time;
 
         // Fill in the estimated latitude position error, XDOP.
         ep_str = ep_to_str(gpsdata->fix.epx, altfactor, altunits);
@@ -984,6 +984,8 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
         (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET,
                         "Time offset");
         if (0 < gpsdata->fix.time.tv_sec) {
+            static time_t last_time;
+
             if (last_time != gpsdata->fix.time.tv_sec) {
                 last_time = gpsdata->fix.time.tv_sec;
                 timespec_t ts_now, ts_diff;
