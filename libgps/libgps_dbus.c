@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"   // must be before all includes
 
 #include <errno.h>
 #include <libgen.h>
@@ -67,10 +67,11 @@ static DBusHandlerResult handle_gps_fix(DBusMessage * message)
                           DBUS_TYPE_DOUBLE, &share_gpsdata->fix.epc,
                           DBUS_TYPE_STRING, &gpsd_devname, DBUS_TYPE_INVALID);
 
-    if (MODE_NO_FIX < share_gpsdata->fix.mode)
+    if (MODE_NO_FIX < share_gpsdata->fix.mode) {
         share_gpsdata->fix.status = STATUS_GPS;
-    else
+    } else {
         share_gpsdata->fix.status = STATUS_UNK;
+    }
 
     dbus_error_free(&error);
 
@@ -100,8 +101,9 @@ int gps_dbus_open(struct gps_data_t *gpsdata)
     DBusError error;
 
     gpsdata->privdata = (void *)malloc(sizeof(struct privdata_t));
-    if (gpsdata->privdata == NULL)
+    if (NULL == gpsdata->privdata) {
         return -1;
+    }
 
     dbus_error_init(&error);
     connection = dbus_bus_get(DBUS_BUS_SYSTEM, &error);
@@ -130,7 +132,7 @@ int gps_dbus_open(struct gps_data_t *gpsdata)
     gpsdata->gps_fd = DBUS_PSEUDO_FD;
 #else
     gpsdata->gps_fd = (void *)(intptr_t)DBUS_PSEUDO_FD;
-#endif /* USE_QT */
+#endif  // USE_QT
     share_gpsdata = gpsdata;
     return 0;
 }
@@ -147,7 +149,6 @@ int gps_dbus_mainloop(struct gps_data_t *gpsdata,
                        int timeout,
                        void (*hook)(struct gps_data_t *))
 {
-    bool status;
     struct timespec ts_from, ts_to;
     double diff, d_timeout;
 
@@ -155,6 +156,8 @@ int gps_dbus_mainloop(struct gps_data_t *gpsdata,
     share_gpsdata = gpsdata;
     PRIVATE(share_gpsdata)->handler = (void (*)(struct gps_data_t *))hook;
     for (;;) {
+        bool status;
+
         if (0 != clock_gettime(CLOCK_REALTIME, &ts_from)) {
             return -2;
         }
@@ -177,5 +180,5 @@ int gps_dbus_mainloop(struct gps_data_t *gpsdata,
     return -2;
 }
 
-#endif /* defined(DBUS_EXPORT_ENABLE) */
+#endif  // defined(DBUS_EXPORT_ENABLE)
 // vim: set expandtab shiftwidth=4
