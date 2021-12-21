@@ -150,6 +150,22 @@ static unsigned char tsip_gnssid(unsigned svtype, short prn,
     return gnssid;
 }
 
+/* tsip1_checksum()
+ * compute TSIP version 1 checksum
+ *
+ * Return: checksum
+ */
+static char tsip1_checksum(const char *buf, size_t len)
+{
+    char checksum = 0;
+    size_t index;
+
+    for(index = 0; index < len; index++) {
+        checksum ^= buf[index];
+    }
+    return checksum;
+}
+
 /* tsip_write1() - send old style TSIP message, improved tsip_write()
  * buf - the packet
  * len - length of buf
@@ -170,7 +186,7 @@ static ssize_t tsip_write1(struct gps_device_t *session,
         return 0;
     }
     if ((NULL == buf) ||
-        0 >= len ||
+        0 == len ||
         (sizeof(session->msgbuf) / 2) < len) {
         // could over run, do not chance it
         return -1;
@@ -271,6 +287,7 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
     struct tm date = {0};
     bool bad_len = false;
     unsigned char chksum = 0;
+    char snd_buf[24];         // send buffer
 
     if (9 > len) {
         // should never happen
@@ -345,6 +362,21 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
                  "TSIPv1: x9001: Version %u.%u Build %u %u/%u/%u hwid %u, "
                  "%.*s\n",
                  u1, u2, u3, u6, u5, u4, u7, u8, buf + u8);
+        mask |= DEVICEID_SET;
+        if (!session->context->passive) {
+            // request everything periodically
+            snd_buf[0] = 0x91;             // id
+            snd_buf[1] = 0x05;             // sub id
+            putbe16(snd_buf, 2, 20);       // length
+            snd_buf[5] = 0x01;             // mode: set
+            snd_buf[6] = 0xff;             // port: current port
+            putbe32(snd_buf, 7, 0x02aaa);
+            putbe32(snd_buf, 11, 0);       // reserved
+            putbe32(snd_buf, 15, 0);       // reserved
+            putbe32(snd_buf, 19, 0);       // reserved
+            snd_buf[23] = tsip1_checksum(&snd_buf[5], 18);   // checksum
+            (void)tsip_write1(session, snd_buf, 25);
+        }
         break;
     case 0x9100:
         // Port Configuration
