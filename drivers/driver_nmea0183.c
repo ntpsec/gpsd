@@ -340,7 +340,9 @@ static int merge_hhmmss(char *hhmmss, struct gps_device_t *session)
     if ('.' == hhmmss[6] &&
         // NetBSD 6 wants the cast
         0 != isdigit((int)hhmmss[7])) {
-        int sublen = strlen(hhmmss + 7);
+        // codacy hates strlen()
+        int sublen = strnlen(hhmmss + 7, 20);
+
         i = atoi(hhmmss + 7);
         session->nmea.subseconds.tv_nsec = (long)i *
                                            (long)pow(10.0, 9 - sublen);
@@ -1243,6 +1245,7 @@ static unsigned char nmea_sigid_to_ubx(unsigned char nmea_sigid)
 {
     unsigned char ubx_sigid = 0;
 
+    // FIXME: need to know gnssid to guess sigid
     switch (nmea_sigid) {
     default:
         FALLTHROUGH
@@ -1687,27 +1690,32 @@ static gps_mask_t processGSA(int count, char *field[],
          * fixes from an Antaris chipset. which returns E in field 2
          * for a dead-reckoning estimate.  Fix by Andreas Stricker.
          */
-        if ('E' != field[2][0])
+        if ('E' != field[2][0]) {
             mask = MODE_SET;
+        }
 
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "NMEA0183: xxGSA sets mode %d\n", session->newdata.mode);
 
-        if (19 < count ) {
+        if (19 < count) {
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "NMEA0183: xxGSA: count %d too long!\n", count);
         } else {
             /* Just ignore the last fields of the Navior CH-4701 */
-            if (field[15][0] != '\0')
+            if ('\0' != field[15][0]) {
                 session->gpsdata.dop.pdop = safe_atof(field[15]);
-            if (field[16][0] != '\0')
+            }
+            if ('\0' != field[16][0]) {
                 session->gpsdata.dop.hdop = safe_atof(field[16]);
-            if (field[17][0] != '\0')
+            }
+            if ('\0' != field[17][0]) {
                 session->gpsdata.dop.vdop = safe_atof(field[17]);
-            if (19 == count && '\0' != field[18][0]) {
-                /* get the NMEA 4.10 sigid */
+            }
+            if (19 == count &&
+                '\0' != field[18][0]) {
+                // get the NMEA 4.10 sigid
                 nmea_sigid = atoi(field[18]);
-                /* FIXME: ubx_sigid not used yet */
+                // FIXME: ubx_sigid not used yet
                 ubx_sigid = nmea_sigid_to_ubx(nmea_sigid);
             }
         }
@@ -1716,9 +1724,9 @@ static gps_mask_t processGSA(int count, char *field[],
          * or GNGSA to GNGSA
          * in which case accumulate
          */
-        if ( '\0' == session->nmea.last_gsa_talker
-          || (GSA_TALKER == session->nmea.last_gsa_talker
-              && 'N' != GSA_TALKER) ) {
+        if ('\0' == session->nmea.last_gsa_talker ||
+            (GSA_TALKER == session->nmea.last_gsa_talker &&
+             'N' != GSA_TALKER) ) {
             session->gpsdata.satellites_used = 0;
             memset(session->nmea.sats_used, 0, sizeof(session->nmea.sats_used));
             GPSD_LOG(LOG_DATA, &session->context->errout,
@@ -1767,14 +1775,14 @@ static gps_mask_t processGSA(int count, char *field[],
             break;
         }
 
-        /* the magic 6 here counts the tag, two mode fields, and DOP fields */
+        // the magic 6 here counts the tag, two mode fields, and DOP fields
         for (i = 0; i < count - 6; i++) {
             int prn;
             int nmea_satnum;
-            unsigned char ubx_gnssid;   /* UNUSED */
-            unsigned char ubx_svid;     /* UNUSED */
+            unsigned char ubx_gnssid;   // UNUSED
+            unsigned char ubx_svid;     // UNUSED
 
-            /* skip empty fields, otherwise empty becomes prn=200 */
+            // skip empty fields, otherwise empty becomes prn=200
             nmea_satnum = atoi(field[i + 3]);
             if (1 > nmea_satnum) {
                 continue;
@@ -1783,7 +1791,7 @@ static gps_mask_t processGSA(int count, char *field[],
                                 &ubx_gnssid, &ubx_svid);
 
 #ifdef __UNUSED__
-            /* debug */
+            // debug
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "NMEA0183: %s nmeaid_to_prn: nmea_gnssid "
                      "%d nmea_satnum %d "
@@ -1792,10 +1800,10 @@ static gps_mask_t processGSA(int count, char *field[],
                      nmea_gnssid, nmea_satnum, ubx_gnssid, ubx_svid, prn);
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      NMEA0183: "%s count %d\n", field[0], count);
-#endif  /*  __UNUSED__ */
+#endif  //  __UNUSED__
 
-            if (prn > 0) {
-                /* check first BEFORE over-writing memory */
+            if (0 < prn) {
+                // check first BEFORE over-writing memory
                 if (MAXCHANNELS <= session->gpsdata.satellites_used) {
                     /* This should never happen as xxGSA is limited to 12,
                      * except for the Navior-24 CH-4701.
@@ -1817,8 +1825,7 @@ static gps_mask_t processGSA(int count, char *field[],
                  session->gpsdata.dop.hdop,
                  session->gpsdata.dop.vdop, ubx_sigid);
     }
-    /* assumes GLGSA or BDGSA, if present, is emitted  directly
-     * after the GPGSA*/
+    // assumes GLGSA or BDGSA, if present, is emitted directly after the GPGSA
     if ((session->nmea.seen_bdgsa ||
          session->nmea.seen_gagsa ||
          session->nmea.seen_gigsa ||
@@ -1828,19 +1835,19 @@ static gps_mask_t processGSA(int count, char *field[],
          GSA_TALKER == 'P') {
         mask = ONLINE_SET;
     } else if ( 'N' != last_last_gsa_talker && 'N' == GSA_TALKER) {
-        /* first of two GNGSA */
-        /* if mode == 1 some GPS only output 1 GNGSA, so ship mode always */
+        /* first of two GNGSA
+         * if mode == 1 some GPS only output 1 GNGSA, so ship mode always */
         mask =  ONLINE_SET | MODE_SET;
     }
 
-    /* cast for 32/64 compatibility */
+    // cast for 32/64 compatibility
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "NMEA0183: xxGSA: mask %#llx\n", (long long unsigned)mask);
     return mask;
 #undef GSA_TALKER
 }
 
-/* xxGSV -  GPS Satellites in View */
+// xxGSV -  GPS Satellites in View
 static gps_mask_t processGSV(int count, char *field[],
                              struct gps_device_t *session)
 {
@@ -2848,18 +2855,20 @@ static gps_mask_t processHDG(int c UNUSED, char *field[],
     double sensor_heading;
     double magnetic_deviation;
 
-    if ( 0 == strlen(field[1])) {
-        /* no data */
+    if ('\0' == field[1][0]) {
+        // no data
         return mask;
     }
     sensor_heading = safe_atof(field[1]);
-    if ((0.0 > sensor_heading) || (360.0 < sensor_heading)) {
-        /* bad data */
+    if ((0.0 > sensor_heading) ||
+        (360.0 < sensor_heading)) {
+        // bad data */
         return mask;
     }
     magnetic_deviation = safe_atof(field[2]);
-    if ((0.0 > magnetic_deviation) || (360.0 < magnetic_deviation)) {
-        /* bad data */
+    if ((0.0 > magnetic_deviation) ||
+        (360.0 < magnetic_deviation)) {
+        // bad data
         return mask;
     }
     switch (field[2][0]) {
@@ -2870,22 +2879,22 @@ static gps_mask_t processHDG(int c UNUSED, char *field[],
         sensor_heading += magnetic_deviation;
         break;
     default:
-        /* ignore */
+        // ignore
         break;
     }
 
-    /* good data */
+    // good data
     session->newdata.magnetic_track = sensor_heading;
     mask |= MAGNETIC_TRACK_SET;
 
-    /* get magnetic variation */
+    // get magnetic variation
     if ('\0' != field[3][0] &&
         '\0' != field[4][0]) {
         session->newdata.magnetic_var = safe_atof(field[3]);
 
         switch (field[4][0]) {
         case 'E':
-            /* no change */
+            // no change
             mask |= MAGNETIC_TRACK_SET;
             break;
         case 'W':
@@ -2893,7 +2902,7 @@ static gps_mask_t processHDG(int c UNUSED, char *field[],
             mask |= MAGNETIC_TRACK_SET;
             break;
         default:
-            /* huh? */
+            // huh?
             session->newdata.magnetic_var = NAN;
             break;
         }
@@ -2908,7 +2917,7 @@ static gps_mask_t processHDG(int c UNUSED, char *field[],
 }
 
 static gps_mask_t processHDT(int c UNUSED, char *field[],
-                                struct gps_device_t *session)
+                             struct gps_device_t *session)
 {
     /*
      * $HEHDT,341.8,T*21
@@ -2922,13 +2931,14 @@ static gps_mask_t processHDT(int c UNUSED, char *field[],
     gps_mask_t mask = ONLINE_SET;
     double heading;
 
-    if ( 0 == strlen(field[1])) {
-        /* no data */
+    if ('\0' == field[1][0]) {
+        // no data
         return mask;
     }
     heading = safe_atof(field[1]);
-    if ((0.0 > heading) || (360.0 < heading)) {
-        /* bad data */
+    if ((0.0 > heading) ||
+        (360.0 < heading)) {
+        // bad data
         return mask;
     }
     // good data
@@ -2961,13 +2971,13 @@ static gps_mask_t processDBT(int c UNUSED, char *field[],
      */
     gps_mask_t mask = ONLINE_SET;
 
-    if (field[3][0] != '\0') {
+    if ('\0' != field[3][0]) {
         session->newdata.depth = safe_atof(field[3]);
         mask |= (ALTITUDE_SET);
-    } else if (field[1][0] != '\0') {
+    } else if ('\0' != field[1][0]) {
         session->newdata.depth = safe_atof(field[1]) * FEET_TO_METERS;
         mask |= (ALTITUDE_SET);
-    } else if (field[5][0] != '\0') {
+    } else if ('\0' != field[5][0]) {
         session->newdata.depth = safe_atof(field[5]) * FATHOMS_TO_METERS;
         mask |= (ALTITUDE_SET);
     }
@@ -2979,7 +2989,7 @@ static gps_mask_t processDBT(int c UNUSED, char *field[],
     return mask;
 }
 
-/* GPS Text message */
+// GPS Text message
 static gps_mask_t processTXT(int count, char *field[],
                              struct gps_device_t *session)
 {
@@ -3010,7 +3020,7 @@ static gps_mask_t processTXT(int count, char *field[],
     int msgType = 0;
     char *msgType_txt = "Unknown";
 
-    if ( 5 != count) {
+    if (5 != count) {
       return mask;
     }
 
@@ -3118,7 +3128,7 @@ static gps_mask_t processTNTA(int c UNUSED, char *field[],
      */
     gps_mask_t mask = ONLINE_SET;
 
-    if (strcmp(field[3], "T4") == 0) {
+    if (0 == strcmp(field[3], "T4")) {
         struct oscillator_t *osc = &session->gpsdata.osc;
         unsigned int quality = atoi(field[2]);
         unsigned int delta = atoi(field[4]);
@@ -3126,10 +3136,10 @@ static gps_mask_t processTNTA(int c UNUSED, char *field[],
         unsigned int status = atoi(field[6]);
         char deltachar = field[4][0];
 
-        osc->running = (quality > 0);
+        osc->running = (0 < quality);
         osc->reference = (deltachar && (deltachar != '?'));
         if (osc->reference) {
-            if (delta < 500) {
+            if (500 > delta) {
                 osc->delta = fine;
             } else {
                 osc->delta = ((delta < 500000000) ? delta : 1000000000 - delta);
@@ -3266,7 +3276,7 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
             if (0 == do_lat_lon(&field[5], &session->newdata)) {
                 mask |= LATLON_SET;
                 if ('\0' != field[9][0]) {
-                    /* altitude is already WGS 84 */
+                    // altitude is already WGS 84
                     session->newdata.altHAE = safe_atof(field[9]);
                     mask |= ALTITUDE_SET;
                 }
@@ -3293,16 +3303,17 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
                      session->gpsdata.dop.hdop, session->gpsdata.dop.vdop,
                      session->gpsdata.dop.tdop, satellites_used);
         }
-    } else if (0 == strcmp("RID", field[1])) {  /* Receiver ID */
+    } else if (0 == strcmp("RID", field[1])) {  // Receiver ID
         (void)snprintf(session->subtype, sizeof(session->subtype) - 1,
                        "%s ver %s", field[2], field[3]);
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "NMEA0183: PASHR,RID: subtype=%s mask={}\n",
                  session->subtype);
         return mask;
-    } else if (0 == strcmp("SAT", field[1])) {  /* Satellite Status */
+    } else if (0 == strcmp("SAT", field[1])) {  // Satellite Status
         struct satellite_t *sp;
         int i, n = session->gpsdata.satellites_visible = atoi(field[2]);
+
         session->gpsdata.satellites_used = 0;
         for (i = 0, sp = session->gpsdata.skyview;
             sp < session->gpsdata.skyview + n; sp++, i++) {
@@ -3334,7 +3345,7 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
         session->gpsdata.attitude.heading = safe_atof(field[2]);
         session->gpsdata.attitude.roll = safe_atof(field[4]);
         session->gpsdata.attitude.pitch = safe_atof(field[5]);
-        /* mask |= ATTITUDE_SET;  * confuses cycle order ?? */
+        // mask |= ATTITUDE_SET;  * confuses cycle order ??
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "NMEA0183: PASHR (OxTS) time %s, heading %lf.\n",
                   timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
@@ -3800,30 +3811,34 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PSTM", 0, false, NULL},
         {"PTFTTXT", 0, false, NULL},            // unknown uptime
         {"PTKM", 0, false, NULL},               // Robertson RGC12 Gyro
-        {"PTNTHTM", 9, false, processTNTHTM},
+        {"PTNLRHVR", 0, false, NULL},           // Trimble Software Version
+        {"PTNLRPT", 0, false, NULL},            // Trimble Serial Port COnfig
+        {"PTNLRSVR", 0, false, NULL},           // Trimble Firmware Version
+        {"PTNLRZD", 0, false, NULL},            // Extended Time and Date
         {"PTNTA", 8, false, processTNTA},
-        {"PUBX", 0, false, NULL},       // ignore u-blox and Antaris
-        {"RLM", 0, false, NULL},        // ignore Return Link Message
-        /* ignore Recommended Minimum Navigation Info, waypoint */
-        {"RMB", 0,  false, NULL},       // ignore Recommended Min Nav Info
+        {"PTNTHTM", 9, false, processTNTHTM},
+        {"PUBX", 0, false, NULL},               // ignore u-blox and Antaris
+        {"RLM", 0, false, NULL},                // ignore Return Link Message
+        // ignore Recommended Minimum Navigation Info, waypoint
+        {"RMB", 0,  false, NULL},          // ignore Recommended Min Nav Info
         {"RMC", 8,  false, processRMC},
-        {"ROT", 0,  false, NULL},       // ignore Rate of Turn
-        {"RPM", 0,  false, NULL},       // ignore Revolutions
-        {"RSA", 0,  false, NULL},       // ignore Rudder Sensor Angle
-        {"RTE", 0,  false, NULL},        // ignore Routes
-        {"STI", 2,  false, processSTI}, // $STI  Skytraq
-        {"THS", 0,  false, NULL},       // True Heading and Status (u-blox 8)
+        {"ROT", 0,  false, NULL},               // ignore Rate of Turn
+        {"RPM", 0,  false, NULL},               // ignore Revolutions
+        {"RSA", 0,  false, NULL},               // ignore Rudder Sensor Angle
+        {"RTE", 0,  false, NULL},               // ignore Routes
+        {"STI", 2,  false, processSTI},         // $STI  Skytraq
+        {"THS", 0,  false, NULL},         // True Heading and Status (u-blox 8)
         {"TXT", 5,  false, processTXT},
-        {"VBW", 0,  false, NULL},       // ignore Dual Ground/Water Speed
-        {"VDO", 0,  false, NULL},       // ignore Own Vessel's Information
-        {"VDR", 0,  false, NULL},       // ignore Set and Drift
-        {"VHW", 0,  false, NULL},       // ignore Water Speed and Heading
-        {"VLW", 0,  false, NULL},       // ignore Dual ground/water distance
+        {"VBW", 0,  false, NULL},         // ignore Dual Ground/Water Speed
+        {"VDO", 0,  false, NULL},         // ignore Own Vessel's Information
+        {"VDR", 0,  false, NULL},         // ignore Set and Drift
+        {"VHW", 0,  false, NULL},         // ignore Water Speed and Heading
+        {"VLW", 0,  false, NULL},         // ignore Dual ground/water distance
         {"VTG", 5,  false, processVTG},
-        {"XDR", 0,  false, NULL},       // ignore $HCXDR, IMU?
-        {"XTE", 0,  false, NULL},       // ignore Cross-Track Error
+        {"XDR", 0,  false, NULL},         // ignore $HCXDR, IMU?
+        {"XTE", 0,  false, NULL},         // ignore Cross-Track Error
         {"ZDA", 4,  false, processZDA},
-        {NULL,  0,  false, NULL},        // no more
+        {NULL,  0,  false, NULL},         // no more
     };
 
     int count;
