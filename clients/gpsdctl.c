@@ -5,7 +5,7 @@
  *
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"   // must be before all includes
 
 #include <assert.h>
 #include <fcntl.h>
@@ -40,12 +40,13 @@ static int gpsd_control(const char *action, const char *argument)
         (void)snprintf(buf, sizeof(buf),
                        "gpsd %s -F %s", gpsd_options, control_socket);
         (void)syslog(LOG_NOTICE, "launching %s", buf);
-        if (system(buf) != 0) {
+        if (0 != system(buf)) {
             (void)syslog(LOG_ERR, "launch of gpsd failed");
             return -1;
         }
-        if (access(control_socket, F_OK) == 0)
+        if (0 == access(control_socket, F_OK)) {
             connect = netlib_localsocket(control_socket, SOCK_STREAM);
+        }
     }
     if (0 > connect) {
         syslog(LOG_ERR, "can't reach gpsd");
@@ -68,16 +69,18 @@ static int gpsd_control(const char *action, const char *argument)
          */
         struct stat sb;
 
-        /* coverity[toctou] */
-        if (stat(argument, &sb) != 1)
+        // coverity[toctou]
+        if (1 != stat(argument, &sb)) {
             (void)chmod(argument, sb.st_mode | S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
+        }
         (void)snprintf(buf, sizeof(buf), "+%s\r\n", argument);
         status = (int)write(connect, buf, strlen(buf));
         // FIXME: return never checked
         ignore_return(read(connect, buf, 12));
     } else if (0 == strcmp(action, "remove")) {
         (void)snprintf(buf, sizeof(buf), "-%s\r\n", argument);
-        status = (int)write(connect, buf, strlen(buf));
+        // codacy does not like strlen()
+        status = (int)write(connect, buf, strnlen(buf, sizeof(buf)));
         // FIXME: return never checked
         ignore_return(read(connect, buf, 12));
     } else {
@@ -87,6 +90,16 @@ static int gpsd_control(const char *action, const char *argument)
     (void)close(connect);
     //syslog(LOG_DEBUG, "gpsd_control ends");
     return status;
+}
+
+// print usage, exit with EXIT_FAILURE
+static void usage(void)
+{
+    (void)printf("usage: gpsdctl action argument\n\n"
+                 "  Actions:\n"
+                 "    add    - add device\n"
+                 "    remove - remove device\n");
+    exit(EXIT_FAILURE);
 }
 
 int main(int argc, char *argv[])
@@ -99,32 +112,36 @@ int main(int argc, char *argv[])
     openlog("gpsdctl", 0, LOG_DAEMON);
     if (3 != argc) {
         (void)syslog(LOG_ERR, "requires action and argument (%d)", argc);
-        exit(EXIT_FAILURE);
+        usage();
     }
-    // pacify coverity
-    len = strlen(argv[1]);
-    if (3 > len || 7 < len) {
+    // pacify coverity, codacy hates strlen()
+    len = strnlen(argv[1], 8);
+    if (3 > len ||
+        7 < len) {
         (void)syslog(LOG_ERR, "invalid action '%s'", argv[1]);
-        exit(EXIT_FAILURE);
+        usage();
     }
 
-    // pacify coverity
-    len = strlen(argv[2]);
+    // pacify coverity, codacy hates strlen()
+    len = strnlen(argv[2], GPS_PATH_MAX);
     if (GPS_PATH_MAX <= len) {
         (void)syslog(LOG_ERR, "invalid path '%s'", argv[2]);
-        exit(EXIT_FAILURE);
+        usage();
     }
 
-    if (NULL != sockenv)
+    if (NULL != sockenv) {
         control_socket = sockenv;
-    else if (0 != geteuid())
+    } else if (0 != geteuid()) {
         control_socket = DEFAULT_GPSD_TEST_SOCKET;
+    }
 
-    if (NULL != optenv)
+    if (NULL != optenv) {
         gpsd_options = optenv;
+    }
 
-    if (0 > gpsd_control(argv[1], argv[2]))
+    if (0 > gpsd_control(argv[1], argv[2])) {
         exit(EXIT_FAILURE);
+    }
 
     exit(EXIT_SUCCESS);
 }
