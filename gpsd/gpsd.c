@@ -684,7 +684,8 @@ static void notify_watchers(struct gps_device_t *device,
             if ((onjson &&
                  sub->policy.json) ||
                 (onpps && sub->policy.pps)) {
-                (void)throttled_write(sub, buf, strlen(buf));
+                // codacy hates strlen()
+                (void)throttled_write(sub, buf, strnlen(buf, sizeof(buf)));
             }
         }
     }
@@ -806,7 +807,8 @@ bool gpsd_add_device(const char *device_name, bool flag_nowait)
 #endif  // SOCKET_EXPORT_ENABLE
 
     // we can't handle paths longer than GPS_PATH_MAX, so don't try
-    if (GPS_PATH_MAX <= strlen(device_name)) {
+    // codacy hates strlen()
+    if (GPS_PATH_MAX <= strnlen(device_name, GPS_PATH_MAX)) {
         GPSD_LOG(LOG_ERROR, &context.errout,
                  "ignoring device %s: path length exceeds maximum %d\n",
                  device_name, GPS_PATH_MAX);
@@ -1008,8 +1010,9 @@ static void handle_control(int sfd, char *buf)
     } else if (strstr(buf, "?devices") == buf) {
         // write back devices list followed by OK
         for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
-            char *path = devp->gpsdata.dev.path;
-            ignore_return(write(sfd, path, strlen(path)));
+            ignore_return(write(sfd, devp->gpsdata.dev.path,
+                                strnlen(devp->gpsdata.dev.path,
+                                        sizeof(devp->gpsdata.dev.path))));
             ignore_return(write(sfd, "\n", 1));
         }
         ignore_return(write(sfd, OK, sizeof(OK) - 1));
