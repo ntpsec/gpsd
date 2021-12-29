@@ -147,23 +147,23 @@ static short ubx2_to_prn(int gnssId, int svId)
     short nmea_PRN;
 
     if (1 > svId) {
-        /* skip 0 svId */
+        // skip 0 svId
         return 0;
     }
 
     switch (gnssId) {
     case 0:
-        /* GPS, 1-32 maps to 1-32 */
+        // GPS, 1-32 maps to 1-32
         if (32 < svId) {
-            /* skip bad svId */
+            // skip bad svId
             return 0;
         }
         nmea_PRN = svId;
         break;
     case 1:
-        /* SBAS, 120..151, 152..158 maps to 33..64, 152..158 */
+        // SBAS, 120..151, 152..158 maps to 33..64, 152..158
         if (120 > svId) {
-            /* Huh? */
+            // Huh?
             return 0;
         } else if (151 >= svId) {
             nmea_PRN = svId - 87;
@@ -175,27 +175,27 @@ static short ubx2_to_prn(int gnssId, int svId)
         }
         break;
     case 2:
-        /* Galileo, 1..36 ->  301-336 */
-        /* Galileo, 211..246 ->  301-336 */
+        // Galileo, 1..36 ->  301-336
+        // Galileo, 211..246 ->  301-336
         if (36 >= svId) {
             nmea_PRN = svId + 300;
         } else if (211 > svId) {
-            /* skip bad svId */
+            // skip bad svId
             return 0;
         } else if (246 >= svId) {
             nmea_PRN = svId + 90;
         } else {
-            /* skip bad svId */
+            // skip bad svId
             return 0;
         }
         break;
     case 3:
-        /* BeiDou, 1..37 -> to 401-437 */
-        /* BeiDou, 159..163,33..64 -> to 401-437 */
+        // BeiDou, 1..37 -> to 401-437
+        // BeiDou, 159..163,33..64 -> to 401-437
         if (37 >= svId) {
             nmea_PRN = svId + 400;
         } else {
-            /* skip bad svId */
+            // skip bad svId
             return 0;
         }
         break;
@@ -208,8 +208,8 @@ static short ubx2_to_prn(int gnssId, int svId)
         nmea_PRN = svId + 172;
         break;
     case 5:
-        /* QZSS, 1-5 maps to 193-197 */
-        /* ZED-F9T also see 198 and 199 */
+        // QZSS, 1-5 maps to 193-197
+        // ZED-F9T also see 198 and 199
         if (7 < svId) {
             /* skip bad svId */
             return 0;
@@ -217,10 +217,9 @@ static short ubx2_to_prn(int gnssId, int svId)
         nmea_PRN = svId + 192;
         break;
     case 6:
-        /* GLONASS, 1-32 maps to 65-96 */
+        // GLONASS, 1-32 maps to 65-96
         if (32 < svId) {
-            /* skip bad svId */
-            /* 255 == tracked, but unidentified, skip */
+            // skip bad svId, 255 == tracked, but unidentified, skip
             return 0;
         }
         nmea_PRN = svId + 64;
@@ -245,56 +244,55 @@ static short ubx_to_prn(int ubx_PRN, unsigned char *gnssId,
 
     // IRNSS??
     if (1 > ubx_PRN) {
-        /* skip 0 PRN */
+        // skip 0 PRN
         return 0;
     } else if (32 >= ubx_PRN) {
-        /* GPS 1..32 -> 1..32 */
+        // GPS 1..32 -> 1..32
         *gnssId = 0;
         *svId = ubx_PRN;
     } else if (64 >= ubx_PRN) {
-        /* BeiDou, 159..163,33..64 -> 1..5,6..37 */
+        // BeiDou, 159..163,33..64 -> 1..5,6..37
         *gnssId = 3;
         *svId = ubx_PRN - 27;
     } else if (96 >= ubx_PRN) {
-        /* GLONASS 65..96 -> 1..32 */
+        // GLONASS 65..96 -> 1..32
         *gnssId = 6;
         *svId = ubx_PRN - 64;
     } else if (120 > ubx_PRN) {
-        /* Huh? */
+        // Huh?
         return 0;
     } else if (158 >= ubx_PRN) {
-        /* SBAS 120..158 -> 120..158 */
+        // SBAS 120..158 -> 120..158
         *gnssId = 1;
         *svId = ubx_PRN;
     } else if (163 >= ubx_PRN) {
-        /* BeiDou, 159..163 -> 1..5 */
+        // BeiDou, 159..163 -> 1..5
         *gnssId = 3;
         *svId = ubx_PRN - 158;
     } else if (173 > ubx_PRN) {
-        /* Huh? */
+        // Huh?
         return 0;
     } else if (182 >= ubx_PRN) {
-        /* IMES 173..182 -> 1..5, in u-blox 8, bot u-blox 9 */
+        // IMES 173..182 -> 1..5, in u-blox 8, bot u-blox 9
         *gnssId = 4;
         *svId = ubx_PRN - 172;
     } else if (193 > ubx_PRN) {
-        /* Huh? */
+        // Huh?
         return 0;
     } else if (199 >= ubx_PRN) {
-        /* QZSS 193..197 -> 1..5 */
-        /* ZED-F9T also see 198 and 199 */
+        // QZSS 193..197 -> 1..5
+        // ZED-F9T also see 198 and 199
         *gnssId = 5;
         *svId = ubx_PRN - 192;
     } else if (211 > ubx_PRN) {
-        /* Huh? */
+        // Huh?
         return 0;
     } else if (246 >= ubx_PRN) {
-        /* Galileo 211..246 -> 1..36 */
+        // Galileo 211..246 -> 1..36
         *gnssId = 2;
         *svId = ubx_PRN - 210;
     } else {
-        /* greater than 246
-         * GLONASS (255), unused, or other unknown */
+        // greater than 246, GLONASS (255), unused, or other unknown
         return 0;
     }
     return ubx2_to_prn(*gnssId, *svId);
@@ -323,7 +321,7 @@ static void ubx_msg_cfg_rate(struct gps_device_t *session, unsigned char *buf,
              (unsigned)measRate, (unsigned)navRate,
              (unsigned)timeRef);
 
-    /* Update our notion of what the device's measurement rate is */
+    // Update our notion of what the device's measurement rate is
     MSTOTS(&session->gpsdata.dev.cycle, measRate);
 
     return;
@@ -1052,9 +1050,9 @@ ubx_msg_hnr_pvt(struct gps_device_t *session, unsigned char *buf,
  * sadly more info than fits in session->swtype for now.
  * so squish the data hard.
  */
-static gps_mask_t
-ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
-                size_t data_len)
+static gps_mask_t ubx_msg_mon_ver(struct gps_device_t *session,
+                                  unsigned char *buf,
+                                  size_t data_len)
 {
     int n = 0;                           // extended info counter
     int num_ext = (data_len - 40) / 30;  // number of extensions
@@ -1073,7 +1071,7 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
                    (char *)buf,
                    (char *)(buf + 30));
 
-    /* save what we can */
+    // save what we can
     (void)strlcpy(session->subtype, obuf, sizeof(session->subtype));
 
     obuf[0] = '\0';
@@ -1091,7 +1089,7 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
     // save what we can in subtype1
     (void)strlcpy(session->subtype1, obuf, sizeof(session->subtype1));
 
-    /* find PROTVER literal, followed by single separator character */
+    // find PROTVER literal, followed by single separator character
     cptr = strstr(obuf, "PROTVER=");     // protVer 18 and above
     if (NULL == cptr) {
         cptr = strstr(obuf, "PROTVER "); // protVer 17 and below
@@ -1110,9 +1108,9 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
      * firmware revision number carried in swVersion field */
     if (0 == session->driver.ubx.protver) {
         for (n = 0; NULL != fw_protver_map[n].fw_string; n++) {
-            /* skip "SW " prefix in session->subtype */
+            // skip "SW " prefix in session->subtype
             cptr = strstr(session->subtype + 3, fw_protver_map[n].fw_string);
-            /* use only when swVersion field starts with fw_string */
+            // use only when swVersion field starts with fw_string
             if (cptr == (session->subtype + 3)) {
                 session->driver.ubx.protver =
                     (unsigned char)fw_protver_map[n].protver;
@@ -1125,7 +1123,7 @@ ubx_msg_mon_ver(struct gps_device_t *session, unsigned char *buf,
         }
     }
 
-    /* output SW and HW Version at LOG_INF */
+    // output SW and HW Version at LOG_INF
     GPSD_LOG(LOG_INF, &session->context->errout,
              "UBX-MON-VER: %s %s PROTVER %u\n",
              session->subtype, session->subtype1,
@@ -3780,16 +3778,16 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         mask = ubx_msg_tim_svin(session, &buf[UBX_PREFIX_LEN], data_len);
         break;
     case UBX_NAV_SVINFO:
-        /* UBX-NAV-SVINFO deprecated, use UBX-NAV-SAT instead */
+        // UBX-NAV-SVINFO deprecated, use UBX-NAV-SAT instead
         GPSD_LOG(LOG_PROG, &session->context->errout, "UBX-NAV-SVINFO\n");
         mask = ubx_msg_nav_svinfo(session, &buf[UBX_PREFIX_LEN], data_len);
 
         /* this is a hack to move some initialization until after we
          * get some u-blox message so we know the GPS is alive */
         if ('\0' == session->subtype[0]) {
-            /* one time only */
+            // one time only
             (void)strlcpy(session->subtype, "Unknown", 8);
-            /* request SW and HW Versions */
+            // request SW and HW Versions
             (void)ubx_write(session, UBX_CLASS_MON, 0x04, NULL, 0);
         }
 
@@ -3970,10 +3968,10 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
         }
 
         session->driver.ubx.last_msgid = msgid;
-        /* FIXME: last_time never used... */
+        // FIXME: last_time never used...
         session->driver.ubx.last_time = session->newdata.time;
     } else {
-        /* no time */
+        // no time
         /* debug
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "UBX: No time, msgid %x\n", msgid);
@@ -3983,8 +3981,10 @@ gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
     // Did protver change?
     if (session->driver.ubx.last_protver != session->driver.ubx.protver) {
         /* Assumption: we just did init, but did not have
-         * protver then, so init is not complete.  Finish now. */
-        if (session->mode == O_OPTIMIZE) {
+         * protver then, so init is not complete.  Finish now.
+         * unless user requested passive mode */
+        if (session->mode == O_OPTIMIZE &&
+            !session->context->passive) {
             ubx_mode(session, MODE_BINARY);
         }
         GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -4015,9 +4015,11 @@ bool ubx_write(struct gps_device_t * session,
     size_t i;
     bool ok;
 
-    /* do not write if -b (readonly) option set */
-    if (session->context->readonly)
+    // do not write if -b (readonly) option set
+    // "passive" handled earlier
+    if (session->context->readonly) {
         return true;
+    }
 
     session->msgbuf[0] = 0xb5;
     session->msgbuf[1] = 0x62;
@@ -4032,12 +4034,12 @@ bool ubx_write(struct gps_device_t * session,
     if (msg != NULL)
         (void)memcpy(&session->msgbuf[6], msg, data_len);
 
-    /* calculate CRC */
+    // calculate CRC
     for (i = 2; i < 6; i++) {
         CK_A += session->msgbuf[i];
         CK_B += CK_A;
     }
-    if (msg != NULL)
+    if (NULL != msg)
         for (i = 0; i < data_len; i++) {
             CK_A += msg[i];
             CK_B += CK_A;
@@ -4046,7 +4048,6 @@ bool ubx_write(struct gps_device_t * session,
     session->msgbuf[6 + data_len] = CK_A;
     session->msgbuf[7 + data_len] = CK_B;
     session->msgbuflen = data_len + 8;
-
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "=> GPS: UBX class: %02x, id: %02x, len: %zd, crc: %02x%02x\n",
@@ -4057,9 +4058,9 @@ bool ubx_write(struct gps_device_t * session,
     return (ok);
 }
 
+// not used by gpsd, it's for gpsctl and friends
 static ssize_t ubx_control_send(struct gps_device_t *session, char *msg,
                                 size_t data_len)
-/* not used by gpsd, it's for gpsctl and friends */
 {
     return ubx_write(session, (unsigned int)msg[0], (unsigned int)msg[1],
                      (unsigned char *)msg + 2,
@@ -4068,7 +4069,7 @@ static ssize_t ubx_control_send(struct gps_device_t *session, char *msg,
 
 static void ubx_init_query(struct gps_device_t *session)
 {
-    /* UBX-MON-VER: query for version information */
+    // UBX-MON-VER: query for version information
     (void)ubx_write(session, UBX_CLASS_MON, 0x04, NULL, 0);
 }
 
@@ -4086,7 +4087,9 @@ static void ubx_event_hook(struct gps_device_t *session, event_t event)
         /*
          * Turn off NMEA output, turn on UBX on this port.
          */
-        if (session->mode == O_OPTIMIZE) {
+        if (session->context->passive) {
+            // passive mode, do no autoconfig
+        } else if (session->mode == O_OPTIMIZE) {
             ubx_mode(session, MODE_BINARY);
         } else {
             ubx_mode(session, MODE_NMEA);
@@ -4100,10 +4103,10 @@ static void ubx_event_hook(struct gps_device_t *session, event_t event)
     }
 }
 
-/* generate and send a configuration block */
-static gps_mask_t
-ubx_cfg_prt(struct gps_device_t *session, speed_t speed, const char parity,
-            const int stopbits, const int mode)
+// generate and send a configuration block
+static gps_mask_t ubx_cfg_prt(struct gps_device_t *session, speed_t speed,
+                              const char parity,
+                              const int stopbits, const int mode)
 {
     unsigned long usart_mode = 0;
     unsigned char buf[UBX_CFG_LEN];
@@ -4115,7 +4118,7 @@ ubx_cfg_prt(struct gps_device_t *session, speed_t speed, const char parity,
      * When this is called from gpsd, the initial probe for UBX should
      * have picked up the device's port number from the CFG_PRT response.
      */
-    /* FIXME!  Bad test, port_id == 0 is valid too.  DDC (I2X) = port 0 */
+    // FIXME!  Bad test, port_id == 0 is valid too.  DDC (I2X) = port 0
     if (session->driver.ubx.port_id != 0) {
         buf[0] = session->driver.ubx.port_id;
     }
@@ -4144,7 +4147,7 @@ ubx_cfg_prt(struct gps_device_t *session, speed_t speed, const char parity,
         // FIXME!!  maybe we know the portid already?
         session->driver.ubx.port_id = buf[0] = USB_ID;
     } else {
-        /* A guess.  Could be UART2, or SPI, or DDC port */
+        // A guess.  Could be UART2, or SPI, or DDC port
         session->driver.ubx.port_id = buf[0] = USART1_ID;
     }
 
@@ -4178,28 +4181,29 @@ ubx_cfg_prt(struct gps_device_t *session, speed_t speed, const char parity,
      *                 (1<<6) | // charLen = 11 = 8 bit
      *                 (1<<11); // parity = 10x = none
      */
-    usart_mode |= (1<<4);       /* reserved1 Antaris 4 compatibility bit */
-    usart_mode |= (1<<7);       /* high bit of charLen */
+    usart_mode |= (1<<4);       // reserved1 Antaris 4 compatibility bit
+    usart_mode |= (1<<7);       // high bit of charLen
 
-    /* u-blox 5+ binary only supports 8N1 */
+    // u-blox 5+ binary only supports 8N1
     switch (parity) {
     case (int)'E':
     case 2:
-        usart_mode |= (1<<7);           /* 7E */
+        usart_mode |= (1<<7);           // 7E
         break;
     case (int)'O':
     case 1:
-        usart_mode |= (1<<9) | (1<<7);  /* 7O */
+        usart_mode |= (1<<9) | (1<<7);  // 7O
         break;
     case (int)'N':
     case 0:
     default:
-        usart_mode |= (1<<11) | (3<<6); /* 8N */
+        usart_mode |= (1<<11) | (3<<6); // 8N
         break;
     }
 
-    if (stopbits == 2)
+    if (2 == stopbits) {
         usart_mode |= (1<<13);
+    }
 
     putle32(buf, 4, usart_mode);
 
@@ -4276,18 +4280,18 @@ ubx_cfg_prt(struct gps_device_t *session, speed_t speed, const char parity,
             (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
         }
 
-    } else { /* MODE_BINARY */
+    } else {    // MODE_BINARY
         // nmea to turn off
         const unsigned char nmea_off[] = {
-            0x00,          /* msg id  = GGA */
-            0x01,          /* msg id  = GLL */
-            0x02,          /* msg id  = GSA */
-            0x03,          /* msg id  = GSV */
-            0x04,          /* msg id  = RMC */
-            0x05,          /* msg id  = VTG */
-            0x07,          /* msg id  = GST */
-            0x08,          /* msg id  = ZDA */
-            0x09,          /* msg id  = GBS */
+            0x00,          // msg id  = GGA
+            0x01,          // msg id  = GLL
+            0x02,          // msg id  = GSA
+            0x03,          // msg id  = GSV
+            0x04,          // msg id  = RMC
+            0x05,          // msg id  = VTG
+            0x07,          // msg id  = GST
+            0x08,          // msg id  = ZDA
+            0x09,          // msg id  = GBS
         };
 
         const unsigned char ubx_nav_on[] = {
@@ -4402,14 +4406,14 @@ ubx_cfg_prt(struct gps_device_t *session, speed_t speed, const char parity,
             }
         }
 
-        msg[0] = 0x01;          /* class */
-        msg[1] = 0x26;          /* msg id  = UBX-NAV-TIMELS */
-        msg[2] = 0xff;          /* about every 4 minutes if nav rate is 1Hz */
+        msg[0] = 0x01;          // class
+        msg[1] = 0x26;          // msg id  = UBX-NAV-TIMELS
+        msg[2] = 0xff;          // about every 4 minutes if nav rate is 1Hz
         (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
 
         // turn off common NMEA
-        msg[0] = 0xf0;          /* class, NMEA */
-        msg[2] = 0x00;          /* rate, off */
+        msg[0] = 0xf0;          // class, NMEA
+        msg[2] = 0x00;          // rate, off
         for (i = 0; i < sizeof(nmea_off); i++) {
             msg[1] = nmea_off[i];          // msg id to turn off
             (void)ubx_write(session, UBX_CLASS_CFG, 0x01, msg, 3);
@@ -4418,8 +4422,7 @@ ubx_cfg_prt(struct gps_device_t *session, speed_t speed, const char parity,
     return 0;
 }
 
-static void
-ubx_mode(struct gps_device_t *session, int mode)
+static void ubx_mode(struct gps_device_t *session, int mode)
 {
     ubx_cfg_prt(session,
                 gpsd_get_speed(session),
@@ -4478,35 +4481,36 @@ static bool ubx_rate(struct gps_device_t *session, double cycletime)
     return ubx_write(session, UBX_CLASS_CFG, 0x08, msg, 6); // CFG-RATE
 }
 
-/* This is everything we export */
-/* *INDENT-OFF* */
+// This is everything we export
+// *INDENT-OFF*
 const struct gps_type_t driver_ubx = {
-    .type_name         = "u-blox",       /* Full name of type */
-    .packet_type       = UBX_PACKET,     /* associated lexer packet type */
-    .flags             = DRIVER_STICKY,  /* remember this */
+    .type_name         = "u-blox",       // Full name of type
+    .packet_type       = UBX_PACKET,     // associated lexer packet type
+    .flags             = DRIVER_STICKY,  // remember this
     .trigger           = NULL,
-    /* Number of satellite channels supported by the device */
-    .channels          = 50,
-    .probe_detect      = NULL,           /* Startup-time device detector */
-    /* Packet getter (using default routine) */
+    // Number of satellite channels supported by the device
+    // ZED-F0P supports 60
+    .channels          = 60,
+    .probe_detect      = NULL,           // Startup-time device detector
+    // Packet getter (using default routine)
     .get_packet        = generic_get,
-    .parse_packet      = parse_input,    /* Parse message packets */
-    /* RTCM handler (using default routine) */
+    .parse_packet      = parse_input,    // Parse message packets
+    // RTCM handler (using default routine)
     .rtcm_writer       = gpsd_write,
-    .init_query        = ubx_init_query, /* non-perturbing initial query */
-    .event_hook        = ubx_event_hook, /* Fire on various lifetime events */
-    .speed_switcher    = ubx_speed,      /* Speed (baudrate) switch */
-    .mode_switcher     = ubx_mode,       /* Mode switcher */
-    .rate_switcher     = ubx_rate,       /* Message delivery rate switcher */
+    .init_query        = ubx_init_query, // non-perturbing initial query
+    .event_hook        = ubx_event_hook, // Fire on various lifetime events
+    .speed_switcher    = ubx_speed,      // Speed (baudrate) switch
+    .mode_switcher     = ubx_mode,       // Mode switcher
+    .rate_switcher     = ubx_rate,       // Message delivery rate switcher
     /* Minimum measurement cycle time currently known from documentation
      * for fastest devices.
      */
     .min_cycle.tv_sec  = 0,
-    .min_cycle.tv_nsec = 25000000,       /* Maximum 40Hz sample rate */
-    .control_send      = ubx_control_send,/* how to send a control string */
-    .time_offset       = NULL,           /* no method for NTP fudge factor */
+    .min_cycle.tv_nsec = 25000000,          // Maximum 40Hz sample rate
+    .control_send      = ubx_control_send,  // how to send a control string
+    .time_offset       = NULL,              // no method for NTP fudge factor
 };
-/* *INDENT-ON* */
-#endif /* defined(UBLOX_ENABLE) && defined(BINARY_ENABLE) */
+// *INDENT-ON*
+#endif // defined(UBLOX_ENABLE) && defined(BINARY_ENABLE)
 
 // vim: set expandtab shiftwidth=4
