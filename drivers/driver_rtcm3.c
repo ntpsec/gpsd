@@ -49,14 +49,18 @@ SPDX-License-Identifier: BSD-2-clause
 
 /* scaling constants for RTCM3 real number types */
 #define GPS_PSEUDORANGE_RESOLUTION      0.02    // DF011
-#define PSEUDORANGE_DIFF_RESOLUTION     0.0005  // DF012,DF042
-#define CARRIER_NOISE_RATIO_UNITS       0.25    // DF015, DF045, DF50
-#define ANTENNA_POSITION_RESOLUTION     0.0001  // DF025-027
+#define PSEUDORANGE_DIFF_RESOLUTION     0.0005  // DF012, DF042
+#define CARRIER_NOISE_RATIO_UNITS       0.25    // DF015, DF045, DF050
+#define ANTENNA_POSITION_RESOLUTION     0.0001  // DF025, DF026, DF027
 #define GLONASS_PSEUDORANGE_RESOLUTION  0.02    // DF041
 #define ANTENNA_DEGREE_RESOLUTION       25e-6   // DF062
 #define GPS_EPOCH_TIME_RESOLUTION       0.1     // DF065
-#define PHASE_CORRECTION_RESOLUTION     0.5     // DF069-070
-
+#define PHASE_CORRECTION_RESOLUTION     0.5     // DF069, DF070
+#define TRANSLATION_MM_RESOLUTION       0.001   // DF156, DF157, DF158, DF166, DF167, DF168, DF169
+#define VALIDITY_RESOLUTION             2.0     // DF152, DF153, DF154, DF155
+#define SCALE_PPM_RESOLUTION            1e-5    // DF162
+#define ROTATION_ARCSEC_RESOLUTION      2e-5    // DF159, DF160, DF161
+#define PROJ_ORIGIN_RESOLUTION          11e-9   // DF171, DF172, DF176, DF177, DF178, DF179, DF183, DF184, DF185, DF186
 
 /* Other magic values */
 #define GPS_INVALID_PSEUDORANGE         0x80000 // DF012, DF018
@@ -601,8 +605,42 @@ void rtcm3_unpack(const struct gps_context_t *context,
         /* RTCM 3.1
          * Helmert / Abridged Molodenski Transformation parameters
          */
-        unknown_name = "Helmert / Abridged Molodenski Transformation "
-                       "parameters";
+        /*unknown_name = "Helmert / Abridged Molodenski Transformation "
+                       "parameters";*/
+        // TODO Check if that works!        
+        // Set Source-Name
+        n = (unsigned long)ugrab(5);
+        (void)memcpy(rtcm->rtcmtypes.rtcm3_1021.src_name, buf + 6, n);
+        rtcm->rtcmtypes.rtcm3_1021.src_name[n] = '\0';
+        bitcount += 8 * n;
+        // Set Target-Name
+        n2 = (unsigned long)ugrab(5);
+        (void)memcpy(rtcm->rtcmtypes.rtcm3_1021.tar_name, buf + 8 + n, n2);
+        rtcm->rtcmtypes.rtcm3_1021.tar_name[n2] = '\0';
+        bitcount += 8 * n2;
+        rtcm->rtcmtypes.rtcm3_1021.sys_id_num = (unsigned int)ugrab(8);
+        rtcm->rtcmtypes.rtcm3_1021.ut_tr_msg_id = (unsigned int)ugrab(10);
+        rtcm->rtcmtypes.rtcm3_1021.plate_number = (unsigned int)ugrab(5);
+        rtcm->rtcmtypes.rtcm3_1021.computation_id = (unsigned int)ugrab(4);
+        rtcm->rtcmtypes.rtcm3_1021.height_id = (unsigned int)ugrab(2);        
+        rtcm->rtcmtypes.rtcm3_1021.lat_origin = (signed int)ugrab(19) * VALIDITY_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.lon_origin = (signed int)ugrab(20) * VALIDITY_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.lat_extension = (unsigned int)ugrab(14) * VALIDITY_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.lon_extension = (unsigned int)ugrab(14) * VALIDITY_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.x_trans = (signed int)ugrab(23) * TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.y_trans = (signed int)ugrab(23) * TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.z_trans = (signed int)ugrab(23) * TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.x_rot = (signed int)ugrab(32) * ROTATION_ARCSEC_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.y_rot = (signed int)ugrab(32) * ROTATION_ARCSEC_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.z_rot = (signed int)ugrab(32) * ROTATION_ARCSEC_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.ds = (signed int)ugrab(25) * SCALE_PPM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.add_as = (unsigned int)ugrab(24) * TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.add_bs = (unsigned int)ugrab(25) * TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.add_at = (unsigned int)ugrab(24) * TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.add_bt = (unsigned int)ugrab(25) * TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.quality_hori = (unsigned int)ugrab(3);
+        rtcm->rtcmtypes.rtcm3_1021.quality_vert = (unsigned int)ugrab(3);
+        unknown = false;
         break;
 
     case 1022:
