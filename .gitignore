@@ -26,3 +26,4 @@ testbuild
 # website staging
 .public
 .vscode
+Dockerfile*
