@@ -769,6 +769,39 @@ struct rtcm3_t {
             signed int M_tau_sub_GPS;
             bool M_l_sub_n;
         } rtcm3_1020;
+        struct rtcm3_1021_t {
+            size_t src_name_len;                        // DF143, Source-Name Counter, # chars to follow
+            unsigned char src_name[255];                // DF144, Source-Name
+            size_t tar_name_len;                        // DF145, Target-Name Counter, # chars to follow
+            unsigned char tar_name[255];                // DF146, Target-Name
+            unsigned int sys_id_num;                    // DF147, System Identification Number
+            unsigned int ut_tr_msg_id;                  // DF148, Utilized Transformation Message Indicator
+                                                        // DF149, Plate Number
+            enum {UNKN, AFRC, ANTA, ARAB, AUST, CARB, COCO, EURA, INDI, NOAM, NAZC, PCFC, SOAM, JUFU, PHIL, RIVR, SCOT} plate_number;
+                                                        // DF150, Computation Indicator
+            enum {SEVEN_APPROX, SEVEN_STRICT, MOLO_ABRGD, MOLO_BADE} computation_id;
+            enum {GEOM, PHYS} height_id;                // DF151, Height Indicator
+            signed int lat_origin;                      // DF152, Latitude of Origin
+            signed int lon_origin;                      // DF153, Longitude of Origin
+            unsigned int lat_extension;                 // DF154, N/S Extension
+            unsigned int lon_extension;                 // DF155, E/W Extension
+            signed int x_trans;                         // DF156, dX
+            signed int y_trans;                         // DF157, dY
+            signed int z_trans;                         // DF158, dZ
+            signed int x_rot;                           // DF159, rX
+            signed int y_rot;                           // DF160, rY
+            signed int z_rot;                           // DF161, rZ
+            signed int ds;                              // DF162, partial scale
+            unsigned int add_as;                        // Add to Major-Axis-Source
+            unsigned int add_bs;                        // Add to Minor-Axis-Source
+            unsigned int add_at;                        // Add to Major-Axis-Target
+            unsigned int add_bt;                        // Add to Minor-Axis-Target
+                                                        // Horizontal Quality Indicator
+            enum {QH0, QH1, QH2, QH3, QH4, QH5, QH6, QH7} quality_horizontal;
+                                                        // Vertical Quality Indicator
+            enum {QV0, QV1, QV2, QV3, QV4, QV5, QV6, QV7} quality_vertical;
+
+        } rtcm3_1021;
         struct rtcm3_1029_t {
             unsigned int station_id;    // Reference Station ID
             unsigned short mjd;         // Modified Julian Day (MJD) Number
