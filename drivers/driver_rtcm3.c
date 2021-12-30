@@ -632,42 +632,29 @@ void rtcm3_unpack(const struct gps_context_t *context,
         (void)memcpy(rtcm->rtcmtypes.rtcm3_1021.tar_name, buf + 8 + n, n2);
         rtcm->rtcmtypes.rtcm3_1021.tar_name[n2] = '\0';
         bitcount += 8 * n2;
-        rtcm->rtcmtypes.rtcm3_1021.sys_id_num = (unsigned)ugrab(8);
-        rtcm->rtcmtypes.rtcm3_1021.ut_tr_msg_id = (unsigned)ugrab(10);
-        rtcm->rtcmtypes.rtcm3_1021.plate_number = (unsigned)ugrab(5);
-        rtcm->rtcmtypes.rtcm3_1021.computation_id = (unsigned)ugrab(4);
-        rtcm->rtcmtypes.rtcm3_1021.height_id = (unsigned)ugrab(2);
-        rtcm->rtcmtypes.rtcm3_1021.lat_origin = sgrab(19) *
-            VALIDITY_RESOLUTION / DEG_ARCSEC_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.lon_origin = sgrab(20) *
-            VALIDITY_RESOLUTION / DEG_ARCSEC_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.lat_extension = sgrab(14) *
-            VALIDITY_RESOLUTION / DEG_ARCSEC_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.lon_extension = sgrab(14) *
-            VALIDITY_RESOLUTION / DEG_ARCSEC_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.x_trans = sgrab(23) *
-            TRANSLATION_MM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.y_trans = sgrab(23) *
-            TRANSLATION_MM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.z_trans = sgrab(23) *
-            TRANSLATION_MM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.x_rot = sgrab(32) *
-            ROTATION_ARCSEC_RESOLUTION / DEG_ARCSEC_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.y_rot = sgrab(32) *
-            ROTATION_ARCSEC_RESOLUTION / DEG_ARCSEC_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.z_rot = sgrab(32) *
-            ROTATION_ARCSEC_RESOLUTION / DEG_ARCSEC_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.ds = sgrab(25) * SCALE_PPM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.add_as = sgrab(24) *
-            TRANSLATION_MM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.add_bs = sgrab(25) *
-            TRANSLATION_MM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.add_at = sgrab(24) *
-            TRANSLATION_MM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.add_bt = sgrab(25) *
-            TRANSLATION_MM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.quality_hori = (unsigned)ugrab(3);
-        rtcm->rtcmtypes.rtcm3_1021.quality_vert = (unsigned)ugrab(3);
+
+        rtcm->rtcmtypes.rtcm3_1021.sys_id_num = (unsigned int)ugrab(8);
+        rtcm->rtcmtypes.rtcm3_1021.ut_tr_msg_id = (unsigned int)ugrab(10);
+        rtcm->rtcmtypes.rtcm3_1021.plate_number = (unsigned int)ugrab(5);
+        rtcm->rtcmtypes.rtcm3_1021.computation_id = (unsigned int)ugrab(4);
+        rtcm->rtcmtypes.rtcm3_1021.height_id = (unsigned int)ugrab(2);
+        rtcm->rtcmtypes.rtcm3_1021.lat_origin = (signed int)ugrab(19) * VALIDITY_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.lon_origin = (signed int)ugrab(20) * VALIDITY_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.lat_extension = (unsigned int)ugrab(14) * VALIDITY_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.lon_extension = (unsigned int)ugrab(14) * VALIDITY_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.x_trans = (signed int)ugrab(23) * TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.y_trans = (signed int)ugrab(23) * TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.z_trans = (signed int)ugrab(23) * TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.x_rot = (signed int)ugrab(32) * ROTATION_ARCSEC_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.y_rot = (signed int)ugrab(32) * ROTATION_ARCSEC_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.z_rot = (signed int)ugrab(32) * ROTATION_ARCSEC_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.ds = (signed int)ugrab(25) * SCALE_PPM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.add_as = (unsigned int)ugrab(24) * TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.add_bs = (unsigned int)ugrab(25) * TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.add_at = (unsigned int)ugrab(24) * TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.add_bt = (unsigned int)ugrab(25) * TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.quality_hori = (unsigned int)ugrab(3);
+        rtcm->rtcmtypes.rtcm3_1021.quality_vert = (unsigned int)ugrab(3);
         unknown = false;
         break;
 
