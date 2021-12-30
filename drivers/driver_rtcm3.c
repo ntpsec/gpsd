@@ -610,7 +610,6 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         /* unknown_name = "Helmert / Abridged Molodenski Transformation "
                        "parameters";*/
-
         // Set Source-Name
         n = (unsigned)ugrab(5);
         if (sizeof(rtcm->rtcmtypes.rtcm3_1021.src_name) <= n) {
@@ -653,12 +652,17 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_1021.y_rot = sgrab(32) * ROTATION_ARCSEC_RESOLUTION / DEG_ARCSEC_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.z_rot = sgrab(32) * ROTATION_ARCSEC_RESOLUTION / DEG_ARCSEC_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.ds = sgrab(25) * SCALE_PPM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.add_as = sgrab(24) * TRANSLATION_MM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.add_bs = sgrab(25) * TRANSLATION_MM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.add_at = sgrab(24) * TRANSLATION_MM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.add_bt = sgrab(25) * TRANSLATION_MM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.quality_hori = (unsigned int)ugrab(3);
-        rtcm->rtcmtypes.rtcm3_1021.quality_vert = (unsigned int)ugrab(3);
+        rtcm->rtcmtypes.rtcm3_1021.add_as = sgrab(24) *
+            TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.add_bs = sgrab(25) *
+            TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.add_at = sgrab(24) *
+            TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.add_bt = sgrab(25) *
+            TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.quality_hori = (unsigned)ugrab(3);
+        rtcm->rtcmtypes.rtcm3_1021.quality_vert = (unsigned)ugrab(3);
+
         unknown = false;
         break;
 
