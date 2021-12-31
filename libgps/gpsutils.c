@@ -544,13 +544,19 @@ timespec_t iso8601_to_timespec(char *isotime)
 
 #ifndef __clang_analyzer__
 #ifndef USE_QT
-    char *dp = NULL;
     double usec = 0;
     struct tm tm;
     memset(&tm,0,sizeof(tm));
 
 #ifdef HAVE_STRPTIME
-    dp = strptime(isotime, "%Y-%m-%dT%H:%M:%S", &tm);
+    {
+        char *dp = NULL;
+        dp = strptime(isotime, "%Y-%m-%dT%H:%M:%S", &tm);
+        if (NULL != dp &&
+            '.' == *dp) {
+            usec = strtod(dp, NULL);
+        }
+    }
 #else
     /* Fallback for systems without strptime (i.e. Windows)
      * This is a simplistic conversion for iso8601 strings only,
@@ -654,10 +660,6 @@ timespec_t iso8601_to_timespec(char *isotime)
         }
     }
 #endif
-    if (NULL != dp &&
-        '.' == *dp) {
-        usec = strtod(dp, NULL);
-    }
     /*
      * It would be nice if we could say mktime(&tm) - timezone + usec instead,
      * but timezone is not available at all on some BSDs. Besides, when working
@@ -702,7 +704,8 @@ char *timespec_to_iso8601(timespec_t fixtime, char isotime[], size_t len)
 
     if (0 > fixtime.tv_sec) {
         // Allow 0 for testing of 1970-01-01T00:00:00.000Z
-        return strncpy(isotime, "NaN", len);
+        strlcpy(isotime, "NaN", len);
+        return isotime;
     }
     if (999499999 < fixtime.tv_nsec) {
         // round up
