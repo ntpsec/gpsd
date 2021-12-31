@@ -2007,6 +2007,38 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                     rtcm->rtcmtypes.rtcm3_1015.header.aux_id,
                     rtcm->rtcmtypes.rtcm3_1015.header.satcount);
         break;
+    case 1021:
+        str_appendf(buf, buflen, 
+                    "\"src_name\":\"%s\",\"tar_name\":\"%s\","
+                    "\"plate_number\":%u,"
+                    "\"lat_origin\":%f,\"lon_origin\":%f,"
+                    "\"lat_extension\":%f,\"lon_extension\":%f,"
+                    "\"dX\":%f,\"dY\":%f,\"dZ\":%f,"
+                    "\"rX\":%f,\"rY\":%f,\"rZ\":%f,\"dS\":%f,"
+                    "\"add_as\":%f,\"add_bs\":%f,"
+                    "\"add_at\":%f,\"add_bt\":%f,",
+                    json_stringify(buf1, sizeof(buf1),
+                                   (char *)rtcm->rtcmtypes.rtcm3_1021.src_name),
+                    json_stringify(buf1, sizeof(buf1),
+                                   (char *)rtcm->rtcmtypes.rtcm3_1021.tar_name),
+                    rtcm->rtcmtypes.rtcm3_1021.plate_number,
+                    rtcm->rtcmtypes.rtcm3_1021.lat_origin,
+                    rtcm->rtcmtypes.rtcm3_1021.lon_origin,
+                    rtcm->rtcmtypes.rtcm3_1021.lat_extension,
+                    rtcm->rtcmtypes.rtcm3_1021.lon_extension,
+                    rtcm->rtcmtypes.rtcm3_1021.x_trans,
+                    rtcm->rtcmtypes.rtcm3_1021.y_trans,
+                    rtcm->rtcmtypes.rtcm3_1021.z_trans,
+                    rtcm->rtcmtypes.rtcm3_1021.x_rot,
+                    rtcm->rtcmtypes.rtcm3_1021.y_rot,
+                    rtcm->rtcmtypes.rtcm3_1021.z_rot,
+                    rtcm->rtcmtypes.rtcm3_1021.ds,
+                    rtcm->rtcmtypes.rtcm3_1021.add_as,
+                    rtcm->rtcmtypes.rtcm3_1021.add_bs,
+                    rtcm->rtcmtypes.rtcm3_1021.add_at,
+                    rtcm->rtcmtypes.rtcm3_1021.add_bt
+        );
+        break;
     case 1029:
         str_appendf(buf, buflen,
                     "\"station_id\":%u,\"mjd\":%u,\"sec\":%u,"

@@ -770,28 +770,21 @@ struct rtcm3_t {
             bool M_l_sub_n;
         } rtcm3_1020;
         struct rtcm3_1021_t {
+            size_t src_len;
             unsigned char src_name[255];                // DF144, Source-Name
+            size_t tar_len;
             unsigned char tar_name[255];                // DF146, Target-Name
             unsigned int sys_id_num;                    // DF147, System Identification Number
             unsigned int ut_tr_msg_id;                  // DF148, Utilized Transformation Message Indicator
             unsigned int plate_number;                  // DF149, Plate Number
             unsigned int computation_id;                // DF150, Computation Indicator
             unsigned int height_id;                     // DF151, Height Indicator
-            signed int lat_origin;                      // DF152, Latitude of Origin
-            signed int lon_origin;                      // DF153, Longitude of Origin
-            unsigned int lat_extension;                 // DF154, N/S Extension
-            unsigned int lon_extension;                 // DF155, E/W Extension
-            signed int x_trans;                         // DF156, dX
-            signed int y_trans;                         // DF157, dY
-            signed int z_trans;                         // DF158, dZ
-            signed int x_rot;                           // DF159, rX
-            signed int y_rot;                           // DF160, rY
-            signed int z_rot;                           // DF161, rZ
-            signed int ds;                              // DF162, partial scale
-            unsigned int add_as;                        // Add to Major-Axis-Source
-            unsigned int add_bs;                        // Add to Minor-Axis-Source
-            unsigned int add_at;                        // Add to Major-Axis-Target
-            unsigned int add_bt;                        // Add to Minor-Axis-Target
+            double lat_origin, lon_origin;              // Latitude of Origin, Longitude of Origin
+            double lat_extension, lon_extension;        // N/S Extension, E/W Extension
+            double x_trans, y_trans, z_trans;           // dX, dY, dZ
+            double x_rot, y_rot, z_rot;                 // rX, rY, rZ
+            double ds;                                  // DF162, partial scale
+            double add_as, add_bs, add_at, add_bt;      // Major|Minor-Axis-Source, Major|Minor-Axis-Target
             unsigned int quality_hori;                  // Horizontal Quality Indicator
             unsigned int quality_vert;                  // Vertical Quality Indicator
         } rtcm3_1021;
