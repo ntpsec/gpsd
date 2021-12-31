@@ -5,6 +5,9 @@
 
 #include "../include/gpsd_config.h"   // must be before all includes
 
+#if defined(DBUS_EXPORT_ENABLE)
+
+#include <dbus/dbus.h>
 #include <errno.h>
 #include <libgen.h>
 #include <math.h>
@@ -13,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -21,15 +25,11 @@
 #include "../include/os_compat.h"
 #include "../include/timespec.h"
 
-#if defined(DBUS_EXPORT_ENABLE)
-#include <syslog.h>
 
 struct privdata_t
 {
     void (*handler)(struct gps_data_t *);
 };
-
-#include <dbus/dbus.h>
 
 /*
  * Unpleasant that we have to declare a static context pointer here - means
@@ -44,12 +44,13 @@ static DBusHandlerResult handle_gps_fix(DBusMessage * message)
 {
     DBusError error;
     const char *gpsd_devname = NULL;
+    double fix_time;
 
     dbus_error_init(&error);
 
     dbus_message_get_args(message,
                           &error,
-                          DBUS_TYPE_DOUBLE, &share_gpsdata->fix.time,
+                          DBUS_TYPE_DOUBLE, &fix_time,
                           DBUS_TYPE_INT32, &share_gpsdata->fix.mode,
                           DBUS_TYPE_DOUBLE, &share_gpsdata->fix.ept,
                           DBUS_TYPE_DOUBLE, &share_gpsdata->fix.latitude,
@@ -66,6 +67,9 @@ static DBusHandlerResult handle_gps_fix(DBusMessage * message)
                           DBUS_TYPE_DOUBLE, &share_gpsdata->fix.climb,
                           DBUS_TYPE_DOUBLE, &share_gpsdata->fix.epc,
                           DBUS_TYPE_STRING, &gpsd_devname, DBUS_TYPE_INVALID);
+
+    // convert time as double back to timespec_t, potential loss of precision.
+    DTOTS(&share_gpsdata->fix.time, fix_time);
 
     if (MODE_NO_FIX < share_gpsdata->fix.mode) {
         share_gpsdata->fix.status = STATUS_GPS;
@@ -150,13 +154,14 @@ int gps_dbus_mainloop(struct gps_data_t *gpsdata,
                        void (*hook)(struct gps_data_t *))
 {
     struct timespec ts_from, ts_to;
-    double diff, d_timeout;
+    double d_timeout;
 
     d_timeout = (double)timeout / 1000000;  // timeout in seconds
     share_gpsdata = gpsdata;
     PRIVATE(share_gpsdata)->handler = (void (*)(struct gps_data_t *))hook;
     for (;;) {
         bool status;
+        double diff;
 
         if (0 != clock_gettime(CLOCK_REALTIME, &ts_from)) {
             return -2;
