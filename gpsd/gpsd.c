@@ -2337,20 +2337,6 @@ int main(int argc, char *argv[])
     }
 #endif  // CONTROL_SOCKET_ENABLE || SYSTEMD_ENABLE
 
-    // log command line, maybe log all parsed options too?
-    if (LOG_INF <= context.errout.debug) {
-        char buf[2048] = "";
-        int cnt;
-
-        buf[0] = '\0';
-        for (cnt = 0; cnt < argc; cnt++) {
-            (void)strlcat(buf, argv[cnt], sizeof(buf));
-            (void)strlcat(buf, " ", sizeof(buf));
-        }
-
-        GPSD_LOG(LOG_INF, &context.errout, "Command line: %s\n", buf);
-    }
-
     // might be time to daemonize
     if (go_background) {
         // not SuS/POSIX portable, but we have our own fallback version
@@ -2373,11 +2359,31 @@ int main(int argc, char *argv[])
         }
     }
 
-    openlog("gpsd", LOG_PID, LOG_USER);
-    GPSD_LOG(LOG_INF, &context.errout, "launching (Version %s, revision %s)\n",
-             VERSION, REVISION);
-    GPSD_LOG(LOG_INF, &context.errout, "starting uid %d, gid %d\n",
-             uid, getgid());
+    /* LOG_PID: log our PID
+     * LOG_CONS: log to console if syslog down
+     * LOG_NDELAY: open now before dropping root */
+    openlog("gpsd", LOG_PID | LOG_CONS | LOG_NDELAY, LOG_USER);
+
+    // Do this after openlog(), so this goes in syslog()
+    if (LOG_INF <= context.errout.debug) {
+        char buf[2048];
+        int cnt;
+
+        GPSD_LOG(LOG_INF, &context.errout,
+                 "launching (Version " VERSION ", revision " REVISION ")\n");
+        GPSD_LOG(LOG_INF, &context.errout, "starting uid %d, gid %d\n",
+                 uid, getgid());
+
+        // log command line, maybe log all parsed options too?
+        buf[0] = '\0';
+        for (cnt = 0; cnt < argc; cnt++) {
+            (void)strlcat(buf, argv[cnt], sizeof(buf));
+            (void)strlcat(buf, " ", sizeof(buf));
+        }
+
+        GPSD_LOG(LOG_INF, &context.errout, "Command line: %s\n", buf);
+    }
+
 
 #ifdef SOCKET_EXPORT_ENABLE
     if (!gpsd_service) {

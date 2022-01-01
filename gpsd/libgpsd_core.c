@@ -97,6 +97,7 @@ void gpsd_release_reporting_lock(void)
 }
 
 #ifndef SQUELCH_ENABLE
+#if __UNUSED
 static void visibilize(char *outbuf, size_t outlen,
                        const char *inbuf, size_t inlen)
 {
@@ -112,6 +113,7 @@ static void visibilize(char *outbuf, size_t outlen,
             (void)snprintf(outbuf + strlen(outbuf), 6, "\\x%02x",
                            0x00ff & (unsigned)*sp);
 }
+#endif   // __UNUSED
 #endif   // !SQUELCH_ENABLE
 
 
@@ -127,67 +129,86 @@ static void gpsd_vlog(const int errlevel,
     (void)fmt;
 #else
     char buf[BUFSIZ];
-    char *err_str;
+    const char *err_str;
+    const char *label;
+    int level = LOG_ERR;
 
     gpsd_acquire_reporting_lock();
     switch (errlevel) {
-    case LOG_ERROR:
-            err_str = "ERROR: ";
+    case LOG_ERROR:      // -1, cannot turn off
+            err_str = "ERROR";
+            level = LOG_CRIT;
             break;
-    case LOG_SHOUT:
-            err_str = "SHOUT: ";
+    case LOG_SHOUT:      // 0, cannot turn off
+            err_str = "SHOUT";
+            level = LOG_ERR;
             break;
-    case LOG_WARN:
-            err_str = "WARN: ";
+    case LOG_WARN:       // 1
+            err_str = "WARN";
+            level = LOG_WARNING;
             break;
-    case LOG_CLIENT:
-            err_str = "CLIENT: ";
+    case LOG_CLIENT:     // 2, log JSON to clients
+            err_str = "CLIENT";
+            level = LOG_NOTICE;
             break;
-    case LOG_INF:
-            err_str = "INFO: ";
+    case LOG_INF:        // 3, informative info
+            err_str = "INFO";
+            level = LOG_INFO;
             break;
-    case LOG_PROG:
-            err_str = "PROG: ";
+    case LOG_PROG:       // 4, program progress messages
+            err_str = "PROG";
+            level = LOG_DEBUG;
             break;
-    case LOG_IO:
-            err_str = "IO: ";
+    case LOG_IO:         // 5, device IO
+            err_str = "IO";
+            level = LOG_DEBUG;
             break;
-    case LOG_DATA:
-            err_str = "DATA: ";
+    case LOG_DATA:       // 6, decoded data
+            err_str = "DATA";
+            level = LOG_DEBUG;
             break;
-    case LOG_SPIN:
-            err_str = "SPIN: ";
+    case LOG_SPIN:       // 7, spin logging
+            err_str = "SPIN";
+            level = LOG_DEBUG;
             break;
-    case LOG_RAW:
-            err_str = "RAW: ";
+    case LOG_RAW:        // 8, low level IO
+            err_str = "RAW";
+            level = LOG_DEBUG;
             break;
-    case LOG_RAW1:
-            err_str = "RAW1: ";
+    case LOG_RAW1:       // 9, rediculous
+            err_str = "RAW1";
+            level = LOG_DEBUG;
             break;
-    case LOG_RAW2:
-            err_str = "RAW2: ";
+    case LOG_RAW2:       // 10, insane
+            err_str = "RAW2";
+            level = LOG_DEBUG;
             break;
-    default:
-            err_str = "UNK: ";
+    default:             // WTF?
+            err_str = "UNK";
+            level = LOG_CRIT;
+            break;
     }
 
-    if (NULL != errout->label) {
-        (void)strlcpy(buf, errout->label, sizeof(buf));
+    if (NULL == errout->label) {
+        label = "MISSING";
     } else {
-        (void)strlcpy(buf, "MISSING", sizeof(buf));
+        label = errout->label;
     }
-    (void)strlcat(buf, ":", sizeof(buf));
-    (void)strlcat(buf, err_str, sizeof(buf));
-    str_vappendf(buf, sizeof(buf), fmt, ap);
+    snprintf(buf, sizeof(buf), "%s:%s: %s", label, err_str, fmt);
+    vsnprintf(outbuf, outlen, buf, ap);
 
-    visibilize(outbuf, outlen, buf, strlen(buf));
+    // this was carzy expensive, just fix the bad log calls
+    // visibilize(outbuf, outlen, buf, strlen(buf));
 
     if (getpid() == getsid(getpid())) {
-        // FIXME: map more gpsd log levels to syslog log levels.
-        syslog((errlevel <= LOG_SHOUT) ? LOG_ERR : LOG_NOTICE, "%s", outbuf);
-    } else if (errout->report != NULL) {
+        // I think this calls syslog() only when daemonized
+        syslog(level, "%s",  outbuf);
+    } else if (NULL != errout->report) {
+        // we are a thread, use report()?
+        // FIXME: is POSIX syslog() thread safe?
         errout->report(outbuf);
     } else {
+        // foreground, use stderr?
         (void)fputs(outbuf, stderr);
     }
     gpsd_release_reporting_lock();
@@ -259,7 +280,7 @@ static void gpsd_run_device_hook(struct gpsd_errout_t *errout,
 int gpsd_switch_driver(struct gps_device_t *session, char *type_name)
 {
     const struct gps_type_t **dp;
-    bool first_sync = (session->device_type != NULL);
+    bool first_sync = (NULL != session->device_type);
     unsigned int i;
 
     if (first_sync &&

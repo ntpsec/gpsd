@@ -1,6 +1,6 @@
                         GPSD project news
 
-3.23.2: unreleased
+3.23.2~dev: unreleased
   NTRIP 2.0 now works.  But still only plain HTML, not RTP, etc.
   Remove ntrip option and NTRIP_ENABLE.  Always build.
   Remove passthrough option and PASSTHROUGH_ENABLE.  Always build.
@@ -11,6 +11,8 @@
   maidenhead() checks for input errors.
   Better SHM logs.
   PPS and TOFF JSON now include shm used, and real precision.
+  Add initial, untested, TSIPv1 support
+  split debug messages into different syslog() levels.
 
 3.23.1: 2021-09-21
   Improve ubx cycle detection.
