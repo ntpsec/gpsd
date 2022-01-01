@@ -1817,7 +1817,6 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
              session->lexer.outbuflen,
              gpsd_prettydump(session));
 
-
     // Get data from current packet into the fix structure
     if (COMMENT_PACKET != session->lexer.type) {
         if (NULL != session->device_type &&
@@ -1900,7 +1899,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
             session->fixcnt = 0;
         }
     } else if (0 != (session->gpsdata.set & (MODE_SET))) {
-        if ( session->gpsdata.fix.status == STATUS_UNK) {
+        if (STATUS_UNK == session->gpsdata.fix.status) {
             session->context->fixcnt = 0;
             session->fixcnt = 0;
         }

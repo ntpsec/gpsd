@@ -35,7 +35,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"   // must be before all includes
 
 #include <ctype.h>
 #include <math.h>
@@ -51,6 +51,7 @@
 #include "../include/bits.h"
 #include "../include/strfuncs.h"
 #include "../include/timespec.h"
+
 #if defined(SIRF_ENABLE) && defined(BINARY_ENABLE)
 
 #define HI(n)           ((n) >> 8)
@@ -62,19 +63,18 @@
  */
 #define SIRF_RETRY_TIME 6
 
-/* Poll Software Version MID 132 */
+// Poll Software Version MID 132
 static unsigned char versionprobe[] = {
     0xa0, 0xa2, 0x00, 0x02,
-    0x84,               /* MID 132 */
-    0x00,               /* unused */
+    0x84,               // MID 132
+    0x00,               // unused
     0x00, 0x00, 0xb0, 0xb3
 };
 
-/* Poll Navigation Parameters MID 152
- * query for MID 19 */
+// Poll Navigation Parameters MID 152, query for MID 19
 static unsigned char navparams[] = {
     0xa0, 0xa2, 0x00, 0x02,
-    0x98,               /* MID 152 */
+    0x98,               // MID 152
     0x00,
     0x00, 0x00, 0xb0, 0xb3
 };
@@ -82,57 +82,57 @@ static unsigned char navparams[] = {
 // DGPS Source MID 133
 static unsigned char dgpscontrol[] = {
     0xa0, 0xa2, 0x00, 0x07,
-    0x85,               /* MID 133 */
-    0x01,               /* use SBAS */
+    0x85,               // MID 133
+    0x01,               // use SBAS
     0x00, 0x00,
     0x00, 0x00, 0x00,
     0x00, 0x00, 0xb0, 0xb3
 };
 
-/* Set SBAS Parameters MID 170 */
+// Set SBAS Parameters MID 170
 static unsigned char sbasparams[] = {
     0xa0, 0xa2, 0x00, 0x06,
-    0xaa,               /* MID 170 */
-    0x00,               /* SBAS PRN */
-    0x01,               /* SBAS Mode */
-    0x00,               /* Auto PRN */
+    0xaa,               // MID 170
+    0x00,               // SBAS PRN
+    0x01,               // SBAS Mode
+    0x00,               // Auto PRN
     0x00, 0x00,
     0x00, 0x00, 0xb0, 0xb3
 };
 
-/* Set Message Rate MID 166 */
+// Set Message Rate MID 166
 static unsigned char requestecef[] = {
     0xa0, 0xa2, 0x00, 0x08,
-    0xa6,               /* MID 166 */
-    0x00,               /* enable 1 */
-    0x02,               /* MID 2 */
-    0x01,               /* once per Sec */
-    0x00, 0x00,         /* unused */
-    0x00, 0x00,         /* unused */
+    0xa6,               // MID 166
+    0x00,               // enable 1
+    0x02,               // MID 2
+    0x01,               // once per Sec
+    0x00, 0x00,         // unused
+    0x00, 0x00,         // unused
     0x00, 0x00, 0xb0, 0xb3
 };
 
-/* Set Message Rate MID 166 */
+// Set Message Rate MID 166
 static unsigned char requesttracker[] = {
     0xa0, 0xa2, 0x00, 0x08,
-    0xa6,               /* MID 166 */
-    0x00,               /* enable 1 */
-    0x04,               /* MID 4 */
-    0x03,               /* every 3 sec */
-    0x00, 0x00,         /* unused */
-    0x00, 0x00,         /* unused */
+    0xa6,               // MID 166
+    0x00,               // enable 1
+    0x04,               // MID 4
+    0x03,               // every 3 sec
+    0x00, 0x00,         // unused
+    0x00, 0x00,         // unused
     0x00, 0x00, 0xb0, 0xb3
 };
 
-/* disable MID XX */
+// disable MID XX
 static unsigned char unsetmidXX[] = {
     0xa0, 0xa2, 0x00, 0x08,
-    0xa6,               /* MID 166 */
-    0x00,               /* enable XX */
-    0x00,               /* MID 0xXX */
-    0x00,               /* rate: never */
-    0x00, 0x00,         /* reserved */
-    0x00, 0x00,         /* reserved */
+    0xa6,               // MID 166
+    0x00,               // enable XX
+    0x00,               // MID 0xXX
+    0x00,               // rate: never
+    0x00, 0x00,         // reserved
+    0x00, 0x00,         // reserved
     0x00, 0x00, 0xb0, 0xb3
 };
 
@@ -147,65 +147,63 @@ static unsigned char unsetmidXX[] = {
  * at 1Hz rate */
 static unsigned char enablesubframe[] = {
     0xa0, 0xa2, 0x00, 0x19,
-    0x80,                       /* MID 128 initialize Data Source */
-    0x00, 0x00, 0x00, 0x00,     /* EXEF X */
-    0x00, 0x00, 0x00, 0x00,     /* ECEF Y */
-    0x00, 0x00, 0x00, 0x00,     /* ECEF Z */
-    0x00, 0x00, 0x00, 0x00,     /* clock drift */
-    0x00, 0x00, 0x00, 0x00,     /* time of week */
-    0x00, 0x00,                 /* week number */
-    0x0C,                       /* Chans 1-12 */
-    /* change the next 0x10 to 0x08
-     * for factory reset */
-    /* 0x10 turns on MIDs 7, 8, 17, 28, 29, 30 and 31 */
+    0x80,                       // MID 128 initialize Data Source
+    0x00, 0x00, 0x00, 0x00,     // EXEF X
+    0x00, 0x00, 0x00, 0x00,     // ECEF Y
+    0x00, 0x00, 0x00, 0x00,     // ECEF Z
+    0x00, 0x00, 0x00, 0x00,     // clock drift
+    0x00, 0x00, 0x00, 0x00,     // time of week
+    0x00, 0x00,                 // week number
+    0x0C,                       // Chans 1-12
+    /* change the next 0x10 to 0x08 for factory reset
+     * 0x10 turns on MIDs 7, 8, 17, 28, 29, 30 and 31 */
     0x10,
     0x00, 0x00, 0xb0, 0xb3
 };
 
-/* disable subframe data */
+// disable subframe data
 static unsigned char disablesubframe[] = {
     0xa0, 0xa2, 0x00, 0x19,
-    0x80,                       /* MID 128 initialize Data Source */
-    0x00, 0x00, 0x00, 0x00,     /* EXEF X */
-    0x00, 0x00, 0x00, 0x00,     /* ECEF Y */
-    0x00, 0x00, 0x00, 0x00,     /* ECEF Z */
-    0x00, 0x00, 0x00, 0x00,     /* clock drift */
-    0x00, 0x00, 0x00, 0x00,     /* time of week */
-    0x00, 0x00,                 /* week number */
-    0x0C,                       /* Chans 1-12 */
+    0x80,                       // MID 128 initialize Data Source
+    0x00, 0x00, 0x00, 0x00,     // EXEF X
+    0x00, 0x00, 0x00, 0x00,     // ECEF Y
+    0x00, 0x00, 0x00, 0x00,     // ECEF Z
+    0x00, 0x00, 0x00, 0x00,     // clock drift
+    0x00, 0x00, 0x00, 0x00,     // time of week
+    0x00, 0x00,                 // week number
+    0x0C,                       // Chans 1-12
 
-    /* 0x00 turns off MIDs 7, 8, 17, 28, 29, 30 and 31 */
-    0x00,                       /* reset bit map */
+    // 0x00 turns off MIDs 7, 8, 17, 28, 29, 30 and 31
+    0x00,                       // reset bit map
 
     0x00, 0x00, 0xb0, 0xb3
 };
 
-/* mode control MID */
+// mode control MID
 static unsigned char modecontrol[] = {
     0xa0, 0xa2, 0x00, 0x0e,
-    0x88,                       /* MID 136 Mode Control */
-    0x00, 0x00,                 /* pad bytes */
-    0x00,                       /* degraded mode off */
-    0x00, 0x00,                 /* pad bytes */
-    0x00, 0x00,                 /* altitude */
-    0x00,                       /* altitude hold auto */
-    0x00,                       /* use last computed alt */
-    0x00,                       /* reserved */
-    0x00,                       /* disable degraded mode */
-    0x00,                       /* disable dead reckoning */
-    0x01,                       /* enable track smoothing */
+    0x88,                       // MID 136 Mode Control
+    0x00, 0x00,                 // pad bytes
+    0x00,                       // degraded mode off
+    0x00, 0x00,                 // pad bytes
+    0x00, 0x00,                 // altitude
+    0x00,                       // altitude hold auto
+    0x00,                       // use last computed alt
+    0x00,                       // reserved
+    0x00,                       // disable degraded mode
+    0x00,                       // disable dead reckoning
+    0x01,                       // enable track smoothing
     0x00, 0x00, 0xb0, 0xb3
 };
 
-/* enable 1 PPS Time MID 52 *
- * using Set Message Rate MID 166 */
+// enable 1 PPS Time MID 52, using Set Message Rate MID 166
 static unsigned char enablemid52[] = {
     0xa0, 0xa2, 0x00, 0x08,
-    0xa6,                       /* MID 166 */
-    0x00,                       /* enable/disable one message */
-    0x34,                       /* MID 52 */
-    0x01,                       /* sent once per second */
-    0x00, 0x00, 0x00, 0x00,     /* reserved, set to zero */
+    0xa6,                       // MID 166
+    0x00,                       // enable/disable one message
+    0x34,                       // MID 52
+    0x01,                       // sent once per second
+    0x00, 0x00, 0x00, 0x00,     // reserved, set to zero
     0x00, 0xdb, 0xb0, 0xb3
 };
 
@@ -245,7 +243,7 @@ static bool sirf_write(struct gps_device_t *session, unsigned char *msg)
     bool ok;
     unsigned int type = (unsigned int)msg[4];
 
-    /* do not write if -b (readonly) option set */
+    // do not write if -b (readonly) option set
     if (session->context->readonly)
         return true;
 
@@ -256,28 +254,29 @@ static bool sirf_write(struct gps_device_t *session, unsigned char *msg)
      * Now you have to wait for the ACK, otherwise chaos ensues.
      * Add instrumentation to reveal when this may happen.
      */
-    /* can also be false because ACK was received after last send */
-    if (session->driver.sirf.need_ack > 0) {
+    // can also be false because ACK was received after last send
+    if (0 < session->driver.sirf.need_ack) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "SiRF: warning, write of MID %#02x while "
                  "awaiting ACK for %#02x.\n",
                  type, session->driver.sirf.need_ack);
     }
 
-    len = (size_t) ((msg[2] << 8) | msg[3]);
+    len = (size_t)((msg[2] << 8) | msg[3]);
     /* '(CS-303979-SP-9) SiRFstarV OSP Extensions.pdf'
      * says max message length is 1032 */
     if (1032 < len) {
         // pacify coverity
         len = 1032;
     }
-    /* calculate CRC */
+    // calculate CRC
     crc = 0;
-    for (i = 0; i < len; i++)
+    for (i = 0; i < len; i++) {
         crc += (int)msg[4 + i];
+    }
     crc &= 0x7fff;
 
-    /* enter CRC after payload */
+    // enter CRC after payload
     msg[len + 4] = (unsigned char)((crc & 0xff00) >> 8);
     msg[len + 5] = (unsigned char)(crc & 0x00ff);
 
@@ -302,25 +301,26 @@ static ssize_t sirf_control_send(struct gps_device_t *session, char *msg,
     session->msgbuf[len + 7] = (char)0xb3;
     session->msgbuflen = len + 8;
 
-    /* *INDENT-OFF* */
+    // *INDENT-OFF*
     return sirf_write(session,
               (unsigned char *)session->msgbuf) ? (int)session->msgbuflen : -1;
-    /* *INDENT-ON* */
+    // *INDENT-ON*
 }
 
-static bool sirfbin_speed(struct gps_device_t *session, speed_t speed, char parity, int stopbits)
-/* change speed in binary mode */
+// change speed in binary mode
+static bool sirfbin_speed(struct gps_device_t *session, speed_t speed,
+                          char parity, int stopbits)
 {
     static unsigned char msg[] = {
         0xa0, 0xa2, 0x00, 0x09,
         0x86,                   /* byte 4:
                                  * Set Binary Serial Port
                                  * MID 134 */
-        0x00, 0x00, 0x12, 0xc0, /* bytes 5-8: 4800 bps */
-        0x08,                   /* byte  9: 8 data bits */
-        0x01,                   /* byte 10: 1 stop bit */
-        0x00,                   /* byte 11: no parity */
-        0x00,                   /* byte 12: reserved pad */
+        0x00, 0x00, 0x12, 0xc0, // bytes 5-8: 4800 bps
+        0x08,                   // byte  9: 8 data bits
+        0x01,                   // byte 10: 1 stop bit
+        0x00,                   // byte 11: no parity
+        0x00,                   // byte 12: reserved pad
         0x00, 0x00, 0xb0, 0xb3
     };
     GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -352,39 +352,39 @@ static bool sirfbin_speed(struct gps_device_t *session, speed_t speed, char pari
     msg[8] = (unsigned char)(speed & 0xff);
     msg[10] = (unsigned char)stopbits;
     msg[11] = (unsigned char)parity;
-    return (sirf_write(session, msg));
+    return sirf_write(session, msg);
 }
 
-/* switch from binary to NMEA at specified baud */
-/* FIXME: does not seem to work... */
+/* switch from binary to NMEA at specified baud
+ * FIXME: does not seem to work... */
 static bool sirf_to_nmea(struct gps_device_t *session, speed_t speed)
 {
     static unsigned char msg[] = { 0xa0, 0xa2, 0x00, 0x18,
         0x81, 0x02,
-        0x01, 0x01,             /* GGA */
-        0x00, 0x00,             /* suppress GLL */
-        0x01, 0x01,             /* GSA */
-        0x05, 0x01,             /* GSV */
-        0x01, 0x01,             /* RMC */
-        0x00, 0x00,             /* suppress VTG */
-        0x00, 0x01,             /* suppress MSS */
-        0x00, 0x01,             /* suppress EPE */
-        0x00, 0x01,             /* suppress EPE */
-        0x00, 0x01,             /* suppress ZDA */
-        0x00, 0x00,             /* unused */
-        0x12, 0xc0,             /* 4800 bps */
+        0x01, 0x01,             // GGA
+        0x00, 0x00,             // suppress GLL
+        0x01, 0x01,             // GSA
+        0x05, 0x01,             // GSV
+        0x01, 0x01,             // RMC
+        0x00, 0x00,             // suppress VTG
+        0x00, 0x01,             // suppress MSS
+        0x00, 0x01,             // suppress EPE
+        0x00, 0x01,             // suppress EPE
+        0x00, 0x01,             // suppress ZDA
+        0x00, 0x00,             // unused
+        0x12, 0xc0,             // 4800 bps
         0xb0, 0xb3
     };
 
-    if (speed >= 0xffff) {
+    if (0xffff <= speed) {
         GPSD_LOG(LOG_ERROR, &session->context->errout,
-            "SiRF: can't switch from SiRF to NMEA because "
-            " current speed %u is big.",
-            (unsigned int)speed);
+                 "SiRF: can't switch from SiRF to NMEA because "
+                 " current speed %u is big.",
+                 (unsigned int)speed);
         return false;
     }
 
-    /* stop binary initialization */
+    // stop binary initialization
     session->cfg_stage = UINT_MAX;
 
     msg[26] = (unsigned char)HI(speed);
@@ -394,9 +394,9 @@ static bool sirf_to_nmea(struct gps_device_t *session, speed_t speed)
 
 static void sirfbin_mode(struct gps_device_t *session, int mode)
 {
-    if (mode == MODE_NMEA) {
+    if (MODE_NMEA == mode) {
         (void)sirf_to_nmea(session, session->gpsdata.dev.baudrate);
-    } else if (mode == MODE_BINARY) {
+    } else if (MODE_BINARY == mode) {
         char parity = '0';
         switch (session->gpsdata.dev.parity) {
         default:
@@ -418,13 +418,13 @@ static void sirfbin_mode(struct gps_device_t *session, int mode)
                         session->gpsdata.dev.baudrate,
                         9 - session->gpsdata.dev.stopbits,
                         session->gpsdata.dev.stopbits, parity);
-        /* reset binary init steps */
+        // reset binary init steps
         session->cfg_stage = 0;
         session->cfg_step = 0;
     }
 }
 
-/* Debug messages MID 255 (0xff) */
+// Debug messages MID 255 (0xff)
 static gps_mask_t sirf_msg_debug(struct gps_device_t *device,
                                  unsigned char *buf, size_t len)
 {
@@ -433,38 +433,41 @@ static gps_mask_t sirf_msg_debug(struct gps_device_t *device,
 
     memset(msgbuf, 0, (int)sizeof(msgbuf));
 
-    /* FIXME: always/only ID 255 */
-    if (0xe1 == buf[0]) {       /* Development statistics messages */
+    // FIXME: always/only ID 255
+    if (0xe1 == buf[0]) {       // Development statistics messages
         if (2 > len) {
-            /* too short */
+            // too short
             return 0;
         }
-        for (i = 2; i < (int)len; i++)
+        for (i = 2; i < (int)len; i++) {
             str_appendf(msgbuf, sizeof(msgbuf), "%c", buf[i] ^ 0xff);
+        }
         GPSD_LOG(LOG_PROG, &device->context->errout,
                  "SiRF: MID 0xe1 (225) SID %#0x %s\n", buf[1], msgbuf);
-    } else if (0xff == (unsigned char)buf[0]) { /* Debug messages */
-        for (i = 1; i < (int)len; i++)
-            if (isprint(buf[i]))
+    } else if (0xff == (unsigned char)buf[0]) {  // Debug messages
+        for (i = 1; i < (int)len; i++) {
+            if (isprint(buf[i])) {
                 str_appendf(msgbuf, sizeof(msgbuf), "%c", buf[i]);
-            else
+            } else {
                 str_appendf(msgbuf, sizeof(msgbuf),
                                "\\x%02x", (unsigned int)buf[i]);
+            }
+        }
         GPSD_LOG(LOG_PROG, &device->context->errout,
                  "SiRF: DBG 0xff: %s\n", msgbuf);
     }
     return 0;
 }
 
-/* decode Error ID Data MID 10 (0x0a) */
+// decode Error ID Data MID 10 (0x0a)
 static gps_mask_t sirf_msg_errors(struct gps_device_t *device,
                                   unsigned char *buf,
                                   size_t len UNUSED)
 {
-    /* FIXME: decode count: bytes 4 and 5 */
+    // FIXME: decode count: bytes 4 and 5
     switch (getbeu16(buf, 1)) {
     case 2:
-        /* ErrId_CS_SVParity */
+        // ErrId_CS_SVParity
         GPSD_LOG(LOG_PROG, &device->context->errout,
                  "SiRF: EID 0x0a type 2: Subframe %u error on PRN %u\n",
                  getbeu32(buf, 9), getbeu32(buf, 5));
@@ -484,15 +487,16 @@ static gps_mask_t sirf_msg_errors(struct gps_device_t *device,
     return 0;
 }
 
-/* Navigation Library Measurement Data MID 28 (0x1c) */
+// Navigation Library Measurement Data MID 28 (0x1c)
 static gps_mask_t sirf_msg_nlmd(struct gps_device_t *session,
                                 unsigned char *buf UNUSED, size_t len)
 {
 
     double gps_tow = 0.0;
 
-    if (len != 56)
+    if (56 != len) {
         return 0;
+    }
 
     /* oh barf, SiRF claims to be IEEE754 but supports two
      * different double orders, neither IEEE754 */
@@ -505,19 +509,20 @@ static gps_mask_t sirf_msg_nlmd(struct gps_device_t *session,
     return 0;
 }
 
-/* MID_SiRFNavNotification MID 51 (0x33) */
+// MID_SiRFNavNotification MID 51 (0x33)
 static gps_mask_t sirf_msg_navnot(struct gps_device_t *session,
                                 unsigned char *buf, size_t len)
 {
     const char *definition = "Unknown";
     gps_mask_t mask = 0;
 
-    if (len < 3)
+    if (3 > len) {
         return 0;
+    }
 
     switch (buf[1]) {
     case 1:
-        /* last message sent every cycle */
+        // last message sent every cycle
         definition = "SID_GPS_SIRFNAV_COMPLETE";
         /* so push a report now */
         mask = REPORT_IS;
@@ -583,7 +588,7 @@ static gps_mask_t sirf_msg_67_1(struct gps_device_t *session,
     uint32_t solution_validity;
     uint32_t solution_info;
     uint32_t gps_tow = 0;
-    uint32_t msecs;                      /* tow in ms */
+    uint32_t msecs;                      // tow in ms
     uint32_t gps_tow_sub_ms = 0;
     uint16_t gps_week = 0;
     timespec_t gps_tow_ns = {0};
@@ -597,12 +602,12 @@ static gps_mask_t sirf_msg_67_1(struct gps_device_t *session,
     uint32_t clk_bias_error;
     int32_t clk_offset;
     uint32_t clk_offset_error;
-    int16_t heading_rate;             /* rate of change cog deg/s * 100 */
-    uint32_t distance_travel;         /* distance traveled m * 100 */
-    uint16_t distance_travel_error;   /* distance traveled error in m * 100 */
+    int16_t heading_rate;             // rate of change cog deg/s * 100
+    uint32_t distance_travel;         // distance traveled m * 100
+    uint16_t distance_travel_error;   // distance traveled error in m * 100
 
-    uint32_t ehpe;                    /* Est horizontal position error * 100 */
-    unsigned char num_svs_in_sol;     /* Num of satellites used in solution */
+    uint32_t ehpe;                    // Est horizontal position error * 100
+    unsigned char num_svs_in_sol;     // Num of satellites used in solution
     uint32_t sv_list_1;
     uint32_t sv_list_2;
     uint32_t sv_list_3;
@@ -611,15 +616,16 @@ static gps_mask_t sirf_msg_67_1(struct gps_device_t *session,
     uint32_t additional_info;
     int debug_base = LOG_PROG;
 
-    if (len < 126)
+    if (126 > len) {
         return 0;
+    }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "SiRF V: MID 67,1 Multiconstellation Navigation Data Response \n");
 
     solution_validity = getbeu32(buf, 2);
     if (0 != solution_validity) {
-        /* invalid fix, just give up */
+        // invalid fix, just give up
         return 0;
     }
 
@@ -628,18 +634,18 @@ static gps_mask_t sirf_msg_67_1(struct gps_device_t *session,
     msecs = getbeu32(buf, 12);
     gps_tow = msecs / 1000;
     gps_tow_ns.tv_sec = gps_tow;
-    /* get ms part */
+    // get ms part
     gps_tow_sub_ms = msecs % 1000;
-    /* add in the ns */
+    // add in the ns
     gps_tow_ns.tv_nsec = (gps_tow_sub_ms * 1000000L) + getbeu32(buf, 16);
     now = gpsd_gpstime_resolv(session, gps_week, gps_tow_ns);
     /* we'll not use this time, instead the unpacked date below,
      * to get the right epoch */
 
-    time_bias = getbes16(buf, 20);    /* add in the ns */
-    /* time_accuracy is an odd 8 bit float */
+    time_bias = getbes16(buf, 20);    // add in the ns
+    // time_accuracy is an odd 8 bit float
     time_accuracy = getub(buf, 22);
-    time_source = getub(buf, 23);     /* unused */
+    time_source = getub(buf, 23);     // unused
 
     memset(&unpacked_date, 0, sizeof(unpacked_date));
     unpacked_date.tm_year = (int)getbeu16(buf, 24) - 1900;
@@ -652,7 +658,7 @@ static gps_mask_t sirf_msg_67_1(struct gps_device_t *session,
     session->context->valid |= LEAP_SECOND_VALID;
     session->newdata.time.tv_sec = mkgmtime(&unpacked_date);
     session->newdata.time.tv_nsec = gps_tow_ns.tv_nsec;
-    /* got time now */
+    // got time now
     mask |= TIME_SET;
 
     datum = getub(buf, 33);
@@ -665,71 +671,72 @@ static gps_mask_t sirf_msg_67_1(struct gps_device_t *session,
     clk_offset_error = getbeu32(buf, 50) / 100.0;
     session->newdata.latitude = getbes32(buf, 54) * 1e-7;
     session->newdata.longitude = getbes32(buf, 58) * 1e-7;
-    /* altitude WGS84 */
+    // altitude WGS84
     session->newdata.altHAE = getbes32(buf, 62) * 1e-2;
-    /* altitude MSL */
+    // altitude MSL
     session->newdata.altMSL = getbes32(buf, 66) * 1e-2;
-    /* Let gpsd_error_model() deal with geoid_sep */
+    // Let gpsd_error_model() deal with geoid_sep
 
     mask |= LATLON_SET;
 
     switch (solution_info & 0x07) {
-    case 0:      /* no fix */
+    case 0:      // no fix
         session->newdata.mode = MODE_NO_FIX;
         break;
-    case 1:      /* unused */
+    case 1:      // unused
         session->newdata.mode = MODE_NO_FIX;
         break;
-    case 2:      /* unused */
+    case 2:      // unused
         session->newdata.mode = MODE_NO_FIX;
         break;
-    case 3:      /* 3-SV KF Solution */
+    case 3:      // 3-SV KF Solution
         session->newdata.mode = MODE_2D;
         break;
-    case 4:      /* Four or more SV KF Solution */
+    case 4:      // Four or more SV KF Solution
         session->newdata.mode = MODE_3D;
         break;
-    case 5:      /* 2-D Least-squares Solution */
+    case 5:      // 2-D Least-squares Solution
         session->newdata.mode = MODE_2D;
         break;
-    case 6:      /* 3-D Least-squaresSolution */
+    case 6:      // 3-D Least-squaresSolution
         session->newdata.mode = MODE_3D;
         break;
-    case 7:      /* DR solution, assume 3D */
+    case 7:      // DR solution, assume 3D
         session->newdata.mode = MODE_3D;
         break;
-    default:     /* can't really happen */
+    default:     // can't really happen
         session->newdata.mode = MODE_NO_FIX;
         break;
     }
     mask |= MODE_SET;
 
     if (!(solution_info & 0x01000)) {
-        /* sog - speed over ground m/s * 100 */
+        // sog - speed over ground m/s * 100
         session->newdata.speed = getbeu16(buf, 70) / 100.0;
         mask |= SPEED_SET;
     }
-    /* cog - course over ground fm true north deg * 100  */
+    // cog - course over ground fm true north deg * 100
     session->newdata.track = getbeu16(buf, 72) / 100.0;
     mask |= TRACK_SET;
 
-    /* climb_rate - vertical velocity m/s * 100 */
+    // climb_rate - vertical velocity m/s * 100
     session->newdata.climb = getbes16(buf, 74) / 100.0;
 
-    if (session->newdata.mode == MODE_3D)
+    if (MODE_3D == session->newdata.mode) {
         mask |= ALTITUDE_SET | CLIMB_SET;
+    }
 
-    heading_rate = getbes16(buf, 76);     /* rate of change cog deg/s * 100 */
-    distance_travel = getbeu32(buf, 78);  /* distance traveled m * 100 */
-    /* heading_error error of cog deg * 100 */
+    heading_rate = getbes16(buf, 76);     // rate of change cog deg/s * 100
+    distance_travel = getbeu32(buf, 78);  // distance traveled m * 100
+    // heading_error error of cog deg * 100
     session->newdata.epd = getbeu16(buf, 82) / 100.0;
-    /* distance traveled error in m * 100 */
+    // distance traveled error in m * 100
     distance_travel_error = getbeu16(buf, 84) / 100.0;
 
-    ehpe = getbeu32(buf, 86);  /* Estimated horizontal position error * 100 */
-    /* Estimated vertical position error * 100 */
+    ehpe = getbeu32(buf, 86);  // Estimated horizontal position error * 100
+    // Estimated vertical position error * 100
     session->newdata.epv = getbeu32(buf, 90) / 100.0;
-    /* Estimated horizontal velocity error * 100 */
+    // Estimated horizontal velocity error * 100
     session->newdata.eps = getbeu16(buf, 94) / 100.0;
     mask |= SPEEDERR_SET;
 
@@ -748,9 +755,9 @@ static gps_mask_t sirf_msg_67_1(struct gps_device_t *session,
     sv_list_5 = getbeu32(buf, 118);
     additional_info = getbeu32(buf, 122);
 
-    mask |= REPORT_IS; /* send it */
+    mask |= REPORT_IS;  // send it
 
-    /* skip all the debug pushing and popping, unless needed */
+    // skip all the debug pushing and popping, unless needed
     if (session->context->errout.debug >= debug_base) {
         char ts_buf[TIMESPEC_LEN];
 
@@ -811,7 +818,7 @@ static gps_mask_t sirf_msg_67_1(struct gps_device_t *session,
 /* Multiconstellation Navigation Data response MID 67,16 (0x43)
  * this replaces the deprecated MID 41 */
 static gps_mask_t sirf_msg_67_16(struct gps_device_t *session,
-                                  unsigned char *buf, size_t len)
+                                 unsigned char *buf, size_t len)
 {
     gps_mask_t mask = 0;
     uint32_t gps_tow = 0;
@@ -828,7 +835,7 @@ static gps_mask_t sirf_msg_67_16(struct gps_device_t *session,
     int st;                    // index into skyview
 
     if (18 > len) {
-        /* zero sats is len == 18 */
+        // zero sats is len == 18
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "SiRF V: MID 67,16 runt packet. Len %lu\n",
                  (unsigned long)len);
@@ -836,7 +843,7 @@ static gps_mask_t sirf_msg_67_16(struct gps_device_t *session,
     }
 
     if (198 < len) {
-        /* max sats per message is 15 */
+        // max sats per message is 15
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "SiRF V: MID 67,16 packet too big. Len %lu\n",
                  (unsigned long)len);
@@ -848,24 +855,24 @@ static gps_mask_t sirf_msg_67_16(struct gps_device_t *session,
 
     gps_week = getbeu16(buf, 2);
     gps_tow = getbeu32(buf, 4) / 1000;
-    /* get ms part, convert to ns */
+    // get ms part, convert to ns
     gps_tow_sub_ms = 1000000 * (getbeu32(buf, 4) % 1000);
-    gps_tow_sub_ms += getbeu32(buf, 8);    /* add in the ns */
+    gps_tow_sub_ms += getbeu32(buf, 8);    // add in the ns
     gps_tow_ns.tv_sec = gps_tow;
     gps_tow_ns.tv_nsec = gps_tow_sub_ms;
     session->newdata.time = gpsd_gpstime_resolv(session, gps_week, gps_tow_ns);
     session->gpsdata.skyview_time = session->newdata.time;
     time_bias = getbes16(buf, 12);
-    /* time_accuracy is an odd 8 bit float */
+    // time_accuracy is an odd 8 bit float
     time_accuracy = getub(buf, 14);
     time_source = getub(buf, 15);
     msg_info = getub(buf, 16);
     if (0 == (msg_info & 0x0f)) {
-        /* WTF? */
+        // WTF?
         return 0;
     }
     if (1 == (msg_info & 0x0f)) {
-        /* first set, zero the sats */
+        // first set, zero the sats
         gpsd_zero_satellites(&session->gpsdata);
     }
     st = ((msg_info & 0x0f) - 1) * 15;
@@ -917,12 +924,12 @@ static gps_mask_t sirf_msg_67_16(struct gps_device_t *session,
 
         offset = 18 + (sat_num * 12);
         if (offset >= len) {
-            /* end of this message */
+            // end of this message
             break;
         }
         sat_info = getbeu16(buf, offset);
         if (0 == sat_info) {
-            /* empty slot, ignore */
+            // empty slot, ignore
             continue;;
         }
 
@@ -945,88 +952,93 @@ static gps_mask_t sirf_msg_67_16(struct gps_device_t *session,
              * 173 to 182: QZSS IMES
              * 183 to 187: QZSS SAIF
              * 193 to 202: QZSS */
-            if ((173 <= svId) && (182 >= svId)){
-                /* IMES */
+            if ((173 <= svId) &&
+                (182 >= svId)){
+                // IMES
                 gnssId = 4;
                 PRN = svId;
                 svId -= 172;
-            } else if ((193 <= svId) && (202 >= svId)){
-                /* QZSS */
+            } else if ((193 <= svId) &&
+                       (202 >= svId)){
+                // QZSS
                 gnssId = 5;
                 PRN = svId;
                 svId -= 192;
             } else {
-                /* GPS, or?? */
+                // GPS, or??
                 gnssId = 0;
                 PRN = svId;
             }
             break;
         case 1:
-            /* SBAS, 120-158 maps to 120-158 */
-            if (120 > svId || 158 < svId) {
-                /* skip bad svId */
+            // SBAS, 120-158 maps to 120-158
+            if (120 > svId ||
+                158 < svId) {
+                // skip bad svId
                 continue;
             }
             gnssId = 1;
             PRN = svId;
             break;
         case 2:
-            /* GLONASS, 1-32 maps to 65-96 */
+            // GLONASS, 1-32 maps to 65-96
             if (1 > svId) {
-                /* skip bad svId */
+                // skip bad svId
                 continue;
             }
             if (32 < svId) {
-                /* skip bad svId */
+                // skip bad svId
                 continue;
             }
             gnssId = 6;
             PRN = svId + 64;
             break;
         case 3:
-            /* Galileo, 1-36 maps to 211-246 */
+            // Galileo, 1-36 maps to 211-246
             if (1 > svId) {
-                /* skip bad svId */
+                // skip bad svId
                 continue;
             }
             if (37 < svId) {
-                /* skip bad svId */
+                // skip bad svId
                 continue;
             }
             gnssId = 2;
             PRN = svId + 210;
             break;
         case 4:
-            /* BeiDou, 1-37 maps to 159-163,33-64 */
+            // BeiDou, 1-37 maps to 159-163,33-64
             if (1 > svId) {
-                /* skip bad svId */
+                // skip bad svId
                 continue;
             } else if (6 > svId) {
-                /* 1-5 maps to 159-163 */
+                // 1-5 maps to 159-163
                 PRN = svId + 158;
             } else if (37 < svId) {
-                /* skip bad svId */
+                // skip bad svId
                 continue;
             } else {
-                /* 6-37 maps to 33-64 */
+                // 6-37 maps to 33-64
                 PRN = svId + 27;
             }
             gnssId = 3;
             break;
         default:
-            /* Huh?  Skip bad gnssId */
+            // Huh?  Skip bad gnssId
             continue;
         }
 
-        /* note tenths in az and el */
+        // note tenths in az and el
         azimuth = (double)getbeu16(buf, offset + 2) / 10.0;
-        /* what, no negative elevation? */
+        // what, no negative elevation?
         elevation = (double)getbeu16(buf, offset + 4) / 10.0;
         avg_cno = getbeu16(buf, offset + 6);
         ss = (double)avg_cno / 10.0;
         status = getbeu32(buf, offset + 8);
-        if ((0 == avg_cno) && (0 >= elevation) && (0 >= azimuth)) {
-            /* null data, skip it */
+        if ((0 == avg_cno) &&
+            (0 >= elevation) &&
+            (0 >= azimuth)) {
+            // null data, skip it
             continue;
         }
 
@@ -1046,12 +1058,12 @@ static gps_mask_t sirf_msg_67_16(struct gps_device_t *session,
                  elevation, ss);
         st++;
         if (st == MAXCHANNELS) {
-            /* filled up skyview */
+            // filled up skyview
             break;
         }
     }
     if ((msg_info >> 4) == (msg_info & 0x0f)) {
-        /* got all the sats */
+        // got all the sats
         mask |= SATELLITE_SET;
     }
     return mask;
@@ -1060,7 +1072,7 @@ static gps_mask_t sirf_msg_67_16(struct gps_device_t *session,
 /* Multiconstellation Navigation Data response MID 67 (0x43)
  * this replaces the deprecated MID 41 */
 static gps_mask_t sirf_msg_67(struct gps_device_t *session,
-                                  unsigned char *buf, size_t len)
+                              unsigned char *buf, size_t len)
 {
     gps_mask_t mask = 0;
 
@@ -1154,7 +1166,7 @@ static gps_mask_t sirf_msg_stats(struct gps_device_t *session,
     return 0;
 }
 
-/* MID_TCXO_LEARNING_OUT MID 93 (0x5d) */
+// MID_TCXO_LEARNING_OUT MID 93 (0x5d)
 static gps_mask_t sirf_msg_tcxo(struct gps_device_t *session,
                                 unsigned char *buf, size_t len)
 {
@@ -1363,7 +1375,7 @@ static gps_mask_t sirf_msg_svinfo(struct gps_device_t *session,
                                   unsigned char *buf, size_t len)
 {
     int st, i, j, nsv;
-    uint32_t hsec;        /* TOW in hundredths of seconds */
+    uint32_t hsec;        // TOW in hundredths of seconds
     timespec_t ts_tow;
     char ts_buf[TIMESPEC_LEN];
 
@@ -1385,11 +1397,12 @@ static gps_mask_t sirf_msg_svinfo(struct gps_device_t *session,
         unsigned short stat = (unsigned short)getbeu16(buf, off + 3);
         session->gpsdata.skyview[st].PRN = prn;
         session->gpsdata.skyview[st].svid = prn;
-        if (120 <= prn && 158 >= prn) {
-            /* SBAS */
+        if (120 <= prn &&
+            158 >= prn) {
+            // SBAS
             session->gpsdata.skyview[st].gnssid = 1;
         } else {
-            /* GPS */
+            // GPS
             session->gpsdata.skyview[st].gnssid = 0;
         }
         session->gpsdata.skyview[st].azimuth =
@@ -1397,8 +1410,9 @@ static gps_mask_t sirf_msg_svinfo(struct gps_device_t *session,
         session->gpsdata.skyview[st].elevation =
             (double)((unsigned)getub(buf, off + 2) / 2.0);
         cn = 0;
-        for (j = 0; j < 10; j++)
+        for (j = 0; j < 10; j++) {
             cn += (int)getub(buf, off + 5 + j);
+        }
 
         session->gpsdata.skyview[st].ss = (float)(cn / 10.0);
         session->gpsdata.skyview[st].used = (bool)(stat & 0x01);
@@ -1415,28 +1429,30 @@ static gps_mask_t sirf_msg_svinfo(struct gps_device_t *session,
 #endif /* UNUSED */
         if (good != 0) {
             st += 1;
-            if (stat & 0x01)
+            if (stat & 0x01) {
                 nsv++;
+            }
         }
     }
     session->gpsdata.satellites_visible = st;
     session->gpsdata.satellites_used = nsv;
-    /* mark SBAS sats in use if SBAS was in use as of the last MID 27 */
+    // mark SBAS sats in use if SBAS was in use as of the last MID 27
     for (i = 0; i < st; i++) {
         int prn = session->gpsdata.skyview[i].PRN;
-        if ((120 <= prn && 158 >= prn) &&
-            STATUS_DGPS  == session->lastfix.status &&
+        if (120 <= prn &&
+            158 >= prn &&
+            STATUS_DGPS == session->lastfix.status &&
             SIRF_DGPS_SOURCE_SBAS == session->driver.sirf.dgps_source) {
             /* used does not seem right, DGPS means got the correction
              * data, not that the geometry was improved... */
             session->gpsdata.skyview[i].used = true;
         }
     }
-    if (st < 3) {
+    if (3 > st) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF: NTPD not enough satellites seen: %d\n", st);
     } else {
-        /* SiRF says if 3 sats in view the time is good */
+        // SiRF says if 3 sats in view the time is good
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF: NTPD valid time MID 0x04, seen=%#02x, time:%s, "
                  "leap:%d\n",
@@ -1506,7 +1522,7 @@ static double sirf_time_offset(struct gps_device_t *session)
     return retval;
 }
 
-/* Measured Navigation Data Out ID 2 (0x02) */
+// Measured Navigation Data Out ID 2 (0x02)
 static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
                                   unsigned char *buf, size_t len)
 {
@@ -1518,9 +1534,10 @@ static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
     gps_mask_t mask = 0;
     char ts_buf[TIMESPEC_LEN];
 
-    /* later versions are 47 bytes long */
-    if (41 > len)
+    // later versions are 47 bytes long
+    if (41 > len) {
         return 0;
+    }
 
     /*
      * A count of satellites used is an unsigned byte at offset 28
@@ -1529,7 +1546,7 @@ static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
      * in JSON the used bits are reported in the SKY sentence;
      * we get that data from the svinfo packet.
      */
-    /* position/velocity is bytes 1-18 */
+    // position/velocity is bytes 1-18
     session->newdata.ecef.x = (double)getbes32(buf, 1);
     session->newdata.ecef.y = (double)getbes32(buf, 5);
     session->newdata.ecef.z = (double)getbes32(buf, 9);
@@ -1539,21 +1556,25 @@ static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
 
     mask |= ECEF_SET | VECEF_SET;
 
-    /* fix status is byte 19 */
+    // fix status is byte 19
     navtype = (unsigned short)getub(buf, 19);
     session->newdata.status = STATUS_UNK;
     session->newdata.mode = MODE_NO_FIX;
-    if ((navtype & 0x80) != 0)
+    if (0 != (navtype & 0x80)) {
         session->newdata.status = STATUS_DGPS;
-    else if ((navtype & 0x07) > 0 && (navtype & 0x07) < 7)
+    } else if (0 < (navtype & 0x07) &&
+               7 > (navtype & 0x07)) {
         session->newdata.status = STATUS_GPS;
-    if ((navtype & 0x07) == 4 || (navtype & 0x07) == 6)
+    }
+    if (4 == (navtype & 0x07) ||
+        6 == (navtype & 0x07)) {
         session->newdata.mode = MODE_3D;
-    else if (session->newdata.status != 0)
+    } else if (0 != session->newdata.status) {
         session->newdata.mode = MODE_2D;
-    /* byte 20 is HDOP */
+    }
+    // byte 20 is HDOP
     session->gpsdata.dop.hdop = (double)getub(buf, 20) / 5.0;
-    /* byte 21 is nav_mode2, not clear how to interpret that */
+    // byte 21 is nav_mode2, not clear how to interpret that
     nav_mode2 = getub(buf, 21);
 
     gps_week = getbes16(buf, 22);
@@ -1564,31 +1585,30 @@ static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
     tow.tv_nsec = (iTOW % 100) * 10000000L;
     session->newdata.time = gpsd_gpstime_resolv(session, gps_week, tow);
 
-    if (session->newdata.mode <= MODE_NO_FIX) {
+    if (MODE_NO_FIX >= session->newdata.mode) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "SiRF: NTPD no fix, mode: %d\n",
+                 "SiRF: MID 0x02 NTPD no fix, mode: %d\n",
                  session->newdata.mode);
     } else {
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "SiRF: MID 0x02  NTPD valid time, seen %#02x time %s "
+                 "SiRF: MID 0x02 NTPD valid time, seen %#02x time %s "
                  "leap %d nav_mode2 %#x\n",
                  session->driver.sirf.time_seen,
                  timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
                  session->context->leap_seconds,
                  nav_mode2);
     }
-    /* clear computed DOPs so they get recomputed. */
+    // clear computed DOPs so they get recomputed.
     session->gpsdata.dop.tdop = NAN;
     mask |= TIME_SET | STATUS_SET | MODE_SET | DOP_SET | USED_IS;
-    if ( 3 <= session->gpsdata.satellites_visible ) {
+    if (3 <= session->gpsdata.satellites_visible) {
         mask |= NTPTIME_IS;
     }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "SiRF: MND 0x02: Navtype %#0x, Status %d mode %d\n",
-             navtype, session->newdata.status, session->newdata.mode);
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "SiRF: MND 0x02: gpsd_week %u iTOW %u\n",
+             "SiRF: MND 0x02: Navtype %#0x, Status %d mode %d "
+             "gpsd_week %u iTOW %u\n",
+             navtype, session->newdata.status, session->newdata.mode,
              gps_week, iTOW);
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "SiRF: MND 0x02: time %s ecef x: %.2f y: %.2f z: %.2f "
