@@ -25,3 +25,4 @@ gpsd-3.*.tar.xz
 testbuild
 # website staging
 .public
+.vscode
