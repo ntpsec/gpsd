@@ -55,15 +55,12 @@ SPDX-License-Identifier: BSD-2-clause
 #define GLONASS_PSEUDORANGE_RESOLUTION  0.02    // DF041
 #define ANTENNA_DEGREE_RESOLUTION       25e-6   // DF062
 #define GPS_EPOCH_TIME_RESOLUTION       0.1     // DF065
-// DF069, DF070, DF192, DF193, DF194, DF195
-#define PHASE_CORRECTION_RESOLUTION     0.5
-// DF156, DF157, DF158, DF166, DF167, DF168, DF169, DF196, DF197
-#define TRANSLATION_MM_RESOLUTION       0.001
+#define PHASE_CORRECTION_RESOLUTION     0.5     // DF069, DF070, DF192, DF193, DF194, DF195
+#define TRANSLATION_MM_RESOLUTION       0.001   // DF156, DF157, DF158, DF166, DF167, DF168, DF169, DF196, DF197
 #define VALIDITY_RESOLUTION             2.0     // DF152, DF153, DF154, DF155
 #define SCALE_PPM_RESOLUTION            1e-5    // DF162
 #define ROTATION_ARCSEC_RESOLUTION      2e-5    // DF159, DF160, DF161
-// DF171, DF172, DF176, DF177, DF178, DF179, DF183, DF184, DF185, DF186
-#define PROJ_ORIGIN_RESOLUTION          11e-9
+#define PROJ_ORIGIN_RESOLUTION          11e-9   // DF171, DF172, DF176, DF177, DF178, DF179, DF183, DF184, DF185, DF186
 #define DEG_ARCSEC_RESOLUTION           3600
 #define CM_RESOLUTION                   0.01    // DF198
 #define RES_ARCSEC_RESOLUTION           3e-5    // DF199, DF200
@@ -673,35 +670,28 @@ void rtcm3_unpack(const struct gps_context_t *context,
         /* RTCM 3.1
          * Residuals Ellipsoidal Grid Representation
          */
-        // unknown_name = "Residuals Ellipsoidal Grid Representation";
-        rtcm->rtcmtypes.rtcm3_1023.sys_id_num = (unsigned)ugrab(8);
+        unknown_name = "Residuals Ellipsoidal Grid Representation";
+        rtcm->rtcmtypes.rtcm3_1023.sys_id_num = (unsigned int)ugrab(8);
         rtcm->rtcmtypes.rtcm3_1023.shift_id_hori = (bool)ugrab(1);
         rtcm->rtcmtypes.rtcm3_1023.shift_id_vert = (bool)ugrab(1);
-        rtcm->rtcmtypes.rtcm3_1023.lat_origin = sgrab(21) *
-            PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1023.lon_origin = sgrab(22) *
-            PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1023.lat_extension = sgrab(12) *
-            PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1023.lon_extension = sgrab(12) *
-            PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1023.lat_mean = sgrab(8) *
-            TRANSLATION_MM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1023.lon_mean = sgrab(8) *
-            TRANSLATION_MM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1023.ele_mean = sgrab(15) *
-            CM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1023.lat_origin = sgrab(21) * PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1023.lon_origin = sgrab(22) * PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1023.lat_extension = sgrab(12) * PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1023.lon_extension = sgrab(12) * PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1023.lat_mean = sgrab(8) * TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1023.lon_mean = sgrab(8) * TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1023.ele_mean = sgrab(15) * CM_RESOLUTION;
 #define R1023 rtcm->rtcmtypes.rtcm3_1023.residuals[i]
-        for (i = 0; i < RTCM3_GRID_SIZE; i++) {
+        for (i = 0; i < 16; i++) {
             R1023.lat_res = sgrab(9) * RES_ARCSEC_RESOLUTION;
             R1023.lon_res = sgrab(9) * RES_ARCSEC_RESOLUTION;
             R1023.ele_res = sgrab(9) * TRANSLATION_MM_RESOLUTION;
         }
 #undef R1023
-        rtcm->rtcmtypes.rtcm3_1023.interp_meth_id_hori = (unsigned)ugrab(2);
-        rtcm->rtcmtypes.rtcm3_1023.interp_meth_id_vert = (unsigned)ugrab(2);
-        rtcm->rtcmtypes.rtcm3_1023.grd_qual_id_hori = (unsigned)ugrab(3);
-        rtcm->rtcmtypes.rtcm3_1023.grd_qual_id_vert = (unsigned)ugrab(3);
+        rtcm->rtcmtypes.rtcm3_1023.interp_meth_id_hori = (unsigned int)ugrab(2);
+        rtcm->rtcmtypes.rtcm3_1023.interp_meth_id_vert = (unsigned int)ugrab(2);
+        rtcm->rtcmtypes.rtcm3_1023.grd_qual_id_hori = (unsigned int)ugrab(3);
+        rtcm->rtcmtypes.rtcm3_1023.grd_qual_id_vert = (unsigned int)ugrab(3);
         rtcm->rtcmtypes.rtcm3_1023.mjd = (unsigned short)ugrab(16);
         unknown = false;
         break;

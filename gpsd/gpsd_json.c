@@ -2077,31 +2077,31 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
         (void)strlcat(buf, "}", buflen);
         break;
 
-        case 1029:
-            str_appendf(buf, buflen,
-                        "\"station_id\":%u,\"mjd\":%u,\"sec\":%u,"
-                        "\"len\":%zd,\"units\":%zd,\"msg\":\"%s\",",
-                        rtcm->rtcmtypes.rtcm3_1029.station_id,
-                        rtcm->rtcmtypes.rtcm3_1029.mjd,
-                        rtcm->rtcmtypes.rtcm3_1029.sod,
-                        rtcm->rtcmtypes.rtcm3_1029.len,
-                        rtcm->rtcmtypes.rtcm3_1029.unicode_units,
-                        json_stringify(buf1, sizeof(buf1),
-                                       (char *)rtcm->rtcmtypes.rtcm3_1029.text));
-            break;
+    case 1029:
+        str_appendf(buf, buflen,
+                    "\"station_id\":%u,\"mjd\":%u,\"sec\":%u,"
+                    "\"len\":%zd,\"units\":%zd,\"msg\":\"%s\",",
+                    rtcm->rtcmtypes.rtcm3_1029.station_id,
+                    rtcm->rtcmtypes.rtcm3_1029.mjd,
+                    rtcm->rtcmtypes.rtcm3_1029.sod,
+                    rtcm->rtcmtypes.rtcm3_1029.len,
+                    rtcm->rtcmtypes.rtcm3_1029.unicode_units,
+                    json_stringify(buf1, sizeof(buf1),
+                                    (char *)rtcm->rtcmtypes.rtcm3_1029.text));
+        break;
 
-        case 1033:
-            str_appendf(buf, buflen,
-                        "\"station_id\":%u,\"desc\":\"%s\","
-                        "\"setup_id\":%u,\"serial\":\"%s\","
-                        "\"receiver\":\"%s\",\"firmware\":\"%s\"",
-                        rtcm->rtcmtypes.rtcm3_1033.station_id,
-                        rtcm->rtcmtypes.rtcm3_1033.descriptor,
-                        INT(rtcm->rtcmtypes.rtcm3_1033.setup_id),
-                        rtcm->rtcmtypes.rtcm3_1033.serial,
-                        rtcm->rtcmtypes.rtcm3_1033.receiver,
-                        rtcm->rtcmtypes.rtcm3_1033.firmware);
-            break;
+    case 1033:
+        str_appendf(buf, buflen,
+                    "\"station_id\":%u,\"desc\":\"%s\","
+                    "\"setup_id\":%u,\"serial\":\"%s\","
+                    "\"receiver\":\"%s\",\"firmware\":\"%s\"",
+                    rtcm->rtcmtypes.rtcm3_1033.station_id,
+                    rtcm->rtcmtypes.rtcm3_1033.descriptor,
+                    INT(rtcm->rtcmtypes.rtcm3_1033.setup_id),
+                    rtcm->rtcmtypes.rtcm3_1033.serial,
+                    rtcm->rtcmtypes.rtcm3_1033.receiver,
+                    rtcm->rtcmtypes.rtcm3_1033.firmware);
+        break;
 
     case 1071: // GPS MSM 1
         FALLTHROUGH
