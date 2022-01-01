@@ -16,7 +16,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"   // must be before all includes
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -29,7 +29,7 @@
  * Parse the data from the device
  */
 
-/* beginning at bitvec bit start, unpack count sixbit characters */
+// beginning at bitvec bit start, unpack count sixbit characters
 static void from_sixbit_untrimmed(unsigned char *bitvec, unsigned int start,
                                   int count, char *to)
 {
@@ -37,24 +37,26 @@ static void from_sixbit_untrimmed(unsigned char *bitvec, unsigned int start,
         "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_ !\"#$%&'()*+,-./0123456789:;<=>?";
     int i;
 
-    /* six-bit to ASCII */
+    // six-bit to ASCII
     for (i = 0; i < count; i++) {
         char newchar;
         newchar = sixchr[ubits(bitvec, start + 6 * i, 6U, false)];
-        if (newchar == '@')
+        if ('@' == newchar) {
             break;
-        else
+        } else {
             to[i] = newchar;
+        }
     }
     to[i] = '\0';
 }
 
-/* trim spaces on right end */
+// trim spaces on right end
 static void trim_spaces_on_right_end(char* to)
 {
     int i;
     for (i = strlen(to) - 1; i >= 0; i--) {
-        if (to[i] == ' ' || to[i] == '@') {
+        if (' ' == to[i] ||
+            '@' == to[i]) {
             to[i] = '\0';
         } else {
             break;
@@ -71,7 +73,7 @@ static void from_sixbit(unsigned char *bitvec, unsigned int start, int count,
        trim_spaces_on_right_end(to);
 }
 
-/* decode an AIS binary packet */
+// decode an AIS binary packet
 bool ais_binary_decode(const struct gpsd_errout_t *errout,
                        struct ais_t *ais,
                        const unsigned char *bits, size_t bitlen,
@@ -113,10 +115,12 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
      * GNU indent so badly that there is no point in trying to be
      * finer-grained than leaving it all alone.
      */
-    /* *INDENT-OFF* */
+    // *INDENT-OFF*
     switch (ais->type) {
-    case 1:     /* Position Report */
+    case 1:     // Position Report
+        FALLTHROUGH
     case 2:
+        FALLTHROUGH
     case 3:
         PERMISSIVE_LENGTH_CHECK(163)
         ais->type1.status       = UBITS(38, 4);
@@ -131,13 +135,16 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         ais->type1.maneuver     = UBITS(143, 2);
         //ais->type1.spare      = UBITS(145, 3);
         ais->type1.raim         = UBITS(148, 1) != 0;
-        if(bitlen >= 168)
-                ais->type1.radio        = UBITS(149, 19);
-        if(bitlen < 168)
-                ais->type1.radio        = UBITS(149, bitlen - 149);
+        if(bitlen >= 168) {
+            ais->type1.radio        = UBITS(149, 19);
+        } else {
+            // less than 168
+            ais->type1.radio        = UBITS(149, bitlen - 149);
+        }
         break;
-    case 4:     /* Base Station Report */
-    case 11:    /* UTC/Date Response */
+    case 4:     // Base Station Report
+        FALLTHROUGH
+    case 11:    // UTC/Date Response
         PERMISSIVE_LENGTH_CHECK(168)
         ais->type4.year         = UBITS(38, 14);
         ais->type4.month        = UBITS(52, 4);
@@ -153,8 +160,8 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         ais->type4.raim         = UBITS(148, 1) != 0;
         ais->type4.radio        = UBITS(149, 19);
         break;
-    case 5: /* Ship static and voyage related data */
-        if (bitlen != 424) {
+    case 5: // Ship static and voyage related data
+        if (424 != bitlen) {
             GPSD_LOG(LOG_WARN, errout,
                      "AIVDM message type 5 size not 424 bits (%zd).\n",
                      bitlen);
@@ -162,8 +169,9 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
              * For unknown reasons, a lot of transmitters in the wild ship
              * with a length of 420 or 422.  This is a recoverable error.
              */
-            if (bitlen < 420)
+            if (420 > bitlen) {
                 return false;
+            }
         }
         ais->type5.ais_version  = UBITS(38, 2);
         ais->type5.imo          = UBITS(40, 30);
@@ -181,11 +189,12 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         ais->type5.minute       = UBITS(288, 6);
         ais->type5.draught      = UBITS(294, 8);
         UCHARS(302, ais->type5.destination);
-        if (bitlen >= 423)
+        if (423 <= bitlen) {
             ais->type5.dte          = UBITS(422, 1);
+        }
         //ais->type5.spare        = UBITS(423, 1);
         break;
-    case 6: /* Addressed Binary Message */
+    case 6:   // Addressed Binary Message
         RANGE_CHECK(88, 1008);
         ais->type6.seqno          = UBITS(38, 2);
         ais->type6.dest_mmsi      = UBITS(40, 30);
@@ -194,11 +203,11 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         ais->type6.dac            = UBITS(72, 10);
         ais->type6.fid            = UBITS(82, 6);
         ais->type6.bitcount       = bitlen - 88;
-        /* not strictly required - helps stability in testing */
+        // not strictly required - helps stability in testing
         (void)memset(ais->type6.bitdata, '\0', sizeof(ais->type6.bitdata));
         ais->type6.structured = false;
-        /* Inland AIS */
-        if (ais->type6.dac == 200) {
+        // Inland AIS
+        if (200 == ais->type6.dac) {
             switch (ais->type6.fid) {
             case 21:    /* ETA at lock/bridge/terminal */
                 if (bitlen != 248)
@@ -409,12 +418,12 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
 #undef ELEMENT_SIZE
                 ais->type6.structured = true;
                 break;
-            case 30:    /* IMO289 - Text description - addressed */
+            case 30:    // IMO289 - Text description - addressed
                 ais->type6.dac1fid30.linkage   = UBITS(88, 10);
                 ENDCHARS(98, ais->type6.dac1fid30.text);
                 ais->type6.structured = true;
                 break;
-            case 32:    /* IMO289 - Tidal Window */
+            case 32:    // IMO289 - Tidal Window
                 ais->type6.dac1fid32.month      = UBITS(88, 4);
                 ais->type6.dac1fid32.day        = UBITS(92, 5);
 #define ARRAY_BASE 97
@@ -441,8 +450,9 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
             (void)memcpy(ais->type6.bitdata, (char *)bits + (88 / CHAR_BIT),
                          BITS_TO_BYTES(ais->type6.bitcount));
         break;
-    case 7: /* Binary acknowledge */
-    case 13: /* Safety Related Acknowledge */
+    case 7:    // Binary acknowledge
+        FALLTHROUGH
+    case 13:   // Safety Related Acknowledge
     {
         unsigned int mmsi[4];
         unsigned seqno[4];
@@ -926,11 +936,13 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         ais->type21.virtual_aid  = UBITS(269, 1) != 0;
         ais->type21.assigned     = UBITS(270, 1) != 0;
         //ais->type21.spare      = UBITS(271, 1);
-        if (strlen(ais->type21.name) == 20 && bitlen > 272)
+        if (20 == strnlen(ais->type21.name, 21) &&
+            272 < bitlen) {
             ENDCHARS(272, ais->type21.name+20);
+        }
         trim_spaces_on_right_end(ais->type21.name);
         break;
-    case 22:    /* Channel Management */
+    case 22:    // Channel Management
         PERMISSIVE_LENGTH_CHECK(168)
         ais->type22.channel_a    = UBITS(40, 12);
         ais->type22.channel_b    = UBITS(52, 12);
@@ -1086,20 +1098,22 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         (void)memcpy(ais->type26.bitdata,
                      (unsigned char *)bits + 5 + 2 * ais->type26.structured,
                      BITS_TO_BYTES(ais->type26.bitcount));
-        /* discard MMSI if addressed */
+        // discard MMSI if addressed
         if (ais->type26.addressed) {
             shiftleft((unsigned char *)ais->type26.bitdata,
                       ais->type26.bitcount, 30);
             ais->type26.bitcount -= 30;
         }
         break;
-    case 27:    /* Long Range AIS Broadcast message */
-        if (bitlen != 96 && bitlen != 168) {
+    case 27:    // Long Range AIS Broadcast message
+        if (96 != bitlen &&
+            168 != bitlen) {
             GPSD_LOG(LOG_WARN, errout,
                      "unexpected AIVDM message type 27 (%zd).\n",
                      bitlen);
             return false;
-        } if (bitlen == 168) {
+        }
+        if (168 == bitlen) {
             /*
              * This is an implementation error observed in the wild,
              * sending a full 168-bit slot rather than just 96 bits.
@@ -1121,14 +1135,12 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                  "Unparsed AIVDM message type %d.\n",ais->type);
         return false;
     }
-    /* *INDENT-ON* */
+    // *INDENT-ON*
 #undef UCHARS
 #undef SBITS
 #undef UBITS
 
-    /* data is fully decoded */
+    // data is fully decoded
     return true;
 }
-
-/* driver_ais.c ends here */
 // vim: set expandtab shiftwidth=4

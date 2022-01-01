@@ -110,7 +110,7 @@ int main (int argc, char **argv)
         }
     }
 
-    if (0 == strlen(oid)) {
+    if ('\0' == oid[0]) {
         (void)fprintf(stderr, "%s: ERROR: Missing option\n\n", argv[0]);
         usage(argv[0]);
         exit(1);

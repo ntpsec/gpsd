@@ -769,7 +769,43 @@ struct rtcm3_t {
             signed int M_tau_sub_GPS;
             bool M_l_sub_n;
         } rtcm3_1020;
-        struct rtcm3_1029_t {
+        struct rtcm3_1021_t {
+            // size_t src_len;
+            char src_name[32];                          // DF144, Source-Name
+            // size_t tar_len;
+            char tar_name[32];                          // DF146, Target-Name
+            unsigned int sys_id_num;                    // DF147, System Identification Number
+            unsigned int ut_tr_msg_id;                  // DF148, Utilized Transformation Message Indicator
+            unsigned int plate_number;                  // DF149, Plate Number
+            unsigned int computation_id;                // DF150, Computation Indicator
+            unsigned int height_id;                     // DF151, Height Indicator
+            double lat_origin, lon_origin;              // Latitude of Origin, Longitude of Origin
+            double lat_extension, lon_extension;        // N/S Extension, E/W Extension
+            double x_trans, y_trans, z_trans;           // dX, dY, dZ
+            double x_rot, y_rot, z_rot;                 // rX, rY, rZ
+            double ds;                                  // DF162, partial scale
+            double add_as, add_bs, add_at, add_bt;      // Major|Minor-Axis-Source, Major|Minor-Axis-Target
+            unsigned int quality_hori;                  // Horizontal Quality Indicator
+            unsigned int quality_vert;                  // Vertical Quality Indicator
+        } rtcm3_1021;
+        struct {
+            unsigned int sys_id_num;                    // DF147, System Identification Number
+            bool shift_id_hori;                         // Horizontal Shift indicator
+            bool shift_id_vert;                         // Vertical Shift indicator
+            double lat_origin, lon_origin;              // Latitude of Origin, Longitude of Origin
+            double lat_extension, lon_extension;        // grid Extension Latitude, grid Extension Longitude
+            double lat_mean, lon_mean, ele_mean;        // mean offset latitude, mean offset longitude, mean offset elevation
+            struct rtcm3_1023_t {
+                double lat_res, lon_res, ele_res;
+            } residuals[16];                            // 4*4 residual grid points
+            unsigned int interp_meth_id_hori;           // Horizontal interpolation method indicator
+            unsigned int interp_meth_id_vert;           // Vertical interpolation method indicator
+            unsigned int grd_qual_id_hori;              // Horizontal Grid quality indicator
+            unsigned int grd_qual_id_vert;              // Vertical Grid quality indicator
+            unsigned short mjd;                         // Modified Julian Date
+        } rtcm3_1023;
+        struct rtcm3_1029_t
+        {
             unsigned int station_id;    // Reference Station ID
             unsigned short mjd;         // Modified Julian Day (MJD) Number
             unsigned int sod;           // Seconds of Day (UTC)

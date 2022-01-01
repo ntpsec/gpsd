@@ -262,9 +262,6 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
      * Some Linuxes, like the RasPi's, have PPS devices preexisting.
      * Other OS have no way to automatically determine the proper /dev/ppsX.
      * Allow user to pass in an explicit PPS device path.
-     *
-     * (We use strncpy() here because this might be compiled where
-     * strlcpy() is not available.)
      */
     if (0 == strncmp(pps_thread->devicename, "/dev/pps", 8)) {
         if (pps_check_fake(pps_thread->devicename + 5)) {
@@ -273,7 +270,7 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
                                  " timing will be inaccurate\n",
                                  pps_thread->devicename);
         }
-        (void)strncpy(path, pps_thread->devicename, sizeof(path)-1);
+        (void)strlcpy(path, pps_thread->devicename, sizeof(path) - 1);
     } else {
         char pps_num = '\0';  // /dev/pps[pps_num] is our device
         size_t i;             // to match type of globbuf.gl_pathc
