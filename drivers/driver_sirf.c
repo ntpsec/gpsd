@@ -1616,7 +1616,7 @@ static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "SiRF: MND 0x02: Navtype %#0x, Status %d mode %d "
-             "gpsd_week %u iTOW %u\n",
+             "gps_week %u iTOW %u\n",
              navtype, session->newdata.status, session->newdata.mode,
              gps_week, iTOW);
     GPSD_LOG(LOG_DATA, &session->context->errout,
