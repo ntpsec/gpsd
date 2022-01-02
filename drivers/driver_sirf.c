@@ -1567,12 +1567,15 @@ static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
 
     // fix status is byte 19
     navtype = (unsigned short)getub(buf, 19);
-    session->newdata.status = STATUS_UNK;
     session->newdata.mode = MODE_NO_FIX;
-    if (0 != (navtype & 0x80)) {
+    if (0 == (navtype & 0x07)) {
+        // no fix
+        session->newdata.status = STATUS_UNK;
+    } else if (7 == (navtype & 0x07)) {
+        session->newdata.status = STATUS_DR;
+    } else if (0x80 == (navtype & 0x80)) {
         session->newdata.status = STATUS_DGPS;
-    } else if (0 < (navtype & 0x07) &&
-               7 > (navtype & 0x07)) {
+    } else {
         session->newdata.status = STATUS_GPS;
     }
     if (4 == (navtype & 0x07) ||
