@@ -1106,10 +1106,11 @@ PRINTF_FUNC(3, 4) void gpsd_log(const int, const struct gpsd_errout_t *,
  * This saves significant pushing, popping, hexification, etc. when
  * the debug level does not require it.
  */
-#define GPSD_LOG(lvl, eo, ...)           \
-    do {                                 \
-        if ((eo)->debug >= (lvl))        \
-            gpsd_log(lvl, eo, __VA_ARGS__);   \
+#define GPSD_LOG(lvl, eo, ...)                 \
+    do {                                       \
+        if (unlikely((eo)->debug >= (lvl))) {  \
+            gpsd_log(lvl, eo, __VA_ARGS__);    \
+        }                                      \
     } while (0)
 
 
