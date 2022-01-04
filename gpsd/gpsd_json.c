@@ -1605,6 +1605,7 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                      char buf[], size_t buflen)
 {
     char buf1[JSON_VAL_MAX * 2 + 1];
+    char buf2[JSON_VAL_MAX * 2 + 1];
     unsigned short i;
     unsigned int n;
 
@@ -2007,6 +2008,74 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                     rtcm->rtcmtypes.rtcm3_1015.header.aux_id,
                     rtcm->rtcmtypes.rtcm3_1015.header.satcount);
         break;
+    case 1021:
+        str_appendf(buf, buflen,
+                    "\"src_name\":\"%s\",\"tar_name\":\"%s\","
+                    "\"sys_id\":%u, \"plate_number\":%u,"
+                    "\"lat_origin\":%f,\"lon_origin\":%f,"
+                    "\"lat_extension\":%f,\"lon_extension\":%f,"
+                    "\"dX\":%.3f,\"dY\":%.3f,\"dZ\":%.3f,"
+                    "\"rX\":%f,\"rY\":%f,\"rZ\":%f,\"dS\":%f,"
+                    "\"add_as\":%.3f,\"add_bs\":%.3f,"
+                    "\"add_at\":%.3f,\"add_bt\":%.3f,",
+                    json_stringify(buf1, sizeof(buf1),
+                                   (char *)rtcm->rtcmtypes.rtcm3_1021.src_name),
+                    json_stringify(buf2, sizeof(buf2),
+                                   (char *)rtcm->rtcmtypes.rtcm3_1021.tar_name),
+                    rtcm->rtcmtypes.rtcm3_1021.sys_id_num,
+                    rtcm->rtcmtypes.rtcm3_1021.plate_number,
+                    rtcm->rtcmtypes.rtcm3_1021.lat_origin,
+                    rtcm->rtcmtypes.rtcm3_1021.lon_origin,
+                    rtcm->rtcmtypes.rtcm3_1021.lat_extension,
+                    rtcm->rtcmtypes.rtcm3_1021.lon_extension,
+                    rtcm->rtcmtypes.rtcm3_1021.x_trans,
+                    rtcm->rtcmtypes.rtcm3_1021.y_trans,
+                    rtcm->rtcmtypes.rtcm3_1021.z_trans,
+                    rtcm->rtcmtypes.rtcm3_1021.x_rot,
+                    rtcm->rtcmtypes.rtcm3_1021.y_rot,
+                    rtcm->rtcmtypes.rtcm3_1021.z_rot,
+                    rtcm->rtcmtypes.rtcm3_1021.ds,
+                    rtcm->rtcmtypes.rtcm3_1021.add_as,
+                    rtcm->rtcmtypes.rtcm3_1021.add_bs,
+                    rtcm->rtcmtypes.rtcm3_1021.add_at,
+                    rtcm->rtcmtypes.rtcm3_1021.add_bt
+        );
+        break;
+    case 1023:
+        str_appendf(buf, buflen,
+                    "\"sys_id\":%u,"
+                    "\"shift_h\":%u,\"shift_v\":%u,"
+                    "\"lat_origin\":%f,\"lon_origin\":%f,"
+                    "\"lat_extension\":%f,\"lon_extension\":%f,"
+                    "\"lat_mean\":%.3f,\"lon_mean\":%.3f,\"ele_mean\":%.2f,"
+                    "\"mjd\":%u,",
+                    rtcm->rtcmtypes.rtcm3_1023.sys_id_num,
+                    rtcm->rtcmtypes.rtcm3_1023.shift_id_hori,
+                    rtcm->rtcmtypes.rtcm3_1023.shift_id_vert,
+                    rtcm->rtcmtypes.rtcm3_1023.lat_origin,
+                    rtcm->rtcmtypes.rtcm3_1023.lon_origin,
+                    rtcm->rtcmtypes.rtcm3_1023.lat_extension,
+                    rtcm->rtcmtypes.rtcm3_1023.lon_extension,
+                    rtcm->rtcmtypes.rtcm3_1023.lat_mean,
+                    rtcm->rtcmtypes.rtcm3_1023.lon_mean,
+                    rtcm->rtcmtypes.rtcm3_1023.ele_mean,
+                    rtcm->rtcmtypes.rtcm3_1023.mjd
+        );
+        (void)strlcat(buf, "\"residuals\":{", buflen);
+        for (i = 0; i < 16; i++) {
+#define R1023 rtcm->rtcmtypes.rtcm3_1023.residuals[i]
+            str_appendf(buf, buflen,
+                        "\"lat_%02u\":%.5f,"
+                        "\"lon_%02u\":%.5f,"
+                        "\"ele_%02u\":%.3f,",
+                        i + 1, R1023.lat_res,
+                        i + 1, R1023.lon_res,
+                        i + 1, R1023.ele_res);
+#undef R1023
+        }
+        str_rstrip_char(buf, ',');
+        (void)strlcat(buf, "}", buflen);
+        break;
     case 1029:
         str_appendf(buf, buflen,
                     "\"station_id\":%u,\"mjd\":%u,\"sec\":%u,"
@@ -2033,89 +2102,89 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                     rtcm->rtcmtypes.rtcm3_1033.firmware);
         break;
 
-    case 1071:    // GPS MSM 1
+    case 1071: // GPS MSM 1
         FALLTHROUGH
-    case 1072:    // GPS MSM 2
+    case 1072: // GPS MSM 2
         FALLTHROUGH
-    case 1073:    // GPS MSM 3
+    case 1073: // GPS MSM 3
         FALLTHROUGH
-    case 1074:    // GPS MSM 4
+    case 1074: // GPS MSM 4
         FALLTHROUGH
-    case 1075:    // GPS MSM 5
+    case 1075: // GPS MSM 5
         FALLTHROUGH
-    case 1076:    // GPS MSM 6
+    case 1076: // GPS MSM 6
         FALLTHROUGH
-    case 1077:    // GPS MSM 7
+    case 1077: // GPS MSM 7
         FALLTHROUGH
-    case 1081:    // GLO MSM 1
+    case 1081: // GLO MSM 1
         FALLTHROUGH
-    case 1082:    // GLO MSM 2
+    case 1082: // GLO MSM 2
         FALLTHROUGH
-    case 1083:    // GLO MSM 3
+    case 1083: // GLO MSM 3
         FALLTHROUGH
-    case 1084:    // GLO MSM 4
+    case 1084: // GLO MSM 4
         FALLTHROUGH
-    case 1085:    // GLO MSM 5
+    case 1085: // GLO MSM 5
         FALLTHROUGH
-    case 1086:    // GLO MSM 6
+    case 1086: // GLO MSM 6
         FALLTHROUGH
-    case 1087:    // GLO MSM 7
+    case 1087: // GLO MSM 7
         FALLTHROUGH
-    case 1091:    // GAL MSM 1
+    case 1091: // GAL MSM 1
         FALLTHROUGH
-    case 1092:    // GAL MSM 2
+    case 1092: // GAL MSM 2
         FALLTHROUGH
-    case 1093:    // GAL MSM 3
+    case 1093: // GAL MSM 3
         FALLTHROUGH
-    case 1094:    // GAL MSM 4
+    case 1094: // GAL MSM 4
         FALLTHROUGH
-    case 1095:    // GAL MSM 5
+    case 1095: // GAL MSM 5
         FALLTHROUGH
-    case 1096:    // GAL MSM 6
+    case 1096: // GAL MSM 6
         FALLTHROUGH
-    case 1097:    // GAL MSM 7
+    case 1097: // GAL MSM 7
         FALLTHROUGH
-    case 1101:    // SBAS MSM 1
+    case 1101: // SBAS MSM 1
         FALLTHROUGH
-    case 1102:    // SBAS MSM 2
+    case 1102: // SBAS MSM 2
         FALLTHROUGH
-    case 1103:    // SBAS MSM 3
+    case 1103: // SBAS MSM 3
         FALLTHROUGH
-    case 1104:    // SBAS MSM 4
+    case 1104: // SBAS MSM 4
         FALLTHROUGH
-    case 1105:    // SBAS MSM 5
+    case 1105: // SBAS MSM 5
         FALLTHROUGH
-    case 1106:    // SBAS MSM 6
+    case 1106: // SBAS MSM 6
         FALLTHROUGH
-    case 1107:    // SBAS MSM 7
+    case 1107: // SBAS MSM 7
         FALLTHROUGH
-    case 1111:    // QZSS MSM 1
+    case 1111: // QZSS MSM 1
         FALLTHROUGH
-    case 1112:    // QZSS MSM 2
+    case 1112: // QZSS MSM 2
         FALLTHROUGH
-    case 1113:    // QZSS MSM 3
+    case 1113: // QZSS MSM 3
         FALLTHROUGH
-    case 1114:    // QZSS MSM 4
+    case 1114: // QZSS MSM 4
         FALLTHROUGH
-    case 1115:    // QZSS MSM 5
+    case 1115: // QZSS MSM 5
         FALLTHROUGH
-    case 1116:    // QZSS MSM 6
+    case 1116: // QZSS MSM 6
         FALLTHROUGH
-    case 1117:    // QZSS MSM 7
+    case 1117: // QZSS MSM 7
         FALLTHROUGH
-    case 1121:    // BD MSM 1
+    case 1121: // BD MSM 1
         FALLTHROUGH
-    case 1122:    // BD MSM 2
+    case 1122: // BD MSM 2
         FALLTHROUGH
-    case 1123:    // BD MSM 3
+    case 1123: // BD MSM 3
         FALLTHROUGH
-    case 1124:    // BD MSM 4
+    case 1124: // BD MSM 4
         FALLTHROUGH
-    case 1125:    // BD MSM 5
+    case 1125: // BD MSM 5
         FALLTHROUGH
-    case 1126:    // BD MSM 6
+    case 1126: // BD MSM 6
         FALLTHROUGH
-    case 1127:    // BD MSM 7
+    case 1127: // BD MSM 7
         str_appendf(buf, buflen,
                     "\"station_id\":%u,\"gnssid\":%u,\"subtype\":\"MSM%d\","
                     "\"tow\":%lld,\"sync\":\"%u\",\"IODS\":%u,"
@@ -2141,36 +2210,41 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                     rtcm->rtcmtypes.rtcm3_1230.station_id,
                     rtcm->rtcmtypes.rtcm3_1230.bias_indicator);
         // actual mask order is undocumented...
-        if (1 & rtcm->rtcmtypes.rtcm3_1230.signals_mask) {
+        if (1 & rtcm->rtcmtypes.rtcm3_1230.signals_mask)
+        {
             str_appendf(buf, buflen, ",\"l1_ca\":%d",
-            rtcm->rtcmtypes.rtcm3_1230.l1_ca_bias);
+                        rtcm->rtcmtypes.rtcm3_1230.l1_ca_bias);
         }
-        if (2 & rtcm->rtcmtypes.rtcm3_1230.signals_mask) {
+        if (2 & rtcm->rtcmtypes.rtcm3_1230.signals_mask)
+        {
             str_appendf(buf, buflen, ",\"l1_p\":%d",
-            rtcm->rtcmtypes.rtcm3_1230.l1_p_bias);
+                        rtcm->rtcmtypes.rtcm3_1230.l1_p_bias);
         }
-        if (4 & rtcm->rtcmtypes.rtcm3_1230.signals_mask) {
+        if (4 & rtcm->rtcmtypes.rtcm3_1230.signals_mask)
+        {
             str_appendf(buf, buflen, ",\"l2_ca\":%d",
-            rtcm->rtcmtypes.rtcm3_1230.l2_ca_bias);
+                        rtcm->rtcmtypes.rtcm3_1230.l2_ca_bias);
         }
-        if (8 & rtcm->rtcmtypes.rtcm3_1230.signals_mask) {
+        if (8 & rtcm->rtcmtypes.rtcm3_1230.signals_mask)
+        {
             str_appendf(buf, buflen, ",\"l2_p\":%d",
-            rtcm->rtcmtypes.rtcm3_1230.l2_p_bias);
+                        rtcm->rtcmtypes.rtcm3_1230.l2_p_bias);
         }
         break;
 
-    case 1018:    // Reserved, alternative Ionospheric Correction Differences
+    case 1018: // Reserved, alternative Ionospheric Correction Differences
         FALLTHROUGH
-    case 1019:    // GPS Ephemeris
+    case 1019: // GPS Ephemeris
         FALLTHROUGH
-    case 1020:    // GLO Ephemeris
+    case 1020: // GLO Ephemeris
         FALLTHROUGH
 
     default:
         (void)strlcat(buf, "\"data\":[", buflen);
-        for (n = 0; n < rtcm->length; n++) {
+        for (n = 0; n < rtcm->length; n++)
+        {
             str_appendf(buf, buflen,
-                        "\"0x%02x\",",(unsigned int)rtcm->rtcmtypes.data[n]);
+                        "\"0x%02x\",", (unsigned int)rtcm->rtcmtypes.data[n]);
         }
         str_rstrip_char(buf, ',');
         (void)strlcat(buf, "]", buflen);
