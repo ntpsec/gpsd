@@ -464,13 +464,69 @@ static gps_mask_t sirf_msg_errors(struct gps_device_t *device,
                                   unsigned char *buf,
                                   size_t len UNUSED)
 {
-    // FIXME: decode count: bytes 4 and 5
+    unsigned count;
+
+    if (5 > len) {
+        // too short
+        return 0;
+    }
+
+    count = getbeu16(buf, 3);
+
     switch (getbeu16(buf, 1)) {
     case 2:
         // ErrId_CS_SVParity
         GPSD_LOG(LOG_PROG, &device->context->errout,
                  "SiRF: EID 0x0a type 2: Subframe %u error on PRN %u\n",
                  getbeu32(buf, 9), getbeu32(buf, 5));
+        break;
+
+    case 4:
+        // ErrId_RMC_GettingPosition
+        GPSD_LOG(LOG_PROG, &device->context->errout,
+                 "SiRF: EID 0x0a type 4: RMC_GettingPosition on PRN %u\n",
+                 getbeu32(buf, 5));
+        break;
+
+    case 10:
+        // ErrId_RXM_TimeExceeded
+        GPSD_LOG(LOG_PROG, &device->context->errout,
+                 "SiRF: EID 0x0a type 10: RXM_TimeExceeded PR %u\n",
+                 getbeu32(buf, 5));
+        break;
+
+    case 11:
+        // ErrId_RXM_TDOPOverflow
+        GPSD_LOG(LOG_PROG, &device->context->errout,
+                 "SiRF: EID 0x0a type 11: RXM_TDOPOverflow doppler %u\n",
+                 getbeu32(buf, 5));
+        break;
+
+    case 12:
+        // ErrId_RXM_ValidDurationExceeded
+        GPSD_LOG(LOG_PROG, &device->context->errout,
+                 "SiRF: EID 0x0a type 12: RXM_ValidDurationExceeded PRN %u\n",
+                 getbeu32(buf, 5));
+        break;
+
+    case 13:
+        // ErrId_STRTP_BadPostion
+        GPSD_LOG(LOG_PROG, &device->context->errout,
+                 "SiRF: EID 0x0a type 13: STRTP_BadPostion\n");
+        break;
+
+    case 4097:
+        // ErrId_MI_VCOClockLost
+        GPSD_LOG(LOG_PROG, &device->context->errout,
+                 "SiRF: EID 0x0a type 4097: MI_VCOClockLost %u\n",
+                 getbeu32(buf, 5));
+        break;
+
+    case 4099:
+        // ErrId_MI_FalseAcqReceiverReset
+        GPSD_LOG(LOG_PROG, &device->context->errout,
+                 "SiRF: EID 0x0a type 4099: MI_FalseAcqReceiverReset %u\n",
+                 getbeu32(buf, 5));
         break;
 
     case 4107:
@@ -480,8 +536,8 @@ static gps_mask_t sirf_msg_errors(struct gps_device_t *device,
 
     default:
         GPSD_LOG(LOG_PROG, &device->context->errout,
-                 "SiRF: EID 0x0a: Error MID %d\n",
-                 getbeu16(buf, 1));
+                 "SiRF: EID 0x0a: Error MID %u, count %u\n",
+                 getbeu16(buf, 1), count);
         break;
     }
     return 0;
@@ -1116,6 +1172,26 @@ static gps_mask_t sirf_msg_qresp(struct gps_device_t *session,
     return 0;
 }
 
+// SBAS 50 (0x32)
+static gps_mask_t sirf_msg_sbas(struct gps_device_t *session,
+                                unsigned char *buf, size_t len)
+{
+    unsigned char prn, mode, timeout, flags;
+
+    if (13 != len) {
+        return 0;
+    }
+
+    prn = buf[1];
+    mode = buf[2];
+    timeout = buf[3];
+    flags = buf[4];
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "SiRF: SBAS 0x32 PRN %u mode %u timeout %u flags x%x\n",
+             prn, mode, timeout, flags);
+    return 0;
+}
+
 // Statistics Channel MID 225 (0xe1)
 static gps_mask_t sirf_msg_stats(struct gps_device_t *session,
                                  unsigned char *buf, size_t len)
@@ -1333,7 +1409,7 @@ static gps_mask_t sirf_msg_swversion(struct gps_device_t *session,
         }
     }
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "SiRF: FV MID 0x06: fv: %0.2f, driverstate %0x "
+             "SiRF: FV 0x06: fv: %0.2f, driverstate %0x "
              "subtype '%s' len %lu buf1 %u buf2 %u\n",
              fv, session->driver.sirf.driverstate,
              session->subtype, (long)len, buf[1], buf[2]);
@@ -1397,6 +1473,7 @@ static gps_mask_t sirf_msg_svinfo(struct gps_device_t *session,
     uint32_t hsec;        // TOW in hundredths of seconds
     timespec_t ts_tow;
     char ts_buf[TIMESPEC_LEN];
+    gps_mask_t mask = 0;
 
     if (188 != len) {
         return 0;
@@ -1442,7 +1519,7 @@ static gps_mask_t sirf_msg_svinfo(struct gps_device_t *session,
             session->gpsdata.skyview[st].elevation != 0;
 #ifdef __UNUSED__
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "SiRF: PRN=%2d El=%3.2f Az=%3.2f ss=%3d stat=%04x %c\n",
+                 "SiRF: MTD 4 PRN=%2d El=%3.2f Az=%3.2f ss=%3d stat=%04x %c\n",
                  prn,
                  getub(buf, off + 2) / 2.0,
                  (getub(buf, off + 1) * 3) / 2.0,
@@ -1469,13 +1546,11 @@ static gps_mask_t sirf_msg_svinfo(struct gps_device_t *session,
             session->gpsdata.skyview[i].used = true;
         }
     }
-    if (3 > st) {
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "SiRF: NTPD not enough satellites seen: %d\n", st);
-    } else {
+    if (3 <= st) {
         // SiRF says if 3 sats in view the time is good
+        mask |= NTPTIME_IS;
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "SiRF: NTPD valid time MID 0x04, seen=%#02x, time:%s, "
+                 "SiRF: MTD 0x04 NTPD valid time seen %#02x time %s, "
                  "leap:%d\n",
                  session->driver.sirf.time_seen,
                  timespec_str(&session->gpsdata.skyview_time, ts_buf,
@@ -1485,7 +1560,7 @@ static gps_mask_t sirf_msg_svinfo(struct gps_device_t *session,
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "SiRF: MTD 0x04: visible=%d mask={SATELLITE}\n",
              session->gpsdata.satellites_visible);
-    return SATELLITE_SET;
+    return mask | SATELLITE_SET;
 }
 
 // return NTP time-offset fudge factor for this device
@@ -2263,8 +2338,7 @@ gps_mask_t sirf_parse(struct gps_device_t * session, unsigned char *buf,
         return sirf_msg_geodetic(session, buf, len);
 
     case 0x32:                  // SBAS corrections MID 50
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "SiRF: unused MID 50 (0x32) SBAS\n");
+        return sirf_msg_sbas(session, buf, len);
         return 0;
 
     case 0x33:                  // MID_SiRFNavNotification MID 51, 0x33
