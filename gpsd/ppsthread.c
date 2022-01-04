@@ -282,7 +282,10 @@ static int init_kernel_pps(struct inner_context_t *inner_context)
 
         /* Attach the line PPS discipline, so no need to ldattach.
          * This activates the magic /dev/pps0 device.
-         * Note: this ioctl() requires root, and device is a tty */
+         * Note: this ioctl() requires root, and device is a tty.
+         * For testing, you can manually create /dev/ppsX:
+         *   stty -F /dev/ttyXX line 18
+         */
         if (0 > ioctl(pps_thread->devicefd, TIOCSETD, &ldisc)) {
             char errbuf[BUFSIZ] = "unknown error";
             pps_thread->log_hook(pps_thread, THREAD_INF,
