@@ -2210,23 +2210,19 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                     rtcm->rtcmtypes.rtcm3_1230.station_id,
                     rtcm->rtcmtypes.rtcm3_1230.bias_indicator);
         // actual mask order is undocumented...
-        if (1 & rtcm->rtcmtypes.rtcm3_1230.signals_mask)
-        {
+        if (1 & rtcm->rtcmtypes.rtcm3_1230.signals_mask) {
             str_appendf(buf, buflen, ",\"l1_ca\":%d",
                         rtcm->rtcmtypes.rtcm3_1230.l1_ca_bias);
         }
-        if (2 & rtcm->rtcmtypes.rtcm3_1230.signals_mask)
-        {
+        if (2 & rtcm->rtcmtypes.rtcm3_1230.signals_mask) {
             str_appendf(buf, buflen, ",\"l1_p\":%d",
                         rtcm->rtcmtypes.rtcm3_1230.l1_p_bias);
         }
-        if (4 & rtcm->rtcmtypes.rtcm3_1230.signals_mask)
-        {
+        if (4 & rtcm->rtcmtypes.rtcm3_1230.signals_mask) {
             str_appendf(buf, buflen, ",\"l2_ca\":%d",
                         rtcm->rtcmtypes.rtcm3_1230.l2_ca_bias);
         }
-        if (8 & rtcm->rtcmtypes.rtcm3_1230.signals_mask)
-        {
+        if (8 & rtcm->rtcmtypes.rtcm3_1230.signals_mask) {
             str_appendf(buf, buflen, ",\"l2_p\":%d",
                         rtcm->rtcmtypes.rtcm3_1230.l2_p_bias);
         }
@@ -3068,9 +3064,9 @@ void json_aivdm_dump(const struct ais_t *ais,
                         str_appendf(buf, buflen,
                             "{\"lon\":%.6f,\"lat\":%.6f},",
                             ais->type6.dac1fid28.waypoints[i].lon /
-                            AIS_LATLON4_DIV,
+                                AIS_LATLON4_DIV,
                             ais->type6.dac1fid28.waypoints[i].lat /
-                            AIS_LATLON4_DIV);
+                                AIS_LATLON4_DIV);
                     } else {
                         str_appendf(buf, buflen,
                             "{\"lon\":%d,\"lat\":%d},",
