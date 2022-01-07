@@ -641,16 +641,23 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_1021.plate_number = (unsigned int)ugrab(5);
         rtcm->rtcmtypes.rtcm3_1021.computation_id = (unsigned int)ugrab(4);
         rtcm->rtcmtypes.rtcm3_1021.height_id = (unsigned int)ugrab(2);
-        rtcm->rtcmtypes.rtcm3_1021.lat_origin = sgrab(19) * VALIDITY_RESOLUTION / DEG_ARCSEC_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.lon_origin = sgrab(20) * VALIDITY_RESOLUTION / DEG_ARCSEC_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.lat_extension = sgrab(14) * VALIDITY_RESOLUTION / DEG_ARCSEC_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.lon_extension = sgrab(14) * VALIDITY_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.lat_origin = sgrab(19) *
+            VALIDITY_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.lon_origin = sgrab(20) *
+            VALIDITY_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.lat_extension = sgrab(14) *
+            VALIDITY_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.lon_extension = sgrab(14) *
+            VALIDITY_RESOLUTION / DEG_ARCSEC_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.x_trans = sgrab(23) * TRANSLATION_MM_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.y_trans = sgrab(23) * TRANSLATION_MM_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.z_trans = sgrab(23) * TRANSLATION_MM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.x_rot = sgrab(32) * ROTATION_ARCSEC_RESOLUTION / DEG_ARCSEC_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.y_rot = sgrab(32) * ROTATION_ARCSEC_RESOLUTION / DEG_ARCSEC_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.z_rot = sgrab(32) * ROTATION_ARCSEC_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.x_rot = sgrab(32) *
+            ROTATION_ARCSEC_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.y_rot = sgrab(32) *
+            ROTATION_ARCSEC_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.z_rot = sgrab(32) *
+            ROTATION_ARCSEC_RESOLUTION / DEG_ARCSEC_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.ds = sgrab(25) * SCALE_PPM_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.add_as = sgrab(24) *
             TRANSLATION_MM_RESOLUTION;
@@ -690,9 +697,9 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_1023.ele_mean = (signed int)sgrab(15) * CM_RESOLUTION;
 #define R1023 rtcm->rtcmtypes.rtcm3_1023.residuals[i]
         for (i = 0; i < RTCM3_GRID_SIZE; i++) {
-            R1023.lat_res = sgrab(9) * RES_ARCSEC_RESOLUTION;
-            R1023.lon_res = sgrab(9) * RES_ARCSEC_RESOLUTION;
-            R1023.ele_res = sgrab(9) * TRANSLATION_MM_RESOLUTION;
+            R1023.lat_res = (signed int)sgrab(9) * RES_ARCSEC_RESOLUTION;
+            R1023.lon_res = (signed int)sgrab(9) * RES_ARCSEC_RESOLUTION;
+            R1023.ele_res = (signed int)sgrab(9) * TRANSLATION_MM_RESOLUTION;
         }
 #undef R1023
         rtcm->rtcmtypes.rtcm3_1023.interp_meth_id_hori = (unsigned int)ugrab(2);
