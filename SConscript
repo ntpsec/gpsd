@@ -1289,6 +1289,8 @@ if not cleaning and not helping:
     # do we have asciidoctor, perhaps versioned?
     adoc_prog = env.WhereIs('asciidoctor')
     if (not adoc_prog):
+        adoc_prog = env.WhereIs('asciidoctor27')
+    if (not adoc_prog):
         adoc_prog = env.WhereIs('asciidoctor26')
 
     config.env['manbuild'] = config.env['manbuild'].lower()

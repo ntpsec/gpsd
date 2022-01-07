@@ -1076,8 +1076,9 @@ static gps_mask_t sirf_msg_67(struct gps_device_t *session,
 {
     gps_mask_t mask = 0;
 
-    if (len < 2)
+    if (2 > len) {
         return 0;
+    }
 
     switch (buf[1]) {
     case 1:
@@ -1092,13 +1093,14 @@ static gps_mask_t sirf_msg_67(struct gps_device_t *session,
     return mask;
 }
 
-/* MID_QUERY_RESP MID 81 (0x51) */
+// MID_QUERY_RESP MID 81 (0x51)
 static gps_mask_t sirf_msg_qresp(struct gps_device_t *session,
-                                unsigned char *buf, size_t len)
+                                 unsigned char *buf, size_t len)
 {
 
-    if (len < 3)
+    if (3 > len) {
         return 0;
+    }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "SiRF IV: unused MID_QUERY_RESP 0x51 (81), Q MID: %d, "
@@ -1107,7 +1109,7 @@ static gps_mask_t sirf_msg_qresp(struct gps_device_t *session,
     return 0;
 }
 
-/* Statistics Channel MID 225 (0xe1) */
+// Statistics Channel MID 225 (0xe1)
 static gps_mask_t sirf_msg_stats(struct gps_device_t *session,
                                  unsigned char *buf, size_t len)
 {
@@ -1117,8 +1119,9 @@ static gps_mask_t sirf_msg_stats(struct gps_device_t *session,
     uint16_t ttff_aid;
     uint16_t ttff_nav;
 
-    if (2 > len)
+    if (2 > len) {
         return 0;
+    }
 
     switch (buf[1]) {
     case 6:
@@ -1181,8 +1184,9 @@ static gps_mask_t sirf_msg_tcxo(struct gps_device_t *session,
     int clock_offset = 0;
     unsigned int temp = 0;
 
-    if (len < 2)
+    if (2 > len) {
         return 0;
+    }
 
     switch (buf[1]) {
     case 1:
@@ -1233,15 +1237,15 @@ static gps_mask_t sirf_msg_tcxo(struct gps_device_t *session,
         gps_tow = getbeu32(buf, 2);
         gps_week = getbeu16(buf, 6);
         time_status = getub(buf, 8);
-        clock_offset = getsb(buf, 9);  /* looks like leapseconds? */
+        clock_offset = getsb(buf, 9);   // looks like leapseconds?
         temp = getub(buf, 22);
         gps_tow_ns.tv_sec = gps_tow / 100;
         gps_tow_ns.tv_nsec = (gps_tow % 100) * 10000000L;
         session->newdata.time = gpsd_gpstime_resolv(session, gps_week,
                                                     gps_tow_ns);
 
-        /* skip all the debug pushing and popping, unless needed */
-        if (session->context->errout.debug >= LOG_PROG) {
+        // skip all the debug pushing and popping, unless needed
+        if (LOG_PROG <= session->context->errout.debug) {
             /* coerce time_t to long to placate older OS, like 32-bit FreeBSD,
              * where time_t is int */
             (void)snprintf(output, sizeof(output),
@@ -1276,50 +1280,57 @@ static gps_mask_t sirf_msg_swversion(struct gps_device_t *session,
     double fv;
     unsigned char *cp;
 
-    if (1 > len)
+    if (1 > len) {
         return 0;
+    }
 
-    if ((3 < len) && (len == (unsigned int)(buf[1] + buf[2] + 3))) {
-        /* new style message, Version 4+, max 162 bytes */
+    if ((3 < len) &&
+        (len == (unsigned int)(buf[1] + buf[2] + 3))) {
+        // new style message, Version 4+, max 162 bytes
         (void)strlcpy(session->subtype, (char *)buf + 3,
                       sizeof(session->subtype));
         (void)strlcat(session->subtype, ";", sizeof(session->subtype));
         (void)strlcat(session->subtype, (char *)buf + 3 + buf[1],
-            sizeof(session->subtype));
+                      sizeof(session->subtype));
         session->driver.sirf.driverstate |= SIRF_GE_232;
-        /* FIXME: this only finding major version, not minor version */
-        for (cp = buf+1; *cp!=(unsigned char)'\0' && isdigit(*cp)==0; cp++)
+        // FIXME: this only finding major version, not minor version
+        for (cp = buf+1; *cp != (unsigned char)'\0' &&
+                         0 == isdigit(*cp); cp++) {
             continue;
+        }
         fv = safe_atof((const char *)cp);
     } else {
-        /* old style, version 3 and below */
+        // old style, version 3 and below
 
         (void)strlcpy(session->subtype, (char *)buf + 1,
                       sizeof(session->subtype));
 
-        for (cp = buf+1; *cp!=(unsigned char)'\0' && isdigit(*cp)==0; cp++)
+        for (cp = buf+1; *cp != (unsigned char)'\0' &&
+                         0 == isdigit(*cp); cp++) {
             continue;
+        }
         fv = safe_atof((const char *)cp);
-        if (fv < 231) {
+        if (231 > fv) {
             session->driver.sirf.driverstate |= SIRF_LT_231;
-            if (fv > 200)
+            if (200 < fv) {
                 sirfbin_mode(session, 0);
-        } else if (fv < 232) {
+            }
+        } else if (232 > fv) {
             session->driver.sirf.driverstate |= SIRF_EQ_231;
         } else {
             session->driver.sirf.driverstate |= SIRF_GE_232;
         }
-        if (strstr((char *)(buf + 1), "ES"))
+        if (strstr((char *)(buf + 1), "ES")) {
             GPSD_LOG(LOG_INF, &session->context->errout,
                      "SiRF: Firmware has XTrac capability\n");
+        }
     }
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "SiRF: fv: %0.2f, Driver state flags are: %0x\n",
-             fv, session->driver.sirf.driverstate);
-    session->driver.sirf.time_seen = 0;
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "SiRF: FV MID 0x06: subtype='%s' len=%lu buf1 %u buf2 %u\n",
+             "SiRF: FV MID 0x06: fv: %0.2f, driverstate %0x "
+             "subtype '%s' len %lu buf1 %u buf2 %u\n",
+             fv, session->driver.sirf.driverstate,
              session->subtype, (long)len, buf[1], buf[2]);
+    session->driver.sirf.time_seen = 0;
     return DEVICEID_SET;
 }
 
@@ -1333,8 +1344,9 @@ static gps_mask_t sirf_msg_navdata(struct gps_device_t *session,
     uint32_t words[10];
     const unsigned int numwords = 10;
 
-    if (len != 43)
+    if (43 != len) {
         return 0;
+    }
 
     chan = (unsigned int)getub(buf, 1);
     svid = (unsigned int)getub(buf, 2);
@@ -1347,9 +1359,9 @@ static gps_mask_t sirf_msg_navdata(struct gps_device_t *session,
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "SiRF: NavData chan %u svid %u\n",chan,svid);
 
-    /* SiRF recommends at least 57600 for SiRF IV nav data */
-    if (session->gpsdata.dev.baudrate < 57600) {
-        /* some USB are also too slow, no way to tell which ones */
+    // SiRF recommends at least 57600 for SiRF IV nav data
+    if (57600 > session->gpsdata.dev.baudrate) {
+        // some USB are also too slow, no way to tell which ones
         if (session->context->readonly ||
             session->context->passive) {
             // FIXME: duplicated in gpsd_internet_subframe_raw()
@@ -1366,7 +1378,7 @@ static gps_mask_t sirf_msg_navdata(struct gps_device_t *session,
                                        numwords);
 }
 
-/* max channels allowed in old MID 4 SiRF format */
+// max channels allowed in old MID 4 SiRF format
 #define SIRF_CHANNELS   12
 
 /* decode Measured Tracker Data response ID 4 (0x04)
@@ -1379,8 +1391,9 @@ static gps_mask_t sirf_msg_svinfo(struct gps_device_t *session,
     timespec_t ts_tow;
     char ts_buf[TIMESPEC_LEN];
 
-    if (len != 188)
+    if (188 != len) {
         return 0;
+    }
 
     hsec = getbeu32(buf, 3);
     ts_tow.tv_sec = hsec / 100;
@@ -1395,6 +1408,7 @@ static gps_mask_t sirf_msg_svinfo(struct gps_device_t *session,
         bool good;
         short prn = (short)getub(buf, off);
         unsigned short stat = (unsigned short)getbeu16(buf, off + 3);
+
         session->gpsdata.skyview[st].PRN = prn;
         session->gpsdata.skyview[st].svid = prn;
         if (120 <= prn &&
@@ -1467,44 +1481,39 @@ static gps_mask_t sirf_msg_svinfo(struct gps_device_t *session,
     return SATELLITE_SET;
 }
 
+// return NTP time-offset fudge factor for this device
+// FIXME: this is pointless...
 static double sirf_time_offset(struct gps_device_t *session)
-/* return NTP time-offset fudge factor for this device */
 {
     double retval = 0;
 
-    /* we need to have seen UTC time with a valid leap-year offset */
-    if ((session->driver.sirf.time_seen & TIME_SEEN_UTC_2) != 0) {
+    // we need to have seen UTC time with a valid leap-year offset
+    if (0 != (session->driver.sirf.time_seen & TIME_SEEN_UTC_2)) {
         retval = NAN;
-    }
-
-    /* the PPS time message */
-    else if (session->driver.sirf.lastid == (unsigned char)52) {
-        retval = 0.3;
-    }
-
-    /* u-blox EMND message */
-    else if (session->driver.sirf.lastid == (unsigned char)98) {
+    } else if ((unsigned char)52 == session->driver.sirf.lastid) {
+        // the PPS time message
+        retval                      = 0.3;
+    } else if ((unsigned char)98 == session->driver.sirf.lastid) {
+        // u-blox EMND message
+        retval                      = 0.570;
+#ifdef __UNUSED
+    } else if ((unsigned char)41 == session->driver.sirf.lastid) {
+        // geodetic-data message
         retval = 0.570;
-    }
-#ifdef __UNUSED__
-    /* geodetic-data message */
-    else if (session->driver.sirf.lastid == (unsigned char)41) {
-        retval = 0.570;
-    }
-#endif /* __UNUSED__ */
+#endif  // __UNUSED__
 
-    /* the Navigation Solution message */
-    else if (session->driver.sirf.lastid == (unsigned char)2) {
+    } else if ((unsigned char)2 == session->driver.sirf.lastid) {
+        // the Navigation Solution message
         if (SOURCE_USB == session->sourcetype ||
             SOURCE_ACM == session->sourcetype) {
-            retval = 0.640;     /* USB or ACM, expect +/- 50mS jitter */
+            retval = 0.640;     // USB or ACM, expect +/- 50mS jitter
         } else {
             switch (session->gpsdata.dev.baudrate) {
             default:
-                retval = 0.704; /* WAG */
+                retval = 0.704;   // WAG
                 break;
             case 4800:
-                retval = 0.704; /* fudge valid at 4800bps */
+                retval = 0.704;   // fudge valid at 4800bps
                 break;
             case 9600:
                 retval = 0.688;
@@ -1513,7 +1522,7 @@ static double sirf_time_offset(struct gps_device_t *session)
                 retval = 0.484;
                 break;
             case 38400:
-                retval = 0.845; /*  0.388; ?? */
+                retval = 0.845;    //  0.388; ??
                 break;
             }
         }
@@ -1558,12 +1567,15 @@ static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
 
     // fix status is byte 19
     navtype = (unsigned short)getub(buf, 19);
-    session->newdata.status = STATUS_UNK;
     session->newdata.mode = MODE_NO_FIX;
-    if (0 != (navtype & 0x80)) {
+    if (0 == (navtype & 0x07)) {
+        // no fix
+        session->newdata.status = STATUS_UNK;
+    } else if (7 == (navtype & 0x07)) {
+        session->newdata.status = STATUS_DR;
+    } else if (0x80 == (navtype & 0x80)) {
         session->newdata.status = STATUS_DGPS;
-    } else if (0 < (navtype & 0x07) &&
-               7 > (navtype & 0x07)) {
+    } else {
         session->newdata.status = STATUS_GPS;
     }
     if (4 == (navtype & 0x07) ||
@@ -1607,7 +1619,7 @@ static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "SiRF: MND 0x02: Navtype %#0x, Status %d mode %d "
-             "gpsd_week %u iTOW %u\n",
+             "gps_week %u iTOW %u\n",
              navtype, session->newdata.status, session->newdata.mode,
              gps_week, iTOW);
     GPSD_LOG(LOG_DATA, &session->context->errout,
@@ -1654,22 +1666,27 @@ static gps_mask_t sirf_msg_geodetic(struct gps_device_t *session,
     double eph;
     double dbl_tmp;
 
-    if (len != 91)
+    if (91 != len) {
         return 0;
+    }
 
     session->gpsdata.sentence_length = 91;
 
     navtype = (unsigned short)getbeu16(buf, 3);
     session->newdata.status = STATUS_UNK;
-    if (navtype & 0x80)
+    if (navtype & 0x80) {
         session->newdata.status = STATUS_DGPS;
-    else if ((navtype & 0x07) > 0 && (navtype & 0x07) < 7)
+    } else if (0 < (navtype & 0x07) &&
+               7 > (navtype & 0x07)) {
         session->newdata.status = STATUS_GPS;
+    }
     session->newdata.mode = MODE_NO_FIX;
-    if ((navtype & 0x07) == 4 || (navtype & 0x07) == 6)
+    if (4 == (navtype & 0x07) ||
+        6 == (navtype & 0x07)) {
         session->newdata.mode = MODE_3D;
-    else if (session->newdata.status)
+    } else if (session->newdata.status) {
         session->newdata.mode = MODE_2D;
+    }
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "SiRF: GND 0x29: Navtype = 0x%0x, Status = %d, mode = %d\n",
              navtype, session->newdata.status, session->newdata.mode);
@@ -1677,24 +1694,28 @@ static gps_mask_t sirf_msg_geodetic(struct gps_device_t *session,
 
     session->newdata.latitude = getbes32(buf, 23) * 1e-7;
     session->newdata.longitude = getbes32(buf, 27) * 1e-7;
-    if (session->newdata.latitude != 0 && session->newdata.longitude != 0)
+    if (0 != session->newdata.latitude &&
+        0 != session->newdata.longitude) {
         mask |= LATLON_SET;
+    }
 
-    if ((eph = getbes32(buf, 50)) > 0) {
+    if (0 < (eph = getbes32(buf, 50))) {
         session->newdata.eph = eph * 1e-2;
         mask |= HERR_SET;
     }
     dbl_temp = getbes32(buf, 54) * 1e-2;
-    if (0.01 < dbl_temp)
+    if (0.01 < dbl_temp) {
         session->newdata.epv = dbl_temp;
-    if ((session->newdata.eps = getbes16(buf, 62) * 1e-2) > 0)
+    }
+    if (0 < (session->newdata.eps = getbes16(buf, 62) * 1e-2)) {
         mask |= SPEEDERR_SET;
+    }
 
-    /* HDOP should be available at byte 89, but in 231 it's zero. */
+    // HDOP should be available at byte 89, but in 231 it's zero.
     //session->gpsdata.dop.hdop = (unsigned int)getub(buf, 89) * 0.2;
 
-    if ((session->newdata.mode > MODE_NO_FIX)
-        && (session->driver.sirf.driverstate & SIRF_GE_232)) {
+    if ((MODE_NO_FIX < session->newdata.mode) &&
+        (session->driver.sirf.driverstate & SIRF_GE_232)) {
         struct tm unpacked_date;
         double subseconds;
         /*
@@ -1743,7 +1764,7 @@ static gps_mask_t sirf_msg_geodetic(struct gps_device_t *session,
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF: GND 0x29 UTC: %lf\n",
                  session->newdata.time);
-        if (session->newdata.mode <= MODE_NO_FIX) {
+        if (MODE_NO_FIX >= session->newdata.mode) {
             GPSD_LOG(LOG_PROG, &session->context->errou,
                      "SiRF: NTPD no fix, mode: $d\n",
                      session->newdata.mode);
@@ -1756,22 +1777,23 @@ static gps_mask_t sirf_msg_geodetic(struct gps_device_t *session,
                      "SiRF: NTPD valid time MID 0x29, seen=%#02x\n",
                      session->driver.sirf.time_seen);
         }
-        if ( 3 <= session->gpsdata.satellites_visible ) {
+        if (3 <= session->gpsdata.satellites_visible) {
             mask |= NTPTIME_IS;
         }
 
-        /* alititude WGS84 */
+        // alititude WGS84
         session->newdata.altHAE = getbes32(buf, 31) * 1e-2;
         session->newdata.altMSL = getbes32(buf, 35) * 1e-2;
-        /* Let gpsd_error_model() deal with geoid_sep and altHAE */
-        /* skip 1 byte of map datum */
+        // Let gpsd_error_model() deal with geoid_sep and altHAE
+        // skip 1 byte of map datum
         session->newdata.speed = getbeu16(buf, 40) * 1e-2;
         session->newdata.track = getbeu16(buf, 42) * 1e-2;
-        /* skip 2 bytes of magnetic variation */
+        // skip 2 bytes of magnetic variation
         session->newdata.climb = getbes16(buf, 46) * 1e-2;
         mask |= TIME_SET | SPEED_SET | TRACK_SET;
-        if (session->newdata.mode == MODE_3D)
+        if (MODE_3D == session->newdata.mode) {
             mask |= ALTITUDE_SET | CLIMB_SET;
+       }
     }
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "SiRF: GND 0x29: time=%.2f lat=%.2f lon=%.2f altHAE=%.2f "
@@ -1788,15 +1810,16 @@ static gps_mask_t sirf_msg_geodetic(struct gps_device_t *session,
 }
 #endif /* __UNUSED__ */
 
-/* decode Navigation Parameters MID 19 (0x13) response to ID 152 */
+// decode Navigation Parameters MID 19 (0x13) response to ID 152
 static gps_mask_t sirf_msg_sysparam(struct gps_device_t *session,
                                     unsigned char *buf, size_t len)
 {
 
-    if (len < 65)
+    if (65 > len) {
         return 0;
+    }
 
-    /* save these to restore them in the revert method */
+    // save these to restore them in the revert method
     session->driver.sirf.nav_parameters_seen = true;
     session->driver.sirf.altitude_hold_mode = (unsigned char)getub(buf, 5);
     session->driver.sirf.altitude_hold_source = (unsigned char)getub(buf, 6);
@@ -1827,15 +1850,16 @@ static gps_mask_t sirf_msg_ublox(struct gps_device_t *session,
     unsigned short navtype;
     char ts_buf[TIMESPEC_LEN];
 
-    if (len != 39)
+    if (39 != len) {
         return 0;
+    }
 
-    /* this packet is only sent by u-blox firmware from version 1.32 */
+    // this packet is only sent by u-blox firmware from version 1.32
     mask = LATLON_SET | ALTITUDE_SET | SPEED_SET | TRACK_SET | CLIMB_SET |
         STATUS_SET | MODE_SET | DOP_SET;
     session->newdata.latitude = (double)getbes32(buf, 1) * RAD_2_DEG * 1e-8;
     session->newdata.longitude = (double)getbes32(buf, 5) * RAD_2_DEG * 1e-8;
-    /* defaults to WGS84 */
+    // defaults to WGS84
     session->newdata.altHAE = (double)getbes32(buf, 9) * 1e-3;
     session->newdata.speed = (double)getbes32(buf, 13) * 1e-3;
     session->newdata.climb = (double)getbes32(buf, 17) * 1e-3;
@@ -1844,24 +1868,28 @@ static gps_mask_t sirf_msg_ublox(struct gps_device_t *session,
     navtype = (unsigned short)getub(buf, 25);
     session->newdata.status = STATUS_UNK;
     session->newdata.mode = MODE_NO_FIX;
-    if (navtype & 0x80)
+    if (navtype & 0x80) {
         session->newdata.status = STATUS_DGPS;
-    else if ((navtype & 0x07) > 0 && (navtype & 0x07) < 7)
+    } else if (0 < (navtype & 0x07) &&
+               7 > (navtype & 0x07)) {
         session->newdata.status = STATUS_GPS;
-    if ((navtype & 0x07) == 4 || (navtype & 0x07) == 6)
+    }
+    if (4 == (navtype & 0x07) ||
+        6 == (navtype & 0x07)) {
         session->newdata.mode = MODE_3D;
-    else if (session->newdata.status)
+    } else if (session->newdata.status) {
         session->newdata.mode = MODE_2D;
+    }
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "SiRF: EMND 0x62: Navtype = 0x%0x, Status = %d, mode = %d\n",
              navtype, session->newdata.status, session->newdata.mode);
 
-    if (navtype & 0x40) {       /* UTC corrected timestamp? */
+    if (navtype & 0x40) {       // UTC corrected timestamp?
         struct tm unpacked_date;
         uint32_t msec;
 
         mask |= TIME_SET;
-        if ( 3 <= session->gpsdata.satellites_visible ) {
+        if (3 <= session->gpsdata.satellites_visible) {
             mask |= NTPTIME_IS;
         }
         memset(&unpacked_date, 0, sizeof(unpacked_date));
@@ -1873,7 +1901,7 @@ static gps_mask_t sirf_msg_ublox(struct gps_device_t *session,
         msec = getbeu16(buf, 32);
         unpacked_date.tm_sec = msec / 1000;
         session->newdata.time.tv_sec = mkgmtime(&unpacked_date);
-        /* ms to ns */
+        // ms to ns
         session->newdata.time.tv_nsec = (msec % 1000) * 1000000L;
         if (0 == (session->driver.sirf.time_seen & TIME_SEEN_UTC_2)) {
             GPSD_LOG(LOG_RAW, &session->context->errout,
@@ -1910,20 +1938,23 @@ static gps_mask_t sirf_msg_ublox(struct gps_device_t *session,
     return mask;
 }
 
-/* decode PPS Time MID 52 (0x34) */
+// decode PPS Time MID 52 (0x34)
 static gps_mask_t sirf_msg_ppstime(struct gps_device_t *session,
                                    unsigned char *buf, size_t len)
 {
     gps_mask_t mask = 0;
 
-    if (len < 19)
+    if (19 > len) {
         return 0;
+    }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "SiRF: PPS 0x34: Status = %#02x\n",
              getub(buf, 14));
-    if (((int)getub(buf, 14) & 0x07) == 0x07) { /* valid UTC time? */
+    if (0x07 == ((int)getub(buf, 14) & 0x07)) {
+        // valid UTC time
         struct tm unpacked_date;
+
         memset(&unpacked_date, 0, sizeof(unpacked_date));
         unpacked_date.tm_hour = (int)getub(buf, 1);
         unpacked_date.tm_min = (int)getub(buf, 2);
@@ -1946,22 +1977,23 @@ static gps_mask_t sirf_msg_ppstime(struct gps_device_t *session,
                  session->context->leap_seconds);
         session->driver.sirf.time_seen |= TIME_SEEN_UTC_2;
         mask |= TIME_SET;
-        if ( 3 <= session->gpsdata.satellites_visible ) {
+        if (3 <= session->gpsdata.satellites_visible) {
             mask |= NTPTIME_IS;
         }
     }
     return mask;
 }
 
-/* decode Navigation Library Measurement Data MID 28 (0x38) */
+// decode Navigation Library Measurement Data MID 28 (0x38)
 static gps_mask_t sirf_msg_nl(struct gps_device_t *session,
                                    unsigned char *buf, size_t len)
 {
 
-    if (len != 67)
+    if (67 != len) {
         return 0;
+    }
 
-    switch ( buf[1] ) {
+    switch (buf[1]) {
     case 1:
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF IV: unused NL 0x38, SubID: 1, GPS Data\n");
@@ -2011,15 +2043,16 @@ static gps_mask_t sirf_msg_nl(struct gps_device_t *session,
     return 0;
 }
 
-/* decode  Extended Ephemeris Data MID 56 (0x38) */
+// decode  Extended Ephemeris Data MID 56 (0x38)
 static gps_mask_t sirf_msg_ee(struct gps_device_t *session,
-                                   unsigned char *buf, size_t len)
+                              unsigned char *buf, size_t len)
 {
 
-    if (len != 67)
+    if (67 != len) {
         return 0;
+    }
 
-    switch ( buf[1] ) {
+    switch (buf[1]) {
     case 1:
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF IV: unused EE 0x40, SubID: 1\n");
@@ -2043,48 +2076,49 @@ gps_mask_t sirf_parse(struct gps_device_t * session, unsigned char *buf,
                       size_t len)
 {
 
-    if (len == 0)
+    if (0 == len) {
         return 0;
+    }
 
     buf += 4;
     len -= 8;
-    /* cast for 32/64 bit compatiility */
+    // cast for 32/64 bit compatiility
     GPSD_LOG(LOG_RAW, &session->context->errout,
              "SiRF: Raw packet type %#04x len %ld\n", buf[0],
              (long)len);
     session->driver.sirf.lastid = buf[0];
 
-    /* could change if the set of messages we enable does */
+    // could change if the set of messages we enable does
     session->cycle_end_reliable = true;
 
     switch (buf[0]) {
-    case 0x02:                  /* Measure Navigation Data Out MID 2 */
-        if ((session->driver.sirf.driverstate & UBLOX) == 0)
+    case 0x02:                  // Measure Navigation Data Out MID 2
+        if (0 == (session->driver.sirf.driverstate & UBLOX)) {
             return sirf_msg_navsol(session, buf,
                                    len) | (CLEAR_IS | REPORT_IS);
-        else {
-            GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "SiRF: MID 2 (0x02) MND skipped, u-blox flag is on.\n");
-            return 0;
         }
-    case 0x04:                  /* Measured tracker data out MID 4 */
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "SiRF: MID 2 (0x02) MND skipped, u-blox flag is on.\n");
+        return 0;
+
+    case 0x04:                  // Measured tracker data out MID 4
         return sirf_msg_svinfo(session, buf, len);
 
-    case 0x05:                  /* Raw Tracker Data Out MID 5 */
+    case 0x05:                  // Raw Tracker Data Out MID 5
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF: unused MID 5 (0x05) Raw Tracker Data\n");
         return 0;
 
-    case 0x06:                  /* Software Version String MID 6 */
+    case 0x06:                  // Software Version String MID 6
         return sirf_msg_swversion(session, buf, len);
 
-    case 0x07:                  /* Clock Status Data MID 7 */
+    case 0x07:                  // Clock Status Data MID 7
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF: unused MID 7 (0x07) CLK\n");
         return 0;
 
-    case 0x08:                  /* subframe data MID 8 */
-        /* extract leap-second from this */
+    case 0x08:                  // subframe data MID 8
+        // extract leap-second from this
         /*
          * Chris Kuethe says:
          * "Message 8 is generated as the data is received. It is not
@@ -2097,7 +2131,7 @@ gps_mask_t sirf_parse(struct gps_device_t * session, unsigned char *buf,
          */
         return sirf_msg_navdata(session, buf, len);
 
-    case 0x09:                  /* CPU Throughput MID 9 (0x09) */
+    case 0x09:                  // CPU Throughput MID 9 (0x09)
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF: THR 0x09: SegStatMax=%.3f, SegStatLat=%3.f, "
                  "AveTrkTime=%.3f, Last MS=%u\n",
@@ -2105,10 +2139,10 @@ gps_mask_t sirf_parse(struct gps_device_t * session, unsigned char *buf,
                  (float)getbeu16(buf, 5) / 186, getbeu16(buf, 7));
         return 0;
 
-    case 0x0a:                  /* Error ID Data MID 10 */
+    case 0x0a:                  // Error ID Data MID 10
         return sirf_msg_errors(session, buf, len);
 
-    case 0x0b:                  /* Command Acknowledgement MID 11 */
+    case 0x0b:                  // Command Acknowledgement MID 11
         if (2 > len) {
             return 0;
         }
@@ -2116,7 +2150,7 @@ gps_mask_t sirf_parse(struct gps_device_t * session, unsigned char *buf,
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "SiRF: ACK 0x0b: %#02x\n", getub(buf, 1));
         } else {
-            /* SiRF III+, has ACK ID */
+            // SiRF III+, has ACK ID
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "SiRF: ACK 0x0b: %#02x/%02x\n",
                      getub(buf, 1), getub(buf, 2));
@@ -2124,7 +2158,7 @@ gps_mask_t sirf_parse(struct gps_device_t * session, unsigned char *buf,
         session->driver.sirf.need_ack = 0;
         return 0;
 
-    case 0x0c:                  /* Command NAcknowledgement MID 12 */
+    case 0x0c:                  // Command NAcknowledgement MID 12
         if (2 > len) {
             return 0;
         }
@@ -2132,49 +2166,49 @@ gps_mask_t sirf_parse(struct gps_device_t * session, unsigned char *buf,
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "SiRF: NACK 0x0c: %#02x\n", getub(buf, 1));
         } else {
-            /* SiRF III+, has NACK ID */
+            // SiRF III+, has NACK ID
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "SiRF: NACK 0x0c: %#02x/%02x\n",
                      getub(buf, 1), getub(buf, 2));
         }
-        /* ugh -- there's no alternative but silent failure here */
+        // ugh -- there's no alternative but silent failure here
         session->driver.sirf.need_ack = 0;
         return 0;
 
-    case 0x0d:                  /* Visible List MID 13 */
-        /* no data her not already in MID 67,16 */
+    case 0x0d:                  // Visible List MID 13
+        // no data here not already in MID 67,16
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF: unused MID 13 (0x0d) Visible List, len %zd\n", len);
         return 0;
 
-    case 0x0e:                  /* Almanac Data MID 14 */
+    case 0x0e:                  // Almanac Data MID 14
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF: unused MID 14 (0x0e) ALM\n");
         return 0;
 
-    case 0x0f:                  /* Ephemeris Data MID 15 */
+    case 0x0f:                  // Ephemeris Data MID 15
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF: unused MID 15 (0x0f) EPH\n");
         return 0;
 
-    case 0x11:                  /* Differential Corrections MID 17 */
+    case 0x11:                  // Differential Corrections MID 17
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF: unused MID 17 (0x11) DIFF\n");
         return 0;
 
-    case 0x12:                  /* OK To Send MID 18 (0x12) */
+    case 0x12:                  // OK To Send MID 18 (0x12)
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF: MID 18 (0x12) OkToSend: OK = %d\n",
                  getub(buf, 1));
         return 0;
 
-    case 0x13:                  /* Navigation Parameters MID 19 (0x13) */
+    case 0x13:                  // Navigation Parameters MID 19 (0x13)
         return sirf_msg_sysparam(session, buf, len);
 
     case 0x1b:                  // DGPS status MID 27
         return sirf_msg_dgpsstatus(session, buf, len);
 
-    case 0x1c:                  /* Navigation Library Measurement Data MID 28 */
+    case 0x1c:                  // Navigation Library Measurement Data MID 28
         return sirf_msg_nlmd(session, buf, len);
 
     case 0x1d:                  // Navigation Library DGPS Data MID 29
@@ -2182,30 +2216,30 @@ gps_mask_t sirf_parse(struct gps_device_t * session, unsigned char *buf,
                  "SiRF: unused MID 29 (0x1d) NLDG\n");
         return 0;
 
-    case 0x1e:                  /* Navigation Library SV State Data MID 30 */
+    case 0x1e:                  // Navigation Library SV State Data MID 30
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF: unused MID 30 (0x1e) NLSV\n");
         return 0;
 
-    case 0x1f:          /* Navigation Library Initialization Data MID 31 */
+    case 0x1f:          // Navigation Library Initialization Data MID 31
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF: unused MID 32 (0x1f) NLID\n");
         return 0;
 
-    case 0x29:                  /* Geodetic Navigation Data MID 41 */
+    case 0x29:                  // Geodetic Navigation Data MID 41
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF: unused MID 41 (0x29) Geodetic Nav Data\n");
         return 0;
 
-    case 0x32:                  /* SBAS corrections MID 50 */
+    case 0x32:                  // SBAS corrections MID 50
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF: unused MID 50 (0x32) SBAS\n");
         return 0;
 
-    case 0x33:                /* MID_SiRFNavNotification MID 51, 0x33 */
+    case 0x33:                  // MID_SiRFNavNotification MID 51, 0x33
         return sirf_msg_navnot(session, buf, len);
 
-    case 0x34:                  /* PPS Time MID 52 */
+    case 0x34:                  // PPS Time MID 52
         /*
          * Carl Carter from SiRF writes: "We do not output on the
          * second (unless you are using MID 52).  We make
@@ -2229,47 +2263,47 @@ gps_mask_t sirf_parse(struct gps_device_t * session, unsigned char *buf,
          */
         return sirf_msg_ppstime(session, buf, len);
 
-    case 0x38:                /* EE Output MID 56 */
+    case 0x38:                // EE Output MID 56
         return sirf_msg_ee(session, buf, len);
 
-    case 0x40:                /* Nav Library MID 64 */
+    case 0x40:                // Nav Library MID 64
         return sirf_msg_nl(session, buf, len);
 
-    case 0x43:                /* Multiconstellation Nav Data Response MID 67 */
+    case 0x43:                // Multiconstellation Nav Data Response MID 67
         return sirf_msg_67(session, buf, len);
 
-    case 0x47:                /* Hardware Config MID 71 */
-        /* MID_HW_CONFIG_REQ */
+    case 0x47:                // Hardware Config MID 71
+        // MID_HW_CONFIG_REQ
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF IV: unused MID 71 (0x47) Hardware Config Request, "
                  "len %zd\n", len);
         return 0;
 
-    case 0x51:                /* MID_QUERY_RESP MID 81 */
+    case 0x51:                // MID_QUERY_RESP MID 81
         return sirf_msg_qresp(session, buf, len);
 
-    case 0x5c:                /* Controller Interference Report MID 92 */
+    case 0x5c:                // Controller Interference Report MID 92
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF IV: unused MID 92 (0x5c) CW Interference Report\n");
         return 0;
 
-    case 0x5d:                /* TCXO Output MID 93 */
+    case 0x5d:                // TCXO Output MID 93
         return sirf_msg_tcxo(session, buf, len);
 
-    case 0x62:          /* u-blox Extended Measured Navigation Data MID 98 */
+    case 0x62:          // u-blox Extended Measured Navigation Data MID 98
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF: MID 98 (0x62) u-blox EMND\n");
         return sirf_msg_ublox(session, buf, len) | (CLEAR_IS | REPORT_IS);
 
-    case 0x80:                  /* Initialize Data Source MID 128 */
+    case 0x80:                  // Initialize Data Source MID 128
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF: unused MID 128 (0x80) INIT\n");
         return 0;
 
-    case 0xe1:                  /* statistics messages MID 225 */
+    case 0xe1:                  // statistics messages MID 225
         return sirf_msg_stats(session, buf, len);
 
-    case 0xff:                  /* Debug messages MID 255 */
+    case 0xff:                  // Debug messages MID 255
         (void)sirf_msg_debug(session, buf, len);
         return 0;
 
@@ -2302,9 +2336,9 @@ static void sirfbin_init_query(struct gps_device_t *session)
     session->cfg_stage = 0;
     session->cfg_step = 0;
 
-    /* MID 132 */
+    // MID 132
     (void)sirf_write(session, versionprobe);
-    /* ask twice, SiRF IV on USB often misses the first request */
+    // ask twice, SiRF IV on USB often misses the first request
     (void)sirf_write(session, versionprobe);
 }
 
@@ -2313,16 +2347,16 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
     static unsigned char moderevert[] = {
         0xa0, 0xa2, 0x00, 0x0e,
         0x88,
-        0x00, 0x00,     /* pad bytes */
-        0x00,           /* degraded mode */
-        0x00, 0x00,     /* pad bytes */
-        0x00, 0x00,     /* altitude source */
-        0x00,           /* altitude hold mode */
-        0x00,           /* use last computed alt */
-        0x00,           /* reserved */
-        0x00,           /* degraded mode timeout */
-        0x00,           /* dead reckoning timeout */
-        0x00,           /* track smoothing */
+        0x00, 0x00,     // pad bytes
+        0x00,           // degraded mode
+        0x00, 0x00,     // pad bytes
+        0x00, 0x00,     // altitude source
+        0x00,           // altitude hold mode
+        0x00,           // use last computed alt
+        0x00,           // reserved
+        0x00,           // degraded mode timeout
+        0x00,           // dead reckoning timeout
+        0x00,           // track smoothing
         0x00, 0x00, 0xb0, 0xb3
     };
 
@@ -2335,7 +2369,7 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
     case event_identified:
         FALLTHROUGH
     case event_reactivate:
-        if (session->lexer.type == NMEA_PACKET) {
+        if (NMEA_PACKET == session->lexer.type) {
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "SiRF: Switching chip mode to binary.\n");
             (void)nmea_send(session,
@@ -2357,36 +2391,36 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
 
 
         if (UINT_MAX == session->cfg_stage) {
-            /* init done */
+            // init done
             return;
         }
         session->cfg_step++;
 
         if ((0 < session->driver.sirf.need_ack) &&
             (15 > session->cfg_step)) {
-            /* we are waiting for ACK, just wait for 15 messages */
+            // we are waiting for ACK, just wait for 15 messages
             return;
         }
         session->cfg_step = 0;
         session->cfg_stage++;
         GPSD_LOG(LOG_PROG, &session->context->errout, "stage: %d\n",
-            session->cfg_stage);
+                 session->cfg_stage);
 
 
         switch (session->cfg_stage) {
         case 0:
-            /* this slot used by event_identified */
+            // this slot used by event_identified
             return;
 
         case 1:
             (void)sirf_write(session, versionprobe);
             break;
         case 2:
-            /* unset MID 0x40 = 64 first since there is a flood of them */
+            // unset MID 0x40 = 64 first since there is a flood of them
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "SiRF: unset MID 0x40.\n");
-            unsetmidXX[5] = 1;        /* enable/disable */
-            unsetmidXX[6] = 0x40;     /* MID 0x40 */
+            unsetmidXX[5] = 1;        // enable/disable
+            unsetmidXX[6] = 0x40;     // MID 0x40
             (void)sirf_write(session, unsetmidXX);
             break;
 
@@ -2401,11 +2435,11 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
             break;
 
         case 4:
-            /* unset GND (0x29 = 41), it's not reliable on SiRF II */
+            // unset GND (0x29 = 41), it's not reliable on SiRF II
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "SiRF: unset MID 0x29.\n");
-            unsetmidXX[5] = 1;        /* enable/disable */
-            unsetmidXX[6] = 0x29;     /* MID 0x29 */
+            unsetmidXX[5] = 1;        // enable/disable
+            unsetmidXX[6] = 0x29;     // MID 0x29
             (void)sirf_write(session, unsetmidXX);
             break;
 
@@ -2448,14 +2482,14 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
             break;
 
         case 11:
-            /* SiRF recommends at least 57600 for SiRF IV subframe data */
-            if (session->gpsdata.dev.baudrate >= 57600) {
-                /* fast enough, turn on subframe data */
+            // SiRF recommends at least 57600 for SiRF IV subframe data
+            if (57600 <= session->gpsdata.dev.baudrate) {
+                // fast enough, turn on subframe data
                 GPSD_LOG(LOG_PROG, &session->context->errout,
                          "SiRF: Enabling subframe transmission.\n");
                 (void)sirf_write(session, enablesubframe);
             } else {
-                /* too slow, turn off subframe data */
+                // too slow, turn off subframe data
                 GPSD_LOG(LOG_PROG, &session->context->errout,
                          "SiRF: Disabling subframe transmission.\n");
                 (void)sirf_write(session, disablesubframe);
@@ -2475,7 +2509,7 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
             break;
 
         default:
-            /* initialization is done */
+            // initialization is done
             session->cfg_stage = UINT_MAX;
             session->cfg_step = 0;
             return;
@@ -2497,43 +2531,43 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
         break;
 
     case event_driver_switch:
-        /* do what here? */
+        // do what here?
         break;
     case event_triggermatch:
-        /* do what here? */
+        // do what here?
         break;
     case event_wakeup:
-        /* do what here? */
+        // do what here?
         break;
     }
 }
 
 
 
-/* this is everything we export */
-/* *INDENT-OFF* */
+// this is everything we export
+// *INDENT-OFF*
 const struct gps_type_t driver_sirf =
 {
-    .type_name      = "SiRF",           /* full name of type */
-    .packet_type    = SIRF_PACKET,      /* associated lexer packet type */
-    .flags          = DRIVER_STICKY,    /* remember this */
-    .trigger        = NULL,             /* no trigger */
-    .channels       = SIRF_CHANNELS,    /* consumer-grade GPS */
-    .probe_detect   = NULL,             /* no probe */
-    .get_packet     = generic_get,      /* be prepared for SiRF or NMEA */
-    .parse_packet   = sirfbin_parse_input,/* parse message packets */
-    .rtcm_writer    = gpsd_write,       /* send RTCM data straight */
-    .init_query     = sirfbin_init_query,/* non-perturbing initial qury */
-    .event_hook     = sirfbin_event_hook,/* lifetime event handler */
-    .speed_switcher = sirfbin_speed,    /* we can change baud rate */
-    .mode_switcher  = sirfbin_mode,     /* there's a mode switcher */
-    .rate_switcher  = NULL,             /* no sample-rate switcher */
-    .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
-    .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-    .control_send   = sirf_control_send,/* how to send a control string */
-    .time_offset     = sirf_time_offset,
+    .type_name      = "SiRF",               // full name of type
+    .packet_type    = SIRF_PACKET,          // associated lexer packet type
+    .flags          = DRIVER_STICKY,        // remember this
+    .trigger        = NULL,                 // no trigger
+    .channels       = SIRF_CHANNELS,        // consumer-grade GPS
+    .probe_detect   = NULL,                 // no probe
+    .get_packet     = generic_get,          // be prepared for SiRF or NMEA
+    .parse_packet   = sirfbin_parse_input,  // parse message packets
+    .rtcm_writer    = gpsd_write,           // send RTCM data straight
+    .init_query     = sirfbin_init_query,   // non-perturbing initial query
+    .event_hook     = sirfbin_event_hook,   // lifetime event handler
+    .speed_switcher = sirfbin_speed,        // we can change baud rate
+    .mode_switcher  = sirfbin_mode,         // there's a mode switcher
+    .rate_switcher  = NULL,                 // no sample-rate switcher
+    .min_cycle.tv_sec  = 1,                 // not relevant, no rate switch
+    .min_cycle.tv_nsec = 0,                 // not relevant, no rate switch
+    .control_send   = sirf_control_send,    // how to send a control string
+    .time_offset    = sirf_time_offset,
 };
-/* *INDENT-ON* */
-#endif /* defined(SIRF_ENABLE) && defined(BINARY_ENABLE) */
+// *INDENT-ON*
+#endif // defined(SIRF_ENABLE) && defined(BINARY_ENABLE)
 
 // vim: set expandtab shiftwidth=4
