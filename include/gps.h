@@ -506,40 +506,51 @@ struct rtcm2_t {
 #define RTCM3_MAX_SATELLITES    64
 #define RTCM3_MAX_DESCRIPTOR    31
 #define RTCM3_MAX_ANNOUNCEMENTS 32
-#define RTCM3_GRID_SIZE         16
+#define RTCM3_GRID_SIZE         16              // RTCM3_1023
 #define RTCM3_DF148_SIZE        10
 
 enum RTCM3_QUALITY_INDICATOR_TRANSFORMATION
 {
-    UNKNOWN,
-    BETTER_0021,
-    BETTER_0050,
-    BETTER_0200,
-    BETTER_0500,
-    BETTER_2000,
-    BETTER_5000,
-    WORSE_5001
+    TR_UNKNOWN,
+    TR_BETTER_0021,
+    TR_BETTER_0050,
+    TR_BETTER_0200,
+    TR_BETTER_0500,
+    TR_BETTER_2000,
+    TR_BETTER_5000,
+    TR_WORSE_5001
 };                                              // DF214, DF215
 
 enum RTCM3_QUALITY_INDICATOR_GRID_RESIDUALS
 {
-    UNKNOWN,
-    BETTER_010,
-    BETTER_020,
-    BETTER_050,
-    BETTER_100,
-    BETTER_200,
-    BETTER_500,
-    WORSE_501
+    GR_UNKNOWN,
+    GR_BETTER_010,
+    GR_BETTER_020,
+    GR_BETTER_050,
+    GR_BETTER_100,
+    GR_BETTER_200,
+    GR_BETTER_500,
+    GR_WORSE_501
 };                                              // DF216, DF217
 
 enum RTCM3_INTERPOLATION_INDICATOR
 {
-    BI_LINEAR,
-    BI_QUADRIC,
-    BI_SPLINE,
-    RESERVED
+    INTERP_BI_LINEAR,
+    INTERP_BI_QUADRIC,
+    INTERP_BI_SPLINE,
+    INTERP_RESERVED
 };                                              // DF212, DF213
+
+enum RTCM3_PROJECTION_TYPE
+{
+    PR_UNKNOWN,
+    PR_TM,
+    PR_TMS,
+    PR_LCC1SP,
+    PR_LCC2SP,
+    PR_LCCW,
+    PR_CS
+};                                              // DF170
 
 // Used for both GPS and GLONASS, but their timebases differ
 struct rtcm3_rtk_hdr {          // header data from 1001, 1002, 1003, 1004
@@ -813,7 +824,7 @@ struct rtcm3_t {
             unsigned char plate_number;                 // DF149, Plate Number 0-31 values
             unsigned char computation_id;               // DF150, Computation Indicator, 0-15 values
             enum {
-                GEOMETRIC, PHYS_TAR, PHYS_SRC, RESERVED
+                H_GEOMETRIC, H_PHYS_TAR, H_PHYS_SRC, H_RESERVED
             } height_id;                                // DF151, Height Indicator, 0-3 values
             double lat_origin, lon_origin;              // Latitude of Origin, Longitude of Origin
             double lat_extension, lon_extension;        // N/S Extension, E/W Extension
@@ -846,6 +857,14 @@ struct rtcm3_t {
             enum RTCM3_QUALITY_INDICATOR_GRID_RESIDUALS grd_qual_id_vert;              // Vertical Grid quality indicator
             unsigned short mjd;                         // Modified Julian Date
         } rtcm3_1023;
+        struct rtcm3_1025_t {
+            unsigned int sys_id_num;                    // DF147, System Identification Number
+            enum RTCM3_PROJECTION_TYPE projection_type; // Projection Types
+            double lat_origin, lon_origin;              // Latitude of Origin, Longitude of Origin
+            double add_sno;                             // DF173
+            double false_east, false_north;             // DF174, DF175
+
+        } rtcm3_1025;
         struct rtcm3_1029_t
         {
             unsigned int station_id;    // Reference Station ID

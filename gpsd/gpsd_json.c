@@ -2075,6 +2075,44 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
         }
         str_rstrip_char(buf, ',');
         (void)strlcat(buf, "}", buflen);
+            break;
+    case 1025:
+        str_appendf(buf, buflen,
+                    "\"sys_id\":%u,"
+                    "\"lat_origin\":%.9f,\"lon_origin\":%.9f,"
+                    "\"add_sno\":%.5f,"
+                    "\"false_easting\":%.3f,\"false_northing\":%.3f,",
+                    rtcm->rtcmtypes.rtcm3_1025.sys_id_num,
+                    rtcm->rtcmtypes.rtcm3_1025.lat_origin,
+                    rtcm->rtcmtypes.rtcm3_1025.lon_origin,
+                    rtcm->rtcmtypes.rtcm3_1025.add_sno,
+                    rtcm->rtcmtypes.rtcm3_1025.false_east,
+                    rtcm->rtcmtypes.rtcm3_1025.false_north);
+        (void)strlcat(buf, "\"projection_type\":", buflen);
+        switch (rtcm->rtcmtypes.rtcm3_1025.projection_type)
+        {
+        case PR_TM:
+            (void)strlcat(buf, "\"TM\",", buflen);
+            break;
+        case PR_TMS:
+            (void)strlcat(buf, "\"TMs\",", buflen);
+            break;
+        case PR_LCC1SP:
+            (void)strlcat(buf, "\"LCC1SP\",", buflen);
+            break;
+        case PR_LCC2SP:
+            (void)strlcat(buf, "\"LCC2SP\",", buflen);
+            break;
+        case PR_LCCW:
+            (void)strlcat(buf, "\"LCCW\",", buflen);
+            break;
+        case PR_CS:
+            (void)strlcat(buf, "\"CS\",", buflen);
+            break;
+        default:
+            (void)strlcat(buf, "\"UNKNOWN\",", buflen);
+            break;
+        }
         break;
     case 1029:
         str_appendf(buf, buflen,
@@ -2086,21 +2124,21 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                     rtcm->rtcmtypes.rtcm3_1029.len,
                     rtcm->rtcmtypes.rtcm3_1029.unicode_units,
                     json_stringify(buf1, sizeof(buf1),
-                                (char *)rtcm->rtcmtypes.rtcm3_1029.text));
+                                    (char *)rtcm->rtcmtypes.rtcm3_1029.text));
         break;
 
-        case 1033:
-            str_appendf(buf, buflen,
-                        "\"station_id\":%u,\"desc\":\"%s\","
-                        "\"setup_id\":%u,\"serial\":\"%s\","
-                        "\"receiver\":\"%s\",\"firmware\":\"%s\"",
-                        rtcm->rtcmtypes.rtcm3_1033.station_id,
-                        rtcm->rtcmtypes.rtcm3_1033.descriptor,
-                        INT(rtcm->rtcmtypes.rtcm3_1033.setup_id),
-                        rtcm->rtcmtypes.rtcm3_1033.serial,
-                        rtcm->rtcmtypes.rtcm3_1033.receiver,
-                        rtcm->rtcmtypes.rtcm3_1033.firmware);
-            break;
+    case 1033:
+        str_appendf(buf, buflen,
+                    "\"station_id\":%u,\"desc\":\"%s\","
+                    "\"setup_id\":%u,\"serial\":\"%s\","
+                    "\"receiver\":\"%s\",\"firmware\":\"%s\"",
+                    rtcm->rtcmtypes.rtcm3_1033.station_id,
+                    rtcm->rtcmtypes.rtcm3_1033.descriptor,
+                    INT(rtcm->rtcmtypes.rtcm3_1033.setup_id),
+                    rtcm->rtcmtypes.rtcm3_1033.serial,
+                    rtcm->rtcmtypes.rtcm3_1033.receiver,
+                    rtcm->rtcmtypes.rtcm3_1033.firmware);
+        break;
 
     case 1071: // GPS MSM 1
         FALLTHROUGH
@@ -2246,9 +2284,13 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
             str_appendf(buf, buflen,
                         "\"0x%02x\",", (unsigned int)rtcm->rtcmtypes.data[n]);
         }
-
         str_rstrip_char(buf, ',');
-        (void)strlcat(buf, "}\r\n", buflen);
+        (void)strlcat(buf, "]", buflen);
+        break;
+    }
+
+    str_rstrip_char(buf, ',');
+    (void)strlcat(buf, "}\r\n", buflen);
 #undef CODE
 #undef INT
 }
