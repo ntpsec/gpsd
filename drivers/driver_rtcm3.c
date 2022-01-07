@@ -610,17 +610,20 @@ void rtcm3_unpack(const struct gps_context_t *context,
          */
         /* unknown_name = "Helmert / Abridged Molodenski Transformation "
                        "parameters";*/
-        // TODO Check if that works!        
         // Set Source-Name
         n = (unsigned long)ugrab(5);
-        (void)memcpy(rtcm->rtcmtypes.rtcm3_1021.src_name, buf + 6, n);
+        for (i = 0; i < n; i++)
+        {
+            rtcm->rtcmtypes.rtcm3_1021.src_name[i] = (char)ugrab(8);
+        }
         rtcm->rtcmtypes.rtcm3_1021.src_name[n] = '\0';
-        bitcount += 8 * n;
         // Set Target-Name
         n2 = (unsigned long)ugrab(5);
-        (void)memcpy(rtcm->rtcmtypes.rtcm3_1021.tar_name, buf + 8 + n, n2);
+        for (i = 0; i < n2; i++)
+        {
+            rtcm->rtcmtypes.rtcm3_1021.tar_name[i] = (char)ugrab(8);
+        }
         rtcm->rtcmtypes.rtcm3_1021.tar_name[n2] = '\0';
-        bitcount += 8 * n2;
         rtcm->rtcmtypes.rtcm3_1021.sys_id_num = (unsigned int)ugrab(8);
 #define R1021 rtcm->rtcmtypes.rtcm3_1021.ut_tr_msg_id[i]
         for (i = 0; i < RTCM3_DF148_SIZE; i++) {
