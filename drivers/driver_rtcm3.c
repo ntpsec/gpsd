@@ -689,7 +689,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_1023.lon_mean = (signed int)sgrab(8) * TRANSLATION_MM_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1023.ele_mean = (signed int)sgrab(15) * CM_RESOLUTION;
 #define R1023 rtcm->rtcmtypes.rtcm3_1023.residuals[i]
-        for (i = 0; i < 16; i++) {
+        for (i = 0; i < RTCM3_GRID_SIZE; i++) {
             R1023.lat_res = sgrab(9) * RES_ARCSEC_RESOLUTION;
             R1023.lon_res = sgrab(9) * RES_ARCSEC_RESOLUTION;
             R1023.ele_res = sgrab(9) * TRANSLATION_MM_RESOLUTION;
