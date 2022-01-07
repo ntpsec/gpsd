@@ -34,8 +34,14 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
+#if defined(HAVE_SYS_TIMEPPS_H)
+    #include <sys/timepps.h>
+#endif
 #include <sys/types.h>
 #include <time.h>
+
+// include unistd.h here as it is missing on older pps-tools releases.
+// 'close' is not defined otherwise.
 #include <unistd.h>
 
 #include "../include/compiler.h"     // for FALLTHROUGH
@@ -73,9 +79,110 @@ static const struct assoc hlines[] = {
     {TIOCM_CTS, "TIOCM_CTS"},
 };
 
+#if defined(HAVE_SYS_TIMEPPS_H)
+// aka RFC2783
+
+static const struct assoc caps[] = {
+    {PPS_CAPTUREASSERT, "PPS_CAPTUREASSERT"},
+    {PPS_CAPTURECLEAR, "PPS_CAPTURECLEAR"},
+    {PPS_CAPTUREBOTH, "PPS_CAPTUREBOTH"},
+    {PPS_OFFSETASSERT, "PPS_OFFSETASSERT"},
+    {PPS_OFFSETCLEAR, "PPS_OFFSETCLEAR"},
+    {PPS_CANWAIT, "PPS_CANWAIT"},
+    {PPS_CANPOLL, "PPS_CANPOLL"},
+    {PPS_ECHOASSERT, "PPS_ECHOASSERT"},
+    {PPS_ECHOCLEAR, "PPS_ECHOCLEAR"},
+    {PPS_TSFMT_TSPEC, "PPS_TSFMT_TSPEC"},
+    {PPS_TSFMT_NTPFP, "PPS_TSFMT_NTPFP"},
+};
+
+static void do_kpps(pps_handle_t kpps_handle)
+{
+    int kpps_caps = 0;
+    pps_params_t pp;
+    const struct assoc *sp;
+
+    // have kernel PPS handle. get RFC2783 features supported
+    if (0 > time_pps_getcap(kpps_handle, &kpps_caps)) {
+        (void)fprintf(stderr,
+                      "ERROR: time_pps_getcap() failed: %s(%d)\n",
+                      strerror(errno), errno);
+        exit(EXIT_FAILURE);
+    }
+    (void)fprintf(stderr, "INFO: kpps_caps 0x%02X\n", kpps_caps);
+
+    for (sp = caps; sp < caps + sizeof(caps) / sizeof(caps[0]); sp++) {
+        if (0 != (kpps_caps & sp->mask)) {
+            (void)printf("  %s\n", sp->string);
+        }
+    }
+    puts("");
+    if (0 == (PPS_CANWAIT & kpps_caps)) {
+        (void)fputs("ERROR: PPS_CANWAIT is missing.\n", stderr);
+    }
+
+    // construct the setparms structure
+    memset((void *)&pp, 0, sizeof(pps_params_t));
+    pp.api_version = PPS_API_VERS_1;    // version 1 protocol
+
+    switch ((PPS_CAPTUREASSERT | PPS_CAPTURECLEAR) & kpps_caps) {
+    case PPS_CAPTUREASSERT:
+        (void)fputs("WARNING: missing PPS_CAPTURECLEAR, pulse may be offset\n",
+                    stderr);
+        pp.mode |= PPS_CAPTUREASSERT;
+        break;
+    case PPS_CAPTURECLEAR:
+        (void)fputs("WARNING: missing PPS_CAPTUREASSERT, pulse may be offset\n",
+                    stderr);
+        pp.mode |= PPS_CAPTURECLEAR;
+        break;
+    case PPS_CAPTUREASSERT | PPS_CAPTURECLEAR:
+        pp.mode |= PPS_CAPTUREASSERT | PPS_CAPTURECLEAR;
+        break;
+    default:
+        (void)fputs("WARNING: missing PPS_CAPTUREASSERT and PPS_CAPTURECLEAR\n",
+                    stderr);
+        exit(EXIT_FAILURE);
+    }
+
+    if (0 > time_pps_setparams(kpps_handle, &pp)) {
+        (void)fprintf(stderr,
+                      "ERROR: time_pps_setparams(mode=0x%02X) failed: %s(%d)\n",
+                      pp.mode, strerror(errno), errno);
+        exit(EXIT_FAILURE);
+    }
+
+    for (;;) {
+        pps_info_t pi;
+        struct timespec kpps_tv ;
+        char ts_str1[TIMESPEC_LEN], ts_str2[TIMESPEC_LEN];
+
+        kpps_tv.tv_sec = 3;   // 3 second timeout
+        kpps_tv.tv_nsec = 0;
+
+        memset((void *)&pi, 0, sizeof(pi));    // paranoia
+        if (0 > time_pps_fetch(kpps_handle, PPS_TSFMT_TSPEC, &pi, &kpps_tv)) {
+            (void)fprintf(stderr, "ERROR: time_pps_fetch() failed: %s(%d)\n",
+                          strerror(errno), errno);
+            exit(EXIT_FAILURE);
+        }
+        (void)printf("assert %s, sequence: %lu, clear  %s, sequence: %lu\n",
+                     timespec_str(&pi.assert_timestamp,
+                                  ts_str1, sizeof(ts_str1)),
+                     (unsigned long)pi.assert_sequence,
+                     timespec_str(&pi.clear_timestamp,
+                                  ts_str2, sizeof(ts_str2)),
+                     (unsigned long) pi.clear_sequence);
+    }
+
+    exit(EXIT_SUCCESS);
+}
+#endif
+
+
 static void usage(void)
 {
-        (void)fprintf(stderr, 
+        (void)fprintf(stderr,
         "usage: ppscheck [OPTIONS] <device>\n\n"
 #ifdef HAVE_GETOPT_LONG
         "  --help            Show this help, then exit.\n"
@@ -90,10 +197,17 @@ static void usage(void)
 
 int main(int argc, char *argv[])
 {
-    struct timespec ts;
     int fd;
     int handshakes;
+    bool is_tty = false;
+    bool has_kpps = false;
+    struct timespec ts;
     char ts_buf[TIMESPEC_LEN];
+#if defined(HAVE_SYS_TIMEPPS_H)
+    // aka RFC2783
+    // int pps_fd = -1;
+    pps_handle_t kpps_handle;
+#endif  // HAVE_SYS_TIMEPPS_H
     const char *optstring = "?hV";
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
@@ -130,30 +244,64 @@ int main(int argc, char *argv[])
             exit(EXIT_SUCCESS);
         }
     }
-    argc -= optind;
-    argv += optind;
 
-    if (1 != argc) {
+    if (2 != argc) {
         usage();
     }
 
-    fd = open(argv[0], O_RDONLY);
+    // TIOCM* one need RD, KPPS needs WR
+    fd = open(argv[1], O_RDWR);
 
     if (-1 == fd) {
         (void)fprintf(stderr, "ERROR: open(%s) failed: %.80s(%d)\n",
-                      argv[0], strerror(errno), errno);
+                      argv[1], strerror(errno), errno);
         exit(EXIT_FAILURE);
     }
     // check that it is a tty
-    if (0 != ioctl(fd, TIOCMGET, &handshakes)) {
-        (void)fprintf(stdout,
-                      "ERROR: ioctl(%s, TIOCMGET) failed: %.80s(%d)\n"
-                      "%s does not appear to be a tty\n",
-                      argv[0], strerror(errno), errno, argv[0]);
+    if (0 == ioctl(fd, TIOCMGET, &handshakes)) {
+        is_tty = true;
+    } else {
+        (void)fprintf(stderr,
+                      "INFO: ioctl(%s, TIOCMGET) failed: %.80s(%d)\n"
+                      "INFO: %s does not appear to be a tty\n",
+                      argv[1], strerror(errno), errno, argv[1]);
+        is_tty = false;
+    }
+#if defined(HAVE_SYS_TIMEPPS_H)
+    // aka RFC2783
+    if (0 == time_pps_create(fd, &kpps_handle)) {
+        has_kpps = true;
+    } else {
+        (void)fprintf(stderr,
+                      "WARNING: time_pps_create(%s)) failed: %.80s(%d)\n"
+                      "WARRING: %s does not appear to be a KPPS device\n",
+                      argv[1], strerror(errno), errno, argv[1]);
+        has_kpps = false;;
+    }
+#else
+    (void)puts("WARNING: KPPS not compiled in.");
+    has_kpps = false;;
+#endif  // HAVE_SYS_TIMEPPS_H
+
+    if (!is_tty &&
+        !has_kpps) {
+        (void)fprintf(stderr,
+                      "ERROR: %s is not a tty and does not support KPPS.\n",
+                      argv[1]);
         exit(EXIT_FAILURE);
     }
 
-    (void)puts("# Seconds  nanoSecs   Signals");
+#if defined(HAVE_SYS_TIMEPPS_H)
+    // aka RFC2783
+    if (!is_tty &&
+        has_kpps) {
+        do_kpps(kpps_handle);
+        // never returns
+    }
+#endif
+    // else is_tty && !has_kpps
+
+    (void)puts("\n# Seconds  nanoSecs   Signals");
     for (;;) {
         const struct assoc *sp;
 
