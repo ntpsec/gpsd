@@ -506,6 +506,40 @@ struct rtcm2_t {
 #define RTCM3_MAX_SATELLITES    64
 #define RTCM3_MAX_DESCRIPTOR    31
 #define RTCM3_MAX_ANNOUNCEMENTS 32
+#define RTCM3_GRID_SIZE         16
+#define RTCM3_DF148_SIZE        10
+
+enum RTCM3_QUALITY_INDICATOR_TRANSFORMATION
+{
+    UNKNOWN,
+    BETTER_0021,
+    BETTER_0050,
+    BETTER_0200,
+    BETTER_0500,
+    BETTER_2000,
+    BETTER_5000,
+    WORSE_5001
+};                                              // DF214, DF215
+
+enum RTCM3_QUALITY_INDICATOR_GRID_RESIDUALS
+{
+    UNKNOWN,
+    BETTER_010,
+    BETTER_020,
+    BETTER_050,
+    BETTER_100,
+    BETTER_200,
+    BETTER_500,
+    WORSE_501
+};                                              // DF216, DF217
+
+enum RTCM3_INTERPOLATION_INDICATOR
+{
+    BI_LINEAR,
+    BI_QUADRIC,
+    BI_SPLINE,
+    RESERVED
+};                                              // DF212, DF213
 
 // Used for both GPS and GLONASS, but their timebases differ
 struct rtcm3_rtk_hdr {          // header data from 1001, 1002, 1003, 1004
@@ -771,30 +805,24 @@ struct rtcm3_t {
         } rtcm3_1020;
         struct rtcm3_1021_t {
             // size_t src_len;
-            char src_name[32];                      // DF144, Source-Name
+            char src_name[RTCM3_MAX_DESCRIPTOR+1];      // DF144, Source-Name
             // size_t tar_len;
-            char tar_name[32];                      // DF146, Target-Name
-            // DF147, System Identification Number
-            unsigned int sys_id_num;
-            // DF148, Utilized Transformation Message Indicator
-            unsigned int ut_tr_msg_id;
-            unsigned int plate_number;              // DF149, Plate Number
-            // DF150, Computation Indicator
-            unsigned int computation_id;
-            unsigned int height_id;                 // DF151, Height Indicator
-            // Latitude of Origin, Longitude of Origin
-            double lat_origin, lon_origin;
-            // N/S Extension, E/W Extension
-            double lat_extension, lon_extension;
-            double x_trans, y_trans, z_trans;       // dX, dY, dZ
-            double x_rot, y_rot, z_rot;             // rX, rY, rZ
-            double ds;                              // DF162, partial scale
-            // Major|Minor-Axis-Source, Major|Minor-Axis-Target
-            double add_as, add_bs, add_at, add_bt;
-            // Horizontal Quality Indicator
-            unsigned int quality_hori;
-            // Vertical Quality Indicator
-            unsigned int quality_vert;
+            char tar_name[RTCM3_MAX_DESCRIPTOR+1];      // DF146, Target-Name
+            unsigned int sys_id_num;                    // DF147, System Identification Number
+            bool ut_tr_msg_id[RTCM3_DF148_SIZE];        // DF148, Utilized Transformation Message Indicator
+            unsigned char plate_number;                 // DF149, Plate Number 0-31 values
+            unsigned char computation_id;               // DF150, Computation Indicator, 0-15 values
+            enum {
+                GEOMETRIC, PHYS_TAR, PHYS_SRC, RESERVED
+            } height_id;                                // DF151, Height Indicator, 0-3 values
+            double lat_origin, lon_origin;              // Latitude of Origin, Longitude of Origin
+            double lat_extension, lon_extension;        // N/S Extension, E/W Extension
+            double x_trans, y_trans, z_trans;           // dX, dY, dZ
+            double x_rot, y_rot, z_rot;                 // rX, rY, rZ
+            double ds;                                  // DF162, partial scale
+            double add_as, add_bs, add_at, add_bt;      // Major|Minor-Axis-Source, Major|Minor-Axis-Target
+            enum RTCM3_QUALITY_INDICATOR_TRANSFORMATION quality_hori;                  // Horizontal Quality Indicator
+            enum RTCM3_QUALITY_INDICATOR_TRANSFORMATION quality_vert;                  // Vertical Quality Indicator
         } rtcm3_1021;
         struct {
             // DF147, System Identification Number
@@ -811,16 +839,12 @@ struct rtcm3_t {
             // 4*4 residual grid points
             struct rtcm3_1023_t {
                 double lat_res, lon_res, ele_res;
-            } residuals[16];
-            // Horizontal interpolation method indicator
-            unsigned int interp_meth_id_hori;
-            // Vertical interpolation method indicator
-            unsigned int interp_meth_id_vert;
-            // Horizontal Grid quality indicator
-            unsigned int grd_qual_id_hori;
-            // Vertical Grid quality indicator
-            unsigned int grd_qual_id_vert;
-            unsigned short mjd;                     // Modified Julian Date
+            } residuals[RTCM3_GRID_SIZE];               // 4*4 residual grid points
+            enum RTCM3_INTERPOLATION_INDICATOR interp_meth_id_hori;                    // Horizontal interpolation method indicator
+            enum RTCM3_INTERPOLATION_INDICATOR interp_meth_id_vert;                    // Vertical interpolation method indicator
+            enum RTCM3_QUALITY_INDICATOR_GRID_RESIDUALS grd_qual_id_hori;              // Horizontal Grid quality indicator
+            enum RTCM3_QUALITY_INDICATOR_GRID_RESIDUALS grd_qual_id_vert;              // Vertical Grid quality indicator
+            unsigned short mjd;                         // Modified Julian Date
         } rtcm3_1023;
         struct rtcm3_1029_t
         {
