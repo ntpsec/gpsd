@@ -608,7 +608,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         /* RTCM 3.1
          * Helmert / Abridged Molodenski Transformation parameters
          */
-        /*unknown_name = "Helmert / Abridged Molodenski Transformation "
+        /* unknown_name = "Helmert / Abridged Molodenski Transformation "
                        "parameters";*/
         // TODO Check if that works!        
         // Set Source-Name
@@ -622,7 +622,11 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_1021.tar_name[n2] = '\0';
         bitcount += 8 * n2;
         rtcm->rtcmtypes.rtcm3_1021.sys_id_num = (unsigned int)ugrab(8);
-        rtcm->rtcmtypes.rtcm3_1021.ut_tr_msg_id = (unsigned int)ugrab(10);
+#define R1021 rtcm->rtcmtypes.rtcm3_1021.ut_tr_msg_id[i]
+        for (i = 0; i < RTCM3_DF148_SIZE; i++) {
+            R1021 = (bool) ugrab(1);
+        }
+#undef R1021
         rtcm->rtcmtypes.rtcm3_1021.plate_number = (unsigned int)ugrab(5);
         rtcm->rtcmtypes.rtcm3_1021.computation_id = (unsigned int)ugrab(4);
         rtcm->rtcmtypes.rtcm3_1021.height_id = (unsigned int)ugrab(2);        
@@ -669,7 +673,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_1023.lon_mean = sgrab(8) * TRANSLATION_MM_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1023.ele_mean = sgrab(15) * CM_RESOLUTION;
 #define R1023 rtcm->rtcmtypes.rtcm3_1023.residuals[i]
-        for (i = 0; i < 16; i++) {
+        for (i = 0; i < RTCM3_GRID_SIZE; i++) {
             R1023.lat_res = sgrab(9) * RES_ARCSEC_RESOLUTION;
             R1023.lon_res = sgrab(9) * RES_ARCSEC_RESOLUTION;
             R1023.ele_res = sgrab(9) * TRANSLATION_MM_RESOLUTION;
