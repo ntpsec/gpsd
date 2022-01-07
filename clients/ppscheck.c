@@ -5,7 +5,7 @@
  * followed by the names of handshake signals then asserted.  Off
  * transitions may generate lines with no signals asserted.
  *
- * If you don't see output within a second, use gpsmon or some other
+ * If you don't see output within a second, use cgps, xgps, or some other
  * equivalent tool to check that your device has satellite lock and is
  * getting fixes before giving up on the possibility of 1PPS.
  *
@@ -22,12 +22,12 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"   // must be before all includes
 
 #include <errno.h>
-#include <fcntl.h>      /* needed for open() and friends */
+#include <fcntl.h>                    // needed for open() and friends
 #ifdef HAVE_GETOPT_LONG
-       #include <getopt.h>
+   #include <getopt.h>
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,6 +38,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "../include/compiler.h"     // for FALLTHROUGH
 #include "../include/timespec.h"
 
 struct assoc {
@@ -85,13 +86,13 @@ static void usage(void)
         "   -V               Show version, then exit.\n"
         "\n"
         "   <device>         Device to check (/dev/ttyS0, /dev/pps0, etc.).\n");
-        exit(1);
 }
 
 int main(int argc, char *argv[])
 {
     struct timespec ts;
     int fd;
+    int handshakes;
     char ts_buf[TIMESPEC_LEN];
     const char *optstring = "?hV";
 #ifdef HAVE_GETOPT_LONG
@@ -111,16 +112,19 @@ int main(int argc, char *argv[])
         ch = getopt(argc, argv, optstring);
 #endif
 
-        if (ch == -1) {
+        if (-1 == ch) {
             break;
         }
 
         switch(ch){
         case '?':
+            FALLTHROUGH
         case 'h':
+            usage();
+            exit(EXIT_SUCCESS);
         default:
             usage();
-            exit(0);
+            exit(EXIT_FAILURE);
         case 'V':
             (void)printf("%s: %s\n", argv[0], REVISION);
             exit(EXIT_SUCCESS);
@@ -129,46 +133,58 @@ int main(int argc, char *argv[])
     argc -= optind;
     argv += optind;
 
-    if (argc != 1)
-            usage();
+    if (1 != argc) {
+        usage();
+    }
 
     fd = open(argv[0], O_RDONLY);
 
-    if (fd == -1) {
-        (void)fprintf(stderr,
-                      "open(%s) failed: %d %.40s\n",
-                      argv[0], errno, strerror(errno));
-        exit(1);
+    if (-1 == fd) {
+        (void)fprintf(stderr, "ERROR: open(%s) failed: %.80s(%d)\n",
+                      argv[0], strerror(errno), errno);
+        exit(EXIT_FAILURE);
+    }
+    // check that it is a tty
+    if (0 != ioctl(fd, TIOCMGET, &handshakes)) {
+        (void)fprintf(stdout,
+                      "ERROR: ioctl(%s, TIOCMGET) failed: %.80s(%d)\n"
+                      "%s does not appear to be a tty\n",
+                      argv[0], strerror(errno), errno, argv[0]);
+        exit(EXIT_FAILURE);
     }
 
-    (void)fprintf(stdout, "# Seconds  nanoSecs   Signals\n");
+    (void)puts("# Seconds  nanoSecs   Signals");
     for (;;) {
-        if (ioctl(fd, TIOCMIWAIT, TIOCM_CD|TIOCM_DSR|TIOCM_RI|TIOCM_CTS) != 0) {
-            (void)fprintf(stderr,
-                          "PPS ioctl(TIOCMIWAIT) failed: %d %.40s\n",
-                          errno, strerror(errno));
-            break;
-        } else {
-            const struct assoc *sp;
-            int handshakes;
+        const struct assoc *sp;
 
-            (void)clock_gettime(CLOCK_REALTIME, &ts);
-            (void)ioctl(fd, TIOCMGET, &handshakes);
-            (void)fprintf(stdout, "%s",
-                          timespec_str(&ts, ts_buf, sizeof(ts_buf)));
-            for (sp = hlines;
-                 sp < hlines + sizeof(hlines)/sizeof(hlines[0]);
-                 sp++)
-                if ((handshakes & sp->mask) != 0) {
-                    (void)fputc(' ', stdout);
-                    (void)fputs(sp->string, stdout);
-                }
-            (void)fputc('\n', stdout);
+        if (0 != ioctl(fd, TIOCMIWAIT,
+                       TIOCM_CD | TIOCM_DSR | TIOCM_RI | TIOCM_CTS)) {
+            (void)fprintf(stderr,
+                          "ERROR: ioctl(TIOCMIWAIT) failed: %.80s(%d)\n",
+                          strerror(errno), errno);
+            exit(EXIT_FAILURE);
         }
+
+        (void)clock_gettime(CLOCK_REALTIME, &ts);
+        if (0 != ioctl(fd, TIOCMGET, &handshakes)) {
+            (void)fprintf(stderr,
+                          "ERROR: ioctl(TIOCMGET) failed: %.80s(%d)\n",
+                          strerror(errno), errno);
+            exit(EXIT_FAILURE);
+        }
+
+        (void)fputs(timespec_str(&ts, ts_buf, sizeof(ts_buf)), stdout);
+        for (sp = hlines;
+             sp < hlines + sizeof(hlines) / sizeof(hlines[0]);
+             sp++) {
+            if (0 != (handshakes & sp->mask)) {
+                (void)fprintf(stdout, "  %s", sp->string);
+            }
+        }
+        (void)puts("");
     }
 
     exit(EXIT_SUCCESS);
 }
 
-/* end */
 // vim: set expandtab shiftwidth=4
