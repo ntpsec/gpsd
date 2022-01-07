@@ -2019,9 +2019,9 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                     "\"add_as\":%.3f,\"add_bs\":%.3f,"
                     "\"add_at\":%.3f,\"add_bt\":%.3f,",
                     json_stringify(buf1, sizeof(buf1),
-                                   (char *)rtcm->rtcmtypes.rtcm3_1021.src_name),
+                                   rtcm->rtcmtypes.rtcm3_1021.src_name),
                     json_stringify(buf2, sizeof(buf2),
-                                   (char *)rtcm->rtcmtypes.rtcm3_1021.tar_name),
+                                   rtcm->rtcmtypes.rtcm3_1021.tar_name),
                     rtcm->rtcmtypes.rtcm3_1021.sys_id_num,
                     rtcm->rtcmtypes.rtcm3_1021.plate_number,
                     rtcm->rtcmtypes.rtcm3_1021.lat_origin,
@@ -2062,7 +2062,7 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                     rtcm->rtcmtypes.rtcm3_1023.mjd
         );
         (void)strlcat(buf, "\"residuals\":{", buflen);
-        for (i = 0; i < 16; i++) {
+        for (i = 0; i < RTCM3_GRID_SIZE; i++) {
 #define R1023 rtcm->rtcmtypes.rtcm3_1023.residuals[i]
             str_appendf(buf, buflen,
                         "\"lat_%02u\":%.5f,"
