@@ -863,7 +863,6 @@ struct rtcm3_t {
             double lat_origin, lon_origin;              // Latitude of Origin, Longitude of Origin
             double add_sno;                             // DF173
             double false_east, false_north;             // DF174, DF175
-
         } rtcm3_1025;
         struct rtcm3_1029_t
         {
