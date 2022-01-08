@@ -51,6 +51,8 @@ The program accepts the following options:
   Display help message and terminate.
 `+-V+, `+--version+`::
   Dump version and exit.
+`*-x SEC*, *--seconds SEC*`::
+  Exit after delay of SEC seconds.
 
 == ARGUMENTS
 

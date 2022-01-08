@@ -47,6 +47,8 @@
 #include "../include/compiler.h"     // for FALLTHROUGH
 #include "../include/timespec.h"
 
+time_t exit_timer = 0;               // for -x option
+
 struct assoc {
     int mask;
     char *string;
@@ -152,21 +154,34 @@ static void do_kpps(pps_handle_t kpps_handle)
         exit(EXIT_FAILURE);
     }
 
+    (void)puts("\n# Assert seq   , Clear seq");
+
     for (;;) {
         pps_info_t pi;
         struct timespec kpps_tv ;
         char ts_str1[TIMESPEC_LEN], ts_str2[TIMESPEC_LEN];
 
+        if (0 < exit_timer &&
+            time(NULL) >= exit_timer) {
+            break;
+        }
         kpps_tv.tv_sec = 3;   // 3 second timeout
         kpps_tv.tv_nsec = 0;
 
         memset((void *)&pi, 0, sizeof(pi));    // paranoia
         if (0 > time_pps_fetch(kpps_handle, PPS_TSFMT_TSPEC, &pi, &kpps_tv)) {
+            if (ETIMEDOUT == errno ||
+                EINTR == errno) {
+                // just a timeout
+                (void)puts("WARNING: time_pps_fetch() timeout\n");
+                continue;
+            }
+
             (void)fprintf(stderr, "ERROR: time_pps_fetch() failed: %s(%d)\n",
                           strerror(errno), errno);
             exit(EXIT_FAILURE);
         }
-        (void)printf("assert %s, sequence: %lu, clear  %s, sequence: %lu\n",
+        (void)printf(" %s %lu, %s %lu\n",
                      timespec_str(&pi.assert_timestamp,
                                   ts_str1, sizeof(ts_str1)),
                      (unsigned long)pi.assert_sequence,
@@ -186,11 +201,13 @@ static void usage(void)
         "usage: ppscheck [OPTIONS] <device>\n\n"
 #ifdef HAVE_GETOPT_LONG
         "  --help            Show this help, then exit.\n"
+        "  --seconds SEC     Exit after SEC seconds delay.\n"
         "  --version         Show version, then exit.\n"
 #endif
         "   -?               Show this help, then exit.\n"
         "   -h               Show this help, then exit.\n"
         "   -V               Show version, then exit.\n"
+        "   -x SEC           Exit after SEC seconds delay.\n"
         "\n"
         "   <device>         Device to check (/dev/ttyS0, /dev/pps0, etc.).\n");
 }
@@ -208,11 +225,12 @@ int main(int argc, char *argv[])
     // int pps_fd = -1;
     pps_handle_t kpps_handle;
 #endif  // HAVE_SYS_TIMEPPS_H
-    const char *optstring = "?hV";
+    const char *optstring = "?hVx:";
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
     static struct option long_options[] = {
         {"help", no_argument, NULL, 'h'},
+        {"seconds", required_argument, NULL, 'x'},
         {"version", no_argument, NULL, 'V' },
         {NULL, 0, NULL, 0},
     };
@@ -242,15 +260,21 @@ int main(int argc, char *argv[])
         case 'V':
             (void)printf("%s: %s\n", argv[0], REVISION);
             exit(EXIT_SUCCESS);
+        case 'x':
+            exit_timer = time(NULL) + strtol(optarg, 0, 0);
+            break;
         }
     }
 
-    if (2 != argc) {
+    if ((optind + 1) != argc ||
+       '\0' == argv[optind][0]) {
+        (void)fputs("ERROR: can't run with no device specified\n", stderr);
         usage();
+        exit(EXIT_FAILURE);
     }
 
     // TIOCM* one need RD, KPPS needs WR
-    fd = open(argv[1], O_RDWR);
+    fd = open(argv[optind], O_RDWR);
 
     if (-1 == fd) {
         (void)fprintf(stderr, "ERROR: open(%s) failed: %.80s(%d)\n",
@@ -304,6 +328,11 @@ int main(int argc, char *argv[])
     (void)puts("\n# Seconds  nanoSecs   Signals");
     for (;;) {
         const struct assoc *sp;
+
+        if (exit_timer &&
+            time(NULL) >= exit_timer) {
+            break;
+        }
 
         if (0 != ioctl(fd, TIOCMIWAIT,
                        TIOCM_CD | TIOCM_DSR | TIOCM_RI | TIOCM_CTS)) {
