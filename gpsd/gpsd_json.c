@@ -2009,7 +2009,7 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                     rtcm->rtcmtypes.rtcm3_1015.header.satcount);
         break;
     case 1021:
-        str_appendf(buf, buflen,
+        str_appendf(buf, buflen, 
                     "\"src_name\":\"%s\",\"tar_name\":\"%s\","
                     "\"sys_id\":%u, \"plate_number\":%u,"
                     "\"lat_origin\":%f,\"lon_origin\":%f,"
