@@ -154,7 +154,8 @@ static void do_kpps(pps_handle_t kpps_handle)
         exit(EXIT_FAILURE);
     }
 
-    (void)puts("\n# Assert seq   , Clear seq");
+    (void)puts("\n# Assert                 seq  ,  "
+               "Clear                  seq");
 
     for (;;) {
         pps_info_t pi;
@@ -181,7 +182,7 @@ static void do_kpps(pps_handle_t kpps_handle)
                           strerror(errno), errno);
             exit(EXIT_FAILURE);
         }
-        (void)printf(" %s %lu, %s %lu\n",
+        (void)printf(" %s %7lu, %s %7lu\n",
                      timespec_str(&pi.assert_timestamp,
                                   ts_str1, sizeof(ts_str1)),
                      (unsigned long)pi.assert_sequence,
