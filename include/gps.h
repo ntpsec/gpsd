@@ -846,10 +846,10 @@ struct rtcm3_t {
             // grid Extension Latitude, grid Extension Longitude
             double lat_extension, lon_extension;
             // mean offset of latitude, longitude, and elevation
-            double lat_mean, lon_mean, ele_mean;
+            double lat_mean, lon_mean, hgt_mean;
             // 4*4 residual grid points
             struct rtcm3_1023_t {
-                double lat_res, lon_res, ele_res;
+                double lat_res, lon_res, hgt_res;
             } residuals[RTCM3_GRID_SIZE];               // 4*4 residual grid points
             enum RTCM3_INTERPOLATION_INDICATOR interp_meth_id_hori;                    // Horizontal interpolation method indicator
             enum RTCM3_INTERPOLATION_INDICATOR interp_meth_id_vert;                    // Vertical interpolation method indicator
