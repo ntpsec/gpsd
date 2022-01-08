@@ -2047,7 +2047,7 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                     "\"shift_h\":%u,\"shift_v\":%u,"
                     "\"lat_origin\":%f,\"lon_origin\":%f,"
                     "\"lat_extension\":%f,\"lon_extension\":%f,"
-                    "\"lat_mean\":%.3f,\"lon_mean\":%.3f,\"ele_mean\":%.2f,"
+                    "\"lat_mean\":%.3f,\"lon_mean\":%.3f,\"hgt_mean\":%.2f,"
                     "\"mjd\":%u,",
                     rtcm->rtcmtypes.rtcm3_1023.sys_id_num,
                     rtcm->rtcmtypes.rtcm3_1023.shift_id_hori,
@@ -2058,7 +2058,7 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                     rtcm->rtcmtypes.rtcm3_1023.lon_extension,
                     rtcm->rtcmtypes.rtcm3_1023.lat_mean,
                     rtcm->rtcmtypes.rtcm3_1023.lon_mean,
-                    rtcm->rtcmtypes.rtcm3_1023.ele_mean,
+                    rtcm->rtcmtypes.rtcm3_1023.hgt_mean,
                     rtcm->rtcmtypes.rtcm3_1023.mjd
         );
         (void)strlcat(buf, "\"residuals\":{", buflen);
@@ -2067,10 +2067,10 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
             str_appendf(buf, buflen,
                         "\"lat_%02u\":%.5f,"
                         "\"lon_%02u\":%.5f,"
-                        "\"ele_%02u\":%.3f,",
+                        "\"hgt_%02u\":%.3f,",
                         i + 1, R1023.lat_res,
                         i + 1, R1023.lon_res,
-                        i + 1, R1023.ele_res);
+                        i + 1, R1023.hgt_res);
 #undef R1023
         }
         str_rstrip_char(buf, ',');
