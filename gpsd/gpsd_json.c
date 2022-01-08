@@ -2068,9 +2068,9 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                         "\"lat_%02u\":%.5f,"
                         "\"lon_%02u\":%.5f,"
                         "\"ele_%02u\":%.3f,",
-                        i+1, R1023.lat_res,
-                        i+1, R1023.lon_res,
-                        i+1, R1023.ele_res);
+                        i + 1, R1023.lat_res,
+                        i + 1, R1023.lon_res,
+                        i + 1, R1023.ele_res);
 #undef R1023
         }
         str_rstrip_char(buf, ',');
@@ -3106,9 +3106,9 @@ void json_aivdm_dump(const struct ais_t *ais,
                         str_appendf(buf, buflen,
                             "{\"lon\":%.6f,\"lat\":%.6f},",
                             ais->type6.dac1fid28.waypoints[i].lon /
-                            AIS_LATLON4_DIV,
+                                AIS_LATLON4_DIV,
                             ais->type6.dac1fid28.waypoints[i].lat /
-                            AIS_LATLON4_DIV);
+                                AIS_LATLON4_DIV);
                     } else {
                         str_appendf(buf, buflen,
                             "{\"lon\":%d,\"lat\":%d},",

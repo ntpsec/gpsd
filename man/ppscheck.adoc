@@ -1,6 +1,6 @@
 = ppscheck(8)
 :author: Eric S. Raymond
-:date: 26 February 2021
+:date: 6 January 2022
 :email: <esr@thyrsus.com.>
 :keywords: gps, PPS, ppscheck
 :manmanual: GPSD Documentation
@@ -24,18 +24,19 @@ ppscheck - tool to check a serial port for PPS
 == DESCRIPTION
 
 *ppscheck* watches a specified serial port for transitions that might be
-PPS. It looks for changes in handshake lines CD, RI, and CTS by running
+PPS. It looks for changes in handshake lines CD, CTS, DSR, and RI by running
 ioctl(...., TIOCMIWAIT, ...) in a loop. When it sees a state change it
 emits a timestamped line of output dumping the state of the handshake
 signals. It's useful for checking whether a device is emitting PPS.
 
 *ppscheck* can run as a normal user, but that user must have permissions
-to read the target device.  Running as root will always work.
+to read the target device.  Running under *sudo* may, or may not, work.
+Running as root will always work.
 
 To check the first serial port do this:
 
 ----
-ppscheck /dev/ttyS0
+# ppscheck /dev/ttyS0
 ----
 
 *ppscheck* is not intended for routine use, but rather for diagnostic
@@ -50,6 +51,8 @@ The program accepts the following options:
   Display help message and terminate.
 `+-V+, `+--version+`::
   Dump version and exit.
+`*-x SEC*, *--seconds SEC*`::
+  Exit after delay of SEC seconds.
 
 == ARGUMENTS
 
@@ -60,13 +63,13 @@ Each output line is the second and nanosecond parts of a timestamp
 followed by the names of the handshake signals then asserted. Off
 transitions may generate lines with no signals asserted.
 
-If you don't see output within a second, use *cgps* or some other
-equivalent tool to check that your device has a satellite lock and is
-getting 3D fixes before giving up on the possibility of PPS.
+If you don't see output within a second, use *cgps*, *xgps*, or some
+other equivalent tool to check that your device has a satellite lock and
+is getting 3D fixes before giving up on the possibility of PPS.
 
 Check your cable. Cheap DB9 to DB9 cables such as those issued with
 UPSes often carry TXD/RXD/GND only, omitting handshake lines such as
-DCD. Suspect this especially if the cable jacket looks too skinny to
+CD. Suspect this especially if the cable jacket looks too skinny to
 hold more than three leads!
 
 Most GPS that have built in USB do not support PPS. When in doubt,
@@ -75,11 +78,11 @@ contact the vendor for confirmation that your device does supply PPS.
 == RETURN VALUES
 
 0:: OK
-1:: if the device counld not be opened
+1:: if the device counld not be opened, or some other failure
 
 == SEE ALSO
 
-*gpsd*(8)
+*cgps*(1), *xgps*(1), *gpsd*(8)
 
 == RESOURCES
 

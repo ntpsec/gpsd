@@ -588,15 +588,15 @@ struct rtcm3_msm_hdr {
     unsigned short station_id;  // Reference Station ID
     time_t tow;                 // GNSS Epoch Time in ms
     bool sync;                  // Synchronous GNSS Message Flag
-    unsigned short IODS;        // IODS – Issue of Data Station  
+    unsigned short IODS;        // IODS – Issue of Data Station
     unsigned char reserved;     // reserved
-    unsigned char steering;     // Clock Steering Indicator 
-    unsigned char ext_clk;      // External Clock Indicator 
+    unsigned char steering;     // Clock Steering Indicator
+    unsigned char ext_clk;      // External Clock Indicator
     bool smoothing;             // Divergence-free Smoothing Indicator
     unsigned int interval;      // Smoothing Interval
-    uint64_t sat_mask;          // Satellite Mask  
-    uint32_t sig_mask;          // Signal Mask  
-    uint64_t cell_mask;         // Cell Mask  
+    uint64_t sat_mask;          // Satellite Mask
+    uint32_t sig_mask;          // Signal Mask
+    uint64_t cell_mask;         // Cell Mask
     // not part of the network message:
     unsigned char gnssid;       // gnssid
     unsigned char msm;          // 1 to 7, MSMx
@@ -836,12 +836,18 @@ struct rtcm3_t {
             enum RTCM3_QUALITY_INDICATOR_TRANSFORMATION quality_vert;                  // Vertical Quality Indicator
         } rtcm3_1021;
         struct {
-            unsigned int sys_id_num;                    // DF147, System Identification Number
-            bool shift_id_hori;                         // Horizontal Shift indicator
-            bool shift_id_vert;                         // Vertical Shift indicator
-            double lat_origin, lon_origin;              // Latitude of Origin, Longitude of Origin
-            double lat_extension, lon_extension;        // grid Extension Latitude, grid Extension Longitude
-            double lat_mean, lon_mean, ele_mean;        // mean offset latitude, mean offset longitude, mean offset elevation
+            // DF147, System Identification Number
+            unsigned int sys_id_num;
+            // Horizontal Shift indicator
+            bool shift_id_hori;
+            bool shift_id_vert;                     // Vertical Shift indicator
+            // Latitude of Origin, Longitude of Origin
+            double lat_origin, lon_origin;
+            // grid Extension Latitude, grid Extension Longitude
+            double lat_extension, lon_extension;
+            // mean offset of latitude, longitude, and elevation
+            double lat_mean, lon_mean, ele_mean;
+            // 4*4 residual grid points
             struct rtcm3_1023_t {
                 double lat_res, lon_res, ele_res;
             } residuals[RTCM3_GRID_SIZE];               // 4*4 residual grid points
@@ -870,7 +876,7 @@ struct rtcm3_t {
         } rtcm3_1029;
         struct rtcm3_1033_t {
             unsigned int station_id;                    // Reference Station ID
-            char descriptor[RTCM3_MAX_DESCRIPTOR+1];    // Description string */
+            char descriptor[RTCM3_MAX_DESCRIPTOR+1];    // Description string
             unsigned int setup_id;
             char serial[RTCM3_MAX_DESCRIPTOR+1];        // Serial # string
             char receiver[RTCM3_MAX_DESCRIPTOR+1];      // Receiver string
@@ -944,9 +950,9 @@ struct orbit
     // toe, time of ephemeris, -1 if invalid
     long toe;
     // LSBs of toe, seconds, -1 if invalid
-    long toeLSB; 
+    long toeLSB;
     // MSBs of toe, seconds, scaled, -1 if invalid
-    long toeMSB; 
+    long toeMSB;
 
     // af0, aka a0, SV clock correction constant term, seconds
     double af0;

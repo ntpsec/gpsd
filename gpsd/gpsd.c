@@ -842,12 +842,11 @@ bool gpsd_add_device(const char *device_name, bool flag_nowait)
 }
 
 #if defined(SOCKET_EXPORT_ENABLE) || defined(CONTROL_SOCKET_ENABLE)
-/* convert hex to binary, write it, unchanged, to GPS
+/* convert hex, with length len, to binary, write it, unchanged, to GPS
  * Returns: NULL, or pointer to error string
  */
-static const char *write_gps(char *device, char *hex) {
+static const char *write_gps(char *device, char *hex, size_t len) {
     struct gps_device_t *devp;
-    size_t len;
     int st;
 
     if (NULL == (devp = find_device(device))) {
@@ -861,7 +860,6 @@ static const char *write_gps(char *device, char *hex) {
         return "Attempted to write to a read-only device";
     }
 
-    len = strlen(hex);
     // NOTE: this destroys the original buffer contents
     st = gpsd_hexpack(hex, hex, len);
     if (0 >= st) {
@@ -874,7 +872,8 @@ static const char *write_gps(char *device, char *hex) {
              st, hex, device);
     if (0 >= write(devp->gpsdata.gps_fd, hex, (size_t)st)) {
         GPSD_LOG(LOG_WARN, &context.errout,
-                 "GPS <=: write to device failed\n");
+                 "GPS <=: write to device failed. %s(%d)\n",
+                 strerror(errno), errno);
         return "write to device failed";
     }
     return NULL;
@@ -970,10 +969,11 @@ static void handle_control(int sfd, char *buf)
                     GPSD_LOG(LOG_INF, &context.errout,
                              "<= control(%d): writing to %s \n", sfd,
                              stash);
-                    if (0 >= write(devp->gpsdata.gps_fd, eq, strlen(eq))) {
+                    if (0 >= write(devp->gpsdata.gps_fd, eq,
+                                   eq - (stash + 1))) {
                         GPSD_LOG(LOG_WARN, &context.errout,
-                                 "<= control(%d): write to device failed\n",
-                                 sfd);
+                                 "<= control(%d): device write failed %s(%d)\n",
+                                 sfd, strerror(errno), errno);
                         ignore_return(write(sfd, ERROR, sizeof(ERROR) - 1));
                     } else {
                         ignore_return(write(sfd, ACK, sizeof(ACK) - 1));
@@ -1000,7 +1000,7 @@ static void handle_control(int sfd, char *buf)
         } else {
             const char *rtn;
             *eq++ = '\0';
-            rtn = write_gps(stash, eq);
+            rtn = write_gps(stash, eq, eq - (stash + 1));
             if (NULL == rtn) {
                 ignore_return(write(sfd, ACK, sizeof(ACK) - 1));
             } else {
@@ -1305,7 +1305,8 @@ static void handle_request(struct subscriber_t *sub,
                                                        watch_buf,
                                                        sizeof(watch_buf));
                             (void)gpsd_write(devp, watch_buf,
-                                             strlen(watch_buf));
+                                             strnlen(watch_buf,
+                                                     sizeof(watch_buf)));
                         }
                     } else {
                         (void)snprintf(reply, replylen,
@@ -1460,7 +1461,8 @@ static void handle_request(struct subscriber_t *sub,
                     }
                     if ('\0' != devconf.hexdata[0]) {
                         const char *rtn = write_gps(device->gpsdata.dev.path,
-                                                    devconf.hexdata);
+                            devconf.hexdata,
+                            strnlen(devconf.hexdata, sizeof(devconf.hexdata)));
                         if (NULL == rtn) {
                             (void)strlcpy(reply, ACK, replylen);
                         } else {
@@ -1519,8 +1521,8 @@ static void handle_request(struct subscriber_t *sub,
             if (allocated_device(devp) && subscribed(sub, devp)) {
                 if (0 != (devp->observed & GPS_TYPEMASK)) {
                     json_noise_dump(&devp->gpsdata,
-                                  reply + strlen(reply),
-                                  replylen - strlen(reply));
+                                    reply + strlen(reply),
+                                    replylen - strlen(reply));
                     rstrip(reply);
                     (void)strlcat(reply, ",", replylen);
                 }
@@ -1626,7 +1628,7 @@ static void pseudonmea_report(struct subscriber_t *sub,
             GPSD_LOG(LOG_IO, &context.errout,
                      "<= GPS (binary tpv) %s: %s\n",
                      device->gpsdata.dev.path, buf);
-            (void)throttled_write(sub, buf, strlen(buf));
+            (void)throttled_write(sub, buf, strnlen(buf, sizeof(buf)));
         }
 
         if (0 != (changed & (SATELLITE_SET|USED_IS))) {
@@ -1634,7 +1636,7 @@ static void pseudonmea_report(struct subscriber_t *sub,
             GPSD_LOG(LOG_IO, &context.errout,
                      "<= GPS (binary sky) %s: %s\n",
                      device->gpsdata.dev.path, buf);
-            (void)throttled_write(sub, buf, strlen(buf));
+            (void)throttled_write(sub, buf, strnlen(buf, sizeof(buf)));
         }
 
         if (0 != (changed & SUBFRAME_SET)) {
@@ -1642,7 +1644,7 @@ static void pseudonmea_report(struct subscriber_t *sub,
             GPSD_LOG(LOG_IO, &context.errout,
                      "<= GPS (binary subframe) %s: %s\n",
                      device->gpsdata.dev.path, buf);
-            (void)throttled_write(sub, buf, strlen(buf));
+            (void)throttled_write(sub, buf, strnlen(buf, sizeof(buf)));
         }
 #ifdef AIVDM_ENABLE
         if (0 != (changed & AIS_SET)) {
@@ -1650,7 +1652,7 @@ static void pseudonmea_report(struct subscriber_t *sub,
             GPSD_LOG(LOG_IO, &context.errout,
                      "<= AIS (binary ais) %s: %s\n",
                      device->gpsdata.dev.path, buf);
-            (void)throttled_write(sub, buf, strlen(buf));
+            (void)throttled_write(sub, buf, strnlen(buf, sizeof(buf)));
         }
 #endif  // AIVDM_ENABLE
     }
@@ -1902,7 +1904,8 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
                     json_data_report(changed, device, &sub->policy,
                                      buf, sizeof(buf));
                     if ('\0' != buf[0]) {
-                        (void)throttled_write(sub, buf, strlen(buf));
+                        (void)throttled_write(sub, buf,
+                                              strnlen(buf, sizeof(buf)));
                     }
                 }
             }
@@ -1918,6 +1921,7 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
 static int handle_gpsd_request(struct subscriber_t *sub, const char *buf)
 {
     char reply[GPS_JSON_RESPONSE_MAX + 1];
+    size_t len = 0;
 
     reply[0] = '\0';
     if ('?' == buf[0]) {
@@ -1927,11 +1931,12 @@ static int handle_gpsd_request(struct subscriber_t *sub, const char *buf)
             if (isspace((unsigned char) *buf)) {
                 end = buf + 1;
             } else {
-                handle_request(sub, buf, &end, reply + strlen(reply),
-                               sizeof(reply) - strlen(reply));
+                len = strnlen(reply, sizeof(reply));
+                handle_request(sub, buf, &end,
+                               reply + len, sizeof(reply) - len);
             }
     }
-    return (int)throttled_write(sub, reply, strlen(reply));
+    return (int)throttled_write(sub, reply, len);
 }
 #endif  // SOCKET_EXPORT_ENABLE
 
@@ -2173,7 +2178,7 @@ int main(int argc, char *argv[])
 #endif  // CONTROL_SOCKET_ENABLE
         case 'f':
             // framing
-            if (3 == strlen(optarg) &&
+            if (3 == strnlen(optarg, 4) &&
                 ('7' == optarg[0] || '8' == optarg[0]) &&
                 ('E' == optarg[1] || 'N' == optarg[1] ||
                  'O' == optarg[1]) &&
@@ -2475,7 +2480,7 @@ int main(int argc, char *argv[])
         /* Make default devices accessible even after we drop privileges.
          * Modifying file system permissions! */
         for (i = optind; i < argc; i++) {
-            if (GPS_PATH_MAX < strlen(argv[i])) {
+            if (GPS_PATH_MAX <= strnlen(argv[i], GPS_PATH_MAX)) {
                // pacify coverity
                GPSD_LOG(LOG_ERROR, &context.errout,
                         "Over long device path %s\n", argv[i]);
@@ -2697,7 +2702,8 @@ int main(int argc, char *argv[])
                                  sub_index(client), ssock);
                         json_version_dump(announce, sizeof(announce));
                         (void)throttled_write(client, announce,
-                                              strlen(announce));
+                                              strnlen(announce,
+                                                      sizeof(announce)));
                     }
                 }
                 FD_CLR(msocks[i], &rfds);

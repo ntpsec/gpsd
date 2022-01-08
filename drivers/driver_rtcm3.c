@@ -55,12 +55,15 @@ SPDX-License-Identifier: BSD-2-clause
 #define GLONASS_PSEUDORANGE_RESOLUTION  0.02    // DF041
 #define ANTENNA_DEGREE_RESOLUTION       25e-6   // DF062
 #define GPS_EPOCH_TIME_RESOLUTION       0.1     // DF065
-#define PHASE_CORRECTION_RESOLUTION     0.5     // DF069, DF070, DF192, DF193, DF194, DF195
-#define TRANSLATION_MM_RESOLUTION       0.001   // DF156, DF157, DF158, DF166, DF167, DF168, DF169, DF196, DF197
+// DF069, DF070, DF192, DF193, DF194, DF195
+#define PHASE_CORRECTION_RESOLUTION     0.5
+// DF156, DF157, DF158, DF166, DF167, DF168, DF169, DF196, DF197
+#define TRANSLATION_MM_RESOLUTION       0.001
 #define VALIDITY_RESOLUTION             2.0     // DF152, DF153, DF154, DF155
 #define SCALE_PPM_RESOLUTION            1e-5    // DF162
 #define ROTATION_ARCSEC_RESOLUTION      2e-5    // DF159, DF160, DF161
-#define PROJ_ORIGIN_RESOLUTION          11e-9   // DF171, DF172, DF176, DF177, DF178, DF179, DF183, DF184, DF185, DF186
+// DF171, DF172, DF176, DF177, DF178, DF179, DF183, DF184, DF185, DF186
+#define PROJ_ORIGIN_RESOLUTION          11e-9
 #define DEG_ARCSEC_RESOLUTION           3600
 #define CM_RESOLUTION                   0.01    // DF198
 #define RES_ARCSEC_RESOLUTION           3e-5    // DF199, DF200
@@ -611,14 +614,22 @@ void rtcm3_unpack(const struct gps_context_t *context,
         /* unknown_name = "Helmert / Abridged Molodenski Transformation "
                        "parameters";*/
         // Set Source-Name
-        n = (unsigned long)ugrab(5);
+        n = (unsigned)ugrab(5);
+        if (sizeof(rtcm->rtcmtypes.rtcm3_1021.src_name) <= n) {
+            // paranoia
+            n = sizeof(rtcm->rtcmtypes.rtcm3_1021.src_name) - 1;
+        }
         for (i = 0; i < n; i++)
         {
             rtcm->rtcmtypes.rtcm3_1021.src_name[i] = (char)ugrab(8);
         }
         rtcm->rtcmtypes.rtcm3_1021.src_name[n] = '\0';
         // Set Target-Name
-        n2 = (unsigned long)ugrab(5);
+        n2 = (unsigned)ugrab(5);
+        if (sizeof(rtcm->rtcmtypes.rtcm3_1021.tar_name) <= n2) {
+            // paranoia
+            n2 = sizeof(rtcm->rtcmtypes.rtcm3_1021.tar_name) - 1;
+        }
         for (i = 0; i < n2; i++)
         {
             rtcm->rtcmtypes.rtcm3_1021.tar_name[i] = (char)ugrab(8);

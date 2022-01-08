@@ -437,6 +437,8 @@ static gps_mask_t sirf_msg_debug(struct gps_device_t *device,
     if (0xe1 == buf[0]) {       // Development statistics messages
         if (2 > len) {
             // too short
+            GPSD_LOG(LOG_INF, &device->context->errout,
+                     "SiRF: DBG (0xe1) runt len %zu\n", len);
             return 0;
         }
         for (i = 2; i < (int)len; i++) {
@@ -464,7 +466,17 @@ static gps_mask_t sirf_msg_errors(struct gps_device_t *device,
                                   unsigned char *buf,
                                   size_t len UNUSED)
 {
-    // FIXME: decode count: bytes 4 and 5
+    unsigned count;
+
+    if (5 > len) {
+        // too short
+        GPSD_LOG(LOG_INF, &device->context->errout,
+                 "SiRF: EID (0x0a) runt len %zu\n", len);
+        return 0;
+    }
+
+    count = getbeu16(buf, 3);
+
     switch (getbeu16(buf, 1)) {
     case 2:
         // ErrId_CS_SVParity
@@ -473,15 +485,105 @@ static gps_mask_t sirf_msg_errors(struct gps_device_t *device,
                  getbeu32(buf, 9), getbeu32(buf, 5));
         break;
 
+    case 4:
+        // ErrId_RMC_GettingPosition
+        GPSD_LOG(LOG_PROG, &device->context->errout,
+                 "SiRF: EID 0x0a type 4: RMC_GettingPosition on PRN %u\n",
+                 getbeu32(buf, 5));
+        break;
+
+    case 10:
+        // ErrId_RXM_TimeExceeded
+        GPSD_LOG(LOG_PROG, &device->context->errout,
+                 "SiRF: EID 0x0a type 10: RXM_TimeExceeded PR %u\n",
+                 getbeu32(buf, 5));
+        break;
+
+    case 11:
+        // ErrId_RXM_TDOPOverflow
+        GPSD_LOG(LOG_PROG, &device->context->errout,
+                 "SiRF: EID 0x0a type 11: RXM_TDOPOverflow doppler %u\n",
+                 getbeu32(buf, 5));
+        break;
+
+    case 12:
+        // ErrId_RXM_ValidDurationExceeded
+        GPSD_LOG(LOG_PROG, &device->context->errout,
+                 "SiRF: EID 0x0a type 12: RXM_ValidDurationExceeded PRN %u\n",
+                 getbeu32(buf, 5));
+        break;
+
+    case 13:
+        // ErrId_STRTP_BadPostion
+        GPSD_LOG(LOG_PROG, &device->context->errout,
+                 "SiRF: EID 0x0a type 13: STRTP_BadPostion\n");
+        break;
+
+    case 4097:
+        // ErrId_MI_VCOClockLost
+        GPSD_LOG(LOG_PROG, &device->context->errout,
+                 "SiRF: EID 0x0a type 4097: MI_VCOClockLost %u\n",
+                 getbeu32(buf, 5));
+        break;
+
+    case 4099:
+        // ErrId_MI_FalseAcqReceiverReset
+        GPSD_LOG(LOG_PROG, &device->context->errout,
+                 "SiRF: EID 0x0a type 4099: MI_FalseAcqReceiverReset %u\n",
+                 getbeu32(buf, 5));
+        break;
+
+    case 4104:
+        // ErrId_STRTP_SRAMCksum
+        GPSD_LOG(LOG_PROG, &device->context->errout,
+                 "SiRF: EID 0x0a type 4104: Failed SRAM "
+                 "checksum during startup.\n");
+        break;
+
+    case 4105:
+        // ErrId_STRTP_RTCTimeInvalid
+        GPSD_LOG(LOG_PROG, &device->context->errout,
+                 "SiRF: EID 0x0a type 4105: Failed RTC SRAM checksum.\n");
+        break;
+
+    case 4106:
+        // ErrId_KFC_BackupFailed_Velocity
+        GPSD_LOG(LOG_PROG, &device->context->errout,
+                 "SiRF: EID 0x0a type 4106: Failed saving position "
+                 "to NVRAM.\n");
+        break;
+
     case 4107:
+        // ErrId_KFC_BackupFailed_NumSV
         GPSD_LOG(LOG_PROG, &device->context->errout,
                  "SiRF: EID 0x0a type 4107: neither KF nor LSQ fix.\n");
         break;
 
+    case 8193:
+        // ErrId_MI_BufferAllocFailure
+        GPSD_LOG(LOG_PROG, &device->context->errout,
+                 "SiRF: EID 0x0a type 8193: "
+                 "Error ID Description:Buffer allocation error.\n");
+        break;
+
+    case 8194:
+        // ErrId_MI_UpdateTimeFailure
+        GPSD_LOG(LOG_PROG, &device->context->errout,
+                 "SiRF: EID 0x0a type 8194: "
+                 "PROCESS_1SEC task unable to complete\n");
+        break;
+
+    case 8195:
+        // ErrId_MI_MemoryTestFailed
+        GPSD_LOG(LOG_PROG, &device->context->errout,
+                 "SiRF: EID 0x0a type 8195: "
+                 "Failure of hardware memory test.\n");
+        break;
+
     default:
         GPSD_LOG(LOG_PROG, &device->context->errout,
-                 "SiRF: EID 0x0a: Error MID %d\n",
-                 getbeu16(buf, 1));
+                 "SiRF: EID 0x0a: Error MID %u, count %u\n",
+                 getbeu16(buf, 1), count);
         break;
     }
     return 0;
@@ -495,6 +597,8 @@ static gps_mask_t sirf_msg_nlmd(struct gps_device_t *session,
     double gps_tow = 0.0;
 
     if (56 != len) {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "SiRF: NLMD (0x0a) runt len %zu\n", len);
         return 0;
     }
 
@@ -503,7 +607,7 @@ static gps_mask_t sirf_msg_nlmd(struct gps_device_t *session,
     /* FIXME - decode the time, since this is the first MID with a
      * good time stamp this will be good for ntpshm time */
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "SiRF: MID 0x1c, NLMD, gps_tow: %f\n",
+             "SiRF: NLMD 0x1c gps_tow: %f\n",
              (double)gps_tow);
 
     return 0;
@@ -517,6 +621,8 @@ static gps_mask_t sirf_msg_navnot(struct gps_device_t *session,
     gps_mask_t mask = 0;
 
     if (3 > len) {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "SiRF: MID (0x33) runt len %zu\n", len);
         return 0;
     }
 
@@ -617,11 +723,13 @@ static gps_mask_t sirf_msg_67_1(struct gps_device_t *session,
     int debug_base = LOG_PROG;
 
     if (126 > len) {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "SiRF: MID 67,1 runt len %zu\n", len);
         return 0;
     }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "SiRF V: MID 67,1 Multiconstellation Navigation Data Response \n");
+             "SiRF V: MND 67,1 Multiconstellation Navigation Data Response \n");
 
     solution_validity = getbeu32(buf, 2);
     if (0 != solution_validity) {
@@ -764,51 +872,57 @@ static gps_mask_t sirf_msg_67_1(struct gps_device_t *session,
         /* coerce time_t to long to placate older OS, like 32-bit FreeBSD,
          * where time_t is int */
         GPSD_LOG(debug_base, &session->context->errout,
-                 "GPS Week %d, tow %d.%03d, time %s\n",
+                 "SiRF V: MND 67,1 GPS Week %d, tow %d.%03d, time %s\n",
                  gps_week, gps_tow, gps_tow_sub_ms,
                  timespec_str(&now, ts_buf, sizeof(ts_buf)));
         GPSD_LOG(debug_base, &session->context->errout,
-                 "UTC time %s leaps %u, datum %s\n",
+                 "SiRF V: MND 67,1 UTC time %s leaps %u, datum %s\n",
                  timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
                  session->context->leap_seconds,
                  session->newdata.datum);
         GPSD_LOG(debug_base, &session->context->errout,
-                 "packed: %02d%02d%02d %02d:%02d:%02d\n",
+                 "SiRF V: MND 67,1 packed: %02d%02d%02d %02d:%02d:%02d\n",
                  unpacked_date.tm_mday, unpacked_date.tm_mon + 1,
                  unpacked_date.tm_year % 100,
                  unpacked_date.tm_hour, unpacked_date.tm_min,
                  unpacked_date.tm_sec);
         GPSD_LOG(debug_base, &session->context->errout,
-                 "solution_info %08x\n", solution_info);
+                 "SiRF V: MND 67,1 solution_info %08x\n", solution_info);
         GPSD_LOG(debug_base, &session->context->errout,
-                 "lat %.7f lon %.7f altHAE %.2f altMSL %.2f\n",
+                 "SiRF V: MND 67,1 lat %.7f lon %.7f altHAE %.2f altMSL %.2f\n",
                  session->newdata.latitude, session->newdata.longitude,
                  session->newdata.altHAE, session->newdata.altMSL);
         GPSD_LOG(debug_base, &session->context->errout,
-                 "speed %.2f track %.2f climb %.2f heading_rate %d\n",
+                 "SiRF V: MND 67,1 speed %.2f track %.2f climb %.2f "
+                 "heading_rate %d\n",
                  session->newdata.speed, session->newdata.track,
                  session->newdata.climb, heading_rate);
         GPSD_LOG(debug_base, &session->context->errout,
-                 "time_bias %d time_accuracy %u, time_source %u\n",
+                 "SiRF V: MND 67,1 time_bias %d time_accuracy %u "
+                 "time_source %u\n",
                  time_bias, time_accuracy, time_source);
         GPSD_LOG(debug_base, &session->context->errout,
-                 "distance_travel %u distance_travel_error %d\n",
+                 "SiRF V: MND 67,1 distance_travel %u "
+                 "distance_travel_error %d\n",
                  distance_travel, distance_travel_error);
         GPSD_LOG(debug_base, &session->context->errout,
-                 "clk_bias %.2f clk_bias_error %u\n",
+                 "SiRF V: MND 67,1 clk_bias %.2f clk_bias_error %u\n",
                  clk_bias / 100.0, clk_bias_error);
         GPSD_LOG(debug_base, &session->context->errout,
-                 "clk_offset %d clk_offset_error %u\n",
+                 "SiRF V: MND 67,1 clk_offset %d clk_offset_error %u\n",
                  clk_offset, clk_offset_error);
         GPSD_LOG(debug_base, &session->context->errout,
-                 "ehpe %d epv %.2f eps %.2f epd %.2f num_svs_in_sol %u\n",
+                 "SiRF V: MND 67,1 ehpe %d epv %.2f eps %.2f epd %.2f "
+                 "num_svs_in_sol %u\n",
                  ehpe, session->newdata.epv, session->newdata.eps,
                  session->newdata.epd, num_svs_in_sol);
         GPSD_LOG(debug_base, &session->context->errout,
-                 "sv_list_1 %08x sv_list_2 %08x sv_list_3 %08x\n",
+                 "SiRF V: MND 67,1 sv_list_1 %08x sv_list_2 %08x s"
+                 "v_list_3 %08x\n",
                  sv_list_1, sv_list_2, sv_list_3);
         GPSD_LOG(debug_base, &session->context->errout,
-                 "sv_list_4 %08x sv_list_5 %08x add_info %08x\n",
+                 "SiRF V: MND 67,1 sv_list_4 %08x sv_list_5 %08x "
+                 "add_info %08x\n",
                  sv_list_4, sv_list_5, additional_info);
     }
 
@@ -887,11 +1001,11 @@ static gps_mask_t sirf_msg_67_16(struct gps_device_t *session,
         char ts_buf[TIMESPEC_LEN];
 
         GPSD_LOG(LOG_IO, &session->context->errout,
-             "GPS Week %d, tow %d.%03d, time %s\n",
+             "SiRF V: MID 67,16 GPS Week %d, tow %d.%03d, time %s\n",
              gps_week, gps_tow, gps_tow_sub_ms,
              timespec_str(&now, ts_buf, sizeof(ts_buf)));
         GPSD_LOG(LOG_IO, &session->context->errout,
-             "Time bias: %u ns, accuracy %#02x, source %u, "
+             "SiRF V: MID 67,16 Time bias: %u ns, accuracy %#02x, source %u, "
              "msg_info %#02x, sats %u\n",
              time_bias, time_accuracy, time_source, msg_info,
              num_of_sats);
@@ -1052,7 +1166,8 @@ static gps_mask_t sirf_msg_67_16(struct gps_device_t *session,
             session->gpsdata.skyview[st].used = true;
         }
         GPSD_LOG(LOG_IO, &session->context->errout,
-                 "sat_info %04x gnssId %u svId %3u o %2u PRN %3u az %4.1f "
+                 "SiRF V: MID 67,16 sat_info %04x gnssId %u svId %3u "
+                 "o %2u PRN %3u az %4.1f "
                  "el %5.1f ss %5.1f\n",
                  sat_info, gnssId, svId, other_info, PRN, azimuth,
                  elevation, ss);
@@ -1077,6 +1192,8 @@ static gps_mask_t sirf_msg_67(struct gps_device_t *session,
     gps_mask_t mask = 0;
 
     if (2 > len) {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "SiRF: MID (0x43) runt len %zu\n", len);
         return 0;
     }
 
@@ -1099,6 +1216,8 @@ static gps_mask_t sirf_msg_qresp(struct gps_device_t *session,
 {
 
     if (3 > len) {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "SiRF: MID (0x51) runt len %zu\n", len);
         return 0;
     }
 
@@ -1106,6 +1225,28 @@ static gps_mask_t sirf_msg_qresp(struct gps_device_t *session,
              "SiRF IV: unused MID_QUERY_RESP 0x51 (81), Q MID: %d, "
              "SID: %d Elen: %d\n",
              buf[1], buf[2], buf[3]);
+    return 0;
+}
+
+// SBAS 50 (0x32)
+static gps_mask_t sirf_msg_sbas(struct gps_device_t *session,
+                                unsigned char *buf, size_t len)
+{
+    unsigned char prn, mode, timeout, flags;
+
+    if (13 != len) {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "SiRF: MID (0x32) runt len %zu\n", len);
+        return 0;
+    }
+
+    prn = buf[1];
+    mode = buf[2];
+    timeout = buf[3];
+    flags = buf[4];
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "SiRF: SBAS 0x32 PRN %u mode %u timeout %u flags x%x\n",
+             prn, mode, timeout, flags);
     return 0;
 }
 
@@ -1120,6 +1261,8 @@ static gps_mask_t sirf_msg_stats(struct gps_device_t *session,
     uint16_t ttff_nav;
 
     if (2 > len) {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "SiRF: MID (0xe1) runt len %zu\n", len);
         return 0;
     }
 
@@ -1185,6 +1328,8 @@ static gps_mask_t sirf_msg_tcxo(struct gps_device_t *session,
     unsigned int temp = 0;
 
     if (2 > len) {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "SiRF: MID (0x5d) runt len %zu\n", len);
         return 0;
     }
 
@@ -1281,6 +1426,8 @@ static gps_mask_t sirf_msg_swversion(struct gps_device_t *session,
     unsigned char *cp;
 
     if (1 > len) {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "SiRF: MID (0x06) runt len %zu\n", len);
         return 0;
     }
 
@@ -1326,7 +1473,7 @@ static gps_mask_t sirf_msg_swversion(struct gps_device_t *session,
         }
     }
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "SiRF: FV MID 0x06: fv: %0.2f, driverstate %0x "
+             "SiRF: FV 0x06: fv: %0.2f, driverstate %0x "
              "subtype '%s' len %lu buf1 %u buf2 %u\n",
              fv, session->driver.sirf.driverstate,
              session->subtype, (long)len, buf[1], buf[2]);
@@ -1345,6 +1492,8 @@ static gps_mask_t sirf_msg_navdata(struct gps_device_t *session,
     const unsigned int numwords = 10;
 
     if (43 != len) {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "SiRF: MID (0x08) runt len %zu\n", len);
         return 0;
     }
 
@@ -1390,8 +1539,11 @@ static gps_mask_t sirf_msg_svinfo(struct gps_device_t *session,
     uint32_t hsec;        // TOW in hundredths of seconds
     timespec_t ts_tow;
     char ts_buf[TIMESPEC_LEN];
+    gps_mask_t mask = 0;
 
     if (188 != len) {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "SiRF: MID (0x04) runt len %zu\n", len);
         return 0;
     }
 
@@ -1435,7 +1587,7 @@ static gps_mask_t sirf_msg_svinfo(struct gps_device_t *session,
             session->gpsdata.skyview[st].elevation != 0;
 #ifdef __UNUSED__
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "SiRF: PRN=%2d El=%3.2f Az=%3.2f ss=%3d stat=%04x %c\n",
+                 "SiRF: MTD 4 PRN=%2d El=%3.2f Az=%3.2f ss=%3d stat=%04x %c\n",
                  prn,
                  getub(buf, off + 2) / 2.0,
                  (getub(buf, off + 1) * 3) / 2.0,
@@ -1462,13 +1614,11 @@ static gps_mask_t sirf_msg_svinfo(struct gps_device_t *session,
             session->gpsdata.skyview[i].used = true;
         }
     }
-    if (3 > st) {
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "SiRF: NTPD not enough satellites seen: %d\n", st);
-    } else {
+    if (3 <= st) {
         // SiRF says if 3 sats in view the time is good
+        mask |= NTPTIME_IS;
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "SiRF: NTPD valid time MID 0x04, seen=%#02x, time:%s, "
+                 "SiRF: MTD 0x04 NTPD valid time seen %#02x time %s, "
                  "leap:%d\n",
                  session->driver.sirf.time_seen,
                  timespec_str(&session->gpsdata.skyview_time, ts_buf,
@@ -1478,7 +1628,7 @@ static gps_mask_t sirf_msg_svinfo(struct gps_device_t *session,
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "SiRF: MTD 0x04: visible=%d mask={SATELLITE}\n",
              session->gpsdata.satellites_visible);
-    return SATELLITE_SET;
+    return mask | SATELLITE_SET;
 }
 
 // return NTP time-offset fudge factor for this device
@@ -1496,12 +1646,9 @@ static double sirf_time_offset(struct gps_device_t *session)
     } else if ((unsigned char)98 == session->driver.sirf.lastid) {
         // u-blox EMND message
         retval                      = 0.570;
-#ifdef __UNUSED
     } else if ((unsigned char)41 == session->driver.sirf.lastid) {
         // geodetic-data message
         retval = 0.570;
-#endif  // __UNUSED__
-
     } else if ((unsigned char)2 == session->driver.sirf.lastid) {
         // the Navigation Solution message
         if (SOURCE_USB == session->sourcetype ||
@@ -1531,7 +1678,7 @@ static double sirf_time_offset(struct gps_device_t *session)
     return retval;
 }
 
-// Measured Navigation Data Out ID 2 (0x02)
+// Measured Navigation Data Out MND ID 2 (0x02)
 static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
                                   unsigned char *buf, size_t len)
 {
@@ -1542,9 +1689,12 @@ static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
     timespec_t tow;
     gps_mask_t mask = 0;
     char ts_buf[TIMESPEC_LEN];
+    double d;
 
     // later versions are 47 bytes long
     if (41 > len) {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "SiRF: MID (0x02) runt len %zu\n", len);
         return 0;
     }
 
@@ -1556,9 +1706,11 @@ static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
      * we get that data from the svinfo packet.
      */
     // position/velocity is bytes 1-18
+    // ecef position  is in meters
     session->newdata.ecef.x = (double)getbes32(buf, 1);
     session->newdata.ecef.y = (double)getbes32(buf, 5);
     session->newdata.ecef.z = (double)getbes32(buf, 9);
+    // ecef velocity is in meters/second * 8
     session->newdata.ecef.vx = (double)getbes16(buf, 13) / 8.0;
     session->newdata.ecef.vy = (double)getbes16(buf, 15) / 8.0;
     session->newdata.ecef.vz = (double)getbes16(buf, 17) / 8.0;
@@ -1578,18 +1730,20 @@ static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
     } else {
         session->newdata.status = STATUS_GPS;
     }
+    // byte 20 is HDOP, or PDOP!
+    d = (double)getub(buf, 20) / 5.0;
     if (4 == (navtype & 0x07) ||
         6 == (navtype & 0x07)) {
         session->newdata.mode = MODE_3D;
+        session->gpsdata.dop.pdop = d;
     } else if (0 != session->newdata.status) {
         session->newdata.mode = MODE_2D;
+        session->gpsdata.dop.hdop = d;
     }
-    // byte 20 is HDOP
-    session->gpsdata.dop.hdop = (double)getub(buf, 20) / 5.0;
     // byte 21 is nav_mode2, not clear how to interpret that
     nav_mode2 = getub(buf, 21);
 
-    gps_week = getbes16(buf, 22);
+    gps_week = getbeu16(buf, 22);    // modulo 1024
     iTOW = getbeu32(buf, 24);
     /* Gack.  The doc says early SiRF scales iTOW by 100, later ones
      * by 1000.  But that does not seem to be true in sirfstar V. */
@@ -1599,11 +1753,11 @@ static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
 
     if (MODE_NO_FIX >= session->newdata.mode) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "SiRF: MID 0x02 NTPD no fix, mode: %d\n",
+                 "SiRF: MND 0x02 NTPD no fix, mode: %d\n",
                  session->newdata.mode);
     } else {
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "SiRF: MID 0x02 NTPD valid time, seen %#02x time %s "
+                 "SiRF: MND 0x02 NTPD valid time, seen %#02x time %s "
                  "leap %d nav_mode2 %#x\n",
                  session->driver.sirf.time_seen,
                  timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
@@ -1633,7 +1787,6 @@ static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
     return mask;
 }
 
-#ifdef __UNUSED__
 /***************************************************************************
  We've stopped interpreting GND (0x29) for the following reasons:
 
@@ -1657,29 +1810,41 @@ static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
 
 Code left in place in case we need to reverse this decision.
 
+update: Jan 2022
+
+Decode the sentence, we need the extended week.
+The cycle ender seems to be preventing the previously seen duplicate TPV.
+For now be cautious on the mask.
+
 ***************************************************************************/
 static gps_mask_t sirf_msg_geodetic(struct gps_device_t *session,
                                     unsigned char *buf, size_t len)
 {
-    unsigned short navtype;
+    unsigned navtype;
     gps_mask_t mask = 0;
-    double eph;
-    double dbl_tmp;
+    char ts_buf[TIMESPEC_LEN];
+    unsigned gps_week;
+    timespec_t tow;
+    unsigned long iTOW;
 
     if (91 != len) {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "SiRF: MID (0x29) runt len %zu\n", len);
         return 0;
     }
 
-    session->gpsdata.sentence_length = 91;
-
-    navtype = (unsigned short)getbeu16(buf, 3);
-    session->newdata.status = STATUS_UNK;
-    if (navtype & 0x80) {
+    navtype = getbeu16(buf, 3);
+    if (0 == (navtype & 0x07)) {
+        // no fix
+        session->newdata.status = STATUS_UNK;
+    } else if (7 == (navtype & 0x07)) {
+        session->newdata.status = STATUS_DR;
+    } else if (0x80 == (navtype & 0x80)) {
         session->newdata.status = STATUS_DGPS;
-    } else if (0 < (navtype & 0x07) &&
-               7 > (navtype & 0x07)) {
+    } else {
         session->newdata.status = STATUS_GPS;
     }
+
     session->newdata.mode = MODE_NO_FIX;
     if (4 == (navtype & 0x07) ||
         6 == (navtype & 0x07)) {
@@ -1687,37 +1852,60 @@ static gps_mask_t sirf_msg_geodetic(struct gps_device_t *session,
     } else if (session->newdata.status) {
         session->newdata.mode = MODE_2D;
     }
+
+    gps_week = getbeu16(buf, 5);  // extended gps week
+    iTOW = getbeu32(buf, 7);
+    MSTOTS(&tow, iTOW);
+    session->newdata.time = gpsd_gpstime_resolv(session, gps_week, tow);
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "SiRF: GND 0x29: Navtype = 0x%0x, Status = %d, mode = %d\n",
-             navtype, session->newdata.status, session->newdata.mode);
-    mask |= STATUS_SET | MODE_SET;
+             "SiRF: GND 0x29: Navtype 0x%0x Status %d mode %d week %u "
+             "iTOW %lu\n",
+             navtype, session->newdata.status, session->newdata.mode,
+             gps_week, iTOW);
+    mask |= STATUS_SET | MODE_SET | TIME_SET;
 
     session->newdata.latitude = getbes32(buf, 23) * 1e-7;
     session->newdata.longitude = getbes32(buf, 27) * 1e-7;
-    if (0 != session->newdata.latitude &&
-        0 != session->newdata.longitude) {
-        mask |= LATLON_SET;
+    if (MODE_NO_FIX < session->newdata.mode) {
+        unsigned u;
+
+        if (3 <= session->gpsdata.satellites_visible) {
+            mask |= NTPTIME_IS;
+        }
+        if (0 != session->newdata.latitude &&
+            0 != session->newdata.longitude) {
+            // annoying if you happen be be at 9/0
+            mask |= LATLON_SET;
+        }
+
+        u = getbeu32(buf, 50);
+        if (0 != u) {
+            session->newdata.eph = u * 1e-2;
+            mask |= HERR_SET;
+        }
+        u = getbeu32(buf, 54);
+        if (0 != u) {
+            // vertical error
+            session->newdata.epv = u * 1e-2;
+            mask |= VERR_SET;
+        }
+        u = getbeu16(buf, 62);
+        if (0 != u) {
+            session->newdata.eps = u * 1e-2;
+            mask |= SPEEDERR_SET;
+        }
+        // HDOP should be available at byte 89, but in 231 it's zero.
+        u = getub(buf, 89);
+        if (0 != u) {
+            session->gpsdata.dop.hdop = u * 0.2;
+        }
     }
 
-    if (0 < (eph = getbes32(buf, 50))) {
-        session->newdata.eph = eph * 1e-2;
-        mask |= HERR_SET;
-    }
-    dbl_temp = getbes32(buf, 54) * 1e-2;
-    if (0.01 < dbl_temp) {
-        session->newdata.epv = dbl_temp;
-    }
-    if (0 < (session->newdata.eps = getbes16(buf, 62) * 1e-2)) {
-        mask |= SPEEDERR_SET;
-    }
-
-    // HDOP should be available at byte 89, but in 231 it's zero.
-    //session->gpsdata.dop.hdop = (unsigned int)getub(buf, 89) * 0.2;
 
     if ((MODE_NO_FIX < session->newdata.mode) &&
         (session->driver.sirf.driverstate & SIRF_GE_232)) {
         struct tm unpacked_date;
-        double subseconds;
+        unsigned subseconds;
         /*
          * Early versions of the SiRF protocol manual don't document
          * this sentence at all.  Some that do incorrectly
@@ -1752,33 +1940,26 @@ static gps_mask_t sirf_msg_geodetic(struct gps_device_t *session,
          */
         memset(&unpacked_date, 0, sizeof(unpacked_date));
         unpacked_date.tm_year = (int)getbeu16(buf, 11) - 1900;
-        unpacked_date.tm_mon = (int)getub(buf, 13) - 1;
-        unpacked_date.tm_mday = (int)getub(buf, 14);
-        unpacked_date.tm_hour = (int)getub(buf, 15);
-        unpacked_date.tm_min = (int)getub(buf, 16);
+        unpacked_date.tm_mon = (int)buf[13] - 1;
+        unpacked_date.tm_mday = (int)buf[14];
+        unpacked_date.tm_hour = (int)buf[15];
+        unpacked_date.tm_min = (int)buf[16];
         subseconds = getbeu16(buf, 17);
         unpacked_date.tm_sec = subseconds / 1000;
-        session->newdata.time.tv_sec = mkgmtime(&unpacked_date);
-        session->newdata.time.tv_nsec = (long)((subseconds % 1000) * 1000000L);
+        // we use iTOW time, not this UTC time, which is often missing
 
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "SiRF: GND 0x29 UTC: %lf\n",
-                 session->newdata.time);
-        if (MODE_NO_FIX >= session->newdata.mode) {
-            GPSD_LOG(LOG_PROG, &session->context->errou,
-                     "SiRF: NTPD no fix, mode: $d\n",
-                     session->newdata.mode);
-        } else if (0 == unpacked_date.tm_year) {
-            GPSD_LOG(LOG_PROG, &session->context->errou,
-                     "SiRF: NTPD no year\n",
-                     session->newdata.mode);
-        } else {
+        if (MODE_2D <= session->newdata.mode &&
+            0 != unpacked_date.tm_year) {
             GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "SiRF: NTPD valid time MID 0x29, seen=%#02x\n",
-                     session->driver.sirf.time_seen);
-        }
-        if (3 <= session->gpsdata.satellites_visible) {
-            mask |= NTPTIME_IS;
+                     "SiRF: GND 0x29 NTPD valid time, seen=%#02x "
+                     "%4d/%02d/%02d %02d:%02d:%02.6f\n",
+                     session->driver.sirf.time_seen,
+                     unpacked_date.tm_year + 1900,
+                     unpacked_date.tm_mon + 1,
+                     unpacked_date.tm_mday,
+                     unpacked_date.tm_hour,
+                     unpacked_date.tm_min,
+                     subseconds * 0.001);
         }
 
         // alititude WGS84
@@ -1787,18 +1968,20 @@ static gps_mask_t sirf_msg_geodetic(struct gps_device_t *session,
         // Let gpsd_error_model() deal with geoid_sep and altHAE
         // skip 1 byte of map datum
         session->newdata.speed = getbeu16(buf, 40) * 1e-2;
+        // true track
         session->newdata.track = getbeu16(buf, 42) * 1e-2;
-        // skip 2 bytes of magnetic variation
+        // skip 2 bytes of magnetic variation, doc says not implemented
         session->newdata.climb = getbes16(buf, 46) * 1e-2;
         mask |= TIME_SET | SPEED_SET | TRACK_SET;
         if (MODE_3D == session->newdata.mode) {
             mask |= ALTITUDE_SET | CLIMB_SET;
        }
     }
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "SiRF: GND 0x29: time=%.2f lat=%.2f lon=%.2f altHAE=%.2f "
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "SiRF: GND 0x29: time=%s lat=%.2f lon=%.2f altHAE=%.2f "
              "track=%.2f speed=%.2f mode=%d status=%d\n",
-             session->newdata.time,
+             timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
              session->newdata.latitude,
              session->newdata.longitude,
              session->newdata.altHAE,
@@ -1808,7 +1991,6 @@ static gps_mask_t sirf_msg_geodetic(struct gps_device_t *session,
              session->newdata.status);
     return mask;
 }
-#endif /* __UNUSED__ */
 
 // decode Navigation Parameters MID 19 (0x13) response to ID 152
 static gps_mask_t sirf_msg_sysparam(struct gps_device_t *session,
@@ -1816,6 +1998,8 @@ static gps_mask_t sirf_msg_sysparam(struct gps_device_t *session,
 {
 
     if (65 > len) {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "SiRF: MID (0x13) runt len %zu\n", len);
         return 0;
     }
 
@@ -1851,6 +2035,8 @@ static gps_mask_t sirf_msg_ublox(struct gps_device_t *session,
     char ts_buf[TIMESPEC_LEN];
 
     if (39 != len) {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "SiRF: MID (0x62) runt len %zu\n", len);
         return 0;
     }
 
@@ -1868,10 +2054,14 @@ static gps_mask_t sirf_msg_ublox(struct gps_device_t *session,
     navtype = (unsigned short)getub(buf, 25);
     session->newdata.status = STATUS_UNK;
     session->newdata.mode = MODE_NO_FIX;
-    if (navtype & 0x80) {
+    if (0 == (navtype & 0x07)) {
+        // no fix
+        session->newdata.status = STATUS_UNK;
+    } else if (7 == (navtype & 0x07)) {
+        session->newdata.status = STATUS_DR;
+    } else if (0x80 == (navtype & 0x80)) {
         session->newdata.status = STATUS_DGPS;
-    } else if (0 < (navtype & 0x07) &&
-               7 > (navtype & 0x07)) {
+    } else {
         session->newdata.status = STATUS_GPS;
     }
     if (4 == (navtype & 0x07) ||
@@ -1905,10 +2095,10 @@ static gps_mask_t sirf_msg_ublox(struct gps_device_t *session,
         session->newdata.time.tv_nsec = (msec % 1000) * 1000000L;
         if (0 == (session->driver.sirf.time_seen & TIME_SEEN_UTC_2)) {
             GPSD_LOG(LOG_RAW, &session->context->errout,
-                     "SiRF: NTPD just SEEN_UTC_2\n");
+                     "SiRF: EMND 0x62 NTPD just SEEN_UTC_2\n");
         }
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "SiRF: NTPD valid time MID 0x62, seen=%#02x\n",
+                 "SiRF: EMND 0x62 NTPD valid time, seen=%#02x\n",
                  session->driver.sirf.time_seen);
         session->driver.sirf.time_seen |= TIME_SEEN_UTC_2;
         /* The mode byte, bit 6 tells us if leap second is valid.
@@ -1924,7 +2114,7 @@ static gps_mask_t sirf_msg_ublox(struct gps_device_t *session,
     session->gpsdata.dop.tdop = (int)getub(buf, 38) / 5.0;
     session->driver.sirf.driverstate |= UBLOX;
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "SiRF: EMD 0x62: time=%s lat=%.2f lon=%.2f altHAE=%.2f "
+             "SiRF: EMND 0x62: time=%s lat=%.2f lon=%.2f altHAE=%.2f "
              "speed=%.2f track=%.2f climb=%.2f mode=%d status=%d gdop=%.2f "
              "pdop=%.2f hdop=%.2f vdop=%.2f tdop=%.2f\n",
              timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
@@ -1945,6 +2135,8 @@ static gps_mask_t sirf_msg_ppstime(struct gps_device_t *session,
     gps_mask_t mask = 0;
 
     if (19 > len) {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "SiRF: MID (0x34) runt len %zu\n", len);
         return 0;
     }
 
@@ -1990,6 +2182,8 @@ static gps_mask_t sirf_msg_nl(struct gps_device_t *session,
 {
 
     if (67 != len) {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "SiRF: MID (0x38) runt len %zu\n", len);
         return 0;
     }
 
@@ -2049,6 +2243,8 @@ static gps_mask_t sirf_msg_ee(struct gps_device_t *session,
 {
 
     if (67 != len) {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "SiRF: MID (0x38) runt len %zu\n", len);
         return 0;
     }
 
@@ -2077,6 +2273,8 @@ gps_mask_t sirf_parse(struct gps_device_t * session, unsigned char *buf,
 {
 
     if (0 == len) {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "SiRF: runt len %zu\n", len);
         return 0;
     }
 
@@ -2227,14 +2425,10 @@ gps_mask_t sirf_parse(struct gps_device_t * session, unsigned char *buf,
         return 0;
 
     case 0x29:                  // Geodetic Navigation Data MID 41
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "SiRF: unused MID 41 (0x29) Geodetic Nav Data\n");
-        return 0;
+        return sirf_msg_geodetic(session, buf, len);
 
     case 0x32:                  // SBAS corrections MID 50
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "SiRF: unused MID 50 (0x32) SBAS\n");
-        return 0;
+        return sirf_msg_sbas(session, buf, len);
 
     case 0x33:                  // MID_SiRFNavNotification MID 51, 0x33
         return sirf_msg_navnot(session, buf, len);
@@ -2290,7 +2484,7 @@ gps_mask_t sirf_parse(struct gps_device_t * session, unsigned char *buf,
     case 0x5d:                // TCXO Output MID 93
         return sirf_msg_tcxo(session, buf, len);
 
-    case 0x62:          // u-blox Extended Measured Navigation Data MID 98
+   case 0x62:          // u-blox Extended Measured Navigation Data MID 98
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF: MID 98 (0x62) u-blox EMND\n");
         return sirf_msg_ublox(session, buf, len) | (CLEAR_IS | REPORT_IS);

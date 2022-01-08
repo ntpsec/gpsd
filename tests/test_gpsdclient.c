@@ -7,14 +7,13 @@
  * SPDX-License-Identifier: BSD-2-clause
 */
 
-/* first so the #defs work */
-#include "../include/gpsd_config.h"
+#include "../include/gpsd_config.h"    // first so the #ifdefs work
 
-#include <math.h>              /* for nan() */
+#include <math.h>                      // for nan()
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>            /* for getopt() */
+#include <unistd.h>                    // for getopt()
 
 #include "../include/compiler.h"       // for FALLTHROUGH
 #include "../include/gpsdclient.h"
@@ -33,71 +32,71 @@ struct test {
 #define NANFLAG 9999
 
 struct test tests[] = {
-    /* 1.999999995 sec */
+    // 1.999999995 sec
     {(1.999999995),
-     "  2.00000000",               /* rounded up */
-     "  2.00000000 E",             /* rounded up */
-     "  2 00.000000'",             /* rounded up */
-     "  2 00.000000' E",           /* rounded up */
+     "  2.00000000",               // rounded up
+     "  2.00000000 E",             // rounded up
+     "  2 00.000000'",             // rounded up
+     "  2 00.000000' E",           // rounded up
      "  1 59' 59.99998\"",
      "  1 59' 59.99998\" N"},
-    /* 3.999999999 sec */
+    // 3.999999999 sec
     {(3.999999994),
-     "  3.99999999",               /* not rounded up */
-     "  3.99999999 E",             /* not rounded up */
-     "  4 00.000000'",             /* rounded up */
-     "  4 00.000000' E",           /* rounded up */
+     "  3.99999999",               // not rounded up
+     "  3.99999999 E",             // not rounded up
+     "  4 00.000000'",             // rounded up
+     "  4 00.000000' E",           // rounded up
      "  3 59' 59.99998\"",
      "  3 59' 59.99998\" N"},
-    /* 5 degree, 1.99999960 arcmin */
+    // 5 degree, 1.99999960 arcmin
     {(5.0 + 1.999999600/60.0),
      "  5.03333333",
      "  5.03333333 E",
-     "  5 02.000000'",             /* rounded up */
-     "  5 02.000000' E",           /* rounded up */
+     "  5 02.000000'",             // rounded up
+     "  5 02.000000' E",           // rounded up
      "  5 01' 59.99998\"",
      "  5 01' 59.99998\" N"},
-    /* 6 degree, 1.99999940 arcmin */
+    // 6 degree, 1.99999940 arcmin
     {(6.0 + 1.999999400/60.0),
      "  6.03333332",
      "  6.03333332 E",
-     "  6 01.999999'",             /* not rounded up */
-     "  6 01.999999' E",           /* not rounded up */
+     "  6 01.999999'",             // not rounded up
+     "  6 01.999999' E",           // not rounded up
      "  6 01' 59.99996\"",
      "  6 01' 59.99996\" N"},
-    /* 7 degree, 59.99999960 arcmin */
+    // 7 degree, 59.99999960 arcmin
     {(7.0 + 59.999999600/60.0),
      "  7.99999999",
      "  7.99999999 E",
-     "  8 00.000000'",             /* rounded up */
-     "  8 00.000000' E",           /* rounded up */
+     "  8 00.000000'",             // rounded up
+     "  8 00.000000' E",           // rounded up
      "  7 59' 59.99998\"",
      "  7 59' 59.99998\" N"},
-    /* 9 degree, 59.99999940 arcmin */
+    // 9 degree, 59.99999940 arcmin
     {(9.0 + 59.999999400/60.0),
      "  9.99999999",
      "  9.99999999 E",
-     "  9 59.999999'",             /* not rounded up */
-     "  9 59.999999' E",             /* not rounded up */
+     "  9 59.999999'",             // not rounded up
+     "  9 59.999999' E",           // not rounded up
      "  9 59' 59.99996\"",
      "  9 59' 59.99996\" N"},
-    /* 11 degree, 1 arcminute, 1.99999600 arcsec */
+    // 11 degree, 1 arcminute, 1.99999600 arcsec
     {(11.0 + 1.0/60.0 + 1.99999600/3600.0),
      " 11.01722222",
      " 11.01722222 E",
      " 11 01.033333'",
      " 11 01.033333' E",
-     " 11 01' 02.00000\"",        /* rounded up */
-     " 11 01' 02.00000\" N"},     /* rounded up */
-    /* 12 deg, 2 min, 2.99999400 sec */
+     " 11 01' 02.00000\"",        // rounded up
+     " 11 01' 02.00000\" N"},     // rounded up
+    // 12 deg, 2 min, 2.99999400 sec
     {(12.0 + 2.0/60.0 + 2.99999400/3600.0),
      " 12.03416667",
      " 12.03416667 E",
      " 12 02.050000'",
      " 12 02.050000' E",
-     " 12 02' 02.99999\"",        /* not rounded up */
-     " 12 02' 02.99999\" N"},     /* not rounded up */
-    /* 13.00000001 sec, LSB of dd */
+     " 12 02' 02.99999\"",        // not rounded up
+     " 12 02' 02.99999\" N"},     // not rounded up
+    // 13.00000001 sec, LSB of dd
     {-13.00000001,
      " 13.00000001",
      " 13.00000001 W",
@@ -105,7 +104,7 @@ struct test tests[] = {
      " 13 00.000001' W",
      " 13 00' 00.00004\"",
      " 13 00' 00.00004\" S"},
-    /* 14 deg, 0.000001 min, LSB of ddmm */
+    // 14 deg, 0.000001 min, LSB of ddmm
     {(14.0 + 0.000001/60.0),
      " 14.00000002",
      " 14.00000002 E",
@@ -113,7 +112,7 @@ struct test tests[] = {
      " 14 00.000001' E",
      " 14 00' 00.00006\"",
      " 14 00' 00.00006\" N"},
-    /* 15 deg, 2 min, 2.00001 sec, LSB of ddmmss */
+    // 15 deg, 2 min, 2.00001 sec, LSB of ddmmss
     {(15.0 + 2.0/60.0 + 2.00001/3600.0),
      " 15.03388889",
      " 15.03388889 E",
@@ -121,8 +120,8 @@ struct test tests[] = {
      " 15 02.033334' E",
      " 15 02' 02.00001\"",
      " 15 02' 02.00001\" N"},
-    /* -44.99999999999 */
-    /* fabs() */
+    // -44.99999999999
+    // fabs()
     {-44.0,
      " 44.00000000",
      " 44.00000000 W",
@@ -130,16 +129,16 @@ struct test tests[] = {
      " 44 00.000000' W",
      " 44 00' 00.00000\"",
      " 44 00' 00.00000\" S"},
-    /* 359.99999999999 */
+    // 359.99999999999
     {359.99999999999,
-     "  0.00000000",            /* rounded up, and rolled over */
-     "  0.00000000 E",            /* rounded up, and rolled over */
+     "  0.00000000",              // rounded up, and rolled over
+     "  0.00000000 E",            // rounded up, and rolled over
      "  0 00.000000'",
      "  0 00.000000' E",
      "  0 00' 00.00000\"",
      "  0 00' 00.00000\" N"},
-    /* 361 */
-    /* nan because out of range */
+    // 361
+    // nan because out of range
     {361,
      "n/a",
      "n/a",
@@ -147,8 +146,8 @@ struct test tests[] = {
      "n/a",
      "n/a",
      "n/a"},
-    /* -361 */
-    /* nan, just because */
+    // -361
+    // nan, just because
     {NANFLAG,
      "n/a",
      "n/a",
@@ -156,8 +155,8 @@ struct test tests[] = {
      "n/a",
      "n/a",
      "n/a"},
-    /* FP_INFINITE */
-    /* gcc too 'smart' to let us put a Nan here */
+    // FP_INFINITE
+    // gcc too 'smart' to let us put a Nan here
     {9999,
      "n/a",
      "n/a",
@@ -233,7 +232,7 @@ static int strcmp_null(char *s1, char *s2)
 int main(int argc, char **argv)
 {
     char buf[20];
-    char *s;
+    const char *s;
     unsigned int i;
     int verbose = 0;
     int fail_count = 0;
@@ -261,9 +260,9 @@ int main(int argc, char **argv)
     }
 
 
-    for (i = 0; i < (sizeof(tests)/sizeof(struct test)); i++) {
+    for (i = 0; i < (sizeof(tests) / sizeof(struct test)); i++) {
         if (NANFLAG == tests[i].deg) {
-           /* make it a NaN */
+           // make it a NaN
            tests[i].deg = nan("a");
         }
         s = deg_to_str(deg_dd, tests[i].deg);
@@ -313,7 +312,7 @@ int main(int argc, char **argv)
         }
     }
 
-    for (i = 0; i < (sizeof(tests2)/sizeof(struct test2)); i++) {
+    for (i = 0; i < (sizeof(tests2) / sizeof(struct test2)); i++) {
         s = maidenhead(tests2[i].lat, tests2[i].lon);
         if (0 != strcmp(s, tests2[i].maidenhead)) {
             printf("ERROR: %s s/b %s\n", s, tests2[i].maidenhead);
@@ -323,7 +322,7 @@ int main(int argc, char **argv)
         }
     }
 
-    for (i = 0; i < (sizeof(tests3)/sizeof(struct fixsource_t)); i++) {
+    for (i = 0; i < (sizeof(tests3) / sizeof(struct fixsource_t)); i++) {
         char spec[200];
 
         // no leftovers wanted
