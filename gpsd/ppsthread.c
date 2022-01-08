@@ -612,19 +612,22 @@ static int get_edge_rfc2783(struct inner_context_t *inner_context,
     memset((void *)&pi, 0, sizeof(pi));    // paranoia
     if (0 > time_pps_fetch(inner_context->kernelpps_handle, PPS_TSFMT_TSPEC,
                            &pi, &kernelpps_tv)) {
-
         char errbuf[BUFSIZ] = "unknown error";
-        if (ETIMEDOUT == errno || EINTR == errno) {
-                // just a timeout
-                thread_context->log_hook(thread_context, THREAD_INF,
-                    "KPPS:%s kernel PPS timeout %s(%d)\n",
-                    thread_context->devicename,
-                    pps_strerror_r(errno, errbuf, sizeof(errbuf)), errno);
-                return 1;
+
+        if (ETIMEDOUT == errno ||
+            EINTR == errno) {
+            // just a timeout
+            thread_context->log_hook(thread_context, THREAD_INF,
+                "KPPS:%s kernel PPS timeout %s(%d)\n",
+                thread_context->devicename,
+                pps_strerror_r(errno, errbuf, sizeof(errbuf)), errno);
+            return 1;
         }
         thread_context->log_hook(thread_context, THREAD_WARN,
-                                 "KPPS:%s kernel PPS failed %s\n",
-                                 thread_context->devicename, errbuf);
+                                 "KPPS:%s kernel PPS failed %s(%d)\n",
+                                 thread_context->devicename,
+                                 pps_strerror_r(errno, errbuf,
+                                                sizeof(errbuf)), errno);
         return 0;
     }
     if (inner_context->pps_canwait) {
@@ -645,13 +648,13 @@ static int get_edge_rfc2783(struct inner_context_t *inner_context,
         *edge = 1;
         *prev_edge = 0;
         if (0 == pi.clear_timestamp.tv_sec) {
-                /* brain damaged pps-gpio sometimes never fills in clear
-                 * so make it look like an invisible pulse
-                 * if clear is the leading edge, then we are off by the
-                 * pulse width */
-                *prev_clock_ts = pi.assert_timestamp;
+            /* brain damaged pps-gpio sometimes never fills in clear
+             * so make it look like an invisible pulse
+             * if clear is the leading edge, then we are off by the
+             * pulse width */
+            *prev_clock_ts = pi.assert_timestamp;
         } else {
-                *prev_clock_ts = pi.clear_timestamp;
+            *prev_clock_ts = pi.clear_timestamp;
         }
         *clock_ts = pi.assert_timestamp;
     } else {
