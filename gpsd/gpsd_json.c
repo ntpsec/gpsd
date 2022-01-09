@@ -2009,7 +2009,7 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                     rtcm->rtcmtypes.rtcm3_1015.header.satcount);
         break;
     case 1021:
-        str_appendf(buf, buflen, 
+        str_appendf(buf, buflen,
                     "\"src_name\":\"%s\",\"tar_name\":\"%s\","
                     "\"sys_id\":%u, \"plate_number\":%u,"
                     "\"lat_origin\":%f,\"lon_origin\":%f,"
@@ -2095,7 +2095,7 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
             (void)strlcat(buf, "\"TM\",", buflen);
             break;
         case PR_TMS:
-            (void)strlcat(buf, "\"TMs\",", buflen);
+            (void)strlcat(buf, "\"TMS\",", buflen);
             break;
         case PR_LCC1SP:
             (void)strlcat(buf, "\"LCC1SP\",", buflen);
@@ -2248,23 +2248,19 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                     rtcm->rtcmtypes.rtcm3_1230.station_id,
                     rtcm->rtcmtypes.rtcm3_1230.bias_indicator);
         // actual mask order is undocumented...
-        if (1 & rtcm->rtcmtypes.rtcm3_1230.signals_mask)
-        {
+        if (1 & rtcm->rtcmtypes.rtcm3_1230.signals_mask) {
             str_appendf(buf, buflen, ",\"l1_ca\":%d",
                         rtcm->rtcmtypes.rtcm3_1230.l1_ca_bias);
         }
-        if (2 & rtcm->rtcmtypes.rtcm3_1230.signals_mask)
-        {
+        if (2 & rtcm->rtcmtypes.rtcm3_1230.signals_mask) {
             str_appendf(buf, buflen, ",\"l1_p\":%d",
                         rtcm->rtcmtypes.rtcm3_1230.l1_p_bias);
         }
-        if (4 & rtcm->rtcmtypes.rtcm3_1230.signals_mask)
-        {
+        if (4 & rtcm->rtcmtypes.rtcm3_1230.signals_mask) {
             str_appendf(buf, buflen, ",\"l2_ca\":%d",
                         rtcm->rtcmtypes.rtcm3_1230.l2_ca_bias);
         }
-        if (8 & rtcm->rtcmtypes.rtcm3_1230.signals_mask)
-        {
+        if (8 & rtcm->rtcmtypes.rtcm3_1230.signals_mask) {
             str_appendf(buf, buflen, ",\"l2_p\":%d",
                         rtcm->rtcmtypes.rtcm3_1230.l2_p_bias);
         }
@@ -2279,8 +2275,7 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
 
     default:
         (void)strlcat(buf, "\"data\":[", buflen);
-        for (n = 0; n < rtcm->length; n++)
-        {
+        for (n = 0; n < rtcm->length; n++) {
             str_appendf(buf, buflen,
                         "\"0x%02x\",", (unsigned int)rtcm->rtcmtypes.data[n]);
         }
