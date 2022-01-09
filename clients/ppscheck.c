@@ -24,6 +24,7 @@
 
 #include "../include/gpsd_config.h"   // must be before all includes
 
+#include <dirent.h>                   // for opendir()
 #include <errno.h>
 #include <fcntl.h>                    // needed for open() and friends
 #ifdef HAVE_GETOPT_LONG
@@ -198,6 +199,51 @@ static void do_kpps(pps_handle_t kpps_handle)
 }
 #endif
 
+/* list_pps() - list pps devices
+ * linux specific
+ * /sys/devices/virtual/pps/pps?/
+ */
+static void list_pps(void)
+{
+    const char *sys = "/sys/devices/virtual/pps";
+    DIR *sys_dir;
+    struct dirent *dp;
+
+    sys_dir = opendir(sys);
+    if (NULL == sys_dir) {
+        (void)printf("ERROR: opendir(%s) failed: %.80s(%d)\n",
+                     sys, strerror(errno), errno);
+        return;
+    }
+    while (NULL != (dp = readdir(sys_dir))) {
+        char name_path[PATH_MAX];
+        char tty_path[PATH_MAX];
+        int fd;
+
+        if ('.' == dp->d_name[0]) {
+            continue;
+        }
+        (void)printf("INFO: %s  ", dp->d_name);
+        (void)snprintf(name_path, sizeof(name_path), "%s/%s/path",
+                       sys, dp->d_name);
+        fd = open(name_path, O_RDONLY);
+        if (-1 == fd) {
+            (void)printf("\nERROR: open(%s) failed: %.80s(%d)\n",
+                         name_path, strerror(errno), errno);
+            continue;
+        }
+        if (-1 == read(fd, tty_path, sizeof(tty_path))) {
+            (void)printf("\nERROR: read(%s) failed: %.80s(%d)\n",
+                         name_path, strerror(errno), errno);
+            continue;
+        }
+        puts(tty_path);
+        (void)close(fd);
+    }
+
+    closedir(sys_dir);
+}
+
 
 static void usage(void)
 {
@@ -232,11 +278,12 @@ int main(int argc, char *argv[])
     // int pps_fd = -1;
     pps_handle_t kpps_handle;
 #endif  // HAVE_SYS_TIMEPPS_H
-    const char *optstring = "?hVx:";
+    const char *optstring = "?hpVx:";
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
     static struct option long_options[] = {
         {"help", no_argument, NULL, 'h'},
+        {"pps", no_argument, NULL, 'p'},
         {"seconds", required_argument, NULL, 'x'},
         {"version", no_argument, NULL, 'V' },
         {NULL, 0, NULL, 0},
@@ -264,6 +311,9 @@ int main(int argc, char *argv[])
         default:
             usage();
             exit(EXIT_FAILURE);
+        case 'p':
+            list_pps();
+            exit(EXIT_SUCCESS);
         case 'V':
             (void)printf("%s: %s\n", argv[0], REVISION);
             exit(EXIT_SUCCESS);

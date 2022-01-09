@@ -19,7 +19,9 @@ ppscheck - tool to check a serial port for PPS
 
 == SYNOPSIS
 
-*ppscheck* [-?]  [--help] [--version] [-h] [-V] device
+*ppscheck* [-?] [--help] [-p] [--pps] [--version] [-h] [-V]
+
+*ppscheck* device
 
 == DESCRIPTION
 
@@ -60,9 +62,11 @@ signals you will never need to use it again on that device.
 The program accepts the following options:
 
 `+-?+, `+-h+, `+--help+`::
-  Display help message and terminate.
+  Print help message, then exit.
+`+-p+, `+--pps+`::
+  Print active PPS devices, then exit.
 `+-V+, `+--version+`::
-  Dump version and exit.
+  Dump version, then exit.
 `*-x SEC*, *--seconds SEC*`::
   Exit after delay of SEC seconds.
 
