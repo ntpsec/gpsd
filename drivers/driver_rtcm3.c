@@ -688,18 +688,18 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_1023.sys_id_num = (unsigned int)ugrab(8);
         rtcm->rtcmtypes.rtcm3_1023.shift_id_hori = (bool)ugrab(1);
         rtcm->rtcmtypes.rtcm3_1023.shift_id_vert = (bool)ugrab(1);
-        rtcm->rtcmtypes.rtcm3_1023.lat_origin = (signed int)sgrab(21) * PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1023.lon_origin = (signed int)sgrab(22) * PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1023.lat_origin = sgrab(21) * PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1023.lon_origin = sgrab(22) * PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1023.lat_extension = (unsigned int)ugrab(12) * PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1023.lon_extension = (unsigned int)ugrab(12) * PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1023.lat_mean = (signed int)sgrab(8) * TRANSLATION_MM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1023.lon_mean = (signed int)sgrab(8) * TRANSLATION_MM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1023.hgt_mean = (signed int)sgrab(15) * CM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1023.lat_mean = sgrab(8) * TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1023.lon_mean = sgrab(8) * TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1023.hgt_mean = sgrab(15) * CM_RESOLUTION;
 #define R1023 rtcm->rtcmtypes.rtcm3_1023.residuals[i]
         for (i = 0; i < RTCM3_GRID_SIZE; i++) {
-            R1023.lat_res = (signed int)sgrab(9) * RES_ARCSEC_RESOLUTION;
-            R1023.lon_res = (signed int)sgrab(9) * RES_ARCSEC_RESOLUTION;
-            R1023.hgt_res = (signed int)sgrab(9) * TRANSLATION_MM_RESOLUTION;
+            R1023.lat_res = sgrab(9) * RES_ARCSEC_RESOLUTION;
+            R1023.lon_res = sgrab(9) * RES_ARCSEC_RESOLUTION;
+            R1023.hgt_res = sgrab(9) * TRANSLATION_MM_RESOLUTION;
         }
 #undef R1023
         rtcm->rtcmtypes.rtcm3_1023.interp_meth_id_hori = (unsigned int)ugrab(2);
@@ -725,11 +725,11 @@ void rtcm3_unpack(const struct gps_context_t *context,
                        "than LCC2SP"; */
         rtcm->rtcmtypes.rtcm3_1025.sys_id_num = (unsigned short)ugrab(8);
         rtcm->rtcmtypes.rtcm3_1025.projection_type = (unsigned short)ugrab(6);
-        rtcm->rtcmtypes.rtcm3_1025.lat_origin = (signed int)sgrab(34) * PROJ_ORIGIN_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1025.lon_origin = (signed int)sgrab(35) * PROJ_ORIGIN_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1025.lat_origin = sgrab(34) * PROJ_ORIGIN_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1025.lon_origin = sgrab(35) * PROJ_ORIGIN_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1025.add_sno = (unsigned int)ugrab(30) * SCALE_PPM_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1025.false_east = (unsigned int)ugrab(36) * TRANSLATION_MM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1025.false_north = (unsigned int)ugrab(35) * TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1025.false_north = ugrab(35) * TRANSLATION_MM_RESOLUTION;
         unknown = false;
         break;
 

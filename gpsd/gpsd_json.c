@@ -2095,7 +2095,7 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
             (void)strlcat(buf, "\"TM\",", buflen);
             break;
         case PR_TMS:
-            (void)strlcat(buf, "\"TMs\",", buflen);
+            (void)strlcat(buf, "\"TMS\",", buflen);
             break;
         case PR_LCC1SP:
             (void)strlcat(buf, "\"LCC1SP\",", buflen);
@@ -2276,8 +2276,7 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
 
     default:
         (void)strlcat(buf, "\"data\":[", buflen);
-        for (n = 0; n < rtcm->length; n++)
-        {
+        for (n = 0; n < rtcm->length; n++) {
             str_appendf(buf, buflen,
                         "\"0x%02x\",", (unsigned int)rtcm->rtcmtypes.data[n]);
         }
