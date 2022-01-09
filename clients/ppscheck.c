@@ -29,6 +29,9 @@
 #ifdef HAVE_GETOPT_LONG
    #include <getopt.h>
 #endif
+#ifdef __linux__
+   #include <linux/tty.h>             // for N_PPS
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -215,6 +218,9 @@ static void usage(void)
 
 int main(int argc, char *argv[])
 {
+#ifdef __linux__
+    int ldisc = 0;     // tty line discipline
+#endif
     int fd;
     int handshakes;
     bool is_tty = false;
@@ -285,6 +291,18 @@ int main(int argc, char *argv[])
     // check that it is a tty
     if (0 == ioctl(fd, TIOCMGET, &handshakes)) {
         is_tty = true;
+#ifdef __linux__
+        /* check current line discipline
+         * if (0 == ioctl(fd, TIOCGETD, &ldisc)) {
+         * always returns ldisc == 0 */
+        // set PPS line discipline
+        ldisc = N_PPS;    // 18 - the PPS line discipline
+        if (0 > ioctl(fd, TIOCGETD, &ldisc)) {
+            (void)fprintf(stderr,
+                          "ERROR: ioctl(%s, TIOCSETD, 18) failed: %.80s(%d)\n",
+                          argv[1], strerror(errno), errno);
+        }
+#endif  // __linux__
     } else {
         (void)fprintf(stderr,
                       "INFO: ioctl(%s, TIOCMGET) failed: %.80s(%d)\n"
@@ -292,6 +310,7 @@ int main(int argc, char *argv[])
                       argv[1], strerror(errno), errno, argv[1]);
         is_tty = false;
     }
+
 #if defined(HAVE_SYS_TIMEPPS_H)
     // aka RFC2783
     if (0 == time_pps_create(fd, &kpps_handle)) {
@@ -356,7 +375,7 @@ int main(int argc, char *argv[])
              sp < hlines + sizeof(hlines) / sizeof(hlines[0]);
              sp++) {
             if (0 != (handshakes & sp->mask)) {
-                (void)fprintf(stdout, "  %s", sp->string);
+                (void)printf("  %s", sp->string);
             }
         }
         (void)puts("");

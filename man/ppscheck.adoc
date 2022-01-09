@@ -39,6 +39,18 @@ To check the first serial port do this:
 # ppscheck /dev/ttyS0
 ----
 
+As a side effect, *ppscheck* will try to create the matching /dev/ppsX
+by setting the tty line discipline (ldisc) to N_PPS (18).  You should then
+have a device /dev/pps0.  Note that not all serial devices support
+ldisc N_PPS.
+
+You can now use *ppscheck* to see if the KPPS (RFC 2783) interface
+is working:
+
+----
+# ppscheck /dev/pps0
+----
+
 *ppscheck* is not intended for routine use, but rather for diagnostic
 purposes. Once you have verified a particular device can output PPS
 signals you will never need to use it again on that device.
@@ -59,9 +71,12 @@ The program accepts the following options:
 The _device_ argument should be the pathname of a device. Such as
 /dev/ttyS0 or /dev/pps0. It will be the device monitored.
 
-Each output line is the second and nanosecond parts of a timestamp
-followed by the names of the handshake signals then asserted. Off
-transitions may generate lines with no signals asserted.
+For a tty device, each output line is the second and nanosecond parts
+of a timestamp followed by the names of the handshake signals then
+asserted. Off transitions may generate lines with no signals asserted.
+
+For a pps device, each output line will contain the assert and clear
+times last detected by KPPS.
 
 If you don't see output within a second, use *cgps*, *xgps*, or some
 other equivalent tool to check that your device has a satellite lock and

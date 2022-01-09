@@ -13,6 +13,7 @@
   PPS and TOFF JSON now include shm used, and real precision.
   Add initial, untested, TSIPv1 support
   split debug messages into different syslog() levels.
+  New ppscheck options, and can use /dev/ppsX devices.
 
 3.23.1: 2021-09-21
   Improve ubx cycle detection.
