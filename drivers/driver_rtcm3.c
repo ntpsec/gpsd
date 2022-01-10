@@ -47,7 +47,7 @@ SPDX-License-Identifier: BSD-2-clause
 
 #ifdef RTCM104V3_ENABLE
 
-/* scaling constants for RTCM3 real number types */
+// scaling constants for RTCM3 real number types
 #define GPS_PSEUDORANGE_RESOLUTION      0.02    // DF011
 #define PSEUDORANGE_DIFF_RESOLUTION     0.0005  // DF012, DF042
 #define CARRIER_NOISE_RATIO_UNITS       0.25    // DF015, DF045, DF050
@@ -55,17 +55,20 @@ SPDX-License-Identifier: BSD-2-clause
 #define GLONASS_PSEUDORANGE_RESOLUTION  0.02    // DF041
 #define ANTENNA_DEGREE_RESOLUTION       25e-6   // DF062
 #define GPS_EPOCH_TIME_RESOLUTION       0.1     // DF065
-#define PHASE_CORRECTION_RESOLUTION     0.5     // DF069, DF070, DF192, DF193, DF194, DF195
-#define TRANSLATION_MM_RESOLUTION       0.001   // DF156, DF157, DF158, DF166, DF167, DF168, DF169, DF196, DF197
+// DF069, DF070, DF192, DF193, DF194, DF195
+#define PHASE_CORRECTION_RESOLUTION     0.5
+// DF156, DF157, DF158, DF166, DF167, DF168, DF169, DF196, DF197
+#define TRANSLATION_MM_RESOLUTION       0.001
 #define VALIDITY_RESOLUTION             2.0     // DF152, DF153, DF154, DF155
 #define SCALE_PPM_RESOLUTION            1e-5    // DF162
 #define ROTATION_ARCSEC_RESOLUTION      2e-5    // DF159, DF160, DF161
-#define PROJ_ORIGIN_RESOLUTION          11e-9   // DF171, DF172, DF176, DF177, DF178, DF179, DF183, DF184, DF185, DF186
+// DF171, DF172, DF176, DF177, DF178, DF179, DF183, DF184, DF185, DF186
+#define PROJ_ORIGIN_RESOLUTION          11e-9
 #define DEG_ARCSEC_RESOLUTION           3600
 #define CM_RESOLUTION                   0.01    // DF198
 #define RES_ARCSEC_RESOLUTION           3e-5    // DF199, DF200
 
-/* Other magic values */
+// Other magic values
 #define GPS_INVALID_PSEUDORANGE         0x80000 // DF012, DF018
 #define GLONASS_INVALID_RANGEINCR       0x2000  // DF047
 #define GLONASS_CHANNEL_BASE            7       // DF040
@@ -191,9 +194,9 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
 void rtcm3_unpack(const struct gps_context_t *context,
                   struct rtcm3_t *rtcm, char *buf)
 {
-    unsigned int n, n2, n3, n4;
+    unsigned n, n2, n3, n4;
     int bitcount = 0;
-    unsigned int i;
+    unsigned i;
     signed long temp;
     bool unknown = true;              // we don't know how to decode
     const char *unknown_name = NULL;  // no decode, but maybe we know the name
@@ -201,16 +204,18 @@ void rtcm3_unpack(const struct gps_context_t *context,
 
 #define GPS_PSEUDORANGE(fld, len) \
     {temp = (unsigned long)ugrab(len);          \
-    if (temp == GPS_INVALID_PSEUDORANGE)        \
+    if (temp == GPS_INVALID_PSEUDORANGE) {      \
         fld.pseudorange = 0;                    \
-    else                                        \
-        fld.pseudorange = temp * GPS_PSEUDORANGE_RESOLUTION;}
+    } else {                                    \
+        fld.pseudorange = temp * GPS_PSEUDORANGE_RESOLUTION;} \
+    }
 #define RANGEDIFF(fld, len) \
     temp = (long)sgrab(len);                    \
-    if (temp == GPS_INVALID_PSEUDORANGE)        \
+    if (temp == GPS_INVALID_PSEUDORANGE) {      \
         fld.rangediff = 0;                      \
-    else                                        \
-        fld.rangediff = temp * PSEUDORANGE_DIFF_RESOLUTION;
+    } else {                                    \
+        fld.rangediff = temp * PSEUDORANGE_DIFF_RESOLUTION; \
+    }
 
     memset(rtcm, 0, sizeof(struct rtcm3_t));
 
@@ -224,13 +229,13 @@ void rtcm3_unpack(const struct gps_context_t *context,
                  preamble, mbz);
     }
 
-    rtcm->length = (unsigned int)ugrab(10);
+    rtcm->length = (unsigned)ugrab(10);
     if (2 > rtcm->length) {
         // ignore zero payload messages, they do not evan have type
         // need 2 bytes just to read 10 bit type.
         return;
     }
-    rtcm->type = (unsigned int)ugrab(12);
+    rtcm->type = (unsigned)ugrab(12);
 
     GPSD_LOG(LOG_RAW, &context->errout, "RTCM3: type %d payload length %d\n",
              rtcm->type, rtcm->length);
@@ -239,7 +244,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
     switch (rtcm->type) {
     case 1001:
         // GPS Basic RTK, L1 Only
-        rtcm->rtcmtypes.rtcm3_1001.header.station_id = (unsigned int)ugrab(12);
+        rtcm->rtcmtypes.rtcm3_1001.header.station_id = (unsigned)ugrab(12);
         rtcm->rtcmtypes.rtcm3_1001.header.tow = (time_t)ugrab(30);
         rtcm->rtcmtypes.rtcm3_1001.header.sync = (bool)ugrab(1);
         rtcm->rtcmtypes.rtcm3_1001.header.satcount = (unsigned short)ugrab(5);
@@ -259,7 +264,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
 
     case 1002:
         // GPS Extended RTK, L1 Only
-        rtcm->rtcmtypes.rtcm3_1002.header.station_id = (unsigned int)ugrab(12);
+        rtcm->rtcmtypes.rtcm3_1002.header.station_id = (unsigned)ugrab(12);
         rtcm->rtcmtypes.rtcm3_1002.header.tow = (time_t)ugrab(30);
         rtcm->rtcmtypes.rtcm3_1002.header.sync = (bool)ugrab(1);
         rtcm->rtcmtypes.rtcm3_1002.header.satcount = (unsigned short)ugrab(5);
@@ -281,7 +286,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
 
     case 1003:
         // GPS Basic RTK, L1 & L2
-        rtcm->rtcmtypes.rtcm3_1003.header.station_id = (unsigned int)ugrab(12);
+        rtcm->rtcmtypes.rtcm3_1003.header.station_id = (unsigned)ugrab(12);
         rtcm->rtcmtypes.rtcm3_1003.header.tow = (time_t)ugrab(30);
         rtcm->rtcmtypes.rtcm3_1003.header.sync = (bool)ugrab(1);
         rtcm->rtcmtypes.rtcm3_1003.header.satcount = (unsigned short)ugrab(5);
@@ -290,18 +295,18 @@ void rtcm3_unpack(const struct gps_context_t *context,
 #define R1003 rtcm->rtcmtypes.rtcm3_1003.rtk_data[i]
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_1003.header.satcount; i++) {
             R1003.ident = (unsigned short)ugrab(6);
-            R1003.L1.indicator =
-                (unsigned char)ugrab(1);
+            R1003.L1.indicator = (unsigned char)ugrab(1);
             GPS_PSEUDORANGE(R1003.L1, 24);
             RANGEDIFF(R1003.L1, 20);
             R1003.L1.locktime = (unsigned char)sgrab(7);
             R1003.L2.indicator = (unsigned char)ugrab(2);
             GPS_PSEUDORANGE(R1003.L2, 24);
             temp = (long)sgrab(20);
-            if (temp == GPS_INVALID_PSEUDORANGE)
+            if (temp == GPS_INVALID_PSEUDORANGE) {
                 R1003.L2.rangediff = 0;
-            else
+            } else {
                 R1003.L2.rangediff = temp * PSEUDORANGE_DIFF_RESOLUTION;
+            }
             R1003.L2.locktime = (unsigned char)sgrab(7);
         }
 #undef R1003
@@ -310,7 +315,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
 
     case 1004:
         // GPS Extended RTK, L1 & L2
-        rtcm->rtcmtypes.rtcm3_1004.header.station_id = (unsigned int)ugrab(12);
+        rtcm->rtcmtypes.rtcm3_1004.header.station_id = (unsigned)ugrab(12);
         rtcm->rtcmtypes.rtcm3_1004.header.tow = (time_t)ugrab(30);
         rtcm->rtcmtypes.rtcm3_1004.header.sync = (bool)ugrab(1);
         rtcm->rtcmtypes.rtcm3_1004.header.satcount = (unsigned short)ugrab(5);
@@ -488,7 +493,8 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_1012.header.interval = (unsigned short)ugrab(3);
 #define R1012 rtcm->rtcmtypes.rtcm3_1012.rtk_data[i]
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_1012.header.satcount; i++) {
-            unsigned int rangeincr;
+            unsigned rangeincr;
+
             R1012.ident = (unsigned short)ugrab(6);
             R1012.L1.indicator = (bool)ugrab(1);
             R1012.L1.channel = (short)ugrab(5) - GLONASS_CHANNEL_BASE;
@@ -499,11 +505,12 @@ void rtcm3_unpack(const struct gps_context_t *context,
             R1012.L1.CNR = (unsigned char)ugrab(8) * CARRIER_NOISE_RATIO_UNITS;
             R1012.L2.indicator = (bool)ugrab(2);
             rangeincr = ugrab(14);
-            if (rangeincr == GLONASS_INVALID_RANGEINCR)
+            if (rangeincr == GLONASS_INVALID_RANGEINCR) {
                 R1012.L2.pseudorange = 0;
-            else
+            } else {
                 R1012.L2.pseudorange = (rangeincr *
                                         GLONASS_PSEUDORANGE_RESOLUTION);
+            }
             RANGEDIFF(R1012.L2, 20);
             R1012.L2.locktime = (unsigned char)sgrab(7);
             R1012.L2.CNR = (unsigned char)ugrab(8) * CARRIER_NOISE_RATIO_UNITS;
@@ -612,35 +619,33 @@ void rtcm3_unpack(const struct gps_context_t *context,
                        "parameters";*/
         // Set Source-Name
         n = (unsigned)ugrab(5);
-        if (sizeof(rtcm->rtcmtypes.rtcm3_1021.src_name) <= n) {
+        if ((sizeof(rtcm->rtcmtypes.rtcm3_1021.src_name) -1) <= n) {
             // paranoia
             n = sizeof(rtcm->rtcmtypes.rtcm3_1021.src_name) - 1;
         }
-        for (i = 0; i < n; i++)
-        {
+        for (i = 0; i < n; i++) {
             rtcm->rtcmtypes.rtcm3_1021.src_name[i] = (char)ugrab(8);
         }
         rtcm->rtcmtypes.rtcm3_1021.src_name[n] = '\0';
         // Set Target-Name
         n2 = (unsigned)ugrab(5);
-        if (sizeof(rtcm->rtcmtypes.rtcm3_1021.tar_name) <= n2) {
+        if ((sizeof(rtcm->rtcmtypes.rtcm3_1021.tar_name) - 1) <= n2) {
             // paranoia
             n2 = sizeof(rtcm->rtcmtypes.rtcm3_1021.tar_name) - 1;
         }
-        for (i = 0; i < n2; i++)
-        {
+        for (i = 0; i < n2; i++) {
             rtcm->rtcmtypes.rtcm3_1021.tar_name[i] = (char)ugrab(8);
         }
         rtcm->rtcmtypes.rtcm3_1021.tar_name[n2] = '\0';
-        rtcm->rtcmtypes.rtcm3_1021.sys_id_num = (unsigned int)ugrab(8);
+        rtcm->rtcmtypes.rtcm3_1021.sys_id_num = (unsigned)ugrab(8);
 #define R1021 rtcm->rtcmtypes.rtcm3_1021.ut_tr_msg_id[i]
         for (i = 0; i < RTCM3_DF148_SIZE; i++) {
-            R1021 = (bool) ugrab(1);
+            R1021 = (bool)ugrab(1);
         }
 #undef R1021
-        rtcm->rtcmtypes.rtcm3_1021.plate_number = (unsigned int)ugrab(5);
-        rtcm->rtcmtypes.rtcm3_1021.computation_id = (unsigned int)ugrab(4);
-        rtcm->rtcmtypes.rtcm3_1021.height_id = (unsigned int)ugrab(2);
+        rtcm->rtcmtypes.rtcm3_1021.plate_number = (unsigned)ugrab(5);
+        rtcm->rtcmtypes.rtcm3_1021.computation_id = (unsigned)ugrab(4);
+        rtcm->rtcmtypes.rtcm3_1021.height_id = (unsigned)ugrab(2);
         rtcm->rtcmtypes.rtcm3_1021.lat_origin = sgrab(19) *
             VALIDITY_RESOLUTION / DEG_ARCSEC_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.lon_origin = sgrab(20) *
@@ -649,9 +654,12 @@ void rtcm3_unpack(const struct gps_context_t *context,
             VALIDITY_RESOLUTION / DEG_ARCSEC_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.lon_extension = sgrab(14) *
             VALIDITY_RESOLUTION / DEG_ARCSEC_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.x_trans = sgrab(23) * TRANSLATION_MM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.y_trans = sgrab(23) * TRANSLATION_MM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1021.z_trans = sgrab(23) * TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.x_trans = sgrab(23) *
+            TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.y_trans = sgrab(23) *
+            TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1021.z_trans = sgrab(23) *
+            TRANSLATION_MM_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.x_rot = sgrab(32) *
             ROTATION_ARCSEC_RESOLUTION / DEG_ARCSEC_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1021.y_rot = sgrab(32) *
@@ -684,16 +692,22 @@ void rtcm3_unpack(const struct gps_context_t *context,
         /* RTCM 3.1
          * Residuals Ellipsoidal Grid Representation
          */
-        /* unknown_name = "Residuals Ellipsoidal Grid Representation"; */
-        rtcm->rtcmtypes.rtcm3_1023.sys_id_num = (unsigned int)ugrab(8);
+        // unknown_name = "Residuals Ellipsoidal Grid Representation";
+        rtcm->rtcmtypes.rtcm3_1023.sys_id_num = (unsigned)ugrab(8);
         rtcm->rtcmtypes.rtcm3_1023.shift_id_hori = (bool)ugrab(1);
         rtcm->rtcmtypes.rtcm3_1023.shift_id_vert = (bool)ugrab(1);
-        rtcm->rtcmtypes.rtcm3_1023.lat_origin = sgrab(21) * PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1023.lon_origin = sgrab(22) * PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1023.lat_extension = (unsigned int)ugrab(12) * PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1023.lon_extension = (unsigned int)ugrab(12) * PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1023.lat_mean = sgrab(8) * TRANSLATION_MM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1023.lon_mean = sgrab(8) * TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1023.lat_origin = sgrab(21) *
+            PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1023.lon_origin = sgrab(22) *
+            PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1023.lat_extension = (unsigned)ugrab(12) *
+            PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1023.lon_extension = (unsigned)ugrab(12) *
+            PHASE_CORRECTION_RESOLUTION / DEG_ARCSEC_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1023.lat_mean = sgrab(8) *
+            TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1023.lon_mean = sgrab(8) *
+            TRANSLATION_MM_RESOLUTION;
         rtcm->rtcmtypes.rtcm3_1023.hgt_mean = sgrab(15) * CM_RESOLUTION;
 #define R1023 rtcm->rtcmtypes.rtcm3_1023.residuals[i]
         for (i = 0; i < RTCM3_GRID_SIZE; i++) {
@@ -702,10 +716,10 @@ void rtcm3_unpack(const struct gps_context_t *context,
             R1023.hgt_res = sgrab(9) * TRANSLATION_MM_RESOLUTION;
         }
 #undef R1023
-        rtcm->rtcmtypes.rtcm3_1023.interp_meth_id_hori = (unsigned int)ugrab(2);
-        rtcm->rtcmtypes.rtcm3_1023.interp_meth_id_vert = (unsigned int)ugrab(2);
-        rtcm->rtcmtypes.rtcm3_1023.grd_qual_id_hori = (unsigned int)ugrab(3);
-        rtcm->rtcmtypes.rtcm3_1023.grd_qual_id_vert = (unsigned int)ugrab(3);
+        rtcm->rtcmtypes.rtcm3_1023.interp_meth_id_hori = (unsigned)ugrab(2);
+        rtcm->rtcmtypes.rtcm3_1023.interp_meth_id_vert = (unsigned)ugrab(2);
+        rtcm->rtcmtypes.rtcm3_1023.grd_qual_id_hori = (unsigned)ugrab(3);
+        rtcm->rtcmtypes.rtcm3_1023.grd_qual_id_vert = (unsigned)ugrab(3);
         rtcm->rtcmtypes.rtcm3_1023.mjd = (unsigned short)ugrab(16);
         unknown = false;
         break;
@@ -725,11 +739,16 @@ void rtcm3_unpack(const struct gps_context_t *context,
                        "than LCC2SP"; */
         rtcm->rtcmtypes.rtcm3_1025.sys_id_num = (unsigned short)ugrab(8);
         rtcm->rtcmtypes.rtcm3_1025.projection_type = (unsigned short)ugrab(6);
-        rtcm->rtcmtypes.rtcm3_1025.lat_origin = sgrab(34) * PROJ_ORIGIN_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1025.lon_origin = sgrab(35) * PROJ_ORIGIN_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1025.add_sno = (unsigned int)ugrab(30) * SCALE_PPM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1025.false_east = (unsigned int)ugrab(36) * TRANSLATION_MM_RESOLUTION;
-        rtcm->rtcmtypes.rtcm3_1025.false_north = ugrab(35) * TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1025.lat_origin = sgrab(34) *
+            PROJ_ORIGIN_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1025.lon_origin = sgrab(35) *
+            PROJ_ORIGIN_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1025.add_sno = (unsigned)ugrab(30) *
+            SCALE_PPM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1025.false_east = (unsigned)ugrab(36) *
+            TRANSLATION_MM_RESOLUTION;
+        rtcm->rtcmtypes.rtcm3_1025.false_north = ugrab(35) *
+            TRANSLATION_MM_RESOLUTION;
         unknown = false;
         break;
 
@@ -1549,7 +1568,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         unknown = false;
         rtcm->rtcmtypes.rtcm3_1230.station_id = (unsigned short)ugrab(12);
         rtcm->rtcmtypes.rtcm3_1230.bias_indicator = (unsigned char)ugrab(1);
-        (void)ugrab(1);         /* reserved */
+        (void)ugrab(1);         // reserved
         rtcm->rtcmtypes.rtcm3_1230.signals_mask = (unsigned char)ugrab(3);
         // actual mask order is undocumented...
         if (1 & rtcm->rtcmtypes.rtcm3_1230.signals_mask) {
@@ -1816,7 +1835,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * Leader bytes, message length, and checksum won't be copied.
          * The first 12 bits of the copied payload will be the type field.
          */
-        memcpy(rtcm->rtcmtypes.data, buf+3, rtcm->length);
+        memcpy(rtcm->rtcmtypes.data, buf + 3, rtcm->length);
         if (NULL == unknown_name) {
             GPSD_LOG(LOG_PROG, &context->errout,
                      "RTCM3: unknown type %d, length %d\n",
