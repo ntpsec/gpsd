@@ -21,7 +21,7 @@ ppscheck - tool to check a serial port for PPS
 
 *ppscheck* [-?] [--help] [-p] [--pps] [--version] [-h] [-V]
 
-*ppscheck* device
+*ppscheck* [-m] device
 
 == DESCRIPTION
 
@@ -63,6 +63,8 @@ The program accepts the following options:
 
 `+-?+, `+-h+, `+--help+`::
   Print help message, then exit.
+`+-m+, `+--match+`::
+  Find PPS device that matches _device_.
 `+-p+, `+--pps+`::
   Print active PPS devices, then exit.
 `+-V+, `+--version+`::

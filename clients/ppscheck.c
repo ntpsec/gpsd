@@ -30,12 +30,13 @@
 #ifdef HAVE_GETOPT_LONG
    #include <getopt.h>
 #endif
+#include <limits.h>          // for PATH_MAX
 #ifdef __linux__
    #include <linux/tty.h>             // for N_PPS
 #endif
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stdlib.h>                   // for atexit()
+#include <string.h>                   // strlcpy(), etc.
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #if defined(HAVE_SYS_TIMEPPS_H)
@@ -49,9 +50,28 @@
 #include <unistd.h>
 
 #include "../include/compiler.h"     // for FALLTHROUGH
+#include "../include/os_compat.h"    // backup for strlcpy()
 #include "../include/timespec.h"
 
 time_t exit_timer = 0;               // for -x option
+int device_fd = -1;                  // fd open device
+int path_fd = -1;                    // fd for open("sys/X")
+DIR *sys_dir = NULL;                 // fd for opendir("sys")
+const char *sys_path = "/sys/devices/virtual/pps";
+
+// atexit function
+static void myexit(void)
+{
+    if (0 <= device_fd) {
+        close(device_fd);
+    }
+    if (0 <= path_fd) {
+        close(path_fd);
+    }
+    if (NULL != sys_dir) {
+        closedir(sys_dir);
+    }
+}
 
 struct assoc {
     int mask;
@@ -110,12 +130,11 @@ static void do_kpps(pps_handle_t kpps_handle)
 
     // have kernel PPS handle. get RFC2783 features supported
     if (0 > time_pps_getcap(kpps_handle, &kpps_caps)) {
-        (void)fprintf(stderr,
-                      "ERROR: time_pps_getcap() failed: %s(%d)\n",
-                      strerror(errno), errno);
+        (void)printf("ERROR: time_pps_getcap() failed: %s(%d)\n",
+                     strerror(errno), errno);
         exit(EXIT_FAILURE);
     }
-    (void)fprintf(stderr, "INFO: kpps_caps 0x%02X\n", kpps_caps);
+    (void)printf("INFO: kpps_caps 0x%02X\n", kpps_caps);
 
     for (sp = caps; sp < caps + sizeof(caps) / sizeof(caps[0]); sp++) {
         if (0 != (kpps_caps & sp->mask)) {
@@ -124,7 +143,7 @@ static void do_kpps(pps_handle_t kpps_handle)
     }
     puts("");
     if (0 == (PPS_CANWAIT & kpps_caps)) {
-        (void)fputs("ERROR: PPS_CANWAIT is missing.\n", stderr);
+        (void)puts("ERROR: PPS_CANWAIT is missing.");
     }
 
     // construct the setparms structure
@@ -133,33 +152,29 @@ static void do_kpps(pps_handle_t kpps_handle)
 
     switch ((PPS_CAPTUREASSERT | PPS_CAPTURECLEAR) & kpps_caps) {
     case PPS_CAPTUREASSERT:
-        (void)fputs("WARNING: missing PPS_CAPTURECLEAR, pulse may be offset\n",
-                    stderr);
+        (void)puts("WARNING: missing PPS_CAPTURECLEAR, pulse may be offset");
         pp.mode |= PPS_CAPTUREASSERT;
         break;
     case PPS_CAPTURECLEAR:
-        (void)fputs("WARNING: missing PPS_CAPTUREASSERT, pulse may be offset\n",
-                    stderr);
+        (void)puts("WARNING: missing PPS_CAPTUREASSERT, pulse may be offset");
         pp.mode |= PPS_CAPTURECLEAR;
         break;
     case PPS_CAPTUREASSERT | PPS_CAPTURECLEAR:
         pp.mode |= PPS_CAPTUREASSERT | PPS_CAPTURECLEAR;
         break;
     default:
-        (void)fputs("WARNING: missing PPS_CAPTUREASSERT and PPS_CAPTURECLEAR\n",
-                    stderr);
+        (void)puts("WARNING: missing PPS_CAPTUREASSERT and PPS_CAPTURECLEAR");
         exit(EXIT_FAILURE);
     }
 
     if (0 > time_pps_setparams(kpps_handle, &pp)) {
-        (void)fprintf(stderr,
-                      "ERROR: time_pps_setparams(mode=0x%02X) failed: %s(%d)\n",
-                      pp.mode, strerror(errno), errno);
+        (void)printf("ERROR: time_pps_setparams(mode=0x%02X) failed: %s(%d)",
+                     pp.mode, strerror(errno), errno);
         exit(EXIT_FAILURE);
     }
 
-    (void)puts("\n# Assert                 seq  ,  "
-               "Clear                  seq");
+    (void)puts("\n# Assert                   seq,  "
+               "Clear                    seq");
 
     for (;;) {
         pps_info_t pi;
@@ -182,8 +197,8 @@ static void do_kpps(pps_handle_t kpps_handle)
                 continue;
             }
 
-            (void)fprintf(stderr, "ERROR: time_pps_fetch() failed: %s(%d)\n",
-                          strerror(errno), errno);
+            (void)printf("ERROR: time_pps_fetch() failed: %s(%d)\n",
+                         strerror(errno), errno);
             exit(EXIT_FAILURE);
         }
         (void)printf(" %s %7lu, %s %7lu\n",
@@ -200,62 +215,120 @@ static void do_kpps(pps_handle_t kpps_handle)
 #endif
 
 /* list_pps() - list pps devices
- * linux specific
+ * linux specific, OK to just let it fail on other OS
  * /sys/devices/virtual/pps/pps?/
  */
 static void list_pps(void)
 {
-    const char *sys = "/sys/devices/virtual/pps";
-    DIR *sys_dir;
     struct dirent *dp;
 
-    sys_dir = opendir(sys);
+    sys_dir = opendir(sys_path);
     if (NULL == sys_dir) {
         (void)printf("ERROR: opendir(%s) failed: %.80s(%d)\n",
-                     sys, strerror(errno), errno);
+                     sys_path, strerror(errno), errno);
         return;
     }
     while (NULL != (dp = readdir(sys_dir))) {
         char name_path[PATH_MAX];
         char tty_path[PATH_MAX];
-        int fd;
+        ssize_t len;
 
         if ('.' == dp->d_name[0]) {
             continue;
         }
         (void)printf("INFO: %s  ", dp->d_name);
         (void)snprintf(name_path, sizeof(name_path), "%s/%s/path",
-                       sys, dp->d_name);
-        fd = open(name_path, O_RDONLY);
-        if (-1 == fd) {
+                       sys_path, dp->d_name);
+        path_fd = open(name_path, O_RDONLY);
+        if (-1 == path_fd) {
             (void)printf("\nERROR: open(%s) failed: %.80s(%d)\n",
                          name_path, strerror(errno), errno);
             continue;
         }
-        if (-1 == read(fd, tty_path, sizeof(tty_path))) {
+        len = read(path_fd, tty_path, sizeof(tty_path));
+        if (-1 == len) {
             (void)printf("\nERROR: read(%s) failed: %.80s(%d)\n",
                          name_path, strerror(errno), errno);
             continue;
         }
+        // tty_path ends with \n
+        if (0 < len) {
+            tty_path[len - 1] = '\0';
+        }
         puts(tty_path);
-        (void)close(fd);
+        (void)close(path_fd);
     }
+}
 
-    closedir(sys_dir);
+/* find_pps() - find pps device that matches a tty device.
+ * very similar to list_pps()
+ * linux specific, OK to just let it fail on other OS
+ * /sys/devices/virtual/pps/pps?/
+ *
+ * return: pointer to static buffer of answer
+ *         NULL on no match
+ */
+static const char *find_pps(const char *device)
+{
+    struct dirent *dp;
+    static char match[PATH_MAX];
+
+    sys_dir = opendir(sys_path);
+    if (NULL == sys_dir) {
+        (void)printf("ERROR: opendir(%s) failed: %.80s(%d)\n",
+                     sys_path, strerror(errno), errno);
+        return NULL;
+    }
+    while (NULL != (dp = readdir(sys_dir))) {
+        char name_path[PATH_MAX];
+        char tty_path[PATH_MAX];
+        ssize_t len;
+
+        if ('.' == dp->d_name[0]) {
+            continue;
+        }
+        (void)snprintf(name_path, sizeof(name_path), "%s/%s/path",
+                       sys_path, dp->d_name);
+        path_fd = open(name_path, O_RDONLY);
+        if (-1 == path_fd) {
+            (void)printf("ERROR: open(%s) failed: %.80s(%d)",
+                         name_path, strerror(errno), errno);
+            continue;
+        }
+        len = read(path_fd, tty_path, sizeof(tty_path));
+        if (-1 == len) {
+            (void)printf("ERROR: read(%s) failed: %.80s(%d)",
+                         name_path, strerror(errno), errno);
+            continue;
+        }
+        // tty_path ends with \n
+        if (0 < len) {
+            tty_path[len - 1] = '\0';
+        }
+        if (0 == strncmp(device, tty_path, sizeof(tty_path))) {
+            (void)strlcpy(match, dp->d_name, sizeof(match));
+            return match;
+        }
+        (void)close(path_fd);
+    }
+    return NULL;
 }
 
 
 static void usage(void)
 {
-        (void)fprintf(stderr,
+        (void)printf(
         "usage: ppscheck [OPTIONS] <device>\n\n"
 #ifdef HAVE_GETOPT_LONG
         "  --help            Show this help, then exit.\n"
+        "  --pps             List pps devices active.\n"
         "  --seconds SEC     Exit after SEC seconds delay.\n"
         "  --version         Show version, then exit.\n"
 #endif
         "   -?               Show this help, then exit.\n"
         "   -h               Show this help, then exit.\n"
+        "   -m               Find pps device that matches <device>\n"
+        "   -p               List pps devices active.\n"
         "   -V               Show version, then exit.\n"
         "   -x SEC           Exit after SEC seconds delay.\n"
         "\n"
@@ -267,22 +340,22 @@ int main(int argc, char *argv[])
 #ifdef __linux__
     int ldisc = 0;     // tty line discipline
 #endif
-    int fd;
     int handshakes;
     bool is_tty = false;
     bool has_kpps = false;
+    bool find_kpps = false;
     struct timespec ts;
     char ts_buf[TIMESPEC_LEN];
 #if defined(HAVE_SYS_TIMEPPS_H)
     // aka RFC2783
-    // int pps_fd = -1;
     pps_handle_t kpps_handle;
 #endif  // HAVE_SYS_TIMEPPS_H
-    const char *optstring = "?hpVx:";
+    const char *optstring = "?hmpVx:";
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
     static struct option long_options[] = {
         {"help", no_argument, NULL, 'h'},
+        {"match", no_argument, NULL, 'm'},
         {"pps", no_argument, NULL, 'p'},
         {"seconds", required_argument, NULL, 'x'},
         {"version", no_argument, NULL, 'V' },
@@ -311,6 +384,9 @@ int main(int argc, char *argv[])
         default:
             usage();
             exit(EXIT_FAILURE);
+        case 'm':
+            find_kpps = true;
+            break;
         case 'p':
             list_pps();
             exit(EXIT_SUCCESS);
@@ -325,50 +401,61 @@ int main(int argc, char *argv[])
 
     if ((optind + 1) != argc ||
        '\0' == argv[optind][0]) {
-        (void)fputs("ERROR: can't run with no device specified\n", stderr);
+        (void)puts("ERROR: can't run with no device specified");
         usage();
         exit(EXIT_FAILURE);
     }
 
-    // TIOCM* one need RD, KPPS needs WR
-    fd = open(argv[optind], O_RDWR);
+    atexit(myexit);
 
-    if (-1 == fd) {
-        (void)fprintf(stderr, "ERROR: open(%s) failed: %.80s(%d)\n",
+    if (find_kpps) {
+        const char *dev;
+        dev = find_pps(argv[optind]);
+        if (NULL == dev) {
+            (void)printf("INFO: pps for %s not found\n", argv[optind]);
+        } else {
+            (void)printf("INFO: %s uses %s\n", argv[optind], dev);
+        }
+        exit(EXIT_SUCCESS);
+    }
+
+
+    // TIOCM* one need RD, KPPS needs WR
+    device_fd = open(argv[optind], O_RDWR);
+
+    if (-1 == device_fd) {
+        (void)printf("ERROR: open(%s) failed: %.80s(%d)\n",
                       argv[1], strerror(errno), errno);
         exit(EXIT_FAILURE);
     }
     // check that it is a tty
-    if (0 == ioctl(fd, TIOCMGET, &handshakes)) {
+    if (0 == ioctl(device_fd, TIOCMGET, &handshakes)) {
         is_tty = true;
 #ifdef __linux__
         /* check current line discipline
-         * if (0 == ioctl(fd, TIOCGETD, &ldisc)) {
+         * if (0 == ioctl(device_fd, TIOCGETD, &ldisc)) {
          * always returns ldisc == 0 */
         // set PPS line discipline
         ldisc = N_PPS;    // 18 - the PPS line discipline
-        if (0 > ioctl(fd, TIOCGETD, &ldisc)) {
-            (void)fprintf(stderr,
-                          "ERROR: ioctl(%s, TIOCSETD, 18) failed: %.80s(%d)\n",
-                          argv[1], strerror(errno), errno);
+        if (0 > ioctl(device_fd, TIOCGETD, &ldisc)) {
+            (void)printf("ERROR: ioctl(%s, TIOCSETD, 18) failed: %.80s(%d)\n",
+                         argv[1], strerror(errno), errno);
         }
 #endif  // __linux__
     } else {
-        (void)fprintf(stderr,
-                      "INFO: ioctl(%s, TIOCMGET) failed: %.80s(%d)\n"
-                      "INFO: %s does not appear to be a tty\n",
-                      argv[1], strerror(errno), errno, argv[1]);
+        (void)printf("INFO: ioctl(%s, TIOCMGET) failed: %.80s(%d)\n"
+                     "INFO: %s does not appear to be a tty\n",
+                     argv[1], strerror(errno), errno, argv[1]);
         is_tty = false;
     }
 
 #if defined(HAVE_SYS_TIMEPPS_H)
     // aka RFC2783
-    if (0 == time_pps_create(fd, &kpps_handle)) {
+    if (0 == time_pps_create(device_fd, &kpps_handle)) {
         has_kpps = true;
     } else {
-        (void)fprintf(stderr,
-                      "WARNING: time_pps_create(%s)) failed: %.80s(%d)\n"
-                      "WARRING: %s does not appear to be a KPPS device\n",
+        (void)printf("WARNING: time_pps_create(%s)) failed: %.80s(%d)\n"
+                     "WARRING: %s does not appear to be a KPPS device\n",
                       argv[1], strerror(errno), errno, argv[1]);
         has_kpps = false;;
     }
@@ -379,9 +466,8 @@ int main(int argc, char *argv[])
 
     if (!is_tty &&
         !has_kpps) {
-        (void)fprintf(stderr,
-                      "ERROR: %s is not a tty and does not support KPPS.\n",
-                      argv[1]);
+        (void)printf("ERROR: %s is not a tty and does not support KPPS.\n",
+                     argv[1]);
         exit(EXIT_FAILURE);
     }
 
@@ -404,19 +490,17 @@ int main(int argc, char *argv[])
             break;
         }
 
-        if (0 != ioctl(fd, TIOCMIWAIT,
+        if (0 != ioctl(device_fd, TIOCMIWAIT,
                        TIOCM_CD | TIOCM_DSR | TIOCM_RI | TIOCM_CTS)) {
-            (void)fprintf(stderr,
-                          "ERROR: ioctl(TIOCMIWAIT) failed: %.80s(%d)\n",
-                          strerror(errno), errno);
+            (void)printf("ERROR: ioctl(TIOCMIWAIT) failed: %.80s(%d)\n",
+                         strerror(errno), errno);
             exit(EXIT_FAILURE);
         }
 
         (void)clock_gettime(CLOCK_REALTIME, &ts);
-        if (0 != ioctl(fd, TIOCMGET, &handshakes)) {
-            (void)fprintf(stderr,
-                          "ERROR: ioctl(TIOCMGET) failed: %.80s(%d)\n",
-                          strerror(errno), errno);
+        if (0 != ioctl(device_fd, TIOCMGET, &handshakes)) {
+            (void)printf("ERROR: ioctl(TIOCMGET) failed: %.80s(%d)\n",
+                         strerror(errno), errno);
             exit(EXIT_FAILURE);
         }
 
