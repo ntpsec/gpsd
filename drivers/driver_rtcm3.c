@@ -157,6 +157,7 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
     rtcm->rtcmtypes.rtcm3_msm.tow = (time_t)ugrab(30);
     rtcm->rtcmtypes.rtcm3_msm.sync = (bool)ugrab(1);
     rtcm->rtcmtypes.rtcm3_msm.IODS = (unsigned short)ugrab(3);
+    bitcount += 7;             // skip 7 reserved bits
     rtcm->rtcmtypes.rtcm3_msm.steering = (unsigned short)ugrab(2);
     rtcm->rtcmtypes.rtcm3_msm.ext_clk = (unsigned short)ugrab(2);
     rtcm->rtcmtypes.rtcm3_msm.smoothing = (bool)ugrab(1);
