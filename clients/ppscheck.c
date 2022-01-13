@@ -346,6 +346,8 @@ int main(int argc, char *argv[])
     bool find_kpps = false;
     struct timespec ts;
     char ts_buf[TIMESPEC_LEN];
+    char *device = NULL;          // pointer to <device> name
+    char device_real[PATH_MAX];   // realname() of <device>
 #if defined(HAVE_SYS_TIMEPPS_H)
     // aka RFC2783
     pps_handle_t kpps_handle;
@@ -408,24 +410,35 @@ int main(int argc, char *argv[])
 
     atexit(myexit);
 
+    device = realpath(argv[optind], device_real);;
+    if (NULL == device) {
+        (void)printf("ERROR: realpath(%s) failed: %.80s(%d)\n",
+                     argv[optind], strerror(errno), errno);
+        exit(EXIT_FAILURE);
+    }
+    if (0 != strncmp(device_real, argv[optind], sizeof(device_real))) {
+        (void)printf("INFO: %s is a symlink to %s\n",
+                     argv[optind], device);
+    }
+
     if (find_kpps) {
         const char *dev;
-        dev = find_pps(argv[optind]);
+        dev = find_pps(device);
         if (NULL == dev) {
-            (void)printf("INFO: pps for %s not found\n", argv[optind]);
+            (void)printf("INFO: pps for %s not found\n", device);
         } else {
-            (void)printf("INFO: %s uses %s\n", argv[optind], dev);
+            (void)printf("INFO: %s uses %s\n", device, dev);
         }
         exit(EXIT_SUCCESS);
     }
 
 
     // TIOCM* one need RD, KPPS needs WR
-    device_fd = open(argv[optind], O_RDWR);
+    device_fd = open(device, O_RDWR);
 
     if (-1 == device_fd) {
         (void)printf("ERROR: open(%s) failed: %.80s(%d)\n",
-                      argv[1], strerror(errno), errno);
+                     argv[1], strerror(errno), errno);
         exit(EXIT_FAILURE);
     }
     // check that it is a tty
