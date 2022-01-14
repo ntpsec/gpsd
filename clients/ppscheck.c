@@ -55,6 +55,11 @@
 
 time_t exit_timer = 0;               // for -x option
 int device_fd = -1;                  // fd open device
+int pps_fd = -1;                     // fd open pps device
+#if defined(HAVE_SYS_TIMEPPS_H)
+    // aka RFC2783
+    pps_handle_t kpps_handle = -1;   // from time_pps_create()
+#endif  // HAVE_SYS_TIMEPPS_H
 int path_fd = -1;                    // fd for open("sys/X")
 DIR *sys_dir = NULL;                 // fd for opendir("sys")
 const char *sys_path = "/sys/devices/virtual/pps";
@@ -65,12 +70,20 @@ static void myexit(void)
     if (0 <= device_fd) {
         close(device_fd);
     }
+    if (0 <= pps_fd) {
+        close(pps_fd);
+    }
     if (0 <= path_fd) {
         close(path_fd);
     }
     if (NULL != sys_dir) {
         closedir(sys_dir);
     }
+#if defined(HAVE_SYS_TIMEPPS_H)
+    if (0 <= kpps_handle) {
+        time_pps_destroy(kpps_handle);
+    }
+#endif  // HAVE_SYS_TIMEPPS_H
 }
 
 struct assoc {
@@ -122,7 +135,15 @@ static const struct assoc caps[] = {
     {PPS_TSFMT_NTPFP, "PPS_TSFMT_NTPFP"},
 };
 
-static void do_kpps(pps_handle_t kpps_handle)
+
+/* cfg_pps()
+ * shows KPPS caps
+ * enable CAPTURES
+ *
+ * Return: void
+ *         exits on error
+ */
+static void cfg_kpps(void)
 {
     int kpps_caps = 0;
     pps_params_t pp;
@@ -172,6 +193,11 @@ static void do_kpps(pps_handle_t kpps_handle)
                      pp.mode, strerror(errno), errno);
         exit(EXIT_FAILURE);
     }
+}
+
+static void do_kpps(void)
+{
+    cfg_kpps();        // get caps, configure KPPS
 
     (void)puts("\n# Assert                   seq,  "
                "Clear                    seq");
@@ -344,14 +370,13 @@ int main(int argc, char *argv[])
     bool is_tty = false;
     bool has_kpps = false;
     bool find_kpps = false;
+    const char *kpps_name = NULL;    // logical name of pps device (pps0, etc.).
+    char kpps_path[PATH_MAX] = "";   // full path to devined kpps device
     struct timespec ts;
-    char ts_buf[TIMESPEC_LEN];
     char *device = NULL;          // pointer to <device> name
     char device_real[PATH_MAX];   // realname() of <device>
-#if defined(HAVE_SYS_TIMEPPS_H)
-    // aka RFC2783
-    pps_handle_t kpps_handle;
-#endif  // HAVE_SYS_TIMEPPS_H
+    pps_seq_t clear_seq = -1;     // KPPS clear sequence
+    pps_seq_t assert_seq = -1;    // KPPS assert sequence
     const char *optstring = "?hmpVx:";
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
@@ -421,19 +446,19 @@ int main(int argc, char *argv[])
                      argv[optind], device);
     }
 
+    // handle -p option
     if (find_kpps) {
-        const char *dev;
-        dev = find_pps(device);
-        if (NULL == dev) {
+        kpps_name = find_pps(device);
+        if (NULL == kpps_name) {
             (void)printf("INFO: pps for %s not found\n", device);
         } else {
-            (void)printf("INFO: %s uses %s\n", device, dev);
+            (void)printf("INFO: %s uses %s\n", device, kpps_name);
         }
         exit(EXIT_SUCCESS);
     }
 
 
-    // TIOCM* one need RD, KPPS needs WR
+    // TIOCM* only needs RD, KPPS needs WR
     device_fd = open(device, O_RDWR);
 
     if (-1 == device_fd) {
@@ -454,6 +479,11 @@ int main(int argc, char *argv[])
             (void)printf("ERROR: ioctl(%s, TIOCSETD, 18) failed: %.80s(%d)\n",
                          argv[1], strerror(errno), errno);
         }
+        // try to find matching kpps device
+        kpps_name = find_pps(device);
+        if (NULL != kpps_name) {
+            (void)snprintf(kpps_path, sizeof(kpps_path), "/dev/%s", kpps_name);
+        }
 #endif  // __linux__
     } else {
         (void)printf("INFO: ioctl(%s, TIOCMGET) failed: %.80s(%d)\n"
@@ -469,13 +499,36 @@ int main(int argc, char *argv[])
     } else {
         (void)printf("WARNING: time_pps_create(%s)) failed: %.80s(%d)\n"
                      "WARRING: %s does not appear to be a KPPS device\n",
-                      argv[1], strerror(errno), errno, argv[1]);
-        has_kpps = false;;
+                      device, strerror(errno), errno, device);
+        if (NULL != kpps_path) {
+            // try kpps_path
+            pps_fd = open(kpps_path, O_RDWR);
+
+            if (-1 == pps_fd) {
+                (void)printf("WARNING: open(%s) failed: %.80s(%d)\n",
+                             kpps_path, strerror(errno), errno);
+            } else {
+                (void)printf("INFO: matching %s opened\n", kpps_path);
+                if (0 == time_pps_create(pps_fd, &kpps_handle)) {
+                    has_kpps = true;
+                } else {
+                    (void)printf(
+                        "WARNING: time_pps_create(%s)) failed: %.80s(%d)\n"
+                        "WARRING: %s does not appear to be a KPPS device\n",
+                        kpps_path, strerror(errno), errno, device);
+                }
+            }
+        }
+    }
+
+    if (!is_tty &&
+        has_kpps) {
+        do_kpps();
+        // never returns
     }
 #else
     (void)puts("WARNING: KPPS not compiled in.");
-    has_kpps = false;;
-#endif  // HAVE_SYS_TIMEPPS_H
+#endif
 
     if (!is_tty &&
         !has_kpps) {
@@ -483,26 +536,22 @@ int main(int argc, char *argv[])
                      argv[1]);
         exit(EXIT_FAILURE);
     }
-
-#if defined(HAVE_SYS_TIMEPPS_H)
-    // aka RFC2783
-    if (!is_tty &&
-        has_kpps) {
-        do_kpps(kpps_handle);
-        // never returns
-    }
-#endif
     // else is_tty && !has_kpps
 
     (void)puts("\n# Seconds  nanoSecs   Signals");
     for (;;) {
         const struct assoc *sp;
+        pps_info_t pi;
+        struct timespec kpps_tv ;
+        char ts_str[TIMESPEC_LEN];
+        char ts_str1[TIMESPEC_LEN];
 
-        if (exit_timer &&
+        if (0 < exit_timer &&
             time(NULL) >= exit_timer) {
             break;
         }
 
+        // use TIOCMIWAIT to wait for change
         if (0 != ioctl(device_fd, TIOCMIWAIT,
                        TIOCM_CD | TIOCM_DSR | TIOCM_RI | TIOCM_CTS)) {
             (void)printf("ERROR: ioctl(TIOCMIWAIT) failed: %.80s(%d)\n",
@@ -510,14 +559,32 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
 
-        (void)clock_gettime(CLOCK_REALTIME, &ts);
+        (void)clock_gettime(CLOCK_REALTIME, &ts);  // quick, grab current time
+
+        // figure out what changed
         if (0 != ioctl(device_fd, TIOCMGET, &handshakes)) {
             (void)printf("ERROR: ioctl(TIOCMGET) failed: %.80s(%d)\n",
                          strerror(errno), errno);
             exit(EXIT_FAILURE);
         }
 
-        (void)fputs(timespec_str(&ts, ts_buf, sizeof(ts_buf)), stdout);
+#if defined(HAVE_SYS_TIMEPPS_H)
+        kpps_tv.tv_sec = 0;   // non-blocking
+        kpps_tv.tv_nsec = 0;
+
+        memset((void *)&pi, 0, sizeof(pi));    // paranoia
+        if (0 > time_pps_fetch(kpps_handle, PPS_TSFMT_TSPEC, &pi, &kpps_tv)) {
+            if (ETIMEDOUT == errno ||
+                EINTR == errno) {
+                // just a timeout
+                (void)puts("WARNING: time_pps_fetch() timeout\n");
+                continue;
+            }
+
+            (void)printf("ERROR: time_pps_fetch() failed: %s(%d)\n",
+                         strerror(errno), errno);
+        }
+        (void)fputs(timespec_str(&ts, ts_str, sizeof(ts_str)), stdout);
         for (sp = hlines;
              sp < hlines + sizeof(hlines) / sizeof(hlines[0]);
              sp++) {
@@ -526,6 +593,21 @@ int main(int argc, char *argv[])
             }
         }
         (void)puts("");
+        if (pi.assert_sequence != assert_seq) {
+            (void)printf("  KPPS assert  %s %7lu\n",
+                         timespec_str(&pi.assert_timestamp,
+                                      ts_str1, sizeof(ts_str1)),
+                         (unsigned long)pi.assert_sequence);
+            assert_seq = pi.assert_sequence;
+        }
+        if (pi.clear_sequence != clear_seq) {
+            (void)printf("  KPPS clear   %s %7lu\n",
+                         timespec_str(&pi.clear_timestamp,
+                                      ts_str1, sizeof(ts_str1)),
+                         (unsigned long)pi.clear_sequence);
+            clear_seq = pi.clear_sequence;
+        }
+#endif   // HAVE_SYS_TIMEPPS_H
     }
 
     exit(EXIT_SUCCESS);
