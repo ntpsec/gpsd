@@ -347,8 +347,11 @@ static const char *find_pps(const char *device)
  */
 static void do_tty(void)
 {
+#if defined(HAVE_SYS_TIMEPPS_H)
     pps_seq_t clear_seq = -1;     // KPPS clear sequence
     pps_seq_t assert_seq = -1;    // KPPS assert sequence
+#endif  // HAVE_SYS_TIMEPPS_H
+
     int handshakes;
     struct timespec ts;
 
@@ -584,7 +587,7 @@ int main(int argc, char *argv[])
         (void)printf("WARNING: time_pps_create(%s)) failed: %.80s(%d)\n"
                      "WARRING: %s does not appear to be a KPPS device\n",
                       device, strerror(errno), errno, device);
-        if (NULL != kpps_path) {
+        if ('\0' != kpps_path[0]) {
             // try kpps_path
             pps_fd = open(kpps_path, O_RDWR);
 
