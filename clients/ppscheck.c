@@ -340,6 +340,94 @@ static const char *find_pps(const char *device)
     return NULL;
 }
 
+/* do_tty()
+ * the main loop for wathing a tty, and optional companion kpps
+ *
+ * return: Never
+ */
+static void do_tty(void)
+{
+    pps_seq_t clear_seq = -1;     // KPPS clear sequence
+    pps_seq_t assert_seq = -1;    // KPPS assert sequence
+    int handshakes;
+    struct timespec ts;
+
+    (void)puts("\n# Src    Seconds   Signals");
+    for (;;) {
+        const struct assoc *sp;
+        pps_info_t pi;
+        struct timespec kpps_tv ;
+        char ts_str[TIMESPEC_LEN];
+
+        if (0 < exit_timer &&
+            time(NULL) >= exit_timer) {
+            break;
+        }
+
+        // use TIOCMIWAIT to wait for change
+        if (0 != ioctl(device_fd, TIOCMIWAIT,
+                       TIOCM_CD | TIOCM_DSR | TIOCM_RI | TIOCM_CTS)) {
+            (void)printf("ERROR: ioctl(TIOCMIWAIT) failed: %.80s(%d)\n",
+                         strerror(errno), errno);
+            exit(EXIT_FAILURE);
+        }
+
+        (void)clock_gettime(CLOCK_REALTIME, &ts);  // quick, grab current time
+
+        // figure out what changed
+        if (0 != ioctl(device_fd, TIOCMGET, &handshakes)) {
+            (void)printf("ERROR: ioctl(TIOCMGET) failed: %.80s(%d)\n",
+                         strerror(errno), errno);
+            exit(EXIT_FAILURE);
+        }
+
+#if defined(HAVE_SYS_TIMEPPS_H)
+        kpps_tv.tv_sec = 0;   // non-blocking
+        kpps_tv.tv_nsec = 0;
+
+        memset((void *)&pi, 0, sizeof(pi));    // paranoia
+        if (0 > time_pps_fetch(kpps_handle, PPS_TSFMT_TSPEC, &pi, &kpps_tv)) {
+            if (ETIMEDOUT == errno ||
+                EINTR == errno) {
+                // just a timeout
+                (void)puts("WARNING: time_pps_fetch() timeout\n");
+                continue;
+            }
+
+            (void)printf("ERROR: time_pps_fetch() failed: %s(%d)\n",
+                         strerror(errno), errno);
+        }
+
+        // print KPPS first, as its timestamp will be before TIOCMIWAIT time
+        if (pi.assert_sequence != assert_seq) {
+            (void)printf(" KPPS %s    assert  %lu\n",
+                         timespec_str(&pi.assert_timestamp,
+                                      ts_str, sizeof(ts_str)),
+                         (unsigned long)pi.assert_sequence);
+            assert_seq = pi.assert_sequence;
+        }
+        if (pi.clear_sequence != clear_seq) {
+            (void)printf(" KPPS %s    clear   %lu\n",
+                         timespec_str(&pi.clear_timestamp,
+                                      ts_str, sizeof(ts_str)),
+                         (unsigned long)pi.clear_sequence);
+            clear_seq = pi.clear_sequence;
+        }
+#endif   // HAVE_SYS_TIMEPPS_H
+        (void)printf(" TTY  %s  ",
+                     timespec_str(&ts, ts_str, sizeof(ts_str)));
+        for (sp = hlines;
+             sp < hlines + sizeof(hlines) / sizeof(hlines[0]);
+             sp++) {
+            if (0 != (handshakes & sp->mask)) {
+                (void)printf("  %s", sp->string);
+            }
+        }
+        (void)puts("\n");
+    }
+    exit(EXIT_SUCCESS);
+}
+
 
 static void usage(void)
 {
@@ -372,11 +460,8 @@ int main(int argc, char *argv[])
     bool find_kpps = false;
     const char *kpps_name = NULL;    // logical name of pps device (pps0, etc.).
     char kpps_path[PATH_MAX] = "";   // full path to devined kpps device
-    struct timespec ts;
     char *device = NULL;          // pointer to <device> name
     char device_real[PATH_MAX];   // realname() of <device>
-    pps_seq_t clear_seq = -1;     // KPPS clear sequence
-    pps_seq_t assert_seq = -1;    // KPPS assert sequence
     const char *optstring = "?hmpVx:";
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
@@ -457,7 +542,6 @@ int main(int argc, char *argv[])
         exit(EXIT_SUCCESS);
     }
 
-
     // TIOCM* only needs RD, KPPS needs WR
     device_fd = open(device, O_RDWR);
 
@@ -537,80 +621,11 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
     // else is_tty && !has_kpps
+    do_tty();
+    // never returns
 
-    (void)puts("\n# Seconds  nanoSecs   Signals");
-    for (;;) {
-        const struct assoc *sp;
-        pps_info_t pi;
-        struct timespec kpps_tv ;
-        char ts_str[TIMESPEC_LEN];
-        char ts_str1[TIMESPEC_LEN];
-
-        if (0 < exit_timer &&
-            time(NULL) >= exit_timer) {
-            break;
-        }
-
-        // use TIOCMIWAIT to wait for change
-        if (0 != ioctl(device_fd, TIOCMIWAIT,
-                       TIOCM_CD | TIOCM_DSR | TIOCM_RI | TIOCM_CTS)) {
-            (void)printf("ERROR: ioctl(TIOCMIWAIT) failed: %.80s(%d)\n",
-                         strerror(errno), errno);
-            exit(EXIT_FAILURE);
-        }
-
-        (void)clock_gettime(CLOCK_REALTIME, &ts);  // quick, grab current time
-
-        // figure out what changed
-        if (0 != ioctl(device_fd, TIOCMGET, &handshakes)) {
-            (void)printf("ERROR: ioctl(TIOCMGET) failed: %.80s(%d)\n",
-                         strerror(errno), errno);
-            exit(EXIT_FAILURE);
-        }
-
-#if defined(HAVE_SYS_TIMEPPS_H)
-        kpps_tv.tv_sec = 0;   // non-blocking
-        kpps_tv.tv_nsec = 0;
-
-        memset((void *)&pi, 0, sizeof(pi));    // paranoia
-        if (0 > time_pps_fetch(kpps_handle, PPS_TSFMT_TSPEC, &pi, &kpps_tv)) {
-            if (ETIMEDOUT == errno ||
-                EINTR == errno) {
-                // just a timeout
-                (void)puts("WARNING: time_pps_fetch() timeout\n");
-                continue;
-            }
-
-            (void)printf("ERROR: time_pps_fetch() failed: %s(%d)\n",
-                         strerror(errno), errno);
-        }
-        (void)fputs(timespec_str(&ts, ts_str, sizeof(ts_str)), stdout);
-        for (sp = hlines;
-             sp < hlines + sizeof(hlines) / sizeof(hlines[0]);
-             sp++) {
-            if (0 != (handshakes & sp->mask)) {
-                (void)printf("  %s", sp->string);
-            }
-        }
-        (void)puts("");
-        if (pi.assert_sequence != assert_seq) {
-            (void)printf("  KPPS assert  %s %7lu\n",
-                         timespec_str(&pi.assert_timestamp,
-                                      ts_str1, sizeof(ts_str1)),
-                         (unsigned long)pi.assert_sequence);
-            assert_seq = pi.assert_sequence;
-        }
-        if (pi.clear_sequence != clear_seq) {
-            (void)printf("  KPPS clear   %s %7lu\n",
-                         timespec_str(&pi.clear_timestamp,
-                                      ts_str1, sizeof(ts_str1)),
-                         (unsigned long)pi.clear_sequence);
-            clear_seq = pi.clear_sequence;
-        }
-#endif   // HAVE_SYS_TIMEPPS_H
-    }
-
-    exit(EXIT_SUCCESS);
+    // how could this happen?
+    exit(EXIT_FAILURE);
 }
 
 // vim: set expandtab shiftwidth=4
