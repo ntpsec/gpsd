@@ -354,8 +354,9 @@ static void do_tty(void)
 
     int handshakes;
     struct timespec ts;
+    time_t last_sec = -1;
 
-    (void)puts("\n# Src    Seconds   Signals");
+    (void)puts("\n# Src   Seconds                 Signals");
     for (;;) {
         const struct assoc *sp;
         pps_info_t pi;
@@ -368,6 +369,7 @@ static void do_tty(void)
         }
 
         // use TIOCMIWAIT to wait for change
+        // no way to set a timeout on this ioctl()
         if (0 != ioctl(device_fd, TIOCMIWAIT,
                        TIOCM_CD | TIOCM_DSR | TIOCM_RI | TIOCM_CTS)) {
             (void)printf("ERROR: ioctl(TIOCMIWAIT) failed: %.80s(%d)\n",
@@ -378,46 +380,54 @@ static void do_tty(void)
         (void)clock_gettime(CLOCK_REALTIME, &ts);  // quick, grab current time
 
         // figure out what changed
+        // look into TIOCGICOUNT instead?
         if (0 != ioctl(device_fd, TIOCMGET, &handshakes)) {
             (void)printf("ERROR: ioctl(TIOCMGET) failed: %.80s(%d)\n",
                          strerror(errno), errno);
             exit(EXIT_FAILURE);
         }
+        if (last_sec != ts.tv_sec) {
+            // new second, new line
+            (void)putchar('\n');
+            last_sec = ts.tv_sec;
+        }
 
 #if defined(HAVE_SYS_TIMEPPS_H)
-        kpps_tv.tv_sec = 0;   // non-blocking
-        kpps_tv.tv_nsec = 0;
+        if (0 <= kpps_handle) {   // SNARD
+            kpps_tv.tv_sec = 0;   // non-blocking
+            kpps_tv.tv_nsec = 0;
+            bool good_pi;
 
-        memset((void *)&pi, 0, sizeof(pi));    // paranoia
-        if (0 > time_pps_fetch(kpps_handle, PPS_TSFMT_TSPEC, &pi, &kpps_tv)) {
-            if (ETIMEDOUT == errno ||
-                EINTR == errno) {
-                // just a timeout
-                (void)puts("WARNING: time_pps_fetch() timeout\n");
-                continue;
+            good_pi = true;
+            memset((void *)&pi, 0, sizeof(pi));    // paranoia
+            if (0 > time_pps_fetch(kpps_handle, PPS_TSFMT_TSPEC,
+                                   &pi, &kpps_tv)) {
+                (void)printf("ERROR: time_pps_fetch() failed: %s(%d)\n",
+                             strerror(errno), errno);
+                good_pi = false;
             }
 
-            (void)printf("ERROR: time_pps_fetch() failed: %s(%d)\n",
-                         strerror(errno), errno);
-        }
-
-        // print KPPS first, as its timestamp will be before TIOCMIWAIT time
-        if (pi.assert_sequence != assert_seq) {
-            (void)printf(" KPPS %s    assert  %lu\n",
-                         timespec_str(&pi.assert_timestamp,
-                                      ts_str, sizeof(ts_str)),
-                         (unsigned long)pi.assert_sequence);
-            assert_seq = pi.assert_sequence;
-        }
-        if (pi.clear_sequence != clear_seq) {
-            (void)printf(" KPPS %s    clear   %lu\n",
-                         timespec_str(&pi.clear_timestamp,
-                                      ts_str, sizeof(ts_str)),
-                         (unsigned long)pi.clear_sequence);
-            clear_seq = pi.clear_sequence;
+            // print KPPS first, as its timestamp will be before
+            // TIOCMIWAIT time
+            if (good_pi) {
+                if (pi.assert_sequence != assert_seq) {
+                    (void)printf("  KPPS %s    assert  %lu\n",
+                                 timespec_str(&pi.assert_timestamp,
+                                              ts_str, sizeof(ts_str)),
+                                 (unsigned long)pi.assert_sequence);
+                    assert_seq = pi.assert_sequence;
+                }
+                if (pi.clear_sequence != clear_seq) {
+                    (void)printf("  KPPS %s    clear   %lu\n",
+                                 timespec_str(&pi.clear_timestamp,
+                                              ts_str, sizeof(ts_str)),
+                                 (unsigned long)pi.clear_sequence);
+                    clear_seq = pi.clear_sequence;
+                }
+            }
         }
 #endif   // HAVE_SYS_TIMEPPS_H
-        (void)printf(" TTY  %s  ",
+        (void)printf("  TTY  %s  ",
                      timespec_str(&ts, ts_str, sizeof(ts_str)));
         for (sp = hlines;
              sp < hlines + sizeof(hlines) / sizeof(hlines[0]);
@@ -426,7 +436,7 @@ static void do_tty(void)
                 (void)printf("  %s", sp->string);
             }
         }
-        (void)puts("\n");
+        (void)putchar('\n');
     }
     exit(EXIT_SUCCESS);
 }
