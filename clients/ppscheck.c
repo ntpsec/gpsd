@@ -75,6 +75,7 @@ static void myexit(void)
     }
     if (0 <= path_fd) {
         close(path_fd);
+        path_fd = -1;
     }
     if (NULL != sys_dir) {
         closedir(sys_dir);
@@ -283,6 +284,10 @@ static void list_pps(void)
         (void)printf("INFO: %s  ", dp->d_name);
         (void)snprintf(name_path, sizeof(name_path), "%s/%s/path",
                        sys_path, dp->d_name);
+        if (0 <= path_fd) {
+            close(path_fd);
+            path_fd = -1;
+        }
         path_fd = open(name_path, O_RDONLY);
         if (-1 == path_fd) {
             (void)printf("\nERROR: open(%s) failed: %.80s(%d)\n",
@@ -300,8 +305,8 @@ static void list_pps(void)
             tty_path[len - 1] = '\0';
         }
         puts(tty_path);
-        (void)close(path_fd);
     }
+    (void)close(path_fd);
 }
 
 /* find_pps() - find pps device that matches a tty device.
@@ -333,6 +338,10 @@ static const char *find_pps(const char *device)
         }
         (void)snprintf(name_path, sizeof(name_path), "%s/%s/path",
                        sys_path, dp->d_name);
+        if (0 <= path_fd) {
+            close(path_fd);
+            path_fd = -1;
+        }
         path_fd = open(name_path, O_RDONLY);
         if (-1 == path_fd) {
             (void)printf("ERROR: open(%s) failed: %.80s(%d)",
@@ -353,8 +362,8 @@ static const char *find_pps(const char *device)
             (void)strlcpy(match, dp->d_name, sizeof(match));
             return match;
         }
-        (void)close(path_fd);
     }
+    (void)close(path_fd);
     return NULL;
 }
 
