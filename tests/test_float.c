@@ -28,43 +28,47 @@ static int test_single(void) {
 	static int i;
 	static int e = 0;
 
-	/* addition test */
+	// addition test
 	f = 1.0;
-	for(i = 0; i < 10; i++)
-		f += (1<<i);
-	if (f != 1024.0) {
+	for(i = 0; i < 10; i++) {
+		f += (1 << i);
+        }
+	if (1024.0 != f) {
 		puts("s1 ");
 		e++;
 	}
 
-	/* subtraction test */
+	// subtraction test
 	f = 1024.0;
-	for(i = 0; i < 10; i++)
-		f -= (1<<i);
-	if (f != 1.0) {
+	for(i = 0; i < 10; i++) {
+		f -= (1 << i);
+        }
+	if (1.0 != f) {
 		puts("s2 ");
 		e++;
 	}
 
-	/* multiplication test */
+	// multiplication test
 	f = 1.0;
-	for(i = 1; i < 10; i++)
+	for(i = 1; i < 10; i++) {
 		f *= i;
-	if (f != 362880.0) {
+        }
+	if (362880.0 != f) {
 		puts("s3 ");
 		e++;
 	}
 
-	/* division test */
+	// division test
 	f = 362880.0;
-	for(i = 1; i < 10; i++)
+	for(i = 1; i < 10; i++) {
 		f /= i;
-	if (f != 1.0) {
+        }
+	if (1.0 != f) {
 		puts("s4 ");
 		e++;
 	}
 
-	/* multiply-accumulate test */
+	// multiply-accumulate test
 	f = 0.5;
 	for(i = 1; i < 1000000; i++) {
 		f += 2.0;
@@ -75,47 +79,52 @@ static int test_single(void) {
 		e++;
 	}
 
-	/* divide-subtract test */
+	// divide-subtract test
 	f = 2.0;
 	for(i = 1; i < 1000000; i++) {
 		f /= 0.5;
 		f -= 2.0;
 	}
-	if (f != 2.0) {
+	if (2.0 != f) {
 		puts("s6 ");
 		e++;
 	}
 
-	/* add-multiply-subtract-divide test */
+	// add-multiply-subtract-divide test
 	f = 1000000.0;
-	for(i = 1; i < 1000000; i++)
+	for(i = 1; i < 1000000; i++) {
 		f = ((((f + 1.5) * 0.5) - 1.25) / 0.5);
-	if (f != 1.0) {
+        }
+	if (1.0 != f) {
 		puts("s7 ");
 		e++;
 	}
 
-	/* multiply-add-divide-subtract test */
+	// multiply-add-divide-subtract test
 	f = 1.0;
-	for(i = 1; i < 1000000; i++)
+	for(i = 1; i < 1000000; i++) {
 		f = ((((f * 5.0) + 3.0) / 2.0) - 3.0);
-	if (f != 1.0)
+        }
+	if (1.0 != f) {
 		puts("s8 ");
+        }
 
-	/* subtract-divide-add-multiply test */
+	// subtract-divide-add-multiply test
 	f = 8.0;
-	for(i = 1; i < 1000000; i++)
+	for(i = 1; i < 1000000; i++) {
 		f = ((((f - 5.0) / 2.0) + 2.5) * 2.0);
-	if (f != 8.0) {
+        }
+	if (8.0 != f) {
 		puts("s9 ");
 		e++;
 	}
 
-	/* divide-subtract-multiply-add test */
+	// divide-subtract-multiply-add test
 	f = 42.0;
-	for(i = 1; i < 1000000; i++)
+	for(i = 1; i < 1000000; i++) {
 		f = ((((f / 6.0) - 5.0) * 19.75 ) + 2.5);
-	if (f != 42.0) {
+        }
+	if (42.0 != f) {
 		puts("s10 ");
 		e++;
 	}
@@ -130,7 +139,7 @@ static int test_double(void) {
 	static int i;
 	static int e = 0;
 
-	/* addition test */
+	// addition test
 	f = 1.0;
 	for(i = 0; i < 10; i++)
 		f += (1<<i);
@@ -139,85 +148,93 @@ static int test_double(void) {
 		e++;
 	}
 
-	/* subtraction test */
+	// subtraction test
 	f = 1024.0;
-	for(i = 0; i < 10; i++)
+	for(i = 0; i < 10; i++) {
 		f -= (1<<i);
-	if (f != 1.0) {
+        }
+	if (1.0 != f) {
 		puts("d2 ");
 		e++;
 	}
 
-	/* multiplication test */
+	// multiplication test
 	f = 1.0;
-	for(i = 1; i < 10; i++)
+	for(i = 1; i < 10; i++) {
 		f *= i;
-	if (f != 362880.0) {
+        }
+	if (362880.0 != f) {
 		puts("d3 ");
 		e++;
 	}
 
-	/* division test */
+	// division test
 	f = 362880.0;
-	for(i = 1; i < 10; i++)
+	for(i = 1; i < 10; i++) {
 		f /= i;
-	if (f != 1.0) {
+        }
+	if (1.0 != f) {
 		puts("d4 ");
 		e++;
 	}
 
-	/* multiply-accumulate test */
+	// multiply-accumulate test
 	f = 0.5;
 	for(i = 1; i < 1000000; i++) {
 		f += 2.0;
 		f *= 0.5;
 	}
-	if (f != 2.0) {
+	if (2.0 != f) {
 		puts("d5 ");
 		e++;
 	}
 
-	/* divide-subtract test */
+	// divide-subtract test
 	f = 2.0;
 	for(i = 1; i < 1000000; i++) {
 		f /= 0.5;
 		f -= 2.0;
 	}
-	if (f != 2.0) {
+	if (2.0 != f) {
 		puts("d6 ");
 		e++;
 	}
 
-	/* add-multiply-subtract-divide test */
+	// add-multiply-subtract-divide test
 	f = 1000000.0;
-	for(i = 1; i < 1000000; i++)
+	for(i = 1; i < 1000000; i++) {
 		f = ((((f + 1.5) * 0.5) - 1.25) / 0.5);
-	if (f != 1.0) {
+        }
+	if (1.0 != f) {
 		puts("d7 ");
 		e++;
 	}
 
-	/* multiply-add-divide-subtract test */
+	// multiply-add-divide-subtract test
 	f = 1.0;
-	for(i = 1; i < 1000000; i++)
+	for(i = 1; i < 1000000; i++) {
 		f = ((((f * 5.0) + 3.0) / 2.0) - 3.0);
-	if (f != 1.0)
+        }
+	if (1.0 != f) {
 		puts("d8 ");
+        }
 
-	/* subtract-divide-add-multiply test */
+	// subtract-divide-add-multiply test
 	f = 8.0;
-	for(i = 1; i < 1000000; i++)
+	for(i = 1; i < 1000000; i++) {
 		f = ((((f - 5.0) / 2.0) + 2.5) * 2.0);
-	if (f != 8.0) {
+        }
+	if (8.0 != f) {
 		puts("d9 ");
 		e++;
 	}
 
-	/* divide-subtract-multiply-add test */
+	// divide-subtract-multiply-add test
 	f = 42.0;
-	for(i = 1; i < 1000000; i++)
+	for(i = 1; i < 1000000; i++) {
 		f = ((((f / 6.0) - 5.0) * 19.75 ) + 2.5);
-	if (f != 42.0) {
+        }
+	if (42.0 != f) {
 		puts("d10 ");
 		e++;
 	}
@@ -230,34 +247,35 @@ static int test_double(void) {
 static int test_modulo(void) {
     int e = 0;
 
-    /* make sure that gcc does not optimize these away */
+    // make sure that gcc does not optimize these away
     volatile int a;
     volatile int b;
 
     a = -5;
     b = 2;
-    //cppcheck-suppress knownConditionTrueFalse
-    if (a % b != -1) {
+    // cppcheck-suppress knownConditionTrueFalse
+    if (-1 != (a % b)) {
 	puts("m1 ");
 	e++;
     }
 
     a = -5;
     b = -2;
-    //cppcheck-suppress knownConditionTrueFalse
-    if (a % b != -1) {
+    // cppcheck-suppress knownConditionTrueFalse
+    if (-1 != (a % b)) {
 	puts("m2 ");
 	e++;
     }
 
     a = 5;
     b = -2;
-    //cppcheck-suppress knownConditionTrueFalse
-    if (a % b != 1) {
+    // cppcheck-suppress knownConditionTrueFalse
+    if (1 != (a % b)) {
 	puts("m3 ");
 	e++;
     }
 
+    // cppcheck-suppress knownConditionTrueFalse
     if (e) {
 	puts("\n");
     }
