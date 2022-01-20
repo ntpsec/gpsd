@@ -197,24 +197,25 @@ static void cfg_kpps(void)
 
 static void do_kpps(void)
 {
+    time_t last = {0};
+
+    pps_seq_t clear_seq = -1;     // KPPS clear sequence
+    pps_seq_t assert_seq = -1;    // KPPS assert sequence
     cfg_kpps();        // get caps, configure KPPS
 
-    (void)puts("\n# Assert                   seq,  "
-               "Clear                    seq");
+    (void)puts("\n# Src   Seconds                 Signal    Sequence");
 
     for (;;) {
         pps_info_t pi;
-        struct timespec kpps_tv ;
-        char ts_str1[TIMESPEC_LEN], ts_str2[TIMESPEC_LEN];
+        struct timespec kpps_tv;
+        time_t now;
+        char ts_str[TIMESPEC_LEN];
 
-        if (0 < exit_timer &&
-            time(NULL) >= exit_timer) {
-            break;
-        }
         kpps_tv.tv_sec = 3;   // 3 second timeout
         kpps_tv.tv_nsec = 0;
 
         memset((void *)&pi, 0, sizeof(pi));    // paranoia
+        // wait for an event
         if (0 > time_pps_fetch(kpps_handle, PPS_TSFMT_TSPEC, &pi, &kpps_tv)) {
             if (ETIMEDOUT == errno ||
                 EINTR == errno) {
@@ -227,13 +228,30 @@ static void do_kpps(void)
                          strerror(errno), errno);
             exit(EXIT_FAILURE);
         }
-        (void)printf(" %s %7lu, %s %7lu\n",
-                     timespec_str(&pi.assert_timestamp,
-                                  ts_str1, sizeof(ts_str1)),
-                     (unsigned long)pi.assert_sequence,
-                     timespec_str(&pi.clear_timestamp,
-                                  ts_str2, sizeof(ts_str2)),
-                     (unsigned long) pi.clear_sequence);
+        now = time(NULL);
+        if (0 < exit_timer &&
+            now >= exit_timer) {
+            break;
+        }
+        // new second, output a newline.
+        if (last != now) {
+            (void)putchar('\n');
+            last = now;
+        }
+        if (pi.assert_sequence != assert_seq) {
+            (void)printf("  KPPS %s    assert  %lu\n",
+                         timespec_str(&pi.assert_timestamp,
+                                      ts_str, sizeof(ts_str)),
+                         (unsigned long)pi.assert_sequence);
+            assert_seq = pi.assert_sequence;
+        }
+        if (pi.clear_sequence != clear_seq) {
+            (void)printf("  KPPS %s    clear   %lu\n",
+                         timespec_str(&pi.clear_timestamp,
+                                      ts_str, sizeof(ts_str)),
+                         (unsigned long)pi.clear_sequence);
+            clear_seq = pi.clear_sequence;
+        }
     }
 
     exit(EXIT_SUCCESS);
