@@ -847,6 +847,8 @@ xtlibs = []
 tiocmiwait = True  # For cleaning, which works on any OS
 usbflags = []
 have_dia = False
+# canplayer is part of can-utils, required for NMEA 2000 tests
+have_canplayer = False
 have_coverage = False
 have_cppcheck = False
 have_flake8 = False
@@ -1369,6 +1371,7 @@ if not cleaning and not helping:
 
     # check for misc audit programs
     try:
+        have_canplayer = config.CheckProg('canplayer')
         have_coverage = config.CheckProg('coverage')
         have_cppcheck = config.CheckProg('cppcheck')
         have_dia = config.CheckProg('dia')
@@ -1383,6 +1386,8 @@ if not cleaning and not helping:
         # gpsd only asks for 2.3.0 or higher
         announce("scons CheckProg() failed..")
 
+    if not have_canplayer:
+        announce("Program canplayer not found -- skipping NMEA 2000 tests")
     if not have_coverage:
         announce("Program coverage not found -- skipping Python coverage")
     if not have_cppcheck:
@@ -2711,6 +2716,20 @@ matrix_regress = Utility('matrix-regress', [test_matrix], [
     '$SRCDIR/tests/test_matrix --quiet'
 ])
 
+# Regression-test NMEA 2000
+if ((env["nmea2000"] and
+     have_canplayer)):
+    nmea2000_logs = glob.glob("test/daemon/*.log*'")
+    # the log files must be dependencies so they get copied into variant_dir
+    nmea2000_regress = Utility('nmea2000-regress',
+        ['tests/test_nmea2000', nmea2000_logs], [
+        '@echo "WIP NMEA 2000  testing decoding..."',
+    ])
+else:
+    announce("NMEA2000 regression tests suppressed because rtcm104v2 is off "
+             "or canplayer is missing.")
+    nmea2000_regress = None
+
 # using regress-drivers requires socket_export being enabled and Python
 if env['socket_export'] and env['python']:
     # Regression-test the daemon.
@@ -2992,7 +3011,7 @@ if qt_env:
     test_nondaemon.append(test_qgpsmm)
 
 test_quick = test_nondaemon + [gpsfake_tests]
-test_noclean = test_quick + [gps_regress]
+test_noclean = test_quick + [gps_regress, nmea2000_regress]
 
 env.Alias('test-nondaemon', test_nondaemon)
 env.Alias('test-quick', test_quick)
