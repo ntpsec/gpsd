@@ -1027,11 +1027,11 @@ if not cleaning and not helping:
             ncurseslibs = ['!ncurses5-config --libs --cflags']
         elif WhereIs('ncursesw5-config'):
             ncurseslibs = ['!ncursesw5-config --libs --cflags']
-        elif context.env['target_platform'].startswith('freebsd'):
+        elif config.env['target_platform'].startswith('freebsd'):
             ncurseslibs = ['-lncurses']
-        elif (context.env['target_platform'].startswith('darwin') or
-              context.env['target_platform'].startswith('openbsd') or
-              context.env['target_platform'].startswith('sunos5')):
+        elif (config.env['target_platform'].startswith('darwin') or
+              config.env['target_platform'].startswith('openbsd') or
+              config.env['target_platform'].startswith('sunos5')):
             ncurseslibs = ['-lcurses']
         else:
             announce('Turning off ncurses support, library not found.')
@@ -1047,7 +1047,8 @@ if not cleaning and not helping:
                 announce("pkg_config is confused about the state "
                          "of libusb-1.0.")
                 usbflags = []
-        elif context.env['target_platform'].startswith('freebsd'):
+        elif config.env['target_platform'].startswith('freebsd'):
+            # FIXME: shold directly test for libusb existence.
             confdefs.append("#define HAVE_LIBUSB 1\n")
             usbflags = ["-lusb"]
         else:
