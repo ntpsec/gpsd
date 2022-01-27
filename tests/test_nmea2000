@@ -23,7 +23,7 @@ fi
 version()
 {
     echo
-    echo `basename $0`" : Version v0.20";
+    echo `basename $0`" : Version v0.21";
     echo
 }
 
@@ -47,8 +47,8 @@ usage()
 device()
 {
     echo
-    echo "CAN device \"${CAN_UNIT}\" do not exit."
-    echo "Try: sudo ./gpsinit vcan "
+    echo "CAN device \"${CAN_UNIT}\" does not exasit."
+    echo "Try as root: ./gpsinit vcan "
     echo
 }
 
@@ -90,11 +90,11 @@ if [ `command -v ${CAN_PLAYER} | wc -c` -eq 0 ]; then can_utils; exit 1; fi
 TMP_PID_FILE=`mktemp`
 TMP_OUT_FILE=`mktemp`
 
-${GPSD_HOME}/gpsd -n -G -D0 -S ${GPSD_PORT} -P ${TMP_PID_FILE} nmea2000://${CAN_UNIT}
+${GPSD_HOME}/../gpsd/gpsd -n -G -D0 -S ${GPSD_PORT} -P ${TMP_PID_FILE} nmea2000://${CAN_UNIT}
 
 sleep 1
 
-${GPSD_HOME}/gpspipe -d -r -w -S -o ${TMP_OUT_FILE} :${GPSD_PORT}
+${GPSD_HOME}/../clients/gpspipe -d -r -w -S -o ${TMP_OUT_FILE} :${GPSD_PORT}
 
 sleep 1
 

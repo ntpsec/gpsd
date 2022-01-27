@@ -2719,12 +2719,19 @@ matrix_regress = Utility('matrix-regress', [test_matrix], [
 # Regression-test NMEA 2000
 if ((env["nmea2000"] and
      have_canplayer)):
-    nmea2000_logs = glob.glob("test/daemon/*.log*'")
     # the log files must be dependencies so they get copied into variant_dir
-    nmea2000_regress = Utility('nmea2000-regress',
-        ['tests/test_nmea2000', nmea2000_logs], [
-        '@echo "WIP NMEA 2000  testing decoding..."',
-    ])
+    nmea2000_logs = Glob("test/nmea2000/*.log", strings=True)
+    nmea2000_tests = []
+    for nmea2000_log in nmea2000_logs:
+        # oddly this runs in build root, but needs to run in variant_dir
+        tgt = Utility(
+            'nmea2000-regress-' + nmea2000_log[:-4],
+            ['tests/test_nmea2000', nmea2000_log, nmea2000_log + '.chk'],
+        '    cd %s; $SRCDIR/tests/test_nmea2000 %s' %
+            (variantdir, nmea2000_log))
+        nmea2000_tests.append(tgt)
+    nmea2000_regress = env.Alias('nmea2000-regress', nmea2000_tests)
+
 else:
     announce("NMEA2000 regression tests suppressed because rtcm104v2 is off "
              "or canplayer is missing.")
@@ -3011,7 +3018,7 @@ if qt_env:
     test_nondaemon.append(test_qgpsmm)
 
 test_quick = test_nondaemon + [gpsfake_tests]
-test_noclean = test_quick + [gps_regress, nmea2000_regress]
+test_noclean = test_quick + [nmea2000_regress, gps_regress]
 
 env.Alias('test-nondaemon', test_nondaemon)
 env.Alias('test-quick', test_quick)
