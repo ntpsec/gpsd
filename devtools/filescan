@@ -1,0 +1,188 @@
+#! /usr/bin/env python
+# -*- coding: latin-1 -*-
+# SPDX-License-Identifier: BSD-2-Clause
+# Copyright 2022 the gpsd project contributors
+"""Scans files for tabs, non-ASCII runes, and trailing whitespace on lines.
+
+.. moduleauthor:: James Browning <JamesB.fe80@GMail.com>
+
+for a file containing a line:
+   	edited.  Symbols “$”, “*” “,” and “.”  are not allowed to be used  	 
+
+we get the image of:
+   === devtools/filescan ===
+      10:          edited.  Symbols "$", "*" "," and "."  are not allowed to be used
+   EAT         "                 !!! !!!  !!! !!! !!! !!!     !!! !!!                           44464
+   =================================================================================================
+
+This file it seems has some issues deliberately left in as indicated by the result block, The resulting block shown is sanitized to avoid Hall Of Mirrors type effects.
+
+#. The name of this file, as given to itself, with short horizontal rules before and after.
+#. A non-compliant line number, followed by a colon, some spacing, and the text of the line.
+#. An offense summary string for the previous line, and offense pointers
+
+   # There are three recognized offenses at this point,
+
+      #. **E** - Trailing whitespace
+      #. **A** - Inclusion of non-ASCII octets
+      #. **T** - Inclusion of tabs (horizontal )
+
+   # There are 4 offense location indicators, that can be below the offending portion of the line.
+
+      #. **!** indicates the offset of a non-ASCII octet.
+      #. **4** and **6** indicate the offset of trailing whitespace.
+      #. **"** and **6** indicate the offset of tabs.
+
+   # The reason the offense location indicators seem misplaced is that tabs tend to expand to the following multiple of 8, and non-ASCII octets tend to contract to fewer runes.
+
+#. A longer horizontal rule to separate any additional files.
+"""
+import sys
+
+encoding = "latin-1"
+pstr = str
+fopt = "rUb"
+if not str is bytes:
+    import io
+
+    fopt = "rb"
+
+    def make_std_wrapper(h):
+        return io.TextIOWrapper(
+            h.buffer, encoding=encoding, newline="\n", line_buffering=True
+        )
+
+    def pstr(s):
+        if not isinstance(s, (bytes, bytearray)):
+            return str(s)
+        return str(s, encoding=encoding)
+
+    sys.stdout = make_std_wrapper(sys.stdout)
+    sys.stderr = make_std_wrapper(sys.stderr)
+
+
+def pchr(c):
+    if isinstance(c, int):
+        return chr(c)
+    return c
+
+
+def pord(c):
+    if isinstance(c, str):
+        return ord(c)
+    return c
+
+
+def mangled(strung, mods):
+    """Return byte-array with incremented/decremented values according to a template.
+
+    #. strung:: the input byte-array
+    #. mods:: a nested tuple-like with the mods
+       #. top level is the group of mods
+       #. level below that is the increment/decrement value and the list of elements to modify by index
+    """
+    try:
+        result = strung
+        for chain in mods:
+            for point in chain[1]:
+                result[point] += chain[0]
+        # result[point] = pchr(int( + mod))
+    except Exception as e:
+        _ = locals()
+        dicky = {}
+        for key in "e mods strung result chain point".split():
+            if key in _:
+                dicky[key] = _[key]
+        print(repr(dicky))
+    return result
+
+
+def hunt_in_file(fname):
+    """Try to open and scan a file for violations given a relative file path.
+
+    #. fname:: open()able argument to find the file, a filename.
+
+    the first part of the code dumps violating lines into the dumper[]
+    . Open the file then for each line.
+       . Sets up the empty scratch variable
+       . Look for things on the list and stick them in the scratch variable.
+       . Possibly tack the scratch variable onto dump.
+    the display code checks if the dumper variable isn't empty, then.
+    . Print the banner with the filename and short horizontal rules.
+    . Set up variables for printing.
+       . Slap together summary line
+       . Create storage for the offending line.
+       . Create/populate modification variable for mangled to modify the storage.
+    . Print out the five-digit line number, ':  ', and the given line.
+    . Prints out a line summarizing and indicating the column of the offense
+    . Prints out a long horizontal rule to separate anything that comes next
+    """
+    dumper = []
+    long_line = 0
+    for lnum, line in enumerate(open(fname, fopt), start=1):
+        a_line = pstr(line)
+        scratch = [
+            lnum,
+            [],
+            a_line,
+            [len(a_line.rstrip()), len(a_line.rstrip("\n\r"))],
+            [],
+        ]
+        for col, octet in enumerate(a_line, start=1):
+            if pord(octet) > 0x7E:
+                scratch[1].append(col)
+            elif pord(octet) == pord("\t"):
+                scratch[4].append(col)
+        if scratch[1] != [] or scratch[4] != [] or scratch[3][1] != scratch[3][0]:
+            dumper.append(scratch)
+            long_line = max(scratch[3][1], long_line)
+    if dumper != []:
+        # print(repr(dumper))
+        sys.stdout.write("=== %s ===\n" % fname)
+        for line in dumper:
+            col, vec = 0, ""
+            strung = bytearray(" " * line[3][0], encoding=encoding)
+            strung += bytearray("4" * (1 + line[3][1] - line[3][0]), encoding=encoding)
+            vec += "E" * (line[3][1] > line[3][0])
+            vec += "A" * (line[1] != [])
+            vec += "T" * (line[4] != [])
+            strung = mangled(strung, [[2, line[4]], [1, line[1]]])
+            sys.stdout.write("%5d:  %s" % (line[0], line[2]))
+            sys.stdout.write("%-8s%s\n" % (vec, pstr(strung)))
+        sys.stdout.write("%s\n\n" % ("=" * (long_line + 8)))
+
+
+if __name__ == "__main__":
+    """Scans files for tabs, non-ASCII runes, and trailing whitespace on lines.
+
+    . Unless given the --version -V --help or -h command-line arguments
+    . Reads filenames from the command-line arguments and then from stdin if it is not a TTY, (probably the bottom of a pipe).
+    . If given -V or --version, prints out the wrong version number.
+    . If given -h or --help, prints text that doesn't help.
+
+    . If none of that happened drop back to the command-line silently.
+    """
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        prog="filescan",
+        description="Scans files for tabs, non-ASCII runes and trailing whitepsace on lines.",
+    )
+    parser.add_argument(
+        "--stdin",
+        "-S",
+        action="store_true",
+        default=False,
+        help="Grab list of files from pipe",
+    )
+    parser.add_argument("--version", "-V", action="version", version="%(prog)s 0.3")
+    parser.add_argument("file_list", nargs="*", help="List of files to scan")
+    _ = parser.parse_args()
+    rings = [_.file_list] if "file_list" in _ else []
+    _ = sys.stdin
+    rings += [] if _.isatty() else [_]
+    if rings == []:
+        parser.parse_args(["--help"])
+    for ring in rings:
+        for key in ring:
+            hunt_in_file(key.strip())
