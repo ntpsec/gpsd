@@ -588,7 +588,7 @@ struct rtcm3_msm_hdr {
     unsigned short station_id;  // Reference Station ID
     time_t tow;                 // GNSS Epoch Time in ms
     bool sync;                  // Synchronous GNSS Message Flag
-    unsigned short IODS;        // IODS – Issue of Data Station
+    unsigned short IODS;        // IODS - Issue of Data Station
     unsigned char reserved;     // reserved
     unsigned char steering;     // Clock Steering Indicator
     unsigned char ext_clk;      // External Clock Indicator
