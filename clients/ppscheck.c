@@ -386,8 +386,10 @@ static void do_tty(void)
     (void)puts("\n# Src   Seconds                 Signals");
     for (;;) {
         const struct assoc *sp;
+#if defined(HAVE_SYS_TIMEPPS_H)
         pps_info_t pi;
         struct timespec kpps_tv ;
+#endif  // HAVE_SYS_TIMEPPS_H
         char ts_str[TIMESPEC_LEN];
 
         if (0 < exit_timer &&
