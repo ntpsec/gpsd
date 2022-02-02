@@ -2733,9 +2733,10 @@ if ((env["nmea2000"] and
     nmea2000_regress = env.Alias('nmea2000-regress', nmea2000_tests)
 
 else:
-    announce("NMEA2000 regression tests suppressed because rtcm104v2 is off "
-             "or canplayer is missing.")
     nmea2000_regress = None
+    if not cleaning and not helping:
+        announce("NMEA2000 regression tests suppressed because rtcm104v2 is off "
+                 "or canplayer is missing.")
 
 # using regress-drivers requires socket_export being enabled and Python
 if env['socket_export'] and env['python']:
