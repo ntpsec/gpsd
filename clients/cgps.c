@@ -994,9 +994,16 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
                 (void)clock_gettime(CLOCK_REALTIME, &ts_now);
                 TS_SUB(&ts_diff, &ts_now, &gpsdata->fix.time);
 
-                (void)mvwprintw(datawin, row, DATAWIN_VALUE_OFFSET + 8,
-                                "%-16s s",
-                                timespec_str(&ts_diff, ts_str, sizeof(ts_str)));
+                if (10000 < llabs(ts_diff.tv_sec)) {
+                    (void)mvwprintw(datawin, row,
+                                    DATAWIN_VALUE_OFFSET + 8,
+                                    "%16lld s", (long long)ts_diff.tv_sec);
+                } else {
+                    (void)mvwprintw(datawin, row,
+                                    DATAWIN_VALUE_OFFSET + 8, "%-16s s",
+                                    timespec_str(&ts_diff, ts_str,
+                                                 sizeof(ts_str)));
+                }
             }
         }
         row++;
