@@ -290,8 +290,11 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session, unsigned id,
     char snd_buf[24];         // send buffer
     char buf2[BUFSIZ];
 
-    if (9 > len) {
+    if (4 > len) {
         // should never happen
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TSIPv1: id 0x%02x-%02x runt, got length %u\n",
+                 id, sub_id, length);
         return mask;
     }
     sub_id = (unsigned)buf[0];
@@ -300,7 +303,7 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session, unsigned id,
 
     if ((length + 3) != (unsigned)len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "TSIPv1: Bad Length. packet id x%02x subpacket id x%02x "
+                 "TSIPv1: Bad Length. packet id x%02x-x%02x "
                  "length got %d expected %u mode %u\n",
                  id, sub_id, len, length + 3, mode);
         return mask;
@@ -314,14 +317,14 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session, unsigned id,
     }
     if (0 != chksum) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "TSIPv1: Bad Checksum. packet id x%02x subpacket id x%02x "
+                 "TSIPv1: Bad Checksum. packet id x%02x-%02x "
                  "length %d/%u mode %u\n",
                  id, sub_id, len, length + 3, mode);
         return mask;
     }
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "TSIPv1: packet id x%02x subpacket id x%02x length %d/%u "
+             "TSIPv1: packet id x%02x-x%02x length %d/%u "
              "mode %u\n",
              id, sub_id, len, length + 3, mode);
 
@@ -377,19 +380,30 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session, unsigned id,
                  "%.*s[%u]\n",
                  u1, u2, u3, u6, u5, u4, u7, u8, buf2, u8);
         mask |= DEVICEID_SET;
+
+        // x91-05, query current periodic messages
+        snd_buf[0] = 0x91;             // id
+        snd_buf[1] = 0x05;             // sub id
+        putbe16(snd_buf, 2, 3);        // length
+        snd_buf[4] = 0;                // mode: query
+        snd_buf[5] = 0xff;             // port: current port
+        snd_buf[6] = tsip1_checksum(snd_buf, 6);   // checksum
+        (void)tsip_write1(session, snd_buf, 7);
+
         if (!session->context->passive) {
-            // request everything periodically
+            /* request everything periodically, x91-05
+             * little harm at 115.2 kbps */
             snd_buf[0] = 0x91;             // id
             snd_buf[1] = 0x05;             // sub id
-            putbe16(snd_buf, 2, 20);       // length
-            snd_buf[5] = 0x01;             // mode: set
-            snd_buf[6] = 0xff;             // port: current port
-            putbe32(snd_buf, 7, 0x02aaa);
-            putbe32(snd_buf, 11, 0);       // reserved
-            putbe32(snd_buf, 15, 0);       // reserved
-            putbe32(snd_buf, 19, 0);       // reserved
-            snd_buf[23] = tsip1_checksum(&snd_buf[5], 18);   // checksum
-            (void)tsip_write1(session, snd_buf, 25);
+            putbe16(snd_buf, 2, 19);       // length
+            snd_buf[4] = 0x01;             // mode: set
+            snd_buf[5] = 0xff;             // port: current port
+            putbe32(snd_buf, 6, 0x02aaa);
+            putbe32(snd_buf, 10, 0);       // reserved
+            putbe32(snd_buf, 14, 0);       // reserved
+            putbe32(snd_buf, 18, 0);       // reserved
+            snd_buf[22] = tsip1_checksum(snd_buf, 22);   // checksum
+            (void)tsip_write1(session, snd_buf, 23);
         }
         break;
     case 0x9100:
@@ -477,7 +491,7 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session, unsigned id,
         break;
     case 0x9105:
         // Receiver Configuration
-        if (18 > length) {
+        if (19 > length) {
             bad_len = true;
             break;
         }
@@ -707,7 +721,7 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session, unsigned id,
         tow = getbeu32(buf, 25);          // TOW, seconds
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "TSIPv1: xa200: num %u type %u PRN %u az %f el %f snr %f "
-                 "flags x%0x4 tow %u",
+                 "flags x%0x4 tow %u\n",
                  u1, u2, u3, d1, d2, d3, u4, tow);
         break;
     case 0xa300:
@@ -745,16 +759,28 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session, unsigned id,
                  u1, u2, u3, d1, d2, d3, d4, d5);
         break;
     case 0xa321:
-        // Error Codes
+        /* Error Report
+         * expect errors for x1c-03 and x35-32 from TSIP probes
+         * 1 - Parameter error
+         * 2 - Length error
+         * 3 - Invalid packet format
+         * 4 - Invalid checksum
+         * 5 - Incorrect TNL/User mode
+         * 6 - Invalid Packet ID
+         * 7 - Invalid subpacket ID
+         * 8 - Update in progress
+         * 9 - Internal error caused div by 0
+         * 10 - Internal error (failed queuing)
+         */
         if (5 > length) {
             bad_len = true;
             break;
         }
-        u1 = (unsigned)buf[6];            // reference packet id
-        u2 = (unsigned)buf[7];            // reference sub packet id
-        u3 = (unsigned)buf[8];            // error code
+        u1 = (unsigned)buf[4];            // reference packet id
+        u2 = (unsigned)buf[5];            // reference sub packet id
+        u3 = (unsigned)buf[6];            // error code
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "TSIPv1: xa321: id %u sub_id %u error %u\n",
+                 "TSIPv1: xa321: id x%02x-%02x error: %u\n",
                  u1, u2, u3);
         break;
     case 0xd000:
@@ -800,6 +826,9 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session, unsigned id,
         FALLTHROUGH
     default:
         // Huh?
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "TSIPv1: x%02x-%02x: unknown packet id/su-id\n",
+                 id, sub_id);
         break;
     }
     if (bad_len) {
@@ -874,13 +903,12 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
 
     id = (unsigned)session->lexer.outbuffer[1];
 #ifdef __UNUSED__      // debug code
-    GPSD_LOG(LOG_SHOUT, &session->context->errout,  // SNARD
+    GPSD_LOG(LOG_SHOUT, &session->context->errout,
              "TSIP: got packet id 0x%02x length %d: %s\n",
              id, len, gpsd_hexdump(buf2, sizeof(buf2),
              (char *)session->lexer.outbuffer, session->lexer.outbuflen));
 #endif  // __UNUSED__
-    // GPSD_LOG(LOG_DATA, &session->context->errout,
-    GPSD_LOG(LOG_SHOUT, &session->context->errout,  // SNARD
+    GPSD_LOG(LOG_DATA, &session->context->errout,
              "TSIP: got packet id 0x%02x length %d: %s\n",
              id, len, gpsd_hexdump(buf2, sizeof(buf2), buf, len));
 
@@ -3171,7 +3199,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          */
         FALLTHROUGH
     case 0xa3:
-        /* Alamrs % Status, TSIP v1
+        /* Alarms % Status, TSIP v1
          * Present in:
          *   RES720
          */

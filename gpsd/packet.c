@@ -2305,9 +2305,10 @@ void packet_parse(struct gps_lexer_t *lexer)
                       ((0x5a <= pkt_id) && (0x5f >= pkt_id)) ||
                       (0x6c == pkt_id) ||
                       (0x6d == pkt_id) ||
-                      ((0x82 <= pkt_id) && (0x84 >= pkt_id)) ||
-                      (0x8f == pkt_id) ||
-                      (0x90 == pkt_id) ||
+                      (0x82 <= pkt_id &&
+                       0x84 >= pkt_id) ||
+                      (0x8f <= pkt_id &&
+                       0x91 >= pkt_id) ||
                       (0xbb == pkt_id) ||
                       (0xbc == pkt_id) ||
                       ((0xa1 <= pkt_id &&
@@ -2397,13 +2398,12 @@ void packet_parse(struct gps_lexer_t *lexer)
                     /* pass */ ;
                 else if (TSIP_ID_AND_LENGTH(0x83, 36))
                     /* pass */ ;
-                else if (TSIP_ID_AND_LENGTH(0x84, 36))
-                    /* pass */ ;
-                // super packets, variable length
-                else if (0x8f == pkt_id) {
+                else if (TSIP_ID_AND_LENGTH(0x84, 36)) {
                     // pass
-                } else if (0x90 == pkt_id) {
-                    // pass, TSIPv1 version/config super packet
+                } else if (0x8f <= pkt_id &&
+                           0x92 >= pkt_id) {
+                    // pass, TSIP super packets, variable length
+                    // pass, TSIPv1 version/config/info super packet
                 } else if (0xa0 <= pkt_id &&
                            0xa3 >= pkt_id) {
                     // PASS, TSIPv1
