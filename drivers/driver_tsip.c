@@ -273,11 +273,11 @@ static bool tsip_detect(struct gps_device_t *session)
  *
  * return: mask
  */
-static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
+static gps_mask_t tsip_parse_v1(struct gps_device_t *session, unsigned id,
                                 const char *buf, int len)
 {
     gps_mask_t mask = 0;
-    unsigned id, sub_id, length, mode;
+    unsigned sub_id, length, mode;
     unsigned short week;
     uint32_t tow;             // time of week in milli seconds
     unsigned u1, u2, u3, u4, u5, u6, u7, u8, u9;
@@ -286,59 +286,62 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
     double d1, d2, d3, d4, d5, d6, d7, d8, d9;
     struct tm date = {0};
     bool bad_len = false;
-    unsigned char chksum = 0;
+    unsigned char chksum;
     char snd_buf[24];         // send buffer
+    char buf2[BUFSIZ];
 
     if (9 > len) {
         // should never happen
         return mask;
     }
-    id = (unsigned)buf[1];
-    sub_id = (unsigned)buf[2];
-    length = getbeu16(buf, 3);  // expected length
-    mode = (unsigned)buf[5];
+    sub_id = (unsigned)buf[0];
+    length = getbeu16(buf, 1);  // expected length
+    mode = (unsigned)buf[3];
 
-    if ((length + 7) != (unsigned)len) {
+    if ((length + 3) != (unsigned)len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "TSIPv1: Bad Length. packet id x%02x subpacket id x%02x "
-                 "length %d/%u mode %u\n",
-                 id, sub_id, len, length, mode);
+                 "length got %d expected %u mode %u\n",
+                 id, sub_id, len, length + 3, mode);
         return mask;
     }
 
-    for (s1 = 1; s1 < (len - 3); s1++ ) {
-        chksum ^= buf[s1];
+    // checksum is id, sub id, length, mode, data, not including trailer
+    // length is mode + data + checksum
+    chksum = id;
+    for (u1 = 0; u1 < (length + 3); u1++ ) {
+        chksum ^= buf[u1];
     }
     if (0 != chksum) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "TSIPv1: Bad Checksum. packet id x%02x subpacket id x%02x "
                  "length %d/%u mode %u\n",
-                 id, sub_id, len, length, mode);
+                 id, sub_id, len, length + 3, mode);
         return mask;
     }
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "TSIPv1: packet id x%02x subpacket id x%02x length %d/%u "
              "mode %u\n",
-             id, sub_id, len, length, mode);
+             id, sub_id, len, length + 3, mode);
 
     if (2 != mode) {
-        /* don't decode queries (mode 0) or set (mode 1)
-         *, why would we even see one? */
+        /* Don't decode queries (mode 0) or set (mode 1).
+         * Why would we even see one? */
         return mask;
     }
     // FIXME: check len/length and checksum
     switch ((id << 8) | sub_id) {
     case 0x9000:
         // Protocol Version
-        if (2 > length) {
+        if (11 > length) {
             bad_len = true;
             break;
         }
-        u1 = (unsigned)buf[6];            // NMEA Major version
-        u2 = (unsigned)buf[7];            // NMEA Minor version
-        u3 = (unsigned)buf[8];            // TSIP version
-        u4 = (unsigned)buf[9];            // Trimble NMEA version
+        u1 = (unsigned)buf[4];            // NMEA Major version
+        u2 = (unsigned)buf[5];            // NMEA Minor version
+        u3 = (unsigned)buf[6];            // TSIP version
+        u4 = (unsigned)buf[7];            // Trimble NMEA version
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "TSIPv1: x9000: NMEA %u.%u TSIP %u TNMEA %u\n",
                  u1, u2, u3, u4);
@@ -349,19 +352,30 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
             bad_len = true;
             break;
         }
-        u1 = (unsigned)buf[6];            // Major version
-        u2 = (unsigned)buf[7];            // Minor version
-        u3 = (unsigned)buf[8];            // Build number
-        u4 = (unsigned)buf[9];            // Build month
-        u5 = (unsigned)buf[10];           // Build day
-        u6 = getbeu16(buf, 11);           // Build year
-        u7 = getbeu16(buf, 13);           // Hardware ID
-        u8 = (unsigned)buf[15];           // Product Name length
+        u1 = (unsigned)buf[4];            // Major version
+        u2 = (unsigned)buf[5];            // Minor version
+        u3 = (unsigned)buf[6];            // Build number
+        u4 = (unsigned)buf[7];            // Build month
+        u5 = (unsigned)buf[8];            // Build day
+        u6 = getbeu16(buf, 9);            // Build year
+        u7 = getbeu16(buf, 11);           // Hardware ID
+        u8 = (unsigned)buf[13];           // Product Name length
         session->driver.tsip.hardware_code = u7;
+        // check for valid module name length
+        // RES720 is 27 long
+        // check for valid module name length, again
+        if (40 < u8) {
+            u8 = 40;
+        }
+        if ((int)u8 > (len - 13)) {
+            u8 = (unsigned)len - 13;
+        }
+        memcpy(buf2, &buf[14], u8);
+        buf2[u8] = '\0';
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "TSIPv1: x9001: Version %u.%u Build %u %u/%u/%u hwid %u, "
-                 "%.*s\n",
-                 u1, u2, u3, u6, u5, u4, u7, u8, buf + u8);
+                 "%.*s[%u]\n",
+                 u1, u2, u3, u6, u5, u4, u7, u8, buf2, u8);
         mask |= DEVICEID_SET;
         if (!session->context->passive) {
             // request everything periodically
@@ -546,28 +560,28 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
             break;
         }
 
-        tow = getbeu32(buf, 6);
-        week = getbeu16(buf, 10);
+        tow = getbeu32(buf, 4);
+        week = getbeu16(buf, 8);
 
-        date.tm_hour = (unsigned)buf[12];            // hours 0 - 23
-        date.tm_min = (unsigned)buf[13];             // minutes 0 -59
-        date.tm_sec = (unsigned)buf[14];             // seconds 0 - 60
-        date.tm_mon = (unsigned)buf[15];             // month 1 - 12
-        date.tm_mday = (unsigned)buf[16];            // day of month 1 - 31
-        date.tm_year = getbeu16(buf, 17) - 1900;     // year
+        date.tm_hour = (unsigned)buf[10];            // hours 0 - 23
+        date.tm_min = (unsigned)buf[11];             // minutes 0 -59
+        date.tm_sec = (unsigned)buf[12];             // seconds 0 - 60
+        date.tm_mon = (unsigned)buf[13];             // month 1 - 12
+        date.tm_mday = (unsigned)buf[14];            // day of month 1 - 31
+        date.tm_year = getbeu16(buf, 15) - 1900;     // year
 
         session->newdata.time.tv_sec = mkgmtime(&date);
         session->newdata.time.tv_nsec = 0;
         // nano, can be negative! So normalize
         TS_NORM(&session->newdata.time);
 
-        u1 = (unsigned)buf[19];             // time base
-        u2 = (unsigned)buf[20];             // PPS base
-        u3 = (unsigned)buf[21];             // flags
-        s1 = getbes16(buf, 22);             // UTC Offset
-        d1 = getbef32((char *)buf, 24);     // PPS Quantization Error
-        d2 = getbef32((char *)buf, 28);     // Bias
-        d3 = getbef32((char *)buf, 32);     // Bias Rate
+        u1 = (unsigned)buf[17];             // time base
+        u2 = (unsigned)buf[18];             // PPS base
+        u3 = (unsigned)buf[19];             // flags
+        s1 = getbes16(buf, 20);             // UTC Offset
+        d1 = getbef32((char *)buf, 22);     // PPS Quantization Error
+        d2 = getbef32((char *)buf, 26);     // Bias
+        d3 = getbef32((char *)buf, 30);     // Bias Rate
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "TSIPv1: xa100: tow %u week %u %02u:%02u:%02u %4u/%02u/%02u "
                  "base %u/%u flagsx%x UTC offset %d qErr %f Bias %f/%f\n",
@@ -790,8 +804,8 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session,
     }
     if (bad_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "TSIPv1: id 0x%02x-%02x runt\n",
-                 id, sub_id);
+                 "TSIPv1: id 0x%02x-%02x runt, got length %u\n",
+                 id, sub_id, length);
         mask = 0;
     }
 
@@ -845,27 +859,30 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
     // get receive time, first
     (void)time(&now);
 
-    // remove DLE stuffing and put data part of message in buf
+    // put data part of message in buf
 
     memset(buf, 0, sizeof(buf));
     len = 0;
-    buf2[0] = '\0';
     for (i = 2; i < (int)session->lexer.outbuflen; i++) {
         if (0x10 == session->lexer.outbuffer[i] &&
             0x03 == session->lexer.outbuffer[++i]) {
+                // DLE, STX.  end of packet, we know the length
                 break;
         }
-
-        // FIXME: expensive way to do hex, that is only used when logging
-        str_appendf(buf2, sizeof(buf2),
-                    "%02x", session->lexer.outbuffer[i]);
         buf[len++] = session->lexer.outbuffer[i];
     }
 
     id = (unsigned)session->lexer.outbuffer[1];
-    GPSD_LOG(LOG_DATA, &session->context->errout,
+#ifdef __UNUSED__      // debug code
+    GPSD_LOG(LOG_SHOUT, &session->context->errout,  // SNARD
              "TSIP: got packet id 0x%02x length %d: %s\n",
-             id, len, buf2);
+             id, len, gpsd_hexdump(buf2, sizeof(buf2),
+             (char *)session->lexer.outbuffer, session->lexer.outbuflen));
+#endif  // __UNUSED__
+    // GPSD_LOG(LOG_DATA, &session->context->errout,
+    GPSD_LOG(LOG_SHOUT, &session->context->errout,  // SNARD
+             "TSIP: got packet id 0x%02x length %d: %s\n",
+             id, len, gpsd_hexdump(buf2, sizeof(buf2), buf, len));
 
     // session->cycle_end_reliable = true;
     switch (id) {
@@ -3176,7 +3193,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          * Present in:
          *   RES720
          */
-        return tsip_parse_v1(session, buf, len);
+        return tsip_parse_v1(session, id, buf, len);
 // end of TSIP V1
     case 0xbb:
         /* Navigation Configuration

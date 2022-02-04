@@ -708,7 +708,7 @@ struct gps_device_t {
              * 0 = None, 1 = old superpacket, 2 = new superpacket (SMT 360) */
             uint8_t superpkt;
             uint8_t machine_id;         // from 0x4b
-            uint16_t hardware_code;     // from 0x1c-83
+            uint16_t hardware_code;     // from 0x1c-83, or 0x90-01
             time_t last_41;             /* Timestamps for packet requests */
             time_t last_48;
             time_t last_5c;
@@ -723,6 +723,7 @@ struct gps_device_t {
 #define TSIP_RESSMT360          3023
 #define TSIP_ICMSMT360          3026
 #define TSIP_RES36017x22        3031
+#define TSIP_RES720             3100
             uint8_t alt_is_msl;         // 0 if alt is HAE, 1 if MSL
             timespec_t last_tow;        // used to find cycle start
             int last_chan_seen;         // from 0x5c or 0x5d

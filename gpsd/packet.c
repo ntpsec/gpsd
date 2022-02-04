@@ -2277,6 +2277,10 @@ void packet_parse(struct gps_lexer_t *lexer)
                  * 0x8f-20, LLA & ENU
                  * 0x8f-26, SEEPROM write status
                  * 0x8f-40, TAIP Configuration
+                 * 0x90-XX, Version/Config (TSIPv1)
+                 * 0xa1-00, Timing Info (TSIPv1)
+                 * 0xa1-01, Frequency Info (TSIPv1)
+                 * 0xa1-02, Position Info (TSIPv1)
                  * 0xbb, GPS Navigation Configuration
                  * 0xbc, Receiver Port Configuration
                  *
@@ -2292,6 +2296,7 @@ void packet_parse(struct gps_lexer_t *lexer)
                  */
                 pkt_id = lexer->inbuffer[1];    // packet ID
                 // *INDENT-OFF*
+                // FIXME: combine this if, and the next ones?
                 if (!((0x13 == pkt_id) ||
                       (0x1c == pkt_id) ||
                       (0x38 == pkt_id) ||
@@ -2302,8 +2307,11 @@ void packet_parse(struct gps_lexer_t *lexer)
                       (0x6d == pkt_id) ||
                       ((0x82 <= pkt_id) && (0x84 >= pkt_id)) ||
                       (0x8f == pkt_id) ||
+                      (0x90 == pkt_id) ||
                       (0xbb == pkt_id) ||
-                      (0xbc == pkt_id))) {
+                      (0xbc == pkt_id) ||
+                      ((0xa1 <= pkt_id &&
+                       0xa3 >= pkt_id)))) {
                     GPSD_LOG(LOG_PROG, &lexer->errout,
                              "Packet ID 0x%02x out of range for TSIP\n",
                              pkt_id);
@@ -2392,12 +2400,18 @@ void packet_parse(struct gps_lexer_t *lexer)
                 else if (TSIP_ID_AND_LENGTH(0x84, 36))
                     /* pass */ ;
                 // super packets, variable length
-                else if (0x8f == pkt_id)
-                    /* pass */ ;
+                else if (0x8f == pkt_id) {
+                    // pass
+                } else if (0x90 == pkt_id) {
+                    // pass, TSIPv1 version/config super packet
+                } else if (0xa0 <= pkt_id &&
+                           0xa3 >= pkt_id) {
+                    // PASS, TSIPv1
+                    // FIXME: check for sub packet id 0 to 2
                 /*
                  * This is according to [TSIP].
                  */
-                else if (TSIP_ID_AND_LENGTH(0xbb, 40))
+                } else if (TSIP_ID_AND_LENGTH(0xbb, 40))
                     /* pass */ ;
                 /*
                  * The Accutime Gold ships a version of this packet with a
