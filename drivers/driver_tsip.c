@@ -266,6 +266,99 @@ static bool tsip_detect(struct gps_device_t *session)
     return ret;
 }
 
+/* send the next TSIPv1 query
+ * Return: void
+ */
+static void tsipv1_query(struct gps_device_t *session, int index)
+{
+    char snd_buf[24];         // send buffer
+
+    switch (index) {
+    case 0:
+        // x90-01, GNSS config
+        snd_buf[0] = 0x91;             // id
+        snd_buf[1] = 0x01;             // sub id
+        putbe16(snd_buf, 2, 2);        // length
+        snd_buf[4] = 0;                // mode: query
+        snd_buf[5] = tsip1_checksum(snd_buf, 5);   // checksum
+        (void)tsip_write1(session, snd_buf, 6);
+        break;
+    case 1:
+        // x90-00, query protocol version
+        snd_buf[0] = 0x90;             // id
+        snd_buf[1] = 0x00;             // sub id
+        putbe16(snd_buf, 2, 2);        // length
+        snd_buf[4] = 0;                // mode: query
+        snd_buf[5] = tsip1_checksum(snd_buf, 5);   // checksum
+        (void)tsip_write1(session, snd_buf, 6);
+        break;
+    case 2:
+        // x90-01, query GNSS config version
+        snd_buf[0] = 0x90;             // id
+        snd_buf[1] = 0x01;             // sub id
+        putbe16(snd_buf, 2, 2);        // length
+        snd_buf[4] = 0;                // mode: query
+        snd_buf[5] = tsip1_checksum(snd_buf, 5);   // checksum
+        (void)tsip_write1(session, snd_buf, 6);
+        break;
+    case 3:
+        // x91-03, query timing config
+        snd_buf[0] = 0x91;             // id
+        snd_buf[1] = 0x03;             // sub id
+        putbe16(snd_buf, 2, 2);        // length
+        snd_buf[4] = 0;                // mode: query
+        snd_buf[5] = tsip1_checksum(snd_buf, 5);   // checksum
+        (void)tsip_write1(session, snd_buf, 6);
+        break;
+    case 4:
+        // x91-04, self survey config
+        snd_buf[0] = 0x91;             // id
+        snd_buf[1] = 0x04;             // sub id
+        putbe16(snd_buf, 2, 2);        // length
+        snd_buf[4] = 0;                // mode: query
+        snd_buf[5] = tsip1_checksum(snd_buf, 5);   // checksum
+        (void)tsip_write1(session, snd_buf, 6);
+        break;
+    case 5:
+        // x93-00, production info
+        snd_buf[0] = 0x93;             // id
+        snd_buf[1] = 0x00;             // sub id
+        putbe16(snd_buf, 2, 2);        // length
+        snd_buf[4] = 0;                // mode: query
+        snd_buf[5] = tsip1_checksum(snd_buf, 5);   // checksum
+        (void)tsip_write1(session, snd_buf, 6);
+        break;
+    case 6:
+        if (session->context->passive) {
+            // x91-05, query current periodic messages
+            snd_buf[0] = 0x91;             // id
+            snd_buf[1] = 0x05;             // sub id
+            putbe16(snd_buf, 2, 3);        // length
+            snd_buf[4] = 0;                // mode: query
+            snd_buf[5] = 0xff;             // port: current port
+            snd_buf[6] = tsip1_checksum(snd_buf, 6);   // checksum
+            (void)tsip_write1(session, snd_buf, 7);
+        } else {
+            /* request everything periodically, x91-05
+             * little harm at 115.2 kbps, this also responses as a query */
+            snd_buf[0] = 0x91;             // id
+            snd_buf[1] = 0x05;             // sub id
+            putbe16(snd_buf, 2, 19);       // length
+            snd_buf[4] = 0x01;             // mode: set
+            snd_buf[5] = 0xff;             // port: current port
+            putbe32(snd_buf, 6, 0x02aaa);
+            putbe32(snd_buf, 10, 0);       // reserved
+            putbe32(snd_buf, 14, 0);       // reserved
+            putbe32(snd_buf, 18, 0);       // reserved
+            snd_buf[22] = tsip1_checksum(snd_buf, 22);   // checksum
+            (void)tsip_write1(session, snd_buf, 23);
+        }
+        break;
+    default:
+        // nothing to do
+    }
+}
+
 /* parse TSIP v1 packages.
  * Currently only in RES720 devices, from 2020 onward.
  * buf: raw data, with DLE stuffing removed
@@ -273,7 +366,7 @@ static bool tsip_detect(struct gps_device_t *session)
  *
  * return: mask
  */
-static gps_mask_t tsip_parse_v1(struct gps_device_t *session, unsigned id,
+static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                                 const char *buf, int len)
 {
     gps_mask_t mask = 0;
@@ -287,7 +380,6 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session, unsigned id,
     struct tm date = {0};
     bool bad_len = false;
     unsigned char chksum;
-    char snd_buf[24];         // send buffer
     char buf2[BUFSIZ];
 
     if (4 > len) {
@@ -350,34 +442,12 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session, unsigned id,
                  "TSIPv1 x90-00: NMEA %u.%u TSIP %u TNMEA %u "
                  "res x%04x x%02x \n",
                  u1, u2, u3, u4, u6, u7);
+        tsipv1_query(session, 0);
 
-        // x91-05, query current periodic messages
-        snd_buf[0] = 0x91;             // id
-        snd_buf[1] = 0x05;             // sub id
-        putbe16(snd_buf, 2, 3);        // length
-        snd_buf[4] = 0;                // mode: query
-        snd_buf[5] = 0xff;             // port: current port
-        snd_buf[6] = tsip1_checksum(snd_buf, 6);   // checksum
-        (void)tsip_write1(session, snd_buf, 7);
-
-        if (!session->context->passive) {
-            /* request everything periodically, x91-05
-             * little harm at 115.2 kbps */
-            snd_buf[0] = 0x91;             // id
-            snd_buf[1] = 0x05;             // sub id
-            putbe16(snd_buf, 2, 19);       // length
-            snd_buf[4] = 0x01;             // mode: set
-            snd_buf[5] = 0xff;             // port: current port
-            putbe32(snd_buf, 6, 0x02aaa);
-            putbe32(snd_buf, 10, 0);       // reserved
-            putbe32(snd_buf, 14, 0);       // reserved
-            putbe32(snd_buf, 18, 0);       // reserved
-            snd_buf[22] = tsip1_checksum(snd_buf, 22);   // checksum
-            (void)tsip_write1(session, snd_buf, 23);
-        }
         break;
     case 0x9001:
-        // Receiver Version Information
+        /* Receiver Version Information
+         * Received in response to the TSIPv1 probe */
         if (11 > length) {
             bad_len = true;
             break;
@@ -408,13 +478,7 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session, unsigned id,
                  u1, u2, u3, u6, u5, u4, u7, u8, buf2, u8);
         mask |= DEVICEID_SET;
 
-        // x90-00, query protocol version
-        snd_buf[0] = 0x90;             // id
-        snd_buf[1] = 0x00;             // sub id
-        putbe16(snd_buf, 2, 2);        // length
-        snd_buf[4] = 0;                // mode: query
-        snd_buf[5] = tsip1_checksum(snd_buf, 5);   // checksum
-        (void)tsip_write1(session, snd_buf, 6);
+        tsipv1_query(session, 1);
 
         break;
     case 0x9100:
@@ -437,14 +501,7 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session, unsigned id,
                  "parity %u stop %u res x%04x %04x\n",
                  u1, u2, u3, u4, u5, u6, u7, u8, u9);
 
-        // x90-01, query GNSS config version
-        snd_buf[0] = 0x90;             // id
-        snd_buf[1] = 0x01;             // sub id
-        putbe16(snd_buf, 2, 2);        // length
-        snd_buf[4] = 0;                // mode: query
-        snd_buf[5] = tsip1_checksum(snd_buf, 5);   // checksum
-        (void)tsip_write1(session, snd_buf, 6);
-
+        tsipv1_query(session, 2);
         break;
     case 0x9101:
         // GNSS Configuration
@@ -453,18 +510,20 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session, unsigned id,
             break;
         }
         // constellation, 0 to 26, mashup of constellation and signal
-        u1 = getbeu32(buf, 6);            // constellation
-        d1 = getbef32((char *)buf, 10);   // elevation mask
-        d2 = getbef32((char *)buf, 14);   // signal mask
-        d3 = getbef32((char *)buf, 18);   // PDOP mask
-        u2 = (unsigned)buf[22];           // anti-jamming
-        u3 = (unsigned)buf[22];           // fix rate
-        d4 = getbef32((char *)buf, 24);   // Antenna CAble delay, seconds
-        u4 = getbeu32(buf, 28);           // reserved
+        u1 = getbeu32(buf, 4);            // constellation
+        d1 = getbef32((char *)buf, 8);    // elevation mask
+        d2 = getbef32((char *)buf, 12);   // signal mask
+        d3 = getbef32((char *)buf, 16);   // PDOP mask
+        u2 = (unsigned)buf[20];           // anti-jamming
+        u3 = (unsigned)buf[21];           // fix rate
+        d4 = getbef32((char *)buf, 22);   // Antenna CAble delay, seconds
+        u4 = getbeu32(buf, 26);           // reserved
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIPv1 x91-01: cons %u el %f signal %f PDOP %f jam %u "
                  "rate %u delay %f res x%04x\n",
                  u1, d1, d2, d3, u2, u3, d4, u4);
+        tsipv1_query(session, 3);
+
         break;
     case 0x9102:
         // NVS Configuration
@@ -484,16 +543,17 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = (unsigned)buf[6];            // time basee
-        u2 = (unsigned)buf[7];            // PPS base
-        u3 = (unsigned)buf[8];            // PPS mask
-        u4 = getbeu16(buf, 9);            // reserved
-        u5 = getbeu16(buf, 13);           // PPS width
-        d1 = getbed64((char *)buf, 15);   // PPS offset, in seconds
+        u1 = (unsigned)buf[4];            // time basee
+        u2 = (unsigned)buf[5];            // PPS base
+        u3 = (unsigned)buf[6];            // PPS mask
+        u4 = getbeu16(buf, 7);            // reserved
+        u5 = getbeu16(buf, 9);            // PPS width
+        d1 = getbed64((char *)buf, 11);   // PPS offset, in seconds
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIPv1 x91-03: time base %u PPS base %u mask %u res x%04x "
                  "width %u offset %f\n",
                  u1, u2, u3, u4, u5, d1);
+        tsipv1_query(session, 4);
         break;
     case 0x9104:
         // Self-Survey Configuration
@@ -501,28 +561,30 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = (unsigned)buf[6];            // self-survey mask
-        u2 = getbeu32(buf, 7);            // self-survey length, # fixes
-        u3 = getbeu16(buf, 11);           // horz uncertainty, meters
-        u4 = getbeu16(buf, 13);           // vert uncertainty, meters
+        u1 = (unsigned)buf[4];            // self-survey mask
+        u2 = getbeu32(buf, 5);            // self-survey length, # fixes
+        u3 = getbeu16(buf, 9);           // horz uncertainty, meters
+        u4 = getbeu16(buf, 11);           // vert uncertainty, meters
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIPv1 x91-04: mask %u length %u hhorz %u vert %u\n",
+                 "TSIPv1 x91-04: mask %u length %u eph %u epv %u\n",
                  u1, u2, u3, u4);
+        tsipv1_query(session, 5);
         break;
     case 0x9105:
-        // Receiver Configuration
+        // x91-05 Receiver Configuration
         if (19 > length) {
             bad_len = true;
             break;
         }
-        u1 = (unsigned)buf[6];           // port
-        u2 = getbeu32(buf, 7);           // type of output
-        u3 = getbeu32(buf, 11);          // reserved
-        u4 = getbeu32(buf, 15);          // reserved
-        u5 = getbeu32(buf, 19);          // reserved
+        u1 = (unsigned)buf[4];           // port
+        u2 = getbeu32(buf, 5);           // type of output
+        u3 = getbeu32(buf, 9);           // reserved
+        u4 = getbeu32(buf, 13);          // reserved
+        u5 = getbeu32(buf, 17);          // reserved
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIPv1 x91-05: port %u type x%04x res x%04x x%04x x%04x\n",
                  u1, u2, u3, u4, u5);
+        tsipv1_query(session, 7);
         break;
     case 0x9201:
         // Reset Cause
@@ -540,21 +602,21 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = (unsigned)buf[6];            // reserved
-        u2 = getbeu32(buf, 7);            // serial number
-        u3 = getbeu64(buf, 11);           // extended serial number
-        u4 = getbeu64(buf, 19);           // extended serial number
-        u5 = (unsigned)buf[27];           // build day
-        u6 = (unsigned)buf[28];           // build month
-        u7 = getbeu16(buf, 29);           // build year
-        u8 = (unsigned)buf[31];           // build hour
-        u9 = getbeu16(buf, 32);           // machine id
-        u10 = getbeu64(buf, 34);          // hardware ID string
-        u11 = getbeu64(buf, 42);          // hardware ID string
-        u12 = getbeu64(buf, 50);          // product ID string
-        u13 = getbeu64(buf, 58);          // product ID string
-        u14 = getbeu32(buf, 66);          // premium options
-        u15 = getbeu32(buf, 70);          // reserved
+        u1 = (unsigned)buf[4];            // reserved
+        u2 = getbeu32(buf, 5);            // serial number
+        u3 = getbeu64(buf, 9);            // extended serial number
+        u4 = getbeu64(buf, 17);           // extended serial number
+        u5 = (unsigned)buf[25];           // build day
+        u6 = (unsigned)buf[26];           // build month
+        u7 = getbeu16(buf, 27);           // build year
+        u8 = (unsigned)buf[29];           // build hour
+        u9 = getbeu16(buf, 30);           // machine id
+        u10 = getbeu64(buf, 32);          // hardware ID string
+        u11 = getbeu64(buf, 40);          // hardware ID string
+        u12 = getbeu64(buf, 48);          // product ID string
+        u13 = getbeu64(buf, 56);          // product ID string
+        u14 = getbeu32(buf, 64);          // premium options
+        u15 = getbeu32(buf, 78);          // reserved
         // ignore 77 Osc search range, and 78–81 Osc offset, always 0xff
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "TSIPv1 x93-00: res %u ser %u x%04x %04x Build %u/%u/%u %u "
@@ -562,6 +624,7 @@ static gps_mask_t tsip_parse_v1(struct gps_device_t *session, unsigned id,
                  "options x%04x res x%04x\n",
                  u1, u2, u3, u4, u7, u6, u5, u8, u9, u10,
                  u11, u12, u13, u14, u15);
+        tsipv1_query(session, 6);
         break;
     case 0xa000:
         // Firmware Upload
@@ -3244,7 +3307,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          * Present in:
          *   RES720
          */
-        return tsip_parse_v1(session, id, buf, len);
+        return tsipv1_parse(session, id, buf, len);
 // end of TSIP V1
     case 0xbb:
         /* Navigation Configuration
