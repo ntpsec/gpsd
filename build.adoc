@@ -454,6 +454,9 @@ emerge --noreplace sys-apps/dbus
 # To build Qt compatible library.
 emerge --noreplace dev-qt/qtcore dev-qt/qtnetwork
 
+# "scons check" requires bc
+emerge --noreplace sys-devel/bc
+
 # prerequisites now installed
 
 # make a place to keep the source
