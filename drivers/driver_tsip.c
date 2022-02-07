@@ -385,8 +385,8 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
     if (4 > len) {
         // should never happen
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "TSIPv1 0x%02x-%02x: runt, got length %u\n",
-                 id, sub_id, length);
+                 "TSIPv1 0x%02x: runt, got length %u\n",
+                 id, length);
         return mask;
     }
     sub_id = (unsigned)buf[0];
@@ -663,14 +663,9 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         date.tm_hour = (unsigned)buf[10];            // hours 0 - 23
         date.tm_min = (unsigned)buf[11];             // minutes 0 -59
         date.tm_sec = (unsigned)buf[12];             // seconds 0 - 60
-        date.tm_mon = (unsigned)buf[13];             // month 1 - 12
+        date.tm_mon = (unsigned)buf[13] - 1;         // month 1 - 12
         date.tm_mday = (unsigned)buf[14];            // day of month 1 - 31
         date.tm_year = getbeu16(buf, 15) - 1900;     // year
-
-        session->newdata.time.tv_sec = mkgmtime(&date);
-        session->newdata.time.tv_nsec = 0;
-        // nano, can be negative! So normalize
-        TS_NORM(&session->newdata.time);
 
         u1 = (unsigned)buf[17];             // time base
         u2 = (unsigned)buf[18];             // PPS base
@@ -679,6 +674,15 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         d1 = getbef32((char *)buf, 22);     // PPS Quantization Error
         d2 = getbef32((char *)buf, 26);     // Bias
         d3 = getbef32((char *)buf, 30);     // Bias Rate
+
+        // fix.time is w/o leap seconds...
+        session->newdata.time.tv_sec = mkgmtime(&date) - s1;
+        session->newdata.time.tv_nsec = 0;
+        // nano, can be negative! So normalize
+        TS_NORM(&session->newdata.time);
+
+        session->context->leap_seconds = s1;
+        session->context->valid |= LEAP_SECOND_VALID;
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIPv1 xa1-00: tow %u week %u %02u:%02u:%02u %4u/%02u/%02u "
                  "base %u/%u flagsx%x UTC offset %d qErr %f Bias %f/%f\n",
@@ -729,6 +733,8 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         d7 = getbef32((char *)buf, 42);   // PDOP, surveyed or current
         d8 = getbef32((char *)buf, 46);   // horz uncertainty
         d9 = getbef32((char *)buf, 50);   // vert uncertainty
+        session->gpsdata.dop.pdop = d7;
+        mask |= DOP_SET;
         if (0 == (u1 & 1)) {
             session->newdata.status = STATUS_GPS;
         } else {
@@ -840,10 +846,15 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         d3 = getbef32((char *)buf, 15);   // VDOP
         d4 = getbef32((char *)buf, 19);   // TDOP
         d5 = getbef32((char *)buf, 23);   // Temperature, degrees C
+        session->gpsdata.dop.pdop = d1;
+        session->gpsdata.dop.hdop = d2;
+        session->gpsdata.dop.vdop = d3;
+        session->gpsdata.dop.tdop = d4;
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIPv1 xa3-11: mode %u status %u survey %u PDOP %f HDOP %f "
                  "VDOP %f TDOP %f temp %f\n",
                  u1, u2, u3, d1, d2, d3, d4, d5);
+        mask |= DOP_SET;
         break;
     case 0xa321:
         /* Error Report
