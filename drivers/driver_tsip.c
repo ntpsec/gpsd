@@ -359,6 +359,113 @@ static void tsipv1_query(struct gps_device_t *session, int index)
     }
 }
 
+/* tsipv1_svtype()
+ * convert TSIPv1 SV Type to satellite_t.gnssid and satellite_t.sigid
+ * PRN is already GNSS specific (1-99)
+ * return gnssid directly, sigid indirectly through pointer
+ *
+ * Return: gnssid
+ *         0xff on error
+ */
+static unsigned char tsipv1_svtype(unsigned svtype, unsigned char *sigid)
+{
+
+    unsigned char gnssid;
+
+    switch (svtype) {
+    case 1:  // GPS L1C
+       gnssid =  GNSSID_GPS;
+       *sigid = 0;
+       break;
+    case 2:  // GPS L2.  CL or CM?
+       gnssid =  GNSSID_GPS;
+       *sigid = 3;         // or, maybe 4
+       break;
+    case 3:  // GPS L5.  I or Q?
+       gnssid =  GNSSID_GPS;
+       *sigid = 6;         // or maybe 7
+       break;
+    case 5:  // GLONASS G1
+       gnssid =  GNSSID_GLO;
+       *sigid = 0;
+       break;
+    case 6:  // GLONASS G2
+       gnssid =  GNSSID_GLO;
+       *sigid = 2;
+       break;
+    case 9:  // SBAS, assume L1
+       gnssid =  GNSSID_SBAS;
+       *sigid = 0;
+       break;
+    case 13:  // Beidou B1, D1 or D2?
+       gnssid =  GNSSID_BD;
+       *sigid = 0;   // or maybe 1
+       break;
+    case 14:  // Beidou B2i
+       gnssid =  GNSSID_BD;
+       *sigid = 2;
+       break;
+    case 15:  // Beidou B2a
+       gnssid =  GNSSID_BD;
+       *sigid = 3;
+       break;
+    case 17:  // Galileo E1, C or B?
+       gnssid =  GNSSID_GAL;
+       *sigid = 0;    // or maybe 1
+       break;
+    case 18:  // Galileo E5a, aI or aQ?
+       gnssid =  GNSSID_GAL;
+       *sigid = 3;    // or maybe 4?
+       break;
+    case 19:  // Galileo E5b, bI or bQ?
+       gnssid =  GNSSID_GAL;
+       *sigid = 5;    // or maybe 6
+       break;
+    case 20:  // Galileo E6
+       gnssid =  GNSSID_GAL;
+       *sigid = 8;     // no idea
+       break;
+    case 22:  // QZSS L1
+       gnssid =  GNSSID_QZSS;
+       *sigid = 0;
+       break;
+    case 23:  // QZSS L2C
+       gnssid =  GNSSID_QZSS;
+       *sigid = 4;    // or maybe 5
+       break;
+    case 24:  // QZSS L5
+       gnssid =  GNSSID_QZSS;
+       *sigid = 8;     // no idea
+       break;
+    case 26:  // IRNSS L5
+       gnssid =  GNSSID_IRNSS;
+       *sigid = 8;     // no idea
+       break;
+    case 4:  // Reserved
+        FALLTHROUGH
+    case 7:  // Reserved
+        FALLTHROUGH
+    case 8:  // Reserved
+        FALLTHROUGH
+    case 10:  // Reservced
+        FALLTHROUGH
+    case 11:  // Reservced
+        FALLTHROUGH
+    case 12:  // Reservced
+        FALLTHROUGH
+    case 16:  // Reserved
+        FALLTHROUGH
+    case 21:  // Reserved
+        FALLTHROUGH
+    case 25:  // Reserved
+        FALLTHROUGH
+    default:
+        *sigid = 0xff;
+        return 0xff;
+    }
+    return gnssid;
+}
+
 /* parse TSIP v1 packages.
  * Currently only in RES720 devices, from 2020 onward.
  * buf: raw data, with DLE stuffing removed
@@ -385,8 +492,8 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
     if (4 > len) {
         // should never happen
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "TSIPv1 0x%02x: runt, got length %u\n",
-                 id, length);
+                 "TSIPv1 0x%02x: runt, got len %u\n",
+                 id, len);
         return mask;
     }
     sub_id = (unsigned)buf[0];
@@ -812,10 +919,14 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         u4 = getbeu32(buf, 19);           // Flags
         // TOW of measurement, not current TOW!
         tow = getbeu32(buf, 23);          // TOW, seconds
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "TSIPv1 xa2-00: num %u type %u PRN %u az %f el %f snr %f "
-                 "flags x%0x4 tow %u\n",
-                 u1, u2, u3, d1, d2, d3, u4, tow);
+        {
+            unsigned char gnssid, sigid;
+            gnssid = tsipv1_svtype(u2, &sigid);
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "TSIPv1 xa2-00: num %u type %u (gnss %u sigid %u) PRN %u "
+                     "az %f el %f snr %f flags x%0x4 tow %u\n",
+                     u1, u2, gnssid, sigid, u3, d1, d2, d3, u4, tow);
+        }
         break;
     case 0xa300:
         // System Alarms
