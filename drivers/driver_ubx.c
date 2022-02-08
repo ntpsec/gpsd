@@ -598,7 +598,7 @@ ubx_msg_esf_raw(struct gps_device_t *session, unsigned char *buf,
     unsigned i;
     uint16_t blocks;
     gps_mask_t mask = 0;
-    struct attitude_t *datap;
+    struct attitude_t *datap = NULL;
     int max_imu, cur_imu = -1;
     max_imu = sizeof(session->gpsdata.imu) / sizeof(struct attitude_t);
 
@@ -627,7 +627,8 @@ ubx_msg_esf_raw(struct gps_device_t *session, unsigned char *buf,
         unsigned char dataType;
 
         sTtag = getleu32(buf, 8 + (i * 8));
-        if ((-1 == cur_imu) || (last_sTtag != sTtag)) {
+        if ((-1 == cur_imu) ||
+            (last_sTtag != sTtag)) {
             cur_imu++;
             if (max_imu <= cur_imu) {
                 GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -640,6 +641,10 @@ ubx_msg_esf_raw(struct gps_device_t *session, unsigned char *buf,
             // do not acumulate IMU data
             gps_clear_att(datap);
             (void)strlcpy(datap->msg, "UBX-ESF-RAW", sizeof(datap->msg));
+        }
+        if (NULL == datap) {
+            // paranoia
+            continue;
         }
 
         data = getleu32(buf, 4 + (i * 8));
