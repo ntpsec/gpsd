@@ -7,10 +7,14 @@ exec 2>&1
 
 # print what we do
 set -x
-if [ $(id -u) != 0 ]; then
+if [ 0 != $(id -u) ]; then
     echo "Please run as root"
     exit 1
 fi
+if [ -n "${SUDO_COMMAND+1}" ]; then
+    echo "sudo will confuse the results."
+fi
+
 
 id
 uname -a
@@ -49,8 +53,8 @@ if command -v ntpshmmon; then
     # 6 lines, or 10 seconds, of ntpshmmon
     ntpshmmon -n 6 -t 10
 fi
-# check for /dev/pps*, /dev/ttyA*, /dev/ttyU*
-ls -l /dev/pps* /dev/tty[AU]*
+# check for /dev/pps*, /dev/ttyA*, ttyS*, ttyT*, ttyU*
+ls -l /dev/pps* /dev/tty[ASTU]*
 # check for USB receivers
 if command -v lsusb; then
     lsusb
