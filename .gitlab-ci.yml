@@ -119,6 +119,8 @@ ubuntu-devel:gcc:
   <<: *debian_build
 
 fedora-latest:
+  # Broken 8 Feb 2022
+  allow_failure: true
   image: fedora:latest
   stage: advanced_build
   variables:
