@@ -2315,23 +2315,28 @@ int main(int argc, char *argv[])
     }
 #endif
 #ifdef CONTROL_SOCKET_ENABLE
-    if (control_socket) {
-        (void)unlink(control_socket);
+    if (control_socket &&
+        '\0' != control_socket[0]) {
+        if(0 == unlink(control_socket)) {
+            GPSD_LOG(LOG_PROG, &context.errout,
+                     "stale control socket %s removed\n", control_socket);
+        } else {
+            GPSD_LOG(LOG_WARN, &context.errout,
+                     "removing stale control socket %s failed: %s(%d)\n",
+                     control_socket, strerror(errno), errno);
+        }
         if (BAD_SOCKET(csock = filesock(control_socket))) {
             GPSD_LOG(LOG_ERROR, &context.errout,
-                     "control socket create failed, netlib error %d\n",
-                     csock);
+                     "control socket %s create failed, netlib error %d\n",
+                     control_socket, csock);
             exit(EXIT_FAILURE);
         } else {
-            GPSD_LOG(LOG_SPIN, &context.errout,
+            GPSD_LOG(LOG_PROG, &context.errout,
                      "control socket %s is fd %d\n",
                      control_socket, csock);
         }
         FD_SET(csock, &all_fds);
         adjust_max_fd(csock, true);
-        GPSD_LOG(LOG_PROG, &context.errout,
-                 "control socket opened at %s\n",
-                 control_socket);
     }
 #endif  // CONTROL_SOCKET_ENABLE
 #else
