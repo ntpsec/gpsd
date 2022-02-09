@@ -1171,9 +1171,13 @@ static int popup(WINDOW **work, WINDOW **save, int nrows, int ncols,
  */
 static void popdown(WINDOW *work, WINDOW *save)
 {
-    (void)wnoutrefresh(save);
-    (void)delwin(save);
-    (void)delwin(work);
+    if (NULL != save) {
+        (void)wnoutrefresh(save);
+        (void)delwin(save);
+    }
+    if (NULL != work) {
+        (void)delwin(work);
+    }
 }
 
 /*
@@ -1222,7 +1226,8 @@ static void dialfill(WINDOW *w, char *s)
 // popup a dialog box containing str
 static void dialog(char *str)
 {
-    WINDOW *work, *save;
+    WINDOW *work = NULL;
+    WINDOW *save = NULL;
     int nrows, ncols;
 
     // Figure out size of window.
