@@ -600,6 +600,27 @@ struct rtcm3_msm_hdr {
     // not part of the network message:
     unsigned char gnssid;       // gnssid
     unsigned char msm;          // 1 to 7, MSMx
+    unsigned char n_sat;        // Number of satellites derived from sat_mask
+    unsigned char n_sig;        // Number of signals derived from sig_mask
+    unsigned char n_cell;       // no. of sats * no. of sigs (<=64!)
+};
+
+// satellite data from MSM1 and MSM7
+struct rtcm3_msm_sat {
+    unsigned short rr_ms;       // Milliseconds in GNSS Satellite rough ranges
+    unsigned short ext_info;    // Extended Satellite info
+    unsigned short rr_m1;       // Rough ranges Modulo 1 Milliseconds
+    short rates_rphr;           // Rough PhaseRange rates
+};
+
+// signal data from MSM1 and MSM7
+struct rtcm3_msm_sig {
+    int pseudo_r;               // Signal fine Pseudoranges
+    int phase_r;                // Signal fine Phaseranges
+    unsigned short lti;         // Lock Time Indicator
+    bool half_amb;              // Half-cycle ambiguity indicator
+    unsigned short cnr;         // Signal CNRs
+    short rates_phr;            // Phase Range Rates
 };
 
 struct rtcm3_network_rtk_header {
@@ -891,6 +912,8 @@ struct rtcm3_t {
             int l2_p_bias;          // GLONASS L2 P Code-Phase Bias
         } rtcm3_1230;
         struct rtcm3_msm_hdr rtcm3_msm;
+        struct rtcm3_msm_sat rtcm3_msm_sat[RTCM3_MAX_SATELLITES];
+        struct rtcm3_msm_sig rtcm3_msm_sig[RTCM3_MAX_SATELLITES];
         unsigned char data[1024];       // Max RTCM3 msg length is 1023 bytes
     } rtcmtypes;
 };
