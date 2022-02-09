@@ -362,7 +362,7 @@ static gps_mask_t handle_0x15(struct gps_device_t *session)
 /* PVT Block */
 static gps_mask_t handle_0xb1(struct gps_device_t *session)
 {
-    gps_mask_t mask;
+    gps_mask_t mask = 0;
     unsigned char *buf = session->lexer.outbuffer + 3;
     uint16_t week;
     uint32_t tow;
@@ -462,16 +462,26 @@ static gps_mask_t handle_0xb1(struct gps_device_t *session)
 
     /* let gpsd_error_model() do the error estimates */
 
-    if (gdop != DOP_UNDEFINED)
+    if (gdop != DOP_UNDEFINED) {
         session->gpsdata.dop.gdop = gdop / 10.0;
-    if (pdop != DOP_UNDEFINED)
+        mask |= DOP_SET;
+    }
+    if (pdop != DOP_UNDEFINED) {
         session->gpsdata.dop.pdop = pdop / 10.0;
-    if (hdop != DOP_UNDEFINED)
+        mask |= DOP_SET;
+    }
+    if (hdop != DOP_UNDEFINED) {
         session->gpsdata.dop.hdop = hdop / 10.0;
-    if (vdop != DOP_UNDEFINED)
+        mask |= DOP_SET;
+    }
+    if (vdop != DOP_UNDEFINED) {
         session->gpsdata.dop.vdop = vdop / 10.0;
-    if (tdop != DOP_UNDEFINED)
+        mask |= DOP_SET;
+    }
+    if (tdop != DOP_UNDEFINED) {
         session->gpsdata.dop.tdop = tdop / 10.0;
+        mask |= DOP_SET;
+    }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "Navcom: received packet type 0xb1 (PVT Report)\n");
@@ -492,8 +502,8 @@ static gps_mask_t handle_0xb1(struct gps_device_t *session)
 #undef VEL_RES
 #undef DOP_UNDEFINED
 
-    mask = LATLON_SET | ALTITUDE_SET | STATUS_SET | MODE_SET | USED_IS |
-           HERR_SET | TIMERR_SET | DOP_SET | VNED_SET | TIME_SET | NTPTIME_IS;
+    mask |= LATLON_SET | ALTITUDE_SET | STATUS_SET | MODE_SET | USED_IS |
+           HERR_SET | TIMERR_SET | VNED_SET | TIME_SET | NTPTIME_IS;
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "PVT 0xb1: time=%s, lat=%.2f lon=%.2f altHAE=%.2f "
              "altMSL %.2f mode=%d status=%d gdop=%.2f pdop=%.2f hdop=%.2f "

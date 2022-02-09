@@ -2082,8 +2082,8 @@ static gps_mask_t ubx_msg_nav_sol(struct gps_device_t *session,
     session->newdata.eps = (double)(getles32(buf, 40) / 100.0);
     mask |= SPEEDERR_SET;
 
-    /* Better to have a single point of truth about DOPs */
-    //session->gpsdata.dop.pdop = (double)(getleu16(buf, 44)/100.0);
+    session->gpsdata.dop.pdop = (double)(getleu16(buf, 44)/100.0);
+    mask |= DOP_SET;
     session->gpsdata.satellites_used = (int)getub(buf, 47);
 
     navmode = (unsigned char)getub(buf, 10);
@@ -2750,9 +2750,6 @@ ubx_msg_nav_sat(struct gps_device_t *session, unsigned char *buf,
         st++;
     }
 
-    /* UBX does not give us these, so recompute */
-    session->gpsdata.dop.xdop = NAN;
-    session->gpsdata.dop.ydop = NAN;
     session->gpsdata.satellites_visible = (int)st;
     session->gpsdata.satellites_used = (int)nsv;
     GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -2845,9 +2842,6 @@ ubx_msg_nav_svinfo(struct gps_device_t *session, unsigned char *buf,
         st++;
     }
 
-    /* UBX does not give us these, so recompute */
-    session->gpsdata.dop.xdop = NAN;
-    session->gpsdata.dop.ydop = NAN;
     session->gpsdata.satellites_visible = (int)st;
     session->gpsdata.satellites_used = (int)nsv;
     GPSD_LOG(LOG_PROG, &session->context->errout,

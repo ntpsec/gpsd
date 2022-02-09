@@ -903,6 +903,7 @@ static gps_mask_t processGNS(int count UNUSED, char *field[],
 
     if (field[8][0] != '\0') {
         session->gpsdata.dop.hdop = safe_atof(field[8]);
+        mask |= DOP_SET;
     }
 
     // we ignore all but the leading mode indicator.
@@ -1131,6 +1132,7 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
     if ('\0' != field[8][0]) {
         // why not to newdata?
         session->gpsdata.dop.hdop = safe_atof(field[8]);
+        mask |= DOP_SET;
     }
 
     // get DGPS stuff
@@ -1704,12 +1706,15 @@ static gps_mask_t processGSA(int count, char *field[],
             /* Just ignore the last fields of the Navior CH-4701 */
             if ('\0' != field[15][0]) {
                 session->gpsdata.dop.pdop = safe_atof(field[15]);
+                mask |= DOP_SET;
             }
             if ('\0' != field[16][0]) {
                 session->gpsdata.dop.hdop = safe_atof(field[16]);
+                mask |= DOP_SET;
             }
             if ('\0' != field[17][0]) {
                 session->gpsdata.dop.vdop = safe_atof(field[17]);
+                mask |= DOP_SET;
             }
             if (19 == count &&
                 '\0' != field[18][0]) {
@@ -1814,7 +1819,7 @@ static gps_mask_t processGSA(int count, char *field[],
                     (unsigned short)prn;
             }
         }
-        mask |= DOP_SET | USED_IS;
+        mask |= USED_IS;
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "NMEA0183: xxGSA: mode=%d used=%d pdop=%.2f hdop=%.2f "
                  " vdop=%.2f "
@@ -2183,12 +2188,6 @@ static gps_mask_t processGSV(int count, char *field[],
         session->nmea.this_frac_time);
 #endif
 
-    /* clear computed DOPs so they get recomputed. */
-    /* FIXME: this kills GPS reported dops... */
-    session->gpsdata.dop.xdop = NAN;
-    session->gpsdata.dop.ydop = NAN;
-    session->gpsdata.dop.tdop = NAN;
-    session->gpsdata.dop.gdop = NAN;
     return SATELLITE_SET;
 #undef GSV_TALKER
 }
@@ -2441,9 +2440,14 @@ static gps_mask_t processPGRMF(int c UNUSED, char *field[],
     session->newdata.speed = safe_atof(field[12]) / MPS_TO_KPH;
     session->newdata.track = safe_atof(field[13]);
     mask |= SPEED_SET | TRACK_SET;
-    session->gpsdata.dop.pdop = safe_atof(field[14]);
-    session->gpsdata.dop.tdop = safe_atof(field[15]);
-    mask |= DOP_SET;
+    if ('\0' != field[14][0]) {
+        session->gpsdata.dop.pdop = safe_atof(field[14]);
+        mask |= DOP_SET;
+    }
+    if ('\0' != field[15][0]) {
+        session->gpsdata.dop.tdop = safe_atof(field[15]);
+        mask |= DOP_SET;
+    }
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "NMEA0183: PGRMF: pdop %.1f tdop %.1f \n",
@@ -3284,12 +3288,23 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
             session->newdata.track = safe_atof(field[11]);
             session->newdata.speed = safe_atof(field[12]) / MPS_TO_KPH;
             session->newdata.climb = safe_atof(field[13]);
-            session->gpsdata.dop.pdop = safe_atof(field[14]);
-            session->gpsdata.dop.hdop = safe_atof(field[15]);
-            session->gpsdata.dop.vdop = safe_atof(field[16]);
-            session->gpsdata.dop.tdop = safe_atof(field[17]);
+            if ('\0' != field[14][0]) {
+                session->gpsdata.dop.pdop = safe_atof(field[14]);
+                mask |= DOP_SET;
+            }
+            if ('\0' != field[15][0]) {
+                session->gpsdata.dop.hdop = safe_atof(field[15]);
+                mask |= DOP_SET;
+            }
+            if ('\0' != field[16][0]) {
+                session->gpsdata.dop.vdop = safe_atof(field[16]);
+                mask |= DOP_SET;
+            }
+            if ('\0' != field[17][0]) {
+                session->gpsdata.dop.tdop = safe_atof(field[17]);
+                mask |= DOP_SET;
+            }
             mask |= (SPEED_SET | TRACK_SET | CLIMB_SET);
-            mask |= DOP_SET;
             GPSD_LOG(LOG_DATA, &session->context->errout,
                      "NMEA0183: PASHR,POS: hhmmss=%s lat=%.2f lon=%.2f"
                      " altHAE=%.f"

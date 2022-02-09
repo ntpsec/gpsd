@@ -467,6 +467,7 @@ static gps_mask_t sky_msg_DF(struct gps_device_t *session,
     session->gpsdata.dop.hdop = getbef32((const char *)buf, 69);
     session->gpsdata.dop.vdop = getbef32((const char *)buf, 73);
     session->gpsdata.dop.tdop = getbef32((const char *)buf, 77);
+    mask |= DOP_SET;
 
     session->newdata.time = gpsd_gpstime_resolv(session, wn, ts_tow );
 
@@ -483,7 +484,7 @@ static gps_mask_t sky_msg_DF(struct gps_device_t *session,
             session->gpsdata.dop.vdop,
             session->gpsdata.dop.tdop);
 
-    mask |= TIME_SET | STATUS_SET | MODE_SET | DOP_SET | CLEAR_IS | REPORT_IS;
+    mask |= TIME_SET | STATUS_SET | MODE_SET | CLEAR_IS | REPORT_IS;
     return mask;
 }
 

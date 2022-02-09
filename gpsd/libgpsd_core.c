@@ -1042,12 +1042,20 @@ static void gpsd_error_model(struct gps_device_t *session)
      * modeling stuff goes. Presently we don't know how to derive
      * time error.
      *
-     * Some drivers set the position-error fields.  Only the Zodiacs
-     * report speed error.  No NMEA 183 reports climb error. GPXTE
-     * and PSRFEPE can report track error, but are rare.
+     * Some drivers set the error fields.  No NMEA 183 reports climb error.
+     * $GPXTE and $PSRFEPE can report track error, but are rare.  Whenever
+     * possible, we step aside and allow the GNSS receiver error estimates
+     * to be used.  But even they are only Wild Ass Guesses (WAGs).
      *
      * The UERE constants are our assumption about the base error of
      * GPS fixes in different directions.
+     *
+     * UERE is actually a variable sent in the Almanac, so assuming
+     * a UERE constant is bogus, as is using it this way.
+     *
+     * Assuming that DGPS has substantially better accuracy than plain
+     * GPS is also a fallacy.  Extending this to RTK is building false
+     * conjecture on top of misplaced wishful thinking.
      */
 #define H_UERE_NO_DGPS          15.0    // meters, 95% confidence
 #define H_UERE_WITH_DGPS        3.75    // meters, 95% confidence
@@ -1057,8 +1065,9 @@ static void gpsd_error_model(struct gps_device_t *session)
 #define P_UERE_WITH_DGPS        4.75    // meters, 95% confidence
     double h_uere, v_uere, p_uere;
 
-    if (NULL == session)
+    if (NULL == session) {
         return;
+    }
 
     fix = &session->gpsdata.fix;
     lastfix = &session->lastfix;
@@ -1851,6 +1860,23 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
 
     session->gpsdata.set = ONLINE_SET | received;
 
+    // copy/merge device data into staging buffers
+    if (0 != (session->gpsdata.set & CLEAR_IS)) {
+        // CLEAR_IS should only be set on first sentence of cycle
+        gps_clear_att(&session->gpsdata.attitude);
+        if (0 == (session->gpsdata.set & DOP_SET)) {
+            // FIXME: put gpsdata.dop in newdata.dop
+            gps_clear_dop(&session->gpsdata.dop);
+        }
+        gps_clear_fix(&session->gpsdata.fix);
+    }
+
+    /* GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "CORE: transfer mask: %s\n",
+                     gps_maskdump(session->gpsdata.set)); */
+    gps_merge_fix(&session->gpsdata.fix,
+                  session->gpsdata.set, &session->newdata);
+
     /*
      * Compute fix-quality data from the satellite positions.
      * These will not overwrite any DOPs reported from the packet
@@ -1862,19 +1888,6 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
                                          &session->gpsdata,
                                          &session->gpsdata.dop);
     }
-
-    // copy/merge device data into staging buffers
-    if (0 != (session->gpsdata.set & CLEAR_IS)) {
-        // CLEAR_IS should only be set on first sentence of cycle
-        gps_clear_fix(&session->gpsdata.fix);
-        gps_clear_att(&session->gpsdata.attitude);
-    }
-
-    /* GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "CORE: transfer mask: %s\n",
-                     gps_maskdump(session->gpsdata.set)); */
-    gps_merge_fix(&session->gpsdata.fix,
-                  session->gpsdata.set, &session->newdata);
 
     gpsd_error_model(session);
 

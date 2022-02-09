@@ -262,6 +262,7 @@ static gps_mask_t handle1003(struct gps_device_t *session)
 /* skyview report */
 {
     int i, n;
+    gps_mask_t mask = 0;
 
     /* The Polaris (and probably the DAGR) emit some strange variant of
      * this message which causes gpsd to crash filtering on impossible
@@ -279,6 +280,7 @@ static gps_mask_t handle1003(struct gps_device_t *session)
     session->gpsdata.dop.hdop = (unsigned int)getzword(11) * 1e-2;
     session->gpsdata.dop.vdop = (unsigned int)getzword(12) * 1e-2;
     session->gpsdata.dop.tdop = (unsigned int)getzword(13) * 1e-2;
+    mask |= DOP_SET;
     session->gpsdata.satellites_visible = n;
 
     for (i = 0; i < ZODIAC_CHANNELS; i++) {
@@ -299,6 +301,7 @@ static gps_mask_t handle1003(struct gps_device_t *session)
     }
     session->gpsdata.skyview_time.tv_sec = 0;
     session->gpsdata.skyview_time.tv_nsec = 0;
+    mask |= SATELLITE_SET;
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "NAVDOP: visible=%d gdop=%.2f pdop=%.2f "
              "hdop=%.2f vdop=%.2f tdop=%.2f mask={SATELLITE|DOP}\n",
@@ -307,7 +310,7 @@ static gps_mask_t handle1003(struct gps_device_t *session)
              session->gpsdata.dop.hdop,
              session->gpsdata.dop.vdop,
              session->gpsdata.dop.pdop, session->gpsdata.dop.tdop);
-    return SATELLITE_SET | DOP_SET;
+    return mask;
 }
 
 static void handle1005(struct gps_device_t *session UNUSED)

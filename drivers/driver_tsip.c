@@ -356,6 +356,7 @@ static void tsipv1_query(struct gps_device_t *session, int index)
         break;
     default:
         // nothing to do
+        break;
     }
 }
 
@@ -2089,6 +2090,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         session->gpsdata.dop.gdop =
             sqrt(pow(session->gpsdata.dop.pdop, 2) +
                  pow(session->gpsdata.dop.tdop, 2));
+        mask |= DOP_SET;
 
         memset(session->driver.tsip.sats_used, 0,
                 sizeof(session->driver.tsip.sats_used));
@@ -2112,7 +2114,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                  session->gpsdata.dop.tdop,
                  session->gpsdata.dop.gdop,
                  buf2);
-        mask |= DOP_SET | USED_IS;
+        mask |= USED_IS;
         break;
     case 0x6d:
         /* All-In-View Satellite Selection (0x6d) polled by 0x24
@@ -2188,6 +2190,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         session->gpsdata.dop.gdop =
             sqrt(pow(session->gpsdata.dop.pdop, 2) +
                  pow(session->gpsdata.dop.tdop, 2));
+        mask |= DOP_SET;
 
         memset(session->driver.tsip.sats_used, 0,
                sizeof(session->driver.tsip.sats_used));
@@ -2212,7 +2215,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                  session->gpsdata.dop.vdop,
                  session->gpsdata.dop.tdop,
                  session->gpsdata.dop.gdop, buf2);
-        mask |= DOP_SET | USED_IS;
+        mask |= USED_IS;
         break;
     case 0x82:
         /* Differential Position Fix Mode (0x82) poll with 0x62-ff

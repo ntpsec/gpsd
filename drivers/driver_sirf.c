@@ -1736,9 +1736,11 @@ static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
         6 == (navtype & 0x07)) {
         session->newdata.mode = MODE_3D;
         session->gpsdata.dop.pdop = d;
+        mask |= DOP_SET;
     } else if (0 != session->newdata.status) {
         session->newdata.mode = MODE_2D;
         session->gpsdata.dop.hdop = d;
+        mask |= DOP_SET;
     }
     // byte 21 is nav_mode2, not clear how to interpret that
     nav_mode2 = getub(buf, 21);
@@ -1764,9 +1766,7 @@ static gps_mask_t sirf_msg_navsol(struct gps_device_t *session,
                  session->context->leap_seconds,
                  nav_mode2);
     }
-    // clear computed DOPs so they get recomputed.
-    session->gpsdata.dop.tdop = NAN;
-    mask |= TIME_SET | STATUS_SET | MODE_SET | DOP_SET | USED_IS;
+    mask |= TIME_SET | STATUS_SET | MODE_SET | USED_IS;
     if (3 <= session->gpsdata.satellites_visible) {
         mask |= NTPTIME_IS;
     }
@@ -1898,6 +1898,7 @@ static gps_mask_t sirf_msg_geodetic(struct gps_device_t *session,
         u = getub(buf, 89);
         if (0 != u) {
             session->gpsdata.dop.hdop = u * 0.2;
+            mask |= DOP_SET;
         }
     }
 
@@ -2042,7 +2043,7 @@ static gps_mask_t sirf_msg_ublox(struct gps_device_t *session,
 
     // this packet is only sent by u-blox firmware from version 1.32
     mask = LATLON_SET | ALTITUDE_SET | SPEED_SET | TRACK_SET | CLIMB_SET |
-        STATUS_SET | MODE_SET | DOP_SET;
+        STATUS_SET | MODE_SET;
     session->newdata.latitude = (double)getbes32(buf, 1) * RAD_2_DEG * 1e-8;
     session->newdata.longitude = (double)getbes32(buf, 5) * RAD_2_DEG * 1e-8;
     // defaults to WGS84
@@ -2112,6 +2113,7 @@ static gps_mask_t sirf_msg_ublox(struct gps_device_t *session,
     session->gpsdata.dop.hdop = (int)getub(buf, 36) / 5.0;
     session->gpsdata.dop.vdop = (int)getub(buf, 37) / 5.0;
     session->gpsdata.dop.tdop = (int)getub(buf, 38) / 5.0;
+    mask |= DOP_SET;
     session->driver.sirf.driverstate |= UBLOX;
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "SiRF: EMND 0x62: time=%s lat=%.2f lon=%.2f altHAE=%.2f "
