@@ -585,15 +585,15 @@ struct rtcm3_extended_rtk {
 // header data from MSM1 to MSM7
 // Used for all GNSS, but their timebases differ
 struct rtcm3_msm_hdr {
-    unsigned short station_id;  // Reference Station ID
+    unsigned station_id;        // Reference Station ID
     time_t tow;                 // GNSS Epoch Time in ms
     bool sync;                  // Synchronous GNSS Message Flag
-    unsigned short IODS;        // IODS - Issue of Data Station
+    unsigned IODS;              // IODS - Issue of Data Station
     unsigned char reserved;     // reserved
     unsigned char steering;     // Clock Steering Indicator
     unsigned char ext_clk;      // External Clock Indicator
     bool smoothing;             // Divergence-free Smoothing Indicator
-    unsigned int interval;      // Smoothing Interval
+    unsigned interval;          // Smoothing Interval
     uint64_t sat_mask;          // Satellite Mask
     uint32_t sig_mask;          // Signal Mask
     uint64_t cell_mask;         // Cell Mask
@@ -607,20 +607,20 @@ struct rtcm3_msm_hdr {
 
 // satellite data from MSM1 and MSM7
 struct rtcm3_msm_sat {
-    unsigned short rr_ms;       // Milliseconds in GNSS Satellite rough ranges
-    unsigned short ext_info;    // Extended Satellite info
-    unsigned short rr_m1;       // Rough ranges Modulo 1 Milliseconds
-    short rates_rphr;           // Rough PhaseRange rates
+    unsigned rr_ms;             // Milliseconds in GNSS Satellite rough ranges
+    unsigned ext_info;          // Extended Satellite info
+    unsigned rr_m1;             // Rough ranges Modulo 1 Milliseconds
+    int rates_rphr;             // Rough PhaseRange rates
 };
 
 // signal data from MSM1 and MSM7
 struct rtcm3_msm_sig {
     int pseudo_r;               // Signal fine Pseudoranges
-    int phase_r;                // Signal fine Phaseranges
-    unsigned short lti;         // Lock Time Indicator
+    int32_t phase_r;            // Signal fine Phaseranges
+    unsigned lti;               // Lock Time Indicator
+    unsigned cnr;               // Signal CNRs
+    int rates_phr;              // Phase Range Rates
     bool half_amb;              // Half-cycle ambiguity indicator
-    unsigned short cnr;         // Signal CNRs
-    short rates_phr;            // Phase Range Rates
 };
 
 struct rtcm3_network_rtk_header {
