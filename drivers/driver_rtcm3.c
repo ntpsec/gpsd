@@ -137,7 +137,7 @@ static bool rtcm3_101567(const struct gps_context_t *context,
  * TODO: rtklib has C code for these.
  *
  * Return: false if decoded
- *         true if runt
+ *         true if runt, or error
  */
 static bool rtcm3_decode_msm(const struct gps_context_t *context,
                              struct rtcm3_t *rtcm, char *buf)
@@ -187,13 +187,16 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
     rtcm->rtcmtypes.rtcm3_msm.n_sig = n_sig;
     rtcm->rtcmtypes.rtcm3_msm.n_cell = n_cell;
 
-    if (64 < n_cell) {
-        GPSD_LOG(LOG_SHOUT, &context->errout,
-                 "RTCM3: rtcm3_decode_msm(%u) sat_mask x%lx sig_mask x%x "
-                 "invalid n_cell %u\n",
+    if (0 == n_sat ||
+        64 < n_cell) {
+        GPSD_LOG(LOG_WARN, &context->errout,
+                 "RTCM3: rtcm3_decode_msm(%u) interval %u  sat_mask x%llx "
+                 "sig_mask x%x invalid n_cell %u\n",
+                 rtcm->type,
+                 rtcm->rtcmtypes.rtcm3_msm.interval,
                  (unsigned long long)rtcm->rtcmtypes.rtcm3_msm.sat_mask,
                  rtcm->rtcmtypes.rtcm3_msm.sig_mask,
-                 rtcm->type, n_cell);
+                 n_cell);
         return false;
     }
 
@@ -386,8 +389,9 @@ void rtcm3_unpack(const struct gps_context_t *context,
     }
     rtcm->type = (unsigned)ugrab(12);
 
-    GPSD_LOG(LOG_RAW, &context->errout, "RTCM3: type %d payload length %d\n",
-             rtcm->type, rtcm->length);
+    GPSD_LOG(LOG_RAW, &context->errout,
+             "RTCM3: type %d payload length %d bitcount %d\n",
+             rtcm->type, rtcm->length, bitcount);
 
     // RTCM3 message type numbers start at 1001
     switch (rtcm->type) {
