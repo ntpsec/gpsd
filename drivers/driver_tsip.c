@@ -489,6 +489,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
     bool bad_len = false;
     unsigned char chksum;
     char buf2[BUFSIZ];
+    unsigned char gnssid, sigid;
 
     if (4 > len) {
         // should never happen
@@ -911,24 +912,48 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             break;
         }
         u1 = (unsigned)buf[4];            // message number, 1 to X
+        if (1 == u1) {
+            // message number starts at 1, no way to know last number
+            gpsd_zero_satellites(&session->gpsdata);
+        }
         // SV type, 0 to 26, mashup of constellation and signal
         u2 = (unsigned)buf[5];
-        u3 = (unsigned)buf[6];            // PRN 1 to 99
+        u3 = (unsigned)buf[6];            // PRN (svid) 1 to 99
         d1 = getbef32((char *)buf, 7);    // azimuth, degrees
         d2 = getbef32((char *)buf, 11);   // elevation, degrees
         d3 = getbef32((char *)buf, 15);   // signal level, db-Hz
         u4 = getbeu32(buf, 19);           // Flags
         // TOW of measurement, not current TOW!
         tow = getbeu32(buf, 23);          // TOW, seconds
-        {
-            unsigned char gnssid, sigid;
-            gnssid = tsipv1_svtype(u2, &sigid);
-            GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "TSIPv1 xa2-00: num %u type %u (gnss %u sigid %u) PRN %u "
-                     "az %f el %f snr %f flags x%0x4 tow %u\n",
-                     u1, u2, gnssid, sigid, u3, d1, d2, d3, u4, tow);
+
+        session->gpsdata.satellites_visible = u1;
+        // convert svtype to gnssid and svid
+        gnssid = tsipv1_svtype(u2, &sigid);
+        session->gpsdata.skyview[u1 - 1].gnssid = gnssid;
+        session->gpsdata.skyview[u1 - 1].svid = u3;
+        // session->gpsdata.skyview[u1 - 1].PRN = nmea_PRN;  // "real" PRN
+        // fake PRN for testing
+        session->gpsdata.skyview[u1 - 1].PRN = u3 + (gnssid * 100);
+        if (0 != (1 & u4)) {
+            if (90.0 >= fabs(d2)) {
+                session->gpsdata.skyview[u1 - 1].elevation = d2;
+            }
+            if (360.0 >= d1 &&
+                0.0 <= d1) {
+                session->gpsdata.skyview[u1 - 1].azimuth = d1;
+            }
         }
+        session->gpsdata.skyview[u1 - 1].ss = d3;
+        if (0 != (6 & u4)) {
+            session->gpsdata.skyview[u1 - 1].used = true;
+        }
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "TSIPv1 xa2-00: num %u type %u (gnss %u sigid %u) PRN %u "
+                 "az %f el %f snr %f flags x%0x4 tow %u\n",
+                 u1, u2, gnssid, sigid, u3, d1, d2, d3, u4, tow);
+        // debug mask |= SATELLITE_SET;
         break;
+
     case 0xa300:
         // System Alarms
         if (18 > length) {
@@ -966,7 +991,8 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  "TSIPv1 xa3-11: mode %u status %u survey %u PDOP %f HDOP %f "
                  "VDOP %f TDOP %f temp %f\n",
                  u1, u2, u3, d1, d2, d3, d4, d5);
-        mask |= DOP_SET;
+        // usually the last message, except for A2-00
+        mask |= REPORT_IS | DOP_SET;
         break;
     case 0xa321:
         /* Error Report

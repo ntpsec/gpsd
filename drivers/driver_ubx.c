@@ -2041,7 +2041,7 @@ ubx_msg_nav_relposned(struct gps_device_t *session, unsigned char *buf,
 static gps_mask_t ubx_msg_nav_sol(struct gps_device_t *session,
                                   unsigned char *buf, size_t data_len)
 {
-    unsigned int flags;
+    unsigned flags, pdop;
     unsigned char navmode;
     gps_mask_t mask;
     char ts_buf[TIMESPEC_LEN];
@@ -2082,8 +2082,11 @@ static gps_mask_t ubx_msg_nav_sol(struct gps_device_t *session,
     session->newdata.eps = (double)(getles32(buf, 40) / 100.0);
     mask |= SPEEDERR_SET;
 
-    session->gpsdata.dop.pdop = (double)(getleu16(buf, 44)/100.0);
-    mask |= DOP_SET;
+    pdop = getleu16(buf, 44);
+    if (9999 > pdop) {
+        session->gpsdata.dop.pdop = (double)(pdop / 100.0);
+        mask |= DOP_SET;
+    }
     session->gpsdata.satellites_used = (int)getub(buf, 47);
 
     navmode = (unsigned char)getub(buf, 10);
@@ -2464,6 +2467,9 @@ static gps_mask_t
 ubx_msg_nav_dop(struct gps_device_t *session, unsigned char *buf,
                 size_t data_len)
 {
+    unsigned u;
+    gps_mask_t mask = 0;
+
     if (18 > data_len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "UBX-NAV-DOP message, runt payload len %zd", data_len);
@@ -2477,11 +2483,31 @@ ubx_msg_nav_dop(struct gps_device_t *session, unsigned char *buf,
      * to our calculations from the visibility matrix, trusting
      * the firmware algorithms over ours.
      */
-    session->gpsdata.dop.gdop = (double)(getleu16(buf, 4) / 100.0);
-    session->gpsdata.dop.pdop = (double)(getleu16(buf, 6) / 100.0);
-    session->gpsdata.dop.tdop = (double)(getleu16(buf, 8) / 100.0);
-    session->gpsdata.dop.vdop = (double)(getleu16(buf, 10) / 100.0);
-    session->gpsdata.dop.hdop = (double)(getleu16(buf, 12) / 100.0);
+    u = getleu16(buf, 4);
+    if (9999 > u) {
+        session->gpsdata.dop.gdop = (double)(u / 100.0);
+        mask |= DOP_SET;
+    }
+    u = getleu16(buf, 6);
+    if (9999 > u) {
+        session->gpsdata.dop.pdop = (double)(u / 100.0);
+        mask |= DOP_SET;
+    }
+    u = getleu16(buf, 8);
+    if (9999 > u) {
+        session->gpsdata.dop.tdop = (double)(u / 100.0);
+        mask |= DOP_SET;
+    }
+    u = getleu16(buf, 10);
+    if (9999 > u) {
+        session->gpsdata.dop.vdop = (double)(u / 100.0);
+        mask |= DOP_SET;
+    }
+    u = getleu16(buf, 12);
+    if (9999 > u) {
+        session->gpsdata.dop.hdop = (double)(u / 100.0);
+        mask |= DOP_SET;
+    }
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "NAV-DOP: gdop=%.2f pdop=%.2f "
              "hdop=%.2f vdop=%.2f tdop=%.2f mask={DOP}\n",
@@ -2489,7 +2515,7 @@ ubx_msg_nav_dop(struct gps_device_t *session, unsigned char *buf,
              session->gpsdata.dop.hdop,
              session->gpsdata.dop.vdop,
              session->gpsdata.dop.pdop, session->gpsdata.dop.tdop);
-    return DOP_SET;
+    return mask;
 }
 
 /**

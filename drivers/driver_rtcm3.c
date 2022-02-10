@@ -144,8 +144,8 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
 {
     int bitcount = 36;  // 8 preamble, 6 zero, 10 length, 12 type
     unsigned n_sig = 0, n_sat = 0, n_cell = 0;
-    uint64_t mask_sat = rtcm->rtcmtypes.rtcm3_msm.sat_mask;
-    uint32_t mask_sig = rtcm->rtcmtypes.rtcm3_msm.sig_mask;
+    uint64_t sat_mask;
+    uint32_t sig_mask;
     unsigned i;
 
     if (22 > rtcm->length) {
@@ -168,18 +168,18 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
     rtcm->rtcmtypes.rtcm3_msm.interval = ugrab(3);
     rtcm->rtcmtypes.rtcm3_msm.sat_mask = ugrab(64);
     rtcm->rtcmtypes.rtcm3_msm.sig_mask = ugrab(32);
-    // FIXME: cell_mask is variable length!
-    // rtcm->rtcmtypes.rtcm3_msm.cell_mask = (uint64_t)ugrab(64);
 
     // count satellites
-    while (mask_sat) {
-        n_sat += mask_sat & 1;
-        mask_sat >>= 1;
+    sat_mask = rtcm->rtcmtypes.rtcm3_msm.sat_mask;
+    while (sat_mask) {
+        n_sat += sat_mask & 1;
+        sat_mask >>= 1;
     }
     // count signals
-    while (mask_sig) {
-        n_sig += mask_sig & 1;
-        mask_sig >>= 1;
+    sig_mask = rtcm->rtcmtypes.rtcm3_msm.sig_mask;
+    while (sig_mask) {
+        n_sig += sig_mask & 1;
+        sig_mask >>= 1;
     }
     // determine cells
     n_cell = n_sat * n_sig;
@@ -187,6 +187,18 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
     rtcm->rtcmtypes.rtcm3_msm.n_sig = n_sig;
     rtcm->rtcmtypes.rtcm3_msm.n_cell = n_cell;
 
+    if (64 < n_cell) {
+        GPSD_LOG(LOG_SHOUT, &context->errout,
+                 "RTCM3: rtcm3_decode_msm(%u) sat_mask x%lx sig_mask x%x "
+                 "invalid n_cell %u\n",
+                 (unsigned long long)rtcm->rtcmtypes.rtcm3_msm.sat_mask,
+                 rtcm->rtcmtypes.rtcm3_msm.sig_mask,
+                 rtcm->type, n_cell);
+        return false;
+    }
+
+    // FIXME: cell_mask is variable length!
+    // rtcm->rtcmtypes.rtcm3_msm.cell_mask = (uint64_t)ugrab(64);
     // FIXME: rtcm->rtcmtypes.rtcm3_msm.cell_mask = ugrab(n_cell);
     bitcount += n_cell;
 

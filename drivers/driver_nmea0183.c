@@ -1129,10 +1129,15 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
     }
     mask |= MODE_SET;
 
+    // BT-451, and others, send 99.99 for invalid DOPs
     if ('\0' != field[8][0]) {
-        // why not to newdata?
-        session->gpsdata.dop.hdop = safe_atof(field[8]);
-        mask |= DOP_SET;
+        double hdop;
+        hdop = safe_atof(field[8]);
+        if (99.0 > hdop) {
+            // why not to newdata?
+            session->gpsdata.dop.hdop = hdop;
+            mask |= DOP_SET;
+        }
     }
 
     // get DGPS stuff
@@ -1703,18 +1708,29 @@ static gps_mask_t processGSA(int count, char *field[],
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "NMEA0183: xxGSA: count %d too long!\n", count);
         } else {
+            double dop;
             /* Just ignore the last fields of the Navior CH-4701 */
             if ('\0' != field[15][0]) {
-                session->gpsdata.dop.pdop = safe_atof(field[15]);
-                mask |= DOP_SET;
+                dop = safe_atof(field[15]);
+                if (99.0 > dop) {
+                    session->gpsdata.dop.pdop = dop;
+                    mask |= DOP_SET;
+                }
             }
+            // BT-451, and others, send 99.99 for invalid DOPs
             if ('\0' != field[16][0]) {
-                session->gpsdata.dop.hdop = safe_atof(field[16]);
-                mask |= DOP_SET;
+                dop = safe_atof(field[16]);
+                if (99.0 > dop) {
+                    session->gpsdata.dop.hdop = dop;
+                    mask |= DOP_SET;
+                }
             }
             if ('\0' != field[17][0]) {
-                session->gpsdata.dop.vdop = safe_atof(field[17]);
-                mask |= DOP_SET;
+                dop = safe_atof(field[17]);
+                if (99.0 > dop) {
+                    session->gpsdata.dop.vdop = dop;
+                    mask |= DOP_SET;
+                }
             }
             if (19 == count &&
                 '\0' != field[18][0]) {
