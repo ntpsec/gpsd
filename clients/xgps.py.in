@@ -205,6 +205,13 @@ class SkyView(Gtk.DrawingArea):
                 else:
                     gnss_str = ''
 
+                if "gnssid" in sat and "sigid" in sat:
+                    # gnssid:sigid in gpsd 3.18 and up
+                    # needs work when multiple signals on one sat
+                    sig_str = "%d\n" % sat.sigid
+                else:
+                    sig_str = ''
+
                 if 'health' not in sat:
                     health = "Unk"
                 elif 1 == sat.health:
@@ -217,12 +224,13 @@ class SkyView(Gtk.DrawingArea):
                 label = Gtk.Label()
                 s = ("<span font_desc='monospace 10'>PRN %10d\n"
                      "%s"
+                     "sigId %s\n"
                      "Elevation %4.1f\n"
                      "Azimuth  %5.1f\n"
                      "SNR       %4.1f\n"
                      "Used %9s\n"
                      "Health %7s</span>" %
-                     (sat.PRN, gnss_str,
+                     (sat.PRN, gnss_str, sig_str,
                       sat.el, sat.az, sat.ss, 'Yes' if sat.used else 'No',
                       health))
                 label.set_markup(s)
@@ -1020,12 +1028,13 @@ frame * {
         skyframe = Gtk.Frame(label="Satellite List")
         self.satbox.add(skyframe)
 
-        self.satlist = Gtk.ListStore(str, str, str, str, str, str, str)
+        self.satlist = Gtk.ListStore(str, str, str, str, str, str, str, str)
         sat_view = Gtk.TreeView(model=self.satlist)
         sat_view.set_fixed_height_mode(True)  # supposed to speed up TreeView
 
         satcols = [['', 0],
                    ['svid', 1],
+                   ['sig', 1],
                    ['PRN', 1],
                    ['Elev', 1],
                    ['Azim', 1],
@@ -1045,7 +1054,7 @@ frame * {
 
         self.row_iters = []
         for i in range(options.maxchandisp):
-            self.satlist.append(["", "", "", "", "", "", ""])
+            self.satlist.append(["", "", "", "", "", "", "", ""])
             self.row_iters.append(self.satlist.get_iter(i))
 
         skyframe.add(sat_view)
@@ -1468,20 +1477,24 @@ frame * {
                     self.set_satlist_field(i, 1,
                                            self._int_to_str(satellite.svid,
                                                             1, 199))
+                if 'sigid' in satellite:
+                    self.set_satlist_field(i, 2,
+                                           self._int_to_str(satellite.sigid,
+                                                            1, 10))
                 # NMEA uses PRN up to 437
-                self.set_satlist_field(i, 2,
+                self.set_satlist_field(i, 3,
                                        self._int_to_str(satellite.PRN, 1, 437))
                 # allow satellites 10 degree below horizon
-                self.set_satlist_field(i, 3,
+                self.set_satlist_field(i, 4,
                                        self._tenth_to_str(satellite.el,
                                                           -10, 90))
-                self.set_satlist_field(i, 4,
+                self.set_satlist_field(i, 5,
                                        self._tenth_to_str(satellite.az,
                                                           0, 359))
-                self.set_satlist_field(i, 5,
+                self.set_satlist_field(i, 6,
                                        self._tenth_to_str(satellite.ss,
                                                           0, 100))
-                self.set_satlist_field(i, 6, yesno)
+                self.set_satlist_field(i, 7, yesno)
 
             # clear rest of the list
             for i in range(data.satellites_seen, options.maxchandisp):
