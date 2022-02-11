@@ -915,22 +915,28 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         if (1 == u1) {
             // message number starts at 1, no way to know last number
             gpsd_zero_satellites(&session->gpsdata);
+            // start of new cycle, save last count
+            session->gpsdata.satellites_visible =
+                session->driver.tsip.last_chan_seen;
         }
+        session->driver.tsip.last_chan_seen = u1;
+
         // SV type, 0 to 26, mashup of constellation and signal
         u2 = (unsigned)buf[5];
-        u3 = (unsigned)buf[6];            // PRN (svid) 1 to 99
+        u3 = (unsigned)buf[6];            // PRN (svid) 1 to 32 (99)
         d1 = getbef32((char *)buf, 7);    // azimuth, degrees
         d2 = getbef32((char *)buf, 11);   // elevation, degrees
         d3 = getbef32((char *)buf, 15);   // signal level, db-Hz
         u4 = getbeu32(buf, 19);           // Flags
         // TOW of measurement, not current TOW!
         tow = getbeu32(buf, 23);          // TOW, seconds
+        session->gpsdata.skyview_time.tv_sec = tow;
 
-        session->gpsdata.satellites_visible = u1;
         // convert svtype to gnssid and svid
         gnssid = tsipv1_svtype(u2, &sigid);
         session->gpsdata.skyview[u1 - 1].gnssid = gnssid;
         session->gpsdata.skyview[u1 - 1].svid = u3;
+        session->gpsdata.skyview[u1 - 1].sigid = sigid;
         // session->gpsdata.skyview[u1 - 1].PRN = nmea_PRN;  // "real" PRN
         // fake PRN for testing
         session->gpsdata.skyview[u1 - 1].PRN = u3 + (gnssid * 100);
@@ -947,11 +953,20 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         if (0 != (6 & u4)) {
             session->gpsdata.skyview[u1 - 1].used = true;
         }
+
+        if ((int)u1 >= session->gpsdata.satellites_visible) {
+            /* Last of the series? Assume same number of sats as
+             * last cycle.
+             * This will cause extra SKY if this set has more
+             * sats than the last set */
+            mask |= SATELLITE_SET;
+        }
+        /* If this series has fewer than last series there will
+         * be no SKY, unless the cycle ender pushes the SKY */
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIPv1 xa2-00: num %u type %u (gnss %u sigid %u) PRN %u "
                  "az %f el %f snr %f flags x%0x4 tow %u\n",
                  u1, u2, gnssid, sigid, u3, d1, d2, d3, u4, tow);
-        // debug mask |= SATELLITE_SET;
         break;
 
     case 0xa300:
@@ -1894,7 +1909,10 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         u3 = getub(buf, 2);                 // Acquisition flag
         u4 = getub(buf, 3);                 // Ephemeris flag
         f1 = getbef32((char *)buf, 4);      // Signal level
-        ftow = getbef32((char *)buf, 8);    // time of Last measurement
+        // time of skyview, not current time, or time of fix
+        ftow = getbef32((char *)buf, 8);
+        DTOTS(&session->gpsdata.skyview_time, ftow);
+
         d1 = getbef32((char *)buf, 12) * RAD_2_DEG;     // Elevation
         d2 = getbef32((char *)buf, 16) * RAD_2_DEG;     // Azimuth
 
@@ -1903,7 +1921,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          * No way to know how many there will be.
          * Save current channel to check for last 0x5c message
          */
-        i = (int)(u2 >> 3);     // channel number
+        i = (int)(u2 >> 3);     // channel number, starting at 0
         if (0 == i) {
             // start of new cycle, save last count
             session->gpsdata.satellites_visible =
