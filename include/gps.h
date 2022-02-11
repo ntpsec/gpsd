@@ -1,5 +1,5 @@
-/* gps.h -- interface of the libgps library */
-/*
+/* gps.h -- interface of the libgps library
+ *
  * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
@@ -91,7 +91,7 @@ extern "C" {
  *       Add gyro_temp, gyro_z, msg, timeTag, to attitude_t
  *       add imu[], and matching IMU_SET flag
  *       move attitude out of the union, to stop conflicts.
- * 13    Add rtcm3_msm_hdr
+ * 13    Add rtcm3_msm
  *       fix tow in never used struct rtcm3_1015_t
  *       remove never used struct rtcm3_1016_t and struct rtcm3_1017_t
  *
@@ -142,17 +142,17 @@ extern "C" {
  * For more info:  https://gps.io/gpsd-numbers-matter.html
  */
 
-typedef struct timespec timespec_t;     /* Unix time as sec, nsec */
+typedef struct timespec timespec_t;     // Unix time as sec, nsec
 
 /* GPS error estimates are all over the map, and often unspecified.
  * try for 1-sigma if we can... */
 struct gps_fix_t {
-    timespec_t time;    /* Time of update */
-    int    mode;        /* Mode of fix */
-#define MODE_NOT_SEEN   0       /* mode update not seen yet */
-#define MODE_NO_FIX     1       /* none */
-#define MODE_2D         2       /* good for latitude/longitude */
-#define MODE_3D         3       /* good for altitude/climb too */
+    timespec_t time;            // Time of update
+    int    mode;                // Mode of fix
+#define MODE_NOT_SEEN   0       // mode update not seen yet
+#define MODE_NO_FIX     1       // none
+#define MODE_2D         2       // good for latitude/longitude
+#define MODE_3D         3       // good for altitude/climb too
 
     /* GPS status, aka fix type, is a modifier (adjective) to
      * gps_data.mode.  It is not a replacement for, or superset of, mode.
@@ -176,48 +176,48 @@ struct gps_fix_t {
  * PPS is the encrypted military P(Y)-code */
 #define STATUS_PPS_FIX  9
 
-    double ept;         /* Expected time uncertainty, seconds */
-    double latitude;    /* Latitude in degrees (valid if mode >= 2) */
-    double epy;         /* Latitude position uncertainty, meters */
-    double longitude;   /* Longitude in degrees (valid if mode >= 2) */
-    double epx;         /* Longitude position uncertainty, meters */
+    double ept;         // Expected time uncertainty, seconds
+    double latitude;    // Latitude in degrees (valid if mode >= 2)
+    double epy;         // Latitude position uncertainty, meters
+    double longitude;   // Longitude in degrees (valid if mode >= 2)
+    double epx;         // Longitude position uncertainty, meters
     double altitude;    // DEPRECATED, undefined.
     double altHAE;      /* Altitude, height above ellipsoid.
                          * in meters and probably WGS84
                          * (valid if mode == 3)
                          * MSL = altHAE - geoid_sep */
-    double altMSL;      /* Altitude MSL (maybe EGM2008) */
-    double epv;         /* Vertical position uncertainty, meters */
-    double track;       /* Course made good (relative to true north) */
-    double epd;         /* Track uncertainty, degrees */
-    double speed;       /* Speed over ground, meters/sec */
-    double eps;         /* Speed uncertainty, meters/sec */
-    double climb;       /* Vertical speed, meters/sec */
-    double epc;         /* Vertical speed uncertainty */
-    /* estimated position error horizontal (2D). Meters, maybe 50%, maybe 95% */
-    /* aka estimated position error (epe) */
-    double eph;         /* estimated position error horizontal (2D) */
-    /* spherical error probability, 3D. Meters, maybe 50%, maybe 95% */
-    /* Garmin, not gpsd, calls this estimated position error (epe) */
+    double altMSL;      // Altitude MSL (maybe EGM2008)
+    double epv;         // Vertical position uncertainty, meters
+    double track;       // Course made good (relative to true north)
+    double epd;         // Track uncertainty, degrees
+    double speed;       // Speed over ground, meters/sec
+    double eps;         // Speed uncertainty, meters/sec
+    double climb;       // Vertical speed, meters/sec
+    double epc;         // Vertical speed uncertainty
+    // estimated position error horizontal (2D). Meters, maybe 50%, maybe 95%
+    // aka estimated position error (epe)
+    double eph;         // estimated position error horizontal (2D)
+    // spherical error probability, 3D. Meters, maybe 50%, maybe 95%
+    // Garmin, not gpsd, calls this estimated position error (epe)
     double sep;
     /* Geoid separation (ellipsoid separation)
      * Height of MSL ellipsoid (geoid) above WGS84 ellipsoid.
      * Positive is MSL above WGS84. In meters */
     double geoid_sep;
 
-    double magnetic_track;  /* Course (relative to Magnetic North) */
-    double magnetic_var;    /* magnetic variation in degrees */
-    double depth;           /* depth in meters, probably depth of water
-                             * under the keel */
+    double magnetic_track;  // Course (relative to Magnetic North)
+    double magnetic_var;    // magnetic variation in degrees
+    // depth in meters, probably depth of water under the keel
+    double depth;
 
-    /* ECEF data, all data in meters, and meters/second, or NaN */
+    // ECEF data, all data in meters, and meters/second, or NaN
     struct {
-        double x, y, z;         /* ECEF x, y, z */
-        double pAcc;            /* 3D Position Accuracy Estimate, likely SEP */
-        double vx, vy, vz;      /* ECEF x, y, z velocity */
-        double vAcc;            /* Velocity Accuracy Estimate, probably SEP */
+        double x, y, z;         // ECEF x, y, z
+        double pAcc;            // 3D Position Accuracy Estimate, likely SEP
+        double vx, vy, vz;      // ECEF x, y, z velocity
+        double vAcc;            // Velocity Accuracy Estimate, probably SEP
     } ecef;
-    /* NED data, all data in meters, and meters/second, or NaN */
+    // NED data, all data in meters, and meters/second, or NaN
     struct {
         double relPosN, relPosE, relPosD;   // NED relative positions
         double relPosL, relPosH;            // relative length and heading
@@ -225,8 +225,7 @@ struct gps_fix_t {
     } NED;
     char datum[40];             // map datum
     // DGPS stuff, often from xxGGA, or xxGNS
-    double dgps_age;            /* age of DGPS data in tenths of seconds,
-                                 * -1 invalid */
+    double dgps_age;       // age of DGPS data in tenths of seconds, -1 invalid
     /* DGPS Station used, max size is a guess
      * NMEA 2 says 0000-1023
      * RTCM 3, station ID is 0 to 4095.
@@ -272,7 +271,7 @@ struct gps_log_t  {
 
     timespec_t then;      // time of log entry, zero if invalid
     // GPS status -- always valid, same values as gps_fix_t.status
-    int    status;              /* Do we have a fix? */
+    int    status;        // type of fix?
 
     uint32_t index_cnt;   // message counter
 
@@ -319,9 +318,9 @@ struct gst_t {
  * the longest possible message will have a total of 33 words."
  */
 #define RTCM2_WORDS_MAX 33
-#define MAXCORRECTIONS  18      /* max correction count in type 1 or 9 */
-#define MAXSTATIONS     10      /* maximum stations in almanac, type 5 */
-/* RTCM104 doesn't specify this, so give it the largest reasonable value */
+#define MAXCORRECTIONS  18      // max correction count in type 1 or 9
+#define MAXSTATIONS     10      // maximum stations in almanac, type 5
+// RTCM104 doesn't specify this, so give it the largest reasonable value
 #define MAXHEALTH       (RTCM2_WORDS_MAX-2)
 
 /*
@@ -341,15 +340,15 @@ typedef uint32_t isgps30bits_t;
 #define NAVSYSTEM_UNKNOWN       3
 
 struct rtcm2_t {
-    /* header contents */
-    unsigned type;      /* RTCM message type */
+    // header contents
+    unsigned type;      // RTCM message type
     unsigned length;    // payload length (words) not including 2 word header
-    double   zcount;    /* time within hour: GPS time, no leap secs */
-    unsigned refstaid;  /* reference station ID */
-    unsigned seqnum;    /* message sequence number (modulo 8) */
-    unsigned stathlth;  /* station health */
+    double   zcount;    // time within hour: GPS time, no leap secs
+    unsigned refstaid;  // reference station ID
+    unsigned seqnum;    // message sequence number (modulo 8)
+    unsigned stathlth;  // station health
 
-    /* message data in decoded form */
+    // message data in decoded form
 
     // Reference Station data for type 3/4/22/23/24/32 messages
     struct {
@@ -390,16 +389,16 @@ struct rtcm2_t {
     union {
         struct {
             unsigned int nentries;
-            struct gps_rangesat_t {     /* data from messages 1 & 9 */
-                unsigned ident;         /* satellite ID */
-                unsigned udre;          /* user differential range error */
-                unsigned iod;           /* issue of data */
-                double prc;             /* range error */
-                double rrc;             /* range error rate */
+            struct gps_rangesat_t {     // data from messages 1 & 9
+                unsigned ident;         // satellite ID
+                unsigned udre;          // user differential range error
+                unsigned iod;           // issue of data
+                double prc;             // range error
+                double rrc;             // range error rate
             } sat[MAXCORRECTIONS];
         } gps_ranges;
-        struct {                /* data from type 4 messages */
-            bool valid;         /* is message well-formed? */
+        struct {                // data from type 4 messages
+            bool valid;         // is message well-formed?
             int system;
             int sense;
 #define SENSE_INVALID   0
@@ -408,45 +407,45 @@ struct rtcm2_t {
             char datum[6];
             double dx, dy, dz;
         } reference;
-        struct {                /* data from type 5 messages */
+        struct {                // data from type 5 messages
             unsigned int nentries;
             struct consat_t {
-                unsigned ident;         /* satellite ID */
-                bool iodl;              /* issue of data */
-                unsigned int health;    /* is satellite healthy? */
-#define HEALTH_NORMAL           (0)     /* Radiobeacon operation normal */
-#define HEALTH_UNMONITORED      (1)     /* No integrity monitor operating */
-#define HEALTH_NOINFO           (2)     /* No information available */
-#define HEALTH_DONOTUSE         (3)     /* Do not use this radiobeacon */
-               int snr;                 /* signal-to-noise ratio, dB */
-#define SNR_BAD -1                      /* not reported */
-                bool health_en;         /* health enabled */
-                bool new_data;          /* new data? */
-                bool los_warning;       /* line-of-sight warning */
-                unsigned int tou;       /* time to unhealth, seconds */
+                unsigned ident;         // satellite ID
+                bool iodl;              // issue of data
+                unsigned int health;    // is satellite healthy?
+#define HEALTH_NORMAL           (0)     // Radiobeacon operation normal
+#define HEALTH_UNMONITORED      (1)     // No integrity monitor operating
+#define HEALTH_NOINFO           (2)     // No information available
+#define HEALTH_DONOTUSE         (3)     // Do not use this radiobeacon
+               int snr;                 // signal-to-noise ratio, dB
+#define SNR_BAD -1                      // not reported
+                bool health_en;         // health enabled
+                bool new_data;          // new data?
+                bool los_warning;       // line-of-sight warning
+                unsigned int tou;       // time to unhealth, seconds
             } sat[MAXHEALTH];
         } conhealth;
-        struct {                /* data from type 7 messages */
+        struct {                // data from type 7 messages
             unsigned int nentries;
             struct station_t {
-                double latitude, longitude;     /* location */
-                unsigned int range;             /* range in km */
-                double frequency;               /* broadcast freq */
-                unsigned int health;            /* station health */
-                unsigned int station_id;        /* of the transmitter */
-                unsigned int bitrate;           /* of station transmissions */
+                double latitude, longitude;     // location
+                unsigned int range;             // range in km
+                double frequency;               // broadcast freq
+                unsigned int health;            // station health
+                unsigned int station_id;        // of the transmitter
+                unsigned int bitrate;           // of station transmissions
             } station[MAXSTATIONS];
         } almanac;
-        struct {                /* data for type 13 messages */
-            bool status;                /* expect a text message */
-            bool rangeflag;             /* station range altered? */
-            double lat, lon;            /* station longitude/latitude */
-            unsigned int range;         /* transmission range in km */
+        struct {                        // data for type 13 messages
+            bool status;                // expect a text message
+            bool rangeflag;             // station range altered?
+            double lat, lon;            // station longitude/latitude
+            unsigned int range;         // transmission range in km
         } xmitter;
-        struct {                /* data from type 14 messages */
-            unsigned int week;                  /* GPS week (0-1023) */
-            unsigned int hour;                  /* Hour in week (0-167) */
-            unsigned int leapsecs;              /* Leap seconds (0-63) */
+        struct {                        // data from type 14 messages
+            unsigned int week;          // GPS week (0-1023)
+            unsigned int hour;          // Hour in week (0-167)
+            unsigned int leapsecs;      // Leap seconds (0-63)
         } gpstime;
         struct {                        // RTCM2 type 18
             int tom;                    // time of measurement
@@ -485,13 +484,13 @@ struct rtcm2_t {
         } rtcm2_24;
         struct {
             unsigned int nentries;
-            struct glonass_rangesat_t {         /* data from message type 31 */
-                unsigned ident;         /* satellite ID */
-                unsigned udre;          /* user differential range error */
-                unsigned tod;           /* issue of data */
-                bool change;            /* ephemeris change bit */
-                double prc;             /* range error */
-                double rrc;             /* range error rate */
+            struct glonass_rangesat_t {      // data from message type 31
+                unsigned ident;              // satellite ID
+                unsigned udre;               // user differential range error
+                unsigned tod;                // issue of data
+                bool change;                 // ephemeris change bit
+                double prc;                  // range error
+                double rrc;                  // range error rate
             } sat[MAXCORRECTIONS];
         } glonass_ranges;
         // data from type 16 messages
@@ -564,8 +563,8 @@ struct rtcm3_rtk_hdr {          // header data from 1001, 1002, 1003, 1004
 
 struct rtcm3_basic_rtk {
     unsigned char indicator;    // Indicator
-    unsigned int channel;       /* Satellite Frequency Channel Number
-                                   (GLONASS only) */
+    // Satellite Frequency Channel Number (GLONASS only)
+    unsigned int channel;
     double pseudorange;         // Pseudorange
     double rangediff;           // PhaseRange - Pseudorange in meters
     unsigned char locktime;     // Lock time Indicator
@@ -573,13 +572,31 @@ struct rtcm3_basic_rtk {
 
 struct rtcm3_extended_rtk {
     unsigned char indicator;    // Indicator
-    unsigned int channel;       /* Satellite Frequency Channel Number
-                                   (GLONASS only) */
+    // Satellite Frequency Channel Number (GLONASS only)
+    unsigned int channel;
     double pseudorange;         // Pseudorange
     double rangediff;           // PhaseRange - L1 Pseudorange
     unsigned char locktime;     // Lock time Indicator
     unsigned char ambiguity;    // Integer Pseudorange Modulus Ambiguity
     double CNR;                 // Carrier-to-Noise Ratio
+};
+
+// satellite data from MSM1 and MSM7
+struct rtcm3_msm_sat {
+    unsigned rr_ms;             // Milliseconds in GNSS Satellite rough ranges
+    unsigned ext_info;          // Extended Satellite info
+    unsigned rr_m1;             // Rough ranges Modulo 1 Milliseconds
+    int rates_rphr;             // Rough PhaseRange rates
+};
+
+// signal data from MSM1 and MSM7
+struct rtcm3_msm_sig {
+    int pseudo_r;               // Signal fine Pseudoranges
+    int32_t phase_r;            // Signal fine Phaseranges
+    unsigned lti;               // Lock Time Indicator
+    unsigned cnr;               // Signal CNRs
+    int rates_phr;              // Phase Range Rates
+    bool half_amb;              // Half-cycle ambiguity indicator
 };
 
 // header data from MSM1 to MSM7
@@ -603,24 +620,8 @@ struct rtcm3_msm_hdr {
     unsigned char n_sat;        // Number of satellites derived from sat_mask
     unsigned char n_sig;        // Number of signals derived from sig_mask
     unsigned char n_cell;       // no. of sats * no. of sigs (<=64!)
-};
-
-// satellite data from MSM1 and MSM7
-struct rtcm3_msm_sat {
-    unsigned rr_ms;             // Milliseconds in GNSS Satellite rough ranges
-    unsigned ext_info;          // Extended Satellite info
-    unsigned rr_m1;             // Rough ranges Modulo 1 Milliseconds
-    int rates_rphr;             // Rough PhaseRange rates
-};
-
-// signal data from MSM1 and MSM7
-struct rtcm3_msm_sig {
-    int pseudo_r;               // Signal fine Pseudoranges
-    int32_t phase_r;            // Signal fine Phaseranges
-    unsigned lti;               // Lock Time Indicator
-    unsigned cnr;               // Signal CNRs
-    int rates_phr;              // Phase Range Rates
-    bool half_amb;              // Half-cycle ambiguity indicator
+    struct rtcm3_msm_sat sat[RTCM3_MAX_SATELLITES];
+    struct rtcm3_msm_sig sig[RTCM3_MAX_SATELLITES];
 };
 
 struct rtcm3_network_rtk_header {
@@ -637,11 +638,11 @@ struct rtcm3_correction_diff {
     unsigned char ident;        // satellite ID
     enum {RESERVED, CORRECT, WIDELANE, UNCERTAIN} ambiguity;
     unsigned char nonsync;
-    double geometric_diff;      /* Geometric Carrier Phase
-                                   Correction Difference (1016, 1017) */
+    // Geometric Carrier Phase Correction Difference (1016, 1017)
+    double geometric_diff;
     unsigned char iode;         // GPS IODE (1016, 1017)
-    double ionospheric_diff;    /* Ionospheric Carrier Phase
-                                   Correction Difference (1015, 1017) */
+    // Ionospheric Carrier Phase Correction Difference (1015, 1017)
+    double ionospheric_diff;
 };
 
 struct rtcm3_t {
@@ -840,21 +841,30 @@ struct rtcm3_t {
             char src_name[RTCM3_MAX_DESCRIPTOR+1];      // DF144, Source-Name
             // size_t tar_len;
             char tar_name[RTCM3_MAX_DESCRIPTOR+1];      // DF146, Target-Name
-            unsigned int sys_id_num;                    // DF147, System Identification Number
-            bool ut_tr_msg_id[RTCM3_DF148_SIZE];        // DF148, Utilized Transformation Message Indicator
-            unsigned char plate_number;                 // DF149, Plate Number 0-31 values
-            unsigned char computation_id;               // DF150, Computation Indicator, 0-15 values
+            // DF147, System Identification Number
+            unsigned int sys_id_num;
+            // DF148, Utilized Transformation Message Indicator
+            bool ut_tr_msg_id[RTCM3_DF148_SIZE];
+            // DF149, Plate Number 0-31 values
+            unsigned char plate_number;
+            // DF150, Computation Indicator, 0-15 values
+            unsigned char computation_id;
             enum {
                 H_GEOMETRIC, H_PHYS_TAR, H_PHYS_SRC, H_RESERVED
-            } height_id;                                // DF151, Height Indicator, 0-3 values
-            double lat_origin, lon_origin;              // Latitude of Origin, Longitude of Origin
-            double lat_extension, lon_extension;        // N/S Extension, E/W Extension
+            } height_id;                // DF151, Height Indicator, 0-3 values
+            // Latitude of Origin, Longitude of Origin
+            double lat_origin, lon_origin;
+            // N/S Extension, E/W Extension
+            double lat_extension, lon_extension;
             double x_trans, y_trans, z_trans;           // dX, dY, dZ
             double x_rot, y_rot, z_rot;                 // rX, rY, rZ
             double ds;                                  // DF162, partial scale
-            double add_as, add_bs, add_at, add_bt;      // Major|Minor-Axis-Source, Major|Minor-Axis-Target
-            enum RTCM3_QUALITY_INDICATOR_TRANSFORMATION quality_hori;                  // Horizontal Quality Indicator
-            enum RTCM3_QUALITY_INDICATOR_TRANSFORMATION quality_vert;                  // Vertical Quality Indicator
+            // Major|Minor-Axis-Source, Major|Minor-Axis-Target
+            double add_as, add_bs, add_at, add_bt;
+            // Horizontal Quality Indicator
+            enum RTCM3_QUALITY_INDICATOR_TRANSFORMATION quality_hori;
+            // Vertical Quality Indicator
+            enum RTCM3_QUALITY_INDICATOR_TRANSFORMATION quality_vert;
         } rtcm3_1021;
         struct {
             // DF147, System Identification Number
@@ -871,17 +881,23 @@ struct rtcm3_t {
             // 4*4 residual grid points
             struct rtcm3_1023_t {
                 double lat_res, lon_res, hgt_res;
-            } residuals[RTCM3_GRID_SIZE];               // 4*4 residual grid points
-            enum RTCM3_INTERPOLATION_INDICATOR interp_meth_id_hori;                    // Horizontal interpolation method indicator
-            enum RTCM3_INTERPOLATION_INDICATOR interp_meth_id_vert;                    // Vertical interpolation method indicator
-            enum RTCM3_QUALITY_INDICATOR_GRID_RESIDUALS grd_qual_id_hori;              // Horizontal Grid quality indicator
-            enum RTCM3_QUALITY_INDICATOR_GRID_RESIDUALS grd_qual_id_vert;              // Vertical Grid quality indicator
+            } residuals[RTCM3_GRID_SIZE];
+            // Horizontal interpolation method indicator
+            enum RTCM3_INTERPOLATION_INDICATOR interp_meth_id_hori;
+            // Vertical interpolation method indicator
+            enum RTCM3_INTERPOLATION_INDICATOR interp_meth_id_vert;
+            // Horizontal Grid quality indicator
+            enum RTCM3_QUALITY_INDICATOR_GRID_RESIDUALS grd_qual_id_hori;
+            // Vertical Grid quality indicator
+            enum RTCM3_QUALITY_INDICATOR_GRID_RESIDUALS grd_qual_id_vert;
             unsigned short mjd;                         // Modified Julian Date
         } rtcm3_1023;
         struct rtcm3_1025_t {
-            unsigned int sys_id_num;                    // DF147, System Identification Number
+            // DF147, System Identification Number
+            unsigned int sys_id_num;
             enum RTCM3_PROJECTION_TYPE projection_type; // Projection Types
-            double lat_origin, lon_origin;              // Latitude of Origin, Longitude of Origin
+            // Latitude of Origin, Longitude of Origin
+            double lat_origin, lon_origin;
             double add_sno;                             // DF173
             double false_east, false_north;             // DF174, DF175
         } rtcm3_1025;
@@ -912,8 +928,6 @@ struct rtcm3_t {
             int l2_p_bias;          // GLONASS L2 P Code-Phase Bias
         } rtcm3_1230;
         struct rtcm3_msm_hdr rtcm3_msm;
-        struct rtcm3_msm_sat rtcm3_msm_sat[RTCM3_MAX_SATELLITES];
-        struct rtcm3_msm_sig rtcm3_msm_sig[RTCM3_MAX_SATELLITES];
         unsigned char data[1024];       // Max RTCM3 msg length is 1023 bytes
     } rtcmtypes;
 };
@@ -983,22 +997,22 @@ struct orbit
     // af2, aka a2, SV clock correction second order term, seconds/second**2
     double af2;
 
-    /* alpha0, seconds */
+    // alpha0, seconds
     double alpha0;
-    /* alpha1, seconds/semi-circle */
+    // alpha1, seconds/semi-circle
     double alpha1;
-    /* alpha2, seconds/semi-circle**2 */
+    // alpha2, seconds/semi-circle**2
     double alpha2;
-    /* alpha3, seconds/semi-circle**3 */
+    // alpha3, seconds/semi-circle**3
     double alpha3;
 
-    /* beta0, seconds */
+    // beta0, seconds
     double beta0;
-    /* beta1, seconds/semi-circle */
+    // beta1, seconds/semi-circle
     double beta1;
-    /* beta2, seconds/semi-circle**2 */
+    // beta2, seconds/semi-circle**2
     double beta2;
-    /* beta3, seconds/semi-circle**3 */
+    // beta3, seconds/semi-circle**3
     double beta3;
 
     /* Cic, Amplitude of the Cosine Harmonic Correction Term to the
@@ -1056,23 +1070,23 @@ typedef struct orbit orbit_t;
  * precision. See IS-GPS-200, Table 20-VI  */
 struct almanac_t
 {
-    uint8_t sv;  /* The satellite this refers to */
-    /* toa, almanac reference time, 8 bits unsigned, seconds */
+    uint8_t sv;  // The satellite this refers to
+    // toa, almanac reference time, 8 bits unsigned, seconds
     uint8_t toa;
     unsigned long l_toa;
-    /* SV health data, 8 bit unsigned bit map */
+    // SV health data, 8 bit unsigned bit map
     uint8_t svh;
-    /* deltai, correction to inclination, 16 bits signed, semi-circles */
+    // deltai, correction to inclination, 16 bits signed, semi-circles
     int16_t deltai;
     double d_deltai;
-    /* M0, Mean Anomaly at Reference Time, 24 bits signed, semi-circles */
+    // M0, Mean Anomaly at Reference Time, 24 bits signed, semi-circles
     int32_t M0;
     double d_M0;
     /* Omega0, Longitude of Ascending Node of Orbit Plane at Weekly Epoch,
      * 24 bits signed, semi-circles */
     int32_t Omega0;
     double d_Omega0;
-    /* omega, Argument of Perigee, 24 bits signed, semi-circles */
+    // omega, Argument of Perigee, 24 bits signed, semi-circles
     int32_t omega;
     double d_omega;
     /* af0, SV clock correction constant term
@@ -1083,14 +1097,14 @@ struct almanac_t
      * 11 bits signed, seconds/second */
     int16_t af1;
     double d_af1;
-    /* eccentricity, 16 bits, unsigned, dimensionless */
+    // eccentricity, 16 bits, unsigned, dimensionless
     uint16_t e;
     double d_eccentricity;
     /* sqrt A, Square Root of the Semi-Major Axis
      * 24 bits unsigned, square_root(meters) */
     uint32_t sqrtA;
     double d_sqrtA;
-    /* Omega dot, Rate of Right Ascension, 16 bits signed, semi-circles/sec */
+    // Omega dot, Rate of Right Ascension, 16 bits signed, semi-circles/sec
     int16_t Omegad;
     double d_Omegad;
 };
@@ -1103,19 +1117,19 @@ struct subframe_t {
     /* data_id, denotes the NAV data structure of D(t), 2 bits, in
      * IS-GPS-200 always == 0x1 */
     uint8_t data_id;
-    /* SV/page id used for subframes 4 & 5, 6 bits */
+    // SV/page id used for subframes 4 & 5, 6 bits
     uint8_t pageid;
-    /* tSVID, SV ID of the sat that transmitted this frame, 6 bits unsigned */
+    // tSVID, SV ID of the sat that transmitted this frame, 6 bits unsigned
     uint8_t tSVID;
     /* TOW17, Time of Week of next Subframe.
      * 17 bits unsigned, 0 to 100,799, scale 6, seconds, -1 if invalid */
     int32_t TOW17;            // 0 to 100,799, or 0 to 604,794
-    /* integrity, URA bounds flag, 1 bit */
+    // integrity, URA bounds flag, 1 bit
     bool integrity;
     /* alert, alert flag, SV URA and/or the SV User Differential Range
      * Accuracy (UDRA) may be worse than indicated, 1 bit */
     bool alert;
-    /* antispoof, A-S mode is ON in that SV, 1 bit */
+    // antispoof, A-S mode is ON in that SV, 1 bit
     bool antispoof;
     // Week Number for sending constellation, -1 for invalid
     int WN;
@@ -1131,7 +1145,7 @@ struct subframe_t {
         /* subframe 1, part of ephemeris, see IS-GPS-200, Table 20-II
          * and Table 20-I */
         struct {
-            /* WN, Week Number, 10 bits unsigned, scale 1, weeks */
+            // WN, Week Number, 10 bits unsigned, scale 1, weeks
             uint16_t WN;
             /* IODC, Issue of Data, Clock, 10 bits, unsigned,
              * issued in 8 data ranges at the same time */
@@ -1140,13 +1154,13 @@ struct subframe_t {
              * scale 2**4, issued in 8 data ranges at the same time */
             uint16_t toc;
             long l_toc;
-            /* l2, code on L2, 2 bits, bit map */
+            // l2, code on L2, 2 bits, bit map
             uint8_t l2;
-            /* l2p, L2 P data flag, 1 bit */
+            // l2p, L2 P data flag, 1 bit
             uint8_t l2p;
-            /* ura, SV accuracy, 4 bits unsigned index */
+            // ura, SV accuracy, 4 bits unsigned index
             unsigned int ura;
-            /* hlth, SV health, 6 bits unsigned bitmap */
+            // hlth, SV health, 6 bits unsigned bitmap
             unsigned int hlth;
             /* af0, SV clock correction constant term
              * 22 bits signed, scale 2**-31, seconds */
@@ -1203,7 +1217,7 @@ struct subframe_t {
              * scale 2**-31, semi-circles */
             int32_t M0;
             double d_M0;
-            /* eccentricity, 32 bits, unsigned, scale 2**-33, dimensionless */
+            // eccentricity, 32 bits, unsigned, scale 2**-33, dimensionless
             uint32_t e;
             double d_eccentricity;
             /* sqrt A, Square Root of the Semi-Major Axis
@@ -1253,22 +1267,21 @@ struct subframe_t {
         struct {
             struct almanac_t almanac;
         } sub4;
-        /* subframe 4, page 13 */
+        // subframe 4, page 13
         struct {
             /* mapping ord ERD# to SV # is non trivial
-             * leave it alone.  See IS-GPS-200 Section 20.3.3.5.1.9 */
-            /* Estimated Range Deviation, 6 bits signed, meters */
+             * leave it alone.  See IS-GPS-200 Section 20.3.3.5.1.9
+             * Estimated Range Deviation, 6 bits signed, meters */
             int8_t ERD[33];
-            /* ai, Availability Indicator, 2bits, bit map */
+            // ai, Availability Indicator, 2bits, bit map
             uint8_t ai;
         } sub4_13;
-        /* subframe 4, page 17, system message, 23 chars, plus nul */
+        // subframe 4, page 17, system message, 23 chars, plus nul
         struct {
             char str[24];
         } sub4_17;
-        /* subframe 4, page 18 */
-        struct {
-            /* ionospheric and UTC data */
+        // subframe 4, page 18
+        struct {          // ionospheric and UTC data
             /* A0, Bias coefficient of GPS time scale relative to UTC time
              * scale, 32 bits signed, scale 2**-30, seconds */
             int32_t A0;
@@ -1281,32 +1294,32 @@ struct subframe_t {
             /* alphaX, the four coefficients of a cubic equation representing
              * the amplitude of the vertical delay */
 
-            /* alpha0, 8 bits signed, scale w**-30, seconds */
+            // alpha0, 8 bits signed, scale w**-30, seconds
             int8_t alpha0;
             double d_alpha0;
-            /* alpha1, 8 bits signed, scale w**-27, seconds/semi-circle */
+            // alpha1, 8 bits signed, scale w**-27, seconds/semi-circle
             int8_t alpha1;
             double d_alpha1;
-            /* alpha2, 8 bits signed, scale w**-24, seconds/semi-circle**2 */
+            // alpha2, 8 bits signed, scale w**-24, seconds/semi-circle**2
             int8_t alpha2;
             double d_alpha2;
-            /* alpha3, 8 bits signed, scale w**-24, seconds/semi-circle**3 */
+            // alpha3, 8 bits signed, scale w**-24, seconds/semi-circle**3
             int8_t alpha3;
             double d_alpha3;
 
             /* betaX, the four coefficients of a cubic equation representing
              * the period of the model */
 
-            /* beta0, 8 bits signed, scale w**11, seconds */
+            // beta0, 8 bits signed, scale w**11, seconds
             int8_t beta0;
             double d_beta0;
-            /* beta1, 8 bits signed, scale w**14, seconds/semi-circle */
+            // beta1, 8 bits signed, scale w**14, seconds/semi-circle
             int8_t beta1;
             double d_beta1;
-            /* beta2, 8 bits signed, scale w**16, seconds/semi-circle**2 */
+            // beta2, 8 bits signed, scale w**16, seconds/semi-circle**2
             int8_t beta2;
             double d_beta2;
-            /* beta3, 8 bits signed, scale w**16, seconds/semi-circle**3 */
+            // beta3, 8 bits signed, scale w**16, seconds/semi-circle**3
             int8_t beta3;
             double d_beta3;
 
@@ -1322,8 +1335,7 @@ struct subframe_t {
             uint16_t tot;
             unsigned long t_tot;
 
-            /* WNt, UTC reference week number, 8 bits unsigned, scale 1,
-             * weeks */
+            // WNt, UTC reference week number, 8 bits unsigned, scale 1, weeks
             uint8_t WNt;
             /* WNlsf, Leap second reference Week Number,
              * 8 bits unsigned, scale 1, weeks */
@@ -1332,7 +1344,7 @@ struct subframe_t {
              * scale 1, days */
             uint8_t DN;
         } sub4_18;
-        /* subframe 4, page 25 */
+        // subframe 4, page 25
         struct {
             /* svf, A-S status and the configuration code of each SV
              * 4 bits unsigned, bitmap */
@@ -1352,7 +1364,7 @@ struct subframe_t {
             /* WNa, Week Number almanac, 8 bits, scale 2, GPS Week
              * Number % 256 */
             uint8_t WNa;
-            /* sv, SV health status, 6 bits, bitmap */
+            // sv, SV health status, 6 bits, bitmap
             uint8_t sv[25];
         } sub5_25;
     };
@@ -1369,57 +1381,57 @@ typedef uint64_t gps_mask_t;
  */
 #define AIS_AUXILIARY_MMSI(n)   ((n) / 10000000 == 98)
 
-/* N/A values and scaling constant for 25/24 bit lon/lat pairs */
+// N/A values and scaling constant for 25/24 bit lon/lat pairs
 #define AIS_LON3_NOT_AVAILABLE  181000
 #define AIS_LAT3_NOT_AVAILABLE  91000
 #define AIS_LATLON3_DIV 60000.0
 
-/* N/A values and scaling constant for 28/27 bit lon/lat pairs */
+// N/A values and scaling constant for 28/27 bit lon/lat pairs
 #define AIS_LON4_NOT_AVAILABLE  1810000
 #define AIS_LAT4_NOT_AVAILABLE  910000
 #define AIS_LATLON4_DIV 600000.0
 
 struct route_info {
-    unsigned int linkage;       /* Message Linkage ID */
-    unsigned int sender;        /* Sender Class */
-    unsigned int rtype;         /* Route Type */
-    unsigned int month;         /* Start month */
-    unsigned int day;           /* Start day */
-    unsigned int hour;          /* Start hour */
-    unsigned int minute;        /* Start minute */
-    unsigned int duration;      /* Duration */
-    int waycount;               /* Waypoint count */
+    unsigned int linkage;       // Message Linkage ID
+    unsigned int sender;        // Sender Class
+    unsigned int rtype;         // Route Type
+    unsigned int month;         // Start month
+    unsigned int day;           // Start day
+    unsigned int hour;          // Start hour
+    unsigned int minute;        // Start minute
+    unsigned int duration;      // Duration
+    int waycount;               // Waypoint count
     struct waypoint_t {
-        signed int lon;         /* Longitude */
-        signed int lat;         /* Latitude */
+        signed int lon;         // Longitude
+        signed int lat;         // Latitude
     } waypoints[16];
 };
 
 struct ais_t
 {
-    unsigned int        type;           /* message type */
-    unsigned int        repeat;         /* Repeat indicator */
-    unsigned int        mmsi;           /* MMSI */
+    unsigned int        type;           // message type
+    unsigned int        repeat;         // Repeat indicator
+    unsigned int        mmsi;           // MMSI
     union {
-        /* Types 1-3 Common navigation info */
+        // Types 1-3 Common navigation info
         struct {
-            unsigned int status;                /* navigation status */
-            signed turn;                        /* rate of turn */
+            unsigned int status;                // navigation status
+            signed turn;                        // rate of turn
 #define AIS_TURN_HARD_LEFT      -127
 #define AIS_TURN_HARD_RIGHT     127
 #define AIS_TURN_NOT_AVAILABLE  128
-            unsigned int speed;         /* speed over ground in deciknots */
+            unsigned int speed;         // speed over ground in deciknots
 #define AIS_SPEED_NOT_AVAILABLE 1023
-#define AIS_SPEED_FAST_MOVER    1022            /* >= 102.2 knots */
-            bool accuracy;                      /* position accuracy */
+#define AIS_SPEED_FAST_MOVER    1022            // >= 102.2 knots
+            bool accuracy;                      // position accuracy
 #define AIS_LATLON_DIV  600000.0
-            int lon;                            /* longitude */
+            int lon;                            // longitude
 #define AIS_LON_NOT_AVAILABLE   0x6791AC0
-            int lat;                            /* latitude */
+            int lat;                            // latitude
 #define AIS_LAT_NOT_AVAILABLE   0x3412140
-            unsigned int course;                /* course over ground */
+            unsigned int course;                // course over ground
 #define AIS_COURSE_NOT_AVAILABLE        3600
-            unsigned int heading;               /* true heading */
+            unsigned int heading;               // true heading
 #define AIS_HEADING_NOT_AVAILABLE       511
             /* seconds of UTC time, 0 to 59.
              * 60 == N/A, 61 == manual, 62 == dead reckoning,
@@ -1429,325 +1441,325 @@ struct ais_t
 #define AIS_SEC_MANUAL          61
 #define AIS_SEC_ESTIMATED       62
 #define AIS_SEC_INOPERATIVE     63
-            unsigned int maneuver;      /* maneuver indicator */
-            //unsigned int spare;       spare bits */
-            bool raim;                  /* RAIM flag */
-            unsigned int radio;         /* radio status bits */
+            unsigned int maneuver;      // maneuver indicator
+            // unsigned int spare;       // spare bits
+            bool raim;                  // RAIM flag
+            unsigned int radio;         // radio status bits
         } type1;
-        /* Type 4 - Base Station Report & Type 11 - UTC and Date Response */
+        // Type 4 - Base Station Report & Type 11 - UTC and Date Response
         struct {
-            unsigned int year;                  /* UTC year */
+            unsigned int year;                  // UTC year
 #define AIS_YEAR_NOT_AVAILABLE  0
-            unsigned int month;                 /* UTC month */
+            unsigned int month;                 // UTC month
 #define AIS_MONTH_NOT_AVAILABLE 0
-            unsigned int day;                   /* UTC day */
+            unsigned int day;                   // UTC day
 #define AIS_DAY_NOT_AVAILABLE   0
-            unsigned int hour;                  /* UTC hour */
+            unsigned int hour;                  // UTC hour
 #define AIS_HOUR_NOT_AVAILABLE  24
-            unsigned int minute;                /* UTC minute */
+            unsigned int minute;                // UTC minute
 #define AIS_MINUTE_NOT_AVAILABLE        60
-            unsigned int second;                /* UTC second */
+            unsigned int second;                // UTC second
 #define AIS_SECOND_NOT_AVAILABLE        60
-            bool accuracy;              /* fix quality */
-            int lon;                    /* longitude */
-            int lat;                    /* latitude */
-            unsigned int epfd;          /* type of position fix device */
-            //unsigned int spare;       spare bits */
-            bool raim;                  /* RAIM flag */
-            unsigned int radio;         /* radio status bits */
+            bool accuracy;              // fix quality
+            int lon;                    // longitude
+            int lat;                    // latitude
+            unsigned int epfd;          // type of position fix device
+            // unsigned int spare;      // spare bits
+            bool raim;                  // RAIM flag
+            unsigned int radio;         // radio status bits
         } type4;
-        /* Type 5 - Ship static and voyage related data */
+        // Type 5 - Ship static and voyage related data
         struct {
-            unsigned int ais_version;   /* AIS version level */
-            unsigned int imo;           /* IMO identification */
+            unsigned int ais_version;   // AIS version level
+            unsigned int imo;           // IMO identification
             // cppcheck-suppress arrayIndexOutOfBounds
-            char callsign[7+1];         /* callsign */
+            char callsign[7+1];         // callsign
 #define AIS_SHIPNAME_MAXLEN     20
             // cppcheck-suppress arrayIndexOutOfBounds
-            char shipname[AIS_SHIPNAME_MAXLEN+1];       /* vessel name */
-            unsigned int shiptype;      /* ship type code */
-            unsigned int to_bow;        /* dimension to bow */
-            unsigned int to_stern;      /* dimension to stern */
-            unsigned int to_port;       /* dimension to port */
-            unsigned int to_starboard;  /* dimension to starboard */
-            unsigned int epfd;          /* type of position fix device */
-            unsigned int month;         /* UTC month */
-            unsigned int day;           /* UTC day */
-            unsigned int hour;          /* UTC hour */
-            unsigned int minute;        /* UTC minute */
-            unsigned int draught;       /* draft in meters */
-            char destination[20+1];     /* ship destination */
-            unsigned int dte;           /* data terminal enable */
-            //unsigned int spare;       spare bits */
+            char shipname[AIS_SHIPNAME_MAXLEN+1];       // vessel name
+            unsigned int shiptype;      // ship type code
+            unsigned int to_bow;        // dimension to bow
+            unsigned int to_stern;      // dimension to stern
+            unsigned int to_port;       // dimension to port
+            unsigned int to_starboard;  // dimension to starboard
+            unsigned int epfd;          // type of position fix device
+            unsigned int month;         // UTC month
+            unsigned int day;           // UTC day
+            unsigned int hour;          // UTC hour
+            unsigned int minute;        // UTC minute
+            unsigned int draught;       // draft in meters
+            char destination[20+1];     // ship destination
+            unsigned int dte;           // data terminal enable
+            // unsigned int spare;      // spare bits
         } type5;
-        /* Type 6 - Addressed Binary Message */
+        // Type 6 - Addressed Binary Message
         struct {
-            unsigned int seqno;         /* sequence number */
-            unsigned int dest_mmsi;     /* destination MMSI */
-            bool retransmit;            /* retransmit flag */
-            //unsigned int spare;       spare bit(s) */
-            unsigned int dac;           /* Application ID */
-            unsigned int fid;           /* Functional ID */
-            bool structured;            /* True match for DAC/FID? */
-#define AIS_TYPE6_BINARY_MAX    920     /* 920 bits */
-            size_t bitcount;            /* bit count of the data */
+            unsigned int seqno;         // sequence number
+            unsigned int dest_mmsi;     // destination MMSI
+            bool retransmit;            // retransmit flag
+            // unsigned int spare;      // spare bit(s)
+            unsigned int dac;           // Application ID
+            unsigned int fid;           // Functional ID
+            bool structured;            // True match for DAC/FID?
+#define AIS_TYPE6_BINARY_MAX    920     // 920 bits
+            size_t bitcount;            // bit count of the data
             union {
                 // cppcheck-suppress arrayIndexOutOfBounds
                 char bitdata[(AIS_TYPE6_BINARY_MAX + 7) / 8];
-                /* Inland AIS - ETA at lock/bridge/terminal */
+                // Inland AIS - ETA at lock/bridge/terminal
                 struct {
-                    char country[2+1];  /* UN Country Code */
-                    char locode[3+1];   /* UN/LOCODE */
-                    char section[5+1];  /* Fairway section */
-                    char terminal[5+1]; /* Terminal code */
-                    char hectometre[5+1];       /* Fairway hectometre */
-                    unsigned int month; /* ETA month */
-                    unsigned int day;   /* ETA day */
-                    unsigned int hour;  /* ETA hour */
-                    unsigned int minute;        /* ETA minute */
-                    unsigned int tugs;  /* Assisting Tugs */
-                    unsigned int airdraught;    /* Air Draught */
+                    char country[2+1];          // UN Country Code
+                    char locode[3+1];           // UN/LOCODE
+                    char section[5+1];          // Fairway section
+                    char terminal[5+1];         // Terminal code
+                    char hectometre[5+1];       // Fairway hectometre
+                    unsigned int month;         // ETA month
+                    unsigned int day;           // ETA day
+                    unsigned int hour;          // ETA hour
+                    unsigned int minute;        // ETA minute
+                    unsigned int tugs;          // Assisting Tugs
+                    unsigned int airdraught;    // Air Draught
                 } dac200fid21;
-                /* Inland AIS - ETA at lock/bridge/terminal */
+                // Inland AIS - ETA at lock/bridge/terminal
                 struct {
-                    char country[2+1];  /* UN Country Code */
-                    char locode[3+1];   /* UN/LOCODE */
-                    char section[5+1];  /* Fairway section */
-                    char terminal[5+1]; /* Terminal code */
-                    char hectometre[5+1];       /* Fairway hectometre */
-                    unsigned int month; /* RTA month */
-                    unsigned int day;   /* RTA day */
-                    unsigned int hour;  /* RTA hour */
-                    unsigned int minute;        /* RTA minute */
-                    unsigned int status;        /* Status */
+                    char country[2+1];          // UN Country Code
+                    char locode[3+1];           // UN/LOCODE
+                    char section[5+1];          // Fairway section
+                    char terminal[5+1];         // Terminal code
+                    char hectometre[5+1];       // Fairway hectometre
+                    unsigned int month;         // RTA month
+                    unsigned int day;           // RTA day
+                    unsigned int hour;          // RTA hour
+                    unsigned int minute;        // RTA minute
+                    unsigned int status;        // Status
 #define DAC200FID22_STATUS_OPERATIONAL  0
 #define DAC200FID22_STATUS_LIMITED      1
 #define DAC200FID22_STATUS_OUT_OF_ORDER 2
 #define DAC200FID22_STATUS_NOT_AVAILABLE        0
                 } dac200fid22;
-                /* Inland AIS - Number of persons on board */
+                // Inland AIS - Number of persons on board
                 struct {
-                    unsigned int crew;  /* # crew on board */
-                    unsigned int passengers;    /* # passengers on board */
-                    unsigned int personnel;     /* # personnel on board */
+                    unsigned int crew;          // # crew on board
+                    unsigned int passengers;    // # passengers on board
+                    unsigned int personnel;     // # personnel on board
 #define DAC200FID55_COUNT_NOT_AVAILABLE 255
                 } dac200fid55;
-                /* GLA - AtoN monitoring data (UK/ROI) */
+                // GLA - AtoN monitoring data (UK/ROI)
                 struct {
-                    unsigned int ana_int;       /* Analogue (internal) */
-                    unsigned int ana_ext1;      /* Analogue (external #1) */
-                    unsigned int ana_ext2;      /* Analogue (external #2) */
-                    unsigned int racon; /* RACON status */
-                    unsigned int light; /* Light status */
-                    bool alarm; /* Health alarm*/
-                    unsigned int stat_ext;      /* Status bits (external) */
-                    bool off_pos;    /* Off position status */
+                    unsigned int ana_int;       // Analogue (internal)
+                    unsigned int ana_ext1;      // Analogue (external #1)
+                    unsigned int ana_ext2;      // Analogue (external #2)
+                    unsigned int racon;         // RACON status
+                    unsigned int light;         // Light status
+                    bool alarm;                 // Health alarm
+                    unsigned int stat_ext;      // Status bits (external)
+                    bool off_pos;               // Off position status
                 } dac235fid10;
-                /* IMO236 - Dangerous Cargo Indication */
+                // IMO236 - Dangerous Cargo Indication
                 struct {
-                    char lastport[5+1];         /* Last Port Of Call */
-                    unsigned int lmonth;        /* ETA month */
-                    unsigned int lday;          /* ETA day */
-                    unsigned int lhour;         /* ETA hour */
-                    unsigned int lminute;       /* ETA minute */
-                    char nextport[5+1];         /* Next Port Of Call */
-                    unsigned int nmonth;        /* ETA month */
-                    unsigned int nday;          /* ETA day */
-                    unsigned int nhour;         /* ETA hour */
-                    unsigned int nminute;       /* ETA minute */
-                    char dangerous[20+1];       /* Main Dangerous Good */
-                    char imdcat[4+1];           /* IMD Category */
-                    unsigned int unid;          /* UN Number */
-                    unsigned int amount;        /* Amount of Cargo */
-                    unsigned int unit;          /* Unit of Quantity */
+                    char lastport[5+1];         // Last Port Of Call
+                    unsigned int lmonth;        // ETA month
+                    unsigned int lday;          // ETA day
+                    unsigned int lhour;         // ETA hour
+                    unsigned int lminute;       // ETA minute
+                    char nextport[5+1];         // Next Port Of Call
+                    unsigned int nmonth;        // ETA month
+                    unsigned int nday;          // ETA day
+                    unsigned int nhour;         // ETA hour
+                    unsigned int nminute;       // ETA minute
+                    char dangerous[20+1];       // Main Dangerous Good
+                    char imdcat[4+1];           // IMD Category
+                    unsigned int unid;          // UN Number
+                    unsigned int amount;        // Amount of Cargo
+                    unsigned int unit;          // Unit of Quantity
                 } dac1fid12;
-                /* IMO236 - Extended Ship Static and Voyage Related Data */
+                // IMO236 - Extended Ship Static and Voyage Related Data
                 struct {
-                    unsigned int airdraught;    /* Air Draught */
+                    unsigned int airdraught;    // Air Draught
                 } dac1fid15;
-                /* IMO236 - Number of Persons on board */
+                // IMO236 - Number of Persons on board
                 struct {
-                    unsigned persons;   /* number of persons */
+                    unsigned persons;           // number of persons
                 } dac1fid16;
-                /* IMO289 - Clearance Time To Enter Port */
+                // IMO289 - Clearance Time To Enter Port
                 struct {
-                    unsigned int linkage;       /* Message Linkage ID */
-                    unsigned int month; /* Month (UTC) */
-                    unsigned int day;   /* Day (UTC) */
-                    unsigned int hour;  /* Hour (UTC) */
-                    unsigned int minute;        /* Minute (UTC) */
-                    char portname[20+1];        /* Name of Port & Berth */
-                    char destination[5+1];      /* Destination */
-                    signed int lon;     /* Longitude */
-                    signed int lat;     /* Latitude */
+                    unsigned int linkage;       // Message Linkage ID
+                    unsigned int month;         // Month (UTC)
+                    unsigned int day;           // Day (UTC)
+                    unsigned int hour;          // Hour (UTC)
+                    unsigned int minute;        // Minute (UTC)
+                    char portname[20+1];        // Name of Port & Berth
+                    char destination[5+1];      // Destination
+                    signed int lon;             // Longitude
+                    signed int lat;             // Latitude
                 } dac1fid18;
-                /* IMO289 - Berthing Data (addressed) */
+                // IMO289 - Berthing Data (addressed)
                 struct {
-                    unsigned int linkage;       /* Message Linkage ID */
-                    unsigned int berth_length;  /* Berth length */
-                    unsigned int berth_depth;   /* Berth Water Depth */
-                    unsigned int position;      /* Mooring Position */
-                    unsigned int month; /* Month (UTC) */
-                    unsigned int day;   /* Day (UTC) */
-                    unsigned int hour;  /* Hour (UTC) */
-                    unsigned int minute;        /* Minute (UTC) */
-                    unsigned int availability;  /* Services Availability */
-                    unsigned int agent; /* Agent */
-                    unsigned int fuel;  /* Bunker/fuel */
-                    unsigned int chandler;      /* Chandler */
-                    unsigned int stevedore;     /* Stevedore */
-                    unsigned int electrical;    /* Electrical */
-                    unsigned int water; /* Potable water */
-                    unsigned int customs;       /* Customs house */
-                    unsigned int cartage;       /* Cartage */
-                    unsigned int crane; /* Crane(s) */
-                    unsigned int lift;  /* Lift(s) */
-                    unsigned int medical;       /* Medical facilities */
-                    unsigned int navrepair;     /* Navigation repair */
-                    unsigned int provisions;    /* Provisions */
-                    unsigned int shiprepair;    /* Ship repair */
-                    unsigned int surveyor;      /* Surveyor */
-                    unsigned int steam; /* Steam */
-                    unsigned int tugs;  /* Tugs */
-                    unsigned int solidwaste;    /* Waste disposal (solid) */
-                    unsigned int liquidwaste;   /* Waste disposal (liquid) */
+                    unsigned int linkage;         // Message Linkage ID
+                    unsigned int berth_length;    // Berth length
+                    unsigned int berth_depth;     // Berth Water Depth
+                    unsigned int position;        // Mooring Position
+                    unsigned int month;           // Month (UTC)
+                    unsigned int day;             // Day (UTC)
+                    unsigned int hour;            // Hour (UTC)
+                    unsigned int minute;          // Minute (UTC)
+                    unsigned int availability;    // Services Availability
+                    unsigned int agent;           // Agent
+                    unsigned int fuel;            // Bunker/fuel
+                    unsigned int chandler;        // Chandler
+                    unsigned int stevedore;       // Stevedore
+                    unsigned int electrical;      // Electrical
+                    unsigned int water;           // Potable water
+                    unsigned int customs;         // Customs house
+                    unsigned int cartage;         // Cartage
+                    unsigned int crane;           // Crane(s)
+                    unsigned int lift;            // Lift(s)
+                    unsigned int medical;         // Medical facilities
+                    unsigned int navrepair;       // Navigation repair
+                    unsigned int provisions;      // Provisions
+                    unsigned int shiprepair;      // Ship repair
+                    unsigned int surveyor;        // Surveyor
+                    unsigned int steam;           // Steam
+                    unsigned int tugs;            // Tugs
+                    unsigned int solidwaste;      // Waste disposal (solid)
+                    unsigned int liquidwaste;     // Waste disposal (liquid)
                     unsigned int hazardouswaste;  // Waste disposal (hazardous)
-                    unsigned int ballast;       /* Reserved ballast exchange */
-                    unsigned int additional;    /* Additional services */
-                    unsigned int regional1;     /* Regional reserved 1 */
-                    unsigned int regional2;     /* Regional reserved 2 */
-                    unsigned int future1;       /* Reserved for future */
-                    unsigned int future2;       /* Reserved for future */
-                    char berth_name[20+1];      /* Name of Berth */
-                    signed int berth_lon;       /* Longitude */
-                    signed int berth_lat;       /* Latitude */
+                    unsigned int ballast;         // Reserved ballast exchange
+                    unsigned int additional;      // Additional services
+                    unsigned int regional1;       // Regional reserved 1
+                    unsigned int regional2;       // Regional reserved 2
+                    unsigned int future1;         // Reserved for future
+                    unsigned int future2;         // Reserved for future
+                    char berth_name[20+1];        // Name of Berth
+                    signed int berth_lon;         // Longitude
+                    signed int berth_lat;         // Latitude
                 } dac1fid20;
-                /* IMO289 - Weather observation report from ship */
-                /*** WORK IN PROGRESS - NOT YET DECODED ***/
+                // IMO289 - Weather observation report from ship
+                // *** WORK IN PROGRESS - NOT YET DECODED ***
                 struct {
-                    bool wmo;                   /* true if WMO variant */
+                    bool wmo;                     // true if WMO variant
                     union {
                         struct {
-                            char location[20+1];        /* Location */
-                            signed int lon;             /* Longitude */
-                            signed int lat;             /* Latitude */
-                            unsigned int day;           /* Report day */
-                            unsigned int hour;          /* Report hour */
-                            unsigned int minute;        /* Report minute */
-                            bool vislimit;              /* Max range? */
-                            unsigned int visibility;    /* Units of 0.1 nm */
+                            char location[20+1];        // Location
+                            signed int lon;             // Longitude
+                            signed int lat;             // Latitude
+                            unsigned int day;           // Report day
+                            unsigned int hour;          // Report hour
+                            unsigned int minute;        // Report minute
+                            bool vislimit;              // Max range?
+                            unsigned int visibility;    // Units of 0.1 nm
 #define DAC1FID21_VISIBILITY_NOT_AVAILABLE      127
 #define DAC1FID21_VISIBILITY_SCALE              10.0
-                            unsigned humidity;          /* units of 1% */
-                            unsigned int wspeed;        /* average wind speed */
-                            unsigned int wgust;         /* wind gust */
+                            unsigned humidity;          // units of 1%
+                            unsigned int wspeed;        // average wind speed
+                            unsigned int wgust;         // wind gust
 #define DAC1FID21_WSPEED_NOT_AVAILABLE          127
-                            unsigned int wdir;          /* wind direction */
+                            unsigned int wdir;          // wind direction
 #define DAC1FID21_WDIR_NOT_AVAILABLE            360
-                            unsigned int pressure;      /* air pressure, hpa */
+                            unsigned int pressure;      // air pressure, hpa
 #define DAC1FID21_NONWMO_PRESSURE_NOT_AVAILABLE 403
-#define DAC1FID21_NONWMO_PRESSURE_HIGH          402     /* > 1200hPa */
-#define DAC1FID21_NONWMO_PRESSURE_OFFSET                400     /* N/A */
-                            unsigned int pressuretend;  /* tendency */
-                            int airtemp;                /* temp, units 0.1C */
+#define DAC1FID21_NONWMO_PRESSURE_HIGH          402     // > 1200hPa
+#define DAC1FID21_NONWMO_PRESSURE_OFFSET        400     // N/A
+                            unsigned int pressuretend;  // tendency
+                            int airtemp;                // temp, units 0.1C
 #define DAC1FID21_AIRTEMP_NOT_AVAILABLE         -1024
 #define DAC1FID21_AIRTEMP_SCALE                 10.0
-                            unsigned int watertemp;     /* units 0.1degC */
+                            unsigned int watertemp;     // units 0.1degC
 #define DAC1FID21_WATERTEMP_NOT_AVAILABLE       501
 #define DAC1FID21_WATERTEMP_SCALE               10.0
-                            unsigned int waveperiod;    /* in seconds */
+                            unsigned int waveperiod;    // in seconds
 #define DAC1FID21_WAVEPERIOD_NOT_AVAILABLE      63
-                            unsigned int wavedir;       /* direction in deg */
+                            unsigned int wavedir;       // direction in deg
 #define DAC1FID21_WAVEDIR_NOT_AVAILABLE         360
-                            unsigned int swellheight;   /* in decimeters */
-                            unsigned int swellperiod;   /* in seconds */
-                            unsigned int swelldir;      /* direction in deg */
+                            unsigned int swellheight;   // in decimeters
+                            unsigned int swellperiod;   // in seconds
+                            unsigned int swelldir;      // direction in deg
                         } nonwmo_obs;
                         struct {
-                            signed int lon;             /* Longitude */
-                            signed int lat;             /* Latitude */
-                            unsigned int month;         /* UTC month */
-                            unsigned int day;           /* Report day */
-                            unsigned int hour;          /* Report hour */
-                            unsigned int minute;        /* Report minute */
-                            unsigned int course;        /* course over ground */
-                            unsigned int speed;         /* speed, m/s */
+                            signed int lon;             // Longitude
+                            signed int lat;             // Latitude
+                            unsigned int month;         // UTC month
+                            unsigned int day;           // Report day
+                            unsigned int hour;          // Report hour
+                            unsigned int minute;        // Report minute
+                            unsigned int course;        // course over ground
+                            unsigned int speed;         // speed, m/s
 #define DAC1FID21_SOG_NOT_AVAILABLE             31
 #define DAC1FID21_SOG_HIGH_SPEED                30
 #define DAC1FID21_SOG_SCALE                     2.0
-                            unsigned int heading;       /* true heading */
+                            unsigned int heading;       // true heading
 #define DAC1FID21_HDG_NOT_AVAILABLE             127
 #define DAC1FID21_HDG_SCALE                     5.0
-                            unsigned int pressure;      /* units of hPa * 0.1 */
+                            unsigned int pressure;      // units of hPa * 0.1
 #define DAC1FID21_WMO_PRESSURE_SCALE            10
 #define DAC1FID21_WMO_PRESSURE_OFFSET           90.0
-                            unsigned int pdelta;        /* units of hPa * 0.1 */
+                            unsigned int pdelta;        // units of hPa * 0.1
 #define DAC1FID21_PDELTA_SCALE                  10
 #define DAC1FID21_PDELTA_OFFSET                 50.0
-                            unsigned int ptend;         /* enumerated */
-                            unsigned int twinddir;      /* in 5 degree steps */
+                            unsigned int ptend;         // enumerated
+                            unsigned int twinddir;      // in 5 degree steps
 #define DAC1FID21_TWINDDIR_NOT_AVAILABLE        127
-                            unsigned int twindspeed;    /* meters per second */
+                            unsigned int twindspeed;    // meters per second
 #define DAC1FID21_TWINDSPEED_SCALE              2
 #define DAC1FID21_RWINDSPEED_NOT_AVAILABLE      255
-                            unsigned int rwinddir;      /* in 5 degree steps */
+                            unsigned int rwinddir;      // in 5 degree steps
 #define DAC1FID21_RWINDDIR_NOT_AVAILABLE        127
-                            unsigned int rwindspeed;    /* meters per second */
+                            unsigned int rwindspeed;    // meters per second
 #define DAC1FID21_RWINDSPEED_SCALE              2
 #define DAC1FID21_RWINDSPEED_NOT_AVAILABLE      255
-                            unsigned int mgustspeed;    /* meters per second */
+                            unsigned int mgustspeed;    // meters per second
 #define DAC1FID21_MGUSTSPEED_SCALE              2
 #define DAC1FID21_MGUSTSPEED_NOT_AVAILABLE      255
-                            unsigned int mgustdir;      /* in 5 degree steps */
+                            unsigned int mgustdir;      // in 5 degree steps
 #define DAC1FID21_MGUSTDIR_NOT_AVAILABLE        127
-                            unsigned int airtemp;       /* degrees K */
+                            unsigned int airtemp;       // degrees K
 #define DAC1FID21_AIRTEMP_OFFSET                223
-                            unsigned humidity;          /* units of 1% */
+                            unsigned humidity;          // units of 1%
 #define DAC1FID21_HUMIDITY_NOT_VAILABLE         127
-                            /* some trailing fields are missing */
+                            // some trailing fields are missing
                         } wmo_obs;
                     };
                 } dac1fid21;
-                /*** WORK IN PROGRESS ENDS HERE ***/
-                /* IMO289 - Dangerous Cargo Indication */
+                // *** WORK IN PROGRESS ENDS HERE ***
+                // IMO289 - Dangerous Cargo Indication
                 struct {
-                    unsigned int unit;  /* Unit of Quantity */
-                    unsigned int amount;        /* Amount of Cargo */
+                    unsigned int unit;          // Unit of Quantity
+                    unsigned int amount;        // Amount of Cargo
                     int ncargos;
                     struct cargo_t {
-                        unsigned int code;      /* Cargo code */
-                        unsigned int subtype;   /* Cargo subtype */
+                        unsigned int code;      // Cargo code
+                        unsigned int subtype;   // Cargo subtype
                     } cargos[28];
                 } dac1fid25;
-                /* IMO289 - Route info (addressed) */
+                // IMO289 - Route info (addressed)
                 struct route_info dac1fid28;
-                /* IMO289 - Text message (addressed) */
+                // IMO289 - Text message (addressed
                 struct {
                     unsigned int linkage;
-#define AIS_DAC1FID30_TEXT_MAX  154     /* 920 bits of six-bit, plus NUL */
+#define AIS_DAC1FID30_TEXT_MAX  154     // 920 bits of six-bit, plus NUL
                     char text[AIS_DAC1FID30_TEXT_MAX];
                 } dac1fid30;
-                /* IMO289 & IMO236 - Tidal Window */
+                // IMO289 & IMO236 - Tidal Window
                 struct {
-                    unsigned int month; /* Month */
-                    unsigned int day;   /* Day */
+                    unsigned int month;         // Month
+                    unsigned int day;           // Day
                     signed int ntidals;
                     struct tidal_t {
-                        signed int lon; /* Longitude */
-                        signed int lat; /* Latitude */
-                        unsigned int from_hour; /* From UTC Hour */
-                        unsigned int from_min;  /* From UTC Minute */
-                        unsigned int to_hour;   /* To UTC Hour */
-                        unsigned int to_min;    /* To UTC Minute */
-#define DAC1FID32_CDIR_NOT_AVAILABLE            360
-                        unsigned int cdir;      /* Current Dir. Predicted */
-#define DAC1FID32_CSPEED_NOT_AVAILABLE          127
-                        unsigned int cspeed;    /* Current Speed Predicted */
+                        signed int lon;         // Longitude
+                        signed int lat;         // Latitude
+                        unsigned int from_hour; // From UTC Hour
+                        unsigned int from_min;  // From UTC Minute
+                        unsigned int to_hour;   // To UTC Hour
+                        unsigned int to_min;    // To UTC Minute
+#define DAC1FID32_CDIR_NOT_AVAILABLE     360
+                        unsigned int cdir;      // Current Dir. Predicted
+#define DAC1FID32_CSPEED_NOT_AVAILABLE   127
+                        unsigned int cspeed;    // Current Speed Predicted
                     } tidals[3];
                 } dac1fid32;
             };
         } type6;
-        /* Type 7 - Binary Acknowledge */
+        // Type 7 - Binary Acknowledge
         struct {
             unsigned int mmsi1;
             unsigned int seqno1;
@@ -1757,187 +1769,187 @@ struct ais_t
             unsigned int seqno3;
             unsigned int mmsi4;
             unsigned int seqno4;
-            /* spares ignored, they're only padding here */
+            // spares ignored, they're only padding here
         } type7;
-        /* Type 8 - Broadcast Binary Message */
+        // Type 8 - Broadcast Binary Message
         struct {
-            unsigned int dac;           /* Designated Area Code */
-            unsigned int fid;           /* Functional ID */
-#define AIS_TYPE8_BINARY_MAX    952     /* 952 bits */
-            size_t bitcount;            /* bit count of the data */
-            bool structured;            /* True match for DAC/FID? */
+            unsigned int dac;           // Designated Area Code
+            unsigned int fid;           // Functional ID
+#define AIS_TYPE8_BINARY_MAX    952     // 952 bits
+            size_t bitcount;            // bit count of the data
+            bool structured;            // True match for DAC/FID?
             union {
                 // cppcheck-suppress arrayIndexOutOfBounds
                 char bitdata[(AIS_TYPE8_BINARY_MAX + 7) / 8];
-                /* Inland static ship and voyage-related data */
+                // Inland static ship and voyage-related data
                 struct {
-                    char vin[8+1];              /* European Vessel ID */
-                    unsigned int length;        /* Length of ship */
-                    unsigned int beam;          /* Beam of ship */
-                    unsigned int shiptype;      /* Ship/combination type */
-                    unsigned int hazard;        /* Hazardous cargo */
+                    char vin[8+1];              // European Vessel ID
+                    unsigned int length;        // Length of ship
+                    unsigned int beam;          // Beam of ship
+                    unsigned int shiptype;      // Ship/combination type
+                    unsigned int hazard;        // Hazardous cargo
 #define DAC200FID10_HAZARD_MAX  5
-                    unsigned int draught;       /* Draught */
-                    unsigned int loaded;        /* Loaded/Unloaded */
-                    bool speed_q;       /* Speed inf. quality */
-                    bool course_q;      /* Course inf. quality */
-                    bool heading_q;     /* Heading inf. quality */
+                    unsigned int draught;       // Draught
+                    unsigned int loaded;        // Loaded/Unloaded
+                    bool speed_q;               // Speed inf. quality
+                    bool course_q;              // Course inf. quality
+                    bool heading_q;             // Heading inf. quality
                 } dac200fid10;
-                /* Inland AIS EMMA Warning */
+                // Inland AIS EMMA Warning
                 struct {
-                    unsigned int start_year;    /* Start Year */
-                    unsigned int start_month;   /* Start Month */
-                    unsigned int start_day;     /* Start Day */
-                    unsigned int end_year;      /* End Year */
-                    unsigned int end_month;     /* End Month */
-                    unsigned int end_day;       /* End Day */
-                    unsigned int start_hour;    /* Start Hour */
-                    unsigned int start_minute;  /* Start Minute */
-                    unsigned int end_hour;      /* End Hour */
-                    unsigned int end_minute;    /* End Minute */
-                    signed int start_lon;       /* Start Longitude */
-                    signed int start_lat;       /* Start Latitude */
-                    signed int end_lon; /* End Longitude */
-                    signed int end_lat; /* End Latitude */
-                    unsigned int type;  /* Type */
-#define DAC200FID23_TYPE_UNKNOWN                0
-                    signed int min;     /* Min value */
-#define DAC200FID23_MIN_UNKNOWN                 255
-                    signed int max;     /* Max value */
-#define DAC200FID23_MAX_UNKNOWN                 255
-                    unsigned int intensity;     /* Classification */
-#define DAC200FID23_CLASS_UNKNOWN               0
-                    unsigned int wind;  /* Wind Direction */
-#define DAC200FID23_WIND_UNKNOWN                0
+                    unsigned int start_year;    // Start Year
+                    unsigned int start_month;   // Start Month
+                    unsigned int start_day;     // Start Day
+                    unsigned int end_year;      // End Year
+                    unsigned int end_month;     // End Month
+                    unsigned int end_day;       // End Day
+                    unsigned int start_hour;    // Start Hour
+                    unsigned int start_minute;  // Start Minute
+                    unsigned int end_hour;      // End Hour
+                    unsigned int end_minute;    // End Minute
+                    signed int start_lon;       // Start Longitude
+                    signed int start_lat;       // Start Latitude
+                    signed int end_lon;         // End Longitude
+                    signed int end_lat;         // End Latitude
+                    unsigned int type;          // Type
+#define DAC200FID23_TYPE_UNKNOWN        0
+                    signed int min;             // Min value
+#define DAC200FID23_MIN_UNKNOWN         255
+                    signed int max;             // Max value
+#define DAC200FID23_MAX_UNKNOWN         255
+                    unsigned int intensity;     // Classification
+#define DAC200FID23_CLASS_UNKNOWN       0
+                    unsigned int wind;          // Wind Direction
+#define DAC200FID23_WIND_UNKNOWN        0
                 } dac200fid23;
                 struct {
-                    char country[2+1];  /* UN Country Code */
+                    char country[2+1];          // UN Country Code
                     signed int ngauges;
                     struct gauge_t {
-                        unsigned int id;        /* Gauge ID */
-#define DAC200FID24_GAUGE_ID_UNKNOWN            0
-                        signed int level;       /* Water Level */
-#define DAC200FID24_GAUGE_LEVEL_UNKNOWN         0
+                        unsigned int id;        // Gauge ID
+#define DAC200FID24_GAUGE_ID_UNKNOWN    0
+                        signed int level;       // Water Level
+#define DAC200FID24_GAUGE_LEVEL_UNKNOWN 0
                     } gauges[4];
                 } dac200fid24;
                 struct {
-                    signed int lon;     /* Signal Longitude */
-                    signed int lat;     /* Signal Latitude */
-                    unsigned int form;  /* Signal form */
-#define DAC200FID40_FORM_UNKNOWN                0
-                    unsigned int facing;        /* Signal orientation */
-#define DAC200FID40_FACING_UNKNOWN              0
-                    unsigned int direction;     /* Direction of impact */
-#define DAC200FID40_DIRECTION_UNKNOWN           0
-                    unsigned int status;        /* Light Status */
-#define DAC200FID40_STATUS_UNKNOWN              0
+                    signed int lon;             // Signal Longitude
+                    signed int lat;             // Signal Latitude
+                    unsigned int form;          // Signal form
+#define DAC200FID40_FORM_UNKNOWN        0
+                    unsigned int facing;        // Signal orientation
+#define DAC200FID40_FACING_UNKNOWN      0
+                    unsigned int direction;     // Direction of impact
+#define DAC200FID40_DIRECTION_UNKNOWN   0
+                    unsigned int status;        // Light Status
+#define DAC200FID40_STATUS_UNKNOWN      0
                 } dac200fid40;
                 /* IMO236  - Meteorological-Hydrological data
                  * Trial message, not to be used after January 2013
                  * Replaced by IMO289 (DAC 1, FID 31)
                  */
                 struct {
-#define DAC1FID11_LATLON_SCALE                  1000
-                    int lon;                    /* longitude in minutes * .001 */
-#define DAC1FID11_LON_NOT_AVAILABLE             0xFFFFFF
-                    int lat;                    /* latitude in minutes * .001 */
-#define DAC1FID11_LAT_NOT_AVAILABLE             0x7FFFFF
-                    unsigned int day;           /* UTC day */
-                    unsigned int hour;          /* UTC hour */
-                    unsigned int minute;        /* UTC minute */
-                    unsigned int wspeed;        /* average wind speed */
-                    unsigned int wgust;         /* wind gust */
-#define DAC1FID11_WSPEED_NOT_AVAILABLE          127
-                    unsigned int wdir;          /* wind direction */
-                    unsigned int wgustdir;      /* wind gust direction */
-#define DAC1FID11_WDIR_NOT_AVAILABLE            511
-                    unsigned int airtemp;       /* temperature, units 0.1C */
-#define DAC1FID11_AIRTEMP_NOT_AVAILABLE         2047
-#define DAC1FID11_AIRTEMP_OFFSET                600
-#define DAC1FID11_AIRTEMP_DIV                   10.0
-                    unsigned int humidity;      /* relative humidity, % */
-#define DAC1FID11_HUMIDITY_NOT_AVAILABLE        127
-                    unsigned int dewpoint;      /* dew point, units 0.1C */
-#define DAC1FID11_DEWPOINT_NOT_AVAILABLE        1023
-#define DAC1FID11_DEWPOINT_OFFSET               200
+#define DAC1FID11_LATLON_SCALE          1000
+                    int lon;                    // longitude in minutes * .001
+#define DAC1FID11_LON_NOT_AVAILABLE     0xFFFFFF
+                    int lat;                    // latitude in minutes * .001
+#define DAC1FID11_LAT_NOT_AVAILABLE     0x7FFFFF
+                    unsigned int day;           // UTC day
+                    unsigned int hour;          // UTC hour
+                    unsigned int minute;        // UTC minute
+                    unsigned int wspeed;        // average wind speed
+                    unsigned int wgust;         // wind gust
+#define DAC1FID11_WSPEED_NOT_AVAILABLE  127
+                    unsigned int wdir;          // wind direction
+                    unsigned int wgustdir;      // wind gust direction
+#define DAC1FID11_WDIR_NOT_AVAILABLE    511
+                    unsigned int airtemp;       // temperature, units 0.1C
+#define DAC1FID11_AIRTEMP_NOT_AVAILABLE 2047
+#define DAC1FID11_AIRTEMP_OFFSET        600
+#define DAC1FID11_AIRTEMP_DIV           10.0
+                    unsigned int humidity;      // relative humidity, %
+#define DAC1FID11_HUMIDITY_NOT_AVAILABLE 127
+                    unsigned int dewpoint;      // dew point, units 0.1C
+#define DAC1FID11_DEWPOINT_NOT_AVAILABLE 1023
+#define DAC1FID11_DEWPOINT_OFFSET        200
 #define DAC1FID11_DEWPOINT_DIV          10.0
-                    unsigned int pressure;      /* air pressure, hpa */
-#define DAC1FID11_PRESSURE_NOT_AVAILABLE        511
-#define DAC1FID11_PRESSURE_OFFSET               -800
-                    unsigned int pressuretend;  /* tendency */
-#define DAC1FID11_PRESSURETREND_NOT_AVAILABLE   3
-                    unsigned int visibility;    /* units 0.1 nautical miles */
-#define DAC1FID11_VISIBILITY_NOT_AVAILABLE      255
-#define DAC1FID11_VISIBILITY_DIV                10.0
-                    int waterlevel;             /* decimeters */
-#define DAC1FID11_WATERLEVEL_NOT_AVAILABLE      511
-#define DAC1FID11_WATERLEVEL_OFFSET             100
-#define DAC1FID11_WATERLEVEL_DIV                10.0
-                    unsigned int leveltrend;    /* water level trend code */
+                    unsigned int pressure;      // air pressure, hpa
+#define DAC1FID11_PRESSURE_NOT_AVAILABLE 511
+#define DAC1FID11_PRESSURE_OFFSET        -800
+                    unsigned int pressuretend;  // tendency
+#define DAC1FID11_PRESSURETREND_NOT_AVAILABLE 3
+                    unsigned int visibility;    // units 0.1 nautical miles
+#define DAC1FID11_VISIBILITY_NOT_AVAILABLE  255
+#define DAC1FID11_VISIBILITY_DIV            10.0
+                    int waterlevel;             // decimeters
+#define DAC1FID11_WATERLEVEL_NOT_AVAILABLE  511
+#define DAC1FID11_WATERLEVEL_OFFSET         100
+#define DAC1FID11_WATERLEVEL_DIV            10.0
+                    unsigned int leveltrend;    // water level trend code
 #define DAC1FID11_WATERLEVELTREND_NOT_AVAILABLE 3
                     unsigned int cspeed;  // surface current speed in deciknots
-#define DAC1FID11_CSPEED_NOT_AVAILABLE          255
-#define DAC1FID11_CSPEED_DIV                    10.0
-                    unsigned int cdir;  /* surface current dir., degrees */
-#define DAC1FID11_CDIR_NOT_AVAILABLE            511
-                    unsigned int cspeed2;       /* current speed in deciknots */
-                    unsigned int cdir2;         /* current dir., degrees */
-                    unsigned int cdepth2;       /* measurement depth, m */
-#define DAC1FID11_CDEPTH_NOT_AVAILABLE          31
-                    unsigned int cspeed3;       /* current speed in deciknots */
-                    unsigned int cdir3;         /* current dir., degrees */
-                    unsigned int cdepth3;       /* measurement depth, m */
-                    unsigned int waveheight;    /* in decimeters */
-#define DAC1FID11_WAVEHEIGHT_NOT_AVAILABLE      255
-#define DAC1FID11_WAVEHEIGHT_DIV                10.0
-                    unsigned int waveperiod;    /* in seconds */
-#define DAC1FID11_WAVEPERIOD_NOT_AVAILABLE      63
-                    unsigned int wavedir;       /* direction in degrees */
-#define DAC1FID11_WAVEDIR_NOT_AVAILABLE         511
-                    unsigned int swellheight;   /* in decimeters */
-                    unsigned int swellperiod;   /* in seconds */
-                    unsigned int swelldir;      /* direction in degrees */
-                    unsigned int seastate;      /* Beaufort scale, 0-12 */
-#define DAC1FID11_SEASTATE_NOT_AVAILABLE        15
-                    unsigned int watertemp;     /* units 0.1deg Celsius */
-#define DAC1FID11_WATERTEMP_NOT_AVAILABLE       1023
-#define DAC1FID11_WATERTEMP_OFFSET              100
+#define DAC1FID11_CSPEED_NOT_AVAILABLE     255
+#define DAC1FID11_CSPEED_DIV               10.0
+                    unsigned int cdir;    // surface current dir., degrees
+#define DAC1FID11_CDIR_NOT_AVAILABLE       511
+                    unsigned int cspeed2;       // current speed in deciknots
+                    unsigned int cdir2;         // current dir., degrees
+                    unsigned int cdepth2;       // measurement depth, m
+#define DAC1FID11_CDEPTH_NOT_AVAILABLE     31
+                    unsigned int cspeed3;       // current speed in deciknots
+                    unsigned int cdir3;         // current dir., degrees
+                    unsigned int cdepth3;       // measurement depth, m
+                    unsigned int waveheight;    // in decimeters
+#define DAC1FID11_WAVEHEIGHT_NOT_AVAILABLE 255
+#define DAC1FID11_WAVEHEIGHT_DIV           10.0
+                    unsigned int waveperiod;    // in seconds
+#define DAC1FID11_WAVEPERIOD_NOT_AVAILABLE 63
+                    unsigned int wavedir;       // direction in degrees
+#define DAC1FID11_WAVEDIR_NOT_AVAILABLE    511
+                    unsigned int swellheight;   // in decimeters
+                    unsigned int swellperiod;   // in seconds
+                    unsigned int swelldir;      // direction in degrees
+                    unsigned int seastate;      // Beaufort scale, 0-12
+#define DAC1FID11_SEASTATE_NOT_AVAILABLE   15
+                    unsigned int watertemp;     // units 0.1deg Celsius
+#define DAC1FID11_WATERTEMP_NOT_AVAILABLE  1023
+#define DAC1FID11_WATERTEMP_OFFSET         100
 #define DAC1FID11_WATERTEMP_DIV         10.0
-                    unsigned int preciptype;    /* 0-7, enumerated */
-#define DAC1FID11_PRECIPTYPE_NOT_AVAILABLE      7
-                    unsigned int salinity;      /* units of 0.1ppt */
-#define DAC1FID11_SALINITY_NOT_AVAILABLE        511
+                    unsigned int preciptype;    // 0-7, enumerated
+#define DAC1FID11_PRECIPTYPE_NOT_AVAILABLE  7
+                    unsigned int salinity;      // units of 0.1ppt
+#define DAC1FID11_SALINITY_NOT_AVAILABLE   511
 #define DAC1FID11_SALINITY_DIV          10.0
-                    unsigned int ice;           /* is there sea ice? */
-#define DAC1FID11_ICE_NOT_AVAILABLE             3
+                    unsigned int ice;           // is there sea ice?
+#define DAC1FID11_ICE_NOT_AVAILABLE        3
                 } dac1fid11;
-                /* IMO236 - Fairway Closed */
+                // IMO236 - Fairway Closed
                 struct {
-                    char reason[20+1];          /* Reason For Closing */
-                    char closefrom[20+1];       /* Location Of Closing From */
-                    char closeto[20+1];         /* Location of Closing To */
-                    unsigned int radius;        /* Radius extension */
+                    char reason[20+1];          // Reason For Closing
+                    char closefrom[20+1];       // Location Of Closing From
+                    char closeto[20+1];         // Location of Closing To
+                    unsigned int radius;        // Radius extension
 #define AIS_DAC1FID13_RADIUS_NOT_AVAILABLE 10001
-                    unsigned int extunit;       /* Unit of extension */
+                    unsigned int extunit;       // Unit of extension
 #define AIS_DAC1FID13_EXTUNIT_NOT_AVAILABLE 0
-                    unsigned int fday;          /* From day (UTC) */
-                    unsigned int fmonth;        /* From month (UTC) */
-                    unsigned int fhour;         /* From hour (UTC) */
-                    unsigned int fminute;       /* From minute (UTC) */
-                    unsigned int tday;          /* To day (UTC) */
-                    unsigned int tmonth;        /* To month (UTC) */
-                    unsigned int thour;         /* To hour (UTC) */
-                    unsigned int tminute;       /* To minute (UTC) */
+                    unsigned int fday;          // From day (UTC)
+                    unsigned int fmonth;        // From month (UTC)
+                    unsigned int fhour;         // From hour (UTC)
+                    unsigned int fminute;       // From minute (UTC)
+                    unsigned int tday;          // To day (UTC)
+                    unsigned int tmonth;        // To month (UTC)
+                    unsigned int thour;         // To hour (UTC)
+                    unsigned int tminute;       // To minute (UTC)
                 } dac1fid13;
-                /* IMO236 - Extended ship and voyage data */
+                // IMO236 - Extended ship and voyage data
                 struct {
-                    unsigned int airdraught;    /* Air Draught */
+                    unsigned int airdraught;    // Air Draught
                 } dac1fid15;
-                /* IMO286 - Number of Persons on board */
+                // IMO286 - Number of Persons on board
                 struct {
-                    unsigned persons;   /* number of persons */
+                    unsigned persons;           // number of persons
                 } dac1fid16;
-                /* IMO289 - VTS-generated/Synthetic Targets */
+                // IMO289 - VTS-generated/Synthetic Targets
                 struct {
                     signed int ntargets;
                     struct target_t {
@@ -1945,8 +1957,8 @@ struct ais_t
 #define DAC1FID17_IDTYPE_IMO            1
 #define DAC1FID17_IDTYPE_CALLSIGN       2
 #define DAC1FID17_IDTYPE_OTHER          3
-                        unsigned int idtype;    /* Identifier type */
-                        union target_id {       /* Target identifier */
+                        unsigned int idtype;    // Identifier type
+                        union target_id {       // Target identifier
                             unsigned int mmsi;
                             unsigned int imo;
 #define DAC1FID17_ID_LENGTH             7
@@ -1954,175 +1966,175 @@ struct ais_t
                             char callsign[DAC1FID17_ID_LENGTH+1];
                             char other[DAC1FID17_ID_LENGTH+1];
                         } id;
-                        signed int lat;         /* Latitude */
-                        signed int lon;         /* Longitude */
-#define DAC1FID17_COURSE_NOT_AVAILABLE          360
-                        unsigned int course;    /* Course Over Ground */
-                        unsigned int second;    /* Time Stamp */
-#define DAC1FID17_SPEED_NOT_AVAILABLE           255
-                        unsigned int speed;     /* Speed Over Ground */
+                        signed int lat;         // Latitude
+                        signed int lon;         // Longitude
+#define DAC1FID17_COURSE_NOT_AVAILABLE  360
+                        unsigned int course;    // Course Over Ground
+                        unsigned int second;    // Time Stamp
+#define DAC1FID17_SPEED_NOT_AVAILABLE   255
+                        unsigned int speed;     // Speed Over Ground
                     } targets[4];
                 } dac1fid17;
-                /* IMO 289 - Marine Traffic Signal */
+                // IMO 289 - Marine Traffic Signal
                 struct {
-                    unsigned int linkage;       /* Message Linkage ID */
-                    char station[20+1];         /* Name of Signal Station */
-                    signed int lon;             /* Longitude */
-                    signed int lat;             /* Latitude */
-                    unsigned int status;        /* Status of Signal */
-                    unsigned int signal;        /* Signal In Service */
-                    unsigned int hour;          /* UTC hour */
-                    unsigned int minute;        /* UTC minute */
-                    unsigned int nextsignal;    /* Expected Next Signal */
+                    unsigned int linkage;       // Message Linkage ID
+                    char station[20+1];         // Name of Signal Station
+                    signed int lon;             // Longitude
+                    signed int lat;             // Latitude
+                    unsigned int status;        // Status of Signal
+                    unsigned int signal;        // Signal In Service
+                    unsigned int hour;          // UTC hour
+                    unsigned int minute;        // UTC minute
+                    unsigned int nextsignal;    // Expected Next Signal
                 } dac1fid19;
-                /* IMO289 - Route info (broadcast) */
+                // IMO289 - Route info (broadcast)
                 struct route_info dac1fid27;
-                /* IMO289 - Text message (broadcast) */
+                // IMO289 - Text message (broadcast)
                 struct {
                     unsigned int linkage;
-#define AIS_DAC1FID29_TEXT_MAX  162     /* 920 bits of six-bit, plus NUL */
+#define AIS_DAC1FID29_TEXT_MAX  162     // 920 bits of six-bit, plus NUL
                     char text[AIS_DAC1FID29_TEXT_MAX];
                 } dac1fid29;
-                /* IMO289 - Meteorological-Hydrological data */
+                // IMO289 - Meteorological-Hydrological data
                 struct {
-                    bool accuracy;      /* position accuracy, <10m if true */
+                    bool accuracy;      // position accuracy, <10m if true
 #define DAC1FID31_LATLON_SCALE  1000
-                    int lon;            /* longitude in minutes * .001 */
+                    int lon;            // longitude in minutes * .001
 #define DAC1FID31_LON_NOT_AVAILABLE     (181*60*DAC1FID31_LATLON_SCALE)
-                    int lat;            /* longitude in minutes * .001 */
+                    int lat;            // longitude in minutes * .001
 #define DAC1FID31_LAT_NOT_AVAILABLE     (91*60*DAC1FID31_LATLON_SCALE)
-                    unsigned int day;           /* UTC day */
-                    unsigned int hour;          /* UTC hour */
-                    unsigned int minute;        /* UTC minute */
-                    unsigned int wspeed;        /* average wind speed */
-                    unsigned int wgust;         /* wind gust */
-#define DAC1FID31_WIND_HIGH                     126
-#define DAC1FID31_WIND_NOT_AVAILABLE            127
-                    unsigned int wdir;          /* wind direction */
-                    unsigned int wgustdir;      /* wind gust direction */
-#define DAC1FID31_DIR_NOT_AVAILABLE             360
-                    int airtemp;                /* temperature, units 0.1C */
-#define DAC1FID31_AIRTEMP_NOT_AVAILABLE         -1024
-#define DAC1FID31_AIRTEMP_DIV                   10.0
-                    unsigned int humidity;      /* relative humidity, % */
-#define DAC1FID31_HUMIDITY_NOT_AVAILABLE        101
-                    int dewpoint;               /* dew point, units 0.1C */
-#define DAC1FID31_DEWPOINT_NOT_AVAILABLE        501
+                    unsigned int day;           // UTC day
+                    unsigned int hour;          // UTC hour
+                    unsigned int minute;        // UTC minute
+                    unsigned int wspeed;        // average wind speed
+                    unsigned int wgust;         // wind gust
+#define DAC1FID31_WIND_HIGH              126
+#define DAC1FID31_WIND_NOT_AVAILABLE     127
+                    unsigned int wdir;          // wind direction
+                    unsigned int wgustdir;      // wind gust direction
+#define DAC1FID31_DIR_NOT_AVAILABLE      360
+                    int airtemp;                // temperature, units 0.1C
+#define DAC1FID31_AIRTEMP_NOT_AVAILABLE  -1024
+#define DAC1FID31_AIRTEMP_DIV            10.0
+                    unsigned int humidity;      // relative humidity, %
+#define DAC1FID31_HUMIDITY_NOT_AVAILABLE 101
+                    int dewpoint;               // dew point, units 0.1C
+#define DAC1FID31_DEWPOINT_NOT_AVAILABLE 501
 #define DAC1FID31_DEWPOINT_DIV          10.0
-                    unsigned int pressure;      /* air pressure, hpa */
-#define DAC1FID31_PRESSURE_NOT_AVAILABLE        511
-#define DAC1FID31_PRESSURE_HIGH                 402
-#define DAC1FID31_PRESSURE_OFFSET               -799
-                    unsigned int pressuretend;  /* tendency */
-#define DAC1FID31_PRESSURETEND_NOT_AVAILABLE    3
-                    bool visgreater;            /* visibility greater than */
-                    unsigned int visibility;    /* units 0.1 nautical miles */
-#define DAC1FID31_VISIBILITY_NOT_AVAILABLE      127
-#define DAC1FID31_VISIBILITY_DIV                10.0
-                    int waterlevel;             /* cm */
-#define DAC1FID31_WATERLEVEL_NOT_AVAILABLE      4001
-#define DAC1FID31_WATERLEVEL_OFFSET             1000
-#define DAC1FID31_WATERLEVEL_DIV                100.0
-                    unsigned int leveltrend;    /* water level trend code */
+                    unsigned int pressure;      // air pressure, hpa
+#define DAC1FID31_PRESSURE_NOT_AVAILABLE 511
+#define DAC1FID31_PRESSURE_HIGH          402
+#define DAC1FID31_PRESSURE_OFFSET        -799
+                    unsigned int pressuretend;  // tendency
+#define DAC1FID31_PRESSURETEND_NOT_AVAILABLE  3
+                    bool visgreater;            // visibility greater than
+                    unsigned int visibility;    // units 0.1 nautical miles
+#define DAC1FID31_VISIBILITY_NOT_AVAILABLE  127
+#define DAC1FID31_VISIBILITY_DIV            10.0
+                    int waterlevel;             // cm
+#define DAC1FID31_WATERLEVEL_NOT_AVAILABLE 4001
+#define DAC1FID31_WATERLEVEL_OFFSET        1000
+#define DAC1FID31_WATERLEVEL_DIV           100.0
+                    unsigned int leveltrend;    // water level trend code
 #define DAC1FID31_WATERLEVELTREND_NOT_AVAILABLE 3
-                    unsigned int cspeed;        /* current speed in deciknots */
-#define DAC1FID31_CSPEED_NOT_AVAILABLE          255
-#define DAC1FID31_CSPEED_DIV                    10.0
-                    unsigned int cdir;          /* current dir., degrees */
-                    unsigned int cspeed2;       /* current speed in deciknots */
-                    unsigned int cdir2;         /* current dir., degrees */
-                    unsigned int cdepth2;       /* measurement depth, 0.1m */
-#define DAC1FID31_CDEPTH_NOT_AVAILABLE          301
-#define DAC1FID31_CDEPTH_SCALE                  10.0
-                    unsigned int cspeed3;       /* current speed in deciknots */
-                    unsigned int cdir3;         /* current dir., degrees */
-                    unsigned int cdepth3;       /* measurement depth, 0.1m */
-                    unsigned int waveheight;    /* in decimeters */
-#define DAC1FID31_HEIGHT_NOT_AVAILABLE          31
-#define DAC1FID31_HEIGHT_DIV                    10.0
-                    unsigned int waveperiod;    /* in seconds */
-#define DAC1FID31_PERIOD_NOT_AVAILABLE          63
-                    unsigned int wavedir;       /* direction in degrees */
-                    unsigned int swellheight;   /* in decimeters */
-                    unsigned int swellperiod;   /* in seconds */
-                    unsigned int swelldir;      /* direction in degrees */
-                    unsigned int seastate;      /* Beaufort scale, 0-12 */
-#define DAC1FID31_SEASTATE_NOT_AVAILABLE        15
-                    int watertemp;              /* units 0.1deg Celsius */
-#define DAC1FID31_WATERTEMP_NOT_AVAILABLE       601
+                    unsigned int cspeed;        // current speed in deciknots
+#define DAC1FID31_CSPEED_NOT_AVAILABLE     255
+#define DAC1FID31_CSPEED_DIV               10.0
+                    unsigned int cdir;          // current dir., degrees
+                    unsigned int cspeed2;       // current speed in deciknots
+                    unsigned int cdir2;         // current dir., degrees
+                    unsigned int cdepth2;       // measurement depth, 0.1m
+#define DAC1FID31_CDEPTH_NOT_AVAILABLE     301
+#define DAC1FID31_CDEPTH_SCALE             10.0
+                    unsigned int cspeed3;       // current speed in deciknots
+                    unsigned int cdir3;         // current dir., degrees
+                    unsigned int cdepth3;       // measurement depth, 0.1m
+                    unsigned int waveheight;    // in decimeters
+#define DAC1FID31_HEIGHT_NOT_AVAILABLE     31
+#define DAC1FID31_HEIGHT_DIV               10.0
+                    unsigned int waveperiod;    // in seconds
+#define DAC1FID31_PERIOD_NOT_AVAILABLE     63
+                    unsigned int wavedir;       // direction in degrees
+                    unsigned int swellheight;   // in decimeters
+                    unsigned int swellperiod;   // in seconds
+                    unsigned int swelldir;      // direction in degrees
+                    unsigned int seastate;      // Beaufort scale, 0-12
+#define DAC1FID31_SEASTATE_NOT_AVAILABLE   15
+                    int watertemp;              // units 0.1deg Celsius
+#define DAC1FID31_WATERTEMP_NOT_AVAILABLE  601
 #define DAC1FID31_WATERTEMP_DIV         10.0
-                    unsigned int preciptype;    /* 0-7, enumerated */
-#define DAC1FID31_PRECIPTYPE_NOT_AVAILABLE      7
-                    unsigned int salinity;   // units of 0.1 permil (ca. PSU)
-#define DAC1FID31_SALINITY_NOT_AVAILABLE        510
+                    unsigned int preciptype;    // 0-7, enumerated
+#define DAC1FID31_PRECIPTYPE_NOT_AVAILABLE 7
+                    unsigned int salinity;     // units of 0.1 permil (ca. PSU)
+#define DAC1FID31_SALINITY_NOT_AVAILABLE   510
 #define DAC1FID31_SALINITY_DIV          10.0
-                    unsigned int ice;           /* is there sea ice? */
-#define DAC1FID31_ICE_NOT_AVAILABLE             3
+                    unsigned int ice;           // is there sea ice?
+#define DAC1FID31_ICE_NOT_AVAILABLE       3
                 } dac1fid31;
             };
         } type8;
-        /* Type 9 - Standard SAR Aircraft Position Report */
+        // Type 9 - Standard SAR Aircraft Position Report
         struct {
-            unsigned int alt;           /* altitude in meters */
+            unsigned int alt;           // altitude in meters
 #define AIS_ALT_NOT_AVAILABLE   4095
-#define AIS_ALT_HIGH            4094    /* 4094 meters or higher */
-            unsigned int speed;         /* speed over ground in deciknots */
+#define AIS_ALT_HIGH            4094    // 4094 meters or higher
+            unsigned int speed;         // speed over ground in deciknots
 #define AIS_SAR_SPEED_NOT_AVAILABLE     1023
 #define AIS_SAR_FAST_MOVER      1022
-            bool accuracy;              /* position accuracy */
-            int lon;                    /* longitude */
-            int lat;                    /* latitude */
-            unsigned int course;        /* course over ground */
+            bool accuracy;              // position accuracy
+            int lon;                    // longitude
+            int lat;                    // latitude
+            unsigned int course;        // course over ground
             /* seconds of UTC time, 0 to 59.
              * 60 == N/A, 61 == manual, 62 == dead reckoning,
              * 63 == inoperative */
-            unsigned int second;        /* seconds of UTC time */
-            unsigned int regional;      /* regional reserved */
-            unsigned int dte;           /* data terminal enable */
-            //unsigned int spare;       spare bits */
-            bool assigned;              /* assigned-mode flag */
-            bool raim;                  /* RAIM flag */
-            unsigned int radio;         /* radio status bits */
+            unsigned int second;        // seconds of UTC time
+            unsigned int regional;      // regional reserved
+            unsigned int dte;           // data terminal enable
+            // unsigned int spare;      // spare bits
+            bool assigned;              // assigned-mode flag
+            bool raim;                  // RAIM flag
+            unsigned int radio;         // radio status bits
         } type9;
-        /* Type 10 - UTC/Date Inquiry */
+        // Type 10 - UTC/Date Inquiry
         struct {
-            //unsigned int spare;
-            unsigned int dest_mmsi;     /* destination MMSI */
-            //unsigned int spare2;
+            // unsigned int spare;
+            unsigned int dest_mmsi;     // destination MMSI
+            // unsigned int spare2;
         } type10;
-        /* Type 12 - Safety-Related Message */
+        // Type 12 - Safety-Related Message
         struct {
-            unsigned int seqno;         /* sequence number */
-            unsigned int dest_mmsi;     /* destination MMSI */
-            bool retransmit;            /* retransmit flag */
-            //unsigned int spare;       spare bit(s) */
-#define AIS_TYPE12_TEXT_MAX     157     /* 936 bits of six-bit, plus NUL */
+            unsigned int seqno;         // sequence number
+            unsigned int dest_mmsi;     // destination MMSI
+            bool retransmit;            // retransmit flag
+            // unsigned int spare;      // spare bit(s)
+#define AIS_TYPE12_TEXT_MAX     157     // 936 bits of six-bit, plus NUL
             char text[AIS_TYPE12_TEXT_MAX];
         } type12;
-        /* Type 14 - Safety-Related Broadcast Message */
+        // Type 14 - Safety-Related Broadcast Message
         struct {
-            //unsigned int spare;       spare bit(s) */
-#define AIS_TYPE14_TEXT_MAX     161     /* 952 bits of six-bit, plus NUL */
+            // unsigned int spare;      // spare bit(s)
+#define AIS_TYPE14_TEXT_MAX     161     // 952 bits of six-bit, plus NUL
             char text[AIS_TYPE14_TEXT_MAX];
         } type14;
-        /* Type 15 - Interrogation */
+        // Type 15 - Interrogation
         struct {
-            //unsigned int spare;       spare bit(s) */
+            // unsigned int spare;      // spare bit(s)
             unsigned int mmsi1;
             unsigned int type1_1;
             unsigned int offset1_1;
-            //unsigned int spare2;      spare bit(s) */
+            // unsigned int spare2;     // spare bit(s)
             unsigned int type1_2;
             unsigned int offset1_2;
-            //unsigned int spare3;      spare bit(s) */
+            // unsigned int spare3;     // spare bit(s)
             unsigned int mmsi2;
             unsigned int type2_1;
             unsigned int offset2_1;
-            //unsigned int spare4;      spare bit(s) */
+            // unsigned int spare4;     // spare bit(s)
         } type15;
-        /* Type 16 - Assigned Mode Command */
+        // Type 16 - Assigned Mode Command
         struct {
-            //unsigned int spare;       spare bit(s) */
+            // unsigned int spare;      // spare bit(s)
             unsigned int mmsi1;
             unsigned int offset1;
             unsigned int increment1;
@@ -2130,51 +2142,51 @@ struct ais_t
             unsigned int offset2;
             unsigned int increment2;
         } type16;
-        /* Type 17 - GNSS Broadcast Binary Message */
+        // Type 17 - GNSS Broadcast Binary Message
         struct {
-            //unsigned int spare;       spare bit(s) */
+            // unsigned int spare;      // spare bit(s)
 #define AIS_GNSS_LATLON_DIV     600.0
-            int lon;                    /* longitude */
-            int lat;                    /* latitude */
-            //unsigned int spare2;      spare bit(s) */
-#define AIS_TYPE17_BINARY_MAX   736     /* 920 bits */
-            size_t bitcount;            /* bit count of the data */
+            int lon;                    // longitude
+            int lat;                    // latitude
+            // unsigned int spare2;     // spare bit(s)
+#define AIS_TYPE17_BINARY_MAX   736     // 920 bits
+            size_t bitcount;            // bit count of the data
             char bitdata[(AIS_TYPE17_BINARY_MAX + 7) / 8];
         } type17;
-        /* Type 18 - Standard Class B CS Position Report */
+        // Type 18 - Standard Class B CS Position Report
         struct {
-            unsigned int reserved;      /* altitude in meters */
-            unsigned int speed;         /* speed over ground in deciknots */
-            bool accuracy;              /* position accuracy */
-            int lon;                    /* longitude */
+            unsigned int reserved;      // altitude in meters
+            unsigned int speed;         // speed over ground in deciknots
+            bool accuracy;              // position accuracy
+            int lon;                    // longitude
 #define AIS_GNS_LON_NOT_AVAILABLE       0x1a838
-            int lat;                    /* latitude */
+            int lat;                    // latitude
 #define AIS_GNS_LAT_NOT_AVAILABLE       0xd548
-            unsigned int course;        /* course over ground */
-            unsigned int heading;       /* true heading */
+            unsigned int course;        // course over ground
+            unsigned int heading;       // true heading
             /* seconds of UTC time, 0 to 59.
              * 60 == N/A, 61 == manual, 62 == dead reckoning,
              * 63 == inoperative */
             unsigned int second;
-            unsigned int regional;      /* regional reserved */
-            bool cs;                    /* carrier sense unit flag */
-            bool display;               /* unit has attached display? */
-            bool dsc;                   /* unit attached to radio with DSC? */
-            bool band;                  /* unit can switch frequency bands? */
-            bool msg22;                 /* can accept Message 22 management? */
-            bool assigned;              /* assigned-mode flag */
-            bool raim;                  /* RAIM flag */
-            unsigned int radio;         /* radio status bits */
+            unsigned int regional;      // regional reserved
+            bool cs;                    // carrier sense unit flag
+            bool display;               // unit has attached display?
+            bool dsc;                   // unit attached to radio with DSC?
+            bool band;                  // unit can switch frequency bands?
+            bool msg22;                 // can accept Message 22 management?
+            bool assigned;              // assigned-mode flag
+            bool raim;                  // RAIM flag
+            unsigned int radio;         // radio status bits
         } type18;
-        /* Type 19 - Extended Class B CS Position Report */
+        // Type 19 - Extended Class B CS Position Report
         struct {
-            unsigned int reserved;      /* altitude in meters */
-            unsigned int speed;         /* speed over ground in deciknots */
-            bool accuracy;              /* position accuracy */
-            int lon;                    /* longitude */
-            int lat;                    /* latitude */
-            unsigned int course;        /* course over ground */
-            unsigned int heading;       /* true heading */
+            unsigned int reserved;      // altitude in meters
+            unsigned int speed;         // speed over ground in deciknots
+            bool accuracy;              // position accuracy
+            int lon;                    // longitude
+            int lat;                    // latitude
+            unsigned int course;        // course over ground
+            unsigned int heading;       // true heading
             /* seconds of UTC time, 0 to 59.
              * 60 == N/A, 61 == manual, 62 == dead reckoning,
              * 63 == inoperative */
@@ -2411,8 +2423,8 @@ struct satellite_t {
      * QZSS:     1 = L1C/A
      */
     unsigned char sigid;
-    signed char freqid;         /* The GLONASS (Only) frequency, 0 - 13 */
-    unsigned char health;       /* 0 = unknown, 1 = healthy, 2 = unhealthy */
+    signed char freqid;         // The GLONASS (Only) frequency, 0 - 13
+    unsigned char health;       // 0 = unknown, 1 = healthy, 2 = unhealthy
 #define SAT_HEALTH_UNK 0
 #define SAT_HEALTH_OK 1
 #define SAT_HEALTH_BAD 2
@@ -2449,7 +2461,7 @@ struct attitude_t {
     double roll;        // deg
     double temp;        // deg C
     double yaw;         // deg
-    /* compass status -- TrueNorth (and any similar) devices only */
+    // compass status -- TrueNorth (and any similar) devices only
     char mag_st;
     char pitch_st;
     char roll_st;
@@ -2457,7 +2469,7 @@ struct attitude_t {
 };
 
 struct dop_t {
-    /* Dilution of precision factors */
+    // Dilution of precision factors
     double xdop, ydop, pdop, hdop, vdop, tdop, gdop;
 };
 

@@ -200,10 +200,8 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
         return false;
     }
 
-    // FIXME: cell_mask is variable length!
-    // rtcm->rtcmtypes.rtcm3_msm.cell_mask = (uint64_t)ugrab(64);
-    // FIXME: rtcm->rtcmtypes.rtcm3_msm.cell_mask = ugrab(n_cell);
-    bitcount += n_cell;
+    // cell_mask is variable length!
+    rtcm->rtcmtypes.rtcm3_msm.cell_mask = ugrab(n_cell);
 
     // Decode Satellite Data
 
@@ -213,7 +211,7 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
         6 == rtcm->rtcmtypes.rtcm3_msm.msm ||
         7 == rtcm->rtcmtypes.rtcm3_msm.msm) {
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_msm.n_sat; i++) {
-            rtcm->rtcmtypes.rtcm3_msm_sat[i].rr_ms = ugrab(8);
+            rtcm->rtcmtypes.rtcm3_msm.sat[i].rr_ms = ugrab(8);
         }
     }
 
@@ -221,20 +219,20 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
     if (5 == rtcm->rtcmtypes.rtcm3_msm.msm ||
         7 == rtcm->rtcmtypes.rtcm3_msm.msm) {
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_msm.n_sat; i++) {
-            rtcm->rtcmtypes.rtcm3_msm_sat[i].ext_info = ugrab(4);
+            rtcm->rtcmtypes.rtcm3_msm.sat[i].ext_info = ugrab(4);
         }
     }
 
     // Decode DF398 (MSM 1-7)
     for (i = 0; i < rtcm->rtcmtypes.rtcm3_msm.n_sat; i++) {
-        rtcm->rtcmtypes.rtcm3_msm_sat[i].rr_m1 = ugrab(10);
+        rtcm->rtcmtypes.rtcm3_msm.sat[i].rr_m1 = ugrab(10);
     };
 
     // Decode DF399 (MSM 5+7)
     if (5 == rtcm->rtcmtypes.rtcm3_msm.msm ||
         7 == rtcm->rtcmtypes.rtcm3_msm.msm) {
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_msm.n_sat; i++) {
-            rtcm->rtcmtypes.rtcm3_msm_sat[i].rates_rphr = ugrab(14);
+            rtcm->rtcmtypes.rtcm3_msm.sat[i].rates_rphr = ugrab(14);
         }
     }
 
@@ -246,12 +244,12 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
         4 == rtcm->rtcmtypes.rtcm3_msm.msm ||
         5 == rtcm->rtcmtypes.rtcm3_msm.msm) {
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_msm.n_cell; i++) {
-            rtcm->rtcmtypes.rtcm3_msm_sig[i].pseudo_r = sgrab(15);
+            rtcm->rtcmtypes.rtcm3_msm.sig[i].pseudo_r = sgrab(15);
         }
     } else if (6 == rtcm->rtcmtypes.rtcm3_msm.msm ||
                7 == rtcm->rtcmtypes.rtcm3_msm.msm) {
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_msm.n_cell; i++) {
-            rtcm->rtcmtypes.rtcm3_msm_sig[i].pseudo_r = sgrab(20);
+            rtcm->rtcmtypes.rtcm3_msm.sig[i].pseudo_r = sgrab(20);
         }
     }
 
@@ -261,12 +259,12 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
         4 == rtcm->rtcmtypes.rtcm3_msm.msm ||
         5 == rtcm->rtcmtypes.rtcm3_msm.msm) {
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_msm.n_cell; i++) {
-            rtcm->rtcmtypes.rtcm3_msm_sig[i].phase_r = sgrab(22);
+            rtcm->rtcmtypes.rtcm3_msm.sig[i].phase_r = sgrab(22);
         }
     } else if (6 == rtcm->rtcmtypes.rtcm3_msm.msm ||
                7 == rtcm->rtcmtypes.rtcm3_msm.msm) {
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_msm.n_cell; i++) {
-            rtcm->rtcmtypes.rtcm3_msm_sig[i].phase_r = sgrab(24);
+            rtcm->rtcmtypes.rtcm3_msm.sig[i].phase_r = sgrab(24);
         }
     }
 
@@ -276,12 +274,12 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
         4 == rtcm->rtcmtypes.rtcm3_msm.msm ||
         5 == rtcm->rtcmtypes.rtcm3_msm.msm) {
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_msm.n_cell; i++) {
-            rtcm->rtcmtypes.rtcm3_msm_sig[i].lti = ugrab(4);
+            rtcm->rtcmtypes.rtcm3_msm.sig[i].lti = ugrab(4);
         }
     } else if (6 == rtcm->rtcmtypes.rtcm3_msm.msm ||
                7 == rtcm->rtcmtypes.rtcm3_msm.msm) {
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_msm.n_cell; i++) {
-            rtcm->rtcmtypes.rtcm3_msm_sig[i].lti = ugrab(10);
+            rtcm->rtcmtypes.rtcm3_msm.sig[i].lti = ugrab(10);
         }
     }
 
@@ -293,7 +291,7 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
         6 == rtcm->rtcmtypes.rtcm3_msm.msm ||
         7 == rtcm->rtcmtypes.rtcm3_msm.msm) {
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_msm.n_cell; i++) {
-            rtcm->rtcmtypes.rtcm3_msm_sig[i].half_amb = ugrab(1);
+            rtcm->rtcmtypes.rtcm3_msm.sig[i].half_amb = ugrab(1);
         }
     }
 
@@ -301,12 +299,12 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
     if (4 == rtcm->rtcmtypes.rtcm3_msm.msm ||
         5 == rtcm->rtcmtypes.rtcm3_msm.msm) {
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_msm.n_cell; i++) {
-            rtcm->rtcmtypes.rtcm3_msm_sig[i].cnr = ugrab(6);
+            rtcm->rtcmtypes.rtcm3_msm.sig[i].cnr = ugrab(6);
         }
     } else if (6 == rtcm->rtcmtypes.rtcm3_msm.msm ||
                7 == rtcm->rtcmtypes.rtcm3_msm.msm) {
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_msm.n_cell; i++) {
-            rtcm->rtcmtypes.rtcm3_msm_sig[i].cnr = ugrab(10);
+            rtcm->rtcmtypes.rtcm3_msm.sig[i].cnr = ugrab(10);
         }
     }
 
@@ -314,7 +312,7 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
     if (5 == rtcm->rtcmtypes.rtcm3_msm.msm ||
         7 == rtcm->rtcmtypes.rtcm3_msm.msm) {
         for (i = 0; i < rtcm->rtcmtypes.rtcm3_msm.n_cell; i++) {
-            rtcm->rtcmtypes.rtcm3_msm_sig[i].cnr = sgrab(15);
+            rtcm->rtcmtypes.rtcm3_msm.sig[i].cnr = sgrab(15);
         }
     }
 
@@ -322,7 +320,7 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
     GPSD_LOG(LOG_PROG, &context->errout, "RTCM3: rtcm3_decode_msm(%u) "
              "gnssid %u MSM%u id %u tow %lld sync %u IODS %u "
              "steering %u ext_clk %u smoothing %u interval %u "
-             "sat_mask x%llx sig_mask x%lx\n",
+             "sat_mask x%llx sig_mask x%lx cell_mask %llx\n",
              rtcm->type,
              rtcm->rtcmtypes.rtcm3_msm.gnssid,
              rtcm->rtcmtypes.rtcm3_msm.msm,
@@ -335,7 +333,8 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
              rtcm->rtcmtypes.rtcm3_msm.smoothing,
              rtcm->rtcmtypes.rtcm3_msm.interval,
              (long long unsigned)rtcm->rtcmtypes.rtcm3_msm.sat_mask,
-             (long unsigned)rtcm->rtcmtypes.rtcm3_msm.sig_mask);
+             (long unsigned)rtcm->rtcmtypes.rtcm3_msm.sig_mask,
+             (long long unsigned)rtcm->rtcmtypes.rtcm3_msm.cell_mask);
     return false;
 }
 
