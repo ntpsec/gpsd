@@ -602,7 +602,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
      // just repaint every time.  Hides a multitude of mistakes.
     (void)werase(satellites);
     (void)mvwaddstr(satellites, 1, 1,
-                    "GNSS   PRN  Elev   Azim   SNR Use");
+                    "GNSS  S PRN  Elev  Azim   SNR Use");
     (void)wborder(satellites, 0, 0, 0, 0, 0, 0, 0, 0);
 
     (void)mvwprintw(satellites, 0, 17, "Seen %2d/Used %2d",
@@ -682,7 +682,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
             column += 2;
             (void)mvwaddstr(satellites, sat_no + 2, column,
                     int_to_str(gpsdata->skyview[sat_no].svid, 0, 500));
-            column += 3;
+            column += 4;
             (void)mvwaddstr(satellites, sat_no + 2, column, sigid);
             column += 2;
 
@@ -707,7 +707,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
             (void)mvwaddstr(satellites, sat_no + 2, column,
                             tenth_to_str(gpsdata->skyview[sat_no].elevation,
                                        -90.0, 90.0));
-            column += 7;
+            column += 6;
             (void)mvwaddstr(satellites, sat_no + 2, column,
                             tenth_to_str(gpsdata->skyview[sat_no].azimuth,
                                        0.0, 359.0));
