@@ -481,6 +481,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
     unsigned sub_id, length, mode;
     unsigned short week;
     uint32_t tow;             // time of week in milli seconds
+    timespec_t ts_tow;
     unsigned u1, u2, u3, u4, u5, u6, u7, u8, u9;
     unsigned u10, u11, u12, u13, u14, u15;    // , u16, u17, u18, u19;
     int s1;
@@ -768,6 +769,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
 
         tow = getbeu32(buf, 4);
         week = getbeu16(buf, 8);
+        session->context->gps_week = week;
 
         date.tm_hour = (unsigned)buf[10];            // hours 0 - 23
         date.tm_min = (unsigned)buf[11];             // minutes 0 -59
@@ -930,7 +932,11 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         u4 = getbeu32(buf, 19);           // Flags
         // TOW of measurement, not current TOW!
         tow = getbeu32(buf, 23);          // TOW, seconds
-        session->gpsdata.skyview_time.tv_sec = tow;
+        ts_tow.tv_sec = tow;
+        ts_tow.tv_nsec = 0;
+        session->gpsdata.skyview_time =
+                gpsd_gpstime_resolv(session, session->context->gps_week,
+                                    ts_tow);
 
         // convert svtype to gnssid and svid
         gnssid = tsipv1_svtype(u2, &sigid);
