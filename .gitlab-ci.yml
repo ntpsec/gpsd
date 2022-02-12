@@ -337,10 +337,10 @@ dist-f35:
   image: fedora:35
   <<: *frpm_build
 
-dist-f33:
+dist-f36:
   variables:
-    REPOPATH: "Fedora/33"
-  image: fedora:33
+    REPOPATH: "Fedora/36"
+  image: fedora:36
   <<: *frpm_build
 
 dist-f34:
