@@ -937,9 +937,8 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         session->gpsdata.skyview[u1 - 1].gnssid = gnssid;
         session->gpsdata.skyview[u1 - 1].svid = u3;
         session->gpsdata.skyview[u1 - 1].sigid = sigid;
-        // session->gpsdata.skyview[u1 - 1].PRN = nmea_PRN;  // "real" PRN
-        // fake PRN for testing
-        session->gpsdata.skyview[u1 - 1].PRN = u3 + (gnssid * 100);
+        // "real" NMEA 4.0 (not 4.10 ir 4.11) PRN
+        session->gpsdata.skyview[u1 - 1].PRN = ubx2_to_prn(gnssid, u3);
         if (0 != (1 & u4)) {
             if (90.0 >= fabs(d2)) {
                 session->gpsdata.skyview[u1 - 1].elevation = d2;
