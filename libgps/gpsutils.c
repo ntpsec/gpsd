@@ -898,4 +898,130 @@ void datum_code_string(int code, char *buffer, size_t len)
         strlcpy(buffer, datum_str, len);
     }
 }
+
+/* make up an NMEA 4.0 (extended) PRN based on gnssId:svId,
+ * This does NOT match NMEA 4.10 and 4.11 where all PRN are 1-99,
+ * except IMEA
+ * Ref Appendix A from u-blox ZED-F9P Interface Description
+ * and
+ * Section 1.5.3  M10-FW500_InterfaceDescription_UBX-20053845.pdf
+ *
+ * Return PRN, or zero for error
+ */
+short ubx2_to_prn(int gnssId, int svId)
+{
+    short nmea_PRN;
+
+    if (1 > svId) {
+        // skip 0 svId
+        return 0;
+    }
+
+    switch (gnssId) {
+    case 0:
+        // GPS, 1-32 maps to 1-32
+        if (32 < svId) {
+            // skip bad svId
+            return 0;
+        }
+        nmea_PRN = svId;
+        break;
+    case 1:
+        // SBAS, 120..151, 152..158 maps to 33..64, 152..158
+        if (120 > svId) {
+            // Huh?
+            return 0;
+        } else if (151 >= svId) {
+            nmea_PRN = svId - 87;
+        } else if (158 >= svId) {
+            nmea_PRN = svId;
+        } else {
+            /* Huh? */
+            return 0;
+        }
+        break;
+    case 2:
+        // Galileo, ubx gnssid:svid 1..36 ->  301-336
+        // Galileo, ubx PRN         211..246 ->  301-336
+        if (36 >= svId) {
+            nmea_PRN = svId + 300;
+        } else if (211 > svId) {
+            // skip bad svId
+            return 0;
+        } else if (246 >= svId) {
+            nmea_PRN = svId + 90;
+        } else {
+            // skip bad svId
+            return 0;
+        }
+        break;
+    case 3:
+        // BeiDou, ubx gnssid:svid 1..37 -> to 401-437
+        // BeiDou, ubx PRN         159..163,33..64 -> to 401-437 ??
+        if (37 >= svId) {
+            nmea_PRN = svId + 400;
+        } else if (159 > svId) {
+            // skip bad svId
+            return 0;
+        } else if (163 >= svId) {
+            nmea_PRN = svId + 242;
+        } else {
+            // skip bad svId
+            return 0;
+        }
+        break;
+    case 4:
+        // IMES, ubx gnssid:svid 1-10 -> to 173-182
+        // IMES, ubx PRN         173-182 to 173-182
+        if (10 < svId) {
+            // skip bad svId
+            return 0;
+        } else if (173 > svId) {
+            // skip bad svId
+            return 0;
+        } else if (182 >= svId) {
+            nmea_PRN = svId;
+        }
+        nmea_PRN = svId + 172;
+        break;
+    case 5:
+        // QZSS, ubx gnssid:svid 1-10 to 193-202
+        // QZSS, ubx PRN         193-202 to 193-202
+        if (10 >= svId) {
+            nmea_PRN = svId + 192;
+        } else if (193 > svId) {
+            // skip bad svId
+            return 0;
+        } else if (202 >= svId) {
+            nmea_PRN = svId;
+        } else {
+            // skip bad svId
+            return 0;
+        }
+        break;
+    case 6:
+        // GLONASS, 1-32 maps to 65-96
+        if (32 >= svId) {
+            nmea_PRN = svId + 64;
+        } else if (65 > svId) {
+            // skip bad svId
+            return 0;
+        } else if (96 >= svId) {
+            nmea_PRN = svId;
+        } else {
+            // skip bad svId, 255 == tracked, but unidentified, skip
+            return 0;
+        }
+        break;
+    case 7:
+        // NavIC (IRNSS)
+        FALLTHROUGH
+    default:
+        // Huh?
+        return 0;
+    }
+
+    return nmea_PRN;
+}
+
 // vim: set expandtab shiftwidth=4

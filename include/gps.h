@@ -2796,6 +2796,7 @@ extern double earth_distance_and_bearings(double, double, double, double,
 extern double wgs84_separation(double, double);
 extern double mag_var(double, double);
 extern void datum_code_string(int code, char *buffer, size_t len);
+extern short ubx2_to_prn(int gnssId, int svId);
 
 /* some multipliers for interpreting GPS output */
 
