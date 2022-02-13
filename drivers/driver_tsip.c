@@ -9,6 +9,8 @@
  * be adding a fixed offset based on a hidden epoch value, in which case
  * unhappy things will occur on the next rollover.
  *
+ * TSIPv1 and RES270 support added by Gary E. Miller <gem@rellim.com>
+ *
  * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
@@ -800,10 +802,14 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  tow, week, date.tm_hour, date.tm_min, date.tm_sec,
                  date.tm_year + 1900, date.tm_mon, date.tm_mday,
                  u1, u2, u3, s1, d1, d2, d3);
-        if (3 == (u3 & 3)) {
+        if (2 == (u3 & 2)) {
             // flags say we have good time
             // if we have good time, can we guess at fix mode?
-            mask |= TIME_SET | NTPTIME_IS;
+            mask |= TIME_SET;
+            if (1 == (u3 & 1)) {
+                // good UTC
+                mask |= NTPTIME_IS;
+            }
         }
         if (0 == session->driver.tsip.hardware_code) {
             // Query Receiver Version Information
