@@ -14,6 +14,7 @@
   Add initial, untested, TSIPv1 support
   split debug messages into different syslog() levels.
   New ppscheck options, and can use /dev/ppsX devices.
+  First try at TSIPv1 protocol decodes.
 
 3.23.1: 2021-09-21
   Improve ubx cycle detection.

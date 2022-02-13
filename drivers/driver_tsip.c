@@ -932,6 +932,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         u4 = getbeu32(buf, 19);           // Flags
         // TOW of measurement, not current TOW!
         tow = getbeu32(buf, 23);          // TOW, seconds
+        session->driver.tsip.last_a200 = tow;
         ts_tow.tv_sec = tow;
         ts_tow.tv_nsec = 0;
         session->gpsdata.skyview_time =
@@ -963,8 +964,14 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             /* Last of the series? Assume same number of sats as
              * last cycle.
              * This will cause extra SKY if this set has more
-             * sats than the last set */
-            mask |= SATELLITE_SET;
+             * sats than the last set.  Will cause drop outs when
+             * number of sats decreases. */
+            if (10 < abs(session->driver.tsip.last_a311 -
+                         session->driver.tsip.last_a200)) {
+                // no xa3-11 in 10 seconds, so push out now
+                mask |= SATELLITE_SET;
+                session->driver.tsip.last_a200 = 0;
+            }
         }
         /* If this series has fewer than last series there will
          * be no SKY, unless the cycle ender pushes the SKY */
@@ -1007,12 +1014,21 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         session->gpsdata.dop.hdop = d2;
         session->gpsdata.dop.vdop = d3;
         session->gpsdata.dop.tdop = d4;
+        // don't have tow, so use the one from xa2-00, if any
+        session->driver.tsip.last_a311 = session->driver.tsip.last_a200;
+
+        if (0 < session->driver.tsip.last_a200) {
+            session->driver.tsip.last_a200 = 0;
+            // TSIPv1 seem to be sent in numerical order, so this
+            // is after xa2-00 and the sats.  Push out any lingering sats.
+            mask |= SATELLITE_SET;
+        }
+        mask |= REPORT_IS | DOP_SET;
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIPv1 xa3-11: mode %u status %u survey %u PDOP %f HDOP %f "
                  "VDOP %f TDOP %f temp %f\n",
                  u1, u2, u3, d1, d2, d3, d4, d5);
         // usually the last message, except for A2-00
-        mask |= REPORT_IS | DOP_SET;
         break;
     case 0xa321:
         /* Error Report

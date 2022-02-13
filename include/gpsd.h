@@ -100,6 +100,7 @@ extern "C" {
  *      add pkt_time to lexer_t
  *      add netlib_connectsock1()
  *      add nmea.gsx_more to gps_device_t
+ *      add TSIPv1 stuff
  */
 
 #define JSON_DATE_MAX   24      /* ISO8601 timestamp with 2 decimal places */
@@ -709,12 +710,14 @@ struct gps_device_t {
             uint8_t superpkt;
             uint8_t machine_id;         // from 0x4b
             uint16_t hardware_code;     // from 0x1c-83, or 0x90-01
-            time_t last_41;             /* Timestamps for packet requests */
+            time_t last_41;             // Timestamps for packet requests
             time_t last_48;
             time_t last_5c;
             time_t last_6d;
             time_t last_46;
             time_t req_compact;
+            time_t last_a200;           // last xa2-00 received
+            time_t last_a311;           // last xa3-11 received
             unsigned int stopbits; /* saved RS232 link parameter */
             char parity;
             int subtype;                // hardware ID, sort of
