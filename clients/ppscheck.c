@@ -422,7 +422,7 @@ static void do_tty(void)
         }
 
 #if defined(HAVE_SYS_TIMEPPS_H)
-        if (0 <= kpps_handle) {   // SNARD
+        if (0 <= kpps_handle) {
             kpps_tv.tv_sec = 0;   // non-blocking
             kpps_tv.tv_nsec = 0;
             bool good_pi;

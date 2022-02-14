@@ -822,6 +822,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             // Query Receiver Version Information
             (void)tsip_write1(session, "\x90\x01\x00\x02\x00\x93", 6);
         }
+        mask |= CLEAR_IS;  // ssems to always be first. Time to clear.
         break;
     case 0xa102:
         // Frequency Information

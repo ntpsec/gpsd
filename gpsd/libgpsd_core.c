@@ -1870,10 +1870,17 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
         }
         gps_clear_fix(&session->gpsdata.fix);
     }
+#ifdef __UNUSED
+    // debug
+    GPSD_LOG(LOG_SHOUT, &session->context->errout,
+             "CORE: before  alt %f new %f\n",
+             session->gpsdata.fix.altMSL,
+             session->newdata.altMSL);
 
-    /* GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "CORE: transfer mask: %s\n",
-                     gps_maskdump(session->gpsdata.set)); */
+    GPSD_LOG(LOG_SHOUT, &session->context->errout,
+             "CORE: transfer mask: %s\n",
+             gps_maskdump(session->gpsdata.set));
+#endif  // __UNUSED
     gps_merge_fix(&session->gpsdata.fix,
                   session->gpsdata.set, &session->newdata);
 
