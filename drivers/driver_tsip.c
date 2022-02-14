@@ -979,8 +979,8 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
              * This will cause extra SKY if this set has more
              * sats than the last set.  Will cause drop outs when
              * number of sats decreases. */
-            if (10 < abs(session->driver.tsip.last_a311 -
-                         session->driver.tsip.last_a200)) {
+            if (10 < llabs(session->driver.tsip.last_a311 -
+                           session->driver.tsip.last_a200)) {
                 // no xa3-11 in 10 seconds, so push out now
                 mask |= SATELLITE_SET;
                 session->driver.tsip.last_a200 = 0;
