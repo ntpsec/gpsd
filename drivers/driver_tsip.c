@@ -584,6 +584,9 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         }
         memcpy(buf2, &buf[14], u8);
         buf2[u8] = '\0';
+        (void)snprintf(session->subtype, sizeof(session->subtype),
+                       "fw %u.%u %u %02u/%02u/%04u %.40s",
+                       u1, u2, u3, u6, u5, u4, buf2);
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIPv1 x90-01: Version %u.%u Build %u %u/%u/%u hwid %u, "
                  "%.*s[%u]\n",
@@ -730,6 +733,9 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         u14 = getbeu32(buf, 64);          // premium options
         u15 = getbeu32(buf, 78);          // reserved
         // ignore 77 Osc search range, and 78–81 Osc offset, always 0xff
+        (void)snprintf(session->subtype1, sizeof(session->subtype1),
+                       "hw %u %02u/%02u/%04u",
+                       u9, u5, u6, u7);
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "TSIPv1 x93-00: res %u ser %u x%04x %04x Build %u/%u/%u %u "
                  "machine %u hardware x%04x %04x product x%04x %04x "
@@ -737,6 +743,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  u1, u2, u3, u4, u7, u6, u5, u8, u9, u10,
                  u11, u12, u13, u14, u15);
         tsipv1_query(session, 6);
+        mask |= DEVICEID_SET;
         break;
     case 0xa000:
         // Firmware Upload
