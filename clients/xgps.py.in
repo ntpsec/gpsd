@@ -81,6 +81,8 @@ MAXCHANDISP = 28
 # how to sort the Satellite List
 # some of ("PRN","el","az","ss","used") with optional '-' to reverse sort
 # by default, used at the top, then sort PRN
+# FIXME: ned to add sigid to the sort.
+# SKY_VIEW_SORT_FIELDS = ('-used', 'PRN', 'sigid')
 SKY_VIEW_SORT_FIELDS = ('-used', 'PRN')
 
 # Each GNSS constellation reuses the same PRNs.  To differentiate they are
@@ -1500,15 +1502,9 @@ frame * {
             for i in range(data.satellites_seen, options.maxchandisp):
                 for j in range(0, 7):
                     self.set_satlist_field(i, j, "")
-        else:
-            # clear all of the list
-            for i in range(0, options.maxchandisp):
-                for j in range(0, 7):
-                    self.set_satlist_field(i, j, "")
-            satellites = ()
-
-        # repaint Skyview
-        self.sky_view.redraw(satellites)
+            # repaint Skyview
+            self.sky_view.redraw(satellites)
+        # else:   #  a SKY with just DOPs
 
         markup = "<span font_desc='monospace 10'>%s </span>"
         # the first 27 fields are updated using TPV data
