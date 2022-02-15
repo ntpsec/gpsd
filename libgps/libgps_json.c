@@ -283,6 +283,9 @@ static int json_sky_read(const char *buf, struct gps_data_t *gpsdata,
         // *INDENT-ON*
         {NULL},
     };
+
+    int nSat = -1;  // Use nSat only to know if sats are in SKY
+
     const struct json_attr_t json_attrs_2[] = {
         // *INDENT-OFF*
         {"class",      t_check,   .dflt.check = "SKY"},
@@ -304,6 +307,8 @@ static int json_sky_read(const char *buf, struct gps_data_t *gpsdata,
                                      .dflt.real = NAN},
         {"gdop",       t_real,    .addr.real    = &gpsdata->dop.gdop,
                                      .dflt.real = NAN},
+        {"nSat",       t_integer, .addr.integer = &nSat,
+                                     .dflt.integer = -1},
         {"satellites", t_array,
                                    STRUCTARRAY(gpsdata->skyview,
                                          json_attrs_satellites,
@@ -318,15 +323,34 @@ static int json_sky_read(const char *buf, struct gps_data_t *gpsdata,
     memset(&gpsdata->skyview, 0, sizeof(gpsdata->skyview));
 
     status = json_read_object(buf, json_attrs_2, endptr);
-    if (status != 0)
+    if (0 != status) {
         return status;
+    }
 
+    if (1 == isfinite(gpsdata->dop.hdop) ||
+        1 == isfinite(gpsdata->dop.xdop) ||
+        1 == isfinite(gpsdata->dop.ydop) ||
+        1 == isfinite(gpsdata->dop.vdop) ||
+        1 == isfinite(gpsdata->dop.tdop) ||
+        1 == isfinite(gpsdata->dop.pdop) ||
+        1 == isfinite(gpsdata->dop.gdop)) {
+        // got at least one DOP
+        gpsdata->set |= DOP_SET;
+    }
+
+    if (-1 == nSat) {
+        // no sats in the SKY, likely just dops.
+        return 0;
+    }
+
+    gpsdata->set |= SATELLITE_SET;
     gpsdata->satellites_used = 0;
     gpsdata->satellites_visible = 0;
     // recalculate used and visible, do not use nSat, uSat
     for (i = 0; i < MAXCHANNELS; i++) {
-        if(gpsdata->skyview[i].PRN > 0)
+        if (0 < gpsdata->skyview[i].PRN) {
             gpsdata->satellites_visible++;
+        }
         if (gpsdata->skyview[i].used) {
             gpsdata->satellites_used++;
         }
@@ -795,9 +819,6 @@ int libgps_json_unpack(const char *buf,
     }
     if (str_starts_with(classtag, "\"class\":\"SKY\"")) {
         status = json_sky_read(buf, gpsdata, end);
-        if (PASS(status)) {
-            gpsdata->set |= SATELLITE_SET;
-        }
         return FILTER(status);
     }
     if (str_starts_with(classtag, "\"class\":\"ATT\"")) {

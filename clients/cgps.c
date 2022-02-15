@@ -572,15 +572,21 @@ static void update_imu_panel(struct gps_data_t *gpsdata,
 
 /* sort the skyviews
  * Used = Y first, then used = N
- * then sort by PRN
+ * then sort by PRN, then sigid
  */
 static int sat_cmp(const void *p1, const void *p2)
 {
-    int diff = ((struct satellite_t*)p2)->used - ((struct satellite_t*)p1)->used;
-    if (0 == diff) {
-        return ((struct satellite_t*)p1)->PRN - ((struct satellite_t*)p2)->PRN;
+    int diff;
+
+    diff = ((struct satellite_t*)p2)->used - ((struct satellite_t*)p1)->used;
+    if (0 != diff) {
+        return diff;
     }
-    return (diff);
+    diff = ((struct satellite_t*)p1)->PRN - ((struct satellite_t*)p2)->PRN;
+    if (0 != diff) {
+        return diff;
+    }
+    return ((struct satellite_t*)p1)->sigid - ((struct satellite_t*)p2)->sigid;
 }
 
 
