@@ -147,7 +147,7 @@ static const char json_str1[] =
  */
 
 static const char *json_str2 = "{\"class\":\"SKY\",\
-         \"time\":\"2005-06-19T12:12:42.03Z\",   \
+         \"time\":\"2005-06-19T12:12:42.03Z\",\"nSat\":6,  \
          \"satellites\":[\
          {\"PRN\":10,\"el\":45,\"az\":196,\"ss\":34,\"used\":true},\
          {\"PRN\":29,\"el\":67,\"az\":310,\"ss\":40,\"used\":true},\
