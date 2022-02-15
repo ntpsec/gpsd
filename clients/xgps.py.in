@@ -1446,14 +1446,19 @@ frame * {
         data.satellites_seen = 0
         data.satellites_used = 0
         if hasattr(data, 'satellites'):
-            satellites = data.satellites
-            for fld in reversed(SKY_VIEW_SORT_FIELDS):
-                rev = (fld[0] == '-')
-                if rev:
-                    fld = fld[1:]
-                satellites = sorted(
-                    satellites[:],
-                    key=lambda x: x[fld], reverse=rev)
+            def key_sats(s):
+                """sat sort function.  Used, gnssid, svid, sigid."""
+                val = 1
+                if s.used:
+                    val = 0
+                val = (val * 100) + s.gnssid
+                val = (val * 1000) + s.svid
+                val *= 100
+                if 'sigid' in s:
+                    val += s.sigid
+                return val
+
+            satellites = sorted(data.satellites, key=key_sats)
 
             # print("Sats: ", satellites)
             for (i, satellite) in enumerate(satellites):
@@ -1480,9 +1485,11 @@ frame * {
                                            self._int_to_str(satellite.svid,
                                                             1, 199))
                 if 'sigid' in satellite:
-                    self.set_satlist_field(i, 2,
-                                           self._int_to_str(satellite.sigid,
-                                                            1, 10))
+                    s = int(satellite.sigid)
+                else:
+                    s = "   "
+                self.set_satlist_field(i, 2, s)
+
                 # NMEA uses PRN up to 437
                 self.set_satlist_field(i, 3,
                                        self._int_to_str(satellite.PRN, 1, 437))
@@ -1500,7 +1507,7 @@ frame * {
 
             # clear rest of the list
             for i in range(data.satellites_seen, options.maxchandisp):
-                for j in range(0, 7):
+                for j in range(0, 8):
                     self.set_satlist_field(i, j, "")
             # repaint Skyview
             self.sky_view.redraw(satellites)
