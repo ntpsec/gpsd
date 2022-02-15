@@ -78,13 +78,6 @@ MAXCHANNELS = 120
 # MAXCHANDISP, default max channels to display
 MAXCHANDISP = 28
 
-# how to sort the Satellite List
-# some of ("PRN","el","az","ss","used") with optional '-' to reverse sort
-# by default, used at the top, then sort PRN
-# FIXME: ned to add sigid to the sort.
-# SKY_VIEW_SORT_FIELDS = ('-used', 'PRN', 'sigid')
-SKY_VIEW_SORT_FIELDS = ('-used', 'PRN')
-
 # Each GNSS constellation reuses the same PRNs.  To differentiate they are
 # all mushed into the PRN.  Different GPS mush differently.  gpsd should
 # have untangled and put in gnssid:svid
@@ -207,12 +200,39 @@ class SkyView(Gtk.DrawingArea):
                 else:
                     gnss_str = ''
 
-                if "gnssid" in sat and "sigid" in sat:
-                    # gnssid:sigid in gpsd 3.18 and up
-                    # needs work when multiple signals on one sat
-                    sig_str = "%d\n" % sat.sigid
-                else:
-                    sig_str = ''
+                sig_str = ''
+                snr_str = ''
+                use_str = ''
+
+                for (x1, y1, sat1) in self.sat_xy:
+                    # find all instances of this sat
+
+                    if (sat1["gnssid"] != sat["gnssid"]  or
+                        sat1["svid"] != sat["svid"]):
+                        # not this one
+                        continue;
+
+                    if "sigid" in sat1:
+                        sig = "%d" % sat1.sigid
+                    else:
+                        sig = "0"
+                    if sig_str:
+                        sig_str += ", " + sig
+                    else:
+                        sig_str = sig
+
+                    snr = "%4.1f" % sat1.ss
+                    if snr_str:
+                        snr_str += ", " + snr
+                    else:
+                        snr_str = snr
+
+                    use = "Yes" if sat.used else "No"
+                    if use_str:
+                        use_str += ", " + use
+                    else:
+                        use_str = use
+
 
                 if 'health' not in sat:
                     health = "Unk"
@@ -229,12 +249,11 @@ class SkyView(Gtk.DrawingArea):
                      "sigId %s\n"
                      "Elevation %4.1f\n"
                      "Azimuth  %5.1f\n"
-                     "SNR       %4.1f\n"
-                     "Used %9s\n"
+                     "SNR %s\n"
+                     "Used %s\n"
                      "Health %7s</span>" %
                      (sat.PRN, gnss_str, sig_str,
-                      sat.el, sat.az, sat.ss, 'Yes' if sat.used else 'No',
-                      health))
+                      sat.el, sat.az, snr_str, use_str, health))
                 label.set_markup(s)
                 rectangle = Gdk.Rectangle()
                 rectangle.x = x - 25
@@ -469,7 +488,8 @@ class SkyView(Gtk.DrawingArea):
             # low probability of excluding legitimate cases, while avoiding
             # the improper display in this case.
             # Note that this only excludes them from the map, not the list.
-            if sat.az == 0 and sat.el == 0:
+            if (0 == sat.az and
+                0 == sat.el):
                 continue
 
             (x, y) = self.pol2cart(sat.az, sat.el)
