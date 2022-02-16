@@ -605,17 +605,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
      * available screen size, or may only show satellites used for the
      * fix.  */
 
-     // just repaint every time.  Hides a multitude of mistakes.
-    (void)werase(satellites);
-    (void)mvwaddstr(satellites, 1, 1,
-                    "GNSS  S PRN  Elev  Azim   SNR Use");
-    (void)wborder(satellites, 0, 0, 0, 0, 0, 0, 0, 0);
-
-    (void)mvwprintw(satellites, 0, 17, "Seen %2d/Used %2d",
-                    gpsdata->satellites_visible,
-                    gpsdata->satellites_used);
-
-    if (0 != (VERSION_SET &gpsdata->set)) {
+    if (0 != (VERSION_SET & gpsdata->set)) {
         // got version, check it
         if (0 != strcmp(gpsdata->version.release, VERSION)) {
             // expected API version not available
@@ -630,13 +620,23 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
         }
     }
 
-    if (0 != gpsdata->satellites_visible) {
+    if (0 != (SATELLITE_SET & gpsdata->set)) {
         int sat_no;
         int loop_end = (display_sats < gpsdata->satellites_visible) ? \
                 display_sats : gpsdata->satellites_visible;
 
-        qsort( gpsdata->skyview, gpsdata->satellites_visible,
-                sizeof( struct satellite_t), sat_cmp);
+         // just repaint every time.  Hides a multitude of mistakes.
+        (void)werase(satellites);
+        (void)mvwaddstr(satellites, 1, 1,
+                        "GNSS  S PRN  Elev  Azim   SNR Use");
+        (void)wborder(satellites, 0, 0, 0, 0, 0, 0, 0, 0);
+
+        (void)mvwprintw(satellites, 0, 17, "Seen %2d/Used %2d",
+                        gpsdata->satellites_visible,
+                        gpsdata->satellites_used);
+
+        qsort(gpsdata->skyview, gpsdata->satellites_visible,
+              sizeof( struct satellite_t), sat_cmp);
         // displayed all sats that fit, maybe all of them
         for (sat_no = 0; sat_no < loop_end; sat_no++) {
             int column = 1;     // column to write to
@@ -736,8 +736,8 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
             // Too many sats to show them all, tell the user.
             if (ERR == mvwprintw(satellites, display_sats + 2, 1, "%s",
                                  "More...")) {
-            die(0, "failed to print sat win More");
-        }
+                die(0, "failed to print sat win More");
+            }
         }
     }
     //  else  no sats to display, screen already cleared...
@@ -811,7 +811,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
     (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET,
                     "Speed          %-21s%5s ", scr, speedunits);
 
-    /* Fill in the track. */
+    // Fill in the track.
     if (magnetic_flag) {
         mag_str = "(mag, var)";
     } else {

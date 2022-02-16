@@ -338,14 +338,16 @@ static int json_sky_read(const char *buf, struct gps_data_t *gpsdata,
         gpsdata->set |= DOP_SET;
     }
 
+    gpsdata->satellites_used = 0;
+    gpsdata->satellites_visible = 0;
+
     if (-1 == nSat) {
         // no sats in the SKY, likely just dops.
+        gpsdata->set &= ~SATELLITE_SET;
         return 0;
     }
 
     gpsdata->set |= SATELLITE_SET;
-    gpsdata->satellites_used = 0;
-    gpsdata->satellites_visible = 0;
     // recalculate used and visible, do not use nSat, uSat
     for (i = 0; i < MAXCHANNELS; i++) {
         if (0 < gpsdata->skyview[i].PRN) {
