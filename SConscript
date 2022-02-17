@@ -1978,22 +1978,26 @@ if env["timeservice"] or env["gpsdclients"]:
                  end=True)
 
 # Test programs - always link locally and statically
-test_bits = env.Program('tests/test_bits', ['tests/test_bits.c'],
+test_bits = env.Program('tests/test_bits',
+                        [libgps_static, 'tests/test_bits.c'],
                         LIBS=[libgps_static])
 test_float = env.Program('tests/test_float', ['tests/test_float.c'])
-test_geoid = env.Program('tests/test_geoid', ['tests/test_geoid.c'],
+test_geoid = env.Program('tests/test_geoid',
+                         [libgpsd_static, libgps_static, 'tests/test_geoid.c'],
                          LIBS=[libgpsd_static, libgps_static],
                          parse_flags=gpsdflags)
 test_gpsdclient = env.Program('tests/test_gpsdclient',
-                              ['tests/test_gpsdclient.c'],
+                              [libgps_static, 'tests/test_gpsdclient.c'],
                               LIBS=[libgps_static, 'm'])
-test_matrix = env.Program('tests/test_matrix', ['tests/test_matrix.c'],
+test_matrix = env.Program('tests/test_matrix',
+                          [libgpsd_static, libgps_static, 'tests/test_matrix.c'],
                           LIBS=[libgpsd_static, libgps_static],
                           parse_flags=gpsdflags)
-test_mktime = env.Program('tests/test_mktime', ['tests/test_mktime.c'],
+test_mktime = env.Program('tests/test_mktime',
+                          [libgps_static, 'tests/test_mktime.c'],
                           LIBS=[libgps_static], parse_flags=mathlibs + rtlibs)
 test_packet = env.Program('tests/test_packet',
-                          ['tests/test_packet.c'],
+                          [libgpsd_static, libgps_static,'tests/test_packet.c'],
                           LIBS=[libgpsd_static, libgps_static],
                           parse_flags=gpsdflags)
 test_timespec = env.Program('tests/test_timespec', ['tests/test_timespec.c'],
@@ -2002,13 +2006,15 @@ test_timespec = env.Program('tests/test_timespec', ['tests/test_timespec.c'],
 test_trig = env.Program('tests/test_trig', ['tests/test_trig.c'],
                         parse_flags=mathlibs)
 # test_libgps for glibc older than 2.17
-test_libgps = env.Program('tests/test_libgps', ['tests/test_libgps.c'],
+test_libgps = env.Program('tests/test_libgps',
+                          [libgps_static, 'tests/test_libgps.c'],
                           LIBS=[libgps_static],
                           parse_flags=mathlibs + rtlibs + dbusflags)
 
 if env['socket_export']:
     test_json = env.Program(
-        'tests/test_json', ['tests/test_json.c'],
+        'tests/test_json',
+        [libgps_static, 'tests/test_json.c'],
         LIBS=[libgps_static],
         parse_flags=mathlibs + rtlibs + usbflags + dbusflags)
 else:
@@ -2016,7 +2022,8 @@ else:
     test_json = None
 
 # duplicate below?
-test_gpsmm = env.Program('tests/test_gpsmm', ['tests/test_gpsmm.cpp'],
+test_gpsmm = env.Program('tests/test_gpsmm',
+                         [libgps_static, 'tests/test_gpsmm.cpp'],
                          LIBS=[libgps_static],
                          parse_flags=mathlibs + rtlibs + dbusflags)
 testprogs = [test_bits,
