@@ -14,6 +14,7 @@
 #include <string.h>
 #include "../include/bits.h"
 
+// test array of 640 bits
 static unsigned char buf[80];
 static signed char sb1, sb2;
 static unsigned char ub1, ub2;
@@ -121,7 +122,7 @@ static void ledumpall(void)
 
 struct unsigned_test
 {
-    unsigned char *buf;
+    const unsigned char *buf;
     unsigned int start, width;
     uint64_t expected;
     bool le;
@@ -188,10 +189,12 @@ int main(int argc, char *argv[])
         {buf, 32, 7,  0x02, false, "first seven bits of fifth byte (0x05)"},
         {buf, 56, 12, 0x8f, false, "12 bits crossing 7th to 8th bytes (0x08ff)"},
         {buf, 78, 4,  0xb,  false, "4 bits crossing 8th to 9th byte (0xfefd)"},
-        // FAILS! {buf, 0,  64, 0xb,  false, "64 bits, 0 bit in"},
-        // FAILS! {buf, 1,  64, 0xb,  false, "64 bits, 1 bit in"},
-        {buf, 1,  63, 0x102030405060708ULL,  false, "63 bits, 1 bit in"},
-        {buf, 9,  63, 0x2030405060708FFULL,  false, "63 bits, 9 bits in"},
+        {buf, 1,  56, 0x020406080a0c0eULL,  false, "56 bits, 1 bit in"},
+        {buf, 7,  56, 0x81018202830384ULL,  false, "56 bits, 7 bit in"},
+        {buf, 9,  56, 0x0406080a0c0e11ULL,  false, "56 bits, 9 bits in"},
+        // width 56 max, check consistent fail on 64 bits
+        {buf, 0,  64, 0,  false, "64 bits, 0 bit in"},
+        {buf, 1,  64, 0,  false, "64 bits, 1 bit in"},
         {buf, 7,  33, 0x102030405,  false, "33 bits, 7 bits in"},
         {buf, 0,  1,  0,    true,  "first bit of first byte"},
         {buf, 0,  8,  0x80, true,  "first 8 bits"},
@@ -205,14 +208,16 @@ int main(int argc, char *argv[])
     struct bitmask *bitm = bitmask_tests;
     struct uint2int *uint2 = uint2_tests;
 
-    memcpy(buf, "\x01\x02\x03\x04\x05\x06\x07\x08", 8);
-    memcpy(buf + 8, "\xff\xfe\xfd\xfc\xfb\xfa\xf9\xf8", 8);
-    memcpy(buf + 16, "\x40\x09\x21\xfb\x54\x44\x2d\x18", 8);
-    memcpy(buf + 24, "\x40\x49\x0f\xdb", 5);
-
     if (!quiet) {
         (void)printf("Testing bitfield extraction\n");
     }
+
+    // test array of 640/232 bits
+    memcpy(buf,
+        "\x01\x02\x03\x04\x05\x06\x07\x08"
+        "\xff\xfe\xfd\xfc\xfb\xfa\xf9\xf8"
+        "\x40\x09\x21\xfb\x54\x44\x2d\x18"
+        "\x40\x49\x0f\xdb", 29);
 
     sb1 = getsb(buf, 0);
     sb2 = getsb(buf, 8);
@@ -220,7 +225,7 @@ int main(int argc, char *argv[])
     ub2 = getub(buf, 8);
 
     if (!quiet) {
-        unsigned char *sp;
+        const unsigned char *sp;
 
         (void)fputs("Test data:", stdout);
         for (sp = buf; sp < buf + 28; sp++) {
@@ -282,8 +287,7 @@ int main(int argc, char *argv[])
          up <
          unsigned_tests + sizeof(unsigned_tests) / sizeof(unsigned_tests[0]);
          up++) {
-        uint64_t res = ubits((unsigned char *)buf, up->start, up->width,
-                             up->le);
+        uint64_t res = ubits(buf, up->start, up->width, up->le);
         bool success = (res == up->expected);
         if (!success) {
             failures++;
@@ -319,8 +323,9 @@ int main(int argc, char *argv[])
 #undef LASSERT
 
 
-    if (!quiet)
+    if (!quiet) {
         (void)printf("Testing BITMASK(N)\n");
+    }
 
     while (129 > bitm->shift) {
         if (bitm->mask != BITMASK(bitm->shift)) {

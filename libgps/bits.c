@@ -10,7 +10,7 @@
  * The sbits() function assumes twos-complement arithmetic. ubits()
  * and sbits() assume no padding in integers.
  */
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include <assert.h>
 #include <limits.h>
@@ -20,8 +20,18 @@
 
 #include "../include/bits.h"
 
-/* extract a (zero-origin) bitfield from the buffer as an
- * unsigned big-endian uint64_t */
+/* extract a (zero-origin) bitfield from a buffer) as an
+ * unsigned uint64_t
+ * Note: max width 56!
+ *
+ * Parameters: buf -- the buffer
+ *             start -- starting bit of desired bitfield
+ *             width -- width of desired bitfield (0 to 56)
+ *             le -- little endian input (swap bytes)
+ *
+ * Returns: bitfield as uint64_t
+ *          zero on errors (56 < width)
+ */
 uint64_t ubits(unsigned char buf[], unsigned int start,
                unsigned int width, bool le)
 {
@@ -30,29 +40,32 @@ uint64_t ubits(unsigned char buf[], unsigned int start,
     unsigned end;
 
     assert(width <= sizeof(uint64_t) * CHAR_BIT);
+    if (0 == width ||
+        56 < width) {
+        return 0;
+    }
     for (i = start / CHAR_BIT;
          i < (start + width + CHAR_BIT - 1) / CHAR_BIT; i++) {
         fld <<= CHAR_BIT;
-        fld |= (unsigned char)buf[i];
+        fld |= (uint64_t)buf[i];
     }
 
     end = (start + width) % CHAR_BIT;
-    if (end != 0) {
+    if (0 != end) {
         fld >>= (CHAR_BIT - end);
     }
 
     fld &= ~(~0ULL << width);
 
-    /* was extraction as a little-endian requested? */
-    if (le)
-    {
+    if (le) {
+        // extraction as a little-endian requested
         uint64_t reversed = 0;
 
-        for (i = width; i; --i)
-        {
+        for (i = width; i; --i) {
             reversed <<= 1;
-            if (fld & 1)
+            if (1 == (1 & fld)) {
                 reversed |= 1;
+            }
             fld >>= 1;
         }
         fld = reversed;
@@ -61,7 +74,7 @@ uint64_t ubits(unsigned char buf[], unsigned int start,
     return fld;
 }
 
-/* extract a bitfield from the buffer as a signed big-endian long */
+// extract a bitfield from the buffer as a signed big-endian long
 int64_t sbits(signed char buf[], unsigned int start, unsigned int width,
               bool le)
 {
@@ -134,20 +147,24 @@ void shiftleft(unsigned char *data, int size, unsigned short left)
     unsigned char *byte;
 
     if (left >= CHAR_BIT) {
-        size -= left/CHAR_BIT;
-        memmove(data, data + left/CHAR_BIT, (size + CHAR_BIT - 1)/CHAR_BIT);
+        size -= left / CHAR_BIT;
+        memmove(data, data + left / CHAR_BIT,
+                (size + CHAR_BIT - 1) / CHAR_BIT);
         left %= CHAR_BIT;
     }
 
-    for (byte = data; size--; ++byte )
-    {
-      unsigned char bits;
-      if (size)
-          bits = byte[1] >> (CHAR_BIT - left);
-      else
-          bits = 0;
-      *byte <<= left;
-      *byte |= bits;
+    for (byte = data; size--; ++byte ) {
+        unsigned char bits;
+
+        if (size) {
+            bits = byte[1] >> (CHAR_BIT - left);
+        } else {
+            bits = 0;
+        }
+        *byte <<= left;
+        // Yes, the mask should not be needed, but id avoids a compiler
+        // bug in gcc-amd64 11.2.1
+        *byte |= 0x0ff & bits;
     }
 }
 
@@ -161,8 +178,8 @@ void putbed64(char *buf, int off, double val)
     putbe32(buf, (off)+4, (l_d.l));
 }
 
+// byte-swap a 16-bit unsigned int
 u_int16_t swap_u16(u_int16_t i)
-/* byte-swap a 16-bit unsigned int */
 {
     u_int8_t c1, c2;
 
@@ -172,7 +189,7 @@ u_int16_t swap_u16(u_int16_t i)
     return (c1 << 8) + c2;
 }
 
-/* byte-swap a 32-bit unsigned int */
+// byte-swap a 32-bit unsigned int
 u_int32_t swap_u32(u_int32_t i)
 {
     u_int8_t c1, c2, c3, c4;
@@ -187,8 +204,8 @@ u_int32_t swap_u32(u_int32_t i)
             ((u_int32_t)c3 << 8) + c4;
 }
 
+// byte-swap a 64-bit unsigned int
 u_int64_t swap_u64(u_int64_t i)
-/* byte-swap a 64-bit unsigned int */
 {
     u_int8_t c1, c2, c3, c4, c5, c6, c7, c8;
 
@@ -210,5 +227,5 @@ u_int64_t swap_u64(u_int64_t i)
             ((u_int64_t)c7 << 8) +
             c8;
 }
-#endif /* __UNUSED__ */
+#endif  // __UNUSED__
 // vim: set expandtab shiftwidth=4
