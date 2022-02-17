@@ -167,7 +167,7 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
     rtcm->rtcmtypes.rtcm3_msm.smoothing = ugrab(1);
     rtcm->rtcmtypes.rtcm3_msm.interval = ugrab(3);
     // FIXME: rtcm->rtcmtypes.rtcm3_msm.sat_mask = ugrab(64);
-    // ugrab(64) works on arm32, but not on amd64!
+    // ugrab(56) is max, can't do 64, so stack it
     rtcm->rtcmtypes.rtcm3_msm.sat_mask = ugrab(32) << 32;
     rtcm->rtcmtypes.rtcm3_msm.sat_mask |= ugrab(32);
     rtcm->rtcmtypes.rtcm3_msm.sig_mask = ugrab(32);
@@ -203,14 +203,14 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
         return false;
     }
 
-    // cell_mask is variable length!  Will fail on amd64 is n_cell > 32
-    if (32 >= n_cell) {
+    // cell_mask is variable length!  ugrab() width max is 56
+    if (56 >= n_cell) {
         rtcm->rtcmtypes.rtcm3_msm.cell_mask = ugrab(n_cell);
     } else {
-        // 33 to 64, breaks ugrab(), workaround it...
-        rtcm->rtcmtypes.rtcm3_msm.cell_mask = ugrab(32);
-        rtcm->rtcmtypes.rtcm3_msm.cell_mask <<= n_cell - 32;
-        rtcm->rtcmtypes.rtcm3_msm.cell_mask |= ugrab(n_cell - 32);
+        // 57 to 64, breaks ugrab(), workaround it...
+        rtcm->rtcmtypes.rtcm3_msm.cell_mask = ugrab(56);
+        rtcm->rtcmtypes.rtcm3_msm.cell_mask <<= n_cell - 56;
+        rtcm->rtcmtypes.rtcm3_msm.cell_mask |= ugrab(n_cell - 56);
     }
 
     // Decode Satellite Data
