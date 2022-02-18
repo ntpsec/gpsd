@@ -721,9 +721,12 @@ struct gps_device_t {
             unsigned int stopbits; /* saved RS232 link parameter */
             char parity;
             int subtype;                // hardware ID, sort of
-#define TSIP_UNKNOWN            0
+#define TSIP_UNKNOWN               0
+#define TSIP_ACEIII               93
 #define TSIP_COPERNICUS_II      1003
 #define TSIP_ACUTIME_GOLD       3001
+#define TSIP_REST               3002
+#define TSIP_RESSMT             3009
 #define TSIP_RESSMT360          3023
 #define TSIP_ICMSMT360          3026
 #define TSIP_RES36017x22        3031
