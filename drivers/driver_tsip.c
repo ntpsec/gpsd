@@ -678,7 +678,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         }
         u1 = (unsigned)buf[4];            // self-survey mask
         u2 = getbeu32(buf, 5);            // self-survey length, # fixes
-        u3 = getbeu16(buf, 9);           // horz uncertainty, meters
+        u3 = getbeu16(buf, 9);            // horz uncertainty, meters
         u4 = getbeu16(buf, 11);           // vert uncertainty, meters
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIPv1 x91-04: mask %u length %u eph %u epv %u\n",
@@ -795,11 +795,11 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         d2 = getbef32((char *)buf, 26);     // Bias
         d3 = getbef32((char *)buf, 30);     // Bias Rate
 
+        // convert seconds to pico seconds
+        session->gpsdata.qErr = (long)(d1 * 10e12);
         // fix.time is w/o leap seconds...
         session->newdata.time.tv_sec = mkgmtime(&date) - s1;
         session->newdata.time.tv_nsec = 0;
-        // nano, can be negative! So normalize
-        TS_NORM(&session->newdata.time);
 
         session->context->leap_seconds = s1;
         session->context->valid |= LEAP_SECOND_VALID;
@@ -1038,6 +1038,33 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             mask |= SATELLITE_SET;
         }
         mask |= REPORT_IS | DOP_SET;
+        switch (u2) {
+        case 0:         // doing position fixes
+            FALLTHROUGH
+        case 4:         // using 1 sat
+            FALLTHROUGH
+        case 5:         // using 2 sat
+            FALLTHROUGH
+        case 6:         // using 3 sat
+            session->newdata.status = STATUS_GPS;
+            mask |= STATUS_SET;
+            break;
+        case 1:         // no GPS time
+            FALLTHROUGH
+        case 2:         // PDOP too high
+            FALLTHROUGH
+        case 3:         // no sats
+            session->newdata.status = STATUS_UNK;
+            mask |= STATUS_SET;
+            break;
+        case 255:
+            session->newdata.status = STATUS_TIME;
+            mask |= STATUS_SET;
+            break;
+        default:
+            // huh?
+            break;
+        }
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIPv1 xa3-11: mode %u status %u survey %u PDOP %f HDOP %f "
                  "VDOP %f TDOP %f temp %f\n",
