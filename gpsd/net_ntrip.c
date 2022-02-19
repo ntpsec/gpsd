@@ -773,6 +773,7 @@ int ntrip_parse_url(const struct gpsd_errout_t *errout,
  */
 static int ntrip_reconnect(struct gps_device_t *device)
 {
+#if defined(SOCK_NONBLOCK)
     socket_t dsock = -1;
     char addrbuf[50];         // INET6_ADDRSTRLEN
 
@@ -803,6 +804,12 @@ static int ntrip_reconnect(struct gps_device_t *device)
     GPSD_LOG(LOG_PROG, &device->context->errout,
              "NTRIP: ntrip_reconnect(%s) IP %s, fd %d NTRIP_CONN_INPROGRESS \n",
              device->gpsdata.dev.path, addrbuf, dsock);
+#else  // no SOCK_NONBLOCK
+    GPSD_LOG(LOG_PROG, &device->context->errout,
+             "NTRIP: ntrip_reconnect(%s) no SOCK_NONBLOCK, can't reconnect.\n",
+             device->gpsdata.dev.path, addrbuf, dsock);
+    device->gpsdata.gps_fd = -1;
+#endif  // no SOCK_NONBLOCK
     return device->gpsdata.gps_fd;
 }
 

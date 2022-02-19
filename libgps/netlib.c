@@ -56,6 +56,7 @@
  * service -- aka port
  * protocol
  * flags -- can be SOCK_NONBLOCK for non-blocking connect
+ *          Note: macOS does not have SOCK_NONBLOCK
  * addrbuf -- 50 char buf to put string of IP address conencting
  *            INET6_ADDRSTRLEN
  * addrbuf_sz -- sizeof(adddrbuf)
