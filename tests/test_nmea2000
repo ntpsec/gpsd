@@ -98,7 +98,8 @@ ${GPSD_HOME}/../clients/gpspipe -d -r -w -S -o ${TMP_OUT_FILE} :${GPSD_PORT}
 
 sleep 1
 
-${CAN_PLAYER} -I${TEST_FILE} ${CAN_UNIT}=can0
+# -t makes it go way faster
+${CAN_PLAYER} -t -I${TEST_FILE} ${CAN_UNIT}=can0
 
 sleep 1
 
