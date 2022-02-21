@@ -3009,6 +3009,48 @@ static gps_mask_t processDBT(int c UNUSED, char *field[],
     return mask;
 }
 
+// $xxTHS -- True Heading and Status
+static gps_mask_t processTHS(int c UNUSED, char *field[],
+                             struct gps_device_t *session)
+{
+    /*
+     * $GNTHS,121.15.A*1F<CR><LF>
+     * 1  - Heading, degrees True
+     * 2  - Mode indicator
+     *      'A’ = Autonomous
+     *      'E’ = Estimated (dead reckoning)
+     *      'M’ = Manual input
+     *      'S’ = Simulator
+     *      'V’ = Data not valid
+     * 3  - Checksum
+     */
+    gps_mask_t mask = ONLINE_SET;
+    double heading;
+
+    if ('\0' == field[1][0] ||
+        '\0' == field[2][0]) {
+        // no data
+        return mask;
+    }
+    if ('V' == field[2][0]) {
+        // invalid data
+        // ignore A, E, M and S for now
+        return mask;
+    }
+    heading = safe_atof(field[1]);
+    if ((0.0 > heading) ||
+        (360.0 < heading)) {
+        // bad data
+        return mask;
+    }
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: $xxTHS heading %lf mode %s\n",
+             heading, field[2]);
+
+    return mask;
+}
+
 // GPS Text message
 static gps_mask_t processTXT(int count, char *field[],
                              struct gps_device_t *session)
@@ -3579,8 +3621,10 @@ static gps_mask_t processPSTI030(int count, char *field[],
      */
     gps_mask_t mask = ONLINE_SET;
 
-    if ( 16 != count )
-            return mask;
+    if (16 != count) {
+        // FIXME: report runt
+        return mask;
+    }
 
     if ('V' == field[3][0] ||
         'N' == field[13][0]) {
@@ -3592,7 +3636,8 @@ static gps_mask_t processPSTI030(int count, char *field[],
         double east, north, climb;
 
         /* data valid */
-        if (field[2][0] != '\0' && field[12][0] != '\0') {
+        if ('\0' != field[2][0] &&
+            '\0' != field[12][0]) {
             /* good date and time */
             if (0 == merge_hhmmss(field[2], session) &&
                 0 == merge_ddmmyy(field[12], session)) {
@@ -3612,13 +3657,12 @@ static gps_mask_t processPSTI030(int count, char *field[],
             }
             mask |= MODE_SET;
         }
-        /* convert ENU to track */
-        /* this has more precision than GPVTG, GPVTG comes earlier
+        /* convert ENU to track
+         * this has more precision than GPVTG, GPVTG comes earlier
          * in the cycle */
-        east = safe_atof(field[9]);     /* east velocity m/s */
-        north = safe_atof(field[10]);   /* north velocity m/s */
-        /* up velocity m/s */
-        climb = safe_atof(field[11]);
+        east = safe_atof(field[9]);     // east velocity m/s
+        north = safe_atof(field[10]);   // north velocity m/s
+        climb = safe_atof(field[11]);   // up velocity m/s
 
         session->newdata.NED.velN = north;
         session->newdata.NED.velE = east;
@@ -3627,7 +3671,7 @@ static gps_mask_t processPSTI030(int count, char *field[],
         mask |= VNED_SET | STATUS_SET;
 
         session->newdata.status = faa_mode(field[13][0]);
-        /* FIXME: save RTK Age and RTK Ratio */
+        // FIXME: save RTK Age and RTK Ratio
     }
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
@@ -3654,64 +3698,97 @@ static gps_mask_t processPSTI(int count, char *field[],
                               struct gps_device_t *session)
 {
     gps_mask_t mask = ONLINE_SET;
+    int type = atoi(field[1]);
 
     if ( 0 != strncmp(session->subtype, "Skytraq", 7) ) {
-        /* this is skytraq, but not marked yet, so probe for Skytraq */
+        // this is skytraq, but not marked yet, so probe for Skytraq
         (void)gpsd_write(session, "\xA0\xA1\x00\x02\x02\x01\x03\x0d\x0a",9);
     }
 
-    if (0 == strcmp("00", field[1]) ) {
-        if ( 4 != count )
-                return mask;
-        /* 1 PPS Timing report ID */
+    switch (type) {
+    case 0:
+        if (4 != count) {
+            // FIXME: report runt
+            break;
+        }
+        // 1 PPS Timing report ID
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "NMEA0183: PSTI,00: Mode: %s, Length: %s, Quant: %s\n",
                 field[2], field[3], field[4]);
-        return mask;
-    }
-    if (0 == strcmp("001", field[1])) {
-        /* Active Antenna Status Report */
+        break;
+    case 1:
+        // Active Antenna Status Report
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "NMEA0183: PSTI,001: Count: %d\n", count);
-        return mask;
-    }
-    if (0 == strcmp("005", field[1])) {
-        /* GPIO 10 event-triggered time & position stamp. */
+        break;
+    case 5:
+        // GPIO 10 event-triggered time & position stamp.
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "NMEA0183: PSTI,005: Count: %d\n", count);
-        return mask;
-    }
-    if (0 == strcmp("030", field[1])) {
-        /*  Recommended Minimum 3D GNSS Data */
-        return processPSTI030(count, field, session);
-    }
-    if (0 == strcmp("032", field[1])) {
-
-        if ( 16 != count )
-                return mask;
-        /* RTK Baseline */
-        if ( 0 == strcmp(field[4], "A")) {
-            /* Status Valid */
+        break;
+    case 30:
+        //  Recommended Minimum 3D GNSS Data
+        mask =  processPSTI030(count, field, session);
+        break;
+    case 32:
+        if (16 != count) {
+            // FIXME: report runt
+            break;
+        }
+        // RTK Baseline
+        if (0 == strcmp(field[4], "A")) {
+            // Status Valid
             if (field[2][0] != '\0' && field[3][0] != '\0') {
-                /* good date and time */
+                // good date and time
                 if (0 == merge_hhmmss(field[2], session) &&
                     0 == merge_ddmmyy(field[3], session)) {
                     mask |= TIME_SET;
-                    register_fractional_time( "PSTI032", field[2], session);
+                    register_fractional_time("PSTI032", field[2], session);
                 }
             }
         }
         GPSD_LOG( LOG_DATA,&session->context->errout,
                  "NMEA0183: PSTI,032: stat:%s mode: %s E: %s N: %s U:%s L:%s "
                  "C:%s\n",
-                field[4], field[5],
-                field[6], field[7], field[8],
-                field[9], field[10]);
-        return mask;
+                 field[4], field[5],
+                 field[6], field[7], field[8],
+                 field[9], field[10]);
+        break;
+    case 33:
+        // RTK RAW Measurement Monitoring Data
+        // PX1172RH
+        if (27 != count) {
+            // FIXME: report runt
+            break;
+        }
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "NMEA0183: PSTI,033: RTK RAW\n");
+        break;
+    case 35:
+        // RTK Baseline Data of Rover Moving Base Receiver
+        // PX1172RH
+        if (16 != count) {
+            // FIXME: report runt
+            break;
+        }
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "NMEA0183: PSTI,033: RTK Baseline\n");
+        break;
+    case 36:
+        // Heading, Pitch and Roll Messages of vehicle
+        // PX1172RH
+        if (8 != count) {
+            // FIXME: report runt
+            break;
+        }
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "NMEA0183: PSTI,033: RTK RAW\n");
+        break;
+    default:
+        GPSD_LOG(LOG_DATA, &session->context->errout,
+                 "NMEA0183: PSTI,%s: Unknown type, Count: %d\n",
+                 field[1], count);
     }
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "NMEA0183: PSTI,%s: Unknown type, Count: %d\n",
-             field[1], count);
 
     return mask;
 }
@@ -3858,7 +3935,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"RSA", 0,  false, NULL},               // ignore Rudder Sensor Angle
         {"RTE", 0,  false, NULL},               // ignore Routes
         {"STI", 2,  false, processSTI},         // $STI  Skytraq
-        {"THS", 0,  false, NULL},         // True Heading and Status (u-blox 8)
+        {"THS", 0,  false, processTHS},         // True Heading and Status
         {"TXT", 5,  false, processTXT},
         {"VBW", 0,  false, NULL},         // ignore Dual Ground/Water Speed
         {"VDO", 0,  false, NULL},         // ignore Own Vessel's Information
