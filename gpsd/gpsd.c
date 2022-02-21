@@ -617,7 +617,7 @@ static ssize_t throttled_write(struct subscriber_t *sub, char *buf,
     if (LOG_CLIENT <= context.errout.debug) {
         if (isprint((unsigned char) buf[0])) {
             GPSD_LOG(LOG_CLIENT, &context.errout,
-                     "=> client(%d): %s\n", sub_index(sub), buf);
+                     "=> client(%d) len %d: %s\n", sub_index(sub), len, buf);
         } else {
             char *cp, buf2[MAX_PACKET_LENGTH * 3];
             buf2[0] = '\0';
@@ -625,12 +625,12 @@ static ssize_t throttled_write(struct subscriber_t *sub, char *buf,
                 str_appendf(buf2, sizeof(buf2),
                                "%02x", (unsigned int)(*cp & 0xff));
             GPSD_LOG(LOG_CLIENT, &context.errout,
-                     "=> client(%d): =%s\n", sub_index(sub), buf2);
+                     "=> client(%d) len %d: =%s\n", sub_index(sub), len, buf2);
         }
     }
 
     gpsd_acquire_reporting_lock();
-    status = send(sub->fd, buf, len, 0);
+    status = write(sub->fd, buf, len);
     gpsd_release_reporting_lock();
 
     if ((ssize_t)len == status) {
@@ -1937,7 +1937,7 @@ static int handle_gpsd_request(struct subscriber_t *sub, const char *buf)
                                reply + len, sizeof(reply) - len);
             }
     }
-    return (int)throttled_write(sub, reply, len);
+    return (int)throttled_write(sub, reply, strnlen(reply, sizeof(reply)));
 }
 #endif  // SOCKET_EXPORT_ENABLE
 
