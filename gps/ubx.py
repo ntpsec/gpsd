@@ -4966,13 +4966,30 @@ Present in M10S
         for i in range(0, u[1]):
             u = struct.unpack_from('<LLLBHB', buf, 260 + i * 272)
             s += "\n   span %u res %u center %u pga %u res x%x %x" % u
+            center = u[2]
+            span = u[0]
 
-            for j in range(0, 256, 16):
-                # grab 256 bytes, ib lines of 16
-                u = struct.unpack_from('<BBBBBBBBBBBBBBBB', buf,
-                                       (4 + j) + (i * 272))
-                s += ("\n     %3u %3u %3u %3u %3u %3u %3u %3u "
-                      "%3u %3u %3u %3u %3u %3u %3u %3u" % u)
+            if gps.VERB_DECODE <= self.verbosity:
+                indent = "\n       "
+            else:
+                indent = "\n     "
+
+            if gps.VERB_INFO <= self.verbosity:
+                # -v 3, one f, data, per line
+                for j in range(0, 256):
+                    f = center + span * ((j - 128) / 256)
+                    s += "\n     %u, %u" % (f, buf[(4 + j) + (i * 272)])
+            else:
+                for j in range(0, 256, 16):
+                    # grab 256 bytes, ib lines of 16
+                    u = struct.unpack_from('<BBBBBBBBBBBBBBBB', buf,
+                                           (4 + j) + (i * 272))
+                    if gps.VERB_DECODE <= self.verbosity:
+                        f = center + span * ((j - 128) / 256)
+                        s += "\n     f(%u) %u" % (j, f)
+                    s += indent
+                    s += ("%3u %3u %3u %3u %3u %3u %3u %3u "
+                          "%3u %3u %3u %3u %3u %3u %3u %3u" % u)
 
         return s
 
