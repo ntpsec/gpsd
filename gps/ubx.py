@@ -4958,14 +4958,21 @@ Deprecated in protVer 34.00
         """UBX-MON-SPAN decode, Signal characteristics
 
 protVer 34.00 and up
+Present in M10S
 """
 
         u = struct.unpack_from('<BBH', buf, 0)
         s = "  version %u numRfBlocks %u reserved0 %u" % u
         for i in range(0, u[1]):
-            # skip the 256 bytes of raw data for now...
             u = struct.unpack_from('<LLLBHB', buf, 260 + i * 272)
-            s += "\n   span %u res %u center %u pga %u" % u
+            s += "\n   span %u res %u center %u pga %u res x%x %x" % u
+
+            for j in range(0, 256, 16):
+                # grab 256 bytes, ib lines of 16
+                u = struct.unpack_from('<BBBBBBBBBBBBBBBB', buf,
+                                       (4 + j) + (i * 272))
+                s += ("\n     %3u %3u %3u %3u %3u %3u %3u %3u "
+                      "%3u %3u %3u %3u %3u %3u %3u %3u" % u)
 
         return s
 
@@ -9538,6 +9545,9 @@ present in 9-series and higher
         "MON-SMGR": {"command": send_poll, "opt": [0x0a, 0x2e],
                      "help": "poll UBX-MON-SMGR Synchronization manager "
                      "configuration"},
+        # UBX-MON-SPAN
+        "MON-SPAN": {"command": send_poll, "opt": [0x0a, 0x31],
+                     "help": "poll UBX-MON-SPAN Signal characteristics"},
         # UBX-MON-TXBUF
         "MON-TXBUF": {"command": send_poll, "opt": [0x0a, 0x08],
                       "help": "poll UBX-MON-TXBUF Transmitter Buffer Status"},
