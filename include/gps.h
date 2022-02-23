@@ -2405,21 +2405,55 @@ struct satellite_t {
     /* ignore gnssid and sigid if svid is zero */
     unsigned char svid;
     /* sigid as defined by u-blox 9/10, and used here
-     * GPS:      0 = L1C/A, 3 = L2 CL, 4 = L2 CM, 6 = L5 I, 7 = L5 Q
-     * SBAS:     0 = L1C/A, ? = L5I
-     * Galileo:  0 = E1 C, 1 = E1 B, 3 = E5 aI, 4 = E5 aQ, 5 = E5 bl, 6 = E5 bQ
      * BeiDou:   0 = B1I D1, 1 = B1I D2, 2 = B2I D1, 3 = B2I D2, 7 = B2a
-     * QZSS:     0 = L1C/A, 4 = L2 CM, 5 = L2 CL
+     * Galileo:  0 = E1 C, 1 = E1 B, 3 = E5 aI, 4 = E5 aQ, 5 = E5 bl, 6 = E5 bQ
      * GLONASS:  0 = L1 OF, 2 = L2 OF
+     * GPS:      0 = L1C/A, 3 = L2 CL, 4 = L2 CM, 6 = L5 I, 7 = L5 Q
+     * IRNSS:    ??
+     * QZSS:     0 = L1C/A, 4 = L2 CM, 5 = L2 CL
+     * SBAS:     0 = L1C/A, ? = L5I
      *
-     * sigid as defined by NMEA 4.10, NOT used here
-     * GPS:      1 = L1C/A, 5 = L2 CM, 6 = L2 CL, 7 = E5 I, 8 = E5 Q
-     * Galileo:  1 = E5 aI, 1 = E5 aQ, 2 = E5 bl, 2 = E5 bQ, 7 = E1 C, 7 = E1 B
+     * sigid as defined by NMEA 4.10, according to Skytrak, NOT used here
+     * Galileo:
+     *   0  All signals
+     *   1  E5a  (aI and aQ)
+     *   2  E5b  (bI and bQ)
+     *   3  E5 a+b
+     *   4  E6‐A
+     *   5  E6‐BC
+     *   6  L1‐A
+     *   7  L1‐B and L1-C (E1-C and E1-B)
+     * GLONASS:
+     *   0  All signals
+     *   1  G1 C/A  (L1 OF)
+     *   2  G1P
+     *   3  G2 C/A  (L2 OF)
+     *   4  GLONASS (M) G2P
+     * GPS:
+     *   0  All signals
+     *   1  L1 C/A
+     *   2  L1 P(Y)
+     *   3  L1C
+     *   4  L2 P(Y)
+     *   5  L2C‐M
+     *   6  L2C‐L
+     *   7  L5‐I
+     *   8  L5‐Q
+     * IRNSS:
+     *   4  L5
      * QZSS:     not defined
-     * GLONASS:  1 = L1 OF, 3 = L2 OF
      *
-     * chnaged sigid as defined by NMEA 4.11, NOT used here
-     * BeiDou:   1 = B1 D1, 1 = B1 D2, 5 = B2 a, 11(8) = B2 D1, 11(8) = B2 D2
+     * Additional sigid as defined by NMEA 4.11, NOT used here
+     * BeiDou:
+     *   According to u-blox
+     *     1 = B1 D1, 1 = B1 D2, 5 = B2 a, 11(8) = B2 D1, 11(8) = B2 D2
+     *   According to Skytrak
+     *     0  All signals
+     *     1  B1  (b1-d1 AND b1-d2)
+     *     2  B2A
+     *     3  B2
+     *     4  B3
+     *     5  B1C
      * QZSS:     1 = L1C/A
      */
     unsigned char sigid;
