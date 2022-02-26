@@ -153,10 +153,11 @@ extern "C" {
  *
  * Some receivers (TN-200, GSW 2.3.2) emit oversized sentences.
  * The Trimble BX-960 receiver emits a 91-character GGA message.
- * The current hog champion is the Skytraq S2525F8 which emits
- * a 100-character PSTI message.
+ * The Skytraq S2525F8 which emits a 100-character PSTI message.
+ * The current hog champion is the Skytraq PX1172RH which emits
+ * a 103-character PSTI message.
  */
-#define NMEA_MAX        102             // max length of NMEA sentence
+#define NMEA_MAX        110             // max length of NMEA sentence
 #define NMEA_MAX_FLD    100             // max fields in an NMEA sentence
 #define NMEA_BIG_BUF    (2*NMEA_MAX+1)  // longer than longest NMEA sentence
 
