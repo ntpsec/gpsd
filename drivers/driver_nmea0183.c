@@ -3674,7 +3674,7 @@ static gps_mask_t processPSTI030(int count, char *field[],
         // FIXME: save RTK Age and RTK Ratio
     }
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
+    GPSD_LOG(LOG_PROG, &session->context->errout,
              "NMEA0183: PSTI,030: ddmmyy=%s hhmmss=%s lat=%.2f lon=%.2f "
              "status=%d, RTK(Age=%s Ratio=%s)\n",
              field[12], field[2],
@@ -3712,18 +3712,18 @@ static gps_mask_t processPSTI(int count, char *field[],
             break;
         }
         // 1 PPS Timing report ID
-        GPSD_LOG(LOG_DATA, &session->context->errout,
+        GPSD_LOG(LOG_PROG, &session->context->errout,
                  "NMEA0183: PSTI,00: Mode: %s, Length: %s, Quant: %s\n",
                 field[2], field[3], field[4]);
         break;
     case 1:
         // Active Antenna Status Report
-        GPSD_LOG(LOG_DATA, &session->context->errout,
+        GPSD_LOG(LOG_PROG, &session->context->errout,
                  "NMEA0183: PSTI,001: Count: %d\n", count);
         break;
     case 5:
         // GPIO 10 event-triggered time & position stamp.
-        GPSD_LOG(LOG_DATA, &session->context->errout,
+        GPSD_LOG(LOG_PROG, &session->context->errout,
                  "NMEA0183: PSTI,005: Count: %d\n", count);
         break;
     case 30:
@@ -3747,7 +3747,7 @@ static gps_mask_t processPSTI(int count, char *field[],
                 }
             }
         }
-        GPSD_LOG( LOG_DATA,&session->context->errout,
+        GPSD_LOG( LOG_PROG,&session->context->errout,
                  "NMEA0183: PSTI,032: stat:%s mode: %s E: %s N: %s U:%s L:%s "
                  "C:%s\n",
                  field[4], field[5],
@@ -3761,7 +3761,7 @@ static gps_mask_t processPSTI(int count, char *field[],
             // FIXME: report runt
             break;
         }
-        GPSD_LOG(LOG_DATA, &session->context->errout,
+        GPSD_LOG(LOG_PROG, &session->context->errout,
                  "NMEA0183: PSTI,033: RTK RAW\n");
         break;
     case 35:
@@ -3771,7 +3771,7 @@ static gps_mask_t processPSTI(int count, char *field[],
             // FIXME: report runt
             break;
         }
-        GPSD_LOG(LOG_DATA, &session->context->errout,
+        GPSD_LOG(LOG_PROG, &session->context->errout,
                  "NMEA0183: PSTI,033: RTK Baseline\n");
         break;
     case 36:
@@ -3781,11 +3781,11 @@ static gps_mask_t processPSTI(int count, char *field[],
             // FIXME: report runt
             break;
         }
-        GPSD_LOG(LOG_DATA, &session->context->errout,
+        GPSD_LOG(LOG_PROG, &session->context->errout,
                  "NMEA0183: PSTI,033: RTK RAW\n");
         break;
     default:
-        GPSD_LOG(LOG_DATA, &session->context->errout,
+        GPSD_LOG(LOG_PROG, &session->context->errout,
                  "NMEA0183: PSTI,%s: Unknown type, Count: %d\n",
                  field[1], count);
     }
@@ -3815,7 +3815,7 @@ static gps_mask_t processSTI(int count, char *field[],
                  "NMEA0183: Skytraq: $STI,%s,%s\n", field[1], field[2]);
         return mask;
     }
-    GPSD_LOG(LOG_DATA, &session->context->errout,
+    GPSD_LOG(LOG_PROG, &session->context->errout,
              "NMEA0183: STI,%s: Unknown type, Count: %d\n", field[1], count);
 
     return mask;
