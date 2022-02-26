@@ -1023,6 +1023,10 @@ if not cleaning and not helping:
             ncurseslibs = pkg_config('ncurses', rpath_hack=True)
             if config.CheckPKG('tinfo'):
                 ncurseslibs += pkg_config('tinfo', rpath_hack=True)
+        elif config.CheckPKG('ncursesw'):
+            ncurseslibs = pkg_config('ncursesw', rpath_hack=True)
+            if config.CheckPKG('tinfo'):
+                ncurseslibs += pkg_config('tinfo', rpath_hack=True)
         # It's not yet known whether rpath_hack is appropriate for
         # ncurses5-config.
         elif WhereIs('ncurses5-config'):
