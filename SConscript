@@ -1024,6 +1024,8 @@ if not cleaning and not helping:
             if config.CheckPKG('tinfo'):
                 ncurseslibs += pkg_config('tinfo', rpath_hack=True)
         elif config.CheckPKG('ncursesw'):
+            # One distro in 2022, Void, only ships the ncursesw
+            # part of ncurses.
             ncurseslibs = pkg_config('ncursesw', rpath_hack=True)
             if config.CheckPKG('tinfo'):
                 ncurseslibs += pkg_config('tinfo', rpath_hack=True)
