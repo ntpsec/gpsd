@@ -2968,7 +2968,7 @@ static gps_mask_t processHDT(int c UNUSED, char *field[],
 
     mask |= (ATTITUDE_SET);
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
+    GPSD_LOG(LOG_PROG, &session->context->errout,
              "NMEA0183: $HEHDT heading %lf.\n",
              session->gpsdata.attitude.heading);
     return mask;
@@ -3044,7 +3044,7 @@ static gps_mask_t processTHS(int c UNUSED, char *field[],
         return mask;
     }
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
+    GPSD_LOG(LOG_PROG, &session->context->errout,
              "NMEA0183: $xxTHS heading %lf mode %s\n",
              heading, field[2]);
 
@@ -3635,10 +3635,10 @@ static gps_mask_t processPSTI030(int count, char *field[],
     } else if ('A' == field[3][0]) {
         double east, north, climb;
 
-        /* data valid */
+        // data valid
         if ('\0' != field[2][0] &&
             '\0' != field[12][0]) {
-            /* good date and time */
+            // good date and time
             if (0 == merge_hhmmss(field[2], session) &&
                 0 == merge_ddmmyy(field[12], session)) {
                 mask |= TIME_SET;
@@ -3771,8 +3771,18 @@ static gps_mask_t processPSTI(int count, char *field[],
             // FIXME: report runt
             break;
         }
+        if ('\0' != field[2][0] &&
+            '\0' != field[3][0] &&
+            'A' == field[4][0]) {
+            // good date and time
+            if (0 == merge_hhmmss(field[2], session) &&
+                0 == merge_ddmmyy(field[3], session)) {
+                mask |= TIME_SET;
+                register_fractional_time( "PSTI035", field[2], session);
+            }
+        }
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "NMEA0183: PSTI,033: RTK Baseline\n");
+                 "NMEA0183: PSTI,035: RTK Baseline\n");
         break;
     case 36:
         // Heading, Pitch and Roll Messages of vehicle
@@ -3781,8 +3791,18 @@ static gps_mask_t processPSTI(int count, char *field[],
             // FIXME: report runt
             break;
         }
+        if ('\0' != field[2][0] &&
+            '\0' != field[3][0] &&
+            'N' != field[7][0]) {
+            // good date and time
+            if (0 == merge_hhmmss(field[2], session) &&
+                0 == merge_ddmmyy(field[3], session)) {
+                mask |= TIME_SET;
+                register_fractional_time( "PSTI036", field[2], session);
+            }
+        }
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "NMEA0183: PSTI,033: RTK RAW\n");
+                 "NMEA0183: PSTI,036: RTK RAW\n");
         break;
     default:
         GPSD_LOG(LOG_PROG, &session->context->errout,
