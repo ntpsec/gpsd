@@ -9,7 +9,6 @@ from __future__ import print_function
 
 import ast
 import atexit      # for atexit.register()
-import distutils.util   # for distutils.util.strtobool()
 import functools
 import glob
 import operator
@@ -20,7 +19,10 @@ import re
 import subprocess
 import sys
 import time
-from distutils import sysconfig
+try:
+    from setuptools import sysconfig
+except:
+    from distutils import sysconfig
 import SCons
 
 # scons does not like targets that come and go (if cleaning, if python,
@@ -83,6 +85,16 @@ def polystr(o):
         return str(o)
 
     raise ValueError
+
+
+def strtobool (val):
+    val = val.lower()
+    if val in ('y', 'yes', 't', 'true', 'on', '1'):
+        return True
+    elif val in ('n', 'no', 'f', 'false', 'off', '0'):
+        return False
+    else:
+        raise ValueError("invalid truth value %r" % (val,))
 
 
 # Helper functions for revision hackery
@@ -1324,7 +1336,7 @@ if not cleaning and not helping:
                      end=True)
     else:
         try:
-            config.env['manbuild'] = distutils.util.strtobool(
+            config.env['manbuild'] = strtobool(
                 config.env['manbuild'])
         except ValueError:
             announce("ERROR: manbuild must be no/auto/yes.")
