@@ -3772,8 +3772,7 @@ static gps_mask_t processPSTI(int count, char *field[],
             break;
         }
         if ('\0' != field[2][0] &&
-            '\0' != field[3][0] &&
-            'A' == field[4][0]) {
+            '\0' != field[3][0]) {
             // good date and time
             if (0 == merge_hhmmss(field[2], session) &&
                 0 == merge_ddmmyy(field[3], session)) {
@@ -4088,6 +4087,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
              * Must force this to be nz, as we're going to rely on a zero
              * value to mean "no previous tag" later.
              */
+            // FIXME: this fails on Skytrak, $PSTI,xx, many different xx
             thistag = i + 1;
             break;
         }

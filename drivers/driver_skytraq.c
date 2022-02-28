@@ -126,15 +126,15 @@ static void PRN2_gnssId_svId(short PRN, uint8_t *gnssId, uint8_t *svId)
 static gps_mask_t sky_msg_80(struct gps_device_t *session,
                                   unsigned char *buf, size_t len)
 {
-    unsigned int kver_x;  /* kernel version */
-    unsigned int kver_y;  /* kernel version */
-    unsigned int kver_z;  /* kernel version */
-    unsigned int over_x;  /* ODM version */
-    unsigned int over_y;  /* ODM version */
-    unsigned int over_z;  /* ODM version */
-    unsigned int rev_yy;   /* revision */
-    unsigned int rev_mm;   /* revision */
-    unsigned int rev_dd;   /* revision */
+    unsigned int kver_x;  // kernel version
+    unsigned int kver_y;  // kernel version
+    unsigned int kver_z;  // kernel version
+    unsigned int over_x;  // ODM version
+    unsigned int over_y;  // ODM version
+    unsigned int over_z;  // ODM version
+    unsigned int rev_yy;  // revision
+    unsigned int rev_mm;  // revision
+    unsigned int rev_dd;  // revision
 
     if ( 14 != len)
         return 0;
@@ -150,16 +150,14 @@ static gps_mask_t sky_msg_80(struct gps_device_t *session,
     rev_dd  = getub(buf, 13);
 
     (void)snprintf(session->subtype, sizeof(session->subtype) - 1,
-             "kver=%3u.%2u,%2u, over=%3u.%2u,%2u, rev=%02u.%02u.%02u",
+             "kver %u.%u,%u over %u.%u,%u, rev %02u.%02u.%02u",
             kver_x, kver_y, kver_z,
             over_x, over_y, over_z,
             rev_yy, rev_mm, rev_dd);
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "Skytraq: MID 0x80: kver=%u.%u,%u, over=%u.%u,%u, rev=%u.%u.%u\n",
-            kver_x, kver_y, kver_z,
-            over_x, over_y, over_z,
-            rev_yy, rev_mm, rev_dd);
+             "Skytraq: MID 0x80: %s\n",
+            session->subtype);
     return 0;
 }
 
@@ -171,15 +169,16 @@ static gps_mask_t sky_msg_80(struct gps_device_t *session,
 static gps_mask_t sky_msg_DC(struct gps_device_t *session,
                                   unsigned char *buf, size_t len)
 {
-    unsigned int iod;   /* Issue of data 0 - 255 */
-    unsigned int wn;    /* week number 0 - 65535 */
-    unsigned int tow;   /* receiver tow 0 - 604799999 in mS */
-    unsigned int mp;    /* measurement period 1 - 1000 ms */
+    unsigned int iod;   // Issue of data 0 - 255
+    unsigned int wn;    // week number 0 - 65535
+    unsigned int tow;   // receiver tow 0 - 604799999 in mS
+    unsigned int mp;    // measurement period 1 - 1000 ms
     char ts_buf[TIMESPEC_LEN];
     timespec_t ts_tow;
 
-    if ( 10 != len)
+    if (10 != len) {
         return 0;
+    }
 
     iod = (unsigned int)getub(buf, 1);
     wn = getbeu16(buf, 2);
@@ -187,7 +186,7 @@ static gps_mask_t sky_msg_DC(struct gps_device_t *session,
     mp = getbeu16(buf, 8);
     MSTOTS(&ts_tow, tow);
 
-    /* should this be newdata.skyview_time? */
+    // should this be newdata.skyview_time?
     session->gpsdata.skyview_time = gpsd_gpstime_resolv(session, wn, ts_tow);
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
