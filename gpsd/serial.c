@@ -9,6 +9,9 @@
 #include <dirent.h>                  // for DIR
 #include <errno.h>
 #include <fcntl.h>
+#ifdef HAVE_LINUX_SERIAL_H
+    #include <linux/serial.h>
+#endif
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>                  // for realpath()
@@ -18,6 +21,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <termios.h>
 #include <unistd.h>
 
 #ifdef HAVE_SYS_SYSMACROS_H
@@ -1023,11 +1027,16 @@ ssize_t gpsd_serial_write(struct gps_device_t * session,
 bool gpsd_next_hunt_setting(struct gps_device_t * session)
 {
     struct timespec ts_now, ts_diff;
+#ifdef TIOCGICOUNT
+    // serial input counters
+    struct serial_icounter_struct icount;
+#endif  // TIOCGICOUNT
 
     // don't waste time in the hunt loop if this is not actually a tty
     // FIXME: Check for ttys like /dev/ttyACM that have no speed.
-    if (0 >= gpsd_serial_isatty(session))
+    if (0 >= gpsd_serial_isatty(session)) {
         return false;
+    }
 
     // ...or if it's nominally a tty but delivers only PPS and no data
     if (SOURCE_PPS == session->sourcetype) {
@@ -1042,6 +1051,25 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
              session->gpsdata.gps_fd,
              session->lexer.retry_counter,
              (long long)ts_diff.tv_sec);
+#ifdef TIOCGICOUNT
+    // check input counts
+    if (LOG_INF > session->context->errout.debug) {
+        // do nothing
+    } else if (-1 == ioctl(session->gpsdata.gps_fd,
+                           (unsigned long)TIOCGICOUNT, &icount)) {
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "SER: ioctl(%d, TIOCGICOUNT) failed: %s(%d)\n",
+                 session->gpsdata.gps_fd, strerror(errno), errno);
+    } else {
+        GPSD_LOG(LOG_INF, &session->context->errout,
+                 "SER: ioctl(%d, TIOCGICOUNT) rx %d tx %d frame %d overrun %d "
+                 "parity %d brk %d buf_overrun %d\n",
+                 session->gpsdata.gps_fd, icount.rx, icount.tx, icount.frame,
+                 icount.overrun, icount.parity, icount.brk,
+                 icount.buf_overrun);
+    }
+#endif  // TIOCGICOUNT
+
     if (SNIFF_RETRIES <= session->lexer.retry_counter++ ||
         3 < ts_diff.tv_sec) {
         // no lock after 3 seconds or SNIFF_RETRIES

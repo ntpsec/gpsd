@@ -1209,6 +1209,7 @@ if not cleaning and not helping:
             config.env["rtcm104v2"] = False
 
     for hdr in ("arpa/inet",
+                "linux/serial",    # for serial_icounter_struct
                 "netdb",
                 "netinet/in",
                 "netinet/ip",
