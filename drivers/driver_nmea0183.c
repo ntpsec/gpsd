@@ -3700,8 +3700,9 @@ static gps_mask_t processPSTI(int count, char *field[],
     gps_mask_t mask = ONLINE_SET;
     int type = atoi(field[1]);
 
-    if ( 0 != strncmp(session->subtype, "Skytraq", 7) ) {
+    if ( 0 != strncmp(session->subtype, "kver ", 5) ) {
         // this is skytraq, but not marked yet, so probe for Skytraq
+        // Send MID 0x02, to get back MID 0x80
         (void)gpsd_write(session, "\xA0\xA1\x00\x02\x02\x01\x03\x0d\x0a",9);
     }
 
@@ -3823,8 +3824,9 @@ static gps_mask_t processSTI(int count, char *field[],
 {
     gps_mask_t mask = ONLINE_SET;
 
-    if ( 0 != strncmp(session->subtype, "Skytraq", 7) ) {
-        /* this is skytraq, but marked yet, so probe for Skytraq */
+    if ( 0 != strncmp(session->subtype, "kver ", 5) ) {
+        // this is skytraq, but marked yet, so probe for Skytraq
+        // Send MID 0x02, to get back MID 0x80
         (void)gpsd_write(session, "\xA0\xA1\x00\x02\x02\x01\x03\x0d\x0a",9);
     }
 
