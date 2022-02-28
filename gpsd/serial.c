@@ -1055,11 +1055,17 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
     // check input counts
     if (LOG_INF > session->context->errout.debug) {
         // do nothing
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "SER: ioctl(%d, TIOCGICOUNT) FUCK\n",
+                 session->gpsdata.gps_fd);
     } else if (-1 == ioctl(session->gpsdata.gps_fd,
                            (unsigned long)TIOCGICOUNT, &icount)) {
-        GPSD_LOG(LOG_ERROR, &session->context->errout,
-                 "SER: ioctl(%d, TIOCGICOUNT) failed: %s(%d)\n",
-                 session->gpsdata.gps_fd, strerror(errno), errno);
+        // some tty-like devices do not implment TIOCGICOUNT
+        if (errno != ENOTTY) {
+            GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "SER: ioctl(%d, TIOCGICOUNT) failed: %s(%d)\n",
+                     session->gpsdata.gps_fd, strerror(errno), errno);
+        }
     } else {
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "SER: ioctl(%d, TIOCGICOUNT) rx %d tx %d frame %d overrun %d "
