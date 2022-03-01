@@ -1051,30 +1051,6 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
              session->gpsdata.gps_fd,
              session->lexer.retry_counter,
              (long long)ts_diff.tv_sec);
-#ifdef TIOCGICOUNT
-    // check input counts
-    if (LOG_INF > session->context->errout.debug) {
-        // do nothing
-        GPSD_LOG(LOG_ERROR, &session->context->errout,
-                 "SER: ioctl(%d, TIOCGICOUNT) FUCK\n",
-                 session->gpsdata.gps_fd);
-    } else if (-1 == ioctl(session->gpsdata.gps_fd,
-                           (unsigned long)TIOCGICOUNT, &icount)) {
-        // some tty-like devices do not implment TIOCGICOUNT
-        if (errno != ENOTTY) {
-            GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "SER: ioctl(%d, TIOCGICOUNT) failed: %s(%d)\n",
-                     session->gpsdata.gps_fd, strerror(errno), errno);
-        }
-    } else {
-        GPSD_LOG(LOG_INF, &session->context->errout,
-                 "SER: ioctl(%d, TIOCGICOUNT) rx %d tx %d frame %d overrun %d "
-                 "parity %d brk %d buf_overrun %d\n",
-                 session->gpsdata.gps_fd, icount.rx, icount.tx, icount.frame,
-                 icount.overrun, icount.parity, icount.brk,
-                 icount.buf_overrun);
-    }
-#endif  // TIOCGICOUNT
 
     if (SNIFF_RETRIES <= session->lexer.retry_counter++ ||
         3 < ts_diff.tv_sec) {
@@ -1088,6 +1064,30 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
             {0, 4800, 9600, 19200, 38400, 57600, 115200, 230400,
              460800, 921600};
 
+#ifdef TIOCGICOUNT
+        // check input counts
+        if (LOG_INF > session->context->errout.debug) {
+            // do nothing
+            GPSD_LOG(LOG_ERROR, &session->context->errout,
+                     "SER: ioctl(%d, TIOCGICOUNT) FUCK\n",
+                     session->gpsdata.gps_fd);
+        } else if (-1 == ioctl(session->gpsdata.gps_fd,
+                               (unsigned long)TIOCGICOUNT, &icount)) {
+            // some tty-like devices do not implment TIOCGICOUNT
+            if (errno != ENOTTY) {
+                GPSD_LOG(LOG_ERROR, &session->context->errout,
+                         "SER: ioctl(%d, TIOCGICOUNT) failed: %s(%d)\n",
+                         session->gpsdata.gps_fd, strerror(errno), errno);
+            }
+        } else {
+            GPSD_LOG(LOG_INF, &session->context->errout,
+                     "SER: ioctl(%d, TIOCGICOUNT) rx %d tx %d frame %d "
+                     "overrun %d parity %d brk %d buf_overrun %d\n",
+                     session->gpsdata.gps_fd, icount.rx, icount.tx,
+                     icount.frame, icount.overrun, icount.parity, icount.brk,
+                     icount.buf_overrun);
+        }
+#endif  // TIOCGICOUNT
         if (0 < session->context->fixed_port_speed) {
             //  fixed speed, don't hunt
             //  this prevents framing hunt?
