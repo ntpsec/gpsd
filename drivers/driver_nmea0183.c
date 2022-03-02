@@ -3588,13 +3588,13 @@ static gps_mask_t processMTK3301(int c UNUSED, char *field[],
     default:
         GPSD_LOG(LOG_PROG, &session->context->errout,
              "NMEA0183: MTK: unknown msg: %d\n", msg);
-        return ONLINE_SET;              /* ignore */
+        return ONLINE_SET;              // ignore
     }
 }
 
-/*  Recommended Minimum 3D GNSS Data */
+//  Recommended Minimum 3D GNSS Data
 static gps_mask_t processPSTI030(int count, char *field[],
-                                struct gps_device_t *session)
+                                 struct gps_device_t *session)
 {
     /*
      * $PSTI,030,hhmmss.sss,A,dddmm.mmmmmmm,a,dddmm.mmmmmmm,a,x.x,
@@ -3685,6 +3685,137 @@ static gps_mask_t processPSTI030(int count, char *field[],
     return mask;
 }
 
+// Skytraq RTK Baseline
+// PX1172RH
+static gps_mask_t processPSTI035(int count, char *field[],
+                                 struct gps_device_t *session)
+{
+    /*
+     * $PSTI,035,041457.000,170316,A,R,0.603,‐0.837,‐0.089,1.036,144.22,,,,,*1B
+     *
+     * 2  UTC time,  hhmmss.sss
+     * 3  UTC Date, ddmmyy
+     * 4  Status, ‘V’ = Void ‘A’ = Active
+     * 5  Mode indicator, ‘F’ = Float RTK. ‘R’ = FIxed RTK
+     * 6  East‐projection of baseline, meters
+     * 7  North‐projection of baseline, meters
+     * 8  Up‐projection of baseline, meters
+     * 9  Baseline length, meters
+     * 10 Baseline course 144.22, true degrees
+     * 11 Reserved
+     * 12 Reserved
+     * 13 Reserved
+     * 14 Reserved
+     * 15 Reserved
+     * 16 Checksum
+     */
+
+    gps_mask_t mask = ONLINE_SET;
+    int base_mode;
+    double base_E, base_N, base_U, base_len, base_crs;
+
+    // RTK Baseline Data of Rover Moving Base Receiver
+    if (16 != count) {
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "NMEA0183: PSTI,035: runt count %d\n", count);
+        return 0;
+    }
+    if ('\0' != field[2][0] &&
+        '\0' != field[3][0]) {
+        // good date and time
+        if (0 == merge_hhmmss(field[2], session) &&
+            0 == merge_ddmmyy(field[3], session)) {
+            mask |= TIME_SET;
+            register_fractional_time( "PSTI035", field[2], session);
+        }
+    }
+    if ('A' != field[4][0]) {
+        // No valid data, except time, sort of
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "NMEA0183: PSTI,035: not valid\n");
+        return mask;
+    }
+    if ('F' != field[5][0]) {
+        // Float RTX
+        base_mode = STATUS_RTK_FLT;
+    } else {
+        base_mode = STATUS_RTK_FIX;
+    }
+    base_E = safe_atof(field[6]);
+    base_N = safe_atof(field[7]);
+    base_U = safe_atof(field[8]);
+    base_len = safe_atof(field[9]);
+    base_crs = safe_atof(field[10]);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NMEA0183: PSTI,035: RTK Baseline mode %d E %.3f  N %.3f  U %.3f "
+             "lenght %.3f  course %.3f \n",
+             base_mode, base_E, base_N, base_U, base_len, base_crs);
+    return mask;
+}
+
+// Skytraq PSTI,036 – Heading, Pitch and Roll
+// PX1172RH
+static gps_mask_t processPSTI036(int count, char *field[],
+                                 struct gps_device_t *session)
+{
+    /*
+     * $PSTI,036,054314.000,030521,191.69,‐16.35,0.00,R*4D
+     *
+     * 2  UTC time,  hhmmss.sss
+     * 3  UTC Date, ddmmyy
+     * 4  Heading, 0 - 359.9, when mode == R, degrees
+     * 5  Pitch, -90 - 90, when mode == R, degrees
+     * 6  Roll, -90 - 90, when mode == R, degrees
+     * 7  Mode
+     *     'N’ = Data not valid
+     *     'A’ = Autonomous mode
+     *     'D’ = Differential mode
+     *     'E’ = Estimated (dead reckoning) mode
+     *     'M’ = Manual input mode
+     *     'S’ = Simulator mode
+     *     'F’ = Float RTK
+     *     'R’ = Fix RTK
+     * 8  Checksum
+     */
+
+    gps_mask_t mask = ONLINE_SET;
+    int mode;
+    double heading, pitch, roll;
+
+    if (8 != count) {
+        // FIXME: report runt
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "NMEA0183: PSTI,036: runt count %d\n", count);
+        return 0;
+    }
+    if ('\0' != field[2][0] &&
+        '\0' != field[3][0]) {
+        // good date and time
+        if (0 == merge_hhmmss(field[2], session) &&
+            0 == merge_ddmmyy(field[3], session)) {
+            mask |= TIME_SET;
+            register_fractional_time( "PSTI036", field[2], session);
+        }
+    }
+    if ('\0' == field[7][0] ||
+        'N' == field[7][0]) {
+        // No valid data, except time, sort of
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "NMEA0183: PSTI,035: not valid\n");
+        return mask;
+    }
+    heading = safe_atof(field[4]);
+    pitch = safe_atof(field[5]);
+    roll = safe_atof(field[6]);
+    mode = faa_mode(field[7][0]);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NMEA0183: PSTI,036: mode %d heading %.2f  pitch %.2f roll %.2f\n",
+             mode, heading, pitch, roll);
+    return mask;
+}
+
 /*
  * Skytraq sentences take this format:
  * $PSTI,type[,val[,val]]*CS
@@ -3700,7 +3831,7 @@ static gps_mask_t processPSTI(int count, char *field[],
     gps_mask_t mask = ONLINE_SET;
     int type = atoi(field[1]);
 
-    if ( 0 != strncmp(session->subtype, "kver ", 5) ) {
+    if (0 != strncmp(session->subtype, "kver ", 5)) {
         // this is skytraq, but not marked yet, so probe for Skytraq
         // Send MID 0x02, to get back MID 0x80
         (void)gpsd_write(session, "\xA0\xA1\x00\x02\x02\x01\x03\x0d\x0a",9);
@@ -3767,42 +3898,12 @@ static gps_mask_t processPSTI(int count, char *field[],
         break;
     case 35:
         // RTK Baseline Data of Rover Moving Base Receiver
-        // PX1172RH
-        if (16 != count) {
-            // FIXME: report runt
-            break;
-        }
-        if ('\0' != field[2][0] &&
-            '\0' != field[3][0]) {
-            // good date and time
-            if (0 == merge_hhmmss(field[2], session) &&
-                0 == merge_ddmmyy(field[3], session)) {
-                mask |= TIME_SET;
-                register_fractional_time( "PSTI035", field[2], session);
-            }
-        }
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "NMEA0183: PSTI,035: RTK Baseline\n");
+        mask =  processPSTI035(count, field, session);
         break;
     case 36:
         // Heading, Pitch and Roll Messages of vehicle
         // PX1172RH
-        if (8 != count) {
-            // FIXME: report runt
-            break;
-        }
-        if ('\0' != field[2][0] &&
-            '\0' != field[3][0] &&
-            'N' != field[7][0]) {
-            // good date and time
-            if (0 == merge_hhmmss(field[2], session) &&
-                0 == merge_ddmmyy(field[3], session)) {
-                mask |= TIME_SET;
-                register_fractional_time( "PSTI036", field[2], session);
-            }
-        }
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "NMEA0183: PSTI,036: RTK RAW\n");
+        mask =  processPSTI036(count, field, session);
         break;
     default:
         GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -3824,7 +3925,7 @@ static gps_mask_t processSTI(int count, char *field[],
 {
     gps_mask_t mask = ONLINE_SET;
 
-    if ( 0 != strncmp(session->subtype, "kver ", 5) ) {
+    if (0 != strncmp(session->subtype, "kver ", 5)) {
         // this is skytraq, but marked yet, so probe for Skytraq
         // Send MID 0x02, to get back MID 0x80
         (void)gpsd_write(session, "\xA0\xA1\x00\x02\x02\x01\x03\x0d\x0a",9);
