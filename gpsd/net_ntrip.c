@@ -807,7 +807,7 @@ static int ntrip_reconnect(struct gps_device_t *device)
 #else  // no SOCK_NONBLOCK
     GPSD_LOG(LOG_PROG, &device->context->errout,
              "NTRIP: ntrip_reconnect(%s) no SOCK_NONBLOCK, can't reconnect.\n",
-             device->gpsdata.dev.path, addrbuf, dsock);
+             device->gpsdata.dev.path);
     device->gpsdata.gps_fd = -1;
 #endif  // no SOCK_NONBLOCK
     return device->gpsdata.gps_fd;
