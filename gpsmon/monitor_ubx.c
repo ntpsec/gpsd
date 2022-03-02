@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include <math.h>
-#include <stdlib.h> /* for labs() */
+#include <stdlib.h>           // for labs()
+#include <string.h>           // for memset()
 #include <time.h>
 
 #include "../include/gpsd.h"
@@ -24,9 +25,10 @@ static bool ubx_initialize(void)
 {
     int i;
 
-    /* "heavily inspired" by monitor_nmea.c */
-    if ((satwin = derwin(devicewin, 19, 28, 0, 0)) == NULL)
+    // "heavily inspired" by monitor_nmea.c
+    if (NULL == (satwin = derwin(devicewin, 19, 28, 0, 0))) {
         return false;
+    }
     (void)wborder(satwin, 0, 0, 0, 0, 0, 0, 0, 0), (void)syncok(satwin, true);
     (void)wattrset(satwin, A_BOLD);
     display(satwin, 1, 1, "Ch PRN  Az  El S/N Flag U");
@@ -35,9 +37,10 @@ static bool ubx_initialize(void)
     display(satwin, 18, 7, " NAV_SVINFO ");
     (void)wattrset(satwin, A_NORMAL);
 
-    /* "heavily inspired" by monitor_nmea.c */
-    if ((navsolwin = derwin(devicewin, 13, 51, 0, 28)) == NULL)
+    // "heavily inspired" by monitor_nmea.c
+    if (NULL == (navsolwin = derwin(devicewin, 13, 51, 0, 28))) {
         return false;
+    }
     (void)wborder(navsolwin, 0, 0, 0, 0, 0, 0, 0, 0),
         (void)wattrset(navsolwin, A_BOLD);
     (void)wmove(navsolwin, 1, 1);
@@ -63,8 +66,9 @@ static bool ubx_initialize(void)
     display(navsolwin, 12, 20, " NAV_SOL ");
     (void)wattrset(navsolwin, A_NORMAL);
 
-    if ((dopwin = derwin(devicewin, 3, 51, 13, 28)) == NULL)
+    if (NULL == (dopwin = derwin(devicewin, 3, 51, 13, 28))) {
         return false;
+    }
     (void)wborder(dopwin, 0, 0, 0, 0, 0, 0, 0, 0);
     (void)wattrset(dopwin, A_BOLD);
     (void)wmove(dopwin, 1, 1);
@@ -72,8 +76,9 @@ static bool ubx_initialize(void)
     display(dopwin, 2, 20, " NAV_DOP ");
     (void)wattrset(dopwin, A_NORMAL);
 
-    if ((ppswin = derwin(devicewin, 3, 51, 16, 28)) == NULL)
+    if (NULL == (ppswin = derwin(devicewin, 3, 51, 16, 28))) {
         return false;
+    }
     (void)wborder(ppswin, 0, 0, 0, 0, 0, 0, 0, 0);
     (void)syncok(ppswin, true);
     (void)wattrset(ppswin, A_BOLD);
