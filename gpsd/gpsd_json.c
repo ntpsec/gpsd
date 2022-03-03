@@ -4455,7 +4455,7 @@ void json_att_dump(const struct gps_data_t *gpsdata,
         char tbuf[JSON_DATE_MAX+1];
 
         str_appendf(reply, replylen, ",\"time\":\"%s\"",
-                       timespec_to_iso8601(att->mtime, tbuf, sizeof(tbuf)));
+                    timespec_to_iso8601(att->mtime, tbuf, sizeof(tbuf)));
     }
     if ('\0' != att->msg[0]) {
         str_appendf(reply, replylen, ",\"msg\":\"%.15s\"", att->msg);
@@ -4601,7 +4601,7 @@ void json_data_report(const gps_mask_t changed,
         max_imu = sizeof(datap->imu) / sizeof(struct attitude_t);
         for (cur_imu = 0; cur_imu < max_imu; cur_imu++ ) {
             if ('\0' == datap->imu[cur_imu].msg[0]) {
-               break;
+                break;
             }
             json_att_dump(datap, buf+strlen(buf), buflen-strlen(buf),
                           &datap->imu[cur_imu], "IMU");

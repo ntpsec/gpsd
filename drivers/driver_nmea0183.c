@@ -238,11 +238,13 @@ static int merge_ddmmyy(char *ddmmyy, struct gps_device_t *session)
         year -= 100;
     }
 
-    if ( (1 > mon ) || (12 < mon ) ) {
+    if ((1 > mon) ||
+        (12 < mon)) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NMEA0183: merge_ddmmyy(%s), malformed month\n",  ddmmyy);
         return 4;
-    } else if ( (1 > mday ) || (31 < mday ) ) {
+    } else if ((1 > mday) ||
+               (31 < mday)) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NMEA0183: merge_ddmmyy(%s), malformed day\n",  ddmmyy);
         return 5;
@@ -288,8 +290,9 @@ static int decode_hhmmss(struct tm *date, long *nsec, char *hhmmss,
     // don't check for termination, might have fractional seconds
 
     date->tm_hour = DD(hhmmss);
-    if (date->tm_hour < old_hour)  // midnight wrap
+    if (date->tm_hour < old_hour) {  // midnight wrap
         date->tm_mday++;
+    }
     date->tm_min = DD(hhmmss + 2);
     date->tm_sec = DD(hhmmss + 4);
 
@@ -740,11 +743,11 @@ static gps_mask_t processGLL(int count, char *field[],
     if (field[5][0] != '\0') {
         if (0 == merge_hhmmss(field[5], session)) {
             register_fractional_time(field[0], field[5], session);
-            if (session->nmea.date.tm_year == 0)
+            if (0 == session->nmea.date.tm_year) {
                 GPSD_LOG(LOG_WARN, &session->context->errout,
                          "NMEA0183: can't use GLL time until after ZDA or RMC"
                          " has supplied a year.\n");
-            else {
+            } else {
                 mask = TIME_SET;
             }
         }
@@ -848,7 +851,7 @@ static gps_mask_t processGNS(int count UNUSED, char *field[],
     if (field[1][0] != '\0') {
         if (0 == merge_hhmmss(field[1], session)) {
             register_fractional_time(field[0], field[1], session);
-            if (session->nmea.date.tm_year == 0) {
+            if (0 == session->nmea.date.tm_year) {
                 GPSD_LOG(LOG_WARN, &session->context->errout,
                          "NMEA0183: can't use GNS time until after ZDA or RMC"
                          " has supplied a year.\n");
@@ -1080,11 +1083,11 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
                  "NMEA0183: GGA time missing.\n");
     } else if (0 == merge_hhmmss(field[1], session)) {
         register_fractional_time(field[0], field[1], session);
-        if (session->nmea.date.tm_year == 0)
+        if (0 == session->nmea.date.tm_year) {
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "NMEA0183: can't use GGA time until after ZDA or RMC"
                      " has supplied a year.\n");
-        else {
+        } else {
             mask |= TIME_SET;
         }
     }
@@ -2611,7 +2614,7 @@ static gps_mask_t processPSRFEPE(int c UNUSED, char *field[],
     if ('\0' != field[1][0]) {
         if (0 == merge_hhmmss(field[1], session)) {
             register_fractional_time(field[0], field[1], session);
-            if (session->nmea.date.tm_year == 0) {
+            if (0 == session->nmea.date.tm_year) {
                 GPSD_LOG(LOG_WARN, &session->context->errout,
                          "NMEA0183: can't use PSRFEPE time until after ZDA "
                          "or RMC has supplied a year.\n");
@@ -2762,9 +2765,9 @@ static gps_mask_t processGBS(int c UNUSED, char *field[],
     register_fractional_time(field[0], field[1], session);
 
     /* check that we're associated with the current fix */
-    if (session->nmea.date.tm_hour == DD(field[1])
-        && session->nmea.date.tm_min == DD(field[1] + 2)
-        && session->nmea.date.tm_sec == DD(field[1] + 4)) {
+    if (session->nmea.date.tm_hour == DD(field[1]) &&
+        session->nmea.date.tm_min == DD(field[1] + 2) &&
+        session->nmea.date.tm_sec == DD(field[1] + 4)) {
         session->newdata.epy = safe_atof(field[2]);
         session->newdata.epx = safe_atof(field[3]);
         session->newdata.epv = safe_atof(field[4]);
@@ -3781,7 +3784,6 @@ static gps_mask_t processPSTI036(int count, char *field[],
 
     gps_mask_t mask = ONLINE_SET;
     int mode;
-    double heading, pitch, roll;
 
     if (8 != count) {
         // FIXME: report runt
@@ -3795,24 +3797,31 @@ static gps_mask_t processPSTI036(int count, char *field[],
         if (0 == merge_hhmmss(field[2], session) &&
             0 == merge_ddmmyy(field[3], session)) {
             mask |= TIME_SET;
-            register_fractional_time( "PSTI036", field[2], session);
+            register_fractional_time("PSTI036", field[2], session);
         }
     }
     if ('\0' == field[7][0] ||
-        'N' == field[7][0]) {
+        'R' != field[7][0]) {
         // No valid data, except time, sort of
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "NMEA0183: PSTI,035: not valid\n");
         return mask;
     }
-    heading = safe_atof(field[4]);
-    pitch = safe_atof(field[5]);
-    roll = safe_atof(field[6]);
+    // good attitude data to use
+    session->gpsdata.attitude.mtime = gpsd_utc_resolve(session);
+    session->gpsdata.attitude.heading = safe_atof(field[4]);
+    session->gpsdata.attitude.pitch = safe_atof(field[5]);
+    session->gpsdata.attitude.roll = safe_atof(field[6]);
     mode = faa_mode(field[7][0]);
+
+    mask |= ATTITUDE_SET;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "NMEA0183: PSTI,036: mode %d heading %.2f  pitch %.2f roll %.2f\n",
-             mode, heading, pitch, roll);
+             mode,
+             session->gpsdata.attitude.heading,
+             session->gpsdata.attitude.pitch,
+             session->gpsdata.attitude.roll);
     return mask;
 }
 
@@ -3831,7 +3840,7 @@ static gps_mask_t processPSTI(int count, char *field[],
     gps_mask_t mask = ONLINE_SET;
     int type = atoi(field[1]);
 
-    if (0 != strncmp(session->subtype, "kver ", 5)) {
+    if (0 != strncmp(session->device_type->type_name, "Skytraq", 7)) {
         // this is skytraq, but not marked yet, so probe for Skytraq
         // Send MID 0x02, to get back MID 0x80
         (void)gpsd_write(session, "\xA0\xA1\x00\x02\x02\x01\x03\x0d\x0a",9);
@@ -3925,7 +3934,7 @@ static gps_mask_t processSTI(int count, char *field[],
 {
     gps_mask_t mask = ONLINE_SET;
 
-    if (0 != strncmp(session->subtype, "kver ", 5)) {
+    if (0 != strncmp(session->device_type->type_name, "Skytraq", 7)) {
         // this is skytraq, but marked yet, so probe for Skytraq
         // Send MID 0x02, to get back MID 0x80
         (void)gpsd_write(session, "\xA0\xA1\x00\x02\x02\x01\x03\x0d\x0a",9);
@@ -4203,7 +4212,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         session->nmea.last_gsa_talker = '\0';
 
     /* timestamp recording for fixes happens here */
-    if ((mask & TIME_SET) != 0) {
+    if (0 != (mask & TIME_SET)) {
         if (0 == session->nmea.date.tm_year &&
             0 == session->nmea.date.tm_mday) {
             // special case to time zero

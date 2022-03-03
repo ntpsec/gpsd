@@ -1724,6 +1724,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
              * previous mode switch to binary succeeded in suppressing
              * NMEA).
              */
+            // QQQ: use STICKY() instead?
             bool dependent_nmea = (NMEA_PACKET == newtype &&
                                NULL != session->device_type->mode_switcher);
 

@@ -52,9 +52,12 @@ static unsigned char versionprobe[] = {
     0x01,               // System
     0x00, 0x0d, 0x0a
 };
+#endif  // __UNUSED
 
-// cppcheck-suppress unusedFunction
-static bool sky_write(struct gps_device_t *session, unsigned char *msg)
+// not used by gpsd, it's for gpsctl and friends
+// not well tested
+static ssize_t sky_write(struct gps_device_t *session, char *msg,
+                         size_t data_len UNUSED)
 {
     unsigned crc;
     size_t i, len;
@@ -79,7 +82,18 @@ static bool sky_write(struct gps_device_t *session, unsigned char *msg)
 
     return (ok);
 }
-#endif  // __UNUSED
+
+/* stub for mode changer, someday
+ * need it to make driver sticky
+ */
+static void sky_mode(struct gps_device_t *session UNUSED, int mode)
+{
+    if (MODE_BINARY == mode) {
+    } else {
+        // MODE_NMEA
+    }
+    return;
+}
 
 /*
  * Convert PRN to gnssid and svid
@@ -161,7 +175,7 @@ static gps_mask_t sky_msg_80(struct gps_device_t *session,
     rev_dd  = getub(buf, 13);
 
     (void)snprintf(session->subtype, sizeof(session->subtype) - 1,
-                   "kver %u.%u,%u over %u.%u,%u, rev %02u.%02u.%02u",
+                   "kver %u.%u.%u over %u.%u.%u rev %02u.%02u.%02u",
                    kver_x, kver_y, kver_z,
                    over_x, over_y, over_z,
                    rev_yy, rev_mm, rev_dd);
@@ -717,17 +731,19 @@ static gps_mask_t skybin_parse_input(struct gps_device_t *session)
 // *INDENT-OFF*
 const struct gps_type_t driver_skytraq =
 {
-    .type_name      = "Skytraq",             // full name of type
-    .packet_type    = SKY_PACKET,            // associated lexer packet type
-    .flags          = DRIVER_STICKY,         // remember this
-    .trigger        = NULL,                  // no trigger
-    .channels       =  SKY_CHANNELS,         // consumer-grade GPS
-    .probe_detect   = NULL,                  // no probe
-    .get_packet     = generic_get,           // be prepared for Skytraq or NMEA
-    .parse_packet   = skybin_parse_input,    // parse message packets
-    .rtcm_writer    = gpsd_write,            // send RTCM data straight
-    .init_query     = NULL,                  // non-perturbing initial qury
+    .channels       = SKY_CHANNELS,          // consumer-grade GPS
+    .control_send   = sky_write,             // how to send a control string
     .event_hook     = NULL,                  // lifetime event handler
+    .flags          = DRIVER_STICKY,         // remember this
+    .get_packet     = generic_get,           // be prepared for Skytraq or NMEA
+    .init_query     = NULL,                  // non-perturbing initial qury
+    .mode_switcher  = sky_mode,              // Mode switcher
+    .packet_type    = SKY_PACKET,            // associated lexer packet type
+    .parse_packet   = skybin_parse_input,    // parse message packets
+    .probe_detect   = NULL,                  // no probe
+    .rtcm_writer    = gpsd_write,            // send RTCM data straight
+    .trigger        = NULL,                  // no trigger
+    .type_name      = "Skytraq",             // full name of type
 };
 // *INDENT-ON*
 #endif  // defined SKYTRAQ_ENABLE) && defined(BINARY_ENABLE)
