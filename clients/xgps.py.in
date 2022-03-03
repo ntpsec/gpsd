@@ -679,15 +679,15 @@ class IMUView(object):
         ("Gyro y", "gyro_y"),
         ("Gyro z", "gyro_z"),
         # third column
-        ("", "YY"),
-        ("Mag x", "mag_x"),
-        ("Mag y", "mag_y"),
-        ("Mag z", "mag_z"),
-        # fourth column
-        ("time", "time"),
+        ("Heading", "heading"),
         ("Pitch", "pitch"),
         ("Roll", "roll"),
         ("Yaw", "yaw"),
+        # fourth column
+        ("time", "time"),
+        ("Mag x", "mag_x"),
+        ("Mag y", "mag_y"),
+        ("Mag z", "mag_z"),
     )
 
     def __init__(self):
@@ -719,6 +719,8 @@ class IMUView(object):
         for (attrname, widget) in self.imuwidgets:
             if hasattr(msg, attrname):
                 s = str(getattr(msg, attrname))
+            elif 'time' == attrname:
+                s = "                    n/a "
             else:
                 s = " n/a "
             widget.set_markup(markup % s)

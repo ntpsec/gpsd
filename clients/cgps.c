@@ -365,6 +365,8 @@ static void windowsetup(void)
         (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Mag X:");
         (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Mag Y:");
         (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Mag Z:");
+        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "True Heading:");
+        (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg");
         (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Yaw:");
         (void)mvwaddstr(datawin, row++, IMU_WIDTH - 8, "deg");
         (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Pitch:");
@@ -487,14 +489,14 @@ static void windowsetup(void)
 
 #define LINE(val)                                           \
     if (0 != isfinite(val)) {                               \
-        (void)mvwprintw(datawin, row, col, "% 8.4f", val);  \
+        (void)mvwprintw(datawin, row, col, "% 9.4f", val);  \
     }                                                       \
     row++;
 
 static void update_imu(struct attitude_t *datap, int col)
 {
     int row = 1;
-    int col_width = 10;
+    int col_width = 14;
 
     (void)mvwprintw(datawin, row++, col, "%-*s", col_width, datap->msg);
     // Print time/date.
@@ -527,6 +529,7 @@ static void update_imu(struct attitude_t *datap, int col)
     LINE(datap->mag_y);
     LINE(datap->mag_z);
 
+    LINE(datap->heading);
     LINE(datap->yaw);
     LINE(datap->pitch);
     LINE(datap->roll);
@@ -544,7 +547,7 @@ static void update_imu_panel(struct gps_data_t *gpsdata,
         if ('\0' == datap->msg[0]) {
             strlcpy(datap->msg, "  ATT", sizeof(datap->msg));
         }
-        update_imu(datap, 12);
+        update_imu(datap, 16);
         update = 1;
     }
 
