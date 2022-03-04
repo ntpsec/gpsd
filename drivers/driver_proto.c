@@ -25,12 +25,20 @@
  * If using vi, ":%s/_PROTO_/MYDRIVER/g" and ":%s/_proto_/mydriver/g"
  * should produce a source file that comes very close to being useful.
  * You will also need to add hooks for your new driver to:
- * SConstruct
+ * SConscript
+ *   in: boolopts = (
+ *   in: libgpsd_sources = [
  * drivers.c
- * gpsd.h-tail
- * libgpsd_core.c
+ *   beneath: 'const struct gps_type_t driver_pps = {'
+ *   in: static const struct gps_type_t *gpsd_driver_array[] = {
+ * gpsd.h
+ *   in: struct gps_lexer_t {
+ * libgpsd_core.c ????
  * packet.c
+ *   in: static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
+ *   in: void packet_parse(struct gps_lexer_t *lexer)
  * packet_states.h
+ *  above: closing #endif
  *
  * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
