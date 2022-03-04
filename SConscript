@@ -401,7 +401,7 @@ nonboolopts = (
     ("manbuild",         "auto",
      "build help in man and HTML formats.  No/Auto/Yes."),
     ("max_clients",      '64',          "maximum allowed clients"),
-    ("max_devices",      '4',           "maximum allowed devices"),
+    ("max_devices",      '6',           "maximum allowed devices"),
     ("prefix",           "/usr/local",  "installation directory prefix"),
     ("python_coverage",  "coverage run", "coverage command for Python progs"),
     ("python_libdir",    "",            "Python module directory prefix"),
