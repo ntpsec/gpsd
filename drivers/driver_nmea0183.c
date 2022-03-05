@@ -3498,104 +3498,108 @@ static gps_mask_t processMWV(int c UNUSED, char *field[],
     return mask;
 }
 
-static gps_mask_t processMTK3301(int c UNUSED, char *field[],
-                               struct gps_device_t *session)
+static gps_mask_t processPMTK001(int c UNUSED, char *field[],
+                                 struct gps_device_t *session)
 {
-    int msg, reason;
+    int reason;
 
-    msg = atoi(&(session->nmea.field[0])[4]);
-    switch (msg) {
-    case 001:                   // ACK / NACK
-        reason = atoi(field[2]);
-        if (-1 == atoi(field[1])) {
-            GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "NMEA0183: MTK NACK: unknown sentence\n");
-        } else if (3 > reason) {
-            const char *mtk_reasons[] = {
-                "Invalid",
-                "Unsupported",
-                "Valid but Failed",
-                "Valid success"
-            };
-            GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "NMEA0183: MTK NACK: %s, reason: %s\n",
-                     field[1], mtk_reasons[reason]);
-        } else {
-            GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "NMEA0183: MTK ACK: %s\n", field[1]);
-        }
-        return ONLINE_SET;
-    case 424:                   // PPS pulse width response
-        /*
-         * Response will look something like: $PMTK424,0,0,1,0,69*12
-         * The pulse width is in field 5 (69 in this example).  This
-         * sentence is poorly documented at:
-         * http://www.trimble.com/embeddedsystems/condor-gps-module.aspx?dtID=documentation
-         *
-         * Packet Type: 324 PMTK_API_SET_OUTPUT_CTL
-         * Packet meaning
-         * Write the TSIP/antenna/PPS configuration data to the Flash memory.
-         * DataField [Data0]:TSIP Packet[on/off]
-         * 0 - Disable TSIP output (Default).
-         * 1 - Enable TSIP output.
-         * [Data1]:Antenna Detect[on/off]
-         * 0 - Disable antenna detect function (Default).
-         * 1 - Enable antenna detect function.
-         * [Data2]:PPS on/off
-         * 0 - Disable PPS function.
-         * 1 - Enable PPS function (Default).
-         * [Data3]:PPS output timing
-         * 0 - Always output PPS (Default).
-         * 1 - Only output PPS when GPS position is fixed.
-         * [Data4]:PPS pulse width
-         * 1~16367999: 61 ns~(61x 16367999) ns (Default = 69)
-         *
-         * The documentation does not give the units of the data field.
-         * Andy Walls <andy@silverblocksystems.net> says:
-         *
-         * "The best I can figure using an oscilloscope, is that it is
-         * in units of 16.368000 MHz clock cycles.  It may be
-         * different for any other unit other than the Trimble
-         * Condor. 69 cycles / 16368000 cycles/sec = 4.216 microseconds
-         * [which is the pulse width I have observed]"
-         *
-         * Support for this theory comes from the fact that crystal
-         * TXCOs with a 16.368MHZ period are commonly available from
-         * multiple vendors. Furthermore, 61*69 = 4209, which is
-         * close to the observed cycle time and suggests that the
-         * documentation is trying to indicate 61ns units.
-         *
-         * He continues:
-         *
-         * "I chose [127875] because to divides 16368000 nicely and the
-         * pulse width is close to 1/100th of a second.  Any number
-         * the user wants to use would be fine.  127875 cycles /
-         * 16368000 cycles/second = 1/128 seconds = 7.8125
-         * milliseconds"
-         */
-
-        /* too short?  Make it longer */
-        if (atoi(field[5]) < 127875)
-            (void)nmea_send(session, "$PMTK324,0,0,1,0,127875");
-        return ONLINE_SET;
-    case 705:                   /* return device subtype */
-        // Firmware release name and version
-        (void)strlcpy(session->subtype, field[1], sizeof(session->subtype));
-        (void)strlcat(session->subtype, "-", sizeof(session->subtype));
-        // Build ID
-        (void)strlcat(session->subtype, field[2], sizeof(session->subtype));
-        (void)strlcat(session->subtype, "-", sizeof(session->subtype));
-        // Product Model
-        (void)strlcat(session->subtype, field[3], sizeof(session->subtype));
-        (void)strlcat(session->subtype, "-", sizeof(session->subtype));
-        // SDK Version
-        (void)strlcat(session->subtype, field[4], sizeof(session->subtype));
-        return ONLINE_SET;
-    default:
+    // ACK / NACK
+    reason = atoi(field[2]);
+    if (-1 == atoi(field[1])) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "NMEA0183: MTK NACK: unknown sentence\n");
+    } else if (3 > reason) {
+        const char *mtk_reasons[] = {
+            "Invalid",
+            "Unsupported",
+            "Valid but Failed",
+            "Valid success"
+        };
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "NMEA0183: MTK NACK: %s, reason: %s\n",
+                 field[1], mtk_reasons[reason]);
+    } else {
         GPSD_LOG(LOG_PROG, &session->context->errout,
-             "NMEA0183: MTK: unknown msg: %d\n", msg);
-        return ONLINE_SET;              // ignore
+                 "NMEA0183: MTK ACK: %s\n", field[1]);
     }
+    return ONLINE_SET;
+}
+
+static gps_mask_t processPMTK424(int c UNUSED, char *field[],
+                                 struct gps_device_t *session)
+{
+    // PPS pulse width response
+    /*
+     * Response will look something like: $PMTK424,0,0,1,0,69*12
+     * The pulse width is in field 5 (69 in this example).  This
+     * sentence is poorly documented at:
+     * http://www.trimble.com/embeddedsystems/condor-gps-module.aspx?dtID=documentation
+     *
+     * Packet Type: 324 PMTK_API_SET_OUTPUT_CTL
+     * Packet meaning
+     * Write the TSIP/antenna/PPS configuration data to the Flash memory.
+     * DataField [Data0]:TSIP Packet[on/off]
+     * 0 - Disable TSIP output (Default).
+     * 1 - Enable TSIP output.
+     * [Data1]:Antenna Detect[on/off]
+     * 0 - Disable antenna detect function (Default).
+     * 1 - Enable antenna detect function.
+     * [Data2]:PPS on/off
+     * 0 - Disable PPS function.
+     * 1 - Enable PPS function (Default).
+     * [Data3]:PPS output timing
+     * 0 - Always output PPS (Default).
+     * 1 - Only output PPS when GPS position is fixed.
+     * [Data4]:PPS pulse width
+     * 1~16367999: 61 ns~(61x 16367999) ns (Default = 69)
+     *
+     * The documentation does not give the units of the data field.
+     * Andy Walls <andy@silverblocksystems.net> says:
+     *
+     * "The best I can figure using an oscilloscope, is that it is
+     * in units of 16.368000 MHz clock cycles.  It may be
+     * different for any other unit other than the Trimble
+     * Condor. 69 cycles / 16368000 cycles/sec = 4.216 microseconds
+     * [which is the pulse width I have observed]"
+     *
+     * Support for this theory comes from the fact that crystal
+     * TXCOs with a 16.368MHZ period are commonly available from
+     * multiple vendors. Furthermore, 61*69 = 4209, which is
+     * close to the observed cycle time and suggests that the
+     * documentation is trying to indicate 61ns units.
+     *
+     * He continues:
+     *
+     * "I chose [127875] because to divides 16368000 nicely and the
+     * pulse width is close to 1/100th of a second.  Any number
+     * the user wants to use would be fine.  127875 cycles /
+     * 16368000 cycles/second = 1/128 seconds = 7.8125
+     * milliseconds"
+     */
+
+    // too short?  Make it longer
+    if (127875 > atoi(field[5])) {
+        (void)nmea_send(session, "$PMTK324,0,0,1,0,127875");
+    }
+    return ONLINE_SET;
+}
+
+static gps_mask_t processPMTK705(int c UNUSED, char *field[],
+                                 struct gps_device_t *session)
+{
+    // return device subtype
+    // Firmware release name and version
+    (void)strlcpy(session->subtype, field[1], sizeof(session->subtype));
+    (void)strlcat(session->subtype, "-", sizeof(session->subtype));
+    // Build ID
+    (void)strlcat(session->subtype, field[2], sizeof(session->subtype));
+    (void)strlcat(session->subtype, "-", sizeof(session->subtype));
+    // Product Model
+    (void)strlcat(session->subtype, field[3], sizeof(session->subtype));
+    (void)strlcat(session->subtype, "-", sizeof(session->subtype));
+    // SDK Version
+    (void)strlcat(session->subtype, field[4], sizeof(session->subtype));
+    return ONLINE_SET;
 }
 
 //  Recommended Minimum 3D GNSS Data
@@ -3964,11 +3968,9 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PJLTS", NULL, 11,  false, NULL},          // GPSDO status
         {"PJLTV", NULL, 4,  false, NULL},           // Time and 3D velocity
         {"PMGNST", NULL, 8, false, processPMGNST},  // Magellan Status
-        {"PMTK", NULL, 3,  false, processMTK3301},
-        // for some reason the parser no longer triggering on leading chars
-        {"PMTK001", NULL, 3, false, processMTK3301},
-        {"PMTK424", NULL, 3, false, processMTK3301},
-        {"PMTK705", NULL, 3, false, processMTK3301},
+        {"PMTK001", NULL, 3, false, processPMTK001},
+        {"PMTK424", NULL, 3, false, processPMTK424},
+        {"PMTK705", NULL, 3, false, processPMTK705},
         {"PMTKCHN", NULL, 0, false, NULL},          // MediaTek Channel Status
         // smart watch sensors, Yes: space!
         {"PRHS ", NULL, 2,  false, processPRHS},
