@@ -4572,6 +4572,11 @@ void json_data_report(const gps_mask_t changed,
     if (0 != (changed & REPORT_IS)) {
         json_tpv_dump(changed, session, policy,
                       buf+strlen(buf), buflen-strlen(buf));
+        // attitude is syncronous to epoch, so report like TPV.
+        if (0 != (changed & ATTITUDE_SET)) {
+            json_att_dump(datap, buf+strlen(buf), buflen-strlen(buf),
+                          &datap->attitude, "ATT");
+        }
     }
 
     if (0 != (changed & GST_SET)) {
@@ -4591,10 +4596,6 @@ void json_data_report(const gps_mask_t changed,
         json_raw_dump(datap, buf+strlen(buf), buflen-strlen(buf));
     }
 
-    if (0 != (changed & ATTITUDE_SET)) {
-        json_att_dump(datap, buf+strlen(buf), buflen-strlen(buf),
-                      &datap->attitude, "ATT");
-    }
     if (0 != (changed & IMU_SET)) {
         int max_imu, cur_imu = 0;
 

@@ -1819,7 +1819,7 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
      * cause display jitter.
      */
     if (!device->cycle_end_reliable &&
-        0 != (changed & (LATLON_SET | MODE_SET))) {
+        0 != (changed & (ATTITUDE_SET | LATLON_SET | MODE_SET))) {
         changed |= REPORT_IS;
     }
 

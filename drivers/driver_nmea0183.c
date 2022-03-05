@@ -1858,7 +1858,8 @@ static gps_mask_t processGSA(int count, char *field[],
          session->nmea.seen_qzgsa) &&
          GSA_TALKER == 'P') {
         mask = ONLINE_SET;
-    } else if ( 'N' != last_last_gsa_talker && 'N' == GSA_TALKER) {
+    } else if ('N' != last_last_gsa_talker &&
+               'N' == GSA_TALKER) {
         /* first of two GNGSA
          * if mode == 1 some GPS only output 1 GNGSA, so ship mode always */
         mask =  ONLINE_SET | MODE_SET;
@@ -2804,9 +2805,12 @@ static gps_mask_t processZDA(int c UNUSED, char *field[],
      */
     gps_mask_t mask = ONLINE_SET;
     int year, mon, mday, century;
+    char ts_buf[TIMESPEC_LEN];
 
-    if (field[1][0] == '\0' || field[2][0] == '\0' || field[3][0] == '\0'
-        || field[4][0] == '\0') {
+    if ('\0' == field[1][0] ||
+        '\0' == field[2][0] ||
+        '\0' == field[3][0] ||
+        '\0' == field[4][0]) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NMEA0183: ZDA fields are empty\n");
         return mask;
@@ -2818,39 +2822,40 @@ static gps_mask_t processZDA(int c UNUSED, char *field[],
     }
 
     /*
-     * We don't register fractional time here because want to leave
+     * We didn't register fractional time here because we wanted to leave
      * ZDA out of end-of-cycle detection. Some devices sensibly emit it only
      * when they have a fix, so watching for it can make them look
-     * like they have a variable fix reporting cycle.
+     * like they have a variable fix reporting cycle.  But later thought
+     * was to not throw out good data because it is inconvenient.
      */
     year = atoi(field[4]);
     mon = atoi(field[3]);
     mday = atoi(field[2]);
     century = year - year % 100;
-    if ( (1900 > year ) || (2200 < year ) ) {
+    if (1900 > year  ||
+        2200 < year) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NMEA0183: malformed ZDA year: %s\n",  field[4]);
-    } else if ( (1 > mon ) || (12 < mon ) ) {
+    } else if (1 > mon ||
+               12 < mon) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NMEA0183: malformed ZDA month: %s\n",  field[3]);
-    } else if ( (1 > mday ) || (31 < mday ) ) {
+    } else if (1 > mday ||
+               31 < mday) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NMEA0183: malformed ZDA day: %s\n",  field[2]);
     } else {
-        char ts_buf[TIMESPEC_LEN];
         gpsd_century_update(session, century);
         session->nmea.date.tm_year = year - 1900;
         session->nmea.date.tm_mon = mon - 1;
         session->nmea.date.tm_mday = mday;
-        if (true == session->context->batteryRTC) {
-            // user wants to live dangerously
-            session->newdata.time = gpsd_utc_resolve(session);
-            GPSD_LOG(LOG_DATA, &session->context->errout,
-                 "NMEA0183: ZDA badtime %s\n",
-                  timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)));
-        }
+        session->newdata.time = gpsd_utc_resolve(session);
+        register_fractional_time(field[0], field[1], session);
         mask = TIME_SET;
     }
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+         "NMEA0183: ZDA time %s\n",
+          timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)));
     return mask;
 }
 
@@ -2945,7 +2950,7 @@ static gps_mask_t processHDT(int c UNUSED, char *field[],
     /*
      * $HEHDT,341.8,T*21
      *
-     * HDT,x.x*hh<cr><lf>
+     * $xxHDT,x.x*hh<cr><lf>
      *
      * The only data field is true heading in degrees.
      * The following field is required to be 'T' indicating a true heading.
@@ -2964,15 +2969,13 @@ static gps_mask_t processHDT(int c UNUSED, char *field[],
         // bad data
         return mask;
     }
-    // good data
-    gps_clear_att(&session->gpsdata.attitude);
     // True heading
     session->gpsdata.attitude.heading = heading;
 
-    mask |= (ATTITUDE_SET);
+    mask |= ATTITUDE_SET;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "NMEA0183: $HEHDT heading %lf.\n",
+             "NMEA0183: $xxHDT heading %lf.\n",
              session->gpsdata.attitude.heading);
     return mask;
 }
@@ -3637,7 +3640,7 @@ static gps_mask_t processPSTI030(int count UNUSED, char *field[],
         session->newdata.mode = MODE_NO_FIX;
         mask |= MODE_SET | STATUS_SET;
     } else if ('A' == field[3][0]) {
-        double east, north, climb;
+        double east, north, climb, age;
 
         // data valid
         if ('\0' != field[2][0] &&
@@ -3667,10 +3670,12 @@ static gps_mask_t processPSTI030(int count UNUSED, char *field[],
         east = safe_atof(field[9]);     // east velocity m/s
         north = safe_atof(field[10]);   // north velocity m/s
         climb = safe_atof(field[11]);   // up velocity m/s
+        age = safe_atof(field[14]);
 
         session->newdata.NED.velN = north;
         session->newdata.NED.velE = east;
         session->newdata.NED.velD = -climb;
+        session->newdata.dgps_age = age;
 
         mask |= VNED_SET | STATUS_SET;
 
@@ -3680,12 +3685,13 @@ static gps_mask_t processPSTI030(int count UNUSED, char *field[],
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "NMEA0183: PSTI,030: ddmmyy=%s hhmmss=%s lat=%.2f lon=%.2f "
-             "status=%d, RTK(Age=%s Ratio=%s)\n",
+             "status=%d, RTK(Age=%.1f Ratio=%s)\n",
              field[12], field[2],
              session->newdata.latitude,
              session->newdata.longitude,
              session->newdata.status,
-             field[14], field[15]);
+             session->newdata.dgps_age,
+             field[15]);
     return mask;
 }
 
@@ -3967,6 +3973,11 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         // smart watch sensors, Yes: space!
         {"PRHS ", NULL, 2,  false, processPRHS},
         {"PRWIZCH", NULL, 0, false, NULL},          // Rockwell Channel Status
+        {"PSRF140", NULL, 0, false, NULL},          // SiRF ephemeris
+        {"PSRF150", NULL, 0, false, NULL},          // SiRF flow control
+        {"PSRF151", NULL, 0, false, NULL},          // SiRF Power
+        {"PSRF152", NULL, 0, false, NULL},          // SiRF ephemeris
+        {"PSRF155", NULL, 0, false, NULL},          // SiRF proprietary
         {"PSRFEPE", NULL, 7, false, processPSRFEPE},  // SiRF Estimated Errors
         /*
          * Skytraq sentences take this format:
@@ -4256,8 +4267,13 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         // extend the cycle to an un-timestamped sentence?
         if (true == session->nmea.cycle_enders[lasttag]) {
             GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "NMEA0183: %s is just after a cycle ender.\n",
-                     session->nmea.field[0]);
+                     "NMEA0183: %s is just after a cycle ender. (%s)\n",
+                     session->nmea.field[0],
+                     gps_maskdump(mask));
+            if (0 != (mask & ~ONLINE_SET)) {
+                // new data... after cycle ender
+                mask |= REPORT_IS;
+            }
         }
         if (session->nmea.cycle_continue) {
             GPSD_LOG(LOG_PROG, &session->context->errout,
