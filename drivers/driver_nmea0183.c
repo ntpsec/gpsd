@@ -3964,6 +3964,22 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"OSD", NULL, 0,  false, NULL},             // ignore Own Ship Data
         // general handler for Ashtech
         {"PASHR", NULL, 3, false, processPASHR},
+        // Furuno proprietary
+        {"PERDACK", NULL, 4, false, NULL},          // ACK
+        {"PERDCRD", NULL, 15, false, NULL},         // NLOSMASK?
+        {"PERDCRG", "DCR", 6, false, NULL},         // QZSS DC report
+        {"PERDCRJ", "FREQ", 9, false, NULL},        // Jamming Status
+        {"PERDCRP", NULL, 9, false, NULL},          // Position
+        {"PERDCRQ", NULL, 11, false, NULL},         // Galileo SAR
+        {"PERDCRW", "TPS1", 8, false, NULL},        // Time
+        {"PERDCRW", "TPS2", 12, false, NULL},       // PPS
+        {"PERDCRW", "TPS3", 11, false, NULL},       // Position Mode
+        {"PERDCRW", "TPS4", 13, false, NULL},       // GCLK
+        {"PERDMSG", NULL, 3, false, NULL},          // Message
+        {"PERDSYS", "ANTSEL", 5, false, NULL},      // Antenna
+        {"PERDSYS", "FIXSESSION", 5, false, NULL},  // Fix Session
+        {"PERDSYS", "GPIO", 3, false, NULL},        // GPIO
+        {"PERDSYS", "VERSION", 6, false, NULL},     // Version
         // Jackson Labs proprietary
         {"PJLTS", NULL, 11,  false, NULL},          // GPSDO status
         {"PJLTV", NULL, 4,  false, NULL},           // Time and 3D velocity
@@ -3972,6 +3988,8 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PMTK424", NULL, 3, false, processPMTK424},
         {"PMTK705", NULL, 3, false, processPMTK705},
         {"PMTKCHN", NULL, 0, false, NULL},          // MediaTek Channel Status
+        // Quectel proprietary
+        {"PQVERNO", NULL, 3, false, NULL},          // Version
         // smart watch sensors, Yes: space!
         {"PRHS ", NULL, 2,  false, processPRHS},
         {"PRWIZCH", NULL, 0, false, NULL},          // Rockwell Channel Status
@@ -4015,8 +4033,9 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PTNLRZD", NULL, 0, false, NULL},        // Extended Time and Date
         {"PTNTA", NULL, 8, false, processTNTA},
         {"PTNTHTM", NULL, 9, false, processTNTHTM},
-        {"PUBX", NULL, 0, false, NULL},           // u-blox and Antaris
-        {"RLM", NULL, 0, false, NULL},            // Return Link Message
+        {"PUBX", NULL, 0, false, NULL},         // u-blox and Antaris
+        {"QSM", NULL, 3, false, NULL},          // QZSS DC Report
+        {"RLM", NULL, 0, false, NULL},          // Return Link Message
         // ignore Recommended Minimum Navigation Info, waypoint
         {"RMB", NULL, 0,  false, NULL},         // Recommended Min Nav Info
         {"RMC", NULL, 8,  false, processRMC},
