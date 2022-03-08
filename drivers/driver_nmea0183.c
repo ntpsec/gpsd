@@ -3109,7 +3109,7 @@ static gps_mask_t processTXT(int count, char *field[],
         break;
     }
 
-    /* maximum text length unknown, guess 80 */
+    // maximum text length unknown, guess 80
     GPSD_LOG(LOG_WARN, &session->context->errout,
              "NMEA0183: TXT: %.10s: %.80s\n",
              msgType_txt, field[4]);
@@ -3505,22 +3505,27 @@ static gps_mask_t processPMTK001(int c UNUSED, char *field[],
 
     // ACK / NACK
     reason = atoi(field[2]);
-    if (-1 == atoi(field[1])) {
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "NMEA0183: MTK NACK: unknown sentence\n");
-    } else if (3 > reason) {
+    if (4 == reason) {
+        // ACK
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "NMEA0183: MTK ACK: %s\n", field[1]);
+    } else {
+        // NACK
         const char *mtk_reasons[] = {
             "Invalid",
             "Unsupported",
             "Valid but Failed",
-            "Valid success"
+            "Valid success"       // unused, see above
+            "Unknown",            // gpsd only
         };
+        if (0 > reason ||
+            4 < reason) {
+            // WTF?
+            reason = 5;
+        }
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NMEA0183: MTK NACK: %s, reason: %s\n",
                  field[1], mtk_reasons[reason]);
-    } else {
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "NMEA0183: MTK ACK: %s\n", field[1]);
     }
     return ONLINE_SET;
 }
@@ -3584,21 +3589,40 @@ static gps_mask_t processPMTK424(int c UNUSED, char *field[],
     return ONLINE_SET;
 }
 
-static gps_mask_t processPMTK705(int c UNUSED, char *field[],
+static gps_mask_t processPMTK705(int count, char *field[],
                                  struct gps_device_t *session)
 {
-    // return device subtype
-    // Firmware release name and version
-    (void)strlcpy(session->subtype, field[1], sizeof(session->subtype));
-    (void)strlcat(session->subtype, "-", sizeof(session->subtype));
-    // Build ID
-    (void)strlcat(session->subtype, field[2], sizeof(session->subtype));
-    (void)strlcat(session->subtype, "-", sizeof(session->subtype));
-    // Product Model
-    (void)strlcat(session->subtype, field[3], sizeof(session->subtype));
-    (void)strlcat(session->subtype, "-", sizeof(session->subtype));
-    // SDK Version
-    (void)strlcat(session->subtype, field[4], sizeof(session->subtype));
+    /* Trimble version:
+     * $PMTK705,AXN_1.30,0000,20090609,*20<CR><LF>
+     *
+     * 0 PMTK705
+     * 1 ReleaseStr - Firmware release name and version
+     * 2 Build_ID   - Build ID
+     * 3 Date code  - YYYYMMDD
+     * 4 Checksum
+     *
+     * Quectel Querk.  L26.
+     * $PMTK705,AXN_3.20_3333_13071501,0003,QUECTEL-L26,*1E<CR><LF>
+     *
+     * 0 PMTK705
+     * 1 ReleaseStr - Firmware release name and version
+     * 2 Build_ID   - Build ID
+     * 3 Date code  - Product Model
+     * 4 SDK Version (optional)
+     * * Checksum
+    */
+
+    // set device subtype
+    if (4 == count) {
+        (void)snprintf(session->subtype, sizeof(session->subtype),
+                       "%s,%s,%s",
+                       field[1], field[2], field[3]);
+    } else {
+        // Once again Quectel goes their own way...
+        (void)snprintf(session->subtype, sizeof(session->subtype),
+                       "%s,%s,%s,%s",
+                       field[1], field[2], field[3], field[4]);
+    }
     return ONLINE_SET;
 }
 
@@ -3984,10 +4008,14 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PJLTS", NULL, 11,  false, NULL},          // GPSDO status
         {"PJLTV", NULL, 4,  false, NULL},           // Time and 3D velocity
         {"PMGNST", NULL, 8, false, processPMGNST},  // Magellan Status
-        {"PMTK001", NULL, 3, false, processPMTK001},
+        // MediaTek proprietary
+        {"PMTK001", NULL, 3, false, processPMTK001},  // ACK
+        {"PMTK010", NULL, 2, false, NULL},          // System Message
+        {"PMTK011", NULL, 2, false, NULL},          // Text Message
         {"PMTK424", NULL, 3, false, processPMTK424},
-        {"PMTK705", NULL, 3, false, processPMTK705},
-        {"PMTKCHN", NULL, 0, false, NULL},          // MediaTek Channel Status
+        {"PMTK705", NULL, 4, false, processPMTK705},
+        // MediaTek/Trimble Satellite Channel Status
+        {"PMTKCHN", NULL, 0, false, NULL},
         // Quectel proprietary
         {"PQVERNO", NULL, 3, false, NULL},          // Version
         // smart watch sensors, Yes: space!
