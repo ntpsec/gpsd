@@ -60,7 +60,9 @@ static inline double decode_lat_or_lon(const char *field)
     // Get integer "minutes"
     minutes = strtol(field, &cp, 10);
     // Must have decimal point
-    if (*cp != '.') return NAN;
+    if ('.' != *cp) {
+        return NAN;
+    }
     // Extract degrees (scaled by 100)
     degrees = minutes / 100;
     // Rescale degrees to normal factor of 60
@@ -243,8 +245,8 @@ static int merge_ddmmyy(char *ddmmyy, struct gps_device_t *session)
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NMEA0183: merge_ddmmyy(%s), malformed month\n",  ddmmyy);
         return 4;
-    } else if ((1 > mday) ||
-               (31 < mday)) {
+    } else if (1 > mday ||
+               31 < mday) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NMEA0183: merge_ddmmyy(%s), malformed day\n",  ddmmyy);
         return 5;
@@ -334,8 +336,9 @@ static int merge_hhmmss(char *hhmmss, struct gps_device_t *session)
     // don't check for termination, might have fractional seconds
 
     session->nmea.date.tm_hour = DD(hhmmss);
-    if (session->nmea.date.tm_hour < old_hour)  // midnight wrap
+    if (session->nmea.date.tm_hour < old_hour) {  // midnight wrap
         session->nmea.date.tm_mday++;
+    }
     session->nmea.date.tm_min = DD(hhmmss + 2);
     session->nmea.date.tm_sec = DD(hhmmss + 4);
 
@@ -360,7 +363,7 @@ static void register_fractional_time(const char *tag, const char *fld,
                                      struct gps_device_t *session)
 {
 
-    if (fld[0] != '\0') {
+    if ('\0' != fld[0]) {
         char ts_buf[TIMESPEC_LEN];
 
         session->nmea.last_frac_time = session->nmea.this_frac_time;
@@ -509,7 +512,7 @@ static gps_mask_t processVTG(int count,
     mask |= TRACK_SET;
 
     // set magnetic variation
-    if (field[3][0] != '\0'){  // ignore empty fields
+    if ('\0' != field[3][0]) {  // ignore empty fields
         session->newdata.magnetic_track = safe_atof(field[3]);
         mask |= MAGNETIC_TRACK_SET;
     }
@@ -765,7 +768,7 @@ static gps_mask_t processGLL(int count, char *field[],
         mask |= LATLON_SET;
 
         newstatus = STATUS_GPS;
-        if (count >= 8) {
+        if (8 <= count) {
             newstatus = faa_mode(*status);
         }
         /*
@@ -848,7 +851,7 @@ static gps_mask_t processGNS(int count UNUSED, char *field[],
     int satellites_used;
     gps_mask_t mask = ONLINE_SET;
 
-    if (field[1][0] != '\0') {
+    if ('\0' != field[1][0]) {
         if (0 == merge_hhmmss(field[1], session)) {
             register_fractional_time(field[0], field[1], session);
             if (0 == session->nmea.date.tm_year) {
@@ -870,8 +873,8 @@ static gps_mask_t processGNS(int count UNUSED, char *field[],
         mask |= MODE_SET;
         return mask;
     }
-    /* navigation status, assume S=safe and C=caution are OK */
-    /* can be missing on valid fix */
+    /* navigation status, assume S=safe and C=caution are OK
+     * can be missing on valid fix */
     if ('U' == field[13][0] ||      // Unsafe
         'V' == field[13][0]) {      // not valid
         return mask;
@@ -904,7 +907,7 @@ static gps_mask_t processGNS(int count UNUSED, char *field[],
         mask |= MODE_SET;
     }
 
-    if (field[8][0] != '\0') {
+    if ('\0' != field[8][0]) {
         session->gpsdata.dop.hdop = safe_atof(field[8]);
         mask |= DOP_SET;
     }
@@ -1419,10 +1422,12 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
             if (100 > nmea_satnum) {
                 // NMEA
                 *ubx_svid = nmea_satnum;
-            } else if (100 < nmea_satnum && 200 > nmea_satnum) {
+            } else if (100 < nmea_satnum &&
+                       200 > nmea_satnum) {
                 // Quectel Querk, NOT NMEA, 101 - 199
                 *ubx_svid = nmea_satnum - 100;
-            } else if (300 < nmea_satnum && 400 > nmea_satnum) {
+            } else if (300 < nmea_satnum &&
+                       400 > nmea_satnum) {
                 // Jackson Labs quirk, NOT NMEA, 301 - 399
                 *ubx_svid = nmea_satnum - 300;
             }
@@ -1434,10 +1439,12 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
             if (100 > nmea_satnum) {
                 // NMEA 1 - 99
                 *ubx_svid = nmea_satnum;
-            } else if (200 < nmea_satnum && 300 > nmea_satnum) {
+            } else if (200 < nmea_satnum &&
+                       300 > nmea_satnum) {
                 // Quectel Querk, NOT NMEA, 201 - 299
                 *ubx_svid = nmea_satnum - 200;
-            } else if (400 < nmea_satnum && 500 > nmea_satnum) {
+            } else if (400 < nmea_satnum &&
+                       500 > nmea_satnum) {
                 // Jackson Labs quirk, NOT NMEA, 401 - 499
                 *ubx_svid = nmea_satnum - 400;
             }
@@ -1511,7 +1518,7 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
             }  // else ??
             break;
         case 'B':
-            if (talker[1] == 'D') {
+            if ('D' == talker[1]) {
                 // map Beidou IDs
                 nmea2_prn = 400 + nmea_satnum;
                 *ubx_gnssid = 3;
@@ -1519,14 +1526,14 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
             break;
         case 'P':
             // Quectel EC25 & EC21 use PQxxx for BeiDou
-            if (talker[1] == 'Q') {
+            if ('Q' == talker[1]) {
                 // map Beidou IDs
                 nmea2_prn = 400 + nmea_satnum;
                 *ubx_gnssid = 3;
             }  // else ??
             break;
         case 'Q':
-            if (talker[1] == 'Z') {
+            if ('Z' == talker[1]) {
                 // QZSS
                 nmea2_prn = 192 + nmea_satnum;
                 *ubx_gnssid = 5;
@@ -1689,7 +1696,7 @@ static gps_mask_t processGSA(int count, char *field[],
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "NMEA0183: xxGSA: malformed, setting ONLINE_SET only.\n");
     } else if (session->nmea.latch_mode) {
-        /* last GGA had a non-advancing timestamp; don't trust this GSA */
+        // last GGA had a non-advancing timestamp; don't trust this GSA
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "NMEA0183: xxGSA: non-advancing timestamp\n");
     } else {
@@ -1712,7 +1719,7 @@ static gps_mask_t processGSA(int count, char *field[],
                      "NMEA0183: xxGSA: count %d too long!\n", count);
         } else {
             double dop;
-            /* Just ignore the last fields of the Navior CH-4701 */
+            // Just ignore the last fields of the Navior CH-4701
             if ('\0' != field[15][0]) {
                 dop = safe_atof(field[15]);
                 if (99.0 > dop) {
@@ -1955,7 +1962,7 @@ static gps_mask_t processGSV(int count, char *field[],
     int nmea_gnssid = 0;
     unsigned char  ubx_sigid = 0;
 
-    if (count <= 3) {
+    if (3 >= count) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NMEA0183: malformed xxGSV - fieldcount %d <= 3\n",
                  count);
@@ -1975,15 +1982,15 @@ static gps_mask_t processGSV(int count, char *field[],
      */
     switch (count % 4) {
     case 0:
-        /* normal, pre-NMEA 4.10 */
+        // normal, pre-NMEA 4.10
         break;
     case 1:
-        /* NMEA 4.10, get the signal ID */
+        // NMEA 4.10, get the signal ID
         nmea_sigid = atoi(field[count - 1]);
         ubx_sigid = nmea_sigid_to_ubx(nmea_sigid);
         break;
     default:
-        /* bad count */
+        // bad count
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NMEA0183: malformed GPGSV - fieldcount %d %% 4 != 0\n",
                  count);
@@ -1992,14 +1999,14 @@ static gps_mask_t processGSV(int count, char *field[],
     }
 
     session->nmea.await = atoi(field[1]);
-    if ((session->nmea.part = atoi(field[2])) < 1) {
+    if (1 > (session->nmea.part = atoi(field[2]))) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NMEA0183: malformed GPGSV - bad part\n");
         gpsd_zero_satellites(&session->gpsdata);
         return ONLINE_SET;
     }
 
-    if (session->nmea.part == 1) {
+    if (1 == session->nmea.part) {
         /*
          * might have gone from GPGSV to GLGSV/BDGSV/QZGSV,
          * in which case accumulate
@@ -2008,7 +2015,7 @@ static gps_mask_t processGSV(int count, char *field[],
          *
          * session->nmea.last_gsv_talker is zero at cycle start
          */
-        if (session->nmea.last_gsv_talker == '\0' ||
+        if ('\0' == session->nmea.last_gsv_talker ||
             ('P' == GSV_TALKER &&
              0 == ubx_sigid)) {
             GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -2020,7 +2027,7 @@ static gps_mask_t processGSV(int count, char *field[],
             gpsd_zero_satellites(&session->gpsdata);
         }
         session->nmea.last_gsv_talker = GSV_TALKER;
-        session->nmea.last_gsv_sigid = ubx_sigid; /* UNUSED */
+        session->nmea.last_gsv_sigid = ubx_sigid;  // UNUSED
         switch (GSV_TALKER) {
         case 'A':        // GA Galileo
             nmea_gnssid = 3;
@@ -2054,7 +2061,7 @@ static gps_mask_t processGSV(int count, char *field[],
             session->nmea.seen_qzgsv = true;
             break;
         default:
-            /* uh, what? */
+            // uh, what?
             break;
         }
     }
@@ -2063,7 +2070,7 @@ static gps_mask_t processGSV(int count, char *field[],
         struct satellite_t *sp;
         int nmea_svid;
 
-        if (session->gpsdata.satellites_visible >= MAXCHANNELS) {
+        if (MAXCHANNELS <= session->gpsdata.satellites_visible) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "NMEA0183: xxGSV: internal error - too many "
                      "satellites [%d]!\n",
@@ -2074,16 +2081,16 @@ static gps_mask_t processGSV(int count, char *field[],
         sp = &session->gpsdata.skyview[session->gpsdata.satellites_visible];
         nmea_svid = atoi(field[fldnum++]);
         if (0 == nmea_svid) {
-            /* skip bogus fields */
+            // skip bogus fields
             continue;
         }
-        /* FIXME: this ignores possible NMEA 4.1 Signal ID hint */
+        // FIXME: this ignores possible NMEA 4.1 Signal ID hint
         sp->PRN = (short)nmeaid_to_prn(field[0], nmea_svid, nmea_gnssid,
                                        &sp->gnssid, &sp->svid);
 
 #ifdef __UNUSED__
         {
-        /* debug */
+        // debug
             char ts_buf[TIMESPEC_LEN];
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "NMEA0183: %s nmeaid_to_prn: nmea_gnssid %d "
@@ -2091,7 +2098,7 @@ static gps_mask_t processGSV(int count, char *field[],
                      field[0],
                      nmea_gnssid, nmea_svid, sp->gnssid, sp->svid, sp->PRN);
         }
-#endif  /* __UNUSED__ */
+#endif  // __UNUSED__
 
         sp->elevation = (double)atoi(field[fldnum++]);
         sp->azimuth = (double)atoi(field[fldnum++]);
@@ -2101,7 +2108,8 @@ static gps_mask_t processGSV(int count, char *field[],
 
         /* sadly NMEA 4.1 does not tell us which sigid (L1, L2) is
          * used.  So if the ss is zero, do not mark used */
-        if (0 < sp->PRN && 0 < sp->ss) {
+        if (0 < sp->PRN &&
+            0 < sp->ss) {
             for (n = 0; n < MAXCHANNELS; n++)
                 if (session->nmea.sats_used[n] == (unsigned short)sp->PRN) {
                     sp->used = true;
@@ -2118,7 +2126,7 @@ static gps_mask_t processGSV(int count, char *field[],
     }
 
 #if __UNUSED
-    /* debug code */
+    // debug code
     GPSD_LOG(LOG_ERROR, &session->context->errout,
         "NMEA0183: x%cGSV: vis %d bdgsv %d gagsv %d gigsv %d glgsv %d "
         "gngsv %d qpgsv %dqzgsv %d\n",
@@ -2156,7 +2164,7 @@ static gps_mask_t processGSV(int count, char *field[],
         }
     }
 
-    /* not valid data until we've seen a complete set of parts */
+    // not valid data until we've seen a complete set of parts
     if (session->nmea.part < session->nmea.await) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "NMEA0183: xxGSV: Partial satellite data (%d of %d).\n",
@@ -2190,7 +2198,7 @@ static gps_mask_t processGSV(int count, char *field[],
              "NMEA0183: xxGSV: Satellite data OK (%d of %d).\n",
              session->nmea.part, session->nmea.await);
 
-    /* assumes GLGSV or BDGSV group, if present, is emitted after the GPGSV */
+    // assumes GLGSV or BDGSV group, if present, is emitted after the GPGSV
     if ((session->nmea.seen_bdgsv ||
          session->nmea.seen_gagsv ||
          session->nmea.seen_gigsv ||
@@ -2201,7 +2209,7 @@ static gps_mask_t processGSV(int count, char *field[],
         return ONLINE_SET;
 
 #if __UNUSED
-    /* debug code */
+    // debug code
     GPSD_LOG(LOG_ERROR, &session->context->errout,
         "NMEA0183: x%cGSV: set skyview_time %s frac_time %.2f\n", GSV_TALKER,
          timespec_str(&session->gpsdata.skyview_time, ts_buf, sizeof(ts_buf)),
@@ -2284,7 +2292,8 @@ static gps_mask_t processPGLOR(int c UNUSED, char *field[],
             GPSD_LOG(LOG_DATA, &session->context->errout,
                      "NMEA0183: PGLOR: LSQ %s UTC\n",
                      field[3]);
-        } else if ('0' == field[1][1] && 0 == strncmp("STA", field[2], 3)) {
+        } else if ('0' == field[1][1] &&
+                   0 == strncmp("STA", field[2], 3)) {
             // version 10
             got_one = 1;
             // field 3, hhmmss.ss UTC
@@ -2434,7 +2443,7 @@ static gps_mask_t processPGRMF(int c UNUSED, char *field[],
         mask |= TIME_SET;
     }
     if ('A' != field[10][0]) {
-        /* Huh? */
+        // Huh?
         return mask;
     }
     if (0 == do_lat_lon(&field[6], &session->newdata)) {
@@ -2442,7 +2451,7 @@ static gps_mask_t processPGRMF(int c UNUSED, char *field[],
     }
     switch (field[11][0]) {
     default:
-        /* Huh? */
+        // Huh?
         break;
     case '0':
         session->newdata.mode = MODE_NO_FIX;
@@ -2500,7 +2509,7 @@ static gps_mask_t processPGRMM(int c UNUSED, char *field[],
     return mask;
 }
 
-/* Garmin Altitude Information */
+// Garmin Altitude Information
 static gps_mask_t processPGRMZ(int c UNUSED, char *field[],
                                struct gps_device_t *session)
 {
@@ -2582,7 +2591,7 @@ static gps_mask_t processPMGNST(int c UNUSED, char *field[],
             break;
         }
     } else {
-        /* Can report 3D fix, but 'F' for no fix */
+        // Can report 3D fix, but 'F' for no fix
         session->newdata.mode = MODE_NO_FIX;
     }
     mask |= MODE_SET;
@@ -2593,7 +2602,7 @@ static gps_mask_t processPMGNST(int c UNUSED, char *field[],
     return mask;
 }
 
-/* SiRF Estimated Position Errors */
+// SiRF Estimated Position Errors
 static gps_mask_t processPSRFEPE(int c UNUSED, char *field[],
                                struct gps_device_t *session)
 {
@@ -2611,7 +2620,7 @@ static gps_mask_t processPSRFEPE(int c UNUSED, char *field[],
      */
     gps_mask_t mask = STATUS_SET;
 
-    /* get time/ valid or not */
+    // get time/ valid or not
     if ('\0' != field[1][0]) {
         if (0 == merge_hhmmss(field[1], session)) {
             register_fractional_time(field[0], field[1], session);
@@ -2625,7 +2634,7 @@ static gps_mask_t processPSRFEPE(int c UNUSED, char *field[],
         }
     }
     if ('A' != field[2][0]) {
-        /* Huh? */
+        // Huh?
         return mask;
     }
 
@@ -2636,24 +2645,24 @@ static gps_mask_t processPSRFEPE(int c UNUSED, char *field[],
         mask |= DOP_SET;
     }
     if ('\0' != field[4][0]) {
-        /* EHPE (Estimated Horizontal Position Error) */
+        // EHPE (Estimated Horizontal Position Error)
         session->newdata.eph = safe_atof(field[4]);
         mask |= HERR_SET;
     }
 
     if ('\0' != field[5][0]) {
-        /* Estimated Vertical Position Error (meters, 0.01 resolution) */
+        // Estimated Vertical Position Error (meters, 0.01 resolution)
         session->newdata.epv = safe_atof(field[5]);
         mask |= VERR_SET;
     }
 
     if ('\0' != field[6][0]) {
-        /* Estimated Horizontal Speed Error meters/sec */
+        // Estimated Horizontal Speed Error meters/sec
         session->newdata.eps = safe_atof(field[6]);
     }
 
     if ('\0' != field[7][0]) {
-        /* Estimated Heading Error degrees */
+        // Estimated Heading Error degrees
         session->newdata.epd = safe_atof(field[7]);
     }
 
@@ -2722,7 +2731,7 @@ static gps_mask_t processDTM(int c UNUSED, char *field[],
 
     for (i = 0; ; i++) {
         if ('\0' == codes[i].code[0]) {
-            /* not found */
+            // not found
             strlcpy(session->newdata.datum, field[1],
                     sizeof(session->newdata.datum));
             break;
@@ -2740,7 +2749,7 @@ static gps_mask_t processDTM(int c UNUSED, char *field[],
     return mask;
 }
 
-/* NMEA 3.0 Estimated Position Error */
+// NMEA 3.0 Estimated Position Error
 static gps_mask_t processGBS(int c UNUSED, char *field[],
                                struct gps_device_t *session)
 {
@@ -2762,10 +2771,10 @@ static gps_mask_t processGBS(int c UNUSED, char *field[],
      */
     gps_mask_t mask = ONLINE_SET;
 
-    /* register fractional time for end-of-cycle detection */
+    // register fractional time for end-of-cycle detection
     register_fractional_time(field[0], field[1], session);
 
-    /* check that we're associated with the current fix */
+    // check that we're associated with the current fix
     if (session->nmea.date.tm_hour == DD(field[1]) &&
         session->nmea.date.tm_min == DD(field[1] + 2) &&
         session->nmea.date.tm_sec == DD(field[1] + 4)) {
@@ -2785,9 +2794,9 @@ static gps_mask_t processGBS(int c UNUSED, char *field[],
     return mask;
 }
 
+// Time & Date
 static gps_mask_t processZDA(int c UNUSED, char *field[],
                                struct gps_device_t *session)
-/* Time & Date */
 {
     /*
      * $GPZDA,160012.71,11,03,2004,-1,00*7D
@@ -2817,7 +2826,7 @@ static gps_mask_t processZDA(int c UNUSED, char *field[],
     }
 
     if (0 != merge_hhmmss(field[1], session)) {
-        /* bad time */
+        // bad time
         return mask;
     }
 
@@ -2964,8 +2973,8 @@ static gps_mask_t processHDT(int c UNUSED, char *field[],
         return mask;
     }
     heading = safe_atof(field[1]);
-    if ((0.0 > heading) ||
-        (360.0 < heading)) {
+    if (0.0 > heading ||
+        360.0 < heading) {
         // bad data
         return mask;
     }
@@ -3402,7 +3411,7 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
             sp->elevation = (double)atoi(field[3 + i * 5 + 2]);
             sp->ss = safe_atof(field[3 + i * 5 + 3]);
             sp->used = false;
-            if (field[3 + i * 5 + 4][0] == 'U') {
+            if ('U' == field[3 + i * 5 + 4][0]) {
                 sp->used = true;
                 session->gpsdata.satellites_used++;
             }
@@ -3414,7 +3423,7 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
         session->gpsdata.skyview_time.tv_nsec = 0;
         mask |= SATELLITE_SET | USED_IS;
 
-    } else if (0 == strcmp("T", field[3])) { /* Assume OxTS PASHR */
+    } else if (0 == strcmp("T", field[3])) {   // Assume OxTS PASHR
         // FIXME: decode OxTS $PASHDR, time is wrong, breaks cycle order
         if (0 == merge_hhmmss(field[1], session)) {
             // register_fractional_time(field[0], field[1], session);
@@ -3684,11 +3693,11 @@ static gps_mask_t processPSTI030(int count UNUSED, char *field[],
             session->newdata.mode = MODE_2D;
             mask |= LATLON_SET;
             if ('\0' != field[8][0]) {
-                /* altitude is MSL */
+                // altitude is MSL
                 session->newdata.altMSL = safe_atof(field[8]);
                 mask |= ALTITUDE_SET;
                 session->newdata.mode = MODE_3D;
-                /* Let gpsd_error_model() deal with geoid_sep and altHAE */
+                // Let gpsd_error_model() deal with geoid_sep and altHAE
             }
             mask |= MODE_SET;
         }
@@ -3896,7 +3905,7 @@ static gps_mask_t processSTI(int count, char *field[],
     }
 
     if ( 0 == strcmp( field[1], "IC") ) {
-        /* $STI,IC,error=XX, this is always very bad, but undocumented */
+        // $STI,IC,error=XX, this is always very bad, but undocumented
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "NMEA0183: Skytraq: $STI,%s,%s\n", field[1], field[2]);
         return mask;
@@ -3984,7 +3993,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"MWV", NULL, 0,  false, processMWV},   // Wind Speed and Angle
 #ifdef OCEANSERVER_ENABLE
         {"OHPR", NULL, 18, false, processOHPR},
-#endif /* OCEANSERVER_ENABLE */
+#endif  // OCEANSERVER_ENABLE
         {"OSD", NULL, 0,  false, NULL},             // ignore Own Ship Data
         // general handler for Ashtech
         {"PASHR", NULL, 3, false, processPASHR},
@@ -4219,7 +4228,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         break;
     }
 
-    /* prevent overaccumulation of sat reports */
+    // prevent overaccumulation of sat reports
     if (!str_starts_with(session->nmea.field[0] + 2, "GSV")) {
         session->nmea.last_gsv_talker = '\0';
     }
@@ -4227,7 +4236,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         session->nmea.last_gsa_talker = '\0';
     }
 
-    /* timestamp recording for fixes happens here */
+    // timestamp recording for fixes happens here
     if (0 != (mask & TIME_SET)) {
         if (0 == session->nmea.date.tm_year &&
             0 == session->nmea.date.tm_mday) {
