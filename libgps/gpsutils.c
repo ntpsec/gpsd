@@ -248,6 +248,17 @@ done:
 
 #define MONTHSPERYEAR   12      /* months per calendar year */
 
+// clear a baseline_t
+static void gps_clear_base(struct baseline_t *base)
+{
+    base->status = STATUS_UNK;
+    base->east = NAN;
+    base->north = NAN;
+    base->up = NAN;
+    base->length = NAN;
+    base->course = NAN;
+}
+
 // stuff a fix structure with recognizable out-of-band values
 void gps_clear_fix(struct gps_fix_t *fixp)
 {
@@ -296,6 +307,7 @@ void gps_clear_fix(struct gps_fix_t *fixp)
     fixp->wanglet = NAN;
     fixp->wspeedr = NAN;
     fixp->wspeedt = NAN;
+    gps_clear_base(&fixp->base);
 }
 
 // stuff an attitude structure with recognizable out-of-band values
@@ -321,6 +333,7 @@ void gps_clear_att(struct attitude_t *attp)
     attp->roll = NAN;
     attp->temp = NAN;
     attp->yaw = NAN;
+    gps_clear_base(&attp->base);
 }
 
 void gps_clear_dop( struct dop_t *dop)
