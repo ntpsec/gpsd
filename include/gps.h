@@ -94,6 +94,7 @@ extern "C" {
  * 13    Add rtcm3_msm
  *       fix tow in never used struct rtcm3_1015_t
  *       remove never used struct rtcm3_1016_t and struct rtcm3_1017_t
+ *       add struct baseline_t
  *
  */
 #define GPSD_API_MAJOR_VERSION  13      // bump on incompatible changes
@@ -143,6 +144,24 @@ extern "C" {
  */
 
 typedef struct timespec timespec_t;     // Unix time as sec, nsec
+
+/* Baseline data is here.  Some receivers, like the Skytraq
+ * PX1172RH_DS, report two baselines.  One from a fixed
+ * (surveyed in) base to the mving base, and one from the moving
+ * base to the moving rover.
+ */
+struct baseline_t {
+    
+    /* status, aka mode, valid values:
+     * STATUS_UNK, STATUS_RTK_FIX, STATUS_RTK_FLT
+     */
+    int status;
+    double east;        // East projection of baseline, meters
+    double north;      // North projection of baseline, meters
+    double up;          // Up projection of baseline, meters
+    double length;      // length, meters.
+    double course;      // course, degrees
+};
 
 /* GPS error estimates are all over the map, and often unspecified.
  * try for 1-sigma if we can... */
@@ -236,6 +255,7 @@ struct gps_fix_t {
     double wanglet;             // Wind angle, true, m/s
     double wspeedr;             // Wind speed, relative, m/s
     double wspeedt;             // Wind speed, true, m/s
+    struct baseline_t base;     // baseline from fixed base
 };
 
 /* Some GNSS receivers, like u-blox 8, can log fixes for later use.
@@ -2464,6 +2484,11 @@ struct satellite_t {
 #define SAT_HEALTH_BAD 2
 };
 
+/* attitude_t was oringally for real IMUs that are syncronous
+ * to the GNSS epoch.  Skytrak introduced a "moving base/rover"
+ * that is used as a "GNSS Compass".  Essentially a synthetic
+ * IMU.  To support this, related data (baseline_t) is also here.
+ */
 struct attitude_t {
     timespec_t  mtime;  // time of measurement
     // arbitrary time tag (see UBX-ESF-MEAS), 32 bit unsigned
@@ -2500,6 +2525,7 @@ struct attitude_t {
     char pitch_st;
     char roll_st;
     char yaw_st;
+    struct baseline_t base;  // baseline from moving base
 };
 
 struct dop_t {
