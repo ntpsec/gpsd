@@ -3787,8 +3787,7 @@ static gps_mask_t processPSTI035(int count UNUSED, char *field[],
      */
 
     gps_mask_t mask = ONLINE_SET;
-    int base_mode;
-    double base_E, base_N, base_U, base_len, base_crs;
+    struct baseline_t *base = &session->gpsdata.attitude.base;
 
     // RTK Baseline Data of Rover Moving Base Receiver
     if ('\0' != field[2][0] &&
@@ -3804,24 +3803,26 @@ static gps_mask_t processPSTI035(int count UNUSED, char *field[],
         // No valid data, except time, sort of
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "NMEA0183: PSTI,035: not valid\n");
+        base->status = STATUS_UNK;
         return mask;
     }
     if ('F' != field[5][0]) {
         // Float RTX
-        base_mode = STATUS_RTK_FLT;
+        base->status = STATUS_RTK_FLT;
     } else {
-        base_mode = STATUS_RTK_FIX;
+        base->status = STATUS_RTK_FIX;
     }
-    base_E = safe_atof(field[6]);
-    base_N = safe_atof(field[7]);
-    base_U = safe_atof(field[8]);
-    base_len = safe_atof(field[9]);
-    base_crs = safe_atof(field[10]);
+    base->east = safe_atof(field[6]);
+    base->north = safe_atof(field[7]);
+    base->up = safe_atof(field[8]);
+    base->length = safe_atof(field[9]);
+    base->course = safe_atof(field[10]);
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "NMEA0183: PSTI,035: RTK Baseline mode %d E %.3f  N %.3f  U %.3f "
-             "lenght %.3f  course %.3f \n",
-             base_mode, base_E, base_N, base_U, base_len, base_crs);
+             "length %.3f course %.3f\n",
+             base->status, base->east, base->north, base->up,
+             base->length, base->course);
     return mask;
 }
 
