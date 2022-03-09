@@ -4540,6 +4540,24 @@ void json_att_dump(const struct gps_data_t *gpsdata,
     if (0 != isfinite(att->depth)) {
         str_appendf(reply, replylen, ",\"depth\":%.3f", att->depth);
     }
+    // FIXME:  split into a function, and also use in FIX.
+    if (STATUS_UNK != att->base.status) {
+        if (0 != isfinite(att->base.east)) {
+            str_appendf(reply, replylen, ",\"baseE\":%.3f", att->base.east);
+        }
+        if (0 != isfinite(att->base.north)) {
+            str_appendf(reply, replylen, ",\"baseN\":%.3f", att->base.north);
+        }
+        if (0 != isfinite(att->base.up)) {
+            str_appendf(reply, replylen, ",\"baseU\":%.3f", att->base.up);
+        }
+        if (0 != isfinite(att->base.length)) {
+            str_appendf(reply, replylen, ",\"baseL\":%.3f", att->base.length);
+        }
+        if (0 != isfinite(att->base.course)) {
+            str_appendf(reply, replylen, ",\"baseC\":%.3f", att->base.course);
+        }
+    }
 
     (void)strlcat(reply, "}\r\n", replylen);
 }
