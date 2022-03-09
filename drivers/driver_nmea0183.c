@@ -3507,6 +3507,40 @@ static gps_mask_t processMWV(int c UNUSED, char *field[],
     return mask;
 }
 
+static gps_mask_t processQuectelFWVersion(int c UNUSED, char* field[],
+    struct gps_device_t* session)
+{
+	// Example request & response are provided courtesy of Quectel below.
+	// This command is not publically documented, but Quectel support
+	// provided this description via email. This has been tested on 
+	// Quectel version L70-M39, but all recent versions of Quectel
+	// support this command is well.
+	//
+	// Request:
+	// $PQVERNO,R*3F
+	//
+	// Response:
+	// $PQVERNO,R,L96NR01A03S,2018/07/30,04:17*6B
+	//
+	// Description of the 6 fields are below.
+	//
+	// 1. $PQVERNO,              Query command
+	// 2. R,                     Read
+	// 3. L96NR01A03S,           Quectel firmware version number
+	// 4. 2018/07/30,            Firmware build date
+	// 5. 04:17*                 Firmware build time
+	// 6. 6B                     Checksum
+	//
+    // subtract 1 because we don't care about the terminating null byte ('\0')
+    if (0 == strncmp(session->nmea.field[0], "PQVERNO", sizeof("PQVERNO") - 1)
+        && '\0' != field[2][0]) {
+        (void)strlcpy(session->subtype1, session->nmea.field[2],
+            sizeof(session->subtype1));
+    }
+
+    return ONLINE_SET;
+}
+
 static gps_mask_t processPMTK001(int c UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
@@ -3632,6 +3666,20 @@ static gps_mask_t processPMTK705(int count, char *field[],
                        "%s,%s,%s,%s",
                        field[1], field[2], field[3], field[4]);
     }
+    
+    if ('\0' == session->subtype1[0])
+    {
+	    // Query for the Quectel firmware version. 
+	    // Quectel GPS receivers containing an MTK chipset use
+	    // this command to return their FW version.
+	    // From 
+	    // https://forums.quectel.com/t/determine-nmea-version-of-l76-l/3882/5
+	    // "$PQVERNO is an internal command and used to query Quectel FW 
+	    // version. We haven’t added this internal command in GNSS
+	    // protocol spec."
+	    (void)nmea_send(session, "$PQVERNO,R");
+	}
+            
     return ONLINE_SET;
 }
 
@@ -4027,7 +4075,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         // MediaTek/Trimble Satellite Channel Status
         {"PMTKCHN", NULL, 0, false, NULL},
         // Quectel proprietary
-        {"PQVERNO", NULL, 3, false, NULL},          // Version
+        {"PQVERNO", NULL, 3, false, processQuectelFWVersion},  // Version
         // smart watch sensors, Yes: space!
         {"PRHS ", NULL, 2,  false, processPRHS},
         {"PRWIZCH", NULL, 0, false, NULL},          // Rockwell Channel Status
