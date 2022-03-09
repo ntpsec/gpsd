@@ -2366,11 +2366,11 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 36;
             break;
         }
-        session->newdata.ecef.x = getbed64((char *)buf, 0);  /* X */
-        session->newdata.ecef.y = getbed64((char *)buf, 8);  /* Y */
-        session->newdata.ecef.z = getbed64((char *)buf, 16); /* Z */
-        d4 = getbed64((char *)buf, 24); /* clock bias */
-        ftow = getbef32((char *)buf, 32); /* time-of-fix */
+        session->newdata.ecef.x = getbed64((char *)buf, 0);  // X
+        session->newdata.ecef.y = getbed64((char *)buf, 8);  // Y
+        session->newdata.ecef.z = getbed64((char *)buf, 16); // Z
+        d4 = getbed64((char *)buf, 24);                      // clock bias
+        ftow = getbef32((char *)buf, 32);                    // time-of-fix
         DTOTS(&ts_tow, ftow);
         session->newdata.time = gpsd_gpstime_resolv(session,
                                                     session->context->gps_week,
@@ -2738,6 +2738,45 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                      u2, u3);
             break;
 
+        case 0xa7:
+            /* Thunderbolt Individual Satellite Solutions
+             * partial decode
+             */
+            if (10 > len) {
+                bad_len = 10;
+                break;
+            }
+            // we assume the receiver not in some crazy mode, and is GPS time
+            tow = getbeu32(buf, 2);             // gpstime in seconds
+            ts_tow.tv_sec = tow;
+            ts_tow.tv_nsec = 0;
+            u1 = buf[1];                     // format, 0 Float, 1 Int
+
+            if (0 == u1) {
+                // floating point mode
+                d1 = getbef32((char *)buf, 6);   // clock bias (combined)
+                d2 = getbef32((char *)buf, 10);  // clock bias rate (combined)
+                // FIXME: decode the individual biases
+                GPSD_LOG(LOG_PROG, &session->context->errout,
+                         "TSIP x8f-a7: tow %llu mode %u bias %e "
+                         "bias rate %e\n",
+                         (long long unsigned)tow, u1, d1, d2);
+            } else if (1 == u1) {
+                // integer mode
+                s1 = getbeu16(buf, 6);    // Clock Bias (combined)
+                s2 = getbeu16(buf, 8);    // Clock Bias rate (combined)
+                // FIXME: decode the individual biases
+                GPSD_LOG(LOG_PROG, &session->context->errout,
+                         "TSIP x8f-a7: tow %llu mode %u bias %d "
+                         "bias rate %d\n",
+                         (long long unsigned)tow, u1, s1, s2);
+            } else {
+                // unknown mode
+                GPSD_LOG(LOG_WARN, &session->context->errout,
+                         "TSIP x8f-a7: tow %llu mode %u. Unnown mode\n",
+                         (long long unsigned)tow, u1);
+            }
+            break;
         case 0xab:
             /* Thunderbolt Timing Superpacket
              * Not Present in:
@@ -2778,7 +2817,6 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                                   sizeof(ts_buf)),
                      gps_maskdump(mask));
             break;
-
 
         case 0xac:
             /* Supplemental Timing Packet (0x8f-ac)
