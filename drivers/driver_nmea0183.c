@@ -808,7 +808,7 @@ static gps_mask_t processGLL(int count, char *field[],
 
 // Geographic position - Latitude, Longitude, and more
 static gps_mask_t processGNS(int count UNUSED, char *field[],
-                               struct gps_device_t *session)
+                             struct gps_device_t *session)
 {
     /* Introduced in NMEA 4.0?
      *
@@ -933,6 +933,47 @@ static gps_mask_t processGNS(int count UNUSED, char *field[],
              session->newdata.longitude,
              session->newdata.mode,
              session->newdata.status);
+    return mask;
+}
+
+// GNSS Range residuals
+static gps_mask_t processGRS(int count UNUSED, char *field[],
+                             struct gps_device_t *session)
+{
+    /* In NMEA 3.01
+     *
+     * Example:
+     * $GPGRS,150119.000,1,-0.33,-2.59,3.03,-0.09,-2.98,7.12,-15.6,17.0,,,,*5A
+     *
+     * 1:  150119.000    UTC HHMMSS.SS
+     * 2:  1             Mode: 0 == original, 1 == recomputed
+     * 3:  -0.33         range residual in meters sat 1
+     * 4:  -2.59         range residual sat 2
+     * [...]
+     * n:   *5A          Mandatory NMEA checksum
+     *
+     */
+    int mode;
+    gps_mask_t mask = ONLINE_SET;
+
+    if ('\0' == field[1][0] ||
+        0 != merge_hhmmss(field[1], session)) {
+        // bad time
+        return mask;
+    }
+
+    mode = atoi(field[2]);
+    if (1 != mode &&
+        2 != mode) {
+        // bad mode
+        return mask;
+    }
+
+    // FIXME: partial decode.  How to match sat numbers up with GSA?
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: %s: mode %d count %d\n",
+             field[0], mode, count);
     return mask;
 }
 
@@ -4028,7 +4069,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"GLC", NULL, 0,  false, NULL},   // ignore Geographic Position, LoranC
         {"GLL", NULL, 7,  true, processGLL},
         {"GNS", NULL, 13, false, processGNS},
-        {"GRS", NULL, 0,  false, NULL},       // ignore GNSS Range Residuals
+        {"GRS", NULL, 4,  false, processGRS},    // GNSS Range Residuals
         {"GSA", NULL, 18, false, processGSA},
         {"GST", NULL, 8,  false, processGST},
         {"GSV", NULL, 0,  false, processGSV},
