@@ -4542,6 +4542,7 @@ void json_att_dump(const struct gps_data_t *gpsdata,
     }
     // FIXME:  split into a function, and also use in FIX.
     if (STATUS_UNK != att->base.status) {
+        str_appendf(reply, replylen, ",\"baseS\":%d", att->base.status);
         if (0 != isfinite(att->base.east)) {
             str_appendf(reply, replylen, ",\"baseE\":%.3f", att->base.east);
         }
