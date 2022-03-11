@@ -1,5 +1,5 @@
 = cgps(1)
-:date: 25 February 2021
+:date: 11 March 2022
 :keywords: gps, gpsd, cgps
 :manmanual: GPSD Documentation
 :mansource: GPSD Version {gpsdver}
@@ -45,19 +45,23 @@ that do document their estimates are inconsistent about what they mean.
 *-D LVL*, *--debug LVL*::
   Sets the debug level; it is primarily for use by GPSD developers. It
   enables various progress messages to standard error.
+*-i*, *--imu*::
+  Show IMU instead of fix and satellite data.
 *-l FMT*, *--llfmt FMT*::
   Sets the format of latitude and longitude reports. The value 'd'
   produces decimal degrees and is the default. The value 'm' produces
   degrees and decimal minutes. The value 's' produces degrees, minutes,
   and decimal seconds.
-*-s*, *--silent*::
-  Prevents *cgps* from displaying the raw data coming from the daemon. This
-  display can also be toggled with the s command.
+*-m*, *--magtrack*::
+  Display tracks as magnetic, not true.
 *-m*, *--magtrack*::
   Display your magnetic track (as opposed to your true track). This is a
   calculated value, not a measured value. Magnetic variation is always
   potentially subject to large errors, but is usually better than two
   degrees.
+*-s*, *--silent*::
+  Prevents *cgps* from displaying the raw data coming from the daemon. This
+  display can also be toggled with the s command.
 *-u UNITS*, *--units UNITS*::
   Set the system units for display; follow the keyword with 'i' for
   'imperial' for American units (International Feet in altitude and

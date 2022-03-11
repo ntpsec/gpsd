@@ -7,7 +7,7 @@
   Remove nmea0183 option and NMEA0183_ENABLE.  Always build.
   Remove netfeed option and NETFEED_ENABLE.  Always build.
   gpsd will retry ntrip:// and tcp:// connections
-  cgps can expand to show more sats.
+  cgps can expand to show more sats. Added --rtk option.
   maidenhead() checks for input errors.
   Better SHM logs.
   PPS and TOFF JSON now include shm used, and real precision.
@@ -15,6 +15,8 @@
   split debug messages into different syslog() levels.
   New ppscheck options, and can use /dev/ppsX devices.
   First try at TSIPv1 protocol decodes.
+  Decode Quectel $PQVERNO for firmware version
+  Decode Skytrak $PSTI,035 and 036 for RTK compass
 
 3.23.1: 2021-09-21
   Improve ubx cycle detection.

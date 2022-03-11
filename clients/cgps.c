@@ -265,6 +265,49 @@ static void die(int sig, const char *msg)
     exit(EXIT_SUCCESS);
 }
 
+
+// convert fix.status to a static string
+static const char *status2str(int status)
+{
+    const char *str;
+
+    switch (status) {
+    case STATUS_DGPS:
+        str = "DGPS ";
+        break;
+    case STATUS_RTK_FIX:
+        str = "RTKFIX";
+        break;
+    case STATUS_RTK_FLT:
+        str = "RTKFLT ";
+        break;
+    case STATUS_DR:
+        str = "DR ";
+        break;
+    case STATUS_GNSSDR:
+        str = "GNSSDR ";
+        break;
+    case STATUS_TIME:
+        str = "FIXED ";
+        break;
+    case STATUS_PPS_FIX:
+        str = "P(Y) ";
+        break;
+    case STATUS_SIM:
+        str = "SIM ";
+        break;
+    case STATUS_UNK:
+        FALLTHROUGH
+    case STATUS_GPS:
+        FALLTHROUGH
+    default:
+        // ignore:
+        str = "";
+        break;
+    }
+    return str;
+}
+
 static enum deg_str_type deg_type = deg_dd;
 
 // initialize curses and set up screen windows
@@ -427,6 +470,7 @@ static void windowsetup(void)
         (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Roll:");
         (void)mvwaddstr(datawin, row++, RTK_WIDTH - 8, "deg");
         row++;
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Status:");
         (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "East:");
         (void)mvwaddstr(datawin, row++, RTK_WIDTH - 8, "m");
         (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "North:");
@@ -655,7 +699,8 @@ static void update_rtk(struct attitude_t *datap, int col)
     LINE(datap->pitch);
     LINE(datap->roll);
     row++;
-    // LINE(datap->base.status);
+    (void)mvwprintw(datawin, row++, col, "   %-*s", col_width,
+                    status2str(datap->base.status));
     LINE(datap->base.east);
     LINE(datap->base.north);
     LINE(datap->base.up);
@@ -979,36 +1024,8 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
         const char *mod = "";
 
         newstate = gpsdata->fix.mode;
-        switch (gpsdata->fix.status) {
-        case STATUS_DGPS:
-            mod = "DGPS ";
-            break;
-        case STATUS_RTK_FIX:
-            mod = "RTK ";
-            break;
-        case STATUS_RTK_FLT:
-            mod = "RTK ";
-            break;
-        case STATUS_DR:
-            mod = "DR ";
-            break;
-        case STATUS_GNSSDR:
-            mod = "GNSSDR ";
-            break;
-        case STATUS_TIME:
-            mod = "FIXED ";
-            break;
-        case STATUS_PPS_FIX:
-            mod = "P(Y) ";
-            break;
-        case STATUS_SIM:
-            mod = "SIM ";
-            break;
-        default:
-            // ignore:
-            mod = "";
-            break;
-        }
+        mod = status2str(gpsdata->fix.status);
+
         switch (gpsdata->fix.mode) {
         case MODE_2D:
             fmt = "2D %sFIX (%d secs)";
