@@ -17,8 +17,8 @@
    to be displayed.
    ================================================================== */
 
-// Width of Compass/IMU window
-#define IMU_WIDTH 80
+#define IMU_WIDTH 80     // Width of Compass/IMU window
+#define RTK_WIDTH 42     // Width of RTK window
 
 /* This defines how much overhead is contained in the 'datawin' window
    (eg, box around the window takes two lines). */
@@ -120,6 +120,7 @@ static bool magnetic_flag = false;       // use magnetic, not true, heading
 static int window_ysize = 0;             // rows in datawin
 static int display_sats = 0;             // number of rows of sats to display
 static bool imu_flag = false;
+static bool rtk_flag = false;
 
 // pseudo-signals indicating reason for termination
 #define CGPS_QUIT       0       // voluntary termination
@@ -344,7 +345,7 @@ static void windowsetup(void)
             (void)wsetscrreg(messages, 0, ysize - (window_ysize));
         }
 
-        // Do the initial compass field label setup.
+        // Do the initial IMU field label setup.
         (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "msg:");
         (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Time:");
         (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "timeTag:");
@@ -379,8 +380,70 @@ static void windowsetup(void)
         // make it so
         (void)refresh();
         return;
-    }
+    } // else
 
+    if (rtk_flag) {
+        // We're an RTK, set up accordingly.
+        int row = 1;
+
+        if ((RTK_WIDTH - 2) > COLS) {
+            // allow 78, cutting of the two rightmost columns is acceptable
+            die(0, "Your terminal not wide enough.  80 columns required.");
+        }
+
+        if (MIN_COMPASS_DATAWIN_YSIZE == ysize) {
+            raw_flag = false;
+            window_ysize = MIN_COMPASS_DATAWIN_YSIZE;
+        } else if (MIN_COMPASS_DATAWIN_YSIZE < ysize) {
+            raw_flag = true;
+            window_ysize = MIN_COMPASS_DATAWIN_YSIZE;
+        } else {
+            die(0, "Your terminal does not have enough rows run cgps.");
+        }
+
+        datawin = newwin(window_ysize, RTK_WIDTH, 0, 0);
+
+        // do not block waiting for user input
+        (void)nodelay(datawin, true);
+
+        if (NULL != messages) {
+            (void)delwin(messages);
+            messages = NULL;
+        }
+        if (raw_flag) {
+            messages = newwin(0, 0, window_ysize, 0);
+
+            (void)scrollok(messages, true);
+            (void)wsetscrreg(messages, 0, ysize - (window_ysize));
+        }
+
+        // Do the initial RTK field label setup.
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "msg:");
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Time:");
+        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Heading:");
+        (void)mvwaddstr(datawin, row++, RTK_WIDTH - 8, "deg");
+        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Pitch:");
+        (void)mvwaddstr(datawin, row++, RTK_WIDTH - 8, "deg");
+        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Roll:");
+        (void)mvwaddstr(datawin, row++, RTK_WIDTH - 8, "deg");
+        row++;
+        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "East:");
+        (void)mvwaddstr(datawin, row++, RTK_WIDTH - 8, "m");
+        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "North:");
+        (void)mvwaddstr(datawin, row++, RTK_WIDTH - 8, "m");
+        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Up:");
+        (void)mvwaddstr(datawin, row++, RTK_WIDTH - 8, "m");
+        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Length:");
+        (void)mvwaddstr(datawin, row++, RTK_WIDTH - 8, "m");
+        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Course:");
+        (void)mvwaddstr(datawin, row++, RTK_WIDTH - 8, "deg");
+        (void)wborder(datawin, 0, 0, 0, 0, 0, 0, 0, 0);
+        // done with RTK setup
+
+        // make it so
+        (void)refresh();
+        return;
+    }
     if ((DATAWIN_WIDTH + SATELLITES_WIDTH - 2) > COLS) {
         // allow 78, cutting of the two rightmost columns is acceptable
         die(0, "Your terminal not wide enough.  80 columns required.");
@@ -536,8 +599,7 @@ static void update_imu(struct attitude_t *datap, int col)
 }
 
 // This gets called once for each new sentence.
-static void update_imu_panel(struct gps_data_t *gpsdata,
-                                 const char *message)
+static void update_imu_panel(struct gps_data_t *gpsdata, const char *message)
 {
     int update = 0;
     struct attitude_t *datap;
@@ -562,6 +624,60 @@ static void update_imu_panel(struct gps_data_t *gpsdata,
             update = 1;
         }
     }
+    if (0 != update) {
+        (void)wrefresh(datawin);
+    }
+
+    if (raw_flag && !silent_flag) {
+        // Be quiet if the user requests silence.
+        (void)waddstr(messages, message);
+        (void)wrefresh(messages);
+    }
+}
+
+// update RTK panale
+static void update_rtk(struct attitude_t *datap, int col)
+{
+    int row = 1;
+    int col_width = 14;
+
+    (void)mvwprintw(datawin, row++, col, "%-*s", col_width, datap->msg);
+    // Print time/date.
+    if (0 < datap->mtime.tv_sec) {
+        char scr[128];
+
+        (void)timespec_to_iso8601(datap->mtime, scr, sizeof(scr));
+        (void)mvwprintw(datawin, row, col, "%-*s", col_width, scr);
+    }
+    row++;
+
+    LINE(datap->heading);
+    LINE(datap->pitch);
+    LINE(datap->roll);
+    row++;
+    // LINE(datap->base.status);
+    LINE(datap->base.east);
+    LINE(datap->base.north);
+    LINE(datap->base.up);
+    LINE(datap->base.length);
+    LINE(datap->base.course);
+}
+
+// This gets called once for each new sentence.
+static void update_rtk_panel(struct gps_data_t *gpsdata, const char *message)
+{
+    int update = 0;
+    struct attitude_t *datap;
+
+    datap = &gpsdata->attitude;
+    if (0 < datap->mtime.tv_sec) {
+        if ('\0' == datap->msg[0]) {
+            strlcpy(datap->msg, "  ATT", sizeof(datap->msg));
+        }
+        update_rtk(datap, 16);
+        update = 1;
+    }
+
     if (0 != update) {
         (void)wrefresh(datawin);
     }
@@ -1094,6 +1210,7 @@ static void usage(char *prog,  int exit_code)
         "  --imu               Display IMU data, not GNSS data\n"
         "  --llfmt FMT         Select lat/lon format, same as -l\n"
         "  --magtrack          Display track as estimated magnetic track.\n"
+        "  --rtk               Display RTK data, not GNSS data\n"
         "  --silent            Be silent, don't print raw gpsd JSON.\n"
         "  --units U           Select distance and speed units, same as -u.\n"
         "  --version           Show version, then exit\n"
@@ -1106,6 +1223,7 @@ static void usage(char *prog,  int exit_code)
         "                          m = DD MM.mmmmmm'\n"
         "                          s = DD MM' SS.sssss\"\n"
         "  -m                  Display track as the estimated magnetic track\n"
+        "  -r                  Display RTK data, not GNSS data\n"
         "  -s                  Be silent, don't print raw gpsd JSON.\n"
         "  -u {i|m|k}          Select distance and speed units\n"
         "                          i = imperial\n"
@@ -1380,7 +1498,7 @@ int main(int argc, char *argv[])
     int wait_clicks = 0;      // cycles to wait before gpsd timeout
     // buffer to hold one JSON message
     char message[GPS_JSON_RESPONSE_MAX];
-    const char *optstring = "?D:hil:msu:V";
+    const char *optstring = "?D:hil:mrsu:V";
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
     static struct option long_options[] = {
@@ -1389,6 +1507,7 @@ int main(int argc, char *argv[])
         {"imu", no_argument, NULL, 'i'},
         {"llfmt", required_argument, NULL, 'l'},
         {"magtrack", no_argument, NULL, 'm' },
+        {"rtk", no_argument, NULL, 'r'},
         {"silent", no_argument, NULL, 's' },
         {"units", required_argument, NULL, 'u'},
         {"version", no_argument, NULL, 'V' },
@@ -1429,6 +1548,9 @@ int main(int argc, char *argv[])
             break;
         case 'm':
             magnetic_flag = true;
+            break;
+        case 'r':
+            rtk_flag = true;
             break;
         case 's':
             silent_flag = true;
@@ -1524,6 +1646,8 @@ int main(int argc, char *argv[])
             // Here's where updates go now that things are established.
             if (imu_flag) {
                 update_imu_panel(&gpsdata, message);
+            } else if (rtk_flag) {
+                update_rtk_panel(&gpsdata, message);
             } else {
                 update_gps_panel(&gpsdata, message, sizeof(message));
             }
