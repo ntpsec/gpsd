@@ -774,6 +774,65 @@ class NoiseView(object):
             widget.set_markup(markup % s)
 
 
+class RTKView(object):
+
+    """Encapsulate view object for watching ATT/RTK data."""
+    COLUMNS = 3
+    ROWS = 4
+    rtkfields = (
+        # First column
+        ("Heading", "heading"),
+        ("Pitch", "pitch"),
+        ("Roll", "roll"),
+        ("Yaw", "yaw"),
+        # second column
+        ("Base Course", "baseC"),
+        ("Base East", "baseE"),
+        ("Base North", "baseN"),
+        ("Base up", "baseU"),
+        # third column
+        ("time", "time"),
+        ("Base Status", "baseS"),
+        ("Base Length", "baseL"),
+        ("", "XX"),
+    )
+
+    def __init__(self):
+        """Initialize class RTKView."""
+        self.widget = Gtk.Grid()
+        self.rtkwidgets = []
+        for i in range(len(RTKView.rtkfields)):
+            colbase = (i // RTKView.ROWS) * 2
+            # attribute / label
+            label = Gtk.Label()
+            label.set_markup("<span font_desc='sans 10'> %s:</span>" %
+                             RTKView.rtkfields[i][0])
+            # force right alignment
+            label.set_halign(Gtk.Align.END)
+            self.widget.attach(label, colbase, i % RTKView.ROWS, 1, 1)
+            # value
+            entry = Gtk.Label()
+            entry.set_xalign(1)            # right align data
+            # span gets lost later
+            entry.set_markup("<span font_desc='monospace 10'> n/a </span>")
+            entry.set_width_chars(10)
+            self.widget.attach_next_to(entry, label,
+                                       Gtk.PositionType.RIGHT, 1, 1)
+            self.rtkwidgets.append((RTKView.rtkfields[i][1], entry))
+
+    def update(self, msg):
+        """Update the RTK data fields."""
+        markup = "<span font_desc='monospace 10'>%s </span>"
+        for (attrname, widget) in self.rtkwidgets:
+            if hasattr(msg, attrname):
+                s = str(getattr(msg, attrname))
+            elif 'time' == attrname:
+                s = "                    n/a "
+            else:
+                s = " n/a "
+            widget.set_markup(markup % s)
+
+
 class Base(object):
 
     """Base class for all the output"""
@@ -852,12 +911,14 @@ class Base(object):
         self.ais_latch = False
         # Flag to turn on ATT if we see ATT, once
         self.att_latch = False
-        # Flag to turn on IMU RAW if we see IMU RAW, once
+        # Flag to turn on IMU MEAS if we see IMU MEAS, once
         self.imumeas_latch = False
         # Flag to turn on IMU RAW if we see IMU RAW, once
         self.imuraw_latch = False
         # Flag to turn on MoiseView if we see GST, once
         self.noise_latch = False
+        # Flag to turn on RTK if we see RTK (base), once
+        self.rtk_latch = False
         self.last_transition = 0.0
         self.daemon = None
         self.device = None
@@ -939,6 +1000,7 @@ frame * {
                  ["IMU RAW Data", False, "<Control>I", "IMU RAW"],
                  ["Noise Statistics", False, "<Control>N", "Noise"],
                  ["Responses", True, "<Control>R", "Responses"],
+                 ["RTK Data", False, "<Control>K", "RTK"],
                  ["Skyview", True, "<Control>S", "Skyview"],
                  ]
 
@@ -1170,11 +1232,20 @@ frame * {
         self.noise_view = NoiseView()
         noiseframe.add(self.noise_view.widget)
 
+        # Add RTK
+        self.rtk_box = Gtk.Grid()
+        vbox.add(self.rtk_box)
+        rtk_frame = Gtk.Frame(label="RTK")
+        self.rtk_box.add(rtk_frame)
+        self.rtk_view = RTKView()
+        rtk_frame.add(self.rtk_view.widget)
+
         self.window.show_all()
         # Hide the ATT/IMU windows until first data seen
         self.att_box.hide()
         self.imumeas_box.hide()
         self.imuraw_box.hide()
+        self.rtk_box.hide()
 
         # Hide the Noise Statistics window until user selects it.
         self.noisebox.hide()
@@ -1190,6 +1261,7 @@ frame * {
             "IMU RAW": self.imuraw_box,
             "Noise": self.noisebox,
             "Responses": self.rawdisplay,
+            "RTK": self.rtk_box,
             "Skyview": self.satbox,
             }
 
@@ -1599,10 +1671,15 @@ frame * {
                     self.ais_box.show()
             elif self.daemon.data["class"] == "ATT":
                 self.att_view.update(self.daemon.data)
+                self.rtk_view.update(self.daemon.data)
                 if not self.att_latch:
                     self.att_latch = True
                     self.menumap['ATT'].set_active(True)
                     self.att_box.show()
+                if not self.rtk_latch:
+                    self.rtk_latch = True
+                    self.menumap['RTK'].set_active(True)
+                    self.rtk_box.show()
             elif self.daemon.data["class"] == "GST":
                 self.noise_view.update(self.daemon.data)
                 if not self.noise_latch:
