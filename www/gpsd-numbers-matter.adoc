@@ -133,7 +133,7 @@ the NIST.
 
 UTC(USNO) supplies the master clock for the GPS system.  In 2020, NIST
 said that UTC(USNO) differed from UTC(NIST) by plus/minus 20 nano
-seconds. See <<NIST USNO>>.  Even if you could track GPS time perfectly,
+seconds. See <<NIST-USNO>>.  Even if you could track GPS time perfectly,
 and it tracked UTC(USNO) perfectly, you are still off by plus/minus 20
 nano seconds.
 
@@ -329,7 +329,7 @@ for Floating-Point Arithmetic]
 
 * [[[NIST2187]]] https://nvlpubs.nist.gov/nistpubs/TechnicalNotes/NIST.TN.2187.pdf[NIST TN 2187]
 
-* [[[NIST-USNO]]] https://www.nist.gov/pml/time-and-frequency-division/time-services/nist-usno/nist-usno-2020-archive[NIST USNO]
+* [[NIST-USNO]] [NIST USNO] https://www.nist.gov/pml/time-and-frequency-division/time-services/nist-usno/nist-usno-2020-archive[NIST USNO]
 
 == COPYING
 

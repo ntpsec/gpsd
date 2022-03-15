@@ -30,7 +30,7 @@ bindings also exist for other languages) and take appropriate care to
 check in their code for the expected major and minor protocol versions.
 
 The GPSD protocol is built on top of JSON, JavaScript Object Notation,
-as specified in <<RFC 7159>>: The JavaScript Object Notation (JSON) Data
+as specified in <<RFC-7159>>: The JavaScript Object Notation (JSON) Data
 Interchange Format. Similar to ECMA 404.
 
 GPSD's use of JSON is restricted in some ways that make parsing it in
@@ -663,7 +663,7 @@ There are various sources of error in the reported clock times. For
 PPS delivered via a real serial-line strobe, serial-interrupt latency
 plus processing time to the timer call should be bounded above by
 about 10 microseconds; that can be reduced to less than 1 microsecond
-if your kernel supports <<RFC 2783>>. USB1.1-to-serial control-line
+if your kernel supports <<RFC-2783>>. USB1.1-to-serial control-line
 emulation is limited to about 1 millisecond. seconds.
 
 Here's an example:
@@ -1568,13 +1568,13 @@ $ gpspipe -w -x 10 | fgrep TPV | jq .
 
 *Project web site:* {gpsdweb}
 
-[[[RFC 2783]]]: https://datatracker.ietf.org/doc/html/rfc2783 +
+[[RFC-2783]] [RFC 2783]: https://datatracker.ietf.org/doc/html/rfc2783 +
 Pulse-Per-Second API for UNIX-like Operating Systems
 
-[[[RFC 7159]]]: https://datatracker.ietf.org/doc/html/rfc7159 +
+[[RFC-7159]] [RFC 7159]: https://datatracker.ietf.org/doc/html/rfc7159 +
 The JavaScript Object Notation (JSON) Data Interchange Format
 
-[[[jq]]]: https://github.com/stedolan/jq
+[[jq]] [jq]: https://github.com/stedolan/jq
 
 == COPYING
 
