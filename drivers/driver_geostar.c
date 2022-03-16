@@ -10,7 +10,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"   // must be before all includes
 
 #include <math.h>
 #include <stdbool.h>
@@ -25,18 +25,30 @@
 #ifdef GEOSTAR_ENABLE
 #define GEOSTAR_CHANNELS   24
 
-#define JAN_2008           0x47798280 /* 1199145600 = 2008 - 1970 in seconds */
+#define JAN_2008           0x47798280  // 1199145600 = 2008 - 1970 in seconds
 
 #define OFFSET(n)          ((n)*4+4)
 
 static int decode_channel_id (uint32_t ch_id) {
         int num = 0;
-        num = (int)(ch_id & 0x1F);                              /* SV ID */
-        if((ch_id & (1<<30)) == 0) num += GLONASS_PRN_OFFSET;   /* GLONASS SV */
-        else if (num == 0 ) num = 32;                           /* GPS SV */
+        num = (int)(ch_id & 0x1F);              // SV ID
+        if (0 == (ch_id & (1<<30))) {
+            num += GLONASS_PRN_OFFSET;          // GLONASS SV
+        } else if (0 == num) {
+            num = 32;                           // GPS SV
+        }
         return num;
 }
 
+/* write to geostar
+ *
+ * id - message is
+ * data - 32 bit words of message content
+ * len - number of 32 bit words in data
+ *
+ * return: 0 == OK
+ *         negative on error
+ */
 static int geostar_write(struct gps_device_t *session,
                          unsigned int id, unsigned char *data, size_t len)
 {
@@ -51,26 +63,26 @@ static int geostar_write(struct gps_device_t *session,
     putbe16(session->msgbuf, 4, id);
     putbe16(session->msgbuf, 6, len);
 
-    /* Copy content */
+    // Copy content
     memcpy(session->msgbuf + 8, data, len * 4);
 
-    len += 2; /* PSGG + id + len */
+    len += 2;      // PSGG + id + len
 
-    /* Calculate checksum */
+    // Calculate checksum
     for (i = 0; (size_t)i < len; i++) {
         cs ^= getleu32(session->msgbuf, i * 4);
     }
 
     putle32(session->msgbuf, len * 4, cs);
 
-    len += 1; /* Checksum */
+    len += 1;    // Checksum
 
     session->msgbuflen = len * 4;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "Sent GeoStar packet id 0x%x\n", id);
     if (gpsd_write(session, session->msgbuf, session->msgbuflen) !=
-        (ssize_t) session->msgbuflen)
+        (ssize_t)session->msgbuflen)
         return -1;
 
     return 0;
@@ -89,19 +101,21 @@ static bool geostar_detect(struct gps_device_t *session)
 
     myfd = session->gpsdata.gps_fd;
 
-    /* request firmware revision and look for a valid response */
+    // request firmware revision and look for a valid response
     putbe32(buf, 0, 0);
-    if (geostar_write(session, 0xc1, buf, 1) == 0) {
+    if (0 == geostar_write(session, 0xc1, buf, 1)) {
         unsigned int n;
         struct timespec to;
+
         // FIXME: this holds the main loop from running...
         for (n = 0; n < 3; n++) {
             // wait one second
             to.tv_sec = 1;
             to.tv_nsec = 0;
-            if (!nanowait(myfd, &to))
+            if (!nanowait(myfd, &to)) {
                 break;
-            if (generic_get(session) >= 0) {
+            }
+            if (0 <= generic_get(session)) {
                 if (session->lexer.type == GEOSTAR_PACKET) {
                     GPSD_LOG(LOG_RAW, &session->context->errout,
                              "geostar_detect found\n");
@@ -133,10 +147,12 @@ static gps_mask_t geostar_analyze(struct gps_device_t *session)
         return 0;
     }
 
-    if (session->lexer.outbuflen < 12 || session->lexer.outbuffer[0] != 'P')
+    if (12 > session->lexer.outbuflen ||
+        'P' != session->lexer.outbuffer[0]) {
         return 0;
+    }
 
-    /* put data part of message in buf */
+    // put data part of message in buf
 
     memset(buf, 0, sizeof(buf));
     memcpy(buf, session->lexer.outbuffer, session->lexer.outbuflen);
@@ -144,7 +160,7 @@ static gps_mask_t geostar_analyze(struct gps_device_t *session)
     buf2[len = 0] = '\0';
     for (i = 0; i < (int)session->lexer.outbuflen; i++) {
         str_appendf(buf2, sizeof(buf2),
-                       "%02x", buf[len++] = session->lexer.outbuffer[i]);
+                    "%02x", buf[len++] = session->lexer.outbuffer[i]);
     }
 
     id = (unsigned int)getleu16(session->lexer.outbuffer, OFFSET(0));
@@ -169,8 +185,8 @@ static gps_mask_t geostar_analyze(struct gps_device_t *session)
         d1 = getled64(buf, OFFSET(1));
         d2 = getled64(buf, OFFSET(3));
         d3 = getled64(buf, OFFSET(5));
-        d4 = getled64(buf, OFFSET(29)); /* GPS time */
-        d5 = getled64(buf, OFFSET(31)); /* GLONASS time */
+        d4 = getled64(buf, OFFSET(29));    // GPS time
+        d5 = getled64(buf, OFFSET(31));    // GLONASS time
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "ECEF coordinates %g %g %g %f %f\n", d1, d2, d3, d4, d5);
         break;
@@ -182,7 +198,7 @@ static gps_mask_t geostar_analyze(struct gps_device_t *session)
 
         session->newdata.latitude = getled64(buf, OFFSET(3)) * RAD_2_DEG;
         session->newdata.longitude = getled64(buf, OFFSET(5)) * RAD_2_DEG;
-        /* altitude above ellipsoid */
+        // altitude above ellipsoid
         session->newdata.altHAE = getled64(buf, OFFSET(7));
         session->newdata.geoid_sep = getled64(buf, OFFSET(9));
         session->gpsdata.satellites_used = (int)getles32(buf, OFFSET(11));
@@ -194,12 +210,12 @@ static gps_mask_t geostar_analyze(struct gps_device_t *session)
         session->newdata.speed = getled64(buf, OFFSET(31));
         session->newdata.track = getled64(buf, OFFSET(33)) * RAD_2_DEG;
 
-        ul1 = getleu32(buf, OFFSET(29)); /* status */
+        ul1 = getleu32(buf, OFFSET(29));   // status
 
-        if (ul1 != 0) {
+        if (0 != ul1) {
             session->newdata.status = STATUS_UNK;
             mask |= STATUS_SET;
-        } else if (session->newdata.status < STATUS_GPS) {
+        } else if (STATUS_GPS > session->newdata.status) {
             // Don't step on previously set status
             session->newdata.status = STATUS_GPS;
             mask |= STATUS_SET;
@@ -232,16 +248,14 @@ static gps_mask_t geostar_analyze(struct gps_device_t *session)
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "Current receiver telemetry %x %d %d %d\n",
                  ul1, ul2, uw1, uw2);
-        if(ul1 & (1<<3)) {
+        if (ul1 & (1<<3)) {
             session->newdata.mode = MODE_2D;
-        }
-        else {
+        } else {
             session->newdata.mode = MODE_3D;
         }
-        if(ul1 & (1<<2)) {
+        if (ul1 & (1<<2)) {
             session->newdata.status = STATUS_GPS;
-        }
-        else {
+        } else {
             session->newdata.status = STATUS_UNK;
             session->newdata.mode = MODE_NO_FIX;
         }
@@ -252,7 +266,9 @@ static gps_mask_t geostar_analyze(struct gps_device_t *session)
         ul1 = getleu32(buf, OFFSET(1));
         GPSD_LOG(LOG_INF, &session->context->errout, "SVs in view %d\n", ul1);
         session->gpsdata.satellites_visible = (int)ul1;
-        if(ul1 > GEOSTAR_CHANNELS) ul1 = GEOSTAR_CHANNELS;
+        if (ul1 > GEOSTAR_CHANNELS) {
+            ul1 = GEOSTAR_CHANNELS;
+        }
         for(i = 0; (uint32_t)i < ul1; i++) {
             int16_t s1, s2, s3;
             ul2 = getleu32(buf, OFFSET(2) + i * 3 * 4);
@@ -448,9 +464,9 @@ static gps_mask_t geostar_analyze(struct gps_device_t *session)
         ul2 = getleu32(buf, OFFSET(3));
         ul3 = getleu32(buf, OFFSET(4));
         (void)snprintf(session->subtype, sizeof(session->subtype),
-                "%u.%u %u.%u.%u %x %c-%u\n",
-                ul4>>16, ul4&0xFFFF, ul1>>9, (ul1>>5)&0xF, ul1&0x1F, ul2,
-                ul3>>24, ul3&0x00FFFFFF);
+                       "%u.%u %u.%u.%u %x %c-%u\n",
+                       ul4>>16, ul4&0xFFFF, ul1>>9, (ul1>>5)&0xF,
+                       ul1&0x1F, ul2, ul3>>24, ul3&0x00FFFFFF);
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "Response to Request FW version command: %s\n",
                  session->subtype);
@@ -487,26 +503,30 @@ static gps_mask_t geostar_analyze(struct gps_device_t *session)
 
 static gps_mask_t geostar_parse_input(struct gps_device_t *session)
 {
-    if (session->lexer.type == GEOSTAR_PACKET) {
+    if (GEOSTAR_PACKET == session->lexer.type) {
         return geostar_analyze(session);;
-    } else
-        return 0;
+    }   // else
+    return 0;
 }
 
+// not used by the daemon, it's for gpsctl and friends
 static ssize_t geostar_control_send(struct gps_device_t *session,
                                  char *buf, size_t buflen)
-/* not used by the daemon, it's for gpsctl and friends */
 {
     return (ssize_t) geostar_write(session,
-                                (unsigned int)buf[0],
-                                (unsigned char *)buf + 1, (buflen - 1)/4);
+                                   (unsigned int)buf[0],
+                                   (unsigned char *)buf + 1, (buflen - 1)/4);
 }
 
 
 static void geostar_init_query(struct gps_device_t *session)
 {
-    unsigned char buf[2 * 4];
-    /* Poll Software Version */
+    unsigned char buf[4];
+
+    // 0xC1 request content is ignored, init for Coverity
+    memset(buf, 0, sizeof(buf));
+
+    // Request Firmware Version
     (void)geostar_write(session, 0xc1, buf, 1);
 }
 
@@ -519,44 +539,45 @@ static void geostar_event_hook(struct gps_device_t *session, event_t event)
         return;
     }
 
-    if (event == event_identified || event == event_reactivate) {
-        /* Select binary packets */
+    if (event == event_identified ||
+        event == event_reactivate) {
+        // Select binary packets
         putbe32(buf, 0, 0xffff0000);
         putbe32(buf, 4, 0);
         (void)geostar_write(session, 0x4f, buf, 2);
 
-        /* Poll Ports params */
+        // Poll Ports params
         putbe32(buf, 0, 1);
         (void)geostar_write(session, 0x81, buf, 1);
         putbe32(buf, 0, 0);
         (void)geostar_write(session, 0x81, buf, 1);
-        /* Poll Init params */
+        // Poll Init params
         (void)geostar_write(session, 0x80, buf, 1);
-        /* Poll Mode */
+        // Poll Mode
         (void)geostar_write(session, 0x82, buf, 1);
-        /* Poll Solution params */
+        // Poll Solution params
         (void)geostar_write(session, 0x83, buf, 1);
-        /* Poll Output rate */
+        // Poll Output rate
         (void)geostar_write(session, 0x84, buf, 1);
-        /* Poll Protocols assignment */
+        // Poll Protocols assignment
         (void)geostar_write(session, 0x86, buf, 1);
-        /* Poll PPS params */
+        // Poll PPS params
         (void)geostar_write(session, 0x8c, buf, 1);
-        /* Poll NMEA packets selected */
+        // Poll NMEA packets selected
         (void)geostar_write(session, 0x8e, buf, 1);
-        /* Poll binary packets selected */
+        // Poll binary packets selected
         (void)geostar_write(session, 0x8f, buf, 1);
     }
 
-    if (event == event_deactivate) {
-        /* Perform cold restart */
+    if (event_deactivate == event) {
+        // Perform cold restart
         putbe32(buf, 0, 3);
         (void)geostar_write(session, 0xc2, buf, 1);
     }
 }
 
 static bool geostar_speed_switch(struct gps_device_t *session,
-                              speed_t speed, char parity, int stopbits)
+                                 speed_t speed, char parity, int stopbits)
 {
     unsigned char buf[4 * 4];
     int iparity;
@@ -584,18 +605,18 @@ static bool geostar_speed_switch(struct gps_device_t *session,
     putbe32(buf, 12, iparity);
     (void)geostar_write(session, 0x41, buf, 4);
 
-    return true;        /* it would be nice to error-check this */
+    return true;        // it would be nice to error-check this
 }
 
 static void geostar_mode(struct gps_device_t *session, int mode)
 {
-    if (mode == MODE_NMEA) {
+    if (MODE_NMEA == mode) {
         unsigned char buf[1 * 4];
-        /* Switch to NMEA mode */
+        // Switch to NMEA mode
         putbe32(buf, 0, 1);
         (void)geostar_write(session, 0x46, buf, 1);
-    } else if (mode == MODE_BINARY) {
-        /* Switch to binary mode */
+    } else if (MODE_BINARY == mode) {
+        // Switch to binary mode
         (void)nmea_send(session, "$GPSGG,SWPROT");
     } else {
         GPSD_LOG(LOG_ERROR, &session->context->errout,
@@ -608,31 +629,31 @@ static double geostar_time_offset(struct gps_device_t *session UNUSED)
     return 0.31;
 }
 
-/* this is everything we export */
-/* *INDENT-OFF* */
+// this is everything we export
+// *INDENT-OFF*
 const struct gps_type_t driver_geostar =
 {
-    .type_name      = "GeoStar",        /* full name of type */
-    .packet_type    = GEOSTAR_PACKET,   /* associated lexer packet type */
-    .flags          = DRIVER_STICKY,    /* remember this */
-    .trigger        = NULL,             /* no trigger */
-    .channels       = GEOSTAR_CHANNELS, /* consumer-grade GPS/GLONASS */
-    .probe_detect   = geostar_detect,   /* probe for device */
-    .get_packet     = generic_get,      /* use the generic packet getter */
-    .parse_packet   = geostar_parse_input,      /* parse message packets */
-    .rtcm_writer    = NULL,             /* doesn't accept DGPS corrections */
+    .type_name      = "GeoStar",             // full name of type
+    .packet_type    = GEOSTAR_PACKET,        // associated lexer packet type
+    .flags          = DRIVER_STICKY,         // remember this
+    .trigger        = NULL,                  // no trigger
+    .channels       = GEOSTAR_CHANNELS,      // consumer-grade GPS/GLONASS
+    .probe_detect   = geostar_detect,        // probe for device
+    .get_packet     = generic_get,           // use the generic packet getter
+    .parse_packet   = geostar_parse_input,   // parse message packets
+    .rtcm_writer    = NULL,                  // no DGPS corrections
     .init_query     = geostar_init_query,    // non-perturbing initial query
     .event_hook     = geostar_event_hook,    // fire on various lifetime events
-    .speed_switcher = geostar_speed_switch,/* change baud rate */
-    .mode_switcher  = geostar_mode,     /* there is a mode switcher */
-    .rate_switcher  = NULL,             /* no rate switcher */
-    .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
-    .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-    .control_send   = geostar_control_send,/* how to send commands */
+    .speed_switcher = geostar_speed_switch,  // change baud rate
+    .mode_switcher  = geostar_mode,          // there is a mode switcher
+    .rate_switcher  = NULL,                  // no rate switcher
+    .min_cycle.tv_sec  = 1,                  // not relevant, no rate switch
+    .min_cycle.tv_nsec = 0,                  // not relevant, no rate switch
+    .control_send   = geostar_control_send,  // how to send commands
     .time_offset     = geostar_time_offset,
 };
-/* *INDENT-ON* */
+// *INDENT-ON*
 
-#endif /* GEOSTAR_ENABLE */
+#endif  // GEOSTAR_ENABLE
 
 // vim: set expandtab shiftwidth=4
