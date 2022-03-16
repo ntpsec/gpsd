@@ -3606,7 +3606,7 @@ static gps_mask_t processPMTK001(int c UNUSED, char *field[],
         if (0 > reason ||
             4 < reason) {
             // WTF?
-            reason = 5;
+            reason = 4;
         }
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NMEA0183: MTK NACK: %s, reason: %s\n",
