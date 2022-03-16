@@ -616,10 +616,9 @@ static ssize_t throttled_write(struct subscriber_t *sub, char *buf,
 
     if (LOG_CLIENT <= context.errout.debug) {
         if (isprint((unsigned char) buf[0])) {
-            // (long)len for 32-bit compatibility
             GPSD_LOG(LOG_CLIENT, &context.errout,
-                     "=> client(%d) len %ld: %s\n",
-                     sub_index(sub), (long)len, buf);
+                     "=> client(%d) len %zu: %s\n",
+                     sub_index(sub), len, buf);
         } else {
             char *cp, buf2[MAX_PACKET_LENGTH * 3];
             buf2[0] = '\0';
@@ -627,8 +626,8 @@ static ssize_t throttled_write(struct subscriber_t *sub, char *buf,
                 str_appendf(buf2, sizeof(buf2),
                                "%02x", (unsigned int)(*cp & 0xff));
             GPSD_LOG(LOG_CLIENT, &context.errout,
-                     "=> client(%d) len %ld: =%s\n",
-                     sub_index(sub), (long)len, buf2);
+                     "=> client(%d) len %zu: =%s\n",
+                     sub_index(sub), len, buf2);
         }
     }
 
