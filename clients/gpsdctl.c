@@ -32,7 +32,9 @@ static int gpsd_control(const char *action, const char *argument)
     char buf[512];
     int status;
 
-    (void)syslog(LOG_ERR, "gpsd_control(action=%s, arg=%s)", action, argument);
+    // limit string to pacify coverity
+    (void)syslog(LOG_ERR, "gpsd_control(action=%.7s, arg=%.*s)",
+                 action, GPS_PATH_MAX, argument);
     if (0 == access(control_socket, F_OK) &&
         0 <= (connect = netlib_localsocket(control_socket, SOCK_STREAM))) {
         syslog(LOG_INFO, "reached a running gpsd");
@@ -125,7 +127,8 @@ int main(int argc, char *argv[])
     // pacify coverity, codacy hates strlen()
     len = strnlen(argv[2], GPS_PATH_MAX);
     if (GPS_PATH_MAX <= len) {
-        (void)syslog(LOG_ERR, "invalid path '%s'", argv[2]);
+        // limit string to pacify Coverity
+        (void)syslog(LOG_ERR, "invalid path '%.*s'", GPS_PATH_MAX, argv[2]);
         usage();
     }
 
