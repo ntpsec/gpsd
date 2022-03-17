@@ -63,7 +63,7 @@ struct classmap_t classmap[CLASSMAP_NITEMS] = {
 static inline double fix_zero(double d, double p)
 {
     // prevent -0.000
-    if (p > fabs(d)) {
+    if (fabs(d) < p) {
         return 0.0;
     }
     return d;
@@ -122,7 +122,7 @@ char *json_stringify(char *to, size_t len, const char *from)
     return to;
 }
 
-void json_version_dump( char *reply, size_t replylen)
+void json_version_dump(char *reply, size_t replylen)
 {
     (void)snprintf(reply, replylen,
                    "{\"class\":\"VERSION\",\"release\":\"%s\",\"rev\":\"%s\","
@@ -221,6 +221,35 @@ static void json_log_dump(const struct gps_device_t *session,
     (void)strlcat(reply, "}\r\n", replylen);
 }
 
+/* dump baseline_t data.
+ * used by json_tpv_dump() and json_att_dump()
+ *
+ * Return: void
+ */
+static void json_base_dump(const struct baseline_t *base,
+                           char *reply, size_t replylen)
+{
+    // FIXME:  split into a function, and also use in FIX.
+    if (STATUS_UNK == base->status) {
+        return;
+    }
+    str_appendf(reply, replylen, ",\"baseS\":%d", base->status);
+    if (0 != isfinite(base->east)) {
+        str_appendf(reply, replylen, ",\"baseE\":%.3f", base->east);
+    }
+    if (0 != isfinite(base->north)) {
+        str_appendf(reply, replylen, ",\"baseN\":%.3f", base->north);
+    }
+    if (0 != isfinite(base->up)) {
+        str_appendf(reply, replylen, ",\"baseU\":%.3f", base->up);
+    }
+    if (0 != isfinite(base->length)) {
+        str_appendf(reply, replylen, ",\"baseL\":%.3f", base->length);
+    }
+    if (0 != isfinite(base->course)) {
+        str_appendf(reply, replylen, ",\"baseC\":%.3f", base->course);
+    }
+}
 
 void json_tpv_dump(const gps_mask_t changed, const struct gps_device_t *session,
                    const struct gps_policy_t *policy,
@@ -476,6 +505,9 @@ void json_tpv_dump(const gps_mask_t changed, const struct gps_device_t *session,
             str_appendf(reply, replylen,
                         ",\"wspeedt\":%.1f", gpsdata->fix.wspeedt);
         }
+    }
+    if (STATUS_UNK != gpsdata->fix.base.status) {
+        json_base_dump(&gpsdata->fix.base, reply, replylen);
     }
     (void)strlcat(reply, "}\r\n", replylen);
 }
@@ -4540,24 +4572,9 @@ void json_att_dump(const struct gps_data_t *gpsdata,
     if (0 != isfinite(att->depth)) {
         str_appendf(reply, replylen, ",\"depth\":%.3f", att->depth);
     }
-    // FIXME:  split into a function, and also use in FIX.
+
     if (STATUS_UNK != att->base.status) {
-        str_appendf(reply, replylen, ",\"baseS\":%d", att->base.status);
-        if (0 != isfinite(att->base.east)) {
-            str_appendf(reply, replylen, ",\"baseE\":%.3f", att->base.east);
-        }
-        if (0 != isfinite(att->base.north)) {
-            str_appendf(reply, replylen, ",\"baseN\":%.3f", att->base.north);
-        }
-        if (0 != isfinite(att->base.up)) {
-            str_appendf(reply, replylen, ",\"baseU\":%.3f", att->base.up);
-        }
-        if (0 != isfinite(att->base.length)) {
-            str_appendf(reply, replylen, ",\"baseL\":%.3f", att->base.length);
-        }
-        if (0 != isfinite(att->base.course)) {
-            str_appendf(reply, replylen, ",\"baseC\":%.3f", att->base.course);
-        }
+        json_base_dump(&att->base, reply, replylen);
     }
 
     (void)strlcat(reply, "}\r\n", replylen);
