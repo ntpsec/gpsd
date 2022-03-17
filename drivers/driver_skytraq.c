@@ -64,7 +64,12 @@ static ssize_t sky_write(struct gps_device_t *session, char *msg,
     bool ok;
     unsigned type = (unsigned)msg[4];
 
+    // max length is undocumented, largest I could find is 261
     len = (size_t)((msg[2] << 8) | msg[3]);
+    // limit to 512 to pacify coverity
+    if (512 < len) {
+        len = 512;
+    }
 
     // calculate Checksum
     crc = 0;
