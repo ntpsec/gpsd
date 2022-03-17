@@ -3600,8 +3600,8 @@ static gps_mask_t processPMTK001(int c UNUSED, char *field[],
             "Invalid",
             "Unsupported",
             "Valid but Failed",
-            "Valid success"       // unused, see above
-            "Unknown",            // gpsd only
+            "Valid success",       // unused, see above
+            "Unknown",             // gpsd only
         };
         if (0 > reason ||
             4 < reason) {
@@ -3822,14 +3822,34 @@ static gps_mask_t processPSTI030(int count UNUSED, char *field[],
     return mask;
 }
 
-/* Skytraq RTK Baseline
- * stub
+/* Skytraq RTK Baseline, fixed base to rover or moving base
+ * Same as $PSTI.035, except that is moving base to rover
  * PX1172RH
  */
 static gps_mask_t processPSTI032(int count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
+    /*
+     * $PSTI,032,041457.000,170316,A,R,0.603,‐0.837,‐0.089,1.036,144.22,,,,,*1B
+     *
+     * 2  UTC time,  hhmmss.sss
+     * 3  UTC Date, ddmmyy
+     * 4  Status, ‘V’ = Void ‘A’ = Active
+     * 5  Mode indicator, ‘F’ = Float RTK. ‘R’ = FIxed RTK
+     * 6  East‐projection of baseline, meters
+     * 7  North‐projection of baseline, meters
+     * 8  Up‐projection of baseline, meters
+     * 9  Baseline length, meters
+     * 10 Baseline course 144.22, true degrees
+     * 11 Reserved
+     * 12 Reserved
+     * 13 Reserved
+     * 14 Reserved
+     * 15 Reserved
+     * 16 Checksum
+     */
     gps_mask_t mask = ONLINE_SET;
+    struct baseline_t *base = &session->gpsdata.fix.base;
 
     if (0 == strcmp(field[4], "A")) {
         // Status Valid
@@ -3842,16 +3862,28 @@ static gps_mask_t processPSTI032(int count UNUSED, char *field[],
             }
         }
     }
-    GPSD_LOG( LOG_PROG,&session->context->errout,
-             "NMEA0183: PSTI,032: stat:%s mode: %s E: %s N: %s U:%s L:%s "
-             "C:%s\n",
-             field[4], field[5],
-             field[6], field[7], field[8],
-             field[9], field[10]);
+
+    if ('F' != field[5][0]) {
+        // Float RTX
+        base->status = STATUS_RTK_FLT;
+    } else {
+        base->status = STATUS_RTK_FIX;
+    }
+    base->east = safe_atof(field[6]);
+    base->north = safe_atof(field[7]);
+    base->up = safe_atof(field[8]);
+    base->length = safe_atof(field[9]);
+    base->course = safe_atof(field[10]);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NMEA0183: PSTI,032: RTK Baseline mode %d E %.3f  N %.3f  U %.3f "
+             "length %.3f course %.3f\n",
+             base->status, base->east, base->north, base->up,
+             base->length, base->course);
     return mask;
 }
 
-// Skytraq RTK Baseline
+// Skytraq RTK Baseline, moving base to moving rover
 // PX1172RH
 static gps_mask_t processPSTI035(int count UNUSED, char *field[],
                                  struct gps_device_t *session)
