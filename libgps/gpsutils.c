@@ -246,7 +246,7 @@ done:
     return fraction;
 }
 
-#define MONTHSPERYEAR   12      /* months per calendar year */
+#define MONTHSPERYEAR   12      // months per calendar year
 
 // clear a baseline_t
 static void gps_clear_base(struct baseline_t *base)
@@ -694,7 +694,7 @@ timespec_t iso8601_to_timespec(char *isotime)
     ret.tv_sec = d.toTime_t();
     ret.tv_nsec = usec * 1e9;;
 #endif
-#endif /* __clang_analyzer__ */
+#endif  // __clang_analyzer__
 
 #if 4 < SIZEOF_TIME_T
     if (253402300799LL < ret.tv_sec) {
@@ -949,7 +949,7 @@ short ubx2_to_prn(int gnssId, int svId)
         } else if (158 >= svId) {
             nmea_PRN = svId;
         } else {
-            /* Huh? */
+            // Huh?
             return 0;
         }
         break;
@@ -986,16 +986,17 @@ short ubx2_to_prn(int gnssId, int svId)
     case 4:
         // IMES, ubx gnssid:svid 1-10 -> to 173-182
         // IMES, ubx PRN         173-182 to 173-182
-        if (10 < svId) {
-            // skip bad svId
-            return 0;
+        if (10 >= svId) {
+            nmea_PRN = svId + 172;
         } else if (173 > svId) {
             // skip bad svId
             return 0;
         } else if (182 >= svId) {
             nmea_PRN = svId;
+        } else {
+            // > 182, skip bad svId
+            return 0;
         }
-        nmea_PRN = svId + 172;
         break;
     case 5:
         // QZSS, ubx gnssid:svid 1-10 to 193-202
