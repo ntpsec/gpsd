@@ -327,7 +327,8 @@ int main(int argc, char *argv[])
         (void)printf("Testing BITMASK(N)\n");
     }
 
-    while (129 > bitm->shift) {
+    // coverity complains about shift more than 63 bits
+    while (64 > bitm->shift) {
         if (bitm->mask != BITMASK(bitm->shift)) {
             failures++;
             printf("BITMASK(0) FAILED, %llu s/b %llu\n",
@@ -340,7 +341,8 @@ int main(int argc, char *argv[])
         (void)printf("Testing UINT2INT(U, N)\n");
     }
 
-    while (129 > uint2->bits) {
+    // coverity complains about shift more than 63 bits
+    while (64 > uint2->bits) {
         if (uint2->res != UINT2INT(uint2->uint, uint2->bits)) {
             failures++;
             printf("UINT2INT(x%llx, %d) FAILED, %lld s/b %lld\n",
