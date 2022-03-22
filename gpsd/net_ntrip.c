@@ -414,6 +414,7 @@ static int ntrip_stream_req_probe(const struct ntrip_stream_t *stream,
     int dsock;
     ssize_t r;
     char buf[BUFSIZ];
+    char outbuf[BUFSIZ];
 
     // open blocking
     dsock = netlib_connectsock(AF_UNSPEC, stream->host, stream->port, "tcp");
@@ -423,8 +424,6 @@ static int ntrip_stream_req_probe(const struct ntrip_stream_t *stream,
                  stream->url, netlib_errstr(dsock), dsock);
         return -1;
     }
-    GPSD_LOG(LOG_SPIN, errout,
-             "NTRIP: stream for req probe connected on fd %d\n", dsock);
     (void)snprintf(buf, sizeof(buf),
             "GET / HTTP/1.1\r\n"
             "Ntrip-Version: Ntrip/2.0\r\n"
@@ -432,6 +431,12 @@ static int ntrip_stream_req_probe(const struct ntrip_stream_t *stream,
             "Host: %s\r\n"
             "Connection: close\r\n"
             "\r\n", VERSION, stream->host);
+
+    GPSD_LOG(LOG_IO, errout,
+             "NTRIP: ntrip_stream_req_probe(%s) fd %d sending >%s<\n",
+             stream->url, dsock,
+             visibilize(outbuf, sizeof(outbuf), buf, strlen(buf)));
+
     r = write(dsock, buf, strlen(buf));
     if ((ssize_t)strlen(buf) != r) {
         GPSD_LOG(LOG_ERROR, errout,
@@ -509,6 +514,7 @@ static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
 {
     int dsock;
     char buf[BUFSIZ];
+    char outbuf[BUFSIZ];
 
     // open blocking
     dsock = netlib_connectsock(AF_UNSPEC, stream->host, stream->port, "tcp");
@@ -533,6 +539,11 @@ static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
             "Connection: close\r\n"
             "\r\n", stream->mountpoint, VERSION, stream->host,
             stream->authStr);
+
+    GPSD_LOG(LOG_IO, errout,
+             "NTRIP: netlib_connectsock() sending >%s<\n",
+             visibilize(outbuf, sizeof(outbuf), buf, strlen(buf)));
+
     if ((ssize_t)strlen(buf) != write(dsock, buf, strlen(buf))) {
         GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: stream write error %s(%d) on fd %d during "
@@ -823,6 +834,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
 {
     socket_t ret = -1;
     char buf[BUFSIZ];
+    char outbuf[BUFSIZ];
 
     GPSD_LOG(LOG_PROG, &device->context->errout,
              "NTRIP: ntrip_open(%s) fd %d state = %d\n",
@@ -947,6 +959,11 @@ int ntrip_open(struct gps_device_t *device, char *orig)
                 "\r\n", device->ntrip.stream.mountpoint, VERSION,
                 device->ntrip.stream.host,
                 device->ntrip.stream.authStr);
+
+        GPSD_LOG(LOG_IO, &device->context->errout,
+                 "NTRIP: ntrip_open() sending >%s<\n",
+                  visibilize(outbuf, sizeof(outbuf), buf, strlen(buf)));
+
         if ((ssize_t)strlen(buf) != write(device->gpsdata.gps_fd, buf,
                                           strlen(buf))) {
             GPSD_LOG(LOG_ERROR, &device->context->errout,

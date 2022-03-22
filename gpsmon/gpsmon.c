@@ -164,8 +164,9 @@ static inline void report_unlock(void)
  *
  ******************************************************************************/
 
-static void visibilize(char *buf2, size_t len2, const char *buf)
 /* string is mostly printable, dress up the nonprintables a bit */
+// FIXME: this duplicates visibilize()
+static void visibilize1(char *buf2, size_t len2, const char *buf)
 {
     const char *sp;
 
@@ -179,9 +180,9 @@ static void visibilize(char *buf2, size_t len2, const char *buf)
                            (unsigned)(*sp & 0xff));
 }
 
+// pass through visibilized if all printable, hexdump otherwise
 static void cond_hexdump(char *buf2, size_t len2,
                          const char *buf, size_t len)
-/* pass through visibilized if all printable, hexdump otherwise */
 {
     size_t i;
     bool printable = true;
@@ -202,7 +203,8 @@ static void cond_hexdump(char *buf2, size_t len2,
                     if (i == len - 2 && buf[i] == '\r')
                         continue;
                 }
-                (void)snprintf(&buf2[j], len2-strlen(buf2), "\\x%02x", (unsigned int)(buf[i] & 0xff));
+                (void)snprintf(&buf2[j], len2-strlen(buf2), "\\x%02x",
+                               (unsigned int)(buf[i] & 0xff));
                 j = strlen(buf2);
             }
     } else {
@@ -331,7 +333,7 @@ static void packet_vlog(char *buf, size_t len, const char *fmt, va_list ap)
 {
     char buf2[BUFSIZ];
 
-    visibilize(buf2, sizeof(buf2), buf);
+    visibilize1(buf2, sizeof(buf2), buf);
 
     report_lock();
     (void)vsnprintf(buf2 + strlen(buf2), len, fmt, ap);

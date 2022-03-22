@@ -96,25 +96,23 @@ void gpsd_release_reporting_lock(void)
     }
 }
 
-#ifndef SQUELCH_ENABLE
-#if __UNUSED
-static void visibilize(char *outbuf, size_t outlen,
-                       const char *inbuf, size_t inlen)
+// copy inbuf string to outbuf, replacingg non-printing characters
+char *visibilize(char *outbuf, size_t outlen, const char *inbuf, size_t inlen)
 {
     const char *sp;
 
     outbuf[0] = '\0';
     // FIXME!! snprintf() when strlcat() will do!
-    for (sp = inbuf; sp < inbuf + inlen && strlen(outbuf)+6 < outlen; sp++)
-        if (isprint((unsigned char) *sp) || (sp[0] == '\n' && sp[1] == '\0')
-          || (sp[0] == '\r' && sp[2] == '\0'))
+    for (sp = inbuf; sp < inbuf + inlen && strlen(outbuf) + 6 < outlen; sp++) {
+        if (isprint((unsigned char)*sp)) {
             (void)snprintf(outbuf + strlen(outbuf), 2, "%c", *sp);
-        else
+        } else {
             (void)snprintf(outbuf + strlen(outbuf), 6, "\\x%02x",
                            0x00ff & (unsigned)*sp);
+        }
+    }
+    return outbuf;
 }
-#endif   // __UNUSED
-#endif   // !SQUELCH_ENABLE
 
 
 // assemble msg in vprintf(3) style, use errout hook or syslog for delivery

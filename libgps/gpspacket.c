@@ -24,7 +24,8 @@ struct gps_lexer_t *ffi_Lexer_init(void);   // For FFI Python interface.
 void gpsd_vlog(const struct gpsd_errout_t*, const int, char*,
                size_t, const char*, va_list);
 
-static void visibilize(char *outbuf, size_t outlen, const char *inbuf,
+// FIXME: this duplicates visibilize()
+static void visibilize1(char *outbuf, size_t outlen, const char *inbuf,
                        size_t inlen) {
   const char *sp;
 
@@ -87,7 +88,7 @@ void gpsd_vlog(const struct gpsd_errout_t *errout, const int errlevel,
     (void)strlcat(buf, err_str, sizeof(buf));
     str_vappendf(buf, sizeof(buf), fmt, ap);
 
-    visibilize(outbuf, outlen, buf, strlen(buf));
+    visibilize1(outbuf, outlen, buf, strlen(buf));
 
     if (getpid() == getsid(getpid()))
       syslog((errlevel <= LOG_SHOUT) ? LOG_ERR : LOG_NOTICE, "%s", outbuf);

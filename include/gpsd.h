@@ -1101,6 +1101,7 @@ extern bool ais_binary_decode(const struct gpsd_errout_t *errout,
 void gpsd_labeled_report(const int, const int,
                          const char *, const char *, va_list);
 
+char *visibilize(char *outbuf, size_t outlen, const char *inbuf, size_t inlen);
 // do not call gpsd_log() directly, use GPSD_LOG() to save a lot of cpu time
 PRINTF_FUNC(3, 4) void gpsd_log(const int, const struct gpsd_errout_t *,
                                 const char *, ...);
