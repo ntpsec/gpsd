@@ -708,7 +708,7 @@ void json_device_dump(const struct gps_device_t *device,
              * or device is a file, pipe, /dev/pps, ttyACM, etc.
              * can be -1 if never configured. */
             if (0 < gpsd_serial_isatty(device) &&
-   -            0 != (speed = gpsd_get_speed(device))) {
+                0 != (speed = gpsd_get_speed(device))) {
 
                 str_appendf(reply, replylen,
                             ",\"native\":%d,\"bps\":%d,\"parity\":\"%c\","
