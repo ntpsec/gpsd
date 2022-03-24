@@ -220,30 +220,33 @@ static void ntrip_str_parse(char *str, size_t len,
  *
  * Return 1 -- found match
  *        0 -- no match, maybe more data to parse?
- *        -1 --  error
+ *        less than zero --  error
  */
 static int ntrip_sourcetable_parse(struct gps_device_t *device)
 {
     struct ntrip_stream_t hold;
     ssize_t llen, len = 0;
     char *line;
-    bool sourcetable = false;
     bool match = false;
-    char buf[BUFSIZ];
-    size_t blen = sizeof(buf);
+    char buf[BUFSIZ / 2];   // half of BUFSIZE, so we can GPSD_LOG() it
     socket_t fd = device->gpsdata.gps_fd;
 
     for (;;) {
         char *eol;
         ssize_t rlen;
 
-        memset(&buf[len], 0, (size_t) (blen - len));
-        rlen = read(fd, &buf[len], (size_t)(blen - 1 - len));
+        memset(&buf[len], 0, sizeof(buf) - (size_t)len);
+        errno = 0;         // paranoia
+        // read, leave room for trailing NUL
+        rlen = read(fd, &buf[len], sizeof(buf) - (size_t)(1 + len));
+        GPSD_LOG(LOG_RAW, &device->context->errout,
+                 "NTRIP: on fd %d len %zd  tried %zd, got %zd\n", fd, len,
+                 sizeof(buf) - (size_t)(1 + len), rlen);
         if (-1 == rlen) {
             if (EINTR == errno) {
                 continue;
             }
-            if (sourcetable &&
+            if (device->ntrip.sourcetable_parse &&
                 !match &&
                 EAGAIN == errno) {
                 /* we have not yet found a match, but there currently
@@ -263,66 +266,73 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                      "NTRIP: stream unexpected close %s(%d) on fd %d "
                      "during sourcetable read\n",
                      strerror(errno), errno, fd);
-            return -1;
+            return -2;
         }
 
         line = buf;
-        rlen = len += rlen;
+        len += rlen;
+        rlen = len;
+        // line points to the next char in buf to analyze
+        // rlen is length of all data in buf
+        // len is length of remaining data in buf, 
+
+        GPSD_LOG(LOG_IO, &device->context->errout,
+                 "NTRIP: source table buffer >%.*s<\n", (int)rlen, buf);
+
         line[rlen] = '\0';      // pacify coverity that this is NUL terminated
 
-        GPSD_LOG(LOG_RAW, &device->context->errout,
-                 "NTRIP: source table buffer %s\n", buf);
+        if (!device->ntrip.sourcetable_parse) {
+            /* For ntrip v1 the very first line s/b:
+             *     "SOURCETABLE 200 OK\r\n"
+             * For ntrip v2, the header should contain:
+             *     "Content-Type: gnss/sourcetable\r\n"
+             */
 
-        sourcetable = device->ntrip.sourcetable_parse;
-        if (!sourcetable) {
             if (str_starts_with(line, NTRIP_SOURCETABLE)) {
                 // parse SOURCETABLE, NTRIP 1.0
-                sourcetable = true;
                 device->ntrip.sourcetable_parse = true;
-                llen = (ssize_t)strlen(NTRIP_SOURCETABLE);
-                line += llen;
-                len -= llen;
-            } else if (NULL != strstr(line, NTRIP_SOURCETABLE2) &&
-                       NULL != (line = strstr(line, NTRIP_BODY))) {
+            } else if (NULL != strstr(line, NTRIP_SOURCETABLE2)) {
                 // parse sourcetable, NTRIP 2.0
-                sourcetable = true;
                 device->ntrip.sourcetable_parse = true;
-                // FIXME: should parse length in header, this a hack
-                llen = (ssize_t)strlen(NTRIP_BODY);
-                line += 4;
-                len -= llen;
             } else {
                 GPSD_LOG(LOG_WARN, &device->context->errout,
                          "NTRIP: Unexpected reply: %s.\n",
                          buf);
-                return -1;
+                return -3;
             }
+            line = strstr(line, NTRIP_BODY);
+            if (NULL == line) {
+                return  -4;
+            }
+            line += 4;        // point to 1st line of body
+            len = rlen - (line - buf);
         }
 
         while (0 < len) {
-            // parse ENDSOURCETABLE
             if (str_starts_with(line, NTRIP_ENDSOURCETABLE)) {
-                goto done;
+                // found ENDSOURCETABLE
+                // we got to the end of source table
+                return -5;
             }
 
             eol = strstr(line, NTRIP_BR);
             if (NULL == eol){
+                // no full line in the buffer
                 break;
             }
-
-            GPSD_LOG(LOG_DATA, &device->context->errout,
-                     "NTRIP: remaining source table lines %s\n", line);
 
             *eol = '\0';
             llen = (ssize_t)(eol - line);
 
-            // TODO: parse headers
+            GPSD_LOG(LOG_IO, &device->context->errout,
+                     "NTRIP: checking: >%s<\n", line);
 
-            // parse STR
             if (str_starts_with(line, NTRIP_STR)) {
+                // parse STR
                 ntrip_str_parse(line + strlen(NTRIP_STR),
                                 (size_t) (llen - strlen(NTRIP_STR)),
                                 &hold, &device->context->errout);
+
                 if (0 == strcmp(device->ntrip.stream.mountpoint,
                                 hold.mountpoint)) {
                     // Found a match to requested stream
@@ -333,7 +343,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                         GPSD_LOG(LOG_ERROR, &device->context->errout,
                                  "NTRIP: stream %s format not supported\n",
                                  line);
-                        return -1;
+                        return -6;
                     }
                     // TODO: support encryption and compression algorithms
                     if (CMP_ENC_NONE != hold.compr_encryp) {
@@ -341,7 +351,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                                  "NTRIP. stream %s compression/encryption "
                                  "algorithm not supported\n",
                                  line);
-                        return -1;
+                        return -7;
                     }
                     // TODO: support digest authentication
                     if (AUTH_NONE != hold.authentication &&
@@ -350,7 +360,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                                  "NTRIP. stream %s authentication method "
                                  "not supported\n",
                                 line);
-                        return -1;
+                        return -8;
                     }
                     // no memcpy, so we can keep the other infos
                     device->ntrip.stream.format = hold.format;
@@ -363,42 +373,42 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                     device->ntrip.stream.fee = hold.fee;
                     device->ntrip.stream.bitrate = hold.bitrate;
                     device->ntrip.stream.set = true;
-                    match = true;
+                    return 1;
                 }
                 /* TODO: compare stream location to own location to
                  * find nearest stream if user hasn't provided one */
             } else if (str_starts_with(line, NTRIP_CAS)) {
                 // TODO: parse CAS, why?
                 // See: http://software.rtcm-ntrip.org/wiki/CAS
-                GPSD_LOG(LOG_INF, &device->context->errout,
+                GPSD_LOG(LOG_IO, &device->context->errout,
                          "NTRIP: Skipping: '%s'\n", line);
             } else if (str_starts_with(line, NTRIP_NET)) {
                 // TODO: parse NET, why?
                 // See: http://software.rtcm-ntrip.org/wiki/NET
-                GPSD_LOG(LOG_INF, &device->context->errout,
+                GPSD_LOG(LOG_IO, &device->context->errout,
                          "NTRIP: Skipping '%s'\n", line);
             }
             // else ???
 
             llen += strlen(NTRIP_BR);
-            line += llen;
-            len -= llen;
-            GPSD_LOG(LOG_RAW, &device->context->errout,
-                     "NTRIP: Remaining source table buffer %zd %s\n", len,
-                     line);
-        }
-        // message too big to fit into buffer
-        if ((blen - 1) == (size_t)len) {
-            return -1;
+            line += llen;        // point to start of next line
+            len -= llen;         // calculate remaining data in buf.
+            GPSD_LOG(LOG_IO, &device->context->errout,
+                     "NTRIP: Remaining source table buffer len %zd\n", len);
         }
 
+        GPSD_LOG(LOG_IO, &device->context->errout,
+                 "NTRIP: Remaining source table buffer len %zd\n", len);
+
         if (0 < len) {
-            memmove(buf, &buf[rlen - len], (size_t) len);
+            // shuffle any remaing fragment to front of buf
+            // line points to the last fragment in buf
+            memmove(buf, line, (size_t)len);
         }
     }
 
-done:
-    return match ? 1 : -1;
+    // fell out of loop, no joy
+    return -9;
 }
 
 /* Connect to NTRIP caster
@@ -883,7 +893,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         GPSD_LOG(LOG_PROG, &device->context->errout,
                  "NTRIP: ntrip_sourcetable_parse(%s) = %d\n",
                  device->ntrip.stream.mountpoint, ret);
-        if (-1 == ret) {
+        if (0 > ret) {
             device->ntrip.conn_state = NTRIP_CONN_ERR;
             return -1;
         }
