@@ -501,9 +501,9 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
                  id, len);
         return mask;
     }
-    sub_id = (unsigned)buf[0];
+    sub_id = getub(buf, 0);
     length = getbeu16(buf, 1);  // expected length
-    mode = (unsigned)buf[3];
+    mode = getub(buf, 3);
 
     if ((length + 3) != (unsigned)len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -544,12 +544,12 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = (unsigned)buf[4];            // NMEA Major version
-        u2 = (unsigned)buf[5];            // NMEA Minor version
-        u3 = (unsigned)buf[6];            // TSIP version
-        u4 = (unsigned)buf[7];            // Trimble NMEA version
-        u6 = getbeu32(buf, 8);            // reserved
-        u7 = (unsigned)buf[12];           // reserved
+        u1 = getub(buf, 4);              // NMEA Major version
+        u2 = getub(buf, 5);              // NMEA Minor version
+        u3 = getub(buf, 6);              // TSIP version
+        u4 = getub(buf, 7);              // Trimble NMEA version
+        u6 = getbeu32(buf, 8);           // reserved
+        u7 = getub(buf, 12);             // reserved
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIPv1 x90-00: NMEA %u.%u TSIP %u TNMEA %u "
                  "res x%04x x%02x \n",
@@ -564,14 +564,14 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = (unsigned)buf[4];            // Major version
-        u2 = (unsigned)buf[5];            // Minor version
-        u3 = (unsigned)buf[6];            // Build number
-        u4 = (unsigned)buf[7];            // Build month
-        u5 = (unsigned)buf[8];            // Build day
+        u1 = getub(buf, 4);               // Major version
+        u2 = getub(buf, 5);               // Minor version
+        u3 = getub(buf, 6);               // Build number
+        u4 = getub(buf, 7);               // Build month
+        u5 = getub(buf, 8);               // Build day
         u6 = getbeu16(buf, 9);            // Build year
         u7 = getbeu16(buf, 11);           // Hardware ID
-        u8 = (unsigned)buf[13];           // Product Name length
+        u8 = getub(buf, 13);              // Product Name length
         session->driver.tsip.hardware_code = u7;
         // check for valid module name length
         // RES720 is 27 long
@@ -602,13 +602,13 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = (unsigned)buf[4];            // port
-        u2 = (unsigned)buf[5];            // port type
-        u3 = (unsigned)buf[6];            // protocol
-        u4 = (unsigned)buf[7];            // baud rate
-        u5 = (unsigned)buf[8];            // data bits
-        u6 = (unsigned)buf[9];            // parity
-        u7 = (unsigned)buf[10];           // stop bits
+        u1 = getub(buf, 4);               // port
+        u2 = getub(buf, 5);               // port type
+        u3 = getub(buf, 6);               // protocol
+        u4 = getub(buf, 7);               // baud rate
+        u5 = getub(buf, 8);               // data bits
+        u6 = getub(buf, 9);               // parity
+        u7 = getub(buf, 10);              // stop bits
         u8 = getbeu32(buf, 11);           // reserved
         u9 = getbeu32(buf, 12);           // reserved
         GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -629,8 +629,8 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         d1 = getbef32((char *)buf, 8);    // elevation mask
         d2 = getbef32((char *)buf, 12);   // signal mask
         d3 = getbef32((char *)buf, 16);   // PDOP mask
-        u2 = (unsigned)buf[20];           // anti-jamming
-        u3 = (unsigned)buf[21];           // fix rate
+        u2 = getub(buf, 20);              // anti-jamming
+        u3 = getub(buf, 21);              // fix rate
         d4 = getbef32((char *)buf, 22);   // Antenna CAble delay, seconds
         u4 = getbeu32(buf, 26);           // reserved
         GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -646,7 +646,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = (unsigned)buf[6];            // status
+        u1 = getub(buf, 6);               // status
         u2 = getbeu32(buf, 7);            // reserved
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIPv1 x91-02: status %u res x%04x\n",
@@ -658,9 +658,9 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = (unsigned)buf[4];            // time basee
-        u2 = (unsigned)buf[5];            // PPS base
-        u3 = (unsigned)buf[6];            // PPS mask
+        u1 = getub(buf, 4);               // time basee
+        u2 = getub(buf, 5);               // PPS base
+        u3 = getub(buf, 6);               // PPS mask
         u4 = getbeu16(buf, 7);            // reserved
         u5 = getbeu16(buf, 9);            // PPS width
         d1 = getbed64((char *)buf, 11);   // PPS offset, in seconds
@@ -676,7 +676,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = (unsigned)buf[4];            // self-survey mask
+        u1 = getub(buf, 4);               // self-survey mask
         u2 = getbeu32(buf, 5);            // self-survey length, # fixes
         u3 = getbeu16(buf, 9);            // horz uncertainty, meters
         u4 = getbeu16(buf, 11);           // vert uncertainty, meters
@@ -691,7 +691,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = (unsigned)buf[4];           // port
+        u1 = getub(buf, 4);              // port
         u2 = getbeu32(buf, 5);           // type of output
         u3 = getbeu32(buf, 9);           // reserved
         u4 = getbeu32(buf, 13);          // reserved
@@ -707,7 +707,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = (unsigned)buf[6];            // reset cause
+        u1 = getub(buf, 6);               // reset cause
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "TSIPv1 x92-01: cause %u\n", u1);
         break;
@@ -717,14 +717,14 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = (unsigned)buf[4];            // reserved
+        u1 = getub(buf, 4);               // reserved
         u2 = getbeu32(buf, 5);            // serial number
         u3 = getbeu64(buf, 9);            // extended serial number
         u4 = getbeu64(buf, 17);           // extended serial number
-        u5 = (unsigned)buf[25];           // build day
-        u6 = (unsigned)buf[26];           // build month
+        u5 = getub(buf, 25);              // build day
+        u6 = getub(buf, 26);              // build month
         u7 = getbeu16(buf, 27);           // build year
-        u8 = (unsigned)buf[29];           // build hour
+        u8 = getub(buf, 29);              // build hour
         u9 = getbeu16(buf, 30);           // machine id
         u10 = getbeu64(buf, 32);          // hardware ID string
         u11 = getbeu64(buf, 40);          // hardware ID string
@@ -750,14 +750,14 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         // could be length 3, or 8, different data...
         switch (length) {
         case 3:
-            u1 = (unsigned)buf[6];            // command
+            u1 = getub(buf, 6);               // command
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "TSIPv1 xa0-00: command %u\n", u1);
             break;
         case 8:
             // ACK/NAK
-            u1 = (unsigned)buf[6];            // command
-            u2 = (unsigned)buf[7];            // status
+            u1 = getub(buf, 6);               // command
+            u2 = getub(buf, 7);               // status
             u3 = getbeu16(buf, 8);            // frame
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "TSIPv1 xa0-00: command %u status %u frame %u\n",
@@ -780,16 +780,16 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         week = getbeu16(buf, 8);
         session->context->gps_week = week;
 
-        date.tm_hour = (unsigned)buf[10];            // hours 0 - 23
-        date.tm_min = (unsigned)buf[11];             // minutes 0 -59
-        date.tm_sec = (unsigned)buf[12];             // seconds 0 - 60
-        date.tm_mon = (unsigned)buf[13] - 1;         // month 1 - 12
-        date.tm_mday = (unsigned)buf[14];            // day of month 1 - 31
+        date.tm_hour = getub(buf, 10);               // hours 0 - 23
+        date.tm_min = getub(buf, 11);                // minutes 0 -59
+        date.tm_sec = getub(buf, 12);                // seconds 0 - 60
+        date.tm_mon = getub(buf, 13) - 1;            // month 1 - 12
+        date.tm_mday = getub(buf, 14);               // day of month 1 - 31
         date.tm_year = getbeu16(buf, 15) - 1900;     // year
 
-        u1 = (unsigned)buf[17];             // time base
-        u2 = (unsigned)buf[18];             // PPS base
-        u3 = (unsigned)buf[19];             // flags
+        u1 = getub(buf, 17);                // time base
+        u2 = getub(buf, 18);                // PPS base
+        u3 = getub(buf, 19);                // flags
         s1 = getbes16(buf, 20);             // UTC Offset
         d1 = getbef32((char *)buf, 22);     // PPS Quantization Error
         d2 = getbef32((char *)buf, 26);     // Bias
@@ -832,7 +832,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         }
         d1 = getbef32((char *)buf, 6);    // DAC voltage
         u1 = getbeu16(buf, 10);           // DAC value
-        u2 = (unsigned)buf[12];           // holdover status
+        u2 = getub(buf, 12);              // holdover status
         u3 = getbeu32(buf, 13);           // holdover time
         d2 = getbef32((char *)buf, 17);   // temperature, degrees C
         GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -847,8 +847,8 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = (unsigned)buf[4];            // position mask
-        u2 = (unsigned)buf[5];            // fix type
+        u1 = getub(buf, 4);               // position mask
+        u2 = getub(buf, 5);               // fix type
         d1 = getbed64((char *)buf, 6);    // latitude or X
         d2 = getbed64((char *)buf, 14);   // longitude or Y
         d3 = getbed64((char *)buf, 22);   // altitude or Z
@@ -927,7 +927,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = (unsigned)buf[4];            // message number, 1 to X
+        u1 = getub(buf, 4);               // message number, 1 to X
         if (1 == u1) {
             // message number starts at 1, no way to know last number
             gpsd_zero_satellites(&session->gpsdata);
@@ -938,8 +938,8 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         session->driver.tsip.last_chan_seen = u1;
 
         // SV type, 0 to 26, mashup of constellation and signal
-        u2 = (unsigned)buf[5];
-        u3 = (unsigned)buf[6];            // PRN (svid) 1 to 32 (99)
+        u2 = getub(buf, 5);
+        u3 = getub(buf, 6);               // PRN (svid) 1 to 32 (99)
         d1 = getbef32((char *)buf, 7);    // azimuth, degrees
         d2 = getbef32((char *)buf, 11);   // elevation, degrees
         d3 = getbef32((char *)buf, 15);   // signal level, db-Hz
@@ -1016,9 +1016,9 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = (unsigned)buf[4];            // receiver mode
-        u2 = (unsigned)buf[5];            // status
-        u3 = (unsigned)buf[6];            // self survey progress 0 - 100
+        u1 = getub(buf, 4);               // receiver mode
+        u2 = getub(buf, 5);               // status
+        u3 = getub(buf, 6);               // self survey progress 0 - 100
         d1 = getbef32((char *)buf, 7);    // PDOP
         d2 = getbef32((char *)buf, 11);   // HDOP
         d3 = getbef32((char *)buf, 15);   // VDOP
@@ -1089,9 +1089,9 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = (unsigned)buf[4];            // reference packet id
-        u2 = (unsigned)buf[5];            // reference sub packet id
-        u3 = (unsigned)buf[6];            // error code
+        u1 = getub(buf, 4);            // reference packet id
+        u2 = getub(buf, 5);            // reference sub packet id
+        u3 = getub(buf, 6);            // error code
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "TSIPv1 xa3-21: id x%02x-%02x error: %u\n",
                  u1, u2, u3);
@@ -1102,7 +1102,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = (unsigned)buf[6];            // debug output type
+        u1 = getub(buf, 6);               // debug output type
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "TSIPv1 xd0-00: debug %u\n", u1);
         break;
@@ -1112,8 +1112,8 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        u1 = (unsigned)buf[6];            // debug type
-        u2 = (unsigned)buf[7];            // debug level
+        u1 = getub(buf, 6);               // debug type
+        u2 = getub(buf, 7);               // debug level
         GPSD_LOG(LOG_WARN, &session->context->errout,
                  "TSIPv1 xd0-01: debug type %u level %u\n", u1, u2);
         break;
@@ -1240,7 +1240,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 1;
             break;
         }
-        u1 = getub(buf, 0);     // Packet ID of non-parsable packet
+        u1 = getub(buf, 0);         // Packet ID of non-parsable packet
         if (2 <= len) {
             u2 = getub(buf, 1);     // Data byte 0 of non-parsable packet
         } else {
@@ -1280,7 +1280,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          *   Lassen SQ (2002)
          *   Lassen iQ (2005) pre fw 1.16
          */
-        u1 = (uint8_t)getub(buf, 0);
+        u1 = getub(buf, 0);
         // decode by sub-code
         switch (u1) {
         case 0x81:
