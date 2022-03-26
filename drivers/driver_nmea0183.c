@@ -3835,7 +3835,7 @@ static gps_mask_t processPSTI032(int count UNUSED, char *field[],
      * 2  UTC time,  hhmmss.sss
      * 3  UTC Date, ddmmyy
      * 4  Status, ‘V’ = Void ‘A’ = Active
-     * 5  Mode indicator, ‘F’ = Float RTK. ‘R’ = FIxed RTK
+     * 5  Mode indicator, ‘F’ = Float RTK. ‘R’ = Fixed RTK
      * 6  East‐projection of baseline, meters
      * 7  North‐projection of baseline, meters
      * 8  Up‐projection of baseline, meters
@@ -3851,24 +3851,34 @@ static gps_mask_t processPSTI032(int count UNUSED, char *field[],
     gps_mask_t mask = ONLINE_SET;
     struct baseline_t *base = &session->gpsdata.fix.base;
 
-    if (0 == strcmp(field[4], "A")) {
-        // Status Valid
-        if (field[2][0] != '\0' && field[3][0] != '\0') {
+    if ('A' != field[4][0]) {
+        //  status not valid
+        return mask;
+    }
+
+    // Status Valid
+    if ('\0' != field[2][0] &&
+        '\0' != field[3][0]) {
+        // have date and time
+        if (0 == merge_hhmmss(field[2], session) &&
+            0 == merge_ddmmyy(field[3], session)) {
             // good date and time
-            if (0 == merge_hhmmss(field[2], session) &&
-                0 == merge_ddmmyy(field[3], session)) {
-                mask |= TIME_SET;
-                register_fractional_time("PSTI032", field[2], session);
-            }
+            mask |= TIME_SET;
+            register_fractional_time("PSTI032", field[2], session);
         }
     }
 
-    if ('F' != field[5][0]) {
-        // Float RTX
+    if ('F' == field[5][0]) {
+        // Float RTK
         base->status = STATUS_RTK_FLT;
-    } else {
+    } else if ('R' == field[5][0]) {
+        // Float RTK
         base->status = STATUS_RTK_FIX;
+    } else {
+        // WTF?
+        return mask;
     }
+
     base->east = safe_atof(field[6]);
     base->north = safe_atof(field[7]);
     base->up = safe_atof(field[8]);
