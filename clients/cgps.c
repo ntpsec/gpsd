@@ -276,7 +276,7 @@ static const char *status2str(int status)
         str = "DGPS ";
         break;
     case STATUS_RTK_FIX:
-        str = "RTKFIX";
+        str = "RTKFIX ";
         break;
     case STATUS_RTK_FLT:
         str = "RTKFLT ";
@@ -962,7 +962,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
         (void)strlcpy(buf2, "        n/a", sizeof(buf2));
     }
     (void)mvwprintw(datawin, row++, DATAWIN_DESC_OFFSET,
-                    "Alt (HAE, MSL) %-11s,%-11s %.2s",
+                    "Alt (HAE, MSL) %-11s,%-11s %2.2s",
                     buf1, buf2, altunits);
 
     // Fill in the speed.
