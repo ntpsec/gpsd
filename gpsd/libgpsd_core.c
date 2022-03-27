@@ -100,16 +100,23 @@ void gpsd_release_reporting_lock(void)
 char *visibilize(char *outbuf, size_t outlen, const char *inbuf, size_t inlen)
 {
     const char *sp;
+    size_t next = 0;
 
     outbuf[0] = '\0';
     // FIXME!! snprintf() when strlcat() will do!
-    for (sp = inbuf; sp < inbuf + inlen && strlen(outbuf) + 6 < outlen; sp++) {
+    for (sp = inbuf; sp < inbuf + inlen && (next + 6) < outlen; sp++) {
+        int ret;
         if (isprint((unsigned char)*sp)) {
-            (void)snprintf(outbuf + strlen(outbuf), 2, "%c", *sp);
+            ret = snprintf(&outbuf[next], 2, "%c", *sp);
         } else {
-            (void)snprintf(outbuf + strlen(outbuf), 6, "\\x%02x",
+            ret = snprintf(&outbuf[next], 6, "\\x%02x",
                            0x00ff & (unsigned)*sp);
         }
+        if (1 > ret) {
+            // error, or ran out of space
+            break;
+        }
+        next += ret;
     }
     return outbuf;
 }
