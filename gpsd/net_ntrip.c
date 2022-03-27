@@ -103,7 +103,7 @@ static char *ntrip_field_iterate(char *start,
     // ignore any quoted ; chars as they are part of the field content
     t = s;
     while ((u = strstr(t, NTRIP_QSC))) {
-        t = u + strlen(NTRIP_QSC);
+        t = u + sizeof(NTRIP_QSC) - 1;
     }
 
     if ((t = strstr(t, ";"))) {
@@ -227,7 +227,6 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
     struct ntrip_stream_t hold;
     ssize_t llen, len = 0;
     char *line;
-    bool match = false;
     char buf[BUFSIZ / 2];   // half of BUFSIZE, so we can GPSD_LOG() it
     socket_t fd = device->gpsdata.gps_fd;
 
@@ -247,14 +246,9 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                 continue;
             }
             if (device->ntrip.sourcetable_parse &&
-                !match &&
                 EAGAIN == errno) {
-                /* we have not yet found a match, but there currently
-                 * is no more data */
+                // not found a match, but there is no more data
                 return 0;
-            }
-            if (match) {
-                return 1;
             }
             GPSD_LOG(LOG_ERROR, &device->context->errout,
                      "NTRIP: stream read error %s(%d) on fd %d\n",
@@ -445,7 +439,8 @@ static int ntrip_stream_req_probe(const struct ntrip_stream_t *stream,
     GPSD_LOG(LOG_IO, errout,
              "NTRIP: ntrip_stream_req_probe(%s) fd %d sending >%s<\n",
              stream->url, dsock,
-             visibilize(outbuf, sizeof(outbuf), buf, strlen(buf)));
+             visibilize(outbuf, sizeof(outbuf), buf,
+                        strnlen(buf, sizeof(buf))));
 
     r = write(dsock, buf, strlen(buf));
     if ((ssize_t)strlen(buf) != r) {
@@ -552,7 +547,8 @@ static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
 
     GPSD_LOG(LOG_IO, errout,
              "NTRIP: netlib_connectsock() sending >%s<\n",
-             visibilize(outbuf, sizeof(outbuf), buf, strlen(buf)));
+             visibilize(outbuf, sizeof(outbuf), buf,
+                        strnlen(buf, sizeof(buf))));
 
     if ((ssize_t)strlen(buf) != write(dsock, buf, strlen(buf))) {
         GPSD_LOG(LOG_ERROR, errout,
