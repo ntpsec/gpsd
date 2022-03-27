@@ -3893,6 +3893,84 @@ static gps_mask_t processPSTI032(int count UNUSED, char *field[],
     return mask;
 }
 
+/* Skytraq  RTK RAW Measurement Monitoring Data
+ */
+static gps_mask_t processPSTI033(int count UNUSED, char *field[],
+                                 struct gps_device_t *session)
+{
+    /*
+     * $PSTI,033,hhmmss.sss,ddmmyy,x,R,x,G,x,x,,,C,x,x,,,E,x,x,,,R,x,x,,*hh
+     * $PSTI,033,110431.000,150517,2,R,1,G,1,0,,,C,0,0,,,E,0,0,,,R,0,0,,*72
+     *
+     * 2  UTC time,  hhmmss.sss
+     * 3  UTC Date, ddmmyy
+     * 4  "2", version
+     * 5  Receiver, R = Rover, B = Base
+     * 6  total cycle‐slipped raw measurements
+     * 7  "G", GPS
+     * 8  cycle slipped L1
+     * 9  cycle slipped L2
+     * 10 reserved
+     * 11 reserved
+     * 12 "C", BDS
+     * 12 cycle slipped B1
+     * 14 cycle slipped B2
+     * 15 reserved
+     * 16 reserved
+     * 17 "E", Galileo
+     * 18 cycle slipped E1
+     * 19 cycle slipped E5b
+     * 20 reserved
+     * 21 reserved
+     * 22 "R", GLONASS
+     * 23 cycle slipped G1
+     * 24 cycle slipped G2
+     * 25 reserved
+     * 26 reserved
+     * 27 Checksum
+     */
+    gps_mask_t mask = ONLINE_SET;
+    char receiver;
+    unsigned total, L1, L2, B1, B2, E1, E5b, G1, G2;
+
+    if ('2' != field[4][0]) {
+        //  we only understand version 2
+        return mask;
+    }
+    if ('B' != field[5][0] &&
+        'R' != field[5][0]) {
+        //  Huh?  Rover or Base
+        return mask;
+    }
+    receiver = field[5][0];
+
+    if ('\0' != field[2][0] &&
+        '\0' != field[3][0]) {
+        // have date and time
+        if (0 == merge_hhmmss(field[2], session) &&
+            0 == merge_ddmmyy(field[3], session)) {
+            // good date and time
+            mask |= TIME_SET;
+            register_fractional_time("PSTI033", field[2], session);
+        }
+    }
+    total = atoi(field[6]);
+    L1 = atoi(field[7]);
+    L2 = atoi(field[8]);
+    B1 = atoi(field[13]);
+    B2 = atoi(field[14]);
+    E1 = atoi(field[18]);
+    E5b = atoi(field[19]);
+    G1 = atoi(field[23]);
+    G2 = atoi(field[24]);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NMEA0183: PSTI,033: RTK RAW receiver %c Slips: total %u L1 %u "
+             "L2 %u B1 %u B2 %u E1 %u E5b %u G1 %u G2 %u\n",
+             receiver, total, L1, L2, B1, B2, E1, E5b, G1, G2);
+    return mask;
+}
+
 // Skytraq RTK Baseline, moving base to moving rover
 // PX1172RH
 static gps_mask_t processPSTI035(int count UNUSED, char *field[],
@@ -3938,12 +4016,14 @@ static gps_mask_t processPSTI035(int count UNUSED, char *field[],
         base->status = STATUS_UNK;
         return mask;
     }
-    if ('F' != field[5][0]) {
+    if ('F' == field[5][0]) {
         // Float RTX
         base->status = STATUS_RTK_FLT;
-    } else {
+    } else if ('R' == field[5][0]) {
+        // Fix RTX
         base->status = STATUS_RTK_FIX;
-    }
+    } // else ??
+
     base->east = safe_atof(field[6]);
     base->north = safe_atof(field[7]);
     base->up = safe_atof(field[8]);
@@ -4188,7 +4268,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         // RTK Baseline
         {"PSTI", "032", 16, false, processPSTI032},
         // RTK RAW Measurement Monitoring Data
-        {"PSTI", "033", 27, false, NULL},
+        {"PSTI", "033", 27, false,  processPSTI033},
         // RTK Baseline Data of Rover Moving Base Receiver
         {"PSTI", "035", 8, false, processPSTI035},
         // Heading, Pitch and Roll Messages of vehicle
