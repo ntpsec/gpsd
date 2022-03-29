@@ -18,7 +18,7 @@
    ================================================================== */
 
 #define IMU_WIDTH 80     // Width of Compass/IMU window
-#define RTK_WIDTH 42     // Width of RTK window
+#define RTK_WIDTH 62     // Width of RTK window
 
 /* This defines how much overhead is contained in the 'datawin' window
    (eg, box around the window takes two lines). */
@@ -429,9 +429,8 @@ static void windowsetup(void)
         // We're an RTK, set up accordingly.
         int row = 1;
 
-        if ((RTK_WIDTH - 2) > COLS) {
-            // allow 78, cutting of the two rightmost columns is acceptable
-            die(0, "Your terminal not wide enough.  80 columns required.");
+        if (RTK_WIDTH > COLS) {
+            die(0, "Your terminal not wide enough.  78 columns required.");
         }
 
         if (MIN_COMPASS_DATAWIN_YSIZE == ysize) {
@@ -481,7 +480,13 @@ static void windowsetup(void)
         (void)mvwaddstr(datawin, row++, RTK_WIDTH - 8, "m");
         (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Course:");
         (void)mvwaddstr(datawin, row++, RTK_WIDTH - 8, "deg");
+        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Age:");
+        (void)mvwaddstr(datawin, row++, RTK_WIDTH - 8, "sec");
+        (void)mvwaddstr(datawin, row, DATAWIN_DESC_OFFSET, "Station:");
+        (void)mvwaddstr(datawin, row++, RTK_WIDTH - 8, "ID");
+        (void)mvwaddstr(datawin, row++, DATAWIN_DESC_OFFSET, "Ratio:");
         (void)wborder(datawin, 0, 0, 0, 0, 0, 0, 0, 0);
+        (void)mvwaddstr(datawin, 0, 3, "RTK");
         // done with RTK setup
 
         // make it so
@@ -594,11 +599,10 @@ static void windowsetup(void)
 }
 
 
-#define LINE(val)                                           \
-    if (0 != isfinite(val)) {                               \
-        (void)mvwprintw(datawin, row, col, "% 9.4f", val);  \
-    }                                                       \
-    row++;
+#define LINE(val) \
+    if (0 != isfinite(val)) {                                  \
+        (void)mvwprintw(datawin, row++, col, "% 12.4f", val);   \
+    }
 
 static void update_imu(struct attitude_t *datap, int col)
 {
@@ -679,19 +683,24 @@ static void update_imu_panel(struct gps_data_t *gpsdata, const char *message)
     }
 }
 
-// update RTK panale
-static void update_rtk(struct attitude_t *datap, int col)
+// update RTK panel
+static void update_rtk(struct gps_data_t *gpsdata)
 {
     int row = 1;
     int col_width = 14;
+    int col = 16;
+    struct attitude_t *datap;
 
-    (void)mvwprintw(datawin, row++, col, "%-*s", col_width, datap->msg);
+    // ATT RTK
+    datap = &gpsdata->attitude;
+
+    (void)mvwprintw(datawin, row++, col - 2, "%*s", col_width, "ATT");
     // Print time/date.
     if (0 < datap->mtime.tv_sec) {
         char scr[128];
 
         (void)timespec_to_iso8601(datap->mtime, scr, sizeof(scr));
-        (void)mvwprintw(datawin, row, col, "%-*s", col_width, scr);
+        (void)mvwprintw(datawin, row, col - 8, "%-*s", col_width, scr);
     }
     row++;
 
@@ -699,27 +708,57 @@ static void update_rtk(struct attitude_t *datap, int col)
     LINE(datap->pitch);
     LINE(datap->roll);
     row++;
-    (void)mvwprintw(datawin, row++, col, "   %-*s", col_width,
+    (void)mvwprintw(datawin, row++, col - 1, "%*s", col_width,
                     status2str(datap->base.status));
     LINE(datap->base.east);
     LINE(datap->base.north);
     LINE(datap->base.up);
     LINE(datap->base.length);
     LINE(datap->base.course);
+
+    // TPV RTK
+    row = 1;
+    col = 34;
+
+    (void)mvwprintw(datawin, row++, col - 2, "%*s", col_width, "TPV");
+    // Print time/date.
+    if (0 < gpsdata->fix.time.tv_sec) {
+        char scr[128];
+
+        (void)timespec_to_iso8601(gpsdata->fix.time, scr, sizeof(scr));
+        (void)mvwprintw(datawin, row, col, "%-*s", col_width, scr);
+    }
+    row++;
+
+    if (0 >= gpsdata->fix.base.status) {
+        return;
+    }
+    row += 4;
+    (void)mvwprintw(datawin, row++, col - 1, "%*s", col_width,
+                    status2str(gpsdata->fix.base.status));
+    LINE(gpsdata->fix.base.east);
+    LINE(gpsdata->fix.base.north);
+    LINE(gpsdata->fix.base.up);
+    LINE(gpsdata->fix.base.length);
+    LINE(gpsdata->fix.base.course);
+    LINE(gpsdata->fix.dgps_age);
+    if (0 <= gpsdata->fix.dgps_station) {
+        (void)mvwprintw(datawin, row++, col, "%12d",
+                        gpsdata->fix.dgps_station);
+    } else {
+        (void)mvwprintw(datawin, row++, col, "%12s", "");
+    }
+    LINE(gpsdata->fix.base.ratio);
 }
 
 // This gets called once for each new sentence.
 static void update_rtk_panel(struct gps_data_t *gpsdata, const char *message)
 {
     int update = 0;
-    struct attitude_t *datap;
 
-    datap = &gpsdata->attitude;
-    if (0 < datap->mtime.tv_sec) {
-        if ('\0' == datap->msg[0]) {
-            strlcpy(datap->msg, "  ATT", sizeof(datap->msg));
-        }
-        update_rtk(datap, 16);
+    if (0 < gpsdata->attitude.mtime.tv_sec ||
+        0 < gpsdata->attitude.mtime.tv_sec) {
+        update_rtk(gpsdata);
         update = 1;
     }
 
