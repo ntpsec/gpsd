@@ -1864,14 +1864,14 @@ static gps_mask_t processGSA(int count, char *field[],
 
 #ifdef __UNUSED__
             // debug
-            GPSD_LOG(LOG_ERROR, &session->context->errout,
+            GPSD_LOG(LOG_SHOUT, &session->context->errout,
                      "NMEA0183: %s nmeaid_to_prn: nmea_gnssid "
                      "%d nmea_satnum %d "
                      "ubx_gnssid %d ubx_svid %d nmea2_prn %d\n",
                      field[0],
                      nmea_gnssid, nmea_satnum, ubx_gnssid, ubx_svid, prn);
-            GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     NMEA0183: "%s count %d\n", field[0], count);
+            GPSD_LOG(LOG_SHOUT, &session->context->errout,
+                     "NMEA0183: %s count %d\n", field[0], count);
 #endif  //  __UNUSED__
 
             if (0 < prn) {
@@ -1996,6 +1996,10 @@ static gps_mask_t processGSV(int count, char *field[],
      * NMEA 4.1 adds a signal-ID field just before the checksum. First
      * seen in May 2015 on a u-blox M8.  It can output 2 sets of GPGSV
      * in one cycle, one for L1C and the other for L2C.
+     *
+     * Skytraq PX1172RH_DS can output GPGSV, GLGSV, GAGSV and GBGSV all in
+     * same epoch.  And each of those repeated for different signals
+     * (L1C/L2C/etc.)
      */
 
     int n, fldnum;
@@ -2067,44 +2071,45 @@ static gps_mask_t processGSV(int count, char *field[],
                      session->nmea.last_gsv_talker);
             gpsd_zero_satellites(&session->gpsdata);
         }
-        session->nmea.last_gsv_talker = GSV_TALKER;
-        session->nmea.last_gsv_sigid = ubx_sigid;  // UNUSED
-        switch (GSV_TALKER) {
-        case 'A':        // GA Galileo
-            nmea_gnssid = 3;
-            session->nmea.seen_gagsv = true;
-            break;
-        case 'B':        // GB BeiDou
-            FALLTHROUGH
-        case 'D':        // BD BeiDou
-            nmea_gnssid = 4;
-            session->nmea.seen_bdgsv = true;
-            break;
-        case 'I':        // GI IRNSS
-            nmea_gnssid = 6;
-            session->nmea.seen_gigsv = true;
-            break;
-        case 'L':        // GL GLONASS
-            nmea_gnssid = 2;
-            session->nmea.seen_glgsv = true;
-            break;
-        case 'N':        // GN GNSS
-            session->nmea.seen_gngsv = true;
-            break;
-        case 'P':        // GP GPS
-            session->nmea.seen_gpgsv = true;
-            break;
-        case 'Q':        // GQ, and PQ (Quectel Querk) QZSS
-            // Quectel EC25 & EC21 use PQGSA for QZSS
-            FALLTHROUGH
-        case 'Z':        // QZ QZSS
-            nmea_gnssid = 5;
-            session->nmea.seen_qzgsv = true;
-            break;
-        default:
-            // uh, what?
-            break;
-        }
+    }
+
+    session->nmea.last_gsv_talker = GSV_TALKER;
+    session->nmea.last_gsv_sigid = ubx_sigid;  // UNUSED
+    switch (GSV_TALKER) {
+    case 'A':        // GA Galileo
+        nmea_gnssid = 3;
+        session->nmea.seen_gagsv = true;
+        break;
+    case 'B':        // GB BeiDou
+        FALLTHROUGH
+    case 'D':        // BD BeiDou
+        nmea_gnssid = 4;
+        session->nmea.seen_bdgsv = true;
+        break;
+    case 'I':        // GI IRNSS
+        nmea_gnssid = 6;
+        session->nmea.seen_gigsv = true;
+        break;
+    case 'L':        // GL GLONASS
+        nmea_gnssid = 2;
+        session->nmea.seen_glgsv = true;
+        break;
+    case 'N':        // GN GNSS
+        session->nmea.seen_gngsv = true;
+        break;
+    case 'P':        // GP GPS
+        session->nmea.seen_gpgsv = true;
+        break;
+    case 'Q':        // GQ, and PQ (Quectel Querk) QZSS
+        // Quectel EC25 & EC21 use PQGSA for QZSS
+        FALLTHROUGH
+    case 'Z':        // QZ QZSS
+        nmea_gnssid = 5;
+        session->nmea.seen_qzgsv = true;
+        break;
+    default:
+        // uh, what?
+        break;
     }
 
     for (fldnum = 4; fldnum < count / 4 * 4;) {
@@ -2129,23 +2134,21 @@ static gps_mask_t processGSV(int count, char *field[],
         sp->PRN = (short)nmeaid_to_prn(field[0], nmea_svid, nmea_gnssid,
                                        &sp->gnssid, &sp->svid);
 
-#ifdef __UNUSED__
-        {
-        // debug
-            char ts_buf[TIMESPEC_LEN];
-            GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "NMEA0183: %s nmeaid_to_prn: nmea_gnssid %d "
-                     "nmea_satnum %d ubx_gnssid %d ubx_svid %d nmea2_prn %d\n",
-                     field[0],
-                     nmea_gnssid, nmea_svid, sp->gnssid, sp->svid, sp->PRN);
-        }
-#endif  // __UNUSED__
-
         sp->elevation = (double)atoi(field[fldnum++]);
         sp->azimuth = (double)atoi(field[fldnum++]);
         sp->ss = (double)atoi(field[fldnum++]);
         sp->used = false;
         sp->sigid = ubx_sigid;
+
+#ifdef __UNUSED__
+        // debug
+        GPSD_LOG(LOG_SHOUT, &session->context->errout,
+                 "NMEA0183: %s nmeaid_to_prn: nmea_gnssid %d "
+                 "nmea_satnum %d ubx_gnssid %d ubx_svid %d nmea2_prn %d "
+                 "az %.1f el %.1f\n",
+                 field[0], nmea_gnssid, nmea_svid, sp->gnssid, sp->svid,
+                 sp->PRN, sp->elevation, sp->azimuth);
+#endif  // __UNUSED__
 
         /* sadly NMEA 4.1 does not tell us which sigid (L1, L2) is
          * used.  So if the ss is zero, do not mark used */
