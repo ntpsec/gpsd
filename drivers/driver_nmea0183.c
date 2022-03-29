@@ -3835,7 +3835,7 @@ static gps_mask_t processPSTI032(int count UNUSED, char *field[],
      * 2  UTC time,  hhmmss.sss
      * 3  UTC Date, ddmmyy
      * 4  Status, ‘V’ = Void ‘A’ = Active
-     * 5  Mode indicator, ‘F’ = Float RTK. ‘R’ = Fixed RTK
+     * 5  Mode indicator, 'O' = Float RTK, ‘F’ = Float RTK. ‘R’ = Fixed RTK
      * 6  East‐projection of baseline, meters
      * 7  North‐projection of baseline, meters
      * 8  Up‐projection of baseline, meters
@@ -3868,11 +3868,13 @@ static gps_mask_t processPSTI032(int count UNUSED, char *field[],
         }
     }
 
-    if ('F' == field[5][0]) {
-        // Float RTK
+    if ('F' == field[5][0] ||
+        'O' == field[5][0]) {
+        // Floating point RTK
+        // 'O' is undocuemented, private email says it is jsut a crappy 'F'.
         base->status = STATUS_RTK_FLT;
     } else if ('R' == field[5][0]) {
-        // Float RTK
+        // Fixed point RTK
         base->status = STATUS_RTK_FIX;
     } else {
         // WTF?
