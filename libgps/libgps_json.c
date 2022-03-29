@@ -140,6 +140,18 @@ static int json_tpv_read(const char *buf, struct gps_data_t *gpsdata,
                                  .dflt.real = NAN},
         {"wspeedt", t_real, .addr.real = &gpsdata->fix.wspeedt,
                                  .dflt.real = NAN},
+        {"baseS",     t_integer,   .addr.integer = &gpsdata->fix.base.status,
+         .dflt.integer = STATUS_UNK},     // aka zero
+        {"baseE",     t_real,      .addr.real = &gpsdata->fix.base.east,
+         .dflt.real = NAN},
+        {"baseN",     t_real,      .addr.real = &gpsdata->fix.base.north,
+         .dflt.real = NAN},
+        {"baseU",     t_real,      .addr.real = &gpsdata->fix.base.up,
+         .dflt.real = NAN},
+        {"baseL",     t_real,      .addr.real = &gpsdata->fix.base.length,
+         .dflt.real = NAN},
+        {"baseC",     t_real,      .addr.real = &gpsdata->fix.base.course,
+         .dflt.real = NAN},
         // ignore unknown keys, for cross-version compatibility
         {"", t_ignore},
 
