@@ -3767,7 +3767,7 @@ static gps_mask_t processPSTI030(int count UNUSED, char *field[],
         session->newdata.mode = MODE_NO_FIX;
         mask |= MODE_SET | STATUS_SET;
     } else if ('A' == field[3][0]) {
-        double east, north, climb, age;
+        double east, north, climb, age, ratio;
 
         // data valid
         if ('\0' != field[2][0] &&
@@ -3798,27 +3798,36 @@ static gps_mask_t processPSTI030(int count UNUSED, char *field[],
         north = safe_atof(field[10]);   // north velocity m/s
         climb = safe_atof(field[11]);   // up velocity m/s
         age = safe_atof(field[14]);
+        ratio = safe_atof(field[15]);
 
         session->newdata.NED.velN = north;
         session->newdata.NED.velE = east;
         session->newdata.NED.velD = -climb;
-        session->newdata.dgps_age = age;
+        if (0.05 < (age + ratio)) {
+            // don't report age == ratio == 0.0
+            session->newdata.dgps_age = age;
+            session->gpsdata.fix.base.ratio = ratio;
+        }
 
         mask |= VNED_SET | STATUS_SET;
 
         session->newdata.status = faa_mode(field[13][0]);
-        // FIXME: save RTK Age and RTK Ratio
+        if (STATUS_RTK_FIX == session->newdata.status ||
+            STATUS_RTK_FLT == session->newdata.status) {
+            // RTK_FIX or RTK_FLT
+            session->gpsdata.fix.base.status = session->newdata.status;
+        }
     }
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "NMEA0183: PSTI,030: ddmmyy=%s hhmmss=%s lat=%.2f lon=%.2f "
-             "status=%d, RTK(Age=%.1f Ratio=%s)\n",
+             "status=%d, RTK(Age=%.1f Ratio=%.1f)\n",
              field[12], field[2],
              session->newdata.latitude,
              session->newdata.longitude,
              session->newdata.status,
              session->newdata.dgps_age,
-             field[15]);
+             session->newdata.base.ratio);
     return mask;
 }
 

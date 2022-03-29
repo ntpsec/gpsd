@@ -475,13 +475,19 @@ void json_tpv_dump(const gps_mask_t changed, const struct gps_device_t *session,
             str_appendf(reply, replylen,
                            ",\"depth\":%.3f", gpsdata->fix.depth);
         }
-        if (0 != isfinite(gpsdata->fix.dgps_age) &&
-            0 <= gpsdata->fix.dgps_station) {
-            /* both, or none */
+        // Skytraq $PSTI can have Age but no Station
+        if (0 != isfinite(gpsdata->fix.dgps_age)) {
             str_appendf(reply, replylen,
                            ",\"dgpsAge\":%.1f", gpsdata->fix.dgps_age);
+        }
+        if (0 <= gpsdata->fix.dgps_station) {
             str_appendf(reply, replylen,
                            ",\"dgpsSta\":%d", gpsdata->fix.dgps_station);
+        }
+        if (0 != isfinite(gpsdata->fix.base.ratio)) {
+            // Skytraq reports ratiiio to .3f
+            str_appendf(reply, replylen,
+                           ",\"dgpsRatio\":%.3f", gpsdata->fix.base.ratio);
         }
     }
     if (0 != (changed & NAVDATA_SET)) {

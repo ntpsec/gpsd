@@ -257,6 +257,7 @@ static void gps_clear_base(struct baseline_t *base)
     base->up = NAN;
     base->length = NAN;
     base->course = NAN;
+    base->ratio = NAN;
 }
 
 // stuff a fix structure with recognizable out-of-band values

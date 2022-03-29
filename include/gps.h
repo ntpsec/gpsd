@@ -157,10 +157,11 @@ struct baseline_t {
      */
     int status;
     double east;        // East projection of baseline, meters
-    double north;      // North projection of baseline, meters
+    double north;       // North projection of baseline, meters
     double up;          // Up projection of baseline, meters
     double length;      // length, meters.
     double course;      // course, degrees
+    double ratio;       // RTK AR Ratio
 };
 
 /* GPS error estimates are all over the map, and often unspecified.
@@ -244,7 +245,7 @@ struct gps_fix_t {
     } NED;
     char datum[40];             // map datum
     // DGPS stuff, often from xxGGA, or xxGNS
-    double dgps_age;       // age of DGPS data in tenths of seconds, -1 invalid
+    double dgps_age;       // age of DGPS data in seconds, -1 invalid
     /* DGPS Station used, max size is a guess
      * NMEA 2 says 0000-1023
      * RTCM 3, station ID is 0 to 4095.
