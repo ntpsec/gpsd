@@ -297,6 +297,17 @@ size_t strlcpy(char *dst, const char *src, size_t siz)
 
 // End of strlcat()/strlcpy() section
 
+#ifndef HAVE_STRNLEN
+
+size_t strnlen(const char *s, size_t maxlen)
+{
+    size_t len = 0;
+    while (len < maxlen && *s++) ++len;
+    return len;
+}
+
+#endif // !HAVE_STRNLEN
+
 /*
  * Provide sincos() on platforms that don't have it.
  * Getting scons to test for sincos() and pass -Werror not possible.

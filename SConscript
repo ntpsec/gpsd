@@ -1241,7 +1241,8 @@ if not cleaning and not helping:
     # for example clock_gettime() require librt on Linux glibc < 2.17
     for f in ("cfmakeraw", "clock_gettime", "daemon", "fcntl", "fork",
               "getopt_long",
-              "gmtime_r", "inet_ntop", "strlcat", "strlcpy", "strptime"):
+              "gmtime_r", "inet_ntop", "strlcat", "strlcpy", "strnlen",
+              "strptime"):
         if config.CheckFunc(f):
             confdefs.append("#define HAVE_%s 1\n" % f.upper())
         else:
@@ -2638,8 +2639,9 @@ cppcheck = Utility("cppcheck",
                    "-U__future__ "
                    "-ULIMITED_MAX_CLIENTS -ULIMITED_MAX_DEVICES -UAF_UNSPEC "
                    "-UINADDR_ANY -U_WIN32 -U__CYGWIN__ "
-                   "-UPATH_MAX -UHAVE_STRLCAT -UHAVE_STRLCPY -UIPTOS_LOWDELAY "
-                   "-UIPV6_TCLASS -UTCP_NODELAY -UTIOCMIWAIT --template gcc "
+                   "-UPATH_MAX -UHAVE_STRLCAT -UHAVE_STRLCPY -UHAVE_STRNLEN "
+                   "-UIPTOS_LOWDELAY -UIPV6_TCLASS -UTCP_NODELAY -UTIOCMIWAIT "
+                   "--template gcc "
                    "--enable=all --inline-suppr "
                    "--suppress='*:drivers/driver_proto.c' "
                    "--force $SRCDIR")
