@@ -4043,6 +4043,7 @@ static gps_mask_t processPSTI035(int count UNUSED, char *field[],
     base->up = safe_atof(field[8]);
     base->length = safe_atof(field[9]);
     base->course = safe_atof(field[10]);
+    mask |= ATTITUDE_SET;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "NMEA0183: PSTI,035: RTK Baseline mode %d E %.3f  N %.3f  U %.3f "
@@ -4090,10 +4091,10 @@ static gps_mask_t processPSTI036(int count UNUSED, char *field[],
         }
     }
     if ('\0' == field[7][0] ||
-        'R' != field[7][0]) {
+        'N' == field[7][0]) {
         // No valid data, except time, sort of
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "NMEA0183: PSTI,035: not valid\n");
+                 "NMEA0183: PSTI,036: not valid\n");
         return mask;
     }
     // good attitude data to use
