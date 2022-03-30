@@ -683,82 +683,83 @@ static void update_imu_panel(struct gps_data_t *gpsdata, const char *message)
     }
 }
 
-// update RTK panel
-static void update_rtk(struct gps_data_t *gpsdata)
+// This gets called once for each new sentence.
+static void update_rtk_panel(struct gps_data_t *gpsdata, const char *message)
 {
+    int update = 0;
     int row = 1;
     int col_width = 14;
     int col = 16;
     struct attitude_t *datap;
 
-    // ATT RTK
-    datap = &gpsdata->attitude;
-
-    (void)mvwprintw(datawin, row++, col - 2, "%*s", col_width, "ATT");
-    // Print time/date.
-    if (0 < datap->mtime.tv_sec) {
-        char scr[128];
-
-        (void)timespec_to_iso8601(datap->mtime, scr, sizeof(scr));
-        (void)mvwprintw(datawin, row, col - 8, "%-*s", col_width, scr);
-    }
-    row++;
-
-    LINE(datap->heading);
-    LINE(datap->pitch);
-    LINE(datap->roll);
-    row++;
-    (void)mvwprintw(datawin, row++, col - 1, "%*s", col_width,
-                    status2str(datap->base.status));
-    LINE(datap->base.east);
-    LINE(datap->base.north);
-    LINE(datap->base.up);
-    LINE(datap->base.length);
-    LINE(datap->base.course);
-
-    // TPV RTK
-    row = 1;
-    col = 34;
-
-    (void)mvwprintw(datawin, row++, col - 2, "%*s", col_width, "TPV");
-    // Print time/date.
-    if (0 < gpsdata->fix.time.tv_sec) {
-        char scr[128];
-
-        (void)timespec_to_iso8601(gpsdata->fix.time, scr, sizeof(scr));
-        (void)mvwprintw(datawin, row, col, "%-*s", col_width, scr);
-    }
-    row++;
-
-    if (0 >= gpsdata->fix.base.status) {
-        return;
-    }
-    row += 4;
-    (void)mvwprintw(datawin, row++, col - 1, "%*s", col_width,
-                    status2str(gpsdata->fix.base.status));
-    LINE(gpsdata->fix.base.east);
-    LINE(gpsdata->fix.base.north);
-    LINE(gpsdata->fix.base.up);
-    LINE(gpsdata->fix.base.length);
-    LINE(gpsdata->fix.base.course);
-    LINE(gpsdata->fix.dgps_age);
-    if (0 <= gpsdata->fix.dgps_station) {
-        (void)mvwprintw(datawin, row++, col, "%12d",
-                        gpsdata->fix.dgps_station);
-    } else {
-        (void)mvwprintw(datawin, row++, col, "%12s", "");
-    }
-    LINE(gpsdata->fix.base.ratio);
-}
-
-// This gets called once for each new sentence.
-static void update_rtk_panel(struct gps_data_t *gpsdata, const char *message)
-{
-    int update = 0;
-
+    // Got attitude?
     if (0 < gpsdata->attitude.mtime.tv_sec ||
-        0 < gpsdata->attitude.mtime.tv_sec) {
-        update_rtk(gpsdata);
+        0 < gpsdata->attitude.mtime.tv_nsec) {
+
+        // ATT RTK
+        datap = &gpsdata->attitude;
+
+        (void)mvwprintw(datawin, row++, col - 2, "%*s", col_width, "ATT");
+        // Print time/date.
+        if (0 < datap->mtime.tv_sec) {
+            char scr[128];
+
+            (void)timespec_to_iso8601(datap->mtime, scr, sizeof(scr));
+            (void)mvwprintw(datawin, row, col - 8, "%-*s", col_width, scr);
+        } else {
+            (void)mvwprintw(datawin, row, col - 8, "%-*s", col_width, "SNARD");
+        }
+        row++;
+
+        LINE(datap->heading);
+        LINE(datap->pitch);
+        LINE(datap->roll);
+        row++;
+        (void)mvwprintw(datawin, row++, col - 1, "%*s", col_width,
+                        status2str(datap->base.status));
+        LINE(datap->base.east);
+        LINE(datap->base.north);
+        LINE(datap->base.up);
+        LINE(datap->base.length);
+        LINE(datap->base.course);
+        update = 1;
+    }
+
+    if (0 < gpsdata->fix.time.tv_sec ||
+        0 < gpsdata->fix.time.tv_nsec) {
+        // TPV RTK
+        row = 1;
+        col = 34;
+
+        (void)mvwprintw(datawin, row++, col - 2, "%*s", col_width, "TPV");
+        // Print time/date.
+        if (0 < gpsdata->fix.time.tv_sec) {
+            char scr[128];
+
+            (void)timespec_to_iso8601(gpsdata->fix.time, scr, sizeof(scr));
+            (void)mvwprintw(datawin, row, col, "%-*s", col_width, scr);
+        }
+        row++;
+
+        if (0 >= gpsdata->fix.base.status) {
+            return;
+        }
+        row += 4;
+        (void)mvwprintw(datawin, row++, col - 1, "%*s", col_width,
+                        status2str(gpsdata->fix.base.status));
+        LINE(gpsdata->fix.base.east);
+        LINE(gpsdata->fix.base.north);
+        LINE(gpsdata->fix.base.up);
+        LINE(gpsdata->fix.base.length);
+        LINE(gpsdata->fix.base.course);
+        LINE(gpsdata->fix.dgps_age);
+        if (0 <= gpsdata->fix.dgps_station) {
+            (void)mvwprintw(datawin, row++, col, "%12d",
+                            gpsdata->fix.dgps_station);
+        } else {
+            (void)mvwprintw(datawin, row++, col, "%12s", "");
+        }
+        LINE(gpsdata->fix.base.ratio);
         update = 1;
     }
 
