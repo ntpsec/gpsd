@@ -4634,7 +4634,7 @@ ssize_t nmea_write(struct gps_device_t *session, char *buf, size_t len UNUSED)
     } else {
         (void)strlcat(session->msgbuf, "\r\n", sizeof(session->msgbuf));
     }
-    // codacy hates strnlen()
+    // codacy hates strlen()
     session->msgbuflen = strnlen(session->msgbuf, sizeof(session->msgbuf));
     return gpsd_write(session, session->msgbuf, session->msgbuflen);
 }
@@ -4647,7 +4647,7 @@ ssize_t nmea_send(struct gps_device_t * session, const char *fmt, ...)
     va_start(ap, fmt);
     (void)vsnprintf(buf, sizeof(buf) - 5, fmt, ap);
     va_end(ap);
-    // codacy hates strnlen()
+    // codacy hates strlen()
     return nmea_write(session, buf, strnlen(buf, sizeof(buf)));
 }
 
