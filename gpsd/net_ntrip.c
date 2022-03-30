@@ -231,7 +231,6 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
     socket_t fd = device->gpsdata.gps_fd;
 
     for (;;) {
-        char *eol;
         ssize_t rlen;
 
         memset(&buf[len], 0, sizeof(buf) - (size_t)len);
@@ -303,6 +302,8 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
         }
 
         while (0 < len) {
+            char *eol;
+
             if (str_starts_with(line, NTRIP_ENDSOURCETABLE)) {
                 // found ENDSOURCETABLE
                 // we got to the end of source table

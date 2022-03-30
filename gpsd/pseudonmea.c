@@ -619,13 +619,14 @@ void nmea_sky_dump(struct gps_device_t *session,
     }
 }
 
+// FIXME: this shim should go away...
 void nmea_subframe_dump(struct gps_device_t *session,
                         char bufp[], size_t len)
 {
     bufp[0] = '\0';
     if (0 != (session->gpsdata.set & SUBFRAME_SET)) {
-        gpsd_binary_almanac_dump(session, bufp + strlen(bufp),
-                                 len - strlen(bufp));
+        size_t buflen = strnlen(bufp, len);
+        gpsd_binary_almanac_dump(session, bufp + buflen, len - buflen);
     }
 }
 

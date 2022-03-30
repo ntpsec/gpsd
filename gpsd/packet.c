@@ -1830,9 +1830,10 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
 static void packet_accept(struct gps_lexer_t *lexer, int packet_type)
 {
     size_t packetlen = lexer->inbufptr - lexer->inbuffer;
-    char scratchbuf[MAX_PACKET_LENGTH * 4 + 1];
 
     if (sizeof(lexer->outbuffer) > packetlen) {
+        char scratchbuf[MAX_PACKET_LENGTH * 4 + 1];
+
         memcpy(lexer->outbuffer, lexer->inbuffer, packetlen);
         lexer->outbuflen = packetlen;
         lexer->outbuffer[packetlen] = '\0';
