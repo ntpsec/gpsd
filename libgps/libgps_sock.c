@@ -543,9 +543,10 @@ int gps_sock_stream(struct gps_data_t *gpsdata, unsigned int flags, void *d)
 int gps_sock_mainloop(struct gps_data_t *gpsdata, int timeout,
                       void (*hook)(struct gps_data_t *gpsdata))
 {
-    int status;
 
     for (;;) {
+        int status;
+
         if (!gps_waiting(gpsdata, timeout)) {
             return -1;
         }

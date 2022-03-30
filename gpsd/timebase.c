@@ -308,7 +308,6 @@ timespec_t gpsd_utc_resolve(struct gps_device_t *session)
      * this will be hairy and risky.
      */
     timespec_t t;
-    char scr[128];
 
     t.tv_sec = (time_t)mkgmtime(&session->nmea.date);
     t.tv_nsec = session->nmea.subseconds.tv_nsec;
@@ -330,6 +329,7 @@ timespec_t gpsd_utc_resolve(struct gps_device_t *session)
     if (17 < session->context->leap_seconds &&
         1483228800LL > t.tv_sec) {
         long long old_tv_sec = t.tv_sec;
+        char scr[128];
 
         t.tv_sec += 619315200LL;                    // fast forward 1024 weeks
         (void)gmtime_r(&t.tv_sec, &session->nmea.date);   // fix NMEA date

@@ -1924,7 +1924,6 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
 static int handle_gpsd_request(struct subscriber_t *sub, const char *buf)
 {
     char reply[GPS_JSON_RESPONSE_MAX + 1];
-    size_t len = 0;
 
     reply[0] = '\0';
     if ('?' == buf[0]) {
@@ -1934,7 +1933,7 @@ static int handle_gpsd_request(struct subscriber_t *sub, const char *buf)
             if (isspace((unsigned char) *buf)) {
                 end = buf + 1;
             } else {
-                len = strnlen(reply, sizeof(reply));
+                size_t len = strnlen(reply, sizeof(reply));
                 handle_request(sub, buf, &end,
                                reply + len, sizeof(reply) - len);
             }

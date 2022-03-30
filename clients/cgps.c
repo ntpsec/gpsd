@@ -691,11 +691,11 @@ static void update_rtk_panel(struct gps_data_t *gpsdata, const char *message)
     int row = 1;
     int col_width = 14;
     int col = 16;
-    struct attitude_t *datap;
 
     // Got attitude?
     if (0 < gpsdata->attitude.mtime.tv_sec ||
         0 < gpsdata->attitude.mtime.tv_nsec) {
+        struct attitude_t *datap;
 
         // ATT RTK
         datap = &gpsdata->attitude;
@@ -1172,7 +1172,6 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
             if (last_time != gpsdata->fix.time.tv_sec) {
                 last_time = gpsdata->fix.time.tv_sec;
                 timespec_t ts_now, ts_diff;
-                char ts_str[TIMESPEC_LEN];
 
                 (void)clock_gettime(CLOCK_REALTIME, &ts_now);
                 TS_SUB(&ts_diff, &ts_now, &gpsdata->fix.time);
@@ -1182,6 +1181,8 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
                                     DATAWIN_VALUE_OFFSET + 8,
                                     "%16lld s", (long long)ts_diff.tv_sec);
                 } else {
+                    char ts_str[TIMESPEC_LEN];
+
                     (void)mvwprintw(datawin, row,
                                     DATAWIN_VALUE_OFFSET + 8, "%-16s s",
                                     timespec_str(&ts_diff, ts_str,
