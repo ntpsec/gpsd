@@ -601,8 +601,9 @@ static void windowsetup(void)
 
 #define LINE(val) \
     if (0 != isfinite(val)) {                                  \
-        (void)mvwprintw(datawin, row++, col, "% 12.4f", val);   \
-    }
+        (void)mvwprintw(datawin, row, col, "% 12.4f", val);    \
+    }                                                          \
+    row++;
 
 static void update_imu(struct attitude_t *datap, int col)
 {
