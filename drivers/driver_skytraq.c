@@ -193,6 +193,30 @@ static gps_mask_t sky_msg_63(struct gps_device_t *session,
 }
 
 /*
+ * decode MID 0x64 -- super packet
+ *
+ * Present in Phoenix
+ */
+static gps_mask_t sky_msg_64(struct gps_device_t *session,
+                             unsigned char *buf, size_t len)
+{
+    unsigned sid;
+
+    if (3 > len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "Skytraq: 0x64: bad len %zu\n", len);
+        return 0;
+    }
+
+    sid = getub(buf, 1);
+
+    // FIXME: decode them!
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "Skytraq: 0x64: sid %u\n", sid);
+    return 0;
+}
+
+/*
  * decode MID 0x80, Software Version
  *
  * 10 bytes
@@ -234,7 +258,7 @@ static gps_mask_t sky_msg_80(struct gps_device_t *session,
                    over_x, over_y, over_z,
                    rev_yy, rev_mm, rev_dd);
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
+    GPSD_LOG(LOG_PROG, &session->context->errout,
              "Skytraq: 0x80: %s\n",
              session->subtype);
     return 0;
@@ -882,6 +906,9 @@ static gps_mask_t sky_parse(struct gps_device_t * session, unsigned char *buf,
     case 0x63:
         mask = sky_msg_63(session, buf, len);
         break;
+    case 0x64:
+        mask = sky_msg_64(session, buf, len);
+        break;
     case 0x80:
         // 128
         mask = sky_msg_80(session, buf, len);
@@ -980,8 +1007,6 @@ static gps_mask_t sky_parse(struct gps_device_t * session, unsigned char *buf,
         mask = sky_msg_E3(session, buf, len);
         break;
 
-    case 0x64:   // sub-id messages
-        FALLTHROUGH
     case 0x65:   // sub-id messages
         FALLTHROUGH
     case 0x67:   // sub-id messages
@@ -1017,63 +1042,209 @@ static gps_mask_t skybin_parse_input(struct gps_device_t *session)
 
         session->cfg_stage++;
 
-        // drivers/driver_nmea0183.c asked for MID 0x80 on detect
+        // drivers/driver_nmea0183.c send 0x04 to get MID 0x80 on detect
         switch (session->cfg_stage) {
         case 1:
+            // Send MID 0x3, to get back MID 0x81 Software CRC
+            (void)gpsd_write(session, "\xA0\xA1\x00\x02\x03\x00\x03\x0d\x0a",
+                             9);
+            break;
+        case 2:
             // Send MID 0x10, to get back MID 0x86 (Position Update Rate)
             (void)gpsd_write(session, "\xA0\xA1\x00\x01\x10\x10\x0d\x0a", 8);
             break;
-        case 2:
+        case 3:
             // Send MID 0x15, to get back MID 0xB9 (Power Mode Status)
             (void)gpsd_write(session, "\xA0\xA1\x00\x01\x15\x15\x0d\x0a", 8);
             break;
-        case 3:
+        case 4:
             // Send MID 0x2E, to get back MID 0xAF (DOP Mask)
             (void)gpsd_write(session, "\xA0\xA1\x00\x01\x2e\x2e\x0d\x0a", 8);
             break;
-        case 4:
+        case 5:
             // Send MID 0x2F, to get back MID 0x80 Elevation and SNR mask
             (void)gpsd_write(session, "\xA0\xA1\x00\x01\x2f\x2f\x0d\x0a", 8);
             break;
-        case 5:
+        case 6:
             // Send MID 0x3a, to get back MID 0xb4 Position Pinning
             (void)gpsd_write(session, "\xA0\xA1\x00\x01\x3a\x3a\x0d\x0a", 8);
             break;
-        case 6:
+        case 7:
             // Send MID 0x44, to get back MID 0xc2 1PPS timing
             // Timing mode versions only
             (void)gpsd_write(session, "\xA0\xA1\x00\x01\x44\x44\x0d\x0a", 8);
             break;
-        case 7:
+        case 8:
             // Send MID 0x46, to get back MID 0xbb 1PPS delay
             (void)gpsd_write(session, "\xA0\xA1\x00\x01\x46\x46\x0d\x0a", 8);
             break;
-        case 8:
+        case 9:
             // Send MID 0x4f, to get back MID 0x93 NMEA talker ID
             (void)gpsd_write(session, "\xA0\xA1\x00\x01\x4f\x4f\x0d\x0a", 8);
             break;
-        case 9:
+        case 10:
             // Send MID 0x56, to get back MID 0xc3 1PPS Output Mode
             // Timing mode versions only
             (void)gpsd_write(session, "\xA0\xA1\x00\x01\x56\x56\x0d\x0a", 8);
             break;
-        case 10:
-            // Send MID 0x62/02, to get back MID 0x62/80 SBAS status
-            (void)gpsd_write(session, "\xA0\xA1\x00\x02\x62\x02\x60\x0d\x0a", 9);
-            break;
         case 11:
-            // Send MID 0x62/04, to get back MID 0x62/81 QZSS status
-            (void)gpsd_write(session, "\xA0\xA1\x00\x02\x62\x04\x66\x0d\x0a", 9);
+            // Send MID 0x62/02, to get back MID 0x62/80 SBAS status
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x62\x02\x60\x0d\x0a", 9);
             break;
         case 12:
-            // Send MID 0x62/06, to get back MID 0x62/82 SBAS Advanced status
-            // not on PX1172RH_DS ?
-            (void)gpsd_write(session, "\xA0\xA1\x00\x02\x62\x06\xe7\x0d\x0a", 9);
+            // Send MID 0x62/04, to get back MID 0x62/81 QZSS status
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x62\x04\x66\x0d\x0a", 9);
             break;
         case 13:
+            // Send MID 0x62/06, to get back MID 0x62/82 SBAS Advanced status
+            // not on PX1172RH_DS ?
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x62\x06\xe7\x0d\x0a", 9);
+            break;
+        case 14:
             // Send MID 0x63/02, to get back MID 0x62/80 SAEE Status
             // not on PX1172RH_DS ?
-            (void)gpsd_write(session, "\xA0\xA1\x00\x02\x63\x02\x61\x0d\x0a", 9);
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x63\x02\x61\x0d\x0a", 9);
+            break;
+        case 15:
+            // Send MID 0x64/01, to get back MID 0x64/80
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x64\x01\x65\x0d\x0a", 9);
+            break;
+        case 16:
+            // Send MID 0x64/03, to get back MID 0x64/81
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x64\x03\x67\x0d\x0a", 9);
+            break;
+        case 17:
+            // Send MID 0x64/07, to get back MID 0x64/83
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x64\x07\x63\x0d\x0a", 9);
+            break;
+        case 18:
+            // Send MID 0x64/0b, to get back MID 0x64/85
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x64\x0b\x6f\x0d\x0a", 9);
+            break;
+        case 19:
+            // Send MID 0x64/12, to get back MID 0x64/88
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x64\x12\x76\x0d\x0a", 9);
+            break;
+        case 20:
+            // Send MID 0x64/16, to get back MID 0x64/8a
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x64\x16\x72\x0d\x0a", 9);
+            break;
+        case 21:
+            // Send MID 0x64/18, to get back MID 0x64/8b
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x64\x18\x7c\x0d\x0a", 9);
+            break;
+        case 22:
+            // Send MID 0x64/1a, to get back MID 0x64/8c
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x64\x1a\x7e\x0d\x0a", 9);
+            break;
+        case 23:
+            // Send MID 0x64/20, to get back MID 0x64/8e
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x64\x20\x44\x0d\x0a", 9);
+            break;
+        case 24:
+            // Send MID 0x64/22, to get back MID 0x64/8f
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x64\x22\x58\x0d\x0a", 9);
+            break;
+        case 25:
+            // Send MID 0x64/28, to get back MID 0x64/92
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x64\x28\x4c\x0d\x0a", 9);
+            break;
+        case 26:
+            // Send MID 0x64/30, to get back MID 0x64/98
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x64\x30\x54\x0d\x0a", 9);
+            break;
+        case 27:
+            // Send MID 0x64/3d, to get back MID 0x64/fe
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x64\x3d\x19\x0d\x0a", 9);
+            break;
+        case 28:
+            // Send MID 0x64/35, to get back MID 0x64/99
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x64\x35\x01\x50\x0d\x0a", 10);
+            break;
+        case 29:
+            // Send MID 0x64/36, to get back MID 0x64/9a
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x64\x36\x52\x0d\x0a", 9);
+            break;
+        case 30:
+            // Send MID 0x64/3c, to get back MID 0x64/99
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x64\x3c\x47\x47\x19\x0d\x0a",
+                             11);
+            break;
+        case 31:
+            // Send MID 0x65/02, to get back MID 0x64/80
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x65\x02\x67\x0d\x0a", 9);
+            break;
+        case 32:
+            // Send MID 0x65/04, to get back MID 0x64/8f
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x65\x04\x61\x0d\x0a", 9);
+            break;
+        case 33:
+            // Send MID 0x6a/07, to get back MID 0x6a/83
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x6a\x07\x6d\x0d\x0a", 9);
+            break;
+        case 34:
+            // Send MID 0x6a/0d, to get back MID 0x6a/85
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x6a\x0d\x67\x0d\x0a", 9);
+            break;
+        case 35:
+            // Send MID 0x6a/14, to get back MID 0x6a/86
+            // not on PX1172RH_DS ?
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x6a\x14\xfd\x0d\x0a", 9);
+            break;
+        case 36:
+            // Send MID 0x6a/16, to get back MID 0x6a/89
+            // not on PX1172RH_DS ?
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x6a\x16\x7c\x0d\x0a", 9);
+            break;
+        case 37:
+            // Send MID 0x7a/0e/01, to get back MID 0x7a/0e/80
+            // not on PX1172RH_DS ?
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x7a\x0e\x01\x75\x0d\x0a", 10);
+            break;
+        case 38:
+            // Send MID 0x7a/0e/02, to get back MID 0x7a/0e/81
+            // not on PX1172RH_DS ?
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x7a\x0e\x02\x76\x0d\x0a", 10);
+            break;
+        case 39:
+            // Send MID 0x7a/0e/03, to get back MID 0x7a/0e/82
+            // not on PX1172RH_DS ?
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x7a\x0e\x03\x77\x0d\x0a", 10);
+            break;
+        case 40:
+            // Send MID 0x7a/0e/05, to get back MID 0x7a/0e/83
+            // not on PX1172RH_DS ?
+            (void)gpsd_write(session,
+                             "\xA0\xA1\x00\x02\x7a\x0e\x05\x71\x0d\x0a", 10);
             break;
         default:
             // Done
