@@ -1185,18 +1185,19 @@ static void json_devicelist_dump(char *reply, size_t replylen)
     struct gps_device_t *devp;
     (void)strlcpy(reply, "{\"class\":\"DEVICES\",\"devices\":[", replylen);
 
-    for (devp = devices; devp < devices + MAX_DEVICES; devp++)
+    for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
+        size_t reply_len = strnlen(reply, GPS_JSON_RESPONSE_MAX - 3);
+        size_t path_len = strnlen(devp->gpsdata.dev.path, GPS_PATH_MAX);
         if (allocated_device(devp) &&
-            strlen(reply) + strlen(devp->gpsdata.dev.path) + 3 <
-            replylen - 1) {
+            (reply_len + path_len + 3) < (replylen - 1)) {
             char *cp;
-            json_device_dump(devp,
-                             reply + strlen(reply), replylen - strlen(reply));
-            cp = reply + strlen(reply);
+            json_device_dump(devp, reply + reply_len, replylen - reply_len);
+            cp = reply + strnlen(reply, GPS_JSON_RESPONSE_MAX - 3);
             *--cp = '\0';
             *--cp = '\0';
             (void)strlcat(reply, ",", replylen);
         }
+    }
 
     str_rstrip_char(reply, ',');
     (void)strlcat(reply, "]}\r\n", replylen);
