@@ -145,6 +145,54 @@ static void PRN2_gnssId_svId(short PRN, uint8_t *gnssId, uint8_t *svId)
 }
 
 /*
+ * decode MID 0x62 -- super packet
+ *
+ * Present in Phoenix
+ */
+static gps_mask_t sky_msg_62(struct gps_device_t *session,
+                             unsigned char *buf, size_t len)
+{
+    unsigned sid;
+
+    if (3 > len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "Skytraq: 0x62: bad len %zu\n", len);
+        return 0;
+    }
+
+    sid = getub(buf, 1);
+
+    // FIXME: decode them!
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "Skytraq: 0x62: sid %u\n", sid);
+    return 0;
+}
+
+/*
+ * decode MID 0x63 -- super packet
+ *
+ * Present in Phoenix
+ */
+static gps_mask_t sky_msg_63(struct gps_device_t *session,
+                             unsigned char *buf, size_t len)
+{
+    unsigned sid;
+
+    if (3 > len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "Skytraq: 0x63: bad len %zu\n", len);
+        return 0;
+    }
+
+    sid = getub(buf, 1);
+
+    // FIXME: decode them!
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "Skytraq: 0x63: sid %u\n", sid);
+    return 0;
+}
+
+/*
  * decode MID 0x80, Software Version
  *
  * 10 bytes
@@ -828,19 +876,41 @@ static gps_mask_t sky_parse(struct gps_device_t * session, unsigned char *buf,
     // session->cycle_end_reliable = true;
 
     switch (buf[0]) {
+    case 0x62:
+        mask = sky_msg_62(session, buf, len);
+        break;
+    case 0x63:
+        mask = sky_msg_63(session, buf, len);
+        break;
     case 0x80:
         // 128
         mask = sky_msg_80(session, buf, len);
         break;
     case 0x83:
         // 131 - ACK
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "Skytraq: ACK to MID %#02x\n", buf[1]);
+        if (2 == len) {
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "Skytraq: 0x83: ACK MID %#02x\n", buf[1]);
+        } else if (3 == len) {
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "Skytraq: 0x83: ACK MID %#02x/%02x\n", buf[1], buf[2]);
+        } else {
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "Skytraq: 0x83: ACK\n");
+        }
         break;
     case 0x84:
         // 132 - NACK
-        GPSD_LOG(LOG_INF, &session->context->errout,
-                 "Skytraq: NACK to MID %#02x\n", buf[1]);
+        if (2 == len) {
+            GPSD_LOG(LOG_INF, &session->context->errout,
+                     "Skytraq: 0x84: NACK MID %#02x\n", buf[1]);
+        } else if (3 == len) {
+            GPSD_LOG(LOG_INF, &session->context->errout,
+                     "Skytraq: 0x84: NACK MID %#02x/%02x\n", buf[1], buf[2]);
+        } else {
+            GPSD_LOG(LOG_INF, &session->context->errout,
+                     "Skytraq: 0x84: NACK\n");
+        }
         break;
     case 0x86:
         // 134 Position Update Rate
@@ -910,8 +980,6 @@ static gps_mask_t sky_parse(struct gps_device_t * session, unsigned char *buf,
         mask = sky_msg_E3(session, buf, len);
         break;
 
-    case 0x63:   // sub-id messages
-        FALLTHROUGH
     case 0x64:   // sub-id messages
         FALLTHROUGH
     case 0x65:   // sub-id messages
@@ -947,49 +1015,65 @@ static gps_mask_t skybin_parse_input(struct gps_device_t *session)
     if (UINT_MAX != session->cfg_stage) {
         // more init to do
 
-        GPSD_LOG(LOG_IO, &session->context->errout, "Skytraq: stage %d\n",
-                 session->cfg_stage);
         session->cfg_stage++;
 
         // drivers/driver_nmea0183.c asked for MID 0x80 on detect
         switch (session->cfg_stage) {
         case 1:
             // Send MID 0x10, to get back MID 0x86 (Position Update Rate)
-            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x10\x10\x0d\x0a",8);
+            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x10\x10\x0d\x0a", 8);
             break;
         case 2:
             // Send MID 0x15, to get back MID 0xB9 (Power Mode Status)
-            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x15\x15\x0d\x0a",8);
+            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x15\x15\x0d\x0a", 8);
             break;
         case 3:
             // Send MID 0x2E, to get back MID 0xAF (DOP Mask)
-            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x2e\x2e\x0d\x0a",8);
+            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x2e\x2e\x0d\x0a", 8);
             break;
         case 4:
             // Send MID 0x2F, to get back MID 0x80 Elevation and SNR mask
-            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x2f\x2f\x0d\x0a",8);
+            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x2f\x2f\x0d\x0a", 8);
             break;
         case 5:
             // Send MID 0x3a, to get back MID 0xb4 Position Pinning
-            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x3a\x3a\x0d\x0a",8);
+            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x3a\x3a\x0d\x0a", 8);
             break;
         case 6:
             // Send MID 0x44, to get back MID 0xc2 1PPS timing
             // Timing mode versions only
-            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x44\x44\x0d\x0a",8);
+            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x44\x44\x0d\x0a", 8);
             break;
         case 7:
             // Send MID 0x46, to get back MID 0xbb 1PPS delay
-            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x46\x46\x0d\x0a",8);
+            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x46\x46\x0d\x0a", 8);
             break;
         case 8:
             // Send MID 0x4f, to get back MID 0x93 NMEA talker ID
-            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x4f\x4f\x0d\x0a",8);
+            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x4f\x4f\x0d\x0a", 8);
             break;
         case 9:
             // Send MID 0x56, to get back MID 0xc3 1PPS Output Mode
             // Timing mode versions only
-            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x56\x56\x0d\x0a",8);
+            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x56\x56\x0d\x0a", 8);
+            break;
+        case 10:
+            // Send MID 0x62/02, to get back MID 0x62/80 SBAS status
+            (void)gpsd_write(session, "\xA0\xA1\x00\x02\x62\x02\x60\x0d\x0a", 9);
+            break;
+        case 11:
+            // Send MID 0x62/04, to get back MID 0x62/81 QZSS status
+            (void)gpsd_write(session, "\xA0\xA1\x00\x02\x62\x04\x66\x0d\x0a", 9);
+            break;
+        case 12:
+            // Send MID 0x62/06, to get back MID 0x62/82 SBAS Advanced status
+            // not on PX1172RH_DS ?
+            (void)gpsd_write(session, "\xA0\xA1\x00\x02\x62\x06\xe7\x0d\x0a", 9);
+            break;
+        case 13:
+            // Send MID 0x63/02, to get back MID 0x62/80 SAEE Status
+            // not on PX1172RH_DS ?
+            (void)gpsd_write(session, "\xA0\xA1\x00\x02\x63\x02\x61\x0d\x0a", 9);
             break;
         default:
             // Done
