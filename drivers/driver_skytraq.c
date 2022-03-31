@@ -60,12 +60,12 @@ static ssize_t sky_write(struct gps_device_t *session, char *msg,
                          size_t data_len UNUSED)
 {
     unsigned crc;
-    size_t i, len;
+    ssize_t i, len;
     bool ok;
     unsigned type = (unsigned)msg[4];
 
     // max length is undocumented, largest I could find is 261
-    len = (size_t)((msg[2] << 8) | msg[3]);
+    len = (ssize_t)(((msg[2] << 8) | msg[3]) & 0x0ffff);
     // limit to 512 to pacify coverity
     if (512 < len) {
         len = 512;
@@ -83,9 +83,10 @@ static ssize_t sky_write(struct gps_device_t *session, char *msg,
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "Skytraq: Writing control type %02x:\n", type);
-    ok = (gpsd_write(session, (const char *)msg, len+7) == (ssize_t) (len+7));
+    len += 7;
+    ok = gpsd_write(session, (const char *)msg, len) == len;
 
-    return (ok);
+    return ok;
 }
 
 /* stub for mode changer, someday
@@ -186,8 +187,183 @@ static gps_mask_t sky_msg_80(struct gps_device_t *session,
                    rev_yy, rev_mm, rev_dd);
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "Skytraq: MID 0x80: %s\n",
+             "Skytraq: 0x80: %s\n",
              session->subtype);
+    return 0;
+}
+
+/*
+ * decode MID 0x86 - Position Update Rate
+ *
+ * Present in Phoenix
+ */
+static gps_mask_t sky_msg_86(struct gps_device_t *session,
+                             unsigned char *buf, size_t len)
+{
+    unsigned rate;
+
+    if (2 != len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "Skytraq: 0x86: bad len %zu\n", len);
+        return 0;
+    }
+
+    rate = getub(buf, 1);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "Skytraq: 0x86: rate %u\n", rate);
+    return 0;
+}
+
+/*
+ * decode MID 0x93 - NMEA Talker ID
+ *
+ * Present in Phoenix
+ */
+static gps_mask_t sky_msg_93(struct gps_device_t *session,
+                             unsigned char *buf, size_t len)
+{
+    unsigned mode;
+
+    if (2 != len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "Skytraq: 0x93: bad len %zu\n", len);
+        return 0;
+    }
+
+    mode = getub(buf, 1);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "Skytraq: 0x93: mode %u\n", mode);
+    return 0;
+}
+
+/*
+ * decode MID 0xaf - DOP mask
+ *
+ * Present in Phoenix
+ */
+static gps_mask_t sky_msg_AF(struct gps_device_t *session,
+                             unsigned char *buf, size_t len)
+{
+    unsigned mode, pdop, hdop, gdop;
+
+    if (8 != len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "Skytraq: 0xAF: bad len %zu\n", len);
+        return 0;
+    }
+
+    mode = getub(buf, 1);
+    pdop = getbeu16(buf, 2);
+    hdop = getbeu16(buf, 4);
+    gdop = getbeu16(buf, 6);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "Skytraq: 0xAF: Masks: mode %u pdop %u hdop %u gdop %u\n",
+             mode, pdop, hdop, gdop);
+    return 0;
+}
+
+/*
+ * decode MID 0xb0 Elevation and DOP mask
+ *
+ * Present in Phoenix
+ */
+static gps_mask_t sky_msg_B0(struct gps_device_t *session,
+                             unsigned char *buf, size_t len)
+{
+    unsigned select, elevation, cnr;
+
+    if (4 != len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "Skytraq: 0xB0: bad len %zu\n", len);
+        return 0;
+    }
+
+    select = getub(buf, 1);
+    elevation = getub(buf, 2);
+    cnr = getub(buf, 3);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "Skytraq: 0xB0: select %u el %u cnr %u\n",
+             select, elevation, cnr);
+    return 0;
+}
+
+/*
+ * decode MID 0xb4 - Position Pinning Status
+ *
+ * Present in Phoenix
+ */
+static gps_mask_t sky_msg_B4(struct gps_device_t *session,
+                             unsigned char *buf, size_t len)
+{
+    unsigned status, pspeed, pcnt, uspeed, ucnt, udist;
+
+    if (12 != len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "Skytraq: 0xB4: bad len %zu\n", len);
+        return 0;
+    }
+
+    status = getub(buf, 1);
+    pspeed = getbeu16(buf, 2);
+    pcnt = getbeu16(buf, 4);
+    uspeed = getbeu16(buf, 6);
+    ucnt = getbeu16(buf, 8);
+    udist = getbeu16(buf, 10);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "Skytraq: 0xB4: status %u pspeed %u pcnt %u uspeed %u "
+             "ucnt %u udist %u\n",
+             status, pspeed, pcnt, uspeed, ucnt, udist);
+    return 0;
+}
+
+/*
+ * decode MID 0xB9 - Power Mode Status
+ *
+ * Present in Phoenix
+ */
+static gps_mask_t sky_msg_B9(struct gps_device_t *session,
+                             unsigned char *buf, size_t len)
+{
+    unsigned mode;
+
+    if (2 != len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "Skytraq: 0xB9: bad len %zu\n", len);
+        return 0;
+    }
+
+    mode = getub(buf, 1);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "Skytraq: 0xB9: mode %u\n", mode);
+    return 0;
+}
+
+/*
+ * decode MID 0xBB - 1PPS Cable Delay
+ *
+ * Present in Phoenix
+ */
+static gps_mask_t sky_msg_BB(struct gps_device_t *session,
+                             unsigned char *buf, size_t len)
+{
+    int delay;
+
+    if (5 != len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "Skytraq: 0xBB: bad len %zu\n", len);
+        return 0;
+    }
+
+    delay = getbeu32(buf, 1);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "Skytraq: 0xBB: delay %d\n", delay);
     return 0;
 }
 
@@ -220,7 +396,7 @@ static gps_mask_t sky_msg_DC(struct gps_device_t *session,
     session->gpsdata.skyview_time = gpsd_gpstime_resolv(session, wn, ts_tow);
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "Skytraq: MID 0xDC: iod %u wn %u tow %u mp %u t%s\n",
+             "Skytraq: 0xDC: iod %u wn %u tow %u mp %u t%s\n",
              iod, wn, tow, mp,
              timespec_str(&session->gpsdata.skyview_time, ts_buf,
                           sizeof(ts_buf)));
@@ -242,7 +418,7 @@ static gps_mask_t sky_msg_DD(struct gps_device_t *session,
     nmeas = (unsigned)getub(buf, 2);
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "Skytraq: MID 0xDD: iod=%u, nmeas=%u\n",
+             "Skytraq: 0xDD: iod=%u, nmeas=%u\n",
              iod, nmeas);
 
     // check IOD?
@@ -428,7 +604,7 @@ static gps_mask_t sky_msg_DE(struct gps_device_t *session,
     session->gpsdata.satellites_used = nsv;
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "Skytraq: MID 0xDE: nsvs=%u visible=%u iod=%u\n", nsvs,
+             "Skytraq: 0xDE: nsvs=%u visible=%u iod=%u\n", nsvs,
              session->gpsdata.satellites_visible, iod);
     return SATELLITE_SET | USED_IS;
 }
@@ -507,7 +683,7 @@ static gps_mask_t sky_msg_DF(struct gps_device_t *session,
     session->newdata.time = gpsd_gpstime_resolv(session, wn, ts_tow );
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "Skytraq: MID 0xDF: iod=%u, stat=%u, wn=%u, tow=%f, t=%s "
+             "Skytraq: 0xDF: iod=%u, stat=%u, wn=%u, tow=%f, t=%s "
              "cb: %f, cd: %f "
              "gdop: %.2f, pdop: %.2f, hdop: %.2f, vdop: %.2f, tdop: %.2f\n",
              iod, navstat, wn, f_tow,
@@ -549,7 +725,7 @@ static gps_mask_t sky_msg_E0(struct gps_device_t *session,
     }
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "Skytraq: 50B MID 0xE0: prn=%u, subf=%u\n",
+             "Skytraq: 0xE0: prn=%u, subf=%u\n",
              prn, subf);
 
     // could be SBAS?
@@ -654,8 +830,8 @@ static gps_mask_t sky_parse(struct gps_device_t * session, unsigned char *buf,
     switch (buf[0]) {
     case 0x80:
         // 128
-        return sky_msg_80(session, buf, len);
-
+        mask = sky_msg_80(session, buf, len);
+        break;
     case 0x83:
         // 131 - ACK
         GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -666,33 +842,73 @@ static gps_mask_t sky_parse(struct gps_device_t * session, unsigned char *buf,
         GPSD_LOG(LOG_INF, &session->context->errout,
                  "Skytraq: NACK to MID %#02x\n", buf[1]);
         break;
+    case 0x86:
+        // 134 Position Update Rate
+        mask = sky_msg_86(session, buf, len);
+        break;
+
+    case 0x93:
+        // NMEA TLKER id
+        mask = sky_msg_93(session, buf, len);
+        break;
+
+    case 0xaf:
+        // DOP Mask
+        mask = sky_msg_AF(session, buf, len);
+        break;
+
+    case 0xb0:
+        // Elevation and CNR mask
+        mask = sky_msg_B0(session, buf, len);
+        break;
+
+    case 0xb4:
+        // Positoin Pinning Status
+        mask = sky_msg_B4(session, buf, len);
+        break;
+
+    case 0xb9:
+        mask = sky_msg_B9(session, buf, len);
+        break;
+
+    case 0xbb:
+        mask = sky_msg_BB(session, buf, len);
+        break;
+
     case 0xDC:
         // 220
-        return sky_msg_DC(session, buf, len);
+        mask = sky_msg_DC(session, buf, len);
+        break;
 
     case 0xDD:
         // 221
-        return sky_msg_DD(session, buf, len);
+        mask = sky_msg_DD(session, buf, len);
+        break;
 
     case 0xDE:
         // 222
-        return sky_msg_DE(session, buf, len);
+        mask = sky_msg_DE(session, buf, len);
+        break;
 
     case 0xDF:
         // 223 - Nave status (PVT)
-        return sky_msg_DF(session, buf, len);
+        mask = sky_msg_DF(session, buf, len);
+        break;
 
     case 0xE0:
         // 224
-        return sky_msg_E0(session, buf, len);
+        mask = sky_msg_E0(session, buf, len);
+        break;
 
     case 0xE2:
         // 226 - Beidou2 D1 Subframe data
-        return sky_msg_E2(session, buf, len);
+        mask = sky_msg_E2(session, buf, len);
+        break;
 
     case 0xE3:
         // 227 - Beidou2 D2 Subframe data
-        return sky_msg_E3(session, buf, len);
+        mask = sky_msg_E3(session, buf, len);
+        break;
 
     case 0x63:   // sub-id messages
         FALLTHROUGH
@@ -722,6 +938,66 @@ static gps_mask_t sky_parse(struct gps_device_t * session, unsigned char *buf,
 
 static gps_mask_t skybin_parse_input(struct gps_device_t *session)
 {
+    /*
+     * Use this hook to step, slowly, through the init messages.
+     * By sending only one for each received we try
+     * to avoid overrunning the receiver input buffer.
+     */
+
+    if (UINT_MAX != session->cfg_stage) {
+        // more init to do
+
+        GPSD_LOG(LOG_IO, &session->context->errout, "Skytraq: stage %d\n",
+                 session->cfg_stage);
+        session->cfg_stage++;
+
+        // drivers/driver_nmea0183.c asked for MID 0x80 on detect
+        switch (session->cfg_stage) {
+        case 1:
+            // Send MID 0x10, to get back MID 0x86 (Position Update Rate)
+            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x10\x10\x0d\x0a",8);
+            break;
+        case 2:
+            // Send MID 0x15, to get back MID 0xB9 (Power Mode Status)
+            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x15\x15\x0d\x0a",8);
+            break;
+        case 3:
+            // Send MID 0x2E, to get back MID 0xAF (DOP Mask)
+            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x2e\x2e\x0d\x0a",8);
+            break;
+        case 4:
+            // Send MID 0x2F, to get back MID 0x80 Elevation and SNR mask
+            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x2f\x2f\x0d\x0a",8);
+            break;
+        case 5:
+            // Send MID 0x3a, to get back MID 0xb4 Position Pinning
+            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x3a\x3a\x0d\x0a",8);
+            break;
+        case 6:
+            // Send MID 0x44, to get back MID 0xc2 1PPS timing
+            // Timing mode versions only
+            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x44\x44\x0d\x0a",8);
+            break;
+        case 7:
+            // Send MID 0x46, to get back MID 0xbb 1PPS delay
+            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x46\x46\x0d\x0a",8);
+            break;
+        case 8:
+            // Send MID 0x4f, to get back MID 0x93 NMEA talker ID
+            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x4f\x4f\x0d\x0a",8);
+            break;
+        case 9:
+            // Send MID 0x56, to get back MID 0xc3 1PPS Output Mode
+            // Timing mode versions only
+            (void)gpsd_write(session, "\xA0\xA1\x00\x01\x56\x56\x0d\x0a",8);
+            break;
+        default:
+            // Done
+            session->cfg_stage = UINT_MAX;
+            break;
+        }
+    }
+
     if (SKY_PACKET == session->lexer.type) {
         return  sky_parse(session, session->lexer.outbuffer,
                         session->lexer.outbuflen);
@@ -729,6 +1005,8 @@ static gps_mask_t skybin_parse_input(struct gps_device_t *session)
     if (NMEA_PACKET == session->lexer.type) {
         return nmea_parse((char *)session->lexer.outbuffer, session);
     }
+    // should not get here...
+
     return 0;
 }
 
