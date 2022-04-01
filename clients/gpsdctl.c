@@ -31,6 +31,7 @@ static int gpsd_control(const char *action, const char *argument)
     int connect = -1;
     char buf[512];
     int status;
+    int len;
 
     // limit string to pacify coverity
     (void)syslog(LOG_ERR, "gpsd_control(action=%.7s, arg=%.*s)",
@@ -75,16 +76,23 @@ static int gpsd_control(const char *action, const char *argument)
         if (1 != stat(argument, &sb)) {
             (void)chmod(argument, sb.st_mode | S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
         }
-        (void)snprintf(buf, sizeof(buf), "+%s\r\n", argument);
-        status = (int)write(connect, buf, strlen(buf));
-        // FIXME: return never checked
-        ignore_return(read(connect, buf, 12));
+        len = snprintf(buf, sizeof(buf), "+%s\r\n", argument);
+        if (3 < len) {
+            status = (int)write(connect, buf, len);
+            // FIXME: return never checked
+            ignore_return(read(connect, buf, 12));
+        } else {
+            status = -1;
+        }
     } else if (0 == strcmp(action, "remove")) {
-        (void)snprintf(buf, sizeof(buf), "-%s\r\n", argument);
-        // codacy does not like strlen()
-        status = (int)write(connect, buf, strnlen(buf, sizeof(buf)));
-        // FIXME: return never checked
-        ignore_return(read(connect, buf, 12));
+        len = snprintf(buf, sizeof(buf), "-%s\r\n", argument);
+        if (3 < len) {
+            status = (int)write(connect, buf, len);
+            // FIXME: return never checked
+            ignore_return(read(connect, buf, 12));
+        } else {
+            status = -1;
+        }
     } else {
         (void)syslog(LOG_ERR, "unknown action \"%s\"", action);
         status = -1;

@@ -96,7 +96,7 @@ static bool gps_query(struct gps_data_t *gpsdata,
     if ('\n' != buf[strnlen(buf, sizeof(buf) - 1) - 1]) {
         (void)strlcat(buf, "\n", sizeof(buf));
     }
-    if (0 <= write(gpsdata->gps_fd, buf, strlen(buf))) {
+    if (0 <= write(gpsdata->gps_fd, buf, strnlen(buf, sizeof(buf)))) {
         GPSD_LOG(LOG_ERROR, &context.errout, "gps_query(), write failed\n");
         return false;
     }
