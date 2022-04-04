@@ -420,7 +420,7 @@ static gps_mask_t sky_msg_6A(struct gps_device_t *session,
 {
     unsigned sid;
     unsigned u[13];
-    double d[4];
+    double d[5];
 
     if (3 > len) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
