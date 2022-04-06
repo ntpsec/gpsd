@@ -675,9 +675,14 @@ static void notify_watchers(struct gps_device_t *device,
     va_list ap;
     char buf[BUFSIZ];
     struct subscriber_t *sub;
+    int len;
 
     va_start(ap, sentence);
-    (void)vsnprintf(buf, sizeof(buf), sentence, ap);
+    len = vsnprintf(buf, sizeof(buf), sentence, ap);
+    if (1 > len) {
+        // uh, oh
+        return;
+    }
     va_end(ap);
 
     for (sub = subscribers; sub < subscribers + MAX_CLIENTS; sub++) {
@@ -687,7 +692,7 @@ static void notify_watchers(struct gps_device_t *device,
                  sub->policy.json) ||
                 (onpps && sub->policy.pps)) {
                 // codacy hates strlen()
-                (void)throttled_write(sub, buf, strnlen(buf, sizeof(buf)));
+                (void)throttled_write(sub, buf, len);
             }
         }
     }
@@ -1224,6 +1229,7 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
     struct gps_policy_t policy_copy;
     const char *end = NULL;
     char watch_buf[GPS_JSON_RESPONSE_MAX];  // buffer for re-written policy
+    int len;
 
     if (str_starts_with(buf, "?DEVICES;")) {
         buf += 9;
@@ -1478,6 +1484,7 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
             }
         }
         // dump a response for each selected channel
+        len = strlen(reply);
         for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
             if (!allocated_device(devp)) {
                 continue;
@@ -1486,9 +1493,7 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
                 0 != strcmp(devp->gpsdata.dev.path, devconf.path)) {
                 continue;
             }
-            json_device_dump(devp,
-                             reply + strlen(reply),
-                             replylen - strlen(reply));
+            json_device_dump(devp, reply + len, replylen - len);
         }
     } else if (str_starts_with(buf, "?POLL;")) {
         char tbuf[JSON_DATE_MAX+1];
@@ -1558,13 +1563,15 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
         while (isspace((unsigned char) *errend) && errend > buf) {
             --errend;
         }
-        (void)snprintf(reply, replylen,
+        len = snprintf(reply, replylen,
                        "{\"class\":\"ERROR\",\"message\":"
                        "\"Unrecognized request '%s'\"}\r\n",
                        json_quote(buf, quoted_error, errend - buf,
                                   sizeof(quoted_error)));
         GPSD_LOG(LOG_ERROR, &context.errout, "ERROR response: %s\n", reply);
-        buf += strnlen(buf, bufsize);
+        if (0 < len) {
+            buf += len;
+        }
     }
   bailout:
     *after = buf;
@@ -1607,7 +1614,8 @@ static void raw_report(struct subscriber_t *sub, struct gps_device_t *device)
                          (char *)device->lexer.outbuffer,
                          device->lexer.outbuflen);
         (void)strlcat((char *)hd, "\r\n", sizeof(device->msgbuf));
-        (void)throttled_write(sub, (char *)hd, strlen(hd));
+        (void)throttled_write(sub, (char *)hd,
+                              strnlen(hd, sizeof(device->msgbuf)));
     }
 #endif  // BINARY_ENABLE
 }
