@@ -1210,14 +1210,14 @@ static void rstrip(char *str)
     char *strend;
 
     strend = str + strlen(str) - 1;
-    while (isspace((unsigned char) *strend)) {
+    while (isspace((unsigned char)*strend)) {
         *strend = '\0';
         --strend;
     }
 }
 
-static void handle_request(struct subscriber_t *sub,
-                           const char *buf, const char **after,
+static void handle_request(struct subscriber_t *sub, const char *buf,
+                           size_t bufsize, const char **after,
                            char *reply, size_t replylen)
 {
     struct gps_device_t *devp;
@@ -1241,7 +1241,7 @@ static void handle_request(struct subscriber_t *sub,
             int status = json_watch_read(buf + 1, &sub->policy, &end);
 
             if (NULL == end) {
-                buf += strlen(buf);
+                buf += strnlen(buf, bufsize - 1);
             } else {
                 if (';' == *end) {
                     ++end;
@@ -1343,7 +1343,7 @@ static void handle_request(struct subscriber_t *sub,
             // first, select a device to operate on
             int status = json_device_read(buf + 1, &devconf, &end);
             if (NULL == end) {
-                buf += strlen(buf);
+                buf += strnlen(buf, bufsize);
             } else {
                 if (';' == *end) {
                     ++end;
@@ -1554,7 +1554,7 @@ static void handle_request(struct subscriber_t *sub,
         // a buffer to put the "quoted" bad json into
         char quoted_error[GPS_JSON_RESPONSE_MAX];
 
-        errend = buf + strlen(buf);
+        errend = buf + strnlen(buf, bufsize);
         while (isspace((unsigned char) *errend) && errend > buf) {
             --errend;
         }
@@ -1564,7 +1564,7 @@ static void handle_request(struct subscriber_t *sub,
                        json_quote(buf, quoted_error, errend - buf,
                                   sizeof(quoted_error)));
         GPSD_LOG(LOG_ERROR, &context.errout, "ERROR response: %s\n", reply);
-        buf += strlen(buf);
+        buf += strnlen(buf, bufsize);
     }
   bailout:
     *after = buf;
@@ -1922,7 +1922,8 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
 /* Execute GPSD requests (?POLL, ?WATCH, etc.) from a buffer.
  * The entire request must be in the buffer.
  */
-static int handle_gpsd_request(struct subscriber_t *sub, const char *buf)
+static int handle_gpsd_request(struct subscriber_t *sub, const char *buf,
+                               size_t bufsize)
 {
     char reply[GPS_JSON_RESPONSE_MAX + 1];
 
@@ -1930,14 +1931,15 @@ static int handle_gpsd_request(struct subscriber_t *sub, const char *buf)
     if ('?' == buf[0]) {
         const char *end;
 
-        for (end = buf; *buf != '\0'; buf = end)
-            if (isspace((unsigned char) *buf)) {
+        for (end = buf; *buf != '\0'; buf = end) {
+            if (isspace((unsigned char)*buf)) {
                 end = buf + 1;
             } else {
                 size_t len = strnlen(reply, sizeof(reply));
-                handle_request(sub, buf, &end,
+                handle_request(sub, buf, bufsize, &end,
                                reply + len, sizeof(reply) - len);
             }
+        }
     }
     return (int)throttled_write(sub, reply, strnlen(reply, sizeof(reply)));
 }
@@ -2912,7 +2914,7 @@ int main(int argc, char *argv[])
                      * COMMAND_TIMEOUT useful.
                      */
                     sub->active = time(NULL);
-                    if (0 > handle_gpsd_request(sub, buf)) {
+                    if (0 > handle_gpsd_request(sub, buf, sizeof(buf))) {
                         detach_client(sub);
                     }
                 }
