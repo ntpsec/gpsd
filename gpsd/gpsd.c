@@ -679,11 +679,11 @@ static void notify_watchers(struct gps_device_t *device,
 
     va_start(ap, sentence);
     len = vsnprintf(buf, sizeof(buf), sentence, ap);
+    va_end(ap);
     if (1 > len) {
         // uh, oh
         return;
     }
-    va_end(ap);
 
     for (sub = subscribers; sub < subscribers + MAX_CLIENTS; sub++) {
         if (0 != sub->active &&
