@@ -1,6 +1,6 @@
                         GPSD project news
 
-3.23.2~dev: unreleased
+3.23.2~rc1: unreleased
   NTRIP 2.0 now works.  But still only plain HTML, not RTP, etc.
   Remove ntrip option and NTRIP_ENABLE.  Always build.
   Remove passthrough option and PASSTHROUGH_ENABLE.  Always build.
@@ -16,7 +16,7 @@
   New ppscheck options, and can use /dev/ppsX devices.
   First try at TSIPv1 protocol decodes.
   Decode Quectel $PQVERNO for firmware version
-  Decode Skytrak $PSTI,035 and 036 for RTK compass
+  Decode Skytrak PX1172RH_DS messages.
 
 3.23.1: 2021-09-21
   Improve ubx cycle detection.

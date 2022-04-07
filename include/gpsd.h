@@ -85,13 +85,12 @@ extern "C" {
  *      GPSD_PROTO_*_VERSION moved to gpsd_config.h
  *      Add gps_context_t.passive
  *      Add gps_context_t.batteryRTC
- * 3.21.1~dev
+ * 3.21.1
  *      Add gps_device_t.ubx.last_protver
  *      Add gps_device_t last_word_gal and last_svid3_gal
- * 3.23.1~dev
  *      Add timespec ts_startCurrentBaud to gps_device_t
  *      ntrip_conn_* to NTRIP_CONN_*
- * 3.23.2~dev
+ * 3.23.2~rc1
  *      add ntrip_parse_url(), ntrip_close()
  *      add host, stream_time, to ntrip_stream_t
  *      add shm_clock_unit and shm_pps_unit to device_t

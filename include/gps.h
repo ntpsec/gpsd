@@ -97,7 +97,7 @@ extern "C" {
  *       add struct baseline_t
  *
  */
-#define GPSD_API_MAJOR_VERSION  13      // bump on incompatible changes
+#define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
 
 #define MAXCHANNELS     140     // u-blox 9 tracks 140 signals
@@ -151,7 +151,6 @@ typedef struct timespec timespec_t;     // Unix time as sec, nsec
  * base to the moving rover.
  */
 struct baseline_t {
-    
     /* status, aka mode, valid values:
      * STATUS_UNK, STATUS_RTK_FIX, STATUS_RTK_FLT
      */
