@@ -34,16 +34,6 @@
 // Phoenix has 230 channels
 #define SKY_CHANNELS    230      // max channels allowed in format
 
-static gps_mask_t sky_parse(struct gps_device_t *, unsigned char *, size_t);
-static gps_mask_t sky_msg_80(struct gps_device_t *, unsigned char *, size_t);
-static gps_mask_t sky_msg_DC(struct gps_device_t *, unsigned char *, size_t);
-static gps_mask_t sky_msg_DD(struct gps_device_t *, unsigned char *, size_t);
-static gps_mask_t sky_msg_DE(struct gps_device_t *, unsigned char *, size_t);
-static gps_mask_t sky_msg_DF(struct gps_device_t *, unsigned char *, size_t);
-static gps_mask_t sky_msg_E0(struct gps_device_t *, unsigned char *, size_t);
-static gps_mask_t sky_msg_E2(struct gps_device_t *, unsigned char *, size_t);
-static gps_mask_t sky_msg_E3(struct gps_device_t *, unsigned char *, size_t);
-
 #ifdef __UNUSED
 // Poll Software Version MID 2
 static unsigned char versionprobe[] = {
@@ -621,6 +611,98 @@ static gps_mask_t sky_msg_86(struct gps_device_t *session,
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "Skytraq 0x86: rate %u\n", rate);
+    return 0;
+}
+
+/*
+ * decode MID 0x89 - Binary measurement data output status
+ *
+ * Present in Phoenix
+ */
+static gps_mask_t sky_msg_89(struct gps_device_t *session,
+                             unsigned char *buf, size_t len)
+{
+    unsigned i;
+    uint8_t u[7];
+
+    if (8 != len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "Skytraq 0x89: bad len %zu\n", len);
+        return 0;
+    }
+
+    for (i = 0; i < 7; i++) {
+        u[i] = getub(buf, i + 1);
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "Skytraq 0x89: rate %u Meas %u raw %u CH_status %u "
+             "RCV_statas %u subf %u eraw %u\n",
+             u[0], u[1], u[2], u[3], u[4], u[5], u[6]);
+
+    return 0;
+}
+
+/*
+ * decode MID 0x8A - Binary rtcm data output status
+ *
+ * Present in Phoenix
+ */
+static gps_mask_t sky_msg_8A(struct gps_device_t *session,
+                             unsigned char *buf, size_t len)
+{
+    unsigned i;
+    uint8_t u[15];
+
+    if (16 != len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "Skytraq 0x8A: bad len %zu\n", len);
+        return 0;
+    }
+
+    for (i = 0; i < 15; i++) {
+        u[i] = getub(buf, i + 1);
+    }
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "Skytraq 0x8A: enable %u MSM %u 1005 %u 107x %u 108x %u "
+             "109x %u 110x %u 111x %u 112x %u 1019 %u 1020 %u "
+             "1042 %u 1046 %u type %u version %u\n",
+             u[0], u[1], u[2], u[3], u[4], u[5], u[6], u[7],
+             u[8], u[9], u[10], u[11], u[12], u[13], u[14]);
+
+    return 0;
+}
+
+/*
+ * decode MID 0x8B - Base position
+ *
+ * Present in Phoenix
+ */
+static gps_mask_t sky_msg_8B(struct gps_device_t *session,
+                             unsigned char *buf, size_t len)
+{
+    uint8_t u[5];
+    double d[3];
+
+    if (35 != len) {
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "Skytraq 0x8B: bad len %zu\n", len);
+        return 0;
+    }
+
+    u[0] = getub(buf, 1);
+    u[1] = getbeu32(buf, 2);
+    u[2] = getbeu32(buf, 6);
+    d[0] = getbed64((const char *)buf, 10);
+    d[1] = getbed64((const char *)buf, 18);
+    d[2] = getbef32((const char *)buf, 26);
+    u[3] = getub(buf, 30);
+    u[4] = getbeu32(buf, 31);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "Skytraq 0x8B: saved mode %u saved length %u stddev %u "
+             "lat %.9f lon %.9f HAE %0.4f run mode %u survey len %u\n",
+             u[0], u[1], u[2], d[0], d[1], d[2], u[3], u[4]);
+
     return 0;
 }
 
@@ -1301,9 +1383,17 @@ static gps_mask_t sky_parse(struct gps_device_t * session, unsigned char *buf,
         // 134 Position Update Rate
         mask = sky_msg_86(session, buf, len);
         break;
-
+    case 0x89:
+        mask = sky_msg_89(session, buf, len);
+        break;
+    case 0x8A:
+        mask = sky_msg_8A(session, buf, len);
+        break;
+    case 0x8B:
+        mask = sky_msg_8B(session, buf, len);
+        break;
     case 0x93:
-        // NMEA TLKER id
+        // NMEA TALKER id
         mask = sky_msg_93(session, buf, len);
         break;
 
@@ -1385,14 +1475,20 @@ static gps_mask_t skybin_parse_input(struct gps_device_t *session)
 {
     /*
      * Use this hook to step, slowly, through the init messages.
-     * By sending only one for each received we try
+     * By sending only one for each three received we try
      * to avoid overrunning the receiver input buffer.
      */
 
     if (UINT_MAX != session->cfg_stage) {
+        session->cfg_step++;
+    }
+
+    if (UINT_MAX != session->cfg_stage &&
+        3 <= session->cfg_step) {
         // more init to do
 
         session->cfg_stage++;
+        session->cfg_step = 0;
 
         // Note: the checksums in the Skytaq doc are sometimes wrong...
 
@@ -1412,192 +1508,204 @@ static gps_mask_t skybin_parse_input(struct gps_device_t *session)
             (void)sky_write(session, "\xA0\xA1\x00\x01\x15\x15\x0d\x0a", 8);
             break;
         case 4:
+            // Send MID 0x1f, to get back MID 0x89 Measurement data statuS
+            (void)sky_write(session, "\xA0\xA1\x00\x01\x1f\x1f\x0d\x0a", 8);
+            break;
+        case 5:
+            // Send MID 0x21, to get back MID 0x8a  RTCM Data output status
+            (void)sky_write(session, "\xA0\xA1\x00\x01\x21\x21\x0d\x0a", 8);
+            break;
+        case 6:
+            // Send MID 0x23, to get back MID 0x8B (Base Position)
+            (void)sky_write(session, "\xA0\xA1\x00\x01\x23\x23\x0d\x0a", 8);
+            break;
+        case 7:
             // Send MID 0x2E, to get back MID 0xAF (DOP Mask)
             (void)sky_write(session, "\xA0\xA1\x00\x01\x2e\x2e\x0d\x0a", 8);
             break;
-        case 5:
+        case 8:
             // Send MID 0x2F, to get back MID 0x80 Elevation and SNR mask
             (void)sky_write(session, "\xA0\xA1\x00\x01\x2f\x2f\x0d\x0a", 8);
             break;
-        case 6:
+        case 9:
             // Send MID 0x3a, to get back MID 0xb4 Position Pinning
             (void)sky_write(session, "\xA0\xA1\x00\x01\x3a\x3a\x0d\x0a", 8);
             break;
-        case 7:
+        case 10:
             // Send MID 0x44, to get back MID 0xc2 1PPS timing
             // Timing mode versions only
             (void)sky_write(session, "\xA0\xA1\x00\x01\x44\x44\x0d\x0a", 8);
             break;
-        case 8:
+        case 11:
             // Send MID 0x46, to get back MID 0xbb 1PPS delay
             (void)sky_write(session, "\xA0\xA1\x00\x01\x46\x46\x0d\x0a", 8);
             break;
-        case 9:
+        case 12:
             // Send MID 0x4f, to get back MID 0x93 NMEA talker ID
             (void)sky_write(session, "\xA0\xA1\x00\x01\x4f\x4f\x0d\x0a", 8);
             break;
-        case 10:
+        case 13:
             // Send MID 0x56, to get back MID 0xc3 1PPS Output Mode
             // Timing mode versions only
             (void)sky_write(session, "\xA0\xA1\x00\x01\x56\x56\x0d\x0a", 8);
             break;
-        case 11:
+        case 14:
             // Send MID 0x62/02, to get back MID 0x62/80 SBAS status
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x62\x02\x60\x0d\x0a", 9);
             break;
-        case 12:
+        case 15:
             // Send MID 0x62/04, to get back MID 0x62/81 QZSS status
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x62\x04\x66\x0d\x0a", 9);
             break;
-        case 13:
+        case 16:
             // Send MID 0x62/06, to get back MID 0x62/82 SBAS Advanced status
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x62\x06\x64\x0d\x0a", 9);
             break;
-        case 14:
+        case 17:
             // Send MID 0x63/02, to get back MID 0x62/80 SAEE Status
             // not on PX1172RH_DS
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x63\x02\x61\x0d\x0a", 9);
             break;
-        case 15:
+        case 18:
             // Send MID 0x64/01, to get back MID 0x64/80
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x64\x01\x65\x0d\x0a", 9);
             break;
-        case 16:
+        case 19:
             // Send MID 0x64/03, to get back MID 0x64/81
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x64\x03\x67\x0d\x0a", 9);
             break;
-        case 17:
+        case 20:
             // Send MID 0x64/07, to get back MID 0x64/83
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x64\x07\x63\x0d\x0a", 9);
             break;
-        case 18:
+        case 21:
             // Send MID 0x64/0b, to get back MID 0x64/85
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x64\x0b\x6f\x0d\x0a", 9);
             break;
-        case 19:
+        case 22:
             // Send MID 0x64/12, to get back MID 0x64/88
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x64\x12\x76\x0d\x0a", 9);
             break;
-        case 20:
+        case 23:
             // Send MID 0x64/16, to get back MID 0x64/8a
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x64\x16\x72\x0d\x0a", 9);
             break;
-        case 21:
+        case 24:
             // Send MID 0x64/18, to get back MID 0x64/8b
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x64\x18\x7c\x0d\x0a", 9);
             break;
-        case 22:
+        case 25:
             // Send MID 0x64/1a, to get back MID 0x64/8c
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x64\x1a\x7e\x0d\x0a", 9);
             break;
-        case 23:
+        case 26:
             // Send MID 0x64/20, to get back MID 0x64/8e
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x64\x20\x44\x0d\x0a", 9);
             break;
-        case 24:
+        case 27:
             // Send MID 0x64/22, to get back MID 0x64/8f
             // not on PX1172RH_DS
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x64\x22\x46\x0d\x0a", 9);
             break;
-        case 25:
+        case 28:
             // Send MID 0x64/28, to get back MID 0x64/92
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x64\x28\x4c\x0d\x0a", 9);
             break;
-        case 26:
+        case 29:
             // Send MID 0x64/30, to get back MID 0x64/98
             // not on PX1172RH_DS
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x64\x30\x54\x0d\x0a", 9);
             break;
-        case 27:
+        case 30:
             // Send MID 0x64/7d, to get back MID 0x64/fe
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x64\x7d\x19\x0d\x0a", 9);
             break;
-        case 28:
+        case 31:
             // Send MID 0x64/35, to get back MID 0x64/99
             // not on PX1172RH_DS
             (void)sky_write(session,
                             "\xA0\xA1\x00\x03\x64\x35\x01\x50\x0d\x0a", 10);
             break;
-        case 29:
+        case 32:
             // Send MID 0x64/36, to get back MID 0x64/9a
             // not on PX1172RH_DS
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x64\x36\x52\x0d\x0a", 9);
             break;
-        case 30:
+        case 33:
             // Send MID 0x64/3c, to get back MID 0x64/99
             // not on PX1172RH_DS
             (void)sky_write(session,
                             "\xA0\xA1\x00\x04\x64\x3c\x47\x47\x19\x0d\x0a",
                             11);
             break;
-        case 31:
+        case 34:
             // Send MID 0x65/02, to get back MID 0x64/80
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x65\x02\x67\x0d\x0a", 9);
             break;
-        case 32:
+        case 35:
             // Send MID 0x65/04, to get back MID 0x64/8f
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x65\x04\x61\x0d\x0a", 9);
             break;
-        case 33:
+        case 36:
             // Send MID 0x6a/07, to get back MID 0x6a/83
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x6a\x07\x6d\x0d\x0a", 9);
             break;
-        case 34:
+        case 37:
             // Send MID 0x6a/0d, to get back MID 0x6a/85
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x6a\x0d\x67\x0d\x0a", 9);
             break;
-        case 35:
+        case 38:
             // Send MID 0x6a/14, to get back MID 0x6a/86
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x6a\x14\xfd\x0d\x0a", 9);
             break;
-        case 36:
+        case 39:
             // Send MID 0x6a/16, to get back MID 0x6a/89
             // not on PX1172RH_DS ?
             (void)sky_write(session,
                             "\xA0\xA1\x00\x02\x6a\x16\x7c\x0d\x0a", 9);
             break;
-        case 37:
+        case 40:
             // Send MID 0x7a/0e/01, to get back MID 0x7a/0e/80
             // not on PX1172RH_DS ?
             (void)sky_write(session,
                             "\xA0\xA1\x00\x03\x7a\x0e\x01\x75\x0d\x0a", 10);
             break;
-        case 38:
+        case 41:
             // Send MID 0x7a/0e/02, to get back MID 0x7a/0e/81
             // not on PX1172RH_DS ?
             (void)sky_write(session,
                             "\xA0\xA1\x00\x03\x7a\x0e\x02\x76\x0d\x0a", 10);
             break;
-        case 39:
+        case 42:
             // Send MID 0x7a/0e/03, to get back MID 0x7a/0e/82
             // not on PX1172RH_DS ?
             (void)sky_write(session,
                             "\xA0\xA1\x00\x03\x7a\x0e\x03\x77\x0d\x0a", 10);
             break;
-        case 40:
+        case 43:
             // Send MID 0x7a/0e/05, to get back MID 0x7a/0e/83
             // not on PX1172RH_DS ?
             (void)sky_write(session,
