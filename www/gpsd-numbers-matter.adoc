@@ -318,18 +318,17 @@ public description look at the Wikipedia <<NaN>> article.
 * *GPSD Project web site:* {gpsdweb}
 
 [bibliography]
-* [[[DD]]] https://en.wikipedia.org/wiki/Decimal_degrees[Decimal Degrees] Wikipedia Article
+* [[[DD]]] https://en.wikipedia.org/wiki/Decimal_degrees
 
-* [[[Y2038]]] https://en.wikipedia.org/wiki/Year_2038_problem[2038 Problem] Wikipedia article
+* [[[Y2038]]] https://en.wikipedia.org/wiki/Year_2038_problem
 
-* [[[IEEE754]]] https://standards.ieee.org/standard/754-2019.html[IEEE Standard
-for Floating-Point Arithmetic]
+* [[[IEEE754]]] https://standards.ieee.org/standard/754-2019.html
 
-* [[[NaN]]] https://en.wikipedia.org/wiki/NaN[NaN] Wikipedia Article
+* [[[NaN]]] https://en.wikipedia.org/wiki/NaN
 
-* [[[NIST2187]]] https://nvlpubs.nist.gov/nistpubs/TechnicalNotes/NIST.TN.2187.pdf[NIST TN 2187]
+* [[[NIST2187]]] https://nvlpubs.nist.gov/nistpubs/TechnicalNotes/NIST.TN.2187.pdf
 
-* [[NIST-USNO]] [NIST USNO] https://www.nist.gov/pml/time-and-frequency-division/time-services/nist-usno/nist-usno-2020-archive[NIST USNO]
+* [[[NIST-USNO]]] https://www.nist.gov/pml/time-and-frequency-division/time-services/nist-usno/nist-usno-2020-archive
 
 == COPYING
 
