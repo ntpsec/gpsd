@@ -37,7 +37,7 @@ struct privdata_t
 };
 
 
-/* open a shared-memory connection to the daemon */
+// open a shared-memory connection to the daemon
 int gps_shm_open(struct gps_data_t *gpsdata)
 {
     int shmid;
@@ -49,18 +49,19 @@ int gps_shm_open(struct gps_data_t *gpsdata)
 
     gpsdata->privdata = NULL;
     shmid = shmget((key_t)shmkey, sizeof(struct gps_data_t), 0);
-    if (shmid == -1) {
-        /* daemon isn't running or failed to create shared segment */
+    if (-1 == shmid) {
+        // daemon isn't running or failed to create shared segment
         return -1;
     }
     gpsdata->privdata = (void *)malloc(sizeof(struct privdata_t));
-    if (gpsdata->privdata == NULL)
+    if (NULL == gpsdata->privdata) {
         return -1;
+    }
 
     PRIVATE(gpsdata)->tick = 0;
     PRIVATE(gpsdata)->shmseg = shmat(shmid, 0, 0);
-    if (PRIVATE(gpsdata)->shmseg == (void *) -1) {
-        /* attach failed for sume unknown reason */
+    if ((void *) -1 == PRIVATE(gpsdata)->shmseg) {
+        // attach failed for sume unknown reason
         free(gpsdata->privdata);
         gpsdata->privdata = NULL;
         return -2;
@@ -69,12 +70,12 @@ int gps_shm_open(struct gps_data_t *gpsdata)
     gpsdata->gps_fd = SHM_PSEUDO_FD;
 #else
     gpsdata->gps_fd = (void *)(intptr_t)SHM_PSEUDO_FD;
-#endif /* USE_QT */
+#endif  // USE_QT
     return 0;
 }
 
-/* check to see if new data has been written */
-/* timeout is in uSec */
+/* check to see if new data has been written
+ * timeout is in uSec */
 bool gps_shm_waiting(const struct gps_data_t *gpsdata, int timeout)
 {
     volatile struct shmexport_t *shared =
@@ -87,7 +88,7 @@ bool gps_shm_waiting(const struct gps_data_t *gpsdata, int timeout)
     endtime.tv_nsec += (timeout % 1000000) * 1000;
     TS_NORM(&endtime);
 
-    /* busy-waiting sucks, but there's not really an alternative */
+    // busy-waiting sucks, but there's not really an alternative
     for (;;) {
         volatile int bookend1, bookend2;
         timespec_t now;
@@ -110,13 +111,12 @@ bool gps_shm_waiting(const struct gps_data_t *gpsdata, int timeout)
     return newdata;
 }
 
+// read an update from the shared-memory segment
 int gps_shm_read(struct gps_data_t *gpsdata)
-/* read an update from the shared-memory segment */
 {
-    if (gpsdata->privdata == NULL)
+    if (NULL == gpsdata->privdata) {
         return -1;
-    else
-    {
+    } else {
         int before, after;
         void *private_save = gpsdata->privdata;
         volatile struct shmexport_t *shared =
@@ -142,9 +142,9 @@ int gps_shm_read(struct gps_data_t *gpsdata)
         memory_barrier();
         after = shared->bookend2;
 
-        if (before != after)
+        if (before != after) {
             return 0;
-        else {
+        } else {
             (void)memcpy((void *)gpsdata,
                          (void *)&noclobber,
                          sizeof(struct gps_data_t));
@@ -153,7 +153,7 @@ int gps_shm_read(struct gps_data_t *gpsdata)
             gpsdata->gps_fd = SHM_PSEUDO_FD;
 #else
             gpsdata->gps_fd = (void *)(intptr_t)SHM_PSEUDO_FD;
-#endif /* USE_QT */
+#endif  // USE_QT
             PRIVATE(gpsdata)->tick = after;
             if ((gpsdata->set & REPORT_IS)!=0) {
                 gpsdata->set = STATUS_SET;
@@ -166,8 +166,9 @@ int gps_shm_read(struct gps_data_t *gpsdata)
 void gps_shm_close(struct gps_data_t *gpsdata)
 {
     if (PRIVATE(gpsdata)) {
-        if (PRIVATE(gpsdata)->shmseg != NULL)
+        if (NULL != PRIVATE(gpsdata)->shmseg) {
             (void)shmdt((const void *)PRIVATE(gpsdata)->shmseg);
+        }
         free(PRIVATE(gpsdata));
         gpsdata->privdata = NULL;
     }
@@ -190,15 +191,16 @@ int gps_shm_mainloop(struct gps_data_t *gpsdata, int timeout,
         }
         status = gps_shm_read(gpsdata);
 
-        if (status == -1)
+        if (-1 == status) {
             break;
-        if (status > 0)
+        }
+        if (0 < status) {
             (*hook)(gpsdata);
+        }
     }
     return -2;
 }
 
-#endif /* SHM_EXPORT_ENABLE */
+#endif  // SHM_EXPORT_ENABLE
 
-/* end */
 // vim: set expandtab shiftwidth=4
