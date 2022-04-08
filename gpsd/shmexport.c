@@ -80,6 +80,23 @@ void shm_release(struct gps_context_t *context)
      * Having it linger forever is bad, and when the size enlarges
      * it can no longer be opened
      */
+
+    /* debug
+    * GPSD_LOG(LOG_SHOUT, &context->errout,
+    *          "SHM: shm_release() shmid %d shmexport %p\n",
+    *          context->shmid, context->shmexport);
+    */
+
+    // detach from segment
+    if (NULL != context->shmexport) {
+        if (-1 == shmdt((const void *)context->shmexport)) {
+            GPSD_LOG(LOG_WARN, &context->errout,
+                     "SHM: shmdt() for shmid %d failed: %s(%d)\n",
+                     context->shmid, strerror(errno), errno);
+        }
+    }
+
+    // remove segment
     if (-1 != context->shmid) {
         if (-1 == shmctl(context->shmid, IPC_RMID, NULL)) {
             GPSD_LOG(LOG_WARN, &context->errout,
@@ -89,13 +106,6 @@ void shm_release(struct gps_context_t *context)
     }
     context->shmid = -1;
 
-    if (NULL != context->shmexport) {
-        if (-1 == shmdt((const void *)context->shmexport)) {
-            GPSD_LOG(LOG_WARN, &context->errout,
-                     "SHM: shmdt() for shmid %d failed: %s(%d)\n",
-                     context->shmid, strerror(errno), errno);
-        }
-    }
 }
 
 // export an update to all listeners
