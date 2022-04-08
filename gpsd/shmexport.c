@@ -67,6 +67,14 @@ bool shm_acquire(struct gps_context_t *context)
         return false;
     }
 
+    // mark SHM to be destroeyd after last user is gone
+    // do it now while we are still uid of the owner/creator
+    if (-1 == shmctl(shmid, IPC_RMID, NULL)) {
+        GPSD_LOG(LOG_WARN, &context->errout,
+                 "SHM: shmctl(%d) for IPC_RMID failed, %s(%d)\n",
+                 context->shmid, strerror(errno), errno);
+    }
+
     GPSD_LOG(LOG_PROG, &context->errout,
              "SHM: shmat() for SHM export succeeded, segment %d\n", shmid);
     return true;
@@ -87,7 +95,7 @@ void shm_release(struct gps_context_t *context)
     *          context->shmid, context->shmexport);
     */
 
-    // detach from segment
+    // detach from segment, it we were last user, it should be deleted.
     if (NULL != context->shmexport) {
         if (-1 == shmdt((const void *)context->shmexport)) {
             GPSD_LOG(LOG_WARN, &context->errout,
@@ -96,14 +104,6 @@ void shm_release(struct gps_context_t *context)
         }
     }
 
-    // remove segment
-    if (-1 != context->shmid) {
-        if (-1 == shmctl(context->shmid, IPC_RMID, NULL)) {
-            GPSD_LOG(LOG_WARN, &context->errout,
-                     "SHM: shmctl(%d) for IPC_RMID failed, %s(%d)\n",
-                     context->shmid, strerror(errno), errno);
-        }
-    }
     context->shmid = -1;
 
 }
