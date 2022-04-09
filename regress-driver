@@ -30,7 +30,20 @@ fi
 # not export the pre-defined/configured directories, so we have to
 # define them on our own. For default installations of distutils the
 # chosen values here will match what distutils uses.
-py_libdir=`pwd`/build/`${PYTHON} -c 'import distutils.util; import sys; print("lib.%s-%s" %(distutils.util.get_platform(), sys.version[0:3]))'`
+#
+# distutils loudly deprecated in 3.10, use sysconfig from 3.2
+export PROG='
+import sys
+try:
+ import sysconfig
+ n = sysconfig.get_platform()
+except:
+ import distutils.util
+ n = distutils.util.get_platform()
+print("lib.%s-%s" %(n, sys.version[0:3]))
+'
+py_libdir=`pwd`/build/`${PYTHON} -c "${PROG}"`
+
 py_scriptdir=`pwd`/build/`${PYTHON} -c 'import sys; print("scripts-%s" %(sys.version[0:3], ))'`
 if [ -d ${py_libdir} ] && [ -d ${py_scriptdir} ]; then
     PYTHONPATH=${py_libdir}
