@@ -18,7 +18,14 @@ factored out so we can write other test programs with it.
 
 from __future__ import absolute_import, print_function, division
 
-from distutils import spawn
+try:
+    # shutil not before Python 3.3
+    import shutil
+    # fake_which = shutil.which
+except:
+    import distutils.spawn
+    fake_which = distutils.spawn.find_executable
+
 import argparse
 import os
 import platform
@@ -106,7 +113,7 @@ def hexdump(s):
 
 def check_xterm():
     """Check whether xterm and DISPLAY are available."""
-    xterm = spawn.find_executable('xterm')
+    xterm = fake_which('xterm')
     return xterm and os.access(xterm, os.X_OK) and os.environ.get('DISPLAY')
 
 
