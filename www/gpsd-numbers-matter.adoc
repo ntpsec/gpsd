@@ -140,7 +140,7 @@ nano seconds.
 The biggest obstacle to *gpsd* and *ntpd* keeping accurate time is the
 granularity of the local host clock.  The *gpsd* release includes a program
 called *clock_test*, and the NTPsec release includes a program in the
-attic caled *clocks*.  Both can characterize your system clock.
+attic called *clocks*.  Both can characterize your system clock.
 
 Using these programs you can determine the granularity of you system
 clock.  Some examples:
