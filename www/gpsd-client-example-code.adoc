@@ -64,7 +64,7 @@ The complete example1.c:
 //    gcc example1.c -o example1 -lgps -lm
 #include <gps.h>
 #include <math.h>        // for isfinite()
-#include <unistd.h>      // for sleep()
+
 
 #define MODE_STR_NUM 4
 static char *mode_str[MODE_STR_NUM] = {
@@ -142,14 +142,13 @@ installed *gpsd* on your system.  The gcc option *-lgps* links in
 *libgps* and *-lm* links in libm.  Some systems will automatically link
 in *libm*.
 
-Lines 5 to 6::
+Line 5::
 [source%nowrap,c,numbered,start=5]
 ----
 #include <math.h>        // for isfinite()
-#include <unistd.h>      // for sleep()
 ----
 
-The system includes are to get prototypes for *isfinite()* and *sleep()*.
+The system includes are to get prototypes for *isfinite()*.
 
 Lines 8 to 14::
 [source%nowrap,c,numbered,start=8]
@@ -353,7 +352,7 @@ for Floating-Point Arithmetic]
 
 * [[[NUMBERS]]] {gpsdweb}gpsd-numbers-matter.html[GPSD Numbers Matter]
 
-* *isfinite(3)*, *sleep(3)*
+* *isfinite(3)*
 
 * *GPSD Project web site:* {gpsdweb}
 
