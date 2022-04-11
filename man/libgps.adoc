@@ -244,7 +244,6 @@ the C source for the other *gpsd* clients for more ideas.
 //    gcc example.c -o example -lgps -lm
 #include <gps.h>
 #include <math.h>        // for isfinite()
-#include <unistd.h>      // for sleep()
 
 #define MODE_STR_NUM 4
 static char *mode_str[MODE_STR_NUM] = {
