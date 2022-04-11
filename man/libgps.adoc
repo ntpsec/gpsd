@@ -239,6 +239,7 @@ instances of *gpsd* from production ones.
 The following is a fully functional minimal C client.  Check
 the C source for the other *gpsd* clients for more ideas.
 
+[source%nowrap,c,numbered]
 ----
 // example  gpsd client
 // compile this way:
