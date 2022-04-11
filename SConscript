@@ -744,19 +744,29 @@ def CheckPKG(context, name):
     return ret
 
 
-def CheckTime_t(context):
-    context.Message('Checking if sizeof(time_t) is 64 bits... ')
-    ret = context.TryLink("""
-        #include <time.h>
+def CheckStrerror_r(context):
+    """Return strerror_r(24,...).
+Will return zero if POSIX, non-zero if gnu-like
+Required because libc's are random about it.
+"""
+    context.Message('Checking if strerror_r() returns char *... ')
+    ret = context.TryRun("""
+#define _GNU_SOURCE 1
 
-        int main(int argc, char **argv) {
-            static int test_array[1 - 2 * ((long int) sizeof(time_t) < 8 )];
-            test_array[0] = 0;
-            (void) argc; (void) argv;
-            return 0;
-        }
+#include <string.h>
+
+int main(int argc, char **argv) {
+    char buf[100];
+
+    if (NULL == strerror_r(24, buf, sizeof(buf))) {
+        puts("0");
+    } else {
+        puts("1");
+    }
+    return 0;
+}
     """, '.c')
-    context.Result(ret)
+    context.Result(int(ret[1]))
     return ret
 
 
@@ -840,7 +850,7 @@ config = Configure(env, custom_tests={
     'CheckC11': CheckC11,
     'CheckCompilerOption': CheckCompilerOption,
     'CheckPKG': CheckPKG,
-    'CheckTime_t': CheckTime_t,
+    'CheckStrerror_r': CheckStrerror_r,
     'GetPythonValue': GetPythonValue,
     })
 
@@ -1229,7 +1239,16 @@ if not cleaning and not helping:
             confdefs.append("/* #undef HAVE_%s_H */\n"
                             % hdr.replace("/", "_").upper())
 
-    if 0 == config.CheckTime_t():
+    (ret, strerror_r_t) = config.CheckStrerror_r()
+
+    if 0 == int(strerror_r_t):
+        confdefs.append("#define STRERROR_R_INT\n")
+    else:
+        confdefs.append("#define STRERROR_R_STR\n")
+
+    sizeof_time_t = config.CheckTypeSize("time_t", "#include <time.h>",
+                                         expect=8)
+    if 0 == sizeof_time_t:
         announce("WARNING: time_t is too small.  It will fail in 2038")
         sizeof_time_t = 4
     else:
