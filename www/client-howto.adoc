@@ -517,6 +517,7 @@ polling loop.
 
 The following code skeleton implements a C++ client:
 
+[source%nowrap,c,numbered]
 ----------------------------------------------------------------------
 
 int main(void)
