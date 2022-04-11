@@ -570,6 +570,7 @@ to the source code for the gps.py library.
 
 The heart of it is this code:
 
+[source%nowrap,python]
 -----------------------------------------------------------------------------
     session = gps(**opts)
     session.stream(WATCH_ENABLE|WATCH_NEWSTYLE)
@@ -580,6 +581,7 @@ The heart of it is this code:
 If you need to intersperse other processing in a main event loop,
 like this:
 
+[source%nowrap,python]
 ----------------------------------------------------------------------
 
 session = gps(mode=WATCH_ENABLE)
