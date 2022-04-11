@@ -127,6 +127,7 @@ port 2947 on the host your sensors are attached to, usually
 localhost. On connection, the gpsd daemon will ship a banner that
 looks something like this:
 
+[source%nowrap,json]
 -----------------------------------------------------------------------------
 {"class":"VERSION","release":"2.93","rev":"2010-03-30T12:18:17",
                    "proto_major":3,"proto_minor":2}
@@ -141,6 +142,7 @@ daemon you want it.  (Remember that it's trying to minimize the amount
 of time the devices are held open and in a fully powered state.)  You
 do this by issuing a WATCH command:
 
+[source%nowrap,json]
 -----------------------------------------------------------------------------
 ?WATCH={"enable":true,"json":true}
 -----------------------------------------------------------------------------
@@ -152,6 +154,7 @@ but JSON is the most capable and usually what you want.
 A side effect of the WATCH command is that the daemon will ship you
 back some information on available devices.
 
+[source%nowrap,json]
 -----------------------------------------------------------------------------
 {"class":"DEVICES","devices":[{"class":"DEVICE","path":"/dev/ttyUSB0",
                    "activated":1269959537.20,"native":0,"bps":4800,"parity":"N",
@@ -179,6 +182,7 @@ them and watches for incoming packets that it can recognize.  *After
 a variable delay*, it will ship a notification that looks something
 like this:
 
+[source%nowrap,json]
 -----------------------------------------------------------------------------
 {"class":"DEVICE","path":"/dev/ttyUSB0","activated":1269960793.97,
                  "driver":"SiRF binary","native":1,"bps":4800,
@@ -227,6 +231,7 @@ However, until the sensor achieves satellite lock, those fixes will be
 "mode 1" - no valid data (mode 2 is a 2D fix, mode 3 is a 3D fix).
 Here's what that looks like:
 
+[source%nowrap,json]
 -----------------------------------------------------------------------------
 {"class":"TPV","device":"/dev/ttyUSB0",
                "time":"2010-04-30T11:47:43.28Z","ept":0.005,"mode":1}
@@ -236,6 +241,7 @@ Occasionally you'll get another kind of sentence, SKY, that reports a
 satellite skyview.  But TPV is the important one.  Here's what it
 looks like when the sensor has a fix to report:
 
+[source%nowrap,json]
 -----------------------------------------------------------------------------
 {"class":"TPV","time":"2010-04-30T11:48:20.10Z","ept":0.005,
                "lat":46.498204497,"lon":7.568061439,"alt":1327.689,
@@ -250,6 +256,7 @@ If you have an AIS receiver attached, it too will have been opened
 and autobauded and protocol-sniffed after your WATCH.  The stream of
 JSON objects will then include things like this:
 
+[source%nowrap,json]
 -----------------------------------------------------------------------------
 {"class":"AIS","type":5,"repeat":0,"mmsi":351759000,"scaled":true,
                "imo":9134270,"ais_version":0,"callsign":"3FOF8",
@@ -263,6 +270,7 @@ JSON objects will then include things like this:
 
 When your application shuts down, it can cancel its watch:
 
+[source%nowrap,json]
 -----------------------------------------------------------------------------
 ?WATCH={"enable":false}
 -----------------------------------------------------------------------------
@@ -274,6 +282,7 @@ But it is good manners.
 
 Another way to use the daemon is with the ?POLL command  To do this, issue
 
+[source%nowrap,json]
 -----------------------------------------------------------------------------
 ?WATCH={"enable":true}
 -----------------------------------------------------------------------------
@@ -281,6 +290,7 @@ Another way to use the daemon is with the ?POLL command  To do this, issue
 This activates all devices without enabling streaming of reports.  You
 can then say "?POLL;" to poll gpsd's recorded data.
 
+[source%nowrap,json]
 -----------------------------------------------------------------------------
 ?POLL;
 {"class":"POLL","time":"2012-04-05T15:00:01.501Z","active":1,

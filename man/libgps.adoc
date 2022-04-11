@@ -217,6 +217,7 @@ to use the session object as an iterator, as in the example given below.
 Resources within the session object will be properly released when it is
 garbage-collected.
 
+[source%nowrap,python]
 ----
 import gps
 session = gps.gps(host="localhost", port="2947")
