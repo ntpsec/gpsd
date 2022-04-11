@@ -22,6 +22,7 @@ libgps - C service library for communicating with the GPS daemon
 
 $$C:$$
 
+[source%nowrap,c]
 ----
 #include <gps.h>
 
