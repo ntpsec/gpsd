@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
         // width 56 max, check consistent fail on 64 bits
         {buf, 0,  64, 0,  false, "64 bits, 0 bit in"},
         {buf, 1,  64, 0,  false, "64 bits, 1 bit in"},
-        {buf, 7,  33, 0x102030405,  false, "33 bits, 7 bits in"},
+        {buf, 7,  33, 0x102030405ULL,  false, "33 bits, 7 bits in"},
         {buf, 0,  1,  0,    true,  "first bit of first byte"},
         {buf, 0,  8,  0x80, true,  "first 8 bits"},
         {buf, 32, 7,  0x20, true, "first seven bits of fifth byte (0x05)"},
