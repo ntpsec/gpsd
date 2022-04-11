@@ -22,7 +22,9 @@ libgpsmm, libQgpsm - C++ and QT class wrappers for the GPS daemon
 
 $$C++:$$
 
-$$#include <libgpsmm>$$
+[source%nowrap,c++]
+----
+#include <libgpsmm>
 
 struct gps_data_t * open(char * host char * port)
 
@@ -35,6 +37,7 @@ struct gps_data_t * read(void)
 struct gps_data_t * waiting(int)
 
 struct gps_data_t * stream unsigned(int flags)
+----
 
 == DESCRIPTION
 
