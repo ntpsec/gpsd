@@ -677,6 +677,8 @@ else:
     # Should we build with debug symbols?
     if env['debug'] or env['debug_opt']:
         env.Append(CCFLAGS=['-g3'])
+        env.Append(LDFLAGS=['-g3'])
+        env.Append(LINKFLAGS=['-g3'])
     # Should we build with optimisation?
     if env['debug'] or env['coveraging']:
         env.Append(CCFLAGS=['-O0'])
