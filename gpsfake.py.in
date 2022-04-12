@@ -18,21 +18,20 @@ factored out so we can write other test programs with it.
 
 from __future__ import absolute_import, print_function, division
 
-try:
-    # shutil not before Python 3.3
-    import shutil
-    # fake_which = shutil.which
-except:
-    import distutils.spawn
-    fake_which = distutils.spawn.find_executable
-
 import argparse
 import os
 import platform
 import pty
+import shutil
 import socket
 import sys
 import time
+
+try:
+    fake_which = shutil.which  # Available in Python 3.3 and later
+except AttributeError:
+    import distutils.spawn  # Deprecated as of Python 3.10
+    fake_which = distutils.spawn.find_executable
 
 # pylint wants local modules last
 try:
