@@ -819,7 +819,7 @@ int json_read_array(const char *cp, const struct json_array_t *arr,
                     return JSON_ERR_BADSTRING;
                 else
                     ++cp;
-                ts_tmp = iso8601_to_timespec((char *)cp);
+                ts_tmp = iso8601_to_timespec(cp);
                 arr->arr.timespecs.store[offset] = ts_tmp;
                 while (*cp && *cp != '"')
                     cp++;

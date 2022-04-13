@@ -552,7 +552,7 @@ time_t mkgmtime(struct tm * t)
 }
 
 // ISO8601 UTC to Unix timespec, no leapsecond correction.
-timespec_t iso8601_to_timespec(char *isotime)
+timespec_t iso8601_to_timespec(const char *isotime)
 {
     timespec_t ret;
 
