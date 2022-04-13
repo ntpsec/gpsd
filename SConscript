@@ -1412,22 +1412,28 @@ if not cleaning and not helping:
     # because we can't seem to keep scons from passing these to g++.
     #
     # Do this after the other config checks, to keep warnings out of them.
-    for option in ('-Wall',
-                   '-Wcast-align',
-                   '-Wextra',
-                   # -Wimplicit-fallthrough same as
-                   # -Wimplicit-fallthrough=3, except osX hates the
-                   # second flavor
-                   '-Wimplicit-fallthrough',
-                   '-Wmissing-declarations',
-                   '-Wmissing-prototypes',
-                   '-Wno-missing-field-initializers',
-                   '-Wno-uninitialized',
-                   '-Wpointer-arith',
-                   '-Wreturn-type',
-                   '-Wstrict-prototypes',
-                   '-Wvla',
-                   ):
+    for option in (
+        # clang: ask for C Annex F standard floating point
+        '--disable-excess-fp-precision',
+        # gcc: ask for C Annex F standard floating point
+        '-fexcess-precision=standard',
+
+        '-Wall',
+        '-Wcast-align',
+        '-Wextra',
+        # -Wimplicit-fallthrough same as
+        # -Wimplicit-fallthrough=3, except osX hates the
+        # second flavor
+        '-Wimplicit-fallthrough',
+        '-Wmissing-declarations',
+        '-Wmissing-prototypes',
+        '-Wno-missing-field-initializers',
+        '-Wno-uninitialized',
+        '-Wpointer-arith',
+        '-Wreturn-type',
+        '-Wstrict-prototypes',
+        '-Wvla',
+        ):
         if option not in config.env['CFLAGS']:
             config.CheckCompilerOption(option)
 
@@ -1842,8 +1848,13 @@ libraries = [libgps_shared, packet_ffi_shared]
 if qt_env:
     qtobjects = []
     qt_flags = qt_env['CFLAGS']
-    for c_only in ('-Wmissing-prototypes', '-Wstrict-prototypes',
-                   '-Wmissing-declarations'):
+    for c_only in (
+        '--disable-excess-fp-precision',
+        '-fexcess-precision=standard',
+        '-Wmissing-prototypes',
+        '-Wstrict-prototypes',
+        '-Wmissing-declarations'
+        ):
         if c_only in qt_flags:
             qt_flags.remove(c_only)
     # Qt binding object files have to be renamed as they're built to avoid
