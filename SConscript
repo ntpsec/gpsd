@@ -1408,8 +1408,9 @@ if not cleaning and not helping:
     # If supported by the compiler, enable all warnings except uninitialized
     # and missing-field-initializers, which we can't help triggering because
     # of the way some of the JSON-parsing code is generated.
-    # Also not including -Wcast-qual and -Wimplicit-function-declaration,
-    # because we can't seem to keep scons from passing these to g++.
+    #
+    # Some flags work for cc, but not c++, add those here, and to c_oply
+    # below
     #
     # Do this after the other config checks, to keep warnings out of them.
     for option in (
@@ -1420,11 +1421,13 @@ if not cleaning and not helping:
 
         '-Wall',
         '-Wcast-align',
+        # '-Wcast-qual',       # someday
         '-Wextra',
         # -Wimplicit-fallthrough same as
         # -Wimplicit-fallthrough=3, except osX hates the
         # second flavor
         '-Wimplicit-fallthrough',
+        # '-Wimplicit-function-declaration',     # someday
         '-Wmissing-declarations',
         '-Wmissing-prototypes',
         '-Wno-missing-field-initializers',
