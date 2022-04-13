@@ -161,7 +161,7 @@ static const char *pps_strerror_r(int errnum, char *buf, size_t len)
     // may, or may not, point to buf.
     return strerror_r(errnum, buf, len);
 #else
-    // strerror_r() returns 0 on zuccess
+    // strerror_r() returns 0 on success
     if (0 == strerror_r(errnum, buf, len)) {
         return buf;
     }
