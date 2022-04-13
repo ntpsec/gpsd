@@ -736,6 +736,22 @@ values can be listed with 'scons -h'.
 # Configuration
 
 
+def CheckFlt_Eval_Method(context):
+    """Ensure FLT_EVAL_METHOD is 0"""
+    context.Message('Checking FLT_EVAL_METHOD is 0... ')
+    ret = context.TryRun("""
+#include <float.h>
+#include <string.h>
+
+int main(int argc, char **argv) {
+    printf("%d", (int)FLT_EVAL_METHOD);
+    return 0;
+}
+    """, '.c')
+    context.Result(0 == int(ret[1]))
+    return ret
+
+
 def CheckPKG(context, name):
     context.Message('Checking pkg-config for %s... ' % name)
     ret = context.TryAction('%s --exists \'%s\''
@@ -849,6 +865,7 @@ env.Prepend(LIBPATH=[os.path.realpath(os.curdir)])
 config = Configure(env, custom_tests={
     'CheckC11': CheckC11,
     'CheckCompilerOption': CheckCompilerOption,
+    'CheckFlt_Eval_Method': CheckFlt_Eval_Method,
     'CheckPKG': CheckPKG,
     'CheckStrerror_r': CheckStrerror_r,
     'GetPythonValue': GetPythonValue,
@@ -1238,6 +1255,12 @@ if not cleaning and not helping:
         else:
             confdefs.append("/* #undef HAVE_%s_H */\n"
                             % hdr.replace("/", "_").upper())
+
+    (ret, flt_eval_method) = config.CheckFlt_Eval_Method()
+
+    flt_eval_method = int(flt_eval_method)
+    if 0 != flt_eval_method:
+        announce("WARNING: FLT_EVAL_METHOD is %d, not 0\n" % flt_eval_method);
 
     (ret, strerror_r_t) = config.CheckStrerror_r()
 
