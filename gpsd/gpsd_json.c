@@ -2557,7 +2557,7 @@ void json_aivdm_dump(const struct ais_t *ais,
     // cppcheck-suppress variableScope
     static const char *signal_legends[] = {
         "N/A",
-        "Serious emergency – stop or divert according to instructions.",
+        "Serious emergency - stop or divert according to instructions.",
         "Vessels shall not proceed.",
         "Vessels may proceed. One way traffic.",
         "Vessels may proceed. Two way traffic.",
