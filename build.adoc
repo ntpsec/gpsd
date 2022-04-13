@@ -972,6 +972,14 @@ qt5-network and pkgconf packages.
 # scons --config=force && scons install
 ----
 
+OpenBSD names scons differently, and uses a different Python. 
+On OpenBSD 13.0, you need to do this to install scons and Python:
+
+----
+# pkg install scons-py38
+# ln -s /usr/local/bin/python3.8 /usr/local/bin/python3
+----
+
 FreeBSD fails to create the python links as required by PEP394.
 So you need to add them yourself, as above.
 
