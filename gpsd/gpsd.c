@@ -13,8 +13,9 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <float.h>                   // for FLT_EVAL_METHOD
 #ifdef HAVE_GETOPT_LONG
-       #include <getopt.h>
+   #include <getopt.h>
 #endif
 #include <grp.h>                     // for setgroups()
 #include <math.h>
@@ -2280,6 +2281,11 @@ int main(int argc, char *argv[])
         GPSD_LOG(LOG_WARN, &context.errout,
                  "This system has a 32-bit time_t.  "
                  "This gpsd will fail at 2038-01-19T03:14:07Z.\n");
+    }
+
+    if (0 != FLT_EVAL_METHOD) {
+        GPSD_LOG(LOG_WARN, &context.errout,
+                 "FLT_EVAL_METHOD is %d, s/b 0\n", FLT_EVAL_METHOD);
     }
 
     uid = getuid();
