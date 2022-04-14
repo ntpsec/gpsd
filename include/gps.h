@@ -2876,7 +2876,9 @@ extern short ubx2_to_prn(int gnssId, int svId);
 // different from UK nautical mile
 #define KNOTS_TO_MPH    (1852 / 1609.344)   // Knots to miles per hour, exact
 #define KNOTS_TO_KPH    1.852          // Knots to kilometers per hour, exact
-#define KNOTS_TO_MPS (KNOTS_TO_KPH / 3.6)  // Knots to meters per second, exact
+// Knots to meters per second, exact, sort of.
+// (double) needed to prevent non conforming CC from promoting to long double
+#define KNOTS_TO_MPS (double)(KNOTS_TO_KPH / 3.6)
 #define MPS_TO_KPH      3.6            // Meters per second to klicks/hr, exact
 #define MPS_TO_MPH   (1 / 0.44704)    // Meters/second to miles per hour, exact
 #define MPS_TO_KNOTS (3600.0 / 1852.0)     // Meters per second to knots, exact
