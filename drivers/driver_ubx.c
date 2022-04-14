@@ -39,6 +39,22 @@
 #include "../include/timespec.h"
 
 /*
+ * Some high-precision messages provide data where the main part is a
+ * signed 32-bit integer (same as the standard-precision versions),
+ * and there's an 8-bit signed field providing an addend scaled to
+ * 1/100th of the main value.  This macro provides a fetch for such
+ * values, scaled to match the extension (i.e., 100X the main-value scale).
+ * Since the fields are nonconsective, the offsets are provided separately.
+ * The result is a signed 64-bit integer.
+ *
+ * The second macro incorporates scaling the result by a specified double.
+ */
+#define getles32x100s8(buf, off, offx) \
+    ((int64_t)(getles32((buf), (off)) * 100LL + getsb((buf), (offx))))
+#define getles32x100s8d(buf, off, offx, scale) \
+    (getles32x100s8((buf), (off), (offx)) * (double)(scale))
+
+/*
  * A ubx packet looks like this:
  * leader: 0xb5 0x62
  * message class: 1 byte
@@ -1536,12 +1552,9 @@ ubx_msg_nav_hpposecef(struct gps_device_t *session, unsigned char *buf,
 
     version = getub(buf, 0);
     session->driver.ubx.iTOW = getleu32(buf, 4);
-    session->newdata.ecef.x = (((int64_t)getles32(buf, 8) * 100L) +
-                                getsb(buf, 20)) / (double)10000.0;
-    session->newdata.ecef.y = (((int64_t)getles32(buf, 12) * 100L) +
-                                getsb(buf, 21)) / (double)10000.0;
-    session->newdata.ecef.z = (((int64_t)getles32(buf, 16) * 100L) +
-                                getsb(buf, 22)) / (double)10000.0;
+    session->newdata.ecef.x = getles32x100s8d(buf, 8, 20, 1e-4);
+    session->newdata.ecef.y = getles32x100s8d(buf, 12, 21, 1e-4);
+    session->newdata.ecef.z = getles32x100s8d(buf, 16, 22, 1e-4);
 
     session->newdata.ecef.pAcc = getleu32(buf, 24) / (double)10000.0;
     /* (long long) cast for 32-bit compat */
@@ -1583,16 +1596,12 @@ ubx_msg_nav_hpposllh(struct gps_device_t *session, unsigned char *buf,
 
     version = getub(buf, 0);
     session->driver.ubx.iTOW = getles32(buf, 4);
-    session->newdata.longitude = (1e-7 * (getles32(buf, 8) +
-                                          (getsb(buf, 24) * 1e-2)));
-    session->newdata.latitude = (1e-7 * (getles32(buf, 12) + \
-                                         (getsb(buf, 25) * 1e-2)));
+    session->newdata.longitude = getles32x100s8d(buf, 8, 24, 1e-9);
+    session->newdata.latitude = getles32x100s8d(buf, 12, 25, 1e-9);
     /* altitude WGS84 */
-    session->newdata.altHAE = ((getles32(buf, 16) * 100L) + getsb(buf, 26)) / \
-                              (double)100000.0;
+    session->newdata.altHAE = getles32x100s8d(buf, 16, 26, 1e-5);
     /* altitude MSL */
-    session->newdata.altMSL = ((getles32(buf, 20) * 100L) + getsb(buf, 27)) / \
-                              (double)100000.0;
+    session->newdata.altMSL = getles32x100s8d(buf, 20, 27, 1e-5);
     /* Let gpsd_error_model() deal with geoid_sep */
 
     /* Horizontal accuracy estimate in .1 mm, unknown est type */
@@ -1862,12 +1871,9 @@ ubx_msg_nav_relposned(struct gps_device_t *session, unsigned char *buf,
         }
         if (4 & flags) {
             // rePosValid
-            session->newdata.NED.relPosN = (1e-2 * (getles32(buf, 8) +
-                (getsb(buf, 20) * 1e-2)));
-            session->newdata.NED.relPosE = (1e-2 * (getles32(buf, 12) +
-                (getsb(buf, 21) * 1e-2)));
-            session->newdata.NED.relPosD = (1e-2 * (getles32(buf, 16) +
-                (getsb(buf, 22) * 1e-2)));
+            session->newdata.NED.relPosN = getles32x100s8d(buf, 8, 20, 1e-4);
+            session->newdata.NED.relPosE = getles32x100s8d(buf, 12, 21, 1e-4);
+            session->newdata.NED.relPosD = getles32x100s8d(buf, 16, 22, 1e-4);
 
             accN = 1e-4 * getles32(buf, 24);
             accE = 1e-4 * getles32(buf, 28);
@@ -1891,14 +1897,10 @@ ubx_msg_nav_relposned(struct gps_device_t *session, unsigned char *buf,
         }
         if (4 & flags) {
             // rePosValid
-            session->newdata.NED.relPosN = (1e-2 * (getles32(buf, 8) +
-                (getsb(buf, 32) * 1e-2)));
-            session->newdata.NED.relPosE = (1e-2 * (getles32(buf, 12) +
-                (getsb(buf, 33) * 1e-2)));
-            session->newdata.NED.relPosD = (1e-2 * (getles32(buf, 16) +
-                (getsb(buf, 34) * 1e-2)));
-            session->newdata.NED.relPosL = (1e-2 * (getles32(buf, 20) +
-                (getsb(buf, 35) * 1e-2)));
+            session->newdata.NED.relPosN = getles32x100s8d(buf, 8, 32, 1e-4);
+            session->newdata.NED.relPosE = getles32x100s8d(buf, 12, 33, 1e-4);
+            session->newdata.NED.relPosD = getles32x100s8d(buf, 16, 34, 1e-4);
+            session->newdata.NED.relPosL = getles32x100s8d(buf, 20, 35, 1e-4);
 
             accN = 1e-4 * getles32(buf, 36);
             accE = 1e-4 * getles32(buf, 40);
