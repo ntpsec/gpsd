@@ -1588,11 +1588,11 @@ ubx_msg_nav_hpposllh(struct gps_device_t *session, unsigned char *buf,
     session->newdata.latitude = (1e-7 * (getles32(buf, 12) + \
                                          (getsb(buf, 25) * 1e-2)));
     /* altitude WGS84 */
-    session->newdata.altHAE = (1e-3 * (getles32(buf, 16) + \
-                                         (getsb(buf, 26) * 1e-2)));
+    session->newdata.altHAE = ((getles32(buf, 16) * 100L) + getsb(buf, 26)) / \
+                              (double)100000.0;
     /* altitude MSL */
-    session->newdata.altMSL = (1e-3 * (getles32(buf, 20) + \
-                                       (getsb(buf, 27) * 1e-2)));
+    session->newdata.altMSL = ((getles32(buf, 20) * 100L) + getsb(buf, 27)) / \
+                              (double)100000.0;
     /* Let gpsd_error_model() deal with geoid_sep */
 
     /* Horizontal accuracy estimate in .1 mm, unknown est type */
