@@ -903,9 +903,9 @@ ubx_msg_hnr_pvt(struct gps_device_t *session, unsigned char *buf,
     session->newdata.longitude = 1e-7 * getles32(buf, 20);
     session->newdata.latitude = 1e-7 * getles32(buf, 24);
     // altitude WGS84
-    session->newdata.altHAE = 1e-3 * getles32(buf, 28);
-    // altitude MSL
-    session->newdata.altMSL = 1e-3 * getles32(buf, 32);
+    session->newdata.altHAE = (double)1e-3 * getles32(buf, 28);
+    // altitude MSL, double to prevent promotion to (long double)
+    session->newdata.altMSL = (double)1e-3 * getles32(buf, 32);
     // Let gpsd_error_model() deal with geoid_sep
 
     // gSpeed (2D)
