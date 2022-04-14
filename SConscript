@@ -748,7 +748,11 @@ int main(int argc, char **argv) {
     return 0;
 }
     """, '.c')
-    context.Result(0 == int(ret[1]))
+    try:
+        context.Result(0 == int(ret[1]))
+    except:
+        context.Result(0)
+        announce("Test failed!")
     return ret
 
 
