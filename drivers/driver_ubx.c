@@ -1536,14 +1536,14 @@ ubx_msg_nav_hpposecef(struct gps_device_t *session, unsigned char *buf,
 
     version = getub(buf, 0);
     session->driver.ubx.iTOW = getleu32(buf, 4);
-    session->newdata.ecef.x = ((getles32(buf, 8) +
-                                (getsb(buf, 20) * 1e-2)) * 1e-2);
-    session->newdata.ecef.y = ((getles32(buf, 12) +
-                                (getsb(buf, 21) * 1e-2)) * 1e-2);
-    session->newdata.ecef.z = ((getles32(buf, 16) +
-                                (getsb(buf, 22) * 1e-2)) * 1e-2);
+    session->newdata.ecef.x = (((int64_t)getles32(buf, 8) * 100L) +
+                                getsb(buf, 20)) / (double)10000.0;
+    session->newdata.ecef.y = (((int64_t)getles32(buf, 12) * 100L) +
+                                getsb(buf, 21)) / (double)10000.0;
+    session->newdata.ecef.z = (((int64_t)getles32(buf, 16) * 100L) +
+                                getsb(buf, 22)) / (double)10000.0;
 
-    session->newdata.ecef.pAcc = getleu32(buf, 24) * 1e-4;
+    session->newdata.ecef.pAcc = getleu32(buf, 24) / (double)10000.0;
     /* (long long) cast for 32-bit compat */
     GPSD_LOG(LOG_PROG, &session->context->errout,
         "UBX-NAV-HPPOSECEF: version %d iTOW=%lld ECEF x=%.4f y=%.4f z=%.4f "
@@ -1596,9 +1596,9 @@ ubx_msg_nav_hpposllh(struct gps_device_t *session, unsigned char *buf,
     /* Let gpsd_error_model() deal with geoid_sep */
 
     /* Horizontal accuracy estimate in .1 mm, unknown est type */
-    session->newdata.eph = getleu32(buf, 28) * 1e-4;
+    session->newdata.eph = getleu32(buf, 28) * (double)1e-4;
     /* Vertical accuracy estimate in .1 mm, unknown est type */
-    session->newdata.epv = getleu32(buf, 32) * 1e-4;
+    session->newdata.epv = getleu32(buf, 32) * (double)1e-4;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
         "UBX-NAV-HPPOSLLH: version %d iTOW=%lld lat=%.4f lon=%.4f "
