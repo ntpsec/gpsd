@@ -748,11 +748,11 @@ int main(int argc, char **argv) {
     return 0;
 }
     """, '.c')
-    try:
-        context.Result(0 == int(ret[1]))
-    except:
+    if 0 == ret[0]:
         context.Result(0)
-        announce("Test failed!")
+        announce("FLT_EVAL_METHOD Test failed!")
+    else:
+        context.Result(0 == int(ret[1]))
     return ret
 
 
@@ -1262,9 +1262,9 @@ if not cleaning and not helping:
 
     (ret, flt_eval_method) = config.CheckFlt_Eval_Method()
 
-    flt_eval_method = int(flt_eval_method)
-    if 0 != flt_eval_method:
-        announce("WARNING: FLT_EVAL_METHOD is %d, not 0\n" % flt_eval_method);
+    if (0 == ret or
+        0 != int(flt_eval_method)):
+        announce("WARNING: FLT_EVAL_METHOD is %s, not 0" % flt_eval_method);
 
     (ret, strerror_r_t) = config.CheckStrerror_r()
 
