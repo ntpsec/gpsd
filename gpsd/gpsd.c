@@ -2283,10 +2283,25 @@ int main(int argc, char *argv[])
                  "This gpsd will fail at 2038-01-19T03:14:07Z.\n");
     }
 
+#ifdef FLT_EVAL_METHOD
     if (0 != FLT_EVAL_METHOD) {
         GPSD_LOG(LOG_WARN, &context.errout,
                  "FLT_EVAL_METHOD is %d, s/b 0\n", FLT_EVAL_METHOD);
     }
+#else
+    GPSD_LOG(LOG_WARN, &context.errout,
+             "FLT_EVAL_METHOD is missing\n");
+#endif
+
+#ifdef __STDC_IEC_599__
+    if (1 != __STDC_IEC_599__) {
+        GPSD_LOG(LOG_WARN, &context.errout,
+                 "__STDC_IEC_599__ is %d, s/b 0\n", __STDC_IEC_599__);
+    }
+#else
+    GPSD_LOG(LOG_WARN, &context.errout,
+             "__STDC_IEC_599__ is missing\n");
+#endif
 
     uid = getuid();
     if (0 != uid) {
