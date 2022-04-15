@@ -741,6 +741,7 @@ values can be listed with 'scons -h'.
 def CheckFlt_Eval_Method(context):
     """Ensure FLT_EVAL_METHOD is 0"""
     context.Message('Checking FLT_EVAL_METHOD is 0... ')
+    # FIXME!  TryRun() does not work when cross-compiling
     ret = context.TryRun("""
 #include <float.h>
 #include <stdio.h>
@@ -773,6 +774,7 @@ Will return zero if POSIX, non-zero if gnu-like
 Required because libc's are random about it.
 """
     context.Message('Checking if strerror_r() returns char *... ')
+    # FIXME!  TryRun() does not work when cross-compiling
     ret = context.TryRun("""
 #define _GNU_SOURCE 1
 
