@@ -1090,7 +1090,7 @@ static bool awaken(struct gps_device_t *device)
     return true;
 }
 
-#if __UNUSED_RECONFIGURE__
+#ifdef __UNUSED_RECONFIGURE__
 // is this channel privileged to change a device's behavior?
 static bool privileged_user(struct gps_device_t *device)
 {
@@ -1277,7 +1277,7 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
                         }
                 } else {
                     // awaken specific device
-#if __UNUSED__
+#ifdef __UNUSED__
                     char outbuf[GPS_JSON_RESPONSE_MAX];
                     json_watch_dump(&sub->policy, outbuf, sizeof(outbuf));
                     GPSD_LOG(0, &context.errout, "policy: %s\n", outbuf);

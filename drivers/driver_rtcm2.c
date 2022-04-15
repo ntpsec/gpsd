@@ -1530,7 +1530,7 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
                 tbuf[j++] = m->words[i].byte1;
                 tbuf[j++] = m->words[i].byte2;
             }
-#if __UNUSED__
+#ifdef __UNUSED__
             // debug code
             {
                 char tmpbuf[100];

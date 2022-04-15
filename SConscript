@@ -1422,15 +1422,16 @@ if not cleaning and not helping:
     #
     # Do this after the other config checks, to keep warnings out of them.
     for option in (
+        # -Wall and Wextra first as they modify later options
+        '-Wall',
+        '-Wextra',
         # clang: ask for C Annex F standard floating point
         '--disable-excess-fp-precision',
         # gcc: ask for C Annex F standard floating point
         '-fexcess-precision=standard',
 
-        '-Wall',
         '-Wcast-align',
         # '-Wcast-qual',       # someday
-        '-Wextra',
         # -Wimplicit-fallthrough same as
         # -Wimplicit-fallthrough=3, except osX hates the
         # second flavor
@@ -1443,6 +1444,7 @@ if not cleaning and not helping:
         '-Wpointer-arith',
         '-Wreturn-type',
         '-Wstrict-prototypes',
+        '-Wundef',
         '-Wvla',
         ):
         if option not in config.env['CFLAGS']:

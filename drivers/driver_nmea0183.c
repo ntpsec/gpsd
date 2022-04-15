@@ -2169,7 +2169,7 @@ static gps_mask_t processGSV(int count, char *field[],
         session->gpsdata.satellites_visible++;
     }
 
-#if __UNUSED
+#ifdef __UNUSED
     // debug code
     GPSD_LOG(LOG_ERROR, &session->context->errout,
         "NMEA0183: x%cGSV: vis %d bdgsv %d gagsv %d gigsv %d glgsv %d "
@@ -2252,7 +2252,7 @@ static gps_mask_t processGSV(int count, char *field[],
         && GSV_TALKER == 'P')
         return ONLINE_SET;
 
-#if __UNUSED
+#ifdef __UNUSED
     // debug code
     GPSD_LOG(LOG_ERROR, &session->context->errout,
         "NMEA0183: x%cGSV: set skyview_time %s frac_time %.2f\n", GSV_TALKER,
