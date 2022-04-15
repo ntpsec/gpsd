@@ -27,13 +27,18 @@
 
 /* Allow avoiding long double intermediate values.
  *
- * On platforms with FLT_EVAL_METHOD != 0 (mostly 32-bit OpenBSD),
- * intermediate values may be kept as double or long doubles.  Although
- * in some cases this is more accurate, it can cause slight differences
- * that lead to regression failures.  Careful use of casting to (double)
- * avoids the issue.
- * See C11 Section 7.12 and Annex F for details.
+ * On platforms with FLT_EVAL_METHOD >=2 (currently only 32-bit OpenBSD),
+ * intermediate values may be kept as long doubles.  Although this is in
+ * principle more accurate, it can cause slight differences that lead to
+ * regression failures.  Storing such values in volatile variables avoids
+ * this.  Where the volatile declaration is unnessary (and absent), such
+ * extra variables are normally optimized out.
  */
+#if FLT_EVAL_METHOD >= 2
+#define FLT_VOLATILE volatile
+#else
+#define FLT_VOLATILE
+#endif   // FLT_EVAL_METHOD
 
 /* Common lat/lon decoding for do_lat_lon
  *
@@ -49,7 +54,7 @@
 static inline double decode_lat_or_lon(const char *field)
 {
     long degrees, minutes;
-    double full_minutes;
+    FLT_VOLATILE double full_minutes;
     char *cp;
 
     // Get integer "minutes"
@@ -65,7 +70,7 @@ static inline double decode_lat_or_lon(const char *field)
     // Add fractional minutes
     full_minutes = minutes + safe_atof(cp);
     // Scale to degrees & return
-    return full_minutes * (double)(1.0 / 60.0);
+    return full_minutes * (1.0 / 60.0);
 }
 
 /* process a pair of latitude/longitude fields starting at field index BEGIN
