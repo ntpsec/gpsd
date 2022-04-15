@@ -741,22 +741,21 @@ values can be listed with 'scons -h'.
 def CheckFlt_Eval_Method(context):
     """Ensure FLT_EVAL_METHOD is 0"""
     context.Message('Checking FLT_EVAL_METHOD is 0... ')
-    # FIXME!  TryRun() does not work when cross-compiling
-    ret = context.TryRun("""
+    ret = context.TryLink("""
 #include <float.h>
-#include <stdio.h>
-#include <string.h>
 
+#ifndef FLT_EVAL_METHOD
+    error
+#endif
+#if 0 != FLT_EVAL_METHOD
+  error
+#endif
 int main(int argc, char **argv) {
-    printf("%d", (int)FLT_EVAL_METHOD);
+    (void) argc; (void) argv;
     return 0;
 }
     """, '.c')
-    if 0 == ret[0]:
-        context.Result(0)
-        announce("FLT_EVAL_METHOD Test failed!")
-    else:
-        context.Result(0 == int(ret[1]))
+    context.Result(ret)
     return ret
 
 
@@ -800,14 +799,21 @@ def CheckCompilerOption(context, option):
     context.Message('Checking if compiler accepts %s... ' % (option,))
     old_CFLAGS = context.env['CFLAGS'][:]  # Get a *copy* of the old list
     context.env.Append(CFLAGS=option)
+    new_CFLAGS = context.env['CFLAGS'][:]  # Get a *copy* of the old list
+    # we don't want to use options that gernerate warnings.
+    context.env.Append(CFLAGS="-Werror")
     ret = context.TryLink("""
         int main(int argc, char **argv) {
             (void) argc; (void) argv;
             return 0;
         }
     """, '.c')
-    if not ret:
+    if ret:
+        # worked, remove the -Werror
+        context.env.Replace(CFLAGS=new_CFLAGS)
+    else:
         context.env.Replace(CFLAGS=old_CFLAGS)
+
     context.Result(ret)
     return ret
 
@@ -1266,11 +1272,9 @@ if not cleaning and not helping:
             confdefs.append("/* #undef HAVE_%s_H */\n"
                             % hdr.replace("/", "_").upper())
 
-    (ret, flt_eval_method) = config.CheckFlt_Eval_Method()
 
-    if (0 == ret or
-        0 != int(flt_eval_method)):
-        announce("WARNING: FLT_EVAL_METHOD is %s, not 0" % flt_eval_method);
+    if not config.CheckFlt_Eval_Method():
+        announce("WARNING: FLT_EVAL_METHOD is not 0")
 
     (ret, strerror_r_t) = config.CheckStrerror_r()
 
