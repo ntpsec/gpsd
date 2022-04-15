@@ -743,6 +743,7 @@ def CheckFlt_Eval_Method(context):
     context.Message('Checking FLT_EVAL_METHOD is 0... ')
     ret = context.TryRun("""
 #include <float.h>
+#include <stdio.h>
 #include <string.h>
 
 int main(int argc, char **argv) {
@@ -775,6 +776,7 @@ Required because libc's are random about it.
     ret = context.TryRun("""
 #define _GNU_SOURCE 1
 
+#include <stdio.h>
 #include <string.h>
 
 int main(int argc, char **argv) {
