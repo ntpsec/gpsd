@@ -7,6 +7,7 @@
 :mansource: GPSD, Version {gpsdver}
 :robots: index,follow
 :sectlinks:
+:source-highlighter: rouge
 :toc: macro
 :type: manpage
 :webfonts!:
