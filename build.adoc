@@ -1010,18 +1010,23 @@ install the required tools.
 # scons --config=force && scons install
 ----
 
-=== Special Notes for OpenBSD 6.6 Build and Installation
+=== Special Notes for OpenBSD 6.6 and 7.0 Build and Installation
 
-gpsd will build, install and run on NetBSD.
+gpsd will build, install and run on OpenBSD.
 
-All you need for a basic gpsd install is scons and git.  Then
-create the missing python link.
+First, update your system. Then all you need for a basic gpsd install is
+scons and git. Then create the missing python link.
 
 ----
+# syspatch -c
+# syspatch
+# pkg_add -u
 # pkg_add scons
 # pkg_add git
 # ln -s /usr/local/bin/python2 /usr/local/bin/python
 ----
+
+Yes, OpenBSD 7.0 still uses Python 2.7.
 
 Then install the normal way.
 
