@@ -41,7 +41,7 @@
  * intermediate variables are normally optimized out.
  */
 
-#if defined(FLT_EVAL_METHOD) && 0 != FLT_EVAL_METHOD
+#if !defined(FLT_EVAL_METHOD) || 0 != FLT_EVAL_METHOD
 #define FLT_VOLATILE volatile
 #else
 #define FLT_VOLATILE
