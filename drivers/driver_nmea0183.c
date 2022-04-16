@@ -27,14 +27,21 @@
 
 /* Allow avoiding long double intermediate values.
  *
- * On platforms with FLT_EVAL_METHOD >=2 (currently only 32-bit OpenBSD),
- * intermediate values may be kept as long doubles.  Although this is in
- * principle more accurate, it can cause slight differences that lead to
- * regression failures.  Storing such values in volatile variables avoids
- * this.  Where the volatile declaration is unnessary (and absent), such
- * extra variables are normally optimized out.
+ * On platforms with 0 != FLT_EVAL_METHOD intermediate values may be kept
+ * as long doubles.  Some 32-bit OpenBSD and 32-bit Debian have
+ * FLT_EVAL_METHOD == 2.  FreeBSD 13,0 has FLT_EVAL_METHOD == -1.  Various
+ * cc options (-mfpmath=387, -mno-sse, etc.) can also change FLT_EVAL_METHOD
+ * from 0.
+ *
+ * Although (long double) may in principle more accurate then (double), it
+ * can cause slight differences that lead to regression failures.  In
+ * other cases (long double) and (double) are the same, thus no effect.
+ * Storing values in volatile variables forces the exact size requested.
+ * Where the volatile declaration is unnessary (and absent), such extra
+ * intermediate variables are normally optimized out.
  */
-#if FLT_EVAL_METHOD >= 2
+
+#if !defined(FLT_EVAL_METHOD) && 0 != FLT_EVAL_METHOD
 #define FLT_VOLATILE volatile
 #else
 #define FLT_VOLATILE
