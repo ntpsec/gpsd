@@ -33,6 +33,8 @@ import SCons
 # scons gets confused by targets that are not a real file (shmclean, etc.).
 # Set them Pseudo (like in a Makefile) and use an Alias() for them.
 
+# Note: Do not use context.TryRun() as that breaks cross-compiling
+
 # Facilitate debugging with pdb.
 # At pdb startup, the environment is such that setting breakpoints in
 # SConstruct requires specifying its full absolute path, which is incovenient.
@@ -769,29 +771,29 @@ def CheckPKG(context, name):
 
 def CheckStrerror_r(context):
     """Return strerror_r(24,...).
-Will return zero if POSIX, non-zero if gnu-like
+Will return true if POSIX, false if gnu-like
 Required because libc's are random about it.
 """
-    context.Message('Checking if strerror_r() returns char *... ')
-    # FIXME!  TryRun() does not work when cross-compiling
-    ret = context.TryRun("""
-#define _GNU_SOURCE 1
+    context.Message('Checking if strerror_r() returns int... ')
+    old_CFLAGS = context.env['CFLAGS'][:]  # Get a *copy* of the old list
+    # Make the cast warning an error
+    context.env.Append(CFLAGS="-Werror")
+    ret = context.TryCompile("""
+        #define _GNU_SOURCE
 
-#include <stdio.h>
-#include <string.h>
+        #include <stddef.h>
+        #include <string.h>
 
-int main(int argc, char **argv) {
-    char buf[100];
+        int main() {
+            char buf[100];
+            int ret;
 
-    if (NULL == strerror_r(24, buf, sizeof(buf))) {
-        puts("0");
-    } else {
-        puts("1");
-    }
-    return 0;
-}
+            ret = strerror_r(24, buf, sizeof(buf));
+            return ret;
+        }
     """, '.c')
-    context.Result(int(ret[1]))
+    context.Result(ret)
+    context.env.Replace(CFLAGS=old_CFLAGS)  # restore flags
     return ret
 
 
@@ -1276,11 +1278,12 @@ if not cleaning and not helping:
     if not config.CheckFlt_Eval_Method():
         announce("WARNING: FLT_EVAL_METHOD is not 0")
 
-    (ret, strerror_r_t) = config.CheckStrerror_r()
 
-    if 0 == int(strerror_r_t):
+    if config.CheckStrerror_r():
+        # POSIX behavior
         confdefs.append("#define STRERROR_R_INT\n")
     else:
+        # glibc behavior
         confdefs.append("#define STRERROR_R_STR\n")
 
     sizeof_time_t = config.CheckTypeSize("time_t", "#include <time.h>",

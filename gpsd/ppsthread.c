@@ -157,12 +157,14 @@ static pthread_mutex_t ppslast_mutex = PTHREAD_MUTEX_INITIALIZER;
 static const char *pps_strerror_r(int errnum, char *buf, size_t len)
 {
 #ifdef STRERROR_R_STR
-    // strerror_r() returns pointer to the requested string.
-    // may, or may not, point to buf.
+    // glibc strerror_r() returns pointer to the requested string.
+    // which may, or may not, point to buf.
     return strerror_r(errnum, buf, len);
 #else
     // strerror_r() returns 0 on success
-    if (0 == strerror_r(errnum, buf, len)) {
+    // assign to an integer to create a warning if strerror_r() returns char *
+    int ret = strerror_r(errnum, buf, len);
+    if (0 == ret) {
         return buf;
     }
     return "strerror_r() failed";
