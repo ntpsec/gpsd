@@ -55,7 +55,8 @@ import gps
 session = gps.gps(host="localhost", port="2947")
 session.stream(flags=gps.WATCH_JSON)
 for report in session:
-    process(report) del session
+    process(report)
+del session
 ----
 
 == DESCRIPTION
@@ -220,7 +221,8 @@ import gps
 session = gps.gps(host="localhost", port="2947")
 session.stream(flags=gps.WATCH_JSON)
 for report in session:
-    process(report) del session
+    process(report)
+del session
 ----
 
 == ENVIRONMENT VARIABLES
