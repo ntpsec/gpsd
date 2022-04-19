@@ -1,6 +1,6 @@
                         GPSD project news
 
-3.23.2~rc1: unreleased
+3.23.2~rc2: unreleased
   NTRIP 2.0 now works.  But still only plain HTML, not RTP, etc.
   Remove ntrip option and NTRIP_ENABLE.  Always build.
   Remove passthrough option and PASSTHROUGH_ENABLE.  Always build.
