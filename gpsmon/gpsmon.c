@@ -1418,7 +1418,8 @@ int main(int argc, char **argv)
 
         for (;;) {
             fd_set efds;
-            timespec_t ts_timeout = {2, 0};   // timeout for pselect()
+            // static here suppresses longjmp warning
+            static timespec_t ts_timeout = {2, 0};   // timeout for pselect()
             switch(gpsd_await_data(&rfds, &efds, maxfd, &all_fds,
                                    &context.errout, ts_timeout)) {
             case AWAIT_GOT_INPUT:

@@ -2648,7 +2648,8 @@ int main(int argc, char *argv[])
 
     while (0 == signalled) {
         fd_set efds;
-        const timespec_t ts_timeout = {2, 0};   // timeout for pselect()
+        // static here suppresses longjmp warning
+        static const timespec_t ts_timeout = {2, 0};   // timeout for pselect()
         timespec_t before, after;        // time before/after gpsd_await_data()
         int await;
         bool time_warp;
