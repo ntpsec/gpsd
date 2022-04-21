@@ -71,7 +71,7 @@ SPDX-License-Identifier: BSD-2-clause
   does not seem to be available on all platforms.
 */
 
-#if HAVE_BUILTIN_ENDIANNESS
+#if defined(HAVE_BUILTIN_ENDIANNESS) && HAVE_BUILTIN_ENDIANNESS
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #define WORDS_BIGENDIAN 1
 #elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
@@ -80,7 +80,7 @@ SPDX-License-Identifier: BSD-2-clause
 #error Unknown endianness!
 #endif
 
-#else /* HAVE_BUILTIN_ENDIANNESS */
+#else /* !HAVE_BUILTIN_ENDIANNESS */
 
 #if defined(HAVE_ENDIAN_H)
 #include <endian.h>
@@ -130,7 +130,7 @@ SPDX-License-Identifier: BSD-2-clause
 #error Unknown endianness!
 #endif /* __BYTE_ORDER */
 
-#endif /* HAVE_BUILTIN_ENDIANNESS */
+#endif /* !HAVE_BUILTIN_ENDIANNESS */
 
 /*
  * Structures for interpreting words in an RTCM-104 2.x message (after
