@@ -350,7 +350,8 @@ class gps_io(object):
        expect_statement_identifier: return only the specified package or
                                     1 if timeout. None (default) if no
                                     filtering is requested
-       input_wait: read timeout in seconds. Default: 2 seconds
+       input_wait: read timeout in seconds. Set to 0 to run forever.
+                   Default: 2 seconds
        raw: file descriptor like object (has to support the .write method)
             to dump raw data. None if not used
 """
@@ -362,6 +363,10 @@ class gps_io(object):
         else:
             # not expecting anything, so OK if we did not see it.
             ret_code = 0
+
+        if 0.01 > input_wait:
+            # 1e20 is close enough to forever for us
+            input_wait = 1e20
 
         try:
             if self.gpsd_host is not None:

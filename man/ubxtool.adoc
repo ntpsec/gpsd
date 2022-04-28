@@ -1,7 +1,7 @@
 = ubxtool(1)
 Gary E. Miller <gem@rellim.com>
 :author: Gary E. Miller
-:date: 25 February 2021
+:date: 27 April 2022
 :email: <gem@rellim.com.>
 :keywords: gps, gpsd, ubxtool, u-blox
 :manmanual: GPSD Documentation
@@ -180,7 +180,8 @@ the output by adding the "-v 2" or "-v 3" options.
 *-V*, *--version*::
   Print *ubxtool* version and exit.
 *-w WAIT*, *--wait WAIT*::
-  Wait for WAIT seconds before exiting. Default 2 seconds.
+  Wait for WAIT seconds before exiting. Use 0 to wait forever.
+  Default 2 seconds.
 *-x ITEM,LAYERS*, *--delitem ITEM,LAYERS*::
   Delete the value of ITEM name from LAYERS. The bit map LAYERS is
   optional. By default, delete in both the BBR and FLASH layers in the

@@ -253,7 +253,8 @@ parser.add_argument(
     default=2.0,
     metavar='WAIT',
     type=float,
-    help='Wait for WAIT seconds before exiting.. [Default %(default)s]',
+    help=('Wait for WAIT seconds before exiting. Zero waits forever.\n'
+          '[Default %(default)s]'),
 )
 parser.add_argument(
     '-x', '--delitem',
