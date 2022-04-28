@@ -1,5 +1,5 @@
 # temp dir for building, no files outside of gpsd-3.*~dev/ should change.
-gpsd-3.23.*~dev
+gpsd-*
 buildtmp
 .sconf_temp
 __pycache__
@@ -27,3 +27,6 @@ testbuild
 .public
 .vscode
 Dockerfile*
+# clangish/ctags
+tags
+compil*-flags
