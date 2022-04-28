@@ -87,10 +87,9 @@ ubuntu-latest:gcc:
   stage: advanced_build
   variables:
     SCONSOPTS: 'qt=yes xgps=yes'
-    PACKAGES: 'build-essential ccache debhelper po-debconf python3-all-dev python3-all-dbg python-all-dev python-all-dbg asciidoctor libncurses-dev libusb-1.0-0-dev libdbus-1-dev libglib2.0-dev makedev libbluetooth-dev qtbase5-dev libqt5network5 lsb-release bc dpkg-dev scons chrpath dh-buildinfo pps-tools'
+    PACKAGES: 'build-essential ccache debhelper po-debconf python3-all-dev python3-all-dbg asciidoctor libncurses-dev libusb-1.0-0-dev libdbus-1-dev libglib2.0-dev makedev libbluetooth-dev qtbase5-dev libqt5network5 lsb-release bc dpkg-dev scons chrpath dh-buildinfo pps-tools'
   before_script:
   - apt update && apt -y install scons
-  - sed -i "s/os.environ.has_key('DH_INTERNAL_OPTIONS')/'DH_INTERNAL_OPTIONS' in os.environ/" /usr/lib/scons/SCons/Script/Main.py
   <<: *debian_build
 
 
