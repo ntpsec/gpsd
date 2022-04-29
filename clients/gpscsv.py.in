@@ -347,6 +347,8 @@ try:
             continue
         if 'SAT' == options.subclass:
             # grab the sats, one at a time
+            if 'satellites' not in report:
+                continue
             for sat in report['satellites']:
                 subreport = {'time': report['time']}
                 subreport.update(sat)
