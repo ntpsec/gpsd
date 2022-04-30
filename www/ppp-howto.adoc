@@ -495,7 +495,7 @@ only in the USA, and even there has limited geographic coverage.
 - [[[PPP]]] https://en.wikipedia.org/wiki/Precise_Point_Positioning[Precise
 Point Positioning] PPP overview on Wikipedia.
 
-= [[[DATUMS]]] https://confluence.qps.nl/qinsy/en/world-geodetic-system-1984-wgs84-29855173.html
+- [[[DATUMS]]] https://confluence.qps.nl/qinsy/en/world-geodetic-system-1984-wgs84-29855173.html
 Information on how different datums differ.
 
 - [[[VERTICAL]]] https://www.nrcan.gc.ca/earth-sciences/geomatics/geodetic-reference-systems/9054#_Toc372901506
