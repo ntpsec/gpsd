@@ -1,8 +1,7 @@
 = Precise Point Positioning (PPP) HOWTO
 Gary E. Miller <gem@rellim.com>
-13 Jan 2021
 :author: Gary E. Miller
-:date: 13 January 2021
+:date: 29 April 2022
 :description: This document is a guide getting high accuracy from your GPS using Precise Point Positioning (PPP).
 :email: <gem@rellim.com>
 :keywords: Precise Point Positioning, PPP, GPSD, GPS
@@ -14,7 +13,7 @@ include::inc-menu.adoc[]
 
 == WARNING
 
-This document assumes you are using gpsd versions 3.22 or git
+This document assumes you are using gpsd versions 3.24 or git
 head.  Using older versions will fail in strange ways.
 
 == Introduction
@@ -283,13 +282,24 @@ shows that you have a stable 3D fix.
 
 === u-blox configuration
 
-This section is only for u-blox users.
+This section is only for u-blox users.  More information on _ubxtool_
+is found in ubxtools-examples <<UBXTOOLS>>
 
 Be sure your serial port speed is high enough:
 
 ...................................
 $ gpsctl -s 115200
 ...................................
+
+_ubxtool_ needs to know the Protocol Version of your u-blox receiver in
+order to program it correctly. Set _UBXOPTS_ so you do not need to use
+-P option on every _ubxtool_ command:
+
+----
+$ export UBXOPS="-P XX"
+----
+
+Replace XX with your protocol version.
 
 Disable all NMEA messages, and enable binary messages:
 
@@ -500,4 +510,5 @@ https://www.ngs.noaa.gov/OPUS/
 The curious can find the RINEX 3.04 format described here:
 ftp://ftp.igs.org/pub/data/format/rinex304.pdf
 
+[[[UBXTOOLS]]] link:ubxtool-examples.html{ubxtools-examples]
 // vim: set syntax=asciidoc:
