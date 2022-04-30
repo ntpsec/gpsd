@@ -456,7 +456,7 @@ sigma's are "optimistic".
 
 === CSRS-PPP
 
-After _gpsrinex_ is complete, you need to login to CSRS-PPP and
+After _gpsrinex_ is complete, you need to login to <<CSRS-PPP>> and
 upload the RINEX 3 file.  After login you will be taken to the upload
 page.  Enter your email address, so the results can be emailed to you.
 
@@ -471,43 +471,46 @@ your precise position, and other goodies.
 
 === Trimble RTX
 
-Before uploading today.obs to Trimble you will need to change the _.obs_
-extension to _.YYo_, where YY is the 2-digit year.  Then proceed as
-above with CSRS-PPP.
+Before uploading today.obs to Trimble <<RTX>> you will need to change
+the _.obs_ extension to _.YYo_, where YY is the 2-digit year. Then
+proceed as above with CSRS-PPP.
 
 === GAPS
 
 The University of New Brunswich has an online PPP service.  They call
-it GNSS Analysis and Positioning Software (GAPS).  GAPS requires
-observations from the L2 P signal or L5 signal.  No u-blox chip
-follows the L2 P signal.
+it GNSS Analysis and Positioning Software <<GAPS>>.  GAPS requires
+observations from the L2 P signal or the L5 I+Q signal.  No u-blox chip
+follows the L2 P signal.  GAPS is not currently supported by gpsd.
+
+=== OPUS
+
+<<OPUS>> requires L1/L2 frequency observation files.  It is available
+only in the USA, and even there has limited geographic coverage.
+
 
 == References
 
-Wikipedia has a little information on PPP:
+[bibliography]
+
+- Wikipedia has a little information on PPP:
 https://en.wikipedia.org/wiki/Precise_Point_Positioning
 
-Information on how different datums differ:
+- Information on how different datums differ:
 https://confluence.qps.nl/qinsy/en/world-geodetic-system-1984-wgs84-29855173.html
 
-Information on vertical datums:
+- Information on vertical datums:
 https://www.nrcan.gc.ca/earth-sciences/geomatics/geodetic-reference-systems/9054#_Toc372901506
 
-One service known to work with gpsrinex output is CSRS-PPP at NRCAN:
-https://webapp.geod.nrcan.gc.ca/geod/tools-outils/ppp.php
+- [[[CSRS-PPP]]] https://webapp.geod.nrcan.gc.ca/geod/tools-outils/ppp.php[CSRS-PPP]
 
-Another service known to work with gpsrinex output is Trimble RTX
-from Trimble.  They require dual frequency (L1 and L2) raw data:
-https://trimblertx.com/Home.aspx
+- [[[RTX]]] https://trimblertx.com/Home.aspx[RTX]
 
-GAPS requires L2 P or L5 I+Q signals, and is not supported by gpsd:
-http://gaps.gge.unb.ca/
+- [[[GAPS]]] http://gaps.gge.unb.ca/[GAPS]
 
-OPUS requires L1/L2 frequency observation files, and has limited geographic
-coverage:
-https://www.ngs.noaa.gov/OPUS/
+- [[[OPUS]]] https://www.ngs.noaa.gov/OPUS/[OPUS]
 
-[[[RINEX3]]] http://acc.igs.org/misc/rinex304.pdf[RINEX 3.04]
+- [[[RINEX3]]] http://acc.igs.org/misc/rinex304.pdf[RINEX 3.04]
 
-[[[UBXTOOLS]]] link:ubxtool-examples.html[ubxtools-examples]
+- [[[UBXTOOLS]]] link:ubxtool-examples.html[ubxtools-examples]
+
 // vim: set syntax=asciidoc:
