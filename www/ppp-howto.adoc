@@ -19,7 +19,7 @@ head.  Using older versions will fail in strange ways.
 == Introduction
 
 This document is a guide getting high accuracy static positions from
-your GPS using Precise Point Positioning (PPP). The rare few that have a
+your GPS using Precise Point Positioning <<PPP>>. The rare few that have a
 GPS that output raw measurement data for L1 and L2 can achieve absolute
 accuracy of around 3 cm.  The u-blox ZED-F9P and ZED-F9T can be better
 than 1 cm. The lucky owners of an L1 GPS that outputs raw measurements
@@ -126,8 +126,8 @@ spot?
 
 All GNSS systems compute positions using ECEF (earth-centered,
 earth-fixed) coordinates. After an ECEF position is calculated, it is
-converted into latitude and longitude using a datum.  So many to
-choose from.  You've probably heard of WGS84, NAD83, and maybe ITRF.
+converted into latitude and longitude using various <<DATUMS>>. So many
+to choose from. You've probably heard of WGS84, NAD83, and maybe ITRF.
 
 NAD83 is pinned to the North American tectonic plate. WGS84 is pinned
 to the Reference Meridian (near the Greenwich Meridian). NAD83 is the
@@ -178,13 +178,13 @@ noticeable in the Hawaiian Islands.
 
 Fun fact: gravity is at its maximum at 'sea level'.
 
-Many different datums can be used to calculate height. These datums
-are based on different ellipsoids used to approximate sea level. The
-two used by CSRS-PPP are CGVD2013 and CGDV28(HT2_0). GCVD2013 is the
-standard datum in Canada since 2013.  The standard in the USA is the
-North American Vertical Datum of 1988 (NAVD 88). Many GPS use the WGS84
-Ellipsoid as the vertical datum. The WGS84 Ellipsoid is from the same
-organization as the WGS84 coordinate system, but not part of WGS84.
+Many different datums can be used to calculate height <<VERTICAL>>).
+These datums are based on different ellipsoids used to approximate sea
+level. The two used by CSRS-PPP are CGVD2013 and CGDV28(HT2_0). GCVD2013
+is the standard datum in Canada since 2013. The standard in the USA is
+the North American Vertical Datum of 1988 (NAVD 88). Many GPS use the
+WGS84 Ellipsoid as the vertical datum. The WGS84 Ellipsoid is from the
+same organization as the WGS84 coordinate system, but not part of WGS84.
 
 More refined datums, like the World Gravity Model, WGM2012, also take
 into account more gravitation effects.
@@ -492,14 +492,14 @@ only in the USA, and even there has limited geographic coverage.
 
 [bibliography]
 
-- Wikipedia has a little information on PPP:
-https://en.wikipedia.org/wiki/Precise_Point_Positioning
+- [[[PPP]]] https://en.wikipedia.org/wiki/Precise_Point_Positioning[Precise
+Point Positioning] PPP overview on Wikipedia.
 
-- Information on how different datums differ:
-https://confluence.qps.nl/qinsy/en/world-geodetic-system-1984-wgs84-29855173.html
+= [[[DATUMS]]] https://confluence.qps.nl/qinsy/en/world-geodetic-system-1984-wgs84-29855173.html
+Information on how different datums differ.
 
-- Information on vertical datums:
-https://www.nrcan.gc.ca/earth-sciences/geomatics/geodetic-reference-systems/9054#_Toc372901506
+- [[[VERTICAL]]] https://www.nrcan.gc.ca/earth-sciences/geomatics/geodetic-reference-systems/9054#_Toc372901506
+Information on vertical datums.
 
 - [[[CSRS-PPP]]] https://webapp.geod.nrcan.gc.ca/geod/tools-outils/ppp.php[CSRS-PPP]
 
