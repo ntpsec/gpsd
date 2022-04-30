@@ -252,7 +252,7 @@ To use these orbits you need to collect the raw measurements from your
 GPS, then upload them to a service to compute a more precise fix.
 Receiver Independent Exchange Format (RINEX) files are the standard
 for sending your raw measurement data.  _gpsd_ uses RINEX Version 3
-(RINEX 3).
+<<RINEX3>>.
 
 Most PPP services have many limitations making them unsuitable for
 our purposes.  Some limitations include: open only to paid subscribers,
@@ -507,8 +507,7 @@ OPUS requires L1/L2 frequency observation files, and has limited geographic
 coverage:
 https://www.ngs.noaa.gov/OPUS/
 
-The curious can find the RINEX 3.04 format described here:
-ftp://ftp.igs.org/pub/data/format/rinex304.pdf
+[[[RINEX3]]] http://acc.igs.org/misc/rinex304.pdf[RINEX 3.04]
 
-[[[UBXTOOLS]]] link:ubxtool-examples.html{ubxtools-examples]
+[[[UBXTOOLS]]] link:ubxtool-examples.html[ubxtools-examples]
 // vim: set syntax=asciidoc:
