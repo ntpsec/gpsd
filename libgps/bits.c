@@ -32,7 +32,7 @@
  * Returns: bitfield as uint64_t
  *          zero on errors (56 < width)
  */
-uint64_t ubits(unsigned char buf[], unsigned int start,
+uint64_t ubits(const unsigned char buf[], unsigned int start,
                unsigned int width, bool le)
 {
     uint64_t fld = 0;
@@ -75,10 +75,10 @@ uint64_t ubits(unsigned char buf[], unsigned int start,
 }
 
 // extract a bitfield from the buffer as a signed big-endian long
-int64_t sbits(signed char buf[], unsigned int start, unsigned int width,
+int64_t sbits(const unsigned char buf[], unsigned int start, unsigned int width,
               bool le)
 {
-    uint64_t fld = ubits((unsigned char *)buf, start, width, le);
+    uint64_t fld = ubits(buf, start, width, le);
 
     /* ensure width > 0 as the result of
        1ULL << (width - 1)
@@ -146,7 +146,7 @@ void shiftleft(unsigned char *data, int size, unsigned short left)
 {
     unsigned char *byte;
 
-    if (left >= CHAR_BIT) {
+    if (CHAR_BIT <= left) {
         size -= left / CHAR_BIT;
         memmove(data, data + left / CHAR_BIT,
                 (size + CHAR_BIT - 1) / CHAR_BIT);
