@@ -609,8 +609,15 @@ static void detach_client(struct subscriber_t *sub)
     unlock_subscriber(sub);
 }
 
-// write to client -- throttle if it's gone or we're close to buffer overrun
-static ssize_t throttled_write(struct subscriber_t *sub, char *buf,
+/* write to client -- throttle if it's gone or we're close to buffer overrun
+ *
+ * Call detach_client() is full string not written.
+ *
+ * Return: On success -0 number of bytes written
+ *         On shrot write -- zero
+ *         On error -- less then zero.
+ */
+static ssize_t throttled_write(struct subscriber_t *sub, const char *buf,
                                const size_t len)
 {
     ssize_t status;
@@ -621,11 +628,14 @@ static ssize_t throttled_write(struct subscriber_t *sub, char *buf,
                      "=> client(%d) len %zu: %s\n",
                      sub_index(sub), len, buf);
         } else {
-            char *cp, buf2[MAX_PACKET_LENGTH * 3];
+            const char *cp;
+            char buf2[MAX_PACKET_LENGTH * 3];
+
             buf2[0] = '\0';
-            for (cp = buf; cp < buf + len; cp++)
+            for (cp = buf; cp < buf + len; cp++) {
                 str_appendf(buf2, sizeof(buf2),
                                "%02x", (unsigned int)(*cp & 0xff));
+            }
             GPSD_LOG(LOG_CLIENT, &context.errout,
                      "=> client(%d) len %zu: =%s\n",
                      sub_index(sub), len, buf2);
@@ -1600,25 +1610,30 @@ static void raw_report(struct subscriber_t *sub, struct gps_device_t *device)
      * super-raw mode.
      */
     if (1 < sub->policy.raw) {
+        // super raw
         (void)throttled_write(sub,
                               (char *)device->lexer.outbuffer,
                               device->lexer.outbuflen);
         return;
     }
-#ifdef BINARY_ENABLE
+
     /*
      * Maybe the user wants a binary packet hexdumped.
      */
     if (1 == sub->policy.raw) {
+        // raw
         const char *hd =
             gpsd_hexdump(device->msgbuf, sizeof(device->msgbuf),
                          (char *)device->lexer.outbuffer,
                          device->lexer.outbuflen);
-        (void)strlcat((char *)hd, "\r\n", sizeof(device->msgbuf));
-        (void)throttled_write(sub, (char *)hd,
-                              strnlen(hd, sizeof(device->msgbuf)));
+        if (0 >= throttled_write(sub, hd,
+                                 strnlen(hd, sizeof(device->msgbuf)))) {
+            // uh, oh
+            return;
+        }
+        // send line terminator.
+        (void)throttled_write(sub, "\r\n",  2);
     }
-#endif  // BINARY_ENABLE
 }
 
 // report pseudo-NMEA in appropriate circumstances
