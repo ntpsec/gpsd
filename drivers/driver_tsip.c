@@ -626,12 +626,12 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         }
         // constellation, 0 to 26, mashup of constellation and signal
         u1 = getbeu32(buf, 4);            // constellation
-        d1 = getbef32((char *)buf, 8);    // elevation mask
-        d2 = getbef32((char *)buf, 12);   // signal mask
-        d3 = getbef32((char *)buf, 16);   // PDOP mask
+        d1 = getbef32(buf, 8);            // elevation mask
+        d2 = getbef32(buf, 12);           // signal mask
+        d3 = getbef32(buf, 16);           // PDOP mask
         u2 = getub(buf, 20);              // anti-jamming
         u3 = getub(buf, 21);              // fix rate
-        d4 = getbef32((char *)buf, 22);   // Antenna CAble delay, seconds
+        d4 = getbef32(buf, 22);           // Antenna CAble delay, seconds
         u4 = getbeu32(buf, 26);           // reserved
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIPv1 x91-01: cons %u el %f signal %f PDOP %f jam %u "
@@ -663,7 +663,7 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         u3 = getub(buf, 6);               // PPS mask
         u4 = getbeu16(buf, 7);            // reserved
         u5 = getbeu16(buf, 9);            // PPS width
-        d1 = getbed64((char *)buf, 11);   // PPS offset, in seconds
+        d1 = getbed64(buf, 11);           // PPS offset, in seconds
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIPv1 x91-03: time base %u PPS base %u mask %u res x%04x "
                  "width %u offset %f\n",
@@ -791,9 +791,9 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         u2 = getub(buf, 18);                // PPS base
         u3 = getub(buf, 19);                // flags
         s1 = getbes16(buf, 20);             // UTC Offset
-        d1 = getbef32((char *)buf, 22);     // PPS Quantization Error
-        d2 = getbef32((char *)buf, 26);     // Bias
-        d3 = getbef32((char *)buf, 30);     // Bias Rate
+        d1 = getbef32(buf, 22);     // PPS Quantization Error
+        d2 = getbef32(buf, 26);     // Bias
+        d3 = getbef32(buf, 30);     // Bias Rate
 
         // convert seconds to pico seconds
         session->gpsdata.qErr = (long)(d1 * 10e12);
@@ -830,11 +830,11 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
             bad_len = true;
             break;
         }
-        d1 = getbef32((char *)buf, 6);    // DAC voltage
+        d1 = getbef32(buf, 6);            // DAC voltage
         u1 = getbeu16(buf, 10);           // DAC value
         u2 = getub(buf, 12);              // holdover status
         u3 = getbeu32(buf, 13);           // holdover time
-        d2 = getbef32((char *)buf, 17);   // temperature, degrees C
+        d2 = getbef32(buf, 17);           // temperature, degrees C
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIPv1 xa1-02: DAC voltage %f value %u Holdover status %u "
                  "time %u temp %f\n",
@@ -849,15 +849,15 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         }
         u1 = getub(buf, 4);               // position mask
         u2 = getub(buf, 5);               // fix type
-        d1 = getbed64((char *)buf, 6);    // latitude or X
-        d2 = getbed64((char *)buf, 14);   // longitude or Y
-        d3 = getbed64((char *)buf, 22);   // altitude or Z
-        d4 = getbef32((char *)buf, 30);   // velocity X or E
-        d5 = getbef32((char *)buf, 34);   // velocity Y or N
-        d6 = getbef32((char *)buf, 38);   // velocity Z or U
-        d7 = getbef32((char *)buf, 42);   // PDOP, surveyed or current
-        d8 = getbef32((char *)buf, 46);   // horz uncertainty
-        d9 = getbef32((char *)buf, 50);   // vert uncertainty
+        d1 = getbed64(buf, 6);            // latitude or X
+        d2 = getbed64(buf, 14);           // longitude or Y
+        d3 = getbed64(buf, 22);           // altitude or Z
+        d4 = getbef32(buf, 30);           // velocity X or E
+        d5 = getbef32(buf, 34);           // velocity Y or N
+        d6 = getbef32(buf, 38);           // velocity Z or U
+        d7 = getbef32(buf, 42);           // PDOP, surveyed or current
+        d8 = getbef32(buf, 46);           // horz uncertainty
+        d9 = getbef32(buf, 50);           // vert uncertainty
         session->gpsdata.dop.pdop = d7;
         mask |= DOP_SET;
         if (0 == (u1 & 1)) {
@@ -940,9 +940,9 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         // SV type, 0 to 26, mashup of constellation and signal
         u2 = getub(buf, 5);
         u3 = getub(buf, 6);               // PRN (svid) 1 to 32 (99)
-        d1 = getbef32((char *)buf, 7);    // azimuth, degrees
-        d2 = getbef32((char *)buf, 11);   // elevation, degrees
-        d3 = getbef32((char *)buf, 15);   // signal level, db-Hz
+        d1 = getbef32(buf, 7);            // azimuth, degrees
+        d2 = getbef32(buf, 11);           // elevation, degrees
+        d3 = getbef32(buf, 15);           // signal level, db-Hz
         u4 = getbeu32(buf, 19);           // Flags
         // TOW of measurement, not current TOW!
         tow = getbeu32(buf, 23);          // TOW, seconds
@@ -1019,11 +1019,11 @@ static gps_mask_t tsipv1_parse(struct gps_device_t *session, unsigned id,
         u1 = getub(buf, 4);               // receiver mode
         u2 = getub(buf, 5);               // status
         u3 = getub(buf, 6);               // self survey progress 0 - 100
-        d1 = getbef32((char *)buf, 7);    // PDOP
-        d2 = getbef32((char *)buf, 11);   // HDOP
-        d3 = getbef32((char *)buf, 15);   // VDOP
-        d4 = getbef32((char *)buf, 19);   // TDOP
-        d5 = getbef32((char *)buf, 23);   // Temperature, degrees C
+        d1 = getbef32(buf, 7);            // PDOP
+        d2 = getbef32(buf, 11);           // HDOP
+        d3 = getbef32(buf, 15);           // VDOP
+        d4 = getbef32(buf, 19);           // TDOP
+        d5 = getbef32(buf, 23);           // Temperature, degrees C
         session->gpsdata.dop.pdop = d1;
         session->gpsdata.dop.hdop = d2;
         session->gpsdata.dop.vdop = d3;
@@ -1601,13 +1601,15 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         buf2[0] = '\0';
         for (i = 0; i < count; i++) {
             u1 = getub(buf, 5 * i + 1);
-            if ((f1 = getbef32((char *)buf, 5 * i + 2)) < 0)
+            if ((f1 = getbef32(buf, 5 * i + 2)) < 0) {
                 f1 = 0.0;
-            for (j = 0; j < TSIP_CHANNELS; j++)
+            }
+            for (j = 0; j < TSIP_CHANNELS; j++) {
                 if (session->gpsdata.skyview[j].PRN == (short)u1) {
                     session->gpsdata.skyview[j].ss = f1;
                     break;
                 }
+            }
             str_appendf(buf2, sizeof(buf2), " %d=%.1f", (int)u1, f1);
         }
         GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -1640,18 +1642,18 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 20;
             break;
         }
-        session->newdata.latitude = getbef32((char *)buf, 0) * RAD_2_DEG;
-        session->newdata.longitude = getbef32((char *)buf, 4) * RAD_2_DEG;
+        session->newdata.latitude = getbef32(buf, 0) * RAD_2_DEG;
+        session->newdata.longitude = getbef32(buf, 4) * RAD_2_DEG;
         /* depending on GPS config, could be either WGS84 or MSL */
-        d1 = getbef32((char *)buf, 8);
+        d1 = getbef32(buf, 8);
         if (0 == session->driver.tsip.alt_is_msl) {
             session->newdata.altHAE = d1;
         } else {
             session->newdata.altMSL = d1;
         }
 
-        //f1 = getbef32((char *)buf, 12);       // clock bias
-        ftow = getbef32((char *)buf, 16);       // time-of-fix
+        //f1 = getbef32(buf, 12);       // clock bias
+        ftow = getbef32(buf, 16);       // time-of-fix
         if (0 != (session->context->valid & GPS_TIME_VALID)) {
             DTOTS(&ts_tow, ftow);
             session->newdata.time =
@@ -1782,10 +1784,10 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             break;
         }
         u1 = getub(buf, 0);               // Dynamics Code
-        f1 = getbef32((char *)buf, 1);    // Elevation Mask
-        f2 = getbef32((char *)buf, 5);    // Signal Level Mask
-        f3 = getbef32((char *)buf, 9);    // PDOP Mask
-        f4 = getbef32((char *)buf, 13);   // PDOP Switch
+        f1 = getbef32(buf, 1);            // Elevation Mask
+        f2 = getbef32(buf, 5);            // Signal Level Mask
+        f3 = getbef32(buf, 9);            // PDOP Mask
+        f4 = getbef32(buf, 13);           // PDOP Switch
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIP x4c: Operating Params: x%02x %f %f %f %f\n",
                  u1, f1, f2, f3, f4);
@@ -1802,9 +1804,9 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
          */
          {
             float  bias, bias_rate;
-            bias = getbef32((char *)buf, 0);         // Bias
-            bias_rate = getbef32((char *)buf, 4);    // Bias rate
-            ftow = getbef32((char *)buf, 8);         // tow
+            bias = getbef32(buf, 0);         // Bias
+            bias_rate = getbef32(buf, 4);    // Bias rate
+            ftow = getbef32(buf, 8);         // tow
             DTOTS(&ts_tow, ftow);
             session->newdata.time =
                 gpsd_gpstime_resolv(session, session->context->gps_week,
@@ -1876,11 +1878,11 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 20;
             break;
         }
-        f1 = getbef32((char *)buf, 0);     // East velocity
-        f2 = getbef32((char *)buf, 4);     // North velocity
-        f3 = getbef32((char *)buf, 8);     // Up velocity
-        f4 = getbef32((char *)buf, 12);    // clock bias rate
-        ftow = getbef32((char *)buf, 16);  // time-of-fix
+        f1 = getbef32(buf, 0);     // East velocity
+        f2 = getbef32(buf, 4);     // North velocity
+        f3 = getbef32(buf, 8);     // Up velocity
+        f4 = getbef32(buf, 12);    // clock bias rate
+        ftow = getbef32(buf, 16);  // time-of-fix
         DTOTS(&ts_tow, ftow);
         session->newdata.time = gpsd_gpstime_resolv(session,
                                                     session->context->gps_week,
@@ -1911,7 +1913,7 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         }
         u1 = getub(buf, 0);                     // Source of information
         u2 = getub(buf, 1);                     // Mfg. diagnostic
-        ftow = getbef32((char *)buf, 2);        // gps_time
+        ftow = getbef32(buf, 2);                // gps_time
         week = getbeu16(buf, 6);                // tsip.gps_week
         if (0x01 == getub(buf, 0)) {
             // good current fix
@@ -1941,11 +1943,11 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         }
         // Useless without the pseudorange...
         u1 = getub(buf, 0);             // PRN 1-237
-        f1 = getbef32((char *)buf, 1);  // sample length
-        f2 = getbef32((char *)buf, 5);  // Signal Level, dbHz
-        f3 = getbef32((char *)buf, 9);  // Code phase, 1/16th chip
-        f4 = getbef32((char *)buf, 13); // Doppler, Hz @ L1
-        d1 = getbed64((char *)buf, 17); // Time of Measurement
+        f1 = getbef32(buf, 1);          // sample length
+        f2 = getbef32(buf, 5);          // Signal Level, dbHz
+        f3 = getbef32(buf, 9);          // Code phase, 1/16th chip
+        f4 = getbef32(buf, 13);         // Doppler, Hz @ L1
+        d1 = getbed64(buf, 17);         // Time of Measurement
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "TSIP x5a: Raw Measurement Data: %d %f %f %f %f %f\n",
                  u1, f1, f2, f3, f4, d1);
@@ -1970,13 +1972,13 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         u2 = getub(buf, 1);                 // slot:chan
         u3 = getub(buf, 2);                 // Acquisition flag
         u4 = getub(buf, 3);                 // Ephemeris flag
-        f1 = getbef32((char *)buf, 4);      // Signal level
+        f1 = getbef32(buf, 4);              // Signal level
         // time of skyview, not current time, or time of fix
-        ftow = getbef32((char *)buf, 8);
+        ftow = getbef32(buf, 8);
         DTOTS(&session->gpsdata.skyview_time, ftow);
 
-        d1 = getbef32((char *)buf, 12) * RAD_2_DEG;     // Elevation
-        d2 = getbef32((char *)buf, 16) * RAD_2_DEG;     // Azimuth
+        d1 = getbef32(buf, 12) * RAD_2_DEG;     // Elevation
+        d2 = getbef32(buf, 16) * RAD_2_DEG;     // Azimuth
 
         /* Channel number, bits 0-2 reserved/unused as of 1999.
          * Seems to always start series at zero and increment to last one.
@@ -2068,19 +2070,19 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         }
         session->driver.tsip.last_chan_seen = i;
 
-        u3 = getub(buf, 2);     /* Acquisition flag */
-        u4 = getub(buf, 3);     /* SV used in Position or Time calculation*/
-        f1 = getbef32((char *)buf, 4);  /* Signal level */
+        u3 = getub(buf, 2);       // Acquisition flag
+        u4 = getub(buf, 3);       // SV used in Position or Time calculation
+        f1 = getbef32(buf, 4);    // Signal level
         // This can be one second behind the TPV on RES SMT 360
-        ftow = getbef32((char *)buf, 8);  /* time of Last measurement */
-        d1 = getbef32((char *)buf, 12) * RAD_2_DEG;     /* Elevation */
-        d2 = getbef32((char *)buf, 16) * RAD_2_DEG;     /* Azimuth */
-        u5 = getub(buf, 20);    /* old measurement flag */
-        u6 = getub(buf, 21);    /* integer msec flag */
-        u7 = getub(buf, 22);    /* bad data flag */
-        u8 = getub(buf, 23);    /* data collection flag */
-        u9 = getub(buf, 24);    /* Used flags */
-        u10 = getub(buf, 25);   /* SV Type */
+        ftow = getbef32(buf, 8);  // time of Last measurement
+        d1 = getbef32(buf, 12) * RAD_2_DEG;     // Elevation
+        d2 = getbef32(buf, 16) * RAD_2_DEG;     // Azimuth
+        u5 = getub(buf, 20);    // old measurement flag
+        u6 = getub(buf, 21);    // integer msec flag
+        u7 = getub(buf, 22);    // bad data flag
+        u8 = getub(buf, 23);    // data collection flag
+        u9 = getub(buf, 24);    // Used flags
+        u10 = getub(buf, 25);   // SV Type
 
 
         GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -2188,11 +2190,11 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         mask |= MODE_SET | STATUS_SET;
 
         session->gpsdata.satellites_used = count;
-        session->gpsdata.dop.pdop = getbef32((char *)buf, 1);
-        session->gpsdata.dop.hdop = getbef32((char *)buf, 5);
-        session->gpsdata.dop.vdop = getbef32((char *)buf, 9);
+        session->gpsdata.dop.pdop = getbef32(buf, 1);
+        session->gpsdata.dop.hdop = getbef32(buf, 5);
+        session->gpsdata.dop.vdop = getbef32(buf, 9);
         // RES SMT 360 and ICM SMT 360 always report tdop == 1
-        session->gpsdata.dop.tdop = getbef32((char *)buf, 13);
+        session->gpsdata.dop.tdop = getbef32(buf, 13);
         session->gpsdata.dop.gdop =
             sqrt(pow(session->gpsdata.dop.pdop, 2) +
                  pow(session->gpsdata.dop.tdop, 2));
@@ -2289,10 +2291,10 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         mask |= MODE_SET | STATUS_SET;
 
         session->gpsdata.satellites_used = count;
-        session->gpsdata.dop.pdop = getbef32((char *)buf, 1);
-        session->gpsdata.dop.hdop = getbef32((char *)buf, 5);
-        session->gpsdata.dop.vdop = getbef32((char *)buf, 9);
-        session->gpsdata.dop.tdop = getbef32((char *)buf, 13);
+        session->gpsdata.dop.pdop = getbef32(buf, 1);
+        session->gpsdata.dop.hdop = getbef32(buf, 5);
+        session->gpsdata.dop.vdop = getbef32(buf, 9);
+        session->gpsdata.dop.tdop = getbef32(buf, 13);
         session->gpsdata.dop.gdop =
             sqrt(pow(session->gpsdata.dop.pdop, 2) +
                  pow(session->gpsdata.dop.tdop, 2));
@@ -2366,11 +2368,11 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 36;
             break;
         }
-        session->newdata.ecef.x = getbed64((char *)buf, 0);  // X
-        session->newdata.ecef.y = getbed64((char *)buf, 8);  // Y
-        session->newdata.ecef.z = getbed64((char *)buf, 16); // Z
-        d4 = getbed64((char *)buf, 24);                      // clock bias
-        ftow = getbef32((char *)buf, 32);                    // time-of-fix
+        session->newdata.ecef.x = getbed64(buf, 0);  // X
+        session->newdata.ecef.y = getbed64(buf, 8);  // Y
+        session->newdata.ecef.z = getbed64(buf, 16); // Z
+        d4 = getbed64(buf, 24);                      // clock bias
+        ftow = getbef32(buf, 32);                    // time-of-fix
         DTOTS(&ts_tow, ftow);
         session->newdata.time = gpsd_gpstime_resolv(session,
                                                     session->context->gps_week,
@@ -2416,18 +2418,18 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             bad_len = 36;
             break;
         }
-        session->newdata.latitude = getbed64((char *)buf, 0) * RAD_2_DEG;
-        session->newdata.longitude = getbed64((char *)buf, 8) * RAD_2_DEG;
-        /* depending on GPS config, could be either WGS84 or MSL */
-        d1 = getbed64((char *)buf, 16);
+        session->newdata.latitude = getbed64(buf, 0) * RAD_2_DEG;
+        session->newdata.longitude = getbed64(buf, 8) * RAD_2_DEG;
+        // depending on GPS config, could be either WGS84 or MSL
+        d1 = getbed64(buf, 16);
         if (0 == session->driver.tsip.alt_is_msl) {
             session->newdata.altHAE = d1;
         } else {
             session->newdata.altMSL = d1;
         }
         mask |= ALTITUDE_SET;
-        //d1 = getbed64((char *)buf, 24);       clock bias */
-        ftow = getbef32((char *)buf, 32);       /* time-of-fix */
+        //d1 = getbed64(buf, 24);       clock bias */
+        ftow = getbef32(buf, 32);       // time-of-fix
         if ((session->context->valid & GPS_TIME_VALID)!=0) {
             // fingers crossed receiver set to UTC, not GPS.
             DTOTS(&ts_tow, ftow);
@@ -2481,11 +2483,11 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
                 break;
             }
             s1 = getbes16(buf, 1);              // Datum Index
-            d1 = getbed64((char *)buf, 3);      // DX
-            d2 = getbed64((char *)buf, 11);     // DY
-            d3 = getbed64((char *)buf, 19);     // DZ
-            d4 = getbed64((char *)buf, 27);     // A-axis
-            d5 = getbed64((char *)buf, 35);     // Eccentricity Squared
+            d1 = getbed64(buf, 3);              // DX
+            d2 = getbed64(buf, 11);             // DY
+            d3 = getbed64(buf, 19);             // DZ
+            d4 = getbed64(buf, 27);             // A-axis
+            d5 = getbed64(buf, 35);             // Eccentricity Squared
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "TSIP x8f-15: Current Datum: %d %f %f %f %f %f\n",
                      s1, d1, d2, d3, d4, d5);
@@ -2754,8 +2756,8 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
 
             if (0 == u1) {
                 // floating point mode
-                d1 = getbef32((char *)buf, 6);   // clock bias (combined)
-                d2 = getbef32((char *)buf, 10);  // clock bias rate (combined)
+                d1 = getbef32(buf, 6);   // clock bias (combined)
+                d2 = getbef32(buf, 10);  // clock bias rate (combined)
                 // FIXME: decode the individual biases
                 GPSD_LOG(LOG_PROG, &session->context->errout,
                          "TSIP x8f-a7: tow %llu mode %u bias %e "
@@ -2849,17 +2851,17 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
             /* PPS Offset in ns
              * save as (long)pico seconds
              * can't really use it as it is not referenced to any PPS */
-            fqErr = getbef32((char *)buf, 16);
+            fqErr = getbef32(buf, 16);
             session->gpsdata.qErr = (long)(fqErr * 1000);
             // ignore 20-23, Clock Offset
             // ignore 24-27, DAC Value
             // ignore 28-31, DAC Voltage
             // 32-35, Temperature degrees C
-            temp = getbef32((char *)buf, 32);
-            session->newdata.latitude = getbed64((char *)buf, 36) * RAD_2_DEG;
-            session->newdata.longitude = getbed64((char *)buf, 44) * RAD_2_DEG;
+            temp = getbef32(buf, 32);
+            session->newdata.latitude = getbed64(buf, 36) * RAD_2_DEG;
+            session->newdata.longitude = getbed64(buf, 44) * RAD_2_DEG;
             // SMT 360 doc says this is always altHAE in meters
-            session->newdata.altHAE = getbed64((char *)buf, 52);
+            session->newdata.altHAE = getbed64(buf, 52);
             // ignore 60-63, always zero
             // ignore 64-67, reserved
 
@@ -3595,10 +3597,10 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
         u2 = getub(buf, 1);             // Operating Dimension
         u3 = getub(buf, 2);             // DGPS Mode (not in Acutime Gold)
         u4 = getub(buf, 3);             // Dynamics Code
-        f1 = getbef32((char *)buf, 5);  // Elevation Mask
-        f2 = getbef32((char *)buf, 9);  // AMU Mask
-        f3 = getbef32((char *)buf, 13); // DOP Mask
-        f4 = getbef32((char *)buf, 17); // DOP Switch
+        f1 = getbef32(buf, 5);          // Elevation Mask
+        f2 = getbef32(buf, 9);          // AMU Mask
+        f3 = getbef32(buf, 13);         // DOP Mask
+        f4 = getbef32(buf, 17);         // DOP Switch
         u5 = getub(buf, 21);            // DGPS Age Limit (not in Acutime Gold)
         /* Constellation
          * bit 0 - GPS
