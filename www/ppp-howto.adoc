@@ -1,7 +1,7 @@
 = Precise Point Positioning (PPP) HOWTO
 Gary E. Miller <gem@rellim.com>
 :author: Gary E. Miller
-:date: 29 April 2022
+:date: 2 May 2022
 :description: This document is a guide getting high accuracy from your GPS using Precise Point Positioning (PPP).
 :email: <gem@rellim.com>
 :keywords: Precise Point Positioning, PPP, GPSD, GPS
@@ -474,6 +474,11 @@ your precise position, and other goodies.
 Before uploading today.obs to Trimble <<RTX>> you will need to change
 the _.obs_ extension to _.YYo_, where YY is the 2-digit year. Then
 proceed as above with CSRS-PPP.
+
+RTX requires at least 10 minutes of data, recommends at least 60 mins
+of data, and no more than 24 hours of data.  It also requires L1 and L2
+observations of pseudorange and carrier phase.  It supports observations
+of BeiDou, Galileo, GLONASS, GPS and QZSS satellites.
 
 === GAPS
 
