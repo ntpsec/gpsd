@@ -1,6 +1,6 @@
 = gpsrinex(1)
 :author: Gary E. Miller
-:date: 25 February 2021
+:date: 2 May 2022
 :email: gem@rellim.com
 :keywords: gps, gpsd, gpsrinex, RINEX, ubxtool
 :manmanual: GPSD Documentation
@@ -66,7 +66,7 @@ not yield much improvement.
 
 The output will consist of one RINEX 3 observation file that is ready to
 be read by your PPP program. The default filename will be in the form:
-gpsrinex.obs. You can override this filename with the
+_gpsrinexYYYYDDDDHHMM.obs_. You can override this filename with the
 *-f* option.
 
 Optionally a server, TCP/IP port number and remote device can be given.
