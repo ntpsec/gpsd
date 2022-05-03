@@ -994,8 +994,7 @@ char *json_quote(const char *in_buffer, char *out_buffer, size_t in_len,
                 continue;
             }
 
-            memcpy((void*)&out_buffer[out_index],
-                   (void*)&in_buffer[in_index], to_copy);
+            memcpy(&out_buffer[out_index], &in_buffer[in_index], to_copy);
             out_index += to_copy;
             // minus one as the for loop does in_index++
             in_index += to_copy - 1;
