@@ -38,7 +38,8 @@ static struct gps_context_t context;
 
 #ifdef AIVDM_ENABLE
 static const char *raw_hexdump(char *scbuf, size_t scbuflen, int structured,
-                                          char *binbuf, size_t binbuflen)
+                               const unsigned char *binbuf,
+                               size_t binbuflen)
 {
     if (!structured) {
         return gpsd_hexdump(scbuf, scbuflen, binbuf, binbuflen);
@@ -157,7 +158,7 @@ static void aivdm_csv_dump(struct ais_t *ais, char *buf, size_t buflen)
                         ais->type6.bitcount,
                         raw_hexdump(scratchbuf, sizeof(scratchbuf),
                                     ais->type6.structured,
-                                    ais->type6.bitdata,
+                                    (const unsigned char *)ais->type6.bitdata,
                                     BITS_TO_BYTES(ais->type6.bitcount)));
         }
         break;
@@ -268,7 +269,7 @@ static void aivdm_csv_dump(struct ais_t *ais, char *buf, size_t buflen)
                        ais->type8.bitcount,
                        raw_hexdump(scratchbuf, sizeof(scratchbuf),
                                    ais->type8.structured,
-                                   ais->type8.bitdata,
+                                   (const unsigned char *)ais->type8.bitdata,
                                    BITS_TO_BYTES(ais->type8.bitcount)));
         }
         break;
@@ -326,7 +327,7 @@ static void aivdm_csv_dump(struct ais_t *ais, char *buf, size_t buflen)
                     ais->type17.lat,
                     ais->type17.bitcount,
                     gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
-                                 ais->type17.bitdata,
+                                 (const unsigned char *)ais->type17.bitdata,
                                  BITS_TO_BYTES(ais->type17.bitcount)));
         break;
     case 18:
@@ -478,7 +479,7 @@ static void aivdm_csv_dump(struct ais_t *ais, char *buf, size_t buflen)
                     ais->type25.app_id,
                     ais->type25.bitcount,
                     gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
-                                 ais->type25.bitdata,
+                                 (const unsigned char *)ais->type25.bitdata,
                                  BITS_TO_BYTES(ais->type25.bitcount)));
         break;
     case 26:                    // Binary Message, Multiple Slot
@@ -490,7 +491,7 @@ static void aivdm_csv_dump(struct ais_t *ais, char *buf, size_t buflen)
                     ais->type26.app_id,
                     ais->type26.bitcount,
                     gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
-                                 ais->type26.bitdata,
+                                 (const unsigned char *)ais->type26.bitdata,
                                  BITS_TO_BYTES(ais->type26.bitcount)),
                     ais->type26.radio);
         break;

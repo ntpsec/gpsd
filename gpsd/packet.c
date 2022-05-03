@@ -254,7 +254,7 @@ static void character_discard(struct gps_lexer_t *lexer)
                  "Character discarded, buffer %zu chars = %s\n",
                  lexer->inbuflen,
                  gpsd_packetdump(scratchbuf, sizeof(scratchbuf),
-                                 (char *)lexer->inbuffer, lexer->inbuflen));
+                                 lexer->inbuffer, lexer->inbuflen));
     }
 }
 
@@ -1017,7 +1017,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             GPSD_LOG(LOG_RAW, &lexer->errout,
                      "Skytraq = %s\n",
                      gpsd_packetdump(scratchbuf,  sizeof(scratchbuf),
-                         (char *)lexer->inbuffer,
+                         lexer->inbuffer,
                          lexer->inbufptr - (unsigned char *)lexer->inbuffer));
             for (n = 4;
                  (unsigned char *)(lexer->inbuffer + n) < lexer->inbufptr - 1;
@@ -1842,7 +1842,7 @@ static void packet_accept(struct gps_lexer_t *lexer, int packet_type)
                  "Packet type %d accepted %zu = %s\n",
                  packet_type, packetlen,
                  gpsd_packetdump(scratchbuf,  sizeof(scratchbuf),
-                                 (char *)lexer->outbuffer,
+                                 lexer->outbuffer,
                                  lexer->outbuflen));
     } else {
         GPSD_LOG(LOG_ERROR, &lexer->errout,
@@ -1865,7 +1865,7 @@ static void packet_discard(struct gps_lexer_t *lexer)
              "Packet discard of %zu, chars remaining is %zu = %s\n",
              discard, remaining,
              gpsd_packetdump(scratchbuf, sizeof(scratchbuf),
-                                (char *)lexer->inbuffer, lexer->inbuflen));
+                             lexer->inbuffer, lexer->inbuflen));
 }
 
 #ifdef STASH_ENABLE
@@ -1882,7 +1882,7 @@ static void packet_stash(struct gps_lexer_t *lexer)
              "Packet stash of %zu = %s\n",
              stashlen,
              gpsd_packetdump(scratchbuf, sizeof(scratchbuf),
-                             (char *)lexer->stashbuffer,
+                             lexer->stashbuffer,
                              lexer->stashbuflen));
 }
 
@@ -1904,7 +1904,7 @@ static void packet_unstash(struct gps_lexer_t *lexer)
                  "Packet unstash of %zu, reconstructed is %zu = %s\n",
                  stashlen, lexer->inbuflen,
                  gpsd_packetdump(scratchbuf, sizeof(scratchbuf),
-                                 (char *)lexer->inbuffer, lexer->inbuflen));
+                                 lexer->inbuffer, lexer->inbuflen));
     } else {
         GPSD_LOG(LOG_ERROR, &lexer->errout,
                  "Rejected too long unstash of %zu\n", stashlen);
@@ -2778,7 +2778,7 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
                  "PACKET: Read %zd chars to buffer[%zd] (total %zd): %s\n",
                  recvd, lexer->inbuflen, lexer->inbuflen + recvd,
                  gpsd_packetdump(scratchbuf, sizeof(scratchbuf),
-                                 (char *)lexer->inbufptr, (size_t) recvd));
+                                 lexer->inbufptr, (size_t) recvd));
         lexer->inbuflen += recvd;
     }
     GPSD_LOG(LOG_SPIN, &lexer->errout,

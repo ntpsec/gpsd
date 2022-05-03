@@ -84,7 +84,7 @@ static ssize_t sky_write(struct gps_device_t *session, char *msg,
                  "Skytraq: Length error: len %u data_len %zu buf %s\n",
                  len, data_len,
                  gpsd_hexdump((char *)outbuf, sizeof(outbuf),
-                              (char *)buf, data_len));
+                              buf, data_len));
         return -2;
     }
 
@@ -101,7 +101,7 @@ static ssize_t sky_write(struct gps_device_t *session, char *msg,
 
     GPSD_LOG(LOG_IO, &session->context->errout,
              "Skytraq: Writing control MID %02x: %s\n", type,
-             gpsd_hexdump((char *)outbuf, sizeof(outbuf), (char *)buf, len));
+             gpsd_hexdump((char *)outbuf, sizeof(outbuf), buf, len));
     ok = gpsd_write(session, (const char *)buf, len) == len;
 
     return ok;
@@ -1279,7 +1279,7 @@ static gps_mask_t sky_msg_E2(struct gps_device_t *session,
              "length %zd byte:%s\n",
              prn, subf, len,
              gpsd_hexdump(session->msgbuf, sizeof(session->msgbuf),
-                          (char *)bytes, 28));
+                          bytes, 28));
 
     return ONLINE_SET;
 }
@@ -1317,7 +1317,7 @@ static gps_mask_t sky_msg_E3(struct gps_device_t *session,
              "length %zd byte:%s\n",
              prn, subf, len,
              gpsd_hexdump(session->msgbuf, sizeof(session->msgbuf),
-                          (char *)bytes, 28));
+                          bytes, 28));
 
     return ONLINE_SET;
 }

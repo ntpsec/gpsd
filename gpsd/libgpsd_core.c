@@ -243,7 +243,7 @@ void gpsd_log(const int errlevel, const struct gpsd_errout_t *errout,
 const char *gpsd_prettydump(struct gps_device_t *session)
 {
     return gpsd_packetdump(session->msgbuf, sizeof(session->msgbuf),
-                           (char *)session->lexer.outbuffer,
+                           session->lexer.outbuffer,
                            session->lexer.outbuflen);
 }
 

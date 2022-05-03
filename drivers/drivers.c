@@ -1479,7 +1479,7 @@ static bool aivdm_decode(unsigned char *buf, size_t buflen,
                      "AIVDM payload is %zd bits, %zd chars: %s\n",
                      ais_context->bitlen, clen,
                      gpsd_hexdump(session->msgbuf, sizeof(session->msgbuf),
-                                     (char *)ais_context->bits, clen));
+                                  ais_context->bits, clen));
         }
 
         /* clear waiting fragments count */

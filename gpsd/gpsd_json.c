@@ -2166,7 +2166,7 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                     rtcm->rtcmtypes.rtcm3_1029.len,
                     rtcm->rtcmtypes.rtcm3_1029.unicode_units,
                     json_stringify(buf1, sizeof(buf1),
-                                    (char *)rtcm->rtcmtypes.rtcm3_1029.text));
+                        (const char *)rtcm->rtcmtypes.rtcm3_1029.text));
         break;
 
     case 1033:
@@ -2865,11 +2865,12 @@ void json_aivdm_dump(const struct ais_t *ais,
             str_appendf(buf, buflen,
                         ",\"data\":\"%zd:%s\"}\r\n",
                         ais->type6.bitcount,
-                        json_stringify(buf1, sizeof(buf1),
-                                       gpsd_hexdump(scratchbuf,
-                                            sizeof(scratchbuf),
-                                            (char *)ais->type6.bitdata,
-                                            BITS_TO_BYTES(ais->type6.bitcount))));
+                        json_stringify(
+                            buf1, sizeof(buf1),
+                            gpsd_hexdump(scratchbuf,
+                                     sizeof(scratchbuf),
+                                     (const unsigned char *)ais->type6.bitdata,
+                                     BITS_TO_BYTES(ais->type6.bitcount))));
             break;
         }
         if (200 == ais->type6.dac) {
@@ -3232,9 +3233,10 @@ void json_aivdm_dump(const struct ais_t *ais,
                         ",\"data\":\"%zd:%s\"}\r\n",
                         ais->type8.bitcount,
                         json_stringify(buf1, sizeof(buf1),
-                           gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
-                                        (char *)ais->type8.bitdata,
-                                        BITS_TO_BYTES(ais->type8.bitcount))));
+                           gpsd_hexdump(
+                               scratchbuf, sizeof(scratchbuf),
+                               (const unsigned char *)ais->type8.bitdata,
+                               BITS_TO_BYTES(ais->type8.bitcount))));
             break;
         }
         if (1 == ais->type8.dac) {
@@ -4089,8 +4091,8 @@ void json_aivdm_dump(const struct ais_t *ais,
                         ais->type17.lat / AIS_GNSS_LATLON_DIV,
                         ais->type17.bitcount,
                         gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
-                                     (char *)ais->type17.bitdata,
-                                     BITS_TO_BYTES(ais->type17.bitcount)));
+                             (const unsigned char *)ais->type17.bitdata,
+                             BITS_TO_BYTES(ais->type17.bitcount)));
         } else {
             str_appendf(buf, buflen,
                         ",\"lon\":%d,\"lat\":%d,\"data\":\"%zd:%s\"}\r\n",
@@ -4098,8 +4100,8 @@ void json_aivdm_dump(const struct ais_t *ais,
                         ais->type17.lat,
                         ais->type17.bitcount,
                         gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
-                                     (char *)ais->type17.bitdata,
-                                     BITS_TO_BYTES(ais->type17.bitcount)));
+                             (const unsigned char *)ais->type17.bitdata,
+                             BITS_TO_BYTES(ais->type17.bitcount)));
         }
         break;
     case 18:
@@ -4424,8 +4426,8 @@ void json_aivdm_dump(const struct ais_t *ais,
                     ais->type25.app_id,
                     ais->type25.bitcount,
                     gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
-                                 (char *)ais->type25.bitdata,
-                                 BITS_TO_BYTES(ais->type25.bitcount)));
+                        (const unsigned char *)ais->type25.bitdata,
+                        BITS_TO_BYTES(ais->type25.bitcount)));
         break;
     case 26:                    // Binary Message, Multiple Slot
         str_appendf(buf, buflen,
@@ -4437,8 +4439,8 @@ void json_aivdm_dump(const struct ais_t *ais,
                     ais->type26.app_id,
                     ais->type26.bitcount,
                     gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
-                                 (char *)ais->type26.bitdata,
-                                 BITS_TO_BYTES(ais->type26.bitcount)),
+                        (const unsigned char *)ais->type26.bitdata,
+                        BITS_TO_BYTES(ais->type26.bitcount)),
                     ais->type26.radio);
         break;
     case 27:                    // Long Range AIS Broadcast message

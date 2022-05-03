@@ -1705,8 +1705,8 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
              tp->length + 2,
              session->lexer.isgps.buflen,
              gpsd_hexdump(session->msgbuf, sizeof(session->msgbuf),
-                             (char *)session->lexer.isgps.buf,
-                             (tp->length + 2) * sizeof(isgps30bits_t)));
+                          (unsigned char *)session->lexer.isgps.buf,
+                          (tp->length + 2) * sizeof(isgps30bits_t)));
 }
 
 static bool preamble_match(isgps30bits_t * w)

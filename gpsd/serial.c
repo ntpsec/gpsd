@@ -1011,7 +1011,8 @@ ssize_t gpsd_serial_write(struct gps_device_t * session,
     GPSD_LOG(LOG_IO, &session->context->errout,
              "SER: => GPS: %s%s\n",
              gpsd_packetdump(scratchbuf, sizeof(scratchbuf),
-                             (char *)buf, len), ok ? "" : " FAILED");
+                             (const unsigned char *)buf,
+                             len), ok ? "" : " FAILED");
     return status;
 }
 
