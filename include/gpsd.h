@@ -899,7 +899,7 @@ extern void rtcm2_unpack(struct gps_device_t *, struct rtcm2_t *, char *);
 extern void json_rtcm3_dump(const struct rtcm3_t *,
                             const char *, char[], size_t);
 extern void rtcm3_unpack(const struct gps_context_t *,
-                         struct rtcm3_t *, char *);
+                         struct rtcm3_t *, const unsigned char *);
 
 /* here are the available GPS drivers */
 extern const struct gps_type_t **gpsd_drivers;

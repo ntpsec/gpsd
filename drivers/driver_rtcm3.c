@@ -82,9 +82,9 @@ SPDX-License-Identifier: BSD-2-clause
  * and look at the tklib source: http://www.rtklib.com/
  */
 
-#define ugrab(width)    (bitcount += width, ubits((unsigned char *)buf, \
+#define ugrab(width)    (bitcount += width, ubits(buf, \
                          bitcount - width, width, false))
-#define sgrab(width)    (bitcount += width, sbits((signed char *)buf,  \
+#define sgrab(width)    (bitcount += width, sbits(buf,  \
                          bitcount - width, width, false))
 
 /* decode 1015/1016/1017 header
@@ -95,7 +95,7 @@ SPDX-License-Identifier: BSD-2-clause
  *         true if runt
  */
 static bool rtcm3_101567(const struct gps_context_t *context,
-                         struct rtcm3_t *rtcm, char *buf)
+                         struct rtcm3_t *rtcm, const unsigned char *buf)
 {
     int bitcount = 36;  // 8 preamble, 6 zero, 10 length, 12 type
 
@@ -140,7 +140,7 @@ static bool rtcm3_101567(const struct gps_context_t *context,
  *         true if runt, or error
  */
 static bool rtcm3_decode_msm(const struct gps_context_t *context,
-                             struct rtcm3_t *rtcm, char *buf)
+                             struct rtcm3_t *rtcm, const unsigned char *buf)
 {
     int bitcount = 36;  // 8 preamble, 6 zero, 10 length, 12 type
     unsigned n_sig = 0, n_sat = 0, n_cell = 0;
@@ -353,7 +353,7 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
  * Return: void
  */
 void rtcm3_unpack(const struct gps_context_t *context,
-                  struct rtcm3_t *rtcm, char *buf)
+                  struct rtcm3_t *rtcm, const unsigned char *buf)
 {
     unsigned n, n2, n3, n4;
     int bitcount = 0;
