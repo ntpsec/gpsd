@@ -30,7 +30,8 @@
  */
 
 // beginning at bitvec bit start, unpack count sixbit characters
-static void from_sixbit_untrimmed(unsigned char *bitvec, unsigned int start,
+static void from_sixbit_untrimmed(const unsigned char *bitvec,
+                                  unsigned int start,
                                   int count, char *to)
 {
     const char sixchr[64] =
@@ -66,8 +67,8 @@ static void trim_spaces_on_right_end(char* to)
 
 /* beginning at bitvec bit start, unpack count sixbit characters
  * and remove trailing spaces */
-static void from_sixbit(unsigned char *bitvec, unsigned int start, int count,
-                        char *to)
+static void from_sixbit(const unsigned char *bitvec, unsigned int start,
+                        int count, char *to)
 {
        from_sixbit_untrimmed(bitvec, start, count, to);
        trim_spaces_on_right_end(to);
@@ -81,10 +82,10 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
 {
     unsigned int u; int i;
 
-#define UBITS(s, l)     ubits((unsigned char *)bits, s, l, false)
-#define SBITS(s, l)     sbits((signed char *)bits, s, l, false)
-#define UCHARS(s, to)   from_sixbit((unsigned char *)bits, s, sizeof(to)-1, to)
-#define ENDCHARS(s, to) from_sixbit((unsigned char *)bits, s, (bitlen-(s))/6,to)
+#define UBITS(s, l)     ubits(bits, s, l, false)
+#define SBITS(s, l)     sbits(bits, s, l, false)
+#define UCHARS(s, to)   from_sixbit(bits, s, sizeof(to)-1, to)
+#define ENDCHARS(s, to) from_sixbit(bits, s, (bitlen-(s))/6,to)
     ais->type = UBITS(0, 6);
     ais->repeat = UBITS(6, 2);
     ais->mmsi = UBITS(8, 30);
@@ -446,9 +447,10 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                 ais->type6.structured = true;
                 break;
             }
-        if (!ais->type6.structured)
-            (void)memcpy(ais->type6.bitdata, (char *)bits + (88 / CHAR_BIT),
+        if (!ais->type6.structured) {
+            (void)memcpy(ais->type6.bitdata, bits + (88 / CHAR_BIT),
                          BITS_TO_BYTES(ais->type6.bitcount));
+        }
         break;
     case 7:    // Binary acknowledge
         FALLTHROUGH
@@ -766,7 +768,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         /* land here if we failed to match a known DAC/FID */
         if (!ais->type8.structured) {
             size_t number_of_bytes = BITS_TO_BYTES(ais->type8.bitcount);
-            (void)memcpy(ais->type8.bitdata, (char *)bits + (56 / CHAR_BIT),
+            (void)memcpy(ais->type8.bitdata, bits + (56 / CHAR_BIT),
                          number_of_bytes);
             size_t valid_bits_in_last_byte = ais->type8.bitcount % CHAR_BIT;
             if(valid_bits_in_last_byte > 0) {
@@ -851,7 +853,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         ais->type17.lat         = SBITS(58, 17);
         //ais->type17.spare     = UBITS(75, 5);
         ais->type17.bitcount    = bitlen - 80;
-        (void)memcpy(ais->type17.bitdata, (char *)bits + (80 / CHAR_BIT),
+        (void)memcpy(ais->type17.bitdata, bits + (80 / CHAR_BIT),
                      BITS_TO_BYTES(ais->type17.bitcount));
         break;
     case 18:    /* Standard Class B CS Position Report */
@@ -920,7 +922,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
     case 21:    /* Aid-to-Navigation Report */
         RANGE_CHECK(272, 368);
         ais->type21.aid_type     = UBITS(38, 5);
-        from_sixbit_untrimmed((unsigned char *)bits, 43, 20, ais->type21.name);
+        from_sixbit_untrimmed(bits, 43, 20, ais->type21.name);
         ais->type21.accuracy     = UBITS(163, 1);
         ais->type21.lon          = SBITS(164, 28);
         ais->type21.lat          = SBITS(192, 27);
@@ -1064,14 +1066,16 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                      "AIVDM message type 25 too short for mode.\n");
             return false;
         }
-        if (ais->type25.addressed)
+        if (ais->type25.addressed) {
             ais->type25.dest_mmsi   = UBITS(40, 30);
-        if (ais->type25.structured)
+        }
+        if (ais->type25.structured) {
             ais->type25.app_id      = UBITS(40 + ais->type25.addressed * 30,16);
+        }
         ais->type25.bitcount        = bitlen - 40 - 16 * ais->type25.structured;
         /* bit 40 is exactly 5 bytes in; 2 bytes is 16 bits */
         (void)memcpy(ais->type25.bitdata,
-                     (char *)bits + 5 + 2 * ais->type25.structured,
+                     bits + 5 + 2 * ais->type25.structured,
                      BITS_TO_BYTES(ais->type25.bitcount));
         /* discard MMSI if addressed */
         if (ais->type25.addressed) {
@@ -1090,13 +1094,15 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
                      "AIVDM message type 26 too short for mode.\n");
             return false;
         }
-        if (ais->type26.addressed)
+        if (ais->type26.addressed) {
             ais->type26.dest_mmsi = UBITS(40, 30);
-        if (ais->type26.structured)
+        }
+        if (ais->type26.structured) {
             ais->type26.app_id    = UBITS(40 + ais->type26.addressed * 30, 16);
+        }
         ais->type26.bitcount      = bitlen - 60 - 16 * ais->type26.structured;
         (void)memcpy(ais->type26.bitdata,
-                     (unsigned char *)bits + 5 + 2 * ais->type26.structured,
+                     bits + 5 + 2 * ais->type26.structured,
                      BITS_TO_BYTES(ais->type26.bitcount));
         // discard MMSI if addressed
         if (ais->type26.addressed) {
