@@ -933,7 +933,7 @@ static gps_mask_t rtcm104v3_analyze(struct gps_device_t *session)
     GPSD_LOG(LOG_RAW, &session->context->errout, "RTCM 3.x packet %d\n", type);
     rtcm3_unpack(session->context,
                  &session->gpsdata.rtcm3,
-                 (char *)session->lexer.outbuffer);
+                 session->lexer.outbuffer);
     session->cycle_end_reliable = true;
     return RTCM3_SET;
 }
@@ -1296,10 +1296,9 @@ const struct gps_type_t driver_isync = {
  *
  **************************************************************************/
 
-static bool aivdm_decode(const char *buf, size_t buflen,
-                  struct gps_device_t *session,
-                  struct ais_t *ais,
-                  int debug)
+static bool aivdm_decode(unsigned char *buf, size_t buflen,
+                         struct gps_device_t *session, struct ais_t *ais,
+                         int debug)
 {
 #ifdef __UNUSED_DEBUG__
     char *sixbits[64] = {
@@ -1317,34 +1316,35 @@ static bool aivdm_decode(const char *buf, size_t buflen,
         "110111", "111000", "111001", "111010", "111011",
         "111100", "111101", "111110", "111111",
     };
-#endif /* __UNUSED_DEBUG__ */
+#endif  // __UNUSED_DEBUG__
     int nfrags, ifrag, nfields = 0;
     unsigned char *field[NMEA_MAX*2];
     unsigned char fieldcopy[NMEA_MAX*2+1];
     unsigned char *data, *cp;
-    char const *cp1;
+    const unsigned  char *cp1;
     int pad;
     struct aivdm_context_t *ais_context;
     int i;
 
-    if (buflen == 0)
+    if (0 == buflen) {
         return false;
+    }
 
-    /* we may need to dump the raw packet */
+    // we may need to dump the raw packet
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "AIVDM packet length %zd: %s\n", buflen, buf);
 
-    /* first clear the result, making sure we don't return garbage */
+    // first clear the result, making sure we don't return garbage
     memset(ais, 0, sizeof(*ais));
 
     /* discard overlong sentences */
-    if (strlen(buf) > sizeof(fieldcopy)-1) {
+    if (strlen((char *)buf) > (sizeof(fieldcopy) - 1)) {
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "overlong AIVDM packet.\n");
         return false;
     }
 
-    /* discard sentences with high-half characters in them, they're corrupted */
+    // discard sentences with high-half characters in them, they're corrupted
     for (cp1 = buf; *cp1; cp1++) {
         if (!isascii(*cp1)) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
@@ -1353,28 +1353,25 @@ static bool aivdm_decode(const char *buf, size_t buflen,
         }
     }
 
-    /* extract packet fields */
-    (void)strlcpy((char *)fieldcopy, buf, sizeof(fieldcopy));
-    field[nfields++] = (unsigned char *)buf;
-    for (cp = fieldcopy;
-         cp < fieldcopy + buflen; cp++)
-    {
-        if (
-             (*cp == (unsigned char)',') ||
-             (*cp == (unsigned char)'*')
-           ) {
+    // extract packet fields
+    (void)strlcpy((char *)fieldcopy, (char *)buf, sizeof(fieldcopy));
+    field[nfields++] = buf;
+    for (cp = fieldcopy; cp < fieldcopy + buflen; cp++) {
+        if (((unsigned char)',' == *cp) ||
+            ((unsigned char)'*' == *cp)) {
             *cp = '\0';
             field[nfields++] = cp + 1;
         }
     }
 #ifdef __UNDEF_DEBUG_
-    for(int nf = 0; nf < nfields; nf++)
+    for(int nf = 0; nf < nfields; nf++) {
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "field [%d] [%s]\n", nf, field[nf]);
+    }
 #endif
 
-    /* discard sentences with exiguous commas; catches run-ons */
-    if (nfields < 7) {
+    // discard sentences with exiguous commas; catches run-ons
+    if (7 > nfields) {
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "malformed AIVDM packet.\n");
         return false;
@@ -1504,43 +1501,45 @@ static bool aivdm_decode(const char *buf, size_t buflen,
 static gps_mask_t aivdm_analyze(struct gps_device_t *session)
 {
     if (session->lexer.type == AIVDM_PACKET) {
-        if (aivdm_decode
-            ((char *)session->lexer.outbuffer, session->lexer.outbuflen,
-             session, &session->gpsdata.ais,
-             session->context->errout.debug)) {
+        if (aivdm_decode(session->lexer.outbuffer, session->lexer.outbuflen,
+                         session, &session->gpsdata.ais,
+                         session->context->errout.debug)) {
             return ONLINE_SET | AIS_SET;
-        } else
-            return ONLINE_SET;
-    } else if (session->lexer.type == NMEA_PACKET) {
+        }
+        // else
+        return ONLINE_SET;
+    }
+    if (session->lexer.type == NMEA_PACKET) {
         return nmea_parse((char *)session->lexer.outbuffer, session);
-    } else
-        return 0;
+    }
+    // else
+    return 0;
 }
 
-/* *INDENT-OFF* */
+// *INDENT-OFF*
 const struct gps_type_t driver_aivdm = {
-    /* Full name of type */
-    .type_name        = "AIVDM",        /* associated lexer packet type */
-    .packet_type      = AIVDM_PACKET,   /* numeric packet type */
-    .flags            = DRIVER_NOFLAGS, /* no rollover or other flags */
-    .trigger          = NULL,           /* identifying response */
-    .channels         = 0,              /* not used by this driver */
-    .probe_detect     = NULL,           /* no probe */
-    .get_packet       = generic_get,    /* how to get a packet */
-    .parse_packet     = aivdm_analyze,  /* how to analyze a packet */
-    .rtcm_writer      = NULL,           /* don't send RTCM data,  */
-    .init_query       = NULL,           /* non-perturbing initial query */
-    .event_hook       = NULL,           /* lifetime event handler */
-    .speed_switcher   = NULL,           /* no speed switcher */
-    .mode_switcher    = NULL,           /* no mode switcher */
-    .rate_switcher    = NULL,           /* no rate switcher */
-    .min_cycle.tv_sec  = 1,             /* max 1Hz */
+    // Full name of type
+    .type_name        = "AIVDM",        // associated lexer packet type
+    .packet_type      = AIVDM_PACKET,   // numeric packet type
+    .flags            = DRIVER_NOFLAGS, // no rollover or other flags
+    .trigger          = NULL,           // identifying response
+    .channels         = 0,              // not used by this driver
+    .probe_detect     = NULL,           // no probe
+    .get_packet       = generic_get,    // how to get a packet
+    .parse_packet     = aivdm_analyze,  // how to analyze a packet
+    .rtcm_writer      = NULL,           // don't send RTCM data,
+    .init_query       = NULL,           // non-perturbing initial query
+    .event_hook       = NULL,           // lifetime event handler
+    .speed_switcher   = NULL,           // no speed switcher
+    .mode_switcher    = NULL,           // no mode switcher
+    .rate_switcher    = NULL,           // no rate switcher
+    .min_cycle.tv_sec  = 1,             // max 1Hz
     .min_cycle.tv_nsec = 0,
-    .control_send     = NULL,           /* no control sender */
-    .time_offset     = NULL,            /* no NTP communication */
+    .control_send     = NULL,           // no control sender
+    .time_offset     = NULL,            // no NTP communication
 };
-/* *INDENT-ON* */
-#endif /* AIVDM_ENABLE */
+// *INDENT-ON*
+#endif  // AIVDM_ENABLE
 
 /**************************************************************************
  *
