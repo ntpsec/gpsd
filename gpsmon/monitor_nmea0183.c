@@ -234,15 +234,23 @@ static void monitor_satlist(WINDOW *win, int y, int x)
 
 /* sort the skyviews
  * Used = Y first, then used = N
- * then sort by PRN
+ * then sort by PRN, and sigid
  */
 static int sat_cmp(const void *p1, const void *p2)
 {
-   int ret = ((struct satellite_t*)p2)->used - ((struct satellite_t*)p1)->used;
+   int ret = ((const struct satellite_t*)p2)->used -
+              ((const struct satellite_t*)p1)->used;
    if (ret) {
         return ret;
    }
-   return ((struct satellite_t*)p1)->PRN - ((struct satellite_t*)p2)->PRN;
+   ret = ((const struct satellite_t*)p1)->PRN -
+          ((const struct satellite_t*)p2)->PRN;
+   if (ret) {
+        return ret;
+   }
+   ret = ((const struct satellite_t*)p1)->sigid -
+          ((const struct satellite_t*)p2)->sigid;
+   return ret;
 }
 
 static void nmea_update(void)
