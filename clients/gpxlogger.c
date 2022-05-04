@@ -402,14 +402,12 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
+    memset(&source, 0, sizeof(source));
     if (NULL != method->magic) {
-        source.server = (char *)method->magic;
-        source.port = NULL;
-        source.device = NULL;
+        source.server = method->magic;
     } else {
         source.server = (char *)"localhost";
         source.port = (char *)DEFAULT_GPSD_PORT;
-        source.device = NULL;
     }
 
     if (optind < argc) {
