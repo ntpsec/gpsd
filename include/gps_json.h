@@ -8,7 +8,7 @@
 #include "json.h"
 
 #define GPS_JSON_COMMAND_MAX    80
-/* u-blox 9 can make really long JSON in "RAW" messages */
+// u-blox 9 can make really long JSON in "RAW" messages
 #define GPS_JSON_RESPONSE_MAX   10240
 
 #ifdef __cplusplus
@@ -20,7 +20,7 @@ struct gps_device_t;
 void json_data_report(const gps_mask_t, struct gps_device_t *,
                       const struct gps_policy_t *, char *, size_t);
 char *json_stringify(char *, size_t, const char *);
-void json_tpv_dump(const gps_mask_t, const struct gps_device_t *,
+void json_tpv_dump(const gps_mask_t, struct gps_device_t *,
                    const struct gps_policy_t *, char *, size_t);
 void json_noise_dump(const struct gps_data_t *, char *, size_t);
 void json_raw_dump(const struct gps_data_t *, char *, size_t);
@@ -52,11 +52,11 @@ int libgps_json_unpack(const char *, struct gps_data_t *,
 }
 #endif
 
-/* these values don't matter in themselves, they just have to be out-of-band */
+// these values don't matter in themselves, they just have to be out-of-band
 #define DEVDEFAULT_BPS          0
 #define DEVDEFAULT_PARITY       'X'
 #define DEVDEFAULT_STOPBITS     3
 #define DEVDEFAULT_NATIVE       -1
 
-/* gps_json.h ends here */
+// gps_json.h ends here
 // vim: set expandtab shiftwidth=4

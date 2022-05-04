@@ -251,11 +251,11 @@ static void json_base_dump(const struct baseline_t *base,
     }
 }
 
-void json_tpv_dump(const gps_mask_t changed, const struct gps_device_t *session,
+void json_tpv_dump(const gps_mask_t changed, struct gps_device_t *session,
                    const struct gps_policy_t *policy,
                    char *reply, size_t replylen)
 {
-    const struct gps_data_t *gpsdata = &session->gpsdata;
+    struct gps_data_t *gpsdata = &session->gpsdata;
 
     assert(replylen > sizeof(char *));
     (void)strlcpy(reply, "{\"class\":\"TPV\"", replylen);
@@ -441,9 +441,8 @@ void json_tpv_dump(const gps_mask_t changed, const struct gps_device_t *session,
                 char ts_str[TIMESPEC_LEN];
                 struct timedelta_t timedelta;
 
-                // ugh - de-consting this might get us in trouble someday
-                pps_thread_ppsout(&((struct gps_device_t *)session)->pps_thread,
-                                  &timedelta);
+                // Can't have (const)session and (volatile)pps_thread.
+                pps_thread_ppsout(&session->pps_thread, &timedelta);
                 str_appendf(reply, replylen, ",\"pps\":%s",
                             timespec_str(&timedelta.clock, ts_str,
                                          sizeof(ts_str)));
