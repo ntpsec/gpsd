@@ -17,10 +17,8 @@ extern "C" {
 
 struct gps_device_t;
 
-void json_data_report(const gps_mask_t,
-                      const struct gps_device_t *,
-                      const struct gps_policy_t *,
-                      char *, size_t);
+void json_data_report(const gps_mask_t, struct gps_device_t *,
+                      const struct gps_policy_t *, char *, size_t);
 char *json_stringify(char *, size_t, const char *);
 void json_tpv_dump(const gps_mask_t, const struct gps_device_t *,
                    const struct gps_policy_t *, char *, size_t);

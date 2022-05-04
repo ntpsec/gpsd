@@ -1347,7 +1347,7 @@ static int rtk_sat_cmp(const void *a, const void *b)
 }
 
 // dump the contents of a parsed RTCM104 message as JSON
-void json_rtcm2_dump(const struct rtcm2_t *rtcm,
+void json_rtcm2_dump(struct rtcm2_t *rtcm,
                      const char *device,
                      char buf[], size_t buflen)
 {
@@ -4606,11 +4606,11 @@ void json_oscillator_dump(const struct gps_data_t *datap,
 
 // report a session state in JSON
 void json_data_report(const gps_mask_t changed,
-                      const struct gps_device_t *session,
+                      struct gps_device_t *session,
                       const struct gps_policy_t *policy,
                       char *buf, size_t buflen)
 {
-    const struct gps_data_t *datap = &session->gpsdata;
+    struct gps_data_t *datap = &session->gpsdata;
     buf[0] = '\0';
 
     if (0 != (changed & REPORT_IS)) {
