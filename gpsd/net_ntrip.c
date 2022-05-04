@@ -482,7 +482,7 @@ static int ntrip_auth_encode(const struct ntrip_stream_t *stream,
             break;
         }
         memset(authenc, 0, sizeof(authenc));
-        if (0 > b64_ntop((unsigned char *)auth, strlen(auth), authenc,
+        if (0 > b64_ntop((const unsigned char *)auth, strlen(auth), authenc,
                          sizeof(authenc) - 1)) {
             ret = -1;
             break;
