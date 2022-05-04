@@ -193,28 +193,37 @@ struct test2 tests2[] = {
 
 
 struct fixsource_t tests3[] = {
-    {"", "", "2947", NULL},
-    {":", "localhost", "2947", NULL},
-    {"::", "localhost", "2947", NULL},
-    {"::/dev/111", "localhost", "2947", "/dev/111"},
-    {":1111", "localhost", "1111", NULL},
-    {":1111:", "localhost", "1111", NULL},
-    {":1111:/dev/111", "localhost", "1111", "/dev/111"},
-    {"example.com", "example.com", "2947", NULL},
-    {"example.com:", "example.com", "2947", NULL},
-    {"example.com::", "example.com", "2947", NULL},
-    {"example.com:1111", "example.com", "1111", NULL},
-    {"example.com:1111:", "example.com", "1111", NULL},
-    {"example.com:1111:/dev/111", "example.com", "1111", "/dev/111"},
+    // default
+    {"", "localhost", NULL, "2947", NULL},
+    {":", "localhost", NULL, "2947", NULL},
+    {"::", "localhost", NULL, "2947", NULL},
+    {"::/dev/111", "localhost", NULL, "2947", "/dev/111"},
+    {":1111", "localhost", NULL, "1111", NULL},
+    {":1111:", "localhost", NULL, "1111", NULL},
+    {":1111:/dev/111", "localhost", NULL, "1111", "/dev/111"},
+    // with server
+    {"example.com", "example.com", NULL, "2947", NULL},
+    {"example.com:", "example.com", NULL, "2947", NULL},
+    {"example.com::", "example.com", NULL, "2947", NULL},
+    {"example.com:1111", "example.com", NULL, "1111", NULL},
+    {"example.com:1111:", "example.com", NULL, "1111", NULL},
+    {"example.com:1111:/dev/111", "example.com", NULL, "1111", "/dev/111"},
+    // IPv4 literals
+    {"127.0.0.1", "127.0.0.1", NULL, "2947", NULL},
+    {"127.0.0.1:1111", "127.0.0.1", NULL, "1111", NULL},
+    {"127.0.0.1:1111:", "127.0.0.1", NULL, "1111", NULL},
+    {"127.0.0.1:1111:/dev/111", "127.0.0.1", NULL, "1111", "/dev/111"},
     // IPv6 literals
-    {"[fe80:1:1::1]", "fe80:1:1::1", "2947", NULL},
-    {"[fe80:1:1::1]:1111", "fe80:1:1::1", "1111", NULL},
-    {"[fe80:1:1::1]:1111:", "fe80:1:1::1", "1111", NULL},
-    {"[fe80:1:1::1]:1111:/dev/111", "fe80:1:1::1", "1111", "/dev/111"},
+    {"[fe80:1:1::1]", "fe80:1:1::1", NULL, "2947", NULL},
+    {"[fe80:1:1::1]:1111", "fe80:1:1::1", NULL, "1111", NULL},
+    {"[fe80:1:1::1]:1111:", "fe80:1:1::1", NULL, "1111", NULL},
+    {"[fe80:1:1::1]:1111:/dev/111", "fe80:1:1::1", NULL, "1111", "/dev/111"},
+    // bare device
+    {"/dev/ttyXX", "localhost", NULL, "2947", "/dev/ttyXX"},
 };
 
 // Compare strings, allowing for NULL
-static int strcmp_null(char *s1, char *s2)
+static int strcmp_null(const char *s1, const char *s2)
 {
     if (NULL == s1) {
         if (NULL == s2) {
@@ -323,18 +332,13 @@ int main(int argc, char **argv)
     }
 
     for (i = 0; i < (sizeof(tests3) / sizeof(struct fixsource_t)); i++) {
-        char spec[200];
+        // no need to zero source, gpsd_source_spec() does it
+        gpsd_source_spec(tests3[i].spec, &source);
 
-        // no leftovers wanted
-        memset(&source, 0, sizeof(source));
-        // test.spec has to be r/w
-        strlcpy(spec, tests3[i].spec, sizeof(spec));
-        // gpsd_source_spec() eats spec
-        gpsd_source_spec(spec, &source);
         if (0 != strcmp_null(source.server, tests3[i].server) ||
             0 != strcmp_null(source.port, tests3[i].port) ||
             0 != strcmp_null(source.device, tests3[i].device)) {
-            printf("ERROR: spec: '%s' '%s' '%s' '%s' s/b '%s' '%s' '%s'\n",
+            printf("ERROR: spec: '%s' got: '%s' '%s' '%s' s/b '%s' '%s' '%s'\n",
                    tests3[i].spec, source.server, source.port, source.device,
                    tests3[i].server, tests3[i].port, tests3[i].device);
             fail_count++;

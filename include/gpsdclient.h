@@ -9,21 +9,22 @@
 #ifndef _GPSD_GPSDCLIENT_H_
 #define _GPSD_GPSDCLIENT_H_
 
+// describe an export method
 struct exportmethod_t
-/* describe an export method */
 {
     const char *name;
     const char *magic;
     const char *description;
 };
 
+// describe a gpsd source
 struct fixsource_t
-/* describe a data source */
 {
-    char *spec;         /* pointer to actual storage */
-    char *server;
-    char *port;
-    char *device;
+    char spec[512];               // original string
+    const char *server;           // server name, maybe IP
+    const char *server_ip;        // server IP as string, maybe IPv4 or IPv6
+    const char *port;
+    const char *device;
 };
 
 struct exportmethod_t *export_lookup(const char *);
@@ -33,7 +34,7 @@ enum unit {unspecified, imperial, nautical, metric};
 enum unit gpsd_units(void);
 enum deg_str_type { deg_dd, deg_ddmm, deg_ddmmss };
 
-/* Warning: deg_to_str() not thread safe */
+// Warning: deg_to_str() not thread safe
 extern char *deg_to_str(enum deg_str_type type, double f);
 extern char *deg_to_str2(enum deg_str_type type, double f,
                          char *buf, unsigned int buf_size,
@@ -44,9 +45,9 @@ extern void gpsd_source_spec(const char *fromstring,
 
 const char *maidenhead(double n,double e);
 
-/* this needs to match JSON_DATE_MAX in gpsd.h */
+// this needs to match JSON_DATE_MAX in gpsd.h
 #define CLIENT_DATE_MAX 24
 
-#endif /* _GPSDCLIENT_H_ */
-/* gpsdclient.h ends here */
+#endif  // _GPSDCLIENT_H_
+// gpsdclient.h ends here
 // vim: set expandtab shiftwidth=4
