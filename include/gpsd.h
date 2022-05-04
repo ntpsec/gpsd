@@ -90,7 +90,7 @@ extern "C" {
  *      Add gps_device_t last_word_gal and last_svid3_gal
  *      Add timespec ts_startCurrentBaud to gps_device_t
  *      ntrip_conn_* to NTRIP_CONN_*
- * 3.23.2~rc1
+ * 3.24
  *      add ntrip_parse_url(), ntrip_close()
  *      add host, stream_time, to ntrip_stream_t
  *      add shm_clock_unit and shm_pps_unit to device_t
@@ -102,7 +102,7 @@ extern "C" {
  *      add TSIPv1 stuff
  */
 
-#define JSON_DATE_MAX   24      /* ISO8601 timestamp with 2 decimal places */
+#define JSON_DATE_MAX   24      // ISO8601 timestamp with 2 decimal places
 
 // be sure to change BUILD_LEAPSECONDS as needed.
 #define BUILD_CENTURY 2000
@@ -112,7 +112,7 @@ extern "C" {
 #define DEFAULT_GPSD_SOCKET     RUNDIR "/gpsd.sock"
 #endif
 
-/* Some internal capabilities depend on which drivers we're compiling. */
+// Some internal capabilities depend on which drivers we're compiling.
 #if !defined(AIVDM_ENABLE) && defined(NMEA2000_ENABLE)
 #define AIVDM_ENABLE
 #endif
@@ -172,7 +172,8 @@ enum isgpsstat_t {
  *
  * In theory, the limit is
  *   1 octet preamble
- *   2 octets payload length (first 6 bits reserved) --> max payload length 1023 octets
+ *   2 octets payload length (first 6 bits reserved) -->
+ *       max payload length 1023 octets
  *   0-1023 octects payload
  *   3 octets CRC
  *   1029 octets maximum
@@ -189,7 +190,7 @@ enum isgpsstat_t {
  * over 512 bytes. I know we like verbose output, but this is ridiculous.
  * Whoopie! The u-blox 8 UBX-RXM-RAWX packet is 8214 byte long!
  */
-#define MAX_PACKET_LENGTH       9216    /* 4 + 16 + (256 * 32) + 2 + fudge */
+#define MAX_PACKET_LENGTH       9216    // 4 + 16 + (256 * 32) + 2 + fudge
 
 /*
  * UTC of second 0 of week 0 of the first rollover period of GPS time.
@@ -200,17 +201,17 @@ enum isgpsstat_t {
  * choosing this as the cutoff, we'll never reject historical GPS logs
  * that are actually valid.
  */
-#define GPS_EPOCH       ((time_t)315964800)   /* 6 Jan 1980 00:00:00 UTC */
+#define GPS_EPOCH       ((time_t)315964800)     // 6 Jan 1980 00:00:00 UTC
 
 /* time constant */
-#define SECS_PER_DAY    ((time_t)(60*60*24))  /* seconds per day */
-#define SECS_PER_WEEK   (7*SECS_PER_DAY)        /* seconds per week */
-#define GPS_ROLLOVER    (1024*SECS_PER_WEEK)    /* rollover period */
+#define SECS_PER_DAY    ((time_t)(60*60*24))    // seconds per day
+#define SECS_PER_WEEK   (7*SECS_PER_DAY)        // seconds per week
+#define GPS_ROLLOVER    (1024*SECS_PER_WEEK)    // rollover period
 
 struct gpsd_errout_t {
-    int debug;                          /* lexer debug level */
-    void (*report)(const char *);       /* reporting hook for lexer errors */
-    char *label;
+    int debug;                          // lexer debug level
+    void (*report)(const char *);       // reporting hook for lexer errors
+    const char *label;
 };
 
 struct gps_lexer_t {

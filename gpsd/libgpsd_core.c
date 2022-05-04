@@ -330,7 +330,7 @@ void gps_context_init(struct gps_context_t *context,
     context->serial_write = gpsd_serial_write;
 
     errout_reset(&context->errout);
-    context->errout.label = (char *)label;
+    context->errout.label = label;
 
     (void)pthread_mutex_init(&report_mutex, NULL);
 }
