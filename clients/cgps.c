@@ -783,15 +783,19 @@ static int sat_cmp(const void *p1, const void *p2)
 {
     int diff;
 
-    diff = ((struct satellite_t*)p2)->used - ((struct satellite_t*)p1)->used;
+    diff = ((const struct satellite_t*)p2)->used -
+            ((const struct satellite_t*)p1)->used;
     if (0 != diff) {
         return diff;
     }
-    diff = ((struct satellite_t*)p1)->PRN - ((struct satellite_t*)p2)->PRN;
+    diff = ((const struct satellite_t*)p1)->PRN -
+            ((const struct satellite_t*)p2)->PRN;
     if (0 != diff) {
         return diff;
     }
-    return ((struct satellite_t*)p1)->sigid - ((struct satellite_t*)p2)->sigid;
+    diff = ((const struct satellite_t*)p1)->sigid -
+            ((const struct satellite_t*)p2)->sigid;
+    return diff;
 }
 
 
