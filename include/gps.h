@@ -2819,7 +2819,7 @@ extern int gps_send(struct gps_data_t *, const char *, ... );
 extern int gps_read(struct gps_data_t *, char *message, int message_len);
 extern int gps_unpack(char *, struct gps_data_t *);
 extern bool gps_waiting(const struct gps_data_t *, int);
-extern int gps_stream(struct gps_data_t *, unsigned int, void *);
+extern int gps_stream(struct gps_data_t *, unsigned int, const char *);
 extern int gps_mainloop(struct gps_data_t *, int,
                         void (*)(struct gps_data_t *));
 extern const char *gps_data(const struct gps_data_t *);

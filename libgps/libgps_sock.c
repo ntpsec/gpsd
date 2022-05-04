@@ -465,7 +465,8 @@ int gps_sock_send(struct gps_data_t *gpsdata, const char *buf)
 }
 
 // ask gpsd to stream reports at you, hiding the command details
-int gps_sock_stream(struct gps_data_t *gpsdata, unsigned int flags, void *d)
+int gps_sock_stream(struct gps_data_t *gpsdata, unsigned int flags,
+                    const char *d)
 {
     char buf[GPS_JSON_COMMAND_MAX] = "?WATCH={\"enable\":";
 
@@ -526,7 +527,7 @@ int gps_sock_stream(struct gps_data_t *gpsdata, unsigned int flags, void *d)
             (void)strlcat(buf, ",\"pps\":true", sizeof(buf));
         }
         if (flags & WATCH_DEVICE) {
-            str_appendf(buf, sizeof(buf), ",\"device\":\"%s\"", (char *)d);
+            str_appendf(buf, sizeof(buf), ",\"device\":\"%s\"", d);
         }
     }
     (void)strlcat(buf, "};", sizeof(buf));
