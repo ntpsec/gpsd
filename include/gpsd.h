@@ -350,7 +350,7 @@ struct gps_context_t {
 #ifdef SHM_EXPORT_ENABLE
     /* we don't want the compiler to treat writes to shmexport as dead code,
      * and we don't want them reordered either */
-    volatile void *shmexport;
+    struct shmexport_t *shmexport;
     int shmid;                          // ID of SHM  (for later IPC_RMID)
 #endif
     ssize_t (*serial_write)(struct gps_device_t *,

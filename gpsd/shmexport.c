@@ -97,7 +97,7 @@ void shm_release(struct gps_context_t *context)
 
     // detach from segment, it we were last user, it should be deleted.
     if (NULL != context->shmexport) {
-        if (-1 == shmdt((const void *)context->shmexport)) {
+        if (-1 == shmdt(context->shmexport)) {
             GPSD_LOG(LOG_WARN, &context->errout,
                      "SHM: shmdt() for shmid %d failed: %s(%d)\n",
                      context->shmid, strerror(errno), errno);
@@ -114,7 +114,7 @@ void shm_update(struct gps_context_t *context, struct gps_data_t *gpsdata)
     if (NULL != context->shmexport) {
         static int tick;
         volatile struct shmexport_t *shared = \
-                            (struct shmexport_t *)context->shmexport;
+                            (volatile struct shmexport_t *)context->shmexport;
 
         ++tick;
         /*
