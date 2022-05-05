@@ -1030,29 +1030,29 @@ extern gps_mask_t ecef_to_wgs84fix(struct gps_fix_t *,
                                    double, double, double);
 extern void clear_dop(struct dop_t *);
 
-/* shmexport.c */
-#define GPSD_SHM_KEY    0x47505344      /* "GPSD" */
+// shmexport.c
+#define GPSD_SHM_KEY    0x47505344      // "GPSD"
 struct shmexport_t
 {
-    int bookend1;
+    volatile int bookend1;
     struct gps_data_t gpsdata;
-    int bookend2;
+    volatile int bookend2;
 };
 extern bool shm_acquire(struct gps_context_t *);
 extern void shm_release(struct gps_context_t *);
 extern void shm_update(struct gps_context_t *, struct gps_data_t *);
 
-/* dbusexport.c */
+// dbusexport.c
 #if defined(DBUS_EXPORT_ENABLE)
 int initialize_dbus_connection (void);
 void send_dbus_fix (struct gps_device_t* channel);
-#endif /* defined(DBUS_EXPORT_ENABLE) */
+#endif  // defined(DBUS_EXPORT_ENABLE)
 
-/* a BSD transplant */
+// a BSD transplant
 int b64_ntop(unsigned char const *src, size_t srclength, char *target,
     size_t targsize);
 
-/* application interface */
+// application interface
 extern void gps_context_init(struct gps_context_t *context,
                              const char *label);
 extern void gpsd_init(struct gps_device_t *,

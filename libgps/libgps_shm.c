@@ -117,9 +117,9 @@ int gps_shm_read(struct gps_data_t *gpsdata)
     if (NULL == gpsdata->privdata) {
         return -1;
     } else {
-        int before, after;
+        int before1, before2, after1, after2;
         void *private_save = gpsdata->privdata;
-        volatile struct shmexport_t *shared =
+        struct shmexport_t *shared =
             (struct shmexport_t *)PRIVATE(gpsdata)->shmseg;
         struct gps_data_t noclobber;
 
@@ -127,22 +127,34 @@ int gps_shm_read(struct gps_data_t *gpsdata)
          * Following block of instructions must not be reordered,
          * otherwise havoc will ensue.  The memory_barrier() call
          * should prevent reordering of the data accesses.
+         * for those lucky enough to have a working memory_barrier()
+         *
+         * bookends are volatile, so that should force
+         * them to be read in order.
          *
          * This is a simple optimistic-concurrency technique.  We wrote
          * the second bookend first, then the data, then the first bookend.
          * Reader copies what it sees in normal order; that way, if we
          * start to write the segment during the read, the second bookend will
          * get clobbered first and the data can be detected as bad.
+         *
+         * Excwpt with mutil-treading and CPU caches, order is iffy...
          */
-        before = shared->bookend1;
+        before1 = shared->bookend1;
+        before2 = shared->bookend2;
         memory_barrier();
+        // memcpy() and (volatile) don't play well together.
         (void)memcpy((void *)&noclobber,
                      (void *)&shared->gpsdata,
                      sizeof(struct gps_data_t));
         memory_barrier();
-        after = shared->bookend2;
+        after1 = shared->bookend1;
+        after2 = shared->bookend2;
 
-        if (before != after) {
+        if (before1 != after1 ||
+            before2 != after2) {
+            // bookend mismatch, throw away the data
+            // FIXME: retry?
             return 0;
         } else {
             (void)memcpy((void *)gpsdata,
@@ -154,8 +166,8 @@ int gps_shm_read(struct gps_data_t *gpsdata)
 #else
             gpsdata->gps_fd = (void *)(intptr_t)SHM_PSEUDO_FD;
 #endif  // USE_QT
-            PRIVATE(gpsdata)->tick = after;
-            if ((gpsdata->set & REPORT_IS)!=0) {
+            PRIVATE(gpsdata)->tick = after2;
+            if (0 != (gpsdata->set & REPORT_IS)) {
                 gpsdata->set = STATUS_SET;
             }
             return (int)sizeof(struct gps_data_t);
