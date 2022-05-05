@@ -1440,12 +1440,12 @@ if not cleaning and not helping:
         '-fexcess-precision=standard',
 
         '-Wcast-align',
-        # '-Wcast-qual',       # someday
+        '-Wcast-qual',
         # -Wimplicit-fallthrough same as
         # -Wimplicit-fallthrough=3, except osX hates the
         # second flavor
         '-Wimplicit-fallthrough',
-        # '-Wimplicit-function-declaration',     # someday
+        # '-Wimplicit-function-declaration',     # someday, annoys C++
         '-Wmissing-declarations',
         '-Wmissing-prototypes',
         '-Wno-missing-field-initializers',
