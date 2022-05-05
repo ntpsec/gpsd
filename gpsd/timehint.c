@@ -22,10 +22,10 @@
 #include <time.h>        // for timespec
 #include <unistd.h>
 
-#include "../include/timespec.h"
 #include "../include/gpsd.h"
-
 #include "../include/ntpshm.h"
+#include "../include/strfuncs.h"       // for memset_volatile()
+#include "../include/timespec.h"
 
 /* Note: you can start gpsd as non-root, and have it work with ntpd.
  * However, it will then only use the ntpshm segments 2 3, and higher.
@@ -192,7 +192,7 @@ static int ntpshm_alloc(struct gps_device_t *session)
              * from declaring the GPS a falseticker before it gets
              * all its marbles together.
              */
-            memset((void *)context->shmTime[unit], 0, sizeof(struct shmTime));
+            memset_volatile(context->shmTime[unit], 0, sizeof(struct shmTime));
             context->shmTime[unit]->mode = 1;
             context->shmTime[unit]->leap = LEAP_NOTINSYNC;
             context->shmTime[unit]->precision = -20;  // initially 1 micro sec
@@ -351,8 +351,8 @@ static void chrony_send(struct gps_device_t *session, struct timedelta_t *td)
     /* chronyd wants a timeval, not a timspec, not to worry, it is
      * just the top of the second */
     TSTOTV(&sample.tv, &td->clock);
-    /* calculate the offset as a timespec to not lose precision */
-    /* if tv_sec greater than 2 then tv_nsec loses precision, but
+    /* calculate the offset as a timespec to not lose precision
+     * if tv_sec greater than 2 then tv_nsec loses precision, but
      * not a big deal as slewing will be required */
     sample.offset = TS_SUB_D(&td->real, &td->clock);
     sample._pad = 0;
