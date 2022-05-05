@@ -477,7 +477,7 @@ void gpsd_clear(struct gps_device_t *session)
     // clear the private data union
     memset((void *)&session->driver, '\0', sizeof(session->driver));
     // set up the context structure for the PPS thread monitor
-    memset((void *)&session->pps_thread, 0, sizeof(session->pps_thread));
+    memset_volatile(&session->pps_thread, 0, sizeof(session->pps_thread));
     session->pps_thread.devicefd = session->gpsdata.gps_fd;
     session->pps_thread.devicename = session->gpsdata.dev.path;
     session->pps_thread.log_hook = ppsthread_log;

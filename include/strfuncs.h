@@ -46,4 +46,16 @@ static inline void str_rstrip_char(char *str, char ch)
     }
 }
 
+/* memset() for a volatile destination
+ * dest = destination
+ * c = fill character
+ * count = sizeof(dest)
+ */
+static inline void memset_volatile(volatile void *dest, char c, size_t count)
+{
+    volatile char *ptr = (volatile char*)dest;
+    while (count-- > 0) {
+        *ptr++ = c;
+    }
+}
 #endif /* _GPSD_STRFUNCS_H_ */
