@@ -64,38 +64,46 @@ char *ntp_name(const int unit)
     return name;
 }
 
-// try to grab a sample from the specified SHM segment
+/* try to grab a sample from SHM segment *shm_in
+ * put it in shm_stat
+ *
+ * Return: shmstat_t
+ */
 enum segstat_t ntp_read(struct shmTime *shm_in, struct shm_stat_t *shm_stat,
                         const bool consume)
 {
-    volatile struct shmTime shmcopy, *shm = shm_in;
+    struct shmTime shmcopy;
     volatile int cnt;
     unsigned int cns_new, rns_new;
 
-    if (NULL == shm) {
+    // clear out old junk
+    memset(shm_stat, 0, sizeof(*shm_stat));
+
+    if (NULL == shm_in) {
+        // no SHM to read from
         shm_stat->status = NO_SEGMENT;
         return NO_SEGMENT;
     }
 
-    shm_stat->tvc.tv_sec = shm_stat->tvc.tv_nsec = 0;
-
     // relying on word access to be atomic here
-    if (0 == shm->valid) {
+    if (0 == shm_in->valid) {
+        // no data to read
         shm_stat->status = NOT_READY;
         return NOT_READY;
     }
 
-    cnt = shm->count;
+    // grab shm_in->count, which is volatile, to compare after memcpy()
+    cnt = shm_in->count;
 
     /*
      * This is proof against concurrency issues if either (a) the
-     * memory_barrier() call works on this host, or (b) memset
+     * memory_barrier() call works on this host, or (b) memcpy
      * compiles to an uninterruptible single-instruction bitblt (this
      * will probably cease to be true if the structure exceeds your VM
      * page size).
      */
     memory_barrier();
-    memcpy((void *)&shmcopy, (void *)shm, sizeof(struct shmTime));
+    memcpy((void *)&shmcopy, (void *)shm_in, sizeof(struct shmTime));
 
     /*
      * An updated consumer such as ntpd should zero the valid flag at this point.
@@ -103,17 +111,21 @@ enum segstat_t ntp_read(struct shmTime *shm_in, struct shm_stat_t *shm_stat,
      * it make the data unavailable for consumers.
      */
     if (consume) {
-        shm->valid = 0;
+        shm_in->valid = 0;
     }
     memory_barrier();
 
     /*
      * Clash detection in case neither (a) nor (b) was true.
-     * Not supported in mode 0, and word access to the count field
-     * must be atomic for this to work.
+     * Not supported in mode 0 (why?).
+     * Word access to the count field * must be atomic for this to work.
+     * shm_in->count is (volatile) to prevent compiler rearrangement,
+     * but does not force cache coherence if memory_barrier() is a NOP.
      */
+    // FIXME: retry on clash?
     if (0 < shmcopy.mode &&
-        cnt != shm->count) {
+        cnt != shm_in->count) {
+        // count changed, possibly bad memcpy()
         shm_stat->status = CLASH;
         return shm_stat->status;
     }
@@ -124,10 +136,10 @@ enum segstat_t ntp_read(struct shmTime *shm_in, struct shm_stat_t *shm_stat,
     case 0:
         shm_stat->tvr.tv_sec    = shmcopy.receiveTimeStampSec;
         shm_stat->tvr.tv_nsec   = shmcopy.receiveTimeStampUSec * 1000;
-        rns_new         = shmcopy.receiveTimeStampNSec;
+        rns_new                 = shmcopy.receiveTimeStampNSec;
         shm_stat->tvt.tv_sec    = shmcopy.clockTimeStampSec;
         shm_stat->tvt.tv_nsec   = shmcopy.clockTimeStampUSec * 1000;
-        cns_new         = shmcopy.clockTimeStampNSec;
+        cns_new                 = shmcopy.clockTimeStampNSec;
 
         /* Since the following comparisons are between unsigned
         ** variables they are always well defined, and any
@@ -154,10 +166,10 @@ enum segstat_t ntp_read(struct shmTime *shm_in, struct shm_stat_t *shm_stat,
     case 1:
         shm_stat->tvr.tv_sec    = shmcopy.receiveTimeStampSec;
         shm_stat->tvr.tv_nsec   = shmcopy.receiveTimeStampUSec * 1000;
-        rns_new         = shmcopy.receiveTimeStampNSec;
+        rns_new                 = shmcopy.receiveTimeStampNSec;
         shm_stat->tvt.tv_sec    = shmcopy.clockTimeStampSec;
         shm_stat->tvt.tv_nsec   = shmcopy.clockTimeStampUSec * 1000;
-        cns_new         = shmcopy.clockTimeStampNSec;
+        cns_new                 = shmcopy.clockTimeStampNSec;
 
         /* See the case above for an explanation of the
         ** following test.
