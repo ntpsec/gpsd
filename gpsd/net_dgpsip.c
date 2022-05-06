@@ -29,6 +29,7 @@ socket_t dgpsip_open(struct gps_device_t *device, const char *dgpsserver)
     int opts;
     char hn[256], buf[BUFSIZ];
     socket_t dsock;
+    ssize_t blen;
 
     device->servicetype = SERVICE_DGPSIP;
     device->dgpsip.reported = false;
@@ -54,10 +55,10 @@ socket_t dgpsip_open(struct gps_device_t *device, const char *dgpsserver)
     device->gpsdata.gps_fd = dsock;
     (void)gethostname(hn, sizeof(hn));
     // greeting required by some RTCM104 servers; others will ignore it
-    (void)snprintf(buf, sizeof(buf), "HELO %s gpsd %s\r\nR\r\n", hn,
-                   VERSION);
-    if ((ssize_t)strlen(buf) !=
-        write(device->gpsdata.gps_fd, buf, strlen(buf))) {
+    blen = snprintf(buf, sizeof(buf), "HELO %s gpsd %s\r\nR\r\n", hn,
+                    VERSION);
+    if (1 > blen ||
+        write(device->gpsdata.gps_fd, buf, blen) != blen) {
         GPSD_LOG(LOG_ERROR, &device->context->errout,
                  "DGPS: hello to DGPS server %s failed\n",
                  dgpsserver);
@@ -87,15 +88,18 @@ void dgpsip_report(struct gps_context_t *context,
         dgpsip->dgpsip.reported = true;
         if (dgpsip->gpsdata.gps_fd > -1) {
             char buf[BUFSIZ];
-            (void)snprintf(buf, sizeof(buf), "R %0.8f %0.8f %0.2f\r\n",
-                           gps->gpsdata.fix.latitude,
-                           gps->gpsdata.fix.longitude,
-                           gps->gpsdata.fix.altMSL);
-            if (write(dgpsip->gpsdata.gps_fd, buf, strlen(buf)) ==
-                (ssize_t) strlen(buf))
+            ssize_t blen;
+            blen = snprintf(buf, sizeof(buf), "R %0.8f %0.8f %0.2f\r\n",
+                            gps->gpsdata.fix.latitude,
+                            gps->gpsdata.fix.longitude,
+                            gps->gpsdata.fix.altMSL);
+            if (1 > blen ||
+                write(dgpsip->gpsdata.gps_fd, buf,blen) != blen) {
+                GPSD_LOG(LOG_WARN, &context->errout,
+                          "DGPS: write to dgps FAILED\n");
+            } else {
                 GPSD_LOG(LOG_IO, &context->errout, "DGPS: => dgps %s\n", buf);
-            else
-                GPSD_LOG(LOG_IO, &context->errout, "DGPS: write to dgps FAILED\n");
+            }
         }
     }
 }
