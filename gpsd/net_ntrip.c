@@ -430,15 +430,20 @@ static int ntrip_stream_req_probe(const struct ntrip_stream_t *stream,
                  stream->url, netlib_errstr(dsock), dsock);
         return -1;
     }
-    (void)snprintf(buf, sizeof(buf),
-            "GET / HTTP/1.1\r\n"
-            "Ntrip-Version: Ntrip/2.0\r\n"
-            "User-Agent: NTRIP gpsd/%s\r\n"
-            "Host: %s\r\n"
-            "Connection: close\r\n"
-            "\r\n", VERSION, stream->host);
+    blen = snprintf(buf, sizeof(buf),
+                    "GET / HTTP/1.1\r\n"
+                    "Ntrip-Version: Ntrip/2.0\r\n"
+                    "User-Agent: NTRIP gpsd/%s\r\n"
+                    "Host: %s\r\n"
+                    "Connection: close\r\n"
+                    "\r\n", VERSION, stream->host);
+    if (1 > blen) {
+        GPSD_LOG(LOG_ERROR, errout,
+                 "NTRIP: ntrip_stream_req_probe(%s) snprintf() fail\n",
+                 stream->url);
+        return -1;
+    }
 
-    blen = strnlen(buf, sizeof(buf));
     GPSD_LOG(LOG_IO, errout,
              "NTRIP: ntrip_stream_req_probe(%s) fd %d sending >%s<\n",
              stream->url, dsock,
@@ -537,18 +542,22 @@ static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
              "NTRIP: netlib_connectsock() returns socket on fd %d\n",
              dsock);
 
-    (void)snprintf(buf, sizeof(buf),
-            "GET /%s HTTP/1.1\r\n"
-            "Ntrip-Version: Ntrip/2.0\r\n"
-            "User-Agent: NTRIP gpsd/%s\r\n"
-            "Host: %s\r\n"
-            "Accept: rtk/rtcm, dgps/rtcm\r\n"
-            "%s"
-            "Connection: close\r\n"
-            "\r\n", stream->mountpoint, VERSION, stream->host,
-            stream->authStr);
+    cnt = snprintf(buf, sizeof(buf),
+                   "GET /%s HTTP/1.1\r\n"
+                   "Ntrip-Version: Ntrip/2.0\r\n"
+                   "User-Agent: NTRIP gpsd/%s\r\n"
+                   "Host: %s\r\n"
+                   "Accept: rtk/rtcm, dgps/rtcm\r\n"
+                   "%s"
+                   "Connection: close\r\n"
+                   "\r\n", stream->mountpoint, VERSION, stream->host,
+                   stream->authStr);
+    if (1 > cnt) {
+        GPSD_LOG(LOG_ERROR, errout,
+                 "NTRIP: netlib_connectsock() snprintf fail<\n");
+        return -1;
+    }
 
-    cnt = strnlen(buf, sizeof(buf));
     GPSD_LOG(LOG_IO, errout,
              "NTRIP: netlib_connectsock() sending >%s<\n",
              visibilize(outbuf, sizeof(outbuf), buf, cnt));
@@ -957,19 +966,24 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         // Need to send GET within about 40 seconds or caster tiems out.
         // FIXME: partially duplicates  ntrip_stream_get_req()
         // try a write, it will fail if connection still in process, or failed.
-        (void)snprintf(buf, sizeof(buf),
-                "GET /%s HTTP/1.1\r\n"
-                "Ntrip-Version: Ntrip/2.0\r\n"
-                "User-Agent: NTRIP gpsd/%s\r\n"
-                "Host: %s\r\n"
-                "Accept: rtk/rtcm, dgps/rtcm\r\n"
-                "%s"
-                "Connection: close\r\n"
-                "\r\n", device->ntrip.stream.mountpoint, VERSION,
-                device->ntrip.stream.host,
-                device->ntrip.stream.authStr);
+        blen = snprintf(buf, sizeof(buf),
+                        "GET /%s HTTP/1.1\r\n"
+                        "Ntrip-Version: Ntrip/2.0\r\n"
+                        "User-Agent: NTRIP gpsd/%s\r\n"
+                        "Host: %s\r\n"
+                        "Accept: rtk/rtcm, dgps/rtcm\r\n"
+                        "%s"
+                        "Connection: close\r\n"
+                        "\r\n", device->ntrip.stream.mountpoint, VERSION,
+                        device->ntrip.stream.host,
+                        device->ntrip.stream.authStr);
 
-        blen = strnlen(buf, sizeof(buf));
+        if (1 > blen) {
+            GPSD_LOG(LOG_ERROR, &device->context->errout,
+                     "NTRIP: ntrip_open() snprintf fail<\n");
+            return -1;
+        }
+
         GPSD_LOG(LOG_IO, &device->context->errout,
                  "NTRIP: ntrip_open() sending >%s<\n",
                   visibilize(outbuf, sizeof(outbuf), buf, blen));
