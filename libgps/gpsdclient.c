@@ -249,7 +249,7 @@ void gpsd_source_spec(const char *arg, struct fixsource_t *source)
     }
     // else
     // grab a copy
-    strncpy(source->spec, arg, sizeof(source->spec));
+    strlcpy(source->spec, arg, sizeof(source->spec));
 
     if ('/' == source->spec[0]) {
         // it is a bare device
