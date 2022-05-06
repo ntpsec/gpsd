@@ -553,7 +553,7 @@ int parse_uri_dest(char *s, char **host, char **service, char **device)
             *s = '\0';
         }
         // nothing in service besides / --> trigger use of default port
-        if (0 == strlen(*service)) {
+        if ('\0' == *service[0]) {
             *service = NULL;
         }
     }
