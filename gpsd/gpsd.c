@@ -1221,11 +1221,11 @@ static void json_devicelist_dump(char *reply, size_t replylen)
 #endif  // SOCKET_EXPORT_ENABLE
 
 // strip trailing \r\n\t\SP from a string
-static void rstrip(char *str)
+static void rstrip(char *str, size_t replylen)
 {
     char *strend;
 
-    strend = str + strlen(str) - 1;
+    strend = str + strnlen(str, replylen) - 1;
     while (isspace((unsigned char)*strend)) {
         *strend = '\0';
         --strend;
@@ -1342,9 +1342,11 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
             // else enable:false ???
         }
         // return a device list and the user's policy
-        json_devicelist_dump(reply + strlen(reply), replylen - strlen(reply));
+        json_devicelist_dump(reply + strnlen(reply, replylen),
+                             replylen - strnlen(reply, replylen));
         json_watch_dump(&sub->policy,
-                        reply + strlen(reply), replylen - strlen(reply));
+                        reply + strnlen(reply, replylen),
+                        replylen - strnlen(reply, replylen));
     } else if (str_starts_with(buf, "?DEVICE") &&
                (';' == buf[7] ||
                 '=' == buf[7])) {
@@ -1495,7 +1497,7 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
             }
         }
         // dump a response for each selected channel
-        len = strlen(reply);
+        len = strnlen(reply, replylen);
         for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
             if (!allocated_device(devp)) {
                 continue;
@@ -1527,9 +1529,9 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
             if (allocated_device(devp) && subscribed(sub, devp)) {
                 if (0 != (devp->observed & GPS_TYPEMASK)) {
                     json_tpv_dump(NAVDATA_SET, devp, &sub->policy,
-                                  reply + strlen(reply),
-                                  replylen - strlen(reply));
-                    rstrip(reply);
+                                  reply + strnlen(reply, replylen),
+                                  replylen - strnlen(reply, replylen));
+                    rstrip(reply, replylen);
                     (void)strlcat(reply, ",", replylen);
                 }
             }
@@ -1540,9 +1542,9 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
             if (allocated_device(devp) && subscribed(sub, devp)) {
                 if (0 != (devp->observed & GPS_TYPEMASK)) {
                     json_noise_dump(&devp->gpsdata,
-                                    reply + strlen(reply),
-                                    replylen - strlen(reply));
-                    rstrip(reply);
+                                    reply + strnlen(reply, replylen),
+                                    replylen - strnlen(reply, replylen));
+                    rstrip(reply, replylen);
                     (void)strlcat(reply, ",", replylen);
                 }
             }
@@ -1553,9 +1555,9 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
             if (allocated_device(devp) && subscribed(sub, devp)) {
                 if (0 != (devp->observed & GPS_TYPEMASK)) {
                     json_sky_dump(&devp->gpsdata,
-                                  reply + strlen(reply),
-                                  replylen - strlen(reply));
-                    rstrip(reply);
+                                  reply + strnlen(reply, replylen),
+                                  replylen - strnlen(reply, replylen));
+                    rstrip(reply, replylen);
                     (void)strlcat(reply, ",", replylen);
                 }
             }
