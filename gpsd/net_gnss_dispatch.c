@@ -36,11 +36,11 @@ int netgnss_uri_open(struct gps_device_t *dev, char *netgnss_service)
 
     if (str_starts_with(netgnss_service, NETGNSS_NTRIP)) {
         // could be initial open, or reopen, or...
-        return ntrip_open(dev, netgnss_service + strlen(NETGNSS_NTRIP));
+        return ntrip_open(dev, netgnss_service + sizeof(NETGNSS_NTRIP) - 1);
     }
 
     if (str_starts_with(netgnss_service, NETGNSS_DGPSIP)) {
-        return dgpsip_open(dev, netgnss_service + strlen(NETGNSS_DGPSIP));
+        return dgpsip_open(dev, netgnss_service + sizeof(NETGNSS_DGPSIP) - 1);
     }
 
 #ifndef REQUIRE_DGNSS_PROTO
