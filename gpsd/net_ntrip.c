@@ -94,7 +94,7 @@ static char *ntrip_field_iterate(char *start,
         if (!prev) {
             return NULL;
         }
-        s = prev + strlen(prev) + 1;
+        s = prev + strnlen(prev, BUFSIZ) + 1;
         if (s >= eol) {
             return NULL;
         }
@@ -180,8 +180,9 @@ static void ntrip_str_parse(char *str, size_t len,
     s = ntrip_field_iterate(NULL, s, eol, errout);
     // <compr-encryp>
     if (NULL != (s = ntrip_field_iterate(NULL, s, eol, errout))) {
-        if ((0 == strcmp(" ", s)) ||
-            (0 == strlen(s)) ||
+
+        if (('\0' == s[0]) ||
+            (0 == strcmp(" ", s)) ||
             (0 == strcasecmp("none", s))) {
             hold->compr_encryp = CMP_ENC_NONE;
         } else {
@@ -324,8 +325,8 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
 
             if (str_starts_with(line, NTRIP_STR)) {
                 // parse STR
-                ntrip_str_parse(line + strlen(NTRIP_STR),
-                                (size_t) (llen - strlen(NTRIP_STR)),
+                ntrip_str_parse(line + sizeof(NTRIP_STR) - 1,
+                                (size_t)(llen - (sizeof(NTRIP_STR) - 1)),
                                 &hold, &device->context->errout);
 
                 if (0 == strcmp(device->ntrip.stream.mountpoint,
@@ -385,7 +386,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
             }
             // else ???
 
-            llen += strlen(NTRIP_BR);
+            llen += sizeof(NTRIP_BR) - 1;
             line += llen;        // point to start of next line
             len -= llen;         // calculate remaining data in buf.
             GPSD_LOG(LOG_IO, &device->context->errout,
@@ -417,7 +418,7 @@ static int ntrip_stream_req_probe(const struct ntrip_stream_t *stream,
                                   struct gpsd_errout_t *errout)
 {
     int dsock;
-    ssize_t r;
+    ssize_t r, blen;
     char buf[BUFSIZ];
     char outbuf[BUFSIZ];
 
@@ -437,18 +438,18 @@ static int ntrip_stream_req_probe(const struct ntrip_stream_t *stream,
             "Connection: close\r\n"
             "\r\n", VERSION, stream->host);
 
+    blen = strnlen(buf, sizeof(buf));
     GPSD_LOG(LOG_IO, errout,
              "NTRIP: ntrip_stream_req_probe(%s) fd %d sending >%s<\n",
              stream->url, dsock,
-             visibilize(outbuf, sizeof(outbuf), buf,
-                        strnlen(buf, sizeof(buf))));
+             visibilize(outbuf, sizeof(outbuf), buf, blen));
 
-    r = write(dsock, buf, strlen(buf));
-    if ((ssize_t)strlen(buf) != r) {
+    r = write(dsock, buf, blen);
+    if (blen != r) {
         GPSD_LOG(LOG_ERROR, errout,
-                 "NTRIP: stream write error %s on fd %d "
+                 "NTRIP: stream write error %s(%d) on fd %d "
                  "during probe request %zd\n",
-                 strerror(errno), dsock, r);
+                 strerror(errno), errno, dsock, r);
         (void)close(dsock);
         return -1;
     }
@@ -482,8 +483,8 @@ static int ntrip_auth_encode(const struct ntrip_stream_t *stream,
             break;
         }
         memset(authenc, 0, sizeof(authenc));
-        if (0 > b64_ntop((const unsigned char *)auth, strlen(auth), authenc,
-                         sizeof(authenc) - 1)) {
+        if (0 > b64_ntop((const unsigned char *)auth, strnlen(auth, 130),
+                         authenc, sizeof(authenc) - 1)) {
             ret = -1;
             break;
         }
@@ -521,6 +522,7 @@ static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
     int dsock;
     char buf[BUFSIZ];
     char outbuf[BUFSIZ];
+    ssize_t cnt, cnt1;
 
     // open blocking
     dsock = netlib_connectsock(AF_UNSPEC, stream->host, stream->port, "tcp");
@@ -546,12 +548,13 @@ static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
             "\r\n", stream->mountpoint, VERSION, stream->host,
             stream->authStr);
 
+    cnt = strnlen(buf, sizeof(buf));
     GPSD_LOG(LOG_IO, errout,
              "NTRIP: netlib_connectsock() sending >%s<\n",
-             visibilize(outbuf, sizeof(outbuf), buf,
-                        strnlen(buf, sizeof(buf))));
+             visibilize(outbuf, sizeof(outbuf), buf, cnt));
 
-    if ((ssize_t)strlen(buf) != write(dsock, buf, strlen(buf))) {
+    cnt1 = write(dsock, buf, cnt);
+    if (cnt != cnt1) {
         GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: stream write error %s(%d) on fd %d during "
                  "get request\n",
@@ -636,7 +639,6 @@ int ntrip_parse_url(const struct gpsd_errout_t *errout,
     char *host = NULL;                   // hostname, IPv4 or IPv6
     char *port = NULL;
     char *mountpoint = NULL;             // mount point
-    size_t len = 0;
 
     // save original URL
     strlcpy(stream->url, fullurl, sizeof(stream->url) - 1);
@@ -654,8 +656,7 @@ int ntrip_parse_url(const struct gpsd_errout_t *errout,
     mountpoint = slash + 1;
     // dup now ends in host or host:port
 
-    len = strlen(mountpoint);
-    if (0 == len) {
+    if ('\0' == mountpoint[0]) {
         // this also handle the trailing / case
         GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: ntrip_parse_url(%s) missing mountpoint.\n", fullurl);
@@ -842,6 +843,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
     socket_t ret = -1;
     char buf[BUFSIZ];
     char outbuf[BUFSIZ];
+    ssize_t blen;
 
     GPSD_LOG(LOG_PROG, &device->context->errout,
              "NTRIP: ntrip_open(%s) fd %d state = %d\n",
@@ -967,12 +969,12 @@ int ntrip_open(struct gps_device_t *device, char *orig)
                 device->ntrip.stream.host,
                 device->ntrip.stream.authStr);
 
+        blen = strnlen(buf, sizeof(buf));
         GPSD_LOG(LOG_IO, &device->context->errout,
                  "NTRIP: ntrip_open() sending >%s<\n",
-                  visibilize(outbuf, sizeof(outbuf), buf, strlen(buf)));
+                  visibilize(outbuf, sizeof(outbuf), buf, blen));
 
-        if ((ssize_t)strlen(buf) != write(device->gpsdata.gps_fd, buf,
-                                          strlen(buf))) {
+        if (blen != write(device->gpsdata.gps_fd, buf, blen)) {
             GPSD_LOG(LOG_ERROR, &device->context->errout,
                      "NTRIP: stream write error %s(%d) on fd %d during "
                      "get request\n",
@@ -1015,11 +1017,12 @@ void ntrip_report(struct gps_context_t *context,
         0 == (count % 5)) {
         if (-1 < caster->gpsdata.gps_fd) {
             char buf[BUFSIZ];
-            ssize_t ret;
+            ssize_t ret, blen;
 
             gpsd_position_fix_dump(gps, buf, sizeof(buf));
-            ret = write(caster->gpsdata.gps_fd, buf, strlen(buf));
-            if ((ssize_t)strlen(buf) == ret) {
+            blen = strnlen(buf, sizeof(buf));
+            ret = write(caster->gpsdata.gps_fd, buf, blen);
+            if (blen == ret) {
                 GPSD_LOG(LOG_IO, &context->errout, "NTRIP: => caster %s\n",
                          buf);
             } else if (0 > ret) {
