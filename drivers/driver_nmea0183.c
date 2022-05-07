@@ -4616,7 +4616,10 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
 }
 
 
-// add NMEA checksum to a possibly  terminated sentence
+/* add NMEA checksum to a possibly terminated sentence
+ * if \0 terminated adds exactly 5 chars: "*XX\n\n"
+ * if *\0 terminated adds exactly 4 chars: "XX\n\n"
+ */
 void nmea_add_checksum(char *sentence)
 {
     unsigned char sum = '\0';
@@ -4631,8 +4634,7 @@ void nmea_add_checksum(char *sentence)
         sum ^= c;
         p++;
     }
-    *p++ = '*';
-    (void)snprintf(p, 5, "%02X\r\n", (unsigned)sum);
+    (void)snprintf(p, 6, "*%02X\r\n", (unsigned)sum);
 }
 
 // ship a command to the GPS, adding * and correct checksum

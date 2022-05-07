@@ -424,9 +424,12 @@ static void gpsd_binary_quality_dump(struct gps_device_t *session,
 }
 
 // Dump $GPZDA if we have time and a fix
-static void gpsd_binary_time_dump(struct gps_device_t *session,
+// return length added
+static ssize_t gpsd_binary_time_dump(struct gps_device_t *session,
                                      char bufp[], size_t len)
 {
+
+    ssize_t blen = 0;
 
     if (MODE_NO_FIX < session->gpsdata.fix.mode &&
         0 <= session->gpsdata.fix.time.tv_sec) {
@@ -438,14 +441,16 @@ static void gpsd_binary_time_dump(struct gps_device_t *session,
                       &tm);
         /* There used to be confusion, but we now know NMEA times are UTC,
          * when available. */
-        (void)snprintf(bufp, len,
-                       "$GPZDA,%s,%02d,%02d,%04d,00,00",
-                       time_str,
-                       tm.tm_mday,
-                       tm.tm_mon + 1,
-                       tm.tm_year + 1900);
+        blen = snprintf(bufp, len,
+                        "$GPZDA,%s,%02d,%02d,%04d,00,00",
+                        time_str,
+                        tm.tm_mday,
+                        tm.tm_mon + 1,
+                        tm.tm_year + 1900);
         nmea_add_checksum(bufp);
+        blen += 5;
     }
+    return blen;
 }
 
 static void gpsd_binary_almanac_dump(struct gps_device_t *session,
@@ -590,15 +595,15 @@ static void gpsd_binary_ais_dump(struct gps_device_t *session,
 void nmea_tpv_dump(struct gps_device_t *session,
                    char bufp[], size_t len)
 {
+    ssize_t blen = 0;
     bufp[0] = '\0';
+
     // maybe all we need is REPORT_IS?
     if (0 != (session->gpsdata.set & (TIME_SET | REPORT_IS))) {
-        gpsd_binary_time_dump(session, bufp + strlen(bufp),
-                              len - strlen(bufp));
+        blen = gpsd_binary_time_dump(session, bufp, len);
     }
     if (0 != (session->gpsdata.set & (LATLON_SET | MODE_SET | REPORT_IS))) {
-        gpsd_position_fix_dump(session, bufp + strlen(bufp),
-                               len - strlen(bufp));
+        gpsd_position_fix_dump(session, bufp + blen, len - blen);
         gpsd_transit_fix_dump(session, bufp + strlen(bufp),
                               len - strlen(bufp));
     }
