@@ -134,7 +134,7 @@ static int moto_send(int fd, char *type, char *body )
     char *buf;
     unsigned short l;
 
-    l = strlen(body) / 2;
+    l = strnlen(body, 3 * USHRT_MAX) / 2;
     if (NULL == (buf = malloc(l+7))) {
         return -1;
     }
@@ -190,7 +190,7 @@ int gpsd_hexpack(char *src, char *dst, int len)
 {
     int i, l;
 
-    l = (int)(strlen(src) / 2);
+    l = (int)(strnlen(src, 3 * USHRT_MAX) / 2);
     if ((l < 1) ||
         (l > len)) {
 	return -1;
