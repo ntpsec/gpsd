@@ -114,11 +114,11 @@ static int hex2bin(const char *s)
 }
 
 // hex2bin source string to destination - destination can be same as source
-int gps_hexpack(const char *src, char *dst, size_t len)
+ssize_t gps_hexpack(const char *src, unsigned char *dst, size_t len)
 {
-    int i, j;
+    ssize_t i, j;
 
-    j = (int)(strlen(src) / 2);
+    j = strnlen(src, BUFSIZ) / 2;
     if ((1 > j) ||
         ((size_t)j > len)) {
         return -2;
@@ -131,7 +131,7 @@ int gps_hexpack(const char *src, char *dst, size_t len)
         }
         dst[i] = (char)(k & 0xff);
     }
-    (void)memset(dst + i, '\0', (size_t) (len - i));
+    (void)memset(dst + i, '\0', (size_t)(len - i));
     return j;
 }
 

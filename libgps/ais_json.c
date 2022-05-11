@@ -30,9 +30,9 @@ static void lenhex_unpack(const char *from,
 {
     char *colon = strchr(from, ':');
 
-    *plen = (size_t) atoi(from);
+    *plen = (size_t)atoi(from);
     if (NULL != colon) {
-        (void)gps_hexpack(colon + 1, to, maxlen);
+        (void)gps_hexpack(colon + 1, (unsigned char *)to, maxlen);
     }
 }
 

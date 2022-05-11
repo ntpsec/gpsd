@@ -1061,31 +1061,33 @@ static bool do_command(const char *line)
         }
         break;
     case 'x':   /* send control packet */
-        if (session.device_type == NULL)
+        if (NULL == session.device_type) {
             complain("No device defined yet");
-        else if (!serial)
+        } else if (!serial) {
             complain("Only available in low-level mode.");
-        else {
-            int st = gps_hexpack(arg, (char *)buf, strlen(arg));
-            if (st < 0)
-                complain("Invalid hex string (error %d)", st);
-            else if (session.device_type->control_send == NULL)
+        } else {
+            ssize_t st = gps_hexpack(arg, buf, strlen(arg));
+            if (0 > st) {
+                complain("Invalid hex string (error %zd)", st);
+            } else if (NULL == session.device_type->control_send) {
                 complain("Device type %s has no control-send method.",
                          session.device_type->type_name);
-            else if (!monitor_control_send(buf, (size_t)st))
+            } else if (!monitor_control_send(buf, (size_t)st)) {
                 complain("Control send failed.");
+            }
         }
         break;
 
     case 'X':   /* send raw packet */
-        if (!serial)
+        if (!serial) {
             complain("Only available in low-level mode.");
-        else {
-            ssize_t len = (ssize_t) gps_hexpack(arg, (char *)buf, strlen(arg));
-            if (len < 0)
-                complain("Invalid hex string (error %lu)", (unsigned long)len);
-            else if (!monitor_raw_send(buf, (size_t)len))
+        } else {
+            ssize_t len = gps_hexpack(arg, buf, strlen(arg));
+            if (0 > len) {
+                complain("Invalid hex string (error %zd)", len);
+            } else if (!monitor_raw_send(buf, (size_t)len)) {
                 complain("Raw send failed.");
+            }
         }
         break;
 
@@ -1094,7 +1096,7 @@ static bool do_command(const char *line)
         break;
     }
 
-    /* continue accepting commands */
+    // continue accepting commands
     return true;
 }
 

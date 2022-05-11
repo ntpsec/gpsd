@@ -865,7 +865,8 @@ bool gpsd_add_device(const char *device_name, bool flag_nowait)
  */
 static const char *write_gps(char *device, char *hex, size_t len) {
     struct gps_device_t *devp;
-    int st;
+    ssize_t st;
+    unsigned char buf[BUFSIZ];
 
     if (NULL == (devp = find_device(device))) {
         GPSD_LOG(LOG_INF, &context.errout, "GPS <=: %s not active\n", device);
@@ -879,16 +880,16 @@ static const char *write_gps(char *device, char *hex, size_t len) {
     }
 
     // NOTE: this destroys the original buffer contents
-    st = gps_hexpack(hex, hex, len);
+    st = gps_hexpack(hex, buf, len);
     if (0 >= st) {
         GPSD_LOG(LOG_INF, &context.errout,
-                 "GPS <=: invalid hex string (error %d).\n", st);
+                 "GPS <=: invalid hex string (error %zd).\n", st);
         return  "invalid hex string";
     }
     GPSD_LOG(LOG_INF, &context.errout,
-             "GPS <=: writing %d bytes fromhex(%s) to %s\n",
+             "GPS <=: writing %zd bytes fromhex(%s) to %s\n",
              st, hex, device);
-    if (0 >= write(devp->gpsdata.gps_fd, hex, (size_t)st)) {
+    if (0 >= write(devp->gpsdata.gps_fd, buf, (size_t)st)) {
         GPSD_LOG(LOG_WARN, &context.errout,
                  "GPS <=: write to device failed. %s(%d)\n",
                  strerror(errno), errno);
