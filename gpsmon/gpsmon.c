@@ -1066,7 +1066,7 @@ static bool do_command(const char *line)
         else if (!serial)
             complain("Only available in low-level mode.");
         else {
-            int st = gpsd_hexpack(arg, (char *)buf, strlen(arg));
+            int st = gps_hexpack(arg, (char *)buf, strlen(arg));
             if (st < 0)
                 complain("Invalid hex string (error %d)", st);
             else if (session.device_type->control_send == NULL)
@@ -1081,7 +1081,7 @@ static bool do_command(const char *line)
         if (!serial)
             complain("Only available in low-level mode.");
         else {
-            ssize_t len = (ssize_t) gpsd_hexpack(arg, (char *)buf, strlen(arg));
+            ssize_t len = (ssize_t) gps_hexpack(arg, (char *)buf, strlen(arg));
             if (len < 0)
                 complain("Invalid hex string (error %lu)", (unsigned long)len);
             else if (!monitor_raw_send(buf, (size_t)len))

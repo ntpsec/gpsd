@@ -879,7 +879,7 @@ static const char *write_gps(char *device, char *hex, size_t len) {
     }
 
     // NOTE: this destroys the original buffer contents
-    st = gpsd_hexpack(hex, hex, len);
+    st = gps_hexpack(hex, hex, len);
     if (0 >= st) {
         GPSD_LOG(LOG_INF, &context.errout,
                  "GPS <=: invalid hex string (error %d).\n", st);

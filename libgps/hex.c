@@ -114,12 +114,12 @@ static int hex2bin(const char *s)
 }
 
 // hex2bin source string to destination - destination can be same as source
-int gpsd_hexpack(const char *src, char *dst, size_t len)
+int gps_hexpack(const char *src, char *dst, size_t len)
 {
     int i, j;
 
     j = (int)(strlen(src) / 2);
-    if ((j < 1) ||
+    if ((1 > j) ||
         ((size_t)j > len)) {
         return -2;
     }

@@ -25,17 +25,15 @@ SPDX-License-Identifier: BSD-2-clause
 #ifdef SOCKET_EXPORT_ENABLE
 #include "../include/libgps.h"
 
-/* kluge because we don't want to include gpsd.h here */
-extern int gpsd_hexpack(const char *, char *, size_t);
-
 static void lenhex_unpack(const char *from,
                           size_t * plen, char *to, size_t maxlen)
 {
     char *colon = strchr(from, ':');
 
     *plen = (size_t) atoi(from);
-    if (colon != NULL)
-        (void)gpsd_hexpack(colon + 1, to, maxlen);
+    if (NULL != colon) {
+        (void)gps_hexpack(colon + 1, to, maxlen);
+    }
 }
 
 
@@ -43,7 +41,7 @@ int json_ais_read(const char *buf,
                   char *path, size_t pathlen, struct ais_t *ais,
                   const char **endptr)
 {
-    /* collected but not actually used yet */
+    // collected but not actually used yet
     bool scaled;
 
 #define AIS_HEADER \
@@ -81,14 +79,14 @@ int json_ais_read(const char *buf,
 
     memset(ais, '\0', sizeof(struct ais_t));
 
-    if (strstr(buf, "\"type\":1,") != NULL
-        || strstr(buf, "\"type\":2,") != NULL
-        || strstr(buf, "\"type\":3,") != NULL) {
+    if (NULL != strstr(buf, "\"type\":1,") ||
+        NULL != strstr(buf, "\"type\":2,") ||
+        NULL != strstr(buf, "\"type\":3,")) {
         status = json_read_object(buf, json_ais1, endptr);
-    } else if (strstr(buf, "\"type\":4,") != NULL
-               || strstr(buf, "\"type\":11,") != NULL) {
+    } else if (NULL != strstr(buf, "\"type\":4,") ||
+               NULL != strstr(buf, "\"type\":11,")) {
         status = json_read_object(buf, json_ais4, endptr);
-        if (status == 0) {
+        if (0 == status) {
             ais->type4.year = AIS_YEAR_NOT_AVAILABLE;
             ais->type4.month = AIS_MONTH_NOT_AVAILABLE;
             ais->type4.day = AIS_DAY_NOT_AVAILABLE;
@@ -447,13 +445,13 @@ int json_ais_read(const char *buf,
     } else if (strstr(buf, "\"type\":27,") != NULL) {
         status = json_read_object(buf, json_ais27, endptr);
     } else {
-        if (endptr != NULL)
+        if (NULL != endptr) {
             *endptr = NULL;
+        }
         return JSON_ERR_MISC;
     }
     return status;
 }
-#endif /* SOCKET_EXPORT_ENABLE */
+#endif  // SOCKET_EXPORT_ENABLE
 
-/* ais_json.c ends here */
 // vim: set expandtab shiftwidth=4

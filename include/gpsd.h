@@ -982,7 +982,6 @@ extern const char *gpsd_prettydump(struct gps_device_t *);
 # ifdef __cplusplus
 extern "C" {
 # endif
-extern int gpsd_hexpack(const char *, char *, size_t);
 # ifdef __cplusplus
 }
 # endif
