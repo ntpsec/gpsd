@@ -29,6 +29,7 @@
 #include <unistd.h>
 
 #include "../include/compiler.h"         // for FALLTHROUGH
+#include "../include/gps.h"              // for gpsd_visibilze()
 #include "../include/gpsdclient.h"
 #include "../include/gpsd.h"
 #include "../include/gps_json.h"
@@ -163,22 +164,6 @@ static inline void report_unlock(void)
  * Visualization helpers
  *
  ******************************************************************************/
-
-/* string is mostly printable, dress up the nonprintables a bit */
-// FIXME: this duplicates visibilize()
-static void visibilize1(char *buf2, size_t len2, const char *buf)
-{
-    const char *sp;
-
-    buf2[0] = '\0';
-    for (sp = buf; *sp != '\0' && strlen(buf2)+4 < len2; sp++)
-        if (isprint((unsigned char) *sp) || (sp[0] == '\n' && sp[1] == '\0')
-          || (sp[0] == '\r' && sp[2] == '\0'))
-            (void)snprintf(buf2 + strlen(buf2), 2, "%c", *sp);
-        else
-            (void)snprintf(buf2 + strlen(buf2), 6, "\\x%02x",
-                           (unsigned)(*sp & 0xff));
-}
 
 // pass through visibilized if all printable, hexdump otherwise
 static void cond_hexdump(char *buf2, size_t len2,
@@ -333,7 +318,7 @@ static void packet_vlog(char *buf, size_t len, const char *fmt, va_list ap)
 {
     char buf2[BUFSIZ];
 
-    visibilize1(buf2, sizeof(buf2), buf);
+    gps_visibilize(buf2, sizeof(buf2), buf, len);
 
     report_lock();
     (void)vsnprintf(buf2 + strlen(buf2), len, fmt, ap);

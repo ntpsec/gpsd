@@ -177,7 +177,7 @@ static void gpsd_vlog(const int errlevel,
     vsnprintf(outbuf, outlen, buf, ap);
 
     // this was carzy expensive, just fix the bad log calls
-    // visibilize(outbuf, outlen, buf, strlen(buf));
+    // gps_visibilize(outbuf, outlen, buf, strlen(buf));
 
     if (getpid() == getsid(getpid())) {
         // I think this calls syslog() only when daemonized
