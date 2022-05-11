@@ -296,4 +296,33 @@ ssize_t hex_escapes(char *cooked, const char *raw)
     }
     return (ssize_t)(cookend - cooked);
 }
+
+// copy inbuf string to outbuf, replacingg non-printing characters
+// slow, but only used for debug output
+char *gps_visibilize(char *outbuf, size_t outlen,
+                      const char *inbuf, size_t inlen)
+{
+    const char *sp;
+    size_t next = 0;
+
+    outbuf[0] = '\0';
+    // FIXME!! snprintf() when strlcat() will do!
+    for (sp = inbuf; sp < inbuf + inlen && (next + 6) < outlen; sp++) {
+        int ret;
+        if (isprint((unsigned char)*sp)) {
+            ret = snprintf(&outbuf[next], 2, "%c", *sp);
+        } else {
+            ret = snprintf(&outbuf[next], 6, "\\x%02x",
+                           0x00ff & (unsigned)*sp);
+        }
+        if (1 > ret) {
+            // error, or ran out of space
+            break;
+        }
+        next += ret;
+    }
+    return outbuf;
+}
+
+
 // vim: set expandtab shiftwidth=4

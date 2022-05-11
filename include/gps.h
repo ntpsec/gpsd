@@ -95,6 +95,7 @@ extern "C" {
  *       fix tow in never used struct rtcm3_1015_t
  *       remove never used struct rtcm3_1016_t and struct rtcm3_1017_t
  *       add struct baseline_t
+ * 14    Move threee visibilize() into one gps_visibilize() here.
  *
  */
 #define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
@@ -2824,6 +2825,8 @@ extern int gps_mainloop(struct gps_data_t *, int,
                         void (*)(struct gps_data_t *));
 extern const char *gps_data(const struct gps_data_t *);
 extern const char *gps_errstr(const int);
+extern char *gps_visibilize(char *outbuf, size_t outlen,
+                            const char *inbuf, size_t inlen);
 
 int json_toff_read(const char *buf, struct gps_data_t *,
                   const char **);

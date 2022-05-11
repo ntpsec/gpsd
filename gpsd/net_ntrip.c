@@ -447,7 +447,7 @@ static int ntrip_stream_req_probe(const struct ntrip_stream_t *stream,
     GPSD_LOG(LOG_IO, errout,
              "NTRIP: ntrip_stream_req_probe(%s) fd %d sending >%s<\n",
              stream->url, dsock,
-             visibilize(outbuf, sizeof(outbuf), buf, blen));
+             gps_visibilize(outbuf, sizeof(outbuf), buf, blen));
 
     r = write(dsock, buf, blen);
     if (blen != r) {
@@ -560,7 +560,7 @@ static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
 
     GPSD_LOG(LOG_IO, errout,
              "NTRIP: netlib_connectsock() sending >%s<\n",
-             visibilize(outbuf, sizeof(outbuf), buf, cnt));
+             gps_visibilize(outbuf, sizeof(outbuf), buf, cnt));
 
     cnt1 = write(dsock, buf, cnt);
     if (cnt != cnt1) {
@@ -986,7 +986,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
 
         GPSD_LOG(LOG_IO, &device->context->errout,
                  "NTRIP: ntrip_open() sending >%s<\n",
-                  visibilize(outbuf, sizeof(outbuf), buf, blen));
+                  gps_visibilize(outbuf, sizeof(outbuf), buf, blen));
 
         if (blen != write(device->gpsdata.gps_fd, buf, blen)) {
             GPSD_LOG(LOG_ERROR, &device->context->errout,
