@@ -165,33 +165,44 @@ static inline void report_unlock(void)
  *
  ******************************************************************************/
 
-// pass through visibilized if all printable, hexdump otherwise
+/* pass through visibilized if all printable, hexdump otherwise
+ *
+ * From: "buf" of size "len"
+ * To: "buf2" of size "len2"
+ *
+ */
 static void cond_hexdump(char *buf2, size_t len2,
                          const char *buf, size_t len)
 {
     size_t i;
     bool printable = true;
     for (i = 0; i < len; i++)
-        if (!isprint((unsigned char) buf[i]) && !isspace((unsigned char) buf[i]))
+        if (!isprint((unsigned char)buf[i]) &&
+            !isspace((unsigned char) buf[i])) {
             printable = false;
+        }
     if (printable) {
         size_t j;
-        for (i = j = 0; i < len && j < len2 - 1; i++)
-            if (isprint((unsigned char) buf[i])) {
+        for (i = j = 0; i < len && j < len2 - 1; i++) {
+            if (isprint((unsigned char)buf[i])) {
                 buf2[j++] = buf[i];
                 buf2[j] = '\0';
-            }
-            else {
+            } else {
                 if (TEXTUAL_PACKET_TYPE(session.lexer.type)) {
-                    if (i == len - 1 && buf[i] == '\n')
+                    if (i == len - 1 &&
+                        buf[i] == '\n') {
                         continue;
-                    if (i == len - 2 && buf[i] == '\r')
+                    }
+                    if (i == len - 2 &&
+                        buf[i] == '\r') {
                         continue;
+                    }
                 }
-                (void)snprintf(&buf2[j], len2-strlen(buf2), "\\x%02x",
+                (void)snprintf(&buf2[j], len2 - strnlen(buf2, len2), "\\x%02x",
                                (unsigned int)(buf[i] & 0xff));
-                j = strlen(buf2);
+                j = strnlen(buf2, len2);
             }
+        }
     } else {
         buf2[0] = '\0';
         for (i = 0; i < len; i++)
@@ -321,7 +332,7 @@ static void packet_vlog(char *buf, size_t len, const char *fmt, va_list ap)
     gps_visibilize(buf2, sizeof(buf2), buf, len);
 
     report_lock();
-    (void)vsnprintf(buf2 + strlen(buf2), len, fmt, ap);
+    (void)vsnprintf(buf2 + strnlen(buf2, sizeof(buf2)), len, fmt, ap);
     gpsmon_report(buf2);
     report_unlock();
 }
@@ -334,7 +345,7 @@ static void announce_log(const char *fmt, ...)
     (void)vsnprintf(buf, sizeof(buf) - 5, fmt, ap);
     va_end(ap);
 
-   if (packetwin != NULL) {
+   if (NULL != packetwin) {
         report_lock();
         (void)wattrset(packetwin, A_BOLD);
         (void)wprintw(packetwin, ">>>");
@@ -429,19 +440,20 @@ static void refresh_statwin(void)
     report_unlock();
 }
 
+// refresh the command window
 static void refresh_cmdwin(void)
-/* refresh the command window */
 {
     report_lock();
     (void)wmove(cmdwin, 0, 0);
     (void)wprintw(cmdwin, "%s", type_name);
-    promptlen = strlen(type_name);
-    if (fallback != NULL && strcmp(fallback->type_name, type_name) != 0) {
+    promptlen = strnlen(type_name, COLS);
+    if (NULL != fallback &&
+        0 != strcmp(fallback->type_name, type_name)) {
         (void)waddch(cmdwin, (chtype)' ');
         (void)waddch(cmdwin, (chtype)'(');
         (void)waddstr(cmdwin, fallback->type_name);
         (void)waddch(cmdwin, (chtype)')');
-        promptlen += strlen(fallback->type_name) + 3;
+        promptlen += strnlen(fallback->type_name, COLS) + 3;
     }
     (void)wprintw(cmdwin, "> ");
     promptlen += 2;
@@ -466,8 +478,11 @@ static bool curses_init(void)
     statwin = newwin(CMDWINHEIGHT, 30, 0, 0);
     cmdwin = newwin(CMDWINHEIGHT, 0, 0, 30);
     packetwin = newwin(0, 0, CMDWINHEIGHT, 0);
-    if (statwin == NULL || cmdwin == NULL || packetwin == NULL)
+    if (NULL == statwin ||
+        NULL == cmdwin ||
+        NULL == packetwin) {
         return false;
+    }
     (void)scrollok(packetwin, true);
     (void)wsetscrreg(packetwin, 0, LINES - CMDWINHEIGHT);
 
@@ -590,8 +605,9 @@ static char *curses_get_command(void)
             NULL != (*active)->initialize) {
             (void)(*active)->initialize();
         }
-    } else if (c != '\r' && c != '\n') {
-        size_t len = strlen(input);
+    } else if ('\r' != c &&
+               '\n' != c) {
+        size_t len = strnlen(input, sizeof(input));
 
         if ('\b' == c ||
             KEY_LEFT == c ||
@@ -734,7 +750,9 @@ static void gpsmon_hook(struct gps_device_t *device, gps_mask_t changed UNUSED)
             time_offset = session.gpsdata.toff;
             return;
         }
-    } else if (!serial && str_starts_with((char*)device->lexer.outbuffer, "{\"class\":\"PPS\",")) {
+    } else if (!serial &&
+               str_starts_with((char*)device->lexer.outbuffer,
+                               "{\"class\":\"PPS\",")) {
         const char *end = NULL;
         struct gps_data_t noclobber;
         int status = json_pps_read((const char *)device->lexer.outbuffer,
@@ -784,32 +802,36 @@ static void gpsmon_hook(struct gps_device_t *device, gps_mask_t changed UNUSED)
     else
 #endif /* SOCKET_EXPORT_ENABLE && PPS_DISPLAY_ENABLE */
     {
+        size_t blen;
+
 #ifdef __future__
-        if (!serial)
-        {
-            if (device->lexer.type == JSON_PACKET)
-            {
+        if (!serial) {
+            if (JSON_PACKET == device->lexer.type) {
                 const char *end = NULL;
-                libgps_json_unpack((char *)device->lexer.outbuffer, &session.gpsdata, &end);
+                libgps_json_unpack((char *)device->lexer.outbuffer,
+                                   &session.gpsdata, &end);
             }
         }
 #endif /* __future__ */
 
-        if (curses_active)
+        if (curses_active) {
             select_packet_monitor(device);
+        }
 
         (void)snprintf(buf, sizeof(buf), "(%d) ",
                        (int)device->lexer.outbuflen);
-        cond_hexdump(buf + strlen(buf), sizeof(buf) - strlen(buf),
-                     (char *)device->lexer.outbuffer,device->lexer.outbuflen);
+        blen  = strnlen(buf, sizeof(buf));
+        cond_hexdump(buf + blen, sizeof(buf) - blen,
+                     (char *)device->lexer.outbuffer,
+                     device->lexer.outbuflen);
         (void)strlcat(buf, "\n", sizeof(buf));
     }
 
     report_lock();
 
-    if (!curses_active)
+    if (!curses_active) {
         (void)fputs(buf, stdout);
-    else {
+    } else {
         if (packetwin != NULL) {
             (void)waddstr(packetwin, buf);
             (void)wnoutrefresh(packetwin);
@@ -817,10 +839,12 @@ static void gpsmon_hook(struct gps_device_t *device, gps_mask_t changed UNUSED)
         (void)doupdate();
     }
 
-    if (logfile != NULL && device->lexer.outbuflen > 0) {
-        UNUSED size_t written_count = fwrite
-               (device->lexer.outbuffer, sizeof(char),
-                device->lexer.outbuflen, logfile);
+    if (NULL != logfile &&
+        0 < device->lexer.outbuflen) {
+        UNUSED size_t written_count = fwrite(device->lexer.outbuffer,
+                                             sizeof(char),
+                                             device->lexer.outbuflen,
+                                             logfile);
         assert(written_count >= 1);
     }
 
@@ -845,11 +869,14 @@ static bool do_command(const char *line)
     const char *arg;
 
     if (isspace((unsigned char) line[1])) {
-        for (arg = line + 2; *arg != '\0' && isspace((unsigned char) *arg); arg++)
+        for (arg = line + 2; *arg != '\0' &&
+                             isspace((unsigned char) *arg); arg++) {
             arg++;
+        }
         arg++;
-    } else
+    } else {
         arg = line + 1;
+    }
 
     switch (line[0]) {
     case 'c':   /* change cycle time */
@@ -878,20 +905,22 @@ static bool do_command(const char *line)
                      switcher->type_name);
         }
         break;
-    case 'i':   /* start probing for subtype */
-        if (session.device_type == NULL)
+    case 'i':   // start probing for subtype
+        if (NULL == session.device_type) {
             complain("No GPS type detected.");
-        else if (!serial)
+        } else if (!serial) {
             complain("Only available in low-level mode.");
-        else {
-            if (strcspn(line, "01") == strlen(line))
+        } else {
+            if (strcspn(line, "01") == strnlen(line, 4)) {
                 context.readonly = !context.readonly;
-            else
+            } else {
                 context.readonly = (atoi(line + 1) == 0);
+            }
             announce_log("[probing %sabled]", context.readonly ? "dis" : "en");
-            if (!context.readonly)
-                /* magic - forces a reconfigure */
+            if (!context.readonly) {
+                // magic - forces a reconfigure
                 session.lexer.counter = 0;
+            }
         }
         break;
 
@@ -911,32 +940,32 @@ static bool do_command(const char *line)
         report_unlock();
         break;
 
-    case 'n':   /* change mode */
-        /* if argument not specified, toggle */
-        if (strcspn(line, "01") == strlen(line)) {
-            /* *INDENT-OFF* */
-            v = (unsigned int)TEXTUAL_PACKET_TYPE(
-                session.lexer.type);
-            /* *INDENT-ON* */
-        } else
+    case 'n':   // change mode
+        // if argument not specified, toggle
+        if (strcspn(line, "01") == strnlen(line, 4)) {
+            v = (unsigned int)TEXTUAL_PACKET_TYPE(session.lexer.type);
+        } else {
             v = (unsigned)atoi(line + 1);
-        if (session.device_type == NULL)
+        }
+        if (NULL == session.device_type) {
             complain("No device defined yet");
-        else if (!serial)
+        } else if (!serial) {
             complain("Only available in low-level mode.");
-        else {
+        } else {
             const struct gps_type_t *switcher = session.device_type;
 
-            if (fallback != NULL && fallback->mode_switcher != NULL)
+            if (NULL != fallback &&
+                NULL != fallback->mode_switcher) {
                 switcher = fallback;
-            if (switcher->mode_switcher != NULL) {
+            }
+            if (NULL != switcher->mode_switcher) {
                 context.readonly = false;
                 announce_log("[Mode switcher to mode %d]", v);
                 switcher->mode_switcher(&session, (int)v);
                 context.readonly = true;
                 (void)tcdrain(session.gpsdata.gps_fd);
 
-                /* wait 50,000 uSec */
+                // wait 50,000 uSec
                 delay.tv_sec = 0;
                 delay.tv_nsec = 50000000L;
                 nanosleep(&delay, NULL);
@@ -994,7 +1023,6 @@ static bool do_command(const char *line)
                 stopbits = (unsigned int)(stopbits - '0');
             }
             speed = (unsigned)atoi(arg);
-            /* *INDENT-OFF* */
             if (switcher->speed_switcher) {
                 context.readonly = false;
                 if (switcher->speed_switcher(&session, speed,
@@ -1017,33 +1045,34 @@ static bool do_command(const char *line)
 
                     (void)gpsd_set_speed(&session, speed,
                                          parity, stopbits);
-                } else
-                    complain
-                        ("Speed/mode combination not supported.");
+                } else {
+                    complain("Speed/mode combination not supported.");
+                }
                 context.readonly = true;
-            } else
-                complain
-                    ("Device type %s has no speed switcher",
-                     switcher->type_name);
-            /* *INDENT-ON* */
-            if (curses_active)
+            } else {
+                complain("Device type %s has no speed switcher",
+                         switcher->type_name);
+            }
+            if (curses_active) {
                 refresh_statwin();
+            }
         }
         break;
 
-    case 't':   /* force device type */
-        if (!serial)
+    case 't':   // force device type
+        if (!serial) {
             complain("Only available in low-level mode.");
-        else if (strlen(arg) > 0) {
+        } else if (0 < strnlen(arg, 80)) {
             int matchcount = 0;
             const struct gps_type_t **dp, *forcetype = NULL;
+
             for (dp = gpsd_drivers; *dp; dp++) {
                 if (strstr((*dp)->type_name, arg) != NULL) {
                     forcetype = *dp;
                     matchcount++;
                 }
             }
-            if (matchcount == 0) {
+            if (0 == matchcount) {
                 complain
                     ("No driver type matches '%s'.", arg);
             } else if (matchcount == 1) {
@@ -1060,13 +1089,13 @@ static bool do_command(const char *line)
             }
         }
         break;
-    case 'x':   /* send control packet */
+    case 'x':   // send control packet
         if (NULL == session.device_type) {
             complain("No device defined yet");
         } else if (!serial) {
             complain("Only available in low-level mode.");
         } else {
-            ssize_t st = gps_hexpack(arg, buf, strlen(arg));
+            ssize_t st = gps_hexpack(arg, buf, strnlen(arg, 1024));
             if (0 > st) {
                 complain("Invalid hex string (error %zd)", st);
             } else if (NULL == session.device_type->control_send) {
@@ -1078,11 +1107,12 @@ static bool do_command(const char *line)
         }
         break;
 
-    case 'X':   /* send raw packet */
+    case 'X':   // send raw packet
         if (!serial) {
             complain("Only available in low-level mode.");
         } else {
-            ssize_t len = gps_hexpack(arg, buf, strlen(arg));
+            ssize_t len = gps_hexpack(arg, buf, strnlen(arg,  1024));
+
             if (0 > len) {
                 complain("Invalid hex string (error %zd)", len);
             } else if (!monitor_raw_send(buf, (size_t)len)) {
@@ -1110,10 +1140,11 @@ static jmp_buf assertbuf;
 
 static void onsig(int sig UNUSED)
 {
-    if (sig == SIGABRT)
+    if (SIGABRT == sig) {
         longjmp(assertbuf, 1);
-    else
-        longjmp(terminate, TERM_SIGNAL);
+    }
+    // else
+    longjmp(terminate, TERM_SIGNAL);
 }
 
 #define WATCHRAW        "?WATCH={\"raw\":2,\"pps\":true}\r\n"
@@ -1121,7 +1152,7 @@ static void onsig(int sig UNUSED)
 #define WATCHNMEA       "?WATCH={\"nmea\":true,\"pps\":true}\r\n"
 #define WATCHNMEADEVICE "?WATCH={\"nmea\":true,\"pps\":true,\"device\":\"%s\"}\r\n"
 
-/* this placement avoids a compiler warning */
+// this placement avoids a compiler warning
 static const char *cmdline;
 
 static void usage(void)
