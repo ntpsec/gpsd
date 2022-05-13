@@ -1,6 +1,6 @@
 = gpsd_json(5)
 :author: Eric S. Raymond
-:date: 7 December 2021
+:date: 13 May 2022
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, JSON, libgps
 :manmanual: GPSD Documentation
@@ -905,12 +905,13 @@ This command reports (when followed by ';') the state of a device, or
 sets (when followed by '=' and a DEVICE object) device-specific
 control bits, notably the device's speed and serial mode and the
 native-mode bit. The parameter-setting form will be rejected if more
-than one client is attached to the channel.
+than one client is attached to the channel and a device path is not
+specified.
 
 Pay attention to the response, because it is possible for this command
-to fail if the GPS does not support a speed-switching command or only
-supports some combinations of serial modes. In case of failure, the
-daemon and GPS will continue to communicate at the old speed.
+to fail if the GPS does not support a command or only supports some
+combinations of modes. In case of failure, the daemon and GPS will
+continue to communicate at the old speed.
 
 Use the parameter-setting form with caution. On USB and Bluetooth
 GPSes it is also possible for serial mode setting to fail either
@@ -929,44 +930,47 @@ A DEVICE object has the following elements:
 |Name |Always? |Type |Description
 |class |Yes |string |Fixed: "DEVICE"
 
-|path |No |string |Name the device for which the control bits are
-being reported, or for which they are to be applied. This attribute
-may be omitted only when there is exactly one subscribed channel.
-
 |activated |No |string |Time the device was activated as an ISO8601
 time stamp. If the device is inactive this attribute is absent.
+
+|bps |No |integer |Device speed in bits per second.
+
+|cycle |No |real |Device cycle time in seconds.
+
+|driver |No |string |GPSD's name for the device driver type. Won't be
+reported before *gpsd* has seen identifiable packets from the device.
 
 |flags |No |integer |Bit vector of property flags. Currently defined
 flags are: describe packet types seen so far (GPS, RTCM2, RTCM3, AIS).
 Won't be reported if empty, e.g. before *gpsd* has seen identifiable
 packets from the device.
 
-|driver |No |string |GPSD's name for the device driver type. Won't be
-reported before *gpsd* has seen identifiable packets from the device.
+|hexdata |No |string |Data, in bare hexadecimal, to send to the GNSS
+receiver.
+
+|mincycle |No |real |Device minimum cycle time in seconds. Reported
+from ?DEVICE when (and only when) the rate is switchable. It is
+read-only and not settable.
+
+|native |No |integer |0 means NMEA mode and 1 means alternate mode
+(binary if it has one, for SiRF and Evermore chipsets in particular).
+Attempting to set this mode on a non-GPS device will yield an error.
+
+|parity |No |string |N, O or E for no parity, odd, or even.
+
+|path |No |string |Name the device for which the control bits are
+being reported, or for which they are to be applied. This attribute
+may be omitted only when there is exactly one subscribed channel.
+
+|readonly |No |boolean |True if device is read-only.
+
+|stopbits |Yes |string |Stop bits (1 or 2).
 
 |subtype |No |string |Whatever version information the device driver
 returned.
 
 |subtype1 |No |string |More version information the device driver
 returned.
-
-|readonly |No |boolean |True if device is read-only.
-
-|bps |No |integer |Device speed in bits per second.
-
-|parity |No |string |N, O or E for no parity, odd, or even.
-
-|stopbits |Yes |string |Stop bits (1 or 2).
-
-|native |No |integer |0 means NMEA mode and 1 means alternate mode
-(binary if it has one, for SiRF and Evermore chipsets in particular).
-Attempting to set this mode on a non-GPS device will yield an error.
-
-|cycle |No |real |Device cycle time in seconds.
-
-|mincycle |No |real |Device minimum cycle time in seconds. Reported
-from ?DEVICE when (and only when) the rate is switchable. It is
-read-only and not settable.
 |===
 
 The serial parameters will (bps, parity, stopbits) be omitted in a
@@ -1000,10 +1004,25 @@ notifications when a device is added to the pool or deactivated.
 When the C client library parses a response of this kind, it will assert
 the DEVICE_SET bit in the top-level set member.
 
-Here's an example:
+==== Examples
+
+A notice of a deactivated device:
 
 ----
 {"class":"DEVICE","path":"/dev/pts1","activated":0}
+----
+
+A send a u-blox receiver at /dev/ttyUSB2 a request for a UBX-MON-VER
+message:
+
+----
+?DEVICE={"path":"/dev/ttyUSB2","hexdata":"b5620a0400000e34"}
+----
+
+The _gpsd_ daemon will respond with an ACK on success:
+
+----
+{"class":"ACK"}
 ----
 
 === ERROR
