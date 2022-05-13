@@ -69,7 +69,7 @@ static void settle(struct gps_device_t *session)
  */
 #define NON_ERROR 0       // must be distinct from any gps_mask_t value
 
-// ship a command and wait on an expected response type
+// send a query to gpsd and wait on an expected response type
 static bool gps_query(struct gps_data_t *gpsdata,
                       gps_mask_t expect,
                       const int timeout,
@@ -96,8 +96,10 @@ static bool gps_query(struct gps_data_t *gpsdata,
     if ('\n' != buf[strnlen(buf, sizeof(buf) - 1) - 1]) {
         (void)strlcat(buf, "\n", sizeof(buf));
     }
-    if (0 <= write(gpsdata->gps_fd, buf, strnlen(buf, sizeof(buf)))) {
-        GPSD_LOG(LOG_ERROR, &context.errout, "gps_query(), write failed\n");
+    if (0 >= write(gpsdata->gps_fd, buf, strnlen(buf, sizeof(buf)))) {
+        GPSD_LOG(LOG_ERROR, &context.errout,
+                 "gps_query(), write failed: %s(%d)\n",
+                 strerror(errno), errno);
         return false;
     }
     GPSD_LOG(LOG_PROG, &context.errout, "gps_query(), wrote, %s\n", buf);
@@ -243,10 +245,10 @@ int main(int argc, char **argv)
     static struct gps_device_t session;        // zero this too
     int ch, status;
     char *device = NULL, *devtype = NULL;
-    char *speed = NULL, *control = NULL, *rate = NULL;
+    char *speed = NULL, *ship = NULL, *rate = NULL;
     bool to_binary = false, to_nmea = false, reset = false;
     bool control_stdout = false;
-    bool lowlevel=false, echo=false;
+    bool lowlevel = false, echo = false;
     struct gps_data_t gpsdata;
     const struct gps_type_t *forcetype = NULL;
     const struct gps_type_t **dp;
@@ -299,6 +301,7 @@ int main(int argc, char **argv)
             break;
         case 'D':               // set debugging level
             debuglevel = atoi(optarg);
+            context.errout.debug = debuglevel;
             gps_enable_debug(debuglevel, stderr);
             break;
         case 'e':               // echo specified control string with wrapper
@@ -376,11 +379,10 @@ int main(int argc, char **argv)
             }
             break;
         case 'x':               // ship specified control string
-            control = optarg;
-            lowlevel = true;
-            if (0 >= (cooklen = hex_escapes(cooked, control))) {
+            ship = optarg;
+            if (0 >= (cooklen = hex_escapes(cooked, ship))) {
                 GPSD_LOG(LOG_ERROR, &context.errout,
-                         "invalid escape string (error %d)\n", (int)cooklen);
+                         "invalid escape string (error %zd)\n", cooklen);
                 exit(EXIT_FAILURE);
             }
             break;
@@ -432,11 +434,13 @@ int main(int argc, char **argv)
         exit(EXIT_SUCCESS);
     }
 
-    (void) signal(SIGINT, onsig);
-    (void) signal(SIGTERM, onsig);
-    (void) signal(SIGQUIT, onsig);
+    (void)signal(SIGINT, onsig);
+    (void)signal(SIGTERM, onsig);
+    (void)signal(SIGQUIT, onsig);
 
     if (!lowlevel) {
+        int i, devcount;
+
         // Try to open the stream to gpsd.
         if (0 != gps_open(NULL, NULL, &gpsdata)) {
             GPSD_LOG(LOG_ERROR, &context.errout,
@@ -444,10 +448,6 @@ int main(int argc, char **argv)
                      gps_errstr(errno));
             lowlevel = true;
         }
-    }
-
-    if (!lowlevel) {
-        int i, devcount;
 
         if (!explicit_timeout) {
             timeout = HIGH_LEVEL_TIMEOUT;
@@ -474,8 +474,8 @@ int main(int argc, char **argv)
             (void)gps_close(&gpsdata);
             exit(EXIT_FAILURE);
         }
-        GPSD_LOG(LOG_PROG, &context.errout,
-                 "%d device(s) found.\n",gpsdata.devices.ndevices);
+        GPSD_LOG(LOG_PROG, &context.errout, "%d device(s) found.\n",
+                 gpsdata.devices.ndevices);
 
         // try to mine the devicelist return for the data we want
         if (1 == gpsdata.devices.ndevices &&
@@ -486,14 +486,15 @@ int main(int argc, char **argv)
             assert(NULL != device);
             for (i = 0; i < gpsdata.devices.ndevices; i++) {
                 if (0 == strcmp(device, gpsdata.devices.list[i].path)) {
-                    goto devicelist_entry_matches;
+                    break;
                 }
             }
-            GPSD_LOG(LOG_ERROR, &context.errout,
-                     "specified device not found in device list.\n");
-            (void)gps_close(&gpsdata);
-            exit(EXIT_FAILURE);
-        devicelist_entry_matches:;
+            if (i >= gpsdata.devices.ndevices) {
+                GPSD_LOG(LOG_ERROR, &context.errout,
+                         "specified device not found in device list.\n");
+                (void)gps_close(&gpsdata);
+                exit(EXIT_FAILURE);
+            }
         }
         gpsdata.dev = gpsdata.devices.list[i];
         devcount = gpsdata.devices.ndevices;
@@ -546,8 +547,9 @@ int main(int argc, char **argv)
         }
 
         // if no control operation was specified, just ID the device
-        if (NULL == speed &&
-            NULL == rate &&
+        if (NULL == rate &&
+            NULL == ship &&
+            NULL == speed &&
             !to_nmea &&
             !to_binary &&
             !reset) {
@@ -602,6 +604,18 @@ int main(int argc, char **argv)
                 GPSD_LOG(LOG_PROG, &context.errout,
                          "%s mode change succeeded\n",
                          gpsdata.dev.path);
+        }
+        if (NULL != ship) {
+            char buf[BUFSIZ];
+
+            (void)gpsd_hexdump(buf, sizeof(buf), (unsigned char *)cooked,
+                               cooklen);
+
+            (void)gps_query(&gpsdata,
+                            DEVICE_SET, (int)timeout,
+                            "&%s=%s\r\n",
+                             device, buf);
+            // wait for response?
         }
         if (NULL != speed) {
             char parity = 'N';
@@ -704,7 +718,7 @@ int main(int argc, char **argv)
     }
     // else
 
-    // access to the daemon failed, use the low-level facilities
+    // lowlevel, or access to the daemon failed, use the low-level facilities
     fd_set all_fds;
     fd_set rfds;
 
@@ -831,8 +845,8 @@ int main(int argc, char **argv)
     }
 
     // if no control operation was specified, we're done
-    if (NULL == speed &&
-        NULL == control &&
+    if (NULL == ship &&
+        NULL == speed &&
         !to_nmea &&
         !to_binary) {
         exit(EXIT_SUCCESS);
@@ -944,8 +958,9 @@ int main(int argc, char **argv)
         }
         context.readonly = write_enable;
     }
-    if (control) {
+    if (ship) {
         bool write_enable = context.readonly;
+
         context.readonly = false;
         if (NULL == session.device_type->control_send) {
             GPSD_LOG(LOG_ERROR, &context.errout,
