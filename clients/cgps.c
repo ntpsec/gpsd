@@ -127,6 +127,7 @@ static bool rtk_flag = false;
 #define GPS_GONE        -1      // GPS device went away
 #define GPS_ERROR       -2      // low-level failure in GPS read
 #define GPS_TIMEOUT     -3      // low-level failure in GPS waiting
+#define CGPS_ERROR      -4      // low-level curses failure
 
 /* range test an int,
  * Return: chars + NUL
@@ -255,6 +256,9 @@ static void die(int sig, const char *msg)
         break;
     case GPS_TIMEOUT:
         (void)fprintf(stderr, "cgps: GPS timeout\n");
+        break;
+    case CGPS_ERROR:
+        (void)fprintf(stderr, "cgps: internal error\n");
         break;
     default:
         (void)fprintf(stderr, "cgps: caught signal %d\n", sig);
@@ -1235,18 +1239,29 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
     }
 
     // Be quiet if the user requests silence.
-    if (!silent_flag && raw_flag) {
-        if (NULL != message) {
+    if (!silent_flag &&
+        raw_flag) {
+        if (NULL != message &&
+            '\0' != message[0]) {
+            // have a message to show
+
             // codacy does not like strlen()
             size_t message_len = strnlen(message, message_max);
 
-            if (0 < message_len) {
-                if ( '\r' == message[message_len - 1]) {
-                    // remove any trailing \r
-                    message[message_len - 1] = '\0';
+            if (message_len >= message_max) {
+                // huh?  Ensure NUL termianted
+                message[message_max - 1] = '\0';
+            } else if ( '\r' == message[message_len - 1]) {
+                // remove any trailing \r
+                message[message_len - 1] = '\0';
+            }
+            if (OK != wprintw(messages, "\n%s", message)) {
+                if (OK != wprintw(messages, "\nERROR in mprintw()")) {
+                    die(CGPS_ERROR, "cgps: ERROR in wprintw()\n");
                 }
-                (void)wprintw(messages, "\n%s", message);
-                (void)wrefresh(messages);
+            }
+            if (OK != wrefresh(messages)) {
+                die(CGPS_ERROR, "cgps: ERROR in wrefresh()\n");
             }
         }
     }
@@ -1712,7 +1727,7 @@ int main(int argc, char *argv[])
             } else if (rtk_flag) {
                 update_rtk_panel(&gpsdata, message);
             } else {
-                update_gps_panel(&gpsdata, message, sizeof(message));
+                update_gps_panel(&gpsdata, message, sizeof(message) - 1);
             }
         }
         if (0 != sig_flag) {
