@@ -613,7 +613,7 @@ int main(int argc, char **argv)
 
             (void)gps_query(&gpsdata,
                             DEVICE_SET, (int)timeout,
-                            "&%s=%s\r\n",
+                            "?DEVICE={\"path\":\"%s\",\"hexdata\":\"%s\"}\r\n",
                              device, buf);
             // wait for response?
         }
