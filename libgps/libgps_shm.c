@@ -152,7 +152,8 @@ int gps_shm_read(struct gps_data_t *gpsdata)
         after2 = shared->bookend2;
 
         if (before1 != after1 ||
-            before2 != after2) {
+            before1 != after2 ||
+            before1 != before2) {
             // bookend mismatch, throw away the data
             // FIXME: retry?
             return 0;
