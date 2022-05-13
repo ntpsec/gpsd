@@ -48,8 +48,8 @@ const char *gpsd_packetdump(char *scbuf, size_t scbuflen,
 }
 
 /* gpsd_hexdump()
- * convert binary in binbu, of length benbuflen
- * into hex string at scbuf or lenght scbuflen
+ * convert binary in binbuf, of length binbuflen
+ * into hex string at scbuf of length scbuflen
  *
  * Return scbuf
  */
@@ -65,7 +65,8 @@ const char *gpsd_hexdump(char *scbuf, size_t scbuflen,
 
     if (NULL == binbuf ||
         0 == binbuflen) {
-        return "";
+        scbuf[0] = '\0';
+        return scbuf;
     }
 
     for (i = 0; i < len && j < (scbuflen - 3); i++) {
@@ -199,26 +200,32 @@ ssize_t hex_escapes(char *cooked, const char *raw)
                     c = (char)0x90;
                     break;
                 case 'A':
+                    FALLTHROUGH
                 case 'a':
                     c = (char)0xa0;
                     break;
                 case 'B':
+                    FALLTHROUGH
                 case 'b':
                     c = (char)0xb0;
                     break;
                 case 'C':
+                    FALLTHROUGH
                 case 'c':
                     c = (char)0xc0;
                     break;
                 case 'D':
+                    FALLTHROUGH
                 case 'd':
                     c = (char)0xd0;
                     break;
                 case 'E':
+                    FALLTHROUGH
                 case 'e':
                     c = (char)0xe0;
                     break;
                 case 'F':
+                    FALLTHROUGH
                 case 'f':
                     c = (char)0xf0;
                     break;
@@ -257,26 +264,32 @@ ssize_t hex_escapes(char *cooked, const char *raw)
                     c += 0x09;
                     break;
                 case 'A':
+                    FALLTHROUGH
                 case 'a':
                     c += 0x0a;
                     break;
                 case 'B':
+                    FALLTHROUGH
                 case 'b':
                     c += 0x0b;
                     break;
                 case 'C':
+                    FALLTHROUGH
                 case 'c':
                     c += 0x0c;
                     break;
                 case 'D':
+                    FALLTHROUGH
                 case 'd':
                     c += 0x0d;
                     break;
                 case 'E':
+                    FALLTHROUGH
                 case 'e':
                     c += 0x0e;
                     break;
                 case 'F':
+                    FALLTHROUGH
                 case 'f':
                     c += 0x0f;
                     break;
