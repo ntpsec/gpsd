@@ -47,10 +47,15 @@ const char *gpsd_packetdump(char *scbuf, size_t scbuflen,
     return gpsd_hexdump(scbuf, scbuflen, binbuf, binbuflen);
 }
 
+/* gpsd_hexdump()
+ * convert binary in binbu, of length benbuflen
+ * into hex string at scbuf or lenght scbuflen
+ *
+ * Return scbuf
+ */
 const char *gpsd_hexdump(char *scbuf, size_t scbuflen,
                          const unsigned  char *binbuf, size_t binbuflen)
 {
-#ifndef SQUELCH_ENABLE
     size_t i, j = 0;
     size_t len =
         (size_t)((binbuflen >
@@ -68,12 +73,6 @@ const char *gpsd_hexdump(char *scbuf, size_t scbuflen,
         scbuf[j++] = hexchar[ibuf[i] & 0x0f];
     }
     scbuf[j] = '\0';
-#else  // SQUELCH defined
-    scbuf[0] = '\0';
-    (void)scbuflen;
-    (void)binbuf;
-    (void)binbuflen;
-#endif  // SQUELCH_ENABLE
     return scbuf;
 }
 
