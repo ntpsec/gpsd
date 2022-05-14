@@ -1,6 +1,6 @@
 = gpsctl(1)
 :author: Eric S. Raymond
-:date: 20 January 2021
+:date: 13 May 2022
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, gpsctl
 :manmanual: GPSD Documentation
@@ -64,7 +64,7 @@ The program accepts the following options:
   the *-t* option without specifying a device. Note: the packet data
   for a binary prototype will be raw, not ASCII-ized in any way.
 *-f*, *--force*::
-  Force low-level access (not through the daemon).
+  Force low-level, direct, access (not through the daemon).
 *-l*, *--list*::
   List a table showing which option switches can be applied to which
   device types, and exit.
@@ -95,22 +95,28 @@ cases) physically disconnecting the NVRAM backup battery.
 *-V*, *--version*::
   Display program version and exit.
 *-x STR*, *--ship STR*::
-  Send a specified control string to the GPS, *gpsctl* will provide packet
-  headers and trailers and checksum as appropriate for binary packet
-  types, and whatever checksum and trailer is required for text packet
-  types. (You must include the leading $ for NMEA packets.) When sending
-  to a UBX device, the first two bytes of the string supplied will
-  become the message class and type, and the remainder the payload. When
+  Send the specified control string to the GNSS receiver. C-style
+  backslash escapes in the string are decoded.  Use \xNN for hex,
+  \e will be replaced with ESC.
+
+  In normal mode, through _gpsd_, the decoded string is passed through,
+  unchanged top _gpsd_ which in turns sends it to the receiver.  Headers,
+  checksums, and suffffices must be provided.
+
+  In low-level, (direct) mode *gpsctl* will provide packet headers and
+  trailers and checksum as appropriate for binary packet types, and
+  whatever checksum and trailer is required for text packet types.
+  (You must include the leading $ for NMEA packets.) When sending to a
+  UBX device, the first two bytes of the string supplied will become
+  the message class and type, and the remainder the payload. When
   sending to a Navcom NCT or Trimble TSIP device, the first byte is
-  interpreted as the command ID and the rest as payload. When sending to
-  a Zodiac device, the first two bytes are used as a message ID of type
-  little-endian short, and the remainder as payload in byte pairs
+  interpreted as the command ID and the rest as payload. When sending
+  to a Zodiac device, the first two bytes are used as a message ID of
+  type little-endian short, and the remainder as payload in byte pairs
   interpreted as little-endian short. For all other supported binary
   GPSes (notably including SiRF) the string is taken as the entire
   message payload and wrapped with appropriate header, trailer and
-  checksum bytes. C-style backslash escapes in the string, notably \xNN
-  for hex, will be interpreted; additionally, \e will be replaced with
-  ESC. This switch implies *-f*.
+  checksum bytes.
 
 The argument of the forcing option, *-t*, should be a string which is
 contained in exactly one of the known driver names; for a list, do
@@ -156,6 +162,9 @@ of *gpsd* from production ones.
   Use low-level operations (not going through a *gpsd* instance) to switch
   a GPS to NMEA mode at 9600bps. The tool will identify the GPS type
   itself.
+
+*gpsctl -x '\xb5\x62\x0a\x04\x00\x00\x0e\x34'*::
+  Send a request for UBX-MON-VER to a _gpsd_ connected GNSS receiver.
 
 == BUGS
 
