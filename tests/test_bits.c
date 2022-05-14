@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../include/bits.h"
+#include "../include/gpsd.h"           // for gpsd_hexdump()
 
 // test array of 640 bits
 static unsigned char buf[80];
@@ -26,21 +27,6 @@ static int64_t sL1, sL2;
 static uint64_t uL1, uL2;
 static float f1;
 static double d1;
-
-static char *hexdump(const void *binbuf, size_t len)
-{
-    static char hexbuf[BUFSIZ];
-    size_t i, j = 0;
-    const char *ibuf = (const char *)binbuf;
-    const char *hexchar = "0123456789abcdef";
-
-    for (i = 0; i < len; i++) {
-        hexbuf[j++] = hexchar[(ibuf[i] & 0xf0) >> 4];
-        hexbuf[j++] = hexchar[ibuf[i] & 0x0f];
-    }
-    hexbuf[j] = '\0';
-    return hexbuf;
-}
 
 static void bedumpall(void)
 {
@@ -177,6 +163,24 @@ static struct uint2int uint2_tests[] = {
     {0, 255, 0},     // 255 marks end
 };
 
+struct hextest_t
+{
+    const char *ascii;
+    const char *bin;      // a binary string
+    size_t binlen;        // length of binary string
+};
+static struct hextest_t hextests[] = {
+    {"000110ff", "\x00\x01\x10\xff", 4},
+    {"00010203040506070809", "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09", 10},
+    {"00102030405060708090", "\x00\x10\x20\x30\x40\x50\x60\x70\x80\x90", 10},
+    {"41426162", "ABab", 4},
+    {"54686520517569636b2042726f776e20466f7820"
+     "4a756d706564204f76657220546865204c617a79"
+     "20446f672773204261636b2e",
+     "The Quick Brown Fox Jumped Over The Lazy Dog's Back.", 52},
+    {NULL, NULL, 0},
+};
+
 int main(int argc, char *argv[])
 {
     int failures = 0;
@@ -207,6 +211,35 @@ int main(int argc, char *argv[])
     };
     struct bitmask *bitm = bitmask_tests;
     struct uint2int *uint2 = uint2_tests;
+    struct hextest_t *hextest = hextests;
+    char hexbuf[BUFSIZ];
+
+    if (!quiet) {
+        (void)printf("Testing gpsd_hexdump()\n");
+    }
+    for (hextest = hextests; NULL != hextest->ascii; hextest++) {
+        char hexbuf2[BUFSIZ];
+        char hexbuf3[BUFSIZ];
+        int fail;
+
+        (void)gpsd_hexdump(hexbuf, sizeof(hexbuf),
+                           (const unsigned char *)hextest->bin,
+                           hextest->binlen);
+        fail = strcmp(hexbuf, hextest->ascii);
+        if (0 != fail) {
+            failures++;
+        }
+        if (!quiet ||
+            fail) {
+            (void)printf("gpsd_hexdump(%s, %zd) got %s s/b %s\n",
+                          gps_visibilize(hexbuf2, sizeof(hexbuf2),
+                                         hextest->bin,
+                                         hextest->binlen),
+                          hextest->binlen, hextest->ascii,
+                          gps_visibilize(hexbuf3, sizeof(hexbuf3), hexbuf,
+                                         strnlen(hexbuf, sizeof(hexbuf))));
+        }
+    }
 
     if (!quiet) {
         (void)printf("Testing bitfield extraction\n");
@@ -296,7 +329,8 @@ int main(int argc, char *argv[])
             !quiet) {
             (void)printf("ubits(%s, %d, %d, %s) %s should be %" PRIx64
                          ", is %" PRIx64 ": %s\n",
-                         hexdump(buf, strlen((char *)buf)),
+                         gpsd_hexdump(hexbuf, sizeof(hexbuf),
+                                      buf, strlen((char *)buf)),
                          up->start, up->width, up->le ? "true" : "false",
                          up->description, up->expected, res,
                          success ? "succeeded" : "FAILED");
@@ -306,7 +340,8 @@ int main(int argc, char *argv[])
 
     shiftleft(buf, 28, 30);
     if (!quiet) {
-        printf("Left-shifted 30 bits: %s\n", hexdump(buf, 28));
+        printf("Left-shifted 30 bits: %s\n",
+               gpsd_hexdump(hexbuf, sizeof(hexbuf), buf, 28));
     }
     /*
      * After the 24-bit shift, the bit array loses its first three bytes:
