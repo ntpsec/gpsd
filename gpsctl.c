@@ -384,6 +384,12 @@ int main(int argc, char **argv)
                 GPSD_LOG(LOG_ERROR, &context.errout,
                          "invalid escape string (error %zd)\n", cooklen);
                 exit(EXIT_FAILURE);
+            } else {
+                char buf[BUFSIZ];
+
+                GPSD_LOG(LOG_PROG, &context.errout,
+                         "cooked string to ship: >%s<\n",
+                         gps_visibilize(buf, sizeof(buf), cooked, cooklen));
             }
             break;
         case 'V':
