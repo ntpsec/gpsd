@@ -143,167 +143,168 @@ ssize_t hex_escapes(char *cooked, const char *raw)
 
     for (cookend = cooked; *raw != '\0'; raw++) {
         if ('\\' != *raw) {
+            // not an escape, just copy thje character
             *cookend++ = *raw;
-        } else {
+            continue;
+        }
+        switch (*++raw) {
+        case 'b':
+            *cookend++ = '\b';
+            break;
+        case 'e':
+            *cookend++ = '\x1b';
+            break;
+        case 'f':
+            *cookend++ = '\f';
+            break;
+        case 'n':
+            *cookend++ = '\n';
+            break;
+        case 'r':
+            *cookend++ = '\r';
+            break;
+        case 't':
+            *cookend++ = '\r';
+            break;
+        case 'v':
+            *cookend++ = '\v';
+            break;
+        case 'x':
             switch (*++raw) {
+            case '0':
+                c = (char)0x00;
+                break;
+            case '1':
+                c = (char)0x10;
+                break;
+            case '2':
+                c = (char)0x20;
+                break;
+            case '3':
+                c = (char)0x30;
+                break;
+            case '4':
+                c = (char)0x40;
+                break;
+            case '5':
+                c = (char)0x50;
+                break;
+            case '6':
+                c = (char)0x60;
+                break;
+            case '7':
+                c = (char)0x70;
+                break;
+            case '8':
+                c = (char)0x80;
+                break;
+            case '9':
+                c = (char)0x90;
+                break;
+            case 'A':
+                FALLTHROUGH
+            case 'a':
+                c = (char)0xa0;
+                break;
+            case 'B':
+                FALLTHROUGH
             case 'b':
-                *cookend++ = '\b';
+                c = (char)0xb0;
                 break;
+            case 'C':
+                FALLTHROUGH
+            case 'c':
+                c = (char)0xc0;
+                break;
+            case 'D':
+                FALLTHROUGH
+            case 'd':
+                c = (char)0xd0;
+                break;
+            case 'E':
+                FALLTHROUGH
             case 'e':
-                *cookend++ = '\x1b';
+                c = (char)0xe0;
                 break;
+            case 'F':
+                FALLTHROUGH
             case 'f':
-                *cookend++ = '\f';
-                break;
-            case 'n':
-                *cookend++ = '\n';
-                break;
-            case 'r':
-                *cookend++ = '\r';
-                break;
-            case 't':
-                *cookend++ = '\r';
-                break;
-            case 'v':
-                *cookend++ = '\v';
-                break;
-            case 'x':
-                switch (*++raw) {
-                case '0':
-                    c = (char)0x00;
-                    break;
-                case '1':
-                    c = (char)0x10;
-                    break;
-                case '2':
-                    c = (char)0x20;
-                    break;
-                case '3':
-                    c = (char)0x30;
-                    break;
-                case '4':
-                    c = (char)0x40;
-                    break;
-                case '5':
-                    c = (char)0x50;
-                    break;
-                case '6':
-                    c = (char)0x60;
-                    break;
-                case '7':
-                    c = (char)0x70;
-                    break;
-                case '8':
-                    c = (char)0x80;
-                    break;
-                case '9':
-                    c = (char)0x90;
-                    break;
-                case 'A':
-                    FALLTHROUGH
-                case 'a':
-                    c = (char)0xa0;
-                    break;
-                case 'B':
-                    FALLTHROUGH
-                case 'b':
-                    c = (char)0xb0;
-                    break;
-                case 'C':
-                    FALLTHROUGH
-                case 'c':
-                    c = (char)0xc0;
-                    break;
-                case 'D':
-                    FALLTHROUGH
-                case 'd':
-                    c = (char)0xd0;
-                    break;
-                case 'E':
-                    FALLTHROUGH
-                case 'e':
-                    c = (char)0xe0;
-                    break;
-                case 'F':
-                    FALLTHROUGH
-                case 'f':
-                    c = (char)0xf0;
-                    break;
-                default:
-                    return -1;
-                }
-                switch (*++raw) {
-                case '0':
-                    c += 0x00;
-                    break;
-                case '1':
-                    c += 0x01;
-                    break;
-                case '2':
-                    c += 0x02;
-                    break;
-                case '3':
-                    c += 0x03;
-                    break;
-                case '4':
-                    c += 0x04;
-                    break;
-                case '5':
-                    c += 0x05;
-                    break;
-                case '6':
-                    c += 0x06;
-                    break;
-                case '7':
-                    c += 0x07;
-                    break;
-                case '8':
-                    c += 0x08;
-                    break;
-                case '9':
-                    c += 0x09;
-                    break;
-                case 'A':
-                    FALLTHROUGH
-                case 'a':
-                    c += 0x0a;
-                    break;
-                case 'B':
-                    FALLTHROUGH
-                case 'b':
-                    c += 0x0b;
-                    break;
-                case 'C':
-                    FALLTHROUGH
-                case 'c':
-                    c += 0x0c;
-                    break;
-                case 'D':
-                    FALLTHROUGH
-                case 'd':
-                    c += 0x0d;
-                    break;
-                case 'E':
-                    FALLTHROUGH
-                case 'e':
-                    c += 0x0e;
-                    break;
-                case 'F':
-                    FALLTHROUGH
-                case 'f':
-                    c += 0x0f;
-                    break;
-                default:
-                    return -2;
-                }
-                *cookend++ = c;
-                break;
-            case '\\':
-                *cookend++ = '\\';
+                c = (char)0xf0;
                 break;
             default:
-                return -3;
+                return -1;
             }
+            switch (*++raw) {
+            case '0':
+                c += 0x00;
+                break;
+            case '1':
+                c += 0x01;
+                break;
+            case '2':
+                c += 0x02;
+                break;
+            case '3':
+                c += 0x03;
+                break;
+            case '4':
+                c += 0x04;
+                break;
+            case '5':
+                c += 0x05;
+                break;
+            case '6':
+                c += 0x06;
+                break;
+            case '7':
+                c += 0x07;
+                break;
+            case '8':
+                c += 0x08;
+                break;
+            case '9':
+                c += 0x09;
+                break;
+            case 'A':
+                FALLTHROUGH
+            case 'a':
+                c += 0x0a;
+                break;
+            case 'B':
+                FALLTHROUGH
+            case 'b':
+                c += 0x0b;
+                break;
+            case 'C':
+                FALLTHROUGH
+            case 'c':
+                c += 0x0c;
+                break;
+            case 'D':
+                FALLTHROUGH
+            case 'd':
+                c += 0x0d;
+                break;
+            case 'E':
+                FALLTHROUGH
+            case 'e':
+                c += 0x0e;
+                break;
+            case 'F':
+                FALLTHROUGH
+            case 'f':
+                c += 0x0f;
+                break;
+            default:
+                return -2;
+            }
+            *cookend++ = c;
+            break;
+        case '\\':
+            *cookend++ = '\\';
+            break;
+        default:
+            return -3;
         }
     }
     return (ssize_t)(cookend - cooked);
