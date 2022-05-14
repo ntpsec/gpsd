@@ -4,6 +4,9 @@
   Have ubxtool "-w 0" run forever.
   Bump libgps version to 30.0
   Change fixsource_t, store server locally, make pointers const.
+  Move gpsd_hexpack() to gps.h as gps_hexpack()
+  Move gpsd_hexdump() to gps.h as gps_hexdump()
+  Allow gpsctl -s/--ship to work without -f.
 
 3.24: 2022-04-22
   NTRIP 2.0 now works.  But still only plain HTML, not RTP, etc.

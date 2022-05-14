@@ -22,9 +22,36 @@
 
 static int moto_send(int , char *, char *);
 static char moto_gen_checksum(char *, int);
-char *gpsd_hexdump(char *, size_t);
 int gpsd_hexpack(char *, char *, int);
 int hex2bin(char *s);
+
+static char last;
+
+// duplicate of gps_hexdump()
+static char *hexdump(char *binbuf, size_t binbuflen)
+{
+    static char hexbuf[USHRT_MAX*2+10+2];
+    size_t i, j = 0;
+    size_t len = (size_t)binbuflen;
+    const char *ibuf = (const char *)binbuf;
+    const char *hexchar = "0123456789abcdef";
+
+    for (i = 0; i < len; i++) {
+        if (ibuf[i] == '@' && (ibuf[i+1] == '@' || last == '@')){
+            hexbuf[j++] = '\n';
+            hexbuf[j++] = ibuf[i++];
+            hexbuf[j++] = ibuf[i++];
+            hexbuf[j++] = ibuf[i++];
+            hexbuf[j++] = ibuf[i++];
+        } else {
+            hexbuf[j++] = hexchar[ (ibuf[i]&0xf0)>>4 ];
+            hexbuf[j++] = hexchar[ ibuf[i]&0x0f ];
+        }
+        last = ibuf[i];
+    }
+    hexbuf[j] ='\0';
+    return hexbuf;
+}
 
 #define BSIZ 64
 int main(int argc, char **argv)
@@ -103,7 +130,7 @@ int main(int argc, char **argv)
         }
 
         if (l > 0){
-            printf("%s", gpsd_hexdump(buf, l));
+            printf("%s", hexdump(buf, l));
             fflush(stdout);
         }
         // allow for up to "n" resends, once per second
@@ -158,32 +185,6 @@ static int moto_send(int fd, char *type, char *body )
         perror("moto_send");
     }
     return (int)status;
-}
-
-static char last;
-char *gpsd_hexdump(char *binbuf, size_t binbuflen)
-{
-    static char hexbuf[USHRT_MAX*2+10+2];
-    size_t i, j = 0;
-    size_t len = (size_t)binbuflen;
-    const char *ibuf = (const char *)binbuf;
-    const char *hexchar = "0123456789abcdef";
-
-    for (i = 0; i < len; i++) {
-        if (ibuf[i] == '@' && (ibuf[i+1] == '@' || last == '@')){
-            hexbuf[j++] = '\n';
-            hexbuf[j++] = ibuf[i++];
-            hexbuf[j++] = ibuf[i++];
-            hexbuf[j++] = ibuf[i++];
-            hexbuf[j++] = ibuf[i++];
-        } else {
-            hexbuf[j++] = hexchar[ (ibuf[i]&0xf0)>>4 ];
-            hexbuf[j++] = hexchar[ ibuf[i]&0x0f ];
-        }
-        last = ibuf[i];
-    }
-    hexbuf[j] ='\0';
-    return hexbuf;
 }
 
 int gpsd_hexpack(char *src, char *dst, int len)

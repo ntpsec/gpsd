@@ -206,8 +206,8 @@ static ssize_t tsip_write1(struct gps_device_t *session,
     session->msgbuflen = (size_t)(ep - session->msgbuf);
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "TSIP: tsip_write1(0x%s)\n",
-             gpsd_hexdump(obuf, sizeof(obuf),
-                          (unsigned char *)&session->msgbuf[1], len + 1));
+             gps_hexdump(obuf, sizeof(obuf),
+                         (unsigned char *)&session->msgbuf[1], len + 1));
     if (gpsd_write(session, session->msgbuf, session->msgbuflen) !=
         (ssize_t) session->msgbuflen)
         return -1;
@@ -1219,13 +1219,13 @@ static gps_mask_t tsip_parse_input(struct gps_device_t *session)
 #ifdef __UNUSED__      // debug code
     GPSD_LOG(LOG_SHOUT, &session->context->errout,
              "TSIP x%02x: length %d: %s\n",
-             id, len, gpsd_hexdump(buf2, sizeof(buf2),
+             id, len, gps_hexdump(buf2, sizeof(buf2),
              (char *)session->lexer.outbuffer, session->lexer.outbuflen));
 #endif  // __UNUSED__
     GPSD_LOG(LOG_DATA, &session->context->errout,
              "TSIP x%02x: length %d: %s\n",
-             id, len, gpsd_hexdump(buf2, sizeof(buf2),
-                                   (unsigned char *)buf, len));
+             id, len, gps_hexdump(buf2, sizeof(buf2),
+                                  (unsigned char *)buf, len));
 
     // session->cycle_end_reliable = true;
     switch (id) {

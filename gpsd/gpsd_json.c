@@ -2866,7 +2866,7 @@ void json_aivdm_dump(const struct ais_t *ais,
                         ais->type6.bitcount,
                         json_stringify(
                             buf1, sizeof(buf1),
-                            gpsd_hexdump(scratchbuf,
+                            gps_hexdump(scratchbuf,
                                      sizeof(scratchbuf),
                                      (const unsigned char *)ais->type6.bitdata,
                                      BITS_TO_BYTES(ais->type6.bitcount))));
@@ -3232,7 +3232,7 @@ void json_aivdm_dump(const struct ais_t *ais,
                         ",\"data\":\"%zd:%s\"}\r\n",
                         ais->type8.bitcount,
                         json_stringify(buf1, sizeof(buf1),
-                           gpsd_hexdump(
+                           gps_hexdump(
                                scratchbuf, sizeof(scratchbuf),
                                (const unsigned char *)ais->type8.bitdata,
                                BITS_TO_BYTES(ais->type8.bitcount))));
@@ -4089,7 +4089,7 @@ void json_aivdm_dump(const struct ais_t *ais,
                         ais->type17.lon / AIS_GNSS_LATLON_DIV,
                         ais->type17.lat / AIS_GNSS_LATLON_DIV,
                         ais->type17.bitcount,
-                        gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
+                        gps_hexdump(scratchbuf, sizeof(scratchbuf),
                              (const unsigned char *)ais->type17.bitdata,
                              BITS_TO_BYTES(ais->type17.bitcount)));
         } else {
@@ -4098,7 +4098,7 @@ void json_aivdm_dump(const struct ais_t *ais,
                         ais->type17.lon,
                         ais->type17.lat,
                         ais->type17.bitcount,
-                        gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
+                        gps_hexdump(scratchbuf, sizeof(scratchbuf),
                              (const unsigned char *)ais->type17.bitdata,
                              BITS_TO_BYTES(ais->type17.bitcount)));
         }
@@ -4424,7 +4424,7 @@ void json_aivdm_dump(const struct ais_t *ais,
                     ais->type25.dest_mmsi,
                     ais->type25.app_id,
                     ais->type25.bitcount,
-                    gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
+                    gps_hexdump(scratchbuf, sizeof(scratchbuf),
                         (const unsigned char *)ais->type25.bitdata,
                         BITS_TO_BYTES(ais->type25.bitcount)));
         break;
@@ -4437,7 +4437,7 @@ void json_aivdm_dump(const struct ais_t *ais,
                     ais->type26.dest_mmsi,
                     ais->type26.app_id,
                     ais->type26.bitcount,
-                    gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
+                    gps_hexdump(scratchbuf, sizeof(scratchbuf),
                         (const unsigned char *)ais->type26.bitdata,
                         BITS_TO_BYTES(ais->type26.bitcount)),
                     ais->type26.radio);

@@ -97,6 +97,7 @@ extern "C" {
  *       add struct baseline_t
  * 14    Move threee visibilize() into one gps_visibilize() here.
  *       Move gpsd_hexpack() to here as gps_hexpack()
+ *       Move gpsd_hexdump() to here as gps_hexdump()
  *
  */
 #define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
@@ -2801,16 +2802,16 @@ struct gps_data_t {
     // u-blox 8 seems to need 10 IMU for UBX-ESF-RAW
     struct attitude_t imu[10];
 
-    /* time stuff */
-    /* FIXME! next lib rev need to add a place to put PPS precision */
+    // time stuff
+    // FIXME! next lib rev need to add a place to put PPS precision
     struct timedelta_t toff;
     struct timedelta_t pps;
-    /* quantization error adjustment to PPS. aka "sawtooth" correction */
-    long qErr;                  /* offset in picoseconds (ps) */
-    /* time of PPS pulse that qErr applies to */
+    // quantization error adjustment to PPS. aka "sawtooth" correction
+    long qErr;                  // offset in picoseconds (ps)
+    // time of PPS pulse that qErr applies to
     timespec_t qErr_time;
 
-    /* Private data - client code must not set this */
+    // Private data - client code must not set this
     void *privdata;
 };
 
@@ -2819,6 +2820,7 @@ extern int gps_open(const char *, const char *,
 extern int gps_close(struct gps_data_t *);
 extern int gps_send(struct gps_data_t *, const char *, ... );
 extern int gps_read(struct gps_data_t *, char *message, int message_len);
+extern const char *gps_hexdump(char *, size_t, const unsigned char *, size_t);
 extern ssize_t gps_hexpack(const char *, unsigned char *, size_t);
 extern int gps_unpack(char *, struct gps_data_t *);
 extern bool gps_waiting(const struct gps_data_t *, int);

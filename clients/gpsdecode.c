@@ -15,7 +15,7 @@
 #include <stdarg.h>
 #include <unistd.h>
 
-#include "../include/gpsd.h"         // for gpsd_hexdump()
+#include "../include/gpsd.h"         // for MAX_PACKET_LENGTH, etc
 #include "../include/bits.h"
 #include "../include/gps_json.h"
 #include "../include/strfuncs.h"
@@ -42,7 +42,7 @@ static const char *raw_hexdump(char *scbuf, size_t scbuflen, int structured,
                                size_t binbuflen)
 {
     if (!structured) {
-        return gpsd_hexdump(scbuf, scbuflen, binbuf, binbuflen);
+        return gps_hexdump(scbuf, scbuflen, binbuf, binbuflen);
     }
 
 // Data parsed as structured doesn't have correct raw data
@@ -326,9 +326,9 @@ static void aivdm_csv_dump(struct ais_t *ais, char *buf, size_t buflen)
                     ais->type17.lon,
                     ais->type17.lat,
                     ais->type17.bitcount,
-                    gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
-                                 (const unsigned char *)ais->type17.bitdata,
-                                 BITS_TO_BYTES(ais->type17.bitcount)));
+                    gps_hexdump(scratchbuf, sizeof(scratchbuf),
+                                (const unsigned char *)ais->type17.bitdata,
+                                BITS_TO_BYTES(ais->type17.bitcount)));
         break;
     case 18:
         str_appendf(buf, buflen,
@@ -478,9 +478,9 @@ static void aivdm_csv_dump(struct ais_t *ais, char *buf, size_t buflen)
                     ais->type25.dest_mmsi,
                     ais->type25.app_id,
                     ais->type25.bitcount,
-                    gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
-                                 (const unsigned char *)ais->type25.bitdata,
-                                 BITS_TO_BYTES(ais->type25.bitcount)));
+                    gps_hexdump(scratchbuf, sizeof(scratchbuf),
+                                (const unsigned char *)ais->type25.bitdata,
+                                BITS_TO_BYTES(ais->type25.bitcount)));
         break;
     case 26:                    // Binary Message, Multiple Slot
         str_appendf(buf, buflen,
@@ -490,9 +490,9 @@ static void aivdm_csv_dump(struct ais_t *ais, char *buf, size_t buflen)
                     ais->type26.dest_mmsi,
                     ais->type26.app_id,
                     ais->type26.bitcount,
-                    gpsd_hexdump(scratchbuf, sizeof(scratchbuf),
-                                 (const unsigned char *)ais->type26.bitdata,
-                                 BITS_TO_BYTES(ais->type26.bitcount)),
+                    gps_hexdump(scratchbuf, sizeof(scratchbuf),
+                                (const unsigned char *)ais->type26.bitdata,
+                                BITS_TO_BYTES(ais->type26.bitcount)),
                     ais->type26.radio);
         break;
     case 27:                    // Long Range AIS Broadcast message

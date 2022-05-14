@@ -44,17 +44,17 @@ const char *gpsd_packetdump(char *scbuf, size_t scbuflen,
         return (const char *)binbuf;
     }
     // else
-    return gpsd_hexdump(scbuf, scbuflen, binbuf, binbuflen);
+    return gps_hexdump(scbuf, scbuflen, binbuf, binbuflen);
 }
 
-/* gpsd_hexdump()
+/* gps_hexdump()
  * convert binary in binbuf, of length binbuflen
  * into hex string at scbuf of length scbuflen
  *
  * Return scbuf
  */
-const char *gpsd_hexdump(char *scbuf, size_t scbuflen,
-                         const unsigned  char *binbuf, size_t binbuflen)
+const char *gps_hexdump(char *scbuf, size_t scbuflen,
+                        const unsigned  char *binbuf, size_t binbuflen)
 {
     size_t i, j = 0;
     size_t len =

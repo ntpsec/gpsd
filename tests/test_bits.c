@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../include/bits.h"
-#include "../include/gpsd.h"           // for gpsd_hexdump()
+#include "../include/gps.h"           // for gps_hexdump()
 
 // test array of 640 bits
 static unsigned char buf[80];
@@ -215,23 +215,23 @@ int main(int argc, char *argv[])
     char hexbuf[BUFSIZ];
 
     if (!quiet) {
-        (void)printf("Testing gpsd_hexdump()\n");
+        (void)printf("Testing gps_hexdump()\n");
     }
     for (hextest = hextests; NULL != hextest->ascii; hextest++) {
         char hexbuf2[BUFSIZ];
         char hexbuf3[BUFSIZ];
         int fail;
 
-        (void)gpsd_hexdump(hexbuf, sizeof(hexbuf),
-                           (const unsigned char *)hextest->bin,
-                           hextest->binlen);
+        (void)gps_hexdump(hexbuf, sizeof(hexbuf),
+                          (const unsigned char *)hextest->bin,
+                          hextest->binlen);
         fail = strcmp(hexbuf, hextest->ascii);
         if (0 != fail) {
             failures++;
         }
         if (!quiet ||
             fail) {
-            (void)printf("gpsd_hexdump(%s, %zd) got %s s/b %s\n",
+            (void)printf("gps_hexdump(%s, %zd) got %s s/b %s\n",
                           gps_visibilize(hexbuf2, sizeof(hexbuf2),
                                          hextest->bin,
                                          hextest->binlen),
@@ -329,8 +329,8 @@ int main(int argc, char *argv[])
             !quiet) {
             (void)printf("ubits(%s, %d, %d, %s) %s should be %" PRIx64
                          ", is %" PRIx64 ": %s\n",
-                         gpsd_hexdump(hexbuf, sizeof(hexbuf),
-                                      buf, strlen((char *)buf)),
+                         gps_hexdump(hexbuf, sizeof(hexbuf),
+                                     buf, strlen((char *)buf)),
                          up->start, up->width, up->le ? "true" : "false",
                          up->description, up->expected, res,
                          success ? "succeeded" : "FAILED");
@@ -341,7 +341,7 @@ int main(int argc, char *argv[])
     shiftleft(buf, 28, 30);
     if (!quiet) {
         printf("Left-shifted 30 bits: %s\n",
-               gpsd_hexdump(hexbuf, sizeof(hexbuf), buf, 28));
+               gps_hexdump(hexbuf, sizeof(hexbuf), buf, 28));
     }
     /*
      * After the 24-bit shift, the bit array loses its first three bytes:

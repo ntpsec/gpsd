@@ -975,7 +975,6 @@ extern gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *,
                                               unsigned int,
                                               uint32_t[],
                                               unsigned int);
-extern const char *gpsd_hexdump(char *, size_t, const unsigned char *, size_t);
 extern const char *gpsd_packetdump(char *, size_t, const unsigned char *,
                                    size_t);
 extern const char *gpsd_prettydump(struct gps_device_t *);

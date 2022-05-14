@@ -1537,8 +1537,8 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
                 GPSD_LOG(LOG_SHOUT, &session->context->errout,
                          "RTCM2: len %d nad %d tbuf %s\n",
                          len, nad,
-                         gpsd_hexdump(tmpbuf, sizeof(tmpbuf),
-                                      (char *)tbuf, len * 3));
+                         gps_hexdump(tmpbuf, sizeof(tmpbuf),
+                                     (char *)tbuf, len * 3));
             }
 #endif // __UNUSED__
             // skip first byte (AR, SF, NAD)
@@ -1704,9 +1704,9 @@ void rtcm2_unpack(struct gps_device_t *session, struct rtcm2_t *tp, char *buf)
              msg_name,
              tp->length + 2,
              session->lexer.isgps.buflen,
-             gpsd_hexdump(session->msgbuf, sizeof(session->msgbuf),
-                          (unsigned char *)session->lexer.isgps.buf,
-                          (tp->length + 2) * sizeof(isgps30bits_t)));
+             gps_hexdump(session->msgbuf, sizeof(session->msgbuf),
+                         (unsigned char *)session->lexer.isgps.buf,
+                         (tp->length + 2) * sizeof(isgps30bits_t)));
 }
 
 static bool preamble_match(isgps30bits_t * w)

@@ -1626,9 +1626,9 @@ static void raw_report(struct subscriber_t *sub, struct gps_device_t *device)
     if (1 == sub->policy.raw) {
         // raw
         const char *hd =
-            gpsd_hexdump(device->msgbuf, sizeof(device->msgbuf),
-                         device->lexer.outbuffer,
-                         device->lexer.outbuflen);
+            gps_hexdump(device->msgbuf, sizeof(device->msgbuf),
+                        device->lexer.outbuffer,
+                        device->lexer.outbuflen);
         if (0 >= throttled_write(sub, hd,
                                  strnlen(hd, sizeof(device->msgbuf)))) {
             // uh, oh

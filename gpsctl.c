@@ -614,8 +614,8 @@ int main(int argc, char **argv)
         if (NULL != ship) {
             char buf[BUFSIZ];
 
-            (void)gpsd_hexdump(buf, sizeof(buf), (unsigned char *)cooked,
-                               cooklen);
+            (void)gps_hexdump(buf, sizeof(buf), (unsigned char *)cooked,
+                              cooklen);
 
             (void)gps_query(&gpsdata,
                             DEVICE_SET, (int)timeout,
