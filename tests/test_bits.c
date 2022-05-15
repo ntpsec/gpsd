@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
         }
         if (!quiet ||
             fail) {
-            (void)printf("gps_hexdump(%s, %zd) got %s s/b %s\n",
+            (void)printf("gps_hexdump(%s, %zu) got %s s/b %s\n",
                           gps_visibilize(hexbuf2, sizeof(hexbuf2),
                                          hextest->bin,
                                          hextest->binlen),
