@@ -52,10 +52,10 @@ static void from_sixbit_untrimmed(const unsigned char *bitvec,
 }
 
 // trim spaces on right end
-static void trim_spaces_on_right_end(char* to)
+static void trim_spaces_on_right_end(char* to, size_t max)
 {
     int i;
-    for (i = strlen(to) - 1; i >= 0; i--) {
+    for (i = strnlen(to, max) - 1; i >= 0; i--) {
         if (' ' == to[i] ||
             '@' == to[i]) {
             to[i] = '\0';
@@ -71,7 +71,7 @@ static void from_sixbit(const unsigned char *bitvec, unsigned int start,
                         int count, char *to)
 {
        from_sixbit_untrimmed(bitvec, start, count, to);
-       trim_spaces_on_right_end(to);
+       trim_spaces_on_right_end(to, count);
 }
 
 // decode an AIS binary packet
@@ -942,7 +942,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
             272 < bitlen) {
             ENDCHARS(272, ais->type21.name+20);
         }
-        trim_spaces_on_right_end(ais->type21.name);
+        trim_spaces_on_right_end(ais->type21.name, sizeof(ais->type21.name));
         break;
     case 22:    // Channel Management
         PERMISSIVE_LENGTH_CHECK(168)
