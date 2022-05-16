@@ -148,8 +148,8 @@ static int gar_decode(const struct gps_context_t *context,
 {
     char buf[10];
     float sign = 1.0;
-    int preflen = (int)strlen(prefix);
-    int offset = 1;      /* assume one character prefix (E,W,S,N,U,D, etc) */
+    int preflen = (int)strnlen(prefix, 3);
+    int offset = 1;      // assume one character prefix (E,W,S,N,U,D, etc)
     long int intresult;
 
     if (length >= sizeof(buf)) {

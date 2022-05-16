@@ -80,6 +80,7 @@ static int gpsd_control(const char *action, const char *argument)
         if (3 < len) {
             status = (int)write(connect, buf, len);
             // FIXME: return never checked
+            // Flawfinder: ignore
             ignore_return(read(connect, buf, 12));
         } else {
             status = -1;
@@ -89,6 +90,7 @@ static int gpsd_control(const char *action, const char *argument)
         if (3 < len) {
             status = (int)write(connect, buf, len);
             // FIXME: return never checked
+            // Flawfinder: ignore
             ignore_return(read(connect, buf, 12));
         } else {
             status = -1;

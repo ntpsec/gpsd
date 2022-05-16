@@ -298,6 +298,7 @@ static ssize_t read_gpsd(char *message, size_t len)
         case 1:
             // we have data waiting, let's process them
             // FIXME!  Do not do one at a time!
+            // Flawfinder: ignore
             result = (int)read(gpsdata.gps_fd, &c, 1);
 
             // If we lost gpsd connection reset it
