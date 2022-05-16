@@ -218,8 +218,6 @@ int main(int argc, char *argv[])
         (void)printf("Testing gps_hexdump()\n");
     }
     for (hextest = hextests; NULL != hextest->ascii; hextest++) {
-        char hexbuf2[BUFSIZ];
-        char hexbuf3[BUFSIZ];
         int fail;
 
         (void)gps_hexdump(hexbuf, sizeof(hexbuf),
@@ -231,6 +229,9 @@ int main(int argc, char *argv[])
         }
         if (!quiet ||
             fail) {
+            char hexbuf2[BUFSIZ];
+            char hexbuf3[BUFSIZ];
+
             (void)printf("gps_hexdump(%s, %zu) got %s s/b %s\n",
                           gps_visibilize(hexbuf2, sizeof(hexbuf2),
                                          hextest->bin,
@@ -330,7 +331,7 @@ int main(int argc, char *argv[])
             (void)printf("ubits(%s, %d, %d, %s) %s should be %" PRIx64
                          ", is %" PRIx64 ": %s\n",
                          gps_hexdump(hexbuf, sizeof(hexbuf),
-                                     buf, strlen((char *)buf)),
+                                     buf, strnlen((char *)buf, sizeof(buf))),
                          up->start, up->width, up->le ? "true" : "false",
                          up->description, up->expected, res,
                          success ? "succeeded" : "FAILED");
