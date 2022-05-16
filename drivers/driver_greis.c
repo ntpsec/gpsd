@@ -843,8 +843,8 @@ static gps_mask_t greis_msg_ET(struct gps_device_t *session,
      * Waited until now to avoid the startup rush and out of
      * critical time path
      */
-    if (0 == strlen(session->subtype)) {
-        /* get version */
+    if (0 == strnlen(session->subtype, sizeof(session->subtype))) {
+        // get version
         (void)greis_write(session, get_ver, sizeof(get_ver) - 1);
     }
     /* The driver waits for ET to send any reports
@@ -1094,7 +1094,7 @@ static gps_mask_t greis_parse_input(struct gps_device_t *session)
 static bool greis_set_speed(struct gps_device_t *session,
                             speed_t speed, char parity, int stopbits)
 {
-    /* change on current port */
+    // change on current port
     static const char set_rate[] = "set,/par/cur/term/rate,";
     static const char set_parity[] = "set,/par/cur/term/parity,";
     static const char set_stops[] = "set,/par/cur/term/stops,";
@@ -1125,7 +1125,8 @@ static bool greis_set_speed(struct gps_device_t *session,
     (void)snprintf(command, sizeof(command) - 1, "%s%lu && %s%s && %s%d",
              set_rate, (unsigned long)speed, set_parity, selected_parity,
              set_stops, stopbits);
-    return (bool)greis_write(session, command, strlen(command));
+    return (bool)greis_write(session, command,
+                             strnlen(command, sizeof(command)));
 }
 
 #if 0
