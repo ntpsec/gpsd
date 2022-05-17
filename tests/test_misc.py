@@ -126,9 +126,10 @@ for (posix, leap, gps_time, gps_week, gps_tow) in tests1:
     if ((gps_time != gpstime or
          gps_week != gpsweek or
          gps_tow != gpstow)):
-        sys.stderr.write("posix2gps(%d, %d) = (%d, %d, %d) s/b (%d, %d, %d)\n" %
-                         (posix, leap, gpstime, gpsweek, gpstow, 
-                          gps_time, gps_week, gps_tow))
+        sys.stderr.write(
+           "posix2gps(%d, %d) = (%d, %d, %d) s/b (%d, %d, %d)\n" %
+           (posix, leap, gpstime, gpsweek, gpstow,
+            gps_time, gps_week, gps_tow))
         errors += 1
 
 if errors:
