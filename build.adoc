@@ -901,6 +901,8 @@ apt install libncurses5-dev libtinfo-dev  pps-tools
 apt install gir1.2-gtk-3.0
 ----
 
+At some point Ubuntu renamed "python-gi" to "python3-gi".
+
 If you wish to build the documentation, be warned it pulls in a
 lot of packages.  Build the documentation is a prerequisite to
 building the HTML files for the website (www/), and also to make
