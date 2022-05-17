@@ -1843,6 +1843,7 @@ try:
 
         # calculate hash
         oaf_s = '\n'.join(oaf['oaf'])
+        # Flawfinder: ignore
         hash_s = hashlib.sha1(oaf_s).hexdigest()
         if hash_s != oaf['hash']:
             sys.stderr.write('%s: OAF bad hash "%s", s/b %s\n'
