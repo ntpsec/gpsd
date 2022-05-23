@@ -2142,6 +2142,10 @@ void gpsd_wrap(struct gps_device_t *session)
     }
 }
 
+/* gpsd_zero_satellites(), initialize the skyview (satellite_t)
+ *
+ * return; void
+ */
 void gpsd_zero_satellites( struct gps_data_t *out)
 {
     int sat;
