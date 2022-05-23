@@ -5517,7 +5517,12 @@ High Precision GNSS products only."""
         }
 
     def nav_sat(self, buf):
-        """UBX-NAV-SAT decode"""
+        """UBX-NAV-SAT decode
+
+Not in u-blox 5
+Present in u-blox 8,  protocol version 15+
+Present in protVer 32
+"""
 
         u = struct.unpack_from('<LBBH', buf, 0)
         s = '  iTOW %u version %u numSvs %u reserved1 x%x' % u
@@ -5620,7 +5625,10 @@ High Precision GNSS products only."""
         }
 
     def nav_sig(self, buf):
-        """UBX-NAV-SIG decode, Signal Information"""
+        """decode UBX-NAV-SIG decode, Signal Information
+
+Present in 9 and 10, protVer 32 and up
+"""
 
         u = struct.unpack_from('<LBBH', buf, 0)
         s = '  iTOW %u version %u numSigs %u reserved1 %u' % u
@@ -8235,8 +8243,16 @@ with resetMode set to Hardware reset."
         # set UBX-CFG-LOGFILTER
         self.gps_send(6, 0x47, m_data)
 
+    def send_able_nav_sat(self, able, args):
+        """dis/enable UBX-NAV-SAT"""
+
+        rate = 1 if able else 0
+        m_data = bytearray([0x1, 0x35, rate])
+        self.gps_send(6, 1, m_data)
+
     def send_able_nav_sig(self, able, args):
-        """dis/enable UBX-NAV-SIG Time Pulse"""
+        """dis/enable UBX-NAV-SIG"""
+
         rate = 1 if able else 0
         m_data = bytearray([0x1, 0x43, rate])
         self.gps_send(6, 1, m_data)
