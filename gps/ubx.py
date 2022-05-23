@@ -8094,6 +8094,12 @@ qErrInvalid add in protVer 34 and up
             0x61,              # msg id = NAV-EOE, first in protver 18
         )
 
+        # UBX for protver >= 27
+        ubx_27_nav_on = (
+            # Add NAV-SIG for L1/L2/L5 info
+            0x43,              # msg id = NAV-SIG
+        )
+
         # some we always turn off, user can enable later
         ubx_nav_off = (
             0x12,              # msg id = NAV-VELNED
@@ -8123,12 +8129,18 @@ qErrInvalid add in protVer 34 and up
                 m_data[1] = idx
                 # UBX-CFG-MSG
                 self.gps_send(6, 1, m_data)
-
         else:
+            # 15 < protVer
             for id in ubx_15_nav_on:
                 m_data[1] = id
                 # UBX-CFG-MSG
                 self.gps_send(6, 1, m_data)
+
+            if 27 <=self.protver:
+                for id in ubx_27_nav_on:
+                    m_data[1] = id
+                    # UBX-CFG-MSG
+                    self.gps_send(6, 1, m_data)
 
             # turn off < 15 messages.  Yes this may make NAKs.
             m_data[2] = 0       # rate off
@@ -9198,6 +9210,9 @@ present in 9-series and higher
         # en/dis able LOG
         "LOG": {"command": send_able_logfilter,
                 "help": "Data Logger"},
+        # en/dis able NAV-SAT Cmessage
+        "NAV-SAT": {"command": send_able_nav_sat,
+                    "help": "NAV-SAT Satellite Information message"},
         # en/dis able NAV-SIG Cmessage
         "NAV-SIG": {"command": send_able_nav_sig,
                     "help": "NAV-SIG Signal Information message"},
