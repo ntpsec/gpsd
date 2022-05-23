@@ -4316,7 +4316,8 @@ static gps_mask_t ubx_cfg_prt(struct gps_device_t *session, speed_t speed,
             // 0x26;       // msg id  = UBX-NAV-TIMELS, allow as low rate
             0x30,          // msg id = NAV-SVINFO, in 4 to 8, not 9
             0x32,          // msg id = NAV-SBAS, in u-blox 4 to 8, not all 9
-            0x35,          // msg id = NAV-SAT, in u-blox 8 and 9
+            0x35,          // msg id = NAV-SAT, in u-blox 8 and up
+            0x43,          // msg id = NAV-SIG, in u-blox 9 and up
             0x61,          // msg id = NAV-EOE
         };
 
@@ -4389,6 +4390,7 @@ static gps_mask_t ubx_cfg_prt(struct gps_device_t *session, speed_t speed,
             0x07,              // msg id = NAV-PVT
             0x11,              // msg id = NAV-VELECEF
             0x35,              // msg id = NAV-SAT
+            0x43,              // msg id = NAV-SIG
             0x61,              // msg id = NAV-EOE, first in protver 18
         };
 
