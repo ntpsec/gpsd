@@ -98,7 +98,7 @@ extern "C" {
  * 14    Move threee visibilize() into one gps_visibilize() here.
  *       Move gpsd_hexpack() to here as gps_hexpack()
  *       Move gpsd_hexdump() to here as gps_hexdump()
- *
+ *       Add prRes and qualityInd to satellite_t
  */
 #define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
@@ -2381,14 +2381,24 @@ struct satellite_t {
     /* SNR. signal-to-noise ratio, 0 to 254 dB, u-blox can be 0 to 63.
      * -1 for n/a */
     double ss;
-    bool used;          // this satellite used in solution
     /* PRN of this satellite, 1 to 437, 0 for n/a
      * sadly there is no standard, but many different implementations of
      * how to code PRN
      */
-    short PRN;          // PRN numbering per NMEA 2.x to 4.0, not 4.10
-    double elevation;   // elevation of satellite, -90 to 90 deg, NAN for n/a
-    double azimuth;     // azimuth, 0 to 359 deg, NAN1 for n/a
+    int16_t PRN;          // PRN numbering per NMEA 2.x to 4.0, not 4.10
+    double elevation;     // elevation of satellite, -90 to 90 deg, NAN for n/a
+    double azimuth;       // azimuth, 0 to 359 deg, NAN1 for n/a
+    double prRes;               // Pseudorange residual, meters
+    bool used;            // this satellite used in solution
+    /* Quality Indicator
+     * 0 = no signal
+     * 1 = searching signal
+     * 2 = signal acquired
+     * 3 = signal detected but unusable
+     * 4 = code locked and time synchronized
+     * 5, 6, 7 = code and carrier locked and time synchronized
+     */
+    uint8_t qualityInd;
     /* gnssid:svid:sigid, as defined by u-blox 8/9:
      *  gnssid        svid (native PRN)
      *  0 = GPS           1-32
@@ -2413,7 +2423,7 @@ struct satellite_t {
      *
      * Note: other GNSS receivers use different mappings!
      */
-    unsigned char gnssid;
+    uint8_t gnssid;
 // defines for u-blox gnssId, as used in satellite_t
 #define GNSSID_GPS 0
 #define GNSSID_SBAS 1
@@ -2426,7 +2436,7 @@ struct satellite_t {
 #define GNSSID_CNT 8              // count for array size
 
     // ignore gnssid and sigid if svid is zero
-    unsigned char svid;
+    uint8_t svid;
     /* sigid as defined by u-blox 9/10, and used here
      * BeiDou:   0 = B1I D1, 1 = B1I D2, 2 = B2I D1, 3 = B2I D2, 7 = B2a
      * Galileo:  0 = E1 C, 1 = E1 B, 3 = E5 aI, 4 = E5 aQ, 5 = E5 bl, 6 = E5 bQ
@@ -2479,12 +2489,13 @@ struct satellite_t {
      *     5  B1C
      * QZSS:     1 = L1C/A
      */
-    unsigned char sigid;
-    signed char freqid;         // The GLONASS (Only) frequency, 0 - 13
-    unsigned char health;       // 0 = unknown, 1 = healthy, 2 = unhealthy
+    uint8_t sigid;
+    int8_t freqid;              // The GLONASS (Only) frequency, 0 - 13
+    uint8_t health;             // 0 = unknown, 1 = healthy, 2 = unhealthy
 #define SAT_HEALTH_UNK 0
 #define SAT_HEALTH_OK 1
 #define SAT_HEALTH_BAD 2
+
 };
 
 /* attitude_t was oringally for real IMUs that are syncronous

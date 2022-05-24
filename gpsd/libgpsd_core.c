@@ -2159,6 +2159,7 @@ void gpsd_zero_satellites( struct gps_data_t *out)
         out->skyview[sat].elevation = NAN;
         out->skyview[sat].ss = NAN;
         out->skyview[sat].freqid = -1;
+        out->skyview[sat].prRes = NAN;
     }
 #if 0
     /*
