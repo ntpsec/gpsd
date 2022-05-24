@@ -568,6 +568,18 @@ void json_sky_dump(const struct gps_data_t *datap,
                        timespec_to_iso8601(datap->skyview_time,
                                       tbuf, sizeof(tbuf)));
     }
+    if (0 != isfinite(datap->dop.gdop)) {
+        str_appendf(reply, replylen, ",\"gdop\":%.2f", datap->dop.gdop);
+    }
+    if (0 != isfinite(datap->dop.hdop)) {
+        str_appendf(reply, replylen, ",\"hdop\":%.2f", datap->dop.hdop);
+    }
+    if (0 != isfinite(datap->dop.pdop)) {
+        str_appendf(reply, replylen, ",\"pdop\":%.2f", datap->dop.pdop);
+    }
+    if (0 != isfinite(datap->dop.tdop)) {
+        str_appendf(reply, replylen, ",\"tdop\":%.2f", datap->dop.tdop);
+    }
     if (0 != isfinite(datap->dop.xdop)) {
         str_appendf(reply, replylen, ",\"xdop\":%.2f", datap->dop.xdop);
     }
@@ -576,18 +588,6 @@ void json_sky_dump(const struct gps_data_t *datap,
     }
     if (0 != isfinite(datap->dop.vdop)) {
         str_appendf(reply, replylen, ",\"vdop\":%.2f", datap->dop.vdop);
-    }
-    if (0 != isfinite(datap->dop.tdop)) {
-        str_appendf(reply, replylen, ",\"tdop\":%.2f", datap->dop.tdop);
-    }
-    if (0 != isfinite(datap->dop.hdop)) {
-        str_appendf(reply, replylen, ",\"hdop\":%.2f", datap->dop.hdop);
-    }
-    if (0 != isfinite(datap->dop.gdop)) {
-        str_appendf(reply, replylen, ",\"gdop\":%.2f", datap->dop.gdop);
-    }
-    if (0 != isfinite(datap->dop.pdop)) {
-        str_appendf(reply, replylen, ",\"pdop\":%.2f", datap->dop.pdop);
     }
     if (0 != (datap->set & SATELLITE_SET)) {
         // insurance against flaky drivers
@@ -603,49 +603,61 @@ void json_sky_dump(const struct gps_data_t *datap,
         if (reported) {
             (void)strlcat(reply, ",\"satellites\":[", replylen);
             for (i = 0; i < reported; i++) {
-                if (datap->skyview[i].PRN) {
-                    str_appendf(reply, replylen, "{\"PRN\":%d",
-                                datap->skyview[i].PRN);
-                    if (0 != isfinite(datap->skyview[i].elevation) &&
-                        90 >= fabs(datap->skyview[i].elevation)) {
-                        str_appendf(reply, replylen, ",\"el\":%.1f",
-                                    datap->skyview[i].elevation);
-                    }
-                    if (0 != isfinite(datap->skyview[i].azimuth) &&
-                        0 <= fabs(datap->skyview[i].azimuth) &&
-                        359 >= fabs(datap->skyview[i].azimuth)) {
-                        str_appendf(reply, replylen, ",\"az\":%.1f",
-                                    datap->skyview[i].azimuth);
-                    }
-                    if (0 != isfinite(datap->skyview[i].ss)) {
-                        str_appendf(reply, replylen, ",\"ss\":%.1f",
-                                    datap->skyview[i].ss);
-                    }
-                    str_appendf(reply, replylen,
-                       ",\"used\":%s",
-                       datap->skyview[i].used ? "true" : "false");
-                    if (0 != datap->skyview[i].svid) {
-                        str_appendf(reply, replylen,
-                           ",\"gnssid\":%d,\"svid\":%d",
-                           datap->skyview[i].gnssid,
-                           datap->skyview[i].svid);
-                    }
-                    if (0 != datap->skyview[i].sigid) {
-                        str_appendf(reply, replylen,
-                           ",\"sigid\":%d", datap->skyview[i].sigid);
-                    }
-                    if (GNSSID_GLO == datap->skyview[i].gnssid &&
-                        0 <= datap->skyview[i].freqid &&
-                        16 >= datap->skyview[i].freqid) {
-                        str_appendf(reply, replylen,
-                           ",\"freqid\":%d", datap->skyview[i].freqid);
-                    }
-                    if (SAT_HEALTH_UNK != datap->skyview[i].health) {
-                        str_appendf(reply, replylen,
-                           ",\"health\":%d", datap->skyview[i].health);
-                    }
-                    (void)strlcat(reply, "},", replylen);
+                if (0 == datap->skyview[i].PRN) {
+                    // blank slot.
+                    continue;
                 }
+                // Put PRN, gnssid, svid, sigid, freqid, at front
+                str_appendf(reply, replylen, "{\"PRN\":%d",
+                            datap->skyview[i].PRN);
+                if (0 != datap->skyview[i].svid) {
+                    str_appendf(reply, replylen,
+                       ",\"gnssid\":%d,\"svid\":%d",
+                       datap->skyview[i].gnssid,
+                       datap->skyview[i].svid);
+                }
+                if (0 != datap->skyview[i].sigid) {
+                    str_appendf(reply, replylen,
+                       ",\"sigid\":%d", datap->skyview[i].sigid);
+                }
+                if (GNSSID_GLO == datap->skyview[i].gnssid &&
+                    0 <= datap->skyview[i].freqid &&
+                    16 >= datap->skyview[i].freqid) {
+                    str_appendf(reply, replylen,
+                       ",\"freqid\":%d", datap->skyview[i].freqid);
+                }
+                // now the rest in alphabetic order.
+                if (0 != isfinite(datap->skyview[i].azimuth) &&
+                    0 <= fabs(datap->skyview[i].azimuth) &&
+                    359 >= fabs(datap->skyview[i].azimuth)) {
+                    str_appendf(reply, replylen, ",\"az\":%.1f",
+                                datap->skyview[i].azimuth);
+                }
+                if (0 != isfinite(datap->skyview[i].elevation) &&
+                    90 >= fabs(datap->skyview[i].elevation)) {
+                    str_appendf(reply, replylen, ",\"el\":%.1f",
+                                datap->skyview[i].elevation);
+                }
+                if (0 != isfinite(datap->skyview[i].prRes)) {
+                    str_appendf(reply, replylen, ",\"prRes\":%.1f",
+                                datap->skyview[i].prRes);
+                }
+                if (0 <= datap->skyview[i].qualityInd) {
+                    str_appendf(reply, replylen, ",\"qual\":%d",
+                                datap->skyview[i].qualityInd);
+                }
+                if (0 != isfinite(datap->skyview[i].ss)) {
+                    str_appendf(reply, replylen, ",\"ss\":%.1f",
+                                datap->skyview[i].ss);
+                }
+                str_appendf(reply, replylen,
+                   ",\"used\":%s",
+                   datap->skyview[i].used ? "true" : "false");
+                if (SAT_HEALTH_UNK != datap->skyview[i].health) {
+                    str_appendf(reply, replylen,
+                       ",\"health\":%d", datap->skyview[i].health);
+                }
+                (void)strlcat(reply, "},", replylen);
             }
             str_rstrip_char(reply, ',');
             (void)strlcat(reply, "]", replylen);

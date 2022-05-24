@@ -2391,6 +2391,7 @@ struct satellite_t {
     double prRes;               // Pseudorange residual, meters
     bool used;            // this satellite used in solution
     /* Quality Indicator
+     * -1 = invalid, ignore
      * 0 = no signal
      * 1 = searching signal
      * 2 = signal acquired
@@ -2398,7 +2399,7 @@ struct satellite_t {
      * 4 = code locked and time synchronized
      * 5, 6, 7 = code and carrier locked and time synchronized
      */
-    uint8_t qualityInd;
+    int8_t qualityInd;
     /* gnssid:svid:sigid, as defined by u-blox 8/9:
      *  gnssid        svid (native PRN)
      *  0 = GPS           1-32
