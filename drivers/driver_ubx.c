@@ -2037,7 +2037,7 @@ static gps_mask_t ubx_msg_nav_sat(struct gps_device_t *session,
  * Satellite Info -- UBX-NAV-SIG
  *
  * Like NAV-SAT, but NAV-SIG has  noelevation and azimuth. So we need both
- * Assume NAV-SAT happend before NAV-SIG.
+ * Assume NAV-SAT was sent in this epoch before NAV-SIG.
  *
  * Not before u-blox 9
  * Present in u-blox 9, protVer 27, and u-blox 10
@@ -2095,7 +2095,7 @@ static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
         uint8_t svId = getub(buf, off + 1);
         uint8_t sigId = getub(buf, off + 2);
         uint8_t freqid = getub(buf, off + 3);
-        int16_t prmes = getles16(buf, off + 4);     // 0.1 m
+        int16_t prRes = getles16(buf, off + 4);     // 0.1 m
         uint8_t cno = getub(buf, off + 6);          // dBHz
         uint8_t qualityInd = getub(buf, off + 7);   // quality indicator
         uint8_t corrSource = getub(buf, off + 8);   // correlation source
@@ -2111,8 +2111,8 @@ static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
 
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "NAV-SIG gnssid %u, svid %u sigid %u PRN %d freqid %u "
-                 "prmes %d cno %u qual %u corr %u, iono %u flags x%x res x%x\n",
-                 gnssId, svId, sigId, nmea_PRN, freqid, prmes, cno,
+                 "prRes %d cno %u qual %u corr %u, iono %u flags x%x res x%x\n",
+                 gnssId, svId, sigId, nmea_PRN, freqid, prRes, cno,
                  qualityInd, corrSource, ionoModel, flags, reserved);
 
         session->gpsdata.skyview[st].gnssid = gnssId;
@@ -2120,6 +2120,8 @@ static gps_mask_t ubx_msg_nav_sig(struct gps_device_t *session,
         session->gpsdata.skyview[st].sigid = sigId;
         session->gpsdata.skyview[st].freqid = freqid;
         session->gpsdata.skyview[st].PRN = nmea_PRN;
+        session->gpsdata.skyview[st].prRes = prRes * 0.1;
+        session->gpsdata.skyview[st].qualityInd = qualityInd;
 
         session->gpsdata.skyview[st].ss = (double)cno;
         session->gpsdata.skyview[st].used = used;

@@ -297,8 +297,7 @@ only the "class" field will reliably be present.
 
 |device |No |string |Name of originating device
 
-|time |No |string |Time/date stamp in ISO8601 format, UTC. May have a
-fractional part of up to .001sec precision.
+|nSat |No |numeric |Number of satellite objects in "satellites" array.
 
 |gdop |No |numeric |Geometric (hyperspherical) dilution of precision,
 a combination of PDOP and TDOP. A dimensionless factor which should be
@@ -312,8 +311,25 @@ error estimate.
 dimensionless factor which should be multiplied by a base UERE to get
 an error estimate.
 
+|prRes |No |numeric |Pseudorange residue in meters.
+
+|qual |No |numeric |Quality Indicator +
+0=no signal +
+1=searching signal +
+2=signal acquired +
+3=signal detected but unusable +
+4=code locked and time synchronized +
+5, 6, 7=code and carrier locked and time synchronized
+
+|satellites |No |list |List of satellite objects in skyview
+
 |tdop |No |numeric |Time dilution of precision, a dimensionless factor
 which should be multiplied by a base UERE to get an error estimate.
+
+|time |No |string |Time/date stamp in ISO8601 format, UTC. May have a
+fractional part of up to .001sec precision.
+
+|uSat |No |numeric |Number of satellites used in navigation solution.
 
 |vdop |No |numeric |Vertical (altitude) dilution of precision, a
 dimensionless factor which should be multiplied by a base UERE to get
@@ -327,11 +343,6 @@ an error estimate.
 factor which should be multiplied by a base UERE to get an error
 estimate.
 
-|nSat |No |numeric |Number of satellite objects in "satellites" array.
-
-|uSat |No |numeric |Number of satellites used in navigation solution.
-
-|satellites |Yes |list |List of satellite objects in skyview
 |===
 
 Many devices compute dilution of precision factors but do not include
