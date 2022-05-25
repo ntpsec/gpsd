@@ -33,7 +33,7 @@ PERMISSIONS
 #include "../include/gps_json.h"
 #include "../include/timespec.h"
 
-/* *INDENT-OFF* */
+// *INDENT-OFF*
 #define JSON_BOOL(x)    ((x)?"true":"false")
 
 /*
@@ -56,7 +56,7 @@ struct classmap_t classmap[CLASSMAP_NITEMS] = {
     {"RTCM3",   SEEN_RTCM3,     PACKET_TYPEMASK(RTCM3_PACKET)},
     {"AIS",     SEEN_AIS,       PACKET_TYPEMASK(AIVDM_PACKET)},
 };
-/* *INDENT-ON* */
+// *INDENT-ON*
 
 // prevent negative zero confusion.
 // Dif arch will return 0.0, or -0.0.
@@ -459,7 +459,7 @@ void json_tpv_dump(const gps_mask_t changed, struct gps_device_t *session,
                         session->context->gps_tow.tv_nsec / 1000000L,
                         session->context->rollovers);
         }
-        /* at the end because it is new and microjson chokes on new items */
+        // at the end because it is new and microjson chokes on new items
         if (0 != isfinite(gpsdata->fix.eph)) {
             str_appendf(reply, replylen, ",\"eph\":%.3f", gpsdata->fix.eph);
         }
@@ -2360,7 +2360,7 @@ void json_aivdm_dump(const struct ais_t *ais,
     char buf1[JSON_VAL_MAX * 2 + 1];
     char buf2[JSON_VAL_MAX * 2 + 1];
     char buf3[JSON_VAL_MAX * 2 + 1];
-    char scratchbuf[MAX_PACKET_LENGTH*2+1];
+    char scratchbuf[MAX_PACKET_LENGTH * 2 + 1];
     int i;
 
     static char *nav_legends[] = {
@@ -2675,7 +2675,7 @@ void json_aivdm_dump(const struct ais_t *ais,
                 ",\"type\":%u,\"repeat\":%u,\"mmsi\":%u,\"scaled\":%s",
                 ais->type, ais->repeat, ais->mmsi, JSON_BOOL(scaled));
     switch (ais->type) {
-    case 1:                     /* Position Report */
+    case 1:                     // Position Report
         FALLTHROUGH
     case 2:
         FALLTHROUGH
@@ -4622,33 +4622,41 @@ void json_data_report(const gps_mask_t changed,
                       char *buf, size_t buflen)
 {
     struct gps_data_t *datap = &session->gpsdata;
+    size_t buf_len;
     buf[0] = '\0';
 
     if (0 != (changed & REPORT_IS)) {
+        buf_len = strnlen(buf, MAX_PACKET_LENGTH);
+
         json_tpv_dump(changed, session, policy,
-                      buf+strlen(buf), buflen-strlen(buf));
+                      buf + buf_len, buflen - buf_len);
         // attitude is syncronous to epoch, so report like TPV.
         if (0 != (changed & ATTITUDE_SET)) {
-            json_att_dump(datap, buf+strlen(buf), buflen-strlen(buf),
+            buf_len = strnlen(buf, MAX_PACKET_LENGTH);
+            json_att_dump(datap, buf + buf_len, buflen - buf_len,
                           &datap->attitude, "ATT");
         }
     }
 
     if (0 != (changed & GST_SET)) {
-        json_noise_dump(datap, buf+strlen(buf), buflen-strlen(buf));
+        buf_len = strnlen(buf, MAX_PACKET_LENGTH);
+        json_noise_dump(datap, buf + buf_len, buflen - buf_len);
     }
 
     if (0 != (changed & (DOP_SET | SATELLITE_SET))) {
-        json_sky_dump(datap, buf+strlen(buf), buflen-strlen(buf));
+        buf_len = strnlen(buf, MAX_PACKET_LENGTH);
+        json_sky_dump(datap, buf + buf_len, buflen - buf_len);
     }
 
     if (0 != (changed & SUBFRAME_SET)) {
-        json_subframe_dump(datap, policy->scaled, buf+strlen(buf),
-                           buflen-strlen(buf));
+        buf_len = strnlen(buf, MAX_PACKET_LENGTH);
+        json_subframe_dump(datap, policy->scaled, buf + buf_len,
+                           buflen - buf_len);
     }
 
     if (0 != (changed & RAW_IS)) {
-        json_raw_dump(datap, buf+strlen(buf), buflen-strlen(buf));
+        buf_len = strnlen(buf, MAX_PACKET_LENGTH);
+        json_raw_dump(datap, buf + buf_len, buflen - buf_len);
     }
 
     if (0 != (changed & IMU_SET)) {
@@ -4659,40 +4667,46 @@ void json_data_report(const gps_mask_t changed,
             if ('\0' == datap->imu[cur_imu].msg[0]) {
                 break;
             }
-            json_att_dump(datap, buf+strlen(buf), buflen-strlen(buf),
+            buf_len = strnlen(buf, MAX_PACKET_LENGTH);
+            json_att_dump(datap, buf + buf_len, buflen - buf_len,
                           &datap->imu[cur_imu], "IMU");
         }
     }
 
 #ifdef RTCM104V2_ENABLE
     if (0 != (changed & RTCM2_SET)) {
+        buf_len = strnlen(buf, MAX_PACKET_LENGTH);
         json_rtcm2_dump(&datap->rtcm2, datap->dev.path,
-                        buf + strlen(buf), buflen - strlen(buf));
+                        buf + buf_len, buflen - buf_len);
     }
 #endif  // RTCM104V2_ENABLE
 
 #ifdef RTCM104V3_ENABLE
     if (0 != (changed & RTCM3_SET)) {
+        buf_len = strnlen(buf, MAX_PACKET_LENGTH);
         json_rtcm3_dump(&datap->rtcm3, datap->dev.path,
-                        buf + strlen(buf), buflen - strlen(buf));
+                        buf + buf_len, buflen - buf_len);
     }
 #endif  // RTCM104V3_ENABLE
 
 #ifdef AIVDM_ENABLE
     if (0 != (changed & AIS_SET)) {
+        buf_len = strnlen(buf, MAX_PACKET_LENGTH);
         json_aivdm_dump(&datap->ais, datap->dev.path,
                         policy->scaled,
-                        buf + strlen(buf), buflen - strlen(buf));
+                        buf + buf_len, buflen - buf_len);
     }
 #endif  // AIVDM_ENABLE
 
 #ifdef OSCILLATOR_ENABLE
     if (0 != (changed & OSCILLATOR_SET)) {
-        json_oscillator_dump(datap, buf + strlen(buf), buflen - strlen(buf));
+        buf_len = strnlen(buf, MAX_PACKET_LENGTH);
+        json_oscillator_dump(datap, buf + buf_len, buflen - buf_len);
     }
 #endif // OSCILLATOR_ENABLE
     if (0 != (changed & LOG_SET)) {
-        json_log_dump(session, buf + strlen(buf), buflen - strlen(buf));
+        buf_len = strnlen(buf, MAX_PACKET_LENGTH);
+        json_log_dump(session, buf + buf_len, buflen - buf_len);
     }
 }
 
