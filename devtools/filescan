@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# -*- coding: latin-1 -*-
+# -*- coding: utf-8 -*-
 # SPDX-License-Identifier: BSD-2-Clause
 # Copyright 2022 the gpsd project contributors
 """Scans files for tabs, non-ASCII runes, and trailing whitespace on lines.
@@ -7,52 +7,40 @@
 .. moduleauthor:: James Browning <JamesB.fe80@GMail.com>
 
 for a file containing a line:
-   	edited.  Symbols “$”, “*” “,” and “.”  are not allowed to be used  	 
+   	edited. Symbols “$”, “*” “,” and “.” are not allowed  	 
 
 we get the image of:
-   === devtools/filescan ===
-      10:          edited.  Symbols "$", "*" "," and "."  are not allowed to be used
-   EAT         "                 !!! !!!  !!! !!! !!! !!!     !!! !!!                           44464
-   =================================================================================================
+    === filescan.py ===
+         10:        edited. Symbols "$", "*" "," and "." are not allowed
+    EAT    :   "                !!! !!!  !!! !!! !!! !!!     !!! !!!                44644
+    ====================================================================================
 
-This file it seems has some issues deliberately left in as indicated by the result block, The resulting block shown is sanitized to avoid Hall Of Mirrors type effects.
 
-#. The name of this file, as given to itself, with short horizontal rules before and after.
-#. A non-compliant line number, followed by a colon, some spacing, and the text of the line.
-#. An offense summary string for the previous line, and offense pointers
-
-   # There are three recognized offenses at this point,
-
-      #. **E** - Trailing whitespace
-      #. **A** - Inclusion of non-ASCII octets
-      #. **T** - Inclusion of tabs (horizontal )
-
-   # There are 4 offense location indicators, that can be below the offending portion of the line.
-
-      #. **!** indicates the offset of a non-ASCII octet.
-      #. **4** and **6** indicate the offset of trailing whitespace.
-      #. **"** and **6** indicate the offset of tabs.
-
-   # The reason the offense location indicators seem misplaced is that tabs tend to expand to the following multiple of 8, and non-ASCII octets tend to contract to fewer runes.
-
-#. A longer horizontal rule to separate any additional files.
+This file it seems has some issues deliberately left in
+as indicated by the result block, The resulting block
+shown is sanitized to avoid Hall Of Mirrors type effects.
 """
 import sys
 
-encoding = "latin-1"
+encoding = "utf-8"
 pstr = str
 fopt = "rUb"
-if not str is bytes:
+if str is not bytes:
     import io
 
     fopt = "rb"
 
     def make_std_wrapper(h):
+        """Wrap std{err,out} to permit unicode output."""
         return io.TextIOWrapper(
-            h.buffer, encoding=encoding, newline="\n", line_buffering=True
+            h.buffer,
+            encoding=encoding,
+            newline="\n",
+            line_buffering=True,
         )
 
     def pstr(s):
+        """Turn (byte(array)) c into a string."""
         if not isinstance(s, (bytes, bytearray)):
             return str(s)
         return str(s, encoding=encoding)
@@ -62,24 +50,28 @@ if not str is bytes:
 
 
 def pchr(c):
+    """Turn (number) c into a rune."""
     if isinstance(c, int):
         return chr(c)
     return c
 
 
 def pord(c):
+    """Turn (rune) c into a number."""
     if isinstance(c, str):
         return ord(c)
     return c
 
 
 def mangled(strung, mods):
-    """Return byte-array with incremented/decremented values according to a template.
+    """Return byte-array with incremented/decremented
+       values according to a template.
 
     #. strung:: the input byte-array
     #. mods:: a nested tuple-like with the mods
        #. top level is the group of mods
-       #. level below that is the increment/decrement value and the list of elements to modify by index
+       #. level below that is the increment/decrement
+          value and the list of elements to modify by index
     """
     try:
         result = strung
@@ -94,6 +86,7 @@ def mangled(strung, mods):
             if key in _:
                 dicky[key] = _[key]
         print(repr(dicky))
+        print(repr(e))
     return result
 
 
@@ -112,7 +105,8 @@ def hunt_in_file(fname):
     . Set up variables for printing.
        . Slap together summary line
        . Create storage for the offending line.
-       . Create/populate modification variable for mangled to modify the storage.
+       . Create/populate modification variable
+         for mangled to modify the storage.
     . Print out the five-digit line number, ':  ', and the given line.
     . Prints out a line summarizing and indicating the column of the offense
     . Prints out a long horizontal rule to separate anything that comes next
@@ -128,12 +122,16 @@ def hunt_in_file(fname):
             [len(a_line.rstrip()), len(a_line.rstrip("\n\r"))],
             [],
         ]
-        for col, octet in enumerate(a_line, start=1):
+        for col, octet in enumerate(a_line):
             if pord(octet) > 0x7E:
                 scratch[1].append(col)
             elif pord(octet) == pord("\t"):
                 scratch[4].append(col)
-        if scratch[1] != [] or scratch[4] != [] or scratch[3][1] != scratch[3][0]:
+        if (
+            scratch[1] != []
+            or scratch[4] != []
+            or scratch[3][1] != scratch[3][0]
+        ):
             dumper.append(scratch)
             long_line = max(scratch[3][1], long_line)
     if dumper != []:
@@ -142,13 +140,19 @@ def hunt_in_file(fname):
         for line in dumper:
             col, vec = 0, ""
             strung = bytearray(" " * line[3][0], encoding=encoding)
-            strung += bytearray("4" * (1 + line[3][1] - line[3][0]), encoding=encoding)
+            strung += (
+                bytearray(
+                    "4" * (1 + line[3][1] - line[3][0]),
+                    encoding=encoding,
+                )
+                + b" "
+            )
             vec += "E" * (line[3][1] > line[3][0])
             vec += "A" * (line[1] != [])
             vec += "T" * (line[4] != [])
             strung = mangled(strung, [[2, line[4]], [1, line[1]]])
-            sys.stdout.write("%5d:  %s" % (line[0], line[2]))
-            sys.stdout.write("%-8s%s\n" % (vec, pstr(strung)))
+            sys.stdout.write("%7d:%s" % (line[0], line[2]))
+            sys.stdout.write("%-7s:%s\n" % (vec, pstr(strung)))
         sys.stdout.write("%s\n\n" % ("=" * (long_line + 8)))
 
 
@@ -156,7 +160,8 @@ if __name__ == "__main__":
     """Scans files for tabs, non-ASCII runes, and trailing whitespace on lines.
 
     . Unless given the --version -V --help or -h command-line arguments
-    . Reads filenames from the command-line arguments and then from stdin if it is not a TTY, (probably the bottom of a pipe).
+    . Reads filenames from the command-line arguments and then from
+      stdin if it is not a TTY, (probably the bottom of a pipe).
     . If given -V or --version, prints out the wrong version number.
     . If given -h or --help, prints text that doesn't help.
 
@@ -166,17 +171,38 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         prog="filescan",
-        description="Scans files for tabs, non-ASCII runes and trailing whitepsace on lines.",
+        description="Scans files for tabs, non-ASCII runes," +
+                     " and trailing whitepsace on lines.",
+        epilog="""* The name of the offending file, as given, with short horizontal rules before and after.
+* A non-compliant line number, followed by a colon, and the text of the line.
+* An offense summary string for the previous line, and offense pointers
+    * There are three recognized offenses at this point,
+        E - Trailing whitespace
+        A - Inclusion of non-ASCII octets
+        T - Inclusion of (horizontal) tabs
+    * There are 3 offense location indicators, that indicate the offset of can be below the offending portion of the line.
+        " - non-trailing horizontal tabs.
+        ! - a non-ASCII octet.
+        4 - trailing spaces (0x20).
+        6 - trailing horizontal tabs.
+    Offense location indicators seem misplaced because horizontal tabs expand to the following multiple of 8, and non-ASCII octets contract.
+* A longer horizontal rule to separate any additional files.
+* Takes a list from stdin if piped in as well.""",
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    #parser.add_argument(
+        #"--stdin",
+        #"-S",
+        #action="store_true",
+        #default=False,
+        #help="Grab list of files from stdin",
+    #)
+    parser.add_argument(
+        "--version", "-V", action="version", version="%(prog)s 0.5"
     )
     parser.add_argument(
-        "--stdin",
-        "-S",
-        action="store_true",
-        default=False,
-        help="Grab list of files from pipe",
+        "file_list", nargs="*", help="List of files to scan"
     )
-    parser.add_argument("--version", "-V", action="version", version="%(prog)s 0.3")
-    parser.add_argument("file_list", nargs="*", help="List of files to scan")
     _ = parser.parse_args()
     rings = [_.file_list] if "file_list" in _ else []
     _ = sys.stdin
