@@ -1710,7 +1710,7 @@ int main(int argc, char *argv[])
         if (!ret) {
             // 240 tries at 0.5 seconds a try is a 2 minute timeout
             if (240 < wait_clicks++) {
-                die(GPS_TIMEOUT, "cgps: timeout contactong gpsd\n");
+                die(GPS_TIMEOUT, "cgps: timeout contacting gpsd\n");
             }
         } else {
             wait_clicks = 0;
