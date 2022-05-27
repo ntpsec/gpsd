@@ -196,9 +196,10 @@ void gps_shm_close(struct gps_data_t *gpsdata)
 int gps_shm_mainloop(struct gps_data_t *gpsdata, int timeout,
                      void (*hook)(struct gps_data_t *gpsdata))
 {
-    int status;
 
     for (;;) {
+        int status;
+
         if (!gps_shm_waiting(gpsdata, timeout)) {
             return -1;
         }
