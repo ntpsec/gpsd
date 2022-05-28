@@ -207,10 +207,10 @@ class SkyView(Gtk.DrawingArea):
                 for (x1, y1, sat1) in self.sat_xy:
                     # find all instances of this sat
 
-                    if (sat1["gnssid"] != sat["gnssid"]  or
-                        sat1["svid"] != sat["svid"]):
+                    if ((sat1["gnssid"] != sat["gnssid"] or
+                         sat1["svid"] != sat["svid"])):
                         # not this one
-                        continue;
+                        continue
 
                     if "sigid" in sat1:
                         sig = "%d" % sat1.sigid
@@ -232,7 +232,6 @@ class SkyView(Gtk.DrawingArea):
                         use_str += ", " + use
                     else:
                         use_str = use
-
 
                 if 'health' not in sat:
                     health = "Unk"
@@ -488,8 +487,8 @@ class SkyView(Gtk.DrawingArea):
             # low probability of excluding legitimate cases, while avoiding
             # the improper display in this case.
             # Note that this only excludes them from the map, not the list.
-            if (0 == sat.az and
-                0 == sat.el):
+            if ((0 == sat.az and
+                 0 == sat.el)):
                 continue
 
             (x, y) = self.pol2cart(sat.az, sat.el)
