@@ -1135,7 +1135,8 @@ frame * {
         skyframe = Gtk.Frame(label="Satellite List")
         self.satbox.add(skyframe)
 
-        self.satlist = Gtk.ListStore(str, str, str, str, str, str, str, str)
+        self.satlist = Gtk.ListStore(str, str, str, str, str, str, str, str,
+                                     str, str)
         sat_view = Gtk.TreeView(model=self.satlist)
         sat_view.set_fixed_height_mode(True)  # supposed to speed up TreeView
 
@@ -1146,6 +1147,8 @@ frame * {
                    ['Elev', 1],
                    ['Azim', 1],
                    ['SNR', 1],
+                   ['qual', 1],
+                   ['prRes', 1],
                    ['Used', 0],
                    ]
 
@@ -1161,11 +1164,12 @@ frame * {
 
         self.row_iters = []
         for i in range(options.maxchandisp):
-            self.satlist.append(["", "", "", "", "", "", "", ""])
+            self.satlist.append(["", "", "", "", "", "", "", "", "", ""])
             self.row_iters.append(self.satlist.get_iter(i))
 
         skyframe.add(sat_view)
 
+        # now do the Skyview
         viewframe = Gtk.Frame(label="Skyview")
         self.satbox.add(viewframe)
         self.sky_view = SkyView(self.rotate)
@@ -1193,7 +1197,7 @@ frame * {
         self.dataframe.add(datatable)
         gpswidgets = []
         # min col widths
-        widths = [0, 25, 0, 20, 0, 23, 0, 8]
+        widths = [0, 25, 0, 20, 0, 23, 0, 0, 0, 8]
         for i in range(len(Base.gpsfields)):
             colbase = (i // Base.ROWS) * 2
             label = Gtk.Label()
@@ -1618,7 +1622,15 @@ frame * {
                 self.set_satlist_field(i, 6,
                                        self._tenth_to_str(satellite.ss,
                                                           0, 100))
-                self.set_satlist_field(i, 7, yesno)
+                if 'qual' in satellite:
+                    self.set_satlist_field(i, 7,
+                                           self._int_to_str(satellite.qual,
+                                                            1, 9))
+                if 'prRes' in satellite:
+                    self.set_satlist_field(i, 8,
+                                           self._tenth_to_str(satellite.prRes,
+                                                              -999, 999))
+                self.set_satlist_field(i, 9, yesno)
 
             # clear rest of the list
             for i in range(data.satellites_seen, options.maxchandisp):
