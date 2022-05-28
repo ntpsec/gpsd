@@ -105,7 +105,8 @@ static double ant_e = 0.0;
 static double ant_h = 0.0;
 static double ant_n = 0.0;
 static char marker_name[61] = "XXXX";
-static char marker_type[61] = "NON_PHYSICAL";
+// NON-GEODETIC means the antenna was not moving (static)
+static char marker_type[61] = "NON_GEODETIC";
 static char observer[21] = "Unknown";
 static char rec_num[21] = "0";
 static char rec_type[21] = "Unknown";
@@ -348,8 +349,11 @@ static void print_rinex_header(void)
 
     (void)fprintf(log_file, "%14.4f%14.4f%14.4f%18s%-20s\n",
         ant_h, ant_e, ant_n, "", "ANTENNA: DELTA H/E/N");
+#if 0
+    // In Rinex 2, not in RINEX 3
     (void)fprintf(log_file, "%6d%6d%48s%-20s\n", 1, 1,
          "", "WAVELENGTH FACT L1/2");
+#endif
 
     // get PRN stats
     qsort(obs_cnt, MAXCNT, sizeof(struct obs_cnt_t), compare_obs_cnt);
@@ -532,6 +536,7 @@ static void print_rinex_header(void)
          "GPS", "",
          "TIME OF LAST OBS");
 
+    // PHASE SHIFT is mandatory since RINEX 3.01,   but blank data is OK.
     if (0 < prn_count[GNSSID_GPS]) {
         // GPS, code G
         (void)fprintf(log_file, "%-60s%-20s\n",
