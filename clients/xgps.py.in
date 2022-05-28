@@ -196,12 +196,14 @@ class SkyView(Gtk.DrawingArea):
                 if "gnssid" in sat and "svid" in sat:
                     # gnssid:svid in gpsd 3.18 and up
                     constellation = gnssid_str(sat)[1]
-                    gnss_str = "%-8s  %4d\n" % (constellation, sat.svid)
+                    gnss_str = "%-8s     %4d\n" % (constellation, sat.svid)
                 else:
                     gnss_str = ''
 
+                prres_str = ''
                 sig_str = ''
                 snr_str = ''
+                qual_str = ''
                 use_str = ''
 
                 for (x1, y1, sat1) in self.sat_xy:
@@ -212,10 +214,19 @@ class SkyView(Gtk.DrawingArea):
                         # not this one
                         continue
 
-                    if "sigid" in sat1:
-                        sig = "%d" % sat1.sigid
+                    if "prRes" in sat1:
+                        prres = "%4.1f" % sat1.prRes
                     else:
-                        sig = "0"
+                        prres = "    "
+                    if prres_str:
+                        prres_str += ", " + prres
+                    else:
+                        prres_str = prres
+
+                    if "sigid" in sat1:
+                        sig = "%4d" % sat1.sigid
+                    else:
+                        sig = "   0"
                     if sig_str:
                         sig_str += ", " + sig
                     else:
@@ -226,6 +237,15 @@ class SkyView(Gtk.DrawingArea):
                         snr_str += ", " + snr
                     else:
                         snr_str = snr
+
+                    if "qual" in sat1:
+                        qual = "%3d" % sat1.qual
+                    else:
+                        qual = "   "
+                    if qual_str:
+                        qual_str += ", " + qual
+                    else:
+                        qual_str = qual
 
                     use = "Yes" if sat.used else "No"
                     if use_str:
@@ -243,16 +263,18 @@ class SkyView(Gtk.DrawingArea):
                     health = "Unk"
 
                 label = Gtk.Label()
-                s = ("<span font_desc='monospace 10'>PRN %10d\n"
+                s = ("<span font_desc='monospace 10'>PRN %13d\n"
                      "%s"
-                     "sigId %s\n"
-                     "Elevation %4.1f\n"
-                     "Azimuth  %5.1f\n"
-                     "SNR %s\n"
-                     "Used %s\n"
-                     "Health %7s</span>" %
-                     (sat.PRN, gnss_str, sig_str,
-                      sat.el, sat.az, snr_str, use_str, health))
+                     "Elevation    %4.1f\n"
+                     "Azimuth     %5.1f\n"
+                     "sigId  %9s\n"
+                     "SNR   %11s\n"
+                     "prRes %11s\n"
+                     "Quality  %7s\n"
+                     "Health  %9s\n"
+                     "Used  %11s</span>" %
+                     (sat.PRN, gnss_str, sat.el, sat.az, sig_str, snr_str,
+                      prres_str, qual_str, health, use_str))
                 label.set_markup(s)
                 rectangle = Gdk.Rectangle()
                 rectangle.x = x - 25
