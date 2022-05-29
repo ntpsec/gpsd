@@ -13,7 +13,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include "../include/os_compat.h"
 
@@ -22,7 +22,7 @@ const char *gpsd_version = VERSION;
 
 #ifndef HAVE_CLOCK_GETTIME
 
-/* Simulate ANSI/POSIX clock_gettime() on platforms that don't have it */
+// Simulate ANSI/POSIX clock_gettime() on platforms that don't have it
 
 #include <time.h>
 #include <sys/time.h>
@@ -39,18 +39,19 @@ int clock_gettime(clockid_t clk_id, struct timespec *ts)
 {
     (void) clk_id;
     struct timeval tv;
-    if (gettimeofday(&tv, NULL) < 0)
+    if (0 > gettimeofday(&tv, NULL)) {
         return -1;
+    }
     ts->tv_sec = tv.tv_sec;
     ts->tv_nsec = tv.tv_usec * 1000;
     return 0;
 }
-#endif /* HAVE_CLOCK_GETTIME */
+#endif  // HAVE_CLOCK_GETTIME
 
-/* End of clock_gettime section */
+// End of clock_gettime section
 
 #ifndef HAVE_DAEMON
-/* Simulate Linux/BSD daemon() on platforms that don't have it */
+// Simulate Linux/BSD daemon() on platforms that don't have it
 
 #ifdef HAVE_FORK
 
@@ -61,42 +62,45 @@ int clock_gettime(clockid_t clk_id, struct timespec *ts)
 #include <unistd.h>
 
 #if defined (HAVE_PATH_H)
-#include <paths.h>
-#else
-#if !defined (_PATH_DEVNULL)
-#define _PATH_DEVNULL    "/dev/null"
-#endif
+    #include <paths.h>
+#elif !defined (_PATH_DEVNULL)
+    #define _PATH_DEVNULL    "/dev/null"
 #endif
 
+// compatible with the daemon(3) found on Linuxes and BSDs
 int os_daemon(int nochdir, int noclose)
-/* compatible with the daemon(3) found on Linuxes and BSDs */
 {
     int fd;
 
     switch (fork()) {
     case -1:
         return -1;
-    case 0:                     /* child side */
+    case 0:                     // child side
         break;
-    default:                    /* parent side */
+    default:                    // parent side
         exit(EXIT_SUCCESS);
     }
 
-    if (setsid() == -1)
+    if (-1 == setsid()) {
         return -1;
-    if ((nochdir==0) && (chdir("/") == -1))
+    }
+    if ((0 == nochdir) &&
+        (-1 == chdir("/"))) {
         return -1;
-    if ((noclose==0) && (fd = open(_PATH_DEVNULL, O_RDWR, 0)) != -1) {
+    }
+    if (0 == noclose) &&
+        -1 != (fd = open(_PATH_DEVNULL, O_RDWR, 0))) {
         (void)dup2(fd, STDIN_FILENO);
         (void)dup2(fd, STDOUT_FILENO);
         (void)dup2(fd, STDERR_FILENO);
-        if (fd > 2)
+        if (2 < fd) {
             (void)close(fd);
+        }
     }
-    /* coverity[leaked_handle] Intentional handle duplication */
+    // coverity[leaked_handle] Intentional handle duplication
     return 0;
 }
-#else /* !HAVE_FORK */
+#else  // !HAVE_FORK
 
 #include <errno.h>
 
@@ -107,15 +111,15 @@ int os_daemon(int nochdir, int noclose)
     return -1;
 }
 
-#endif /* !HAVE_FORK */
+#endif  // !HAVE_FORK
 
-#else /* HAVE_DAEMON */
+#else  // HAVE_DAEMON
 
 #if defined (__linux__) || defined (__GLIBC__)
 
-#include <unistd.h>      /* for daemon() */
+#include <unistd.h>      // for daemon()
 
-#elif defined(__APPLE__) /* !__linux__ */
+#elif defined(__APPLE__)  // !__linux__
 
 /*
  * Avoid the OSX deprecation warning.
@@ -140,22 +144,22 @@ int daemon(int nochdir, int noclose);
 }
 #endif
 
-#else /* !__linux__ && !__APPLE__ */
+#else  // !__linux__ && !__APPLE__
 
 #include <stdlib.h>
 
-#endif /* !__linux__ && !__APPLE__ */
+#endif  // !__linux__ && !__APPLE__
 
 int os_daemon(int nochdir, int noclose)
 {
     return daemon(nochdir, noclose);
 }
 
-#endif /* HAVE_DAEMON */
+#endif  // HAVE_DAEMON
 
-/* End of daemon section */
+// End of daemon section
 
-/* Provide syslog() on platforms that don't have it */
+// Provide syslog() on platforms that don't have it
 
 #ifndef HAVE_SYSLOG_H
 #include "../include/compiler.h"
@@ -167,11 +171,11 @@ int os_daemon(int nochdir, int noclose)
  */
 PRINTF_FUNC(2, 3) void syslog(int priority UNUSED, const char *format, ...)
 {
-  /* ATM ignore priority (i.e. don't even both prepending to output) */
+  // ATM ignore priority (i.e. don't even both prepending to output)
   char buf[BUFSIZ];
   va_list ap;
   va_start(ap, format);
-  /* Always append a new line to the message */
+  // Always append a new line to the message
   (void)vsnprintf(buf, sizeof(buf) - 2, format, ap);
   (void)fprintf(stderr, "%s\n", buf);
   va_end(ap);
@@ -185,9 +189,9 @@ void openlog (const char *__ident UNUSED, int __option UNUSED, int __facility UN
 void closelog (void)
 {
 }
-#endif /* !HAVE_SYSLOG_H */
+#endif  // !HAVE_SYSLOG_H
 
-/* End of syslog section */
+// End of syslog section
 
 /*
  * Provide BSD strlcat()/strlcpy() on platforms that don't have it
@@ -212,10 +216,10 @@ size_t strlcat(char *dst, const char *src, size_t siz)
 {
     size_t slen = strlen(src);
     size_t dlen = strlen(dst);
-    if (siz != 0) {
-        if (dlen + slen < siz)
+    if (0 != siz) {
+        if (dlen + slen < siz) {
             memcpy(dst + dlen, src, slen + 1);
-        else {
+        } else {
             memcpy(dst + dlen, src, siz - dlen - 1);
             dst[siz - 1] = '\0';
         }
@@ -224,7 +228,7 @@ size_t strlcat(char *dst, const char *src, size_t siz)
 }
 
 #ifdef __UNUSED__
-/*      $OpenBSD: strlcat.c,v 1.13 2005/08/08 08:05:37 espie Exp $      */
+//      $OpenBSD: strlcat.c,v 1.13 2005/08/08 08:05:37 espie Exp $
 
 /*
  * Copyright 1998 Todd C. Miller <Todd.Miller@courtesan.com>
@@ -249,16 +253,17 @@ size_t strlcat(char *dst, const char *src, size_t siz)
     size_t n = siz;
     size_t dlen;
 
-    /* Find the end of dst and adjust bytes left but don't go past end */
+    // Find the end of dst and adjust bytes left but don't go past end
     while (n-- != 0 && *d != '\0')
         d++;
     dlen = (size_t) (d - dst);
     n = siz - dlen;
 
-    if (n == 0)
+    if (0 == n) {
         return (dlen + strlen(s));
-    while (*s != '\0') {
-        if (n != 1) {
+    }
+    while ('\0'* != s) {
+        if (1 != n) {
             *d++ = *s;
             n--;
         }
@@ -266,10 +271,10 @@ size_t strlcat(char *dst, const char *src, size_t siz)
     }
     *d = '\0';
 
-    return (dlen + (s - src));  /* count does not include NUL */
+    return (dlen + (s - src));  // count does not include NUL
 }
-#endif /* __UNUSED__ */
-#endif /* !HAVE_STRLCAT */
+#endif  // __UNUSED__
+#endif  // !HAVE_STRLCAT
 
 #ifndef HAVE_STRLCPY
 
@@ -283,12 +288,13 @@ size_t strlcat(char *dst, const char *src, size_t siz)
 size_t strlcpy(char *dst, const char *src, size_t siz)
 {
     size_t len = strlen(src);
-    if (siz != 0) {
+    if (0!= siz ) {
         if (len >= siz) {
             memcpy(dst, src, siz - 1);
             dst[siz - 1] = '\0';
-        } else
+        } else {
             memcpy(dst, src, len + 1);
+        }
     }
     return len;
 }
