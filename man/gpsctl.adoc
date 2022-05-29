@@ -138,9 +138,9 @@ If no options are given, the program will display a message identifying
 the GPS type of the selected device and exit.
 
 Reset (*-r*) operations must stand alone; others can be combined.
-Multiple options will be executed in this order: mode changes (*-b*
-and -*n*) first, speed changes (*-s*) second, and control-string
-sends (*-c*) last.
+gpsctl will execute multiple options in this order: mode change (-b
+or -n) first, speed changes (-s) second, cycle rate (-c) third and
+control strings (-x) last.
 
 [[environment]]
 == ENVIRONMENT VARIABLES
