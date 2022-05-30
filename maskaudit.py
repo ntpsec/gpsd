@@ -188,13 +188,17 @@ if __name__ == '__main__':
  * Try to write guards so it is only called at higher log levels.
  */
 
-#include \"../include/gpsd_config.h\"  /* must be before all includes */
+#include \"../include/gpsd_config.h\"  // must be before all includes
 
 #include <stdio.h>
 #include <string.h>
 
 #include \"../include/gpsd.h\"
 
+/* Convert gps_mask_t set to a string representation
+ *
+ * Return pointer to static buffer contatining the string.
+ */
 const char *gps_maskdump(gps_mask_t set)
 {
     static char buf[%d];
@@ -216,12 +220,13 @@ const char *gps_maskdump(gps_mask_t set)
     memset(buf, '\\0', sizeof(buf));
     buf[0] = '{';
     for (sp = names; sp < names + sizeof(names)/sizeof(names[0]); sp++)
-        if ((set & sp->mask)!=0) {
+        if (0 != (set & sp->mask)) {
             (void)strlcat(buf, sp->name, sizeof(buf));
             (void)strlcat(buf, "|", sizeof(buf));
         }
-    if (buf[1] != \'\\0\')
+    if (\'\\0\' != buf[1]) {
         buf[strlen(buf)-1] = \'\\0\';
+    }
     (void)strlcat(buf, "}", sizeof(buf));
     return buf;
 }
