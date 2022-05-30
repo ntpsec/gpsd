@@ -261,10 +261,14 @@ static int json_raw_read(const char *buf, struct gps_data_t *gpsdata,
     memset(&gpsdata->raw, 0, sizeof(gpsdata->raw));
 
     status = json_read_object(buf, json_attrs_raw, endptr);
-    if (status != 0)
+    if (0 != status) {
         return status;
-    if (0 == isfinite(mtime_s) || 0 == isfinite(mtime_ns))
+    }
+    gpsdata->set |= RAW_SET;
+    if (0 == isfinite(mtime_s) ||
+        0 == isfinite(mtime_ns)) {
         return status;
+    }
     gpsdata->raw.mtime.tv_sec = (time_t)mtime_s;
     gpsdata->raw.mtime.tv_nsec = (long)mtime_ns;
 
