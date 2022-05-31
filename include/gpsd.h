@@ -23,11 +23,11 @@ extern "C" {
 #include <stdio.h>
 #include <termios.h>
 #ifdef HAVE_WINSOCK2_H
-#include <winsock2.h>      /* for fd_set */
-#else /* !HAVE_WINSOCK2_H */
-#include <sys/select.h>    /* for fd_set */
-#endif /* !HAVE_WINSOCK2_H */
-#include <time.h>    /* for time_t */
+#include <winsock2.h>      // for fd_set
+#else  // !HAVE_WINSOCK2_H
+#include <sys/select.h>    // for fd_set
+#endif  // !HAVE_WINSOCK2_H
+#include <time.h>    // for time_t
 
 #include "gps.h"
 #include "os_compat.h"
@@ -203,7 +203,7 @@ enum isgpsstat_t {
  */
 #define GPS_EPOCH       ((time_t)315964800)     // 6 Jan 1980 00:00:00 UTC
 
-/* time constant */
+// time constant
 #define SECS_PER_DAY    ((time_t)(60*60*24))    // seconds per day
 #define SECS_PER_WEEK   (7*SECS_PER_DAY)        // seconds per week
 #define GPS_ROLLOVER    (1024*SECS_PER_WEEK)    // rollover period
@@ -328,9 +328,9 @@ struct gps_context_t {
     bool batteryRTC;
     speed_t fixed_port_speed;           // Fixed port speed, if non-zero
     char fixed_port_framing[4];         // Fixed port framing, if non-blank
-    /* DGPS status */
+    // DGPS status
     int fixcnt;                         // count of good fixes seen
-    /* timekeeping */
+    // timekeeping
     time_t start_time;                  // local time of daemon startup
     int leap_seconds;                   // Unix secs to UTC (GPS-UTC offset)
     unsigned short gps_week;            // GPS week, usually 10 bits
@@ -362,18 +362,18 @@ struct ais_type24a_t {
     unsigned int mmsi;
     char shipname[AIS_SHIPNAME_MAXLEN+1];
 };
-#define MAX_TYPE24_INTERLEAVE   8       /* max number of queued type 24s */
+#define MAX_TYPE24_INTERLEAVE   8       // max number of queued type 24s
 struct ais_type24_queue_t {
     struct ais_type24a_t ships[MAX_TYPE24_INTERLEAVE];
     int index;
 };
 
-/* state for resolving AIVDM decodes */
+// state for resolving AIVDM decodes
 struct aivdm_context_t {
-    /* hold context for decoding AIDVM packet sequences */
+    // hold context for decoding AIDVM packet sequences
     int decoded_frags;     // for tracking AIDVM parts in a multipart sequence
     unsigned char bits[2048];
-    size_t bitlen; /* how many valid bits */
+    size_t bitlen;         // how many valid bits
     struct ais_type24_queue_t type24_queue;
 };
 
@@ -393,17 +393,17 @@ typedef enum {
 
 
 #define INTERNAL_SET(n) ((gps_mask_t)(1llu<<(SET_HIGH_BIT+(n))))
-#define RAW_IS          INTERNAL_SET(1)         /* raw pseudoranges available */
-#define USED_IS         INTERNAL_SET(2)         /* sat-used count available */
-#define DRIVER_IS       INTERNAL_SET(3)         /* driver type identified */
-#define CLEAR_IS        INTERNAL_SET(4)         /* starts a reporting cycle */
-#define REPORT_IS       INTERNAL_SET(5)         /* ends a reporting cycle */
-#define NODATA_IS       INTERNAL_SET(6)         /* no data read from fd */
+#define RAW_IS          INTERNAL_SET(1)         // raw pseudoranges available
+#define USED_IS         INTERNAL_SET(2)         // sat-used count available
+#define DRIVER_IS       INTERNAL_SET(3)         // driver type identified
+#define CLEAR_IS        INTERNAL_SET(4)         // starts a reporting cycle
+#define REPORT_IS       INTERNAL_SET(5)         // ends a reporting cycle
+#define NODATA_IS       INTERNAL_SET(6)         // no data read from fd
 #define NTPTIME_IS      INTERNAL_SET(7)         // precision time is available
-#define PERR_IS         INTERNAL_SET(8)         /* PDOP set */
-#define PASSTHROUGH_IS  INTERNAL_SET(9)         /* passthrough mode */
-#define EOF_IS          INTERNAL_SET(10)        /* synthetic EOF */
-#define GOODTIME_IS     INTERNAL_SET(11)      /* time good even if no pos fix */
+#define PERR_IS         INTERNAL_SET(8)         // PDOP set
+#define PASSTHROUGH_IS  INTERNAL_SET(9)         // passthrough mode
+#define EOF_IS          INTERNAL_SET(10)        // synthetic EOF
+#define GOODTIME_IS     INTERNAL_SET(11)        // time good even if no pos fix
 #define DATA_IS ~(ONLINE_SET|PACKET_SET|CLEAR_IS|REPORT_IS)
 
 typedef unsigned int driver_mask_t;
@@ -413,10 +413,10 @@ typedef unsigned int driver_mask_t;
 /*
  * True if a device type is non-null and has control methods.
  */
-#define CONTROLLABLE(dp)        (((dp) != NULL) && \
-                                 ((dp)->speed_switcher != NULL          \
-                                  || (dp)->mode_switcher != NULL        \
-                                  || (dp)->rate_switcher != NULL))
+#define CONTROLLABLE(dp)        ((NULL != (dp)) &&                  \
+                                 (NULL != (dp)->speed_switcher ||   \
+                                  NULL != (dp)->mode_switcher ||    \
+                                  NULL != (dp)->rate_switcher))
 
 /*
  * True if a driver selection of it should be sticky.
@@ -424,10 +424,10 @@ typedef unsigned int driver_mask_t;
 #define STICKY(dp)      ((dp) != NULL && ((dp)->flags & DRIVER_STICKY) != 0)
 
 struct gps_type_t {
-/* GPS method table, describes how to talk to a particular GPS type */
+// GPS method table, describes how to talk to a particular GPS type
     char *type_name;
     int packet_type;
-    driver_mask_t flags;        /* reserved for expansion */
+    driver_mask_t flags;        // reserved for expansion
     char *trigger;
     int channels;
     bool (*probe_detect)(struct gps_device_t *session);
@@ -540,14 +540,14 @@ struct ntrip_stream_t
 };
 
 
+// session object, encapsulates all global state
 struct gps_device_t {
-/* session object, encapsulates all global state */
     struct gps_data_t gpsdata;
     const struct gps_type_t *device_type;
-    unsigned int driver_index;        /* numeric index of current driver */
-    unsigned int drivers_identified;  /* bitmask; what drivers have we seen? */
-    unsigned int cfg_stage;     /* configuration stage counter */
-    unsigned int cfg_step;      /* configuration step counter */
+    unsigned int driver_index;        // numeric index of current driver
+    unsigned int drivers_identified;  // bitmask; what drivers have we seen?
+    unsigned int cfg_stage;           // configuration stage counter
+    unsigned int cfg_step;            // configuration step counter
     const struct gps_type_t *last_controller;
     struct gps_context_t        *context;
     sourcetype_t sourcetype;
@@ -559,7 +559,7 @@ struct gps_device_t {
     struct gps_lexer_t lexer;
     int badcount;
     int subframe_count;
-    /* firmware version or subtype ID, 96 too small for ZED-F9 */
+    // firmware version or subtype ID, 96 too small for ZED-F9
     char subtype[128];
     char subtype1[128];
     time_t opentime;                  // FIXME: change to timespec_t
@@ -575,35 +575,35 @@ struct gps_device_t {
 #define VALID_UNIT(u)   (0 <= (u) && (u) < NTPSHMSEGS)
     int shm_clock_unit;
     int shm_pps_unit;
-    int chronyfd;                       /* for talking to chrony */
+    int chronyfd;                      // for talking to chrony
     volatile struct pps_thread_t pps_thread;
     /*
      * msgbuf needs to hold the hex decode of inbuffer
      * so msgbuf must be 2x the size of inbuffer
      */
-    char msgbuf[MAX_PACKET_LENGTH*4+1]; /* command message buffer for sends */
+    char msgbuf[MAX_PACKET_LENGTH*4+1]; // command message buffer for sends
     size_t msgbuflen;
-    int observed;                       /* which packet type`s have we seen? */
-    bool cycle_end_reliable;            /* does driver signal REPORT_MASK */
-    int fixcnt;                         /* count of fixes from this device */
+    int observed;                       // which packet type`s have we seen?
+    bool cycle_end_reliable;            // does driver signal REPORT_MASK
+    int fixcnt;                         // count of fixes from this device
     int last_word_gal;                  // last subframe word from Galileo
     int last_svid3_gal;                 // last SVID3 from Galileo
-    struct gps_fix_t newdata;           /* where drivers put their data */
-    struct gps_fix_t lastfix;           /* not quite yet ready for oldfix */
-    struct gps_fix_t oldfix;            /* previous fix for error modeling */
+    struct gps_fix_t newdata;           // where drivers put their data
+    struct gps_fix_t lastfix;           // not quite yet ready for oldfix
+    struct gps_fix_t oldfix;            // previous fix for error modeling
     struct {
         unsigned short sats_used[MAXCHANNELS];
-        int part, await;                /* for tracking GSV parts */
-        struct tm date;                 /* date part of last sentence time */
-        timespec_t subseconds;          /* subsec part of last sentence time */
+        int part, await;                // for tracking GSV parts
+        struct tm date;                 // date part of last sentence time
+        timespec_t subseconds;          // subsec part of last sentence time
         // pointers to each field in fieldcopy.  Each is NUL terminated.
         char *field[NMEA_MAX_FLD];
         unsigned char fieldcopy[NMEA_MAX+1]; // a copy of the current sentence
-        /* detect receivers that ship GGA with non-advancing timestamp */
+        // detect receivers that ship GGA with non-advancing timestamp
         bool latch_mode;
         char last_gga_timestamp[16];
         char last_gga_talker;
-        /* GSV stuff */
+        // GSV stuff
         bool seen_bdgsv;                        // BeiDou GSV
         bool seen_gagsv;                        // Galileo GSV
         bool seen_gigsv;                        // IRNSS GSV
@@ -612,8 +612,8 @@ struct gps_device_t {
         bool seen_gpgsv;                        // GPS GSV
         bool seen_qzgsv;                        // QZSS GSV
         char last_gsv_talker;
-        unsigned char last_gsv_sigid;           /* NMEA 4.1 */
-        /* GSA stuff */
+        unsigned char last_gsv_sigid;           // NMEA 4.1
+        // GSA stuff
         bool seen_bdgsa;                        // BeiDou GSA
         bool seen_gagsa;                        // Galileo GSA
         bool seen_gigsa;                        // IRNSS GSA
@@ -633,7 +633,7 @@ struct gps_device_t {
          */
         timespec_t this_frac_time, last_frac_time;
         bool latch_frac_time;
-        int lasttag;              /* index into nmea_phrase[] */
+        int lasttag;              // index into nmea_phrase[]
         // 120 > number of used entries in nmea_phrase[]
 #define NMEA_NUM 120
         // bit map into nmea_phrase[], +1 to shut up coverity
@@ -654,34 +654,34 @@ struct gps_device_t {
         struct {
             unsigned int physical_port;
         } geostar;
-#endif /* GEOSTAR_ENABLE */
+#endif  // GEOSTAR_ENABLE
 #ifdef GREIS_ENABLE
         struct {
             uint32_t rt_tod;            // RT message time of day (modulo 1 day)
-            bool seen_rt;               /* true if seen RT message */
-            bool seen_uo;               /* true if seen UO message */
-            bool seen_si;               /* true if seen SI message */
-            bool seen_az;               /* true if seen AZ message */
-            bool seen_ec;               /* true if seen EC message */
-            bool seen_el;               /* true if seen EL message */
-            /* true if seen a raw measurement message */
+            bool seen_rt;               // true if seen RT message
+            bool seen_uo;               // true if seen UO message
+            bool seen_si;               // true if seen SI message
+            bool seen_az;               // true if seen AZ message
+            bool seen_ec;               // true if seen EC message
+            bool seen_el;               // true if seen EL message
+            // true if seen a raw measurement message
             bool seen_raw;
         } greis;
-#endif /* GREIS_ENABLE */
+#endif  // GREIS_ENABLE
 #ifdef SIRF_ENABLE
         struct {
-            unsigned int need_ack;      /* if NZ we're awaiting ACK */
-            unsigned int driverstate;   /* for private use */
-#define SIRF_LT_231     0x01            /* SiRF at firmware rev < 231 */
-#define SIRF_EQ_231     0x02            /* SiRF at firmware rev == 231 */
-#define SIRF_GE_232     0x04            /* SiRF at firmware rev >= 232 */
-#define UBLOX           0x08            /* u-blox firmware with packet 0x62 */
+            unsigned int need_ack;      // if NZ we're awaiting ACK
+            unsigned int driverstate;   // for private use
+#define SIRF_LT_231     0x01            // SiRF at firmware rev < 231
+#define SIRF_EQ_231     0x02            // SiRF at firmware rev == 231
+#define SIRF_GE_232     0x04            // SiRF at firmware rev >= 232
+#define UBLOX           0x08            // u-blox firmware with packet 0x62
             unsigned long satcounter;
             unsigned int time_seen;
-            unsigned char lastid;       /* ID with last timestamp seen */
-#define TIME_SEEN_UTC_2 0x08    /* Seen UTC time variant 2? */
-            /* fields from Navigation Parameters message */
-            bool nav_parameters_seen;   /* have we seen one? */
+            unsigned char lastid;       // ID with last timestamp seen
+#define TIME_SEEN_UTC_2 0x08            // Seen UTC time variant 2?
+            // fields from Navigation Parameters message
+            bool nav_parameters_seen;   // have we seen one?
             unsigned char altitude_hold_mode;
             unsigned char altitude_hold_source;
             int16_t altitude_source_input;
@@ -689,20 +689,20 @@ struct gps_device_t {
             unsigned char degraded_timeout;
             unsigned char dr_timeout;
             unsigned char track_smooth_mode;
-            /* fields from DGPS Status */
+            // fields from DGPS Status
             unsigned int dgps_source;
-#define SIRF_DGPS_SOURCE_NONE           0 /* No DGPS correction type selected */
-#define SIRF_DGPS_SOURCE_SBAS           1 /* SBAS */
-#define SIRF_DGPS_SOURCE_SERIAL         2 /* RTCM corrections */
-#define SIRF_DGPS_SOURCE_BEACON         3 /* Beacon corrections */
-#define SIRF_DGPS_SOURCE_SOFTWARE       4 /* Software API corrections */
+#define SIRF_DGPS_SOURCE_NONE           0  // No DGPS correction type selected
+#define SIRF_DGPS_SOURCE_SBAS           1  // SBAS
+#define SIRF_DGPS_SOURCE_SERIAL         2  // RTCM corrections
+#define SIRF_DGPS_SOURCE_BEACON         3  // Beacon corrections
+#define SIRF_DGPS_SOURCE_SOFTWARE       4  // Software API corrections
         } sirf;
-#endif /* SIRF_ENABLE */
+#endif  // SIRF_ENABLE
 #ifdef SUPERSTAR2_ENABLE
         struct {
             time_t last_iono;
         } superstar2;
-#endif /* SUPERSTAR2_ENABLE */
+#endif  // SUPERSTAR2_ENABLE
 #ifdef TSIP_ENABLE
         struct {
             unsigned short sats_used[MAXCHANNELS];
@@ -719,7 +719,7 @@ struct gps_device_t {
             time_t req_compact;
             time_t last_a200;           // last xa2-00 received
             time_t last_a311;           // last xa3-11 received
-            unsigned int stopbits; /* saved RS232 link parameter */
+            unsigned int stopbits;      // saved RS232 link parameter
             char parity;
             int subtype;                // hardware ID, sort of
 #define TSIP_UNKNOWN               0
@@ -736,54 +736,54 @@ struct gps_device_t {
             timespec_t last_tow;        // used to find cycle start
             int last_chan_seen;         // from 0x5c or 0x5d
         } tsip;
-#endif /* TSIP_ENABLE */
-#ifdef GARMIN_ENABLE    /* private housekeeping stuff for the Garmin driver */
+#endif  // TSIP_ENABLE
+#ifdef GARMIN_ENABLE    // private housekeeping stuff for the Garmin driver
         struct {
-            unsigned char Buffer[4096+12];      /* Garmin packet buffer */
-            size_t BufferLen;           /* current GarminBuffer Length */
+            unsigned char Buffer[4096+12];   // Garmin packet buffer
+            size_t BufferLen;                // current GarminBuffer Length
         } garmin;
-#endif /* GARMIN_ENABLE */
-#ifdef ZODIAC_ENABLE    /* private housekeeping stuff for the Zodiac driver */
+#endif  // GARMIN_ENABLE
+#ifdef ZODIAC_ENABLE    // private housekeeping stuff for the Zodiac driver
         struct {
-            unsigned short sn;          /* packet sequence number */
+            unsigned short sn;          // packet sequence number
             /*
              * Zodiac chipset channel status from PRWIZCH. Keep it so
              * raw-mode translation of Zodiac binary protocol can send
              * it up to the client.
              */
 #define ZODIAC_CHANNELS 12
-            unsigned int Zs[ZODIAC_CHANNELS];   /* satellite PRNs */
-            unsigned int Zv[ZODIAC_CHANNELS];   /* signal values (0-7) */
+            unsigned int Zs[ZODIAC_CHANNELS];   // satellite PRNs
+            unsigned int Zv[ZODIAC_CHANNELS];   // signal values (0-7)
         } zodiac;
-#endif /* ZODIAC_ENABLE */
+#endif  // ZODIAC_ENABLE
 #ifdef UBLOX_ENABLE
         struct {
-            /* FIXME: last_time set but never used? */
-            timespec_t last_time;               /* time of last_msgid */
-            /* iTOW, and last_iTOW, in ms, used for cycle end detect. */
+            // FIXME: last_time set but never used?
+            timespec_t last_time;               // time of last_msgid
+            // iTOW, and last_iTOW, in ms, used for cycle end detect.
             int64_t iTOW;
             int64_t last_iTOW;
-            unsigned int end_msgid;             /* cycle ender class/ID */
-            unsigned int last_msgid;            /* last class/ID */
+            unsigned int end_msgid;             // cycle ender class/ID
+            unsigned int last_msgid;            // last class/ID
             unsigned char port_id;
             unsigned char sbas_in_use;
             unsigned char protver;              // u-blox protocol version
             unsigned char last_protver;         // last protocol version
         } ubx;
-#endif /* UBLOX_ENABLE */
+#endif  // UBLOX_ENABLE
 #ifdef NAVCOM_ENABLE
         struct {
             uint8_t physical_port;
             bool warned;
         } navcom;
-#endif /* NAVCOM_ENABLE */
+#endif  // NAVCOM_ENABLE
 #ifdef ONCORE_ENABLE
         struct {
 #define ONCORE_VISIBLE_CH 12
             int visible;
-            int PRN[ONCORE_VISIBLE_CH];         /* PRNs of satellite */
-            int elevation[ONCORE_VISIBLE_CH];   /* elevation of satellite */
-            int azimuth[ONCORE_VISIBLE_CH];     /* azimuth */
+            int PRN[ONCORE_VISIBLE_CH];         // PRNs of satellite
+            int elevation[ONCORE_VISIBLE_CH];   // elevation of satellite
+            int azimuth[ONCORE_VISIBLE_CH];     // azimuth
 #define ONCORE_POS_HOLD_MODE_UNKNOWN    0
 #define ONCORE_POS_HOLD_MODE_OFF        1
 #define ONCORE_POS_HOLD_MODE_ON         2
@@ -791,7 +791,7 @@ struct gps_device_t {
             int pos_hold_mode;
             int pps_offset_ns;
         } oncore;
-#endif /* ONCORE_ENABLE */
+#endif  // ONCORE_ENABLE
 #ifdef NMEA2000_ENABLE
         struct {
             unsigned int can_msgcnt;
@@ -808,27 +808,27 @@ struct gps_device_t {
             void *pgnlist;
             unsigned char sid[8];
         } nmea2000;
-#endif /* NMEA2000_ENABLE */
+#endif  // NMEA2000_ENABLE
         /*
          * This is not conditionalized on RTCM104_ENABLE because we need to
          * be able to build gpsdecode even when RTCM support is not
          * configured in the daemon.  It doesn't take up extra space.
          */
         struct {
-            /* ISGPS200 decoding */
+            // ISGPS200 decoding
             bool            locked;
             int             curr_offset;
             isgps30bits_t   curr_word;
             isgps30bits_t   buf[RTCM2_WORDS_MAX];
             unsigned int    bufindex;
         } isgps;
-#endif /* BINARY_ENABLE */
+#endif  // BINARY_ENABLE
 #ifdef AIVDM_ENABLE
         struct {
             struct aivdm_context_t context[AIVDM_CHANNELS];
             char ais_channel;
         } aivdm;
-#endif /* AIVDM_ENABLE */
+#endif  // AIVDM_ENABLE
     } driver;
 
     /*
@@ -837,10 +837,10 @@ struct gps_device_t {
      * in this substructure is only valid if servicetype is SERVICE_NTRIP.
      */
     struct {
-        /* state information about the stream */
+        // state information about the stream
         struct ntrip_stream_t stream;
 
-        /* state information about our response parsing */
+        // state information about our response parsing
         enum {
             NTRIP_CONN_INIT = 0,
             NTRIP_CONN_SENT_PROBE,
@@ -849,11 +849,11 @@ struct gps_device_t {
             NTRIP_CONN_ERR,
             NTRIP_CONN_CLOSED,         // connection closed
             NTRIP_CONN_INPROGRESS,     // connection in progress
-        } conn_state;   /* connection state for multi stage connect */
+        } conn_state;   // connection state for multi stage connect
         bool works; // marks a working connection, so we try to reconnect once
-        bool sourcetable_parse; /* have we read the sourcetable header? */
+        bool sourcetable_parse; // have we read the sourcetable header?
     } ntrip;
-    /* State of a DGPSIP connection */
+    // State of a DGPSIP connection
     struct {
         bool reported;
     } dgpsip;
@@ -862,28 +862,28 @@ struct gps_device_t {
 /*
  * These are used where a file descriptor of 0 or greater indicates open device.
  */
-#define UNALLOCATED_FD  -1      /* this slot is available for reallocation */
-#define PLACEHOLDING_FD -2      /* this slot *not* available for reallocation */
+#define UNALLOCATED_FD  -1      // this slot is available for reallocation
+#define PLACEHOLDING_FD -2      // this slot *not* available for reallocation
 
-/* logging levels */
-#define LOG_ERROR       -1      /* errors, display always */
-#define LOG_SHOUT       0       /* not an error but we should always see it */
-#define LOG_WARN        1       /* not errors but may indicate a problem */
-#define LOG_CLIENT      2       /* log JSON reports to clients */
-#define LOG_INF         3       /* key informative messages */
-#define LOG_PROG        4       /* progress messages */
-#define LOG_IO          5       /* IO to and from devices */
-#define LOG_DATA        6       /* log data management messages */
-#define LOG_SPIN        7       /* logging for catching spin bugs */
-#define LOG_RAW         8       /* raw low-level I/O */
+// logging levels
+#define LOG_ERROR       -1      // errors, display always
+#define LOG_SHOUT       0       // not an error but we should always see it
+#define LOG_WARN        1       // not errors but may indicate a problem
+#define LOG_CLIENT      2       // log JSON reports to clients
+#define LOG_INF         3       // key informative messages
+#define LOG_PROG        4       // progress messages
+#define LOG_IO          5       // IO to and from devices
+#define LOG_DATA        6       // log data management messages
+#define LOG_SPIN        7       // logging for catching spin bugs
+#define LOG_RAW         8       // raw low-level I/O
 #define LOG_RAW1        9       // rawer
 #define LOG_RAW2       10       // rawest
 
 #define ISGPS_ERRLEVEL_BASE     LOG_RAW
 
-#define IS_HIGHEST_BIT(v,m)     (v & ~((m<<1)-1))==0
+#define IS_HIGHEST_BIT(v,m)     0 == (v & ~((m << 1) - 1))
 
-/* driver helper functions */
+// driver helper functions
 extern void isgps_init(struct gps_lexer_t *);
 enum isgpsstat_t isgps_decode(struct gps_lexer_t *,
                               bool (*preamble_match)(isgps30bits_t *),
@@ -902,10 +902,10 @@ extern void json_rtcm3_dump(const struct rtcm3_t *,
 extern void rtcm3_unpack(const struct gps_context_t *,
                          struct rtcm3_t *, const unsigned char *);
 
-/* here are the available GPS drivers */
+// here are the available GPS drivers
 extern const struct gps_type_t **gpsd_drivers;
 
-/* gpsd library internal prototypes */
+// gpsd library internal prototypes
 extern gps_mask_t generic_parse_input(struct gps_device_t *);
 extern ssize_t generic_get(struct gps_device_t *);
 
@@ -1089,7 +1089,7 @@ extern void gpsd_wrap(struct gps_device_t *);
 extern bool gpsd_add_device(const char *device_name, bool flag_nowait);
 extern const char *gpsd_maskdump(gps_mask_t);
 
-/* exceptional driver methods */
+// exceptional driver methods
 extern bool ubx_write(struct gps_device_t *, unsigned int, unsigned int,
                       const unsigned char *, size_t);
 extern bool ais_binary_decode(const struct gpsd_errout_t *errout,
@@ -1141,7 +1141,7 @@ PRINTF_FUNC(3, 4) void gpsd_log(const int, const struct gpsd_errout_t *,
  * provide an implementation in serial.c for systems that lack it.
  */
 void cfmakeraw(struct termios *);
-#endif /* !defined(HAVE_CFMAKERAW) */
+#endif  // !defined(HAVE_CFMAKERAW)
 
 #define DEVICEHOOKPATH "/" SYSCONFDIR "/gpsd/device-hook"
 
@@ -1149,7 +1149,7 @@ void cfmakeraw(struct termios *);
 }
 # endif
 
-#endif /* _GPSD_H_ */
+#endif  // _GPSD_H_
 // Local variables:
 // mode: c
 // end:
