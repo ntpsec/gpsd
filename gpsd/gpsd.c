@@ -1876,7 +1876,7 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
 #ifdef SHM_EXPORT_ENABLE
     // should match clients/gpsdecode.c decode()
     if (0 != (changed & (AIS_SET | ATTITUDE_SET | GST_SET | DOP_SET |
-                         IMU_SET | RAW_SET |  REPORT_IS| RTCM2_SET |
+                         IMU_SET | RAW_IS |  REPORT_IS| RTCM2_SET |
                          RTCM3_SET | SATELLITE_SET | SUBFRAME_SET))) {
         // SHM clients updated more often than TCP clients.
         shm_update(&context, &device->gpsdata);

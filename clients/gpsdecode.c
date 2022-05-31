@@ -515,7 +515,10 @@ static void aivdm_csv_dump(struct ais_t *ais, char *buf, size_t buflen)
 }
 #endif
 
-// say whether a given message should be visible
+/* say whether a given message should be visible
+ *
+ * Return: False if this message should be filtered.
+ */
 static bool filter(gps_mask_t changed, struct gps_device_t *session)
 {
     unsigned int i, t;
@@ -621,9 +624,15 @@ static void decode(FILE *fpin, FILE*fpout)
         if (session.lexer.outbuflen < minima[session.lexer.type+1]) {
             minima[session.lexer.type+1] = session.lexer.outbuflen;
         }
+#ifdef __UNUSED__  // debug
+        (void)fprintf(stderr, "decode(): json %d mask %s\n",
+                      json, gps_maskdump(session.gpsdata.set));
+        (void)fprintf(stderr, "decode(): json %d changed %s\n",
+                      json, gps_maskdump(changed));
+#endif
         // mask should match what's in gpsd/gpsd.c report_data()
         if (0 == (changed & (AIS_SET|ATTITUDE_SET|GST_SET|IMU_SET|REPORT_IS|
-                             RTCM2_SET|RTCM3_SET|SATELLITE_SET|
+                             RAW_IS|RTCM2_SET|RTCM3_SET|SATELLITE_SET|
                              SUBFRAME_SET))) {
             continue;
         }
