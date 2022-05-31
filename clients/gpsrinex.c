@@ -579,6 +579,10 @@ static void print_rinex_header(void)
         (void)fprintf(log_file, "%-60s%-20s\n",
              "R L2C", "SYS / PHASE SHIFT");
     }
+    // GLO only files do not have LEAP SECOND record
+    // FIX: add leap second future, and wekk of leap second future
+    (void)fprintf(log_file, "%16d%16s%16s%16s%3s%-20s\n",
+         leap_seconds, "", "", "", "GPS", "LEAP SECONDS");
     (void)fprintf(log_file, "%-60s%-20s\n",
          "", "END OF HEADER");
     if (DEBUG_PROG <= debug) {
@@ -1019,7 +1023,8 @@ static void quit_handler(int signum)
  */
 static void conditionally_log_fix(struct gps_data_t *gpsdata)
 {
-    if (0 == leap_seconds && 0 < gpsdata->leap_seconds) {
+    if (0 == leap_seconds &&
+        0 < gpsdata->leap_seconds) {
         // grab a static copy of the current leap second.
         leap_seconds = gpsdata->leap_seconds;
     }
@@ -1060,7 +1065,14 @@ static void conditionally_log_fix(struct gps_data_t *gpsdata)
         if (DEBUG_RAW <= debug) {
             (void)fprintf(stderr,"got RAW\n");
         }
-        /* RINEX 3 prefers GPS time. Accepts GLO (UTC) time.
+        /* RINEX 3.05, Section 4.1
+         * For single constellation, use that constellations time.
+         * GPS time is UTC, minus the leap seconds
+         * GLONASS time is UTC
+         * Galileo time is GPS time.
+         * BeiDou time is 14 seconds behind GPS time.
+         * QZSS time is GPS time.
+         * prefers GPS time. Accepts GLO (UTC) time.
          * NRCan does not accept GLO time
          * Remove the leap second to get GPS from UTC.
          */
@@ -1122,6 +1134,7 @@ static void usage(void)
 #define REC_NUM 310
 #define REC_TYPE 311
 #define REC_VERS 312
+
 
 /*
  *
@@ -1298,15 +1311,17 @@ int main(int argc, char **argv)
     (void)signal(SIGQUIT, quit_handler);
     (void)signal(SIGINT, quit_handler);
 
-    if (gps_open(source.server, source.port, &gpsdata) != 0) {
-        (void)fprintf(stderr, "%s: no gpsd running or network error: %d, %s\n",
-                      progname, errno, gps_errstr(errno));
+    if (0 > gps_open(source.server, source.port, &gpsdata)) {
+        (void)fprintf(stderr,
+                      "%s: no gpsd running or network error: %d, %s(%d)\n",
+                      progname, errno, gps_errstr(errno), errno);
         exit(EXIT_FAILURE);
     }
-
-    if (source.device != NULL)
+    if (NULL != source.device) {
         flags |= WATCH_DEVICE;
+    }
     (void)gps_stream(&gpsdata, flags, source.device);
+
 
     // create temp file, coverity does not like tmpfile()
     // covarfity wants a umask
