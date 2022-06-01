@@ -249,7 +249,7 @@ int gps_send(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
  * Return: negative -- fail
  */
 int gps_stream(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
-        unsigned int flags CONDITIONALLY_UNUSED,
+        watch_t flags CONDITIONALLY_UNUSED,
         const char *d CONDITIONALLY_UNUSED)
 {
     int status = -1;

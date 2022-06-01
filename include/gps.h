@@ -99,7 +99,7 @@ extern "C" {
  *       Move gpsd_hexpack() to here as gps_hexpack()
  *       Move gpsd_hexdump() to here as gps_hexdump()
  *       Add prRes and qualityInd to satellite_t
- *       Add fixsource_t to gps_data_t
+ *       Add fixsource_t and watch_t to gps_data_t
  */
 #define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
@@ -2684,19 +2684,20 @@ typedef int socket_t;
 #define INVALIDATE_SOCKET(s)    do { s = -1; } while (0)
 
 // mode flags for setting streaming policy
-#define WATCH_ENABLE    0x000001u       // enable streaming
-#define WATCH_DISABLE   0x000002u       // disable watching
-#define WATCH_READONLY  0x000004u       // read only (file input)
-#define WATCH_JSON      0x000010u       // JSON output
-#define WATCH_NMEA      0x000020u       // output in NMEA
-#define WATCH_RARE      0x000040u       // output of packets in hex
-#define WATCH_RAW       0x000080u       // output of raw packets
-#define WATCH_SCALED    0x000100u       // scale output to floats
-#define WATCH_TIMING    0x000200u       // timing information
-#define WATCH_DEVICE    0x000800u       // watch specific device
-#define WATCH_SPLIT24   0x001000u       // split AIS Type 24s
-#define WATCH_PPS       0x002000u       // enable PPS JSON
-#define WATCH_NEWSTYLE  0x010000u       // force JSON streaming
+typedef uint32_t watch_t;
+#define WATCH_ENABLE    (watch_t)0x000001u       // enable streaming
+#define WATCH_DISABLE   (watch_t)0x000002u       // disable watching
+#define WATCH_READONLY  (watch_t)0x000004u       // read only (file input)
+#define WATCH_JSON      (watch_t)0x000010u       // JSON output
+#define WATCH_NMEA      (watch_t)0x000020u       // output in NMEA
+#define WATCH_RARE      (watch_t)0x000040u       // output of packets in hex
+#define WATCH_RAW       (watch_t)0x000080u       // output of raw packets
+#define WATCH_SCALED    (watch_t)0x000100u       // scale output to floats
+#define WATCH_TIMING    (watch_t)0x000200u       // timing information
+#define WATCH_DEVICE    (watch_t)0x000800u       // watch specific device
+#define WATCH_SPLIT24   (watch_t)0x001000u       // split AIS Type 24s
+#define WATCH_PPS       (watch_t)0x002000u       // enable PPS JSON
+#define WATCH_NEWSTYLE  (watch_t)0x010000u       // force JSON streaming
 
 
 // describe a gpsd source
@@ -2836,6 +2837,7 @@ struct gps_data_t {
     // time of PPS pulse that qErr applies to
     timespec_t qErr_time;
     struct fixsource_t source;    // source of the gpsd data
+    watch_t watch;                // watch flags in use.
 
     // Private data - client code must not set this
     void *privdata;
@@ -2850,7 +2852,7 @@ extern const char *gps_hexdump(char *, size_t, const unsigned char *, size_t);
 extern ssize_t gps_hexpack(const char *, unsigned char *, size_t);
 extern int gps_unpack(char *, struct gps_data_t *);
 extern bool gps_waiting(const struct gps_data_t *, int);
-extern int gps_stream(struct gps_data_t *, unsigned int, const char *);
+extern int gps_stream(struct gps_data_t *, watch_t, const char *);
 extern int gps_mainloop(struct gps_data_t *, int,
                         void (*)(struct gps_data_t *));
 extern const char *gps_data(const struct gps_data_t *);

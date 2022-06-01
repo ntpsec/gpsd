@@ -468,7 +468,7 @@ int gps_sock_send(struct gps_data_t *gpsdata, const char *buf)
 }
 
 // ask gpsd to stream reports at you, hiding the command details
-int gps_sock_stream(struct gps_data_t *gpsdata, unsigned int flags,
+int gps_sock_stream(struct gps_data_t *gpsdata, watch_t flags,
                     const char *d)
 {
     char buf[GPS_JSON_COMMAND_MAX] = "?WATCH={\"enable\":";
