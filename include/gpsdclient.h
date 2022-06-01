@@ -17,16 +17,6 @@ struct exportmethod_t
     const char *description;
 };
 
-// describe a gpsd source
-struct fixsource_t
-{
-    char spec[512];               // original string
-    const char *server;           // server name, maybe IP
-    const char *server_ip;        // server IP as string, maybe IPv4 or IPv6
-    const char *port;
-    const char *device;
-};
-
 struct exportmethod_t *export_lookup(const char *);
 struct exportmethod_t *export_default(void);
 void export_list(FILE *);
@@ -39,9 +29,6 @@ extern char *deg_to_str(enum deg_str_type type, double f);
 extern char *deg_to_str2(enum deg_str_type type, double f,
                          char *buf, unsigned int buf_size,
                          const char *suffix_pos, const char *suffix_neg);
-
-extern void gpsd_source_spec(const char *fromstring,
-                             struct fixsource_t *source);
 
 const char *maidenhead(double n,double e);
 

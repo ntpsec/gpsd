@@ -99,6 +99,7 @@ extern "C" {
  *       Move gpsd_hexpack() to here as gps_hexpack()
  *       Move gpsd_hexdump() to here as gps_hexdump()
  *       Add prRes and qualityInd to satellite_t
+ *       Add fixsource_t to gps_data_t
  */
 #define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
@@ -2697,6 +2698,17 @@ typedef int socket_t;
 #define WATCH_PPS       0x002000u       // enable PPS JSON
 #define WATCH_NEWSTYLE  0x010000u       // force JSON streaming
 
+
+// describe a gpsd source
+struct fixsource_t
+{
+    char spec[512];               // original string
+    const char *server;           // server name, maybe IP
+    const char *server_ip;        // server IP as string, maybe IPv4 or IPv6
+    const char *port;
+    const char *device;
+};
+
 /*
  * Main structure that includes all previous substructures
  */
@@ -2823,6 +2835,7 @@ struct gps_data_t {
     long qErr;                  // offset in picoseconds (ps)
     // time of PPS pulse that qErr applies to
     timespec_t qErr_time;
+    struct fixsource_t source;    // source of the gpsd data
 
     // Private data - client code must not set this
     void *privdata;
@@ -2852,7 +2865,10 @@ int json_pps_read(const char *buf, struct gps_data_t *,
 int json_oscillator_read(const char *buf, struct gps_data_t *,
                          const char **);
 
-// dependencies on struct gpsdata_t end here
+// dependencies on struct gps_data_t end here
+
+extern void gpsd_source_spec(const char *fromstring,
+                             struct fixsource_t *source);
 
 extern void libgps_trace(int errlevel, const char *, ...);
 
