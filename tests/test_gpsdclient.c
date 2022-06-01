@@ -16,6 +16,7 @@
 #include <unistd.h>                    // for getopt()
 
 #include "../include/compiler.h"       // for FALLTHROUGH
+#include "../include/gps.h"            // fixsource_t
 #include "../include/gpsdclient.h"
 #include "../include/os_compat.h"
 

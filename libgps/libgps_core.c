@@ -185,8 +185,7 @@ int gps_close(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED)
  *    char *message         -- NULL, or optional buffer for received JSON
  *    int message_len       -- zero, or sizeof(message)
  */
-int gps_read(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
-             char *message, int message_len)
+int gps_read(struct gps_data_t *gpsdata, char *message, int message_len)
 {
     int status = -1;
 
@@ -198,14 +197,18 @@ int gps_read(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
         *message = '\0';
     }
 
+    if (NULL != gpsdata->source.server &&
+        0 == strcmp(gpsdata->source.server, GPSD_LOCAL_FILE)) {
+        // local file read
+    }
 #ifdef SHM_EXPORT_ENABLE
-    if (BAD_SOCKET((intptr_t)(gpsdata->gps_fd))) {
+    else if (BAD_SOCKET((intptr_t)(gpsdata->gps_fd))) {
         status = gps_shm_read(gpsdata);
     }
 #endif  // SHM_EXPORT_ENABLE
 
 #ifdef SOCKET_EXPORT_ENABLE
-    if (-1 == status &&
+    else if (-1 == status &&
         !BAD_SOCKET((intptr_t)(gpsdata->gps_fd))) {
         status = gps_sock_read(gpsdata, message, message_len);
     }
@@ -282,16 +285,23 @@ const char *gps_data(const struct gps_data_t *gpsdata CONDITIONALLY_UNUSED)
 }
 
 /* is there input waiting from the GPS?
- * timeout is in uSec */
-bool gps_waiting(const struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
+ * timeout is in uSec
+ */
+bool gps_waiting(const struct gps_data_t *gpsdata,
                  int timeout CONDITIONALLY_UNUSED)
 {
     // this is bogus, but I can't think of a better solution yet
     bool waiting = true;
 
+    if (NULL != gpsdata->source.server &&
+        0 == strcmp(gpsdata->source.server, GPSD_LOCAL_FILE)) {
+        // always ready, until EOF
+        return true;
+    }
 #ifdef SHM_EXPORT_ENABLE
     if (SHM_PSEUDO_FD == (intptr_t)(gpsdata->gps_fd)) {
         waiting = gps_shm_waiting(gpsdata, timeout);
+        return waiting;
     }
 #endif  // SHM_EXPORT_ENABLE
 

@@ -39,15 +39,6 @@
 #ifdef SOCKET_EXPORT_ENABLE
 #include "../include/gps_json.h"
 
-struct privdata_t
-{
-    bool newstyle;
-    // data buffered from the last read
-    ssize_t waiting;
-    char buffer[GPS_JSON_RESPONSE_MAX * 2];
-    int waitcount;
-};
-
 #ifdef HAVE_WINSOCK2_H
 static bool need_init = TRUE;
 static bool need_finish = TRUE;
@@ -129,15 +120,11 @@ int gps_sock_open(const char *host, const char *port,
 #endif  // USE_QT
 
     // set up for line-buffered I/O over the daemon socket
-    gpsdata->privdata = (void *)malloc(sizeof(struct privdata_t));
+    gpsdata->privdata = (struct privdata_t *)malloc(sizeof(struct privdata_t));
     if (NULL == gpsdata->privdata) {
         return -1;
     }
-    PRIVATE(gpsdata)->newstyle = false;
-    PRIVATE(gpsdata)->waiting = 0;
-    PRIVATE(gpsdata)->buffer[0] = 0;
-
-    PRIVATE(gpsdata)->waitcount = 0;
+    memset(gpsdata->privdata, 0, sizeof(struct privdata_t));
     return 0;
 }
 

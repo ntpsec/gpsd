@@ -7,10 +7,6 @@
 
 #include "json.h"
 
-#define GPS_JSON_COMMAND_MAX    80
-// u-blox 9 can make really long JSON in "RAW" messages
-#define GPS_JSON_RESPONSE_MAX   10240
-
 #ifdef __cplusplus
 extern "C" {
 #endif

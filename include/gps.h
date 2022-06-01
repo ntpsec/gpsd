@@ -100,6 +100,7 @@ extern "C" {
  *       Move gpsd_hexdump() to here as gps_hexdump()
  *       Add prRes and qualityInd to satellite_t
  *       Add fixsource_t and watch_t to gps_data_t
+ *       move privdata_t here from libgps/gps_sock.c
  */
 #define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
@@ -107,6 +108,10 @@ extern "C" {
 #define MAXCHANNELS     140     // u-blox 9 tracks 140 signals
 #define MAXUSERDEVS     4       // max devices per user
 #define GPS_PATH_MAX    128     // for names like /dev/serial/by-id/...
+
+#define GPS_JSON_COMMAND_MAX    80
+// u-blox 9 can make really long JSON in "RAW" messages
+#define GPS_JSON_RESPONSE_MAX   10240
 
 // normalize degrees to 0 to 359
 #define DEG_NORM(deg) \
@@ -2710,6 +2715,22 @@ struct fixsource_t
     const char *device;
 };
 
+// data buffers for reading files or sockets
+struct gps_data_t;   // forward declaration of gpss_data_t;
+
+struct privdata_t
+{
+    // data buffered from the last read
+    ssize_t waiting;
+    char buffer[GPS_JSON_RESPONSE_MAX * 2];
+    int waitcount;
+    // DBus handler
+    void (*handler)(struct gps_data_t *);
+    // SHM handler
+    void *shmseg;
+    int tick;
+};
+
 /*
  * Main structure that includes all previous substructures
  */
@@ -2840,7 +2861,7 @@ struct gps_data_t {
     watch_t watch;                // watch flags in use.
 
     // Private data - client code must not set this
-    void *privdata;
+    struct privdata_t *privdata;
 };
 
 extern int gps_open(const char *, const char *,

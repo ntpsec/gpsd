@@ -30,12 +30,6 @@ PERMISSIONS
 #include "../include/gpsd.h"
 #include "../include/libgps.h"
 
-struct privdata_t
-{
-    void *shmseg;
-    int tick;
-};
-
 
 // open a shared-memory connection to the daemon
 int gps_shm_open(struct gps_data_t *gpsdata)
@@ -53,14 +47,14 @@ int gps_shm_open(struct gps_data_t *gpsdata)
         // daemon isn't running or failed to create shared segment
         return -1;
     }
-    gpsdata->privdata = (void *)malloc(sizeof(struct privdata_t));
+    gpsdata->privdata = (struct privdata_t *)malloc(sizeof(struct privdata_t));
     if (NULL == gpsdata->privdata) {
         return -1;
     }
+    memset(gpsdata->privdata, 0, sizeof(struct privdata_t));
 
-    PRIVATE(gpsdata)->tick = 0;
     PRIVATE(gpsdata)->shmseg = shmat(shmid, 0, 0);
-    if ((void *) -1 == PRIVATE(gpsdata)->shmseg) {
+    if ((void *)-1 == PRIVATE(gpsdata)->shmseg) {
         // attach failed for sume unknown reason
         free(gpsdata->privdata);
         gpsdata->privdata = NULL;
@@ -118,7 +112,7 @@ int gps_shm_read(struct gps_data_t *gpsdata)
         return -1;
     } else {
         int before1, before2, after1, after2;
-        void *private_save = gpsdata->privdata;
+        struct privdata_t *private_save = gpsdata->privdata;
         struct shmexport_t *shared =
             (struct shmexport_t *)PRIVATE(gpsdata)->shmseg;
         struct gps_data_t noclobber;
