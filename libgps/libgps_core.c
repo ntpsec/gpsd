@@ -69,8 +69,7 @@ void libgps_trace(int errlevel, const char *fmt, ...)
  * Return: 0 o nsuccess
  *         less than zero on failure
  */
-int gps_open(const char *host,
-             const char *port CONDITIONALLY_UNUSED,
+int gps_open(const char *host, const char *port,
              struct gps_data_t *gpsdata)
 {
     int status = -100;
@@ -78,6 +77,10 @@ int gps_open(const char *host,
     if (!gpsdata) {
         return NL_NOHOST;
     }
+
+    // save for later
+    gpsdata->source.server = host;
+    gpsdata->source.port = port;
 
     if (NULL != host &&
         0 == strcmp(host, GPSD_LOCAL_FILE)) {
@@ -254,6 +257,7 @@ int gps_stream(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
 {
     int status = -1;
 
+    gpsdata->watch = flags;
     if (WATCH_READONLY & flags) {
         // read only
         return 0;
