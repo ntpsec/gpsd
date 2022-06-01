@@ -2685,6 +2685,7 @@ typedef int socket_t;
 // mode flags for setting streaming policy
 #define WATCH_ENABLE    0x000001u       // enable streaming
 #define WATCH_DISABLE   0x000002u       // disable watching
+#define WATCH_READONLY  0x000004u       // read only (file input)
 #define WATCH_JSON      0x000010u       // JSON output
 #define WATCH_NMEA      0x000020u       // output in NMEA
 #define WATCH_RARE      0x000040u       // output of packets in hex

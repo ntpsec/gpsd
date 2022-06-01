@@ -83,12 +83,16 @@ int gps_open(const char *host,
         0 == strcmp(host, GPSD_LOCAL_FILE)) {
         int fd;
 
-        libgps_debug_trace((DEBUG_CALLS, "gps_open()\n"));
+        libgps_debug_trace((DEBUG_CALLS, "INFO: gps_open(FILE)\n"));
         if (NULL == port) {
+            libgps_debug_trace((DEBUG_CALLS,
+                               "ERROR: gps_open(FILE) missing port\n"));
             return FILE_FAIL;
         }
-        fd = open(host, O_RDONLY);
+        fd = open(port, O_RDONLY);
         if (0 > fd) {
+            libgps_debug_trace((DEBUG_CALLS, "ERROR: gps_open(%s) %d\n",
+                                port,  errno));
             return FILE_FAIL;
         }
 #ifdef USE_QT
@@ -250,6 +254,10 @@ int gps_stream(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
 {
     int status = -1;
 
+    if (WATCH_READONLY & flags) {
+        // read only
+        return 0;
+    }
 #ifdef SOCKET_EXPORT_ENABLE
     status = gps_sock_stream(gpsdata, flags, d);
 #endif  // SOCKET_EXPORT_ENABLE
