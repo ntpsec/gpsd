@@ -438,11 +438,14 @@ const char *gps_sock_data(const struct gps_data_t *gpsdata)
  * Return: 0 -- success
  * Return: negative -- fail
  */
+// FIXME: pass in buf_len
 int gps_sock_send(struct gps_data_t *gpsdata, const char *buf)
 {
+    size_t buf_len = strnlen(buf, BUFSIZ);
+
 #ifdef USE_QT
     QTcpSocket *sock = (QTcpSocket *) gpsdata->gps_fd;
-    sock->write(buf, strlen(buf));
+    sock->write(buf, buf_len);
     if (sock->waitForBytesWritten()) {
         return 0;
     }
@@ -451,15 +454,15 @@ int gps_sock_send(struct gps_data_t *gpsdata, const char *buf)
 #else   // USE_QT
     ssize_t sent;
 #ifdef HAVE_WINSOCK2_H
-    sent = send(gpsdata->gps_fd, buf, strlen(buf), 0);
+    sent = send(gpsdata->gps_fd, buf, buf_len, 0);
 #else
-    sent = write(gpsdata->gps_fd, buf, strlen(buf));
+    sent = write(gpsdata->gps_fd, buf, buf_len);
 #endif /* HAVE_WINSOCK2_H */
-    if ((ssize_t)strlen(buf) == sent) {
+    if ((ssize_t)buf_len == sent) {
         return 0;
     }
     (void)fprintf(stderr, "gps_sock_send() write %ld, s/b %ld\n",
-                  (long)sent, (long)strlen(buf));
+                  (long)sent, (long)buf_len);
 #endif  // USE_QT
     return -1;
 }
