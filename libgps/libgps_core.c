@@ -10,6 +10,7 @@
 
 #include <ctype.h>
 #include <errno.h>
+#include <fcntl.h>                    // open()
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -55,42 +56,76 @@ void libgps_trace(int errlevel, const char *fmt, ...)
 #define CONDITIONALLY_UNUSED UNUSED
 #endif  // SOCKET_EXPORT_ENABLE
 
+/* gps_open(host,) -- open a connection for reading from gpsd
+ *
+ * host can be:
+ *     a host name or host ip - to conenct to host
+ *        port is numeric or symbolic port to connect to
+ *     GPSD_DBUS_EXPORT "DBUS export"     - to connect to local DBUS
+ *     GPSD_FILE_LOCAL "local file"       - to read to local file
+ *        port is file name to open
+ *     GPSD_SHARED_MEMORY "shared memory" - to connect to local chared memory
+ *
+ * Return: 0 o nsuccess
+ *         less than zero on failure
+ */
 int gps_open(const char *host,
              const char *port CONDITIONALLY_UNUSED,
              struct gps_data_t *gpsdata)
 {
-    int status = -1;
+    int status = -100;
 
     if (!gpsdata) {
-        return -1;
+        return NL_NOHOST;
     }
 
-#ifdef SHM_EXPORT_ENABLE
     if (NULL != host &&
+        0 == strcmp(host, GPSD_LOCAL_FILE)) {
+        int fd;
+
+        libgps_debug_trace((DEBUG_CALLS, "gps_open()\n"));
+        if (NULL == port) {
+            return FILE_FAIL;
+        }
+        fd = open(host, O_RDONLY);
+        if (0 > fd) {
+            return FILE_FAIL;
+        }
+#ifdef USE_QT
+        gpsdata->gps_fd = (void *)(intptr_t)fd;   // Huh?
+#else
+        gpsdata->gps_fd = fd;
+#endif
+        status = 0;
+    }
+#ifdef SHM_EXPORT_ENABLE
+    else if (NULL != host &&
         0 == strcmp(host, GPSD_SHARED_MEMORY)) {
         status = gps_shm_open(gpsdata);
-        if (status == -1) {
-            status = SHM_NOSHARED;
-        } else if (status == -2) {
-            status = SHM_NOATTACH;
+        if (-1 == status) {
+            return SHM_NOSHARED;
+        }
+        if (-2 == status ) {
+            return SHM_NOATTACH;
         }
     }
 #define USES_HOST
 #endif  // SHM_EXPORT_ENABLE
 
 #ifdef DBUS_EXPORT_ENABLE
-    if (NULL != host &&
+    else if (NULL != host &&
         0 == strcmp(host, GPSD_DBUS_EXPORT)) {
         status = gps_dbus_open(gpsdata);
         if (0 != status ) {
-            status = DBUS_FAILURE;
+            return DBUS_FAILURE;
         }
     }
 #define USES_HOST
 #endif  // DBUS_EXPORT_ENABLE
 
 #ifdef SOCKET_EXPORT_ENABLE
-    if (-1 == status) {
+    else {
+        // last shot, try host:port
         status = gps_sock_open(host, port, gpsdata);
     }
 #define USES_HOST

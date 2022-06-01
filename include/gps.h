@@ -2931,7 +2931,7 @@ extern short ubx2_to_prn(int gnssId, int svId);
 
 #define CLIGHT      299792458.0  // speed of light (m/s)
 
-// netlib_connectsock() errno return values
+// gpsd_open() and netlib_connectsock() error return values
 #define NL_NOSERVICE    -1      // can't get service entry
 #define NL_NOHOST       -2      // can't get host entry
 #define NL_NOPROTO      -3      // can't get protocol entry
@@ -2941,13 +2941,15 @@ extern short ubx2_to_prn(int gnssId, int svId);
 #define SHM_NOSHARED    -7      // shared-memory segment not available
 #define SHM_NOATTACH    -8      // shared-memory attach failed
 #define DBUS_FAILURE    -9      // DBUS initialization failure
+#define FILE_FAIL      -10      // failed to open file
 
 #define DEFAULT_GPSD_PORT       "2947"  // IANA assignment
 #define DEFAULT_RTCM_PORT       "2101"  // IANA assignment
 
 // special host values for non-socket exports
-#define GPSD_SHARED_MEMORY      "shared memory"
 #define GPSD_DBUS_EXPORT        "DBUS export"
+#define GPSD_LOCAL_FILE         "local file"
+#define GPSD_SHARED_MEMORY      "shared memory"
 
 #ifdef __cplusplus
 }  // End of the 'extern "C"' block

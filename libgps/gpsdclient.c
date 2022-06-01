@@ -22,6 +22,7 @@ static struct exportmethod_t exportmethods[] = {
 #if defined(DBUS_EXPORT_ENABLE)
     {"dbus", GPSD_DBUS_EXPORT, "DBUS broadcast"},
 #endif  // defined(DBUS_EXPORT_ENABLE)
+    {"file", GPSD_LOCAL_FILE, "local file"},
 #ifdef SHM_EXPORT_ENABLE
     {"shm", GPSD_SHARED_MEMORY, "shared memory"},
 #endif  // SOCKET_EXPORT_ENABLE
