@@ -100,11 +100,11 @@ int gps_dbus_open(struct gps_data_t *gpsdata)
 {
     DBusError error;
 
-    gpsdata->privdata = (struct privdata_t *)malloc(sizeof(struct privdata_t));
+    gpsdata->privdata =
+        (struct privdata_t *)calloc(1, sizeof(struct privdata_t));
     if (NULL == gpsdata->privdata) {
         return -1;
     }
-    memset(gpsdata->privdata, 0, sizeof(struct privdata_t));
 
     dbus_error_init(&error);
     connection = dbus_bus_get(DBUS_BUS_SYSTEM, &error);

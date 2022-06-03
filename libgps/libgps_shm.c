@@ -47,11 +47,11 @@ int gps_shm_open(struct gps_data_t *gpsdata)
         // daemon isn't running or failed to create shared segment
         return -1;
     }
-    gpsdata->privdata = (struct privdata_t *)malloc(sizeof(struct privdata_t));
+    gpsdata->privdata =
+        (struct privdata_t *)calloc(1, sizeof(struct privdata_t));
     if (NULL == gpsdata->privdata) {
         return -1;
     }
-    memset(gpsdata->privdata, 0, sizeof(struct privdata_t));
 
     PRIVATE(gpsdata)->shmseg = shmat(shmid, 0, 0);
     if ((void *)-1 == PRIVATE(gpsdata)->shmseg) {

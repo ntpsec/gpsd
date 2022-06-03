@@ -2721,7 +2721,7 @@ struct gps_data_t;   // forward declaration of gpss_data_t;
 struct privdata_t
 {
     // data buffered from the last read
-    ssize_t waiting;
+    ssize_t waiting;       // the number of bytes in the buffer
     char buffer[GPS_JSON_RESPONSE_MAX * 2];
     int waitcount;
     // DBus handler

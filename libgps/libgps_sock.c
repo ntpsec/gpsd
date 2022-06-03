@@ -120,11 +120,11 @@ int gps_sock_open(const char *host, const char *port,
 #endif  // USE_QT
 
     // set up for line-buffered I/O over the daemon socket
-    gpsdata->privdata = (struct privdata_t *)malloc(sizeof(struct privdata_t));
+    gpsdata->privdata =
+        (struct privdata_t *)calloc(1, sizeof(struct privdata_t));
     if (NULL == gpsdata->privdata) {
         return -1;
     }
-    memset(gpsdata->privdata, 0, sizeof(struct privdata_t));
     return 0;
 }
 

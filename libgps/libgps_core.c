@@ -104,6 +104,12 @@ int gps_open(const char *host, const char *port,
         gpsdata->gps_fd = fd;
 #endif
         status = 0;
+        // set up for line-buffered I/O over the daemon socket
+        gpsdata->privdata =
+            (struct privdata_t *)calloc(1, sizeof(struct privdata_t));
+        if (NULL == gpsdata->privdata) {
+            return -1;
+        }
     }
 #ifdef SHM_EXPORT_ENABLE
     else if (NULL != host &&
@@ -178,12 +184,16 @@ int gps_close(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED)
     return status;
 }
 
-/* read from a gpsd connection
+/* wait for and read data from the daemon or file
  *
  * parameters:
  *    gps_data_t *gpsdata   -- structure for GPS data
  *    char *message         -- NULL, or optional buffer for received JSON
  *    int message_len       -- zero, or sizeof(message)
+ *
+ * Return:
+ *    less than zero on error
+ *    zero OK
  */
 int gps_read(struct gps_data_t *gpsdata, char *message, int message_len)
 {
@@ -196,10 +206,96 @@ int gps_read(struct gps_data_t *gpsdata, char *message, int message_len)
         // we do not memset() as this is time critical input path
         *message = '\0';
     }
+    if (NULL == PRIVATE(gpsdata)) {
+        char err[] = "gps_read() NULL == privdata";
+        libgps_debug_trace((DEBUG_CALLS, "%s\n", err));
+        strlcpy(gpsdata->error, err, sizeof(gpsdata->error));
+        gpsdata->set = ERROR_SET;
+        return -1;
+    }
 
     if (NULL != gpsdata->source.server &&
         0 == strcmp(gpsdata->source.server, GPSD_LOCAL_FILE)) {
         // local file read
+        char *eol, *eptr;
+        ssize_t read_ret, message_len;
+
+        errno = 0;
+
+        // scan to find end of message (\n), or end of buffer
+        eol = PRIVATE(gpsdata)->buffer;
+        eptr = eol + PRIVATE(gpsdata)->waiting;
+
+        // fill the buffer
+#ifdef USE_QT
+        read_ret = -1;  // TBD
+#else
+        read_ret = read(gpsdata->gps_fd, eptr,
+                        sizeof(PRIVATE(gpsdata)->buffer) -
+                        PRIVATE(gpsdata)->waiting - 1);
+#endif
+        if (0 >= read_ret) {
+            // EOL, or error
+            char err[] = "gps_read() == 0";
+            gpsdata->set = ERROR_SET;
+            libgps_debug_trace((DEBUG_CALLS, "%s\n", err));
+            strlcpy(gpsdata->error, err, sizeof(gpsdata->error));
+            return -1;
+        }
+        gpsdata->set &= ~PACKET_SET;
+        PRIVATE(gpsdata)->waiting += read_ret;
+        eptr = eol + PRIVATE(gpsdata)->waiting;
+
+        while ((eptr > eol) &&
+               ('\n' != *eol)) {
+            eol++;
+        }
+
+        if (eol >= eptr) {
+            /* Buffer is full but still didn't get a message.
+             * discard and try again. */
+            libgps_debug_trace((DEBUG_CALLS,
+                                "gps_read() buffer full, but no message\n"));
+            PRIVATE(gpsdata)->buffer[0] = '\0';
+            PRIVATE(gpsdata)->waiting = 0;
+            return -1;
+        }
+        /* else  have a full message in buffer
+         * eol now points to trailing \n in a full message */
+        *eol = '\0';
+        /* why the 1?  We want the NUL.
+         *          |0|1|2|3|4|5| 6|7|
+         *          |1|2|3|4|5|6|\n|X|
+         *     buffer^         eol^
+         *  buffer = 0
+         *  eol = 6
+         *  eol-buffer = 6-0 = 6, size of the line data is 7 bytes with \n
+         *  eol-buffer+1 = 6-0+1 = 7
+         */
+        message_len = 1 + eol - PRIVATE(gpsdata)->buffer;
+
+        if (NULL != message) {
+            // user wants a copy, including NUL
+            memcpy(message, PRIVATE(gpsdata)->buffer, message_len);
+        }
+        (void)clock_gettime(CLOCK_REALTIME, &gpsdata->online);
+        // unpack the JSON message
+        status = gps_unpack(PRIVATE(gpsdata)->buffer, gpsdata);
+
+        // calculate length of good data still in buffer
+        PRIVATE(gpsdata)->waiting -= message_len;
+
+        if (0 >= PRIVATE(gpsdata)->waiting) {
+            // no waiting data, or overflow, clear the buffer, just in case
+            *PRIVATE(gpsdata)->buffer = '\0';
+            PRIVATE(gpsdata)->waiting = 0;
+        } else {
+            // shift the remaing data to the fron.
+            memmove(PRIVATE(gpsdata)->buffer,
+                    PRIVATE(gpsdata)->buffer + message_len,
+                    PRIVATE(gpsdata)->waiting);
+        }
+        gpsdata->set |= PACKET_SET;
     }
 #ifdef SHM_EXPORT_ENABLE
     else if (BAD_SOCKET((intptr_t)(gpsdata->gps_fd))) {
@@ -254,12 +350,16 @@ int gps_send(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
  * Return: 0 -- success
  * Return: negative -- fail
  */
-int gps_stream(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED,
-        watch_t flags CONDITIONALLY_UNUSED,
+int gps_stream(struct gps_data_t *gpsdata, watch_t flags,
         const char *d CONDITIONALLY_UNUSED)
 {
     int status = -1;
 
+    if (NULL != gpsdata->source.server &&
+        0 == strcmp(gpsdata->source.server, GPSD_LOCAL_FILE)) {
+        // lodal cile, read-only
+        flags |= WATCH_READONLY;
+    }
     gpsdata->watch = flags;
     if (WATCH_READONLY & flags) {
         // read only

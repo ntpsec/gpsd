@@ -52,7 +52,7 @@ extern void libgps_dump_state(struct gps_data_t *);
 }
 #endif
 
-#define PRIVATE(gpsdata) ((struct privdata_t *)(gpsdata)->privdata)
+#define PRIVATE(gpsdata) ((gpsdata)->privdata)
 
 #endif /* _GPSD_LIBGPS_H_ */
 // vim: set expandtab shiftwidth=4
