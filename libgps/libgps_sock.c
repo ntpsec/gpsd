@@ -383,7 +383,10 @@ int gps_sock_read(struct gps_data_t *gpsdata, char *message, int message_len)
  */
 int gps_unpack(char *buf, struct gps_data_t *gpsdata)
 {
-    libgps_debug_trace((DEBUG_CALLS, "gps_unpack(%s)\n", buf));
+    char vbuf[GPS_JSON_COMMAND_MAX];
+    libgps_debug_trace((DEBUG_CALLS, "gps_unpack(%s)\n",
+                        gps_visibilize(vbuf, sizeof(vbuf),
+                                       buf, strnlen(buf, sizeof(vbuf)))));
 
     // detect and process a JSON response
     if ('{' == buf[0]) {
@@ -394,7 +397,8 @@ int gps_unpack(char *buf, struct gps_data_t *gpsdata)
                '\0' != next[0][0]) {
             libgps_debug_trace((DEBUG_CALLS,
                                "gps_unpack() segment parse '%s'\n",
-                               *next));
+                               gps_visibilize(vbuf, sizeof(vbuf), *next,
+                                              strnlen(*next, sizeof(vbuf)))));
             if (-1 == libgps_json_unpack(*next, gpsdata, next)) {
                 break;
             }
