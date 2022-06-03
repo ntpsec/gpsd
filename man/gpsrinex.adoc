@@ -1,6 +1,6 @@
 = gpsrinex(1)
 :author: Gary E. Miller
-:date: 2 May 2022
+:date: 3 June 2022
 :email: gem@rellim.com
 :keywords: gps, gpsd, gpsrinex, RINEX, ubxtool
 :manmanual: GPSD Documentation
@@ -79,8 +79,10 @@ and watches all devices opened by *gpsd*.
   Print a usage message and exit.
 *-D LVL*, *-debug LVL*::
   Set debug level to LVL.
-*-f FILE*, *--fileout FILE*::
+*-f OUTFILE*, *--fileout OUTFILE*::
   save RINEX into FILE.
+*-F INFILE*, *--filein INFILE*::
+  Read GPS JSON from file, not from a live _gpsd_.
 *-i SECS*, *--interval SECS*::
   wait [interval] seconds between epochs. The interval can be specified
   to the millisecond. OPUS accepts intervals of 1, 2, 3, 5, 10, 15 or,30
@@ -249,7 +251,7 @@ https://www.ngs.noaa.gov/OPUS/
 The curious can find the RINEX 3.04 format described here:
 ftp://igs.org/pub/data/format/rinex304.pdf
 
-*gpsd*(8), *gps*(1), *gpsprof*(1), *gpsfake*(1). *ubxtool*(1)
+*gpsd*(8), *gps*(1), *gpsprof*(1), *gpsfake*(1). *ubxtool*(1), *gpsd_json*(5)
 
 == RESOURCES
 

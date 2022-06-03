@@ -1095,6 +1095,7 @@ static void usage(void)
           "     -D, --debug LVL            Set debug level, default 0\n"
           "     -f FILE, --fileout FILE    Output to filename\n"
           "                                default: gpsrinexYYYYDDDDHHMM.obs\n"
+          "     -F INFILE, --filein INFILE Read from INFILE, not gpsd\n"
           "     -h, --help                 print this usage and exit\n"
           "     -i SEC, --interval SEC     Time between samples in seconds\n"
           "                                default: %0.3f\n"
@@ -1149,7 +1150,8 @@ int main(int argc, char **argv)
     struct tm *report_time;
     struct tm tm_buf;            // temp buffer for gmtime_r()
     unsigned int flags = WATCH_ENABLE;
-    char   *fname = NULL;
+    char   *file_out = NULL;
+    char   *file_in = NULL;
     int timeout = 10;
     double f;
 
@@ -1158,7 +1160,7 @@ int main(int argc, char **argv)
     log_file = stdout;
     while (1) {
         int ch;
-        const char *optstring = "?D:f:hi:n:V";
+        const char *optstring = "?D:f:F:hi:n:V";
 
 #ifdef HAVE_GETOPT_LONG
         int option_index = 0;
@@ -1171,6 +1173,7 @@ int main(int argc, char **argv)
             {"ant_n", required_argument, NULL, ANT_N},
             {"count", required_argument, NULL, 'n' },
             {"debug", required_argument, NULL, 'D' },
+            {"filein", required_argument, NULL, 'F' },
             {"fileout", required_argument, NULL, 'f' },
             {"help", no_argument, NULL, 'h' },
             {"interval", required_argument, NULL, 'i' },
@@ -1198,7 +1201,10 @@ int main(int argc, char **argv)
             gps_enable_debug(debug, log_file);
             break;
         case 'f':       // Output file name.
-            fname = strdup(optarg);
+            file_out = strdup(optarg);
+            break;
+        case 'F':       // input file name.
+            file_in = strdup(optarg);
             break;
         case 'i':               // set sampling interval
             f = safe_atof(optarg); // still in seconds
@@ -1271,7 +1277,11 @@ int main(int argc, char **argv)
     source.server = (char *)"localhost";
     source.port = (char *)DEFAULT_GPSD_PORT;
 
-    if (optind < argc) {
+    if (NULL != file_in) {
+        // read from file, not a gpsd
+        source.server = GPSD_LOCAL_FILE;
+        source.port = file_in;
+    } else if (optind < argc) {
         // in this case, switch to the method "socket" always
         gpsd_source_spec(argv[optind], &source);
     }
@@ -1291,15 +1301,15 @@ int main(int argc, char **argv)
     report_time = gmtime_r(&(start_time.tv_sec), &tm_buf);
 
     // open the output file
-    if (NULL == fname) {
+    if (NULL == file_out) {
         (void)strftime(tmstr, sizeof(tmstr), "gpsrinex%Y%j%H%M%S.obs",
                        report_time);
-        fname = tmstr;
+        file_out = tmstr;
     }
-    log_file = fopen(fname, "w");
+    log_file = fopen(file_out, "w");
     if (log_file == NULL) {
         syslog(LOG_ERR, "ERROR: Failed to open %s: %s",
-               fname, strerror(errno));
+               file_out, strerror(errno));
         exit(3);
     }
 
@@ -1321,7 +1331,6 @@ int main(int argc, char **argv)
         flags |= WATCH_DEVICE;
     }
     (void)gps_stream(&gpsdata, flags, source.device);
-
 
     // create temp file, coverity does not like tmpfile()
     // covarfity wants a umask
