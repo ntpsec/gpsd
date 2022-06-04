@@ -3095,9 +3095,10 @@ static gps_mask_t ubx_msg_rxm_rawx(struct gps_device_t *session,
         session->context->leap_seconds = leapS;
         session->context->valid |= LEAP_SECOND_VALID;
     }
-    // convert GPS weeks and "approximately" GPS TOW to UTC
+    // RINEX 3 wants GPS time, not UTC time, do not add leap seconds.
     DTOTS(&ts_tow, rcvTow);
     // Do not set newdata.time.  set gpsdata.raw.mtime
+    // FIXME: this uses leap_seconds...
     session->gpsdata.raw.mtime = gpsd_gpstime_resolv(session, week, ts_tow);
 
     /* zero the measurement data

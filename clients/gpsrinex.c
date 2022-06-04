@@ -1074,9 +1074,9 @@ static void conditionally_log_fix(struct gps_data_t *gpsdata)
          * QZSS time is GPS time.
          * prefers GPS time. Accepts GLO (UTC) time.
          * NRCan does not accept GLO time
-         * Remove the leap second to get GPS from UTC.
+         *
+         * gpsdata->raw.mtime.tv_sec is already in GPS time
          */
-        gpsdata->raw.mtime.tv_sec += leap_seconds;
         print_raw(gpsdata);
     }
     return;
