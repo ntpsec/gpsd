@@ -375,7 +375,51 @@ void gpsd_century_update(struct gps_device_t *session, int century)
     }
 }
 
-// gpsd_gpstime_resolv() convert GPS week/tow to UTC as a timespec
+/* gpsd_gpstime() convert GPS week/tow to "GPS time"
+ * "GPS time" as defined by RINEX:  GPS time + leap secods == UTC
+ *
+ * Use for time that is not "time now in UTC".
+ * Do not touch: gps_week, gps_tow, GPS_VALID, rollovers in context.
+ */
+timespec_t gpsd_gpstime(struct gps_device_t *session,
+                        unsigned week, timespec_t tow)
+{
+    timespec_t t;
+
+    if (1024 <= week) {
+        // we have a full, not truncated, week
+    } else {
+        // truncated week, add in the roll overs
+        week += session->context->rollovers * 1024;
+    }
+
+    // gcc needs the (time_t)week to not overflow. clang got it right.
+    // if time_t is 32-bits, then still 2038 issues
+    // no leap seconds
+    t.tv_sec = GPS_EPOCH + ((time_t)week * SECS_PER_WEEK) + tow.tv_sec;
+    t.tv_nsec = tow.tv_nsec;
+
+#if 4 < SIZEOF_TIME_T
+    // 2038 rollover hack for unsigned 32-bit time, assuming today is < 2038
+    if (0 > t.tv_sec) {
+        // recompute for previous EPOCH
+        week -= 1024;
+        t.tv_sec = GPS_EPOCH + ((time_t)week * SECS_PER_WEEK) + tow.tv_sec;
+        GPSD_LOG(LOG_WARN, &session->context->errout,
+                 "gpsd_gpstime(): 2038 rollover. Adjusting to %lld week %u\n",
+                 (long long)t.tv_sec, week);
+    }
+#endif   // SIZEOF_TIME_T
+
+    return t;
+}
+
+/* gpsd_gpstime_resolv() convert GPS week/tow to UTC as a timespec
+ * using current leap second.
+ *
+ * Sets gps_week, gps_tow, GPS_VALID, rollovers, in context.
+ * FIXME: this prolly should call gpsd_resolv() instead of duplicating it.
+ */
 timespec_t gpsd_gpstime_resolv(struct gps_device_t *session,
                                unsigned week, timespec_t tow)
 {

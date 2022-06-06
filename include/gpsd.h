@@ -960,6 +960,7 @@ extern ssize_t gpsd_write(struct gps_device_t *, const char *, const size_t);
 
 extern void gpsd_time_init(struct gps_context_t *, time_t);
 extern void gpsd_set_century(struct gps_device_t *);
+extern timespec_t gpsd_gpstime(struct gps_device_t *, unsigned, timespec_t);
 extern timespec_t gpsd_gpstime_resolv(struct gps_device_t *, unsigned,
                                       timespec_t);
 extern timespec_t gpsd_utc_resolve(struct gps_device_t *);
