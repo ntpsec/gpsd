@@ -1355,7 +1355,6 @@ int main(int argc, char **argv)
         }
         // wait for gpsd
         if (!gps_waiting(&gpsdata, timeout * 1000000)) {
-            (void)fprintf(stderr, "gpsrinex: timeout\n");
             syslog(LOG_INFO, "timeout;");
             break;
         }
@@ -1364,8 +1363,9 @@ int main(int argc, char **argv)
         }
         (void)gps_read(&gpsdata, NULL, 0);
         if (ERROR_SET & gpsdata.set) {
-            fprintf(stderr, "gps_read() error '%s'\n", gpsdata.error);
-            exit(6);
+            syslog(LOG_INFO, "gps_read() error '%s'\n", gpsdata.error);
+            // dont exit, maybe useable data, maybe just EOF
+            break;
         }
         if (0 != sig_flag) {
             break;
@@ -1373,6 +1373,7 @@ int main(int argc, char **argv)
         conditionally_log_fix(&gpsdata);
         if (0 >= sample_count) {
             // done
+            syslog(LOG_INFO, "exiting, sample_count met");
             break;
         }
     }
@@ -1381,7 +1382,8 @@ int main(int argc, char **argv)
 
     // remove the temp file
     (void)unlink(tmp_fname);
-    if (0 != sig_flag && SIGINT != sig_flag) {
+    if (0 != sig_flag &&
+        SIGINT != sig_flag) {
         syslog(LOG_INFO, "exiting, signal %d received", sig_flag);
     }
     exit(EXIT_SUCCESS);
