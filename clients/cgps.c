@@ -1256,7 +1256,7 @@ static void update_gps_panel(struct gps_data_t *gpsdata, char *message,
                 message[message_len - 1] = '\0';
             }
             if (OK != wprintw(messages, "\n%s", message)) {
-                if (OK != wprintw(messages, "\nERROR in mprintw()")) {
+                if (OK != wprintw(messages, "\nERROR in wprintw()")) {
                     die(CGPS_ERROR, "cgps: ERROR in wprintw()\n");
                 }
             }
