@@ -193,7 +193,8 @@ int gps_close(struct gps_data_t *gpsdata CONDITIONALLY_UNUSED)
  *    int message_len       -- zero, or sizeof(message)
  *
  * Return:
- *    less than zero on error
+ *    -1 == error
+ *    -2 == EOF
  *    zero OK
  */
 int gps_read(struct gps_data_t *gpsdata, char *message, int message_len)
@@ -236,12 +237,19 @@ int gps_read(struct gps_data_t *gpsdata, char *message, int message_len)
                         PRIVATE(gpsdata)->waiting - 1);
 #endif
         if (0 >= read_ret) {
+            int ret;
+
             // EOL, or error
-            char err[] = "gps_read() == 0";
+            if ( 0 == read_ret) {
+                strlcpy(gpsdata->error, "EOF", sizeof(gpsdata->error));
+                ret = -2;
+            } else {
+                strlcpy(gpsdata->error, "ERROR", sizeof(gpsdata->error));
+                ret = -1;
+            }
             gpsdata->set = ERROR_SET;
-            libgps_debug_trace((DEBUG_CALLS, "%s\n", err));
-            strlcpy(gpsdata->error, err, sizeof(gpsdata->error));
-            return -1;
+            libgps_debug_trace((DEBUG_CALLS, "%s\n", gpsdata->error));
+            return ret;
         }
         gpsdata->set &= ~PACKET_SET;
         PRIVATE(gpsdata)->waiting += read_ret;
