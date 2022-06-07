@@ -581,8 +581,8 @@ static void print_rinex_header(void)
     }
     // GLO only files do not have LEAP SECOND record
     // FIX: add leap second future, and wekk of leap second future
-    (void)fprintf(log_file, "%16d%16s%16s%16s%3s%-20s\n",
-         leap_seconds, "", "", "", "GPS", "LEAP SECONDS");
+    (void)fprintf(log_file, "%6d%6s%6s%6s%3s%33s%-20s\n",
+         leap_seconds, "", "", "", "GPS", "", "LEAP SECONDS");
     (void)fprintf(log_file, "%-60s%-20s\n",
          "", "END OF HEADER");
     if (DEBUG_PROG <= debug) {
