@@ -299,6 +299,29 @@ static int obs_cnt_prns(unsigned char gnssid)
     return prn_cnt;
 }
 
+/* num_of_obs()
+ * print a line for "PRN / # OF OBS"
+ */
+static void num_of_obs(struct obs_cnt_t *obs, obs_codes *codes)
+{
+    char str[6][10];
+    int i;
+
+    for (i = 0; i < 6; i++) {
+        if (CODEMAX <= codes[i] ||
+            0 == obs->obs_cnts[codes[i]]) {
+            strncpy(str[i], "      ", sizeof(str[0]));
+        } else {
+            snprintf(str[i], sizeof(str[0]), "%d", obs->obs_cnts[codes[i]]);
+        }
+    }
+    (void)fprintf(log_file,"   %c%02d%6s%6s%6s%6s%6s%6s%18s%-20s\n",
+                  gnssid2rinex(obs->gnssid), obs->svid,
+                  str[0], str[1], str[2], str[3], str[4], str[5],
+                  "", "PRN / # OF OBS");
+}
+
+
 /* print_rinex_header()
  * Print a RINEX 3 header to the file "log_file".
  * Some of the data in the header is only known after processing all
@@ -408,6 +431,12 @@ static void print_rinex_header(void)
     // get all the PRN / # OF OBS
     for (i = 0; i < MAXCNT; i++) {
         int cnt = 0;                     // number of obs for one sat
+        obs_codes gps_codes[] = {C1C, L1C, D1C, C2C, L2C, D2C, CODEMAX};
+        obs_codes sbas_codes[] = {C1C, L1C, D1C, C2C, L2C, D2C, CODEMAX};
+        obs_codes gal_codes[] = {C1C, L1C, D1C, C7Q, L7Q, D7Q, CODEMAX};
+        obs_codes bd_codes[] = {C1C, L1C, D1C, C7I, L7I, D7I, CODEMAX};
+        obs_codes qzss_codes[] = {C1C, L1C, D1C, C2L, L2L, D2L, CODEMAX};
+        obs_codes glo_codes[] = {C1C, L1C, D1C, C2C, L2C, D2C, CODEMAX};
 
         if (0 == obs_cnt[i].svid) {
             // done
@@ -423,75 +452,27 @@ static void print_rinex_header(void)
         switch (obs_cnt[i].gnssid) {
         case GNSSID_GPS:
             // GPS, code G
-            (void)fprintf(log_file,"   %c%02d%6u%6u%6u%6u%6u%6u%18s%-20s\n",
-                          gnssid2rinex(obs_cnt[i].gnssid), obs_cnt[i].svid,
-                          obs_cnt[i].obs_cnts[C1C],
-                          obs_cnt[i].obs_cnts[L1C],
-                          obs_cnt[i].obs_cnts[D1C],
-                          obs_cnt[i].obs_cnts[C2C],
-                          obs_cnt[i].obs_cnts[L2C],
-                          obs_cnt[i].obs_cnts[D2C],
-                          "", "PRN / # OF OBS");
+            num_of_obs(&obs_cnt[i], gps_codes);
             break;
         case GNSSID_SBAS:
             // SBAS, L1C and L5C, code S
-            (void)fprintf(log_file,"   %c%02d%6u%6u%6u%6u%6u%6u%18s%-20s\n",
-                          gnssid2rinex(obs_cnt[i].gnssid), obs_cnt[i].svid,
-                          obs_cnt[i].obs_cnts[C1C],
-                          obs_cnt[i].obs_cnts[L1C],
-                          obs_cnt[i].obs_cnts[D1C],
-                          obs_cnt[i].obs_cnts[C5I],
-                          obs_cnt[i].obs_cnts[L5I],
-                          obs_cnt[i].obs_cnts[D5I],
-                          "", "PRN / # OF OBS");
+            num_of_obs(&obs_cnt[i], sbas_codes);
             break;
         case GNSSID_GAL:
             // Galileo, code E
-            (void)fprintf(log_file,"   %c%02d%6u%6u%6u%6u%6u%6u%18s%-20s\n",
-                          gnssid2rinex(obs_cnt[i].gnssid), obs_cnt[i].svid,
-                          obs_cnt[i].obs_cnts[C1C],
-                          obs_cnt[i].obs_cnts[L1C],
-                          obs_cnt[i].obs_cnts[D1C],
-                          obs_cnt[i].obs_cnts[C7Q],
-                          obs_cnt[i].obs_cnts[L7Q],
-                          obs_cnt[i].obs_cnts[D7Q],
-                          "", "PRN / # OF OBS");
+            num_of_obs(&obs_cnt[i], gal_codes);
             break;
         case GNSSID_BD:
             // BeiDou, code C
-            (void)fprintf(log_file,"   %c%02d%6u%6u%6u%6u%6u%6u%18s%-20s\n",
-                          gnssid2rinex(obs_cnt[i].gnssid), obs_cnt[i].svid,
-                          obs_cnt[i].obs_cnts[C1C],
-                          obs_cnt[i].obs_cnts[L1C],
-                          obs_cnt[i].obs_cnts[D1C],
-                          obs_cnt[i].obs_cnts[C7I],
-                          obs_cnt[i].obs_cnts[L7I],
-                          obs_cnt[i].obs_cnts[D7I],
-                          "", "PRN / # OF OBS");
+            num_of_obs(&obs_cnt[i], bd_codes);
             break;
         case GNSSID_QZSS:
             // QZSS, code J
-            (void)fprintf(log_file,"   %c%02d%6u%6u%6u%6u%6u%6u%18s%-20s\n",
-                          gnssid2rinex(obs_cnt[i].gnssid), obs_cnt[i].svid,
-                          obs_cnt[i].obs_cnts[C1C],
-                          obs_cnt[i].obs_cnts[L1C],
-                          obs_cnt[i].obs_cnts[D1C],
-                          obs_cnt[i].obs_cnts[C2L],
-                          obs_cnt[i].obs_cnts[L2L],
-                          obs_cnt[i].obs_cnts[D2L],
-                          "", "PRN / # OF OBS");
+            num_of_obs(&obs_cnt[i], qzss_codes);
             break;
         case GNSSID_GLO:
             // GLONASS, code R
-            (void)fprintf(log_file,"   %c%02d%6u%6u%6u%6u%6u%6u%18s%-20s\n",
-                          gnssid2rinex(obs_cnt[i].gnssid), obs_cnt[i].svid,
-                          obs_cnt[i].obs_cnts[C1C],
-                          obs_cnt[i].obs_cnts[L1C],
-                          obs_cnt[i].obs_cnts[D1C],
-                          obs_cnt[i].obs_cnts[C2C],
-                          obs_cnt[i].obs_cnts[L2C],
-                          obs_cnt[i].obs_cnts[D2C],
-                          "", "PRN / # OF OBS");
+            num_of_obs(&obs_cnt[i], glo_codes);
             break;
         // FIXME: Add GNSSID_IRNSS, L5A
         default:
