@@ -117,12 +117,13 @@ static char rec_vers[21] = "0";
  *  1 = SBAS      RINEX S
  *  2 = Galileo   RINEX E
  *  3 - BeiDou    RINEX C
+ *      Table 19 : RINEX BDS Observation Codes
  *  4 = IMES      not supported by RINEX
  *  5 = QZSS      RINEX J
  *  6 = GLONASS   RINEX R
  *  7 = IRNSS     RINEX I
  *
- * RINEX 3 observation codes [1]:
+ * the most common RINEX 3 observation codes [1]:
  * C1C  L1 C/A Pseudorange
  * C1P  L1 P Pseudorange
  * C1W  L1 Z-tracking Pseudorange
@@ -156,7 +157,22 @@ typedef enum {C1C = 0, D1C, L1C,
               C2L, D2L, L2L,
               C5I, D5I, L5I,
               C7I, D7I, L7I,
-              C7Q, D7Q, L7Q, CODEMAX} obs_codes;
+              C7Q, D7Q, L7Q,
+              CODEMAX} obs_codes;
+
+// convert obs_codes to strings
+static const char obs_str[CODEMAX + 1][4] = {
+    "C1C", "D1C", "L1C",
+    "C2C", "D2C", "L2C",
+    "C2L", "D2L", "L2L",
+    "C5I", "D5I", "L5I",
+    "C7I", "D7I", "L7I",
+    "C7Q", "D7Q", "L7Q",
+    "XXX",
+};
+
+#define MAX_TYPES 6     // maximum types of obs on a line
+
 /* structure to hold count of observations by gnssid:svid
  * MAXCHANNEL+1 is just a WAG of max size */
 #define MAXCNT (MAXCHANNELS + 1)
@@ -181,6 +197,13 @@ static int debug = DEBUG_INFO;               // debug level
 
 static struct gps_data_t gpsdata;
 static FILE *log_file;
+
+obs_codes gps_codes[MAX_TYPES + 1] = {C1C, L1C, D1C, C2C, L2C, D2C, CODEMAX};
+obs_codes sbas_codes[MAX_TYPES + 1] = {C1C, L1C, D1C, CODEMAX};
+obs_codes gal_codes[MAX_TYPES + 1] = {C1C, L1C, D1C, C7Q, L7Q, D7Q, CODEMAX};
+obs_codes bd_codes[MAX_TYPES + 1] = {C1C, L1C, D1C, C7I, L7I, D7I, CODEMAX};
+obs_codes qzss_codes[MAX_TYPES + 1] = {C1C, L1C, D1C, C2L, L2L, D2L, CODEMAX};
+obs_codes glo_codes[MAX_TYPES + 1] = {C1C, L1C, D1C, C2C, L2C, D2C, CODEMAX};
 
 /* convert a u-blox/gpsd gnssid to the RINEX 3 constellation code
  * see [1] Section 3.5
@@ -299,17 +322,42 @@ static int obs_cnt_prns(unsigned char gnssid)
     return prn_cnt;
 }
 
+/* types_of_obs()
+ * print a line for "SYS / # / OBS TYPES"
+ */
+static void types_of_obs(unsigned char gnssid, obs_codes *codes)
+{
+    char str[MAX_TYPES][5];
+    int i;
+
+    memset(str, 0, sizeof(str));
+
+    for (i = 0; i < MAX_TYPES; i++) {
+        if (CODEMAX <= codes[i]) {
+            break;
+        }
+        snprintf(str[i], sizeof(str[0]), "%s", obs_str[codes[i]]);
+    }
+    (void)fprintf(log_file, "%c%5d%4s%4s%4s%4s%4s%4s%4s%4s%22s%-20s\n",
+                  gnssid2rinex(gnssid), i,
+                  str[0], str[1], str[2], str[3], str[4], str[5],
+                  "", "", "", "SYS / # / OBS TYPES");
+}
+
 /* num_of_obs()
  * print a line for "PRN / # OF OBS"
  */
 static void num_of_obs(struct obs_cnt_t *obs, obs_codes *codes)
 {
-    char str[6][10];
+    char str[MAX_TYPES][10];
     int i;
 
-    for (i = 0; i < 6; i++) {
-        if (CODEMAX <= codes[i] ||
-            0 == obs->obs_cnts[codes[i]]) {
+    memset(str, 0, sizeof(str));
+    for (i = 0; i < MAX_TYPES; i++) {
+        if (CODEMAX <= codes[i]) {
+            break;
+        }
+        if (0 == obs->obs_cnts[codes[i]]) {
             strncpy(str[i], "      ", sizeof(str[0]));
         } else {
             snprintf(str[i], sizeof(str[0]), "%d", obs->obs_cnts[codes[i]]);
@@ -389,39 +437,27 @@ static void print_rinex_header(void)
      * for some reason gfzrnx_lx wants C1C, D1C, L1C, not C1C, L1C, D1C */
     if (0 < prn_count[GNSSID_GPS]) {
         // GPS, code G
-        (void)fprintf(log_file, "%c%5d%4s%4s%4s%4s%4s%4s%4s%4s%22s%-20s\n",
-             gnssid2rinex(GNSSID_GPS), 6, "C1C", "L1C", "D1C", "C2C", "L2C",
-             "D2C", "", "", "", "SYS / # / OBS TYPES");
+        types_of_obs(GNSSID_GPS, gps_codes);
     }
     if (0 < prn_count[GNSSID_SBAS]) {
-        // SBAS, L1 and L5 only, code S
-        (void)fprintf(log_file, "%c%5d%4s%4s%4s%4s%4s%4s%4s%4s%22s%-20s\n",
-             gnssid2rinex(GNSSID_SBAS), 3, "C1C", "L1C", "D1C", "", "", "",
-             "", "", "", "SYS / # / OBS TYPES");
+        // SBAS, code S
+        types_of_obs(GNSSID_SBAS, sbas_codes);
     }
     if (0 < prn_count[GNSSID_GAL]) {
-        // Galileo, E1, E5 aand E6 only, code E
-        (void)fprintf(log_file, "%c%5d%4s%4s%4s%4s%4s%4s%4s%4s%22s%-20s\n",
-             gnssid2rinex(GNSSID_GAL), 6, "C1C", "L1C", "D1C", "C7Q",
-             "L7Q", "D7Q", "", "", "", "SYS / # / OBS TYPES");
+        // Galileo, code E
+        types_of_obs(GNSSID_GAL, gal_codes);
     }
     if (0 < prn_count[GNSSID_BD]) {
         // BeiDou, BDS, code C
-        (void)fprintf(log_file, "%c%5d%4s%4s%4s%4s%4s%4s%4s%4s%22s%-20s\n",
-             gnssid2rinex(GNSSID_BD), 6, "C1C", "L1C", "D1C", "C7I", "L7I",
-             "D7I", "", "", "", "SYS / # / OBS TYPES");
+        types_of_obs(GNSSID_BD, bd_codes);
     }
     if (0 < prn_count[GNSSID_QZSS]) {
         // QZSS, code J
-        (void)fprintf(log_file, "%c%5d%4s%4s%4s%4s%4s%4s%4s%4s%22s%-20s\n",
-             gnssid2rinex(GNSSID_QZSS), 6, "C1C", "L1C", "D1C", "C2L",
-             "L2L", "D2L", "", "", "", "SYS / # / OBS TYPES");
+        types_of_obs(GNSSID_QZSS, qzss_codes);
     }
     if (0 < prn_count[GNSSID_GLO]) {
         // GLONASS, R
-        (void)fprintf(log_file, "%c%5d%4s%4s%4s%4s%4s%4s%4s%4s%22s%-20s\n",
-             gnssid2rinex(GNSSID_GLO), 6, "C1C", "L1C", "D1C", "C2C", "L2C",
-             "D2C", "", "", "", "SYS / # / OBS TYPES");
+        types_of_obs(GNSSID_GLO, glo_codes);
     }
     // FIXME: Add IRNSS...
 
@@ -431,12 +467,6 @@ static void print_rinex_header(void)
     // get all the PRN / # OF OBS
     for (i = 0; i < MAXCNT; i++) {
         int cnt = 0;                     // number of obs for one sat
-        obs_codes gps_codes[] = {C1C, L1C, D1C, C2C, L2C, D2C, CODEMAX};
-        obs_codes sbas_codes[] = {C1C, L1C, D1C, C2C, L2C, D2C, CODEMAX};
-        obs_codes gal_codes[] = {C1C, L1C, D1C, C7Q, L7Q, D7Q, CODEMAX};
-        obs_codes bd_codes[] = {C1C, L1C, D1C, C7I, L7I, D7I, CODEMAX};
-        obs_codes qzss_codes[] = {C1C, L1C, D1C, C2L, L2L, D2L, CODEMAX};
-        obs_codes glo_codes[] = {C1C, L1C, D1C, C2C, L2C, D2C, CODEMAX};
 
         if (0 == obs_cnt[i].svid) {
             // done
