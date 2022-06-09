@@ -3155,7 +3155,8 @@ static gps_mask_t ubx_msg_rxm_rawx(struct gps_device_t *session,
             switch (sigId) {
             default:
                 // let PPP figure it out
-                FALLTHROUGH
+                obs_code = "XXX";
+                break;
             case 0:       // L1C/A
                 obs_code = "L1C";
                 break;
@@ -3187,7 +3188,8 @@ static gps_mask_t ubx_msg_rxm_rawx(struct gps_device_t *session,
             switch (sigId) {
             default:
                 // let PPP figure it out
-                FALLTHROUGH
+                obs_code = "XXX";
+                break;
             case 0:       //
                 obs_code = "L1C";       // u-blox calls this E1OS or E1C
                 break;
@@ -3202,22 +3204,23 @@ static gps_mask_t ubx_msg_rxm_rawx(struct gps_device_t *session,
                 break;
             }
             break;
-        case 3:       // BeiDou
+        case 3:       // BeiDou, mappings to RINUEX are a guess.
             switch (sigId) {
             default:
                 // let PPP figure it out
-                FALLTHROUGH
+                obs_code = "XXX";
+                break;
             case 0:       //
-                obs_code = "L2Q";       // u-blox calls this B1I D1
+                obs_code = "L2I";       // u-blox calls this B1I D1
                 break;
             case 1:       //
-                obs_code = "L2I";       // u-blox calls this B1I D2
+                obs_code = "L2Q";       // u-blox calls this B1I D2
                 break;
             case 2:       //
                 obs_code = "L7Q";       // u-blox calls this B2I D1
                 break;
             case 3:       //
-                obs_code = "L7I";       // u-blox calls this B2I D2
+                obs_code = "L7Q";       // u-blox calls this B2I D2
                 break;
             }
             break;
@@ -3229,7 +3232,8 @@ static gps_mask_t ubx_msg_rxm_rawx(struct gps_device_t *session,
             switch (sigId) {
             default:
                 // let PPP figure it out
-                FALLTHROUGH
+                obs_code = "XXX";
+                break;
             case 0:       //
                 obs_code = "L1C";       // u-blox calls this L1C/A
                 break;
@@ -3245,7 +3249,8 @@ static gps_mask_t ubx_msg_rxm_rawx(struct gps_device_t *session,
             switch (sigId) {
             default:
                 // let PPP figure it out
-                FALLTHROUGH
+                obs_code = "XXX";
+                break;
             case 0:       //
                 obs_code = "L1C";       // u-blox calls this L1OF
                 break;
