@@ -80,8 +80,6 @@
 #define UBX_CFG_LEN             20
 #define outProtoMask            14
 
-static gps_mask_t ubx_parse(struct gps_device_t *session, unsigned char *buf,
-                            size_t len);
 static gps_mask_t ubx_msg_log_batch(struct gps_device_t *session,
                                     unsigned char *buf, size_t data_len);
 static gps_mask_t ubx_msg_log_info(struct gps_device_t *session,
@@ -3575,8 +3573,8 @@ ubx_msg_tim_tp(struct gps_device_t *session, unsigned char *buf,
     return mask;
 }
 
-gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
-                     size_t len)
+static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
+                            size_t len)
 {
     size_t data_len;
     unsigned short msgid;
