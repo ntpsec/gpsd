@@ -37,6 +37,7 @@ extern struct gps_device_t      session;
 extern bool serial;     /* True - direct mode, False - daemon mode */
 void toff_update(WINDOW *, int, int);
 void pps_update(WINDOW *, int, int);
+void pastef(WINDOW *win, int y, int x, int flen, char *fmt, double f);
 
 #endif /* _GPSD_GPSMON_H_ */
 /* gpsmon.h ends here */

@@ -6,6 +6,7 @@
 #include "../include/gpsd_config.h"  // must be before all includes
 
 #include <math.h>
+#include <stdint.h>           // for int64_t (tow in display_ubx_nav)
 #include <stdlib.h>           // for labs()
 #include <string.h>           // for memset()
 #include <time.h>
@@ -31,9 +32,9 @@ static bool ubx_initialize(void)
     }
     (void)wborder(satwin, 0, 0, 0, 0, 0, 0, 0, 0), (void)syncok(satwin, true);
     (void)wattrset(satwin, A_BOLD);
-    display(satwin, 1, 1, "Ch PRN  Az  El S/N Flag U");
+    display(satwin, 1, 1, "Ch PRN  Az  El S/N H Q U");
     for (i = 0; i < 16; i++)
-        display(satwin, (int)(i + 2), 1, "%2d", i);
+        display(satwin, i + 2, 1, "%2d", i);
     display(satwin, 18, 7, " NAV_SVINFO ");
     (void)wattrset(satwin, A_NORMAL);
 
@@ -61,9 +62,9 @@ static bool ubx_initialize(void)
     (void)wmove(navsolwin, 10, 1);
     (void)wprintw(navsolwin, "Est Pos Err       m Est Vel Err       m/s");
     (void)wmove(navsolwin, 11, 1);
-    (void)wprintw(navsolwin, "PRNs: ## PDOP: xx.x Fix 0x.. Flags 0x..");
+    (void)wprintw(navsolwin, "PRNs: ## PDOP: xx.x Fix 0x..");
 
-    display(navsolwin, 12, 20, " NAV_SOL ");
+    display(navsolwin, 12, 22, " NAV ");
     (void)wattrset(navsolwin, A_NORMAL);
 
     if (NULL == (dopwin = derwin(devicewin, 3, 51, 13, 28))) {
@@ -95,247 +96,152 @@ static bool ubx_initialize(void)
     return true;
 }
 
-static void display_nav_svinfo(unsigned char *buf, size_t data_len)
+
+#define MAXSKYCHANS 16
+static void display_ubx_sat(void)
 {
-    unsigned i, j, nchan;
+    int nchan, i;
+    nchan = session.gpsdata.satellites_visible;
+    if (nchan > MAXSKYCHANS)
+        nchan = MAXSKYCHANS;
 
-    /* very coarse sanity check (minimal length for valid message reached?) */
-    if (data_len < 8)
-        return;
-
-    nchan = getub(buf, 4);
-    if (nchan > 16)
-        nchan = 16;
-
+#define SV session.gpsdata.skyview[i]
     for (i = 0; i < nchan; i++) {
-        unsigned off = 8 + 12 * i;
-        unsigned ss, prn;
-        int el;
-        int az;
-        unsigned fl;
+        (void)mvwprintw(satwin, i + 2, 4, "%3d --- ---  -- %d %d %c",
+                        SV.PRN, SV.health,
+                        SV.qualityInd, (SV.used) ? 'Y' : ' ');
+        pastef(satwin, i + 2,  8, 3, "%3.0f", SV.azimuth);
+        pastef(satwin, i + 2, 12, 3, "%3.0f", SV.elevation);
+        pastef(satwin, i + 2, 17, 3, "%2.0f", SV.ss);
+    }
+    (void)wmove(navsolwin, 11, 7);
+    (void)wprintw(navsolwin, "%2d", session.gpsdata.satellites_used);
+    pastef(navsolwin, 11, 15, 5, "%5.1f", session.gpsdata.dop.pdop);
+#undef SV
 
-        prn = getub(buf, off + 1);
-        fl = getleu16(buf, off + 2);
-        ss = getub(buf, off + 4);
-        el = getsb(buf, off + 5);
-        az = getles16(buf, off + 6);
-        (void)wmove(satwin, (int)(i + 2), 4);
-        (void)wprintw(satwin, "%3d %3d %3d  %2d %04x %c",
-                      prn, az, el, ss, fl, (fl & UBX_SAT_USED) ? 'Y' : ' ');
-    }
     /* clear potentially stale sat lines unconditionally */
-    for (j = i; j < 16; j++) {
-        (void)wmove(satwin, (int)(j + 2), 4);
-        (void)wprintw(satwin, "%22s", " ");
+    for (; i < MAXSKYCHANS; i++) {
+        (void)wmove(satwin, i + 2, 4);
+        (void)wprintw(satwin, "%21s", " ");
     }
+#undef MAXSKYCHANS
 
     /* update pane label, in case NAV-SAT was previously displayed */
-    (void)wattrset(satwin, A_BOLD);
-    display(satwin, 18, 13, "VINFO ");
-    (void)wattrset(satwin, A_NORMAL);
-    (void)wnoutrefresh(satwin);
-    return;
-}
-
-static void display_nav_sat(unsigned char *buf, size_t data_len)
-{
-    unsigned i, j, nchan;
-
-    /* very coarse sanity check (minimal length for valid message reached?) */
-    if (data_len < 8)
-        return;
-
-    nchan = getub(buf, 5);
-    if (nchan > 16)
-        nchan = 16;
-
-    for (i = 0; i < nchan; i++) {
-        unsigned off = 8 + 12 * i;
-        unsigned ss, prn, gnss;
-        int el;
-        int az;
-        unsigned fl;
-
-        gnss = getub(buf, off);
-        prn = getub(buf, off + 1);
-        fl = getleu16(buf, off + 8);
-        ss = getub(buf, off + 2);
-        el = getsb(buf, off + 3);
-        az = getles16(buf, off + 4);
-
-        /* Translate sat numbering to the one used in UBX-NAV-SVINFO */
-        if (gnss == 2) {
-            prn += 210;  // Galileo
-        } else if (gnss == 3 && prn <= 5) {
-            prn += 158;  // BeiDou
-        } else if (gnss == 3 && prn >= 6) {
-            prn += 27;   // BeiDou (continued)
-        } else if (gnss == 4) {
-            prn += 172;  // IMES
-        } else if (gnss == 5) {
-            prn += 192;  // QZSS
-        } else if (gnss == 6 && prn != 255) {
-            prn += 64;   // GLONASS
-        }
-
-        (void)wmove(satwin, (int)(i + 2), 4);
-        (void)wprintw(satwin, "%3d %3d %3d  %2d %04x %c",
-                      prn, az, el, ss, fl,
-                      (fl & (UBX_SAT_USED << 3)) ? 'Y' : ' ');
-    }
-    /* clear potentially stale sat lines unconditionally */
-    for (j = i; j < 16; j++) {
-        (void)wmove(satwin, (int)(j + 2), 4);
-        (void)wprintw(satwin, "%22s", " ");
-    }
-
-    /* redraw frame to close gap to shorter label */
     (void)wborder(satwin, 0, 0, 0, 0, 0, 0, 0, 0), (void)syncok(satwin, true);
-    /* update pane label */
     (void)wattrset(satwin, A_BOLD);
-    display(satwin, 18, 7, " NAV-SAT ");
+
     (void)wattrset(satwin, A_NORMAL);
     (void)wnoutrefresh(satwin);
+    (void)wnoutrefresh(navsolwin);
+
     return;
 }
 
-static void display_nav_sol(unsigned char *buf, size_t data_len)
+
+static void display_ubx_dop(void)
 {
-    unsigned short gw = 0;
-    unsigned int tow = 0, flags;
-    double epx, epy, epz, evx, evy, evz;
-    unsigned char navmode;
-    struct gps_data_t g;
+    pastef(dopwin, 1,  9, 4, "%4.1f", session.gpsdata.dop.hdop);
+    pastef(dopwin, 1, 18, 4, "%4.1f", session.gpsdata.dop.vdop);
+    pastef(dopwin, 1, 27, 4, "%4.1f", session.gpsdata.dop.pdop);
+    pastef(dopwin, 1, 36, 4, "%4.1f", session.gpsdata.dop.tdop);
+    pastef(dopwin, 1, 45, 4, "%4.1f", session.gpsdata.dop.gdop);
+    //pastef(dopwin, 1, 9, 4, "%4.1f", session.gpsdata.dop.hdop);
+}
 
-    if (52 != data_len) {
-        return;
+
+static void display_ubx_nav(gps_mask_t mask)
+{
+    int64_t tow;
+
+#define SE session.newdata.ecef
+    if (0 != (ECEF_SET & mask)) {
+        (void)mvwprintw(navsolwin, 1, 11, "%11sm %11sm %11sm", "", "", "");
+        pastef(navsolwin, 1, 11, 10, "%+10.2f", SE.x);
+        pastef(navsolwin, 1, 24, 10, "%+10.2f", SE.y);
+        pastef(navsolwin, 1, 37, 10, "%+10.2f", SE.z);
     }
-    // pacify coverity
-    memset(&g, 0, sizeof(g));
-
-    navmode = (unsigned char)getub(buf, 10);
-    flags = (unsigned int)getub(buf, 11);
-
-    if ((flags & (UBX_SOL_VALID_WEEK | UBX_SOL_VALID_TIME)) != 0) {
-        tow = (unsigned int)getleu32(buf, 0);
-        gw = (unsigned short)getles16(buf, 8);
+    if (0 != (VECEF_SET & mask)) {
+        (void)wmove(navsolwin, 2, 11);
+        (void)wprintw(navsolwin, "%9sm/s %9sm/s %9sm/s", "", "", "");
+        pastef(navsolwin, 2, 11, 10, "%+9.2f", SE.vx);
+        pastef(navsolwin, 2, 24, 10, "%+9.2f", SE.vy);
+        pastef(navsolwin, 2, 37, 10, "%+9.2f", SE.vz);
     }
+#undef SE
 
-    epx = (double)(getles32(buf, 12) / 100.0);
-    epy = (double)(getles32(buf, 16) / 100.0);
-    epz = (double)(getles32(buf, 20) / 100.0);
-    evx = (double)(getles32(buf, 28) / 100.0);
-    evy = (double)(getles32(buf, 32) / 100.0);
-    evz = (double)(getles32(buf, 36) / 100.0);
-    (void)ecef_to_wgs84fix(&g.fix, epx, epy, epz, evx, evy, evz);
-    /* maybe should check the ecef_to_wgs84fix() return code? */
-
-    g.fix.epx = g.fix.epy = (double)(getles32(buf, 24) / 100.0);
-    g.fix.eps = (double)(getles32(buf, 40) / 100.0);
-    g.dop.pdop = (double)(getleu16(buf, 44) / 100.0);
-    g.satellites_used = (int)getub(buf, 47);
-
-    (void)wmove(navsolwin, 1, 11);
-    (void)wprintw(navsolwin, "%+10.2fm %+10.2fm %+10.2fm", epx, epy, epz);
-    (void)wmove(navsolwin, 2, 11);
-    (void)wprintw(navsolwin, "%+9.2fm/s %+9.2fm/s %+9.2fm/s", evx, evy, evz);
-
+#define SF session.newdata
     (void)wmove(navsolwin, 4, 11);
     (void)wattrset(navsolwin, A_UNDERLINE);
-    (void)wprintw(navsolwin, "%12.9f  %13.9f  %8.2fm",
-                  g.fix.latitude, g.fix.longitude, g.fix.altHAE);
+    (void)mvwprintw(navsolwin, 4, 48, "m");
+    if (0 != (LATLON_SET & mask)) {
+        pastef(navsolwin, 4, 11, 12, "%12.9f", SF.latitude);
+        pastef(navsolwin, 4, 25, 13, "%13.9f", SF.longitude);
+    }
+    if (0 != (ALTITUDE_SET & mask)) {
+        pastef(navsolwin, 4, 40,  8, "%8.2f", SF.altHAE);
+    }
     (void)mvwaddch(navsolwin, 4, 23, ACS_DEGREE);
     (void)mvwaddch(navsolwin, 4, 38, ACS_DEGREE);
     (void)wmove(navsolwin, 5, 11);
     // coverity says g.fix.track never set.
-    (void)wprintw(navsolwin, "%6.2fm/s %5.1fo %6.2fm/s",
-                  g.fix.speed, g.fix.track, g.fix.climb);
+    (void)wprintw(navsolwin, "%6sm/s%6so%7sm/s",
+                  "", "", "");
+    if (0 != (SPEED_SET & mask)) {
+        pastef(navsolwin, 5, 11, 6, "%6.2f", SF.speed);
+    }
+    if (0 != (TRACK_SET & mask)) {
+        pastef(navsolwin, 5, 21, 5, "%5.1f", SF.track);
+    }
+    pastef(navsolwin, 5, 28, 6, "%6.2f", SF.climb);
     (void)mvwaddch(navsolwin, 5, 26, ACS_DEGREE);
     (void)wattrset(navsolwin, A_NORMAL);
 
-    (void)wmove(navsolwin, 7, 7);
-    {
-        unsigned int day = tow / 86400000;
-        unsigned int tod = tow % 86400000;
-        unsigned int h = tod / 3600000;
-        unsigned int m = tod % 3600000;
-        unsigned int s = m % 60000;
+    pastef(navsolwin, 10, 12, 7, "%7.2f", session.newdata.eph);
+    pastef(navsolwin, 10, 33, 6, "%6.2f", session.newdata.epv);
 
-        m = (m - s) / 60000;
+    (void)wmove(navsolwin, 11, 25);
+    (void)wprintw(navsolwin, "0x%02x", session.newdata.mode);
+#undef SF
 
+    if (0 != (TIME_SET & mask)) {
+        tow = session.driver.ubx.iTOW;
+        unsigned long day = tow / 86400000UL;
+        unsigned long tod = tow % 86400000UL;
+        unsigned long h = tod / 3600000UL;
+        unsigned long m = tod % 3600000UL;
+        unsigned long s = m % 6000UL;
+        m = (m - s) / 60000UL;
+
+        (void)wmove(navsolwin, 7, 7);
         (void)wattrset(navsolwin, A_UNDERLINE);
         (void)wprintw(navsolwin, "%u %02u:%02u:%05.2f",
-                      day, h, m, (double)s / 1000);
+                    day, h, m, (double)s / 1000);
         (void)wattrset(navsolwin, A_NORMAL);
-    }
-    (void)wmove(navsolwin, 8, 11);
-    if ((flags & (UBX_SOL_VALID_WEEK | UBX_SOL_VALID_TIME)) != 0) {
-        (void)wprintw(navsolwin, "%d+%10.3lf", gw, (double)(tow / 1000.0));
+
+        (void)wmove(navsolwin, 8, 11);
+        (void)wprintw(navsolwin, "%d+%10.3lf", session.context->gps_week, (double)(tow / 1000.0));
         (void)wmove(navsolwin, 8, 36);
         (void)wprintw(navsolwin, "%d", (tow / 86400000));
     }
 
-    /* relies on the fact that epx and epy are set to same value */
-    (void)wmove(navsolwin, 10, 12);
-    (void)wprintw(navsolwin, "%7.2f", g.fix.epx);
-    (void)wmove(navsolwin, 10, 33);
-    (void)wprintw(navsolwin, "%6.2f", g.fix.epv);
-    (void)wmove(navsolwin, 11, 7);
-    (void)wprintw(navsolwin, "%2d", g.satellites_used);
-    (void)wmove(navsolwin, 11, 15);
-    (void)wprintw(navsolwin, "%5.1f", g.dop.pdop);
-    (void)wmove(navsolwin, 11, 25);
-    (void)wprintw(navsolwin, "0x%02x", navmode);
-    (void)wmove(navsolwin, 11, 36);
-    (void)wprintw(navsolwin, "0x%02x", flags);
     (void)wnoutrefresh(navsolwin);
 }
 
-static void display_nav_dop(unsigned char *buf, size_t data_len)
-{
-    if (data_len != 18)
-        return;
-    (void)wmove(dopwin, 1, 9);
-    (void)wprintw(dopwin, "%4.1f", getleu16(buf, 12) / 100.0);
-    (void)wmove(dopwin, 1, 18);
-    (void)wprintw(dopwin, "%4.1f", getleu16(buf, 10) / 100.0);
-    (void)wmove(dopwin, 1, 27);
-    (void)wprintw(dopwin, "%4.1f", getleu16(buf, 6) / 100.0);
-    (void)wmove(dopwin, 1, 36);
-    (void)wprintw(dopwin, "%4.1f", getleu16(buf, 8) / 100.0);
-    (void)wmove(dopwin, 1, 45);
-    (void)wprintw(dopwin, "%4.1f", getleu16(buf, 4) / 100.0);
-    (void)wnoutrefresh(dopwin);
-}
 
 static void ubx_update(void)
 {
-    unsigned char *buf;
-    size_t data_len;
-    unsigned short msgid;
+    gps_mask_t mask = 0;
 
-    buf = session.lexer.outbuffer;
-    msgid = (unsigned short)((buf[2] << 8) | buf[3]);
-    data_len = (size_t) getles16(buf, 4);
-    switch (msgid) {
-    case UBX_NAV_SVINFO:
-        display_nav_svinfo(&buf[6], data_len);
-        break;
-    case UBX_NAV_SAT:
-        display_nav_sat(&buf[6], data_len);
-        break;
-    case UBX_NAV_DOP:
-        display_nav_dop(&buf[6], data_len);
-        break;
-    case UBX_NAV_SOL:
-        display_nav_sol(&buf[6], data_len);
-        break;
-    default:
-        break;
+    mask = session.device_type->parse_packet(&session);
+    if (0 != (SATELLITE_SET & mask)) {
+        display_ubx_sat();
+    }
+    display_ubx_nav(mask);
+    if (0 != (DOP_SET & mask)) {
+        display_ubx_dop();
     }
 
     toff_update(ppswin, TOFF_LINE, TOFF_COLUMN + 6);
-
     pps_update(ppswin, PPS_LINE, PPS_COLUMN + 5);
 }
 
