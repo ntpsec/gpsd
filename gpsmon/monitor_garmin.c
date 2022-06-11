@@ -161,7 +161,7 @@ static void garmin_bin_update(uint16_t pkt_id, uint32_t pkt_size UNUSED,
     cpo_sat_data *sats = NULL;
     cpo_pvt_data *pvt = NULL;
     //cpo_rcv_data *rmd = NULL;
-    char tbuf[JSON_DATE_MAX+1];
+    char tbuf[JSON_DATE_MAX + 1];
 
     switch (pkt_id) {
     case 0x29:  /* Receiver Measurement Record */
@@ -234,8 +234,8 @@ static void garmin_bin_ser_update(void)
    len = session.lexer.outbuflen;
 
    if (!(buf[0] == (unsigned char)0x10 &&               /* DLE */
-                buf[len-2] == (unsigned char)0x10 &&    /* DLE */
-                buf[len-1] == (unsigned char)0x03))     /* ETX */
+                buf[len - 2] == (unsigned char)0x10 &&    /* DLE */
+                buf[len - 1] == (unsigned char)0x03))     /* ETX */
         goto end;       /* bad pkt */
 
    if (buf[1] == (unsigned char)0x10 && buf[2] != (unsigned char)0x10)
@@ -252,7 +252,7 @@ static void garmin_bin_ser_update(void)
    for (i = 0; i <= 255; i++) {
         if (pkt_size == (uint32_t)j)
            break;
-        c = buf[i+3];
+        c = buf[i + 3];
         if (got_dle) {
            got_dle = false;
            if (c != (unsigned char)0x10)
@@ -266,7 +266,7 @@ static void garmin_bin_ser_update(void)
    }
 
    /* check pkt chksum */
-   if ((unsigned char)(-chksum) == buf[len-3])
+   if ((unsigned char)(-chksum) == buf[len - 3])
         pkt_good = true;
 
    end:
