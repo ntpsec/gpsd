@@ -268,7 +268,7 @@ static void sirf_update(void)
     unsigned char *buf;
     size_t len;
     uint8_t dgps;
-    char tbuf[JSON_DATE_MAX+1];
+    char tbuf[JSON_DATE_MAX + 1];
 
     buf = session.lexer.outbuffer + 4;
     len = session.lexer.outbuflen - 8;
