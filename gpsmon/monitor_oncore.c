@@ -216,7 +216,7 @@ static void oncore_update(void)
         unsigned char mon, day, hour, min, sec;
         unsigned int nsec;
         unsigned char dopt, nvis, nsat, status;
-        char statusbuf[64];     /* 6+9+3+3+10+5+7+12+1=56 */
+        char statusbuf[64];     /* 6 + 9 + 3 + 3 + 10 + 5 + 7 + 12 + 1 = 56 */
 
         mon = (unsigned char)getub(buf, 4);
         day = (unsigned char)getub(buf, 5);
