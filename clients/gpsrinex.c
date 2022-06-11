@@ -367,7 +367,7 @@ static void num_of_obs(struct obs_cnt_t *obs, obs_codes *codes)
             break;
         }
         if (0 == obs->obs_cnts[codes[i]]) {
-            strncpy(str[i], "      ", sizeof(str[0]));
+            strlcpy(str[i], "      ", sizeof(str[0]));
         } else {
             snprintf(str[i], sizeof(str[0]), "%u", obs->obs_cnts[codes[i]]);
         }
@@ -803,13 +803,13 @@ static void one_sig(struct meas_t *meas)
         obs_cnt_inc(gnssid, svid, dxx);
     }
 
-    strncpy(obs_items[cxx], fmt_obs(meas->pseudorange, 0, 0),
+    strlcpy(obs_items[cxx], fmt_obs(meas->pseudorange, 0, 0),
             sizeof(obs_items[cxx]));
     // putting snr here, with phase, is deprecated.
     // it should be an S observation.
-    strncpy(obs_items[lxx], fmt_obs(meas->carrierphase, meas->lli, snr),
+    strlcpy(obs_items[lxx], fmt_obs(meas->carrierphase, meas->lli, snr),
             sizeof(obs_items[lxx]));
-    strncpy(obs_items[dxx], fmt_obs(meas->doppler, 0, 0),
+    strlcpy(obs_items[dxx], fmt_obs(meas->doppler, 0, 0),
             sizeof(obs_items[dxx]));
 }
 
@@ -958,11 +958,12 @@ static void print_raw(struct gps_data_t *gpsdata)
         if ((last_gnssid != gpsdata->raw.meas[i].gnssid) ||
             (last_svid != gpsdata->raw.meas[i].svid)) {
             char rinex_gnssid;
-            int j;
 
             rinex_gnssid = gnssid2rinex(last_gnssid);
 
             if (0 != last_svid) {
+                int j;
+
                 (void)fprintf(tmp_file, "%c%02d", rinex_gnssid, last_svid);
                 for (j = 0; j < MAX_TYPES; j++) {
                     int obs = obs_set[last_gnssid][j];
@@ -1315,7 +1316,9 @@ int main(int argc, char **argv)
 
     // create temp file, coverity does not like tmpfile()
     // covarfity wants a umask
-    (void)umask(0177);        // force rw-r--r--
+    // codacy comlains about umask(), can't win...
+    // Flawfinder: ignore
+    (void)umask(0177);        // force rw-------
     strlcpy(tmp_fname, "/tmp/gpsrinexXXXXXX", sizeof(tmp_fname));
     tmp_file_desc = mkstemp(tmp_fname);
     if (0 > tmp_file_desc) {
@@ -1329,6 +1332,8 @@ int main(int argc, char **argv)
                       strerror(errno));
         exit(2);
     }
+    // remove the temp file from the file system, leaving it open!
+    (void)unlink(tmp_fname);
 
     for (;;) {
         if (0 != sig_flag) {
@@ -1361,8 +1366,6 @@ int main(int argc, char **argv)
 
     print_rinex_footer();
 
-    // remove the temp file
-    (void)unlink(tmp_fname);
     if (0 != sig_flag &&
         SIGINT != sig_flag) {
         syslog(LOG_INFO, "exiting, signal %d received", sig_flag);
