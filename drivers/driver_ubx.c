@@ -3097,7 +3097,7 @@ static gps_mask_t ubx_msg_rxm_rawx(struct gps_device_t *session,
     DTOTS(&ts_tow, rcvTow);
     // Do not set newdata.time.  set gpsdata.raw.mtime
     // RINEX 3 "GPS time", not UTC, no leap seconds
-    session->gpsdata.raw.mtime = gpsd_gpstime_resolv(session, week, ts_tow);
+    session->gpsdata.raw.mtime = gpsd_gpstime(session, week, ts_tow);
 
     /* zero the measurement data
      * so we can tell which meas never got set */
