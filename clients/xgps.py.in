@@ -1634,7 +1634,7 @@ frame * {
 
             # clear rest of the list
             for i in range(data.satellites_seen, options.maxchandisp):
-                for j in range(0, 8):
+                for j in range(0, 10):
                     self.set_satlist_field(i, j, "")
             # repaint Skyview
             self.sky_view.redraw(satellites)
