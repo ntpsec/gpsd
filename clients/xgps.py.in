@@ -924,6 +924,7 @@ class Base(object):
 
     def __init__(self, deg_type, rotation=None, title=""):
         """Initialize class Base."""
+        self.old_sats = ['n/a', 'n/a']
         self.deg_type = deg_type
         self.rotate = rotation
         self.conversions = gps.clienthelpers.unit_adjustments()
@@ -1414,7 +1415,7 @@ frame * {
         if 1 == item and hasattr(data, 'satellites_used'):
             return getattr(data, 'satellites_used')
 
-        return "n/a"
+        return self.old_sats[item]
 
     def update_dop(self, data, doptype):
         """Update a DOP in the GPS Data window."""
@@ -1562,9 +1563,9 @@ frame * {
 
     def update_skyview(self, data):
         """Update the satellite list and skyview."""
-        data.satellites_seen = 0
-        data.satellites_used = 0
         if hasattr(data, 'satellites'):
+            data.satellites_seen = 0
+            data.satellites_used = 0
             def key_sats(s):
                 """sat sort function.  Used, gnssid, svid, sigid."""
                 val = 1
@@ -1631,6 +1632,7 @@ frame * {
                                            self._tenth_to_str(satellite.prRes,
                                                               -999, 999))
                 self.set_satlist_field(i, 9, yesno)
+            self.old_sats = [data.satellites_seen, data.satellites_used]
 
             # clear rest of the list
             for i in range(data.satellites_seen, options.maxchandisp):
