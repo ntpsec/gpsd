@@ -204,24 +204,27 @@ static void display_ubx_nav(gps_mask_t mask)
 #undef SF
 
     if (0 != (TIME_SET & mask)) {
+        // Note: iTOW is GPS time, not UTC.
         tow = session.driver.ubx.iTOW;
-        unsigned long day = tow / 86400000UL;
-        unsigned long tod = tow % 86400000UL;
-        unsigned long h = tod / 3600000UL;
-        unsigned long m = tod % 3600000UL;
-        unsigned long s = m % 6000UL;
-        m = (m - s) / 60000UL;
+        unsigned ms = (unsigned)(tow % 1000);
+        uint64_t tod = tow / 1000UL;              // remove ms
+        unsigned s = (unsigned)(tod % 60);
+        unsigned m = (unsigned)((tod % 3600UL) / 60);
+        unsigned h = (unsigned)((tod / 3600UL) % 24);
+        unsigned day = (unsigned)(tod / 86400UL);
 
         (void)wmove(navsolwin, 7, 7);
         (void)wattrset(navsolwin, A_UNDERLINE);
-        (void)wprintw(navsolwin, "%u %02u:%02u:%05.2f",
-                    day, h, m, (double)s / 1000);
+        (void)wprintw(navsolwin, "%u %02u:%02u:%02u.%02u", day, h, m, s, ms);
         (void)wattrset(navsolwin, A_NORMAL);
 
         (void)wmove(navsolwin, 8, 11);
-        (void)wprintw(navsolwin, "%d+%10.3lf", session.context->gps_week, (double)(tow / 1000.0));
+        (void)wprintw(navsolwin, "%d+%10.3lf", session.context->gps_week,
+                      (double)(tow / 1000.0));
         (void)wmove(navsolwin, 8, 36);
-        (void)wprintw(navsolwin, "%d", (tow / 86400000));
+        // FIXME: isn't this just day?
+        (void)wprintw(navsolwin, "%llu",
+                      (unsigned long long)(tow / 86400000UL));
     }
 
     (void)wnoutrefresh(navsolwin);
