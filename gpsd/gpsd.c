@@ -966,8 +966,8 @@ static void handle_control(int sfd, char *buf)
         }
     } else if ('!' == buf[0]) {
         // split line after ! into device=string, send string to device
-        char *eq;
-        (void)snarfline(buf + 1, &stash);
+        char *eq, *end;
+        end = snarfline(buf + 1, &stash);
         eq = strchr(stash, '=');
         if (NULL == eq) {
             GPSD_LOG(LOG_WARN, &context.errout,
@@ -989,7 +989,7 @@ static void handle_control(int sfd, char *buf)
                              "<= control(%d): writing to %s \n", sfd,
                              stash);
                     if (0 >= write(devp->gpsdata.gps_fd, eq,
-                                   eq - (stash + 1))) {
+                                   (end - (buf + 1)) - (eq - stash))) {
                         GPSD_LOG(LOG_WARN, &context.errout,
                                  "<= control(%d): device write failed %s(%d)\n",
                                  sfd, strerror(errno), errno);
@@ -1007,9 +1007,9 @@ static void handle_control(int sfd, char *buf)
         }
     } else if ('&' == buf[0]) {
         // split line after & into dev=hexdata, send unpacked hexdata to dev
-        char *eq;
+        char *eq, *end;
 
-        (void)snarfline(buf + 1, &stash);
+        end = snarfline(buf + 1, &stash);
         eq = strchr(stash, '=');
         if (NULL == eq) {
             GPSD_LOG(LOG_WARN, &context.errout,
@@ -1019,7 +1019,7 @@ static void handle_control(int sfd, char *buf)
         } else {
             const char *rtn;
             *eq++ = '\0';
-            rtn = write_gps(stash, eq, eq - (stash + 1));
+            rtn = write_gps(stash, eq, (end - (buf + 1)) - (eq - stash));
             if (NULL == rtn) {
                 ignore_return(write(sfd, ACK, sizeof(ACK) - 1));
             } else {
