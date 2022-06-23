@@ -10,8 +10,11 @@
 #ifndef _GPSD_H_
 #define _GPSD_H_
 
-#include "compiler.h"   /* Must be outside extern "C" for "atomic"
-                         * pulls in gpsd_config.h */
+#ifndef GPSD_CONFIG_H
+    #error "Missing GPSD_CONFIG_H"
+#endif
+
+#include "compiler.h"   // Must be outside extern "C" for "atomic"
 
 # ifdef __cplusplus
 extern "C" {

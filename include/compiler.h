@@ -9,6 +9,10 @@
 #ifndef _GPSD_COMPILER_H_
 #define _GPSD_COMPILER_H_
 
+#ifndef GPSD_CONFIG_H
+    #error "Missing GPSD_CONFIG_H"
+#endif
+
 /*
  * Tell GCC that we want thread-safe behavior with _REENTRANT;
  * in particular, errno must be thread-local.
