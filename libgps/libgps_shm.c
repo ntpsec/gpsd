@@ -31,7 +31,14 @@ PERMISSIONS
 #include "../include/libgps.h"
 
 
-// open a shared-memory connection to the daemon
+/* open a shared-memory connection to the daemon
+ *
+ * Return: 0 == OK
+ *        less than zero is an error
+ *         -1 shmget() error
+ *         -2 shmat() error
+ *         -3 calloc() error
+ */
 int gps_shm_open(struct gps_data_t *gpsdata)
 {
     int shmid;
@@ -45,17 +52,23 @@ int gps_shm_open(struct gps_data_t *gpsdata)
     shmid = shmget((key_t)shmkey, sizeof(struct gps_data_t), 0);
     if (-1 == shmid) {
         // daemon isn't running or failed to create shared segment
+        libgps_debug_trace((DEBUG_CALLS, "gps_shm_open(x%lx) %s(%d)\n",
+                            (unsigned long)shmkey, strerror(errno),  errno));
         return -1;
     }
     gpsdata->privdata =
         (struct privdata_t *)calloc(1, sizeof(struct privdata_t));
     if (NULL == gpsdata->privdata) {
-        return -1;
+        libgps_debug_trace((DEBUG_CALLS, "calloc() %s(%d)\n",
+                            strerror(errno),  errno));
+        return -3;
     }
 
     PRIVATE(gpsdata)->shmseg = shmat(shmid, 0, 0);
     if ((void *)-1 == PRIVATE(gpsdata)->shmseg) {
         // attach failed for sume unknown reason
+        libgps_debug_trace((DEBUG_CALLS, "shmat() %s(%d)\n",
+                            strerror(errno),  errno));
         free(gpsdata->privdata);
         gpsdata->privdata = NULL;
         return -2;

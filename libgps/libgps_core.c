@@ -67,7 +67,7 @@ void libgps_trace(int errlevel, const char *fmt, ...)
  *        port is file name to open
  *     GPSD_SHARED_MEMORY "shared memory" - to connect to local chared memory
  *
- * Return: 0 o nsuccess
+ * Return: 0 osnuccess
  *         less than zero on failure
  */
 int gps_open(const char *host, const char *port,
@@ -116,11 +116,15 @@ int gps_open(const char *host, const char *port,
     else if (NULL != host &&
         0 == strcmp(host, GPSD_SHARED_MEMORY)) {
         status = gps_shm_open(gpsdata);
-        if (-1 == status) {
+        if (0 != status) {
+            if (-2 == status ) {
+                return SHM_NOATTACH;
+            }
+            if (-3 == status ) {
+                return SHM_CALLOC;
+            }
+            // -1, or other error
             return SHM_NOSHARED;
-        }
-        if (-2 == status ) {
-            return SHM_NOATTACH;
         }
     }
 #define USES_HOST

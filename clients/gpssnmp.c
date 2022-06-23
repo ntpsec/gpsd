@@ -128,7 +128,8 @@ int main (int argc, char **argv)
     // status = gps_open(source.server, source.port, &gpsdata);
     status = gps_open(GPSD_SHARED_MEMORY, DEFAULT_GPSD_PORT, &gpsdata);
     if (0 != status) {
-        (void)fprintf(stderr, "gpssnmp: ERROR: connection failed\n");
+        (void)fprintf(stderr, "gpssnmp: ERROR: connection failed: %d\n",
+                      status);
         exit(1);
     }
     status = gps_read(&gpsdata, NULL, 0);
