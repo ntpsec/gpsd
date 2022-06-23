@@ -6,7 +6,7 @@
 #ifndef _GPSD_LIBGPS_H_
 #define _GPSD_LIBGPS_H_
 
-/* values to poke in the gps_fd member if we get it via something special */
+// values to poke in the gps_fd member if we get it via something special
 #define SHM_PSEUDO_FD   -1
 #define DBUS_PSEUDO_FD  -2
 
@@ -41,9 +41,9 @@ extern int gps_dbus_mainloop(struct gps_data_t *, int,
 extern int json_ais_read(const char *, char *, size_t, struct ais_t *,
                          const char **);
 
-/* debugging apparatus for the client library */
-#define DEBUG_CALLS     1       /* shallowest debug level */
-#define DEBUG_JSON      5       /* minimum level for verbose JSON debugging */
+// debugging apparatus for the client library
+#define DEBUG_CALLS     1       // shallowest debug level
+#define DEBUG_JSON      5       // minimum level for verbose JSON debugging
 #define libgps_debug_trace(args) (void) libgps_trace args
 extern int libgps_debuglevel;
 extern void libgps_dump_state(struct gps_data_t *);
@@ -54,5 +54,5 @@ extern void libgps_dump_state(struct gps_data_t *);
 
 #define PRIVATE(gpsdata) ((gpsdata)->privdata)
 
-#endif /* _GPSD_LIBGPS_H_ */
+#endif  // _GPSD_LIBGPS_H_
 // vim: set expandtab shiftwidth=4

@@ -2982,6 +2982,7 @@ extern short ubx2_to_prn(int gnssId, int svId);
 #define SHM_NOATTACH    -8      // shared-memory attach failed
 #define DBUS_FAILURE    -9      // DBUS initialization failure
 #define FILE_FAIL      -10      // failed to open file
+#define SHM_CALLOC     -11      // calloc() fail
 
 #define DEFAULT_GPSD_PORT       "2947"  // IANA assignment
 #define DEFAULT_RTCM_PORT       "2101"  // IANA assignment
