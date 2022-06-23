@@ -467,15 +467,12 @@ static int ntrip_stream_req_probe(const struct ntrip_stream_t *stream,
  * Return: 0 == OK
  *         -1 = auth error
  */
-static int ntrip_auth_encode(const struct ntrip_stream_t *stream,
-                             const char *auth,
-                             char buf[],
-                             size_t size)
+static int ntrip_auth_encode(struct ntrip_stream_t *stream)
 {
     char authenc[64];       // base 64 encoding of auth (username:password)
     int ret = 0;
 
-    memset(buf, 0, size);
+    memset(stream->authStr, 0, sizeof(stream->authStr));
     switch (stream->authentication) {
     case AUTH_NONE:
         // nothing to do.
@@ -483,17 +480,16 @@ static int ntrip_auth_encode(const struct ntrip_stream_t *stream,
     case AUTH_BASIC:
         // RFC 7617 Basic Access Authentication.
         // username may not contain a colon (")
-        if (NULL == auth) {
-            ret = -1;
-            break;
-        }
         memset(authenc, 0, sizeof(authenc));
-        if (0 > b64_ntop((const unsigned char *)auth, strnlen(auth, 130),
+        if (0 > b64_ntop((const unsigned char *)stream->credentials,
+                         strnlen(stream->credentials,
+                                 sizeof(stream->credentials)),
                          authenc, sizeof(authenc) - 1)) {
             ret = -1;
             break;
         }
-        (void)snprintf(buf, size - 1, "Authorization: Basic %s\r\n", authenc);
+        (void)snprintf(stream->authStr, sizeof(stream->authStr),
+                       "Authorization: Basic %s\r\n", authenc);
         break;
     case AUTH_DIGEST:
         // TODO: support digest authentication, who needs it?
@@ -924,10 +920,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
                  device->ntrip.stream.authentication,
                  device->ntrip.stream.fee,
                  device->ntrip.stream.bitrate);
-        if (0 != ntrip_auth_encode(&device->ntrip.stream,
-                                   device->ntrip.stream.credentials,
-                                   device->ntrip.stream.authStr,
-                                   sizeof(device->ntrip.stream.authStr))) {
+        if (0 != ntrip_auth_encode(&device->ntrip.stream)) {
             device->ntrip.conn_state = NTRIP_CONN_ERR;
             return -1;
         }
