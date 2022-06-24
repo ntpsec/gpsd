@@ -1797,7 +1797,7 @@ ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
          "NAV-PVT: flags=%02x time=%s lat=%.2f lon=%.2f altHAE=%.2f "
-         "track=%.2f speed=%.2f climb=%.2f mode=%d status=%d used=%d\n",
+         "track=%.2f speed=%.2f mode=%d status=%d used=%d\n",
          flags,
          timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
          session->newdata.latitude,
@@ -1805,7 +1805,6 @@ ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
          session->newdata.altHAE,
          session->newdata.track,
          session->newdata.speed,
-         session->newdata.climb,
          session->newdata.mode,
          session->newdata.status,
          session->gpsdata.satellites_used);
@@ -2262,14 +2261,13 @@ static gps_mask_t ubx_msg_nav_sol(struct gps_device_t *session,
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "UBX-NAV-SOL: time=%s ecef x:%.2f y:%.2f z:%.2f track=%.2f "
-             "speed=%.2f climb=%.2f mode=%d status=%d used=%d\n",
+             "speed=%.2f mode=%d status=%d used=%d\n",
              timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
              session->newdata.ecef.x,
              session->newdata.ecef.y,
              session->newdata.ecef.z,
              session->newdata.track,
              session->newdata.speed,
-             session->newdata.climb,
              session->newdata.mode,
              session->newdata.status,
              session->gpsdata.satellites_used);
