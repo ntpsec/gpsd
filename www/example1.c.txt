@@ -48,12 +48,12 @@ int main(int argc, char *argv[])
             puts("n/a ");
         }
         if (isfinite(gps_data.fix.latitude) &&
-            isfinite( gps_data.fix.longitude)) {
+            isfinite(gps_data.fix.longitude)) {
             // Display data from the GPS receiver if valid.
             printf("Lat %.6f Lon %.6f\n",
                    gps_data.fix.latitude, gps_data.fix.longitude);
         } else {
-            printf("Lat n/a Lon n/a\n",
+            printf("Lat n/a Lon n/a\n");
         }
     }
 
