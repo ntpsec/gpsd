@@ -66,6 +66,14 @@ static bool ubx_initialize(void)
 
     display(navsolwin, 12, 22, " NAV ");
     (void)wattrset(navsolwin, A_NORMAL);
+    display(navsolwin, 1, 22, "m %11sm %11sm", "", "");
+    display(navsolwin, 2, 20, "m/s %9sm/s %9sm/s", "", "");
+    display(navsolwin, 4, 48, "m");
+    display(navsolwin, 5, 17, "m/s%6so", "");
+    (void)mvwaddch(navsolwin, 4, 23, ACS_DEGREE);
+    (void)mvwaddch(navsolwin, 4, 38, ACS_DEGREE);
+    (void)mvwaddch(navsolwin, 5, 26, ACS_DEGREE);
+
 
     if (NULL == (dopwin = derwin(devicewin, 3, 51, 13, 28))) {
         return false;
@@ -116,7 +124,7 @@ static void display_ubx_sat(void)
     }
     (void)wmove(navsolwin, 11, 7);
     (void)wprintw(navsolwin, "%2d", session.gpsdata.satellites_used);
-    pastef(navsolwin, 11, 15, 5, "%5.1f", session.gpsdata.dop.pdop);
+    pastef(navsolwin, 11, 15, 4, "%5.1f", session.gpsdata.dop.pdop);
 #undef SV
 
     /* clear potentially stale sat lines unconditionally */
@@ -140,12 +148,11 @@ static void display_ubx_sat(void)
 
 static void display_ubx_dop(void)
 {
-    pastef(dopwin, 1,  9, 4, "%4.1f", session.gpsdata.dop.hdop);
-    pastef(dopwin, 1, 18, 4, "%4.1f", session.gpsdata.dop.vdop);
-    pastef(dopwin, 1, 27, 4, "%4.1f", session.gpsdata.dop.pdop);
-    pastef(dopwin, 1, 36, 4, "%4.1f", session.gpsdata.dop.tdop);
-    pastef(dopwin, 1, 45, 4, "%4.1f", session.gpsdata.dop.gdop);
-    //pastef(dopwin, 1, 9, 4, "%4.1f", session.gpsdata.dop.hdop);
+    pastef(dopwin, 1,  9, 3, "%4.1f", session.gpsdata.dop.hdop);
+    pastef(dopwin, 1, 18, 3, "%4.1f", session.gpsdata.dop.vdop);
+    pastef(dopwin, 1, 27, 3, "%4.1f", session.gpsdata.dop.pdop);
+    pastef(dopwin, 1, 36, 3, "%4.1f", session.gpsdata.dop.tdop);
+    pastef(dopwin, 1, 45, 3, "%4.1f", session.gpsdata.dop.gdop);
 }
 
 
@@ -155,52 +162,44 @@ static void display_ubx_nav(gps_mask_t mask)
 
 #define SE session.newdata.ecef
     if (0 != (ECEF_SET & mask)) {
-        (void)mvwprintw(navsolwin, 1, 11, "%11sm %11sm %11sm", "", "", "");
-        pastef(navsolwin, 1, 11, 10, "%+10.2f", SE.x);
-        pastef(navsolwin, 1, 24, 10, "%+10.2f", SE.y);
-        pastef(navsolwin, 1, 37, 10, "%+10.2f", SE.z);
+        pastef(navsolwin, 1, 11, 9, "%+10.2f", SE.x);
+        pastef(navsolwin, 1, 24, 9, "%+10.2f", SE.y);
+        pastef(navsolwin, 1, 37, 9, "%+10.2f", SE.z);
     }
     if (0 != (VECEF_SET & mask)) {
-        (void)wmove(navsolwin, 2, 11);
-        (void)wprintw(navsolwin, "%9sm/s %9sm/s %9sm/s", "", "", "");
-        pastef(navsolwin, 2, 11, 10, "%+9.2f", SE.vx);
-        pastef(navsolwin, 2, 24, 10, "%+9.2f", SE.vy);
-        pastef(navsolwin, 2, 37, 10, "%+9.2f", SE.vz);
+        pastef(navsolwin, 2, 11, 8, "%+9.2f", SE.vx);
+        pastef(navsolwin, 2, 24, 8, "%+9.2f", SE.vy);
+        pastef(navsolwin, 2, 37, 8, "%+9.2f", SE.vz);
     }
 #undef SE
 
 #define SF session.newdata
-    (void)wmove(navsolwin, 4, 11);
     (void)wattrset(navsolwin, A_UNDERLINE);
-    (void)mvwprintw(navsolwin, 4, 48, "m");
     if (0 != (LATLON_SET & mask)) {
-        pastef(navsolwin, 4, 11, 12, "%12.9f", SF.latitude);
-        pastef(navsolwin, 4, 25, 13, "%13.9f", SF.longitude);
+        pastef(navsolwin, 4, 11, 11, "%12.9f", SF.latitude);
+        pastef(navsolwin, 4, 25, 12, "%13.9f", SF.longitude);
+    }
+    if (0 != (HERR_SET & mask)) {
+        pastef(navsolwin, 10, 12, 6, "%7.2f", session.newdata.eph);
     }
     if (0 != (ALTITUDE_SET & mask)) {
-        pastef(navsolwin, 4, 40,  8, "%8.2f", SF.altHAE);
+        pastef(navsolwin, 4, 40,  7, "%8.2f", SF.altHAE);
     }
-    (void)mvwaddch(navsolwin, 4, 23, ACS_DEGREE);
-    (void)mvwaddch(navsolwin, 4, 38, ACS_DEGREE);
-    (void)wmove(navsolwin, 5, 11);
-    // coverity says g.fix.track never set.
-    (void)wprintw(navsolwin, "%6sm/s%6so%7sm/s",
-                  "", "", "");
     if (0 != (SPEED_SET & mask)) {
-        pastef(navsolwin, 5, 11, 6, "%6.2f", SF.speed);
+        pastef(navsolwin, 5, 11, 5, "%6.2f", SF.speed);
+    }
+    if (0 != (VERR_SET & mask)) {
+        pastef(navsolwin, 10, 33, 5, "%6.2f", session.newdata.epv);
     }
     if (0 != (TRACK_SET & mask)) {
-        pastef(navsolwin, 5, 21, 5, "%5.1f", SF.track);
+        // coverity says g.fix.track never set.
+        pastef(navsolwin, 5, 21, 4, "%5.1f", SF.track);
     }
-    pastef(navsolwin, 5, 28, 6, "%6.2f", SF.climb);
-    (void)mvwaddch(navsolwin, 5, 26, ACS_DEGREE);
     (void)wattrset(navsolwin, A_NORMAL);
-
-    pastef(navsolwin, 10, 12, 7, "%7.2f", session.newdata.eph);
-    pastef(navsolwin, 10, 33, 6, "%6.2f", session.newdata.epv);
-
-    (void)wmove(navsolwin, 11, 25);
-    (void)wprintw(navsolwin, "0x%02x", session.newdata.mode);
+    if (0 != (STATUS_SET & mask)) {
+        (void)wmove(navsolwin, 11, 25);
+        (void)wprintw(navsolwin, "0x%02x", session.newdata.mode);
+    }
 #undef SF
 
     if (0 != (TIME_SET & mask)) {
@@ -215,16 +214,14 @@ static void display_ubx_nav(gps_mask_t mask)
 
         (void)wmove(navsolwin, 7, 7);
         (void)wattrset(navsolwin, A_UNDERLINE);
-        (void)wprintw(navsolwin, "%u %02u:%02u:%02u.%02u", day, h, m, s, ms);
+        (void)wprintw(navsolwin, "%u %02u:%02u:%02u.%03u", day, h, m, s, ms);
         (void)wattrset(navsolwin, A_NORMAL);
 
         (void)wmove(navsolwin, 8, 11);
         (void)wprintw(navsolwin, "%d+%10.3lf", session.context->gps_week,
                       (double)(tow / 1000.0));
         (void)wmove(navsolwin, 8, 36);
-        // FIXME: isn't this just day?
-        (void)wprintw(navsolwin, "%llu",
-                      (unsigned long long)(tow / 86400000UL));
+        (void)wprintw(navsolwin, "%u", day);
     }
 
     (void)wnoutrefresh(navsolwin);
