@@ -152,8 +152,11 @@ case $mode in
         [ $quiet = true ] || echo "Testing the $testing..." >&2
         errors=0; total=0; notfound=0;error_list="";
         for f in $*; do
-            # Try to cull the SHM file on macOS
-            for I in $(ipcs -m|gsed -rn "s|^.*(0x[0-9a-f]*).*$|\1|p");do ipcrm -M "${I}";done
+            # Try to cull the leftover  SHM file
+            # FIXME: throws "ipcrm: illegal key (0x00000000)" errors
+            # we know the SHM name, why not just ipcrm that?
+            for I in $(ipcs -m|sed -rn "s|^.*(0x[0-9a-f]*).*$|\1|p"); \
+                do ipcrm -M "${I}";done
 
             if [ -r $f.chk ]
             then
