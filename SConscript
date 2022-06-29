@@ -200,10 +200,16 @@ doc_files = [
     'SUPPORT.adoc',
 ]
 
-# doc files to install in share/gpsd/doc
+# doc files to install in share/gpsd/doc/
 icon_files = [
     'packaging/X11/gpsd-logo.png',
 ]
+
+# MIB files to install in share/mibs/gpsd/
+mib_files = [
+    'man/GPSD-MIB',
+]
+mib_lint = (mib_files + ['SConstruct', 'SConscript'])
 
 # gpsd_version, and variantdir, from SConstruct
 Import('*')
@@ -439,6 +445,7 @@ pathopts = (
     ("includedir",   "include",            "header file directory"),
     ("libdir",       "lib",                "system libraries"),
     ("mandir",       "share/man",          "manual pages directory"),
+    ("mibdir",       "share/mibs/gpsd",    "MIB directory"),
     ("pkgconfig",    "$libdir/pkgconfig",  "pkgconfig file directory"),
     ("sbindir",      "sbin",               "system binaries directory"),
     ("sharedir",     "share/gpsd",         "share directory"),
@@ -912,6 +919,7 @@ have_flake8 = False
 have_pycodestyle = False
 have_pylint = False
 have_scan_build = False
+have_smilint = False
 have_tar = False
 have_valgrind = False
 
@@ -1469,6 +1477,8 @@ if not cleaning and not helping:
         have_pycodestyle = config.CheckProg('pycodestyle')
         have_pylint = config.CheckProg('pylint')
         have_scan_build = config.CheckProg('scan-build')
+        # smilint is part of libsmi package
+        have_smilint = config.CheckProg('smilint')
         have_tar = config.CheckProg(env['TAR'])
         have_valgrind = config.CheckProg('valgrind')
     except AttributeError:
@@ -1493,6 +1503,8 @@ if not cleaning and not helping:
         announce("Program pylint not found -- skipping pylint checks")
     if not have_scan_build:
         announce("Program scan-build not found -- skipping scan-build checks")
+    if not have_smilint:
+        announce("Program smilint not found -- skipping MIB checks")
     if not have_tar:
         announce('WARNING: %s not found.  Can not build tar files.' %
                  env['TAR'])
@@ -2273,6 +2285,7 @@ substmap = (
     ('@MAILMAN@',    mailman),
     ('@MAINPAGE@',   mainpage),
     ('@MASTER@',     'DO NOT HAND_HACK! THIS FILE IS GENERATED'),
+    ('@MIBPATH',     installdir('mibdir', add_destdir=False)),
     ('@PREFIX@',     env['prefix']),
     ('@PROJECTPAGE@', projectpage),
     # PEP 394 and 397 python shebang
@@ -2544,6 +2557,7 @@ build_src = [
     "libgps.pc",
     libraries,
     manpage_targets,
+    mib_files,
     packing,
     sbin_binaries,
     webpages,
@@ -2663,11 +2677,15 @@ if qt_env:
 # icons to install
 docinstall += env.Install(target=installdir('icondir'), source=icon_files)
 
+# MIB to install
+mibinstall = env.Install(target=installdir('mibdir'), source=mib_files)
+
 # and now we know everything to install
 install_src = (binaryinstall +
                docinstall +
                headerinstall +
                maninstall +
+               mibinstall +
                pc_install +
                python_install)
 
@@ -2818,6 +2836,14 @@ deg_regress = Utility('deg-regress', [test_gpsdclient], [
 matrix_regress = Utility('matrix-regress', [test_matrix], [
     '$SRCDIR/tests/test_matrix --quiet'
 ])
+
+# MIB test
+if have_smilint:
+    mib_regress = Utility('mib-regress', [mib_lint], [
+        'smilint man/GPSD-MIB'
+    ])
+else:
+    mib_regress = []
 
 # Regression-test NMEA 2000
 if ((env["nmea2000"] and
@@ -3101,6 +3127,7 @@ test_nondaemon = [
     json_regress,
     matrix_regress,
     method_regress,
+    mib_regress,
     packet_regress,
     rtcm_regress,
     test_xgps_deps,

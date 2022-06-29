@@ -1,0 +1,26 @@
+GPSD-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, enterprises FROM SNMPv2-SMI
+;
+gpsd MODULE-IDENTITY
+     LAST-UPDATED "202206281600Z"
+     ORGANIZATION "The Gpsd Project"
+     CONTACT-INFO
+        "The Gpsd Project
+        https://gpsd.io
+        EMail: gpsd-users@gpsd.io"
+
+     DESCRIPTION
+        "This MIB contains definition of the OIDs
+        used by gpssnmp part of the gpsd project."
+
+     REVISION
+        "202206281600Z"
+
+     DESCRIPTION
+        "Initial MIB."
+
+     ::= { enterprises 59054 }
+
+END

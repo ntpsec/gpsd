@@ -8,6 +8,7 @@
   Move gpsd_hexdump() to gps.h as gps_hexdump()
   Allow gpsctl -s/--ship to work without -f.
   Grab prRes and quality from u-blox 8+, into JSON, then into xgps.
+  New GPSD-MIB, installed in share/mibs/gpsd.
 
 3.24: 2022-04-22
   NTRIP 2.0 now works.  But still only plain HTML, not RTP, etc.
