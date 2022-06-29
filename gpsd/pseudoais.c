@@ -286,8 +286,7 @@ unsigned int ais_binary_encode(struct ais_t *ais,
         ais_addbits(bits, 270,  1, (uint64_t)ais->type21.assigned);
         // ais_addbits(bits, 271,  1, (uint64_t)ais->type21.spare);
         len = 271 + 1;
-        // 4096 is a WAG
-        slen = strnlen(ais->type21.name, 4096);
+        slen = strnlen(ais->type21.name, sizeof(ais->type21.name));
         if (20 < slen) {
             unsigned int extralen;
 
