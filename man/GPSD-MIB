@@ -1,10 +1,22 @@
 GPSD-MIB DEFINITIONS ::= BEGIN
 
+-- Run "smilint GPSD_MIB" to validate this MIB
+--
+-- By default this file is installed as:
+--     /usr/local/share/snmp/mibs/gpsd/GPSD-MIB
+-- For net-snmp to find the file, add the following line to /etc/snmp/snmp.conf
+--   mibfile /usr/local/share/snmp/mibs/gpsd/GPSD-MIB
+
 IMPORTS
     MODULE-IDENTITY, OBJECT-TYPE, enterprises FROM SNMPv2-SMI
+    Unsigned32
+        FROM SNMPv2-SMI
+    TimeStamp
+        FROM SNMPv2-TC
 ;
+
 gpsd MODULE-IDENTITY
-     LAST-UPDATED "202206281600Z"
+     LAST-UPDATED "202206291600Z"
      ORGANIZATION "The Gpsd Project"
      CONTACT-INFO
         "The Gpsd Project
@@ -13,10 +25,13 @@ gpsd MODULE-IDENTITY
 
      DESCRIPTION
         "This MIB contains definition of the OIDs
-        used by gpssnmp part of the gpsd project."
+        used by gpssnmp part of the gpsd project.
+
+        This file is Copyright 2022 by the GPSD project
+        SPDX-License-Identifier: BSD-2-clause"
 
      REVISION
-        "202206281600Z"
+        "202206291600Z"
 
      DESCRIPTION
         "Initial MIB."

@@ -205,7 +205,7 @@ icon_files = [
     'packaging/X11/gpsd-logo.png',
 ]
 
-# MIB files to install in share/mibs/gpsd/
+# MIB files to install in $PREFIX/share/snmp/mibs/gpsd/
 mib_files = [
     'man/GPSD-MIB',
 ]
@@ -445,7 +445,8 @@ pathopts = (
     ("includedir",   "include",            "header file directory"),
     ("libdir",       "lib",                "system libraries"),
     ("mandir",       "share/man",          "manual pages directory"),
-    ("mibdir",       "share/mibs/gpsd",    "MIB directory"),
+    # /usr/share/snmp/mibs is default for net-snmp
+    ("mibdir",       "share/snmp/mibs/gpsd",    "MIB directory"),
     ("pkgconfig",    "$libdir/pkgconfig",  "pkgconfig file directory"),
     ("sbindir",      "sbin",               "system binaries directory"),
     ("sharedir",     "share/gpsd",         "share directory"),
