@@ -9,14 +9,14 @@ GPSD-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
     MODULE-IDENTITY, OBJECT-TYPE, enterprises FROM SNMPv2-SMI
-    Unsigned32
+    Integer32, Unsigned32
         FROM SNMPv2-SMI
-    TimeStamp
+    DisplayString, TimeStamp
         FROM SNMPv2-TC
 ;
 
 gpsd MODULE-IDENTITY
-     LAST-UPDATED "202206291600Z"
+     LAST-UPDATED "202206301600Z"
      ORGANIZATION "The Gpsd Project"
      CONTACT-INFO
         "The Gpsd Project
@@ -31,11 +31,105 @@ gpsd MODULE-IDENTITY
         SPDX-License-Identifier: BSD-2-clause"
 
      REVISION
-        "202206291600Z"
+        "202206301600Z"
 
      DESCRIPTION
         "Initial MIB."
 
      ::= { enterprises 59054 }
+
+-- groups in GPSD
+-- These correspond to the gpsd JSON message classes
+-- See the gpsd doc for detailed explanation of each.
+-- Few implemented implemented so far.
+-- All are read-only
+
+ais       OBJECT IDENTIFIER ::= { gpsd 1 }
+
+att       OBJECT IDENTIFIER ::= { gpsd 2 }
+
+devices   OBJECT IDENTIFIER ::= { gpsd 3 }
+
+gst       OBJECT IDENTIFIER ::= { gpsd 4 }
+
+imu       OBJECT IDENTIFIER ::= { gpsd 5 }
+
+log       OBJECT IDENTIFIER ::= { gpsd 6 }
+
+osc       OBJECT IDENTIFIER ::= { gpsd 7 }
+
+raw       OBJECT IDENTIFIER ::= { gpsd 8 }
+
+rtcm2     OBJECT IDENTIFIER ::= { gpsd 9 }
+
+rtcm3     OBJECT IDENTIFIER ::= { gpsd 10 }
+
+sky       OBJECT IDENTIFIER ::= { gpsd 11 }
+
+subframe  OBJECT IDENTIFIER ::= { gpsd 12 }
+
+tpv       OBJECT IDENTIFIER ::= { gpsd 13 }
+
+version   OBJECT IDENTIFIER ::= { gpsd 14 }
+
+watch     OBJECT IDENTIFIER ::= { gpsd 15 }
+
+-- devices
+
+devNumber  OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "The number of devices currently attached to gpsd, regardless
+            of current state."
+    ::= { devices 1 }
+
+-- the Devices table
+
+-- The Devices table contains information on on each connected device
+
+devTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF DevEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+            "A list of device entries.  The number of entries is
+            given by the value of devNumber."
+    ::= { devices 2 }
+
+devEntry OBJECT-TYPE
+    SYNTAX      DevEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+            "An entry containing information applicable to a
+            particular device."
+    INDEX   { devIndex }
+    ::= { devTable 1 }
+
+
+DevEntry ::=
+      SEQUENCE {
+        devIndex                 Integer32,
+        devPath                  DisplayString
+      }
+
+devIndex OBJECT-TYPE
+    SYNTAX      Integer32 (0..255)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "A unique value, greater than zero, for each device."
+    ::= { devEntry 1 }
+
+devPath OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "The device path."
+    ::= { devEntry 2 }
+
 
 END
