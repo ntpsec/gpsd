@@ -162,6 +162,18 @@ static int json_tpv_read(const char *buf, struct gps_data_t *gpsdata,
     };
 
     ret = json_read_object(buf, json_attrs_1, endptr);
+    if (1 == isfinite(gpsdata->fix.ecef.x) &&
+        1 == isfinite(gpsdata->fix.ecef.y) &&
+        1 == isfinite(gpsdata->fix.ecef.z)) {
+        // All, or none.  Clients can just do their own isfinite()s
+        gpsdata->set |= ECEF_SET;
+    }
+    if (1 == isfinite(gpsdata->fix.ecef.vx) &&
+        1 == isfinite(gpsdata->fix.ecef.vy) &&
+        1 == isfinite(gpsdata->fix.ecef.vz)) {
+        // All, or none.  Clients can just do their own isfinite()s
+        gpsdata->set |= VECEF_SET;
+    }
     return ret;
 }
 
