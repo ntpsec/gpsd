@@ -628,9 +628,9 @@ Or maybe a gpsd JSON file.
             self.mincycle = default("mincycle", NaN)
             self.serialmode = default("serialmode", "8N1")
         elif self.data.get("class") == "TPV":
+            self.valid = ONLINE_SET
             self.device = default("device", "missing")
             self.utc = default("time", None, TIME_SET)
-            self.valid = ONLINE_SET
             if self.utc is not None:
                 # self.utc is always iso 8601 string
                 # just copy to fix.time
