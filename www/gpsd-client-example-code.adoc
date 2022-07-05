@@ -41,7 +41,7 @@ Fix mode: 3D (3) Time: 1615325175.000000000 Lat 44.068861 Lon -121.314085
 ^C
 ----
  
-The paranoid reader will have read https://gpsd.io/example1.c[example1.c]
+The paranoid reader will have read https://gpsd.io/example1.c.txt[example1.c]
 before running it so as not to lose all their Bitcoin.
 
 As you can see above, this client prints the "Fix Mode" ("mode"), Time
@@ -59,68 +59,7 @@ The complete example1.c:
 
 [source%nowrap,c,numbered]
 ----
-// example  gpsd client
-// compile this way:
-//    gcc example1.c -o example1 -lgps -lm
-#include <gps.h>
-#include <math.h>        // for isfinite()
-
-
-#define MODE_STR_NUM 4
-static char *mode_str[MODE_STR_NUM] = {
-    "n/a",
-    "None",
-    "2D",
-    "3D"
-};
-
-int main(int argc, char *argv[])
-{
-    struct gps_data_t gps_data;
-
-    if (0 != gps_open("localhost", "2947", &gps_data)) {
-        printf("Open error.  Bye, bye\n");
-        return 1;
-    }
-
-    (void)gps_stream(&gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
-
-    while (gps_waiting(&gps_data, 5000000)) {
-        if (-1 == gps_read(&gps_data, NULL, 0)) {
-            printf("Read error.  Bye, bye\n");
-            break;
-        }
-        if (MODE_SET != (MODE_SET & gps_data.set)) {
-            // did not even get mode, nothing to see here
-            continue;
-        }
-        if (0 > gps_data.fix.mode ||
-            MODE_STR_NUM <= gps_data.fix.mode) {
-            gps_data.fix.mode = 0;
-        }
-        printf("Fix mode: %s (%d) Time: ",
-               mode_str[gps_data.fix.mode],
-               gps_data.fix.mode);
-        if (TIME_SET == (TIME_SET & gps_data.set)) {
-            // not 32 bit safe
-            printf("%ld.%09ld ", gps_data.fix.time.tv_sec,
-                   gps_data.fix.time.tv_nsec);
-        } else {
-            puts("n/a ");
-        }
-        if (isfinite(gps_data.fix.latitude) &&
-            isfinite( gps_data.fix.longitude)) {
-            // Display data from the GPS receiver if valid.
-            printf("Lat %.6f Lon %.6f\n",
-                   gps_data.fix.latitude, gps_data.fix.longitude);
-        }
-    }
-
-    // When you are done...
-    (void)gps_stream(&gps_data, WATCH_DISABLE, NULL);
-    (void)gps_close(&gps_data);
-    return 0;
-}
+include::example1.c.txt[]
 ----
 
 === COMMENTARY
@@ -298,7 +237,7 @@ to UTC.  Many GPS/GNSS receivers output random time when they do not
 have a fix.  Worse, some continue to do so for minutes after reporting
 that they have a valid fix.
 
-Lines 50 to 55::
+Lines 50 to 57::
 [source%nowrap,c,numbered,start=50]
 ----
         if (isfinite(gps_data.fix.latitude) &&
@@ -306,6 +245,8 @@ Lines 50 to 55::
             // Display data from the GPS receiver if valid.
             printf("Lat %.6f Lon %.6f\n",
                    gps_data.fix.latitude, gps_data.fix.longitude);
+        } else {
+            printf("Lat n/a Lon n/a\n");
         }
 ----
 
@@ -321,7 +262,7 @@ _latitude_ and _longitude_ are set by seeing if they are finite numbers by
 using *isfinite()* from *libm*.  Do not use *isnan()*!  See <<NUMBERS>>
 for a more detailed explanation about this issue.
 
-Lines 58 to 61::
+Lines 60 to 63::
 [source%nowrap,c,numbered,start=58]
 ----
     // When you are done...

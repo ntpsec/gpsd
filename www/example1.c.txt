@@ -3,7 +3,7 @@
 //    gcc example1.c -o example1 -lgps -lm
 #include <gps.h>
 #include <math.h>        // for isfinite()
-#include <unistd.h>      // for sleep()
+// This line intentionally left blank.
 
 #define MODE_STR_NUM 4
 static char *mode_str[MODE_STR_NUM] = {
