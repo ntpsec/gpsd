@@ -64,7 +64,7 @@ def isfinite(f):
     return float('-inf') < float(f) < float('inf')
 
 
-# Don't hand-hack this list, it's generated.
+# Not required but a good idea if these match the list in include/gps.h
 ONLINE_SET = (1 << 1)
 TIME_SET = (1 << 2)
 TIMERR_SET = (1 << 3)
@@ -96,9 +96,20 @@ VERSION_SET = (1 << 28)
 POLICY_SET = (1 << 29)
 LOGMESSAGE_SET = (1 << 30)
 ERROR_SET = (1 << 31)
-TIMEDRIFT_SET = (1 << 32)
-EOF_SET = (1 << 33)
-SET_HIGH_BIT = 34
+TOFF_SET = (1 << 32)
+PPS_SET = (1 << 33)
+NAVDATA_SET = (1 << 34)
+OSCILLATOR_SET = (1 << 35)
+ECEF_SET = (1 << 36)
+VECEF_SET = (1 << 37)
+MAGNETIC_TRACK_SET = (1 << 38)
+RAW_SET = (1 << 39)
+NED_SET = (1 << 40)
+VNED_SET = (1 << 41)
+LOG_SET = (1 << 42)
+IMU_SET = (1 << 43)
+EOF_SET = (1 << 44)
+SET_HIGH_BIT = 44
 UNION_SET = (RTCM2_SET | RTCM3_SET | SUBFRAME_SET | AIS_SET | VERSION_SET |
              DEVICELIST_SET | ERROR_SET | GST_SET)
 STATUS_UNK = 0
@@ -639,6 +650,8 @@ Or maybe a gpsd JSON file.
             self.fix.altHAE = default("altHAE", NaN, ALTITUDE_SET)
             self.fix.altMSL = default("altMSL", NaN, ALTITUDE_SET)
             self.fix.climb = default("climb", NaN, CLIMB_SET)
+            self.fix.ecefvx = default("ecefvx", NaN, VECEF_SET)
+            self.fix.ecefx = default("ecefx", NaN, ECEF_SET)
             self.fix.epc = default("epc", NaN, CLIMBERR_SET)
             self.fix.epd = default("epd", NaN)
             self.fix.eps = default("eps", NaN, SPEEDERR_SET)

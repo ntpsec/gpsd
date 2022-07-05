@@ -2737,6 +2737,7 @@ struct privdata_t
 
 struct gps_data_t {
     gps_mask_t set;     // has field been set since this was last cleared?
+    // Not required, but a good idea if these match the list in gps/gps.py.in
 #define ONLINE_SET      (1llu<<1)
 #define TIME_SET        (1llu<<2)
 #define TIMERR_SET      (1llu<<3)
@@ -2780,7 +2781,8 @@ struct gps_data_t {
 #define VNED_SET        (1llu<<41)
 #define LOG_SET         (1llu<<42)
 #define IMU_SET         (1llu<<43)
-#define SET_HIGH_BIT    44
+#define EOF_SET         (1llu<<44)
+#define SET_HIGH_BIT    45
     timespec_t online;          /* NZ if GPS is on line, 0 if not.
                                  *
                                  * Note: gpsd clears this time when sentences
