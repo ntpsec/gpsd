@@ -9,10 +9,10 @@ GPSD-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
     MODULE-IDENTITY, OBJECT-TYPE, enterprises FROM SNMPv2-SMI
-    Integer32, Unsigned32
-        FROM SNMPv2-SMI
     DisplayString, TimeStamp
         FROM SNMPv2-TC
+    Float64TC
+        FROM FLOAT-TC-MIB
 ;
 
 gpsd MODULE-IDENTITY
@@ -77,7 +77,7 @@ watch     OBJECT IDENTIFIER ::= { gpsd 15 }
 -- devices
 
 devNumber  OBJECT-TYPE
-    SYNTAX      Integer32
+    SYNTAX      INTEGER
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -111,12 +111,12 @@ devEntry OBJECT-TYPE
 
 DevEntry ::=
       SEQUENCE {
-        devIndex                 Integer32,
+        devIndex                 INTEGER,
         devPath                  DisplayString
       }
 
 devIndex OBJECT-TYPE
-    SYNTAX      Integer32 (0..255)
+    SYNTAX      INTEGER (0..255)
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -130,6 +130,100 @@ devPath OBJECT-TYPE
     DESCRIPTION
             "The device path."
     ::= { devEntry 2 }
+
+-- tpv - Stuff from the TPV JSON class
+
+tpvNumber  OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "The number of devices currently attached to gpsd, regardless
+            of current state."
+    ::= { tpv 1 }
+
+-- the TPV table
+
+-- The TPV table contains cwthe TPV data on on each connected device
+-- See 'man gpsd_json' for more information on each variable
+
+tpvTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF TpvEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+            "A list of device entries.  The number of entries is
+            given by the value of tpvNumber."
+    ::= { tpv 2 }
+
+tpvEntry OBJECT-TYPE
+    SYNTAX      TpvEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+            "An entry containing information applicable to a
+            particular device."
+    INDEX   { tpvIndex }
+    ::= { tpvTable 1 }
+
+
+TpvEntry ::=
+      SEQUENCE {
+        tpvIndex             INTEGER,
+        tpvMode              INTEGER,
+        tpvLatitude          Float64TC,
+        tpvLongitude         Float64TC,
+        tpvAltHAE            Float64TC,
+        tpvAltMSL            Float64TC
+      }
+
+tpvIndex OBJECT-TYPE
+    SYNTAX      INTEGER (0..255)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "A unique value, greater than zero, for each device."
+    ::= { tpvEntry 1 }
+
+tpvMode OBJECT-TYPE
+    SYNTAX      INTEGER (0..15)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "NMEA mode: 0=unknown, 1=no fix, 2=2D, 3=3D."
+    ::= { tpvEntry 2 }
+
+tpvLatitude OBJECT-TYPE
+    SYNTAX      Float64TC
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "The device Latitude in degrees."
+    ::= { tpvEntry 3 }
+
+tpvLongitude OBJECT-TYPE
+    SYNTAX      Float64TC
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "The device Longitude in degrees."
+    ::= { tpvEntry 4 }
+
+tpvAltHAE OBJECT-TYPE
+    SYNTAX      Float64TC
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "The device altitude above the(maybe WGS84) ellipsoid in meters."
+    ::= { tpvEntry 5 }
+
+tpvAltMSL OBJECT-TYPE
+    SYNTAX      Float64TC
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "The device altitude MSL in meters."
+    ::= { tpvEntry 6 }
 
 
 END
