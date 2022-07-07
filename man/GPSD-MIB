@@ -16,7 +16,7 @@ IMPORTS
 ;
 
 gpsd MODULE-IDENTITY
-     LAST-UPDATED "202206301600Z"
+     LAST-UPDATED "202207061600Z"
      ORGANIZATION "The Gpsd Project"
      CONTACT-INFO
         "The Gpsd Project
@@ -31,16 +31,16 @@ gpsd MODULE-IDENTITY
         SPDX-License-Identifier: BSD-2-clause"
 
      REVISION
-        "202206301600Z"
+        "202207061600Z"
 
      DESCRIPTION
-        "Initial MIB."
+        "DRAFT: Initial MIB."
 
      ::= { enterprises 59054 }
 
 -- groups in GPSD
 -- These correspond to the gpsd JSON message classes
--- See the gpsd doc for detailed explanation of each.
+-- See the gpsd doc (man gpsd_json) for detailed explanation of each.
 -- Few implemented implemented so far.
 -- All are read-only
 
@@ -138,8 +138,7 @@ tpvNumber  OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-            "The number of devices currently attached to gpsd, regardless
-            of current state."
+            "The number of devices in tpvTable, regardless of current state."
     ::= { tpv 1 }
 
 -- the TPV table
@@ -170,6 +169,7 @@ tpvEntry OBJECT-TYPE
 TpvEntry ::=
       SEQUENCE {
         tpvIndex             INTEGER,
+        tpvPath              DisplayString,
         tpvMode              INTEGER,
         tpvLatitude          Float64TC,
         tpvLongitude         Float64TC,
@@ -185,13 +185,21 @@ tpvIndex OBJECT-TYPE
             "A unique value, greater than zero, for each device."
     ::= { tpvEntry 1 }
 
+tpvPath OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "The device path."
+    ::= { tpvEntry 2 }
+
 tpvMode OBJECT-TYPE
     SYNTAX      INTEGER (0..15)
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
             "NMEA mode: 0=unknown, 1=no fix, 2=2D, 3=3D."
-    ::= { tpvEntry 2 }
+    ::= { tpvEntry 3 }
 
 tpvLatitude OBJECT-TYPE
     SYNTAX      Float64TC
@@ -199,7 +207,7 @@ tpvLatitude OBJECT-TYPE
     STATUS      current
     DESCRIPTION
             "The device Latitude in degrees."
-    ::= { tpvEntry 3 }
+    ::= { tpvEntry 4 }
 
 tpvLongitude OBJECT-TYPE
     SYNTAX      Float64TC
@@ -207,7 +215,7 @@ tpvLongitude OBJECT-TYPE
     STATUS      current
     DESCRIPTION
             "The device Longitude in degrees."
-    ::= { tpvEntry 4 }
+    ::= { tpvEntry 5 }
 
 tpvAltHAE OBJECT-TYPE
     SYNTAX      Float64TC
@@ -215,7 +223,7 @@ tpvAltHAE OBJECT-TYPE
     STATUS      current
     DESCRIPTION
             "The device altitude above the(maybe WGS84) ellipsoid in meters."
-    ::= { tpvEntry 5 }
+    ::= { tpvEntry 6 }
 
 tpvAltMSL OBJECT-TYPE
     SYNTAX      Float64TC
@@ -223,7 +231,82 @@ tpvAltMSL OBJECT-TYPE
     STATUS      current
     DESCRIPTION
             "The device altitude MSL in meters."
-    ::= { tpvEntry 6 }
+    ::= { tpvEntry 7 }
+
+-- sky - Stuff from the SKY JSON class
+
+skyNumber  OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "The number of devices in skyTable, regardless of current state."
+    ::= { sky 1 }
+
+-- the TPV table
+
+-- The TPV table contains cwthe TPV data on on each connected device
+-- See 'man gpsd_json' for more information on each variable
+
+skyTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SkyEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+            "A list of device entries.  The number of entries is
+            given by the value of skyNumber."
+    ::= { sky 2 }
+
+skyEntry OBJECT-TYPE
+    SYNTAX      SkyEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+            "An entry containing information applicable to a
+            particular device."
+    INDEX   { skyIndex }
+    ::= { skyTable 1 }
+
+
+SkyEntry ::=
+      SEQUENCE {
+        skyIndex             INTEGER,
+        skyPath              DisplayString,
+        skynSat              INTEGER,
+        skyuSat              INTEGER
+      }
+
+skyIndex OBJECT-TYPE
+    SYNTAX      INTEGER (0..255)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "A unique value, greater than zero, for each device."
+    ::= { skyEntry 1 }
+
+skyPath OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "The device path."
+    ::= { skyEntry 2 }
+
+skynSat OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "number of sats seen by this device"
+    ::= { skyEntry 3 }
+
+skyuSat OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "number of sats used by this device"
+    ::= { skyEntry 4 }
 
 
 END
