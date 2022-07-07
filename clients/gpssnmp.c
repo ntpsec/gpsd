@@ -35,19 +35,14 @@ static void usage(char *prog_name) {
         "Examples:\n"
         "to get OID_VISIBLE\n"
         "   $ gpssnmp -g .1.3.6.1.2.1.25.1.31\n"
-        "   .1.3.6.1.2.1.25.1.31\n"
-        "   gauge\n"
-        "   13\n\n"
+        "   .1.3.6.1.2.1.25.1.31 = gauge: 13\n\n"
         "to get OID_USED\n"
         "   $ gpssnmp -g .1.3.6.1.2.1.25.1.32\n"
-        "   .1.3.6.1.2.1.25.1.32\n"
-        "   gauge\n"
-        "   4\n\n"
+        "   .1.3.6.1.2.1.25.1.32 = gauge: 4\n\n"
         "to get OID_SNR_AVG\n"
         "   $ gpssnmp -g .1.3.6.1.2.1.25.1.33\n"
-        "   .1.3.6.1.2.1.25.1.33\n"
-        "   gauge\n"
-        "   22.250000\n\n", prog_name);
+        "   .1.3.6.1.2.1.25.1.33 = gauge: 22.250000\n\n",
+        prog_name);
 }
 
 int main (int argc, char **argv)
@@ -174,13 +169,13 @@ int main (int argc, char **argv)
     }
     if (strcmp(OID_VISIBLE, oid) == 0) {
         printf(OID_VISIBLE);
-        printf("\ngauge\n%d\n", visible);
+        printf(" = gauge: %d\n", visible);
     } else if (strcmp(OID_USED, oid) == 0) {
         printf(OID_USED);
-        printf("\ngauge\n%d\n", used);
+        printf(" = gauge: %d\n", used);
     } else if (strcmp(OID_SNR_AVG, oid) == 0) {
         printf(OID_SNR_AVG);
-        printf("\ngauge\n%lf\n", snr_avg);
+        printf(" = gauge: %lf\n", snr_avg);
     } else {
         (void)fprintf(stderr, "%s: ERROR: Unknown OID %s\n\n",
                       argv[0], oid);
