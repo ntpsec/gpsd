@@ -60,6 +60,7 @@ int main (int argc, char **argv)
     char oid[30] = "";       // requested OID
     int debug = 0;
     struct fixsource_t source;
+    struct timespec ts_start, ts_now;
 
     const char *optstring = "?D:g:hV";
 #ifdef HAVE_GETOPT_LONG
@@ -123,19 +124,39 @@ int main (int argc, char **argv)
         gpsd_source_spec(NULL, &source);
     }
 
-    /* Open the stream to gpsd. */
-    // broken, used shared memory.
-    // status = gps_open(source.server, source.port, &gpsdata);
-    status = gps_open(GPSD_SHARED_MEMORY, DEFAULT_GPSD_PORT, &gpsdata);
+    // Open the stream to gpsd
+    status = gps_open(source.server, source.port, &gpsdata);
     if (0 != status) {
         (void)fprintf(stderr, "gpssnmp: ERROR: connection failed: %d\n",
                       status);
         exit(1);
     }
-    status = gps_read(&gpsdata, NULL, 0);
-    if (-1 == status) {
-        (void)fprintf(stderr, "gpssnmp: ERROR: read failed %d\n", status);
-        exit(1);
+    // we want JSON
+    (void)gps_stream(&gpsdata, WATCH_ENABLE | WATCH_JSON, NULL);
+
+    clock_gettime(CLOCK_REALTIME, &ts_start);
+
+    while (gps_waiting(&gpsdata, 5000000)) {
+        // FIXME: Add a timeout, we may never get the data we want.
+        status = gps_read(&gpsdata, NULL, 0);
+        if (-1 == status) {
+            (void)fprintf(stderr, "gpssnmp: ERROR: read failed %d\n", status);
+            exit(1);
+        }
+        if (SATELLITE_SET & gpsdata.set) {
+            // got what we need
+            break;
+        }
+        clock_gettime(CLOCK_REALTIME, &ts_now);
+        // use llabs(), in case time went backwards...
+        if (10 < llabs(ts_now.tv_sec - ts_start.tv_sec)) {
+            // FIXME:  Make this configurable.
+            // timeout
+            (void)fprintf(stderr, "gpssnmp: ERROR: timeout\n");
+            exit(1);
+        }
+
+
     }
     used  = gpsdata.satellites_used;
     visible = gpsdata.satellites_visible;
