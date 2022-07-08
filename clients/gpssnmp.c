@@ -31,7 +31,7 @@
 static void usage(char *prog_name) {
     // "%s [-h] [-g OID] [server[:port[:device]]]\n\n"
     printf("Usage:\n"
-        "%s [-h] [-g OID]\n\n"
+        "%s [-h] [-g OID] [server[:port[:device]]]\n\n"
         "Examples:\n"
         "to get OID_VISIBLE\n"
         "   $ gpssnmp -g .1.3.6.1.2.1.25.1.31\n"
@@ -112,7 +112,7 @@ int main (int argc, char **argv)
         exit(1);
     }
 
-    /* Grok the server, port, and device. */
+    // Grok the server, port, and device
     if (optind < argc) {
         gpsd_source_spec(argv[optind], &source);
     } else {

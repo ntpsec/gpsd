@@ -17,6 +17,8 @@ gpssnmp - SNMP helper client for gpsd
 
 == SYNOPSIS
 
+*gpssnmp* [OPTIONS] [server[:port[:device]]]
+
 *gpssnmp* -h
 
 *gpssnmp* -g OID
