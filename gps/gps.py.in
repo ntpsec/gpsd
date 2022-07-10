@@ -608,7 +608,7 @@ Or maybe a gpsd JSON file.
                            verbose=verbose)
 
         gpsdata.__init__(self)
-        gpsjson.__init__(self)
+        gpsjson.__init__(self, verbose=verbose)
         if mode:
             self.stream(mode)
 

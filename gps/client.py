@@ -218,12 +218,12 @@ class gpsjson(object):
 
     """Basic JSON decoding."""
 
-    def __init__(self):
+    def __init__(self, verbose=0):
         """Init gpsjson."""
         self.data = None
         self.stream_command = None
         self.enqueued = None
-        self.verbose = -1
+        self.verbose = verbose
 
     def __iter__(self):
         """Broken __iter__."""
