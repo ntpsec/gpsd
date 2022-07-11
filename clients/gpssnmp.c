@@ -28,6 +28,14 @@
 #define OID_USED ".1.3.6.1.2.1.25.1.32"
 #define OID_SNR_AVG ".1.3.6.1.2.1.25.1.33"
 
+struct oid_mib_xlate {
+    const char *oid;
+    const char *short_mibr;
+    const char *long_mib;
+    int *int_val;
+    double *dbl_val;
+};
+
 static void usage(char *prog_name) {
     // "%s [-h] [-g OID] [server[:port[:device]]]\n\n"
     printf("Usage:\n"
@@ -56,6 +64,13 @@ int main (int argc, char **argv)
     int debug = 0;
     struct fixsource_t source;
     struct timespec ts_start, ts_now;
+    struct oid_mib_xlate xlate[] = {
+        {OID_VISIBLE, NULL, NULL, &visible, NULL},    // deprecated
+        {OID_USED, NULL, NULL, &used, NULL},          // deprecated
+        {OID_SNR_AVG, NULL, NULL, NULL, &snr_avg},    // deprecated
+        {NULL, NULL, NULL, NULL, NULL},
+    };
+    struct oid_mib_xlate *pxlate;
 
     const char *optstring = "?D:g:hV";
 #ifdef HAVE_GETOPT_LONG
@@ -77,7 +92,7 @@ int main (int argc, char **argv)
         ch = getopt(argc, argv, optstring);
 #endif
 
-        if (ch == -1) {
+        if (-1 == ch) {
             break;
         }
 
@@ -167,21 +182,26 @@ int main (int argc, char **argv)
     if (0 < used) {
         snr_avg = snr_total / used;
     }
-    if (strcmp(OID_VISIBLE, oid) == 0) {
-        printf(OID_VISIBLE);
-        printf(" = gauge: %d\n", visible);
-    } else if (strcmp(OID_USED, oid) == 0) {
-        printf(OID_USED);
-        printf(" = gauge: %d\n", used);
-    } else if (strcmp(OID_SNR_AVG, oid) == 0) {
-        printf(OID_SNR_AVG);
-        printf(" = gauge: %lf\n", snr_avg);
-    } else {
+    for (pxlate = xlate; NULL != pxlate->oid; pxlate++) {
+        if (0 == strcmp(pxlate->oid, oid)) {
+            if (NULL != pxlate->int_val) {
+                printf("%s = gauge: %d\n", pxlate->oid, *pxlate->int_val);
+            } else if (NULL != pxlate->dbl_val) {
+                printf("%s = gauge: %lf\n", pxlate->oid, *pxlate->dbl_val);
+            } else {
+                (void)fprintf(stderr, "%s: ERROR: internal error, OID %s\n\n",
+                              argv[0], oid);
+            }
+            break;
+        }
+    }
+    if (NULL == pxlate->oid) {
+        // fell of the end of the list...
         (void)fprintf(stderr, "%s: ERROR: Unknown OID %s\n\n",
                       argv[0], oid);
         usage(argv[0]);
         exit(1);
     }
 
-    return 0;
+    exit(0);
 }
