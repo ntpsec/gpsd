@@ -31,7 +31,9 @@ gpssnmp - SNMP helper client for gpsd
 
 *gpssnmp* does not require root privileges. It will also run fine as root.
 
-The output of *gpssnmp* is moded after that of *snmpget*.
+The output of *gpssnmp* conforms to the requierments of the "pass [-p
+priority] MIBOID PROG" option in *snmpd.conf*.  So it can be used to
+extend *snmpd* with the *GPSD-MIB*.
 
 == OPTIONS
 
@@ -76,7 +78,7 @@ To get OID_SNR_AVG:
 
 == SEE ALSO
 
-*cgps*(1), *gps*(1), *gpspipe*(1), *snmpget*(1), xgps*(1)
+*cgps*(1), *gps*(1), *gpspipe*(1), *snmpget*(1), xgps*(1), snmpd.conf(5)  
 
 *gpsd*(8)
 

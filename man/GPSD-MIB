@@ -143,7 +143,7 @@ tpvNumber  OBJECT-TYPE
 
 -- the TPV table
 
--- The TPV table contains cwthe TPV data on on each connected device
+-- The TPV table contains the TPV data from each connected device
 -- See 'man gpsd_json' for more information on each variable
 
 tpvTable OBJECT-TYPE
@@ -243,9 +243,9 @@ skyNumber  OBJECT-TYPE
             "The number of devices in skyTable, regardless of current state."
     ::= { sky 1 }
 
--- the TPV table
+-- the SKY table
 
--- The TPV table contains cwthe TPV data on on each connected device
+-- The SKY table contains the SKY JSON data from each connected device
 -- See 'man gpsd_json' for more information on each variable
 
 skyTable OBJECT-TYPE
@@ -272,8 +272,8 @@ SkyEntry ::=
       SEQUENCE {
         skyIndex             INTEGER,
         skyPath              DisplayString,
-        skynSat              INTEGER,
-        skyuSat              INTEGER
+        skynSat              INTEGER,       -- aka "seen"
+        skyuSat              INTEGER        -- used
       }
 
 skyIndex OBJECT-TYPE

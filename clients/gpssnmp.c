@@ -1,5 +1,5 @@
 /* gpssnmp - poll local gpsd for SNMP variables
- * 
+ *
  * To build this:
  *     gcc -o gpssnmp gpssnmp.c -lgps
  *
@@ -30,7 +30,7 @@
 
 struct oid_mib_xlate {
     const char *oid;
-    const char *short_mibr;
+    const char *short_mib;
     const char *long_mib;
     int *int_val;
     double *dbl_val;
@@ -65,8 +65,11 @@ int main (int argc, char **argv)
     struct fixsource_t source;
     struct timespec ts_start, ts_now;
     struct oid_mib_xlate xlate[] = {
+        // Not really 'visible', just "seen" in the Alamanc.
         {OID_VISIBLE, NULL, NULL, &visible, NULL},    // deprecated
+        {".1.3.6.1.4.1.59054.11.2.1.3.0", "skynSat.0",NULL,  &visible, NULL},
         {OID_USED, NULL, NULL, &used, NULL},          // deprecated
+        {".1.3.6.1.4.1.59054.11.2.1.4.0", "skyuSat.0",NULL,  &used, NULL},
         {OID_SNR_AVG, NULL, NULL, NULL, &snr_avg},    // deprecated
         {NULL, NULL, NULL, NULL, NULL},
     };
@@ -183,11 +186,17 @@ int main (int argc, char **argv)
         snr_avg = snr_total / used;
     }
     for (pxlate = xlate; NULL != pxlate->oid; pxlate++) {
-        if (0 == strcmp(pxlate->oid, oid)) {
+        if (0 == strcmp(pxlate->oid, oid) ||
+            (NULL != pxlate->short_mib &&
+             0 == strcmp(pxlate->short_mib, oid))) {
+            /* The output here conforms to the requierments of the
+             * "pass [-p priority] MIBOID PROG" option to snmpd.conf
+             */
+
             if (NULL != pxlate->int_val) {
-                printf("%s = gauge: %d\n", pxlate->oid, *pxlate->int_val);
+                printf("%s\ngauge\n%d\n", pxlate->oid, *pxlate->int_val);
             } else if (NULL != pxlate->dbl_val) {
-                printf("%s = gauge: %lf\n", pxlate->oid, *pxlate->dbl_val);
+                printf("%s\ngauge\n%lf\n", pxlate->oid, *pxlate->dbl_val);
             } else {
                 (void)fprintf(stderr, "%s: ERROR: internal error, OID %s\n\n",
                               argv[0], oid);
