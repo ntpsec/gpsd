@@ -24,10 +24,6 @@
 #include "../include/gpsdclient.h"   // for gpsd_source_spec()
 #include "../include/os_compat.h"    // for strlcpy() if needed
 
-#define OID_VISIBLE ".1.3.6.1.2.1.25.1.31"
-#define OID_USED ".1.3.6.1.2.1.25.1.32"
-#define OID_SNR_AVG ".1.3.6.1.2.1.25.1.33"
-
 struct oid_mib_xlate {
     const char *oid;
     const char *short_mib;
@@ -37,19 +33,19 @@ struct oid_mib_xlate {
 };
 
 static void usage(char *prog_name) {
-    // "%s [-h] [-g OID] [server[:port[:device]]]\n\n"
     printf("Usage:\n"
-        "%s [-h] [-g OID] [server[:port[:device]]]\n\n"
+        "%s [-h] [-g OID] | [-n OID] [server[:port[:device]]]\n\n"
         "Examples:\n"
-        "to get OID_VISIBLE\n"
-        "   $ gpssnmp -g .1.3.6.1.2.1.25.1.31\n"
-        "   .1.3.6.1.2.1.25.1.31 = gauge: 13\n\n"
-        "to get OID_USED\n"
-        "   $ gpssnmp -g .1.3.6.1.2.1.25.1.32\n"
-        "   .1.3.6.1.2.1.25.1.32 = gauge: 4\n\n"
-        "to get OID_SNR_AVG\n"
-        "   $ gpssnmp -g .1.3.6.1.2.1.25.1.33\n"
-        "   .1.3.6.1.2.1.25.1.33 = gauge: 22.250000\n\n",
+        "to get the number of saltellits seen with the OID\n"
+        "   $ gpssnmp -g .1.3.6.1.4.1.59054.11.2.1.3.1\n"
+        "   .1.3.6.1.4.1.59054.11.2.1.3.1\n"
+        "   INTEGER\n"
+        "   15\n\n"
+        "to get the number of saltellits seen with the MIB name\n"
+        "   $ gpssnmp -g skynSat.1\n"
+        "   .1.3.6.1.4.1.59054.11.2.1.3.1\n"
+        "   INTEGER\n"
+        "   15\n\n",
         prog_name);
 }
 
@@ -58,29 +54,37 @@ int main (int argc, char **argv)
     struct gps_data_t gpsdata;
     int i;
     double snr_total=0;
-    double snr_avg = 0.0;
+    int snr_avg = 0;
+    // Not really 'visible', just "seen" in the Alamanc.
     int status, used, visible;
-    char oid[30] = "";       // requested OID
+    char oid[40] = "";       // requested get OID
+    char noid[40] = "";      // requested next OID
     int debug = 0;
     struct fixsource_t source;
     struct timespec ts_start, ts_now;
+    // keep this list sorted, o it can be "walked".
+    // for now we only handle the first device, so MIBs, end in .1
     struct oid_mib_xlate xlate[] = {
-        // Not really 'visible', just "seen" in the Alamanc.
-        {OID_VISIBLE, NULL, NULL, &visible, NULL},    // deprecated
-        {".1.3.6.1.4.1.59054.11.2.1.3.0", "skynSat.0",NULL,  &visible, NULL},
-        {OID_USED, NULL, NULL, &used, NULL},          // deprecated
-        {".1.3.6.1.4.1.59054.11.2.1.4.0", "skyuSat.0",NULL,  &used, NULL},
-        {OID_SNR_AVG, NULL, NULL, NULL, &snr_avg},    // deprecated
+        // next three are "pirate" OIDs, deprecated
+        {".1.3.6.1.2.1.25.1.31", NULL, NULL, &visible, NULL},
+        {".1.3.6.1.2.1.25.1.32", NULL, NULL, &used, NULL},
+        {".1.3.6.1.2.1.25.1.33", NULL, NULL, &snr_avg, NULL},
+        // previous three are "pirate" OIDs, deprecated
+        {".1.3.6.1.4.1.59054.11.2.1.3.1", "skynSat.1",NULL,  &visible, NULL},
+        {".1.3.6.1.4.1.59054.11.2.1.4.1", "skyuSat.1",NULL,  &used, NULL},
+        {".1.3.6.1.4.1.59054.11.2.1.5.1", "skySNRavg.1",NULL, &snr_avg, NULL},
         {NULL, NULL, NULL, NULL, NULL},
     };
     struct oid_mib_xlate *pxlate;
 
-    const char *optstring = "?D:g:hV";
+    const char *optstring = "?D:g:hn:V";
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
     static struct option long_options[] = {
         {"debug", required_argument, NULL, 'D'},
+        {"get", required_argument, NULL, 'g'},
         {"help", no_argument, NULL, 'h'},
+        {"next", required_argument, NULL, 'n'},
         {"version", no_argument, NULL, 'V' },
         {NULL, 0, NULL, 0},
     };
@@ -106,12 +110,15 @@ int main (int argc, char **argv)
             usage(argv[0]);
             exit(0);
             break;
-        case 'g':
-            strlcpy(oid, optarg, sizeof(oid));
-            break;
         case 'D':
             debug = atoi(optarg);
             gps_enable_debug(debug, stderr);
+            break;
+        case 'g':
+            strlcpy(oid, optarg, sizeof(oid));
+            break;
+        case 'n':
+            strlcpy(noid, optarg, sizeof(noid));
             break;
         case 'V':
             (void)fprintf(stderr, "%s: %s (revision %s)\n",
@@ -124,8 +131,18 @@ int main (int argc, char **argv)
         }
     }
 
-    if ('\0' == oid[0]) {
-        (void)fprintf(stderr, "%s: ERROR: Missing option\n\n", argv[0]);
+    if ('\0' == oid[0] &&
+        '\0' == noid[0]) {
+        (void)fprintf(stderr, "%s: ERROR: Missing option -g or -n\n\n",
+                      argv[0]);
+        usage(argv[0]);
+        exit(1);
+    }
+
+    if ('\0' != oid[0] &&
+        '\0' != noid[0]) {
+        (void)fprintf(stderr, "%s: ERROR: Use either -g or -n, not both\n\n",
+                      argv[0]);
         usage(argv[0]);
         exit(1);
     }
@@ -183,26 +200,39 @@ int main (int argc, char **argv)
     }
     gps_close (&gpsdata);
     if (0 < used) {
-        snr_avg = snr_total / used;
+        snr_avg = (unsigned)(100 * snr_total / used);
     }
     for (pxlate = xlate; NULL != pxlate->oid; pxlate++) {
-        if (0 == strcmp(pxlate->oid, oid) ||
-            (NULL != pxlate->short_mib &&
-             0 == strcmp(pxlate->short_mib, oid))) {
-            /* The output here conforms to the requierments of the
-             * "pass [-p priority] MIBOID PROG" option to snmpd.conf
-             */
 
-            if (NULL != pxlate->int_val) {
-                printf("%s\ngauge\n%d\n", pxlate->oid, *pxlate->int_val);
-            } else if (NULL != pxlate->dbl_val) {
-                printf("%s\ngauge\n%lf\n", pxlate->oid, *pxlate->dbl_val);
+        if ('\0' != oid[0]) {
+            if (0 == strncmp(pxlate->oid, oid, sizeof(oid)) ||
+                (NULL != pxlate->short_mib &&
+                 0 == strncmp(pxlate->short_mib, oid, sizeof(oid)))) {
+                // get match
             } else {
-                (void)fprintf(stderr, "%s: ERROR: internal error, OID %s\n\n",
-                              argv[0], oid);
+                continue;
             }
-            break;
+        } else if ('\0' != noid[0]) {
+             int cmp = strncmp(pxlate->oid, noid, sizeof(noid));
+
+             if (0 >= cmp) {
+                // not far enough yet.
+                continue;
+             }
+             // got next match, numeric OID only
         }
+        /* got match
+         * The output here conforms to the requierments of the
+         * "pass [-p priority] MIBOID PROG" option to snmpd.conf
+         */
+
+        if (NULL != pxlate->int_val) {
+            printf("%s\nINTEGER\n%d\n", pxlate->oid, *pxlate->int_val);
+        } else {
+            (void)fprintf(stderr, "%s: ERROR: internal error, OID %s\n\n",
+                          argv[0], oid);
+        }
+        break;
     }
     if (NULL == pxlate->oid) {
         // fell of the end of the list...

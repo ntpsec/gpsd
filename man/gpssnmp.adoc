@@ -1,5 +1,5 @@
 = gpssnmp(1)
-:date: 7 July 2022
+:date: 13 July 2022
 :keywords: gps, gpsd, gpssnmp
 :manmanual: GPSD Documentation
 :mansource: GPSD Version {gpsdver}
@@ -23,6 +23,8 @@ gpssnmp - SNMP helper client for gpsd
 
 *gpssnmp* -g OID
 
+*gpssnmp* -n OID
+
 *gpssnmp* -V
 
 == DESCRIPTION
@@ -40,35 +42,65 @@ extend *snmpd* with the *GPSD-MIB*.
 *-?*, *-h*, *--help*::
   Print a summary of options and then exit.
 *-g OID*::
-  Get the specified OID.  Supported OID values are:
-*.1.3.6.1.2.1.25.1.31*;; OID_VISIBLE, Number of visible GNSS satellites
-*.1.3.6.1.2.1.25.1.32*;; OID_USED, Number of GNSS satellites used.
-*.1.3.6.1.2.1.25.1.33*;; OID_SNR_AVG, Average of all used SNRs.
-
+  Get the specified OID.
+*-n OID*::
+  Get the next OID starting at OID.
 *-V*, *--version*::
   Print the package version and exit.
 
+Supported OID values are:
+* .1.3.6.1.4.1.59054.11.2.1.3.1;; Number of sats seen.
+* .1.3.6.1.4.1.59054.11.2.1.4.1;; Number of sats in use.
+* .1.3.6.1.4.1.59054.11.2.1.5.1;; Average SNR of all used satellites. Times 10.
+
 == EXAMPLES:
 
-To get OID_VISIBLE:
+To get the number of saltellits seen with the OID
 
 ----
-   $ gpssnmp -g .1.3.6.1.2.1.25.1.31
-   .1.3.6.1.2.1.25.1.31 = gauge: 13
+   $ gpssnmp -g .1.3.6.1.4.1.59054.11.2.1.3.1
+   .1.3.6.1.4.1.59054.11.2.1.3.1
+   INTEGER
+   15
 ----
 
-To get OID_USED:
+To get the number of saltellits seen with the MIB name
 
 ----
-   $ gpssnmp -g .1.3.6.1.2.1.25.1.32
-   .1.3.6.1.2.1.25.1.32 = gauge: 4
+   $ gpssnmp -g skynSat.1
+   .1.3.6.1.4.1.59054.11.2.1.3.1
+   INTEGER
+   15
 ----
 
-To get OID_SNR_AVG:
+=== Connecting to snmpd
+
+*gpssnmp* can work as a "pass-through script" with *snmpd*.  To enable
+this functionality on an already working snmpd installation, add this to your
+*/etc/snmp/snmpd.conf* file, and then restart *snmpd*:
+
+````
+# be sure SNMPv2 community "public" can access all MIBs:
+rocommunity public  localhost
+
+# configure pass-thur of GPSD-MIB to gpssnmp
+pass .1.3.6.1.4.1.59054  /usr/local/bin/gpssnmp
+----
+
+You can then query the number of satlettites in use this way:
+
+````
+$ snmpget -c public -v 2c localhost skynSat.1
+GPSD-MIB::skynSat.1 = INTEGER: 16
+````
+
+Or dump the entire "sky" OID this way:
 
 ----
-   $ gpssnmp -g .1.3.6.1.2.1.25.1.33
-   .1.3.6.1.2.1.25.1.33 = gauge: 22.250000
+$ snmpwalk -c public -v 2c localhost GPSD-MIB::sky
+GPSD-MIB::skynSat.1 = INTEGER: 17
+GPSD-MIB::skyuSat.1 = INTEGER: 8
+GPSD-MIB::skySNRavg.1 = INTEGER: 2000
 ----
 
 == RETURN VALUES

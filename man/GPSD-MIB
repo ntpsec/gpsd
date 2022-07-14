@@ -11,8 +11,6 @@ IMPORTS
     MODULE-IDENTITY, OBJECT-TYPE, enterprises FROM SNMPv2-SMI
     DisplayString, TimeStamp
         FROM SNMPv2-TC
-    Float64TC
-        FROM FLOAT-TC-MIB
 ;
 
 gpsd MODULE-IDENTITY
@@ -274,6 +272,7 @@ SkyEntry ::=
         skyPath              DisplayString,
         skynSat              INTEGER,       -- aka "seen"
         skyuSat              INTEGER        -- used
+        skySNRavg            Float64TC      -- average SNR
       }
 
 skyIndex OBJECT-TYPE
@@ -307,6 +306,14 @@ skyuSat OBJECT-TYPE
     DESCRIPTION
             "number of sats used by this device"
     ::= { skyEntry 4 }
+
+skySNRavg OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "average SNR or all satellites in use, times 100."
+    ::= { skyEntry 5 }
 
 
 END
