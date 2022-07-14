@@ -169,10 +169,10 @@ TpvEntry ::=
         tpvIndex             INTEGER,
         tpvPath              DisplayString,
         tpvMode              INTEGER,
-        tpvLatitude          Float64TC,
-        tpvLongitude         Float64TC,
-        tpvAltHAE            Float64TC,
-        tpvAltMSL            Float64TC
+        tpvLatitude          INTEGER,
+        tpvLongitude         INTEGER,
+        tpvAltHAE            INTEGER,
+        tpvAltMSL            INTEGER
       }
 
 tpvIndex OBJECT-TYPE
@@ -200,35 +200,36 @@ tpvMode OBJECT-TYPE
     ::= { tpvEntry 3 }
 
 tpvLatitude OBJECT-TYPE
-    SYNTAX      Float64TC
+    SYNTAX      INTEGER
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-            "The device Latitude in degrees."
+            "The device Latitude in degrees. Times 1e9"
     ::= { tpvEntry 4 }
 
 tpvLongitude OBJECT-TYPE
-    SYNTAX      Float64TC
+    SYNTAX      INTEGER
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-            "The device Longitude in degrees."
+            "The device Longitude in degrees. Times 1e9"
     ::= { tpvEntry 5 }
 
 tpvAltHAE OBJECT-TYPE
-    SYNTAX      Float64TC
+    SYNTAX      INTEGER
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-            "The device altitude above the(maybe WGS84) ellipsoid in meters."
+            "The device altitude above the(maybe WGS84) ellipsoid in meters.
+             Times 1e4."
     ::= { tpvEntry 6 }
 
 tpvAltMSL OBJECT-TYPE
-    SYNTAX      Float64TC
+    SYNTAX      INTEGER
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-            "The device altitude MSL in meters."
+            "The device altitude MSL in meters. Time 1e4."
     ::= { tpvEntry 7 }
 
 -- sky - Stuff from the SKY JSON class
@@ -271,8 +272,8 @@ SkyEntry ::=
         skyIndex             INTEGER,
         skyPath              DisplayString,
         skynSat              INTEGER,       -- aka "seen"
-        skyuSat              INTEGER        -- used
-        skySNRavg            Float64TC      -- average SNR
+        skyuSat              INTEGER,       -- used
+        skySNRavg            INTEGER        -- average SNR
       }
 
 skyIndex OBJECT-TYPE
