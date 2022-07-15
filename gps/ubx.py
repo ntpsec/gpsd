@@ -1532,6 +1532,13 @@ class ubx(object):
          "Data bytes 17-24"),
         ("CFG-RINV-CHUNK3", 0x50c70007, "X8", 1, "",
          "Data bytes 25-30 (MSB)"),
+        # CFG-RTCM-
+        ("CFG-RTCM-DF003_OUT", 0x30090001, "U2", 1, "",
+         "RTCM DF003 reference station ID (output)"),
+        ("CFG-RTCM-DF003_IN", 0x30090008, "U2", 1, "",
+         "RTCM DF003 reference station ID (input)"),
+        ("CFG-RTCM-DF003_IN_FILTER", 0x20090009, "E1", 1, "",
+         "RTCM input filter configuration based on DF003 value"),
         # CFG-SBAS-
         ("CFG-SBAS", 0x1036ffff, "", 0, "",
          "get all CFG-SBAS"),
