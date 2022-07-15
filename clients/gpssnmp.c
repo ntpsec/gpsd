@@ -15,6 +15,7 @@
 #ifdef HAVE_GETOPT_LONG
    #include <getopt.h>
 #endif
+#include <math.h>                    // for isfinite()
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>                  // for strlcpy()
@@ -66,6 +67,7 @@ int main (int argc, char **argv)
 {
     struct gps_data_t gpsdata;
     int i;
+    int one = 1;             // the one!
     double snr_total = 0;
     double snr_avg = 0;
     int status;
@@ -86,6 +88,13 @@ int main (int argc, char **argv)
          &snr_avg, 1},
         // previous three are "pirate" OIDs, deprecated
         // start sky
+        // only handle one device, for now
+        {".1.3.6.1.4.1.59054.11.1", "skyNumber", t_sinteger,
+         &one, 1},
+        {".1.3.6.1.4.1.59054.11.2.1.1.1", "skyIndex", t_sinteger,
+         &one, 1},
+        {".1.3.6.1.4.1.59054.11.2.1.2.1", "skyPath", t_string,
+         &gpsdata.dev.path, 1},
         {".1.3.6.1.4.1.59054.11.2.1.3.1", "skynSat.1", t_sinteger,
          &gpsdata.satellites_visible, 1},
         {".1.3.6.1.4.1.59054.11.2.1.4.1", "skyuSat.1", t_sinteger,
@@ -93,14 +102,22 @@ int main (int argc, char **argv)
         {".1.3.6.1.4.1.59054.11.2.1.5.1", "skySNRavg.1", t_double,
          &snr_avg, 100},
         // end sky
-        // tpv sky
+        // start tpv
+        // only handle one device, for now
+        {".1.3.6.1.4.1.59054.13.1", "tpvNumber", t_sinteger,
+         &one, 1},
+        {".1.3.6.1.4.1.59054.13.2.1.1.1", "tpvIndex", t_sinteger,
+         &one, 1},
+        {".1.3.6.1.4.1.59054.13.2.1.2.1", "tpvPath", t_string,
+         &gpsdata.dev.path, 1},
         {".1.3.6.1.4.1.59054.13.2.1.3.1", "tpvMode.1", t_sinteger,
          &gpsdata.fix.mode, 1},
+        // why 1e7?  Because SNMP chokes on INTEGERS > 32 bits.
         {".1.3.6.1.4.1.59054.13.2.1.4.1", "tpvLatitude.1", t_double,
-         &gpsdata.fix.latitude, 100000LL},
+         &gpsdata.fix.latitude, 10000000LL},
         {".1.3.6.1.4.1.59054.13.2.1.5.1", "tpvLongitude.1", t_double,
-         &gpsdata.fix.longitude, 100000LL},
-        // end tpv sky
+         &gpsdata.fix.longitude, 10000000LL},
+        // end tpv
         {NULL, NULL, t_sinteger, NULL},
     };
     struct oid_mib_xlate *pxlate;
@@ -257,8 +274,17 @@ int main (int argc, char **argv)
                     *(int *)pxlate->pval);
         } else if (t_double == pxlate->type) {
             // SNMP is too stupid to understand IEEE754, use scaled integers
-            printf("%s\nINTEGER\n%ld\n", pxlate->oid,
-                    (long)(*(double *)pxlate->pval * pxlate->scale));
+            // SNMP chokes on INTEGER > 32 bits.
+            if (isfinite(*(double *)pxlate->pval)) {
+                printf("%s\nINTEGER\n%ld\n", pxlate->oid,
+                        (long)(*(double *)pxlate->pval * pxlate->scale));
+            } else {
+                printf("%s\nINTEGER\nNaN\n", pxlate->oid);
+            }
+        } else if (t_string == pxlate->type) {
+            // 255 seems to be max STRING length.
+            printf("%s\nSTRING\n%.255s\n", pxlate->oid,
+                    (char *)pxlate->pval);
         } else {
             (void)fprintf(stderr, "%s: ERROR: internal error, OID %s\n\n",
                           argv[0], oid);

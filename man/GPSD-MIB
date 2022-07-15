@@ -8,7 +8,8 @@ GPSD-MIB DEFINITIONS ::= BEGIN
 --   mibfile /usr/local/share/snmp/mibs/gpsd/GPSD-MIB
 
 IMPORTS
-    MODULE-IDENTITY, OBJECT-TYPE, enterprises FROM SNMPv2-SMI
+    MODULE-IDENTITY, OBJECT-TYPE, enterprises
+        FROM SNMPv2-SMI
     DisplayString, TimeStamp
         FROM SNMPv2-TC
 ;
@@ -200,19 +201,21 @@ tpvMode OBJECT-TYPE
     ::= { tpvEntry 3 }
 
 tpvLatitude OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX  INTEGER
     MAX-ACCESS  read-only
     STATUS      current
+    -- why 1e7?  Because SNMP chokes on INTEGERS > 32 bits.
     DESCRIPTION
-            "The device Latitude in degrees. Times 1e5"
+            "The device Latitude in degrees. Times 1e7"
     ::= { tpvEntry 4 }
 
 tpvLongitude OBJECT-TYPE
     SYNTAX      INTEGER
     MAX-ACCESS  read-only
     STATUS      current
+    -- why 1e7?  Because SNMP chokes on INTEGERS > 32 bits.
     DESCRIPTION
-            "The device Longitude in degrees. Times 1e5"
+            "The device Longitude in degrees. Times 1e7"
     ::= { tpvEntry 5 }
 
 tpvAltHAE OBJECT-TYPE

@@ -1,5 +1,5 @@
 = gpssnmp(1)
-:date: 13 July 2022
+:date: 15 July 2022
 :keywords: gps, gpsd, gpssnmp
 :manmanual: GPSD Documentation
 :mansource: GPSD Version {gpsdver}
@@ -94,13 +94,20 @@ $ snmpget -c public -v 2c localhost skynSat.1
 GPSD-MIB::skynSat.1 = INTEGER: 16
 ````
 
-Or dump the entire "sky" OID this way:
+Dump the entire "sky" OID this way:
 
 ----
 $ snmpwalk -c public -v 2c localhost GPSD-MIB::sky
 GPSD-MIB::skynSat.1 = INTEGER: 17
 GPSD-MIB::skyuSat.1 = INTEGER: 8
 GPSD-MIB::skySNRavg.1 = INTEGER: 2000
+----
+
+Dump the entire GPSD-MIB this way:
+
+----
+$ snmpwalk -c public -v 2c localhost gpsd
+[...]
 ----
 
 == RETURN VALUES
