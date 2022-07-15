@@ -144,13 +144,14 @@ class gpscommon(object):
             else:
                 frag = self.sock.recv(8192)
 
-            self.linebuffer += frag
-            if not self.linebuffer:
+            if not frag:
                 if self.verbose > 1:
                     sys.stderr.write(
                         "poll: no available data: returning -1.\n")
                 # Read failed
                 return -1
+
+            self.linebuffer += frag
 
             eol = self.linebuffer.find(b'\n')
             if eol == -1:
@@ -158,7 +159,7 @@ class gpscommon(object):
                     sys.stderr.write("poll: partial message: returning 0.\n")
                 # Read succeeded, but only got a fragment
                 self.response = ''  # Don't duplicate last response
-                self.bresponse = ''  # Don't duplicate last response
+                self.bresponse = b''  # Don't duplicate last response
                 return 0
         else:
             if self.verbose > 1:
