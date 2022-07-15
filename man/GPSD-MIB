@@ -204,7 +204,7 @@ tpvLatitude OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-            "The device Latitude in degrees. Times 1e9"
+            "The device Latitude in degrees. Times 1e5"
     ::= { tpvEntry 4 }
 
 tpvLongitude OBJECT-TYPE
@@ -212,7 +212,7 @@ tpvLongitude OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-            "The device Longitude in degrees. Times 1e9"
+            "The device Longitude in degrees. Times 1e5"
     ::= { tpvEntry 5 }
 
 tpvAltHAE OBJECT-TYPE

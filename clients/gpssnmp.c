@@ -24,12 +24,25 @@
 #include "../include/gpsdclient.h"   // for gpsd_source_spec()
 #include "../include/os_compat.h"    // for strlcpy() if needed
 
+typedef enum {
+    t_double,
+    t_sbyte,
+    t_schort,
+    t_sinteger,
+    t_slongint,
+    t_string,
+    t_ubyte,
+    t_uinteger,
+    t_ulongint,
+    t_ushort}
+gpsdata_type;
+
 struct oid_mib_xlate {
     const char *oid;
     const char *short_mib;
-    const char *long_mib;
-    int *int_val;
-    double *dbl_val;
+    gpsdata_type type;
+    void *pval;
+    int64_t scale;
 };
 
 static void usage(char *prog_name) {
@@ -53,10 +66,9 @@ int main (int argc, char **argv)
 {
     struct gps_data_t gpsdata;
     int i;
-    double snr_total=0;
-    int snr_avg = 0;
-    // Not really 'visible', just "seen" in the Alamanc.
-    int status, used, visible;
+    double snr_total = 0;
+    double snr_avg = 0;
+    int status;
     char oid[40] = "";       // requested get OID
     char noid[40] = "";      // requested next OID
     int debug = 0;
@@ -66,14 +78,30 @@ int main (int argc, char **argv)
     // for now we only handle the first device, so MIBs, end in .1
     struct oid_mib_xlate xlate[] = {
         // next three are "pirate" OIDs, deprecated
-        {".1.3.6.1.2.1.25.1.31", NULL, NULL, &visible, NULL},
-        {".1.3.6.1.2.1.25.1.32", NULL, NULL, &used, NULL},
-        {".1.3.6.1.2.1.25.1.33", NULL, NULL, &snr_avg, NULL},
+        {".1.3.6.1.2.1.25.1.31", NULL, t_sinteger,
+         &gpsdata.satellites_visible, 1},
+        {".1.3.6.1.2.1.25.1.32", NULL, t_sinteger,
+         &gpsdata.satellites_used, 1},
+        {".1.3.6.1.2.1.25.1.33", NULL, t_sinteger,
+         &snr_avg, 1},
         // previous three are "pirate" OIDs, deprecated
-        {".1.3.6.1.4.1.59054.11.2.1.3.1", "skynSat.1",NULL,  &visible, NULL},
-        {".1.3.6.1.4.1.59054.11.2.1.4.1", "skyuSat.1",NULL,  &used, NULL},
-        {".1.3.6.1.4.1.59054.11.2.1.5.1", "skySNRavg.1",NULL, &snr_avg, NULL},
-        {NULL, NULL, NULL, NULL, NULL},
+        // start sky
+        {".1.3.6.1.4.1.59054.11.2.1.3.1", "skynSat.1", t_sinteger,
+         &gpsdata.satellites_visible, 1},
+        {".1.3.6.1.4.1.59054.11.2.1.4.1", "skyuSat.1", t_sinteger,
+         &gpsdata.satellites_used, 1},
+        {".1.3.6.1.4.1.59054.11.2.1.5.1", "skySNRavg.1", t_double,
+         &snr_avg, 100},
+        // end sky
+        // tpv sky
+        {".1.3.6.1.4.1.59054.13.2.1.3.1", "tpvMode.1", t_sinteger,
+         &gpsdata.fix.mode, 1},
+        {".1.3.6.1.4.1.59054.13.2.1.4.1", "tpvLatitude.1", t_double,
+         &gpsdata.fix.latitude, 100000LL},
+        {".1.3.6.1.4.1.59054.13.2.1.5.1", "tpvLongitude.1", t_double,
+         &gpsdata.fix.longitude, 100000LL},
+        // end tpv sky
+        {NULL, NULL, t_sinteger, NULL},
     };
     struct oid_mib_xlate *pxlate;
 
@@ -188,9 +216,7 @@ int main (int argc, char **argv)
 
 
     }
-    used  = gpsdata.satellites_used;
-    visible = gpsdata.satellites_visible;
-    for(i = 0; i <= used; i++) {
+    for(i = 0; i <= gpsdata.satellites_used; i++) {
         if (0 < gpsdata.skyview[i].used &&
             1 <  gpsdata.skyview[i].ss) {
             // printf("i: %d, P:%d, ss: %f\n", i, gpsdata.skyview[i].PRN,
@@ -199,8 +225,8 @@ int main (int argc, char **argv)
         }
     }
     gps_close (&gpsdata);
-    if (0 < used) {
-        snr_avg = (unsigned)(100 * snr_total / used);
+    if (0 < gpsdata.satellites_used) {
+        snr_avg = snr_total / gpsdata.satellites_used;
     }
     for (pxlate = xlate; NULL != pxlate->oid; pxlate++) {
 
@@ -226,8 +252,13 @@ int main (int argc, char **argv)
          * "pass [-p priority] MIBOID PROG" option to snmpd.conf
          */
 
-        if (NULL != pxlate->int_val) {
-            printf("%s\nINTEGER\n%d\n", pxlate->oid, *pxlate->int_val);
+        if (t_sinteger == pxlate->type) {
+            printf("%s\nINTEGER\n%d\n", pxlate->oid,
+                    *(int *)pxlate->pval);
+        } else if (t_double == pxlate->type) {
+            // SNMP is too stupid to understand IEEE754, use scaled integers
+            printf("%s\nINTEGER\n%ld\n", pxlate->oid,
+                    (long)(*(double *)pxlate->pval * pxlate->scale));
         } else {
             (void)fprintf(stderr, "%s: ERROR: internal error, OID %s\n\n",
                           argv[0], oid);
