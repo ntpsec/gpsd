@@ -34,7 +34,6 @@ import gps.misc
 # Packet types and  Logging levels extracted from gpsd.h
 @PYPACKETH@
 
-
 class PacketLibraryNotFoundError(Exception):
     """Error loading packet library."""
     pass
@@ -81,8 +80,8 @@ Returns the library handle."""
     #  DYLD_LIBRARY_PATH,
     #  current working directory,
     #  DYLD_FALLBACK_LIBRARY_PATH (default: $HOME/lib:/usr/local/lib:/usr/lib)
-    # Note that some recent macOS versions have stopped honoring *_LIBRARY_PATH,
-    # for security reasons.
+    # Note that some recent macOS versions have stopped honoring
+    #  *_LIBRARY_PATH, for security reasons.
     #
     # Linux:
     #   find_library() does not usually return a full path.

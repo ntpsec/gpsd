@@ -8143,7 +8143,7 @@ qErrInvalid add in protVer 34 and up
                 # UBX-CFG-MSG
                 self.gps_send(6, 1, m_data)
 
-            if 27 <=self.protver:
+            if 27 <= self.protver:
                 for id in ubx_27_nav_on:
                     m_data[1] = id
                     # UBX-CFG-MSG

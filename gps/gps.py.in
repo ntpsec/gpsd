@@ -57,6 +57,7 @@ GNSSID_QZSS = 5
 GNSSID_GLO = 6
 GNSSID_IRNSS = 7            # ZED-F9T mapping
 
+
 def isfinite(f):
     """Check if f is finite."""
     # Python 2 does not think +Inf or -Inf are NaN
