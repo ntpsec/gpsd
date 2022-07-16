@@ -25,8 +25,14 @@
 #include "../include/gpsdclient.h"   // for gpsd_source_spec()
 #include "../include/os_compat.h"    // for strlcpy() if needed
 
+int debug = 0;                       // debug level
+struct gps_data_t gpsdata;
+int one = 1;                         // the one!
+double snr_avg = 0;
+
 typedef enum {
     t_double,
+    t_dummy,      // used for non-terminal OIDs.
     t_sbyte,
     t_schort,
     t_sinteger,
@@ -46,80 +52,109 @@ struct oid_mib_xlate {
     int64_t scale;
 };
 
+// keep this list sorted, so it can be "walked".
+// for now we only handle the first device, so table OIDs, end in .1
+struct oid_mib_xlate xlate[] = {
+    // next three are "pirate" OIDs, deprecated
+    {".1.3.6.1.2.1.25.1.31", NULL, t_sinteger,
+     &gpsdata.satellites_visible, 1},
+    {".1.3.6.1.2.1.25.1.32", NULL, t_sinteger,
+     &gpsdata.satellites_used, 1},
+    {".1.3.6.1.2.1.25.1.33", NULL, t_sinteger,
+     &snr_avg, 1},
+    // previous three are "pirate" OIDs, deprecated
+    {".1.3.6.1.4.1.59054", "gpsd", t_dummy, NULL, 0},
+    // start sky
+    {".1.3.6.1.4.1.59054.11", "sky", t_dummy, NULL, 0},
+    // only handle one device, for now
+    {".1.3.6.1.4.1.59054.11.1", "skyNumber", t_sinteger,
+     &one, 1},
+    {".1.3.6.1.4.1.59054.11.2.1.1.1", "skyIndex", t_sinteger,
+     &one, 1},
+    {".1.3.6.1.4.1.59054.11.2.1.2.1", "skyPath", t_string,
+     &gpsdata.dev.path, 1},
+    {".1.3.6.1.4.1.59054.11.2.1.3.1", "skynSat.1", t_sinteger,
+     &gpsdata.satellites_visible, 1},
+    {".1.3.6.1.4.1.59054.11.2.1.4.1", "skyuSat.1", t_sinteger,
+     &gpsdata.satellites_used, 1},
+    {".1.3.6.1.4.1.59054.11.2.1.5.1", "skySNRavg.1", t_double,
+     &snr_avg, 100},
+    // end sky
+    // start tpv
+    {".1.3.6.1.4.1.59054.13", "tpv", t_dummy, NULL, 0},
+    // only handle one device, for now
+    {".1.3.6.1.4.1.59054.13.1", "tpvNumber", t_sinteger,
+     &one, 1},
+    {".1.3.6.1.4.1.59054.13.2.1.1.1", "tpvIndex", t_sinteger,
+     &one, 1},
+    {".1.3.6.1.4.1.59054.13.2.1.2.1", "tpvPath", t_string,
+     &gpsdata.dev.path, 1},
+    {".1.3.6.1.4.1.59054.13.2.1.3.1", "tpvMode.1", t_sinteger,
+     &gpsdata.fix.mode, 1},
+    // why 1e7?  Because SNMP chokes on INTEGERS > 32 bits.
+    {".1.3.6.1.4.1.59054.13.2.1.4.1", "tpvLatitude.1", t_double,
+     &gpsdata.fix.latitude, 10000000LL},
+    {".1.3.6.1.4.1.59054.13.2.1.5.1", "tpvLongitude.1", t_double,
+     &gpsdata.fix.longitude, 10000000LL},
+    // end tpv
+    {NULL, NULL, t_sinteger, NULL},
+};
+
+/* print usage info, then exit.
+ *
+ * Never returns
+ */
 static void usage(char *prog_name) {
-    printf("Usage:\n"
-        "%s [-h] [-g OID] | [-n OID] [server[:port[:device]]]\n\n"
-        "Examples:\n"
-        "to get the number of saltellits seen with the OID\n"
-        "   $ gpssnmp -g .1.3.6.1.4.1.59054.11.2.1.3.1\n"
-        "   .1.3.6.1.4.1.59054.11.2.1.3.1\n"
-        "   INTEGER\n"
-        "   15\n\n"
-        "to get the number of saltellits seen with the MIB name\n"
-        "   $ gpssnmp -g skynSat.1\n"
-        "   .1.3.6.1.4.1.59054.11.2.1.3.1\n"
-        "   INTEGER\n"
-        "   15\n\n",
+    struct oid_mib_xlate *pxlate;
+
+    (void)printf("usage: %s [OPTIONS] [server[:port[:device]]]\n\n\
+Options include: \n\
+  -?, -h, --help            = help message\n\
+                              Use with -D 1 to show possible OIDs\n\
+  -D, --debug LVL           = set debug level to LVL, default 0 \n\
+  -g, --get OID             = get value for OID\n\
+  -n, --next OID            = next OID value\n\
+  -V, --version             = emit version and exit.\n\n\
+Examples:\n\n\
+to get the number of saltellites seen with the OID\n\
+   $ gpssnmp -g .1.3.6.1.4.1.59054.11.2.1.3.1\n\
+   .1.3.6.1.4.1.59054.11.2.1.3.1\n\
+   INTEGER\n\
+   15\n\n\
+to get the number of saltellites seen with the MIB name\n\
+   $ gpssnmp -g skynSat.1\n\
+   .1.3.6.1.4.1.59054.11.2.1.3.1\n\
+   INTEGER\n\
+   15\n\n",
         prog_name);
+
+    if (0 >= debug) {
+        // done, exit
+        exit(0);
+    }
+    puts("Supported OIDs and their short names:\n");
+    for (pxlate = xlate; NULL != pxlate->oid; pxlate++) {
+        if (NULL == pxlate->short_mib) {
+            // skip deprecated OIDs
+            continue;
+        }
+        printf("   %-15s %-50s\n", pxlate->short_mib, pxlate->oid);
+    }
+    puts("");
+    exit(0);
 }
 
 int main (int argc, char **argv)
 {
-    struct gps_data_t gpsdata;
+    bool do_usage = false;
+    bool get_next = false;
     int i;
-    int one = 1;             // the one!
     double snr_total = 0;
-    double snr_avg = 0;
     int status;
     char oid[40] = "";       // requested get OID
     char noid[40] = "";      // requested next OID
-    int debug = 0;
     struct fixsource_t source;
     struct timespec ts_start, ts_now;
-    // keep this list sorted, o it can be "walked".
-    // for now we only handle the first device, so MIBs, end in .1
-    struct oid_mib_xlate xlate[] = {
-        // next three are "pirate" OIDs, deprecated
-        {".1.3.6.1.2.1.25.1.31", NULL, t_sinteger,
-         &gpsdata.satellites_visible, 1},
-        {".1.3.6.1.2.1.25.1.32", NULL, t_sinteger,
-         &gpsdata.satellites_used, 1},
-        {".1.3.6.1.2.1.25.1.33", NULL, t_sinteger,
-         &snr_avg, 1},
-        // previous three are "pirate" OIDs, deprecated
-        // start sky
-        // only handle one device, for now
-        {".1.3.6.1.4.1.59054.11.1", "skyNumber", t_sinteger,
-         &one, 1},
-        {".1.3.6.1.4.1.59054.11.2.1.1.1", "skyIndex", t_sinteger,
-         &one, 1},
-        {".1.3.6.1.4.1.59054.11.2.1.2.1", "skyPath", t_string,
-         &gpsdata.dev.path, 1},
-        {".1.3.6.1.4.1.59054.11.2.1.3.1", "skynSat.1", t_sinteger,
-         &gpsdata.satellites_visible, 1},
-        {".1.3.6.1.4.1.59054.11.2.1.4.1", "skyuSat.1", t_sinteger,
-         &gpsdata.satellites_used, 1},
-        {".1.3.6.1.4.1.59054.11.2.1.5.1", "skySNRavg.1", t_double,
-         &snr_avg, 100},
-        // end sky
-        // start tpv
-        // only handle one device, for now
-        {".1.3.6.1.4.1.59054.13.1", "tpvNumber", t_sinteger,
-         &one, 1},
-        {".1.3.6.1.4.1.59054.13.2.1.1.1", "tpvIndex", t_sinteger,
-         &one, 1},
-        {".1.3.6.1.4.1.59054.13.2.1.2.1", "tpvPath", t_string,
-         &gpsdata.dev.path, 1},
-        {".1.3.6.1.4.1.59054.13.2.1.3.1", "tpvMode.1", t_sinteger,
-         &gpsdata.fix.mode, 1},
-        // why 1e7?  Because SNMP chokes on INTEGERS > 32 bits.
-        {".1.3.6.1.4.1.59054.13.2.1.4.1", "tpvLatitude.1", t_double,
-         &gpsdata.fix.latitude, 10000000LL},
-        {".1.3.6.1.4.1.59054.13.2.1.5.1", "tpvLongitude.1", t_double,
-         &gpsdata.fix.longitude, 10000000LL},
-        // end tpv
-        {NULL, NULL, t_sinteger, NULL},
-    };
     struct oid_mib_xlate *pxlate;
 
     const char *optstring = "?D:g:hn:V";
@@ -152,8 +187,7 @@ int main (int argc, char **argv)
         case '?':
             FALLTHROUGH
         case 'h':
-            usage(argv[0]);
-            exit(0);
+            do_usage = true;
             break;
         case 'D':
             debug = atoi(optarg);
@@ -170,12 +204,15 @@ int main (int argc, char **argv)
                           argv[0], VERSION, REVISION);
             exit(EXIT_SUCCESS);
         default:
-            usage(argv[0]);
-            exit(0);
+            (void)fprintf(stderr, "ERROR: Unknown option %c\n\n", ch);
+            do_usage = true;
             break;
         }
     }
 
+    if (do_usage) {
+        usage(argv[0]);    // never returns
+    }
     if ('\0' == oid[0] &&
         '\0' == noid[0]) {
         (void)fprintf(stderr, "%s: ERROR: Missing option -g or -n\n\n",
@@ -255,6 +292,8 @@ int main (int argc, char **argv)
             } else {
                 continue;
             }
+        } else if (get_next) {
+            // this is the next one
         } else if ('\0' != noid[0]) {
              int cmp = strncmp(pxlate->oid, noid, sizeof(noid));
 
@@ -269,10 +308,12 @@ int main (int argc, char **argv)
          * "pass [-p priority] MIBOID PROG" option to snmpd.conf
          */
 
-        if (t_sinteger == pxlate->type) {
-            printf("%s\nINTEGER\n%d\n", pxlate->oid,
-                    *(int *)pxlate->pval);
-        } else if (t_double == pxlate->type) {
+        switch (pxlate->type) {
+        case t_dummy:
+            // skip, go to next one
+            get_next = true;
+            continue;
+        case t_double:
             // SNMP is too stupid to understand IEEE754, use scaled integers
             // SNMP chokes on INTEGER > 32 bits.
             if (isfinite(*(double *)pxlate->pval)) {
@@ -281,13 +322,20 @@ int main (int argc, char **argv)
             } else {
                 printf("%s\nINTEGER\nNaN\n", pxlate->oid);
             }
-        } else if (t_string == pxlate->type) {
+            break;
+        case t_sinteger:
+            printf("%s\nINTEGER\n%d\n", pxlate->oid,
+                    *(int *)pxlate->pval);
+            break;
+        case t_string:
             // 255 seems to be max STRING length.
             printf("%s\nSTRING\n%.255s\n", pxlate->oid,
                     (char *)pxlate->pval);
-        } else {
+            break;
+        default:
             (void)fprintf(stderr, "%s: ERROR: internal error, OID %s\n\n",
                           argv[0], oid);
+            break;
         }
         break;
     }
