@@ -50,6 +50,7 @@ struct oid_mib_xlate {
     gpsdata_type type;
     void *pval;
     int64_t scale;
+    const char *desc;
 };
 
 // keep this list sorted, so it can be "walked".
@@ -57,59 +58,59 @@ struct oid_mib_xlate {
 struct oid_mib_xlate xlate[] = {
     // next three are "pirate" OIDs, deprecated
     {".1.3.6.1.2.1.25.1.31", NULL, t_sinteger,
-     &gpsdata.satellites_visible, 1},
+     &gpsdata.satellites_visible, 1, ""},
     {".1.3.6.1.2.1.25.1.32", NULL, t_sinteger,
-     &gpsdata.satellites_used, 1},
+     &gpsdata.satellites_used, 1, ""},
     {".1.3.6.1.2.1.25.1.33", NULL, t_sinteger,
-     &snr_avg, 1},
+     &snr_avg, 1, ""},
     // previous three are "pirate" OIDs, deprecated
-    {".1.3.6.1.4.1.59054", "gpsd", t_dummy, NULL, 0},
+    {".1.3.6.1.4.1.59054", "gpsd", t_dummy, NULL, 0, "Anchor for GPSD-MIB"},
     // start sky
-    {".1.3.6.1.4.1.59054.11", "sky", t_dummy, NULL, 0},
+    {".1.3.6.1.4.1.59054.11", "sky", t_dummy, NULL, 0, "Anchor for SKY"},
     // only handle one device, for now
     {".1.3.6.1.4.1.59054.11.1", "skyNumber", t_sinteger,
-     &one, 1},
+     &one, 1, "The number of devices in the skyTable"},
     {".1.3.6.1.4.1.59054.11.2.1.1.1", "skyIndex", t_sinteger,
-     &one, 1},
+     &one, 1, "skyTable Index"},
     {".1.3.6.1.4.1.59054.11.2.1.2.1", "skyPath", t_string,
-     &gpsdata.dev.path, 1},
+     &gpsdata.dev.path, 1, "path for this device"},
     {".1.3.6.1.4.1.59054.11.2.1.3.1", "skynSat.1", t_sinteger,
-     &gpsdata.satellites_visible, 1},
+     &gpsdata.satellites_visible, 1, "Number of satellties seen"},
     {".1.3.6.1.4.1.59054.11.2.1.4.1", "skyuSat.1", t_sinteger,
-     &gpsdata.satellites_used, 1},
+     &gpsdata.satellites_used, 1, "Number of satellties in use"},
     {".1.3.6.1.4.1.59054.11.2.1.5.1", "skySNRavg.1", t_double,
-     &snr_avg, 100},
+     &snr_avg, 100, "Average SNR of all satellites in use."},
     // end sky
     // start tpv
-    {".1.3.6.1.4.1.59054.13", "tpv", t_dummy, NULL, 0},
+    {".1.3.6.1.4.1.59054.13", "tpv", t_dummy, NULL, 0, "Anchor for TPV"},
     {".1.3.6.1.4.1.59054.13.1", "tpvLeapSeconds", t_sinteger,
-     &gpsdata.leap_seconds, 1},
+     &gpsdata.leap_seconds, 1, ""},
     // only handle one device, for now
     {".1.3.6.1.4.1.59054.13.2", "tpvNumber", t_sinteger,
-     &one, 1},
+     &one, 1, "The number of devices in the tpvTable"},
     {".1.3.6.1.4.1.59054.13.3.1.1.1", "tpvIndex", t_sinteger,
-     &one, 1},
+     &one, 1, "tpvTable Index"},
     {".1.3.6.1.4.1.59054.13.3.1.2.1", "tpvPath", t_string,
-     &gpsdata.dev.path, 1},
+     &gpsdata.dev.path, 1, "path for this device"},
     {".1.3.6.1.4.1.59054.13.3.1.3.1", "tpvMode.1", t_sinteger,
-     &gpsdata.fix.mode, 1},
+     &gpsdata.fix.mode, 1, "Fix Mode"},
     {".1.3.6.1.4.1.59054.13.3.1.4.1", "tpvStatus.1", t_sinteger,
-     &gpsdata.fix.status, 1},
+     &gpsdata.fix.status, 1, "Fix Status"},
     // why 1e7?  Because SNMP chokes on INTEGERS > 32 bits.
     {".1.3.6.1.4.1.59054.13.3.1.5.1", "tpvLatitude.1", t_double,
-     &gpsdata.fix.latitude, 10000000LL},
+     &gpsdata.fix.latitude, 10000000LL, "Latitude in degrees."},
     {".1.3.6.1.4.1.59054.13.3.1.6.1", "tpvLongitude.1", t_double,
-     &gpsdata.fix.longitude, 10000000LL},
+     &gpsdata.fix.longitude, 10000000LL, "Longitude in degrees."},
     {".1.3.6.1.4.1.59054.13.3.1.7.1", "tpvAltHAE.1", t_double,
-     &gpsdata.fix.altHAE, 10000},
+     &gpsdata.fix.altHAE, 10000, "Height above Ellipsoid, in meters."},
     {".1.3.6.1.4.1.59054.13.3.1.8.1", "tpvAltMSL.1", t_double,
-     &gpsdata.fix.altMSL, 10000},
+     &gpsdata.fix.altMSL, 10000, "Height above MSL, in meters."},
     {".1.3.6.1.4.1.59054.13.3.1.9.1", "tpvClimb.1", t_double,
-     &gpsdata.fix.climb, 10000},
+     &gpsdata.fix.climb, 10000, "CLimb rate in meters/second"},
     {".1.3.6.1.4.1.59054.13.3.1.10.1", "tpvTrack.1", t_double,
-     &gpsdata.fix.climb, 10000},
+     &gpsdata.fix.climb, 10000, "True Track in degrees."},
     // end tpv
-    {NULL, NULL, t_sinteger, NULL},
+    {NULL, NULL, t_sinteger, NULL, 0, ""},
 };
 
 /* print usage info, then exit.
@@ -123,6 +124,7 @@ static void usage(char *prog_name) {
 Options include: \n\
   -?, -h, --help            = help message\n\
                               Use with -D 1 to show possible OIDs\n\
+                              Use with -D 2 to show scale factors\n\
   -D, --debug LVL           = set debug level to LVL, default 0 \n\
   -g, --get OID             = get value for OID\n\
   -n, --next OID            = next OID value\n\
@@ -151,6 +153,16 @@ to get the number of saltellites seen with the MIB name\n\
             continue;
         }
         printf("   %-15s %-50s\n", pxlate->short_mib, pxlate->oid);
+        if (2 > debug) {
+            continue;
+        }
+        if ('\0' != pxlate->desc[0]) {
+            printf("     Desc: %s\n", pxlate->desc);
+        }
+        if (t_sinteger == pxlate->type ||
+            t_double == pxlate->type) {
+            printf("     Scale: %ld\n", pxlate->scale);
+        }
     }
     puts("");
     exit(0);
