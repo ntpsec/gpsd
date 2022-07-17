@@ -15,7 +15,7 @@ IMPORTS
 ;
 
 gpsd MODULE-IDENTITY
-     LAST-UPDATED "202207061600Z"
+     LAST-UPDATED "202207161600Z"
      ORGANIZATION "The Gpsd Project"
      CONTACT-INFO
         "The Gpsd Project
@@ -30,7 +30,7 @@ gpsd MODULE-IDENTITY
         SPDX-License-Identifier: BSD-2-clause"
 
      REVISION
-        "202207061600Z"
+        "202207161600Z"
 
      DESCRIPTION
         "DRAFT: Initial MIB."
@@ -131,6 +131,15 @@ devPath OBJECT-TYPE
     ::= { devEntry 2 }
 
 -- tpv - Stuff from the TPV JSON class
+-- See "man gpsd_json" for more details on each item.
+
+tpvLeapSeconds OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "Current Leap Seconds."
+    ::= { tpv 1}
 
 tpvNumber  OBJECT-TYPE
     SYNTAX      INTEGER
@@ -138,7 +147,7 @@ tpvNumber  OBJECT-TYPE
     STATUS      current
     DESCRIPTION
             "The number of devices in tpvTable, regardless of current state."
-    ::= { tpv 1 }
+    ::= { tpv 2 }
 
 -- the TPV table
 
@@ -152,7 +161,7 @@ tpvTable OBJECT-TYPE
     DESCRIPTION
             "A list of device entries.  The number of entries is
             given by the value of tpvNumber."
-    ::= { tpv 2 }
+    ::= { tpv 3 }
 
 tpvEntry OBJECT-TYPE
     SYNTAX      TpvEntry
@@ -170,10 +179,13 @@ TpvEntry ::=
         tpvIndex             INTEGER,
         tpvPath              DisplayString,
         tpvMode              INTEGER,
+        tpvStatus            INTEGER,
         tpvLatitude          INTEGER,
         tpvLongitude         INTEGER,
         tpvAltHAE            INTEGER,
-        tpvAltMSL            INTEGER
+        tpvAltMSL            INTEGER,
+        tpvClimb             INTEGER,
+        tpvHeading           INTEGER
       }
 
 tpvIndex OBJECT-TYPE
@@ -200,14 +212,24 @@ tpvMode OBJECT-TYPE
             "NMEA mode: 0=unknown, 1=no fix, 2=2D, 3=3D."
     ::= { tpvEntry 3 }
 
+tpvStatus OBJECT-TYPE
+    SYNTAX      INTEGER (0..15)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "Almost NMEA status: 0=Unknown, 1=Normal, 2=DGPS, 3=RTK Fixed,
+        4=RTK Floating, 5=DR, 6=GNSSDR, 7=Time (surveyed), 8=Simulated,   
+        9=P(Y)"
+    ::= { tpvEntry 4 }
+
 tpvLatitude OBJECT-TYPE
     SYNTAX  INTEGER
     MAX-ACCESS  read-only
     STATUS      current
     -- why 1e7?  Because SNMP chokes on INTEGERS > 32 bits.
     DESCRIPTION
-            "The device Latitude in degrees. Times 1e7"
-    ::= { tpvEntry 4 }
+            "The device Latitude in degrees. Scale 1e-7"
+    ::= { tpvEntry 5 }
 
 tpvLongitude OBJECT-TYPE
     SYNTAX      INTEGER
@@ -215,8 +237,8 @@ tpvLongitude OBJECT-TYPE
     STATUS      current
     -- why 1e7?  Because SNMP chokes on INTEGERS > 32 bits.
     DESCRIPTION
-            "The device Longitude in degrees. Times 1e7"
-    ::= { tpvEntry 5 }
+            "The device Longitude in degrees. Scale 1e-7"
+    ::= { tpvEntry 6 }
 
 tpvAltHAE OBJECT-TYPE
     SYNTAX      INTEGER
@@ -224,16 +246,32 @@ tpvAltHAE OBJECT-TYPE
     STATUS      current
     DESCRIPTION
             "The device altitude above the(maybe WGS84) ellipsoid in meters.
-             Times 1e4."
-    ::= { tpvEntry 6 }
+             Scale 1e-4."
+    ::= { tpvEntry 7 }
 
 tpvAltMSL OBJECT-TYPE
     SYNTAX      INTEGER
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-            "The device altitude MSL in meters. Time 1e4."
-    ::= { tpvEntry 7 }
+            "The device altitude MSL in meters. Scale 1e-4."
+    ::= { tpvEntry 8 }
+
+tpvClimb OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "The device climb rate in meters per second. Scale 1e-44."
+    ::= { tpvEntry 9 }
+
+tpvHeading OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "Course over ground, degrees from true north. Scale 1e-5."
+    ::= { tpvEntry 10 }
 
 -- sky - Stuff from the SKY JSON class
 

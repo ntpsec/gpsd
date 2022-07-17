@@ -82,20 +82,32 @@ struct oid_mib_xlate xlate[] = {
     // end sky
     // start tpv
     {".1.3.6.1.4.1.59054.13", "tpv", t_dummy, NULL, 0},
+    {".1.3.6.1.4.1.59054.13.1", "tpvLeapSeconds", t_sinteger,
+     &gpsdata.leap_seconds, 1},
     // only handle one device, for now
-    {".1.3.6.1.4.1.59054.13.1", "tpvNumber", t_sinteger,
+    {".1.3.6.1.4.1.59054.13.2", "tpvNumber", t_sinteger,
      &one, 1},
-    {".1.3.6.1.4.1.59054.13.2.1.1.1", "tpvIndex", t_sinteger,
+    {".1.3.6.1.4.1.59054.13.3.1.1.1", "tpvIndex", t_sinteger,
      &one, 1},
-    {".1.3.6.1.4.1.59054.13.2.1.2.1", "tpvPath", t_string,
+    {".1.3.6.1.4.1.59054.13.3.1.2.1", "tpvPath", t_string,
      &gpsdata.dev.path, 1},
-    {".1.3.6.1.4.1.59054.13.2.1.3.1", "tpvMode.1", t_sinteger,
+    {".1.3.6.1.4.1.59054.13.3.1.3.1", "tpvMode.1", t_sinteger,
      &gpsdata.fix.mode, 1},
+    {".1.3.6.1.4.1.59054.13.3.1.4.1", "tpvStatus.1", t_sinteger,
+     &gpsdata.fix.status, 1},
     // why 1e7?  Because SNMP chokes on INTEGERS > 32 bits.
-    {".1.3.6.1.4.1.59054.13.2.1.4.1", "tpvLatitude.1", t_double,
+    {".1.3.6.1.4.1.59054.13.3.1.5.1", "tpvLatitude.1", t_double,
      &gpsdata.fix.latitude, 10000000LL},
-    {".1.3.6.1.4.1.59054.13.2.1.5.1", "tpvLongitude.1", t_double,
+    {".1.3.6.1.4.1.59054.13.3.1.6.1", "tpvLongitude.1", t_double,
      &gpsdata.fix.longitude, 10000000LL},
+    {".1.3.6.1.4.1.59054.13.3.1.7.1", "tpvAltHAE.1", t_double,
+     &gpsdata.fix.altHAE, 10000},
+    {".1.3.6.1.4.1.59054.13.3.1.8.1", "tpvAltMSL.1", t_double,
+     &gpsdata.fix.altMSL, 10000},
+    {".1.3.6.1.4.1.59054.13.3.1.9.1", "tpvClimb.1", t_double,
+     &gpsdata.fix.climb, 10000},
+    {".1.3.6.1.4.1.59054.13.3.1.10.1", "tpvTrack.1", t_double,
+     &gpsdata.fix.climb, 10000},
     // end tpv
     {NULL, NULL, t_sinteger, NULL},
 };
@@ -320,17 +332,18 @@ int main (int argc, char **argv)
                 printf("%s\nINTEGER\n%ld\n", pxlate->oid,
                         (long)(*(double *)pxlate->pval * pxlate->scale));
             } else {
-                printf("%s\nINTEGER\nNaN\n", pxlate->oid);
+                // skip, go to next one
+                get_next = true;
             }
             break;
         case t_sinteger:
             printf("%s\nINTEGER\n%d\n", pxlate->oid,
-                    *(int *)pxlate->pval);
+                   *(int *)pxlate->pval);
             break;
         case t_string:
             // 255 seems to be max STRING length.
             printf("%s\nSTRING\n%.255s\n", pxlate->oid,
-                    (char *)pxlate->pval);
+                   (char *)pxlate->pval);
             break;
         default:
             (void)fprintf(stderr, "%s: ERROR: internal error, OID %s\n\n",
