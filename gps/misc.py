@@ -371,7 +371,7 @@ def EarthDistance(c1, c2):
         cosLambda = math.cos(Lambda)
         sinSigma = math.sqrt((cosU2 * sinLambda) ** 2 +
                              (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda) ** 2)
-        if sinSigma == 0:
+        if 0 == sinSigma:
             return 0.0  # coincident points
         cosSigma = sinU1 * sinU2 + cosU1 * cosU2 * cosLambda
         sigma = math.atan2(sinSigma, cosSigma)
@@ -386,7 +386,7 @@ def EarthDistance(c1, c2):
         Lambda = L + (1 - C) * f * sinAlpha * (sigma + C * sinSigma *
                                                (cos2SigmaM + C * cosSigma *
                                                 (-1 + 2 * cos2SigmaM ** 2)))
-        if abs(Lambda - LambdaPrev) < CONVERGENCE_THRESHOLD:
+        if CONVERGENCE_THRESHOLD > abs(Lambda - LambdaPrev):
             break  # successful convergence
     else:
         # failure to converge
@@ -451,7 +451,7 @@ def isotime(s):
         return date + "." + repr(msec)[3:]
 
     if isinstance(s, STR_CLASS):
-        if s[-1] == "Z":
+        if "Z" == s[-1]:
             s = s[:-1]
         if "." in s:
             (date, msec) = s.split(".")

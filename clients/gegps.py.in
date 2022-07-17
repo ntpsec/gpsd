@@ -68,7 +68,7 @@ for official kml document.
         speed = 0
 
     # not all TPV includes heading, like when acquiring fix
-    if speed >= 1 and 'track' in tpv:
+    if 1 <= speed and 'track' in tpv:
         heading = int(round(tpv['track'], 0))
     else:
         heading = 0
@@ -170,11 +170,11 @@ if __name__ == "__main__":
         # override host, port and device with target
         arg = options.target.split(':')
         len_arg = len(arg)
-        if len_arg == 1:
+        if 1 == len_arg:
             (options.host,) = arg
-        elif len_arg == 2:
+        elif 2 == len_arg:
             (options.host, options.port) = arg
-        elif len_arg == 3:
+        elif 3 == len_arg:
             (options.host, options.port, options.device) = arg
         else:
             parser.print_help()
@@ -198,7 +198,7 @@ if __name__ == "__main__":
         try:
             while True:
                 report = session.next()
-                if report['class'] == 'TPV':
+                if 'TPV' == report['class']:
                     f = open(os.path.join(options.kmldir,
                              'Realtime_GPS.kml'), 'w')
                     f.write(kmlize(report))

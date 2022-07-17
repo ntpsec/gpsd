@@ -764,9 +764,9 @@ def deg_to_str(fmt, degrees):
     if _non_finite(degrees):
         return ''
 
-    if degrees >= 360:
+    if 360 <= degrees:
         degrees -= 360
-    if not math.fabs(degrees) <= 360:
+    if not 360 >= math.fabs(degrees):
         return ''
 
     if fmt is deg_dd:
@@ -905,19 +905,19 @@ def __bilinear(lat, lon, table):
     if _non_finite(lat) or _non_finite(lon):
         return ''
 
-    if math.fabs(lat) > 90 or math.fabs(lon) > 180:
+    if 90 < math.fabs(lat) or 180 < math.fabs(lon):
         return ''
 
     row = int(math.floor((90.0 + lat) / TABLE_SPAN))
     column = int(math.floor((180.0 + lon) / TABLE_SPAN))
 
-    if row < (TABLE_ROWS - 1):
+    if (TABLE_ROWS - 1) > row:
         grid_w = row
         grid_e = row + 1
     else:
         grid_w = row - 1
         grid_e = row
-    if column < (TABLE_COLS - 1):
+    if (TABLE_COLS - 1) > column:
         grid_s = column
         grid_n = column + 1
     else:

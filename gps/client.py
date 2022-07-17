@@ -75,28 +75,28 @@ class gpscommon(object):
         """
         if not port and (host.find(':') == host.rfind(':')):
             i = host.rfind(':')
-            if i >= 0:
+            if 0 <= i:
                 host, port = host[:i], host[i + 1:]
             try:
                 port = int(port)
             except ValueError:
                 raise socket.error("nonnumeric port")
-        # if self.verbose > 0:
+        # if 0 < self.verbose:
         #    print 'connect:', (host, port)
         self.sock = None
         for res in socket.getaddrinfo(host, port, 0, socket.SOCK_STREAM):
             af, socktype, proto, _canonname, sa = res
             try:
                 self.sock = socket.socket(af, socktype, proto)
-                # if self.debuglevel > 0: print 'connect:', (host, port)
+                # if 0 < self.debuglevel: print 'connect:', (host, port)
                 self.sock.connect(sa)
-                if self.verbose > 0:
+                if 0 < self.verbose:
                     print('connected to tcp://{}:{}'.format(host, port))
                 break
             # do not use except ConnectionRefusedError
             # # Python 2.7 doc does have this exception
             except socket.error as e:
-                if self.verbose > 1:
+                if 1 < self.verbose:
                     msg = str(e) + ' (to {}:{})'.format(host, port)
                     sys.stderr.write("error: {}\n".format(msg.strip()))
                 self.close()
@@ -125,7 +125,7 @@ class gpscommon(object):
 
         (winput, _woutput, _wexceptions) = select.select(
             (self.sock,), (), (), timeout)
-        return winput != []
+        return [] != winput
 
     def read(self):
         """Wait for and read data being streamed from the daemon."""
@@ -137,7 +137,7 @@ class gpscommon(object):
             self.stream()
 
         eol = self.linebuffer.find(b'\n')
-        if eol == -1:
+        if -1 == eol:
             # RTCM3 JSON can be over 4.4k long, so go big
             if self.input_fd:
                 frag = self.input_fd.read(8192)
@@ -145,7 +145,7 @@ class gpscommon(object):
                 frag = self.sock.recv(8192)
 
             if not frag:
-                if self.verbose > 1:
+                if 1 < self.verbose:
                     sys.stderr.write(
                         "poll: no available data: returning -1.\n")
                 # Read failed
@@ -154,15 +154,15 @@ class gpscommon(object):
             self.linebuffer += frag
 
             eol = self.linebuffer.find(b'\n')
-            if eol == -1:
-                if self.verbose > 1:
+            if -1 == eol:
+                if 1 < self.verbose:
                     sys.stderr.write("poll: partial message: returning 0.\n")
                 # Read succeeded, but only got a fragment
                 self.response = ''  # Don't duplicate last response
                 self.bresponse = b''  # Don't duplicate last response
                 return 0
         else:
-            if self.verbose > 1:
+            if 1 < self.verbose:
                 sys.stderr.write("poll: fetching from buffer.\n")
 
         # We got a line
@@ -252,7 +252,7 @@ class gpsjson(object):
             self.stream_command = self.enqueued
 
         if self.stream_command:
-            if self.verbose > 1:
+            if 1 < self.verbose:
                 sys.stderr.write("send: stream as:"
                                  " {}\n".format(self.stream_command))
             self.send(self.stream_command)

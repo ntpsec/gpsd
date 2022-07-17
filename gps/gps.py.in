@@ -226,7 +226,7 @@ class gps_io(object):
         self.verbosity_level = verbosity_level
         self.prog_name = os.path.basename(sys.argv[0])
         Serial = serial
-        Serial_v3 = Serial and Serial.VERSION.split('.')[0] >= '3'
+        Serial_v3 = Serial and '3' <= Serial.VERSION.split('.')[0]
         # buffer to hold read data
         self.out = b''
 
@@ -384,7 +384,7 @@ class gps_io(object):
             if self.gpsd_host is not None:
                 # gpsd input
                 start = monotonic()
-                while input_wait > (monotonic() - start):
+                while (monotonic() - start) < input_wait:
                     # First priority is to be sure the input buffer is read.
                     # This is to prevent input buffer overuns
                     if 0 < self.ser.waiting():
@@ -412,7 +412,7 @@ class gps_io(object):
             elif self.input_is_device:
                 # input is a serial device
                 start = monotonic()
-                while input_wait > (monotonic() - start):
+                while (monotonic() - start) < input_wait:
                     # First priority is to be sure the input buffer is read.
                     # This is to prevent input buffer overuns
                     # pyserial 3.0+ deprecates inWaiting() in favor of
@@ -623,9 +623,9 @@ Or maybe a gpsd JSON file.
             self.valid |= vbit
             return self.data[k]
 
-        if self.data.get("class") == "VERSION":
+        if "VERSION" == self.data.get("class"):
             self.version = self.data
-        elif self.data.get("class") == "DEVICE":
+        elif "DEVICE" == self.data.get("class"):
             self.valid = ONLINE_SET | DEVICE_SET
             self.path = self.data["path"]
             self.activated = default("activated", None)
@@ -639,7 +639,7 @@ Or maybe a gpsd JSON file.
             self.driver_mode = default("native", 0)
             self.mincycle = default("mincycle", NaN)
             self.serialmode = default("serialmode", "8N1")
-        elif self.data.get("class") == "TPV":
+        elif "TPV" == self.data.get("class"):
             self.valid = ONLINE_SET
             self.device = default("device", "missing")
             self.utc = default("time", None, TIME_SET)
@@ -666,7 +666,7 @@ Or maybe a gpsd JSON file.
             self.fix.speed = default("speed", NaN, SPEED_SET)
             self.fix.status = default("status", 1)
             self.fix.track = default("track", NaN, TRACK_SET)
-        elif self.data.get("class") == "SKY":
+        elif "SKY" == self.data.get("class"):
             self.device = default("device", "missing")
             for attrp in ("g", "h", "p", "t", "v", "x", "y"):
                 n = attrp + "dop"
@@ -689,20 +689,20 @@ Or maybe a gpsd JSON file.
                 if sat.used:
                     self.satellites_used += 1
             self.valid = ONLINE_SET | SATELLITE_SET
-        elif self.data.get("class") == "PPS":
+        elif "PPS" == self.data.get("class"):
             self.device = default("device", "missing")
             self.real_sec = default("real_sec", NaN)
             self.real_nsec = default("real_nsec", NaN)
             self.clock_sec = default("clock_sec", NaN)
             self.clock_nsec = default("clock_nsec", NaN)
             self.precision = default("precision", 0)
-        # elif self.data.get("class") == "DEVICES":
+        # elif "DEVICES" == self.data.get("class"):
         # TODO: handle class DEVICES    # pylint: disable=fixme
 
     def read(self):
         """Read and interpret data from the daemon."""
         status = gpscommon.read(self)
-        if status <= 0:
+        if 0 >= status:
             return status
         if self.response.startswith("{") and self.response.endswith("}\r\n"):
             self.unpack(self.response)
@@ -712,7 +712,7 @@ Or maybe a gpsd JSON file.
 
     def __next__(self):
         """Python 3 version of next()."""
-        if self.read() == -1:
+        if -1 == self.read():
             raise StopIteration
         if hasattr(self, "data"):
             return self.data

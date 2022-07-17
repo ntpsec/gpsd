@@ -114,10 +114,10 @@ def gnssid_str(sat):
 
 def fit_to_grid(x, y, line_width):
     """Adjust coordinates to produce sharp lines."""
-    if line_width % 1.0 != 0:
+    if 0 != line_width % 1.0:
         # Can't have sharp lines for non-integral line widths.
         return float(x), float(y)  # Be consistent about returning floats
-    if line_width % 2 == 0:
+    if 0 == line_width % 2:
         # Round to a pixel corner.
         return round(x), round(y)
 
@@ -180,7 +180,7 @@ class SkyView(Gtk.DrawingArea):
                 # got a sat match under the mouse
                 # print((x, y))
                 if ((self.pop_xy[0] and self.pop_xy[1] and
-                     self.pop_xy == (int(x), int(y)))):
+                     (int(x), int(y)) == self.pop_xy)):
                     # popup already up here, ignore event
                     # print("(%d, %d)" % (x, y))
                     return
@@ -451,7 +451,7 @@ class SkyView(Gtk.DrawingArea):
         self.draw_circle(self.center_x, self.center_y, 6, filled=False)
 
         # The horizon circle
-        if self.step_of_grid == 45:
+        if 45 == self.step_of_grid:
             # The circle corresponding to 45 degrees elevation.
             # There are two ways we could plot this.  Projecting the sphere
             # on the display plane, the circle would have a diameter of
@@ -459,7 +459,7 @@ class SkyView(Gtk.DrawingArea):
             # the horizon diameter in half, seems to work better visually.
             self.draw_circle(self.center_x, self.center_y, self.radius / 2,
                              filled=False)
-        elif self.step_of_grid == 30:
+        elif 30 == self.step_of_grid:
             self.draw_circle(self.center_x, self.center_y, self.radius * 2 / 3,
                              filled=False)
             self.draw_circle(self.center_x, self.center_y, self.radius / 3,
@@ -517,14 +517,14 @@ class SkyView(Gtk.DrawingArea):
             # colorize by signal to noise ratio
             # RINEX 3 uses 9 steps: 1 to 9.  Corresponding to
             # <12, 12-17, 18-23, 24-29, 30-35, 36-41, 42-47, 48-53, >= 54
-            if sat.ss < 12:
+            if 12 > sat.ss:
                 self.set_color(190, 190, 190)      # gray
-            elif sat.ss < 30:
+            elif 30 > sat.ss:
                 self.set_color(255, 0, 0)          # red
-            elif sat.ss < 36:
+            elif 36 > sat.ss:
                 # RINEX 3 says 30 is "threshold for good tracking"
                 self.set_color(255, 255, 0)        # yellow
-            elif sat.ss < 42:
+            elif 42 > sat.ss:
                 self.set_color(0, 205, 0)          # green3
             else:
                 self.set_color(0, 255, 180)        # green and some blue
@@ -533,15 +533,15 @@ class SkyView(Gtk.DrawingArea):
             constellation = gnssid_str(sat)[0]
             if constellation in ('GP', '  '):
                 self.draw_circle(x, y, SkyView.SAT_RADIUS, sat.used)
-            elif constellation == 'SB':
+            elif 'SB' == constellation:
                 self.draw_square(x, y, SkyView.SAT_RADIUS, sat.used, 0)
-            elif constellation == 'GA':
+            elif 'GA' == constellation:
                 self.draw_triangle(x, y, SkyView.SAT_RADIUS, sat.used, 0)
-            elif constellation == 'BD':
+            elif 'BD' == constellation:
                 self.draw_triangle(x, y, SkyView.SAT_RADIUS, sat.used, 1)
-            elif constellation == 'GL':
+            elif 'GL' == constellation:
                 self.draw_square(x, y, SkyView.SAT_RADIUS, sat.used, 1)
-            elif constellation == 'QZ':
+            elif 'QZ' == constellation:
                 self.draw_triangle(x, y, SkyView.SAT_RADIUS, sat.used, 2)
             else:
                 # IRNSS, IMES, unknown or other
@@ -615,16 +615,16 @@ class AISView(object):
 
     def latlon(self, lat, lon):
         """Latitude/longitude display in nice format."""
-        if lat < 0:
+        if 0 > lat:
             latsuff = "S"
-        elif lat > 0:
+        elif 0 < lat:
             latsuff = "N"
         else:
             latsuff = ""
         lat = gps.clienthelpers.deg_to_str(self.deg_type, lat)
-        if lon < 0:
+        if 0 > lon:
             lonsuff = "W"
-        elif lon > 0:
+        elif 0 < lon:
             lonsuff = "E"
         else:
             lonsuff = ""
@@ -643,18 +643,18 @@ class AISView(object):
                         if mmsi == ais.mmsi:
                             latlon = self.latlon(ais.lat, ais.lon)
                             self.store.set_value(here, 4, latlon)
-        elif ais.type == 4:
+        elif 4 == ais.type:
             if self.enter(ais, ais.mmsi):
                 where = self.latlon(ais.lat, ais.lon)
                 self.store.prepend(
                     (ais.type, str(ais.mmsi), "(shore)", ais.timestamp, where,
                      ais.epfd_text))
-        elif ais.type == 5:
+        elif 5 == ais.type:
             if self.enter(ais, ais.shipname):
                 self.store.prepend(
                     (ais.type, ais.shipname, ais.callsign, ais.destination,
                      "", str(ais.shiptype)))
-        elif ais.type == 12:
+        elif 12 == ais.type:
             sender = ais.mmsi
             if sender in self.named:
                 sender = self.named[sender].shipname
@@ -664,7 +664,7 @@ class AISView(object):
                 recipient = self.named[recipient].shipname
             self.store.prepend(
                 (ais.type, sender, "", recipient, "", ais.text))
-        elif ais.type == 14:
+        elif 14 == ais.type:
             sender = ais.mmsi
             if sender in self.named:
                 sender = self.named[sender].shipname
@@ -675,7 +675,7 @@ class AISView(object):
                 self.store.prepend(
                     (ais.type, ais.shipname, "(class B)", "", "",
                      ais.shiptype_text))
-        elif ais.type == 21:
+        elif 21 == ais.type:
             if self.enter(ais, ais.name):
                 where = self.latlon(ais.lat, ais.lon)
                 self.store.prepend(
@@ -1338,9 +1338,9 @@ frame * {
 
     def update_latitude(self, data):
         """Update latitude."""
-        if data.mode >= gps.MODE_2D and hasattr(data, "lat"):
+        if gps.MODE_2D <= data.mode and hasattr(data, "lat"):
             lat = gps.clienthelpers.deg_to_str(self.deg_type, data.lat)
-            if data.lat < 0:
+            if 0 > data.lat:
                 ns = 'S'
             else:
                 ns = 'N'
@@ -1350,9 +1350,9 @@ frame * {
 
     def update_longitude(self, data):
         """Update longitude."""
-        if data.mode >= gps.MODE_2D and hasattr(data, "lon"):
+        if gps.MODE_2D <= data.mode and hasattr(data, "lon"):
             lon = gps.clienthelpers.deg_to_str(self.deg_type, data.lon)
-            if data.lon < 0:
+            if 0 > data.lon:
                 ew = 'W'
             else:
                 ew = 'E'
@@ -1363,7 +1363,7 @@ frame * {
     def update_altitude(self, data, item):
         """Update altitude."""
         ret = "n/a"
-        if data.mode >= gps.MODE_3D:
+        if gps.MODE_3D <= data.mode:
             if 0 == item and hasattr(data, "altHAE"):
                 ret = ("%10.3f %s" %
                        ((data.altHAE * self.conversions.altfactor),
@@ -1463,7 +1463,7 @@ frame * {
 
     def update_mag_dec(self, data):
         """Update magnetic declination in the GPS Data window."""
-        if ((data.mode >= gps.MODE_2D and
+        if ((gps.MODE_2D <= data.mode and
              hasattr(data, "lat") and
              hasattr(data, "lon"))):
             off = gps.clienthelpers.mag_var(data.lat, data.lon)
@@ -1473,7 +1473,7 @@ frame * {
 
     def update_maidenhead(self, data):
         """Update maidenhead grid square in the GPS Data window."""
-        if ((data.mode >= gps.MODE_2D and
+        if ((gps.MODE_2D <= data.mode and
              hasattr(data, "lat") and
              hasattr(data, "lon"))):
             return gps.clienthelpers.maidenhead(data.lat, data.lon)
@@ -1503,9 +1503,9 @@ frame * {
             elif gps.STATUS_PPS_FIX == data.status:
                 sub_status = " PPS"
 
-        if data.mode == gps.MODE_2D:
+        if gps.MODE_2D == data.mode:
             status = "2D%s FIX" % sub_status
-        elif data.mode == gps.MODE_3D:
+        elif gps.MODE_3D == data.mode:
             if hasattr(data, 'status') and gps.STATUS_TIME == data.status:
                 status = "FIXED SURVEYED"
             else:
@@ -1690,7 +1690,7 @@ frame * {
 
     def handle_response(self, source, condition):
         """Handle ordinary I/O ready condition from the daemon."""
-        if self.daemon.read() == -1:
+        if -1 == self.daemon.read():
             self.handle_hangup(source, condition)
         if self.daemon.valid & gps.PACKET_SET:
             if ((self.device and
@@ -1698,13 +1698,13 @@ frame * {
                  self.device != self.daemon.data["device"])):
                 return True
             self.rawdisplay.set_text(self.daemon.response.strip())
-            if self.daemon.data["class"] == "AIS":
+            if "AIS" == self.daemon.data["class"]:
                 self.ais_view.update(self.daemon.data)
                 if not self.ais_latch:
                     self.ais_latch = True
                     self.menumap['AIS'].set_active(True)
                     self.ais_box.show()
-            elif self.daemon.data["class"] == "ATT":
+            elif "ATT" == self.daemon.data["class"]:
                 self.att_view.update(self.daemon.data)
                 self.rtk_view.update(self.daemon.data)
                 if not self.att_latch:
@@ -1715,13 +1715,13 @@ frame * {
                     self.rtk_latch = True
                     self.menumap['RTK'].set_active(True)
                     self.rtk_box.show()
-            elif self.daemon.data["class"] == "GST":
+            elif "GST" == self.daemon.data["class"]:
                 self.noise_view.update(self.daemon.data)
                 if not self.noise_latch:
                     self.noise_latch = True
                     self.menumap['Noise'].set_active(True)
                     self.noisebox.show()
-            elif self.daemon.data["class"] == "IMU":
+            elif "IMU" == self.daemon.data["class"]:
                 if 'UBX-ESF-MEAS' == self.daemon.data["msg"]:
                     self.imumeas_view.update(self.daemon.data)
                     if not self.ais_latch:
@@ -1734,11 +1734,11 @@ frame * {
                         self.imuraw_latch = True
                         self.menumap['IMU RAW'].set_active(True)
                         self.imuraw_box.show()
-            elif self.daemon.data["class"] == "SKY":
+            elif "SKY" == self.daemon.data["class"]:
                 self.update_skyview(self.daemon.data)
-            elif self.daemon.data["class"] == "TPV":
+            elif "TPV" == self.daemon.data["class"]:
                 self.update_gpsdata(self.daemon.data)
-            elif self.daemon.data["class"] == "VERSION":
+            elif "VERSION" == self.daemon.data["class"]:
                 self.update_version(self.daemon.version)
 
         return True
@@ -1869,11 +1869,11 @@ if __name__ == "__main__":
         # override with target
         arg = options.target.split(':')
         len_arg = len(arg)
-        if len_arg == 1:
+        if 1 == len_arg:
             (options.host,) = arg
-        elif len_arg == 2:
+        elif 2 == len_arg:
             (options.host, options.port) = arg
-        elif len_arg == 3:
+        elif 3 == len_arg:
             (options.host, options.port, options.device) = arg
         else:
             parser.print_help()

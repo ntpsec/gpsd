@@ -126,7 +126,7 @@ class aiogps(gps):  # pylint: disable=R0902
             'port': self.port
         }
         self.connection_timeout = connection_timeout
-        assert reconnect >= 0
+        assert 0 <= reconnect
         self.reconnect = reconnect
         # If alive_opts are not specified use defaults
         self.alive_opts = alive_opts or {
@@ -272,7 +272,7 @@ class aiogps(gps):  # pylint: disable=R0902
     async def stream(self, flags: Optional[int] = 0,
                      devpath: Optional[str] = None) -> None:
         """Creates and sends the stream command."""
-        if flags > 0:
+        if 0 < flags:
             # Update the stream command
             self.stream_command = self.generate_stream_command(flags, devpath)
 

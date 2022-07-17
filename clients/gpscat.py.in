@@ -159,14 +159,14 @@ if __name__ == '__main__':
                 cflag &= ~termios.CSIZE
                 cflag |= (termios.CS8, termios.CS7)[options.stopbits - 1]
             if options.parity:
-                if options.parity == 'N':
+                if 'N' == options.parity:
                     iflag &= ~termios.PARENB
                     iflag &= ~termios.INPCK
-                elif options.parity == 'O':
+                elif 'O' == options.parity:
                     iflag |= termios.INPCK
                     cflag |= termios.PARENB
                     cflag |= termios.PARODD
-                elif options.parity == 'E':
+                elif 'E' == options.parity:
                     iflag |= termios.INPCK
                     cflag |= termios.PARENB
                     cflag &= ~termios.PARODD
@@ -188,7 +188,7 @@ if __name__ == '__main__':
                 else:
                     (length, ptype, packet, counter) = getter.get(tty)
                     seqno += 1
-                    if length == 0:
+                    if 0 == length:
                         break
                     if options.typeflag:
                         sys.stdout.write('%d (%d@%d): %s\n' % (ptype, length,

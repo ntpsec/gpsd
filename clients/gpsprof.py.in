@@ -199,7 +199,7 @@ class stats(object):
                 m4 += pow(fix - sigma, 4)
 
         self.sigma = sigma
-        if sigma > 0.0001:
+        if 0.0001 < sigma:
             self.skewness = m3 / (len(fixes) * pow(sigma, 3))
             self.kurtosis = m4 / (len(fixes) * pow(sigma, 4))
 
@@ -266,17 +266,17 @@ class plotter(object):
             baton = Baton("gpsprof: %d looking for fix" % os.getpid(), "done")
             countdown = options.wait
             basetime = time.time()
-            while countdown > 0:
-                if self.session.read() == -1:
+            while 0 < countdown:
+                if -1 == self.session.read():
                     sys.stderr.write("gpsprof: gpsd has vanished.\n")
                     sys.exit(1)
                 baton.twirl()
-                if self.session.data["class"] == "ERROR":
+                if "ERROR" == self.session.data["class"]:
                     sys.stderr.write(" ERROR: %s.\n"
                                      % self.session.data["message"])
                     sys.exit(1)
-                if self.session.data["class"] == "DEVICES":
-                    if ((len(self.session.data["devices"]) != 1 and
+                if "DEVICES" == self.session.data["class"]:
+                    if ((1 != len(self.session.data["devices"]) and
                          not options.device)):
                         sys.stderr.write("ERROR: multiple devices connected, "
                                          "you must explicitly specify the "
@@ -287,7 +287,7 @@ class plotter(object):
                             self.session.data["devices"][i])
                         if self.device['path'] == options.device:
                             break
-                if self.session.data["class"] == "WATCH":
+                if "WATCH" == self.session.data["class"]:
                     if ((self.requires_time and
                          not self.session.data.get("timing"))):
                         sys.stderr.write("timing is not enabled.\n")
@@ -305,7 +305,7 @@ class plotter(object):
                      (time.time() - basetime <
                       self.session.cycle * options.threshold))):
                     continue
-                if self.session.fix.mode <= gps.MODE_NO_FIX:
+                if gps.MODE_NO_FIX >= self.session.fix.mode:
                     continue
                 if self.sample():
                     if countdown == options.wait:
@@ -327,7 +327,7 @@ class plotter(object):
         for line in infp:
             baton.twirl()
             self.session.unpack(line)
-            if self.session.data["class"] == "DEVICES":
+            if "DEVICES" == self.session.data["class"]:
                 self.device = copy.copy(self.session.data["devices"][0])
             elif self.session.data["class"] not in self.watch:
                 continue
@@ -356,9 +356,9 @@ class spaceplot(plotter):
         """Grab samples."""
         # Watch out for the NaN value from gps.py.
         if (((self.in_replot or self.session.valid) and
-             self.session.data["class"] == "TPV" and
+             "TPV" == self.session.data["class"] and
              # Skip TPV without an actual fix.
-             self.session.data["mode"] >= gps.MODE_2D)):
+             gps.MODE_2D <= self.session.data["mode"])):
             # get sat used count
             sats_used = 0
             for sat in self.session.satellites:
@@ -409,7 +409,7 @@ class spaceplot(plotter):
         sats_used = []
         for x in self.fixes:
             # skip missing sats, if any, often missing at start
-            if x[3] != 0:
+            if 0 != x[3]:
                 sats_used.append(x[3])
 
         # calc sats used data: mean, min, max, sigma
@@ -577,16 +577,16 @@ class spaceplot(plotter):
                       'mrse = %.3f meters\\n'
                       ) % (calc_hep, calc_sep, calc_mrse)
 
-        if self.centroid[0] < 0.0:
+        if 0.0 > self.centroid[0]:
             latstring = "%.9fS" % -self.centroid[0]
-        elif stat_lat.mean > 0.0:
+        elif 0.0 < stat_lat.mean:
             latstring = "%.9fN" % self.centroid[0]
         else:
             latstring = "0.0"
 
-        if self.centroid[1] < 0.0:
+        if 0.0 > self.centroid[1]:
             lonstring = "%.9fW" % -self.centroid[1]
-        elif stat_lon.mean > 0.0:
+        elif 0.0 < stat_lon.mean:
             lonstring = "%.9fE" % self.centroid[1]
         else:
             lonstring = "0.0"
@@ -706,7 +706,7 @@ class spaceplot(plotter):
                          '{0:>15.9f}'.format(stat_lon_r.max),
                          '{0:>15.3f}'.format(stat_alt.max))
 
-        if len(self.fixes) > 1000:
+        if 1000 < len(self.fixes):
             plot_style = 'dots'
         else:
             plot_style = 'points'
@@ -795,7 +795,7 @@ class polarplot(plotter):
 
     def sample(self):
         """Grab samples."""
-        if self.session.data["class"] == "SKY":
+        if "SKY" == self.session.data["class"]:
             sats = self.session.data['satellites']
             seen = 0
             used = 0
@@ -968,7 +968,7 @@ class timeplot(plotter):
 
     def sample(self):
         """Grab samples."""
-        if self.session.data["class"] == "PPS":
+        if "PPS" == self.session.data["class"]:
             self.fixes.append((self.session.data['real_sec'],
                                self.session.data['real_nsec'],
                                self.session.data['clock_sec'],
@@ -1247,11 +1247,11 @@ if __name__ == '__main__':
         # override with target
         arg = options.target.split(':')
         len_arg = len(arg)
-        if len_arg == 1:
+        if 1 == len_arg:
             (options.host,) = arg
-        elif len_arg == 2:
+        elif 2 == len_arg:
             (options.host, options.port) = arg
-        elif len_arg == 3:
+        elif 3 == len_arg:
             (options.host, options.port, options.device) = arg
         else:
             parser.print_help()
@@ -1271,7 +1271,7 @@ if __name__ == '__main__':
             sys.stderr.write("gpsprof: no such formatter.\n")
             sys.exit(1)
 
-    if options.wait[-1] == 'h':
+    if 'h' == options.wait[-1]:
         options.wait = int(options.wait[:-1]) * 360
     else:
         options.wait = int(options.wait)

@@ -465,8 +465,8 @@ try:
             badarg = True
         else:
             data_or = reduce(operator.or_, cmd_data)
-            badarg = data_or != data_or & 0xFF
-        if badarg or len(cmd_list) < 2:
+            badarg = data_or & 0xFF != data_or
+        if badarg or 2 > len(cmd_list):
             sys.stderr.write('%s: Argument format (hex bytes) is'
                              ' class,id[,payload...]\n' % PROG_NAME)
             sys.exit(1)

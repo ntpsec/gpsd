@@ -224,7 +224,7 @@ class LandSpeedometer(Speedometer):
 
             for z in self.short_ticks:
                 w_half = self.cr.get_line_width() / 2
-                if i < 0:
+                if 0 > i:
                     self.cr.move_to(
                         x + (radius - short_inset) * cos((i + z) * pi / 6.0),
                         y + (radius - short_inset) * sin((i + z) * pi / 6.0)
@@ -548,7 +548,7 @@ Arg:
 satsoup: a dictionary {'el': xx, 'az': xx, 'ss': xx}
 """
         el, az = satsoup['el'], satsoup['az']
-        if el == 0 and az == 0:
+        if 0 == el and 0 == az:
             return  # Skip satellites with unknown position
         h = pi / 2 - radians(az)  # to xy
         self.cr.set_line_width(2)
@@ -565,13 +565,13 @@ satsoup: a dictionary {'el': xx, 'az': xx, 'ss': xx}
         else:
             self.cr.arc(x0, y0, NauticalSpeedometer.SAT_SIZE, 0, pi * 2.0)
 
-        if satsoup['ss'] < 10:
+        if 10 > satsoup['ss']:
             self.set_color('Gray')
-        elif satsoup['ss'] < 30:
+        elif 30 > satsoup['ss']:
             self.set_color('Red')
-        elif satsoup['ss'] < 35:
+        elif 35 > satsoup['ss']:
             self.set_color('Yellow')
-        elif satsoup['ss'] < 40:
+        elif 40 > satsoup['ss']:
             self.set_color('Green3')
         else:
             self.set_color('Green1')
@@ -807,13 +807,13 @@ class Main(object):
 
     def handle_response(self, source, condition):
         """Handle_response."""
-        if self.daemon.read() == -1:
+        if -1 == self.daemon.read():
             self.handle_hangup(source, condition)
-        if self.daemon.data['class'] == 'VERSION':
+        if 'VERSION' == self.daemon.data['class']:
             self.update_version(self.daemon.version)
-        elif self.daemon.data['class'] == 'TPV':
+        elif 'TPV' == self.daemon.data['class']:
             self.update_speed(self.daemon.data)
-        elif self.nautical and self.daemon.data['class'] == 'SKY':
+        elif self.nautical and 'SKY' == self.daemon.data['class']:
             self.update_skyview(self.daemon.data)
 
         return True
@@ -993,11 +993,11 @@ if __name__ == '__main__':
         # override with target
         arg = options.target.split(':')
         len_arg = len(arg)
-        if len_arg == 1:
+        if 1 == len_arg:
             (options.host,) = arg
-        elif len_arg == 2:
+        elif 2 == len_arg:
             (options.host, options.port) = arg
-        elif len_arg == 3:
+        elif 3 == len_arg:
             (options.host, options.port, options.device) = arg
         else:
             parser.print_help()

@@ -169,27 +169,27 @@ This class contains functions to decode messages in the Javad GREIS
 
     def i1_s(self, i):
         """Convert an '! i1' to a string."""
-        return 'X' if i == 127 else str(i)
+        return 'X' if 127 == i else str(i)
 
     def i2_s(self, i):
         """Convert an '! i2' to a string."""
-        return 'X' if i == 32767 else str(i)
+        return 'X' if 32767 == i else str(i)
 
     def i4_s(self, i):
         """Convert an '! i4' to a string."""
-        return 'X' if i == 2147483647 else str(i)
+        return 'X' if 2147483647 == i else str(i)
 
     def u1_s(self, u):
         """Convert an '! u1' to a string."""
-        return 'X' if u == 255 else str(u)
+        return 'X' if 255 == u else str(u)
 
     def u2_s(self, u):
         """Convert an '! u2' to a string."""
-        return 'X' if u == 65535 else str(u)
+        return 'X' if 65535 == u else str(u)
 
     def u4_s(self, u):
         """Convert an '! u4' to a string."""
-        return 'X' if u == 4294967295 else str(u)
+        return 'X' if 4294967295 == u else str(u)
 
     def isuchex(self, c):
         """Is byte an upper case hex char?"""
@@ -1427,7 +1427,7 @@ Three types of GPS I/O
     def __init__(self):
         """Initialize class."""
         Serial = serial
-        Serial_v3 = Serial and Serial.VERSION.split('.')[0] >= '3'
+        Serial_v3 = Serial and '3' <= Serial.VERSION.split('.')[0]
         # buffer to hold read data
         self.out = b''
 
@@ -1547,7 +1547,7 @@ Three types of GPS I/O
             if read_opts['target']['server'] is not None:
                 # gpsd input
                 start = gps.monotonic()
-                while read_opts['input_wait'] > (gps.monotonic() - start):
+                while (gps.monotonic() - start) < read_opts['input_wait']:
                     # First priority is to be sure the input buffer is read.
                     # This is to prevent input buffer overuns
                     if 0 < self.ser.waiting():
@@ -1574,7 +1574,7 @@ Three types of GPS I/O
             elif self.input_is_device:
                 # input is a serial device
                 start = gps.monotonic()
-                while read_opts['input_wait'] > (gps.monotonic() - start):
+                while (gps.monotonic() - start) < read_opts['input_wait']:
                     # First priority is to be sure the input buffer is read.
                     # This is to prevent input buffer overuns
                     # pyserial 3.0+ deprecates inWaiting() in favor of
@@ -1723,28 +1723,28 @@ except getopt.GetoptError as err:
     sys.exit(2)
 
 for (opt, val) in options:
-    if opt == '-c':
+    if '-c' == opt:
         # command
         opts['command'] = val
-    elif opt == '-d':
+    elif '-d' == opt:
         # disable
         opts['disable'] = val
-    elif opt == '-e':
+    elif '-e' == opt:
         # enable
         opts['enable'] = val
-    elif opt == '-f':
+    elif '-f' == opt:
         # file input
         opts['input_file_name'] = val
     elif opt in ('-h', '-?'):
         # help
         usage()
-    elif opt == '-p':
+    elif '-p' == opt:
         # preprogrammed command
         opts['poll'] = val
-    elif opt == '-r':
+    elif '-r' == opt:
         # read only
         opts['read_only'] = True
-    elif opt == '-s':
+    elif '-s' == opt:
         # serial port speed
         opts['input_speed'] = int(val)
         if opts['input_speed'] not in gps_model.speeds:
@@ -1752,7 +1752,7 @@ for (opt, val) in options:
                              (PROG_NAME, opts['input_speed']))
             sys.exit(1)
 
-    elif opt == '-w':
+    elif '-w' == opt:
         # max wait time, seconds
         opts['input_wait'] = float(val)
     elif opt in '-v':
@@ -1772,10 +1772,10 @@ for (opt, val) in options:
                              (PROG_NAME, opts['set_speed']))
             sys.exit(1)
 
-    elif opt == '-W':
+    elif '-W' == opt:
         # forced wait, no early exit on command completion
         opts['input_forced_wait'] = True
-    elif opt == '-V':
+    elif '-V' == opt:
         # version
         sys.stderr.write('zerk: Version %s\n' % gps_version)
         sys.exit(0)
