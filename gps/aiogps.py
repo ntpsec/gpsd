@@ -152,7 +152,6 @@ class aiogps(gps):  # pylint: disable=R0902
         self.response = polystr(self.bresponse)
         # Default stream command
         self.stream_command = self.generate_stream_command(WATCH_ENABLE)
-        self.loop = self.connection_args.get('loop', asyncio.get_event_loop())
         self.valid = 0
 
     def __del__(self) -> None:
@@ -167,8 +166,7 @@ class aiogps(gps):  # pylint: disable=R0902
              if self.connection_args['port'] else ''))
         self.reader, self.writer = await asyncio.wait_for(
             asyncio.open_connection(**self.connection_args),
-            self.connection_timeout,
-            loop=self.loop)
+            self.connection_timeout)
         # Set socket options
         sock = self.writer.get_extra_info('socket')
         if sock is not None:
@@ -216,8 +214,7 @@ class aiogps(gps):  # pylint: disable=R0902
                 rx_timeout = self.alive_opts.get('rx_timeout', None)
                 reader = self.reader.readuntil(separator=b'\n')
                 self.bresponse = await asyncio.wait_for(reader,
-                                                        rx_timeout,
-                                                        loop=self.loop)
+                                                        rx_timeout)
                 self.response = polystr(self.bresponse)
                 if self.response.startswith(
                         "{") and self.response.endswith("}\r\n"):
