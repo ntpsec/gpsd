@@ -45,72 +45,86 @@ typedef enum {
 gpsdata_type;
 
 struct oid_mib_xlate {
-    const char *oid;
-    const char *short_mib;
-    gpsdata_type type;
-    void *pval;
-    int64_t scale;
-    const char *desc;
+    const char *oid;            // this OID
+    const char *short_mib;      // short MIB for this
+    gpsdata_type type;          // the type of the value
+    void *pval;                 // pointer the value
+    int64_t scale;              // scale factor to convert to int32_t
+    int64_t min;                // minimum value of scaled value
+    const char *desc;           // description, for usage()
 };
 
 // keep this list sorted, so it can be "walked".
 // for now we only handle the first device, so table OIDs, end in .1
-struct oid_mib_xlate xlate[] = {
+const struct oid_mib_xlate xlate[] = {
     // next three are "pirate" OIDs, deprecated
-    {".1.3.6.1.2.1.25.1.31", NULL, t_sinteger,
-     &gpsdata.satellites_visible, 1, ""},
-    {".1.3.6.1.2.1.25.1.32", NULL, t_sinteger,
-     &gpsdata.satellites_used, 1, ""},
-    {".1.3.6.1.2.1.25.1.33", NULL, t_sinteger,
-     &snr_avg, 1, ""},
+    {".1.3.6.1.2.1.25.1.31", NULL, t_sinteger, &gpsdata.satellites_visible,
+     1, -9, ""},
+    {".1.3.6.1.2.1.25.1.32", NULL, t_sinteger, &gpsdata.satellites_used,
+     1, 0, ""},
+    {".1.3.6.1.2.1.25.1.33", NULL, t_sinteger, &snr_avg, 1, 0, ""},
     // previous three are "pirate" OIDs, deprecated
-    {".1.3.6.1.4.1.59054", "gpsd", t_dummy, NULL, 0, "Anchor for GPSD-MIB"},
+    {".1.3.6.1.4.1.59054", "gpsd", t_dummy, NULL, 0, 0,
+     "Anchor for GPSD-MIB"},
     // start sky
-    {".1.3.6.1.4.1.59054.11", "sky", t_dummy, NULL, 0, "Anchor for SKY"},
+    {".1.3.6.1.4.1.59054.11", "sky", t_dummy, NULL, 0, 0,
+     "Anchor for SKY"},
     // only handle one device, for now
-    {".1.3.6.1.4.1.59054.11.1", "skyNumber", t_sinteger,
-     &one, 1, "The number of devices in the skyTable"},
-    {".1.3.6.1.4.1.59054.11.2.1.1.1", "skyIndex", t_sinteger,
-     &one, 1, "skyTable Index"},
-    {".1.3.6.1.4.1.59054.11.2.1.2.1", "skyPath", t_string,
-     &gpsdata.dev.path, 1, "path for this device"},
+    {".1.3.6.1.4.1.59054.11.1", "skyNumber", t_sinteger, &one, 1, -1,
+     "The number of devices in the skyTable"},
+    {".1.3.6.1.4.1.59054.11.2.1.1.1", "skyIndex", t_sinteger, &one, 1, 0,
+     "skyTable Index"},
+    {".1.3.6.1.4.1.59054.11.2.1.2.1", "skyPath", t_string, &gpsdata.dev.path,
+     1, 0, "path for this device"},
     {".1.3.6.1.4.1.59054.11.2.1.3.1", "skynSat.1", t_sinteger,
-     &gpsdata.satellites_visible, 1, "Number of satellties seen"},
+     &gpsdata.satellites_visible, 1, -1,
+     "Number of satellties seen"},
     {".1.3.6.1.4.1.59054.11.2.1.4.1", "skyuSat.1", t_sinteger,
-     &gpsdata.satellites_used, 1, "Number of satellties in use"},
+     &gpsdata.satellites_used, 1, -1,
+     "Number of satellties in use"},
     {".1.3.6.1.4.1.59054.11.2.1.5.1", "skySNRavg.1", t_double,
-     &snr_avg, 100, "Average SNR of all satellites in use."},
+     &snr_avg, 100, 0,
+     "Average SNR of all satellites in use."},
     // end sky
     // start tpv
-    {".1.3.6.1.4.1.59054.13", "tpv", t_dummy, NULL, 0, "Anchor for TPV"},
+    {".1.3.6.1.4.1.59054.13", "tpv", t_dummy, NULL, 0, 0,
+     "Anchor for TPV"},
     {".1.3.6.1.4.1.59054.13.1", "tpvLeapSeconds", t_sinteger,
-     &gpsdata.leap_seconds, 1, ""},
+     &gpsdata.leap_seconds, 1, 1,
+     ""},
     // only handle one device, for now
     {".1.3.6.1.4.1.59054.13.2", "tpvNumber", t_sinteger,
-     &one, 1, "The number of devices in the tpvTable"},
+     &one, 1, 0,
+     "The number of devices in the tpvTable"},
     {".1.3.6.1.4.1.59054.13.3.1.1.1", "tpvIndex", t_sinteger,
-     &one, 1, "tpvTable Index"},
+     &one, 1, 1, "tpvTable Index"},
     {".1.3.6.1.4.1.59054.13.3.1.2.1", "tpvPath", t_string,
-     &gpsdata.dev.path, 1, "path for this device"},
+     &gpsdata.dev.path, 1, 1, "path for this device"},
     {".1.3.6.1.4.1.59054.13.3.1.3.1", "tpvMode.1", t_sinteger,
-     &gpsdata.fix.mode, 1, "Fix Mode"},
+     &gpsdata.fix.mode, 1, 0, "Fix Mode"},
     {".1.3.6.1.4.1.59054.13.3.1.4.1", "tpvStatus.1", t_sinteger,
-     &gpsdata.fix.status, 1, "Fix Status"},
+     &gpsdata.fix.status, 1, 0, "Fix Status"},
     // why 1e7?  Because SNMP chokes on INTEGERS > 32 bits.
     {".1.3.6.1.4.1.59054.13.3.1.5.1", "tpvLatitude.1", t_double,
-     &gpsdata.fix.latitude, 10000000LL, "Latitude in degrees."},
+     &gpsdata.fix.latitude, 10000000LL, -900000000LL,
+     "Latitude in degrees."},
     {".1.3.6.1.4.1.59054.13.3.1.6.1", "tpvLongitude.1", t_double,
-     &gpsdata.fix.longitude, 10000000LL, "Longitude in degrees."},
+     &gpsdata.fix.longitude, 10000000LL, -18010000000LL,
+     "Longitude in degrees."},
     {".1.3.6.1.4.1.59054.13.3.1.7.1", "tpvAltHAE.1", t_double,
-     &gpsdata.fix.altHAE, 10000, "Height above Ellipsoid, in meters."},
+     &gpsdata.fix.altHAE, 10000, LONG_MIN,
+     "Height above Ellipsoid, in meters."},
     {".1.3.6.1.4.1.59054.13.3.1.8.1", "tpvAltMSL.1", t_double,
-     &gpsdata.fix.altMSL, 10000, "Height above MSL, in meters."},
+     &gpsdata.fix.altMSL, 10000, LONG_MIN,
+     "Height above MSL, in meters."},
     {".1.3.6.1.4.1.59054.13.3.1.9.1", "tpvClimb.1", t_double,
-     &gpsdata.fix.climb, 10000, "CLimb rate in meters/second"},
+     &gpsdata.fix.climb, 10000, LONG_MIN,
+     "CLimb rate in meters/second"},
     {".1.3.6.1.4.1.59054.13.3.1.10.1", "tpvTrack.1", t_double,
-     &gpsdata.fix.climb, 10000, "True Track in degrees."},
+     &gpsdata.fix.climb, 10000, -1,
+     "True Track in degrees."},
     // end tpv
-    {NULL, NULL, t_sinteger, NULL, 0, ""},
+    {NULL, NULL, t_sinteger, NULL, 0, 0, ""},
 };
 
 /* print usage info, then exit.
@@ -118,7 +132,7 @@ struct oid_mib_xlate xlate[] = {
  * Never returns
  */
 static void usage(char *prog_name) {
-    struct oid_mib_xlate *pxlate;
+    const struct oid_mib_xlate *pxlate;
 
     (void)printf("usage: %s [OPTIONS] [server[:port[:device]]]\n\n\
 Options include: \n\
@@ -179,7 +193,8 @@ int main (int argc, char **argv)
     char noid[40] = "";      // requested next OID
     struct fixsource_t source;
     struct timespec ts_start, ts_now;
-    struct oid_mib_xlate *pxlate;
+    const struct oid_mib_xlate *pxlate;
+    long long value;         // (long long) so we get 64 bits on 32-bit CPUs.
 
     const char *optstring = "?D:g:hn:V";
 #ifdef HAVE_GETOPT_LONG
@@ -356,16 +371,21 @@ int main (int argc, char **argv)
             // SNMP is too stupid to understand IEEE754, use scaled integers
             // SNMP chokes on INTEGER > 32 bits.
             if (isfinite(*(double *)pxlate->pval)) {
-                printf("%s\nINTEGER\n%ld\n", pxlate->oid,
-                        (long)(*(double *)pxlate->pval * pxlate->scale));
+                value = (long)(*(double *)pxlate->pval * pxlate->scale);
+                if (pxlate->min <= value) {
+                    printf("%s\nINTEGER\n%lld\n", pxlate->oid, value);
+                }
             } else {
                 // skip, go to next one
                 get_next = true;
             }
             break;
         case t_sinteger:
-            printf("%s\nINTEGER\n%d\n", pxlate->oid,
-                   *(int *)pxlate->pval);
+            // not scaled
+            value = *(int *)pxlate->pval;
+            if (pxlate->min <= value) {
+                printf("%s\nINTEGER\n%lld\n", pxlate->oid, value);
+            }
             break;
         case t_string:
             // 255 seems to be max STRING length.
