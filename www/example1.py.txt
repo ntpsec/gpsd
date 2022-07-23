@@ -1,0 +1,28 @@
+#! /usr/bin/env python3
+"""
+example  Python gpsd client
+run this way: python3 example1.py.txt
+"""
+
+import gps               # the gpsd interface module
+
+session = gps.gps(mode=gps.WATCH_ENABLE)
+
+try:
+    while 0 == session.read():
+        if not (gps.TIME_SET & session.valid):
+            # not useful
+            continue
+
+        outstr = 'Time: ' + session.fix.time + ' Mode: '
+        if gps.MODE_SET & session.valid:
+            outstr += str(session.fix.mode)
+        if gps.LATLON_SET & session.valid:
+            outstr += (" Lat %.6f Lon %.6f" %
+                       (session.fix.latitude, session.fix.longitude))
+        else:
+            outstr += " Lat n/a Lon n/a"
+
+        print(outstr)
+except KeyboardInterrupt:
+    exit(0)
