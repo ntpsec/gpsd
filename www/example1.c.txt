@@ -1,9 +1,8 @@
 // example  gpsd client
 // compile this way:
 //    gcc example1.c -o example1 -lgps -lm
-#include <gps.h>
+#include <gps.h>         .. for gps_*()
 #include <math.h>        // for isfinite()
-// This line intentionally left blank.
 
 #define MODE_STR_NUM 4
 static char *mode_str[MODE_STR_NUM] = {

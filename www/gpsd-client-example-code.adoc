@@ -1,6 +1,6 @@
 = gpsd Client Example Code
 Gary E. Miller <gem@rellim.com>
-15 July 2021
+24 July 2022
 :author: Gary E. Miller
 :description: A line by line code walk-through of a simple gpsd C client.
 :email: <gem@rellim.com>
@@ -72,7 +72,7 @@ Lines 1 to 4::
 // example  gpsd client
 // compile this way:
 //    gcc example1.c -o example1 -lgps -lm
-#include <gps.h>
+#include <gps.h>         .. for gps_*()
 ----
 
 All you need to compile this example is *libgps*, and *gps.h*, installed
@@ -89,8 +89,8 @@ Line 5::
 
 The system includes are to get prototypes for *isfinite()*.
 
-Lines 8 to 14::
-[source%nowrap,c,numbered,start=8]
+Lines 7 to 12::
+[source%nowrap,c,numbered,start=7]
 ----
 #define MODE_STR_NUM 4
 static char *mode_str[MODE_STR_NUM] = {
@@ -103,8 +103,8 @@ static char *mode_str[MODE_STR_NUM] = {
 An array of strings used to convert _gps_data.fix.mode_ integer to a
 nice Fix Type string.
 
-Lines 16 to 17::
-[source%nowrap,c,numbered,start=16]
+Lines 15 to 16::
+[source%nowrap,c,numbered,start=15]
 ----
 int main(int argc, char *argv[])
 {
@@ -114,8 +114,8 @@ All we need is a simple main().  For clarity no options handling is done
 in this example.  Real programs will implement options and arguments:
 *-h*; *-V*; *[server[;port[;device]]*; etc.
 
-Line 18::
-[source%nowrap,c,numbered,start=18]
+Line 17::
+[source%nowrap,c,numbered,start=17]
 ----
     struct gps_data_t gps_data;
 ----
@@ -125,8 +125,8 @@ Every variable we care about, all variables, are contained in
 *gps.h*. *gps_data* contains a *struct gps_fix_t fix* which is also
 defined in *gps.h*.  The _TPV_ data we will use is in _gps_data.fix_.
 
-Line 20 to 23::
-[source%nowrap,c,numbered,start=20]
+Line 19 to 22::
+[source%nowrap,c,numbered,start=19]
 ----
     if (0 != gps_open("localhost", "2947", &gps_data)) {
         printf("Open error.  Bye, bye\n");
@@ -144,8 +144,8 @@ function calls.
 Note the use of <<Yoda>> conditions.  These prevent many hard to spot
 code errors.
 
-Line 25::
-[source%nowrap,c,numbered,start=25]
+Line 24::
+[source%nowrap,c,numbered,start=24]
 ----
     (void)gps_stream(&gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
 ----
@@ -154,8 +154,8 @@ Tell *gpsd* to send us reports using JSON. Later on *gpsd_read()* will
 decode those JSON messsages for us.  See the <<gpsd_json>> man page for
 details on the JSON messages.
 
-Line 27::
-[source%nowrap,c,numbered,start=27]
+Line 26::
+[source%nowrap,c,numbered,start=26]
 ----
     while (gps_waiting(&gps_data, 5000000)) {
 ----
@@ -164,8 +164,8 @@ The main loop. Wait, using *gps_waiting()* until data from the *gpsd*
 connection is available, then run the body of the loop.  Exit if no data
 seen in 5 seconds (5000000 micro seconds).
 
-Lines 28 to 31::
-[source%nowrap,c,numbered,start=28]
+Lines 27 to 30::
+[source%nowrap,c,numbered,start=27]
 ----
         if (-1 == gps_read(&gps_data, NULL, 0)) {
             printf("Read error.  Bye, bye\n");
@@ -177,8 +177,8 @@ Read the waiting data using *gpsd_read()* and parse it into *gps_data*.
 Exit loudly on errors. No telling, yet, what the data is.  It could be
 from *TPV*, *SKY*, *AIS*, or other message classes.
 
-Lines 32 to 35::
-[source%nowrap,c,numbered,start=32]
+Lines 31 to 34::
+[source%nowrap,c,numbered,start=31]
 ----
         if (MODE_SET != (MODE_SET & gps_data.set)) {
             // did not even get mode, nothing to see here
@@ -191,8 +191,8 @@ received, not some other data, like *SKY*.  The flag *MODE_SET* is set
 IFF a *TPV* JSON sentence was received.  If no *MODE_SET* then do not
 bother to look at the rest of the data in _gpsdata.fix_.
 
-Lines 36 to 39::
-[source%nowrap,c,numbered,start=36]
+Lines 35 to 38::
+[source%nowrap,c,numbered,start=35]
 ----
         if (0 > gps_data.fix.mode ||
             MODE_STR_NUM <= gps_data.fix.mode) {
@@ -205,8 +205,8 @@ _mode_str_.  New versions of *gpsd* often extend the range of
 unenumerated types, so protect yourself from an array overrun.  Array
 overruns are bad.
 
-Lines 40 to 42::
-[source%nowrap,c,numbered,start=40]
+Lines 39 to 41::
+[source%nowrap,c,numbered,start=39]
 ----
         printf("Fix mode: %s (%d) Time: ",
                mode_str[gps_data.fix.mode],
@@ -215,8 +215,8 @@ Lines 40 to 42::
 
 Print the Fix mode as an integer, and a string.
 
-Lines 43 to 48::
-[source%nowrap,c,numbered,start=43]
+Lines 42 to 47::
+[source%nowrap,c,numbered,start=42]
 ----
         if (TIME_SET == (TIME_SET & gps_data.set)) {
             // not 32 bit safe
@@ -237,8 +237,8 @@ to UTC.  Many GPS/GNSS receivers output random time when they do not
 have a fix.  Worse, some continue to do so for minutes after reporting
 that they have a valid fix.
 
-Lines 50 to 57::
-[source%nowrap,c,numbered,start=50]
+Lines 49 to 56::
+[source%nowrap,c,numbered,start=49]
 ----
         if (isfinite(gps_data.fix.latitude) &&
             isfinite( gps_data.fix.longitude)) {
@@ -262,8 +262,8 @@ _latitude_ and _longitude_ are set by seeing if they are finite numbers by
 using *isfinite()* from *libm*.  Do not use *isnan()*!  See <<NUMBERS>>
 for a more detailed explanation about this issue.
 
-Lines 60 to 63::
-[source%nowrap,c,numbered,start=58]
+Lines 59 to 62::
+[source%nowrap,c,numbered,start=59]
 ----
     // When you are done...
     (void)gps_stream(&gps_data, WATCH_DISABLE, NULL);
