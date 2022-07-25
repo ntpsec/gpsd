@@ -18,16 +18,20 @@ This document supplies some code examples that show how to write
 good *gpsd* clients.  It is an attempt to supplant the myriad bad
 Stack Overflow examples of *gpsd* clients.
 
-== EXAMPLE 1
+== PREAMBLE
 
-A simple *gpsd* client that connects to the already running *gpsd* on
-the _localhost_ running on the default port _2947_, using TCP.  You need
-to already have *gpsd* installed, with its libraries, and running, on your
-host for this example to run.
+You need to already have @VERSION@ *gpsd* installed, with its libraries, and
+running, on your host for these examples to run.
+
+== EXAMPLE 1 -- C
+
+Example 1 is a simple *gpsd* client, written in C, that connects to the
+already running *gpsd* on the _localhost_ running on the default port
+_2947_, using TCP.
 
 Grab a copy of https://gpsd.io/example1.c.txt[example1.c], rename it
 to not have the .txt extension (an scons bug workaround), compile it,
-and run it. i The example builds and runs fine as a normal user as it
+and run it.  The example builds and runs fine as a normal user as it
 does not require any special permissions. Use "^C" to exit.  Like
 this:
 
@@ -273,6 +277,31 @@ Lines 59 to 62::
 
 When falling out of the loop, close the TCP connection nicely
 and return success.  Mother always said to clean up after myself.
+
+== EXAMPLE 2 -- Python
+
+Example 2 is a simple *gpsd* client, written in Python, that connects
+to the already running *gpsd* on the _localhost_ running on the default
+port _2947_, using TCP.
+
+Grab a copy of https://gpsd.io/example2.py.txt[example2.py], rename it
+to not have the .txt extension (an scons bug workaround), and run it.
+The example builds and runs fine as a normal user as it does not require
+any special permissions. Use "^C" to exit. Like this:
+
+----
+$ wget -o example2.py https://gpsd.io/example2.py.txt
+$ python example2.py
+Time: 2022-07-25T02:37:25.000Z Mode: 3 Lat 44.068917 Lon -121.314127
+Time: 2022-07-25T02:37:25.000Z Mode: 3 Lat 44.068917 Lon -121.314127
+Time: 2022-07-25T02:37:26.000Z Mode: 3 Lat 44.068915 Lon -121.314126
+Time: 2022-07-25T02:37:26.000Z Mode: 3 Lat 44.068915 Lon -121.314126
+^C
+----
+
+As you can see above, this client prints the "Time", "Mode" "Lat" and
+"Lon" if available. These are the Time and Position parts of the acronym
+_TPV_. Otherwise it prints nothing.
 
 == REFERENCES
 
