@@ -2459,7 +2459,10 @@ if adoc_prog:
                  )
     for src, tgt in adocfiles:
         target = '%s.html' % tgt
-        env.Depends(src, ['www/docinfo.html', 'www/inc-menu.adoc'])
+        env.Depends(src, ['www/docinfo.html',
+                          'www/example1.c.txt',
+                          'www/example2.py.txt',
+                          'www/inc-menu.adoc'])
         tgt = env.Command(target, '%s.adoc' % src,
             '%s -b html5 %s -o $TARGET $SOURCE' %
             (adoc_prog, adoc_args))

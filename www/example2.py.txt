@@ -10,19 +10,30 @@ session = gps.gps(mode=gps.WATCH_ENABLE)
 
 try:
     while 0 == session.read():
-        if not (gps.TIME_SET & session.valid):
-            # not useful
+        if not (gps.MODE_SET & session.valid):
+            # not useful, probably not a TPV message
             continue
 
-        outstr = 'Time: ' + session.fix.time + ' Mode: '
-        if gps.MODE_SET & session.valid:
-            outstr += str(session.fix.mode)
-        if gps.LATLON_SET & session.valid:
-            outstr += (" Lat %.6f Lon %.6f" %
-                       (session.fix.latitude, session.fix.longitude))
+        print('Mode: %s(%d) Time: ' %
+              (("Invalid", "NO_FIX", "2D", "3D")[session.fix.mode],
+               session.fix.mode), end="")
+        # print time, if we have it
+        if gps.TIME_SET & session.valid:
+            print(session.fix.time, end="")
         else:
-            outstr += " Lat n/a Lon n/a"
+            print('n/a', end="")
 
-        print(outstr)
+        if ((gps.isfinite(session.fix.latitude) and
+             gps.isfinite(session.fix.longitude))):
+            print(" Lat %.6f Lon %.6f" %
+                  (session.fix.latitude, session.fix.longitude))
+        else:
+            print(" Lat n/a Lon n/a")
+
 except KeyboardInterrupt:
-    exit(0)
+    # got a ^C.  Say bye, bye
+    print('')
+
+# Got ^C, or fell out of the loop.  Cleanup, and leave.
+session.close()
+exit(0)

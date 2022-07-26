@@ -20,8 +20,9 @@ Stack Overflow examples of *gpsd* clients.
 
 == PREAMBLE
 
-You need to already have @VERSION@ *gpsd* installed, with its libraries, and
-running, on your host for these examples to run.
+You need to already have recent *gpsd* installed, with its libraries, and
+running, on your host for these examples to run.  Do not install the
+*gps* Python module from *pip*, it is old and broken.
 
 == EXAMPLE 1 -- C
 
@@ -45,12 +46,14 @@ Fix mode: 3D (3) Time: 1615325175.000000000 Lat 44.068861 Lon -121.314085
 ^C
 ----
  
-The paranoid reader will have read https://gpsd.io/example1.c.txt[example1.c]
-before running it so as not to lose all their Bitcoin.
+The paranoid reader will have read
+https://gpsd.io/example1.c.txt[example1.c] before running it so as not
+to lose all their Bitcoin.
 
-As you can see above, this client prints the "Fix Mode" ("mode"), Time
-("time"), "latitude" and "longitude" if available.  These are the Time and
-Position parts of the acronym _TPV_.  Otherwise it prints nothing.
+As you can see above, this client prints, if they are available, the
+"Fix Mode" ("mode"), Time ("time"), "latitude" and "longitude". These
+are the Time and Position parts of the acronym _TPV_. Otherwise it
+prints nothing.
 
 Adding Velocity output is left as an exercise to the reader.
 
@@ -73,10 +76,7 @@ Line by line commentary:
 Lines 1 to 4::
 [source%nowrap,c,numbered]
 ----
-// example  gpsd client
-// compile this way:
-//    gcc example1.c -o example1 -lgps -lm
-#include <gps.h>         .. for gps_*()
+include::example1.c.txt[lines=1..4]
 ----
 
 All you need to compile this example is *libgps*, and *gps.h*, installed
@@ -88,40 +88,36 @@ in *libm*.
 Line 5::
 [source%nowrap,c,numbered,start=5]
 ----
-#include <math.h>        // for isfinite()
+include::example1.c.txt[lines=5]
 ----
 
-The system includes are to get prototypes for *isfinite()*.
+Include _math.h_ to get the prototype for *isfinite()*.  You
+should always check all floating point numbers from *gpsd*
+with *isfinite()* before using them.
 
 Lines 7 to 12::
 [source%nowrap,c,numbered,start=7]
 ----
-#define MODE_STR_NUM 4
-static char *mode_str[MODE_STR_NUM] = {
-    "n/a",
-    "None",
-    "2D",
-    "3D"
-};
+include::example1.c.txt[lines=7..12]
 ----
+
 An array of strings used to convert _gps_data.fix.mode_ integer to a
 nice Fix Type string.
 
 Lines 15 to 16::
 [source%nowrap,c,numbered,start=15]
 ----
-int main(int argc, char *argv[])
-{
+include::example1.c.txt[lines=15..16]
 ----
 
 All we need is a simple main().  For clarity no options handling is done
 in this example.  Real programs will implement options and arguments:
-*-h*; *-V*; *[server[;port[;device]]*; etc.
+*-h*; *-V*; *[server[;port[;device]]'z*; etc.
 
 Line 17::
 [source%nowrap,c,numbered,start=17]
 ----
-    struct gps_data_t gps_data;
+include::example1.c.txt[lines=17]
 ----
 
 Every variable we care about, all variables, are contained in
@@ -132,10 +128,7 @@ defined in *gps.h*.  The _TPV_ data we will use is in _gps_data.fix_.
 Line 19 to 22::
 [source%nowrap,c,numbered,start=19]
 ----
-    if (0 != gps_open("localhost", "2947", &gps_data)) {
-        printf("Open error.  Bye, bye\n");
-        return 1;
-    }
+include::example1.c.txt[lines=19..22]
 ----
 
 Connect to the already running *gpsd* on the _localhost_ running on the
@@ -151,7 +144,7 @@ code errors.
 Line 24::
 [source%nowrap,c,numbered,start=24]
 ----
-    (void)gps_stream(&gps_data, WATCH_ENABLE | WATCH_JSON, NULL);
+include::example1.c.txt[lines=24]
 ----
 
 Tell *gpsd* to send us reports using JSON. Later on *gpsd_read()* will
@@ -161,7 +154,7 @@ details on the JSON messages.
 Line 26::
 [source%nowrap,c,numbered,start=26]
 ----
-    while (gps_waiting(&gps_data, 5000000)) {
+include::example1.c.txt[lines=26]
 ----
 
 The main loop. Wait, using *gps_waiting()* until data from the *gpsd*
@@ -171,10 +164,7 @@ seen in 5 seconds (5000000 micro seconds).
 Lines 27 to 30::
 [source%nowrap,c,numbered,start=27]
 ----
-        if (-1 == gps_read(&gps_data, NULL, 0)) {
-            printf("Read error.  Bye, bye\n");
-            break;
-        }
+include::example1.c.txt[lines=27..30]
 ----
 
 Read the waiting data using *gpsd_read()* and parse it into *gps_data*.
@@ -184,10 +174,7 @@ from *TPV*, *SKY*, *AIS*, or other message classes.
 Lines 31 to 34::
 [source%nowrap,c,numbered,start=31]
 ----
-        if (MODE_SET != (MODE_SET & gps_data.set)) {
-            // did not even get mode, nothing to see here
-            continue;
-        }
+include::example1.c.txt[lines=31..34]
 ----
 
 Here is a part that most programmers miss.  Check that *TPV* data was
@@ -198,10 +185,7 @@ bother to look at the rest of the data in _gpsdata.fix_.
 Lines 35 to 38::
 [source%nowrap,c,numbered,start=35]
 ----
-        if (0 > gps_data.fix.mode ||
-            MODE_STR_NUM <= gps_data.fix.mode) {
-            gps_data.fix.mode = 0;
-        }
+include::example1.c.txt[lines=35..38]
 ----
 
 Range check _gpsdata.fix.mode_ so we can use it as an index into
@@ -212,9 +196,7 @@ overruns are bad.
 Lines 39 to 41::
 [source%nowrap,c,numbered,start=39]
 ----
-        printf("Fix mode: %s (%d) Time: ",
-               mode_str[gps_data.fix.mode],
-               gps_data.fix.mode);
+include::example1.c.txt[lines=39..41]
 ----
 
 Print the Fix mode as an integer, and a string.
@@ -222,13 +204,7 @@ Print the Fix mode as an integer, and a string.
 Lines 42 to 47::
 [source%nowrap,c,numbered,start=42]
 ----
-        if (TIME_SET == (TIME_SET & gps_data.set)) {
-            // not 32 bit safe
-            printf("%ld.%09ld ", gps_data.fix.time.tv_sec,
-                   gps_data.fix.time.tv_nsec);
-        } else {
-            puts("n/a ");
-        }
+include::example1.c.txt[lines=42..47]
 ----
 
 Print the _gps_data.fix.time_ as seconds and nano seconds into the UNIX
@@ -244,14 +220,7 @@ that they have a valid fix.
 Lines 49 to 56::
 [source%nowrap,c,numbered,start=49]
 ----
-        if (isfinite(gps_data.fix.latitude) &&
-            isfinite( gps_data.fix.longitude)) {
-            // Display data from the GPS receiver if valid.
-            printf("Lat %.6f Lon %.6f\n",
-                   gps_data.fix.latitude, gps_data.fix.longitude);
-        } else {
-            printf("Lat n/a Lon n/a\n");
-        }
+include::example1.c.txt[lines=49..56]
 ----
 
 Just because we have a "3D" fix does not mean we have _latitude_ and
@@ -269,10 +238,7 @@ for a more detailed explanation about this issue.
 Lines 59 to 62::
 [source%nowrap,c,numbered,start=59]
 ----
-    // When you are done...
-    (void)gps_stream(&gps_data, WATCH_DISABLE, NULL);
-    (void)gps_close(&gps_data);
-    return 0;
+include::example1.c.txt[lines=59..62]
 ----
 
 When falling out of the loop, close the TCP connection nicely
@@ -292,16 +258,104 @@ any special permissions. Use "^C" to exit. Like this:
 ----
 $ wget -o example2.py https://gpsd.io/example2.py.txt
 $ python example2.py
-Time: 2022-07-25T02:37:25.000Z Mode: 3 Lat 44.068917 Lon -121.314127
-Time: 2022-07-25T02:37:25.000Z Mode: 3 Lat 44.068917 Lon -121.314127
-Time: 2022-07-25T02:37:26.000Z Mode: 3 Lat 44.068915 Lon -121.314126
-Time: 2022-07-25T02:37:26.000Z Mode: 3 Lat 44.068915 Lon -121.314126
+Mode: 3D(3) Time: 2022-07-26T00:40:35.000Z Lat 44.068934 Lon -121.314026
+Mode: 3D(3) Time: 2022-07-26T00:40:35.000Z Lat 44.068934 Lon -121.314026
+Mode: 3D(3) Time: 2022-07-26T00:40:36.000Z Lat 44.068935 Lon -121.314026
+Mode: 3D(3) Time: 2022-07-26T00:40:36.000Z Lat 44.068935 Lon -121.314026
+
 ^C
 ----
+
+The paranoid reader will have read
+https://gpsd.io/example2.py.txt[example2.py] before running it so as not
+to lose all their Bitcoin.
 
 As you can see above, this client prints the "Time", "Mode" "Lat" and
 "Lon" if available. These are the Time and Position parts of the acronym
 _TPV_. Otherwise it prints nothing.
+
+The complete example2.py:
+
+[source%nowrap,python,numbered]
+----
+include::example2.py.txt[]
+----
+
+=== COMMENTARY
+
+Line by line commentary.
+
+Start with a standard Python file header, and import the *gps*
+modile. No other imports are required.
+
+Lines 1 to 7::
+[source%nowrap,python,numbered]
+----
+include::example2.py.txt[lines=1..7]
+----
+
+Connect to the local *gpsd* daemon, and request streaming updates.
+
+Line 9::
+[source%nowrap,python,numbered,start=9]
+----
+include::example2.py.txt[lines=9]
+----
+
+
+Use a _while_ loop to handle incoming packets. Place it in a _try_ block
+to cleanly catch "^C". The function _session.read()_ returns 0, for OK,
+when a packet is received, or on a timeout. It will return less than
+zero on an error condition, such as a disconnect from the *gpsd* daemon.
+
+Lines 11 to 12::
+[source%nowrap,python,numbered,start=11]
+----
+include::example2.py.txt[lines=11..12]
+----
+
+The read() can return many different packet types.  Ensure that we
+have a TPV packet by looking for the fix mode to be set.  Otherwise,
+skip this message.
+
+Lines 13 to 15::
+[source%nowrap,python,numbered,start=13]
+----
+include::example2.py.txt[lines=13..15]
+----
+
+Now that we know we have a good _mode_, print it.  Also print the
+_time_, if is is good.  The TIME_SET flag bit in session.valid is set
+if the time is good.
+
+
+Lines 17 to 24::
+[source%nowrap,python,numbered,start=17]
+----
+include::example2.py.txt[lines=17..24]
+----
+
+Check that the Latitude and Longitude are finite before printing them.
+Always check all floating point numbers are finite before using them.
+
+Lines 26 to 31::
+[source%nowrap,python,numbered,start=26]
+----
+include::example2.py.txt[lines=26..31]
+----
+
+Code execution has left the _while_ loop. Maybe the _except:_
+was triggered on a "^C".  Otherwise we fell out of the loop because
+_session.read()_ returned an end of file, or error. Either way, cleanup
+and exit.
+
+
+Lines 33 to 39::
+[source%nowrap,python,numbered,start=33]
+----
+include::example2.py.txt[lines=33..]
+----
+
 
 == REFERENCES
 
