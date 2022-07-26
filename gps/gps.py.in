@@ -699,19 +699,11 @@ Or maybe a gpsd JSON file.
         # elif "DEVICES" == self.data.get("class"):
         # TODO: handle class DEVICES    # pylint: disable=fixme
 
-    def read(self):
-        """Read and interpret data from the daemon."""
-        status = gpscommon.read(self)
-        if 0 >= status:
-            return status
-        if self.response.startswith("{") and self.response.endswith("}\r\n"):
-            self.unpack(self.response)
-            self._oldstyle_shim()
-            self.valid |= PACKET_SET
-        return 0
-
     def __next__(self):
-        """Python 3 version of next()."""
+        """Python 3 version of next().
+
+This is just a shim over read() to enable implicit iteration.
+Not intended to be used directly, use read() instead."""
         if -1 == self.read():
             raise StopIteration
         if hasattr(self, "data"):
@@ -720,8 +712,26 @@ Or maybe a gpsd JSON file.
         return self.response
 
     def next(self):
-        """Python 2 backward compatibility."""
+        """Python 2 compatibile next().
+
+This is just a shim over read() to enable implicit iteration.
+Not intended to be used directly, use read() instead."""
         return self.__next__()
+
+    def read(self):
+        """Read and interpret data from a gpsd daemon.
+
+Return: less than zero on error or disconnect
+        Otherwise zero,
+"""
+        status = gpscommon.read(self)
+        if 0 >= status:
+            return status
+        if self.response.startswith("{") and self.response.endswith("}\r\n"):
+            self.unpack(self.response)
+            self._oldstyle_shim()
+            self.valid |= PACKET_SET
+        return 0
 
     def stream(self, flags=0, devpath=None):
         """Ask gpsd to stream reports at your client."""
