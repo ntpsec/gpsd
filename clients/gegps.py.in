@@ -200,7 +200,7 @@ if __name__ == "__main__":
         while 0 == session.read():
             if not hasattr(session, "data"):
                 # no data yet
-                continue;
+                continue
 
             if 'TPV' == session.data['class']:
                 f = open(os.path.join(options.kmldir,

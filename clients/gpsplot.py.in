@@ -370,17 +370,15 @@ else:
     end_seconds = 0
 
 try:
-    while True:
-        try:
-            report = session.next()
-        except StopIteration:
-            # end of data
-            break
-
-        if report['class'] != options.mclass:
+    while 0 == session.read():
+        if not hasattr(session, "data"):
+            # no data yet
             continue
 
-        _do_one_line(report)
+        if session.data['class'] != options.mclass:
+            continue
+
+        _do_one_line(session.data)
 
         if 0 < options.count:
             count += 1
