@@ -180,6 +180,13 @@ if __name__ == "__main__":
             parser.print_help()
             sys.exit(0)
 
+    if options.initialize:
+        f = open(os.path.join(options.kmldir,
+                 'Open_in_Google_Earth_RT_GPS.kml'), 'w')
+        f.write(KML_OPEN_IN_GE)
+        f.close()
+        sys.exit(0)
+
     try:
         session = gps.gps(host=options.host, port=options.port,
                           verbose=options.debug)
@@ -189,24 +196,19 @@ if __name__ == "__main__":
 
     session.stream(gps.WATCH_ENABLE)
 
-    if options.initialize:
-        f = open(os.path.join(options.kmldir,
-                 'Open_in_Google_Earth_RT_GPS.kml'), 'w')
-        f.write(KML_OPEN_IN_GE)
-        f.close()
-    else:
-        try:
-            while True:
-                report = session.next()
-                if 'TPV' == report['class']:
-                    f = open(os.path.join(options.kmldir,
-                             'Realtime_GPS.kml'), 'w')
-                    f.write(kmlize(report))
-                    f.close()
-        except StopIteration:
-            pass
-        except KeyboardInterrupt:
-            print('gegps stopped ')
+    try:
+        while 0 == session.read():
+            if not hasattr(session, "data"):
+                # no data yet
+                continue;
+
+            if 'TPV' == session.data['class']:
+                f = open(os.path.join(options.kmldir,
+                         'Realtime_GPS.kml'), 'w')
+                f.write(kmlize(session.data))
+                f.close()
+    except KeyboardInterrupt:
+        print('gegps stopped ')
 
 # end
 # vim: set expandtab shiftwidth=4
