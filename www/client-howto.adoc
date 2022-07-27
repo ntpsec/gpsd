@@ -1,8 +1,7 @@
 = GPSD Client HOWTO
 Eric S. Raymond <esr@thyrsus.com>
-v1.21, Feb 2021
 :author: Eric S. Raymond
-:date: 22 Februrary 2021
+:date: 26 July 2022
 :description: This document is a guide to interfacing client applications with GPSD.
 :email: <esr@thyrsus.com>
 :keywords: time, GPSD, NTP, time, precision, 1PPS, PPS, stratum, jitter
@@ -585,37 +584,40 @@ like this:
 ----------------------------------------------------------------------
 
 session = gps(mode=WATCH_ENABLE)
-try:
-    while True:
-        # Do stuff
-        report = session.next()
-        # Check report class for 'DEVICE' messages from gpsd.  If
-        # we're expecting messages from multiple devices we should
-        # inspect the message to determine which device
-        # has just become available.  But if we're just listening
-	# to a single device, this may do.
-        if report['class'] == 'DEVICE':
-            # Clean up our current connection.
-            session.close()
-            # Tell gpsd we're ready to receive messages.
-            session = gps(mode=WATCH_ENABLE)
-	# Do more stuff
-except StopIteration:
-    print "GPSD has terminated"
+while 0 == session.read()
+    if not hasattr(session, "data"):
+        # no data yet
+        continue;
+
+    # Check data class for 'DEVICE' messages from gpsd.  If
+    # we're expecting messages from multiple devices we should
+    # inspect the message to determine which device
+    # has just become available.  But if we're just listening
+    # to a single device, this may do.
+    if session.data['class'] == 'DEVICE':
+        # Clean up our current connection.
+        session.close()
+        # Tell gpsd we're ready to receive messages.
+        session = gps(mode=WATCH_ENABLE)
+    # Do more stuff
+
+print "GPSD has terminated"
 
 ----------------------------------------------------------------------
 
-Each call to the iterator yields a report structure until the daemon
-terminates, at which point the iterator next() method will raise
-StopIteration and the loop will terminate.
+Each call to session.read() will fill session.response with the message
+just received from *gpsd*. If that message was gpsd JSON then the JSON
+fields are decoded into session.data. When the daemon terminates,
+session.read() will return non-zero, and then the loop will terminate.
 
-The report object returned by next() can be accessed either as a dictionary
-or as an object.  As a dictionary, it is the raw contents of the last
-JSON response re-encoded in plain ASCII.  For convenience, you may
-also access it as an object with members for each attribute in the
-dictionary.  It is especially useful to know that the object will
-always have a "class" member giving the response type (TPV, SKY,
-DEVICE, etc.) as a string.
+The session.data object can be accessed either as a dictionary or as
+an object. As a dictionary, it is the raw contents of the last JSON
+response re-encoded in plain ASCII. For convenience, you may also access
+it as an object with members for each attribute in the dictionary. It
+is especially useful to know that the object will always have a "class"
+member giving the response type (TPV, SKY, DEVICE, etc.) as a string.
+
+See "Gpsd Client Example Code" for more client code examples.
 
 For more interesting examples integrated with X and GTK, see xgps and
 xgpsspeed.
