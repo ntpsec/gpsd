@@ -183,6 +183,7 @@ desktop-file-install \
 %doc /usr/share/doc/build.adoc
 %doc /usr/share/doc/SUPPORT.adoc
 %doc /usr/share/doc/example1.c.txt
+%doc /usr/share/snmp/mibs/gpsd/GPSD-MIB
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
 %{_sbindir}/gpsd
 %{_sbindir}/gpsdctl
