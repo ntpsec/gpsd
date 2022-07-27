@@ -896,12 +896,12 @@ if options.continuous:
     options.satpos = True
 
 try:
-    while True:
-        try:
-            msg = session.next()
-        except StopIteration:
-            # most likely end of file, maybe lost connection to gpsd
-            break
+    while 0 == session.read():
+        if not hasattr(session, "data"):
+            # no data yet
+            continue
+
+        msg = session.data       # shortcut
 
         if not msg or 'class' not in msg:
             # ??

@@ -1566,6 +1566,7 @@ frame * {
         if hasattr(data, 'satellites'):
             data.satellites_seen = 0
             data.satellites_used = 0
+
             def key_sats(s):
                 """sat sort function.  Used, gnssid, svid, sigid."""
                 val = 1
