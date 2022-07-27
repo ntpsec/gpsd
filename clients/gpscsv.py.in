@@ -329,43 +329,36 @@ else:
     end_seconds = 0
 
 try:
-    while True:
-        try:
-            report = session.next()
-        except StopIteration:
-            # end of data
-            break
+    while 0 == session.read():
 
-        if not report:
-            sys.stderr.write("ERROR: Empty (malformed?) input\n")
-            sys.exit(1)
-        if 'class' not in report:
-            # invalid input.
+        if 'class' not in session.data:
+            # Not JSON input.  Maybe NMEA, etc.
             sys.stderr.write("WARNING: Malformed input %s\n" % report)
             continue
-        if report['class'] != options.mclass:
+        if session.data['class'] != options.mclass:
             continue
         if 'SAT' == options.subclass:
             # grab the sats, one at a time
-            if 'satellites' not in report:
+            if 'satellites' not in session.data:
                 continue
-            for sat in report['satellites']:
-                subreport = {'time': report['time']}
+            for sat in session.data['satellites']:
+                subreport = {'time': session.data['time']}
                 subreport.update(sat)
                 _do_one_line(subreport)
         elif 'SUBFRAME' == options.mclass:
-            if report['frame'] not in options.frames:
+            if session.data['frame'] not in options.frames:
                 continue
-            if options.subclass not in report:
+            if options.subclass not in session.data:
                 # Not all subframe 4/5 have ALMANAC
                 continue
 
-            subreport = {'TOW17': report['TOW17'], 'tSV': report['tSV']}
-            subreport.update(report[options.subclass])
+            subreport = {'TOW17': session.data['TOW17'],
+                         'tSV': session.data['tSV']}
+            subreport.update(session.data[options.subclass])
             _do_one_line(subreport)
 
         else:
-            _do_one_line(report)
+            _do_one_line(session.data)
 
         if 0 < options.count:
             count += 1
