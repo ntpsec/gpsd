@@ -1,7 +1,7 @@
 = NMEA Revealed
 Eric S. Raymond <esr@thyrsus.com>
 :author: Eric S. Raymond
-:date: 18 November 2021
+:date: 28 July 2022
 :description: A programmer's guide to NMEA0183, the GPS protocol reporting standard
 :email: <esr@thyrsus.com>
 :keywords: NMEA0183, GPS, standard, protocol
@@ -1492,8 +1492,9 @@ or not.
 
 Example: $GLGSV,3,3,09,88,07,028*51
 
-Note: NMEA 4.1+ systems (u-blox 9, Quectel LCD79) may emit an extra field,
-Signal ID, just before the checksum.
+Note: NMEA 4.10+ systems (u-blox 9, Quectel LCD79) may emit an extra field,
+Signal ID, just before the checksum.  See the description of Signal ID's
+above.
 
 Note: $GNGSV uses PRN in field 4.  Other $GxGSV use the satellite ID in
 field 4.  Jackson Labs, Quectel, Telit, and others get this wrong, in
