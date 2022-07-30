@@ -185,7 +185,8 @@ TpvEntry ::=
         tpvAltHAE            INTEGER,
         tpvAltMSL            INTEGER,
         tpvClimb             INTEGER,
-        tpvHeading           INTEGER
+        tpvTrack             INTEGER,
+        tpvSpeed             INTEGER
       }
 
 tpvIndex OBJECT-TYPE
@@ -262,16 +263,24 @@ tpvClimb OBJECT-TYPE
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
-            "The device climb rate in meters per second. Scale 1e-44."
+            "The device climb rate in meters per second. Scale 1e-4."
     ::= { tpvEntry 9 }
 
-tpvHeading OBJECT-TYPE
+tpvTrack OBJECT-TYPE
     SYNTAX      INTEGER
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
             "Course over ground, degrees from true north. Scale 1e-5."
     ::= { tpvEntry 10 }
+
+tpvSpeed OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "The device speed in meters per second. Scale 1e-4."
+    ::= { tpvEntry 11 }
 
 -- sky - Stuff from the SKY JSON class
 

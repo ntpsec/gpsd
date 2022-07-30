@@ -54,8 +54,10 @@ struct oid_mib_xlate {
     const char *desc;           // description, for usage()
 };
 
-// keep this list sorted, so it can be "walked".
-// for now we only handle the first device, so table OIDs, end in .1
+/* Keep this list sorted, so it can be "walked".
+ * Sorted "Numerically", not "alphabetically".
+ * For now we only handle the first device, so table OIDs, end in .1
+ */
 const struct oid_mib_xlate xlate[] = {
     // next three are "pirate" OIDs, deprecated
     {".1.3.6.1.2.1.25.1.31", NULL, t_sinteger, &gpsdata.satellites_visible,
@@ -121,11 +123,74 @@ const struct oid_mib_xlate xlate[] = {
      &gpsdata.fix.climb, 10000, LONG_MIN,
      "CLimb rate in meters/second"},
     {".1.3.6.1.4.1.59054.13.3.1.10.1", "tpvTrack.1", t_double,
-     &gpsdata.fix.climb, 10000, -1,
+     &gpsdata.fix.track, 100000, -1,
      "True Track in degrees."},
+    {".1.3.6.1.4.1.59054.13.3.1.11.1", "tpvSpeed.1", t_double,
+     &gpsdata.fix.speed, 10000, -1,
+     "Ground speed (2D) in meters/second."},
     // end tpv
     {NULL, NULL, t_sinteger, NULL, 0, 0, ""},
 };
+
+/* compare_oid() -- compare 2 oids, "numerically".
+ *
+ * even though they look alphanumeric, oids need to be compared
+ * "numerically".
+ *
+ * so ".1.3.6.1.4.1.59054.13.3.1.9.1"
+ * comes before ".1.3.6.1.4.1.59054.13.3.1.10.1"
+ *
+ * Return: 0 if oid1 == oid2
+ *         negative  if oid1 < oid2
+ *         positive  if oid1 > oid2
+ *
+ */
+static long compare_oid(const char *oid1, const char *oid2)
+{
+    /* One could assume that in1 == in2, until the mismatch, but
+     * someone add a leading zero and mess things up. */
+    int in1 = 0;
+    int in2 = 0;
+    long part1, part2, ret = 0;
+
+    while (1) {
+        if ('.' != oid1[in1] ||
+            '.' != oid2[in2]) {
+            // legally, the only option is nul.
+            ret = (long)oid1[in1] - (long)oid2[in2];
+            break;
+        }
+        in1++;
+        in2++;
+
+        part1 = atol(&oid1[in1]);
+        part2 = atol(&oid2[in2]);
+        if (part1 != part2) {
+            ret = part1 - part2;
+            break;
+        }
+        // same, so far
+        // scan to next period or nul
+        while (1) {
+            in1++;
+            if ('\0' == oid1[in1] ||
+                '.' == oid1[in1]) {
+                break;
+            }
+        }
+        while (1) {
+            in2++;
+            if ('\0' == oid2[in2] ||
+                '.' == oid2[in2]) {
+                break;
+            }
+        }
+    }
+    // debug:
+    // (void)fprintf(stderr, "%s (%d) %s (%d) %ld\n\n",
+    //               oid1, in1, oid2, in2, ret);
+    return ret;
+}
 
 /* print usage info, then exit.
  *
@@ -339,7 +404,7 @@ int main (int argc, char **argv)
 
         // Debug (void)fprintf(stderr, "gpssnmp: Trying %s\n", pxlate->oid);
         if ('\0' != oid[0]) {
-            if (0 == strncmp(pxlate->oid, oid, sizeof(oid)) ||
+            if (0 == compare_oid(pxlate->oid, oid) ||
                 (NULL != pxlate->short_mib &&
                  0 == strncmp(pxlate->short_mib, oid, sizeof(oid)))) {
                 // get match
@@ -349,10 +414,10 @@ int main (int argc, char **argv)
         } else if (get_next) {
             // this is the next one
         } else if ('\0' != noid[0]) {
-             int cmp = strncmp(pxlate->oid, noid, sizeof(noid));
+             long cmp = compare_oid(pxlate->oid, noid);
 
              if (0 >= cmp) {
-                // not far enough yet.
+                // no match, yet.
                 continue;
              }
              // got next match, numeric OID only
