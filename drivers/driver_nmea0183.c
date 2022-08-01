@@ -4240,15 +4240,16 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PASHR", NULL, 3, false, processPASHR},
         // Furuno proprietary
         {"PERDACK", NULL, 4, false, NULL},          // ACK
+        // {"PERDAPI", NULL, 3, false, NULL},          // Config Send
         {"PERDCRD", NULL, 15, false, NULL},         // NLOSMASK?
         {"PERDCRG", "DCR", 6, false, NULL},         // QZSS DC report
         {"PERDCRJ", "FREQ", 9, false, NULL},        // Jamming Status
         {"PERDCRP", NULL, 9, false, NULL},          // Position
         {"PERDCRQ", NULL, 11, false, NULL},         // Galileo SAR
         {"PERDCRW", "TPS1", 8, false, NULL},        // Time
-        {"PERDCRW", "TPS2", 12, false, NULL},       // PPS
-        {"PERDCRW", "TPS3", 11, false, NULL},       // Position Mode
-        {"PERDCRW", "TPS4", 13, false, NULL},       // GCLK
+        {"PERDCRX", "TPS2", 12, false, NULL},       // PPS
+        {"PERDCRY", "TPS3", 11, false, NULL},       // Position Mode
+        {"PERDCRZ", "TPS4", 13, false, NULL},       // GCLK
         {"PERDMSG", NULL, 3, false, NULL},          // Message
         {"PERDSYS", "ANTSEL", 5, false, NULL},      // Antenna
         {"PERDSYS", "FIXSESSION", 5, false, NULL},  // Fix Session
