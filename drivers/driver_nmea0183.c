@@ -1401,11 +1401,12 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
     } else if (0 < nmea_gnssid) {
         // this switch handles case where nmea_gnssid is known
         switch (nmea_gnssid) {
-        default:
-            // x = IMES                Not defined by NMEA 4.10
-            FALLTHROUGH
         case 0:
-            // none given, ignore
+            // can't happen, see if() just above.
+            FALLTHROUGH
+        default:
+            // unknown
+            // x = IMES                Not defined by NMEA 4.10
             nmea2_prn = 0;
             break;
         case 1:
@@ -1455,11 +1456,11 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
             //  2 = GLONASS   65-96, nul
             *ubx_gnssid = 6;
             if (64 > nmea_satnum) {
-                // NMEA 1 - 64
+                // NMEA svid 1 - 64
                 *ubx_svid = nmea_satnum;
             } else {
-                // SiRF quirk 65-96
-                // Jackson Labs Micro JLT quirk 65-96
+                /* Jackson Labs Micro JLT, Quectel Querk, SiRF, Skytrak, u-blox quirk:
+                 * GLONASS are  65 to 96 */
                 *ubx_svid = nmea_satnum - 64;
             }
             nmea2_prn = 64 + *ubx_svid;
@@ -1812,6 +1813,9 @@ static gps_mask_t processGSA(int count, char *field[],
                      "NMEA0183: xxGSA: clear sats_used\n");
         }
         session->nmea.last_gsa_talker = GSA_TALKER;
+
+        /* figure out which constellation(s) this GSA is for by looking
+         * at the talker ID. */
         switch (session->nmea.last_gsa_talker) {
         case 'A':
             // GA Galileo
@@ -1839,6 +1843,8 @@ static gps_mask_t processGSA(int count, char *field[],
         case 'N':
             // GN GNSS
             session->nmea.seen_gngsa = true;
+            // field 18 is the NMEA gnssid in 4.10 and up.
+            nmea_gnssid = atoi(field[18]);
             break;
         case 'P':
             // GP GPS
