@@ -1316,6 +1316,7 @@ filegen peerstats file peerstats type day enable
 
 This enables logging of the peer server statistics.
 
+[start=2]
 . Make sure the directory exists properly.  For ntpd as root do:
 
 -----------------------------------------------------------------------------
@@ -1323,6 +1324,7 @@ This enables logging of the peer server statistics.
    # chown ntp:ntp /var/log/ntpstats
 -----------------------------------------------------------------------------
 
+[start=3]
 . Start ntpd and let it run for at least four hours.
 Periodically check progress with "ntpq -p" and wait
 until change has settled out.
@@ -1444,6 +1446,7 @@ for its clock selection algorithm.  It will still write out statistics to
 the peerstats file.  Once ntpd is stable (a few hours or so), we can
 process the peerstats file.
 
+[start=2]
 . Measuring the delay between the two messages.
 
 From the 'peerstats' file, extract the lines corresponding to
@@ -1479,6 +1482,7 @@ satisfaction.)
         gnuplot> replot "peerstats.shm" using ($2):($5) with lines
 ------------------
 
+[start=3]
 . Applying the correction factor.
 
 By examining the plot generated above, you should be able to estimate
@@ -1581,12 +1585,13 @@ EEE Settings for eth0:
 	Link partner advertised EEE link modes:  Not reported
 # ethtool --set-eee eth0 eee off
 # ethtool --show-eee eth0
-EEE Settings for eth1:
+EEE Settings for eth0:
 	EEE status: disabled
-	Tx LPI: disabled
+	Tx LPI: 0 (us)
 	Supported EEE link modes:  100baseT/Full
 	                           1000baseT/Full
-	Advertised EEE link modes:  Not reported
+	Advertised EEE link modes:  100baseT/Full
+	                            100baseT/Full
 	Link partner advertised EEE link modes:  Not reported
 -----------------------------------------------------------------------------
 
