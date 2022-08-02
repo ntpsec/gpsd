@@ -186,7 +186,15 @@ TpvEntry ::=
         tpvAltMSL            INTEGER,
         tpvClimb             INTEGER,
         tpvTrack             INTEGER,
-        tpvSpeed             INTEGER
+        tpvSpeed             INTEGER,
+        tpvEpc               INTEGER,
+        tpvEpd               INTEGER,
+        tpvEph               INTEGER,
+        tpvEps               INTEGER,
+        tpvEpt               INTEGER,
+        tpvEpv               INTEGER,
+        tpvEpx               INTEGER,
+        tpvEpy               INTEGER
       }
 
 tpvIndex OBJECT-TYPE
@@ -281,6 +289,70 @@ tpvSpeed OBJECT-TYPE
     DESCRIPTION
             "The device speed in meters per second. Scale 1e-4."
     ::= { tpvEntry 11 }
+
+tpvEpc OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "Estimated climb error in meters / second. Scale 1e-5"
+    ::= { tpvEntry 12 }
+
+tpvEpd OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "Estimated track (direction) error in degrees. Scale 1e-5"
+    ::= { tpvEntry 13 }
+
+tpvEph OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "Estimated horizontal (2D) error in meters. Scale 1e-5"
+    ::= { tpvEntry 14 }
+
+tpvEps OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "Estimated speed (2D) error in meters / second. Scale 1e-5"
+    ::= { tpvEntry 15 }
+
+tpvEpt OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "Estimated time error in seconds. Scale 1e-7"
+    ::= { tpvEntry 16 }
+
+tpvEpv OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "Estimated vertical (altitude) error in meters. Scale 1e-5"
+    ::= { tpvEntry 17 }
+
+tpvEpx OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "Estimated Longitude error in meters. Scale 1e-5"
+    ::= { tpvEntry 18 }
+
+tpvEpy OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "Estimated Latitude error in meters. Scale 1e-5"
+    ::= { tpvEntry 19 }
 
 -- sky - Stuff from the SKY JSON class
 
