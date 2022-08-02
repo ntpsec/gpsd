@@ -216,6 +216,45 @@ static long compare_oid(const char *oid1, const char *oid2)
     return ret;
 }
 
+#ifdef __UNUSED__
+/* get_one()
+ *
+ * Wait at most 10 seconds
+ *
+ * exits on read errors and time outs.
+ *
+ * Return: 0 -- got one
+ */
+int get_one()
+{
+    struct timespec ts_start, ts_now;
+
+    clock_gettime(CLOCK_REALTIME, &ts_start);
+
+    while (gps_waiting(&gpsdata, 5000000)) {
+
+        // wait 10 seconds, tops.
+        clock_gettime(CLOCK_REALTIME, &ts_now);
+        // use llabs(), in case time went backwards...
+        if (10 < llabs(ts_now.tv_sec - ts_start.tv_sec)) {
+            // FIXME:  Make this configurable.
+            // timeout
+            (void)fputs("gpssnmp: ERROR: timeout", stderr);
+            exit(1);
+        }
+
+        status = gps_read(&gpsdata, NULL, 0);
+        if (-1 == status) {
+            (void)fprintf(stderr, "gpssnmp: ERROR: read failed %d\n", status);
+            exit(1);
+        }
+        // got something
+        break;
+    }
+    return 0;
+}
+#endif    //  __UNUSED__
+
 /* print usage info, then exit.
  *
  * Never returns
@@ -426,7 +465,10 @@ int main (int argc, char **argv)
     }
     for (pxlate = xlate; NULL != pxlate->oid; pxlate++) {
 
-        // Debug (void)fprintf(stderr, "gpssnmp: Trying %s\n", pxlate->oid);
+        if (4 <= debug) {
+            (void)fprintf(stderr, "gpssnmp: Trying %s, get_next %d\n",
+                          pxlate->oid, get_next);
+        }
         if ('\0' != oid[0]) {
             if (0 == compare_oid(pxlate->oid, oid) ||
                 (NULL != pxlate->short_mib &&
@@ -451,6 +493,11 @@ int main (int argc, char **argv)
          * "pass [-p priority] MIBOID PROG" option to snmpd.conf
          */
 
+        get_next = false;
+
+        if (4 <= debug) {
+            (void)fprintf(stderr, "gpssnmp: match type %d\n", pxlate->type);
+        }
         switch (pxlate->type) {
         case t_dummy:
             // skip, go to next one
@@ -486,7 +533,9 @@ int main (int argc, char **argv)
                           argv[0], oid);
             break;
         }
-        break;
+        if (!get_next) {
+            break;
+        }
     }
     if (NULL == pxlate->oid) {
         // fell of the end of the list...
