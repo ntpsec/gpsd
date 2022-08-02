@@ -395,7 +395,14 @@ SkyEntry ::=
         skyPath              DisplayString,
         skynSat              INTEGER,       -- aka "seen"
         skyuSat              INTEGER,       -- used
-        skySNRavg            INTEGER        -- average SNR
+        skySNRavg            INTEGER,       -- average SNR
+        skyGdop              INTEGER,
+        skyHdop              INTEGER,
+        skyPdop              INTEGER,
+        skyTdop              INTEGER,
+        skyVdop              INTEGER,
+        skyXdop              INTEGER,
+        skyYdop              INTEGER
       }
 
 skyIndex OBJECT-TYPE
@@ -438,5 +445,60 @@ skySNRavg OBJECT-TYPE
             "average SNR or all satellites in use, times 100."
     ::= { skyEntry 5 }
 
+skyGdop OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "gdop, times 100."
+    ::= { skyEntry 6 }
+
+skyHdop OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "hdop, times 100."
+    ::= { skyEntry 7 }
+
+skyPdop OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "pdop, times 100."
+    ::= { skyEntry 8 }
+
+skyTdop OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "gdop, times 100."
+    ::= { skyEntry 9 }
+
+skyVdop OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "vdop, times 100."
+    ::= { skyEntry 10 }
+
+skyXdop OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "xdop, times 100."
+    ::= { skyEntry 11 }
+
+skyYdop OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "ydop, times 100."
+    ::= { skyEntry 12 }
 
 END
