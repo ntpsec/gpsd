@@ -51,6 +51,7 @@ struct oid_mib_xlate {
     void *pval;                 // pointer the value
     int64_t scale;              // scale factor to convert to int32_t
     int64_t min;                // minimum value of scaled value
+    gps_mask_t need;            // the _SET this needs
     const char *desc;           // description, for usage()
 };
 
@@ -61,120 +62,121 @@ struct oid_mib_xlate {
 const struct oid_mib_xlate xlate[] = {
     // next three are "pirate" OIDs, deprecated
     {".1.3.6.1.2.1.25.1.31", NULL, t_sinteger, &gpsdata.satellites_visible,
-     1, -9, ""},
+     1, -9, SATELLITE_SET, ""},
     {".1.3.6.1.2.1.25.1.32", NULL, t_sinteger, &gpsdata.satellites_used,
-     1, 0, ""},
-    {".1.3.6.1.2.1.25.1.33", NULL, t_sinteger, &snr_avg, 1, 0, ""},
+     1, 0, SATELLITE_SET, ""},
+    {".1.3.6.1.2.1.25.1.33", NULL, t_sinteger, &snr_avg, 1, 0, SATELLITE_SET,
+     ""},
     // previous three are "pirate" OIDs, deprecated
-    {".1.3.6.1.4.1.59054", "gpsd", t_dummy, NULL, 0, 0,
+    {".1.3.6.1.4.1.59054", "gpsd", t_dummy, NULL, 0, 0, ONLINE_SET,
      "Anchor for GPSD-MIB"},
     // start sky
-    {".1.3.6.1.4.1.59054.11", "sky", t_dummy, NULL, 0, 0,
+    {".1.3.6.1.4.1.59054.11", "sky", t_dummy, NULL, 0, 0, ONLINE_SET,
      "Anchor for SKY"},
     // only handle one device, for now
     {".1.3.6.1.4.1.59054.11.1", "skyNumber", t_sinteger, &one, 1, -1,
-     "The number of devices in the skyTable"},
+     ONLINE_SET, "The number of devices in the skyTable"},
     {".1.3.6.1.4.1.59054.11.2.1.1.1", "skyIndex", t_sinteger, &one, 1, 0,
-     "skyTable Index"},
+     ONLINE_SET, "skyTable Index"},
     {".1.3.6.1.4.1.59054.11.2.1.2.1", "skyPath", t_string, &gpsdata.dev.path,
-     1, 0, "path for this device"},
+     1, 0, SATELLITE_SET, "path for this device"},
     {".1.3.6.1.4.1.59054.11.2.1.3.1", "skynSat.1", t_sinteger,
-     &gpsdata.satellites_visible, 1, -1,
+     &gpsdata.satellites_visible, 1, -1, SATELLITE_SET,
      "Number of satellties seen"},
     {".1.3.6.1.4.1.59054.11.2.1.4.1", "skyuSat.1", t_sinteger,
-     &gpsdata.satellites_used, 1, -1,
+     &gpsdata.satellites_used, 1, -1, SATELLITE_SET,
      "Number of satellties in use"},
     {".1.3.6.1.4.1.59054.11.2.1.5.1", "skySNRavg.1", t_double,
-     &snr_avg, 100, 0,
+     &snr_avg, 100, 0, SATELLITE_SET,
      "Average SNR of all satellites in use."},
     {".1.3.6.1.4.1.59054.11.2.1.6.1", "skyGdop.1", t_double,
-     &gpsdata.dop.gdop, 100, 0,
+     &gpsdata.dop.gdop, 100, 0, DOP_SET,
      "gdop."},
     {".1.3.6.1.4.1.59054.11.2.1.7.1", "skyHdop.1", t_double,
-     &gpsdata.dop.hdop, 100, 0,
+     &gpsdata.dop.hdop, 100, 0, DOP_SET,
      "hdop."},
     {".1.3.6.1.4.1.59054.11.2.1.8.1", "skyPdop.1", t_double,
-     &gpsdata.dop.pdop, 100, 0,
+     &gpsdata.dop.pdop, 100, 0, DOP_SET,
      "pdop."},
     {".1.3.6.1.4.1.59054.11.2.1.9.1", "skyTdop.1", t_double,
-     &gpsdata.dop.tdop, 100, 0,
+     &gpsdata.dop.tdop, 100, 0, DOP_SET,
      "tdop."},
     {".1.3.6.1.4.1.59054.11.2.1.10.1", "skyVdop.1", t_double,
-     &gpsdata.dop.vdop, 100, 0,
+     &gpsdata.dop.vdop, 100, 0, DOP_SET,
      "vdop."},
     {".1.3.6.1.4.1.59054.11.2.1.11.1", "skyXdop.1", t_double,
-     &gpsdata.dop.xdop, 100, 0,
+     &gpsdata.dop.xdop, 100, 0, DOP_SET,
      "xdop."},
     {".1.3.6.1.4.1.59054.11.2.1.12.1", "skyYdop.1", t_double,
-     &gpsdata.dop.ydop, 100, 0,
+     &gpsdata.dop.ydop, 100, 0, DOP_SET,
      "ydop."},
     // end sky
     // start tpv
-    {".1.3.6.1.4.1.59054.13", "tpv", t_dummy, NULL, 0, 0,
+    {".1.3.6.1.4.1.59054.13", "tpv", t_dummy, NULL, 0, 0, ONLINE_SET,
      "Anchor for TPV"},
     {".1.3.6.1.4.1.59054.13.1", "tpvLeapSeconds", t_sinteger,
-     &gpsdata.leap_seconds, 1, 1,
+     &gpsdata.leap_seconds, 1, 1, TIME_SET,
      ""},
     // only handle one device, for now
     {".1.3.6.1.4.1.59054.13.2", "tpvNumber", t_sinteger,
-     &one, 1, 0,
+     &one, 1, 0, ONLINE_SET,
      "The number of devices in the tpvTable"},
     {".1.3.6.1.4.1.59054.13.3.1.1.1", "tpvIndex", t_sinteger,
-     &one, 1, 1, "tpvTable Index"},
+     &one, 1, 1, ONLINE_SET, "tpvTable Index"},
     {".1.3.6.1.4.1.59054.13.3.1.2.1", "tpvPath", t_string,
-     &gpsdata.dev.path, 1, 1, "path for this device"},
+     &gpsdata.dev.path, 1, 1, MODE_SET, "path for this device"},
     {".1.3.6.1.4.1.59054.13.3.1.3.1", "tpvMode.1", t_sinteger,
-     &gpsdata.fix.mode, 1, 0, "Fix Mode"},
+     &gpsdata.fix.mode, 1, 0, MODE_SET, "Fix Mode"},
     {".1.3.6.1.4.1.59054.13.3.1.4.1", "tpvStatus.1", t_sinteger,
-     &gpsdata.fix.status, 1, 0, "Fix Status"},
+     &gpsdata.fix.status, 1, 0, STATUS_SET, "Fix Status"},
     // why 1e7?  Because SNMP chokes on INTEGERS > 32 bits.
     {".1.3.6.1.4.1.59054.13.3.1.5.1", "tpvLatitude.1", t_double,
-     &gpsdata.fix.latitude, 10000000LL, -900000000LL,
+     &gpsdata.fix.latitude, 10000000LL, -900000000LL, LATLON_SET,
      "Latitude in degrees."},
     {".1.3.6.1.4.1.59054.13.3.1.6.1", "tpvLongitude.1", t_double,
-     &gpsdata.fix.longitude, 10000000LL, -18010000000LL,
+     &gpsdata.fix.longitude, 10000000LL, -18010000000LL, LATLON_SET,
      "Longitude in degrees."},
     {".1.3.6.1.4.1.59054.13.3.1.7.1", "tpvAltHAE.1", t_double,
-     &gpsdata.fix.altHAE, 10000, LONG_MIN,
+     &gpsdata.fix.altHAE, 10000, LONG_MIN, ALTITUDE_SET,
      "Height above Ellipsoid, in meters."},
     {".1.3.6.1.4.1.59054.13.3.1.8.1", "tpvAltMSL.1", t_double,
-     &gpsdata.fix.altMSL, 10000, LONG_MIN,
+     &gpsdata.fix.altMSL, 10000, LONG_MIN, ALTITUDE_SET,
      "Height above MSL, in meters."},
     {".1.3.6.1.4.1.59054.13.3.1.9.1", "tpvClimb.1", t_double,
-     &gpsdata.fix.climb, 10000, LONG_MIN,
+     &gpsdata.fix.climb, 10000, LONG_MIN, CLIMB_SET,
      "CLimb rate in meters/second"},
     {".1.3.6.1.4.1.59054.13.3.1.10.1", "tpvTrack.1", t_double,
-     &gpsdata.fix.track, 100000, -1,
+     &gpsdata.fix.track, 100000, -1, TRACK_SET,
      "True Track in degrees."},
     {".1.3.6.1.4.1.59054.13.3.1.11.1", "tpvSpeed.1", t_double,
-     &gpsdata.fix.speed, 10000, -1,
+     &gpsdata.fix.speed, 10000, -1, SPEED_SET,
      "Ground speed (2D) in meters/second."},
     {".1.3.6.1.4.1.59054.13.3.1.12.1", "tpvEpc.1", t_double,
-     &gpsdata.fix.epc, 100000, -1,
+     &gpsdata.fix.epc, 100000, -1, HERR_SET,
      "Estimated climb error in meters / second."},
     {".1.3.6.1.4.1.59054.13.3.1.13.1", "tpvEpd.1", t_double,
-     &gpsdata.fix.epd, 100000, -1,
+     &gpsdata.fix.epd, 100000, -1, HERR_SET,
      "Estimated track (direction) error in degrees."},
     {".1.3.6.1.4.1.59054.13.3.1.14.1", "tpvEph.1", t_double,
-     &gpsdata.fix.eph, 100000, -1,
+     &gpsdata.fix.eph, 100000, -1, HERR_SET,
      "Estimated horizontal (2D) error in meters."},
     {".1.3.6.1.4.1.59054.13.3.1.15.1", "tpvEps.1", t_double,
-     &gpsdata.fix.eps, 100000, -1,
+     &gpsdata.fix.eps, 100000, -1, HERR_SET,
      "Estimated speed (2d) error in meters / second."},
     {".1.3.6.1.4.1.59054.13.3.1.16.1", "tpvEpt.1", t_double,
-     &gpsdata.fix.ept, 10000000, -1,
+     &gpsdata.fix.ept, 10000000, -1, HERR_SET,
      "Estimated time in seconds."},
     {".1.3.6.1.4.1.59054.13.3.1.17.1", "tpvEpv.1", t_double,
-     &gpsdata.fix.epv, 100000, -1,
+     &gpsdata.fix.epv, 100000, -1, VERR_SET,
      "Estimated vertical (altitude) error in meters."},
     {".1.3.6.1.4.1.59054.13.3.1.18.1", "tpvEpx.1", t_double,
-     &gpsdata.fix.epx, 100000, -1,
+     &gpsdata.fix.epx, 100000, -1, HERR_SET,
      "Estimated longitude error in meters."},
     {".1.3.6.1.4.1.59054.13.3.1.19.1", "tpvEpy.1", t_double,
-     &gpsdata.fix.epy, 100000, -1,
+     &gpsdata.fix.epy, 100000, -1, HERR_SET,
      "Estimated latitude error in meters."},
     // end tpv
-    {NULL, NULL, t_sinteger, NULL, 0, 0, ""},
+    {NULL, NULL, t_sinteger, NULL, 0, 0, ONLINE_SET, ""},
 };
 
 /* compare_oid() -- compare 2 oids, "numerically".
@@ -237,7 +239,7 @@ static long compare_oid(const char *oid1, const char *oid2)
     return ret;
 }
 
-/* get_one() -- get one gpsdata
+/* get_one() -- get gpsdata, until "need" satisfied
  *
  * Wait at most 10 seconds
  *
@@ -246,16 +248,20 @@ static long compare_oid(const char *oid1, const char *oid2)
  * Return: void
  *         exits on time out or error
  */
-static void get_one(void)
+static void get_one(gps_mask_t need)
 {
     struct timespec ts_start, ts_now;
     int status, i;
     double snr_total = 0;
 
+    if (ONLINE_SET == need) {
+        // nothing needed
+        return;
+    }
+
     clock_gettime(CLOCK_REALTIME, &ts_start);
 
     while (gps_waiting(&gpsdata, 5000000)) {
-        gps_mask_t want = MODE_SET | SATELLITE_SET | TIME_SET;
 
         // wait 10 seconds, tops.
         clock_gettime(CLOCK_REALTIME, &ts_now);
@@ -272,7 +278,7 @@ static void get_one(void)
             (void)fprintf(stderr, "gpssnmp: ERROR: read failed %d\n", status);
             exit(1);
         }
-        if (want == (want & gpsdata.set)) {
+        if (need == (need & gpsdata.set)) {
             // got something
             break;
         }
@@ -476,11 +482,13 @@ int main (int argc, char **argv)
          */
 
         get_next = false;
-        get_one();      // fill gpsdata
 
         if (4 <= debug) {
-            (void)fprintf(stderr, "gpssnmp: match type %d\n", pxlate->type);
+            (void)fprintf(stderr, "gpssnmp: match type %d need %s\n",
+                          pxlate->type, gps_maskdump(pxlate->need));
         }
+        get_one(pxlate->need);      // fill gpsdata with what we need
+
         switch (pxlate->type) {
         case t_dummy:
             // skip, go to next one

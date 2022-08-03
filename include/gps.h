@@ -2748,7 +2748,7 @@ struct gps_data_t {
 #define CLIMB_SET       (1llu<<8)
 #define STATUS_SET      (1llu<<9)
 #define MODE_SET        (1llu<<10)
-#define DOP_SET         (1llu<<11)   // not used by clients
+#define DOP_SET         (1llu<<11)
 #define HERR_SET        (1llu<<12)
 #define VERR_SET        (1llu<<13)
 #define ATTITUDE_SET    (1llu<<14)
