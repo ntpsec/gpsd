@@ -176,6 +176,14 @@ const struct oid_mib_xlate xlate[] = {
      &gpsdata.fix.epy, 100000, -1, HERR_SET,
      "Estimated latitude error in meters."},
     // end tpv
+    // start version
+    {".1.3.6.1.4.1.59054.14.1", "verRelease", t_string,
+     &gpsdata.version.release, 1, 1, VERSION_SET,
+     "Release number of gpsd."},
+    {".1.3.6.1.4.1.59054.14.2", "verRevision", t_string,
+     &gpsdata.version.rev, 1, 1, VERSION_SET,
+     "Revision string of gpsd."},
+    // end version
     {NULL, NULL, t_sinteger, NULL, 0, 0, ONLINE_SET, ""},
 };
 
@@ -258,6 +266,9 @@ static void get_one(gps_mask_t need)
         // nothing needed
         return;
     }
+    /* FIXME: VERSION_SET only come once after connect, so once
+     * persist mode is imlemented, will need to cache that data.
+     * Similar for DEVICELIST_SET */
 
     clock_gettime(CLOCK_REALTIME, &ts_start);
 

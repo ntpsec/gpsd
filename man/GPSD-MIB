@@ -501,4 +501,23 @@ skyYdop OBJECT-TYPE
             "ydop, times 100."
     ::= { skyEntry 12 }
 
+-- version - Stuff from the VERSION JSON class
+-- See "man gpsd_json" for more details on each item.
+
+verRelease OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "gpsd daemon release."
+    ::= { version 1 }
+
+verRevision OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "gpsd daemon Revision."
+    ::= { version 2 }
+
 END
