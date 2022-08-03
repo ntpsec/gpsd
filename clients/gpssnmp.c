@@ -26,7 +26,7 @@
 #include "../include/os_compat.h"    // for strlcpy() if needed
 
 int debug = 0;                       // debug level
-struct gps_data_t gpsdata_now, gpsdata;
+struct gps_data_t gpsdata;
 int one = 1;                         // the one!
 double snr_avg = 0;
 
@@ -164,13 +164,13 @@ const struct oid_mib_xlate xlate[] = {
     {".1.3.6.1.4.1.59054.13.3.1.16.1", "tpvEpt.1", t_double,
      &gpsdata.fix.ept, 10000000, -1,
      "Estimated time in seconds."},
-    {".1.3.6.1.4.1.59054.13.3.1.18.1", "tpvEpv.1", t_double,
+    {".1.3.6.1.4.1.59054.13.3.1.17.1", "tpvEpv.1", t_double,
      &gpsdata.fix.epv, 100000, -1,
      "Estimated vertical (altitude) error in meters."},
-    {".1.3.6.1.4.1.59054.13.3.1.19.1", "tpvEpx.1", t_double,
+    {".1.3.6.1.4.1.59054.13.3.1.18.1", "tpvEpx.1", t_double,
      &gpsdata.fix.epx, 100000, -1,
      "Estimated longitude error in meters."},
-    {".1.3.6.1.4.1.59054.13.3.1.20.1", "tpvEpy.1", t_double,
+    {".1.3.6.1.4.1.59054.13.3.1.19.1", "tpvEpy.1", t_double,
      &gpsdata.fix.epy, 100000, -1,
      "Estimated latitude error in meters."},
     // end tpv
@@ -237,22 +237,25 @@ static long compare_oid(const char *oid1, const char *oid2)
     return ret;
 }
 
-#ifdef __UNUSED__
-/* get_one()
+/* get_one() -- get one gpsdata
  *
  * Wait at most 10 seconds
  *
  * exits on read errors and time outs.
  *
- * Return: 0 -- got one
+ * Return: void
+ *         exits on time out or error
  */
-int get_one()
+static void get_one(void)
 {
     struct timespec ts_start, ts_now;
+    int status, i;
+    double snr_total = 0;
 
     clock_gettime(CLOCK_REALTIME, &ts_start);
 
     while (gps_waiting(&gpsdata, 5000000)) {
+        gps_mask_t want = MODE_SET | SATELLITE_SET | TIME_SET;
 
         // wait 10 seconds, tops.
         clock_gettime(CLOCK_REALTIME, &ts_now);
@@ -269,12 +272,23 @@ int get_one()
             (void)fprintf(stderr, "gpssnmp: ERROR: read failed %d\n", status);
             exit(1);
         }
-        // got something
-        break;
+        if (want == (want & gpsdata.set)) {
+            // got something
+            break;
+        }
     }
-    return 0;
+    for(i = 0; i <= gpsdata.satellites_used; i++) {
+        if (0 < gpsdata.skyview[i].used &&
+            1 <  gpsdata.skyview[i].ss) {
+            // printf("i: %d, P:%d, ss: %f\n", i, gpsdata.skyview[i].PRN,
+            //         gpsdata.skyview[i].ss);
+            snr_total += gpsdata.skyview[i].ss;
+        }
+    }
+    if (0 < gpsdata.satellites_used) {
+        snr_avg = snr_total / gpsdata.satellites_used;
+    }
 }
-#endif    //  __UNUSED__
 
 /* print usage info, then exit.
  *
@@ -335,13 +349,10 @@ int main (int argc, char **argv)
 {
     bool do_usage = false;
     bool get_next = false;
-    int i;
-    double snr_total = 0;
     int status;
     char oid[40] = "";       // requested get OID
     char noid[40] = "";      // requested next OID
     struct fixsource_t source;
-    struct timespec ts_start, ts_now;
     const struct oid_mib_xlate *pxlate;
     long long value;         // (long long) so we get 64 bits on 32-bit CPUs.
 
@@ -425,65 +436,15 @@ int main (int argc, char **argv)
     }
 
     // Open the stream to gpsd
-    status = gps_open(source.server, source.port, &gpsdata_now);
+    status = gps_open(source.server, source.port, &gpsdata);
     if (0 != status) {
         (void)fprintf(stderr, "gpssnmp: ERROR: connection failed: %d\n",
                       status);
         exit(1);
     }
     // we want JSON
-    (void)gps_stream(&gpsdata_now, WATCH_ENABLE | WATCH_JSON, NULL);
+    (void)gps_stream(&gpsdata, WATCH_ENABLE | WATCH_JSON, NULL);
 
-    clock_gettime(CLOCK_REALTIME, &ts_start);
-
-    while (gps_waiting(&gpsdata_now, 5000000)) {
-        gps_mask_t want = MODE_SET | SATELLITE_SET;
-
-        // wait 10 seconds, tops.
-        clock_gettime(CLOCK_REALTIME, &ts_now);
-        // use llabs(), in case time went backwards...
-        if (10 < llabs(ts_now.tv_sec - ts_start.tv_sec)) {
-            // FIXME:  Make this configurable.
-            // timeout
-            (void)fputs("gpssnmp: ERROR: timeout", stderr);
-            exit(1);
-        }
-
-        status = gps_read(&gpsdata_now, NULL, 0);
-        if (-1 == status) {
-            (void)fprintf(stderr, "gpssnmp: ERROR: read failed %d\n", status);
-            exit(1);
-        }
-        if (!(TIME_SET & gpsdata_now.set)) {
-            // not useful, save it
-            gpsdata = gpsdata_now;
-            continue;
-        }
-        if (3 <= debug) {
-            (void)fprintf(stderr, "gpssnmp: time %lld %lld mask %s\n",
-                          (long long)gpsdata_now.online.tv_sec,
-                          (long long)gpsdata.online.tv_sec,
-                          gps_maskdump(gpsdata_now.set));
-        }
-        if (want == (want & gpsdata_now.set)) {
-            // got what we need
-            // FIXME: wait for time change too.
-            gpsdata = gpsdata_now;
-            break;
-        }
-        gpsdata = gpsdata_now;
-    }
-    for(i = 0; i <= gpsdata.satellites_used; i++) {
-        if (0 < gpsdata.skyview[i].used &&
-            1 <  gpsdata.skyview[i].ss) {
-            // printf("i: %d, P:%d, ss: %f\n", i, gpsdata.skyview[i].PRN,
-            //         gpsdata.skyview[i].ss);
-            snr_total+=gpsdata.skyview[i].ss;
-        }
-    }
-    if (0 < gpsdata.satellites_used) {
-        snr_avg = snr_total / gpsdata.satellites_used;
-    }
     for (pxlate = xlate; NULL != pxlate->oid; pxlate++) {
 
         if (4 <= debug) {
@@ -515,6 +476,7 @@ int main (int argc, char **argv)
          */
 
         get_next = false;
+        get_one();      // fill gpsdata
 
         if (4 <= debug) {
             (void)fprintf(stderr, "gpssnmp: match type %d\n", pxlate->type);
