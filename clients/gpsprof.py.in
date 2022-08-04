@@ -795,7 +795,7 @@ class polarplot(plotter):
 
     def sample(self):
         """Grab samples."""
-        if "SKY" == self.session.data["class"]:
+        if "SKY" == self.session.data["class"] and "satellites" in self.session.data:
             sats = self.session.data['satellites']
             seen = 0
             used = 0
@@ -1015,7 +1015,7 @@ class uninstrumented(plotter):
     def sample(self):
         """Grab samples."""
         if self.session.fix.time:
-            seconds = time.time() - gps.misc.isotime(self.session.data.time)
+            seconds = time.time() - gps.misc.isotime(self.session.fix.time)
             self.fixes.append(seconds)
             return True
 
