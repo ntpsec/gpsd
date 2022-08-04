@@ -311,6 +311,7 @@ static void get_one(gps_mask_t need)
 static void usage(char *prog_name) {
     const struct oid_mib_xlate *pxlate;
 
+    // don't add  --persist until is works...
     (void)printf("usage: %s [OPTIONS] [server[:port[:device]]]\n\n\
 Options include: \n\
   -?, -h, --help            = help message\n\
@@ -361,6 +362,7 @@ to get the number of saltellites seen with the MIB name\n\
 
 int main (int argc, char **argv)
 {
+    bool persist = false;
     bool do_usage = false;
     bool get_next = false;
     int status;
@@ -369,8 +371,9 @@ int main (int argc, char **argv)
     struct fixsource_t source;
     const struct oid_mib_xlate *pxlate;
     long long value;         // (long long) so we get 64 bits on 32-bit CPUs.
+    char inbuf[512];
 
-    const char *optstring = "?D:g:hn:V";
+    const char *optstring = "?D:g:hn:pV";
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
     static struct option long_options[] = {
@@ -378,6 +381,7 @@ int main (int argc, char **argv)
         {"get", required_argument, NULL, 'g'},
         {"help", no_argument, NULL, 'h'},
         {"next", required_argument, NULL, 'n'},
+        {"persist", no_argument, NULL, 'p'},
         {"version", no_argument, NULL, 'V' },
         {NULL, 0, NULL, 0},
     };
@@ -412,6 +416,9 @@ int main (int argc, char **argv)
         case 'n':
             strlcpy(noid, optarg, sizeof(noid));
             break;
+        case 'p':
+            persist = true;
+            break;
         case 'V':
             (void)fprintf(stderr, "%s: %s (revision %s)\n",
                           argv[0], VERSION, REVISION);
@@ -426,20 +433,22 @@ int main (int argc, char **argv)
     if (do_usage) {
         usage(argv[0]);    // never returns
     }
-    if ('\0' == oid[0] &&
-        '\0' == noid[0]) {
-        (void)fprintf(stderr, "%s: ERROR: Missing option -g or -n\n\n",
-                      argv[0]);
-        usage(argv[0]);
-        exit(1);
-    }
+    if (!persist) {
+        if ('\0' == oid[0] &&
+            '\0' == noid[0]) {
+            (void)fprintf(stderr, "%s: ERROR: Missing option -g or -n\n\n",
+                          argv[0]);
+            usage(argv[0]);
+            exit(1);
+        }
 
-    if ('\0' != oid[0] &&
-        '\0' != noid[0]) {
-        (void)fprintf(stderr, "%s: ERROR: Use either -g or -n, not both\n\n",
-                      argv[0]);
-        usage(argv[0]);
-        exit(1);
+        if ('\0' != oid[0] &&
+            '\0' != noid[0]) {
+            (void)fprintf(stderr, "%s: ERROR: Use either -g or -n, not both\n\n",
+                          argv[0]);
+            usage(argv[0]);
+            exit(1);
+        }
     }
 
     // Grok the server, port, and device
@@ -452,13 +461,24 @@ int main (int argc, char **argv)
     // Open the stream to gpsd
     status = gps_open(source.server, source.port, &gpsdata);
     if (0 != status) {
-        (void)fprintf(stderr, "gpssnmp: ERROR: connection failed: %d\n",
+        (void)fprintf(stderr, "gpssnmp: ERROR: connec3Ytion failed: %d\n",
                       status);
         exit(1);
     }
     // we want JSON
     (void)gps_stream(&gpsdata, WATCH_ENABLE | WATCH_JSON, NULL);
 
+    if (persist) {
+        // wait for PING
+        char *s = fgets(inbuf, sizeof(inbuf), stdin);
+        if (NULL == s) {
+            (void)fputs("gpssnmp: ERROR: PING failed.\n", stderr);
+            exit(1);
+         }
+        // send PONG
+        puts("PONG");
+        fflush(stdout);
+    }
     for (pxlate = xlate; NULL != pxlate->oid; pxlate++) {
 
         if (4 <= debug) {
