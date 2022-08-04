@@ -41,6 +41,8 @@ extend *snmpd* with the *GPSD-MIB*.
 
 *-?*, *-h*, *--help*::
   Print a summary of options and then exit.
+  Use with "-D 1" to see valid OID values.
+  Use with "-D 2" to see valid OID values with scale values and descriptions.
 *-g OID*::
   Get the specified OID.
 *-n OID*::
@@ -48,10 +50,6 @@ extend *snmpd* with the *GPSD-MIB*.
 *-V*, *--version*::
   Print the package version and exit.
 
-Supported OID values are:
-* .1.3.6.1.4.1.59054.11.2.1.3.1;; Number of sats seen.
-* .1.3.6.1.4.1.59054.11.2.1.4.1;; Number of sats in use.
-* .1.3.6.1.4.1.59054.11.2.1.5.1;; Average SNR of all used satellites. Times 10.
 
 == EXAMPLES:
 
