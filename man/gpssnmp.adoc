@@ -79,7 +79,7 @@ To get the number of saltellits seen with the MIB name
 this functionality on an already working snmpd installation, add this to your
 */etc/snmp/snmpd.conf* file, and then restart *snmpd*:
 
-````
+----
 # be sure SNMPv2 community "public" can access all MIBs:
 rocommunity public  localhost
 
@@ -89,10 +89,10 @@ pass .1.3.6.1.4.1.59054  /usr/local/bin/gpssnmp
 
 You can then query the number of satlettites in use this way:
 
-````
+----
 $ snmpget -c public -v 2c localhost skynSat.1
 GPSD-MIB::skynSat.1 = INTEGER: 16
-````
+----
 
 Dump the entire "sky" OID this way:
 
@@ -107,6 +107,9 @@ Dump the entire GPSD-MIB this way:
 
 ----
 $ snmpwalk -c public -v 2c localhost gpsd
+GPSD-MIB::tpvLeapSeconds = INTEGER: 18
+GPSD-MIB::tpvNumber = INTEGER: 1
+GPSD-MIB::tpvIndex.1 = INTEGER: 1
 [...]
 ----
 
@@ -117,7 +120,7 @@ $ snmpwalk -c public -v 2c localhost gpsd
 
 == SEE ALSO
 
-*cgps*(1), *gps*(1), *gpspipe*(1), *snmpget*(1), xgps*(1), snmpd.conf(5)  
+*cgps*(1), *gps*(1), *gpspipe*(1), *snmpget*(1), *xgps*(1), *snmpd.conf*(5)  
 
 *gpsd*(8)
 

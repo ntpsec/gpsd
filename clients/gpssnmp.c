@@ -1,7 +1,4 @@
-/* gpssnmp - poll local gpsd for SNMP variables
- *
- * To build this:
- *     gcc -o gpssnmp gpssnmp.c -lgps
+/* gpssnmp - poll gpsd varaiables for SNMP.
  *
  * Copyright 2016 David Taylor <gpsd@david.taylor.name>
  *
