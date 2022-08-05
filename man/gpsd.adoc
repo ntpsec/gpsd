@@ -15,7 +15,7 @@ include::../www/inc-menu.adoc[]
 
 gpsd - interface daemon for GPS receivers
 
-== SYNOPSSIS
+== SYNOPSIS
 
 *gpsd* [OPTIONS]
 
