@@ -1401,14 +1401,6 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
     } else if (0 < nmea_gnssid) {
         // this switch handles case where nmea_gnssid is known
         switch (nmea_gnssid) {
-        case 0:
-            // can't happen, see if() just above.
-            FALLTHROUGH
-        default:
-            // unknown
-            // x = IMES                Not defined by NMEA 4.10
-            nmea2_prn = 0;
-            break;
         case 1:
             if (33 > nmea_satnum) {
                 // 1 = GPS       1-32
@@ -1520,6 +1512,11 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
             *ubx_gnssid = 7;
             *ubx_svid = nmea_satnum;
             nmea2_prn = nmea_satnum + 500;  // This is wrong...
+            break;
+        default:
+            // unknown
+            // x = IMES                Not defined by NMEA 4.10
+            nmea2_prn = 0;
             break;
         }
 
