@@ -469,15 +469,59 @@ int main (int argc, char **argv)
     (void)gps_stream(&gpsdata, WATCH_ENABLE | WATCH_JSON, NULL);
 
     if (persist) {
-        // wait for PING
-        char *s = fgets(inbuf, sizeof(inbuf), stdin);
-        if (NULL == s) {
-            (void)fputs("gpssnmp: ERROR: PING failed.\n", stderr);
-            exit(1);
-         }
-        // send PONG
-        puts("PONG");
-        fflush(stdout);
+        while (1) {
+            // get a command from stdin
+            char *s = fgets(inbuf, sizeof(inbuf), stdin);
+
+            if (NULL == s) {
+                // read error
+                exit(0);
+            }
+            if (0 == strcmp("\n", s)) {
+                // done
+                puts("");
+                exit(0);
+            }
+            if (0 == strcmp("PING\n", s)) {
+                // send PONG
+                puts("PONG");
+            } else if (0 == strcmp("get\n", s)) {
+                s = fgets(inbuf, sizeof(inbuf), stdin);
+                if (NULL == s) {
+                    // read error
+                    exit(0);
+                }
+                fputs(s, stdout);
+                puts("NONE");
+            } else if (0 == strcmp("getnext\n", s)) {
+                s = fgets(inbuf, sizeof(inbuf), stdin);
+                if (NULL == s) {
+                    // read error
+                    exit(0);
+                }
+                // if requested OID is \n, getnext gpsd
+                fputs(s, stdout);
+                puts("NONE");
+            } else if (0 == strcmp("set\n", s)) {
+                // read only
+                // get OID, ignore it
+                s = fgets(inbuf, sizeof(inbuf), stdin);
+                if (NULL == s) {
+                    // read error
+                    exit(0);
+                }
+                // get value, ignore it
+                s = fgets(inbuf, sizeof(inbuf), stdin);
+                if (NULL == s) {
+                    // read error
+                    exit(0);
+                }
+                puts("not-writable");
+            } else {
+                puts("NONE");
+            }
+            fflush(stdout);
+        }
     }
     for (pxlate = xlate; NULL != pxlate->oid; pxlate++) {
 
