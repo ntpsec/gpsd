@@ -304,6 +304,104 @@ static void get_one(gps_mask_t need)
     }
 }
 
+/* oid_lookup()
+ *
+ * get xlate table entry for oid
+ * OR:
+ * get next xlate table entry after noid
+ *
+ * Return: NULL on not found
+ *         pointer to xlate[x] if found
+ */
+static const struct oid_mib_xlate *oid_lookup(const char *oid,
+                                              const char *noid)
+{
+    bool get_next = false;
+    const struct oid_mib_xlate *pxlate;
+    long long value;         // (long long) so we get 64 bits on 32-bit CPUs.
+
+    for (pxlate = xlate; NULL != pxlate->oid; pxlate++) {
+
+        if (4 <= debug) {
+            (void)fprintf(stderr, "gpssnmp: Trying %s, get_next %d\n",
+                          pxlate->oid, get_next);
+        }
+        if ('\0' != oid[0]) {
+            if (0 == compare_oid(pxlate->oid, oid) ||
+                (NULL != pxlate->short_mib &&
+                 0 == strncmp(pxlate->short_mib, oid,
+                              sizeof(pxlate->short_mib)))) {
+                // get match
+            } else {
+                continue;
+            }
+        } else if (get_next) {
+            // this is the next one
+        } else if ('\0' != noid[0]) {
+             long cmp = compare_oid(pxlate->oid, noid);
+
+             if (0 >= cmp) {
+                // no match, yet.
+                continue;
+             }
+             // got next match, numeric OID only
+        }
+        /* got match
+         * The output here conforms to the requierments of the
+         * "pass [-p priority] MIBOID PROG" option to snmpd.conf
+         */
+
+        get_next = false;
+
+        if (4 <= debug) {
+            (void)fprintf(stderr, "gpssnmp: match type %d need %s\n",
+                          pxlate->type, gps_maskdump(pxlate->need));
+        }
+        get_one(pxlate->need);      // fill gpsdata with what we need
+
+        switch (pxlate->type) {
+        case t_dummy:
+            // skip, go to next one
+            get_next = true;
+            continue;
+        case t_double:
+            // SNMP is too stupid to understand IEEE754, use scaled integers
+            // SNMP chokes on INTEGER > 32 bits.
+            if (isfinite(*(double *)pxlate->pval)) {
+                value = (long)(*(double *)pxlate->pval * pxlate->scale);
+                if (pxlate->min <= value) {
+                    printf("%s\nINTEGER\n%lld\n", pxlate->oid, value);
+                }
+            } else {
+                // skip, go to next one
+                get_next = true;
+            }
+            break;
+        case t_sinteger:
+            // not scaled
+            value = *(int *)pxlate->pval;
+            if (pxlate->min <= value) {
+                printf("%s\nINTEGER\n%lld\n", pxlate->oid, value);
+            }
+            break;
+        case t_string:
+            // 255 seems to be max STRING length.
+            printf("%s\nSTRING\n%.255s\n", pxlate->oid,
+                   (char *)pxlate->pval);
+            break;
+        default:
+            (void)fprintf(stderr, "gpssnmp: ERROR: internal error, OID %s\n\n",
+                          oid);
+            break;
+        }
+        if (!get_next) {
+            break;
+        }
+    }
+    return pxlate;
+}
+
+
 /* print usage info, then exit.
  *
  * Never returns
@@ -364,13 +462,11 @@ int main (int argc, char **argv)
 {
     bool persist = false;
     bool do_usage = false;
-    bool get_next = false;
     int status;
     char oid[40] = "";       // requested get OID
     char noid[40] = "";      // requested next OID
     struct fixsource_t source;
     const struct oid_mib_xlate *pxlate;
-    long long value;         // (long long) so we get 64 bits on 32-bit CPUs.
     char inbuf[512];
 
     const char *optstring = "?D:g:hn:pV";
@@ -523,83 +619,9 @@ int main (int argc, char **argv)
             fflush(stdout);
         }
     }
-    for (pxlate = xlate; NULL != pxlate->oid; pxlate++) {
 
-        if (4 <= debug) {
-            (void)fprintf(stderr, "gpssnmp: Trying %s, get_next %d\n",
-                          pxlate->oid, get_next);
-        }
-        if ('\0' != oid[0]) {
-            if (0 == compare_oid(pxlate->oid, oid) ||
-                (NULL != pxlate->short_mib &&
-                 0 == strncmp(pxlate->short_mib, oid, sizeof(oid)))) {
-                // get match
-            } else {
-                continue;
-            }
-        } else if (get_next) {
-            // this is the next one
-        } else if ('\0' != noid[0]) {
-             long cmp = compare_oid(pxlate->oid, noid);
-
-             if (0 >= cmp) {
-                // no match, yet.
-                continue;
-             }
-             // got next match, numeric OID only
-        }
-        /* got match
-         * The output here conforms to the requierments of the
-         * "pass [-p priority] MIBOID PROG" option to snmpd.conf
-         */
-
-        get_next = false;
-
-        if (4 <= debug) {
-            (void)fprintf(stderr, "gpssnmp: match type %d need %s\n",
-                          pxlate->type, gps_maskdump(pxlate->need));
-        }
-        get_one(pxlate->need);      // fill gpsdata with what we need
-
-        switch (pxlate->type) {
-        case t_dummy:
-            // skip, go to next one
-            get_next = true;
-            continue;
-        case t_double:
-            // SNMP is too stupid to understand IEEE754, use scaled integers
-            // SNMP chokes on INTEGER > 32 bits.
-            if (isfinite(*(double *)pxlate->pval)) {
-                value = (long)(*(double *)pxlate->pval * pxlate->scale);
-                if (pxlate->min <= value) {
-                    printf("%s\nINTEGER\n%lld\n", pxlate->oid, value);
-                }
-            } else {
-                // skip, go to next one
-                get_next = true;
-            }
-            break;
-        case t_sinteger:
-            // not scaled
-            value = *(int *)pxlate->pval;
-            if (pxlate->min <= value) {
-                printf("%s\nINTEGER\n%lld\n", pxlate->oid, value);
-            }
-            break;
-        case t_string:
-            // 255 seems to be max STRING length.
-            printf("%s\nSTRING\n%.255s\n", pxlate->oid,
-                   (char *)pxlate->pval);
-            break;
-        default:
-            (void)fprintf(stderr, "%s: ERROR: internal error, OID %s\n\n",
-                          argv[0], oid);
-            break;
-        }
-        if (!get_next) {
-            break;
-        }
-    }
+    // else, !persist
+    pxlate = oid_lookup(oid, noid);
     if (NULL == pxlate->oid) {
         // fell of the end of the list...
         (void)fprintf(stderr, "%s: ERROR: Unknown OID %s\n\n",
