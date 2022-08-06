@@ -329,8 +329,7 @@ static const struct oid_mib_xlate *oid_lookup(const char *oid,
         if ('\0' != oid[0]) {
             if (0 == compare_oid(pxlate->oid, oid) ||
                 (NULL != pxlate->short_mib &&
-                 0 == strncmp(pxlate->short_mib, oid,
-                              sizeof(pxlate->short_mib)))) {
+                 0 == strcmp(pxlate->short_mib, oid))) {
                 // get match
             } else {
                 continue;
