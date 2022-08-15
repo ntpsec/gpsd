@@ -26,6 +26,7 @@ int debug = 0;                       // debug level
 struct gps_data_t gpsdata;
 int one = 1;                         // the one!
 double snr_avg = 0;
+FILE *logfd;
 
 typedef enum {
     t_double,
@@ -239,7 +240,7 @@ static long compare_oid(const char *oid1, const char *oid2)
         }
     }
     // debug:
-    // (void)fprintf(stderr, "%s (%d) %s (%d) %ld\n\n",
+    // (void)fprintf(logfd, "%s (%d) %s (%d) %ld\n\n",
     //               oid1, in1, oid2, in2, ret);
     return ret;
 }
@@ -277,13 +278,13 @@ static void get_one(gps_mask_t need)
         if (10 < llabs(ts_now.tv_sec - ts_start.tv_sec)) {
             // FIXME:  Make this configurable.
             // timeout
-            (void)fputs("gpssnmp: ERROR: timeout", stderr);
+            (void)fputs("gpssnmp: ERROR: timeout", logfd);
             exit(1);
         }
 
         status = gps_read(&gpsdata, NULL, 0);
         if (-1 == status) {
-            (void)fprintf(stderr, "gpssnmp: ERROR: read failed %d\n", status);
+            (void)fprintf(logfd, "gpssnmp: ERROR: read failed %d\n", status);
             exit(1);
         }
         if (need == (need & gpsdata.set)) {
@@ -323,7 +324,7 @@ static const struct oid_mib_xlate *oid_lookup(const char *oid,
     for (pxlate = xlate; NULL != pxlate->oid; pxlate++) {
 
         if (4 <= debug) {
-            (void)fprintf(stderr, "gpssnmp: Trying %s, get_next %d\n",
+            (void)fprintf(logfd, "gpssnmp: Trying %s, get_next %d\n",
                           pxlate->oid, get_next);
         }
         if ('\0' != oid[0]) {
@@ -353,7 +354,7 @@ static const struct oid_mib_xlate *oid_lookup(const char *oid,
         get_next = false;
 
         if (4 <= debug) {
-            (void)fprintf(stderr, "gpssnmp: match type %d need %s\n",
+            (void)fprintf(logfd, "gpssnmp: match type %d need %s\n",
                           pxlate->type, gps_maskdump(pxlate->need));
         }
         get_one(pxlate->need);      // fill gpsdata with what we need
@@ -370,6 +371,8 @@ static const struct oid_mib_xlate *oid_lookup(const char *oid,
                 value = (long)(*(double *)pxlate->pval * pxlate->scale);
                 if (pxlate->min <= value) {
                     printf("%s\nINTEGER\n%lld\n", pxlate->oid, value);
+                    (void)fprintf(logfd, "%s\nINTEGER\n%lld\n",
+                                  pxlate->oid, value);
                 }
             } else {
                 // skip, go to next one
@@ -381,15 +384,19 @@ static const struct oid_mib_xlate *oid_lookup(const char *oid,
             value = *(int *)pxlate->pval;
             if (pxlate->min <= value) {
                 printf("%s\nINTEGER\n%lld\n", pxlate->oid, value);
+                (void)fprintf(logfd, "%s\nINTEGER\n%lld\n", pxlate->oid,
+                              value);
             }
             break;
         case t_string:
             // 255 seems to be max STRING length.
             printf("%s\nSTRING\n%.255s\n", pxlate->oid,
                    (char *)pxlate->pval);
+            (void)fprintf(logfd, "%s\nSTRING\n%.255s\n", pxlate->oid,
+                          (char *)pxlate->pval);
             break;
         default:
-            (void)fprintf(stderr, "gpssnmp: ERROR: internal error, OID %s\n\n",
+            (void)fprintf(logfd, "gpssnmp: ERROR: internal error, OID %s\n\n",
                           oid);
             break;
         }
@@ -457,6 +464,54 @@ to get the number of saltellites seen with the MIB name\n\
     exit(0);
 }
 
+/* get_line()
+ *
+ * get one line, remove the trailing \n, check for errors.
+ *
+ * Return: void
+ */
+static void get_line(char *inbuf, size_t inbuf_len)
+{
+    size_t i;
+    // get a command from stdin
+    char *s;
+
+    inbuf_len--;
+
+    s = fgets(inbuf, inbuf_len, stdin);
+
+    if (NULL == s) {
+        // read error
+        fprintf(logfd, "got NULL\n");
+        exit(0);
+    }
+    // remove the trailing \n, if any
+    for (i = 0; ; i++) {
+        if (inbuf_len <= i) {
+            fprintf(logfd, "string overrun\n");
+            exit(0);
+        }
+        if ('\0' == s[i]) {
+            fprintf(logfd, "missing \\n\n");
+            exit(0);
+        }
+        if ('\n' == s[i]) {
+            // got the \n
+            s[i] = '\0';
+            break;
+        }
+    }
+
+    fprintf(logfd, "got s: %s\n", s);
+    fflush(logfd);
+    if ('\0' == s[0]) {
+        // done
+        puts("");
+        exit(0);
+    }
+}
+
+
 int main (int argc, char **argv)
 {
     bool persist = false;
@@ -482,6 +537,8 @@ int main (int argc, char **argv)
     };
 #endif  // HAVE_GETOPT_LONG
 
+    logfd = stderr;
+
     /* Process the options.  Print help if requested. */
     while (1) {
         int ch;
@@ -503,7 +560,6 @@ int main (int argc, char **argv)
             break;
         case 'D':
             debug = atoi(optarg);
-            gps_enable_debug(debug, stderr);
             break;
         case 'g':
             strlcpy(oid, optarg, sizeof(oid));
@@ -515,23 +571,29 @@ int main (int argc, char **argv)
             persist = true;
             break;
         case 'V':
-            (void)fprintf(stderr, "%s: %s (revision %s)\n",
+            (void)fprintf(logfd, "%s: %s (revision %s)\n",
                           argv[0], VERSION, REVISION);
             exit(EXIT_SUCCESS);
         default:
-            (void)fprintf(stderr, "ERROR: Unknown option %c\n\n", ch);
+            (void)fprintf(logfd, "ERROR: Unknown option %c\n\n", ch);
             do_usage = true;
             break;
         }
     }
 
     if (do_usage) {
+        fprintf(logfd, "usage\n");
         usage(argv[0]);    // never returns
     }
-    if (!persist) {
+
+    if (persist) {
+        // debug, log to file
+        logfd = fopen("/tmp/gpssnmp.log", "a");
+        fflush(logfd);
+    } else {
         if ('\0' == oid[0] &&
             '\0' == noid[0]) {
-            (void)fprintf(stderr, "%s: ERROR: Missing option -g or -n\n\n",
+            (void)fprintf(logfd, "%s: ERROR: Missing option -g or -n\n\n",
                           argv[0]);
             usage(argv[0]);
             exit(1);
@@ -539,11 +601,15 @@ int main (int argc, char **argv)
 
         if ('\0' != oid[0] &&
             '\0' != noid[0]) {
-            (void)fprintf(stderr, "%s: ERROR: Use either -g or -n, not both\n\n",
+            (void)fprintf(logfd, "%s: ERROR: Use either -g or -n, not both\n\n",
                           argv[0]);
             usage(argv[0]);
             exit(1);
         }
+    }
+
+    if (debug) {
+        gps_enable_debug(debug, logfd);
     }
 
     // Grok the server, port, and device
@@ -556,61 +622,48 @@ int main (int argc, char **argv)
     // Open the stream to gpsd
     status = gps_open(source.server, source.port, &gpsdata);
     if (0 != status) {
-        (void)fprintf(stderr, "gpssnmp: ERROR: connec3Ytion failed: %d\n",
+        (void)fprintf(logfd, "gpssnmp: ERROR: connection failed: %d\n",
                       status);
         exit(1);
     }
     // we want JSON
     (void)gps_stream(&gpsdata, WATCH_ENABLE | WATCH_JSON, NULL);
 
+
     if (persist) {
         while (1) {
-            // get a command from stdin
-            char *s = fgets(inbuf, sizeof(inbuf), stdin);
+            get_line(inbuf, sizeof(inbuf));
 
-            if (NULL == s) {
-                // read error
-                exit(0);
-            }
-            if (0 == strcmp("\n", s)) {
-                // done
-                puts("");
-                exit(0);
-            }
-            if (0 == strcmp("PING\n", s)) {
+            if (0 == strcmp("PING", inbuf)) {
                 // send PONG
                 puts("PONG");
-            } else if (0 == strcmp("get\n", s)) {
-                s = fgets(inbuf, sizeof(inbuf), stdin);
-                if (NULL == s) {
-                    // read error
-                    exit(0);
+            } else if (0 == strcmp("get", inbuf)) {
+                get_line(inbuf, sizeof(inbuf));
+
+                pxlate = oid_lookup(inbuf, NULL);
+                if (NULL == pxlate->oid) {
+                    // if requested OID is \n, getnext gpsd
+                    fputs(inbuf, stdout);
+                    puts("NONE");
                 }
-                fputs(s, stdout);
-                puts("NONE");
-            } else if (0 == strcmp("getnext\n", s)) {
-                s = fgets(inbuf, sizeof(inbuf), stdin);
-                if (NULL == s) {
-                    // read error
-                    exit(0);
+            } else if (0 == strcmp("getnext", inbuf)) {
+                get_line(inbuf, sizeof(inbuf));
+
+                fprintf(logfd, "getnext: %s\n", inbuf);
+                fflush(logfd);
+                pxlate = oid_lookup(inbuf, NULL);
+                if (NULL == pxlate->oid) {
+                    // if requested OID is \n, getnext gpsd
+                    fputs(inbuf, stdout);
+                    puts("NONE");
                 }
-                // if requested OID is \n, getnext gpsd
-                fputs(s, stdout);
-                puts("NONE");
-            } else if (0 == strcmp("set\n", s)) {
+            } else if (0 == strcmp("set", inbuf)) {
                 // read only
                 // get OID, ignore it
-                s = fgets(inbuf, sizeof(inbuf), stdin);
-                if (NULL == s) {
-                    // read error
-                    exit(0);
-                }
+                get_line(inbuf, sizeof(inbuf));
+
                 // get value, ignore it
-                s = fgets(inbuf, sizeof(inbuf), stdin);
-                if (NULL == s) {
-                    // read error
-                    exit(0);
-                }
+                get_line(inbuf, sizeof(inbuf));
                 puts("not-writable");
             } else {
                 puts("NONE");
@@ -623,7 +676,7 @@ int main (int argc, char **argv)
     pxlate = oid_lookup(oid, noid);
     if (NULL == pxlate->oid) {
         // fell of the end of the list...
-        (void)fprintf(stderr, "%s: ERROR: Unknown OID %s\n\n",
+        (void)fprintf(logfd, "%s: ERROR: Unknown OID %s\n\n",
                       argv[0], oid);
         usage(argv[0]);
         exit(1);
