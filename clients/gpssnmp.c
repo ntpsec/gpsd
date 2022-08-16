@@ -9,6 +9,7 @@
 
 #include "../include/gpsd_config.h"  // must be before all includes
 
+#include <errno.h>                   // for errno
 #ifdef HAVE_GETOPT_LONG
    #include <getopt.h>
 #endif
@@ -22,11 +23,12 @@
 #include "../include/gpsdclient.h"   // for gpsd_source_spec()
 #include "../include/os_compat.h"    // for strlcpy() if needed
 
-int debug = 0;                       // debug level
-struct gps_data_t gpsdata;
-int one = 1;                         // the one!
-double snr_avg = 0;
-FILE *logfd;
+#define PROGNAME "gpssnmp"
+static int debug = 0;                       // debug level
+static struct gps_data_t gpsdata;
+static int one = 1;                         // the one!
+static double snr_avg = 0;
+static FILE *logfd;
 
 typedef enum {
     t_double,
@@ -57,7 +59,7 @@ struct oid_mib_xlate {
  * Sorted "Numerically", not "alphabetically".
  * For now we only handle the first device, so table OIDs, end in .1
  */
-const struct oid_mib_xlate xlate[] = {
+static const struct oid_mib_xlate xlate[] = {
     // next three are "pirate" OIDs, deprecated
     {".1.3.6.1.2.1.25.1.31", NULL, t_sinteger, &gpsdata.satellites_visible,
      1, -9, SATELLITE_SET, ""},
@@ -240,9 +242,93 @@ static long compare_oid(const char *oid1, const char *oid2)
         }
     }
     // debug:
-    // (void)fprintf(logfd, "%s (%d) %s (%d) %ld\n\n",
+    // (void)fprintf(logfd, PROGNAME ": %s (%d) %s (%d) %ld\n\n",
     //               oid1, in1, oid2, in2, ret);
     return ret;
+}
+
+/* get_line()
+ *
+ * get one line from stdin, remove the trailing \n, check for errors.
+ * used for pass_persist mode
+ *
+ * Return: void
+ */
+static void get_line(char *inbuf, size_t inbuf_len)
+{
+    size_t i;
+    // get a command from stdin
+    char *s;
+
+    inbuf_len--;
+
+    // FIXME: need some sort of timeout?
+    s = fgets(inbuf, inbuf_len, stdin);
+
+    if (NULL == s) {
+        // read error
+        fprintf(logfd, PROGNAME ": got NULL\n");
+        exit(0);
+    }
+    // remove the trailing \n, if any
+    for (i = 0; ; i++) {
+        if (inbuf_len <= i) {
+            fprintf(logfd, PROGNAME ": string overrun\n");
+            exit(0);
+        }
+        if ('\0' == s[i]) {
+            fprintf(logfd, PROGNAME ": missing \\n\n");
+            exit(0);
+        }
+        if ('\n' == s[i]) {
+            // got the \n
+            s[i] = '\0';
+            break;
+        }
+    }
+
+    fprintf(logfd, PROGNAME ": got s: %s\n", s);
+    if ('\0' == s[0]) {
+        // done
+        puts("");
+        exit(0);
+    }
+    if (0 != fflush(NULL)) {
+        // flush error
+        fprintf(logfd, PROGNAME ": fflush() error %d\n", errno);
+        exit(1);
+    }
+}
+
+/* put_line()
+ *
+ * send one line to stdout, add the trailing \n.
+ * used for pass_persist mode
+ *
+ * Return: void
+ */
+static void put_line(const char *outbuf)
+{
+    // send it
+    if (0 > puts(outbuf)) {
+        // write error
+        (void)fprintf(logfd, PROGNAME ": fputs() error %d\n", errno);
+        exit(1);
+    }
+    if (1 <= debug) {
+        // log it
+        if (0 > fprintf(logfd, PROGNAME ": sent: %s\n", outbuf)) {
+            // log failure
+            (void)fprintf(stderr, "fprintf() error %d\n", errno);
+            exit(1);
+        }
+    }
+    // flush it
+    if (0 != fflush(NULL)) {
+        // flush error
+        (void)fprintf(logfd, PROGNAME ": fflush() error %d\n", errno);
+        exit(1);
+    }
 }
 
 /* get_one() -- get gpsdata, until "need" satisfied
@@ -278,13 +364,14 @@ static void get_one(gps_mask_t need)
         if (10 < llabs(ts_now.tv_sec - ts_start.tv_sec)) {
             // FIXME:  Make this configurable.
             // timeout
-            (void)fputs("gpssnmp: ERROR: timeout", logfd);
+            (void)fputs(PROGNAME ": ERROR: timeout", logfd);
             exit(1);
         }
 
         status = gps_read(&gpsdata, NULL, 0);
         if (-1 == status) {
-            (void)fprintf(logfd, "gpssnmp: ERROR: read failed %d\n", status);
+            (void)fprintf(logfd, PROGNAME "gpssnmp: ERROR: read failed %d\n",
+                          status);
             exit(1);
         }
         if (need == (need & gpsdata.set)) {
@@ -310,51 +397,72 @@ static void get_one(gps_mask_t need)
  * get xlate table entry for oid
  * OR:
  * get next xlate table entry after noid
+ * Then output OID, type and value to stdout.
  *
  * Return: NULL on not found
  *         pointer to xlate[x] if found
  */
 static const struct oid_mib_xlate *oid_lookup(const char *oid,
-                                              const char *noid)
+                                              bool next)
 {
-    bool get_next = false;
     const struct oid_mib_xlate *pxlate;
     long long value;         // (long long) so we get 64 bits on 32-bit CPUs.
+    char outbuf[512];
 
     for (pxlate = xlate; NULL != pxlate->oid; pxlate++) {
+        int compare;
 
-        if (4 <= debug) {
-            (void)fprintf(logfd, "gpssnmp: Trying %s, get_next %d\n",
-                          pxlate->oid, get_next);
-        }
-        if ('\0' != oid[0]) {
-            if (0 == compare_oid(pxlate->oid, oid) ||
-                (NULL != pxlate->short_mib &&
-                 0 == strcmp(pxlate->short_mib, oid))) {
-                // get match
-            } else {
+        if ('.' == oid[0]) {
+            // numeric OID
+            compare = compare_oid(pxlate->oid, oid);
+        } else {
+            // mib
+            if (NULL == pxlate->short_mib) {
+                // nothing to match against
                 continue;
             }
-        } else if (get_next) {
-            // this is the next one
-        } else if ('\0' != noid[0]) {
-             long cmp = compare_oid(pxlate->oid, noid);
-
-             if (0 >= cmp) {
-                // no match, yet.
+            if (0 != strcmp(pxlate->short_mib, oid)) {
+                // no match
+                // no way to do getnext until we can convert MIB to OID.
                 continue;
-             }
-             // got next match, numeric OID only
+            }
+            // get match
         }
+
+        if (4 <= debug) {
+            (void)fprintf(logfd,
+                          PROGNAME ": Trying %s, next %d, compare %d\n",
+                          pxlate->oid, next, compare);
+            fflush(NULL);
+        }
+        if (0 > compare) {
+            // not yet, keep going
+            continue;
+        }
+        // else
+        if (0 == compare) {
+            // exact match
+            if (next) {
+                // need next
+                continue;
+            }
+            // got get match
+        } else {
+            // (0 < compare), gone past
+            if (!next) {
+                // gone past exact match
+                return NULL;
+            }
+            // got next
+        }
+
         /* got match
          * The output here conforms to the requierments of the
          * "pass [-p priority] MIBOID PROG" option to snmpd.conf
          */
 
-        get_next = false;
-
         if (4 <= debug) {
-            (void)fprintf(logfd, "gpssnmp: match type %d need %s\n",
+            (void)fprintf(logfd, PROGNAME ": match type %d need %s\n",
                           pxlate->type, gps_maskdump(pxlate->need));
         }
         get_one(pxlate->need);      // fill gpsdata with what we need
@@ -362,47 +470,48 @@ static const struct oid_mib_xlate *oid_lookup(const char *oid,
         switch (pxlate->type) {
         case t_dummy:
             // skip, go to next one
-            get_next = true;
             continue;
         case t_double:
             // SNMP is too stupid to understand IEEE754, use scaled integers
             // SNMP chokes on INTEGER > 32 bits.
             if (isfinite(*(double *)pxlate->pval)) {
-                value = (long)(*(double *)pxlate->pval * pxlate->scale);
+                value = (long long)(*(double *)pxlate->pval * pxlate->scale);
                 if (pxlate->min <= value) {
-                    printf("%s\nINTEGER\n%lld\n", pxlate->oid, value);
-                    (void)fprintf(logfd, "%s\nINTEGER\n%lld\n",
-                                  pxlate->oid, value);
+                    put_line(pxlate->oid);
+                    put_line("INTEGER");
+                    snprintf(outbuf, sizeof(outbuf), "%lld", value);
+                    put_line(outbuf);
                 }
             } else {
                 // skip, go to next one
-                get_next = true;
+                continue;
             }
             break;
         case t_sinteger:
             // not scaled
             value = *(int *)pxlate->pval;
             if (pxlate->min <= value) {
-                printf("%s\nINTEGER\n%lld\n", pxlate->oid, value);
-                (void)fprintf(logfd, "%s\nINTEGER\n%lld\n", pxlate->oid,
-                              value);
+                put_line(pxlate->oid);
+                put_line("INTEGER");
+                snprintf(outbuf, sizeof(outbuf), "%lld", value);
+                put_line(outbuf);
             }
             break;
         case t_string:
             // 255 seems to be max STRING length.
-            printf("%s\nSTRING\n%.255s\n", pxlate->oid,
-                   (char *)pxlate->pval);
-            (void)fprintf(logfd, "%s\nSTRING\n%.255s\n", pxlate->oid,
-                          (char *)pxlate->pval);
+            put_line(pxlate->oid);
+            put_line("STRING");
+            snprintf(outbuf, sizeof(outbuf), "%.255s", (char *)pxlate->pval);
+            put_line(outbuf);
             break;
         default:
-            (void)fprintf(logfd, "gpssnmp: ERROR: internal error, OID %s\n\n",
+            (void)fprintf(logfd,
+                          PROGNAME ": ERROR: internal error, OID %s\n\n",
                           oid);
-            break;
+            // continue or abort?
+            continue;
         }
-        if (!get_next) {
-            break;
-        }
+        break;
     }
     return pxlate;
 }
@@ -464,64 +573,17 @@ to get the number of saltellites seen with the MIB name\n\
     exit(0);
 }
 
-/* get_line()
- *
- * get one line, remove the trailing \n, check for errors.
- *
- * Return: void
- */
-static void get_line(char *inbuf, size_t inbuf_len)
-{
-    size_t i;
-    // get a command from stdin
-    char *s;
-
-    inbuf_len--;
-
-    s = fgets(inbuf, inbuf_len, stdin);
-
-    if (NULL == s) {
-        // read error
-        fprintf(logfd, "got NULL\n");
-        exit(0);
-    }
-    // remove the trailing \n, if any
-    for (i = 0; ; i++) {
-        if (inbuf_len <= i) {
-            fprintf(logfd, "string overrun\n");
-            exit(0);
-        }
-        if ('\0' == s[i]) {
-            fprintf(logfd, "missing \\n\n");
-            exit(0);
-        }
-        if ('\n' == s[i]) {
-            // got the \n
-            s[i] = '\0';
-            break;
-        }
-    }
-
-    fprintf(logfd, "got s: %s\n", s);
-    fflush(logfd);
-    if ('\0' == s[0]) {
-        // done
-        puts("");
-        exit(0);
-    }
-}
-
-
 int main (int argc, char **argv)
 {
     bool persist = false;
     bool do_usage = false;
     int status;
-    char oid[40] = "";       // requested get OID
-    char noid[40] = "";      // requested next OID
+    char oid[40] = "";       // requested OID
     struct fixsource_t source;
     const struct oid_mib_xlate *pxlate;
     char inbuf[512];
+    bool get = false;        // doing a get?
+    bool next = false;       // doing a next?
 
     const char *optstring = "?D:g:hn:pV";
 #ifdef HAVE_GETOPT_LONG
@@ -563,47 +625,47 @@ int main (int argc, char **argv)
             break;
         case 'g':
             strlcpy(oid, optarg, sizeof(oid));
+            get = true;
             break;
         case 'n':
-            strlcpy(noid, optarg, sizeof(noid));
+            strlcpy(oid, optarg, sizeof(oid));
+            next = true;
             break;
         case 'p':
             persist = true;
             break;
         case 'V':
-            (void)fprintf(logfd, "%s: %s (revision %s)\n",
-                          argv[0], VERSION, REVISION);
+            (void)fprintf(logfd, PROGNAME ": %s (revision %s)\n",
+                          VERSION, REVISION);
             exit(EXIT_SUCCESS);
         default:
-            (void)fprintf(logfd, "ERROR: Unknown option %c\n\n", ch);
+            (void)fprintf(logfd,
+                          PROGNAME ": ERROR: Unknown option %c\n\n", ch);
             do_usage = true;
             break;
         }
     }
 
     if (do_usage) {
-        fprintf(logfd, "usage\n");
+        fprintf(logfd, PROGNAME ": usage\n");
         usage(argv[0]);    // never returns
     }
 
     if (persist) {
         // debug, log to file
         logfd = fopen("/tmp/gpssnmp.log", "a");
-        fflush(logfd);
     } else {
-        if ('\0' == oid[0] &&
-            '\0' == noid[0]) {
-            (void)fprintf(logfd, "%s: ERROR: Missing option -g or -n\n\n",
-                          argv[0]);
-            usage(argv[0]);
+        if (!get && !next) {
+            (void)fprintf(logfd,
+                          PROGNAME ": ERROR: Missing option -g or -n\n\n");
+            usage(PROGNAME);
             exit(1);
         }
 
-        if ('\0' != oid[0] &&
-            '\0' != noid[0]) {
-            (void)fprintf(logfd, "%s: ERROR: Use either -g or -n, not both\n\n",
-                          argv[0]);
-            usage(argv[0]);
+        if (get && next) {
+            (void)fprintf(logfd,
+                PROGNAME ": ERROR: Use either -g or -n, not both\n\n");
+            usage(PROGNAME);
             exit(1);
         }
     }
@@ -622,13 +684,12 @@ int main (int argc, char **argv)
     // Open the stream to gpsd
     status = gps_open(source.server, source.port, &gpsdata);
     if (0 != status) {
-        (void)fprintf(logfd, "gpssnmp: ERROR: connection failed: %d\n",
+        (void)fprintf(logfd, PROGNAME ": ERROR: connection failed: %d\n",
                       status);
         exit(1);
     }
     // we want JSON
     (void)gps_stream(&gpsdata, WATCH_ENABLE | WATCH_JSON, NULL);
-
 
     if (persist) {
         while (1) {
@@ -636,26 +697,24 @@ int main (int argc, char **argv)
 
             if (0 == strcmp("PING", inbuf)) {
                 // send PONG
-                puts("PONG");
+                put_line("PONG");
             } else if (0 == strcmp("get", inbuf)) {
                 get_line(inbuf, sizeof(inbuf));
 
-                pxlate = oid_lookup(inbuf, NULL);
-                if (NULL == pxlate->oid) {
+                pxlate = oid_lookup(inbuf, false);
+                if (NULL == pxlate ||
+                    NULL == pxlate->oid) {
                     // if requested OID is \n, getnext gpsd
-                    fputs(inbuf, stdout);
-                    puts("NONE");
+                    put_line("NONE");
                 }
             } else if (0 == strcmp("getnext", inbuf)) {
                 get_line(inbuf, sizeof(inbuf));
 
-                fprintf(logfd, "getnext: %s\n", inbuf);
-                fflush(logfd);
-                pxlate = oid_lookup(inbuf, NULL);
-                if (NULL == pxlate->oid) {
+                pxlate = oid_lookup(inbuf, true);
+                if (NULL == pxlate ||
+                    NULL == pxlate->oid) {
                     // if requested OID is \n, getnext gpsd
-                    fputs(inbuf, stdout);
-                    puts("NONE");
+                    put_line("NONE");
                 }
             } else if (0 == strcmp("set", inbuf)) {
                 // read only
@@ -664,24 +723,23 @@ int main (int argc, char **argv)
 
                 // get value, ignore it
                 get_line(inbuf, sizeof(inbuf));
-                puts("not-writable");
+                put_line("not-writable");
             } else {
-                puts("NONE");
+                put_line("NONE");
             }
-            fflush(stdout);
         }
     }
 
     // else, !persist
-    pxlate = oid_lookup(oid, noid);
-    if (NULL == pxlate->oid) {
+    pxlate = oid_lookup(oid, next);
+    if (NULL == pxlate ||
+        NULL == pxlate->oid) {
         // fell of the end of the list...
-        (void)fprintf(logfd, "%s: ERROR: Unknown OID %s\n\n",
-                      argv[0], oid);
-        usage(argv[0]);
+        (void)fprintf(logfd, PROGNAME ": ERROR: Unknown OID %s\n\n",
+                      oid);
         exit(1);
     }
-    gps_close (&gpsdata);
+    gps_close(&gpsdata);
 
     exit(0);
 }
