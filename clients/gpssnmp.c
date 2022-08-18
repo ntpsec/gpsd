@@ -25,7 +25,8 @@
 
 #define PROGNAME "gpssnmp"
 static int debug = 0;                       // debug level
-static struct gps_data_t gpsdata;
+static struct gps_data_t gpsdata;           // last received gps_data_t
+static struct gps_data_t gpsdata_ver;       // cached gps_data_t with VERSION_SET
 static int one = 1;                         // the one!
 static double snr_avg = 0;
 static FILE *logfd;
@@ -350,14 +351,16 @@ static void get_one(gps_mask_t need)
         // nothing needed
         return;
     }
-    /* FIXME: VERSION_SET only come once after connect, so once
-     * persist mode is imlemented, will need to cache that data.
-     * Similar for DEVICELIST_SET */
 
     clock_gettime(CLOCK_REALTIME, &ts_start);
 
     while (gps_waiting(&gpsdata, 5000000)) {
 
+        if (VERSION_SET == need) {
+            // use cached version data
+            gpsdata = gpsdata_ver;
+            break;
+        }
         // wait 10 seconds, tops.
         clock_gettime(CLOCK_REALTIME, &ts_now);
         // use llabs(), in case time went backwards...
@@ -373,6 +376,12 @@ static void get_one(gps_mask_t need)
             (void)fprintf(logfd, PROGNAME "gpssnmp: ERROR: read failed %d\n",
                           status);
             exit(1);
+        }
+        if (VERSION_SET == (VERSION_SET & gpsdata.set)) {
+            /* VERSION_SET only come once after connect, so cache
+             * that data when we get it. */
+            // FIXME: do Similar for DEVICELIST_SET */
+            gpsdata_ver = gpsdata;
         }
         if (need == (need & gpsdata.set)) {
             // got something
