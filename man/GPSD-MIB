@@ -194,7 +194,8 @@ TpvEntry ::=
         tpvEpt               INTEGER,
         tpvEpv               INTEGER,
         tpvEpx               INTEGER,
-        tpvEpy               INTEGER
+        tpvEpy               INTEGER,
+        tpvTime              DisplayString
       }
 
 tpvIndex OBJECT-TYPE
@@ -353,6 +354,14 @@ tpvEpy OBJECT-TYPE
     DESCRIPTION
             "Estimated Latitude error in meters. Scale 1e-5"
     ::= { tpvEntry 19 }
+
+tpvTime OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..30))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "UTC time of fix"
+    ::= { tpvEntry 20 }
 
 -- sky - Stuff from the SKY JSON class
 

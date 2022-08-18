@@ -39,6 +39,7 @@ typedef enum {
     t_sinteger,
     t_slongint,
     t_string,
+    t_time,
     t_ubyte,
     t_uinteger,
     t_ulongint,
@@ -176,6 +177,9 @@ static const struct oid_mib_xlate xlate[] = {
     {".1.3.6.1.4.1.59054.13.3.1.19.1", "tpvEpy.1", t_double,
      &gpsdata.fix.epy, 100000, -1, HERR_SET,
      "Estimated latitude error in meters."},
+    {".1.3.6.1.4.1.59054.13.3.1.20.1", "tpvTime.1", t_time,
+     &gpsdata.fix.time, 1, -1, TIME_SET,
+     "UTC time of fix."},
     // end tpv
     // start version
     {".1.3.6.1.4.1.59054.14.1", "verRelease", t_string,
@@ -512,6 +516,13 @@ static const struct oid_mib_xlate *oid_lookup(const char *oid,
             put_line("STRING");
             snprintf(outbuf, sizeof(outbuf), "%.255s", (char *)pxlate->pval);
             put_line(outbuf);
+            break;
+        case t_time:
+            // 255 seems to be max STRING length.
+            put_line(pxlate->oid);
+            put_line("STRING");
+            put_line(timespec_to_iso8601(*(timespec_t *)pxlate->pval,
+                                         outbuf, sizeof(outbuf)));
             break;
         default:
             (void)fprintf(logfd,
