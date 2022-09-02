@@ -65,7 +65,7 @@ Decider('MD5')
 # Put .sconsign*dblite and .scons-options-cache in variantdir for
 # one-touch cleaning
 # support building with various Python versions.
-sconsign_file = '.sconsign.{}.dblite'.format(pickle.HIGHEST_PROTOCOL)
+sconsign_file = '.sconsign.%d.dblite' % pickle.HIGHEST_PROTOCOL
 SConsignFile(os.getcwd() + os.path.sep + sconsign_file)
 
 # Start by reading configuration variables from the cache
