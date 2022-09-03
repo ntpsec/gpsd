@@ -13,7 +13,7 @@
 #ifdef HAVE_GETOPT_LONG
    #include <getopt.h>
 #endif
-#include <math.h>                    // for isfinite()
+#include <math.h>                    // for isfinite(), fabs()
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>                  // for strlcpy()
@@ -22,6 +22,7 @@
 #include "../include/gps.h"
 #include "../include/gpsdclient.h"   // for gpsd_source_spec()
 #include "../include/os_compat.h"    // for strlcpy() if needed
+#include "../include/timespec.h"     // for TS_SUB_D()
 
 #define PROGNAME "gpssnmp"
 static int debug = 0;                       // debug level
@@ -267,12 +268,14 @@ static void get_line(char *inbuf, size_t inbuf_len)
 
     inbuf_len--;
 
+    errno = 0;
     // FIXME: need some sort of timeout?
     s = fgets(inbuf, inbuf_len, stdin);
 
     if (NULL == s) {
         // read error
-        fprintf(logfd, PROGNAME ": got NULL\n");
+        fprintf(logfd, PROGNAME ": fgets()got NULL. %s(%d)\n",
+                strerror(errno), errno);
         exit(0);
     }
     // remove the trailing \n, if any
@@ -356,19 +359,21 @@ static void get_one(gps_mask_t need)
         return;
     }
 
+    // snmpd is impatient, it will not wait longer than 5 seconds.
     clock_gettime(CLOCK_REALTIME, &ts_start);
 
-    while (gps_waiting(&gpsdata, 5000000)) {
+    // timout is in micro seconds.
+    while (gps_waiting(&gpsdata, 2 * US_IN_SEC)) {
 
         if (VERSION_SET == need) {
             // use cached version data
             gpsdata = gpsdata_ver;
             break;
         }
-        // wait 10 seconds, tops.
+        // wait 3 seconds, tops.
         clock_gettime(CLOCK_REALTIME, &ts_now);
-        // use llabs(), in case time went backwards...
-        if (10 < llabs(ts_now.tv_sec - ts_start.tv_sec)) {
+        // use fabs(), in case time went backwards...
+        if (3 < fabs(TS_SUB_D(&ts_now, &ts_start))) {
             // FIXME:  Make this configurable.
             // timeout
             (void)fputs(PROGNAME ": ERROR: timeout", logfd);
