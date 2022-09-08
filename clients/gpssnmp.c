@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>                  // for strlcpy()
+#include <unistd.h>                  // for alarm()
 
 #include "../include/compiler.h"     // for FALLTHROUGH
 #include "../include/gps.h"
@@ -269,10 +270,14 @@ static void get_line(char *inbuf, size_t inbuf_len)
     inbuf_len--;
 
     errno = 0;
-    // FIXME: need some sort of timeout?
+    // Don't hang forever in the syscall
+    alarm(3);
+    inbuf[0] = '\0';
     s = fgets(inbuf, inbuf_len, stdin);
+    alarm(0);
 
-    if (NULL == s) {
+    if (NULL == s ||
+        '\0' == s[0]) {
         // read error
         fprintf(logfd, PROGNAME ": fgets()got NULL. %s(%d)\n",
                 strerror(errno), errno);
@@ -332,7 +337,7 @@ static void put_line(const char *outbuf)
         }
     }
     // flush it
-    if (0 != fflush(NULL)) {
+    if (0 != fflush(stdout)) {
         // flush error
         (void)fprintf(logfd, PROGNAME ": fflush() error %d\n", errno);
         exit(1);
@@ -365,7 +370,8 @@ static void get_one(gps_mask_t need)
     // timout is in micro seconds.
     while (gps_waiting(&gpsdata, 2 * US_IN_SEC)) {
 
-        if (VERSION_SET == need) {
+        if (VERSION_SET == need &&
+            '\0' != gpsdata_ver.version.release[0]) {
             // use cached version data
             gpsdata = gpsdata_ver;
             break;
@@ -759,6 +765,8 @@ int main (int argc, char **argv)
     pxlate = oid_lookup(oid, next);
     if (NULL == pxlate ||
         NULL == pxlate->oid) {
+        // NONE is supposedly for persist mode only, but, why not?
+        put_line("NONE");
         // fell of the end of the list...
         (void)fprintf(logfd, PROGNAME ": ERROR: Unknown OID %s\n\n",
                       oid);
