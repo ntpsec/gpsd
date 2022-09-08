@@ -26,10 +26,11 @@
 #include "../include/timespec.h"     // for TS_SUB_D()
 
 #define PROGNAME "gpssnmp"
-static int debug = 0;                       // debug level
-static struct gps_data_t gpsdata;           // last received gps_data_t
-static struct gps_data_t gpsdata_ver;       // cached gps_data_t with VERSION_SET
-static int one = 1;                         // the one!
+static int debug = 0;                      // debug level
+static struct gps_data_t gpsdata;          // last received gps_data_t
+static struct gps_data_t gpsdata_ll;       // cached gps_data_t with LATLON_SET
+static struct gps_data_t gpsdata_ver;      // cached gps_data_t with VERSION_SET
+static int one = 1;                        // the one!
 static double snr_avg = 0;
 static FILE *logfd;
 
@@ -364,18 +365,25 @@ static void get_one(gps_mask_t need)
         return;
     }
 
+    if (LATLON_SET == need &&
+        LATLON_SET == (LATLON_SET & gpsdata_ll.set)) {
+        // use cached tpv data
+        gpsdata = gpsdata_ll;
+        return;
+    }
+    if (VERSION_SET == need &&
+        '\0' != gpsdata_ver.version.release[0]) {
+        // use cached version data
+        gpsdata = gpsdata_ver;
+        return;
+    }
+
     // snmpd is impatient, it will not wait longer than 5 seconds.
     clock_gettime(CLOCK_REALTIME, &ts_start);
 
     // timout is in micro seconds.
     while (gps_waiting(&gpsdata, 2 * US_IN_SEC)) {
 
-        if (VERSION_SET == need &&
-            '\0' != gpsdata_ver.version.release[0]) {
-            // use cached version data
-            gpsdata = gpsdata_ver;
-            break;
-        }
         // wait 3 seconds, tops.
         clock_gettime(CLOCK_REALTIME, &ts_now);
         // use fabs(), in case time went backwards...
@@ -395,24 +403,30 @@ static void get_one(gps_mask_t need)
         if (VERSION_SET == (VERSION_SET & gpsdata.set)) {
             /* VERSION_SET only come once after connect, so cache
              * that data when we get it. */
-            // FIXME: do Similar for DEVICELIST_SET */
+            // FIXME: do Similar for DEVICELIST_SET
             gpsdata_ver = gpsdata;
+        } else if (LATLON_SET == (LATLON_SET & gpsdata.set)) {
+            // cache lat/lon, good for persist mode
+            gpsdata_ll = gpsdata;
         }
         if (need == (need & gpsdata.set)) {
             // got something
             break;
         }
     }
-    for(i = 0; i <= gpsdata.satellites_used; i++) {
-        if (0 < gpsdata.skyview[i].used &&
-            1 <  gpsdata.skyview[i].ss) {
-            // printf("i: %d, P:%d, ss: %f\n", i, gpsdata.skyview[i].PRN,
-            //         gpsdata.skyview[i].ss);
-            snr_total += gpsdata.skyview[i].ss;
+    if (SATELLITE_SET == (need & gpsdata.set)) {
+        // compute a derived value: snr_avg
+        for(i = 0; i <= gpsdata.satellites_used; i++) {
+            if (0 < gpsdata.skyview[i].used &&
+                1 <  gpsdata.skyview[i].ss) {
+                // printf("i: %d, P:%d, ss: %f\n", i, gpsdata.skyview[i].PRN,
+                //         gpsdata.skyview[i].ss);
+                snr_total += gpsdata.skyview[i].ss;
+            }
         }
-    }
-    if (0 < gpsdata.satellites_used) {
-        snr_avg = snr_total / gpsdata.satellites_used;
+        if (0 < gpsdata.satellites_used) {
+            snr_avg = snr_total / gpsdata.satellites_used;
+        }
     }
 }
 
