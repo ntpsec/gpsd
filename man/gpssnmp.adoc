@@ -1,5 +1,5 @@
 = gpssnmp(1)
-:date: 15 July 2022
+:date: 8 September 2022
 :keywords: gps, gpsd, gpssnmp
 :manmanual: GPSD Documentation
 :mansource: GPSD Version {gpsdver}
@@ -25,6 +25,8 @@ gpssnmp - SNMP helper client for gpsd
 
 *gpssnmp* -n OID
 
+*gpssnmp* -p
+
 *gpssnmp* -V
 
 == DESCRIPTION
@@ -33,9 +35,13 @@ gpssnmp - SNMP helper client for gpsd
 
 *gpssnmp* does not require root privileges. It will also run fine as root.
 
-The output of *gpssnmp* conforms to the requierments of the "pass [-p
-priority] MIBOID PROG" option in *snmpd.conf*.  So it can be used to
-extend *snmpd* with the *GPSD-MIB*.
+*gpssnmp* can act as an agent to *snmpd* in _pass_ mode or in
+_pass_persist_ mode. So it can be used to extend *snmpd* with the
+*GPSD-MIB*.  Given the nature of the *SNMP* protocol, do not expect
+good latency.  Data from different epochs may be mixed up together.
+
+NOTE: this program is new in version 3.24.1 and will be subject to
+change for a few revisions.  Consider it a Work In Progress (WIP).
 
 == OPTIONS
 
@@ -47,6 +53,9 @@ extend *snmpd* with the *GPSD-MIB*.
   Get the specified OID.
 *-n OID*::
   Get the next OID starting at OID.
+*-p*, *--persist*::
+  Enter _pass_persist_ mode.  This allows better performance when used as
+  an agent for the *snmpd* daemon.  See the snmpd.conf man page for details.
 *-V*, *--version*::
   Print the package version and exit.
 
@@ -75,7 +84,7 @@ To get the number of saltellits seen with the MIB name
 
 *gpssnmp* can work as a "pass-through script" with *snmpd*.  To enable
 this functionality on an already working snmpd installation, add this to your
-*/etc/snmp/snmpd.conf* file, and then restart *snmpd*:
+*snmpd.conf* file, and then restart *snmpd*:
 
 ----
 # be sure SNMPv2 community "public" can access all MIBs:
@@ -111,6 +120,14 @@ GPSD-MIB::tpvIndex.1 = INTEGER: 1
 [...]
 ----
 
+*gpssnmp* supports the _pass_persist_ mode of snmpd.  To have
+*snmpd* use *gpssnmp* in this mode put this in your _snmpd.conf_
+file:
+
+----
+pass_persist .1.3.6.1.4.1.59054  /usr/local/bin/gpssnmp --persist
+----
+
 == RETURN VALUES
 
 *0*:: on success.
@@ -118,9 +135,11 @@ GPSD-MIB::tpvIndex.1 = INTEGER: 1
 
 == SEE ALSO
 
-*cgps*(1), *gps*(1), *gpspipe*(1), *snmpget*(1), *xgps*(1), *snmpd.conf*(5)  
+*cgps*(1), *gps*(1), *gpspipe*(1), *snmpget*(1), *snmpwalk*(1), *xgps*(1)
 
-*gpsd*(8)
+*snmpd.conf*(5)
+
+*gpsd*(8), *snmpd*(8)
 
 == RESOURCES
 
@@ -128,5 +147,5 @@ GPSD-MIB::tpvIndex.1 = INTEGER: 1
 
 == COPYING
 
-This file is Copyright 2013 by the GPSD project +
+This file is Copyright 2022 by the GPSD project +
 SPDX-License-Identifier: BSD-2-clause

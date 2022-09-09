@@ -29,6 +29,7 @@
 static int debug = 0;                      // debug level
 static struct gps_data_t gpsdata;          // last received gps_data_t
 // cached copies of gpsdata, only useful in persist mode
+// FIXME: need a better way to "age-out" the caches.
 static struct gps_data_t gpsdata_sky;      // cached gps_data_t with sky
 static struct gps_data_t gpsdata_tpv;      // cached gps_data_t with TPV
 static struct gps_data_t gpsdata_ver;      // cached gps_data_t with VERSION_SET
@@ -583,7 +584,6 @@ static const struct oid_mib_xlate *oid_lookup(const char *oid,
 static void usage(char *prog_name) {
     const struct oid_mib_xlate *pxlate;
 
-    // don't add  --persist until is works...
     (void)printf("usage: %s [OPTIONS] [server[:port[:device]]]\n\n\
 Options include: \n\
   -?, -h, --help            = help message\n\
@@ -592,6 +592,7 @@ Options include: \n\
   -D, --debug LVL           = set debug level to LVL, default 0 \n\
   -g, --get OID             = get value for OID\n\
   -n, --next OID            = next OID value\n\
+  -p, --persist             = enter pass_persist mode\n\
   -V, --version             = emit version and exit.\n\n\
 Examples:\n\n\
 to get the number of saltellites seen with the OID\n\
@@ -713,18 +714,25 @@ int main (int argc, char **argv)
 
     if (persist) {
         // debug, log to file
+        if (get || next) {
+            (void)fprintf(logfd,
+                PROGNAME ": ERROR: Use only one of: -g; -n; or -p.\n\n");
+            usage(PROGNAME);
+            exit(1);
+        }
         logfd = fopen("/tmp/gpssnmp.log", "a");
     } else {
         if (!get && !next) {
             (void)fprintf(logfd,
-                          PROGNAME ": ERROR: Missing option -g or -n\n\n");
+                          PROGNAME ": ERROR: You must specify one of: "
+                          "-g; -n; or -p.\n\n");
             usage(PROGNAME);
             exit(1);
         }
 
         if (get && next) {
             (void)fprintf(logfd,
-                PROGNAME ": ERROR: Use either -g or -n, not both\n\n");
+                PROGNAME ": ERROR: Use only one of: -g; -n; or -p.\n\n");
             usage(PROGNAME);
             exit(1);
         }
