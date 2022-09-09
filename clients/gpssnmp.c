@@ -28,8 +28,11 @@
 #define PROGNAME "gpssnmp"
 static int debug = 0;                      // debug level
 static struct gps_data_t gpsdata;          // last received gps_data_t
-static struct gps_data_t gpsdata_ll;       // cached gps_data_t with LATLON_SET
+// cached copies of gpsdata, only useful in persist mode
+static struct gps_data_t gpsdata_sky;      // cached gps_data_t with sky
+static struct gps_data_t gpsdata_tpv;      // cached gps_data_t with TPV
 static struct gps_data_t gpsdata_ver;      // cached gps_data_t with VERSION_SET
+
 static int one = 1;                        // the one!
 static double snr_avg = 0;
 static FILE *logfd;
@@ -302,15 +305,15 @@ static void get_line(char *inbuf, size_t inbuf_len)
     }
 
     fprintf(logfd, PROGNAME ": got s: %s\n", s);
+    if (0 != fflush(logfd)) {
+        // flush error
+        fprintf(logfd, PROGNAME ": fflush() error %d\n", errno);
+        exit(1);
+    }
     if ('\0' == s[0]) {
         // done
         puts("");
         exit(0);
-    }
-    if (0 != fflush(NULL)) {
-        // flush error
-        fprintf(logfd, PROGNAME ": fflush() error %d\n", errno);
-        exit(1);
     }
 }
 
@@ -338,7 +341,8 @@ static void put_line(const char *outbuf)
         }
     }
     // flush it
-    if (0 != fflush(stdout)) {
+    if (0 != fflush(stdout) ||
+        0 != fflush(logfd)) {
         // flush error
         (void)fprintf(logfd, PROGNAME ": fflush() error %d\n", errno);
         exit(1);
@@ -365,10 +369,14 @@ static void get_one(gps_mask_t need)
         return;
     }
 
-    if (LATLON_SET == need &&
-        LATLON_SET == (LATLON_SET & gpsdata_ll.set)) {
-        // use cached tpv data
-        gpsdata = gpsdata_ll;
+    if (need == (need & gpsdata_sky.set)) {
+        // use cached SKY data, hopefully not very stale...
+        gpsdata = gpsdata_sky;
+        return;
+    }
+    if (need == (need & gpsdata_tpv.set)) {
+        // use cached TPV data, hopefully not very stale...
+        gpsdata = gpsdata_tpv;
         return;
     }
     if (VERSION_SET == need &&
@@ -400,14 +408,17 @@ static void get_one(gps_mask_t need)
                           status);
             exit(1);
         }
-        if (VERSION_SET == (VERSION_SET & gpsdata.set)) {
+        if (SATELLITE_SET == (SATELLITE_SET & gpsdata.set)) {
+            // cache SKY, good for persist mode
+            gpsdata_sky = gpsdata;
+        } else if (MODE_SET == (MODE_SET & gpsdata.set)) {
+            // cache TPV, good for persist mode
+            gpsdata_tpv = gpsdata;
+        } else if (VERSION_SET == (VERSION_SET & gpsdata.set)) {
             /* VERSION_SET only come once after connect, so cache
              * that data when we get it. */
             // FIXME: do Similar for DEVICELIST_SET
             gpsdata_ver = gpsdata;
-        } else if (LATLON_SET == (LATLON_SET & gpsdata.set)) {
-            // cache lat/lon, good for persist mode
-            gpsdata_ll = gpsdata;
         }
         if (need == (need & gpsdata.set)) {
             // got something
@@ -465,13 +476,14 @@ static const struct oid_mib_xlate *oid_lookup(const char *oid,
                 continue;
             }
             // get match
+            compare = 0;
         }
 
         if (4 <= debug) {
             (void)fprintf(logfd,
                           PROGNAME ": Trying %s, next %d, compare %d\n",
                           pxlate->oid, next, compare);
-            fflush(NULL);
+            fflush(logfd);
         }
         if (0 > compare) {
             // not yet, keep going
@@ -502,6 +514,7 @@ static const struct oid_mib_xlate *oid_lookup(const char *oid,
         if (4 <= debug) {
             (void)fprintf(logfd, PROGNAME ": match type %d need %s\n",
                           pxlate->type, gps_maskdump(pxlate->need));
+            fflush(logfd);
         }
         get_one(pxlate->need);      // fill gpsdata with what we need
 
@@ -553,6 +566,7 @@ static const struct oid_mib_xlate *oid_lookup(const char *oid,
             (void)fprintf(logfd,
                           PROGNAME ": ERROR: internal error, OID %s\n\n",
                           oid);
+            fflush(logfd);
             // continue or abort?
             continue;
         }
@@ -686,6 +700,7 @@ int main (int argc, char **argv)
         default:
             (void)fprintf(logfd,
                           PROGNAME ": ERROR: Unknown option %c\n\n", ch);
+            fflush(logfd);
             do_usage = true;
             break;
         }
