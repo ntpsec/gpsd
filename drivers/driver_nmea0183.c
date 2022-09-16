@@ -1945,13 +1945,14 @@ static gps_mask_t processGSV(int count, char *field[],
      *  6) 083         Azimuth, degrees
      *  7) 46          Signal-to-noise ratio in decibels
      * <repeat for up to 4 satellites per sentence>
-     *   )             NMEA 4.1 signalId
+     *   )             NMEA 4.1 Signal Id (optional)
+     *   )             Quectel Querk: System ID (4 or 5) (optional)
      *   )             checksum
      *
      * NMEA 4.1+:
      * $GAGSV,3,1,09,02,00,179,,04,09,321,,07,11,134,11,11,10,227,,7*7F
      * after the satellite block, before the checksum, new field:
-     * 7           NMEA Signal ID
+     *             NMEA Signal ID
      *             1 = GPS L1C/A, BeiDou B1I D1, BeiDou B1I D2, GLONASS L1 OF
      *             2 = Galileo E5 bl, E5 bQ
      *             3 = BeiDou B2I D1, B2I D2
@@ -1959,16 +1960,23 @@ static gps_mask_t processGSV(int count, char *field[],
      *             6 = GPS L2 CL
      *             7 = Galileo E1C, E1B
      *
+     * Quectel Querk:
+     * $PQGSV,4,2,15,09,16,120,,10,26,049,,16,07,123,,19,34,212,,0,4*62
+     * after the Signal ID, before the checksum, new field:
+     *             System ID
+     *             4 = BeiDou
+     *             5 = QZSS
+     *
      * Can occur with talker IDs:
      *   BD (Beidou),
      *   GA (Galileo),
      *   GB (Beidou),
-     *   GI (IRNSS
+     *   GI (IRNSS),
      *   GL (GLONASS),
      *   GN (GLONASS, any combination GNSS),
      *   GP (GPS, SBAS, QZSS),
      *   GQ (QZSS).
-     *   PQ (QZSS). Quectel Quirk
+     *   PQ (QZSS). Quectel Querk. BeiDou or QZSS
      *   QZ (QZSS).
      *
      * As of April 2019:
@@ -1997,7 +2005,7 @@ static gps_mask_t processGSV(int count, char *field[],
      *
      * The driver automatically adapts to either case, but it takes until the
      * second cycle (usually 10 seconds from device connect) for it to
-     * learn to expect BSDGV or GLGSV.
+     * learn to expect BDGSV or GLGSV.
      *
      * Some GPS (Garmin 17N) spread the xxGSV over several cycles.  So
      * cycles, or cycle time, can not be used to determine start of
@@ -2006,6 +2014,23 @@ static gps_mask_t processGSV(int count, char *field[],
      * NMEA 4.1 adds a signal-ID field just before the checksum. First
      * seen in May 2015 on a u-blox M8.  It can output 2 sets of GPGSV
      * in one cycle, one for L1C and the other for L2C.
+     *
+     * Once again, Quectel is Querky.  They added the $PQGSV sentence
+     * to handle what NMEA 4.11 says should be in the $BDGSV and $GQGSV
+     * sentences.  $PQGSV adds a new field just before the checksum for the
+     * System ID. This field is set to 4 for BeiDou, or 5 for QZSS.  The EG25
+     * output can look like this:
+     *
+     * $GLGSV,2,1,08,78,37,039,22,79,53,317,21,69,56,275,20,88,23,077,18,1*7A
+     * $GLGSV,2,2,08,87,11,030,17,68,37,195,21,70,11,331,,81,13,129,,1*79
+     * $PQGSV,4,1,15,02,20,116,,03,,,,05,34,137,,07,05,046,,0,4*58
+     * $PQGSV,4,2,15,09,16,120,,10,26,049,,16,07,123,,19,34,212,,0,4*62
+     * $PQGSV,4,3,15,20,03,174,,21,05,324,,22,37,281,,27,28,085,,0,4*65
+     * $PQGSV,4,4,15,28,07,039,,29,,,,30,23,143,,0,4*67
+     * $GAGSV,1,1,02,04,53,296,,09,05,322,,7*71
+     * $GPGSV,3,1,10,13,80,247,17,14,47,043,19,15,48,295,20,17,48,108,17,1*62
+     * $GPGSV,3,2,10,19,36,151,18,30,32,087,18,05,14,230,,07,03,098,,1*65
+     * $GPGSV,3,3,10,12,00,234,,24,13,295,,1*69
      *
      * Skytraq PX1172RH_DS can output GPGSV, GLGSV, GAGSV and GBGSV all in
      * same epoch.  And each of those repeated for different signals
@@ -2033,7 +2058,8 @@ static gps_mask_t processGSV(int count, char *field[],
 
     /*
      * This check used to be !=0, but we have loosen it a little to let by
-     * NMEA 4.1 GSVs with an extra signal-ID field at the end.
+     * NMEA 4.1 GSVs with an extra signal-ID field at the end.  Then loosen
+     * some more for Quectel  Querky $PQGSV.
      */
     switch (count % 4) {
     case 0:
@@ -2044,10 +2070,22 @@ static gps_mask_t processGSV(int count, char *field[],
         nmea_sigid = atoi(field[count - 1]);
         ubx_sigid = nmea_sigid_to_ubx(nmea_sigid);
         break;
+#if 0
+    case 2:
+        // WIP
+        // Quectel Querk. $PQGSV, get the signal ID, and system ID
+        nmea_sigid = atoi(field[count - 2]);
+        ubx_sigid = nmea_sigid_to_ubx(nmea_sigid);
+        nmea_gnssid = atoi(field[count - 1]);
+        GPSD_LOG(LOG_SHOUT, &session->context->errout,
+                 "NMEA0183: malformed %.6s- fieldcount%d) %% 4 == 3\n",
+                 field[0], count);
+        break;
+#endif
     default:
         // bad count
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "NMEA0183: malformed GPGSV - fieldcount %d %% 4 != 0\n",
+                 "NMEA0183: malformed GPGSV - fieldcount(%d)\n",
                  count);
         gpsd_zero_satellites(&session->gpsdata);
         return ONLINE_SET;
@@ -2111,7 +2149,16 @@ static gps_mask_t processGSV(int count, char *field[],
         session->nmea.seen_gpgsv = true;
         break;
     case 'Q':        // GQ, and PQ (Quectel Querk) QZSS
-        // Quectel EC25 & EC21 use PQGSA for QZSS
+#if 0
+        // WIP
+        if ('P' == field[0][0] &&
+            0 != nmea_gnssid) {
+            /* Quectel EC25 & EC21 use PQGSV for BeiDou or QZSS
+             * nmea_gnssid set above, what about seen?
+             */
+            break;
+        }
+#endif
         FALLTHROUGH
     case 'Z':        // QZ QZSS
         nmea_gnssid = 5;
