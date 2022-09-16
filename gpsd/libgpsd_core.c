@@ -1615,9 +1615,10 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
         newlen = session->device_type->get_packet(session);
         // coverity[deref_ptr]
         GPSD_LOG(LOG_RAW, &session->context->errout,
-                 "CORE: %s is known to be %s\n",
+                 "CORE: %s is known to be %s, packet type %d\n",
                  session->gpsdata.dev.path,
-                 session->device_type->type_name);
+                 session->device_type->type_name,
+                 session->lexer.type);
     } else {
         newlen = generic_get(session);
     }
@@ -1814,13 +1815,13 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
              gpsd_prettydump(session));
 
     // Get data from current packet into the fix structure
-    if (COMMENT_PACKET != session->lexer.type) {
-        if (NULL != session->device_type &&
-            NULL != session->device_type->parse_packet) {
+    if (COMMENT_PACKET != session->lexer.type &&
+        BAD_PACKET != session->lexer.type &&
+        NULL != session->device_type &&
+        NULL != session->device_type->parse_packet) {
             received |= session->device_type->parse_packet(session);
             GPSD_LOG(LOG_SPIN, &session->context->errout,
                      "CORE: parse_packet() = %s\n", gps_maskdump(received));
-        }
     }
 
     /*
