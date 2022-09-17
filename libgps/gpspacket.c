@@ -26,12 +26,14 @@ void gpsd_vlog(const struct gpsd_errout_t*, const int, char*,
                size_t, const char*, va_list);
 
 // assemble msg in vprintf(3) style, use errout hook or syslog for delivery
+// FIXME: duplicated in gpsd/libgpsd_core.c
 void gpsd_vlog(const struct gpsd_errout_t *errout, const int errlevel,
                char *outbuf, size_t outlen, const char *fmt, va_list ap)
 {
     if (errout->debug >= errlevel) {
         char buf[BUFSIZ];
         char *err_str;
+        const char *label;
 
         switch (errlevel) {
         case LOG_ERROR:
@@ -64,15 +66,24 @@ void gpsd_vlog(const struct gpsd_errout_t *errout, const int errlevel,
         case LOG_RAW:
             err_str = "RAW: ";
             break;
+        case LOG_RAW1:       // 9, rediculous
+            err_str = "RAW1";
+            break;
+        case LOG_RAW2:       // 10, insane
+            err_str = "RAW2";
+            break;
         default:
             err_str = "UNK: ";
             break;
         }
 
-        assert(errout->label != NULL);
-        (void)strlcpy(buf, errout->label, sizeof(buf));
-        (void)strlcat(buf, ":", sizeof(buf));
-        (void)strlcat(buf, err_str, sizeof(buf));
+        if (NULL == errout->label) {
+            label = "MISSING";
+        } else {
+            label = errout->label;
+        }
+
+        snprintf(buf, sizeof(buf), "%s:%s", label, err_str);
         str_vappendf(buf, sizeof(buf), fmt, ap);
 
         gps_visibilize(outbuf, outlen, buf, strlen(buf));

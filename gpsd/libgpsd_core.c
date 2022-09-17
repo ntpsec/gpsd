@@ -97,6 +97,7 @@ void gpsd_release_reporting_lock(void)
 }
 
 // assemble msg in vprintf(3) style, use errout hook or syslog for delivery
+// FIXME: duplicated in gpsd/libgpsd_core.c
 static void gpsd_vlog(const int errlevel,
                       const struct gpsd_errout_t *errout,
                       char *outbuf, size_t outlen,
