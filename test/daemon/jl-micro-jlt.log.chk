@@ -1,6 +1,3 @@
-$GAGSV -- unique PRN mapping
-$GNGGA -- Lock State flag repalces Quality flag.
-$PJLTS -- GPSDO status
 $GNRMC,012238.00,A,3454.4922,S,13835.7617,E,0.0,0.0,120821,,,D*5A
 {"class":"TPV","status":2,"mode":2,"time":"2021-08-12T01:22:38.000Z","ept":0.005,"lat":-34.908203333,"lon":138.596028333,"track":0.0000,"magtrack":7.9179,"magvar":7.9,"speed":0.000}
 $GNGGA,012238.00,3454.4922,S,13835.7617,E,2,12,99.0,53.3,M,-3.5,M,,*7B

@@ -2,6 +2,7 @@
 # Submitter: aquarat
 # Date: 2010-10-26
 # Notes: shows GPZDA bug in gpsd 2.95
+#        No checksums, everything  ignored
 #
 # This file is Copyright 2010 by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.

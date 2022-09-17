@@ -239,9 +239,16 @@ static bool nmea_checksum(const struct gpsd_errout_t *errout,
     unsigned int n, csum = 0;
     char csum_s[3] = { '0', '0', '0' };
 
-    if (str_starts_with(buf, "$PASHR,")) {
-        // Good Grief!  $PASHR has no checksum.
-        // Oddly, we have no example of such a sentance.
+    /* These have no checksum:
+     *  GPS-320FW emits $PLCS
+     *  MTK-3301 emits $POLYN
+     *  Skytraq S2525F8-BD-RTK emits $STI
+     *  Telit SL869 emits $GPTXT
+     *  Ashtech (old!) $PASHR,MCA and $PASHR,PBN with no checksum
+     * All undocumented,  Let them fail, except $STI.
+     */
+    if (str_starts_with(buf, "$STI,")) {
+        // Let this one go...
         return true;
     }
 
@@ -255,13 +262,14 @@ static bool nmea_checksum(const struct gpsd_errout_t *errout,
     }
     // skip past checksum at end.
     // FIXME! if it is always 2 chars, this is overkill?
-    while (strchr("0123456789ABCDEF", *end)) {
+    // Magellan EC-10X has lower case hex in checksum. It is rare.
+    while (strchr("0123456789ABCDEF", toupper(*end))) {
         --end;
     }
 
     if ('*' != *end) {
         // no asterisk before checksum
-        return true;
+        return false;
     }
 
     for (n = 1; buf + n < end; n++) {

@@ -10,6 +10,8 @@
 # Log created with Kermit logging from /dev/ttyUSB0 at 4800 baud
 # Log shows entire power up to first fix sequence 
 #
+# $POLYN has no checksum.
+#
 # This file is Copyright 2010 by the GPSD project
 # BSD terms apply: see the file COPYING in the distribution root for details.
 #
