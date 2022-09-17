@@ -4302,6 +4302,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         // Jackson Labs proprietary
         {"PJLTS", NULL, 11,  false, NULL},          // GPSDO status
         {"PJLTV", NULL, 4,  false, NULL},           // Time and 3D velocity
+        // GPS-320FW -- $PLCS
         {"PMGNST", NULL, 8, false, processPMGNST},  // Magellan Status
         // MediaTek proprietary
         {"PMTK001", NULL, 3, false, processPMTK001},  // ACK
@@ -4311,6 +4312,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PMTK705", NULL, 4, false, processPMTK705},
         // MediaTek/Trimble Satellite Channel Status
         {"PMTKCHN", NULL, 0, false, NULL},
+        // MTK-3301 -- $POLYN
         // Quectel proprietary
         {"PQVERNO", NULL, 5, false, processPQVERNO},  // Version
         // smart watch sensors, Yes: space!
