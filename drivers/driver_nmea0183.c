@@ -2070,18 +2070,20 @@ static gps_mask_t processGSV(int count, char *field[],
         nmea_sigid = atoi(field[count - 1]);
         ubx_sigid = nmea_sigid_to_ubx(nmea_sigid);
         break;
-#if 0
     case 2:
-        // WIP
         // Quectel Querk. $PQGSV, get the signal ID, and system ID
         nmea_sigid = atoi(field[count - 2]);
         ubx_sigid = nmea_sigid_to_ubx(nmea_sigid);
         nmea_gnssid = atoi(field[count - 1]);
-        GPSD_LOG(LOG_SHOUT, &session->context->errout,
-                 "NMEA0183: malformed %.6s- fieldcount%d) %% 4 == 3\n",
-                 field[0], count);
+        if (4 > nmea_gnssid ||
+            5 < nmea_gnssid) {
+            // Quectel says only 4 or 5
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "NMEA0183: invalid nmea_gnssid %d\n",
+                     nmea_gnssid);
+            return ONLINE_SET;
+        }
         break;
-#endif
     default:
         // bad count
         GPSD_LOG(LOG_WARN, &session->context->errout,
@@ -2149,8 +2151,6 @@ static gps_mask_t processGSV(int count, char *field[],
         session->nmea.seen_gpgsv = true;
         break;
     case 'Q':        // GQ, and PQ (Quectel Querk) QZSS
-#if 0
-        // WIP
         if ('P' == field[0][0] &&
             0 != nmea_gnssid) {
             /* Quectel EC25 & EC21 use PQGSV for BeiDou or QZSS
@@ -2158,7 +2158,7 @@ static gps_mask_t processGSV(int count, char *field[],
              */
             break;
         }
-#endif
+        // else
         FALLTHROUGH
     case 'Z':        // QZ QZSS
         nmea_gnssid = 5;
