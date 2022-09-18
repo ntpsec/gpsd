@@ -280,8 +280,8 @@ static bool nmea_checksum(const struct gpsd_errout_t *errout,
                    csum_s[1] == toupper((int)end[2]));
     if (!checksum_ok) {
         GPSD_LOG(LOG_WARN, errout,
-                 "bad checksum in NMEA packet; expected %s.\n",
-                 csum_s);
+                 "bad checksum in NMEA packet; got %c%c expected %s.\n",
+                 end[1], end[2], csum_s);
     }
 
     return checksum_ok;
