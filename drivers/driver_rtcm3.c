@@ -111,20 +111,19 @@ static bool rtcm3_101567(const struct gps_context_t *context,
     // 1015, 1016, and 1017 all use the 1015 struct
     rtcm->rtcmtypes.rtcm3_1015.header.network_id = (unsigned)ugrab(12);
     rtcm->rtcmtypes.rtcm3_1015.header.subnetwork_id = (unsigned )ugrab(4);
-    rtcm->rtcmtypes.rtcm3_1015.header.tow = (time_t)ugrab(23);
+    rtcm->rtcmtypes.rtcm3_1015.header.tow = ugrab(23);
     rtcm->rtcmtypes.rtcm3_1015.header.multimesg = (bool)ugrab(1);
     rtcm->rtcmtypes.rtcm3_1015.header.master_id = (unsigned)ugrab(12);
     rtcm->rtcmtypes.rtcm3_1015.header.aux_id = (unsigned)ugrab(12);
     rtcm->rtcmtypes.rtcm3_1015.header.satcount = (unsigned char)ugrab(4);
 
-    // (long long)tow for 32 bit machines.
     GPSD_LOG(LOG_PROG, &context->errout, "RTCM3: rtcm3_10567(%u) "
-             "network_id %u subnetwork_id %u tow %lld multimesg %u "
+             "network_id %u subnetwork_id %u tow %lu multimesg %u "
              "master_id %u aux_id %u satcount %u",
              rtcm->type,
              rtcm->rtcmtypes.rtcm3_1015.header.network_id,
              rtcm->rtcmtypes.rtcm3_1015.header.subnetwork_id,
-             (long long)rtcm->rtcmtypes.rtcm3_1015.header.tow,
+             rtcm->rtcmtypes.rtcm3_1015.header.tow,
              rtcm->rtcmtypes.rtcm3_1015.header.multimesg,
              rtcm->rtcmtypes.rtcm3_1015.header.master_id,
              rtcm->rtcmtypes.rtcm3_1015.header.aux_id,
@@ -158,7 +157,7 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
     }
 
     rtcm->rtcmtypes.rtcm3_msm.station_id = ugrab(12);
-    rtcm->rtcmtypes.rtcm3_msm.tow = (time_t)ugrab(30);
+    rtcm->rtcmtypes.rtcm3_msm.tow = ugrab(30);
     rtcm->rtcmtypes.rtcm3_msm.sync = ugrab(1);
     rtcm->rtcmtypes.rtcm3_msm.IODS = ugrab(3);
     bitcount += 7;             // skip 7 reserved bits, DF001
@@ -326,16 +325,15 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
         }
     }
 
-    // (long long)tow for 32 bit machines.
     GPSD_LOG(LOG_PROG, &context->errout, "RTCM3: rtcm3_decode_msm(%u) "
-             "gnssid %u MSM%u id %u tow %lld sync %u IODS %u "
+             "gnssid %u MSM%u id %u tow %lu sync %u IODS %u "
              "steering %u ext_clk %u smoothing %u interval %u "
              "sat_mask x%llx sig_mask x%lx cell_mask %llx\n",
              rtcm->type,
              rtcm->rtcmtypes.rtcm3_msm.gnssid,
              rtcm->rtcmtypes.rtcm3_msm.msm,
              rtcm->rtcmtypes.rtcm3_msm.station_id,
-             (long long)rtcm->rtcmtypes.rtcm3_msm.tow,
+             rtcm->rtcmtypes.rtcm3_msm.tow,
              rtcm->rtcmtypes.rtcm3_msm.sync,
              rtcm->rtcmtypes.rtcm3_msm.IODS,
              rtcm->rtcmtypes.rtcm3_msm.steering,
@@ -407,7 +405,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
     case 1001:
         // GPS Basic RTK, L1 Only
         rtcm->rtcmtypes.rtcm3_1001.header.station_id = (unsigned)ugrab(12);
-        rtcm->rtcmtypes.rtcm3_1001.header.tow = (time_t)ugrab(30);
+        rtcm->rtcmtypes.rtcm3_1001.header.tow = ugrab(30);
         rtcm->rtcmtypes.rtcm3_1001.header.sync = (bool)ugrab(1);
         rtcm->rtcmtypes.rtcm3_1001.header.satcount = (unsigned short)ugrab(5);
         rtcm->rtcmtypes.rtcm3_1001.header.smoothing = (bool)ugrab(1);
@@ -427,7 +425,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
     case 1002:
         // GPS Extended RTK, L1 Only
         rtcm->rtcmtypes.rtcm3_1002.header.station_id = (unsigned)ugrab(12);
-        rtcm->rtcmtypes.rtcm3_1002.header.tow = (time_t)ugrab(30);
+        rtcm->rtcmtypes.rtcm3_1002.header.tow = ugrab(30);
         rtcm->rtcmtypes.rtcm3_1002.header.sync = (bool)ugrab(1);
         rtcm->rtcmtypes.rtcm3_1002.header.satcount = (unsigned short)ugrab(5);
         rtcm->rtcmtypes.rtcm3_1002.header.smoothing = (bool)ugrab(1);
@@ -449,7 +447,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
     case 1003:
         // GPS Basic RTK, L1 & L2
         rtcm->rtcmtypes.rtcm3_1003.header.station_id = (unsigned)ugrab(12);
-        rtcm->rtcmtypes.rtcm3_1003.header.tow = (time_t)ugrab(30);
+        rtcm->rtcmtypes.rtcm3_1003.header.tow = ugrab(30);
         rtcm->rtcmtypes.rtcm3_1003.header.sync = (bool)ugrab(1);
         rtcm->rtcmtypes.rtcm3_1003.header.satcount = (unsigned short)ugrab(5);
         rtcm->rtcmtypes.rtcm3_1003.header.smoothing = (bool)ugrab(1);
@@ -478,7 +476,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
     case 1004:
         // GPS Extended RTK, L1 & L2
         rtcm->rtcmtypes.rtcm3_1004.header.station_id = (unsigned)ugrab(12);
-        rtcm->rtcmtypes.rtcm3_1004.header.tow = (time_t)ugrab(30);
+        rtcm->rtcmtypes.rtcm3_1004.header.tow = ugrab(30);
         rtcm->rtcmtypes.rtcm3_1004.header.sync = (bool)ugrab(1);
         rtcm->rtcmtypes.rtcm3_1004.header.satcount = (unsigned short)ugrab(5);
         rtcm->rtcmtypes.rtcm3_1004.header.smoothing = (bool)ugrab(1);
@@ -571,7 +569,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         // GLONASS Basic RTK, L1 Only
         rtcm->rtcmtypes.rtcm3_1009.header.station_id =
             (unsigned short)ugrab(12);
-        rtcm->rtcmtypes.rtcm3_1009.header.tow = (time_t)ugrab(27);
+        rtcm->rtcmtypes.rtcm3_1009.header.tow = ugrab(27);
         rtcm->rtcmtypes.rtcm3_1009.header.sync = (bool)ugrab(1);
         rtcm->rtcmtypes.rtcm3_1009.header.satcount = (unsigned short)ugrab(5);
         rtcm->rtcmtypes.rtcm3_1009.header.smoothing = (bool)ugrab(1);
@@ -593,7 +591,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         // GLONASS Extended RTK, L1 Only
         rtcm->rtcmtypes.rtcm3_1010.header.station_id =
             (unsigned short)ugrab(12);
-        rtcm->rtcmtypes.rtcm3_1010.header.tow = (time_t)ugrab(27);
+        rtcm->rtcmtypes.rtcm3_1010.header.tow = ugrab(27);
         rtcm->rtcmtypes.rtcm3_1010.header.sync = (bool)ugrab(1);
         rtcm->rtcmtypes.rtcm3_1010.header.satcount = (unsigned short)ugrab(5);
         rtcm->rtcmtypes.rtcm3_1010.header.smoothing = (bool)ugrab(1);
@@ -617,7 +615,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         // GLONASS Basic RTK, L1 & L2
         rtcm->rtcmtypes.rtcm3_1011.header.station_id =
             (unsigned short)ugrab(12);
-        rtcm->rtcmtypes.rtcm3_1011.header.tow = (time_t)ugrab(27);
+        rtcm->rtcmtypes.rtcm3_1011.header.tow = ugrab(27);
         rtcm->rtcmtypes.rtcm3_1011.header.sync = (bool)ugrab(1);
         rtcm->rtcmtypes.rtcm3_1011.header.satcount = (unsigned short)ugrab(5);
         rtcm->rtcmtypes.rtcm3_1011.header.smoothing = (bool)ugrab(1);
@@ -648,7 +646,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         // GLONASS Extended RTK, L1 & L2
         rtcm->rtcmtypes.rtcm3_1012.header.station_id =
             (unsigned short)ugrab(12);
-        rtcm->rtcmtypes.rtcm3_1012.header.tow = (time_t)ugrab(27);
+        rtcm->rtcmtypes.rtcm3_1012.header.tow = ugrab(27);
         rtcm->rtcmtypes.rtcm3_1012.header.sync = (bool)ugrab(1);
         rtcm->rtcmtypes.rtcm3_1012.header.satcount = (unsigned short)ugrab(5);
         rtcm->rtcmtypes.rtcm3_1012.header.smoothing = (bool)ugrab(1);

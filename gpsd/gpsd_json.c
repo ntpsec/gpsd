@@ -1768,10 +1768,10 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
 
     case 1004:
         str_appendf(buf, buflen,
-                    "\"station_id\":%u,\"tow\":%d,\"sync\":\"%s\","
+                    "\"station_id\":%u,\"tow\":%lu,\"sync\":\"%s\","
                     "\"smoothing\":\"%s\",\"interval\":\"%u\",",
                     rtcm->rtcmtypes.rtcm3_1004.header.station_id,
-                    (int)rtcm->rtcmtypes.rtcm3_1004.header.tow,
+                    rtcm->rtcmtypes.rtcm3_1004.header.tow,
                     JSON_BOOL(rtcm->rtcmtypes.rtcm3_1004.header.sync),
                     JSON_BOOL(rtcm->rtcmtypes.rtcm3_1004.header.smoothing),
                     rtcm->rtcmtypes.rtcm3_1004.header.interval);

@@ -582,12 +582,12 @@ enum RTCM3_PROJECTION_TYPE
 
 // Used for both GPS and GLONASS, but their timebases differ
 struct rtcm3_rtk_hdr {          // header data from 1001, 1002, 1003, 1004
-    unsigned int station_id;    // Reference Station ID
-    time_t tow;                 // GNSS Epoch Time in ms
-    bool sync;                  // Synchronous GNSS Message Flag
-    unsigned short satcount;    // # Satellite Signals Processed
-    bool smoothing;             // Divergence-free Smoothing Indicator
-    unsigned int interval;      // Smoothing Interval
+    unsigned int station_id;    // Reference Station ID, DF003
+    unsigned long tow;          // GNSS Epoch Time in ms, DF004
+    bool sync;                  // Synchronous GNSS Message Flag, DF005
+    unsigned short satcount;    // # Satellite Signals Processed, DF006
+    bool smoothing;             // Divergence-free Smoothing Indicator, DF007
+    unsigned int interval;      // Smoothing Interval, DF008
 };
 
 struct rtcm3_basic_rtk {
