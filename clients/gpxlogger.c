@@ -469,7 +469,8 @@ int main(int argc, char **argv)
             break;
         }
         // avoid banging on reconnect
-        (void)sleep(timeout);
+        // (unsigned int) cast to shut up Coverity CID 355859
+        (void)sleep((unsigned int)timeout);
         syslog(LOG_INFO, "timeout; about to reconnect");
     }
 
