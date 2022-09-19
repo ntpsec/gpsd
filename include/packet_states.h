@@ -18,7 +18,7 @@
    NMEA_CR,             // seen terminating \r of NMEA packet
    NMEA_RECOGNIZED,     // saw trailing \n of NMEA packet
 
-   SIRF_ACK_LEAD_1,     // seen A of possible SiRF Ack
+   NMEA_LEAD_A,         // seen A of possible SiRF Ack, or of $AP
    SIRF_ACK_LEAD_2,     // seen c of possible SiRF Ack
    AIS_LEAD_1,          // seen initial A of possible AIS message
    AIS_LEAD_2,          // seen second I/B/N/X of possible AIS message

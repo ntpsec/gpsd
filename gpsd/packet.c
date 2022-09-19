@@ -465,8 +465,10 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         break;
     case NMEA_DOLLAR:
         switch (c) {
-        case 'A':           // $A, SiRF Ack
-            lexer->state = SIRF_ACK_LEAD_1;
+        case 'A':
+            /* $A (SiRF Ack), $AI (Mobile Class A or B AIS Station?), or
+             * $AP (autopliot) */
+            lexer->state = NMEA_LEAD_A;
             break;
         case 'B':           // $BD
             lexer->state = BEIDOU_LEAD_1;
@@ -973,11 +975,13 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         }
         break;
 #endif /* EARTHMATE_ENABLE */
-    case SIRF_ACK_LEAD_1:
+    case NMEA_LEAD_A:
         if ('c' == c) {                // $Ac
             lexer->state = SIRF_ACK_LEAD_2;
-        } else if ('I' == c) {         // $AI, Alarm Indicator, AIS?
+        } else if ('I' == c) {         // $AI, Mobile Class A or B AIS Station
             lexer->state = AIS_LEAD_2;
+        } else if ('P' == c) {         // $AP, auto pilot
+            lexer->state = NMEA_LEADER_END;
         } else {
             return character_pushback(lexer, GROUND_STATE);
         }
