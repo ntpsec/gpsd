@@ -461,6 +461,38 @@ static gps_mask_t processBWC(int count, char *field[],
     return mask;
 }
 
+/* precessXDR() - process transducer messages
+ */
+static gps_mask_t processXDR(int c UNUSED, char *field[],
+                             struct gps_device_t *session)
+{
+    /*
+     * $APXDR,A,0.135,D,PTCH*7C
+     * $APXDR,A,3.861,D,ROLL*65
+     *
+     * 1) Transducer type
+     *     A = Angular Displacement
+     * 2) Measurement data
+     * 3) Units of measure
+     *     D = degrees
+     * 4) Transducer ID
+     *     can be repeated...
+     * )  checksum
+     *
+     */
+    gps_mask_t mask = ONLINE_SET;
+
+    if ('\0' == field[1][0]) {
+        // no data
+        return mask;
+    }
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NMEA0183: $xxXDR: Type %.10s Data %.10s Units %.10s ID %.10s\n",
+             field[1], field[2], field[3], field[4]);
+    return mask;
+}
+
 /* process xxVTG
  *     $GPVTG,054.7,T,034.4,M,005.5,N,010.2,K
  *     $GPVTG,054.7,T,034.4,M,005.5,N,010.2,K,A
@@ -712,6 +744,35 @@ static gps_mask_t processRMC(int count, char *field[],
              session->newdata.mode,
              session->newdata.magnetic_var,
              session->newdata.status);
+    return mask;
+}
+
+/* precessROT() - process Rate Of Turn
+ *
+ * Deprecated by NMEA in 2008
+ */
+static gps_mask_t processROT(int c UNUSED, char *field[],
+                             struct gps_device_t *session)
+{
+    /*
+     * $APROT,0.013,A*35
+     *
+     * 1) Rate of Turn deg/min
+     * 2) A = valid, V = Void
+     * )  checksum
+     *
+     */
+    gps_mask_t mask = ONLINE_SET;
+
+    if ('\0' == field[1][0] ||
+        'A' != field[2][0]) {
+        // no data
+        return mask;
+    }
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NMEA0183: $xxROT:Rate of Turn %.10s\n",
+             field[1]);
     return mask;
 }
 
@@ -3054,6 +3115,34 @@ static gps_mask_t processHDG(int c UNUSED, char *field[],
     return mask;
 }
 
+/* precessHDM() - process magnetic headingxxHDM messages
+ *
+ * Deprecated by NMEA in 2008
+ */
+static gps_mask_t processHDM(int c UNUSED, char *field[],
+                             struct gps_device_t *session)
+{
+    /*
+     * $APHDM,218.634,M*39
+     *
+     * 1) Magnetic heading
+     * 2) M == Magnetic
+     * )  checksum
+     *
+     */
+    gps_mask_t mask = ONLINE_SET;
+
+    if ('\0' == field[1][0]) {
+        // no data
+        return mask;
+    }
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NMEA0183: $xxHDM: Magnetic heading %.10s\n",
+             field[1]);
+    return mask;
+}
+
 static gps_mask_t processHDT(int c UNUSED, char *field[],
                              struct gps_device_t *session)
 {
@@ -4269,6 +4358,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"GSV", NULL, 0,  false, processGSV},
         // ignore Heading, Deviation and Variation
         {"HDG", NULL, 0,  false, processHDG},
+        {"HDM", NULL, 3,  false, processHDM},   // $APHDM, Magnetic Heading
         {"HDT", NULL, 1,  false, processHDT},
         {"HWBIAS", NULL, 0, false, NULL},       // Unknown HuaWei sentence
         {"MLA", NULL, 0,  false, NULL},         // GLONASS Almana Data
@@ -4364,7 +4454,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         // ignore Recommended Minimum Navigation Info, waypoint
         {"RMB", NULL, 0,  false, NULL},         // Recommended Min Nav Info
         {"RMC", NULL, 8,  false, processRMC},
-        {"ROT", NULL, 0,  false, NULL},         // ignore Rate of Turn
+        {"ROT", NULL, 3,  false, processROT},   // $APROT Rate of Turn
         {"RPM", NULL, 0,  false, NULL},         // ignore Revolutions
         {"RSA", NULL, 0,  false, NULL},         // Rudder Sensor Angle
         {"RTE", NULL, 0,  false, NULL},         // ignore Routes
@@ -4377,7 +4467,8 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"VHW", NULL, 0,  false, NULL},         // Water Speed and Heading
         {"VLW", NULL, 0,  false, NULL},         // Dual ground/water distance
         {"VTG", NULL, 5,  false, processVTG},
-        {"XDR", NULL, 0,  false, NULL},         // $HCXDR, IMU?
+        // $APXDR, $HCXDR, Transducer measurements
+        {"XDR", NULL, 5,  false, processXDR},
         {"XTE", NULL, 0,  false, NULL},         // Cross-Track Error
         {"ZDA", NULL ,4,  false, processZDA},
         {NULL, NULL,  0,  false, NULL},         // no more
