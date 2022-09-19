@@ -4465,7 +4465,10 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
     // dispatch on field zero, the sentence tag
     for (i = 0; i < NMEA_NUM; ++i) {
         char *s = session->nmea.field[0];
-        if (NULL == nmea_phrase[i].name) {
+
+        // CODACY #350416, wants explicit numeric end check
+        if ((NMEA_NUM - 1) <= i ||
+            NULL == nmea_phrase[i].name) {
             mask = ONLINE_SET;
             GPSD_LOG(LOG_DATA, &session->context->errout,
                      "NMEA0183: Unknown sentence type %s\n",
