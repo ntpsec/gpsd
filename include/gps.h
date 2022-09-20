@@ -101,6 +101,7 @@ extern "C" {
  *       Add prRes and qualityInd to satellite_t
  *       Add fixsource_t and watch_t to gps_data_t
  *       move privdata_t here from libgps/gps_sock.c
+ *       Add rot (Rate Of Turn), mheading, to struct attitude_t
  */
 #define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
@@ -2533,12 +2534,14 @@ struct attitude_t {
     double gyro_y;      // deg/s^2
     double gyro_z;      // deg/s^2
     double heading;     // true heading
+    double mheading;    // magnetic heading
     double mag_len;     // unitvector sqrt(x^2 + y^2 +z^2)
     double mag_x;
     double mag_y;
     double mag_z;
     double pitch;       // deg
     double roll;        // deg
+    double rot;         // rate of turn.  degrees / minute
     double temp;        // deg C
     double yaw;         // deg
     // compass status -- TrueNorth (and any similar) devices only

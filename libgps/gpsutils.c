@@ -326,12 +326,14 @@ void gps_clear_att(struct attitude_t *attp)
     attp->gyro_y = NAN;
     attp->gyro_z = NAN;
     attp->heading = NAN;
+    attp->mheading = NAN;
     attp->mag_len = NAN;
     attp->mag_x = NAN;
     attp->mag_y = NAN;
     attp->mag_z = NAN;
     attp->pitch = NAN;
     attp->roll = NAN;
+    attp->rot = NAN;
     attp->temp = NAN;
     attp->yaw = NAN;
     gps_clear_base(&attp->base);

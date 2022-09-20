@@ -2325,9 +2325,13 @@ static gps_mask_t processHDM(int c UNUSED, char *field[],
         return mask;
     }
 
+    // assume good data
+    session->gpsdata.attitude.mheading = safe_atof(field[1]);
+    mask |= ATTITUDE_SET;
+
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "NMEA0183: $xxHDM: Magnetic heading %.10s\n",
-             field[1]);
+             "NMEA0183: $xxHDM: Magnetic heading %f\n",
+             session->gpsdata.attitude.mheading);
     return mask;
 }
 
@@ -3863,9 +3867,13 @@ static gps_mask_t processROT(int c UNUSED, char *field[],
         return mask;
     }
 
+    // assume good data
+    session->gpsdata.attitude.rot = safe_atof(field[1]);
+    mask |= ATTITUDE_SET;
+
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "NMEA0183: $xxROT:Rate of Turn %.10s\n",
-             field[1]);
+             "NMEA0183: $xxROT:Rate of Turn %f\n",
+             session->gpsdata.attitude.rot);
     return mask;
 }
 
@@ -4203,15 +4211,31 @@ static gps_mask_t processXDR(int c UNUSED, char *field[],
      *
      */
     gps_mask_t mask = ONLINE_SET;
+    double data;
 
-    if ('\0' == field[1][0]) {
-        // no data
+    if ('A' != field[1][0] ||
+        '\0' == field[2][0] ||
+        'D' != field[3][0]) {
+        // no angular data, no data, or not degrees
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "NMEA0183: $xxXDR: Type %.10s Data %.10s Units %.10s "
+                 "ID %.10s\n",
+                 field[1], field[2], field[3], field[4]);
         return mask;
     }
 
+    data = safe_atof(field[2]);
+    if (0 != strncmp( "PTCH", field[4], 4)) {
+        session->gpsdata.attitude.pitch = data;
+        mask |= ATTITUDE_SET;
+    } else if (0 != strncmp( "ROLL", field[4], 4)) {
+        session->gpsdata.attitude.roll = data;
+        mask |= ATTITUDE_SET;
+    }
+
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "NMEA0183: $xxXDR: Type %.10s Data %.10s Units %.10s ID %.10s\n",
-             field[1], field[2], field[3], field[4]);
+             "NMEA0183: $xxXDR: Type %.10s Data %f Units %.10s ID %.10s\n",
+             field[1], data, field[3], field[4]);
     return mask;
 }
 

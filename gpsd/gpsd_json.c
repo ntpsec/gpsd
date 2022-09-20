@@ -4522,6 +4522,9 @@ void json_att_dump(const struct gps_data_t *gpsdata,
             str_appendf(reply, replylen, ",\"mag_st\":\"%c\"", att->mag_st);
         }
     }
+    if (0 != isfinite(att->mheading)) {
+        str_appendf(reply, replylen, ",\"mheading\":%.3f", att->mheading);
+    }
     if (0 != isfinite(att->pitch)) {
         str_appendf(reply, replylen, ",\"pitch\":%.2f", att->pitch);
         if ('\0' != att->pitch_st) {
@@ -4540,6 +4543,9 @@ void json_att_dump(const struct gps_data_t *gpsdata,
         if ('\0' != att->roll_st) {
             str_appendf(reply, replylen, ",\"roll_st\":\"%c\"", att->roll_st);
         }
+    }
+    if (0 != isfinite(att->rot)) {
+        str_appendf(reply, replylen, ",\"rot\":%.3f", att->rot);
     }
 
     if (0 != isfinite(att->dip)) {
