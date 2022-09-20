@@ -4216,35 +4216,81 @@ static gps_mask_t processXDR(int count, char *field[],
      *
      */
     gps_mask_t mask = ONLINE_SET;
-    double data;
     unsigned int i;
     unsigned int num_meas = count / 4;
 
     for (i = 0; i < num_meas; i++) {
-        if ('A' != field[i + 1][0] ||
-            '\0' == field[i + 2][0] ||
-            'D' != field[i + 3][0]) {
-            // no angular data, no data, or not degrees
+        double data = 0.0;
+        unsigned int j = i * 4;
+
+        if ('\0' == field[j + 2][0]) {
+            // no data, skip it
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "NMEA0183: $xxXDR: Type %.10s Data %.10s Units %.10s "
                      "ID %.10s\n",
-                     field[i + 1], field[i + 2], field[i + 3], field[i + 4]);
+                     field[j + 1], field[j + 2], field[j + 3], field[j + 4]);
             continue;
         }
 
-        data = safe_atof(field[2]);
-        if (0 == strncmp( "PTCH", field[4], 6) ||
-            0 == strncmp( "PTICH", field[4], 6)) {
-            session->gpsdata.attitude.pitch = data;
-            mask |= ATTITUDE_SET;
-        } else if (0 == strncmp( "ROLL", field[4], 4)) {
-            session->gpsdata.attitude.roll = data;
-            mask |= ATTITUDE_SET;
+        data = safe_atof(field[j + 2]);
+
+        switch (field[j + 1][0]) {
+        case 'A':
+            // angles
+            if ('D' != field[j + 3][0]) {
+                // not degrees
+                continue;
+            }
+            if (0 == strncmp( "HEEL", field[j + 4], 10)) {
+                // session->gpsdata.attitude.roll = data;
+                // mask |= ATTITUDE_SET;
+            } else if (0 == strncmp( "PTCH", field[j + 4], 10) ||
+                0 == strncmp( "PITCH", field[j + 4], 10)) {
+                session->gpsdata.attitude.pitch = data;
+                mask |= ATTITUDE_SET;
+            } else if (0 == strncmp( "ROLL", field[j + 4], 10)) {
+                session->gpsdata.attitude.roll = data;
+                mask |= ATTITUDE_SET;
+            } else if (0 == strncmp( "RUDDER", field[j + 4], 10)) {
+                // session->gpsdata.attitude.roll = data;
+                // mask |= ATTITUDE_SET;
+            } else if (0 == strncmp( "TRIM", field[j + 4], 10)) {
+                // session->gpsdata.attitude.roll = data;
+                // mask |= ATTITUDE_SET;
+            }
+            // else, unknown
+            break;
+        case 'G':
+            // G: TODO: G,358,,MAGX,G,2432,,MAGY,G,-8974,,MAGZ*47
+            // oddly field[j + 3][0] is NUL...
+
+            if (0 == strncmp( "MAGX", field[j + 4], 10)) {
+                // unknown scale
+                session->gpsdata.attitude.mag_x = data;
+                mask |= ATTITUDE_SET;
+            } else if (0 == strncmp( "MAGY", field[j + 4], 10)) {
+                // unknown scale
+                session->gpsdata.attitude.mag_y = data;
+                mask |= ATTITUDE_SET;
+            } else if (0 == strncmp( "MAGZ", field[j + 4], 10)) {
+                // unknown scale
+                session->gpsdata.attitude.mag_z = data;
+                mask |= ATTITUDE_SET;
+            }
+            break;
+        case 'C':
+            // C,,C,AIRTEMP,
+            FALLTHROUGH
+        case 'P':
+            // Pressure: TODO: P,,B,BARO
+            FALLTHROUGH
+        default:
+            break;
         }
 
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "NMEA0183: $xxXDR: Type %.10s Data %f Units %.10s ID %.10s\n",
-                 field[1 + 1], data, field[i + 3], field[i + 4]);
+                 field[j + 1], data, field[j + 3], field[j + 4]);
     }
     return mask;
 }
