@@ -306,6 +306,7 @@ the following are well known:
 .Common talker IDs
 |================================================================
 |$AI     | Alarm Indicator, (AIS?)
+|$AP     | Auto Pilot (pypilot?)
 |$BD     | BeiDou (China)
 |$CD     | Digital Selective Calling (DSC)
 |$EC     | Electronic Chart Display & Information System (ECDIS)
