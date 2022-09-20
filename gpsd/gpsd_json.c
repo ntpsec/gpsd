@@ -4526,7 +4526,8 @@ void json_att_dump(const struct gps_data_t *gpsdata,
         str_appendf(reply, replylen, ",\"mheading\":%.3f", att->mheading);
     }
     if (0 != isfinite(att->pitch)) {
-        str_appendf(reply, replylen, ",\"pitch\":%.2f", att->pitch);
+        // pypilot reports %.3f
+        str_appendf(reply, replylen, ",\"pitch\":%.3f", att->pitch);
         if ('\0' != att->pitch_st) {
             str_appendf(reply, replylen, ",\"pitch_st\":\"%c\"",
                         att->pitch_st);
@@ -4539,7 +4540,8 @@ void json_att_dump(const struct gps_data_t *gpsdata,
         }
     }
     if (0 != isfinite(att->roll)) {
-        str_appendf(reply, replylen, ",\"roll\":%.2f", att->roll);
+        // pypilot reports %.3f
+        str_appendf(reply, replylen, ",\"roll\":%.3f", att->roll);
         if ('\0' != att->roll_st) {
             str_appendf(reply, replylen, ",\"roll_st\":\"%c\"", att->roll_st);
         }

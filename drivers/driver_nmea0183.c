@@ -4193,7 +4193,7 @@ static gps_mask_t processVTG(int count,
 
 /* precessXDR() - process transducer messages
  */
-static gps_mask_t processXDR(int c UNUSED, char *field[],
+static gps_mask_t processXDR(int count, char *field[],
                              struct gps_device_t *session)
 {
     /*
@@ -4209,33 +4209,43 @@ static gps_mask_t processXDR(int c UNUSED, char *field[],
      *     can be repeated...
      * )  checksum
      *
+     * TODO: stacked measurements, like the TNT Revolution:
+  $HCXDR,A,177,D,PITCH,A,-40,D,ROLL,G,358,,MAGX,G,2432,,MAGY,G,-8974,,MAGZ*47
+     *  the bund_zeus:
+  $IIXDR,C,,C,AIRTEMP,A,-3.0,D,HEEL,A,3.7,D,TRIM,P,,B,BARO,A,-4.2,D,RUDDER*28
+     *
      */
     gps_mask_t mask = ONLINE_SET;
     double data;
+    unsigned int i;
+    unsigned int num_meas = count / 4;
 
-    if ('A' != field[1][0] ||
-        '\0' == field[2][0] ||
-        'D' != field[3][0]) {
-        // no angular data, no data, or not degrees
+    for (i = 0; i < num_meas; i++) {
+        if ('A' != field[i + 1][0] ||
+            '\0' == field[i + 2][0] ||
+            'D' != field[i + 3][0]) {
+            // no angular data, no data, or not degrees
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "NMEA0183: $xxXDR: Type %.10s Data %.10s Units %.10s "
+                     "ID %.10s\n",
+                     field[i + 1], field[i + 2], field[i + 3], field[i + 4]);
+            continue;
+        }
+
+        data = safe_atof(field[2]);
+        if (0 == strncmp( "PTCH", field[4], 6) ||
+            0 == strncmp( "PTICH", field[4], 6)) {
+            session->gpsdata.attitude.pitch = data;
+            mask |= ATTITUDE_SET;
+        } else if (0 == strncmp( "ROLL", field[4], 4)) {
+            session->gpsdata.attitude.roll = data;
+            mask |= ATTITUDE_SET;
+        }
+
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "NMEA0183: $xxXDR: Type %.10s Data %.10s Units %.10s "
-                 "ID %.10s\n",
-                 field[1], field[2], field[3], field[4]);
-        return mask;
+                 "NMEA0183: $xxXDR: Type %.10s Data %f Units %.10s ID %.10s\n",
+                 field[1 + 1], data, field[i + 3], field[i + 4]);
     }
-
-    data = safe_atof(field[2]);
-    if (0 != strncmp( "PTCH", field[4], 4)) {
-        session->gpsdata.attitude.pitch = data;
-        mask |= ATTITUDE_SET;
-    } else if (0 != strncmp( "ROLL", field[4], 4)) {
-        session->gpsdata.attitude.roll = data;
-        mask |= ATTITUDE_SET;
-    }
-
-    GPSD_LOG(LOG_PROG, &session->context->errout,
-             "NMEA0183: $xxXDR: Type %.10s Data %f Units %.10s ID %.10s\n",
-             field[1], data, field[3], field[4]);
     return mask;
 }
 

@@ -16,6 +16,8 @@ $HEHDT,4.0,T*2B
 {"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:11.000Z","ept":0.005,"lat":50.213180000,"lon":-8.114660000,"track":3.0000,"magtrack":0.1222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
 {"class":"ATT","heading":4.000}
 $HEROT,0.0,A*2B
+{"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:11.000Z","ept":0.005,"lat":50.213180000,"lon":-8.114660000,"track":3.0000,"magtrack":0.1222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
+{"class":"ATT","heading":4.000,"rot":0.000}
 $PFEC,AIcmd,0,35,A,01062011,130712*06
 !AIVDO,1,1,,B,13`kvwO005wJnb0Lfo:P7h8H05`L,0*7D
 {"class":"AIS","type":1,"repeat":0,"mmsi":244121341,"scaled":false,"status":15,"status_text":"Not defined","turn":0,"speed":5,"accuracy":true,"lon":-4868800,"lat":30127914,"course":31,"heading":4,"second":12,"maneuver":0,"raim":false,"radio":23068}
@@ -30,6 +32,8 @@ $HEHDT,4.0,T*2B
 {"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:12.000Z","ept":0.005,"lat":50.213190000,"lon":-8.114660000,"track":3.1000,"magtrack":0.2222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
 {"class":"ATT","heading":4.000}
 $HEROT,0.0,A*2B
+{"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:12.000Z","ept":0.005,"lat":50.213190000,"lon":-8.114660000,"track":3.1000,"magtrack":0.2222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
+{"class":"ATT","heading":4.000,"rot":0.000}
 $PFEC,AIcmd,0,35,A,01062011,130713*07
 !AIVDO,1,1,,B,13`kvwO005wJnb0Lfo;07h8J05`L,0*1E
 {"class":"AIS","type":1,"repeat":0,"mmsi":244121341,"scaled":false,"status":15,"status_text":"Not defined","turn":0,"speed":5,"accuracy":true,"lon":-4868800,"lat":30127916,"course":31,"heading":4,"second":13,"maneuver":0,"raim":false,"radio":23068}
@@ -44,6 +48,8 @@ $HEHDT,4.0,T*2B
 {"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:13.000Z","ept":0.005,"lat":50.213190000,"lon":-8.114660000,"track":3.1000,"magtrack":0.2222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
 {"class":"ATT","heading":4.000}
 $HEROT,0.0,A*2B
+{"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:13.000Z","ept":0.005,"lat":50.213190000,"lon":-8.114660000,"track":3.1000,"magtrack":0.2222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
+{"class":"ATT","heading":4.000,"rot":0.000}
 $PFEC,AIcmd,0,35,A,01062011,130714*00
 !AIVDO,1,1,,B,13`kvwO005wJnb0Lfo;@7@8L05`L,0*40
 {"class":"AIS","type":1,"repeat":0,"mmsi":244121341,"scaled":false,"status":15,"status_text":"Not defined","turn":0,"speed":5,"accuracy":true,"lon":-4868800,"lat":30127917,"course":29,"heading":4,"second":14,"maneuver":0,"raim":false,"radio":23068}
@@ -58,6 +64,8 @@ $HEHDT,4.0,T*2B
 {"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:14.000Z","ept":0.005,"lat":50.213190000,"lon":-8.114660000,"track":2.9000,"magtrack":0.0222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
 {"class":"ATT","heading":4.000}
 $HEROT,0.0,A*2B
+{"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:14.000Z","ept":0.005,"lat":50.213190000,"lon":-8.114660000,"track":2.9000,"magtrack":0.0222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
+{"class":"ATT","heading":4.000,"rot":0.000}
 $PFEC,AIcmd,0,35,A,01062011,130715*01
 !AIVDO,1,1,,B,13`kvwO005wJnb0Lfo;h7@8N05`L,0*6A
 {"class":"AIS","type":1,"repeat":0,"mmsi":244121341,"scaled":false,"status":15,"status_text":"Not defined","turn":0,"speed":5,"accuracy":true,"lon":-4868800,"lat":30127919,"course":29,"heading":4,"second":15,"maneuver":0,"raim":false,"radio":23068}
@@ -72,6 +80,8 @@ $HEHDT,4.0,T*2B
 {"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:15.000Z","ept":0.005,"lat":50.213190000,"lon":-8.114660000,"track":2.9000,"magtrack":0.0222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
 {"class":"ATT","heading":4.000}
 $HEROT,0.0,A*2B
+{"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:15.000Z","ept":0.005,"lat":50.213190000,"lon":-8.114660000,"track":2.9000,"magtrack":0.0222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
+{"class":"ATT","heading":4.000,"rot":0.000}
 $PFEC,AIcmd,0,35,A,01062011,130716*02
 !AIVDO,1,1,,B,13`kvwO005wJnb0Lfo<07P8P05`L,0*3B
 {"class":"AIS","type":1,"repeat":0,"mmsi":244121341,"scaled":false,"status":15,"status_text":"Not defined","turn":0,"speed":5,"accuracy":true,"lon":-4868800,"lat":30127920,"course":30,"heading":4,"second":16,"maneuver":0,"raim":false,"radio":23068}
@@ -86,6 +96,8 @@ $HEHDT,4.1,T*2A
 {"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:16.000Z","ept":0.005,"lat":50.213200000,"lon":-8.114660000,"track":3.0000,"magtrack":0.1222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
 {"class":"ATT","heading":4.100}
 $HEROT,0.0,A*2B
+{"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:16.000Z","ept":0.005,"lat":50.213200000,"lon":-8.114660000,"track":3.0000,"magtrack":0.1222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
+{"class":"ATT","heading":4.100,"rot":0.000}
 !AIVDM,1,1,,B,13aGhtw0B<OJfDpLgQqQd1FR05`L,0*41
 {"class":"AIS","type":1,"repeat":0,"mmsi":244707571,"scaled":false,"status":15,"status_text":"Not defined","turn":1,"speed":140,"accuracy":false,"lon":-4885860,"lat":30138854,"course":432,"heading":43,"second":17,"maneuver":0,"raim":false,"radio":23068}
 $PFEC,AIcmd,0,35,A,01062011,130717*03
@@ -102,6 +114,8 @@ $HEHDT,4.1,T*2A
 {"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:17.000Z","ept":0.005,"lat":50.213200000,"lon":-8.114660000,"track":2.8000,"magtrack":359.9222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
 {"class":"ATT","heading":4.100}
 $HEROT,0.0,A*2B
+{"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:17.000Z","ept":0.005,"lat":50.213200000,"lon":-8.114660000,"track":2.8000,"magtrack":359.9222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
+{"class":"ATT","heading":4.100,"rot":0.000}
 $PFEC,AIcmd,0,35,A,01062011,130718*0C
 !AIVDO,1,1,,B,13`kvwO005wJnb2Lfo<h6@8T05`L,0*74
 {"class":"AIS","type":1,"repeat":0,"mmsi":244121341,"scaled":false,"status":15,"status_text":"Not defined","turn":0,"speed":5,"accuracy":true,"lon":-4868799,"lat":30127923,"course":25,"heading":4,"second":18,"maneuver":0,"raim":false,"radio":23068}
@@ -116,6 +130,8 @@ $HEHDT,4.1,T*2A
 {"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:18.000Z","ept":0.005,"lat":50.213200000,"lon":-8.114660000,"track":2.5000,"magtrack":359.6222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
 {"class":"ATT","heading":4.100}
 $HEROT,0.0,A*2B
+{"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:18.000Z","ept":0.005,"lat":50.213200000,"lon":-8.114660000,"track":2.5000,"magtrack":359.6222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
+{"class":"ATT","heading":4.100,"rot":0.000}
 $PFEC,AIcmd,0,35,A,01062011,130719*0D
 !AIVDO,1,1,,B,13`kvwO005wJnb2Lfo=@6@8V05`L,0*5F
 {"class":"AIS","type":1,"repeat":0,"mmsi":244121341,"scaled":false,"status":15,"status_text":"Not defined","turn":0,"speed":5,"accuracy":true,"lon":-4868799,"lat":30127925,"course":25,"heading":4,"second":19,"maneuver":0,"raim":false,"radio":23068}
@@ -130,6 +146,8 @@ $HEHDT,4.1,T*2A
 {"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:19.000Z","ept":0.005,"lat":50.213200000,"lon":-8.114660000,"track":2.5000,"magtrack":359.6222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
 {"class":"ATT","heading":4.100}
 $HEROT,0.0,A*2B
+{"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:19.000Z","ept":0.005,"lat":50.213200000,"lon":-8.114660000,"track":2.5000,"magtrack":359.6222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
+{"class":"ATT","heading":4.100,"rot":0.000}
 $PFEC,AIcmd,0,35,A,01062011,130720*07
 !AIVDO,1,1,,B,13`kvwO005wJnb2Lfo=P6@8`05`L,0*79
 {"class":"AIS","type":1,"repeat":0,"mmsi":244121341,"scaled":false,"status":15,"status_text":"Not defined","turn":0,"speed":5,"accuracy":true,"lon":-4868799,"lat":30127926,"course":25,"heading":4,"second":20,"maneuver":0,"raim":false,"radio":23068}
@@ -144,6 +162,8 @@ $HEHDT,4.1,T*2A
 {"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:20.000Z","ept":0.005,"lat":50.213210000,"lon":-8.114660000,"track":2.5000,"magtrack":359.6222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
 {"class":"ATT","heading":4.100}
 $HEROT,0.0,A*2B
+{"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:20.000Z","ept":0.005,"lat":50.213210000,"lon":-8.114660000,"track":2.5000,"magtrack":359.6222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
+{"class":"ATT","heading":4.100,"rot":0.000}
 $PFEC,AIcmd,0,35,A,01062011,130721*06
 !AIVDO,1,1,,B,13`kvwO005wJnb2Lfo>05P8b05`L,0*0B
 {"class":"AIS","type":1,"repeat":0,"mmsi":244121341,"scaled":false,"status":15,"status_text":"Not defined","turn":0,"speed":5,"accuracy":true,"lon":-4868799,"lat":30127928,"course":22,"heading":4,"second":21,"maneuver":0,"raim":false,"radio":23068}
@@ -158,6 +178,8 @@ $HEHDT,4.1,T*2A
 {"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:21.000Z","ept":0.005,"lat":50.213210000,"lon":-8.114660000,"track":2.2000,"magtrack":359.3222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
 {"class":"ATT","heading":4.100}
 $HEROT,0.0,A*2B
+{"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:21.000Z","ept":0.005,"lat":50.213210000,"lon":-8.114660000,"track":2.2000,"magtrack":359.3222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
+{"class":"ATT","heading":4.100,"rot":0.000}
 $PFEC,AIcmd,0,35,A,01062011,130722*05
 !AIVDO,1,1,,B,13`kvwO005wJnb2Lfo>@6@8d05`L,0*6E
 {"class":"AIS","type":1,"repeat":0,"mmsi":244121341,"scaled":false,"status":15,"status_text":"Not defined","turn":0,"speed":5,"accuracy":true,"lon":-4868799,"lat":30127929,"course":25,"heading":4,"second":22,"maneuver":0,"raim":false,"radio":23068}
@@ -172,3 +194,5 @@ $HEHDT,4.1,T*2A
 {"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:22.000Z","ept":0.005,"lat":50.213210000,"lon":-8.114660000,"track":2.5000,"magtrack":359.6222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
 {"class":"ATT","heading":4.100}
 $HEROT,0.0,A*2B
+{"class":"TPV","status":2,"mode":2,"time":"2031-01-15T13:07:22.000Z","ept":0.005,"lat":50.213210000,"lon":-8.114660000,"track":2.5000,"magtrack":359.6222,"magvar":-2.9,"speed":0.257,"datum":"WGS84"}
+{"class":"ATT","heading":4.100,"rot":0.000}

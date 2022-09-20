@@ -493,9 +493,13 @@ fractional part of up to .001sec precision.
 
 |mag_st |No |string |Magnetometer status.
 
+|mheading |No |numeric |Heading, degrees from magnetic north.
+
 |pitch |No |numeric |Pitch in degrees.
 
 |pitch_st |No |string |Pitch sensor status.
+
+|rot |No |numeric |Rate of Turn in dgrees per minute.
 
 |yaw |No |numeric |Yaw in degrees
 
