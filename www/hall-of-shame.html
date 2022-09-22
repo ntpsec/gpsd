@@ -5,7 +5,7 @@
    <meta name="Description" content="Naming and shaming GPS vendors for especially botched designs">
    <meta name="Keywords" content="GPS, gpsd, shame">
    <meta name="Author" content="Eric S. Raymond">
-   <meta name="Revised" content="9 April 2015">
+   <meta name="Revised" content="21 September 2022">
    <meta name="robots" content="index,follow">
    <link rel="stylesheet" href="main.css" type="text/css">
    <title>GPS Hall of Shame</title>
@@ -32,7 +32,7 @@ GPS Hall of Shame
     <a href="hardware.html">Hardware</a><br>
     <a href="for-vendors.html">For GPS Vendors</a><br>
     <a href="wishlist.html">Wish List</a><br>
-    Hall of Shame<br>
+    <a href="#">Hall of Shame</a><br>
     <a href="troubleshooting.html">Troubleshooting Guide</a><br>
     <a href="hacking.html">Hacker's Guide</a><br>
     <a href="protocol-transition.html">Application Compatibility</a>
@@ -91,6 +91,11 @@ versions it applies to.</p>
 vendors ever actually test their hardware.</p>
 
 <ul>
+<li><p>The Quectel-chipsets implement "Querky" interpretations of the
+NMEA protocol.  *gpsd* tries to implement workarounds when possiblem
+but it would be far better is Quectel developers read the NMEA
+protocol documentation.</p></li>
+
 <li><p>The iTalk protocol  from Fastrax Inc. sometimes emits well-formed,
 checksummed binary packets in which the length is incorrect.  If you
 trust it and read the number of bytes it tells you to, you'll land in
