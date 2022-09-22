@@ -1,6 +1,6 @@
 = libgps(3)
 :author: Eric S. Raymond
-:date: 25 July 2022
+:date: 21 September 2022
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, libgps
 :manmanual: GPSD Documentation
@@ -57,12 +57,14 @@ Python:
 import gps
 session = gps.gps(host="localhost", port="2947")
 session.stream(flags=gps.WATCH_JSON)
-for report in session:
-    process(report)
+while 0 == session.read():
+    process(session)
 del session
 ----
 
 == DESCRIPTION
+
+=== C
 
 *libgps* is a service library which supports communicating with an
 instance of the *gpsd*(8), link it with the linker option *-lgps*.
@@ -210,14 +212,19 @@ different flag masks is allowed.
 *gps_errstr()* returns an ASCII string (in English) describing the
 error indicated by a nonzero return value from *gps_open()*.
 
-The Python implementation supports the same facilities as the
-socket-export calls in the C library; there is no shared-memory
-interface. *gps_open()* is replaced by the initialization of a gps
-session object; the other calls are methods of that object, and have the
-same names as the corresponding C functions. However, it is simpler just
-to use the session object as an iterator, as in the example given below.
-Resources within the session object will be properly released when it is
-garbage-collected.
+=== Python
+
+The Python implementation supports the same facilities as the the C
+library. *gps_open()* is replaced by the initialization of a gps session
+object: *session = gps.gps(...)*. The other calls are methods of that
+object, and have the same names as the corresponding C functions.
+
+In addtion to using *gps.read()* to read messages from *gpsd*, you can
+use the session object as an iterator, as in the code fragment given
+below. Python iterators implicitly call the function *gps.\_\_next()*
+which is just a shim over *gps.read()*. There is other advantage to
+using the implicit iterator and it does not allow the options that
+*gps.read()* does.
 
 [source%nowrap,python]
 ----
@@ -228,6 +235,13 @@ for report in session:
     process(report)
 del session
 ----
+
+Resources within the session object will be properly released when it is
+garbage-collected.
+
+For further information on the Python gps module, read the comments in
+the modules files.  There is a complete Python example in the file
+_www/gpsd-client-example-code.adoc_.
 
 == ENVIRONMENT VARIABLES
 
