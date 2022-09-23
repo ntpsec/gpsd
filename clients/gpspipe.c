@@ -131,6 +131,7 @@ static void usage(void)
                   "  --usec           Time stamp in usec, implies '-t'. "
                   "Use twice for sec.usec.\n"
                   "  --version        Print version and exit.\n"
+                  "  --nobuffer       do not buffer output\n"
                   "  --zulu           Set the timestamp format to iso8601, "
                   "implies '-t'\n"
 #endif
@@ -160,6 +161,7 @@ static void usage(void)
                   "  -V               Print version and exit.\n"
                   "  -w               Dump gpsd native JSON data.\n"
                   "  -x SEC           Exit after SEC seconds delay.\n"
+                  "  -B               do not buffer output\n"
                   "  -Z               Set the timestamp format to iso8601, "
                   "implies '-t'.\n\n"
                   "You must specify one, or more, of: "
@@ -181,6 +183,7 @@ int main(int argc, char **argv)
     bool new_line = true;
     bool raw = false;
     bool watch = false;
+    bool nobuffer = false;
     int option_u = 0;                   // option to show uSeconds
     long count = -1;
     time_t exit_timer = 0;
@@ -192,7 +195,7 @@ int main(int argc, char **argv)
     struct fixsource_t source;
     char *serialport = NULL;
     char *outfile = NULL;
-    const char *optstring = "2?dD:hln:o:pPrRwSs:tT:uvVx:Z";
+    const char *optstring = "2?BdD:hln:o:pPrRwSs:tT:uvVx:Z";
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
     static struct option long_options[] = {
@@ -217,6 +220,7 @@ int main(int argc, char **argv)
         {"usec", no_argument, NULL, 'u'},
         {"version", no_argument, NULL, 'V' },
         {"zulu", no_argument, NULL, 'Z'},
+        {"nobuffer", no_argument, NULL, 'B'},
         {NULL, 0, NULL, 0},
     };
 #endif
@@ -308,6 +312,9 @@ int main(int argc, char **argv)
             format = zulu_format;
             iso8601 = true;
             break;
+        case 'B':
+            nobuffer = true;
+            break;
         case '?':
         case 'h':
             usage();
@@ -369,6 +376,10 @@ int main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
     }
+    if (nobuffer) {
+        setbuf(fp, NULL);    // do NOT buffer output
+    }
+
 
     /* Open the serial port and set it up. */
     if (serialport) {
