@@ -85,17 +85,32 @@ in the future.</p>
 bug, it's best if you can identify the firmware version or range of
 versions it applies to.</p>
 
+<h2>NMEA violations</h2>
+
+<p>These are the screwups that lead us to wonder if the GPS chipset
+vendors ever read the NMEA documentation.</p>
+
+<ul>
+<li><p>When Qualcomm bought SiRF, they stopped releasing any documentation,
+and started get creative with their interpretations of NMEA.  Thenm starting
+adding new protocols.</p></li>
+
+<li><p>The QUalcomm SiRF-TriG, Furuno GT-88, Navlor CH-4701, and Quectel
+EG25-G, all emit broken $xxGSA sentences.  Each broken in  different ways.
+</p></li>
+
+<li><p>The Quectel-chipsets implement "Querky" interpretations of the
+NMEA protocol.  *gpsd* tries to implement workarounds when possiblem
+but it would be far better is Quectel developers read the NMEA
+protocol documentation.</p></li>
+</ul>
+
 <h2>Implementation blunders</h2>
 
 <p>These are the screwups that lead us to wonder if the GPS chipset
 vendors ever actually test their hardware.</p>
 
 <ul>
-<li><p>The Quectel-chipsets implement "Querky" interpretations of the
-NMEA protocol.  *gpsd* tries to implement workarounds when possiblem
-but it would be far better is Quectel developers read the NMEA
-protocol documentation.</p></li>
-
 <li><p>The iTalk protocol  from Fastrax Inc. sometimes emits well-formed,
 checksummed binary packets in which the length is incorrect.  If you
 trust it and read the number of bytes it tells you to, you'll land in
