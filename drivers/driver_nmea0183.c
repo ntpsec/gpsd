@@ -1501,17 +1501,19 @@ static gps_mask_t processGSA(int count, char *field[],
      *         1=Fix not available,
      *         2=2D,
      *         3=3D
-     * 3-14 = PRNs of satellites used in position fix (null for unused fields)
+     *         E=Dead Reckonig (Antaris)
+     * 3-14 (or 24!) = satellite PRNs used in position fix (null unused)
      * 15   = PDOP
      * 16   = HDOP
      * 17   = VDOP
-     * 18   - NMEA 4.1+ GNSS System ID, u-blox extended
+     * 18   - NMEA 4.1+ GNSS System ID, u-blox extended, Quectel $PQ
      *             1 = GPS L1C/A, L2CL, L2CM
      *             2 = GLONASS L1 OF, L2 OF
      *             3 = Galileo E1C, E1B, E5 bl, E5 bQ
      *             4 = BeiDou B1I D1, B1I D2, B2I D1, B2I D12
      *             5 = QZSS
      *             6 - NavID (IRNSS)
+     * 18     SiRF TriG puts a floating point number here.
      *
      * Not all documentation specifies the number of PRN fields, it
      * may be variable.  Most doc that specifies says 12 PRNs.
@@ -1524,6 +1526,11 @@ static gps_mask_t processGSA(int count, char *field[],
      * $GPGSA,A,3,23,31,22,16,03,07,,,,,,,1.8,1.1,1.4*3E
      * $BDGSA,A,3,214,,,,,,,,,,,,1.8,1.1,1.4*18
      * These need to be combined like GPGSV and BDGSV
+     *
+     * The SiRF-TriG, found in their Atlas VI SoC,  uses field 18 for
+     * something other than the NMEA gnss ID:
+     * $GPGSA,A,3,25,32,12,14,,,,,,,,,2.1,1.1,1.8,1.2*39
+     * $BDGSA,A,3,02,03,04,,,,,,,,,,2.1,1.1,1.8,1.2*2D
      *
      * Some GPS emit GNGSA.  So far we have not seen a GPS emit GNGSA
      * and then another flavor of xxGSA
@@ -1544,12 +1551,17 @@ static gps_mask_t processGSA(int count, char *field[],
      * $GNGSA,A,3,13,12,22,19,08,21,,,,,,,1.05,0.64,0.83,4*0B
      * Also note the NMEA 4.0 GLONASS PRN (82) in an NMEA 4.1
      * sentence.
+     *
+     * Another Quectel Querk.  Note the extra field on the end.
+     *   System ID, 4 = BeiDou, 5 = QZSS
+     * 
+     * $PQGSA,A,3,12,,,,,,,,,,,,1.2,0.9,0.9,4*3C
+     * $PQGSA,A,3,,,,,,,,,,,,,1.2,0.9,0.9,5*3E
+     * NMEA 4.11 says they should use $BDGSA and $GQGSA
      */
     gps_mask_t mask = ONLINE_SET;
     char last_last_gsa_talker = session->nmea.last_gsa_talker;
     int nmea_gnssid = 0;
-    int nmea_sigid = 0;
-    int ubx_sigid = 0;
 
     /*
      * One chipset called the i.Trek M3 issues GPGSA lines that look like
@@ -1560,31 +1572,36 @@ static gps_mask_t processGSA(int count, char *field[],
      */
     if (18 > count) {
         GPSD_LOG(LOG_DATA, &session->context->errout,
-                 "NMEA0183: xxGSA: malformed, setting ONLINE_SET only.\n");
+                 "NMEA0183: xxGSA: count %d too short.\n",
+                 count);
     } else if (session->nmea.latch_mode) {
         // last GGA had a non-advancing timestamp; don't trust this GSA
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "NMEA0183: xxGSA: non-advancing timestamp\n");
     } else {
         int i;
-        session->newdata.mode = atoi(field[2]);
+
+        i = atoi(field[2]);
         /*
          * The first arm of this conditional ignores dead-reckoning
          * fixes from an Antaris chipset. which returns E in field 2
          * for a dead-reckoning estimate.  Fix by Andreas Stricker.
          */
-        if ('E' != field[2][0]) {
+        if (1 <= i &&
+            3 >= i) {
+            session->newdata.mode = i;
             mask = MODE_SET;
-        }
 
-        GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "NMEA0183: xxGSA sets mode %d\n", session->newdata.mode);
+            GPSD_LOG(LOG_PROG, &session->context->errout,
+                     "NMEA0183: xxGSA sets mode %d\n", session->newdata.mode);
+        }
 
         if (19 < count) {
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "NMEA0183: xxGSA: count %d too long!\n", count);
         } else {
             double dop;
+
             // Just ignore the last fields of the Navior CH-4701
             if ('\0' != field[15][0]) {
                 dop = safe_atof(field[15]);
@@ -1610,10 +1627,15 @@ static gps_mask_t processGSA(int count, char *field[],
             }
             if (19 == count &&
                 '\0' != field[18][0]) {
-                // get the NMEA 4.10 sigid
-                nmea_sigid = atoi(field[18]);
-                // FIXME: ubx_sigid not used yet
-                ubx_sigid = nmea_sigid_to_ubx(nmea_sigid);
+                if (NULL != strchr(field[18], '.')) {
+                    // SiRF TriG puts a floating point in field 18
+                    GPSD_LOG(LOG_WARN, &session->context->errout,
+                             "NMEA0183: xxGSA: illegal field 18 (%s)!\n",
+                             field[18]);
+                } else {
+                    // get the NMEA 4.10, or $PQGSA, system ID
+                    nmea_gnssid = atoi(field[18]);
+                }
             }
         }
         /*
@@ -1626,7 +1648,7 @@ static gps_mask_t processGSA(int count, char *field[],
              'N' != GSA_TALKER) ) {
             session->gpsdata.satellites_used = 0;
             memset(session->nmea.sats_used, 0, sizeof(session->nmea.sats_used));
-            GPSD_LOG(LOG_DATA, &session->context->errout,
+            GPSD_LOG(LOG_PROG, &session->context->errout,
                      "NMEA0183: xxGSA: clear sats_used\n");
         }
         session->nmea.last_gsa_talker = GSA_TALKER;
@@ -1661,14 +1683,22 @@ static gps_mask_t processGSA(int count, char *field[],
             // GN GNSS
             session->nmea.seen_gngsa = true;
             // field 18 is the NMEA gnssid in 4.10 and up.
-            nmea_gnssid = atoi(field[18]);
+            // nmea_gnssid = atoi(field[18]);  // duplicates above
             break;
         case 'P':
             // GP GPS
             session->nmea.seen_gpgsa = true;
+            nmea_gnssid = 1;
             break;
         case 'Q':
-            // Quectel EC25 & EC21 use PQGSA for QZSS
+            // Quectel EC25 & EC21 use PQGSA for QZSS and GLONASS
+            if ('P' == field[0][0] &&
+                0 != nmea_gnssid) {
+                /* Quectel EC25 & EC21 use PQGSV for BeiDou or QZSS
+                 * nmea_gnssid set above.  What about seen?
+                 */
+                break;
+            }
             FALLTHROUGH
         case 'Z':        // QZ QZSS
             // NMEA 4.11 GQGSA for QZSS
@@ -1717,15 +1747,14 @@ static gps_mask_t processGSA(int count, char *field[],
             }
         }
         mask |= USED_IS;
-        GPSD_LOG(LOG_DATA, &session->context->errout,
+        GPSD_LOG(LOG_PROG, &session->context->errout,
                  "NMEA0183: xxGSA: mode=%d used=%d pdop=%.2f hdop=%.2f "
-                 " vdop=%.2f "
-                 "ubx_sigid %d\n",
+                 "vdop=%.2f nmea_gnssid %d\n",
                  session->newdata.mode,
                  session->gpsdata.satellites_used,
                  session->gpsdata.dop.pdop,
                  session->gpsdata.dop.hdop,
-                 session->gpsdata.dop.vdop, ubx_sigid);
+                 session->gpsdata.dop.vdop, nmea_gnssid);
     }
     // assumes GLGSA or BDGSA, if present, is emitted directly after the GPGSA
     if ((session->nmea.seen_bdgsa ||

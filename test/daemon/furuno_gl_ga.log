@@ -3,6 +3,7 @@
 # Furuno GT-88
 #
 # Note: invalid GNGSA GALILEO encoding
+#       GAGSV: outputs 21 fields, no DOPS, and adds signal id.
 #       proprietary $PERD messages
 #
 $GNRMC,120213.000,A,5957.0062,N,01100.6429,E,0.00,0.00,310722,,,D,V*0A

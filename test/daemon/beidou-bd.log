@@ -9,6 +9,9 @@
 #	Use this log to test that Beidou NMEA IDs are being mapped to
 #	the Beidou PRN range and that Beidou GSV sentences are
 #	properly integrated into a combined skyview.
+#
+#       Non-standard field 18 in $BDGSA.  FLoating point instead of NMEA
+#       system ID.
 
 $PSRFEPE,074150.799,V,,,,,*23
 $GNGGA,074150.799,,,,,0,00,,,M,0.0,M,,0000,*64

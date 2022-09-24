@@ -2,6 +2,8 @@
 # Chipset: eg25-g (on PinePhone)
 # Firmware: EG25GGBR07A08M2G_01.002.01.002.
 # Submittter: Andrey Skvortsov @AndreySV on GitLab
+# Location: 36.763803983N 31.410876250E
+#    07330 Manavgat Antalya, Turkey
 # Date: 2022-09-11
 # Note: Quectel Querk: $PQGSV
 $GLGSV,2,1,08,78,38,036,22,79,53,313,19,88,22,080,26,68,39,195,21,1*75
