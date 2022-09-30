@@ -534,8 +534,8 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
                 // NMEA svid 1 - 64
                 *ubx_svid = nmea_satnum;
             } else {
-                /* Jackson Labs Micro JLT, Quectel Querk, SiRF, Skytrak, u-blox quirk:
-                 * GLONASS are  65 to 96 */
+                /* Jackson Labs Micro JLT, Quectel Querk, SiRF, Skytrak,
+                 * u-blox quirk: GLONASS are  65 to 96 */
                 *ubx_svid = nmea_satnum - 64;
             }
             nmea2_prn = 64 + *ubx_svid;
@@ -1506,14 +1506,18 @@ static gps_mask_t processGSA(int count, char *field[],
      * 15   = PDOP
      * 16   = HDOP
      * 17   = VDOP
-     * 18   - NMEA 4.1+ GNSS System ID, u-blox extended, Quectel $PQ
-     *             1 = GPS L1C/A, L2CL, L2CM
-     *             2 = GLONASS L1 OF, L2 OF
-     *             3 = Galileo E1C, E1B, E5 bl, E5 bQ
-     *             4 = BeiDou B1I D1, B1I D2, B2I D1, B2I D12
+     *  -- -- --
+     * 18   - NMEA 4.10+ GNSS System ID, u-blox extended, Quectel $PQ
+     *             0 = QZSS (Trimble only)
+     *             1 = GPS
+     *             2 = GLONASS
+     *             3 = Galileo
+     *             4 = BeiDou
      *             5 = QZSS
-     *             6 - NavID (IRNSS)
+     *             6 - NavIC (IRNSS)
+     *  -- OR --
      * 18     SiRF TriG puts a floating point number here.
+     *  -- -- --
      *
      * Not all documentation specifies the number of PRN fields, it
      * may be variable.  Most doc that specifies says 12 PRNs.
@@ -1554,7 +1558,7 @@ static gps_mask_t processGSA(int count, char *field[],
      *
      * Another Quectel Querk.  Note the extra field on the end.
      *   System ID, 4 = BeiDou, 5 = QZSS
-     * 
+     *
      * $PQGSA,A,3,12,,,,,,,,,,,,1.2,0.9,0.9,4*3C
      * $PQGSA,A,3,,,,,,,,,,,,,1.2,0.9,0.9,5*3E
      * NMEA 4.11 says they should use $BDGSA and $GQGSA
@@ -1570,14 +1574,11 @@ static gps_mask_t processGSA(int count, char *field[],
      * it claims to be a valid sentence (A flag) when it isn't.
      * Alarmingly, it's possible this error may be generic to SiRFstarIII.
      */
-    if (18 > count) {
-        GPSD_LOG(LOG_DATA, &session->context->errout,
-                 "NMEA0183: xxGSA: count %d too short.\n",
-                 count);
-    } else if (session->nmea.latch_mode) {
+    if (session->nmea.latch_mode) {
         // last GGA had a non-advancing timestamp; don't trust this GSA
-        GPSD_LOG(LOG_DATA, &session->context->errout,
-                 "NMEA0183: xxGSA: non-advancing timestamp\n");
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "NMEA0183: %s: non-advancing timestamp\n", field[0]);
+        // FIXME: return here?
     } else {
         int i;
 
@@ -1593,12 +1594,17 @@ static gps_mask_t processGSA(int count, char *field[],
             mask = MODE_SET;
 
             GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "NMEA0183: xxGSA sets mode %d\n", session->newdata.mode);
+                     "NMEA0183: %s sets mode %d\n",
+                     field[0], session->newdata.mode);
         }
 
+#if 0   // debug
+        GPSD_LOG(LOG_SHOUT, &session->context->errout,
+                 "NMEA0183: %s: count %d \n", field[0], count);
+#endif  // debug
         if (19 < count) {
             GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "NMEA0183: xxGSA: count %d too long!\n", count);
+                     "NMEA0183: %s: count %d too long!\n", field[0], count);
         } else {
             double dop;
 
@@ -1630,8 +1636,8 @@ static gps_mask_t processGSA(int count, char *field[],
                 if (NULL != strchr(field[18], '.')) {
                     // SiRF TriG puts a floating point in field 18
                     GPSD_LOG(LOG_WARN, &session->context->errout,
-                             "NMEA0183: xxGSA: illegal field 18 (%s)!\n",
-                             field[18]);
+                             "NMEA0183: %s: illegal field 18 (%s)!\n",
+                             field[0], field[18]);
                 } else {
                     // get the NMEA 4.10, or $PQGSA, system ID
                     nmea_gnssid = atoi(field[18]);
@@ -1641,15 +1647,18 @@ static gps_mask_t processGSA(int count, char *field[],
         /*
          * might have gone from GPGSA to GLGSA/BDGSA
          * or GNGSA to GNGSA
+         * or GNGSA to PQGSA
          * in which case accumulate
          */
+        // FIXME: maybe on clear on first GPGSA?
         if ('\0' == session->nmea.last_gsa_talker ||
             (GSA_TALKER == session->nmea.last_gsa_talker &&
-             'N' != GSA_TALKER) ) {
+             'N' != GSA_TALKER &&
+             'Q' != GSA_TALKER) ) {
             session->gpsdata.satellites_used = 0;
             memset(session->nmea.sats_used, 0, sizeof(session->nmea.sats_used));
             GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "NMEA0183: xxGSA: clear sats_used\n");
+                     "NMEA0183: %s: clear sats_used\n", field[0]);
         }
         session->nmea.last_gsa_talker = GSA_TALKER;
 
@@ -1683,7 +1692,7 @@ static gps_mask_t processGSA(int count, char *field[],
             // GN GNSS
             session->nmea.seen_gngsa = true;
             // field 18 is the NMEA gnssid in 4.10 and up.
-            // nmea_gnssid = atoi(field[18]);  // duplicates above
+            // nmea_gnssid set above
             break;
         case 'P':
             // GP GPS
@@ -1707,50 +1716,72 @@ static gps_mask_t processGSA(int count, char *field[],
             break;
         }
 
-        // the magic 6 here counts the tag, two mode fields, and DOP fields
+        /* The magic 6 here is the tag, two mode fields, and three DOP fields.
+         * Maybe 7, NMEA 4.10+, also has gnssid field. */
         for (i = 0; i < count - 6; i++) {
             int prn;
-            int nmea_satnum;
+            int n;
+            int nmea_satnum;            // almost svid...
             unsigned char ubx_gnssid;   // UNUSED
             unsigned char ubx_svid;     // UNUSED
 
             // skip empty fields, otherwise empty becomes prn=200
+            if ('\0' == field[i + 3][0]) {
+                continue;
+            }
+            if (NULL != strchr(field[i + 3], '.')) {
+                // found a float, must be PDOP, done.
+                break;
+            }
             nmea_satnum = atoi(field[i + 3]);
-            if (1 > nmea_satnum) {
+            if (1 > nmea_satnum ||
+                600 < nmea_satnum) {
                 continue;
             }
             prn = nmeaid_to_prn(field[0], nmea_satnum, nmea_gnssid,
                                 &ubx_gnssid, &ubx_svid);
 
-#ifdef __UNUSED__
-            // debug
+#if 0       // debug
             GPSD_LOG(LOG_SHOUT, &session->context->errout,
-                     "NMEA0183: %s nmeaid_to_prn: nmea_gnssid "
-                     "%d nmea_satnum %d "
-                     "ubx_gnssid %d ubx_svid %d nmea2_prn %d\n",
-                     field[0],
-                     nmea_gnssid, nmea_satnum, ubx_gnssid, ubx_svid, prn);
-            GPSD_LOG(LOG_SHOUT, &session->context->errout,
-                     "NMEA0183: %s count %d\n", field[0], count);
-#endif  //  __UNUSED__
+                     "NMEA0183: %s PRN %d nmea_gnssid %d "
+                     "nmea_satnum %d ubx_gnssid %d ubx_svid %d count %d \n",
+                     field[0], prn, nmea_gnssid, nmea_satnum, ubx_gnssid,
+                     ubx_svid, count);
+#endif      //  debug
 
-            if (0 < prn) {
-                // check first BEFORE over-writing memory
-                if (MAXCHANNELS <= session->gpsdata.satellites_used) {
-                    /* This should never happen as xxGSA is limited to 12,
-                     * except for the Navior-24 CH-4701.
-                     * But it could happen with multiple GSA per cycle */
+            if (0 >= prn) {
+                // huh?
+                continue;
+            }
+            // check first BEFORE over-writing memory
+            if (MAXCHANNELS <= session->gpsdata.satellites_used) {
+                /* This should never happen as xxGSA is limited to 12,
+                 * except for the Navior-24 CH-4701.
+                 * But it could happen with multiple GSA per cycle */
+                GPSD_LOG(LOG_ERROR, &session->context->errout,
+                         "NMEA0183: %s used >= MAXCHANNELS!\n", field[0]);
+                break;
+            }
+            /* check for duplicate.
+             * Often GPS in both $GPGSA and $GNGSA, for example Quectel. */
+            for (n = 0; n < MAXCHANNELS; n++) {
+                if ( 0 == session->nmea.sats_used[n]) {
+                    // unused slot, use it.
+                    session->nmea.sats_used[n] = (unsigned short)prn;
+                    session->gpsdata.satellites_used = n + 1;
                     break;
                 }
-                session->nmea.sats_used[session->gpsdata.satellites_used++] =
-                    (unsigned short)prn;
+                if (session->nmea.sats_used[n] == (unsigned short)prn) {
+                    // Duplicate!
+                    break;
+                }
             }
         }
         mask |= USED_IS;
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "NMEA0183: xxGSA: mode=%d used=%d pdop=%.2f hdop=%.2f "
+                 "NMEA0183: %s: mode=%d used=%d pdop=%.2f hdop=%.2f "
                  "vdop=%.2f nmea_gnssid %d\n",
-                 session->newdata.mode,
+                 field[0], session->newdata.mode,
                  session->gpsdata.satellites_used,
                  session->gpsdata.dop.pdop,
                  session->gpsdata.dop.hdop,
@@ -1774,7 +1805,10 @@ static gps_mask_t processGSA(int count, char *field[],
 
     // cast for 32/64 compatibility
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "NMEA0183: xxGSA: mask %#llx\n", (long long unsigned)mask);
+             "NMEA0183: %s: count %d visible %d used %d mask %#llx\n",
+             field[0], count, session->gpsdata.satellites_visible,
+             session->gpsdata.satellites_used,
+             (long long unsigned)mask);
     return mask;
 #undef GSA_TALKER
 }
@@ -1871,20 +1905,17 @@ static gps_mask_t processGSV(int count, char *field[],
      *  6) 083         Azimuth, degrees
      *  7) 46          Signal-to-noise ratio in decibels
      * <repeat for up to 4 satellites per sentence>
-     *   )             NMEA 4.1 Signal Id (optional)
-     *   )             Quectel Querk: System ID (4 or 5) (optional)
-     *   )             checksum
+     *   m - 1)        NMEA 4.10 Signal Id (optional)
+     *                 Quecktel Querk: 0 for "All Signa;s".
+     *   m=n-1)        Quectel Querk: System ID (optional)
+     *                     4 = BeiDou, 5 = QZSS
+     *   n)            checksum
      *
      * NMEA 4.1+:
      * $GAGSV,3,1,09,02,00,179,,04,09,321,,07,11,134,11,11,10,227,,7*7F
      * after the satellite block, before the checksum, new field:
-     *             NMEA Signal ID
-     *             1 = GPS L1C/A, BeiDou B1I D1, BeiDou B1I D2, GLONASS L1 OF
-     *             2 = Galileo E5 bl, E5 bQ
-     *             3 = BeiDou B2I D1, B2I D2
-     *             5 = GPS L2 CM
-     *             6 = GPS L2 CL
-     *             7 = Galileo E1C, E1B
+     *             NMEA Signal ID, depends on constellation.
+     &             see include/gps.h
      *
      * Quectel Querk:
      * $PQGSV,4,2,15,09,16,120,,10,26,049,,16,07,123,,19,34,212,,0,4*62
@@ -1970,15 +2001,15 @@ static gps_mask_t processGSV(int count, char *field[],
 
     if (3 >= count) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "NMEA0183: malformed xxGSV - fieldcount %d <= 3\n",
-                 count);
+                 "NMEA0183: %s, malformed - fieldcount %d <= 3\n",
+                 field[0], count);
         gpsd_zero_satellites(&session->gpsdata);
         return ONLINE_SET;
     }
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "NMEA0183: x%cGSV: part %s of %s, last_gsv_talker '%#x' "
+             "NMEA0183: %s: part %s of %s, last_gsv_talker '%#x' "
              " last_gsv_sigid %u\n",
-             GSV_TALKER, field[2], field[1],
+             field[0], field[2], field[1],
              session->nmea.last_gsv_talker,
              session->nmea.last_gsv_sigid);
 
@@ -2005,27 +2036,35 @@ static gps_mask_t processGSV(int count, char *field[],
             5 < nmea_gnssid) {
             // Quectel says only 4 or 5
             GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "NMEA0183: invalid nmea_gnssid %d\n",
-                     nmea_gnssid);
+                     "NMEA0183: %sm invalid nmea_gnssid %d\n",
+                     field[0], nmea_gnssid);
             return ONLINE_SET;
         }
         break;
     default:
         // bad count
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "NMEA0183: malformed GPGSV - fieldcount(%d)\n",
-                 count);
+                 "NMEA0183: malformed %s - fieldcount(%d)\n",
+                 field[0], count);
         gpsd_zero_satellites(&session->gpsdata);
         return ONLINE_SET;
     }
 
     session->nmea.await = atoi(field[1]);
-    if (1 > (session->nmea.part = atoi(field[2]))) {
+    session->nmea.part = atoi(field[2]);
+    if (1 > session->nmea.part) {
         GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "NMEA0183: malformed GPGSV - bad part\n");
+                 "NMEA0183: %s: malformed - bad part %d\n",
+                 field[0], session->nmea.part);
         gpsd_zero_satellites(&session->gpsdata);
         return ONLINE_SET;
     }
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NMEA0183: %s: part %d of %d nmea_gnssid %d nmea_sigid %d "
+             "ubx_sigid %d\n",
+             field[0], session->nmea.part, session->nmea.await,
+             nmea_gnssid, nmea_sigid, ubx_sigid);
 
     if (1 == session->nmea.part) {
         /*
@@ -2034,15 +2073,16 @@ static gps_mask_t processGSV(int count, char *field[],
          *
          * NMEA 4.1 might have gone from GPGVS,sigid=x to GPGSV,sigid=y
          *
+         * Quectel EG25 can go GLGSV, PQGSV, GAGSV, GPGSV, in one cycle.
+         *
          * session->nmea.last_gsv_talker is zero at cycle start
          */
-        if ('\0' == session->nmea.last_gsv_talker ||
-            ('P' == GSV_TALKER &&
-             0 == ubx_sigid)) {
+        if ('\0' == session->nmea.last_gsv_talker) {
+            // Assume all xxGSV in same epoch.  Clear at 1st in eopoch.
             GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "NMEA0183: x%cGSV: new part %d, last_gsv_talker '%#x', "
+                     "NMEA0183: %s: new part %d, last_gsv_talker '%#x', "
                      "zeroing\n",
-                     GSV_TALKER,
+                     field[0],
                      session->nmea.part,
                      session->nmea.last_gsv_talker);
             gpsd_zero_satellites(&session->gpsdata);
@@ -2054,6 +2094,7 @@ static gps_mask_t processGSV(int count, char *field[],
     switch (GSV_TALKER) {
     case 'A':        // GA Galileo
         nmea_gnssid = 3;
+        // Quectel LC79D can have sigid 6 (L1-A) and 1 (E5a)
         session->nmea.seen_gagsv = true;
         break;
     case 'B':        // GB BeiDou
@@ -2076,7 +2117,7 @@ static gps_mask_t processGSV(int count, char *field[],
     case 'P':        // GP GPS
         session->nmea.seen_gpgsv = true;
         break;
-    case 'Q':        // GQ, and PQ (Quectel Querk) QZSS
+    case 'Q':        // $GQ, and $PQ (Quectel Querk) QZSS
         if ('P' == field[0][0] &&
             0 != nmea_gnssid) {
             /* Quectel EC25 & EC21 use PQGSV for BeiDou or QZSS
@@ -2084,7 +2125,7 @@ static gps_mask_t processGSV(int count, char *field[],
              */
             break;
         }
-        // else
+        // else $GQ
         FALLTHROUGH
     case 'Z':        // QZ QZSS
         nmea_gnssid = 5;
@@ -2101,9 +2142,9 @@ static gps_mask_t processGSV(int count, char *field[],
 
         if (MAXCHANNELS <= session->gpsdata.satellites_visible) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "NMEA0183: xxGSV: internal error - too many "
+                     "NMEA0183: %s: internal error - too many "
                      "satellites [%d]!\n",
-                     session->gpsdata.satellites_visible);
+                     field[0], session->gpsdata.satellites_visible);
             gpsd_zero_satellites(&session->gpsdata);
             break;
         }
@@ -2113,7 +2154,6 @@ static gps_mask_t processGSV(int count, char *field[],
             // skip bogus fields
             continue;
         }
-        // FIXME: this ignores possible NMEA 4.1 Signal ID hint
         sp->PRN = (short)nmeaid_to_prn(field[0], nmea_svid, nmea_gnssid,
                                        &sp->gnssid, &sp->svid);
 
@@ -2123,26 +2163,25 @@ static gps_mask_t processGSV(int count, char *field[],
         sp->used = false;
         sp->sigid = ubx_sigid;
 
-#ifdef __UNUSED__
-        // debug
-        GPSD_LOG(LOG_SHOUT, &session->context->errout,
-                 "NMEA0183: %s nmeaid_to_prn: nmea_gnssid %d "
-                 "nmea_satnum %d ubx_gnssid %d ubx_svid %d nmea2_prn %d "
-                 "az %.1f el %.1f\n",
-                 field[0], nmea_gnssid, nmea_svid, sp->gnssid, sp->svid,
-                 sp->PRN, sp->elevation, sp->azimuth);
-#endif  // __UNUSED__
-
         /* sadly NMEA 4.1 does not tell us which sigid (L1, L2) is
          * used.  So if the ss is zero, do not mark used */
         if (0 < sp->PRN &&
             0 < sp->ss) {
-            for (n = 0; n < MAXCHANNELS; n++)
+            for (n = 0; n < MAXCHANNELS; n++) {
                 if (session->nmea.sats_used[n] == (unsigned short)sp->PRN) {
                     sp->used = true;
                     break;
                 }
+            }
         }
+#if 0   // debug
+        GPSD_LOG(LOG_SHOUT, &session->context->errout,
+                 "NMEA0183: %s nmea_gnssid %d nmea_satnum %d ubx_gnssid %d "
+                 "ubx_svid %d nmea2_prn %d az %.1f el %.1f used %d\n",
+                 field[0], nmea_gnssid, nmea_svid, sp->gnssid, sp->svid,
+                 sp->PRN, sp->elevation, sp->azimuth, sp->used);
+#endif  // debug
+
         /*
          * Incrementing this unconditionally falls afoul of chipsets like
          * the Motorola Oncore GT+ that emit empty fields at the end of the
@@ -2152,12 +2191,11 @@ static gps_mask_t processGSV(int count, char *field[],
         session->gpsdata.satellites_visible++;
     }
 
-#ifdef __UNUSED
-    // debug code
-    GPSD_LOG(LOG_ERROR, &session->context->errout,
-        "NMEA0183: x%cGSV: vis %d bdgsv %d gagsv %d gigsv %d glgsv %d "
-        "gngsv %d qpgsv %dqzgsv %d\n",
-        GSV_TALKER,
+#if 0    // debug code
+    GPSD_LOG(LOG_SHOUT, &session->context->errout,
+        "NMEA0183: %s: vis %d bdgsv %d gagsv %d gigsv %d glgsv %d "
+        "gngsv %d qpgsv %d qzgsv %d\n",
+        field[0],
         session->gpsdata.satellites_visible,
         session->nmea.seen_bdgsv,
         session->nmea.seen_gagsv,
@@ -2166,7 +2204,7 @@ static gps_mask_t processGSV(int count, char *field[],
         session->nmea.seen_gngsv,
         session->nmea.seen_gpgsv,
         session->nmea.seen_qzgsv);
-#endif
+#endif  // debug
 
     /*
      * Alas, we can't sanity check field counts when there are multiple sat
@@ -2186,16 +2224,17 @@ static gps_mask_t processGSV(int count, char *field[],
         if (session->nmea.part == session->nmea.await
                 && atoi(field[3]) != session->gpsdata.satellites_visible) {
             GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "NMEA0183: xxGSV field 3 value of %d != actual count %d\n",
-                     atoi(field[3]), session->gpsdata.satellites_visible);
+                     "NMEA0183: %s field 3 value of %d != actual count %d\n",
+                     field[0], atoi(field[3]),
+                     session->gpsdata.satellites_visible);
         }
     }
 
     // not valid data until we've seen a complete set of parts
     if (session->nmea.part < session->nmea.await) {
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "NMEA0183: xxGSV: Partial satellite data (%d of %d).\n",
-                 session->nmea.part, session->nmea.await);
+                 "NMEA0183: %s: Partial satellite data (%d of %d).\n",
+                 field[0], session->nmea.part, session->nmea.await);
         session->nmea.gsx_more = true;
         return ONLINE_SET;
     }
@@ -2208,24 +2247,27 @@ static gps_mask_t processGSV(int count, char *field[],
      * elevations).  This behavior was observed under SiRF firmware
      * revision 231.000.000_A2.
      */
-    for (n = 0; n < session->gpsdata.satellites_visible; n++) {
+     for (n = 0; n < session->gpsdata.satellites_visible; n++) {
         if (0 != session->gpsdata.skyview[n].azimuth) {
+            // odd?
             goto sane;
         }
-    }
-    GPSD_LOG(LOG_WARN, &session->context->errout,
-             "NMEA0183: xxGSV: Satellite data no good (%d of %d).\n",
-             session->nmea.part, session->nmea.await);
-    gpsd_zero_satellites(&session->gpsdata);
-    return ONLINE_SET;
-  sane:
+     }
+     GPSD_LOG(LOG_WARN, &session->context->errout,
+              "NMEA0183: %s: Satellite data no good (%d of %d).\n",
+              field[0], session->nmea.part, session->nmea.await);
+     gpsd_zero_satellites(&session->gpsdata);
+     return ONLINE_SET;
+   sane:
     session->gpsdata.skyview_time.tv_sec = 0;
     session->gpsdata.skyview_time.tv_nsec = 0;
-    GPSD_LOG(LOG_DATA, &session->context->errout,
-             "NMEA0183: xxGSV: Satellite data OK (%d of %d).\n",
-             session->nmea.part, session->nmea.await);
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NMEA0183: %s: Satellite data OK (%d of %d).\n",
+             field[0], session->nmea.part, session->nmea.await);
 
-    // assumes GLGSV or BDGSV group, if present, is emitted after the GPGSV
+    /* assumes GLGSV or BDGSV group, if present, is emitted after the GPGSV
+     * An assumption that Quectel breaks;  The EG25 can send in one epoch:
+     * $GLGSV, $PQGSV, $GAGSV, then $GPGSV! */
     if ((session->nmea.seen_bdgsv ||
          session->nmea.seen_gagsv ||
          session->nmea.seen_gigsv ||
@@ -2235,13 +2277,19 @@ static gps_mask_t processGSV(int count, char *field[],
         && GSV_TALKER == 'P')
         return ONLINE_SET;
 
-#ifdef __UNUSED
-    // debug code
-    GPSD_LOG(LOG_ERROR, &session->context->errout,
-        "NMEA0183: x%cGSV: set skyview_time %s frac_time %.2f\n", GSV_TALKER,
-         timespec_str(&session->gpsdata.skyview_time, ts_buf, sizeof(ts_buf)),
-        session->nmea.this_frac_time);
-#endif
+#if 0   // debug code
+    {
+        char ts_buf[TIMESPEC_LEN];
+        char ts_buf1[TIMESPEC_LEN];
+        GPSD_LOG(LOG_SHOUT, &session->context->errout,
+            "NMEA0183: %s: set skyview_time %s frac_time %s\n",
+            field[0],
+            timespec_str(&session->gpsdata.skyview_time, ts_buf,
+                         sizeof(ts_buf)),
+            timespec_str(&session->nmea.this_frac_time, ts_buf1,
+                         sizeof(ts_buf1)));
+    }
+#endif  // debug
 
     return SATELLITE_SET;
 #undef GSV_TALKER
@@ -4463,7 +4511,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"GRS", NULL, 4,  false, processGRS},    // GNSS Range Residuals
         {"GSA", NULL, 18, false, processGSA},
         {"GST", NULL, 8,  false, processGST},
-        {"GSV", NULL, 0,  false, processGSV},
+        {"GSV", NULL, 4,  false, processGSV},
         // ignore Heading, Deviation and Variation
         {"HDG", NULL, 0,  false, processHDG},
         {"HDM", NULL, 3,  false, processHDM},   // $APHDM, Magnetic Heading

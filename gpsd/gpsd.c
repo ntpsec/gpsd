@@ -644,6 +644,10 @@ static ssize_t throttled_write(struct subscriber_t *sub, const char *buf,
 
     gpsd_acquire_reporting_lock();
     status = write(sub->fd, buf, len);
+#if 0   // debug
+    fsync(sub->fd);
+#endif  // debug
+
     gpsd_release_reporting_lock();
 
     if ((ssize_t)len == status) {

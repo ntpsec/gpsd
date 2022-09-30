@@ -875,6 +875,7 @@ static gps_mask_t fill_dop(const struct gpsd_errout_t *errout,
     memset(satpos, 0, sizeof(satpos));
 
     for (n = k = 0; k < gpsdata->satellites_visible; k++) {
+        // This double counts single sats where we got 2 signals from them.
         if (!gpsdata->skyview[k].used) {
              // skip unused sats
              continue;
@@ -902,7 +903,7 @@ static gps_mask_t fill_dop(const struct gpsd_errout_t *errout,
         satpos[n][2] = sin(sp->elevation * DEG_2_RAD);
         satpos[n][3] = 1;
         GPSD_LOG(LOG_INF, errout,
-                 "CORE: PRN%3d az %5.1f el %4.1f (%9.6f, %9.6f, %9.6f)\n",
+                 "CORE: PRN %3d az %5.1f el %4.1f (%9.6f, %9.6f, %9.6f)\n",
                  gpsdata->skyview[k].PRN,
                  gpsdata->skyview[k].azimuth,
                  gpsdata->skyview[k].elevation,
