@@ -103,6 +103,8 @@ extern "C" {
  *      add netlib_connectsock1()
  *      add nmea.gsx_more to gps_device_t
  *      add TSIPv1 stuff
+ * 3.24.1~dev
+ *      add end_gsv_talker to gps_device_t.nmea
  */
 
 #define JSON_DATE_MAX   24      // ISO8601 timestamp with 2 decimal places
@@ -615,6 +617,7 @@ struct gps_device_t {
         bool seen_gpgsv;                        // GPS GSV
         bool seen_qzgsv;                        // QZSS GSV
         char last_gsv_talker;
+        char end_gsv_talker;
         unsigned char last_gsv_sigid;           // NMEA 4.1
         // GSA stuff
         bool seen_bdgsa;                        // BeiDou GSA

@@ -2121,8 +2121,19 @@ static gps_mask_t processGSV(int count, char *field[],
         if ('P' == field[0][0] &&
             0 != nmea_gnssid) {
             /* Quectel EC25 & EC21 use PQGSV for BeiDou or QZSS
+             * 4 = BeiDou, 5 = QZSS
              * nmea_gnssid set above, what about seen?
              */
+            if (4 == nmea_gnssid) {
+                session->nmea.seen_bdgsv = true;
+            } else if (5 == nmea_gnssid) {
+                session->nmea.seen_qzgsv = true;
+            } else {
+                GPSD_LOG(LOG_ERROR, &session->context->errout,
+                         "NMEA0183: %s: invalid nmea_gnssid %d\n",
+                         field[0], nmea_gnssid);
+                return ONLINE_SET;
+            }
             break;
         }
         // else $GQ
@@ -2273,9 +2284,14 @@ static gps_mask_t processGSV(int count, char *field[],
          session->nmea.seen_gigsv ||
          session->nmea.seen_glgsv ||
          session->nmea.seen_gngsv ||
-         session->nmea.seen_qzgsv)
-        && GSV_TALKER == 'P')
+         session->nmea.seen_qzgsv) &&
+        ('P' == GSV_TALKER &&
+         'P' != session->nmea.end_gsv_talker)) {
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "NMEA0183: %s: not end talker %d\n",
+                 field[0], session->nmea.end_gsv_talker);
         return ONLINE_SET;
+    }
 
 #if 0   // debug code
     {
@@ -4768,6 +4784,10 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
 
     // prevent overaccumulation of sat reports
     if (!str_starts_with(session->nmea.field[0] + 2, "GSV")) {
+        // This assumes all $xxGSV are contiguous.
+        if (0 != session->nmea.last_gsv_talker) {
+            session->nmea.end_gsv_talker = session->nmea.last_gsv_talker;
+        }
         session->nmea.last_gsv_talker = '\0';
     }
     if (!str_starts_with(session->nmea.field[0] + 2, "GSA")) {
