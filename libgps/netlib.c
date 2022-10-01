@@ -206,9 +206,14 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
      * for discussion.
      */
     if (SOCK_STREAM == type) {
-        setsockopt(s, IPPROTO_TCP, TCP_NODELAY, (char *)&one, sizeof(one));
+        (void)setsockopt(s, IPPROTO_TCP, TCP_NODELAY, (char *)&one,
+                         sizeof(one));
     }
 #endif
+    if (SOCK_STREAM == type) {
+        // Set keepalive on TCP connections.  Maybe detect disconnects better.
+        (void)setsockopt(s, IPPROTO_TCP, SO_KEEPALIVE, NULL, 0);
+    }
 
     // set socket to noblocking
 #ifdef HAVE_FCNTL
