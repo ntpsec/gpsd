@@ -77,7 +77,7 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
     struct addrinfo hints;
     struct addrinfo *result = NULL;
     struct addrinfo *rp;
-    int ret, type, proto, one = 1;
+    int ret, type, proto, one;
     socket_t s;
     bool bind_me;
 
@@ -146,6 +146,7 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
         }
         // allow reuse of local address is in TIMEWAIT state
         // useful on a quick gpsd restart to reuse the address.
+        one = 1;
         if (-1 == setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&one,
                                     sizeof(one))) {
             ret = NL_NOSOCKOPT;
@@ -206,13 +207,16 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
      * for discussion.
      */
     if (SOCK_STREAM == type) {
+        one = 1;
         (void)setsockopt(s, IPPROTO_TCP, TCP_NODELAY, (char *)&one,
                          sizeof(one));
     }
 #endif
     if (SOCK_STREAM == type) {
         // Set keepalive on TCP connections.  Maybe detect disconnects better.
-        (void)setsockopt(s, IPPROTO_TCP, SO_KEEPALIVE, NULL, 0);
+        one = 1;
+        (void)setsockopt(s, IPPROTO_TCP, SO_KEEPALIVE, (char *)&one,
+                         sizeof(one));
     }
 
     // set socket to noblocking
