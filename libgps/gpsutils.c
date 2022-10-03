@@ -201,6 +201,13 @@ double safe_atof(const char *string)
         }
         while (isdigit((int) *p)) {
             exp = exp * 10 + (*p - '0');
+            if (1024 < exp) {
+                if (true == expSign) {
+                    // exponent underflow!
+                    return 0.0;
+                } // else  exponent overflow!
+                return INFINITY;
+            }
             p += 1;
         }
     }
