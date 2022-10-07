@@ -1,6 +1,6 @@
 = gpsd_json(5)
 :author: Eric S. Raymond
-:date: 13 May 2022
+:date: 7 September 2022
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, JSON, libgps
 :manmanual: GPSD Documentation
@@ -101,7 +101,9 @@ The optional "status" field (aka fix type), is a modifier (adjective) to
 mode.  It is not a replacement for, or superset of, the "mode" field.
 It is almost, but not quite, the same as the NMEA 4.x xxGGA GPS Quality
 Indicator Values.  Many GNSS receivers do not supply it.  Those that do
-interpret the specification in various incompatible ways.
+interpret the specification in various incompatible ways.  To save space
+in the output, and avoid confusion, the JSON never includes status values
+of 0 or 1.
 
 All error estimates (epc, epd, epe, eph, ept, epv, epx, epy) are
 guessed to be 95% confidence, may also be 50%, one sigma, or two sigma
