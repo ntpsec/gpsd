@@ -855,14 +855,8 @@ ubx_msg_hnr_pvt(struct gps_device_t *session, unsigned char *buf,
             *mode = MODE_3D;
             mask |= MODE_SET;
         }
-        if (UBX_NAV_PVT_FLAG_DGPS == (flags & UBX_NAV_PVT_FLAG_DGPS)) {
-            *status = STATUS_DGPS;
-            mask |= STATUS_SET;
-        } else {
-            *status = STATUS_GPS;
-            mask |= STATUS_SET;
-        }
-        mask |=   LATLON_SET;
+        *status = STATUS_GPS;   // GPSDR??
+        mask |= STATUS_SET | LATLON_SET;
         break;
 
     case UBX_MODE_2D:
@@ -896,6 +890,19 @@ ubx_msg_hnr_pvt(struct gps_device_t *session, unsigned char *buf,
             mask |= STATUS_SET;
         }
         break;
+    }
+
+    if (UBX_NAV_PVT_FLAG_DGPS == (flags & UBX_NAV_PVT_FLAG_DGPS)) {
+        // RTK flags not in u-blox 8
+        if (UBX_NAV_PVT_FLAG_RTK_FIX == (flags & UBX_NAV_PVT_FLAG_RTK_FIX)) {
+            *status = STATUS_RTK_FIX;
+        } else if (UBX_NAV_PVT_FLAG_RTK_FLT ==
+                   (flags & UBX_NAV_PVT_FLAG_RTK_FLT)) {
+            *status = STATUS_RTK_FLT;
+        } else {
+            *status = STATUS_DGPS;
+        }
+        mask |= STATUS_SET;
     }
 
     if (UBX_NAV_PVT_VALID_DATE_TIME == (valid & UBX_NAV_PVT_VALID_DATE_TIME)) {
@@ -1707,14 +1714,8 @@ ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
             *mode = MODE_3D;
             mask |= MODE_SET;
         }
-        if ((flags & UBX_NAV_PVT_FLAG_DGPS) == UBX_NAV_PVT_FLAG_DGPS) {
-            *status = STATUS_DGPS;
-            mask |= STATUS_SET;
-        } else {
-            *status = STATUS_GPS;
-            mask |= STATUS_SET;
-        }
-        mask |=   LATLON_SET;
+        *status = STATUS_GPS;
+        mask |= STATUS_SET | LATLON_SET;
         break;
 
     case UBX_MODE_2D:
@@ -1748,6 +1749,19 @@ ubx_msg_nav_pvt(struct gps_device_t *session, unsigned char *buf,
             mask |= STATUS_SET;
         }
         break;
+    }
+
+    if (UBX_NAV_PVT_FLAG_DGPS == (flags & UBX_NAV_PVT_FLAG_DGPS)) {
+        // RTK flags not before protoVer 20.
+        if (UBX_NAV_PVT_FLAG_RTK_FIX == (flags & UBX_NAV_PVT_FLAG_RTK_FIX)) {
+            *status = STATUS_RTK_FIX;
+        } else if (UBX_NAV_PVT_FLAG_RTK_FLT ==
+                   (flags & UBX_NAV_PVT_FLAG_RTK_FLT)) {
+            *status = STATUS_RTK_FLT;
+        } else {
+            *status = STATUS_DGPS;
+        }
+        mask |= STATUS_SET;
     }
 
     if ((valid & UBX_NAV_PVT_VALID_DATE_TIME) == UBX_NAV_PVT_VALID_DATE_TIME) {
@@ -1910,6 +1924,7 @@ ubx_msg_nav_relposned(struct gps_device_t *session, unsigned char *buf,
                 session->newdata.NED.relPosH = 1e-5 * getles32(buf, 24);
             }
             mask |= NED_SET;
+            // FIXME: RTK flags?
         }
     }
 
@@ -2328,12 +2343,8 @@ ubx_msg_nav_status(struct gps_device_t *session, unsigned char *buf,
         case UBX_MODE_GPSDR:
             // 4
             *mode = MODE_3D;
-            if (2 == (2 & fixStat)) {
-                *status = STATUS_DGPS;
-            } else {
-                // FIXME:  Set DR if this is DR
-                *status = STATUS_GPS;
-            }
+            // FIXME:  Set DR if this is DR
+            *status = STATUS_GPS;
             break;
 
         case UBX_MODE_2D:
@@ -2358,6 +2369,16 @@ ubx_msg_nav_status(struct gps_device_t *session, unsigned char *buf,
             *mode = MODE_NO_FIX;
             *status = STATUS_UNK;
             break;
+        }
+        if (2 == (2 & fixStat)) {
+            if (0x40 == (0x40 & flags2)) {
+                *status = STATUS_RTK_FLT;
+            } else if (0x80 == (0x80 & flags2)) {
+                *status = STATUS_RTK_FIX;
+            }
+            // else ??
+        } else if (1 == (1 & fixStat)) {
+            *status = STATUS_DGPS;
         }
     }
     mask |= STATUS_SET | MODE_SET;
