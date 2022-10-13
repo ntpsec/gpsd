@@ -2315,14 +2315,19 @@ int main(int argc, char *argv[])
              "FLT_EVAL_METHOD is missing\n");
 #endif
 
-#ifdef __STDC_IEC_599__
-    if (1 != __STDC_IEC_599__) {
+/* C99: 6.10.8 Predefined macro names
+ *   __STDC_IEC_559__ The integer constant 1, intended to indicate
+ *    conformance to the specifications in annex F (IEC 60559
+ *    floating-point arithmetic).
+ */
+#ifdef __STDC_IEC_559__
+    if (1 != __STDC_IEC_559__) {
         GPSD_LOG(LOG_WARN, &context.errout,
-                 "__STDC_IEC_599__ is %d, s/b 0\n", __STDC_IEC_599__);
+                 "__STDC_IEC_559__ is %d, s/b 1\n", __STDC_IEC_559__);
     }
 #else
     GPSD_LOG(LOG_WARN, &context.errout,
-             "__STDC_IEC_599__ is missing\n");
+             "__STDC_IEC_559__ is missing\n");
 #endif
 
     uid = getuid();
