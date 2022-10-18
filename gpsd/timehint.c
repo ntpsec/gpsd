@@ -455,21 +455,22 @@ void ntpshm_link_activate(struct gps_device_t *session)
              session->gpsdata.dev.path, session->sourcetype,
              session->gpsdata.gps_fd);
 
-    /* don't talk to NTP when we're:
+    /* Don't talk to NTP when we're:
      *   reading from a file
      *   reading from a pipe
-     *   reading from a remote gpsd
      *   running inside the test harness (PTY)
-     *   over TCP or UDP
+     * Those are likely not real time feeds.
      */
     if (SOURCE_BLOCKDEV == session->sourcetype ||
-        SOURCE_GPSD == session->sourcetype ||
         SOURCE_PIPE == session->sourcetype ||
-        SOURCE_PTY == session->sourcetype ||
-        SOURCE_TCP == session->sourcetype ||
-        SOURCE_UDP == session->sourcetype) {
+        SOURCE_PTY == session->sourcetype) {
+        GPSD_LOG(LOG_PROG, &context->errout,
+                 "NTP:SHM: ntpshm_alloc(%s) sourcetype %d not using for NTP. ",
+                 session->gpsdata.dev.path, session->sourcetype);
         return;
     }
+    /* Allow NTP over gpsd://, tcp:// and udp:// as well as over
+     * devices. */
 
     if (SOURCE_PPS != session->sourcetype) {
         // allocate a shared-memory segment for "NMEA" time data

@@ -12,6 +12,7 @@
   gpssnmp supports GPSD-MIB in pass and pass_persist modes
   Add decodes for NMEA $xxHDM, $xxROT and $xxXDR
   Add Magnetic Heading (mheading) and Rate of Rotation (rot) to attitude_t
+  Allow NTP time from gpsd://, tcp:// and udp:// sources
 
 3.24: 2022-04-22
   NTRIP 2.0 now works.  But still only plain HTML, not RTP, etc.
