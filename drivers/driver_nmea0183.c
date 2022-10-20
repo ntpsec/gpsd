@@ -1204,7 +1204,7 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
         }
     }
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
+    GPSD_LOG(LOG_PROG, &session->context->errout,
              "NMEA0183: GGA: hhmmss=%s lat=%.2f lon=%.2f altMSL=%.2f "
              "mode=%d status=%d\n",
              field[1],
@@ -2862,7 +2862,7 @@ static gps_mask_t processPGRME(int c UNUSED, char *field[],
         mask = HERR_SET | VERR_SET | PERR_IS;
     }
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
+    GPSD_LOG(LOG_PROG, &session->context->errout,
              "NMEA0183: PGRME: epx=%.2f epy=%.2f sep=%.2f\n",
              session->newdata.epx,
              session->newdata.epy,
@@ -2964,7 +2964,7 @@ static gps_mask_t processPGRMF(int c UNUSED, char *field[],
         mask |= DOP_SET;
     }
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
+    GPSD_LOG(LOG_PROG, &session->context->errout,
              "NMEA0183: PGRMF: pdop %.1f tdop %.1f \n",
              session->gpsdata.dop.pdop,
              session->gpsdata.dop.tdop);
@@ -2989,9 +2989,73 @@ static gps_mask_t processPGRMM(int c UNUSED, char *field[],
                 sizeof(session->newdata.datum));
     }
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
+    GPSD_LOG(LOG_PROG, &session->context->errout,
              "NMEA0183: PGRMM: datum=%.40s\n",
              session->newdata.datum);
+    return mask;
+}
+
+// Garmin Sensor Status Info
+static gps_mask_t processPGRMT(int c UNUSED, char *field[],
+                               struct gps_device_t *session)
+{
+    /*
+     * $PGRMT,GPS 15x-W software ver. 4.20,,,,,,,,*6A
+     * 1    = Product, model and software version
+     * 2    = ROM Checksum test P=pass, F=fail
+     * 3    = Receiver failure discrete, P=pass, F=fail
+     * 4    = Stored data lost, R=retained, L=lost
+     * 5    = Real time clock lost, R=retained, L=lost
+     * 6    = Oscillator drift discrete, P=pass, F=excessive drift detected
+     * 7    = Data collection discrete, C=collecting, null if not collecting
+     * 8    = GPS sensor temperature in degrees C
+     * 9    = GPS sensor configuration data, R=retained, L=lost
+     *
+     * Output once per minuite by default.
+     * 50 char max.
+     *
+     * As of October 2022, only ever seen field 1 populated
+     */
+    gps_mask_t mask = ONLINE_SET;
+
+    strlcpy(session->subtype, field[1], sizeof(session->subtype));
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NMEA0183: PGRMT: subtype %s\n",
+             session->subtype);
+    return mask;
+}
+
+// Garmin 3D Velocity Information
+static gps_mask_t processPGRMV(int c UNUSED, char *field[],
+                               struct gps_device_t *session)
+{
+    /*
+     * $PGRMV,-2.4,-1.1,0.3*59
+     * 1    = true east velocity,  m/s
+     * 2    = true north velocity,  m/s
+     * 3    = true up velocity,  m/s
+     */
+    gps_mask_t mask = ONLINE_SET;
+
+    if ('\0' == field[1][0] ||
+        '\0' == field[2][0] ||
+        '\0' == field[3][0]) {
+        // nothing to report
+        return mask;
+    }
+
+    session->newdata.NED.velE = safe_atof(field[1]);
+    session->newdata.NED.velN = safe_atof(field[2]);
+    session->newdata.NED.velD = -safe_atof(field[3]);
+
+    mask |= VNED_SET;
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NMEA0183: PGRMV: velE %.2f velN %.2f velD %.2f\n",
+            session->newdata.NED.velE,
+            session->newdata.NED.velN,
+            session->newdata.NED.velD);
     return mask;
 }
 
@@ -3040,7 +3104,7 @@ static gps_mask_t processPGRMZ(int c UNUSED, char *field[],
         break;
     }
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
+    GPSD_LOG(LOG_PROG, &session->context->errout,
              "NMEA0183: PGRMZ: altMSL %.2f mode %d\n",
              session->newdata.altMSL,
              session->newdata.mode);
@@ -3923,7 +3987,7 @@ static gps_mask_t processRMC(int count, char *field[],
         mask |= STATUS_SET;
     }
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
+    GPSD_LOG(LOG_PROG, &session->context->errout,
              "NMEA0183: RMC: ddmmyy=%s hhmmss=%s lat=%.2f lon=%.2f "
              "speed=%.2f track=%.2f mode=%d var=%.1f status=%d\n",
              field[9], field[1],
@@ -4490,8 +4554,8 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PGRMI", NULL, 0,  false, NULL},          // ignore Garmin Sensor Init
         {"PGRMM", NULL, 2,  false, processPGRMM},  // Garmin Map Datum
         {"PGRMO", NULL, 0,  false, NULL},     // ignore Garmin Sentence Enable
-        {"PGRMT", NULL, 0,  false, NULL},          // ignore Garmin Sensor Info
-        {"PGRMV", NULL, 0,  false, NULL},     // ignore Garmin 3D Velocity Info
+        {"PGRMT", NULL, 10, false, processPGRMT},  // Garmin Sensor Info
+        {"PGRMV", NULL, 4,  false, processPGRMV},  // Garmin 3D Velocity Info
         {"PGRMZ", NULL, 4,  false, processPGRMZ},
             /*
              * Basic sentences must come after the PG* ones, otherwise
