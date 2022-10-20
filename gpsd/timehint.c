@@ -246,7 +246,7 @@ void ntpshm_put(struct gps_device_t *session, int unit, int precision,
 
 
     if (!VALID_UNIT(unit)) {
-        GPSD_LOG(LOG_RAW, &session->context->errout,
+        GPSD_LOG(LOG_WARN, &session->context->errout,
                  "NTP:SHM:  ntpshm_put(,%d,) invalid unit\n", unit);
         return;
     }
@@ -308,7 +308,7 @@ static void init_hook(struct gps_device_t *session)
                      session->gpsdata.dev.path,
                      chrony_path, session->chronyfd, strerror(errno), errno);
         } else {
-            GPSD_LOG(LOG_RAW, &session->context->errout,
+            GPSD_LOG(LOG_PROG, &session->context->errout,
                      "NTP:%s using chrony socket: %s\n",
                      session->gpsdata.dev.path, chrony_path);
         }
@@ -357,7 +357,7 @@ static void chrony_send(struct gps_device_t *session, struct timedelta_t *td)
     sample.offset = TS_SUB_D(&td->real, &td->clock);
     sample._pad = 0;
 
-    GPSD_LOG(LOG_RAW, &session->context->errout,
+    GPSD_LOG(LOG_PROG, &session->context->errout,
              "NTP: chrony_send %s @ %s Offset: %0.9f\n",
              timespec_str(&td->real, real_str, sizeof(real_str)),
              timespec_str(&td->clock, clock_str, sizeof(clock_str)),
@@ -405,7 +405,10 @@ static char *report_hook(volatile struct pps_thread_t *pps_thread,
     }
 
     // precision is a floor so do not make it tight
-    if (SOURCE_USB == session->sourcetype ||
+    if (SOURCE_TCP == session->sourcetype ||
+        SOURCE_UDP == session->sourcetype) {
+        precision = -1;      //  one second if we are lucky..
+    } else if (SOURCE_USB == session->sourcetype ||
         SOURCE_ACM == session->sourcetype) {
         // if PPS over USB, then precision = -10, 1 milli sec
         precision = -10;
