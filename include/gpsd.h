@@ -640,8 +640,8 @@ struct gps_device_t {
         timespec_t this_frac_time, last_frac_time;
         bool latch_frac_time;
         int lasttag;              // index into nmea_phrase[]
-        // 120 > number of used entries in nmea_phrase[]
-#define NMEA_NUM 120
+        // 140 > number of used entries in nmea_phrase[]
+#define NMEA_NUM 140
         // bit map into nmea_phrase[], +1 to shut up coverity
         bool cycle_enders[NMEA_NUM + 1];
         bool cycle_continue;

@@ -4640,6 +4640,19 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PMTKCHN", NULL, 0, false, NULL},
         // MTK-3301 -- $POLYN
         // Quectel proprietary
+        {"PQTMCFGEINSMSGERROR", NULL, 1, false, NULL},      // Error
+        {"PQTMCFGEINSMSGOK", NULL, 1, false, NULL},         // OK
+        {"PQTMCFGORIENTATION", NULL, 3, false, NULL},       // Orientation
+        {"PQTMCFGORIENTATIONERROR", NULL, 1, false, NULL},  // Error
+        {"PQTMCFGORIENTATIONOK", NULL, 1, false, NULL},     // OK
+        {"PQTMCFGWHEELTICKERROR", NULL, 1, false, NULL},    // Error
+        {"PQTMCFGWHEELTICKOK", NULL, 1, false, NULL},       // OK
+        {"PQTMGPS", NULL, 14, false, NULL},           // GPS Status
+        {"PQTMINS", NULL, 11, false, NULL},           // INS Results
+        {"PQTMIMU", NULL, 10, false, NULL},           // IMU Raw Data
+        {"PQTMQMPT", NULL, 2, false, NULL},           // Meters / tick
+        {"PQTMQMPTERROR", NULL, 1, false, NULL},      // Error
+        {"PQTMVEHMSG", NULL, 2, false, NULL},         // Vehicle Info
         {"PQVERNO", NULL, 5, false, processPQVERNO},  // Version
         // smart watch sensors, Yes: space!
         {"PRHS ", NULL, 2,  false, processPRHS},
