@@ -3327,6 +3327,54 @@ static gps_mask_t processPQxOK(int c UNUSED, char* field[],
     return ONLINE_SET;
 }
 
+// Quectel PQTMGPS - GNSS position stuff
+static gps_mask_t processPQTMGPS(int count UNUSED, char *field[],
+                                 struct gps_device_t *session)
+{
+    /*
+     * $PQTMGPS,671335,463792.000,31.822084600,117.115221100,59.4260,63.0420,
+     *  0.0270,-171.7101,5.9890,1.3300,2.1100,3,18,*75
+     *
+     * 1   Milliseconds since turn on. 32-bit unsigned integer.
+     * 2   Time of week. Seconds
+     * 3   Latitude. Degrees
+     * 4   Longitude. Degrees
+     * 5   Height above ellipsoid, Meters
+     * 6   Altitude above mean-sea-level. Meters
+     * 7   Ground speed (2D). Meters / sec
+     * 8   Heading (2D). Degrees.
+     * 9   Horizontal accuracy estimate. Meters.
+     * 10  HDOP
+     * 11  PDOP
+     * 12  Fix type.  0 = No fix.  2 = 2D fix.  3 = 3D fix.
+     * 13  Number of navigation satellites (seen? used?)
+     *
+     * Note: incomplete time stamp.
+     */
+    gps_mask_t mask = ONLINE_SET;
+    unsigned ts = atoi(field[1]);
+    unsigned tow = atoi(field[2]);
+    double lat = safe_atof(field[3]);
+    double lon = safe_atof(field[4]);
+    double hae = safe_atof(field[5]);
+    double msl = safe_atof(field[6]);
+    double speed = safe_atof(field[7]);
+    double heading = safe_atof(field[8]);
+    double hAcc = safe_atof(field[9]);
+    double hdop = safe_atof(field[10]);
+    double pdop = safe_atof(field[11]);
+    unsigned fix = atoi(field[12]);
+    unsigned numsat = atoi(field[13]);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NMEA0183: PQTMGPS ts %u tow %u lat %.9f lon %.9f HAE %.4f "
+             "MSL %.4f speed %.4f head %.4f hacc %.4f hdop %.4f pdop %.4f "
+             "mode %u nsat %u\n",
+             ts, tow, lat, lon, hae, msl, speed, heading, hAcc, hdop,
+             pdop, fix, numsat);
+    return mask;
+}
+
 static gps_mask_t processPQVERNO(int c UNUSED, char* field[],
                                  struct gps_device_t* session)
 {
@@ -4681,7 +4729,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PQTMCFGWHEELTICKERROR", NULL, 1, false, processPQxERR},    // Error
         {"PQTMCFGWHEELTICKOK", NULL, 1, false, processPQxOK},        // OK
         {"PQTMQMPTERROR", NULL, 1, false, processPQxERR},            // Error
-        {"PQTMGPS", NULL, 14, false, NULL},           // GPS Status
+        {"PQTMGPS", NULL, 14, false, processPQTMGPS}, // GPS Status
         {"PQTMINS", NULL, 11, false, NULL},           // INS Results
         {"PQTMIMU", NULL, 10, false, NULL},           // IMU Raw Data
         {"PQTMQMPT", NULL, 2, false, NULL},           // Meters / tick
