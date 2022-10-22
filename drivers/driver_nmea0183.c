@@ -3327,7 +3327,7 @@ static gps_mask_t processPQxOK(int c UNUSED, char* field[],
     return ONLINE_SET;
 }
 
-// Quectel PQTMGPS - GNSS position stuff
+// Quectel $PQTMGPS - GNSS position stuff
 static gps_mask_t processPQTMGPS(int count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
@@ -3375,7 +3375,7 @@ static gps_mask_t processPQTMGPS(int count UNUSED, char *field[],
     return mask;
 }
 
-// Quectel PQTMIMU - IMU Raw Data
+// Quectel $PQTMIMU - IMU Raw Data
 static gps_mask_t processPQTMIMU(int count UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
@@ -3408,6 +3408,48 @@ static gps_mask_t processPQTMIMU(int count UNUSED, char *field[],
              "NMEA0183: PQTMIMU ts %u accX %.6f accY %.6f accZ %.6f "
              "rateX %.6f rateY %.6f rateZ %.6f ticks %u tick_ts %u\n",
              ts, accX, accY, accZ, rateX, rateY, rateZ, ticks, tick_ts);
+    return mask;
+}
+
+// Quectel $PQTMINS - DR Nav results
+static gps_mask_t processPQTMINS(int count UNUSED, char *field[],
+                                 struct gps_device_t *session)
+{
+    /*
+     * $PQTMINS,42529,1,31.822038000,117.115182800,67.681000,,,,-0.392663,
+        1.300793,0.030088*4D
+     *
+     * 1   Milliseconds since turn on. 32-bit unsigned integer.
+     * 2   Solution type, 0 = Pitch and Roll, 1 = GNSS, pitch, roll, heading
+     *                    2 = GNSS + DR, 3 = DR Only
+     * 3   Latitude. Degrees
+     * 4   Longitude. Degrees
+     * 5   Height (HAE?, MSL?) , Meters
+     * 6   Northward velocity
+     * 7   Eastward velocity
+     * 8   Downward velocity
+     * 9   Roll
+     * 10  Pitch
+     * 11  Heading
+     *
+     */
+    gps_mask_t mask = ONLINE_SET;
+    unsigned ts = atoi(field[1]);
+    unsigned sol = atoi(field[2]);
+    double lat = safe_atof(field[3]);
+    double lon = safe_atof(field[4]);
+    double alt = safe_atof(field[5]);
+    double velN = safe_atof(field[6]);
+    double velE = safe_atof(field[7]);
+    double velD = safe_atof(field[8]);
+    double roll = safe_atof(field[9]);
+    double pitch = safe_atof(field[10]);
+    double head = safe_atof(field[11]);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NMEA0183: PQTMINS ts %u sol %u lat %.9f lon %.9f alt %.6f "
+             "velN %.6f velE %.6f velD %.6f roll %.6f pitch %.6f head %.6f\n",
+             ts, sol, lat, lon, alt, velN, velE, velD, roll, pitch, head);
     return mask;
 }
 
@@ -4759,17 +4801,16 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         // Quectel proprietary
         {"PQTMCFGEINSMSGERROR", NULL, 1, false, processPQxERR},      // Error
         {"PQTMCFGEINSMSGOK", NULL, 1, false, processPQxOK},          // OK
-        {"PQTMCFGORIENTATION", NULL, 3, false, NULL},       // Orientation
         {"PQTMCFGORIENTATIONERROR", NULL, 1, false, processPQxERR},  // Error
+        {"PQTMCFGORIENTATION", NULL, 3, false, NULL},       // Orientation
         {"PQTMCFGORIENTATIONOK", NULL, 1, false, processPQxOK},      // OK
         {"PQTMCFGWHEELTICKERROR", NULL, 1, false, processPQxERR},    // Error
         {"PQTMCFGWHEELTICKOK", NULL, 1, false, processPQxOK},        // OK
-        {"PQTMQMPTERROR", NULL, 1, false, processPQxERR},            // Error
         {"PQTMGPS", NULL, 14, false, processPQTMGPS},  // GPS Status
-        {"PQTMINS", NULL, 11, false, NULL},            // INS Results
         {"PQTMIMU", NULL, 10, false, processPQTMIMU},  // IMU Raw Data
+        {"PQTMINS", NULL, 11, false, processPQTMINS},  // INS Results
+        {"PQTMQMPTERROR", NULL, 1, false, processPQxERR},       // Error
         {"PQTMQMPT", NULL, 2, false, NULL},            // Meters / tick
-        {"PQTMQMPTERROR", NULL, 1, false, NULL},       // Error
         {"PQTMVEHMSG", NULL, 2, false, NULL},          // Vehicle Info
         {"PQVERNO", NULL, 5, false, processPQVERNO},   // Version
         // smart watch sensors, Yes: space!
