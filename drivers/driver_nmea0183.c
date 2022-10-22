@@ -3375,6 +3375,42 @@ static gps_mask_t processPQTMGPS(int count UNUSED, char *field[],
     return mask;
 }
 
+// Quectel PQTMIMU - IMU Raw Data
+static gps_mask_t processPQTMIMU(int count UNUSED, char *field[],
+                                 struct gps_device_t *session)
+{
+    /*
+     * $PQTMIMU,42634,-0.006832,-0.022814,1.014552,0.315000,-0.402500,
+       -0.332500,0,0*55
+     *
+     * 1   Milliseconds since turn on. 32-bit unsigned integer.
+     * 2   Acceleration in X-axis direction. g
+     * 3   Acceleration in Y-axis direction. g
+     * 4   Acceleration in A-axis direction. g
+     * 5   Angular rate in X-axis direction. Degrees / second
+     * 6   Angular rate in y-axis direction. Degrees / second
+     * 7   Angular rate in Z-axis direction. Degrees / second
+     * 8   Cumulative ticks
+     * 9   Timestamp of last tick
+     */
+    gps_mask_t mask = ONLINE_SET;
+    unsigned ts = atoi(field[1]);
+    double accX = safe_atof(field[2]);
+    double accY = safe_atof(field[3]);
+    double accZ = safe_atof(field[4]);
+    double rateX = safe_atof(field[5]);
+    double rateY = safe_atof(field[6]);
+    double rateZ = safe_atof(field[7]);
+    unsigned ticks = atoi(field[8]);
+    unsigned tick_ts = atoi(field[9]);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NMEA0183: PQTMIMU ts %u accX %.6f accY %.6f accZ %.6f "
+             "rateX %.6f rateY %.6f rateZ %.6f ticks %u tick_ts %u\n",
+             ts, accX, accY, accZ, rateX, rateY, rateZ, ticks, tick_ts);
+    return mask;
+}
+
 static gps_mask_t processPQVERNO(int c UNUSED, char* field[],
                                  struct gps_device_t* session)
 {
@@ -4729,13 +4765,13 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PQTMCFGWHEELTICKERROR", NULL, 1, false, processPQxERR},    // Error
         {"PQTMCFGWHEELTICKOK", NULL, 1, false, processPQxOK},        // OK
         {"PQTMQMPTERROR", NULL, 1, false, processPQxERR},            // Error
-        {"PQTMGPS", NULL, 14, false, processPQTMGPS}, // GPS Status
-        {"PQTMINS", NULL, 11, false, NULL},           // INS Results
-        {"PQTMIMU", NULL, 10, false, NULL},           // IMU Raw Data
-        {"PQTMQMPT", NULL, 2, false, NULL},           // Meters / tick
-        {"PQTMQMPTERROR", NULL, 1, false, NULL},      // Error
-        {"PQTMVEHMSG", NULL, 2, false, NULL},         // Vehicle Info
-        {"PQVERNO", NULL, 5, false, processPQVERNO},  // Version
+        {"PQTMGPS", NULL, 14, false, processPQTMGPS},  // GPS Status
+        {"PQTMINS", NULL, 11, false, NULL},            // INS Results
+        {"PQTMIMU", NULL, 10, false, processPQTMIMU},  // IMU Raw Data
+        {"PQTMQMPT", NULL, 2, false, NULL},            // Meters / tick
+        {"PQTMQMPTERROR", NULL, 1, false, NULL},       // Error
+        {"PQTMVEHMSG", NULL, 2, false, NULL},          // Vehicle Info
+        {"PQVERNO", NULL, 5, false, processPQVERNO},   // Version
         // smart watch sensors, Yes: space!
         {"PRHS ", NULL, 2,  false, processPRHS},
         {"PRWIZCH", NULL, 0, false, NULL},          // Rockwell Channel Status
