@@ -3294,6 +3294,39 @@ static gps_mask_t processPMTK705(int count, char *field[],
     return ONLINE_SET;
 }
 
+static gps_mask_t processPQxERR(int c UNUSED, char* field[],
+                                struct gps_device_t* session)
+{
+    /* Quectel generic PQxxxERRROR message handler
+     * The messages are content free, not very useful.
+     *
+     * $PQTMCFGEINSMSGERROR*4A
+     * $PQTMCFGORIENTATIONERROR*54
+     * $PQTMCFGWHEELTICKERROR*44
+     * $PQTMQMPTERROR*58
+     */
+
+    GPSD_LOG(LOG_WARN, &session->context->errout,
+             "NMEA0183: %s Error\n", field[0]);
+    return ONLINE_SET;
+}
+
+static gps_mask_t processPQxOK(int c UNUSED, char* field[],
+                               struct gps_device_t* session)
+{
+    /* Quectel generic PQTMxxxOK message handler
+     * The messages are content free, not very useful.
+     *
+     * $PQTMCFGEINSMSGOK*16
+     * $PQTMCFGORIENTATIONOK*08
+     * $PQTMCFGWHEELTICKOK*18
+     */
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NMEA0183: %s OK\n", field[0]);
+    return ONLINE_SET;
+}
+
 static gps_mask_t processPQVERNO(int c UNUSED, char* field[],
                                  struct gps_device_t* session)
 {
@@ -4640,13 +4673,14 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PMTKCHN", NULL, 0, false, NULL},
         // MTK-3301 -- $POLYN
         // Quectel proprietary
-        {"PQTMCFGEINSMSGERROR", NULL, 1, false, NULL},      // Error
-        {"PQTMCFGEINSMSGOK", NULL, 1, false, NULL},         // OK
+        {"PQTMCFGEINSMSGERROR", NULL, 1, false, processPQxERR},      // Error
+        {"PQTMCFGEINSMSGOK", NULL, 1, false, processPQxOK},          // OK
         {"PQTMCFGORIENTATION", NULL, 3, false, NULL},       // Orientation
-        {"PQTMCFGORIENTATIONERROR", NULL, 1, false, NULL},  // Error
-        {"PQTMCFGORIENTATIONOK", NULL, 1, false, NULL},     // OK
-        {"PQTMCFGWHEELTICKERROR", NULL, 1, false, NULL},    // Error
-        {"PQTMCFGWHEELTICKOK", NULL, 1, false, NULL},       // OK
+        {"PQTMCFGORIENTATIONERROR", NULL, 1, false, processPQxERR},  // Error
+        {"PQTMCFGORIENTATIONOK", NULL, 1, false, processPQxOK},      // OK
+        {"PQTMCFGWHEELTICKERROR", NULL, 1, false, processPQxERR},    // Error
+        {"PQTMCFGWHEELTICKOK", NULL, 1, false, processPQxOK},        // OK
+        {"PQTMQMPTERROR", NULL, 1, false, processPQxERR},            // Error
         {"PQTMGPS", NULL, 14, false, NULL},           // GPS Status
         {"PQTMINS", NULL, 11, false, NULL},           // INS Results
         {"PQTMIMU", NULL, 10, false, NULL},           // IMU Raw Data
