@@ -1,6 +1,6 @@
 = gpspipe(1)
 :author: Gary E. Miller
-:date: 15 October 2021
+:date: 25 October 2022
 :email: gem@rellim.com.
 :keywords: gps, gpsd, gpspipe, socat
 :manmanual: GPSD Documentation
@@ -47,6 +47,8 @@ for writing the output to a file.
   Print a usage message and exit.
 *-2*, *--split24*::
   *-2* sets the split24 flag on AIS reports.
+*-B*, *--nobuffer*::
+  Do not buffer the output.
 *-d*, *--daemonize*::
   Run as a daemon.
 *-D LVL*, *--debug LVL*::
@@ -141,14 +143,14 @@ $ socat EXEC:'gpspipe -r' TCP-LISTEN:2948,reuseaddr,fork
 ----
 
 The paranoid may wish to have *socat* run as user 'nobody' and only
-accept connections from the local network.  The "su=nobody" means
+accept connections from the local network.  Using the *-B" option to
+*gpspipe* will reduce latency and jitter  The "su=nobody" means
 this must be run as root:
 
 ----
-# socat EXEC:'gpspipe -r' \
+# socat EXEC:'gpspipe -rB' \
    TCP-LISTEN:2948,reuseaddr,fork,su=nobody,range=192.168.0.0/24
 ----
-
 
 
 == RETURN VALUES
