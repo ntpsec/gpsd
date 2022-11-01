@@ -1828,7 +1828,12 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
         if (VALID_UNIT(device->shm_clock_unit)) {
             ntpshm_put(device, device->shm_clock_unit, precision, &td);
         }
-        // why not device->shm_pps_unit here too?
+        if (0 < device->chrony_clock_fd) {
+            chrony_send(device, device->chrony_clock_fd, &td);
+        }
+        // PPS samples are sent from the ppsthread, which minimizes the
+        // delay and allows the PPS samples to be sent at a higher rate
+        // than the message-based samples sent here
 
 #ifdef SOCKET_EXPORT_ENABLE
         notify_watchers(device, false, true,

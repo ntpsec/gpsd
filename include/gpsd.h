@@ -580,7 +580,8 @@ struct gps_device_t {
 #define VALID_UNIT(u)   (0 <= (u) && (u) < NTPSHMSEGS)
     int shm_clock_unit;
     int shm_pps_unit;
-    int chronyfd;                      // for talking to chrony
+    int chrony_clock_fd;              // for talking to chrony
+    int chrony_pps_fd;
     volatile struct pps_thread_t pps_thread;
     /*
      * msgbuf needs to hold the hex decode of inbuffer
@@ -1022,6 +1023,7 @@ extern void ntpshm_context_init(struct gps_context_t *);
 extern void ntpshm_session_init(struct gps_device_t *);
 extern void ntpshm_put(struct gps_device_t *, int unit, int precision,
                        struct timedelta_t *);
+extern void chrony_send(struct gps_device_t *, int fd, struct timedelta_t *);
 extern void ntpshm_link_deactivate(struct gps_device_t *);
 extern void ntpshm_link_activate(struct gps_device_t *);
 

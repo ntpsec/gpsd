@@ -275,24 +275,24 @@ struct sock_sample {
 };
 
 // for chrony SOCK interface, which allows nSec timekeeping
-static void init_hook(struct gps_device_t *session)
+static int chrony_open(struct gps_device_t *session, const char *prefix)
 {
     // open the chrony socket
     char chrony_path[GPS_PATH_MAX];
+    int fd = -1;
 
-    session->chronyfd = -1;
     if (0 == getuid()) {
         /* this case will fire on command-line devices;
          * they're opened before priv-dropping.  Matters because
          * usually only root can use /run or /var/run.
          */
         (void)snprintf(chrony_path, sizeof (chrony_path),
-                       RUNDIR "/chrony.%s.sock",
-                       basename(session->gpsdata.dev.path));
+                       RUNDIR "/%s%s.sock",
+                       prefix, basename(session->gpsdata.dev.path));
     } else {
         (void)snprintf(chrony_path, sizeof (chrony_path),
-                       "/tmp/chrony.%s.sock",
-                       basename(session->gpsdata.dev.path));
+                       "/tmp/%s%s.sock",
+                       prefix, basename(session->gpsdata.dev.path));
     }
 
     if (0 != access(chrony_path, F_OK)) {
@@ -300,26 +300,28 @@ static void init_hook(struct gps_device_t *session)
                 "NTP:%s chrony socket %s doesn't exist\n",
                 session->gpsdata.dev.path, chrony_path);
     } else {
-        session->chronyfd = netlib_localsocket(chrony_path, SOCK_DGRAM);
-        if (0 > session->chronyfd) {
+        fd = netlib_localsocket(chrony_path, SOCK_DGRAM);
+        if (0 > fd) {
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "NTP:%s connect chrony socket failed: %s, error: %d, "
                      "%s(%d)\n",
                      session->gpsdata.dev.path,
-                     chrony_path, session->chronyfd, strerror(errno), errno);
+                     chrony_path, fd, strerror(errno), errno);
         } else {
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "NTP:%s using chrony socket: %s\n",
                      session->gpsdata.dev.path, chrony_path);
         }
     }
+
+    return fd;
 }
 
 
 /* td is the real time and clock time of the edge
  * offset is actual_ts - clock_ts
  */
-static void chrony_send(struct gps_device_t *session, struct timedelta_t *td)
+void chrony_send(struct gps_device_t *session, int fd, struct timedelta_t *td)
 {
     char real_str[TIMESPEC_LEN];
     char clock_str[TIMESPEC_LEN];
@@ -362,7 +364,7 @@ static void chrony_send(struct gps_device_t *session, struct timedelta_t *td)
              timespec_str(&td->real, real_str, sizeof(real_str)),
              timespec_str(&td->clock, clock_str, sizeof(clock_str)),
              sample.offset);
-    (void)send(session->chronyfd, &sample, sizeof (sample), 0);
+    (void)send(fd, &sample, sizeof (sample), 0);
 }
 
 // ship the time of a PPS event to ntpd and/or chrony
@@ -399,9 +401,9 @@ static char *report_hook(volatile struct pps_thread_t *pps_thread,
 
     // FIXME?  how to log socket AND shm reported?
     log1 = "accepted";
-    if (0 <= session->chronyfd) {
+    if (0 <= session->chrony_pps_fd) {
         log1 = "accepted chrony sock";
-        chrony_send(session, td);
+        chrony_send(session, session->chrony_pps_fd, td);
     }
 
     // precision is a floor so do not make it tight
@@ -439,12 +441,16 @@ void ntpshm_link_deactivate(struct gps_device_t *session)
     }
     if (VALID_UNIT(session->shm_pps_unit)) {
         pps_thread_deactivate(&session->pps_thread);
-        if (-1 != session->chronyfd) {
-            // how do we know chronyfd is related to this shm_pps_unit?
-            (void)close(session->chronyfd);
-        }
         ntpshm_free(session->context, session->shm_pps_unit);
         session->shm_pps_unit = -1;
+    }
+    if (0 < session->chrony_clock_fd) {
+        (void)close(session->chrony_clock_fd);
+        session->chrony_clock_fd = -1;
+    }
+    if (0 < session->chrony_pps_fd) {
+        (void)close(session->chrony_pps_fd);
+        session->chrony_pps_fd = -1;
     }
 }
 
@@ -478,17 +484,18 @@ void ntpshm_link_activate(struct gps_device_t *session)
     if (SOURCE_PPS != session->sourcetype) {
         // allocate a shared-memory segment for "NMEA" time data
         session->shm_clock_unit = ntpshm_alloc(session);
+        session->chrony_clock_fd = chrony_open(session, "chrony.clk.");
 
-        if (!VALID_UNIT(session->shm_clock_unit)) {
+        if (VALID_UNIT(session->shm_clock_unit)) {
+            GPSD_LOG(LOG_PROG, &context->errout,
+                     "NTP:SHM: ntpshm_alloc(%s), sourcetype %d "
+                     "shm_clock using SHM(%d)\n",
+                     session->gpsdata.dev.path, session->sourcetype,
+                     session->shm_clock_unit);
+        } else {
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "NTP:SHM: ntpshm_alloc(shm_clock) failed\n");
-            return;
         }
-        GPSD_LOG(LOG_PROG, &context->errout,
-                 "NTP:SHM: ntpshm_alloc(%s), sourcetype %d "
-                 "shm_clock using SHM(%d)\n",
-                 session->gpsdata.dev.path, session->sourcetype,
-                 session->shm_clock_unit);
     }
 
     if (SOURCE_USB == session->sourcetype ||
@@ -506,7 +513,17 @@ void ntpshm_link_activate(struct gps_device_t *session)
                      "shm_pps using SHM(%d)\n",
                      session->gpsdata.dev.path, session->sourcetype,
                      session->shm_pps_unit);
-            init_hook(session);
+        } else {
+            GPSD_LOG(LOG_WARN, &session->context->errout,
+                     "NTP:SHM: ntpshm_alloc(shm_pps) failed\n");
+        }
+
+        /* The chrony socket name should indicate PPS source, but it is kept
+         * this way for compatibility with configurations created when only one
+         * socket per device could be used */
+        session->chrony_pps_fd = chrony_open(session, "chrony.");
+
+        if (VALID_UNIT(session->shm_pps_unit) || 0 < session->chrony_pps_fd) {
             session->pps_thread.report_hook = report_hook;
 #ifdef MAGIC_HAT_ENABLE
             /*
@@ -533,9 +550,6 @@ void ntpshm_link_activate(struct gps_device_t *session)
             }
 #endif  // MAGIC_HAT_ENABLE
             pps_thread_activate(&session->pps_thread);
-        } else {
-            GPSD_LOG(LOG_WARN, &session->context->errout,
-                     "NTP:SHM: ntpshm_alloc(shm_pps) failed\n");
         }
     }
 }
