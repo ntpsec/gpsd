@@ -254,14 +254,14 @@ static void display_nav_sol(unsigned char *buf, size_t data_len)
     pastef(navsolwin, 2, 24, 8, "%+9.2f", evy);
     pastef(navsolwin, 2, 37, 8, "%+9.2f", evz);
     (void)wattrset(navsolwin, A_UNDERLINE);
-    if (0 != (outmask && LATLON_SET)) {
+    if (0 != (outmask & LATLON_SET)) {
         (void)mvwprintw(navsolwin,  4, 11, "%12.9f  %13.9f  %8.2fm",
                   g.fix.latitude, g.fix.longitude, g.fix.altHAE);
     }
     (void)mvwaddch(navsolwin, 4, 23, ACS_DEGREE);
     (void)mvwaddch(navsolwin, 4, 38, ACS_DEGREE);
     // coverity says g.fix.track never set.
-    if (0 != (outmask && VNED_SET)) {
+    if (0 != (outmask & VNED_SET)) {
         (void)mvwprintw(navsolwin,  5, 11, "%6.2fm/s %5.1fo %6.2fm/s",
                   g.fix.speed, NAN, g.fix.climb);
     }
