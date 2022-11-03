@@ -2801,7 +2801,7 @@ int main(int argc, char *argv[])
 
         // read any commands that came in over the control socket
         // Linux man page says FD_* and select() are obsolete...
-        GPSD_LOG(LOG_RAW1, &context.errout, "read control commands");
+        GPSD_LOG(LOG_RAW1, &context.errout, "read control commands\n");
         for (cfd = 0; cfd < (int)FD_SETSIZE; cfd++) {
             // Do we really need to check all 1024 possible file descriptors?
             if (FD_ISSET(cfd, &control_fds)) {
