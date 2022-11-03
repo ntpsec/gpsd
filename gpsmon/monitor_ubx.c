@@ -32,7 +32,7 @@ static bool ubx_initialize(void)
     }
     (void)wborder(satwin, 0, 0, 0, 0, 0, 0, 0, 0), (void)syncok(satwin, true);
     (void)wattrset(satwin, A_BOLD);
-    display(satwin, 1, 1, "Ch PRN  Az  El S/N H Q U");
+    display(satwin, 1, 1, "Ch PRN  Az  El S/N FLAG U");
     for (i = 0; i < 16; i++)
         display(satwin, i + 2, 1, "%2d", i);
     display(satwin, 18, 7, " NAV_SVINFO ");
@@ -44,35 +44,24 @@ static bool ubx_initialize(void)
     }
     (void)wborder(navsolwin, 0, 0, 0, 0, 0, 0, 0, 0),
         (void)wattrset(navsolwin, A_BOLD);
-    (void)wmove(navsolwin, 1, 1);
-    (void)wprintw(navsolwin, "ECEF Pos:");
-    (void)wmove(navsolwin, 2, 1);
-    (void)wprintw(navsolwin, "ECEF Vel:");
+    (void)mvwprintw(navsolwin,  1,  1, "ECEF Pos:");
+    (void)mvwprintw(navsolwin,  2,  1, "ECEF Vel:");
 
-    (void)wmove(navsolwin, 4, 1);
-    (void)wprintw(navsolwin, "LTP Pos:");
-    (void)wmove(navsolwin, 5, 1);
-    (void)wprintw(navsolwin, "LTP Vel:");
+    (void)mvwprintw(navsolwin,  4,  1, "LTP Pos:");
+    (void)mvwprintw(navsolwin,  5,  1, "LTP Vel:");
 
-    (void)wmove(navsolwin, 7, 1);
-    (void)wprintw(navsolwin, "Time:");
-    (void)wmove(navsolwin, 8, 1);
-    (void)wprintw(navsolwin, "Time GPS:                     Day:");
+    (void)mvwprintw(navsolwin,  7,  1, "Time:");
+    (void)mvwprintw(navsolwin,  8,  1, "Time GPS:                     Day:");
 
-    (void)wmove(navsolwin, 10, 1);
-    (void)wprintw(navsolwin, "Est Pos Err       m Est Vel Err       m/s");
-    (void)wmove(navsolwin, 11, 1);
-    (void)wprintw(navsolwin, "PRNs: ## PDOP: xx.x Fix 0x..");
+    (void)mvwprintw(navsolwin, 10,  1, "Est Pos Err       m Est Vel Err       m/s");
+    (void)mvwprintw(navsolwin, 11,  1, "PRNs: ## PDOP: xx.x Fix 0x..");
 
-    display(navsolwin, 12, 22, " NAV ");
+    (void)mvwprintw(navsolwin, 12, 22, " NAV ");
     (void)wattrset(navsolwin, A_NORMAL);
     display(navsolwin, 1, 22, "m %11sm %11sm", "", "");
     display(navsolwin, 2, 20, "m/s %9sm/s %9sm/s", "", "");
     display(navsolwin, 4, 48, "m");
     display(navsolwin, 5, 17, "m/s%6so", "");
-    (void)mvwaddch(navsolwin, 4, 23, ACS_DEGREE);
-    (void)mvwaddch(navsolwin, 4, 38, ACS_DEGREE);
-    (void)mvwaddch(navsolwin, 5, 26, ACS_DEGREE);
 
 
     if (NULL == (dopwin = derwin(devicewin, 3, 51, 13, 28))) {
@@ -80,8 +69,7 @@ static bool ubx_initialize(void)
     }
     (void)wborder(dopwin, 0, 0, 0, 0, 0, 0, 0, 0);
     (void)wattrset(dopwin, A_BOLD);
-    (void)wmove(dopwin, 1, 1);
-    (void)wprintw(dopwin, "DOP [H]      [V]      [P]      [T]      [G]");
+    (void)mvwprintw(dopwin,  1,  1, "DOP [H]      [V]      [P]      [T]      [G]");
     display(dopwin, 2, 20, " NAV_DOP ");
     (void)wattrset(dopwin, A_NORMAL);
 
@@ -106,38 +94,102 @@ static bool ubx_initialize(void)
 
 
 #define MAXSKYCHANS 16
-static void display_ubx_sat(void)
+static void display_nav_svinfo(unsigned char *buf, size_t data_len)
 {
-    int nchan, i;
-    nchan = session.gpsdata.satellites_visible;
+    int az, el, i, nchan;
+    unsigned fl, off, prn, ss;
+
+    // very coarse sanity check (minimal length for valid message reached?)
+    if (data_len < 8)
+        return;
+
+    nchan = getub(buf, 4);
     if (nchan > MAXSKYCHANS)
         nchan = MAXSKYCHANS;
 
+    for (i = 0; i < nchan; i++) {
+        off = 8 + 12 * i;
+
+        prn = getub(buf, off + 1);
+        fl = getleu16(buf, off + 2);
+        ss = getub(buf, off + 4);
+        el = getsb(buf, off + 5);
+        az = getles16(buf, off + 6);
+        (void)mvwprintw(satwin, i + 2,  4, "%3d %3d %3d  %2d %04x %c",
+                        prn, az, el, ss, fl, (fl & UBX_SAT_USED) ? 'Y' : ' ');
+    }
+    // clear potentially stale sat lines unconditionally
+    for (;i < MAXSKYCHANS; i++) {
+        mvwprintw(satwin, (int)(i + 2), 4, "%22s", "");
+    }
+
+    // update pane label, in case NAV-SAT was previously displayed
+    (void)wattrset(satwin, A_BOLD);
+    display(satwin, 18, 13, "VINFO ");
+    (void)wattrset(satwin, A_NORMAL);
+    (void)wnoutrefresh(satwin);
+    return;
+}
+
+
+static void display_nav_sat(unsigned char *buf, size_t data_len)
+{
+    int az, el, i, nchan;
+    unsigned fl, gnss, off, prn, ss;
+
+    // very coarse sanity check (minimal length for valid message reached?)
+    if (data_len < 8) {
+        return;
+    }
+
+    nchan = getub(buf, 5);
+    if (nchan > MAXSKYCHANS) {
+        nchan = MAXSKYCHANS;
+    }
+
 #define SV session.gpsdata.skyview[i]
     for (i = 0; i < nchan; i++) {
-        (void)mvwprintw(satwin, i + 2, 4, "%3d --- ---  -- %d %d %c",
-                        SV.PRN, SV.health,
-                        SV.qualityInd, (SV.used) ? 'Y' : ' ');
-        pastef(satwin, i + 2,  8, 3, "%3.0f", SV.azimuth);
-        pastef(satwin, i + 2, 12, 3, "%3.0f", SV.elevation);
-        pastef(satwin, i + 2, 17, 3, "%2.0f", SV.ss);
+        off = 8 + 12 * i;
+        gnss = getub(buf, off);
+        prn = getub(buf, off + 1);
+        fl = getleu16(buf, off + 8);
+        ss = getub(buf, off + 2);
+        el = getsb(buf, off + 3);
+        az = getles16(buf, off + 4);
+
+        // Translate sat numbering to the one used in UBX-NAV-SVINFO
+        if (gnss == 2) {
+            prn += 210;  // Galileo
+        } else if (gnss == 3 && prn <= 5) {
+            prn += 158;  // BeiDou
+        } else if (gnss == 3 && prn >= 6) {
+            prn += 27;   // BeiDou (continued)
+        } else if (gnss == 4) {
+            prn += 172;  // IMES
+        } else if (gnss == 5) {
+            prn += 192;  // QZSS
+        } else if (gnss == 6 && prn != 255) {
+            prn += 64;   // GLONASS
+        }
+
+        (void)mvwprintw(satwin, i + 2, 4, "%3d %3d %3d  %2d %04x %c",
+                        prn, az, el, ss, fl,
+                        (fl & (UBX_SAT_USED << 3)) ? 'Y' : ' ');
     }
-    (void)wmove(navsolwin, 11, 7);
-    (void)wprintw(navsolwin, "%2d", session.gpsdata.satellites_used);
+    (void)mvwprintw(navsolwin, 11,  7, "%2d", session.gpsdata.satellites_used);
     pastef(navsolwin, 11, 15, 4, "%5.1f", session.gpsdata.dop.pdop);
 #undef SV
 
-    /* clear potentially stale sat lines unconditionally */
+    // clear potentially stale sat lines unconditionally
     for (; i < MAXSKYCHANS; i++) {
-        (void)wmove(satwin, i + 2, 4);
-        (void)wprintw(satwin, "%21s", " ");
+        (void)mvwprintw(satwin, i + 2,  4, "%22s", "");
     }
 #undef MAXSKYCHANS
 
-    /* update pane label, in case NAV-SAT was previously displayed */
+    // update pane label, in case NAV-SAT was previously displayed
     (void)wborder(satwin, 0, 0, 0, 0, 0, 0, 0, 0), (void)syncok(satwin, true);
     (void)wattrset(satwin, A_BOLD);
-
+    display(satwin, 18, 7, " NAV-SAT ");
     (void)wattrset(satwin, A_NORMAL);
     (void)wnoutrefresh(satwin);
     (void)wnoutrefresh(navsolwin);
@@ -146,99 +198,127 @@ static void display_ubx_sat(void)
 }
 
 
-static void display_ubx_dop(void)
+static void display_nav_dop(unsigned char *buf, size_t data_len)
 {
-    pastef(dopwin, 1,  9, 3, "%4.1f", session.gpsdata.dop.hdop);
-    pastef(dopwin, 1, 18, 3, "%4.1f", session.gpsdata.dop.vdop);
-    pastef(dopwin, 1, 27, 3, "%4.1f", session.gpsdata.dop.pdop);
-    pastef(dopwin, 1, 36, 3, "%4.1f", session.gpsdata.dop.tdop);
-    pastef(dopwin, 1, 45, 3, "%4.1f", session.gpsdata.dop.gdop);
+    if (data_len != 18) {
+        return;
+    }
+    pastef(dopwin, 1,  9, 3, "%4.1f", getleu16(buf, 12) / 100.0);
+    pastef(dopwin, 1, 18, 3, "%4.1f", getleu16(buf, 10) / 100.0);
+    pastef(dopwin, 1, 27, 3, "%4.1f", getleu16(buf,  6) / 100.0);
+    pastef(dopwin, 1, 36, 3, "%4.1f", getleu16(buf,  8) / 100.0);
+    pastef(dopwin, 1, 45, 3, "%4.1f", getleu16(buf,  4) / 100.0);
 }
 
 
-static void display_ubx_nav(gps_mask_t mask)
+static void display_nav_sol(unsigned char *buf, size_t data_len)
 {
-    int64_t tow;
+    gps_mask_t outmask;
+    unsigned short gw = 0;
+    unsigned int tow = 0, flags;
+    double epx, epy, epz, evx, evy, evz;
+    unsigned char navmode;
+    struct gps_data_t g;
 
-#define SE session.newdata.ecef
-    if (0 != (ECEF_SET & mask)) {
-        pastef(navsolwin, 1, 11, 9, "%+10.2f", SE.x);
-        pastef(navsolwin, 1, 24, 9, "%+10.2f", SE.y);
-        pastef(navsolwin, 1, 37, 9, "%+10.2f", SE.z);
+    if (52 != data_len) {
+        return;
     }
-    if (0 != (VECEF_SET & mask)) {
-        pastef(navsolwin, 2, 11, 8, "%+9.2f", SE.vx);
-        pastef(navsolwin, 2, 24, 8, "%+9.2f", SE.vy);
-        pastef(navsolwin, 2, 37, 8, "%+9.2f", SE.vz);
-    }
-#undef SE
+    // pacify coverity
+    memset(&g, 0, sizeof(g));
 
-#define SF session.newdata
+    navmode = (unsigned char)getub(buf, 10);
+    flags = (unsigned int)getub(buf, 11);
+
+    if ((flags & (UBX_SOL_VALID_WEEK | UBX_SOL_VALID_TIME)) != 0) {
+        tow = (unsigned int)getleu32(buf, 0);
+        gw = (unsigned short)getles16(buf, 8);
+    }
+
+    epx = (double)(getles32(buf, 12) / 100.0);
+    epy = (double)(getles32(buf, 16) / 100.0);
+    epz = (double)(getles32(buf, 20) / 100.0);
+    evx = (double)(getles32(buf, 28) / 100.0);
+    evy = (double)(getles32(buf, 32) / 100.0);
+    evz = (double)(getles32(buf, 36) / 100.0);
+    outmask = ecef_to_wgs84fix(&g.fix, epx, epy, epz, evx, evy, evz);
+
+    g.fix.epx = g.fix.epy = (double)(getles32(buf, 24) / 100.0);
+    g.fix.eps = (double)(getles32(buf, 40) / 100.0);
+    g.dop.pdop = (double)(getleu16(buf, 44) / 100.0);
+    g.satellites_used = (int)getub(buf, 47);
+
+    pastef(navsolwin, 1, 11, 9, "%+10.2f", epx);
+    pastef(navsolwin, 1, 24, 9, "%+10.2f", epy);
+    pastef(navsolwin, 1, 37, 9, "%+10.2f", epz);
+    pastef(navsolwin, 2, 11, 8, "%+9.2f", evx);
+    pastef(navsolwin, 2, 24, 8, "%+9.2f", evy);
+    pastef(navsolwin, 2, 37, 8, "%+9.2f", evz);
     (void)wattrset(navsolwin, A_UNDERLINE);
-    if (0 != (LATLON_SET & mask)) {
-        pastef(navsolwin, 4, 11, 11, "%12.9f", SF.latitude);
-        pastef(navsolwin, 4, 25, 12, "%13.9f", SF.longitude);
+    if (0 != (outmask && LATLON_SET)) {
+        (void)mvwprintw(navsolwin,  4, 11, "%12.9f  %13.9f  %8.2fm",
+                  g.fix.latitude, g.fix.longitude, g.fix.altHAE);
     }
-    if (0 != (HERR_SET & mask)) {
-        pastef(navsolwin, 10, 12, 6, "%7.2f", session.newdata.eph);
+    (void)mvwaddch(navsolwin, 4, 23, ACS_DEGREE);
+    (void)mvwaddch(navsolwin, 4, 38, ACS_DEGREE);
+    // coverity says g.fix.track never set.
+    if (0 != (outmask && VNED_SET)) {
+        (void)mvwprintw(navsolwin,  5, 11, "%6.2fm/s %5.1fo %6.2fm/s",
+                  g.fix.speed, NAN, g.fix.climb);
     }
-    if (0 != (ALTITUDE_SET & mask)) {
-        pastef(navsolwin, 4, 40,  7, "%8.2f", SF.altHAE);
-    }
-    if (0 != (SPEED_SET & mask)) {
-        pastef(navsolwin, 5, 11, 5, "%6.2f", SF.speed);
-    }
-    if (0 != (VERR_SET & mask)) {
-        pastef(navsolwin, 10, 33, 5, "%6.2f", session.newdata.epv);
-    }
-    if (0 != (TRACK_SET & mask)) {
-        // coverity says g.fix.track never set.
-        pastef(navsolwin, 5, 21, 4, "%5.1f", SF.track);
-    }
+    (void)mvwaddch(navsolwin, 5, 26, ACS_DEGREE);
     (void)wattrset(navsolwin, A_NORMAL);
-    if (0 != (STATUS_SET & mask)) {
-        (void)wmove(navsolwin, 11, 25);
-        (void)wprintw(navsolwin, "0x%02x", session.newdata.mode);
-    }
-#undef SF
 
-    if (0 != (TIME_SET & mask)) {
-        // Note: iTOW is GPS time, not UTC.
-        tow = session.driver.ubx.iTOW;
-        unsigned ms = (unsigned)(tow % 1000);
+    {
         uint64_t tod = tow / 1000UL;              // remove ms
         unsigned s = (unsigned)(tod % 60);
         unsigned m = (unsigned)((tod % 3600UL) / 60);
         unsigned h = (unsigned)((tod / 3600UL) % 24);
         unsigned day = (unsigned)(tod / 86400UL);
 
-        (void)wmove(navsolwin, 7, 7);
         (void)wattrset(navsolwin, A_UNDERLINE);
-        (void)wprintw(navsolwin, "%u %02u:%02u:%02u.%03u", day, h, m, s, ms);
+        (void)mvwprintw(navsolwin,  7,  7, "%u %02u:%02u:%02d.%02d",
+                        day, h, m, s, (tow % 1000)  / 10);
         (void)wattrset(navsolwin, A_NORMAL);
-
-        (void)wmove(navsolwin, 8, 11);
-        (void)wprintw(navsolwin, "%d+%10.3lf", session.context->gps_week,
-                      (double)(tow / 1000.0));
-        (void)wmove(navsolwin, 8, 36);
-        (void)wprintw(navsolwin, "%u", day);
+    }
+    if ((flags & (UBX_SOL_VALID_WEEK | UBX_SOL_VALID_TIME)) != 0) {
+        (void)mvwprintw(navsolwin,  8, 11, "%d+%10.3lf", gw, (double)(tow / 1000.0));
+        (void)mvwprintw(navsolwin,  8, 36, "%d", (tow / 86400000));
     }
 
+    // relies on the fact that epx and epy are set to same value
+    (void)mvwprintw(navsolwin, 10, 12, "%7.2f", g.fix.epx);
+    (void)mvwprintw(navsolwin, 10, 33, "%6.2f", g.fix.epv);
+    (void)mvwprintw(navsolwin, 11,  7, "%2d", g.satellites_used);
+    (void)mvwprintw(navsolwin, 11, 15, "%5.1f", g.dop.pdop);
+    (void)mvwprintw(navsolwin, 11, 25, "0x%02x", navmode);
+    (void)mvwprintw(navsolwin, 11, 36, "0x%02x", flags);
     (void)wnoutrefresh(navsolwin);
 }
 
-
 static void ubx_update(void)
 {
-    gps_mask_t mask = 0;
+    unsigned char *buf;
+    size_t data_len;
+    unsigned short msgid;
 
-    mask = session.device_type->parse_packet(&session);
-    if (0 != (SATELLITE_SET & mask)) {
-        display_ubx_sat();
-    }
-    display_ubx_nav(mask);
-    if (0 != (DOP_SET & mask)) {
-        display_ubx_dop();
+    buf = session.lexer.outbuffer;
+    msgid = (unsigned short)((buf[2] << 8) | buf[3]);
+    data_len = (size_t) getles16(buf, 4);
+    switch (msgid) {
+    case UBX_NAV_SVINFO:
+        display_nav_svinfo(&buf[6], data_len);
+        break;
+    case UBX_NAV_SAT:
+        display_nav_sat(&buf[6], data_len);
+        break;
+    case UBX_NAV_DOP:
+        display_nav_dop(&buf[6], data_len);
+        break;
+    case UBX_NAV_SOL:
+        display_nav_sol(&buf[6], data_len);
+        break;
+    default:
+        break;
     }
 
     toff_update(ppswin, TOFF_LINE, TOFF_COLUMN + 6);
@@ -261,7 +341,7 @@ const struct monitor_object_t ubx_mmt = {
     .update = ubx_update,
     .command = ubx_command,
     .wrap = ubx_wrap,
-    .min_y = 19,.min_x = 80,    /* size of the device window */
+    .min_y = 19,.min_x = 80,    // size of the device window
     .driver = &driver_ubx,
 };
 #endif
