@@ -638,14 +638,15 @@ the device (normally less than a second later).
   assumptions. See above for further details on the device-hook
   mechanism.
 */@RUNDIR@/chrony.XXX.sock*::
-  When *chronyd* is started, it may create this file.  When *gpsd* is
-  started, it will open this file if it exists.  Then *gpsd* will put
-  PPS timing information in the file for *chronyd* to use to correct the
-  system clock.
+  Optional Unix domain socket provided by *chronyd* configured with a SOCK
+  reference clock, where XXX is the name of the serial device (e.g. ttyS0).
+  When *gpsd* is started, it will try to connect to this socket. If connected,
+  it will be sending PPS timing information to *chronyd* in order to
+  synchronize the system clock.
 */@RUNDIR@/chrony.clk.XXX.sock*::
   Similar to *chrony.XXX.sock*, but will be used to pass timing
   information to *chronyd* that is derived from the serial (likely NMEA)
-  timing.
+  timing instead of PPS.
 
 == ENVIRONMENT VARIABLES
 
