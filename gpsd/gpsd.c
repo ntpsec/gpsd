@@ -2893,15 +2893,13 @@ int main(int argc, char *argv[])
                     } else if (0 < gpsd_serial_isatty(device)) {
                         // then try the next hunt speed.
                         gpsd_next_hunt_setting(device);
-                    } else {
-                        // gpsd://, tcp:// etc.  Just reset timer for now.
-                        device->lexer.pkt_time = now;
-                        if (SERVICE_NTRIP == device->servicetype) {
-                            // ntrip://
-                            // likely NTRIP_CONN_INPROGRESS, move it along
-                            ntrip_open(device, "");
-                        }
+                    } else if (SERVICE_NTRIP == device->servicetype) {
+			// ntrip://
+			// likely NTRIP_CONN_INPROGRESS, move it along
+			device->lexer.pkt_time = now;
+			ntrip_open(device, "");
                     }
+                    // else, gpsd://, tcp:// or udp://
                 }
                 break;
             default:
