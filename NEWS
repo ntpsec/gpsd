@@ -14,6 +14,7 @@
   Add Magnetic Heading (mheading) and Rate of Rotation (rot) to attitude_t
   Allow NTP time from gpsd://, tcp:// and udp:// sources
   Add the -B, --nobuffer, option to gpspipe.
+  gpsd opens $RUNDIR/chrony.clk.XXX.sock to supply serial time to chronyd.
 
 3.24: 2022-04-22
   NTRIP 2.0 now works.  But still only plain HTML, not RTP, etc.

@@ -360,11 +360,15 @@ void chrony_send(struct gps_device_t *session, int fd, struct timedelta_t *td)
     sample._pad = 0;
 
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "NTP: chrony_send %s @ %s Offset: %0.9f\n",
-             timespec_str(&td->real, real_str, sizeof(real_str)),
+             "NTP: chrony_send(%d) %s @ %s Offset: %0.9f\n",
+             fd, timespec_str(&td->real, real_str, sizeof(real_str)),
              timespec_str(&td->clock, clock_str, sizeof(clock_str)),
              sample.offset);
-    (void)send(fd, &sample, sizeof (sample), 0);
+    if (-1 >= send(fd, &sample, sizeof (sample), 0)) {
+	GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "NTP: chrony_send(%d) %s(%d)\n",
+		 fd, strerror(errno), errno);
+    }
 }
 
 // ship the time of a PPS event to ntpd and/or chrony
@@ -523,7 +527,8 @@ void ntpshm_link_activate(struct gps_device_t *session)
          * socket per device could be used */
         session->chrony_pps_fd = chrony_open(session, "chrony.");
 
-        if (VALID_UNIT(session->shm_pps_unit) || 0 < session->chrony_pps_fd) {
+        if (VALID_UNIT(session->shm_pps_unit) ||
+            0 < session->chrony_pps_fd) {
             session->pps_thread.report_hook = report_hook;
 #ifdef MAGIC_HAT_ENABLE
             /*

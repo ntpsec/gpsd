@@ -1,5 +1,5 @@
 = gpsd(8)
-:date: 12 November 2021
+:date: 9 November 2022
 :keywords: gps, gpsd, gnss
 :manmanual: GPSD Documentation
 :mansource: GPSD, Version {gpsdver}
@@ -637,6 +637,15 @@ the device (normally less than a second later).
   directory, it is possible to build the GPSD source code with different
   assumptions. See above for further details on the device-hook
   mechanism.
+*/@RUNDIR@/chrony.XXX.sock*::
+  When *chronyd* is started, it may create this file.  When *gpsd* is
+  started, it will open this file if it exists.  Then *gpsd* will put
+  PPS timing information in the file for *chronyd* to use to correct the
+  system clock.
+*/@RUNDIR@/chrony.clk.XXX.sock*::
+  Similar to *chrony.XXX.sock*, but will be used to pass timing
+  information to *chronyd* that is derived from the serial (likely NMEA)
+  timing.
 
 == ENVIRONMENT VARIABLES
 
@@ -713,9 +722,13 @@ This manual page by Eric S. Raymond <esr@thyrsus.com>.
 
 == SEE ALSO
 
-*gpsd*(8), *gpsctl*(1), *gps*(1), *gpsprof*(1), *gpsfake*(1).  *gpscat(1),
-*ntpshmmon*(1), *libgps*(3), *libgpsmm*(3), *gpsd_json*(5),  *gpsdctl*(8),
-*ntpd*(8)
+*gpsctl*(1), *gps*(1), *gpsprof*(1), *gpsfake*(1).  *gpscat(1), *ntpshmmon*(1),
+
+*libgps*(3), *libgpsmm*(3)
+
+*gpsd_json*(5)
+
+*chronyd*(8), *gpsd*(8), *gpsdctl*(8), *ntpd*(8)
 
 == RESOURCES
 
