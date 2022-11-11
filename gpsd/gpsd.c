@@ -2898,8 +2898,12 @@ int main(int argc, char *argv[])
 			// likely NTRIP_CONN_INPROGRESS, move it along
 			device->lexer.pkt_time = now;
 			ntrip_open(device, "");
+                    } else if (SOURCE_TCP == device->sourcetype) {
+			if (60 <= delta.tv_sec) {
+                            gpsd_close(device);
+                        }
                     }
-                    // else, gpsd://, tcp:// or udp://
+                    // else, gpsd://, udp://
                 }
                 break;
             default:
