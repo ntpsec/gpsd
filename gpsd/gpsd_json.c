@@ -2022,7 +2022,7 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
 
         for (i = 0; i < (unsigned short)rtcm->rtcmtypes.rtcm3_1013.ncount; i++)
             str_appendf(buf, buflen,
-                        "{\"id\":%u,\"sync\":\"%s\",\"interval\":%u}",
+                        "{\"id\":%u,\"sync\":\"%s\",\"interval\":%u},",
                         rtcm->rtcmtypes.rtcm3_1013.announcements[i].id,
                         JSON_BOOL(rtcm->rtcmtypes.rtcm3_1013.
                              announcements[i].sync),
