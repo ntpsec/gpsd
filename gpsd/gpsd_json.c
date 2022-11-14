@@ -2017,14 +2017,21 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                     rtcm->rtcmtypes.rtcm3_1013.mjd,
                     rtcm->rtcmtypes.rtcm3_1013.sod,
                     INT(rtcm->rtcmtypes.rtcm3_1013.leapsecs));
+
+        (void)strlcat(buf, "\"announcements\":[", buflen);
+
         for (i = 0; i < (unsigned short)rtcm->rtcmtypes.rtcm3_1013.ncount; i++)
             str_appendf(buf, buflen,
-                        "{\"id\":%u,\"sync\":\"%s\",\"interval\":%u}",
+                        "{\"id\":%u,\"sync\":\"%s\",\"interval\":%u},
                         rtcm->rtcmtypes.rtcm3_1013.announcements[i].id,
                         JSON_BOOL(rtcm->rtcmtypes.rtcm3_1013.
                              announcements[i].sync),
                         rtcm->rtcmtypes.rtcm3_1013.
                         announcements[i].interval);
+
+        str_rstrip_char(buf, ',');
+        (void)strlcat(buf, "]", buflen);
+
         break;
 
     case 1014:
