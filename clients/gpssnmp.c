@@ -626,7 +626,8 @@ to get the number of saltellites seen with the MIB name\n\
         }
         if (t_sinteger == pxlate->type ||
             t_double == pxlate->type) {
-            printf("     Scale: %ld\n", pxlate->scale);
+            // cast for 32-bit compiles
+            printf("     Scale: %lld\n", (long long)pxlate->scale);
         }
     }
     puts("");
