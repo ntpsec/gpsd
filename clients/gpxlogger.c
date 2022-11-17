@@ -38,7 +38,7 @@ static struct fixsource_t source;
 static struct gps_data_t gpsdata;
 static FILE *logfile;
 static bool intrack = false;
-static unsigned long timeout = 5;         // seconds
+static long timeout = 5;                  // seconds
 static double minmove = 0;                // meters
 static int debug;
 static int sig_flag = 0;
@@ -369,6 +369,7 @@ int main(int argc, char **argv)
         case 'i':               // set polling interval
             timeout = atoi(optarg);
             if (1 > timeout) {
+                // set zero, and negative, timeouts to one.
                 timeout = 1;
             } else if (3600 <= timeout) {
                 (void)fputs("WARNING: track timeout is an hour or more!\n",
