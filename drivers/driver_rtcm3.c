@@ -325,15 +325,16 @@ static bool rtcm3_decode_msm(const struct gps_context_t *context,
         }
     }
 
+    // tow is %llu for 32-bit compatibility
     GPSD_LOG(LOG_PROG, &context->errout, "RTCM3: rtcm3_decode_msm(%u) "
-             "gnssid %u MSM%u id %u tow %lu sync %u IODS %u "
+             "gnssid %u MSM%u id %u tow %llu sync %u IODS %u "
              "steering %u ext_clk %u smoothing %u interval %u "
              "sat_mask x%llx sig_mask x%lx cell_mask %llx\n",
              rtcm->type,
              rtcm->rtcmtypes.rtcm3_msm.gnssid,
              rtcm->rtcmtypes.rtcm3_msm.msm,
              rtcm->rtcmtypes.rtcm3_msm.station_id,
-             rtcm->rtcmtypes.rtcm3_msm.tow,
+             (unsigned long long)rtcm->rtcmtypes.rtcm3_msm.tow,
              rtcm->rtcmtypes.rtcm3_msm.sync,
              rtcm->rtcmtypes.rtcm3_msm.IODS,
              rtcm->rtcmtypes.rtcm3_msm.steering,
