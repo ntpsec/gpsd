@@ -2012,25 +2012,28 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
     case 1013:
         str_appendf(buf, buflen,
                     "\"station_id\":%u,\"mjd\":%u,\"sec\":%u,"
-                    "\"leapsecs\":%u,",
+                    "\"leapsecs\":%u",
                     rtcm->rtcmtypes.rtcm3_1013.station_id,
                     rtcm->rtcmtypes.rtcm3_1013.mjd,
                     rtcm->rtcmtypes.rtcm3_1013.sod,
                     INT(rtcm->rtcmtypes.rtcm3_1013.leapsecs));
 
-        (void)strlcat(buf, "\"announcements\":[", buflen);
+        if (0 < rtcm->rtcmtypes.rtcm3_1013.ncount) {
+	    (void)strlcat(buf, ",\"announcements\":[", buflen);
 
-        for (i = 0; i < (unsigned short)rtcm->rtcmtypes.rtcm3_1013.ncount; i++)
-            str_appendf(buf, buflen,
-                        "{\"id\":%u,\"sync\":\"%s\",\"interval\":%u},",
-                        rtcm->rtcmtypes.rtcm3_1013.announcements[i].id,
-                        JSON_BOOL(rtcm->rtcmtypes.rtcm3_1013.
-                             announcements[i].sync),
-                        rtcm->rtcmtypes.rtcm3_1013.
-                        announcements[i].interval);
+	    for (n = 0; n < (unsigned)rtcm->rtcmtypes.rtcm3_1013.ncount; n++) {
+		str_appendf(buf, buflen,
+			    "{\"id\":%u,\"sync\":\"%s\",\"interval\":%u},",
+			    rtcm->rtcmtypes.rtcm3_1013.announcements[n].id,
+			    JSON_BOOL(rtcm->rtcmtypes.rtcm3_1013.
+				 announcements[n].sync),
+			    rtcm->rtcmtypes.rtcm3_1013.
+			    announcements[n].interval);
+            }
 
-        str_rstrip_char(buf, ',');
-        (void)strlcat(buf, "]", buflen);
+	    str_rstrip_char(buf, ',');
+	    (void)strlcat(buf, "]", buflen);
+        }
 
         break;
 
