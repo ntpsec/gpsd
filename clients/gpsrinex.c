@@ -358,7 +358,9 @@ static void types_of_obs(unsigned char gnssid)
  */
 static void num_of_obs(struct obs_cnt_t *obs, obs_codes *codes)
 {
-    char str[MAX_TYPES][10];
+    /* Fields are 6 wide, but we use 20 here to shut up some compiler
+     * warnings.  */
+    char str[MAX_TYPES][20];
     int i;
 
     memset(str, 0, sizeof(str));
