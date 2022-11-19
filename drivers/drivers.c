@@ -38,7 +38,7 @@ gps_mask_t generic_parse_input(struct gps_device_t *session)
         gps_mask_t st = 0;
         char *sentence = (char *)session->lexer.outbuffer;
 
-        if ('\n' != sentence[strlen(sentence)-1]) {
+        if ('\n' != sentence[strlen(sentence) - 1]) {
             GPSD_LOG(LOG_IO, &session->context->errout,
                      "<= GPS: %s\n", sentence);
         } else {
@@ -53,16 +53,18 @@ gps_mask_t generic_parse_input(struct gps_device_t *session)
         for (dp = gpsd_drivers; *dp; dp++) {
             char *trigger = (*dp)->trigger;
 
-            if (trigger!=NULL && str_starts_with(sentence, trigger)) {
+            if (trigger != NULL &&
+                str_starts_with(sentence, trigger)) {
                 GPSD_LOG(LOG_PROG, &session->context->errout,
                          "found trigger string %s.\n", trigger);
                 if (*dp != session->device_type) {
                     (void)gpsd_switch_driver(session, (*dp)->type_name);
-                    if (session->device_type != NULL
-                        && session->device_type->event_hook != NULL)
+                    if (session->device_type != NULL &&
+                        session->device_type->event_hook != NULL) {
                         session->device_type->event_hook(session,
                                                          event_triggermatch);
                     st |= DEVICEID_SET;
+                    }
                 }
             }
         }
@@ -118,8 +120,9 @@ const struct gps_type_t driver_unknown = {
 
 static void nmea_event_hook(struct gps_device_t *session, event_t event)
 {
-    if (session->context->readonly)
+    if (session->context->readonly) {
         return;
+    }
     /*
      * This is where we try to tickle NMEA devices into revealing their
      * inner natures.
@@ -302,8 +305,9 @@ static void garmin_mode_switch(struct gps_device_t *session, int mode)
 static void garmin_nmea_event_hook(struct gps_device_t *session,
                                    event_t event)
 {
-    if (session->context->readonly)
+    if (session->context->readonly) {
         return;
+    }
 
     if (event == event_driver_switch) {
         // forces a reconfigure as the following packets come in
@@ -633,7 +637,7 @@ static const struct gps_type_t driver_earthmate = {
     .time_offset     = NULL,            // no method for NTP fudge factor
 };
 // *INDENT-ON*
-#endif /* EARTHMATE_ENABLE */
+#endif  // EARTHMATE_ENABLE
 
 #ifdef TNT_ENABLE
 /**************************************************************************
@@ -731,26 +735,26 @@ static void tnt_event_hook(struct gps_device_t *session, event_t event)
 
 // *INDENT-OFF*
 const struct gps_type_t driver_trueNorth = {
-    .type_name      = "True North",     /* full name of type */
-    .packet_type    = NMEA_PACKET,      /* associated lexer packet type */
-    .flags          = DRIVER_STICKY,    /* remember this */
-    .trigger        = "$PTNTHTM",       /* their proprietary sentence */
-    .channels       = 0,                /* not an actual GPS at all */
-    .probe_detect   = NULL,             /* no probe in run mode */
-    .get_packet     = generic_get,      /* how to get a packet */
-    .parse_packet   = generic_parse_input,      /* how to interpret a packet */
-    .rtcm_writer    = NULL,             /* Don't send */
-    .init_query     = NULL,             /* non-perturbing initial query */
-    .event_hook     = tnt_event_hook,   /* lifetime event handler */
-    .speed_switcher = tnt_speed,        /* no speed switcher */
-    .mode_switcher  = NULL,             /* no mode switcher */
-    .rate_switcher  = NULL,             /* no wrapup */
-    .min_cycle.tv_sec  = 0,             /* not relevant, no rate switch */
-    .min_cycle.tv_nsec = 500000000,     /* not relevant, no rate switch */
-    .control_send   = tnt_control_send, /* how to send control strings */
+    .type_name      = "True North",     // full name of type
+    .packet_type    = NMEA_PACKET,      // associated lexer packet type
+    .flags          = DRIVER_STICKY,    // remember this
+    .trigger        = "$PTNTHTM",       // their proprietary sentence
+    .channels       = 0,                // not an actual GPS at all
+    .probe_detect   = NULL,             // no probe in run mode
+    .get_packet     = generic_get,      // how to get a packet
+    .parse_packet   = generic_parse_input,      // how to interpret a packet
+    .rtcm_writer    = NULL,             // Don't send
+    .init_query     = NULL,             // non-perturbing initial query
+    .event_hook     = tnt_event_hook,   // lifetime event handler
+    .speed_switcher = tnt_speed,        // no speed switcher
+    .mode_switcher  = NULL,             // no mode switcher
+    .rate_switcher  = NULL,             // no wrapup
+    .min_cycle.tv_sec  = 0,             // not relevant, no rate switch
+    .min_cycle.tv_nsec = 500000000,     // not relevant, no rate switch
+    .control_send   = tnt_control_send, // how to send control strings
     .time_offset     = NULL,
 };
-/* *INDENT-ON* */
+// *INDENT-ON*
 #endif
 
 #ifdef OCEANSERVER_ENABLE
@@ -792,40 +796,42 @@ static int oceanserver_send(struct gpsd_errout_t *errout,
 static void oceanserver_event_hook(struct gps_device_t *session,
                                    event_t event)
 {
-    if (session->context->readonly)
+    if (session->context->readonly) {
         return;
-    if (event == event_configure && session->lexer.counter == 0) {
-        /* report in NMEA format */
+    }
+    if (event == event_configure &&
+        session->lexer.counter == 0) {
+        // report in NMEA format
         (void)oceanserver_send(&session->context->errout,
                                session->gpsdata.gps_fd, "2\n");
-        /* ship all fields */
+        // ship all fields
         (void)oceanserver_send(&session->context->errout,
                                session->gpsdata.gps_fd, "X2047");
     }
 }
 
-/* *INDENT-OFF* */
+// *INDENT-OFF*
 static const struct gps_type_t driver_oceanServer = {
-    .type_name      = "OceanServer OS5000", /* full name of type */
-    .packet_type    = NMEA_PACKET,      /* associated lexer packet type */
-    .flags          = DRIVER_STICKY,    /* no rollover or other flags */
-    .trigger        = "$OHPR,",         /* detect their main sentence */
-    .channels       = 0,                /* not an actual GPS at all */
+    .type_name      = "OceanServer OS5000", // full name of type
+    .packet_type    = NMEA_PACKET,      // associated lexer packet type
+    .flags          = DRIVER_STICKY,    // no rollover or other flags
+    .trigger        = "$OHPR,",         // detect their main sentence
+    .channels       = 0,                // not an actual GPS at all
     .probe_detect   = NULL,
-    .get_packet     = generic_get,      /* how to get a packet */
-    .parse_packet   = generic_parse_input,      /* how to interpret a packet */
-    .rtcm_writer    = NULL,             /* Don't send */
-    .init_query     = NULL,             /* non-perturbing initial query */
+    .get_packet     = generic_get,      // how to get a packet
+    .parse_packet   = generic_parse_input,      // how to interpret a packet
+    .rtcm_writer    = NULL,             // Don't send
+    .init_query     = NULL,             // non-perturbing initial query
     .event_hook     = oceanserver_event_hook,
-    .speed_switcher = NULL,             /* no speed switcher */
-    .mode_switcher  = NULL,             /* no mode switcher */
-    .rate_switcher  = NULL,             /* no wrapup */
-    .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
-    .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-    .control_send   = nmea_write,       /* how to send control strings */
+    .speed_switcher = NULL,             // no speed switcher
+    .mode_switcher  = NULL,             // no mode switcher
+    .rate_switcher  = NULL,             // no wrapup
+    .min_cycle.tv_sec  = 1,             // not relevant, no rate switch
+    .min_cycle.tv_nsec = 0,             // not relevant, no rate switch
+    .control_send   = nmea_write,       // how to send control strings
     .time_offset     = NULL,
 };
-/* *INDENT-ON* */
+// *INDENT-ON*
 #endif
 
 #ifdef FURY_ENABLE
@@ -846,13 +852,15 @@ static bool fury_rate_switcher(struct gps_device_t *session, double rate)
     char buf[78];
     double inverted;
 
-    /* rate is a frequency, but the command takes interval in # of seconds */
-    if (rate == 0.0)
+    // rate is a frequency, but the command takes interval in # of seconds
+    if (rate == 0.0) {
         inverted = 0.0;
-    else
+    } else {
         inverted = 1.0/rate;
-    if (inverted > 256)
+    }
+    if (inverted > 256) {
         return false;
+    }
     (void)snprintf(buf, sizeof(buf), "GPS:GPGGA %d\r\n", (int)inverted);
     (void)gpsd_write(session, buf, strlen(buf));
     return true;
@@ -860,37 +868,39 @@ static bool fury_rate_switcher(struct gps_device_t *session, double rate)
 
 static void fury_event_hook(struct gps_device_t *session, event_t event)
 {
-    if (event == event_wakeup && gpsd_get_speed(session) == 115200)
+    if (event == event_wakeup &&
+        gpsd_get_speed(session) == 115200) {
         (void)fury_rate_switcher(session, 1.0);
-    else if (event == event_deactivate)
+    } else if (event == event_deactivate) {
         (void)fury_rate_switcher(session, 0.0);
+    }
 }
 
 
-/* *INDENT-OFF* */
+// *INDENT-OFF*
 static const struct gps_type_t driver_fury = {
-    .type_name      = "Jackson Labs Fury", /* full name of type */
-    .packet_type    = NMEA_PACKET,      /* associated lexer packet type */
-    .flags          = DRIVER_STICKY,    /* no rollover or other flags */
-    .trigger        = NULL,             /* detect their main sentence */
-    .channels       = 0,                /* not an actual GPS at all */
+    .type_name      = "Jackson Labs Fury", // full name of type
+    .packet_type    = NMEA_PACKET,      // associated lexer packet type
+    .flags          = DRIVER_STICKY,    // no rollover or other flags
+    .trigger        = NULL,             // detect their main sentence
+    .channels       = 0,                // not an actual GPS at all
     .probe_detect   = NULL,
-    .get_packet     = generic_get,      /* how to get a packet */
-    .parse_packet   = generic_parse_input,      /* how to interpret a packet */
-    .rtcm_writer    = NULL,             /* Don't send */
-    .init_query     = NULL,             /* non-perturbing initial query */
+    .get_packet     = generic_get,      // how to get a packet
+    .parse_packet   = generic_parse_input,      // how to interpret a packet
+    .rtcm_writer    = NULL,             // Don't send
+    .init_query     = NULL,             // non-perturbing initial query
     .event_hook     = fury_event_hook,
-    .speed_switcher = NULL,             /* no speed switcher */
-    .mode_switcher  = NULL,             /* no mode switcher */
+    .speed_switcher = NULL,             // no speed switcher
+    .mode_switcher  = NULL,             // no mode switcher
     .rate_switcher  = fury_rate_switcher,
-    .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
-    .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-    .control_send   = nmea_write,       /* how to send control strings */
+    .min_cycle.tv_sec  = 1,             // not relevant, no rate switch
+    .min_cycle.tv_nsec = 0,             // not relevant, no rate switch
+    .control_send   = nmea_write,       // how to send control strings
     .time_offset     = NULL,
 };
-/* *INDENT-ON* */
+// *INDENT-ON*
 
-#endif /* FURY_ENABLE */
+#endif  // FURY_ENABLE
 
 #ifdef RTCM104V2_ENABLE
 /**************************************************************************
@@ -907,29 +917,29 @@ static gps_mask_t rtcm104v2_analyze(struct gps_device_t *session)
     return RTCM2_SET;
 }
 
-/* *INDENT-OFF* */
+// *INDENT-OFF*
 static const struct gps_type_t driver_rtcm104v2 = {
-    .type_name     = "RTCM104V2",       /* full name of type */
-    .packet_type   = RTCM2_PACKET,      /* associated lexer packet type */
-    .flags         = DRIVER_NOFLAGS,    /* no rollover or other flags */
-    .trigger       = NULL,              /* no recognition string */
-    .channels      = 0,                 /* not used */
-    .probe_detect  = NULL,              /* no probe */
-    .get_packet    = generic_get,       /* how to get a packet */
-    .parse_packet  = rtcm104v2_analyze, /*  */
-    .rtcm_writer   = NULL,              /* don't send RTCM data,  */
-    .init_query     = NULL,             /* non-perturbing initial query */
-    .event_hook    = NULL,              /* no event_hook */
-    .speed_switcher= NULL,              /* no speed switcher */
-    .mode_switcher = NULL,              /* no mode switcher */
-    .rate_switcher = NULL,              /* no sample-rate switcher */
-    .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
-    .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-    .control_send   = NULL,             /* how to send control strings */
+    .type_name     = "RTCM104V2",       // full name of type
+    .packet_type   = RTCM2_PACKET,      // associated lexer packet type
+    .flags         = DRIVER_NOFLAGS,    // no rollover or other flags
+    .trigger       = NULL,              // no recognition string
+    .channels      = 0,                 // not used
+    .probe_detect  = NULL,              // no probe
+    .get_packet    = generic_get,       // how to get a packet
+    .parse_packet  = rtcm104v2_analyze, //
+    .rtcm_writer   = NULL,              // don't send RTCM data
+    .init_query     = NULL,             // non-perturbing initial query
+    .event_hook    = NULL,              // no event_hook
+    .speed_switcher= NULL,              // no speed switcher
+    .mode_switcher = NULL,              // no mode switcher
+    .rate_switcher = NULL,              // no sample-rate switcher
+    .min_cycle.tv_sec  = 1,             // not relevant, no rate switch
+    .min_cycle.tv_nsec = 0,             // not relevant, no rate switch
+    .control_send   = NULL,             // how to send control strings
     .time_offset     = NULL,
 };
-/* *INDENT-ON* */
-#endif /* RTCM104V2_ENABLE */
+// *INDENT-ON*
+#endif  // RTCM104V2_ENABLE
 #ifdef RTCM104V3_ENABLE
 /**************************************************************************
  *
@@ -949,29 +959,29 @@ static gps_mask_t rtcm104v3_analyze(struct gps_device_t *session)
     return RTCM3_SET;
 }
 
-/* *INDENT-OFF* */
+// *INDENT-OFF*
 static const struct gps_type_t driver_rtcm104v3 = {
-    .type_name     = "RTCM104V3",       /* full name of type */
-    .packet_type   = RTCM3_PACKET,      /* associated lexer packet type */
-    .flags         = DRIVER_NOFLAGS,    /* no rollover or other flags */
-    .trigger       = NULL,              /* no recognition string */
-    .channels      = 0,                 /* not used */
-    .probe_detect  = NULL,              /* no probe */
-    .get_packet    = generic_get,       /* how to get a packet */
-    .parse_packet  = rtcm104v3_analyze, /*  */
-    .rtcm_writer   = NULL,              /* don't send RTCM data,  */
-    .init_query    = NULL,              /* non-perturbing initial query */
-    .event_hook    = NULL,              /* no event hook */
-    .speed_switcher= NULL,              /* no speed switcher */
-    .mode_switcher = NULL,              /* no mode switcher */
-    .rate_switcher = NULL,              /* no sample-rate switcher */
-    .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
-    .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-    .control_send   = NULL,             /* how to send control strings */
+    .type_name     = "RTCM104V3",       // full name of type
+    .packet_type   = RTCM3_PACKET,      // associated lexer packet type
+    .flags         = DRIVER_NOFLAGS,    // no rollover or other flags
+    .trigger       = NULL,              // no recognition string
+    .channels      = 0,                 // not used
+    .probe_detect  = NULL,              // no probe
+    .get_packet    = generic_get,       // how to get a packet
+    .parse_packet  = rtcm104v3_analyze, //
+    .rtcm_writer   = NULL,              // don't send RTCM data
+    .init_query    = NULL,              // non-perturbing initial query
+    .event_hook    = NULL,              // no event hook
+    .speed_switcher= NULL,              // no speed switcher
+    .mode_switcher = NULL,              // no mode switcher
+    .rate_switcher = NULL,              // no sample-rate switcher
+    .min_cycle.tv_sec  = 1,             // not relevant, no rate switch
+    .min_cycle.tv_nsec = 0,             // not relevant, no rate switch
+    .control_send   = NULL,             // how to send control strings
     .time_offset     = NULL,
 };
-/* *INDENT-ON* */
-#endif /* RTCM104V3_ENABLE */
+// *INDENT-ON*
+#endif  // RTCM104V3_ENABLE
 
 #ifdef GARMINTXT_ENABLE
 /**************************************************************************
@@ -980,29 +990,29 @@ static const struct gps_type_t driver_rtcm104v3 = {
  *
  **************************************************************************/
 
-/* *INDENT-OFF* */
+// *INDENT-OFF*
 static const struct gps_type_t driver_garmintxt = {
-    .type_name     = "Garmin Simple Text",              /* full name of type */
-    .packet_type   = GARMINTXT_PACKET,  /* associated lexer packet type */
-    .flags         = DRIVER_NOFLAGS,    /* no rollover or other flags */
-    .trigger       = NULL,              /* no recognition string */
-    .channels      = 0,                 /* not used */
-    .probe_detect  = NULL,              /* no probe */
-    .get_packet    = generic_get,       /* how to get a packet */
-    .parse_packet  = garmintxt_parse,   /* how to parse one */
-    .rtcm_writer   = NULL,              /* don't send RTCM data,  */
-    .init_query     = NULL,             /* non-perturbing initial query */
-    .event_hook    = NULL,              /* no event hook */
-    .speed_switcher= NULL,              /* no speed switcher */
-    .mode_switcher = NULL,              /* no mode switcher */
-    .rate_switcher = NULL,              /* no sample-rate switcher */
-    .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
-    .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-    .control_send   = NULL,             /* how to send control strings */
+    .type_name     = "Garmin Simple Text",              // full name of type
+    .packet_type   = GARMINTXT_PACKET,  // associated lexer packet type
+    .flags         = DRIVER_NOFLAGS,    // no rollover or other flags
+    .trigger       = NULL,              // no recognition string
+    .channels      = 0,                 // not used
+    .probe_detect  = NULL,              // no probe
+    .get_packet    = generic_get,       // how to get a packet
+    .parse_packet  = garmintxt_parse,   // how to parse one
+    .rtcm_writer   = NULL,              // don't send RTCM data
+    .init_query     = NULL,             // non-perturbing initial query
+    .event_hook    = NULL,              // no event hook
+    .speed_switcher= NULL,              // no speed switcher
+    .mode_switcher = NULL,              // no mode switcher
+    .rate_switcher = NULL,              // no sample-rate switcher
+    .min_cycle.tv_sec  = 1,             // not relevant, no rate switch
+    .min_cycle.tv_nsec = 0,             // not relevant, no rate switch
+    .control_send   = NULL,             // how to send control strings
     .time_offset     = NULL,
 };
-/* *INDENT-ON* */
-#endif /* GARMINTXT_ENABLE */
+// *INDENT-ON*
+#endif  // GARMINTXT_ENABLE
 
 /**************************************************************************
  *
@@ -1055,10 +1065,11 @@ static void mtk3301_event_hook(struct gps_device_t *session, event_t event)
 "$PMTK314,1,1,1,1,1,5,1,1,0,0,0,0,0,0,0,0,0,1,0"
 
 */
-    if (session->context->readonly)
+    if (session->context->readonly) {
         return;
+    }
     if (event == event_triggermatch) {
-        (void)nmea_send(session, "$PMTK320,0"); /* power save off */
+        (void)nmea_send(session, "$PMTK320,0");  // power save off
         // Fix interval, 1000 millseconds
         (void)nmea_send(session, "$PMTK300,1000,0,0,0.0,0.0");
         // Set NMEA sentences.
@@ -1111,32 +1122,32 @@ static bool mtk3301_rate_switcher(struct gps_device_t *session, double rate)
     }
 
     (void)snprintf(buf, sizeof(buf), "$PMTK300,%u,0,0,0,0", milliseconds);
-    (void)nmea_send(session, buf);      /* Fix interval */
+    (void)nmea_send(session, buf);      // Fix interval
     return true;
 }
 
-/* *INDENT-OFF* */
+// *INDENT-OFF*
 const struct gps_type_t driver_mtk3301 = {
-    .type_name      = "MTK-3301",       /* full name of type */
-    .packet_type    = NMEA_PACKET,      /* associated lexer packet type */
-    .flags          = DRIVER_STICKY,    /* remember this */
-    .trigger        = "$PMTK705,",      /* firmware release name and version */
-    .channels       = 12,               /* not used by this driver */
-    .probe_detect   = NULL,             /* no probe */
-    .get_packet     = generic_get,      /* how to get a packet */
-    .parse_packet   = generic_parse_input,      /* how to interpret a packet */
-    .rtcm_writer    = gpsd_write,       /* write RTCM data straight */
-    .init_query     = NULL,             /* non-perturbing initial query */
-    .event_hook     = mtk3301_event_hook,       /* lifetime event handler */
+    .type_name      = "MTK-3301",               // full name of type
+    .packet_type    = NMEA_PACKET,              // associated lexer packet type
+    .flags          = DRIVER_STICKY,            // remember this
+    .trigger        = "$PMTK705,",         // firmware release name and version
+    .channels       = 12,                       // not used by this driver
+    .probe_detect   = NULL,                     // no probe
+    .get_packet     = generic_get,              // how to get a packet
+    .parse_packet   = generic_parse_input,      // how to interpret a packet
+    .rtcm_writer    = gpsd_write,               // write RTCM data straight
+    .init_query     = NULL,                     // non-perturbing initial query
+    .event_hook     = mtk3301_event_hook,       // lifetime event handler
     .speed_switcher = mtk3301_speed_switcher,   // sample speed switcher
-    .mode_switcher  = NULL,             /* no mode switcher */
-    .rate_switcher  = mtk3301_rate_switcher,    /* sample rate switcher */
+    .mode_switcher  = NULL,                     // no mode switcher
+    .rate_switcher  = mtk3301_rate_switcher,    // sample rate switcher
     .min_cycle.tv_sec  = 0,
-    .min_cycle.tv_nsec = 100000000,     /* max 10Hz */
-    .control_send   = nmea_write,       /* how to send control strings */
+    .min_cycle.tv_nsec = 100000000,             // max 10Hz
+    .control_send   = nmea_write,               // how to send control strings
     .time_offset     = NULL,
 };
-/* *INDENT-ON* */
+// *INDENT-ON*
 
 #ifdef ISYNC_ENABLE
 /**************************************************************************
@@ -1173,7 +1184,7 @@ static bool isync_detect(struct gps_device_t *session)
     char old_parity;
     unsigned int old_stopbits;
 
-    /* Set 9600 8N1 */
+    // Set 9600 8N1
     old_baudrate = session->gpsdata.dev.baudrate;
     old_parity = session->gpsdata.dev.parity;
     old_stopbits = session->gpsdata.dev.stopbits;
@@ -1184,7 +1195,7 @@ static bool isync_detect(struct gps_device_t *session)
      */
     (void)isync_write(session, "@@@@\r\nMAW0C0B\r\n");
 
-    /* return serial port to original settings */
+    // return serial port to original settings
     gpsd_set_speed(session, old_baudrate, old_parity, old_stopbits);
 
     return false;
@@ -1192,8 +1203,9 @@ static bool isync_detect(struct gps_device_t *session)
 
 static void isync_event_hook(struct gps_device_t *session, event_t event)
 {
-    if (session->context->readonly)
+    if (session->context->readonly) {
         return;
+    }
 
     if (event == event_driver_switch) {
         session->lexer.counter = 0;
@@ -1247,13 +1259,13 @@ static void isync_event_hook(struct gps_device_t *session, event_t event)
              *  - do not consider GPS messages
              */
             (void)isync_write(session, "MAW2200\r\n");
-            /* Restart sync */
+            // Restart sync
             (void)isync_write(session, "SY1\r\n");
-            /* Restart tracking */
+            // Restart tracking
             (void)isync_write(session, "TR1\r\n");
             break;
         case 4:
-            /* Cancel BTx messages (if any) */
+            // Cancel BTx messages (if any)
             (void)isync_write(session, "BT0\r\n");
             /* Configure messages coming out every second:
              *  - Oscillator status ($PTNTA) at 750ms
@@ -1270,35 +1282,35 @@ static void isync_event_hook(struct gps_device_t *session, event_t event)
             (void)isync_write(session, "@@@@GPS\r\n");
             break;
         case 6:
-            /* Trigger detection of underlying u-blox (if necessary) */
+            // Trigger detection of underlying u-blox (if necessary)
             (void)ubx_write(session, 0x06, 0x00, NULL, 0);
             break;
         }
     }
 }
 
-/* *INDENT-OFF* */
+// *INDENT-OFF*
 const struct gps_type_t driver_isync = {
-    .type_name      = "iSync",          /* full name of type */
-    .packet_type    = NMEA_PACKET,      /* associated lexer packet type */
-    .flags          = DRIVER_STICKY,    /* remember this */
-    .trigger        = "$PTNTS,B,",      /* iSync status message */
-    .channels       = 50,               /* copied from driver_ubx */
-    .probe_detect   = isync_detect,     /* how to detect at startup time */
-    .get_packet     = generic_get,      /* how to get a packet */
-    .parse_packet   = generic_parse_input,      /* how to interpret a packet */
-    .init_query     = NULL,             /* non-perturbing initial query */
-    .event_hook     = isync_event_hook, /* lifetime event handler */
-    .speed_switcher = NULL,             /* no speed switcher */
-    .mode_switcher  = NULL,             /* no mode switcher */
-    .rate_switcher  = NULL,             /* no sample-rate switcher */
-    .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
-    .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-    .control_send   = nmea_write,       /* how to send control strings */
-    .time_offset     = NULL,            /* no method for NTP fudge factor */
+    .type_name      = "iSync",          // full name of type
+    .packet_type    = NMEA_PACKET,      // associated lexer packet type
+    .flags          = DRIVER_STICKY,    // remember this
+    .trigger        = "$PTNTS,B,",      // iSync status message
+    .channels       = 50,               // copied from driver_ubx
+    .probe_detect   = isync_detect,     // how to detect at startup time
+    .get_packet     = generic_get,      // how to get a packet
+    .parse_packet   = generic_parse_input,      // how to interpret a packet
+    .init_query     = NULL,             // non-perturbing initial query
+    .event_hook     = isync_event_hook, // lifetime event handler
+    .speed_switcher = NULL,             // no speed switcher
+    .mode_switcher  = NULL,             // no mode switcher
+    .rate_switcher  = NULL,             // no sample-rate switcher
+    .min_cycle.tv_sec  = 1,             // not relevant, no rate switch
+    .min_cycle.tv_nsec = 0,             // not relevant, no rate switch
+    .control_send   = nmea_write,       // how to send control strings
+    .time_offset     = NULL,            // no method for NTP fudge factor
 };
-/* *INDENT-ON* */
-#endif /* ISYNC_ENABLE */
+// *INDENT-ON*
+#endif  // ISYNC_ENABLE
 
 #ifdef AIVDM_ENABLE
 /**************************************************************************
@@ -1348,7 +1360,7 @@ static bool aivdm_decode(unsigned char *buf, size_t buflen,
     // first clear the result, making sure we don't return garbage
     memset(ais, 0, sizeof(*ais));
 
-    /* discard overlong sentences */
+    // discard overlong sentences
     if (strlen((char *)buf) > (sizeof(fieldcopy) - 1)) {
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "overlong AIVDM packet.\n");
@@ -1427,26 +1439,27 @@ static bool aivdm_decode(unsigned char *buf, size_t buflen,
         return false;
     }
 
-    nfrags = atoi((char *)field[1]); /* number of fragments to expect */
-    ifrag = atoi((char *)field[2]); /* fragment id */
+    nfrags = atoi((char *)field[1]); // number of fragments to expect
+    ifrag = atoi((char *)field[2]);  // fragment id
     data = field[5];
 
     pad = 0;
     if(isdigit(field[6][0]))
-        pad = field[6][0] - '0'; /* number of padding bits ASCII encoded*/
+        pad = field[6][0] - '0';  // number of padding bits ASCII encoded
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "nfrags=%d, ifrag=%d, decoded_frags=%d, data=%s, pad=%d\n",
              nfrags, ifrag, ais_context->decoded_frags, data, pad);
 
-    /* assemble the binary data */
+    // assemble the binary data
 
-    /* check fragment ordering */
+    // check fragment ordering
     if (ifrag != ais_context->decoded_frags + 1) {
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "invalid fragment #%d received, expected #%d.\n",
                  ifrag, ais_context->decoded_frags + 1);
-        if (ifrag != 1)
+        if (ifrag != 1) {
             return false;
+        }
         /* else, ifrag==1: Just discard all that was previously decoded and
          * simply handle that packet */
         ais_context->decoded_frags = 0;
@@ -1456,17 +1469,18 @@ static bool aivdm_decode(unsigned char *buf, size_t buflen,
         ais_context->bitlen = 0;
     }
 
-    /* wacky 6-bit encoding, shades of FIELDATA */
+    // wacky 6-bit encoding, shades of FIELDATA
     for (cp = data; cp < data + strlen((char *)data); cp++) {
         unsigned char ch;
         ch = *cp;
         ch -= 48;
-        if (ch >= 40)
+        if (ch >= 40) {
             ch -= 8;
+        }
 #ifdef __UNUSED_DEBUG__
         GPSD_LOG(LOG_RAW, &session->context->errout,
                  "%c: %s\n", *cp, sixbits[ch]);
-#endif /* __UNUSED_DEBUG__ */
+#endif  // __UNUSED_DEBUG__
         for (i = 5; i >= 0; i--) {
             if ((ch >> i) & 0x01) {
                 ais_context->bits[ais_context->bitlen / 8] |=
@@ -1482,7 +1496,7 @@ static bool aivdm_decode(unsigned char *buf, size_t buflen,
     }
     ais_context->bitlen -= pad;
 
-    /* time to pass buffered-up data to where it's actually processed? */
+    // time to pass buffered-up data to where it's actually processed?
     if (ifrag == nfrags) {
         if (debug >= LOG_INF) {
             size_t clen = BITS_TO_BYTES(ais_context->bitlen);
@@ -1493,10 +1507,10 @@ static bool aivdm_decode(unsigned char *buf, size_t buflen,
                                  ais_context->bits, clen));
         }
 
-        /* clear waiting fragments count */
+        // clear waiting fragments count
         ais_context->decoded_frags = 0;
 
-        /* decode the assembled binary packet */
+        // decode the assembled binary packet
         return ais_binary_decode(&session->context->errout,
                                  ais,
                                  ais_context->bits,
@@ -1504,7 +1518,7 @@ static bool aivdm_decode(unsigned char *buf, size_t buflen,
                                  &ais_context->type24_queue);
     }
 
-    /* we're still waiting on another sentence */
+    // we're still waiting on another sentence
     ais_context->decoded_frags++;
     return false;
 }
@@ -1558,7 +1572,7 @@ const struct gps_type_t driver_aivdm = {
  *
  **************************************************************************/
 
-/* prepend the session path to the value of a specified attribute */
+// prepend the session path to the value of a specified attribute
 static void path_rewrite(struct gps_device_t *session, char *prefix)
 {
     /*
@@ -1571,14 +1585,15 @@ static void path_rewrite(struct gps_device_t *session, char *prefix)
 
     assert(prefix != NULL && session->lexer.outbuffer != NULL);
 
-    /* possibly the rewrite has been done already, this comw up in gpsmon */
+    // possibly the rewrite has been done already, this comw up in gpsmon
     if (strstr((char *)session->lexer.outbuffer,
-               session->gpsdata.dev.path) != NULL)
+               session->gpsdata.dev.path) != NULL) {
         return;
+    }
 
     for (prefloc = (char *)session->lexer.outbuffer;
          prefloc < (char *)session->lexer.outbuffer+session->lexer.outbuflen;
-         prefloc++)
+         prefloc++) {
         if (str_starts_with(prefloc, prefix)) {
             char *sfxloc;
             char copy[sizeof(session->lexer.outbuffer)+1];
@@ -1589,14 +1604,17 @@ static void path_rewrite(struct gps_device_t *session, char *prefix)
             (void)strlcpy(prefloc,
                           session->gpsdata.dev.path,
                           sizeof(session->gpsdata.dev.path));
-            if ((sfxloc = strchr(prefloc, '#')))
-                *sfxloc = '\0';  /* Avoid accumulating multiple device names */
+            sfxloc = strchr(prefloc, '#');
+            if (sfxloc) {
+                *sfxloc = '\0';  // Avoid accumulating multiple device names
+            }
             (void)strlcat((char *)session->lexer.outbuffer, "#",
                           sizeof(session->lexer.outbuffer));
             (void)strlcat((char *)session->lexer.outbuffer,
                           copy + (prefloc-(char *)session->lexer.outbuffer),
                           sizeof(session->lexer.outbuffer));
         }
+    }
     session->lexer.outbuflen = strlen((char *)session->lexer.outbuffer);
 }
 
@@ -1606,18 +1624,18 @@ static gps_mask_t json_pass_packet(struct gps_device_t *session)
              "<= GPS: %s\n", (char *)session->lexer.outbuffer);
 
     if (strstr(session->gpsdata.dev.path, ":/") != NULL &&
-        strstr(session->gpsdata.dev.path, "localhost") == NULL)
-    {
-        /* devices and paths need to be edited */
-        if (strstr((char *)session->lexer.outbuffer, "DEVICE") != NULL)
+        strstr(session->gpsdata.dev.path, "localhost") == NULL) {
+        // devices and paths need to be edited
+        if (strstr((char *)session->lexer.outbuffer, "DEVICE") != NULL) {
             path_rewrite(session, "\"path\":\"");
+        }
         path_rewrite(session, "\"device\":\"");
 
-        /* mark certain responses without a path or device attribute */
+        // mark certain responses without a path or device attribute
         if (session->gpsdata.dev.path[0] != '\0') {
-            if (strstr((char *)session->lexer.outbuffer, "VERSION") != NULL
-                || strstr((char *)session->lexer.outbuffer, "WATCH") != NULL
-                || strstr((char *)session->lexer.outbuffer, "DEVICES") != NULL) {
+            if (strstr((char *)session->lexer.outbuffer, "VERSION") != NULL ||
+                strstr((char *)session->lexer.outbuffer, "WATCH") != NULL ||
+                strstr((char *)session->lexer.outbuffer, "DEVICES") != NULL) {
                 session->lexer.outbuffer[session->lexer.outbuflen-1] = '\0';
                 (void)strlcat((char *)session->lexer.outbuffer, ",\"remote\":\"",
                               sizeof(session->lexer.outbuffer));
@@ -1636,52 +1654,52 @@ static gps_mask_t json_pass_packet(struct gps_device_t *session)
     return PASSTHROUGH_IS;
 }
 
-/* *INDENT-OFF* */
+// *INDENT-OFF*
 const struct gps_type_t driver_json_passthrough = {
-    .type_name      = "JSON slave driver",      /* full name of type */
-    .packet_type    = JSON_PACKET,      /* associated lexer packet type */
-    .flags          = DRIVER_NOFLAGS,   /* don't remember this */
-    .trigger        = NULL,             /* it's the default */
-    .channels       = 0,                /* not used */
-    .probe_detect   = NULL,             /* no probe */
-    .get_packet     = generic_get,      /* use generic packet getter */
-    .parse_packet   = json_pass_packet, /* how to interpret a packet */
-    .rtcm_writer    = NULL,             /* write RTCM data straight */
-    .init_query     = NULL,             /* non-perturbing initial query */
-    .event_hook     = NULL,             /* lifetime event handler */
-    .speed_switcher = NULL,             /* no speed switcher */
-    .mode_switcher  = NULL,             /* no mode switcher */
-    .rate_switcher  = NULL,             /* no sample-rate switcher */
-    .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
-    .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-    .control_send   = NULL,             /* how to send control strings */
-    .time_offset     = NULL,            /* no method for NTP fudge factor */
+    .type_name      = "JSON slave driver",      // full name of type
+    .packet_type    = JSON_PACKET,      // associated lexer packet type
+    .flags          = DRIVER_NOFLAGS,   // don't remember this
+    .trigger        = NULL,             // it's the default
+    .channels       = 0,                // not used
+    .probe_detect   = NULL,             // no probe
+    .get_packet     = generic_get,      // use generic packet getter
+    .parse_packet   = json_pass_packet, // how to interpret a packet
+    .rtcm_writer    = NULL,             // write RTCM data straight
+    .init_query     = NULL,             // non-perturbing initial query
+    .event_hook     = NULL,             // lifetime event handler
+    .speed_switcher = NULL,             // no speed switcher
+    .mode_switcher  = NULL,             // no mode switcher
+    .rate_switcher  = NULL,             // no sample-rate switcher
+    .min_cycle.tv_sec  = 1,             // not relevant, no rate switch
+    .min_cycle.tv_nsec = 0,             // not relevant, no rate switch
+    .control_send   = NULL,             // how to send control strings
+    .time_offset     = NULL,            // no method for NTP fudge factor
 };
-/* *INDENT-ON* */
+// *INDENT-ON*
 
 
-/* *INDENT-OFF* */
+// *INDENT-OFF*
 const struct gps_type_t driver_pps = {
-    .type_name      = "PPS",            /* full name of type */
-    .packet_type    = BAD_PACKET,       /* associated lexer packet type */
-    .flags          = DRIVER_NOFLAGS,   /* don't remember this */
-    .trigger        = NULL,             /* it's the default */
-    .channels       = 0,                /* not used */
-    .probe_detect   = NULL,             /* no probe */
-    .get_packet     = NULL,             /* use generic packet getter */
-    .parse_packet   = NULL,             /* how to interpret a packet */
-    .rtcm_writer    = NULL,             /* write RTCM data straight */
-    .init_query     = NULL,             /* non-perturbing initial query */
-    .event_hook     = NULL,             /* lifetime event handler */
-    .speed_switcher = NULL,             /* no speed switcher */
-    .mode_switcher  = NULL,             /* no mode switcher */
-    .rate_switcher  = NULL,             /* no sample-rate switcher */
-    .min_cycle.tv_sec  = 1,             /* not relevant, no rate switch */
-    .min_cycle.tv_nsec = 0,             /* not relevant, no rate switch */
-    .control_send   = NULL,             /* how to send control strings */
-    .time_offset     = NULL,            /* no method for NTP fudge factor */
+    .type_name      = "PPS",            // full name of type
+    .packet_type    = BAD_PACKET,       // associated lexer packet type
+    .flags          = DRIVER_NOFLAGS,   // don't remember this
+    .trigger        = NULL,             // it's the default
+    .channels       = 0,                // not used
+    .probe_detect   = NULL,             // no probe
+    .get_packet     = NULL,             // use generic packet getter
+    .parse_packet   = NULL,             // how to interpret a packet
+    .rtcm_writer    = NULL,             // write RTCM data straight
+    .init_query     = NULL,             // non-perturbing initial query
+    .event_hook     = NULL,             // lifetime event handler
+    .speed_switcher = NULL,             // no speed switcher
+    .mode_switcher  = NULL,             // no mode switcher
+    .rate_switcher  = NULL,             // no sample-rate switcher
+    .min_cycle.tv_sec  = 1,             // not relevant, no rate switch
+    .min_cycle.tv_nsec = 0,             // not relevant, no rate switch
+    .control_send   = NULL,             // how to send control strings
+    .time_offset     = NULL,            // no method for NTP fudge factor
 };
-/* *INDENT-ON* */
+// *INDENT-ON*
 
 
 extern const struct gps_type_t driver_evermore;
