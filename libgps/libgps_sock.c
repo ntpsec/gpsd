@@ -381,7 +381,7 @@ int gps_sock_read(struct gps_data_t *gpsdata, char *message, int message_len)
  * gps_unpack() currently returns 0 in all cases, but should it ever need to
  * return an error status, it must be < 0.
  */
-int gps_unpack(char *buf, struct gps_data_t *gpsdata)
+int gps_unpack(const char *buf, struct gps_data_t *gpsdata)
 {
     char vbuf[GPS_JSON_COMMAND_MAX];
     libgps_debug_trace((DEBUG_CALLS, "gps_unpack(%s)\n",

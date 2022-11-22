@@ -2876,7 +2876,7 @@ extern int gps_send(struct gps_data_t *, const char *, ... );
 extern int gps_read(struct gps_data_t *, char *message, int message_len);
 extern const char *gps_hexdump(char *, size_t, const unsigned char *, size_t);
 extern ssize_t gps_hexpack(const char *, unsigned char *, size_t);
-extern int gps_unpack(char *, struct gps_data_t *);
+extern int gps_unpack(const char *, struct gps_data_t *);
 extern bool gps_waiting(const struct gps_data_t *, int);
 extern int gps_stream(struct gps_data_t *, watch_t, const char *);
 extern int gps_mainloop(struct gps_data_t *, int,
