@@ -958,7 +958,7 @@ int libgps_json_unpack(const char *buf,
         return FILTER(status);
     }
     if (str_starts_with(classtag, "\"class\":\"TOFF\"")) {
-        status = json_pps_read(buf, gpsdata, end);
+        status = json_toff_read(buf, gpsdata, end);
         if (PASS(status)) {
             gpsdata->set &= ~UNION_SET;
             gpsdata->set |= TOFF_SET;
