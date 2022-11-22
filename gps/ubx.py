@@ -7605,7 +7605,7 @@ qErrInvalid add in protVer 34 and up
         """UBX-TIM-VRFY decode, Sourced Time Verification"""
 
         u = struct.unpack_from('<llllHBB', buf, 0)
-        s = ('  itow %d frac %d deltaMs %d deltaMs %d\n'
+        s = ('  itow %d frac %d deltaMs %d deltaNs %d\n'
              '  wno %u flags x%x reserved1 %u' % u)
         if gps.VERB_DECODE <= self.verbosity:
             s += ('\n   flags (%s)' %
