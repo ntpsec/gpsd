@@ -1407,9 +1407,10 @@ static bool aivdm_decode(unsigned char *buf, size_t buflen,
          * which makes sense as they don't come in over radio.  This
          * is going to break if there's ever an AIVDO type 24, though.
          */
-        if (!str_starts_with((const char *)field[0], "!AIVDO"))
+        if (!str_starts_with((const char *)field[0], "!AIVDO")) {
             GPSD_LOG(LOG_INF, &session->context->errout,
                      "invalid empty AIS channel. Assuming 'A'\n");
+        }
         ais_context = &session->driver.aivdm.context[0];
         session->driver.aivdm.ais_channel ='A';
         break;
@@ -1425,6 +1426,7 @@ static bool aivdm_decode(unsigned char *buf, size_t buflen,
         session->driver.aivdm.ais_channel ='A';
         break;
     case '2':
+        FALLTHROUGH
     case 'B':
         ais_context = &session->driver.aivdm.context[1];
         session->driver.aivdm.ais_channel ='B';
@@ -1439,13 +1441,14 @@ static bool aivdm_decode(unsigned char *buf, size_t buflen,
         return false;
     }
 
-    nfrags = atoi((char *)field[1]); // number of fragments to expect
-    ifrag = atoi((char *)field[2]);  // fragment id
+    nfrags = atoi((char *)field[1]);  // number of fragments to expect
+    ifrag = atoi((char *)field[2]);   // fragment id
     data = field[5];
 
     pad = 0;
-    if(isdigit(field[6][0]))
+    if(isdigit(field[6][0])) {
         pad = field[6][0] - '0';  // number of padding bits ASCII encoded
+    }
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "nfrags=%d, ifrag=%d, decoded_frags=%d, data=%s, pad=%d\n",
              nfrags, ifrag, ais_context->decoded_frags, data, pad);
@@ -1457,14 +1460,14 @@ static bool aivdm_decode(unsigned char *buf, size_t buflen,
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "invalid fragment #%d received, expected #%d.\n",
                  ifrag, ais_context->decoded_frags + 1);
-        if (ifrag != 1) {
+        if (1 != ifrag) {
             return false;
         }
         /* else, ifrag==1: Just discard all that was previously decoded and
          * simply handle that packet */
         ais_context->decoded_frags = 0;
     }
-    if (ifrag == 1) {
+    if (1 == ifrag) {
         (void)memset(ais_context->bits, '\0', sizeof(ais_context->bits));
         ais_context->bitlen = 0;
     }
