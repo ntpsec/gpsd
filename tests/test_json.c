@@ -629,8 +629,12 @@ static void jsontest(int i)
         break;
 
     case 11:
-        status = json_toff_read(json_strTOFF, &gpsdata, NULL);
+        status = gps_unpack(json_strTOFF, &gpsdata);
         assert_case(status);
+        if (TOFF_SET != (TOFF_SET & gpsdata.set)) {
+            (void)fprintf(stderr, "failed TOFF_SET not set\n");
+            exit(EXIT_FAILURE);
+        }
         assert_string("device", gpsdata.dev.path, "GPS#1");
         assert_int("real_sec", "t_integer", gpsdata.toff.real.tv_sec,
                    1428001514);
