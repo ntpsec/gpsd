@@ -228,7 +228,7 @@ static unsigned long greis_hex2bin(char c)
 /* nmea_checksum(*errout, buf) -- check NMEA checksum for message in buffer.
  * Also handles !AI checksums.
  *
- * Return: True = Checksum goo
+ * Return: True = Checksum good
  *         False -- checksum bad
  */
 static bool nmea_checksum(const struct gpsd_errout_t *errout,
@@ -252,26 +252,32 @@ static bool nmea_checksum(const struct gpsd_errout_t *errout,
         return true;
     }
 
-    /*
-     * Back up past any whitespace.  Need to do this because
-     * at least one GPS (the Firefly 1a) emits \r\r\n
+    /* Some messages, like !AIVMD, !AIVMO, can have "stuff" after the
+     * checksum.  Some messages can have "*" in the body of a message.
+     * At least one GPS (the Firefly 1a) emits \r\r\n at the end.
+     *
+     * So scan backwards until we find the *.  Use the 2 chars to the
+     * right as the checksum.
      */
-    for (end = endp - 1;
-         isspace((unsigned char) *end); end--) {
-        continue;
-    }
-    // skip past checksum at end.
-    // FIXME! if it is always 2 chars, this is overkill?
-    // Magellan EC-10X has lower case hex in checksum. It is rare.
-    while (strchr("0123456789ABCDEF", toupper(*end))) {
-        --end;
+    for (end = endp - 1; buf < end; end--) {
+        if ('*' == *end) {
+            break;
+        }
     }
 
     if ('*' != *end) {
-        // no asterisk before checksum
+        // no asterisk found
         return false;
     }
 
+    /* Verify checksum is 2 hex digits.  Irnoge trailing stuff.
+     * Magellan EC-10X has lower case hex in checksum. It is rare.  */
+    if (!isxdigit(end[1]) ||
+        !isxdigit(end[2])) {
+        return false;
+    }
+
+    // compute the checksum
     for (n = 1; buf + n < end; n++) {
         csum ^= buf[n];
     }
