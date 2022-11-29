@@ -538,7 +538,8 @@ try:
         gps_model.send_cfg_valset(nvs)
 
     exit_code = io_handle.read(gps_model.decode_msg,  # decode function
-                               opts['input_wait'])    # raw input
+                               opts['input_wait'],
+                               raw_fs=raw)    # raw input
 
     if ((gps.VERB_RAW <= opts['verbosity']) and io_handle.out):
         # dump raw left overs
