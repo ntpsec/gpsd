@@ -164,8 +164,9 @@ static int faa_mode(char mode)
     case 'R':   // fixed RTK
         newstatus = STATUS_RTK_FIX;
         break;
-    case 'M':   // manual input.  Same as simulated?  Or surveyed?
-        FALLTHROUGH
+    case 'M':   // manual input.  Interpret as surveyed to better match GGA
+        newstatus = STATUS_TIME;
+        break;
     case 'S':   // simulator
         newstatus = STATUS_SIM;
         break;
