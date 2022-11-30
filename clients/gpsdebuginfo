@@ -39,7 +39,10 @@ elif command -v netstat; then
 elif command -v ss; then
     ss -ltpn | sed -nE '1p;/:2947 |gpsd/p'
 fi
-ps ax | sed -nE '1p;/gpsd/p'
+
+# busybox does not support ps a or x options, so gall back to 'l'
+ps ax || ps l |  sed -nE '1p;/gpsd/p'
+
 if command -v gpspipe; then
     gpspipe -V
     # try to get JSON header
@@ -53,8 +56,8 @@ if command -v ntpshmmon; then
     # 6 lines, or 10 seconds, of ntpshmmon
     ntpshmmon -n 6 -t 10
 fi
-# check for /dev/pps*, /dev/ttyA*, ttyS*, ttyT*, ttyU*
-ls -l /dev/pps* /dev/tty[ASTU]*
+# check for /dev/pps*, /dev/ttyA*, ttyS*, ttyT*, ttyU*, gps*
+ls -l /dev/pps* /dev/tty[ASTU]* /dev/gps*
 # check for USB receivers
 if command -v lsusb; then
     lsusb
