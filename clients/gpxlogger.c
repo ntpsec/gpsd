@@ -35,13 +35,15 @@ static struct fixsource_t source;
  *
  **************************************************************************/
 
+static int debug;                         // debug level
+// The garmin extensions are optional, because they cause Google maps to barf.
+static bool garmin = false;               // enable garmin depth extension
 static struct gps_data_t gpsdata;
-static FILE *logfile;
 static bool intrack = false;
-static long timeout = 5;                  // seconds
+static FILE *logfile;
 static double minmove = 0;                // meters
-static int debug;
 static int sig_flag = 0;
+static long timeout = 5;                  // seconds
 
 static void print_gpx_header(void)
 {
@@ -50,14 +52,32 @@ static void print_gpx_header(void)
     (void)fprintf(logfile,
          "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
          "<gpx version=\"1.1\" creator=\"GPSD %s - %s\"\n"
-         "        xmlns:xsi=\"https://www.w3.org/2001/XMLSchema-instance\"\n"
-         "        xmlns=\"http://www.topografix.com/GPX/1/1\"\n"
-         "        xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1\n"
-         "        http://www.topografix.com/GPX/1/1/gpx.xsd\">\n"
+         "  xmlns=\"http://www.topografix.com/GPX/1/1\"\n"
+         "  xmlns:xsi=\"https://www.w3.org/2001/XMLSchema-instance\"\n",
+         VERSION, GPSD_URL);
+
+    if (garmin) {
+        (void)fputs(
+             "  xmlns:gpxx=\"http://www8.garmin.com/xmlschemas/"
+             "GpxExtensions/v3\"\n"
+             "  xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 "
+             "http://www.topografix.com/GPX/1/1/gpx.xsd "
+             "https://www8.garmin.com/xmlschemas/GpxExtensions/v3 "
+             "https://www8.garmin.com/xmlschemas/GpxExtensions/v3/"
+             "GpxExtensionsv3.xsd\"",
+             logfile);
+    } else {
+        (void)fputs(
+             "  xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1\n"
+             "  http://www.topografix.com/GPX/1/1/gpx.xsd\"",
+             logfile);
+    }
+
+    (void)fprintf(logfile,
+         "\n>\n"
          " <metadata>\n"
          "  <time>%s</time>\n"
          " </metadata>\n",
-         VERSION, GPSD_URL,
          now_to_iso8601(tbuf, sizeof(tbuf)));
     (void)fflush(logfile);
 }
@@ -141,6 +161,17 @@ static void print_fix(struct gps_data_t *gpsdata, timespec_t ts_time)
         (void)fprintf(logfile, "    <pdop>%.1f</pdop>\n", gpsdata->dop.pdop);
     }
 
+    if (garmin &&
+        0 != isfinite(gpsdata->fix.depth)) {
+        // garmin extentions cause google maps to crash
+        (void)fprintf(logfile,
+             "        <extensions>\n"
+             "            <gpxx:TrackPointExtension>\n"
+             "                <gpxx:Depth>%.2f</gpxx:Depth>\n"
+             "            </gpxx:TrackPointExtension>\n"
+             "        </extensions>\n",
+             gpsdata->fix.depth);
+    }
     (void)fputs("   </trkpt>\n", logfile);
     (void)fflush(logfile);
 }
@@ -240,6 +271,7 @@ static void usage(void)
          "  --debug LVL         Set debug level.\n"
          "  --export EXPORTMETHOD  Default %s\n"
          "  --exports           List available exports, then exit\n"
+         "  --garmin            Enable Garmin depth output\n"
          "  --help              Show this help, then exit\n"
          "  --interval TIMEOUT  Create new track after TIMEOUT seconds. "
          "Default 5\n"
@@ -252,6 +284,7 @@ static void usage(void)
          "  -d                  Daemonize\n"
          "  -e EXPORTMETHOD     Default %s \n"
          "  -f FILENAME         Send output to file FILENAME\n"
+         "  -g                  Enable Garmin depth output\n"
          "  -h                  Show this help, then exit\n"
          "  -i TIMEOUT          Create new track after TIMEOUT seconds. "
          "Default 5\n"
@@ -274,7 +307,7 @@ int main(int argc, char **argv)
     bool reconnect = false;
     unsigned int flags = WATCH_ENABLE;
     struct exportmethod_t *method = NULL;
-    const char *optstring = "?dD:e:f:hi:lm:rV";
+    const char *optstring = "?dD:e:f:ghi:lm:rV";
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
     static struct option long_options[] = {
@@ -282,6 +315,7 @@ int main(int argc, char **argv)
         {"debug", required_argument, NULL, 'D'},
         {"export", required_argument, NULL, 'e'},
         {"exports", no_argument, NULL, 'l'},
+        {"garmin", no_argument, NULL, 'g'},
         {"help", no_argument, NULL, 'h'},
         {"interval", required_argument, NULL, 'i'},
         {"minmove", required_argument, NULL, 'm'},
@@ -366,6 +400,9 @@ int main(int argc, char **argv)
                 free(fname);
                 break;
             }
+        case 'g':
+            garmin = true;
+            break;
         case 'i':               // set polling interval
             timeout = atoi(optarg);
             if (1 > timeout) {
