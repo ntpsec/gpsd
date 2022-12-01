@@ -2971,56 +2971,35 @@ Utility('rtcm-makeregress', [gpsdecode], [
 ])
 
 # Regression-test the AIVDM decoder.
-aivdm_logs = ['test/sample.aivdm', 'test/sample.aivdm.chk',
-              'test/sample.aivdm.js.chk', 'test/sample.aivdm.ju.chk']
+aivdm_chks = [['test/sample.aivdm', 'test/sample.aivdm.chk', '-u -c'],
+              ['test/sample.aivdm', 'test/sample.aivdm.js.chk', '-j'],
+              ['test/sample.aivdm', 'test/sample.aivdm.ju.chk', '-u -j'],
+              # Parse the unscaled json reference, dump it as unscaled json,
+              ['test/sample.aivdm.ju.chk', 'test/sample.aivdm.ju.chk',
+               '-u -e -j'],
+              # Parse the unscaled json reference, dump it as scaled json,
+              ['test/sample.aivdm.ju.chk', 'test/sample.aivdm.js.chk',
+               '-e -j'],
+              ]
+aivdm_regress = None
 if env["aivdm"]:
     # the log files must be dependencies so they get copied into variant_dir
-    # FIXME! Does not return a proper fail code
-    aivdm_regress = Utility('aivdm-regress', [gpsdecode, aivdm_logs], [
-        '@echo "Testing AIVDM decoding w/ CSV format..."',
-        '@for f in $SRCDIR/test/*.aivdm; do '
-        '    echo "\tTesting $${f}..."; '
-        '    TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
-        '    $SRCDIR/clients/gpsdecode -u -c <$${f} >$${TMPFILE}; '
-        '    diff -ub $${f}.chk $${TMPFILE} || echo "Test FAILED!"; '
-        '    rm -f $${TMPFILE}; '
-        'done;',
-        '@echo "Testing AIVDM decoding w/ JSON unscaled format..."',
-        '@for f in $SRCDIR/test/*.aivdm; do '
-        '    echo "\tTesting $${f}..."; '
-        '    TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
-        '    $SRCDIR/clients/gpsdecode -u -j <$${f} >$${TMPFILE}; '
-        '    diff -ub $${f}.ju.chk $${TMPFILE} || echo "Test FAILED!"; '
-        '    rm -f $${TMPFILE}; '
-        'done;',
-        '@echo "Testing AIVDM decoding w/ JSON scaled format..."',
-        '@for f in $SRCDIR/test/*.aivdm; do '
-        '    echo "\tTesting $${f}..."; '
-        '    TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
-        '    $SRCDIR/clients/gpsdecode -j <$${f} >$${TMPFILE}; '
-        '    diff -ub $${f}.js.chk $${TMPFILE} || echo "Test FAILED!"; '
-        '    rm -f $${TMPFILE}; '
-        'done;',
-        '@echo "Testing idempotency of unscaled JSON dump/decode for AIS"',
-        '@TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
-        '$SRCDIR/clients/gpsdecode -u -e -j <$SRCDIR/test/sample.aivdm.ju.chk '
-        ' >$${TMPFILE}; '
-        '    grep -v "^#" $SRCDIR/test/sample.aivdm.ju.chk '
-        '    | diff -ub - $${TMPFILE} || echo "Test FAILED!"; '
-        '    rm -f $${TMPFILE}; ',
-        # Parse the unscaled json reference, dump it as scaled json,
-        # and finally compare it with the scaled json reference
-        '@echo "Testing idempotency of scaled JSON dump/decode for AIS"',
-        '@TMPFILE=`mktemp -t gpsd-test.chk-XXXXXXXXXXXXXX`; '
-        '$SRCDIR/clients/gpsdecode -e -j <$SRCDIR/test/sample.aivdm.ju.chk '
-        ' >$${TMPFILE};'
-        '    grep -v "^#" $SRCDIR/test/sample.aivdm.js.chk '
-        '    | diff -ub - $${TMPFILE} || echo "Test FAILED!"; '
-        '    rm -f $${TMPFILE}; ',
-    ])
+    aivdm_tests = []
+    aivdm_cnt = 0
+    for aivdm_log, aivdm_chk, aivdm_opt in aivdm_chks:
+        # oddly this runs in build root, but needs to run in variant_dir
+        tgt = Utility(
+            'aivdm-regress-%d' % aivdm_cnt,
+            [aivdm_log, aivdm_chk],
+            ['@echo "Testing AIVDM decoding w/  %s ..."' % aivdm_opt,
+             '$SRCDIR/clients/gpsdecode %s < %s | diff -ub %s -' %
+             (aivdm_opt, aivdm_log, aivdm_chk)])
+        aivdm_tests.append(tgt)
+        aivdm_cnt += 1
+    aivdm_regress = env.Alias('aivdm-regress', aivdm_tests)
+
 else:
     announce("AIVDM regression tests suppressed because aivdm is off.")
-    aivdm_regress = None
 
 # Rebuild the AIVDM regression tests.
 # Use root dir copies so the new .chk is back into root.
