@@ -40,7 +40,7 @@ static int debug;                         // debug level
 static bool garmin = false;               // enable garmin depth extension
 static struct gps_data_t gpsdata;
 static bool intrack = false;
-static FILE *logfile;
+static FILE *gpxlogfile = NULL;           // file to write gpx log to
 static double minmove = 0;                // meters
 static int sig_flag = 0;
 static long timeout = 5;                  // seconds
@@ -49,7 +49,7 @@ static void print_gpx_header(void)
 {
     char tbuf[CLIENT_DATE_MAX+1];
 
-    (void)fprintf(logfile,
+    (void)fprintf(gpxlogfile,
          "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
          "<gpx version=\"1.1\" creator=\"GPSD %s - %s\"\n"
          "  xmlns=\"http://www.topografix.com/GPX/1/1\"\n"
@@ -65,28 +65,28 @@ static void print_gpx_header(void)
              "https://www8.garmin.com/xmlschemas/GpxExtensions/v3 "
              "https://www8.garmin.com/xmlschemas/GpxExtensions/v3/"
              "GpxExtensionsv3.xsd\"",
-             logfile);
+             gpxlogfile);
     } else {
         (void)fputs(
              "  xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1\n"
              "  http://www.topografix.com/GPX/1/1/gpx.xsd\"",
-             logfile);
+             gpxlogfile);
     }
 
-    (void)fprintf(logfile,
+    (void)fprintf(gpxlogfile,
          "\n>\n"
          " <metadata>\n"
          "  <time>%s</time>\n"
          " </metadata>\n",
          now_to_iso8601(tbuf, sizeof(tbuf)));
-    (void)fflush(logfile);
+    (void)fflush(gpxlogfile);
 }
 
 static void print_gpx_trk_end(void)
 {
     (void)fputs("  </trkseg>\n"
-                " </trk>\n", logfile);
-    (void)fflush(logfile);
+                " </trk>\n", gpxlogfile);
+    (void)fflush(gpxlogfile);
 }
 
 static void print_gpx_footer(void)
@@ -94,23 +94,23 @@ static void print_gpx_footer(void)
     if (intrack) {
         print_gpx_trk_end();
     }
-    (void)fputs("</gpx>\n", logfile);
-    (void)fclose(logfile);
+    (void)fputs("</gpx>\n", gpxlogfile);
+    (void)fclose(gpxlogfile);
 }
 
 static void print_gpx_trk_start(void)
 {
     (void)fputs(" <trk>\n"
                 "  <src>GPSD " VERSION "</src>\n"
-                "  <trkseg>\n", logfile);
-    (void)fflush(logfile);
+                "  <trkseg>\n", gpxlogfile);
+    (void)fflush(gpxlogfile);
 }
 
 static void print_fix(struct gps_data_t *gpsdata, timespec_t ts_time)
 {
     char tbuf[CLIENT_DATE_MAX + 1];
 
-    (void)fprintf(logfile, "   <trkpt lat=\"%.9f\" lon=\"%.9f\">\n",
+    (void)fprintf(gpxlogfile, "   <trkpt lat=\"%.9f\" lon=\"%.9f\">\n",
                   gpsdata->fix.latitude, gpsdata->fix.longitude);
 
     /*
@@ -122,24 +122,25 @@ static void print_fix(struct gps_data_t *gpsdata, timespec_t ts_time)
      * gpsd now explicitly supports distinct HAE and MSL.
      */
     if (0 != isfinite(gpsdata->fix.altHAE)) {
-        (void)fprintf(logfile, "    <ele>%.4f</ele>\n", gpsdata->fix.altHAE);
+        (void)fprintf(gpxlogfile,
+             "    <ele>%.4f</ele>\n", gpsdata->fix.altHAE);
     }
 
-    (void)fprintf(logfile, "    <time>%s</time>\n",
+    (void)fprintf(gpxlogfile, "    <time>%s</time>\n",
                   timespec_to_iso8601(ts_time, tbuf, sizeof(tbuf)));
     if (STATUS_DGPS == gpsdata->fix.status) {
         // FIXME: other status values?
-        (void)fputs("    <fix>dgps</fix>\n", logfile);
+        (void)fputs("    <fix>dgps</fix>\n", gpxlogfile);
     } else {
         switch (gpsdata->fix.mode) {
         case MODE_3D:
-            (void)fputs("    <fix>3d</fix>\n", logfile);
+            (void)fputs("    <fix>3d</fix>\n", gpxlogfile);
             break;
         case MODE_2D:
-            (void)fputs("    <fix>2d</fix>\n", logfile);
+            (void)fputs("    <fix>2d</fix>\n", gpxlogfile);
             break;
         case MODE_NO_FIX:
-            (void)fputs("    <fix>none</fix>\n", logfile);
+            (void)fputs("    <fix>none</fix>\n", gpxlogfile);
             break;
         default:
             // don't print anything if no fix indicator
@@ -149,31 +150,35 @@ static void print_fix(struct gps_data_t *gpsdata, timespec_t ts_time)
 
     if (MODE_NO_FIX < gpsdata->fix.mode &&
         0 < gpsdata->satellites_used) {
-        (void)fprintf(logfile, "    <sat>%d</sat>\n", gpsdata->satellites_used);
+        (void)fprintf(gpxlogfile,
+             "    <sat>%d</sat>\n", gpsdata->satellites_used);
     }
     if (0 != isfinite(gpsdata->dop.hdop)) {
-        (void)fprintf(logfile, "    <hdop>%.1f</hdop>\n", gpsdata->dop.hdop);
+        (void)fprintf(gpxlogfile,
+             "    <hdop>%.1f</hdop>\n", gpsdata->dop.hdop);
     }
     if (0 != isfinite(gpsdata->dop.vdop)) {
-        (void)fprintf(logfile, "    <vdop>%.1f</vdop>\n", gpsdata->dop.vdop);
+        (void)fprintf(gpxlogfile,
+             "    <vdop>%.1f</vdop>\n", gpsdata->dop.vdop);
     }
     if (0 != isfinite(gpsdata->dop.pdop)) {
-        (void)fprintf(logfile, "    <pdop>%.1f</pdop>\n", gpsdata->dop.pdop);
+        (void)fprintf(gpxlogfile,
+             "    <pdop>%.1f</pdop>\n", gpsdata->dop.pdop);
     }
 
-    if (garmin &&
+    if (true == garmin &&
         0 != isfinite(gpsdata->fix.depth)) {
         // garmin extentions cause google maps to crash
-        (void)fprintf(logfile,
-             "        <extensions>\n"
-             "            <gpxx:TrackPointExtension>\n"
-             "                <gpxx:Depth>%.2f</gpxx:Depth>\n"
-             "            </gpxx:TrackPointExtension>\n"
-             "        </extensions>\n",
+        (void)fprintf(gpxlogfile,
+             "    <extensions>\n"
+             "       <gpxx:TrackPointExtension>\n"
+             "           <gpxx:Depth>%.2f</gpxx:Depth>\n"
+             "       </gpxx:TrackPointExtension>\n"
+             "    </extensions>\n",
              gpsdata->fix.depth);
     }
-    (void)fputs("   </trkpt>\n", logfile);
-    (void)fflush(logfile);
+    (void)fputs("   </trkpt>\n", gpxlogfile);
+    (void)fflush(gpxlogfile);
 }
 
 // cleanup as an atexit() handler
@@ -188,6 +193,10 @@ static void cleanup(void)
         }
 }
 
+/* called by gps_mainloop() to maybe log a fix.
+ *
+ * Return void
+ */
 static void conditionally_log_fix(struct gps_data_t *gpsdata)
 {
     static timespec_t ts_time, old_ts_time, ts_diff;
@@ -271,19 +280,21 @@ static void usage(void)
          "  --debug LVL         Set debug level.\n"
          "  --export EXPORTMETHOD  Default %s\n"
          "  --exports           List available exports, then exit\n"
+         "  --filein INFILE     Read from INFILE, not gpsd\n"
          "  --garmin            Enable Garmin depth output\n"
          "  --help              Show this help, then exit\n"
          "  --interval TIMEOUT  Create new track after TIMEOUT seconds. "
          "Default 5\n"
          "  --minmove MINMOVE   Minimum move in meters to log\n"
-         "  --output FILNAME    Send output to file FILENAME\n"
+         "  --output OUTFILE    Send gpx output to file OUTFILE\n"
          "  --reconnect         Retry when gpsd loses the fix.\n"
          "  --version           Show version, then exit\n"
 #endif
          "  -D LVL              Set debug level.\n"
          "  -d                  Daemonize\n"
          "  -e EXPORTMETHOD     Default %s \n"
-         "  -f FILENAME         Send output to file FILENAME\n"
+         "  -f OUTFILE          Send gpx output to file OUTFILE\n"
+         "  -F INFILE           Read from INFILE, not gpsd\n"
          "  -g                  Enable Garmin depth output\n"
          "  -h                  Show this help, then exit\n"
          "  -i TIMEOUT          Create new track after TIMEOUT seconds. "
@@ -307,7 +318,8 @@ int main(int argc, char **argv)
     bool reconnect = false;
     unsigned int flags = WATCH_ENABLE;
     struct exportmethod_t *method = NULL;
-    const char *optstring = "?dD:e:f:ghi:lm:rV";
+    char   *file_in = NULL;
+    const char *optstring = "?dD:e:f:F:ghi:lm:rV";
 #ifdef HAVE_GETOPT_LONG
     int option_index = 0;
     static struct option long_options[] = {
@@ -315,6 +327,7 @@ int main(int argc, char **argv)
         {"debug", required_argument, NULL, 'D'},
         {"export", required_argument, NULL, 'e'},
         {"exports", no_argument, NULL, 'l'},
+        {"filein", required_argument, NULL, 'F' },
         {"garmin", no_argument, NULL, 'g'},
         {"help", no_argument, NULL, 'h'},
         {"interval", required_argument, NULL, 'i'},
@@ -334,7 +347,7 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    logfile = stdout;
+    gpxlogfile = stdout;
     while (1) {
 #ifdef HAVE_GETOPT_LONG
         ch = getopt_long(argc, argv, optstring, long_options, &option_index);
@@ -353,7 +366,7 @@ int main(int argc, char **argv)
             break;
         case 'D':
             debug = atoi(optarg);
-            gps_enable_debug(debug, logfile);
+            gps_enable_debug(debug, gpxlogfile);
             break;
         case 'e':
             method = export_lookup(optarg);
@@ -389,17 +402,20 @@ int main(int argc, char **argv)
                     }
                 }
                 fname[s] = '\0';;
-                logfile = fopen(fname, "w");
-                if (NULL == logfile) {
+                gpxlogfile = fopen(fname, "w");
+                if (NULL == gpxlogfile) {
                     syslog(LOG_ERR,
                            "Failed to open %s: %s, logging to stdout.",
                            fname, strerror(errno));
-                    logfile = stdout;
+                    gpxlogfile = stdout;
                 }
             bailout:
                 free(fname);
                 break;
             }
+        case 'F':       // input file name.
+            file_in = strdup(optarg);
+            break;
         case 'g':
             garmin = true;
             break;
@@ -435,13 +451,23 @@ int main(int argc, char **argv)
     }
 
     if (daemonize &&
-        stdout ==  logfile) {
-        syslog(LOG_ERR, "Daemon mode with no valid logfile name - exiting.");
+        stdout ==  gpxlogfile) {
+        syslog(LOG_ERR,
+            "Daemon mode with no valid gpxlogfile name - exiting.");
         exit(EXIT_FAILURE);
     }
 
     memset(&source, 0, sizeof(source));
-    if (NULL != method->magic) {
+    if (NULL != file_in) {
+        // read from file, not a gpsd
+        if (optind < argc) {
+            (void)fprintf(stderr,
+                "ERROR: local file and gpsd source both requested\n");
+            exit(EXIT_FAILURE);
+        }
+        source.server = GPSD_LOCAL_FILE;
+        source.port = file_in;
+    } else if (NULL != method->magic) {
         source.server = method->magic;
     } else {
         source.server = (char *)"localhost";
@@ -453,7 +479,7 @@ int main(int argc, char **argv)
         gpsd_source_spec(argv[optind], &source);
     }
 #if 0
-    (void)fprintf(logfile, "<!-- server: %s port: %s  device: %s -->\n",
+    (void)fprintf(gpxlogfile, "<!-- server: %s port: %s  device: %s -->\n",
                  source.server, source.port, source.device);
 #endif
 
@@ -472,7 +498,7 @@ int main(int argc, char **argv)
         }
     }
 
-    //syslog (LOG_INFO, "---------- STARTED ----------");
+    // syslog (LOG_INFO, "---------- STARTED ----------");
 
     if (0 != gps_open(source.server, source.port, &gpsdata)) {
         (void)fprintf(stderr,
@@ -484,8 +510,9 @@ int main(int argc, char **argv)
     if (NULL != source.device) {
         flags |= WATCH_DEVICE;
     }
-    if (NULL != source.port) {
-        // only to sockets, not shared memory or dbus
+    if (NULL != source.port &&
+        NULL == file_in) {
+        // only to sockets, not infiles, shared memory or dbus
         if (0 > gps_stream(&gpsdata, flags, source.device)) {
             syslog(LOG_ERR, "gps_stream() failed");
             exit(EXIT_FAILURE);

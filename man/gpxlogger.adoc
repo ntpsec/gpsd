@@ -3,7 +3,7 @@ Amaury Jacquot; Petter Reinholdtsen; Chris Kuethe
 :email_1: sxpert@sxpert.org
 :email_2: pere@hungry.com
 :email_3: chris.kuethe@gmail.com
-:date: 25 February 2021
+:date: 1 December 2022
 :keywords: gps, gpsd, gpx, gpxlogger
 :manmanual: GPSD Documentation
 :mansource: GPSD, Version {gpsdver}
@@ -64,6 +64,11 @@ give a [server[:port[:device]]] specification as arguments.  See the
 With *-e shm, --export shm* this program will listen to the local
 *gpsd* using shared memory.
 
+*-F INFILE*, *--filein INFILE*::
+  Read gpsd JSON from file INFILE, instead of from a *gpsd* daemon.
+*-g*, *--garmin*::
+  Enable Garmin extensions to GPX format.  This allows depth to also
+  be logged in the gpx output.  Not compatible with Google maps.
 *-i SECONDS*, *--interval SECONDS*::
   A new track is created if there's no fix written for an interval of
   SECONDS. Defaulting to 5 seconds.
@@ -72,6 +77,8 @@ With *-e shm, --export shm* this program will listen to the local
 *-m MINMOVE*, *--minmove MINMOVE*::
   Sets a minimum move distance in meters (it may include a fractional
   decimal part). Motions shorter than this will not be logged.
+*-o OUTFILE*, *--output OUTFILE*::
+  Output the GPX logg to file file OUTFILE, instead of to stdout..
 *-r*, *--reconnect*::
   Retry when GPSd loses the fix. Without *-r*, *gpxlogger* would quit in
   this case.
@@ -94,7 +101,9 @@ the *gps*(1) man page
 
 == SEE ALSO
 
-*gpsd*(8), *gps*(1)
+*gps*(1)
+
+*gpsd*(8)
 
 == RESOURCES
 
