@@ -932,7 +932,12 @@ if not cleaning and not helping:
     if (sys.platform != config.env['target_platform']):
         announce("Target system is: %s" % config.env['target_platform'])
 
-    announce("cc is %s, version %s" % (env['CC'], env['CCVERSION']))
+    if 'CCVERSION' in env:
+        announce("cc is %s, version %s" % (env['CC'], env['CCVERSION']))
+    else:
+        # sometimes scons can not determine clang version
+        announce("cc is %s, WARNING version in unknown" % env['CC'])
+
     # clang accepts -pthread, then warns it is unused.
     if not config.CheckCC():
         announce("ERROR: CC doesn't work")
