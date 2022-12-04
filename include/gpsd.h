@@ -104,7 +104,7 @@ extern "C" {
  *      add nmea.gsx_more to gps_device_t
  *      add TSIPv1 stuff
  * 3.24.1~dev
- *      add end_gsv_talker to gps_device_t.nmea
+ *      add end_gsv_talker and gga_sats_used to gps_device_t.nmea
  */
 
 #define JSON_DATE_MAX   24      // ISO8601 timestamp with 2 decimal places
@@ -647,6 +647,7 @@ struct gps_device_t {
         bool cycle_enders[NMEA_NUM + 1];
         bool cycle_continue;
         bool gsx_more;         // more GSV or GSA to come.
+        unsigned gga_sats_used;  // sats used from GGA, GNS or $PASHR
     } nmea;
     /*
      * The rest of this structure is driver-specific private storage.

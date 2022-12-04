@@ -1015,7 +1015,6 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
     int newstatus;
     char last_last_gga_talker = session->nmea.last_gga_talker;
     int fix;              // a.k.a Quality flag
-    int satellites_visible;
     session->nmea.last_gga_talker = field[0][1];
 
     if ('\0' == field[6][0]) {
@@ -1119,9 +1118,8 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
      * so if we set it here we break xxGSV
      * Some GPS, like SiRFstarV NMEA, report per GNSS used
      * counts in GPGGA and GLGGA.
-     * session->gpsdata.satellites_visible = atoi(field[7]);
      */
-    satellites_visible = atoi(field[7]);
+    session->nmea.gga_sats_used = atoi(field[7]);
 
     if ('\0' == field[1][0]) {
         GPSD_LOG(LOG_DATA, &session->context->errout,
@@ -1163,13 +1161,13 @@ static gps_mask_t processGGA(int c UNUSED, char *field[],
              * elsewhere in the code we want to be able to test for the
              * presence of a valid fix with mode > MODE_NO_FIX.
              *
-             * Use satellites_visible as double check on MODE_3D
+             * Use gga_sats_used; as double check on MODE_3D
              */
-            if (4 <= satellites_visible) {
+            if (4 <= session->nmea.gga_sats_used) {
                 session->newdata.mode = MODE_3D;
             }
         }
-        if (3 > satellites_visible) {
+        if (3 > session->nmea.gga_sats_used) {
             session->newdata.mode = MODE_NO_FIX;
         }
     } else {
@@ -1357,7 +1355,6 @@ static gps_mask_t processGNS(int count UNUSED, char *field[],
      *
      */
     int newstatus;
-    int satellites_used;
     gps_mask_t mask = ONLINE_SET;
 
     if ('\0' != field[1][0]) {
@@ -1389,7 +1386,7 @@ static gps_mask_t processGNS(int count UNUSED, char *field[],
         return mask;
     }
 
-    satellites_used = atoi(field[7]);
+    session->nmea.gga_sats_used = atoi(field[7]);
 
     if (0 == do_lat_lon(&field[2], &session->newdata)) {
         mask |= LATLON_SET;
@@ -1400,7 +1397,7 @@ static gps_mask_t processGNS(int count UNUSED, char *field[],
             session->newdata.altMSL = safe_atof(field[9]);
             if (0 != isfinite(session->newdata.altMSL)) {
                 mask |= ALTITUDE_SET;
-                if (3 < satellites_used) {
+                if (3 < session->nmea.gga_sats_used) {
                     // more than 3 sats used means 3D
                     session->newdata.mode = MODE_3D;
                 }
@@ -1807,7 +1804,7 @@ static gps_mask_t processGSA(int count, char *field[],
     // cast for 32/64 compatibility
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "NMEA0183: %s: count %d visible %d used %d mask %#llx\n",
-             field[0], count, session->gpsdata.satellites_visible,
+             field[0], count, session->gpsdata.satellites_used,
              session->gpsdata.satellites_used,
              (long long unsigned)mask);
     return mask;
@@ -2629,7 +2626,6 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
             session->newdata.status = STATUS_UNK;
             session->newdata.mode = MODE_NO_FIX;
         } else {
-            int satellites_used;
 
             // if we make it this far, we at least have a 3D fix
             session->newdata.mode = MODE_3D;
@@ -2638,9 +2634,7 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
             else
                 session->newdata.status = STATUS_GPS;
 
-            /* don't use as this breaks the GPGSV counter
-             * session->gpsdata.satellites_used = atoi(field[3]);  */
-            satellites_used = atoi(field[3]);
+            session->nmea.gga_sats_used = atoi(field[3]);
             if (0 == merge_hhmmss(field[4], session)) {
                 register_fractional_time(field[0], field[4], session);
                 mask |= TIME_SET;
@@ -2684,7 +2678,7 @@ static gps_mask_t processPASHR(int c UNUSED, char *field[],
                      session->newdata.climb, session->newdata.mode,
                      session->newdata.status, session->gpsdata.dop.pdop,
                      session->gpsdata.dop.hdop, session->gpsdata.dop.vdop,
-                     session->gpsdata.dop.tdop, satellites_used);
+                     session->gpsdata.dop.tdop, session->nmea.gga_sats_used);
         }
     } else if (0 == strcmp("RID", field[1])) {  // Receiver ID
         (void)snprintf(session->subtype, sizeof(session->subtype) - 1,
