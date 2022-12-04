@@ -294,7 +294,7 @@ static void usage(void)
          "  -d                  Daemonize\n"
          "  -e EXPORTMETHOD     Default %s \n"
          "  -f OUTFILE          Send gpx output to file OUTFILE\n"
-         "  -F INFILE           Read from INFILE, not gpsd\n"
+         "  -F INFILE           Read *gpsd* JSON from INFILE, not gpsd\n"
          "  -g                  Enable Garmin depth output\n"
          "  -h                  Show this help, then exit\n"
          "  -i TIMEOUT          Create new track after TIMEOUT seconds. "

@@ -65,7 +65,7 @@ With *-e shm, --export shm* this program will listen to the local
 *gpsd* using shared memory.
 
 *-F INFILE*, *--filein INFILE*::
-  Read gpsd JSON from file INFILE, instead of from a *gpsd* daemon.
+  Read *gpsd* JSON from file INFILE, instead of from a *gpsd* daemon.
 *-g*, *--garmin*::
   Enable Garmin extensions to GPX format.  This allows depth to also
   be logged in the gpx output.  Not compatible with Google maps.
