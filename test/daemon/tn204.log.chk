@@ -2,9 +2,9 @@ $GPRMC,230148,A,3348.605,N,11821.126,W,000.0,209.4,261002,013.8,E*6B
 {"class":"TPV","mode":2,"time":"2022-06-11T23:01:48.000Z","ept":0.005,"lat":33.810083333,"lon":-118.352100000,"track":209.4000,"magtrack":223.2000,"magvar":13.8,"speed":0.000}
 $GPRMB,A,,,,,,,,,,,,V*71
 $GPGGA,230149,3348.605,N,11821.126,W,1,05,1.7,49.4,M,-32.4,M,,*4E
-{"class":"SKY","hdop":1.70}
+{"class":"SKY","hdop":1.70,"uSat":5}
 $GPGSA,A,3,07,08,,,27,28,29,,,,,,4.2,1.7,3.8*32
-{"class":"SKY","hdop":1.70,"pdop":4.20,"vdop":3.80}
+{"class":"SKY","hdop":1.70,"pdop":4.20,"vdop":3.80,"uSat":5}
 $GPGSV,2,1,08,07,43,197,44,08,68,062,43,11,18,089,00,26,24,314,43*73
 $GPGSV,2,2,08,27,48,103,46,28,66,323,42,29,33,306,43,31,10,040,00*78
 {"class":"SKY","gdop":5.05,"hdop":1.70,"pdop":4.20,"tdop":2.91,"xdop":1.21,"ydop":1.17,"vdop":3.80,"nSat":8,"uSat":5,"satellites":[{"PRN":7,"gnssid":0,"svid":7,"az":197.0,"el":43.0,"ss":44.0,"used":true},{"PRN":8,"gnssid":0,"svid":8,"az":62.0,"el":68.0,"ss":43.0,"used":true},{"PRN":11,"gnssid":0,"svid":11,"az":89.0,"el":18.0,"ss":0.0,"used":false},{"PRN":26,"gnssid":0,"svid":26,"az":314.0,"el":24.0,"ss":43.0,"used":false},{"PRN":27,"gnssid":0,"svid":27,"az":103.0,"el":48.0,"ss":46.0,"used":true},{"PRN":28,"gnssid":0,"svid":28,"az":323.0,"el":66.0,"ss":42.0,"used":true},{"PRN":29,"gnssid":0,"svid":29,"az":306.0,"el":33.0,"ss":43.0,"used":true},{"PRN":31,"gnssid":0,"svid":31,"az":40.0,"el":10.0,"ss":0.0,"used":false}]}
@@ -18,9 +18,9 @@ $GPRMC,230150,A,3348.606,N,11821.125,W,000.0,209.4,261002,013.8,E*62
 {"class":"TPV","mode":3,"time":"2022-06-11T23:01:50.000Z","ept":0.005,"lat":33.810100000,"lon":-118.352083333,"track":209.4000,"magtrack":223.2000,"magvar":13.8,"speed":0.000,"geoidSep":-34.288}
 $GPRMB,A,,,,,,,,,,,,V*71
 $GPGGA,230151,3348.607,N,11821.124,W,1,05,1.7,49.2,M,-32.4,M,,*41
-{"class":"SKY","hdop":1.70}
+{"class":"SKY","hdop":1.70,"uSat":5}
 $GPGSA,A,3,07,08,,,27,28,29,,,,,,4.2,1.7,3.8*32
-{"class":"SKY","hdop":1.70,"pdop":4.20,"vdop":3.80}
+{"class":"SKY","hdop":1.70,"pdop":4.20,"vdop":3.80,"uSat":5}
 $GPGSV,2,1,08,07,43,197,45,08,68,062,42,11,18,089,00,26,24,314,43*73
 $GPGSV,2,2,08,27,48,103,46,28,66,323,42,29,33,306,44,31,10,040,00*7F
 {"class":"SKY","gdop":5.05,"hdop":1.70,"pdop":4.20,"tdop":2.91,"xdop":1.21,"ydop":1.17,"vdop":3.80,"nSat":8,"uSat":5,"satellites":[{"PRN":7,"gnssid":0,"svid":7,"az":197.0,"el":43.0,"ss":45.0,"used":true},{"PRN":8,"gnssid":0,"svid":8,"az":62.0,"el":68.0,"ss":42.0,"used":true},{"PRN":11,"gnssid":0,"svid":11,"az":89.0,"el":18.0,"ss":0.0,"used":false},{"PRN":26,"gnssid":0,"svid":26,"az":314.0,"el":24.0,"ss":43.0,"used":false},{"PRN":27,"gnssid":0,"svid":27,"az":103.0,"el":48.0,"ss":46.0,"used":true},{"PRN":28,"gnssid":0,"svid":28,"az":323.0,"el":66.0,"ss":42.0,"used":true},{"PRN":29,"gnssid":0,"svid":29,"az":306.0,"el":33.0,"ss":44.0,"used":true},{"PRN":31,"gnssid":0,"svid":31,"az":40.0,"el":10.0,"ss":0.0,"used":false}]}
@@ -36,9 +36,9 @@ $GPRMC,230152,A,3348.607,N,11821.124,W,000.0,209.4,261002,013.8,E*60
 {"class":"TPV","mode":3,"time":"2022-06-11T23:01:52.000Z","ept":0.005,"lat":33.810116667,"lon":-118.352066667,"track":209.4000,"magtrack":223.2000,"magvar":13.8,"speed":0.000,"geoidSep":-34.288}
 $GPRMB,A,,,,,,,,,,,,V*71
 $GPGGA,230153,3348.607,N,11821.124,W,1,05,1.7,49.1,M,-32.4,M,,*40
-{"class":"SKY","hdop":1.70}
+{"class":"SKY","hdop":1.70,"uSat":5}
 $GPGSA,A,3,,08,,,,,29,,,,,,4.2,1.7,3.8*3A
-{"class":"SKY","hdop":1.70,"pdop":4.20,"vdop":3.80}
+{"class":"SKY","hdop":1.70,"pdop":4.20,"vdop":3.80,"uSat":5}
 $GPGSV,2,1,08,07,43,197,45,08,68,062,42,11,18,089,00,26,24,314,41*71
 $GPGSV,2,2,08,27,48,103,46,28,66,323,42,29,33,306,44,31,10,040,00*7F
 {"class":"SKY","hdop":1.70,"pdop":4.20,"vdop":3.80,"nSat":8,"uSat":2,"satellites":[{"PRN":7,"gnssid":0,"svid":7,"az":197.0,"el":43.0,"ss":45.0,"used":false},{"PRN":8,"gnssid":0,"svid":8,"az":62.0,"el":68.0,"ss":42.0,"used":true},{"PRN":11,"gnssid":0,"svid":11,"az":89.0,"el":18.0,"ss":0.0,"used":false},{"PRN":26,"gnssid":0,"svid":26,"az":314.0,"el":24.0,"ss":41.0,"used":false},{"PRN":27,"gnssid":0,"svid":27,"az":103.0,"el":48.0,"ss":46.0,"used":false},{"PRN":28,"gnssid":0,"svid":28,"az":323.0,"el":66.0,"ss":42.0,"used":false},{"PRN":29,"gnssid":0,"svid":29,"az":306.0,"el":33.0,"ss":44.0,"used":true},{"PRN":31,"gnssid":0,"svid":31,"az":40.0,"el":10.0,"ss":0.0,"used":false}]}
@@ -54,9 +54,9 @@ $GPRMC,230154,A,3348.607,N,11821.124,W,000.0,209.4,261002,013.8,E*66
 {"class":"TPV","mode":3,"time":"2022-06-11T23:01:54.000Z","ept":0.005,"lat":33.810116667,"lon":-118.352066667,"track":209.4000,"magtrack":223.2000,"magvar":13.8,"speed":0.000,"geoidSep":-34.288}
 $GPRMB,A,,,,,,,,,,,,V*71
 $GPGGA,230155,3348.608,N,11821.124,W,1,02,1.9,49.0,M,-32.4,M,,*41
-{"class":"SKY","hdop":1.90}
+{"class":"SKY","hdop":1.90,"uSat":2}
 $GPGSA,A,3,07,08,,,27,28,,,,,,,1.9,1.9,1.0*33
-{"class":"SKY","hdop":1.90,"pdop":1.90,"vdop":1.00}
+{"class":"SKY","hdop":1.90,"pdop":1.90,"vdop":1.00,"uSat":2}
 $GPGSV,2,1,08,07,43,197,45,08,68,062,43,11,18,089,00,26,24,314,41*70
 $GPGSV,2,2,08,27,48,103,46,28,66,323,43,29,33,306,44,31,10,040,00*7E
 {"class":"SKY","gdop":19.87,"hdop":1.90,"pdop":1.90,"tdop":12.53,"xdop":1.49,"ydop":4.03,"vdop":1.00,"nSat":8,"uSat":4,"satellites":[{"PRN":7,"gnssid":0,"svid":7,"az":197.0,"el":43.0,"ss":45.0,"used":true},{"PRN":8,"gnssid":0,"svid":8,"az":62.0,"el":68.0,"ss":43.0,"used":true},{"PRN":11,"gnssid":0,"svid":11,"az":89.0,"el":18.0,"ss":0.0,"used":false},{"PRN":26,"gnssid":0,"svid":26,"az":314.0,"el":24.0,"ss":41.0,"used":false},{"PRN":27,"gnssid":0,"svid":27,"az":103.0,"el":48.0,"ss":46.0,"used":true},{"PRN":28,"gnssid":0,"svid":28,"az":323.0,"el":66.0,"ss":43.0,"used":true},{"PRN":29,"gnssid":0,"svid":29,"az":306.0,"el":33.0,"ss":44.0,"used":false},{"PRN":31,"gnssid":0,"svid":31,"az":40.0,"el":10.0,"ss":0.0,"used":false}]}

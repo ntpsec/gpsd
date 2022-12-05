@@ -1559,7 +1559,7 @@ static void handle_request(struct subscriber_t *sub, const char *buf,
         for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
             if (allocated_device(devp) && subscribed(sub, devp)) {
                 if (0 != (devp->observed & GPS_TYPEMASK)) {
-                    json_sky_dump(&devp->gpsdata,
+                    json_sky_dump(devp,
                                   reply + strnlen(reply, replylen),
                                   replylen - strnlen(reply, replylen));
                     rstrip(reply, replylen);

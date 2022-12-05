@@ -550,10 +550,11 @@ void json_noise_dump(const struct gps_data_t *gpsdata,
     (void)strlcat(reply, "}\r\n", replylen);
 }
 
-void json_sky_dump(const struct gps_data_t *datap,
+void json_sky_dump(const struct gps_device_t *session,
                    char *reply, size_t replylen)
 {
     int i, reported = 0, used = 0;
+    const struct gps_data_t *datap = &session->gpsdata;
 
     assert(replylen > sizeof(char *));
     (void)strlcpy(reply, "{\"class\":\"SKY\"", replylen);
@@ -662,6 +663,10 @@ void json_sky_dump(const struct gps_data_t *datap,
             str_rstrip_char(reply, ',');
             (void)strlcat(reply, "]", replylen);
         }
+    } else if (0 != session->nmea.gga_sats_used) {
+        // no sat data, but we have number used from $_GGA, $__GNS, or $PASHR
+        str_appendf(reply, replylen, ",\"uSat\":%u",
+                    session->nmea.gga_sats_used);
     }
     (void)strlcat(reply, "}\r\n", replylen);
 }
@@ -4663,7 +4668,7 @@ void json_data_report(const gps_mask_t changed,
 
     if (0 != (changed & (DOP_SET | SATELLITE_SET))) {
         buf_len = strnlen(buf, MAX_PACKET_LENGTH);
-        json_sky_dump(datap, buf + buf_len, buflen - buf_len);
+        json_sky_dump(session, buf + buf_len, buflen - buf_len);
     }
 
     if (0 != (changed & SUBFRAME_SET)) {
