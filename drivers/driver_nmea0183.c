@@ -827,7 +827,7 @@ static gps_mask_t processBWC(int count, char *field[],
 }
 
 static gps_mask_t processDBT(int c UNUSED, char *field[],
-                                struct gps_device_t *session)
+                             struct gps_device_t *session)
 {
     /*
      * $SDDBT,7.7,f,2.3,M,1.3,F*05
@@ -855,9 +855,46 @@ static gps_mask_t processDBT(int c UNUSED, char *field[],
     }
 
     GPSD_LOG(LOG_DATA, &session->context->errout,
-             "NMEA0183: mode %d, depth %lf.\n",
+             "NMEA0183: %s mode %d, depth %lf.\n",
+             field[0],
              session->newdata.mode,
              session->newdata.depth);
+    return mask;
+}
+
+static gps_mask_t processDPT(int c UNUSED, char *field[],
+                             struct gps_device_t *session)
+{
+    /*
+     * $--DPT,x.x,x.x,x.x*hh<CR><LF>
+     * 1) Depth below sounder in meters
+     * 2) (+) Offset between sounder and waterline in meters
+     *    (-) Offset between sounder and keel in meters
+     * 3) Maximum range scale
+     * 4) Checksum.
+     *
+     * $SDDBT and $SDDPT should agree, but often don't.
+     *
+     */
+    double offset;
+    gps_mask_t mask = ONLINE_SET;
+
+    if ('\0' == field[1][0]) {
+        // no depth
+        return mask;
+    }
+    session->newdata.depth = safe_atof(field[1]);
+    offset = safe_atof(field[2]);
+    if (0.0 > offset) {
+        // adjust to get depth from keel
+        session->newdata.depth -= offset;
+    }
+    mask |= ALTITUDE_SET;
+
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+             "NMEA0183: %s depth %.1f offset %s max %s\n",
+             field[0],
+             session->newdata.depth, field[2], field[3]);
     return mask;
 }
 
@@ -4735,8 +4772,8 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         // Bearing & Distance to Waypoint, Great Circle
         {"BWC", NULL, 12, false, processBWC},
         {"DBT", NULL, 7,  false, processDBT},
-        {"DPT", NULL, 0,  false, NULL},       // ignore depth
-        {"DTM", NULL, 2,  false, processDTM}, // datum
+        {"DPT", NULL, 4,  false, processDPT},  // depth
+        {"DTM", NULL, 2,  false, processDTM},  // datum
         {"GBS", NULL, 7,  false, processGBS},
         {"GGA", NULL, 13, false, processGGA},
         {"GLC", NULL, 0,  false, NULL},   // ignore Geographic Position, LoranC
