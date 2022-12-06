@@ -854,7 +854,7 @@ static gps_mask_t processDBT(int c UNUSED, char *field[],
         mask |= (ALTITUDE_SET);
     }
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
+    GPSD_LOG(LOG_PROG, &session->context->errout,
              "NMEA0183: %s mode %d, depth %lf.\n",
              field[0],
              session->newdata.mode,
@@ -891,7 +891,7 @@ static gps_mask_t processDPT(int c UNUSED, char *field[],
     }
     mask |= ALTITUDE_SET;
 
-    GPSD_LOG(LOG_DATA, &session->context->errout,
+    GPSD_LOG(LOG_PROG, &session->context->errout,
              "NMEA0183: %s depth %.1f offset %s max %s\n",
              field[0],
              session->newdata.depth, field[2], field[3]);
@@ -2499,6 +2499,32 @@ static gps_mask_t processHDT(int c UNUSED, char *field[],
     return mask;
 }
 
+static gps_mask_t processMTW(int c UNUSED, char *field[],
+                              struct gps_device_t *session)
+{
+    /* Water temp in degrees C
+     * $--MTW,x.x,C*hh<CR><LF>
+     *
+     * Fields in order:
+     * 1. water temp degrees C
+     * 2. C
+     * *hh          mandatory nmea_checksum
+     */
+    gps_mask_t mask = ONLINE_SET;
+
+    if ('\0' == field[1][0] ||
+        'C' != field[2][0]) {
+        // no temp
+        return mask;
+    }
+    session->newdata.wtemp = safe_atof(field[1]);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+        "NMEA0183: %s temp %.1f C\n",
+        field[0], session->newdata.wtemp);
+    return mask;
+}
+
 static gps_mask_t processMWD(int c UNUSED, char *field[],
                               struct gps_device_t *session)
 {
@@ -2894,7 +2920,7 @@ static gps_mask_t processPGRME(int c UNUSED, char *field[],
         mask = HERR_SET | VERR_SET | PERR_IS;
     }
 
-    GPSD_LOG(LOG_PROG, &session->context->errout,
+    GPSD_LOG(LOG_DATA, &session->context->errout,
              "NMEA0183: PGRME: epx=%.2f epy=%.2f sep=%.2f\n",
              session->newdata.epx,
              session->newdata.epy,
@@ -2996,7 +3022,7 @@ static gps_mask_t processPGRMF(int c UNUSED, char *field[],
         mask |= DOP_SET;
     }
 
-    GPSD_LOG(LOG_PROG, &session->context->errout,
+    GPSD_LOG(LOG_DATA, &session->context->errout,
              "NMEA0183: PGRMF: pdop %.1f tdop %.1f \n",
              session->gpsdata.dop.pdop,
              session->gpsdata.dop.tdop);
@@ -3021,7 +3047,7 @@ static gps_mask_t processPGRMM(int c UNUSED, char *field[],
                 sizeof(session->newdata.datum));
     }
 
-    GPSD_LOG(LOG_PROG, &session->context->errout,
+    GPSD_LOG(LOG_DATA, &session->context->errout,
              "NMEA0183: PGRMM: datum=%.40s\n",
              session->newdata.datum);
     return mask;
@@ -3052,7 +3078,7 @@ static gps_mask_t processPGRMT(int c UNUSED, char *field[],
 
     strlcpy(session->subtype, field[1], sizeof(session->subtype));
 
-    GPSD_LOG(LOG_PROG, &session->context->errout,
+    GPSD_LOG(LOG_DATA, &session->context->errout,
              "NMEA0183: PGRMT: subtype %s\n",
              session->subtype);
     return mask;
@@ -3083,7 +3109,7 @@ static gps_mask_t processPGRMV(int c UNUSED, char *field[],
 
     mask |= VNED_SET;
 
-    GPSD_LOG(LOG_PROG, &session->context->errout,
+    GPSD_LOG(LOG_DATA, &session->context->errout,
              "NMEA0183: PGRMV: velE %.2f velN %.2f velD %.2f\n",
             session->newdata.NED.velE,
             session->newdata.NED.velN,
@@ -4771,7 +4797,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"BOD", NULL, 0,  false, NULL},    // Bearing Origin to Destination
         // Bearing & Distance to Waypoint, Great Circle
         {"BWC", NULL, 12, false, processBWC},
-        {"DBT", NULL, 7,  false, processDBT},
+        {"DBT", NULL, 7,  false, processDBT},  // depth
         {"DPT", NULL, 4,  false, processDPT},  // depth
         {"DTM", NULL, 2,  false, processDTM},  // datum
         {"GBS", NULL, 7,  false, processGBS},
@@ -4790,7 +4816,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"HWBIAS", NULL, 0, false, NULL},       // Unknown HuaWei sentence
         {"MLA", NULL, 0,  false, NULL},         // GLONASS Almana Data
         {"MSS", NULL, 0,  false, NULL},         // beacon receiver status
-        {"MTW", NULL, 0,  false, NULL},         // ignore Water Temperature
+        {"MTW", NULL, 3,  false, processMTW},   // Water Temperature
         {"MWD", NULL, 0,  false, processMWD},   // Wind Direction and Speed
         {"MWV", NULL, 0,  false, processMWV},   // Wind Speed and Angle
 #ifdef OCEANSERVER_ENABLE

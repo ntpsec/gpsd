@@ -1,6 +1,6 @@
 = gpsd_json(5)
 :author: Eric S. Raymond
-:date: 7 September 2022
+:date: 5 December 2022
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, JSON, libgps
 :manmanual: GPSD Documentation
@@ -265,6 +265,9 @@ meters.
 |wspeedr |No |numeric |Wind speed relative in meters per second.
 
 |wspeedt |No |numeric |Wind speed true in meters per second.
+
+|wtemp |No |numeric |Water temperature in degrees Celsius.
+
 |===
 
 When the C client library parses a response of this kind, it will

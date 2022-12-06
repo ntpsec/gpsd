@@ -315,6 +315,7 @@ void gps_clear_fix(struct gps_fix_t *fixp)
     fixp->wanglet = NAN;
     fixp->wspeedr = NAN;
     fixp->wspeedt = NAN;
+    fixp->wtemp = NAN;
     gps_clear_base(&fixp->base);
 }
 
@@ -518,6 +519,9 @@ void gps_merge_fix(struct gps_fix_t *to,
         if (0 != isfinite(from->wspeedt)) {
             to->wspeedt = from->wspeedt;
         }
+    }
+    if (0 != isfinite(from->wtemp)) {
+        to->wtemp = from->wtemp;
     }
 }
 

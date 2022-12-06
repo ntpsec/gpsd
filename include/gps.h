@@ -102,6 +102,7 @@ extern "C" {
  *       Add fixsource_t and watch_t to gps_data_t
  *       move privdata_t here from libgps/gps_sock.c
  *       Add rot (Rate Of Turn), mheading, to struct attitude_t
+ *       Add wemp to gps_fix_t
  */
 #define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
@@ -238,6 +239,7 @@ struct gps_fix_t {
     double magnetic_var;    // magnetic variation in degrees
     // depth in meters, probably depth of water under the keel
     double depth;
+    double wtemp;           // water temp, degrees C
 
     // ECEF data, all data in meters, and meters/second, or NaN
     struct {
