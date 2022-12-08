@@ -20,7 +20,7 @@ IMPORTS
 ;
 
 gpsd MODULE-IDENTITY
-     LAST-UPDATED "202212070600Z"
+     LAST-UPDATED "202212080600Z"
      ORGANIZATION "The Gpsd Project"
      CONTACT-INFO
         "The Gpsd Project
@@ -35,7 +35,7 @@ gpsd MODULE-IDENTITY
         SPDX-License-Identifier: BSD-2-clause"
 
      REVISION
-        "202212070600Z"
+        "202212080600Z"
 
      DESCRIPTION
         "DRAFT: Initial MIB."
@@ -119,7 +119,7 @@ DevEntry ::=
 
 devIndex OBJECT-TYPE
     SYNTAX      Integer32 (0..255)
-    MAX-ACCESS  read-only
+    MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
             "A unique value, greater than zero, for each device."
@@ -203,7 +203,7 @@ TpvEntry ::=
 
 tpvIndex OBJECT-TYPE
     SYNTAX      Integer32 (0..255)
-    MAX-ACCESS  read-only
+    MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
             "A unique value, greater than zero, for each device."
@@ -419,7 +419,7 @@ SkyEntry ::=
 
 skyIndex OBJECT-TYPE
     SYNTAX      Integer32 (0..255)
-    MAX-ACCESS  read-only
+    MAX-ACCESS  not-accessible
     STATUS      current
     DESCRIPTION
             "A unique value, greater than zero, for each device."
@@ -537,12 +537,10 @@ verRevision OBJECT-TYPE
 
 gpsdObjects     OBJECT-GROUP
                 OBJECTS {
-                    devIndex,
                     devNumber,
                     devPath,
                     tpvLeapSeconds,
                     tpvNumber,
-                    tpvIndex,
                     tpvPath,
                     tpvMode,
                     tpvStatus,
@@ -563,7 +561,6 @@ gpsdObjects     OBJECT-GROUP
                     tpvEpy,
                     tpvTime,
                     skyNumber,
-                    skyIndex,
                     skyPath,
                     skynSat,
                     skyuSat,
