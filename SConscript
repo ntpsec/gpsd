@@ -2853,7 +2853,7 @@ matrix_regress = Utility('matrix-regress', [test_matrix], [
 # MIB test
 if have_smilint:
     mib_regress = Utility('mib-regress', [mib_lint], [
-        'smilint man/GPSD-MIB'
+        'smilint -l 4 man/GPSD-MIB'
     ])
 else:
     mib_regress = []

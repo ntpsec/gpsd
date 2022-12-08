@@ -1,21 +1,26 @@
 GPSD-MIB DEFINITIONS ::= BEGIN
 
--- Run "smilint GPSD_MIB" to validate this MIB
+-- Run "smilint -l 4 GPSD_MIB" to validate this MIB
 --
 -- By default this file is installed as:
 --     /usr/local/share/snmp/mibs/gpsd/GPSD-MIB
 -- For net-snmp to find the file, add the following line to /etc/snmp/snmp.conf
 --   mibfile /usr/local/share/snmp/mibs/gpsd/GPSD-MIB
+--
+-- SNMP says Integer32 and INTEGER are "indistinguishable", but smilint
+-- prefers Integer32.
 
 IMPORTS
-    MODULE-IDENTITY, OBJECT-TYPE, enterprises
+    Integer32, MODULE-IDENTITY, OBJECT-TYPE, enterprises
         FROM SNMPv2-SMI
-    DisplayString, TimeStamp
+    DisplayString
         FROM SNMPv2-TC
+    OBJECT-GROUP, MODULE-COMPLIANCE
+        FROM SNMPv2-CONF
 ;
 
 gpsd MODULE-IDENTITY
-     LAST-UPDATED "202207161600Z"
+     LAST-UPDATED "202212070600Z"
      ORGANIZATION "The Gpsd Project"
      CONTACT-INFO
         "The Gpsd Project
@@ -30,17 +35,15 @@ gpsd MODULE-IDENTITY
         SPDX-License-Identifier: BSD-2-clause"
 
      REVISION
-        "202207161600Z"
+        "202212070600Z"
 
      DESCRIPTION
         "DRAFT: Initial MIB."
 
      ::= { enterprises 59054 }
 
--- groups in GPSD
 -- These correspond to the gpsd JSON message classes
 -- See the gpsd doc (man gpsd_json) for detailed explanation of each.
--- Few implemented implemented so far.
 -- All are read-only
 
 ais       OBJECT IDENTIFIER ::= { gpsd 1 }
@@ -76,7 +79,7 @@ watch     OBJECT IDENTIFIER ::= { gpsd 15 }
 -- devices
 
 devNumber  OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -110,12 +113,12 @@ devEntry OBJECT-TYPE
 
 DevEntry ::=
       SEQUENCE {
-        devIndex                 INTEGER,
+        devIndex                 Integer32,
         devPath                  DisplayString
       }
 
 devIndex OBJECT-TYPE
-    SYNTAX      INTEGER (0..255)
+    SYNTAX      Integer32 (0..255)
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -134,7 +137,7 @@ devPath OBJECT-TYPE
 -- See "man gpsd_json" for more details on each item.
 
 tpvLeapSeconds OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -142,7 +145,7 @@ tpvLeapSeconds OBJECT-TYPE
     ::= { tpv 1}
 
 tpvNumber  OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -176,30 +179,30 @@ tpvEntry OBJECT-TYPE
 
 TpvEntry ::=
       SEQUENCE {
-        tpvIndex             INTEGER,
+        tpvIndex             Integer32,
         tpvPath              DisplayString,
-        tpvMode              INTEGER,
-        tpvStatus            INTEGER,
-        tpvLatitude          INTEGER,
-        tpvLongitude         INTEGER,
-        tpvAltHAE            INTEGER,
-        tpvAltMSL            INTEGER,
-        tpvClimb             INTEGER,
-        tpvTrack             INTEGER,
-        tpvSpeed             INTEGER,
-        tpvEpc               INTEGER,
-        tpvEpd               INTEGER,
-        tpvEph               INTEGER,
-        tpvEps               INTEGER,
-        tpvEpt               INTEGER,
-        tpvEpv               INTEGER,
-        tpvEpx               INTEGER,
-        tpvEpy               INTEGER,
+        tpvMode              Integer32,
+        tpvStatus            Integer32,
+        tpvLatitude          Integer32,
+        tpvLongitude         Integer32,
+        tpvAltHAE            Integer32,
+        tpvAltMSL            Integer32,
+        tpvClimb             Integer32,
+        tpvTrack             Integer32,
+        tpvSpeed             Integer32,
+        tpvEpc               Integer32,
+        tpvEpd               Integer32,
+        tpvEph               Integer32,
+        tpvEps               Integer32,
+        tpvEpt               Integer32,
+        tpvEpv               Integer32,
+        tpvEpx               Integer32,
+        tpvEpy               Integer32,
         tpvTime              DisplayString
       }
 
 tpvIndex OBJECT-TYPE
-    SYNTAX      INTEGER (0..255)
+    SYNTAX      Integer32 (0..255)
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -215,7 +218,7 @@ tpvPath OBJECT-TYPE
     ::= { tpvEntry 2 }
 
 tpvMode OBJECT-TYPE
-    SYNTAX      INTEGER (0..15)
+    SYNTAX      Integer32 (0..15)
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -223,7 +226,7 @@ tpvMode OBJECT-TYPE
     ::= { tpvEntry 3 }
 
 tpvStatus OBJECT-TYPE
-    SYNTAX      INTEGER (0..15)
+    SYNTAX      Integer32 (0..15)
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -233,7 +236,7 @@ tpvStatus OBJECT-TYPE
     ::= { tpvEntry 4 }
 
 tpvLatitude OBJECT-TYPE
-    SYNTAX  INTEGER
+    SYNTAX  Integer32
     MAX-ACCESS  read-only
     STATUS      current
     -- why 1e7?  Because SNMP chokes on INTEGERS > 32 bits.
@@ -242,7 +245,7 @@ tpvLatitude OBJECT-TYPE
     ::= { tpvEntry 5 }
 
 tpvLongitude OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     -- why 1e7?  Because SNMP chokes on INTEGERS > 32 bits.
@@ -251,7 +254,7 @@ tpvLongitude OBJECT-TYPE
     ::= { tpvEntry 6 }
 
 tpvAltHAE OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -260,7 +263,7 @@ tpvAltHAE OBJECT-TYPE
     ::= { tpvEntry 7 }
 
 tpvAltMSL OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -268,7 +271,7 @@ tpvAltMSL OBJECT-TYPE
     ::= { tpvEntry 8 }
 
 tpvClimb OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -276,7 +279,7 @@ tpvClimb OBJECT-TYPE
     ::= { tpvEntry 9 }
 
 tpvTrack OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -284,7 +287,7 @@ tpvTrack OBJECT-TYPE
     ::= { tpvEntry 10 }
 
 tpvSpeed OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -292,7 +295,7 @@ tpvSpeed OBJECT-TYPE
     ::= { tpvEntry 11 }
 
 tpvEpc OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -300,7 +303,7 @@ tpvEpc OBJECT-TYPE
     ::= { tpvEntry 12 }
 
 tpvEpd OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -308,7 +311,7 @@ tpvEpd OBJECT-TYPE
     ::= { tpvEntry 13 }
 
 tpvEph OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -316,7 +319,7 @@ tpvEph OBJECT-TYPE
     ::= { tpvEntry 14 }
 
 tpvEps OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -324,7 +327,7 @@ tpvEps OBJECT-TYPE
     ::= { tpvEntry 15 }
 
 tpvEpt OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -332,7 +335,7 @@ tpvEpt OBJECT-TYPE
     ::= { tpvEntry 16 }
 
 tpvEpv OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -340,7 +343,7 @@ tpvEpv OBJECT-TYPE
     ::= { tpvEntry 17 }
 
 tpvEpx OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -348,7 +351,7 @@ tpvEpx OBJECT-TYPE
     ::= { tpvEntry 18 }
 
 tpvEpy OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -366,7 +369,7 @@ tpvTime OBJECT-TYPE
 -- sky - Stuff from the SKY JSON class
 
 skyNumber  OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -400,22 +403,22 @@ skyEntry OBJECT-TYPE
 
 SkyEntry ::=
       SEQUENCE {
-        skyIndex             INTEGER,
+        skyIndex             Integer32,
         skyPath              DisplayString,
-        skynSat              INTEGER,       -- aka "seen"
-        skyuSat              INTEGER,       -- used
-        skySNRavg            INTEGER,       -- average SNR
-        skyGdop              INTEGER,
-        skyHdop              INTEGER,
-        skyPdop              INTEGER,
-        skyTdop              INTEGER,
-        skyVdop              INTEGER,
-        skyXdop              INTEGER,
-        skyYdop              INTEGER
+        skynSat              Integer32,       -- aka "seen"
+        skyuSat              Integer32,       -- used
+        skySNRavg            Integer32,       -- average SNR
+        skyGdop              Integer32,
+        skyHdop              Integer32,
+        skyPdop              Integer32,
+        skyTdop              Integer32,
+        skyVdop              Integer32,
+        skyXdop              Integer32,
+        skyYdop              Integer32
       }
 
 skyIndex OBJECT-TYPE
-    SYNTAX      INTEGER (0..255)
+    SYNTAX      Integer32 (0..255)
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -431,7 +434,7 @@ skyPath OBJECT-TYPE
     ::= { skyEntry 2 }
 
 skynSat OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -439,7 +442,7 @@ skynSat OBJECT-TYPE
     ::= { skyEntry 3 }
 
 skyuSat OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -447,7 +450,7 @@ skyuSat OBJECT-TYPE
     ::= { skyEntry 4 }
 
 skySNRavg OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -455,7 +458,7 @@ skySNRavg OBJECT-TYPE
     ::= { skyEntry 5 }
 
 skyGdop OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -463,7 +466,7 @@ skyGdop OBJECT-TYPE
     ::= { skyEntry 6 }
 
 skyHdop OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -471,7 +474,7 @@ skyHdop OBJECT-TYPE
     ::= { skyEntry 7 }
 
 skyPdop OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -479,7 +482,7 @@ skyPdop OBJECT-TYPE
     ::= { skyEntry 8 }
 
 skyTdop OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -487,7 +490,7 @@ skyTdop OBJECT-TYPE
     ::= { skyEntry 9 }
 
 skyVdop OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -495,7 +498,7 @@ skyVdop OBJECT-TYPE
     ::= { skyEntry 10 }
 
 skyXdop OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -503,7 +506,7 @@ skyXdop OBJECT-TYPE
     ::= { skyEntry 11 }
 
 skyYdop OBJECT-TYPE
-    SYNTAX      INTEGER
+    SYNTAX      Integer32
     MAX-ACCESS  read-only
     STATUS      current
     DESCRIPTION
@@ -528,5 +531,68 @@ verRevision OBJECT-TYPE
     DESCRIPTION
             "gpsd daemon Revision."
     ::= { version 2 }
+
+-- groups in GPSD
+-- included to pacify smilint
+
+gpsdObjects     OBJECT-GROUP
+                OBJECTS {
+                    devIndex,
+                    devNumber,
+                    devPath,
+                    tpvLeapSeconds,
+                    tpvNumber,
+                    tpvIndex,
+                    tpvPath,
+                    tpvMode,
+                    tpvStatus,
+                    tpvLatitude,
+                    tpvLongitude,
+                    tpvAltHAE,
+                    tpvAltMSL,
+                    tpvClimb,
+                    tpvTrack,
+                    tpvSpeed,
+                    tpvEpc,
+                    tpvEpd,
+                    tpvEph,
+                    tpvEps,
+                    tpvEpt,
+                    tpvEpv,
+                    tpvEpx,
+                    tpvEpy,
+                    tpvTime,
+                    skyNumber,
+                    skyIndex,
+                    skyPath,
+                    skynSat,
+                    skyuSat,
+                    skySNRavg,
+                    skyGdop,
+                    skyHdop,
+                    skyPdop,
+                    skyTdop,
+                    skyVdop,
+                    skyXdop,
+                    skyYdop,
+                    verRelease,
+                    verRevision
+                }
+                STATUS  current
+                DESCRIPTION
+                    "A collection of objects providing support for
+                    the gpsd MIB."
+                ::= { gpsd 16 }
+
+gpsdMIBCompliance MODULE-COMPLIANCE
+    STATUS  current
+    DESCRIPTION
+        "The compliance statement for gpsd entities which
+        implement the GPSD MIB."
+    MODULE  -- compliance to the containing MIB module
+    GROUP   gpsdObjects
+    DESCRIPTION
+        "THis is here to shut up smilint"
+    ::= { gpsd 17 }
 
 END
