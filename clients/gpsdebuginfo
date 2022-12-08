@@ -12,7 +12,8 @@ if [ 0 != $(id -u) ]; then
     exit 1
 fi
 if [ -n "${SUDO_COMMAND+1}" ]; then
-    echo "sudo will confuse the results."
+    echo "Please run as root"
+    echo "Running under sudo confuses the results."
 fi
 
 
