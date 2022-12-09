@@ -1012,7 +1012,7 @@ install the required tools.
 # scons --config=force && scons install
 ----
 
-=== Special Notes for OpenBSD 6.6 and 7.0 Build and Installation
+=== Special Notes for OpenBSD 6.6 and 7.x Build and Installation
 
 gpsd will build, install and run on OpenBSD.
 
@@ -1037,6 +1037,11 @@ Then install the normal way.
 # cd gpsd
 # scons --config=force && scons install
 ----
+
+=== OpenBSD 7.2
+
+OpenBSD 7.2 may require the linker flag _-fPIC_ in order to completely
+build.  Set _LDFLAGS="-fPIC"_.
 
 == Special Notes for Fedora derivatives
 === Special Notes for Fedora 32, 33 Build and Installation
