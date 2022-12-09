@@ -868,29 +868,28 @@ static bool do_command(const char *line)
     unsigned char buf[BUFLEN];
     const char *arg;
 
-    if (isspace((unsigned char) line[1])) {
-        for (arg = line + 2; *arg != '\0' &&
-                             isspace((unsigned char) *arg); arg++) {
-            arg++;
-        }
-        arg++;
-    } else {
-        arg = line + 1;
+    // skip over any spaces until NUL or the next argument
+    for (arg = line + 1;
+         *arg != '\0' &&
+         isspace((unsigned char) *arg);
+         arg++) {
     }
 
     switch (line[0]) {
     case 'c':   /* change cycle time */
-        if (session.device_type == NULL)
+        if (NULL == session.device_type) {
             complain("No device defined yet");
-        else if (!serial)
+        } else if (!serial) {
             complain("Only available in low-level mode.");
-        else {
+        } else {
             double rate = strtod(arg, NULL);
             const struct gps_type_t *switcher = session.device_type;
 
-            if (fallback != NULL && fallback->rate_switcher != NULL)
+            if (NULL != fallback &&
+                NULL != fallback->rate_switcher) {
                 switcher = fallback;
-            if (switcher->rate_switcher != NULL) {
+            }
+            if (NULL != switcher->rate_switcher) {
                 /* *INDENT-OFF* */
                 context.readonly = false;
                 if (switcher->rate_switcher(&session, rate)) {
@@ -899,10 +898,10 @@ static bool do_command(const char *line)
                     complain("Rate not supported.");
                 context.readonly = true;
                 /* *INDENT-ON* */
-            } else
-                complain
-                    ("Device type %s has no rate switcher",
-                     switcher->type_name);
+            } else {
+                complain("Device type %s has no rate switcher",
+                         switcher->type_name);
+            }
         }
         break;
     case 'i':   // start probing for subtype
@@ -914,7 +913,7 @@ static bool do_command(const char *line)
             if (strcspn(line, "01") == strnlen(line, 4)) {
                 context.readonly = !context.readonly;
             } else {
-                context.readonly = (atoi(line + 1) == 0);
+                context.readonly = (atoi(arg) == 0);
             }
             announce_log("[probing %sabled]", context.readonly ? "dis" : "en");
             if (!context.readonly) {
@@ -924,19 +923,26 @@ static bool do_command(const char *line)
         }
         break;
 
-    case 'l':   /* open logfile */
+    case 'l':   // open logfile
         report_lock();
-        if (logfile != NULL) {
-            if (packetwin != NULL)
-                (void)wprintw(packetwin,
-                              ">>> Logging off\n");
+        if (NULL != logfile) {
+            // close existing log, ignore argument
+            if (NULL != packetwin) {
+                (void)wprintw(packetwin, ">>> Logging off\n");
+            }
             (void)fclose(logfile);
+        } else if ('\0' != *arg) {
+            logfile = fopen(arg, "a");
+            // open new log file, arument is the name
+            if (NULL != packetwin) {
+                if (NULL != logfile) {
+                    (void)wprintw(packetwin, ">>> Logging to %s\n", arg);
+                } else {
+                    (void)wprintw(packetwin, ">>> Logging to %s failed\n",
+                                  arg);
+                }
+            }
         }
-
-        if ((logfile = fopen(line + 1, "a")) != NULL)
-            if (packetwin != NULL)
-                (void)wprintw(packetwin,
-                              ">>> Logging to %s\n", line + 1);
         report_unlock();
         break;
 
@@ -945,7 +951,7 @@ static bool do_command(const char *line)
         if (strcspn(line, "01") == strnlen(line, 4)) {
             v = (unsigned int)TEXTUAL_PACKET_TYPE(session.lexer.type);
         } else {
-            v = (unsigned)atoi(line + 1);
+            v = (unsigned)atoi(arg);
         }
         if (NULL == session.device_type) {
             complain("No device defined yet");
@@ -975,24 +981,25 @@ static bool do_command(const char *line)
                  * gpsmon resyncs.  So stash the current type to
                  * be restored if we do 'n' from NMEA mode.
                  */
-                if (v == 0)
+                if (0 == v) {
                     fallback = switcher;
-            } else
-                complain
-                    ("Device type %s has no mode switcher",
-                     switcher->type_name);
+                }
+            } else {
+                complain("Device type %s has no mode switcher",
+                         switcher->type_name);
+            }
         }
         break;
 
-    case 'q':   /* quit */
+    case 'q':   // quit
         return false;
 
-    case 's':   /* change speed */
-        if (session.device_type == NULL)
+    case 's':   // change speed
+        if (NULL == session.device_type) {
             complain("No device defined yet");
-        else if (!serial)
+        } else if (!serial) {
             complain("Only available in low-level mode.");
-        else {
+        } else {
             speed_t speed;
             char parity = session.gpsdata.dev.parity;
             unsigned int stopbits =
@@ -1000,23 +1007,23 @@ static bool do_command(const char *line)
             char *modespec;
             const struct gps_type_t *switcher = session.device_type;
 
-            if (fallback != NULL && fallback->speed_switcher != NULL)
+            if (NULL != fallback &&
+                NULL != fallback->speed_switcher) {
                 switcher = fallback;
+            }
             modespec = strchr(arg, ':');
-            if (modespec != NULL) {
-                if (strchr("78", *++modespec) == NULL) {
-                    complain
-                        ("No support for that word length.");
+            if (NULL != modespec) {
+                if (NULL == strchr("78", *++modespec)) {
+                    complain("No support for that word length.");
                     break;
                 }
                 parity = *++modespec;
-                if (strchr("NOE", parity) == NULL) {
-                    complain("What parity is '%c'?.",
-                                     parity);
+                if (NULL == strchr("NOE", parity)) {
+                    complain("What parity is '%c'?.", parity);
                     break;
                 }
                 stopbits = (unsigned int)*++modespec;
-                if (strchr("12", (char)stopbits) == NULL) {
+                if (NULL == strchr("12", (char)stopbits)) {
                     complain("Stop bits must be 1 or 2.");
                     break;
                 }
@@ -1067,23 +1074,22 @@ static bool do_command(const char *line)
             const struct gps_type_t **dp, *forcetype = NULL;
 
             for (dp = gpsd_drivers; *dp; dp++) {
-                if (strstr((*dp)->type_name, arg) != NULL) {
+                if (NULL != strstr((*dp)->type_name, arg)) {
                     forcetype = *dp;
                     matchcount++;
                 }
             }
             if (0 == matchcount) {
-                complain
-                    ("No driver type matches '%s'.", arg);
-            } else if (matchcount == 1) {
+                complain("No driver type matches '%s'.", arg);
+            } else if (1 == matchcount) {
                 assert(forcetype != NULL);
-                /* *INDENT-OFF* */
-                if (switch_type(forcetype))
+                if (switch_type(forcetype)) {
                     (void)gpsd_switch_driver(&session,
                                              forcetype->type_name);
-                /* *INDENT-ON* */
-                if (curses_active)
+                }
+                if (curses_active) {
                     refresh_cmdwin();
+                }
             } else {
                 complain("Multiple driver type names match '%s'.", arg);
             }
@@ -1096,6 +1102,7 @@ static bool do_command(const char *line)
             complain("Only available in low-level mode.");
         } else {
             ssize_t st = gps_hexpack(arg, buf, strnlen(arg, 1024));
+
             if (0 > st) {
                 complain("Invalid hex string (error %zd)", st);
             } else if (NULL == session.device_type->control_send) {
