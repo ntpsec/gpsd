@@ -309,28 +309,30 @@ static int json_sky_read(const char *buf, struct gps_data_t *gpsdata,
         {"class",      t_check,   .dflt.check = "SKY"},
         {"device",     t_string,  .addr.string  = gpsdata->dev.path,
                                      .len = sizeof(gpsdata->dev.path)},
-        {"time",       t_time,    .addr.ts = &gpsdata->skyview_time,
-                                     .dflt.ts = {0, 0}},
+        {"gdop",       t_real,    .addr.real    = &gpsdata->dop.gdop,
+                                     .dflt.real = NAN},
         {"hdop",       t_real,    .addr.real    = &gpsdata->dop.hdop,
+                                     .dflt.real = NAN},
+        {"nSat",       t_integer, .addr.integer = &nSat,
+                                     .dflt.integer = -1},
+        {"pdop",       t_real,    .addr.real    = &gpsdata->dop.pdop,
+                                     .dflt.real = NAN},
+        {"tdop",       t_real,    .addr.real    = &gpsdata->dop.tdop,
+                                     .dflt.real = NAN},
+        {"vdop",       t_real,    .addr.real    = &gpsdata->dop.vdop,
                                      .dflt.real = NAN},
         {"xdop",       t_real,    .addr.real    = &gpsdata->dop.xdop,
                                      .dflt.real = NAN},
         {"ydop",       t_real,    .addr.real    = &gpsdata->dop.ydop,
                                      .dflt.real = NAN},
-        {"vdop",       t_real,    .addr.real    = &gpsdata->dop.vdop,
-                                     .dflt.real = NAN},
-        {"tdop",       t_real,    .addr.real    = &gpsdata->dop.tdop,
-                                     .dflt.real = NAN},
-        {"pdop",       t_real,    .addr.real    = &gpsdata->dop.pdop,
-                                     .dflt.real = NAN},
-        {"gdop",       t_real,    .addr.real    = &gpsdata->dop.gdop,
-                                     .dflt.real = NAN},
-        {"nSat",       t_integer, .addr.integer = &nSat,
-                                     .dflt.integer = -1},
         {"satellites", t_array,
                                    STRUCTARRAY(gpsdata->skyview,
                                          json_attrs_satellites,
                                          &gpsdata->satellites_visible)},
+        {"time",       t_time,    .addr.ts = &gpsdata->skyview_time,
+                                     .dflt.ts = {0, 0}},
+        {"uSat",       t_integer, .addr.integer = &gpsdata->satellites_used,
+                                     .dflt.integer = 0},
         // ignore unknown keys, for cross-version compatibility
         {"", t_ignore},
         {NULL},
@@ -356,11 +358,10 @@ static int json_sky_read(const char *buf, struct gps_data_t *gpsdata,
         gpsdata->set |= DOP_SET;
     }
 
-    gpsdata->satellites_used = 0;
     gpsdata->satellites_visible = 0;
 
     if (-1 == nSat) {
-        // no sats in the SKY, likely just dops.
+        // no sats in the SKY, likely just dops.  Maybe uSat
         gpsdata->set &= ~SATELLITE_SET;
         return 0;
     }
