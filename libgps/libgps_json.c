@@ -365,6 +365,7 @@ static int json_sky_read(const char *buf, struct gps_data_t *gpsdata,
         gpsdata->set &= ~SATELLITE_SET;
         return 0;
     }
+    gpsdata->satellites_used = 0;
 
     gpsdata->set |= SATELLITE_SET;
     // recalculate used and visible, do not use nSat, uSat
