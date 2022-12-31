@@ -338,7 +338,7 @@ have a toolchain issue.  The most common such problem is failures of
 strict C99 conformance in floating-point libraries.
 
 Once you have verified that the code is working, "scons install"
-will install it it in the system directories. "scons uninstall" will
+will install it in the system directories. "scons uninstall" will
 undo this. Note: because scons is a single-phase build system, this
 may recompile everything. If you want feature-configuration options,
 you need to specify them here.
@@ -1044,12 +1044,12 @@ OpenBSD 7.2 may require the linker flag _-fPIC_ in order to completely
 build.  Set _LDFLAGS="-fPIC"_.
 
 == Special Notes for Fedora derivatives
-=== Special Notes for Fedora 32, 33 Build and Installation
+=== Special Notes for Fedora 32 to 33, Build and Installation
 
-gpsd currently will build, install and run on Fedora 32, 33 and 34.  Any
+gpsd currently will build, install and run on Fedora 32, to 37.  Any
 supported architecture should work.
 
-Upgrade you packages, install the gcc compiler and tools. Clone the gpsd
+Upgrade your packages, install the gcc compiler and tools. Clone the gpsd
 source, and then build it.  Fedora recommends a reboot after using dnf.
 
 ----
