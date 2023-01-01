@@ -936,7 +936,7 @@ if not cleaning and not helping:
         announce("cc is %s, version %s" % (env['CC'], env['CCVERSION']))
     else:
         # sometimes scons can not determine clang version
-        announce("cc is %s, WARNING version in unknown" % env['CC'])
+        announce("cc is %s, WARNING version is unknown" % env['CC'])
 
     # clang accepts -pthread, then warns it is unused.
     if not config.CheckCC():
