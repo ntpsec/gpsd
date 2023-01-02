@@ -61,8 +61,8 @@ may autoconfigure that mode.
 You can verify correct operation by first starting *gpsd*.  Then *xgps*,
 the X windows test client or *cgps* the curses based terminal client.
 
-If you have problems, the GPSD project maintains a FAQ to assist
-troubleshooting.
+If you have problems, the GPSD project maintains helpful information
+online.  Some links are at the end of this man page.
 
 == DESCRIPTION
 
@@ -734,6 +734,7 @@ This manual page by Eric S. Raymond <esr@thyrsus.com>.
 == RESOURCES
 
 *Project web site:* {gpsdweb}
+*GPSD FAQ:* {gpsdweb}faq.html
 *GPSD Time Service HOWTO:* {gpsdweb}gpsd-time-service-howto.html
 *Introduction to Time Service:* {gpsdweb}time-service-intro.html
 
