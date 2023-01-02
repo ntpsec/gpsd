@@ -1,7 +1,7 @@
 = ubxtool(1)
 Gary E. Miller <gem@rellim.com>
 :author: Gary E. Miller
-:date: 27 April 2022
+:date: 1 January 2023
 :email: <gem@rellim.com.>
 :keywords: gps, gpsd, ubxtool, u-blox
 :manmanual: GPSD Documentation
@@ -29,7 +29,7 @@ ubxtool - u-blox tool
 == DESCRIPTION
 
 *ubxtool* is a tool for u-blox GPS. If you do not have a u-blox GPS then
-can stop reading now.
+you can stop reading now.
 
 This tool operates with your u-blox GPS at a very low level. To
 understand *ubxtool* you must first be familiar with your u-blox GPS and
@@ -43,8 +43,8 @@ GPS. It can read binary messages from a file. It can read and write
 directly through a serial device, or through a running *gpsd* instance.
 
 *ubxtool* does not require root privileges, except maybe to access the
-serial port in direct mode.  It will run fine as root.  Running under
-sudo will cause loss of functionality.
+serial port in direct access mode (*-f FILE*). It will run fine as root.
+Running under sudo will cause loss of functionality.
 
 == OPTIONS
 
@@ -102,10 +102,10 @@ Disable sending UBX-TIM-TP.
   to enable. *-e* accepts the same OPTIONs as *-d*, except the
   action is to enable the option.
 *-f FILE*, *--file FILE*::
-  Connect to a file or device. Accepts one parameter, FILE, the file or
-  device to open. Files are opened read-only. Character devices are
-  opened read/write, unless the *-r* parameter is given. Requires the
-  pyserial module.
+  Connect directly to a file or device. Accepts one parameter, FILE, the
+  file or device to open. Files are opened read-only. Character devices
+  are opened read/write, unless the *-r* parameter is given. Requires
+  the pyserial module.
 *-g ITEM,LAYER,POSITION,END*, *--getitem ITEM,LAYER,POSITION,END*::
   Get the value of ITEM from LAYER, starting at POSITION, up to END
   key/value pairs (UBX-CFG-VALGET). All parameters past ITEM are
@@ -117,7 +117,7 @@ Disable sending UBX-TIM-TP.
   Specifies port ID # (interface) for port-related commands such as
   UBX_CFG-PRT.
 *-p PRESET*, *--preset PRESET*::
-  Send a preset command the GPS. Usually accepts one parameter, PRESET,
+  Send a preset command to the GPS. Usually accepts one parameter, PRESET,
   the name of the command to send. A few PRESETS, like LOG-FINDTIME,
   accept additional comma separated parameters. More than one -p may be
   used.
