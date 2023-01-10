@@ -470,7 +470,6 @@ import_env = (
     "GROUPS",          # Required by gpg
     "HOME",            # Required by gpg
     "LANG",            # To avoid Gtk warnings with Python >=3.7
-    "LOGNAME",         # LOGNAME is required for the flocktest production.
     'PATH',            # Required for ccache and Coverity scan-build
     'CCACHE_DIR',      # Required for ccache
     'CCACHE_RECACHE',  # Required for ccache (probably there are more)
@@ -3116,10 +3115,6 @@ if env['xgps_deps']:
 else:
     test_xgps_deps = None
 
-# Run test builds on remote machines
-flocktest = Utility("flocktest", [], "cd devtools; ./flocktest " + gitrepo)
-
-
 # Run all normal regression tests
 describe = UtilityWithHerald(
     'Run normal regression tests for %s...' % gpsd_revision.strip(),
@@ -3371,7 +3366,6 @@ if have_tar:
         testbuild,
         check,
         audits,
-        flocktest,
     ])
 
 # The chmod copes with the fact that scp will give a
