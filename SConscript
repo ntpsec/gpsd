@@ -537,7 +537,7 @@ else:
 gpsd_revision = polystr(gpsd_revision.strip())
 
 # Distros like to add a suffix to the version.  Fedora, and others,
-# call it the "rele4ase".  It often looks like: r1
+# call it the "release".  It often looks like: r1
 if env['release']:
     gpsd_revision += "-" + polystr(env['release'])
 
