@@ -103,7 +103,7 @@ extern "C" {
  *      add netlib_connectsock1()
  *      add nmea.gsx_more to gps_device_t
  *      add TSIPv1 stuff
- * 3.24.1~dev
+ * 3.25
  *      add end_gsv_talker and gga_sats_used to gps_device_t.nmea
  */
 
