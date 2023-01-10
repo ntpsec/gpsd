@@ -52,7 +52,7 @@ EnsureSConsVersion(2, 3, 0)
 EnsurePythonVersion(2, 6)
 
 # package version
-gpsd_version = "3.25"
+gpsd_version = "3.25.1~dev"
 # name 'build' is already taken, put stuff in gpsd-$VERSION
 # it makes tar simple
 variantdir = 'gpsd-' + gpsd_version

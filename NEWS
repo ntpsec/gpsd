@@ -1,5 +1,7 @@
                         GPSD project news
 
+3.25.1~dev: WIP
+
 3.25: 2022-01-09
   Have ubxtool "-w 0" run forever.
   Bump libgps version to 30.0
