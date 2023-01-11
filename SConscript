@@ -599,8 +599,8 @@ env['SC_PYTHON'] = sys.executable  # Path to SCons Python
 # environment before running scons get moved into CCFLAGS by scons.
 # LDFLAGS set while running scons get ignored.
 #
-# This means all uses of LDFLAG in this file ae simply dead code.  Cruft
-# to be removed at a later date.
+# This means all uses of LDFLAG in this file ae simply dead code.  Except
+# for the import from the environment passed to scons.
 
 env['STRIP'] = "strip"
 env['PKG_CONFIG'] = "pkg-config"
@@ -624,6 +624,8 @@ for i in ["ARFLAGS",
           "SHLINKFLAGS",
           ]:
     if i in os.environ:
+        # MergeFlags() puts the options where scons wants them, not
+        # where you asked them to go.
         env.MergeFlags(Split(os.getenv(i)))
 
 
@@ -688,16 +690,13 @@ else:
     # Should we build with profiling?
     if env['profiling']:
         env.Append(CCFLAGS=['-pg'])
-        env.Append(LDFLAGS=['-pg'])
     # Should we build with coveraging?
     if env['coveraging']:
         env.Append(CFLAGS=['-coverage'])
-        env.Append(LDFLAGS=['-coverage'])
         env.Append(LINKFLAGS=['-coverage'])
     # Should we build with debug symbols?
     if env['debug'] or env['debug_opt']:
         env.Append(CCFLAGS=['-g3'])
-        env.Append(LDFLAGS=['-g3'])
         env.Append(LINKFLAGS=['-g3'])
     # Should we build with optimisation?
     if env['debug'] or env['coveraging']:
