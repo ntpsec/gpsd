@@ -3012,7 +3012,7 @@ if env["aivdm"]:
         # oddly this runs in build root, but needs to run in variant_dir
         tgt = Utility(
             'aivdm-regress-%d' % aivdm_cnt,
-            [aivdm_log, aivdm_chk],
+            [aivdm_log, aivdm_chk, gpsdecode],
             ['@echo "Testing AIVDM decoding w/  %s ..."' % aivdm_opt,
              '$SRCDIR/clients/gpsdecode %s < %s | diff -ub %s -' %
              (aivdm_opt, aivdm_log, aivdm_chk)])
