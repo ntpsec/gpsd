@@ -1315,8 +1315,23 @@ if not cleaning and not helping:
         # glibc behavior
         confdefs.append("#define STRERROR_R_STR\n")
 
+    # check for 64 bit time_t.  Needed for 2038.
     sizeof_time_t = config.CheckTypeSize("time_t", "#include <time.h>",
                                          expect=8)
+    if 0 == sizeof_time_t:
+        # see if we can force time64_t
+        # this needs glibc 2.34 or later, and a compatible kernel
+        sizeof_time_t = config.CheckTypeSize("time_t",
+                                             "#define _TIME_BITS 64\n"
+                                             "#define _FILE_OFFSET_BITS 64\n"
+                                             "#include <time.h>",
+                                             expect=8)
+        if 0 != sizeof_time_t:
+            # force time64_t
+            confdefs.append("// Forcing 64-bit time_t\n"
+                            "#define _TIME_BITS 64\n"
+                            "#define _FILE_OFFSET_BITS 64\n")
+
     if 0 == sizeof_time_t:
         announce("WARNING: time_t is too small.  It will fail in 2038")
         sizeof_time_t = 4
