@@ -39,9 +39,23 @@ struct shmTime
                  *       clear valid
                  */
     volatile int count;
+#if defined(_TIME_BITS) && 64 == _TIME_BITS
+    /* libc default time_t is 32-bits, but we are using 64-bits.
+     * glibc 2.34 and later.
+     * Lower 31 bits, no sign bit, are here. */
+    unsigned clockTimeStampSec;
+#else
     time_t clockTimeStampSec;
+#endif
     int clockTimeStampUSec;
+#if defined(_TIME_BITS) && 64 == _TIME_BITS
+    /* libc default time_t is 32-bits, but we are using 64-bits.
+     * glibc 2.34 and later.
+     * Lower 31 bits, no sign bit, are here. */
+    unsigned receiveTimeStampSec;
+#else
     time_t receiveTimeStampSec;
+#endif
     int receiveTimeStampUSec;
     int leap;                   // not leapsecond offset, a notification code
     int precision;              // log(2) of source jitter
@@ -49,7 +63,11 @@ struct shmTime
     volatile int valid;
     unsigned        clockTimeStampNSec;     // Unsigned ns timestamps
     unsigned        receiveTimeStampNSec;   // Unsigned ns timestamps
-    int             dummy[8];
+    /* Change previous dummy[0,1] to hold top bits.
+     * Zero until 2038.  */
+    unsigned top_clockTimeStampSec;
+    unsigned top_receiveTimeStampSec;
+    int             dummy[6];
 };
 
 
