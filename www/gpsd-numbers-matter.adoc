@@ -1,6 +1,6 @@
 = GPSD Numbers Matter
 Gary E. Miller <gem@rellim.com>
-14 July 2022
+16 January 2023
 :author: Gary E. Miller
 :description: How and why  GPSD tortures numbers.
 :email: <gem@rellim.com>
@@ -24,22 +24,37 @@ handles numbers.  This white paper will explore many of those choices.
 Computers work with either floating point numbers in <<IEEE754>> format or
 binary numbers.  Binary numbers are exact, floating point numbers are not.
 For example, the quantity 1/10 (one tenth) can not be represented exactly
-in IEEE 754.
+in IEEE 754.  IEEE 754 is also known as IEC 60559,
 
 An IEEE 754 single precision (float) has 7.22 decimal digits of precision (24
 binary bits of precision).
 
-A 32 bit integer has 9.33 deciaml digits of precision. That is 31 binary
-digits of precision, plus a sign bit.
-
 An IEEE 754 double precision (double) has 15.95 decimal digits of
-precision (53 binary bits of precision).
+precision (53 binary bits of precision)
 
-A 64 bit integer has 18.96 digits of decimal precision. That is 63
-binary digits of precision, plus a sign bit.
+Appendix F of the C99 standard requires the use of strict IEEE 754. Any
+standard conforming floating point program will result in the exact same
+results, regardless of distribution, architecture, C compiler, etc.
+C headers include "#define __STDC_IEC_559__ 1" to indicated standards
+compliance.  See C99 Section 6.10.8.2.
+
+Beware: since about 2011, some have decided to trade a bit of standards
+compliance for a bit of speed. C allows this deviant behavior as long
+as the C headers do not define "__STDC_IEC_559__" as 1.
+
+*gpsd* regression tests only pass when "__STDC_IEC_559__" is 1.
 
 printf() format %f defaults to %.6f.  Below you will see how that may
 cause problems.
+
+Python floats are very similar to IEEE 754 doubles, plus some annoying bugs
+related to <<NaN>>.
+
+A 32 bit integer has 9.33 decimal digits of precision. That is 31 binary
+digits of precision, plus a sign bit.
+
+A 64 bit integer has 18.96 digits of decimal precision. That is 63
+binary digits of precision, plus a sign bit.
 
 == Latitude and Longitude
 
@@ -52,18 +67,18 @@ soon. No matter, *gpsd* wants to not lose the precision of the data it
 is given.
 
 printf() format %f defaults to %.6f, which will truncate a latitude or
-longitude. so print with %.7f, or even %9f, if you have a survey grade
-GPS. Here is a rough idea of how degrees relate to distance, at the
-equator:
+longitude in degrees. So print with %.7f, or even %.9f, if you have
+a survey grade GPS. Here is a rough idea of how degrees relate to
+distance, at the equator:
 
 |====
-|Degrees|Resolution|DMS|Distance at equator
+|Degrees|Resolution|DM|DMS|Distance at equator
 
-|0.0001|1e-4|0° 00′ 0.36″|11.132 m
-|0.000001|1e-6|0° 00′ 0.0036″|11.132 cm
-|0.0000001|1e-7|0° 00′ 0.00036″|11.132 mm
-|0.00000001|1e-8|0° 00′ 0.000036″|1.1132 mm
-|0.000000001|1e-9|0° 00′ 0.0000036″|0.1113 mm
+|     0.0001|1e-4|0° 00.006′|0° 00′ 0.36″|11.132 m
+|   0.000001|1e-6|0° 00.00006′|0° 00′ 0.0036″|11.132 cm
+|  0.0000001|1e-7|0° 00.000006′|0° 00′ 0.00036″|11.132 mm
+| 0.00000001|1e-8|0° 00.0000006′|0° 00′ 0.000036″|1.1132 mm
+|0.000000001|1e-9|0° 00.00000006′|0° 00′ 0.0000036″|0.1113 mm
 |====
 Source: <<DD>>
 
@@ -75,8 +90,27 @@ Starting with protocol version 20, those u-blox with High Precision
 firmware supports the UBX-NAV-HPPOSLLH message. That message reports to
 0.00000000001 (1e-9) precision, about 0.1 mm.
 
-Python floats are very similar to C doubles, plus some annoying bugs
-related to <<NaN>>.
+Note this will not fit in a 32-bit integer or single precision float,
+but fits easily in a 64-bit integer or double precision float.
+
+=== NMEA
+
+More interesting is how precision relates to how NMEA reports latitude
+and longitude. NMEA sentences report those in _ddmm.mmmmmm_. Where _d_
+is in degrees and _m_ is in minutes with a decimal fraction.
+
+|====
+|DM|Distance at equator
+
+|0° 00.001′|1.8553 m
+|0° 00.00001′|1.8553 cm
+|0° 00.000001|1.8553 mm
+|0° 00.0000001|0.18553 mm
+|0° 00.00000001|0.018553 mm
+|====
+
+7 places after the decimal point is almost as precise as a ZED-F9P with
+the High Precision (HP) firmware can report.
 
 See <<DD>> for more information on Decimal Degrees and precision.
 
@@ -89,7 +123,7 @@ GNSS receivers to a maximum altitude of 18,000 m. That fits comfortably
 in 28 binary digits. 29 if you want to go to below Sea Level. This will
 not fit in a "float", but fits in a 32 integer (scaled) or a "double".
 
-If you are a rocket scientis, and can get a GNSS receiver that works in
+If you are a rocket scientist, and can get a GNSS receiver that works in
 Geostationary orbit (35,786 km) then you would need 39 binary digits of
 precision. This will not fit in a "float" or a 32 integer but fits
 in a 64 bit integer (scaled) or a "double".
@@ -103,7 +137,7 @@ for "Time". There is loss of precision when storing time as a double!
  * A double is 53 significant bits.
  * POSIX time to nanoSec precision is 62 significant bits
  * POSIX time to nanoSec precision after 2038 is 63 bits
- * POSIX time as a double is only microSec precision
+ * POSIX time as a double is only micro second precision
 
 That is why POSIX time as a double and PPS do not play well together.
 
@@ -114,8 +148,8 @@ That is why *gpsd* tells time using *struct timespec*.  That look like this:
 [source,c]
 ----
   struct timespec {
-      time_t  tv_sec;  /* Seconds */
-      long    tv_nsec; /* Nanoseconds */
+      time_t  tv_sec;   // Seconds
+      long    tv_nsec;  // Nanoseconds
   };
 ----
 
@@ -149,7 +183,7 @@ second to hold it.
 
 === Time Accuracy
 
-Just because gpsd can represent a number does not mean the number means
+Just because *gpsd* can represent a number does not mean the number means
 what you think it does.  The u-blox ZED-F9T data sheet says it can
 output absolute PPS to 5ns.  But the fine print says: "1-sigma, fixed
 position mode, depends on temperature, atmospheric conditions, baseline
@@ -290,7 +324,7 @@ int main(int argc, char **argv)
 }
 ----
 
-What do you expect to see whan that program is run?  Try it:
+What do you expect to see when that program is run?  Try it:
 
 ----
 ~ $ gcc  nan.c -o nan
