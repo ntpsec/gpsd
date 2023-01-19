@@ -174,13 +174,14 @@ void gpsd_position_fix_dump(struct gps_device_t *session,
             break;
         }
 
+        // Use lat %011.7f and lon %12.7f, becaause u-blox ZED-F9P does.
         (void)snprintf(bufp, len,
                        "$GPGGA,%s,%s,%c,%s,%c,%d,%02d,",
                        time_str,
-                       degtodm_str(session->gpsdata.fix.latitude, "%09.4f",
+                       degtodm_str(session->gpsdata.fix.latitude, "%011.7f",
                                    lat_str),
                        ((session->gpsdata.fix.latitude > 0) ? 'N' : 'S'),
-                       degtodm_str(session->gpsdata.fix.longitude, "%010.4f",
+                       degtodm_str(session->gpsdata.fix.longitude, "%012.7f",
                                    lon_str),
                        ((session->gpsdata.fix.longitude > 0) ? 'E' : 'W'),
                        fixquality,
@@ -236,14 +237,15 @@ static void gpsd_transit_fix_dump(struct gps_device_t *session,
     }
 
     // FIXME! add in "Mode Indicator" after var_dir
+    // Use lat %011.7f and lon %12.7f, becaause u-blox ZED-F9P does.
     (void)snprintf(bufp, len,
                    "$GPRMC,%s,%c,%s,%c,%s,%c,%s,%s,%s,%s,%s",
                    time_str,
                    valid,
-                   degtodm_str(session->gpsdata.fix.latitude, "%09.4f",
+                   degtodm_str(session->gpsdata.fix.latitude, "%011.7f",
                                lat_str),
                    ((session->gpsdata.fix.latitude > 0) ? 'N' : 'S'),
-                   degtodm_str(session->gpsdata.fix.longitude, "%010.4f",
+                   degtodm_str(session->gpsdata.fix.longitude, "%012.7f",
                                lon_str),
                    ((session->gpsdata.fix.longitude > 0) ? 'E' : 'W'),
                    f_str(session->gpsdata.fix.speed * MPS_TO_KNOTS, "%.4f",
