@@ -1,6 +1,6 @@
 = GPSD Numbers Matter
 Gary E. Miller <gem@rellim.com>
-16 January 2023
+18 January 2023
 :author: Gary E. Miller
 :description: How and why  GPSD tortures numbers.
 :email: <gem@rellim.com>
@@ -66,29 +66,62 @@ decimal digits of precision. It is certainly not that accurate, maybe
 soon. No matter, *gpsd* wants to not lose the precision of the data it
 is given.
 
-printf() format %f defaults to %.6f, which will truncate a latitude or
-longitude in degrees. So print with %.7f, or even %.9f, if you have
-a survey grade GPS. Here is a rough idea of how degrees relate to
-distance, at the equator:
 
+.Degrees
+[%header%autowidth,cols=">,<,<,<,>,>"]
 |====
-|Degrees|Resolution|DM|DMS|Distance at equator
+|Resolution D|D|DM|DMS|Distance|Units
 
-|     0.0001|1e-4|0° 00.006′|0° 00′ 0.36″|11.132 m
-|   0.000001|1e-6|0° 00.00006′|0° 00′ 0.0036″|11.132 cm
-|  0.0000001|1e-7|0° 00.000006′|0° 00′ 0.00036″|11.132 mm
-| 0.00000001|1e-8|0° 00.0000006′|0° 00′ 0.000036″|1.1132 mm
-|0.000000001|1e-9|0° 00.00000006′|0° 00′ 0.0000036″|0.1113 mm
+|1.0E+00|1°|1° 0' |1° 0' 0"|111.319|km
+|1.0E-01|0.1°|0° 6' |0° 6' 0"|11.132|km
+|1.0E-02|0.01°|0° 0.6' |0° 0' 36"|1.113|km
+|1.0E-03|0.001°|0° 0.06' |0° 0' 3.6"|111.319|m
+|1.0E-04|0.0001°|0° 0.006' |0° 0' 0.36"|11.132|m
+|1.0E-05|0.00001°|0° 0.0006' |0° 0' 0.036"|1.113|m
+|1.0E-06|0.000001°|0° 0.00006' |0° 0' 0.0036"|111.319|mm
+|1.0E-07|0.0000001°|0° 0.000006' |0° 0' 0.00036"|11.132|mm
+|1.0E-08|0.00000001°|0° 0.0000006' |0° 0' 0.000036"|1.113|mm
+|1.0E-09|0.000000001°|0° 0.00000006' |0° 0' 0.0000036"|111|&micro;m
+|====
+
+
+.Degrees Minutes
+[%header%autowidth,cols=">,<,<,<,>,>"]
+|====
+|Resolution M|D|DM|DMS|Distance|Units
+
+|1.0E+00|0.01°|0° 1' |0° 1' 0"|1.855|km
+|1.0E-01|0.001°|0° 0.1' |0° 0' 6.0"|185.533|m
+|1.0E-02|0.0001°|0° 0.01' |0° 0' 0.6"|18.553|m
+|1.0E-03|0.00001°|0° 0.001' |0° 0' 0.06"|1.855|m
+|1.0E-04|0.000001°|0° 0.0001' |0° 0' 0.006"|185.533|mm
+|1.0E-05|0.0000001°|0° 0.00001' |0° 0' 0.0006"|18.553|mm
+|1.0E-06|0.00000001°|0° 0.000001' |0° 0' 0.00006"|1.855|mm
+|1.0E-07|0.000000001°|0° 0.0000001' |0° 0' 0.000006"|185|&micro;m
+|====
+
+
+.Degrees Minutes Seconds
+[%header%autowidth,cols=">,<,<,<,>,>"]
+|====
+|Resolution S|D|DM|DMS|Distance|Units
+
+|1.0E+00|0.0002°|0° 0.01' |0° 0' 1"|30.922|m
+|1.0E-01|0.00002°|0° 0.001' |0° 0' 0.1"|3.092|m
+|1.0E-02|0.000002°|0° 0.0001' |0° 0' 0.01"|309.221|mm
+|1.0E-03|0.0000002°|0° 0.00001' |0° 0' 0.001"|30.922|mm
+|1.0E-04|0.00000002°|0° 0.000001' |0° 0' 0.0001"|3.092|mm
+|1.0E-05|0.000000002°|0° 0.0000001' |0° 0' 0.00001"|309|&micro;m
 |====
 Source: <<DD>>
 
 u-blox firmware since at least protocol version 4 (Antaris 4)
-has reported latitude and longitude to 0.0000001 (1e-7) with the
+has reported latitude and longitude to 0.0000001° (1e-7) with the
 UBX-NAV-POSLLH message. At that time, 1e-7 was wildly optimistic.
 
-Starting with protocol version 20, those u-blox with High Precision
-firmware supports the UBX-NAV-HPPOSLLH message. That message reports to
-0.00000000001 (1e-9) precision, about 0.1 mm.
+Starting with protocol version 20, u-blox devices with High Precision
+firmware support the UBX-NAV-HPPOSECEF message. That message reports to
+0.1 mm precision.
 
 Note this will not fit in a 32-bit integer or single precision float,
 but fits easily in a 64-bit integer or double precision float.
@@ -99,18 +132,15 @@ More interesting is how precision relates to how NMEA reports latitude
 and longitude. NMEA sentences report those in _ddmm.mmmmmm_. Where _d_
 is in degrees and _m_ is in minutes with a decimal fraction.
 
-|====
-|DM|Distance at equator
-
-|0° 00.001′|1.8553 m
-|0° 00.00001′|1.8553 cm
-|0° 00.000001|1.8553 mm
-|0° 00.0000001|0.18553 mm
-|0° 00.00000001|0.018553 mm
-|====
+You can use Table 2 (Degrees Minutes) to see how the decimal fraction
+of minutes relates to NMEA reported latitude and longitude.
 
 7 places after the decimal point is almost as precise as a ZED-F9P with
 the High Precision (HP) firmware can report.
+
+printf() format %f defaults to %.6f, which will reduce the ZED-F9P
+precision of latitude and longitude. So print with %.7f, or even %.9f, if
+you have a survey grade GPS.
 
 See <<DD>> for more information on Decimal Degrees and precision.
 
