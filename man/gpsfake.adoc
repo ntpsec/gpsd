@@ -117,7 +117,7 @@ to the daemon is run in background.
 *-p*, *--pipe*::
   Sets watcher mode and dump the NMEA and GPSD notifications generated
   by the log to standard output. This is useful for regression testing.
-*-p PORT*, *--port PORT*::
+*-P PORT*, *--port PORT*::
   Sets the daemon's listening port to PORT.
 *-q*, *--quiet*::
   Tell *gpsfake* to suppress normal progress output and thus act in a
