@@ -47,7 +47,7 @@ usage()
 device()
 {
     echo
-    echo "CAN device \"${CAN_UNIT}\" does not exasit."
+    echo "CAN device \"${CAN_UNIT}\" does not exist."
     echo "Try as root: ./gpsinit vcan "
     echo
 }
