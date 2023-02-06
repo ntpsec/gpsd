@@ -428,7 +428,7 @@ static void get_one(gps_mask_t need)
     }
     if (SATELLITE_SET == (need & gpsdata.set)) {
         // compute a derived value: snr_avg
-        for(i = 0; i <= MAXCHANNELS; i++) {
+        for(i = 0; i < MAXCHANNELS; i++) {
             if (0 < gpsdata.skyview[i].used &&
                 1 <  gpsdata.skyview[i].ss) {
                 // printf("i: %d, P:%d, ss: %f\n", i, gpsdata.skyview[i].PRN,
