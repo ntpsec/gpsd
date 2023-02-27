@@ -1,6 +1,6 @@
 = gpsd_json(5)
 :author: Eric S. Raymond
-:date: 5 December 2022
+:date: 27 February 2023
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, JSON, libgps
 :manmanual: GPSD Documentation
@@ -984,7 +984,7 @@ may be omitted only when there is exactly one subscribed channel.
 
 |readonly |No |boolean |True if device is read-only.
 
-|stopbits |Yes |string |Stop bits (1 or 2).
+|stopbits |Yes |integer |Stop bits (1 or 2).
 
 |subtype |No |string |Whatever version information the device driver
 returned.
