@@ -4906,6 +4906,14 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PSTI", "036", 2, false, processPSTI036},
         // $PSTM ST Micro STA8088xx/STA8089xx/STA8090xx
         {"PSTM", NULL, 0, false, NULL},
+        /* Kongsberg Seatex AS. Seapath 320
+         * $PSXN,20,horiz-qual,hgt-qual,head-qual,rp-qual*csum
+         * $PSXN,21,event*csum
+         * $PSXN,22,gyro-calib,gyro-offs*csum
+         * $PSXN,23,roll,pitch,head,heave*csum
+         * $PSXN,24,roll-rate,pitch-rate,yaw-rate,vertical-vel*csum
+         */
+        {"PSXN", NULL, 0, false, NULL},
         {"PTFTTXT", NULL, 0, false, NULL},        // unknown uptime
         {"PTKM", NULL, 0, false, NULL},           // Robertson RGC12 Gyro
         {"PTNLRHVR", NULL, 0, false, NULL},       // Trimble Software Version
