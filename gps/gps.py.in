@@ -440,16 +440,60 @@ class gps_io(object):
                         # Got what we were waiting for.  Done?
                         ret_code = 0
             else:
-                # ordinary file, so all read at once
-                self.out += self.ser.read()
-                if raw_fd is not None:
-                    # save to raw file
-                    raw_fd.write(polybytes(self.out))
+                # read from file
+                # hold no more than 16 kB in memory
+                # avoid allocating the bytes each time
+                # (though probably little benefit)
+                # this must be longer than the longest possible message!!!
+                max_in_mem = 16384
+
+                rb = bytearray(max_in_mem)
+                rb_view = memoryview(rb)
+                rb_idx = 0     # number of bytes read into buffer
+
+                # use self.out to cache between read calls
+                nleftover = len(self.out)
+                if nleftover:
+                    if nleftover > max_in_mem:
+                        raise IndexError('Unexpectedly long leftover bytes?')
+                    rb[:nleftover] = self.out
+                    rb_idx = nleftover
+
                 while True:
-                    consumed = decode_func(self.out)
-                    self.out = self.out[consumed:]
-                    if 0 >= consumed:
+
+                    # read into the end of our bytearray
+                    nread = self.ser.readinto(rb_view[rb_idx:])
+
+                    # if we read something, write it out if needed
+                    if 0 < nread:
+                        if raw_fd is not None:
+                            # save newly read part only
+                            raw_fd.write(polybytes(
+                                rb_view[rb_idx:rb_idx+nread:]))
+
+                    rb_idx += nread
+
+                    consumed_idx = 0
+                    while True:
+                        consumed = decode_func(rb_view[consumed_idx:rb_idx])
+                        if 0 >= consumed:
+                            break
+                        consumed_idx += consumed
+
+                    # copy end to front
+                    if consumed_idx < rb_idx:
+                        rb_view[:rb_idx-consumed_idx] = \
+                            rb_view[consumed_idx:rb_idx]
+                    rb_idx -= consumed_idx
+
+                    # if we made no progress, break
+                    # either we're done or had a decoding error
+                    if ((0 == nread and
+                         0 == consumed_idx)):
                         break
+
+                # store anything leftover to self.out
+                self.out = rb[:rb_idx]
 
         except IOError:
             # This happens on a good device name, but gpsd already running.
