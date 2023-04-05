@@ -1,7 +1,7 @@
 = ubxtool examples
 Gary E. Miller <gem@rellim.com>
 :Author: Gary E. Miller
-:Date: 18 June 2021
+:Date: 5 April 2023
 :Description: U-blox GNSS receiver configuration examples
 :Email: <gem@rellim.com>
 :keywords: u-blox, examples, configuration, sudo
@@ -12,7 +12,7 @@ Gary E. Miller <gem@rellim.com>
 include::inc-menu.adoc[]
 
 WARNING: This document assumes you are using gpsd from git head, or
-version 3.22 or higher.  Using older gpsd versions will fail in strange
+version 3.25 or higher.  Using older gpsd versions will fail in strange
 ways.
 
 == Introduction
@@ -1182,7 +1182,7 @@ u-blox recently recommended to a cold boot after changing
 to some configurations of constellations:
 
 ----
-$ unxtool -p COLDBOOT
+$ ubxtool -p COLDBOOT
 ----
 
 === Changing Constellations with Configuration Items
