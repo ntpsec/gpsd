@@ -9192,7 +9192,7 @@ present in 9-series and higher
                   "help": "batching, using CFG-BATCH"},
         # en/dis able BeiDou
         "BEIDOU": {"command": send_able_beidou,
-                   "help": "BeiDou B1. BEIDOU,5 for B1 and B2"},
+                   "help": "BEIDOU for B1. BEIDOU,2 for B1 and B2"},
         # en/dis able basic binary messages
         "BINARY": {"command": send_able_binary,
                    "help": "basic binary messages"},
