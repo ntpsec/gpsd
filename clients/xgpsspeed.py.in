@@ -75,7 +75,7 @@ class Speedometer(Gtk.DrawingArea):
         """Init Speedometer class."""
         Gtk.DrawingArea.__init__(self)
         self.MPH_UNIT_LABEL = 'mph'
-        self.KPH_UNIT_LABEL = 'kmh'
+        self.KPH_UNIT_LABEL = 'km/h'
         self.KNOTS_UNIT_LABEL = 'knots'
         self.conversions = {
             self.MPH_UNIT_LABEL: gps.MPS_TO_MPH,
@@ -710,7 +710,7 @@ class Main(object):
 
         units = [["Imperial", True, "i", 'mph'],
                  ["Nautical", False, "n", 'knots'],
-                 ["Metric", False, "m", 'kmh'],
+                 ["Metric", False, "m", 'km/h'],
                  ]
 
         menui = None
@@ -972,7 +972,7 @@ if __name__ == '__main__':
         '--speedunits',
         dest='speedunits',
         default=default_units.speedunits,
-        choices=['mph', 'kmh', 'knots'],
+        choices=['mph', 'km/h', 'knots'],
         help='The unit of speed. [Default %(default)s]'
     )
     parser.add_argument(
