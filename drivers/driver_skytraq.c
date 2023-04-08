@@ -107,12 +107,13 @@ static ssize_t sky_write(struct gps_device_t *session, char *msg,
     return ok;
 }
 
-/* stub for mode changer, someday
- * need it to make driver sticky
- */
-
-/* Cherry-picked from 0004-Update-Skytraq-driver-to-support-Venus8-modules-chan.patch
- * by Kai Harrekilde-Petersen in https://lists.gnu.org/archive/html/gpsd-dev/2018-03/msg00025.html
+/* sky_mode() - NMEA/Binary mode changer
+ * return: void
+ *
+ * Cherry-picked from:
+ *  0004-Update-Skytraq-driver-to-support-Venus8-modules-chan.patch
+ * by Kai Harrekilde-Petersen in:
+ *  https://lists.gnu.org/archive/html/gpsd-dev/2018-03/msg00025.html
 */
 static void sky_mode(struct gps_device_t *session, int mode)
 {
@@ -123,16 +124,16 @@ static void sky_mode(struct gps_device_t *session, int mode)
         0x00, 0x00, 0x00,
         0x0D, 0x0A     // end-of-sentence sequence
     };
-    if (mode == MODE_BINARY) {
+    if (MODE_BINARY == mode) {
         msg[5] = 0x02;
-    } else {                   // default to MODE_NMEA
+    } else {                   // else to MODE_NMEA
         msg[5] = 0x01;
     }
     
     GPSD_LOG(LOG_PROG, &session->context->errout,
-	     "Skytraq: setting MODE=%s\n", (mode == MODE_BINARY) ? "Binary" : "NMEA");
+	     "Skytraq: setting MODE %s\n",
+             (MODE_BINARY == mode) ? "Binary" : "NMEA");
     (void)sky_write(session, msg, 10);
-    return;
 }
 
 /*
