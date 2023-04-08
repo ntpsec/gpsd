@@ -85,6 +85,7 @@ GPSD Frequently Asked Questions
     <li><a href='#bug-reporting'>How do I report bugs in GPSD?</a></li>
     <li><a href='#support'>What support channels does GPSD have?</a></li>
     <li><a href='#license'>What is the license of GPSD?</a></li>
+    <li><a href='#copyright'>What is the copyright of GPSD?</a></li>
     <li><a href='#commercial'>Can I use GPSD in commercial products?</a></li>
   </ul>
   </li>
@@ -546,9 +547,17 @@ professionals and experts and we deliver results.</p>
 
 <h2 id="license">What is the license of GPSD?</h2>
 
-<p>Most of GPSD is under the permissive BSD license.  Some portions
-are under other permissive licenses, including the MIT/X license and
-the ISC license.</p>
+<p>Most of GPSD is under the permissive BSD-2-Clause license. Some
+portions are under other permissive licenses, including the MIT/X
+license and the ISC license.</p>
+
+<h2 id="copyright">What is the copyright of GPSD?</h2>
+
+<p>Most of GPSD is "Copyright The GPSD Project".  Some portions
+also have copyrights from the original contributors or original
+sources.  This project follows the guidance from The Linux Foundation:
+<a href="https://www.linuxfoundation.org/blog/blog/copyright-notices-in-open-source-software-projects">Copyright Notices in Open Source Software Projects</a>.
+Notice there is no need for "(C)", dates, or other decorations.</p>
 
 <h2 id="commercial">Can I use GPSD in commercial products?</h2>
 
