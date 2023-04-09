@@ -1,6 +1,6 @@
 = AIVDM/AIVDO protocol decoding
 Eric S. Raymond <esr@thyrsus.com>
-v1.56, 8 July 2021
+v1.57, 7 April 2023
 :author: Eric S. Raymond
 :description: The AIVDM Marine AIS protocol demystified, for programmers.
 :email: <esr@thyrsus.com>
@@ -589,6 +589,7 @@ Type 1, 2 and 3 messages share a common reporting structure for
 navigational information; we'll call it the Common Navigation Block
 (CNB). This is the information most likely to be of interest for
 decoding software. Total of 168 bits, occupying one AIVDM sentence.
+More information on the CNB is at <<MSGS123>>>.
 
 //: Type CNB
 .Common Navigation Block
@@ -636,16 +637,16 @@ maximum of three hops. A value of 3 indicates "Do not repeat".
 |8 | Under way sailing
 |9 | Reserved for future amendment of Navigational Status for HSC
 |10| Reserved for future amendment of Navigational Status for WIG
-|11| Reserved for future use
-|12| Reserved for future use
+|11| Power-driven vessel towing astern (regional use)
+|12| Power-driven vessel pushing ahead or towing alongside (regional use).
 |13| Reserved for future use
 |14| AIS-SART is active
-|15| Not defined (default)
+|15| Ubdefined (default)
 |======
 
 Note, the AIS-SART value was added after <<IALA>> and designates an
 AIS transmitter in an survival craft such as a lifeboat.  See
-<<AIS-SART>> for the field specification and <<SART>> for
+<<MSGS123>> for the field specification and <<SART>> for
 background.
 
 Turn rate is encoded as follows:
@@ -5314,7 +5315,7 @@ Identification System]
 
 - [[[IALA-A126]]] http://www.iala-aism.org/iala/publications/documentspdf/doc_299_eng.pdf[]
 
-- [[[AIS-SART]]] http://www.navcen.uscg.gov/?pageName=AISMessagesA
+- [[[MSGS123]]] https://www.navcen.uscg.gov/ais-class-a-reports[Class A AIS Position Report (Messages 1, 2, and 3)]
 
 - [[[SART]]] https://en.wikipedia.org/wiki/AIS-SART
 
@@ -5497,6 +5498,9 @@ messages.
 Version 1.55 add Table of Contents.  Markup cleanup.
 
 Version 1.56 fix typos per Jim J. Jewett
+
+Version 1.57 Update Type 1/2/3 Nav Status Descriptions. Fix dead link to
+<<MSGS123>>.
 
 
 // end
