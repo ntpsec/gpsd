@@ -129,7 +129,8 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         FALLTHROUGH
     case 3:
         // per https://www.navcen.uscg.gov/ais-class-a-reports
-        PERMISSIVE_LENGTH_CHECK(163)
+        // In 2023, most of our samples are 168, but some are 163 and 204.
+        RANGE_CHECK(163, 204)
         ais->type1.status       = UBITS(38, 4);
         ais->type1.turn         = SBITS(42, 8);
         ais->type1.speed        = UBITS(50, 10);
@@ -145,7 +146,7 @@ bool ais_binary_decode(const struct gpsd_errout_t *errout,
         if(bitlen >= 168) {
             ais->type1.radio        = UBITS(149, 19);
         } else {
-            // less than 168
+            // less than 168, as of 2023 we have no examples of this.
             ais->type1.radio        = UBITS(149, bitlen - 149);
         }
         break;
