@@ -302,7 +302,7 @@ $GPGLL,5250.53808,N,00542.34920,E,214010.00,A,A*64
 {"class":"TPV","mode":3,"time":"2020-04-07T21:40:10.000Z","ept":0.005,"lat":52.842301333,"lon":5.705820000,"altHAE":42.5000,"altMSL":-3.3000,"alt":-3.3000,"epx":8.142,"epy":12.972,"epv":39.790,"magvar":1.7,"speed":0.058,"climb":0.100,"eps":25.94,"epc":79.58,"geoidSep":45.800,"eph":19.380,"sep":38.190}
 !AIVDM,2,1,4,A,53aGEvp000010;S3KH05H4q@T00000000000000U1@:33tl>0431CCAD,0*0C
 !AIVDM,2,2,4,A,P00000000000008,2*48
-{"class":"AIS","type":5,"repeat":0,"mmsi":244700667,"scaled":false,"imo":0,"ais_version":2,"callsign":"PB8066","shipname":"AVANTI","shiptype":37,"shiptype_text":"Pleasure Craft","to_bow":10,"to_stern":10,"to_port":3,"to_starboard":3,"epfd":15,"epfd_text":"INVALID EPFD","eta":"03-08T14:00Z","draught":16,"destination":"LEMMER","dte":1}
+{"class":"AIS","type":5,"repeat":0,"mmsi":244700667,"scaled":false,"imo":0,"ais_version":2,"callsign":"PB8066","shipname":"AVANTI","shiptype":37,"shiptype_text":"Pleasure Craft","to_bow":10,"to_stern":10,"to_port":3,"to_starboard":3,"epfd":15,"epfd_text":"Internal GNSS","eta":"03-08T14:00Z","draught":16,"destination":"LEMMER","dte":1}
 $GPRMC,214011.00,A,5250.53812,N,00542.34918,E,0.100,,070420,,,A*7C
 $GPVTG,,T,,M,0.100,N,0.185,K,A*2E
 $GPGGA,214011.00,5250.53812,N,00542.34918,E,1,09,1.02,-3.3,M,45.8,M,,*7E
@@ -1539,7 +1539,7 @@ $GPGLL,5250.53606,N,00542.34848,E,214137.00,A,A*6F
 {"class":"TPV","mode":3,"time":"2020-04-07T21:41:37.000Z","ept":0.005,"lat":52.842267667,"lon":5.705808000,"altHAE":39.7000,"altMSL":-6.1000,"alt":-6.1000,"epx":8.127,"epy":12.955,"epv":39.560,"magvar":1.7,"speed":0.044,"climb":0.300,"eps":25.91,"epc":78.66,"geoidSep":45.800,"eph":20.710,"sep":38.760}
 !AIVDM,2,1,7,A,53`kEwp000010?OW3D1aL4iEL00000000000000U2H005u2=0431CCAD,0*27
 !AIVDM,2,2,7,A,P00000000000000,2*43
-{"class":"AIS","type":5,"repeat":0,"mmsi":244110847,"scaled":false,"imo":0,"ais_version":2,"callsign":"PC7905","shipname":"ZWALUW","shiptype":37,"shiptype_text":"Pleasure Craft","to_bow":19,"to_stern":0,"to_port":0,"to_starboard":5,"epfd":15,"epfd_text":"INVALID EPFD","eta":"04-04T13:00Z","draught":16,"destination":"LEMMER","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":244110847,"scaled":false,"imo":0,"ais_version":2,"callsign":"PC7905","shipname":"ZWALUW","shiptype":37,"shiptype_text":"Pleasure Craft","to_bow":19,"to_stern":0,"to_port":0,"to_starboard":5,"epfd":15,"epfd_text":"Internal GNSS","eta":"04-04T13:00Z","draught":16,"destination":"LEMMER","dte":0}
 $GPRMC,214138.00,A,5250.53607,N,00542.34851,E,0.064,,070420,,,A*73
 $GPVTG,,T,,M,0.064,N,0.118,K,A*29
 $GPGGA,214138.00,5250.53607,N,00542.34851,E,1,09,1.09,-6.0,M,45.8,M,,*7F
@@ -1586,7 +1586,7 @@ $GPGLL,5250.53617,N,00542.34859,E,214140.00,A,A*6F
 $GPRMC,214141.00,A,5250.53619,N,00542.34865,E,0.016,,070420,,,A*70
 !AIVDM,2,1,8,A,53`hBO@0000107;OW<1@T`l4000000000000000U0h<14t0Ht4000000,0*22
 !AIVDM,2,2,8,A,000000000000000,2*2C
-{"class":"AIS","type":5,"repeat":0,"mmsi":244060797,"scaled":false,"imo":0,"ais_version":0,"callsign":"PA2793","shipname":"TIJMA","shiptype":37,"shiptype_text":"Pleasure Craft","to_bow":6,"to_stern":12,"to_port":1,"to_starboard":4,"epfd":15,"epfd_text":"INVALID EPFD","eta":"00-00T24:60Z","draught":16,"destination":"","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":244060797,"scaled":false,"imo":0,"ais_version":0,"callsign":"PA2793","shipname":"TIJMA","shiptype":37,"shiptype_text":"Pleasure Craft","to_bow":6,"to_stern":12,"to_port":1,"to_starboard":4,"epfd":15,"epfd_text":"Internal GNSS","eta":"00-00T24:60Z","draught":16,"destination":"","dte":0}
 $GPVTG,,T,,M,0.016,N,0.030,K,A*27
 $GPGGA,214141.00,5250.53619,N,00542.34865,E,1,09,1.09,-5.1,M,45.8,M,,*7B
 {"class":"SKY","hdop":1.09,"uSat":9}
@@ -1602,7 +1602,7 @@ $GPGLL,5250.53619,N,00542.34865,E,214141.00,A,A*6F
 {"class":"TPV","mode":3,"time":"2020-04-07T21:41:41.000Z","ept":0.005,"lat":52.842269833,"lon":5.705810833,"altHAE":40.7000,"altMSL":-5.1000,"alt":-5.1000,"epx":8.127,"epy":12.955,"epv":39.560,"magvar":1.7,"speed":0.008,"climb":0.200,"eps":25.91,"epc":79.12,"geoidSep":45.800,"eph":20.710,"sep":38.760}
 !AIVDM,2,1,4,B,53aIk>`000010OW7S80L45=@E8h4p@000000000Q:0665t0Ht0000000,0*4B
 !AIVDM,2,2,4,B,000000000000000,2*23
-{"class":"AIS","type":5,"repeat":0,"mmsi":244740922,"scaled":false,"imo":0,"ais_version":2,"callsign":"PG9182","shipname":"GAASTERLAND","shiptype":33,"shiptype_text":"Dredging or underwater ops","to_bow":80,"to_stern":6,"to_port":6,"to_starboard":5,"epfd":15,"epfd_text":"INVALID EPFD","eta":"00-00T24:60Z","draught":0,"destination":"","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":244740922,"scaled":false,"imo":0,"ais_version":2,"callsign":"PG9182","shipname":"GAASTERLAND","shiptype":33,"shiptype_text":"Dredging or underwater ops","to_bow":80,"to_stern":6,"to_port":6,"to_starboard":5,"epfd":15,"epfd_text":"Internal GNSS","eta":"00-00T24:60Z","draught":0,"destination":"","dte":0}
 $GPRMC,214142.00,A,5250.53621,N,00542.34871,E,0.047,,070420,,,A*79
 $GPVTG,,T,,M,0.047,N,0.087,K,A*2F
 $GPGGA,214142.00,5250.53621,N,00542.34871,E,1,09,1.09,-4.9,M,45.8,M,,*7F

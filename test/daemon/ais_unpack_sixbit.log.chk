@@ -15,12 +15,12 @@
 {"class":"AIS","type":21,"repeat":1,"mmsi":993672009,"scaled":false,"aid_type":14,"aid_type_text":"Beacon, Starboard hand","name":"FORT PIERCE INLET LB 6","accuracy":false,"lon":-48162173,"lat":16485296,"to_bow":0,"to_stern":0,"to_port":0,"to_starboard":0,"epfd":7,"epfd_text":"Surveyed","second":61,"regional":0,"off_position":false,"raim":false,"virtual_aid":false}
 !AIVDM,2,1,0,1,53aI9sl000010WCC;@1LTh`t000000000000001S0h;41vqa00PCDm1DQ0CO,0*55
 !AIVDM,2,2,0,1,`8800000000,2*04
-{"class":"AIS","type":5,"repeat":0,"mmsi":244730351,"scaled":false,"imo":0,"ais_version":1,"callsign":"PI4424","shipname":"WILJO","shiptype":99,"shiptype_text":"Other Type - no additional information","to_bow":6,"to_stern":11,"to_port":4,"to_starboard":1,"epfd":15,"epfd_text":"INVALID EPFD","eta":"11-19T09:00Z","draught":2,"destination":"AMSTERDAM>","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":244730351,"scaled":false,"imo":0,"ais_version":1,"callsign":"PI4424","shipname":"WILJO","shiptype":99,"shiptype_text":"Other Type - no additional information","to_bow":6,"to_stern":11,"to_port":4,"to_starboard":1,"epfd":15,"epfd_text":"Internal GNSS","eta":"11-19T09:00Z","draught":2,"destination":"AMSTERDAM>","dte":0}
 !AIVDM,1,1,,A,ENk`sG6T4V69Q93T@1bb@1h1T@6=3BiM7uUb`00003vP00`<Mh0,2*4A
 {"class":"AIS","type":21,"repeat":1,"mmsi":993672028,"scaled":false,"aid_type":13,"aid_type_text":"Beacon, Port hand","name":"HILLSBRGH CUT C CH LB 17","accuracy":false,"lon":-49468323,"lat":16698197,"to_bow":0,"to_stern":0,"to_port":0,"to_starboard":0,"epfd":7,"epfd_text":"Surveyed","second":61,"regional":0,"off_position":false,"raim":false,"virtual_aid":false}
 !AIVDM,2,1,5,B,53aC2TT000010GK;?F0@ThTLDq@T62220000001?78825w?os0K`88888888,0*4A
 !AIVDM,2,2,5,B,88888888800,2*2A
-{"class":"AIS","type":5,"repeat":0,"mmsi":244630162,"scaled":false,"imo":0,"ais_version":1,"callsign":"PE6235","shipname":"DILIGENTIA","shiptype":79,"shiptype_text":"Cargo - No additional information","to_bow":57,"to_stern":8,"to_port":2,"to_starboard":5,"epfd":15,"epfd_text":"INVALID EPFD","eta":"12-31T23:59Z","draught":1,"destination":".","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":244630162,"scaled":false,"imo":0,"ais_version":1,"callsign":"PE6235","shipname":"DILIGENTIA","shiptype":79,"shiptype_text":"Cargo - No additional information","to_bow":57,"to_stern":8,"to_port":2,"to_starboard":5,"epfd":15,"epfd_text":"Internal GNSS","eta":"12-31T23:59Z","draught":1,"destination":".","dte":0}
 !AIVDM,1,1,,B,ENk`sBG37a:@84Ra1Rh4W62b@61=8Ab37o5n000003vP08=P,0*6C
 {"class":"AIS","type":21,"repeat":1,"mmsi":993672009,"scaled":false,"aid_type":14,"aid_type_text":"Beacon, Starboard hand","name":"FORT PIERCE INLET LB 6","accuracy":false,"lon":-48162173,"lat":16485296,"to_bow":0,"to_stern":0,"to_port":0,"to_starboard":0,"epfd":7,"epfd_text":"Surveyed","second":61,"regional":0,"off_position":false,"raim":false,"virtual_aid":false}
 !AIVDM,1,1,,B,C6:W26h00:9RAr4THs4cTRv0jbhBL@bOSQWii0000000S4862S0P,0*71

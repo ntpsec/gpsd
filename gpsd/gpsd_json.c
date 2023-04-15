@@ -2372,6 +2372,15 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
 #endif   // defined(RTCM104V3_ENABLE)
 
 #if defined(AIVDM_ENABLE)
+/* json_aivdm_dump() - output AIS messages as JSON
+ *
+ * AIS defined in ITU-R M1371-5 (2014)
+ *
+ * https://www.navcen.uscg.gov/ais-class-a-reports
+ * https://www.navcen.uscg.gov/ais-class-b-reports
+ *
+ * return: void
+ */
 void json_aivdm_dump(const struct ais_t *ais,
                      const char *device, bool scaled,
                      char *buf, size_t buflen)
@@ -2382,6 +2391,7 @@ void json_aivdm_dump(const struct ais_t *ais,
     char scratchbuf[MAX_PACKET_LENGTH * 2 + 1];
     int i;
 
+    // "Navigation Status" in Type 1/2/3
     static char *nav_legends[] = {
         "Under way using engine",
         "At anchor",
@@ -2394,10 +2404,10 @@ void json_aivdm_dump(const struct ais_t *ais,
         "Under way sailing",
         "Reserved for HSC",
         "Reserved for WIG",
+        "Power-driven vessel towing astern",
+        "Power-driven vessel pushing ahead or towing alongside",
         "Reserved",
-        "Reserved",
-        "Reserved",
-        "Reserved",
+        "AIS-SART is active",
         "Not defined",
     };
 
@@ -2411,6 +2421,13 @@ void json_aivdm_dump(const struct ais_t *ais,
         "Integrated navigation system",
         "Surveyed",
         "Galileo",
+        "Reserved (9)",
+        "Reserved (10)",
+        "Reserved (11)",
+        "Reserved (12)",
+        "Reserved (13)",
+        "Reserved (14)",
+        "Internal GNSS",
     };
 
 #define EPFD_DISPLAY(n) (((n) < (unsigned int)NITEMS(epfd_legends)) ? \
@@ -2704,11 +2721,11 @@ void json_aivdm_dump(const struct ais_t *ais,
             char speedlegend[20];
 
             /*
-             * Express turn as nan if not available,
+             * Express turn as "n/a" if not available,
              * "fastleft"/"fastright" for fast turns.
              */
             if (-128 == ais->type1.turn) {
-                (void)strlcpy(turnlegend, "\"nan\"", sizeof(turnlegend));
+                (void)strlcpy(turnlegend, "\"n/a\"", sizeof(turnlegend));
             } else if (-127 == ais->type1.turn) {
                 (void)strlcpy(turnlegend, "\"fastleft\"", sizeof(turnlegend));
             } else if (127 == ais->type1.turn) {
@@ -2720,11 +2737,11 @@ void json_aivdm_dump(const struct ais_t *ais,
             }
 
             /*
-             * Express speed as nan if not available,
+             * Express speed as "n/a" if not available,
              * "fast" for fast movers.
              */
             if (AIS_SPEED_NOT_AVAILABLE == ais->type1.speed) {
-                (void)strlcpy(speedlegend, "\"nan\"", sizeof(speedlegend));
+                (void)strlcpy(speedlegend, "\"n/a\"", sizeof(speedlegend));
             } else if (AIS_SPEED_FAST_MOVER == ais->type1.speed) {
                 (void)strlcpy(speedlegend, "\"fast\"", sizeof(speedlegend));
             } else {

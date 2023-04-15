@@ -11,7 +11,7 @@
 {"class":"AIS","type":3,"repeat":0,"mmsi":538071319,"scaled":false,"status":1,"status_text":"At anchor","turn":-11,"speed":0,"accuracy":false,"lon":4169637,"lat":26107347,"course":680,"heading":303,"second":13,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,2,1,7,A,53aGulD0000000c7?0918Tq<E>0<Q8U=@Tp400155P:22uG`002ShTj0,0*05
 !AIVDM,2,2,7,A,EQC`4Sm51A0C@08,2*50
-{"class":"AIS","type":5,"repeat":0,"mmsi":244710865,"scaled":false,"imo":0,"ais_version":1,"callsign":"","shipname":"PRINSES CHRISTINA","shiptype":69,"shiptype_text":"Passenger - No additional information","to_bow":44,"to_stern":10,"to_port":2,"to_starboard":2,"epfd":15,"epfd_text":"INVALID EPFD","eta":"05-15T08:00Z","draught":0,"destination":"JOBSHAVEN ROTTEDAM","dte":1}
+{"class":"AIS","type":5,"repeat":0,"mmsi":244710865,"scaled":false,"imo":0,"ais_version":1,"callsign":"","shipname":"PRINSES CHRISTINA","shiptype":69,"shiptype_text":"Passenger - No additional information","to_bow":44,"to_stern":10,"to_port":2,"to_starboard":2,"epfd":15,"epfd_text":"Internal GNSS","eta":"05-15T08:00Z","draught":0,"destination":"JOBSHAVEN ROTTEDAM","dte":1}
 !AIVDM,1,1,,A,13aGD3PP00PN?5DMRh878wwn0>`<,0*59
 {"class":"AIS","type":1,"repeat":0,"mmsi":244700174,"scaled":false,"status":0,"status_text":"Under way using engine","turn":-128,"speed":0,"accuracy":true,"lon":3963050,"lat":30978080,"course":1827,"heading":511,"second":59,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,2,1,2,B,55CTb`82CwWg<I<7<01<D4`4<e>1<=Thh40000091J12h5rVNA5S2Dlj,0*72
@@ -51,7 +51,7 @@
 {"class":"AIS","type":8,"repeat":0,"mmsi":205625000,"scaled":false,"dac":200,"fid":10,"vin":"00000000","length":300,"beam":130,"shiptype":8400,"shiptype_text":"Illegal ship type value.","hazard":5,"hazard_text":"Unknown","draught":500,"loaded":0,"loaded_text":"N/A (default)","speed_q":false,"course_q":false,"heading_q":false}
 !AIVDM,2,1,3,B,53M@RAT00000l4tc:204hV0<5B0tJ0<uLE>2220t0`?55t@P04Dkk1CU81Sl,0*03
 !AIVDM,2,2,3,B,U4p88888880,2*0D
-{"class":"AIS","type":5,"repeat":0,"mmsi":232006214,"scaled":false,"imo":0,"ais_version":1,"callsign":"MAOJ2","shipname":"ALI CAT OF COWES","shiptype":60,"shiptype_text":"Passenger - all ships of this type","to_bow":5,"to_stern":15,"to_port":5,"to_starboard":5,"epfd":15,"epfd_text":"INVALID EPFD","eta":"01-01T00:00Z","draught":17,"destination":"SOLENT FORTS","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":232006214,"scaled":false,"imo":0,"ais_version":1,"callsign":"MAOJ2","shipname":"ALI CAT OF COWES","shiptype":60,"shiptype_text":"Passenger - all ships of this type","to_bow":5,"to_stern":15,"to_port":5,"to_starboard":5,"epfd":15,"epfd_text":"Internal GNSS","eta":"01-01T00:00Z","draught":17,"destination":"SOLENT FORTS","dte":0}
 !AIVDM,1,1,,B,13aGG>hP00PE?n<MgAfatOv62>`<,0*7F
 {"class":"AIS","type":1,"repeat":0,"mmsi":244700987,"scaled":false,"status":0,"status_text":"Under way using engine","turn":-128,"speed":0,"accuracy":true,"lon":2784966,"lat":31183290,"course":2545,"heading":511,"second":3,"maneuver":0,"raim":true,"radio":59916}
 !AIVDM,1,1,,A,B3P>Bm@0@OvRK5W@o?LnKwW5oP06,0*31
@@ -83,7 +83,7 @@
 {"class":"AIS","type":18,"repeat":0,"mmsi":503035850,"scaled":false,"reserved":0,"speed":234,"accuracy":true,"lon":90766416,"lat":-20290875,"course":125,"heading":511,"second":14,"regional":0,"cs":true,"display":false,"dsc":true,"band":true,"msg22":true,"raim":true,"radio":917510}
 !AIVDM,2,1,2,A,53aGulD0000000c7?0918Tq<E>0<Q8U=@Tp400155P:22uG`002ShTj0EQC`,0*37
 !AIVDM,2,2,2,A,4Sm51A0C@08,2*62
-{"class":"AIS","type":5,"repeat":0,"mmsi":244710865,"scaled":false,"imo":0,"ais_version":1,"callsign":"","shipname":"PRINSES CHRISTINA","shiptype":69,"shiptype_text":"Passenger - No additional information","to_bow":44,"to_stern":10,"to_port":2,"to_starboard":2,"epfd":15,"epfd_text":"INVALID EPFD","eta":"05-15T08:00Z","draught":0,"destination":"JOBSHAVEN ROTTEDAM","dte":1}
+{"class":"AIS","type":5,"repeat":0,"mmsi":244710865,"scaled":false,"imo":0,"ais_version":1,"callsign":"","shipname":"PRINSES CHRISTINA","shiptype":69,"shiptype_text":"Passenger - No additional information","to_bow":44,"to_stern":10,"to_port":2,"to_starboard":2,"epfd":15,"epfd_text":"Internal GNSS","eta":"05-15T08:00Z","draught":0,"destination":"JOBSHAVEN ROTTEDAM","dte":1}
 !AIVDM,1,1,,B,33P<LTm000P7spTN1cwUg8pL2>`<,0*31
 {"class":"AIS","type":3,"repeat":0,"mmsi":235084947,"scaled":false,"status":5,"status_text":"Moored","turn":0,"speed":0,"accuracy":true,"lon":1040146,"lat":31484926,"course":1468,"heading":284,"second":14,"maneuver":0,"raim":true,"radio":59916}
 !AIVDM,1,1,,A,63aDq8P0RW?4<SL3000000000000,0*31
@@ -196,7 +196,7 @@
 {"class":"AIS","type":1,"repeat":0,"mmsi":413451980,"scaled":false,"status":0,"status_text":"Under way using engine","turn":-128,"speed":101,"accuracy":false,"lon":72406010,"lat":22809570,"course":1009,"heading":90,"second":12,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,2,1,7,B,56:40<T0000084q:221PTr0HDpN3G7R22222221@7HU78v580>E2@CRR,0*00
 !AIVDM,2,2,7,B,CP0000000000000,2*33
-{"class":"AIS","type":5,"repeat":0,"mmsi":413204530,"scaled":false,"imo":0,"ais_version":1,"callsign":"BANR","shipname":"XIN FENG 518","shiptype":80,"shiptype_text":"Tanker - all ships of this type","to_bow":59,"to_stern":37,"to_port":7,"to_starboard":8,"epfd":15,"epfd_text":"INVALID EPFD","eta":"08-10T08:00Z","draught":57,"destination":"TIANJIN","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":413204530,"scaled":false,"imo":0,"ais_version":1,"callsign":"BANR","shipname":"XIN FENG 518","shiptype":80,"shiptype_text":"Tanker - all ships of this type","to_bow":59,"to_stern":37,"to_port":7,"to_starboard":8,"epfd":15,"epfd_text":"Internal GNSS","eta":"08-10T08:00Z","draught":57,"destination":"TIANJIN","dte":0}
 !AIVDM,1,1,,B,34eGkSh000o8TtvL9Qbm:E`L0>`<,0*4B
 {"class":"AIS","type":3,"repeat":0,"mmsi":316011407,"scaled":false,"status":0,"status_text":"Under way using engine","turn":0,"speed":0,"accuracy":true,"lon":-74373217,"lat":29516203,"course":1321,"heading":180,"second":14,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,B,B3P8Ae@0000GwI7A0poHww`5kP06,0*58
@@ -309,7 +309,7 @@
 {"class":"AIS","type":8,"repeat":0,"mmsi":366999659,"scaled":false,"dac":366,"fid":56,"data":"256:927e7ae062fe4f4a7409c8cf952edcb9e0a1f4175b93a22276a136d3a0ee61c8"}
 !AIVDM,2,1,7,B,569>`@T000032222220h4V0L4pN1ADv3F222220O1pA63t0H00688888,0*63
 !AIVDM,2,2,7,B,888888888888880,2*20
-{"class":"AIS","type":5,"repeat":0,"mmsi":412330050,"scaled":false,"imo":0,"ais_version":1,"callsign":"0","shipname":"LAI GANG TUO 5","shiptype":31,"shiptype_text":"Towing","to_bow":15,"to_stern":17,"to_port":6,"to_starboard":3,"epfd":15,"epfd_text":"INVALID EPFD","eta":"00-00T24:00Z","draught":0,"destination":"X","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":412330050,"scaled":false,"imo":0,"ais_version":1,"callsign":"0","shipname":"LAI GANG TUO 5","shiptype":31,"shiptype_text":"Towing","to_bow":15,"to_stern":17,"to_port":6,"to_starboard":3,"epfd":15,"epfd_text":"Internal GNSS","eta":"00-00T24:00Z","draught":0,"destination":"X","dte":0}
 !AIVDM,1,1,,B,602:LtDjKKV8048j=h0000000000,0*50
 {"class":"AIS","type":6,"repeat":0,"mmsi":2268401,"scaled":false,"seqno":1,"dest_mmsi":211512930,"retransmit":false,"dac":1,"fid":2,"data":"80:32370000000000000000"}
 !AIVDM,1,1,,B,H3aKUN1<mDd0000000000000000,2*2D
@@ -351,7 +351,7 @@
 {"class":"AIS","type":20,"repeat":0,"mmsi":2734468,"scaled":false,"offset1":1641,"number1":1,"timeout1":7,"increment1":750,"offset2":1748,"number2":5,"timeout2":7,"increment2":225,"offset3":0,"number3":1,"timeout3":5,"increment3":1125,"offset4":1753,"number4":5,"timeout4":5,"increment4":1125}
 !AIVDM,2,1,6,A,53aJII4000010;OC3F0TaHDE:3GF22222222220t1P@45t0Ht621AC`1C`51,0*50
 !AIVDM,2,2,6,A,DUAp8888880,2*02
-{"class":"AIS","type":5,"repeat":0,"mmsi":244750692,"scaled":false,"imo":0,"ais_version":1,"callsign":"PB7405","shipname":"IJVEER 55","shiptype":60,"shiptype_text":"Passenger - all ships of this type","to_bow":12,"to_stern":16,"to_port":4,"to_starboard":5,"epfd":15,"epfd_text":"INVALID EPFD","eta":"00-00T24:60Z","draught":24,"destination":"HEEN EN TERUG","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":244750692,"scaled":false,"imo":0,"ais_version":1,"callsign":"PB7405","shipname":"IJVEER 55","shiptype":60,"shiptype_text":"Passenger - all ships of this type","to_bow":12,"to_stern":16,"to_port":4,"to_starboard":5,"epfd":15,"epfd_text":"Internal GNSS","eta":"00-00T24:60Z","draught":24,"destination":"HEEN EN TERUG","dte":0}
 !AIVDM,1,1,,B,13m@k00P00PkQF:U7Pf>4?vT2>`<,0*34
 {"class":"AIS","type":1,"repeat":0,"mmsi":257176320,"scaled":false,"status":0,"status_text":"Under way using engine","turn":-128,"speed":0,"accuracy":true,"lon":6752965,"lat":38920376,"course":3600,"heading":511,"second":18,"maneuver":0,"raim":true,"radio":59916}
 !AIVDM,2,1,8,B,8h2=Vg@0Gh0TN1N>vAB0@PegFPClDIFcgwl?wnSwe7wvlOwwsAwwnSGm,0*29
@@ -385,14 +385,14 @@
 {"class":"AIS","type":18,"repeat":0,"mmsi":265650060,"scaled":false,"reserved":0,"speed":0,"accuracy":false,"lon":6992371,"lat":34600597,"course":315,"heading":511,"second":20,"regional":0,"cs":true,"display":false,"dsc":true,"band":true,"msg22":true,"raim":false,"radio":917510}
 !AIVDM,2,1,5,A,53ufeF826Lb9<mET001<CK;:1H4pMD58@000000N1p733t0Ht;ARDj2C,0*07
 !AIVDM,2,2,5,A,Qp2C`4jhAiDP@jh,2*69
-{"class":"AIS","type":5,"repeat":0,"mmsi":266055000,"scaled":false,"imo":8811170,"ais_version":2,"callsign":"SMUY","shipname":"SD622 VANGUARD","shiptype":30,"shiptype_text":"Fishing","to_bow":15,"to_stern":7,"to_port":3,"to_starboard":3,"epfd":15,"epfd_text":"INVALID EPFD","eta":"00-00T24:60Z","draught":45,"destination":"FISHING IN SKAGERACK","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":266055000,"scaled":false,"imo":8811170,"ais_version":2,"callsign":"SMUY","shipname":"SD622 VANGUARD","shiptype":30,"shiptype_text":"Fishing","to_bow":15,"to_stern":7,"to_port":3,"to_starboard":3,"epfd":15,"epfd_text":"Internal GNSS","eta":"00-00T24:60Z","draught":45,"destination":"FISHING IN SKAGERACK","dte":0}
 !AIVDM,1,1,,A,H3uEwS0l4pT0000000000000001,2*06
 !AIVDM,1,1,,B,H3uOHk0H5@l4p00000000000003,2*63
 !AIVDM,1,1,,A,63aJGc00RW?4<SL5000000000000,0*34
 {"class":"AIS","type":6,"repeat":0,"mmsi":244750252,"scaled":false,"seqno":0,"dest_mmsi":2268401,"retransmit":false,"dac":200,"fid":55,"crew":5,"passengers":0,"personnel":0}
 !AIVDM,2,1,5,A,53aDrIl000010GK3?T1LDp@TpL000000000000122`433ug0034m0ESlQCP0,0*75
 !AIVDM,2,2,5,A,00000000000,2*21
-{"class":"AIS","type":5,"repeat":0,"mmsi":244660839,"scaled":false,"imo":0,"ais_version":1,"callsign":"PE6039","shipname":"WENDING","shiptype":66,"shiptype_text":"Passenger - Reserved for future use","to_bow":21,"to_stern":4,"to_port":3,"to_starboard":3,"epfd":15,"epfd_text":"INVALID EPFD","eta":"06-30T00:00Z","draught":12,"destination":"STAVOREN","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":244660839,"scaled":false,"imo":0,"ais_version":1,"callsign":"PE6039","shipname":"WENDING","shiptype":66,"shiptype_text":"Passenger - Reserved for future use","to_bow":21,"to_stern":4,"to_port":3,"to_starboard":3,"epfd":15,"epfd_text":"Internal GNSS","eta":"06-30T00:00Z","draught":12,"destination":"STAVOREN","dte":0}
 !AIVDM,1,1,,A,17tDtw8uh17J9VB0ejCkSTFJ2>`<,0*1B
 {"class":"AIS","type":1,"repeat":0,"mmsi":533019900,"scaled":false,"status":8,"status_text":"Under way sailing","turn":-9,"speed":1,"accuracy":false,"lon":62147785,"lat":750159,"course":910,"heading":139,"second":13,"maneuver":0,"raim":true,"radio":59916}
 !AIVDM,1,1,,B,14aT4D?P007JlWp0guN`NwvH0>`<,0*65
@@ -476,7 +476,7 @@
 {"class":"AIS","type":1,"repeat":0,"mmsi":244860636,"scaled":false,"status":0,"status_text":"Under way using engine","turn":0,"speed":0,"accuracy":false,"lon":5005605,"lat":29442804,"course":2495,"heading":342,"second":19,"maneuver":0,"raim":false,"radio":20484}
 !AIVDM,2,1,9,A,53aJFfl000010CWWOL1TFo;N118u=0E:0aDhTDpN38515vl=>06ADTiBi@00,0*1F
 !AIVDM,2,2,9,A,00000000000,2*2D
-{"class":"AIS","type":5,"repeat":0,"mmsi":244750011,"scaled":false,"imo":0,"ais_version":1,"callsign":"PD9977","shipname":"YE-27 PROSPER JULIEN","shiptype":30,"shiptype_text":"Fishing","to_bow":25,"to_stern":5,"to_port":1,"to_starboard":5,"epfd":15,"epfd_text":"INVALID EPFD","eta":"11-08T13:14Z","draught":0,"destination":"YERSEKE","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":244750011,"scaled":false,"imo":0,"ais_version":1,"callsign":"PD9977","shipname":"YE-27 PROSPER JULIEN","shiptype":30,"shiptype_text":"Fishing","to_bow":25,"to_stern":5,"to_port":1,"to_starboard":5,"epfd":15,"epfd_text":"Internal GNSS","eta":"11-08T13:14Z","draught":0,"destination":"YERSEKE","dte":0}
 !AIVDM,1,1,,B,13b?AJ7000PBMVdMaqehQ6nJ0>`<,0*5A
 {"class":"AIS","type":1,"repeat":0,"mmsi":245617000,"scaled":false,"status":7,"status_text":"Engaged in fishing","turn":0,"speed":0,"accuracy":true,"lon":2419926,"lat":31095223,"course":132,"heading":219,"second":13,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,A,139f9W?P00PuablN2Eg@0?vVR>`<,0*31
@@ -575,10 +575,10 @@
 {"class":"AIS","type":5,"repeat":0,"mmsi":367300350,"scaled":false,"imo":9350551,"ais_version":0,"callsign":"WDD8608","shipname":"THOR","shiptype":52,"shiptype_text":"Tug","to_bow":15,"to_stern":15,"to_port":7,"to_starboard":5,"epfd":1,"epfd_text":"GPS","eta":"08-10T00:00Z","draught":65,"destination":"US^HOU<>US^GLS","dte":0}
 !AIVDM,2,1,5,B,53aGDt`000010;?73<0`th4p@4000000000000166h=62tm`0020DliC50000000,0*3E
 !AIVDM,2,2,5,B,0000000,2*22
-{"class":"AIS","type":5,"repeat":0,"mmsi":244700402,"scaled":false,"imo":0,"ais_version":2,"callsign":"PB3103","shipname":"JOLANDA","shiptype":70,"shiptype_text":"Cargo - all ships of this type","to_bow":54,"to_stern":13,"to_port":6,"to_starboard":2,"epfd":15,"epfd_text":"INVALID EPFD","eta":"03-11T08:00Z","draught":0,"destination":"HASSELT","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":244700402,"scaled":false,"imo":0,"ais_version":2,"callsign":"PB3103","shipname":"JOLANDA","shiptype":70,"shiptype_text":"Cargo - all ships of this type","to_bow":54,"to_stern":13,"to_port":6,"to_starboard":2,"epfd":15,"epfd_text":"Internal GNSS","eta":"03-11T08:00Z","draught":0,"destination":"HASSELT","dte":0}
 !AIVDM,2,1,5,B,539GS:`00000@?GCWT0I8Td4000000000000001528824t0Ht02kiC3P0000,0*07
 !AIVDM,2,2,5,B,00000000000,2*22
-{"class":"AIS","type":5,"repeat":0,"mmsi":211149610,"scaled":false,"imo":0,"ais_version":2,"callsign":"DC5499","shipname":"FRIKA","shiptype":69,"shiptype_text":"Passenger - No additional information","to_bow":17,"to_stern":8,"to_port":2,"to_starboard":4,"epfd":15,"epfd_text":"INVALID EPFD","eta":"00-00T24:60Z","draught":0,"destination":"KOELN","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":211149610,"scaled":false,"imo":0,"ais_version":2,"callsign":"DC5499","shipname":"FRIKA","shiptype":69,"shiptype_text":"Passenger - No additional information","to_bow":17,"to_stern":8,"to_port":2,"to_starboard":4,"epfd":15,"epfd_text":"Internal GNSS","eta":"00-00T24:60Z","draught":0,"destination":"KOELN","dte":0}
 !AIVDM,1,1,,B,83aGuJPj2d<t=LMt>ACh`@QP:0t0,0*60
 {"class":"AIS","type":8,"repeat":0,"mmsi":244710762,"scaled":false,"dac":200,"fid":10,"vin":"03051709","length":670,"beam":80,"shiptype":8460,"shiptype_text":"Illegal ship type value.","hazard":0,"hazard_text":"0 blue cones/lights","draught":320,"loaded":1,"loaded_text":"Unloaded","speed_q":true,"course_q":true,"heading_q":true}
 !AIVDM,1,1,,B,ENj`=4>Q<h42V00000000000000@c>qC?WUD`00000a020,4*17
@@ -622,7 +622,7 @@
 !AIVDM,1,1,,A,4h50Ko1v:581DWL8wp0c@G700<2C,0*54
 {"class":"AIS","type":4,"repeat":3,"mmsi":5250012,"scaled":false,"timestamp":"2018-08-10T08:01:20Z","accuracy":true,"lon":62408700,"lat":708700,"epfd":7,"epfd_text":"Surveyed","raim":false,"radio":49299}
 !AIVDM,1,1,,B,403Ow4Av:581DqFF0nA2DVg02L8D,0*70
-{"class":"AIS","type":4,"repeat":0,"mmsi":3669777,"scaled":false,"timestamp":"2018-08-10T08:01:20Z","accuracy":true,"lon":-55791589,"lat":17863834,"epfd":15,"epfd_text":"INVALID EPFD","raim":true,"radio":115220}
+{"class":"AIS","type":4,"repeat":0,"mmsi":3669777,"scaled":false,"timestamp":"2018-08-10T08:01:20Z","accuracy":true,"lon":-55791589,"lat":17863834,"epfd":15,"epfd_text":"Internal GNSS","raim":true,"radio":115220}
 !AIVDM,1,1,,A,639o4gP0RW?6<SL3000000000000,0*5A
 {"class":"AIS","type":6,"repeat":0,"mmsi":211666110,"scaled":false,"seqno":0,"dest_mmsi":2268401,"retransmit":true,"dac":200,"fid":55,"crew":3,"passengers":0,"personnel":0}
 !AIVDM,1,1,,B,18J:sb8P00WKj@h0gRqb=Owb2>`<,0*5A
@@ -635,7 +635,7 @@
 {"class":"AIS","type":1,"repeat":0,"mmsi":205367990,"scaled":false,"status":0,"status_text":"Under way using engine","turn":-128,"speed":0,"accuracy":true,"lon":2606160,"lat":30764000,"course":2161,"heading":511,"second":20,"maneuver":0,"raim":true,"radio":59916}
 !AIVDM,2,1,7,A,539kmw800000@S??C@04hEP4pA8T40000000001@;p?92uqGo70QDSiL,0*16
 !AIVDM,2,2,7,A,=<<ePjE6F<<<<00,2*44
-{"class":"AIS","type":5,"repeat":0,"mmsi":211613180,"scaled":false,"imo":0,"ais_version":2,"callsign":"DH3344","shipname":"ALEXANDRIA","shiptype":80,"shiptype_text":"Tanker - all ships of this type","to_bow":95,"to_stern":15,"to_port":9,"to_starboard":2,"epfd":15,"epfd_text":"INVALID EPFD","eta":"07-18T23:55Z","draught":28,"destination":"BEROE04026CITYX0000","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":211613180,"scaled":false,"imo":0,"ais_version":2,"callsign":"DH3344","shipname":"ALEXANDRIA","shiptype":80,"shiptype_text":"Tanker - all ships of this type","to_bow":95,"to_stern":15,"to_port":9,"to_starboard":2,"epfd":15,"epfd_text":"Internal GNSS","eta":"07-18T23:55Z","draught":28,"destination":"BEROE04026CITYX0000","dte":0}
 !AIVDM,1,1,,A,17ljf9i02l7J2Wp0a;S8DVBJ0>`<,0*5F
 {"class":"AIS","type":1,"repeat":0,"mmsi":525119015,"scaled":false,"status":1,"status_text":"At anchor","turn":0,"speed":180,"accuracy":false,"lon":62133500,"lat":674700,"course":2130,"heading":201,"second":13,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,A,E>jN6VAWS39T7a2h9b9:Qb:a2P009F9??>pU000003v010,4*41
@@ -768,7 +768,7 @@
 {"class":"AIS","type":3,"repeat":0,"mmsi":205340690,"scaled":false,"status":5,"status_text":"Moored","turn":-128,"speed":0,"accuracy":true,"lon":2204989,"lat":30654627,"course":664,"heading":511,"second":18,"maneuver":0,"raim":true,"radio":59916}
 !AIVDM,2,1,9,B,534=@4400000u8hn220QTA8uHThhF2222222220t00000um;`3kklm1CQ1H8,0*1D
 !AIVDM,2,2,9,B,88888888880,2*2E
-{"class":"AIS","type":5,"repeat":0,"mmsi":205738000,"scaled":false,"imo":0,"ais_version":1,"callsign":"ORLM","shipname":"HYDROVILLE","shiptype":60,"shiptype_text":"Passenger - all ships of this type","to_bow":0,"to_stern":0,"to_port":0,"to_starboard":0,"epfd":15,"epfd_text":"INVALID EPFD","eta":"07-10T11:40Z","draught":15,"destination":"OOSTENDE","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":205738000,"scaled":false,"imo":0,"ais_version":1,"callsign":"ORLM","shipname":"HYDROVILLE","shiptype":60,"shiptype_text":"Passenger - all ships of this type","to_bow":0,"to_stern":0,"to_port":0,"to_starboard":0,"epfd":15,"epfd_text":"Internal GNSS","eta":"07-10T11:40Z","draught":15,"destination":"OOSTENDE","dte":0}
 !AIVDM,1,1,,A,14`akJ30010@OmTMK;UjR`<T0>`<,0*0D
 {"class":"AIS","type":1,"repeat":0,"mmsi":311063400,"scaled":false,"status":3,"status_text":"Restricted manoeuverability","turn":0,"speed":1,"accuracy":false,"lon":2162354,"lat":30854039,"course":650,"heading":262,"second":18,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,B,15NNfE0000qDeiJA=@eqrl4f0>`<,0*47
@@ -816,7 +816,7 @@
 {"class":"AIS","type":4,"repeat":0,"mmsi":3475015,"scaled":false,"timestamp":"2018-08-09T08:01:20Z","accuracy":false,"lon":108600000,"lat":54600000,"epfd":0,"epfd_text":"Undefined","raim":false,"radio":197453}
 !AIVDM,2,1,9,A,53`j7@T000010CW?3L0lttp@4p<D00000000000U18=22t0Ht0@C2k@@D`88,0*51
 !AIVDM,2,2,9,A,88888000008,2*2D
-{"class":"AIS","type":5,"repeat":0,"mmsi":244090690,"scaled":false,"imo":0,"ais_version":1,"callsign":"PD9307","shipname":"MOONDANCE","shiptype":37,"shiptype_text":"Pleasure Craft","to_bow":9,"to_stern":13,"to_port":2,"to_starboard":2,"epfd":15,"epfd_text":"INVALID EPFD","eta":"00-00T24:60Z","draught":1,"destination":"ALKMAAR","dte":1}
+{"class":"AIS","type":5,"repeat":0,"mmsi":244090690,"scaled":false,"imo":0,"ais_version":1,"callsign":"PD9307","shipname":"MOONDANCE","shiptype":37,"shiptype_text":"Pleasure Craft","to_bow":9,"to_stern":13,"to_port":2,"to_starboard":2,"epfd":15,"epfd_text":"Internal GNSS","eta":"00-00T24:60Z","draught":1,"destination":"ALKMAAR","dte":1}
 !AIVDM,1,1,,A,13aJG5h000PV:iRL52R@08:d2<0a,0*72
 {"class":"AIS","type":1,"repeat":0,"mmsi":244750103,"scaled":false,"status":0,"status_text":"Under way using engine","turn":0,"speed":0,"accuracy":true,"lon":5002801,"lat":29442697,"course":0,"heading":261,"second":22,"maneuver":0,"raim":true,"radio":49193}
 !AIVDM,1,1,,A,404k0uQv:581FbrA;meKvBW008=<,0*2C
@@ -1112,7 +1112,7 @@
 !AIVDM,1,1,,B,B3HT;QP0;otFE>6ilkpdowe5WP06,0*5A
 {"class":"AIS","type":18,"repeat":0,"mmsi":227085190,"scaled":false,"reserved":0,"speed":47,"accuracy":false,"lon":-1914212,"lat":28431166,"course":717,"heading":511,"second":26,"regional":0,"cs":true,"display":false,"dsc":true,"band":true,"msg22":false,"raim":true,"radio":917510}
 !AIVDM,1,1,,A,402bBViv:581I1Jcq2ImeM?02L14,0*15
-{"class":"AIS","type":4,"repeat":0,"mmsi":2790043,"scaled":false,"timestamp":"2018-08-10T08:01:25Z","accuracy":false,"lon":11886369,"lat":27094388,"epfd":15,"epfd_text":"INVALID EPFD","raim":true,"radio":114756}
+{"class":"AIS","type":4,"repeat":0,"mmsi":2790043,"scaled":false,"timestamp":"2018-08-10T08:01:25Z","accuracy":false,"lon":11886369,"lat":27094388,"epfd":15,"epfd_text":"Internal GNSS","raim":true,"radio":114756}
 !AIVDM,1,1,,A,4025bviv:581HPhUg8OO9f102H?1,0*78
 {"class":"AIS","type":4,"repeat":0,"mmsi":2190075,"scaled":false,"timestamp":"2018-08-10T08:01:24Z","accuracy":true,"lon":6368740,"lat":33016248,"epfd":1,"epfd_text":"GPS","raim":true,"radio":99265}
 !AIVDM,1,1,,A,13aL;sgP1UPNoLlMJgFeAgvj2>`<,0*6A
@@ -1145,7 +1145,7 @@
 {"class":"AIS","type":3,"repeat":0,"mmsi":261139000,"scaled":false,"status":5,"status_text":"Moored","turn":0,"speed":0,"accuracy":false,"lon":11118349,"lat":32717179,"course":903,"heading":55,"second":26,"maneuver":1,"raim":false,"radio":59916}
 !AIVDM,2,1,9,A,539hD8400000@;@5c00LThh6000000000000001@;@D66v5B00QDliCP0000,0*3C
 !AIVDM,2,2,9,A,00000000000,2*2D
-{"class":"AIS","type":5,"repeat":0,"mmsi":211555360,"scaled":false,"imo":0,"ais_version":1,"callsign":"DB4AZ0","shipname":"GILLA","shiptype":80,"shiptype_text":"Tanker - all ships of this type","to_bow":90,"to_stern":20,"to_port":6,"to_starboard":6,"epfd":15,"epfd_text":"INVALID EPFD","eta":"08-10T18:00Z","draught":2,"destination":"ESSEN","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":211555360,"scaled":false,"imo":0,"ais_version":1,"callsign":"DB4AZ0","shipname":"GILLA","shiptype":80,"shiptype_text":"Tanker - all ships of this type","to_bow":90,"to_stern":20,"to_port":6,"to_starboard":6,"epfd":15,"epfd_text":"Internal GNSS","eta":"08-10T18:00Z","draught":2,"destination":"ESSEN","dte":0}
 !AIVDM,1,1,,A,13ge0ag000NJrnrTk@8KDWLj0>`<,0*21
 {"class":"AIS","type":1,"repeat":0,"mmsi":251347110,"scaled":false,"status":15,"status_text":"Not defined","turn":0,"speed":0,"accuracy":false,"lon":-13248803,"lat":38588449,"course":2898,"heading":238,"second":25,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,B,13UhJ200001d1RnEeg<:5pHl0>`<,0*48
@@ -1196,7 +1196,7 @@
 {"class":"AIS","type":4,"repeat":0,"mmsi":2717205,"scaled":false,"timestamp":"2018-08-10T08:01:24Z","accuracy":false,"lon":15981667,"lat":23979678,"epfd":7,"epfd_text":"Surveyed","raim":false,"radio":99279}
 !AIVDM,2,1,0,B,539n@V400000@>3;;WM<j0hU10D000000000001S0hB33tw?e0R0AQC`5iDi,0*1D
 !AIVDM,2,2,0,B,C0000000000,2*54
-{"class":"AIS","type":5,"repeat":0,"mmsi":211652760,"scaled":false,"imo":0,"ais_version":1,"callsign":"DC 2297","shipname":"SL LIPPE","shiptype":99,"shiptype_text":"Other Type - no additional information","to_bow":6,"to_stern":18,"to_port":3,"to_starboard":3,"epfd":15,"epfd_text":"INVALID EPFD","eta":"03-30T15:45Z","draught":2,"destination":"HAFEN WESEL","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":211652760,"scaled":false,"imo":0,"ais_version":1,"callsign":"DC 2297","shipname":"SL LIPPE","shiptype":99,"shiptype_text":"Other Type - no additional information","to_bow":6,"to_stern":18,"to_port":3,"to_starboard":3,"epfd":15,"epfd_text":"Internal GNSS","eta":"03-30T15:45Z","draught":2,"destination":"HAFEN WESEL","dte":0}
 !AIVDM,1,1,,B,B44d>PP1=@RDCk`TQSjFWwb5kP06,0*1F
 {"class":"AIS","type":18,"repeat":0,"mmsi":273354370,"scaled":false,"reserved":0,"speed":309,"accuracy":false,"lon":17992167,"lat":35948092,"course":2409,"heading":511,"second":20,"regional":0,"cs":true,"display":false,"dsc":true,"band":true,"msg22":true,"raim":false,"radio":917510}
 !AIVDM,1,1,,B,144cv1P0002;VV@R@3HIU5N`0>`<,0*25
@@ -1242,7 +1242,7 @@
 {"class":"AIS","type":20,"repeat":0,"mmsi":2442024,"scaled":false,"offset1":1385,"number1":2,"timeout1":7,"increment1":1125,"offset2":0,"number2":0,"timeout2":0,"increment2":0,"offset3":0,"number3":0,"timeout3":0,"increment3":0,"offset4":0,"number4":0,"timeout4":0,"increment4":0}
 !AIVDM,2,1,7,A,53aGDuT000010WK3OT1`u8N0lEB1HhTa@00000152h342t00031CRj5BFQC`,0*2A
 !AIVDM,2,2,7,A,00000000000,2*23
-{"class":"AIS","type":5,"repeat":0,"mmsi":244700406,"scaled":false,"imo":0,"ais_version":1,"callsign":"PI6079","shipname":"ZORG MET VLIJT","shiptype":69,"shiptype_text":"Passenger - No additional information","to_bow":22,"to_stern":3,"to_port":4,"to_starboard":2,"epfd":15,"epfd_text":"INVALID EPFD","eta":"00-00T00:00Z","draught":12,"destination":"ENKHUIZEN","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":244700406,"scaled":false,"imo":0,"ais_version":1,"callsign":"PI6079","shipname":"ZORG MET VLIJT","shiptype":69,"shiptype_text":"Passenger - No additional information","to_bow":22,"to_stern":3,"to_port":4,"to_starboard":2,"epfd":15,"epfd_text":"Internal GNSS","eta":"00-00T00:00Z","draught":12,"destination":"ENKHUIZEN","dte":0}
 !AIVDM,1,1,,A,14`qIn002NG4;4rLOm:UAT>h0>`<,0*77
 {"class":"AIS","type":1,"repeat":0,"mmsi":311319000,"scaled":false,"status":0,"status_text":"Under way using engine","turn":0,"speed":158,"accuracy":false,"lon":-74950499,"lat":29881642,"course":1350,"heading":135,"second":24,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,A,144jLIPP012e?HPIU@s50wwp0>`<,0*01
@@ -1282,7 +1282,7 @@
 !AIVDM,1,1,,A,B3P>5T00@`2w>@5ag;5QkwdUoP06,0*3B
 {"class":"AIS","type":18,"repeat":0,"mmsi":235111824,"scaled":false,"reserved":0,"speed":66,"accuracy":true,"lon":1566496,"lat":23706801,"course":1564,"heading":511,"second":25,"regional":0,"cs":true,"display":false,"dsc":true,"band":true,"msg22":true,"raim":true,"radio":917510}
 !AIVDM,1,1,,A,139gK6<P01PebqNN`jt:vOvh2>`<,0*7F
-{"class":"AIS","type":1,"repeat":0,"mmsi":211540760,"scaled":false,"status":12,"status_text":"Reserved","turn":-128,"speed":1,"accuracy":true,"lon":5986095,"lat":32125680,"course":2809,"heading":511,"second":24,"maneuver":0,"raim":true,"radio":59916}
+{"class":"AIS","type":1,"repeat":0,"mmsi":211540760,"scaled":false,"status":12,"status_text":"Power-driven vessel pushing ahead or towing alongside","turn":-128,"speed":1,"accuracy":true,"lon":5986095,"lat":32125680,"course":2809,"heading":511,"second":24,"maneuver":0,"raim":true,"radio":59916}
 !AIVDM,1,1,,B,4028j7iv:581IOV`mTDaul100504,0*5A
 {"class":"AIS","type":4,"repeat":0,"mmsi":2241055,"scaled":false,"timestamp":"2018-08-10T08:01:25Z","accuracy":false,"lon":-3324238,"lat":21659088,"epfd":1,"epfd_text":"GPS","raim":false,"radio":20484}
 !AIVDM,1,1,,A,13:IKR00002G6;pClkLLfRKB0>`<,0*6D
@@ -1559,7 +1559,7 @@
 {"class":"AIS","type":21,"repeat":0,"mmsi":992446000,"scaled":false,"aid_type":30,"aid_type_text":"Special Mark","name":"NL COASTGUARD 99","accuracy":false,"lon":2875090,"lat":31770930,"to_bow":0,"to_stern":0,"to_port":0,"to_starboard":0,"epfd":7,"epfd_text":"Surveyed","second":60,"regional":0,"off_position":false,"raim":false,"virtual_aid":true}
 !AIVDM,2,1,1,B,544eiET2AjdqD8ps<00l4`u:0<P50T<PEJ00000t6Hj98t@QT5jhERhFc@lR,0*1A
 !AIVDM,2,2,1,B,CA@KBhERhFP,2*5C
-{"class":"AIS","type":5,"repeat":0,"mmsi":273379670,"scaled":false,"imo":9554638,"ais_version":1,"callsign":"UBNN3","shipname":"MAJOR CHAPICHEV","shiptype":60,"shiptype_text":"Passenger - all ships of this type","to_bow":51,"to_stern":50,"to_port":9,"to_starboard":8,"epfd":15,"epfd_text":"INVALID EPFD","eta":"01-01T01:36Z","draught":23,"destination":"KAVKAZ-CRIMEA-KAVKAZ","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":273379670,"scaled":false,"imo":9554638,"ais_version":1,"callsign":"UBNN3","shipname":"MAJOR CHAPICHEV","shiptype":60,"shiptype_text":"Passenger - all ships of this type","to_bow":51,"to_stern":50,"to_port":9,"to_starboard":8,"epfd":15,"epfd_text":"Internal GNSS","eta":"01-01T01:36Z","draught":23,"destination":"KAVKAZ-CRIMEA-KAVKAZ","dte":0}
 !AIVDM,1,1,,B,13M@F<@OhDOj:5tNUJe:89Dd0>`<,0*50
 {"class":"AIS","type":1,"repeat":0,"mmsi":232003121,"scaled":false,"status":0,"status_text":"Under way using engine","turn":127,"speed":20,"accuracy":false,"lon":-1814338,"lat":32070324,"course":2592,"heading":298,"second":22,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,B,8020r<PlhB49GC8ORQBP@0FdDa?D=Hli3D0000000000?pg0000000000000,0*0B
@@ -1695,7 +1695,7 @@
 !AIVDM,1,1,,A,ENk`so91S@@@@@@@@@@@@@@@@@@==Fm;9bGh000003vP000,2*12
 {"class":"AIS","type":21,"repeat":1,"mmsi":993672156,"scaled":false,"aid_type":18,"aid_type_text":"Beacon, Safe water","name":"CF","accuracy":false,"lon":-46830261,"lat":20262784,"to_bow":0,"to_stern":0,"to_port":0,"to_starboard":0,"epfd":7,"epfd_text":"Surveyed","second":61,"regional":0,"off_position":false,"raim":false,"virtual_aid":false}
 !AIVDM,1,1,,A,15Ng>F<P00IS0A`A87IJ3?vp2>`<,0*03
-{"class":"AIS","type":1,"repeat":0,"mmsi":367775320,"scaled":false,"status":12,"status_text":"Reserved","turn":-128,"speed":0,"accuracy":false,"lon":-54132172,"lat":17958757,"course":2572,"heading":511,"second":28,"maneuver":0,"raim":true,"radio":59916}
+{"class":"AIS","type":1,"repeat":0,"mmsi":367775320,"scaled":false,"status":12,"status_text":"Power-driven vessel pushing ahead or towing alongside","turn":-128,"speed":0,"accuracy":false,"lon":-54132172,"lat":17958757,"course":2572,"heading":511,"second":28,"maneuver":0,"raim":true,"radio":59916}
 !AIVDM,1,1,,A,H7OeabTTCD34pUM00000000p3330,0*6B
 !AIVDM,1,1,,A,23P=Ul@00001l7DMKuR=U`Pr0>`<,0*44
 {"class":"AIS","type":2,"repeat":0,"mmsi":235103697,"scaled":false,"status":0,"status_text":"Under way using engine","turn":0,"speed":0,"accuracy":false,"lon":237802,"lat":30866824,"course":3478,"heading":272,"second":29,"maneuver":0,"raim":false,"radio":59916}
@@ -1717,7 +1717,7 @@
 {"class":"AIS","type":1,"repeat":0,"mmsi":205232090,"scaled":false,"status":0,"status_text":"Under way using engine","turn":-128,"speed":0,"accuracy":true,"lon":2627921,"lat":30755298,"course":0,"heading":511,"second":29,"maneuver":0,"raim":true,"radio":59916}
 !AIVDM,2,1,1,A,53aGulD0000000c7?0918Tq<E>0<Q8U=@Tp400155P:22uG`002ShTj0EQC`,0*34
 !AIVDM,2,2,1,A,4Sm51A0C@0:,2*63
-{"class":"AIS","type":5,"repeat":0,"mmsi":244710865,"scaled":false,"imo":0,"ais_version":1,"callsign":"","shipname":"PRINSES CHRISTINA","shiptype":69,"shiptype_text":"Passenger - No additional information","to_bow":44,"to_stern":10,"to_port":2,"to_starboard":2,"epfd":15,"epfd_text":"INVALID EPFD","eta":"05-15T08:00Z","draught":0,"destination":"JOBSHAVEN ROTTEDAM","dte":1}
+{"class":"AIS","type":5,"repeat":0,"mmsi":244710865,"scaled":false,"imo":0,"ais_version":1,"callsign":"","shipname":"PRINSES CHRISTINA","shiptype":69,"shiptype_text":"Passenger - No additional information","to_bow":44,"to_stern":10,"to_port":2,"to_starboard":2,"epfd":15,"epfd_text":"Internal GNSS","eta":"05-15T08:00Z","draught":0,"destination":"JOBSHAVEN ROTTEDAM","dte":1}
 !AIVDM,1,1,,B,639Hgn00RW?6<SL4000000000000,0*43
 {"class":"AIS","type":6,"repeat":0,"mmsi":211169240,"scaled":false,"seqno":0,"dest_mmsi":2268401,"retransmit":true,"dac":200,"fid":55,"crew":4,"passengers":0,"personnel":0}
 !AIVDM,2,1,3,B,54eGE401rH38<HsGGC=<D5=04r18uT4j2222220l0pQ7564d0>43lU80,0*6F
@@ -1759,11 +1759,11 @@
 {"class":"AIS","type":1,"repeat":0,"mmsi":414362000,"scaled":false,"status":0,"status_text":"Under way using engine","turn":0,"speed":121,"accuracy":false,"lon":70697978,"lat":14139416,"course":2347,"heading":235,"second":30,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,2,1,8,B,539jP3400000@??GKH0HM>18PDTph4p@000000151@K26t0000RkiC3P0000,0*48
 !AIVDM,2,2,8,B,00000000000,2*2F
-{"class":"AIS","type":5,"repeat":0,"mmsi":211591180,"scaled":false,"imo":0,"ais_version":1,"callsign":"DC3566","shipname":"FGS RHEINLAND","shiptype":69,"shiptype_text":"Passenger - No additional information","to_bow":10,"to_stern":27,"to_port":2,"to_starboard":6,"epfd":15,"epfd_text":"INVALID EPFD","eta":"00-00T00:00Z","draught":2,"destination":"KOELN","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":211591180,"scaled":false,"imo":0,"ais_version":1,"callsign":"DC3566","shipname":"FGS RHEINLAND","shiptype":69,"shiptype_text":"Passenger - No additional information","to_bow":10,"to_stern":27,"to_port":2,"to_starboard":6,"epfd":15,"epfd_text":"Internal GNSS","eta":"00-00T00:00Z","draught":2,"destination":"KOELN","dte":0}
 !AIVDM,1,1,,B,ENkaRHSQPV@1T@2@973h3@@@@@@<bIJv8W4rP00003vP000,2*3E
 {"class":"AIS","type":21,"repeat":1,"mmsi":993682018,"scaled":false,"aid_type":7,"aid_type_text":"Leading Light Front","name":"CAL CH D RNG F","accuracy":false,"lon":-55994690,"lat":18057684,"to_bow":0,"to_stern":0,"to_port":0,"to_starboard":0,"epfd":7,"epfd_text":"Surveyed","second":61,"regional":0,"off_position":false,"raim":false,"virtual_aid":false}
 !AIVDM,1,1,,B,15NdFId000qD?`RA<joe5SFt0>`<,0*73
-{"class":"AIS","type":1,"repeat":0,"mmsi":367728230,"scaled":false,"status":12,"status_text":"Reserved","turn":0,"speed":0,"accuracy":true,"lon":-56066799,"lat":18035422,"course":3350,"heading":107,"second":30,"maneuver":0,"raim":false,"radio":59916}
+{"class":"AIS","type":1,"repeat":0,"mmsi":367728230,"scaled":false,"status":12,"status_text":"Power-driven vessel pushing ahead or towing alongside","turn":0,"speed":0,"accuracy":true,"lon":-56066799,"lat":18035422,"course":3350,"heading":107,"second":30,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,B,15NO8sPP00IJ@VrA6Kqr5?vt2>`<,0*6B
 {"class":"AIS","type":1,"repeat":0,"mmsi":367511790,"scaled":false,"status":0,"status_text":"Under way using engine","turn":-128,"speed":0,"accuracy":false,"lon":-55278371,"lat":17931239,"course":2580,"heading":511,"second":30,"maneuver":0,"raim":true,"radio":59916}
 !AIVDM,2,1,3,B,55N3KH800001L@?KGCP`tPr0HuR222222222220O18?5567;n7EDkFAwUDl3,0*6B
@@ -1840,7 +1840,7 @@
 !AIVDM,1,1,,B,141jmj0P00PNKV2MRjSP0?vn2>`<,0*1C
 {"class":"AIS","type":1,"repeat":0,"mmsi":270317000,"scaled":false,"status":0,"status_text":"Under way using engine","turn":-128,"speed":0,"accuracy":true,"lon":3988673,"lat":30978702,"course":0,"heading":511,"second":27,"maneuver":0,"raim":true,"radio":59916}
 !AIVDM,1,1,,B,403OKEQv:581Nr?WEDBS?lg02L2S,0*2D
-{"class":"AIS","type":4,"repeat":0,"mmsi":3660630,"scaled":false,"timestamp":"2018-08-10T08:01:30Z","accuracy":true,"lon":-48285014,"lat":19451858,"epfd":15,"epfd_text":"INVALID EPFD","raim":true,"radio":114851}
+{"class":"AIS","type":4,"repeat":0,"mmsi":3660630,"scaled":false,"timestamp":"2018-08-10T08:01:30Z","accuracy":true,"lon":-48285014,"lat":19451858,"epfd":15,"epfd_text":"Internal GNSS","raim":true,"radio":114851}
 !AIVDM,1,1,,B,13aDC20P1QPN=DtMQFquwgvnR>`<,0*06
 {"class":"AIS","type":1,"repeat":0,"mmsi":244650760,"scaled":false,"status":0,"status_text":"Under way using engine","turn":-128,"speed":97,"accuracy":true,"lon":3959454,"lat":30955239,"course":3582,"heading":511,"second":27,"maneuver":1,"raim":true,"radio":59916}
 !AIVDM,1,1,,A,13aGE8@P0oPN@StMPKI4@OvrR>`<,0*59
@@ -1925,12 +1925,12 @@
 !AIVDM,2,2,5,A,88888888880,2*21
 {"class":"AIS","type":5,"repeat":0,"mmsi":565567000,"scaled":false,"imo":9326419,"ais_version":0,"callsign":"9VJJ6","shipname":"WAN HAI 508","shiptype":70,"shiptype_text":"Cargo - all ships of this type","to_bow":206,"to_stern":63,"to_port":14,"to_starboard":18,"epfd":3,"epfd_text":"Combined GPS/GLONASS","eta":"08-10T06:30Z","draught":113,"destination":"SIN_EBGA","dte":0}
 !AIVDM,1,1,,B,403Ow4iv:581PqiE34IpRUg02@CC,0*16
-{"class":"AIS","type":4,"repeat":0,"mmsi":3669779,"scaled":false,"timestamp":"2018-08-10T08:01:32Z","accuracy":true,"lon":-52254622,"lat":27140758,"epfd":15,"epfd_text":"INVALID EPFD","raim":true,"radio":66771}
+{"class":"AIS","type":4,"repeat":0,"mmsi":3669779,"scaled":false,"timestamp":"2018-08-10T08:01:32Z","accuracy":true,"lon":-52254622,"lat":27140758,"epfd":15,"epfd_text":"Internal GNSS","raim":true,"radio":66771}
 !AIVDM,2,1,4,B,539`vQ400000@SGKGP0P4q<D5@000000000000150@@23t0Ht0B0C@UDQh00,0*6A
 !AIVDM,2,2,4,B,00000000000,2*23
-{"class":"AIS","type":5,"repeat":0,"mmsi":211435140,"scaled":false,"imo":0,"ais_version":1,"callsign":"DH5658","shipname":"HANSEAT","shiptype":69,"shiptype_text":"Passenger - No additional information","to_bow":2,"to_stern":16,"to_port":2,"to_starboard":3,"epfd":15,"epfd_text":"INVALID EPFD","eta":"00-00T24:60Z","draught":1,"destination":"HAMBURG","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":211435140,"scaled":false,"imo":0,"ais_version":1,"callsign":"DH5658","shipname":"HANSEAT","shiptype":69,"shiptype_text":"Passenger - No additional information","to_bow":2,"to_stern":16,"to_port":2,"to_starboard":3,"epfd":15,"epfd_text":"Internal GNSS","eta":"00-00T24:60Z","draught":1,"destination":"HAMBURG","dte":0}
 !AIVDM,1,1,,A,403Otf1v:581PqPjVdA=E?g02<;A,0*01
-{"class":"AIS","type":4,"repeat":0,"mmsi":3669176,"scaled":false,"timestamp":"2018-08-10T08:01:32Z","accuracy":true,"lon":-54422314,"lat":18044222,"epfd":15,"epfd_text":"INVALID EPFD","raim":true,"radio":49873}
+{"class":"AIS","type":4,"repeat":0,"mmsi":3669176,"scaled":false,"timestamp":"2018-08-10T08:01:32Z","accuracy":true,"lon":-54422314,"lat":18044222,"epfd":15,"epfd_text":"Internal GNSS","raim":true,"radio":49873}
 !AIVDM,1,1,,2,8020r<PlhB49GCDORQBPoPFcr=?D>hTi3H0000000000CKg0000000000000,0*75
 {"class":"AIS","type":8,"repeat":0,"mmsi":2112050,"scaled":false,"dac":211,"fid":1,"data":"304:21095d351f8a14a0de05abe8d3d43b09310d80000000000000004dbbc0000000000000000000"}
 !AIVDM,1,1,,A,13P;tBh008wsB02M1G7Tn4u20>`<,0*7A
@@ -1961,7 +1961,7 @@
 {"class":"AIS","type":1,"repeat":0,"mmsi":636017756,"scaled":false,"status":0,"status_text":"Under way using engine","turn":0,"speed":129,"accuracy":true,"lon":73043422,"lat":22711308,"course":907,"heading":92,"second":33,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,2,1,4,A,533e;cT000000000001<E8`u<00000000000001?48632uG<q0klliC31OL0,0*1E
 !AIVDM,2,2,4,A,SmDQp880000,2*4B
-{"class":"AIS","type":5,"repeat":0,"mmsi":205212590,"scaled":false,"imo":0,"ais_version":1,"callsign":"","shipname":"SERJOS","shiptype":79,"shiptype_text":"Cargo - No additional information","to_bow":33,"to_stern":6,"to_port":3,"to_starboard":2,"epfd":15,"epfd_text":"INVALID EPFD","eta":"05-14T12:57Z","draught":3,"destination":"OSSELLE=0BOURG","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":205212590,"scaled":false,"imo":0,"ais_version":1,"callsign":"","shipname":"SERJOS","shiptype":79,"shiptype_text":"Cargo - No additional information","to_bow":33,"to_stern":6,"to_port":3,"to_starboard":2,"epfd":15,"epfd_text":"Internal GNSS","eta":"05-14T12:57Z","draught":3,"destination":"OSSELLE=0BOURG","dte":0}
 !AIVDM,1,1,,B,ENjO`9S2qHHH@:ab4QPh8:W:0h1PN6vo;4Pe010888N000EPFVR@,0*43
 {"class":"AIS","type":21,"repeat":1,"mmsi":992471078,"scaled":false,"aid_type":6,"aid_type_text":"Light, with sectors","name":"E2000 USTICA PUNTA CAVAZZI","accuracy":false,"lon":7892919,"lat":23216488,"to_bow":1,"to_stern":1,"to_port":1,"to_starboard":1,"epfd":0,"epfd_text":"Undefined","second":60,"regional":0,"off_position":false,"raim":false,"virtual_aid":false}
 !AIVDM,1,1,,B,ENk`sV6rKh@@@@@@@@@@@@@@@@@=Al7s;A5E800003vP000,2*66
@@ -2103,7 +2103,7 @@
 {"class":"AIS","type":1,"repeat":0,"mmsi":211559990,"scaled":false,"status":0,"status_text":"Under way using engine","turn":-128,"speed":0,"accuracy":true,"lon":5991576,"lat":32084012,"course":3480,"heading":511,"second":32,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,2,1,8,B,53aDCTT000010OGCG40<518T<u8qE<000000000n00000tL@07Q1B1Cd<vL>,0*47
 !AIVDM,2,2,8,B,0jE6F<<LLL3,2*0F
-{"class":"AIS","type":5,"repeat":0,"mmsi":244650898,"scaled":false,"imo":0,"ais_version":1,"callsign":"PG5451","shipname":"CAPRICORNUS","shiptype":54,"shiptype_text":"Anti-pollution equipment","to_bow":0,"to_stern":0,"to_port":0,"to_starboard":0,"epfd":15,"epfd_text":"INVALID EPFD","eta":"01-24T16:00Z","draught":30,"destination":"DEHEN03908CITYX01110","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":244650898,"scaled":false,"imo":0,"ais_version":1,"callsign":"PG5451","shipname":"CAPRICORNUS","shiptype":54,"shiptype_text":"Anti-pollution equipment","to_bow":0,"to_stern":0,"to_port":0,"to_starboard":0,"epfd":15,"epfd_text":"Internal GNSS","eta":"01-24T16:00Z","draught":30,"destination":"DEHEN03908CITYX01110","dte":0}
 !AIVDM,1,1,,A,13caE50P0pQ4R5TF2=`<uww42D1elhE>`<,0*75
 {"class":"AIS","type":1,"repeat":0,"mmsi":247092500,"scaled":false,"status":0,"status_text":"Under way using engine","turn":-128,"speed":56,"accuracy":true,"lon":8982706,"lat":23104928,"course":3319,"heading":511,"second":34,"maneuver":0,"raim":true,"radio":82029}
 !AIVDM,1,1,,A,13cbOC0P0m0vm52J6Ohkkgw60>`<,0*17
@@ -2146,7 +2146,7 @@
 {"class":"AIS","type":3,"repeat":0,"mmsi":244430000,"scaled":false,"status":1,"status_text":"At anchor","turn":0,"speed":5,"accuracy":true,"lon":2886084,"lat":31788377,"course":2037,"heading":110,"second":35,"maneuver":0,"raim":true,"radio":59916}
 !AIVDM,2,1,1,B,53aDr?D000010CS7OH085=@4000000000000001?=h00<t00050CDm1DQ0C@0000,0*33
 !AIVDM,2,2,1,B,0000000,2*26
-{"class":"AIS","type":5,"repeat":0,"mmsi":244660797,"scaled":false,"imo":0,"ais_version":1,"callsign":"PD8176","shipname":"BASTA","shiptype":79,"shiptype_text":"Cargo - No additional information","to_bow":110,"to_stern":0,"to_port":0,"to_starboard":12,"epfd":15,"epfd_text":"INVALID EPFD","eta":"00-00T00:00Z","draught":20,"destination":"AMSTERDAM","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":244660797,"scaled":false,"imo":0,"ais_version":1,"callsign":"PD8176","shipname":"BASTA","shiptype":79,"shiptype_text":"Cargo - No additional information","to_bow":110,"to_stern":0,"to_port":0,"to_starboard":12,"epfd":15,"epfd_text":"Internal GNSS","eta":"00-00T00:00Z","draught":20,"destination":"AMSTERDAM","dte":0}
 !AIVDM,1,1,,A,13`m;:PP00PEt58N2Hqv4?w62>`<,0*6D
 {"class":"AIS","type":1,"repeat":0,"mmsi":244140842,"scaled":false,"status":0,"status_text":"Under way using engine","turn":-128,"speed":0,"accuracy":true,"lon":2875556,"lat":31496423,"course":3600,"heading":511,"second":35,"maneuver":0,"raim":true,"radio":59916}
 !BSVDM,1,1,,A,13`td@0P@;0CwjlRer8WmWc:0>`<,0*0F
@@ -2186,7 +2186,7 @@
 {"class":"AIS","type":21,"repeat":1,"mmsi":993672000,"scaled":false,"aid_type":18,"aid_type_text":"Beacon, Safe water","name":"MIAMI M","accuracy":false,"lon":-48049989,"lat":15460986,"to_bow":0,"to_stern":0,"to_port":0,"to_starboard":0,"epfd":7,"epfd_text":"Surveyed","second":61,"regional":0,"off_position":false,"raim":false,"virtual_aid":false}
 !AIVDM,2,1,4,B,53HPIi82<quTI49H000@4pTDj0h5H4h00000000Q2iB;;t0Ht<S1H20E,0*10
 !AIVDM,2,2,4,B,TQ@000000000000,2*56
-{"class":"AIS","type":5,"repeat":0,"mmsi":227023300,"scaled":false,"imo":9234393,"ais_version":2,"callsign":"FQBV","shipname":"DANIEL LAVAL","shiptype":33,"shiptype_text":"Dredging or underwater ops","to_bow":22,"to_stern":82,"to_port":11,"to_starboard":11,"epfd":15,"epfd_text":"INVALID EPFD","eta":"00-00T24:60Z","draught":50,"destination":"LE HAVRE","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":227023300,"scaled":false,"imo":9234393,"ais_version":2,"callsign":"FQBV","shipname":"DANIEL LAVAL","shiptype":33,"shiptype_text":"Dredging or underwater ops","to_bow":22,"to_stern":82,"to_port":11,"to_starboard":11,"epfd":15,"epfd_text":"Internal GNSS","eta":"00-00T24:60Z","draught":50,"destination":"LE HAVRE","dte":0}
 !AIVDM,1,1,,A,639eb`P0RW?6<SOwwwwp00000000,0*41
 {"class":"AIS","type":6,"repeat":0,"mmsi":211511970,"scaled":false,"seqno":0,"dest_mmsi":2268401,"retransmit":true,"dac":200,"fid":55,"crew":255,"passengers":8191,"personnel":255}
 !AIVDM,1,1,,A,133fc200000BOqNMaehe2IW60>`<,0*2E
@@ -2209,7 +2209,7 @@
 {"class":"AIS","type":5,"repeat":0,"mmsi":636015776,"scaled":false,"imo":9589932,"ais_version":0,"callsign":"D5CT4","shipname":"NAVE CASSIOPEIA","shiptype":80,"shiptype_text":"Tanker - all ships of this type","to_bow":188,"to_stern":40,"to_port":21,"to_starboard":11,"epfd":1,"epfd_text":"GPS","eta":"08-09T22:00Z","draught":79,"destination":"FAWLEY OPL","dte":0}
 !AIVDM,2,1,3,A,53HPIi82<quTI49H000@4pTDj0h5H4h00000000Q2iB;;t0Ht<S1H20ETQ@0,0*61
 !AIVDM,2,2,3,A,00000000000,2*27
-{"class":"AIS","type":5,"repeat":0,"mmsi":227023300,"scaled":false,"imo":9234393,"ais_version":2,"callsign":"FQBV","shipname":"DANIEL LAVAL","shiptype":33,"shiptype_text":"Dredging or underwater ops","to_bow":22,"to_stern":82,"to_port":11,"to_starboard":11,"epfd":15,"epfd_text":"INVALID EPFD","eta":"00-00T24:60Z","draught":50,"destination":"LE HAVRE","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":227023300,"scaled":false,"imo":9234393,"ais_version":2,"callsign":"FQBV","shipname":"DANIEL LAVAL","shiptype":33,"shiptype_text":"Dredging or underwater ops","to_bow":22,"to_stern":82,"to_port":11,"to_starboard":11,"epfd":15,"epfd_text":"Internal GNSS","eta":"00-00T24:60Z","draught":50,"destination":"LE HAVRE","dte":0}
 !BSVDM,1,1,,A,13n;E60P000galrTC34P0?w60>`<,0*0F
 {"class":"AIS","type":1,"repeat":0,"mmsi":258135320,"scaled":false,"status":0,"status_text":"Under way using engine","turn":-128,"speed":0,"accuracy":false,"lon":6246045,"lat":38060818,"course":0,"heading":511,"second":35,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,B,13aGEVPP000JM;RNFe900?w80>`<,0*3A
@@ -2229,7 +2229,7 @@
 {"class":"AIS","type":18,"repeat":0,"mmsi":563044530,"scaled":false,"reserved":0,"speed":3,"accuracy":false,"lon":62162785,"lat":742148,"course":708,"heading":511,"second":7,"regional":0,"cs":true,"display":false,"dsc":true,"band":true,"msg22":true,"raim":false,"radio":917510}
 !AIVDM,2,1,5,A,53GR8@T00000Ho?K?80<huHU<00000000000000D0h=44t0006C1H20ETQ@0,0*20
 !AIVDM,2,2,5,A,00000000000,2*21
-{"class":"AIS","type":5,"repeat":0,"mmsi":226003010,"scaled":false,"imo":0,"ais_version":1,"callsign":"FM3632","shipname":"CLOVIS","shiptype":20,"shiptype_text":"Wing in ground (WIG) - all ships of this type","to_bow":6,"to_stern":13,"to_port":4,"to_starboard":4,"epfd":15,"epfd_text":"INVALID EPFD","eta":"00-00T00:00Z","draught":25,"destination":"LE HAVRE","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":226003010,"scaled":false,"imo":0,"ais_version":1,"callsign":"FM3632","shipname":"CLOVIS","shiptype":20,"shiptype_text":"Wing in ground (WIG) - all ships of this type","to_bow":6,"to_stern":13,"to_port":4,"to_starboard":4,"epfd":15,"epfd_text":"Internal GNSS","eta":"00-00T00:00Z","draught":25,"destination":"LE HAVRE","dte":0}
 !AIVDM,1,1,,A,13L@gJ50001i5ERR1Hoh015V0>`<,0*66
 {"class":"AIS","type":1,"repeat":0,"mmsi":230961000,"scaled":false,"status":5,"status_text":"Moored","turn":0,"speed":0,"accuracy":false,"lon":14822065,"lat":35674335,"course":0,"heading":34,"second":51,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,A,33prp1001@1DwghO=9U3V2u:0>`<,0*4D
@@ -2319,7 +2319,7 @@
 {"class":"AIS","type":1,"repeat":0,"mmsi":247143160,"scaled":false,"status":15,"status_text":"Not defined","turn":-128,"speed":11,"accuracy":true,"lon":8058077,"lat":22903242,"course":1695,"heading":511,"second":38,"maneuver":0,"raim":true,"radio":59916}
 !AIVDM,2,1,9,B,53ci:a800000Tu=0001HJ373SP0000000000000o10731t0Ht2h000000000,0*12
 !AIVDM,2,2,9,B,00000000000,2*2E
-{"class":"AIS","type":5,"repeat":0,"mmsi":247220900,"scaled":false,"imo":0,"ais_version":2,"callsign":"IOSP","shipname":"VF 1088","shiptype":55,"shiptype_text":"Law Enforcement","to_bow":8,"to_stern":7,"to_port":3,"to_starboard":1,"epfd":15,"epfd_text":"INVALID EPFD","eta":"00-00T24:60Z","draught":11,"destination":"","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":247220900,"scaled":false,"imo":0,"ais_version":2,"callsign":"IOSP","shipname":"VF 1088","shiptype":55,"shiptype_text":"Law Enforcement","to_bow":8,"to_stern":7,"to_port":3,"to_starboard":1,"epfd":15,"epfd_text":"Internal GNSS","eta":"00-00T24:60Z","draught":11,"destination":"","dte":0}
 !AIVDM,1,1,,A,13aDpBhP00PNb7LMC`Pj2?w:R>`<,0*28
 {"class":"AIS","type":1,"repeat":0,"mmsi":244660299,"scaled":false,"status":0,"status_text":"Under way using engine","turn":-128,"speed":0,"accuracy":true,"lon":4018414,"lat":30730371,"course":520,"heading":511,"second":37,"maneuver":1,"raim":true,"radio":59916}
 !AIVDM,1,1,,B,23m2k>0000P2GGlMN;G=c`E20>`<,0*44
@@ -2331,7 +2331,7 @@
 {"class":"AIS","type":3,"repeat":0,"mmsi":244020365,"scaled":false,"status":5,"status_text":"Moored","turn":-19,"speed":21,"accuracy":true,"lon":2913677,"lat":31415691,"course":2040,"heading":511,"second":37,"maneuver":0,"raim":true,"radio":59916}
 !AIVDM,2,1,0,A,533fk<T00000uC;?W00l5D@0000000000000001?28022v4;050P@DlS,0*6E
 !AIVDM,2,2,0,A,i1@000000000000,2*0C
-{"class":"AIS","type":5,"repeat":0,"mmsi":205239090,"scaled":false,"imo":0,"ais_version":1,"callsign":"OT2390","shipname":"MAUD","shiptype":79,"shiptype_text":"Cargo - No additional information","to_bow":17,"to_stern":0,"to_port":2,"to_starboard":2,"epfd":15,"epfd_text":"INVALID EPFD","eta":"08-08T11:00Z","draught":20,"destination":"BAASRODE","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":205239090,"scaled":false,"imo":0,"ais_version":1,"callsign":"OT2390","shipname":"MAUD","shiptype":79,"shiptype_text":"Cargo - No additional information","to_bow":17,"to_stern":0,"to_port":2,"to_starboard":2,"epfd":15,"epfd_text":"Internal GNSS","eta":"08-08T11:00Z","draught":20,"destination":"BAASRODE","dte":0}
 !AIVDM,1,1,,A,13uSNV0001Q;FUDPi4A07Rs60>`<,0*28
 {"class":"AIS","type":1,"repeat":0,"mmsi":265871000,"scaled":false,"status":0,"status_text":"Under way using engine","turn":0,"speed":1,"accuracy":true,"lon":9876650,"lat":34358340,"course":30,"heading":93,"second":35,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,B,B3I6tmP0?wupE`VaUL32Swk5oP06,0*56
@@ -2339,7 +2339,7 @@
 !AIVDM,1,1,,B,H3aQfL@h608Dhh6099D`4000001,2*03
 !AIVDM,2,1,7,A,53aN41D000010<hh000P7;:0dtdP44p00000000N30623tL<12U1DThj1C32,0*0D
 !AIVDM,2,2,7,A,CQh00000008,2*61
-{"class":"AIS","type":5,"repeat":0,"mmsi":244810757,"scaled":false,"imo":0,"ais_version":1,"callsign":"PCLL","shipname":"HA22 KOKHAAN","shiptype":30,"shiptype_text":"Fishing","to_bow":24,"to_stern":6,"to_port":2,"to_starboard":3,"epfd":15,"epfd_text":"INVALID EPFD","eta":"01-24T12:01Z","draught":10,"destination":"TERSCHELLING","dte":1}
+{"class":"AIS","type":5,"repeat":0,"mmsi":244810757,"scaled":false,"imo":0,"ais_version":1,"callsign":"PCLL","shipname":"HA22 KOKHAAN","shiptype":30,"shiptype_text":"Fishing","to_bow":24,"to_stern":6,"to_port":2,"to_starboard":3,"epfd":15,"epfd_text":"Internal GNSS","eta":"01-24T12:01Z","draught":10,"destination":"TERSCHELLING","dte":1}
 !AIVDM,1,1,,A,83aC2Lhj2d<dttLvM2`ht?a@80t0,0*16
 {"class":"AIS","type":8,"repeat":0,"mmsi":244630131,"scaled":false,"dac":200,"fid":10,"vin":"02331394","length":1350,"beam":120,"shiptype":8010,"shiptype_text":"Motor freighter","hazard":0,"hazard_text":"0 blue cones/lights","draught":256,"loaded":1,"loaded_text":"Unloaded","speed_q":true,"course_q":true,"heading_q":true}
 !BSVDM,1,1,,B,63P;0p<0SJPB>P4Hf6QhT1MvNP,4*2A
@@ -2355,13 +2355,13 @@
 !AIVDM,1,1,,A,3815ADPwh00COH8MHTuRQSS:0>`<,0*50
 {"class":"AIS","type":3,"repeat":0,"mmsi":538005842,"scaled":false,"status":0,"status_text":"Under way using engine","turn":-1,"speed":0,"accuracy":false,"lon":2554628,"lat":30811382,"course":646,"heading":113,"second":37,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,B,15NeOQd000q=25VA0nWKpPs>0>`<,0*61
-{"class":"AIS","type":1,"repeat":0,"mmsi":367746950,"scaled":false,"status":12,"status_text":"Reserved","turn":0,"speed":0,"accuracy":true,"lon":-57012045,"lat":17839773,"course":3042,"heading":29,"second":39,"maneuver":0,"raim":false,"radio":59916}
+{"class":"AIS","type":1,"repeat":0,"mmsi":367746950,"scaled":false,"status":12,"status_text":"Power-driven vessel pushing ahead or towing alongside","turn":0,"speed":0,"accuracy":true,"lon":-57012045,"lat":17839773,"course":3042,"heading":29,"second":39,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,B,13aEO@hP1EPCLbfMIh<mUOw:R>`<,0*41
 {"class":"AIS","type":1,"repeat":0,"mmsi":244670275,"scaled":false,"status":0,"status_text":"Under way using engine","turn":-128,"speed":85,"accuracy":true,"lon":2549079,"lat":30830643,"course":1429,"heading":511,"second":37,"maneuver":1,"raim":true,"radio":59916}
 !AIVDM,1,1,,A,13lgdT0000OGijDF15BeoUM:0>`<,0*2A
 {"class":"AIS","type":1,"repeat":0,"mmsi":256634000,"scaled":false,"status":0,"status_text":"Under way using engine","turn":0,"speed":0,"accuracy":false,"lon":-5271990,"lat":23086410,"course":3550,"heading":174,"second":37,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,A,4028jFiv:581VOoOurHkCKw00@FV,0*2F
-{"class":"AIS","type":4,"repeat":0,"mmsi":2241115,"scaled":false,"timestamp":"2018-08-10T08:01:38Z","accuracy":false,"lon":-1114179,"lat":26006383,"epfd":15,"epfd_text":"INVALID EPFD","raim":false,"radio":66982}
+{"class":"AIS","type":4,"repeat":0,"mmsi":2241115,"scaled":false,"timestamp":"2018-08-10T08:01:38Z","accuracy":false,"lon":-1114179,"lat":26006383,"epfd":15,"epfd_text":"Internal GNSS","raim":false,"radio":66982}
 !AIVDM,1,1,,B,B3EdNi007?u54JV=RMN;swk5oP06,0*06
 {"class":"AIS","type":18,"repeat":0,"mmsi":224075460,"scaled":false,"reserved":0,"speed":28,"accuracy":true,"lon":-1531339,"lat":26053079,"course":2238,"heading":511,"second":38,"regional":0,"cs":true,"display":false,"dsc":true,"band":true,"msg22":true,"raim":true,"radio":917510}
 !AIVDM,1,1,,B,63aGrTh0RW?6<SL5000000000000,0*62
@@ -2501,7 +2501,7 @@
 !AIVDM,1,1,,A,E>jbcFnc0W2a9Q7a3aa0W70W@HKPL=O4@eH=01088;v0100,2*45
 {"class":"AIS","type":21,"repeat":0,"mmsi":992652123,"scaled":false,"aid_type":13,"aid_type_text":"Beacon, Port hand","name":"VANERSBORGSRANNAN 07","accuracy":false,"lon":7395268,"lat":35041384,"to_bow":1,"to_stern":1,"to_port":1,"to_starboard":1,"epfd":7,"epfd_text":"Surveyed","second":60,"regional":0,"off_position":false,"raim":false,"virtual_aid":true}
 !AIVDM,1,1,,B,403OwpAv:581`o?l24K7Htg02L3V,0*3D
-{"class":"AIS","type":4,"repeat":0,"mmsi":3669985,"scaled":false,"timestamp":"2018-08-10T08:01:40Z","accuracy":true,"lon":-73424830,"lat":28432626,"epfd":15,"epfd_text":"INVALID EPFD","raim":true,"radio":114918}
+{"class":"AIS","type":4,"repeat":0,"mmsi":3669985,"scaled":false,"timestamp":"2018-08-10T08:01:40Z","accuracy":true,"lon":-73424830,"lat":28432626,"epfd":15,"epfd_text":"Internal GNSS","raim":true,"radio":114918}
 !AIVDM,2,1,9,A,ENjOsq0s?@6a9Qh10a4P00000000VVf@;i7s000000N,0*21
 !AIVDM,2,2,9,A,010,4*2A
 {"class":"AIS","type":21,"repeat":1,"mmsi":992476132,"scaled":false,"aid_type":1,"aid_type_text":"Reference point","name":"6^ MRSC BARI","accuracy":false,"lon":10120080,"lat":24678360,"to_bow":0,"to_stern":0,"to_port":0,"to_starboard":0,"epfd":0,"epfd_text":"Undefined","second":60,"regional":0,"off_position":false,"raim":false,"virtual_aid":true}
@@ -2575,7 +2575,7 @@
 !AIVDM,1,1,,A,B3aJJR@09h5lsf7Qm0vbkwlUkP06,0*3E
 {"class":"AIS","type":18,"repeat":0,"mmsi":244750985,"scaled":false,"reserved":0,"speed":39,"accuracy":false,"lon":3055068,"lat":31577103,"course":2732,"heading":511,"second":41,"regional":0,"cs":true,"display":false,"dsc":true,"band":true,"msg22":true,"raim":false,"radio":917510}
 !AIVDM,1,1,,B,15NOV<<P00rRis0E4Plc>wwD2>`<,0*28
-{"class":"AIS","type":1,"repeat":0,"mmsi":367519280,"scaled":false,"status":12,"status_text":"Reserved","turn":-128,"speed":0,"accuracy":true,"lon":-45772960,"lat":22094034,"course":2875,"heading":511,"second":42,"maneuver":0,"raim":true,"radio":59916}
+{"class":"AIS","type":1,"repeat":0,"mmsi":367519280,"scaled":false,"status":12,"status_text":"Power-driven vessel pushing ahead or towing alongside","turn":-128,"speed":0,"accuracy":true,"lon":-45772960,"lat":22094034,"course":2875,"heading":511,"second":42,"maneuver":0,"raim":true,"radio":59916}
 !AIVDM,1,1,,A,B5:tEGP00@LpKuUFOLh1SwlUCP06,0*4E
 {"class":"AIS","type":18,"repeat":0,"mmsi":347018590,"scaled":false,"reserved":0,"speed":1,"accuracy":false,"lon":15142395,"lat":22445516,"course":24,"heading":511,"second":41,"regional":0,"cs":true,"display":false,"dsc":true,"band":false,"msg22":true,"raim":false,"radio":917510}
 !AIVDM,2,1,5,B,59NS;T@2@6sl7Pp?F2050j05E=A8T6222222221=KQ;J>64m0LA1B0CH8888,0*50
@@ -2593,7 +2593,7 @@
 {"class":"AIS","type":6,"repeat":0,"mmsi":211668650,"scaled":false,"seqno":0,"dest_mmsi":2268401,"retransmit":true,"dac":200,"fid":55,"crew":0,"passengers":0,"personnel":220}
 !AIVDM,2,1,5,A,53aJHg`0S6bv10CS;SP4@DhPDT@000000000001J9P:55uo>050CDm1D,0*54
 !AIVDM,2,2,5,A,Q0C@00000000000,2*43
-{"class":"AIS","type":5,"repeat":0,"mmsi":244750526,"scaled":false,"imo":2300591,"ais_version":2,"callsign":" PD8288","shipname":"ADELHEID","shiptype":90,"shiptype_text":"Other Type - all ships of this type","to_bow":76,"to_stern":10,"to_port":5,"to_starboard":5,"epfd":15,"epfd_text":"INVALID EPFD","eta":"07-14T14:00Z","draught":20,"destination":"AMSTERDAM","dte":0}
+{"class":"AIS","type":5,"repeat":0,"mmsi":244750526,"scaled":false,"imo":2300591,"ais_version":2,"callsign":" PD8288","shipname":"ADELHEID","shiptype":90,"shiptype_text":"Other Type - all ships of this type","to_bow":76,"to_stern":10,"to_port":5,"to_starboard":5,"epfd":15,"epfd_text":"Internal GNSS","eta":"07-14T14:00Z","draught":20,"destination":"AMSTERDAM","dte":0}
 !AIVDM,2,1,6,A,55CTb`82CwWg<I<7<01<D4`4<e>1<=Thh40000091J12h5rVNA5S2Dlj,0*75
 !AIVDM,2,2,6,A,CQiCP0000000000,2*7A
 {"class":"AIS","type":5,"repeat":0,"mmsi":356068000,"scaled":false,"imo":9698939,"ais_version":2,"callsign":"3FSA3","shipname":"SEAJACKS SCYLLA","shiptype":9,"shiptype_text":"Reserved for future use","to_bow":11,"to_stern":129,"to_port":2,"to_starboard":48,"epfd":1,"epfd_text":"GPS","eta":"07-21T06:30Z","draught":68,"destination":"VLISSINGEN","dte":0}
@@ -2677,7 +2677,7 @@
 {"class":"AIS","type":1,"repeat":0,"mmsi":259616000,"scaled":false,"status":7,"status_text":"Engaged in fishing","turn":-127,"speed":87,"accuracy":false,"lon":3408455,"lat":37702248,"course":1980,"heading":193,"second":43,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,2,1,9,A,58u:Mg800001a;GKWH1<U=@E9<0000000000000N38534u4`000hD1H53mkP,0*02
 !AIVDM,2,2,9,A,00000000008,2*25
-{"class":"AIS","type":5,"repeat":0,"mmsi":601005500,"scaled":false,"imo":0,"ais_version":2,"callsign":"ZR5696","shipname":"SISTERS","shiptype":30,"shiptype_text":"Fishing","to_bow":25,"to_stern":5,"to_port":3,"to_starboard":4,"epfd":15,"epfd_text":"INVALID EPFD","eta":"04-09T08:00Z","draught":0,"destination":"CAPE TOWN","dte":1}
+{"class":"AIS","type":5,"repeat":0,"mmsi":601005500,"scaled":false,"imo":0,"ais_version":2,"callsign":"ZR5696","shipname":"SISTERS","shiptype":30,"shiptype_text":"Fishing","to_bow":25,"to_stern":5,"to_port":3,"to_starboard":4,"epfd":15,"epfd_text":"Internal GNSS","eta":"04-09T08:00Z","draught":0,"destination":"CAPE TOWN","dte":1}
 !AIVDM,1,1,,A,ENjOsphrg@6a9Qh92SSTWh1PV0Q0Slm@:r;8000000N014R@@9beORW,0*63
 {"class":"AIS","type":21,"repeat":1,"mmsi":992476131,"scaled":false,"aid_type":1,"aid_type_text":"Reference point","name":"5^ MRSC REGGIO CALABRIA","accuracy":false,"lon":9391440,"lat":22877760,"to_bow":0,"to_stern":0,"to_port":0,"to_starboard":0,"epfd":0,"epfd_text":"Undefined","second":60,"regional":0,"off_position":false,"raim":false,"virtual_aid":true}
 !AIVDM,1,1,,A,139d6V0P1OPEnATMaRPbewwDR>`<,0*34
