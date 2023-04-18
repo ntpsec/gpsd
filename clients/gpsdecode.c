@@ -575,12 +575,15 @@ static void pseudonmea_report(gps_mask_t changed, struct gps_device_t *device)
     }
 }
 
-// sensor data on fpin to dump format on fpout
-static void decode(FILE *fpin, FILE*fpout)
+/* decode(): decode sensor data from fpin to dump format on fpout
+ *
+ * Return: void
+ */
+static void decode(FILE *fpin, FILE *fpout)
 {
     struct gps_device_t session;
     struct gps_policy_t policy;
-    size_t minima[PACKET_TYPES+1];
+    size_t minima[PACKET_TYPES + 1];
 #if defined(SOCKET_EXPORT_ENABLE) || defined(AIVDM_ENABLE)
     char buf[GPS_JSON_RESPONSE_MAX * 4];
 #endif
@@ -603,8 +606,8 @@ static void decode(FILE *fpin, FILE*fpout)
     (void)strlcpy(session.gpsdata.dev.path,
                   "stdin",
                   sizeof(session.gpsdata.dev.path));
-    for (i = 0; i < (int)(sizeof(minima)/sizeof(minima[0])); i++) {
-        minima[i] = MAX_PACKET_LENGTH+1;
+    for (i = 0; i < (int)(sizeof(minima) / sizeof(minima[0])); i++) {
+        minima[i] = MAX_PACKET_LENGTH + 1;
     }
 
     for (;;) {
@@ -631,14 +634,15 @@ static void decode(FILE *fpin, FILE*fpout)
                       json, gps_maskdump(changed));
 #endif
         // mask should match what's in gpsd/gpsd.c report_data()
-        if (0 == (changed & (AIS_SET|ATTITUDE_SET|GST_SET|IMU_SET|REPORT_IS|
-                             RAW_IS|RTCM2_SET|RTCM3_SET|SATELLITE_SET|
-                             SUBFRAME_SET))) {
+        if (0 == (changed & (AIS_SET | ATTITUDE_SET | GST_SET | IMU_SET |
+                             REPORT_IS | RAW_IS | RTCM2_SET | RTCM3_SET |
+                             SATELLITE_SET | SUBFRAME_SET))) {
             continue;
         }
         if (!filter(changed, &session)) {
             continue;
-        } else if (json) {
+        }
+        if (json) {
             if (0 != (changed & PASSTHROUGH_IS)) {
                 (void)fputs((char *)session.lexer.outbuffer, fpout);
                 (void)fputs("\n", fpout);
@@ -675,9 +679,9 @@ static void decode(FILE *fpin, FILE*fpout)
     }
 
     if (minlength) {
-        for (i = 0; i < (int)(sizeof(minima)/sizeof(minima[0])); i++) {
+        for (i = 0; i < (int)(sizeof(minima) / sizeof(minima[0])); i++) {
             // dump all minima, ignoring comments
-            if (i != 1 && minima[i] < MAX_PACKET_LENGTH+1) {
+            if (i != 1 && minima[i] <= MAX_PACKET_LENGTH) {
                 const struct gps_type_t **dp;
                 char *np = "Unknown";
 
@@ -687,7 +691,7 @@ static void decode(FILE *fpin, FILE*fpout)
                         break;
                     }
                 }
-                printf("%s (%d): %u\n", np, i-1, (unsigned int)minima[i]);
+                printf("%s (%d): %u\n", np, i - 1, (unsigned int)minima[i]);
             }
         }
     }
@@ -720,7 +724,7 @@ static void encode(FILE *fpin, FILE *fpout)
         int status;
 
         ++lineno;
-        if (inbuf[0] == '#') {
+        if ('#' == inbuf[0]) {
             continue;
         }
         status = libgps_json_unpack(inbuf, &session.gpsdata, NULL);
@@ -871,7 +875,8 @@ int main(int argc, char **argv)
             break;
 
         case 'V':
-            (void)fprintf(stderr, "gpsdecode revision " VERSION "\n");
+            (void)fprintf(stderr, "gpsdecode revision " VERSION
+                          ", revision " REVISION "\n");
             exit(EXIT_SUCCESS);
 
         case '?':
@@ -885,11 +890,23 @@ int main(int argc, char **argv)
     // argc -= optind;
     // argv += optind;
 
+    if (2 < verbose) {
+        int cnt;
+
+        (void)fprintf(stderr, "gpsdecode:INFO: version " VERSION
+                      ", revision " REVISION "\n"
+                      "gpsdecode:INFO: Command line: ");
+        for (cnt = 0; cnt < argc; cnt++) {
+            (void)fprintf(stderr, " %s", argv[cnt]);
+        }
+        (void)fprintf(stderr, "\n");
+    }
     if (mode == doencode) {
 #ifdef SOCKET_EXPORT_ENABLE
         encode(stdin, stdout);
 #else
-        (void)fprintf(stderr, "gpsdecode: encoding support isn't compiled.\n");
+        (void)fprintf(stderr,
+                      "gpsdecode:ERROR: encoding support isn't compiled.\n");
         exit(EXIT_FAILURE);
 #endif  // SOCKET_EXPORT_ENABLE
     } else {
