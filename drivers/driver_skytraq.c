@@ -129,9 +129,9 @@ static void sky_mode(struct gps_device_t *session, int mode)
     } else {                   // else to MODE_NMEA
         msg[5] = 0x01;
     }
-    
+
     GPSD_LOG(LOG_PROG, &session->context->errout,
-	     "Skytraq: setting MODE %s\n",
+             "Skytraq: setting MODE %s\n",
              (MODE_BINARY == mode) ? "Binary" : "NMEA");
     (void)sky_write(session, msg, 10);
 }
@@ -744,6 +744,113 @@ static gps_mask_t sky_msg_93(struct gps_device_t *session,
     GPSD_LOG(LOG_PROG, &session->context->errout,
              "Skytraq 0x93: mode %u\n", mode);
     return 0;
+}
+
+/*
+ * Binary Navigation Data Message (0xA8)
+ * Returns 59 bytes;
+ * Fix Mode, SV, Week, TOW, Latitude, Longitude, ellipsoid altitude,
+ * mean sea level altitude, gdop, pdop, hdop, vdop, tdop,
+ * ecef.{x,y,z}, ecef_v.{x,y,z}
+ *
+ * The following message (0xA8) is emitted by the modules supporting
+ * the Binary Messages Raw Measurements Data Extension in AN0028
+ * (https://www.skytraq.com.tw/homesite/AN0028.pdf)
+ * Original implementation by Kai Harrekilde-Petersen
+ * and adapted by Thatcher Chamberlin (j.thatcher.c@gmail.com)
+ */
+static gps_mask_t sky_msg_A8(struct gps_device_t *session,
+                   unsigned char *buf, size_t len)
+{
+    unsigned char  navmode; // Navigation fix mode (0: No fix, 1: 2D, 2: 3D, 3: 3D+DGNSS
+    unsigned short week;    // GNSS week number
+    double   ftow;       // Time of week
+    timespec_t ts_tow;
+    char ts_buf[TIMESPEC_LEN];
+
+    int *mode = &session->newdata.mode;
+    int *status = &session->newdata.status;
+    gps_mask_t mask = 0;
+
+    if (59 != len) {
+        GPSD_LOG(LOG_INF, &session->context->errout, "Skytraq: "
+            "Navigation Data Message has incorrect length %ld\n", len);
+        return 0;
+    }
+
+    navmode = getub(buf, 1);
+    switch (navmode) {
+    case 1: // 2D fix
+        *mode = MODE_2D;
+        *status = STATUS_GPS;
+        break;
+    case 2: // 3D fix
+        *mode = MODE_3D;
+        *status = STATUS_GPS;
+        break;
+    case 3: // 3D DGPS fix
+        *mode = MODE_3D;
+        *status = STATUS_DGPS;
+        break;
+
+    default: // Includes SKY_MODE_NONE
+        *mode = MODE_NO_FIX;
+        *status = STATUS_UNK;
+        break;
+    }
+    mask |= MODE_SET | STATUS_SET;
+
+    session->gpsdata.satellites_used = getub(buf, 2);
+
+    mask |= ONLINE_SET;
+    week = getbeu16(buf,  3);
+    ftow = getbeu32(buf,  5) / 100.0;
+    DTOTS(&ts_tow, (int)ftow);
+
+    session->newdata.time = gpsd_gpstime_resolv(session, week, ts_tow);
+    mask |= TIME_SET;
+
+    if (MODE_2D == *mode || MODE_3D == *mode) {
+        session->newdata.latitude  = getbes32(buf,  9) / 1e7;
+        session->newdata.longitude = getbes32(buf, 13) / 1e7;
+        mask |= LATLON_SET | NTPTIME_IS;
+
+        if (MODE_3D == *mode) {
+            session->newdata.altHAE  = getbes32(buf, 17) / 100.0;
+            session->newdata.altMSL  = getbes32(buf, 21) / 100.0;
+
+            session->newdata.ecef.x  = getbes32(buf, 35) / 100.0;
+            session->newdata.ecef.y  = getbes32(buf, 39) / 100.0;
+            session->newdata.ecef.z  = getbes32(buf, 43) / 100.0;
+            session->newdata.ecef.vx = getbes32(buf, 47) / 100.0;
+            session->newdata.ecef.vy = getbes32(buf, 51) / 100.0;
+            session->newdata.ecef.vz = getbes32(buf, 55) / 100.0;
+            mask |= ECEF_SET | VECEF_SET | ALTITUDE_SET;
+        }
+    }
+
+    session->gpsdata.dop.gdop = getbeu16(buf, 25) / 100.0;
+    session->gpsdata.dop.pdop = getbeu16(buf, 27) / 100.0;
+    session->gpsdata.dop.hdop = getbeu16(buf, 29) / 100.0;
+    session->gpsdata.dop.vdop = getbeu16(buf, 31) / 100.0;
+    session->gpsdata.dop.tdop = getbeu16(buf, 33) / 100.0;
+    mask |= DOP_SET | CLEAR_IS | REPORT_IS;
+    GPSD_LOG(LOG_DATA, &session->context->errout,
+         "Skytraq: NAVDATA time=%s, lat=%.7f lon=%.7f altHAE=%.2f altMSL=%.2f mode=%d status=%d "
+         "gdop: %.2f, hdop: %.2f, pdop: %.2f, tdop: %.2f, vdop: %.2f\n",
+         timespec_str(&session->newdata.time, ts_buf, sizeof(ts_buf)),
+         session->newdata.latitude,
+         session->newdata.longitude,
+         session->newdata.altHAE,
+         session->newdata.altMSL,
+         session->newdata.mode,
+         session->newdata.status,
+         session->gpsdata.dop.gdop,
+         session->gpsdata.dop.hdop,
+         session->gpsdata.dop.pdop,
+         session->gpsdata.dop.tdop,
+         session->gpsdata.dop.vdop);
+    return mask;
 }
 
 /*
@@ -1435,6 +1542,11 @@ static gps_mask_t sky_parse(struct gps_device_t * session, unsigned char *buf,
     case 0x93:
         // NMEA TALKER id
         mask = sky_msg_93(session, buf, len);
+        break;
+
+    case 0xA8:
+        // Navigation Data Message
+        mask = sky_msg_A8(session, buf, len);
         break;
 
     case 0xae:
