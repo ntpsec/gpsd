@@ -1,6 +1,6 @@
 = AIVDM/AIVDO protocol decoding
 Eric S. Raymond <esr@thyrsus.com>
-v1.57, 7 April 2023
+v1.57, 17 April 2023
 :author: Eric S. Raymond
 :description: The AIVDM Marine AIS protocol demystified, for programmers.
 :email: <esr@thyrsus.com>
@@ -783,12 +783,19 @@ The standard uses "EPFD" to designate any Electronic Position Fixing Device.
 |6    |Integrated navigation system
 |7    |Surveyed
 |8    |Galileo
+|9    |Reserved
+|10   |Reserved
+|11   |Reserved
+|11   |Reserved
+|13   |Reserved
+|14   |Reserved
+|15   |Internal GNSS
 |======
 
-Note: though values 9-15 are marked "not used" in <<IALA>>, the EPFD
-type value 15 (all field bits 1) is not uncommon in the wild; it
-appears some receivers emit it as the undefined value. Decoders should
-be prepared to accept this.
+Note: though values 9-15 are marked "not used" in <<IALA>>.
+Decoders should be prepared to accept them as they are seen in the wild.
+<<ITU1371>> specifies type value 15 (all field bits 1) as "Internal
+GNSS".
 
 === Type 5: Static and Voyage Related Data
 
@@ -5499,8 +5506,8 @@ Version 1.55 add Table of Contents.  Markup cleanup.
 
 Version 1.56 fix typos per Jim J. Jewett
 
-Version 1.57 Update Type 1/2/3 Nav Status Descriptions. Fix dead link to
-<<MSGS123>>.
+Version 1.57 Update Type 1/2/3 Nav Statusa, and EPFD, Descriptions. Fix dead
+link to <<MSGS123>>.
 
 
 // end
