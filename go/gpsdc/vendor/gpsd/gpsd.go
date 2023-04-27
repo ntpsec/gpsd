@@ -442,3 +442,41 @@ func (src *Context) Writer(wstr []byte) error {
 	}
 	return err
 }
+
+/* ConnGPSD() -- Create, and run, a data channel connection to a gpsd
+ *
+ * Sends decoded JSON packets into the data channel.
+ * Only returns on connection failure.
+ *
+ * Return: void
+ */
+func ConnGPSD(gpsdConn *Context, gpsDataChan chan interface{}) {
+
+	err := Open(gpsdConn)
+	if nil != err {
+		gpsdConn.GLog.Log(LOG_ERROR,
+			"Failed to connect to GPSD: %v", err)
+		return
+	}
+	defer gpsdConn.Conn.Close()
+
+	// FIXME: add device:
+	watch := []byte("?WATCH={\"enable\":true,\"json\":true};\r\n")
+
+	err = gpsdConn.Writer(watch)
+	if nil != err {
+		gpsdConn.GLog.Log(LOG_ERROR,
+			"Failed to send command to GPSD: %v", err)
+		return
+	}
+
+	// Reader() read messages from gpsd, and sends them out the
+	// channel.  Returns only when conenction is broken.
+	err = gpsdConn.Reader(gpsDataChan)
+	if nil != err {
+		gpsdConn.GLog.Log(LOG_ERROR,
+			"Failed to read from GPSD: %v", err)
+		return
+	}
+}
+
