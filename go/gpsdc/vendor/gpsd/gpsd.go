@@ -295,8 +295,6 @@ type Context struct {
 	Host     string // hostname or IP
 	Port     string // srouce port
 	Type     string // tcp, tcp4, tcp6, udp, udp4, udp6, file, unix (socket)
-	// file, device
-	Verbosity int      // 0 = ERROR, 1 = WARN, 2 = INFO
 	GLog      *GLogger // GPSD logging
 }
 
