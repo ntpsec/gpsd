@@ -288,7 +288,7 @@ type WATCH struct {
 }
 
 // describe a context/connection to a GPSD source
-type Source struct {
+type Context struct {
 	Conn     net.Conn
 	Device   string
 	Filename string
@@ -303,7 +303,7 @@ type Source struct {
 // Open a connection to a gpsd source.
 // Connection specified by SOURCE struct
 // Eventually will know about files, read-only, etc.
-func Open(src *Source) error {
+func Open(src *Context) error {
 
 	var err error = nil
 
@@ -330,7 +330,7 @@ func Open(src *Source) error {
  * Returns only when conenction is broken, EOF, etc.
  * Eventually will know about files, read-only, etc.
  */
-func (src *Source) Reader(gpsDataChan chan interface{}) error {
+func (src *Context) Reader(gpsDataChan chan interface{}) error {
 
 	buf := make([]byte, 4096)
 
@@ -431,7 +431,7 @@ func (src *Source) Reader(gpsDataChan chan interface{}) error {
 
 // Write to a gpsd connection.
 // Eventually will know about files, read-only, etc.
-func (src *Source) Writer(wstr []byte) error {
+func (src *Context) Writer(wstr []byte) error {
 
 	var err error = nil
 
