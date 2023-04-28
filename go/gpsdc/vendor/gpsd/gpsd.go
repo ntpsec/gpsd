@@ -23,8 +23,8 @@ import (
 	// Results are not consistent across implementations, by design.
 	// does not define constant NaN.
 	// does not define isFinite()
-	"math"    // for math.Log()
-	"net"     // for net.Dial(), net.Conn, etc.
+	"math" // for math.Log()
+	"net"  // for net.Dial(), net.Conn, etc.
 	// "reflect"     // for reflect.TypeOf() For debug
 	"strings" // for strings.Split()
 )
@@ -176,6 +176,21 @@ func NewSATELLITE() *SATELLITE {
 	}
 }
 
+/* ByGNSS implements sort.Interface based on the GNSS/Svid fields.
+ * You can sort []SATELLITE this way:
+ *   sort.Sort(gpsd.ByGNSS(sky.Satellites))
+ */
+type ByGNSS []SATELLITE
+
+func (a ByGNSS) Len() int { return len(a) }
+func (a ByGNSS) Less(i, j int) bool {
+	if a[i].Gnssid != a[j].Gnssid {
+		return a[i].Gnssid < a[j].Gnssid
+	}
+	return a[i].Svid < a[j].Svid
+}
+func (a ByGNSS) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+
 type SKY struct {
 	Class      string
 	Device     string
@@ -293,10 +308,10 @@ type Context struct {
 	Conn     net.Conn
 	Device   string
 	Filename string
-	Host     string // hostname or IP
-	Port     string // srouce port
-	Type     string // tcp, tcp4, tcp6, udp, udp4, udp6, file, unix (socket)
-	GLog      *GLogger // GPSD logging
+	Host     string   // hostname or IP
+	Port     string   // srouce port
+	Type     string   // tcp, tcp4, tcp6, udp, udp4, udp6, file, unix (socket)
+	GLog     *GLogger // GPSD logging
 }
 
 // Open a connection to a gpsd source.
@@ -478,4 +493,3 @@ func ConnGPSD(gpsdConn *Context, gpsDataChan chan interface{}) {
 		return
 	}
 }
-
