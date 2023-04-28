@@ -85,13 +85,24 @@ func main() {
 			data := <-gpsDataChan
 			// GLog.Log(gpsd.LOG_PROG, "Got %+v\n", data)
 
-			switch data.(type) {
+			switch t := data.(type) {
+			case *gpsd.SKY:
+				sky := data.(*gpsd.SKY)
+				fmt.Printf("SKY Time %s\n", 
+					sky.Time)
+                                if 0 < len(sky.Satellites) {
+                                    fmt.Printf(
+					"SATELLITES %+v\n", sky.Satellites[0])
+                                }
 			case *gpsd.TPV:
 				tpv := data.(*gpsd.TPV)
-				fmt.Printf("TPV Time %s Mode %d Lat %f Lon %f\n",
+				fmt.Printf("TPV Time %s Mode %d Lat %f " +
+                                          "  Lon %f\n",
 					tpv.Time, tpv.Mode, tpv.Lat, tpv.Lon)
 			default:
 				// ignore other message classes
+                                GLog.Log(gpsd.LOG_PROG, "Ignoring type %v\n",
+                                       t)
 			}
 		}
 	}(gpsDataChan)

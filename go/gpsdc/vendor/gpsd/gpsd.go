@@ -25,6 +25,7 @@ import (
 	// does not define isFinite()
 	"math"    // for math.Log()
 	"net"     // for net.Dial(), net.Conn, etc.
+	// "reflect"     // for reflect.TypeOf() For debug
 	"strings" // for strings.Split()
 )
 
@@ -391,9 +392,9 @@ func (src *Context) Reader(gpsDataChan chan interface{}) error {
 						"SKY: %v\n", err)
 					continue
 				}
-				// FIXME: unpack SATELLITES
 				src.GLog.Log(LOG_PROG,
 					"SKY %+v\n", sky)
+				gpsDataChan <- sky
 			case "TPV":
 				tpv := NewTPV()
 				err = json.Unmarshal([]byte(line), &tpv)
