@@ -44,7 +44,7 @@ func main() {
 	flag.Parse()
 
 	// Start logging, set verbosity
-	GLog := gpsd.NewLog(os.Stderr, "gpsdc: ")
+	GLog := gpsd.NewLog(os.Stderr, "example3: ")
 	GLog.LogLevel = gpsd.LogLvl(verbosity)
 
 	// Create a connection context

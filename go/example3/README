@@ -1,0 +1,20 @@
+This directory contains 2 files and 1 directory
+
+example3.go is a minimal gpsd client program written in Go.
+
+go.mod is a bookeeping file that the Go compiler uses.
+It declares the two requirements for example3.go:
+
+1. The Golang compiler version
+2. The gpsd Go package
+
+The vendor directory contains the gpsd Go package in vendor/gpsd/gpsd.go
+
+To run example3.go, change to this directory and run:
+
+    $ go run .
+
+To build the binary example3, change to this directory and run:
+
+    $ go build .
+
