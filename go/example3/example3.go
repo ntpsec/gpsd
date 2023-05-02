@@ -102,6 +102,14 @@ func main() {
 				fmt.Printf("TPV Time %s Mode %d Lat %f "+
 					"  Lon %f\n",
 					tpv.Time, tpv.Mode, tpv.Lat, tpv.Lon)
+			case *gpsd.WATCH:
+				watch := data.(*gpsd.WATCH)
+				fmt.Printf("WATCH enable %v json %v\n",
+					watch.Enable, watch.Json)
+			case *gpsd.VERSION:
+				ver := data.(*gpsd.VERSION)
+				fmt.Printf("VERSION Release %s\n",
+					ver.Release)
 			default:
 				// ignore other message classes
 				GLog.Log(gpsd.LOG_PROG, "Ignoring type %v\n",

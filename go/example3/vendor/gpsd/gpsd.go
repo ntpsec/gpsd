@@ -428,6 +428,7 @@ func (src *Context) Reader(gpsDataChan chan interface{}) error {
 					continue
 				}
 				src.GLog.Log(LOG_PROG, "VERSION %+v\n", version)
+				gpsDataChan <- version
 			case "WATCH":
 				watch := new(WATCH)
 				err = json.Unmarshal([]byte(line), &watch)
@@ -436,6 +437,7 @@ func (src *Context) Reader(gpsDataChan chan interface{}) error {
 					continue
 				}
 				src.GLog.Log(LOG_PROG, "WATCH %+v\n", watch)
+				gpsDataChan <- watch
 			default:
 				fmt.Printf("Unknown class '%s'\n", gpsdmsg.Class)
 			}
