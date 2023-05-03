@@ -1,11 +1,24 @@
-//
-// A Golang module to conenct to gpsd.
-//
-// Warning: Go math does not implement IEEE 754!
-//
-// This file is Copyright 2022 by the GPSD project
-// SPDX-License-Identifier: BSD-2-clause
-//
+/*
+Package gpsd enables for gpsa God clients to connect to gpsd daemons.
+
+This package is standalone, using only core Golang packages.
+It does not require any other components of gpsd to be installed,
+does not require an FFI, or libgps, does not require non-core
+Golang modules.
+
+This package connect to gpsd daemons and has them send gpsd JSON
+messages.  The JSON packets are decoded and placed into structs
+matching the JSON message class.
+
+See "man gpsd_json" for descriptions of the JSON messages and their
+contents.
+
+Warning: Go math does not implement IEEE 754!
+results will not afree with other gpsd clients.
+
+This file is Copyright by The GPSD Project
+SPDX-License-Identifier: BSD-2-clause
+*/
 
 package gpsd
 
@@ -29,10 +42,10 @@ import (
 	"strings" // for strings.Split()
 )
 
-// add a wrapper over loa.Logger module
-// logging levels
+// LogLvl is a wrapper over loa.Logger module logging levels.
 type LogLvl int
 
+// Set the log levels to match those in include/gpsd.h
 const (
 	LOG_ERROR  LogLvl = -1 // errors, display always
 	LOG_SHOUT  LogLvl = 0  // not an error but we should always see it
@@ -47,25 +60,42 @@ const (
 	LOG_RAW1   LogLvl = 9  // rawer
 )
 
+// LogLvl.String() return the log level as a string
+func (level LogLvl) String() string {
+	return []string{"ERROR",
+		"SHOUT",
+		"WARN",
+		"CLIENT",
+		"INF",
+		"PROG",
+		"IO",
+		"DATA",
+		"SPIN",
+		"RAW",
+		"RAW1"}[level+1]
+}
+
+// GLogger is a wrapper around log.Logger, plus LogLvl.
 type GLogger struct {
-	// Why can't I just make GLogger an alias of log.Logger?
 	Logger   *log.Logger
 	LogLevel LogLvl // Current log level, default 0
 }
 
+// NewLog creates a new GLogger struct.
 func NewLog(out io.Writer, prefix string) *GLogger {
-	// Yes, this is ugly.  Got a better idea?
 	var GLog GLogger
 
 	GLog.Logger = log.New(out, prefix, log.Ltime)
 	return &GLog
 }
 
+// Log sends log message fmt to log.Logger is the LogLvl is high enough.
 func (log *GLogger) Log(level LogLvl, fmt string, args ...interface{}) {
 	if log.LogLevel < level {
 		return
 	}
-	log.Logger.Printf(fmt, args...)
+	newfmt := level.String() + ": " + fmt
+	log.Logger.Printf(newfmt, args...)
 }
 
 // Filling in math module oversights.
@@ -89,8 +119,11 @@ func IsFinite(x float64) bool {
 }
 
 // define some useful types to ease formatting
+
+// GUint is an unsigned int, -1 means unset.
 type GUint int
 
+// GUint.String() return a GUint as a string.  "n/a" if unset.
 func (x GUint) String() string {
 	u := int(x)
 	if 0 > u {
@@ -99,9 +132,10 @@ func (x GUint) String() string {
 	return fmt.Sprintf("%d", u)
 }
 
-// Use GFloat, instead of float64, to pretty print NaN
+// GFloat, used instead of float64, to pretty print NaN
 type GFloat float64
 
+// GFloat.String() return a GFloat as a string.  "n/a" if unset.
 func (d GFloat) String() string {
 	f := float64(d)
 	if IsFinite(f) {
@@ -112,12 +146,16 @@ func (d GFloat) String() string {
 
 // See the gpsd_json man page for the descriptions of these structures
 
+// GPSData, just enough to decode the class from the JSON.
 type GPSData struct {
 	Class string
 	// delay parsing until we know the class
 }
 
 // sadly, Go has no easy way to set a non-zero default value for missing keys.
+// So we have to use NewXXXX() for that
+
+// DEVICE, for the DEVICE items in DEVICES
 type DEVICE struct {
 	Class     string
 	Activated string
@@ -136,12 +174,14 @@ type DEVICE struct {
 	Readonly  bool
 }
 
+// DEVICES, to hold DEVICES message.
 type DEVICES struct {
 	Class   string
 	Devices []DEVICE
 	Remote  string
 }
 
+// PPS, to hold PPS message.
 type PPS struct {
 	Class      string
 	Clock_nsec int
@@ -154,6 +194,7 @@ type PPS struct {
 	Shm        string
 }
 
+// SATELLITE, for the SATELLITE items in SKY
 type SATELLITE struct {
 	Az     GFloat
 	El     GFloat
@@ -167,7 +208,7 @@ type SATELLITE struct {
 	Used   bool
 }
 
-// Return a new SATELLITE, with good defaults
+// NewSATELLITE()  Return a new SATELLITE, with good defaults
 func NewSATELLITE() *SATELLITE {
 	return &SATELLITE{
 		Az: GFloat(NaN),
@@ -191,6 +232,7 @@ func (a ByGNSS) Less(i, j int) bool {
 }
 func (a ByGNSS) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 
+// SKY, to hold SKY message.
 type SKY struct {
 	Class      string
 	Device     string
@@ -223,6 +265,7 @@ func NewSKY() *SKY {
 		Xdop:  NaN}
 }
 
+// TPV, to hold TPV message.
 type TPV struct {
 	AltHAE      float64
 	AltMSL      float64
@@ -281,6 +324,7 @@ func NewTPV() *TPV {
 		Lat: GFloat(NaN), Lon: GFloat(NaN)}
 }
 
+// VERSION, to hold VERSION message.
 type VERSION struct {
 	Class       string
 	Proto_major int
@@ -290,6 +334,7 @@ type VERSION struct {
 	Rev         string
 }
 
+// WATCH, to hold WATCH message.
 type WATCH struct {
 	Class   string
 	Device  string
@@ -310,13 +355,18 @@ type Context struct {
 	Filename string
 	Host     string   // hostname or IP
 	Port     string   // srouce port
-	Type     string   // tcp, tcp4, tcp6, udp, udp4, udp6, file, unix (socket)
+        // tcp, tcp4, tcp6, udp, udp4, udp6, file, unix (socket)
+	Type     string
 	GLog     *GLogger // GPSD logging
 }
 
-// Open a connection to a gpsd source.
-// Connection specified by SOURCE struct
-// Eventually will know about files, read-only, etc.
+/* Open() opens a connection to a gpsd source.
+ * Connection to make specified by Context struct
+ * Eventually will know about files, read-only, etc.
+ *
+ * Return: OK = nil
+ *         On fail = the error
+ */
 func Open(src *Context) error {
 
 	var err error = nil
