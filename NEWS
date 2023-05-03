@@ -2,7 +2,7 @@
 
 3.25.1~dev: WIP
 
-3.25: 2022-01-09
+3.25: 2022-10-09
   Have ubxtool "-w 0" run forever.
   Bump libgps version to 30.0
   Change fixsource_t, store server locally, make pointers const.
