@@ -440,6 +440,7 @@ func (src *Context) Reader(gpsDataChan chan interface{}) error {
 				}
 				src.GLog.Log(LOG_PROG,
 					"DEVICES %+v\n", devices)
+				gpsDataChan <- devices
 			case "PPS":
 				pps := new(PPS)
 				err = json.Unmarshal([]byte(line), &pps)

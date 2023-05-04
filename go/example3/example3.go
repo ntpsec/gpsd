@@ -120,6 +120,17 @@ func main() {
 			GLog.Log(gpsd.LOG_IO, "Got %+v\n", data)
 
 			switch t := data.(type) {
+			case *gpsd.DEVICES:
+				devices := data.(*gpsd.DEVICES)
+				fmt.Printf("DEVICES\n")
+
+				// Sort devices?
+				for _, device := range devices.Devices {
+					fmt.Printf("  DEVICE %s Driver %s " +
+                                                "Subtype %s %s\n",
+						device.Path, device.Driver,
+						device.Subtype, device.Subtype1)
+				}
 			case *gpsd.SKY:
 				sky := data.(*gpsd.SKY)
 				fmt.Printf("SKY Time %s\n",
