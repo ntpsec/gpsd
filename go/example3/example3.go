@@ -87,16 +87,16 @@ func main() {
 		os.Exit(2)
 	}
 
-        // Who to conenct to
+	// Who to conenct to
 	gpsdConn.Device = gpsdDev
 	gpsdConn.Host = gpsdHost
 	gpsdConn.Port = gpsdPort
 
-        // What to ask for
-        gpsdConn.Watch.Device = gpsdDev  // Yeah, this duplicates gpsdConn.Device
-        gpsdConn.Watch.Enable = true
-        gpsdConn.Watch.Json = true
-        gpsdConn.Watch.Pps = true
+	// What to ask for
+	gpsdConn.Watch.Device = gpsdDev // Yeah, this duplicates gpsdConn.Device
+	gpsdConn.Watch.Enable = true
+	gpsdConn.Watch.Json = true
+	gpsdConn.Watch.Pps = true
 
 	/* Use a wait group to wait until the go routine connected to
 	 * the gpsd dameon exits.
@@ -134,11 +134,19 @@ func main() {
 
 				// Sort devices?
 				for _, device := range devices.Devices {
-					fmt.Printf("  DEVICE %s Driver %s " +
-                                                "Subtype %s %s\n",
+					fmt.Printf("  DEVICE %s Driver %s "+
+						"Subtype %s %s\n",
 						device.Path, device.Driver,
 						device.Subtype, device.Subtype1)
 				}
+			case *gpsd.ERROR:
+				errormsg := data.(*gpsd.ERROR)
+				fmt.Printf("ERROR %s\n", errormsg.Message)
+			case *gpsd.PPS:
+				pps := data.(*gpsd.PPS)
+				fmt.Printf("PPS Clock %v.%09d Real %v.%09d\n",
+					pps.Real_sec, pps.Real_nsec,
+					pps.Clock_sec, pps.Clock_nsec)
 			case *gpsd.SKY:
 				sky := data.(*gpsd.SKY)
 				fmt.Printf("SKY Time %s\n",
@@ -153,7 +161,7 @@ func main() {
 				toff := data.(*gpsd.TOFF)
 				fmt.Printf("TOFF Clock %v.%09d Real %v.%09d\n",
 					toff.Real_sec, toff.Real_nsec,
-                                        toff.Clock_sec, toff.Clock_nsec)
+					toff.Clock_sec, toff.Clock_nsec)
 			case *gpsd.TPV:
 				tpv := data.(*gpsd.TPV)
 				fmt.Printf("TPV Time %s Mode %d Lat %f "+

@@ -181,6 +181,12 @@ type DEVICES struct {
 	Remote  string
 }
 
+// ERROR, for the ERROR message.
+type ERROR struct {
+	Class   string
+	Message string
+}
+
 // PPS, to hold PPS message.
 type PPS struct {
 	Class      string
@@ -265,22 +271,21 @@ func NewSKY() *SKY {
 		Xdop:  NaN}
 }
 
-
 // TOFF, to hold TOFF message.
 type TOFF struct {
-	Clock_sec   GUint
-	Clock_nsec  GUint
-	Device      string
-	Real_sec    GUint
-	Real_nsec   GUint
+	Clock_sec  GUint
+	Clock_nsec GUint
+	Device     string
+	Real_sec   GUint
+	Real_nsec  GUint
 }
 
 // Return a new TOFF, with good defaults
 func NewTOFF() *TOFF {
 	return &TOFF{
 		Clock_sec:  GUint(-1),
-		Clock_nsec:  GUint(-1),
-		Real_sec:  GUint(-1),
+		Clock_nsec: GUint(-1),
+		Real_sec:   GUint(-1),
 		Real_nsec:  GUint(-1)}
 }
 
@@ -375,9 +380,9 @@ type Context struct {
 	GLog     *GLogger // GPSD logging
 	Host     string   // hostname or IP
 	Port     string   // srouce port
-        // tcp, tcp4, tcp6, udp, udp4, udp6, file, unix (socket)
-	Type     string
-        Watch    WATCH    // requested WATCH
+	// tcp, tcp4, tcp6, udp, udp4, udp6, file, unix (socket)
+	Type  string
+	Watch WATCH // requested WATCH
 }
 
 /* Open() opens a connection to a gpsd source.
@@ -461,6 +466,16 @@ func (src *Context) Reader(gpsDataChan chan interface{}) error {
 				src.GLog.Log(LOG_PROG,
 					"DEVICES %+v\n", devices)
 				gpsDataChan <- devices
+			case "ERROR":
+				errormsg := new(ERROR)
+				err = json.Unmarshal([]byte(line), &errormsg)
+				if nil != err {
+					src.GLog.Log(LOG_WARN,
+						"ERROR: %v\n", err)
+					continue
+				}
+				src.GLog.Log(LOG_PROG, "ERROR %+v\n", errormsg)
+				gpsDataChan <- errormsg
 			case "PPS":
 				pps := new(PPS)
 				err = json.Unmarshal([]byte(line), &pps)
@@ -470,6 +485,7 @@ func (src *Context) Reader(gpsDataChan chan interface{}) error {
 					continue
 				}
 				src.GLog.Log(LOG_PROG, "PPS %+v\n", pps)
+				gpsDataChan <- pps
 			case "SKY":
 				sky := NewSKY()
 				err = json.Unmarshal([]byte(line), &sky)
@@ -559,15 +575,15 @@ func ConnGPSD(gpsdConn *Context, gpsDataChan chan interface{}) {
 	defer gpsdConn.Conn.Close()
 
 	watch := fmt.Sprintf("?WATCH={\"enable\":%v,\"json\":%v,\"pps\":%v",
-            gpsdConn.Watch.Enable, gpsdConn.Watch.Json, gpsdConn.Watch.Pps)
-        if 0 < len(gpsdConn.Watch.Device) {
-            // add device:
-            watch += fmt.Sprintf(",\"device\":\"%s\"", gpsdConn.Watch.Device)
-        }
+		gpsdConn.Watch.Enable, gpsdConn.Watch.Json, gpsdConn.Watch.Pps)
+	if 0 < len(gpsdConn.Watch.Device) {
+		// add device:
+		watch += fmt.Sprintf(",\"device\":\"%s\"", gpsdConn.Watch.Device)
+	}
 	watch += "};\r\n"
 
-        gpsdConn.GLog.Log(LOG_SHOUT,
-                "Sending to GPSD: %v", watch)
+	gpsdConn.GLog.Log(LOG_SHOUT,
+		"Sending to GPSD: %v", watch)
 
 	err = gpsdConn.Writer([]byte(watch))
 	if nil != err {
