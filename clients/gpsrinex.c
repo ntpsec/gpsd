@@ -1288,12 +1288,13 @@ int main(int argc, char **argv)
     if (NULL == file_out) {
         (void)strftime(tmstr, sizeof(tmstr), "gpsrinex%Y%j%H%M%S.obs",
                        report_time);
-        file_out = tmstr;
+        file_out = strdup(tmstr);
     }
     log_file = fopen(file_out, "w");
     if (log_file == NULL) {
         syslog(LOG_ERR, "ERROR: Failed to open %s: %s",
                file_out, strerror(errno));
+        free(file_out);      // pacify -Wanalyzer-malloc-leak
         exit(3);
     }
 
