@@ -200,12 +200,15 @@ type PPS struct {
 	Shm        string
 }
 
+// GNSSID a wrapper on SATELLITE.Gnssid.
+type GNSSid int
+
 // SATELLITE, for the SATELLITE items in SKY
 type SATELLITE struct {
 	Az     GFloat
 	El     GFloat
 	Freqid int
-	Gnssid int
+	Gnssid GNSSid
 	Health int
 	PRN    int
 	Sigid  int
@@ -221,6 +224,29 @@ func NewSATELLITE() *SATELLITE {
 		El: GFloat(NaN),
 		Ss: GFloat(NaN),
 	}
+}
+
+// GNSSid.String() return the name of the constellation
+func (gnssid GNSSid) String() string {
+        if 0 > gnssid { return "n/a" }
+        if 7 < gnssid { return "unk" }
+
+	return []string{
+               "GPS",
+               "SBAS",
+               "Galileo",
+               "BeiDou",
+               "IMES",
+               "QZSS",
+               "GLONASS",
+               "NavIC"}[gnssid]
+}
+
+// SATELLITE.HlthUsed() - return a string about Health and Used
+func (sat SATELLITE) HlthUsed() string {
+        if 2 == sat.Health { return "U" }  // Unhealthy
+        if sat.Used { return "Y" }    // Used
+        return "N"                         // Unused
 }
 
 /* ByGNSS implements sort.Interface based on the GNSS/Svid fields.

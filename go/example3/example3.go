@@ -20,6 +20,7 @@ The flags are:
 	                'gpsd', IP
 	                'gpsd4' IPv4 only,
 	                'gpsd6' IPv6 only.
+		-v
 		-verbosity
 	            The verbosity of the logging (0 to 9_.  Default 0.
 
@@ -64,7 +65,9 @@ func main() {
 	flag.StringVar(&gpsdProt, "prot", "gpsd",
 		"GPSD protocol. "+
 			"'gpsd', 'gpsd4' IPv4 only, 'gpsd6' IPv6 only")
-	flag.IntVar(&verbosity, "verbosity", 0, "Verbosity")
+	v_help := "Verbosity (0-9)"
+	flag.IntVar(&verbosity, "v", 0, v_help)
+	flag.IntVar(&verbosity, "verbosity", 0, v_help)
 	flag.Parse()
 
 	// Start logging, set verbosity
@@ -154,8 +157,11 @@ func main() {
 
 				sort.Sort(gpsd.ByGNSS(sky.Satellites))
 				for _, sat := range sky.Satellites {
-					fmt.Printf(
-						"  %+v\n", sat)
+                                        fmt.Printf("  %s %d " +
+                                                "Az %s El %s Snr %s Used %s\n",
+                                                sat.Gnssid, sat.Svid,
+                                                sat.Az, sat.El, sat.Ss,
+                                                sat.HlthUsed())
 				}
 			case *gpsd.TOFF:
 				toff := data.(*gpsd.TOFF)
