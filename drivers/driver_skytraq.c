@@ -774,7 +774,7 @@ static gps_mask_t sky_msg_A8(struct gps_device_t *session,
 
     if (59 != len) {
         GPSD_LOG(LOG_INF, &session->context->errout, "Skytraq: "
-            "Navigation Data Message has incorrect length %ld\n", len);
+            "Navigation Data Message has incorrect length %zu\n", len);
         return 0;
     }
 
