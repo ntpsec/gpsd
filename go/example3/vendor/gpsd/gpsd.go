@@ -265,6 +265,25 @@ func NewSKY() *SKY {
 		Xdop:  NaN}
 }
 
+
+// TOFF, to hold TOFF message.
+type TOFF struct {
+	Clock_sec   GUint
+	Clock_nsec  GUint
+	Device      string
+	Real_sec    GUint
+	Real_nsec   GUint
+}
+
+// Return a new TOFF, with good defaults
+func NewTOFF() *TOFF {
+	return &TOFF{
+		Clock_sec:  GUint(-1),
+		Clock_nsec:  GUint(-1),
+		Real_sec:  GUint(-1),
+		Real_nsec:  GUint(-1)}
+}
+
 // TPV, to hold TPV message.
 type TPV struct {
 	AltHAE      float64
@@ -353,11 +372,12 @@ type Context struct {
 	Conn     net.Conn
 	Device   string
 	Filename string
+	GLog     *GLogger // GPSD logging
 	Host     string   // hostname or IP
 	Port     string   // srouce port
         // tcp, tcp4, tcp6, udp, udp4, udp6, file, unix (socket)
 	Type     string
-	GLog     *GLogger // GPSD logging
+        Watch    WATCH    // requested WATCH
 }
 
 /* Open() opens a connection to a gpsd source.
@@ -461,6 +481,16 @@ func (src *Context) Reader(gpsDataChan chan interface{}) error {
 				src.GLog.Log(LOG_PROG,
 					"SKY %+v\n", sky)
 				gpsDataChan <- sky
+			case "TOFF":
+				toff := NewTOFF()
+				err = json.Unmarshal([]byte(line), &toff)
+				if nil != err {
+					src.GLog.Log(LOG_WARN,
+						"TOFF: %v\n", err)
+					continue
+				}
+				src.GLog.Log(LOG_PROG, "TOFF %+v\n", toff)
+				gpsDataChan <- toff
 			case "TPV":
 				tpv := NewTPV()
 				err = json.Unmarshal([]byte(line), &tpv)
@@ -513,6 +543,7 @@ func (src *Context) Writer(wstr []byte) error {
 /* ConnGPSD() -- Create, and run, a data channel connection to a gpsd
  *
  * Sends decoded JSON packets into the data channel.
+ * Does not handle Raw, Super Raw, etc.
  * Only returns on connection failure.
  *
  * Return: void
@@ -527,10 +558,18 @@ func ConnGPSD(gpsdConn *Context, gpsDataChan chan interface{}) {
 	}
 	defer gpsdConn.Conn.Close()
 
-	// FIXME: add device:
-	watch := []byte("?WATCH={\"enable\":true,\"json\":true};\r\n")
+	watch := fmt.Sprintf("?WATCH={\"enable\":%v,\"json\":%v,\"pps\":%v",
+            gpsdConn.Watch.Enable, gpsdConn.Watch.Json, gpsdConn.Watch.Pps)
+        if 0 < len(gpsdConn.Watch.Device) {
+            // add device:
+            watch += fmt.Sprintf(",\"device\":\"%s\"", gpsdConn.Watch.Device)
+        }
+	watch += "};\r\n"
 
-	err = gpsdConn.Writer(watch)
+        gpsdConn.GLog.Log(LOG_SHOUT,
+                "Sending to GPSD: %v", watch)
+
+	err = gpsdConn.Writer([]byte(watch))
 	if nil != err {
 		gpsdConn.GLog.Log(LOG_ERROR,
 			"Failed to send command to GPSD: %v", err)

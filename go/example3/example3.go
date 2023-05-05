@@ -86,9 +86,17 @@ func main() {
 		GLog.Log(gpsd.LOG_ERROR, "Unknown protocol %s\n", gpsdProt)
 		os.Exit(2)
 	}
+
+        // Who to conenct to
 	gpsdConn.Device = gpsdDev
 	gpsdConn.Host = gpsdHost
 	gpsdConn.Port = gpsdPort
+
+        // What to ask for
+        gpsdConn.Watch.Device = gpsdDev  // Yeah, this duplicates gpsdConn.Device
+        gpsdConn.Watch.Enable = true
+        gpsdConn.Watch.Json = true
+        gpsdConn.Watch.Pps = true
 
 	/* Use a wait group to wait until the go routine connected to
 	 * the gpsd dameon exits.
@@ -141,6 +149,11 @@ func main() {
 					fmt.Printf(
 						"  %+v\n", sat)
 				}
+			case *gpsd.TOFF:
+				toff := data.(*gpsd.TOFF)
+				fmt.Printf("TOFF Clock %v.%09d Real %v.%09d\n",
+					toff.Real_sec, toff.Real_nsec,
+                                        toff.Clock_sec, toff.Clock_nsec)
 			case *gpsd.TPV:
 				tpv := data.(*gpsd.TPV)
 				fmt.Printf("TPV Time %s Mode %d Lat %f "+
@@ -156,7 +169,7 @@ func main() {
 					ver.Release)
 			default:
 				// Ignore other message classes.  For now.
-				GLog.Log(gpsd.LOG_PROG, "Ignoring type %v\n",
+				GLog.Log(gpsd.LOG_SHOUT, "Ignoring type %v\n",
 					t)
 			}
 		}
