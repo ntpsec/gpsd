@@ -65,9 +65,9 @@ func main() {
 	flag.StringVar(&gpsdProt, "prot", "gpsd",
 		"GPSD protocol. "+
 			"'gpsd', 'gpsd4' IPv4 only, 'gpsd6' IPv6 only")
-	v_help := "Verbosity (0-9)"
-	flag.IntVar(&verbosity, "v", 0, v_help)
-	flag.IntVar(&verbosity, "verbosity", 0, v_help)
+	vHelp := "Verbosity (0-9)"
+	flag.IntVar(&verbosity, "v", 0, vHelp)
+	flag.IntVar(&verbosity, "verbosity", 0, vHelp)
 	flag.Parse()
 
 	// Start logging, set verbosity
