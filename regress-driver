@@ -185,6 +185,8 @@ case $mode in
             else
                 echo "*** No check log $f.chk exists"
                 notfound=`expr $notfound + 1`;
+                # Not Found is an Error.
+                errors=`expr $errors + 1`;
             fi
             total=`expr $total + 1`;
         done;
