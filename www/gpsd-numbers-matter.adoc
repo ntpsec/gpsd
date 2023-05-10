@@ -38,9 +38,9 @@ results, regardless of distribution, architecture, C compiler, etc.
 C headers include "#define __STDC_IEC_559__ 1" to indicated standards
 compliance.  See C99 Section 6.10.8.2.
 
-Beware: since about 2011, some have decided to trade a bit of standards
-compliance for a bit of speed. C allows this deviant behavior as long
-as the C headers do not define "__STDC_IEC_559__" as 1.
+Beware: since about 2011, some distributions have decided to trade a
+bit of standards compliance for a bit of speed. C allows this deviant
+behavior as long as the C headers do not define "__STDC_IEC_559__" as 1.
 
 *gpsd* regression tests only pass when "__STDC_IEC_559__" is 1.
 
@@ -48,7 +48,7 @@ printf() format %f defaults to %.6f.  Below you will see how that may
 cause problems.
 
 Python floats are very similar to IEEE 754 doubles, plus some annoying bugs
-related to <<NaN>>.
+related to <<NaN>>.  More on that later.
 
 A 32 bit integer has 9.33 decimal digits of precision. That is 31 binary
 digits of precision, plus a sign bit.
@@ -497,19 +497,41 @@ floating point number.
 
 == Not Your Grandmother's Pi
 
-The Baylonians knew about Pi 4,000 years ago.  You know Pi as an
-irrational number that randomly continues forever.  At the start of the
-20th century, about 500 digits of Pi were known.
+The Babylonians knew about Pi 4,000 years ago.  You know pi as an
+irrational number that randomly continues forever.  Slowly converging on
+the ratio between the radius and the circumference of a circle.  At the
+start of the 20th century, about 500 digits of pi were known.
 
-Forget all that.  GNSS systems do not use that Pi.  USA Space
-Systems Command has decreed, in <<IS-GPS-200>> that Pi is exactly
-3.1415926535898.  About 14 decimal digits of precision.  The Galileo
-<<OS_SIS_ICD>>, BeiDou <<ICD_B1I>>, and QZSS <<IS-QZSS>> also mandate
-that Pi.
+Here are the first 74 digits of pi:
+
+3.1415926535897932384626433832795028841971693993751058209749445923078164062...
+
+Forget that pi.  GNSS systems do not use that pi.
+
+USA Space Systems Command has decreed, in <<IS-GPS-200>>, that pi is
+exactly 3.1415926535898.  45 binary digits of precision, about 14
+decimal digits of precision. Galileo <<OS_SIS_ICD>>, BeiDou <<ICD_B1I>>,
+and QZSS <<IS-QZSS>> also mandate that pi.
 
 Of course GLONASS <ICD-GLONASS>> has a different opinion.  It uses
-3.14159265358979.  One more decimal digit than GPS, et. al.
+3.14159265358979.  49 binary digits of precision.  One more decimal
+digit than GPS, et. al.
 
+Both flavors of pi fit comfortably in the 53 bits of binary precision in
+an <<IEEE754>> double.
+
+How much does this matter?  SBAS satellites orbit in a Geosynchronous
+Equatorial Orbit (GEO).  The radius of a GEO orbit is 42,164 km.
+The circumference of that orbit, computed using the GPS pi, and computed
+with the 74 digit pi above,, differ by 0.285 microns (micro meters).
+
+The circumference of that orbit, computed using the GPS pi, and the
+GLONASS pi, differs by 0.422 microns (micro meters).  Worse than using GPS pi.
+
+According to the <<IS-GPS-200>> an orbit error of one meter equates to
+a position error of about one meter.  So we can assume, for now, the
+selection of pi to use (GPS, GLONASS, etc.) is of minimal importance.
+Unless you are studying gravity waves.
 
 == REFERENCES
 
