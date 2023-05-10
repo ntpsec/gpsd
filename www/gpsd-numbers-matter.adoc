@@ -1,6 +1,6 @@
 = GPSD Numbers Matter
 Gary E. Miller <gem@rellim.com>
-19 January 2023
+09 May 2023
 :author: Gary E. Miller
 :description: How and why  GPSD tortures numbers.
 :email: <gem@rellim.com>
@@ -270,9 +270,11 @@ which integer is challenging. <<IEEE754>> eliminates that problem with
 floating point numbers.
 
 When *gpsd* marks a floating point number invalid, it sets the value to
-<<NaN>>. So before using any *gpsd* floating point number, check that
-it is valid. C obeys <<IEEE754>>. Python sort of does, enough for our
-purposes.
+<<NaN>>. So before using any *gpsd* floating point number, check that it
+is valid.  Standard C obeys <<IEEE754>>.  Some distributions turn off
+strict compliance in exchange for a bit of speed.  Those distributions
+will fail the *gpsd* regression tests. Python, and Golang, sort of obey
+<<IEEE754>>, enough for our purposes.
 
 === C NaN
 
@@ -412,6 +414,103 @@ And that is why *gpsd* uses *math.isfinite()* instead of *math.isnan()*.
 the subject. The <<IEEE754>> document is a closed source standard. For a
 public description look at the Wikipedia <<NaN>> article.
 
+=== Golang NaN
+
+Golang has similar quirks to Python, "features" that conflict with <<IEEE754>>,
+many undocumented.  Criminally Go does not allow NaN to be used as a constant:
+
+[source%nowrap,numbered]
+----
+$ cat nan.go
+package main
+
+const myNaN = 1.0/0.0
+
+$ go build nan.go
+# command-line-arguments
+./nan.go:3:19: invalid operation: division by zero
+----
+
+Or ven as a computed variable:
+
+[source%nowrap,numbered]
+----
+# cat nan.go
+package main
+
+func init() {
+    myNaN := 1.0 / 0.0
+}
+kong /tmp # go build nan.go
+# command-line-arguments
+./nan.go:6:19: invalid operation: division by zero
+----
+
+Go provides the function  math.NaN() as a roundabout way to get NaN.  But
+it cannot be used as a constant:
+
+[source%nowrap,numbered]
+----
+# cat nan.go
+package main
+
+import "math"  // for math.NaN()
+
+const myNaN = math.NaN()
+kong /tmp # go build nan.go
+# command-line-arguments
+./nan.go:5:15: math.NaN() (value of type float64) is not constant
+----
+
+You can only use math.NaN() as a variable, you can't make it a constant.
+Like this:
+
+[source%nowrap,numbered]
+----
+$ cat nan.go
+package main
+
+import "math"  // for math.NaN()
+
+func init() {
+    myNaN := math.NaN()
+}
+kong /tmp # go build nan.go
+$ command-line-arguments
+./nan.go:6:5: myNaN declared and not used
+----
+
+Go does not provide isFinite(), so you gpsd rolls its own:
+
+[source%nowrap,numbered]
+----
+func IsFinite(x float64) bool {
+        if math.IsNaN(x) || math.IsInf(x, 0) {
+                return false
+        }
+        return true
+}
+----
+
+See above for why you should always use isFinite() before using a
+floating point number.
+
+== Not Your Grandmother's Pi
+
+The Baylonians knew about Pi 4,000 years ago.  You know Pi as an
+irrational number that randomly continues forever.  At the start of the
+20th century, about 500 digits of Pi were known.
+
+Forget all that.  GNSS systems do not use that Pi.  USA Space
+Systems Command has decreed, in <<IS-GPS-200>> that Pi is exactly
+3.1415926535898.  About 14 decimal digits of precision.  The Galileo
+<<OS_SIS_ICD>>, BeiDou <<ICD_B1I>>, and QZSS <<IS-QZSS>> also mandate
+that Pi.
+
+Of course GLONASS <ICD-GLONASS>> has a different opinion.  It uses
+3.14159265358979.  One more decimal digit than GPS, et. al.
+
+
 == REFERENCES
 
 * *GPSD Project web site:* {gpsdweb}
@@ -431,7 +530,18 @@ public description look at the Wikipedia <<NaN>> article.
 
 * [[[NIST-USNO]]] https://www.nist.gov/pml/time-and-frequency-division/time-services/nist-usno/nist-usno-2020-archive
 
+* [[[IS-GPS-200]]] https://navcen.uscg.gov/gps-technical-references
+
+* [[[OS_SIS_ICD]]] https://galileognss.eu/galileo-gnss-documents/
+
+* [[[ICD_B1I]]] http://en.beidou.gov.cn/SYSTEMS/ICD/
+
+* [[[IS-QZSS]]] https://qzss.go.jp/en/technical/ps-is-qzss/ps-is-qzss.html
+
+* [[[ICD-GLONASS]]] https://glonass-iac.ru/en/documents/
+
 == COPYING
 
-This file is Copyright 2021 by the GPSD project +
+This file is Copyright by Gary E. Miller
+This file is Copyright by the GPSD project +
 SPDX-License-Identifier: BSD-2-clause

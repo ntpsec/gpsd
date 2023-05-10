@@ -2951,10 +2951,15 @@ extern short ubx2_to_prn(int gnssId, int svId);
 // miles and knots are both the international standard versions of the units
 
 // angle conversion multipliers
-// IS-GPS-200, and Galileo_OS_SIS_ICD_v2.0.pdf, use pi = 3.1415926535898
+// IS-GPS-200, Galileo OS_SIS_ICD, BeiDou ICD_B1I, and QZSS IS-QZSS use
+// pi = 3.1415926535898
+// FIXME: use the proper pi
 #define GPS_PI          3.1415926535897932384626433832795029
 #define RAD_2_DEG       57.2957795130823208767981548141051703
 #define DEG_2_RAD       0.0174532925199432957692369076848861271
+
+// GLONASS uses one more digit than GPS in pi:
+#define GLO_PI          3.14159265358979
 
 // other mathematical constants
 #define GPS_LN2         0.693147180559945309417232121458176568
