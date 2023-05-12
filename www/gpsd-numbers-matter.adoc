@@ -1,6 +1,6 @@
 = GPSD Numbers Matter
 Gary E. Miller <gem@rellim.com>
-09 May 2023
+11 May 2023
 :author: Gary E. Miller
 :description: How and why  GPSD tortures numbers.
 :email: <gem@rellim.com>
@@ -259,15 +259,53 @@ interrupts, interrupt latency, etc. will reduce the accuracy with which
 he system clock can be read or set.  Your goal, and that of NIST stated
 in <<NIST2187>>, is that you can tell time to less than 1 micro second.
 
+== Not Your Grandmother's Pi
+
+The Babylonians knew about Pi 4,000 years ago.  You know pi as an
+irrational number that randomly continues forever.  Slowly converging on
+the ratio between the radius and the circumference of a circle.  At the
+start of the 20th century, about 500 digits of pi were known.
+
+Here are the first 74 digits of pi:
+
+3.1415926535897932384626433832795028841971693993751058209749445923078164062...
+
+Forget that pi.  GNSS systems do not use that pi.
+
+USA Space Systems Command has decreed, in <<IS-GPS-200>>, that pi is
+exactly 3.1415926535898.  45 binary digits of precision, about 14
+decimal digits of precision. Galileo <<OS_SIS_ICD>>, BeiDou <<ICD_B1I>>,
+and QZSS <<IS-QZSS>> also mandate that pi.
+
+Of course GLONASS <ICD-GLONASS>> has a different opinion.  It uses
+3.14159265358979.  49 binary digits of precision.  One more decimal
+digit than GPS, et. al.
+
+Both flavors of pi fit comfortably in the 53 bits of binary precision in
+an <<IEEE754>> double.
+
+How much does this matter?  SBAS satellites orbit in a Geosynchronous
+Equatorial Orbit (GEO).  The radius of a GEO orbit is 42,164 km.
+The circumference of that orbit, computed using the GPS pi, and computed
+with the 74 digit pi above,, differ by 0.285 microns (micro meters).
+
+The circumference of that orbit, computed using the GPS pi, and the
+GLONASS pi, differs by 0.422 microns (micro meters).  Worse than using GPS pi.
+
+According to the <<IS-GPS-200>> an orbit error of one meter equates to
+a position error of about one meter.  So we can assume, for now, the
+selection of pi to use (GPS, GLONASS, etc.) is of minimal importance.
+Unless you are studying gravity waves.
+
 == NaN ain't your Nana
 
 The most obviously confounding choice is the use in *gpsd* of *NaNs*
 (Not A Number). *gpsd* keeps track of a large number of individual
 numbers, most of them are invalid at any one time. To keep track of
-which integers are valid, a bit field is used. When an integer is
-valid, a corresponding bit is set. Keeping track of which bit matches
-which integer is challenging. <<IEEE754>> eliminates that problem with
-floating point numbers.
+which integers are valid, a bit field is used. When an integer is valid,
+a corresponding bit is set. Keeping track of which bit matches which
+integer is challenging. *NaNs* from <<IEEE754>> eliminate that problem
+with floating point numbers.
 
 When *gpsd* marks a floating point number invalid, it sets the value to
 <<NaN>>. So before using any *gpsd* floating point number, check that it
@@ -494,44 +532,6 @@ func IsFinite(x float64) bool {
 
 See above for why you should always use isFinite() before using a
 floating point number.
-
-== Not Your Grandmother's Pi
-
-The Babylonians knew about Pi 4,000 years ago.  You know pi as an
-irrational number that randomly continues forever.  Slowly converging on
-the ratio between the radius and the circumference of a circle.  At the
-start of the 20th century, about 500 digits of pi were known.
-
-Here are the first 74 digits of pi:
-
-3.1415926535897932384626433832795028841971693993751058209749445923078164062...
-
-Forget that pi.  GNSS systems do not use that pi.
-
-USA Space Systems Command has decreed, in <<IS-GPS-200>>, that pi is
-exactly 3.1415926535898.  45 binary digits of precision, about 14
-decimal digits of precision. Galileo <<OS_SIS_ICD>>, BeiDou <<ICD_B1I>>,
-and QZSS <<IS-QZSS>> also mandate that pi.
-
-Of course GLONASS <ICD-GLONASS>> has a different opinion.  It uses
-3.14159265358979.  49 binary digits of precision.  One more decimal
-digit than GPS, et. al.
-
-Both flavors of pi fit comfortably in the 53 bits of binary precision in
-an <<IEEE754>> double.
-
-How much does this matter?  SBAS satellites orbit in a Geosynchronous
-Equatorial Orbit (GEO).  The radius of a GEO orbit is 42,164 km.
-The circumference of that orbit, computed using the GPS pi, and computed
-with the 74 digit pi above,, differ by 0.285 microns (micro meters).
-
-The circumference of that orbit, computed using the GPS pi, and the
-GLONASS pi, differs by 0.422 microns (micro meters).  Worse than using GPS pi.
-
-According to the <<IS-GPS-200>> an orbit error of one meter equates to
-a position error of about one meter.  So we can assume, for now, the
-selection of pi to use (GPS, GLONASS, etc.) is of minimal importance.
-Unless you are studying gravity waves.
 
 == REFERENCES
 
