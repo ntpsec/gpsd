@@ -208,7 +208,7 @@ $GPGBS,194935.00,3.0,1.9,4.2,,,,*4F
 {"class":"TPV","mode":2,"time":"2029-03-17T19:49:35.000Z","ept":0.005,"lat":52.699963167,"lon":5.292751500,"epx":1.900,"epy":3.000,"epv":4.200,"magvar":1.6,"speed":0.001,"eps":6.00}
 !AIVDM,1,1,,B,H3`gaQ1AU0Pttp0000000000003,2*6D
 !AIVDM,1,1,,B,13a6ld3P@9PDv3TN1GdRv7k800SH,0*60
-{"class":"AIS","type":1,"repeat":0,"mmsi":244430000,"scaled":false,"status":3,"status_text":"Restricted manoeuverability","turn":-127,"speed":9,"accuracy":true,"lon":2748530,"lat":31479730,"course":760,"heading":249,"second":36,"maneuver":0,"raim":false,"radio":2264}
+{"class":"AIS","type":1,"repeat":0,"mmsi":244430000,"scaled":false,"status":3,"status_text":"Restricted maneuverability","turn":-127,"speed":9,"accuracy":true,"lon":2748530,"lat":31479730,"course":760,"heading":249,"second":36,"maneuver":0,"raim":false,"radio":2264}
 !AIVDO,1,1,,,B3aC3LP00063ai7RNpT03wiUsP06,0*46
 {"class":"AIS","type":18,"repeat":0,"mmsi":244630386,"scaled":false,"reserved":0,"speed":0,"accuracy":false,"lon":3175650,"lat":31619977,"course":0,"heading":511,"second":35,"regional":0,"cs":true,"display":false,"dsc":true,"band":true,"msg22":true,"raim":false,"radio":917510}
 $GPRMC,194936.00,A,5241.99789,N,00517.56508,E,0.014,,010809,,,A*7C

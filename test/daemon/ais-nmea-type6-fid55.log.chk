@@ -226,7 +226,7 @@
 !AIVDM,1,1,,A,1777G;0OkB7IE=:0eMAscIMl0>`<,0*45
 {"class":"AIS","type":1,"repeat":0,"mmsi":477222700,"scaled":false,"status":0,"status_text":"Under way using engine","turn":127,"speed":210,"accuracy":false,"lon":62040485,"lat":744775,"course":2989,"heading":302,"second":58,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,A,18J5DB3000WJluf0gmM``Qv<2>`<,0*0B
-{"class":"AIS","type":1,"repeat":0,"mmsi":564221000,"scaled":false,"status":3,"status_text":"Restricted manoeuverability","turn":0,"speed":0,"accuracy":true,"lon":62236599,"lat":783734,"course":2210,"heading":63,"second":6,"maneuver":0,"raim":true,"radio":59916}
+{"class":"AIS","type":1,"repeat":0,"mmsi":564221000,"scaled":false,"status":3,"status_text":"Restricted maneuverability","turn":0,"speed":0,"accuracy":true,"lon":62236599,"lat":783734,"course":2210,"heading":63,"second":6,"maneuver":0,"raim":true,"radio":59916}
 !AIVDM,1,1,,B,640Uv:P0RW?<<SL200Op00000000,0*46
 {"class":"AIS","type":6,"repeat":0,"mmsi":269057578,"scaled":false,"seqno":0,"dest_mmsi":2268403,"retransmit":false,"dac":200,"fid":55,"crew":2,"passengers":0,"personnel":255}
 !AIVDM,1,1,,B,16lcA000007Jlmd0geT`kTv:0>`<,0*63
@@ -367,7 +367,7 @@
 !AIVDM,1,1,,B,13GRe3PP030:jf8Ktrd5jOvT2>`<,0*12
 {"class":"AIS","type":1,"repeat":0,"mmsi":226012430,"scaled":false,"status":0,"status_text":"Under way using engine","turn":-128,"speed":3,"accuracy":false,"lon":1414596,"lat":29309616,"course":1481,"heading":511,"second":18,"maneuver":0,"raim":true,"radio":59916}
 !AIVDM,1,1,,A,139a3DS000Pe>lrN`c=N490T0>`<,0*78
-{"class":"AIS","type":1,"repeat":0,"mmsi":211436370,"scaled":false,"status":3,"status_text":"Restricted manoeuverability","turn":0,"speed":0,"accuracy":true,"lon":5928605,"lat":32123701,"course":3600,"heading":288,"second":18,"maneuver":0,"raim":false,"radio":59916}
+{"class":"AIS","type":1,"repeat":0,"mmsi":211436370,"scaled":false,"status":3,"status_text":"Restricted maneuverability","turn":0,"speed":0,"accuracy":true,"lon":5928605,"lat":32123701,"course":3600,"heading":288,"second":18,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,A,63aIiU00RW?4<SL2000000000000,0*28
 {"class":"AIS","type":6,"repeat":0,"mmsi":244740500,"scaled":false,"seqno":0,"dest_mmsi":2268401,"retransmit":false,"dac":200,"fid":55,"crew":2,"passengers":0,"personnel":0}
 !AIVDM,1,1,,A,13Hd4f?P00P:6IDKw:i@0?vT2>`<,0*36
@@ -532,7 +532,7 @@
 !AIVDM,1,1,,A,B5Nui0P00>C>f5T>P@`ogwaUoP06,0*1B
 {"class":"AIS","type":18,"repeat":0,"mmsi":368013570,"scaled":false,"reserved":0,"speed":0,"accuracy":true,"lon":-57026805,"lat":17727754,"course":891,"heading":511,"second":19,"regional":0,"cs":true,"display":false,"dsc":true,"band":true,"msg22":true,"raim":true,"radio":917510}
 !AIVDM,1,1,,A,137b@V3P000O<HhNUK09WOvV0>`<,0*54
-{"class":"AIS","type":1,"repeat":0,"mmsi":209359000,"scaled":false,"status":3,"status_text":"Restricted manoeuverability","turn":-128,"speed":0,"accuracy":false,"lon":4088600,"lat":32070400,"course":2461,"heading":511,"second":19,"maneuver":0,"raim":false,"radio":59916}
+{"class":"AIS","type":1,"repeat":0,"mmsi":209359000,"scaled":false,"status":3,"status_text":"Restricted maneuverability","turn":-128,"speed":0,"accuracy":false,"lon":4088600,"lat":32070400,"course":2461,"heading":511,"second":19,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,A,16K8AKh01maa=sLCiVG2MR0V0>`<,0*7C
 {"class":"AIS","type":1,"repeat":0,"mmsi":431100271,"scaled":false,"status":0,"status_text":"Under way using engine","turn":0,"speed":117,"accuracy":true,"lon":80899950,"lat":20735580,"course":630,"heading":64,"second":19,"maneuver":0,"raim":false,"radio":59916}
 !BSVDM,1,1,,A,13o<o:80000FaMDSFH6sj60V0>`<,0*5D
@@ -770,7 +770,7 @@
 !AIVDM,2,2,9,B,88888888880,2*2E
 {"class":"AIS","type":5,"repeat":0,"mmsi":205738000,"scaled":false,"imo":0,"ais_version":1,"callsign":"ORLM","shipname":"HYDROVILLE","shiptype":60,"shiptype_text":"Passenger - all ships of this type","to_bow":0,"to_stern":0,"to_port":0,"to_starboard":0,"epfd":15,"epfd_text":"Internal GNSS","eta":"07-10T11:40Z","draught":15,"destination":"OOSTENDE","dte":0}
 !AIVDM,1,1,,A,14`akJ30010@OmTMK;UjR`<T0>`<,0*0D
-{"class":"AIS","type":1,"repeat":0,"mmsi":311063400,"scaled":false,"status":3,"status_text":"Restricted manoeuverability","turn":0,"speed":1,"accuracy":false,"lon":2162354,"lat":30854039,"course":650,"heading":262,"second":18,"maneuver":0,"raim":false,"radio":59916}
+{"class":"AIS","type":1,"repeat":0,"mmsi":311063400,"scaled":false,"status":3,"status_text":"Restricted maneuverability","turn":0,"speed":1,"accuracy":false,"lon":2162354,"lat":30854039,"course":650,"heading":262,"second":18,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,B,15NNfE0000qDeiJA=@eqrl4f0>`<,0*47
 {"class":"AIS","type":1,"repeat":0,"mmsi":367504980,"scaled":false,"status":0,"status_text":"Under way using engine","turn":0,"speed":0,"accuracy":true,"lon":-56005075,"lat":18043063,"course":2539,"heading":130,"second":23,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,A,15NMkigP00IJq=tA4L:KIOvf2>`<,0*21
@@ -937,7 +937,7 @@
 !AIVDM,1,1,,B,144eAq7P012WU?VItqADM?vf2>`<,0*05
 {"class":"AIS","type":1,"repeat":0,"mmsi":273371620,"scaled":false,"status":7,"status_text":"Engaged in fishing","turn":-128,"speed":1,"accuracy":false,"lon":21965299,"lat":27212101,"course":1140,"heading":511,"second":23,"maneuver":0,"raim":true,"radio":59916}
 !AIVDM,1,1,,B,18151Dk0007JSA>0g;L9WG420>`<,0*0A
-{"class":"AIS","type":1,"repeat":0,"mmsi":538001747,"scaled":false,"status":3,"status_text":"Restricted manoeuverability","turn":0,"speed":0,"accuracy":false,"lon":62200359,"lat":772976,"course":2461,"heading":226,"second":1,"maneuver":0,"raim":false,"radio":59916}
+{"class":"AIS","type":1,"repeat":0,"mmsi":538001747,"scaled":false,"status":3,"status_text":"Restricted maneuverability","turn":0,"speed":0,"accuracy":false,"lon":62200359,"lat":772976,"course":2461,"heading":226,"second":1,"maneuver":0,"raim":false,"radio":59916}
 !BSVDM,1,1,,A,13o8:H70000GPR<RET`qVpUD0>`<,0*61
 {"class":"AIS","type":1,"repeat":0,"mmsi":259132000,"scaled":false,"status":7,"status_text":"Engaged in fishing","turn":0,"speed":0,"accuracy":false,"lon":3081286,"lat":36005027,"course":2459,"heading":274,"second":42,"maneuver":0,"raim":false,"radio":59916}
 !ABVDM,1,1,0,B,13tR7COP01R3<a6IA9P6cgvb0>`<,0*4F
@@ -969,7 +969,7 @@
 !AIVDM,1,1,,B,33Kv8050000oOClNw8i<;:bh0>`<,0*27
 {"class":"AIS","type":3,"repeat":0,"mmsi":230656000,"scaled":false,"status":5,"status_text":"Moored","turn":0,"speed":0,"accuracy":false,"lon":7273082,"lat":32491716,"course":3116,"heading":341,"second":24,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,B,33uLovSOww1D2ILQwHLN436`0>`<,0*34
-{"class":"AIS","type":3,"repeat":0,"mmsi":265762810,"scaled":false,"status":3,"status_text":"Restricted manoeuverability","turn":127,"speed":1023,"accuracy":false,"lon":11014958,"lat":35641457,"course":3600,"heading":99,"second":20,"maneuver":0,"raim":false,"radio":59916}
+{"class":"AIS","type":3,"repeat":0,"mmsi":265762810,"scaled":false,"status":3,"status_text":"Restricted maneuverability","turn":127,"speed":1023,"accuracy":false,"lon":11014958,"lat":35641457,"course":3600,"heading":99,"second":20,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,A,E@2=Vg@;4a::PV@0b7W@:94PV@3P0qo>>evWP000006f11@,2*0D
 {"class":"AIS","type":21,"repeat":1,"mmsi":2320061,"scaled":false,"aid_type":0,"aid_type_text":"Unspecified","name":"VIRTUAL ATON TRIAL GE","accuracy":false,"lon":237006,"lat":30866748,"to_bow":0,"to_stern":0,"to_port":0,"to_starboard":0,"epfd":0,"epfd_text":"Undefined","second":13,"regional":224,"off_position":false,"raim":false,"virtual_aid":true}
 !AIVDM,1,1,,B,139dRcP01DPEei`Makc:a`Ff2>`<,0*48
@@ -1269,7 +1269,7 @@
 !AIVDM,1,1,,B,8>p=MtQWhAPRg<PIEml;50,4*46
 {"class":"AIS","type":8,"repeat":0,"mmsi":998465010,"scaled":false,"dac":415,"fid":1,"data":"72:1822bcc819575d0b14"}
 !AIVDM,1,1,,B,33aLn6S029P?jOpMNEj<4a`j8>`<,0*17
-{"class":"AIS","type":3,"repeat":0,"mmsi":244790810,"scaled":false,"status":3,"status_text":"Restricted manoeuverability","turn":0,"speed":137,"accuracy":true,"lon":2069500,"lat":30905800,"course":3090,"heading":308,"second":25,"maneuver":0,"raim":false,"radio":59916}
+{"class":"AIS","type":3,"repeat":0,"mmsi":244790810,"scaled":false,"status":3,"status_text":"Restricted maneuverability","turn":0,"speed":137,"accuracy":true,"lon":2069500,"lat":30905800,"course":3090,"heading":308,"second":25,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,A,B3JI3d@00830V:5b:3qI3wdUoP06,0*3E
 {"class":"AIS","type":18,"repeat":0,"mmsi":229000113,"scaled":false,"reserved":0,"speed":0,"accuracy":true,"lon":1577748,"lat":23734334,"course":1424,"heading":511,"second":25,"regional":0,"cs":true,"display":false,"dsc":true,"band":true,"msg22":true,"raim":true,"radio":917510}
 !AIVDM,1,1,,A,332S8P5P0114tjDKToHGA?vh0>`<,0*59
@@ -1691,7 +1691,7 @@
 !AIVDM,1,1,,B,83aI:M@j2d<dttuttB9Pqgbh5DP0,0*06
 {"class":"AIS","type":8,"repeat":0,"mmsi":244730485,"scaled":false,"dac":200,"fid":10,"vin":"02333731","length":1100,"beam":115,"shiptype":8022,"shiptype_text":"Motor tanker, liquid cargo, type C","hazard":0,"hazard_text":"0 blue cones/lights","draught":170,"loaded":1,"loaded_text":"Unloaded","speed_q":false,"course_q":false,"heading_q":false}
 !AIVDM,1,1,,A,13b3rn30000F>5fMaee@006j0>`<,0*13
-{"class":"AIS","type":1,"repeat":0,"mmsi":245431000,"scaled":false,"status":3,"status_text":"Restricted manoeuverability","turn":0,"speed":0,"accuracy":false,"lon":2912439,"lat":31092149,"course":0,"heading":3,"second":25,"maneuver":0,"raim":false,"radio":59916}
+{"class":"AIS","type":1,"repeat":0,"mmsi":245431000,"scaled":false,"status":3,"status_text":"Restricted maneuverability","turn":0,"speed":0,"accuracy":false,"lon":2912439,"lat":31092149,"course":0,"heading":3,"second":25,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,A,ENk`so91S@@@@@@@@@@@@@@@@@@==Fm;9bGh000003vP000,2*12
 {"class":"AIS","type":21,"repeat":1,"mmsi":993672156,"scaled":false,"aid_type":18,"aid_type_text":"Beacon, Safe water","name":"CF","accuracy":false,"lon":-46830261,"lat":20262784,"to_bow":0,"to_stern":0,"to_port":0,"to_starboard":0,"epfd":7,"epfd_text":"Surveyed","second":61,"regional":0,"off_position":false,"raim":false,"virtual_aid":false}
 !AIVDM,1,1,,A,15Ng>F<P00IS0A`A87IJ3?vp2>`<,0*03
@@ -1779,7 +1779,7 @@
 !AIVDM,1,1,,A,63aDorH0RW?:<SL6000000000000,0*76
 {"class":"AIS","type":6,"repeat":0,"mmsi":244660201,"scaled":false,"seqno":2,"dest_mmsi":2268402,"retransmit":true,"dac":200,"fid":55,"crew":6,"passengers":0,"personnel":0}
 !AIVDM,1,1,,A,15Mv<H300;o85OHJMoMjwBPp0>`<,0*08
-{"class":"AIS","type":1,"repeat":0,"mmsi":366972000,"scaled":false,"status":3,"status_text":"Restricted manoeuverability","turn":0,"speed":11,"accuracy":true,"lon":-74437652,"lat":27752311,"course":765,"heading":80,"second":28,"maneuver":0,"raim":false,"radio":59916}
+{"class":"AIS","type":1,"repeat":0,"mmsi":366972000,"scaled":false,"status":3,"status_text":"Restricted maneuverability","turn":0,"speed":11,"accuracy":true,"lon":-74437652,"lat":27752311,"course":765,"heading":80,"second":28,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,B,139i0v?P00PvsKpMwnA00?vr2>`<,0*4E
 {"class":"AIS","type":1,"repeat":0,"mmsi":211566840,"scaled":false,"status":15,"status_text":"Not defined","turn":-128,"speed":0,"accuracy":true,"lon":8248188,"lat":31454788,"course":0,"heading":511,"second":29,"maneuver":0,"raim":true,"radio":59916}
 !AIVDM,1,1,,A,B6:dWfP00277JgSP3BTq7wf61P06,0*52
@@ -1956,7 +1956,7 @@
 !AIVDM,1,1,,B,63aGrTh0RW?6<SL5000000000000,0*62
 {"class":"AIS","type":6,"repeat":0,"mmsi":244710035,"scaled":false,"seqno":0,"dest_mmsi":2268401,"retransmit":true,"dac":200,"fid":55,"crew":5,"passengers":0,"personnel":0}
 !AIVDM,1,1,,A,13F8u<3000OjOHRHhNt@t8vv0>`<,0*24
-{"class":"AIS","type":1,"repeat":0,"mmsi":224542000,"scaled":false,"status":3,"status_text":"Restricted manoeuverability","turn":0,"speed":0,"accuracy":false,"lon":-1770735,"lat":25960177,"course":240,"heading":287,"second":31,"maneuver":0,"raim":false,"radio":59916}
+{"class":"AIS","type":1,"repeat":0,"mmsi":224542000,"scaled":false,"status":3,"status_text":"Restricted maneuverability","turn":0,"speed":0,"accuracy":false,"lon":-1770735,"lat":25960177,"course":240,"heading":287,"second":31,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,1,1,,A,19NSLG0021`eAftEb<33Rjq20>`<,0*5F
 {"class":"AIS","type":1,"repeat":0,"mmsi":636017756,"scaled":false,"status":0,"status_text":"Under way using engine","turn":0,"speed":129,"accuracy":true,"lon":73043422,"lat":22711308,"course":907,"heading":92,"second":33,"maneuver":0,"raim":false,"radio":59916}
 !AIVDM,2,1,4,A,533e;cT000000000001<E8`u<00000000000001?48632uG<q0klliC31OL0,0*1E
@@ -2661,7 +2661,7 @@
 !AIVDM,1,1,,B,133sljPP10PG4tlMaT:3GwwBR>`<,0*1F
 {"class":"AIS","type":1,"repeat":0,"mmsi":205452490,"scaled":false,"status":0,"status_text":"Under way using engine","turn":-128,"speed":64,"accuracy":true,"lon":3024794,"lat":31089704,"course":863,"heading":511,"second":41,"maneuver":1,"raim":true,"radio":59916}
 !AIVDM,1,1,,B,13aBNFCP00PF?lHMUaIPUgwBP>`<,0*47
-{"class":"AIS","type":1,"repeat":0,"mmsi":244620889,"scaled":false,"status":3,"status_text":"Restricted manoeuverability","turn":-128,"speed":0,"accuracy":true,"lon":2915980,"lat":31025510,"course":150,"heading":511,"second":41,"maneuver":1,"raim":false,"radio":59916}
+{"class":"AIS","type":1,"repeat":0,"mmsi":244620889,"scaled":false,"status":3,"status_text":"Restricted maneuverability","turn":-128,"speed":0,"accuracy":true,"lon":2915980,"lat":31025510,"course":150,"heading":511,"second":41,"maneuver":1,"raim":false,"radio":59916}
 !AIVDM,1,1,,B,B3Hbs5P0003NJ768IP6`vDN00000,0*55
 {"class":"AIS","type":18,"repeat":0,"mmsi":227195670,"scaled":false,"reserved":0,"speed":0,"accuracy":false,"lon":1821966,"lat":25716225,"course":2703,"heading":296,"second":60,"regional":0,"cs":false,"display":false,"dsc":false,"band":false,"msg22":false,"raim":false,"radio":0}
 !AIVDM,1,1,,A,33aN2cmP000dt<6I?2c@0?wB8>`<,0*48
