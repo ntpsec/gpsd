@@ -89,7 +89,7 @@ the *gps*(1) man page
 
 == ENVIRONMENT
 
-You can set the environment varable *MPLBACKEND* to your desired
+You can set the environment variable *MPLBACKEND* to your desired
 Matplotlib backend.  This save you from using *-b BACKEND* every time
 you run *gpsplot*.
 
