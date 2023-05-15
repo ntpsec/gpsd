@@ -37,7 +37,7 @@ order the files are specified.
 
 *gpsfake* does not require root privileges, but will run fine as root.
 It can be run concurrently with a production *gpsd* instance without
-causing problems, as long as you use the *-P* option.  Runing under sudo
+causing problems, as long as you use the *-P* option.  Running under sudo
 will cause minor loss of functionality.
 
 The logfiles may contain packets in any supported format, including in
