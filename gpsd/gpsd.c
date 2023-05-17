@@ -378,7 +378,7 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
     case AF_INET:
         sin_len = sizeof(sat.sa_in);
 
-        memset((char *)&sat.sa_in, 0, sin_len);
+        memset(&sat.sa_in, 0, sin_len);
         sat.sa_in.sin_family = (sa_family_t) AF_INET;
         if (listen_global) {
             sat.sa_in.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -403,7 +403,7 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
     case AF_INET6:
         sin_len = sizeof(sat.sa_in6);
 
-        memset((char *)&sat.sa_in6, 0, sin_len);
+        memset(&sat.sa_in6, 0, sin_len);
         sat.sa_in6.sin6_family = (sa_family_t) AF_INET6;
         if (listen_global) {
             sat.sa_in6.sin6_addr = in6addr_any;
@@ -2623,15 +2623,9 @@ int main(int argc, char *argv[])
     {
         struct sigaction sa;
 
-        sa.sa_flags = 0;
-#ifdef __COVERITY__
-        /*
-         * Obsolete and unused.  We're only doing this to pacify Coverity
-         * which otherwise throws an UNINIT event here. Don't swap with the
-         * handler initialization, they're unioned on some architectures.
-         */
-        sa.sa_restorer = NULL;
-#endif  // __COVERITY__
+        // Pacify Coverity, init the struct
+        memset(&sa, 0, sizeof(sa));
+
         sa.sa_handler = onsig;
         (void)sigfillset(&sa.sa_mask);
         (void)sigaction(SIGHUP, &sa, NULL);
