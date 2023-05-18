@@ -4497,10 +4497,11 @@ void json_aivdm_dump(const struct ais_t *ais,
     case 27:                    // Long Range AIS Broadcast message
         if (scaled) {
             str_appendf(buf, buflen,
-                        ",\"status\":\"%s\","
+                        ",\"status\":%u,\"status_text\":\"%s\""
                         "\"accuracy\":%s,\"lon\":%.4f,\"lat\":%.4f,"
                         "\"speed\":%u,\"course\":%u,\"raim\":%s,"
                         "\"gnss\":%s}\r\n",
+                        ais->type27.status,
                         nav_legends[ais->type27.status],
                         JSON_BOOL(ais->type27.accuracy),
                         ais->type27.lon / AIS_LONGRANGE_LATLON_DIV,
