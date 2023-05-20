@@ -236,16 +236,25 @@ static gps_mask_t sirf_msg_ublox(struct gps_device_t *, unsigned char *,
                                  size_t);
 
 
-static bool sirf_write(struct gps_device_t *session, unsigned char *msg)
+static bool sirf_write(struct gps_device_t *session, unsigned char *msg,
+                       size_t msg_size)
 {
     unsigned int crc;
     size_t i, len;
     bool ok;
-    unsigned int type = (unsigned int)msg[4];
+    unsigned int type;
 
     // do not write if -b (readonly) option set
-    if (session->context->readonly)
+    if (session->context->readonly) {
         return true;
+    }
+    if (10 > msg_size) {
+        // message is smaller than minimum size
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "SiRF: sirf_write() msg too small!\n");
+        return false;
+    }
+    type = msg[4];
 
     /*
      * Control strings spaced too closely together confuse the SiRF
@@ -263,11 +272,11 @@ static bool sirf_write(struct gps_device_t *session, unsigned char *msg)
     }
 
     len = (size_t)((msg[2] << 8) | msg[3]);
-    /* '(CS-303979-SP-9) SiRFstarV OSP Extensions.pdf'
-     * says max message length is 1032 */
-    if (1032 < len) {
-        // pacify coverity
-        len = 1032;
+    if ((len + 8) > msg_size) {
+        // message is smaller than len + leader + trailer
+        GPSD_LOG(LOG_ERROR, &session->context->errout,
+                 "SiRF: sirf_write() msg less than %zu!\n", len + 8);
+        return false;
     }
     // calculate CRC
     crc = 0;
@@ -303,7 +312,8 @@ static ssize_t sirf_control_send(struct gps_device_t *session, char *msg,
 
     // *INDENT-OFF*
     return sirf_write(session,
-              (unsigned char *)session->msgbuf) ? (int)session->msgbuflen : -1;
+              (unsigned char *)session->msgbuf,
+              sizeof(session->msgbuf)) ? (int)session->msgbuflen : -1;
     // *INDENT-ON*
 }
 
@@ -352,7 +362,7 @@ static bool sirfbin_speed(struct gps_device_t *session, speed_t speed,
     msg[8] = (unsigned char)(speed & 0xff);
     msg[10] = (unsigned char)stopbits;
     msg[11] = (unsigned char)parity;
-    return sirf_write(session, msg);
+    return sirf_write(session, msg, sizeof(msg));
 }
 
 /* switch from binary to NMEA at specified baud
@@ -389,7 +399,7 @@ static bool sirf_to_nmea(struct gps_device_t *session, speed_t speed)
 
     msg[26] = (unsigned char)HI(speed);
     msg[27] = (unsigned char)LO(speed);
-    return sirf_write(session, msg);
+    return sirf_write(session, msg, sizeof(msg));
 }
 
 static void sirfbin_mode(struct gps_device_t *session, int mode)
@@ -1519,7 +1529,7 @@ static gps_mask_t sirf_msg_navdata(struct gps_device_t *session,
         } else {
             GPSD_LOG(LOG_WARN, &session->context->errout,
                      "WARNING: SiRF: link too slow, disabling subframes.\n");
-            (void)sirf_write(session, disablesubframe);
+            (void)sirf_write(session, disablesubframe, sizeof(disablesubframe));
         }
     }
 
@@ -2533,9 +2543,9 @@ static void sirfbin_init_query(struct gps_device_t *session)
     session->cfg_step = 0;
 
     // MID 132
-    (void)sirf_write(session, versionprobe);
+    (void)sirf_write(session, versionprobe, sizeof(versionprobe));
     // ask twice, SiRF IV on USB often misses the first request
-    (void)sirf_write(session, versionprobe);
+    (void)sirf_write(session, versionprobe, sizeof(versionprobe));
 }
 
 static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
@@ -2609,7 +2619,7 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
             return;
 
         case 1:
-            (void)sirf_write(session, versionprobe);
+            (void)sirf_write(session, versionprobe, sizeof(versionprobe));
             break;
         case 2:
             // unset MID 0x40 = 64 first since there is a flood of them
@@ -2617,7 +2627,7 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
                      "SiRF: unset MID 0x40.\n");
             unsetmidXX[5] = 1;        // enable/disable
             unsetmidXX[6] = 0x40;     // MID 0x40
-            (void)sirf_write(session, unsetmidXX);
+            (void)sirf_write(session, unsetmidXX, sizeof(unsetmidXX));
             break;
 
         case 3:
@@ -2627,7 +2637,7 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
              */
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "SiRF: Requesting navigation parameters.\n");
-            (void)sirf_write(session, navparams);
+            (void)sirf_write(session, navparams, sizeof(navparams));
             break;
 
         case 4:
@@ -2636,37 +2646,37 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
                      "SiRF: unset MID 0x29.\n");
             unsetmidXX[5] = 1;        // enable/disable
             unsetmidXX[6] = 0x29;     // MID 0x29
-            (void)sirf_write(session, unsetmidXX);
+            (void)sirf_write(session, unsetmidXX, sizeof(unsetmidXX));
             break;
 
         case 5:
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "SiRF: Setting Navigation Parameters.\n");
-            (void)sirf_write(session, modecontrol);
+            (void)sirf_write(session, modecontrol, sizeof(modecontrol));
             break;
 
         case 6:
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "SiRF: Requesting periodic ecef reports.\n");
-            (void)sirf_write(session, requestecef);
+            (void)sirf_write(session, requestecef, sizeof(requestecef));
             break;
 
         case 7:
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "SiRF: Requesting periodic tracker reports.\n");
-            (void)sirf_write(session, requesttracker);
+            (void)sirf_write(session, requesttracker, sizeof(requesttracker));
             break;
 
         case 8:
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "SiRF: Setting DGPS control to use SBAS.\n");
-            (void)sirf_write(session, dgpscontrol);
+            (void)sirf_write(session, dgpscontrol, sizeof(dgpscontrol));
             break;
 
         case 9:
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "SiRF: Setting SBAS to auto/integrity mode.\n");
-            (void)sirf_write(session, sbasparams);
+            (void)sirf_write(session, sbasparams, sizeof(sbasparams));
             break;
 
         case 10:
@@ -2674,7 +2684,7 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
                      "SiRF: Enabling PPS message MID 52 (0x32).\n");
             /* Not supported on some GPS.
              * It will be NACKed is not supported */
-            (void)sirf_write(session, enablemid52);
+            (void)sirf_write(session, enablemid52, sizeof(enablemid52));
             break;
 
         case 11:
@@ -2683,12 +2693,14 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
                 // fast enough, turn on subframe data
                 GPSD_LOG(LOG_PROG, &session->context->errout,
                          "SiRF: Enabling subframe transmission.\n");
-                (void)sirf_write(session, enablesubframe);
+                (void)sirf_write(session, enablesubframe,
+                                 sizeof(enablesubframe));
             } else {
                 // too slow, turn off subframe data
                 GPSD_LOG(LOG_PROG, &session->context->errout,
                          "SiRF: Disabling subframe transmission.\n");
-                (void)sirf_write(session, disablesubframe);
+                (void)sirf_write(session, disablesubframe,
+                                 sizeof(disablesubframe));
             }
             break;
 
@@ -2701,7 +2713,7 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
                      "SiRF: disable MID 7, 28, 29, 30, 31.\n");
             unsetmidXX[5] = 5;
             unsetmidXX[6] = 0;
-            (void)sirf_write(session, unsetmidXX);
+            (void)sirf_write(session, unsetmidXX, sizeof(unsetmidXX));
             break;
 
         default:
@@ -2723,7 +2735,7 @@ static void sirfbin_event_hook(struct gps_device_t *session, event_t event)
         putbyte(moderevert, 17, session->driver.sirf.track_smooth_mode);
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "SiRF: Reverting navigation parameters...\n");
-        (void)sirf_write(session, moderevert);
+        (void)sirf_write(session, moderevert, sizeof(moderevert));
         break;
 
     case event_driver_switch:
