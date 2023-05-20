@@ -2724,16 +2724,22 @@ void json_aivdm_dump(const struct ais_t *ais,
              * Express turn as "n/a" if not available,
              * "fastleft"/"fastright" for fast turns.
              */
-            if (-128 == ais->type1.turn) {
+            if (AIS_TURN_NOT_AVAILABLE <= abs(ais->type1.turn)) {
                 (void)strlcpy(turnlegend, "\"n/a\"", sizeof(turnlegend));
-            } else if (-127 == ais->type1.turn) {
+            } else if (AIS_TURN_HARD_LEFT == ais->type1.turn) {
                 (void)strlcpy(turnlegend, "\"fastleft\"", sizeof(turnlegend));
-            } else if (127 == ais->type1.turn) {
+            } else if (AIS_TURN_HARD_RIGHT == ais->type1.turn) {
                 (void)strlcpy(turnlegend, "\"fastright\"", sizeof(turnlegend));
             } else {
-                double rot1 = ais->type1.turn / 4.733;
+                // range -708° to 708°
+                double rot = ais->type1.turn / 4.733;
+
+                rot *= rot;
+                if (0 > ais->type1.turn) {
+                    rot = -rot;
+                }
                 (void)snprintf(turnlegend, sizeof(turnlegend),
-                               "%.0f", rot1 * rot1);
+                    "\"%.2f\"", rot);
             }
 
             /*
