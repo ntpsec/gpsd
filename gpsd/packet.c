@@ -2009,10 +2009,13 @@ void lexer_init(struct gps_lexer_t *lexer)
 // grab a packet from the input buffer
 void packet_parse(struct gps_lexer_t *lexer)
 {
+    int inbuflen;
+
     lexer->outbuflen = 0;
     while (0 < packet_buffered_input(lexer)) {
         unsigned char c = *lexer->inbufptr++;
         unsigned int oldstate = lexer->state;
+
         if (!nextstate(lexer, c)) {
             continue;
         }
@@ -2021,6 +2024,7 @@ void packet_parse(struct gps_lexer_t *lexer)
                  lexer->char_counter, (isprint(c) ? c : '.'), c,
                  state_table[oldstate], state_table[lexer->state]);
         lexer->char_counter++;
+        inbuflen = lexer->inbufptr - lexer->inbuffer;
 
         // FIXME: make this if/else nest a switch()
         if (GROUND_STATE == lexer->state) {
@@ -2153,23 +2157,22 @@ void packet_parse(struct gps_lexer_t *lexer)
 #ifdef ONCORE_ENABLE
         } else if (ONCORE_RECOGNIZED == lexer->state) {
             char a, b;
-            int i, len;
+            int i;
 
-            len = lexer->inbufptr - lexer->inbuffer;
-            a = (char)(lexer->inbuffer[len - 3]);
+            a = (char)(lexer->inbuffer[inbuflen - 3]);
             b = '\0';
-            for (i = 2; i < len - 3; i++) {
+            for (i = 2; i < inbuflen - 3; i++) {
                 b ^= lexer->inbuffer[i];
             }
             if (a == b) {
                 GPSD_LOG(LOG_IO, &lexer->errout,
                          "Accept OnCore packet @@%c%c len %d\n",
-                         lexer->inbuffer[2], lexer->inbuffer[3], len);
+                         lexer->inbuffer[2], lexer->inbuffer[3], inbuflen);
                 packet_accept(lexer, ONCORE_PACKET);
             } else {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
                          "REJECT OnCore packet @@%c%c len %d\n",
-                         lexer->inbuffer[2], lexer->inbuffer[3], len);
+                         lexer->inbuffer[2], lexer->inbuffer[3], inbuflen);
                 packet_accept(lexer, BAD_PACKET);
                 lexer->state = GROUND_STATE;
             }
@@ -2178,12 +2181,11 @@ void packet_parse(struct gps_lexer_t *lexer)
 #endif  // ONCORE_ENABLE
 #if defined(TSIP_ENABLE) || defined(GARMIN_ENABLE)
         } else if (TSIP_RECOGNIZED == lexer->state) {
-            size_t packetlen = lexer->inbufptr - lexer->inbuffer;
 #ifdef TSIP_ENABLE
             unsigned int pos, dlecnt;
             // don't count stuffed DLEs in the length
             dlecnt = 0;
-            for (pos = 0; pos < (unsigned int)packetlen; pos++) {
+            for (pos = 0; pos < (unsigned int)inbuflen; pos++) {
                 if (DLE == lexer->inbuffer[pos]) {
                     dlecnt++;
                 }
@@ -2193,10 +2195,10 @@ void packet_parse(struct gps_lexer_t *lexer)
                 dlecnt /= 2;
                 GPSD_LOG(LOG_RAW1, &lexer->errout,
                          "Unstuffed %d DLEs\n", dlecnt);
-                packetlen -= dlecnt;
+                inbuflen -= dlecnt;
             }
 #endif  // TSIP_ENABLE
-            if (5 > packetlen) {
+            if (5 > inbuflen) {
                 lexer->state = GROUND_STATE;
             } else {
                 unsigned int pkt_id;
@@ -2365,84 +2367,89 @@ void packet_parse(struct gps_lexer_t *lexer)
                 }
                 // *INDENT-ON*
 #define TSIP_ID_AND_LENGTH(id, len)     ((id == pkt_id) && \
-                                         (len == (packetlen - 4)))
+                                         (len == (inbuflen - 4)))
 
-                if ((0x13 == pkt_id) && (1 <= packetlen))
+                if ((0x13 == pkt_id) &&
+                    (1 <= inbuflen)) {
                     /* pass */ ;
                 /*
                  * Not in [TSIP],  Accutime Gold only. Variable length.
                  */
-                else if ((0x1c == pkt_id) && (11 <= packetlen))
+                } else if ((0x1c == pkt_id) &&
+                           (11 <= inbuflen)) {
                     /* pass */ ;
-                else if (TSIP_ID_AND_LENGTH(0x41, 10))
+                } else if (TSIP_ID_AND_LENGTH(0x41, 10)) {
                     /* pass */ ;
-                else if (TSIP_ID_AND_LENGTH(0x42, 16))
+                } else if (TSIP_ID_AND_LENGTH(0x42, 16)) {
                     /* pass */ ;
-                else if (TSIP_ID_AND_LENGTH(0x43, 20))
+                } else if (TSIP_ID_AND_LENGTH(0x43, 20)) {
                     /* pass */ ;
-                else if (TSIP_ID_AND_LENGTH(0x45, 10))
+                } else if (TSIP_ID_AND_LENGTH(0x45, 10)) {
                     /* pass */ ;
-                else if (TSIP_ID_AND_LENGTH(0x46, 2))
+                } else if (TSIP_ID_AND_LENGTH(0x46, 2)) {
                     /* pass */ ;
-                else if ((0x47 == pkt_id) && ((packetlen % 5) == 0))
+                } else if ((0x47 == pkt_id) &&
+                           (0 == (inbuflen % 5))) {
                     /*
                      * 0x47 data length 1+5*numSV, packetlen is 5+5*numSV
                      * FIXME, should be a proper length calculation
                      */
                      /* pass */ ;
-                else if (TSIP_ID_AND_LENGTH(0x48, 22))
+                } else if (TSIP_ID_AND_LENGTH(0x48, 22)) {
                     /* pass */ ;
-                else if (TSIP_ID_AND_LENGTH(0x49, 32))
+                } else if (TSIP_ID_AND_LENGTH(0x49, 32)) {
                     /* pass */ ;
-                else if (TSIP_ID_AND_LENGTH(0x4a, 20))
+                } else if (TSIP_ID_AND_LENGTH(0x4a, 20)) {
                     /* pass */ ;
-                else if (TSIP_ID_AND_LENGTH(0x4b, 3))
+                } else if (TSIP_ID_AND_LENGTH(0x4b, 3)) {
                     /* pass */ ;
-                else if (TSIP_ID_AND_LENGTH(0x4c, 17))
+                } else if (TSIP_ID_AND_LENGTH(0x4c, 17)) {
                     /* pass */ ;
-                else if (TSIP_ID_AND_LENGTH(0x54, 12))
+                } else if (TSIP_ID_AND_LENGTH(0x54, 12)) {
                     /* pass */ ;
-                else if (TSIP_ID_AND_LENGTH(0x55, 4))
+                } else if (TSIP_ID_AND_LENGTH(0x55, 4)) {
                     /* pass */ ;
-                else if (TSIP_ID_AND_LENGTH(0x56, 20))
+                } else if (TSIP_ID_AND_LENGTH(0x56, 20)) {
                     /* pass */ ;
-                else if (TSIP_ID_AND_LENGTH(0x57, 8))
+                } else if (TSIP_ID_AND_LENGTH(0x57, 8)) {
                     /* pass */ ;
-                else if (TSIP_ID_AND_LENGTH(0x5a, 25))
+                } else if (TSIP_ID_AND_LENGTH(0x5a, 25)) {
                     /* pass */ ;
-                else if (TSIP_ID_AND_LENGTH(0x5b, 16))
+                } else if (TSIP_ID_AND_LENGTH(0x5b, 16)) {
                     /* pass */ ;
-                else if (TSIP_ID_AND_LENGTH(0x5c, 24))
+                } else if (TSIP_ID_AND_LENGTH(0x5c, 24)) {
                     /* pass */ ;
-                else if (TSIP_ID_AND_LENGTH(0x5d, 26))
+                } else if (TSIP_ID_AND_LENGTH(0x5d, 26)) {
                     /* pass */ ;
-                else if (TSIP_ID_AND_LENGTH(0x5e, 2))
+                } else if (TSIP_ID_AND_LENGTH(0x5e, 2)) {
                     /* pass */ ;
-                /*
+                 /*
                  * Not in [TSIP]. the TSIP driver doesn't use type 0x5f.
                  * but we test for it so as to avoid setting packet not_tsip
                  */
-                else if (TSIP_ID_AND_LENGTH(0x5f, 66))
+                } else if (TSIP_ID_AND_LENGTH(0x5f, 66)) {
                     /*
                      * 0x6c data length 18+numSV, total packetlen is 22+numSV
                      * numSV up to 224
                      */
                     /* pass */ ;
-                else if ((0x6c == pkt_id)
-                         && ((22 <= packetlen) && (246 >= packetlen)))
+                } else if ((0x6c == pkt_id) &&
+                           ((22 <= inbuflen) &&
+                            (246 >= inbuflen))) {
                     /*
                      * 0x6d data length 17+numSV, total packetlen is 21+numSV
                      * numSV up to 32
                      */
                     /* pass */ ;
-                else if ((0x6d == pkt_id)
-                         && ((21 <= packetlen) && (53 >= packetlen)))
+                } else if ((0x6d == pkt_id) &&
+                           ((21 <= inbuflen) &&
+                            (53 >= inbuflen))) {
                     /* pass */ ;
-                else if (TSIP_ID_AND_LENGTH(0x82, 1))
+                } else if (TSIP_ID_AND_LENGTH(0x82, 1)) {
                     /* pass */ ;
-                else if (TSIP_ID_AND_LENGTH(0x83, 36))
+                } else if (TSIP_ID_AND_LENGTH(0x83, 36)) {
                     /* pass */ ;
-                else if (TSIP_ID_AND_LENGTH(0x84, 36)) {
+                } else if (TSIP_ID_AND_LENGTH(0x84, 36)) {
                     // pass
                 } else if (0x8f <= pkt_id &&
                            0x93 >= pkt_id) {
@@ -2455,28 +2462,28 @@ void packet_parse(struct gps_lexer_t *lexer)
                 /*
                  * This is according to [TSIP].
                  */
-                } else if (TSIP_ID_AND_LENGTH(0xbb, 40))
+                } else if (TSIP_ID_AND_LENGTH(0xbb, 40)) {
                     /* pass */ ;
                 /*
                  * The Accutime Gold ships a version of this packet with a
                  * 43-byte payload.  We only use the first 21 bytes, and
                  * parts after byte 27 are padding.
                  */
-                else if (TSIP_ID_AND_LENGTH(0xbb, 43))
+                } else if (TSIP_ID_AND_LENGTH(0xbb, 43)) {
                     /* pass */ ;
-                else {
+                } else {
                     /* pass */ ;
                     GPSD_LOG(LOG_PROG, &lexer->errout,
-                             "TSIP REJECT pkt_id = %#02x, packetlen= %zu\n",
-                             pkt_id, packetlen);
+                             "TSIP REJECT pkt_id = %#02x, inbuflen= %d\n",
+                             pkt_id, inbuflen);
                     // FIXME:  goto??
                     goto not_tsip;
                 }
 #undef TSIP_ID_AND_LENGTH
                 // Debug
                 GPSD_LOG(LOG_RAW, &lexer->errout,
-                         "TSIP pkt_id = %#02x, packetlen= %zu\n",
-                         pkt_id, packetlen);
+                         "TSIP pkt_id = %#02x, inbuflen= %d\n",
+                         pkt_id, inbuflen);
                 packet_accept(lexer, TSIP_PACKET);
                 packet_discard(lexer);
                 break;
