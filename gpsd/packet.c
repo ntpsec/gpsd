@@ -2503,9 +2503,10 @@ void packet_parse(struct gps_lexer_t *lexer)
                          "RTCM3 data checksum failure, "
                          "%0x against %02x %02x %02x\n",
                          crc24q_hash(lexer->inbuffer,
-                                     lexer->inbufptr - lexer->inbuffer -
-                                     3), lexer->inbufptr[-3],
-                         lexer->inbufptr[-2], lexer->inbufptr[-1]);
+                                     lexer->inbufptr - lexer->inbuffer - 3),
+                         lexer->inbufptr[-3],
+                         lexer->inbufptr[-2],
+                         lexer->inbufptr[-1]);
                 packet_accept(lexer, BAD_PACKET);
             }
             packet_discard(lexer);
