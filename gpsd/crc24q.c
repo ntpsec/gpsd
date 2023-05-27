@@ -27,7 +27,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -42,8 +42,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define CRCSEED 0               /* could be NZ to detect leading zeros */
-#define CRCPOLY 0x1864CFBu      /* encodes all info about the polynomial */
+#define CRCSEED 0               // could be NZ to detect leading zeros
+#define CRCPOLY 0x1864CFBu      // encodes all info about the polynomial
 
 static void crc_init(unsigned int table[256])
 {
@@ -144,6 +144,10 @@ static const int unsigned crc24q[256] = {
     0xFCD11CCEu, 0xFD575035u, 0xFE5BC9C3u, 0xFFDD8538u,
 };
 
+/* crc24q_hash() - compute the CRC24Q for "len" bytes of data in "data"
+ *
+ * Return: the 24 bit hash
+ */
 unsigned crc24q_hash(unsigned char *data, int len)
 {
     int i;
@@ -153,7 +157,7 @@ unsigned crc24q_hash(unsigned char *data, int len)
         crc = (crc << 8) ^ crc24q[data[i] ^ (unsigned char)(crc >> 16)];
     }
 
-    crc = (crc & 0x00ffffff);
+    crc &= 0x00ffffff;
 
     return crc;
 }
@@ -171,13 +175,14 @@ void crc24q_sign(unsigned char *data, int len)
     data[len + 1] = MID(crc);
     data[len + 2] = LO(crc);
 }
-#endif /* __UNUSED__ */
+#endif  // __UNUSED__
 
 bool crc24q_check(unsigned char *data, int len)
 {
     unsigned crc = crc24q_hash(data, len - 3);
 
     return (((data[len - 3] == HI(crc)) &&
-             (data[len - 2] == MID(crc)) && (data[len - 1] == LO(crc))));
+             (data[len - 2] == MID(crc)) &&
+             (data[len - 1] == LO(crc))));
 }
 // vim: set expandtab shiftwidth=4
