@@ -2015,7 +2015,8 @@ void packet_parse(struct gps_lexer_t *lexer)
         unsigned char c = *lexer->inbufptr++;
         unsigned int oldstate = lexer->state;
         int inbuflen;
-        unsigned crc_computed;
+        unsigned crc_computed;  // the CRC/checksum we computed
+        unsigned crc_expected;  // the CRC/checksum the message claims to have
 
         if (!nextstate(lexer, c)) {
             continue;
@@ -2102,17 +2103,16 @@ void packet_parse(struct gps_lexer_t *lexer)
 #ifdef SIRF_ENABLE
         } else if (SIRF_RECOGNIZED == lexer->state) {
             unsigned char *trailer = lexer->inbufptr - 4;
-            unsigned int checksum =
-                (unsigned)((trailer[0] << 8) | trailer[1]);
             unsigned int n;
 
+            crc_expected = (trailer[0] << 8) | trailer[1];
             crc_computed = 0;
 
             for (n = 4; n < (unsigned)(trailer - lexer->inbuffer); n++) {
                 crc_computed += lexer->inbuffer[n];
             }
             crc_computed &= 0x7fff;
-            if (checksum == crc_computed) {
+            if (crc_expected == crc_computed) {
                 packet_accept(lexer, SIRF_PACKET);
             } else {
                 packet_accept(lexer, BAD_PACKET);
@@ -2583,7 +2583,7 @@ void packet_parse(struct gps_lexer_t *lexer)
 #endif  // UBLOX_ENABLE
 #ifdef EVERMORE_ENABLE
         } else if (EVERMORE_RECOGNIZED == lexer->state) {
-            unsigned int n, checksum, len;
+            unsigned int n, len;
 
             n = 0;
             if (DLE != lexer->inbuffer[n++]) {
@@ -2612,8 +2612,8 @@ void packet_parse(struct gps_lexer_t *lexer)
                     }
                 }
             }
-            checksum = lexer->inbuffer[n++];
-            if (DLE == checksum) {
+            crc_expected = lexer->inbuffer[n++];
+            if (DLE == crc_expected) {
                 if (DLE != lexer->inbuffer[n++]) {
                     // FIXME: goto??
                     goto not_evermore;
@@ -2629,10 +2629,10 @@ void packet_parse(struct gps_lexer_t *lexer)
                 goto not_evermore;
             }
             crc_computed &= 0xff;
-            if (crc_computed != checksum) {
+            if (crc_computed != crc_expected) {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
                          "EverMore checksum failed: %02x != %02x\n",
-                         crc_computed, checksum);
+                         crc_computed, crc_expected);
                 // FIXME: goto??
                 goto not_evermore;
             }
@@ -2652,7 +2652,7 @@ void packet_parse(struct gps_lexer_t *lexer)
                              (uint16_t)getib((i))))
 
         } else if (ITALK_RECOGNIZED == lexer->state) {
-            uint16_t len, n, csum, xsum;
+            uint16_t len, n, crc_computed, xsum;
 
             // number of words
             len = (uint16_t)(lexer->inbuffer[6] & 0xff);
@@ -2660,20 +2660,20 @@ void packet_parse(struct gps_lexer_t *lexer)
             // expected checksum
             xsum = getiw(7 + 2 * len);
 
-            csum = 0;
+            crc_computed = 0;
             for (n = 0; n < len; n++) {
                 uint16_t tmpw = getiw(7 + 2 * n);
-                uint32_t tmpdw  = (csum + 1) * (tmpw + n);
-                csum ^= (tmpdw & 0xffff) ^ ((tmpdw >> 16) & 0xffff);
+                uint32_t tmpdw  = (crc_computed + 1) * (tmpw + n);
+                crc_computed ^= (tmpdw & 0xffff) ^ ((tmpdw >> 16) & 0xffff);
             }
             if (0 == len ||
-                csum == xsum) {
+                crc_computed == xsum) {
                 packet_accept(lexer, ITALK_PACKET);
             } else {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
                          "ITALK: checksum failed - "
                          "type 0x%02x expected 0x%04x got 0x%04x\n",
-                         lexer->inbuffer[4], xsum, csum);
+                         lexer->inbuffer[4], xsum, crc_computed);
                 packet_accept(lexer, BAD_PACKET);
                 lexer->state = GROUND_STATE;
             }
@@ -2693,19 +2693,20 @@ void packet_parse(struct gps_lexer_t *lexer)
         } else if (GEOSTAR_RECOGNIZED == lexer->state) {
             // GeoStar uses a XOR 32bit checksum
             int n;
-            unsigned int cs = 0L;
+
+            crc_computed = 0;
 
             // Calculate checksum
             for (n = 0; n < inbuflen; n += 4) {
-                cs ^= getleu32(lexer->inbuffer, n);
+                crc_computed ^= getleu32(lexer->inbuffer, n);
             }
 
-            if (0 == cs) {
+            if (0 == crc_computed) {
                 packet_accept(lexer, GEOSTAR_PACKET);
             } else {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
                          "GeoStar checksum failed 0x%x over length %d\n",
-                         cs, inbuflen);
+                         crc_computed, inbuflen);
                 packet_accept(lexer, BAD_PACKET);
                 lexer->state = GROUND_STATE;
             }
@@ -2728,11 +2729,10 @@ void packet_parse(struct gps_lexer_t *lexer)
                          "Accept GREIS error packet len %d\n", inbuflen);
                 packet_accept(lexer, GREIS_PACKET);
             } else {
-                unsigned char expected_cs = lexer->inbuffer[inbuflen - 1];
-                unsigned char cs = greis_checksum(lexer->inbuffer,
-                                                  inbuflen - 1);
+                crc_expected = lexer->inbuffer[inbuflen - 1];
+                crc_computed = greis_checksum(lexer->inbuffer, inbuflen - 1);
 
-                if (cs == expected_cs) {
+                if (crc_computed == crc_expected) {
                     GPSD_LOG(LOG_IO, &lexer->errout,
                              "Accept GREIS packet type '%c%c' len %d\n",
                              lexer->inbuffer[0], lexer->inbuffer[1], inbuflen);
@@ -2746,7 +2746,8 @@ void packet_parse(struct gps_lexer_t *lexer)
                              "REJECT GREIS len %d."
                              " Bad checksum %#02x, expecting %#02x."
                              " Packet type in hex: 0x%02x%02x",
-                             inbuflen, cs, expected_cs, lexer->inbuffer[0],
+                             inbuflen, crc_computed, crc_expected,
+                             lexer->inbuffer[0],
                              lexer->inbuffer[1]);
                     packet_accept(lexer, BAD_PACKET);
                     // got this far, fair to expect we will get more GREIS
