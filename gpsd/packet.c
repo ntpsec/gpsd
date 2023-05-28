@@ -2129,26 +2129,27 @@ void packet_parse(struct gps_lexer_t *lexer)
 #endif /* SKYTRAQ_ENABLE */
 #ifdef SUPERSTAR2_ENABLE
         } else if (SUPERSTAR2_RECOGNIZED == lexer->state) {
-            unsigned a = 0, b;
             size_t n;
 
+            crc_computed = 0;
             lexer->length = 4 + (size_t)lexer->inbuffer[3] + 2;
             if (261 < lexer->length) {
                 // can't happen, pacify coverity by checking anyway.
                 lexer->length = 261;
             }
             for (n = 0; n < lexer->length - 2; n++) {
-                a += (unsigned)lexer->inbuffer[n];
+                crc_computed += lexer->inbuffer[n];
             }
-            b = (unsigned)getleu16(lexer->inbuffer, lexer->length - 2);
+            crc_expected = getleu16(lexer->inbuffer, lexer->length - 2);
             GPSD_LOG(LOG_IO, &lexer->errout,
                      "SuperStarII pkt dump: type %u len %zu\n",
                      lexer->inbuffer[1], lexer->length);
-            if (a != b) {
+            if (crc_expected != crc_computed) {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
                          "REJECT SuperStarII packet type 0x%02x"
                          "%zd bad checksum 0x%04x, expecting 0x%04x\n",
-                         lexer->inbuffer[1], lexer->length, a, b);
+                         lexer->inbuffer[1], lexer->length,
+                         crc_computed, crc_expected);
                 packet_accept(lexer, BAD_PACKET);
                 lexer->state = GROUND_STATE;
             } else {
@@ -2208,7 +2209,6 @@ void packet_parse(struct gps_lexer_t *lexer)
 #ifdef GARMIN_ENABLE
                 unsigned int len;
                 size_t n;
-                unsigned int ch, chksum;
                 n = 0;
 #ifdef TSIP_ENABLE
                 // shortcut garmin
@@ -2223,7 +2223,7 @@ void packet_parse(struct gps_lexer_t *lexer)
                 }
                 pkt_id = lexer->inbuffer[n++];  // packet ID
                 len = lexer->inbuffer[n++];
-                chksum = len + pkt_id;
+                crc_computed = len + pkt_id;
                 if (DLE == len) {
                     if (DLE != lexer->inbuffer[n++]) {
                         // FIXME: goto ???
@@ -2231,7 +2231,7 @@ void packet_parse(struct gps_lexer_t *lexer)
                     }
                 }
                 for (; len > 0; len--) {
-                    chksum += lexer->inbuffer[n];
+                    crc_computed += lexer->inbuffer[n];
                     if (DLE == lexer->inbuffer[n++]) {
                         if (DLE != lexer->inbuffer[n++]) {
                             // FIXME: goto ???
@@ -2240,9 +2240,9 @@ void packet_parse(struct gps_lexer_t *lexer)
                     }
                 }
                 // check sum byte
-                ch = lexer->inbuffer[n++];
-                chksum += ch;
-                if (DLE == ch) {
+                crc_expected = lexer->inbuffer[n++];
+                crc_computed += crc_expected;
+                if (DLE == crc_expected) {
                     if (DLE != lexer->inbuffer[n++]) {
                         // FIXME: goto ???
                         goto not_garmin;
@@ -2257,10 +2257,10 @@ void packet_parse(struct gps_lexer_t *lexer)
                     // FIXME: goto ???
                     goto not_garmin;
                 }
-                chksum &= 0xff;
-                if (chksum) {
+                crc_computed &= 0xff;
+                if (crc_computed) {
                     GPSD_LOG(LOG_PROG, &lexer->errout,
-                             "Garmin checksum failed: %02x!=0\n", chksum);
+                             "Garmin checksum failed: %02x!=0\n", crc_computed);
                     // FIXME: goto ???
                     goto not_garmin;
                 }
@@ -2652,13 +2652,13 @@ void packet_parse(struct gps_lexer_t *lexer)
                              (uint16_t)getib((i))))
 
         } else if (ITALK_RECOGNIZED == lexer->state) {
-            uint16_t len, n, crc_computed, xsum;
+            uint16_t len, n;
 
             // number of words
             len = (uint16_t)(lexer->inbuffer[6] & 0xff);
 
             // expected checksum
-            xsum = getiw(7 + 2 * len);
+            crc_expected = getiw(7 + 2 * len);
 
             crc_computed = 0;
             for (n = 0; n < len; n++) {
@@ -2667,13 +2667,13 @@ void packet_parse(struct gps_lexer_t *lexer)
                 crc_computed ^= (tmpdw & 0xffff) ^ ((tmpdw >> 16) & 0xffff);
             }
             if (0 == len ||
-                crc_computed == xsum) {
+                crc_computed == crc_expected) {
                 packet_accept(lexer, ITALK_PACKET);
             } else {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
                          "ITALK: checksum failed - "
                          "type 0x%02x expected 0x%04x got 0x%04x\n",
-                         lexer->inbuffer[4], xsum, crc_computed);
+                         lexer->inbuffer[4], crc_expected, crc_computed);
                 packet_accept(lexer, BAD_PACKET);
                 lexer->state = GROUND_STATE;
             }
