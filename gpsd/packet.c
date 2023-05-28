@@ -2014,7 +2014,8 @@ void packet_parse(struct gps_lexer_t *lexer)
     while (0 < packet_buffered_input(lexer)) {
         unsigned char c = *lexer->inbufptr++;
         unsigned int oldstate = lexer->state;
-        int inbuflen;
+        unsigned inbuflen;      // bytes in inbuffer for message
+        unsigned idx;           // index into inbuffer
         unsigned crc_computed;  // the CRC/checksum we computed
         unsigned crc_expected;  // the CRC/checksum the message claims to have
 
@@ -2103,13 +2104,12 @@ void packet_parse(struct gps_lexer_t *lexer)
 #ifdef SIRF_ENABLE
         } else if (SIRF_RECOGNIZED == lexer->state) {
             unsigned char *trailer = lexer->inbufptr - 4;
-            unsigned int n;
 
             crc_expected = (trailer[0] << 8) | trailer[1];
             crc_computed = 0;
 
-            for (n = 4; n < (unsigned)(trailer - lexer->inbuffer); n++) {
-                crc_computed += lexer->inbuffer[n];
+            for (idx = 4; idx < (trailer - lexer->inbuffer); idx++) {
+                crc_computed += lexer->inbuffer[idx];
             }
             crc_computed &= 0x7fff;
             if (crc_expected == crc_computed) {
@@ -2129,7 +2129,6 @@ void packet_parse(struct gps_lexer_t *lexer)
 #endif /* SKYTRAQ_ENABLE */
 #ifdef SUPERSTAR2_ENABLE
         } else if (SUPERSTAR2_RECOGNIZED == lexer->state) {
-            size_t n;
 
             crc_computed = 0;
             lexer->length = 4 + (size_t)lexer->inbuffer[3] + 2;
@@ -2137,8 +2136,8 @@ void packet_parse(struct gps_lexer_t *lexer)
                 // can't happen, pacify coverity by checking anyway.
                 lexer->length = 261;
             }
-            for (n = 0; n < lexer->length - 2; n++) {
-                crc_computed += lexer->inbuffer[n];
+            for (idx = 0; idx < lexer->length - 2; idx++) {
+                crc_computed += lexer->inbuffer[idx];
             }
             crc_expected = getleu16(lexer->inbuffer, lexer->length - 2);
             GPSD_LOG(LOG_IO, &lexer->errout,
@@ -2161,12 +2160,11 @@ void packet_parse(struct gps_lexer_t *lexer)
 #ifdef ONCORE_ENABLE
         } else if (ONCORE_RECOGNIZED == lexer->state) {
             char a, b;
-            int i;
 
             a = (char)(lexer->inbuffer[inbuflen - 3]);
             b = '\0';
-            for (i = 2; i < inbuflen - 3; i++) {
-                b ^= lexer->inbuffer[i];
+            for (idx = 2; idx < inbuflen - 3; idx++) {
+                b ^= lexer->inbuffer[idx];
             }
             if (a == b) {
                 GPSD_LOG(LOG_IO, &lexer->errout,
@@ -2186,11 +2184,11 @@ void packet_parse(struct gps_lexer_t *lexer)
 #if defined(TSIP_ENABLE) || defined(GARMIN_ENABLE)
         } else if (TSIP_RECOGNIZED == lexer->state) {
 #ifdef TSIP_ENABLE
-            int pos, dlecnt;
+            int dlecnt;
             // don't count stuffed DLEs in the length
             dlecnt = 0;
-            for (pos = 0; pos < inbuflen; pos++) {
-                if (DLE == lexer->inbuffer[pos]) {
+            for (idx = 0; idx < inbuflen; idx++) {
+                if (DLE == lexer->inbuffer[idx]) {
                     dlecnt++;
                 }
             }
@@ -2208,8 +2206,8 @@ void packet_parse(struct gps_lexer_t *lexer)
                 unsigned int pkt_id;
 #ifdef GARMIN_ENABLE
                 unsigned int len;
-                size_t n;
-                n = 0;
+
+                idx = 0;
 #ifdef TSIP_ENABLE
                 // shortcut garmin
                 if (TSIP_PACKET == lexer->type) {
@@ -2217,43 +2215,43 @@ void packet_parse(struct gps_lexer_t *lexer)
                     goto not_garmin;
                 }
 #endif /* TSIP_ENABLE */
-                if (DLE != lexer->inbuffer[n++]) {
+                if (DLE != lexer->inbuffer[idx++]) {
                     // FIXME: goto ???
                     goto not_garmin;
                 }
-                pkt_id = lexer->inbuffer[n++];  // packet ID
-                len = lexer->inbuffer[n++];
+                pkt_id = lexer->inbuffer[idx++];  // packet ID
+                len = lexer->inbuffer[idx++];
                 crc_computed = len + pkt_id;
                 if (DLE == len) {
-                    if (DLE != lexer->inbuffer[n++]) {
+                    if (DLE != lexer->inbuffer[idx++]) {
                         // FIXME: goto ???
                         goto not_garmin;
                     }
                 }
                 for (; len > 0; len--) {
-                    crc_computed += lexer->inbuffer[n];
-                    if (DLE == lexer->inbuffer[n++]) {
-                        if (DLE != lexer->inbuffer[n++]) {
+                    crc_computed += lexer->inbuffer[idx];
+                    if (DLE == lexer->inbuffer[idx++]) {
+                        if (DLE != lexer->inbuffer[idx++]) {
                             // FIXME: goto ???
                             goto not_garmin;
                         }
                     }
                 }
                 // check sum byte
-                crc_expected = lexer->inbuffer[n++];
+                crc_expected = lexer->inbuffer[idx++];
                 crc_computed += crc_expected;
                 if (DLE == crc_expected) {
-                    if (DLE != lexer->inbuffer[n++]) {
+                    if (DLE != lexer->inbuffer[idx++]) {
                         // FIXME: goto ???
                         goto not_garmin;
                     }
                 }
-                if (DLE != lexer->inbuffer[n++]) {
+                if (DLE != lexer->inbuffer[idx++]) {
                     // FIXME: goto ???
                     goto not_garmin;
                 }
                 // we used to say n++ here, but scan-build complains
-                if (ETX != lexer->inbuffer[n]) {
+                if (ETX != lexer->inbuffer[idx]) {
                     // FIXME: goto ???
                     goto not_garmin;
                 }
@@ -2553,13 +2551,12 @@ void packet_parse(struct gps_lexer_t *lexer)
 #ifdef UBLOX_ENABLE
         } else if (UBX_RECOGNIZED == lexer->state) {
             // UBX use a TCP like checksum
-            int n;
             unsigned char ck_a = (unsigned char)0;
             unsigned char ck_b = (unsigned char)0;
 
             GPSD_LOG(LOG_IO, &lexer->errout, "UBX: len %d\n", inbuflen);
-            for (n = 2; n < (inbuflen - 2); n++) {
-                ck_a += lexer->inbuffer[n];
+            for (idx = 2; idx < (inbuflen - 2); idx++) {
+                ck_a += lexer->inbuffer[idx];
                 ck_b += ck_a;
             }
             if (ck_a == lexer->inbuffer[inbuflen - 2] &&
@@ -2583,20 +2580,20 @@ void packet_parse(struct gps_lexer_t *lexer)
 #endif  // UBLOX_ENABLE
 #ifdef EVERMORE_ENABLE
         } else if (EVERMORE_RECOGNIZED == lexer->state) {
-            unsigned int n, len;
+            unsigned int len;
 
-            n = 0;
-            if (DLE != lexer->inbuffer[n++]) {
+            idx = 0;
+            if (DLE != lexer->inbuffer[idx++]) {
                 // FIXME: goto??
                 goto not_evermore;
             }
-            if (STX != lexer->inbuffer[n++]) {
+            if (STX != lexer->inbuffer[idx++]) {
                 // FIXME: goto??
                 goto not_evermore;
             }
-            len = lexer->inbuffer[n++];
+            len = lexer->inbuffer[idx++];
             if (DLE == len) {
-                if (DLE != lexer->inbuffer[n++]) {
+                if (DLE != lexer->inbuffer[idx++]) {
                     // FIXME: goto??
                     goto not_evermore;
                 }
@@ -2604,27 +2601,27 @@ void packet_parse(struct gps_lexer_t *lexer)
             len -= 2;
             crc_computed = 0;
             for (; len > 0; len--) {
-                crc_computed += lexer->inbuffer[n];
-                if (DLE == lexer->inbuffer[n++]) {
-                    if (DLE != lexer->inbuffer[n++]) {
+                crc_computed += lexer->inbuffer[idx];
+                if (DLE == lexer->inbuffer[idx++]) {
+                    if (DLE != lexer->inbuffer[idx++]) {
                         // FIXME: goto??
                         goto not_evermore;
                     }
                 }
             }
-            crc_expected = lexer->inbuffer[n++];
+            crc_expected = lexer->inbuffer[idx++];
             if (DLE == crc_expected) {
-                if (DLE != lexer->inbuffer[n++]) {
+                if (DLE != lexer->inbuffer[idx++]) {
                     // FIXME: goto??
                     goto not_evermore;
                 }
             }
-            if (DLE != lexer->inbuffer[n++]) {
+            if (DLE != lexer->inbuffer[idx++]) {
                 // FIXME: goto??
                 goto not_evermore;
             }
             // we used to say n++ here, but scan-build complains
-            if (ETX != lexer->inbuffer[n]) {
+            if (ETX != lexer->inbuffer[idx]) {
                 // FIXME: goto??
                 goto not_evermore;
             }
@@ -2652,7 +2649,7 @@ void packet_parse(struct gps_lexer_t *lexer)
                              (uint16_t)getib((i))))
 
         } else if (ITALK_RECOGNIZED == lexer->state) {
-            uint16_t len, n;
+            uint16_t len;
 
             // number of words
             len = (uint16_t)(lexer->inbuffer[6] & 0xff);
@@ -2661,9 +2658,9 @@ void packet_parse(struct gps_lexer_t *lexer)
             crc_expected = getiw(7 + 2 * len);
 
             crc_computed = 0;
-            for (n = 0; n < len; n++) {
-                uint16_t tmpw = getiw(7 + 2 * n);
-                uint32_t tmpdw  = (crc_computed + 1) * (tmpw + n);
+            for (idx = 0; idx < len; idx++) {
+                uint16_t tmpw = getiw(7 + 2 * idx);
+                uint32_t tmpdw  = (crc_computed + 1) * (tmpw + idx);
                 crc_computed ^= (tmpdw & 0xffff) ^ ((tmpdw >> 16) & 0xffff);
             }
             if (0 == len ||
@@ -2692,13 +2689,12 @@ void packet_parse(struct gps_lexer_t *lexer)
 #ifdef GEOSTAR_ENABLE
         } else if (GEOSTAR_RECOGNIZED == lexer->state) {
             // GeoStar uses a XOR 32bit checksum
-            int n;
 
             crc_computed = 0;
 
             // Calculate checksum
-            for (n = 0; n < inbuflen; n += 4) {
-                crc_computed ^= getleu32(lexer->inbuffer, n);
+            for (idx = 0; idx < inbuflen; idx += 4) {
+                crc_computed ^= getleu32(lexer->inbuffer, idx);
             }
 
             if (0 == crc_computed) {
