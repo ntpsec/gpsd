@@ -2580,6 +2580,7 @@ void packet_parse(struct gps_lexer_t *lexer)
 #ifdef EVERMORE_ENABLE
         } else if (EVERMORE_RECOGNIZED == lexer->state) {
             unsigned int n, crc, checksum, len;
+
             n = 0;
             if (DLE != lexer->inbuffer[n++]) {
                 // FIXME: goto??
@@ -2687,12 +2688,11 @@ void packet_parse(struct gps_lexer_t *lexer)
 #ifdef GEOSTAR_ENABLE
         } else if (GEOSTAR_RECOGNIZED == lexer->state) {
             // GeoStar uses a XOR 32bit checksum
-            int n, len;
+            int n;
             unsigned int cs = 0L;
-            len = lexer->inbufptr - lexer->inbuffer;
 
             // Calculate checksum
-            for (n = 0; n < len; n += 4) {
+            for (n = 0; n < inbuflen; n += 4) {
                 cs ^= getleu32(lexer->inbuffer, n);
             }
 
@@ -2701,7 +2701,7 @@ void packet_parse(struct gps_lexer_t *lexer)
             } else {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
                          "GeoStar checksum failed 0x%x over length %d\n",
-                         cs, len);
+                         cs, inbuflen);
                 packet_accept(lexer, BAD_PACKET);
                 lexer->state = GROUND_STATE;
             }
@@ -2710,28 +2710,28 @@ void packet_parse(struct gps_lexer_t *lexer)
 #endif  // GEOSTAR_ENABLE
 #ifdef GREIS_ENABLE
         } else if (GREIS_RECOGNIZED == lexer->state) {
-            int len = lexer->inbufptr - lexer->inbuffer;
 
             if ('R' == lexer->inbuffer[0] &&
                 'E' == lexer->inbuffer[1]) {
                 // Replies don't have checksum
                 GPSD_LOG(LOG_IO, &lexer->errout,
-                         "Accept GREIS reply packet len %d\n", len);
+                         "Accept GREIS reply packet len %d\n", inbuflen);
                 packet_accept(lexer, GREIS_PACKET);
             } else if ('E' == lexer->inbuffer[0] &&
                        'R' == lexer->inbuffer[1]) {
                 // Error messages don't have checksum
                 GPSD_LOG(LOG_IO, &lexer->errout,
-                         "Accept GREIS error packet len %d\n", len);
+                         "Accept GREIS error packet len %d\n", inbuflen);
                 packet_accept(lexer, GREIS_PACKET);
             } else {
-                unsigned char expected_cs = lexer->inbuffer[len - 1];
-                unsigned char cs = greis_checksum(lexer->inbuffer, len - 1);
+                unsigned char expected_cs = lexer->inbuffer[inbuflen - 1];
+                unsigned char cs = greis_checksum(lexer->inbuffer,
+                                                  inbuflen - 1);
 
                 if (cs == expected_cs) {
                     GPSD_LOG(LOG_IO, &lexer->errout,
                              "Accept GREIS packet type '%c%c' len %d\n",
-                             lexer->inbuffer[0], lexer->inbuffer[1], len);
+                             lexer->inbuffer[0], lexer->inbuffer[1], inbuflen);
                     packet_accept(lexer, GREIS_PACKET);
                 } else {
                     /*
@@ -2742,7 +2742,7 @@ void packet_parse(struct gps_lexer_t *lexer)
                              "REJECT GREIS len %d."
                              " Bad checksum %#02x, expecting %#02x."
                              " Packet type in hex: 0x%02x%02x",
-                             len, cs, expected_cs, lexer->inbuffer[0],
+                             inbuflen, cs, expected_cs, lexer->inbuffer[0],
                              lexer->inbuffer[1]);
                     packet_accept(lexer, BAD_PACKET);
                     // got this far, fair to expect we will get more GREIS
@@ -2764,8 +2764,7 @@ void packet_parse(struct gps_lexer_t *lexer)
 #endif  // RTCM104V2_ENABLE
 #ifdef GARMINTXT_ENABLE
         } else if (GTXT_RECOGNIZED == lexer->state) {
-            size_t packetlen = lexer->inbufptr - lexer->inbuffer;
-            if (57 <= packetlen) {
+            if (57 <= inbuflen) {
                 packet_accept(lexer, GARMINTXT_PACKET);
                 packet_discard(lexer);
                 lexer->state = GROUND_STATE;
@@ -2776,8 +2775,7 @@ void packet_parse(struct gps_lexer_t *lexer)
             }
 #endif
         } else if (JSON_RECOGNIZED == lexer->state) {
-            size_t packetlen = lexer->inbufptr - lexer->inbuffer;
-            if (11 <= packetlen) {
+            if (11 <= inbuflen) {
                 // {"class": }
                 packet_accept(lexer, JSON_PACKET);
             } else {
