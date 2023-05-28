@@ -2159,14 +2159,12 @@ void packet_parse(struct gps_lexer_t *lexer)
 #endif /* SUPERSTAR2_ENABLE */
 #ifdef ONCORE_ENABLE
         } else if (ONCORE_RECOGNIZED == lexer->state) {
-            char a, b;
-
-            a = (char)(lexer->inbuffer[inbuflen - 3]);
-            b = '\0';
+            crc_expected = lexer->inbuffer[inbuflen - 3];
+            crc_computed = '\0';
             for (idx = 2; idx < inbuflen - 3; idx++) {
-                b ^= lexer->inbuffer[idx];
+                crc_computed ^= lexer->inbuffer[idx];
             }
-            if (a == b) {
+            if (crc_computed == crc_expected) {
                 GPSD_LOG(LOG_IO, &lexer->errout,
                          "Accept OnCore packet @@%c%c len %d\n",
                          lexer->inbuffer[2], lexer->inbuffer[3], inbuflen);
@@ -2522,7 +2520,6 @@ void packet_parse(struct gps_lexer_t *lexer)
 #ifdef ZODIAC_ENABLE
         } else if (ZODIAC_RECOGNIZED == lexer->state) {
             unsigned len, n;
-            short sum;
 
             // be paranoid, look ahead for a good checksum
             len = getzuword(2);
@@ -2530,18 +2527,21 @@ void packet_parse(struct gps_lexer_t *lexer)
                 // pacify coverity, 253 seems to be max length
                 len = 253;
             }
-            for (n = sum = 0; n < len; n++) {
-                sum += getzword(5 + n);
+            crc_computed = 0;
+            for (n = 0; n < len; n++) {
+                crc_computed += getzword(5 + n);
             }
-            sum *= -1;
+            crc_expected = getzword(5 + len);
+            crc_computed += crc_expected;
+            crc_computed &= 0x0ff;
             if (0 == len ||
-                sum == getzword(5 + len)) {
+                0 == crc_computed) {
                 packet_accept(lexer, ZODIAC_PACKET);
             } else {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
                          "Zodiac data checksum 0x%x over length %u, "
                          "expecting 0x%x\n",
-                         sum, len, getzword(5 + len));
+                         crc_expected, len, getzword(5 + len));
                 packet_accept(lexer, BAD_PACKET);
                 lexer->state = GROUND_STATE;
             }
