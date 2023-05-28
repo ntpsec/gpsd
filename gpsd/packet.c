@@ -2009,12 +2009,13 @@ void lexer_init(struct gps_lexer_t *lexer)
 // grab a packet from the input buffer
 void packet_parse(struct gps_lexer_t *lexer)
 {
-    int inbuflen;
 
     lexer->outbuflen = 0;
     while (0 < packet_buffered_input(lexer)) {
         unsigned char c = *lexer->inbufptr++;
         unsigned int oldstate = lexer->state;
+        int inbuflen;
+        unsigned crc_computed;
 
         if (!nextstate(lexer, c)) {
             continue;
@@ -2103,13 +2104,15 @@ void packet_parse(struct gps_lexer_t *lexer)
             unsigned char *trailer = lexer->inbufptr - 4;
             unsigned int checksum =
                 (unsigned)((trailer[0] << 8) | trailer[1]);
-            unsigned int n, crc = 0;
+            unsigned int n;
+
+            crc_computed = 0;
 
             for (n = 4; n < (unsigned)(trailer - lexer->inbuffer); n++) {
-                crc += lexer->inbuffer[n];
+                crc_computed += lexer->inbuffer[n];
             }
-            crc &= 0x7fff;
-            if (checksum == crc) {
+            crc_computed &= 0x7fff;
+            if (checksum == crc_computed) {
                 packet_accept(lexer, SIRF_PACKET);
             } else {
                 packet_accept(lexer, BAD_PACKET);
@@ -2580,7 +2583,7 @@ void packet_parse(struct gps_lexer_t *lexer)
 #endif  // UBLOX_ENABLE
 #ifdef EVERMORE_ENABLE
         } else if (EVERMORE_RECOGNIZED == lexer->state) {
-            unsigned int n, crc, checksum, len;
+            unsigned int n, checksum, len;
 
             n = 0;
             if (DLE != lexer->inbuffer[n++]) {
@@ -2599,9 +2602,9 @@ void packet_parse(struct gps_lexer_t *lexer)
                 }
             }
             len -= 2;
-            crc = 0;
+            crc_computed = 0;
             for (; len > 0; len--) {
-                crc += lexer->inbuffer[n];
+                crc_computed += lexer->inbuffer[n];
                 if (DLE == lexer->inbuffer[n++]) {
                     if (DLE != lexer->inbuffer[n++]) {
                         // FIXME: goto??
@@ -2625,11 +2628,11 @@ void packet_parse(struct gps_lexer_t *lexer)
                 // FIXME: goto??
                 goto not_evermore;
             }
-            crc &= 0xff;
-            if (crc != checksum) {
+            crc_computed &= 0xff;
+            if (crc_computed != checksum) {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
                          "EverMore checksum failed: %02x != %02x\n",
-                         crc, checksum);
+                         crc_computed, checksum);
                 // FIXME: goto??
                 goto not_evermore;
             }
