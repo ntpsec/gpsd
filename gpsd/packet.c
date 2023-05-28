@@ -2041,7 +2041,7 @@ void packet_parse(struct gps_lexer_t *lexer)
                 packet_accept(lexer, BAD_PACKET);
                 lexer->state = GROUND_STATE;
                 packet_discard(lexer);
-                break;    // exit case
+                break;    // exit while
             }
 
             // checksum passed or not present
@@ -2106,7 +2106,7 @@ void packet_parse(struct gps_lexer_t *lexer)
             unsigned int n, crc = 0;
 
             for (n = 4; n < (unsigned)(trailer - lexer->inbuffer); n++) {
-                crc += (int)lexer->inbuffer[n];
+                crc += lexer->inbuffer[n];
             }
             crc &= 0x7fff;
             if (checksum == crc) {
@@ -2139,8 +2139,8 @@ void packet_parse(struct gps_lexer_t *lexer)
             }
             b = (unsigned)getleu16(lexer->inbuffer, lexer->length - 2);
             GPSD_LOG(LOG_IO, &lexer->errout,
-                     "SuperStarII pkt dump: type %u len %u\n",
-                     lexer->inbuffer[1], (unsigned)lexer->length);
+                     "SuperStarII pkt dump: type %u len %zu\n",
+                     lexer->inbuffer[1], lexer->length);
             if (a != b) {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
                          "REJECT SuperStarII packet type 0x%02x"
@@ -2182,10 +2182,10 @@ void packet_parse(struct gps_lexer_t *lexer)
 #if defined(TSIP_ENABLE) || defined(GARMIN_ENABLE)
         } else if (TSIP_RECOGNIZED == lexer->state) {
 #ifdef TSIP_ENABLE
-            unsigned int pos, dlecnt;
+            int pos, dlecnt;
             // don't count stuffed DLEs in the length
             dlecnt = 0;
-            for (pos = 0; pos < (unsigned int)inbuflen; pos++) {
+            for (pos = 0; pos < inbuflen; pos++) {
                 if (DLE == lexer->inbuffer[pos]) {
                     dlecnt++;
                 }
@@ -2533,7 +2533,8 @@ void packet_parse(struct gps_lexer_t *lexer)
                 sum += getzword(5 + n);
             }
             sum *= -1;
-            if (0 == len || sum == getzword(5 + len)) {
+            if (0 == len ||
+                sum == getzword(5 + len)) {
                 packet_accept(lexer, ZODIAC_PACKET);
             } else {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
@@ -2648,22 +2649,22 @@ void packet_parse(struct gps_lexer_t *lexer)
                              (uint16_t)getib((i))))
 
         } else if (ITALK_RECOGNIZED == lexer->state) {
-            volatile uint16_t len, n, csum, xsum;
+            uint16_t len, n, csum, xsum;
 
             // number of words
-            len = (uint16_t) (lexer->inbuffer[6] & 0xff);
+            len = (uint16_t)(lexer->inbuffer[6] & 0xff);
 
             // expected checksum
             xsum = getiw(7 + 2 * len);
 
-
             csum = 0;
             for (n = 0; n < len; n++) {
-                volatile uint16_t tmpw = getiw(7 + 2 * n);
-                volatile uint32_t tmpdw  = (csum + 1) * (tmpw + n);
+                uint16_t tmpw = getiw(7 + 2 * n);
+                uint32_t tmpdw  = (csum + 1) * (tmpw + n);
                 csum ^= (tmpdw & 0xffff) ^ ((tmpdw >> 16) & 0xffff);
             }
-            if (0 == len || csum == xsum) {
+            if (0 == len ||
+                csum == xsum) {
                 packet_accept(lexer, ITALK_PACKET);
             } else {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
