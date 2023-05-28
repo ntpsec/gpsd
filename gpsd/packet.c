@@ -2502,15 +2502,13 @@ void packet_parse(struct gps_lexer_t *lexer)
 #endif  // TSIP_ENABLE || GARMIN_ENABLE
 #ifdef RTCM104V3_ENABLE
         } else if (RTCM3_RECOGNIZED == lexer->state) {
-            if (crc24q_check(lexer->inbuffer,
-                             lexer->inbufptr - lexer->inbuffer)) {
+            if (crc24q_check(lexer->inbuffer, inbuflen)) {
                 packet_accept(lexer, RTCM3_PACKET);
             } else {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
                          "RTCM3 data checksum failure, "
                          "%0x against %02x %02x %02x\n",
-                         crc24q_hash(lexer->inbuffer,
-                                     lexer->inbufptr - lexer->inbuffer - 3),
+                         crc24q_hash(lexer->inbuffer, inbuflen - 3),
                          lexer->inbufptr[-3],
                          lexer->inbufptr[-2],
                          lexer->inbufptr[-1]);
@@ -2551,17 +2549,17 @@ void packet_parse(struct gps_lexer_t *lexer)
 #ifdef UBLOX_ENABLE
         } else if (UBX_RECOGNIZED == lexer->state) {
             // UBX use a TCP like checksum
-            int n, len;
+            int n;
             unsigned char ck_a = (unsigned char)0;
             unsigned char ck_b = (unsigned char)0;
-            len = lexer->inbufptr - lexer->inbuffer;
-            GPSD_LOG(LOG_IO, &lexer->errout, "UBX: len %d\n", len);
-            for (n = 2; n < (len - 2); n++) {
+
+            GPSD_LOG(LOG_IO, &lexer->errout, "UBX: len %d\n", inbuflen);
+            for (n = 2; n < (inbuflen - 2); n++) {
                 ck_a += lexer->inbuffer[n];
                 ck_b += ck_a;
             }
-            if (ck_a == lexer->inbuffer[len - 2] &&
-                ck_b == lexer->inbuffer[len - 1]) {
+            if (ck_a == lexer->inbuffer[inbuflen - 2] &&
+                ck_b == lexer->inbuffer[inbuflen - 1]) {
                 packet_accept(lexer, UBX_PACKET);
             } else {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
@@ -2569,9 +2567,9 @@ void packet_parse(struct gps_lexer_t *lexer)
                          " expecting 0x%02hhx%02hhx (type 0x%02hhx%02hhx)\n",
                          ck_a,
                          ck_b,
-                         len,
-                         lexer->inbuffer[len - 2],
-                         lexer->inbuffer[len - 1],
+                         inbuflen,
+                         lexer->inbuffer[inbuflen - 2],
+                         lexer->inbuffer[inbuflen - 1],
                          lexer->inbuffer[2], lexer->inbuffer[3]);
                 packet_accept(lexer, BAD_PACKET);
                 lexer->state = GROUND_STATE;
