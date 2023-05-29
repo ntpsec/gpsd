@@ -2018,6 +2018,8 @@ void packet_parse(struct gps_lexer_t *lexer)
         unsigned idx;           // index into inbuffer
         unsigned crc_computed;  // the CRC/checksum we computed
         unsigned crc_expected;  // the CRC/checksum the message claims to have
+        enum {PASS, ACCEPT, DISCARD} acc_dis;
+        int packet_type;
 
         if (!nextstate(lexer, c)) {
             continue;
@@ -2028,23 +2030,23 @@ void packet_parse(struct gps_lexer_t *lexer)
                  state_table[oldstate], state_table[lexer->state]);
         lexer->char_counter++;
         inbuflen = lexer->inbufptr - lexer->inbuffer;
+        acc_dis = PASS;
 
         // FIXME: make this if/else nest a switch()
         if (GROUND_STATE == lexer->state) {
             character_discard(lexer);
         } else if (COMMENT_RECOGNIZED == lexer->state) {
-            packet_accept(lexer, COMMENT_PACKET);
-            packet_discard(lexer);
+            packet_type = COMMENT_PACKET;
+            acc_dis = ACCEPT;
             lexer->state = GROUND_STATE;
-            break;
         } else if (NMEA_RECOGNIZED == lexer->state) {
             if (!nmea_checksum(&lexer->errout,
                                (const char *)lexer->inbuffer,
                                (const char *)lexer->inbufptr)) {
                 packet_accept(lexer, BAD_PACKET);
-                lexer->state = GROUND_STATE;
                 packet_discard(lexer);
-                break;    // exit while
+                lexer->state = GROUND_STATE;
+                break;
             }
 
             // checksum passed or not present
@@ -2093,7 +2095,9 @@ void packet_parse(struct gps_lexer_t *lexer)
                 packet_accept(lexer, AIVDM_PACKET);
             } else
 #endif  // AIVDM_ENABLE
+            {
                 packet_accept(lexer, NMEA_PACKET);
+            }
             packet_discard(lexer);
 #ifdef STASH_ENABLE
             if (lexer->stashbuflen) {
@@ -2113,19 +2117,19 @@ void packet_parse(struct gps_lexer_t *lexer)
             }
             crc_computed &= 0x7fff;
             if (crc_expected == crc_computed) {
-                packet_accept(lexer, SIRF_PACKET);
+                packet_type = SIRF_PACKET;
+                acc_dis = ACCEPT;
             } else {
                 packet_accept(lexer, BAD_PACKET);
                 lexer->state = GROUND_STATE;
+                packet_discard(lexer);
+                break;
             }
-            packet_discard(lexer);
-            break;
 #endif  // SIRF_ENABLE
 #ifdef SKYTRAQ_ENABLE
         } else if (SKY_RECOGNIZED == lexer->state) {
-            packet_accept(lexer, SKY_PACKET);
-            packet_discard(lexer);
-            break;
+            packet_type = SKY_PACKET;
+            acc_dis = ACCEPT;
 #endif /* SKYTRAQ_ENABLE */
 #ifdef SUPERSTAR2_ENABLE
         } else if (SUPERSTAR2_RECOGNIZED == lexer->state) {
@@ -2150,12 +2154,13 @@ void packet_parse(struct gps_lexer_t *lexer)
                          lexer->inbuffer[1], lexer->length,
                          crc_computed, crc_expected);
                 packet_accept(lexer, BAD_PACKET);
+                packet_discard(lexer);
                 lexer->state = GROUND_STATE;
+                break;
             } else {
-                packet_accept(lexer, SUPERSTAR2_PACKET);
+                packet_type = SUPERSTAR2_PACKET;
+                acc_dis = ACCEPT;
             }
-            packet_discard(lexer);
-            break;
 #endif /* SUPERSTAR2_ENABLE */
 #ifdef ONCORE_ENABLE
         } else if (ONCORE_RECOGNIZED == lexer->state) {
@@ -2790,6 +2795,11 @@ void packet_parse(struct gps_lexer_t *lexer)
             packet_stash(lexer);
             packet_discard(lexer);
 #endif  // STASH_ENABLE
+        }
+        if (ACCEPT == acc_dis) {
+            packet_accept(lexer, packet_type);
+            packet_discard(lexer);
+            break;
         }
     }                           // while
 }
