@@ -174,14 +174,16 @@ void gpsd_position_fix_dump(struct gps_device_t *session,
             break;
         }
 
-        // Use lat %011.7f and lon %12.7f, becaause u-blox ZED-F9P does.
+        /* Use lat/lon precision .7 becaause u-blox ZED-F9P does.
+         * Use lat 4 digits of integer, lon 5 digits, because:
+         * http://sapos.geonord-od.de:2101/ wants that minimum */
         (void)snprintf(bufp, len,
                        "$GPGGA,%s,%s,%c,%s,%c,%d,%02d,",
                        time_str,
-                       degtodm_str(session->gpsdata.fix.latitude, "%011.7f",
+                       degtodm_str(session->gpsdata.fix.latitude, "%012.7f",
                                    lat_str),
                        ((session->gpsdata.fix.latitude > 0) ? 'N' : 'S'),
-                       degtodm_str(session->gpsdata.fix.longitude, "%012.7f",
+                       degtodm_str(session->gpsdata.fix.longitude, "%013.7f",
                                    lon_str),
                        ((session->gpsdata.fix.longitude > 0) ? 'E' : 'W'),
                        fixquality,
