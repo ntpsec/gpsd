@@ -2677,9 +2677,8 @@ void packet_parse(struct gps_lexer_t *lexer)
 #ifdef NAVCOM_ENABLE
         } else if (NAVCOM_RECOGNIZED == lexer->state) {
             // By the time we got here we know checksum is OK
-            packet_accept(lexer, NAVCOM_PACKET);
-            packet_discard(lexer);
-            break;
+            packet_type = NAVCOM_PACKET;
+            acc_dis = ACCEPT;
 #endif  // NAVCOM_ENABLE
 #ifdef GEOSTAR_ENABLE
         } else if (GEOSTAR_RECOGNIZED == lexer->state) {
@@ -2693,16 +2692,15 @@ void packet_parse(struct gps_lexer_t *lexer)
             }
 
             if (0 == crc_computed) {
-                packet_accept(lexer, GEOSTAR_PACKET);
+                packet_type = GEOSTAR_PACKET;
             } else {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
                          "GeoStar checksum failed 0x%x over length %d\n",
                          crc_computed, inbuflen);
-                packet_accept(lexer, BAD_PACKET);
+                packet_type = BAD_PACKET;
                 lexer->state = GROUND_STATE;
             }
-            packet_discard(lexer);
-            break;
+            acc_dis = ACCEPT;
 #endif  // GEOSTAR_ENABLE
 #ifdef GREIS_ENABLE
         } else if (GREIS_RECOGNIZED == lexer->state) {
@@ -2754,9 +2752,8 @@ void packet_parse(struct gps_lexer_t *lexer)
              * RTCM packets don't have checksums.  The six bits of parity
              * per word and the preamble better be good enough.
              */
-            packet_accept(lexer, RTCM2_PACKET);
-            packet_discard(lexer);
-            break;
+            packet_type = RTCM2_PACKET;
+            acc_dis = ACCEPT;
 #endif  // RTCM104V2_ENABLE
 #ifdef GARMINTXT_ENABLE
         } else if (GTXT_RECOGNIZED == lexer->state) {
@@ -2773,13 +2770,12 @@ void packet_parse(struct gps_lexer_t *lexer)
         } else if (JSON_RECOGNIZED == lexer->state) {
             if (11 <= inbuflen) {
                 // {"class": }
-                packet_accept(lexer, JSON_PACKET);
+                packet_type = JSON_PACKET;
             } else {
-                packet_accept(lexer, BAD_PACKET);
+                packet_type = BAD_PACKET;
             }
-            packet_discard(lexer);
             lexer->state = GROUND_STATE;
-            break;
+            acc_dis = ACCEPT;
 #ifdef STASH_ENABLE
         } else if (STASH_RECOGNIZED == lexer->state) {
             packet_stash(lexer);
