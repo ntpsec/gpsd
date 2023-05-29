@@ -2120,10 +2120,9 @@ void packet_parse(struct gps_lexer_t *lexer)
                 packet_type = SIRF_PACKET;
                 acc_dis = ACCEPT;
             } else {
-                packet_accept(lexer, BAD_PACKET);
+                packet_type = BAD_PACKET;
+                acc_dis = ACCEPT;
                 lexer->state = GROUND_STATE;
-                packet_discard(lexer);
-                break;
             }
 #endif  // SIRF_ENABLE
 #ifdef SKYTRAQ_ENABLE
@@ -2153,14 +2152,12 @@ void packet_parse(struct gps_lexer_t *lexer)
                          "%zd bad checksum 0x%04x, expecting 0x%04x\n",
                          lexer->inbuffer[1], lexer->length,
                          crc_computed, crc_expected);
-                packet_accept(lexer, BAD_PACKET);
-                packet_discard(lexer);
+                packet_type = BAD_PACKET;
                 lexer->state = GROUND_STATE;
-                break;
             } else {
                 packet_type = SUPERSTAR2_PACKET;
-                acc_dis = ACCEPT;
             }
+            acc_dis = ACCEPT;
 #endif /* SUPERSTAR2_ENABLE */
 #ifdef ONCORE_ENABLE
         } else if (ONCORE_RECOGNIZED == lexer->state) {
@@ -2173,16 +2170,15 @@ void packet_parse(struct gps_lexer_t *lexer)
                 GPSD_LOG(LOG_IO, &lexer->errout,
                          "Accept OnCore packet @@%c%c len %d\n",
                          lexer->inbuffer[2], lexer->inbuffer[3], inbuflen);
-                packet_accept(lexer, ONCORE_PACKET);
+                packet_type = ONCORE_PACKET;
             } else {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
                          "REJECT OnCore packet @@%c%c len %d\n",
                          lexer->inbuffer[2], lexer->inbuffer[3], inbuflen);
-                packet_accept(lexer, BAD_PACKET);
                 lexer->state = GROUND_STATE;
+                packet_type = BAD_PACKET;
             }
-            packet_discard(lexer);
-            break;
+            acc_dis = ACCEPT;
 #endif  // ONCORE_ENABLE
 #if defined(TSIP_ENABLE) || defined(GARMIN_ENABLE)
         } else if (TSIP_RECOGNIZED == lexer->state) {
@@ -2507,7 +2503,7 @@ void packet_parse(struct gps_lexer_t *lexer)
 #ifdef RTCM104V3_ENABLE
         } else if (RTCM3_RECOGNIZED == lexer->state) {
             if (crc24q_check(lexer->inbuffer, inbuflen)) {
-                packet_accept(lexer, RTCM3_PACKET);
+                packet_type = RTCM3_PACKET;
             } else {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
                          "RTCM3 data checksum failure, "
@@ -2516,11 +2512,10 @@ void packet_parse(struct gps_lexer_t *lexer)
                          lexer->inbufptr[-3],
                          lexer->inbufptr[-2],
                          lexer->inbufptr[-1]);
-                packet_accept(lexer, BAD_PACKET);
+                packet_type = BAD_PACKET;
             }
-            packet_discard(lexer);
+            acc_dis = ACCEPT;
             lexer->state = GROUND_STATE;
-            break;
 #endif  // RTCM104V3_ENABLE
 #ifdef ZODIAC_ENABLE
         } else if (ZODIAC_RECOGNIZED == lexer->state) {
@@ -2541,17 +2536,16 @@ void packet_parse(struct gps_lexer_t *lexer)
             crc_computed &= 0x0ff;
             if (0 == len ||
                 0 == crc_computed) {
-                packet_accept(lexer, ZODIAC_PACKET);
+                packet_type = ZODIAC_PACKET;
             } else {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
                          "Zodiac data checksum 0x%x over length %u, "
                          "expecting 0x%x\n",
                          crc_expected, len, getzword(5 + len));
-                packet_accept(lexer, BAD_PACKET);
+                packet_type = BAD_PACKET;
                 lexer->state = GROUND_STATE;
             }
-            packet_discard(lexer);
-            break;
+            acc_dis = ACCEPT;
 #endif  // ZODIAC_ENABLE
 #ifdef UBLOX_ENABLE
         } else if (UBX_RECOGNIZED == lexer->state) {
@@ -2566,7 +2560,7 @@ void packet_parse(struct gps_lexer_t *lexer)
             }
             if (ck_a == lexer->inbuffer[inbuflen - 2] &&
                 ck_b == lexer->inbuffer[inbuflen - 1]) {
-                packet_accept(lexer, UBX_PACKET);
+                packet_type = UBX_PACKET;
             } else {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
                          "UBX checksum 0x%02hhx%02hhx over length %d,"
@@ -2577,11 +2571,10 @@ void packet_parse(struct gps_lexer_t *lexer)
                          lexer->inbuffer[inbuflen - 2],
                          lexer->inbuffer[inbuflen - 1],
                          lexer->inbuffer[2], lexer->inbuffer[3]);
-                packet_accept(lexer, BAD_PACKET);
+                packet_type = BAD_PACKET;
                 lexer->state = GROUND_STATE;
             }
-            packet_discard(lexer);
-            break;
+            acc_dis = ACCEPT;
 #endif  // UBLOX_ENABLE
 #ifdef EVERMORE_ENABLE
         } else if (EVERMORE_RECOGNIZED == lexer->state) {
