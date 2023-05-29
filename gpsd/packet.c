@@ -2493,10 +2493,9 @@ void packet_parse(struct gps_lexer_t *lexer)
                  * More attempts to recognize ambiguous TSIP-like
                  * packet types could go here.
                  */
-                packet_accept(lexer, BAD_PACKET);
+                packet_type = BAD_PACKET;
+                acc_dis = ACCEPT;
                 lexer->state = GROUND_STATE;
-                packet_discard(lexer);
-                break;
 #endif  // TSIP_ENABLE
             }
 #endif  // TSIP_ENABLE || GARMIN_ENABLE
@@ -2635,10 +2634,9 @@ void packet_parse(struct gps_lexer_t *lexer)
             packet_discard(lexer);
             break;
           not_evermore:
-            packet_accept(lexer, BAD_PACKET);
+            packet_type = BAD_PACKET;
+            acc_dis = ACCEPT;
             lexer->state = GROUND_STATE;
-            packet_discard(lexer);
-            break;
 #endif  // EVERMORE_ENABLE
 // XXX CSK
 #ifdef ITRAX_ENABLE
@@ -2663,17 +2661,16 @@ void packet_parse(struct gps_lexer_t *lexer)
             }
             if (0 == len ||
                 crc_computed == crc_expected) {
-                packet_accept(lexer, ITALK_PACKET);
+                packet_type = ITALK_PACKET;
             } else {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
                          "ITALK: checksum failed - "
                          "type 0x%02x expected 0x%04x got 0x%04x\n",
                          lexer->inbuffer[4], crc_expected, crc_computed);
-                packet_accept(lexer, BAD_PACKET);
+                packet_type = BAD_PACKET;
                 lexer->state = GROUND_STATE;
             }
-            packet_discard(lexer);
-            break;
+            acc_dis = ACCEPT;
 #undef getiw
 #undef getib
 #endif  // ITRAX_ENABLE
