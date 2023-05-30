@@ -1308,9 +1308,11 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
     case RTCM3_LEADER_1:
         // high 6 bits must be zero, low 2 bits are MSB of a 10-bit length
         if (0 == (c & 0xFC)) {
-            lexer->length = (size_t) (c << 8);
+            lexer->length = (size_t)c << 8;
             lexer->state = RTCM3_LEADER_2;
         } else {
+            GPSD_LOG(LOG_IO, &lexer->errout,
+                     "RTCM3 must be zero bits aren't: %u\n", c & 0xFC);
             return character_pushback(lexer, GROUND_STATE);
         }
         break;
@@ -2019,7 +2021,9 @@ void packet_parse(struct gps_lexer_t *lexer)
         unsigned crc_computed;  // the CRC/checksum we computed
         unsigned crc_expected;  // the CRC/checksum the message claims to have
         enum {PASS, ACCEPT, DISCARD} acc_dis;
-        int packet_type;
+        int packet_type;        // gpsd packet type
+        unsigned msg_id;        // native type or ID the message thinks it is
+        unsigned data_len;      // What the message says the data length is.
 
         if (!nextstate(lexer, c)) {
             continue;
@@ -2501,6 +2505,16 @@ void packet_parse(struct gps_lexer_t *lexer)
 #endif  // TSIP_ENABLE || GARMIN_ENABLE
 #ifdef RTCM104V3_ENABLE
         } else if (RTCM3_RECOGNIZED == lexer->state) {
+            if (LOG_IO <= lexer->errout.debug) {
+                // yes, the top 6 bits should be zero, total 10 bits of length
+                data_len = (lexer->inbuffer[1] << 8) | lexer->inbuffer[2];
+                // 12 bits of message type
+                msg_id = (lexer->inbuffer[3] << 4) | (lexer->inbuffer[4] >> 4);
+
+                GPSD_LOG(LOG_IO, &lexer->errout,
+                             "RTCM3 len %u type %u\n", data_len, msg_id);
+            }
+
             if (crc24q_check(lexer->inbuffer, inbuflen)) {
                 packet_type = RTCM3_PACKET;
             } else {
