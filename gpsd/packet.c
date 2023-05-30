@@ -2718,19 +2718,18 @@ void packet_parse(struct gps_lexer_t *lexer)
 #endif  // GEOSTAR_ENABLE
 #ifdef GREIS_ENABLE
         } else if (GREIS_RECOGNIZED == lexer->state) {
-
             if ('R' == lexer->inbuffer[0] &&
                 'E' == lexer->inbuffer[1]) {
                 // Replies don't have checksum
                 GPSD_LOG(LOG_IO, &lexer->errout,
                          "Accept GREIS reply packet len %d\n", inbuflen);
-                packet_accept(lexer, GREIS_PACKET);
+                packet_type = GREIS_PACKET;
             } else if ('E' == lexer->inbuffer[0] &&
                        'R' == lexer->inbuffer[1]) {
                 // Error messages don't have checksum
                 GPSD_LOG(LOG_IO, &lexer->errout,
                          "Accept GREIS error packet len %d\n", inbuflen);
-                packet_accept(lexer, GREIS_PACKET);
+                packet_type = GREIS_PACKET;
             } else {
                 crc_expected = lexer->inbuffer[inbuflen - 1];
                 crc_computed = greis_checksum(lexer->inbuffer, inbuflen - 1);
@@ -2739,7 +2738,7 @@ void packet_parse(struct gps_lexer_t *lexer)
                     GPSD_LOG(LOG_IO, &lexer->errout,
                              "Accept GREIS packet type '%c%c' len %d\n",
                              lexer->inbuffer[0], lexer->inbuffer[1], inbuflen);
-                    packet_accept(lexer, GREIS_PACKET);
+                    packet_type = GREIS_PACKET;
                 } else {
                     /*
                      * Print hex instead of raw characters, since they might be
@@ -2752,13 +2751,12 @@ void packet_parse(struct gps_lexer_t *lexer)
                              inbuflen, crc_computed, crc_expected,
                              lexer->inbuffer[0],
                              lexer->inbuffer[1]);
-                    packet_accept(lexer, BAD_PACKET);
+                    packet_type = BAD_PACKET;
                     // got this far, fair to expect we will get more GREIS
                     lexer->state = GREIS_EXPECTED;
                 }
             }
-            packet_discard(lexer);
-            break;
+            acc_dis = ACCEPT;
 #endif /* GREIS_ENABLE */
 #ifdef RTCM104V2_ENABLE
         } else if (RTCM2_RECOGNIZED == lexer->state) {
