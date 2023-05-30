@@ -70,8 +70,8 @@ static struct ntrip_fmt_s {
     {"RTCM 3.1", FMT_RTCM3_1},
     {"RTCM3.1", FMT_RTCM3_1},
     {"RTCM 3.2", FMT_RTCM3_2},
-    {"RTCM3.2", FMT_RTCM3_2},
-    {"RTCM32", FMT_RTCM3_2},       // for http://sapos.geonord-od.de:2101/
+    {"RTCM3.2", FMT_RTCM3_2},       // for http://sapos.geonord-od.de:2101/
+    {"RTCM32", FMT_RTCM3_2},
     {"RTCM 3.3", FMT_RTCM3_3},
     {"RTCM 3", FMT_RTCM3_0},
     {"RTCM3", FMT_RTCM3_0},
