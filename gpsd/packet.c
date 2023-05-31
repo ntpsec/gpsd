@@ -605,6 +605,8 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         }
         break;
     // end PASHR, TSIP mitigation
+
+    // start of AIS states
     case AIS_BANG:
         if ('A' == c) {          // !A
             lexer->state = AIS_LEAD_1;
@@ -618,7 +620,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         break;
     case AIS_LEAD_1:
         if (NULL != strchr("BDINRSTX", c)) {
-            // !AB, !AD, !AI, !AN, !AR, !AS, !AT, !AX"
+            // !AB, !AD, !AI, !AN, !AR, !AS, !AT, !AX
             lexer->state = AIS_LEAD_2;
         } else {
             return character_pushback(lexer, GROUND_STATE);
@@ -664,15 +666,24 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
     case AIS_LEADER_END:
         // We stay here grabbing the body of the message, until \r\n
         if ('\r' == c) {
-            lexer->state = NMEA_CR;
+            lexer->state = AIS_CR;
         } else if ('\n' == c) {
-            /* not strictly correct (missing \r), but helps for
-             * helps for interpreting logfiles. */
-            lexer->state = NMEA_RECOGNIZED;
+            /* not strictly correct (missing \r), but helps with
+             * interpreting logfiles. */
+            lexer->state = AIS_RECOGNIZED;
         } else if (!isprint(c)) {
             (void)character_pushback(lexer, GROUND_STATE);
         }
         break;
+    case AIS_CR:
+        if ('\n' == c) {
+            lexer->state = AIS_RECOGNIZED;
+        } else {
+            (void)character_pushback(lexer, GROUND_STATE);
+        }
+        break;
+    // end of AIS states
+
 #if defined(TNT_ENABLE) || defined(GARMINTXT_ENABLE) || defined(ONCORE_ENABLE)
     case AT1_LEADER:
         switch (c) {
@@ -716,7 +727,8 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         if ('\r' == c) {
             lexer->state = NMEA_CR;
         } else if ('\n' == c) {
-            // not strictly correct, but helps for interpreting logfiles
+            /* not strictly correct (missing \r), but helps with
+             * interpreting logfiles. */
             lexer->state = NMEA_RECOGNIZED;
         } else if ('$' == c) {
 #ifdef STASH_ENABLE
@@ -741,6 +753,9 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             (void)character_pushback(lexer, GROUND_STATE);
         }
         break;
+    case AIS_RECOGNIZED:
+        // AIS and NMEA often mixed treat them similar to start
+        FALLTHROUGH
     case NMEA_RECOGNIZED:
         if ('#' == c) {
             lexer->state = COMMENT_BODY;
@@ -2056,6 +2071,17 @@ void packet_parse(struct gps_lexer_t *lexer)
             packet_type = COMMENT_PACKET;
             acc_dis = ACCEPT;
             lexer->state = GROUND_STATE;
+        } else if (AIS_RECOGNIZED == lexer->state) {
+            if (nmea_checksum(&lexer->errout,
+                               (const char *)lexer->inbuffer,
+                               (const char *)lexer->inbufptr)) {
+                packet_type = AIVDM_PACKET;
+            } else {
+                packet_type = BAD_PACKET;
+                lexer->state = GROUND_STATE;
+            }
+            acc_dis = ACCEPT;
+
         } else if (NMEA_RECOGNIZED == lexer->state) {
             if (!nmea_checksum(&lexer->errout,
                                (const char *)lexer->inbuffer,
@@ -2066,55 +2092,7 @@ void packet_parse(struct gps_lexer_t *lexer)
                 break;
             }
 
-            // checksum passed or not present
-#ifdef AIVDM_ENABLE
-            /* !ABVDx  - NMEA 4.0 Base AIS station
-             * !ADVDx  - MMEA 4.0 Dependent AIS Base Station
-             * !AIVDx  - Mobile AIS station
-             * !ANVDx  - NMEA 4.0 Aid to Navigation AIS station
-             * !ARVDx  - NMEA 4.0 AIS Receiving Station
-             * !ASVDx  - NMEA 4.0 Limited Base Station
-             * !ATVDx  - NMEA 4.0 AIS Transmitting Station
-             * !AXVDx  - NMEA 4.0 Repeater AIS station
-             * !BSVDx  - Base AIS station (deprecated in NMEA 4.0)
-             * !SAVDx  - NMEA 4.0 Physical Shore AIS Station
-             *
-             * where x is:
-             *   M -- from other ships
-             *   O -- from your own ship
-             */
-            /* make some simple char tests first to stop wasting cycles
-             * on a lot of strncmp()s */
-            if ('!' == lexer->inbuffer[0] &&
-                'V' == lexer->inbuffer[3] &&
-                'D' == lexer->inbuffer[4] &&
-                ',' == lexer->inbuffer[6] &&
-                (str_starts_with((char *)lexer->inbuffer, "!ABVDM,") ||
-                 str_starts_with((char *)lexer->inbuffer, "!ABVDO,") ||
-                 str_starts_with((char *)lexer->inbuffer, "!ADVDM,") ||
-                 str_starts_with((char *)lexer->inbuffer, "!ADVDO,") ||
-                 str_starts_with((char *)lexer->inbuffer, "!AIVDM,") ||
-                 str_starts_with((char *)lexer->inbuffer, "!AIVDO,") ||
-                 str_starts_with((char *)lexer->inbuffer, "!ANVDM,") ||
-                 str_starts_with((char *)lexer->inbuffer, "!ANVDO,") ||
-                 str_starts_with((char *)lexer->inbuffer, "!ARVDM,") ||
-                 str_starts_with((char *)lexer->inbuffer, "!ARVDO,") ||
-                 str_starts_with((char *)lexer->inbuffer, "!ASVDM,") ||
-                 str_starts_with((char *)lexer->inbuffer, "!ASVDO,") ||
-                 str_starts_with((char *)lexer->inbuffer, "!ATVDM,") ||
-                 str_starts_with((char *)lexer->inbuffer, "!ATVDO,") ||
-                 str_starts_with((char *)lexer->inbuffer, "!AXVDM,") ||
-                 str_starts_with((char *)lexer->inbuffer, "!AXVDO,") ||
-                 str_starts_with((char *)lexer->inbuffer, "!BSVDM,") ||
-                 str_starts_with((char *)lexer->inbuffer, "!BSVDO,") ||
-                 str_starts_with((char *)lexer->inbuffer, "!SAVDM,") ||
-                 str_starts_with((char *)lexer->inbuffer, "!SAVDO,"))) {
-                packet_accept(lexer, AIVDM_PACKET);
-            } else
-#endif  // AIVDM_ENABLE
-            {
-                packet_accept(lexer, NMEA_PACKET);
-            }
+            packet_accept(lexer, NMEA_PACKET);
             packet_discard(lexer);
 #ifdef STASH_ENABLE
             if (lexer->stashbuflen) {
@@ -2122,6 +2100,7 @@ void packet_parse(struct gps_lexer_t *lexer)
             }
 #endif  // STASH_ENABLE
             break;
+
 #ifdef SIRF_ENABLE
         } else if (SIRF_RECOGNIZED == lexer->state) {
             unsigned char *trailer = lexer->inbufptr - 4;

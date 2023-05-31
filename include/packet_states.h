@@ -6,6 +6,8 @@
 
    AIS_BANG,            // we've seen first character of an AIS message '!'
    AIS_LEADER_END,      // seen end char of AIS leader, in body
+   AIS_CR,              // seen terminating \r of AIS packet
+   AIS_RECOGNIZED,      // saw trailing \n of AIS packet
 
    NMEA_DOLLAR,         // we've seen first character of NMEA leader
    NMEA_PUB_LEAD,       // seen second character of NMEA G leader
