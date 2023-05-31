@@ -2856,10 +2856,12 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
     packet_parse(lexer);
 
     // if input buffer is full, discard
-    if (sizeof(lexer->inbuffer) == (lexer->inbuflen)) {
+    if (sizeof(lexer->inbuffer) <= (lexer->inbuflen)) {
         // coverity[tainted_data]
         packet_discard(lexer);
         lexer->state = GROUND_STATE;
+        GPSD_LOG(LOG_WARN, &lexer->errout,
+                 "PACKET: packet_get() inbuffer overflow.\n");
     }
 
     /*
