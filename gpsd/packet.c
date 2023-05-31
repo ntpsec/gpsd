@@ -2022,7 +2022,7 @@ void packet_parse(struct gps_lexer_t *lexer)
         unsigned crc_expected;  // the CRC/checksum the message claims to have
         enum {PASS, ACCEPT, DISCARD} acc_dis;
         int packet_type;        // gpsd packet type
-        unsigned msg_id;        // native type or ID the message thinks it is
+        unsigned pkt_id;        // native type or ID the message thinks it is
         unsigned data_len;      // What the message says the data length is.
 
         if (!nextstate(lexer, c)) {
@@ -2206,10 +2206,7 @@ void packet_parse(struct gps_lexer_t *lexer)
             if (5 > inbuflen) {
                 lexer->state = GROUND_STATE;
             } else {
-                unsigned int pkt_id;
 #ifdef GARMIN_ENABLE
-                unsigned int len;
-
                 idx = 0;
 #ifdef TSIP_ENABLE
                 // shortcut garmin
@@ -2223,15 +2220,15 @@ void packet_parse(struct gps_lexer_t *lexer)
                     goto not_garmin;
                 }
                 pkt_id = lexer->inbuffer[idx++];  // packet ID
-                len = lexer->inbuffer[idx++];
-                crc_computed = len + pkt_id;
-                if (DLE == len) {
+                data_len = lexer->inbuffer[idx++];
+                crc_computed = data_len + pkt_id;
+                if (DLE == data_len) {
                     if (DLE != lexer->inbuffer[idx++]) {
                         // FIXME: goto ???
                         goto not_garmin;
                     }
                 }
-                for (; len > 0; len--) {
+                for (; data_len > 0; data_len--) {
                     crc_computed += lexer->inbuffer[idx];
                     if (DLE == lexer->inbuffer[idx++]) {
                         if (DLE != lexer->inbuffer[idx++]) {
@@ -2509,10 +2506,10 @@ void packet_parse(struct gps_lexer_t *lexer)
                 // yes, the top 6 bits should be zero, total 10 bits of length
                 data_len = (lexer->inbuffer[1] << 8) | lexer->inbuffer[2];
                 // 12 bits of message type
-                msg_id = (lexer->inbuffer[3] << 4) | (lexer->inbuffer[4] >> 4);
+                pkt_id = (lexer->inbuffer[3] << 4) | (lexer->inbuffer[4] >> 4);
 
                 GPSD_LOG(LOG_IO, &lexer->errout,
-                             "RTCM3 len %u type %u\n", data_len, msg_id);
+                             "RTCM3 len %u type %u\n", data_len, pkt_id);
             }
 
             if (crc24q_check(lexer->inbuffer, inbuflen)) {
