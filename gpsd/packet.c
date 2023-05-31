@@ -2588,7 +2588,6 @@ void packet_parse(struct gps_lexer_t *lexer)
 #endif  // UBLOX_ENABLE
 #ifdef EVERMORE_ENABLE
         } else if (EVERMORE_RECOGNIZED == lexer->state) {
-            unsigned int len;
 
             idx = 0;
             if (DLE != lexer->inbuffer[idx++]) {
@@ -2599,16 +2598,16 @@ void packet_parse(struct gps_lexer_t *lexer)
                 // FIXME: goto??
                 goto not_evermore;
             }
-            len = lexer->inbuffer[idx++];
-            if (DLE == len) {
+            data_len = lexer->inbuffer[idx++];
+            if (DLE == data_len) {
                 if (DLE != lexer->inbuffer[idx++]) {
                     // FIXME: goto??
                     goto not_evermore;
                 }
             }
-            len -= 2;
+            data_len -= 2;
             crc_computed = 0;
-            for (; len > 0; len--) {
+            for (; data_len > 0; data_len--) {
                 crc_computed += lexer->inbuffer[idx];
                 if (DLE == lexer->inbuffer[idx++]) {
                     if (DLE != lexer->inbuffer[idx++]) {
@@ -2656,21 +2655,19 @@ void packet_parse(struct gps_lexer_t *lexer)
                              (uint16_t)getib((i))))
 
         } else if (ITALK_RECOGNIZED == lexer->state) {
-            uint16_t len;
-
             // number of words
-            len = (uint16_t)(lexer->inbuffer[6] & 0xff);
+            data_len = (uint16_t)(lexer->inbuffer[6] & 0xff);
 
             // expected checksum
-            crc_expected = getiw(7 + 2 * len);
+            crc_expected = getiw(7 + 2 * data_len);
 
             crc_computed = 0;
-            for (idx = 0; idx < len; idx++) {
+            for (idx = 0; idx < data_len; idx++) {
                 uint16_t tmpw = getiw(7 + 2 * idx);
                 uint32_t tmpdw  = (crc_computed + 1) * (tmpw + idx);
                 crc_computed ^= (tmpdw & 0xffff) ^ ((tmpdw >> 16) & 0xffff);
             }
-            if (0 == len ||
+            if (0 == data_len ||
                 crc_computed == crc_expected) {
                 packet_type = ITALK_PACKET;
             } else {
