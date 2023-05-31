@@ -2503,13 +2503,18 @@ void packet_parse(struct gps_lexer_t *lexer)
 #ifdef RTCM104V3_ENABLE
         } else if (RTCM3_RECOGNIZED == lexer->state) {
             if (LOG_IO <= lexer->errout.debug) {
+                char outbuf[BUFSIZ];
                 // yes, the top 6 bits should be zero, total 10 bits of length
                 data_len = (lexer->inbuffer[1] << 8) | lexer->inbuffer[2];
                 // 12 bits of message type
                 pkt_id = (lexer->inbuffer[3] << 4) | (lexer->inbuffer[4] >> 4);
 
+                // print the inbuffer packet, +33 to peek ahead. (maybe)
                 GPSD_LOG(LOG_IO, &lexer->errout,
-                             "RTCM3 len %u type %u\n", data_len, pkt_id);
+                         "RTCM3 data_len %u type %u inbufflen %u buf %s\n",
+                         data_len, pkt_id, inbuflen,
+                         gps_hexdump(outbuf, sizeof(outbuf),
+                                     lexer->inbuffer, inbuflen + 33));
             }
 
             if (crc24q_check(lexer->inbuffer, inbuflen)) {
