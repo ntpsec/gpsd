@@ -2529,29 +2529,28 @@ void packet_parse(struct gps_lexer_t *lexer)
 #endif  // RTCM104V3_ENABLE
 #ifdef ZODIAC_ENABLE
         } else if (ZODIAC_RECOGNIZED == lexer->state) {
-            unsigned len, n;
 
             // be paranoid, look ahead for a good checksum
-            len = getzuword(2);
-            if (253 < len) {
+            data_len = getzuword(2);
+            if (253 < data_len) {
                 // pacify coverity, 253 seems to be max length
-                len = 253;
+                data_len = 253;
             }
             crc_computed = 0;
-            for (n = 0; n < len; n++) {
-                crc_computed += getzword(5 + n);
+            for (idx = 0; idx < data_len; idx++) {
+                crc_computed += getzword(5 + idx);
             }
-            crc_expected = getzword(5 + len);
+            crc_expected = getzword(5 + data_len);
             crc_computed += crc_expected;
             crc_computed &= 0x0ff;
-            if (0 == len ||
+            if (0 == data_len ||
                 0 == crc_computed) {
                 packet_type = ZODIAC_PACKET;
             } else {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
                          "Zodiac data checksum 0x%x over length %u, "
                          "expecting 0x%x\n",
-                         crc_expected, len, getzword(5 + len));
+                         crc_expected, data_len, getzword(5 + data_len));
                 packet_type = BAD_PACKET;
                 lexer->state = GROUND_STATE;
             }
@@ -2656,7 +2655,7 @@ void packet_parse(struct gps_lexer_t *lexer)
 
         } else if (ITALK_RECOGNIZED == lexer->state) {
             // number of words
-            data_len = (uint16_t)(lexer->inbuffer[6] & 0xff);
+            data_len = lexer->inbuffer[6] & 0xff;
 
             // expected checksum
             crc_expected = getiw(7 + 2 * data_len);
