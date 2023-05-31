@@ -367,7 +367,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             break;
 #endif  // TSIP_ENABLE || EVERMORE_ENABLE || GARMIN_ENABLE
         case '!':
-            lexer->state = NMEA_BANG;
+            lexer->state = AIS_BANG;
             break;
         case '#':
             lexer->state = COMMENT_BODY;
@@ -605,7 +605,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         }
         break;
     // end PASHR, TSIP mitigation
-    case NMEA_BANG:
+    case AIS_BANG:
         if ('A' == c) {          // !A
             lexer->state = AIS_LEAD_1;
         } else if ('B' == c) {   // !B
@@ -735,7 +735,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
             // codacy thinks this state is impossible
             lexer->state = NMEA_DOLLAR;
         } else if ('!' == c) {
-            lexer->state = NMEA_BANG;
+            lexer->state = AIS_BANG;
 #ifdef UBLOX_ENABLE
         } else if (MICRO == c) {   // latin1 micro, 0xb5
             // LEA-5H can/will output NMEA/UBX back to back
