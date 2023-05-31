@@ -626,7 +626,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         break;
     case AIS_LEAD_2:
         if (isalpha(c)) {
-            lexer->state = NMEA_LEADER_END;
+            lexer->state = AIS_LEADER_END;
         } else {
             return character_pushback(lexer, GROUND_STATE);
         }
@@ -641,7 +641,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         break;
     case AIS_LEAD_ALT2:
         if (isalpha(c)) {
-            lexer->state = NMEA_LEADER_END;
+            lexer->state = AIS_LEADER_END;
         } else {
             return character_pushback(lexer, GROUND_STATE);
         }
@@ -656,9 +656,21 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         break;
     case AIS_LEAD_ALT4:
         if (isalpha(c)) {
-            lexer->state = NMEA_LEADER_END;
+            lexer->state = AIS_LEADER_END;
         } else {
             return character_pushback(lexer, GROUND_STATE);
+        }
+        break;
+    case AIS_LEADER_END:
+        // We stay here grabbing the body of the message, until \r\n
+        if ('\r' == c) {
+            lexer->state = NMEA_CR;
+        } else if ('\n' == c) {
+            /* not strictly correct (missing \r), but helps for
+             * helps for interpreting logfiles. */
+            lexer->state = NMEA_RECOGNIZED;
+        } else if (!isprint(c)) {
+            (void)character_pushback(lexer, GROUND_STATE);
         }
         break;
 #if defined(TNT_ENABLE) || defined(GARMINTXT_ENABLE) || defined(ONCORE_ENABLE)
@@ -700,6 +712,7 @@ static bool nextstate(struct gps_lexer_t *lexer, unsigned char c)
         break;
 #endif  // TNT_ENABLE || GARMINTXT_ENABLE || ONCORE_ENABLE
     case NMEA_LEADER_END:
+        // We stay here grabbing the body of the message
         if ('\r' == c) {
             lexer->state = NMEA_CR;
         } else if ('\n' == c) {

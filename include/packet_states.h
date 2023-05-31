@@ -3,9 +3,11 @@
 
    COMMENT_BODY,        // pound comment for a test load
    COMMENT_RECOGNIZED,  // comment recognized
-   NMEA_DOLLAR,         // we've seen first character of NMEA leader
 
    AIS_BANG,            // we've seen first character of an AIS message '!'
+   AIS_LEADER_END,      // seen end char of AIS leader, in body
+
+   NMEA_DOLLAR,         // we've seen first character of NMEA leader
    NMEA_PUB_LEAD,       // seen second character of NMEA G leader
    NMEA_VENDOR_LEAD,    // seen second character of NMEA P leader
    NMEA_LEADER_END,     // seen end char of NMEA leader, in body
@@ -17,8 +19,8 @@
    NMEA_BINARY_NL,      // \n on end of Ashtech-style binary packet
    NMEA_CR,             // seen terminating \r of NMEA packet
    NMEA_RECOGNIZED,     // saw trailing \n of NMEA packet
-
    NMEA_LEAD_A,         // seen A of possible SiRF Ack, or of $AP
+
    SIRF_ACK_LEAD_2,     // seen c of possible SiRF Ack
    AIS_LEAD_1,          // seen initial A of possible AIS message
    AIS_LEAD_2,          // seen second I/B/N/X of possible AIS message
