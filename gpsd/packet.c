@@ -2579,65 +2579,72 @@ void packet_parse(struct gps_lexer_t *lexer)
 #endif  // UBLOX_ENABLE
 #ifdef EVERMORE_ENABLE
         } else if (EVERMORE_RECOGNIZED == lexer->state) {
-
-            idx = 0;
-            if (DLE != lexer->inbuffer[idx++]) {
-                // FIXME: goto??
-                goto not_evermore;
-            }
-            if (STX != lexer->inbuffer[idx++]) {
-                // FIXME: goto??
-                goto not_evermore;
-            }
-            data_len = lexer->inbuffer[idx++];
-            if (DLE == data_len) {
-                if (DLE != lexer->inbuffer[idx++]) {
-                    // FIXME: goto??
-                    goto not_evermore;
-                }
-            }
-            data_len -= 2;
-            crc_computed = 0;
-            for (; data_len > 0; data_len--) {
-                crc_computed += lexer->inbuffer[idx];
-                if (DLE == lexer->inbuffer[idx++]) {
-                    if (DLE != lexer->inbuffer[idx++]) {
-                        // FIXME: goto??
-                        goto not_evermore;
-                    }
-                }
-            }
-            crc_expected = lexer->inbuffer[idx++];
-            if (DLE == crc_expected) {
-                if (DLE != lexer->inbuffer[idx++]) {
-                    // FIXME: goto??
-                    goto not_evermore;
-                }
-            }
-            if (DLE != lexer->inbuffer[idx++]) {
-                // FIXME: goto??
-                goto not_evermore;
-            }
-            // we used to say n++ here, but scan-build complains
-            if (ETX != lexer->inbuffer[idx]) {
-                // FIXME: goto??
-                goto not_evermore;
-            }
-            crc_computed &= 0xff;
-            if (crc_computed != crc_expected) {
-                GPSD_LOG(LOG_PROG, &lexer->errout,
-                         "EverMore checksum failed: %02x != %02x\n",
-                         crc_computed, crc_expected);
-                // FIXME: goto??
-                goto not_evermore;
-            }
-            packet_accept(lexer, EVERMORE_PACKET);
-            packet_discard(lexer);
-            break;
-          not_evermore:
+            // Evermore uses DLE stuffing, what a PITA.
+            // Assume failure.
             packet_type = BAD_PACKET;
             acc_dis = ACCEPT;
             lexer->state = GROUND_STATE;
+
+            do {
+                // the do{} is only done once, just so we can break
+
+                // check for leader
+                idx = 0;
+                if (DLE != lexer->inbuffer[idx++] ||
+                    STX != lexer->inbuffer[idx++]) {
+                    // should not happen
+                    break;
+                }
+
+                // get one byte length, if length is 0x10, two DLE are sent.
+                data_len = lexer->inbuffer[idx++];
+                if (DLE == data_len &&
+                    DLE != lexer->inbuffer[idx++]) {
+                    // should not happen
+                    break;
+                }
+                if (8 > data_len) {
+                    /* should not happen, need 1 byte of data for message ID
+                     * shortest message is 8 bytes of data_len */
+                    break;
+                }
+
+                data_len -= 2;
+                crc_computed = 0;
+                for (; data_len > 0; data_len--) {
+                    crc_computed += lexer->inbuffer[idx];
+                    if (DLE == lexer->inbuffer[idx++] &&
+                        DLE != lexer->inbuffer[idx++]) {
+                        // should not happen, DLE not doubled.
+                        break;
+                    }
+                }
+                // get one byte checksum
+                crc_expected = lexer->inbuffer[idx++];
+                if (DLE == crc_expected &&
+                    DLE != lexer->inbuffer[idx++]) {
+                    // should not happen, DLE not doubled.
+                    break;
+                }
+                // get two byte trailer
+                if (DLE != lexer->inbuffer[idx++] ||
+                    ETX != lexer->inbuffer[idx]) {
+                    // we used to say n++ here, but scan-build complains
+                    // bad trailer
+                    break;
+                }
+                crc_computed &= 0xff;
+                if (crc_computed != crc_expected) {
+                    GPSD_LOG(LOG_PROG, &lexer->errout,
+                             "EverMore checksum failed: %02x != %02x\n",
+                             crc_computed, crc_expected);
+                    break;
+                }
+                packet_type = EVERMORE_PACKET;
+                lexer->state = EVERMORE_RECOGNIZED;
+                break;     // redundant
+            } while (0);
+
 #endif  // EVERMORE_ENABLE
 // XXX CSK
 #ifdef ITRAX_ENABLE

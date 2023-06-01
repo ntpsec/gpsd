@@ -4825,6 +4825,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"OSD", NULL, 0,  false, NULL},             // ignore Own Ship Data
         // general handler for Ashtech
         {"PASHR", NULL, 3, false, processPASHR},
+        {"PEMT", NULL, 5, false, NULL},             // Evermore proprietary
         // Furuno proprietary
         {"PERDACK", NULL, 4, false, NULL},          // ACK
         // {"PERDAPI", NULL, 3, false, NULL},          // Config Send
