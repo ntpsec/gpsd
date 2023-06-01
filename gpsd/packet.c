@@ -47,8 +47,6 @@ PERMISSIONS
 #include "../include/crc24q.h"
 #include "../include/strfuncs.h"
 
-// FIXME: STASH_ENABLE never, ever defined, why all the code?
-
 /*
  * The packet-recognition state machine.  This takes an incoming byte stream
  * and tries to segment it into packets.  There are four types of packets:
@@ -1972,6 +1970,8 @@ static void packet_discard(struct gps_lexer_t *lexer)
 }
 
 #ifdef STASH_ENABLE
+// See test/daemon/isync.log for why the stash is needed.
+
 // stash the input buffer up to current input pointer
 static void packet_stash(struct gps_lexer_t *lexer)
 {
@@ -2048,10 +2048,11 @@ void packet_parse(struct gps_lexer_t *lexer)
         unsigned idx;           // index into inbuffer
         unsigned crc_computed;  // the CRC/checksum we computed
         unsigned crc_expected;  // the CRC/checksum the message claims to have
-        enum {PASS, ACCEPT, DISCARD} acc_dis;
+        enum {PASS, ACCEPT} acc_dis;
         int packet_type;        // gpsd packet type
         unsigned pkt_id;        // native type or ID the message thinks it is
         unsigned data_len;      // What the message says the data length is.
+        bool unstash;
 
         if (!nextstate(lexer, c)) {
             continue;
@@ -2063,6 +2064,7 @@ void packet_parse(struct gps_lexer_t *lexer)
         lexer->char_counter++;
         inbuflen = lexer->inbufptr - lexer->inbuffer;
         acc_dis = PASS;
+        unstash = false;
 
         // FIXME: make this if/else nest a switch()
         if (GROUND_STATE == lexer->state) {
@@ -2083,23 +2085,16 @@ void packet_parse(struct gps_lexer_t *lexer)
             acc_dis = ACCEPT;
 
         } else if (NMEA_RECOGNIZED == lexer->state) {
-            if (!nmea_checksum(&lexer->errout,
+            if (nmea_checksum(&lexer->errout,
                                (const char *)lexer->inbuffer,
                                (const char *)lexer->inbufptr)) {
-                packet_accept(lexer, BAD_PACKET);
-                packet_discard(lexer);
+                packet_type = NMEA_PACKET;
+                unstash = true;
+            } else {
                 lexer->state = GROUND_STATE;
-                break;
+                packet_type = BAD_PACKET;
             }
-
-            packet_accept(lexer, NMEA_PACKET);
-            packet_discard(lexer);
-#ifdef STASH_ENABLE
-            if (lexer->stashbuflen) {
-                packet_unstash(lexer);
-            }
-#endif  // STASH_ENABLE
-            break;
+            acc_dis = ACCEPT;
 
 #ifdef SIRF_ENABLE
         } else if (SIRF_RECOGNIZED == lexer->state) {
@@ -2787,6 +2782,12 @@ void packet_parse(struct gps_lexer_t *lexer)
         if (ACCEPT == acc_dis) {
             packet_accept(lexer, packet_type);
             packet_discard(lexer);
+#ifdef STASH_ENABLE
+            if (unstash &&
+                0 != lexer->stashbuflen) {
+                packet_unstash(lexer);
+            }
+#endif  // STASH_ENABLE
             break;
         }
     }                           // while
