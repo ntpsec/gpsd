@@ -2071,15 +2071,15 @@ void packet_parse(struct gps_lexer_t *lexer)
          * Cases alpha sorted to be easy to find. */
         switch (lexer->state) {
         case AIS_RECOGNIZED:
-            if (nmea_checksum(&lexer->errout,
+            acc_dis = ACCEPT;
+            if (!nmea_checksum(&lexer->errout,
                                (const char *)lexer->inbuffer,
                                (const char *)lexer->inbufptr)) {
-                packet_type = AIVDM_PACKET;
-            } else {
                 packet_type = BAD_PACKET;
                 lexer->state = GROUND_STATE;
+                break;
             }
-            acc_dis = ACCEPT;
+            packet_type = AIVDM_PACKET;
             break;
 
         case COMMENT_RECOGNIZED:
@@ -2161,7 +2161,7 @@ void packet_parse(struct gps_lexer_t *lexer)
 #ifdef GEOSTAR_ENABLE
         case GEOSTAR_RECOGNIZED:
             // GeoStar uses a XOR 32bit checksum
-
+            acc_dis = ACCEPT;
             crc_computed = 0;
 
             // Calculate checksum
@@ -2169,60 +2169,62 @@ void packet_parse(struct gps_lexer_t *lexer)
                 crc_computed ^= getleu32(lexer->inbuffer, idx);
             }
 
-            if (0 == crc_computed) {
-                packet_type = GEOSTAR_PACKET;
-            } else {
+            if (0 != crc_computed) {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
                          "GeoStar checksum failed 0x%x over length %d\n",
                          crc_computed, inbuflen);
                 packet_type = BAD_PACKET;
                 lexer->state = GROUND_STATE;
+                break;
             }
-            acc_dis = ACCEPT;
+            packet_type = GEOSTAR_PACKET;
             break;
 #endif  // GEOSTAR_ENABLE
 
 #ifdef GREIS_ENABLE
         case GREIS_RECOGNIZED:
+            acc_dis = ACCEPT;
+
             if ('R' == lexer->inbuffer[0] &&
                 'E' == lexer->inbuffer[1]) {
                 // Replies don't have checksum
                 GPSD_LOG(LOG_IO, &lexer->errout,
                          "Accept GREIS reply packet len %d\n", inbuflen);
                 packet_type = GREIS_PACKET;
-            } else if ('E' == lexer->inbuffer[0] &&
-                       'R' == lexer->inbuffer[1]) {
+                break;
+            }
+            if ('E' == lexer->inbuffer[0] &&
+                'R' == lexer->inbuffer[1]) {
                 // Error messages don't have checksum
                 GPSD_LOG(LOG_IO, &lexer->errout,
                          "Accept GREIS error packet len %d\n", inbuflen);
                 packet_type = GREIS_PACKET;
-            } else {
-                // 8-bit checksum
-                crc_computed = greis_checksum(lexer->inbuffer, inbuflen);
-
-                if (0 == crc_computed) {
-                    GPSD_LOG(LOG_IO, &lexer->errout,
-                             "Accept GREIS packet type '%c%c' len %d\n",
-                             lexer->inbuffer[0], lexer->inbuffer[1], inbuflen);
-                    packet_type = GREIS_PACKET;
-                } else {
-                    /*
-                     * Print hex instead of raw characters, since they might be
-                     * unprintable. If \0, it will even mess up the log output.
-                     */
-                    GPSD_LOG(LOG_PROG, &lexer->errout,
-                             "REJECT GREIS len %d."
-                             " Bad checksum %#02x, expecting 0."
-                             " Packet type in hex: 0x%02x%02x",
-                             inbuflen, crc_computed,
-                             lexer->inbuffer[0],
-                             lexer->inbuffer[1]);
-                    packet_type = BAD_PACKET;
-                    // got this far, fair to expect we will get more GREIS
-                    lexer->state = GREIS_EXPECTED;
-                }
+                break;
             }
-            acc_dis = ACCEPT;
+            // 8-bit checksum
+            crc_computed = greis_checksum(lexer->inbuffer, inbuflen);
+
+            if (0 != crc_computed) {
+                /*
+                 * Print hex instead of raw characters, since they might be
+                 * unprintable. If \0, it will even mess up the log output.
+                 */
+                GPSD_LOG(LOG_PROG, &lexer->errout,
+                         "REJECT GREIS len %d."
+                         " Bad checksum %#02x, expecting 0."
+                         " Packet type in hex: 0x%02x%02x",
+                         inbuflen, crc_computed,
+                         lexer->inbuffer[0],
+                         lexer->inbuffer[1]);
+                packet_type = BAD_PACKET;
+                // got this far, fair to expect we will get more GREIS
+                lexer->state = GREIS_EXPECTED;
+                break;
+            }
+            GPSD_LOG(LOG_IO, &lexer->errout,
+                     "Accept GREIS packet type '%c%c' len %d\n",
+                     lexer->inbuffer[0], lexer->inbuffer[1], inbuflen);
+            packet_type = GREIS_PACKET;
             break;
 #endif  // GREIS_ENABLE
 
