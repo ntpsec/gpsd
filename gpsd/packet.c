@@ -2066,6 +2066,8 @@ void packet_parse(struct gps_lexer_t *lexer)
         acc_dis = PASS;
         unstash = false;
 
+        /* check if we have a _RECOGNISED state, if so, perfomr final
+         * checks on the packet, before decoding. */
         switch (lexer->state) {
         case GROUND_STATE:
             character_discard(lexer);
@@ -2247,6 +2249,7 @@ void packet_parse(struct gps_lexer_t *lexer)
                         break;
                     }
                     // Compute checksum.
+                    data_len++;
                     for (; data_len > 0; data_len--) {
                         crc_computed += lexer->inbuffer[idx];
                         if (DLE == lexer->inbuffer[idx++] &&
@@ -2254,15 +2257,6 @@ void packet_parse(struct gps_lexer_t *lexer)
                             // Bad DLE stuffing
                             break;
                         }
-                    }
-                    // check sum byte
-                    // FIXME, just make previous loop one longer.
-                    crc_expected = lexer->inbuffer[idx++];
-                    crc_computed += crc_expected;
-                    if (DLE == crc_expected &&
-                        DLE != lexer->inbuffer[idx++]) {
-                        // Bad DLE stuffing
-                        break;
                     }
 
                     crc_computed &= 0xff;
