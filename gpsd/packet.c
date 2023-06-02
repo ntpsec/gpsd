@@ -2067,18 +2067,9 @@ void packet_parse(struct gps_lexer_t *lexer)
         unstash = false;
 
         /* check if we have a _RECOGNISED state, if so, perfomr final
-         * checks on the packet, before decoding. */
+         * checks on the packet, before decoding.
+         * Cases alpha sorted to be easy to find. */
         switch (lexer->state) {
-        case GROUND_STATE:
-            character_discard(lexer);
-            break;
-
-        case COMMENT_RECOGNIZED:
-            packet_type = COMMENT_PACKET;
-            acc_dis = ACCEPT;
-            lexer->state = GROUND_STATE;
-            break;
-
         case AIS_RECOGNIZED:
             if (nmea_checksum(&lexer->errout,
                                (const char *)lexer->inbuffer,
@@ -2089,8 +2080,224 @@ void packet_parse(struct gps_lexer_t *lexer)
                 lexer->state = GROUND_STATE;
             }
             acc_dis = ACCEPT;
-
             break;
+
+        case COMMENT_RECOGNIZED:
+            packet_type = COMMENT_PACKET;
+            acc_dis = ACCEPT;
+            lexer->state = GROUND_STATE;
+            break;
+
+#ifdef EVERMORE_ENABLE
+        case EVERMORE_RECOGNIZED:
+            // Evermore uses DLE stuffing, what a PITA.
+            // Assume failure.
+            packet_type = BAD_PACKET;
+            acc_dis = ACCEPT;
+            lexer->state = GROUND_STATE;
+
+            do {
+                // the do{} is only done once, just so we can break
+
+                // check for leader
+                idx = 0;
+                if (DLE != lexer->inbuffer[idx++] ||
+                    STX != lexer->inbuffer[idx++]) {
+                    // should not happen
+                    break;
+                }
+
+                // get one byte length, if length is 0x10, two DLE are sent.
+                data_len = lexer->inbuffer[idx++];
+                if (DLE == data_len &&
+                    DLE != lexer->inbuffer[idx++]) {
+                    // should not happen
+                    break;
+                }
+                if (8 > data_len) {
+                    /* should not happen, need 1 byte of data for message ID
+                     * shortest message is 8 bytes of data_len */
+                    break;
+                }
+
+                data_len -= 2;
+                crc_computed = 0;
+                for (; data_len > 0; data_len--) {
+                    crc_computed += lexer->inbuffer[idx];
+                    if (DLE == lexer->inbuffer[idx++] &&
+                        DLE != lexer->inbuffer[idx++]) {
+                        // should not happen, DLE not doubled.
+                        break;
+                    }
+                }
+                // get one byte checksum
+                crc_expected = lexer->inbuffer[idx++];
+                if (DLE == crc_expected &&
+                    DLE != lexer->inbuffer[idx++]) {
+                    // should not happen, DLE not doubled.
+                    break;
+                }
+                // get two byte trailer
+                if (DLE != lexer->inbuffer[idx++] ||
+                    ETX != lexer->inbuffer[idx]) {
+                    // we used to say n++ here, but scan-build complains
+                    // bad trailer
+                    break;
+                }
+                crc_computed &= 0xff;
+                if (crc_computed != crc_expected) {
+                    GPSD_LOG(LOG_PROG, &lexer->errout,
+                             "EverMore checksum failed: %02x != %02x\n",
+                             crc_computed, crc_expected);
+                    break;
+                }
+                packet_type = EVERMORE_PACKET;
+                lexer->state = EVERMORE_RECOGNIZED;
+                break;     // redundant
+            } while (0);
+            break;
+#endif  // EVERMORE_ENABLE
+
+#ifdef GEOSTAR_ENABLE
+        case GEOSTAR_RECOGNIZED:
+            // GeoStar uses a XOR 32bit checksum
+
+            crc_computed = 0;
+
+            // Calculate checksum
+            for (idx = 0; idx < inbuflen; idx += 4) {
+                crc_computed ^= getleu32(lexer->inbuffer, idx);
+            }
+
+            if (0 == crc_computed) {
+                packet_type = GEOSTAR_PACKET;
+            } else {
+                GPSD_LOG(LOG_PROG, &lexer->errout,
+                         "GeoStar checksum failed 0x%x over length %d\n",
+                         crc_computed, inbuflen);
+                packet_type = BAD_PACKET;
+                lexer->state = GROUND_STATE;
+            }
+            acc_dis = ACCEPT;
+            break;
+#endif  // GEOSTAR_ENABLE
+
+#ifdef GREIS_ENABLE
+        case GREIS_RECOGNIZED:
+            if ('R' == lexer->inbuffer[0] &&
+                'E' == lexer->inbuffer[1]) {
+                // Replies don't have checksum
+                GPSD_LOG(LOG_IO, &lexer->errout,
+                         "Accept GREIS reply packet len %d\n", inbuflen);
+                packet_type = GREIS_PACKET;
+            } else if ('E' == lexer->inbuffer[0] &&
+                       'R' == lexer->inbuffer[1]) {
+                // Error messages don't have checksum
+                GPSD_LOG(LOG_IO, &lexer->errout,
+                         "Accept GREIS error packet len %d\n", inbuflen);
+                packet_type = GREIS_PACKET;
+            } else {
+                // 8-bit checksum
+                crc_computed = greis_checksum(lexer->inbuffer, inbuflen);
+
+                if (0 == crc_computed) {
+                    GPSD_LOG(LOG_IO, &lexer->errout,
+                             "Accept GREIS packet type '%c%c' len %d\n",
+                             lexer->inbuffer[0], lexer->inbuffer[1], inbuflen);
+                    packet_type = GREIS_PACKET;
+                } else {
+                    /*
+                     * Print hex instead of raw characters, since they might be
+                     * unprintable. If \0, it will even mess up the log output.
+                     */
+                    GPSD_LOG(LOG_PROG, &lexer->errout,
+                             "REJECT GREIS len %d."
+                             " Bad checksum %#02x, expecting 0."
+                             " Packet type in hex: 0x%02x%02x",
+                             inbuflen, crc_computed,
+                             lexer->inbuffer[0],
+                             lexer->inbuffer[1]);
+                    packet_type = BAD_PACKET;
+                    // got this far, fair to expect we will get more GREIS
+                    lexer->state = GREIS_EXPECTED;
+                }
+            }
+            acc_dis = ACCEPT;
+            break;
+#endif  // GREIS_ENABLE
+
+        case GROUND_STATE:
+            character_discard(lexer);
+            break;
+
+#ifdef GARMINTXT_ENABLE
+        case GTXT_RECOGNIZED:
+            if (57 <= inbuflen) {
+                packet_accept(lexer, GARMINTXT_PACKET);
+                packet_discard(lexer);
+                lexer->state = GROUND_STATE;
+                break;
+            } else {
+                packet_accept(lexer, BAD_PACKET);
+                lexer->state = GROUND_STATE;
+            }
+            break;
+#endif
+
+#ifdef ITRAX_ENABLE
+#define getib(j) ((uint8_t)lexer->inbuffer[(j)])
+#define getiw(i) ((uint16_t)(((uint16_t)getib((i) + 1) << 8) | \
+                             (uint16_t)getib((i))))
+
+        case ITALK_RECOGNIZED:
+            // number of words
+            data_len = lexer->inbuffer[6] & 0xff;
+
+            // expected checksum
+            crc_expected = getiw(7 + 2 * data_len);
+
+            crc_computed = 0;
+            for (idx = 0; idx < data_len; idx++) {
+                uint16_t tmpw = getiw(7 + 2 * idx);
+                uint32_t tmpdw  = (crc_computed + 1) * (tmpw + idx);
+                crc_computed ^= (tmpdw & 0xffff) ^ ((tmpdw >> 16) & 0xffff);
+            }
+            if (0 == data_len ||
+                crc_computed == crc_expected) {
+                packet_type = ITALK_PACKET;
+            } else {
+                GPSD_LOG(LOG_PROG, &lexer->errout,
+                         "ITALK: checksum failed - "
+                         "type 0x%02x expected 0x%04x got 0x%04x\n",
+                         lexer->inbuffer[4], crc_expected, crc_computed);
+                packet_type = BAD_PACKET;
+                lexer->state = GROUND_STATE;
+            }
+            acc_dis = ACCEPT;
+#undef getiw
+#undef getib
+            break;
+#endif  // ITRAX_ENABLE
+
+        case JSON_RECOGNIZED:
+            if (11 <= inbuflen) {
+                // {"class": }
+                packet_type = JSON_PACKET;
+            } else {
+                packet_type = BAD_PACKET;
+            }
+            lexer->state = GROUND_STATE;
+            acc_dis = ACCEPT;
+            break;
+
+#ifdef NAVCOM_ENABLE
+        case NAVCOM_RECOGNIZED:
+            // By the time we got here we know checksum is OK
+            packet_type = NAVCOM_PACKET;
+            acc_dis = ACCEPT;
+            break;
+#endif  // NAVCOM_ENABLE
+
         case NMEA_RECOGNIZED:
             if (nmea_checksum(&lexer->errout,
                                (const char *)lexer->inbuffer,
@@ -2103,6 +2310,74 @@ void packet_parse(struct gps_lexer_t *lexer)
             }
             acc_dis = ACCEPT;
             break;
+
+#ifdef ONCORE_ENABLE
+        case ONCORE_RECOGNIZED:
+            crc_expected = lexer->inbuffer[inbuflen - 3];
+            crc_computed = '\0';
+            for (idx = 2; idx < inbuflen - 3; idx++) {
+                crc_computed ^= lexer->inbuffer[idx];
+            }
+            if (crc_computed == crc_expected) {
+                GPSD_LOG(LOG_IO, &lexer->errout,
+                         "Accept OnCore packet @@%c%c len %d\n",
+                         lexer->inbuffer[2], lexer->inbuffer[3], inbuflen);
+                packet_type = ONCORE_PACKET;
+            } else {
+                GPSD_LOG(LOG_PROG, &lexer->errout,
+                         "REJECT OnCore packet @@%c%c len %d\n",
+                         lexer->inbuffer[2], lexer->inbuffer[3], inbuflen);
+                lexer->state = GROUND_STATE;
+                packet_type = BAD_PACKET;
+            }
+            acc_dis = ACCEPT;
+            break;
+#endif  // ONCORE_ENABLE
+
+#ifdef RTCM104V2_ENABLE
+        case RTCM2_RECOGNIZED:
+            /*
+             * RTCM packets don't have checksums.  The six bits of parity
+             * per word and the preamble better be good enough.
+             */
+            packet_type = RTCM2_PACKET;
+            acc_dis = ACCEPT;
+            break;
+#endif  // RTCM104V2_ENABLE
+
+#ifdef RTCM104V3_ENABLE
+        case RTCM3_RECOGNIZED:
+            if (LOG_IO <= lexer->errout.debug) {
+                char outbuf[BUFSIZ];
+                // yes, the top 6 bits should be zero, total 10 bits of length
+                data_len = (lexer->inbuffer[1] << 8) | lexer->inbuffer[2];
+                // 12 bits of message type
+                pkt_id = (lexer->inbuffer[3] << 4) | (lexer->inbuffer[4] >> 4);
+
+                // print the inbuffer packet, +33 to peek ahead. (maybe)
+                GPSD_LOG(LOG_IO, &lexer->errout,
+                         "RTCM3 data_len %u type %u inbufflen %u buf %s\n",
+                         data_len, pkt_id, inbuflen,
+                         gps_hexdump(outbuf, sizeof(outbuf),
+                                     lexer->inbuffer, inbuflen + 33));
+            }
+
+            if (crc24q_check(lexer->inbuffer, inbuflen)) {
+                packet_type = RTCM3_PACKET;
+            } else {
+                GPSD_LOG(LOG_PROG, &lexer->errout,
+                         "RTCM3 data checksum failure, "
+                         "%0x against %02x %02x %02x\n",
+                         crc24q_hash(lexer->inbuffer, inbuflen - 3),
+                         lexer->inbufptr[-3],
+                         lexer->inbufptr[-2],
+                         lexer->inbufptr[-1]);
+                packet_type = BAD_PACKET;
+            }
+            acc_dis = ACCEPT;
+            lexer->state = GROUND_STATE;
+            break;
+#endif  // RTCM104V3_ENABLE
 
 #ifdef SIRF_ENABLE
         case SIRF_RECOGNIZED:
@@ -2132,6 +2407,13 @@ void packet_parse(struct gps_lexer_t *lexer)
             acc_dis = ACCEPT;
             break;
 #endif  // SKYTRAQ_ENABLE
+
+#ifdef STASH_ENABLE
+        case STASH_RECOGNIZED:
+            packet_stash(lexer);
+            packet_discard(lexer);
+            break;
+#endif  // STASH_ENABLE
 
 #ifdef SUPERSTAR2_ENABLE
         case SUPERSTAR2_RECOGNIZED:
@@ -2163,29 +2445,6 @@ void packet_parse(struct gps_lexer_t *lexer)
             acc_dis = ACCEPT;
             break;
 #endif  // SUPERSTAR2_ENABLE
-
-#ifdef ONCORE_ENABLE
-        case ONCORE_RECOGNIZED:
-            crc_expected = lexer->inbuffer[inbuflen - 3];
-            crc_computed = '\0';
-            for (idx = 2; idx < inbuflen - 3; idx++) {
-                crc_computed ^= lexer->inbuffer[idx];
-            }
-            if (crc_computed == crc_expected) {
-                GPSD_LOG(LOG_IO, &lexer->errout,
-                         "Accept OnCore packet @@%c%c len %d\n",
-                         lexer->inbuffer[2], lexer->inbuffer[3], inbuflen);
-                packet_type = ONCORE_PACKET;
-            } else {
-                GPSD_LOG(LOG_PROG, &lexer->errout,
-                         "REJECT OnCore packet @@%c%c len %d\n",
-                         lexer->inbuffer[2], lexer->inbuffer[3], inbuflen);
-                lexer->state = GROUND_STATE;
-                packet_type = BAD_PACKET;
-            }
-            acc_dis = ACCEPT;
-            break;
-#endif  // ONCORE_ENABLE
 
 #if defined(TSIP_ENABLE) || defined(GARMIN_ENABLE)
         case TSIP_RECOGNIZED:
@@ -2519,71 +2778,6 @@ void packet_parse(struct gps_lexer_t *lexer)
             break;
 #endif  // TSIP_ENABLE || GARMIN_ENABLE
 
-#ifdef RTCM104V3_ENABLE
-        case RTCM3_RECOGNIZED:
-            if (LOG_IO <= lexer->errout.debug) {
-                char outbuf[BUFSIZ];
-                // yes, the top 6 bits should be zero, total 10 bits of length
-                data_len = (lexer->inbuffer[1] << 8) | lexer->inbuffer[2];
-                // 12 bits of message type
-                pkt_id = (lexer->inbuffer[3] << 4) | (lexer->inbuffer[4] >> 4);
-
-                // print the inbuffer packet, +33 to peek ahead. (maybe)
-                GPSD_LOG(LOG_IO, &lexer->errout,
-                         "RTCM3 data_len %u type %u inbufflen %u buf %s\n",
-                         data_len, pkt_id, inbuflen,
-                         gps_hexdump(outbuf, sizeof(outbuf),
-                                     lexer->inbuffer, inbuflen + 33));
-            }
-
-            if (crc24q_check(lexer->inbuffer, inbuflen)) {
-                packet_type = RTCM3_PACKET;
-            } else {
-                GPSD_LOG(LOG_PROG, &lexer->errout,
-                         "RTCM3 data checksum failure, "
-                         "%0x against %02x %02x %02x\n",
-                         crc24q_hash(lexer->inbuffer, inbuflen - 3),
-                         lexer->inbufptr[-3],
-                         lexer->inbufptr[-2],
-                         lexer->inbufptr[-1]);
-                packet_type = BAD_PACKET;
-            }
-            acc_dis = ACCEPT;
-            lexer->state = GROUND_STATE;
-            break;
-#endif  // RTCM104V3_ENABLE
-
-#ifdef ZODIAC_ENABLE
-        case ZODIAC_RECOGNIZED:
-
-            // be paranoid, look ahead for a good checksum
-            data_len = getzuword(2);
-            if (253 < data_len) {
-                // pacify coverity, 253 seems to be max length
-                data_len = 253;
-            }
-            crc_computed = 0;
-            for (idx = 0; idx < data_len; idx++) {
-                crc_computed += getzword(5 + idx);
-            }
-            crc_expected = getzword(5 + data_len);
-            crc_computed += crc_expected;
-            crc_computed &= 0x0ff;
-            if (0 == data_len ||
-                0 == crc_computed) {
-                packet_type = ZODIAC_PACKET;
-            } else {
-                GPSD_LOG(LOG_PROG, &lexer->errout,
-                         "Zodiac data checksum 0x%x over length %u, "
-                         "expecting 0x%x\n",
-                         crc_expected, data_len, getzword(5 + data_len));
-                packet_type = BAD_PACKET;
-                lexer->state = GROUND_STATE;
-            }
-            acc_dis = ACCEPT;
-            break;
-#endif  // ZODIAC_ENABLE
-
 #ifdef UBLOX_ENABLE
         case UBX_RECOGNIZED:
             // UBX use a TCP like checksum
@@ -2615,222 +2809,36 @@ void packet_parse(struct gps_lexer_t *lexer)
             break;
 #endif  // UBLOX_ENABLE
 
-#ifdef EVERMORE_ENABLE
-        case EVERMORE_RECOGNIZED:
-            // Evermore uses DLE stuffing, what a PITA.
-            // Assume failure.
-            packet_type = BAD_PACKET;
-            acc_dis = ACCEPT;
-            lexer->state = GROUND_STATE;
-
-            do {
-                // the do{} is only done once, just so we can break
-
-                // check for leader
-                idx = 0;
-                if (DLE != lexer->inbuffer[idx++] ||
-                    STX != lexer->inbuffer[idx++]) {
-                    // should not happen
-                    break;
-                }
-
-                // get one byte length, if length is 0x10, two DLE are sent.
-                data_len = lexer->inbuffer[idx++];
-                if (DLE == data_len &&
-                    DLE != lexer->inbuffer[idx++]) {
-                    // should not happen
-                    break;
-                }
-                if (8 > data_len) {
-                    /* should not happen, need 1 byte of data for message ID
-                     * shortest message is 8 bytes of data_len */
-                    break;
-                }
-
-                data_len -= 2;
-                crc_computed = 0;
-                for (; data_len > 0; data_len--) {
-                    crc_computed += lexer->inbuffer[idx];
-                    if (DLE == lexer->inbuffer[idx++] &&
-                        DLE != lexer->inbuffer[idx++]) {
-                        // should not happen, DLE not doubled.
-                        break;
-                    }
-                }
-                // get one byte checksum
-                crc_expected = lexer->inbuffer[idx++];
-                if (DLE == crc_expected &&
-                    DLE != lexer->inbuffer[idx++]) {
-                    // should not happen, DLE not doubled.
-                    break;
-                }
-                // get two byte trailer
-                if (DLE != lexer->inbuffer[idx++] ||
-                    ETX != lexer->inbuffer[idx]) {
-                    // we used to say n++ here, but scan-build complains
-                    // bad trailer
-                    break;
-                }
-                crc_computed &= 0xff;
-                if (crc_computed != crc_expected) {
-                    GPSD_LOG(LOG_PROG, &lexer->errout,
-                             "EverMore checksum failed: %02x != %02x\n",
-                             crc_computed, crc_expected);
-                    break;
-                }
-                packet_type = EVERMORE_PACKET;
-                lexer->state = EVERMORE_RECOGNIZED;
-                break;     // redundant
-            } while (0);
-            break;
-#endif  // EVERMORE_ENABLE
-
-#ifdef ITRAX_ENABLE
-#define getib(j) ((uint8_t)lexer->inbuffer[(j)])
-#define getiw(i) ((uint16_t)(((uint16_t)getib((i) + 1) << 8) | \
-                             (uint16_t)getib((i))))
-
-        case ITALK_RECOGNIZED:
-            // number of words
-            data_len = lexer->inbuffer[6] & 0xff;
-
-            // expected checksum
-            crc_expected = getiw(7 + 2 * data_len);
-
+#ifdef ZODIAC_ENABLE
+        case ZODIAC_RECOGNIZED:
+            // be paranoid, look ahead for a good checksum
+            data_len = getzuword(2);
+            if (253 < data_len) {
+                // pacify coverity, 253 seems to be max length
+                data_len = 253;
+            }
             crc_computed = 0;
             for (idx = 0; idx < data_len; idx++) {
-                uint16_t tmpw = getiw(7 + 2 * idx);
-                uint32_t tmpdw  = (crc_computed + 1) * (tmpw + idx);
-                crc_computed ^= (tmpdw & 0xffff) ^ ((tmpdw >> 16) & 0xffff);
+                crc_computed += getzword(5 + idx);
             }
+            crc_expected = getzword(5 + data_len);
+            crc_computed += crc_expected;
+            crc_computed &= 0x0ff;
             if (0 == data_len ||
-                crc_computed == crc_expected) {
-                packet_type = ITALK_PACKET;
+                0 == crc_computed) {
+                packet_type = ZODIAC_PACKET;
             } else {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
-                         "ITALK: checksum failed - "
-                         "type 0x%02x expected 0x%04x got 0x%04x\n",
-                         lexer->inbuffer[4], crc_expected, crc_computed);
-                packet_type = BAD_PACKET;
-                lexer->state = GROUND_STATE;
-            }
-            acc_dis = ACCEPT;
-#undef getiw
-#undef getib
-            break;
-#endif  // ITRAX_ENABLE
-#ifdef NAVCOM_ENABLE
-        case NAVCOM_RECOGNIZED:
-            // By the time we got here we know checksum is OK
-            packet_type = NAVCOM_PACKET;
-            acc_dis = ACCEPT;
-            break;
-#endif  // NAVCOM_ENABLE
-#ifdef GEOSTAR_ENABLE
-        case GEOSTAR_RECOGNIZED:
-            // GeoStar uses a XOR 32bit checksum
-
-            crc_computed = 0;
-
-            // Calculate checksum
-            for (idx = 0; idx < inbuflen; idx += 4) {
-                crc_computed ^= getleu32(lexer->inbuffer, idx);
-            }
-
-            if (0 == crc_computed) {
-                packet_type = GEOSTAR_PACKET;
-            } else {
-                GPSD_LOG(LOG_PROG, &lexer->errout,
-                         "GeoStar checksum failed 0x%x over length %d\n",
-                         crc_computed, inbuflen);
+                         "Zodiac data checksum 0x%x over length %u, "
+                         "expecting 0x%x\n",
+                         crc_expected, data_len, getzword(5 + data_len));
                 packet_type = BAD_PACKET;
                 lexer->state = GROUND_STATE;
             }
             acc_dis = ACCEPT;
             break;
-#endif  // GEOSTAR_ENABLE
-#ifdef GREIS_ENABLE
-        case GREIS_RECOGNIZED:
-            if ('R' == lexer->inbuffer[0] &&
-                'E' == lexer->inbuffer[1]) {
-                // Replies don't have checksum
-                GPSD_LOG(LOG_IO, &lexer->errout,
-                         "Accept GREIS reply packet len %d\n", inbuflen);
-                packet_type = GREIS_PACKET;
-            } else if ('E' == lexer->inbuffer[0] &&
-                       'R' == lexer->inbuffer[1]) {
-                // Error messages don't have checksum
-                GPSD_LOG(LOG_IO, &lexer->errout,
-                         "Accept GREIS error packet len %d\n", inbuflen);
-                packet_type = GREIS_PACKET;
-            } else {
-                // 8-bit checksum
-                crc_computed = greis_checksum(lexer->inbuffer, inbuflen);
+#endif  // ZODIAC_ENABLE
 
-                if (0 == crc_computed) {
-                    GPSD_LOG(LOG_IO, &lexer->errout,
-                             "Accept GREIS packet type '%c%c' len %d\n",
-                             lexer->inbuffer[0], lexer->inbuffer[1], inbuflen);
-                    packet_type = GREIS_PACKET;
-                } else {
-                    /*
-                     * Print hex instead of raw characters, since they might be
-                     * unprintable. If \0, it will even mess up the log output.
-                     */
-                    GPSD_LOG(LOG_PROG, &lexer->errout,
-                             "REJECT GREIS len %d."
-                             " Bad checksum %#02x, expecting 0."
-                             " Packet type in hex: 0x%02x%02x",
-                             inbuflen, crc_computed,
-                             lexer->inbuffer[0],
-                             lexer->inbuffer[1]);
-                    packet_type = BAD_PACKET;
-                    // got this far, fair to expect we will get more GREIS
-                    lexer->state = GREIS_EXPECTED;
-                }
-            }
-            acc_dis = ACCEPT;
-            break;
-#endif  // GREIS_ENABLE
-#ifdef RTCM104V2_ENABLE
-        case RTCM2_RECOGNIZED:
-            /*
-             * RTCM packets don't have checksums.  The six bits of parity
-             * per word and the preamble better be good enough.
-             */
-            packet_type = RTCM2_PACKET;
-            acc_dis = ACCEPT;
-            break;
-#endif  // RTCM104V2_ENABLE
-#ifdef GARMINTXT_ENABLE
-        case GTXT_RECOGNIZED:
-            if (57 <= inbuflen) {
-                packet_accept(lexer, GARMINTXT_PACKET);
-                packet_discard(lexer);
-                lexer->state = GROUND_STATE;
-                break;
-            } else {
-                packet_accept(lexer, BAD_PACKET);
-                lexer->state = GROUND_STATE;
-            }
-            break;
-#endif
-        case JSON_RECOGNIZED:
-            if (11 <= inbuflen) {
-                // {"class": }
-                packet_type = JSON_PACKET;
-            } else {
-                packet_type = BAD_PACKET;
-            }
-            lexer->state = GROUND_STATE;
-            acc_dis = ACCEPT;
-            break;
-#ifdef STASH_ENABLE
-        case STASH_RECOGNIZED:
-            packet_stash(lexer);
-            packet_discard(lexer);
-            break;
-#endif  // STASH_ENABLE
         }
         if (ACCEPT == acc_dis) {
             packet_accept(lexer, packet_type);
