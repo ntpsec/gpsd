@@ -2182,326 +2182,334 @@ void packet_parse(struct gps_lexer_t *lexer)
              * So we check for Garmin length and checksum, if they
              * fail, we check for TSIP ID's, maybe their matching lengths.
              */
-#ifdef TSIP_ENABLE
-            int dlecnt;
-            // don't count stuffed DLEs in the length
-            dlecnt = 0;
-            for (idx = 0; idx < inbuflen; idx++) {
-                if (DLE == lexer->inbuffer[idx]) {
-                    dlecnt++;
-                }
-            }
-            if (dlecnt > 2) {
-                dlecnt -= 2;
-                dlecnt /= 2;
-                GPSD_LOG(LOG_RAW1, &lexer->errout,
-                         "Unstuffed %d DLEs\n", dlecnt);
-                inbuflen -= dlecnt;
-            }
-#endif  // TSIP_ENABLE
-            if (5 > inbuflen) {
-                // Message has no data.
-                lexer->state = GROUND_STATE;
-            } else {
-#ifdef GARMIN_ENABLE
-#ifdef TSIP_ENABLE
-                // shortcut garmin
-                if (TSIP_PACKET == lexer->type) {
-                    // FIXME: goto ???
-                    goto not_garmin;
-                }
-#endif /* TSIP_ENABLE */
-                // We know DLE == lexer->inbuffer[0]
-                idx = 1;
 
-                // Garmin promises ID's 3 (ETX) and 16 (DLE) are never used
-                pkt_id = lexer->inbuffer[idx++];  // packet ID, byte 1.
+            // Assume bad
+            packet_type = BAD_PACKET;
+            lexer->state = GROUND_STATE;
+            acc_dis = ACCEPT;
 
-                data_len = lexer->inbuffer[idx++];
-                crc_computed = data_len + pkt_id;
-                if (DLE == data_len &&
-                    DLE != lexer->inbuffer[idx++]) {
-                    // Bad DLE stuffing
-                    // FIXME: goto ???
-                    goto not_garmin;
-                }
+            do {
+                int dlecnt;
 
-                for (; data_len > 0; data_len--) {
-                    crc_computed += lexer->inbuffer[idx];
-                    if (DLE == lexer->inbuffer[idx++] &&
-                        DLE != lexer->inbuffer[idx++]) {
-                        // Bad DLE stuffing
-                        // FIXME: goto ???
-                        goto not_garmin;
+                // don't count stuffed DLEs in the length
+                dlecnt = 0;
+                for (idx = 0; idx < inbuflen; idx++) {
+                    if (DLE == lexer->inbuffer[idx]) {
+                        dlecnt++;
                     }
                 }
-
-                // check sum byte
-                crc_expected = lexer->inbuffer[idx++];
-                crc_computed += crc_expected;
-                if (DLE == crc_expected &&
-                    DLE != lexer->inbuffer[idx++]) {
-                    // Bad DLE stuffing
-                    // FIXME: goto ???
-                    goto not_garmin;
+                if (dlecnt > 2) {
+                    dlecnt -= 2;
+                    dlecnt /= 2;
+                    GPSD_LOG(LOG_RAW1, &lexer->errout,
+                             "Unstuffed %d DLEs\n", dlecnt);
+                    inbuflen -= dlecnt;
                 }
 
-                crc_computed &= 0xff;
-                if (0 != crc_computed) {
-                    GPSD_LOG(LOG_PROG, &lexer->errout,
-                             "Garmin checksum failed: %02x!=0\n", crc_computed);
-                    // FIXME: goto ???
-                    goto not_garmin;
+                if (5 > inbuflen) {
+                    // Message has no data.  Can't be GARMIN or TSIP.
+                    break;
                 }
+#ifdef GARMIN_ENABLE
+                do {
+#ifdef TSIP_ENABLE
+                    // last packet was TSIP, shortcut garmin
+                    if (TSIP_PACKET == lexer->type) {
+                        break;
+                    }
+#endif  // TSIP_ENABLE
+                    // We know DLE == lexer->inbuffer[0]
+                    idx = 1;
 
-                // Check for trailer where expected
-                if (DLE != lexer->inbuffer[idx++] ||
-                    ETX != lexer->inbuffer[idx]) {
-                    // we used to say n++ here, but scan-build complains
-                    // FIXME: goto ???
-                    goto not_garmin;
+                    // Garmin promises ID's 3 (ETX) and 16 (DLE) are never used
+                    pkt_id = lexer->inbuffer[idx++];  // packet ID, byte 1.
+
+                    // Get data length from packet.
+                    data_len = lexer->inbuffer[idx++];
+                    crc_computed = data_len + pkt_id;
+                    if (DLE == data_len &&
+                        DLE != lexer->inbuffer[idx++]) {
+                        // Bad DLE stuffing
+                        break;
+                    }
+                    // Compute checksum.
+                    for (; data_len > 0; data_len--) {
+                        crc_computed += lexer->inbuffer[idx];
+                        if (DLE == lexer->inbuffer[idx++] &&
+                            DLE != lexer->inbuffer[idx++]) {
+                            // Bad DLE stuffing
+                            break;
+                        }
+                    }
+                    // check sum byte
+                    // FIXME, just make previous loop one longer.
+                    crc_expected = lexer->inbuffer[idx++];
+                    crc_computed += crc_expected;
+                    if (DLE == crc_expected &&
+                        DLE != lexer->inbuffer[idx++]) {
+                        // Bad DLE stuffing
+                        break;
+                    }
+
+                    crc_computed &= 0xff;
+                    if (0 != crc_computed) {
+                        GPSD_LOG(LOG_PROG, &lexer->errout,
+                                 "Garmin checksum failed: %02x!=0\n",
+                                 crc_computed);
+                        break;
+                    }
+
+                    // Check for trailer where expected
+                    if (DLE != lexer->inbuffer[idx++] ||
+                        ETX != lexer->inbuffer[idx]) {
+                        // we used to say idx++ here, but scan-build complains
+                        break;
+                    }
+
+                    // A good packet!
+                    packet_type = GARMIN_PACKET;
+                    break;    // redundant...
+                } while (0);
+
+                if (GARMIN_PACKET == packet_type) {
+                    break;
                 }
-
-                packet_accept(lexer, GARMIN_PACKET);
-                packet_discard(lexer);
-                break;
-              not_garmin:;
                 GPSD_LOG(LOG_RAW1, &lexer->errout, "Not a Garmin packet\n");
                 // Could be TSIP, but line noise can look like TSIP.
 
 #endif  // GARMIN_ENABLE
 #ifdef TSIP_ENABLE
-                /* check for some common TSIP packet types:
-                 * 0x13, TSIP Parsing Error Notification
-                 * 0x1c, Hardware/Software Version Information
-                 * 0x38, Request SV system data
-                 * 0x40, Almanac
-                 * 0x41, GPS time, data length 10
-                 * 0x42, Single Precision Fix XYZ, data length 16
-                 * 0x43, Velocity Fix XYZ, ECEF, data length 20
-                 * 0x45, Software Version Information, data length 10
-                 * 0x46, Health of Receiver, data length 2
-                 * 0x47, Signal Level all Sats Tracked, data length 1+5*numSV
-                 * 0x48, GPS System Messages, data length 22
-                 * 0x49, Almanac Health Page, data length 32
-                 * 0x4a, Single Precision Fix LLA, data length 20
-                 * 0x4b, Machine Code Status, data length 3
-                 * 0x4c, Operating Parameters Report, data length 17
-                 * 0x4d, Oscillator Offset
-                 * 0x4e, Response to set GPS time
-                 * 0x54, One Satellite Bias, data length 12
-                 * 0x55, I/O Options, data length 4
-                 * 0x56, Velocity Fix ENU, data length 20
-                 * 0x57, Last Computed Fix Report, data length 8
-                 * 0x58, Satellite System Data
-                 * 0x58-05, UTC
-                 * 0x59, Satellite Health
-                 * 0x5a, Raw Measurements
-                 * 0x5b, Satellite Ephemeris Status, data length 16
-                 * 0x5c, Satellite Tracking Status, data length 24
-                 * 0x5d, Satellite Tracking Status (multi-gnss), data length 26
-                 * 0x5e, Additional Fix Status Report
-                 * 0x5f, Severe Failure Notification
-                 * 0x5F-01-0B: Reset Error Codes
-                 * 0x5F-02: Ascii text message
-                 * 0x6c, Satellite Selection List, data length 18+numSV
-                 * 0x6d, All-In-View Satellite Selection, data length 17+numSV
-                 * 0x6f, Synced Measurement Packet
-                 * 0x72, PV filter parameters
-                 * 0x74, Altitude filter parameters
-                 * 0x78, Max DGPS correction age
-                 * 0x7b, NMEA message schedule
-                 * 0x82, Differential Position Fix Mode, data length 1
-                 * 0x83, Double Precision Fix XYZ, data length 36
-                 * 0x84, Double Precision Fix LLA, data length 36
-                 * 0x85, DGPS Correction status
-                 * 0x8f, Superpackets
-                 * 0x8f-01,
-                 * 0x8f-02,
-                 * 0x8f-03, port configuration
-                 * 0x8f-14, datum
-                 * 0x8f-15, datum
-                 * 0x8f-17, Single Precision UTM
-                 * 0x8f-18, Double Precision UTM
-                 * 0x8f-20, LLA & ENU
-                 * 0x8f-26, SEEPROM write status
-                 * 0x8f-40, TAIP Configuration
-                 * 0x90-XX, Version/Config (TSIPv1)
-                 * 0xa1-00, Timing Info (TSIPv1)
-                 * 0xa1-01, Frequency Info (TSIPv1)
-                 * 0xa1-02, Position Info (TSIPv1)
-                 * 0xbb, GPS Navigation Configuration
-                 * 0xbc, Receiver Port Configuration
-                 *
-                 * <DLE>[pkt id] [data] <DLE><ETX>
-                 *
-                 * The best description is in [TSIP], the Trimble Standard
-                 * Interface Protocol manual; unless otherwise specified
-                 * that is where these type/length notifications are from.
-                 *
-                 * Note that not all Trimble chips conform perfectly to this
-                 * specification, nor does it cover every packet type we
-                 * may see on the wire.
-                 */
-                pkt_id = lexer->inbuffer[1];    // packet ID
-                // *INDENT-OFF*
-                // FIXME: combine this if, and the next ones?
-                if (!((0x13 == pkt_id) ||
-                      (0x1c == pkt_id) ||
-                      (0x38 == pkt_id) ||
-                      ((0x41 <= pkt_id) && (0x4c >= pkt_id)) ||
-                      ((0x54 <= pkt_id) && (0x57 >= pkt_id)) ||
-                      ((0x5a <= pkt_id) && (0x5f >= pkt_id)) ||
-                      (0x6c == pkt_id) ||
-                      (0x6d == pkt_id) ||
-                      (0x82 <= pkt_id &&
-                       0x84 >= pkt_id) ||
-                      (0x8f <= pkt_id &&
-                       0x93 >= pkt_id) ||
-                      (0xbb == pkt_id) ||
-                      (0xbc == pkt_id) ||
-                      ((0xa1 <= pkt_id &&
-                       0xa3 >= pkt_id)))) {
-                    GPSD_LOG(LOG_PROG, &lexer->errout,
-                             "Packet ID 0x%02x out of range for TSIP\n",
-                             pkt_id);
-                    // FIXME: goto ???
-                    goto not_tsip;
-                }
-                // *INDENT-ON*
+                do {
+                    /* Since TSIP has no length, or checksum,
+                     * check for some common TSIP packet types:
+                     * 0x13, TSIP Parsing Error Notification
+                     * 0x1c, Hardware/Software Version Information
+                     * 0x38, Request SV system data
+                     * 0x40, Almanac
+                     * 0x41, GPS time, data length 10
+                     * 0x42, Single Precision Fix XYZ, data length 16
+                     * 0x43, Velocity Fix XYZ, ECEF, data length 20
+                     * 0x45, Software Version Information, data length 10
+                     * 0x46, Health of Receiver, data length 2
+                     * 0x47, Signal Level all Sats Tracked, data length 1+5*numSV
+                     * 0x48, GPS System Messages, data length 22
+                     * 0x49, Almanac Health Page, data length 32
+                     * 0x4a, Single Precision Fix LLA, data length 20
+                     * 0x4b, Machine Code Status, data length 3
+                     * 0x4c, Operating Parameters Report, data length 17
+                     * 0x4d, Oscillator Offset
+                     * 0x4e, Response to set GPS time
+                     * 0x54, One Satellite Bias, data length 12
+                     * 0x55, I/O Options, data length 4
+                     * 0x56, Velocity Fix ENU, data length 20
+                     * 0x57, Last Computed Fix Report, data length 8
+                     * 0x58, Satellite System Data
+                     * 0x58-05, UTC
+                     * 0x59, Satellite Health
+                     * 0x5a, Raw Measurements
+                     * 0x5b, Satellite Ephemeris Status, data length 16
+                     * 0x5c, Satellite Tracking Status, data length 24
+                     * 0x5d, Satellite Tracking Stat, multi-gnss, data length 26
+                     * 0x5e, Additional Fix Status Report
+                     * 0x5f, Severe Failure Notification
+                     * 0x5F-01-0B: Reset Error Codes
+                     * 0x5F-02: Ascii text message
+                     * 0x6c, Satellite Selection List, data length 18+numSV
+                     * 0x6d, All-In-View Satellites, data length 17+numSV
+                     * 0x6f, Synced Measurement Packet
+                     * 0x72, PV filter parameters
+                     * 0x74, Altitude filter parameters
+                     * 0x78, Max DGPS correction age
+                     * 0x7b, NMEA message schedule
+                     * 0x82, Differential Position Fix Mode, data length 1
+                     * 0x83, Double Precision Fix XYZ, data length 36
+                     * 0x84, Double Precision Fix LLA, data length 36
+                     * 0x85, DGPS Correction status
+                     * 0x8f, Superpackets
+                     * 0x8f-01,
+                     * 0x8f-02,
+                     * 0x8f-03, port configuration
+                     * 0x8f-14, datum
+                     * 0x8f-15, datum
+                     * 0x8f-17, Single Precision UTM
+                     * 0x8f-18, Double Precision UTM
+                     * 0x8f-20, LLA & ENU
+                     * 0x8f-26, SEEPROM write status
+                     * 0x8f-40, TAIP Configuration
+                     * 0x90-XX, Version/Config (TSIPv1)
+                     * 0xa1-00, Timing Info (TSIPv1)
+                     * 0xa1-01, Frequency Info (TSIPv1)
+                     * 0xa1-02, Position Info (TSIPv1)
+                     * 0xbb, GPS Navigation Configuration
+                     * 0xbc, Receiver Port Configuration
+                     *
+                     * <DLE>[pkt id] [data] <DLE><ETX>
+                     *
+                     * The best description is in [TSIP], the Trimble Standard
+                     * Interface Protocol manual; unless otherwise specified
+                     * that is where these type/length notifications are from.
+                     *
+                     * Note that not all Trimble chips conform perfectly to this
+                     * specification, nor does it cover every packet type we
+                     * may see on the wire.
+                     */
+                    pkt_id = lexer->inbuffer[1];    // packet ID
+                    // *INDENT-OFF*
+                    // FIXME: combine this if, and the next ones?
+                    if (!((0x13 == pkt_id) ||
+                          (0x1c == pkt_id) ||
+                          (0x38 == pkt_id) ||
+                          ((0x41 <= pkt_id) && (0x4c >= pkt_id)) ||
+                          ((0x54 <= pkt_id) && (0x57 >= pkt_id)) ||
+                          ((0x5a <= pkt_id) && (0x5f >= pkt_id)) ||
+                          (0x6c == pkt_id) ||
+                          (0x6d == pkt_id) ||
+                          (0x82 <= pkt_id &&
+                           0x84 >= pkt_id) ||
+                          (0x8f <= pkt_id &&
+                           0x93 >= pkt_id) ||
+                          (0xbb == pkt_id) ||
+                          (0xbc == pkt_id) ||
+                          ((0xa1 <= pkt_id &&
+                           0xa3 >= pkt_id)))) {
+                        GPSD_LOG(LOG_PROG, &lexer->errout,
+                                 "Packet ID 0x%02x out of range for TSIP\n",
+                                 pkt_id);
+                        break;
+                    }
+                    // *INDENT-ON*
 #define TSIP_ID_AND_LENGTH(id, len)     ((id == pkt_id) && \
                                          (len == (inbuflen - 4)))
 
-                if ((0x13 == pkt_id) &&
-                    (1 <= inbuflen)) {
-                    /* pass */ ;
-                /*
-                 * Not in [TSIP],  Accutime Gold only. Variable length.
-                 */
-                } else if ((0x1c == pkt_id) &&
-                           (11 <= inbuflen)) {
-                    /* pass */ ;
-                } else if (TSIP_ID_AND_LENGTH(0x41, 10)) {
-                    /* pass */ ;
-                } else if (TSIP_ID_AND_LENGTH(0x42, 16)) {
-                    /* pass */ ;
-                } else if (TSIP_ID_AND_LENGTH(0x43, 20)) {
-                    /* pass */ ;
-                } else if (TSIP_ID_AND_LENGTH(0x45, 10)) {
-                    /* pass */ ;
-                } else if (TSIP_ID_AND_LENGTH(0x46, 2)) {
-                    /* pass */ ;
-                } else if ((0x47 == pkt_id) &&
-                           (0 == (inbuflen % 5))) {
+                    if ((0x13 == pkt_id) &&
+                        (1 <= inbuflen)) {
+                        /* pass */ ;
                     /*
-                     * 0x47 data length 1+5*numSV, packetlen is 5+5*numSV
-                     * FIXME, should be a proper length calculation
+                     * Not in [TSIP],  Accutime Gold only. Variable length.
                      */
-                     /* pass */ ;
-                } else if (TSIP_ID_AND_LENGTH(0x48, 22)) {
-                    /* pass */ ;
-                } else if (TSIP_ID_AND_LENGTH(0x49, 32)) {
-                    /* pass */ ;
-                } else if (TSIP_ID_AND_LENGTH(0x4a, 20)) {
-                    /* pass */ ;
-                } else if (TSIP_ID_AND_LENGTH(0x4b, 3)) {
-                    /* pass */ ;
-                } else if (TSIP_ID_AND_LENGTH(0x4c, 17)) {
-                    /* pass */ ;
-                } else if (TSIP_ID_AND_LENGTH(0x54, 12)) {
-                    /* pass */ ;
-                } else if (TSIP_ID_AND_LENGTH(0x55, 4)) {
-                    /* pass */ ;
-                } else if (TSIP_ID_AND_LENGTH(0x56, 20)) {
-                    /* pass */ ;
-                } else if (TSIP_ID_AND_LENGTH(0x57, 8)) {
-                    /* pass */ ;
-                } else if (TSIP_ID_AND_LENGTH(0x5a, 25)) {
-                    /* pass */ ;
-                } else if (TSIP_ID_AND_LENGTH(0x5b, 16)) {
-                    /* pass */ ;
-                } else if (TSIP_ID_AND_LENGTH(0x5c, 24)) {
-                    /* pass */ ;
-                } else if (TSIP_ID_AND_LENGTH(0x5d, 26)) {
-                    /* pass */ ;
-                } else if (TSIP_ID_AND_LENGTH(0x5e, 2)) {
-                    /* pass */ ;
-                 /*
-                 * Not in [TSIP]. the TSIP driver doesn't use type 0x5f.
-                 * but we test for it so as to avoid setting packet not_tsip
-                 */
-                } else if (TSIP_ID_AND_LENGTH(0x5f, 66)) {
+                    } else if ((0x1c == pkt_id) &&
+                               (11 <= inbuflen)) {
+                        /* pass */ ;
+                    } else if (TSIP_ID_AND_LENGTH(0x41, 10)) {
+                        /* pass */ ;
+                    } else if (TSIP_ID_AND_LENGTH(0x42, 16)) {
+                        /* pass */ ;
+                    } else if (TSIP_ID_AND_LENGTH(0x43, 20)) {
+                        /* pass */ ;
+                    } else if (TSIP_ID_AND_LENGTH(0x45, 10)) {
+                        /* pass */ ;
+                    } else if (TSIP_ID_AND_LENGTH(0x46, 2)) {
+                        /* pass */ ;
+                    } else if ((0x47 == pkt_id) &&
+                               (0 == (inbuflen % 5))) {
+                        /*
+                         * 0x47 data length 1+5*numSV, packetlen is 5+5*numSV
+                         * FIXME, should be a proper length calculation
+                         */
+                         /* pass */ ;
+                    } else if (TSIP_ID_AND_LENGTH(0x48, 22)) {
+                        /* pass */ ;
+                    } else if (TSIP_ID_AND_LENGTH(0x49, 32)) {
+                        /* pass */ ;
+                    } else if (TSIP_ID_AND_LENGTH(0x4a, 20)) {
+                        /* pass */ ;
+                    } else if (TSIP_ID_AND_LENGTH(0x4b, 3)) {
+                        /* pass */ ;
+                    } else if (TSIP_ID_AND_LENGTH(0x4c, 17)) {
+                        /* pass */ ;
+                    } else if (TSIP_ID_AND_LENGTH(0x54, 12)) {
+                        /* pass */ ;
+                    } else if (TSIP_ID_AND_LENGTH(0x55, 4)) {
+                        /* pass */ ;
+                    } else if (TSIP_ID_AND_LENGTH(0x56, 20)) {
+                        /* pass */ ;
+                    } else if (TSIP_ID_AND_LENGTH(0x57, 8)) {
+                        /* pass */ ;
+                    } else if (TSIP_ID_AND_LENGTH(0x5a, 25)) {
+                        /* pass */ ;
+                    } else if (TSIP_ID_AND_LENGTH(0x5b, 16)) {
+                        /* pass */ ;
+                    } else if (TSIP_ID_AND_LENGTH(0x5c, 24)) {
+                        /* pass */ ;
+                    } else if (TSIP_ID_AND_LENGTH(0x5d, 26)) {
+                        /* pass */ ;
+                    } else if (TSIP_ID_AND_LENGTH(0x5e, 2)) {
+                        /* pass */ ;
+                     /*
+                     * Not in [TSIP]. the TSIP driver doesn't use type 0x5f.
+                     * but we test for it so as to avoid setting packet not_tsip
+                     */
+                    } else if (TSIP_ID_AND_LENGTH(0x5f, 66)) {
+                        /*
+                         * 0x6c data length 18+numSV, total packetlen is 22+numSV
+                         * numSV up to 224
+                         */
+                        /* pass */ ;
+                    } else if ((0x6c == pkt_id) &&
+                               ((22 <= inbuflen) &&
+                                (246 >= inbuflen))) {
+                        /*
+                         * 0x6d data length 17+numSV, total packetlen is 21+numSV
+                         * numSV up to 32
+                         */
+                        /* pass */ ;
+                    } else if ((0x6d == pkt_id) &&
+                               ((21 <= inbuflen) &&
+                                (53 >= inbuflen))) {
+                        /* pass */ ;
+                    } else if (TSIP_ID_AND_LENGTH(0x82, 1)) {
+                        /* pass */ ;
+                    } else if (TSIP_ID_AND_LENGTH(0x83, 36)) {
+                        /* pass */ ;
+                    } else if (TSIP_ID_AND_LENGTH(0x84, 36)) {
+                        // pass
+                    } else if (0x8f <= pkt_id &&
+                               0x93 >= pkt_id) {
+                        // pass, TSIP super packets, variable length
+                        // pass, TSIPv1 version/config/info super packet
+                    } else if (0xa0 <= pkt_id &&
+                               0xa3 >= pkt_id) {
+                        // PASS, TSIPv1
+                        // FIXME: check for sub packet id 0 to 2
                     /*
-                     * 0x6c data length 18+numSV, total packetlen is 22+numSV
-                     * numSV up to 224
+                     * This is according to [TSIP].
                      */
-                    /* pass */ ;
-                } else if ((0x6c == pkt_id) &&
-                           ((22 <= inbuflen) &&
-                            (246 >= inbuflen))) {
+                    } else if (TSIP_ID_AND_LENGTH(0xbb, 40)) {
+                        /* pass */ ;
                     /*
-                     * 0x6d data length 17+numSV, total packetlen is 21+numSV
-                     * numSV up to 32
+                     * The Accutime Gold ships a version of this packet with a
+                     * 43-byte payload.  We only use the first 21 bytes, and
+                     * parts after byte 27 are padding.
                      */
-                    /* pass */ ;
-                } else if ((0x6d == pkt_id) &&
-                           ((21 <= inbuflen) &&
-                            (53 >= inbuflen))) {
-                    /* pass */ ;
-                } else if (TSIP_ID_AND_LENGTH(0x82, 1)) {
-                    /* pass */ ;
-                } else if (TSIP_ID_AND_LENGTH(0x83, 36)) {
-                    /* pass */ ;
-                } else if (TSIP_ID_AND_LENGTH(0x84, 36)) {
-                    // pass
-                } else if (0x8f <= pkt_id &&
-                           0x93 >= pkt_id) {
-                    // pass, TSIP super packets, variable length
-                    // pass, TSIPv1 version/config/info super packet
-                } else if (0xa0 <= pkt_id &&
-                           0xa3 >= pkt_id) {
-                    // PASS, TSIPv1
-                    // FIXME: check for sub packet id 0 to 2
-                /*
-                 * This is according to [TSIP].
-                 */
-                } else if (TSIP_ID_AND_LENGTH(0xbb, 40)) {
-                    /* pass */ ;
-                /*
-                 * The Accutime Gold ships a version of this packet with a
-                 * 43-byte payload.  We only use the first 21 bytes, and
-                 * parts after byte 27 are padding.
-                 */
-                } else if (TSIP_ID_AND_LENGTH(0xbb, 43)) {
-                    /* pass */ ;
-                } else {
-                    /* pass */ ;
-                    GPSD_LOG(LOG_PROG, &lexer->errout,
-                             "TSIP REJECT pkt_id = %#02x, inbuflen= %d\n",
-                             pkt_id, inbuflen);
-                    // FIXME:  goto??
-                    goto not_tsip;
-                }
+                    } else if (TSIP_ID_AND_LENGTH(0xbb, 43)) {
+                        /* pass */ ;
+                    } else {
+                        /* pass */ ;
+                        GPSD_LOG(LOG_PROG, &lexer->errout,
+                                 "TSIP REJECT pkt_id = %#02x, inbuflen= %d\n",
+                                 pkt_id, inbuflen);
+                        break;
+                    }
 #undef TSIP_ID_AND_LENGTH
-                // Debug
-                GPSD_LOG(LOG_RAW, &lexer->errout,
-                         "TSIP pkt_id = %#02x, inbuflen= %d\n",
-                         pkt_id, inbuflen);
-                packet_accept(lexer, TSIP_PACKET);
-                packet_discard(lexer);
-                break;
-              not_tsip:
-                GPSD_LOG(LOG_RAW1, &lexer->errout, "Not a TSIP packet\n");
-                /*
-                 * More attempts to recognize ambiguous TSIP-like
-                 * packet types could go here.
-                 */
-                packet_type = BAD_PACKET;
-                acc_dis = ACCEPT;
-                lexer->state = GROUND_STATE;
+                    // Debug
+                    GPSD_LOG(LOG_RAW, &lexer->errout,
+                             "TSIP pkt_id = %#02x, inbuflen= %d\n",
+                             pkt_id, inbuflen);
+                    packet_type = TSIP_PACKET;
+                    lexer->state = TSIP_RECOGNIZED;
+                    break;     // redundant
+                } while (0);
+
+                if (BAD_PACKET == packet_type) {
+                    GPSD_LOG(LOG_RAW1, &lexer->errout, "Not a TSIP packet\n");
+                    acc_dis = ACCEPT;
+                    lexer->state = GROUND_STATE;
+                }
+                break;   // redundant
 #endif  // TSIP_ENABLE
-            }
+            } while (0);
 #endif  // TSIP_ENABLE || GARMIN_ENABLE
+
 #ifdef RTCM104V3_ENABLE
         } else if (RTCM3_RECOGNIZED == lexer->state) {
             if (LOG_IO <= lexer->errout.debug) {
