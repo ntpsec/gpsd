@@ -2234,11 +2234,11 @@ void packet_parse(struct gps_lexer_t *lexer)
 
 #ifdef GARMINTXT_ENABLE
         case GTXT_RECOGNIZED:
+            // As of June 2023, we have no regression of GARMINTXT.
             if (57 <= inbuflen) {
                 packet_accept(lexer, GARMINTXT_PACKET);
                 packet_discard(lexer);
                 lexer->state = GROUND_STATE;
-                break;
             } else {
                 packet_accept(lexer, BAD_PACKET);
                 lexer->state = GROUND_STATE;
