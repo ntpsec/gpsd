@@ -2173,6 +2173,15 @@ void packet_parse(struct gps_lexer_t *lexer)
 #endif  // ONCORE_ENABLE
 #if defined(TSIP_ENABLE) || defined(GARMIN_ENABLE)
         } else if (TSIP_RECOGNIZED == lexer->state) {
+            /* Could be Garmin, or TSIP.  Both are DLE stuffed.
+             *
+             * Garmin: DLE, ID, Length, data..., checksum, DLE, ETX
+             * TSIP: DLE, ID, data..., DLE, ETX
+             *
+             * Note: TSIP has no length, or checksum.  Shame!
+             * So we check for Garmin length and checksum, if they
+             * fail, we check for TSIP ID's, maybe their matching lengths.
+             */
 #ifdef TSIP_ENABLE
             int dlecnt;
             // don't count stuffed DLEs in the length
@@ -2191,10 +2200,10 @@ void packet_parse(struct gps_lexer_t *lexer)
             }
 #endif  // TSIP_ENABLE
             if (5 > inbuflen) {
+                // Message has no data.
                 lexer->state = GROUND_STATE;
             } else {
 #ifdef GARMIN_ENABLE
-                idx = 0;
 #ifdef TSIP_ENABLE
                 // shortcut garmin
                 if (TSIP_PACKET == lexer->type) {
@@ -2202,58 +2211,64 @@ void packet_parse(struct gps_lexer_t *lexer)
                     goto not_garmin;
                 }
 #endif /* TSIP_ENABLE */
-                if (DLE != lexer->inbuffer[idx++]) {
+                // We know DLE == lexer->inbuffer[0]
+                idx = 1;
+
+                // Garmin promises ID's 3 (ETX) and 16 (DLE) are never used
+                pkt_id = lexer->inbuffer[idx++];  // packet ID, byte 1.
+
+                data_len = lexer->inbuffer[idx++];
+                crc_computed = data_len + pkt_id;
+                if (DLE == data_len &&
+                    DLE != lexer->inbuffer[idx++]) {
+                    // Bad DLE stuffing
                     // FIXME: goto ???
                     goto not_garmin;
                 }
-                pkt_id = lexer->inbuffer[idx++];  // packet ID
-                data_len = lexer->inbuffer[idx++];
-                crc_computed = data_len + pkt_id;
-                if (DLE == data_len) {
-                    if (DLE != lexer->inbuffer[idx++]) {
+
+                for (; data_len > 0; data_len--) {
+                    crc_computed += lexer->inbuffer[idx];
+                    if (DLE == lexer->inbuffer[idx++] &&
+                        DLE != lexer->inbuffer[idx++]) {
+                        // Bad DLE stuffing
                         // FIXME: goto ???
                         goto not_garmin;
                     }
                 }
-                for (; data_len > 0; data_len--) {
-                    crc_computed += lexer->inbuffer[idx];
-                    if (DLE == lexer->inbuffer[idx++]) {
-                        if (DLE != lexer->inbuffer[idx++]) {
-                            // FIXME: goto ???
-                            goto not_garmin;
-                        }
-                    }
-                }
+
                 // check sum byte
                 crc_expected = lexer->inbuffer[idx++];
                 crc_computed += crc_expected;
-                if (DLE == crc_expected) {
-                    if (DLE != lexer->inbuffer[idx++]) {
-                        // FIXME: goto ???
-                        goto not_garmin;
-                    }
-                }
-                if (DLE != lexer->inbuffer[idx++]) {
+                if (DLE == crc_expected &&
+                    DLE != lexer->inbuffer[idx++]) {
+                    // Bad DLE stuffing
                     // FIXME: goto ???
                     goto not_garmin;
                 }
-                // we used to say n++ here, but scan-build complains
-                if (ETX != lexer->inbuffer[idx]) {
-                    // FIXME: goto ???
-                    goto not_garmin;
-                }
+
                 crc_computed &= 0xff;
-                if (crc_computed) {
+                if (0 != crc_computed) {
                     GPSD_LOG(LOG_PROG, &lexer->errout,
                              "Garmin checksum failed: %02x!=0\n", crc_computed);
                     // FIXME: goto ???
                     goto not_garmin;
                 }
+
+                // Check for trailer where expected
+                if (DLE != lexer->inbuffer[idx++] ||
+                    ETX != lexer->inbuffer[idx]) {
+                    // we used to say n++ here, but scan-build complains
+                    // FIXME: goto ???
+                    goto not_garmin;
+                }
+
                 packet_accept(lexer, GARMIN_PACKET);
                 packet_discard(lexer);
                 break;
               not_garmin:;
                 GPSD_LOG(LOG_RAW1, &lexer->errout, "Not a Garmin packet\n");
+                // Could be TSIP, but line noise can look like TSIP.
+
 #endif  // GARMIN_ENABLE
 #ifdef TSIP_ENABLE
                 /* check for some common TSIP packet types:
