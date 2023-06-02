@@ -2770,10 +2770,10 @@ void packet_parse(struct gps_lexer_t *lexer)
                          "Accept GREIS error packet len %d\n", inbuflen);
                 packet_type = GREIS_PACKET;
             } else {
-                crc_expected = lexer->inbuffer[inbuflen - 1];
-                crc_computed = greis_checksum(lexer->inbuffer, inbuflen - 1);
+                // 8-bit checksum
+                crc_computed = greis_checksum(lexer->inbuffer, inbuflen);
 
-                if (crc_computed == crc_expected) {
+                if (0 == crc_computed) {
                     GPSD_LOG(LOG_IO, &lexer->errout,
                              "Accept GREIS packet type '%c%c' len %d\n",
                              lexer->inbuffer[0], lexer->inbuffer[1], inbuflen);
@@ -2785,9 +2785,9 @@ void packet_parse(struct gps_lexer_t *lexer)
                      */
                     GPSD_LOG(LOG_PROG, &lexer->errout,
                              "REJECT GREIS len %d."
-                             " Bad checksum %#02x, expecting %#02x."
+                             " Bad checksum %#02x, expecting 0."
                              " Packet type in hex: 0x%02x%02x",
-                             inbuflen, crc_computed, crc_expected,
+                             inbuflen, crc_computed,
                              lexer->inbuffer[0],
                              lexer->inbuffer[1]);
                     packet_type = BAD_PACKET;
