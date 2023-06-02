@@ -2313,24 +2313,24 @@ void packet_parse(struct gps_lexer_t *lexer)
 
 #ifdef ONCORE_ENABLE
         case ONCORE_RECOGNIZED:
-            crc_expected = lexer->inbuffer[inbuflen - 3];
-            crc_computed = '\0';
-            for (idx = 2; idx < inbuflen - 3; idx++) {
+            acc_dis = ACCEPT;
+            crc_computed = 0;
+            for (idx = 2; idx < inbuflen - 2; idx++) {
                 crc_computed ^= lexer->inbuffer[idx];
             }
-            if (crc_computed == crc_expected) {
-                GPSD_LOG(LOG_IO, &lexer->errout,
-                         "Accept OnCore packet @@%c%c len %d\n",
-                         lexer->inbuffer[2], lexer->inbuffer[3], inbuflen);
-                packet_type = ONCORE_PACKET;
-            } else {
+
+            if (0 != crc_computed) {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
                          "REJECT OnCore packet @@%c%c len %d\n",
                          lexer->inbuffer[2], lexer->inbuffer[3], inbuflen);
                 lexer->state = GROUND_STATE;
                 packet_type = BAD_PACKET;
+                break;
             }
-            acc_dis = ACCEPT;
+            GPSD_LOG(LOG_IO, &lexer->errout,
+                     "Accept OnCore packet @@%c%c len %d\n",
+                     lexer->inbuffer[2], lexer->inbuffer[3], inbuflen);
+            packet_type = ONCORE_PACKET;
             break;
 #endif  // ONCORE_ENABLE
 
