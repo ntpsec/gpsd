@@ -2066,14 +2066,18 @@ void packet_parse(struct gps_lexer_t *lexer)
         acc_dis = PASS;
         unstash = false;
 
-        // FIXME: make this if/else nest a switch()
-        if (GROUND_STATE == lexer->state) {
+        switch (lexer->state) {
+        case GROUND_STATE:
             character_discard(lexer);
-        } else if (COMMENT_RECOGNIZED == lexer->state) {
+            break;
+
+        case COMMENT_RECOGNIZED:
             packet_type = COMMENT_PACKET;
             acc_dis = ACCEPT;
             lexer->state = GROUND_STATE;
-        } else if (AIS_RECOGNIZED == lexer->state) {
+            break;
+
+        case AIS_RECOGNIZED:
             if (nmea_checksum(&lexer->errout,
                                (const char *)lexer->inbuffer,
                                (const char *)lexer->inbufptr)) {
@@ -2084,7 +2088,8 @@ void packet_parse(struct gps_lexer_t *lexer)
             }
             acc_dis = ACCEPT;
 
-        } else if (NMEA_RECOGNIZED == lexer->state) {
+            break;
+        case NMEA_RECOGNIZED:
             if (nmea_checksum(&lexer->errout,
                                (const char *)lexer->inbuffer,
                                (const char *)lexer->inbufptr)) {
@@ -2095,9 +2100,10 @@ void packet_parse(struct gps_lexer_t *lexer)
                 packet_type = BAD_PACKET;
             }
             acc_dis = ACCEPT;
+            break;
 
 #ifdef SIRF_ENABLE
-        } else if (SIRF_RECOGNIZED == lexer->state) {
+        case SIRF_RECOGNIZED:
             unsigned char *trailer = lexer->inbufptr - 4;
 
             crc_expected = (trailer[0] << 8) | trailer[1];
@@ -2115,14 +2121,18 @@ void packet_parse(struct gps_lexer_t *lexer)
                 acc_dis = ACCEPT;
                 lexer->state = GROUND_STATE;
             }
+            break;
 #endif  // SIRF_ENABLE
+
 #ifdef SKYTRAQ_ENABLE
-        } else if (SKY_RECOGNIZED == lexer->state) {
+        case SKY_RECOGNIZED:
             packet_type = SKY_PACKET;
             acc_dis = ACCEPT;
-#endif /* SKYTRAQ_ENABLE */
+            break;
+#endif  // SKYTRAQ_ENABLE
+
 #ifdef SUPERSTAR2_ENABLE
-        } else if (SUPERSTAR2_RECOGNIZED == lexer->state) {
+        case SUPERSTAR2_RECOGNIZED:
 
             crc_computed = 0;
             lexer->length = 4 + (size_t)lexer->inbuffer[3] + 2;
@@ -2149,9 +2159,11 @@ void packet_parse(struct gps_lexer_t *lexer)
                 packet_type = SUPERSTAR2_PACKET;
             }
             acc_dis = ACCEPT;
-#endif /* SUPERSTAR2_ENABLE */
+            break;
+#endif  // SUPERSTAR2_ENABLE
+
 #ifdef ONCORE_ENABLE
-        } else if (ONCORE_RECOGNIZED == lexer->state) {
+        case ONCORE_RECOGNIZED:
             crc_expected = lexer->inbuffer[inbuflen - 3];
             crc_computed = '\0';
             for (idx = 2; idx < inbuflen - 3; idx++) {
@@ -2170,9 +2182,11 @@ void packet_parse(struct gps_lexer_t *lexer)
                 packet_type = BAD_PACKET;
             }
             acc_dis = ACCEPT;
+            break;
 #endif  // ONCORE_ENABLE
+
 #if defined(TSIP_ENABLE) || defined(GARMIN_ENABLE)
-        } else if (TSIP_RECOGNIZED == lexer->state) {
+        case TSIP_RECOGNIZED:
             /* Could be Garmin, or TSIP.  Both are DLE stuffed.
              *
              * Garmin: DLE, ID, Length, data..., checksum, DLE, ETX
@@ -2508,10 +2522,11 @@ void packet_parse(struct gps_lexer_t *lexer)
                 break;   // redundant
 #endif  // TSIP_ENABLE
             } while (0);
+            break;
 #endif  // TSIP_ENABLE || GARMIN_ENABLE
 
 #ifdef RTCM104V3_ENABLE
-        } else if (RTCM3_RECOGNIZED == lexer->state) {
+        case RTCM3_RECOGNIZED:
             if (LOG_IO <= lexer->errout.debug) {
                 char outbuf[BUFSIZ];
                 // yes, the top 6 bits should be zero, total 10 bits of length
@@ -2541,9 +2556,11 @@ void packet_parse(struct gps_lexer_t *lexer)
             }
             acc_dis = ACCEPT;
             lexer->state = GROUND_STATE;
+            break;
 #endif  // RTCM104V3_ENABLE
+
 #ifdef ZODIAC_ENABLE
-        } else if (ZODIAC_RECOGNIZED == lexer->state) {
+        case ZODIAC_RECOGNIZED:
 
             // be paranoid, look ahead for a good checksum
             data_len = getzuword(2);
@@ -2570,9 +2587,11 @@ void packet_parse(struct gps_lexer_t *lexer)
                 lexer->state = GROUND_STATE;
             }
             acc_dis = ACCEPT;
+            break;
 #endif  // ZODIAC_ENABLE
+
 #ifdef UBLOX_ENABLE
-        } else if (UBX_RECOGNIZED == lexer->state) {
+        case UBX_RECOGNIZED:
             // UBX use a TCP like checksum
             unsigned char ck_a = (unsigned char)0;
             unsigned char ck_b = (unsigned char)0;
@@ -2599,9 +2618,11 @@ void packet_parse(struct gps_lexer_t *lexer)
                 lexer->state = GROUND_STATE;
             }
             acc_dis = ACCEPT;
+            break;
 #endif  // UBLOX_ENABLE
+
 #ifdef EVERMORE_ENABLE
-        } else if (EVERMORE_RECOGNIZED == lexer->state) {
+        case EVERMORE_RECOGNIZED:
             // Evermore uses DLE stuffing, what a PITA.
             // Assume failure.
             packet_type = BAD_PACKET;
@@ -2667,15 +2688,15 @@ void packet_parse(struct gps_lexer_t *lexer)
                 lexer->state = EVERMORE_RECOGNIZED;
                 break;     // redundant
             } while (0);
-
+            break;
 #endif  // EVERMORE_ENABLE
-// XXX CSK
+
 #ifdef ITRAX_ENABLE
 #define getib(j) ((uint8_t)lexer->inbuffer[(j)])
 #define getiw(i) ((uint16_t)(((uint16_t)getib((i) + 1) << 8) | \
                              (uint16_t)getib((i))))
 
-        } else if (ITALK_RECOGNIZED == lexer->state) {
+        case ITALK_RECOGNIZED:
             // number of words
             data_len = lexer->inbuffer[6] & 0xff;
 
@@ -2702,15 +2723,17 @@ void packet_parse(struct gps_lexer_t *lexer)
             acc_dis = ACCEPT;
 #undef getiw
 #undef getib
+            break;
 #endif  // ITRAX_ENABLE
 #ifdef NAVCOM_ENABLE
-        } else if (NAVCOM_RECOGNIZED == lexer->state) {
+        case NAVCOM_RECOGNIZED:
             // By the time we got here we know checksum is OK
             packet_type = NAVCOM_PACKET;
             acc_dis = ACCEPT;
+            break;
 #endif  // NAVCOM_ENABLE
 #ifdef GEOSTAR_ENABLE
-        } else if (GEOSTAR_RECOGNIZED == lexer->state) {
+        case GEOSTAR_RECOGNIZED:
             // GeoStar uses a XOR 32bit checksum
 
             crc_computed = 0;
@@ -2730,9 +2753,10 @@ void packet_parse(struct gps_lexer_t *lexer)
                 lexer->state = GROUND_STATE;
             }
             acc_dis = ACCEPT;
+            break;
 #endif  // GEOSTAR_ENABLE
 #ifdef GREIS_ENABLE
-        } else if (GREIS_RECOGNIZED == lexer->state) {
+        case GREIS_RECOGNIZED:
             if ('R' == lexer->inbuffer[0] &&
                 'E' == lexer->inbuffer[1]) {
                 // Replies don't have checksum
@@ -2772,18 +2796,20 @@ void packet_parse(struct gps_lexer_t *lexer)
                 }
             }
             acc_dis = ACCEPT;
-#endif /* GREIS_ENABLE */
+            break;
+#endif  // GREIS_ENABLE
 #ifdef RTCM104V2_ENABLE
-        } else if (RTCM2_RECOGNIZED == lexer->state) {
+        case RTCM2_RECOGNIZED:
             /*
              * RTCM packets don't have checksums.  The six bits of parity
              * per word and the preamble better be good enough.
              */
             packet_type = RTCM2_PACKET;
             acc_dis = ACCEPT;
+            break;
 #endif  // RTCM104V2_ENABLE
 #ifdef GARMINTXT_ENABLE
-        } else if (GTXT_RECOGNIZED == lexer->state) {
+        case GTXT_RECOGNIZED:
             if (57 <= inbuflen) {
                 packet_accept(lexer, GARMINTXT_PACKET);
                 packet_discard(lexer);
@@ -2793,8 +2819,9 @@ void packet_parse(struct gps_lexer_t *lexer)
                 packet_accept(lexer, BAD_PACKET);
                 lexer->state = GROUND_STATE;
             }
+            break;
 #endif
-        } else if (JSON_RECOGNIZED == lexer->state) {
+        case JSON_RECOGNIZED:
             if (11 <= inbuflen) {
                 // {"class": }
                 packet_type = JSON_PACKET;
@@ -2803,10 +2830,12 @@ void packet_parse(struct gps_lexer_t *lexer)
             }
             lexer->state = GROUND_STATE;
             acc_dis = ACCEPT;
+            break;
 #ifdef STASH_ENABLE
-        } else if (STASH_RECOGNIZED == lexer->state) {
+        case STASH_RECOGNIZED:
             packet_stash(lexer);
             packet_discard(lexer);
+            break;
 #endif  // STASH_ENABLE
         }
         if (ACCEPT == acc_dis) {
