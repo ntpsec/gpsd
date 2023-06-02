@@ -6,23 +6,30 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include <limits.h>
 
 #include "../include/driver_greis.h"
 
+/* This algorithm is right out of the:
+ *  "GREIS GNSS Receiver External Interface Specification" Version 4.1.00
+ * Section a.1.1 Computing 8-bit checksum
+ */
+
 static inline unsigned char greis_rotate_left(unsigned char val)
 {
-    /* left circular rotation by two bits */
+    // left circular rotation by two bits
     return (val << 2) | (val >> (CHAR_BIT - 2));
 }
 
 unsigned char greis_checksum(const unsigned char *src, int count)
 {
     unsigned char res = 0;
-    while (count--)
+
+    while (count--) {
         res = greis_rotate_left(res) ^ *src++;
+    }
     return greis_rotate_left(res);
 }
 // vim: set expandtab shiftwidth=4
