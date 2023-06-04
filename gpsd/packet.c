@@ -2053,6 +2053,8 @@ void packet_parse(struct gps_lexer_t *lexer)
         unsigned pkt_id;        // native type or ID the message thinks it is
         unsigned data_len;      // What the message says the data length is.
         bool unstash;
+        unsigned char *trailer;
+        unsigned char ck_a, ck_b;  // for ubx check bytes
 
         if (!nextstate(lexer, c)) {
             continue;
@@ -2383,7 +2385,7 @@ void packet_parse(struct gps_lexer_t *lexer)
 
 #ifdef SIRF_ENABLE
         case SIRF_RECOGNIZED:
-            unsigned char *trailer = lexer->inbufptr - 4;
+            trailer = lexer->inbufptr - 4;
 
             crc_expected = (trailer[0] << 8) | trailer[1];
             crc_computed = 0;
@@ -2783,8 +2785,8 @@ void packet_parse(struct gps_lexer_t *lexer)
 #ifdef UBLOX_ENABLE
         case UBX_RECOGNIZED:
             // UBX use a TCP like checksum
-            unsigned char ck_a = (unsigned char)0;
-            unsigned char ck_b = (unsigned char)0;
+            ck_a = (unsigned char)0;
+            ck_b = (unsigned char)0;
 
             GPSD_LOG(LOG_IO, &lexer->errout, "UBX: len %d\n", inbuflen);
             for (idx = 2; idx < (inbuflen - 2); idx++) {
