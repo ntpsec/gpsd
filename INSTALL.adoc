@@ -78,7 +78,7 @@ and with 0660 permissions.
 
 When gpsd drops privileges, its default is to set uid to 'nobody' and
 group to the owning group of the prototype device (the configure
-option gpsd-user=foo will cause gpsd to change to 'foo'
+option gpsd_user=foo will cause gpsd to change to 'foo'
 instead).
 
 If your system has the Linux hotplug facility installed you can skip
