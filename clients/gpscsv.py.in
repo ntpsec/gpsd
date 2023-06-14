@@ -342,6 +342,9 @@ try:
             if 'satellites' not in session.data:
                 continue
             for sat in session.data['satellites']:
+                if 'time' not in session.data:
+                    sys.stderr.write("WARNING: missing time in SKY\n")
+                    continue
                 subreport = {'time': session.data['time']}
                 subreport.update(sat)
                 _do_one_line(subreport)
