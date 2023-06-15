@@ -1,6 +1,6 @@
 = gpsd_json(5)
 :author: Eric S. Raymond
-:date: 27 February 2023
+:date: 14 June 2023
 :email: <esr@thyrsus.com.>
 :keywords: gps, gpsd, JSON, libgps
 :manmanual: GPSD Documentation
@@ -366,34 +366,32 @@ The satellite list objects have the following elements:
 [cols=",,,",options="header",]
 |===
 |Name |Always? |Type |Description
-|PRN |Yes |numeric |PRN ID of the satellite. 1-63 are GNSS satellites,
-64-96 are GLONASS satellites, 100-164 are SBAS satellites
+|PRN |Yes |numeric |PRN ID of the satellite.  See "<<PRNs>>"
 
 |az |No |numeric |Azimuth, degrees from true north.
 
 |el |No |numeric |Elevation in degrees.
 
-|ss |No |numeric |Signal to Noise ratio in dBHz.
-
-|used |Yes |boolean |Used in current solution? (SBAS/WAAS/EGNOS
-satellites may be flagged used if the solution has corrections from
-them, but not all drivers make this information available.)
-
-|gnssid |No |numeric |The GNSS ID, as defined by u-blox, not NMEA.
-0=GPS, 2=Galileo, 3=Beidou, 5=QZSS, 6-GLONASS.
-
-|svid |No |numeric |The satellite ID within its constellation. As
-defined by u-blox, not NMEA).
-
-|sigid |No |numeric |The signal ID of this signal. As defined by
-u-blox, not NMEA. See u-blox doc for details.
-
 |freqid |No |numeric |For GLONASS satellites only: the frequency ID of
 the signal. As defined by u-blox, range 0 to 13. The freqid is the
 frequency slot plus 7.
 
+|gnssid |No |numeric |The GNSS ID.  See "<<PRNs>>"
+
 |health |No |numeric |The health of this satellite. 0 is unknown, 1 is
 OK, and 2 is unhealthy.
+
+|ss |No |numeric |Signal to Noise ratio in dBHz.
+
+|sigid |No |numeric |The signal ID of this signal. See "<<PRNs>>"
+u-blox, not NMEA. See u-blox doc for details.
+
+|svid |No |numeric |The satellite ID (PRN) within its constellation.
+See  "<<PRNs>"
+
+|used |Yes |boolean |Used in current solution? (SBAS/WAAS/EGNOS
+satellites may be flagged used if the solution has corrections from
+them, but not all drivers make this information available.)
 |===
 
 Note that satellite objects do not have a "class" field, as they are
@@ -1194,7 +1192,7 @@ messages. Here is the format:
 |===
 |Name |Type |Description
 |ident |integer |The PRN number of the satellite for which this is
-correction data.
+correction data. See "<<PRNs>"
 
 |udre |integer |User Differential Range Error (0-3). See the table
 following for values.
@@ -1322,7 +1320,7 @@ Here is the format:
 [cols=",,",options="header",]
 |===
 |Name |Type |Description
-|ident |integer |The PRN number of the satellite.
+|ident |integer |The PRN number of the satellite. See "<<PRNs>"
 
 |iodl |bool |True indicates that this information relates to the
 satellite information in an accompanying type 1 or type 9 message.
@@ -1419,9 +1417,11 @@ message:
 [cols=",,",options="header",]
 |===
 |Name |Type |Description
-|status |bool |If True, signals user to expect a type 16 explanatory
-message associated with this station. Probably indicates some sort of
-unusual event.
+|lat |real |Degrees latitude, signed. Positive is N, negative is S.
+
+|lon |real |Degrees longitude, signed. Positive is E, negative is W.
+
+|range |integer |Transmission range in km (1-1024).
 
 |rangeflag |bool |If True, indicates that the estimated range is
 different from that found in the type 7 message (which contains the
@@ -1429,11 +1429,9 @@ beacon's listed range). Generally indicates a range reduction due to
 causes such as poor ionospheric conditions or reduced transmission
 power.
 
-|lat |real |Degrees latitude, signed. Positive is N, negative is S.
-
-|lon |real |Degrees longitude, signed. Positive is E, negative is W.
-
-|range |integer |Transmission range in km (1-1024).
+|status |bool |If True, signals user to expect a type 16 explanatory
+message associated with this station. Probably indicates some sort of
+unusual event.
 |===
 
 This message type replaces message type 3 (Reference Station Parameters)
@@ -1447,9 +1445,9 @@ Here are the payload members of a type 14 (GPS Time of Week) message:
 [cols=",,",options="header",]
 |===
 |Name |Type |Description
-|week |integer |GPS week (0-123).
 |hour |integer |Hour of week (0-167).
 |leapsecs |integer |Leap Seconds (0-63).
+|week |integer |GPS week (0-123).
 |===
 
 Here's an example:
@@ -1479,7 +1477,7 @@ type 9 messages. Here is the format:
 |===
 |Name |Type |Description
 |ident |integer |The PRN number of the satellite for which this is
-correction data.
+correction data. See "<<PRNs>>"
 
 |udre |integer |User Differential Range Error (0-3). See the table
 following for values.
@@ -1570,11 +1568,96 @@ the members of the corresponding JSON object type.
 |Name |Always? |Type |Description
 |class |Yes |string |Fixed: "SUBFRAME"
 |device |Yes |string |Name of the originating device.
+|frame |No |integer |Frame number
 |gnssId |Yes |integer |Constellation of transmitting satellite
+|scaled |Yes |boolean |True is values scaled
 |tSV |Yes |integer |ID of transmitting satellite (Not PRN)
 |TOW17 |No |integer |Type 17 bits of the next GPS Time Of Week
-|frame |No |integer |Frame number
-|scaled |Yes |boolean |True is values scaled
+|===
+
+[id="PRNs"]
+== PRN, GNSS id, SV id, and SIG id
+
+This JSON refers to individual satellites by PRN, and by the combinarion
+of GNSS id and SV id.
+
+Beware.  What most people think of as the PRN is not the PRN that each
+constellation (GPS, GLONASS, BeiDou, etc.) uses in its documentation.
+
+Each constellation numbers its PRNs starting from 1.  GPS reserves all
+PRNs up to 1023.  What most users think of as the PRN is what NMEA
+calls a PRN, which is not the native, standardized, PRN.  NMEA PRNs
+started out as the GPS PRNs, but when other constellations became
+available, GNSS receiver vendors overloaded that NMEA field.  Without
+standardizing, or coordinating, between themselves.  Some receivers use
+different PRN mappings depending on runtime configuration.  Don't expect
+any specificity in an NMEA PRN, there is no consensus meaning.
+
+To leave this mess behind, receiver vendors now refer to each satellite
+by its constellation (GPS, GLONASS, etc.), and its PRN (starting at 1)
+within that constellation.
+
+*gpsd* refers to each constellation by its gnssid, and each satellite
+within that constellation by its native PRN (svid).  Of course there is
+no standardization, or consensus, on these ids, so *gpsd* decided on its
+own.  These are loosely based on the u-blox usage:
+
+.gnssid and svid table
+[cols=",,,",options="header",]
+|===
+|Constellation |Abr |gnssid |svid (native PRN)
+|BeiDou       |BD|3|1-37
+|Galileo      |GA|2|1-36
+|GLONASS      |GL|6|1-32, 255
+|GPS          |GP|0|1-32
+|IMES         |IM|4|1-10
+|NavIC (IRNSS)|IR|7|1-11
+|QZSS         |QZ|5|1-7
+|SBAS         |SB|1|120-158
+|===
+
+Of course the story does not end there.  Modern satellites transmit on
+more than one band (L1, L2, L5, etc.) and using more than one signal
+modulation (C/a, CM, CL. P, etc.).  So a GPS satellellite (gnssid = 0),
+with a native PRN of 3 (svid = 3) may transmitting on L2 and L5 using
+several modulations.  Each of those may be reported individually by your
+receiver, by Gisnal ID (sigid) with it own data on Health, SNR, Used,
+etc.
+
+If you have a multi band receiver, and really want to understand
+its sigids, then prepare to spend a lot of quality time with their
+documentation.  As new receivers appear, with new bands and modulations,
+it is impossible to keep up.  Here is a table of some sigids known to
+*gpsd*:
+
+.sigid table
+[cols=",,",options="header",]
+|===
+|Constellation|sigid| signal name
+|BeiDou| 0|B1I D1
+|| 1|B1I D2
+|| 2|B2I D1
+|| 3|B2I D2
+|| 7|B2a
+|Galileo|  0|E1 C
+|| 1|E1 B
+|| 3|E5 aI
+|| 4|E5 aQ
+|| 5|E5 bl
+|| 6|E5 bQ
+|GLONASS|  0|L1 OF
+|| 2|L2 OF
+|GPS|      0|L1C/A
+|| 3|L2 CL
+|| 4|L2 CM
+|| 6|L5 I
+|| 7|L5 Q
+|IRNSS| ??|
+|QZSS| 0|L1C/A
+|| 4|L2 CM
+|| 5|L2 CL
+|SBAS|     0|L1C/A
+|| ?|L5I
 |===
 
 == READING
@@ -1584,7 +1667,7 @@ colorize, your JSON with <<jq>> to make reading easier.  Using *jq*
 ito pretty pring a JSON file can be as simple as:
 
 ----
-$ jq .  GPSD.json 
+$ jq .  GPSD.json
 ----
 
 To grab 10 seconds of live *gpsd* JSON, and pretty print it:
