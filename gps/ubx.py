@@ -2398,7 +2398,7 @@ Deprecated in protVer 34.00
         """UBX-CFG-DGNSS decode, DGNSS configuration"""
 
         u = struct.unpack_from('<BBBB', buf, 0)
-        s = (" dgnssMode %u (%s) reserved1 %u %u %u" % u
+        s = (" dgnssMode %u (%s) reserved1 %u %u %u" %
              (u[0], index_s(u[0], self.cfg_dgnss_mode), u[1], u[2], u[3]))
         return s
 
