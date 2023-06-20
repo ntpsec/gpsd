@@ -138,6 +138,12 @@ size_t strnlen(const char *s, size_t maxlen);
 // getting scons to test for sincos() and pass -Werror not possible
 void gpsd_sincos(double x, double *sinp, double *cosp);
 
+#ifdef __GNU__ /* building on GNU/Hurd */
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+#endif
+
 # ifdef __cplusplus
 }
 # endif
