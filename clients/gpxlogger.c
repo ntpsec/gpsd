@@ -379,29 +379,12 @@ int main(int argc, char **argv)
             break;
        case 'f':       // Output file name.
             {
-                char   *fname = NULL;
+                char   fname[PATH_MAX];
                 time_t  t;
-                size_t  s = 0;
-                size_t fnamesize = strnlen(optarg, PATH_MAX) + 128;
 
-                t = time(NULL);
-                while (0 == s) {
-                    char *newfname = realloc(fname, fnamesize);
-
-                    if (NULL == newfname) {
-                        syslog(LOG_ERR, "realloc failed.");
-                        goto bailout;
-                    } else {
-                        fname = newfname;
-                    }
-                    s = strftime(fname, fnamesize-1, optarg, localtime(&t));
-                    if (!s) {
-                        /* expanded filename did not fit in string, try 
-                         * a bigger string */
-                        fnamesize += 1024;
-                    }
-                }
-                fname[s] = '\0';
+                size_t s = strftime(fname, sizeof(fname) - 11, optarg,
+                                    localtime(&t));
+                fname[s] = '\0';      // paranoia
                 gpxlogfile = fopen(fname, "w");
                 if (NULL == gpxlogfile) {
                     syslog(LOG_ERR,
@@ -409,10 +392,8 @@ int main(int argc, char **argv)
                            fname, strerror(errno));
                     gpxlogfile = stdout;
                 }
-            bailout:
-                free(fname);
-                break;
             }
+            break;
         case 'F':       // input file name.
             file_in = strdup(optarg);
             break;
