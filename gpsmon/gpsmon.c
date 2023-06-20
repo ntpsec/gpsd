@@ -212,14 +212,18 @@ static void cond_hexdump(char *buf2, size_t len2,
 
 void toff_update(WINDOW *win, int y, int x)
 {
-    assert(win != NULL);
+    if (NULL == win) {
+        return;
+    }
     if (time_offset.real.tv_sec != 0) {
         // NOTE: can not use double here due to precision requirements
         struct timespec timedelta;
         int i, ymax, xmax;
 
         getmaxyx(win, ymax, xmax);
-        assert(ymax > 0);  // squash a compiler warning
+        if (0 > ymax) {
+            ymax = 0;  // squash a compiler warning
+        }
         (void)wmove(win, y, x);
         /*
          * The magic number 18 shortening the field works because
@@ -249,14 +253,18 @@ void pps_update(WINDOW *win, int y, int x)
 {
     struct timedelta_t ppstimes;
 
-    assert(win != NULL);
+    if (NULL == win) {
+        return;
+    }
     if (0 < pps_thread_ppsout(&session.pps_thread, &ppstimes)) {
         // NOTE: can not use double here due to precision requirements
         struct timespec timedelta;
         int i, ymax, xmax;
 
         getmaxyx(win, ymax, xmax);
-        assert(ymax > 0);  // squash a compiler warning
+        if (0 > ymax) {
+            ymax = 0;  // squash a compiler warning
+        }
         (void)wmove(win, y, x);
         // see toff_update() for explanation of the magic number
         for (i = 0; i < 18 && x + i < xmax - 1; i++) {
@@ -287,10 +295,17 @@ void monitor_fixframe(WINDOW * win)
 {
     int ymax, xmax, ycur, xcur;
 
-    assert(win != NULL);
+    if (NULL == win) {
+        return;
+    }
     getyx(win, ycur, xcur);
     getmaxyx(win, ymax, xmax);
-    assert(xcur > -1 && ymax > 0);  // squash a compiler warning
+    if (0 > xcur) {
+        xcur = 0;  // squash a compiler warning
+    }
+    if (0 > ymax) {
+        ymax = 0;  // squash a compiler warning
+    }
     (void)mvwaddch(win, ycur, xmax - 1, ACS_VLINE);
 }
 
@@ -355,7 +370,9 @@ static void announce_log(const char *fmt, ...)
 
 static void monitor_vcomplain(const char *fmt, va_list ap)
 {
-    assert(cmdwin!=NULL);
+    if (NULL == cmdwin) {
+        return;
+    }
     (void)wmove(cmdwin, 0, (int)promptlen);
     (void)wclrtoeol(cmdwin);
     (void)wattrset(cmdwin, A_BOLD);
@@ -645,6 +662,7 @@ static char *curses_get_command(void)
         NULL != active &&
         NULL != (*active)->command) {
         int status = (*active)->command(line);
+
         if (COMMAND_TERMINATE == status) {
             bailout = TERM_QUIT;
             return NULL;
@@ -652,7 +670,7 @@ static char *curses_get_command(void)
         if (COMMAND_MATCH == status ) {
             return NULL;
         }
-        // FIXME: assdert()s must die
+        // FIXME: assert()s must die
         assert(status == COMMAND_UNKNOWN);
     }
 
