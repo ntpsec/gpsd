@@ -1054,7 +1054,7 @@ static gps_mask_t sirf_msg_67_16(struct gps_device_t *session,
         sat_info = getbeu16(buf, offset);
         if (0 == sat_info) {
             // empty slot, ignore
-            continue;;
+            continue;
         }
 
         /* 0 = GPS/QZSS

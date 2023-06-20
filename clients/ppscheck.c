@@ -562,7 +562,7 @@ int main(int argc, char *argv[])
 
     atexit(myexit);
 
-    device = realpath(argv[optind], device_real);;
+    device = realpath(argv[optind], device_real);
     if (NULL == device) {
         (void)printf("ERROR: realpath(%s) failed: %.80s(%d)\n",
                      argv[optind], strerror(errno), errno);

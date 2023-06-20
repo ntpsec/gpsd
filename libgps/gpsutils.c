@@ -695,7 +695,7 @@ timespec_t iso8601_to_timespec(const char *isotime)
      * timezone database to get it right.
      */
     ret.tv_sec = mkgmtime(&tm);
-    ret.tv_nsec = usec * 1e9;;
+    ret.tv_nsec = usec * 1e9;
 #else
     double usec = 0;
 
@@ -706,7 +706,7 @@ timespec_t iso8601_to_timespec(const char *isotime)
         usec = sl[1].toInt() / pow(10., (double)sl[1].size());
     }
     ret.tv_sec = d.toTime_t();
-    ret.tv_nsec = usec * 1e9;;
+    ret.tv_nsec = usec * 1e9;
 #endif
 #endif  // __clang_analyzer__
 

@@ -671,7 +671,7 @@ static gps_mask_t
 ubx_msg_hnr_att(struct gps_device_t *session, unsigned char *buf,
                 size_t data_len)
 {
-    uint8_t version;;
+    uint8_t version;
     int64_t iTOW;
     timespec_t ts_tow;
     gps_mask_t mask = 0;
@@ -722,7 +722,7 @@ static gps_mask_t
 ubx_msg_hnr_ins(struct gps_device_t *session, unsigned char *buf,
                 size_t data_len)
 {
-    uint8_t version;;
+    uint8_t version;
     uint32_t bitfield0;
     gps_mask_t mask = 0;
     int64_t iTOW;
@@ -1856,7 +1856,7 @@ ubx_msg_nav_relposned(struct gps_device_t *session, unsigned char *buf,
 {
     int version;
     unsigned flags;
-    double accN = NAN, accE = NAN, accD = NAN, accL = NAN, accH = NAN;;
+    double accN = NAN, accE = NAN, accD = NAN, accL = NAN, accH = NAN;
     gps_mask_t mask = 0;
 
     if (40 > data_len) {
@@ -4049,7 +4049,7 @@ static gps_mask_t ubx_parse(struct gps_device_t * session, unsigned char *buf,
                 session->driver.ubx.end_msgid = session->driver.ubx.last_msgid;
             }
             session->driver.ubx.last_iTOW = session->driver.ubx.iTOW;
-            mask |= CLEAR_IS;;
+            mask |= CLEAR_IS;
         }
 
         session->driver.ubx.last_msgid = msgid;

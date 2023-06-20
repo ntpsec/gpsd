@@ -1180,7 +1180,7 @@ static gps_mask_t navcom_parse_input(struct gps_device_t *session)
                           session->lexer.outbuflen);
     }
     if (NMEA_PACKET == session->lexer.type) {
-        return nmea_parse((char *)session->lexer.outbuffer, session);;
+        return nmea_parse((char *)session->lexer.outbuffer, session);
     }
     return 0;
 }

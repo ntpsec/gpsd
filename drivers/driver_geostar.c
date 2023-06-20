@@ -504,7 +504,7 @@ static gps_mask_t geostar_analyze(struct gps_device_t *session)
 static gps_mask_t geostar_parse_input(struct gps_device_t *session)
 {
     if (GEOSTAR_PACKET == session->lexer.type) {
-        return geostar_analyze(session);;
+        return geostar_analyze(session);
     }   // else
     return 0;
 }

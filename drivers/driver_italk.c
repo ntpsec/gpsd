@@ -177,7 +177,7 @@ static gps_mask_t decode_itk_prnstatus(struct gps_device_t *session,
         }
         session->gpsdata.satellites_visible = (int)st;
         session->gpsdata.satellites_used = (int)nsv;
-        mask = USED_IS | SATELLITE_SET;;
+        mask = USED_IS | SATELLITE_SET;
 
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "PRN_STATUS: time=%s visible=%d used=%d "
@@ -425,7 +425,7 @@ static gps_mask_t italk_parse_input(struct gps_device_t *session)
 {
     if (ITALK_PACKET == session->lexer.type) {
         return italk_parse(session, session->lexer.outbuffer,
-                           session->lexer.outbuflen);;
+                           session->lexer.outbuflen);
     }
     if (NMEA_PACKET == session->lexer.type) {
         return nmea_parse((char *)session->lexer.outbuffer, session);

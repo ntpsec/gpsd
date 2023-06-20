@@ -483,7 +483,7 @@ static gps_mask_t superstar2_parse_input(struct gps_device_t *session)
 {
     if (SUPERSTAR2_PACKET == session->lexer.type) {
         return superstar2_dispatch(session, session->lexer.outbuffer,
-                                   session->lexer.length);;
+                                   session->lexer.length);
     }
     if (NMEA_PACKET == session->lexer.type) {
         return nmea_parse((char *)session->lexer.outbuffer, session);

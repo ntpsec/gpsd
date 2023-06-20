@@ -401,7 +401,7 @@ int main(int argc, char **argv)
                         fnamesize += 1024;
                     }
                 }
-                fname[s] = '\0';;
+                fname[s] = '\0';
                 gpxlogfile = fopen(fname, "w");
                 if (NULL == gpxlogfile) {
                     syslog(LOG_ERR,

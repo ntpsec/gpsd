@@ -1325,7 +1325,7 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
     case 0:
         word_desc = "Spare Word";
         subp->orbit.sv = tSVID;
-        tmp = (words[0] >> 22) & BITMASK(2);;
+        tmp = (words[0] >> 22) & BITMASK(2);
         if (2 == tmp) {
             // valid time
             subp->WN = (words[3] >> 18) & BITMASK(12);        // WN

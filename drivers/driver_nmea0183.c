@@ -589,7 +589,7 @@ static int nmeaid_to_prn(char *talker, int nmea_satnum,
 
             // put it at 193 to 199 where NMEA 4.11 wants it
             // huh?  space for only 7?
-            nmea2_prn = 192 + *ubx_svid;;
+            nmea2_prn = 192 + *ubx_svid;
             break;
         case 6:
             //  6 - NavIC (IRNSS)    1-15

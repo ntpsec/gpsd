@@ -514,7 +514,7 @@ static int get_edge_tiocmiwait(volatile struct pps_thread_t *thread_context,
                 "TPPS:%s ioctl(TIOCMIWAIT) failed: %s(%d)\n",
                 thread_context->devicename,
                 pps_strerror_r(errno, errbuf, sizeof(errbuf)), errno);
-        return -1;;
+        return -1;
     }
 
     /*
@@ -537,7 +537,7 @@ static int get_edge_tiocmiwait(volatile struct pps_thread_t *thread_context,
                     "TPPS:%s clock_gettime() failed: %s(%d)\n",
                     thread_context->devicename,
                     pps_strerror_r(errno, errbuf, sizeof(errbuf)), errno);
-        return -1;;
+        return -1;
     }
 
     /* got the edge, got the time just after the edge, now quickly
