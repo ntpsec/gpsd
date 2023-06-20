@@ -324,18 +324,6 @@ static void gpsmon_report(const char *buf)
         (void)fputs(buf, logfile);
 }
 
-static void packet_vlog(char *buf, size_t len, const char *fmt, va_list ap)
-{
-    char buf2[BUFSIZ];
-
-    gps_visibilize(buf2, sizeof(buf2), buf, len);
-
-    report_lock();
-    (void)vsnprintf(buf2 + strnlen(buf2, sizeof(buf2)), len, fmt, ap);
-    gpsmon_report(buf2);
-    report_unlock();
-}
-
 static void announce_log(const char *fmt, ...)
 {
     char buf[BUFSIZ];
@@ -664,17 +652,6 @@ static char *curses_get_command(void)
  * by curses_active and have ttylike alternatives.
  *
  ******************************************************************************/
-
-static void packet_log(const char *fmt, ...)
-{
-    char buf[BUFSIZ];
-    va_list ap;
-
-    buf[0] = '\0';
-    va_start(ap, fmt);
-    packet_vlog(buf, sizeof(buf), fmt, ap);
-    va_end(ap);
-}
 
 static ssize_t gpsmon_serial_write(struct gps_device_t *session,
                    const char *buf,
@@ -1145,7 +1122,9 @@ static bool do_command(const char *line)
 
 static char *pps_report(volatile struct pps_thread_t *pps_thread UNUSED,
                         struct timedelta_t *td UNUSED) {
-    packet_log(PPSBAR);
+    report_lock();
+    gpsmon_report(PPSBAR);
+    report_unlock();
     return "gpsmon";
 }
 
