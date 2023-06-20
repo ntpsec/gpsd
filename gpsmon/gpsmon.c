@@ -532,11 +532,12 @@ static bool switch_type(const struct gps_type_t *devtype)
 
             leftover = LINES - 1 - (*active)->min_y;
             report_lock();
-            if (leftover <= 0) {
-                if (packetwin != NULL)
+            if (0 >= leftover) {
+                if (NULL != packetwin) {
                     (void)delwin(packetwin);
+                }
                 packetwin = NULL;
-            } else if (packetwin == NULL) {
+            } else if (NULL == packetwin) {
                 packetwin = newwin(leftover, COLS, (*active)->min_y + 1, 0);
                 (void)scrollok(packetwin, true);
                 (void)wsetscrreg(packetwin, 0, leftover - 1);
@@ -678,22 +679,23 @@ static ssize_t gpsmon_serial_write(struct gps_device_t *session,
 
 bool monitor_control_send( unsigned char *buf, size_t len)
 {
-    if (!serial)
-        return false;
-    else {
-        ssize_t st;
+    ssize_t st;
 
-        context.readonly = false;
-        st = session.device_type->control_send(&session, (char *)buf, len);
-        context.readonly = true;
-        return (st != -1);
+    if (!serial) {
+        return false;
     }
+
+    context.readonly = false;
+    st = session.device_type->control_send(&session, (char *)buf, len);
+    context.readonly = true;
+    return (st != -1);
 }
 
 static bool monitor_raw_send( unsigned char *buf, size_t len)
 {
     ssize_t st = gpsd_write(&session, (char *)buf, len);
-    return (st > 0 && (size_t) st == len);
+    return (0 < st &&
+            (size_t)st == len);
 }
 
 static void complain(const char *fmt, ...)
@@ -701,9 +703,9 @@ static void complain(const char *fmt, ...)
     va_list ap;
     va_start(ap, fmt);
 
-    if (curses_active)
+    if (curses_active) {
         monitor_vcomplain(fmt, ap);
-    else {
+    } else {
         (void)vfprintf(stderr, fmt, ap);
         (void)fputc('\n', stderr);
     }
@@ -727,76 +729,77 @@ static void gpsmon_hook(struct gps_device_t *device, gps_mask_t changed UNUSED)
     char ts_buf1[TIMESPEC_LEN];
     char ts_buf2[TIMESPEC_LEN];
 
-    if (!serial && str_starts_with((char*)device->lexer.outbuffer,
-                                   "{\"class\":\"TOFF\",")) {
+    if (!serial &&
+        str_starts_with((char*)device->lexer.outbuffer,
+                        "{\"class\":\"TOFF\",")) {
         const char *end = NULL;
         int status = json_toff_read((const char *)device->lexer.outbuffer,
                                    &session.gpsdata,
                                    &end);
-        if (status != 0) {
+
+        if (0 != status) {
             complain("Ill-formed TOFF packet: %d (%s)", status,
                      json_error_string(status));
             return;
-        } else {
-            if (!curses_active)
-                (void)fprintf(stderr, "TOFF=%s real=%s\n",
-                              timespec_str(&session.gpsdata.toff.clock,
-                                           ts_buf1, sizeof(ts_buf1)),
-                              timespec_str(&session.gpsdata.toff.real,
-                                           ts_buf2, sizeof(ts_buf2)));
-            time_offset = session.gpsdata.toff;
-            return;
         }
+        if (!curses_active) {
+            (void)fprintf(stderr, "TOFF=%s real=%s\n",
+                          timespec_str(&session.gpsdata.toff.clock,
+                                       ts_buf1, sizeof(ts_buf1)),
+                          timespec_str(&session.gpsdata.toff.real,
+                                       ts_buf2, sizeof(ts_buf2)));
+        }
+        time_offset = session.gpsdata.toff;
+        return;
     } else if (!serial &&
                str_starts_with((char*)device->lexer.outbuffer,
                                "{\"class\":\"PPS\",")) {
         const char *end = NULL;
         struct gps_data_t noclobber;
+        struct timespec timedelta;
+        char timedelta_str[TIMESPEC_LEN];
         int status = json_pps_read((const char *)device->lexer.outbuffer,
                                    &noclobber,
                                    &end);
-        if (status != 0) {
+
+        if (0 != status) {
             complain("Ill-formed PPS packet: %d (%s)", status,
                      json_error_string(status));
             return;
-        } else {
-            struct timespec timedelta;
-            char timedelta_str[TIMESPEC_LEN];
-
-            TS_SUB( &timedelta, &noclobber.pps.clock, &noclobber.pps.real);
-            timespec_str(&timedelta, timedelta_str, sizeof(timedelta_str));
-
-            if (!curses_active) {
-                char pps_clock_str[TIMESPEC_LEN];
-                char pps_real_str[TIMESPEC_LEN];
-
-                timespec_str(&noclobber.pps.clock, pps_clock_str,
-                             sizeof(pps_clock_str));
-                timespec_str(&noclobber.pps.real, pps_real_str,
-                             sizeof(pps_real_str));
-
-                (void)fprintf(stderr,
-                              "PPS=%.20s clock=%.20s offset=%.20s\n",
-                              pps_clock_str,
-                              pps_real_str,
-                              timedelta_str);
-            }
-
-            (void)snprintf(buf, sizeof(buf),
-                        "------------------- PPS offset: %.20s ------\n",
-                        timedelta_str);
-// FIXME:  Decouple this from the pps_thread code.
-            /*
-             * In direct mode this would be a bad idea, but we're not actually
-             * watching for handshake events on a spawned thread here.
-             */
-            // coverity[missing_lock]
-            session.pps_thread.pps_out = noclobber.pps;
-            // coverity[missing_lock]
-            session.pps_thread.ppsout_count++;
         }
-    }
-    else
+
+        TS_SUB( &timedelta, &noclobber.pps.clock, &noclobber.pps.real);
+        timespec_str(&timedelta, timedelta_str, sizeof(timedelta_str));
+
+        if (!curses_active) {
+            char pps_clock_str[TIMESPEC_LEN];
+            char pps_real_str[TIMESPEC_LEN];
+
+            timespec_str(&noclobber.pps.clock, pps_clock_str,
+                         sizeof(pps_clock_str));
+            timespec_str(&noclobber.pps.real, pps_real_str,
+                         sizeof(pps_real_str));
+
+            (void)fprintf(stderr,
+                          "PPS=%.20s clock=%.20s offset=%.20s\n",
+                          pps_clock_str,
+                          pps_real_str,
+                          timedelta_str);
+        }
+
+        (void)snprintf(buf, sizeof(buf),
+                      "------------------- PPS offset: %.20s ------\n",
+                      timedelta_str);
+// FIXME:  Decouple this from the pps_thread code.
+        /*
+         * In direct mode this would be a bad idea, but we're not actually
+         * watching for handshake events on a spawned thread here.
+         */
+        // coverity[missing_lock]
+        session.pps_thread.pps_out = noclobber.pps;
+        // coverity[missing_lock]
+        session.pps_thread.ppsout_count++;
+    } else
 #endif // SOCKET_EXPORT_ENABLE && PPS_DISPLAY_ENABLE
     {
         size_t blen;
@@ -829,7 +832,7 @@ static void gpsmon_hook(struct gps_device_t *device, gps_mask_t changed UNUSED)
     if (!curses_active) {
         (void)fputs(buf, stdout);
     } else {
-        if (packetwin != NULL) {
+        if (NULL != packetwin) {
             (void)waddstr(packetwin, buf);
             (void)wnoutrefresh(packetwin);
         }
@@ -891,8 +894,9 @@ static bool do_command(const char *line)
                 context.readonly = false;
                 if (switcher->rate_switcher(&session, rate)) {
                     announce_log("[Rate switcher called.]");
-                } else
+                } else {
                     complain("Rate not supported.");
+                }
                 context.readonly = true;
                 // *INDENT-ON*
             } else {
@@ -1248,30 +1252,35 @@ int main(int argc, char **argv)
             for (active = monitor_objects; *active; active++) {
                 (void)fputs("i l q ^S ^Q", stdout);
                 (void)fputc(' ', stdout);
-                if ((*active)->driver->mode_switcher != NULL)
+                if (NULL != (*active)->driver->mode_switcher) {
                     (void)fputc('n', stdout);
-                else
+                } else {
                     (void)fputc(' ', stdout);
+                }
                 (void)fputc(' ', stdout);
-                if ((*active)->driver->speed_switcher != NULL)
+                if (NULL != (*active)->driver->speed_switcher) {
                     (void)fputc('s', stdout);
-                else
+                } else {
                     (void)fputc(' ', stdout);
+                }
                 (void)fputc(' ', stdout);
-                if ((*active)->driver->rate_switcher != NULL)
+                if (NULL != (*active)->driver->rate_switcher) {
                     (void)fputc('x', stdout);
-                else
+                } else {
                     (void)fputc(' ', stdout);
+                }
                 (void)fputc(' ', stdout);
-                if ((*active)->driver->control_send != NULL)
+                if (NULL != (*active)->driver->control_send) {
                     (void)fputc('x', stdout);
-                else
+                } else {
                     (void)fputc(' ', stdout);
+                }
                 (void)fputc(' ', stdout);
-                if ((*active)->command != NULL)
+                if (NULL != (*active)->command) {
                     (void)fputc('+', stdout);
-                else
+                } else {
                     (void)fputc(' ', stdout);
+                }
                 (void)fputs("\t", stdout);
                 (void)fputs((*active)->driver->type_name, stdout);
                 (void)fputc('\n', stdout);
@@ -1279,7 +1288,7 @@ int main(int argc, char **argv)
             exit(EXIT_SUCCESS);
         case 'l':               // enable logging at startup
             logfile = fopen(optarg, "w");
-            if (logfile == NULL) {
+            if (NULL == logfile) {
                 (void)fprintf(stderr, "Couldn't open logfile for writing.\n");
                 exit(EXIT_FAILURE);
             }
@@ -1290,17 +1299,17 @@ int main(int argc, char **argv)
         case 't':
             fallback = NULL;
             for (active = monitor_objects; *active; active++) {
-                if (str_starts_with((*active)->driver->type_name, optarg))
-                {
+                if (str_starts_with((*active)->driver->type_name, optarg)) {
                     fallback = (*active)->driver;
                     matches++;
                 }
             }
-            if (matches > 1) {
-                (void)fprintf(stderr, "-t option matched more than one driver.\n");
+            if (1 < matches) {
+                (void)fprintf(stderr,
+                              "-t option matched more than one driver.\n");
                 exit(EXIT_FAILURE);
             }
-            else if (matches == 0) {
+            if (0 == matches) {
                 (void)fprintf(stderr, "-t option didn't match any driver.\n");
                 exit(EXIT_FAILURE);
             }
@@ -1344,24 +1353,24 @@ int main(int argc, char **argv)
                            sizeof(session.gpsdata.dev.path));
         }
     } else {
-        if (strstr(source.server, "//") == 0)
+        if (0 == strstr(source.server, "//")) {
             (void) strlcpy(session.gpsdata.dev.path,
                            "tcp://",
                            sizeof(session.gpsdata.dev.path));
-        else
+        } else {
             session.gpsdata.dev.path[0] = '\0';
+        }
         str_appendf(session.gpsdata.dev.path, sizeof(session.gpsdata.dev.path),
                        "%s:%s", source.server, source.port);
     }
 
     activated = gpsd_activate(&session, O_PROBEONLY);
-    if ( 0 > activated ) {
-        if ( PLACEHOLDING_FD == activated ) {
+    if (0 > activated) {
+        if (PLACEHOLDING_FD == activated) {
                 (void)fputs("gpsmon:ERROR: PPS device unsupported\n", stderr);
         }
         exit(EXIT_FAILURE);
     }
-
 
     if (serial) {
         // this guard suppresses a warning on Bluetooth devices
@@ -1369,7 +1378,7 @@ int main(int argc, char **argv)
             SOURCE_ACM == session.sourcetype ||
             SOURCE_USB == session.sourcetype ) {
             session.pps_thread.report_hook = pps_report;
-            #ifdef MAGIC_HAT_ENABLE
+#ifdef MAGIC_HAT_ENABLE
             /*
              * The HAT kludge. If we're using the HAT GPS on a
              * Raspberry Pi or a workalike like the ODROIDC2, and
@@ -1379,14 +1388,15 @@ int main(int argc, char **argv)
             if (0 == strcmp(session.pps_thread.devicename, MAGIC_HAT_GPS) ||
                 0 == strcmp(session.pps_thread.devicename, MAGIC_LINK_GPS)) {
                 const char *first_pps = pps_get_first();
+
                 if (0 == access(first_pps, R_OK | W_OK)) {
                         session.pps_thread.devicename = first_pps;
                 }
             }
-            #endif  // MAGIC_HAT_ENABLE
+#endif  // MAGIC_HAT_ENABLE
             pps_thread_activate(&session.pps_thread);
         }
-    } else if (source.device != NULL) {
+    } else if (NULL != source.device) {
         (void)gps_send(&session.gpsdata,
                        nmea ? WATCHNMEADEVICE : WATCHRAWDEVICE, source.device);
     } else {
