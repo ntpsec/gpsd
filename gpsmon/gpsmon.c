@@ -189,11 +189,11 @@ static void cond_hexdump(char *buf2, size_t len2,
             } else {
                 if (TEXTUAL_PACKET_TYPE(session.lexer.type)) {
                     if (i == len - 1 &&
-                        buf[i] == '\n') {
+                        '\n' == buf[i]) {
                         continue;
                     }
                     if (i == len - 2 &&
-                        buf[i] == '\r') {
+                        '\r' == buf[i]) {
                         continue;
                     }
                 }
@@ -204,19 +204,20 @@ static void cond_hexdump(char *buf2, size_t len2,
         }
     } else {
         buf2[0] = '\0';
-        for (i = 0; i < len; i++)
+        for (i = 0; i < len; i++) {
             str_appendf(buf2, len2, "%02x", (unsigned int)(buf[i] & 0xff));
+        }
     }
 }
 
 void toff_update(WINDOW *win, int y, int x)
 {
     assert(win != NULL);
-    if (time_offset.real.tv_sec != 0)
-    {
+    if (time_offset.real.tv_sec != 0) {
         // NOTE: can not use double here due to precision requirements
         struct timespec timedelta;
         int i, ymax, xmax;
+
         getmaxyx(win, ymax, xmax);
         assert(ymax > 0);  // squash a compiler warning
         (void)wmove(win, y, x);
@@ -226,11 +227,12 @@ void toff_update(WINDOW *win, int y, int x)
          * rather than 10 (because we don't print values of
          * 86400 seconds or greater in numerical form).
          */
-        for (i = 0; i < 18 && x + i < xmax - 1; i++)
+        for (i = 0; i < 18 && x + i < xmax - 1; i++) {
             (void)waddch(win, ' ');
+        }
         TS_SUB(&timedelta, &time_offset.clock, &time_offset.real);
         // (long long) for 32-bit CPU with 64-bit time_t
-        if ( 86400 < llabs(timedelta.tv_sec) ) {
+        if (86400 < llabs(timedelta.tv_sec)) {
             // more than one day off, overflow
             // need a bigger field to show it
             (void)mvwaddstr(win, y, x, "> 1 day");
@@ -248,19 +250,21 @@ void pps_update(WINDOW *win, int y, int x)
     struct timedelta_t ppstimes;
 
     assert(win != NULL);
-    if (pps_thread_ppsout(&session.pps_thread, &ppstimes) > 0) {
+    if (0 < pps_thread_ppsout(&session.pps_thread, &ppstimes)) {
         // NOTE: can not use double here due to precision requirements
         struct timespec timedelta;
         int i, ymax, xmax;
+
         getmaxyx(win, ymax, xmax);
         assert(ymax > 0);  // squash a compiler warning
         (void)wmove(win, y, x);
         // see toff_update() for explanation of the magic number
-        for (i = 0; i < 18 && x + i < xmax - 1; i++)
+        for (i = 0; i < 18 && x + i < xmax - 1; i++) {
             (void)waddch(win, ' ');
+        }
         TS_SUB( &timedelta, &ppstimes.clock, &ppstimes.real);
         // (long long) for 32-bit CPU with 64-bit time_t
-        if ( 86400 < llabs(timedelta.tv_sec) ) {
+        if (86400 < llabs(timedelta.tv_sec)) {
             // more than one day off, overflow
             // need a bigger field to show it
             (void)mvwaddstr(win, y, x, "> 1 day");
@@ -292,8 +296,9 @@ void monitor_fixframe(WINDOW * win)
 
 static void packet_dump(const char *buf, size_t buflen)
 {
-    if (packetwin != NULL) {
+    if (NULL != packetwin) {
         char buf2[MAX_PACKET_LENGTH * 2];
+
         cond_hexdump(buf2, buflen * 2, buf, buflen);
         (void)waddstr(packetwin, buf2);
         (void)waddch(packetwin, (chtype)'\n');
@@ -302,7 +307,7 @@ static void packet_dump(const char *buf, size_t buflen)
 
 static void monitor_dump_send(const char *buf, size_t len)
 {
-    if (packetwin != NULL) {
+    if (NULL != packetwin) {
         report_lock();
         (void)wattrset(packetwin, A_BOLD);
         (void)wprintw(packetwin, ">>>");
@@ -316,12 +321,14 @@ static void monitor_dump_send(const char *buf, size_t len)
 static void gpsmon_report(const char *buf)
 {
     // report locking is left to caller
-    if (!curses_active)
+    if (!curses_active) {
         (void)fputs(buf, stdout);
-    else if (packetwin != NULL)
+    } else if (NULL != packetwin) {
         (void)waddstr(packetwin, buf);
-    if (logfile != NULL)
+    }
+    if (NULL != logfile) {
         (void)fputs(buf, logfile);
+    }
 }
 
 static void announce_log(const char *fmt, ...)
@@ -341,7 +348,7 @@ static void announce_log(const char *fmt, ...)
         (void)wprintw(packetwin, "\n");
         report_unlock();
    }
-   if (logfile != NULL) {
+   if (NULL != logfile) {
        (void)fprintf(logfile, ">>>%s\n", buf);
    }
 }
@@ -368,6 +375,7 @@ static void monitor_vcomplain(const char *fmt, va_list ap)
 void monitor_complain(const char *fmt, ...)
 {
     va_list ap;
+
     va_start(ap, fmt);
     monitor_vcomplain(fmt, ap);
     va_end(ap);
@@ -375,8 +383,9 @@ void monitor_complain(const char *fmt, ...)
 
 void monitor_log(const char *fmt, ...)
 {
-    if (packetwin != NULL) {
+    if (NULL != packetwin) {
         va_list ap;
+
         report_lock();
         va_start(ap, fmt);
         (void)vw_printw(packetwin, fmt, ap);
@@ -389,7 +398,7 @@ static const char *promptgen(void)
 {
     static char buf[sizeof(session.gpsdata.dev.path) + HOST_NAME_MAX + 20];
 
-    if (serial)
+    if (serial) {
         (void)snprintf(buf, sizeof(buf),
                        "%s:%s %u %u%c%u",
                        hostname,
@@ -398,9 +407,9 @@ static const char *promptgen(void)
                        9 - session.gpsdata.dev.stopbits,
                        session.gpsdata.dev.parity,
                        session.gpsdata.dev.stopbits);
-    else {
+    } else {
         (void)strlcpy(buf, session.gpsdata.dev.path, sizeof(buf));
-        if (source.device != NULL) {
+        if (NULL != source.device) {
             (void) strlcat(buf, ":", sizeof(buf));
             (void) strlcat(buf, source.device, sizeof(buf));
         }
@@ -485,32 +494,37 @@ static bool switch_type(const struct gps_type_t *devtype)
     const struct monitor_object_t **trial, **newobject;
     newobject = NULL;
     for (trial = monitor_objects; *trial; trial++) {
-        if (strcmp((*trial)->driver->type_name, devtype->type_name)==0) {
+        if (0 == strcmp((*trial)->driver->type_name, devtype->type_name)) {
             newobject = trial;
             break;
         }
     }
     if (newobject) {
-        if (LINES < (*newobject)->min_y + 1 || COLS < (*newobject)->min_x) {
+        if (LINES < (*newobject)->min_y + 1 ||
+            COLS < (*newobject)->min_x) {
             monitor_complain("%s requires %dx%d screen",
                              (*newobject)->driver->type_name,
                              (*newobject)->min_x, (*newobject)->min_y + 1);
         } else {
             int leftover;
 
-            if (active != NULL) {
-                if ((*active)->wrap != NULL)
+            if (NULL != active) {
+                if (NULL != (*active)->wrap) {
                     (*active)->wrap();
+                }
                 (void)delwin(devicewin);
             }
             active = newobject;
-            if (devicewin)
+            if (devicewin) {
                 delwin(devicewin);
+            }
             devicewin = newwin((*active)->min_y, (*active)->min_x, 1, 0);
             // screen might have JSON on it from the init sequence
             (void)clearok(stdscr, true);
             (void)clear();
-            if ((devicewin == NULL) || ((*active)->initialize != NULL && !(*active)->initialize())) {
+            if (NULL == devicewin ||
+                (NULL != (*active)->initialize &&
+                 !(*active)->initialize())) {
                 monitor_complain("Internal initialization failure - screen "
                                  "must be at least 80x24. Aborting.");
                 return false;
