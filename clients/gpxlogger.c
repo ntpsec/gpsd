@@ -385,12 +385,16 @@ int main(int argc, char **argv)
                 size_t s = strftime(fname, sizeof(fname) - 11, optarg,
                                     localtime(&t));
                 fname[s] = '\0';      // paranoia
-                gpxlogfile = fopen(fname, "w");
-                if (NULL == gpxlogfile) {
-                    syslog(LOG_ERR,
-                           "Failed to open %s: %s, logging to stdout.",
-                           fname, strerror(errno));
-                    gpxlogfile = stdout;
+                if (0 < s) {
+                    gpxlogfile = fopen(fname, "w");
+                    if (NULL == gpxlogfile) {
+                        syslog(LOG_ERR,
+                               "Failed to open %s: %s, logging to stdout.",
+                               fname, strerror(errno));
+                        gpxlogfile = stdout;
+                    }
+                } else {
+                    syslog(LOG_ERR, "strftime() failed, logging to stdout.");
                 }
             }
             break;
