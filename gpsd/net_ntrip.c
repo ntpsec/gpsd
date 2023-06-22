@@ -191,6 +191,10 @@ static void ntrip_str_parse(char *str, size_t len,
             GPSD_LOG(LOG_WARN, errout,
                      "NTRIP: Got unknown {compress,encrypt}ion '%s'\n", s);
         }
+    } else {
+        GPSD_LOG(LOG_WARN, errout,
+                 "NTRIP: STR missing encryption and authentication fields\n");
+        return;    // done
     }
     // <authentication>
     if (NULL != (s = ntrip_field_iterate(NULL, s, eol, errout))) {
@@ -205,17 +209,29 @@ static void ntrip_str_parse(char *str, size_t len,
             GPSD_LOG(LOG_WARN, errout,
                      "NTRIP: Got unknown authenticatiion '%s'\n", s);
         }
+    } else {
+        GPSD_LOG(LOG_WARN, errout,
+                 "NTRIP: STR missing authenticatiion field\n");
+        return;    // done
     }
     // <fee>
-    if (NULL != (s = ntrip_field_iterate(NULL, s, eol, errout))) {
-        hold->fee = atoi(s);
+    s = ntrip_field_iterate(NULL, s, eol, errout);
+    if (NULL == s) {
+        // done, no more
+        return;
     }
+    hold->fee = atoi(s);
+
     // <bitrate>
-    if (NULL != (s = ntrip_field_iterate(NULL, s, eol, errout))) {
-        hold->bitrate = atoi(s);
+    s = ntrip_field_iterate(NULL, s, eol, errout);
+    if (NULL == s) {
+        // done, no more
+        return;
     }
+    hold->bitrate = atoi(s);
+
     // ...<misc>
-    while (NULL != (s = ntrip_field_iterate(NULL, s, eol, errout)));
+    // we don't care about extra fields
 }
 
 /* Parse the sourcetable, looking for a match to requested stream.
@@ -476,8 +492,16 @@ static int ntrip_auth_encode(struct ntrip_stream_t *stream)
     memset(stream->authStr, 0, sizeof(stream->authStr));
     switch (stream->authentication) {
     case AUTH_NONE:
-        // nothing to do.
-        break;
+        if ('\0' == *stream->credentials) {
+            // nothing to do.
+            break;
+        }
+        /* The user provided a user:password, but the SOURCETABLE did
+         * not request AUTH_BASIC. The RTKLIB Ver 2.4.2 (2013) str2str
+         * forgets to ask for basic auth even when needed.
+         * So if the user gave us a u:p, send it anyway
+         */
+        FALLTHROUGH
     case AUTH_BASIC:
         // RFC 7617 Basic Access Authentication.
         // username may not contain a colon (")
