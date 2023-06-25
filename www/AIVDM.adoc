@@ -1,6 +1,6 @@
 = AIVDM/AIVDO protocol decoding
 Eric S. Raymond <esr@thyrsus.com>
-v1.57, 17 April 2023
+v1.58, 24 June 2023
 :author: Eric S. Raymond
 :description: The AIVDM Marine AIS protocol demystified, for programmers.
 :email: <esr@thyrsus.com>
@@ -180,7 +180,7 @@ There is a http://gnuais.sourceforge.net/[GNU AIS] project at
 SourceForge.  It seems intended primarily to work directly
 with AIS radios.
 
-http://www.maritec.co.za/aisvdmvdodecoding.php[The Maritec decoder]
+http://www.maritec.co.za/aisvdmvdodecoding[The Maritec decoder]
 looks to be pretty high-quality and can be exercised through a
 public web form. This is a useful resource for anyone qualifying
 an AIS decoder.
@@ -4883,7 +4883,7 @@ tag block:
 
 Each comma-separated field is expected to be a type key, followed by a
 colon, followed by content.  The semantics of the type keys are as
-follows (table from <<NMEA-ADVANCE>>):
+follows:
 
 Confusingly, there is a different standard introduced with NMEA 4.00,
 IEC 62320-1, that uses the same tag block format but a slightly
@@ -5042,9 +5042,6 @@ Share alike. You contribute a feed, you get back all feeds.
 Subscription access to real-time data. No longer has free access even
 to delayed data.
 
-- http://hd-sf.com:9009
-Free San Francisco Bay Area AIS feed. For non-commercial use only.
-
 == JSON-AIS encoding
 
 Here is an application of the JSON metaformat to present AIS data in a
@@ -5054,13 +5051,14 @@ described here because (a) the specification is closely tied to the
 field encodings, and (b) the author wishes to offer it as an
 interoperability standard for other applications.
 
-One previous effort, <<HAM-JSON-AIS>>, has been made to define a
-JSON-based standard for exchange of unpacked, human-readable AIS
-data. The latest version at time of writing, from December 2008,covers
-only a small subset of the most common AIS messages, and many data
-fields in the messages it does dump are omitted.  The member names
-given in the bit-field tables match the attributes used in HAM-JSON-AIS
-when HAM-JSON-AIS includes that field.
+One previous effort, JSON-AIS, has been made to define a JSON-based
+standard for exchange of unpacked, human-readable AIS data. The latest
+version at time of writing, from December 2008,covers only a small
+subset of the most common AIS messages, and many data fields in the
+messages it does dump are omitted.  Online links to the project have
+disappeared as of June 2023.  The member names given in the bit-field
+tables match the attributes used in HAM-JSON-AIS when HAM-JSON-AIS
+includes that field.
 
 The general ground rules for JSON-AIS encoding are as follows:
 
@@ -5272,13 +5270,13 @@ Identification System]
 
 - [[[INLAND]]] http://www.unece.org/fileadmin/DAM/trans/doc/finaldocs/sc3/ECE-TRANS-SC3-176e.pdf[International Standard for tracking and tracing on Inland Waterways]
 
-- [[[SEAWAY]]] http://www.greatlakes-seaway.com/en/pdf/aisdata.pdf[St. Lawrence
+- [[[SEAWAY]]] https://greatlakes-seaway.com/wp-content/uploads/2020/05/Seaway-AIS-message-specifications-R41.pdf[St. Lawrence
   Seaway AIS Data Messaging Formats and Specifications]
 
-- [[[THAMES]]] http://www.pla.co.uk/pdfs/maritime/APPENDIX_I__II_amendment_for_2012_byelaws_FINAL.pdf[Thames AIS - Technical Requirements Specification]
+- [[[THAMES]]] https://www.pla.co.uk/assets/APPENDIX_I__II_amendment_for_2012_byelaws_FINAL.pdf[Thames AIS - Technical Requirements Specification]
 
-- [[[IMO236]]] http://www.imo.org/includes/blastData.asp/doc_id=4503&filename=236.pdf[IMO
-  Circular 236: Guidance on the Application of AIS Binary Messages (May 2004)]
+- [[[IMO236]]] https://www.navcen.uscg.gov/sites/default/files/pdf/IMO_SN1_Circ290_Guidance_on_presentation%20of%20AIS_ASM.pdf[IMO
+-  Circular 236: Guidance on the Application of AIS Binary Messages (June 2010)]
 
 - [[[IMO289]]]
   http://vislab-ccom.unh.edu/~schwehr/papers/2010-IMO-SN.1-Circ.289.pdf[IMO
@@ -5290,8 +5288,6 @@ Identification System]
   Recommendation A-126 On The Use of the Automatic Identification System (AIS)
   in Marine Aids to Navigation Services
 
-- [[[Schwehr]]] http://schwehr.org/blog/[Kurt Schwehr's weblog]
-
 - [[[IEC-PAS]]] IEC-PAS 61162-100, "Maritime navigation and
   radiocommunication equipment and systems"  The ASCII armoring
   is described on page 26 of Annex C, Table C-1. Communicated by
@@ -5302,7 +5298,7 @@ Identification System]
   Automatic Identification System (AIS)" Communicated by Mike Greene;
   I have not looked at it.
 
-- [[[ITU-MID]]] http://www.itu.int/cgi-bin/htsh/glad/cga_mids.sh?lng=E[Table
+- [[[ITU-MID]]] https://www.itu.int/en/ITU-R/terrestrial/fmd/Pages/mid.aspx[Table
   of Maritime Identification Digits]
 
 - [[[RAIM]]] https://en.wikipedia.org/wiki/RAIM[Receiver Autonomous
@@ -5313,8 +5309,6 @@ Identification System]
 
 - [[[MMSI]]] http://www.navcen.uscg.gov/marcomms/gmdss/mmsi.htm#format[MMSI
   Format]
-
-- [[[HAM-JSON-AIS]]] http://wiki.ham.fi/JSON_AIS.en[JSON AIS transmission protocol]
 
 - [[[AISHUB]]] http://www.aishub.net/[AIS Hub, the AIS data sharing center]
 
@@ -5328,7 +5322,8 @@ Identification System]
 
 - [[[PATREON]]] https://www.patreon.com/esr
 
-- [[[NMEA-ADVANCE]]] http://www.nmea.org/Assets/0183_advancements_nmea_oct_1_2010%20(2).pdf
+- [[[NMEA-ADVANCE]]] https://vdocuments.net/nmea-0183-advancements-2pdfl-luft-1010-nmea-0183-advancements-slide-11-new.html
+
 
 == Change history
 
@@ -5508,6 +5503,9 @@ Version 1.56 fix typos per Jim J. Jewett
 
 Version 1.57 Update Type 1/2/3 Nav Statusa, and EPFD, Descriptions. Fix dead
 link to <<MSGS123>>.
+
+Version 1.58 Fix many dead links
+
 
 
 // end
