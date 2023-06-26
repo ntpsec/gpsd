@@ -44,6 +44,20 @@ def uint2int(u, bit):
 
 # I'd like to use pypy module bitstring or bitarray, but
 # people complain when non stock python modules are used here.
+def unpack_s10g(word, pos):
+    """Grab GLONASS signed 10 bits from word"""
+
+    # GLONASS uses the sign bit instead of the two's complement,
+    # for instance, -42 is encoded as 1000101010.
+    ubytes = bytearray(2)
+    ubytes[0] = (word >> pos) & 0xff
+    ubytes[1] = (word >> (pos + 8)) & 0x03
+    sign = 0x02 & ubytes[1]
+    ubytes[1] &= ~0x02
+    u = struct.unpack_from('<H', ubytes, 0)
+    return u[0] if not sign else -u[0]
+
+
 def unpack_s11(word, pos):
     """Grab a signed 11 bits from offset pos of word"""
 
@@ -64,6 +78,18 @@ def unpack_s11s(word):
     newword <<= 3
     newword |= (word >> 8) & 0x07
     return unpack_s11(newword, 0)
+
+
+def unpack_s11g(word, pos):
+    """Grab GLONASS signed 11 bits from word"""
+
+    ubytes = bytearray(2)
+    ubytes[0] = (word >> pos) & 0xff
+    ubytes[1] = (word >> (pos + 8)) & 0x07
+    sign = 0x04 & ubytes[1]
+    ubytes[1] &= ~0x04
+    u = struct.unpack_from('<H', ubytes, 0)
+    return u[0] if not sign else -u[0]
 
 
 def unpack_s14(word, pos):
@@ -6827,10 +6853,10 @@ protVer 34 and up
                   (NA, tauc, N4, tauGPS, ln))
         if stringnum in [6, 8, 10, 12, 14]:
             if 5 == frame and 14 == stringnum:
-                B1 = (page >> 112) & 0x07ff
-                B2 = (page >> 102) & 0x03ff
+                B1 = unpack_s11g(page, 112)
+                B2 = unpack_s10g(page, 102)
                 KP = (page >> 100) & 3
-                s += "\n        Extra 1: B1 %u B2 %u KP %u" % (B1, B2, KP)
+                s += "\n        Extra 1: B1 %d B2 %d KP %u" % (B1, B2, KP)
             else:
                 Cn = (page >> 122) & 1
                 m = (page >> 120) & 3
