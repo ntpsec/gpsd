@@ -6826,7 +6826,7 @@ protVer 34 and up
             s += ("\n        Time: NA %u tauc %u N4 %u tauGPS %u ln %u" %
                   (NA, tauc, N4, tauGPS, ln))
         if stringnum in [6, 8, 10, 12, 14]:
-            if 5 == frame:
+            if 5 == frame and 14 == stringnum:
                 B1 = (page >> 112) & 0x07ff
                 B2 = (page >> 102) & 0x03ff
                 KP = (page >> 100) & 3
@@ -6844,7 +6844,7 @@ protVer 34 and up
                       "\n          epsilonA %u" %
                       (Cn, m, nA, tauA, lambdaA, deltaiA, epsilonA))
         if stringnum in [7, 9, 11, 13, 15]:
-            if 5 == frame:
+            if 5 == frame and 15 == stringnum:
                 ln = (page >> 51) & 1
                 s += "\n        Extra 2: ln %u" % ln
             else:
