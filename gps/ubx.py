@@ -42,20 +42,27 @@ def uint2int(u, bit):
     return u
 
 
+# unpack_XXX() - unpack types from "word"
+#
+# word is a very long unsigned integer made from the message.
+#
 # I'd like to use pypy module bitstring or bitarray, but
 # people complain when non stock python modules are used here.
-def unpack_s10g(word, pos):
-    """Grab GLONASS signed 10 bits from word"""
 
-    # GLONASS uses the sign bit instead of the two's complement,
-    # for instance, -42 is encoded as 1000101010.
-    ubytes = bytearray(2)
-    ubytes[0] = (word >> pos) & 0xff
-    ubytes[1] = (word >> (pos + 8)) & 0x03
-    sign = 0x02 & ubytes[1]
-    ubytes[1] &= ~0x02
-    u = struct.unpack_from('<H', ubytes, 0)
-    return u[0] if not sign else -u[0]
+def unpack_s10g(word, pos):
+    """Grab GLONASS signed 10 bits from word
+
+GLONASS uses the sign bit instead of the two's complement,
+for instance, -42 is encoded as 1000101010.
+
+See 'ICD_GLONASS_5.1_(2008)_en.pdf' Section 4.4
+"""
+
+    val = (word >> pos) & 0x03ff
+    if 0x0200 & val:
+        # sign bit on, mask out sign bit and negate
+        val = -(val & ~0x0200)
+    return val
 
 
 def unpack_s11(word, pos):
@@ -81,15 +88,19 @@ def unpack_s11s(word):
 
 
 def unpack_s11g(word, pos):
-    """Grab GLONASS signed 11 bits from word"""
+    """Grab GLONASS signed 11 bits from word
 
-    ubytes = bytearray(2)
-    ubytes[0] = (word >> pos) & 0xff
-    ubytes[1] = (word >> (pos + 8)) & 0x07
-    sign = 0x04 & ubytes[1]
-    ubytes[1] &= ~0x04
-    u = struct.unpack_from('<H', ubytes, 0)
-    return u[0] if not sign else -u[0]
+GLONASS uses the sign bit instead of the two's complement,
+for instance, -42 is encoded as 1000101010.
+
+See 'ICD_GLONASS_5.1_(2008)_en.pdf' Section 4.4
+"""
+
+    val = (word >> pos) & 0x07ff
+    if 0x0400 & val:
+        # sign bit on, makks out sign bit and negate
+        val = -(val & ~0x0400)
+    return val
 
 
 def unpack_s14(word, pos):
@@ -5170,12 +5181,12 @@ protVer 34 and up
 """
 
         u = struct.unpack_from('<LBBBLLBffffffffffff', buf, 0)
-        return('  iTOW %u version %u posCovValid %u velCovValid %u '
-               'reserved0 %u %u %u\n'
-               ' posCovNN %f posCovNE  %f posCovND %f\n'
-               ' posCovEE %f posCovED  %f posCovDD %f\n'
-               ' velCovNN %f velCovNE  %f velCovND %f\n'
-               ' velCovEE %f velCovED  %f velCovDD %f\n' % u)
+        return ('  iTOW %u version %u posCovValid %u velCovValid %u '
+                'reserved0 %u %u %u\n'
+                ' posCovNN %f posCovNE  %f posCovND %f\n'
+                ' posCovEE %f posCovED  %f posCovDD %f\n'
+                ' velCovNN %f velCovNE  %f velCovND %f\n'
+                ' velCovEE %f velCovED  %f velCovDD %f\n' % u)
 
     def nav_dgps(self, buf):
         """UBX-NAV-DGPS decode, DGPS Data used for NAV"""
@@ -6776,13 +6787,15 @@ protVer 34 and up
         return s
 
     def _decode_sfrbx_glo(self, words):
-        """Decode UBX-RXM-SFRBX GLONASS frames"""
-        # See u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf
-        # Section 10.3 GLONASS
-        # L10F and L20F only
-        # ICD_GLONASS_5.1_(2008)_en.pdf "ICD L1, L2 GLONASS"
-        # gotta decode the u-blox munging and the GLONASS packing...
-        # u-blox stripts preamble
+        """Decode UBX-RXM-SFRBX GLONASS frames
+
+See u-blox8-M8_ReceiverDescrProtSpec_UBX-13003221.pdf
+Section 10.3 GLONASS
+L10F and L20F only
+ICD_GLONASS_5.1_(2008)_en.pdf "ICD L1, L2 GLONASS"
+gotta decode the u-blox munging and the GLONASS packing...
+u-blox stripts preamble
+"""
         stringnum = (words[0] >> 27) & 0x0f
 
         page = 0
@@ -6810,7 +6823,7 @@ protVer 34 and up
             xn = (page >> 51) & 0xa30ffffffff
             s += ("\n        Ephemeris 1: P1 %u tk %u xnp %u xnpp %u xn %u" %
                   (P1, tk, xnp, xnpp, xn))
-        if 2 == stringnum:
+        elif 2 == stringnum:
             Bn = (page >> 120) & 7
             P2 = (page >> 119) & 1
             tb = (page >> 112) & 0x07f
@@ -6820,7 +6833,7 @@ protVer 34 and up
             s += ("\n        Ephemeris 2: Bn %u P2 %u tb %u ynp %u ynpp %u "
                   "yn %u" %
                   (Bn, P2, tb, ynp, ynpp, yn))
-        if 3 == stringnum:
+        elif 3 == stringnum:
             P3 = (page >> 122) & 1
             lambdan = (page >> 111) & 0x07fff
             p = (page >> 108) & 3
@@ -6830,7 +6843,7 @@ protVer 34 and up
             zn = (page >> 51) & 0xa30ffffffff
             s += ("\n        Ephemeris 3: P3 %u znp %u znpp %u zn %u" %
                   (P3, znp, znpp, zn))
-        if 4 == stringnum:
+        elif 4 == stringnum:
             # n is SVID
             taun = (page >> 101) & 0x03ffffff
             deltataun = (page >> 96) & 0x01f
@@ -6843,7 +6856,7 @@ protVer 34 and up
             s += ("\n        Ephemeris 4: taun %u deltataun %u En %u P4 %u"
                   "\n           FT %u NT %u n %u M %u" %
                   (taun, deltataun, En, P4, FT, NT, n, M))
-        if 5 == stringnum:
+        elif 5 == stringnum:
             NA = (page >> 112) & 0x07ff
             tauc = (page >> 80) & 0x0ffffffff
             N4 = (page >> 74) & 0x01f
@@ -6851,8 +6864,9 @@ protVer 34 and up
             ln = (page >> 51) & 1
             s += ("\n        Time: NA %u tauc %u N4 %u tauGPS %u ln %u" %
                   (NA, tauc, N4, tauGPS, ln))
-        if stringnum in [6, 8, 10, 12, 14]:
-            if 5 == frame and 14 == stringnum:
+        elif stringnum in [6, 8, 10, 12, 14]:
+            if (((5 == frame and
+                 14 == stringnum))):
                 B1 = unpack_s11g(page, 112)
                 B2 = unpack_s10g(page, 102)
                 KP = (page >> 100) & 3
@@ -6869,7 +6883,7 @@ protVer 34 and up
                       "lambdaA %u deltaiA %u"
                       "\n          epsilonA %u" %
                       (Cn, m, nA, tauA, lambdaA, deltaiA, epsilonA))
-        if stringnum in [7, 9, 11, 13, 15]:
+        elif stringnum in [7, 9, 11, 13, 15]:
             if 5 == frame and 15 == stringnum:
                 ln = (page >> 51) & 1
                 s += "\n        Extra 2: ln %u" % ln
