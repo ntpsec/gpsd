@@ -2390,7 +2390,7 @@ void packet_parse(struct gps_lexer_t *lexer)
             crc_expected = (trailer[0] << 8) | trailer[1];
             crc_computed = 0;
 
-            for (idx = 4; idx < (trailer - lexer->inbuffer); idx++) {
+            for (idx = 4; idx < (inbuflen - 4); idx++) {
                 crc_computed += lexer->inbuffer[idx];
             }
             crc_computed &= 0x7fff;
