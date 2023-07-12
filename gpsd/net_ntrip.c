@@ -47,6 +47,7 @@
 
 // HTTP 1.1
 #define NTRIP_UNAUTH            "401 Unauthorized"
+#define NTRIP_CHUNKED           "Transfer-Encoding: chunked\r\n"
 
 
 // table to convert format string to enum ntrip_fmt
@@ -636,6 +637,14 @@ static int ntrip_stream_get_parse(const struct ntrip_stream_t *stream,
         NULL == strstr(buf, NTRIP_HTTP)) {
         GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: Unknown reply %s from caster: %s:%s/%s\n", buf,
+                 stream->host, stream->port, stream->mountpoint);
+        return -1;
+    }
+    // Chunking not supported. Yet. Refuse the stream or it would confuse the
+    // RTCM3 parser.
+    if (NULL != strstr(buf, NTRIP_CHUNKED)) {
+        GPSD_LOG(LOG_ERROR, errout,
+                 "NTRIP: caster sends unsupported chunked replies %s:%s/%s\n",
                  stream->host, stream->port, stream->mountpoint);
         return -1;
     }
