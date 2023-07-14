@@ -47,7 +47,7 @@
 
 // HTTP 1.1
 #define NTRIP_UNAUTH            "401 Unauthorized"
-#define NTRIP_CHUNKED           "Transfer-Encoding: chunked\r\n"
+#define NTRIP_CHUNKED           "Transfer-Encoding: chunked"
 
 
 // table to convert format string to enum ntrip_fmt
@@ -286,7 +286,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
         rlen = len;
         // line points to the next char in buf to analyze
         // rlen is length of all data in buf
-        // len is length of remaining data in buf, 
+        // len is length of remaining data in buf,
 
         GPSD_LOG(LOG_IO, &device->context->errout,
                  "NTRIP: source table buffer >%.*s<\n", (int)rlen, buf);
@@ -640,8 +640,24 @@ static int ntrip_stream_get_parse(const struct ntrip_stream_t *stream,
                  stream->host, stream->port, stream->mountpoint);
         return -1;
     }
+
+    /* The NTRIP v2.0 is heavily based on HTTP/1.1, with some casters
+     * also using chunked transfers, as defined by RFC 9112, chap. 7.1,
+     * Chunked Transfer Coding, like so:
+     *
+     *  HTTP/1.1 200 OK\r\n
+     *  [...headers...]\r\n
+     *  Transfer-Encoding: chunked\r\n
+     *  \r\n
+     *  64\r\n
+     *  64-bytes-worth-of-binary-message\r\n
+     *  27\r\n
+     *  27-bytes-worth-of-binary-message\r\n
+     */
+
     // Chunking not supported. Yet. Refuse the stream or it would confuse the
     // RTCM3 parser.
+    // This assumes that the Chunked header is the only header.
     if (NULL != strstr(buf, NTRIP_CHUNKED)) {
         GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: caster sends unsupported chunked replies %s:%s/%s\n",
