@@ -473,11 +473,11 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
     }
     if (0 > bind(s, &sat.sa, (socklen_t)sin_len)) {
         GPSD_LOG(LOG_ERROR, &context.errout,
-                 "can't bind to %s port %s, %s(%d)\n", af_str,
-                 service, strerror(errno), errno);
+                 "Can't bind to %s/%s port %s(%d), %s(%d)\n", af_str,
+                 pse->s_proto, service, port, strerror(errno), errno);
         if (EADDRINUSE == errno) {
             GPSD_LOG(LOG_ERROR, &context.errout,
-                     "maybe gpsd is already running!  "
+                     "Maybe gpsd is already running!  "
                      "Or systemd has the port?\n");
         }
         (void)close(s);
