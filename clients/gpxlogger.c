@@ -380,7 +380,7 @@ int main(int argc, char **argv)
        case 'f':       // Output file name.
             {
                 char   fname[PATH_MAX];
-                time_t  t;
+                time_t t = time(NULL);
 
                 size_t s = strftime(fname, sizeof(fname) - 11, optarg,
                                     localtime(&t));
