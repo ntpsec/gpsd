@@ -355,12 +355,16 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
     int type, proto, one = 1;
     in_port_t port;
     char *af_str = "";
+    char *proto_str = "";
     const int dscp = IPTOS_LOWDELAY; // Prioritize packet
 
     INVALIDATE_SOCKET(s);
-    if (0 != (pse = getservbyname(service, tcp_or_udp))) {
-        port = ntohs((in_port_t) pse->s_port);
-    } else if (0 == (port = (in_port_t) atoi(service))) {
+    pse = getservbyname(service, tcp_or_udp);
+    if (NULL != pse) {
+        // Got port by name.
+        port = ntohs((in_port_t)pse->s_port);
+    } else if (0 == (port = (in_port_t)atoi(service))) {
+        // Could not get port by name or number.
         GPSD_LOG(LOG_ERROR, &context.errout,
                  "can't get \"%s\" service entry.\n", service);
         return -1;
@@ -369,9 +373,11 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
     if (0 == strcmp(tcp_or_udp, "udp")) {
         type = SOCK_DGRAM;
         proto = (ppe) ? ppe->p_proto : IPPROTO_UDP;
+        proto_str = "UDP";
     } else {
         type = SOCK_STREAM;
         proto = (ppe) ? ppe->p_proto : IPPROTO_TCP;
+        proto_str = "TCP";
     }
 
     switch (af) {
@@ -474,7 +480,7 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
     if (0 > bind(s, &sat.sa, (socklen_t)sin_len)) {
         GPSD_LOG(LOG_ERROR, &context.errout,
                  "Can't bind to %s/%s port %s(%d), %s(%d)\n", af_str,
-                 pse->s_proto, service, port, strerror(errno), errno);
+                 proto_str, service, port, strerror(errno), errno);
         if (EADDRINUSE == errno) {
             GPSD_LOG(LOG_ERROR, &context.errout,
                      "Maybe gpsd is already running!  "
