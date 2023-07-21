@@ -737,9 +737,9 @@ static void deactivate_device(struct gps_device_t *device)
     }
 }
 
-static device_update_fd(int fd, bool open)
+static void device_update_fd(int fd, bool open)
 {
-    // We can't log here...
+    // We don't log here...
     if (open) {
         FD_SET(fd, &all_fds);
     } else {
