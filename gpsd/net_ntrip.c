@@ -955,6 +955,9 @@ int ntrip_open(struct gps_device_t *device, char *orig)
             false == device->ntrip.stream.set) {
             return ret;
         }
+        if (NULL != device->gpsdata.update_fd) {
+            device->gpsdata.update_fd(device->gpsdata.gps_fd, false);
+        }
         (void)close(device->gpsdata.gps_fd);
         device->gpsdata.gps_fd = PLACEHOLDING_FD;
         GPSD_LOG(LOG_PROG, &device->context->errout,
@@ -982,6 +985,9 @@ int ntrip_open(struct gps_device_t *device, char *orig)
             return -1;
         }
         device->gpsdata.gps_fd = ret;
+        if (NULL != device->gpsdata.update_fd) {
+            device->gpsdata.update_fd(device->gpsdata.gps_fd, true);
+        }
         device->ntrip.conn_state = NTRIP_CONN_SENT_GET;
         break;
     case NTRIP_CONN_SENT_GET:          // state = 2
@@ -1004,6 +1010,10 @@ int ntrip_open(struct gps_device_t *device, char *orig)
             break;
         }
         ret = ntrip_reconnect(device);
+        if (0 <= ret &&
+            NULL != device->gpsdata.update_fd) {
+            device->gpsdata.update_fd(ret, true);
+        }
         break;
     case NTRIP_CONN_INPROGRESS:      // state = 6
         // Need to send GET within about 40 seconds or caster tiems out.

@@ -2806,6 +2806,23 @@ struct gps_data_t {
      * use socket_t, which is int, for windows compatibility */
     socket_t gps_fd;
 #endif
+
+    /* the driver can call this to tell the user its fd
+     * has changed.
+     * This is useful for drivers that have a multi-stage
+     * initialisation, which requires closing and opening
+     * a connection to a remote server for example (NTRIP
+     * does that), where the user will usually only know
+     * about the initial fd (when the device is initially
+     * opened).
+     * Might be NULL for users that are not interested in
+     * polling the device, so don't call without checking
+     * the value first.
+     * - fd: the fd to act on
+     * - open: true is the fd is now open, false otherwise
+     */
+    void (*update_fd)(int fd, bool open);
+
     struct gps_fix_t    fix;    // accumulated PVT data
     struct gps_log_t    log;    // log data
 

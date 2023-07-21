@@ -737,6 +737,17 @@ static void deactivate_device(struct gps_device_t *device)
     }
 }
 
+static device_update_fd(int fd, bool open)
+{
+    // We can't log here...
+    if (open) {
+        FD_SET(fd, &all_fds);
+    } else {
+        FD_CLR(fd, &all_fds);
+    }
+    adjust_max_fd(fd, open);
+}
+
 #if defined(SOCKET_EXPORT_ENABLE) || defined(CONTROL_SOCKET_ENABLE)
 // find the device block for an existing device name
 static struct gps_device_t *find_device(const char *device_name)
@@ -846,6 +857,7 @@ bool gpsd_add_device(const char *device_name, bool flag_nowait)
     for (devp = devices; devp < devices + MAX_DEVICES; devp++) {
         if (!allocated_device(devp)) {
             gpsd_init(devp, &context, device_name);
+            devp->gpsdata.update_fd = device_update_fd;
             ntpshm_session_init(devp);
             GPSD_LOG(LOG_INF, &context.errout,
                      "stashing device %s at slot %d\n",
