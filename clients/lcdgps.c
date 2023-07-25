@@ -21,11 +21,12 @@
 */
 
 #define LCDDHOST "localhost"
-#define LCDDPORT 13666
+#define LCDDPORT "13666"
 
 #define CLIMB 3
 
 #include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd.h"
 
 #include <arpa/inet.h>
 #include <errno.h>
@@ -33,7 +34,6 @@
        #include <getopt.h>   // for getopt_long()
 #endif
 #include <math.h>
-#include <netdb.h>        /* for gethostbyname() */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -259,9 +259,6 @@ static void usage( char *prog)
 
 int main(int argc, char *argv[])
 {
-    int rc;
-    struct sockaddr_in localAddr, servAddr;
-    struct hostent *h;
     const char *optstring = "?hl:su:V";
     int n;
 #ifdef HAVE_GETOPT_LONG
@@ -390,41 +387,10 @@ int main(int argc, char *argv[])
     }
 
     /* Connect to LCDd */
-    h = gethostbyname(LCDDHOST);
-    if (h==NULL) {
-        printf("%s: unknown host '%s'\n",argv[0],LCDDHOST);
-        exit(EXIT_FAILURE);
-    }
+    sd = netlib_connectsock1(AF_UNSPEC, LCDDHOST, LCDDPORT, "tcp", 0, false, NULL, 0);
+    if (0 > sd) {
 
-    servAddr.sin_family = h->h_addrtype;
-    memcpy((char *) &servAddr.sin_addr.s_addr, h->h_addr_list[0], h->h_length);
-    servAddr.sin_port = htons(LCDDPORT);
-
-    /* create socket */
-    sd = socket(AF_INET, SOCK_STREAM, 0);
-    if (BAD_SOCKET(sd)) {
-        perror("cannot open socket ");
-        exit(EXIT_FAILURE);
-    }
-
-    /* bind any port number */
-    localAddr.sin_family = AF_INET;
-    localAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    localAddr.sin_port = htons(0);
-
-    /* coverity[uninit_use_in_call] */
-    rc = bind(sd, (struct sockaddr *) &localAddr, sizeof(localAddr));
-    if (rc == -1) {
-        printf("%s: cannot bind port TCP %d\n",argv[0],LCDDPORT);
-        perror("error ");
-        exit(EXIT_FAILURE);
-    }
-
-    /* connect to server */
-    /* coverity[uninit_use_in_call] */
-    rc = connect(sd, (struct sockaddr *) &servAddr, sizeof(servAddr));
-    if (rc == -1) {
-        perror("cannot connect ");
+        (void)fprintf(stderr, "lcdgps: cannot connect: %s\n", netlib_errstr(sd));
         exit(EXIT_FAILURE);
     }
 
