@@ -21,7 +21,6 @@
 #ifdef HAVE_GETOPT_LONG
        #include <getopt.h>   // for getopt_long()
 #endif
-#include <netdb.h>        /* for gethostbyname() */
 #include <netinet/in.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -50,7 +49,6 @@ static struct gps_data_t gpsdata;
 
 /* UDP socket variables */
 #define MAX_UDP_DEST 5
-static struct sockaddr_in remote[MAX_UDP_DEST];
 static int sock[MAX_UDP_DEST];
 static int udpchannel;
 
@@ -128,12 +126,10 @@ static int send_udp(char *nmeastring, size_t ind)
 
     // send message on udp channel
     for (channel=0; channel < udpchannel; channel ++) {
-        ssize_t status = sendto(sock[channel],
-                                buffer,
-                                ind,
-                                0,
-                                (struct sockaddr *)&remote[channel],
-                                (int)sizeof(remote));
+        ssize_t status = send(sock[channel],
+                              buffer,
+                              ind,
+                              0);
         if (status < (ssize_t)ind) {
             (void)fprintf(stderr, "gps2udp: failed to send [%s] \n",
                           buffer);
@@ -152,9 +148,6 @@ static int open_udp(char **hostport)
    for (channel = 0; channel < udpchannel; channel++) {
        char *hostname = NULL;
        char *portname = NULL;
-       char *endptr = NULL;
-       int  portnum;
-       struct hostent *hp;
 
        if (NULL == hostport[channel]) {
            // pacify coverity
@@ -171,32 +164,13 @@ static int open_udp(char **hostport)
            return -1;
        }
 
-       errno = 0;
-       portnum = (int)strtol(portname, &endptr, 10);
-       if (1 > portnum || 65535 < portnum || '\0' != *endptr || 0 != errno) {
-           (void)fprintf(stderr, "gps2udp: syntax is [-u hostname:port] "
-                         "[%s] is not a valid port number\n", portname);
-           return -1;
-       }
-
-       sock[channel]= socket(AF_INET, SOCK_DGRAM, 0);
+       sock[channel] = netlib_connectsock1(AF_UNSPEC, hostname, portname, "udp",
+                                           0, false, NULL, 0);
        if (0 > sock[channel]) {
-           (void)fprintf(stderr, "gps2udp: error creating UDP socket\n");
+           (void)fprintf(stderr, "gps2udp: error creating UDP socket: %s\n",
+                         netlib_errstr(sock[channel]));
            return -1;
        }
-
-       remote[channel].sin_family = (sa_family_t)AF_INET;
-       hp = gethostbyname(hostname);
-       if (NULL == hp) {
-           (void)fprintf(stderr,
-                         "gps2udp: syntax is [-u hostname:port] [%s]"
-                         " is not a valid hostname\n",
-                         hostname);
-           return -1;
-       }
-
-       memcpy( &remote[channel].sin_addr, hp->h_addr_list[0], hp->h_length);
-       remote[channel].sin_port = htons((in_port_t)portnum);
     }
     return 0;
 }
