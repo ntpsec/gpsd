@@ -856,7 +856,8 @@ static int ntrip_reconnect(struct gps_device_t *device)
              device->gpsdata.dev.path);
     dsock = netlib_connectsock1(AF_UNSPEC, device->ntrip.stream.host,
                                 device->ntrip.stream.port,
-                                "tcp", SOCK_NONBLOCK, addrbuf, sizeof(addrbuf));
+                                "tcp", 1, false,
+                                addrbuf, sizeof(addrbuf));
     device->gpsdata.gps_fd = dsock;
     // nonblocking means we have the fd, but the connection is not
     // finished yet.  Connection may fail, later.

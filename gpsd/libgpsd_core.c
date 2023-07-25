@@ -561,7 +561,6 @@ int gpsd_open(struct gps_device_t *session)
         char server[GPS_PATH_MAX], *host, *port, *device;
         socket_t dsock;
         char addrbuf[50];    // INET6_ADDRSTRLEN
-        int sock_opt;
 
         session->sourcetype = SOURCE_TCP;
         (void)strlcpy(server, session->gpsdata.dev.path + 6, sizeof(server));
@@ -576,15 +575,9 @@ int gpsd_open(struct gps_device_t *session)
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "CORE: opening TCP feed at %s, port %s.\n", host,
                  port);
-#if defined(SOCK_NONBLOCK)
-        sock_opt = SOCK_NONBLOCK;
-#else
-        // macOS has no SOCK_NONBLOCK
-        sock_opt = 0;
-#endif
         // open non-blocking
         dsock = netlib_connectsock1(AF_UNSPEC, host, port, "tcp",
-                                    sock_opt, addrbuf, sizeof(addrbuf));
+                                    1, false, addrbuf, sizeof(addrbuf));
         if (0 > dsock) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "CORE: TCP %s IP %s, open error %s(%d).\n",
@@ -614,7 +607,8 @@ int gpsd_open(struct gps_device_t *session)
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "CORE: opening UDP feed at %s, port %s.\n", host,
                  port);
-        if (0 > (dsock = netlib_connectsock(AF_UNSPEC, host, port, "udp"))) {
+        if (0 > (dsock = netlib_connectsock1(AF_UNSPEC, host, port, "udp",
+                                             0, true, NULL, 0))) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
                      "CORE: UDP device open error %s(%d).\n",
                      netlib_errstr(dsock), dsock);

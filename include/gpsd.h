@@ -1002,7 +1002,7 @@ extern void gpsd_clear_data(struct gps_device_t *);
 extern socket_t netlib_connectsock(int, const char *, const char *,
                                    const char *);
 extern socket_t netlib_connectsock1(int, const char *, const char *,
-                                    const char *, int,
+                                    const char *, int, bool,
                                     char *, size_t);
 // end FIXME
 extern socket_t netlib_localsocket(const char *, int);

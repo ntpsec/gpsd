@@ -55,8 +55,10 @@
  * host - host to connect to
  * service -- aka port
  * protocol
- * flags -- can be SOCK_NONBLOCK for non-blocking connect
- *          Note: macOS does not have SOCK_NONBLOCK
+ * nonblock -- 1 sets the socket as non-blocking before connect() if
+ *             SOCK_NONBLOCK is supported,
+ *             >1 sets the socket as non-blocking after connect()
+ * bind_me -- call bind() on the socket instead of connect()
  * addrbuf -- 50 char buf to put string of IP address conencting
  *            INET6_ADDRSTRLEN
  * addrbuf_sz -- sizeof(adddrbuf)
@@ -70,16 +72,15 @@
  *        less than zero on error (NL_*)
  */
 socket_t netlib_connectsock1(int af, const char *host, const char *service,
-                             const char *protocol, int flags,
+                             const char *protocol, int nonblock, bool bind_me,
                              char *addrbuf, size_t addrbuf_sz)
 {
     struct protoent *ppe;
     struct addrinfo hints;
     struct addrinfo *result = NULL;
     struct addrinfo *rp;
-    int ret, type, proto, one;
+    int ret, flags, type, proto, one;
     socket_t s;
-    bool bind_me;
 
     if (NULL != addrbuf) {
         addrbuf[0] = '\0';
@@ -97,9 +98,6 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
         return NL_NOPROTO;
     }
 
-    /* we probably ought to pass this in as an explicit flag argument */
-    bind_me = (SOCK_DGRAM == type);
-
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = af;
     hints.ai_socktype = type;
@@ -107,6 +105,15 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
     if (bind_me) {
         hints.ai_flags = AI_PASSIVE;
     }
+#if defined(SOCK_NONBLOCK)
+    flags = nonblock == 1 ? SOCK_NONBLOCK : 0;
+#else
+    // macOS has no SOCK_NONBLOCK
+    flags = 0;
+    if (nonblock == 1)
+        nonblock = 2;
+#endif
+
     // FIXME: need a way to bypass these DNS calls if host is an IP.
     if ((ret = getaddrinfo(host, service, &hints, &result))) {
         // result is unchanged on error, so we need to have set it to NULL
@@ -219,13 +226,15 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
                          sizeof(one));
     }
 
-    // set socket to noblocking
+    if (nonblock > 1) {
+        // set socket to noblocking
 #ifdef HAVE_FCNTL
-    (void)fcntl(s, F_SETFL, fcntl(s, F_GETFL) | O_NONBLOCK);
+        (void)fcntl(s, F_SETFL, fcntl(s, F_GETFL) | O_NONBLOCK);
 #elif defined(HAVE_WINSOCK2_H)
-    u_long one1 = 1;
-    (void)ioctlsocket(s, FIONBIO, &one1);
+        u_long one1 = 1;
+        (void)ioctlsocket(s, FIONBIO, &one1);
 #endif
+    }
     return s;
 }
 
@@ -235,7 +244,7 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
 socket_t netlib_connectsock(int af, const char *host, const char *service,
                             const char *protocol)
 {
-    return netlib_connectsock1(af, host, service, protocol, 0, NULL, 0);
+    return netlib_connectsock1(af, host, service, protocol, 2, false, NULL, 0);
 }
 
 //  Convert NL_* error code to a string
