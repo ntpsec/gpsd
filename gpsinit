@@ -6,26 +6,23 @@
 # SPDX-License-Identifier: BSD-2-clause
 #
 
-speed=38400
 net=0
 
 version()
 {
-    echo `basename $0`" : Version v0.21";
+    echo "$(basename "$0") : Version v0.21";
 }
 
 usage()
 {
     version; echo;
-    echo "usage :" `basename $0` "[-n <netnumber>] [-s <serial speed>] <can_module_name> [<interface_name>]";
-    echo "      :" `basename $0` "-V";
-    echo "      :" `basename $0` "-h";
+    echo "usage : $(basename "$0") [-n <netnumber>] <can_module_name> [<interface_name>]";
+    echo "      : $(basename "$0") -V";
+    echo "      : $(basename "$0") -h";
     echo "  Options include:";
     echo "  -?              = Print this help message and exit.";
     echo "  -h              = Print this help message and exit.";
     echo "  -n              = CAN network number, 0 if not given.";
-    echo "  -s              = Speed of the slcan hardware port, 38400 if not given.";
-    echo "                  = Needed for some slcan modules only.";
     echo "  -V              = Print version of this script and exit.";
     echo "  can_module_name = One out of plx_pci, esd_usb2, usb_8dev, vcan, slcan, beaglebone.";
     echo "  interface_name  = The interface, the SLCAN module is connected to, i.e. /dev/ttyS0 or /dev/ttyUSB0.";
@@ -34,19 +31,19 @@ usage()
 }
 
 # -v for version is deprecated 2020
-while getopts :n:s:vh opt
+while getopts :n:s:vVh opt
 do
     case ${opt} in
         h)  usage; exit 0;;
         n)  net=${OPTARG};;
-        s)  speed=${OPTARG};;
+        s)  ;; # unused
         \?) usage; exit 1;;
         v)  version; exit 0;;
         V)  version; exit 0;;
     esac
 done
 
-shift $((${OPTIND} - 1))
+shift $((OPTIND - 1))
 
 candevice=$1
 
@@ -54,38 +51,38 @@ case ${candevice} in
 plx_pci)
     # For the SJA1000 based PCI or PCI-Express CAN interface
     modprobe plx_pci;
-    ip link set can${net} type can tq 250 prop-seg 6 phase-seg1 7 phase-seg2 2 sjw 1;
-    ip link set can${net} up;;
+    ip link set "can${net}" type can tq 250 prop-seg 6 phase-seg1 7 phase-seg2 2 sjw 1;
+    ip link set "can${net}" up;;
 esd_usb2)
     # For an esd usb/2 CAN interface
     modprobe esd_usb2;
-    ip link set can${net} type can tq 250 prop-seg 6 phase-seg1 7 phase-seg2 2 sjw 1;
-    ip link set can${net} up;;
+    ip link set "can${net}" type can tq 250 prop-seg 6 phase-seg1 7 phase-seg2 2 sjw 1;
+    ip link set "can${net}" up;;
 usb_8dev)
     # For an 8devices usb2can CAN interface
     modprobe usb_8dev;
-    ip link set can${net} type can tq 250 prop-seg 6 phase-seg1 7 phase-seg2 2 sjw 1;
-    ip link set can${net} up;;
+    ip link set "can${net}" type can tq 250 prop-seg 6 phase-seg1 7 phase-seg2 2 sjw 1;
+    ip link set "can${net}" up;;
 vcan)
     # With this setup, CAN frames can be injected into vcan0 by a test
     modprobe vcan;
     ip link add type vcan;
-    ip link set vcan${net} up;;
+    ip link set "vcan${net}" up;;
 slcan)
     # For a serial line CAN device
     # No support for devices, that need a setup of the baudrate yet
     device=${2:-/dev/ttyUSB0};
     modprobe slcan;
-    slcan_attach -f -s5 -o ${device};
-    slcand `basename ${device}`;
-    ip link set slcan${net} up;;
+    slcan_attach -f -s5 -o "${device}";
+    slcand "$(basename "${device}")";
+    ip link set "slcan${net}" up;;
 beaglebone)
     # For CAN interface on a BeagleBone
     # The d_can driver is part of the kernel
-    ip link set can${net} type can bitrate 250000 sjw 1;
-    ip link set can${net} up;;
+    ip link set "can${net}" type can bitrate 250000 sjw 1;
+    ip link set "can${net}" up;;
 *)
-    echo `basename ${0}` ": invalid CAN interface ${1} net${net} device ${2:-(none)}"
+    echo "$(basename "$0") : invalid CAN interface ${1} net${net} device ${2:-(none)}"
     echo;
     usage;
     exit 1
