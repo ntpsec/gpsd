@@ -42,7 +42,7 @@ socket_t dgpsip_open(struct gps_device_t *device, const char *dgpsserver)
     }
 
     dsock = netlib_connectsock(AF_UNSPEC, dgpsserver, dgpsport, "tcp");
-    if (0 <= dsock) {
+    if (0 > dsock) {
         GPSD_LOG(LOG_ERROR, &device->context->errout,
                  "DGPS: can't connect to DGPS server %s, netlib error %s(%d).\n",
                  dgpsserver, netlib_errstr(dsock), dsock);
