@@ -129,7 +129,7 @@ def make_driver_code(wfp):
                 continue
             offset = offsets[i].split('-')[0]
             if arrayname:
-                target = "%s.%s[i].%s" % (structnme, arrayname, name)
+                target = "%s.%s[i].%s" % (structname, arrayname, name)
                 offset = "a + " + offset
             else:
                 target = "%s.%s" % (structname, name)
