@@ -10,7 +10,7 @@
 #endif  // HAVE_ARPA_INET_H
 #include <errno.h>                    // for errno
 #include <fcntl.h>
-#include <sys/types.h>   // FreeBSD needs it for netinet/ip.h
+#include <sys/types.h>                // FreeBSD needs it for netinet/ip.h
 #ifdef HAVE_NETDB_H
 #  include <netdb.h>
 #endif  // HAVE_NETDB_H
@@ -41,7 +41,7 @@
 #include "../include/gpsd.h"
 #include "../include/sockaddr.h"
 
-/* work around the unfinished ipv6 implementation on hurd and OSX <10.6 */
+// work around the unfinished ipv6 implementation on hurd and OSX <10.6
 #ifndef IPV6_TCLASS
 #  if defined(__GNU__)
 #    define IPV6_TCLASS 61
@@ -110,8 +110,9 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
 #else
     // macOS has no SOCK_NONBLOCK
     flags = 0;
-    if (nonblock == 1)
+    if (1 == nonblock) {
         nonblock = 2;
+    }
 #endif
 
     // FIXME: need a way to bypass these DNS calls if host is an IP.
@@ -142,7 +143,7 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
      *     IPv4 addresses.
      * Thus, with the default parameters, we get IPv6 addresses first.
      */
-    for (rp = result; rp != NULL; rp = rp->ai_next) {
+    for (rp = result; NULL != rp; rp = rp->ai_next) {
         ret = NL_NOCONNECT;
         // flags might be zero or SOCK_NONBLOCK
         if (0 > (s = socket(rp->ai_family, rp->ai_socktype | flags,
@@ -155,7 +156,7 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
         // useful on a quick gpsd restart to reuse the address.
         one = 1;
         if (-1 == setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&one,
-                                    sizeof(one))) {
+                             sizeof(one))) {
             ret = NL_NOSOCKOPT;
         } else if (bind_me) {
             // want a passive socket (SOCK_DGRAM), UDP.
@@ -199,6 +200,7 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
 #ifdef IPTOS_LOWDELAY
     {
         int opt = IPTOS_LOWDELAY;
+
         (void)setsockopt(s, IPPROTO_IP, IP_TOS, &opt, sizeof(opt));
 #ifdef IPV6_TCLASS
         (void)setsockopt(s, IPPROTO_IPV6, IPV6_TCLASS, &opt, sizeof(opt));
@@ -226,7 +228,7 @@ socket_t netlib_connectsock1(int af, const char *host, const char *service,
                          sizeof(one));
     }
 
-    if (nonblock > 1) {
+    if (1 < nonblock) {
         // set socket to noblocking
 #ifdef HAVE_FCNTL
         (void)fcntl(s, F_SETFL, fcntl(s, F_GETFL) | O_NONBLOCK);
@@ -299,10 +301,11 @@ socket_t netlib_localsocket(const char *sockfile, int socktype)
 char *netlib_sock2ip(socket_t fd)
 {
     static char ip[INET6_ADDRSTRLEN];
+    int r = 0;
 #ifdef HAVE_INET_NTOP
-    int r;
     sockaddr_t fsin;
     socklen_t alen = (socklen_t) sizeof(fsin);
+
     r = getpeername(fd, &(fsin.sa), &alen);
     if (0 == r) {
         switch (fsin.sa.sa_family) {
@@ -319,10 +322,11 @@ char *netlib_sock2ip(socket_t fd)
             return ip;
         }
     }
-    // Ugh...
-    if (0 != r)
 #endif  // HAVE_INET_NTOP
+
+    if (0 != r) {
         (void)strlcpy(ip, "<unknown>", sizeof(ip));
+    }
     return ip;
 }
 // vim: set expandtab shiftwidth=4
