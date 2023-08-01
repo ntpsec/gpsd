@@ -5,17 +5,17 @@
 # make it easy to pipe/save stderr
 exec 2>&1
 
-# print what we do
-set -x
 if [ 0 != "$(id -u)" ]; then
-    echo "Please run as root"
+    echo "ERROR: Please run as root"
     exit 1
 fi
 if [ -n "${SUDO_COMMAND+1}" ]; then
-    echo "Please run as root"
-    echo "Running under sudo confuses the results."
+    echo "WARNING: Please run as root"
+    echo "WARNING: Running under sudo confuses the results."
 fi
 
+# print what we do
+set -x
 
 id
 uname -a
