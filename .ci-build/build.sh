@@ -15,53 +15,60 @@ if [ "${USE_CCACHE}" = "true" ] && [ -n "${CCACHE_DIR}" ] && command -v ccache >
     mkdir -p "${CCACHE_DIR}"
 
     # fix for ccache: error: BASEDIR: not an absolute path
-    export CCACHE_DIR=$(realpath "${CCACHE_DIR}")
-    export CCACHE_BASEDIR=$(realpath "${CCACHE_BASEDIR}")
+    CCACHE_DIR=$(realpath "${CCACHE_DIR}")
+    export CCACHE_DIR
+    CCACHE_BASEDIR=$(realpath "${CCACHE_BASEDIR}")
+    export CCACHE_BASEDIR
 
     if [ -d "/usr/lib64/ccache" ]; then
         # fedora
-        export PATH="/usr/lib64/ccache:${PATH}"
+        PATH="/usr/lib64/ccache:${PATH}"
     elif [ -d "/usr/local/libexec/ccache/" ]; then
         # freebsd
-        export PATH="/usr/local/libexec/ccache:${PATH}"
+        PATH="/usr/local/libexec/ccache:${PATH}"
     else
         # debian, .....
-        export PATH="/usr/lib/ccache:${PATH}"
+        PATH="/usr/lib/ccache:${PATH}"
     fi
+    export PATH
     echo 'max_size = 100M' > "${CCACHE_DIR}/ccache.conf"
 else
-    export USE_CCACHE="false"
+    USE_CCACHE="false"
+    export USE_CCACHE
 fi
 
 if command -v lsb_release >/dev/null && lsb_release -d | grep -qi -e debian -e ubuntu; then
     eval "$(dpkg-buildflags --export=sh)"
-    export DEB_HOST_MULTIARCH=$(dpkg-architecture -qDEB_HOST_MULTIARCH)
-    export PYTHONS="$(pyversions -v -r '>= 2.3'; py3versions -v -r '>= 3.4')"
+    DEB_HOST_MULTIARCH=$(dpkg-architecture -qDEB_HOST_MULTIARCH)
+    export DEB_HOST_MULTIARCH
+    PYTHONS="$(pyversions -v -r '>= 2.3'; py3versions -v -r '>= 3.4')"
+    export PYTHONS
     SCONSOPTS="${SCONSOPTS} libdir=/usr/lib/${DEB_HOST_MULTIARCH}"
 else
     SCONSOPTS="${SCONSOPTS} libdir=/usr/lib"
 fi
 
-SCONSOPTS="${SCONSOPTS} $@ prefix=/usr"
-SCONSOPTS="${SCONSOPTS} systemd=yes"
-SCONSOPTS="${SCONSOPTS} nostrip=yes"
-SCONSOPTS="${SCONSOPTS} dbus_export=yes"
-SCONSOPTS="${SCONSOPTS} docdir=/usr/share/doc/gpsd"
-SCONSOPTS="${SCONSOPTS} gpsd_user=gpsd"
-SCONSOPTS="${SCONSOPTS} gpsd_group=dialout"
-SCONSOPTS="${SCONSOPTS} debug=yes"
+SCONSOPTS="${SCONSOPTS} $* prefix=/usr \
+	systemd=yes \
+	nostrip=yes \
+	dbus_export=yes \
+	docdir=/usr/share/doc/gpsd \
+	gpsd_user=gpsd \
+	gpsd_group=dialout \
+	debug=yes"
 # set qt_versioned here only for non-CentOS systems (CentOS below)
 if [ ! -f "/etc/centos-release" ]; then
     SCONSOPTS="${SCONSOPTS} qt_versioned=5"
 fi
 
-export SCONS=$(command -v scons)
+SCONS=$(command -v scons)
+export SCONS
 
 if command -v nproc >/dev/null; then
     NPROC=$(nproc)
     SCONS_PARALLEL="-j ${NPROC} "
     if [ "${SLOW_CHECK}" != "yes" ]; then
-        CHECK_NPROC=$(( 4 * ${NPROC} ))
+        CHECK_NPROC=$(( 4 * NPROC ))
         SCONS_CHECK_PARALLEL="-j ${CHECK_NPROC} "
     else
         SCONS_CHECK_PARALLEL="${SCONS_PARALLEL}"
@@ -73,13 +80,16 @@ fi
 
 if [ -f "/etc/centos-release" ]; then
     if grep -q "^CentOS Linux release 7" /etc/centos-release ; then
-        export PYTHONS="2"
+        PYTHONS="2"
+        export PYTHONS
         # Qt version 5 currently doesn't compile, so omit versioning
         # for now
         #SCONSOPTS="${SCONSOPTS} qt_versioned=5"
     elif grep -q "^CentOS Linux release 8" /etc/centos-release ; then
-        export SCONS=$(command -v scons-3)
-        export PYTHONS="3"
+        SCONS=$(command -v scons-3)
+        export SCONS
+        PYTHONS="3"
+        export PYTHONS
         SCONSOPTS="${SCONSOPTS} qt_versioned=5"
     else
         # other CentOS versions not explicitly considered here, handle
@@ -91,20 +101,22 @@ fi
 export SCONSOPTS
 
 if [ -z "$PYTHONS" ]; then
-    export PYTHONS="3"
+    PYTHONS="3"
+    export PYTHONS
 fi
 
 if [ -n "${SCAN_BUILD}" ]; then
-    export PYTHONS="3"
+    PYTHONS="3"
+    export PYTHONS
 fi
 
 for py in $PYTHONS; do
     _SCONS="${SCONS} target_python=python${py}"
-    python${py}     ${_SCONS} ${SCONSOPTS} --clean
+    "python${py}"     ${_SCONS} ${SCONSOPTS} --clean
     rm -f .sconsign.*.dblite
-    ${SCAN_BUILD} python${py}     ${_SCONS} ${SCONS_PARALLEL}${SCONSOPTS} build-all
+    ${SCAN_BUILD} "python${py}"     ${_SCONS} ${SCONS_PARALLEL}${SCONSOPTS} build-all
     if [ -z "${NOCHECK}" ]; then
-        python${py}     ${_SCONS} ${SCONS_CHECK_PARALLEL}${SCONSOPTS} check
+        "python${py}"     ${_SCONS} ${SCONS_CHECK_PARALLEL}${SCONSOPTS} check
     fi
 done
 
