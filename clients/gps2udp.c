@@ -12,7 +12,7 @@
  *
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include <arpa/inet.h>
 #include <assert.h>
@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 // do not use strsep() it is not POSIX
-#include <string.h>      /* for strlcpy(), strtok(), etc. */
+#include <string.h>      // for strlcpy(), strtok(), etc.
 #include <strings.h>
 #include <sys/select.h>
 #include <sys/socket.h>
@@ -47,7 +47,7 @@
 
 static struct gps_data_t gpsdata;
 
-/* UDP socket variables */
+// UDP socket variables
 #define MAX_UDP_DEST 5
 static int sock[MAX_UDP_DEST];
 static int udpchannel;
@@ -99,7 +99,7 @@ static int send_udp(char *nmeastring, size_t ind)
     } else {
         // use directly nmeastring but change terminition
         buffer = nmeastring;
-        ind = ind-1;
+        ind--;
     }
     // Add termination to NMEA feed for AISHUB
     buffer[ind] = '\r'; ind++;
@@ -125,7 +125,7 @@ static int send_udp(char *nmeastring, size_t ind)
     }
 
     // send message on udp channel
-    for (channel=0; channel < udpchannel; channel ++) {
+    for (channel = 0; channel < udpchannel; channel ++) {
         ssize_t status = send(sock[channel],
                               buffer,
                               ind,
@@ -380,6 +380,7 @@ static unsigned int AISGetInt(unsigned char *bitbytes, unsigned int sp,
 
     for(i = 0; i < len; i++) {
         unsigned int cp, cx, c0;
+
         acc  = acc << 1;
         cp = (s0p + i) / 6;
         cx = (unsigned int)bitbytes[cp];      // what if cp >= byte_length?
@@ -418,30 +419,34 @@ int main(int argc, char **argv)
     flags = WATCH_ENABLE;
     while (1) {
         int ch;
+
 #ifdef HAVE_GETOPT_LONG
         ch = getopt_long(argc, argv, optstring, long_options, &option_index);
 #else
         ch = getopt(argc, argv, optstring);
 #endif
-        if (ch == -1) {
+        if (-1 == ch) {
             break;
         }
 
         switch (ch) {
         case 'a':
             aisonly = true;
-            if (0 < debug)
+            if (0 < debug) {
                 (void)fprintf(stdout, "AIS only selected\n");
+            }
             break;
         case 'b':
             daemonize = true;
-            if (0 < debug)
+            if (0 < debug) {
                 (void)fprintf(stdout, "Daemonize selected\n");
+            }
             break;
         case 'c':
             count = atol(optarg);
-            if (0 < debug)
+            if (0 < debug) {
                 (void)fprintf(stdout, "Count %ld selected\n", count);
+            }
             break;
         case 'd':
             debug = atoi(optarg);
@@ -449,12 +454,14 @@ int main(int argc, char **argv)
                 usage();
                 exit(1);
             }
-            if (0 < debug)
+            if (0 < debug) {
                 (void)fprintf(stdout, "Debug %u selected\n", debug);
+            }
             break;
         case 'j':
-            if (0 < debug)
+            if (0 < debug) {
                 (void)fprintf(stdout, "JSON selected\n");
+            }
             flags |= WATCH_JSON;
             break;
         case 'n':
@@ -471,7 +478,7 @@ int main(int argc, char **argv)
             tpvonly = true;
             break;
         case 'u':
-            if (udpchannel >= MAX_UDP_DEST) {
+            if (MAX_UDP_DEST <= udpchannel) {
                 (void)fprintf(stderr,
                               "gps2udp: too many UDP destinations (max=%d).\n",
                               MAX_UDP_DEST);
@@ -592,7 +599,7 @@ int main(int argc, char **argv)
 
             // if we count messages check it now
             if (0 <= count) {
-                if (count-- == 0) {
+                if (0 == count--) {
                     // completed count
                     (void)fprintf(stderr,
                                   "gpsd2udp: normal exit after counted "
