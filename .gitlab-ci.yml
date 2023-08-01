@@ -26,22 +26,6 @@ alpine-3:
     - apk add scons asciidoctor python3-dev libcap-dev ncurses-dev build-base bash linux-headers musl-dev ccache
     - .ci-build/build.sh
 
-debian-stable:
-  image: debian:latest
-  stage: build
-  variables:
-    SCONSOPTS: 'qt=yes xgps=yes'
-    PACKAGES: 'build-essential ccache debhelper po-debconf python3-all-dev python3-all-dbg asciidoctor libncurses-dev libusb-1.0-0-dev libdbus-1-dev libglib2.0-dev makedev libbluetooth-dev qtbase5-dev libqt5network5 lsb-release bc dpkg-dev scons chrpath dh-buildinfo pps-tools python3-lib2to3 python3'
-  extends: .debian_build
-
-debian-unstable:gcc:
-  image: debian:unstable
-  stage: build
-  variables:
-    SCONSOPTS: 'qt=yes xgps=yes'
-    PACKAGES: 'build-essential ccache debhelper po-debconf python3-all-dev python3-all-dbg asciidoctor libncurses-dev libusb-1.0-0-dev libdbus-1-dev libglib2.0-dev makedev libbluetooth-dev qtbase5-dev libqt5network5 lsb-release bc dpkg-dev scons chrpath dh-buildinfo pps-tools python3-lib2to3 python3'
-  extends: .debian_build
-
 debian-experimental:gcc:
   allow_failure: true
   image: debian:experimental
@@ -81,43 +65,6 @@ debian-unstable:minimal:
     SCONSOPTS: 'aivdm=no ashtech=no bluez=no control_socket=no controlsend=no coveraging=no dbus_export=no debug=no earthmate=no evermore=no force_global=no fury=no fv18=no garmin=no garmintxt=no geostar=no gpsclock=no gpsdclients=no greis=no implicit_link=no isync=no itrax=no leapfetch=no libgpsmm=no magic_hat=no manbuild=no minimal=no mtk3301=no navcom=no ncurses=no netfeed=no nmea0183=no nmea2000=no nostrip=no ntrip=no oceanserver=no oncore=no oscillator=no passthrough=no profiling=no python=no qt=no reconfigure=no rtcm104v2=no rtcm104v3=no shared=no shm_export=no sirf=no skytraq=no slow=no socket_export=yes squelch=no superstar2=no systemd=no timeservice=no tnt=no tripmate=no tsip=no ublox=no usb=no xgps=no'
     NOCHECK: 'true'
     PACKAGES: 'build-essential ccache scons chrpath lsb-release python3-all-dev python3-lib2to3 python3'
-  extends: .debian_build
-
-
-# the latest tag should match the last Ubuntu LTS release.
-ubuntu-latest:gcc:
-  image: ubuntu:latest
-  stage: build
-  variables:
-    SCONSOPTS: 'qt=yes xgps=yes'
-    PACKAGES: 'build-essential ccache debhelper po-debconf python3-all-dev python3-all-dbg asciidoctor libncurses-dev libusb-1.0-0-dev libdbus-1-dev libglib2.0-dev makedev libbluetooth-dev qtbase5-dev libqt5network5 lsb-release bc dpkg-dev scons chrpath dh-buildinfo pps-tools'
-  before_script:
-    - apt update && apt -y install scons
-  extends: .debian_build
-
-
-# the "rolling" release
-ubuntu-rolling:gcc:
-  # Broken 19 April 2021
-  allow_failure: true
-  image: ubuntu:rolling
-  stage: build
-  variables:
-    SCONSOPTS: 'qt=yes xgps=yes'
-    # package gone April 2021
-    PACKAGES: 'build-essential ccache debhelper po-debconf python3-all-dev python3-all-dbg asciidoctor libncurses-dev libusb-1.0-0-dev libdbus-1-dev libglib2.0-dev makedev libbluetooth-dev qtbase5-dev libqt5network5 lsb-release bc dpkg-dev scons chrpath dh-buildinfo pps-tools'
-  extends: .debian_build
-
-
-# the devel tag should point to the docker image of the next, upcoming Ubuntu release
-ubuntu-devel:gcc:
-  # Broken 20 Nov 2020
-  allow_failure: true
-  image: ubuntu:devel
-  stage: build
-  variables:
-    SCONSOPTS: 'qt=yes xgps=yes'
-    PACKAGES: 'build-essential ccache debhelper po-debconf python3-all-dev python3-all-dbg asciidoctor libncurses-dev libusb-1.0-0-dev libdbus-1-dev libglib2.0-dev makedev libbluetooth-dev qtbase5-dev libqt5network5 lsb-release bc dpkg-dev scons chrpath dh-buildinfo pps-tools python3-setuptools'
   extends: .debian_build
 
 fedora-latest:
@@ -321,48 +268,3 @@ pages:
     paths:
       - public
   <<: *should_build_pages
-
-.frpm_build:
-  stage: build
-  before_script:
-    - dnf install -y bluez-libs-devel bzip2 chrpath createrepo_c dbus-devel dbus-glib-devel desktop-file-utils dnf-plugins-core gcc-c++ git ncurses-devel qt-devel pps-tools-devel python3-devel rpmdevtools systemd xz
-    - dnf install -y asciidoctor libusb1-devel python3-devel python3-scons fedora-packager
-  script:
-    - python3 $(command -v scons) -c
-    - python3 $(command -v scons) build
-    - python3 $(command -v scons) dist
-    - python3 $(command -v scons) distrpm
-  after_script:
-    - ls -laR /root/rpmbuild/RPMS/
-    - mkdir -pv .pages .public/repos/$REPOPATH/gpsd/x86_64/RPMS
-    - mv -v /root/rpmbuild/RPMS/x86_64/*.rpm .public/repos/$REPOPATH/gpsd/x86_64/RPMS
-    - createrepo_c -v --deltas --retain-old-md 1 .public/repos/$REPOPATH/gpsd/x86_64/RPMS
-  artifacts:
-    paths:
-      - .public/repos/*/*/gpsd/x86_64/RPMS/
-      - gpsd-*.tar.*
-      - gpsd-*/packaging/rpm/gpsd.spec
-    expire_in: 2 weeks
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH'
-      when: never
-    - if: $CI_PIPELINE_SOURCE != "schedule"
-      when: never
-
-dist-f35:
-  variables:
-    REPOPATH: "Fedora/35"
-  image: fedora:35
-  extends: .frpm_build
-
-dist-f36:
-  variables:
-    REPOPATH: "Fedora/36"
-  image: fedora:36
-  extends: .frpm_build
-
-dist-f34:
-  variables:
-    REPOPATH: "Fedora/34"
-  image: fedora:34
-  extends: .frpm_build
