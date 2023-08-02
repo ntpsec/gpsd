@@ -600,15 +600,19 @@ static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
  * Return: 0 == OK
  *         less than zero == failure
  */
-static int ntrip_stream_get_parse(const struct ntrip_stream_t *stream,
-                                  const int dsock,
-                                  const struct gpsd_errout_t *errout)
+static int ntrip_stream_get_parse(struct gps_device_t *device)
 {
-    char buf[BUFSIZ];
     int opts;
+    const struct ntrip_stream_t *stream = &device->ntrip.stream;
+    const int dsock  = device->gpsdata.gps_fd;
+    const struct gpsd_errout_t *errout = &device->context->errout;
+    ssize_t read_ret;         // value retuend from read()
+    char *buf = (char *)device->lexer.inbuffer;
 
-    memset(buf, 0, sizeof(buf));
-    while (-1 == read(dsock, buf, sizeof(buf) - 1)) {
+    lexer_init(&device->lexer);   // paranoia
+    /* We expect the header comes in as one TCP packet.
+     * dsock is still blocking, so get exactly 1024 bytes */
+    while (-1 == (read_ret = read(dsock, buf, 1024))) {
         if (EINTR == errno) {
             continue;
         }
@@ -617,7 +621,7 @@ static int ntrip_stream_get_parse(const struct ntrip_stream_t *stream,
                  strerror(errno), errno, dsock);
         return -1;
     }
-    buf[sizeof(buf) - 1] = '\0';   // pacify coverity about NUL-terminated.
+    buf[read_ret] = '\0';   // Make a nice NUL terminated string.
 
     // parse 401 Unauthorized
     if (NULL != strstr(buf, NTRIP_UNAUTH)) {
@@ -664,9 +668,13 @@ static int ntrip_stream_get_parse(const struct ntrip_stream_t *stream,
                  stream->host, stream->port, stream->mountpoint);
         return -1;
     }
+    // TODO: compute inbufptr, and outbuflen, so the first part is not lost.
     opts = fcntl(dsock, F_GETFL);
 
-    if (0 <= opts) {
+    if (-1 == opts) {
+        GPSD_LOG(LOG_ERROR, errout, "NTRIP: fcntl(%d) %s(%d)\n",
+                 dsock, strerror(errno), errno);
+    } else {
         (void)fcntl(dsock, F_SETFL, opts | O_NONBLOCK);
     }
 
@@ -992,9 +1000,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         device->ntrip.conn_state = NTRIP_CONN_SENT_GET;
         break;
     case NTRIP_CONN_SENT_GET:          // state = 2
-        ret = ntrip_stream_get_parse(&device->ntrip.stream,
-                                     device->gpsdata.gps_fd,
-                                     &device->context->errout);
+        ret = ntrip_stream_get_parse(device);
         if (-1 == ret) {
             (void)close(device->gpsdata.gps_fd);
             device->gpsdata.gps_fd = PLACEHOLDING_FD;
