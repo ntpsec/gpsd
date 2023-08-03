@@ -31,12 +31,12 @@
 // NTRIP 1.0 caster responses.  Based on Icecast audio servers
 #define NTRIP_SOURCETABLE       "SOURCETABLE 200 OK\r\n"
 #define NTRIP_ENDSOURCETABLE    "ENDSOURCETABLE"
-#define NTRIP_ICY               "ICY 200 OK"
+#define NTRIP_ICY               "ICY 200 OK\r\n"
 
 // NTRIP 2.0 caster responses.  Based on HTTP 1.1
 #define NTRIP_SOURCETABLE2      "Content-Type: gnss/sourcetable\r\n"
 #define NTRIP_BODY              "\r\n\r\n"
-#define NTRIP_HTTP              "HTTP/1.1 200 OK"
+#define NTRIP_HTTP              "HTTP/1.1 200 OK\r\n"
 
 // sourcetable stuff
 #define NTRIP_CAS               "CAS;"
@@ -46,8 +46,8 @@
 #define NTRIP_QSC               "\";\""
 
 // HTTP 1.1
-#define NTRIP_UNAUTH            "401 Unauthorized"
-#define NTRIP_CHUNKED           "Transfer-Encoding: chunked"
+#define NTRIP_UNAUTH            "401 Unauthorized\r\n"
+#define NTRIP_CHUNKED           "Transfer-Encoding: chunked\r\n"
 
 
 // table to convert format string to enum ntrip_fmt
@@ -614,20 +614,20 @@ static void lexer_getline(struct gps_lexer_t *lexer)
 
         lexer->outbuffer[i] = u;
         lexer->inbuflen--;
-        if (0 == lexer->inbuflen) {
-            // ending not found
-            i++;
-            break;
-        }
 
         if ('\0' == u) {
             // found NUL
             break;
         }
-        if ('\r' == u) {
+        if ('\n' == u) {
             // found return
-            lexer->outbuffer[i] = '\0';  // Ensure a NUL, remove \n
-            i++;                         // and remove \n too
+            i++;
+            break;
+        }
+
+        if (0 == lexer->inbuflen) {
+            // nothing left to read,  ending not found
+            i++;
             break;
         }
     }
@@ -641,6 +641,7 @@ static void lexer_getline(struct gps_lexer_t *lexer)
  */
 static int ntrip_stream_get_parse(struct gps_device_t *device)
 {
+    char dbgbuf[128];
     int opts;
     const struct ntrip_stream_t *stream = &device->ntrip.stream;
     const int dsock  = device->gpsdata.gps_fd;
@@ -665,8 +666,10 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
     ibuf[read_ret] = '\0';   // Make a nice NUL terminated string.
     lexer->inbuflen = read_ret;
     lexer_getline(lexer);
-    GPSD_LOG(LOG_DATA, errout,
-             "NTRIP: lexer_getline() >%s<\n", lexer->outbuffer);
+    GPSD_LOG(LOG_IO, errout,
+             "NTRIP: lexer_getline() >%s<\n",
+             gps_visibilize(dbgbuf, sizeof(dbgbuf),
+                            (char *)lexer->outbuffer, lexer->outbuflen));
 
     /* check for which of the 4 things we expect to start the reply:
      *
@@ -681,13 +684,6 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
     if (0 == strncmp(obuf, NTRIP_UNAUTH, sizeof(NTRIP_UNAUTH))) {
         GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: not authorized for %s\n", stream->url);
-        return -1;
-    }
-    // can't parse SOURCETABLE here
-    if (0 == strncmp(obuf, NTRIP_SOURCETABLE, sizeof(NTRIP_SOURCETABLE))) {
-        GPSD_LOG(LOG_ERROR, errout,
-                 "NTRIP: caster doesn't recognize stream %s:%s/%s\n",
-                 stream->host, stream->port, stream->mountpoint);
         return -1;
     }
     // parse "ICY 200 OK" or "HTTP/1.1 200 OK"
@@ -715,16 +711,29 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
      *  27-bytes-worth-of-binary-message\r\n
      */
 
-    // Chunking not supported. Yet. Refuse the stream or it would confuse the
-    // RTCM3 parser.
-    // This assumes that the Chunked header is the only header.
-    if (NULL != strstr(ibuf, NTRIP_CHUNKED)) {
-        GPSD_LOG(LOG_ERROR, errout,
-                 "NTRIP: caster sends unsupported chunked replies %s:%s/%s\n",
-                 stream->host, stream->port, stream->mountpoint);
-        return -1;
+    while (1) {
+        lexer_getline(lexer);
+        GPSD_LOG(LOG_IO, errout,
+                 "NTRIP: lexer_getline() >%s<\n",
+                 gps_visibilize(dbgbuf, sizeof(dbgbuf),
+                                (char *)lexer->outbuffer, lexer->outbuflen));
+
+        /* Chunking not supported. Yet. Refuse the stream or it would
+         * confuse the RTCM3 parser. */
+        if (0 == strncmp(obuf, NTRIP_CHUNKED, sizeof(NTRIP_CHUNKED))) {
+            GPSD_LOG(LOG_PROG, errout,
+                     "NTRIP: caster sends hunked data\n");
+            device->ntrip.stream.chunked = true;
+        }
+        if ('\0' == *lexer->outbuffer) {
+            // done, never got end of headers.
+            break;
+        }
+        if (0 == strncmp(obuf, NTRIP_BR, sizeof(NTRIP_BR))) {
+            // done
+            break;
+        }
     }
-    // TODO: compute inbufptr, and outbuflen, so the first part is not lost.
     opts = fcntl(dsock, F_GETFL);
 
     if (-1 == opts) {
@@ -733,7 +742,11 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
     } else {
         (void)fcntl(dsock, F_SETFL, opts | O_NONBLOCK);
     }
-
+    // The excess data from this first read is now in device->lexer.
+    // So far we have only seen zero here.
+    GPSD_LOG(LOG_IO, errout,
+             "NTRIP: ntrip_stream_get_parse(), %zu leftover bytes\n",
+             lexer->inbuflen);
     return 0;
 }
 

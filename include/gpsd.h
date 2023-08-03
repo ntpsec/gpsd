@@ -542,6 +542,7 @@ struct ntrip_stream_t
     } authentication;
     int fee;
     int bitrate;
+    bool chunked;        // true if the HTTP stream is chunked.
 };
 
 
