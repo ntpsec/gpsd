@@ -596,6 +596,45 @@ static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
     return dsock;
 }
 
+/* lexer_getline() -- get one line, ending in \n or \0, from lexer->inbuffer,
+ * put in lexer->outbuffer.  NUL terminate outbuffer.
+ *
+ * Assume: inbufptr is correct.  inbuffer is NULL terminated.
+ *
+ * Can not handle buffer wrap.
+ *
+ * Return: void
+ */
+static void lexer_getline(struct gps_lexer_t *lexer)
+{
+    unsigned i;
+
+    for (i = 0; i < sizeof(lexer->outbuffer) - 2; i++) {
+        unsigned char u = *lexer->inbufptr++;
+
+        lexer->outbuffer[i] = u;
+        lexer->inbuflen--;
+        if (0 == lexer->inbuflen) {
+            // ending not found
+            i++;
+            break;
+        }
+
+        if ('\0' == u) {
+            // found NUL
+            break;
+        }
+        if ('\r' == u) {
+            // found return
+            lexer->outbuffer[i] = '\0';  // Ensure a NUL, remove \n
+            i++;                         // and remove \n too
+            break;
+        }
+    }
+    lexer->outbuffer[i] = '\0';  // Ensure a NUL
+    lexer->outbuflen = i;
+}
+
 /* parse the stream header
  * Return: 0 == OK
  *         less than zero == failure
@@ -607,12 +646,14 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
     const int dsock  = device->gpsdata.gps_fd;
     const struct gpsd_errout_t *errout = &device->context->errout;
     ssize_t read_ret;         // value retuend from read()
-    char *buf = (char *)device->lexer.inbuffer;
+    struct gps_lexer_t *lexer = &device->lexer;
+    char *ibuf = (char *)lexer->inbuffer;
+    char *obuf = (char *)lexer->outbuffer;
 
-    lexer_init(&device->lexer);   // paranoia
+    lexer_init(lexer);
     /* We expect the header comes in as one TCP packet.
      * dsock is still blocking, so get exactly 1024 bytes */
-    while (-1 == (read_ret = read(dsock, buf, 1024))) {
+    while (-1 == (read_ret = read(dsock, ibuf, 1024))) {
         if (EINTR == errno) {
             continue;
         }
@@ -621,29 +662,44 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
                  strerror(errno), errno, dsock);
         return -1;
     }
-    buf[read_ret] = '\0';   // Make a nice NUL terminated string.
+    ibuf[read_ret] = '\0';   // Make a nice NUL terminated string.
+    lexer->inbuflen = read_ret;
+    lexer_getline(lexer);
+    GPSD_LOG(LOG_DATA, errout,
+             "NTRIP: lexer_getline() >%s<\n", lexer->outbuffer);
 
-    // parse 401 Unauthorized
-    if (NULL != strstr(buf, NTRIP_UNAUTH)) {
+    /* check for which of the 4 things we expect to start the reply:
+     *
+     * 401 Unauthorized\r\n     -- missing or wrong authentication
+     * SOURCETABLE 200 OK\r\n   -- incorrect mount point requested
+     * ICY 200 OK\r\n           -- NTRIP v1
+     * HTTP/1.1 200 OK\r\n      -- NTRIP v2
+     *
+     * Anything else is not understood.
+    */
+
+    if (0 == strncmp(obuf, NTRIP_UNAUTH, sizeof(NTRIP_UNAUTH))) {
         GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: not authorized for %s\n", stream->url);
         return -1;
     }
     // can't parse SOURCETABLE here
-    if (NULL != strstr(buf, NTRIP_SOURCETABLE)) {
+    if (0 == strncmp(obuf, NTRIP_SOURCETABLE, sizeof(NTRIP_SOURCETABLE))) {
         GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: caster doesn't recognize stream %s:%s/%s\n",
                  stream->host, stream->port, stream->mountpoint);
         return -1;
     }
     // parse "ICY 200 OK" or "HTTP/1.1 200 OK"
-    if (NULL == strstr(buf, NTRIP_ICY) &&
-        NULL == strstr(buf, NTRIP_HTTP)) {
+    if (0 != strncmp(obuf, NTRIP_ICY, sizeof(NTRIP_ICY)) &&
+        0 != strncmp(obuf, NTRIP_HTTP, sizeof(NTRIP_HTTP))) {
         GPSD_LOG(LOG_ERROR, errout,
-                 "NTRIP: Unknown reply %s from caster: %s:%s/%s\n", buf,
+                 "NTRIP: Unknown reply %s from caster: %s:%s/%s\n", obuf,
                  stream->host, stream->port, stream->mountpoint);
         return -1;
     }
+
+    // first line is good.
 
     /* The NTRIP v2.0 is heavily based on HTTP/1.1, with some casters
      * also using chunked transfers, as defined by RFC 9112, chap. 7.1,
@@ -662,7 +718,7 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
     // Chunking not supported. Yet. Refuse the stream or it would confuse the
     // RTCM3 parser.
     // This assumes that the Chunked header is the only header.
-    if (NULL != strstr(buf, NTRIP_CHUNKED)) {
+    if (NULL != strstr(ibuf, NTRIP_CHUNKED)) {
         GPSD_LOG(LOG_ERROR, errout,
                  "NTRIP: caster sends unsupported chunked replies %s:%s/%s\n",
                  stream->host, stream->port, stream->mountpoint);
