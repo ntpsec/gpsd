@@ -384,10 +384,11 @@ class gps_io(object):
             if self.gpsd_host is not None:
                 # gpsd input
                 start = monotonic()
-                while (monotonic() - start) < input_wait:
+                remaining_time = input_wait
+                while remaining_time > 0:
                     # First priority is to be sure the input buffer is read.
                     # This is to prevent input buffer overuns
-                    if 0 < self.ser.waiting():
+                    if 0 < self.ser.waiting(remaining_time):
                         # We have serial input waiting, get it
                         # No timeout possible
                         # RTCM3 JSON can be over 4.4k long, so go big
@@ -397,17 +398,22 @@ class gps_io(object):
                             raw_fd.write(polybytes(new_out))
                         self.out += new_out
 
-                    consumed = decode_func(self.out)
-                    # TODO: the decoder shall return a some current
-                    # statement_identifier # to fill last_statement_identifier
-                    last_statement_identifier = None
-                    #
-                    self.out = self.out[consumed:]
-                    if ((expect_statement_identifier and
-                         (expect_statement_identifier ==
-                          last_statement_identifier))):
-                        # Got what we were waiting for.  Done?
-                        ret_code = 0
+                    while True:
+                        consumed = decode_func(self.out)
+                        if consumed == 0:
+                            break
+                        # TODO: the decoder shall return a some current
+                        # statement_identifier # to fill last_statement_identifier
+                        last_statement_identifier = None
+                        #
+                        self.out = self.out[consumed:]
+                        if ((expect_statement_identifier and
+                             (expect_statement_identifier ==
+                              last_statement_identifier))):
+                            # Got what we were waiting for.  Done?
+                            ret_code = 0
+
+                    remaining_time = start + input_wait - monotonic()
 
             elif self.input_is_device:
                 # input is a serial device
