@@ -2866,6 +2866,7 @@ void packet_parse(struct gps_lexer_t *lexer)
 ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
 {
     ssize_t recvd;
+    char scratchbuf[MAX_PACKET_LENGTH * 4 + 1];
 
     errno = 0;
     /* O_NONBLOCK set, so this should not block.
@@ -2885,7 +2886,6 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
             return -1;
         }
     } else {
-        char scratchbuf[MAX_PACKET_LENGTH * 4 + 1];
         GPSD_LOG(LOG_RAW1, &lexer->errout,
                  "PACKET: Read %zd chars to buffer[%zd] (total %zd): %s\n",
                  recvd, lexer->inbuflen, lexer->inbuflen + recvd,
@@ -2896,7 +2896,12 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
     GPSD_LOG(LOG_SPIN, &lexer->errout,
              "PACKET: packet_get() fd %d -> %zd %s(%d)\n",
              fd, recvd, strerror(errno), errno);
-
+    if (true == lexer->chunked) {
+        GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                 "PACKET: packet_get() fd %d CHUNKED %s \n", fd,
+                 gps_visibilize(scratchbuf, sizeof(scratchbuf),
+                                (char *)lexer->inbufptr, 10));
+    }
     /*
      * Bail out, indicating no more input, only if we just received
      * nothing from the device and there is nothing waiting in the

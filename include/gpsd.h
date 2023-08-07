@@ -105,6 +105,8 @@ extern "C" {
  *      add TSIPv1 stuff
  * 3.25
  *      add end_gsv_talker and gga_sats_used to gps_device_t.nmea
+ * 3.26
+ *      add chunked to gps_lexer_t, for NTRIP 1.1 chunking.
  */
 
 #define JSON_DATE_MAX   24      // ISO8601 timestamp with 2 decimal places
@@ -292,6 +294,7 @@ struct gps_lexer_t {
     unsigned char stashbuffer[MAX_PACKET_LENGTH];
     size_t stashbuflen;
 #endif  // STASH_ENABLE
+    bool chunked;        // true if NTRIP/1.1 and the HTTP stream is chunked.
 };
 
 extern void lexer_init(struct gps_lexer_t *);
@@ -542,7 +545,6 @@ struct ntrip_stream_t
     } authentication;
     int fee;
     int bitrate;
-    bool chunked;        // true if the HTTP stream is chunked.
 };
 
 

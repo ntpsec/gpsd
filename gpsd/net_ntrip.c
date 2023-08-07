@@ -706,9 +706,17 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
      *  Transfer-Encoding: chunked\r\n
      *  \r\n
      *  64\r\n
-     *  64-bytes-worth-of-binary-message\r\n
-     *  27\r\n
-     *  27-bytes-worth-of-binary-message\r\n
+     *  x64-bytes-worth-of-binary-message
+     *  \r\n
+     *  27;\r\n
+     *  x27-bytes-worth-of-binary-message
+     *  \r\n
+     *  42;foo=bar\r\n
+     *  x42-bytes-worth-of-binary-message
+     *  \r\n
+     *
+     * http/2 removed support for chunking.
+     *
      */
 
     while (1) {
@@ -723,7 +731,7 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
         if (0 == strncmp(obuf, NTRIP_CHUNKED, sizeof(NTRIP_CHUNKED))) {
             GPSD_LOG(LOG_PROG, errout,
                      "NTRIP: caster sends hunked data\n");
-            device->ntrip.stream.chunked = true;
+            lexer->chunked = true;
         }
         if ('\0' == *lexer->outbuffer) {
             // done, never got end of headers.
@@ -747,6 +755,9 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
     GPSD_LOG(LOG_IO, errout,
              "NTRIP: ntrip_stream_get_parse(), %zu leftover bytes\n",
              lexer->inbuflen);
+    if (0 == lexer->inbuflen) {
+        packet_reset(lexer);
+    }
     return 0;
 }
 
