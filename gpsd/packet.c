@@ -36,6 +36,7 @@ PERMISSIONS
 #include <netinet/in.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>             // for strtol()
 #include <string.h>
 #include <sys/time.h>           // for struct timeval
 #include <sys/types.h>
@@ -2897,8 +2898,29 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
              "PACKET: packet_get() fd %d -> %zd %s(%d)\n",
              fd, recvd, strerror(errno), errno);
     if (true == lexer->chunked) {
+        unsigned chunk_size = 0;     // given chunk size
+        size_t idx = 0;              // index into inbuffer.
+
+        // ugly, but shift the inbuffer if not already zero aligned.
+        if (lexer->inbufptr != lexer->inbuffer) {
+            memmove(lexer->inbuffer, lexer->inbuffer + lexer->inbuflen,
+                    lexer->inbuflen);
+            lexer->inbufptr = lexer->inbuffer;
+        }
+
+        for (idx = 0; idx < lexer->inbuflen; idx++) {
+            if (!isxdigit(lexer->inbuffer[idx])) {
+                // terminate on non-hex.
+                // valid endings are ':' or '\r\n'.
+                break;
+            }
+            // FIXME: use endptr, instead of for loop
+            chunk_size = strtol((char *)lexer->inbuffer, NULL, 16);
+        }
+
         GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                 "PACKET: packet_get() fd %d CHUNKED %s \n", fd,
+                 "PACKET: NTRIP: packet_get(d %d) CHUNKED %u inbuflen %zu %s\n",
+                 fd, chunk_size, lexer->inbuflen,
                  gps_visibilize(scratchbuf, sizeof(scratchbuf),
                                 (char *)lexer->inbufptr, 10));
     }
