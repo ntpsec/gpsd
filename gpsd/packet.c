@@ -2898,8 +2898,17 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
              "PACKET: packet_get() fd %d -> %zd %s(%d)\n",
              fd, recvd, strerror(errno), errno);
     if (true == lexer->chunked) {
+        /* Handle http/1.1 chinking as a layer about the packet layer.
+         * so far only NTRIP v2 uses it. */
         unsigned chunk_size = 0;     // given chunk size
         size_t idx = 0;              // index into inbuffer.
+        size_t needed = 0;
+
+        GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                 "PACKET: packet_get(%d) -> %zd entering chunked %s\n",
+                 fd, recvd,
+                 gps_visibilize(scratchbuf, sizeof(scratchbuf),
+                                (char *)lexer->inbufptr, 10));
 
         // ugly, but shift the inbuffer if not already zero aligned.
         if (lexer->inbufptr != lexer->inbuffer) {
@@ -2908,6 +2917,7 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
             lexer->inbufptr = lexer->inbuffer;
         }
 
+        chunk_size = 0;
         for (idx = 0; idx < lexer->inbuflen; idx++) {
             if (!isxdigit(lexer->inbuffer[idx])) {
                 // terminate on non-hex.
@@ -2917,12 +2927,51 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
             // FIXME: use endptr, instead of for loop
             chunk_size = strtol((char *)lexer->inbuffer, NULL, 16);
         }
+        if (';' != lexer->inbuffer[idx] &&
+            '\r' != lexer->inbuffer[idx]) {
+            // invalid ending.  valid endings are ':' or '\r\n'.
+            GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                     "PACKET: NTRIP: packet_get(d %d) invalid ending idx %zu "
+                     "(x%x).\n",
+                     fd, idx, lexer->inbuffer[idx]);
+            return 0;   // assume we need more input.
+        }
+        for (; idx < lexer->inbuflen; idx++) {
+            // move past '\n'
+            if ('\n' == lexer->inbuffer[idx]) {
+                break;
+            }
+        }
+        if ('\n' != lexer->inbuffer[idx]) {
+            // invalid ending.  valid endings is '\n'.
+            GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                     "PACKET: NTRIP: packet_get(d %d) invalid ending 2.\n",
+                     fd);
+            return 0;   // assume we need more input.
+        }
 
+        // to unchunk we need chunk size + 2 more for \r\n
+        needed = chunk_size + 2 + idx;
         GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                 "PACKET: NTRIP: packet_get(d %d) CHUNKED %u inbuflen %zu %s\n",
-                 fd, chunk_size, lexer->inbuflen,
+                 "PACKET: NTRIP: packet_get(d %d) CHUNKED %u inbuflen %zu "
+                 "needed %zu %s\n",
+                 fd, chunk_size, lexer->inbuflen, needed,
                  gps_visibilize(scratchbuf, sizeof(scratchbuf),
                                 (char *)lexer->inbufptr, 10));
+        if (needed >= lexer->inbuflen) {
+            // don't have enough yet
+            GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                     "PACKET: NTRIP: packet_get(d %d) no full chunk yet.\n",
+                     fd);
+            return 0;   // assume we need more input.
+        }
+        // enough data in inbuffer, starting at inbuffer[idc] + 1
+        // move past that chunk header.
+        lexer->inbufptr += idx;
+        lexer->inbuflen -= idx;
+        GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                 "PACKET: NTRIP: packet_get(d %d) got a chunk.\n",
+                 fd);
     }
     /*
      * Bail out, indicating no more input, only if we just received

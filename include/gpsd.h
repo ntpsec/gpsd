@@ -303,6 +303,8 @@ extern void packet_pushback(struct gps_lexer_t *);
 extern void packet_parse(struct gps_lexer_t *);
 extern ssize_t packet_get(int, struct gps_lexer_t *);
 extern int packet_sniff(struct gps_lexer_t *);
+
+// return the number of bytes waiting in inbuffer
 #define packet_buffered_input(lexer) ((lexer)->inbuffer + (lexer)->inbuflen - (lexer)->inbufptr)
 
 // Next, declarations for the core library...

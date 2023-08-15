@@ -730,7 +730,7 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
          * confuse the RTCM3 parser. */
         if (0 == strncmp(obuf, NTRIP_CHUNKED, sizeof(NTRIP_CHUNKED))) {
             GPSD_LOG(LOG_PROG, errout,
-                     "NTRIP: caster sends hunked data\n");
+                     "NTRIP: caster sends chunked data\n");
             lexer->chunked = true;
         }
         if ('\0' == *lexer->outbuffer) {
@@ -757,6 +757,11 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
              lexer->inbuflen);
     if (0 == lexer->inbuflen) {
         packet_reset(lexer);
+    } else {
+        GPSD_LOG(LOG_IO, errout,
+                 "NTRIP: leftover: >%s<\n",
+                 gps_visibilize(dbgbuf, sizeof(dbgbuf),
+                                (char *)lexer->inbufptr, lexer->inbuflen));
     }
     return 0;
 }
