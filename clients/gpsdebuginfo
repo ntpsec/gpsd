@@ -57,8 +57,8 @@ if command -v ntpshmmon; then
     # 6 lines, or 10 seconds, of ntpshmmon
     ntpshmmon -n 6 -t 10
 fi
-# check for /dev/pps*, /dev/ttyA*, ttyS*, ttyT*, ttyU*, gps*
-ls -l /dev/pps* /dev/tty[ASTU]* /dev/gps*
+# check for /dev/pps*, /dev/ttyA*, ttyP* ttyS*, ttyT*, ttyU*, gps*
+ls -l /dev/pps* /dev/tty[APSTU]* /dev/gps*
 # check for USB receivers
 if command -v lsusb; then
     lsusb
