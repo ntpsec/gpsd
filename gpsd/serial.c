@@ -1044,6 +1044,12 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
         return false;
     }
 
+    // ...or if the port speed is fixed.
+    if (0 < session->context->fixed_port_speed) {
+        //  this prevents framing hunt.
+        return false;
+    }
+
     clock_gettime(CLOCK_REALTIME, &ts_now);
     TS_SUB(&ts_diff, &ts_now, &session->ts_startCurrentBaud);
 
@@ -1086,11 +1092,6 @@ bool gpsd_next_hunt_setting(struct gps_device_t * session)
                      icount.buf_overrun);
         }
 #endif  // TIOCGICOUNT
-        if (0 < session->context->fixed_port_speed) {
-            //  fixed speed, don't hunt
-            //  this prevents framing hunt?
-            return false;
-        }
 
         if ((unsigned int)((sizeof(rates) / sizeof(rates[0])) - 1) <=
             session->baudindex++) {
