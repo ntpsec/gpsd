@@ -146,6 +146,11 @@ static sourcetype_t gpsd_classify(struct gps_device_t *session)
             break;
 
         default:     // Give up, default to rs232
+            /* reports that Buildroot may usa major 241 for serial,
+             *  instead of its documented purpose (usbmon). */
+            GPSD_LOG(LOG_WARNING, &session->context->errout,
+                     "SER: gpsd_classify(%s) Unkown Major Device # %d\n",
+                     path, devmajor);
             devtype = SOURCE_RS232;
             break;
         }
