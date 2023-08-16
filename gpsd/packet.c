@@ -2905,7 +2905,7 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
         size_t needed = 0;
 
         GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                 "PACKET: packet_get(%d) -> %zd entering chunked %s\n",
+                 "PACKET: packet_get(%d) -> %zd entering chunked >%s<\n",
                  fd, recvd,
                  gps_visibilize(scratchbuf, sizeof(scratchbuf),
                                 (char *)lexer->inbufptr, 10));
@@ -2943,19 +2943,21 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
             }
         }
         if ('\n' != lexer->inbuffer[idx]) {
-            // invalid ending.  valid endings is '\n'.
+            // Invalid ending.  The only valid ending is '\n'.
             GPSD_LOG(LOG_SHOUT, &lexer->errout,
                      "PACKET: NTRIP: packet_get(d %d) invalid ending 2.\n",
                      fd);
             return 0;   // assume we need more input.
         }
+        idx++;    // move past the trailing '\n'
 
-        // to unchunk we need chunk size + 2 more for \r\n
+        /* to unchunk we need chunk size + 2 more for \r\n + 2 more
+         * for the tailing \r\n */
         needed = chunk_size + 2 + idx;
         GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                 "PACKET: NTRIP: packet_get(d %d) CHUNKED %u inbuflen %zu "
-                 "needed %zu %s\n",
-                 fd, chunk_size, lexer->inbuflen, needed,
+                 "PACKET: NTRIP: packet_get(d %d) CHUNKED %u idx %zu "
+                 "inbuflen %zu needed %zu %s\n",
+                 fd, chunk_size, idx, lexer->inbuflen, needed,
                  gps_visibilize(scratchbuf, sizeof(scratchbuf),
                                 (char *)lexer->inbufptr, 10));
         if (needed >= lexer->inbuflen) {
@@ -2970,8 +2972,9 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
         lexer->inbufptr += idx;
         lexer->inbuflen -= idx;
         GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                 "PACKET: NTRIP: packet_get(d %d) got a chunk.\n",
-                 fd);
+                 "PACKET: NTRIP: packet_get(d %d) got a chunk >%s<\n",
+                 fd, gps_visibilize(scratchbuf, sizeof(scratchbuf),
+                                (char *)lexer->inbufptr, 10));
     }
     /*
      * Bail out, indicating no more input, only if we just received

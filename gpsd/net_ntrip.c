@@ -758,10 +758,16 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
     if (0 == lexer->inbuflen) {
         packet_reset(lexer);
     } else {
+        // The "leftover" is the start of the first chunk.
+        if (lexer->inbufptr != lexer->inbuffer) {
+            // Shift inbufptr to the start.  Yes, a bit brutal.
+            memmove(lexer->inbuffer, lexer->inbufptr, lexer->inbuflen);
+            lexer->inbufptr = lexer->inbuffer;
+        }
         GPSD_LOG(LOG_IO, errout,
                  "NTRIP: leftover: >%s<\n",
                  gps_visibilize(dbgbuf, sizeof(dbgbuf),
-                                (char *)lexer->inbufptr, lexer->inbuflen));
+                                (char *)lexer->inbuffer, lexer->inbuflen));
     }
     return 0;
 }
