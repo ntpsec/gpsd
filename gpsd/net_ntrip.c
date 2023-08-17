@@ -715,7 +715,10 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
      *  x42-bytes-worth-of-binary-message
      *  \r\n
      *
-     * http/2 removed support for chunking.
+     * Annoyingly the chunks are NOT aligned on NTRIP message boundaries.
+     * So one possible benefit is lost.
+     *
+     * http/2 removed support for chunking.  Good riddance!
      *
      */
 
