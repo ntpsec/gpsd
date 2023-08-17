@@ -30,21 +30,23 @@ const char *gpsd_packetdump(char *scbuf, size_t scbuflen,
                             size_t binbuflen)
 {
     const unsigned char *cp;
-    bool printable = true;
 
     if (NULL == binbuf) {
         return "";
     }
-    for (cp = binbuf; cp < binbuf + binbuflen; cp++)
-        if (!isprint(*cp) && !isspace(*cp)) {
-            printable = false;
-            break;      // no need to keep iterating
+    for (cp = binbuf; cp < binbuf + binbuflen; cp++) {
+        // Careful, isprint() is locale specific.
+        if (0x7f <= *cp ||
+            (!isprint(*cp) &&
+             !isspace(*cp))) {
+            // some non-printable, do it the hard way.
+            return gps_hexdump(scbuf, scbuflen, binbuf, binbuflen);
         }
-    if (printable) {
-        return (const char *)binbuf;
     }
-    // else
-    return gps_hexdump(scbuf, scbuflen, binbuf, binbuflen);
+    // all printable
+    memcpy(scbuf, binbuf, binbuflen);
+    scbuf[binbuflen] = '\0';    // paranoia
+    return (const char *)scbuf;
 }
 
 /* gps_hexdump()
@@ -60,7 +62,6 @@ const char *gps_hexdump(char *scbuf, size_t scbuflen,
     size_t len =
         (size_t)((binbuflen >
                    MAX_PACKET_LENGTH) ? MAX_PACKET_LENGTH : binbuflen);
-    const char *ibuf = (const char *)binbuf;
     const char *hexchar = "0123456789abcdef";
 
     if (NULL == binbuf ||
@@ -70,8 +71,8 @@ const char *gps_hexdump(char *scbuf, size_t scbuflen,
     }
 
     for (i = 0; i < len && j < (scbuflen - 3); i++) {
-        scbuf[j++] = hexchar[(ibuf[i] & 0xf0) >> 4];
-        scbuf[j++] = hexchar[ibuf[i] & 0x0f];
+        scbuf[j++] = hexchar[(binbuf[i] >> 4) & 0x0f];
+        scbuf[j++] = hexchar[binbuf[i] & 0x0f];
     }
     scbuf[j] = '\0';
     return scbuf;
