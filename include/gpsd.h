@@ -255,7 +255,7 @@ struct gps_lexer_t {
 #define PACKET_TYPEMASK(n)      (1 << (n))
 #define GPS_TYPEMASK    (((2<<(MAX_GPSPACKET_TYPE+1))-1) &~ PACKET_TYPEMASK(COMMENT_PACKET))
     unsigned int state;
-    size_t length;
+    size_t length;         // if a message has a length field, this is it.
     unsigned char inbuffer[MAX_PACKET_LENGTH*2+1];
     size_t inbuflen;
     unsigned char *inbufptr;
