@@ -2906,12 +2906,13 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
         int chunk_num;
         unsigned char tmp_buffer[sizeof(lexer->inbuffer)];
         size_t tmp_buflen = 0;  // bytes in tmp_buffer
+        size_t saved_inbuflen;
 
         GPSD_LOG(LOG_SHOUT, &lexer->errout,
                  "PACKET: packet_get(%d) -> %zd entering chunked >%s<\n",
                  fd, recvd,
                  gps_visibilize(scratchbuf, sizeof(scratchbuf),
-                                (char *)lexer->inbufptr, 10));
+                                (char *)lexer->inbufptr, lexer->inbuflen));
 
         // ugly, but shift the inbuffer if not already zero aligned.
         // it always, usually, is aligned?
@@ -2923,10 +2924,10 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
         for (chunk_num = 0; ; chunk_num++) {
 
             GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                     "PACKET: packet_get(%d)  chunk %d >%s<\n",
+                     "PACKET: packet_get(%d) chunk %d >%s<\n",
                      fd, chunk_num,
                      gps_visibilize(scratchbuf, sizeof(scratchbuf),
-                                    (char *)lexer->inbufptr, 10));
+                                    (char *)lexer->inbufptr, lexer->inbuflen));
 
             // get the hexadecimal chunk size.
             chunk_size = 0;
@@ -2970,17 +2971,17 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
              * for the tailing \r\n */
             needed = chunk_size + 2 + idx;
             GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                     "PACKET: NTRIP: packet_get(d %d) chunk %u idx %zu "
+                     "PACKET: NTRIP: packet_get( %d) chunk %u idx %zu "
                      "inbuflen %zu needed %zu %s\n",
                      fd, chunk_size, idx, lexer->inbuflen, needed,
                      gps_visibilize(scratchbuf, sizeof(scratchbuf),
                                     (char *)lexer->inbufptr, 10));
             if (needed >= lexer->inbuflen) {
-                // don't have enough yet
-                // annoyingly, centipede can send the chunk count line, and
-                // not the chunked data yet!!
+                /* Ddon't have enough yet.  Annoyingly, centipede can send
+                 * the chunk count line, but not the chunked data yet!!
+                 * Like this: "64\r\n" */
                 GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                         "PACKET: NTRIP: packet_get(d %d) chunk %d not full\n",
+                         "PACKET: NTRIP: packet_get( %d) chunk %d not full\n",
                          fd, chunk_num);
                 break;
             }
@@ -2989,9 +2990,10 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
             lexer->inbufptr += idx;
             lexer->inbuflen -= idx;
             GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                     "PACKET: NTRIP: packet_get(d %d) got a chunk >%s<\n",
-                     fd, gps_visibilize(scratchbuf, sizeof(scratchbuf),
-                                    (char *)lexer->inbufptr, 10));
+                     "PACKET: NTRIP: packet_get(%d) got chunk %d >%s<\n",
+                     fd, chunk_num,
+                     gps_visibilize(scratchbuf, sizeof(scratchbuf),
+                                    (char *)lexer->inbufptr, chunk_size));
 
             // save the chunk
             memcpy(&tmp_buffer[tmp_buflen], lexer->inbufptr, chunk_size);
@@ -3008,10 +3010,26 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
             return lexer->inbuflen;   // not right, close enough
         }
         // now parse the chunks.
-        memcpy(lexer->inbuffer, &tmp_buffer[tmp_buflen], tmp_buflen);
+        memcpy(lexer->inbuffer, tmp_buffer, tmp_buflen);
         lexer->inbufptr = lexer->inbuffer;
         lexer->inbuflen = tmp_buflen;
-        packet_parse(lexer);
+        GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                 "PACKET: NTRIP: packet_get(d %d) sending unchunked to "
+                 "packet_parse()>%s<\n",
+                 fd, gps_visibilize(scratchbuf, sizeof(scratchbuf),
+                                (char *)lexer->inbufptr, lexer->inbuflen));
+        while (true) {
+            // keep sending until all taken
+            saved_inbuflen = lexer->inbuflen;
+            packet_parse(lexer);
+            if (saved_inbuflen == lexer->inbuflen) {
+                break;
+            }
+        }
+        // there is often a residue, it needs to be saved.
+        // but for now, trash it.
+        lexer->inbufptr = lexer->inbuffer;
+        lexer->inbuflen = 0;
         return tmp_buflen;     // say we got it all.
     }
     /*
