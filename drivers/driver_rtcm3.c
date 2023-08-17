@@ -358,9 +358,9 @@ void rtcm3_unpack(const struct gps_context_t *context,
     int bitcount = 0;
     unsigned i;
     signed long temp;
-    bool unknown = true;              // we don't know how to decode
-    const char *unknown_name = NULL;  // no decode, but maybe we know the name
-    unsigned preamble, mbz;           // preamble 0xd3, and must be zero
+    bool unknown = true;               // we don't know how to decode
+    const char *msg_name = "Unknown";  // we know the name
+    unsigned preamble, mbz;            // preamble 0xd3, and must be zero
 
 #define GPS_PSEUDORANGE(fld, len) \
     {temp = (unsigned long)ugrab(len);          \
@@ -393,18 +393,21 @@ void rtcm3_unpack(const struct gps_context_t *context,
     if (2 > rtcm->length) {
         // ignore zero payload messages, they do not evan have type
         // need 2 bytes just to read 10 bit type.
+        GPSD_LOG(LOG_PROG, &context->errout,
+                 "RTCM3: bad payload length %d bitcount %d\n",
+                 rtcm->length, bitcount);
         return;
     }
     rtcm->type = (unsigned)ugrab(12);
 
-    GPSD_LOG(LOG_RAW, &context->errout,
+    GPSD_LOG(LOG_IO, &context->errout,
              "RTCM3: type %d payload length %d bitcount %d\n",
              rtcm->type, rtcm->length, bitcount);
 
     // RTCM3 message type numbers start at 1001
     switch (rtcm->type) {
     case 1001:
-        // GPS Basic RTK, L1 Only
+        msg_name = "GPS Basic RTK, L1 Only";
         rtcm->rtcmtypes.rtcm3_1001.header.station_id = (unsigned)ugrab(12);
         rtcm->rtcmtypes.rtcm3_1001.header.tow = ugrab(30);
         rtcm->rtcmtypes.rtcm3_1001.header.sync = (bool)ugrab(1);
@@ -424,7 +427,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         break;
 
     case 1002:
-        // GPS Extended RTK, L1 Only
+        msg_name = "GPS Extended RTK, L1 Only";
         rtcm->rtcmtypes.rtcm3_1002.header.station_id = (unsigned)ugrab(12);
         rtcm->rtcmtypes.rtcm3_1002.header.tow = ugrab(30);
         rtcm->rtcmtypes.rtcm3_1002.header.sync = (bool)ugrab(1);
@@ -446,7 +449,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         break;
 
     case 1003:
-        // GPS Basic RTK, L1 & L2
+        msg_name = "GPS Basic RTK, L1 & L2";
         rtcm->rtcmtypes.rtcm3_1003.header.station_id = (unsigned)ugrab(12);
         rtcm->rtcmtypes.rtcm3_1003.header.tow = ugrab(30);
         rtcm->rtcmtypes.rtcm3_1003.header.sync = (bool)ugrab(1);
@@ -475,7 +478,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         break;
 
     case 1004:
-        // GPS Extended RTK, L1 & L2
+        msg_name = "GPS Extended RTK, L1 & L2";
         rtcm->rtcmtypes.rtcm3_1004.header.station_id = (unsigned)ugrab(12);
         rtcm->rtcmtypes.rtcm3_1004.header.tow = ugrab(30);
         rtcm->rtcmtypes.rtcm3_1004.header.sync = (bool)ugrab(1);
@@ -502,8 +505,8 @@ void rtcm3_unpack(const struct gps_context_t *context,
         break;
 
     case 1005:
-        /* Stationary Antenna Reference Point, No Height Information
-         * 19 bytes */
+        msg_name = "Stationary Antenna Reference Point, No Height Information";
+        // 19 bytes
 #define R1005 rtcm->rtcmtypes.rtcm3_1005
         R1005.station_id = (unsigned short)ugrab(12);
         ugrab(6);               // reserved
@@ -520,8 +523,8 @@ void rtcm3_unpack(const struct gps_context_t *context,
         break;
 
     case 1006:
-        /* Stationary Antenna Reference Point, with Height Information
-         * 21 bytes */
+        msg_name = "Stationary Antenna Reference Point, w/ Height Info";
+        // 21 bytes
 #define R1006 rtcm->rtcmtypes.rtcm3_1006
         R1006.station_id = (unsigned short)ugrab(12);
         (void)ugrab(6);         // reserved
@@ -539,8 +542,8 @@ void rtcm3_unpack(const struct gps_context_t *context,
         break;
 
     case 1007:
-        /* Antenna Description
-         * 5 to 36 bytes */
+        msg_name = "Antenna Description";
+        // 5 to 36 bytes
         rtcm->rtcmtypes.rtcm3_1007.station_id = (unsigned short)ugrab(12);
         n = (unsigned long)ugrab(8);
         (void)memcpy(rtcm->rtcmtypes.rtcm3_1007.descriptor, buf + 7, n);
@@ -551,8 +554,8 @@ void rtcm3_unpack(const struct gps_context_t *context,
         break;
 
     case 1008:
-        /* Antenna Description & Serial Number
-         * 6 to 68 bytes */
+        msg_name = "Antenna Description & Serial Number";
+        // 6 to 68 bytes
         rtcm->rtcmtypes.rtcm3_1008.station_id = (unsigned short)ugrab(12);
         n = (unsigned long)ugrab(8);
         (void)memcpy(rtcm->rtcmtypes.rtcm3_1008.descriptor, buf + 7, n);
@@ -567,7 +570,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         break;
 
     case 1009:
-        // GLONASS Basic RTK, L1 Only
+        msg_name = "GLONASS Basic RTK, L1 Only";
         rtcm->rtcmtypes.rtcm3_1009.header.station_id =
             (unsigned short)ugrab(12);
         rtcm->rtcmtypes.rtcm3_1009.header.tow = ugrab(27);
@@ -589,7 +592,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         break;
 
     case 1010:
-        // GLONASS Extended RTK, L1 Only
+        msg_name = "GLONASS Extended RTK, L1 Only";
         rtcm->rtcmtypes.rtcm3_1010.header.station_id =
             (unsigned short)ugrab(12);
         rtcm->rtcmtypes.rtcm3_1010.header.tow = ugrab(27);
@@ -613,7 +616,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         break;
 
     case 1011:
-        // GLONASS Basic RTK, L1 & L2
+        msg_name = "GLONASS Basic RTK, L1 & L2";
         rtcm->rtcmtypes.rtcm3_1011.header.station_id =
             (unsigned short)ugrab(12);
         rtcm->rtcmtypes.rtcm3_1011.header.tow = ugrab(27);
@@ -644,7 +647,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         break;
 
     case 1012:
-        // GLONASS Extended RTK, L1 & L2
+        msg_name = "GLONASS Extended RTK, L1 & L2";
         rtcm->rtcmtypes.rtcm3_1012.header.station_id =
             (unsigned short)ugrab(12);
         rtcm->rtcmtypes.rtcm3_1012.header.tow = ugrab(27);
@@ -681,7 +684,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         break;
 
     case 1013:
-        // System Parameters
+        msg_name = "System Parameters";
         rtcm->rtcmtypes.rtcm3_1013.station_id = (unsigned short)ugrab(12);
         rtcm->rtcmtypes.rtcm3_1013.mjd = (unsigned short)ugrab(16);
         rtcm->rtcmtypes.rtcm3_1013.sod = (unsigned short)ugrab(17);
@@ -698,9 +701,8 @@ void rtcm3_unpack(const struct gps_context_t *context,
         break;
 
     case 1014:
-        /* Network Auxiliary Station Data
-         * coordinate difference between one Aux station and the master station
-         */
+        msg_name = "Network Auxiliary Station Data";
+        // coordinate difference between one Aux station and master station
         rtcm->rtcmtypes.rtcm3_1014.network_id = (int)ugrab(8);
         rtcm->rtcmtypes.rtcm3_1014.subnetwork_id = (int)ugrab(4);
         rtcm->rtcmtypes.rtcm3_1014.stationcount = (char)ugrab(5);
@@ -721,7 +723,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * 9 bytes minimum
          */
         unknown = rtcm3_101567(context, rtcm, buf);
-        unknown_name = "GPS Ionospheric Correction Differences";
+        msg_name = "GPS Ionospheric Correction Differences";
         break;
 
     case 1016:
@@ -731,7 +733,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * 9 bytes minimum
          */
         unknown = rtcm3_101567(context, rtcm, buf);
-        unknown_name = "GPS Geometric Correction Differences";
+        msg_name = "GPS Geometric Correction Differences";
         break;
 
     case 1017:
@@ -742,7 +744,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * 9 bytes minimum
          */
         unknown = rtcm3_101567(context, rtcm, buf);
-        unknown_name = "GPS Combined Geometric and Ionospheric "
+        msg_name = "GPS Combined Geometric and Ionospheric "
                        "Correction Differences";
         break;
 
@@ -750,7 +752,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         /* RTCM 3.1
          * Reserved for alternative Ionospheric Correction Difference Message
          */
-        unknown_name = "Reserved for alternative Ionospheric Correction "
+        msg_name = "Reserved for alternative Ionospheric Correction "
                        "Differences";
         break;
 
@@ -760,7 +762,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * 62 bytes
          */
         // TODO: rtklib has C code for this one.
-        unknown_name = "GPS Ephemeris";
+        msg_name = "GPS Ephemeris";
         break;
 
     case 1020:
@@ -769,15 +771,15 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * 45 bytes
          */
         // TODO: rtklib has C code for this one.
-        unknown_name = "GLO Ephemeris";
+        msg_name = "GLO Ephemeris";
         break;
 
     case 1021:
         /* RTCM 3.1
          * Helmert / Abridged Molodenski Transformation parameters
          */
-        /* unknown_name = "Helmert / Abridged Molodenski Transformation "
-                       "parameters";*/
+        msg_name = "Helmert / Abridged Molodenski Transformation "
+                       "parameters";
         // Set Source-Name
         n = (unsigned)ugrab(5);
         if ((sizeof(rtcm->rtcmtypes.rtcm3_1021.src_name) -1) <= n) {
@@ -846,14 +848,14 @@ void rtcm3_unpack(const struct gps_context_t *context,
         /* RTCM 3.1
          * Molodenski-Badekas transformation parameters
          */
-        unknown_name = "Molodenski-Badekas transformation parameters";
+        msg_name = "Molodenski-Badekas transformation parameters";
         break;
 
     case 1023:
         /* RTCM 3.1
          * Residuals Ellipsoidal Grid Representation
          */
-        // unknown_name = "Residuals Ellipsoidal Grid Representation";
+        msg_name = "Residuals Ellipsoidal Grid Representation";
         rtcm->rtcmtypes.rtcm3_1023.sys_id_num = (unsigned)ugrab(8);
         rtcm->rtcmtypes.rtcm3_1023.shift_id_hori = (bool)ugrab(1);
         rtcm->rtcmtypes.rtcm3_1023.shift_id_vert = (bool)ugrab(1);
@@ -889,15 +891,15 @@ void rtcm3_unpack(const struct gps_context_t *context,
         /* RTCM 3.1
          * Residuals Plane Grid Representation
          */
-        unknown_name = "Residuals Plane Grid Representation";
+        msg_name = "Residuals Plane Grid Representation";
         break;
 
     case 1025:
         /* RTCM 3.1
          * Projection Parameters, Projection Types other than LCC2SP
          */
-        /* unknown_name = "Projection Parameters, Projection Types other "
-                       "than LCC2SP"; */
+        msg_name = "Projection Parameters, Projection Types other "
+                       "than LCC2SP";
         rtcm->rtcmtypes.rtcm3_1025.sys_id_num = (unsigned short)ugrab(8);
         rtcm->rtcmtypes.rtcm3_1025.projection_type = (unsigned short)ugrab(6);
         rtcm->rtcmtypes.rtcm3_1025.lat_origin = sgrab(34) *
@@ -918,26 +920,26 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * Projection Parameters, Projection Type LCC2SP
          * (Lambert Conic Conformal)
          */
-        unknown_name = "Projection Parameters, Projection Type LCC2SP";
+        msg_name = "Projection Parameters, Projection Type LCC2SP";
         break;
 
     case 1027:
         /* RTCM 3.1
          * Projection Parameters, Projection Type OM (Oblique Mercator)
          */
-        unknown_name = "Projection Parameters, Projection Type OM";
+        msg_name = "Projection Parameters, Projection Type OM";
         break;
 
     case 1028:
         /* RTCM 3.1
          * Reserved for global to plate fixed transformation
          */
-        unknown_name = "Reserved, Global to Plate Transformation";
+        msg_name = "Reserved, Global to Plate Transformation";
         break;
 
     case 1029:
-        /* Text in UTF8 format
-         * 9 bytes minimum
+        msg_name = "Text in UTF8 format";
+        /* 9 bytes minimum
          * (max. 127 multibyte characters and max. 255 bytes)
          */
         rtcm->rtcmtypes.rtcm3_1029.station_id = (unsigned short)ugrab(12);
@@ -954,26 +956,26 @@ void rtcm3_unpack(const struct gps_context_t *context,
         /* RTCM 3.1
          * GPS Network RTK Residual Message
          */
-        unknown_name = "GPS Network RTK Residual";
+        msg_name = "GPS Network RTK Residual";
         break;
 
     case 1031:
         /* RTCM 3.1
          * GLONASS Network RTK Residual Message
          */
-        unknown_name = "GLONASS Network RTK Residual";
+        msg_name = "GLONASS Network RTK Residual";
         break;
 
     case 1032:
         /* RTCM 3.1
          * Physical Reference Station Position message
          */
-        unknown_name = "Physical Reference Station Position";
+        msg_name = "Physical Reference Station Position";
         break;
 
     case 1033:                  // see note in header
-        /* Receiver and Antenna Descriptor
-         * Type1033 is a combined Message Types 1007 and 1008
+        msg_name ="Receiver and Antenna Descriptor";
+        /* Type1033 is a combined Message Types 1007 and 1008
          * and hence contains antenna descriptor and serial number
          * as well as receiver descriptor and serial number.
          */
@@ -1004,35 +1006,35 @@ void rtcm3_unpack(const struct gps_context_t *context,
         /* RTCM 3.2
          * GPS Network FKP Gradient Message
          */
-        unknown_name = "GPS Network FKP Gradient";
+        msg_name = "GPS Network FKP Gradient";
         break;
 
     case 1035:
         /* RTCM 3.2
          * GLONASS Network FKP Gradient Message
          */
-        unknown_name = "GLO Network FKP Gradient";
+        msg_name = "GLO Network FKP Gradient";
         break;
 
     case 1037:
         /* RTCM 3.2
          * GLONASS Ionospheric Correction Differences
          */
-        unknown_name = "GLO Ionospheric Correction Differences";
+        msg_name = "GLO Ionospheric Correction Differences";
         break;
 
     case 1038:
         /* RTCM 3.2
          * GLONASS Geometric Correction Differences
          */
-        unknown_name = "GLO Geometric Correction Differences";
+        msg_name = "GLO Geometric Correction Differences";
         break;
 
     case 1039:
         /* RTCM 3.2
          * GLONASS Combined Geometric and Ionospheric Correction Differences
          */
-        unknown_name = "GLONASS Combined Geometric and Ionospheric "
+        msg_name = "GLONASS Combined Geometric and Ionospheric "
                        "Correction Differences";
         break;
 
@@ -1041,7 +1043,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * BeiDou Ephemeris
          * length ?
          */
-        unknown_name = "BD Ephemeris";
+        msg_name = "BD Ephemeris";
         break;
 
     case 1043:
@@ -1049,7 +1051,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * SBAS Ephemeris
          * length 29
          */
-        unknown_name = "SBAS Ephemeris";
+        msg_name = "SBAS Ephemeris";
         break;
 
     case 1044:
@@ -1058,7 +1060,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * length 61
          */
         // TODO: rtklib has C code for this one.
-        unknown_name = "QZSS Ephemeris";
+        msg_name = "QZSS Ephemeris";
         break;
 
     case 1045:
@@ -1067,7 +1069,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * 64 bytes
          */
         // TODO: rtklib has C code for this one.
-        unknown_name = "GAL F/NAV Ephemeris Data";
+        msg_name = "GAL F/NAV Ephemeris Data";
         break;
 
     case 1046:
@@ -1076,118 +1078,114 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * length 63
          */
         // TODO: rtklib has C code for this one.
-        unknown_name = "GAL I/NAV Ephemeris Data";
+        msg_name = "GAL I/NAV Ephemeris Data";
         break;
 
     case 1057:
         /* RTCM 3.2
          * SSR GPS Orbit Correction
          */
-        unknown_name = "SSR GPS Orbit Correction";
+        msg_name = "SSR GPS Orbit Correction";
         break;
 
     case 1058:
         /* RTCM 3.2
          * SSR GPS Clock Correction
          */
-        unknown_name = "SSR GPS Clock Correction";
+        msg_name = "SSR GPS Clock Correction";
         break;
 
     case 1059:
         /* RTCM 3.2
          * SSR GPS Code Bias
          */
-        unknown_name = "SSR GPS Code Bias";
+        msg_name = "SSR GPS Code Bias";
         break;
 
     case 1060:
         /* RTCM 3.2
          * SSR GPS Combined Orbit and Clock Correction
          */
-        unknown_name = "SSR GPS Combined Orbit and Clock Correction";
+        msg_name = "SSR GPS Combined Orbit and Clock Correction";
         break;
 
     case 1061:
         /* RTCM 3.2
          * SSR GPS URA
          */
-        unknown_name = "SSR GPS URA";
+        msg_name = "SSR GPS URA";
         break;
 
     case 1062:
         /* RTCM 3.2
          * SSR GPS High Rate Clock Correction
          */
-        unknown_name = "SSR GPS High Rate Clock Correction";
+        msg_name = "SSR GPS High Rate Clock Correction";
         break;
 
     case 1063:
         /* RTCM 3.2
          * SSR GLO Orbit Correction
          */
-        unknown_name = "SSR GLO Orbit Correction";
+        msg_name = "SSR GLO Orbit Correction";
         break;
 
     case 1064:
         /* RTCM 3.2
          * SSR GLO Clock Correction
          */
-        unknown_name = "SSR GLO Clock Correction";
+        msg_name = "SSR GLO Clock Correction";
         break;
 
     case 1065:
         /* RTCM 3.2
          * SSR GLO Code Correction
          */
-        unknown_name = "SSR GLO ode Correction";
+        msg_name = "SSR GLO ode Correction";
         break;
 
     case 1066:
         /* RTCM 3.2
          * SSR GLO Combined Orbit and Clock Correction
          */
-        unknown_name = "SSR GLO Combined Orbit and Clock Correction";
+        msg_name = "SSR GLO Combined Orbit and Clock Correction";
         break;
 
     case 1067:
         /* RTCM 3.2
          * SSR GLO URA
          */
-        unknown_name = "SSR GLO URA";
+        msg_name = "SSR GLO URA";
         break;
 
     case 1068:
         /* RTCM 3.2
          * SSR GPS High Rate Clock Correction
          */
-        unknown_name = "SSR GLO High Rate Clock Correction";
+        msg_name = "SSR GLO High Rate Clock Correction";
         break;
 
     case 1070:
         /* RTCM 3.x
          * Reserved for MSM
          */
-        unknown_name = "Reserved for MSM";
+        msg_name = "Reserved for MSM";
         break;
 
     case 1071:
-        /* RTCM 3.2
-         * GPS Multi Signal Message 1
-         */
+        // RTCM 3.2
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GPS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 1;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "GPS MSM 1";
+        msg_name = "GPS MSM 1";
         break;
 
     case 1072:
-        /* RTCM 3.2
-         * GPS Multi Signal Message 2
-         */
+        // RTCM 3.2
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GPS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 2;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "GPS MSM 2";
+        msg_name = "GPS MSM 2";
         break;
 
     case 1073:
@@ -1197,7 +1195,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GPS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 3;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "GPS MSM 3";
+        msg_name = "GPS MSM 3";
         break;
 
     case 1074:
@@ -1207,7 +1205,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GPS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 4;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "GPS MSM 4";
+        msg_name = "GPS MSM 4";
         break;
 
     case 1075:
@@ -1217,7 +1215,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GPS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 5;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "GPS MSM 5";
+        msg_name = "GPS MSM 5";
         break;
 
     case 1076:
@@ -1227,7 +1225,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GPS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 6;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "GPS MSM 6";
+        msg_name = "GPS MSM 6";
         break;
 
     case 1077:
@@ -1240,28 +1238,28 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GPS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 7;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "GPS MSM7";
+        msg_name = "GPS MSM7";
         break;
 
     case 1078:
         /* RTCM 3.x
          * Reserved for MSM
          */
-        unknown_name = "Reserved for MSM";
+        msg_name = "Reserved for MSM";
         break;
 
     case 1079:
         /* RTCM 3.x
          * Reserved for MSM
          */
-        unknown_name = "Reserved for MSM";
+        msg_name = "Reserved for MSM";
         break;
 
     case 1080:
         /* RTCM 3.x
          * Reserved for MSM
          */
-        unknown_name = "Reserved for MSM";
+        msg_name = "Reserved for MSM";
         break;
 
     case 1081:
@@ -1271,7 +1269,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GLO;
         rtcm->rtcmtypes.rtcm3_msm.msm = 1;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "GLO MSM 1";
+        msg_name = "GLO MSM 1";
         break;
 
     case 1082:
@@ -1281,7 +1279,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GLO;
         rtcm->rtcmtypes.rtcm3_msm.msm = 2;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "GLO MSM 2";
+        msg_name = "GLO MSM 2";
         break;
 
     case 1083:
@@ -1291,7 +1289,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GLO;
         rtcm->rtcmtypes.rtcm3_msm.msm = 3;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "GLO MSM 3";
+        msg_name = "GLO MSM 3";
         break;
 
     case 1084:
@@ -1301,7 +1299,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GLO;
         rtcm->rtcmtypes.rtcm3_msm.msm = 4;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "GLO MSM 4";
+        msg_name = "GLO MSM 4";
         break;
 
     case 1085:
@@ -1311,7 +1309,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GLO;
         rtcm->rtcmtypes.rtcm3_msm.msm = 5;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "GLO MSM 5";
+        msg_name = "GLO MSM 5";
         break;
 
     case 1086:
@@ -1321,7 +1319,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GLO;
         rtcm->rtcmtypes.rtcm3_msm.msm = 6;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "GLO MSM 6";
+        msg_name = "GLO MSM 6";
         break;
 
     case 1087:
@@ -1334,28 +1332,28 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GLO;
         rtcm->rtcmtypes.rtcm3_msm.msm = 7;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "GLO MSM 7";
+        msg_name = "GLO MSM 7";
         break;
 
     case 1088:
         /* RTCM 3.x
          * Reserved for MSM
          */
-        unknown_name = "Reserved for MSM";
+        msg_name = "Reserved for MSM";
         break;
 
     case 1089:
         /* RTCM 3.x
          * Reserved for MSM
          */
-        unknown_name = "Reserved for MSM";
+        msg_name = "Reserved for MSM";
         break;
 
     case 1090:
         /* RTCM 3.x
          * Reserved for MSM
          */
-        unknown_name = "Reserved for MSM";
+        msg_name = "Reserved for MSM";
         break;
 
     case 1091:
@@ -1365,7 +1363,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GAL;
         rtcm->rtcmtypes.rtcm3_msm.msm = 1;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "GAL MSM 1";
+        msg_name = "GAL MSM 1";
         break;
 
     case 1092:
@@ -1375,7 +1373,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GAL;
         rtcm->rtcmtypes.rtcm3_msm.msm = 2;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "GAL MSM 2";
+        msg_name = "GAL MSM 2";
         break;
 
     case 1093:
@@ -1385,7 +1383,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GAL;
         rtcm->rtcmtypes.rtcm3_msm.msm = 3;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "GAL MSM 3";
+        msg_name = "GAL MSM 3";
         break;
 
     case 1094:
@@ -1395,7 +1393,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GAL;
         rtcm->rtcmtypes.rtcm3_msm.msm = 4;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "GAL MSM 4";
+        msg_name = "GAL MSM 4";
         break;
 
     case 1095:
@@ -1405,7 +1403,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GAL;
         rtcm->rtcmtypes.rtcm3_msm.msm = 5;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "GAL MSM 5";
+        msg_name = "GAL MSM 5";
         break;
 
     case 1096:
@@ -1415,7 +1413,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GAL;
         rtcm->rtcmtypes.rtcm3_msm.msm = 6;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "GAL MSM 6";
+        msg_name = "GAL MSM 6";
         break;
 
     case 1097:
@@ -1428,28 +1426,28 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_GAL;
         rtcm->rtcmtypes.rtcm3_msm.msm = 7;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "GAL MSM 7";
+        msg_name = "GAL MSM 7";
         break;
 
     case 1098:
         /* RTCM 3.x
          * Reserved for MSM
          */
-        unknown_name = "Reserved for MSM";
+        msg_name = "Reserved for MSM";
         break;
 
     case 1099:
         /* RTCM 3.x
          * Reserved for MSM
          */
-        unknown_name = "Reserved for MSM";
+        msg_name = "Reserved for MSM";
         break;
 
     case 1100:
         /* RTCM 3.x
          * Reserved for MSM
          */
-        unknown_name = "Reserved for MSM";
+        msg_name = "Reserved for MSM";
         break;
 
     case 1101:
@@ -1459,7 +1457,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_SBAS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 1;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "SBAS MSM 1";
+        msg_name = "SBAS MSM 1";
         break;
 
     case 1102:
@@ -1469,7 +1467,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_SBAS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 2;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "SBAS MSM 2";
+        msg_name = "SBAS MSM 2";
         break;
 
     case 1103:
@@ -1479,7 +1477,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_SBAS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 3;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "SBAS MSM 3";
+        msg_name = "SBAS MSM 3";
         break;
 
     case 1104:
@@ -1489,7 +1487,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_SBAS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 4;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "SBAS MSM 4";
+        msg_name = "SBAS MSM 4";
         break;
 
     case 1105:
@@ -1499,7 +1497,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_SBAS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 5;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "SBAS MSM 5";
+        msg_name = "SBAS MSM 5";
         break;
 
     case 1106:
@@ -1509,7 +1507,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_SBAS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 6;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "SBAS MSM 6";
+        msg_name = "SBAS MSM 6";
         break;
 
     case 1107:
@@ -1522,28 +1520,28 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_SBAS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 7;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "SBAS MSM 7";
+        msg_name = "SBAS MSM 7";
         break;
 
     case 1108:
         /* RTCM 3.x
          * Reserved for MSM
          */
-        unknown_name = "Reserved for MSM";
+        msg_name = "Reserved for MSM";
         break;
 
     case 1109:
         /* RTCM 3.x
          * Reserved for MSM
          */
-        unknown_name = "Reserved for MSM";
+        msg_name = "Reserved for MSM";
         break;
 
     case 1110:
         /* RTCM 3.x
          * Reserved for MSM
          */
-        unknown_name = "Reserved for MSM";
+        msg_name = "Reserved for MSM";
         break;
 
     case 1111:
@@ -1553,7 +1551,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_QZSS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 1;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "QZSS MSM 1";
+        msg_name = "QZSS MSM 1";
         break;
 
     case 1112:
@@ -1563,7 +1561,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_QZSS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 2;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "QZSS MSM 2";
+        msg_name = "QZSS MSM 2";
         break;
 
     case 1113:
@@ -1573,7 +1571,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_QZSS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 3;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "QZSS MSM 3";
+        msg_name = "QZSS MSM 3";
         break;
 
     case 1114:
@@ -1583,7 +1581,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_QZSS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 4;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "QZSS MSM 4";
+        msg_name = "QZSS MSM 4";
         break;
 
     case 1115:
@@ -1593,7 +1591,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_QZSS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 5;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "QZSS MSM 5";
+        msg_name = "QZSS MSM 5";
         break;
 
     case 1116:
@@ -1603,7 +1601,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_QZSS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 6;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "QZSS MSM 6";
+        msg_name = "QZSS MSM 6";
         break;
 
     case 1117:
@@ -1613,28 +1611,28 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_QZSS;
         rtcm->rtcmtypes.rtcm3_msm.msm = 7;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "QZSS MSM 7";
+        msg_name = "QZSS MSM 7";
         break;
 
     case 1118:
         /* RTCM 3.x
          * Reserved for MSM
          */
-        unknown_name = "Reserved for MSM";
+        msg_name = "Reserved for MSM";
         break;
 
     case 1119:
         /* RTCM 3.x
          * Reserved for MSM
          */
-        unknown_name = "Reserved for MSM";
+        msg_name = "Reserved for MSM";
         break;
 
     case 1120:
         /* RTCM 3.x
          * Reserved for MSM
          */
-        unknown_name = "Reserved for MSM";
+        msg_name = "Reserved for MSM";
         break;
 
     case 1121:
@@ -1644,7 +1642,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_BD;
         rtcm->rtcmtypes.rtcm3_msm.msm = 1;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "BD MSM 1";
+        msg_name = "BD MSM 1";
         break;
 
     case 1122:
@@ -1654,7 +1652,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_BD;
         rtcm->rtcmtypes.rtcm3_msm.msm = 2;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "BD MSM 2";
+        msg_name = "BD MSM 2";
         break;
 
     case 1123:
@@ -1664,7 +1662,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_BD;
         rtcm->rtcmtypes.rtcm3_msm.msm = 3;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "BD MSM 3";
+        msg_name = "BD MSM 3";
         break;
 
     case 1124:
@@ -1674,7 +1672,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_BD;
         rtcm->rtcmtypes.rtcm3_msm.msm = 4;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "BD MSM 4";
+        msg_name = "BD MSM 4";
         break;
 
     case 1125:
@@ -1684,7 +1682,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_BD;
         rtcm->rtcmtypes.rtcm3_msm.msm = 5;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "BD MSM 5";
+        msg_name = "BD MSM 5";
         break;
 
     case 1126:
@@ -1694,7 +1692,7 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_BD;
         rtcm->rtcmtypes.rtcm3_msm.msm = 6;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "BD MSM 6";
+        msg_name = "BD MSM 6";
         break;
 
     case 1127:
@@ -1704,28 +1702,28 @@ void rtcm3_unpack(const struct gps_context_t *context,
         rtcm->rtcmtypes.rtcm3_msm.gnssid = GNSSID_BD;
         rtcm->rtcmtypes.rtcm3_msm.msm = 7;
         unknown = rtcm3_decode_msm(context, rtcm, buf);
-        unknown_name = "BD MSM 7";
+        msg_name = "BD MSM 7";
         break;
 
     case 1128:
         /* RTCM 3.x
          * Reserved for MSM
          */
-        unknown_name = "Reserved for MSM";
+        msg_name = "Reserved for MSM";
         break;
 
     case 1229:
         /* RTCM 3.x
          * Reserved for MSM
          */
-        unknown_name = "Reserved for MSM";
+        msg_name = "Reserved for MSM";
         break;
 
     case 1230:
         /* RTCM 3.2
          * GLONASS L1 and L2, C/A and P, Code-Phase Biases.
          */
-        unknown_name = "GLO L1 and L2 Code-Phase Biases";
+        msg_name = "GLO L1 and L2 Code-Phase Biases";
         unknown = false;
         rtcm->rtcmtypes.rtcm3_1230.station_id = (unsigned short)ugrab(12);
         rtcm->rtcmtypes.rtcm3_1230.bias_indicator = (unsigned char)ugrab(1);
@@ -1752,42 +1750,42 @@ void rtcm3_unpack(const struct gps_context_t *context,
         /* RTCM 3.3
          * Geely Proprietary
          */
-        unknown_name = "Geely Proprietary";
+        msg_name = "Geely Proprietary";
         break;
 
     case 4063:
         /* RTCM 3.3
          * CHC Navigation (CHCNAV) Proprietary
          */
-        unknown_name = "CHC Navigation (CHCNAV) Proprietary";
+        msg_name = "CHC Navigation (CHCNAV) Proprietary";
         break;
 
     case 4064:
         /* RTCM 3.3
          * NTLab Proprietary
          */
-        unknown_name = "NTLab Proprietary";
+        msg_name = "NTLab Proprietary";
         break;
 
     case 4065:
         /* RTCM 3.3
          * Allystar Technology (Shenzhen) Co. Ltd. Proprietary
          */
-        unknown_name = "Allystar Technology (Shenzhen) Co. Ltd. Proprietary";
+        msg_name = "Allystar Technology (Shenzhen) Co. Ltd. Proprietary";
         break;
 
     case 4066:
         /* RTCM 3.3
          * Lantmateriet Proprietary
          */
-        unknown_name = "Lantmateriet Proprietary";
+        msg_name = "Lantmateriet Proprietary";
         break;
 
     case 4067:
         /* RTCM 3.x
          * China Transport telecommunications & Information Center Proprietary
          */
-        unknown_name = "China Transport telecommunications & Information "
+        msg_name = "China Transport telecommunications & Information "
                        "Center Proprietary";
         break;
 
@@ -1795,28 +1793,28 @@ void rtcm3_unpack(const struct gps_context_t *context,
         /* RTCM 3.3
          * Qianxun Location Networks Co. Ltd Proprietary
          */
-        unknown_name = "Qianxun Location Networks Co. Ltd Proprietary";
+        msg_name = "Qianxun Location Networks Co. Ltd Proprietary";
         break;
 
     case 4069:
         /* RTCM 3.3
          * VERIPOS Ltd Proprietary
          */
-        unknown_name = "VERIPOS Ltd Proprietary";
+        msg_name = "VERIPOS Ltd Proprietary";
         break;
 
     case 4070:
         /* RTCM 3.3
          * Wuhan MengXin Technology
          */
-        unknown_name = "Wuhan MengXin Technology Proprietary";
+        msg_name = "Wuhan MengXin Technology Proprietary";
         break;
 
     case 4071:
         /* RTCM 3.3
          * Wuhan Navigation and LBS
          */
-        unknown_name = "Wuhan Navigation and LBS Proprietary";
+        msg_name = "Wuhan Navigation and LBS Proprietary";
         break;
 
     case 4072:
@@ -1826,70 +1824,70 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * 4072.0 Reference station PVT (u-blox proprietary)
          * 4072.1 Additional reference station information (u-blox proprietary)
          */
-        unknown_name = "u-blox Proprietary";
+        msg_name = "u-blox Proprietary";
         break;
 
     case 4073:
         /* RTCM 3.x
          * Unicore Communications Proprietary
          */
-        unknown_name = "Alberding GmbH Proprietary";
+        msg_name = "Alberding GmbH Proprietary";
         break;
 
     case 4075:
         /* RTCM 3.x
          * Alberding GmbH Proprietary
          */
-        unknown_name = "Alberding GmbH Proprietary";
+        msg_name = "Alberding GmbH Proprietary";
         break;
 
     case 4076:
         /* RTCM 3.x
          * International GNSS Service Proprietary
          */
-        unknown_name = "International GNSS Service Proprietary";
+        msg_name = "International GNSS Service Proprietary";
         break;
 
     case 4077:
         /* RTCM 3.x
          * Hemisphere GNSS Proprietary
          */
-        unknown_name = "Hemisphere GNSS Proprietary";
+        msg_name = "Hemisphere GNSS Proprietary";
         break;
 
     case 4078:
         /* RTCM 3.x
          * ComNav Technology Proprietary
          */
-        unknown_name = "ComNav Technology Proprietary";
+        msg_name = "ComNav Technology Proprietary";
         break;
 
     case 4079:
         /* RTCM 3.x
          * SubCarrier Systems Corp Proprietary
          */
-        unknown_name = "SubCarrier Systems Corp Proprietary";
+        msg_name = "SubCarrier Systems Corp Proprietary";
         break;
 
     case 4080:
         /* RTCM 3.x
          * NavCom Technology, Inc.
          */
-        unknown_name = "NavCom Technology, Inc.";
+        msg_name = "NavCom Technology, Inc.";
         break;
 
     case 4081:
         /* RTCM 3.x
          * Seoul National Universtiry GNSS Lab Proprietary
          */
-        unknown_name = "Seoul National Universtiry GNSS Lab Proprietery";
+        msg_name = "Seoul National Universtiry GNSS Lab Proprietery";
         break;
 
     case 4082:
         /* RTCM 3.x
          * Cooperative Research Centre for Spatial Information Proprietary
          */
-        unknown_name = "Cooperative Research Centre for Spatial Information "
+        msg_name = "Cooperative Research Centre for Spatial Information "
                        "Proprietary";
         break;
 
@@ -1897,91 +1895,91 @@ void rtcm3_unpack(const struct gps_context_t *context,
         /* RTCM 3.x
          * German Aerospace Center Proprietary
          */
-        unknown_name = "German Aerospace Center Proprietary";
+        msg_name = "German Aerospace Center Proprietary";
         break;
 
     case 4084:
         /* RTCM 3.x
          * Geodetics Inc Proprietary
          */
-        unknown_name = "Geodetics Inc Proprietary";
+        msg_name = "Geodetics Inc Proprietary";
         break;
 
     case 4085:
         /* RTCM 3.x
          * European GNSS Supervisory Authority Proprietary
          */
-        unknown_name = "European GNSS Supervisory Authority Proprietary";
+        msg_name = "European GNSS Supervisory Authority Proprietary";
         break;
 
     case 4086:
         /* RTCM 3.x
          * InPosition GmbH Proprietary
          */
-        unknown_name = "InPosition GmbH Proprietary";
+        msg_name = "InPosition GmbH Proprietary";
         break;
 
     case 4087:
         /* RTCM 3.x
          * Fugro Proprietary
          */
-        unknown_name = "Fugro Proprietary";
+        msg_name = "Fugro Proprietary";
         break;
 
     case 4088:
         /* RTCM 3.x
          * IfEN GmbH Proprietary
          */
-        unknown_name = "IfEN GmbH Proprietary";
+        msg_name = "IfEN GmbH Proprietary";
         break;
 
     case 4089:
         /* RTCM 3.x
          * Septentrio Satellite Navigation Proprietary
          */
-        unknown_name = "Septentrio Satellite Navigation Proprietary";
+        msg_name = "Septentrio Satellite Navigation Proprietary";
         break;
 
     case 4090:
         /* RTCM 3.x
          * Geo++ Proprietary
          */
-        unknown_name = "Geo++ Proprietary";
+        msg_name = "Geo++ Proprietary";
         break;
 
     case 4091:
         /* RTCM 3.x
          * Topcon Positioning Systems Proprietary
          */
-        unknown_name = "Topcon Positioning Systems Proprietary";
+        msg_name = "Topcon Positioning Systems Proprietary";
         break;
 
     case 4092:
         /* RTCM 3.x
          * Leica Geosystems Proprietary
          */
-        unknown_name = "Leica Geosystems Proprietary";
+        msg_name = "Leica Geosystems Proprietary";
         break;
 
     case 4093:
         /* RTCM 3.x
          * NovAtel Proprietary
          */
-        unknown_name = "NovAtel Pr.orietary";
+        msg_name = "NovAtel Pr.orietary";
         break;
 
     case 4094:
         /* RTCM 3.x
          * Trimble Proprietary
          */
-        unknown_name = "Trimble Proprietary";
+        msg_name = "Trimble Proprietary";
         break;
 
     case 4095:
         /* RTCM 3.x
          * Ashtech/Magellan Proprietary
          */
-        unknown_name = "Ashtech/Magellan Proprietary";
+        msg_name = "Ashtech/Magellan Proprietary";
         break;
 
     default:
@@ -1997,15 +1995,13 @@ void rtcm3_unpack(const struct gps_context_t *context,
          * The first 12 bits of the copied payload will be the type field.
          */
         memcpy(rtcm->rtcmtypes.data, buf + 3, rtcm->length);
-        if (NULL == unknown_name) {
-            GPSD_LOG(LOG_PROG, &context->errout,
-                     "RTCM3: unknown type %d, length %d\n",
-                     rtcm->type, rtcm->length);
-        } else {
-            GPSD_LOG(LOG_PROG, &context->errout,
-                     "RTCM3: %s (type %d), length %d\n",
-                     unknown_name, rtcm->type, rtcm->length);
-        }
+        GPSD_LOG(LOG_PROG, &context->errout,
+                 "RTCM3: %d (%s) Undecoded, length %d\n",
+                 rtcm->type, msg_name, rtcm->length);
+    } else {
+        GPSD_LOG(LOG_PROG, &context->errout,
+                 "RTCM3: %d (%s) length %d\n",
+                 rtcm->type, msg_name, rtcm->length);
     }
 }
 
