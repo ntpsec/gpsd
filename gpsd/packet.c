@@ -2861,7 +2861,8 @@ void packet_parse(struct gps_lexer_t *lexer)
 
 /* grab a packet;
  * return: greater than zero: length
- *         0 == EOF
+ *         > 0  == got a packet.
+ *         0 == EOF or no full packet
  *        -1 == I/O error
  */
 ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
@@ -2983,7 +2984,7 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
                 GPSD_LOG(LOG_SHOUT, &lexer->errout,
                          "PACKET: NTRIP: packet_get( %d) chunk %d not full\n",
                          fd, chunk_num);
-                break;
+                return 0;
             }
             // enough data in inbuffer, starting at inbuffer[idx]
             // move past that chunk header.
@@ -3020,6 +3021,11 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
                                 (char *)lexer->inbufptr, lexer->inbuflen));
         while (true) {
             // keep sending until all taken
+            GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                     "PACKET: NTRIP: packet_get(%d) to packet_parse() "
+                      "inbuflen %zu outbuflen %zu pbu %zu\n",
+                      fd, lexer->inbuflen, lexer->outbuflen,
+                      packet_buffered_input(lexer));
             saved_inbuflen = lexer->inbuflen;
             packet_parse(lexer);
             if (saved_inbuflen == lexer->inbuflen) {
