@@ -2352,31 +2352,41 @@ void packet_parse(struct gps_lexer_t *lexer)
 
 #ifdef RTCM104V3_ENABLE
         case RTCM3_RECOGNIZED:
+            // RTCM3 message header not always at inbuffer[0]
+            for (idx = 0; idx < inbuflen; idx++) {
+                if (0xd3 == lexer->inbuffer[idx]) {
+                    break;
+                }
+            }
+            // we assume xd3 must be in there!
+            // yes, the top 6 bits should be zero, total 10 bits of length
+            data_len = (lexer->inbuffer[idx + 1] << 8) |
+                       lexer->inbuffer[idx + 2];
             if (LOG_IO <= lexer->errout.debug) {
                 char outbuf[BUFSIZ];
-                // yes, the top 6 bits should be zero, total 10 bits of length
-                data_len = (lexer->inbuffer[1] << 8) | lexer->inbuffer[2];
                 // 12 bits of message type
-                pkt_id = (lexer->inbuffer[3] << 4) | (lexer->inbuffer[4] >> 4);
+                pkt_id = (lexer->inbuffer[idx + 3] << 4) |
+                         (lexer->inbuffer[idx + 4] >> 4);
 
-                // print the inbuffer packet, +33 to peek ahead. (maybe)
+                // print the inbuffer packet, +3 to peek ahead. (maybe)
                 GPSD_LOG(LOG_IO, &lexer->errout,
                          "RTCM3 data_len %u type %u inbufflen %u buf %s\n",
                          data_len, pkt_id, inbuflen,
                          gps_hexdump(outbuf, sizeof(outbuf),
-                                     lexer->inbuffer, inbuflen + 33));
+                                     &lexer->inbuffer[idx], data_len + 6 + 3));
             }
 
-            if (crc24q_check(lexer->inbuffer, inbuflen)) {
+            // The CRC includes the preamble, and data.
+            if (crc24q_check(&lexer->inbuffer[idx], data_len + 6)) {
                 packet_type = RTCM3_PACKET;
             } else {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
                          "RTCM3 data checksum failure, "
                          "%0x against %02x %02x %02x\n",
-                         crc24q_hash(lexer->inbuffer, inbuflen - 3),
-                         lexer->inbufptr[-3],
-                         lexer->inbufptr[-2],
-                         lexer->inbufptr[-1]);
+                         crc24q_hash(&lexer->inbuffer[idx], data_len + 3),
+                         lexer->inbufptr[idx + data_len + 1],
+                         lexer->inbufptr[idx + data_len + 2],
+                         lexer->inbufptr[idx + data_len + 3]);
                 packet_type = BAD_PACKET;
             }
             acc_dis = ACCEPT;

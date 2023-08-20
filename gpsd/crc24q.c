@@ -177,6 +177,7 @@ void crc24q_sign(unsigned char *data, int len)
 }
 #endif  // __UNUSED__
 
+// len includes the data to CRC, and the 3 CRC bytes to check with.
 bool crc24q_check(unsigned char *data, int len)
 {
     unsigned crc = crc24q_hash(data, len - 3);
