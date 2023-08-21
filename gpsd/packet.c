@@ -2358,10 +2358,14 @@ void packet_parse(struct gps_lexer_t *lexer)
                     break;
                 }
             }
+            if (2048 < idx) {
+                idx = 0;        // can't happen, but pacify fuzzer.
+            }
             // we assume xd3 must be in there!
             // yes, the top 6 bits should be zero, total 10 bits of length
             data_len = (lexer->inbuffer[idx + 1] << 8) |
                        lexer->inbuffer[idx + 2];
+            data_len &= 0x03ff;   // truncate below 1024, so pacify fuzzer
             if (LOG_IO <= lexer->errout.debug) {
                 char outbuf[BUFSIZ];
                 // 12 bits of message type
