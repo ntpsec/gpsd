@@ -3021,9 +3021,15 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
             return lexer->inbuflen;   // not right, close enough
         }
         // now parse the chunks.
-        memcpy(lexer->inbuffer, tmp_buffer, tmp_buflen);
+        // RTCM3 message header not always at inbuffer[0]
+        for (idx = 0; idx < tmp_buflen; idx++) {
+            if (0xd3 == tmp_buffer[idx]) {
+                break;
+            }
+        }
+        memcpy(lexer->inbuffer, &tmp_buffer[idx], tmp_buflen - idx);
         lexer->inbufptr = lexer->inbuffer;
-        lexer->inbuflen = tmp_buflen;
+        lexer->inbuflen = tmp_buflen - idx;
         GPSD_LOG(LOG_SHOUT, &lexer->errout,
                  "PACKET: NTRIP: packet_get(d %d) sending unchunked to "
                  "packet_parse()>%s<\n",
