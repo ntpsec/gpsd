@@ -1517,6 +1517,10 @@ static bool hunt_failure(struct gps_device_t *session)
         // Not a tty, so can't hunt.
         return false;
     }
+    // It is a tty, but don't hunt if speed is fixed.
+    if (0 != session->context->fixed_port_speed) {
+        return false;
+    }
     return 1 < session->badcount++;
 }
 
@@ -1661,6 +1665,8 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
     if (COMMENT_PACKET == session->lexer.type) {
         // deal with regression test helper macros
         const char date_str[] = "# Date: ";
+
+        session->badcount = 0;
         if (0 == strcmp((const char *)session->lexer.outbuffer,
                         "# EOF\n")) {
             // undocumented, used by gpsfake to signal EOF
@@ -1744,6 +1750,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
     }
 
     // we have recognized a packet
+    session->badcount = 0;
     gps_mask_t received = PACKET_SET;
     (void)clock_gettime(CLOCK_REALTIME, &session->gpsdata.online);
 
