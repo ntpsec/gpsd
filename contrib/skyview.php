@@ -241,24 +241,24 @@ function cellplot($image, $size, $clrs, $cellsize, $e){
         #Plotting that unholy mess is the job of
         # imagefilledpolygon ( $image, array $points, $num_points, $color )
 
-        $np = 0;
+        $numpoints = 0;
         $points = array();
         for($x = $az; $x <= $az+$cellsize; $x++){
                 list($px,$py) = azel2xy($x, $el, $size);
                 array_push($points, $px, $py);
-                $np++;
+                $numpoints++;
         }
         for($x = $az+$cellsize; $x >= $az; $x--){
                 list($px,$py) = azel2xy($x, $el+$cellsize, $size);
                 array_push($points, $px, $py);
-                $np++;
+                $numpoints++;
         }
         list($px,$py) = azel2xy($az, $el, $size);
         array_push($points, $px, $py);
-        $np++;
+        $numpoints++;
 
         if ($snr > 0)
-                imageFilledPolygon($image, $points, $np, $color);
+                imageFilledPolygon($image, $points, $numpoints, $color);
 }
 
 function splot($image, $size, $clrs, $radius, $filled, $e){
