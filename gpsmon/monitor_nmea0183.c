@@ -217,7 +217,7 @@ static void monitor_satlist(WINDOW *win, int y, int x)
         if (session.gpsdata.skyview[i].used) {
             str_appendf(tmp, sizeof(tmp),
                         "%d ", session.gpsdata.skyview[i].PRN);
-            if ((int)strlen(tmp) < xmax - 1 - x) {
+            if ((int)strnlen(tmp, sizeof(tmp)) < xmax - 1 - x) {
                 str_appendf(scr, sizeof(scr),
                             "%d ", session.gpsdata.skyview[i].PRN);
             } else {
@@ -276,10 +276,11 @@ static void nmea_update(void)
         getmaxyx(nmeawin, ymax, xmax);
         assert(ymax > 0);
         if (strstr(sentences, fields[0]) == NULL) {
-            char *s_end = sentences + strlen(sentences);
-            if ((int)(strlen(sentences) + strlen(fields[0])) < xmax - 2) {
+            char *s_end = sentences + strnlen(sentences, sizeof(sentences));
+            if ((int)(strnlen(sentences, sizeof(sentences)) +
+                      strlen(fields[0])) < xmax - 2) {
                 *s_end++ = ' ';
-                (void)strlcpy(s_end, fields[0], sizeof(sentences));
+                (void)strlcpy(s_end, fields[0], sizeof(sentences) - 1);
             } else {
                 *--s_end = '.';
                 *--s_end = '.';
@@ -472,7 +473,7 @@ static void monitor_nmea_send(const char *fmt, ...)
     va_start(ap, fmt);
     (void)vsnprintf(buf, sizeof(buf) - 5, fmt, ap);
     va_end(ap);
-    (void)monitor_control_send((unsigned char *)buf, strlen(buf));
+    (void)monitor_control_send((unsigned char *)buf, strnlen(buf, sizeof(buf)));
 }
 
 /*
