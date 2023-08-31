@@ -34,16 +34,16 @@ if ($argc != 3){
 // How many samples to read of SKY messages.
 $count = $argv[1] ;
 
-$sz = 640;
+$size = 640;
 $cellsize = 5; # degrees
 $radius = 8; # pixels
 $filled = 0;
 
-$im = imageCreate($sz, $sz);
+$im = imageCreate($size, $size);
 // The colors we use
 $clrs = colorsetup($im);
-skyview($im, $sz, $clrs);
-legend($im, $sz, $clrs);
+skyview($im, $size, $clrs);
+legend($im, $size, $clrs);
 
 $sky = array();
 
@@ -122,14 +122,14 @@ foreach($sky as $az => $x){
 	foreach ($sky[$az] as $el => $y){
 		$e = array(-1, $el, $az, $sky[$az][$el]['avg'], -1);
 		if ($cellmode)
-			cellplot($im, $sz, $clrs, $cellsize, $e);
+			cellplot($im, $size, $clrs, $cellsize, $e);
 		else
-			splot($im, $sz, $clrs, $radius, $filled, $e);
+			splot($im, $size, $clrs, $radius, $filled, $e);
 	}
 }
 
 
-skygrid($im, $sz, $clrs);	# redraw grid over satellites
+skygrid($im, $size, $clrs);	# redraw grid over satellites
 imagePNG($im, $argv[2]);
 imageDestroy($im);
 
@@ -154,11 +154,11 @@ function colorsetup($im){
 	return $clrs;
 }
 
-function legend($im, $sz, $clrs){
+function legend($im, $size, $clrs){
 	$radius = 30;
-	$fn = 5;
-	$x = $sz - (4*$radius+7) - 2;
-	$y = $sz - $radius - 3;
+	$font = 5;
+	$x = $size - (4*$radius+7) - 2;
+	$y = $size - $radius - 3;
 
 	imageFilledRectangle($im, $x, $y, $x + 4*$radius + 7, $y + $radius +1,
                              $clrs['dkgray']);
@@ -171,33 +171,33 @@ function legend($im, $sz, $clrs){
 	imageRectangle($im, $x+4*$radius+6, $y+1, $x + 3*$radius + 6,
                        $y + $radius,
                        $clrs['brightgreen']);
-	imageString($im, $fn, $x+3+0*$radius, $y+$radius/3, "<30",
+	imageString($im, $font, $x+3+0*$radius, $y+$radius/3, "<30",
                     $clrs['red']);
-	imageString($im, $fn, $x+5+1*$radius, $y+$radius/3, "30+",
+	imageString($im, $font, $x+5+1*$radius, $y+$radius/3, "30+",
                     $clrs['yellow']);
-	imageString($im, $fn, $x+7+2*$radius, $y+$radius/3, "35+",
+	imageString($im, $font, $x+7+2*$radius, $y+$radius/3, "35+",
                     $clrs['darkgreen']);
-	imageString($im, $fn, $x+9+3*$radius, $y+$radius/3, "40+",
+	imageString($im, $font, $x+9+3*$radius, $y+$radius/3, "40+",
                     $clrs['brightgreen']);
 }
 
-function radial($angle, $sz){
+function radial($angle, $size){
 	#turn into radians
 	$angle = deg2rad($angle);
 
 	# determine length of radius
-	$radius = $sz * 0.5 * 0.95;
+	$radius = $size * 0.5 * 0.95;
 
 	# and convert length/azimuth to cartesian
-	$x0 = sprintf("%d", (($sz * 0.5) - ($radius * cos($angle))));
-	$y0 = sprintf("%d", (($sz * 0.5) - ($radius * sin($angle))));
-	$x1 = sprintf("%d", (($sz * 0.5) + ($radius * cos($angle))));
-	$y1 = sprintf("%d", (($sz * 0.5) + ($radius * sin($angle))));
+	$x0 = sprintf("%d", (($size * 0.5) - ($radius * cos($angle))));
+	$y0 = sprintf("%d", (($size * 0.5) - ($radius * sin($angle))));
+	$x1 = sprintf("%d", (($size * 0.5) + ($radius * cos($angle))));
+	$y1 = sprintf("%d", (($size * 0.5) + ($radius * sin($angle))));
 
 	return array($x0, $y0, $x1, $y1);
 }
 
-function azel2xy($az, $el, $sz){
+function azel2xy($az, $el, $size){
 	#rotate coords... 90deg W = 180deg trig
 	$az += 270;
 
@@ -205,18 +205,18 @@ function azel2xy($az, $el, $sz){
 	$az = deg2rad($az);
 
 	# determine length of radius
-	$radius = $sz * 0.5 * 0.95;
+	$radius = $size * 0.5 * 0.95;
 	$radius -= ($radius * ($el/90));
 
 	# and convert length/azimuth to cartesian
-	$x = sprintf("%d", (($sz * 0.5) + ($radius * cos($az))));
-	$y = sprintf("%d", (($sz * 0.5) + ($radius * sin($az))));
-	$x = $sz - $x;
+	$x = sprintf("%d", (($size * 0.5) + ($radius * cos($az))));
+	$y = sprintf("%d", (($size * 0.5) + ($radius * sin($az))));
+	$x = $size - $x;
 
 	return array($x, $y);
 }
 
-function cellplot($im, $sz, $clrs, $cellsize, $e){
+function cellplot($im, $size, $clrs, $cellsize, $e){
 	list($sv, $el, $az, $snr, $_) = $e;
 
 	if ((0 == $sv) || (0 == $az + $el + $snr) ||
@@ -244,16 +244,16 @@ function cellplot($im, $sz, $clrs, $cellsize, $e){
 	$np = 0;
 	$points = array();
 	for($x = $az; $x <= $az+$cellsize; $x++){
-		list($px,$py) = azel2xy($x, $el, $sz);
+		list($px,$py) = azel2xy($x, $el, $size);
 		array_push($points, $px, $py);
 		$np++;
 	}
 	for($x = $az+$cellsize; $x >= $az; $x--){
-		list($px,$py) = azel2xy($x, $el+$cellsize, $sz);
+		list($px,$py) = azel2xy($x, $el+$cellsize, $size);
 		array_push($points, $px, $py);
 		$np++;
 	}
-	list($px,$py) = azel2xy($az, $el, $sz);
+	list($px,$py) = azel2xy($az, $el, $size);
 	array_push($points, $px, $py);
 	$np++;
 
@@ -261,7 +261,7 @@ function cellplot($im, $sz, $clrs, $cellsize, $e){
 		imageFilledPolygon($im, $points, $np, $color);
 }
 
-function splot($im, $sz, $clrs, $radius, $filled, $e){
+function splot($im, $size, $clrs, $radius, $filled, $e){
 	list($sv, $az, $el, $snr, $_) = $e;
 
 	if ((0 == $sv) || (0 == $az + $el + $snr))
@@ -277,7 +277,7 @@ function splot($im, $sz, $clrs, $radius, $filled, $e){
 	if ($snr == 0)
 		$color = $clrs['black'];
 
-	list($x, $y) = azel2xy($el, $az, $sz);
+	list($x, $y) = azel2xy($el, $az, $size);
 
 	if ($snr > 0){
 		if ($filled)
@@ -288,51 +288,51 @@ function splot($im, $sz, $clrs, $radius, $filled, $e){
 	}
 }
 
-function elevation($im, $sz, $clrs, $a){
+function elevation($im, $size, $clrs, $a){
 	$b = 90 - $a;
-	$a = $sz * 0.95 * ($a/180);
-	imageArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360, $clrs['ltgray']);
-	$x = $sz/2 - 16;
-	$y = $sz/2 - $a;
+	$a = $size * 0.95 * ($a/180);
+	imageArc($im, $size/2, $size/2, $a*2, $a*2, 0, 360, $clrs['ltgray']);
+	$x = $size/2 - 16;
+	$y = $size/2 - $a;
 	imageString($im, 2, $x, $y, $b, $clrs['ltgray']);
 }
 
-function skyview($im, $sz, $clrs){
-	$a = 90; $a = $sz * 0.95 * ($a/180);
-	imageFilledArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360,
+function skyview($im, $size, $clrs){
+	$a = 90; $a = $size * 0.95 * ($a/180);
+	imageFilledArc($im, $size/2, $size/2, $a*2, $a*2, 0, 360,
                        $clrs['mdgray'], 0);
-	imageArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360,
+	imageArc($im, $size/2, $size/2, $a*2, $a*2, 0, 360,
                  $clrs['black']);
-	$x = $sz/2 - 16; $y = $sz/2 - $a;
+	$x = $size/2 - 16; $y = $size/2 - $a;
 	imageString($im, 2, $x, $y, "0", $clrs['ltgray']);
 
-	$a = 85; $a = $sz * 0.95 * ($a/180);
-	imageFilledArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360,
+	$a = 85; $a = $size * 0.95 * ($a/180);
+	imageFilledArc($im, $size/2, $size/2, $a*2, $a*2, 0, 360,
                        $clrs['white'], 0);
-	imageArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360, $clrs['ltgray']);
-	imageString($im, 1, $sz/2 - 6, $sz+$a, '5', $clrs['black']);
-	$x = $sz/2 - 16; $y = $sz/2 - $a;
+	imageArc($im, $size/2, $size/2, $a*2, $a*2, 0, 360, $clrs['ltgray']);
+	imageString($im, 1, $size/2 - 6, $size+$a, '5', $clrs['black']);
+	$x = $size/2 - 16; $y = $size/2 - $a;
 	imageString($im, 2, $x, $y, "5", $clrs['ltgray']);
 
-	skygrid($im, $sz, $clrs);
-	$x = $sz/2 - 16; $y = $sz/2 - 8;
+	skygrid($im, $size, $clrs);
+	$x = $size/2 - 16; $y = $size/2 - 8;
 	/* imageString($im, 2, $x, $y, "90", $clrs['ltgray']); */
 
-	imageString($im, 4, $sz/2 + 4, 2        , 'N', $clrs['black']);
-	imageString($im, 4, $sz/2 + 4, $sz - 16 , 'S', $clrs['black']);
-	imageString($im, 4, 4        , $sz/2 + 4, 'E', $clrs['black']);
-	imageString($im, 4, $sz - 10 , $sz/2 + 4, 'W', $clrs['black']);
+	imageString($im, 4, $size/2 + 4, 2        , 'N', $clrs['black']);
+	imageString($im, 4, $size/2 + 4, $size - 16 , 'S', $clrs['black']);
+	imageString($im, 4, 4        , $size/2 + 4, 'E', $clrs['black']);
+	imageString($im, 4, $size - 10 , $size/2 + 4, 'W', $clrs['black']);
 
 }
 
-function skygrid($im, $sz, $clrs){
+function skygrid($im, $size, $clrs){
 	for($i = 0; $i < 180; $i += 15){
-		list($x0, $y0, $x1, $y1) = radial($i, $sz);
+		list($x0, $y0, $x1, $y1) = radial($i, $size);
 		imageLine($im, $x0, $y0, $x1, $y1, $clrs['ltgray']);
 	}
 
 	for($i = 15; $i < 90; $i += 15)
-		elevation($im, $sz, $clrs, $i);
+		elevation($im, $size, $clrs, $i);
 }
 
 ?>
