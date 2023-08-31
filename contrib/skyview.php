@@ -40,9 +40,10 @@ $radius = 8; # pixels
 $filled = 0;
 
 $im = imageCreate($sz, $sz);
-$C = colorsetup($im);
-skyview($im, $sz, $C);
-legend($im, $sz, $C);
+// The colors we use
+$clrs = colorsetup($im);
+skyview($im, $sz, $clrs);
+legend($im, $sz, $clrs);
 
 $sky = array();
 
@@ -121,14 +122,14 @@ foreach($sky as $az => $x){
 	foreach ($sky[$az] as $el => $y){
 		$e = array(-1, $el, $az, $sky[$az][$el]['avg'], -1);
 		if ($cellmode)
-			cellplot($im, $sz, $C, $cellsize, $e);
+			cellplot($im, $sz, $clrs, $cellsize, $e);
 		else
-			splot($im, $sz, $C, $radius, $filled, $e);
+			splot($im, $sz, $clrs, $radius, $filled, $e);
 	}
 }
 
 
-skygrid($im, $sz, $C);	# redraw grid over satellites
+skygrid($im, $sz, $clrs);	# redraw grid over satellites
 imagePNG($im, $argv[2]);
 imageDestroy($im);
 
@@ -136,38 +137,43 @@ exit(0);
 
 ###########################################################################
 function colorsetup($im){
-	$C['white']	= imageColorAllocate($im, 255, 255, 255);
-	$C['ltgray']	= imageColorAllocate($im, 191, 191, 191);
-	$C['mdgray']	= imageColorAllocate($im, 127, 127, 127);
-	$C['dkgray']	= imageColorAllocate($im, 63, 63, 63);
-	$C['black']	= imageColorAllocate($im, 0, 0, 0);
-	$C['red']	= imageColorAllocate($im, 255, 0, 0);
-	$C['brightgreen'] = imageColorAllocate($im, 0, 255, 0);
-	$C['darkgreen']	= imageColorAllocate($im, 0, 192, 0);
-	$C['blue']	= imageColorAllocate($im, 0, 0, 255);
-	$C['cyan']	= imageColorAllocate($im, 0, 255, 255);
-	$C['magenta']	= imageColorAllocate($im, 255, 0, 255);
-	$C['yellow']	= imageColorAllocate($im, 255, 255, 0);
-	$C['orange']	= imageColorAllocate($im, 255, 128, 0);
+	$clrs['white']	= imageColorAllocate($im, 255, 255, 255);
+	$clrs['ltgray']	= imageColorAllocate($im, 191, 191, 191);
+	$clrs['mdgray']	= imageColorAllocate($im, 127, 127, 127);
+	$clrs['dkgray']	= imageColorAllocate($im, 63, 63, 63);
+	$clrs['black']	= imageColorAllocate($im, 0, 0, 0);
+	$clrs['red']	= imageColorAllocate($im, 255, 0, 0);
+	$clrs['brightgreen'] = imageColorAllocate($im, 0, 255, 0);
+	$clrs['darkgreen']	= imageColorAllocate($im, 0, 192, 0);
+	$clrs['blue']	= imageColorAllocate($im, 0, 0, 255);
+	$clrs['cyan']	= imageColorAllocate($im, 0, 255, 255);
+	$clrs['magenta']	= imageColorAllocate($im, 255, 0, 255);
+	$clrs['yellow']	= imageColorAllocate($im, 255, 255, 0);
+	$clrs['orange']	= imageColorAllocate($im, 255, 128, 0);
 
-	return $C;
+	return $clrs;
 }
 
-function legend($im, $sz, $C){
+function legend($im, $sz, $clrs){
 	$r = 30;
 	$fn = 5;
 	$x = $sz - (4*$r+7) - 2;
 	$y = $sz - $r - 3;
 
-	imageFilledRectangle($im, $x, $y, $x + 4*$r + 7, $y + $r +1, $C['dkgray']);
-	imageRectangle($im, $x+0*$r+1, $y+1, $x + 1*$r + 0, $y + $r, $C['red']);
-	imageRectangle($im, $x+1*$r+2, $y+1, $x + 2*$r + 2, $y + $r, $C['yellow']);
-	imageRectangle($im, $x+2*$r+4, $y+1, $x + 3*$r + 4, $y + $r, $C['darkgreen']);
-	imageRectangle($im, $x+4*$r+6, $y+1, $x + 3*$r + 6, $y + $r, $C['brightgreen']);
-	imageString($im, $fn, $x+3+0*$r, $y+$r/3, "<30", $C['red']);
-	imageString($im, $fn, $x+5+1*$r, $y+$r/3, "30+", $C['yellow']);
-	imageString($im, $fn, $x+7+2*$r, $y+$r/3, "35+", $C['darkgreen']);
-	imageString($im, $fn, $x+9+3*$r, $y+$r/3, "40+", $C['brightgreen']);
+	imageFilledRectangle($im, $x, $y, $x + 4*$r + 7, $y + $r +1,
+                             $clrs['dkgray']);
+	imageRectangle($im, $x+0*$r+1, $y+1, $x + 1*$r + 0, $y + $r,
+                       $clrs['red']);
+	imageRectangle($im, $x+1*$r+2, $y+1, $x + 2*$r + 2, $y + $r,
+                       $clrs['yellow']);
+	imageRectangle($im, $x+2*$r+4, $y+1, $x + 3*$r + 4, $y + $r,
+                       $clrs['darkgreen']);
+	imageRectangle($im, $x+4*$r+6, $y+1, $x + 3*$r + 6, $y + $r,
+                       $clrs['brightgreen']);
+	imageString($im, $fn, $x+3+0*$r, $y+$r/3, "<30", $clrs['red']);
+	imageString($im, $fn, $x+5+1*$r, $y+$r/3, "30+", $clrs['yellow']);
+	imageString($im, $fn, $x+7+2*$r, $y+$r/3, "35+", $clrs['darkgreen']);
+	imageString($im, $fn, $x+9+3*$r, $y+$r/3, "40+", $clrs['brightgreen']);
 }
 
 function radial($angle, $sz){
@@ -205,22 +211,22 @@ function azel2xy($az, $el, $sz){
 	return array($x, $y);
 }
 
-function cellplot($im, $sz, $C, $cellsize, $e){
+function cellplot($im, $sz, $clrs, $cellsize, $e){
 	list($sv, $el, $az, $snr, $_) = $e;
 
 	if ((0 == $sv) || (0 == $az + $el + $snr) ||
 	    ($az < 0) || ($el < 0))
 		return;
 
-	$color = $C['brightgreen'];
+	$color = $clrs['brightgreen'];
 	if ($snr < 40)
-		$color = $C['darkgreen'];
+		$color = $clrs['darkgreen'];
 	if ($snr < 35)
-		$color = $C['yellow'];
+		$color = $clrs['yellow'];
 	if ($snr < 30)
-		$color = $C['red'];
+		$color = $clrs['red'];
 	if ($snr < 15)
-		$color = $C['dkgray'];
+		$color = $clrs['dkgray'];
 
 	#consider an N-degree cell plotted at (0,0). its top left corner
 	#will be (0,0) and its bottom right corner will be at (N,N). The
@@ -250,21 +256,21 @@ function cellplot($im, $sz, $C, $cellsize, $e){
 		imageFilledPolygon($im, $points, $np, $color);
 }
 
-function splot($im, $sz, $C, $r, $filled, $e){
+function splot($im, $sz, $clrs, $r, $filled, $e){
 	list($sv, $az, $el, $snr, $_) = $e;
 
 	if ((0 == $sv) || (0 == $az + $el + $snr))
 		return;
 
-	$color = $C['brightgreen'];
+	$color = $clrs['brightgreen'];
 	if ($snr < 40)
-		$color = $C['darkgreen'];
+		$color = $clrs['darkgreen'];
 	if ($snr < 35)
-		$color = $C['yellow'];
+		$color = $clrs['yellow'];
 	if ($snr < 30)
-		$color = $C['red'];
+		$color = $clrs['red'];
 	if ($snr == 0)
-		$color = $C['black'];
+		$color = $clrs['black'];
 
 	list($x, $y) = azel2xy($el, $az, $sz);
 
@@ -276,48 +282,51 @@ function splot($im, $sz, $C, $r, $filled, $e){
 	}
 }
 
-function elevation($im, $sz, $C, $a){
+function elevation($im, $sz, $clrs, $a){
 	$b = 90 - $a;
 	$a = $sz * 0.95 * ($a/180);
-	imageArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360, $C['ltgray']);
+	imageArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360, $clrs['ltgray']);
 	$x = $sz/2 - 16;
 	$y = $sz/2 - $a;
-	imageString($im, 2, $x, $y, $b, $C['ltgray']);
+	imageString($im, 2, $x, $y, $b, $clrs['ltgray']);
 }
 
-function skyview($im, $sz, $C){
+function skyview($im, $sz, $clrs){
 	$a = 90; $a = $sz * 0.95 * ($a/180);
-	imageFilledArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360, $C['mdgray'], 0);
-	imageArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360, $C['black']);
+	imageFilledArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360,
+                       $clrs['mdgray'], 0);
+	imageArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360,
+                 $clrs['black']);
 	$x = $sz/2 - 16; $y = $sz/2 - $a;
-	imageString($im, 2, $x, $y, "0", $C['ltgray']);
+	imageString($im, 2, $x, $y, "0", $clrs['ltgray']);
 
 	$a = 85; $a = $sz * 0.95 * ($a/180);
-	imageFilledArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360, $C['white'], 0);
-	imageArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360, $C['ltgray']);
-	imageString($im, 1, $sz/2 - 6, $sz+$a, '5', $C['black']);
+	imageFilledArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360,
+                       $clrs['white'], 0);
+	imageArc($im, $sz/2, $sz/2, $a*2, $a*2, 0, 360, $clrs['ltgray']);
+	imageString($im, 1, $sz/2 - 6, $sz+$a, '5', $clrs['black']);
 	$x = $sz/2 - 16; $y = $sz/2 - $a;
-	imageString($im, 2, $x, $y, "5", $C['ltgray']);
+	imageString($im, 2, $x, $y, "5", $clrs['ltgray']);
 
-	skygrid($im, $sz, $C);
+	skygrid($im, $sz, $clrs);
 	$x = $sz/2 - 16; $y = $sz/2 - 8;
-	/* imageString($im, 2, $x, $y, "90", $C['ltgray']); */
+	/* imageString($im, 2, $x, $y, "90", $clrs['ltgray']); */
 
-	imageString($im, 4, $sz/2 + 4, 2        , 'N', $C['black']);
-	imageString($im, 4, $sz/2 + 4, $sz - 16 , 'S', $C['black']);
-	imageString($im, 4, 4        , $sz/2 + 4, 'E', $C['black']);
-	imageString($im, 4, $sz - 10 , $sz/2 + 4, 'W', $C['black']);
+	imageString($im, 4, $sz/2 + 4, 2        , 'N', $clrs['black']);
+	imageString($im, 4, $sz/2 + 4, $sz - 16 , 'S', $clrs['black']);
+	imageString($im, 4, 4        , $sz/2 + 4, 'E', $clrs['black']);
+	imageString($im, 4, $sz - 10 , $sz/2 + 4, 'W', $clrs['black']);
 
 }
 
-function skygrid($im, $sz, $C){
+function skygrid($im, $sz, $clrs){
 	for($i = 0; $i < 180; $i += 15){
 		list($x0, $y0, $x1, $y1) = radial($i, $sz);
-		imageLine($im, $x0, $y0, $x1, $y1, $C['ltgray']);
+		imageLine($im, $x0, $y0, $x1, $y1, $clrs['ltgray']);
 	}
 
 	for($i = 15; $i < 90; $i += 15)
-		elevation($im, $sz, $C, $i);
+		elevation($im, $sz, $clrs, $i);
 }
 
 ?>
