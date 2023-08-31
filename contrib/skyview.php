@@ -155,25 +155,30 @@ function colorsetup($im){
 }
 
 function legend($im, $sz, $clrs){
-	$r = 30;
+	$radius = 30;
 	$fn = 5;
-	$x = $sz - (4*$r+7) - 2;
-	$y = $sz - $r - 3;
+	$x = $sz - (4*$radius+7) - 2;
+	$y = $sz - $radius - 3;
 
-	imageFilledRectangle($im, $x, $y, $x + 4*$r + 7, $y + $r +1,
+	imageFilledRectangle($im, $x, $y, $x + 4*$radius + 7, $y + $radius +1,
                              $clrs['dkgray']);
-	imageRectangle($im, $x+0*$r+1, $y+1, $x + 1*$r + 0, $y + $r,
-                       $clrs['red']);
-	imageRectangle($im, $x+1*$r+2, $y+1, $x + 2*$r + 2, $y + $r,
-                       $clrs['yellow']);
-	imageRectangle($im, $x+2*$r+4, $y+1, $x + 3*$r + 4, $y + $r,
-                       $clrs['darkgreen']);
-	imageRectangle($im, $x+4*$r+6, $y+1, $x + 3*$r + 6, $y + $r,
+	imageRectangle($im, $x+0*$radius+1, $y+1, $x + 1*$radius + 0,
+                       $y + $radius, $clrs['red']);
+	imageRectangle($im, $x+1*$radius+2, $y+1, $x + 2*$radius + 2,
+                       $y + $radius, $clrs['yellow']);
+	imageRectangle($im, $x+2*$radius+4, $y+1, $x + 3*$radius + 4,
+                       $y + $radius, $clrs['darkgreen']);
+	imageRectangle($im, $x+4*$radius+6, $y+1, $x + 3*$radius + 6,
+                       $y + $radius,
                        $clrs['brightgreen']);
-	imageString($im, $fn, $x+3+0*$r, $y+$r/3, "<30", $clrs['red']);
-	imageString($im, $fn, $x+5+1*$r, $y+$r/3, "30+", $clrs['yellow']);
-	imageString($im, $fn, $x+7+2*$r, $y+$r/3, "35+", $clrs['darkgreen']);
-	imageString($im, $fn, $x+9+3*$r, $y+$r/3, "40+", $clrs['brightgreen']);
+	imageString($im, $fn, $x+3+0*$radius, $y+$radius/3, "<30",
+                    $clrs['red']);
+	imageString($im, $fn, $x+5+1*$radius, $y+$radius/3, "30+",
+                    $clrs['yellow']);
+	imageString($im, $fn, $x+7+2*$radius, $y+$radius/3, "35+",
+                    $clrs['darkgreen']);
+	imageString($im, $fn, $x+9+3*$radius, $y+$radius/3, "40+",
+                    $clrs['brightgreen']);
 }
 
 function radial($angle, $sz){
@@ -181,13 +186,13 @@ function radial($angle, $sz){
 	$angle = deg2rad($angle);
 
 	# determine length of radius
-	$r = $sz * 0.5 * 0.95;
+	$radius = $sz * 0.5 * 0.95;
 
 	# and convert length/azimuth to cartesian
-	$x0 = sprintf("%d", (($sz * 0.5) - ($r * cos($angle))));
-	$y0 = sprintf("%d", (($sz * 0.5) - ($r * sin($angle))));
-	$x1 = sprintf("%d", (($sz * 0.5) + ($r * cos($angle))));
-	$y1 = sprintf("%d", (($sz * 0.5) + ($r * sin($angle))));
+	$x0 = sprintf("%d", (($sz * 0.5) - ($radius * cos($angle))));
+	$y0 = sprintf("%d", (($sz * 0.5) - ($radius * sin($angle))));
+	$x1 = sprintf("%d", (($sz * 0.5) + ($radius * cos($angle))));
+	$y1 = sprintf("%d", (($sz * 0.5) + ($radius * sin($angle))));
 
 	return array($x0, $y0, $x1, $y1);
 }
@@ -200,12 +205,12 @@ function azel2xy($az, $el, $sz){
 	$az = deg2rad($az);
 
 	# determine length of radius
-	$r = $sz * 0.5 * 0.95;
-	$r -= ($r * ($el/90));
+	$radius = $sz * 0.5 * 0.95;
+	$radius -= ($radius * ($el/90));
 
 	# and convert length/azimuth to cartesian
-	$x = sprintf("%d", (($sz * 0.5) + ($r * cos($az))));
-	$y = sprintf("%d", (($sz * 0.5) + ($r * sin($az))));
+	$x = sprintf("%d", (($sz * 0.5) + ($radius * cos($az))));
+	$y = sprintf("%d", (($sz * 0.5) + ($radius * sin($az))));
 	$x = $sz - $x;
 
 	return array($x, $y);
@@ -256,7 +261,7 @@ function cellplot($im, $sz, $clrs, $cellsize, $e){
 		imageFilledPolygon($im, $points, $np, $color);
 }
 
-function splot($im, $sz, $clrs, $r, $filled, $e){
+function splot($im, $sz, $clrs, $radius, $filled, $e){
 	list($sv, $az, $el, $snr, $_) = $e;
 
 	if ((0 == $sv) || (0 == $az + $el + $snr))
@@ -276,9 +281,10 @@ function splot($im, $sz, $clrs, $r, $filled, $e){
 
 	if ($snr > 0){
 		if ($filled)
-			imageFilledArc($im, $x, $y, $r, $r, 0, 360, $color, 0);
+			imageFilledArc($im, $x, $y, $radius, $radius,
+                                       0, 360, $color, 0);
 		else
-			imageArc($im, $x, $y, $r, $r, 0, 360, $color);
+			imageArc($im, $x, $y, $radius, $radius, 0, 360, $color);
 	}
 }
 
