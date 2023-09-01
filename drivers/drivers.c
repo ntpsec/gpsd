@@ -933,7 +933,8 @@ static const struct gps_type_t driver_rtcm104v2 = {
     .speed_switcher= NULL,              // no speed switcher
     .mode_switcher = NULL,              // no mode switcher
     .rate_switcher = NULL,              // no sample-rate switcher
-    .min_cycle.tv_sec  = 1,             // not relevant, no rate switch
+    // cycle not relevant, no rate switch, but can generate log noise
+    .min_cycle.tv_sec  = 10,            // Some NTRIP servers are bursty
     .min_cycle.tv_nsec = 0,             // not relevant, no rate switch
     .control_send   = NULL,             // how to send control strings
     .time_offset     = NULL,
@@ -975,7 +976,8 @@ static const struct gps_type_t driver_rtcm104v3 = {
     .speed_switcher= NULL,              // no speed switcher
     .mode_switcher = NULL,              // no mode switcher
     .rate_switcher = NULL,              // no sample-rate switcher
-    .min_cycle.tv_sec  = 1,             // not relevant, no rate switch
+    // cycle not relevant, no rate switch, but can generate log noise
+    .min_cycle.tv_sec  = 10,            // Some NTRIP servers are bursty
     .min_cycle.tv_nsec = 0,             // not relevant, no rate switch
     .control_send   = NULL,             // how to send control strings
     .time_offset     = NULL,
