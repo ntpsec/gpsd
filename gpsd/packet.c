@@ -2884,6 +2884,7 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
     ssize_t recvd;
     char scratchbuf[MAX_PACKET_LENGTH * 4 + 1];
 
+    lexer->errout.label = "gpsd";   // dunno why have to do this...
     errno = 0;
     /* O_NONBLOCK set, so this should not block.
      * Best not to block on an unresponsive GNSS receiver */
@@ -2924,7 +2925,7 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
         size_t saved_inbuflen;
 
         GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                 "PACKET: packet_get(%d) -> %zd entering chunked >%s<\n",
+                 "PACKET: packet_get(%d) -> %zd entering chunked >%.100s<\n",
                  fd, recvd,
                  gps_visibilize(scratchbuf, sizeof(scratchbuf),
                                 (char *)lexer->inbufptr, lexer->inbuflen));
@@ -2964,7 +2965,7 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
                          "PACKET: NTRIP: packet_get(d %d) invalid ending idx "
                          "%zu (x%x).\n",
                          fd, idx, lexer->inbuffer[idx]);
-                return 0;   // assume we need more input.
+                break;   // assume we need more input.
             }
 
             // move past '\n' line ending
@@ -2978,7 +2979,7 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
                 GPSD_LOG(LOG_SHOUT, &lexer->errout,
                          "PACKET: NTRIP: packet_get(d %d) invalid ending 2.\n",
                          fd);
-                return 0;   // assume we need more input.
+                break;   // assume we need more input.
             }
             idx++;    // move past the trailing '\n'
 
@@ -2998,7 +2999,7 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
                 GPSD_LOG(LOG_SHOUT, &lexer->errout,
                          "PACKET: NTRIP: packet_get( %d) chunk %d not full\n",
                          fd, chunk_num);
-                return 0;
+                break;
             }
             // enough data in inbuffer, starting at inbuffer[idx]
             // move past that chunk header.
@@ -3022,7 +3023,7 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
             }
         }
         if (0 == tmp_buflen) {
-            return lexer->inbuflen;   // not right, close enough
+            return 0;   // not right, close enough
         }
         // now parse the chunks.
         // RTCM3 message header not always at inbuffer[0]
@@ -3031,21 +3032,24 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
                 break;
             }
         }
+        if (0xd3 != tmp_buffer[idx]) {
+            // start of RTCM3 not found.
+            return 0;   // not right, close enough
+        }
+        // prolly should check for start of next RTCM3, to ensure we
+        // have all of the first one.
         memcpy(lexer->inbuffer, &tmp_buffer[idx], tmp_buflen - idx);
         lexer->inbufptr = lexer->inbuffer;
         lexer->inbuflen = tmp_buflen - idx;
-        GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                 "PACKET: NTRIP: packet_get(d %d) sending unchunked to "
-                 "packet_parse()>%s<\n",
-                 fd, gps_visibilize(scratchbuf, sizeof(scratchbuf),
-                                (char *)lexer->inbufptr, lexer->inbuflen));
         while (true) {
             // keep sending until all taken
             GPSD_LOG(LOG_SHOUT, &lexer->errout,
                      "PACKET: NTRIP: packet_get(%d) to packet_parse() "
-                      "inbuflen %zu outbuflen %zu pbu %zu\n",
+                      "inbuflen %zu outbuflen %zu pbu %zu >%s<\n",
                       fd, lexer->inbuflen, lexer->outbuflen,
-                      packet_buffered_input(lexer));
+                      packet_buffered_input(lexer),
+                      gps_visibilize(scratchbuf, sizeof(scratchbuf),
+                                    (char *)lexer->inbufptr, lexer->inbuflen));
             saved_inbuflen = lexer->inbuflen;
             packet_parse(lexer);
             if (saved_inbuflen == lexer->inbuflen) {
