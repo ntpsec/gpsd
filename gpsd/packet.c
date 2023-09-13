@@ -3041,26 +3041,22 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
         memcpy(lexer->inbuffer, &tmp_buffer[idx], tmp_buflen - idx);
         lexer->inbufptr = lexer->inbuffer;
         lexer->inbuflen = tmp_buflen - idx;
-        while (true) {
-            // keep sending until all taken
-            GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                     "PACKET: NTRIP: packet_get(%d) to packet_parse() "
-                      "inbuflen %zu outbuflen %zu pbu %zu >%s<\n",
-                      fd, lexer->inbuflen, lexer->outbuflen,
-                      packet_buffered_input(lexer),
-                      gps_visibilize(scratchbuf, sizeof(scratchbuf),
-                                    (char *)lexer->inbufptr, lexer->inbuflen));
-            saved_inbuflen = lexer->inbuflen;
-            packet_parse(lexer);
-            if (saved_inbuflen == lexer->inbuflen) {
-                break;
-            }
-        }
+
+        GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                 "PACKET: NTRIP: packet_get(%d) to packet_parse() "
+                  "inbuflen %zu outbuflen %zu pbu %zu >%.200s<\n",
+                  fd, lexer->inbuflen, lexer->outbuflen,
+                  packet_buffered_input(lexer),
+                  gps_visibilize(scratchbuf, sizeof(scratchbuf),
+                                (char *)lexer->inbufptr, lexer->inbuflen));
+        saved_inbuflen = lexer->inbuflen;
+        packet_parse(lexer);
+
         // there is often a residue, it needs to be saved.
         // but for now, trash it.
-        lexer->inbufptr = lexer->inbuffer;
-        lexer->inbuflen = 0;
-        return tmp_buflen;     // say we got it all.
+        // lexer->inbufptr = lexer->inbuffer;
+        // lexer->inbuflen = 0;
+        return (ssize_t)lexer->outbuflen;
     }
     /*
      * Bail out, indicating no more input, only if we just received
