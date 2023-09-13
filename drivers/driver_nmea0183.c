@@ -3595,6 +3595,36 @@ static gps_mask_t processPQTMINS(int count UNUSED, char *field[],
     return mask;
 }
 
+// Quectel $PQTMVER - Firmware info
+static gps_mask_t processPQTMVER(int count UNUSED, char *field[],
+                                 struct gps_device_t *session)
+{
+    /*
+     * $PQTMVER,MODULE_L89HANR01A06S,2022/07/28,18:27:04*7A
+     *
+     * 1   Version
+     * 2   build date yyyy/mm/dd
+     * 3   build time hh:mm:ss
+     *
+     */
+    char obuf[128];                      // temp version string buffer
+    gps_mask_t mask = ONLINE_SET;
+
+    // save as subtype
+    (void)snprintf(obuf, sizeof(obuf),
+             "%s %.12s %.10s",
+             field[1], field[2], field[3]);
+
+    // save what we can
+    (void)strlcpy(session->subtype, obuf, sizeof(session->subtype) - 1);
+
+    GPSD_LOG(LOG_PROG, &session->context->errout,
+             "NMEA0183: PQTMVER %s\n",
+             session->subtype);
+
+    return mask;
+}
+
 static gps_mask_t processPQVERNO(int c UNUSED, char* field[],
                                  struct gps_device_t* session)
 {
@@ -4945,6 +4975,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         // MediaTek/Trimble Satellite Channel Status
         {"PMTKCHN", NULL, 0, false, NULL},
         // MTK-3301 -- $POLYN
+
         // Quectel proprietary
         {"PQTMCFGEINSMSGERROR", NULL, 1, false, processPQxERR},      // Error
         {"PQTMCFGEINSMSGOK", NULL, 1, false, processPQxOK},          // OK
@@ -4959,6 +4990,8 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PQTMQMPTERROR", NULL, 1, false, processPQxERR},       // Error
         {"PQTMQMPT", NULL, 2, false, NULL},            // Meters / tick
         {"PQTMVEHMSG", NULL, 2, false, NULL},          // Vehicle Info
+        {"PQTMVER", NULL, 4, false, processPQTMVER},   // Firmware info
+
         {"PQVERNO", NULL, 5, false, processPQVERNO},   // Version
         // smart watch sensors, Yes: space!
         {"PRHS ", NULL, 2,  false, processPRHS},
