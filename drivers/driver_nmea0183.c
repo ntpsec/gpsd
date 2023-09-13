@@ -2640,6 +2640,89 @@ static gps_mask_t processOHPR(int c UNUSED, char *field[],
 }
 #endif  // OCEANSERVER_ENABLE
 
+// PAIRxxx is Airoha, spunoff from Mediatek
+
+// PAIR001 -- ACK/NAK
+static gps_mask_t processPAIR001(int c UNUSED, char *field[],
+                                 struct gps_device_t *session)
+{
+    int reason;
+    const char *reasons[] = {
+        "Success",
+        "In process, wait",
+        "Failed",
+        "Not supported",
+        "Busy, try again.",
+        "Unknown",             // gpsd only
+    };
+
+    // ACK / NACK
+    reason = atoi(field[2]);
+    if (4 == reason) {
+        // ACK
+        GPSD_LOG(LOG_PROG, &session->context->errout,
+                 "NMEA0183: PAIR001, ACK: %s\n", field[1]);
+        return ONLINE_SET;
+    }
+
+    // else, NACK
+    if (0 > reason ||
+        4 < reason) {
+        // WTF?
+        reason = 5;
+    }
+    GPSD_LOG(LOG_WARN, &session->context->errout,
+             "NMEA0183: PAIR NACK: %s, reason: %s\n",
+             field[1], reasons[reason]);
+
+    return ONLINE_SET;
+}
+
+// PAIR010 -- Request Aiding
+static gps_mask_t processPAIR010(int c UNUSED, char *field[],
+                                 struct gps_device_t *session)
+{
+    int type;
+    const char *types[] = {
+        "EPO data",
+        "Time",
+        "Location",
+        "Unknown",             // gpsd only
+    };
+
+    int system;
+    const char *systems[] = {
+        "GPS",
+        "GLONASS",
+        "Galileo",
+        "BDS",
+        "QZSS",
+        "Unknown",             // gpsd only
+    };
+    int wn;         // week number
+    int tow;        // time of week
+
+    type = atoi(field[1]);
+    if (0 > type ||
+        2 < type) {
+        // WTF?
+        type = 3;
+    }
+    system = atoi(field[2]);
+    if (0 > system ||
+        4 < system) {
+        // WTF?
+        system = 5;
+    }
+    wn = atoi(field[3]);
+    tow = atoi(field[4]);
+    GPSD_LOG(LOG_WARN, &session->context->errout,
+             "NMEA0183: PAIR010: Need %s for %s.  WN %d TOW %d\n",
+             types[type], systems[system], wn, tow);
+
+    return ONLINE_SET;
+}
+
 /* Ashtech sentences take this format:
  * $PASHDR,type[,val[,val]]*CS
  * type is an alphabetic subsentence type
@@ -3214,6 +3297,13 @@ static gps_mask_t processPMTK001(int c UNUSED, char *field[],
                                  struct gps_device_t *session)
 {
     int reason;
+    const char *mtk_reasons[] = {
+        "Invalid",
+        "Unsupported",
+        "Valid but Failed",
+        "Valid success",       // unused, see above
+        "Unknown",             // gpsd only
+    };
 
     // ACK / NACK
     reason = atoi(field[2]);
@@ -3221,24 +3311,18 @@ static gps_mask_t processPMTK001(int c UNUSED, char *field[],
         // ACK
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "NMEA0183: MTK ACK: %s\n", field[1]);
-    } else {
-        // NACK
-        const char *mtk_reasons[] = {
-            "Invalid",
-            "Unsupported",
-            "Valid but Failed",
-            "Valid success",       // unused, see above
-            "Unknown",             // gpsd only
-        };
-        if (0 > reason ||
-            4 < reason) {
-            // WTF?
-            reason = 4;
-        }
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "NMEA0183: MTK NACK: %s, reason: %s\n",
-                 field[1], mtk_reasons[reason]);
+        return ONLINE_SET;
     }
+
+    // else, NACK
+    if (0 > reason ||
+        3 < reason) {
+        // WTF?
+        reason = 4;
+    }
+    GPSD_LOG(LOG_WARN, &session->context->errout,
+             "NMEA0183: MTK NACK: %s, reason: %s\n",
+             field[1], mtk_reasons[reason]);
     return ONLINE_SET;
 }
 
@@ -4825,33 +4909,37 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"OSD", NULL, 0,  false, NULL},             // ignore Own Ship Data
         // general handler for Ashtech
         {"PASHR", NULL, 3, false, processPASHR},
-        {"PEMT", NULL, 5, false, NULL},             // Evermore proprietary
+        // Airoha proprietary
+        {"PAIR001", NULL, 3, false, processPAIR001},  // ACK/NAK
+        {"PAIR010", NULL, 5, false, processPAIR010},  // Request Aiding
+
+        {"PEMT", NULL, 5, false, NULL},               // Evermore proprietary
         // Furuno proprietary
-        {"PERDACK", NULL, 4, false, NULL},          // ACK
-        // {"PERDAPI", NULL, 3, false, NULL},          // Config Send
-        {"PERDCRD", NULL, 15, false, NULL},         // NLOSMASK?
-        {"PERDCRG", "DCR", 6, false, NULL},         // QZSS DC report
-        {"PERDCRJ", "FREQ", 9, false, NULL},        // Jamming Status
-        {"PERDCRP", NULL, 9, false, NULL},          // Position
-        {"PERDCRQ", NULL, 11, false, NULL},         // Galileo SAR
-        {"PERDCRW", "TPS1", 8, false, NULL},        // Time
-        {"PERDCRX", "TPS2", 12, false, NULL},       // PPS
-        {"PERDCRY", "TPS3", 11, false, NULL},       // Position Mode
-        {"PERDCRZ", "TPS4", 13, false, NULL},       // GCLK
-        {"PERDMSG", NULL, 3, false, NULL},          // Message
-        {"PERDSYS", "ANTSEL", 5, false, NULL},      // Antenna
-        {"PERDSYS", "FIXSESSION", 5, false, NULL},  // Fix Session
-        {"PERDSYS", "GPIO", 3, false, NULL},        // GPIO
-        {"PERDSYS", "VERSION", 6, false, NULL},     // Version
+        {"PERDACK", NULL, 4, false, NULL},            // ACK
+        // {"PERDAPI", NULL, 3, false, NULL},         // Config Send
+        {"PERDCRD", NULL, 15, false, NULL},           // NLOSMASK?
+        {"PERDCRG", "DCR", 6, false, NULL},           // QZSS DC report
+        {"PERDCRJ", "FREQ", 9, false, NULL},          // Jamming Status
+        {"PERDCRP", NULL, 9, false, NULL},            // Position
+        {"PERDCRQ", NULL, 11, false, NULL},           // Galileo SAR
+        {"PERDCRW", "TPS1", 8, false, NULL},          // Time
+        {"PERDCRX", "TPS2", 12, false, NULL},         // PPS
+        {"PERDCRY", "TPS3", 11, false, NULL},         // Position Mode
+        {"PERDCRZ", "TPS4", 13, false, NULL},         // GCLK
+        {"PERDMSG", NULL, 3, false, NULL},            // Message
+        {"PERDSYS", "ANTSEL", 5, false, NULL},        // Antenna
+        {"PERDSYS", "FIXSESSION", 5, false, NULL},    // Fix Session
+        {"PERDSYS", "GPIO", 3, false, NULL},          // GPIO
+        {"PERDSYS", "VERSION", 6, false, NULL},       // Version
         // Jackson Labs proprietary
-        {"PJLTS", NULL, 11,  false, NULL},          // GPSDO status
-        {"PJLTV", NULL, 4,  false, NULL},           // Time and 3D velocity
+        {"PJLTS", NULL, 11,  false, NULL},            // GPSDO status
+        {"PJLTV", NULL, 4,  false, NULL},             // Time and 3D velocity
         // GPS-320FW -- $PLCS
-        {"PMGNST", NULL, 8, false, processPMGNST},  // Magellan Status
-        // MediaTek proprietary
-        {"PMTK001", NULL, 3, false, processPMTK001},  // ACK
-        {"PMTK010", NULL, 2, false, NULL},          // System Message
-        {"PMTK011", NULL, 2, false, NULL},          // Text Message
+        {"PMGNST", NULL, 8, false, processPMGNST},    // Magellan Status
+        // MediaTek proprietary, EOL.  Replaced by Airoha
+        {"PMTK001", NULL, 3, false, processPMTK001},  // ACK/NAK
+        {"PMTK010", NULL, 2, false, NULL},            // System Message
+        {"PMTK011", NULL, 2, false, NULL},            // Text Message
         {"PMTK424", NULL, 3, false, processPMTK424},
         {"PMTK705", NULL, 4, false, processPMTK705},
         // MediaTek/Trimble Satellite Channel Status
