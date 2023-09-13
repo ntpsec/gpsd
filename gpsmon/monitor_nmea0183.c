@@ -267,8 +267,10 @@ static void nmea_update(void)
     /* can be NULL if packet was overlong */
     fields = session.nmea.field;
 
-    if (session.lexer.outbuffer[0] == (unsigned char)'$'
-                && fields != NULL && fields[0] != NULL) {
+    if ((unsigned char)'$' == session.lexer.outbuffer[0] &&
+        NULL != fields &&
+        NULL != fields[0]) {
+
         int ymax, xmax;
         timespec_t now;
         timespec_t ts_diff;
@@ -300,7 +302,7 @@ static void nmea_update(void)
             char *findme = strstr(sentences, fields[0]);
 
             tick_interval = ts_diff;
-            if (findme != NULL) {
+            if (NULL != findme) {
                 (void)mvwchgat(nmeawin, SENTENCELINE, 1, xmax - 13, A_NORMAL,
                                0, NULL);
                 (void)mvwchgat(nmeawin, SENTENCELINE, 1 + (findme - sentences),
