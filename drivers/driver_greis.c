@@ -1176,7 +1176,7 @@ const struct gps_type_t driver_greis = {
     /* Startup-time device detector */
     .probe_detect     = NULL,
     /* Packet getter (using default routine) */
-    .get_packet       = generic_get,
+    .get_packet       = packet_get1,
     /* Parse message packets */
     .parse_packet     = greis_parse_input,
     /* non-perturbing initial query (e.g. for version) */

@@ -251,7 +251,7 @@ static bool tsip_detect(struct gps_device_t *session)
             to.tv_nsec = 0;
             if (!nanowait(myfd, &to))
                 break;
-            if (generic_get(session) >= 0) {
+            if (packet_get1(session) >= 0) {
                 if (session->lexer.type == TSIP_PACKET) {
                     GPSD_LOG(LOG_RAW, &session->context->errout,
                              "TSIP: tsip_detect found\n");
@@ -4415,7 +4415,7 @@ const struct gps_type_t driver_tsip =
     .trigger        = NULL,               // no trigger
     .channels       = TSIP_CHANNELS,      // consumer-grade GPS
     .probe_detect   = tsip_detect,        // probe for 9600O81 device
-    .get_packet     = generic_get,        // use the generic packet getter
+    .get_packet     = packet_get1,        // use the generic packet getter
     .parse_packet   = tsip_parse_input,   // parse message packets
     .rtcm_writer    = NULL,               // doesn't accept DGPS corrections
     .init_query     = tsip_init_query,    // non-perturbing initial query

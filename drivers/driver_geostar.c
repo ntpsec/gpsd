@@ -115,7 +115,7 @@ static bool geostar_detect(struct gps_device_t *session)
             if (!nanowait(myfd, &to)) {
                 break;
             }
-            if (0 <= generic_get(session)) {
+            if (0 <= packet_get1(session)) {
                 if (session->lexer.type == GEOSTAR_PACKET) {
                     GPSD_LOG(LOG_RAW, &session->context->errout,
                              "geostar_detect found\n");
@@ -639,7 +639,7 @@ const struct gps_type_t driver_geostar =
     .trigger        = NULL,                  // no trigger
     .channels       = GEOSTAR_CHANNELS,      // consumer-grade GPS/GLONASS
     .probe_detect   = geostar_detect,        // probe for device
-    .get_packet     = generic_get,           // use the generic packet getter
+    .get_packet     = packet_get1,           // use the generic packet getter
     .parse_packet   = geostar_parse_input,   // parse message packets
     .rtcm_writer    = NULL,                  // no DGPS corrections
     .init_query     = geostar_init_query,    // non-perturbing initial query

@@ -4580,7 +4580,7 @@ const struct gps_type_t driver_ubx = {
     .channels          = 60,
     .probe_detect      = NULL,           // Startup-time device detector
     // Packet getter (using default routine)
-    .get_packet        = generic_get,
+    .get_packet        = packet_get1,
     .parse_packet      = parse_input,    // Parse message packets
     // RTCM handler (using default routine)
     .rtcm_writer       = gpsd_write,

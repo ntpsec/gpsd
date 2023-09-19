@@ -322,8 +322,6 @@ Notes based on code as of Mon Apr 5 21:38:06 2010 -0400.
 |Functions: |This is the main driver for NMEA, both plain vanilla and
 any manufacturer specific variety of NMEA output. This is NOT where
 manufacturer specific binary matters are handled.
-|`+ssize_t generic_get(struct gps_device_t *session)+` |This is a
-wrapper to call the real packet getter function, `+packet_get()+`.
 
 |`+ssize_t pass_rtcm(struct gps_device_t *session, char *buf, size_t rtcmbytes)+`
 |This writes the rtcm data to the device.

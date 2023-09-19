@@ -1620,7 +1620,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
                  session->device_type->type_name,
                  session->lexer.type);
     } else {
-        newlen = generic_get(session);
+        newlen = packet_get1(session);
     }
 
     // update the scoreboard structure from the GPS

@@ -521,7 +521,7 @@ const struct gps_type_t driver__proto__binary = {
     /* Startup-time device detector */
     .probe_detect     = _proto__probe_detect,
     /* Packet getter (using default routine) */
-    .get_packet       = generic_get,
+    .get_packet       = packet_get1,
     /* Parse message packets */
     .parse_packet     = _proto__parse_input,
     /* RTCM handler (using default routine) */

@@ -547,7 +547,7 @@ const struct gps_type_t driver_superstar2 = {
     /* Startup-time device detector */
     .probe_detect       = NULL,
     /* Packet getter (using default routine) */
-    .get_packet         = generic_get,
+    .get_packet         = packet_get1,
     /* Parse message packets */
     .parse_packet       = superstar2_parse_input,
     /* RTCM handler (using default routine) */

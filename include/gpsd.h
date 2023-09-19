@@ -924,7 +924,6 @@ extern const struct gps_type_t **gpsd_drivers;
 
 // gpsd library internal prototypes
 extern gps_mask_t generic_parse_input(struct gps_device_t *);
-extern ssize_t generic_get(struct gps_device_t *);
 
 extern gps_mask_t nmea_parse(char *, struct gps_device_t *);
 extern ssize_t nmea_write(struct gps_device_t *, char *, size_t);

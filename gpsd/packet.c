@@ -2916,7 +2916,7 @@ ssize_t packet_get1(struct gps_device_t *session)
             // fall through, input buffer may be nonempty
         } else {
             GPSD_LOG(LOG_WARN, &lexer->errout,
-                     "PACKET: packet_get(%d) errno: %s(%d)\n",
+                     "PACKET: packet_get1(%d) errno: %s(%d)\n",
                      fd, strerror(errno), errno);
             return -1;
         }
@@ -2929,7 +2929,7 @@ ssize_t packet_get1(struct gps_device_t *session)
         lexer->inbuflen += recvd;
     }
     GPSD_LOG(LOG_SPIN, &lexer->errout,
-             "PACKET: packet_get() fd %d -> %zd %s(%d)\n",
+             "PACKET: packet_get1() fd %d -> %zd %s(%d)\n",
              fd, recvd, strerror(errno), errno);
     if (true == lexer->chunked) {
         /* Handle http/1.1 chunking as a layer above the packet layer.
@@ -2943,7 +2943,7 @@ ssize_t packet_get1(struct gps_device_t *session)
         size_t saved_inbuflen;
 
         GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                 "PACKET: packet_get(%d) -> %zd entering chunked >%.100s<\n",
+                 "PACKET: packet_get1(%d) -> %zd entering chunked >%.100s<\n",
                  fd, recvd,
                  gps_visibilize(scratchbuf, sizeof(scratchbuf),
                                 (char *)lexer->inbufptr, lexer->inbuflen));
@@ -2958,7 +2958,7 @@ ssize_t packet_get1(struct gps_device_t *session)
         for (chunk_num = 0; ; chunk_num++) {
 
             GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                     "PACKET: packet_get(%d) chunk %d >%s<\n",
+                     "PACKET: packet_get1(%d) chunk %d >%s<\n",
                      fd, chunk_num,
                      gps_visibilize(scratchbuf, sizeof(scratchbuf),
                                     (char *)lexer->inbufptr, lexer->inbuflen));
@@ -2980,7 +2980,7 @@ ssize_t packet_get1(struct gps_device_t *session)
                 '\r' != lexer->inbuffer[idx]) {
                 // invalid ending.  valid endings are ':' or '\r\n'.
                 GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                         "PACKET: NTRIP: packet_get(d %d) invalid ending idx "
+                         "PACKET: NTRIP: packet_get1(d %d) invalid ending idx "
                          "%zu (x%x).\n",
                          fd, idx, lexer->inbuffer[idx]);
                 break;   // assume we need more input.
@@ -2995,7 +2995,7 @@ ssize_t packet_get1(struct gps_device_t *session)
             if ('\n' != lexer->inbuffer[idx]) {
                 // Invalid ending.  The only valid ending is '\n'.
                 GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                         "PACKET: NTRIP: packet_get(d %d) invalid ending 2.\n",
+                         "PACKET: NTRIP: packet_get1(d %d) invalid ending 2.\n",
                          fd);
                 break;   // assume we need more input.
             }
@@ -3005,7 +3005,7 @@ ssize_t packet_get1(struct gps_device_t *session)
              * for the tailing \r\n */
             needed = chunk_size + 2 + idx;
             GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                     "PACKET: NTRIP: packet_get( %d) chunk %u idx %zu "
+                     "PACKET: NTRIP: packet_get1( %d) chunk %u idx %zu "
                      "inbuflen %zu needed %zu %s\n",
                      fd, chunk_size, idx, lexer->inbuflen, needed,
                      gps_visibilize(scratchbuf, sizeof(scratchbuf),
@@ -3015,7 +3015,7 @@ ssize_t packet_get1(struct gps_device_t *session)
                  * the chunk count line, but not the chunked data yet!!
                  * Like this: "64\r\n" */
                 GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                         "PACKET: NTRIP: packet_get( %d) chunk %d not full\n",
+                         "PACKET: NTRIP: packet_get1( %d) chunk %d not full\n",
                          fd, chunk_num);
                 break;
             }
@@ -3024,7 +3024,7 @@ ssize_t packet_get1(struct gps_device_t *session)
             lexer->inbufptr += idx;
             lexer->inbuflen -= idx;
             GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                     "PACKET: NTRIP: packet_get(%d) got chunk %d >%s<\n",
+                     "PACKET: NTRIP: packet_get1(%d) got chunk %d >%s<\n",
                      fd, chunk_num,
                      gps_visibilize(scratchbuf, sizeof(scratchbuf),
                                     (char *)lexer->inbufptr, chunk_size));
@@ -3061,7 +3061,7 @@ ssize_t packet_get1(struct gps_device_t *session)
         lexer->inbuflen = tmp_buflen - idx;
 
         GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                 "PACKET: NTRIP: packet_get(%d) to packet_parse() "
+                 "PACKET: NTRIP: packet_get1(%d) to packet_parse() "
                   "inbuflen %zu outbuflen %zu pbu %zu >%.200s<\n",
                   fd, lexer->inbuflen, lexer->outbuflen,
                   packet_buffered_input(lexer),
@@ -3096,7 +3096,7 @@ ssize_t packet_get1(struct gps_device_t *session)
         packet_discard(lexer);
         lexer->state = GROUND_STATE;
         GPSD_LOG(LOG_WARN, &lexer->errout,
-                 "PACKET: packet_get() inbuffer overflow.\n");
+                 "PACKET: packet_get1() inbuffer overflow.\n");
     }
 
     /*
@@ -3107,7 +3107,7 @@ ssize_t packet_get1(struct gps_device_t *session)
      * just physically read.
      *
      * Note: this choice greatly simplifies life for callers of
-     * packet_get(), but means that they cannot tell when a nonzero
+     * packet_get1(), but means that they cannot tell when a nonzero
      * return means there was a successful physical read.  They will
      * thus credit a data source that drops out with being alive
      * slightly longer than it actually was.  This is unlikely to
