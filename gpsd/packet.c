@@ -2873,16 +2873,34 @@ void packet_parse(struct gps_lexer_t *lexer)
     }                           // while
 }
 
+/* packet_get() -- deprecated 2023, use packet_get1() instead
+ * exposed in Python FFI.
+ */
+ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
+{
+    struct gps_device_t session = {0};
+    ssize_t retval;
+
+    session.gpsdata.gps_fd = fd;
+    session.lexer = *lexer;   // structure copy
+    retval = packet_get1(&session);
+    *lexer = session.lexer;   // structure copy
+    return retval;
+}
+
+
 /* grab a packet;
  * return: greater than zero: length
  *         > 0  == got a packet.
  *         0 == EOF or no full packet
  *        -1 == I/O error
  */
-ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
+ssize_t packet_get1(struct gps_device_t *session)
 {
     ssize_t recvd;
     char scratchbuf[MAX_PACKET_LENGTH * 4 + 1];
+    int fd = session->gpsdata.gps_fd;
+    struct gps_lexer_t *lexer = &session->lexer;
 
     lexer->errout.label = "gpsd";   // dunno why have to do this...
     errno = 0;

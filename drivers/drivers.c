@@ -21,7 +21,7 @@
 
 ssize_t generic_get(struct gps_device_t *session)
 {
-    return packet_get(session->gpsdata.gps_fd, &session->lexer);
+    return packet_get1(session);
 }
 
 // This handles only bad, comment, and maybe NMEA packets.

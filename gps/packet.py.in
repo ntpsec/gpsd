@@ -181,7 +181,9 @@ Fetch a single packet from file descriptor
         _loaded = self.pointer.contents
 
     def get(self, file_handle):
-        """Get a packet from a file descriptor."""
+        """Get a packet from a file descriptor.
+
+Deprecated 2023, use packet_get1() instead"""
         global _loaded
         _packet.packet_get.restype = ctypes.c_int
         _packet.packet_get.argtypes = [ctypes.c_int, ctypes.POINTER(lexer_t)]

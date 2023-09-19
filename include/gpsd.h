@@ -107,6 +107,7 @@ extern "C" {
  *      add end_gsv_talker and gga_sats_used to gps_device_t.nmea
  * 3.26
  *      add chunked to gps_lexer_t, for NTRIP 1.1 chunking.
+ *      add packet_get1(), deprecate packet_get()
  */
 
 #define JSON_DATE_MAX   24      // ISO8601 timestamp with 2 decimal places
@@ -301,6 +302,7 @@ extern void lexer_init(struct gps_lexer_t *);
 extern void packet_reset(struct gps_lexer_t *);
 extern void packet_pushback(struct gps_lexer_t *);
 extern void packet_parse(struct gps_lexer_t *);
+// packet_get()  deprecated Sep 2023, use packet_get1() instead
 extern ssize_t packet_get(int, struct gps_lexer_t *);
 extern int packet_sniff(struct gps_lexer_t *);
 
@@ -871,6 +873,8 @@ struct gps_device_t {
         bool reported;
     } dgpsip;
 };
+
+extern ssize_t packet_get1(struct gps_device_t *);
 
 /*
  * These are used where a file descriptor of 0 or greater indicates open device.
