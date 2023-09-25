@@ -103,6 +103,7 @@ extern "C" {
  *       move privdata_t here from libgps/gps_sock.c
  *       Add rot (Rate Of Turn), mheading, to struct attitude_t
  *       Add wtemp to gps_fix_t
+ *       Add rtcm3_4076_hdr
  */
 #define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
@@ -583,6 +584,18 @@ enum RTCM3_PROJECTION_TYPE
     PR_CS
 };                                              // DF170
 
+// Header for all RTCM3 4076 messages. IGS SSR
+struct rtcm3_4076_hdr {
+    unsigned ssr_vers;         // IDF001, IGS SSR message version.
+    unsigned igs_num;          // IDF002, IGS message number
+    unsigned ssr_epoch;        // IDF003, SSR Epoch Time in seconds
+    unsigned ssr_update;       // IDF004, SSR Update Interval
+    unsigned ssr_mmi;          // IDF005, SSR Mutiple Message Interval
+    unsigned ssr_iod;          // IDF007, IOD SSR
+    unsigned ssr_provider;     // IDF008, SSR Provider ID
+    unsigned ssr_solution;     // IDF009, SSR Solution ID
+};
+
 struct rtcm3_basic_rtk {
     unsigned char indicator;    // Indicator
     // Satellite Frequency Channel Number (GLONASS only)
@@ -960,6 +973,7 @@ struct rtcm3_t {
             int l2_p_bias;          // GLONASS L2 P Code-Phase Bias
         } rtcm3_1230;
         struct rtcm3_msm_hdr rtcm3_msm;
+        struct rtcm3_4076_hdr rtcm3_4076;
         unsigned char data[1024];       // Max RTCM3 msg length is 1023 bytes
     } rtcmtypes;
 };
