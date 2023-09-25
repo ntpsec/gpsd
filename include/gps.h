@@ -583,16 +583,6 @@ enum RTCM3_PROJECTION_TYPE
     PR_CS
 };                                              // DF170
 
-// Used for both GPS and GLONASS, but their timebases differ
-struct rtcm3_rtk_hdr {          // header data from 1001, 1002, 1003, 1004
-    unsigned int station_id;    // Reference Station ID, DF003
-    unsigned long tow;          // GNSS Epoch Time in ms, DF004
-    bool sync;                  // Synchronous GNSS Message Flag, DF005
-    unsigned short satcount;    // # Satellite Signals Processed, DF006
-    bool smoothing;             // Divergence-free Smoothing Indicator, DF007
-    unsigned int interval;      // Smoothing Interval, DF008
-};
-
 struct rtcm3_basic_rtk {
     unsigned char indicator;    // Indicator
     // Satellite Frequency Channel Number (GLONASS only)
@@ -600,6 +590,17 @@ struct rtcm3_basic_rtk {
     double pseudorange;         // Pseudorange
     double rangediff;           // PhaseRange - Pseudorange in meters
     unsigned char locktime;     // Lock time Indicator
+};
+
+struct rtcm3_correction_diff {
+    unsigned char ident;        // satellite ID
+    enum {RESERVED, CORRECT, WIDELANE, UNCERTAIN} ambiguity;
+    unsigned char nonsync;
+    // Geometric Carrier Phase Correction Difference (1016, 1017)
+    double geometric_diff;
+    unsigned char iode;         // GPS IODE (1016, 1017)
+    // Ionospheric Carrier Phase Correction Difference (1015, 1017)
+    double ionospheric_diff;
 };
 
 struct rtcm3_extended_rtk {
@@ -666,15 +667,14 @@ struct rtcm3_network_rtk_header {
     unsigned char satcount;     // count of GPS satellites
 };
 
-struct rtcm3_correction_diff {
-    unsigned char ident;        // satellite ID
-    enum {RESERVED, CORRECT, WIDELANE, UNCERTAIN} ambiguity;
-    unsigned char nonsync;
-    // Geometric Carrier Phase Correction Difference (1016, 1017)
-    double geometric_diff;
-    unsigned char iode;         // GPS IODE (1016, 1017)
-    // Ionospheric Carrier Phase Correction Difference (1015, 1017)
-    double ionospheric_diff;
+// Used for both GPS and GLONASS, but their timebases differ
+struct rtcm3_rtk_hdr {          // header data from 1001, 1002, 1003, 1004
+    unsigned int station_id;    // Reference Station ID, DF003
+    unsigned long tow;          // GNSS Epoch Time in ms, DF004
+    bool sync;                  // Synchronous GNSS Message Flag, DF005
+    unsigned short satcount;    // # Satellite Signals Processed, DF006
+    bool smoothing;             // Divergence-free Smoothing Indicator, DF007
+    unsigned int interval;      // Smoothing Interval, DF008
 };
 
 struct rtcm3_t {
