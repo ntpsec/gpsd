@@ -429,7 +429,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
  *
  * Warning: Blocking.  if the host is unresponsive, this will hang forever.
  *
- * Return: file descriptor of connection
+ * Return: fntrip_stream_get_parseile descriptor of connection
  *         negative number on failure
  */
 static int ntrip_stream_req_probe(const struct ntrip_stream_t *stream,
@@ -651,6 +651,8 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
     char *ibuf = (char *)lexer->inbuffer;
     char *obuf = (char *)lexer->outbuffer;
 
+    GPSD_LOG(LOG_PROG, errout,
+             "NTRIP: ntrip_stream_get_parse(fd %d)\n", dsock);
     lexer_init(lexer);
     /* We expect the header comes in as one TCP packet.
      * dsock is still blocking, so get exactly 1024 bytes */
@@ -1153,7 +1155,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         } else {
             GPSD_LOG(LOG_ERROR, &device->context->errout,
                      "NTRIP: stream write success get request\n");
-            device->ntrip.conn_state = NTRIP_CONN_ESTABLISHED;
+            device->ntrip.conn_state = NTRIP_CONN_SENT_GET;
         }
         ret = device->gpsdata.gps_fd;
         break;
