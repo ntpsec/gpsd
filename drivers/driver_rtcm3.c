@@ -131,6 +131,53 @@ static bool rtcm3_101567(const struct gps_context_t *context,
     return false;
 }
 
+/* decode 4076 header
+ * IGS State Space Representation (SSR) Format
+ * www.igs.org
+ * https://files.igs.org/pub/data/format/igs_ssr_v1.pdf
+ *
+ * Return: false if decoded
+ *         true if runt or undecoded
+ */
+static bool rtcm3_4076(const struct gps_context_t *context,
+                         struct rtcm3_t *rtcm, const unsigned char *buf)
+{
+    int bitcount = 36;         // 8 preamble, 6 zero, 10 length, 12 type
+    unsigned vers;             // IDF001, IGS SSR message version.
+    unsigned igs_num;          // IDF002, IGS message number
+    unsigned ssr_epoch;        // IDF003, SSR Epoch Time in seconds
+    unsigned ssr_update;       // IDF004, SSR Update Interval
+    unsigned ssr_mmi;          // IDF005, SSR Mutiple Message Interval
+    unsigned ssr_iod;          // IDF007, IOD SSR
+    unsigned ssr_provider;     // IDF008, SSR Provider ID
+    unsigned ssr_solution;     // IDF009, SSR Solution ID
+
+    if (22 > rtcm->length) {
+        // need 76 bits, 9.5 bytes
+        rtcm->length = 0;          // set to zero to prevent JSON decode
+        GPSD_LOG(LOG_WARN, &context->errout,
+                 "RTCM3: rtcm3_4076() type %d runt length %d ",
+                 rtcm->type, rtcm->length);
+        return true;
+    }
+
+    vers = ugrab(3);
+    igs_num = ugrab(8);
+    ssr_epoch = ugrab(20);
+    ssr_update = ugrab(4);
+    ssr_mmi = ugrab(1);
+    ssr_iod = ugrab(4);
+    ssr_provider = ugrab(16);
+    ssr_solution = ugrab(4);
+
+    GPSD_LOG(LOG_PROG, &context->errout,
+             "RTCM3: rtcm3_4076 ver %u igs_num %u Epoch %u update %u mmi %u "
+             "IOD %u Provider %u Solution %u\n",
+             vers, igs_num, ssr_epoch, ssr_update, ssr_mmi, ssr_iod,
+             ssr_provider, ssr_solution);
+    return true;
+}
+
 /* decode MSM header
  * MSM1 to MSM7 share a common header
  * TODO: rtklib has C code for these.
@@ -1843,9 +1890,10 @@ void rtcm3_unpack(const struct gps_context_t *context,
 
     case 4076:
         /* RTCM 3.x
-         * International GNSS Service Proprietary
+         * International GNSS Service Proprietary, www.igs.org
          */
         msg_name = "International GNSS Service Proprietary";
+        unknown = rtcm3_4076(context, rtcm, buf);
         break;
 
     case 4077:
