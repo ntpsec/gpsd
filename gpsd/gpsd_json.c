@@ -2345,6 +2345,21 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                         rtcm->rtcmtypes.rtcm3_1230.l2_p_bias);
         }
         break;
+    case 4976:
+        // IGS proprietary, SSR
+        // TODO: this is just the header.
+        str_appendf(buf, buflen,
+                    "\"vers\":%u,\"num\":%u,\"epoch\":%u,\"update\":%u,"
+                    "\"mmi\": %u,\"iod\": %u,\"provider\":%u,\"solution\": %u,",
+                    rtcm->rtcmtypes.rtcm3_4076.ssr_vers,
+                    rtcm->rtcmtypes.rtcm3_4076.igs_num,
+                    rtcm->rtcmtypes.rtcm3_4076.ssr_epoch,
+                    rtcm->rtcmtypes.rtcm3_4076.ssr_update,
+                    rtcm->rtcmtypes.rtcm3_4076.ssr_mmi,
+                    rtcm->rtcmtypes.rtcm3_4076.ssr_iod,
+                    rtcm->rtcmtypes.rtcm3_4076.ssr_provider,
+                    rtcm->rtcmtypes.rtcm3_4076.ssr_solution);
+        break;
 
     case 1018: // Reserved, alternative Ionospheric Correction Differences
         FALLTHROUGH
