@@ -33,7 +33,7 @@ __version__ = "@VERSION@"
 # ------------------------------------------------------------------------
 # ------------------------------------------------------------------------
 def polar2cart(azimuth, elevation, r_max):
-    """Convert polar coordinates in cartesian ones."""
+    """Convert polar coordinates in Cartesian ones."""
     radius = r_max * (1 - elevation / 90.0)
     theta = math.radians(float(azimuth - 90))
     return (
@@ -57,39 +57,39 @@ def cutoff_err(err, err_min, err_max):
 # Read JSON data from file or stdin, search a {'class': 'SKY'} line.
 # ------------------------------------------------------------------------
 EXIT_CODE = 0
-SKY = None
-TPV = None
+SKY = {}
+TPV = {}
 try:
     if len(sys.argv) > 1:
         with open(sys.argv[1]) as f:
             while True:
                 SENTENCE = json.loads(f.readline())
-                if 'class' in SENTENCE and SENTENCE['class'] == 'SKY':
-                    SKY = SENTENCE
-                if 'class' in SENTENCE and SENTENCE['class'] == 'TPV':
+                if 'class' in SENTENCE and 'SKY' == SENTENCE['class']:
+                    if 'satellites' in  SENTENCE:
+                        SKY = SENTENCE
+                if 'class' in SENTENCE and 'TPV' == SENTENCE['class']:
                     TPV = SENTENCE
-                if SKY is not None and TPV is not None:
+                if {} not in [SKY, TPV]:
                     break
     else:
         while True:
             SENTENCE = json.loads(sys.stdin.readline())
-            if 'class' in SENTENCE and SENTENCE['class'] == 'SKY':
-                SKY = SENTENCE
-            if 'class' in SENTENCE and SENTENCE['class'] == 'TPV':
+            if 'class' in SENTENCE and 'SKY' == SENTENCE['class']:
+                if 'satellites' in  SENTENCE:
+                    SKY = SENTENCE
+            if 'class' in SENTENCE and 'TPV' == SENTENCE['class']:
                 TPV = SENTENCE
-            if SKY is not None and TPV is not None:
+            if {} not in [SKY, TPV]:
                 sys.stdin.close()
                 break
 except (IOError, ValueError):
     # Assume empty data and write msg to stderr.
     EXIT_CODE = 100
+    err = ['position'] if {} == TPV else []
+    if {} == SKY:
+        err += ['skyview image']
     sys.stderr.write("Error reading JSON data from file or stdin."
-                     " Creating an empty or partial skyview image.\n")
-
-if SKY is None:
-    SKY = {}
-if TPV is None:
-    TPV = {}
+                     " Creating an empty " + ' and '.join(err) + ".\n")
 
 # ------------------------------------------------------------------------
 # Colors for the SVG styles.
@@ -136,15 +136,13 @@ ERR_MAX = 75.0
 # Create an empty list, if satellites list is missing.
 if 'satellites' not in SKY.keys():
     SKY['satellites'] = []
-
-if len(SKY['satellites']) < MIN_SAT:
-    NUM_SAT = MIN_SAT
-else:
-    NUM_SAT = len(SKY['satellites'])
+NUM_SAT = max(MIN_SAT, len(SKY['satellites']))
 
 # Make a sortable array and autoscale SNR.
 SATELLITES = {}
 for sat in SKY['satellites']:
+    if 0 >= sat.get('ss', 0):
+        continue
     SATELLITES[sat['PRN']] = sat
     if float(sat['ss']) > SNR_MAX:
         SNR_MAX = float(sat['ss'])
@@ -197,19 +195,35 @@ else:
 TIME_STR = UTC.strftime('%Y-%m-%d %H:%M:%S UTC')
 
 # ------------------------------------------------------------------------
-# Output the SGV image.
+# Output the SVG image.
 # ------------------------------------------------------------------------
 print('''<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
-          "https://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg
-   xmlns="https://www.w3.org/2000/svg"
-   width="%d"
-   height="%d">''' % (IMG_WIDTH, IMG_HEIGHT))
+<!-- WARNING - do not step into this trap!
 
-# NOTICE: librsvg v.2.40 has a bug with "chain" multiple class selectors:
-# it does not handle a selector like text.label.title and a
-# tag class="label title".
+Do not "correct" the xmlns attribute from "HTTP" to "HTTPS", as this will
+make the produced SVG file unrenderable for Chrome and a couple of other
+browsers.
+
+xml Namespace IDs must be unique; that's why they use the domain name
+system to form worldwide unique IDs in URL format.
+
+But beware - it is still an ID and NOT an URL - even if the ID used as an URL
+happens to point to something sensible, like documentation of the namespace.
+
+more background about XML namespaces:
+    https://developer.mozilla.org/en-US/docs/Web/SVG/Namespaces_Crash_Course
+-->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+          "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg
+   width="%d"
+   height="%d"
+   xmlns="http://www.w3.org/2000/svg"
+>''' % (IMG_WIDTH, IMG_HEIGHT))
+
+# NOTICE: librsvg 2.40 has a bug with "chain" multiple class selectors:
+# it does not handle a selector like text.label.title and an
+# attribute class="label title".
 print('<style type="text/css">')
 # Labels.
 print('    text              '
@@ -280,8 +294,8 @@ print('<text x="%d" y="%d" class="compass">%s</text>' %
       (CIRCLE_X + CIRCLE_R + LBL_COMPASS_POINTS_SIZE,
        CIRCLE_Y + int(LBL_COMPASS_POINTS_SIZE*0.4), 'E'))
 # Lat/lon.
-POS_LAT = "%.5f" % (float(TPV['lat']),) if 'lat' in TPV else 'Unknown'
-POS_LON = "%.5f" % (float(TPV['lon']),) if 'lon' in TPV else 'Unknown'
+POS_LAT = "%.5f" % (float(TPV['lat']),) if 'lat' in TPV else 'n/a'
+POS_LON = "%.5f" % (float(TPV['lon']),) if 'lon' in TPV else 'n/a'
 print('<text class="label label-center" x="%d" y="%d">Lat/Lon: %s %s</text>' %
       (POS_LBL_X, POS_LBL_Y, POS_LAT, POS_LON))
 # Satellites signal/noise ratio box.
@@ -295,15 +309,8 @@ SS_LBL_Y = int(BARS_BOX_Y - BARS_BOX_HEIGHT + LBL_FONT_SIZE +
 print('<text class="label label-snr" x="%d" y="%d">'
       'Satellites Signal/Noise Ratio</text>' % (SS_LBL_X, SS_LBL_Y))
 # Box for horizontal and vertical estimated error.
-if 'epx' in TPV and 'epy' in TPV:
-    EPX = float(TPV['epx'])
-    EPY = float(TPV['epy'])
-    EPH = math.sqrt(EPX**2 + EPY**2)
-elif 'eph' in TPV:
-    EPH = float(TPV['eph'])
-else:
-    EPH = ERR_MAX
-EPV = float(TPV['epv']) if 'epv' in TPV else ERR_MAX
+EPH = TPV.get('eph', ERR_MAX)
+EPV = TPV.get('epv', ERR_MAX)
 ERR_H, SIGN_H = cutoff_err(EPH, ERR_MIN, ERR_MAX)
 ERR_V, SIGN_V = cutoff_err(EPV, ERR_MIN, ERR_MAX)
 ERR_LBL_X = int(ERR_BOX_X - STROKE_WIDTH * 2.0)
@@ -335,6 +342,8 @@ print('<rect class="bars bars-used" x="%d" y="%d" rx="%d" '
 i = 0
 for prn in sorted(SATELLITES):
     sat = SATELLITES[prn]
+    if 'az' not in sat or 'el' not in sat:
+        continue
     BAR_HEIGHT = int(BAR_HEIGHT_MAX * (float(sat['ss']) / SNR_MAX))
     (sat_x, sat_y) = polar2cart(float(sat['az']), float(sat['el']), CIRCLE_R)
     sat_x = int(CIRCLE_X + sat_x)
