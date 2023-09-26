@@ -1667,6 +1667,7 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
 {
     char buf1[JSON_VAL_MAX * 2 + 1];
     char buf2[JSON_VAL_MAX * 2 + 1];
+    char *ptr;                       // utility pointer
     unsigned short i;
     unsigned int n;
 
@@ -2146,48 +2147,47 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
         (void)strlcat(buf, "}", buflen);
             break;
     case 1025:
+        switch (rtcm->rtcmtypes.rtcm3_1025.projection_type) {
+        case PR_TM:
+            ptr = "TM";
+            break;
+        case PR_TMS:
+            ptr = "TMS";
+            break;
+        case PR_LCC1SP:
+            ptr = "LCC1SP";
+            break;
+        case PR_LCC2SP:
+            ptr = "LCC2SP";
+            break;
+        case PR_LCCW:
+            ptr = "LCCW";
+            break;
+        case PR_CS:
+            ptr = "CS";
+            break;
+        default:
+            ptr = "UNKNOWN";
+            break;
+        }
         str_appendf(buf, buflen,
                     "\"sys_id\":%u,"
                     "\"lat_origin\":%.9f,\"lon_origin\":%.9f,"
                     "\"add_sno\":%.5f,"
                     "\"false_easting\":%.3f,\"false_northing\":%.3f,"
-                    "\"projection_type\":",
+                    "\"projection_type\":\"%s\"",
                     rtcm->rtcmtypes.rtcm3_1025.sys_id_num,
                     rtcm->rtcmtypes.rtcm3_1025.lat_origin,
                     rtcm->rtcmtypes.rtcm3_1025.lon_origin,
                     rtcm->rtcmtypes.rtcm3_1025.add_sno,
                     rtcm->rtcmtypes.rtcm3_1025.false_east,
-                    rtcm->rtcmtypes.rtcm3_1025.false_north);
-        switch (rtcm->rtcmtypes.rtcm3_1025.projection_type)
-        {
-        case PR_TM:
-            (void)strlcat(buf, "\"TM\",", buflen);
-            break;
-        case PR_TMS:
-            (void)strlcat(buf, "\"TMS\",", buflen);
-            break;
-        case PR_LCC1SP:
-            (void)strlcat(buf, "\"LCC1SP\",", buflen);
-            break;
-        case PR_LCC2SP:
-            (void)strlcat(buf, "\"LCC2SP\",", buflen);
-            break;
-        case PR_LCCW:
-            (void)strlcat(buf, "\"LCCW\",", buflen);
-            break;
-        case PR_CS:
-            (void)strlcat(buf, "\"CS\",", buflen);
-            break;
-        default:
-            (void)strlcat(buf, "\"UNKNOWN\",", buflen);
-            break;
-        }
+                    rtcm->rtcmtypes.rtcm3_1025.false_north, ptr);
         break;
 
     case 1029:
         str_appendf(buf, buflen,
                     "\"station_id\":%u,\"mjd\":%u,\"sec\":%u,"
-                    "\"len\":%zd,\"units\":%zd,\"msg\":\"%s\",",
+                    "\"len\":%zd,\"units\":%zd,\"msg\":\"%s\"",
                     rtcm->rtcmtypes.rtcm3_1029.station_id,
                     rtcm->rtcmtypes.rtcm3_1029.mjd,
                     rtcm->rtcmtypes.rtcm3_1029.sod,
@@ -2299,7 +2299,7 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
                     "\"steering\":%u,\"extclk\":%u,"
                     "\"smoothing\":%u,\"interval\":%u,"
                     "\"MaskSat\":%llu,\"MaskSig\":%u,\"MaskCell\":%llu,"
-                    "\"NSat\":%u,\"NSig\":%u,\"NCell\":%u,",
+                    "\"NSat\":%u,\"NSig\":%u,\"NCell\":%u",
                     rtcm->rtcmtypes.rtcm3_msm.station_id,
                     // FIXME: make gnssid a string?
                     rtcm->rtcmtypes.rtcm3_msm.gnssid,
@@ -2348,7 +2348,7 @@ void json_rtcm3_dump(const struct rtcm3_t *rtcm,
         // TODO: this is just the header.
         str_appendf(buf, buflen,
                     "\"vers\":%u,\"num\":%u,\"epoch\":%u,\"update\":%u,"
-                    "\"mmi\": %u,\"iod\": %u,\"provider\":%u,\"solution\": %u,",
+                    "\"mmi\": %u,\"iod\": %u,\"provider\":%u,\"solution\": %u",
                     rtcm->rtcmtypes.rtcm3_4076.ssr_vers,
                     rtcm->rtcmtypes.rtcm3_4076.igs_num,
                     rtcm->rtcmtypes.rtcm3_4076.ssr_epoch,
