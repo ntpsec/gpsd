@@ -856,6 +856,7 @@ struct gps_device_t {
         struct ntrip_stream_t stream;
 
         // state information about our response parsing
+        // must match ntrip_states[] in gpsd/net_ntrip.c
         enum {
             NTRIP_CONN_INIT = 0,
             NTRIP_CONN_SENT_PROBE,

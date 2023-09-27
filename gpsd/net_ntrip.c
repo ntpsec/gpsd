@@ -49,6 +49,28 @@
 #define NTRIP_UNAUTH            "401 Unauthorized\r\n"
 #define NTRIP_CHUNKED           "Transfer-Encoding: chunked\r\n"
 
+// ntrip_state() -- stringify conn_state
+static const char *ntrip_state(unsigned state)
+{
+    // NTRIP conn_states.  See include/gpsd.h
+    const char *ntrip_states[] = {
+        "INIT",
+        "SENT_PROBE",
+        "SENT_GET",
+        "ESTABLISHED",
+        "ERR",
+        "CLOSED",
+        "INPROGRESS",
+        "UNKNOWN",
+    };
+    unsigned num_states = sizeof(ntrip_states)/sizeof(ntrip_states[0]);
+
+    if (num_states <= state) {
+        // huh?
+        state = num_states - 1;
+    }
+    return ntrip_states[state];
+}
 
 // table to convert format string to enum ntrip_fmt
 static struct ntrip_fmt_s {
@@ -1006,8 +1028,9 @@ int ntrip_open(struct gps_device_t *device, char *orig)
     ssize_t blen;
 
     GPSD_LOG(LOG_PROG, &device->context->errout,
-             "NTRIP: ntrip_open(%s) fd %d state = %d\n",
+             "NTRIP: ntrip_open(%s) fd %d state = %s(%d)\n",
              orig, device->gpsdata.gps_fd,
+             ntrip_state(device->ntrip.conn_state),
              device->ntrip.conn_state);
 
     switch (device->ntrip.conn_state) {
