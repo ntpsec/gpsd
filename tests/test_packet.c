@@ -275,10 +275,12 @@ static struct map runontests[] = {
 static int packet_test(struct map *mp)
 {
     struct gps_lexer_t lexer;
+    struct gpsd_errout_t errout;
     int failure = 0;
 
-    lexer_init(&lexer);
-    lexer.errout.debug = verbose;
+    errout_reset(&errout);
+    errout.debug = verbose;
+    lexer_init(&lexer, &errout);
     memcpy(lexer.inbufptr = lexer.inbuffer, mp->test, mp->testlen);
     lexer.inbuflen = mp->testlen;
     packet_parse(&lexer);
@@ -301,6 +303,7 @@ static int packet_test(struct map *mp)
 static void runon_test(struct map *mp)
 {
     struct gps_lexer_t lexer;
+    struct gpsd_errout_t errout;
     int nullfd = open("/dev/null", O_RDONLY);
     ssize_t st;
 
@@ -309,8 +312,9 @@ static void runon_test(struct map *mp)
                       errno);
         exit(EXIT_FAILURE);
     }
-    lexer_init(&lexer);
-    lexer.errout.debug = verbose;
+    errout_reset(&errout);
+    errout.debug = verbose;
+    lexer_init(&lexer, &errout);
     memcpy(lexer.inbufptr = lexer.inbuffer, mp->test, mp->testlen);
     lexer.inbuflen = mp->testlen;
     (void)fputs((char *)mp->test, stdout);

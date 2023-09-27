@@ -675,7 +675,7 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
 
     GPSD_LOG(LOG_PROG, errout,
              "NTRIP: ntrip_stream_get_parse(fd %d)\n", dsock);
-    lexer_init(lexer);
+    lexer_init(lexer, &device->context->errout);
     /* We expect the header comes in as one TCP packet.
      * dsock is still blocking, so get exactly 1024 bytes */
     while (-1 == (read_ret = read(dsock, ibuf, 1024))) {

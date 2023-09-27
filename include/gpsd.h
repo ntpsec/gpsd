@@ -108,6 +108,7 @@ extern "C" {
  * 3.26
  *      add chunked to gps_lexer_t, for NTRIP 1.1 chunking.
  *      add packet_get1(), deprecate packet_get()
+ *      change lexer_init() prototype
  */
 
 #define JSON_DATE_MAX   24      // ISO8601 timestamp with 2 decimal places
@@ -298,7 +299,7 @@ struct gps_lexer_t {
     bool chunked;        // true if NTRIP/1.1 and the HTTP stream is chunked.
 };
 
-extern void lexer_init(struct gps_lexer_t *);
+extern void lexer_init(struct gps_lexer_t *, struct gpsd_errout_t *);
 extern void packet_reset(struct gps_lexer_t *);
 extern void packet_pushback(struct gps_lexer_t *);
 extern void packet_parse(struct gps_lexer_t *);

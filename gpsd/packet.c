@@ -2020,7 +2020,7 @@ static void packet_unstash(struct gps_lexer_t *lexer)
 // entry points begin here
 
 // reset lexer structure
-void lexer_init(struct gps_lexer_t *lexer)
+void lexer_init(struct gps_lexer_t *lexer, struct gpsd_errout_t *errout)
 {
     memset(lexer, 0, sizeof(struct gps_lexer_t));
     /* lel memset() do all the zeros
@@ -2034,7 +2034,7 @@ void lexer_init(struct gps_lexer_t *lexer)
     // set start_time to help out autobaud.
     (void)clock_gettime(CLOCK_REALTIME, &lexer->start_time);
     packet_reset(lexer);
-    errout_reset(&lexer->errout);
+    lexer->errout = *errout;    // srtucture copy
 }
 
 // grab one packet from inbufptr
@@ -2904,7 +2904,6 @@ ssize_t packet_get1(struct gps_device_t *session)
     int fd = session->gpsdata.gps_fd;
     struct gps_lexer_t *lexer = &session->lexer;
 
-    lexer->errout.label = "gpsd";   // dunno why have to do this...
     errno = 0;
     /* O_NONBLOCK set, so this should not block.
      * Best not to block on an unresponsive GNSS receiver */

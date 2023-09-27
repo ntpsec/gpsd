@@ -440,8 +440,7 @@ static void ppsthread_log(volatile struct pps_thread_t *pps_thread,
 void gpsd_clear(struct gps_device_t *session)
 {
     (void)clock_gettime(CLOCK_REALTIME, &session->gpsdata.online);
-    lexer_init(&session->lexer);
-    session->lexer.errout = session->context->errout;
+    lexer_init(&session->lexer, &session->context->errout);
     // session->gpsdata.online = 0;
     gps_clear_att(&session->gpsdata.attitude);
     gps_clear_dop(&session->gpsdata.dop);
