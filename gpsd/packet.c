@@ -2037,7 +2037,9 @@ void lexer_init(struct gps_lexer_t *lexer)
     errout_reset(&lexer->errout);
 }
 
-// grab a packet from the input buffer
+// grab one packet from inbufptr
+// move it to outbugptr
+// adjust pointers and lenghts, then return
 void packet_parse(struct gps_lexer_t *lexer)
 {
 
@@ -3043,10 +3045,12 @@ ssize_t packet_get1(struct gps_device_t *session)
         if (0 == tmp_buflen) {
             return 0;   // not right, close enough
         }
-        // now parse the chunks.
+        // now parse the chunks., to get one message
         // RTCM3 message header not always at inbuffer[0]
-        for (idx = 0; idx < tmp_buflen; idx++) {
-            if (0xd3 == tmp_buffer[idx]) {
+        for (idx = 0; idx < (tmp_buflen - 1); idx++) {
+            if (0xd3 == tmp_buffer[idx] &&
+                0 == (0xfc & tmp_buffer[idx +1])) {
+                // Looking for 0xd3, followed by 6 zeros.
                 break;
             }
         }
