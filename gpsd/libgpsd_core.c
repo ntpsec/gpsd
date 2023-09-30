@@ -1642,14 +1642,20 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
         /*
          * Multiplier is 2 to avoid edge effects due to sampling at the exact
          * wrong time...
+         * leave TCP network connection alone, let the TCP link timer expire
+         * and throw an error.
          */
         if (0 < session->gpsdata.online.tv_sec &&
+            SOURCE_TCP != session->sourcetype &&
             // FIXME: do this with integer math...
             TSTONS(&delta) >= (TSTONS(&session->gpsdata.dev.cycle) * 2)) {
             GPSD_LOG(LOG_INF, &session->context->errout,
-                     "CORE: %s is offline (%s sec since data)\n",
+                     "CORE: %s is offline (%s sec since data) cycle %lld "
+                     "srctype %d\n",
                      session->gpsdata.dev.path,
-                     timespec_str(&delta, ts_buf, sizeof(ts_buf)));
+                     timespec_str(&delta, ts_buf, sizeof(ts_buf)),
+                     (long long)session->gpsdata.dev.cycle.tv_sec,
+                     session->sourcetype);
             session->gpsdata.online.tv_sec = 0;
             session->gpsdata.online.tv_nsec = 0;
         }
