@@ -2039,7 +2039,7 @@ void lexer_init(struct gps_lexer_t *lexer, struct gpsd_errout_t *errout)
 
 // grab one packet from inbufptr
 // move it to outbugptr
-// adjust pointers and lenghts, then return
+// adjust pointers and lengths, then return
 void packet_parse(struct gps_lexer_t *lexer)
 {
 
@@ -2904,6 +2904,21 @@ ssize_t packet_get1(struct gps_device_t *session)
     int fd = session->gpsdata.gps_fd;
     struct gps_lexer_t *lexer = &session->lexer;
 
+    // TODO: other types of input may have leftovers in the inbuf too!
+    if (true == lexer->chunked) {
+        GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                 "PACKET: packet_get1(fd %d) chunked inbuflen %zd "
+                 "outbuflen %zd\n",
+                 fd, lexer->inbuflen, lexer->outbuflen);
+        // do we already have a packet?
+        if (10 < lexer->inbuflen) {
+            packet_parse(lexer);
+            if (0 < lexer->outbuflen) {
+                // got one
+                return (ssize_t)lexer->outbuflen;
+            }
+        }
+    }
     errno = 0;
     /* O_NONBLOCK set, so this should not block.
      * Best not to block on an unresponsive GNSS receiver */
