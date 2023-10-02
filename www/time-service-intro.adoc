@@ -71,7 +71,7 @@ standard, UTC(NIST), normally tracks UTC to within 5 ns <<BIPM-T>>.
 
 In practice, the U.S. has another time standard; UTC(USNO),
 military clock time propagated through the GPS system.  As the skew
-between UTC(NIST) and UTC(USNO seldom if ever exceeds 10ns
+between UTC(NIST) and UTC(USNO) seldom if ever exceeds 10ns
 <<TIMESCALE>> they are for practical purposes identical.
 
 GPS enables receivers to generate a pulse-per-second
