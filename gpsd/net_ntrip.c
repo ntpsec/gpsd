@@ -798,7 +798,6 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
     }
     // empty the outbuffer of the ehader stuff
     lexer->inbufptr = lexer->inbuffer;
-    lexer->inbuflen = 0;
     return 0;
 }
 

@@ -1661,7 +1661,7 @@ gps_mask_t gpsd_poll(struct gps_device_t *session)
         }
         return NODATA_IS;
     }
-    // else (0 < newlen), got a whole message
+    // else (0 < newlen), got at least something.
     session->lexer.pkt_time = ts_now;
 
     GPSD_LOG(LOG_RAW, &session->context->errout,
