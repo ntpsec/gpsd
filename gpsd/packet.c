@@ -2938,25 +2938,21 @@ ssize_t packet_get1(struct gps_device_t *session)
      * Best not to block on an unresponsive GNSS receiver */
     recvd = read(fd, lexer->inbuffer + lexer->inbuflen,
                  sizeof(lexer->inbuffer) - lexer->inbuflen);
-    if (0 == recvd) {
+    if (0 == recvd &&
+        true == lexer->chunked) {
         /* When reading from a TCP socket, and no bytes readym
          * returns 0 and sets errno to 11 (Resource temporarily unavailable).
          */
-        if (EAGAIN == errno) {
-            GPSD_LOG(LOG_RAW2, &lexer->errout, "PACKET: no bytes ready\n");
-            recvd = 0;
-            // fall through, input buffer may be nonempty??
-        } else {
+        if (EAGAIN != errno) {
             GPSD_LOG(LOG_WARN, &lexer->errout,
                      "PACKET: packet_get1(fd %d) recvd %zd %s(%d)\n",
                      fd, recvd, strerror(errno), errno);
             return -1;
-        }
-        if (true == lexer->chunked) {
-            return 1;
         } // else
-        return 0;
+        GPSD_LOG(LOG_RAW2, &lexer->errout, "PACKET: no bytes ready\n");
+        return 1;
     } // else
+
     if (-1 == recvd) {
         if (EAGAIN == errno ||
             EINTR == errno) {
