@@ -2940,7 +2940,7 @@ ssize_t packet_get1(struct gps_device_t *session)
                  sizeof(lexer->inbuffer) - lexer->inbuflen);
     if (0 == recvd &&
         true == lexer->chunked) {
-        /* When reading from a TCP socket, and no bytes readym
+        /* When reading from a TCP socket, and no bytes ready, read()
          * returns 0 and sets errno to 11 (Resource temporarily unavailable).
          */
         if (EAGAIN != errno) {
@@ -3159,7 +3159,7 @@ ssize_t packet_get1(struct gps_device_t *session)
         GPSD_LOG(LOG_SHOUT, &lexer->errout,
                  "PACKET: packet_get1(fd %d) chunked packet_parse() got %zd "
                  ">%.200s<\n",
-                 fd, lexer->outbuflen, 
+                 fd, lexer->outbuflen,
                  gps_hexdump(scratchbuf, sizeof(scratchbuf),
                              lexer->outbuffer, lexer->outbuflen));
         return (ssize_t)lexer->outbuflen;
