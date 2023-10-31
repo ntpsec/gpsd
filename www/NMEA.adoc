@@ -1774,6 +1774,28 @@ is probably incorrect.
 
 Example: $INMTW,17.9,C*1B
 
+=== MWD - Wind Direction & Speed
+
+------------------------------------------------------------------------------
+        1   2 3   4 5   6 7   8 9
+        |   | |   | |   | |   | |
+ $--MWD,x.x,a,x.x,a,x.x,a,x.x,a*hh<CR><LF>
+------------------------------------------------------------------------------
+
+Field Number:
+
+1. Wind Direction, 0 to 359.9 degrees
+2. Reference, T = True, M = Magnetic
+3. Wind Direction, 0 to 359.9 degrees
+4. Reference, T = True, M = Magnetic
+5. Wind Speed
+6. Wind Speed Units, K/M/N
+7. Wind Speed
+8. Wind Speed Units, K/M/N
+9. Checksum
+
+Example: $WIMWD,302.4,T,289.6,M,10.5,N,5.4,M*6F
+
 === MWV - Wind Speed and Angle
 
 ------------------------------------------------------------------------------
@@ -2691,7 +2713,6 @@ on the Web:
 |ETL - Engine Telegraph Operation Status
 |EVE - General Event Message
 |FIR - Fire Detection
-|MWD - Wind Direction & Speed
 |WDR - Distance to Waypoint - Rhumb Line
 |WDC - Distance to Waypoint - Great Circle
 |ZDL - Time and Distance to Variable Point
