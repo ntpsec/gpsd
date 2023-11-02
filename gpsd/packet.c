@@ -2892,6 +2892,298 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
 }
 
 
+/* packet_get1_chunked() - grab an http/1.1 chunked packet;
+ *
+ * Handle http/1.1 chunking as a layer above the packet layer.
+ * so far only NTRIP v2 uses it.  Perversely the chunks do
+ * not seem to align with received packets.
+ *
+ * A pointless feature in http/1.1
+ *
+ * return: greater than zero: length
+ *         > 0  == got a packet.
+ *         0 == EOF or no full packet
+ *        -1 == I/O error
+ */
+static ssize_t packet_get1_chunked(struct gps_device_t *session)
+{
+    ssize_t recvd;
+    char scratchbuf[MAX_PACKET_LENGTH * 4 + 1];
+    int fd = session->gpsdata.gps_fd;
+    struct gps_lexer_t *lexer = &session->lexer;
+    unsigned chunk_size = 0;        // given chunk size
+    size_t idx = 0;                 // index into inbuffer.
+    size_t needed = 0;
+    int chunk_num;
+    unsigned char tmp_buffer[sizeof(lexer->inbuffer)];
+    size_t tmp_buflen = 0;          // bytes in tmp_buffer
+    unsigned char *tmp_bufptr;      // pointer to head in tmp_buffer
+
+    GPSD_LOG(LOG_SHOUT, &lexer->errout,
+             "PACKET: packet_get1_chunked(fd %d) chunked inbuflen %zd "
+             "offset %zd\n",
+             fd, lexer->inbuflen, lexer->inbufptr - lexer->inbuffer);
+
+    // do we already have a packet?
+    if (10 < lexer->inbuflen &&
+        0xd3 == lexer->inbuffer[0] &&
+        0 == (0xfc & lexer->inbuffer[1])) {
+        // Looking for 0xd3, followed by 6 zeros.
+        GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                 "PACKET: packet_get1_chunked(fd %d) already have packet\n",
+                 fd);
+        packet_parse(lexer);
+        GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                 "PACKET: packet_get1_chunked(fd %d) chunked left over "
+                 "fm packet_parse() inbuflen %zd outbuflen %zd >%.200s<\n",
+                 fd, lexer->inbuflen, lexer->outbuflen,
+                 gps_hexdump(scratchbuf, sizeof(scratchbuf),
+                             lexer->outbuffer, lexer->outbuflen));
+        if (0 < lexer->outbuflen) {
+            // got one
+            return (ssize_t)lexer->outbuflen;
+        }
+    }
+    /* else, get some more data.  */
+
+    errno = 0;
+    /* O_NONBLOCK set, so this should not block.
+     * Best not to block on an unresponsive NTRIP server */
+    recvd = read(fd, lexer->inbuffer + lexer->inbuflen,
+                 sizeof(lexer->inbuffer) - lexer->inbuflen);
+
+    if (0 == recvd) {
+        /* When reading from a TCP socket, and no bytes ready, read()
+         * returns 0 and sets errno to 11 (Resource temporarily unavailable).
+         */
+        if (EAGAIN != errno) {
+            GPSD_LOG(LOG_WARN, &lexer->errout,
+                     "PACKET: packet_get1_chunked(fd %d) recvd %zd %s(%d)\n",
+                     fd, recvd, strerror(errno), errno);
+            return -1;
+        } // else
+        GPSD_LOG(LOG_RAW2, &lexer->errout, "PACKET: no bytes ready\n");
+        return 1;
+    } // else
+
+    if (-1 == recvd) {
+        if (EAGAIN == errno ||
+            EINTR == errno) {
+            GPSD_LOG(LOG_RAW2, &lexer->errout, "PACKET: no bytes ready\n");
+            recvd = 0;
+            // fall through, why?
+        } else {
+            GPSD_LOG(LOG_WARN, &lexer->errout,
+                     "PACKET: packet_get1_chunked(fd %d) errno: %s(%d)\n",
+                     fd, strerror(errno), errno);
+            return -1;
+        }
+    } else {
+        // Got some data.
+        GPSD_LOG(LOG_RAW1, &lexer->errout,
+                 "PACKET: Read %zd chars to buffer[%zd] (total %zd): %s\n",
+                 recvd, lexer->inbuflen, lexer->inbuflen + recvd,
+                 gpsd_packetdump(scratchbuf, sizeof(scratchbuf),
+                                 lexer->inbufptr, (size_t) recvd));
+        lexer->inbuflen += recvd;
+    }
+    GPSD_LOG(LOG_SPIN, &lexer->errout,
+             "PACKET: packet_get1_chunked(fd %d) recvd %zd %s(%d)\n",
+             fd, recvd, strerror(errno), errno);
+
+
+    GPSD_LOG(LOG_SHOUT, &lexer->errout,
+             "PACKET: packet_get1_chunked(fd %d) inbuflen %zd entering chunked "
+             ">%.100s<\n",
+             fd, lexer->inbuflen,
+             gps_hexdump(scratchbuf, sizeof(scratchbuf),
+                         lexer->inbufptr, lexer->inbuflen));
+
+    /* Preversly, the first buffer may be just 4 bytes.
+     * smallest valid chunk: "0\r\n\r\n"
+     * Give up for now */
+    if (5 >= lexer->inbuflen) {
+        GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                 "PACKET: packet_get1_chunked(fd %d) chunked less than 4\n",
+                 fd);
+        return 0;       // got nothing.
+    }
+    /* Make a copy of the inbuffer.  Then unchunk it back into
+     * inbuffer.  Maybe should read into tmo_buffer? */
+    memmove(tmp_buffer, lexer->inbuffer, lexer->inbuflen);
+    lexer->inbufptr = lexer->inbuffer;
+    tmp_buflen = lexer->inbuflen;
+    tmp_bufptr = tmp_buffer;
+    lexer->inbuflen = 0;
+
+    if (0 == lexer->chunk_remaining) {
+        // need unchunking
+        chunk_size = 0;
+        for (chunk_num = 0; ; chunk_num++) {
+
+            GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                     "PACKET: packet_get1_chunked(fd %d) chunk %d size %u "
+                     ">%.200s<\n",
+                     fd, chunk_num, chunk_size,
+                     gps_hexdump(scratchbuf, sizeof(scratchbuf),
+                                 tmp_bufptr, tmp_buflen));
+
+            // get the hexadecimal chunk size.
+            for (idx = 0; idx < 4; idx++) {
+                if (!isxdigit(tmp_bufptr[idx])) {
+                    // terminate on non-hex.
+                    // valid endings are ':' or '\r\n'.
+                    break;
+                }
+                // FIXME: use endptr, instead of for loop
+                chunk_size = strtol((char *)tmp_bufptr, NULL, 16);
+            }
+
+            // check for valid hex ending
+            // need better test for overrun
+            if (';' != tmp_bufptr[idx] &&
+                '\r' != tmp_bufptr[idx]) {
+                // invalid ending.  valid endings are ':' or '\r\n' (0d0a).
+                GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                         "PACKET: NTRIP: packet_get1_chunked(d %d) "
+                         "invalid ending idx %zu (x%x).\n",
+                         fd, idx, tmp_bufptr[idx]);
+                break;   // assume we need more input??
+            }
+            idx++;   // skip past the ":" or "\r"
+
+            // move past '\n' line ending
+            for (; tmp_bufptr[idx] < tmp_buffer[sizeof(tmp_buffer) - 1];
+                 idx++) {
+                if ('\n' == tmp_bufptr[idx]) {
+                    break;
+                }
+            }
+            if ('\n' != tmp_bufptr[idx]) {
+                // Invalid ending.  The only valid ending is '\n'.
+                GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                         "PACKET: NTRIP: packet_get1_chunked(d %d) "
+                         "invalid ending 2, idx %zu x%02x\n",
+                         fd, idx, tmp_bufptr[idx]);
+                break;   // assume we need more input.
+            }
+            idx++;    // move past the trailing '\n'
+
+            /* to unchunk we need chunk size + 2 more for \r\n + 2 more
+             * for the tailing \r\n */
+            needed = chunk_size + 2 + idx;
+            GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                     "PACKET: NTRIP: packet_get1_chunked( %d) size %u "
+                     "idx %zu buflen %zu needed %zu %s\n",
+                     fd, chunk_size, idx, tmp_buflen, needed,
+                     gps_hexdump(scratchbuf, sizeof(scratchbuf),
+                                 tmp_bufptr, 10));
+            if (needed > tmp_buflen) {
+                /* Ddon't have enough yet.  Annoyingly, centipede can send
+                 * the chunk count line, but not the chunked data yet!!
+                 * Like this: "64\r\n".  Leave chunk line in inbuffer */
+                lexer->chunk_remaining = 0;
+                GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                         "PACKET: NTRIP: packet_get1_chunked( %d) "
+                         "chunk %d not full\n",
+                         fd, chunk_num);
+                break;
+            }
+            lexer->chunk_remaining = chunk_size;
+            // enough data in inbuffer, starting at tmp_bufptr[idx]
+            // move past that chunk header.
+            tmp_bufptr += idx;
+            tmp_buflen -= idx;
+            GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                     "PACKET: NTRIP: packet_get1_chunked(%d) got "
+                     "chunk %d >%s<\n",
+                     fd, chunk_num,
+                     gps_hexdump(scratchbuf, sizeof(scratchbuf),
+                                 lexer->inbufptr, chunk_size));
+
+            // save the chunk into inbuffer
+            memcpy(lexer->inbufptr, tmp_bufptr, chunk_size);
+            lexer->inbuflen += chunk_size;
+            lexer->inbufptr += chunk_size;
+
+            // skip past the chunk trailer (\r\n)
+            tmp_bufptr += chunk_size + 2;
+            tmp_buflen -= chunk_size + 2;
+            // smallest valid chunk: "0\r\n\r\n"
+            if (5 >= tmp_buflen) {
+                break;
+            }
+        }
+    } // else, inbuf already unchunked
+
+    if (0 == lexer->inbuflen) {
+        GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                 "PACKET: NTRIP: packet_get1_chunked(%d) got nothing, "
+                 "return 0\n",
+                  fd);
+        return 1;   // not right, close enough
+    }
+    // data starts at lexer->inbuffer[0]
+    GPSD_LOG(LOG_SHOUT, &lexer->errout,
+             "PACKET: packet_get1_chunked(fd %d) remaining %u "
+             "unchunked %.200s\n",
+              fd, lexer->chunk_remaining,
+              gps_hexdump(scratchbuf, sizeof(scratchbuf),
+                          lexer->inbuffer, lexer->inbuflen));
+
+    // now get one message
+    // RTCM3 message header not always at inbufptr[0]
+    for (idx = 0; idx < (sizeof(lexer->inbuffer) - 1); idx++) {
+        if (0xd3 == lexer->inbuffer[idx] &&
+            0 == (0xfc & lexer->inbuffer[idx +1])) {
+            // Looking for 0xd3, followed by 6 zeros.
+            break;
+        }
+    }
+    if (0xd3 != lexer->inbuffer[idx]) {
+        // start of RTCM3 not found.
+        GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                 "PACKET: packet_get1_chunked(fd %d) chunked RTCM3 start not "
+                 "found, idx %zu, %.200s\n",
+                  fd, idx,
+                  gps_hexdump(scratchbuf, sizeof(scratchbuf),
+                              lexer->inbuffer, lexer->inbuflen));
+        return 1;   // not right, close enough
+    }
+    /* Prolly should check for start of next RTCM3, to ensure we
+     * have all of the first one.
+     * packet_parse() works much better is the start (0xd3) of
+     * messages is at inbuffer[0]
+     */
+    memmove(lexer->inbuffer, &lexer->inbuffer[idx], lexer->inbuflen - idx);
+    lexer->inbufptr = lexer->inbuffer;
+    lexer->inbuflen -= idx;
+    lexer->chunk_remaining -= idx;
+    lexer->outbuflen = 0;
+
+    GPSD_LOG(LOG_SHOUT, &lexer->errout,
+             "PACKET: NTRIP: packet_get1_chunked(%d) to packet_parse() "
+              "inbuflen %zu tmp_buflen %zu idx %zu outbuflen %zu pbu %zu "
+              ">%.200s<\n",
+              fd, lexer->inbuflen, tmp_buflen, idx, lexer->outbuflen,
+              packet_buffered_input(lexer),
+              gps_hexdump(scratchbuf, sizeof(scratchbuf),
+                          lexer->inbufptr, lexer->inbuflen));
+    packet_parse(lexer);
+
+    // there is often a residue in tmp_buffer, it needs to be saved.
+    // but for now, trash it.
+    // lexer->inbufptr = lexer->inbuffer;
+    // lexer->inbuflen = 0;
+    GPSD_LOG(LOG_SHOUT, &lexer->errout,
+             "PACKET: packet_get1_chunked(fd %d) chunked packet_parse() got %zd "
+             ">%.200s<\n",
+             fd, lexer->outbuflen,
+             gps_hexdump(scratchbuf, sizeof(scratchbuf),
+                         lexer->outbuffer, lexer->outbuflen));
+    return (ssize_t)lexer->outbuflen;
+}
+
 /* grab a packet;
  * return: greater than zero: length
  *         > 0  == got a packet.
@@ -2905,53 +3197,16 @@ ssize_t packet_get1(struct gps_device_t *session)
     int fd = session->gpsdata.gps_fd;
     struct gps_lexer_t *lexer = &session->lexer;
 
-    // TODO: other types of input may have leftovers in the inbuf too!
     if (true == lexer->chunked) {
-        GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                 "PACKET: packet_get1(fd %d) chunked inbuflen %zd offset %zd\n",
-                 fd, lexer->inbuflen, lexer->inbufptr - lexer->inbuffer);
-        // do we already have a packet?
-        if (10 < lexer->inbuflen &&
-            0xd3 == lexer->inbuffer[0] &&
-            0 == (0xfc & lexer->inbuffer[1])) {
-            // Looking for 0xd3, followed by 6 zeros.
-            GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                     "PACKET: packet_get1(fd %d) already have packet\n",
-                     fd);
-            packet_parse(lexer);
-            GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                     "PACKET: packet_get1(fd %d) chunked left over "
-                     "fm packet_parse() inbuflen %zd outbuflen %zd >%.200s<\n",
-                     fd, lexer->inbuflen, lexer->outbuflen,
-                     gps_hexdump(scratchbuf, sizeof(scratchbuf),
-                                 lexer->outbuffer, lexer->outbuflen));
-            if (0 < lexer->outbuflen) {
-                // got one
-                return (ssize_t)lexer->outbuflen;
-            }
-        }
-        /* else, not sure what to do if here, likely we have a partial
-         * message in inbuf */
+        // De-chunking too complicate to do unline below.
+        return packet_get1_chunked(session);
     }
+
     errno = 0;
     /* O_NONBLOCK set, so this should not block.
      * Best not to block on an unresponsive GNSS receiver */
     recvd = read(fd, lexer->inbuffer + lexer->inbuflen,
                  sizeof(lexer->inbuffer) - lexer->inbuflen);
-    if (0 == recvd &&
-        true == lexer->chunked) {
-        /* When reading from a TCP socket, and no bytes ready, read()
-         * returns 0 and sets errno to 11 (Resource temporarily unavailable).
-         */
-        if (EAGAIN != errno) {
-            GPSD_LOG(LOG_WARN, &lexer->errout,
-                     "PACKET: packet_get1(fd %d) recvd %zd %s(%d)\n",
-                     fd, recvd, strerror(errno), errno);
-            return -1;
-        } // else
-        GPSD_LOG(LOG_RAW2, &lexer->errout, "PACKET: no bytes ready\n");
-        return 1;
-    } // else
 
     if (-1 == recvd) {
         if (EAGAIN == errno ||
@@ -2976,202 +3231,6 @@ ssize_t packet_get1(struct gps_device_t *session)
     GPSD_LOG(LOG_SPIN, &lexer->errout,
              "PACKET: packet_get1(fd %d) recvd %zd %s(%d)\n",
              fd, recvd, strerror(errno), errno);
-    if (true == lexer->chunked) {
-        /* Handle http/1.1 chunking as a layer above the packet layer.
-         * so far only NTRIP v2 uses it.  Perversely the chunks do
-         * not seem to align with received packets. */
-        unsigned chunk_size = 0;        // given chunk size
-        size_t idx = 0;                 // index into inbuffer.
-        size_t needed = 0;
-        int chunk_num;
-        unsigned char tmp_buffer[sizeof(lexer->inbuffer)];
-        size_t tmp_buflen = 0;          // bytes in tmp_buffer
-        unsigned char *tmp_bufptr;      // pointer to head in tmp_buffer
-
-        GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                 "PACKET: packet_get1(fd %d) inbuflen %zd entering chunked "
-                 ">%.100s<\n",
-                 fd, lexer->inbuflen,
-                 gps_hexdump(scratchbuf, sizeof(scratchbuf),
-                             lexer->inbufptr, lexer->inbuflen));
-
-        /* Preversly, the first buffer may be just 4 bytes.
-         * smallest valid chunk: "0\r\n\r\n"
-         * Give up for now */
-        if (5 >= lexer->inbuflen) {
-            GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                     "PACKET: packet_get1(fd %d) chunked less than 4\n", fd);
-            return 0;       // got nothing.
-        }
-        /* Make a copy of the inbuffer.  Then unchunk it back into
-         * inbuffer */
-        memmove(tmp_buffer, lexer->inbuffer, lexer->inbuflen);
-        lexer->inbufptr = lexer->inbuffer;
-        tmp_buflen = lexer->inbuflen;
-        tmp_bufptr = tmp_buffer;
-        lexer->inbuflen = 0;
-
-        if (0 == lexer->chunk_remaining) {
-            // need unchunking
-            for (chunk_num = 0; ; chunk_num++) {
-
-                GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                         "PACKET: packet_get1(fd %d) chunk %d >%.200s<\n",
-                         fd, chunk_num,
-                         gps_hexdump(scratchbuf, sizeof(scratchbuf),
-                                     tmp_bufptr, tmp_buflen));
-
-                // get the hexadecimal chunk size.
-                chunk_size = 0;
-                for (idx = 0; idx < 4; idx++) {
-                    if (!isxdigit(tmp_bufptr[idx])) {
-                        // terminate on non-hex.
-                        // valid endings are ':' or '\r\n'.
-                        break;
-                    }
-                    // FIXME: use endptr, instead of for loop
-                    chunk_size = strtol((char *)tmp_bufptr, NULL, 16);
-                }
-
-                // check for valid hex ending
-                // need better test for overrun
-                if (';' != tmp_bufptr[idx] &&
-                    '\r' != tmp_bufptr[idx]) {
-                    // invalid ending.  valid endings are ':' or '\r\n'.
-                    GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                             "PACKET: NTRIP: packet_get1(d %d) invalid ending idx "
-                             "%zu (x%x).\n",
-                             fd, idx, tmp_bufptr[idx]);
-                    break;   // assume we need more input.
-                }
-
-                // move past '\n' line ending
-                for (; tmp_bufptr[idx] < tmp_buffer[sizeof(tmp_buffer) - 1];
-                     idx++) {
-                    if ('\n' == tmp_bufptr[idx]) {
-                        break;
-                    }
-                }
-                if ('\n' != tmp_bufptr[idx]) {
-                    // Invalid ending.  The only valid ending is '\n'.
-                    GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                             "PACKET: NTRIP: packet_get1(d %d) invalid ending 2 "
-                             "x%x.\n",
-                             fd, tmp_bufptr[idx]);
-                    break;   // assume we need more input.
-                }
-                idx++;    // move past the trailing '\n'
-
-                /* to unchunk we need chunk size + 2 more for \r\n + 2 more
-                 * for the tailing \r\n */
-                needed = chunk_size + 2 + idx;
-                GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                         "PACKET: NTRIP: packet_get1( %d) chunk %u idx %zu "
-                         "buflen %zu needed %zu %s\n",
-                         fd, chunk_size, idx, tmp_buflen, needed,
-                         gps_hexdump(scratchbuf, sizeof(scratchbuf),
-                                     tmp_bufptr, 10));
-                if (needed > tmp_buflen) {
-                    /* Ddon't have enough yet.  Annoyingly, centipede can send
-                     * the chunk count line, but not the chunked data yet!!
-                     * Like this: "64\r\n".  Leave chunk line in inbuffer */
-                    lexer->chunk_remaining = 0;
-                    GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                             "PACKET: NTRIP: packet_get1( %d) chunk %d not full\n",
-                             fd, chunk_num);
-                    break;
-                }
-                lexer->chunk_remaining = chunk_size;
-                // enough data in inbuffer, starting at tmp_bufptr[idx]
-                // move past that chunk header.
-                tmp_bufptr += idx;
-                tmp_buflen -= idx;
-                GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                         "PACKET: NTRIP: packet_get1(%d) got chunk %d >%s<\n",
-                         fd, chunk_num,
-                         gps_hexdump(scratchbuf, sizeof(scratchbuf),
-                                     lexer->inbufptr, chunk_size));
-
-                // save the chunk into inbuffer
-                memcpy(lexer->inbufptr, tmp_bufptr, chunk_size);
-                lexer->inbuflen += chunk_size;
-                lexer->inbufptr += chunk_size;
-
-                // skip past the chunk trailer (\r\n)
-                tmp_bufptr += chunk_size + 2;
-                tmp_buflen -= chunk_size + 2;
-                // smallest valid chunk: "0\r\n\r\n"
-                if (5 >= tmp_buflen) {
-                    break;
-                }
-            }
-        } // else, inbuf already unchunked
-
-        if (0 == lexer->inbuflen) {
-            GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                     "PACKET: NTRIP: packet_get1(%d) got nothing, return 0\n",
-                      fd);
-            return 1;   // not right, close enough
-        }
-        // data starts at lexer->inbuffer[0]
-        GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                 "PACKET: packet_get1(fd %d) remaining %u unchunked %.200s\n",
-                  fd, lexer->chunk_remaining,
-                  gps_hexdump(scratchbuf, sizeof(scratchbuf),
-                              lexer->inbuffer, lexer->inbuflen));
-
-        // now get one message
-        // RTCM3 message header not always at inbufptr[0]
-        for (idx = 0; idx < (sizeof(lexer->inbuffer) - 1); idx++) {
-            if (0xd3 == lexer->inbuffer[idx] &&
-                0 == (0xfc & lexer->inbuffer[idx +1])) {
-                // Looking for 0xd3, followed by 6 zeros.
-                break;
-            }
-        }
-        if (0xd3 != lexer->inbuffer[idx]) {
-            // start of RTCM3 not found.
-            GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                     "PACKET: packet_get1(fd %d) chunked RTCM3 start not "
-                     "found, idx %zu, %.200s\n",
-                      fd, idx,
-                      gps_hexdump(scratchbuf, sizeof(scratchbuf),
-                                  lexer->inbuffer, lexer->inbuflen));
-            return 1;   // not right, close enough
-        }
-        /* Prolly should check for start of next RTCM3, to ensure we
-         * have all of the first one.
-         * packet_parse() works much better is the start (0xd3) of
-         * messages is at inbuffer[0]
-         */
-        memmove(lexer->inbuffer, &lexer->inbuffer[idx], lexer->inbuflen - idx);
-        lexer->inbufptr = lexer->inbuffer;
-        lexer->inbuflen -= idx;
-        lexer->chunk_remaining -= idx;
-        lexer->outbuflen = 0;
-
-        GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                 "PACKET: NTRIP: packet_get1(%d) to packet_parse() "
-                  "inbuflen %zu tmp_buflen %zu idx %zu outbuflen %zu pbu %zu "
-                  ">%.200s<\n",
-                  fd, lexer->inbuflen, tmp_buflen, idx, lexer->outbuflen,
-                  packet_buffered_input(lexer),
-                  gps_hexdump(scratchbuf, sizeof(scratchbuf),
-                              lexer->inbufptr, lexer->inbuflen));
-        packet_parse(lexer);
-
-        // there is often a residue in tmp_buffer, it needs to be saved.
-        // but for now, trash it.
-        // lexer->inbufptr = lexer->inbuffer;
-        // lexer->inbuflen = 0;
-        GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                 "PACKET: packet_get1(fd %d) chunked packet_parse() got %zd "
-                 ">%.200s<\n",
-                 fd, lexer->outbuflen,
-                 gps_hexdump(scratchbuf, sizeof(scratchbuf),
-                             lexer->outbuffer, lexer->outbuflen));
-        return (ssize_t)lexer->outbuflen;
-    }
     /*
      * Bail out, indicating no more input, only if we just received
      * nothing from the device and there is nothing waiting in the
