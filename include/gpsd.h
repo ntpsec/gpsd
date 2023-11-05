@@ -296,8 +296,8 @@ struct gps_lexer_t {
     unsigned char stashbuffer[MAX_PACKET_LENGTH];
     size_t stashbuflen;
 #endif  // STASH_ENABLE
-    bool chunked;        // true if NTRIP/1.1 and the HTTP stream is chunked.
-    unsigned int chunk_remaining;  // Bytes remaining before end of this chunk.
+    bool chunked;             // true if NTRIP/1.1 and the HTTP stream is chunked.
+    int chunk_remaining;      // Bytes remaining before end of this chunk.
 };
 
 extern void lexer_init(struct gps_lexer_t *, struct gpsd_errout_t *);
