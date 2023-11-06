@@ -2397,7 +2397,7 @@ void packet_parse(struct gps_lexer_t *lexer)
                 packet_type = RTCM3_PACKET;
             } else {
                 GPSD_LOG(LOG_PROG, &lexer->errout,
-                         "RTCM3 data checksum failure, "
+                         "RTCM3 data crc failure, "
                          "%0x against %02x %02x %02x\n",
                          crc24q_hash(&lexer->inbuffer[idx], data_len + 3),
                          lexer->inbufptr[idx + data_len + 1],
@@ -2942,35 +2942,24 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
         // return -1;
     }
 
-    // do we already have a packet?
-    if (10 < lexer->inbuflen &&
-        0xd3 == lexer->inbuffer[0] &&
-        0 == (0xfc & lexer->inbuffer[1])) {
-        // Looking for 0xd3, followed by 6 zeros.
-        GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                 "PACKET: packet_get1_chunked(fd %d) already have packet\n",
-                 fd);
-        packet_parse(lexer);
-        GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                 "PACKET: packet_get1_chunked(fd %d) chunked left over "
-                 "fm packet_parse() inbuflen %zd outbuflen %zd >%.200s<\n",
-                 fd, lexer->inbuflen, lexer->outbuflen,
-                 gps_hexdump(scratchbuf, sizeof(scratchbuf),
-                             lexer->outbuffer, lexer->outbuflen));
-        if (0 < lexer->outbuflen) {
-            // got one
-            return (ssize_t)lexer->outbuflen;
-        }
-    }
-    /* else, get some more data.  */
-
     errno = 0;
-    /* O_NONBLOCK set, so this should not block.
-     * Best not to block on an unresponsive NTRIP server */
-    recvd = read(fd, lexer->inbuffer + lexer->inbuflen,
-                 sizeof(lexer->inbuffer) - lexer->inbuflen);
+    recvd = 0;
+    if (1024 > lexer->inbuflen) {
+        /* Do not bother to read if we already have a lot
+         * O_NONBLOCK set, so this should not block.
+         * Best not to block on an unresponsive NTRIP server.
+         * They tend to be bursty. */
+        recvd = read(fd, lexer->inbuffer + lexer->inbuflen,
+                     sizeof(lexer->inbuffer) - lexer->inbuflen);
+    } else {
+        GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                 "PACKET: packet_get1_chunked(fd %d) got enough inbuflen %zu "
+                 "offset %zd\n",
+                 fd, lexer->inbuflen, lexer->inbufptr - lexer->inbuffer);
+    }
 
-    if (0 == recvd) {
+    if (0 == recvd &&
+        0 >= lexer->inbuflen) {
         /* When reading from a TCP socket, and no bytes ready, read()
          * returns 0 and sets errno to 11 (Resource temporarily unavailable).
          */
@@ -3008,7 +2997,6 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
     GPSD_LOG(LOG_SPIN, &lexer->errout,
              "PACKET: packet_get1_chunked(fd %d) recvd %zd %s(%d)\n",
              fd, recvd, strerror(errno), errno);
-
 
     GPSD_LOG(LOG_SHOUT, &lexer->errout,
              "PACKET: packet_get1_chunked(fd %d) inbuflen %zd entering chunked "
