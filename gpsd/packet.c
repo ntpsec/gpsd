@@ -2922,16 +2922,18 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
     struct gps_lexer_t *lexer = &session->lexer;
     int chunk_size = 0;             // given chunk size
     size_t idx = 0;                 // index into inbuffer.
-    size_t needed = 0;
     int chunk_num;
-    unsigned char tmp_buffer[sizeof(lexer->inbuffer)];
-    size_t tmp_buflen = 0;          // bytes in tmp_buffer
     unsigned char *tmp_bufptr;      // pointer to head in tmp_buffer
+    ssize_t taken;
+    // make tmp_buffer large, to simlify overflow prevention
+    unsigned char tmp_buffer[sizeof(lexer->inbuffer) * 2];
+    size_t tmp_buflen = 0;          // bytes in tmp_buffer
 
     GPSD_LOG(LOG_SHOUT, &lexer->errout,
              "PACKET: packet_get1_chunked(fd %d) enter inbuflen %zu "
-             "offset %zd\n",
-             fd, lexer->inbuflen, lexer->inbufptr - lexer->inbuffer);
+             "offset %zd remaining %d\n",
+             fd, lexer->inbuflen, lexer->inbufptr - lexer->inbuffer,
+             lexer->chunk_remaining);
 
     if (sizeof(lexer->inbuffer) < lexer->inbuflen) {
         GPSD_LOG(LOG_ERROR, &lexer->errout,
@@ -2987,9 +2989,11 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
         }
     } else {
         // Got some data.
-        GPSD_LOG(LOG_RAW1, &lexer->errout,
-                 "PACKET: Read %zd chars to buffer[%zd] (total %zd): %s\n",
-                 recvd, lexer->inbuflen, lexer->inbuflen + recvd,
+        // GPSD_LOG(LOG_RAW1, &lexer->errout,
+        GPSD_LOG(LOG_SHOUT, &lexer->errout,
+                 "PACKET: packet_get1_chunked(fd %d) Read %zd chars to "
+                 "buffer[%zd] (total %zd): %s\n",
+                 fd, recvd, lexer->inbuflen, lexer->inbuflen + recvd,
                  gpsd_packetdump(scratchbuf, sizeof(scratchbuf),
                                  lexer->inbufptr, (size_t) recvd));
         lexer->inbuflen += recvd;
@@ -2999,9 +3003,9 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
              fd, recvd, strerror(errno), errno);
 
     GPSD_LOG(LOG_SHOUT, &lexer->errout,
-             "PACKET: packet_get1_chunked(fd %d) inbuflen %zd entering chunked "
+             "PACKET: packet_get1_chunked(fd %d) inbuflen %zd mid chunked emaining %d "
              ">%.100s<\n",
-             fd, lexer->inbuflen,
+             fd, lexer->inbuflen, lexer->chunk_remaining,
              gps_hexdump(scratchbuf, sizeof(scratchbuf),
                          lexer->inbufptr, lexer->inbuflen));
 
@@ -3015,25 +3019,38 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
                  fd, lexer->chunk_remaining);
         return 0;       // got nothing.
     }
-    if (0 == lexer->chunk_remaining) {
+    /* The length in the header may be up to 1023, plus message
+     * overhead.
+     * Here we may have N remaining at the head of inbuffer, followed
+     * by part, or all, of the next bit to unchunk.*/
+    if (0 > lexer->chunk_remaining) {
+        GPSD_LOG(LOG_ERROR, &lexer->errout,
+                 "PACKET: packet_get1_chunkedfd %d) remaining %d < 0 !!!\n",
+                 fd, lexer->chunk_remaining);
+        // how to recover??
+        exit(0);
+    }
+    if (lexer->inbuflen > (long unsigned)lexer->chunk_remaining) {
         // need unchunking
+        size_t unchunked = lexer->inbuflen - lexer->chunk_remaining;
 
-        /* Make a copy of the inbuffer.  Then unchunk it back into
-         * inbuffer.  Maybe should read into tmo_buffer? */
-        memmove(tmp_buffer, lexer->inbuffer, lexer->inbuflen);
-        tmp_buflen = lexer->inbuflen;
-        tmp_bufptr = tmp_buffer;
+        /* Make a copy of the unchunked part of inbuffer.
+         * Then unchunk it back into inbuffer. */
+        lexer->inbufptr = &lexer->inbuffer[lexer->chunk_remaining];
+        memmove(tmp_buffer, lexer->inbufptr, unchunked);
 
         // get ready to copy chunks back into the inbuffer
-        lexer->inbufptr = lexer->inbuffer;
-        lexer->inbuflen = 0;
+        tmp_buflen = unchunked;
+        tmp_bufptr = tmp_buffer;
+        lexer->inbuflen = lexer->chunk_remaining;
 
         chunk_size = 0;
         for (chunk_num = 0; ; chunk_num++) {
+            size_t needed = 0;
 
             GPSD_LOG(LOG_SHOUT, &lexer->errout,
-                     "PACKET: packet_get1_chunkedfd %d) doing chunk %d size %d inbuflen %zu "
-                     ">%.200s<\n",
+                     "PACKET: packet_get1_chunkedfd %d) doing chunk %d  "
+                     "ize %d inbuflen %zu >%.200s<\n",
                      fd, chunk_num, chunk_size, lexer->inbuflen,
                      gps_hexdump(scratchbuf, sizeof(scratchbuf),
                                  tmp_bufptr, tmp_buflen));
@@ -3092,11 +3109,13 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
                 /* Ddon't have enough yet.  Annoyingly, centipede can send
                  * the chunk count line, but not the chunked data yet!!
                  * Like this: "64\r\n".  Leave chunk line in inbuffer */
-                lexer->chunk_remaining = 0;
+                // save the fragement into inbuffer
+                memcpy(lexer->inbufptr, tmp_bufptr, tmp_buflen);
+                lexer->inbuflen += tmp_buflen;
                 GPSD_LOG(LOG_SHOUT, &lexer->errout,
                          "PACKET: NTRIP: packet_get1_chunked(fd %d) "
-                         "chunk %d not full\n",
-                         fd, chunk_num);
+                         "chunk %d not full needed %zd tmp_buflen %zu\n",
+                         fd, chunk_num, needed, tmp_buflen);
                 break;
             }
             lexer->chunk_remaining += chunk_size;
@@ -3147,6 +3166,7 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
                  "PACKET: packet_get1_chunkedfd %d) remaining %d < 0 !!!\n",
                  fd, lexer->chunk_remaining);
         // how to recover??
+        exit(0);
     }
     GPSD_LOG(LOG_SHOUT, &lexer->errout,
              "PACKET: packet_get1_chunked(fd %d) inbuflen %zu remaining %d "
@@ -3201,21 +3221,25 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
 
     GPSD_LOG(LOG_SHOUT, &lexer->errout,
              "PACKET: NTRIP: packet_get1_chunked(fd %d) to packet_parse() "
-              "inbuflen %zu idx %zu outbuflen %zu pbu %zu >%.200s<\n",
-              fd, lexer->inbuflen, idx, lexer->outbuflen,
+              "inbuflen %zu idx %zu outbuflen %zu remaining %d pbu %zu >%.200s<\n",
+              fd, lexer->inbuflen, idx, lexer->outbuflen, lexer->chunk_remaining,
               packet_buffered_input(lexer),
               gps_hexdump(scratchbuf, sizeof(scratchbuf),
                           lexer->inbufptr, lexer->inbuflen));
+    taken = lexer->inbuflen;
     packet_parse(lexer);
+    taken -= lexer->inbuflen;
+    lexer->chunk_remaining -= taken;
 
     // there is often a residue in tmp_buffer, it needs to be saved.
     // but for now, trash it.
     // lexer->inbufptr = lexer->inbuffer;
     // lexer->inbuflen = 0;
     GPSD_LOG(LOG_SHOUT, &lexer->errout,
-             "PACKET: packet_get1_chunked(fd %d) chunked packet_parse() got %zd "
-             ">%.200s<\n",
-             fd, lexer->outbuflen,
+             "PACKET: packet_get1_chunked(fd %d) fm packet_parse() taken %zd "
+             "inbuflen %zd outbuflen %zd remaining %d >%.200s<\n",
+             fd, taken, lexer->inbuflen, lexer->outbuflen,
+             lexer->chunk_remaining,
              gps_hexdump(scratchbuf, sizeof(scratchbuf),
                          lexer->outbuffer, lexer->outbuflen));
 
