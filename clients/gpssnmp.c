@@ -218,9 +218,11 @@ static long compare_oid(const char *oid1, const char *oid2)
      * someone add a leading zero and mess things up. */
     int in1 = 0;
     int in2 = 0;
-    long part1, part2, ret = 0;
+    long ret = 0;
 
     while (1) {
+        long part1, part2;
+
         if ('.' != oid1[in1] ||
             '.' != oid2[in2]) {
             // legally, the only option is nul.
@@ -362,8 +364,6 @@ static void put_line(const char *outbuf)
 static void get_one(gps_mask_t need)
 {
     struct timespec ts_start, ts_now;
-    int status, i;
-    double snr_total = 0;
 
     if (ONLINE_SET == need) {
         // nothing needed
@@ -392,6 +392,7 @@ static void get_one(gps_mask_t need)
 
     // timout is in micro seconds.
     while (gps_waiting(&gpsdata, 2 * US_IN_SEC)) {
+        int status;
 
         // wait 3 seconds, tops.
         clock_gettime(CLOCK_REALTIME, &ts_now);
@@ -428,6 +429,9 @@ static void get_one(gps_mask_t need)
     }
     if (SATELLITE_SET == (need & gpsdata.set)) {
         // compute a derived value: snr_avg
+        double snr_total = 0;
+        int i;
+
         for(i = 0; i < MAXCHANNELS; i++) {
             if (0 < gpsdata.skyview[i].used &&
                 1 <  gpsdata.skyview[i].ss) {
