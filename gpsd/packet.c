@@ -2920,14 +2920,11 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
     char scratchbuf[MAX_PACKET_LENGTH * 4 + 1];
     int fd = session->gpsdata.gps_fd;
     struct gps_lexer_t *lexer = &session->lexer;
-    int chunk_size = 0;             // given chunk size
     size_t idx = 0;                 // index into inbuffer.
-    int chunk_num;
     unsigned char *tmp_bufptr;      // pointer to head in tmp_buffer
     ssize_t taken;
     // make tmp_buffer large, to simlify overflow prevention
     unsigned char tmp_buffer[sizeof(lexer->inbuffer) * 2];
-    size_t tmp_buflen = 0;          // bytes in tmp_buffer
 
     GPSD_LOG(LOG_PROG, &lexer->errout,
              "PACKET: packet_get1_chunked(fd %d) enter inbuflen %zu "
@@ -2945,9 +2942,9 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
 
     errno = 0;
     recvd = 0;
-    if (2028 > lexer->inbuflen) {
+    if (2048 > lexer->inbuflen) {
         /* Do not bother to read if we already have enough for longest
-         * RTCM3 message.  Longest RTCM3 message is 1013 plus header
+         * RTCM3 message.  Longest RTCM3 message is 1023 plus header
          * and chunk overhead.
          * O_NONBLOCK set, so this should not block.
          * Best not to block on an unresponsive NTRIP server.
@@ -2963,7 +2960,7 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
     }
 
     if (0 == recvd &&
-        0 >= lexer->inbuflen) {
+        0 == lexer->inbuflen) {
         /* When reading from a TCP socket, and no bytes ready, read()
          * returns 0 and sets errno to 11 (Resource temporarily unavailable).
          */
@@ -2973,8 +2970,10 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
                      fd, recvd, strerror(errno), errno);
             return -1;   // unrecoverable error.
         } // else
-        GPSD_LOG(LOG_RAW2, &lexer->errout, "PACKET: no bytes ready\n");
-        return 1;
+        GPSD_LOG(LOG_RAW2, &lexer->errout,
+                 "PACKET: packet_get1_chunked(fd %d)  no bytes ready\n",
+                 fd);
+        return 1;  // pretend we got something, to keep connection open
     } // else
 
     if (-1 == recvd) {
@@ -3023,48 +3022,43 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
     }
     if (lexer->inbuflen > (long unsigned)lexer->chunk_remaining) {
         // need unchunking
-        size_t unchunked = lexer->inbuflen - lexer->chunk_remaining;
+        size_t tmp_buflen = lexer->inbuflen - lexer->chunk_remaining;
+        int chunk_num;            // many chunks in one buffer,
 
         /* Make a copy of the unchunked part of inbuffer.
          * Then unchunk it back into inbuffer. */
         lexer->inbufptr = &lexer->inbuffer[lexer->chunk_remaining];
-        memmove(tmp_buffer, lexer->inbufptr, unchunked);
+        memmove(tmp_buffer, lexer->inbufptr, tmp_buflen);
 
         // get ready to copy chunks back into the inbuffer
-        tmp_buflen = unchunked;
         tmp_bufptr = tmp_buffer;
         lexer->inbuflen = lexer->chunk_remaining;
 
-        chunk_size = 0;
         for (chunk_num = 0; ; chunk_num++) {
             size_t needed = 0;
+            int chunk_size = 0;       // given chunk size
+            unsigned char *endptr;    // for strtol()
 
             GPSD_LOG(LOG_IO, &lexer->errout,
                      "PACKET: packet_get1_chunkedfd %d) doing chunk %d  "
-                     "ize %d inbuflen %zu >%.200s<\n",
+                     "size %d inbuflen %zu >%.200s<\n",
                      fd, chunk_num, chunk_size, lexer->inbuflen,
                      gps_hexdump(scratchbuf, sizeof(scratchbuf),
                                  tmp_bufptr, tmp_buflen));
 
             // get the hexadecimal chunk size.
-            for (idx = 0; idx < 4; idx++) {
-                if (!isxdigit(tmp_bufptr[idx])) {
-                    // terminate on non-hex.
-                    // valid endings are ':' or '\r\n'.
-                    break;
-                }
-                chunk_size = strtol((char *)tmp_bufptr, NULL, 16);
-            }
+            chunk_size = strtol((char *)tmp_bufptr, (char **)&endptr, 16);
+            idx = endptr - tmp_bufptr;
 
             // check for valid hex ending
             // need better test for overrun
-            if (';' != tmp_bufptr[idx] &&
-                '\r' != tmp_bufptr[idx]) {
+            if (';' != *endptr &&
+                '\r' != *endptr) {
                 // invalid ending.  valid endings are ':' or '\r\n' (0d0a).
                 GPSD_LOG(LOG_WARN, &lexer->errout,
                          "PACKET: NTRIP: packet_get1_chunked(fd %d) "
                          "invalid ending idx %zu (x%x).\n",
-                         fd, idx, tmp_bufptr[idx]);
+                         fd, idx, *endptr);
                 // unrecoverable?
                 break;   // assume we need more input??
             }

@@ -1,6 +1,7 @@
                         GPSD project news
 
 3.25.1~dev: WIP
+  Handle NTRIPv2 that comes in "chunks".
 
 3.25: 2022-10-09
   Have ubxtool "-w 0" run forever.
