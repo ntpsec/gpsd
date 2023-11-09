@@ -3036,8 +3036,22 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
 
         for (chunk_num = 0; ; chunk_num++) {
             size_t needed = 0;
-            int chunk_size = 0;       // given chunk size
-            unsigned char *endptr;    // for strtol()
+            int chunk_size = 0;        // given chunk size
+            long chunk_size_l = 0;     // given chunk size, as a long
+            unsigned char *endptr;     // for strtol()
+
+            // get the hexadecimal chunk size.
+            chunk_size_l = strtol((char *)tmp_bufptr, (char **)&endptr, 16);
+            if (0 > chunk_size_l ||
+                10000 < chunk_size_l) {
+                // don't let chunk be negative, or too large.
+                GPSD_LOG(LOG_ERROR, &lexer->errout,
+                         "PACKET: packet_get1_chunkedfd %d) invalid  "
+                         "chunk_size %ld!!!\n",
+                         fd, chunk_size_l);
+                return -1;   // unrecoverable error.
+            }
+            chunk_size = chunk_size_l;  // We already tested it fits.
 
             GPSD_LOG(LOG_IO, &lexer->errout,
                      "PACKET: packet_get1_chunkedfd %d) doing chunk %d  "
@@ -3046,8 +3060,6 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
                      gps_hexdump(scratchbuf, sizeof(scratchbuf),
                                  tmp_bufptr, tmp_buflen));
 
-            // get the hexadecimal chunk size.
-            chunk_size = strtol((char *)tmp_bufptr, (char **)&endptr, 16);
             idx = endptr - tmp_bufptr;
 
             // check for valid hex ending
