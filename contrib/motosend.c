@@ -13,7 +13,7 @@
 #include <sys/types.h>
 #include <termios.h>
 #include <time.h>          // For nanosleep() and time()
-#include <unistd.h>
+#include <unistd.h>        // for write()
 
 /* 
  * @@Cj - receiver ID
@@ -26,6 +26,43 @@ int gpsd_hexpack(char *, char *, int);
 int hex2bin(char *s);
 
 static char last;
+
+// replace with strtol() ??
+int hex2bin(char *s)
+{
+    int a, b;
+
+    a = s[0] & 0xff;
+    b = s[1] & 0xff;
+
+    if ((a >= 'a') &&
+        (a <= 'f')) {
+        a = a + 10 - 'a';
+    } else if ((a >= 'A') &&
+               (a <= 'F')) {
+        a = a + 10 - 'A';
+    } else if ((a >= '0') &&
+               (a <= '9')) {
+        a -= '0';
+    } else {
+        return -1;
+    }
+
+    if ((b >= 'a') &&
+        (b <= 'f')) {
+        b = b + 10 - 'a';
+    } else if ((b >= 'A') &&
+               (b <= 'F')) {
+        b = b + 10 - 'A';
+    } else if ((b >= '0') &&
+               (b <= '9')) {
+        b -= '0';
+    } else {
+        return -1;
+    }
+
+    return (a << 4) + b;
+}
 
 // duplicate of gps_hexdump()
 static char *hexdump(char *binbuf, size_t binbuflen)
@@ -53,12 +90,77 @@ static char *hexdump(char *binbuf, size_t binbuflen)
     return hexbuf;
 }
 
-#define BSIZ 64
+char moto_gen_checksum(char *buf, int len)
+{
+    int n;
+    char ck = '\0';
+
+    for (n = 0; n < len; n++) {
+        ck ^= buf[n];
+    }
+    return ck;
+}
+
+static int moto_send(int fd, char *type, char *body )
+{
+    ssize_t status;
+    char *buf;
+    unsigned short l;
+
+    l = strnlen(body, 3 * USHRT_MAX) / 2;
+    if (NULL == (buf = malloc(l+7))) {
+        return -1;
+    }
+
+    memset(buf, 0, l+7);
+    buf[0] = '@'; buf[1] = '@';
+    buf[2] = type[0]; buf[3] = type[1];
+
+    if (l) {
+        if (-1 == gpsd_hexpack(body, buf+4, l)){
+            free(buf);
+            return -1;
+        }
+    }
+
+    buf[l+4] = moto_gen_checksum(buf+2, l+2);
+    buf[l+5] = '\r'; buf[l+6] = '\n';
+
+    status = write(fd, buf, l+7);
+    if (-1 == status) {
+        perror("moto_send");
+    } // else
+
+    return (int)status;
+}
+
+int gpsd_hexpack(char *src, char *dst, int len)
+{
+    int i, l;
+
+    l = (int)(strnlen(src, 3 * USHRT_MAX) / 2);
+    if ((l < 1) ||
+        (l > len)) {
+	return -1;
+    }
+
+    memset(dst, 0, len);
+    for (i = 0; i < l; i++) {
+	int k;
+
+	if (-1 == (k = hex2bin(src+i*2))) {
+	    return -1;
+        }
+        dst[i] = (char)(k & 0xff);
+    }
+    return l;
+}
+
 int main(int argc, char **argv)
 {
     int speed, l, fd, n;
     struct termios term;
-    char buf[BSIZ];
+    char buf[64];
     time_t t;
     struct timespec delay;
 
@@ -122,9 +224,10 @@ int main(int argc, char **argv)
         delay.tv_nsec = 1000000L;
         nanosleep(&delay, NULL);
 
-        memset(buf, 0, BSIZ);
-        if ((l = read(fd, buf, BSIZ)) == -1) {
-            if (!(EINTR == errno || EAGAIN == errno)) {
+        memset(buf, 0, sizeof(buf));
+        if (-1 = (l = read(fd, buf, sizeof(buf)))) {
+            if (!(EINTR == errno ||
+                  EAGAIN == errno)) {
                 err(1, "read");
             }
         }
@@ -142,105 +245,4 @@ int main(int argc, char **argv)
         }
     }
     return 0;
-}
-
-char moto_gen_checksum(char *buf, int len)
-{
-    int n;
-    char ck = '\0';
-
-    for (n = 0; n < len; n++) {
-        ck ^= buf[n];
-    }
-    return ck;
-}
-
-static int moto_send(int fd, char *type, char *body )
-{
-    size_t status;
-    char *buf;
-    unsigned short l;
-
-    l = strnlen(body, 3 * USHRT_MAX) / 2;
-    if (NULL == (buf = malloc(l+7))) {
-        return -1;
-    }
-
-    memset(buf, 0, l+7);
-    buf[0] = '@'; buf[1] = '@';
-    buf[2] = type[0]; buf[3] = type[1];
-
-    if (l) {
-        if (-1 == gpsd_hexpack(body, buf+4, l)){
-            free(buf);
-            return -1;
-        }
-    }
-
-    buf[l+4] = moto_gen_checksum(buf+2, l+2);
-    buf[l+5] = '\r'; buf[l+6] = '\n';
-
-    status = write(fd, buf, l+7);
-    if (status == -1) {
-        perror("moto_send");
-    }
-    return (int)status;
-}
-
-int gpsd_hexpack(char *src, char *dst, int len)
-{
-    int i, l;
-
-    l = (int)(strnlen(src, 3 * USHRT_MAX) / 2);
-    if ((l < 1) ||
-        (l > len)) {
-	return -1;
-    }
-
-    memset(dst, 0, len);
-    for (i = 0; i < l; i++) {
-	int k;
-
-	if (-1 == (k = hex2bin(src+i*2))) {
-	    return -1;
-        }
-        dst[i] = (char)(k & 0xff);
-    }
-    return l;
-}
-
-int hex2bin(char *s)
-{
-    int a, b;
-
-    a = s[0] & 0xff;
-    b = s[1] & 0xff;
-
-    if ((a >= 'a') &&
-        (a <= 'f')) {
-        a = a + 10 - 'a';
-    } else if ((a >= 'A') &&
-               (a <= 'F')) {
-        a = a + 10 - 'A';
-    } else if ((a >= '0') &&
-               (a <= '9')) {
-        a -= '0';
-    } else {
-        return -1;
-    }
-
-    if ((b >= 'a') &&
-        (b <= 'f')) {
-        b = b + 10 - 'a';
-    } else if ((b >= 'A') &&
-               (b <= 'F')) {
-        b = b + 10 - 'A';
-    } else if ((b >= '0') &&
-               (b <= '9')) {
-        b -= '0';
-    } else {
-        return -1;
-    }
-
-    return (a << 4) + b;
 }
