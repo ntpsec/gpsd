@@ -15,15 +15,19 @@
 [MESSAGES CONTROL]
 
 # Disable warnings that are silly
-disable = bad-continuation,
-    invalid-name,
+# bad-continuation removed from pylint May 2020
+# misplaced-comparison-constant, only needed if
+#    load-plugins=pylint.extensions.comparison_placement
+# no-self-use, removed from pylint 3.1.0
+disable = invalid-name,
     misplaced-comparison-constant,
-    no-self-use,
     too-many-branches,
     too-many-lines,
     too-many-locals,
     too-many-nested-blocks,
     too-many-public-methods,
-    too-many-statements
+    too-many-statements,
+    # consider-using-f-string needs Python >= 3.6
+    consider-using-f-string
 
 # vim: set expandtab shiftwidth=4
