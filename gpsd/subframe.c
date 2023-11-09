@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-clause
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include <math.h>
 #include <string.h>                  // for memcpy()
@@ -91,13 +91,13 @@ static void subframe_almanac(const struct gpsd_errout_t *errout,
                              uint8_t data_id,
                              struct almanac_t *almp)
 {
-    almp->sv     = sv; /* ignore the 0 sv problem for now */
+    almp->sv     = sv;  // ignore the 0 sv problem for now
     almp->e      = ( words[2] & BITMASK(16));
     almp->d_eccentricity  = pow(2.0, -21) * almp->e;
     /* careful, each SV can have more than 2 toa's active at the same time
      * you can not just store one or two almanacs for each sat */
     almp->toa      = ((words[3] >> 16) & BITMASK(8));
-    almp->l_toa    = almp->toa << 12;
+    almp->l_toa    = (long)almp->toa << 12;
     // Inclination Angle at Reference Time
     // Relative to i0 = 0.30 semi-circles
     almp->deltai   = (int16_t)( words[3] & BITMASK(16));
@@ -168,7 +168,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
      *
      * To date this code has been tested on iTrax, SiRF and ublox.
      */
-    /* FIXME!! I really doubt this is Big Endian compatible */
+    // FIXME!! I really doubt this is Big Endian compatible
     uint8_t preamble;
     struct subframe_t *subp = &session->gpsdata.subframe;
     init_subframe(&session->gpsdata.subframe, gnssId, (uint8_t)tSVID);
@@ -181,7 +181,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
 
     preamble = (uint8_t)((words[0] >> 16) & BITMASK(8));
     if (preamble == 0x8b) {
-        /* somehow missed an inversion */
+        // somehow missed an inversion
         preamble ^= BITMASK(8);
         words[0] ^= BITMASK(24);
     }
@@ -193,7 +193,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
         return 0;
     }
     subp->integrity = (bool)((words[0] >> 1) & 1);
-    /* The subframe ID is in the Hand Over Word (page 80) */
+    // The subframe ID is in the Hand Over Word (page 80)
     // subframe_num is 1 to 5
     subp->subframe_num = ((words[1] >> 2) & BITMASK(3));
     subp->antispoof = (bool)((words[1] >> 5) & 1);
@@ -214,8 +214,8 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
 
     switch (subp->subframe_num) {
     case 1:
-        /* subframe 1: clock parameters for transmitting SV */
-        /* get Week Number (WN) from subframe 1 */
+        // subframe 1: clock parameters for transmitting SV
+        // get Week Number (WN) from subframe 1
         /*
          * This only extracts 10 bits of GPS week.
          * 13 bits are available in the extension CNAV message,
@@ -225,13 +225,13 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
         session->context->gps_week =
             (unsigned short)((words[2] >> 14) & BITMASK(10));
         subp->sub1.WN   = (uint16_t)session->context->gps_week;
-        subp->sub1.l2   = (uint8_t)((words[2] >> 12) & 3); /* L2 Code */
-        /* URA Index */
+        subp->sub1.l2   = (uint8_t)((words[2] >> 12) & 3);   // L2 Code
+        // URA Index
         subp->sub1.ura  = (unsigned int)((words[2] >>  8) & BITMASK(4));
-        /* SV health */
+        // SV health
         subp->sub1.hlth = (unsigned int)((words[2] >>  2) & BITMASK(6));
-        subp->sub1.IODC = (words[2] & 3);                  /* IODC 2 MSB */
-        subp->sub1.l2p  = ((words[3] >> 23) & 1);          /* L2 P flag */
+        subp->sub1.IODC = (words[2] & 3);                  // IODC 2 MSB
+        subp->sub1.l2p  = ((words[3] >> 23) & 1);          // L2 P flag
         subp->sub1.Tgd  = (int8_t)( words[6] & BITMASK(8));
         subp->sub1.d_Tgd  = pow(2.0, -31) * (int)subp->sub1.Tgd;
         subp->sub1.toc  = ( words[7] & BITMASK(16));
@@ -263,7 +263,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                  subp->sub1.d_af0);
         break;
     case 2:
-        /* subframe 2: ephemeris for transmitting SV */
+        // subframe 2: ephemeris for transmitting SV
         subp->sub2.IODE   = ((words[2] >> 16) & BITMASK(8));
         subp->sub2.Crs    = (int16_t)( words[2] & BITMASK(16));
         subp->sub2.d_Crs  = pow(2.0, -5) * subp->sub2.Crs;
@@ -310,7 +310,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                  subp->sub2.u_AODO);
         break;
     case 3:
-        /* subframe 3: ephemeris for transmitting SV */
+        // subframe 3: ephemeris for transmitting SV
         subp->sub3.Cic      = (int16_t)((words[2] >>  8) & BITMASK(16));
         subp->sub3.d_Cic    = pow(2.0, -29) * subp->sub3.Cic;
         subp->sub3.Omega0   = (int32_t)(words[2] & BITMASK(8));
@@ -349,15 +349,15 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
         break;
     case 4:
         {
-            int i = 0;   /* handy loop counter */
+            int i = 0;   // handy loop counter
             int sv = -2;
             switch (subp->pageid) {
             case 0:
-                /* almanac for dummy sat 0, which is same as transmitting sat */
+                // almanac for dummy sat 0, which is same as transmitting sat
                 sv = 0;
                 break;
 
-            /* almanac data for SV 25 through 32 respectively; */
+            // almanac data for SV 25 through 32 respectively;
             case 25:         // aka page 2:
                 sv = 25;
                 break;
@@ -384,7 +384,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                 break;
 
             case 52:                  // aka page 13
-                /* NMCT */
+                // NMCT
                 // ERD can not be char as char may be signed or unsigned.
                 // FIXME: shuffle SV into correct slot.
                 sv = -1;
@@ -556,10 +556,10 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
             case 56:         // aka page 18
                 /* for some inscrutable reason page 18 is sent
                  * as page 56, IS-GPS-200 Table 20-V */
-                /* ionospheric and UTC data */
+                // ionospheric and UTC data
 
                 sv = -1;
-                /* current leap seconds */
+                // current leap seconds
                 subp->sub4_18.alpha0 = (int8_t)((words[2] >> 8) & BITMASK(8));
                 subp->sub4_18.d_alpha0 = pow(2.0, -30) *
                                              (int)subp->sub4_18.alpha0;
@@ -592,17 +592,17 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                 subp->sub4_18.A0    |= ((words[7] >> 16) & BITMASK(8));
                 subp->sub4_18.d_A0   = pow(2.0, -30) * subp->sub4_18.A0;
 
-                /* careful WN is 10 bits, but WNt is 8 bits! */
-                /* WNt (Week Number of LSF) */
+                // careful WN is 10 bits, but WNt is 8 bits!
+                // WNt (Week Number of LSF)
                 subp->sub4_18.tot    = ((words[7] >> 8) & BITMASK(8));
                 subp->sub4_18.t_tot  = (unsigned long)subp->sub4_18.tot << 12;
                 subp->sub4_18.WNt    = ((words[7] >> 0) & BITMASK(8));
                 subp->sub4_18.leap  = (int8_t)((words[8] >> 16) & BITMASK(8));
                 subp->sub4_18.WNlsf  = ((words[8] >>  8) & BITMASK(8));
 
-                /* DN (Day Number of LSF) */
+                // DN (Day Number of LSF)
                 subp->sub4_18.DN = (words[8] & BITMASK(8));
-                /* leap second future */
+                // leap second future
                 subp->sub4_18.lsf = (int8_t)((words[9] >> 16) & BITMASK(8));
 
                 GPSD_LOG(LOG_PROG, &session->context->errout,
@@ -621,8 +621,8 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
 
                 /* notify the leap seconds correction in the end
                  * of current day */
-                /* IS-GPS-200, paragraph 20.3.3.5.2.4 */
-                /* FIXME: only allow LEAPs in June and December */
+                // IS-GPS-200, paragraph 20.3.3.5.2.4
+                // FIXME: only allow LEAPs in June and December
                 // only need to check whole seconds
                 if (((session->context->gps_week % 256) ==
                      (unsigned short)subp->sub4_18.WNlsf) &&
@@ -661,13 +661,13 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
             case 60:         // aka page 22
                 /* for some inscrutable reason page 22 is sent
                  * as page 60, IS-GPS-200 Table 20-V */
-                /* reserved page */
+                // reserved page
                 break;
 
             case 61:         // aka page 23
                 /* for some inscrutable reason page 23 is sent
                  * as page 61, IS-GPS-200 Table 20-V */
-                /* reserved page */
+                // reserved page
                 break;
 
             case 62:     // aka pages 12 and 24
@@ -794,7 +794,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                 break;
 
             default:                    // unkown page...
-                ;                       /* no op */
+                ;                       // no op
             }
             if ( -1 < sv ) {
                 subp->is_almanac = 1;
@@ -803,13 +803,13 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                                  (uint8_t)sv, subp->data_id,
                                  &subp->sub4.almanac);
             } else if ( -2 == sv ) {
-                /* unknown or secret page */
+                // unknown or secret page
                 GPSD_LOG(LOG_PROG, &session->context->errout,
                          "50B,GPS: SF:4-%d data_id %d\n",
                          subp->pageid, subp->data_id);
                 return 0;
             }
-            /* else, already handled */
+            // else, already handled
         }
         break;
     case 5:
@@ -828,7 +828,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
              * IS-GPS-200 Table 20-V */
 
             subp->sub5_25.toa   = ((words[2] >> 8) & BITMASK(8));
-            subp->sub5_25.l_toa = subp->sub5_25.toa << 12;
+            subp->sub5_25.l_toa = (long)subp->sub5_25.toa << 12;
             subp->sub5_25.WNa   = (words[2] & BITMASK(8));
             subp->sub5_25.sv[1] = ((words[3] >> 18) & BITMASK(6));
             subp->sub5_25.sv[2] = ((words[3] >> 12) & BITMASK(6));
@@ -877,7 +877,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
                      subp->sub5_25.sv[21], subp->sub5_25.sv[22],
                      subp->sub5_25.sv[23], subp->sub5_25.sv[24]);
         } else {
-            /* unknown page */
+            // unknown page
             GPSD_LOG(LOG_PROG, &session->context->errout,
                      "50B,GPS: SF:5-%d data_id %d unknown page\n",
                      subp->pageid, subp->data_id);
@@ -885,7 +885,7 @@ gps_mask_t gpsd_interpret_subframe(struct gps_device_t *session,
         }
         break;
     default:
-        /* unknown/illegal subframe */
+        // unknown/illegal subframe
         return 0;
     }
     return SUBFRAME_SET;
@@ -1536,7 +1536,8 @@ static gps_mask_t subframe_gal(struct gps_device_t *session,
         // Now it gets weird.  2/2 of Almanac 1, and 1/2 of Almanac 2
         word_desc = "Almanacs 2";
         subp->orbit1.sv = (words[1] >> 13) & BITMASK(6);      // SVID2
-        if (0 >= subp->orbit1.sv || 36 < subp->orbit1.sv) {
+        if (0 == subp->orbit1.sv ||
+            36 < subp->orbit1.sv) {
             // dummy, or reserved, almanac
             mask = 0;
             break;
@@ -1916,10 +1917,10 @@ gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
              words[5], words[6], words[7], words[8], words[9]);
 
     preamble = (uint8_t)((words[0] >> 22) & BITMASK(8));
-    if (preamble == 0x8b) {     /* preamble is inverted */
-        words[0] ^= 0x3fffffc0; /* invert */
+    if (preamble == 0x8b) {       // preamble is inverted
+        words[0] ^= 0x3fffffc0;   // invert
     } else if (preamble != 0x74) {
-        /* strangely this is very common, so don't log it */
+        // strangely this is very common, so don't log it
         GPSD_LOG(LOG_DATA, &session->context->errout,
                  "50B,GPS: gpsd_interpret_subframe_raw: bad preamble 0x%x\n",
                  preamble);
@@ -1930,9 +1931,9 @@ gps_mask_t gpsd_interpret_subframe_raw(struct gps_device_t *session,
     for (i = 1; i < 10; i++) {
         int invert;
         uint32_t parity;
-        /* D30* says invert */
+        // D30* says invert
         invert = (words[i] & 0x40000000) ? 1 : 0;
-        /* inverted data, invert it back */
+        // inverted data, invert it back
         if (invert) {
             words[i] ^= 0x3fffffc0;
         }
