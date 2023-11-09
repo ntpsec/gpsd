@@ -11,7 +11,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <termios.h>
-#include <time.h>  /* For nanosleep() */
+#include <time.h>       // For nanosleep()
 #include <unistd.h>
 
 #define MODE_RAW 0
@@ -178,8 +178,7 @@ static int nmea_send(int fd, const char *fmt, ... )
     // leave room in buf for checksum
     (void)vsnprintf(buf, sizeof(buf) - 6, fmt, ap);
     va_end(ap);
-    (void)strncat(buf, "*", sizeof(buf) - 2);
-    buf[BUFSIZ - 1] = '\0';      // strncat paranoia
+    (void)strlcat(buf, "*", sizeof(buf));
 
     nmea_add_checksum(buf);
     // (void)fputs(buf, stderr);  // debug output
@@ -191,10 +190,10 @@ static int nmea_send(int fd, const char *fmt, ... )
     delay.tv_nsec = 100000000L;
     nanosleep(&delay, NULL);
 
-    if (strnlen(buf, BUFSIZ) == status) {
+    if (status == strnlen(buf, BUFSIZ)) {
         return (int)status;
-    } else {
-        perror("nmea_send");
-        return -1;
-    }
+    }  // else
+
+    perror("nmea_send");
+    return -1;
 }
