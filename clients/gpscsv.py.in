@@ -19,24 +19,23 @@ import time            # for time.time()
 
 def _do_one_line(data):
     """dump one report line."""
-    global options
 
     if options.json_fields is None:
         # no fields specified, use the 1st ones found
         fields = data.keys()
         options.json_fields = []
-        for f in fields:
-            if isinstance(data[f], (dict, list)):
+        for fld in fields:
+            if isinstance(data[fld], (dict, list)):
                 # skip dictionay fields
                 continue
 
-            options.json_fields.append(f)
+            options.json_fields.append(fld)
 
         if 0 < options.header:
-            f = options.separator.join(options.json_fields)
+            fld = options.separator.join(options.json_fields)
             if 2 == options.header:
-                f = '# ' + f
-            print(f)
+                fld = '# ' + fld
+            print(fld)
 
     out = []
     for fld in options.json_fields:
@@ -331,9 +330,10 @@ else:
 try:
     while 0 == session.read():
 
-        if 'class' not in session.data:
+        if ((session.data is None or
+            'class' not in session.data)):
             # Not JSON input.  Maybe NMEA, etc.
-            sys.stderr.write("WARNING: Malformed input %s\n" % report)
+            sys.stderr.write("WARNING: Malformed input %s\n" % session.data)
             continue
         if session.data['class'] != options.mclass:
             continue
