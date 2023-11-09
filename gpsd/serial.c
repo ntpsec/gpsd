@@ -705,12 +705,16 @@ void gpsd_set_speed(struct gps_device_t *session,
         SOURCE_USB != session->sourcetype &&
         SOURCE_BLUETOOTH != session->sourcetype) {
 
-        if (0 < gpsd_serial_isatty(session) && !session->context->readonly) {
+        // it is not read-only, not ttyACM, not BT
+        if (0 < gpsd_serial_isatty(session)) {
             if (NULL == session->device_type) {
                 const struct gps_type_t **dp;
-                for (dp = gpsd_drivers; *dp; dp++)
-                    if (NULL != (*dp)->event_hook)
+
+                for (dp = gpsd_drivers; *dp; dp++) {
+                    if (NULL != (*dp)->event_hook) {
                         (*dp)->event_hook(session, event_wakeup);
+                    }
+                }
             } else if (NULL != session->device_type->event_hook) {
                 session->device_type->event_hook(session, event_wakeup);
             }
