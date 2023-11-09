@@ -33,7 +33,8 @@ gps_mask_t generic_parse_input(struct gps_device_t *session)
         gps_mask_t st = 0;
         char *sentence = (char *)session->lexer.outbuffer;
 
-        if ('\n' != sentence[strlen(sentence) - 1]) {
+        if ('\n' != sentence[strnlen(sentence,
+                                     sizeof(session->lexer.outbuffer)) - 1]) {
             GPSD_LOG(LOG_IO, &session->context->errout,
                      "<= GPS: %s\n", sentence);
         } else {
@@ -685,16 +686,16 @@ static bool tnt_send(struct gps_device_t *session, const char *fmt, ...)
     va_start(ap, fmt);
     (void)vsnprintf(buf, sizeof(buf) - 5, fmt, ap);
     va_end(ap);
-    sent = tnt_control_send(session, buf, strlen(buf));
-    if ((ssize_t)strlen(buf) == sent) {
+    sent = tnt_control_send(session, buf, strnlen(buf, sizeof(buf)));
+    if ((ssize_t)strnlen(buf, sizeof(buf)) == sent) {
         GPSD_LOG(LOG_IO, &session->context->errout,
                  "=> GPS: %s\n", buf);
         return true;
-    } else {
-        GPSD_LOG(LOG_WARN, &session->context->errout,
-                 "=> GPS: %s FAILED\n", buf);
-        return false;
-    }
+    }  //  else
+
+    GPSD_LOG(LOG_WARN, &session->context->errout,
+             "=> GPS: %s FAILED\n", buf);
+    return false;
 }
 
 static bool tnt_speed(struct gps_device_t *session,
@@ -777,15 +778,15 @@ static int oceanserver_send(struct gpsd_errout_t *errout,
     (void)vsnprintf(buf, sizeof(buf) - 5, fmt, ap);
     va_end(ap);
     (void)strlcat(buf, "", sizeof(buf));
-    status = (int)write(fd, buf, strlen(buf));
+    status = (int)write(fd, buf, strnlen(buf, sizeof(buf)));
     (void)tcdrain(fd);
-    if (status == (int)strlen(buf)) {
+    if (status == (int)strnlen(buf, sizeof(buf))) {
         GPSD_LOG(LOG_IO, errout, "=> GPS: %s\n", buf);
         return status;
-    } else {
-        GPSD_LOG(LOG_WARN, errout, "=> GPS: %s FAILED\n", buf);
-        return -1;
-    }
+    }  // else
+
+    GPSD_LOG(LOG_WARN, errout, "=> GPS: %s FAILED\n", buf);
+    return -1;
 }
 
 static void oceanserver_event_hook(struct gps_device_t *session,
@@ -857,7 +858,7 @@ static bool fury_rate_switcher(struct gps_device_t *session, double rate)
         return false;
     }
     (void)snprintf(buf, sizeof(buf), "GPS:GPGGA %d\r\n", (int)inverted);
-    (void)gpsd_write(session, buf, strlen(buf));
+    (void)gpsd_write(session, buf, strnlen(buf, sizeof(buf)));
     return true;
 }
 
@@ -1358,7 +1359,7 @@ static bool aivdm_decode(unsigned char *buf, size_t buflen,
     memset(ais, 0, sizeof(*ais));
 
     // discard overlong sentences
-    if (strlen((char *)buf) > (sizeof(fieldcopy) - 1)) {
+    if (strnlen((char *)buf, buflen) > (sizeof(fieldcopy) - 1)) {
         GPSD_LOG(LOG_ERROR, &session->context->errout,
                  "overlong AIVDM packet.\n");
         return false;
@@ -1615,7 +1616,8 @@ static void path_rewrite(struct gps_device_t *session, char *prefix)
                           sizeof(session->lexer.outbuffer));
         }
     }
-    session->lexer.outbuflen = strlen((char *)session->lexer.outbuffer);
+    session->lexer.outbuflen = strnlen((char *)session->lexer.outbuffer,
+                                       sizeof(session->lexer.outbuffer));
 }
 
 static gps_mask_t json_pass_packet(struct gps_device_t *session)
@@ -1645,7 +1647,9 @@ static gps_mask_t json_pass_packet(struct gps_device_t *session)
                 (void)strlcat((char *)session->lexer.outbuffer, "\"}",
                               sizeof(session->lexer.outbuffer));
             }
-            session->lexer.outbuflen = strlen((char *)session->lexer.outbuffer);
+            session->lexer.outbuflen = strnlen(
+                (char *)session->lexer.outbuffer,
+                sizeof(session->lexer.outbuffer));
         }
     }
     GPSD_LOG(LOG_PROG, &session->context->errout,
