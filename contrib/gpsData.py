@@ -12,10 +12,12 @@
 
 from __future__ import absolute_import, print_function, division
 
-import gps
 import os
 import threading
 import time
+
+# PEP8, local imports go last.
+import gps
 
 gpsd = None          # setting the global variable
 
@@ -35,7 +37,6 @@ class GpsPoller(threading.Thread):
 
     def run(self):
         """Run."""
-        global gpsd
         while gpsp.running:
             # this will continue to loop and grab EACH set of
             # gpsd info to clear the buffer
