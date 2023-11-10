@@ -87,7 +87,7 @@ except (IOError, ValueError):
     EXIT_CODE = 100
     errs = ['position'] if {} == TPV else []
     if not SKY:
-        erasr += ['skyview image']
+        errs += ['skyview image']
     sys.stderr.write("Error reading JSON data from file or stdin."
                      " Creating an empty " + ' and '.join(errs) + ".\n")
 
