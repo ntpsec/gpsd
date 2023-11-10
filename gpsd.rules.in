@@ -31,18 +31,24 @@
 SUBSYSTEM!="tty", GOTO="gpsd_rules_end"
 
 # FTDI 8U232AM / FT232 [linux module: ftdi_sio]
-ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", SYMLINK+="gps%n", @UDEVCOMMAND@
+# rule disabled because it matches way too many generic serial converters
+# and creates more harm than good
+#ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", SYMLINK+="gps%n", @UDEVCOMMAND@
 
 # ATEN International Co., Ltd UC-232A Serial Port [linux module: pl2303]
 ATTRS{idVendor}=="0557", ATTRS{idProduct}=="2008", SYMLINK+="gps%n", @UDEVCOMMAND@
 
 # Prolific Technology, Inc. PL2303 Serial Port [linux module: pl2303]
-ATTRS{idVendor}=="067b", ATTRS{idProduct}=="2303", SYMLINK+="gps%n", @UDEVCOMMAND@
+# rule disabled because it matches way too many generic serial converters
+# and creates more harm than good
+#ATTRS{idVendor}=="067b", ATTRS{idProduct}=="2303", SYMLINK+="gps%n", @UDEVCOMMAND@
 
 # This is a partial duplicate and does not follow the same style as the others?
 # u-blox AG, u-blox 8 (tested with u-blox8 GNSS Mouse Receiver / GR-801)
-# [linux module: pl2303] 
-ATTRS{idVendor}=="067b", ATTRS{idProduct}=="2303", SYMLINK+="gps%n", TAG+="systemd", ENV{SYSTEMD_WANTS}="gpsdctl@%k.service" 
+# [linux module: pl2303]
+# rule disabled because it matches way too many generic serial converters
+# and creates more harm than good
+#ATTRS{idVendor}=="067b", ATTRS{idProduct}=="2303", SYMLINK+="gps%n", TAG+="systemd", ENV{SYSTEMD_WANTS}="gpsdctl@%k.service"
 
 # PS-360 OEM (GPS sold with MS Street and Trips 2005) [linux module: pl2303]
 ATTRS{idVendor}=="067b", ATTRS{idProduct}=="aaa0", SYMLINK+="gps%n", @UDEVCOMMAND@
