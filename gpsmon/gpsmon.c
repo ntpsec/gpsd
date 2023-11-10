@@ -530,6 +530,7 @@ static bool switch_type(const struct gps_type_t *devtype)
                     (*active)->wrap();
                 }
                 (void)delwin(devicewin);
+                devicewin = NULL;
             }
             active = newobject;
             if (devicewin) {
