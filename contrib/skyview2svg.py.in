@@ -85,11 +85,11 @@ try:
 except (IOError, ValueError):
     # Assume empty data and write msg to stderr.
     EXIT_CODE = 100
-    err = ['position'] if {} == TPV else []
-    if {} == SKY:
-        err += ['skyview image']
+    errs = ['position'] if {} == TPV else []
+    if not SKY:
+        erasr += ['skyview image']
     sys.stderr.write("Error reading JSON data from file or stdin."
-                     " Creating an empty " + ' and '.join(err) + ".\n")
+                     " Creating an empty " + ' and '.join(errs) + ".\n")
 
 # ------------------------------------------------------------------------
 # Colors for the SVG styles.
