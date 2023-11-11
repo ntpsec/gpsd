@@ -549,8 +549,7 @@ class spaceplot(plotter):
                 if not math.isnan(fix_lla[2]):
                     fix_ecef = wgs84_to_ecef(fix_lla[:3])
                     dist3d = dist_3d(self.centroid_ecef, fix_ecef)
-                    if dist_3d_max < dist3d:
-                        dist_3d_max = dist3d
+                    dist_3d_max = max(dist_3d_max, dist3d)
 
             # Sort fixes by distance from average altitude
             alt_fixes_r.sort(key=abs)
@@ -795,7 +794,8 @@ class polarplot(plotter):
 
     def sample(self):
         """Grab samples."""
-        if "SKY" == self.session.data["class"] and "satellites" in self.session.data:
+        if (("SKY" == self.session.data["class"] and
+             "satellites" in self.session.data)):
             sats = self.session.data['satellites']
             seen = 0
             used = 0
@@ -1238,7 +1238,7 @@ if __name__ == '__main__':
     options = parser.parse_args()
 
     if options.logfile:
-        options.logfp = open(options.logfile, "w")
+        options.logfp = open(options.logfile, "w", encoding=ascii)
     else:
         options.logfp = None
 
@@ -1285,7 +1285,7 @@ if __name__ == '__main__':
         plot.postprocess()
         # Save the timing data (only) for post-analysis if required.
         if options.dumpfile:
-            with open(options.dumpfile, "w") as fp:
+            with open(options.dumpfile, "w", encoding=ascii) as fp:
                 fp.write(plot.dump())
         if options.logfp:
             options.logfp.close()
