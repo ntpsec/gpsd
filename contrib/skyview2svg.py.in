@@ -61,11 +61,11 @@ SKY = {}
 TPV = {}
 try:
     if len(sys.argv) > 1:
-        with open(sys.argv[1]) as f:
+        with open(sys.argv[1], encoding=ascii) as f:
             while True:
                 SENTENCE = json.loads(f.readline())
                 if 'class' in SENTENCE and 'SKY' == SENTENCE['class']:
-                    if 'satellites' in  SENTENCE:
+                    if 'satellites' in SENTENCE:
                         SKY = SENTENCE
                 if 'class' in SENTENCE and 'TPV' == SENTENCE['class']:
                     TPV = SENTENCE
@@ -75,7 +75,7 @@ try:
         while True:
             SENTENCE = json.loads(sys.stdin.readline())
             if 'class' in SENTENCE and 'SKY' == SENTENCE['class']:
-                if 'satellites' in  SENTENCE:
+                if 'satellites' in SENTENCE:
                     SKY = SENTENCE
             if 'class' in SENTENCE and 'TPV' == SENTENCE['class']:
                 TPV = SENTENCE
@@ -85,7 +85,7 @@ try:
 except (IOError, ValueError):
     # Assume empty data and write msg to stderr.
     EXIT_CODE = 100
-    errs = ['position'] if {} == TPV else []
+    errs = ['position'] if not TPV else []
     if not SKY:
         errs += ['skyview image']
     sys.stderr.write("Error reading JSON data from file or stdin."
