@@ -1812,22 +1812,22 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
      * Else we may be providing GPS time.
      */
     if (0 == (changed & TIME_SET)) {
-        // GPSD_LOG(LOG_PROG, &context.errout, "NTP: No time this packet\n");
+        GPSD_LOG(LOG_DATA, &context.errout, "NTP: No time this packet\n");
     } else if (NTP_MIN_FIXES >= device->fixcnt &&
                false == context.batteryRTC) {
         /* Many GPS spew random times until after several valid GPS fixes.
          * Garmin says wait at least 3.
          * Allow override with -r option as some GPS say they always output
          * good time from an RTC */
-        // GPSD_LOG(LOG_PROG, &context.errout, "NTP: no fix\n");
+        GPSD_LOG(LOG_DATA, &context.errout, "NTP: no fix\n");
     } else if (0 == device->newdata.time.tv_sec) {
-        // GPSD_LOG(LOG_PROG, &context.errout, "NTP: bad new time\n");
+        GPSD_LOG(LOG_DATA, &context.errout, "NTP: bad new time\n");
     } else if (device->newdata.time.tv_sec <=
                device->pps_thread.fix_in.real.tv_sec) {
-        // GPSD_LOG(LOG_PROG, &context.errout, "NTP: Not a new time\n");
+        GPSD_LOG(LOG_DATA, &context.errout, "NTP: Not a new time\n");
     } else if (!device->ship_to_ntpd) {
-        // GPSD_LOG(LOG_PROG, &context.errout,
-        //          "NTP: No precision time report\n");
+        GPSD_LOG(LOG_DATA, &context.errout,
+                 "NTP: No precision time report\n");
     } else {
         struct timedelta_t td;
         struct gps_device_t *ppsonly;
@@ -1845,6 +1845,9 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
 
         if (VALID_UNIT(device->shm_clock_unit)) {
             ntpshm_put(device, device->shm_clock_unit, precision, &td);
+        } else {
+            GPSD_LOG(LOG_DATA, &context.errout,
+                     "NTP: No shm_clock_unit\n");
         }
         if (0 < device->chrony_clock_fd) {
             chrony_send(device, device->chrony_clock_fd, &td);
@@ -1853,7 +1856,6 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
         // delay and allows the PPS samples to be sent at a higher rate
         // than the message-based samples sent here
 
-#ifdef SOCKET_EXPORT_ENABLE
         notify_watchers(device, false, true,
                         "{\"class\":\"TOFF\",\"device\":\"%s\",\"real_sec\":"
                         "%lld, \"real_nsec\":%ld,\"clock_sec\":%lld,"
@@ -1863,8 +1865,6 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
                         (long long)td.real.tv_sec, td.real.tv_nsec,
                         (long long)td.clock.tv_sec, td.clock.tv_nsec,
                         precision, device->shm_clock_unit);
-#endif  // SOCKET_EXPORT_ENABLE
-
     }
 
     /*
