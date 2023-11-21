@@ -2478,6 +2478,16 @@ int main(int argc, char *argv[])
         GPSD_LOG(LOG_INF, &context.errout, "Command line: %s\n", buf);
     }
 
+    if (true == context.readonly &&
+        true == context.passive) {
+       GPSD_LOG(LOG_WARN, &context.errout,
+                "-p (--passive) does nothing when used with "
+                "-b (--readonlly)\n");
+    }
+    if (true == context.batteryRTC) {
+       GPSD_LOG(LOG_WARN, &context.errout,
+                "-r (--badtime) is DANGEROUS\n");
+    }
 
 #ifdef SOCKET_EXPORT_ENABLE
     if (!gpsd_service) {
