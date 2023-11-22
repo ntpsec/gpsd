@@ -439,6 +439,15 @@ static char *report_hook(volatile struct pps_thread_t *pps_thread,
 // release ntpshm storage for a session
 void ntpshm_link_deactivate(struct gps_device_t *session)
 {
+    struct gps_context_t *context = session->context;
+
+    GPSD_LOG(LOG_DATA, &context->errout,
+             "NTP: ntpshm_link_deactivate(%d, %d, %d, %d)\n",
+             session->shm_clock_unit,
+             session->shm_pps_unit,
+             session->chrony_clock_fd,
+             session->chrony_pps_fd);
+
     if (VALID_UNIT(session->shm_clock_unit)) {
         ntpshm_free(session->context, session->shm_clock_unit);
         session->shm_clock_unit = -1;
