@@ -1464,7 +1464,7 @@ reports
 |`+static double degtodm(double a)+` |Converts a fractional degree value
 (like 125.3567) into an NMEA field as dddmm.xxx (like 12521.402).
 
-|`+void gpsd_position_fix_dump(struct gps_device_t *session, /char bufp[], size_t len)+`
+|`+int gpsd_position_fix_dump(struct gps_device_t *session, /char bufp[], size_t len)+`
 |If possible, create a $GPGGA message (full time, position and fix data)
 from the fix data, taking care about the validity of subsidiary fields
 like HDOP and altitude.

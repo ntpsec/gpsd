@@ -194,7 +194,7 @@ static void ntrip_str_parse(char *str, size_t len,
     if (NULL != (s = ntrip_field_iterate(NULL, s, eol, errout))) {
         hold->longitude = safe_atof(s);
     }
-    // <nmea>
+    // <nmea> 0 == do not send GGA, 1 == send GGA
     if (NULL != (s = ntrip_field_iterate(NULL, s, eol, errout))) {
         hold->nmea = atoi(s);
     }
@@ -1192,43 +1192,56 @@ int ntrip_open(struct gps_device_t *device, char *orig)
     return ret;
 }
 
-// may be time to ship a usage report to the NTRIP caster
+// may be time to ship a GGA report to the NTRIP caster
 void ntrip_report(struct gps_context_t *context,
                   struct gps_device_t *gps,
                   struct gps_device_t *caster)
 {
-    static int count;
+    static int count = 0;
+    char buf[BUFSIZ];
+    ssize_t blen;
 
-    /*
-     * 10 is an arbitrary number, the point is to have gotten several good
+    if (0 == caster->ntrip.stream.nmea) {
+        return;   // no need to be here...
+    }
+    GPSD_LOG(LOG_IO, &context->errout,
+             "NTRIP: = ntrip_report() fixcnt %d count %d caster %d\n",
+             context->fixcnt, count, caster->gpsdata.gps_fd);
+
+    /* 10 is an arbitrary number, the point is to have gotten several good
      * fixes before reporting usage to our NTRIP caster.
-     *
-     * count % 5 is as arbitrary a number as the fixcnt. But some delay
-     * was needed here
      */
-    count ++;
-    if (0 != caster->ntrip.stream.nmea &&
-        10 < context->fixcnt &&
-        0 == (count % 5)) {
-        if (-1 < caster->gpsdata.gps_fd) {
-            char buf[BUFSIZ];
-            ssize_t ret, blen;
+    if (10 > context->fixcnt) {
+        return;   // no good fix to send...
+    }
 
-            gpsd_position_fix_dump(gps, buf, sizeof(buf));
-            blen = strnlen(buf, sizeof(buf));
-            ret = write(caster->gpsdata.gps_fd, buf, blen);
-            if (blen == ret) {
-                GPSD_LOG(LOG_IO, &context->errout, "NTRIP: => caster %s\n",
-                         buf);
-            } else if (0 > ret) {
-                GPSD_LOG(LOG_ERROR, &context->errout,
-                         "NTRIP: ntrip_report() write(%d) error %s(%d)\n",
-                         caster->gpsdata.gps_fd, strerror(errno), errno);
-            } else {
-                GPSD_LOG(LOG_ERROR, &context->errout,
-                         "NTRIP: ntrip_report() short write(%d) = %zd\n",
-                         caster->gpsdata.gps_fd, ret);
-            }
+    /* count % 5 is as arbitrary a number as the fix dump delay.
+     * But some delay * was needed here
+     */
+    count++;
+    if (0 != (count % 5)) {
+        return;   // wait some more
+    }
+    if (0 > caster->gpsdata.gps_fd) {
+        return;   // huh?  No NTRIP fd to write to??
+    }
+
+    blen = gpsd_position_fix_dump(gps, buf, sizeof(buf));
+    if (0 < blen) {
+        ssize_t ret;
+
+        ret = write(caster->gpsdata.gps_fd, buf, blen);
+        if (blen == ret) {
+            GPSD_LOG(LOG_IO, &context->errout, "NTRIP: => caster %s\n",
+                     buf);
+        } else if (0 > ret) {
+            GPSD_LOG(LOG_ERROR, &context->errout,
+                     "NTRIP: ntrip_report() write(%d) error %s(%d)\n",
+                     caster->gpsdata.gps_fd, strerror(errno), errno);
+        } else {
+            GPSD_LOG(LOG_ERROR, &context->errout,
+                     "NTRIP: ntrip_report() short write(%d) = %zd\n",
+                     caster->gpsdata.gps_fd, ret);
         }
     }
 }

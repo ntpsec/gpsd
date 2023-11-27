@@ -126,76 +126,90 @@ static void dbl_to_str(const char *fmt, double val, char *bufp, size_t len,
 #define FIX_QUALITY_MANUAL 7
 #define FIX_QUALITY_SIMULATED 8
 
-/* Dump a $GPGGA.
+/*
+ * If possible, create a $GPGGA message (full time, position and fix data)
+ * from the fix data, taking care about the validity of subsidiary fields
+ * like HDOP and altitude.
+ *
  * looks like this is only called from net_ntrip.c and nmea_tpv_dump()
+ *
+ * Return: length of generated GGA string at bufp
  */
-void gpsd_position_fix_dump(struct gps_device_t *session,
-                            char bufp[], size_t len)
+int gpsd_position_fix_dump(struct gps_device_t *session,
+                           char bufp[], size_t len)
 {
     struct tm tm;
     char time_str[TIMESTR_SZ];
+    unsigned char fixquality;
+    char lat_str[BUF_SZ];
+    char lon_str[BUF_SZ];
+    int blen = 0;          // length, so far, of string in bufp
+
+    *bufp = '\0';
+
+    // Maybe send an empty $GGA on no fix?
+    if (MODE_NO_FIX >= session->gpsdata.fix.mode) {
+        return 0;
+    }
 
     utc_to_hhmmss(session->gpsdata.fix.time, time_str, sizeof(time_str), &tm);
-
-    if (MODE_NO_FIX < session->gpsdata.fix.mode) {
-        unsigned char fixquality;
-        char lat_str[BUF_SZ];
-        char lon_str[BUF_SZ];
-
-        switch(session->gpsdata.fix.status) {
-        case STATUS_UNK:
-            fixquality = FIX_QUALITY_INVALID;
-            break;
-        case STATUS_GPS:
-            fixquality = FIX_QUALITY_GPS;
-            break;
-        case STATUS_DGPS:
-            fixquality = FIX_QUALITY_DGPS;
-            break;
-        case STATUS_RTK_FIX:
-            fixquality = FIX_QUALITY_RTK;
-            break;
-        case STATUS_RTK_FLT:
-            fixquality = FIX_QUALITY_RTK_FLT;
-            break;
-        case STATUS_DR:
-            FALLTHROUGH
-        case STATUS_GNSSDR:
-            fixquality = FIX_QUALITY_DR;
-            break;
-        case STATUS_TIME:
-            fixquality = FIX_QUALITY_MANUAL;
-            break;
-        case STATUS_SIM:
-            fixquality = FIX_QUALITY_SIMULATED;
-            break;
-        default:
-            fixquality = FIX_QUALITY_INVALID;
-            break;
-        }
-
-        /* Use lat/lon precision .7 becaause u-blox ZED-F9P does.
-         * Use lat 4 digits of integer, lon 5 digits, because:
-         * http://sapos.geonord-od.de:2101/ wants that minimum */
-        (void)snprintf(bufp, len,
-                       "$GPGGA,%s,%s,%c,%s,%c,%d,%02d,",
-                       time_str,
-                       degtodm_str(session->gpsdata.fix.latitude, "%012.7f",
-                                   lat_str),
-                       ((session->gpsdata.fix.latitude > 0) ? 'N' : 'S'),
-                       degtodm_str(session->gpsdata.fix.longitude, "%013.7f",
-                                   lon_str),
-                       ((session->gpsdata.fix.longitude > 0) ? 'E' : 'W'),
-                       fixquality,
-                       session->gpsdata.satellites_used);
-        dbl_to_str("%.2f,", session->gpsdata.dop.hdop, bufp, len, NULL);
-        dbl_to_str("%.2f,", session->gpsdata.fix.altMSL, bufp, len, "M,");
-        dbl_to_str("%.3f,", session->gpsdata.fix.geoid_sep, bufp, len, "M,");
-        /* empty place holders for Age of correction data, and
-         * Differential base station ID */
-        (void)strlcat(bufp, ",", len);
-        nmea_add_checksum(bufp);
+    switch(session->gpsdata.fix.status) {
+    case STATUS_UNK:
+        fixquality = FIX_QUALITY_INVALID;
+        break;
+    case STATUS_GPS:
+        fixquality = FIX_QUALITY_GPS;
+        break;
+    case STATUS_DGPS:
+        fixquality = FIX_QUALITY_DGPS;
+        break;
+    case STATUS_RTK_FIX:
+        fixquality = FIX_QUALITY_RTK;
+        break;
+    case STATUS_RTK_FLT:
+        fixquality = FIX_QUALITY_RTK_FLT;
+        break;
+    case STATUS_DR:
+        FALLTHROUGH
+    case STATUS_GNSSDR:
+        fixquality = FIX_QUALITY_DR;
+        break;
+    case STATUS_TIME:
+        fixquality = FIX_QUALITY_MANUAL;
+        break;
+    case STATUS_SIM:
+        fixquality = FIX_QUALITY_SIMULATED;
+        break;
+    default:
+        fixquality = FIX_QUALITY_INVALID;
+        break;
     }
+
+    /* Use lat/lon precision .7 becaause u-blox ZED-F9P does.
+     * Use lat 4 digits of integer, lon 5 digits, because:
+     * http://sapos.geonord-od.de:2101/ wants that minimum */
+    blen = snprintf(bufp, len,
+                    "$GPGGA,%s,%s,%c,%s,%c,%d,%02d,",
+                    time_str,
+                    degtodm_str(session->gpsdata.fix.latitude, "%012.7f",
+                                lat_str),
+                    ((session->gpsdata.fix.latitude > 0) ? 'N' : 'S'),
+                    degtodm_str(session->gpsdata.fix.longitude, "%013.7f",
+                                lon_str),
+                    ((session->gpsdata.fix.longitude > 0) ? 'E' : 'W'),
+                    fixquality,
+                    session->gpsdata.satellites_used);
+    dbl_to_str("%.2f,", session->gpsdata.dop.hdop, bufp + blen, len - blen,
+               NULL);
+    dbl_to_str("%.2f,", session->gpsdata.fix.altMSL, bufp, len, "M,");
+    dbl_to_str("%.3f,", session->gpsdata.fix.geoid_sep, bufp, len, "M,");
+    // FIXME: we now have these:
+    /* empty place holders for Age of correction data, and
+     * Differential base station ID */
+    (void)strlcat(bufp, ",", len);
+    nmea_add_checksum(bufp);
+
+    return( strnlen(bufp, len));
 }
 
 
@@ -607,9 +621,8 @@ void nmea_tpv_dump(struct gps_device_t *session,
         blen = gpsd_binary_time_dump(session, bufp, len);
     }
     if (0 != (session->gpsdata.set & (LATLON_SET | MODE_SET | REPORT_IS))) {
-        gpsd_position_fix_dump(session, bufp + blen, len - blen);
-        gpsd_transit_fix_dump(session, bufp + strlen(bufp),
-                              len - strlen(bufp));
+        blen += gpsd_position_fix_dump(session, bufp + blen, len - blen);
+        gpsd_transit_fix_dump(session, bufp + blen, len - blen);
     }
     if (0 != (session->gpsdata.set &
               (MODE_SET | DOP_SET | USED_IS | HERR_SET | REPORT_IS))) {

@@ -1005,8 +1005,8 @@ extern "C" {
 }
 # endif
 extern ssize_t hex_escapes(char *, const char *);
-extern void gpsd_position_fix_dump(struct gps_device_t *,
-                                   char[], size_t);
+extern int gpsd_position_fix_dump(struct gps_device_t *,
+                                  char[], size_t);
 extern void gpsd_clear_data(struct gps_device_t *);
 // FIXME: use in libgps, so should not be in gpsd.h!
 // deprecated Oct 2021, use netlib_connectsock1() instead
