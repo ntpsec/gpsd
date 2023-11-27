@@ -257,6 +257,7 @@ struct gps_fix_t {
     } NED;
     char datum[40];             // map datum
     // DGPS stuff, often from xxGGA, or xxGNS
+    // SiRF II is %.1f, Skytraq is %,4fm others seem to be int
     double dgps_age;       // age of DGPS data in seconds, -1 invalid
     /* DGPS Station used, max size is a guess
      * NMEA 2 says 0000-1023

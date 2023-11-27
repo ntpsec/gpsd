@@ -203,10 +203,19 @@ int gpsd_position_fix_dump(struct gps_device_t *session,
                NULL);
     dbl_to_str("%.2f,", session->gpsdata.fix.altMSL, bufp, len, "M,");
     dbl_to_str("%.3f,", session->gpsdata.fix.geoid_sep, bufp, len, "M,");
-    // FIXME: we now have these:
-    /* empty place holders for Age of correction data, and
-     * Differential base station ID */
-    (void)strlcat(bufp, ",", len);
+    // Age of correction data, and Differential base station ID
+    if (0.0 > session->gpsdata.fix.dgps_age ||
+        0 > session->gpsdata.fix.dgps_station) {
+        // n/a
+        (void)strlcat(bufp, ",", len);
+    } else {
+        char dgps_str[BUF_SZ];
+
+        // Warning, u-blox dgps_station may be 16 bits.
+        (void)snprintf(dgps_str, BUF_SZ, "%.1f,%04d",
+                       session->gpsdata.fix.dgps_age,
+                       session->gpsdata.fix.dgps_station);
+    }
     nmea_add_checksum(bufp);
 
     return( strnlen(bufp, len));
