@@ -621,7 +621,7 @@ static socket_t ntrip_stream_get_req(const struct ntrip_stream_t *stream,
 /* lexer_getline() -- get one line, ending in \n or \0, from lexer->inbuffer,
  * put in lexer->outbuffer.  NUL terminate outbuffer.
  *
- * Assume: inbufptr is correct.  inbuffer is NULL terminated.
+ * Assume: inbufptr is correct.  inbuffer is NUL terminated.
  *
  * Can not handle buffer wrap.
  *
@@ -632,8 +632,14 @@ static void lexer_getline(struct gps_lexer_t *lexer)
     unsigned i;
 
     for (i = 0; i < sizeof(lexer->outbuffer) - 2; i++) {
-        unsigned char u = *lexer->inbufptr++;
+        unsigned char u;
 
+        if (0 == lexer->inbuflen ||
+            sizeof(lexer->inbuffer) <= lexer->inbuflen) {  // paranoia
+            // nothing left to read,  ending not found
+            break;
+        }
+        u = *lexer->inbufptr++;
         lexer->outbuffer[i] = u;
         lexer->inbuflen--;
 
@@ -646,18 +652,15 @@ static void lexer_getline(struct gps_lexer_t *lexer)
             i++;
             break;
         }
-
-        if (0 == lexer->inbuflen) {
-            // nothing left to read,  ending not found
-            i++;
-            break;
-        }
     }
     lexer->outbuffer[i] = '\0';  // Ensure a NUL
     lexer->outbuflen = i;
 }
 
-/* parse the stream header
+/* ntrip_stream_get_parse(s) -- read, then parse, the stream header.
+ * Assume the entire header is ready to be read, and is less than
+ * 1024 bytes.
+ *
  * Return: 0 == OK
  *         less than zero == failure
  */
@@ -672,13 +675,14 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
     struct gps_lexer_t *lexer = &device->lexer;
     char *ibuf = (char *)lexer->inbuffer;
     char *obuf = (char *)lexer->outbuffer;
+    bool got_header;
 
     GPSD_LOG(LOG_PROG, errout,
              "NTRIP: ntrip_stream_get_parse(fd %d)\n", dsock);
     lexer_init(lexer, &device->context->errout);
     /* We expect the header comes in as one TCP packet.
      * dsock is still blocking, so get exactly 1024 bytes */
-    while (-1 == (read_ret = read(dsock, ibuf, 1024))) {
+    while (0 >= (read_ret = read(dsock, ibuf, 1024))) {
         if (EINTR == errno) {
             continue;
         }
@@ -688,7 +692,7 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
         return -1;
     }
     ibuf[read_ret] = '\0';   // Make a nice NUL terminated string.
-    lexer->inbuflen = read_ret;
+    lexer->inbuflen = (size_t)read_ret;
     lexer_getline(lexer);
     GPSD_LOG(LOG_IO, errout,
              "NTRIP: lexer_getline() >%s<\n",
@@ -746,15 +750,15 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
      *
      */
 
-    while (1) {
+    got_header = false;
+    while (0 < lexer->inbuflen) {
         lexer_getline(lexer);
         GPSD_LOG(LOG_IO, errout,
                  "NTRIP: lexer_getline() >%s<\n",
                  gps_visibilize(dbgbuf, sizeof(dbgbuf),
                                 (char *)lexer->outbuffer, lexer->outbuflen));
 
-        /* Chunking not supported. Yet. Refuse the stream or it would
-         * confuse the RTCM3 parser. */
+        // Chunking needed?
         if (0 == strncmp(obuf, NTRIP_CHUNKED, sizeof(NTRIP_CHUNKED))) {
             GPSD_LOG(LOG_PROG, errout,
                      "NTRIP: caster sends chunked data\n");
@@ -766,9 +770,17 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
         }
         if (0 == strncmp(obuf, NTRIP_BR, sizeof(NTRIP_BR))) {
             // done
+            got_header = true;
             break;
         }
     }
+    if (false == got_header) {
+        GPSD_LOG(LOG_WARN, errout,
+                 "NTRIP: did not get end of headers.\n");
+        /* do something about it? If we are not chunked it'll work out
+         * anyway. */
+    }
+
     opts = fcntl(dsock, F_GETFL);
 
     if (-1 == opts) {
@@ -782,10 +794,12 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
     GPSD_LOG(LOG_IO, errout,
              "NTRIP: ntrip_stream_get_parse(), %zu leftover bytes\n",
              lexer->inbuflen);
-    if (0 == lexer->inbuflen) {
+    if (0 == lexer->inbuflen ||
+        sizeof(lexer->inbuffer) <= lexer->inbuflen) {  // paranoia
         packet_reset(lexer);
     } else {
-        // The "leftover" is the start of the first chunk.
+        /* The "leftover" is the start of the datastream. Chunked or
+         * unchunked. */
         if (lexer->inbufptr != lexer->inbuffer) {
             // Shift inbufptr to the start.  Yes, a bit brutal.
             memmove(lexer->inbuffer, lexer->inbufptr, lexer->inbuflen);
