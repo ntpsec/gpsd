@@ -1822,8 +1822,9 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
         GPSD_LOG(LOG_DATA, &context.errout, "NTP: no fix\n");
     } else if (0 == device->newdata.time.tv_sec) {
         GPSD_LOG(LOG_DATA, &context.errout, "NTP: bad new time\n");
-    } else if (device->newdata.time.tv_sec <=
-               device->pps_thread.fix_in.real.tv_sec) {
+    } else if (device->newdata.time.tv_sec !=
+               device->oldfix.time.tv_sec) {
+        // sadly, time can go backward...
         GPSD_LOG(LOG_DATA, &context.errout, "NTP: Not a new time\n");
     } else if (!device->ship_to_ntpd) {
         GPSD_LOG(LOG_DATA, &context.errout,
