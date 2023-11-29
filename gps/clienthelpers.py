@@ -888,10 +888,22 @@ def maidenhead(dec_lat, dec_lon):
     grid_lat_extsq = chr(48 + int(adj_lat_remainder / 15))
     grid_lon_extsq = chr(48 + int(adj_lon_remainder / 30))
 
+    # remainder in seconds * 1000
+    adj_lat_remainder = (adj_lat_remainder % 15) * 1000
+    adj_lon_remainder = (adj_lon_remainder % 30) * 1000
+
+    print(adj_lat_remainder, adj_lon_remainder)
+
+    # divide into 24 zones (extended subsquares)
+    # each 0.625 seconds lon, 1.25 seconds lat
+    grid_lat_esubsq = chr(97 + int(adj_lat_remainder / 625))
+    grid_lon_esubsq = chr(97 + int(adj_lon_remainder / 1250))
+
     return (grid_lon_sq + grid_lat_sq +
             grid_lon_field + grid_lat_field +
             grid_lon_subsq + grid_lat_subsq +
-            grid_lon_extsq + grid_lat_extsq)
+            grid_lon_extsq + grid_lat_extsq +
+            grid_lon_esubsq + grid_lat_esubsq)
 
 
 def __bilinear(lat, lon, table):
