@@ -178,14 +178,14 @@ struct test2 {
 struct test2 tests2[] = {
     /* maidenhead
      * keep in sync with test_clienthelpers.py */
-    {48.86471, 2.37305, "JN18eu47", "Paris"},
-    {41.93498, 12.43652, "JN61fw24", "Rome"},
-    {39.9771, -75.1685, "FM29jx94", "Philadelphia, PA USA"},
-    {44.06878, -121.31424, "CN94ib26", "Bend, OR USA"},
-    {-23.4028, -50.9766, "GG46mo23", "Sao Paulo"},
-    {-33.86881, 151.20929 , "QF56od51", "Sydney, NSW AU"},
-    {90, 180, "RR99xx99", "North Pole"},
-    {-90, -180, "AA00aa00", "South Pole"},
+    {48.864710, 2.373051, "JN18eu47sm", "Paris"},
+    {41.934982, 12.436523, "JN61fw24jj", "Rome"},
+    {39.977144, -75.16855, "FM29jx94sm", "Philadelphia, PA USA"},
+    {44.068786, -121.314247, "CN94ib26gm", "Bend, OR USA"},
+    {-23.40288, -50.97669, "GG46mo23th", "Sao Paulo"},
+    {-33.868810, 151.209291 , "QF56od51cl", "Sydney, NSW AU"},
+    {90, 180, "RR99xx99xx", "North Pole"},
+    {-90, -180, "AA00aa00aa", "South Pole"},
     {91, 0, "    n/a ", "Invalid Latitude"},
     {-91, 0, "    n/a ", "Invalid Latitude"},
     {0, 200, "    n/a ", "Invalid Longitude"},

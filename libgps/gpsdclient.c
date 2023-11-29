@@ -69,7 +69,7 @@ char *deg_to_str2(enum deg_str_type type, double f,
         return buf;
     }
 
-    /* suffix? */
+    // suffix?
     if (0.0 > f) {
         f = -f;
         if (NULL != suffix_neg) {
@@ -79,8 +79,8 @@ char *deg_to_str2(enum deg_str_type type, double f,
         suffix = suffix_pos;
     }
 
-    /* add rounding quanta */
-    /* IEEE 754 wants round to nearest even.
+    /* add rounding quanta
+     * IEEE 754 wants round to nearest even.
      * We cheat and just round to nearest.
      * Intel trying to kill off round to nearest even. */
     switch (type) {
@@ -91,11 +91,11 @@ char *deg_to_str2(enum deg_str_type type, double f,
         f += 0.5 * 1e-8;              // round up
         break;
     case deg_dd:
-        /* DD.dddddddd */
+        // DD.dddddddd
         f += 0.5 * 1e-8;              // round up
         break;
     case deg_ddmm:
-        /* DD MM.mmmmmm */
+        // DD MM.mmmmmm
         f += (0.5 * 1e-6) / 60;       // round up
         break;
     case deg_ddmmss:
@@ -244,7 +244,7 @@ void gpsd_source_spec(const char *arg, struct fixsource_t *source)
     if (NULL == arg ||
         '\0' == arg[0]) {
         // no source, use defaults
-        strncpy(source->spec, "localhost:" DEFAULT_GPSD_PORT,
+        strlcpy(source->spec, "localhost:" DEFAULT_GPSD_PORT,
                 sizeof(source->spec));
         return;
     }
@@ -310,6 +310,11 @@ const char *maidenhead(double lat, double lon)
      * Specification at
      * https://en.wikipedia.org/wiki/Maidenhead_Locator_System
      *
+     * IARU in their "HVF Handbook" disagrees.  They claim the
+     * third, and fifth, pairs should be upper case, not lower casae.
+     *
+     * The spec if for 4 pairs, maybe we should extend to 5 pairs.
+     *
      * There's a fair amount of slop in how Maidenhead converters operate
      * that can make it look like this one is wrong.
      *
@@ -325,7 +330,7 @@ const char *maidenhead(double lat, double lon)
      */
     /* FIXME: convert lat/lon to integer seconds, then do all the
      * math on integers */
-    static char buf[9];
+    static char buf[11];
 
     int t1;
 
@@ -374,6 +379,14 @@ const char *maidenhead(double lat, double lon)
         t1 = 9;
     }
     buf[6] = (char) ((char)t1 + '0');
+    lon -= (float)(t1 * 30);
+
+    // lon is now seconds * 1000, 0 to 30,000
+    lon *= 1000.0;
+
+    // divide into 24 zones (extended subsquares) each 1.25 seconds lon
+    t1 = (int)(lon / 1250);
+    buf[8] = (char) ((char)t1 + 'a');
 
     // latitude
     if (89.99999 < lat) {
@@ -414,8 +427,16 @@ const char *maidenhead(double lat, double lon)
         t1 = 9;
     }
     buf[7] = (char) ((char)t1 + '0');
+    lat -= (float)(t1 * 15);
 
-    buf[8] = '\0';
+    // lat is now seconds * 1000
+    lat *= 1000.0;
+
+    // divide into 24 zones (extended subsquares) each 0.625 seconds lat
+    t1 = (int)(lat / 625);
+    buf[9] = (char) ((char)t1 + 'a');
+
+    buf[10] = '\0';
 
     return buf;
 }
