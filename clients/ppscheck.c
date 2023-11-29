@@ -282,19 +282,21 @@ static void list_pps(void)
             continue;
         }
         (void)printf("INFO: %s  ", dp->d_name);
-        (void)snprintf(name_path, sizeof(name_path), "%s/%s/path",
+        (void)snprintf(name_path, sizeof(name_path) - 1, "%s/%s/path",
                        sys_path, dp->d_name);
         if (0 <= path_fd) {
             close(path_fd);
             path_fd = -1;
         }
+        name_path[sizeof(name_path) - 1] = '\0';  // paranoia
         path_fd = open(name_path, O_RDONLY);
         if (-1 == path_fd) {
             (void)printf("\nERROR: open(%s) failed: %.80s(%d)\n",
                          name_path, strerror(errno), errno);
             continue;
         }
-        len = read(path_fd, tty_path, sizeof(tty_path));
+        // leave space for NUL.
+        len = read(path_fd, tty_path, sizeof(tty_path) - 1);
         if (-1 == len) {
             (void)printf("\nERROR: read(%s) failed: %.80s(%d)\n",
                          name_path, strerror(errno), errno);
