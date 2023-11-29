@@ -14,7 +14,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <termios.h>
-#include <time.h>  /* For nanosleep() */
+#include <time.h>   // For nanosleep()
 #include <unistd.h>
 #ifndef __GLIBC__
   #include <util.h>
@@ -39,7 +39,7 @@ int main( int argc, char **argv){
 		switch(c){
 		case 'd':
 			dflag = 1;
-			strncpy(tn, optarg, sizeof(tn)-1);
+			strlcpy(tn, optarg, sizeof(tn) - 1);
 			break;
 		case 's':
 			speed = atoi(optarg);
@@ -66,25 +66,32 @@ int main( int argc, char **argv){
 	argc -= optind;
 	argv += optind;
 
-	if (argc != 1)
+	if (argc != 1) {
 		usage();
+        }
 
-	if (0 == speed)
+	if (0 == speed) {
 		speed = 4800;
+        }
 
 	printf("opening %s\n", argv[0]);
-	if ((ifd = open(argv[0], O_RDONLY, 0444)) == -1)
+	if ((ifd = open(argv[0], O_RDONLY, 0444)) == -1) {
 		err(1, "open");
+        }
 
-	if (fstat(ifd, &sb) == -1)
+	if (fstat(ifd, &sb) == -1) {
 		err(1, "fstat");
+        }
 
-	if ((buf = mmap(0, sb.st_size, PROT_READ, MAP_FILE | MAP_PRIVATE, ifd, 0)) == MAP_FAILED)
+	if ((buf = mmap(0, sb.st_size, PROT_READ, MAP_FILE | MAP_PRIVATE,
+                        ifd, 0)) == MAP_FAILED) {
 		err(1, "mmap");
+        }
 
-	if (dflag){
-		if ((ofd = open(tn, O_RDWR|O_NOCTTY, 0644)) == -1)
+	if (dflag) {
+		if ((ofd = open(tn, O_RDWR|O_NOCTTY, 0644)) == -1) {
 			err(1, "open");
+                }
 		tcgetattr(ofd, &term);
 		cfmakeraw(&term);
 		cfsetispeed(&term, speed);
@@ -101,8 +108,9 @@ int main( int argc, char **argv){
 		cfmakeraw(&term);
 		cfsetospeed(&term, speed);
 		cfsetispeed(&term, speed);
-		if (openpty(&ofd, &sfd, tn, &term, NULL) == -1)
+		if (openpty(&ofd, &sfd, tn, &term, NULL) == -1) {
 			err(1, "openpty");
+                }
 
 		tcsetattr(ofd, TCSANOW, &term);
 		tcsetattr(sfd, TCSANOW, &term);
@@ -114,13 +122,13 @@ int main( int argc, char **argv){
 	for(len = 0; len < sb.st_size; len += WRLEN ){
 		write(ofd, buf+len, WRLEN );
 	//	tcdrain(ofd);
-		if (0 == dflag){
+		if (0 == dflag) {
 			tcflush(ofd, TCIFLUSH);
 	//		tcdrain(sfd);
 			tcflush(sfd, TCIFLUSH);
 		}
 		spinner( len );
-		/* wait sleeptime Sec */
+		/* wait sleeptime Sec
 		delay.tv_sec = (time_t)(sleeptime / 1000000000L);
 		delay.tv_nsec = sleeptime % 1000000000L;
 		nanosleep(&delay, NULL);
@@ -136,8 +144,9 @@ int main( int argc, char **argv){
 void spinner(int n){
 	char *s = "|/-\\";
 
-	if (n % (WRLEN * 4))
+	if (n % (WRLEN * 4)) {
 		return;
+        }
 
 	n /= (WRLEN * 4);
 
