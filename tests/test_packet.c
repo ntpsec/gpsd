@@ -2,7 +2,7 @@
  * This file is Copyright 2010 by the GPSD project
  * SPDX-License-Identifier: BSD-2-clause
  */
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include <ctype.h>
 #include <errno.h>          // for errno
@@ -28,9 +28,9 @@ struct map
     int type;
 };
 
-/* *INDENT-OFF* */
+// *INDENT-OFF*
 static struct map singletests[] = {
-    /* NMEA tests */
+    // NMEA tests
     {
         .legend = "NMEA packet with checksum (1)",
         .test = "$GPVTG,308.74,T,,M,0.00,N,0.0,K*68\r\n",
@@ -83,7 +83,7 @@ static struct map singletests[] = {
         .garbage_offset = 0,
         .type = NMEA_PACKET,
     },
-    /* SiRF tests */
+    // SiRF tests
     {
         .legend = "SiRF WAAS version ID",
         .test = {
@@ -133,7 +133,7 @@ static struct map singletests[] = {
         .garbage_offset = 0,
         .type = BAD_PACKET,
     },
-    /* Zodiac tests */
+    // Zodiac tests
     {
         .legend = "Zodiac binary 1000 Geodetic Status Output Message",
         .test = {
@@ -152,7 +152,7 @@ static struct map singletests[] = {
         .garbage_offset = 0,
         .type = ZODIAC_PACKET,
     },
-    /* EverMore tests */
+    // EverMore tests
     {
         .legend = "EverMore status packet 0x20",
         .test = {
@@ -208,7 +208,7 @@ static struct map singletests[] = {
         .type = EVERMORE_PACKET,
     },
     {
-        /* from page 4-3 of RTCM 10403.1 */
+        // from page 4-3 of RTCM 10403.1
         .legend = "RTCM104V3 type 1005 packet",
         /*
          * Reference Station Id = 2003
@@ -240,7 +240,7 @@ static struct map singletests[] = {
         .type = BAD_PACKET,
     },
     {
-        /* from page 3-71 of the RTCM 10403.1 */
+        // from page 3-71 of the RTCM 10403.1
         .legend = "RTCM104V3 type 1029 packet",
         .test = {
             0xD3, 0x00, 0x27, 0x40, 0x50, 0x17, 0x00, 0x84,
@@ -255,11 +255,9 @@ static struct map singletests[] = {
         .type = RTCM3_PACKET,
     },
 };
-/* *INDENT-ON* */
 
-/* *INDENT-OFF* */
 static struct map runontests[] = {
-    /* NMEA tests */
+    // NMEA tests
     {
         .legend = "Double NMEA packet with checksum",
         .test = "$GPVTG,308.74,T,,M,0.00,N,0.0,K*68\r\n$GPGGA,110534.994,"
@@ -270,32 +268,33 @@ static struct map runontests[] = {
         NMEA_PACKET,
     },
 };
-/* *INDENT-ON* */
+// *INDENT-ON*
 
 static int packet_test(struct map *mp)
 {
     struct gps_lexer_t lexer;
-    struct gpsd_errout_t errout;
+    struct gpsd_errout_t errout = {0};   // pacify Coverity.
     int failure = 0;
 
-    errout_reset(&errout);
+    errout_reset(&errout);      // Do the real initialization of errout
     errout.debug = verbose;
     lexer_init(&lexer, &errout);
     memcpy(lexer.inbufptr = lexer.inbuffer, mp->test, mp->testlen);
     lexer.inbuflen = mp->testlen;
     packet_parse(&lexer);
-    if (lexer.type != mp->type)
+    if (lexer.type != mp->type) {
         printf("%2ti: %s test FAILED (packet type %d wrong).\n",
                mp - singletests + 1, mp->legend, lexer.type);
-    else if (memcmp
+    } else if (memcmp
              (mp->test + mp->garbage_offset, lexer.outbuffer,
               lexer.outbuflen)) {
         printf("%2ti: %s test FAILED (data garbled).\n", mp - singletests + 1,
                mp->legend);
         ++failure;
-    } else
+    } else {
         printf("%2ti: %s test succeeded.\n", mp - singletests + 1,
                mp->legend);
+    }
 
     return failure;
 }
@@ -303,7 +302,7 @@ static int packet_test(struct map *mp)
 static void runon_test(struct map *mp)
 {
     struct gps_lexer_t lexer;
-    struct gpsd_errout_t errout;
+    struct gpsd_errout_t errout = {0};  // pacify Coverity
     int nullfd = open("/dev/null", O_RDONLY);
     ssize_t st;
 
@@ -312,7 +311,7 @@ static void runon_test(struct map *mp)
                       errno);
         exit(EXIT_FAILURE);
     }
-    errout_reset(&errout);
+    errout_reset(&errout);   // The real init of errout
     errout.debug = verbose;
     lexer_init(&lexer, &errout);
     memcpy(lexer.inbufptr = lexer.inbuffer, mp->test, mp->testlen);
@@ -333,42 +332,52 @@ static int property_check(void)
     int status;
 
     for (dp = gpsd_drivers; *dp; dp++) {
-        if (*dp == NULL || (*dp)->packet_type == COMMENT_PACKET)
+        if (*dp == NULL ||
+            (*dp)->packet_type == COMMENT_PACKET) {
             continue;
+        }
 
-        if (CONTROLLABLE(*dp))
+        if (CONTROLLABLE(*dp)) {
             (void)fputs("control\t", stdout);
-        else
+        } else {
             (void)fputs(".\t", stdout);
-        if ((*dp)->event_hook != NULL)
+        }
+        if ((*dp)->event_hook != NULL) {
             (void)fputs("hook\t", stdout);
-        else
+        } else {
             (void)fputs(".\t", stdout);
-        if ((*dp)->trigger != NULL)
+        }
+        if ((*dp)->trigger != NULL) {
             (void)fputs("trigger\t", stdout);
-        else if ((*dp)->probe_detect != NULL)
+        } else if ((*dp)->probe_detect != NULL) {
             (void)fputs("probe\t", stdout);
-        else
+        } else {
             (void)fputs(".\t", stdout);
-        if ((*dp)->control_send != NULL)
+        }
+        if ((*dp)->control_send != NULL) {
             (void)fputs("send\t", stdout);
-        else
+        } else {
             (void)fputs(".\t", stdout);
-        if ((*dp)->packet_type > NMEA_PACKET)
+        }
+        if ((*dp)->packet_type > NMEA_PACKET) {
             (void)fputs("binary\t", stdout);
-        else
+        } else {
             (void)fputs("NMEA\t", stdout);
-        if (STICKY(*dp))
+        }
+        if (STICKY(*dp)) {
             (void)fputs("sticky\t", stdout);
-        else
+        } else {
             (void)fputs(".\t", stdout);
+        }
         (void)puts((*dp)->type_name);
     }
 
     status = EXIT_SUCCESS;
     for (dp = gpsd_drivers; *dp; dp++) {
-        if (*dp == NULL || (*dp)->packet_type == COMMENT_PACKET)
+        if (*dp == NULL ||
+            (*dp)->packet_type == COMMENT_PACKET) {
             continue;
+        }
         if (CONTROLLABLE(*dp) && (*dp)->control_send == NULL) {
             (void)fprintf(stderr, "%s has control methods but no send\n",
                           (*dp)->type_name);
@@ -409,9 +418,9 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (singletest)
+    if (singletest) {
         failcount += packet_test(singletests + singletest - 1);
-    else {
+    } else {
         (void)fputs("=== Packet identification tests ===\n", stdout);
         for (mp = singletests;
              mp < singletests + sizeof(singletests) / sizeof(singletests[0]);
