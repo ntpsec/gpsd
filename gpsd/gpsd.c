@@ -1821,10 +1821,12 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
          * good time from an RTC */
         GPSD_LOG(LOG_DATA, &context.errout, "NTP: no fix\n");
     } else if (0 == device->newdata.time.tv_sec) {
+        // it is not 1970 all over again!
         GPSD_LOG(LOG_DATA, &context.errout, "NTP: bad new time\n");
-    } else if (device->newdata.time.tv_sec !=
-               device->oldfix.time.tv_sec) {
-        // sadly, time can go backward...
+    } else if (device->newdata.time.tv_sec ==
+               device->lastfix.time.tv_sec) {
+        /* This second already reported. Sadly, time can go backward...
+         * Thus the simple != instead of > */
         GPSD_LOG(LOG_DATA, &context.errout, "NTP: Not a new time\n");
     } else if (!device->ship_to_ntpd) {
         GPSD_LOG(LOG_DATA, &context.errout,
