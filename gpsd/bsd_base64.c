@@ -1,4 +1,4 @@
-/*      $OpenBSD: base64.c,v 1.3 1997/11/08 20:46:55 deraadt Exp $      */
+//      $OpenBSD: base64.c,v 1.3 1997/11/08 20:46:55 deraadt Exp $
 /*
  * Copyright 1996 by Internet Software Consortium.
  *
@@ -41,7 +41,7 @@
  * IF IBM IS APPRISED OF THE POSSIBILITY OF SUCH DAMAGES.
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include <assert.h>
 #include <ctype.h>
@@ -50,7 +50,7 @@
 #include <string.h>
 #include <sys/types.h>
 
-#include "../include/gpsd.h"       /* we only need the prototype */
+#include "../include/gpsd.h"       // we only need the prototype
 
 static const char Base64[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -123,10 +123,14 @@ int b64_ntop(unsigned char const *src, size_t srclength, char *target,
              size_t targsize)
 {
     size_t datalength = 0;
+    size_t i;
     unsigned char input[3];
     unsigned char output[4];
 
     while (2 < srclength) {
+        if (datalength + 4 > targsize) {
+            return (-1);
+        }
         input[0] = *src++;
         input[1] = *src++;
         input[2] = *src++;
@@ -136,26 +140,25 @@ int b64_ntop(unsigned char const *src, size_t srclength, char *target,
         output[1] = ((input[0] & 0x03) << 4) + (input[1] >> 4);
         output[2] = ((input[1] & 0x0f) << 2) + (input[2] >> 6);
         output[3] = input[2] & 0x3f;
-        assert(output[0] < 64);
-        assert(output[1] < 64);
-        assert(output[2] < 64);
-        assert(output[3] < 64);
 
-        if (datalength + 4 > targsize)
-            return (-1);
-        target[datalength++] = Base64[output[0]];
-        target[datalength++] = Base64[output[1]];
-        target[datalength++] = Base64[output[2]];
-        target[datalength++] = Base64[output[3]];
+        for (i = 0; i < 4; i++) {
+            assert(output[i] < 64);
+            target[datalength++] = Base64[output[i]];
+        }
     }
 
-    /* Now we worry about padding. */
+    // Now we worry about padding.
     if (0 != srclength) {
-        size_t i;
-        /* Get what's left. */
+
+        // Get what's left.
+        if (datalength + 4 > targsize) {
+            return (-1);
+        }
+
         input[0] = input[1] = input[2] = '\0';
-        for (i = 0; i < srclength; i++)
+        for (i = 0; i < srclength; i++) {
             input[i] = *src++;
+        }
 
         output[0] = input[0] >> 2;
         output[1] = ((input[0] & 0x03) << 4) + (input[1] >> 4);
@@ -164,21 +167,21 @@ int b64_ntop(unsigned char const *src, size_t srclength, char *target,
         assert(output[1] < 64);
         assert(output[2] < 64);
 
-        if (datalength + 4 > targsize)
-            return (-1);
         target[datalength++] = Base64[output[0]];
         target[datalength++] = Base64[output[1]];
-        if (srclength == 1)
+        if (1 == srclength) {
             target[datalength++] = Pad64;
-        else
+        } else {
             target[datalength++] = Base64[output[2]];
+        }
         target[datalength++] = Pad64;
     }
-    if (datalength >= targsize)
+    if (datalength >= targsize) {
         return (-1);
-    target[datalength] = '\0';  /* Returned value doesn't count \0. */
+    }
+    target[datalength] = '\0';  // Returned value doesn't count \0.
     return (datalength);
 }
 
-/* end */
+// end
 // vim: set expandtab shiftwidth=4
