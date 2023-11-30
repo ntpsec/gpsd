@@ -1173,7 +1173,8 @@ const struct gps_type_t driver_mtk3301 = {
 static ssize_t isync_write(struct gps_device_t *session, const char *data)
 
 {
-    return gpsd_write(session, data, strlen(data));
+    // 80 nseems a reasonable max, and strnlen() shuts up Codacy.
+    return gpsd_write(session, data, strnlen(data, 80));
 }
 
 static bool isync_detect(struct gps_device_t *session)
