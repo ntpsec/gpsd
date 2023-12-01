@@ -1758,15 +1758,23 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
     if (0 != (changed & RTCM2_SET) ||
         0 != (changed & RTCM3_SET)) {
         if (0 != (changed & RTCM2_SET) &&
-            RTCM_MAX < device->lexer.outbuflen) {
+            RTCM2_MAX < device->lexer.outbuflen) {
+            char tmpbuf[500];
+
             GPSD_LOG(LOG_ERROR, &context.errout,
-                     "overlong RTCM packet (%zd bytes)\n",
-                     device->lexer.outbuflen);
+                     "overlong RTCM2 packet %zd bytes (%d max)\n",
+                     device->lexer.outbuflen, RTCM2_MAX);
+            // GPSD_LOG(LOG_PROG, &context.errout,
+            GPSD_LOG(LOG_ERROR, &context.errout,
+                     "overlong RTCM2 packet >^s<\n",
+                     gps_hexdump(tmpbuf, sizeof(tmpbuf),
+                                 device->lexer.outbuffer,
+                                 device->lexer.outbuflen));
         } else if (0 != (changed & RTCM3_SET) &&
                    RTCM3_MAX < device->lexer.outbuflen) {
             GPSD_LOG(LOG_ERROR, &context.errout,
-                     "overlong RTCM3 packet (%zd bytes)\n",
-                     device->lexer.outbuflen);
+                     "overlong RTCM3 packet %zd bytes (%d max)\n",
+                     device->lexer.outbuflen, RTCM3_MAX);
         } else {
             struct gps_device_t *dp;
             for (dp = devices; dp < (devices + MAX_DEVICES); dp++) {

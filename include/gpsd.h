@@ -109,6 +109,7 @@ extern "C" {
  *      add chunked to gps_lexer_t, for NTRIP 1.1 chunking.
  *      add packet_get1(), deprecate packet_get()
  *      change lexer_init() prototype
+ *      Change RTCM_MAX to RTCM2_MAX to avoid confusiotn, and make it 4 longer.
  */
 
 #define JSON_DATE_MAX   24      // ISO8601 timestamp with 2 decimal places
@@ -174,10 +175,10 @@ enum isgpsstat_t {
     ISGPS_NO_SYNC, ISGPS_SYNC, ISGPS_SKIP, ISGPS_MESSAGE,
 };
 
-#define RTCM_MAX        (RTCM2_WORDS_MAX * sizeof(isgps30bits_t))
+// 135 long packets have been seen in the wild.
+#define RTCM2_MAX        ((RTCM2_WORDS_MAX * sizeof(isgps30bits_t)) + 4)
 /*
- * RTCM3 is more variable length than RTCM 2.  In the absence of
- * reading a specification, follow BKG's lead in assuming 2048.
+ * RTCM3 is more variable length than RTCM 2.
  *
  * In theory, the limit is
  *   1 octet preamble
@@ -186,8 +187,10 @@ enum isgpsstat_t {
  *   0-1023 octects payload
  *   3 octets CRC
  *   1029 octets maximum
+ *
+ * Use 1040 out of paranoia
  */
-#define RTCM3_MAX       2048
+#define RTCM3_MAX       1040
 
 /*
  * The packet buffers need to be as long than the longest packet we
