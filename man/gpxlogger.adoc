@@ -64,6 +64,9 @@ give a [server[:port[:device]]] specification as arguments.  See the
 With *-e shm, --export shm* this program will listen to the local
 *gpsd* using shared memory.
 
+*-f OUTFILE*, *--output OUTFILE*::
+  Output the GPX logg to file file OUTFILE, instead of to stdout..
+  You may use strftime(3) options int OUTFILE.
 *-F INFILE*, *--filein INFILE*::
   Read *gpsd* JSON from file INFILE, instead of from a *gpsd* daemon.
 *-g*, *--garmin*::
@@ -77,8 +80,6 @@ With *-e shm, --export shm* this program will listen to the local
 *-m MINMOVE*, *--minmove MINMOVE*::
   Sets a minimum move distance in meters (it may include a fractional
   decimal part). Motions shorter than this will not be logged.
-*-o OUTFILE*, *--output OUTFILE*::
-  Output the GPX logg to file file OUTFILE, instead of to stdout..
 *-r*, *--reconnect*::
   Retry when GPSd loses the fix. Without *-r*, *gpxlogger* would quit in
   this case.
@@ -99,9 +100,20 @@ the *gps*(1) man page
 *0*:: on success.
 *1*:: on failure
 
+NOTE: spxlogger sends error messages to the system log, not to
+stderr.
+
+== EXAMPLES
+
+To daemonize, and  output the gpx log to a date stamped filename:
+
+$ gpxlogger -d -f "out-%c.gpx"
+
 == SEE ALSO
 
 *gps*(1)
+
+*strftime*(3)
 
 *gpsd*(8)
 

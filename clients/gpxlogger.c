@@ -272,6 +272,9 @@ static void quit_handler(int signum)
 
 static void usage(void)
 {
+    (void)fprintf(stderr, "%s: version %s (revision %s)\n\n",
+                  progname, VERSION, REVISION);
+
     (void)fprintf(stderr,
          "Usage: %s [OPTIONS] [server[:port:[device]]]\n\n"
          "  -?                  Show this help, then exit\n"
@@ -302,12 +305,15 @@ static void usage(void)
          "  -l                  List available exports, then exit\n"
          "  -m MINMOVE          Minimum move in meters to log\n"
          "  -r                  Retry when gpsd loses the fix.\n"
-         "  -V                  Show version and exit\n",
+         "  -V                  Show version and exit\n\n\n\n"
+         "Note: gpxlogger sends error messages to the system log, not stderr."
+         "\n\n",
          progname,
 #ifdef HAVE_GETOPT_LONG
          export_default()->name,
 #endif
          export_default()->name);
+
     exit(EXIT_FAILURE);
 }
 
@@ -389,8 +395,8 @@ int main(int argc, char **argv)
                     gpxlogfile = fopen(fname, "w");
                     if (NULL == gpxlogfile) {
                         syslog(LOG_ERR,
-                               "Failed to open %s: %s, logging to stdout.",
-                               fname, strerror(errno));
+                               "Failed to open %s: %s(%d), logging to stdout.",
+                               fname, strerror(errno), errno);
                         gpxlogfile = stdout;
                     }
                 } else {
