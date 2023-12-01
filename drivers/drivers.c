@@ -1472,7 +1472,8 @@ static bool aivdm_decode(unsigned char *buf, size_t buflen,
     }
 
     // wacky 6-bit encoding, shades of FIELDATA
-    for (cp = data; cp < data + strlen((char *)data); cp++) {
+    // Max 256 is a guess, to pacify Codacy
+    for (cp = data; cp < data + strnlen((char *)data, 256); cp++) {
         unsigned char ch;
         ch = *cp;
         ch -= 48;
