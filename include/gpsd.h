@@ -110,6 +110,7 @@ extern "C" {
  *      add packet_get1(), deprecate packet_get()
  *      change lexer_init() prototype
  *      Change RTCM_MAX to RTCM2_MAX to avoid confusiotn, and make it 4 longer.
+ *      add shm_clock_lastsec and shm_pps_lastsec to gps_device_t;
  */
 
 #define JSON_DATE_MAX   24      // ISO8601 timestamp with 2 decimal places
@@ -592,6 +593,8 @@ struct gps_device_t {
 #define VALID_UNIT(u)   (0 <= (u) && (u) < NTPSHMSEGS)
     int shm_clock_unit;
     int shm_pps_unit;
+    time_t shm_clock_lastsec;         // the last second written to SHM(clock)
+    time_t shm_pps_lastsec;           // the last second written to SHM(pps)
     int chrony_clock_fd;              // for talking to chrony
     int chrony_pps_fd;
     volatile struct pps_thread_t pps_thread;

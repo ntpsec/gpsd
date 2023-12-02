@@ -1762,11 +1762,11 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
             char tmpbuf[500];
 
             GPSD_LOG(LOG_ERROR, &context.errout,
-                     "overlong RTCM2 packet %zd bytes (%d max)\n",
-                     device->lexer.outbuflen, RTCM2_MAX);
+                     "overlong RTCM2 packet %zd bytes (%lu max)\n",
+                     device->lexer.outbuflen, (unsigned long)RTCM2_MAX);
             // GPSD_LOG(LOG_PROG, &context.errout,
             GPSD_LOG(LOG_ERROR, &context.errout,
-                     "overlong RTCM2 packet >^s<\n",
+                     "overlong RTCM2 packet >%s<\n",
                      gps_hexdump(tmpbuf, sizeof(tmpbuf),
                                  device->lexer.outbuffer,
                                  device->lexer.outbuflen));
@@ -1831,8 +1831,7 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
     } else if (0 == device->newdata.time.tv_sec) {
         // it is not 1970 all over again!
         GPSD_LOG(LOG_DATA, &context.errout, "NTP: bad new time\n");
-    } else if (device->newdata.time.tv_sec ==
-               device->lastfix.time.tv_sec) {
+    } else if (device->newdata.time.tv_sec == device->shm_clock_lastsec) {
         /* This second already reported. Sadly, time can go backward...
          * Thus the simple != instead of > */
         GPSD_LOG(LOG_DATA, &context.errout, "NTP: Not a new time\n");
@@ -1863,6 +1862,10 @@ static void all_reports(struct gps_device_t *device, gps_mask_t changed)
         if (0 < device->chrony_clock_fd) {
             chrony_send(device, device->chrony_clock_fd, &td);
         }
+
+        // note that we have done this second:
+        device->shm_clock_lastsec = device->newdata.time.tv_sec;
+
         // PPS samples are sent from the ppsthread, which minimizes the
         // delay and allows the PPS samples to be sent at a higher rate
         // than the message-based samples sent here
