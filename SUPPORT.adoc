@@ -1,5 +1,5 @@
 = gpsd SUPPORT information
-:date: 9 February 2021
+:date: 05 December 2023
 :docinfodir: www
 :keywords: gps, gpsd, gnss
 :robots: index,follow
@@ -49,6 +49,18 @@ supply:
 * Your GPS/GNSS receiver model.
 * How you are starting the gpsd daemon.
 
+If yours is a build problem, then the entire, unredacted, build log
+will be asked for.
+
+If you have *gpsd* running, the entire, unredacted, output of
+*gpsdebuginfo* info wiil be asked for.  You can always find the lastest
+copy of *gpsdebuginfo* info here: + https://gpsd.io/gpsdebuginfo
+
+Please be patient, it may take a day, or two, to reach the right persons.
+
+Be prepared to provide additional information.  Drive-by bug reports
+are hard to resolve.
+
 == ISSUE TRACKER
 
 The *gpsd* source control website is at +
@@ -65,9 +77,9 @@ implementable, is likely to be of broad interest, and the request is
 filed by someone with a history of participation in the community.
 
 Issues may be created for the most recent formal release of *gpsd*, or
-the current version of *gpsd*, the website or other project content.
-(Quality bug reports with specific references to problem code still
-present in the latest release are OK too.)
+the current development version of *gpsd*, the website or other project
+content.  (Quality bug reports with specific references to problem code
+still present in the latest release are OK too.)
 
 Issues that are not valid issues (not a bug, or lack of a reasonable
 attempt to provide enough information) may be summarily closed.
@@ -104,8 +116,8 @@ list is likely not for you.)
 
 Some users and developers hang out on the "#gpsd" channel on IRC.  All
 are welcome.  Introduce your self.  Depending on random chance someone
-may be available to chat right away, or it may require many hours for
-a response.  Be patient, someone will reply.
+may be available to chat right away, or it may require many hours, or
+a day, for a response.  Be patient, someone will reply.
 
 == PRIVATE MAIL TO MAINTAINERS
 
