@@ -48,7 +48,11 @@ debian-unstable:clang:
     SCONSOPTS: 'qt=yes xgps=yes'
     CC: 'clang'
     CXX: 'clang++'
-    PACKAGES: 'clang build-essential ccache debhelper po-debconf python3-all-dev python3-all-dbg asciidoctor libncurses-dev libusb-1.0-0-dev libdbus-1-dev libglib2.0-dev makedev libbluetooth-dev qtbase5-dev libqt5network5 lsb-release bc dpkg-dev scons chrpath dh-buildinfo pps-tools python3-lib2to3 python3'
+    PACKAGES: 'asciidoctor bc build-essential ccache chrpath clang debhelper
+        dh-buildinfo dpkg-dev libbluetooth-dev libdbus-1-dev libglib2.0-dev
+        libncurses-dev libqt5network5 libusb-1.0-0-dev lsb-release makedev
+        po-debconf pps-tools python3 python3-all-dbg python3-all-dev
+        python3-lib2to3 python3-setuptools qtbase5-dev scons'
   extends: .debian_build
 
 debian-experimental:clang:
@@ -176,7 +180,11 @@ scan-build:
     SCONSOPTS: 'qt=yes xgps=yes'
     SCAN_BUILD: 'scan-build -o scan_build'
     NOCHECK: 'true'
-    PACKAGES: 'clang clang-tools build-essential debhelper po-debconf python3-all-dev python3-all-dbg asciidoctor libncurses-dev libusb-1.0-0-dev libdbus-1-dev libglib2.0-dev makedev libbluetooth-dev qtbase5-dev libqt5network5 lsb-release bc dpkg-dev scons chrpath dh-buildinfo pps-tools'
+    PACKAGES: 'asciidoctor bc build-essential chrpath clang clang-tools debhelper
+        dh-buildinfo dpkg-dev libbluetooth-dev libdbus-1-dev libglib2.0-dev
+        libncurses-dev libqt5network5 libusb-1.0-0-dev lsb-release makedev
+        po-debconf pps-tools python3-all-dbg python3-all-dev python3-setuptools
+        qtbase5-dev scons'
   artifacts:
     paths:
       - scan_build
@@ -209,7 +217,11 @@ coverity:
     SCONSOPTS: 'qt=yes xgps=yes'
     SCAN_BUILD: 'cov-analysis-linux64-*/bin/cov-build --dir cov-int'
     NOCHECK: 'true'
-    PACKAGES: 'clang clang-tools build-essential debhelper po-debconf python3-dev python3-dbg asciidoctor libncurses-dev libusb-1.0-0-dev libdbus-1-dev libglib2.0-dev makedev libbluetooth-dev qtbase5-dev libqt5network5 lsb-release bc dpkg-dev scons chrpath dh-buildinfo pps-tools'
+    PACKAGES: 'asciidoctor bc build-essential chrpath clang clang-tools debhelper
+        dh-buildinfo dpkg-dev libbluetooth-dev libdbus-1-dev libglib2.0-dev
+        libncurses-dev libqt5network5 libusb-1.0-0-dev lsb-release makedev
+        po-debconf pps-tools python3-dbg python3-dev python-setuptools
+        qtbase5-dev scons'
   before_script:
     - apt update && apt -y install curl git
     - curl -o /tmp/cov-analysis-linux64.tgz https://scan.coverity.com/download/linux64 --form project=$COVERITY_SCAN_PROJECT_NAME --form token=$COVERITY_SCAN_TOKEN
