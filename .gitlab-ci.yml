@@ -63,7 +63,11 @@ debian-experimental:clang:
     SCONSOPTS: 'qt=yes xgps=yes'
     CC: 'clang'
     CXX: 'clang++'
-    PACKAGES: 'build-essential ccache debhelper po-debconf python3-all-dev python3-all-dbg asciidoctor libncurses-dev libusb-1.0-0-dev libdbus-1-dev libglib2.0-dev makedev libbluetooth-dev qtbase5-dev libqt5network5 lsb-release bc dpkg-dev scons chrpath dh-buildinfo pps-tools python3-lib2to3 python3'
+    PACKAGES: 'asciidoctor bc build-essential ccache chrpath debhelper dh-buildinfo
+        dpkg-dev libbluetooth-dev libdbus-1-dev libglib2.0-dev libncurses-dev
+        libqt5network5 libusb-1.0-0-dev lsb-release makedev po-debconf pps-tools
+        python3 python3-all-dbg python3-all-dev python3-lib2to3 python3-setuptools
+        qtbase5-dev scons'
     EXPERIMENTAL_PACKAGES: 'clang'
   extends: .debian_build
 
