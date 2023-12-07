@@ -181,10 +181,10 @@ if __name__ == "__main__":
             sys.exit(0)
 
     if options.initialize:
-        f = open(os.path.join(options.kmldir,
-                 'Open_in_Google_Earth_RT_GPS.kml'), 'w')
-        f.write(KML_OPEN_IN_GE)
-        f.close()
+        with (open(os.path.join(options.kmldir,
+                   'Open_in_Google_Earth_RT_GPS.kml'), 'w',
+                   encoding="utf8") as f):
+            f.write(KML_OPEN_IN_GE)
         sys.exit(0)
 
     try:
@@ -203,10 +203,9 @@ if __name__ == "__main__":
                 continue
 
             if 'TPV' == session.data['class']:
-                f = open(os.path.join(options.kmldir,
-                         'Realtime_GPS.kml'), 'w')
-                f.write(kmlize(session.data))
-                f.close()
+                with (open(os.path.join(options.kmldir,
+                           'Realtime_GPS.kml'), 'w', encoding="utf8") as f):
+                    f.write(kmlize(session.data))
     except KeyboardInterrupt:
         print('gegps stopped ')
 
