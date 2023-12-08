@@ -8,12 +8,9 @@
  *
  */
 #include <sys/types.h>
-#include "gps.h" //the C library we are going to wrap
+#include "gps.h"           //the C library we are going to wrap
 
-#ifndef USE_QT
-class gpsmm {
-#else
-
+#ifdef USE_QT
 #include <QtCore/qglobal.h>
 
 #if defined(LIBQGPSMM_LIBRARY)
@@ -23,7 +20,10 @@ class gpsmm {
 #endif
 
 class LIBQGPSMMSHARED_EXPORT gpsmm {
-#endif
+#else    // USE_QT
+class gpsmm {
+#endif  // USE_QT
+
     public:
         // cppcheck-suppress uninitVar
         gpsmm(const char *host, const char *port) : to_user(0), _gps_state() {

@@ -129,10 +129,10 @@ int gps_dbus_open(struct gps_data_t *gpsdata)
         return 5;
     }
 
-#ifndef USE_QT
-    gpsdata->gps_fd = DBUS_PSEUDO_FD;
-#else
+#ifdef USE_QT
     gpsdata->gps_fd = (void *)(intptr_t)DBUS_PSEUDO_FD;
+#else   // USE_QT
+    gpsdata->gps_fd = DBUS_PSEUDO_FD;
 #endif  // USE_QT
     share_gpsdata = gpsdata;
     return 0;

@@ -584,6 +584,7 @@ timespec_t iso8601_to_timespec(const char *isotime)
 #else  // USE_QT
     double usec = 0;
     struct tm tm;
+
     memset(&tm,0,sizeof(tm));
 
 #ifdef HAVE_STRPTIME

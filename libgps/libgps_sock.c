@@ -20,15 +20,15 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#ifndef USE_QT
+#ifdef USE_QT
+    #include <QTcpSocket>
+#else  // USE_QT
     #ifdef HAVE_SYS_SOCKET_H
         #include <sys/socket.h>
     #endif  // HAVE_SYS_SOCKET_H
     #ifdef HAVE_WINSOCK2_H
     #include <winsock2.h>
     #endif  // HAVE_WINSOCK2_H
-#else
-    #include <QTcpSocket>
 #endif  // USE_QT
 
 #include "../include/gps.h"
