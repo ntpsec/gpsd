@@ -4908,26 +4908,33 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"ACCURACY", NULL, 1,  true, processACCURACY},
         {"ALM", NULL, 0,  false, NULL},    // ignore GPS Almanac Data
         {"APB", NULL, 0,  false, NULL},    // ignore Autopilot Sentence B
+        {"AVR", NULL, 0,  false, NULL},    // Same as $PTNL,AVR
         {"BOD", NULL, 0,  false, NULL},    // Bearing Origin to Destination
         // Bearing & Distance to Waypoint, Great Circle
         {"BWC", NULL, 12, false, processBWC},
         {"DBT", NULL, 7,  false, processDBT},  // depth
         {"DPT", NULL, 4,  false, processDPT},  // depth
         {"DTM", NULL, 2,  false, processDTM},  // datum
-        {"GBS", NULL, 7,  false, processGBS},
-        {"GGA", NULL, 13, false, processGGA},
-        {"GLC", NULL, 0,  false, NULL},   // ignore Geographic Position, LoranC
-        {"GLL", NULL, 7,  true, processGLL},
-        {"GNS", NULL, 13, false, processGNS},
-        {"GRS", NULL, 4,  false, processGRS},    // GNSS Range Residuals
-        {"GSA", NULL, 18, false, processGSA},
-        {"GST", NULL, 8,  false, processGST},
-        {"GSV", NULL, 4,  false, processGSV},
+        {"GBS", NULL, 7,  false, processGBS},  // GNSS Sat Fault Detection
+        {"GGA", NULL, 13, false, processGGA},  // GPS fix data
+        {"GGK", NULL, 0,  false, NULL},        // Same as $PTNL,GGK
+        {"GGQ", NULL, 0,  false, NULL},        // Leica Position
+        {"GLC", NULL, 0,  false, NULL},        // Geographic Position, LoranC
+        {"GLL", NULL, 7,  true, processGLL},   // Position, Lat/Lon
+        {"GMP", NULL, 0,  false, NULL},        // Map Projection
+        {"GNS", NULL, 13, false, processGNS},  // GNSS fix data
+        {"GRS", NULL, 4,  false, processGRS},  // GNSS Range Residuals
+        {"GSA", NULL, 18, false, processGSA},  // DOP and Active sats
+        {"GST", NULL, 8,  false, processGST},  // Pseudorange error stats
+        {"GSV", NULL, 4,  false, processGSV},  // Sats in view
         // ignore Heading, Deviation and Variation
         {"HDG", NULL, 0,  false, processHDG},
         {"HDM", NULL, 3,  false, processHDM},   // $APHDM, Magnetic Heading
-        {"HDT", NULL, 1,  false, processHDT},
+        {"HDT", NULL, 1,  false, processHDT},   // Heading true
+        {"HRP", NULL, 0, false, NULL},       // Serpentrio Headinf, Roll, Pitch
         {"HWBIAS", NULL, 0, false, NULL},       // Unknown HuaWei sentence
+        {"LLK", NULL, 0, false, NULL},          // Leica local pos and GDOP
+        {"LLQ", NULL, 0, false, NULL},          // Leica local pos and quality
         {"MLA", NULL, 0,  false, NULL},         // GLONASS Almana Data
         {"MSS", NULL, 0,  false, NULL},         // beacon receiver status
         {"MTW", NULL, 3,  false, processMTW},   // Water Temperature
@@ -4974,6 +4981,7 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PMTK705", NULL, 4, false, processPMTK705},
         // MediaTek/Trimble Satellite Channel Status
         {"PMTKCHN", NULL, 0, false, NULL},
+
         // MTK-3301 -- $POLYN
 
         // Quectel proprietary
@@ -5002,6 +5010,17 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PSRF152", NULL, 0, false, NULL},          // SiRF ephemeris
         {"PSRF155", NULL, 0, false, NULL},          // SiRF proprietary
         {"PSRFEPE", NULL, 7, false, processPSRFEPE},  // SiRF Estimated Errors
+
+        /* Serpentrio
+         * $PSSN,HRP  -- Heading Pitch, Roll
+         * $PSSN,RBD  -- Rover-Base Direction
+         * $PSSN,RBP  -- Rover-Base Position
+         * $PSSN,RBV  -- Rover-Base Velocity
+         * $PSSN,SNC  -- NTRIP Client Status
+         * $PSSN,TFM  -- RTCM coordinate transform
+         */
+        {"PSSN", NULL, 0, false, NULL},          // $PSSN
+
         /*
          * Skytraq sentences take this format:
          * $PSTI,type[,val[,val]]*CS
@@ -5037,6 +5056,13 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
          */
         {"PSXN", NULL, 0, false, NULL},
         {"PTFTTXT", NULL, 0, false, NULL},        // unknown uptime
+
+        /* Trimble Propietary
+         * $PTNL,AVR
+         * $PTNL,GGK
+         */
+        {"PTNI", NULL, 0, false, NULL},
+
         {"PTKM", NULL, 0, false, NULL},           // Robertson RGC12 Gyro
         {"PTNLRHVR", NULL, 0, false, NULL},       // Trimble Software Version
         {"PTNLRPT", NULL, 0, false, NULL},        // Trimble Serial Port COnfig
@@ -5046,27 +5072,33 @@ gps_mask_t nmea_parse(char *sentence, struct gps_device_t * session)
         {"PTNTHTM", NULL, 9, false, processTNTHTM},
         {"PUBX", NULL, 0, false, NULL},         // u-blox and Antaris
         {"QSM", NULL, 3, false, NULL},          // QZSS DC Report
+        {"RBD", NULL, 0, false, NULL},       // Serpentrio rover-base direction
+        {"RBP", NULL, 0, false, NULL},       // Serpentrio rover-base position
+        {"RBV", NULL, 0, false, NULL},       // Serpentrio rover-base velocity
         {"RLM", NULL, 0, false, NULL},          // Return Link Message
         // ignore Recommended Minimum Navigation Info, waypoint
         {"RMB", NULL, 0,  false, NULL},         // Recommended Min Nav Info
-        {"RMC", NULL, 8,  false, processRMC},
-        {"ROT", NULL, 3,  false, processROT},   // $APROT Rate of Turn
+        {"RMC", NULL, 8,  false, processRMC},   // Recommended Minimum Data
+        {"ROT", NULL, 3,  false, processROT},   // Rate of Turn
         {"RPM", NULL, 0,  false, NULL},         // ignore Revolutions
         {"RSA", NULL, 0,  false, NULL},         // Rudder Sensor Angle
         {"RTE", NULL, 0,  false, NULL},         // ignore Routes
+        {"SNC", NULL, 0, false, NULL},       // Serpentrio NTRIP client status
         {"STI", NULL, 2,  false, processSTI},   // $STI  Skytraq
+        {"TFM", NULL, 0, false, NULL},          // Serpentrio Coord Transform
         {"THS", NULL, 0,  false, processTHS},   // True Heading and Status
         {"TXT", NULL, 5,  false, processTXT},
+        {"TXTbase", NULL, 0,  false, NULL},     // RTCM 1029 TXT
         {"VBW", NULL, 0,  false, NULL},         // Dual Ground/Water Speed
         {"VDO", NULL, 0,  false, NULL},         // Own Vessel's Information
         {"VDR", NULL, 0,  false, NULL},         // Set and Drift
         {"VHW", NULL, 0,  false, NULL},         // Water Speed and Heading
         {"VLW", NULL, 0,  false, NULL},         // Dual ground/water distance
-        {"VTG", NULL, 5,  false, processVTG},
+        {"VTG", NULL, 5,  false, processVTG},   // Course/speed over ground
         // $APXDR, $HCXDR, Transducer measurements
         {"XDR", NULL, 5,  false, processXDR},
         {"XTE", NULL, 0,  false, NULL},         // Cross-Track Error
-        {"ZDA", NULL ,4,  false, processZDA},
+        {"ZDA", NULL ,4,  false, processZDA},   // Time and Date
         {NULL, NULL,  0,  false, NULL},         // no more
     };
 
