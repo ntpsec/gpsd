@@ -155,10 +155,10 @@ void shm_update(struct gps_context_t *context, struct gps_data_t *gpsdata)
         memory_barrier();
         shared->gpsdata = *gpsdata;
         memory_barrier();
-#ifndef USE_QT
-        shared->gpsdata.gps_fd = SHM_PSEUDO_FD;
-#else
+#ifdef USE_QT
         shared->gpsdata.gps_fd = (void *)(intptr_t)SHM_PSEUDO_FD;
+#else
+        shared->gpsdata.gps_fd = SHM_PSEUDO_FD;
 #endif  // USE_QT
         memory_barrier();
         shared->bookend1 = tick;

@@ -473,6 +473,11 @@ extern const char *gps_errstr(const int err)
      * protocol compatibility checks
      */
 #ifndef USE_QT
+    static char buf[32];
+
+    (void)snprintf(buf, sizeof(buf), "Qt error %d", err);
+    return buf;
+#else // USE_QT
 #ifdef SHM_EXPORT_ENABLE
     if (SHM_NOSHARED == err) {
         return "no shared-memory segment or daemon not running";
@@ -487,11 +492,7 @@ extern const char *gps_errstr(const int err)
     }
 #endif  // DBUS_EXPORT_ENABLE
     return netlib_errstr(err);
-#else
-    static char buf[32];
-    (void)snprintf(buf, sizeof(buf), "Qt error %d", err);
-    return buf;
-#endif
+#endif  // USE_QT
 }
 
 void libgps_dump_state(struct gps_data_t *collect)

@@ -570,7 +570,18 @@ timespec_t iso8601_to_timespec(const char *isotime)
     timespec_t ret;
 
 #ifndef __clang_analyzer__
-#ifndef USE_QT
+#ifdef USE_QT
+    double usec = 0;
+
+    QString t(isotime);
+    QDateTime d = QDateTime::fromString(isotime, Qt::ISODate);
+    QStringList sl = t.split(".");
+    if (1 < sl.size()) {
+        usec = sl[1].toInt() / pow(10., (double)sl[1].size());
+    }
+    ret.tv_sec = d.toTime_t();
+    ret.tv_nsec = usec * 1e9;
+#else  // USE_QT
     double usec = 0;
     struct tm tm;
     memset(&tm,0,sizeof(tm));
@@ -696,18 +707,7 @@ timespec_t iso8601_to_timespec(const char *isotime)
      */
     ret.tv_sec = mkgmtime(&tm);
     ret.tv_nsec = usec * 1e9;
-#else
-    double usec = 0;
-
-    QString t(isotime);
-    QDateTime d = QDateTime::fromString(isotime, Qt::ISODate);
-    QStringList sl = t.split(".");
-    if (1 < sl.size()) {
-        usec = sl[1].toInt() / pow(10., (double)sl[1].size());
-    }
-    ret.tv_sec = d.toTime_t();
-    ret.tv_nsec = usec * 1e9;
-#endif
+#endif  // USE_QT
 #endif  // __clang_analyzer__
 
 #if 4 < SIZEOF_TIME_T
