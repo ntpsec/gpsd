@@ -436,6 +436,9 @@ int gps_sock_send(struct gps_data_t *gpsdata, const char *buf)
 
 #ifdef USE_QT
     QTcpSocket *sock = (QTcpSocket *) gpsdata->gps_fd;
+    if (NULL == sock) {
+        return -1;
+    }
     sock->write(buf, buf_len);
     if (sock->waitForBytesWritten()) {
         return 0;

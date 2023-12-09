@@ -2814,6 +2814,9 @@ struct gps_data_t {
                                  */
 
 #ifdef USE_QT
+    /* we want this to be QTcpSocket *, but that requires QTcpSocket.h, which
+     * requires a bunch of other includes, that require __cpplus, and that
+     * gets weird fast. */
     void* gps_fd;
 #else
     /* socket or file descriptor to GPS
