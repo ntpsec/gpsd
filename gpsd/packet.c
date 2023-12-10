@@ -2679,8 +2679,7 @@ void packet_parse(struct gps_lexer_t *lexer)
 #define TSIP_ID_AND_LENGTH(id, len)     ((id == pkt_id) && \
                                          (len == (inbuflen - 4)))
 
-                    if ((0x13 == pkt_id) &&
-                        (1 <= inbuflen)) {
+                    if (0x13 == pkt_id) {
                         /* pass */ ;
                     /*
                      * Not in [TSIP],  Accutime Gold only. Variable length.
