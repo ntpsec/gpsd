@@ -8,7 +8,7 @@
  *
  */
 #include <sys/types.h>
-#include "gps.h"           //the C library we are going to wrap
+#include "gps.h"           // the C library we are going to wrap
 
 #ifdef USE_QT
 #include <QtCore/qglobal.h>
@@ -58,7 +58,7 @@ class gpsmm {
         struct gps_data_t * gps_state() { return &_gps_state; }
         struct gps_data_t* backup(void) {
             if (NULL == to_user) { return to_user; }
-             //return the backup copy
+             // return the backup copy
             *to_user=*gps_state();
             return to_user;
         };

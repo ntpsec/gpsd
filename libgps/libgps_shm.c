@@ -73,11 +73,7 @@ int gps_shm_open(struct gps_data_t *gpsdata)
         gpsdata->privdata = NULL;
         return -2;
     }
-#ifdef USE_QT
-    gpsdata->gps_fd = (void *)(intptr_t)SHM_PSEUDO_FD;
-#else  // USE_QT
-    gpsdata->gps_fd = SHM_PSEUDO_FD;
-#endif  // USE_QT
+    gpsdata->gps_fd = (gps_fd_t)SHM_PSEUDO_FD;
     return 0;
 }
 
@@ -169,11 +165,7 @@ int gps_shm_read(struct gps_data_t *gpsdata)
                          (void *)&noclobber,
                          sizeof(struct gps_data_t));
             gpsdata->privdata = private_save;
-#ifdef USE_QT
-            gpsdata->gps_fd = (void *)(intptr_t)SHM_PSEUDO_FD;
-#else   // USE_QT
-            gpsdata->gps_fd = SHM_PSEUDO_FD;
-#endif  // USE_QT
+            gpsdata->gps_fd = (gps_fd_t)SHM_PSEUDO_FD;
             PRIVATE(gpsdata)->tick = after2;
             if (0 != (gpsdata->set & REPORT_IS)) {
                 gpsdata->set = STATUS_SET;

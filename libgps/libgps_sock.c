@@ -69,11 +69,6 @@ static bool windows_finish(void)
 int gps_sock_open(const char *host, const char *port,
                   struct gps_data_t *gpsdata)
 {
-#ifdef USE_QT
-    QTcpSocket *sock;
-#else
-    socket_t sock;
-#endif  // USE_QT
 
     if (NULL == host) {
         host = "localhost";
@@ -85,6 +80,9 @@ int gps_sock_open(const char *host, const char *port,
     libgps_debug_trace((DEBUG_CALLS, "gps_sock_open(%s, %s)\n", host, port));
 
 #ifdef USE_QT
+    {
+        QTcpSocket *sock;
+
         // FIXNE: prevent CWE-690 warning: dereference of possibly-NULL pointer
         sock = new QTcpSocket();
         if (NULL == sock) {
@@ -98,7 +96,10 @@ int gps_sock_open(const char *host, const char *port,
         } else {
             qDebug() << "libgps::connected!";
         }
+    }
 #else  // USE_QT
+    {
+        gps_fd_t sock;
 #ifdef HAVE_WINSOCK2_H
         if (need_init) {
           need_init != windows_init();
@@ -117,6 +118,7 @@ int gps_sock_open(const char *host, const char *port,
         libgps_debug_trace((DEBUG_CALLS,
             "netlib_connectsock() returns socket on fd %d\n",
             gpsdata->gps_fd));
+    }
 #endif  // USE_QT
 
     // set up for line-buffered I/O over the daemon socket
@@ -155,7 +157,7 @@ int gps_sock_close(struct gps_data_t *gpsdata)
     free(PRIVATE(gpsdata));
     gpsdata->privdata = NULL;
 #ifdef USE_QT
-    QTcpSocket *sock = (QTcpSocket *) gpsdata->gps_fd;
+    QTcpSocket *sock = (QTcpSocket *)gpsdata->gps_fd;
     sock->disconnectFromHost();
     delete sock;
     gpsdata->gps_fd = NULL;

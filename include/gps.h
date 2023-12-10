@@ -104,6 +104,7 @@ extern "C" {
  *       Add rot (Rate Of Turn), mheading, to struct attitude_t
  *       Add wtemp to gps_fix_t
  *       Add rtcm3_4076_hdr
+ *       change gps_data_t.gps_fd to type gps_fd_t.
  */
 #define GPSD_API_MAJOR_VERSION  14      // bump on incompatible changes
 #define GPSD_API_MINOR_VERSION  0       // bump on compatible changes
@@ -2751,6 +2752,18 @@ struct privdata_t
     int tick;
 };
 
+#ifdef USE_QT
+    /* we want this to be QTcpSocket *, but that requires QTcpSocket.h, which
+     * requires a bunch of other includes, that require __cpplus, and that
+     * gets weird fast. */
+typedef void* gps_fd_t;
+#else
+    /* socket or file descriptor to GPS
+     * POSIX says this is an int.
+     * use socket_t, which is int, for windows compatibility */
+typedef socket_t gps_fd_t;
+#endif
+
 /*
  * Main structure that includes all previous substructures
  */
@@ -2813,17 +2826,7 @@ struct gps_data_t {
                                  * prone to false zero values.
                                  */
 
-#ifdef USE_QT
-    /* we want this to be QTcpSocket *, but that requires QTcpSocket.h, which
-     * requires a bunch of other includes, that require __cpplus, and that
-     * gets weird fast. */
-    void* gps_fd;
-#else
-    /* socket or file descriptor to GPS
-     * POSIX says this is an int.
-     * use socket_t, which is int, for windows compatibility */
-    socket_t gps_fd;
-#endif
+    gps_fd_t gps_fd;
 
     /* the driver can call this to tell the user its fd
      * has changed.

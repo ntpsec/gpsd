@@ -85,7 +85,7 @@ int gps_open(const char *host, const char *port,
 
     if (NULL != host &&
         0 == strcmp(host, GPSD_LOCAL_FILE)) {
-        int fd;
+        intptr_t fd;
 
         libgps_debug_trace((DEBUG_CALLS, "INFO: gps_open(FILE)\n"));
         if (NULL == port) {
@@ -99,11 +99,7 @@ int gps_open(const char *host, const char *port,
                                 port,  errno));
             return FILE_FAIL;
         }
-#ifdef USE_QT
-        gpsdata->gps_fd = (void *)(intptr_t)fd;   // Huh?
-#else
-        gpsdata->gps_fd = fd;
-#endif
+        gpsdata->gps_fd = (gps_fd_t)fd;
         status = 0;
         // set up for line-buffered I/O over the daemon socket
         gpsdata->privdata =
