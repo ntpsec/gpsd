@@ -554,7 +554,7 @@ int gpsd_open(struct gps_device_t *session)
         GPSD_LOG(LOG_PROG, &session->context->errout,
                  "CORE: netgnss_uri_open(%s) returns socket on fd %d\n",
                  session->gpsdata.dev.path, session->gpsdata.gps_fd);
-        return session->gpsdata.gps_fd;
+        return (int)session->gpsdata.gps_fd;
     // otherwise, could be an TCP data feed
     } else if (str_starts_with(session->gpsdata.dev.path, "tcp://")) {
         char server[GPS_PATH_MAX], *host, *port, *device;
@@ -587,7 +587,7 @@ int gpsd_open(struct gps_device_t *session)
                      "CORE: TCP %s IP %s opened on fd %d\n",
                      session->gpsdata.dev.path, addrbuf, dsock);
         }
-        session->gpsdata.gps_fd = dsock;
+        session->gpsdata.gps_fd = (int)dsock;
         return session->gpsdata.gps_fd;
     // or could be UDP
     } else if (str_starts_with(session->gpsdata.dev.path, "udp://")) {
@@ -693,7 +693,7 @@ int gpsd_activate(struct gps_device_t *session, const int mode)
         gpsd_run_device_hook(&session->context->errout,
                              session->gpsdata.dev.path, HOOK_ACTIVATE);
     }
-    session->gpsdata.gps_fd = gpsd_open(session);
+    session->gpsdata.gps_fd = (gps_fd_t)gpsd_open(session);
     if (O_CONTINUE != mode) {
         session->mode = mode;
     }

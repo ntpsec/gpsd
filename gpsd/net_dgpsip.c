@@ -52,7 +52,7 @@ socket_t dgpsip_open(struct gps_device_t *device, const char *dgpsserver)
     GPSD_LOG(LOG_PROG, &device->context->errout,
              "DGPS: connection to DGPS server %s established. fd=%d\n",
              dgpsserver, dsock);
-    device->gpsdata.gps_fd = dsock;
+    device->gpsdata.gps_fd = (gps_fd_t)dsock;
     (void)gethostname(hn, sizeof(hn));
     // greeting required by some RTCM104 servers; others will ignore it
     blen = snprintf(buf, sizeof(buf), "HELO %s gpsd %s\r\nR\r\n", hn,
@@ -72,7 +72,7 @@ socket_t dgpsip_open(struct gps_device_t *device, const char *dgpsserver)
                  "DGPS: fcntl %s failed. %s(%d)\n",
                  dgpsserver, strerror(errno), errno);
     }
-    return device->gpsdata.gps_fd;
+    return (socket_t)device->gpsdata.gps_fd;
 }
 
 void dgpsip_report(struct gps_context_t *context,

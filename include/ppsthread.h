@@ -32,7 +32,7 @@ struct timedelta_t {
  */
 struct pps_thread_t {
     void *context;              // PPS thread code leaves this alone
-    socket_t devicefd;          // device file descriptor
+    gps_fd_t devicefd;          // device file descriptor
     const char *devicename;           // device path
     char *(*report_hook)(volatile struct pps_thread_t *,
                          struct timedelta_t *);

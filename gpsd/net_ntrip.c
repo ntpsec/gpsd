@@ -269,7 +269,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
     ssize_t llen, len = 0;
     char *line;
     char buf[BUFSIZ / 2];   // half of BUFSIZE, so we can GPSD_LOG() it
-    socket_t fd = device->gpsdata.gps_fd;
+    socket_t fd = (socket_t)device->gpsdata.gps_fd;
 
     for (;;) {
         ssize_t rlen;
@@ -1028,7 +1028,7 @@ static int ntrip_reconnect(struct gps_device_t *device)
              device->gpsdata.dev.path);
     device->gpsdata.gps_fd = -1;
 #endif  // no SOCK_NONBLOCK
-    return device->gpsdata.gps_fd;
+    return (int)device->gpsdata.gps_fd;
 }
 
 /* open a connection to a NTRIP broadcaster
@@ -1084,7 +1084,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         // cant use device->lexer.pkt_time and gpsd_clear() reset it
         (void)clock_gettime(CLOCK_REALTIME, &device->ntrip.stream.stream_time);
 
-        device->gpsdata.gps_fd = ret;
+        device->gpsdata.gps_fd = (int)ret;
         device->ntrip.conn_state = NTRIP_CONN_SENT_PROBE;
         return ret;
     case NTRIP_CONN_SENT_PROBE:     // state = 1
@@ -1197,7 +1197,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
                      "NTRIP: stream write success get request\n");
             device->ntrip.conn_state = NTRIP_CONN_SENT_GET;
         }
-        ret = device->gpsdata.gps_fd;
+        ret = (int)device->gpsdata.gps_fd;
         break;
     case NTRIP_CONN_ESTABLISHED:     // state = 3
         FALLTHROUGH
