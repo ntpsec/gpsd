@@ -23,7 +23,9 @@
  *
  */
 
-#include "../include/gpsd_config.h"  /* must be before all includes */
+#undef USE_QT                        // this progtam does not work with QT.
+
+#include "../include/gpsd_config.h"  // must be before all includes
 
 #include <errno.h>
 #include <fcntl.h>
@@ -39,16 +41,16 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <time.h>               /* for time_t */
+#include <time.h>               // for time_t
 #include <unistd.h>
 
 #ifdef HAVE_SYS_SOCKET_H
     #include <sys/socket.h>
-#endif /* HAVE_SYS_SOCKET_H */
-#include <termios.h>            /* for speed_t, and cfmakeraw() on some OS */
+#endif  // HAVE_SYS_SOCKET_H
+#include <termios.h>            // for speed_t, and cfmakeraw() on some OS
 #ifdef HAVE_WINSOCK2_H
     #include <winsock2.h>
-#endif /* HAVE_WINSOCK2_H */
+#endif  // HAVE_WINSOCK2_H
 
 #include "../include/gpsd.h"            // for os_daemon()
 
@@ -57,44 +59,44 @@
 static struct gps_data_t gpsdata;
 static void spinner(unsigned int, unsigned int);
 
-/* NMEA-0183 standard baud rate */
+// NMEA-0183 standard baud rate
 #define BAUDRATE B4800
 
-/* Serial port variables */
+// Serial port variables
 static struct termios oldtio, newtio;
-static int fd_out = STDOUT_FILENO; /* output initially goes to standard output */
+static int fd_out = STDOUT_FILENO;  // output initially goes to standard output
 static char serbuf[255];
 static int debug;
 
-/* open the serial port and set it up */
+// open the serial port and set it up
 static void open_serial(char *device)
 {
     /*
      * Open modem device for reading and writing and not as controlling
      * tty.
      */
-    if ((fd_out = open(device, O_RDWR | O_NOCTTY)) == -1) {
+    if (-1 == (fd_out = open(device, O_RDWR | O_NOCTTY))) {
         (void)fprintf(stderr, "gpspipe: error opening serial port\n");
         exit(EXIT_FAILURE);
     }
 
-    /* Save current serial port settings for later */
-    if (tcgetattr(fd_out, &oldtio) != 0) {
+    // Save current serial port settings for later
+    if (0 != tcgetattr(fd_out, &oldtio)) {
         (void)fprintf(stderr, "gpspipe: error reading serial port settings\n");
         exit(EXIT_FAILURE);
     }
 
-    /* Clear struct for new port settings. */
+    // Clear struct for new port settings.
     memset(&newtio, 0, sizeof(newtio));
 
-    /* make it raw */
+    // make it raw
     (void)cfmakeraw(&newtio);
-    /* set speed */
+    // set speed
     (void)cfsetospeed(&newtio, BAUDRATE);
 
-    /* Clear the modem line and activate the settings for the port. */
+    // Clear the modem line and activate the settings for the port.
     (void)tcflush(fd_out, TCIFLUSH);
-    if (tcsetattr(fd_out, TCSANOW, &newtio) != 0) {
+    if (0 != tcsetattr(fd_out, TCSANOW, &newtio)) {
         (void)fprintf(stderr, "gpspipe: error configuring serial port\n");
         exit(EXIT_FAILURE);
     }
@@ -234,7 +236,7 @@ int main(int argc, char **argv)
         ch = getopt(argc, argv, optstring);
 #endif
 
-        if (ch == -1) {
+        if (-1 == ch) {
             break;
         }
 
@@ -325,39 +327,43 @@ int main(int argc, char **argv)
         }
     }
 
-    /* Grok the server, port, and device. */
+    // Grok the server, port, and device.
     if (optind < argc) {
         gpsd_source_spec(argv[optind], &source);
     } else {
         gpsd_source_spec(NULL, &source);
     }
 
-    if (serialport != NULL && !raw) {
+    if (NULL != serialport &&
+        !raw) {
         (void)fprintf(stderr, "gpspipe: use of '-s' requires '-r'.\n");
         exit(EXIT_FAILURE);
     }
 
-    if (outfile == NULL && daemonize) {
+    if (NULL == outfile &&
+        daemonize) {
         (void)fprintf(stderr, "gpspipe: use of '-d' requires '-o'.\n");
         exit(EXIT_FAILURE);
     }
 
-    if (!raw && !watch && !binary) {
+    if (!raw &&
+        !watch &&
+        !binary) {
         (void)fprintf(stderr,
                       "gpspipe: one of '-R', '-r', or '-w' is required.\n");
         exit(EXIT_FAILURE);
     }
 
-    /* Daemonize if the user requested it. */
+    // Daemonize if the user requested it.
     if (daemonize) {
-        if (os_daemon(0, 0) != 0) {
+        if (0 != os_daemon(0, 0)) {
             (void)fprintf(stderr,
                           "gpspipe: daemonization failed: %s\n",
                           strerror(errno));
         }
     }
 
-    /* Sleep for ten seconds if the user requested it. */
+    // Sleep for ten seconds if the user requested it.
     if (sleepy) {
         (void)sleep(10);
     }
@@ -365,11 +371,11 @@ int main(int argc, char **argv)
     /* Open the output file if the user requested it. If the user
      * requested '-R', we use the 'b' flag in fopen() to "do the right
      * thing" in non-linux/unix OSes. */
-    if (outfile == NULL) {
+    if (NULL == outfile) {
         fp = stdout;
     } else {
         fp = fopen(outfile, binary ? "wb" : "w");
-        if (fp == NULL) {
+        if (NULL == fp) {
             (void)fprintf(stderr,
                           "gpspipe: unable to open output file: %s\n",
                           outfile);
@@ -381,24 +387,25 @@ int main(int argc, char **argv)
     }
 
 
-    /* Open the serial port and set it up. */
+    // Open the serial port and set it up.
     if (serialport) {
         open_serial(serialport);
     }
 
-    if (gps_open(source.server, source.port, &gpsdata) != 0) {
+    if (0 != gps_open(source.server, source.port, &gpsdata)) {
         (void)fprintf(stderr,
                       "gpspipe: could not connect to gpsd %s:%s, %s(%d)\n",
                       source.server, source.port, gps_errstr(errno), errno);
         exit(EXIT_FAILURE);
     }
 
-    if (source.device != NULL) {
+    if (NULL != source.device) {
         flags |= WATCH_DEVICE;
     }
     (void)gps_stream(&gpsdata, flags, source.device);
 
-    if ((isatty(STDERR_FILENO) == 0) || daemonize) {
+    if (0 == (isatty(STDERR_FILENO)) ||
+        daemonize) {
         vflag = 0;
     }
 
@@ -412,14 +419,17 @@ int main(int argc, char **argv)
         FD_SET(gpsdata.gps_fd, &fds);
         errno = 0;
         r = pselect(gpsdata.gps_fd+1, &fds, NULL, NULL, &tv, NULL);
-        if (r >= 0 && exit_timer && time(NULL) >= exit_timer) {
+        if (0 <= r &&
+            exit_timer &&
+            time(NULL) >= exit_timer) {
             break;
         }
-        if (r == -1 && errno != EINTR) {
+        if (-1 == r &&
+            EINTR != errno) {
             (void)fprintf(stderr, "gpspipe: select error %s(%d)\n",
                           strerror(errno), errno);
             exit(EXIT_FAILURE);
-        } else if (r == 0) {
+        } else if (0 == r) {
             continue;
         }
 
@@ -427,18 +437,20 @@ int main(int argc, char **argv)
             spinner(vflag, l++);
         }
 
-        /* reading directly from the socket avoids decode overhead */
+        // reading directly from the socket avoids decode overhead
         errno = 0;
         r = (int)recv(gpsdata.gps_fd, buf, sizeof(buf), 0);
-        if (r > 0) {
+        if (0 < r) {
             int i = 0;
             int j = 0;
+
             for (i = 0; i < r; i++) {
                 char c = buf[i];
-                if (j < (int)(sizeof(serbuf) - 1)) {
+                if ((int)(sizeof(serbuf) - 1) > j) {
                     serbuf[j++] = buf[i];
                 }
-                if (new_line && timestamp) {
+                if (new_line &&
+                    timestamp) {
                     char tmstr_u[40];            // time with "usec" resolution
                     struct timespec now;
                     struct tm tmp_now;
@@ -466,7 +478,9 @@ int main(int argc, char **argv)
                         written = snprintf(tmstr_u, sizeof(tmstr_u),
                                            ".%06ld", (long)now.tv_nsec/1000);
 
-                        if ((0 < written) && (40 > written) && iso8601) {
+                        if ((0 < written) &&
+                            (40 > written) &&
+                            iso8601) {
                             tmstr_u[written-1] = 'Z';
                             tmstr_u[written] = '\0';
                         }
@@ -475,22 +489,22 @@ int main(int argc, char **argv)
                         *tmstr_u = '\0';
                     }
 
-                    if (fprintf(fp, "%.24s%s: ", tmstr, tmstr_u) <= 0) {
+                    if (0 >= fprintf(fp, "%.24s%s: ", tmstr, tmstr_u)) {
                         (void)fprintf(stderr,
                                       "gpspipe: write error, %s(%d)\n",
                                       strerror(errno), errno);
                         exit(EXIT_FAILURE);
                     }
                 }
-                if (fputc(c, fp) == EOF) {
+                if (EOF == fputc(c, fp)) {
                     (void)fprintf(stderr, "gpspipe: write error, %s(%d)\n",
                                   strerror(errno), errno);
                     exit(EXIT_FAILURE);
                 }
 
-                if (c == '\n') {
-                    if (serialport != NULL) {
-                        if (write(fd_out, serbuf, (size_t) j) == -1) {
+                if ('\n' == c) {
+                    if (NULL != serialport) {
+                        if (-1 == write(fd_out, serbuf, (size_t) j)) {
                             (void)fprintf(stderr,
                                           "gpspipe: serial port write error,"
                                           " %s(%d)\n",
@@ -501,24 +515,23 @@ int main(int argc, char **argv)
                     }
 
                     new_line = true;
-                    /* flush after every good line */
+                    // flush after every good line
                     if (fflush(fp)) {
                         (void)fprintf(stderr,
                                       "gpspipe: fflush error, %s(%d)\n",
                                       strerror(errno), errno);
                         exit(EXIT_FAILURE);
                     }
-                    if (count > 0) {
-                        if (0 >= --count) {
-                            /* completed count */
-                            exit(EXIT_SUCCESS);
-                        }
+                    if (0 < count &&
+                        0 >= --count) {
+                        // completed count
+                        exit(EXIT_SUCCESS);
                     }
                 }
             }
         } else {
-            if (r == -1) {
-                if (errno == EAGAIN) {
+            if (-1 == r) {
+                if (EAGAIN == errno) {
                     continue;
                 } else {
                     (void)fprintf(stderr, "gpspipe: read error %s(%d)\n",
@@ -532,15 +545,15 @@ int main(int argc, char **argv)
     }
 
 #ifdef __UNUSED__
-    if (serialport != NULL) {
-        /* Restore the old serial port settings. */
+    if (NULL != serialport) {
+        // Restore the old serial port settings.
         if (tcsetattr(fd_out, TCSANOW, &oldtio) != 0) {
             (void)fprintf(stderr,
                           "gpsipe: error restoring serial port settings\n");
             exit(EXIT_FAILURE);
         }
     }
-#endif /* __UNUSED__ */
+#endif  // __UNUSED__
 
     exit(EXIT_SUCCESS);
 }
