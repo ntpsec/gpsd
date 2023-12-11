@@ -669,7 +669,8 @@ static int ntrip_stream_get_parse(struct gps_device_t *device)
     char dbgbuf[128];
     int opts;
     const struct ntrip_stream_t *stream = &device->ntrip.stream;
-    const int dsock  = device->gpsdata.gps_fd;
+    // (int) to shut up cadacy about USE_QT.
+    const int dsock  = (int)device->gpsdata.gps_fd;
     const struct gpsd_errout_t *errout = &device->context->errout;
     ssize_t read_ret;         // value retuend from read()
     struct gps_lexer_t *lexer = &device->lexer;
