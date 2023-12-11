@@ -892,7 +892,7 @@ def maidenhead(dec_lat, dec_lon):
     adj_lat_remainder = (adj_lat_remainder % 15) * 1000
     adj_lon_remainder = (adj_lon_remainder % 30) * 1000
 
-    print(adj_lat_remainder, adj_lon_remainder)
+    # print(adj_lat_remainder, adj_lon_remainder)  # debug
 
     # divide into 24 zones (extended subsquares)
     # each 0.625 seconds lon, 1.25 seconds lat
