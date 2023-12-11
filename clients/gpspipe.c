@@ -23,7 +23,7 @@
  *
  */
 
-#undef USE_QT                        // this progtam does not work with QT.
+#undef USE_QT       // this progtam does not work with QT. Pacify Codacy
 
 #include "../include/gpsd_config.h"  // must be before all includes
 
@@ -418,7 +418,7 @@ int main(int argc, char **argv)
         FD_ZERO(&fds);
         FD_SET(gpsdata.gps_fd, &fds);
         errno = 0;
-        r = pselect(gpsdata.gps_fd+1, &fds, NULL, NULL, &tv, NULL);
+        r = pselect(gpsdata.gps_fd + 1, &fds, NULL, NULL, &tv, NULL);
         if (0 <= r &&
             exit_timer &&
             time(NULL) >= exit_timer) {
