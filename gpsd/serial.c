@@ -893,7 +893,8 @@ int gpsd_serial_open(struct gps_device_t *session)
         GPSD_LOG(LOG_IO, &session->context->errout,
                  "SER: gpsd_serial_open(%s) -> %d, Not tty\n",
                  session->gpsdata.dev.path, session->gpsdata.gps_fd);
-        return session->gpsdata.gps_fd;
+        // (int) to pacify Codacy.
+        return (int)session->gpsdata.gps_fd;
     }
 
     // Save original terminal parameters, why?

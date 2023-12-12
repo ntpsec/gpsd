@@ -146,9 +146,14 @@ int gps_open(const char *host, const char *port,
 #endif  // SOCKET_EXPORT_ENABLE
 
 #ifndef USES_HOST
-    (void)fprintf(stderr,
-                  "No methods available for connecting to %s!\n",
-                  host);
+    if (NULL == host) {
+        // Should not happend, but this pacifies Codacy
+        (void)fprintf(stderr,
+             "No methods available for connecting to NULL == host!\n");
+    } else {
+        (void)fprintf(stderr,
+                      "No methods available for connecting to %s!\n", host);
+    }
 #endif  // USES_HOST
 #undef USES_HOST
 

@@ -2917,7 +2917,8 @@ static ssize_t packet_get1_chunked(struct gps_device_t *session)
 {
     ssize_t recvd;
     char scratchbuf[MAX_PACKET_LENGTH * 4 + 1];
-    int fd = session->gpsdata.gps_fd;
+    // (int) to pacify Codacy
+    int fd = (int)session->gpsdata.gps_fd;
     struct gps_lexer_t *lexer = &session->lexer;
     size_t idx = 0;                 // index into inbuffer.
     unsigned char *tmp_bufptr;      // pointer to head in tmp_buffer
