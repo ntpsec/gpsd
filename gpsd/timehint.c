@@ -473,7 +473,7 @@ void ntpshm_link_activate(struct gps_device_t *session)
     struct gps_context_t *context = session->context;
 
     GPSD_LOG(LOG_PROG, &context->errout,
-             "NTP:SHM: ntpshm_link_activate(%s), sourcetype %d fd %d\n",
+             "NTP:SHM: ntpshm_link_activate(%s), sourcetype %d fd %ld\n",
              session->gpsdata.dev.path, session->sourcetype,
              session->gpsdata.gps_fd);
 

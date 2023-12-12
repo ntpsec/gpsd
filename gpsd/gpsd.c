@@ -498,7 +498,7 @@ static socket_t passivesock_af(int af, char *service, char *tcp_or_udp,
         return -1;
     }
 
-    GPSD_LOG(LOG_SPIN, &context.errout, "passivesock_af() -> %d\n", s);
+    GPSD_LOG(LOG_SPIN, &context.errout, "passivesock_af() -> %ld\n", s);
     return s;
 }
 
@@ -780,7 +780,7 @@ static bool open_device( struct gps_device_t *device)
         return false;
     }
     GPSD_LOG(LOG_PROG, &context.errout,
-             "CORE: open_device(%s) fd %d\n",
+             "CORE: open_device(%s) fd %ld\n",
              device->gpsdata.dev.path,
              device->gpsdata.gps_fd);
 
@@ -1075,7 +1075,7 @@ static bool awaken(struct gps_device_t *device)
     int ret;
 
     GPSD_LOG(LOG_PROG, &context.errout,
-             "awaken(%d) fd %d, path %s\n",
+             "awaken(%d) fd %ld, path %s\n",
              (int)(device - devices),
              device->gpsdata.gps_fd, device->gpsdata.dev.path);
 
@@ -1090,7 +1090,7 @@ static bool awaken(struct gps_device_t *device)
 
     if (!BAD_SOCKET(device->gpsdata.gps_fd)) {
         GPSD_LOG(LOG_PROG, &context.errout,
-                 "device %d (fd=%d, path %s) already active.\n",
+                 "device %d (fd=%ld, path %s) already active.\n",
                  (int)(device - devices),
                  device->gpsdata.gps_fd, device->gpsdata.dev.path);
         return true;
@@ -1116,7 +1116,7 @@ static bool awaken(struct gps_device_t *device)
     }
 
     GPSD_LOG(LOG_RAW, &context.errout,
-             "flagging descriptor %d in assign_channel()\n",
+             "flagging descriptor %ld in assign_channel()\n",
              device->gpsdata.gps_fd);
     FD_SET(device->gpsdata.gps_fd, &all_fds);
     adjust_max_fd(device->gpsdata.gps_fd, true);
@@ -1203,7 +1203,7 @@ static void set_serial(struct gps_device_t *device,
              */
             if (0 != tcdrain(device->gpsdata.gps_fd)) {
                 GPSD_LOG(LOG_ERROR, &device->context->errout,
-                         "SER: set_serial(%d) tcdrain() failed: %s(%d)\n",
+                         "SER: set_serial(%ld) tcdrain() failed: %s(%d)\n",
                          device->gpsdata.gps_fd,
                          strerror(errno), errno);
             }
@@ -2185,7 +2185,7 @@ int main(int argc, char *argv[])
     static char *pid_file = NULL;
     struct gps_device_t *device;
     int i;
-    int msocks[2] = {-1, -1};
+    socket_t msocks[2] = {-1, -1};
     bool device_opened = false;
     bool go_background = true;
     volatile bool in_restart;
@@ -2425,12 +2425,12 @@ int main(int argc, char *argv[])
         }
         if (BAD_SOCKET(csock = filesock(control_socket))) {
             GPSD_LOG(LOG_ERROR, &context.errout,
-                     "control socket %s create failed, netlib error %d\n",
+                     "control socket %s create failed, netlib error %ld\n",
                      control_socket, csock);
             exit(EXIT_FAILURE);
         } else {
             GPSD_LOG(LOG_PROG, &context.errout,
-                     "control socket %s is fd %d\n",
+                     "control socket %s is fd %ld\n",
                      control_socket, csock);
         }
         FD_SET(csock, &all_fds);
@@ -2510,7 +2510,7 @@ int main(int argc, char *argv[])
     }
     if (1 > passivesocks(gpsd_service, "tcp", QLEN, msocks)) {
         GPSD_LOG(LOG_ERROR, &context.errout,
-                 "command sockets creation failed, netlib errors %d, %d\n",
+                 "command sockets creation failed, netlib errors %ld, %ld\n",
                  msocks[0], msocks[1]);
         if (NULL != pid_file) {
             (void)unlink(pid_file);
@@ -2787,7 +2787,7 @@ int main(int argc, char *argv[])
                     client = allocate_client();
                     if (NULL == client) {
                         GPSD_LOG(LOG_ERROR, &context.errout,
-                                 "Client %s connect on fd %d -"
+                                 "Client %s connect on fd %ld -"
                                  "no subscriber slots available\n", c_ip,
                                     ssock);
                         (void)close(ssock);
@@ -2806,7 +2806,7 @@ int main(int argc, char *argv[])
                         client->fd = ssock;
                         client->active = time(NULL);
                         GPSD_LOG(LOG_SPIN, &context.errout,
-                                 "client %s (%d) connect on fd %d\n", c_ip,
+                                 "client %s (%d) connect on fd %ld\n", c_ip,
                                  sub_index(client), ssock);
                         json_version_dump(announce, sizeof(announce));
                         (void)throttled_write(client, announce,
@@ -2831,7 +2831,7 @@ int main(int argc, char *argv[])
                          "accept: %s(%d)\n", strerror(errno), errno);
             } else {
                 GPSD_LOG(LOG_INF, &context.errout,
-                         "control socket connect on fd %d\n",
+                         "control socket connect on fd %ld\n",
                          ssock);
                 FD_SET(ssock, &all_fds);
                 FD_SET(ssock, &control_fds);
@@ -2852,12 +2852,12 @@ int main(int argc, char *argv[])
                 while (0 < (rd = read(cfd, buf, sizeof(buf) - 1))) {
                     buf[rd] = '\0';
                     GPSD_LOG(LOG_CLIENT, &context.errout,
-                             "<= control(%d): %s\n", cfd, buf);
+                             "<= control(%ld): %s\n", cfd, buf);
                     // coverity[tainted_data] Safe, never handed to exec
                     handle_control(cfd, buf);
                 }
                 GPSD_LOG(LOG_SPIN, &context.errout,
-                         "close(%d) of control socket\n", cfd);
+                         "close(%ld) of control socket\n", cfd);
                 (void)close(cfd);
                 FD_CLR(cfd, &all_fds);
                 FD_CLR(cfd, &control_fds);
@@ -2880,7 +2880,7 @@ int main(int argc, char *argv[])
                                            &rfds), device, all_reports,
                                            DEVICE_REAWAKE);
             GPSD_LOG(LOG_DATA, &context.errout,
-                     "gpsd_multipoll(%d) = %d\n",
+                     "gpsd_multipoll(%ld) = %d\n",
                      device->gpsdata.gps_fd, multipoll_ret);
             switch (multipoll_ret) {
             case DEVICE_READY:
@@ -2921,7 +2921,7 @@ int main(int argc, char *argv[])
                 // llabs() in case the system time jumped
                 if (5 <= llabs(delta.tv_sec)) {
                     GPSD_LOG(LOG_PROG, &context.errout,
-                        "gpsd_multipoll(%d) DEVICE_UNCHANGED for %lld\n",
+                        "gpsd_multipoll(%ld) DEVICE_UNCHANGED for %lld\n",
                         device->gpsdata.gps_fd, (long long)delta.tv_sec);
                     if (time_warp) {
                         // ugh, start over...
@@ -2945,7 +2945,7 @@ int main(int argc, char *argv[])
             default:
                 // huh?
                 GPSD_LOG(LOG_WARN, &context.errout,
-                         "gpsd_multipoll(%d) = unknown return value %d\n",
+                         "gpsd_multipoll(%ld) = unknown return value %d\n",
                          device->gpsdata.gps_fd, multipoll_ret);
                 break;
             }
@@ -3078,7 +3078,7 @@ int main(int argc, char *argv[])
                     if (0 == device->releasetime) {
                         device->releasetime = time(NULL);
                         GPSD_LOG(LOG_PROG, &context.errout,
-                                 "device %d (fd %d) released\n",
+                                 "device %d (fd %ld) released\n",
                                  (int)(device - devices),
                                  device->gpsdata.gps_fd);
                     } else if (RELEASE_TIMEOUT <
@@ -3087,7 +3087,7 @@ int main(int argc, char *argv[])
                                  "device %d closed\n",
                                  (int)(device - devices));
                         GPSD_LOG(LOG_RAW, &context.errout,
-                                 "unflagging descriptor %d\n",
+                                 "unflagging descriptor %ld\n",
                                  device->gpsdata.gps_fd);
                         deactivate_device(device);
                     }

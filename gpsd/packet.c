@@ -2892,7 +2892,7 @@ ssize_t packet_get(int fd, struct gps_lexer_t *lexer)
     struct gps_device_t session = {{0}};
     ssize_t retval;
 
-    session.gpsdata.gps_fd = fd;
+    session.gpsdata.gps_fd = (gps_fd_t)fd;
     session.lexer = *lexer;   // structure copy
     retval = packet_get1(&session);
     *lexer = session.lexer;   // structure copy

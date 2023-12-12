@@ -2704,7 +2704,7 @@ struct oscillator_t {
  * as it makes clearer what some declarations are doing without breaking
  * binary compatibility.
  */
-typedef int socket_t;
+typedef intptr_t socket_t;
 // BAD_SOCKET() needs to flag UNALLOCATED_FD (01) and PLACEHOLDING_FD (-2)
 #define BAD_SOCKET(s)   (0 > (s))
 #define INVALIDATE_SOCKET(s)    do { s = -1; } while (0)

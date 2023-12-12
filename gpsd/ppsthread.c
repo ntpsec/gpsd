@@ -545,7 +545,7 @@ static int get_edge_tiocmiwait(volatile struct pps_thread_t *thread_context,
     if (0 != ioctl(thread_context->devicefd, (unsigned long)TIOCMGET, state)) {
         char errbuf[BUFSIZ] = "unknown error";
         thread_context->log_hook(thread_context, THREAD_ERROR,
-                    "TPPS:%s ioctl(%d, TIOCMGET) failed: %s(%d)\n",
+                    "TPPS:%s ioctl(%ld, TIOCMGET) failed: %s(%d)\n",
                     thread_context->devicename, thread_context->devicefd,
                     pps_strerror_r(errno, errbuf, sizeof(errbuf)), errno);
         return -1;
@@ -744,7 +744,7 @@ static void *gpsd_ppsmonitor(void *arg)
     if (0 > thread_context->devicefd ||
         0 == isatty(thread_context->devicefd)) {
         thread_context->log_hook(thread_context, THREAD_PROG,
-            "KPPS:%s gps_fd:%d not a tty, can not use TIOMCIWAIT\n",
+            "KPPS:%s gps_fd:%ld not a tty, can not use TIOMCIWAIT\n",
             thread_context->devicename,
             thread_context->devicefd);
         /* why do we care the device is a tty? so as not to ioctl(TIO..)

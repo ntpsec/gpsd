@@ -948,7 +948,7 @@ extern gps_mask_t garmintxt_parse(struct gps_device_t *);
 extern gps_mask_t aivdm_parse(struct gps_device_t *);
 
 extern bool netgnss_uri_check(char *);
-extern int netgnss_uri_open(struct gps_device_t *, char *);
+extern gps_fd_t netgnss_uri_open(struct gps_device_t *, char *);
 extern void netgnss_report(struct gps_context_t *,
                          struct gps_device_t *,
                          struct gps_device_t *);
@@ -960,7 +960,7 @@ extern void dgpsip_report(struct gps_context_t *,
                          struct gps_device_t *);
 extern void dgpsip_autoconnect(struct gps_context_t *,
                                double, double, const char *);
-extern int ntrip_open(struct gps_device_t *, char *);
+extern socket_t ntrip_open(struct gps_device_t *, char *);
 extern void ntrip_report(struct gps_context_t *,
                          struct gps_device_t *,
                          struct gps_device_t *);

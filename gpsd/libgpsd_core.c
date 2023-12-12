@@ -368,7 +368,7 @@ void gpsd_deactivate(struct gps_device_t *session)
         session->device_type->event_hook(session, event_deactivate);
     }
     GPSD_LOG(LOG_INF, &session->context->errout,
-             "CORE: closing %s, fd %d\n",
+             "CORE: closing %s, fd %ld\n",
              session->gpsdata.dev.path, session->gpsdata.gps_fd);
     if (SERVICE_NTRIP == session->servicetype) {
         ntrip_close(session);
@@ -542,7 +542,7 @@ int parse_uri_dest(char *s, char **host, char **service, char **device)
 int gpsd_open(struct gps_device_t *session)
 {
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "CORE: gpsd_open(%s) fd %d\n",
+             "CORE: gpsd_open(%s) fld %ld\n",
              session->gpsdata.dev.path,
              session->gpsdata.gps_fd);
 
@@ -552,7 +552,7 @@ int gpsd_open(struct gps_device_t *session)
                                                    session->gpsdata.dev.path);
         session->sourcetype = SOURCE_TCP;
         GPSD_LOG(LOG_PROG, &session->context->errout,
-                 "CORE: netgnss_uri_open(%s) returns socket on fd %d\n",
+                 "CORE: netgnss_uri_open(%s) returns socket on fd %ld\n",
                  session->gpsdata.dev.path, session->gpsdata.gps_fd);
         return (int)session->gpsdata.gps_fd;
     // otherwise, could be an TCP data feed
@@ -579,15 +579,15 @@ int gpsd_open(struct gps_device_t *session)
                                     1, false, addrbuf, sizeof(addrbuf));
         if (0 > dsock) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "CORE: TCP %s IP %s, open error %s(%d).\n",
+                     "CORE: TCP %s IP %s, open error %s(%ld).\n",
                      session->gpsdata.dev.path, addrbuf,
                      netlib_errstr(dsock), dsock);
         } else {
             GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "CORE: TCP %s IP %s opened on fd %d\n",
+                     "CORE: TCP %s IP %s opened on fd %ld\n",
                      session->gpsdata.dev.path, addrbuf, dsock);
         }
-        session->gpsdata.gps_fd = (int)dsock;
+        session->gpsdata.gps_fd = dsock;
         return session->gpsdata.gps_fd;
     // or could be UDP
     } else if (str_starts_with(session->gpsdata.dev.path, "udp://")) {
@@ -609,12 +609,12 @@ int gpsd_open(struct gps_device_t *session)
         if (0 > (dsock = netlib_connectsock1(AF_UNSPEC, host, port, "udp",
                                              0, true, NULL, 0))) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "CORE: UDP device open error %s(%d).\n",
+                     "CORE: UDP device open error %s(%ld).\n",
                      netlib_errstr(dsock), dsock);
             return -1;
         } else {
             GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "CORE: UDP device opened on fd %d\n", dsock);
+                     "CORE: UDP device opened on fd %ld\n", dsock);
         }
         session->gpsdata.gps_fd = dsock;
         return session->gpsdata.gps_fd;
@@ -653,12 +653,12 @@ int gpsd_open(struct gps_device_t *session)
                  host, port);
         if (0 > (dsock = netlib_connectsock(AF_UNSPEC, host, port, "tcp"))) {
             GPSD_LOG(LOG_ERROR, &session->context->errout,
-                     "CORE: remote gpsd device open error %s(%d).\n",
+                     "CORE: remote gpsd device open error %s(%ld).\n",
                      netlib_errstr(dsock), dsock);
             return -1;
         } else {
             GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "CORE: remote gpsd feed opened on fd %d\n", dsock);
+                     "CORE: remote gpsd feed opened on fd %ld\n", dsock);
         }
         // watch to remote is issued when WATCH is
         session->gpsdata.gps_fd = dsock;
@@ -685,7 +685,7 @@ int gpsd_open(struct gps_device_t *session)
 int gpsd_activate(struct gps_device_t *session, const int mode)
 {
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "CORE: gpsd_activate(%s, %d) fd %d\n",
+             "CORE: gpsd_activate(%s, %d) fd %ld\n",
              session->gpsdata.dev.path, mode,
              session->gpsdata.gps_fd);
 
@@ -707,7 +707,7 @@ int gpsd_activate(struct gps_device_t *session, const int mode)
             // it is /dev/ppsX, need to set devicename, etc.
             // check report_hook to ensure not already running
             GPSD_LOG(LOG_PROG, &session->context->errout,
-                     "CORE: to gpsd_clear() fd %d\n",
+                     "CORE: to gpsd_clear() fd %ld\n",
                      session->gpsdata.gps_fd);
             gpsd_clear(session);
         }
@@ -759,7 +759,7 @@ foundit:
         session->device_type->event_hook(session, event_reactivate);
     }
     GPSD_LOG(LOG_PROG, &session->context->errout,
-             "CORE: activate fd %d done\n",
+             "CORE: activate fd %ld done\n",
              session->gpsdata.gps_fd);
 
     return session->gpsdata.gps_fd;
@@ -1954,7 +1954,7 @@ int gpsd_multipoll(const bool data_ready,
         int fragments;
 
         GPSD_LOG(LOG_RAW1, &device->context->errout,
-                 "CORE: polling %d\n", device->gpsdata.gps_fd);
+                 "CORE: polling %ld\n", device->gpsdata.gps_fd);
 
         /*
          * Strange special case - the opening transaction on an NTRIP

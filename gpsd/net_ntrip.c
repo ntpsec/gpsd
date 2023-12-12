@@ -279,7 +279,7 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
         // read, leave room for trailing NUL
         rlen = read(fd, &buf[len], sizeof(buf) - (size_t)(1 + len));
         GPSD_LOG(LOG_RAW, &device->context->errout,
-                 "NTRIP: on fd %d len %zd  tried %zd, got %zd\n", fd, len,
+                 "NTRIP: on fd %ld len %zd  tried %zd, got %zd\n", fd, len,
                  sizeof(buf) - (size_t)(1 + len), rlen);
         if (-1 == rlen) {
             if (EINTR == errno) {
@@ -291,13 +291,13 @@ static int ntrip_sourcetable_parse(struct gps_device_t *device)
                 return 0;
             }
             GPSD_LOG(LOG_ERROR, &device->context->errout,
-                     "NTRIP: stream read error %s(%d) on fd %d\n",
+                     "NTRIP: stream read error %s(%d) on fd %ld\n",
                      strerror(errno), errno, fd);
             return -1;
         }
         if (0 == rlen) {     // server closed the connection
             GPSD_LOG(LOG_ERROR, &device->context->errout,
-                     "NTRIP: stream unexpected close %s(%d) on fd %d "
+                     "NTRIP: stream unexpected close %s(%d) on fd %ld "
                      "during sourcetable read\n",
                      strerror(errno), errno, fd);
             return -2;
@@ -1007,7 +1007,7 @@ static int ntrip_reconnect(struct gps_device_t *device)
     if (0 > dsock) {
         // no way to recover from this, except wait and try again later
         GPSD_LOG(LOG_ERROR, &device->context->errout,
-                 "NTRIP: ntrip_reconnect(%s) IP %s, failed: %s(%d)\n",
+                 "NTRIP: ntrip_reconnect(%s) IP %s, failed: %s(%ld)\n",
                  device->gpsdata.dev.path, addrbuf,
                  netlib_errstr(dsock), dsock);
         // set time for retry
@@ -1020,7 +1020,8 @@ static int ntrip_reconnect(struct gps_device_t *device)
     // the ntrip request again.
     device->ntrip.conn_state = NTRIP_CONN_INPROGRESS;
     GPSD_LOG(LOG_PROG, &device->context->errout,
-             "NTRIP: ntrip_reconnect(%s) IP %s, fd %d NTRIP_CONN_INPROGRESS \n",
+             "NTRIP: ntrip_reconnect(%s) IP %s, fd %ld "
+             "NTRIP_CONN_INPROGRESS \n",
              device->gpsdata.dev.path, addrbuf, dsock);
 #else  // no SOCK_NONBLOCK
     GPSD_LOG(LOG_PROG, &device->context->errout,
@@ -1037,7 +1038,7 @@ static int ntrip_reconnect(struct gps_device_t *device)
  * Return: 0 on success, or the new fd
  *         less than zero on failure
  */
-int ntrip_open(struct gps_device_t *device, char *orig)
+socket_t ntrip_open(struct gps_device_t *device, char *orig)
 {
     socket_t ret = -1;
     char buf[BUFSIZ];
@@ -1045,7 +1046,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
     ssize_t blen;
 
     GPSD_LOG(LOG_PROG, &device->context->errout,
-             "NTRIP: ntrip_open(%s) fd %d state = %s(%d)\n",
+             "NTRIP: ntrip_open(%s) fd %ld state = %s(%d)\n",
              orig, device->gpsdata.gps_fd,
              ntrip_state(device->ntrip.conn_state),
              device->ntrip.conn_state);
@@ -1073,7 +1074,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         ret = ntrip_stream_req_probe(&device->ntrip.stream,
                                      &device->context->errout);
         GPSD_LOG(LOG_PROG, &device->context->errout,
-                 "NTRIP: ntrip_stream_req_probe(%s) ret %d\n",
+                 "NTRIP: ntrip_stream_req_probe(%s) ret %ld\n",
                  device->ntrip.stream.url, ret);
         if (-1 == ret) {
             device->gpsdata.gps_fd = PLACEHOLDING_FD;
@@ -1084,13 +1085,13 @@ int ntrip_open(struct gps_device_t *device, char *orig)
         // cant use device->lexer.pkt_time and gpsd_clear() reset it
         (void)clock_gettime(CLOCK_REALTIME, &device->ntrip.stream.stream_time);
 
-        device->gpsdata.gps_fd = (int)ret;
+        device->gpsdata.gps_fd = (gps_fd_t)ret;
         device->ntrip.conn_state = NTRIP_CONN_SENT_PROBE;
         return ret;
     case NTRIP_CONN_SENT_PROBE:     // state = 1
         ret = ntrip_sourcetable_parse(device);
         GPSD_LOG(LOG_PROG, &device->context->errout,
-                 "NTRIP: ntrip_sourcetable_parse(%s) = %d\n",
+                 "NTRIP: ntrip_sourcetable_parse(%s) = %ld\n",
                  device->ntrip.stream.mountpoint, ret);
         if (0 > ret) {
             device->ntrip.conn_state = NTRIP_CONN_ERR;
@@ -1186,7 +1187,7 @@ int ntrip_open(struct gps_device_t *device, char *orig)
 
         if (blen != write(device->gpsdata.gps_fd, buf, blen)) {
             GPSD_LOG(LOG_ERROR, &device->context->errout,
-                     "NTRIP: stream write error %s(%d) on fd %d during "
+                     "NTRIP: stream write error %s(%d) on fd %ld during "
                      "get request\n",
                      strerror(errno), errno, device->gpsdata.gps_fd);
             device->ntrip.conn_state = NTRIP_CONN_ERR;
@@ -1220,7 +1221,7 @@ void ntrip_report(struct gps_context_t *context,
         return;   // no need to be here...
     }
     GPSD_LOG(LOG_IO, &context->errout,
-             "NTRIP: = ntrip_report() fixcnt %d count %d caster %d\n",
+             "NTRIP: = ntrip_report() fixcnt %d count %d caster %ld\n",
              context->fixcnt, count, caster->gpsdata.gps_fd);
 
     /* 10 is an arbitrary number, the point is to have gotten several good
@@ -1251,11 +1252,11 @@ void ntrip_report(struct gps_context_t *context,
                      buf);
         } else if (0 > ret) {
             GPSD_LOG(LOG_ERROR, &context->errout,
-                     "NTRIP: ntrip_report() write(%d) error %s(%d)\n",
+                     "NTRIP: ntrip_report() write(%ld) error %s(%d)\n",
                      caster->gpsdata.gps_fd, strerror(errno), errno);
         } else {
             GPSD_LOG(LOG_ERROR, &context->errout,
-                     "NTRIP: ntrip_report() short write(%d) = %zd\n",
+                     "NTRIP: ntrip_report() short write(%ld) = %zd\n",
                      caster->gpsdata.gps_fd, ret);
         }
     }
@@ -1267,7 +1268,7 @@ void ntrip_close(struct gps_device_t *session)
     if (0 > session->gpsdata.gps_fd) {
         // UNALLOCATED_FD (-1) or PLACEHOLDING_FD (-2). Nothing to do.
         GPSD_LOG(LOG_ERROR, &session->context->errout,
-                 "NTRIP: ntrip_close(%s), close(%d) bad fd\n",
+                 "NTRIP: ntrip_close(%s), close(%ld) bad fd\n",
                  session->gpsdata.dev.path, session->gpsdata.gps_fd);
         session->gpsdata.gps_fd = PLACEHOLDING_FD;
         return;
@@ -1275,12 +1276,12 @@ void ntrip_close(struct gps_device_t *session)
 
     if (-1 == close(session->gpsdata.gps_fd)) {
         GPSD_LOG(LOG_ERROR, &session->context->errout,
-                 "NTRIP: ntrip_close(%s), close(%d), %s(%d)\n",
+                 "NTRIP: ntrip_close(%s), close(%ld), %s(%d)\n",
                  session->gpsdata.dev.path,
                  session->gpsdata.gps_fd, strerror(errno), errno);
     } else {
         GPSD_LOG(LOG_IO, &session->context->errout,
-                 "NTRIP: ntrip_close(%s), close(%d)\n",
+                 "NTRIP: ntrip_close(%s), close(%ld)\n",
                  session->gpsdata.dev.path,
                  session->gpsdata.gps_fd);
     }
