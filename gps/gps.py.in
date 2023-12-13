@@ -403,7 +403,8 @@ class gps_io(object):
                         if consumed == 0:
                             break
                         # TODO: the decoder shall return a some current
-                        # statement_identifier # to fill last_statement_identifier
+                        # statement_identifier # to fill last_statement
+                        #_identifier
                         last_statement_identifier = None
                         #
                         self.out = self.out[consumed:]
