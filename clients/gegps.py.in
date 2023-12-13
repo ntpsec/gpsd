@@ -24,10 +24,10 @@ import sys
 # pylint wants local modules last
 try:
     import gps
-except ImportError as e:
+except ImportError as error:
     sys.stderr.write(
         "gegps: can't load Python gps libraries -- check PYTHONPATH.\n")
-    sys.stderr.write("%s\n" % e)
+    sys.stderr.write("%s\n" % error)
     sys.exit(1)
 
 gps_version = '@VERSION@'
@@ -51,6 +51,10 @@ KML_OPEN_IN_GE = '''\
 '''
 
 if str is bytes:
+    # This is here only because open in Python 2 throws a TypeError
+    # when given an encoding argument. Do not change it until the
+    # last Python 2 user dies, or someone retcons Python 2 open to
+    # accept encoding. DO NOT trust anything that says it can go.
     polyopen = open
 else:
 
