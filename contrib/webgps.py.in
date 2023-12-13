@@ -121,7 +121,7 @@ class Track:
     def track(self):
         """Return the track as canvas drawing operations."""
         mid_thing = ');L('
-        return('M(%s);' % mid_thing.join(
+        return ('M(%s);' % mid_thing.join(
                         map(lambda x: '%d,%d' % (x[0], x[1]), self.posn)))
 
 
