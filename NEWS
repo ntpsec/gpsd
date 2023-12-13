@@ -2,6 +2,10 @@
 
 3.25.1~dev: WIP
   Handle NTRIPv2 that comes in "chunks".
+  
+  Note: The new "chunk" code led to a short lived bug that led to
+        CVE-2023-43628, a buffer overrun.  That bug never appeared in
+        any gpsd release.
 
 3.25: 2022-10-09
   Have ubxtool "-w 0" run forever.
