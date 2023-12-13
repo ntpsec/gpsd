@@ -50,14 +50,6 @@ KML_OPEN_IN_GE = '''\
 </kml>
 '''
 
-if str is bytes:
-    polyopen = open
-else:
-
-    def polyopen(filename, mode):
-        """Open a file with utf-8 encoding to silence linters."""
-        return open(filename, mode, encoding="utf-8")
-
 
 def kmlize(tpv):
     """Kmlize.
@@ -189,9 +181,9 @@ if __name__ == "__main__":
             sys.exit(0)
 
     if options.initialize:
-        with polyopen(os.path.join(options.kmldir,
-                      'Open_in_Google_Earth_RT_GPS.kml'), 'w',
-                      ) as f:
+        with open(os.path.join(options.kmldir,
+                  'Open_in_Google_Earth_RT_GPS.kml'), 'w',
+                  encoding="utf8") as f:
             f.write(KML_OPEN_IN_GE)
         sys.exit(0)
 
@@ -211,8 +203,8 @@ if __name__ == "__main__":
                 continue
 
             if 'TPV' == session.data['class']:
-                with polyopen(os.path.join(options.kmldir,
-                              'Realtime_GPS.kml'), 'w') as f:
+                with open(os.path.join(options.kmldir,
+                          'Realtime_GPS.kml'), 'w', encoding="utf8") as f:
                     f.write(kmlize(session.data))
     except KeyboardInterrupt:
         print('gegps stopped ')
