@@ -2524,7 +2524,7 @@ struct satellite_t {
 
 };
 
-/* attitude_t was oringally for real IMUs that are syncronous
+/* attitude_t was originally for real IMUs that are syncronous
  * to the GNSS epoch.  Skytrak introduced a "moving base/rover"
  * that is used as a "GNSS Compass".  Essentially a synthetic
  * IMU.  To support this, related data (baseline_t) is also here.
@@ -2886,7 +2886,7 @@ struct gps_data_t {
         char error[256];
     };
     /* attitude and imu are similar
-     * attitude is synchronous to the GNNS epoch, and cumulative in the epoch
+     * attitude is synchronous to the GNSS epoch, and cumulative in the epoch
      * imus is async to the epoch, and sent immediately
      *
      */

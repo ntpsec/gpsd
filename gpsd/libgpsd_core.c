@@ -177,7 +177,7 @@ static void gpsd_vlog(const int errlevel,
     snprintf(buf, sizeof(buf), "%s:%s: %s", label, err_str, fmt);
     vsnprintf(outbuf, outlen, buf, ap);
 
-    // this was carzy expensive, just fix the bad log calls
+    // this was crazy expensive, just fix the bad log calls
     // gps_visibilize(outbuf, outlen, buf, strlen(buf));
 
     if (getpid() == getsid(getpid())) {
